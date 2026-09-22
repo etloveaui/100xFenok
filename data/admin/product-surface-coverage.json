@@ -1,7 +1,7 @@
 {
   "schema_version": "product-surface-coverage/v2",
   "source_stamp_version": 2,
-  "generated_at": "2026-09-21T23:21:51.059Z",
+  "generated_at": "2026-09-22T00:28:45.795Z",
   "source": "local DataPack coverage files",
   "raw_policy": {
     "public_mirror_allowed": true,
@@ -44,7 +44,7 @@
         "days_31_90": 583,
         "over_90_days": 0
       },
-      "median_age_days": 81,
+      "median_age_days": 82,
       "oldest_member": {
         "ticker": "ABXB",
         "source_as_of": "2026-06-29"
@@ -75,8 +75,8 @@
     "surfaces": 7,
     "ready": 1,
     "partial": 0,
-    "stale": 1,
-    "pending": 5,
+    "stale": 2,
+    "pending": 4,
     "unavailable": 0,
     "error": 0
   },
@@ -93,7 +93,7 @@
     "edgarByTicker": 204,
     "slickchartsJson": 579,
     "dataUsageRootJson": 24905,
-    "dataUsagePublicJson": 11213
+    "dataUsagePublicJson": 11219
   },
   "surfaces": [
     {
@@ -169,9 +169,9 @@
           "label": "가격 원천 기준일",
           "status": "ready",
           "status_label": "준비됨",
-          "detail": "기준 2026-09-18 · 1일 전",
+          "detail": "기준 2026-09-18 · 2일 전",
           "as_of": "2026-09-18",
-          "age_days": 1,
+          "age_days": 2,
           "max_age_days": 7,
           "calendar": "us_market"
         },
@@ -200,7 +200,7 @@
           "reason": "provider publishes no aggregate source date"
         }
       ],
-      "as_of": "2026-09-21T12:40:16.705Z",
+      "as_of": "2026-09-22T00:27:11Z",
       "source_as_of": "2026-09-18",
       "source_as_of_reason": null,
       "stamp_evidence": {
@@ -408,7 +408,7 @@
           "collection_fresh_count": 23,
           "stale_count": 0,
           "collected_at_floor": "2026-09-21T01:14:16Z",
-          "collection_age_hours": 22.126,
+          "collection_age_hours": 23.242,
           "max_age_hours": 50,
           "reason": "provider publishes no date; recency = collection time"
         },
@@ -421,9 +421,9 @@
       "route": "/market-valuation",
       "label": "시장 밸류에이션",
       "owner": "Market valuation",
-      "status": "pending",
-      "status_label": "대기",
-      "coverage_score": 80,
+      "status": "stale",
+      "status_label": "오래됨",
+      "coverage_score": 70,
       "summary": "시장 화면은 값 자체보다 기준일, 커버리지, 소스 차이를 함께 보여야 한다.",
       "checks": [
         {
@@ -488,11 +488,11 @@
         },
         {
           "label": "Yardeni 기준일",
-          "status": "ready",
-          "status_label": "준비됨",
-          "detail": "기준 2026-09-11 · 10일 전",
+          "status": "stale",
+          "status_label": "오래됨",
+          "detail": "기준 2026-09-11 · 11일 전",
           "as_of": "2026-09-11",
-          "age_days": 10,
+          "age_days": 11,
           "max_age_days": 10,
           "calendar": null
         },
@@ -520,14 +520,14 @@
           "label": "시장 데이터 기준일",
           "status": "ready",
           "status_label": "준비됨",
-          "detail": "기준 2026-09-18 · 1일 전",
+          "detail": "기준 2026-09-18 · 2일 전",
           "as_of": "2026-09-18",
-          "age_days": 1,
+          "age_days": 2,
           "max_age_days": 7,
           "calendar": "us_market"
         }
       ],
-      "as_of": "2026-09-21T23:20:13Z",
+      "as_of": "2026-09-22T00:27:11Z",
       "source_as_of": "2026-09-11",
       "source_as_of_reason": null,
       "stamp_evidence": {
@@ -766,7 +766,7 @@
           "collection_fresh_count": 16,
           "stale_count": 0,
           "collected_at_floor": "2026-09-21T01:14:29Z",
-          "collection_age_hours": 22.123,
+          "collection_age_hours": 23.238,
           "max_age_hours": 50,
           "reason": "provider publishes no date; recency = collection time"
         },
@@ -829,14 +829,14 @@
           "label": "섹터 데이터 기준일",
           "status": "ready",
           "status_label": "준비됨",
-          "detail": "기준 2026-09-18 · 3일 전",
+          "detail": "기준 2026-09-18 · 4일 전",
           "as_of": "2026-09-18",
-          "age_days": 3,
+          "age_days": 4,
           "max_age_days": 14,
           "calendar": null
         }
       ],
-      "as_of": "2026-09-21T23:20:13Z",
+      "as_of": "2026-09-22T00:27:11Z",
       "source_as_of": "2026-09-18",
       "source_as_of_reason": null,
       "stamp_evidence": {
@@ -884,7 +884,7 @@
           "collection_fresh_count": 3,
           "stale_count": 0,
           "collected_at_floor": "2026-09-21T01:14:41Z",
-          "collection_age_hours": 22.119,
+          "collection_age_hours": 23.235,
           "max_age_hours": 50,
           "reason": "provider publishes no date; recency = collection time"
         },
@@ -939,15 +939,15 @@
           "label": "ETF 상세 전체 구성원 원천 기준일",
           "status": "stale",
           "status_label": "오래됨",
-          "detail": "기준 2026-06-29 · 84일 전 (경고: 7일 초과 노후화)",
+          "detail": "기준 2026-06-29 · 85일 전 (경고: 7일 초과 노후화)",
           "as_of": "2026-06-29",
-          "age_days": 84,
+          "age_days": 85,
           "max_age_days": 7,
           "calendar": null,
           "warn_only": true
         }
       ],
-      "as_of": "2026-09-21T01:24:27Z",
+      "as_of": "2026-09-22T00:11:34Z",
       "source_as_of": "2026-06-29",
       "source_as_of_reason": null,
       "stamp_evidence": {
@@ -5476,7 +5476,7 @@
           "collection_fresh_count": 5,
           "stale_count": 0,
           "collected_at_floor": "2026-09-21T01:14:16Z",
-          "collection_age_hours": 22.126,
+          "collection_age_hours": 23.242,
           "max_age_hours": 50,
           "reason": "provider publishes no date; recency = collection time"
         },
@@ -5518,9 +5518,9 @@
           "label": "스크리너 기준일",
           "status": "ready",
           "status_label": "준비됨",
-          "detail": "기준 2026-09-18 · 3일 전",
+          "detail": "기준 2026-09-18 · 4일 전",
           "as_of": "2026-09-18",
-          "age_days": 3,
+          "age_days": 4,
           "max_age_days": 14,
           "calendar": null
         }
@@ -5571,9 +5571,9 @@
           "label": "미러/사용 현황",
           "status": "ready",
           "status_label": "준비됨",
-          "detail": "24,905 / 11,213 JSON",
+          "detail": "24,905 / 11,219 JSON",
           "root": 24905,
-          "public": 11213
+          "public": 11219
         },
         {
           "label": "시장 데이터 감사",
@@ -5607,7 +5607,7 @@
           "reason": "internal artifact uses generation time; no upstream source date"
         }
       ],
-      "as_of": "2026-09-21T23:21:51.059Z",
+      "as_of": "2026-09-22T00:28:45.795Z",
       "source_as_of": null,
       "source_as_of_reason": "internal artifact uses generation time; no upstream source date"
     }
