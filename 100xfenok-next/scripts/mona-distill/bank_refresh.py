@@ -6,22 +6,33 @@ Two modes sharing one extraction core:
 
 Zero-maintenance design: processed video ids live in _bank_state.json next to the
 bank; every entry passes a schema/2-gate filter and en-dedupe before append.
-LLM extraction rides the existing free chain adapters (gemini flash-lite first,
-gpt-5.4-mini fallback); videos without transcripts fall back to Gemini video
-analysis (does not touch YouTube transcript endpoints, so it survives IP blocks).
+LLM extraction goes through the FENO LLM task door (registry task
+chains.DISTILL_TASK; CCH owns the model chain). Videos without transcripts fall
+back to Gemini video analysis (does not touch YouTube transcript endpoints, so it
+survives IP blocks); that one path is still off the task door, see the legacy
+block below.
 """
 from __future__ import annotations
 
 import argparse
 import json
+import os
 import re
+import sys
 import subprocess
 import time
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any, Callable, Iterator
 
-from chains import _ensure_aa_path, _resolve_model_id, call_gemini_flash_lite, make_gpt_adapter, strip_code_fence
+from chains import (
+    DISTILL_TASK,
+    _ensure_feno_llm_path,
+    _feno_llm_registry_path,
+    call_task,
+    call_task_with_backoff,
+    strip_code_fence,
+)
 from distill_engine import read_json, write_json_atomic
 from enrich import LLM_SLEEP_LADDER_S, add_entry_enrichment, backup_expression_bank, default_transcript_dir, read_transcript_text, utc_iso
 from gates import apply_source_verification
@@ -71,10 +82,38 @@ TranscriptProvider = Callable[[str, str], str]
 
 def extract_from_transcript(text: str) -> str:
     prompt = f"다음 한국어 영어회화 강의 자막에서 학습 표현을 추출해라.\n\n{EXTRACT_RULES}\n\n[자막]\n{text[:12000]}"
+    return call_task(DISTILL_TASK, EXTRACT_SYSTEM, prompt)
+
+
+# --- legacy non-door path ------------------------------------------------------
+# The one mona-distill model call still off the FENO LLM task door:
+# generate_for_task cannot carry a video fileUri (video_url is a reserved caller
+# option on the task path) and the distill task hops are text-only. Kept as is on
+# Asset Allocator's Gemini client until CCH offers a video-capable task route.
+DEFAULT_AA_SCRIPTS = (
+    Path.home()
+    / "agents-workspace/00_my_data/01_El_Fenomeno/00_Project/Asset_Allocator/scripts"
+)
+
+
+def _ensure_aa_path() -> None:
+    path = str(Path(os.environ.get("AA_SCRIPTS_DIR", str(DEFAULT_AA_SCRIPTS))))
+    if path not in sys.path:
+        sys.path.insert(0, path)
+
+
+def _resolve_model_id(alias: str, fallback: str) -> str:
     try:
-        return call_gemini_flash_lite(EXTRACT_SYSTEM, prompt)
-    except Exception:
-        return make_gpt_adapter(_resolve_model_id("gpt-5.4-mini", "gpt-5.4-mini"))(EXTRACT_SYSTEM, prompt)
+        _ensure_feno_llm_path()
+        from feno_llm.resolver import resolve
+
+        return resolve(alias, registry_path=str(_feno_llm_registry_path())).wire_id
+    except Exception as exc:
+        print(
+            f"[bank-refresh] resolver failed for alias {alias!r}; using fallback {fallback!r}: {exc}",
+            file=sys.stderr,
+        )
+        return fallback
 
 
 def extract_from_video(video_id: str) -> str:
@@ -93,26 +132,12 @@ def extract_from_video(video_id: str) -> str:
     if not result.success or not result.text.strip():
         raise RuntimeError(f"gemini video: {result.error or 'empty'}")
     return result.text
+# --- end legacy non-door path --------------------------------------------------
 
 
 def extract_enriched_from_transcript(text: str) -> str:
     prompt = f"다음 한국어 영어회화 강의 자막에서 학습 표현을 풀증류해라.\n\n{EXTRACT_ENRICHED_RULES}\n\n[자막]\n{text[:16000]}"
-    errors: list[str] = []
-    for name, adapter in [
-        (_resolve_model_id("gemini-3.1-flash-lite", "gemini-3.1-flash-lite"), call_gemini_flash_lite),
-        (_resolve_model_id("gpt-5.4-mini", "gpt-5.4-mini"), make_gpt_adapter(_resolve_model_id("gpt-5.4-mini", "gpt-5.4-mini"))),
-    ]:
-        for sleep_s in (0.0, *LLM_SLEEP_LADDER_S):
-            if sleep_s:
-                time.sleep(sleep_s)
-            try:
-                return adapter(EXTRACT_SYSTEM, prompt)
-            except Exception as exc:  # noqa: BLE001 - free-chain fallback ladder
-                message = str(exc)
-                errors.append(f"{name}: {message}")
-                if "429" not in message and "rate" not in message.lower():
-                    break
-    raise RuntimeError(" | ".join(errors) or "enriched extraction chain exhausted")
+    return call_task_with_backoff(DISTILL_TASK, EXTRACT_SYSTEM, prompt, LLM_SLEEP_LADDER_S)
 
 
 def normalize_en(value: str) -> str:

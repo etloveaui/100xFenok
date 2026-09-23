@@ -1,7 +1,7 @@
 import { existsSync, readFileSync } from "node:fs";
 import path from "node:path";
 
-// Minimal fail-closed mirror of feno_llm.resolver.resolve() (Python, mona-distill/chains.py).
+// Minimal fail-closed mirror of feno_llm.resolver.resolve() (Python, claude-code-hub llm-runtime).
 // This does not shell out to Python and does not parse full YAML — it regex-extracts a
 // `- id: <wire-id>` block whose `aliases: [...]` line contains the requested alias, matching
 // the flat model-list shape used by shared-model-provider-registry.yaml. The registry lives in

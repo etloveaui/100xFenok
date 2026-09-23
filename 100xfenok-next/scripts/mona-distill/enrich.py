@@ -14,13 +14,12 @@ import argparse
 import json
 import re
 import shutil
-import time
 from collections import defaultdict
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any, Callable
 
-from chains import _resolve_model_id, call_gemini_flash_lite, make_gpt_adapter, strip_code_fence
+from chains import DISTILL_TASK, call_task_with_backoff, strip_code_fence
 from distill_engine import read_json, write_json_atomic
 from gates import ORIGINAL_BANK_FIELDS, validate_enriched_entry, word_count
 from worker import default_root
@@ -206,22 +205,7 @@ def build_enrich_prompt(source_id: str, entries: list[dict[str, Any]], transcrip
 
 def call_enrich_chain(source_id: str, entries: list[dict[str, Any]], transcript: str, grounded: bool) -> str:
     prompt = build_enrich_prompt(source_id, entries, transcript, grounded)
-    errors: list[str] = []
-    for name, adapter in [
-        (_resolve_model_id("gemini-3.1-flash-lite", "gemini-3.1-flash-lite"), call_gemini_flash_lite),
-        (_resolve_model_id("gpt-5.4-mini", "gpt-5.4-mini"), make_gpt_adapter(_resolve_model_id("gpt-5.4-mini", "gpt-5.4-mini"))),
-    ]:
-        for sleep_s in (0.0, *LLM_SLEEP_LADDER_S):
-            if sleep_s:
-                time.sleep(sleep_s)
-            try:
-                return adapter(ENRICH_SYSTEM, prompt)
-            except Exception as exc:  # noqa: BLE001 - free-chain fallback ladder
-                message = str(exc)
-                errors.append(f"{name}: {message}")
-                if "429" not in message and "rate" not in message.lower():
-                    break
-    raise RuntimeError(" | ".join(errors) or f"{source_id}: enrichment chain exhausted")
+    return call_task_with_backoff(DISTILL_TASK, ENRICH_SYSTEM, prompt, LLM_SLEEP_LADDER_S)
 
 
 def parse_enrichment_response(raw_text: str) -> dict[str, dict[str, Any]]:

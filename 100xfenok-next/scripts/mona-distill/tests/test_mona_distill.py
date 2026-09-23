@@ -14,7 +14,13 @@ from unittest.mock import patch
 SCRIPT_DIR = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(SCRIPT_DIR))
 
-from chains import ChainExhaustedError, ChainProvider, build_distill_prompt, strip_code_fence, unquote
+from chains import (
+    DISTILL_TASK,
+    ChainExhaustedError,
+    TaskProvider,
+    build_distill_prompt,
+    strip_code_fence,
+)
 from distill_engine import run_distill, write_json_atomic
 from gates import (
     groundedness_gate,
@@ -30,20 +36,14 @@ from worker import canonical_study_date, drain_once, enqueue_pending
 MONA_VNEXT_MODEL_OPTIONS = SCRIPT_DIR.parents[1] / "src" / "features" / "mona-vnext" / "live" / "modelOptions.ts"
 ADMIN_LIVE_TS = SCRIPT_DIR.parents[1] / "src" / "lib" / "server" / "admin-live.ts"
 
-DISTILL_REGISTRY_SYNC_SITES = [
-    ("chains.py", '_resolve_model_id("gemini-3.1-flash-lite", "gemini-3.1-flash-lite")', 2),
-    ("chains.py", '_resolve_model_id("gpt-5.4-mini", "gpt-5.4-mini")', 2),
-    ("chains.py", '_resolve_model_id("mimo-2.5", "mimo-v2.5")', 2),
-    ("chains.py", '_resolve_model_id("gpt-5.6-luna", "gpt-5.6-luna")', 2),
-    ("chains.py", '_resolve_model_id("gpt-5.5", "gpt-5.5")', 2),
-    ("chains.py", '_resolve_model_id("deepseek-v4-pro", "deepseek-v4-pro")', 2),
-    ("enrich.py", '_resolve_model_id("gemini-3.1-flash-lite", "gemini-3.1-flash-lite")', 1),
-    ("enrich.py", '_resolve_model_id("gpt-5.4-mini", "gpt-5.4-mini")', 2),
-    ("teach_notes.py", '_resolve_model_id("gemini-3.1-flash-lite", "gemini-3.1-flash-lite")', 2),
-    ("teach_notes.py", '_resolve_model_id("gpt-5.4-mini", "gpt-5.4-mini")', 4),
-    ("bank_refresh.py", '_resolve_model_id("gemini-3.1-flash-lite", "gemini-3.1-flash-lite")', 2),
-    ("bank_refresh.py", '_resolve_model_id("gpt-5.4-mini", "gpt-5.4-mini")', 3),
-]
+DOOR_MODULES = ["chains.py", "bank_refresh.py", "enrich.py", "teach_notes.py", "worker.py", "distill_engine.py", "providers.py", "gates.py", "sanitize.py"]
+LEGACY_BLOCK = re.compile(r"# --- legacy non-door path.*?# --- end legacy non-door path", re.DOTALL)
+# Anything that selects a model or provider outside the registry task door.
+OFF_DOOR_PATTERN = re.compile(
+    r"_gemini_api|_kimi_api|_mimo_api|_codex_auth|Asset_Allocator|AA_SCRIPTS|urllib|api\.deepseek\.com"
+    r"|generate_text\(|_resolve_model_id|\b(?:model|provider|alias)\s*=\s*[\"']"
+    r"|gpt-\d|gemini-\d|mimo-|deepseek-|kimi-|claude-(?!code-hub)"
+)
 
 
 def read_json(path: Path):
@@ -179,6 +179,39 @@ class MonaDistillTests(unittest.TestCase):
         self.assertTrue(groundedness_gate(profile, weak_notes).ok)
 
 
+class FakeTaskFacade:
+    """Records generate_for_task calls and replays scripted LLMResult-like results."""
+
+    def __init__(self, *results) -> None:
+        self.results = list(results)
+        self.calls: list[dict[str, object]] = []
+
+    def generate_for_task(self, task_name: str, prompt: str, **kwargs):
+        self.calls.append({"task": task_name, "prompt": prompt, "kwargs": kwargs})
+        result = self.results.pop(0) if len(self.results) > 1 else self.results[0]
+        if isinstance(result, Exception):
+            raise result
+        return result
+
+    def generate_text(self, *_args, **_kwargs):
+        raise AssertionError("model-level generate_text used instead of the task door")
+
+
+def task_ok(text: str):
+    return types.SimpleNamespace(text=text, error=None, attempts=[{"model": "hop-1", "error_code": None}])
+
+
+def task_error(code: str, http_status: int | None = None):
+    return types.SimpleNamespace(
+        text="",
+        error=types.SimpleNamespace(code=code, message=f"{code} message", http_status=http_status),
+        attempts=[{"model": "hop-1", "error_code": code, "error_http_status": http_status}],
+    )
+
+
+VALID_PROFILE = '{"learner-profile": {"weak_patterns": [], "strengths": [], "progress": ""}}'
+
+
 class ChainProviderTests(unittest.TestCase):
     PAYLOAD = {
         "weak_notes": [{"ko": "막혔어", "tried": "I blocked", "correct": "I was stuck.", "sessions": ["2026-06-09"]}],
@@ -188,24 +221,127 @@ class ChainProviderTests(unittest.TestCase):
         "job": {"date": "2026-06-09", "mode": "interrupt"},
     }
 
-    def test_falls_back_to_next_adapter(self) -> None:
-        def broken(system: str, prompt: str) -> str:
-            raise RuntimeError("boom")
+    def test_task_provider_calls_task_door_by_name_only(self) -> None:
+        import chains
 
-        def valid(system: str, prompt: str) -> str:
-            return '{"learner-profile": {"weak_patterns": [], "strengths": [], "progress": ""}}'
+        facade = FakeTaskFacade(task_ok("```json\n" + VALID_PROFILE + "\n```"))
+        with patch.object(chains, "_load_feno_llm_facade", return_value=facade):
+            result = TaskProvider().call(self.PAYLOAD)
 
-        provider = ChainProvider([("broken", broken), ("valid", valid)])
-        result = provider.call(self.PAYLOAD)
-        self.assertIn("learner-profile", result)
+        self.assertEqual(result, VALID_PROFILE)
+        self.assertEqual(len(facade.calls), 1)
+        call = facade.calls[0]
+        self.assertEqual(call["task"], DISTILL_TASK)
+        system, prompt = build_distill_prompt(self.PAYLOAD)
+        self.assertEqual(call["prompt"], prompt)
+        # task name + system only: no model, provider, timeout, retry or token options
+        self.assertEqual(call["kwargs"], {"system": system})
 
-    def test_exhausted_chain_raises(self) -> None:
-        def broken(system: str, prompt: str) -> str:
-            raise RuntimeError("boom")
+    def test_task_failure_raises_chain_exhausted(self) -> None:
+        import chains
 
-        provider = ChainProvider([("a", broken), ("b", broken)])
-        with self.assertRaises(ChainExhaustedError):
-            provider.call(self.PAYLOAD)
+        for result in (task_error("chain_exhausted"), task_ok("   "), RuntimeError("runtime import broke")):
+            with self.subTest(result=result), \
+                 patch.object(chains, "_load_feno_llm_facade", return_value=FakeTaskFacade(result)):
+                with self.assertRaises(ChainExhaustedError):
+                    TaskProvider().call(self.PAYLOAD)
+
+    def test_worker_chain_failure_soft_fails_and_preserves_profile(self) -> None:
+        import chains
+
+        with tempfile.TemporaryDirectory() as temp:
+            root = Path(temp)
+            seed_root(root)
+            before = read_json(root / "profile" / "learner-profile.json")
+            enqueue_pending(root, "2026-06-09", mode="nightly")
+            with patch.object(chains, "_load_feno_llm_facade", return_value=FakeTaskFacade(task_error("chain_exhausted"))):
+                result = drain_once(root, provider_kind="chain")
+            self.assertFalse(result["ok"])
+            self.assertTrue(result["soft_failed"])
+            self.assertIn(DISTILL_TASK, result["reason"])
+            self.assertEqual(read_json(root / "profile" / "learner-profile.json"), before)
+            self.assertFalse((root / "curriculum-live.json").exists())
+            self.assertTrue((root / "_queue" / "last_error.json").exists())
+            self.assertFalse((root / "_queue" / "pending.json").exists())
+
+    def test_worker_chain_success_writes_profile_for_both_modes(self) -> None:
+        import chains
+
+        for mode in ("interrupt", "nightly"):
+            with self.subTest(mode=mode), tempfile.TemporaryDirectory() as temp:
+                root = Path(temp)
+                seed_root(root)
+                enqueue_pending(root, "2026-06-09", mode=mode)
+                facade = FakeTaskFacade(task_ok(MockProvider("valid").call({"weak_notes": read_json(root / "weak-notes.json")["notes"]})))
+                with patch.object(chains, "_load_feno_llm_facade", return_value=facade):
+                    result = drain_once(root, provider_kind="chain")
+                self.assertTrue(result["ok"], result)
+                self.assertEqual([call["task"] for call in facade.calls], [DISTILL_TASK])
+                self.assertEqual((root / "curriculum-live.json").exists(), mode == "nightly")
+
+    def test_backoff_retries_only_rate_limited_failures(self) -> None:
+        import chains
+
+        rate_limited = FakeTaskFacade(task_error("rate_limit"), task_error("http_429", 429), task_ok("[]"))
+        with patch.object(chains, "_load_feno_llm_facade", return_value=rate_limited), \
+             patch.object(chains.time, "sleep") as sleep:
+            self.assertEqual(chains.call_task_with_backoff("some_task", "sys", "prompt", (1.0, 2.0, 3.0)), "[]")
+        self.assertEqual(len(rate_limited.calls), 3)
+        self.assertEqual([c.args[0] for c in sleep.call_args_list], [1.0, 2.0])
+
+        hard_fail = FakeTaskFacade(task_error("chain_exhausted"))
+        with patch.object(chains, "_load_feno_llm_facade", return_value=hard_fail), \
+             patch.object(chains.time, "sleep") as sleep:
+            with self.assertRaises(ChainExhaustedError):
+                chains.call_task_with_backoff("some_task", "sys", "prompt", (1.0, 2.0, 3.0))
+        self.assertEqual(len(hard_fail.calls), 1)
+        sleep.assert_not_called()
+
+    def test_ppalmo_transcript_lanes_use_distill_task(self) -> None:
+        import bank_refresh
+        import chains
+        import enrich
+        import teach_notes
+
+        facade = FakeTaskFacade(task_ok("[]"))
+        with patch.object(chains, "_load_feno_llm_facade", return_value=facade):
+            bank_refresh.extract_from_transcript("자막")
+            bank_refresh.extract_enriched_from_transcript("자막")
+            enrich.call_enrich_chain("vid1", [{"en": "I was stuck.", "ko": "막혔어"}], "자막", True)
+            teach_notes.call_teach_chain("vid1", "자막")
+            teach_notes.call_cluster_chain("correction_style", [{"text": "obs", "video_ids": ["vid1"]}])
+
+        self.assertEqual([call["task"] for call in facade.calls], [DISTILL_TASK] * 5)
+        self.assertEqual(
+            [call["kwargs"]["system"] for call in facade.calls],
+            [bank_refresh.EXTRACT_SYSTEM, bank_refresh.EXTRACT_SYSTEM, enrich.ENRICH_SYSTEM, teach_notes.TEACH_SYSTEM, teach_notes.TEACH_SYSTEM],
+        )
+        self.assertTrue(all(set(call["kwargs"]) == {"system"} for call in facade.calls))
+
+    def test_every_model_call_goes_through_the_task_door(self) -> None:
+        """Regression guard for the 2026-09-23 LLM audit: no model literals, provider
+        clients, raw provider HTTP or Asset_Allocator imports outside the one
+        documented legacy video block in bank_refresh.py."""
+        for filename in DOOR_MODULES:
+            text = (SCRIPT_DIR / filename).read_text(encoding="utf-8")
+            if filename == "bank_refresh.py":
+                blocks = LEGACY_BLOCK.findall(text)
+                self.assertEqual(len(blocks), 1)
+                self.assertEqual(re.findall(r"^def (\w+)", blocks[0], re.MULTILINE), ["_ensure_aa_path", "_resolve_model_id", "extract_from_video"])
+                text = LEGACY_BLOCK.sub("", text)
+            with self.subTest(filename=filename):
+                self.assertEqual(OFF_DOOR_PATTERN.findall(text), [])
+        chains_text = (SCRIPT_DIR / "chains.py").read_text(encoding="utf-8")
+        self.assertEqual(chains_text.count("generate_for_task("), 1)
+
+    def test_distill_task_resolves_in_shared_registry(self) -> None:
+        import chains
+
+        chains._ensure_feno_llm_path()
+        from feno_llm.resolver import resolve_task_chain
+
+        steps = resolve_task_chain(DISTILL_TASK, registry_path=str(chains._feno_llm_registry_path()))
+        self.assertTrue(steps)
 
     def test_prompt_grounds_on_inputs_and_forbids_fabrication(self) -> None:
         system, prompt = build_distill_prompt(self.PAYLOAD)
@@ -218,11 +354,6 @@ class ChainProviderTests(unittest.TestCase):
         fenced = "```json\n{\"a\": 1}\n```"
         self.assertEqual(strip_code_fence(fenced), '{"a": 1}')
         self.assertEqual(strip_code_fence('{"a": 1}'), '{"a": 1}')
-
-    def test_unquote_handles_single_and_double_quotes(self) -> None:
-        self.assertEqual(unquote(' "secret" '), "secret")
-        self.assertEqual(unquote(" 'secret' "), "secret")
-        self.assertEqual(unquote("secret"), "secret")
 
     def test_feno_llm_resolver_path_resolves_from_worktree(self) -> None:
         import chains
@@ -270,120 +401,6 @@ class ChainProviderTests(unittest.TestCase):
         self.assertEqual(fallback_literals, [expected.wire_id])
         self.assertEqual(expected.family, "gemini")
         self.assertNotEqual(expected.usage_tier, "disabled")
-
-    def test_distill_registry_sync_sites_resolve_live_wire_ids(self) -> None:
-        import chains
-
-        registry_path = chains._feno_llm_registry_path()
-        chains._ensure_feno_llm_path()
-        from feno_llm.resolver import resolve
-
-        expected_wire_ids = {
-            "gemini-3.1-flash-lite": "gemini-3.1-flash-lite",
-            "gpt-5.4-mini": "gpt-5.4-mini",
-            "mimo-2.5": "mimo-v2.5",
-            "gpt-5.6-luna": "gpt-5.6-luna",
-            "gpt-5.5": "gpt-5.5",
-            "deepseek-v4-pro": "deepseek-v4-pro",
-        }
-        for alias, wire_id in expected_wire_ids.items():
-            with self.subTest(alias=alias):
-                resolved = resolve(alias, registry_path=str(registry_path))
-                self.assertEqual(resolved.wire_id, wire_id)
-                self.assertNotEqual(resolved.usage_tier, "disabled")
-                self.assertEqual(chains._resolve_model_id(alias, wire_id), wire_id)
-
-        for filename, needle, expected_count in DISTILL_REGISTRY_SYNC_SITES:
-            with self.subTest(filename=filename, needle=needle):
-                text = (SCRIPT_DIR / filename).read_text(encoding="utf-8")
-                self.assertEqual(text.count(needle), expected_count)
-
-    def test_nightly_chain_uses_luna_first_with_existing_fallbacks(self) -> None:
-        import chains
-
-        resolved = {
-            "gpt-5.6-luna": "gpt-5.6-luna",
-            "gpt-5.5": "gpt-5.5",
-            "deepseek-v4-pro": "deepseek-v4-pro",
-        }
-        with patch.object(chains, "_resolve_model_id", side_effect=lambda alias, fallback: resolved.get(alias, fallback)):
-            provider = chains.nightly_chain()
-
-        self.assertEqual(
-            [name for name, _adapter in provider.adapters],
-            ["gpt-5.6-luna", "kimi-for-coding+thinking", "gpt-5.5", "deepseek-v4-pro"],
-        )
-
-    def test_gpt_adapter_routes_through_feno_llm_facade(self) -> None:
-        import chains
-
-        seen: dict[str, object] = {}
-
-        class FakeFacade:
-            @staticmethod
-            def generate_text(prompt: str, **kwargs):
-                seen["prompt"] = prompt
-                seen["kwargs"] = kwargs
-                return types.SimpleNamespace(text="  {\"ok\": true}  ", usage={}, elapsed_ms=11, error=None)
-
-        direct_auth = types.SimpleNamespace(
-            get_codex_token=lambda: (_ for _ in ()).throw(AssertionError("direct codex auth used")),
-            codex_sse_request=lambda *_args, **_kwargs: (_ for _ in ()).throw(AssertionError("direct codex transport used")),
-        )
-        with patch.dict(sys.modules, {"_codex_auth": direct_auth}), \
-             patch.object(chains, "_load_feno_llm_facade", return_value=FakeFacade(), create=True):
-            text = chains.make_gpt_adapter("gpt-test")("system prompt", "user prompt")
-
-        self.assertEqual(text, "  {\"ok\": true}  ")
-        self.assertEqual(seen["prompt"], "user prompt")
-        self.assertEqual(
-            seen["kwargs"],
-            {"model": "gpt-test", "provider": "openai", "system": "system prompt"},
-        )
-
-    def test_gpt_adapter_preserves_fallback_error_surface(self) -> None:
-        import chains
-
-        class FakeFacade:
-            @staticmethod
-            def generate_text(_prompt: str, **_kwargs):
-                return types.SimpleNamespace(text="", usage={}, elapsed_ms=0, error=types.SimpleNamespace(code="no_auth"))
-
-        with patch.object(chains, "_load_feno_llm_facade", return_value=FakeFacade(), create=True):
-            with self.assertRaisesRegex(RuntimeError, "codex token unavailable"):
-                chains.make_gpt_adapter("gpt-test")("system", "prompt")
-
-    def test_mimo_adapter_routes_through_feno_llm_facade_json_mode(self) -> None:
-        import chains
-
-        seen: dict[str, object] = {}
-
-        class FakeFacade:
-            @staticmethod
-            def generate_text(prompt: str, **kwargs):
-                seen["prompt"] = prompt
-                seen["kwargs"] = kwargs
-                return types.SimpleNamespace(text="{\"ok\": true}", usage={}, elapsed_ms=13, error=None)
-
-        direct_mimo = types.SimpleNamespace(
-            call_mimo=lambda *_args, **_kwargs: (_ for _ in ()).throw(AssertionError("direct mimo helper used")),
-        )
-        with patch.dict(sys.modules, {"_mimo_api": direct_mimo}), \
-             patch.object(chains, "_load_feno_llm_facade", return_value=FakeFacade(), create=True), \
-             patch.object(chains, "_resolve_model_id", return_value="mimo-v2.5"):
-            text = chains.mimo_v25_adapter("system prompt", "user prompt")
-
-        self.assertEqual(text, "{\"ok\": true}")
-        self.assertEqual(seen["prompt"], "user prompt")
-        self.assertEqual(
-            seen["kwargs"],
-            {
-                "model": "mimo-v2.5",
-                "provider": "mimo",
-                "system": "system prompt",
-                "response_format": "json",
-            },
-        )
 
     def test_nightly_job_reaches_provider(self) -> None:
         with tempfile.TemporaryDirectory() as temp:

@@ -43,11 +43,13 @@ def enqueue_pending(root: Path, date: str, mode: str = "interrupt", trigger: str
     return pending
 
 
-def resolve_provider(kind: str, mock_mode: str, job_mode: str) -> Provider:
+def resolve_provider(kind: str, mock_mode: str) -> Provider:
     if kind == "chain":
-        from chains import interrupt_chain, nightly_chain
+        from chains import TaskProvider
 
-        return nightly_chain() if job_mode == "nightly" else interrupt_chain()
+        # Interrupt and nightly share one registry task; the nightly-only
+        # curriculum-adjust request lives in the prompt (job mode).
+        return TaskProvider()
     return MockProvider(mock_mode)
 
 
@@ -65,7 +67,7 @@ def drain_once(root: Path, provider_mode: str = "valid", provider_kind: str = "m
             raise ValueError("job must be an object")
         if job.get("mode") not in ("interrupt", "nightly"):
             raise ValueError(f"unsupported mode: {job.get('mode')}")  # unknown future modes fail safe
-        provider = resolve_provider(provider_kind, provider_mode, str(job.get("mode")))
+        provider = resolve_provider(provider_kind, provider_mode)
         result = run_distill(root, job, provider)
         return {"drained": True, **result}
     except Exception as exc:
