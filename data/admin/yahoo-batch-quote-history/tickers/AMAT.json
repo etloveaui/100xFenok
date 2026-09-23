@@ -1,19 +1,6 @@
 {
   "attempts": [
     {
-      "attempts_used": 0,
-      "event_name": "schedule",
-      "failures": [],
-      "latency_ms": 0,
-      "natural": true,
-      "observed_at": "2026-08-25T23:49:10Z",
-      "outcome": "skipped_fresh",
-      "run_attempt": 1,
-      "run_id": "32911905308",
-      "schedule": "20 23 * * 1-5",
-      "shard": "1/5"
-    },
-    {
       "attempts_used": 1,
       "event_name": "schedule",
       "failures": [],
@@ -183,15 +170,28 @@
       "run_id": "35676451924",
       "schedule": "20 23 * * 1-5",
       "shard": "2/5"
+    },
+    {
+      "attempts_used": 1,
+      "event_name": "schedule",
+      "failures": [],
+      "latency_ms": 574,
+      "natural": true,
+      "observed_at": "2026-09-23T01:43:04Z",
+      "outcome": "fresh",
+      "run_attempt": 1,
+      "run_id": "35806669054",
+      "schedule": "20 23 * * 1-5",
+      "shard": "2/5"
     }
   ],
   "current": {
-    "fetched_at": "2026-09-22T01:42:26Z",
-    "history_as_of": "2026-09-21",
+    "fetched_at": "2026-09-23T01:45:02Z",
+    "history_as_of": "2026-09-22",
     "path": "data/yf/finance/AMAT.json",
-    "payload_sha256": "35b23653917d897de1f90f85d7949c5a2c5093518140ae1707987fd4ccd4313f",
-    "quote_as_of": "2026-09-21T20:00:01Z",
-    "source_as_of": "2026-09-21"
+    "payload_sha256": "275d602e71f41481e4831c4ab513f157c02572d1d25efb21ffbc296b08378674",
+    "quote_as_of": "2026-09-22T20:00:01Z",
+    "source_as_of": "2026-09-22"
   },
   "discovered_from": [
     "global_scouter_stock",
@@ -199,15 +199,15 @@
     "nasdaq_giw_sox"
   ],
   "last_attempt": {
-    "attempts_used": 0,
+    "attempts_used": 1,
     "event_name": "schedule",
     "failures": [],
-    "latency_ms": 0,
+    "latency_ms": 574,
     "natural": true,
-    "observed_at": "2026-09-22T01:51:27Z",
-    "outcome": "skipped_fresh",
+    "observed_at": "2026-09-23T01:43:04Z",
+    "outcome": "fresh",
     "run_attempt": 1,
-    "run_id": "35676451924",
+    "run_id": "35806669054",
     "schedule": "20 23 * * 1-5",
     "shard": "2/5"
   },
@@ -234,14 +234,14 @@
   "promotion_contract": "provider_observation/v2",
   "provider_observation": {
     "event_name": "schedule",
-    "history_as_of": "2026-09-21",
-    "observed_at": "2026-09-22T01:39:10Z",
-    "payload_sha256": "c0a20ac425653323e8e5c8abe7a172dee7b4f424e14dfaaa8fbafc0771f89f02",
-    "quote_as_of": "2026-09-21T20:00:01Z",
+    "history_as_of": "2026-09-22",
+    "observed_at": "2026-09-23T01:43:04Z",
+    "payload_sha256": "20f660ff023e7c360472bf8e093c78e8696d56b3bd53bff1c9b002f9d469d083",
+    "quote_as_of": "2026-09-22T20:00:01Z",
     "run_attempt": 1,
-    "run_id": "35676451924",
+    "run_id": "35806669054",
     "schema_version": "provider_observation/v2",
-    "source_as_of": "2026-09-21"
+    "source_as_of": "2026-09-22"
   },
   "recovered_at": "2026-09-17T01:31:25Z",
   "recovered_from_run_id": "35044200539",
@@ -252,5 +252,5 @@
   "retry": false,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "ticker": "AMAT",
-  "updated_at": "2026-09-22T01:51:27Z"
+  "updated_at": "2026-09-23T01:43:04Z"
 }

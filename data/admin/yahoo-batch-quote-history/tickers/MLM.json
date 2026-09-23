@@ -1,19 +1,6 @@
 {
   "attempts": [
     {
-      "attempts_used": 0,
-      "event_name": "schedule",
-      "failures": [],
-      "latency_ms": 0,
-      "natural": true,
-      "observed_at": "2026-08-21T23:49:38Z",
-      "outcome": "skipped_fresh",
-      "run_attempt": 1,
-      "run_id": "32537807621",
-      "schedule": "20 23 * * 1-5",
-      "shard": "1/5"
-    },
-    {
       "attempts_used": 1,
       "event_name": "schedule",
       "failures": [],
@@ -182,15 +169,28 @@
       "run_id": "35507652316",
       "schedule": "",
       "shard": "1/5"
+    },
+    {
+      "attempts_used": 1,
+      "event_name": "schedule",
+      "failures": [],
+      "latency_ms": 626,
+      "natural": true,
+      "observed_at": "2026-09-23T01:33:25Z",
+      "outcome": "fresh",
+      "run_attempt": 1,
+      "run_id": "35806669054",
+      "schedule": "20 23 * * 1-5",
+      "shard": "0/5"
     }
   ],
   "current": {
-    "fetched_at": "2026-09-20T11:31:39Z",
-    "history_as_of": "2026-09-18",
+    "fetched_at": "2026-09-23T01:37:38Z",
+    "history_as_of": "2026-09-22",
     "path": "data/yf/finance/MLM.json",
-    "payload_sha256": "f5ecb99d12cdf6fe3108159bf969e4d7ed3716394f15496363564fb23bff0f90",
-    "quote_as_of": "2026-09-18T20:00:02Z",
-    "source_as_of": "2026-09-18"
+    "payload_sha256": "9bb1b272b728f1b7429a5b9499d47096036b8996ee870d63ede2ef76307f85e9",
+    "quote_as_of": "2026-09-22T20:00:02Z",
+    "source_as_of": "2026-09-22"
   },
   "discovered_from": [
     "global_scouter_stock",
@@ -198,16 +198,16 @@
   ],
   "last_attempt": {
     "attempts_used": 1,
-    "event_name": "workflow_dispatch",
+    "event_name": "schedule",
     "failures": [],
-    "latency_ms": 549,
-    "natural": false,
-    "observed_at": "2026-09-20T11:28:24Z",
+    "latency_ms": 626,
+    "natural": true,
+    "observed_at": "2026-09-23T01:33:25Z",
     "outcome": "fresh",
     "run_attempt": 1,
-    "run_id": "35507652316",
-    "schedule": "",
-    "shard": "1/5"
+    "run_id": "35806669054",
+    "schedule": "20 23 * * 1-5",
+    "shard": "0/5"
   },
   "last_recovered_failure": {
     "attempts_used": 1,
@@ -231,15 +231,15 @@
   },
   "promotion_contract": "provider_observation/v2",
   "provider_observation": {
-    "event_name": "workflow_dispatch",
-    "history_as_of": "2026-09-18",
-    "observed_at": "2026-09-20T11:28:24Z",
-    "payload_sha256": "b4bb1047d87aa0e3ffdee8d0d3fe99b5dc8eae78016e582b52fc121f516bb1de",
-    "quote_as_of": "2026-09-18T20:00:02Z",
+    "event_name": "schedule",
+    "history_as_of": "2026-09-22",
+    "observed_at": "2026-09-23T01:33:25Z",
+    "payload_sha256": "de4fd4ecc262e9d3dd774c434c00d8e6de31f6c2987d064ef90947b637b97fd5",
+    "quote_as_of": "2026-09-22T20:00:02Z",
     "run_attempt": 1,
-    "run_id": "35507652316",
+    "run_id": "35806669054",
     "schema_version": "provider_observation/v2",
-    "source_as_of": "2026-09-18"
+    "source_as_of": "2026-09-22"
   },
   "recovered_at": "2026-09-11T01:11:50Z",
   "recovered_from_run_id": "34175958781",
@@ -250,5 +250,5 @@
   "retry": false,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "ticker": "MLM",
-  "updated_at": "2026-09-20T11:28:24Z"
+  "updated_at": "2026-09-23T01:33:25Z"
 }

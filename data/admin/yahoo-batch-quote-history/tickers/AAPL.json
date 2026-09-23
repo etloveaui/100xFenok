@@ -1,19 +1,6 @@
 {
   "attempts": [
     {
-      "attempts_used": 0,
-      "event_name": "schedule",
-      "failures": [],
-      "latency_ms": 0,
-      "natural": true,
-      "observed_at": "2026-08-25T23:49:10Z",
-      "outcome": "skipped_fresh",
-      "run_attempt": 1,
-      "run_id": "32911905308",
-      "schedule": "20 23 * * 1-5",
-      "shard": "1/5"
-    },
-    {
       "attempts_used": 1,
       "event_name": "schedule",
       "failures": [],
@@ -183,15 +170,28 @@
       "run_id": "35676451924",
       "schedule": "20 23 * * 1-5",
       "shard": "2/5"
+    },
+    {
+      "attempts_used": 1,
+      "event_name": "schedule",
+      "failures": [],
+      "latency_ms": 589,
+      "natural": true,
+      "observed_at": "2026-09-23T01:43:04Z",
+      "outcome": "fresh",
+      "run_attempt": 1,
+      "run_id": "35806669054",
+      "schedule": "20 23 * * 1-5",
+      "shard": "2/5"
     }
   ],
   "current": {
-    "fetched_at": "2026-09-22T01:42:19Z",
-    "history_as_of": "2026-09-21",
+    "fetched_at": "2026-09-23T01:44:55Z",
+    "history_as_of": "2026-09-22",
     "path": "data/yf/finance/AAPL.json",
-    "payload_sha256": "c8f232e29e6ff813049741f58c7fcaaf6877803b1fdf02abb099fec75a0cb703",
-    "quote_as_of": "2026-09-21T20:00:01Z",
-    "source_as_of": "2026-09-21"
+    "payload_sha256": "d5717f42afc507fbd7e5d565986c225088aa1f4c76561ce7578b507fc2abdc8d",
+    "quote_as_of": "2026-09-22T20:00:01Z",
+    "source_as_of": "2026-09-22"
   },
   "discovered_from": [
     "global_scouter_stock",
@@ -199,15 +199,15 @@
     "portfolio_configuration"
   ],
   "last_attempt": {
-    "attempts_used": 0,
+    "attempts_used": 1,
     "event_name": "schedule",
     "failures": [],
-    "latency_ms": 0,
+    "latency_ms": 589,
     "natural": true,
-    "observed_at": "2026-09-22T01:51:27Z",
-    "outcome": "skipped_fresh",
+    "observed_at": "2026-09-23T01:43:04Z",
+    "outcome": "fresh",
     "run_attempt": 1,
-    "run_id": "35676451924",
+    "run_id": "35806669054",
     "schedule": "20 23 * * 1-5",
     "shard": "2/5"
   },
@@ -234,14 +234,14 @@
   "promotion_contract": "provider_observation/v2",
   "provider_observation": {
     "event_name": "schedule",
-    "history_as_of": "2026-09-21",
-    "observed_at": "2026-09-22T01:39:10Z",
-    "payload_sha256": "a5c0038edbe49b857213c65df457d22770d2f0d43bfcbc09ee8bdf232bbcb4aa",
-    "quote_as_of": "2026-09-21T20:00:01Z",
+    "history_as_of": "2026-09-22",
+    "observed_at": "2026-09-23T01:43:04Z",
+    "payload_sha256": "3cb1442eafbb7bc1499cc7072e07ca9ee7c7e638b48e631e1b31efe2a0dee9d2",
+    "quote_as_of": "2026-09-22T20:00:01Z",
     "run_attempt": 1,
-    "run_id": "35676451924",
+    "run_id": "35806669054",
     "schema_version": "provider_observation/v2",
-    "source_as_of": "2026-09-21"
+    "source_as_of": "2026-09-22"
   },
   "recovered_at": "2026-09-17T01:31:25Z",
   "recovered_from_run_id": "35044200539",
@@ -252,5 +252,5 @@
   "retry": false,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "ticker": "AAPL",
-  "updated_at": "2026-09-22T01:51:27Z"
+  "updated_at": "2026-09-23T01:43:04Z"
 }

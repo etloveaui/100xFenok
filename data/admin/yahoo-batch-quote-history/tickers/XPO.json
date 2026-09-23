@@ -6,19 +6,6 @@
       "failures": [],
       "latency_ms": 0,
       "natural": true,
-      "observed_at": "2026-08-25T23:49:10Z",
-      "outcome": "skipped_fresh",
-      "run_attempt": 1,
-      "run_id": "32911905308",
-      "schedule": "20 23 * * 1-5",
-      "shard": "1/5"
-    },
-    {
-      "attempts_used": 0,
-      "event_name": "schedule",
-      "failures": [],
-      "latency_ms": 0,
-      "natural": true,
       "observed_at": "2026-08-26T00:00:08Z",
       "outcome": "skipped_fresh",
       "run_attempt": 1,
@@ -181,15 +168,28 @@
       "run_id": "35507652316",
       "schedule": "",
       "shard": "4/5"
+    },
+    {
+      "attempts_used": 1,
+      "event_name": "schedule",
+      "failures": [],
+      "latency_ms": 521,
+      "natural": true,
+      "observed_at": "2026-09-23T01:43:04Z",
+      "outcome": "fresh",
+      "run_attempt": 1,
+      "run_id": "35806669054",
+      "schedule": "20 23 * * 1-5",
+      "shard": "2/5"
     }
   ],
   "current": {
-    "fetched_at": "2026-09-20T11:45:50Z",
-    "history_as_of": "2026-09-18",
+    "fetched_at": "2026-09-23T01:47:24Z",
+    "history_as_of": "2026-09-22",
     "path": "data/yf/finance/XPO.json",
-    "payload_sha256": "55592fc2c3356ec2bff8f5ecd6908437de653262d6442fc3af4d5a252dfc7c07",
-    "quote_as_of": "2026-09-18T20:00:02Z",
-    "source_as_of": "2026-09-18"
+    "payload_sha256": "cd23ee98cd2f3ce5696ec4249da9a680a2ef6cc0c855ebb4e619c29cb6f2cded",
+    "quote_as_of": "2026-09-22T20:00:03Z",
+    "source_as_of": "2026-09-22"
   },
   "discovered_from": [
     "global_scouter_stock",
@@ -197,16 +197,16 @@
   ],
   "last_attempt": {
     "attempts_used": 1,
-    "event_name": "workflow_dispatch",
+    "event_name": "schedule",
     "failures": [],
-    "latency_ms": 445,
-    "natural": false,
-    "observed_at": "2026-09-20T11:41:23Z",
+    "latency_ms": 521,
+    "natural": true,
+    "observed_at": "2026-09-23T01:43:04Z",
     "outcome": "fresh",
     "run_attempt": 1,
-    "run_id": "35507652316",
-    "schedule": "",
-    "shard": "4/5"
+    "run_id": "35806669054",
+    "schedule": "20 23 * * 1-5",
+    "shard": "2/5"
   },
   "lkg": {
     "fetched_at": "2026-07-09T02:47:29Z",
@@ -218,15 +218,15 @@
   },
   "promotion_contract": "provider_observation/v2",
   "provider_observation": {
-    "event_name": "workflow_dispatch",
-    "history_as_of": "2026-09-18",
-    "observed_at": "2026-09-20T11:41:23Z",
-    "payload_sha256": "48f163b39716f4b0c000bcf646425923826a1796530251a80fe97e89b8b046fb",
-    "quote_as_of": "2026-09-18T20:00:02Z",
+    "event_name": "schedule",
+    "history_as_of": "2026-09-22",
+    "observed_at": "2026-09-23T01:43:04Z",
+    "payload_sha256": "1569cc13490d368c68778e1b5e6d87907017d0d26c40f73d12caa25ea992e4f5",
+    "quote_as_of": "2026-09-22T20:00:03Z",
     "run_attempt": 1,
-    "run_id": "35507652316",
+    "run_id": "35806669054",
     "schema_version": "provider_observation/v2",
-    "source_as_of": "2026-09-18"
+    "source_as_of": "2026-09-22"
   },
   "resolution_state": "fresh_primary",
   "retry": false,
@@ -242,5 +242,5 @@
     "source_as_of": "2026-07-08"
   },
   "ticker": "XPO",
-  "updated_at": "2026-09-20T11:41:23Z"
+  "updated_at": "2026-09-23T01:43:04Z"
 }

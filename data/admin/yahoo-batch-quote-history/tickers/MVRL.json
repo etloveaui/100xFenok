@@ -1,19 +1,6 @@
 {
   "attempts": [
     {
-      "attempts_used": 0,
-      "event_name": "schedule",
-      "failures": [],
-      "latency_ms": 0,
-      "natural": true,
-      "observed_at": "2026-07-14T00:23:07Z",
-      "outcome": "skipped_fresh",
-      "run_attempt": 1,
-      "run_id": "29295146902",
-      "schedule": "20 23 * * 1-5",
-      "shard": "2/5"
-    },
-    {
       "attempts_used": 1,
       "event_name": "schedule",
       "failures": [],
@@ -181,31 +168,44 @@
       "run_id": "35507652316",
       "schedule": "",
       "shard": "3/5"
+    },
+    {
+      "attempts_used": 1,
+      "event_name": "schedule",
+      "failures": [],
+      "latency_ms": 492,
+      "natural": true,
+      "observed_at": "2026-09-23T01:33:25Z",
+      "outcome": "fresh",
+      "run_attempt": 1,
+      "run_id": "35806669054",
+      "schedule": "20 23 * * 1-5",
+      "shard": "0/5"
     }
   ],
   "current": {
-    "fetched_at": "2026-09-20T11:40:21Z",
-    "history_as_of": "2026-09-18",
+    "fetched_at": "2026-09-23T01:37:43Z",
+    "history_as_of": "2026-09-22",
     "path": "data/yf/finance/MVRL.json",
-    "payload_sha256": "3aca07e11d43cb3021e73466df754e8a1a30c49880a409beef69fe8bdd26da21",
-    "quote_as_of": "2026-09-18T16:38:20Z",
-    "source_as_of": "2026-09-18"
+    "payload_sha256": "23009916223d7a23336bf71af8bf5f8c377fe827140ef169fdbb39fbb00964e9",
+    "quote_as_of": "2026-09-22T19:37:07Z",
+    "source_as_of": "2026-09-22"
   },
   "discovered_from": [
     "market_facts"
   ],
   "last_attempt": {
     "attempts_used": 1,
-    "event_name": "workflow_dispatch",
+    "event_name": "schedule",
     "failures": [],
-    "latency_ms": 473,
-    "natural": false,
-    "observed_at": "2026-09-20T11:37:02Z",
+    "latency_ms": 492,
+    "natural": true,
+    "observed_at": "2026-09-23T01:33:25Z",
     "outcome": "fresh",
     "run_attempt": 1,
-    "run_id": "35507652316",
-    "schedule": "",
-    "shard": "3/5"
+    "run_id": "35806669054",
+    "schedule": "20 23 * * 1-5",
+    "shard": "0/5"
   },
   "lkg": {
     "fetched_at": "2026-08-06T05:29:20Z",
@@ -217,15 +217,15 @@
   },
   "promotion_contract": "provider_observation/v2",
   "provider_observation": {
-    "event_name": "workflow_dispatch",
-    "history_as_of": "2026-09-18",
-    "observed_at": "2026-09-20T11:37:02Z",
-    "payload_sha256": "6c372066e3c1170ac4549a63f250dad4a5beb6735145ad7c2f8d0531a7dd884e",
-    "quote_as_of": "2026-09-18T16:38:20Z",
+    "event_name": "schedule",
+    "history_as_of": "2026-09-22",
+    "observed_at": "2026-09-23T01:33:25Z",
+    "payload_sha256": "7c67f679598edd650759a49677f8795c3ff7fa8b1b4e95699e0c15bb03f199a9",
+    "quote_as_of": "2026-09-22T19:37:07Z",
     "run_attempt": 1,
-    "run_id": "35507652316",
+    "run_id": "35806669054",
     "schema_version": "provider_observation/v2",
-    "source_as_of": "2026-09-18"
+    "source_as_of": "2026-09-22"
   },
   "resolution_state": "fresh_primary",
   "retry": false,
@@ -241,5 +241,5 @@
     "source_as_of": "2026-08-05"
   },
   "ticker": "MVRL",
-  "updated_at": "2026-09-20T11:37:02Z"
+  "updated_at": "2026-09-23T01:33:25Z"
 }

@@ -26,39 +26,6 @@
       ],
       "latency_ms": 0,
       "natural": true,
-      "observed_at": "2026-08-24T23:49:48Z",
-      "outcome": "failed",
-      "run_attempt": 1,
-      "run_id": "32790347813",
-      "schedule": "20 23 * * 1-5",
-      "shard": "2/5"
-    },
-    {
-      "attempts_used": 2,
-      "error": "empty payload",
-      "event_name": "schedule",
-      "failures": [
-        {
-          "attempt": 1,
-          "error": "KeyError=[redacted]",
-          "source": "provider_safe_call"
-        },
-        {
-          "attempt": 1,
-          "error": "empty payload"
-        },
-        {
-          "attempt": 2,
-          "error": "KeyError=[redacted]",
-          "source": "provider_safe_call"
-        },
-        {
-          "attempt": 2,
-          "error": "empty payload"
-        }
-      ],
-      "latency_ms": 0,
-      "natural": true,
       "observed_at": "2026-08-25T23:49:33Z",
       "outcome": "failed",
       "run_attempt": 1,
@@ -461,6 +428,39 @@
       "run_id": "35676451924",
       "schedule": "20 23 * * 1-5",
       "shard": "4/5"
+    },
+    {
+      "attempts_used": 2,
+      "error": "empty payload",
+      "event_name": "schedule",
+      "failures": [
+        {
+          "attempt": 1,
+          "error": "KeyError=[redacted]",
+          "source": "provider_safe_call"
+        },
+        {
+          "attempt": 1,
+          "error": "empty payload"
+        },
+        {
+          "attempt": 2,
+          "error": "KeyError=[redacted]",
+          "source": "provider_safe_call"
+        },
+        {
+          "attempt": 2,
+          "error": "empty payload"
+        }
+      ],
+      "latency_ms": 0,
+      "natural": true,
+      "observed_at": "2026-09-23T01:47:26Z",
+      "outcome": "failed",
+      "run_attempt": 1,
+      "run_id": "35806669054",
+      "schedule": "20 23 * * 1-5",
+      "shard": "3/5"
     }
   ],
   "discovered_from": [
@@ -492,12 +492,12 @@
     ],
     "latency_ms": 0,
     "natural": true,
-    "observed_at": "2026-09-22T01:58:09Z",
+    "observed_at": "2026-09-23T01:47:26Z",
     "outcome": "failed",
     "run_attempt": 1,
-    "run_id": "35676451924",
+    "run_id": "35806669054",
     "schedule": "20 23 * * 1-5",
-    "shard": "4/5"
+    "shard": "3/5"
   },
   "latest_failure": {
     "attempts_used": 2,
@@ -526,18 +526,18 @@
       }
     ],
     "lkg_status": "absent",
-    "observed_at": "2026-09-22T01:58:09Z",
+    "observed_at": "2026-09-23T01:47:26Z",
     "run_attempt": 1,
-    "run_id": "35676451924"
+    "run_id": "35806669054"
   },
-  "resolution_state": "unavailable",
-  "retry": true,
+  "resolution_state": "terminal_provider_unsupported",
+  "retry": false,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "terminal": {
-    "artifact_generated_at": "2026-09-22T00:42:58.825Z",
+    "artifact_generated_at": "2026-09-23T00:29:07.452Z",
     "artifact_path": "admin/fenok-s1-stock-public-promotion-dry-run.json",
-    "classified_at": "2026-09-22T01:58:09Z",
-    "classified_run_id": "35676451924",
+    "classified_at": "2026-09-23T01:51:52Z",
+    "classified_run_id": "35806669054",
     "evidence": [
       {
         "alias_source": null,
@@ -560,8 +560,8 @@
         "type": "Delisted"
       }
     ],
-    "evidence_sha256": "0d4b181000188e9a15c31edda6b4441947f842c1b0c6742ff29dc55465ff8c09"
+    "evidence_sha256": "a759b33ffbce68ac7c7f1a0341f679f3655eb17210ff756461f3fc15c1e9390a"
   },
   "ticker": "DAY",
-  "updated_at": "2026-09-22T01:58:09Z"
+  "updated_at": "2026-09-23T01:51:52Z"
 }
