@@ -1,6 +1,6 @@
 {
   "schema_version": "fenok-s1-stock-public-promotion-dry-run/v0.1",
-  "generated_at": "2026-09-23T02:04:08.090Z",
+  "generated_at": "2026-09-23T02:26:31.301Z",
   "purpose": "Persist an admin-only dry-run and fail-closed explicit-enable plan for future S1 public stock promotion.",
   "contract_doc": "docs/planning/CONTRACT_fenok_s1_stock_promotion_scoring_v0_1_20260630.md",
   "source_gate": "s1_stock_promotion_candidates.joined_gate",
@@ -58,11 +58,11 @@
         "100xfenok-next/public/data/computed/fenok_signals_summary.json"
       ],
       "before_counts": {
-        "public_s0_rows": 1182
+        "public_s0_rows": 1184
       },
       "after_counts_if_enabled": {
         "public_s0_rows": 1184,
-        "promoted_rows": 2,
+        "promoted_rows": 0,
         "blocked_rows_excluded": 49,
         "duplicate_symbols": 0
       },
@@ -84,18 +84,18 @@
     "full_public_mirror": false
   },
   "counts": {
-    "public_s0_before": 1182,
-    "s1_gap_total": 51,
-    "promotion_rows": 2,
+    "public_s0_before": 1184,
+    "s1_gap_total": 49,
+    "promotion_rows": 0,
     "excluded_blocked_rows": 49,
     "public_s0_after_if_enabled": 1184,
     "s0_overlap_rows": 0,
     "etf_rows": 0,
     "non_stock_rows": 0,
-    "scored_preview_rows": 2,
+    "scored_preview_rows": 0,
     "fake_score_rows": 0,
-    "rows_with_missing_axes": 2,
-    "rows_with_unsupported_axes": 2,
+    "rows_with_missing_axes": 0,
+    "rows_with_unsupported_axes": 0,
     "files_written": 1,
     "public_files_written": 0
   },
@@ -120,12 +120,12 @@
     {
       "id": "s1_public_promotion_dry_run_counts_current",
       "ok": true,
-      "detail": "s0=1182, gap=51, promotion=2, blocked=49"
+      "detail": "s0=1184, gap=49, promotion=0, blocked=49"
     },
     {
       "id": "s1_public_promotion_dry_run_hypothetical_denominator",
       "ok": true,
-      "detail": "1182+2=1184; blocked=49; gap=51"
+      "detail": "1184+0=1184; blocked=49; gap=49"
     },
     {
       "id": "s1_public_promotion_dry_run_no_s0_overlap",
@@ -145,7 +145,7 @@
     {
       "id": "s1_public_promotion_dry_run_missing_axes_null_explicit",
       "ok": true,
-      "detail": "rows_with_missing_axes=2, rows_with_unsupported_axes=2"
+      "detail": "rows_with_missing_axes=0, rows_with_unsupported_axes=0"
     },
     {
       "id": "s1_public_promotion_dry_run_blockers_exact_current_set",
@@ -180,7 +180,7 @@
     {
       "id": "s1_public_mutation_plan_fail_closed_with_rollback",
       "ok": true,
-      "detail": "{\"after\":{\"public_s0_rows\":1184,\"promoted_rows\":2,\"blocked_rows_excluded\":49,\"duplicate_symbols\":0},\"rollback_targets\":[\"data/computed/stock_action_index.json\",\"data/computed/fenok_signals.json\",\"data/computed/fenok_signals_summary.json\",\"100xfenok-next/public/data/computed/fenok_signals_summary.json\"],\"validation\":{\"no_s0_overlap\":true,\"no_etf_or_non_stock_rows\":true,\"missing_axes_null_explicit\":true,\"blocked_rows_excluded\":true,\"full_public_signal_file_forbidden\":true}}"
+      "detail": "{\"after\":{\"public_s0_rows\":1184,\"promoted_rows\":0,\"blocked_rows_excluded\":49,\"duplicate_symbols\":0},\"rollback_targets\":[\"data/computed/stock_action_index.json\",\"data/computed/fenok_signals.json\",\"data/computed/fenok_signals_summary.json\",\"100xfenok-next/public/data/computed/fenok_signals_summary.json\"],\"validation\":{\"no_s0_overlap\":true,\"no_etf_or_non_stock_rows\":true,\"missing_axes_null_explicit\":true,\"blocked_rows_excluded\":true,\"full_public_signal_file_forbidden\":true}}"
     },
     {
       "id": "s1_public_mutation_no_write_check_mode",
@@ -192,12 +192,12 @@
     {
       "id": "s1_promotion_gate_plan_counts_match_gate",
       "ok": true,
-      "detail": "2+49 vs 2+49"
+      "detail": "0+49 vs 0+49"
     },
     {
       "id": "s1_promotion_gate_plan_preserves_s0_count",
       "ok": true,
-      "detail": "1182->1182, future=1184, s0_overlap_rows=0"
+      "detail": "1184->1184, future=1184, s0_overlap_rows=0"
     },
     {
       "id": "s1_promotion_gate_plan_no_etf_or_non_stock_rows",
@@ -217,7 +217,7 @@
     {
       "id": "s1_promotion_gate_plan_missing_axes_null_explicit",
       "ok": true,
-      "detail": "rows_with_missing_axes=2, rows_with_unsupported_axes=2"
+      "detail": "rows_with_missing_axes=0, rows_with_unsupported_axes=0"
     },
     {
       "id": "s1_promotion_gate_plan_blockers_exact_current_set",
@@ -230,294 +230,7 @@
       "detail": "files_written=0, public_files_written=0"
     }
   ],
-  "promotion_rows": [
-    {
-      "ticker": "SITM",
-      "source_stage": "JOINED_READY_NOT_SCORED",
-      "target_stage": "S1_PUBLIC_PROMOTION_DRY_RUN",
-      "asset_type": "stock",
-      "identity": {
-        "name": "SiTime Corporation",
-        "exchange": "NGM",
-        "currency": "USD",
-        "country_scope": "US",
-        "sector": "Technology",
-        "industry": "Semiconductors"
-      },
-      "eligibility": {
-        "joined_ready": true,
-        "outside_s0": true,
-        "etf_lane_excluded": true,
-        "exact_ticker_contract": true,
-        "minimum_evidence_families": 3,
-        "observed_evidence_family_count": 3
-      },
-      "score_source": "scripts/stock-action-score-core.mjs",
-      "score_contract_version": "action-score-v0.3.1",
-      "score_preview_summary": {
-        "action_score": 18.37,
-        "signal_score": 19.61,
-        "coverage_ratio": 0.7882,
-        "confidence_label": "high",
-        "action_bucket": "watch",
-        "action_label": "관찰",
-        "action_reasons": [
-          "기관 공시 주식 1명 · 옵션/클래스 포함 2명",
-          "12M 100.7%",
-          "Fwd PER 42.5"
-        ],
-        "families": {
-          "valuation": {
-            "present": true,
-            "eligible": true,
-            "score": 2,
-            "max": 20
-          },
-          "momentum_revision": {
-            "present": true,
-            "eligible": true,
-            "score": 9,
-            "max": 22
-          },
-          "income": {
-            "present": false,
-            "eligible": false,
-            "score": 0,
-            "max": 10
-          },
-          "index_structure": {
-            "present": false,
-            "eligible": true,
-            "score": 0,
-            "max": 18
-          },
-          "smart_money": {
-            "present": true,
-            "eligible": true,
-            "score": 2.14,
-            "max": 25
-          },
-          "sector_smart_money": {
-            "present": false,
-            "eligible": false,
-            "score": 0,
-            "max": 5
-          }
-        }
-      },
-      "missing_scoring_axes": [
-        {
-          "key": "global_scouter_core_row",
-          "label": "global-scouter core stock row",
-          "value": null,
-          "display": "미확인"
-        },
-        {
-          "key": "global_scouter_detail_file",
-          "label": "global-scouter detail estimates",
-          "value": null,
-          "display": "미확인"
-        },
-        {
-          "key": "stockanalysis_financials_file",
-          "label": "StockAnalysis financials",
-          "value": null,
-          "display": "미확인"
-        },
-        {
-          "key": "revision_movers",
-          "label": "revision movers",
-          "value": null,
-          "display": "미확인"
-        },
-        {
-          "key": "yf_quarter_closes",
-          "label": "YF quarter closes",
-          "value": null,
-          "display": "미확인"
-        },
-        {
-          "key": "slickcharts_returns",
-          "label": "SlickCharts returns",
-          "value": null,
-          "display": "미확인"
-        },
-        {
-          "key": "slickcharts_dividends",
-          "label": "SlickCharts dividends",
-          "value": null,
-          "display": "미확인"
-        }
-      ],
-      "unsupported_scoring_axes": [
-        {
-          "key": "per_band",
-          "label": "PER band",
-          "value": null,
-          "display": "미확인",
-          "reason": "S1 market_facts does not carry Global Scouter PER-band min/current/max."
-        },
-        {
-          "key": "sector_smart_money",
-          "label": "sector smart money",
-          "value": null,
-          "display": "미확인",
-          "reason": "S1 market_facts identity sector is not yet bridged to the stock_action canonical sector map."
-        },
-        {
-          "key": "conviction_entries",
-          "label": "13F conviction entries",
-          "value": null,
-          "display": "미확인",
-          "reason": "S1 score preview keeps conviction unmapped until the ticker-level source join is explicit."
-        }
-      ],
-      "claim_scope": "Admin-only S1 public-promotion dry run; not S0, not public, not daily, not gated."
-    },
-    {
-      "ticker": "TSEM",
-      "source_stage": "JOINED_READY_NOT_SCORED",
-      "target_stage": "S1_PUBLIC_PROMOTION_DRY_RUN",
-      "asset_type": "stock",
-      "identity": {
-        "name": "Tower Semiconductor Ltd.",
-        "exchange": "NMS",
-        "currency": "USD",
-        "country_scope": "US",
-        "sector": "Technology",
-        "industry": "Semiconductors"
-      },
-      "eligibility": {
-        "joined_ready": true,
-        "outside_s0": true,
-        "etf_lane_excluded": true,
-        "exact_ticker_contract": true,
-        "minimum_evidence_families": 3,
-        "observed_evidence_family_count": 3
-      },
-      "score_source": "scripts/stock-action-score-core.mjs",
-      "score_contract_version": "action-score-v0.3.1",
-      "score_preview_summary": {
-        "action_score": 18.17,
-        "signal_score": 19.4,
-        "coverage_ratio": 0.7882,
-        "confidence_label": "high",
-        "action_bucket": "watch",
-        "action_label": "관찰",
-        "action_reasons": [
-          "기관 공시 주식 0명 · 옵션/클래스 포함 2명",
-          "12M 241.2%",
-          "Fwd PER 35.6"
-        ],
-        "families": {
-          "valuation": {
-            "present": true,
-            "eligible": true,
-            "score": 2,
-            "max": 20
-          },
-          "momentum_revision": {
-            "present": true,
-            "eligible": true,
-            "score": 9,
-            "max": 22
-          },
-          "income": {
-            "present": false,
-            "eligible": false,
-            "score": 0,
-            "max": 10
-          },
-          "index_structure": {
-            "present": false,
-            "eligible": true,
-            "score": 0,
-            "max": 18
-          },
-          "smart_money": {
-            "present": true,
-            "eligible": true,
-            "score": 2,
-            "max": 25
-          },
-          "sector_smart_money": {
-            "present": false,
-            "eligible": false,
-            "score": 0,
-            "max": 5
-          }
-        }
-      },
-      "missing_scoring_axes": [
-        {
-          "key": "global_scouter_core_row",
-          "label": "global-scouter core stock row",
-          "value": null,
-          "display": "미확인"
-        },
-        {
-          "key": "global_scouter_detail_file",
-          "label": "global-scouter detail estimates",
-          "value": null,
-          "display": "미확인"
-        },
-        {
-          "key": "stockanalysis_financials_file",
-          "label": "StockAnalysis financials",
-          "value": null,
-          "display": "미확인"
-        },
-        {
-          "key": "revision_movers",
-          "label": "revision movers",
-          "value": null,
-          "display": "미확인"
-        },
-        {
-          "key": "yf_quarter_closes",
-          "label": "YF quarter closes",
-          "value": null,
-          "display": "미확인"
-        },
-        {
-          "key": "slickcharts_returns",
-          "label": "SlickCharts returns",
-          "value": null,
-          "display": "미확인"
-        },
-        {
-          "key": "slickcharts_dividends",
-          "label": "SlickCharts dividends",
-          "value": null,
-          "display": "미확인"
-        }
-      ],
-      "unsupported_scoring_axes": [
-        {
-          "key": "per_band",
-          "label": "PER band",
-          "value": null,
-          "display": "미확인",
-          "reason": "S1 market_facts does not carry Global Scouter PER-band min/current/max."
-        },
-        {
-          "key": "sector_smart_money",
-          "label": "sector smart money",
-          "value": null,
-          "display": "미확인",
-          "reason": "S1 market_facts identity sector is not yet bridged to the stock_action canonical sector map."
-        },
-        {
-          "key": "conviction_entries",
-          "label": "13F conviction entries",
-          "value": null,
-          "display": "미확인",
-          "reason": "S1 score preview keeps conviction unmapped until the ticker-level source join is explicit."
-        }
-      ],
-      "claim_scope": "Admin-only S1 public-promotion dry run; not S0, not public, not daily, not gated."
-    }
-  ],
+  "promotion_rows": [],
   "blocked_rows": [
     {
       "ticker": "230360.KQ",
