@@ -24,11 +24,13 @@ DEFAULT_FENO_LLM_REGISTRY = (
     / "agents-workspace/00_my_data/01_El_Fenomeno/00_Project/claude-code-hub/docs/references/shared-model-provider-registry.yaml"
 )
 
-# Shared-registry task name (claude-code-hub shared-model-provider-registry.yaml
-# task_routing) for every mona-distill lane: learner-profile distill (interrupt +
-# nightly) and the Ppalmo transcript lanes (bank extraction, enrichment,
-# teaching notes).
+# Shared-registry task names (claude-code-hub shared-model-provider-registry.yaml
+# task_routing). DISTILL_TASK serves every text lane: learner-profile distill
+# (interrupt + nightly) and the Ppalmo transcript lanes (bank extraction,
+# enrichment, teaching notes). DISTILL_VIDEO_TASK is the video-capable route for
+# the bank refresher's transcript-less video fallback.
 DISTILL_TASK = "mona_distill"
+DISTILL_VIDEO_TASK = "mona_distill_video"
 
 RATE_LIMIT_CODES = frozenset({"rate_limit", "http_429"})
 
@@ -174,10 +176,15 @@ def _rate_limited(error: Any, attempts: list[dict[str, Any]]) -> bool:
     )
 
 
-def call_task(task_name: str, system: str, prompt: str) -> str:
-    """One call through the FENO LLM task door; raises ChainExhaustedError on failure."""
+def call_task(task_name: str, system: str | None, prompt: str, **task_inputs: Any) -> str:
+    """One call through the FENO LLM task door; raises ChainExhaustedError on failure.
+
+    ``task_inputs`` are the facade's caller-owned task inputs only (for example
+    response_format or video_url/video_mime_type); model selection stays in the
+    registry.
+    """
     try:
-        result = _load_feno_llm_facade().generate_for_task(task_name, prompt, system=system)
+        result = _load_feno_llm_facade().generate_for_task(task_name, prompt, system=system, **task_inputs)
     except Exception as exc:  # noqa: BLE001 - a runtime defect must still soft-fail
         raise ChainExhaustedError(f"{task_name}: runtime error {type(exc).__name__}: {exc}") from exc
     attempts = list(getattr(result, "attempts", None) or [])

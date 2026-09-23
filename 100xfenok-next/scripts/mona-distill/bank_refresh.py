@@ -8,31 +8,21 @@ Zero-maintenance design: processed video ids live in _bank_state.json next to th
 bank; every entry passes a schema/2-gate filter and en-dedupe before append.
 LLM extraction goes through the FENO LLM task door (registry task
 chains.DISTILL_TASK; CCH owns the model chain). Videos without transcripts fall
-back to Gemini video analysis (does not touch YouTube transcript endpoints, so it
-survives IP blocks); that one path is still off the task door, see the legacy
-block below.
+back to video analysis through chains.DISTILL_VIDEO_TASK (does not touch YouTube
+transcript endpoints, so it survives IP blocks).
 """
 from __future__ import annotations
 
 import argparse
 import json
-import os
 import re
-import sys
 import subprocess
 import time
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any, Callable, Iterator
 
-from chains import (
-    DISTILL_TASK,
-    _ensure_feno_llm_path,
-    _feno_llm_registry_path,
-    call_task,
-    call_task_with_backoff,
-    strip_code_fence,
-)
+from chains import DISTILL_TASK, DISTILL_VIDEO_TASK, call_task, call_task_with_backoff, strip_code_fence
 from distill_engine import read_json, write_json_atomic
 from enrich import LLM_SLEEP_LADDER_S, add_entry_enrichment, backup_expression_bank, default_transcript_dir, read_transcript_text, utc_iso
 from gates import apply_source_verification
@@ -53,6 +43,8 @@ THEME_TARGETS = {
     "work-advanced": 80,
 }
 DONE_STATUSES = {"extracted", "zero-yield"}
+# feno_llm accepts only a concrete video/<subtype> MIME type for a video URI.
+VIDEO_MIME_TYPE = "video/mp4"
 
 EXTRACT_SYSTEM = "너는 영어회화 강의에서 학습 표현을 추출하는 분석기다. 출력은 JSON 배열 하나만."
 
@@ -85,54 +77,17 @@ def extract_from_transcript(text: str) -> str:
     return call_task(DISTILL_TASK, EXTRACT_SYSTEM, prompt)
 
 
-# --- legacy non-door path ------------------------------------------------------
-# The one mona-distill model call still off the FENO LLM task door:
-# generate_for_task cannot carry a video fileUri (video_url is a reserved caller
-# option on the task path) and the distill task hops are text-only. Kept as is on
-# Asset Allocator's Gemini client until CCH offers a video-capable task route.
-DEFAULT_AA_SCRIPTS = (
-    Path.home()
-    / "agents-workspace/00_my_data/01_El_Fenomeno/00_Project/Asset_Allocator/scripts"
-)
-
-
-def _ensure_aa_path() -> None:
-    path = str(Path(os.environ.get("AA_SCRIPTS_DIR", str(DEFAULT_AA_SCRIPTS))))
-    if path not in sys.path:
-        sys.path.insert(0, path)
-
-
-def _resolve_model_id(alias: str, fallback: str) -> str:
-    try:
-        _ensure_feno_llm_path()
-        from feno_llm.resolver import resolve
-
-        return resolve(alias, registry_path=str(_feno_llm_registry_path())).wire_id
-    except Exception as exc:
-        print(
-            f"[bank-refresh] resolver failed for alias {alias!r}; using fallback {fallback!r}: {exc}",
-            file=sys.stderr,
-        )
-        return fallback
-
-
 def extract_from_video(video_id: str) -> str:
-    """Gemini watches the video directly — fallback when transcripts are unavailable."""
-    _ensure_aa_path()
-    from _gemini_api import call_gemini
-
-    payload = {
-        "contents": [{"parts": [
-            {"fileData": {"mimeType": "video/*", "fileUri": f"https://www.youtube.com/watch?v={video_id}"}},
-            {"text": f"이 한국어 영어회화 강의에서 학습 표현을 추출해라.\n\n{EXTRACT_RULES}"},
-        ]}],
-        "generationConfig": {"responseMimeType": "application/json"},
-    }
-    result = call_gemini(_resolve_model_id("gemini-3.1-flash-lite", "gemini-3.1-flash-lite"), payload)
-    if not result.success or not result.text.strip():
-        raise RuntimeError(f"gemini video: {result.error or 'empty'}")
-    return result.text
-# --- end legacy non-door path --------------------------------------------------
+    """The model watches the video directly — fallback when transcripts are unavailable."""
+    prompt = f"이 한국어 영어회화 강의에서 학습 표현을 추출해라.\n\n{EXTRACT_RULES}"
+    return call_task(
+        DISTILL_VIDEO_TASK,
+        None,
+        prompt,
+        response_format="json",
+        video_url=f"https://www.youtube.com/watch?v={video_id}",
+        video_mime_type=VIDEO_MIME_TYPE,
+    )
 
 
 def extract_enriched_from_transcript(text: str) -> str:

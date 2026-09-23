@@ -16,6 +16,7 @@ sys.path.insert(0, str(SCRIPT_DIR))
 
 from chains import (
     DISTILL_TASK,
+    DISTILL_VIDEO_TASK,
     ChainExhaustedError,
     TaskProvider,
     build_distill_prompt,
@@ -37,7 +38,6 @@ MONA_VNEXT_MODEL_OPTIONS = SCRIPT_DIR.parents[1] / "src" / "features" / "mona-vn
 ADMIN_LIVE_TS = SCRIPT_DIR.parents[1] / "src" / "lib" / "server" / "admin-live.ts"
 
 DOOR_MODULES = ["chains.py", "bank_refresh.py", "enrich.py", "teach_notes.py", "worker.py", "distill_engine.py", "providers.py", "gates.py", "sanitize.py"]
-LEGACY_BLOCK = re.compile(r"# --- legacy non-door path.*?# --- end legacy non-door path", re.DOTALL)
 # Anything that selects a model or provider outside the registry task door.
 OFF_DOOR_PATTERN = re.compile(
     r"_gemini_api|_kimi_api|_mimo_api|_codex_auth|Asset_Allocator|AA_SCRIPTS|urllib|api\.deepseek\.com"
@@ -318,30 +318,67 @@ class ChainProviderTests(unittest.TestCase):
         )
         self.assertTrue(all(set(call["kwargs"]) == {"system"} for call in facade.calls))
 
+    def test_video_fallback_calls_video_task_by_name_with_video_input(self) -> None:
+        import bank_refresh
+        import chains
+
+        facade = FakeTaskFacade(task_ok('[{"ko": "막혔어", "en": "I was stuck."}]'))
+        with patch.object(chains, "_load_feno_llm_facade", return_value=facade):
+            raw = bank_refresh.extract_from_video("vid123")
+
+        self.assertEqual(raw, '[{"ko": "막혔어", "en": "I was stuck."}]')
+        self.assertEqual(len(facade.calls), 1)
+        call = facade.calls[0]
+        self.assertEqual(call["task"], DISTILL_VIDEO_TASK)
+        self.assertIn(bank_refresh.EXTRACT_RULES, call["prompt"])
+        self.assertEqual(
+            call["kwargs"],
+            {
+                "system": None,
+                "response_format": "json",
+                "video_url": "https://www.youtube.com/watch?v=vid123",
+                "video_mime_type": bank_refresh.VIDEO_MIME_TYPE,
+            },
+        )
+        self.assertRegex(bank_refresh.VIDEO_MIME_TYPE, r"^video/[A-Za-z0-9.+-]+$")
+
+    def test_video_fallback_invalid_video_is_a_failure_not_an_answer(self) -> None:
+        import bank_refresh
+        import chains
+
+        with tempfile.TemporaryDirectory() as temp:
+            root = Path(temp)
+            facade = FakeTaskFacade(task_error("invalid_video"))
+            with patch.object(chains, "_load_feno_llm_facade", return_value=facade):
+                with self.assertRaisesRegex(ChainExhaustedError, "invalid_video"):
+                    bank_refresh.extract_from_video("vid123")
+                with redirect_stdout(io.StringIO()):
+                    report = bank_refresh.run(root, [("vid123", "")], use_video_fallback=True, dry_run=False)
+            self.assertEqual((report["scanned"], report["added"], report["failed"]), (1, 0, 1))
+            self.assertEqual(list(root.iterdir()), [])
+
     def test_every_model_call_goes_through_the_task_door(self) -> None:
         """Regression guard for the 2026-09-23 LLM audit: no model literals, provider
-        clients, raw provider HTTP or Asset_Allocator imports outside the one
-        documented legacy video block in bank_refresh.py."""
+        clients, raw provider HTTP or Asset_Allocator imports anywhere in mona-distill."""
         for filename in DOOR_MODULES:
             text = (SCRIPT_DIR / filename).read_text(encoding="utf-8")
-            if filename == "bank_refresh.py":
-                blocks = LEGACY_BLOCK.findall(text)
-                self.assertEqual(len(blocks), 1)
-                self.assertEqual(re.findall(r"^def (\w+)", blocks[0], re.MULTILINE), ["_ensure_aa_path", "_resolve_model_id", "extract_from_video"])
-                text = LEGACY_BLOCK.sub("", text)
             with self.subTest(filename=filename):
                 self.assertEqual(OFF_DOOR_PATTERN.findall(text), [])
         chains_text = (SCRIPT_DIR / "chains.py").read_text(encoding="utf-8")
         self.assertEqual(chains_text.count("generate_for_task("), 1)
 
-    def test_distill_task_resolves_in_shared_registry(self) -> None:
+    def test_distill_tasks_resolve_in_shared_registry(self) -> None:
         import chains
 
         chains._ensure_feno_llm_path()
         from feno_llm.resolver import resolve_task_chain
 
-        steps = resolve_task_chain(DISTILL_TASK, registry_path=str(chains._feno_llm_registry_path()))
-        self.assertTrue(steps)
+        for task_name in (DISTILL_TASK, DISTILL_VIDEO_TASK):
+            with self.subTest(task=task_name):
+                steps = resolve_task_chain(task_name, registry_path=str(chains._feno_llm_registry_path()))
+                self.assertTrue(steps)
+        video_steps = resolve_task_chain(DISTILL_VIDEO_TASK, registry_path=str(chains._feno_llm_registry_path()))
+        self.assertTrue(all("video" in (step.resolution.capabilities or ()) for step in video_steps))
 
     def test_prompt_grounds_on_inputs_and_forbids_fabrication(self) -> None:
         system, prompt = build_distill_prompt(self.PAYLOAD)
