@@ -2,10 +2,10 @@
   "schema_version": "market-facts/v1",
   "ticker": "AMZO",
   "asset_type": "etf",
-  "generated_at": "2026-09-21T01:42:22Z",
-  "source_as_of": null,
+  "generated_at": "2026-09-24T14:46:50Z",
+  "source_as_of": "2026-09-24",
   "source_as_of_scope": "selected_price_fact",
-  "source_as_of_reason": "selected price fact has no provider source date",
+  "source_as_of_reason": null,
   "identity": {
     "name": "AMZO",
     "exchange": null,
@@ -16,11 +16,149 @@
     "category": null
   },
   "facts": {
+    "price": {
+      "value": 15.13,
+      "source": "stockanalysis.quote",
+      "as_of": "2026-09-24",
+      "fetched_at": "2026-09-24T14:10:09Z",
+      "confidence": "observed",
+      "policy": [
+        "yf",
+        "yf.fast_info",
+        "stockanalysis.quote",
+        "yf.stockanalysis_fallback.quote",
+        "slickcharts"
+      ],
+      "candidates": [
+        {
+          "value": 15.13,
+          "source": "stockanalysis.quote",
+          "as_of": "2026-09-24",
+          "fetched_at": "2026-09-24T14:10:09Z",
+          "confidence": "observed"
+        }
+      ],
+      "candidate_count": 1
+    },
+    "previous_close": {
+      "value": 14.7,
+      "source": "stockanalysis.quote",
+      "as_of": "2026-09-24",
+      "fetched_at": "2026-09-24T14:10:09Z",
+      "confidence": "observed",
+      "policy": [
+        "yf",
+        "stockanalysis.quote",
+        "yf.stockanalysis_fallback.quote"
+      ],
+      "candidates": [
+        {
+          "value": 14.7,
+          "source": "stockanalysis.quote",
+          "as_of": "2026-09-24",
+          "fetched_at": "2026-09-24T14:10:09Z",
+          "confidence": "observed"
+        }
+      ],
+      "candidate_count": 1
+    },
+    "change": {
+      "value": 0.43,
+      "source": "stockanalysis.quote",
+      "as_of": "2026-09-24",
+      "fetched_at": "2026-09-24T14:10:09Z",
+      "confidence": "observed",
+      "policy": [
+        "stockanalysis.quote",
+        "yf",
+        "yf.derived",
+        "yf.stockanalysis_fallback.quote"
+      ],
+      "candidates": [
+        {
+          "value": 0.43,
+          "source": "stockanalysis.quote",
+          "as_of": "2026-09-24",
+          "fetched_at": "2026-09-24T14:10:09Z",
+          "confidence": "observed"
+        }
+      ],
+      "candidate_count": 1
+    },
+    "change_pct": {
+      "value": 2.93,
+      "source": "stockanalysis.quote",
+      "as_of": "2026-09-24",
+      "fetched_at": "2026-09-24T14:10:09Z",
+      "confidence": "observed",
+      "policy": [
+        "stockanalysis.quote",
+        "yf",
+        "yf.derived",
+        "yf.stockanalysis_fallback.quote"
+      ],
+      "candidates": [
+        {
+          "value": 2.93,
+          "source": "stockanalysis.quote",
+          "as_of": "2026-09-24",
+          "fetched_at": "2026-09-24T14:10:09Z",
+          "confidence": "observed"
+        }
+      ],
+      "candidate_count": 1
+    },
+    "total_assets": {
+      "value": "$821.77K",
+      "source": "stockanalysis.overview",
+      "as_of": "2026-09-24",
+      "fetched_at": "2026-09-24T14:10:09Z",
+      "confidence": "observed",
+      "policy": [
+        "yf",
+        "stockanalysis.overview",
+        "yf.stockanalysis_fallback.overview"
+      ],
+      "candidates": [
+        {
+          "value": "$821.77K",
+          "source": "stockanalysis.overview",
+          "as_of": "2026-09-24",
+          "fetched_at": "2026-09-24T14:10:09Z",
+          "confidence": "observed"
+        }
+      ],
+      "candidate_count": 1
+    },
+    "expense_ratio": {
+      "value": 1.49,
+      "source": "stockanalysis.overview",
+      "as_of": "2026-09-24",
+      "fetched_at": "2026-09-24T14:10:09Z",
+      "confidence": "observed",
+      "unit": "percent_points",
+      "policy": [
+        "yf",
+        "stockanalysis.overview",
+        "yf.stockanalysis_fallback.overview"
+      ],
+      "candidates": [
+        {
+          "value": 1.49,
+          "source": "stockanalysis.overview",
+          "as_of": "2026-09-24",
+          "fetched_at": "2026-09-24T14:10:09Z",
+          "confidence": "observed",
+          "unit": "percent_points"
+        }
+      ],
+      "candidate_count": 1
+    },
     "return_1m": {
-      "value": -9.370657351883596,
-      "source": "stockanalysis.etf_universe.performance",
-      "as_of": null,
-      "fetched_at": "2026-09-21T01:14:16Z",
+      "value": 6.329,
+      "source": "stockanalysis.detail.performance",
+      "as_of": "2026-09-24",
+      "fetched_at": "2026-09-24T14:10:09Z",
       "confidence": "observed",
       "unit": "percent_points",
       "policy": [
@@ -31,6 +169,14 @@
       ],
       "candidates": [
         {
+          "value": 6.329,
+          "source": "stockanalysis.detail.performance",
+          "as_of": "2026-09-24",
+          "fetched_at": "2026-09-24T14:10:09Z",
+          "confidence": "observed",
+          "unit": "percent_points"
+        },
+        {
           "value": -9.370657351883596,
           "source": "stockanalysis.etf_universe.performance",
           "as_of": null,
@@ -39,37 +185,109 @@
           "unit": "percent_points"
         }
       ],
+      "candidate_count": 2
+    },
+    "return_3m": {
+      "value": -22.240736332619214,
+      "source": "stockanalysis.detail.history",
+      "as_of": "2026-09-23",
+      "fetched_at": "2026-09-24T14:10:09Z",
+      "confidence": "derived",
+      "unit": "percent_points",
+      "policy": [
+        "yf.history_1y",
+        "stockanalysis.detail.history"
+      ],
+      "candidates": [
+        {
+          "value": -22.240736332619214,
+          "source": "stockanalysis.detail.history",
+          "as_of": "2026-09-23",
+          "fetched_at": "2026-09-24T14:10:09Z",
+          "confidence": "derived",
+          "unit": "percent_points"
+        }
+      ],
       "candidate_count": 1
     }
   },
   "etf": {
-    "holdings_count": null,
-    "holdings_updated": null,
-    "top_holdings": [],
+    "holdings_count": 4,
+    "holdings_updated": "Sep 22, 2026",
+    "top_holdings": [
+      {
+        "name": "Cfd Amazon.Com Inc",
+        "weight_pct": 213.98,
+        "shares": 1758435,
+        "raw": {
+          "n": "Cfd Amazon.Com Inc",
+          "as": "213.98%",
+          "sh": "1,758,435"
+        }
+      },
+      {
+        "name": "Cashusd",
+        "weight_pct": 88.28,
+        "shares": 725456,
+        "raw": {
+          "n": "Cashusd",
+          "as": "88.28%",
+          "sh": "725,456"
+        }
+      },
+      {
+        "name": "Net Other Assets",
+        "weight_pct": -2.24,
+        "shares": 18378,
+        "raw": {
+          "n": "Net Other Assets",
+          "as": "-2.24%",
+          "sh": "18,378"
+        }
+      },
+      {
+        "name": "Cfd Amazon.Com Inc",
+        "weight_pct": -200.02,
+        "shares": 6360,
+        "raw": {
+          "n": "Cfd Amazon.Com Inc",
+          "as": "-200.02%",
+          "sh": "6,360"
+        }
+      }
+    ],
     "asset_allocation": null,
     "sectors": null,
     "countries": null,
-    "classification": null,
+    "classification": {
+      "is_leveraged": true,
+      "leverage_factor": 2.0,
+      "is_inverse": true,
+      "is_single_stock": true,
+      "underlying": "Amazon",
+      "source": "stockanalysis.overview.description",
+      "confidence": "high"
+    },
     "yahoo_funds_data_available": false
   },
   "financials": null,
   "sources": {
     "yf": false,
-    "stockanalysis": false,
+    "stockanalysis": true,
     "stockanalysis_yf_fallback": false,
     "stockanalysis_etf_catalog": true,
     "slickcharts": false
   },
   "source_files": {
     "yf": null,
-    "stockanalysis": null,
+    "stockanalysis": "computed/data-supply/etf-detail/payloads/AMZO.json",
     "stockanalysis_yf_fallback": null,
     "stockanalysis_etf_catalog": "stockanalysis/etf_universe.json",
     "slickcharts": null
   },
   "resolver": {
     "version": "market-facts-resolver/v1",
-    "detail_authority": "data_supply:unavailable",
+    "detail_authority": "data_supply:fresh_primary",
     "field_source_policy": {
       "price": [
         "yf",
