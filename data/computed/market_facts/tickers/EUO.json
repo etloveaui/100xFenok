@@ -2,10 +2,10 @@
   "schema_version": "market-facts/v1",
   "ticker": "EUO",
   "asset_type": "etf",
-  "generated_at": "2026-09-21T01:42:22Z",
-  "source_as_of": null,
+  "generated_at": "2026-09-24T17:43:30Z",
+  "source_as_of": "2026-09-24",
   "source_as_of_scope": "selected_price_fact",
-  "source_as_of_reason": "selected price fact has no provider source date",
+  "source_as_of_reason": null,
   "identity": {
     "name": "EUO",
     "exchange": null,
@@ -16,11 +16,171 @@
     "category": null
   },
   "facts": {
+    "price": {
+      "value": 31.27,
+      "source": "stockanalysis.quote",
+      "as_of": "2026-09-24",
+      "fetched_at": "2026-09-24T17:24:00Z",
+      "confidence": "observed",
+      "policy": [
+        "yf",
+        "yf.fast_info",
+        "stockanalysis.quote",
+        "yf.stockanalysis_fallback.quote",
+        "slickcharts"
+      ],
+      "candidates": [
+        {
+          "value": 31.27,
+          "source": "stockanalysis.quote",
+          "as_of": "2026-09-24",
+          "fetched_at": "2026-09-24T17:24:00Z",
+          "confidence": "observed"
+        }
+      ],
+      "candidate_count": 1
+    },
+    "previous_close": {
+      "value": 31.26,
+      "source": "stockanalysis.quote",
+      "as_of": "2026-09-24",
+      "fetched_at": "2026-09-24T17:24:00Z",
+      "confidence": "observed",
+      "policy": [
+        "yf",
+        "stockanalysis.quote",
+        "yf.stockanalysis_fallback.quote"
+      ],
+      "candidates": [
+        {
+          "value": 31.26,
+          "source": "stockanalysis.quote",
+          "as_of": "2026-09-24",
+          "fetched_at": "2026-09-24T17:24:00Z",
+          "confidence": "observed"
+        }
+      ],
+      "candidate_count": 1
+    },
+    "change": {
+      "value": 0.01,
+      "source": "stockanalysis.quote",
+      "as_of": "2026-09-24",
+      "fetched_at": "2026-09-24T17:24:00Z",
+      "confidence": "observed",
+      "policy": [
+        "stockanalysis.quote",
+        "yf",
+        "yf.derived",
+        "yf.stockanalysis_fallback.quote"
+      ],
+      "candidates": [
+        {
+          "value": 0.01,
+          "source": "stockanalysis.quote",
+          "as_of": "2026-09-24",
+          "fetched_at": "2026-09-24T17:24:00Z",
+          "confidence": "observed"
+        }
+      ],
+      "candidate_count": 1
+    },
+    "change_pct": {
+      "value": 0.03,
+      "source": "stockanalysis.quote",
+      "as_of": "2026-09-24",
+      "fetched_at": "2026-09-24T17:24:00Z",
+      "confidence": "observed",
+      "policy": [
+        "stockanalysis.quote",
+        "yf",
+        "yf.derived",
+        "yf.stockanalysis_fallback.quote"
+      ],
+      "candidates": [
+        {
+          "value": 0.03,
+          "source": "stockanalysis.quote",
+          "as_of": "2026-09-24",
+          "fetched_at": "2026-09-24T17:24:00Z",
+          "confidence": "observed"
+        }
+      ],
+      "candidate_count": 1
+    },
+    "total_assets": {
+      "value": 33720000.0,
+      "source": "stockanalysis.overview",
+      "as_of": "2026-09-24",
+      "fetched_at": "2026-09-24T17:24:00Z",
+      "confidence": "observed",
+      "policy": [
+        "yf",
+        "stockanalysis.overview",
+        "yf.stockanalysis_fallback.overview"
+      ],
+      "candidates": [
+        {
+          "value": 33720000.0,
+          "source": "stockanalysis.overview",
+          "as_of": "2026-09-24",
+          "fetched_at": "2026-09-24T17:24:00Z",
+          "confidence": "observed"
+        }
+      ],
+      "candidate_count": 1
+    },
+    "beta": {
+      "value": -0.34,
+      "source": "stockanalysis.overview",
+      "as_of": "2026-09-24",
+      "fetched_at": "2026-09-24T17:24:00Z",
+      "confidence": "observed",
+      "policy": [
+        "yf",
+        "stockanalysis.overview",
+        "yf.stockanalysis_fallback.overview"
+      ],
+      "candidates": [
+        {
+          "value": -0.34,
+          "source": "stockanalysis.overview",
+          "as_of": "2026-09-24",
+          "fetched_at": "2026-09-24T17:24:00Z",
+          "confidence": "observed"
+        }
+      ],
+      "candidate_count": 1
+    },
+    "expense_ratio": {
+      "value": 0.95,
+      "source": "stockanalysis.overview",
+      "as_of": "2026-09-24",
+      "fetched_at": "2026-09-24T17:24:00Z",
+      "confidence": "observed",
+      "unit": "percent_points",
+      "policy": [
+        "yf",
+        "stockanalysis.overview",
+        "yf.stockanalysis_fallback.overview"
+      ],
+      "candidates": [
+        {
+          "value": 0.95,
+          "source": "stockanalysis.overview",
+          "as_of": "2026-09-24",
+          "fetched_at": "2026-09-24T17:24:00Z",
+          "confidence": "observed",
+          "unit": "percent_points"
+        }
+      ],
+      "candidate_count": 1
+    },
     "return_1m": {
-      "value": 3.303,
-      "source": "stockanalysis.etf_universe.performance",
-      "as_of": null,
-      "fetched_at": "2026-09-21T01:14:16Z",
+      "value": 5.733,
+      "source": "stockanalysis.detail.performance",
+      "as_of": "2026-09-24",
+      "fetched_at": "2026-09-24T17:24:00Z",
       "confidence": "observed",
       "unit": "percent_points",
       "policy": [
@@ -31,6 +191,14 @@
       ],
       "candidates": [
         {
+          "value": 5.733,
+          "source": "stockanalysis.detail.performance",
+          "as_of": "2026-09-24",
+          "fetched_at": "2026-09-24T17:24:00Z",
+          "confidence": "observed",
+          "unit": "percent_points"
+        },
+        {
           "value": 3.303,
           "source": "stockanalysis.etf_universe.performance",
           "as_of": null,
@@ -39,13 +207,36 @@
           "unit": "percent_points"
         }
       ],
+      "candidate_count": 2
+    },
+    "return_3m": {
+      "value": 0.8061915511125444,
+      "source": "stockanalysis.detail.history",
+      "as_of": "2026-09-23",
+      "fetched_at": "2026-09-24T17:24:00Z",
+      "confidence": "derived",
+      "unit": "percent_points",
+      "policy": [
+        "yf.history_1y",
+        "stockanalysis.detail.history"
+      ],
+      "candidates": [
+        {
+          "value": 0.8061915511125444,
+          "source": "stockanalysis.detail.history",
+          "as_of": "2026-09-23",
+          "fetched_at": "2026-09-24T17:24:00Z",
+          "confidence": "derived",
+          "unit": "percent_points"
+        }
+      ],
       "candidate_count": 1
     },
     "return_ytd": {
-      "value": 8.112,
-      "source": "stockanalysis.etf_universe.performance",
-      "as_of": null,
-      "fetched_at": "2026-09-21T01:14:16Z",
+      "value": 10.342,
+      "source": "stockanalysis.detail.performance",
+      "as_of": "2026-09-24",
+      "fetched_at": "2026-09-24T17:24:00Z",
       "confidence": "observed",
       "unit": "percent_points",
       "policy": [
@@ -56,6 +247,14 @@
         "yf"
       ],
       "candidates": [
+        {
+          "value": 10.342,
+          "source": "stockanalysis.detail.performance",
+          "as_of": "2026-09-24",
+          "fetched_at": "2026-09-24T17:24:00Z",
+          "confidence": "observed",
+          "unit": "percent_points"
+        },
         {
           "value": 8.112,
           "source": "stockanalysis.etf_universe.performance",
@@ -65,13 +264,13 @@
           "unit": "percent_points"
         }
       ],
-      "candidate_count": 1
+      "candidate_count": 2
     },
     "return_1y": {
-      "value": 8.487,
-      "source": "stockanalysis.etf_universe.performance",
-      "as_of": null,
-      "fetched_at": "2026-09-21T01:14:16Z",
+      "value": 12.62,
+      "source": "stockanalysis.detail.performance",
+      "as_of": "2026-09-24",
+      "fetched_at": "2026-09-24T17:24:00Z",
       "confidence": "observed",
       "unit": "percent_points",
       "policy": [
@@ -83,6 +282,14 @@
       ],
       "candidates": [
         {
+          "value": 12.62,
+          "source": "stockanalysis.detail.performance",
+          "as_of": "2026-09-24",
+          "fetched_at": "2026-09-24T17:24:00Z",
+          "confidence": "observed",
+          "unit": "percent_points"
+        },
+        {
           "value": 8.487,
           "source": "stockanalysis.etf_universe.performance",
           "as_of": null,
@@ -91,13 +298,36 @@
           "unit": "percent_points"
         }
       ],
+      "candidate_count": 2
+    },
+    "return_3y_avg": {
+      "value": 4.606782170682,
+      "source": "stockanalysis.detail.history",
+      "as_of": "2026-09-01",
+      "fetched_at": "2026-09-24T17:24:00Z",
+      "confidence": "derived",
+      "unit": "percent_points",
+      "policy": [
+        "yf",
+        "stockanalysis.detail.history"
+      ],
+      "candidates": [
+        {
+          "value": 4.606782170682,
+          "source": "stockanalysis.detail.history",
+          "as_of": "2026-09-01",
+          "fetched_at": "2026-09-24T17:24:00Z",
+          "confidence": "derived",
+          "unit": "percent_points"
+        }
+      ],
       "candidate_count": 1
     },
     "return_5y_avg": {
-      "value": 4.981,
-      "source": "stockanalysis.etf_universe.performance",
-      "as_of": null,
-      "fetched_at": "2026-09-21T01:14:16Z",
+      "value": 5.04,
+      "source": "stockanalysis.detail.performance",
+      "as_of": "2026-09-24",
+      "fetched_at": "2026-09-24T17:24:00Z",
       "confidence": "observed",
       "unit": "percent_points",
       "policy": [
@@ -108,6 +338,14 @@
       ],
       "candidates": [
         {
+          "value": 5.04,
+          "source": "stockanalysis.detail.performance",
+          "as_of": "2026-09-24",
+          "fetched_at": "2026-09-24T17:24:00Z",
+          "confidence": "observed",
+          "unit": "percent_points"
+        },
+        {
           "value": 4.981,
           "source": "stockanalysis.etf_universe.performance",
           "as_of": null,
@@ -116,13 +354,13 @@
           "unit": "percent_points"
         }
       ],
-      "candidate_count": 1
+      "candidate_count": 2
     },
     "return_10y_avg": {
-      "value": 2.254,
-      "source": "stockanalysis.etf_universe.performance",
-      "as_of": null,
-      "fetched_at": "2026-09-21T01:14:16Z",
+      "value": 2.734,
+      "source": "stockanalysis.detail.performance",
+      "as_of": "2026-09-24",
+      "fetched_at": "2026-09-24T17:24:00Z",
       "confidence": "observed",
       "unit": "percent_points",
       "policy": [
@@ -131,6 +369,14 @@
         "stockanalysis.etf_universe.performance"
       ],
       "candidates": [
+        {
+          "value": 2.734,
+          "source": "stockanalysis.detail.performance",
+          "as_of": "2026-09-24",
+          "fetched_at": "2026-09-24T17:24:00Z",
+          "confidence": "observed",
+          "unit": "percent_points"
+        },
         {
           "value": 2.254,
           "source": "stockanalysis.etf_universe.performance",
@@ -140,13 +386,13 @@
           "unit": "percent_points"
         }
       ],
-      "candidate_count": 1
+      "candidate_count": 2
     },
     "return_max_avg": {
-      "value": 1.215,
-      "source": "stockanalysis.etf_universe.performance",
-      "as_of": null,
-      "fetched_at": "2026-09-21T01:14:16Z",
+      "value": 1.319,
+      "source": "stockanalysis.detail.performance",
+      "as_of": "2026-09-24",
+      "fetched_at": "2026-09-24T17:24:00Z",
       "confidence": "observed",
       "unit": "percent_points",
       "policy": [
@@ -156,6 +402,14 @@
       ],
       "candidates": [
         {
+          "value": 1.319,
+          "source": "stockanalysis.detail.performance",
+          "as_of": "2026-09-24",
+          "fetched_at": "2026-09-24T17:24:00Z",
+          "confidence": "observed",
+          "unit": "percent_points"
+        },
+        {
           "value": 1.215,
           "source": "stockanalysis.etf_universe.performance",
           "as_of": null,
@@ -164,37 +418,148 @@
           "unit": "percent_points"
         }
       ],
-      "candidate_count": 1
+      "candidate_count": 2
     }
   },
   "etf": {
-    "holdings_count": null,
-    "holdings_updated": null,
-    "top_holdings": [],
+    "holdings_count": 8,
+    "holdings_updated": "Sep 23, 2026",
+    "top_holdings": [
+      {
+        "rank": 1,
+        "name": "Currency Contract - Usd",
+        "weight_pct": 201.81,
+        "shares": 69313553,
+        "raw": {
+          "no": 1,
+          "n": "Currency Contract - Usd",
+          "as": "201.81%",
+          "sh": "69,313,553"
+        }
+      },
+      {
+        "rank": 2,
+        "symbol": "#IQMM",
+        "name": "ProShares GENIUS Money Market ETF",
+        "weight_pct": 29.13,
+        "shares": 100000,
+        "raw": {
+          "no": 2,
+          "n": "ProShares GENIUS Money Market ETF",
+          "s": "#IQMM",
+          "as": "29.13%",
+          "sh": "100,000"
+        }
+      },
+      {
+        "rank": 3,
+        "symbol": "B.0 11.17.26",
+        "name": "United States Treasury Bills 0%",
+        "weight_pct": 28.95,
+        "shares": 10000000,
+        "raw": {
+          "no": 3,
+          "n": "United States Treasury Bills 0%",
+          "s": "B.0 11.17.26",
+          "as": "28.95%",
+          "sh": "10,000,000"
+        }
+      },
+      {
+        "rank": 4,
+        "name": "Bny Mellon Cash Reserve",
+        "weight_pct": 22.84,
+        "shares": 7842984,
+        "raw": {
+          "no": 4,
+          "n": "Bny Mellon Cash Reserve",
+          "as": "22.84%",
+          "sh": "7,842,984"
+        }
+      },
+      {
+        "rank": 5,
+        "symbol": "B.0 09.29.26",
+        "name": "United States Treasury Bills 0%",
+        "weight_pct": 14.55,
+        "shares": 5000000,
+        "raw": {
+          "no": 5,
+          "n": "United States Treasury Bills 0%",
+          "s": "B.0 09.29.26",
+          "as": "14.55%",
+          "sh": "5,000,000"
+        }
+      },
+      {
+        "rank": 6,
+        "name": "Euro",
+        "weight_pct": 0.72,
+        "shares": 216000,
+        "raw": {
+          "no": 6,
+          "n": "Euro",
+          "as": "0.72%",
+          "sh": "216,000"
+        }
+      },
+      {
+        "rank": 7,
+        "name": "Euro",
+        "weight_pct": -0.73,
+        "shares": 251581,
+        "raw": {
+          "no": 7,
+          "n": "Euro",
+          "as": "-0.73%",
+          "sh": "251,581"
+        }
+      },
+      {
+        "rank": 8,
+        "name": "Currency Contract - Usd",
+        "weight_pct": -197.26,
+        "shares": 59468462,
+        "raw": {
+          "no": 8,
+          "n": "Currency Contract - Usd",
+          "as": "-197.26%",
+          "sh": "59,468,462"
+        }
+      }
+    ],
     "asset_allocation": null,
     "sectors": null,
     "countries": null,
-    "classification": null,
+    "classification": {
+      "is_leveraged": false,
+      "leverage_factor": null,
+      "is_inverse": false,
+      "is_single_stock": false,
+      "underlying": null,
+      "source": "stockanalysis.overview.description",
+      "confidence": "high"
+    },
     "yahoo_funds_data_available": false
   },
   "financials": null,
   "sources": {
     "yf": false,
-    "stockanalysis": false,
+    "stockanalysis": true,
     "stockanalysis_yf_fallback": false,
     "stockanalysis_etf_catalog": true,
     "slickcharts": false
   },
   "source_files": {
     "yf": null,
-    "stockanalysis": null,
+    "stockanalysis": "computed/data-supply/etf-detail/payloads/EUO.json",
     "stockanalysis_yf_fallback": null,
     "stockanalysis_etf_catalog": "stockanalysis/etf_universe.json",
     "slickcharts": null
   },
   "resolver": {
     "version": "market-facts-resolver/v1",
-    "detail_authority": "data_supply:unavailable",
+    "detail_authority": "data_supply:fresh_primary",
     "field_source_policy": {
       "price": [
         "yf",
