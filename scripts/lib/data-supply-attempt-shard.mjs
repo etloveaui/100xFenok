@@ -188,6 +188,12 @@ export function foldWorstTuples(tuples) {
         : Object.hasOwn(worst, "failure_detail")
           ? worst
           : null;
+    if (selected.execution !== "threw" && diagnostic?.execution === "threw") {
+      return diagnostic;
+    }
+    if (selected.execution !== "threw") {
+      return selected;
+    }
     return diagnostic === null || diagnostic === selected
       ? selected
       : {

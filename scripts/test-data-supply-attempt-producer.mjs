@@ -14,6 +14,7 @@ import {
   buildAttemptRow,
   classifyEndpointResponse,
   foldWorstTuples,
+  libraryTuple,
   mergeCompositeShard,
   returnedTuple,
   threwTuple,
@@ -357,6 +358,35 @@ function rowFor(memberId, index) {
   const transport = threwTuple("transport");
   assert.equal(foldWorstTuples([ready, drift, rate]), rate);
   assert.equal(foldWorstTuples([ready, rate, transport]), rate, "equal severity keeps the first tuple");
+
+  const returnedErr = libraryTuple({
+    execution: "returned",
+    candidates: 1,
+    retryCount: 0,
+    latencyMs: 10,
+    outcome: "error",
+  });
+  const threwErr = libraryTuple({
+    execution: "threw",
+    exceptionKind: "unexpected",
+    candidates: 1,
+    retryCount: 0,
+    latencyMs: 10,
+    outcome: "error",
+    failureEntity: "FLM",
+    failureDetail: "ValueError: svelte_contract_drift",
+  });
+  const folded = foldWorstTuples([returnedErr, threwErr]);
+  assert.equal(folded.execution, "threw");
+  assert.equal(folded.failure_entity, "FLM");
+  const row = buildAttemptRow({
+    laneId: "yahoo_etf_fallback",
+    memberId: null,
+    attemptId: "test-yahoo-diagnostic",
+    observedAt: "2026-07-14T00:00:00Z",
+    tuple: folded,
+  });
+  assert.equal(validateAttemptEvidence({ schema_version: "data-supply-detection-attempts/v2", attempts: [row] }), true);
 }
 
 function permutations(values) {
