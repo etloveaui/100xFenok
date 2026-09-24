@@ -1,19 +1,6 @@
 {
   "attempts": [
     {
-      "attempts_used": 0,
-      "event_name": "schedule",
-      "failures": [],
-      "latency_ms": 0,
-      "natural": true,
-      "observed_at": "2026-09-03T01:16:16Z",
-      "outcome": "skipped_fresh",
-      "run_attempt": 1,
-      "run_id": "33702512577",
-      "schedule": "20 23 * * 1-5",
-      "shard": "1/5"
-    },
-    {
       "attempts_used": 1,
       "event_name": "schedule",
       "failures": [],
@@ -181,15 +168,28 @@
       "run_id": "35806669054",
       "schedule": "20 23 * * 1-5",
       "shard": "2/5"
+    },
+    {
+      "attempts_used": 1,
+      "event_name": "schedule",
+      "failures": [],
+      "latency_ms": 540,
+      "natural": true,
+      "observed_at": "2026-09-24T01:38:09Z",
+      "outcome": "fresh",
+      "run_attempt": 1,
+      "run_id": "35943054282",
+      "schedule": "20 23 * * 1-5",
+      "shard": "2/5"
     }
   ],
   "current": {
-    "fetched_at": "2026-09-23T01:46:06Z",
-    "history_as_of": "2026-09-22",
+    "fetched_at": "2026-09-24T01:41:03Z",
+    "history_as_of": "2026-09-23",
     "path": "data/yf/finance/IBKR.json",
-    "payload_sha256": "e93f205e6d2eb7eeb2ee8ce1ae46012c15e8d00ba1c5ec2bdd05b01f6caa2595",
-    "quote_as_of": "2026-09-22T20:00:01Z",
-    "source_as_of": "2026-09-22"
+    "payload_sha256": "85dbe5724f4138f71a00d00a26d903f15544fb3568ee21ff9a6c1a8448c4d454",
+    "quote_as_of": "2026-09-23T20:00:01Z",
+    "source_as_of": "2026-09-23"
   },
   "discovered_from": [
     "market_facts"
@@ -198,12 +198,12 @@
     "attempts_used": 1,
     "event_name": "schedule",
     "failures": [],
-    "latency_ms": 493,
+    "latency_ms": 540,
     "natural": true,
-    "observed_at": "2026-09-23T01:43:04Z",
+    "observed_at": "2026-09-24T01:38:09Z",
     "outcome": "fresh",
     "run_attempt": 1,
-    "run_id": "35806669054",
+    "run_id": "35943054282",
     "schedule": "20 23 * * 1-5",
     "shard": "2/5"
   },
@@ -218,14 +218,14 @@
   "promotion_contract": "provider_observation/v2",
   "provider_observation": {
     "event_name": "schedule",
-    "history_as_of": "2026-09-22",
-    "observed_at": "2026-09-23T01:43:04Z",
-    "payload_sha256": "90973d8b4076d6d74b6998172b9c6a156a606931b9f9c20c8a8dead33f46d414",
-    "quote_as_of": "2026-09-22T20:00:01Z",
+    "history_as_of": "2026-09-23",
+    "observed_at": "2026-09-24T01:38:09Z",
+    "payload_sha256": "516b0dc3b48369d883e5632ebffe10cfafed8360b5c62cff8c35087babacf803",
+    "quote_as_of": "2026-09-23T20:00:01Z",
     "run_attempt": 1,
-    "run_id": "35806669054",
+    "run_id": "35943054282",
     "schema_version": "provider_observation/v2",
-    "source_as_of": "2026-09-22"
+    "source_as_of": "2026-09-23"
   },
   "resolution_state": "fresh_primary",
   "retry": false,
@@ -241,5 +241,5 @@
     "source_as_of": "2026-06-29"
   },
   "ticker": "IBKR",
-  "updated_at": "2026-09-23T01:43:04Z"
+  "updated_at": "2026-09-24T01:38:09Z"
 }

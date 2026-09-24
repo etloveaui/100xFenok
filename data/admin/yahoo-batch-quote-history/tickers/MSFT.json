@@ -1,19 +1,6 @@
 {
   "attempts": [
     {
-      "attempts_used": 1,
-      "event_name": "schedule",
-      "failures": [],
-      "latency_ms": 586,
-      "natural": true,
-      "observed_at": "2026-09-01T01:52:51Z",
-      "outcome": "fresh",
-      "run_attempt": 1,
-      "run_id": "33460327385",
-      "schedule": "20 23 * * 1-5",
-      "shard": "0/5"
-    },
-    {
       "attempts_used": 0,
       "event_name": "schedule",
       "failures": [],
@@ -185,32 +172,45 @@
       "run_id": "35806669054",
       "schedule": "20 23 * * 1-5",
       "shard": "4/5"
+    },
+    {
+      "attempts_used": 1,
+      "event_name": "schedule",
+      "failures": [],
+      "latency_ms": 513,
+      "natural": true,
+      "observed_at": "2026-09-24T01:35:01Z",
+      "outcome": "fresh",
+      "run_attempt": 1,
+      "run_id": "35943054282",
+      "schedule": "20 23 * * 1-5",
+      "shard": "1/5"
     }
   ],
   "current": {
-    "fetched_at": "2026-09-23T01:42:03Z",
-    "history_as_of": "2026-09-22",
+    "fetched_at": "2026-09-24T01:37:10Z",
+    "history_as_of": "2026-09-23",
     "path": "data/yf/finance/MSFT.json",
-    "payload_sha256": "089c980e0153ff2e52021c0cef3178293a58a891c33984faf6ce3e9084832b83",
-    "quote_as_of": "2026-09-22T20:00:01Z",
-    "source_as_of": "2026-09-22"
+    "payload_sha256": "d2daa860e7e8cf9bda5318fbea061bdaee3fd361073f6d389a2aaa84fdc64d2a",
+    "quote_as_of": "2026-09-23T20:00:01Z",
+    "source_as_of": "2026-09-23"
   },
   "discovered_from": [
     "global_scouter_stock",
     "market_facts"
   ],
   "last_attempt": {
-    "attempts_used": 0,
+    "attempts_used": 1,
     "event_name": "schedule",
     "failures": [],
-    "latency_ms": 0,
+    "latency_ms": 513,
     "natural": true,
-    "observed_at": "2026-09-23T01:51:52Z",
-    "outcome": "skipped_fresh",
+    "observed_at": "2026-09-24T01:35:01Z",
+    "outcome": "fresh",
     "run_attempt": 1,
-    "run_id": "35806669054",
+    "run_id": "35943054282",
     "schedule": "20 23 * * 1-5",
-    "shard": "4/5"
+    "shard": "1/5"
   },
   "last_recovered_failure": {
     "attempts_used": 1,
@@ -235,14 +235,14 @@
   "promotion_contract": "provider_observation/v2",
   "provider_observation": {
     "event_name": "schedule",
-    "history_as_of": "2026-09-22",
-    "observed_at": "2026-09-23T01:38:41Z",
-    "payload_sha256": "358608522a95b8ca25fcc0c0efea04f6fb2cbca6f7363b69055d186f852cded1",
-    "quote_as_of": "2026-09-22T20:00:01Z",
+    "history_as_of": "2026-09-23",
+    "observed_at": "2026-09-24T01:35:01Z",
+    "payload_sha256": "50f3c3e4ea1f0adab0d76f6263cceb67b1d5e74e2c224066d5b44fcf173e997f",
+    "quote_as_of": "2026-09-23T20:00:01Z",
     "run_attempt": 1,
-    "run_id": "35806669054",
+    "run_id": "35943054282",
     "schema_version": "provider_observation/v2",
-    "source_as_of": "2026-09-22"
+    "source_as_of": "2026-09-23"
   },
   "recovered_at": "2026-09-17T01:31:25Z",
   "recovered_from_run_id": "34917681226",
@@ -253,5 +253,5 @@
   "retry": false,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "ticker": "MSFT",
-  "updated_at": "2026-09-23T01:51:52Z"
+  "updated_at": "2026-09-24T01:35:01Z"
 }

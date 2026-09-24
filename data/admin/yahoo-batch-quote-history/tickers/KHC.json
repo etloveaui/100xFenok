@@ -4,45 +4,6 @@
       "attempts_used": 1,
       "event_name": "schedule",
       "failures": [],
-      "latency_ms": 561,
-      "natural": true,
-      "observed_at": "2026-08-28T07:10:49Z",
-      "outcome": "fresh",
-      "run_attempt": 1,
-      "run_id": "33149671509",
-      "schedule": "20 23 * * 1-5",
-      "shard": "3/5"
-    },
-    {
-      "attempts_used": 1,
-      "event_name": "schedule",
-      "failures": [],
-      "latency_ms": 579,
-      "natural": true,
-      "observed_at": "2026-09-01T02:10:13Z",
-      "outcome": "fresh",
-      "run_attempt": 1,
-      "run_id": "33460327385",
-      "schedule": "20 23 * * 1-5",
-      "shard": "4/5"
-    },
-    {
-      "attempts_used": 1,
-      "event_name": "schedule",
-      "failures": [],
-      "latency_ms": 788,
-      "natural": true,
-      "observed_at": "2026-09-02T01:27:36Z",
-      "outcome": "fresh",
-      "run_attempt": 1,
-      "run_id": "33577879211",
-      "schedule": "20 23 * * 1-5",
-      "shard": "4/5"
-    },
-    {
-      "attempts_used": 1,
-      "event_name": "schedule",
-      "failures": [],
       "latency_ms": 823,
       "natural": true,
       "observed_at": "2026-09-04T01:04:03Z",
@@ -182,32 +143,71 @@
       "run_id": "35806669054",
       "schedule": "20 23 * * 1-5",
       "shard": "1/5"
+    },
+    {
+      "attempts_used": 1,
+      "event_name": "schedule",
+      "failures": [],
+      "latency_ms": 484,
+      "natural": true,
+      "observed_at": "2026-09-24T01:29:54Z",
+      "outcome": "fresh",
+      "run_attempt": 1,
+      "run_id": "35943054282",
+      "schedule": "20 23 * * 1-5",
+      "shard": "0/5"
+    },
+    {
+      "attempts_used": 0,
+      "event_name": "schedule",
+      "failures": [],
+      "latency_ms": 0,
+      "natural": true,
+      "observed_at": "2026-09-24T01:35:01Z",
+      "outcome": "skipped_fresh",
+      "run_attempt": 1,
+      "run_id": "35943054282",
+      "schedule": "20 23 * * 1-5",
+      "shard": "1/5"
+    },
+    {
+      "attempts_used": 0,
+      "event_name": "schedule",
+      "failures": [],
+      "latency_ms": 0,
+      "natural": true,
+      "observed_at": "2026-09-24T01:45:34Z",
+      "outcome": "skipped_fresh",
+      "run_attempt": 1,
+      "run_id": "35943054282",
+      "schedule": "20 23 * * 1-5",
+      "shard": "4/5"
     }
   ],
   "current": {
-    "fetched_at": "2026-09-23T01:41:50Z",
-    "history_as_of": "2026-09-22",
+    "fetched_at": "2026-09-24T01:33:49Z",
+    "history_as_of": "2026-09-23",
     "path": "data/yf/finance/KHC.json",
-    "payload_sha256": "539b7eb78b87b45eb2acdfae9bcbbe6f1bcf1ac536ce694415ee6408ae8fff95",
-    "quote_as_of": "2026-09-22T20:00:03Z",
-    "source_as_of": "2026-09-22"
+    "payload_sha256": "a8c086501038240122e337be8bd55370539534d1525777e6eb745aab42bb7e65",
+    "quote_as_of": "2026-09-23T20:00:03Z",
+    "source_as_of": "2026-09-23"
   },
   "discovered_from": [
     "global_scouter_stock",
     "market_facts"
   ],
   "last_attempt": {
-    "attempts_used": 1,
+    "attempts_used": 0,
     "event_name": "schedule",
     "failures": [],
-    "latency_ms": 522,
+    "latency_ms": 0,
     "natural": true,
-    "observed_at": "2026-09-23T01:38:41Z",
-    "outcome": "fresh",
+    "observed_at": "2026-09-24T01:45:34Z",
+    "outcome": "skipped_fresh",
     "run_attempt": 1,
-    "run_id": "35806669054",
+    "run_id": "35943054282",
     "schedule": "20 23 * * 1-5",
-    "shard": "1/5"
+    "shard": "4/5"
   },
   "last_recovered_failure": {
     "attempts_used": 1,
@@ -232,14 +232,14 @@
   "promotion_contract": "provider_observation/v2",
   "provider_observation": {
     "event_name": "schedule",
-    "history_as_of": "2026-09-22",
-    "observed_at": "2026-09-23T01:38:41Z",
-    "payload_sha256": "b1eb5b9349790839962eb8144eef6d2325bdfd969f8aa40eb2bbcb9cedf779ef",
-    "quote_as_of": "2026-09-22T20:00:03Z",
+    "history_as_of": "2026-09-23",
+    "observed_at": "2026-09-24T01:29:54Z",
+    "payload_sha256": "4e26901b23988786a32748d3405737b453ca01d97467ccbd74a15feb9bd31f3c",
+    "quote_as_of": "2026-09-23T20:00:03Z",
     "run_attempt": 1,
-    "run_id": "35806669054",
+    "run_id": "35943054282",
     "schema_version": "provider_observation/v2",
-    "source_as_of": "2026-09-22"
+    "source_as_of": "2026-09-23"
   },
   "recovered_at": "2026-09-10T01:10:13Z",
   "recovered_from_run_id": "34175958781",
@@ -250,5 +250,5 @@
   "retry": false,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "ticker": "KHC",
-  "updated_at": "2026-09-23T01:38:41Z"
+  "updated_at": "2026-09-24T01:45:34Z"
 }

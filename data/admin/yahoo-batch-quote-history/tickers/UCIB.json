@@ -1,32 +1,6 @@
 {
   "attempts": [
     {
-      "attempts_used": 0,
-      "event_name": "schedule",
-      "failures": [],
-      "latency_ms": 0,
-      "natural": true,
-      "observed_at": "2026-07-18T00:49:31Z",
-      "outcome": "skipped_fresh",
-      "run_attempt": 1,
-      "run_id": "29622560422",
-      "schedule": "20 23 * * 1-5",
-      "shard": "3/5"
-    },
-    {
-      "attempts_used": 1,
-      "event_name": "schedule",
-      "failures": [],
-      "latency_ms": 703,
-      "natural": true,
-      "observed_at": "2026-08-10T02:30:39Z",
-      "outcome": "fresh",
-      "run_attempt": 1,
-      "run_id": "31349898588",
-      "schedule": "7 0 * * 0-5",
-      "shard": "12/72"
-    },
-    {
       "attempts_used": 1,
       "event_name": "schedule",
       "failures": [],
@@ -181,65 +155,91 @@
       "run_id": "35806669054",
       "schedule": "20 23 * * 1-5",
       "shard": "2/5"
+    },
+    {
+      "attempts_used": 1,
+      "event_name": "schedule",
+      "failures": [],
+      "latency_ms": 497,
+      "natural": true,
+      "observed_at": "2026-09-24T01:29:54Z",
+      "outcome": "fresh",
+      "run_attempt": 1,
+      "run_id": "35943054282",
+      "schedule": "20 23 * * 1-5",
+      "shard": "0/5"
+    },
+    {
+      "attempts_used": 0,
+      "event_name": "schedule",
+      "failures": [],
+      "latency_ms": 0,
+      "natural": true,
+      "observed_at": "2026-09-24T01:38:09Z",
+      "outcome": "skipped_fresh",
+      "run_attempt": 1,
+      "run_id": "35943054282",
+      "schedule": "20 23 * * 1-5",
+      "shard": "2/5"
     }
   ],
   "current": {
-    "fetched_at": "2026-09-23T01:47:13Z",
-    "history_as_of": "2026-09-21",
+    "fetched_at": "2026-09-24T01:31:01Z",
+    "history_as_of": "2026-09-23",
     "path": "data/yf/finance/UCIB.json",
-    "payload_sha256": "a556ef557271b3dc1ea49831e4184193182b190dc855296969948e2203139ff8",
-    "quote_as_of": "2026-09-15T18:42:23Z",
-    "source_as_of": "2026-09-15T18:42:23Z"
+    "payload_sha256": "d0eae996406f4ed061f14571760fa1f78d15b0f56891846f201c1c3835b23df6",
+    "quote_as_of": "2026-09-23T19:58:55Z",
+    "source_as_of": "2026-09-23"
   },
   "discovered_from": [
     "market_facts"
   ],
   "last_attempt": {
-    "attempts_used": 1,
+    "attempts_used": 0,
     "event_name": "schedule",
     "failures": [],
-    "latency_ms": 490,
+    "latency_ms": 0,
     "natural": true,
-    "observed_at": "2026-09-23T01:43:04Z",
-    "outcome": "fresh",
+    "observed_at": "2026-09-24T01:38:09Z",
+    "outcome": "skipped_fresh",
     "run_attempt": 1,
-    "run_id": "35806669054",
+    "run_id": "35943054282",
     "schedule": "20 23 * * 1-5",
     "shard": "2/5"
   },
   "lkg": {
-    "fetched_at": "2026-08-10T02:34:50Z",
-    "history_as_of": "2026-08-07",
+    "fetched_at": "2026-09-23T01:47:13Z",
+    "history_as_of": "2026-09-21",
     "path": "data/admin/yahoo-batch-quote-history/lkg/UCIB.json",
-    "payload_sha256": "54fa920bf0cfe0a313ce5e9093abcec64acd88650068fd4545812e6f66939686",
-    "quote_as_of": "2026-08-04T17:47:59Z",
-    "source_as_of": "2026-08-04T17:47:59Z"
+    "payload_sha256": "a556ef557271b3dc1ea49831e4184193182b190dc855296969948e2203139ff8",
+    "quote_as_of": "2026-09-15T18:42:23Z",
+    "source_as_of": "2026-09-15T18:42:23Z"
   },
   "promotion_contract": "provider_observation/v2",
   "provider_observation": {
     "event_name": "schedule",
-    "history_as_of": "2026-09-21",
-    "observed_at": "2026-09-23T01:43:04Z",
-    "payload_sha256": "dccf6927cfd29c5623fc78b87a6ad02c06774b241bf33356d2b3db72cd2b50b3",
-    "quote_as_of": "2026-09-15T18:42:23Z",
+    "history_as_of": "2026-09-23",
+    "observed_at": "2026-09-24T01:29:54Z",
+    "payload_sha256": "9b2dc897087e5b68027d81469f20b9faa1301e927760309e9f808455f0b6dd68",
+    "quote_as_of": "2026-09-23T19:58:55Z",
     "run_attempt": 1,
-    "run_id": "35806669054",
+    "run_id": "35943054282",
     "schema_version": "provider_observation/v2",
-    "source_as_of": "2026-09-15T18:42:23Z"
+    "source_as_of": "2026-09-23"
   },
   "resolution_state": "fresh_primary",
   "retry": false,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "stale": {
     "age_business_days": 7,
-    "classified_at": "2026-08-13T00:06:17Z",
-    "classified_run_id": "31652949582",
+    "classified_at": "2026-09-24T01:29:54Z",
+    "classified_run_id": "35943054282",
     "expected_resolution": "next_natural_yahoo_run",
     "max_business_days": 6,
-    "message": "UCIB holds LKG because Yahoo source date 2026-08-04T17:47:59Z is 7 business days old, beyond the 6-day bound; it will retry on the next natural Yahoo run.",
+    "message": "UCIB holds LKG because Yahoo source date 2026-09-15T18:42:23Z is 7 business days old, beyond the 6-day bound; it will retry on the next natural Yahoo run.",
     "reason": "source_age_exceeds_lane_bound",
-    "source_as_of": "2026-08-04T17:47:59Z"
+    "source_as_of": "2026-09-15T18:42:23Z"
   },
   "ticker": "UCIB",
-  "updated_at": "2026-09-23T01:43:04Z"
+  "updated_at": "2026-09-24T01:38:09Z"
 }

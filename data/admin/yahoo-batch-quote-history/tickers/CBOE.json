@@ -2,33 +2,6 @@
   "attempts": [
     {
       "attempts_used": 1,
-      "event_name": "schedule",
-      "failures": [],
-      "latency_ms": 862,
-      "natural": true,
-      "observed_at": "2026-09-02T01:11:48Z",
-      "outcome": "fresh",
-      "run_attempt": 1,
-      "run_id": "33577879211",
-      "schedule": "20 23 * * 1-5",
-      "shard": "1/5"
-    },
-    {
-      "attempts_used": 1,
-      "error": "StockDetailValidationError: Yahoo history close must be a finite number",
-      "event_name": "schedule",
-      "failures": [],
-      "latency_ms": 544,
-      "natural": true,
-      "observed_at": "2026-09-03T01:16:16Z",
-      "outcome": "failed",
-      "run_attempt": 1,
-      "run_id": "33702512577",
-      "schedule": "20 23 * * 1-5",
-      "shard": "1/5"
-    },
-    {
-      "attempts_used": 1,
       "error": "StockDetailValidationError: Yahoo history close must be a finite number",
       "event_name": "schedule",
       "failures": [],
@@ -187,29 +160,55 @@
       "run_id": "35806669054",
       "schedule": "20 23 * * 1-5",
       "shard": "1/5"
+    },
+    {
+      "attempts_used": 1,
+      "event_name": "schedule",
+      "failures": [],
+      "latency_ms": 508,
+      "natural": true,
+      "observed_at": "2026-09-24T01:29:54Z",
+      "outcome": "fresh",
+      "run_attempt": 1,
+      "run_id": "35943054282",
+      "schedule": "20 23 * * 1-5",
+      "shard": "0/5"
+    },
+    {
+      "attempts_used": 0,
+      "event_name": "schedule",
+      "failures": [],
+      "latency_ms": 0,
+      "natural": true,
+      "observed_at": "2026-09-24T01:35:01Z",
+      "outcome": "skipped_fresh",
+      "run_attempt": 1,
+      "run_id": "35943054282",
+      "schedule": "20 23 * * 1-5",
+      "shard": "1/5"
     }
   ],
   "current": {
-    "fetched_at": "2026-09-23T01:40:57Z",
-    "history_as_of": "2026-09-22",
+    "fetched_at": "2026-09-24T01:32:57Z",
+    "history_as_of": "2026-09-23",
     "path": "data/yf/finance/CBOE.json",
-    "payload_sha256": "e523a15fe662a800fe7463a139ec82f63bd4352401b7e28b23afc8d5a1efa937",
-    "quote_as_of": "2026-09-22T20:00:00Z",
-    "source_as_of": "2026-09-22"
+    "payload_sha256": "c9c38a3d63d2753162930bfb168ab46f9525715ecdf6aaf32155513e26da2a94",
+    "quote_as_of": "2026-09-23T20:00:00Z",
+    "source_as_of": "2026-09-23"
   },
   "discovered_from": [
     "market_facts"
   ],
   "last_attempt": {
-    "attempts_used": 1,
+    "attempts_used": 0,
     "event_name": "schedule",
     "failures": [],
-    "latency_ms": 587,
+    "latency_ms": 0,
     "natural": true,
-    "observed_at": "2026-09-23T01:38:41Z",
-    "outcome": "fresh",
+    "observed_at": "2026-09-24T01:35:01Z",
+    "outcome": "skipped_fresh",
     "run_attempt": 1,
-    "run_id": "35806669054",
+    "run_id": "35943054282",
     "schedule": "20 23 * * 1-5",
     "shard": "1/5"
   },
@@ -236,14 +235,14 @@
   "promotion_contract": "provider_observation/v2",
   "provider_observation": {
     "event_name": "schedule",
-    "history_as_of": "2026-09-22",
-    "observed_at": "2026-09-23T01:38:41Z",
-    "payload_sha256": "2f8be92afde0fe4fc73aef9899af98783fcc7664d4bb4c266669e2fc9c6b257d",
-    "quote_as_of": "2026-09-22T20:00:00Z",
+    "history_as_of": "2026-09-23",
+    "observed_at": "2026-09-24T01:29:54Z",
+    "payload_sha256": "134999d1a345ddbe4eff6762d2db896af568c19856e016ae65516cfbee852888",
+    "quote_as_of": "2026-09-23T20:00:00Z",
     "run_attempt": 1,
-    "run_id": "35806669054",
+    "run_id": "35943054282",
     "schema_version": "provider_observation/v2",
-    "source_as_of": "2026-09-22"
+    "source_as_of": "2026-09-23"
   },
   "recovered_at": "2026-09-19T01:16:57Z",
   "recovered_from_run_id": "35294798817",
@@ -254,5 +253,5 @@
   "retry": false,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "ticker": "CBOE",
-  "updated_at": "2026-09-23T01:38:41Z"
+  "updated_at": "2026-09-24T01:35:01Z"
 }
