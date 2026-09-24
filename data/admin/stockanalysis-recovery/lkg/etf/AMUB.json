@@ -1,0 +1,1841 @@
+{
+  "schema_version": "stockanalysis/v1",
+  "source": "stockanalysis",
+  "asset_type": "etf",
+  "ticker": "AMUB",
+  "source_as_of": "2025-10-31T00:00:00Z",
+  "fetched_at": "2026-07-15T14:34:46Z",
+  "endpoints": {
+    "holdings": "/etf/amub/holdings/__data.json",
+    "overview": "/etf/amub/__data.json",
+    "quote": null,
+    "history_periods": {}
+  },
+  "endpoint_contracts": {
+    "overview": {
+      "format": "svelte_devalue",
+      "decoder": "svelte_devalue_node/v1",
+      "contract": "etf_detail_overview/v1"
+    },
+    "holdings": {
+      "format": "svelte_devalue",
+      "decoder": "svelte_devalue_node/v1",
+      "contract": "etf_detail_holdings/v1"
+    },
+    "quote": {
+      "format": "rest_json",
+      "contract": "stockanalysis_quote/v1"
+    },
+    "history_periods": {
+      "format": "rest_json",
+      "contract": "stockanalysis_history/v1"
+    }
+  },
+  "normalized": {
+    "holdings": [],
+    "asset_allocation": null,
+    "sectors": null,
+    "countries": null,
+    "holding_count": 0,
+    "holdings_updated": "Oct 31, 2025",
+    "classification": {
+      "is_leveraged": false,
+      "leverage_factor": null,
+      "is_inverse": false,
+      "is_single_stock": false,
+      "underlying": null,
+      "source": "stockanalysis.overview.description",
+      "confidence": "high"
+    },
+    "overview": {
+      "aum": "$37.28M",
+      "expenseRatio": "1.65%",
+      "dividendYield": "5.64%",
+      "inception": "Oct 8, 2015",
+      "provider_page": "etracs",
+      "etf_website": "http://etracs.ubs.com/product/detail/index/ussymbol/AMUB"
+    },
+    "performance": {
+      "tr1m": 2.942,
+      "trYTD": 22.9,
+      "tr1y": 25.079,
+      "cagr5y": 21.394,
+      "cagr10y": 11.16,
+      "cagrMAX": 7.963
+    },
+    "quote": null,
+    "history": null,
+    "history_periods": {}
+  },
+  "raw": {
+    "overview": {
+      "trust": {
+        "sources": [
+          {
+            "name": "S&P Global Market Intelligence",
+            "short": "S&P Global",
+            "url": "https://www.spglobal.com/market-intelligence/en"
+          },
+          {
+            "name": "CBOE",
+            "short": "CBOE",
+            "url": "https://www.cboe.com/"
+          },
+          {
+            "name": "Nasdaq UTP",
+            "short": "Nasdaq UTP",
+            "url": "https://www.utpplan.com/overview",
+            "noUtm": true
+          },
+          {
+            "name": "Finnhub",
+            "short": "Finnhub",
+            "url": "https://finnhub.io/"
+          }
+        ],
+        "topic": "overview",
+        "ticker": "AMUB",
+        "lastChecked": 1784126050685,
+        "summary": {
+          "text": "Historical data is provided by S&P Global Market Intelligence. Real-time stock price data is provided by CBOE and 15-minute delayed consolidated tape pricing data is provided by Nasdaq UTP. Several fund data points are also provided by Finnhub."
+        }
+      },
+      "type": "etf",
+      "aum": "$37.28M",
+      "nav": null,
+      "expenseRatio": "1.65%",
+      "peRatio": null,
+      "sharesOut": null,
+      "dps": "$1.27",
+      "dividendYield": "5.64%",
+      "payoutRatio": null,
+      "exDivDate": "May 29, 2026",
+      "ch1y": "+17.57%",
+      "payoutFrequency": "Quarterly",
+      "beta": null,
+      "holdings": 0,
+      "inception": "Oct 8, 2015",
+      "chart": {
+        "expiration": null,
+        "data": [
+          {
+            "t": 1784021400
+          },
+          {
+            "t": 1784021460
+          },
+          {
+            "t": 1784021520
+          },
+          {
+            "t": 1784021580
+          },
+          {
+            "t": 1784021640
+          },
+          {
+            "t": 1784021700
+          },
+          {
+            "t": 1784021760
+          },
+          {
+            "t": 1784021820
+          },
+          {
+            "t": 1784021880
+          },
+          {
+            "t": 1784021940
+          },
+          {
+            "t": 1784022000
+          },
+          {
+            "t": 1784022060
+          },
+          {
+            "t": 1784022120
+          },
+          {
+            "t": 1784022180
+          },
+          {
+            "t": 1784022240
+          },
+          {
+            "t": 1784022300
+          },
+          {
+            "c": 22.473,
+            "o": 22.473,
+            "t": 1784022360
+          },
+          {
+            "c": null,
+            "t": 1784022420
+          },
+          {
+            "c": null,
+            "t": 1784022480
+          },
+          {
+            "c": null,
+            "t": 1784022540
+          },
+          {
+            "c": null,
+            "t": 1784022600
+          },
+          {
+            "c": null,
+            "t": 1784022660
+          },
+          {
+            "c": null,
+            "t": 1784022720
+          },
+          {
+            "c": null,
+            "t": 1784022780
+          },
+          {
+            "c": null,
+            "t": 1784022840
+          },
+          {
+            "c": null,
+            "t": 1784022900
+          },
+          {
+            "c": null,
+            "t": 1784022960
+          },
+          {
+            "c": null,
+            "t": 1784023020
+          },
+          {
+            "c": null,
+            "t": 1784023080
+          },
+          {
+            "c": null,
+            "t": 1784023140
+          },
+          {
+            "c": null,
+            "t": 1784023200
+          },
+          {
+            "c": null,
+            "t": 1784023260
+          },
+          {
+            "c": null,
+            "t": 1784023320
+          },
+          {
+            "c": null,
+            "t": 1784023380
+          },
+          {
+            "c": null,
+            "t": 1784023440
+          },
+          {
+            "c": null,
+            "t": 1784023500
+          },
+          {
+            "c": null,
+            "t": 1784023560
+          },
+          {
+            "c": null,
+            "t": 1784023620
+          },
+          {
+            "c": null,
+            "t": 1784023680
+          },
+          {
+            "c": null,
+            "t": 1784023740
+          },
+          {
+            "c": null,
+            "t": 1784023800
+          },
+          {
+            "c": null,
+            "t": 1784023860
+          },
+          {
+            "c": null,
+            "t": 1784023920
+          },
+          {
+            "c": null,
+            "t": 1784023980
+          },
+          {
+            "c": null,
+            "t": 1784024040
+          },
+          {
+            "c": null,
+            "t": 1784024100
+          },
+          {
+            "c": null,
+            "t": 1784024160
+          },
+          {
+            "c": null,
+            "t": 1784024220
+          },
+          {
+            "c": null,
+            "t": 1784024280
+          },
+          {
+            "c": null,
+            "t": 1784024340
+          },
+          {
+            "c": null,
+            "t": 1784024400
+          },
+          {
+            "c": null,
+            "t": 1784024460
+          },
+          {
+            "c": null,
+            "t": 1784024520
+          },
+          {
+            "c": null,
+            "t": 1784024580
+          },
+          {
+            "c": null,
+            "t": 1784024640
+          },
+          {
+            "c": null,
+            "t": 1784024700
+          },
+          {
+            "c": null,
+            "t": 1784024760
+          },
+          {
+            "c": null,
+            "t": 1784024820
+          },
+          {
+            "c": null,
+            "t": 1784024880
+          },
+          {
+            "c": null,
+            "t": 1784024940
+          },
+          {
+            "c": null,
+            "t": 1784025000
+          },
+          {
+            "c": null,
+            "t": 1784025060
+          },
+          {
+            "c": null,
+            "t": 1784025120
+          },
+          {
+            "c": null,
+            "t": 1784025180
+          },
+          {
+            "c": null,
+            "t": 1784025240
+          },
+          {
+            "c": null,
+            "t": 1784025300
+          },
+          {
+            "c": null,
+            "t": 1784025360
+          },
+          {
+            "c": null,
+            "t": 1784025420
+          },
+          {
+            "c": null,
+            "t": 1784025480
+          },
+          {
+            "c": null,
+            "t": 1784025540
+          },
+          {
+            "c": null,
+            "t": 1784025600
+          },
+          {
+            "c": null,
+            "t": 1784025660
+          },
+          {
+            "c": null,
+            "t": 1784025720
+          },
+          {
+            "c": null,
+            "t": 1784025780
+          },
+          {
+            "c": null,
+            "t": 1784025840
+          },
+          {
+            "c": null,
+            "t": 1784025900
+          },
+          {
+            "c": null,
+            "t": 1784025960
+          },
+          {
+            "c": null,
+            "t": 1784026020
+          },
+          {
+            "c": null,
+            "t": 1784026080
+          },
+          {
+            "c": null,
+            "t": 1784026140
+          },
+          {
+            "c": null,
+            "t": 1784026200
+          },
+          {
+            "c": null,
+            "t": 1784026260
+          },
+          {
+            "c": null,
+            "t": 1784026320
+          },
+          {
+            "c": null,
+            "t": 1784026380
+          },
+          {
+            "c": null,
+            "t": 1784026440
+          },
+          {
+            "c": null,
+            "t": 1784026500
+          },
+          {
+            "c": null,
+            "t": 1784026560
+          },
+          {
+            "c": null,
+            "t": 1784026620
+          },
+          {
+            "c": null,
+            "t": 1784026680
+          },
+          {
+            "c": null,
+            "t": 1784026740
+          },
+          {
+            "c": null,
+            "t": 1784026800
+          },
+          {
+            "c": null,
+            "t": 1784026860
+          },
+          {
+            "c": null,
+            "t": 1784026920
+          },
+          {
+            "c": null,
+            "t": 1784026980
+          },
+          {
+            "c": null,
+            "t": 1784027040
+          },
+          {
+            "c": null,
+            "t": 1784027100
+          },
+          {
+            "c": null,
+            "t": 1784027160
+          },
+          {
+            "c": null,
+            "t": 1784027220
+          },
+          {
+            "c": null,
+            "t": 1784027280
+          },
+          {
+            "c": null,
+            "t": 1784027340
+          },
+          {
+            "c": null,
+            "t": 1784027400
+          },
+          {
+            "c": null,
+            "t": 1784027460
+          },
+          {
+            "c": null,
+            "t": 1784027520
+          },
+          {
+            "c": 22.41,
+            "t": 1784027580
+          },
+          {
+            "c": null,
+            "t": 1784027640
+          },
+          {
+            "c": null,
+            "t": 1784027700
+          },
+          {
+            "c": null,
+            "t": 1784027760
+          },
+          {
+            "c": null,
+            "t": 1784027820
+          },
+          {
+            "c": null,
+            "t": 1784027880
+          },
+          {
+            "c": null,
+            "t": 1784027940
+          },
+          {
+            "c": null,
+            "t": 1784028000
+          },
+          {
+            "c": null,
+            "t": 1784028060
+          },
+          {
+            "c": null,
+            "t": 1784028120
+          },
+          {
+            "c": null,
+            "t": 1784028180
+          },
+          {
+            "c": null,
+            "t": 1784028240
+          },
+          {
+            "c": null,
+            "t": 1784028300
+          },
+          {
+            "c": null,
+            "t": 1784028360
+          },
+          {
+            "c": null,
+            "t": 1784028420
+          },
+          {
+            "c": null,
+            "t": 1784028480
+          },
+          {
+            "c": null,
+            "t": 1784028540
+          },
+          {
+            "c": null,
+            "t": 1784028600
+          },
+          {
+            "c": null,
+            "t": 1784028660
+          },
+          {
+            "c": null,
+            "t": 1784028720
+          },
+          {
+            "c": null,
+            "t": 1784028780
+          },
+          {
+            "c": null,
+            "t": 1784028840
+          },
+          {
+            "c": null,
+            "t": 1784028900
+          },
+          {
+            "c": null,
+            "t": 1784028960
+          },
+          {
+            "c": null,
+            "t": 1784029020
+          },
+          {
+            "c": null,
+            "t": 1784029080
+          },
+          {
+            "c": null,
+            "t": 1784029140
+          },
+          {
+            "c": null,
+            "t": 1784029200
+          },
+          {
+            "c": null,
+            "t": 1784029260
+          },
+          {
+            "c": null,
+            "t": 1784029320
+          },
+          {
+            "c": null,
+            "t": 1784029380
+          },
+          {
+            "c": null,
+            "t": 1784029440
+          },
+          {
+            "c": null,
+            "t": 1784029500
+          },
+          {
+            "c": null,
+            "t": 1784029560
+          },
+          {
+            "c": null,
+            "t": 1784029620
+          },
+          {
+            "c": null,
+            "t": 1784029680
+          },
+          {
+            "c": null,
+            "t": 1784029740
+          },
+          {
+            "c": null,
+            "t": 1784029800
+          },
+          {
+            "c": null,
+            "t": 1784029860
+          },
+          {
+            "c": null,
+            "t": 1784029920
+          },
+          {
+            "c": null,
+            "t": 1784029980
+          },
+          {
+            "c": null,
+            "t": 1784030040
+          },
+          {
+            "c": null,
+            "t": 1784030100
+          },
+          {
+            "c": null,
+            "t": 1784030160
+          },
+          {
+            "c": null,
+            "t": 1784030220
+          },
+          {
+            "c": null,
+            "t": 1784030280
+          },
+          {
+            "c": null,
+            "t": 1784030340
+          },
+          {
+            "c": null,
+            "t": 1784030400
+          },
+          {
+            "c": null,
+            "t": 1784030460
+          },
+          {
+            "c": null,
+            "t": 1784030520
+          },
+          {
+            "c": null,
+            "t": 1784030580
+          },
+          {
+            "c": null,
+            "t": 1784030640
+          },
+          {
+            "c": null,
+            "t": 1784030700
+          },
+          {
+            "c": null,
+            "t": 1784030760
+          },
+          {
+            "c": null,
+            "t": 1784030820
+          },
+          {
+            "c": null,
+            "t": 1784030880
+          },
+          {
+            "c": null,
+            "t": 1784030940
+          },
+          {
+            "c": null,
+            "t": 1784031000
+          },
+          {
+            "c": null,
+            "t": 1784031060
+          },
+          {
+            "c": null,
+            "t": 1784031120
+          },
+          {
+            "c": null,
+            "t": 1784031180
+          },
+          {
+            "c": null,
+            "t": 1784031240
+          },
+          {
+            "c": null,
+            "t": 1784031300
+          },
+          {
+            "c": null,
+            "t": 1784031360
+          },
+          {
+            "c": null,
+            "t": 1784031420
+          },
+          {
+            "c": null,
+            "t": 1784031480
+          },
+          {
+            "c": null,
+            "t": 1784031540
+          },
+          {
+            "c": null,
+            "t": 1784031600
+          },
+          {
+            "c": null,
+            "t": 1784031660
+          },
+          {
+            "c": null,
+            "t": 1784031720
+          },
+          {
+            "c": null,
+            "t": 1784031780
+          },
+          {
+            "c": null,
+            "t": 1784031840
+          },
+          {
+            "c": null,
+            "t": 1784031900
+          },
+          {
+            "c": null,
+            "t": 1784031960
+          },
+          {
+            "c": null,
+            "t": 1784032020
+          },
+          {
+            "c": null,
+            "t": 1784032080
+          },
+          {
+            "c": null,
+            "t": 1784032140
+          },
+          {
+            "c": null,
+            "t": 1784032200
+          },
+          {
+            "c": null,
+            "t": 1784032260
+          },
+          {
+            "c": null,
+            "t": 1784032320
+          },
+          {
+            "c": null,
+            "t": 1784032380
+          },
+          {
+            "c": null,
+            "t": 1784032440
+          },
+          {
+            "c": null,
+            "t": 1784032500
+          },
+          {
+            "c": null,
+            "t": 1784032560
+          },
+          {
+            "c": null,
+            "t": 1784032620
+          },
+          {
+            "c": null,
+            "t": 1784032680
+          },
+          {
+            "c": 22.545,
+            "t": 1784032740
+          },
+          {
+            "c": 22.545,
+            "t": 1784032800
+          },
+          {
+            "c": 22.545,
+            "t": 1784032860
+          },
+          {
+            "c": null,
+            "t": 1784032920
+          },
+          {
+            "c": 22.545,
+            "t": 1784032980
+          },
+          {
+            "c": 22.545,
+            "t": 1784033040
+          },
+          {
+            "c": null,
+            "t": 1784033100
+          },
+          {
+            "c": 22.535,
+            "t": 1784033160
+          },
+          {
+            "c": null,
+            "t": 1784033220
+          },
+          {
+            "c": 22.535,
+            "t": 1784033280
+          },
+          {
+            "c": 22.535,
+            "t": 1784033340
+          },
+          {
+            "c": 22.535,
+            "t": 1784033400
+          },
+          {
+            "c": null,
+            "t": 1784033460
+          },
+          {
+            "c": 22.535,
+            "t": 1784033520
+          },
+          {
+            "c": null,
+            "t": 1784033580
+          },
+          {
+            "c": null,
+            "t": 1784033640
+          },
+          {
+            "c": 22.535,
+            "t": 1784033700
+          },
+          {
+            "c": 22.525,
+            "t": 1784033760
+          },
+          {
+            "c": 22.525,
+            "t": 1784033820
+          },
+          {
+            "c": 22.525,
+            "t": 1784033880
+          },
+          {
+            "c": 22.535,
+            "t": 1784033940
+          },
+          {
+            "c": 22.535,
+            "t": 1784034000
+          },
+          {
+            "c": 22.535,
+            "t": 1784034060
+          },
+          {
+            "c": 22.535,
+            "t": 1784034120
+          },
+          {
+            "c": 22.535,
+            "t": 1784034180
+          },
+          {
+            "c": 22.525,
+            "t": 1784034240
+          },
+          {
+            "c": null,
+            "t": 1784034300
+          },
+          {
+            "c": 22.525,
+            "t": 1784034360
+          },
+          {
+            "c": null,
+            "t": 1784034420
+          },
+          {
+            "c": 22.525,
+            "t": 1784034480
+          },
+          {
+            "c": 22.525,
+            "t": 1784034540
+          },
+          {
+            "c": null,
+            "t": 1784034600
+          },
+          {
+            "c": null,
+            "t": 1784034660
+          },
+          {
+            "c": 22.535,
+            "t": 1784034720
+          },
+          {
+            "c": 22.535,
+            "t": 1784034780
+          },
+          {
+            "c": 22.535,
+            "t": 1784034840
+          },
+          {
+            "c": 22.535,
+            "t": 1784034900
+          },
+          {
+            "c": 22.535,
+            "t": 1784034960
+          },
+          {
+            "c": null,
+            "t": 1784035020
+          },
+          {
+            "c": 22.53,
+            "t": 1784035080
+          },
+          {
+            "c": 22.53,
+            "t": 1784035140
+          },
+          {
+            "c": null,
+            "t": 1784035200
+          },
+          {
+            "c": 22.515,
+            "t": 1784035260
+          },
+          {
+            "c": 22.515,
+            "t": 1784035320
+          },
+          {
+            "c": null,
+            "t": 1784035380
+          },
+          {
+            "c": 22.525,
+            "t": 1784035440
+          },
+          {
+            "c": 22.515,
+            "t": 1784035500
+          },
+          {
+            "c": null,
+            "t": 1784035560
+          },
+          {
+            "c": 22.515,
+            "t": 1784035620
+          },
+          {
+            "c": 22.505,
+            "t": 1784035680
+          },
+          {
+            "c": 22.51,
+            "t": 1784035740
+          },
+          {
+            "c": 22.515,
+            "t": 1784035800
+          },
+          {
+            "c": null,
+            "t": 1784035860
+          },
+          {
+            "c": 22.515,
+            "t": 1784035920
+          },
+          {
+            "c": 22.515,
+            "t": 1784035980
+          },
+          {
+            "c": null,
+            "t": 1784036040
+          },
+          {
+            "c": 22.515,
+            "t": 1784036100
+          },
+          {
+            "c": 22.515,
+            "t": 1784036160
+          },
+          {
+            "c": 22.515,
+            "t": 1784036220
+          },
+          {
+            "c": 22.525,
+            "t": 1784036280
+          },
+          {
+            "c": 22.525,
+            "t": 1784036340
+          },
+          {
+            "c": 22.525,
+            "t": 1784036400
+          },
+          {
+            "c": null,
+            "t": 1784036460
+          },
+          {
+            "c": 22.525,
+            "t": 1784036520
+          },
+          {
+            "c": 22.525,
+            "t": 1784036580
+          },
+          {
+            "c": 22.525,
+            "t": 1784036640
+          },
+          {
+            "c": 22.525,
+            "t": 1784036700
+          },
+          {
+            "c": 22.525,
+            "t": 1784036760
+          },
+          {
+            "c": 22.515,
+            "t": 1784036820
+          },
+          {
+            "c": 22.515,
+            "t": 1784036880
+          },
+          {
+            "c": 22.515,
+            "t": 1784036940
+          },
+          {
+            "c": 22.515,
+            "t": 1784037000
+          },
+          {
+            "c": null,
+            "t": 1784037060
+          },
+          {
+            "c": null,
+            "t": 1784037120
+          },
+          {
+            "c": 22.515,
+            "t": 1784037180
+          },
+          {
+            "c": null,
+            "t": 1784037240
+          },
+          {
+            "c": null,
+            "t": 1784037300
+          },
+          {
+            "c": 22.515,
+            "t": 1784037360
+          },
+          {
+            "c": null,
+            "t": 1784037420
+          },
+          {
+            "c": 22.515,
+            "t": 1784037480
+          },
+          {
+            "c": 22.535,
+            "t": 1784037540
+          },
+          {
+            "c": 22.545,
+            "t": 1784037600
+          },
+          {
+            "c": 22.545,
+            "t": 1784037660
+          },
+          {
+            "c": null,
+            "t": 1784037720
+          },
+          {
+            "c": null,
+            "t": 1784037780
+          },
+          {
+            "c": 22.545,
+            "t": 1784037840
+          },
+          {
+            "c": 22.545,
+            "t": 1784037900
+          },
+          {
+            "c": 22.545,
+            "t": 1784037960
+          },
+          {
+            "c": 22.555,
+            "t": 1784038020
+          },
+          {
+            "c": 22.555,
+            "t": 1784038080
+          },
+          {
+            "c": 22.565,
+            "t": 1784038140
+          },
+          {
+            "c": 22.565,
+            "t": 1784038200
+          },
+          {
+            "c": 22.565,
+            "t": 1784038260
+          },
+          {
+            "c": 22.565,
+            "t": 1784038320
+          },
+          {
+            "c": 22.565,
+            "t": 1784038380
+          },
+          {
+            "c": null,
+            "t": 1784038440
+          },
+          {
+            "c": 22.565,
+            "t": 1784038500
+          },
+          {
+            "c": null,
+            "t": 1784038560
+          },
+          {
+            "c": null,
+            "t": 1784038620
+          },
+          {
+            "c": 22.565,
+            "t": 1784038680
+          },
+          {
+            "c": 22.565,
+            "t": 1784038740
+          },
+          {
+            "c": 22.565,
+            "t": 1784038800
+          },
+          {
+            "c": 22.565,
+            "t": 1784038860
+          },
+          {
+            "c": 22.565,
+            "t": 1784038920
+          },
+          {
+            "c": 22.565,
+            "t": 1784038980
+          },
+          {
+            "c": 22.565,
+            "t": 1784039040
+          },
+          {
+            "c": 22.575,
+            "t": 1784039100
+          },
+          {
+            "c": 22.575,
+            "t": 1784039160
+          },
+          {
+            "c": 22.575,
+            "t": 1784039220
+          },
+          {
+            "c": 22.575,
+            "t": 1784039280
+          },
+          {
+            "c": 22.575,
+            "t": 1784039340
+          },
+          {
+            "c": 22.575,
+            "t": 1784039400
+          },
+          {
+            "c": null,
+            "t": 1784039460
+          },
+          {
+            "c": 22.575,
+            "t": 1784039520
+          },
+          {
+            "c": 22.575,
+            "t": 1784039580
+          },
+          {
+            "c": 22.575,
+            "t": 1784039640
+          },
+          {
+            "c": 22.575,
+            "t": 1784039700
+          },
+          {
+            "c": null,
+            "t": 1784039760
+          },
+          {
+            "c": 22.575,
+            "t": 1784039820
+          },
+          {
+            "c": 22.585,
+            "t": 1784039880
+          },
+          {
+            "c": 22.585,
+            "t": 1784039940
+          },
+          {
+            "c": 22.585,
+            "t": 1784040000
+          },
+          {
+            "c": 22.585,
+            "t": 1784040060
+          },
+          {
+            "c": 22.585,
+            "t": 1784040120
+          },
+          {
+            "c": 22.595,
+            "t": 1784040180
+          },
+          {
+            "c": 22.595,
+            "t": 1784040240
+          },
+          {
+            "c": null,
+            "t": 1784040300
+          },
+          {
+            "c": 22.595,
+            "t": 1784040360
+          },
+          {
+            "c": 22.595,
+            "t": 1784040420
+          },
+          {
+            "c": 22.595,
+            "t": 1784040480
+          },
+          {
+            "c": 22.595,
+            "t": 1784040540
+          },
+          {
+            "c": 22.585,
+            "t": 1784040600
+          },
+          {
+            "c": 22.585,
+            "t": 1784040660
+          },
+          {
+            "c": 22.575,
+            "t": 1784040720
+          },
+          {
+            "c": null,
+            "t": 1784040780
+          },
+          {
+            "c": 22.575,
+            "t": 1784040840
+          },
+          {
+            "c": 22.575,
+            "t": 1784040900
+          },
+          {
+            "c": 22.575,
+            "t": 1784040960
+          },
+          {
+            "c": 22.575,
+            "t": 1784041020
+          },
+          {
+            "c": 22.575,
+            "t": 1784041080
+          },
+          {
+            "c": 22.575,
+            "t": 1784041140
+          },
+          {
+            "c": 22.575,
+            "t": 1784041200
+          },
+          {
+            "c": 22.575,
+            "t": 1784041260
+          },
+          {
+            "c": 22.575,
+            "t": 1784041320
+          },
+          {
+            "c": 22.575,
+            "t": 1784041380
+          },
+          {
+            "c": 22.575,
+            "t": 1784041440
+          },
+          {
+            "c": 22.575,
+            "t": 1784041500
+          },
+          {
+            "c": 22.575,
+            "t": 1784041560
+          },
+          {
+            "c": 22.555,
+            "t": 1784041620
+          },
+          {
+            "c": 22.555,
+            "t": 1784041680
+          },
+          {
+            "c": 22.555,
+            "t": 1784041740
+          },
+          {
+            "c": 22.555,
+            "t": 1784041800
+          },
+          {
+            "c": 22.545,
+            "t": 1784041860
+          },
+          {
+            "c": 22.545,
+            "t": 1784041920
+          },
+          {
+            "c": 22.545,
+            "t": 1784041980
+          },
+          {
+            "c": 22.535,
+            "t": 1784042040
+          },
+          {
+            "c": 22.54,
+            "t": 1784042100
+          },
+          {
+            "c": 22.535,
+            "t": 1784042160
+          },
+          {
+            "c": 22.535,
+            "t": 1784042220
+          },
+          {
+            "c": 22.545,
+            "t": 1784042280
+          },
+          {
+            "c": 22.545,
+            "t": 1784042340
+          },
+          {
+            "c": 22.555,
+            "t": 1784042400
+          },
+          {
+            "c": 22.555,
+            "t": 1784042460
+          },
+          {
+            "c": null,
+            "t": 1784042520
+          },
+          {
+            "c": null,
+            "t": 1784042580
+          },
+          {
+            "c": 22.545,
+            "t": 1784042640
+          },
+          {
+            "c": null,
+            "t": 1784042700
+          },
+          {
+            "c": 22.545,
+            "t": 1784042760
+          },
+          {
+            "c": 22.545,
+            "t": 1784042820
+          },
+          {
+            "c": 22.555,
+            "t": 1784042880
+          },
+          {
+            "c": 22.56,
+            "t": 1784042940
+          },
+          {
+            "c": 22.56,
+            "t": 1784043000
+          },
+          {
+            "c": 22.565,
+            "t": 1784043060
+          },
+          {
+            "c": 22.555,
+            "t": 1784043120
+          },
+          {
+            "c": 22.555,
+            "t": 1784043180
+          },
+          {
+            "c": 22.565,
+            "t": 1784043240
+          },
+          {
+            "c": 22.565,
+            "t": 1784043300
+          },
+          {
+            "c": 22.575,
+            "t": 1784043360
+          },
+          {
+            "c": 22.575,
+            "t": 1784043420
+          },
+          {
+            "c": 22.575,
+            "t": 1784043480
+          },
+          {
+            "c": 22.575,
+            "t": 1784043540
+          },
+          {
+            "c": 22.565,
+            "t": 1784043600
+          },
+          {
+            "c": 22.565,
+            "t": 1784043660
+          },
+          {
+            "c": 22.565,
+            "t": 1784043720
+          },
+          {
+            "c": 22.565,
+            "t": 1784043780
+          },
+          {
+            "c": 22.555,
+            "t": 1784043840
+          },
+          {
+            "c": 22.565,
+            "t": 1784043900
+          },
+          {
+            "c": 22.565,
+            "t": 1784043960
+          },
+          {
+            "c": 22.565,
+            "t": 1784044020
+          },
+          {
+            "c": 22.565,
+            "t": 1784044080
+          },
+          {
+            "c": 22.565,
+            "t": 1784044140
+          },
+          {
+            "c": 22.565,
+            "t": 1784044200
+          },
+          {
+            "c": 22.565,
+            "t": 1784044260
+          },
+          {
+            "c": 22.545,
+            "t": 1784044320
+          },
+          {
+            "c": 22.535,
+            "t": 1784044380
+          },
+          {
+            "c": 22.545,
+            "t": 1784044440
+          },
+          {
+            "c": 22.545,
+            "t": 1784044500
+          },
+          {
+            "c": 22.54,
+            "t": 1784044560
+          },
+          {
+            "c": 22.555,
+            "t": 1784044620
+          },
+          {
+            "c": 22.545,
+            "t": 1784044680
+          },
+          {
+            "c": 22.535,
+            "t": 1784044740
+          },
+          {
+            "c": 22.5442,
+            "t": 1784044800
+          }
+        ]
+      },
+      "description": "ETRACS Alerian MLP Index ETN is an exchange traded note launched by UBS AG, London Branch. The note seeks to track the performance of the Alerian MLP Index. The index represents the public equity markets. It comprises of 50 master limited partnerships that are engaged in the energy sector and involved in the transportation, storage, processing or production of energy commodities. The index seeks to track the companies across all market capitalizations. The ETN will mature on July 18, 2042. ETRACS Alerian MLP Index ETN was formed on July 17, 2012 and is domiciled in the United States.",
+      "infoTable": [
+        [
+          "Asset Class",
+          "Equity"
+        ],
+        [
+          "Category",
+          "Energy Limited Partnership"
+        ],
+        [
+          "Region",
+          "North America"
+        ],
+        [
+          "Stock Exchange",
+          "NYSEARCA"
+        ],
+        [
+          "Ticker Symbol",
+          "AMUB"
+        ],
+        [
+          "Provider",
+          "ETRACS"
+        ],
+        [
+          "Index Tracked",
+          "Alerian MLP"
+        ]
+      ],
+      "etf_website": "http://etracs.ubs.com/product/detail/index/ussymbol/AMUB",
+      "provider_page": "etracs",
+      "holdingsTable": {
+        "count": 0,
+        "updated": "Oct 31, 2025",
+        "top10": 0,
+        "holdings": []
+      },
+      "dividendTable": [
+        {
+          "dt": "2026-05-29",
+          "amt": 0.3242,
+          "pay": "2026-06-08"
+        },
+        {
+          "dt": "2026-03-02",
+          "amt": 0.3202,
+          "pay": "2026-03-10"
+        },
+        {
+          "dt": "2025-12-01",
+          "amt": 0.3168,
+          "pay": "2025-12-09"
+        },
+        {
+          "dt": "2025-08-28",
+          "amt": 0.3094,
+          "pay": "2025-09-08"
+        },
+        {
+          "dt": "2025-05-29",
+          "amt": 0.3085,
+          "pay": "2025-06-06"
+        },
+        {
+          "dt": "2025-03-03",
+          "amt": 0.2996,
+          "pay": "2025-03-11"
+        }
+      ],
+      "news": {
+        "exp": "1784131190060",
+        "data": [
+          {
+            "url": "https://www.etftrends.com/energy-infrastructure-content-hub/visualizing-annual-mlp-distribution-growth/",
+            "img": "https://cdn.snapi.dev/images/v1/h/u/w/reit37-3799684.jpg",
+            "title": "Visualizing Annual MLP Distribution Growth",
+            "text": "Reliable distribution growth remains one of the most important tailwinds for midstream MLPs. After all, investors often allocate to this space primarily for its attractive yield and consistent income.",
+            "source": "ETF Trends",
+            "type": "Article",
+            "tickers": [
+              "#AMJB",
+              "#AMLP",
+              "#MLPB",
+              "#MLPR"
+            ],
+            "time": "Jul 14, 2026, 7:12 AM EDT",
+            "ago": "1 day ago"
+          },
+          {
+            "url": "https://www.etftrends.com/energy-infrastructure-content-hub/1q26-midstream-mlp-buybacks-steady-start-year/",
+            "img": "https://cdn.snapi.dev/images/v1/r/o/t/reit18-3719091.jpg",
+            "title": "1Q26 Midstream/MLP Buybacks: Steady Start to Year",
+            "text": "Key Takeaways Six constituents in the broad Alerian Midstream Energy Index (AMNA) spent a combined $818 million on equity repurchases in 1Q26. Cheniere Energy (LNG) continued to dominate repurchase ac...",
+            "source": "ETF Trends",
+            "type": "Article",
+            "tickers": [
+              "$MLP",
+              "#AMJB",
+              "#AMLP",
+              "#ENFR",
+              "#MLPB",
+              "#MLPR"
+            ],
+            "time": "May 26, 2026, 7:33 AM EDT",
+            "ago": "7 weeks ago"
+          },
+          {
+            "url": "https://www.businesswire.com/news/home/20241121082975/en/UBS-Declares-Quarterly-Coupon-Payments-on-Exchange-Traded-Note-AMUB/",
+            "img": "https://cdn.snapi.dev/images/v1/b/j/p/press4-2772479.jpg",
+            "title": "UBS Declares Quarterly Coupon Payments on Exchange Traded Note: AMUB",
+            "text": "NEW YORK--(BUSINESS WIRE)--UBS Investment Bank today announced coupon payments for the ETRACS Alerian MLP Index ETN Series B (NYSE Arca: “AMUB”), traded on the NYSE Arca. NYSE Ticker ETN Name and Pros...",
+            "source": "Business Wire",
+            "type": "Article",
+            "tickers": null,
+            "time": "Nov 21, 2024, 4:30 PM EST",
+            "ago": "1 year ago"
+          },
+          {
+            "url": "https://www.businesswire.com/news/home/20240821691949/en/UBS-declares-quarterly-coupon-payments-on-Exchange-Traded-Note-AMUB/",
+            "img": "https://cdn.snapi.dev/images/v1/p/r/press14-2602675.jpg",
+            "title": "UBS declares quarterly coupon payments on Exchange Traded Note: AMUB",
+            "text": "NEW YORK--(BUSINESS WIRE)--UBS Investment Bank today announced coupon payments for the ETRACS Alerian MLP Index ETN Series B (NYSE Arca: “AMUB”), traded on the NYSE Arca. NYSE Ticker ETN Name and Pros...",
+            "source": "Business Wire",
+            "type": "Article",
+            "tickers": null,
+            "time": "Aug 21, 2024, 4:30 PM EDT",
+            "ago": "2 years ago"
+          }
+        ]
+      },
+      "config": {
+        "no1d": false
+      },
+      "changes": {
+        "price1w": 22.147,
+        "price1m": 21.9,
+        "price3m": 21.294,
+        "price6m": 19.835,
+        "priceYTD": 18.891,
+        "price1y": 19.175,
+        "price5y": 11.83,
+        "priceMAX": 21.61
+      },
+      "performance": {
+        "tr1m": 2.942,
+        "trYTD": 22.9,
+        "tr1y": 25.079,
+        "cagr5y": 21.394,
+        "cagr10y": 11.16,
+        "cagrMAX": 7.963
+      }
+    },
+    "holdings": {},
+    "quote": null,
+    "history": null,
+    "history_periods": {}
+  },
+  "detail_status": "stockanalysis_partial",
+  "partial_reason_codes": [
+    "holdings_unavailable",
+    "holdings_surface_omits_holdings",
+    "holdings_count_unavailable",
+    "holdings_date_unavailable",
+    "holdings_countries_unavailable",
+    "history_deferred_initial_reconcile",
+    "quote_deferred_initial_reconcile"
+  ]
+}
