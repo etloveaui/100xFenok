@@ -1,62 +1,35 @@
 {
-  "schema_version": "producer-lkg-key-state/v2",
+  "schema_version": "producer-lkg-key-state/v1",
   "lane_id": "us_indices_daily",
   "key": "nasdaq100.json",
-  "updated_at": "2026-09-22T23:58:37.684Z",
-  "resolution_state": "fresh_primary",
-  "retry": false,
+  "updated_at": "2026-09-24T00:14:40.983Z",
+  "resolution_state": "lkg_primary",
+  "retry": true,
   "current": {
-    "path": "data/indices/nasdaq100.json",
+    "path": "data/admin/us-indices-daily/lkg/nasdaq100.json",
     "payload_sha256": "d1a95d69c85505321b3b4a14b967931cad157c5f292ab9758867d8566d83de58",
     "source_as_of": "2026-09-22"
   },
-  "canonical_ref": "data/indices/nasdaq100.json",
   "lkg": {
     "path": "data/admin/us-indices-daily/lkg/nasdaq100.json",
     "payload_sha256": "d1a95d69c85505321b3b4a14b967931cad157c5f292ab9758867d8566d83de58",
     "source_as_of": "2026-09-22"
   },
-  "latest_failure": null,
+  "canonical_ref": "data/indices/nasdaq100.json",
+  "latest_failure": {
+    "run_id": "35936998318",
+    "run_attempt": 1,
+    "event_name": "schedule",
+    "observed_at": "2026-09-24T00:14:40.983Z",
+    "failure_kind": "schema_drift",
+    "error": "Error: Yahoo chart row must have a valid date and finite positive value for ^NDX"
+  },
   "recovered_from_run_id": "33696334752",
   "recovery_run_id": "33818784791",
   "recovery_run_attempt": 1,
   "recovery_event_name": "schedule",
   "recovered_at": "2026-09-03T23:53:32.990Z",
-  "last_run_id": "35799692473",
+  "last_run_id": "35936998318",
   "last_run_attempt": 1,
-  "last_event_name": "schedule",
-  "promotion_contract": "provider_observation/v2",
-  "promotion_proof_required": true,
-  "provider_observation": {
-    "schema_version": "provider_observation/v2",
-    "payload_sha256": "5e6b454e5b14e605158c4190c756f9f9492be04055b94093f64e6f9bd1a3482d",
-    "candidate_payload_sha256": "d1a95d69c85505321b3b4a14b967931cad157c5f292ab9758867d8566d83de58",
-    "payload_ref": "data/admin/us-indices-daily/provider-observations/5e6b454e5b14e605158c4190c756f9f9492be04055b94093f64e6f9bd1a3482d.json",
-    "source_as_of": "2026-09-22",
-    "run_id": "35799692473",
-    "run_attempt": 1,
-    "event_name": "schedule",
-    "observed_at": "2026-09-22T23:58:37.684Z",
-    "recovered_from_run_id": "33696334752"
-  },
-  "recovery_observation": {
-    "schema_version": "provider_observation/v2",
-    "payload_sha256": "10192b046e6d9d7ab586efb11f0b8cf4c688ba6f5a6292dc347141faa56795dc",
-    "candidate_payload_sha256": "3ed6810b79fdeb312bc478590477b87639a4aa0206c4b9dd1278a63ec97eb18e",
-    "payload_ref": "data/admin/us-indices-daily/provider-observations/10192b046e6d9d7ab586efb11f0b8cf4c688ba6f5a6292dc347141faa56795dc.json",
-    "source_as_of": "2026-09-03",
-    "run_id": "33818784791",
-    "run_attempt": 1,
-    "event_name": "schedule",
-    "observed_at": "2026-09-03T23:53:32.990Z",
-    "recovered_from_run_id": "33696334752"
-  },
-  "last_recovered_failure": {
-    "run_id": "33696334752",
-    "run_attempt": 1,
-    "event_name": "schedule",
-    "observed_at": "2026-09-02T23:43:53.652Z",
-    "failure_kind": "schema_drift",
-    "error": "Error: Yahoo chart row must have a valid date and finite positive value for ^NDX"
-  }
+  "last_event_name": "schedule"
 }

@@ -1,62 +1,35 @@
 {
-  "schema_version": "producer-lkg-key-state/v2",
+  "schema_version": "producer-lkg-key-state/v1",
   "lane_id": "us_indices_daily",
   "key": "sp500.json",
-  "updated_at": "2026-09-22T23:58:37.684Z",
-  "resolution_state": "fresh_primary",
-  "retry": false,
+  "updated_at": "2026-09-24T00:14:40.983Z",
+  "resolution_state": "lkg_primary",
+  "retry": true,
   "current": {
-    "path": "data/indices/sp500.json",
+    "path": "data/admin/us-indices-daily/lkg/sp500.json",
     "payload_sha256": "23df75da36a9d44bc94e9e5f82a6d50398d28b2036a738bfec74cb2a13bff398",
     "source_as_of": "2026-09-22"
   },
-  "canonical_ref": "data/indices/sp500.json",
   "lkg": {
     "path": "data/admin/us-indices-daily/lkg/sp500.json",
     "payload_sha256": "23df75da36a9d44bc94e9e5f82a6d50398d28b2036a738bfec74cb2a13bff398",
     "source_as_of": "2026-09-22"
   },
-  "latest_failure": null,
+  "canonical_ref": "data/indices/sp500.json",
+  "latest_failure": {
+    "run_id": "35936998318",
+    "run_attempt": 1,
+    "event_name": "schedule",
+    "observed_at": "2026-09-24T00:14:40.983Z",
+    "failure_kind": "schema_drift",
+    "error": "Error: Yahoo chart row must have a valid date and finite positive value for ^GSPC"
+  },
   "recovered_from_run_id": "33696334752",
   "recovery_run_id": "33818784791",
   "recovery_run_attempt": 1,
   "recovery_event_name": "schedule",
   "recovered_at": "2026-09-03T23:53:32.990Z",
-  "last_run_id": "35799692473",
+  "last_run_id": "35936998318",
   "last_run_attempt": 1,
-  "last_event_name": "schedule",
-  "promotion_contract": "provider_observation/v2",
-  "promotion_proof_required": true,
-  "provider_observation": {
-    "schema_version": "provider_observation/v2",
-    "payload_sha256": "1e3b646cdde93b2735cb35d0647f7b4e2aa91c35a9de89794ebdb63d4366e190",
-    "candidate_payload_sha256": "23df75da36a9d44bc94e9e5f82a6d50398d28b2036a738bfec74cb2a13bff398",
-    "payload_ref": "data/admin/us-indices-daily/provider-observations/1e3b646cdde93b2735cb35d0647f7b4e2aa91c35a9de89794ebdb63d4366e190.json",
-    "source_as_of": "2026-09-22",
-    "run_id": "35799692473",
-    "run_attempt": 1,
-    "event_name": "schedule",
-    "observed_at": "2026-09-22T23:58:37.684Z",
-    "recovered_from_run_id": "33696334752"
-  },
-  "recovery_observation": {
-    "schema_version": "provider_observation/v2",
-    "payload_sha256": "b325f0da2102968b41efa4058894f70a8d112f676f6ddfbb2615c98710603f7d",
-    "candidate_payload_sha256": "fe887ce9fb45783f296914af2315e57ed28d8765d053232b13c708af31e797e8",
-    "payload_ref": "data/admin/us-indices-daily/provider-observations/b325f0da2102968b41efa4058894f70a8d112f676f6ddfbb2615c98710603f7d.json",
-    "source_as_of": "2026-09-03",
-    "run_id": "33818784791",
-    "run_attempt": 1,
-    "event_name": "schedule",
-    "observed_at": "2026-09-03T23:53:32.990Z",
-    "recovered_from_run_id": "33696334752"
-  },
-  "last_recovered_failure": {
-    "run_id": "33696334752",
-    "run_attempt": 1,
-    "event_name": "schedule",
-    "observed_at": "2026-09-02T23:43:53.652Z",
-    "failure_kind": "schema_drift",
-    "error": "Error: Yahoo chart row must have a valid date and finite positive value for ^GSPC"
-  }
+  "last_event_name": "schedule"
 }
