@@ -1,62 +1,35 @@
 {
-  "schema_version": "producer-lkg-key-state/v2",
+  "schema_version": "producer-lkg-key-state/v1",
   "lane_id": "us_indices_daily",
   "key": "nasdaq.json",
-  "updated_at": "2026-09-22T23:58:37.684Z",
-  "resolution_state": "fresh_primary",
-  "retry": false,
+  "updated_at": "2026-09-24T00:14:40.983Z",
+  "resolution_state": "lkg_primary",
+  "retry": true,
   "current": {
-    "path": "data/indices/nasdaq.json",
+    "path": "data/admin/us-indices-daily/lkg/nasdaq.json",
     "payload_sha256": "8fb753e15dcfaca1b14036f6b0815289393888630331bbcabb8d4402c02d00cf",
     "source_as_of": "2026-09-22"
   },
-  "canonical_ref": "data/indices/nasdaq.json",
   "lkg": {
     "path": "data/admin/us-indices-daily/lkg/nasdaq.json",
     "payload_sha256": "8fb753e15dcfaca1b14036f6b0815289393888630331bbcabb8d4402c02d00cf",
     "source_as_of": "2026-09-22"
   },
-  "latest_failure": null,
+  "canonical_ref": "data/indices/nasdaq.json",
+  "latest_failure": {
+    "run_id": "35936998318",
+    "run_attempt": 1,
+    "event_name": "schedule",
+    "observed_at": "2026-09-24T00:14:40.983Z",
+    "failure_kind": "schema_drift",
+    "error": "Error: Yahoo chart row must have a valid date and finite positive value for ^IXIC"
+  },
   "recovered_from_run_id": "33696334752",
   "recovery_run_id": "33818784791",
   "recovery_run_attempt": 1,
   "recovery_event_name": "schedule",
   "recovered_at": "2026-09-03T23:53:32.990Z",
-  "last_run_id": "35799692473",
+  "last_run_id": "35936998318",
   "last_run_attempt": 1,
-  "last_event_name": "schedule",
-  "promotion_contract": "provider_observation/v2",
-  "promotion_proof_required": true,
-  "provider_observation": {
-    "schema_version": "provider_observation/v2",
-    "payload_sha256": "65e5dcf610c97420e11b595902c5502dfb697d40f874dfabec7e0b90b440d383",
-    "candidate_payload_sha256": "8fb753e15dcfaca1b14036f6b0815289393888630331bbcabb8d4402c02d00cf",
-    "payload_ref": "data/admin/us-indices-daily/provider-observations/65e5dcf610c97420e11b595902c5502dfb697d40f874dfabec7e0b90b440d383.json",
-    "source_as_of": "2026-09-22",
-    "run_id": "35799692473",
-    "run_attempt": 1,
-    "event_name": "schedule",
-    "observed_at": "2026-09-22T23:58:37.684Z",
-    "recovered_from_run_id": "33696334752"
-  },
-  "recovery_observation": {
-    "schema_version": "provider_observation/v2",
-    "payload_sha256": "03a3b5dec6167846ab69e8825fb2f9e30ab8571e79067a2a3a30ac3ed51ac38d",
-    "candidate_payload_sha256": "dc8492b0c93d4b17f89caa20c023a5702135dffc6ae18fe552bfb0753eb2cedc",
-    "payload_ref": "data/admin/us-indices-daily/provider-observations/03a3b5dec6167846ab69e8825fb2f9e30ab8571e79067a2a3a30ac3ed51ac38d.json",
-    "source_as_of": "2026-09-03",
-    "run_id": "33818784791",
-    "run_attempt": 1,
-    "event_name": "schedule",
-    "observed_at": "2026-09-03T23:53:32.990Z",
-    "recovered_from_run_id": "33696334752"
-  },
-  "last_recovered_failure": {
-    "run_id": "33696334752",
-    "run_attempt": 1,
-    "event_name": "schedule",
-    "observed_at": "2026-09-02T23:43:53.652Z",
-    "failure_kind": "schema_drift",
-    "error": "Error: Yahoo chart row must have a valid date and finite positive value for ^IXIC"
-  }
+  "last_event_name": "schedule"
 }
