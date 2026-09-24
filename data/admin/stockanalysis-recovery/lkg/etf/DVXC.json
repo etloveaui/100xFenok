@@ -1,0 +1,287 @@
+{
+  "schema_version": "stockanalysis/v1",
+  "source": "stockanalysis",
+  "asset_type": "etf",
+  "ticker": "DVXC",
+  "source_as_of": "2026-07-16T00:00:00Z",
+  "fetched_at": "2026-07-18T18:41:03Z",
+  "endpoints": {
+    "holdings": "/etf/dvxc/holdings/__data.json",
+    "overview": "/etf/dvxc/__data.json",
+    "quote": null,
+    "history_periods": {}
+  },
+  "endpoint_contracts": {
+    "overview": {
+      "format": "svelte_devalue",
+      "decoder": "svelte_devalue_node/v1",
+      "contract": "etf_detail_overview/v1"
+    },
+    "holdings": {
+      "format": "svelte_devalue",
+      "decoder": "svelte_devalue_node/v1",
+      "contract": "etf_detail_holdings/v1"
+    },
+    "quote": {
+      "format": "rest_json",
+      "contract": "stockanalysis_quote/v1"
+    },
+    "history_periods": {
+      "format": "rest_json",
+      "contract": "stockanalysis_history/v1"
+    }
+  },
+  "normalized": {
+    "holdings": [
+      {
+        "name": "Trs Comm Serv Select Sector Spdr /Long/",
+        "weight_pct": 101.31,
+        "shares": 2258,
+        "raw": {
+          "n": "Trs Comm Serv Select Sector Spdr /Long/",
+          "as": "101.31%",
+          "sh": "2,258"
+        }
+      },
+      {
+        "symbol": "#XLC",
+        "name": "State Street Communication Services Select Sector SPDR ETF",
+        "weight_pct": 52.09,
+        "shares": 1161,
+        "raw": {
+          "n": "State Street Communication Services Select Sector SPDR ETF",
+          "s": "#XLC",
+          "as": "52.09%",
+          "sh": "1,161"
+        }
+      },
+      {
+        "name": "Us Dollars",
+        "weight_pct": 43.72,
+        "shares": 109777,
+        "raw": {
+          "n": "Us Dollars",
+          "as": "43.72%",
+          "sh": "109,777"
+        }
+      },
+      {
+        "name": "Trs Comm Serv Select Sector Spdr /Short/",
+        "weight_pct": -97.13,
+        "shares": 243856,
+        "raw": {
+          "n": "Trs Comm Serv Select Sector Spdr /Short/",
+          "as": "-97.13%",
+          "sh": "243,856"
+        }
+      }
+    ],
+    "asset_allocation": null,
+    "sectors": null,
+    "countries": null,
+    "holding_count": 4,
+    "holdings_updated": "Jul 16, 2026",
+    "classification": {
+      "is_leveraged": false,
+      "leverage_factor": null,
+      "is_inverse": false,
+      "is_single_stock": false,
+      "underlying": null,
+      "source": "stockanalysis.overview.description",
+      "confidence": "high"
+    },
+    "overview": {
+      "aum": "$250.65K",
+      "expenseRatio": "0.89%",
+      "sharesOut": "10,000",
+      "inception": "Jul 22, 2025",
+      "etf_website": "https://www.websinv.com/product_page/dvxc/"
+    },
+    "performance": {
+      "tr1m": -3.821356748899899,
+      "trYTD": -16.649756353446254,
+      "tr1y": null,
+      "cagr5y": null,
+      "cagr10y": null,
+      "cagrMAX": null
+    },
+    "quote": null,
+    "history": null,
+    "history_periods": {}
+  },
+  "raw": {
+    "overview": {
+      "trust": {
+        "sources": [
+          {
+            "name": "S&P Global Market Intelligence",
+            "short": "S&P Global",
+            "url": "https://www.spglobal.com/market-intelligence/en"
+          },
+          {
+            "name": "CBOE",
+            "short": "CBOE",
+            "url": "https://www.cboe.com/"
+          },
+          {
+            "name": "Nasdaq UTP",
+            "short": "Nasdaq UTP",
+            "url": "https://www.utpplan.com/overview",
+            "noUtm": true
+          },
+          {
+            "name": "Finnhub",
+            "short": "Finnhub",
+            "url": "https://finnhub.io/"
+          }
+        ],
+        "topic": "overview",
+        "ticker": "DVXC",
+        "lastChecked": 1784335383283,
+        "summary": {
+          "text": "Historical data is provided by S&P Global Market Intelligence. Real-time stock price data is provided by CBOE and 15-minute delayed consolidated tape pricing data is provided by Nasdaq UTP. Several fund data points are also provided by Finnhub."
+        }
+      },
+      "type": "etf",
+      "aum": "$250.65K",
+      "nav": null,
+      "expenseRatio": "0.89%",
+      "peRatio": null,
+      "sharesOut": "10,000",
+      "dps": null,
+      "dividendYield": null,
+      "payoutRatio": null,
+      "exDivDate": null,
+      "ch1y": null,
+      "payoutFrequency": "n/a",
+      "beta": null,
+      "holdings": 4,
+      "inception": "Jul 22, 2025",
+      "chart": {
+        "expiration": null,
+        "data": []
+      },
+      "description": "The WEBs Communication Services XLC Defined Volatility ETF (DVXC) is an exchange-traded fund that is based on the Syntax Defined Volatility XLC index. The fund tracks an index that adjusts exposure, between 0-200% via swaps, to the US large-cap Communication Services sector based on recent market volatility. The investment objective is to reduce volatility to a distinct target level and pursue better risk-adjusted sector returns DVXC was launched on Jul 22, 2025 and is issued by WEBs.",
+      "infoTable": [
+        [
+          "Asset Class",
+          "Equity"
+        ],
+        [
+          "Category",
+          "Communications"
+        ],
+        [
+          "Region",
+          "North America"
+        ],
+        [
+          "Stock Exchange",
+          "NASDAQ"
+        ],
+        [
+          "Ticker Symbol",
+          "DVXC"
+        ],
+        [
+          "Provider",
+          "WEBs"
+        ],
+        [
+          "Index Tracked",
+          "Syntax Defined Volatility XLC Index"
+        ]
+      ],
+      "etf_website": "https://www.websinv.com/product_page/dvxc/",
+      "provider_page": null,
+      "holdingsTable": {
+        "count": 4,
+        "updated": "Jul 16, 2026",
+        "top10": 100,
+        "holdings": [
+          {
+            "n": "Trs Comm Serv Select Sector Spdr /Long/",
+            "as": "101.31%",
+            "sh": "2,258"
+          },
+          {
+            "n": "State Street Communication Services Select Sector SPDR ETF",
+            "s": "#XLC",
+            "as": "52.09%",
+            "sh": "1,161"
+          },
+          {
+            "n": "Us Dollars",
+            "as": "43.72%",
+            "sh": "109,777"
+          },
+          {
+            "n": "Trs Comm Serv Select Sector Spdr /Short/",
+            "as": "-97.13%",
+            "sh": "243,856"
+          }
+        ]
+      },
+      "dividendTable": null,
+      "news": {
+        "exp": "1784408810638",
+        "data": [
+          {
+            "url": "https://www.globenewswire.com/news-release/2025/07/23/3120166/0/en/WEBs-Investments-Expands-Defined-Volatility-ETF-Suite-with-Launch-of-11-Sector-Funds.html",
+            "img": "https://cdn.snapi.dev/images/v1/b/a/x/press1-3192805.jpg",
+            "title": "WEBs Investments Expands Defined Volatility℠ ETF Suite with Launch of 11 Sector Funds",
+            "text": "PARK CITY, Utah, July 23, 2025 (GLOBE NEWSWIRE) -- WEBs Investments Inc. (WEBs) , an innovator in volatility-managed investment solutions, in partnership with Westwood Holdings Group, Inc. (NYSE: WHG)...",
+            "source": "GlobeNewsWire",
+            "type": "Article",
+            "tickers": [
+              "#DVIN",
+              "#DVRE",
+              "#DVUT",
+              "#DVXB",
+              "#DVXE",
+              "#DVXF",
+              "#DVXK"
+            ],
+            "time": "Jul 23, 2025, 8:00 AM EDT",
+            "ago": "1 year ago"
+          }
+        ]
+      },
+      "config": {
+        "no1d": false
+      },
+      "changes": {
+        "price1w": 24.48,
+        "price1m": 25.112,
+        "price3m": 28.21,
+        "price6m": 27.651,
+        "priceYTD": 28.976,
+        "price1y": null,
+        "price5y": null,
+        "priceMAX": 25.239
+      },
+      "performance": {
+        "tr1m": -3.821356748899899,
+        "trYTD": -16.649756353446254,
+        "tr1y": null,
+        "cagr5y": null,
+        "cagr10y": null,
+        "cagrMAX": null
+      }
+    },
+    "holdings": {},
+    "quote": null,
+    "history": null,
+    "history_periods": {}
+  },
+  "detail_status": "stockanalysis_partial",
+  "partial_reason_codes": [
+    "holdings_unavailable",
+    "holdings_surface_omits_holdings",
+    "holdings_count_unavailable",
+    "holdings_date_unavailable",
+    "holdings_countries_unavailable",
+    "history_deferred_initial_reconcile",
+    "quote_deferred_initial_reconcile"
+  ]
+}
