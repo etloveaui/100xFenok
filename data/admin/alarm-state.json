@@ -1,8 +1,8 @@
 {
   "schema_version": "alarm-state/v1",
-  "generated_at": "2026-09-25T21:56:01.903Z",
+  "generated_at": "2026-09-25T22:25:23.870Z",
   "status": "open",
-  "open_incident_count": 18,
+  "open_incident_count": 16,
   "open_incidents": [
     {
       "workflow": "build-stocks-analyzer.yml",
@@ -163,20 +163,6 @@
       "cadence_status": "not_due"
     },
     {
-      "workflow": "global-writer-queue-observer.yml",
-      "label": "Global Writer Queue Observability",
-      "streak": 0,
-      "failure_streak_threshold": 2,
-      "first_failing_run_id": null,
-      "first_failing_run_url": null,
-      "alarm_reasons": [
-        "missed_schedule_window"
-      ],
-      "lane_outcome_lanes": [],
-      "lost_schedule_slot_count": 0,
-      "cadence_status": "no_declaration"
-    },
-    {
       "workflow": "slickcharts-daily.yml",
       "label": "SlickCharts Daily",
       "streak": 0,
@@ -265,20 +251,6 @@
       "first_failing_run_url": "https://github.com/etloveaui/100xFenok/actions/runs/36123235463",
       "alarm_reasons": [
         "failure_streak"
-      ],
-      "lane_outcome_lanes": [],
-      "lost_schedule_slot_count": 0,
-      "cadence_status": "no_declaration"
-    },
-    {
-      "workflow": "worker-request-budget-alarm.yml",
-      "label": "Worker Request Budget Alarm",
-      "streak": 0,
-      "failure_streak_threshold": 2,
-      "first_failing_run_id": null,
-      "first_failing_run_url": null,
-      "alarm_reasons": [
-        "missed_schedule_window"
       ],
       "lane_outcome_lanes": [],
       "lost_schedule_slot_count": 0,
@@ -715,9 +687,9 @@
   "queue_evicted_run_count": 0,
   "queue_evicted_workflows": [],
   "last_firing": {
-    "run_id": "36193918315",
-    "run_url": "https://github.com/etloveaui/100xFenok/actions/runs/36193918315",
-    "observed_at": "2026-09-25T21:56:01.903Z",
+    "run_id": "36196405285",
+    "run_url": "https://github.com/etloveaui/100xFenok/actions/runs/36196405285",
+    "observed_at": "2026-09-25T22:25:23.870Z",
     "event": "workflow_run",
     "workflows": [
       "build-stocks-analyzer.yml",
@@ -730,14 +702,12 @@
       "fetch-stockanalysis.yml",
       "fetch-treasury-tga.yml",
       "fetch-us-indices-daily.yml",
-      "global-writer-queue-observer.yml",
       "slickcharts-daily.yml",
       "slickcharts-history.yml",
       "slickcharts-monthly.yml",
       "slickcharts-symbols.yml",
       "slickcharts-weekly.yml",
-      "validate-workflows.yml",
-      "worker-request-budget-alarm.yml"
+      "validate-workflows.yml"
     ],
     "title": "100xFenok pipeline job failure alarm"
   },
