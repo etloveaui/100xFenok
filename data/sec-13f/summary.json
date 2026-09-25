@@ -67,33 +67,52 @@
     "investor_count": 63,
     "data_latency_note": "13F filings may be delayed up to 45 days after quarter end",
     "enrichment_coverage": {
-      "sector": 0.165,
-      "industry": 0.0,
-      "market_cap": 0.0,
-      "price_at_filing": 0.0,
-      "return_since_filing": 0.0
+      "sector": 0.6535,
+      "industry": 0.598,
+      "market_cap": 0.5991,
+      "price_at_filing": 0.1199,
+      "return_since_filing": 0.1199
     },
     "enrichment_source_mix": {
-      "unknown": 2682158,
-      "fallback": 530079
+      "fallback": 12503,
+      "unknown": 77534,
+      "yf-local": 135492
     },
     "mode": {
       "strict_official": false,
       "backfill_mode": "full",
       "use_yahoo": false,
-      "continue_on_investor_error": true
+      "continue_on_investor_error": true,
+      "local_yf_backfill": true
     },
     "partial_run": false,
     "publish_blocked": false,
     "investor_errors": [],
     "source_generated_at": "2026-09-25T03:58:28.718414",
-    "source_quarter": "2026-Q2"
+    "source_quarter": "2026-Q2",
+    "enrichment_denominator": "public_filtered_holdings",
+    "enrichment_backfill": {
+      "source": "local_yf_finance",
+      "status": "ready",
+      "warnings": [],
+      "generated_at": "2026-09-25T04:34:07.422Z",
+      "yf_finance_generated_at": "2026-09-25T04:27:28Z",
+      "yf_finance_files": 1298,
+      "yf_quarter_closes_generated_at": "2026-09-24T01:50:08Z",
+      "total_holdings": 225529,
+      "profile_hit_rows": 152524,
+      "profile_miss_rows": 73005,
+      "touched_rows": 135459,
+      "unique_profile_symbols": 752,
+      "sector_method": "Yahoo sector normalized to GICS where local profile is available; existing converter sector preserved",
+      "price_method": "report_date quarter close to latest close from local data/yf/quarter_closes.json"
+    }
   },
   "investors": {
     "buffett": {
       "name": "Warren Buffett",
       "group": "value",
-      "aum": 299253556246.0,
+      "aum": 299253556246,
       "holdings_count": 54,
       "top5": [
         "AXP",
@@ -111,7 +130,7 @@
     "marks": {
       "name": "Howard Marks",
       "group": "value",
-      "aum": 7206070520.0,
+      "aum": 7206070520,
       "holdings_count": 99,
       "top5": [
         "STATE STREET CORP",
@@ -129,7 +148,7 @@
     "klarman": {
       "name": "Seth Klarman",
       "group": "value",
-      "aum": 5415853000.0,
+      "aum": 5415853000,
       "holdings_count": 23,
       "top5": [
         "AMZN",
@@ -147,7 +166,7 @@
     "fidelity": {
       "name": "Fidelity (Lynch)",
       "group": "value",
-      "aum": 2303878429723.0,
+      "aum": 2303878429723,
       "holdings_count": 160,
       "top5": [
         "NVDA",
@@ -165,7 +184,7 @@
     "druckenmiller": {
       "name": "Stanley Druckenmiller",
       "group": "macro",
-      "aum": 5210856000.0,
+      "aum": 5210856000,
       "holdings_count": 91,
       "top5": [
         "NTRA",
@@ -183,7 +202,7 @@
     "soros": {
       "name": "George Soros",
       "group": "macro",
-      "aum": 8143628824.0,
+      "aum": 8143628824,
       "holdings_count": 157,
       "top5": [
         "AMZN",
@@ -201,7 +220,7 @@
     "dalio": {
       "name": "Ray Dalio",
       "group": "macro",
-      "aum": 24376086530.0,
+      "aum": 24376086530,
       "holdings_count": 179,
       "top5": [
         "SPY",
@@ -219,7 +238,7 @@
     "griffin": {
       "name": "Ken Griffin",
       "group": "hedge",
-      "aum": 875011794337.0,
+      "aum": 875011794337,
       "holdings_count": 148,
       "top5": [
         "SPY",
@@ -237,7 +256,7 @@
     "cohen": {
       "name": "Steve Cohen",
       "group": "hedge",
-      "aum": 90675333456.0,
+      "aum": 90675333456,
       "holdings_count": 249,
       "top5": [
         "CRDO",
@@ -255,7 +274,7 @@
     "hohn": {
       "name": "Chris Hohn",
       "group": "hedge",
-      "aum": 52769884406.0,
+      "aum": 52769884406,
       "holdings_count": 11,
       "top5": [
         "GE AEROSPACE",
@@ -273,7 +292,7 @@
     "laffont": {
       "name": "Philippe Laffont",
       "group": "hedge",
-      "aum": 48629053706.0,
+      "aum": 48629053706,
       "holdings_count": 125,
       "top5": [
         "LRCX",
@@ -291,7 +310,7 @@
     "fisher": {
       "name": "Ken Fisher",
       "group": "quant",
-      "aum": 335827609549.0,
+      "aum": 335827609549,
       "holdings_count": 111,
       "top5": [
         "NVDA",
@@ -309,7 +328,7 @@
     "asness": {
       "name": "Cliff Asness",
       "group": "quant",
-      "aum": 286847511937.0,
+      "aum": 286847511937,
       "holdings_count": 288,
       "top5": [
         "NVDA",
@@ -327,7 +346,7 @@
     "wood": {
       "name": "Cathie Wood",
       "group": "growth",
-      "aum": 15402788184.0,
+      "aum": 15402788184,
       "holdings_count": 98,
       "top5": [
         "TSLA",
@@ -345,7 +364,7 @@
     "ackman": {
       "name": "Bill Ackman",
       "group": "activist",
-      "aum": 19465692772.0,
+      "aum": 19465692772,
       "holdings_count": 15,
       "top5": [
         "UBER",
@@ -363,7 +382,7 @@
     "tepper": {
       "name": "David Tepper",
       "group": "event",
-      "aum": 7725383349.0,
+      "aum": 7725383349,
       "holdings_count": 27,
       "top5": [
         "AMZN",
@@ -381,7 +400,7 @@
     "loeb": {
       "name": "Dan Loeb",
       "group": "event",
-      "aum": 4679571988.0,
+      "aum": 4679571988,
       "holdings_count": 33,
       "top5": [
         "DISCK",
@@ -399,7 +418,7 @@
     "greenblatt": {
       "name": "Joel Greenblatt",
       "group": "value",
-      "aum": 42963515885.0,
+      "aum": 42963515885,
       "holdings_count": 264,
       "top5": [
         "SPY",
@@ -417,7 +436,7 @@
     "einhorn": {
       "name": "David Einhorn",
       "group": "value",
-      "aum": 2047998727.0,
+      "aum": 2047998727,
       "holdings_count": 81,
       "top5": [
         "GRBK",
@@ -435,7 +454,7 @@
     "pabrai": {
       "name": "Mohnish Pabrai",
       "group": "value",
-      "aum": 326749980.0,
+      "aum": 326749980,
       "holdings_count": 3,
       "top5": [
         "HCC",
@@ -451,7 +470,7 @@
     "gayner": {
       "name": "Tom Gayner",
       "group": "value",
-      "aum": 13130490727.0,
+      "aum": 13130490727,
       "holdings_count": 117,
       "top5": [
         "GOOGL",
@@ -469,7 +488,7 @@
     "russo": {
       "name": "Tom Russo",
       "group": "value",
-      "aum": 8925889600.0,
+      "aum": 8925889600,
       "holdings_count": 23,
       "top5": [
         "GOOGL",
@@ -487,7 +506,7 @@
     "miller": {
       "name": "Bill Miller",
       "group": "value",
-      "aum": 423070057.0,
+      "aum": 423070057,
       "holdings_count": 53,
       "top5": [
         "NBR",
@@ -505,7 +524,7 @@
     "icahn": {
       "name": "Carl Icahn",
       "group": "activist",
-      "aum": 8264090525.0,
+      "aum": 8264090525,
       "holdings_count": 18,
       "top5": [
         "IEP",
@@ -523,7 +542,7 @@
     "peltz": {
       "name": "Nelson Peltz",
       "group": "activist",
-      "aum": 4230905202.0,
+      "aum": 4230905202,
       "holdings_count": 9,
       "top5": [
         "GE Aerospace",
@@ -541,7 +560,7 @@
     "halvorsen": {
       "name": "Andreas Halvorsen",
       "group": "tiger",
-      "aum": 35079228595.0,
+      "aum": 35079228595,
       "holdings_count": 77,
       "top5": [
         "V",
@@ -559,7 +578,7 @@
     "coleman": {
       "name": "Chase Coleman",
       "group": "tiger",
-      "aum": 23981506027.0,
+      "aum": 23981506027,
       "holdings_count": 37,
       "top5": [
         "TSM",
@@ -577,7 +596,7 @@
     "mandel": {
       "name": "Stephen Mandel",
       "group": "tiger",
-      "aum": 16357760275.0,
+      "aum": 16357760275,
       "holdings_count": 34,
       "top5": [
         "NBIS",
@@ -595,7 +614,7 @@
     "tudor": {
       "name": "Paul Tudor Jones",
       "group": "macro",
-      "aum": 71912518398.0,
+      "aum": 71912518398,
       "holdings_count": 136,
       "top5": [
         "IWM",
@@ -613,7 +632,7 @@
     "singer": {
       "name": "Paul Singer",
       "group": "event",
-      "aum": 22669814953.0,
+      "aum": 22669814953,
       "holdings_count": 27,
       "top5": [
         "META",
@@ -631,7 +650,7 @@
     "blackrock": {
       "name": "BlackRock",
       "group": "passive",
-      "aum": 6729538649155.0,
+      "aum": 6729538649155,
       "holdings_count": 140,
       "top5": [
         "NVDA",
@@ -649,7 +668,7 @@
     "vanguard": {
       "name": "Vanguard",
       "group": "passive",
-      "aum": 6897676080637.0,
+      "aum": 6897676080637,
       "holdings_count": 174,
       "top5": [
         "NVDA",
@@ -667,7 +686,7 @@
     "state_street": {
       "name": "State Street",
       "group": "passive",
-      "aum": 3383260349220.0,
+      "aum": 3383260349220,
       "holdings_count": 184,
       "top5": [
         "NVDA",
@@ -685,7 +704,7 @@
     "geode": {
       "name": "Geode Capital",
       "group": "passive",
-      "aum": 1875315674155.0,
+      "aum": 1875315674155,
       "holdings_count": 162,
       "top5": [
         "NVDA",
@@ -703,7 +722,7 @@
     "northern_trust": {
       "name": "Northern Trust",
       "group": "passive",
-      "aum": 859788523480.0,
+      "aum": 859788523480,
       "holdings_count": 168,
       "top5": [
         "NVDA",
@@ -721,7 +740,7 @@
     "norges": {
       "name": "Norges Bank",
       "group": "passive",
-      "aum": 1003234964718.0,
+      "aum": 1003234964718,
       "holdings_count": 182,
       "top5": [
         "NVDA",
@@ -739,7 +758,7 @@
     "wellington": {
       "name": "Wellington Management",
       "group": "institutional",
-      "aum": 580172687615.0,
+      "aum": 580172687615,
       "holdings_count": 191,
       "top5": [
         "NVDA",
@@ -757,7 +776,7 @@
     "trowe": {
       "name": "T. Rowe Price",
       "group": "institutional",
-      "aum": 999124702000.0,
+      "aum": 999124702000,
       "holdings_count": 178,
       "top5": [
         "NVDA",
@@ -775,7 +794,7 @@
     "capital_world": {
       "name": "Capital World Investors",
       "group": "institutional",
-      "aum": 846430378138.0,
+      "aum": 846430378138,
       "holdings_count": 169,
       "top5": [
         "AVGO",
@@ -793,7 +812,7 @@
     "capital_research_global": {
       "name": "Capital Research Global Investors",
       "group": "institutional",
-      "aum": 716871733902.0,
+      "aum": 716871733902,
       "holdings_count": 144,
       "top5": [
         "AVGO",
@@ -811,7 +830,7 @@
     "renaissance": {
       "name": "Jim Simons / Renaissance",
       "group": "quant",
-      "aum": 72617871974.0,
+      "aum": 72617871974,
       "holdings_count": 237,
       "top5": [
         "NVDA",
@@ -829,7 +848,7 @@
     "de_shaw": {
       "name": "D. E. Shaw",
       "group": "quant",
-      "aum": 210202510998.0,
+      "aum": 210202510998,
       "holdings_count": 221,
       "top5": [
         "SPY",
@@ -847,7 +866,7 @@
     "two_sigma": {
       "name": "Two Sigma",
       "group": "quant",
-      "aum": 138117670065.0,
+      "aum": 138117670065,
       "holdings_count": 236,
       "top5": [
         "WDC",
@@ -865,7 +884,7 @@
     "millennium": {
       "name": "Millennium Management",
       "group": "hedge",
-      "aum": 276293649404.0,
+      "aum": 276293649404,
       "holdings_count": 167,
       "top5": [
         "ISHARES  TR",
@@ -883,7 +902,7 @@
     "scion": {
       "name": "Michael Burry / Scion",
       "group": "hedge",
-      "aum": 1381198076.0,
+      "aum": 1381198076,
       "holdings_count": 8,
       "top5": [
         "PLTR",
@@ -901,7 +920,7 @@
     "d1": {
       "name": "D1 Capital",
       "group": "hedge",
-      "aum": 34783267943.0,
+      "aum": 34783267943,
       "holdings_count": 51,
       "top5": [
         "ATI",
@@ -919,7 +938,7 @@
     "altimeter": {
       "name": "Altimeter Capital",
       "group": "hedge",
-      "aum": 9829676383.0,
+      "aum": 9829676383,
       "holdings_count": 19,
       "top5": [
         "NVDA",
@@ -937,7 +956,7 @@
     "whale_rock": {
       "name": "Whale Rock Capital",
       "group": "hedge",
-      "aum": 12456319060.0,
+      "aum": 12456319060,
       "holdings_count": 34,
       "top5": [
         "SNDK",
@@ -955,7 +974,7 @@
     "balyasny": {
       "name": "Balyasny Asset Management",
       "group": "hedge",
-      "aum": 80215403914.0,
+      "aum": 80215403914,
       "holdings_count": 248,
       "top5": [
         "QQQ",
@@ -973,7 +992,7 @@
     "abdiel": {
       "name": "Abdiel Capital",
       "group": "hedge",
-      "aum": 51803813.0,
+      "aum": 51803813,
       "holdings_count": 5,
       "top5": [
         "HCA",
@@ -991,7 +1010,7 @@
     "akre": {
       "name": "Chuck Akre",
       "group": "growth",
-      "aum": 5122536308.0,
+      "aum": 5122536308,
       "holdings_count": 18,
       "top5": [
         "MA",
@@ -1009,7 +1028,7 @@
     "polen": {
       "name": "Polen Capital",
       "group": "growth",
-      "aum": 11610786601.0,
+      "aum": 11610786601,
       "holdings_count": 40,
       "top5": [
         "LLY",
@@ -1027,7 +1046,7 @@
     "hhlr": {
       "name": "HHLR Advisors",
       "group": "growth",
-      "aum": 832072843.0,
+      "aum": 832072843,
       "holdings_count": 31,
       "top5": [
         "LEGN",
@@ -1045,7 +1064,7 @@
     "sands": {
       "name": "Sands Capital",
       "group": "growth",
-      "aum": 26928187141.0,
+      "aum": 26928187141,
       "holdings_count": 54,
       "top5": [
         "NVDA",
@@ -1063,7 +1082,7 @@
     "fundsmith": {
       "name": "Fundsmith",
       "group": "growth",
-      "aum": 13648923682.0,
+      "aum": 13648923682,
       "holdings_count": 40,
       "top5": [
         "MARRIOTT INTL INC NEW",
@@ -1081,7 +1100,7 @@
     "edgewood": {
       "name": "Edgewood Management",
       "group": "growth",
-      "aum": 9694506515.0,
+      "aum": 9694506515,
       "holdings_count": 27,
       "top5": [
         "NVDA",
@@ -1099,7 +1118,7 @@
     "wcm": {
       "name": "WCM Investment Management",
       "group": "growth",
-      "aum": 55159073519.0,
+      "aum": 55159073519,
       "holdings_count": 63,
       "top5": [
         "STX",
@@ -1117,7 +1136,7 @@
     "dorsey": {
       "name": "Dorsey Asset Management",
       "group": "growth",
-      "aum": 1561408466.0,
+      "aum": 1561408466,
       "holdings_count": 11,
       "top5": [
         "ASML",
@@ -1135,7 +1154,7 @@
     "durable": {
       "name": "Durable Capital",
       "group": "growth",
-      "aum": 10282381271.0,
+      "aum": 10282381271,
       "holdings_count": 36,
       "top5": [
         "RBC BEARINGS INC",
@@ -1153,7 +1172,7 @@
     "dragoneer": {
       "name": "Dragoneer",
       "group": "growth",
-      "aum": 2834424427.0,
+      "aum": 2834424427,
       "holdings_count": 12,
       "top5": [
         "ATI",
@@ -1171,7 +1190,7 @@
     "atreides": {
       "name": "Gavin Baker",
       "group": "growth",
-      "aum": 14335417162.0,
+      "aum": 14335417162,
       "holdings_count": 44,
       "top5": [
         "ATI",
@@ -1189,7 +1208,7 @@
     "himalaya": {
       "name": "Li Lu",
       "group": "value",
-      "aum": 3702921099.0,
+      "aum": 3702921099,
       "holdings_count": 8,
       "top5": [
         "GOOGL",
@@ -1207,7 +1226,7 @@
     "gmo": {
       "name": "Jeremy Grantham",
       "group": "value",
-      "aum": 44399773809.0,
+      "aum": 44399773809,
       "holdings_count": 88,
       "top5": [
         "MSFT",
@@ -1226,83 +1245,83 @@
   "top_stocks": {
     "NVDA": {
       "holders": 78,
-      "total_value": 1672050534863.0
+      "total_value": 1672050534863
     },
     "AAPL": {
       "holders": 70,
-      "total_value": 1379929261112.0
+      "total_value": 1379929261112
     },
     "GOOGL": {
       "holders": 131,
-      "total_value": 1253890762899.0
+      "total_value": 1253890762899
     },
     "MSFT": {
       "holders": 59,
-      "total_value": 1014283699066.0
+      "total_value": 1014283699066
     },
     "AMZN": {
       "holders": 72,
-      "total_value": 748161369213.0
+      "total_value": 748161369213
     },
     "AVGO": {
       "holders": 53,
-      "total_value": 649789259539.0
+      "total_value": 649789259539
     },
     "META": {
       "holders": 71,
-      "total_value": 482508515087.0
+      "total_value": 482508515087
     },
     "MU": {
       "holders": 49,
-      "total_value": 388629482873.0
+      "total_value": 388629482873
     },
     "TSLA": {
       "holders": 48,
-      "total_value": 372206076923.0
+      "total_value": 372206076923
     },
     "LLY": {
       "holders": 37,
-      "total_value": 352628883925.0
+      "total_value": 352628883925
     },
     "JPM": {
       "holders": 34,
-      "total_value": 254473765747.0
+      "total_value": 254473765747
     },
     "ATI": {
       "holders": 118,
-      "total_value": 254052887638.0
+      "total_value": 254052887638
     },
     "AMD": {
       "holders": 46,
-      "total_value": 253470120501.0
+      "total_value": 253470120501
     },
     "BRK.B": {
       "holders": 39,
-      "total_value": 224562568735.0
+      "total_value": 224562568735
     },
     "IVV": {
       "holders": 74,
-      "total_value": 200662846682.0
+      "total_value": 200662846682
     },
     "V": {
       "holders": 41,
-      "total_value": 196828198172.0
+      "total_value": 196828198172
     },
     "JNJ": {
       "holders": 38,
-      "total_value": 186324982731.0
+      "total_value": 186324982731
     },
     "INTC": {
       "holders": 47,
-      "total_value": 171044659620.0
+      "total_value": 171044659620
     },
     "XOM": {
       "holders": 22,
-      "total_value": 169291589800.0
+      "total_value": 169291589800
     },
     "AMAT": {
       "holders": 34,
-      "total_value": 160639976723.0
+      "total_value": 160639976723
     }
   }
 }
