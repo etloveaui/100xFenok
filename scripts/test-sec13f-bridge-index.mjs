@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-/** Independent regression gate for the SEC 13F bridge index (live, honest 424/1,028 coverage). */
+/** Independent regression gate for the SEC 13F bridge index (live, honest 424/1,031 coverage). */
 
 import assert from "node:assert/strict";
 import crypto from "node:crypto";
@@ -71,7 +71,7 @@ const sec13fSummary = readJson("data/sec-13f/summary.json");
 assert.equal(index.schema_version, "sec13f-bridge-index/v1");
 assert.equal(index.contract.graph_expansion, "held");
 assert.equal(index.contract.freshness_credit, false);
-assert.equal(index.contract.consumer, "public/superinvestors and /data/computed/sec13f_bridge_index.json (honest 424/1,028 coverage)");
+assert.equal(index.contract.consumer, "public/superinvestors and /data/computed/sec13f_bridge_index.json (honest 424/1,031 coverage)");
 assert.equal(index.contract.public_route, "/data/computed/sec13f_bridge_index.json");
 assert.equal(index.contract.live_readback, "verified");
 assert.equal(index.contract.producer_typed_marker, true);
@@ -113,10 +113,18 @@ const intersection = secTickers.filter((ticker) => core.has(ticker));
 // and LLYVK instead of IVE. Independent before/after ticker-set comparison
 // adds exactly these two unresolved outside-core rows; no ticker is removed.
 // Core, intersection, and enriched extension counts remain unchanged.
+// Re-pinned 2026-09-25 against the CI-regenerated tree (run 36094280988
+// publish e785ad7e2e; full-history 13F drop 413bc36373). The outside-core set
+// gained exactly COMM, HL, SANM - all unresolved rows - and removed none:
+// secTickers 1028 -> 1031, outside 604 -> 607, unresolved 491 -> 492,
+// no-overlap 528 -> 529, no-mf 491 -> 492. Extension/action_plus 76 -> 78 and
+// per_present 67 -> 69 had already drifted in the Sep 24 committed refresh and
+// are re-pinned to the same measured values. core 1066 and intersection 424
+// are unchanged: source-data growth and resolution, not the graph expanding.
 assert.equal(core.size, 1066, "Global Scouter analyzer core count drifted");
-assert.equal(secTickers.length, 1028, "SEC 13F ticker count drifted");
+assert.equal(secTickers.length, 1031, "SEC 13F ticker count drifted");
 assert.equal(intersection.length, 424, "SEC 13F/core intersection drifted");
-assert.equal(outside.length, 604, "SEC 13F outside-core boundary drifted");
+assert.equal(outside.length, 607, "SEC 13F outside-core boundary drifted");
 
 const expected = new Map();
 for (const ticker of outside) {
@@ -156,27 +164,27 @@ for (const row of index.rows) {
 }
 
 const countClass = (name) => index.rows.filter((row) => row.classification.classes.includes(name)).length;
-assert.equal(countClass("action_plus_market_facts"), 76);
+assert.equal(countClass("action_plus_market_facts"), 78);
 assert.equal(countClass("market_facts_only"), 37);
-assert.equal(countClass("no_action_index_overlap"), 528);
-assert.equal(countClass("no_market_facts"), 491);
+assert.equal(countClass("no_action_index_overlap"), 529);
+assert.equal(countClass("no_market_facts"), 492);
 assert.equal(countClass("action_index_only"), 0);
-assert.equal(index.counts.sec13f_extension_stock, 76);
+assert.equal(index.counts.sec13f_extension_stock, 78);
 assert.equal(index.counts.sec13f_market_facts_only, 37);
-assert.equal(index.counts.sec13f_unresolved, 491);
+assert.equal(index.counts.sec13f_unresolved, 492);
 
 const extensionRows = index.rows.filter((row) => row.classification.type === "sec13f_extension_stock");
-assert.equal(extensionRows.length, 76);
+assert.equal(extensionRows.length, 78);
 // Re-pinned 2026-08-21 from 69/7 after reproducing the projection stack's own
 // order. The bridge must be built from the action index that S5 regenerates
 // from the market facts S2 regenerates; building it against the committed
 // market facts instead yields 69 and disagrees with every CI run, which is how
 // an incorrect 69 was briefly committed at 172ead1bc8.
-assert.equal(extensionRows.filter((row) => row.completeness.per_present).length, 67);
+assert.equal(extensionRows.filter((row) => row.completeness.per_present).length, 69);
 assert.equal(extensionRows.filter((row) => !row.completeness.per_present).length, 9);
-assert.equal(extensionRows.filter((row) => row.completeness.forward_pe_present).length, 76);
-assert.equal(extensionRows.filter((row) => row.completeness.market_facts_price_observed).length, 76);
-assert.equal(extensionRows.filter((row) => row.completeness.bridge_field_floor).length, 76);
+assert.equal(extensionRows.filter((row) => row.completeness.forward_pe_present).length, 78);
+assert.equal(extensionRows.filter((row) => row.completeness.market_facts_price_observed).length, 78);
+assert.equal(extensionRows.filter((row) => row.completeness.bridge_field_floor).length, 78);
 // Re-pinned 2026-08-21 from 38/38. The Yahoo broad-finance lane had not
 // published since 2026-08-16, so these rows were starved of current estimates;
 // restoring publication moved 36 rows from incomplete to full in one refresh.
@@ -188,12 +196,12 @@ assert.equal(extensionRows.filter((row) => row.completeness.bridge_field_floor).
 // unresolved (489) are still unchanged, so this remains completeness and
 // mapping improving, not the graph expanding.
 assert.equal(extensionRows.filter((row) => row.yf_estimates.state === "full").length, 74);
-assert.equal(extensionRows.filter((row) => row.yf_estimates.state === "incomplete").length, 2);
+assert.equal(extensionRows.filter((row) => row.yf_estimates.state === "incomplete").length, 4);
 assert.deepEqual(index.counts.estimate, {
   extension_full: 74,
-  extension_incomplete: 2,
+  extension_incomplete: 4,
   market_facts_only_incomplete: 37,
-  unresolved_absent: 491,
+  unresolved_absent: 492,
   as_of: {
     bridge_generated_at: index.generated_at,
     yf_finance: deterministicGeneratedAt(index.rows.map((row) => row.yf_estimates.source_as_of)),
@@ -201,7 +209,7 @@ assert.deepEqual(index.counts.estimate, {
     sec13f: sec13fSummary.metadata?.source_quarter ?? null,
   },
 });
-assert.equal(index.counts.price_observed_extension, 76);
+assert.equal(index.counts.price_observed_extension, 78);
 assert.equal(index.counts.price_observed_extension_as_of, marketFactsIndex.core_surface_source_as_of ?? null);
 
 const expectedYfPaths = extensionRows.map((row) => row.yf_estimates.path).filter((relativePath) => fs.existsSync(path.join(ROOT, relativePath)));
