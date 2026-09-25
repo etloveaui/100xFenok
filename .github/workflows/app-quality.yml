@@ -1,0 +1,78 @@
+name: App Quality
+
+# Fast PR gate for the Next app: typecheck, unit tests, and lint of the files a
+# PR touches. Until this existed, a PR that only changed src/ ran no check at
+# all; type errors surfaced first in the production deploy build.
+# Lint is scoped to changed files as a ratchet: the tree still carries older
+# react-hooks findings, and every file a PR touches must come out clean.
+
+on:
+  pull_request:
+    paths:
+      - '100xfenok-next/src/**'
+      - '100xfenok-next/package.json'
+      - '100xfenok-next/package-lock.json'
+      - '100xfenok-next/tsconfig.json'
+      - '100xfenok-next/eslint.config.mjs'
+      - '.github/workflows/app-quality.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: app-quality-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  app-quality:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    defaults:
+      run:
+        working-directory: 100xfenok-next
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: 100xfenok-next/package-lock.json
+
+      - name: Install dependencies
+        run: npm ci
+
+      # build-version.ts and lane-runid-map.ts are gitignored build outputs
+      # that src imports; generate them the same way the deploy build does.
+      - name: Generate build-time modules
+        run: |
+          npm run build:version
+          npm run build:lane-runid-map
+
+      - name: Typecheck
+        run: npm run typecheck
+
+      - name: Unit tests
+        run: npm test
+
+      - name: Lint changed files
+        env:
+          BASE_SHA: ${{ github.event.pull_request.base.sha }}
+        run: |
+          set -euo pipefail
+          if [ -z "${BASE_SHA:-}" ]; then
+            npm run lint
+            exit 0
+          fi
+          mapfile -t changed < <(git diff --name-only --diff-filter=ACMR "$BASE_SHA"...HEAD -- 'src/**/*.ts' 'src/**/*.tsx' | sed 's|^100xfenok-next/||')
+          if [ "${#changed[@]}" -eq 0 ]; then
+            echo "No changed TypeScript files to lint."
+            exit 0
+          fi
+          printf 'Linting %s changed file(s)\n' "${#changed[@]}"
+          npx eslint -- "${changed[@]}"

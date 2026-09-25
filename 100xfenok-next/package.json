@@ -106,6 +106,8 @@
     "start:qa": "FENOK_LOCAL_PROD_QA=1 next start",
     "sync-research": "node scripts/sync-research-artifacts.mjs",
     "lint": "eslint",
+    "typecheck": "tsc --noEmit -p tsconfig.json",
+    "test": "tsx --test \"src/**/*.test.ts\"",
     "qa:browser": "node .qa-playwright.js",
     "qa:superinvestors-window": "tsx scripts/test-superinvestor-same-period-window.ts",
     "qa:browser:lite": "QA_VIEWPORTS=desktop QA_ROUTES=/,/screener node .qa-playwright.js",
