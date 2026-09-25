@@ -8,6 +8,7 @@ import {
   shortTermConvictionCallFromScore,
 } from "../../scripts/lib/fenok-proxy-formula-contract.mjs";
 import { EDGE_AXIS_SPOKE_LABELS } from "../src/lib/fenok-signals/edge-axis-labels.mjs";
+import { STOCK_DETAIL_PANEL_UI_MARKERS } from "../../scripts/lib/dual-hexagon-ui-contract.mjs";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const appRoot = path.resolve(__dirname, "..");
@@ -151,20 +152,7 @@ const UI_CONTRACTS = [
   },
   {
     file: "src/app/screener/StockDetailPanel.tsx",
-    markers: [
-      "const DETAIL_LONG_TERM_AXIS_CONFIG",
-      "const DETAIL_SHORT_TERM_AXIS_CONFIG",
-      "function buildDetailLongTermAxes",
-      "function buildDetailShortTermAxes",
-      "FenokSignalRadarHexagonPair",
-      "aria-label={`Fenok Edge",
-      "Short Edge",
-      "Long Edge",
-      "commonBasisShortTermView",
-      "shortTermCommonBasisCopy",
-      "shortTermConvictionScore",
-      "shortTermConvictionCall",
-    ],
+    markers: STOCK_DETAIL_PANEL_UI_MARKERS,
   },
   {
     file: "src/app/stock/[ticker]/StockDetailClient.tsx",
