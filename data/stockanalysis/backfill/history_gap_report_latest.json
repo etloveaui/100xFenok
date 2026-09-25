@@ -1,36 +1,36 @@
 {
   "schema_version": "stockanalysis-history-gap-report/v1",
-  "generated_at": "2026-09-25T05:24:48.153Z",
-  "classification_as_of": "2026-09-25T05:24:26.412Z",
+  "generated_at": "2026-09-25T05:59:34.768Z",
+  "classification_as_of": "2026-09-25T05:59:12.423Z",
   "report_profile": {
     "key": "daily_1y",
     "required_history_periods": [
       "daily_1y"
     ],
-    "generated_at": "2026-09-25T05:24:48.153Z",
-    "classification_as_of": "2026-09-25T05:24:26.412Z"
+    "generated_at": "2026-09-25T05:59:34.768Z",
+    "classification_as_of": "2026-09-25T05:59:12.423Z"
   },
   "required_history_periods": [
     "daily_1y"
   ],
   "primary_stockanalysis_detail_files": 5605,
-  "complete_required_history": 5140,
-  "missing_required_history": 465,
-  "fetchable_required_history": 220,
+  "complete_required_history": 5183,
+  "missing_required_history": 422,
+  "fetchable_required_history": 164,
   "inception_limited_required_history": 193,
-  "terminal_limited_required_history": 52,
-  "coverage_pct": 91.7,
+  "terminal_limited_required_history": 65,
+  "coverage_pct": 92.47,
   "missing_by_period": {
-    "daily_1y": 465
+    "daily_1y": 422
   },
   "fetchable_by_period": {
-    "daily_1y": 220
+    "daily_1y": 164
   },
   "inception_limited_by_period": {
     "daily_1y": 193
   },
   "terminal_limited_by_period": {
-    "daily_1y": 52
+    "daily_1y": 65
   },
   "samples": {
     "missing": [
@@ -59,19 +59,6 @@
         ],
         "terminal_limit_source": "provider_recent_failure",
         "inception_date": "2020-12-07"
-      },
-      {
-        "ticker": "ACII",
-        "missing": [
-          "daily_1y"
-        ],
-        "fetchable_missing": [
-          "daily_1y"
-        ],
-        "inception_limited_missing": [],
-        "terminal_limited_missing": [],
-        "terminal_limit_source": null,
-        "inception_date": "2025-09-25"
       },
       {
         "ticker": "ADIU",
@@ -163,11 +150,9 @@
         "terminal_limited_missing": [],
         "terminal_limit_source": null,
         "inception_date": "2026-03-31"
-      }
-    ],
-    "fetchable": [
+      },
       {
-        "ticker": "ACII",
+        "ticker": "ARLU",
         "missing": [
           "daily_1y"
         ],
@@ -177,8 +162,10 @@
         "inception_limited_missing": [],
         "terminal_limited_missing": [],
         "terminal_limit_source": null,
-        "inception_date": "2025-09-25"
-      },
+        "inception_date": "2024-03-28"
+      }
+    ],
+    "fetchable": [
       {
         "ticker": "ARLU",
         "missing": [
@@ -295,6 +282,19 @@
         "terminal_limited_missing": [],
         "terminal_limit_source": null,
         "inception_date": "2025-07-02"
+      },
+      {
+        "ticker": "BRKW",
+        "missing": [
+          "daily_1y"
+        ],
+        "fetchable_missing": [
+          "daily_1y"
+        ],
+        "inception_limited_missing": [],
+        "terminal_limited_missing": [],
+        "terminal_limit_source": null,
+        "inception_date": "2025-06-18"
       }
     ],
     "inception_limited": [
@@ -612,34 +612,33 @@
   "daily_1y_gap": {
     "min_rows": 200,
     "detail_files_scanned": 5605,
-    "complete": 4028,
-    "missing": 1577,
-    "fetchable": 513,
+    "complete": 4071,
+    "missing": 1534,
+    "fetchable": 457,
     "inception_limited": 1011,
-    "terminal_limited": 53,
+    "terminal_limited": 66,
     "classification_projection": {
       "row_count": 5605,
-      "sha256": "f674986a8bdf1af07534234c43b50d1ba209f82d96d5646b823c8c749f7bb21c",
+      "sha256": "8e2d1f1fd3828caa9bcefc001ed5ef6fc9d213a1a56a8376da43f204c910bc8f",
       "reason_counts": {
-        "complete": 4028,
+        "complete": 4071,
         "full_span_sparse_history": 1,
         "inception_limited_declared": 1011,
-        "provider_recent_failure": 29,
-        "provider_rejected_non_etf": 5,
+        "provider_recent_failure": 41,
+        "provider_rejected_non_etf": 6,
         "provider_truncated_suspected": 1,
         "source_unavailable_recent_failure": 18,
         "stockanalysis_recent_short_rows": 1,
-        "unconfirmed_short_history": 511
+        "unconfirmed_short_history": 455
       }
     },
     "fetchable_breakdown": {
       "counts": {
-        "stockanalysis_short_rows": 513
+        "stockanalysis_short_rows": 457
       },
       "samples": {
         "stockanalysis_short_rows": [
           "AAOX",
-          "ACII",
           "ADIU",
           "AMUN",
           "AMYY",
@@ -647,14 +646,15 @@
           "APDB",
           "APHG",
           "APLX",
-          "APLZ"
+          "APLZ",
+          "APPC"
         ]
       }
     },
     "terminal_limited_breakdown": {
       "counts": {
-        "provider_recent_failure": 29,
-        "provider_rejected_non_etf": 5,
+        "provider_recent_failure": 41,
+        "provider_rejected_non_etf": 6,
         "source_unavailable_recent_failure": 18,
         "stockanalysis_recent_short_rows": 1
       },
@@ -673,6 +673,7 @@
         ],
         "provider_rejected_non_etf": [
           "ESUM",
+          "IDEQ",
           "PHYS",
           "PSLV",
           "SFGV",
@@ -738,51 +739,7 @@
             "yf_crosscheck_earliest": "2026-03-24",
             "yf_crosscheck_latest": "2026-08-07",
             "yf_crosscheck_density": 0.959596,
-            "classification_as_of": "2026-09-25T05:24:26.412Z"
-          }
-        },
-        {
-          "ticker": "ACII",
-          "actual_rows": 0,
-          "fetchable_missing": [
-            "daily_1y"
-          ],
-          "inception_limited_missing": [],
-          "inception_date": null,
-          "daily_1y_gap_source": "stockanalysis_short_rows",
-          "source_provider": "stockanalysis",
-          "detail_status": "stockanalysis_partial",
-          "classification_reason": "unconfirmed_short_history",
-          "payload_fetched_at": "2026-07-15T14:31:24Z",
-          "daily_1y_classification": {
-            "classification_reason": "unconfirmed_short_history",
-            "declared_inception_date": "2025-09-25",
-            "declared_inception_source": "normalized.overview.inception",
-            "declared_inception_source_field": "normalized.overview.inception",
-            "declared_inception_valid": false,
-            "declared_inception_invalid_future": false,
-            "effective_start_date": null,
-            "effective_start_source": null,
-            "provider_truncation_suspected": false,
-            "cross_provider_start_confirmed": false,
-            "stable_observation_confirmed": false,
-            "stable_observation_pinned_start": null,
-            "daily_1y_row_count": 0,
-            "daily_1y_valid_unique_date_count": 0,
-            "daily_1y_earliest_observation": null,
-            "daily_1y_latest_observation": null,
-            "daily_1y_span_days": null,
-            "daily_1y_expected_trading_days": 0,
-            "daily_1y_density": 0,
-            "daily_1y_max_internal_gap_days": 0,
-            "latest_observation_age_days": null,
-            "latest_observation_age_business_days": null,
-            "daily_1y_evidence_pass": false,
-            "yf_crosscheck_rows": 218,
-            "yf_crosscheck_earliest": "2025-09-25",
-            "yf_crosscheck_latest": "2026-08-07",
-            "yf_crosscheck_density": 0.960352,
-            "classification_as_of": "2026-09-25T05:24:26.412Z"
+            "classification_as_of": "2026-09-25T05:59:12.423Z"
           }
         },
         {
@@ -826,7 +783,7 @@
             "yf_crosscheck_earliest": "2026-06-16",
             "yf_crosscheck_latest": "2026-08-04",
             "yf_crosscheck_density": 0.944444,
-            "classification_as_of": "2026-09-25T05:24:26.412Z"
+            "classification_as_of": "2026-09-25T05:59:12.423Z"
           }
         },
         {
@@ -870,7 +827,7 @@
             "yf_crosscheck_earliest": "2025-10-21",
             "yf_crosscheck_latest": "2026-08-06",
             "yf_crosscheck_density": 0.956731,
-            "classification_as_of": "2026-09-25T05:24:26.412Z"
+            "classification_as_of": "2026-09-25T05:59:12.423Z"
           }
         },
         {
@@ -914,7 +871,7 @@
             "yf_crosscheck_earliest": "2025-09-16",
             "yf_crosscheck_latest": "2026-08-05",
             "yf_crosscheck_density": 0.961207,
-            "classification_as_of": "2026-09-25T05:24:26.412Z"
+            "classification_as_of": "2026-09-25T05:59:12.423Z"
           }
         },
         {
@@ -958,7 +915,7 @@
             "yf_crosscheck_earliest": "2025-09-04",
             "yf_crosscheck_latest": "2026-08-06",
             "yf_crosscheck_density": 0.962656,
-            "classification_as_of": "2026-09-25T05:24:26.412Z"
+            "classification_as_of": "2026-09-25T05:59:12.423Z"
           }
         },
         {
@@ -1002,7 +959,7 @@
             "yf_crosscheck_earliest": "2026-05-06",
             "yf_crosscheck_latest": "2026-08-07",
             "yf_crosscheck_density": 0.955882,
-            "classification_as_of": "2026-09-25T05:24:26.412Z"
+            "classification_as_of": "2026-09-25T05:59:12.423Z"
           }
         },
         {
@@ -1046,7 +1003,7 @@
             "yf_crosscheck_earliest": "2026-06-16",
             "yf_crosscheck_latest": "2026-08-07",
             "yf_crosscheck_density": 0.948718,
-            "classification_as_of": "2026-09-25T05:24:26.412Z"
+            "classification_as_of": "2026-09-25T05:59:12.423Z"
           }
         },
         {
@@ -1090,7 +1047,7 @@
             "yf_crosscheck_earliest": "2025-09-09",
             "yf_crosscheck_latest": "2026-08-05",
             "yf_crosscheck_density": 0.962025,
-            "classification_as_of": "2026-09-25T05:24:26.412Z"
+            "classification_as_of": "2026-09-25T05:59:12.423Z"
           }
         },
         {
@@ -1134,7 +1091,51 @@
             "yf_crosscheck_earliest": "2026-01-22",
             "yf_crosscheck_latest": "2026-08-07",
             "yf_crosscheck_density": 0.964789,
-            "classification_as_of": "2026-09-25T05:24:26.412Z"
+            "classification_as_of": "2026-09-25T05:59:12.423Z"
+          }
+        },
+        {
+          "ticker": "APPC",
+          "actual_rows": 14,
+          "fetchable_missing": [
+            "daily_1y"
+          ],
+          "inception_limited_missing": [],
+          "inception_date": null,
+          "daily_1y_gap_source": "stockanalysis_short_rows",
+          "source_provider": "stockanalysis",
+          "detail_status": "stockanalysis_partial",
+          "classification_reason": "unconfirmed_short_history",
+          "payload_fetched_at": "2026-07-19T05:55:07Z",
+          "daily_1y_classification": {
+            "classification_reason": "unconfirmed_short_history",
+            "declared_inception_date": null,
+            "declared_inception_source": null,
+            "declared_inception_source_field": null,
+            "declared_inception_valid": false,
+            "declared_inception_invalid_future": false,
+            "effective_start_date": null,
+            "effective_start_source": null,
+            "provider_truncation_suspected": false,
+            "cross_provider_start_confirmed": false,
+            "stable_observation_confirmed": false,
+            "stable_observation_pinned_start": null,
+            "daily_1y_row_count": 14,
+            "daily_1y_valid_unique_date_count": 14,
+            "daily_1y_earliest_observation": "2026-06-29",
+            "daily_1y_latest_observation": "2026-07-17",
+            "daily_1y_span_days": 18,
+            "daily_1y_expected_trading_days": 15,
+            "daily_1y_density": 0.933333,
+            "daily_1y_max_internal_gap_days": 4,
+            "latest_observation_age_days": 70,
+            "latest_observation_age_business_days": 50,
+            "daily_1y_evidence_pass": false,
+            "yf_crosscheck_rows": 33,
+            "yf_crosscheck_earliest": "2026-06-26",
+            "yf_crosscheck_latest": "2026-08-12",
+            "yf_crosscheck_density": 0.970588,
+            "classification_as_of": "2026-09-25T05:59:12.423Z"
           }
         }
       ],
@@ -1179,7 +1180,7 @@
             "yf_crosscheck_earliest": "2025-12-11",
             "yf_crosscheck_latest": "2026-08-10",
             "yf_crosscheck_density": 0.953757,
-            "classification_as_of": "2026-09-25T05:24:26.412Z"
+            "classification_as_of": "2026-09-25T05:59:12.423Z"
           }
         },
         {
@@ -1222,7 +1223,7 @@
             "yf_crosscheck_earliest": "2026-06-03",
             "yf_crosscheck_latest": "2026-08-07",
             "yf_crosscheck_density": 0.958333,
-            "classification_as_of": "2026-09-25T05:24:26.412Z"
+            "classification_as_of": "2026-09-25T05:59:12.423Z"
           }
         },
         {
@@ -1265,7 +1266,7 @@
             "yf_crosscheck_earliest": "2026-06-23",
             "yf_crosscheck_latest": "2026-08-05",
             "yf_crosscheck_density": 0.96875,
-            "classification_as_of": "2026-09-25T05:24:26.412Z"
+            "classification_as_of": "2026-09-25T05:59:12.423Z"
           }
         },
         {
@@ -1308,7 +1309,7 @@
             "yf_crosscheck_earliest": "2025-12-12",
             "yf_crosscheck_latest": "2026-08-06",
             "yf_crosscheck_density": 0.952941,
-            "classification_as_of": "2026-09-25T05:24:26.412Z"
+            "classification_as_of": "2026-09-25T05:59:12.423Z"
           }
         },
         {
@@ -1351,7 +1352,7 @@
             "yf_crosscheck_earliest": "2026-05-12",
             "yf_crosscheck_latest": "2026-08-06",
             "yf_crosscheck_density": 0.952381,
-            "classification_as_of": "2026-09-25T05:24:26.412Z"
+            "classification_as_of": "2026-09-25T05:59:12.423Z"
           }
         },
         {
@@ -1394,7 +1395,7 @@
             "yf_crosscheck_earliest": "2026-07-15",
             "yf_crosscheck_latest": "2026-08-06",
             "yf_crosscheck_density": 1,
-            "classification_as_of": "2026-09-25T05:24:26.412Z"
+            "classification_as_of": "2026-09-25T05:59:12.423Z"
           }
         },
         {
@@ -1437,7 +1438,7 @@
             "yf_crosscheck_earliest": "2026-07-07",
             "yf_crosscheck_latest": "2026-08-11",
             "yf_crosscheck_density": 1,
-            "classification_as_of": "2026-09-25T05:24:26.412Z"
+            "classification_as_of": "2026-09-25T05:59:12.423Z"
           }
         },
         {
@@ -1480,7 +1481,7 @@
             "yf_crosscheck_earliest": "2026-03-19",
             "yf_crosscheck_latest": "2026-08-06",
             "yf_crosscheck_density": 0.960396,
-            "classification_as_of": "2026-09-25T05:24:26.412Z"
+            "classification_as_of": "2026-09-25T05:59:12.423Z"
           }
         },
         {
@@ -1523,7 +1524,7 @@
             "yf_crosscheck_earliest": "2026-07-23",
             "yf_crosscheck_latest": "2026-08-10",
             "yf_crosscheck_density": 1,
-            "classification_as_of": "2026-09-25T05:24:26.412Z"
+            "classification_as_of": "2026-09-25T05:59:12.423Z"
           }
         },
         {
@@ -1566,7 +1567,7 @@
             "yf_crosscheck_earliest": null,
             "yf_crosscheck_latest": null,
             "yf_crosscheck_density": 0,
-            "classification_as_of": "2026-09-25T05:24:26.412Z"
+            "classification_as_of": "2026-09-25T05:59:12.423Z"
           }
         }
       ],
@@ -1616,7 +1617,7 @@
             "yf_crosscheck_earliest": "2025-09-25",
             "yf_crosscheck_latest": "2026-09-24",
             "yf_crosscheck_density": 0.957854,
-            "classification_as_of": "2026-09-25T05:24:26.412Z"
+            "classification_as_of": "2026-09-25T05:59:12.423Z"
           }
         },
         {
@@ -1664,7 +1665,7 @@
             "yf_crosscheck_earliest": "2025-09-24",
             "yf_crosscheck_latest": "2026-09-24",
             "yf_crosscheck_density": 0.958015,
-            "classification_as_of": "2026-09-25T05:24:26.412Z"
+            "classification_as_of": "2026-09-25T05:59:12.423Z"
           }
         },
         {
@@ -1712,7 +1713,7 @@
             "yf_crosscheck_earliest": "2025-09-24",
             "yf_crosscheck_latest": "2026-09-24",
             "yf_crosscheck_density": 0.958015,
-            "classification_as_of": "2026-09-25T05:24:26.412Z"
+            "classification_as_of": "2026-09-25T05:59:12.423Z"
           }
         },
         {
@@ -1760,7 +1761,7 @@
             "yf_crosscheck_earliest": "2026-03-24",
             "yf_crosscheck_latest": "2026-08-12",
             "yf_crosscheck_density": 0.960784,
-            "classification_as_of": "2026-09-25T05:24:26.412Z"
+            "classification_as_of": "2026-09-25T05:59:12.423Z"
           }
         },
         {
@@ -1808,7 +1809,7 @@
             "yf_crosscheck_earliest": "2025-09-24",
             "yf_crosscheck_latest": "2026-09-24",
             "yf_crosscheck_density": 0.958015,
-            "classification_as_of": "2026-09-25T05:24:26.412Z"
+            "classification_as_of": "2026-09-25T05:59:12.423Z"
           }
         },
         {
@@ -1856,7 +1857,7 @@
             "yf_crosscheck_earliest": "2025-09-24",
             "yf_crosscheck_latest": "2026-09-24",
             "yf_crosscheck_density": 0.958015,
-            "classification_as_of": "2026-09-25T05:24:26.412Z"
+            "classification_as_of": "2026-09-25T05:59:12.423Z"
           }
         },
         {
@@ -1904,7 +1905,7 @@
             "yf_crosscheck_earliest": "2025-09-24",
             "yf_crosscheck_latest": "2026-09-24",
             "yf_crosscheck_density": 0.958015,
-            "classification_as_of": "2026-09-25T05:24:26.412Z"
+            "classification_as_of": "2026-09-25T05:59:12.423Z"
           }
         },
         {
@@ -1952,7 +1953,7 @@
             "yf_crosscheck_earliest": "2025-09-24",
             "yf_crosscheck_latest": "2026-09-24",
             "yf_crosscheck_density": 0.958015,
-            "classification_as_of": "2026-09-25T05:24:26.412Z"
+            "classification_as_of": "2026-09-25T05:59:12.423Z"
           }
         },
         {
@@ -2000,7 +2001,7 @@
             "yf_crosscheck_earliest": "2025-09-24",
             "yf_crosscheck_latest": "2026-09-24",
             "yf_crosscheck_density": 0.958015,
-            "classification_as_of": "2026-09-25T05:24:26.412Z"
+            "classification_as_of": "2026-09-25T05:59:12.423Z"
           }
         },
         {
@@ -2048,7 +2049,7 @@
             "yf_crosscheck_earliest": "2025-09-24",
             "yf_crosscheck_latest": "2026-09-24",
             "yf_crosscheck_density": 0.958015,
-            "classification_as_of": "2026-09-25T05:24:26.412Z"
+            "classification_as_of": "2026-09-25T05:59:12.423Z"
           }
         }
       ],
@@ -2077,30 +2078,30 @@
     },
     "scored_etfs": {
       "scored_etf_count": 4579,
-      "complete": 3600,
-      "missing": 979,
-      "fetchable": 260,
+      "complete": 3602,
+      "missing": 977,
+      "fetchable": 258,
       "inception_limited": 704,
       "terminal_limited": 15,
       "classification_projection": {
         "row_count": 4579,
-        "sha256": "eed7b314b95167660264627478047d95365645b50c12436895a99ba90288ca22",
+        "sha256": "40ce7fe1d23825c23ebea1683da9c6577f9335b7518a23ba2f7c7072ad3d6c74",
         "reason_counts": {
-          "complete": 3600,
-          "data_supply_unavailable": 10,
+          "complete": 3602,
+          "data_supply_unavailable": 9,
           "full_span_sparse_history": 1,
           "inception_limited_declared": 643,
           "inception_limited_observation_derived": 61,
           "missing_untracked": 169,
-          "provider_rejected_non_etf": 5,
+          "provider_rejected_non_etf": 6,
           "provider_truncated_suspected": 1,
-          "unconfirmed_short_history": 89
+          "unconfirmed_short_history": 87
         }
       },
       "fetchable_breakdown": {
         "counts": {
           "missing_untracked": 169,
-          "stockanalysis_short_rows": 89,
+          "stockanalysis_short_rows": 87,
           "yahoo_fallback_short_rows": 2
         },
         "samples": {
@@ -2117,7 +2118,6 @@
             "AEMG"
           ],
           "stockanalysis_short_rows": [
-            "ACII",
             "AMUN",
             "ASCI",
             "BCKT",
@@ -2126,7 +2126,8 @@
             "BGCG",
             "BGFI",
             "BGGG",
-            "BGUS"
+            "BGUS",
+            "BMSI"
           ],
           "yahoo_fallback_short_rows": [
             "ARMY",
@@ -2136,8 +2137,8 @@
       },
       "terminal_limited_breakdown": {
         "counts": {
-          "data_supply_unavailable": 10,
-          "provider_rejected_non_etf": 5
+          "data_supply_unavailable": 9,
+          "provider_rejected_non_etf": 6
         },
         "samples": {
           "data_supply_unavailable": [
@@ -2145,7 +2146,6 @@
             "CBOX",
             "CUST",
             "FPAS",
-            "HFSP",
             "IBIM",
             "PCEB",
             "STXF",
@@ -2154,6 +2154,7 @@
           ],
           "provider_rejected_non_etf": [
             "ESUM",
+            "IDEQ",
             "PHYS",
             "PSLV",
             "SFGV",
@@ -2200,54 +2201,6 @@
             "detail_source_kind": "missing",
             "primary_present": false,
             "data_supply_status": "missing",
-            "data_supply_resolution_state": null
-          },
-          {
-            "ticker": "ACII",
-            "actual_rows": 0,
-            "fetchable_missing": [
-              "daily_1y"
-            ],
-            "inception_limited_missing": [],
-            "inception_date": null,
-            "daily_1y_gap_source": "stockanalysis_short_rows",
-            "source_provider": "stockanalysis",
-            "detail_status": "stockanalysis_partial",
-            "classification_reason": "unconfirmed_short_history",
-            "payload_fetched_at": "2026-07-15T14:31:24Z",
-            "daily_1y_classification": {
-              "classification_reason": "unconfirmed_short_history",
-              "declared_inception_date": "2025-09-25",
-              "declared_inception_source": "normalized.overview.inception",
-              "declared_inception_source_field": "normalized.overview.inception",
-              "declared_inception_valid": false,
-              "declared_inception_invalid_future": false,
-              "effective_start_date": null,
-              "effective_start_source": null,
-              "provider_truncation_suspected": false,
-              "cross_provider_start_confirmed": false,
-              "stable_observation_confirmed": false,
-              "stable_observation_pinned_start": null,
-              "daily_1y_row_count": 0,
-              "daily_1y_valid_unique_date_count": 0,
-              "daily_1y_earliest_observation": null,
-              "daily_1y_latest_observation": null,
-              "daily_1y_span_days": null,
-              "daily_1y_expected_trading_days": 0,
-              "daily_1y_density": 0,
-              "daily_1y_max_internal_gap_days": 0,
-              "latest_observation_age_days": null,
-              "latest_observation_age_business_days": null,
-              "daily_1y_evidence_pass": false,
-              "yf_crosscheck_rows": 218,
-              "yf_crosscheck_earliest": "2025-09-25",
-              "yf_crosscheck_latest": "2026-08-07",
-              "yf_crosscheck_density": 0.960352,
-              "classification_as_of": "2026-09-25T05:24:26.412Z"
-            },
-            "detail_source_kind": "stockanalysis_primary",
-            "primary_present": true,
-            "data_supply_status": "available",
             "data_supply_resolution_state": null
           },
           {
@@ -2327,6 +2280,19 @@
             "primary_present": false,
             "data_supply_status": "missing",
             "data_supply_resolution_state": null
+          },
+          {
+            "ticker": "AEMG",
+            "actual_rows": 0,
+            "missing_file": true,
+            "daily_1y_gap_source": "missing_untracked",
+            "terminal_limit_source": null,
+            "pending_consecutive_failures": 0,
+            "pending_next_attempt_after_utc": null,
+            "detail_source_kind": "missing",
+            "primary_present": false,
+            "data_supply_status": "missing",
+            "data_supply_resolution_state": null
           }
         ],
         "inception_limited": [
@@ -2370,7 +2336,7 @@
               "yf_crosscheck_earliest": "2025-12-11",
               "yf_crosscheck_latest": "2026-08-10",
               "yf_crosscheck_density": 0.953757,
-              "classification_as_of": "2026-09-25T05:24:26.412Z"
+              "classification_as_of": "2026-09-25T05:59:12.423Z"
             },
             "detail_source_kind": "stockanalysis_primary",
             "primary_present": true,
@@ -2417,7 +2383,7 @@
               "yf_crosscheck_earliest": "2026-06-03",
               "yf_crosscheck_latest": "2026-08-07",
               "yf_crosscheck_density": 0.958333,
-              "classification_as_of": "2026-09-25T05:24:26.412Z"
+              "classification_as_of": "2026-09-25T05:59:12.423Z"
             },
             "detail_source_kind": "stockanalysis_primary",
             "primary_present": true,
@@ -2464,7 +2430,7 @@
               "yf_crosscheck_earliest": "2026-06-23",
               "yf_crosscheck_latest": "2026-08-05",
               "yf_crosscheck_density": 0.96875,
-              "classification_as_of": "2026-09-25T05:24:26.412Z"
+              "classification_as_of": "2026-09-25T05:59:12.423Z"
             },
             "detail_source_kind": "stockanalysis_primary",
             "primary_present": true,
@@ -2511,7 +2477,7 @@
               "yf_crosscheck_earliest": "2025-12-12",
               "yf_crosscheck_latest": "2026-08-06",
               "yf_crosscheck_density": 0.952941,
-              "classification_as_of": "2026-09-25T05:24:26.412Z"
+              "classification_as_of": "2026-09-25T05:59:12.423Z"
             },
             "detail_source_kind": "stockanalysis_primary",
             "primary_present": true,
@@ -2558,7 +2524,7 @@
               "yf_crosscheck_earliest": "2026-03-19",
               "yf_crosscheck_latest": "2026-08-06",
               "yf_crosscheck_density": 0.960396,
-              "classification_as_of": "2026-09-25T05:24:26.412Z"
+              "classification_as_of": "2026-09-25T05:59:12.423Z"
             },
             "detail_source_kind": "stockanalysis_primary",
             "primary_present": true,
@@ -2605,7 +2571,7 @@
               "yf_crosscheck_earliest": "2026-07-23",
               "yf_crosscheck_latest": "2026-08-10",
               "yf_crosscheck_density": 1,
-              "classification_as_of": "2026-09-25T05:24:26.412Z"
+              "classification_as_of": "2026-09-25T05:59:12.423Z"
             },
             "detail_source_kind": "stockanalysis_primary",
             "primary_present": true,
@@ -2652,7 +2618,7 @@
               "yf_crosscheck_earliest": "2026-04-01",
               "yf_crosscheck_latest": "2026-08-11",
               "yf_crosscheck_density": 0.957895,
-              "classification_as_of": "2026-09-25T05:24:26.412Z"
+              "classification_as_of": "2026-09-25T05:59:12.423Z"
             },
             "detail_source_kind": "stockanalysis_primary",
             "primary_present": true,
@@ -2699,7 +2665,7 @@
               "yf_crosscheck_earliest": "2025-11-24",
               "yf_crosscheck_latest": "2026-08-07",
               "yf_crosscheck_density": 0.951351,
-              "classification_as_of": "2026-09-25T05:24:26.412Z"
+              "classification_as_of": "2026-09-25T05:59:12.423Z"
             },
             "detail_source_kind": "stockanalysis_primary",
             "primary_present": true,
@@ -2746,7 +2712,7 @@
               "yf_crosscheck_earliest": "2026-06-03",
               "yf_crosscheck_latest": "2026-08-10",
               "yf_crosscheck_density": 0.959184,
-              "classification_as_of": "2026-09-25T05:24:26.412Z"
+              "classification_as_of": "2026-09-25T05:59:12.423Z"
             },
             "detail_source_kind": "stockanalysis_primary",
             "primary_present": true,
@@ -2793,7 +2759,7 @@
               "yf_crosscheck_earliest": "2025-10-16",
               "yf_crosscheck_latest": "2026-08-11",
               "yf_crosscheck_density": 0.957944,
-              "classification_as_of": "2026-09-25T05:24:26.412Z"
+              "classification_as_of": "2026-09-25T05:59:12.423Z"
             },
             "detail_source_kind": "stockanalysis_primary",
             "primary_present": true,
@@ -2895,7 +2861,7 @@
               "yf_crosscheck_earliest": "2025-09-24",
               "yf_crosscheck_latest": "2026-09-24",
               "yf_crosscheck_density": 0.958015,
-              "classification_as_of": "2026-09-25T05:24:26.412Z"
+              "classification_as_of": "2026-09-25T05:59:12.423Z"
             },
             "detail_source_kind": "stockanalysis_primary",
             "primary_present": true,
@@ -2919,7 +2885,7 @@
             "data_supply_resolution_state": null
           },
           {
-            "ticker": "HFSP",
+            "ticker": "IBIM",
             "actual_rows": 0,
             "missing_file": true,
             "terminal_limited_missing": [
@@ -2935,19 +2901,55 @@
             "data_supply_resolution_state": null
           },
           {
-            "ticker": "IBIM",
+            "ticker": "IDEQ",
             "actual_rows": 0,
-            "missing_file": true,
+            "fetchable_missing": [],
+            "inception_limited_missing": [],
             "terminal_limited_missing": [
               "daily_1y"
             ],
-            "terminal_limit_source": "data_supply_unavailable",
-            "daily_1y_gap_source": "data_supply_unavailable",
-            "pending_consecutive_failures": 1,
-            "pending_next_attempt_after_utc": null,
-            "detail_source_kind": "r2_unavailable",
-            "primary_present": false,
-            "data_supply_status": "unavailable",
+            "terminal_limit_source": "provider_rejected_non_etf",
+            "inception_date": null,
+            "daily_1y_gap_source": "provider_rejected_non_etf",
+            "source_provider": "stockanalysis",
+            "detail_status": "stockanalysis_partial",
+            "pending_consecutive_failures": 5,
+            "pending_next_attempt_after_utc": "2026-10-02T05:39:06Z",
+            "classification_reason": "unconfirmed_short_history",
+            "payload_fetched_at": "2026-07-18T20:49:58Z",
+            "daily_1y_classification": {
+              "classification_reason": "unconfirmed_short_history",
+              "declared_inception_date": "2015-05-29",
+              "declared_inception_source": "normalized.overview.inception",
+              "declared_inception_source_field": "normalized.overview.inception",
+              "declared_inception_valid": false,
+              "declared_inception_invalid_future": false,
+              "effective_start_date": null,
+              "effective_start_source": null,
+              "provider_truncation_suspected": false,
+              "cross_provider_start_confirmed": false,
+              "stable_observation_confirmed": false,
+              "stable_observation_pinned_start": null,
+              "daily_1y_row_count": 0,
+              "daily_1y_valid_unique_date_count": 0,
+              "daily_1y_earliest_observation": null,
+              "daily_1y_latest_observation": null,
+              "daily_1y_span_days": null,
+              "daily_1y_expected_trading_days": 0,
+              "daily_1y_density": 0,
+              "daily_1y_max_internal_gap_days": 0,
+              "latest_observation_age_days": null,
+              "latest_observation_age_business_days": null,
+              "daily_1y_evidence_pass": false,
+              "yf_crosscheck_rows": 250,
+              "yf_crosscheck_earliest": "2025-09-25",
+              "yf_crosscheck_latest": "2026-09-24",
+              "yf_crosscheck_density": 0.957854,
+              "classification_as_of": "2026-09-25T05:59:12.423Z"
+            },
+            "detail_source_kind": "stockanalysis_primary",
+            "primary_present": true,
+            "data_supply_status": "available",
             "data_supply_resolution_state": null
           },
           {
@@ -3011,7 +3013,7 @@
               "yf_crosscheck_earliest": "2025-09-24",
               "yf_crosscheck_latest": "2026-09-24",
               "yf_crosscheck_density": 0.958015,
-              "classification_as_of": "2026-09-25T05:24:26.412Z"
+              "classification_as_of": "2026-09-25T05:59:12.423Z"
             },
             "detail_source_kind": "stockanalysis_primary",
             "primary_present": true,
@@ -3063,7 +3065,7 @@
               "yf_crosscheck_earliest": "2025-09-24",
               "yf_crosscheck_latest": "2026-09-24",
               "yf_crosscheck_density": 0.961832,
-              "classification_as_of": "2026-09-25T05:24:26.412Z"
+              "classification_as_of": "2026-09-25T05:59:12.423Z"
             },
             "detail_source_kind": "stockanalysis_primary",
             "primary_present": true,
@@ -3118,7 +3120,7 @@
     "caveat": "Effective ETF detail daily 1Y continuity uses true StockAnalysis primary first, then the verified R2 active selection. Fetchable gaps are the immediate backfill queue; inception-limited and terminal provider/data-supply states are tracked but do not block by themselves."
   },
   "incremental_plan": {
-    "generated_at": "2026-09-24T17:27:21Z",
+    "generated_at": "2026-09-25T05:39:12Z",
     "operation": "incremental_etf_backfill_plan",
     "mode": "history_gaps_only",
     "network": "none",
@@ -3162,10 +3164,10 @@
     }
   },
   "market_facts_return_3y": {
-    "etf": 2878,
-    "stockanalysis_history": 610,
-    "etf_coverage_pct": 51.58,
-    "etf_denominator": 5580,
+    "etf": 2900,
+    "stockanalysis_history": 632,
+    "etf_coverage_pct": 51.96,
+    "etf_denominator": 5581,
     "stockanalysis_universe_denominator": 5642
   },
   "recommended_dispatch": {
@@ -3181,8 +3183,8 @@
       "selection": "explicit full-primary daily_1y fetchable tickers; not the scored-ETF scheduled plan",
       "single_writer": true,
       "shard_size": 100,
-      "ticker_count": 220,
-      "shard_count": 3,
+      "ticker_count": 164,
+      "shard_count": 2,
       "shards": [
         {
           "shard": 1,
@@ -3191,27 +3193,17 @@
             "history_gaps_only": "true",
             "required_history_periods": "daily_1y",
             "incremental_etf_limit": "0",
-            "etfs": "ACII,ARLU,AUGU,AVGW,BBB,BCCC,BETE,BETH,BITB,BNDY,BRKW,BRRR,BTC,BTCO,BTCW,BTRN,CBOJ,CBOY,CBTJ,CBTY,CBXY,CEGX,CERY,COIW,CPHY,CPNJ,CPNM,CPNQ,CPNS,CPRA,CPRJ,CPRO,CPRY,CPSA,CPSD,CPSF,CPSJ,CPSM,CPSN,CPSO,CPSP,CPSR,CPST,CPSU,HFSP,HIGH,HODL,HOOW,HYGW,HYSA,HYTI,HYTR,IAPR,IAU,IAUG,IAUM,IBIC,IBIH,IBIJ,IBIK,IBIL,IBIT,IBUF,IDEC,IDEQ,IFEB,IFED,IGLD,IJAN,IJUL,IJUN,IMAR,IMAY,INOV,IOCT,ISEP,IVVW,IWDL,IWFL,IWML,JAJL,JANT,JANU,JANW,JNEU,JOJO,JULH,JULJ,JULT,JULU,JULW,KAUG,KBAB,KBUF,KCCA,KDEC,KFEB,KJAN,KJUL,KJUN"
+            "etfs": "ARLU,AUGU,AVGW,BBB,BCCC,BETE,BETH,BITB,BNDY,BRKW,BRRR,BTC,BTCO,BTCW,BTRN,CBOJ,CBOY,CBTJ,CBTY,CBXY,CEGX,CERY,COIW,CPHY,CPNJ,CPNM,CPNQ,CPNS,CPRA,CPRJ,CPRO,CPRY,CPSA,CPSD,CPSF,CPSJ,CPSM,CPSN,CPSO,CPSP,CPSR,CPST,CPSU,HYGW,KMAR,KMAY,KMLI,KNOV,KOCT,KOLD,KPDD,KPRO,KSEP,KSPY,LABX,LAPR,LFEQ,LGCF,LJUL,LQDW,LQTI,LRCU,LTTI,MAGX,MAGY,MARU,MAYU,METW,MLPB,MLPD,MLPR,MMID,MSFW,MSFX,MSOO,MSTB,MSTQ,MSTW,MTUL,MVPL,MVRL,NAPR,NAUG,NDEC,NFEB,NFLW,NJAN,NJUL,SLON,TOT,UAUG,UCIB,UDEC,UDN,UFEB,UFIV,UJAN,UJUL,UJUN,ULE"
           }
         },
         {
           "shard": 2,
-          "ticker_count": 100,
+          "ticker_count": 64,
           "inputs": {
             "history_gaps_only": "true",
             "required_history_periods": "daily_1y",
             "incremental_etf_limit": "0",
-            "etfs": "KMAR,KMAY,KMLI,KNOV,KOCT,KOLD,KPDD,KPRO,KSEP,KSPY,LABX,LAPR,LFEQ,LGCF,LJUL,LQDW,LQTI,LRCU,LTTI,MAGX,MAGY,MARU,MAYU,METW,MLPB,MLPD,MLPR,MMID,MSFW,MSFX,MSOO,MSTB,MSTQ,MSTW,MTUL,MVPL,MVRL,NAPR,NAUG,NDEC,NFEB,NFLW,NJAN,NJUL,SLON,TOT,UAUG,UCIB,UDEC,UDN,UFEB,UFIV,UJAN,UJUL,UJUN,ULE,UMAY,UNOV,UNX,UOCT,USE,USEP,USG,USML,USOI,USVN,UTEN,UTHY,UTRE,UTWO,UTWY,UVXY,UX,UXRP,VIXM,VIXY,VXX,VXZ,VYLD,WAGN,WTPI,WXET,XBIL,XDIV,XDQQ,XDSQ,XDTE,XLBI,XLCI,XLEI,XLFI,XLII,XLRI,XLSI,XLVI,XLYI,XRPI,XRPR,XTJA,XTJL"
-          }
-        },
-        {
-          "shard": 3,
-          "ticker_count": 20,
-          "inputs": {
-            "history_gaps_only": "true",
-            "required_history_periods": "daily_1y",
-            "incremental_etf_limit": "0",
-            "etfs": "XTOC,YBTC,YCL,YCS,YETH,ZALT,ZAPR,ZAUG,ZDEK,ZFEB,ZJAN,ZJUL,ZJUN,ZMAY,ZNOV,ZOCT,ZSB,ZSC,ZSEP,ZVOL"
+            "etfs": "UMAY,UNOV,UNX,UOCT,USE,USEP,USG,USML,USOI,USVN,UTEN,UTHY,UTRE,UTWO,UTWY,UVXY,UX,UXRP,VIXM,VIXY,VXX,VXZ,VYLD,WAGN,WTPI,WXET,XBIL,XDIV,XDQQ,XDSQ,XDTE,XLBI,XLCI,XLEI,XLFI,XLII,XLRI,XLSI,XLVI,XLYI,XRPI,XRPR,XTJA,XTJL,XTOC,YBTC,YCL,YCS,YETH,ZALT,ZAPR,ZAUG,ZDEK,ZFEB,ZJAN,ZJUL,ZJUN,ZMAY,ZNOV,ZOCT,ZSB,ZSC,ZSEP,ZVOL"
           }
         }
       ]
