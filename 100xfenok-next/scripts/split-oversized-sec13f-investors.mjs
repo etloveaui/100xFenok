@@ -5,10 +5,13 @@
  *
  * The public mirror is the surface Cloudflare serves from static assets, where a
  * single asset may not exceed 25 MiB. This step compact-serializes every investor
- * mirror file and, when the compact form would still exceed the split cap,
- * rewrites the file as a small parts manifest plus quarter-range part files under
- * `<investor>/`. Consumers that understand the manifest load the parts and keep
- * the complete history; every other investor keeps a single unchanged file.
+ * mirror file and, when the compact form would still exceed the split trigger
+ * (16 MiB, conservative below the 25 MiB asset limit), rewrites the file as a
+ * small parts manifest plus quarter-range part files under `<investor>/`. Parts
+ * are packed at quarter boundaries by actual serialized bytes and may never
+ * exceed 20 MiB each; a single quarter over the cap fails the build by name.
+ * Consumers that understand the manifest load the parts and keep the complete
+ * history; every other investor keeps a single unchanged file.
  *
  * Registry-excluded paths (for example the private griffin investor) never reach
  * the public mirror and are ignored here. Re-running is idempotent: an existing
@@ -30,17 +33,20 @@ const PUBLIC_ROOT = rootFlagIndex >= 0 && process.argv[rootFlagIndex + 1]
 const INVESTORS_DIR = path.join(PUBLIC_ROOT, "data/sec-13f/investors");
 const MANIFEST_SCHEMA = "sec13f-investor-parts/v1";
 const DEFAULT_CAP_BYTES = 16 * 1024 * 1024;
-const QUARTERS_PER_PART = 25;
+const DEFAULT_PART_CAP_BYTES = 20 * 1024 * 1024;
 
-const capBytes = (() => {
-  const raw = process.env.SEC13F_INVESTOR_SPLIT_CAP_BYTES;
-  if (!raw) return DEFAULT_CAP_BYTES;
+function readCap(envName, fallback) {
+  const raw = process.env[envName];
+  if (!raw) return fallback;
   const parsed = Number.parseInt(raw, 10);
   if (!Number.isFinite(parsed) || parsed <= 0) {
-    throw new Error(`invalid SEC13F_INVESTOR_SPLIT_CAP_BYTES: ${raw}`);
+    throw new Error(`invalid ${envName}: ${raw}`);
   }
   return parsed;
-})();
+}
+
+const capBytes = readCap("SEC13F_INVESTOR_SPLIT_CAP_BYTES", DEFAULT_CAP_BYTES);
+const partCapBytes = readCap("SEC13F_INVESTOR_PART_CAP_BYTES", DEFAULT_PART_CAP_BYTES);
 
 const excludedFiles = new Set(
   deriveExcludedPublicDataFiles().map((relativePath) => `data/${relativePath}`),
@@ -50,15 +56,44 @@ function compactBytes(value) {
   return Buffer.byteLength(JSON.stringify(value));
 }
 
+function oversizedQuarterError(id, quarter) {
+  return new Error(
+    `single quarter ${quarter ?? "?"} of ${id} exceeds the ${partCapBytes}-byte part cap`,
+  );
+}
+
+function packParts(id, filings) {
+  const parts = [];
+  let current = [];
+  for (const filing of filings) {
+    const candidate = [...current, filing];
+    if (Buffer.byteLength(JSON.stringify({ filings: candidate })) > partCapBytes) {
+      if (current.length === 0) throw oversizedQuarterError(id, filing?.quarter);
+      parts.push(current);
+      current = [filing];
+      if (Buffer.byteLength(JSON.stringify({ filings: current })) > partCapBytes) {
+        throw oversizedQuarterError(id, filing?.quarter);
+      }
+    } else {
+      current = candidate;
+    }
+  }
+  if (current.length > 0) parts.push(current);
+  return parts;
+}
+
 function splitInvestor(absolutePath, id, investor, filings, rest) {
   const partsDir = path.join(INVESTORS_DIR, id);
   fs.rmSync(partsDir, { recursive: true, force: true });
   fs.mkdirSync(partsDir, { recursive: true });
   const parts = [];
-  for (let index = 0; index < filings.length; index += QUARTERS_PER_PART) {
-    const slice = filings.slice(index, index + QUARTERS_PER_PART);
+  for (const slice of packParts(id, filings)) {
     const partName = `part-${String(parts.length + 1).padStart(2, "0")}.json`;
-    fs.writeFileSync(path.join(partsDir, partName), JSON.stringify({ filings: slice }));
+    const body = JSON.stringify({ filings: slice });
+    if (Buffer.byteLength(body) > partCapBytes) {
+      throw oversizedQuarterError(id, slice[0]?.quarter);
+    }
+    fs.writeFileSync(path.join(partsDir, partName), body);
     parts.push({
       path: `/data/sec-13f/investors/${id}/${partName}`,
       count: slice.length,

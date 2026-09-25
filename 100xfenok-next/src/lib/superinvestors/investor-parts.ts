@@ -34,12 +34,27 @@ export async function resolveSec13fInvestorPayload<T>(payload: T): Promise<T> {
     payload.parts.map((part) => fetch(part.path, { cache: "force-cache" })),
   );
   const filings: unknown[] = [];
-  for (const response of responses) {
+  for (let index = 0; index < responses.length; index += 1) {
+    const part = payload.parts[index];
+    const response = responses[index];
     if (!response.ok) {
-      throw new Error(`sec13f investor part fetch failed: ${response.status}`);
+      throw new Error(`sec13f investor part fetch failed: ${response.status} (${part.path})`);
     }
-    const body = (await response.json()) as { filings?: unknown[] };
-    if (Array.isArray(body.filings)) filings.push(...body.filings);
+    const body = (await response.json()) as { filings?: unknown };
+    if (!Array.isArray(body.filings)) {
+      throw new Error(`sec13f investor part is malformed: ${part.path}`);
+    }
+    if (typeof part.count === "number" && body.filings.length !== part.count) {
+      throw new Error(
+        `sec13f investor part count mismatch: ${part.path} carries ${body.filings.length} filings, expected ${part.count}`,
+      );
+    }
+    filings.push(...body.filings);
+  }
+  if (typeof payload.filings_total === "number" && filings.length !== payload.filings_total) {
+    throw new Error(
+      `sec13f investor assembly mismatch: ${filings.length} of ${payload.filings_total} filings loaded`,
+    );
   }
   return {
     ...payload,
