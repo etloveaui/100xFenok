@@ -1,12 +1,12 @@
 #!/usr/bin/env node
 
 import assert from "node:assert/strict";
-import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from "node:fs";
+import { mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { dirname, join } from "node:path";
 
 import { buildEtfScoringLaneReadiness } from "./lib/etf-readiness-gate.mjs";
-import { runEtfSignalGateChecks } from "../100xfenok-next/scripts/check-fenok-etf-signal-gate.mjs";
+import { checkEtfSignalPayload, runEtfSignalGateChecks } from "../100xfenok-next/scripts/check-fenok-etf-signal-gate.mjs";
 
 const greenScoredLane = {
   signalGeneratedAt: "2026-07-26T14:23:44.115Z",
@@ -290,4 +290,78 @@ try {
   console.log("route proof (delegation regression cases): ok");
 } finally {
   for (const root of fixtureRoots) rmSync(root, { recursive: true, force: true });
+}
+
+// signal_definitions public contract: exact top-level allowlist plus
+// the intended shape — tracking_quality {label, meaning} only, no private/raw
+// nested data. Numerical/row/privacy checks above stay untouched.
+{
+  const currentSummary = JSON.parse(
+    readFileSync(
+      join(import.meta.dirname, "..", "data", "computed", "fenok_etf_signals_summary.json"),
+      "utf8",
+    ),
+  );
+  const check = (payload) => {
+    const errors = [];
+    checkEtfSignalPayload(payload, payload.__name ?? "signal_definitions fixture", new Set(), errors, [], { publicSummary: true });
+    return errors;
+  };
+  const cloneWith = (mutate, name) => {
+    const payload = structuredClone(currentSummary);
+    payload.__name = name;
+    mutate(payload);
+    delete payload.__name;
+    return payload;
+  };
+
+  // Positive: current shipped summary satisfies the full public contract.
+  assert.deepEqual(
+    check(structuredClone(currentSummary)),
+    [],
+    "current summary must pass every public payload check including signal_definitions",
+  );
+
+  // Negative: missing definitions -> exact top-level allowlist rejects it.
+  const missingErrors = check(cloneWith((p) => { delete p.signal_definitions; }, "missing definitions"));
+  assert.ok(
+    missingErrors.some((e) => e.includes("unexpected or missing public top-level field")),
+    "missing signal_definitions must be rejected",
+  );
+
+  // Negative: malformed shape (tracking_quality with unexpected keys).
+  const malformedShapeErrors = check(cloneWith((p) => {
+    p.signal_definitions = { tracking_quality: { label: "베타·이력 점수", benchmark_error_rate: 0.01 } };
+  }, "malformed definitions shape"));
+  assert.ok(
+    malformedShapeErrors.some((e) => e.includes("signal_definitions")),
+    "malformed signal_definitions shape must be rejected",
+  );
+
+  // Negative: malformed content (empty label must not pass as nonempty string).
+  const malformedContentErrors = check(cloneWith((p) => {
+    p.signal_definitions.tracking_quality = { label: " ", meaning: "Mean of beta proximity." };
+  }, "malformed definitions content"));
+  assert.ok(
+    malformedContentErrors.some((e) => e.includes("signal_definitions")),
+    "empty-label signal_definitions must be rejected",
+  );
+
+  // Negative: unexpected extra top-level field.
+  const extraTopErrors = check(cloneWith((p) => { p.private_debug = { raw: true }; }, "unexpected top-level field"));
+  assert.ok(
+    extraTopErrors.some((e) => e.includes("unexpected or missing public top-level field")),
+    "unexpected top-level field must be rejected",
+  );
+
+  // Negative: unexpected nested field inside tracking_quality.
+  const extraNestedErrors = check(cloneWith((p) => {
+    p.signal_definitions.tracking_quality.raw_scores = [1, 2, 3];
+  }, "unexpected nested field"));
+  assert.ok(
+    extraNestedErrors.some((e) => e.includes("signal_definitions")),
+    "unexpected nested field inside signal_definitions must be rejected",
+  );
+
+  console.log("signal_definitions public contract: ok");
 }

@@ -49,6 +49,7 @@ const PUBLIC_SUMMARY_TOP_LEVEL_KEYS = [
   "generated_at",
   "rows",
   "schema_version",
+  "signal_definitions",
   "source_file",
 ];
 const PUBLIC_SUMMARY_ROW_KEYS = [
@@ -216,6 +217,25 @@ export function checkEtfSignalPayload(
     }
     if (!sameJson(payload.fields, PUBLIC_SUMMARY_FIELDS)) {
       errors.push(`${name} fields differ from the public summary allowlist`);
+    }
+    // signal_definitions is deliberately public explanatory metadata: exactly
+    // tracking_quality {label, meaning} with nonempty strings. Extra private or
+    // raw nested fields are rejected rather than permitted.
+    const definitions = payload.signal_definitions;
+    if (definitions === undefined) {
+      errors.push(`${name} signal_definitions must be present`);
+    } else if (!definitions || typeof definitions !== "object" || Array.isArray(definitions)
+      || !sameKeys(definitions, ["tracking_quality"])) {
+      errors.push(`${name} signal_definitions must contain exactly tracking_quality`);
+    } else {
+      const quality = definitions.tracking_quality;
+      if (!quality || typeof quality !== "object" || Array.isArray(quality)
+        || !sameKeys(quality, ["label", "meaning"])) {
+        errors.push(`${name} signal_definitions.tracking_quality must contain exactly label and meaning`);
+      } else if (typeof quality.label !== "string" || quality.label.trim() === ""
+        || typeof quality.meaning !== "string" || quality.meaning.trim() === "") {
+        errors.push(`${name} signal_definitions.tracking_quality label/meaning must be nonempty strings`);
+      }
     }
   }
 
