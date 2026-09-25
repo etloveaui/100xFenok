@@ -49,10 +49,15 @@ jobs:
 
       # build-version.ts and lane-runid-map.ts are gitignored build outputs
       # that src imports; generate them the same way the deploy build does.
+      # src/lib/macro-chart/registry.ts imports the macro-series catalog from
+      # the public mirror, which sync-static fills from data/ (also ignored);
+      # copy just that file rather than running the full data sync.
       - name: Generate build-time modules
         run: |
           npm run build:version
           npm run build:lane-runid-map
+          mkdir -p public/data/catalog
+          cp ../data/catalog/macro-series.json public/data/catalog/macro-series.json
 
       - name: Typecheck
         run: npm run typecheck
