@@ -115,6 +115,14 @@ def main() -> int:
             SUBSET_DIR.mkdir(parents=True, exist_ok=True)
             target.write_bytes(data)
         slices.append({"file": file_name, "codepoints": len(codepoints), "bytes": len(data), "sha256": digest})
+        # Core is declared first and without a unicode-range. Where ranges
+        # overlap, the face declared last is checked first (CSS Fonts 4,
+        # unicode-range), so the precise lists of the two later faces still
+        # route rare characters away from core, while core's own ~1,700-range
+        # list (~6 KB of render-blocking CSS after gzip) is not shipped. Core is
+        # the file every page downloads anyway, so the wider range never costs
+        # an extra download. The reverse (a wide range on a rare face) would.
+        range_line = "" if name == "core" else f"  unicode-range: {unicode_range(codepoints)};\n"
         faces.append(
             "@font-face {\n"
             "  font-family: 'Pretendard Variable';\n"
@@ -122,7 +130,7 @@ def main() -> int:
             "  font-weight: 45 920;\n"
             "  font-display: swap;\n"
             f"  src: url('./pretendard/{file_name}') format('woff2-variations');\n"
-            f"  unicode-range: {unicode_range(codepoints)};\n"
+            f"{range_line}"
             "}"
         )
 
