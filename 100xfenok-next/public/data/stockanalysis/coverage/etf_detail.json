@@ -2,7 +2,7 @@
   "schema_version": "stockanalysis/v1",
   "source": "stockanalysis",
   "asset_type": "etf_detail_coverage",
-  "generated_at": "2026-09-24T23:56:11Z",
+  "generated_at": "2026-09-25T02:14:01Z",
   "status": "warn",
   "policy": {
     "candidate_universe": "union(etf_universe, etf_screener, new_etfs)",
@@ -17,7 +17,7 @@
     "pending_ledger": "backfill/pending_ledger.json"
   },
   "counts": {
-    "candidate_total": 5650,
+    "candidate_total": 5666,
     "source_breakdown": {
       "etf_universe": 5642,
       "etf_screener": 20,
@@ -25,13 +25,13 @@
     },
     "detail_files": 5605,
     "covered_detail_files": 5440,
-    "missing_detail_files": 210,
+    "missing_detail_files": 226,
     "extra_detail_files": 165,
     "stockanalysis_detail_files": 5605,
     "yahoo_fallback_files": 0,
     "invalid_detail_files": 0,
-    "coverage_pct": 96.28,
-    "primary_stockanalysis_pct": 96.28,
+    "coverage_pct": 96.01,
+    "primary_stockanalysis_pct": 96.01,
     "missing_by_source": {
       "etf_universe": 202,
       "etf_screener": 0,
@@ -39,15 +39,15 @@
     },
     "missing_status_breakdown": {
       "provider_gap_reprobe_due": 1,
-      "untracked": 209
+      "untracked": 225
     },
     "missing_failure_breakdown": {
       "provider_coverage_gap": 1,
-      "untracked": 209
+      "untracked": 225
     },
     "missing_availability_breakdown": {
       "provider_absent": 1,
-      "unprobed": 209
+      "unprobed": 225
     },
     "pending_tracked": 290,
     "pending_cooldown": 51,
@@ -56,15 +56,15 @@
   },
   "missing_reason_summary": {
     "provider_coverage_gap": 1,
-    "untracked": 209
+    "untracked": 225
   },
   "missing_status_summary": {
     "provider_gap_reprobe_due": 1,
-    "untracked": 209
+    "untracked": 225
   },
   "missing_availability_summary": {
     "provider_absent": 1,
-    "unprobed": 209
+    "unprobed": 225
   },
   "missing_reason_samples": {
     "provider_coverage_gap": [
@@ -142,6 +142,7 @@
     "AFEM",
     "AGGM",
     "AHBM",
+    "AIBF",
     "AICH",
     "AIFR",
     "AIHY",
@@ -164,6 +165,7 @@
     "CCML",
     "CGFS",
     "CGPT",
+    "CHIP",
     "CLIM",
     "COHQ",
     "COOL",
@@ -253,7 +255,11 @@
     "MUNH",
     "MUNJ",
     "MXLL",
+    "MYCP",
+    "MYHF",
+    "MYML",
     "NCLD",
+    "NECK",
     "NQLT",
     "NRAM",
     "NUIB",
@@ -274,6 +280,7 @@
     "QAU",
     "QQAU",
     "QQBF",
+    "QQI",
     "QQQB",
     "QQSE",
     "QSE",
@@ -309,6 +316,7 @@
     "TSCZ",
     "TSEE",
     "TSIB",
+    "TXNY",
     "UCBG",
     "UMCU",
     "USGX",
@@ -317,6 +325,8 @@
     "USSX",
     "VEEM",
     "VEGX",
+    "VMHY",
+    "VMSD",
     "VOOB",
     "VOOY",
     "WSMD",
@@ -324,8 +334,14 @@
     "XCSH",
     "XQBT",
     "XUSM",
+    "XVAD",
     "XVAP",
+    "XVAZ",
+    "XVGL",
+    "XVMS",
+    "XVMT",
     "XVNV",
+    "XVPT",
     "XVSP",
     "XVTS",
     "XWNG",
@@ -527,6 +543,7 @@
       "AFEM",
       "AGGM",
       "AHBM",
+      "AIBF",
       "AICH",
       "AIFR",
       "AIHY",
@@ -549,6 +566,7 @@
       "CCML",
       "CGFS",
       "CGPT",
+      "CHIP",
       "CLIM",
       "COHQ",
       "COOL",
@@ -556,9 +574,7 @@
       "CROB",
       "CSEP",
       "CTSE",
-      "DACL",
-      "DEPW",
-      "DFMC"
+      "DACL"
     ],
     "missing_provider_gap_reprobe_due": [
       "DACL"
