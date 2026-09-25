@@ -797,7 +797,7 @@ export default function HomeCanvasPlusClient() {
             {indexCards.map((card) => {
               const positive = (card.changePercent ?? 0) >= 0;
               return (
-                <Panel key={card.symbol} loading={!dashboardSettled}>
+                <Panel key={card.symbol} loading={!dashboardSettled} loadingMode="placeholder">
                   <div className="flex flex-col gap-[6px] p-3 md:gap-[10px] md:p-[14px_16px]">
                     <div className="flex items-center justify-between gap-2">
                       <span className="font-mono text-[12px] text-[var(--c-ink)] md:text-[13px]">{card.label}</span>
@@ -814,7 +814,7 @@ export default function HomeCanvasPlusClient() {
                 </Panel>
               );
             })}
-            <Panel loading={kospiLoading}>
+            <Panel loading={kospiLoading} loadingMode="placeholder">
               <div className="flex flex-col gap-[6px] p-3 md:gap-[10px] md:p-[14px_16px]">
                 <div className="flex items-center justify-between gap-2">
                   <span className="font-mono text-[12px] text-[var(--c-ink)] md:text-[13px]">KOSPI</span>

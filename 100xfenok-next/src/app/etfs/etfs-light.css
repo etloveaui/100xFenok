@@ -782,6 +782,22 @@
   display: flex;
   flex-direction: column;
   gap: 8px;
+  container-type: inline-size;
+}
+
+/* Four count cells do not fit one row on a phone ("5,666개" and "100개" ran
+ * into each other and the fourth cell was clipped). Below 34rem of the
+ * strip's own width the cells fold into a 2x2 grid with hairline dividers. */
+@container (max-width: 34rem) {
+  .etf-sum [data-etfs-summary-cells] {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .etf-sum [data-etfs-summary-cells] > * {
+    border-width: 0;
+    box-shadow: 1px 0 0 var(--fnk-neutral-200), 0 1px 0 var(--fnk-neutral-200);
+  }
 }
 
 .etf-sum-note {

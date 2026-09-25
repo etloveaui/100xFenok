@@ -22,7 +22,16 @@ type PanelProps = {
   retryLabel?: string;
   /** keep LKG children visible when stale/error */
   keepContentOnStale?: boolean;
+  /**
+   * How `loading` looks. "skeleton" (default) lays the generic skeleton over the
+   * still-mounted, hidden children; "placeholder" is for children that already
+   * render their own placeholder layout (e.g. "—" values) — they stay visible
+   * and dimmed, so the panel keeps its exact size when data arrives.
+   */
+  loadingMode?: "skeleton" | "placeholder";
 };
+
+const PANEL_BOX = "bg-[#ffffff] border border-[#e2e8f0] rounded-[8px] overflow-hidden transition-colors duration-150";
 
 export function useDelayedLoading(active?: boolean, delay = 120) {
   const [show, setShow] = React.useState(false);
@@ -63,29 +72,49 @@ export function Panel({
   onRetry,
   retryLabel,
   keepContentOnStale = true,
+  loadingMode = "skeleton",
 }: PanelProps) {
   const showSkeleton = useDelayedLoading(loading);
-  if (showSkeleton) {
+  if (loading && loadingMode === "placeholder") {
     return (
-      <div
-        className={`bg-[#ffffff] border border-[#e2e8f0] rounded-[8px] overflow-hidden transition-colors duration-150 ${className}`}
-        aria-busy="true"
-      >
-        <Skeleton />
+      <div className={`${PANEL_BOX} ${className}`} aria-busy="true" data-panel-loading="placeholder">
+        {children}
+      </div>
+    );
+  }
+  if (loading) {
+    // Children stay in the layout (hidden) under the skeleton, so the panel is
+    // max(children, skeleton) tall from the first paint. Before, it rendered the
+    // children, swapped to a fixed skeleton at 120ms and swapped back on data —
+    // two layout shifts per panel. The skeleton itself still only becomes
+    // visible after the 120ms delay.
+    return (
+      <div className={`${PANEL_BOX} ${className}`} aria-busy="true" data-panel-loading="skeleton">
+        <div className="grid">
+          <div className="invisible [grid-area:1/1]" aria-hidden="true" inert>
+            {children}
+          </div>
+          <div
+            className="[grid-area:1/1] transition-opacity duration-150"
+            style={{ opacity: showSkeleton ? 1 : 0 }}
+          >
+            <Skeleton />
+          </div>
+        </div>
       </div>
     );
   }
   if (empty) {
     const { rails } = splitTrailingRails(children);
     return (
-      <div className={`bg-[#ffffff] border border-[#e2e8f0] rounded-[8px] overflow-hidden transition-colors duration-150 ${className}`}>
+      <div className={`${PANEL_BOX} ${className}`}>
         <EmptyState reason={emptyReason} nextRefresh={emptyNextRefresh} actionLabel={emptyActionLabel} onAction={onEmptyAction} />
         {rails}
       </div>
     );
   }
   return (
-    <div className={`bg-[#ffffff] border border-[#e2e8f0] rounded-[8px] overflow-hidden transition-colors duration-150 ${className}`}>
+    <div className={`${PANEL_BOX} ${className}`}>
       {(stale || error) && <StaleState asOf={asOf} detail={error ? errorDetail : undefined} onRetry={onRetry} retryLabel={retryLabel} />}
       {((stale || error) && keepContentOnStale) || (!stale && !error) ? children : null}
       {(stale || error) && !keepContentOnStale && <div className="px-4 py-3 text-[12px] text-[#64748b]">이전 값 유지 중</div>}

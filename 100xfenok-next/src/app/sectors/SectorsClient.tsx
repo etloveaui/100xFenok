@@ -744,7 +744,19 @@ export default function SectorsClient() {
             <span className="sec-eyebrow">SECTORS · GICS 기준 11개 업종 흐름</span>
             <Pill>섹터 11개</Pill>
           </div>
-          <h1 className="sec-title">{headline}</h1>
+          {/* The read sentence arrives with the data; the title box reserves its
+              lines up front so the panels below do not jump when it lands. */}
+          <h1 className="sec-title" aria-busy={loading || undefined}>
+            {loading ? (
+              <>
+                <span className="sr-only">{headline}</span>
+                <span className="sec-title-skeleton" aria-hidden="true" />
+                <span className="sec-title-skeleton sec-title-skeleton--short" aria-hidden="true" />
+              </>
+            ) : (
+              headline
+            )}
+          </h1>
           <div className="sec-meta-row">
             <Pill tone={sourceMeta.tickerSourceDate ? "neutral" : "warn"}>시세 수집 {quoteLabel}</Pill>
             {failed && (
