@@ -1,10 +1,10 @@
 {
   "schema_version": "sec13f-bridge-index/v1",
-  "generated_at": "2026-09-25T01:51:02.901Z",
-  "purpose": "SEC 13F bridge index of tickers outside the Global Scouter universe, published live with honest 424/1,028 coverage.",
+  "generated_at": "2026-09-25T05:24:06.185Z",
+  "purpose": "SEC 13F bridge index of tickers outside the Global Scouter universe, published live with honest 424/1,031 coverage.",
   "contract": {
     "candidate_type": "sec13f_extension_stock",
-    "consumer": "public/superinvestors and /data/computed/sec13f_bridge_index.json (honest 424/1,028 coverage)",
+    "consumer": "public/superinvestors and /data/computed/sec13f_bridge_index.json (honest 424/1,031 coverage)",
     "public_route": "/data/computed/sec13f_bridge_index.json",
     "live_readback": "verified",
     "producer_typed_marker": true,
@@ -30,14 +30,14 @@
     "sec13f": "2026-Q2"
   },
   "input_fingerprints": {
-    "analyzer": "429025736894670c97eecff6c5cfc29bc815aee5d688c9b5c40a135ca3752ec6",
-    "action_index": "a1570e57f3f173dc19e887fa711bfe5bf11e33db64cb7d8e57619cd6688a72d9",
-    "market_facts": "3d85308596fa5c08ed247731d6b31dd7c8f1625bdeadf2154dc644d3c9d5e587",
-    "sec13f_by_ticker": "da46f2d0e9a6b5007cf5ca0fffd3c5ff95cff0797cfe74ff5fdb62f5db17371b",
-    "sec13f_summary": "a27daea988ef236c6f52ec75368888dc90860e227e89cf70255cacb95a922813",
+    "analyzer": "6f76de1adcb714d6f29492f538096b7c5d8a44622e78f18c15cd67338433c3bb",
+    "action_index": "52041aaaa9216b808d388125e804d5e4f5c4f651386126e38882b9d8346f9fb9",
+    "market_facts": "1bfcc07a22f95251ba2324975287680207999bfd8646c05898c9c6ac83aa06b9",
+    "sec13f_by_ticker": "19358a7d63caf7b895beb0135ec3b72c0a9095c40df5eb41b075e16f2475220e",
+    "sec13f_summary": "2f4dd33783b6e39bcf4db3e666abf31019c2b372f5921adc75c9e950bdf604af",
     "market_facts_details": {
       "file_count": 115,
-      "sha256": "2523d79b9657114c82e6c16ccb232e5eb1f63bca710053151c47b233dfd78004"
+      "sha256": "61c9c0fb00f12c417dcd968ea34f9380ffd26b9a2b968a7d9783a06b05ee1d29"
     },
     "yf_finance_candidates": {
       "file_count": 78,
@@ -46,29 +46,29 @@
   },
   "graph_invariants": {
     "core_stock_count": 1066,
-    "sec13f_ticker_count": 1028,
+    "sec13f_ticker_count": 1031,
     "core_intersection_count": 424,
     "warning_threshold": 450,
     "graph_mutation_applied": false,
     "public_surface_mutation_applied": true
   },
   "counts": {
-    "sec13f_outside_core": 604,
+    "sec13f_outside_core": 607,
     "action_plus_market_facts": 78,
     "market_facts_only": 37,
-    "no_action_index_overlap": 526,
-    "no_market_facts": 489,
+    "no_action_index_overlap": 529,
+    "no_market_facts": 492,
     "action_index_only": 0,
     "sec13f_extension_stock": 78,
     "sec13f_market_facts_only": 37,
-    "sec13f_unresolved": 489,
+    "sec13f_unresolved": 492,
     "estimate": {
       "extension_full": 74,
       "extension_incomplete": 4,
       "market_facts_only_incomplete": 37,
-      "unresolved_absent": 489,
+      "unresolved_absent": 492,
       "as_of": {
-        "bridge_generated_at": "2026-09-25T01:51:02.901Z",
+        "bridge_generated_at": "2026-09-25T05:24:06.185Z",
         "yf_finance": "2026-09-24T00:00:00.000Z",
         "market_facts": "2026-09-21",
         "sec13f": "2026-Q2"
@@ -2365,7 +2365,7 @@
       },
       "sec13f": {
         "holders_count": 46,
-        "total_market_value": 315200865766
+        "total_market_value": 318393262012
       },
       "market_facts": null,
       "stock_action_index": null,
@@ -4496,8 +4496,8 @@
         "yf_finance": false
       },
       "sec13f": {
-        "holders_count": 5,
-        "total_market_value": 5653757449
+        "holders_count": 6,
+        "total_market_value": 8101875241
       },
       "market_facts": null,
       "stock_action_index": null,
@@ -7161,6 +7161,61 @@
       }
     },
     {
+      "ticker": "COMM",
+      "classification": {
+        "type": "sec13f_unresolved",
+        "classes": [
+          "no_action_index_overlap",
+          "no_market_facts"
+        ]
+      },
+      "source_links": {
+        "sec13f_by_ticker": true,
+        "global_scouter_core": false,
+        "stock_action_index": false,
+        "market_facts": false,
+        "yf_finance": false
+      },
+      "sec13f": {
+        "holders_count": 1,
+        "total_market_value": 80172774
+      },
+      "market_facts": null,
+      "stock_action_index": null,
+      "yf_estimates": {
+        "file": false,
+        "path": "data/yf/finance/COMM.json",
+        "state": "absent",
+        "source_as_of": null,
+        "fields_present": [],
+        "missing_fields": [
+          "earnings_estimate",
+          "revenue_estimate",
+          "growth_estimates",
+          "eps_trend",
+          "eps_revisions",
+          "recommendations_summary"
+        ]
+      },
+      "completeness": {
+        "market_facts_price_observed": false,
+        "action_price_present": false,
+        "action_valuation_present": false,
+        "yf_estimate_or_absent_reason": false,
+        "bridge_field_floor": false,
+        "per_present": false,
+        "forward_pe_present": false
+      },
+      "acceptance": {
+        "promotion_status": "promoted",
+        "reason": "promoted_live_honest_coverage",
+        "producer_typed_marker": true,
+        "current_consumer": "public/superinvestors and /data/computed/sec13f_bridge_index.json",
+        "public_route": "/data/computed/sec13f_bridge_index.json",
+        "live_readback": "verified"
+      }
+    },
+    {
       "ticker": "COMP",
       "classification": {
         "type": "sec13f_unresolved",
@@ -9478,8 +9533,8 @@
         "yf_finance": true
       },
       "sec13f": {
-        "holders_count": 20,
-        "total_market_value": 17711225290
+        "holders_count": 23,
+        "total_market_value": 15745109142
       },
       "market_facts": {
         "asset_type": "etf",
@@ -14753,8 +14808,8 @@
         "yf_finance": false
       },
       "sec13f": {
-        "holders_count": 1,
-        "total_market_value": 42769035
+        "holders_count": 2,
+        "total_market_value": 2033913090
       },
       "market_facts": null,
       "stock_action_index": null,
@@ -14816,6 +14871,61 @@
       "yf_estimates": {
         "file": false,
         "path": "data/yf/finance/HIW.json",
+        "state": "absent",
+        "source_as_of": null,
+        "fields_present": [],
+        "missing_fields": [
+          "earnings_estimate",
+          "revenue_estimate",
+          "growth_estimates",
+          "eps_trend",
+          "eps_revisions",
+          "recommendations_summary"
+        ]
+      },
+      "completeness": {
+        "market_facts_price_observed": false,
+        "action_price_present": false,
+        "action_valuation_present": false,
+        "yf_estimate_or_absent_reason": false,
+        "bridge_field_floor": false,
+        "per_present": false,
+        "forward_pe_present": false
+      },
+      "acceptance": {
+        "promotion_status": "promoted",
+        "reason": "promoted_live_honest_coverage",
+        "producer_typed_marker": true,
+        "current_consumer": "public/superinvestors and /data/computed/sec13f_bridge_index.json",
+        "public_route": "/data/computed/sec13f_bridge_index.json",
+        "live_readback": "verified"
+      }
+    },
+    {
+      "ticker": "HL",
+      "classification": {
+        "type": "sec13f_unresolved",
+        "classes": [
+          "no_action_index_overlap",
+          "no_market_facts"
+        ]
+      },
+      "source_links": {
+        "sec13f_by_ticker": true,
+        "global_scouter_core": false,
+        "stock_action_index": false,
+        "market_facts": false,
+        "yf_finance": false
+      },
+      "sec13f": {
+        "holders_count": 2,
+        "total_market_value": 304131719
+      },
+      "market_facts": null,
+      "stock_action_index": null,
+      "yf_estimates": {
+        "file": false,
+        "path": "data/yf/finance/HL.json",
         "state": "absent",
         "source_as_of": null,
         "fields_present": [],
@@ -18152,8 +18262,8 @@
         "yf_finance": false
       },
       "sec13f": {
-        "holders_count": 2,
-        "total_market_value": 191202041
+        "holders_count": 3,
+        "total_market_value": 274423849
       },
       "market_facts": null,
       "stock_action_index": null,
@@ -18537,8 +18647,8 @@
         "yf_finance": true
       },
       "sec13f": {
-        "holders_count": 4,
-        "total_market_value": 9917685566
+        "holders_count": 5,
+        "total_market_value": 11945544370
       },
       "market_facts": {
         "asset_type": "etf",
@@ -24581,7 +24691,7 @@
         "file": true,
         "path": "data/yf/finance/QQQ.json",
         "state": "incomplete",
-        "source_as_of": "2026-09-17",
+        "source_as_of": "2026-09-24",
         "fields_present": [],
         "missing_fields": [
           "earnings_estimate",
@@ -26450,6 +26560,61 @@
       }
     },
     {
+      "ticker": "SANM",
+      "classification": {
+        "type": "sec13f_unresolved",
+        "classes": [
+          "no_action_index_overlap",
+          "no_market_facts"
+        ]
+      },
+      "source_links": {
+        "sec13f_by_ticker": true,
+        "global_scouter_core": false,
+        "stock_action_index": false,
+        "market_facts": false,
+        "yf_finance": false
+      },
+      "sec13f": {
+        "holders_count": 1,
+        "total_market_value": 26309944
+      },
+      "market_facts": null,
+      "stock_action_index": null,
+      "yf_estimates": {
+        "file": false,
+        "path": "data/yf/finance/SANM.json",
+        "state": "absent",
+        "source_as_of": null,
+        "fields_present": [],
+        "missing_fields": [
+          "earnings_estimate",
+          "revenue_estimate",
+          "growth_estimates",
+          "eps_trend",
+          "eps_revisions",
+          "recommendations_summary"
+        ]
+      },
+      "completeness": {
+        "market_facts_price_observed": false,
+        "action_price_present": false,
+        "action_valuation_present": false,
+        "yf_estimate_or_absent_reason": false,
+        "bridge_field_floor": false,
+        "per_present": false,
+        "forward_pe_present": false
+      },
+      "acceptance": {
+        "promotion_status": "promoted",
+        "reason": "promoted_live_honest_coverage",
+        "producer_typed_marker": true,
+        "current_consumer": "public/superinvestors and /data/computed/sec13f_bridge_index.json",
+        "public_route": "/data/computed/sec13f_bridge_index.json",
+        "live_readback": "verified"
+      }
+    },
+    {
       "ticker": "SAP",
       "classification": {
         "type": "sec13f_unresolved",
@@ -27002,8 +27167,8 @@
         "yf_finance": false
       },
       "sec13f": {
-        "holders_count": 15,
-        "total_market_value": 10134433597
+        "holders_count": 16,
+        "total_market_value": 10268066145
       },
       "market_facts": null,
       "stock_action_index": null,
@@ -28542,7 +28707,7 @@
       },
       "market_facts": {
         "asset_type": "etf",
-        "source_as_of": "2026-09-23",
+        "source_as_of": "2026-09-24",
         "price": {
           "present": false,
           "value": null,
@@ -28676,7 +28841,7 @@
         "file": true,
         "path": "data/yf/finance/SSO.json",
         "state": "incomplete",
-        "source_as_of": "2026-09-17",
+        "source_as_of": "2026-09-24",
         "fields_present": [],
         "missing_fields": [
           "earnings_estimate",
@@ -32319,7 +32484,7 @@
       },
       "market_facts": {
         "asset_type": "etf",
-        "source_as_of": "2026-09-23",
+        "source_as_of": "2026-09-24",
         "price": {
           "present": false,
           "value": null,
@@ -32494,7 +32659,7 @@
       },
       "market_facts": {
         "asset_type": "etf",
-        "source_as_of": "2026-09-23",
+        "source_as_of": "2026-09-24",
         "price": {
           "present": false,
           "value": null,
@@ -32614,7 +32779,7 @@
       },
       "market_facts": {
         "asset_type": "etf",
-        "source_as_of": "2026-09-23",
+        "source_as_of": "2026-09-24",
         "price": {
           "present": false,
           "value": null,
@@ -32628,7 +32793,7 @@
         "file": true,
         "path": "data/yf/finance/VGK.json",
         "state": "incomplete",
-        "source_as_of": "2026-09-17",
+        "source_as_of": "2026-09-24",
         "fields_present": [],
         "missing_fields": [
           "earnings_estimate",
@@ -33214,7 +33379,7 @@
       },
       "market_facts": {
         "asset_type": "etf",
-        "source_as_of": "2026-09-23",
+        "source_as_of": "2026-09-24",
         "price": {
           "present": false,
           "value": null,
@@ -33594,7 +33759,7 @@
       },
       "market_facts": {
         "asset_type": "etf",
-        "source_as_of": "2026-09-23",
+        "source_as_of": "2026-09-24",
         "price": {
           "present": false,
           "value": null,
@@ -33659,7 +33824,7 @@
       },
       "market_facts": {
         "asset_type": "etf",
-        "source_as_of": "2026-09-23",
+        "source_as_of": "2026-09-24",
         "price": {
           "present": false,
           "value": null,

@@ -1,0 +1,54 @@
+{
+  "schema_version": "stockanalysis-recovery-state/v1",
+  "artifact_kind": "etf",
+  "entity": "IBIH",
+  "attempts": [
+    {
+      "run_id": "36098898590",
+      "run_attempt": 1,
+      "event_name": "workflow_dispatch",
+      "schedule": "",
+      "natural": false,
+      "observed_at": "2026-09-25T05:33:15Z",
+      "outcome": "failed",
+      "controlled": false,
+      "error": "ValueError: svelte_contract_drift:holdings:missing_required:holdings"
+    }
+  ],
+  "resolution_state": "lkg_primary",
+  "retry": true,
+  "last_attempt": {
+    "run_id": "36098898590",
+    "run_attempt": 1,
+    "event_name": "workflow_dispatch",
+    "schedule": "",
+    "natural": false,
+    "observed_at": "2026-09-25T05:33:15Z",
+    "outcome": "failed",
+    "controlled": false,
+    "error": "ValueError: svelte_contract_drift:holdings:missing_required:holdings"
+  },
+  "latest_failure": {
+    "run_id": "36098898590",
+    "run_attempt": 1,
+    "observed_at": "2026-09-25T05:33:15Z",
+    "error": "ValueError: svelte_contract_drift:holdings:missing_required:holdings",
+    "controlled": false,
+    "had_canonical_before_failure": true,
+    "expected_payload_sha256": "2ff3849cfacb8c6caae0f71339eedf786123a242366e1d284a809c46a1df2f3e",
+    "data_loss": false
+  },
+  "updated_at": "2026-09-25T05:33:15Z",
+  "lkg": {
+    "path": "data/admin/stockanalysis-recovery/lkg/etf/IBIH.json",
+    "payload_sha256": "2ff3849cfacb8c6caae0f71339eedf786123a242366e1d284a809c46a1df2f3e",
+    "source_as_of": null,
+    "fetched_at": "2026-07-18T20:48:36Z"
+  },
+  "current": {
+    "path": "data/admin/stockanalysis-recovery/lkg/etf/IBIH.json",
+    "payload_sha256": "2ff3849cfacb8c6caae0f71339eedf786123a242366e1d284a809c46a1df2f3e",
+    "source_as_of": null,
+    "fetched_at": "2026-07-18T20:48:36Z"
+  }
+}
