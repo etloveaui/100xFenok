@@ -1,6 +1,6 @@
 {
   "schema_version": "sec13f-bridge-index/v1",
-  "generated_at": "2026-09-25T07:33:50.621Z",
+  "generated_at": "2026-09-25T19:05:31.798Z",
   "purpose": "SEC 13F bridge index of tickers outside the Global Scouter universe, published live with honest 424/1,031 coverage.",
   "contract": {
     "candidate_type": "sec13f_extension_stock",
@@ -30,11 +30,11 @@
     "sec13f": "2026-Q2"
   },
   "input_fingerprints": {
-    "analyzer": "6f76de1adcb714d6f29492f538096b7c5d8a44622e78f18c15cd67338433c3bb",
-    "action_index": "8824aeecaf7ce5ca8a59a402e22013c310f600e9186165b74995ccdd07202d23",
-    "market_facts": "2391820d1773bbc2156d49cb29ce360feb623838f5abce4c255141e31ecdccc5",
-    "sec13f_by_ticker": "19358a7d63caf7b895beb0135ec3b72c0a9095c40df5eb41b075e16f2475220e",
-    "sec13f_summary": "2f4dd33783b6e39bcf4db3e666abf31019c2b372f5921adc75c9e950bdf604af",
+    "analyzer": "442b98d9473a3c2fb26682b15d7acfde694b0489c6bb4f235d91c6853a6263d5",
+    "action_index": "6c5489cadc0ea9556b0e8322f5c8d88f5fdc2a07fb1005369ab65e76f5a64bb2",
+    "market_facts": "1bddb3c53a8f39744beee815099ff780bc1d6cfeec008ac9b98ab49b329d536c",
+    "sec13f_by_ticker": "18744c2a465ef72940da65510b0f80a26077607866ab7186cf4d2985164f8400",
+    "sec13f_summary": "d9d8d8424db9d930473d000022c45d5afb9a4e2630b93c7a4bc676bf5960cd49",
     "market_facts_details": {
       "file_count": 115,
       "sha256": "e273bb6079e1e6763ec88c4961ff7f8d9926bf9b3d85709d4530cc1d957519a3"
@@ -46,29 +46,29 @@
   },
   "graph_invariants": {
     "core_stock_count": 1066,
-    "sec13f_ticker_count": 1031,
+    "sec13f_ticker_count": 1032,
     "core_intersection_count": 424,
     "warning_threshold": 450,
     "graph_mutation_applied": false,
     "public_surface_mutation_applied": true
   },
   "counts": {
-    "sec13f_outside_core": 607,
+    "sec13f_outside_core": 608,
     "action_plus_market_facts": 78,
     "market_facts_only": 37,
-    "no_action_index_overlap": 529,
-    "no_market_facts": 492,
+    "no_action_index_overlap": 530,
+    "no_market_facts": 493,
     "action_index_only": 0,
     "sec13f_extension_stock": 78,
     "sec13f_market_facts_only": 37,
-    "sec13f_unresolved": 492,
+    "sec13f_unresolved": 493,
     "estimate": {
       "extension_full": 74,
       "extension_incomplete": 4,
       "market_facts_only_incomplete": 37,
-      "unresolved_absent": 492,
+      "unresolved_absent": 493,
       "as_of": {
-        "bridge_generated_at": "2026-09-25T07:33:50.621Z",
+        "bridge_generated_at": "2026-09-25T19:05:31.798Z",
         "yf_finance": "2026-09-24T00:00:00.000Z",
         "market_facts": "2026-09-21",
         "sec13f": "2026-Q2"
@@ -2365,7 +2365,7 @@
       },
       "sec13f": {
         "holders_count": 46,
-        "total_market_value": 318393262012
+        "total_market_value": 318560295162
       },
       "market_facts": null,
       "stock_action_index": null,
@@ -18060,6 +18060,61 @@
       }
     },
     {
+      "ticker": "KTOS",
+      "classification": {
+        "type": "sec13f_unresolved",
+        "classes": [
+          "no_action_index_overlap",
+          "no_market_facts"
+        ]
+      },
+      "source_links": {
+        "sec13f_by_ticker": true,
+        "global_scouter_core": false,
+        "stock_action_index": false,
+        "market_facts": false,
+        "yf_finance": false
+      },
+      "sec13f": {
+        "holders_count": 1,
+        "total_market_value": 232974116
+      },
+      "market_facts": null,
+      "stock_action_index": null,
+      "yf_estimates": {
+        "file": false,
+        "path": "data/yf/finance/KTOS.json",
+        "state": "absent",
+        "source_as_of": null,
+        "fields_present": [],
+        "missing_fields": [
+          "earnings_estimate",
+          "revenue_estimate",
+          "growth_estimates",
+          "eps_trend",
+          "eps_revisions",
+          "recommendations_summary"
+        ]
+      },
+      "completeness": {
+        "market_facts_price_observed": false,
+        "action_price_present": false,
+        "action_valuation_present": false,
+        "yf_estimate_or_absent_reason": false,
+        "bridge_field_floor": false,
+        "per_present": false,
+        "forward_pe_present": false
+      },
+      "acceptance": {
+        "promotion_status": "promoted",
+        "reason": "promoted_live_honest_coverage",
+        "producer_typed_marker": true,
+        "current_consumer": "public/superinvestors and /data/computed/sec13f_bridge_index.json",
+        "public_route": "/data/computed/sec13f_bridge_index.json",
+        "live_readback": "verified"
+      }
+    },
+    {
       "ticker": "L",
       "classification": {
         "type": "sec13f_extension_stock",
@@ -28822,8 +28877,8 @@
         "yf_finance": true
       },
       "sec13f": {
-        "holders_count": 3,
-        "total_market_value": 214701950
+        "holders_count": 4,
+        "total_market_value": 246762531
       },
       "market_facts": {
         "asset_type": "etf",
