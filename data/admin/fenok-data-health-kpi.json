@@ -1,9 +1,9 @@
 {
   "schema_version": "fenok-data-health-kpi/v2",
-  "generated_at": "2026-09-25T02:40:42.160Z",
+  "generated_at": "2026-09-25T04:29:58.768Z",
   "status": "degraded",
   "status_label": "저하",
-  "status_message": "9 required lane(s) are not ready; healthy lanes may still publish.",
+  "status_message": "7 required lane(s) are not ready; healthy lanes may still publish.",
   "purpose": "Admin-safe service data health KPI: current data freshness, daily gates, public mirror safety, and automation contracts.",
   "raw_policy": {
     "public_mirror_allowed": true,
@@ -21,19 +21,19 @@
   },
   "outcome_watchdog": {
     "schema_version": "lane-outcome-watchdog/v1",
-    "evaluated_at": "2026-09-25T02:40:42.160Z",
+    "evaluated_at": "2026-09-25T04:29:58.768Z",
     "basis": "per_row_advance_basis",
     "threshold_multiplier": 1.5,
     "status": "overdue",
     "counts": {
       "monitored": 22,
-      "current": 15,
-      "overdue": 7,
+      "current": 12,
+      "overdue": 10,
       "unobservable": 0
     },
     "advance_bases": {
-      "canonical_file_source_as_of": 17,
-      "publish_outcome": 3,
+      "canonical_file_source_as_of": 19,
+      "publish_outcome": 1,
       "canonical_file_generated_at": 2
     },
     "rows": [
@@ -43,7 +43,7 @@
         "cadence_hours": 24,
         "threshold_hours": 36,
         "last_advance": "2026-09-24",
-        "age_hours": 26.68,
+        "age_hours": 28.5,
         "state": "current",
         "source_as_of": "2026-09-24",
         "advance_basis": "canonical_file_source_as_of",
@@ -55,7 +55,7 @@
         "cadence_hours": 168,
         "threshold_hours": 252,
         "last_advance": "2026-09-18",
-        "age_hours": 170.68,
+        "age_hours": 172.5,
         "state": "current",
         "source_as_of": "2026-09-18",
         "advance_basis": "canonical_file_source_as_of",
@@ -67,7 +67,7 @@
         "cadence_hours": 2160,
         "threshold_hours": 3240,
         "last_advance": "2026-06-30",
-        "age_hours": 2090.68,
+        "age_hours": 2092.5,
         "state": "current",
         "source_as_of": "2026-06-30",
         "advance_basis": "canonical_file_source_as_of",
@@ -79,8 +79,8 @@
         "cadence_hours": 24,
         "threshold_hours": 36,
         "last_advance": "2026-09-23",
-        "age_hours": 24,
-        "state": "current",
+        "age_hours": 48,
+        "state": "overdue",
         "source_as_of": "2026-09-23",
         "advance_basis": "canonical_file_source_as_of",
         "calendar": "us_federal_business"
@@ -91,7 +91,7 @@
         "cadence_hours": 24,
         "threshold_hours": 36,
         "last_advance": "2026-09-25",
-        "age_hours": 2.68,
+        "age_hours": 4.5,
         "state": "current",
         "source_as_of": "2026-09-25",
         "advance_basis": "canonical_file_source_as_of",
@@ -103,7 +103,7 @@
         "cadence_hours": 24,
         "threshold_hours": 36,
         "last_advance": "2026-09-25T02:14:01Z",
-        "age_hours": 0.44,
+        "age_hours": 2.27,
         "state": "current",
         "source_as_of": null,
         "advance_basis": "canonical_file_generated_at",
@@ -115,7 +115,7 @@
         "cadence_hours": 24,
         "threshold_hours": 36,
         "last_advance": "2026-09-21T01:14:16Z",
-        "age_hours": 97.44,
+        "age_hours": 99.26,
         "state": "overdue",
         "source_as_of": null,
         "advance_basis": "canonical_file_generated_at",
@@ -127,7 +127,7 @@
         "cadence_hours": 24,
         "threshold_hours": 36,
         "last_advance": "2026-09-25T02:22:50.334Z",
-        "age_hours": 0.3,
+        "age_hours": 2.12,
         "state": "current",
         "source_as_of": null,
         "advance_basis": "publish_outcome",
@@ -139,7 +139,7 @@
         "cadence_hours": 24,
         "threshold_hours": 36,
         "last_advance": "2026-09-24T23:55:41Z",
-        "age_hours": 2.75,
+        "age_hours": 4.57,
         "state": "current",
         "source_as_of": "2026-09-24T23:55:41Z",
         "advance_basis": "canonical_file_source_as_of",
@@ -150,11 +150,11 @@
         "cadence_kind": "daily",
         "cadence_hours": 24,
         "threshold_hours": 36,
-        "last_advance": "2026-09-25T00:14:11.612Z",
+        "last_advance": "2026-09-25",
         "age_hours": 0,
         "state": "current",
         "source_as_of": "2026-09-25",
-        "advance_basis": "publish_outcome",
+        "advance_basis": "canonical_file_source_as_of",
         "calendar": "us_trading"
       },
       {
@@ -162,11 +162,11 @@
         "cadence_kind": "daily",
         "cadence_hours": 24,
         "threshold_hours": 36,
-        "last_advance": "2026-09-25T01:57:14.239Z",
+        "last_advance": "2026-09-25",
         "age_hours": 0,
         "state": "current",
         "source_as_of": "2026-09-25",
-        "advance_basis": "publish_outcome",
+        "advance_basis": "canonical_file_source_as_of",
         "calendar": "us_trading"
       },
       {
@@ -175,7 +175,7 @@
         "cadence_hours": 24,
         "threshold_hours": 36,
         "last_advance": "2026-09-22",
-        "age_hours": 48,
+        "age_hours": 72,
         "state": "overdue",
         "source_as_of": "2026-09-22",
         "advance_basis": "canonical_file_source_as_of",
@@ -187,7 +187,7 @@
         "cadence_hours": 720,
         "threshold_hours": 1080,
         "last_advance": "2026-08-01",
-        "age_hours": 1322.68,
+        "age_hours": 1324.5,
         "state": "overdue",
         "source_as_of": "2026-08-01",
         "advance_basis": "canonical_file_source_as_of",
@@ -199,7 +199,7 @@
         "cadence_hours": 24,
         "threshold_hours": 36,
         "last_advance": "2026-09-22",
-        "age_hours": 74.68,
+        "age_hours": 76.5,
         "state": "overdue",
         "source_as_of": "2026-09-22",
         "advance_basis": "canonical_file_source_as_of",
@@ -211,7 +211,7 @@
         "cadence_hours": 24,
         "threshold_hours": 36,
         "last_advance": "2026-09-20",
-        "age_hours": 122.68,
+        "age_hours": 124.5,
         "state": "overdue",
         "source_as_of": "2026-09-20",
         "advance_basis": "canonical_file_source_as_of",
@@ -223,7 +223,7 @@
         "cadence_hours": 168,
         "threshold_hours": 252,
         "last_advance": "2026-09-03",
-        "age_hours": 530.68,
+        "age_hours": 532.5,
         "state": "overdue",
         "source_as_of": "2026-09-03",
         "advance_basis": "canonical_file_source_as_of",
@@ -235,8 +235,8 @@
         "cadence_hours": 24,
         "threshold_hours": 36,
         "last_advance": "2026-09-23",
-        "age_hours": 24,
-        "state": "current",
+        "age_hours": 48,
+        "state": "overdue",
         "source_as_of": "2026-09-23",
         "advance_basis": "canonical_file_source_as_of",
         "calendar": "us_trading"
@@ -247,7 +247,7 @@
         "cadence_hours": 168,
         "threshold_hours": 252,
         "last_advance": "2026-08-17",
-        "age_hours": 938.68,
+        "age_hours": 940.5,
         "state": "overdue",
         "source_as_of": "2026-08-17",
         "advance_basis": "canonical_file_source_as_of",
@@ -259,8 +259,8 @@
         "cadence_hours": 24,
         "threshold_hours": 36,
         "last_advance": "2026-09-23",
-        "age_hours": 24,
-        "state": "current",
+        "age_hours": 48,
+        "state": "overdue",
         "source_as_of": "2026-09-23",
         "advance_basis": "canonical_file_source_as_of",
         "calendar": "us_trading"
@@ -271,7 +271,7 @@
         "cadence_hours": 24,
         "threshold_hours": 36,
         "last_advance": "2026-09-24T06:09:38.294Z",
-        "age_hours": 0,
+        "age_hours": 24,
         "state": "current",
         "source_as_of": "2026-09-24T06:09:38.294Z",
         "advance_basis": "canonical_file_source_as_of",
@@ -283,7 +283,7 @@
         "cadence_hours": 24,
         "threshold_hours": 36,
         "last_advance": "2026-09-24",
-        "age_hours": 26.68,
+        "age_hours": 28.5,
         "state": "current",
         "source_as_of": "2026-09-24",
         "advance_basis": "canonical_file_source_as_of",
@@ -295,7 +295,7 @@
         "cadence_hours": 24,
         "threshold_hours": 36,
         "last_advance": "2026-09-23T18:32:00Z",
-        "age_hours": 32.15,
+        "age_hours": 33.97,
         "state": "current",
         "source_as_of": "2026-09-23T18:32:00Z",
         "advance_basis": "canonical_file_source_as_of",
@@ -316,11 +316,11 @@
       "origin": null
     },
     "last_rebuild_context": {
-      "built_at": "2026-09-25T02:40:42.160Z",
-      "run_id": "36086592108",
+      "built_at": "2026-09-25T04:29:58.768Z",
+      "run_id": "36094156546",
       "workflow": "Update Manifest",
-      "event_name": "workflow_dispatch",
-      "sha": "ee558604f90d3473aa4c6b3cbeca29a7465247d7"
+      "event_name": "push",
+      "sha": "413bc363733986c8242ee53e5dee8c3ca4f98c6d"
     },
     "cadence": {
       "crons_utc": [
@@ -801,14 +801,14 @@
     "fetch_cron_skip_detection": {
       "schema_version": "fetch-cron-attempt-coverage/v1",
       "mode": "shadow",
-      "evaluated_at": "2026-09-25T02:40:38.742Z",
-      "status": "ready",
+      "evaluated_at": "2026-09-25T04:29:56.126Z",
+      "status": "warning",
       "deployment_blocking": false,
       "counts": {
         "scheduled_members": 32,
         "schedule_bindings": 37,
-        "observed": 37,
-        "suspected_skips": 0,
+        "observed": 36,
+        "suspected_skips": 1,
         "attempt_gaps": 0
       },
       "pre_activation_members": [],
@@ -886,7 +886,7 @@
           "cron": "0 */6 * * *",
           "calendar_id": "utc",
           "expected_at": "2026-09-24T18:00:00.000Z",
-          "observed_at": "2026-09-24T20:57:24.640Z",
+          "observed_at": "2026-09-25T02:43:34.774Z",
           "state": "observed",
           "producer_status": "ready",
           "producer_reason": "ok"
@@ -898,7 +898,7 @@
           "schedule_id": "hourly_at_12",
           "cron": "12 * * * *",
           "calendar_id": "utc",
-          "expected_at": "2026-09-24T20:12:00.000Z",
+          "expected_at": "2026-09-24T22:12:00.000Z",
           "observed_at": "2026-09-25T01:37:07.907Z",
           "state": "observed",
           "producer_status": "ready",
@@ -1015,7 +1015,7 @@
           "schedule_id": "hourly_at_05",
           "cron": "5 * * * *",
           "calendar_id": "utc",
-          "expected_at": "2026-09-24T20:05:00.000Z",
+          "expected_at": "2026-09-24T22:05:00.000Z",
           "observed_at": "2026-09-25T01:25:18.517Z",
           "state": "observed",
           "producer_status": "ready",
@@ -1288,11 +1288,11 @@
           "schedule_id": "yahoo_batch_etf_0000_utc",
           "cron": "7 0 * * 0-5",
           "calendar_id": "utc",
-          "expected_at": "2026-09-24T00:07:00.000Z",
+          "expected_at": "2026-09-25T00:07:00.000Z",
           "observed_at": "2026-09-24T04:39:02Z",
-          "state": "observed",
-          "producer_status": "ready",
-          "producer_reason": "ok"
+          "state": "suspected_skip",
+          "producer_status": "stale",
+          "producer_reason": "stale"
         }
       ]
     },
@@ -1310,7 +1310,7 @@
       {
         "family": "computed-signals",
         "result": "published",
-        "observed_at": "2026-09-25T01:42:59.707Z",
+        "observed_at": "2026-09-25T02:47:04.314Z",
         "gate_after": "ok"
       },
       {
@@ -1441,8 +1441,8 @@
       },
       {
         "family": "treasury-tga",
-        "result": "published",
-        "observed_at": "2026-09-24T20:58:41.141Z",
+        "result": "resumed",
+        "observed_at": "2026-09-25T02:44:49.998Z",
         "gate_after": "ok"
       },
       {
@@ -1728,7 +1728,7 @@
               "collection_fresh_count": 23,
               "stale_count": 0,
               "collected_at_floor": "2026-09-25T02:00:03Z",
-              "collection_age_hours": 0.678,
+              "collection_age_hours": 2.499,
               "max_age_hours": 50,
               "reason": "provider publishes no date; recency = collection time"
             },
@@ -1922,7 +1922,7 @@
               "collection_fresh_count": 16,
               "stale_count": 0,
               "collected_at_floor": "2026-09-25T02:00:16Z",
-              "collection_age_hours": 0.674,
+              "collection_age_hours": 2.495,
               "max_age_hours": 50,
               "reason": "provider publishes no date; recency = collection time"
             },
@@ -1979,7 +1979,7 @@
               "collection_fresh_count": 3,
               "stale_count": 0,
               "collected_at_floor": "2026-09-25T02:00:30Z",
-              "collection_age_hours": 0.67,
+              "collection_age_hours": 2.491,
               "max_age_hours": 50,
               "reason": "provider publishes no date; recency = collection time"
             },
@@ -6927,7 +6927,7 @@
               "collection_fresh_count": 5,
               "stale_count": 0,
               "collected_at_floor": "2026-09-25T02:00:03Z",
-              "collection_age_hours": 0.678,
+              "collection_age_hours": 2.499,
               "max_age_hours": 50,
               "reason": "provider publishes no date; recency = collection time"
             },
@@ -6990,7 +6990,7 @@
     {
       "source_id": "etf_daily1y_readiness_admin",
       "freshness_basis": ".generated_at",
-      "source_date": "2026-09-25T02:40:10.999Z",
+      "source_date": "2026-09-25T04:29:37.459Z",
       "unit": "hours",
       "calendar": "wall_clock",
       "max_staleness": 50,
@@ -7006,7 +7006,7 @@
       "calendar": "us_market",
       "max_staleness": 30,
       "required": true,
-      "age": 15.29,
+      "age": 17.11,
       "status": "ready"
     },
     {
@@ -7017,7 +7017,7 @@
       "calendar": "wall_clock",
       "max_staleness": 174,
       "required": true,
-      "age": 110.16,
+      "age": 111.98,
       "status": "ready"
     },
     {
@@ -7028,7 +7028,7 @@
       "calendar": "wall_clock",
       "max_staleness": 174,
       "required": true,
-      "age": 109.34,
+      "age": 111.16,
       "status": "ready"
     },
     {
@@ -7039,7 +7039,7 @@
       "calendar": "wall_clock",
       "max_staleness": 750,
       "required": true,
-      "age": 504.17,
+      "age": 505.99,
       "status": "ready"
     },
     {
@@ -7050,14 +7050,14 @@
       "calendar": "wall_clock",
       "max_staleness": 750,
       "required": true,
-      "age": 785.45,
+      "age": 787.27,
       "status": "stale"
     }
   ],
   "source_artifacts": [
     {
       "id": "fenok_edge_coverage_index",
-      "generated_at": "2026-09-25T02:40:03.425Z",
+      "generated_at": "2026-09-25T04:29:31.932Z",
       "public_mirror": true,
       "public_safe": true
     },
@@ -7069,25 +7069,25 @@
     },
     {
       "id": "product_surface_coverage",
-      "generated_at": "2026-09-25T02:40:31.081Z",
+      "generated_at": "2026-09-25T04:29:49.693Z",
       "public_mirror": true,
       "public_safe": true
     },
     {
       "id": "s0_finra_occ_mapping_ledger",
-      "generated_at": "2026-09-25T02:40:10.917Z",
+      "generated_at": "2026-09-25T04:29:37.398Z",
       "public_mirror": false,
       "public_safe": false
     },
     {
       "id": "etf_daily1y_readiness_admin",
-      "generated_at": "2026-09-25T02:40:10.999Z",
+      "generated_at": "2026-09-25T04:29:37.459Z",
       "public_mirror": false,
       "public_safe": false
     },
     {
       "id": "etf_core_daily_basket_admin",
-      "generated_at": "2026-09-25T02:39:51.432Z",
+      "generated_at": "2026-09-25T04:29:23.038Z",
       "public_mirror": false,
       "public_safe": false
     },
@@ -7111,7 +7111,7 @@
     },
     {
       "id": "data_supply_detection_floor",
-      "generated_at": "2026-09-25T02:40:38.742Z",
+      "generated_at": "2026-09-25T04:29:56.126Z",
       "public_mirror": false,
       "public_safe": false
     },
@@ -7130,12 +7130,12 @@
   ],
   "totals": {
     "lanes": 35,
-    "ready": 26,
-    "degraded": 9,
+    "ready": 28,
+    "degraded": 7,
     "warning": 0,
     "blocked": 0,
     "unavailable": 0,
-    "required_not_ready": 9,
+    "required_not_ready": 7,
     "platform_blocking_not_ready": 0
   },
   "lanes": [
@@ -7147,7 +7147,7 @@
       "status_message": "S0 active stocks daily gate is ready.",
       "deployment_blocking": false,
       "required": true,
-      "as_of": "2026-09-25T02:40:03.425Z",
+      "as_of": "2026-09-25T04:29:31.932Z",
       "counts": {
         "active_total": 1184,
         "by_market": [
@@ -7323,7 +7323,7 @@
       "status_message": "S1 candidate promotion gate is ready.",
       "deployment_blocking": false,
       "required": true,
-      "as_of": "2026-09-25T02:38:39.934Z",
+      "as_of": "2026-09-25T04:28:27.760Z",
       "counts": {
         "denominator": 1226,
         "current_public_stock": 1184,
@@ -7735,7 +7735,7 @@
           "label": "promotion artifact",
           "status": "ready",
           "status_label": "정상",
-          "detail": "2026-09-25T02:38:39.934Z",
+          "detail": "2026-09-25T04:28:27.760Z",
           "platform_blocking": false
         },
         {
@@ -7800,7 +7800,7 @@
       "status_message": "ETF public scoring and daily gate is not ready: PUBLIC+DAILY+GATED: SCORED; coverage-index ETF gate: not_ready. Other lanes may publish.",
       "deployment_blocking": false,
       "required": true,
-      "as_of": "2026-09-25T02:40:10.999Z",
+      "as_of": "2026-09-25T04:29:37.459Z",
       "counts": {
         "eligible_etf_count": 4579,
         "scored_public_etf": 4579,
@@ -15863,7 +15863,7 @@
       "label": "SlickCharts delivery freshness",
       "status": "degraded",
       "status_label": "저하",
-      "status_message": "SlickCharts delivery freshness is not ready: SlickCharts delivery readiness: 552 current, 0 missing, 1 stale, 0 invalid; slickcharts-history/stocks-dividends-historical.json: 785.45h old exceeds 750h delivery SLA. Other lanes may publish.",
+      "status_message": "SlickCharts delivery freshness is not ready: SlickCharts delivery readiness: 552 current, 0 missing, 1 stale, 0 invalid; slickcharts-history/stocks-dividends-historical.json: 787.27h old exceeds 750h delivery SLA. Other lanes may publish.",
       "deployment_blocking": false,
       "required": true,
       "as_of": "2026-08-23T09:13:53.000Z",
@@ -15939,9 +15939,9 @@
             "workflow_id": "slickcharts-history",
             "artifact": "stocks-dividends-historical.json",
             "symbol": null,
-            "reason": "785.45h old exceeds 750h delivery SLA",
+            "reason": "787.27h old exceeds 750h delivery SLA",
             "delivery_at": "2026-08-23T09:13:53.000Z",
-            "age_hours": 785.45,
+            "age_hours": 787.27,
             "max_hours": 750,
             "status": "stale"
           }
@@ -15973,7 +15973,7 @@
           "label": "SlickCharts delivery readiness",
           "status": "blocked",
           "status_label": "차단",
-          "detail": "552 current, 0 missing, 1 stale, 0 invalid; slickcharts-history/stocks-dividends-historical.json: 785.45h old exceeds 750h delivery SLA",
+          "detail": "552 current, 0 missing, 1 stale, 0 invalid; slickcharts-history/stocks-dividends-historical.json: 787.27h old exceeds 750h delivery SLA",
           "platform_blocking": false
         }
       ]
@@ -16200,7 +16200,7 @@
       "status_message": "Product surface freshness is not ready: stale surfaces: 1 stale; product surface true-date/collection taxonomy v2: etf_center:pending_true_date. Other lanes may publish.",
       "deployment_blocking": false,
       "required": true,
-      "as_of": "2026-09-25T02:40:31.081Z",
+      "as_of": "2026-09-25T04:29:49.693Z",
       "counts": {
         "surfaces": 7,
         "ready": 1,
@@ -16264,7 +16264,7 @@
           "label": "product-surface-coverage",
           "status": "ready",
           "status_label": "정상",
-          "detail": "2026-09-25T02:40:31.081Z",
+          "detail": "2026-09-25T04:29:49.693Z",
           "platform_blocking": false
         },
         {
@@ -16329,7 +16329,7 @@
       "status_message": "FINRA/OCC source gate is ready.",
       "deployment_blocking": false,
       "required": true,
-      "as_of": "2026-09-25T02:40:10.917Z",
+      "as_of": "2026-09-25T04:29:37.398Z",
       "counts": {
         "active_us_total": 754,
         "plain_us_finra_denominator": 694,
@@ -16341,10 +16341,10 @@
       },
       "details": {
         "source_dates": {
-          "signals_generated_at": "2026-09-25T02:39:09.514Z",
+          "signals_generated_at": "2026-09-25T04:28:51.328Z",
           "finra_source_date": "20260923",
           "occ_source_date": "20260923",
-          "coverage_index_generated_at": "2026-09-25T02:40:03.425Z",
+          "coverage_index_generated_at": "2026-09-25T04:29:31.932Z",
           "flow_backfill_index_generated_at": "2026-06-29T12:34:33.046Z"
         },
         "action_policy": [
@@ -16384,7 +16384,7 @@
           "label": "ledger acceptance",
           "status": "ready",
           "status_label": "정상",
-          "detail": "2026-09-25T02:40:10.917Z",
+          "detail": "2026-09-25T04:29:37.398Z",
           "platform_blocking": false
         },
         {
@@ -16437,7 +16437,7 @@
       "status_message": "Daily automation and deploy gates is ready.",
       "deployment_blocking": false,
       "required": true,
-      "as_of": "2026-09-25T02:40:42.708Z",
+      "as_of": "2026-09-25T04:29:59.205Z",
       "counts": {},
       "details": {
         "credential_dependent_for_build": false,
@@ -16843,7 +16843,7 @@
         ],
         "last_attempt": {
           "event_name": null,
-          "observed_at": "2026-09-24T20:57:24.640Z",
+          "observed_at": "2026-09-25T02:43:34.774Z",
           "outcome": "success",
           "failure_class": null
         },
@@ -17246,9 +17246,9 @@
     {
       "id": "sentiment",
       "label": "Market sentiment",
-      "status": "degraded",
-      "status_label": "저하",
-      "status_message": "Market sentiment is not ready: Detection floor status: future_source; source_as_of 2026-09-25. Other lanes may publish.",
+      "status": "ready",
+      "status_label": "정상",
+      "status_message": "Market sentiment is ready.",
       "deployment_blocking": false,
       "required": true,
       "as_of": "2026-09-25",
@@ -17343,9 +17343,9 @@
         {
           "id": "detection_floor_status",
           "label": "Detection floor status",
-          "status": "blocked",
-          "status_label": "차단",
-          "detail": "future_source; source_as_of 2026-09-25",
+          "status": "ready",
+          "status_label": "정상",
+          "detail": "ok; source_as_of 2026-09-25",
           "platform_blocking": false
         },
         {
@@ -17357,7 +17357,7 @@
           "platform_blocking": false
         }
       ],
-      "reason": "future_source",
+      "reason": "ok",
       "artifact": {
         "source_as_of": "2026-09-25"
       }
@@ -17365,9 +17365,9 @@
     {
       "id": "nasdaq_giw_sox",
       "label": "Nasdaq GIW SOX constituents",
-      "status": "degraded",
-      "status_label": "저하",
-      "status_message": "Nasdaq GIW SOX constituents is not ready: Detection floor status: future_source; source_as_of 2026-09-25. Other lanes may publish.",
+      "status": "ready",
+      "status_label": "정상",
+      "status_message": "Nasdaq GIW SOX constituents is ready.",
       "deployment_blocking": false,
       "required": true,
       "as_of": "2026-09-25",
@@ -17387,9 +17387,9 @@
         {
           "id": "detection_floor_status",
           "label": "Detection floor status",
-          "status": "blocked",
-          "status_label": "차단",
-          "detail": "future_source; source_as_of 2026-09-25",
+          "status": "ready",
+          "status_label": "정상",
+          "detail": "ok; source_as_of 2026-09-25",
           "platform_blocking": false
         },
         {
@@ -17401,7 +17401,7 @@
           "platform_blocking": false
         }
       ],
-      "reason": "future_source",
+      "reason": "ok",
       "artifact": {
         "source_as_of": "2026-09-25"
       }
@@ -18380,7 +18380,7 @@
       "check_id": "delivery_ready",
       "status": "blocked",
       "label": "SlickCharts delivery readiness",
-      "detail": "552 current, 0 missing, 1 stale, 0 invalid; slickcharts-history/stocks-dividends-historical.json: 785.45h old exceeds 750h delivery SLA",
+      "detail": "552 current, 0 missing, 1 stale, 0 invalid; slickcharts-history/stocks-dividends-historical.json: 787.27h old exceeds 750h delivery SLA",
       "required": true
     },
     {
@@ -18432,22 +18432,6 @@
       "required": true
     },
     {
-      "lane_id": "sentiment",
-      "check_id": "detection_floor_status",
-      "status": "blocked",
-      "label": "Detection floor status",
-      "detail": "future_source; source_as_of 2026-09-25",
-      "required": true
-    },
-    {
-      "lane_id": "nasdaq_giw_sox",
-      "check_id": "detection_floor_status",
-      "status": "blocked",
-      "label": "Detection floor status",
-      "detail": "future_source; source_as_of 2026-09-25",
-      "required": true
-    },
-    {
       "lane_id": "us_indices_daily",
       "check_id": "detection_floor_status",
       "status": "blocked",
@@ -18477,6 +18461,22 @@
       "status": "blocked",
       "label": "LKG retry set empty",
       "detail": "bridge lkg_primary after run 36019903433; recovery_not_advanced_by_provider at run 36019903433",
+      "required": true
+    },
+    {
+      "lane_id": "gdelt_news_tone",
+      "check_id": "detection_floor_status",
+      "status": "blocked",
+      "label": "Detection floor status",
+      "detail": "schema_drift; source_as_of 2026-09-23T18:32:00Z",
+      "required": true
+    },
+    {
+      "lane_id": "gdelt_news_tone",
+      "check_id": "lkg_retry_set_empty",
+      "status": "blocked",
+      "label": "LKG retry set empty",
+      "detail": "news_tone_proxy lkg_primary after run 36042744722",
       "required": true
     }
   ]
