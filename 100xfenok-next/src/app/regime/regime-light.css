@@ -38,7 +38,14 @@
   color: var(--fnk-neutral-900);
 }
 
+/* Zero basis and width: the sentence never decides where the head wraps.
+ * Its length used to - below ~760px the short loading line sat beside the
+ * title and the longer loaded verdict dropped under it, pushing the page
+ * down 31-41px when the data landed. It now always sits beside the title
+ * and truncates, loading or loaded. */
 .rgm-verdict {
+  flex: 1 1 0;
+  width: 0;
   min-width: 0;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -449,6 +456,11 @@
 }
 
 @media (max-width: 720px) {
+  /* The section tabs take their own row on narrow screens in every state. */
+  .rgm-tabs {
+    flex-basis: 100%;
+  }
+
   .rgm-thead,
   .rgm-trow {
     grid-template-columns: 110px 1fr 64px 84px;
