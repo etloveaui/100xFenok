@@ -64,6 +64,7 @@ export default function DesignLabProfilePreview() {
               height={128}
               className="size-full object-cover"
               priority
+              unoptimized
             />
           </div>
 
@@ -94,14 +95,14 @@ export default function DesignLabProfilePreview() {
             <div className="space-y-[9px]">
               {gridImages.map((item) => (
                 <div key={item.src} className={`relative overflow-hidden rounded-[2px] ${item.heightClass}`}>
-                  <Image src={item.src} alt={item.alt} fill sizes="(max-width: 768px) 45vw, 167px" className="object-cover" />
+                  <Image src={item.src} alt={item.alt} fill sizes="(max-width: 768px) 45vw, 167px" className="object-cover" unoptimized />
                 </div>
               ))}
             </div>
             <div className="space-y-[9px]">
               {gridImagesRight.map((item) => (
                 <div key={item.src} className={`relative overflow-hidden rounded-[2px] ${item.heightClass}`}>
-                  <Image src={item.src} alt={item.alt} fill sizes="(max-width: 768px) 45vw, 167px" className="object-cover" />
+                  <Image src={item.src} alt={item.alt} fill sizes="(max-width: 768px) 45vw, 167px" className="object-cover" unoptimized />
                 </div>
               ))}
             </div>
