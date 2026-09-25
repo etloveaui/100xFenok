@@ -391,6 +391,66 @@ class ChainProviderTests(unittest.TestCase):
             self.assertEqual((report["scanned"], report["added"], report["failed"]), (1, 0, 1))
             self.assertEqual(list(root.iterdir()), [])
 
+    def test_members_only_videos_skip_before_video_call_and_persist(self) -> None:
+        """fh-403: members-only detection at scan time — skipped is neither failed
+        nor added, no model call happens, and the verdict persists so reruns do
+        no detection work at all."""
+        import bank_refresh
+        import chains
+
+        with tempfile.TemporaryDirectory() as temp:
+            root = Path(temp)
+            facade = FakeTaskFacade(task_ok("[]"))
+            with patch.object(chains, "_load_feno_llm_facade", return_value=facade):
+                # primary signal: flat-listing availability == subscriber_only
+                with redirect_stdout(io.StringIO()):
+                    report = bank_refresh.run(
+                        root,
+                        [("vidmembers", "")],
+                        use_video_fallback=True,
+                        dry_run=False,
+                        availability={"vidmembers": "subscriber_only"},
+                    )
+                self.assertEqual(
+                    (report["scanned"], report["added"], report["failed"], report["skipped"]),
+                    (1, 0, 0, 1),
+                )
+                self.assertEqual(facade.calls, [])
+                verdicts = bank_refresh.load_skipped(root)
+                self.assertEqual(verdicts["vidmembers"]["reason"], "members_only")
+                self.assertEqual(verdicts["vidmembers"]["detected_by"], "availability")
+                # persisted verdict short-circuits the rerun with no detection work
+                with redirect_stdout(io.StringIO()):
+                    rerun = bank_refresh.run(
+                        root,
+                        [("vidmembers", "")],
+                        use_video_fallback=True,
+                        dry_run=False,
+                        availability={"vidmembers": ""},
+                    )
+                self.assertEqual(rerun["skipped"], 1)
+                self.assertEqual(facade.calls, [])
+                # fallback signal: unknown availability + members-only access error
+                with patch.object(bank_refresh, "members_only_access_error", return_value=True) as probe:
+                    with redirect_stdout(io.StringIO()):
+                        fallback = bank_refresh.run(
+                            root,
+                            [("vidunknown", "")],
+                            use_video_fallback=True,
+                            dry_run=False,
+                            availability={"vidunknown": ""},
+                        )
+                probe.assert_called_once_with("vidunknown")
+                self.assertEqual(
+                    (fallback["scanned"], fallback["added"], fallback["failed"], fallback["skipped"]),
+                    (1, 0, 0, 1),
+                )
+                self.assertEqual(
+                    bank_refresh.load_skipped(root)["vidunknown"]["detected_by"],
+                    "access_error",
+                )
+                self.assertEqual(facade.calls, [])
+
     def test_every_model_call_goes_through_the_task_door(self) -> None:
         """Regression guard for the 2026-09-23 LLM audit: no model literals, provider
         clients, raw provider HTTP or Asset_Allocator imports anywhere in mona-distill."""
