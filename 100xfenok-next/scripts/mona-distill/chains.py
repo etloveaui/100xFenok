@@ -10,6 +10,7 @@ from __future__ import annotations
 
 import json
 import os
+import re
 import sys
 import time
 from pathlib import Path
@@ -158,9 +159,31 @@ def build_distill_prompt(payload: dict[str, Any]) -> tuple[str, str]:
 
 # --- task door ---------------------------------------------------------------
 
+def _safe_error_details(details: Any) -> str:
+    """Keep only bounded provider diagnostics, never a raw body or credential."""
+    if not isinstance(details, dict):
+        return ""
+    fields = []
+    for name in ("provider_error_code", "upstream_message"):
+        value = details.get(name)
+        if not isinstance(value, str):
+            continue
+        value = " ".join(value.split())
+        value = re.sub(r"https?://\S+", "[url redacted]", value, flags=re.IGNORECASE)
+        value = re.sub(
+            r"\b(?:api[_-]?key|key|token|authorization)\b[\"']?\s*[:=]\s*[\"']?(?:Bearer\s+)?[^\s,;\"'}\]]+|\bBearer\s+[^\s,;\"'}\]]+",
+            "[credential redacted]", value, flags=re.IGNORECASE,
+        )
+        value = re.sub(r"[A-Za-z0-9_.-]{24,}", "[redacted]", value)
+        if value:
+            fields.append(f"{name}={value[:200]}")
+    return "; ".join(fields)
+
+
 def _attempt_summary(attempts: list[dict[str, Any]]) -> str:
     return ", ".join(
         f"{attempt.get('model') or attempt.get('alias')}:{attempt.get('error_code') or 'ok'}"
+        + (f" ({safe})" if (safe := _safe_error_details(attempt.get("error_details"))) else "")
         for attempt in attempts
         if isinstance(attempt, dict)
     )

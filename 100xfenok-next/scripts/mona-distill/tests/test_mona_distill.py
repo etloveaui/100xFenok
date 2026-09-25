@@ -246,6 +246,40 @@ class ChainProviderTests(unittest.TestCase):
                 with self.assertRaises(ChainExhaustedError):
                     TaskProvider().call(self.PAYLOAD)
 
+    def test_task_failure_keeps_safe_provider_reason_without_credentials(self) -> None:
+        import chains
+
+        result = types.SimpleNamespace(
+            text="",
+            error=types.SimpleNamespace(code="chain_exhausted", message="video call failed", http_status=None),
+            attempts=[{
+                "model": "video-hop", "error_code": "http_403", "error_http_status": 403,
+                "error_details": {
+                    "provider_error_code": "PERMISSION_DENIED",
+                    "upstream_message": (
+                        "Video fetch denied at https://example.invalid/watch?key=short-secret "
+                        "api_key=other-secret Authorization: Bearer tiny-secret "
+                        "{\"api_key\":\"json-secret\", 'Authorization':'Bearer header-secret'}"
+                    ),
+                    "request_id": "not-for-bank-log",
+                },
+            }],
+        )
+        with patch.object(chains, "_load_feno_llm_facade", return_value=FakeTaskFacade(result)):
+            with self.assertRaises(ChainExhaustedError) as raised:
+                chains.call_task(DISTILL_VIDEO_TASK, None, "watch video")
+
+        message = str(raised.exception)
+        self.assertIn("PERMISSION_DENIED", message)
+        self.assertIn("Video fetch denied", message)
+        self.assertNotIn("https://", message)
+        self.assertNotIn("short-secret", message)
+        self.assertNotIn("other-secret", message)
+        self.assertNotIn("tiny-secret", message)
+        self.assertNotIn("json-secret", message)
+        self.assertNotIn("header-secret", message)
+        self.assertNotIn("not-for-bank-log", message)
+
     def test_worker_chain_failure_soft_fails_and_preserves_profile(self) -> None:
         import chains
 
