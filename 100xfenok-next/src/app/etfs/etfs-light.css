@@ -89,6 +89,30 @@
   color: var(--fnk-neutral-500);
 }
 
+/* EtfTextSkeleton: the outer span paints one shimmer bar per wrapped line of
+   the hidden template copy inside it. */
+.etf-text-skeleton-ink {
+  visibility: hidden;
+}
+
+.etf-text-skeleton {
+  border-radius: 6px;
+  background: linear-gradient(90deg, var(--fnk-neutral-100), var(--fnk-neutral-200), var(--fnk-neutral-100));
+  background-size: 200% 100%;
+  -webkit-box-decoration-break: clone;
+  box-decoration-break: clone;
+  animation: etf-text-shimmer 1.4s ease-in-out infinite;
+}
+
+@keyframes etf-text-shimmer {
+  from { background-position: 100% 0; }
+  to { background-position: -100% 0; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .etf-text-skeleton { animation: none; }
+}
+
 .etf-retry {
   background: none;
   border: 0;

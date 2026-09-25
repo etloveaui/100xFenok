@@ -2,6 +2,7 @@
 
 import { DistributionBand, Stat, StatStrip } from "@/components/ui";
 import { formatInteger } from "@/lib/format";
+import EtfTextSkeleton from "./EtfTextSkeleton";
 import {
   computeEtfInsights,
   type EtfCompositionBucketKey,
@@ -28,9 +29,23 @@ export default function EtfSummaryStrip({ surface }: { surface: EtfSurfaceData }
   const insights = ready ? computeEtfInsights(rows, snapshot, null) : null;
 
   if (!loaded) {
+    // Same cells, band and legend as the loaded strip with placeholder values,
+    // so the numbers replace "—" in place instead of pushing the page down.
     return (
-      <section aria-label="ETF 요약" data-etfs-summary-strip="true" className="etf-sum">
-        <p className="etf-sum-note">ETF 요약 확인 중</p>
+      <section aria-label="ETF 요약" aria-busy="true" data-etfs-summary-strip="true" className="etf-sum">
+        <StatStrip data-etfs-summary-cells="true">
+          <Stat label="전체" value="—" sub="확인 중" />
+          <Stat label="신규" value="—" sub="확인 중" />
+          <Stat label="레버리지·인버스" value="—" sub="확인 중" />
+          <Stat label="디지털자산" value="—" sub="확인 중" />
+        </StatStrip>
+        <DistributionBand segments={[]} ariaLabel="ETF 자산군 구성 확인 중" />
+        <p className="etf-sum-legend">
+          <EtfTextSkeleton>
+            주식형 0,000개(00.0%) · 채권형 0,000개(00.0%) · 기타 0,000개(00%) · 원자재 000개(0.0%) · 디지털자산 00개(0.0%)
+          </EtfTextSkeleton>
+          <span className="sr-only">ETF 요약 확인 중</span>
+        </p>
       </section>
     );
   }
