@@ -11,6 +11,7 @@ import type {
   InvestorData,
   SuperInvestorsDataResult,
 } from "@/lib/superinvestors/types";
+import { resolveSec13fInvestorPayload } from "@/lib/superinvestors/investor-parts";
 
 // One retry remains bounded to 30 seconds, below the hosted QA route wait.
 // This includes connection queueing, download, and JSON parsing for by_ticker.
@@ -253,7 +254,8 @@ export function useInvestorDetail(name: string | null) {
           }
           return;
         }
-        const investor = (await response.json()) as InvestorData;
+        const payload = (await response.json()) as InvestorData;
+        const investor = (await resolveSec13fInvestorPayload(payload)) as InvestorData;
         INVESTOR_CACHE.set(name, investor);
         if (!cancelled) {
           setData(investor);

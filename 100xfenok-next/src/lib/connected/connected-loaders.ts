@@ -1,4 +1,5 @@
 import { normalizeForEntityKey } from "@/lib/ticker";
+import { resolveSec13fInvestorPayload } from "@/lib/superinvestors/investor-parts";
 
 /* ───────────────────────────────────────────────
  * Types
@@ -155,11 +156,12 @@ export async function loadInvestorHoldings(investorName: string): Promise<Invest
 
   investorPending[key] = fetch(`/data/sec-13f/investors/${encodeURIComponent(key)}.json`, { cache: "force-cache" })
     .then((r) => (r.ok ? r.json() : null))
-    .then((raw: Record<string, unknown> | null) => {
-      if (!raw?.investor) {
+    .then(async (rawPayload: Record<string, unknown> | null) => {
+      if (!rawPayload?.investor) {
         investorCache[key] = null;
         return null;
       }
+      const raw = (await resolveSec13fInvestorPayload(rawPayload)) as Record<string, unknown>;
       const inv = raw.investor as Record<string, unknown>;
       const rawFilings = Array.isArray(inv.filings) ? inv.filings : [];
       const filings: InvestorFiling[] = rawFilings.map((f: Record<string, unknown>) => ({
