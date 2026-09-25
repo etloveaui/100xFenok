@@ -4482,6 +4482,9 @@ function contextOptionsFor(viewport) {
 try {
   for (const { name, viewport } of viewports) {
     const context = await browser.newContext(contextOptionsFor(viewport));
+    // The closed-site "intro" gate redirects cookie-less visitors to /intro;
+    // the browse cookie keeps QA on the public pages, as in the live-integrity check.
+    await context.addCookies([{ name: "fx_browse", value: "1", url: new URL(baseUrl).origin }]);
     if (isolated) {
       await context.route("**/*", async (requestRoute) => {
         const url = new URL(requestRoute.request().url());
