@@ -13,10 +13,8 @@ export const metadata: Metadata = {
 
 export default function RegimePage() {
   return (
-    <div className="fnk-shell">
-      <AppShell active="regime" title="시황">
-        <RegimeClient />
-      </AppShell>
-    </div>
+    <AppShell active="regime" title="시황">
+      <RegimeClient />
+    </AppShell>
   );
 }

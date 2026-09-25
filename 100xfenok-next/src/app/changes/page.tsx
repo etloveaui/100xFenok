@@ -10,10 +10,8 @@ export const metadata: Metadata = {
 
 export default function ChangesPage() {
   return (
-    <div className="fnk-shell">
-      <AppShell title="무엇이 바뀌었나" backHref={ROUTES.home}>
-        <ChangesClient />
-      </AppShell>
-    </div>
+    <AppShell title="무엇이 바뀌었나" backHref={ROUTES.home}>
+      <ChangesClient />
+    </AppShell>
   );
 }

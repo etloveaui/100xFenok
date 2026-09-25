@@ -10,10 +10,8 @@ export const metadata: Metadata = {
 
 export default function ResearchPage() {
   return (
-    <div className="fnk-shell">
-      <AppShell active="research" title="리서치" backHref={ROUTES.home}>
-        <ResearchClient />
-      </AppShell>
-    </div>
+    <AppShell active="research" title="리서치" backHref={ROUTES.home}>
+      <ResearchClient />
+    </AppShell>
   );
 }

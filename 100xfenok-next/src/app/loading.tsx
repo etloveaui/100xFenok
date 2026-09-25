@@ -1,7 +1,9 @@
 // Route-level Suspense fallback shown during navigation. Kept light + neutral
-// so it matches the v5 light theme for every surface (the old V1 bento
-// skeleton had a dark `bg-slate-950` hero tile that flashed jarringly when
-// navigating away from the v5 home).
+// so it matches the light theme for every surface.
+//
+// On shell routes it renders inside the persistent frame's content column, so
+// the rail, top bar and tab bar stay on screen while the next page loads; the
+// `.fnk-shell .route-loading` rule drops the standalone padding there.
 //
 // The skeleton appears only after a 120ms delay (five-state contract: pending
 // skeleton with delay) so fast navigations never flash placeholder chrome.
@@ -13,7 +15,12 @@ export default function Loading() {
   const show = useDelayedLoading(true);
   if (!show) return null;
   return (
-    <div className="mx-auto w-full max-w-[1200px] overflow-x-hidden px-3 py-4 sm:px-4">
+    <div
+      className="route-loading mx-auto w-full max-w-[1200px] overflow-x-hidden px-3 py-4 sm:px-4"
+      role="status"
+      aria-live="polite"
+    >
+      <span className="sr-only">페이지를 불러오는 중입니다</span>
       {/* top status bar */}
       <div className="mb-4 h-14 w-full rounded-lg border border-slate-200 bg-white p-3 shadow-sm">
         <div className="skeleton-bar h-3 w-40" />

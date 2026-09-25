@@ -51,7 +51,6 @@ export default function WorkbenchView({ surface = "workbench" }: { surface?: Wor
 
   return (
     <div
-      className="fnk-shell"
       data-workbench-surface={isExplore ? undefined : "true"}
       data-explore-surface={isExplore ? "true" : undefined}
     >

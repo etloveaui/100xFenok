@@ -1009,10 +1009,8 @@ export default function HomeCanvasPlusClient() {
 
 export function HomeShell() {
   return (
-    <div className="fnk-shell">
-      <AppShell active="explore" title={EXPLORE_PRODUCT_TITLE}>
-        <HomeCanvasPlusClient />
-      </AppShell>
-    </div>
+    <AppShell active="explore" title={EXPLORE_PRODUCT_TITLE}>
+      <HomeCanvasPlusClient />
+    </AppShell>
   );
 }

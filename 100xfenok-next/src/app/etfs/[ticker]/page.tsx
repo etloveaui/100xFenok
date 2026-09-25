@@ -27,7 +27,7 @@ export default async function EtfDetailPage({ params }: Props) {
   const { ticker } = await params;
   const symbol = normalizeForRouteTicker(ticker);
   return (
-    <div className="fnk-shell" data-etf-detail-surface="true" data-etf-detail-route-owner="etf-detail" data-etf-detail-symbol={symbol}>
+    <div data-etf-detail-surface="true" data-etf-detail-route-owner="etf-detail" data-etf-detail-symbol={symbol}>
       <AppShell active="etfs" title={symbol} backHref={ROUTES.etfs}>
         <EtfDetailClient ticker={symbol} />
       </AppShell>

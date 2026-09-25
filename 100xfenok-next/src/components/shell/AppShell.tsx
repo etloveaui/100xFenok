@@ -1,6 +1,17 @@
 "use client";
 
-import { useEffect, useRef, useState, type ReactNode, type Ref } from "react";
+import {
+  createContext,
+  useContext,
+  useEffect,
+  useLayoutEffect,
+  useMemo,
+  useRef,
+  useState,
+  type ReactNode,
+  type Ref,
+} from "react";
+import { usePathname } from "next/navigation";
 import BrandLogo from "@/components/BrandLogo";
 import ConnectedView from "@/components/connected/ConnectedView";
 import TransitionLink from "@/components/TransitionLink";
@@ -27,12 +38,21 @@ import { ROUTES } from "@/lib/routes";
 import { currentJourneyReturnTo } from "@/lib/journey-context";
 import type { DataState } from "@/lib/data-state";
 import { useModal } from "@/hooks/useModal";
+import { NavItemPending, useNavigationPending } from "@/components/shell/navigation-progress";
+import { normalizeShellPathname, resolveShellRoute } from "@/components/shell/shell-routes";
 
 /**
  * Product shell (v3 design handoff): desktop = left rail + global top bar +
  * ticker strip; mobile = app header + bottom tab bar (PWA standalone-safe).
- * V1 Navbar/Footer are hidden via body.fnk-shell-on (globals.css) while a
- * shell page is mounted. CSS: src/styles/app-shell.css (.fnk-shell scope).
+ * CSS: src/styles/app-shell.css (.fnk-shell scope).
+ *
+ * The chrome is persistent: `AppShellFrame` (root layout) draws it once and
+ * keeps it mounted across client navigations, so the rail, tab bar, search
+ * box, ticker tape and signed-in state never blink or refetch between pages.
+ * Pages keep rendering `<AppShell active title backHref freshness>` — inside
+ * the frame that call only registers the page's chrome state (title, back
+ * link, freshness pill) and returns the page content. Outside a frame (a route
+ * missing from shell-routes.ts) AppShell draws the chrome itself as before.
  */
 
 export type ShellPage =
@@ -419,36 +439,70 @@ function useTape(): { items: TapeItem[]; settled: boolean } {
 function Tape({ items }: { items: TapeItem[] }) {
   const fmt = (v: number) => `${v >= 0 ? "+" : ""}${v.toFixed(1)}%`;
   const seq = [...items, ...items];
+  // The period label sits outside the moving track: as the first track item
+  // it scrolled away within seconds and left bare "+66.9%" figures behind.
   return (
-    <div className="ticker-track">
-      <span className="tk-item"><span className="p">YTD</span></span>
-      {seq.map((it, i) => (
-        <span key={`${it.label}-${i}`} className="tk-item">
-          <span className="s">{it.label}</span>
-          {it.price ? <span className="p num">{it.price}</span> : null}
-          <span className={`num ${it.pct >= 0 ? "up" : "down"}`}>{fmt(it.pct)}</span>
-        </span>
-      ))}
-    </div>
+    <>
+      <span className="tk-label">연초 대비</span>
+      <div className="ticker-track">
+        {seq.map((it, i) => (
+          <span key={`${it.label}-${i}`} className="tk-item">
+            <span className="s">{it.label}</span>
+            {it.price ? <span className="p num">{it.price}</span> : null}
+            <span className={`num ${it.pct >= 0 ? "up" : "down"}`}>{fmt(it.pct)}</span>
+          </span>
+        ))}
+      </div>
+    </>
   );
 }
 
-export default function AppShell({
-  active,
-  title,
-  backHref,
-  backLabel = "뒤로",
-  freshness,
-  children,
-}: {
+type AppShellMeta = {
   active?: ShellPage;
   title: string;
   backHref?: string;
   backLabel?: string;
   freshness?: DataState | null;
+};
+
+type ShellRegistration = { pathname: string; meta: AppShellMeta };
+
+type ShellFrameApi = {
+  register: (registration: ShellRegistration) => void;
+  unregister: (registration: ShellRegistration) => void;
+};
+
+const ShellFrameContext = createContext<ShellFrameApi | null>(null);
+
+function sameFreshness(a: DataState | null | undefined, b: DataState | null | undefined): boolean {
+  if (a === b) return true;
+  if (!a || !b) return false;
+  return JSON.stringify(a) === JSON.stringify(b);
+}
+
+function sameRegistration(a: ShellRegistration, b: ShellRegistration): boolean {
+  return (
+    a.pathname === b.pathname &&
+    a.meta.active === b.meta.active &&
+    a.meta.title === b.meta.title &&
+    a.meta.backHref === b.meta.backHref &&
+    a.meta.backLabel === b.meta.backLabel &&
+    sameFreshness(a.meta.freshness, b.meta.freshness)
+  );
+}
+
+function ShellChrome({
+  meta,
+  pathname,
+  children,
+}: {
+  meta: AppShellMeta;
+  pathname: string;
   children: ReactNode;
 }) {
+  const { active, title, backHref, backLabel = "뒤로", freshness } = meta;
   useUserHeartbeat();
+  const navPending = useNavigationPending();
   const [searching, setSearching] = useState(false);
   const [showScrollTop, setShowScrollTop] = useState(false);
   const [typeaheadPreviewTicker, setTypeaheadPreviewTicker] = useState<string | null>(null);
@@ -462,6 +516,16 @@ export default function AppShell({
   const tickerVisible = tape.items.length > 0;
   // Only a settled empty tape releases the reserved band height.
   const tickerOff = tape.settled && !tickerVisible;
+
+  // The chrome outlives the page, so transient chrome UI (mobile search, More
+  // sheet, stock preview) must close when the route changes underneath it.
+  const [routePath, setRoutePath] = useState(pathname);
+  if (routePath !== pathname) {
+    setRoutePath(pathname);
+    setSearching(false);
+    if (moreModal.isOpen) moreModal.close();
+    if (previewModal.isOpen) previewModal.close();
+  }
 
   const handleTypeaheadStockPreview = (ticker: string) => {
     moreModal.close();
@@ -492,11 +556,6 @@ export default function AppShell({
   }, [moreOpen]);
 
   useEffect(() => {
-    if (previewModal.isOpen || !typeaheadPreviewTicker) return;
-    setTypeaheadPreviewTicker(null);
-  }, [previewModal.isOpen, typeaheadPreviewTicker]);
-
-  useEffect(() => {
     const update = () => {
       const next = window.scrollY > 480;
       setShowScrollTop((current) => (current === next ? current : next));
@@ -522,7 +581,8 @@ export default function AppShell({
   };
 
   return (
-    <>
+    <div className="fnk-shell" data-shell-frame="">
+      <div className="nav-progress" aria-hidden="true" data-active={navPending ? "" : undefined} />
       {/* desktop left rail */}
       <aside className="rail">
         <TransitionLink href={ROUTES.home} className="rail-logo" aria-label="100x Fenok 홈">
@@ -544,6 +604,7 @@ export default function AppShell({
                     aria-current={n.id === navActive ? "page" : undefined}
                   >
                     {n.icon} {n.label}
+                    <NavItemPending />
                   </TransitionLink>
                 );
               })}
@@ -634,7 +695,7 @@ export default function AppShell({
         ) : null}
       </header>
 
-      <div className="content">{children}</div>
+      <div className="content" aria-busy={navPending || undefined}>{children}</div>
       {typeaheadPreviewTicker && previewModal.isOpen ? (
         <div className="typeahead-preview-layer">
           <button type="button" className="typeahead-preview-backdrop" aria-label="미리보기 닫기" onClick={closeTypeaheadPreview} />
@@ -675,6 +736,7 @@ export default function AppShell({
               aria-current={id === navActive ? "page" : undefined}
             >
               {n.icon} {n.label}
+              <NavItemPending />
             </TransitionLink>
           );
         })}
@@ -732,6 +794,69 @@ export default function AppShell({
         </div>
       ) : null}
       <AdoptStorePrompt />
-    </>
+    </div>
+  );
+}
+
+/**
+ * Root-layout host for the persistent chrome. Shell routes (shell-routes.ts)
+ * get the chrome immediately — on the server render and on the loading state
+ * of a client navigation — using the route table's defaults; the page's own
+ * `<AppShell>` props take over as soon as it mounts. Other routes (admin,
+ * winddown, intro, /ib, …) render untouched.
+ */
+export function AppShellFrame({ children }: { children: ReactNode }) {
+  const pathname = normalizeShellPathname(usePathname());
+  const routeMeta = resolveShellRoute(pathname);
+  const [registration, setRegistration] = useState<ShellRegistration | null>(null);
+  const api = useMemo<ShellFrameApi>(
+    () => ({
+      register: (next) => setRegistration((prev) => (prev && sameRegistration(prev, next) ? prev : next)),
+      unregister: (gone) => setRegistration((prev) => (prev && sameRegistration(prev, gone) ? null : prev)),
+    }),
+    [],
+  );
+
+  if (!routeMeta) return <>{children}</>;
+  const meta = registration && registration.pathname === pathname ? registration.meta : routeMeta;
+  return (
+    <ShellFrameContext.Provider value={api}>
+      <ShellChrome meta={meta} pathname={pathname}>
+        {children}
+      </ShellChrome>
+    </ShellFrameContext.Provider>
+  );
+}
+
+export default function AppShell({
+  active,
+  title,
+  backHref,
+  backLabel = "뒤로",
+  freshness,
+  children,
+}: {
+  active?: ShellPage;
+  title: string;
+  backHref?: string;
+  backLabel?: string;
+  freshness?: DataState | null;
+  children: ReactNode;
+}) {
+  const frame = useContext(ShellFrameContext);
+  const pathname = normalizeShellPathname(usePathname());
+
+  useLayoutEffect(() => {
+    if (!frame) return;
+    const registration: ShellRegistration = { pathname, meta: { active, title, backHref, backLabel, freshness } };
+    frame.register(registration);
+    return () => frame.unregister(registration);
+  }, [frame, pathname, active, title, backHref, backLabel, freshness]);
+
+  if (frame) return <>{children}</>;
+  return (
+    <ShellChrome meta={{ active, title, backHref, backLabel, freshness }} pathname={pathname}>
+      {children}
+    </ShellChrome>
   );
 }

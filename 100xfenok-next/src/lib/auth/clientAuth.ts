@@ -10,6 +10,10 @@ export const DEFAULT_CLIENT_ID =
   "1047143661358-ppe3u3k58dcbi59usbkmd0fggbi5dkpd.apps.googleusercontent.com";
 
 let inMemoryToken: string | undefined;
+// Callers that ask at the same moment share one /api/user/me round trip — the
+// desktop and mobile UserAuthPill instances mount together. Only the in-flight
+// request is shared; a settled answer is never reused, and auth changes drop it.
+let meInFlight: Promise<UserMeResponse> | null = null;
 
 export function loadAuthToken(): string {
   if (inMemoryToken === undefined) {
@@ -29,6 +33,7 @@ function readStoredToken(): string {
 
 export function saveAuthToken(token: string): void {
   inMemoryToken = token;
+  meInFlight = null;
   if (typeof window === "undefined") return;
   try {
     window.localStorage.setItem(TOKEN_KEY, token);
@@ -39,6 +44,7 @@ export function saveAuthToken(token: string): void {
 
 export function clearAuthToken(): void {
   inMemoryToken = "";
+  meInFlight = null;
   if (typeof window === "undefined") return;
   try {
     window.localStorage.removeItem(TOKEN_KEY);
@@ -233,6 +239,7 @@ export async function postUserPing(): Promise<boolean> {
       method: "POST",
       headers,
     });
+    res.body?.cancel().catch(() => {});
     if (res.status === 401 || res.status === 403) {
       clearAuthToken();
       notifyAuthInvalid();
@@ -245,7 +252,16 @@ export async function postUserPing(): Promise<boolean> {
   }
 }
 
-export async function fetchMe(): Promise<UserMeResponse> {
+export function fetchMe(): Promise<UserMeResponse> {
+  if (meInFlight) return meInFlight;
+  const request = requestMe().finally(() => {
+    if (meInFlight === request) meInFlight = null;
+  });
+  meInFlight = request;
+  return request;
+}
+
+async function requestMe(): Promise<UserMeResponse> {
   const token = loadAuthToken();
   const headers: Record<string, string> = {};
   if (token) {
@@ -256,6 +272,8 @@ export async function fetchMe(): Promise<UserMeResponse> {
     headers,
   });
   if (res.status === 401 || res.status === 403) {
+    // Release the unread error body so the connection does not stay busy.
+    res.body?.cancel().catch(() => {});
     clearAuthToken();
     notifyAuthInvalid();
     notifyUserChange(null);

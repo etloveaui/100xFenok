@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from 'next';
 import { cookies } from 'next/headers';
 import Link from 'next/link';
 import AppShell from '@/components/shell/AppShell';
+import ShellChromeOff from '@/components/shell/ShellChromeOff';
 import RouteEmbedFrame from '@/components/RouteEmbedFrame';
 import { Stat, StatStrip } from '@/components/ui/Stat';
 import { ROUTES } from '@/lib/routes';
@@ -75,13 +76,11 @@ export default async function VRPage({ searchParams }: PageProps) {
         shellClassName={version === "v1" ? undefined : "route-embed-shell-app"}
       />
     );
-    if (version === "v1") return frame;
+    if (version === "v1") return <ShellChromeOff>{frame}</ShellChromeOff>;
     return (
-      <div className="fnk-shell">
-        <AppShell active="vr" title={frameTitle} backHref={ROUTES.home}>
-          {frame}
-        </AppShell>
-      </div>
+      <AppShell active="vr" title={frameTitle} backHref={ROUTES.home}>
+        {frame}
+      </AppShell>
     );
   }
 
@@ -256,13 +255,11 @@ export default async function VRPage({ searchParams }: PageProps) {
     </div>
   );
 
-  if (version === "v1") return landing;
+  if (version === "v1") return <ShellChromeOff>{landing}</ShellChromeOff>;
 
   return (
-    <div className="fnk-shell">
-      <AppShell active="vr" title="VR 전략 가이드" backHref={ROUTES.home}>
-        {landing}
-      </AppShell>
-    </div>
+    <AppShell active="vr" title="VR 전략 가이드" backHref={ROUTES.home}>
+      {landing}
+    </AppShell>
   );
 }

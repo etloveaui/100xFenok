@@ -10,9 +10,5 @@ export const metadata: Metadata = {
 };
 
 export default function MarketValuationPage() {
-  return (
-    <div className="fnk-shell">
-      <MarketValuationShell />
-    </div>
-  );
+  return <MarketValuationShell />;
 }
