@@ -1,19 +1,6 @@
 {
   "attempts": [
     {
-      "attempts_used": 0,
-      "event_name": "schedule",
-      "failures": [],
-      "latency_ms": 0,
-      "natural": true,
-      "observed_at": "2026-08-20T23:45:51Z",
-      "outcome": "skipped_fresh",
-      "run_attempt": 1,
-      "run_id": "32429826829",
-      "schedule": "20 23 * * 1-5",
-      "shard": "1/5"
-    },
-    {
       "attempts_used": 1,
       "event_name": "schedule",
       "failures": [],
@@ -182,15 +169,28 @@
       "run_id": "35806669054",
       "schedule": "20 23 * * 1-5",
       "shard": "3/5"
+    },
+    {
+      "attempts_used": 1,
+      "event_name": "schedule",
+      "failures": [],
+      "latency_ms": 469,
+      "natural": true,
+      "observed_at": "2026-09-25T01:37:44Z",
+      "outcome": "fresh",
+      "run_attempt": 1,
+      "run_id": "36082706783",
+      "schedule": "20 23 * * 1-5",
+      "shard": "0/5"
     }
   ],
   "current": {
-    "fetched_at": "2026-09-23T01:51:02Z",
-    "history_as_of": "2026-09-22",
+    "fetched_at": "2026-09-25T01:42:09Z",
+    "history_as_of": "2026-09-24",
     "path": "data/yf/finance/ONON.json",
-    "payload_sha256": "e43558f67cc275021af6fee82abc87556f28ba2df223f2e9c3bb4f7d9ccf616f",
-    "quote_as_of": "2026-09-22T20:00:02Z",
-    "source_as_of": "2026-09-22"
+    "payload_sha256": "9c753a21863e2248fbd955c15e8d7e9c39a0b6734605f58811a8869802ca787f",
+    "quote_as_of": "2026-09-24T20:00:02Z",
+    "source_as_of": "2026-09-24"
   },
   "discovered_from": [
     "global_scouter_stock",
@@ -200,14 +200,14 @@
     "attempts_used": 1,
     "event_name": "schedule",
     "failures": [],
-    "latency_ms": 523,
+    "latency_ms": 469,
     "natural": true,
-    "observed_at": "2026-09-23T01:47:26Z",
+    "observed_at": "2026-09-25T01:37:44Z",
     "outcome": "fresh",
     "run_attempt": 1,
-    "run_id": "35806669054",
+    "run_id": "36082706783",
     "schedule": "20 23 * * 1-5",
-    "shard": "3/5"
+    "shard": "0/5"
   },
   "last_recovered_failure": {
     "attempts_used": 1,
@@ -232,14 +232,14 @@
   "promotion_contract": "provider_observation/v2",
   "provider_observation": {
     "event_name": "schedule",
-    "history_as_of": "2026-09-22",
-    "observed_at": "2026-09-23T01:47:26Z",
-    "payload_sha256": "6a1190c9dc22fa4fc2a128b22ed67f6d1d53b68d74e4db7113f00ca58a4093b8",
-    "quote_as_of": "2026-09-22T20:00:02Z",
+    "history_as_of": "2026-09-24",
+    "observed_at": "2026-09-25T01:37:44Z",
+    "payload_sha256": "756a9082ee97e9d66a1974c1a4e559f48c81967dfe1a30ab49bfe6e11fd59e06",
+    "quote_as_of": "2026-09-24T20:00:02Z",
     "run_attempt": 1,
-    "run_id": "35806669054",
+    "run_id": "36082706783",
     "schema_version": "provider_observation/v2",
-    "source_as_of": "2026-09-22"
+    "source_as_of": "2026-09-24"
   },
   "recovered_at": "2026-09-11T01:11:50Z",
   "recovered_from_run_id": "34175958781",
@@ -250,5 +250,5 @@
   "retry": false,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "ticker": "ONON",
-  "updated_at": "2026-09-23T01:47:26Z"
+  "updated_at": "2026-09-25T01:37:44Z"
 }

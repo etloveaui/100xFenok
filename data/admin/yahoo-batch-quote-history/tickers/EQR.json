@@ -5,20 +5,6 @@
       "error": "ValueError: quote_as_of is unavailable for EQR despite available history",
       "event_name": "schedule",
       "failures": [],
-      "latency_ms": 590,
-      "natural": true,
-      "observed_at": "2026-09-01T01:52:51Z",
-      "outcome": "failed",
-      "run_attempt": 1,
-      "run_id": "33460327385",
-      "schedule": "20 23 * * 1-5",
-      "shard": "0/5"
-    },
-    {
-      "attempts_used": 1,
-      "error": "ValueError: quote_as_of is unavailable for EQR despite available history",
-      "event_name": "schedule",
-      "failures": [],
       "latency_ms": 774,
       "natural": true,
       "observed_at": "2026-09-02T01:05:40Z",
@@ -213,6 +199,26 @@
       "run_id": "35943054282",
       "schedule": "20 23 * * 1-5",
       "shard": "0/5"
+    },
+    {
+      "attempts_used": 1,
+      "error": "ValueError: quote_as_of is unavailable for EQR despite available history",
+      "event_name": "schedule",
+      "failures": [
+        {
+          "attempt": 1,
+          "error": "AttributeError: 'Index' object has no attribute 'date'",
+          "source": "provider_safe_call"
+        }
+      ],
+      "latency_ms": 431,
+      "natural": true,
+      "observed_at": "2026-09-25T01:37:44Z",
+      "outcome": "failed",
+      "run_attempt": 1,
+      "run_id": "36082706783",
+      "schedule": "20 23 * * 1-5",
+      "shard": "0/5"
     }
   ],
   "current": {
@@ -237,12 +243,12 @@
         "source": "provider_safe_call"
       }
     ],
-    "latency_ms": 449,
+    "latency_ms": 431,
     "natural": true,
-    "observed_at": "2026-09-24T01:29:54Z",
+    "observed_at": "2026-09-25T01:37:44Z",
     "outcome": "failed",
     "run_attempt": 1,
-    "run_id": "35943054282",
+    "run_id": "36082706783",
     "schedule": "20 23 * * 1-5",
     "shard": "0/5"
   },
@@ -260,9 +266,9 @@
       }
     ],
     "lkg_status": "retained",
-    "observed_at": "2026-09-24T01:29:54Z",
+    "observed_at": "2026-09-25T01:37:44Z",
     "run_attempt": 1,
-    "run_id": "35943054282"
+    "run_id": "36082706783"
   },
   "lkg": {
     "fetched_at": "2026-08-24T23:44:47Z",
@@ -298,5 +304,5 @@
     "source_as_of": "2026-08-17T20:00:03Z"
   },
   "ticker": "EQR",
-  "updated_at": "2026-09-24T01:29:54Z"
+  "updated_at": "2026-09-25T01:37:44Z"
 }

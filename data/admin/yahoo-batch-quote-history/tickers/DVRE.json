@@ -38,31 +38,44 @@
       "run_id": "31094670683",
       "schedule": "7 8 * * 0-5",
       "shard": "52/72"
+    },
+    {
+      "attempts_used": 1,
+      "event_name": "schedule",
+      "failures": [],
+      "latency_ms": 620,
+      "natural": true,
+      "observed_at": "2026-09-25T01:37:44Z",
+      "outcome": "fresh",
+      "run_attempt": 1,
+      "run_id": "36082706783",
+      "schedule": "20 23 * * 1-5",
+      "shard": "0/5"
     }
   ],
   "current": {
-    "fetched_at": "2026-08-06T10:51:25Z",
-    "history_as_of": "2026-08-05",
-    "path": "data/admin/yahoo-batch-quote-history/lkg/DVRE.json",
-    "payload_sha256": "46458776b02193c67f392c382d68656729d1404b0534bfa4777105e6049db114",
-    "quote_as_of": "2026-08-05T20:00:00Z",
-    "source_as_of": "2026-08-05"
+    "fetched_at": "2026-09-25T01:38:03Z",
+    "history_as_of": "2026-09-02",
+    "path": "data/yf/finance/DVRE.json",
+    "payload_sha256": "01c0c93efb851f217ae1fc6ad46b8eb27bd0a04c7703374613afad1a677926ae",
+    "quote_as_of": "2026-08-26T20:00:00Z",
+    "source_as_of": "2026-08-26T20:00:00Z"
   },
   "discovered_from": [
-    "stockanalysis_etf"
+    "market_facts"
   ],
   "last_attempt": {
     "attempts_used": 1,
     "event_name": "schedule",
     "failures": [],
-    "latency_ms": 1005,
+    "latency_ms": 620,
     "natural": true,
-    "observed_at": "2026-08-06T10:49:28Z",
+    "observed_at": "2026-09-25T01:37:44Z",
     "outcome": "fresh",
     "run_attempt": 1,
-    "run_id": "31094670683",
-    "schedule": "7 8 * * 0-5",
-    "shard": "52/72"
+    "run_id": "36082706783",
+    "schedule": "20 23 * * 1-5",
+    "shard": "0/5"
   },
   "lkg": {
     "fetched_at": "2026-08-06T10:51:25Z",
@@ -75,17 +88,17 @@
   "promotion_contract": "provider_observation/v2",
   "provider_observation": {
     "event_name": "schedule",
-    "history_as_of": "2026-08-05",
-    "observed_at": "2026-08-06T10:49:28Z",
-    "payload_sha256": "70fc490b7f2aa47ee3ab5b654b8920e7d14687ca75478038675d45179d20c2fb",
-    "quote_as_of": "2026-08-05T20:00:00Z",
+    "history_as_of": "2026-09-02",
+    "observed_at": "2026-09-25T01:37:44Z",
+    "payload_sha256": "620b655eec99253c65cd012157bceae47055705fc898863efbc0c405dae34747",
+    "quote_as_of": "2026-08-26T20:00:00Z",
     "run_attempt": 1,
-    "run_id": "31094670683",
+    "run_id": "36082706783",
     "schema_version": "provider_observation/v2",
-    "source_as_of": "2026-08-05"
+    "source_as_of": "2026-08-26T20:00:00Z"
   },
-  "resolution_state": "lkg_primary",
-  "retry": true,
+  "resolution_state": "fresh_primary",
+  "retry": false,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "stale": {
     "age_business_days": 7,
@@ -98,5 +111,5 @@
     "source_as_of": "2026-08-05"
   },
   "ticker": "DVRE",
-  "updated_at": "2026-08-14T00:10:47Z"
+  "updated_at": "2026-09-25T01:37:44Z"
 }

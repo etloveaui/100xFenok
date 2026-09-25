@@ -1,19 +1,6 @@
 {
   "attempts": [
     {
-      "attempts_used": 0,
-      "event_name": "schedule",
-      "failures": [],
-      "latency_ms": 0,
-      "natural": true,
-      "observed_at": "2026-08-27T04:56:50Z",
-      "outcome": "skipped_fresh",
-      "run_attempt": 1,
-      "run_id": "33039718885",
-      "schedule": "20 23 * * 1-5",
-      "shard": "4/5"
-    },
-    {
       "attempts_used": 1,
       "error": "StockDetailValidationError: Yahoo history close must be a finite number",
       "event_name": "schedule",
@@ -186,6 +173,20 @@
       "run_id": "35943054282",
       "schedule": "20 23 * * 1-5",
       "shard": "2/5"
+    },
+    {
+      "attempts_used": 1,
+      "error": "StockDetailValidationError: Yahoo history close must be a finite number",
+      "event_name": "schedule",
+      "failures": [],
+      "latency_ms": 557,
+      "natural": true,
+      "observed_at": "2026-09-25T01:37:44Z",
+      "outcome": "failed",
+      "run_attempt": 1,
+      "run_id": "36082706783",
+      "schedule": "20 23 * * 1-5",
+      "shard": "0/5"
     }
   ],
   "current": {
@@ -205,14 +206,14 @@
     "error": "StockDetailValidationError: Yahoo history close must be a finite number",
     "event_name": "schedule",
     "failures": [],
-    "latency_ms": 554,
+    "latency_ms": 557,
     "natural": true,
-    "observed_at": "2026-09-24T01:38:09Z",
+    "observed_at": "2026-09-25T01:37:44Z",
     "outcome": "failed",
     "run_attempt": 1,
-    "run_id": "35943054282",
+    "run_id": "36082706783",
     "schedule": "20 23 * * 1-5",
-    "shard": "2/5"
+    "shard": "0/5"
   },
   "last_recovered_failure": {
     "attempts_used": 1,
@@ -234,9 +235,9 @@
     "failure_kind": "unexpected",
     "failures": [],
     "lkg_status": "retained",
-    "observed_at": "2026-09-24T01:38:09Z",
+    "observed_at": "2026-09-25T01:37:44Z",
     "run_attempt": 1,
-    "run_id": "35943054282"
+    "run_id": "36082706783"
   },
   "lkg": {
     "fetched_at": "2026-09-23T01:47:14Z",
@@ -267,5 +268,5 @@
   "retry": true,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "ticker": "UNH",
-  "updated_at": "2026-09-24T01:38:09Z"
+  "updated_at": "2026-09-25T01:37:44Z"
 }

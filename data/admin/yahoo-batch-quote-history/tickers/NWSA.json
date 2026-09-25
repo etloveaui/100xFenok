@@ -1,19 +1,6 @@
 {
   "attempts": [
     {
-      "attempts_used": 0,
-      "event_name": "schedule",
-      "failures": [],
-      "latency_ms": 0,
-      "natural": true,
-      "observed_at": "2026-08-20T23:45:51Z",
-      "outcome": "skipped_fresh",
-      "run_attempt": 1,
-      "run_id": "32429826829",
-      "schedule": "20 23 * * 1-5",
-      "shard": "1/5"
-    },
-    {
       "attempts_used": 1,
       "event_name": "schedule",
       "failures": [],
@@ -182,15 +169,28 @@
       "run_id": "35806669054",
       "schedule": "20 23 * * 1-5",
       "shard": "3/5"
+    },
+    {
+      "attempts_used": 1,
+      "event_name": "schedule",
+      "failures": [],
+      "latency_ms": 617,
+      "natural": true,
+      "observed_at": "2026-09-25T01:37:44Z",
+      "outcome": "fresh",
+      "run_attempt": 1,
+      "run_id": "36082706783",
+      "schedule": "20 23 * * 1-5",
+      "shard": "0/5"
     }
   ],
   "current": {
-    "fetched_at": "2026-09-23T01:51:00Z",
-    "history_as_of": "2026-09-22",
+    "fetched_at": "2026-09-25T01:42:07Z",
+    "history_as_of": "2026-09-24",
     "path": "data/yf/finance/NWSA.json",
-    "payload_sha256": "1cfdf3ba72e3cf69d6b6be389f451519ab6b5e5f98fdfc27253a505808446339",
-    "quote_as_of": "2026-09-22T20:00:01Z",
-    "source_as_of": "2026-09-22"
+    "payload_sha256": "91ebeacfc4a66ce8cfe2d286f7ef40ca2a2a49728db02fb661a2111314d90648",
+    "quote_as_of": "2026-09-24T20:00:00Z",
+    "source_as_of": "2026-09-24"
   },
   "discovered_from": [
     "global_scouter_stock",
@@ -200,14 +200,14 @@
     "attempts_used": 1,
     "event_name": "schedule",
     "failures": [],
-    "latency_ms": 521,
+    "latency_ms": 617,
     "natural": true,
-    "observed_at": "2026-09-23T01:47:26Z",
+    "observed_at": "2026-09-25T01:37:44Z",
     "outcome": "fresh",
     "run_attempt": 1,
-    "run_id": "35806669054",
+    "run_id": "36082706783",
     "schedule": "20 23 * * 1-5",
-    "shard": "3/5"
+    "shard": "0/5"
   },
   "last_recovered_failure": {
     "attempts_used": 1,
@@ -232,14 +232,14 @@
   "promotion_contract": "provider_observation/v2",
   "provider_observation": {
     "event_name": "schedule",
-    "history_as_of": "2026-09-22",
-    "observed_at": "2026-09-23T01:47:26Z",
-    "payload_sha256": "c5eef135e26040270264aa4d724bd28ea4568be1d6da869a25f80ff6e66a13b4",
-    "quote_as_of": "2026-09-22T20:00:01Z",
+    "history_as_of": "2026-09-24",
+    "observed_at": "2026-09-25T01:37:44Z",
+    "payload_sha256": "0b75bd586e69123f5dfd872cbf6876d4b265ca548e4d23c67952ce9261f71c7e",
+    "quote_as_of": "2026-09-24T20:00:00Z",
     "run_attempt": 1,
-    "run_id": "35806669054",
+    "run_id": "36082706783",
     "schema_version": "provider_observation/v2",
-    "source_as_of": "2026-09-22"
+    "source_as_of": "2026-09-24"
   },
   "recovered_at": "2026-09-11T01:11:50Z",
   "recovered_from_run_id": "34175958781",
@@ -250,5 +250,5 @@
   "retry": false,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "ticker": "NWSA",
-  "updated_at": "2026-09-23T01:47:26Z"
+  "updated_at": "2026-09-25T01:37:44Z"
 }

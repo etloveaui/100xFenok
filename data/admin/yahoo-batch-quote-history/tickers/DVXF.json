@@ -38,31 +38,44 @@
       "run_id": "31526744910",
       "schedule": "7 18 * * 0-5",
       "shard": "33/72"
+    },
+    {
+      "attempts_used": 1,
+      "event_name": "schedule",
+      "failures": [],
+      "latency_ms": 450,
+      "natural": true,
+      "observed_at": "2026-09-25T01:37:44Z",
+      "outcome": "fresh",
+      "run_attempt": 1,
+      "run_id": "36082706783",
+      "schedule": "20 23 * * 1-5",
+      "shard": "0/5"
     }
   ],
   "current": {
-    "fetched_at": "2026-08-11T19:56:51Z",
-    "history_as_of": "2026-08-10",
-    "path": "data/admin/yahoo-batch-quote-history/lkg/DVXF.json",
-    "payload_sha256": "bc08b1437e1eb7154e7fbaad633bbdaeb020faccd304e0fd4250809f59887415",
-    "quote_as_of": "2026-08-10T20:00:00Z",
-    "source_as_of": "2026-08-10"
+    "fetched_at": "2026-09-25T01:38:09Z",
+    "history_as_of": "2026-09-02",
+    "path": "data/yf/finance/DVXF.json",
+    "payload_sha256": "f239b03775f80ab0529295e0fe564e7d470e5fbb7d1c949baa040ea957a79739",
+    "quote_as_of": "2026-08-26T20:00:00Z",
+    "source_as_of": "2026-08-26T20:00:00Z"
   },
   "discovered_from": [
-    "stockanalysis_etf"
+    "market_facts"
   ],
   "last_attempt": {
     "attempts_used": 1,
     "event_name": "schedule",
     "failures": [],
-    "latency_ms": 776,
+    "latency_ms": 450,
     "natural": true,
-    "observed_at": "2026-08-11T19:54:36Z",
+    "observed_at": "2026-09-25T01:37:44Z",
     "outcome": "fresh",
     "run_attempt": 1,
-    "run_id": "31526744910",
-    "schedule": "7 18 * * 0-5",
-    "shard": "33/72"
+    "run_id": "36082706783",
+    "schedule": "20 23 * * 1-5",
+    "shard": "0/5"
   },
   "lkg": {
     "fetched_at": "2026-08-11T19:56:51Z",
@@ -75,17 +88,17 @@
   "promotion_contract": "provider_observation/v2",
   "provider_observation": {
     "event_name": "schedule",
-    "history_as_of": "2026-08-10",
-    "observed_at": "2026-08-11T19:54:36Z",
-    "payload_sha256": "016bd9169158472dedda67a18a618ac0701662c4056a85b3c7d061c28b9cb415",
-    "quote_as_of": "2026-08-10T20:00:00Z",
+    "history_as_of": "2026-09-02",
+    "observed_at": "2026-09-25T01:37:44Z",
+    "payload_sha256": "ac664119162c642784306e8b5e9135e0186025df11182d0d69d349568bfaa4b3",
+    "quote_as_of": "2026-08-26T20:00:00Z",
     "run_attempt": 1,
-    "run_id": "31526744910",
+    "run_id": "36082706783",
     "schema_version": "provider_observation/v2",
-    "source_as_of": "2026-08-10"
+    "source_as_of": "2026-08-26T20:00:00Z"
   },
-  "resolution_state": "lkg_primary",
-  "retry": true,
+  "resolution_state": "fresh_primary",
+  "retry": false,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "stale": {
     "age_business_days": 7,
@@ -98,5 +111,5 @@
     "source_as_of": "2026-08-10"
   },
   "ticker": "DVXF",
-  "updated_at": "2026-08-19T23:42:29Z"
+  "updated_at": "2026-09-25T01:37:44Z"
 }

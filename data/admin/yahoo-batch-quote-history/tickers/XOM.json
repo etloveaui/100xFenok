@@ -4,19 +4,6 @@
       "attempts_used": 1,
       "event_name": "schedule",
       "failures": [],
-      "latency_ms": 802,
-      "natural": true,
-      "observed_at": "2026-08-21T23:49:38Z",
-      "outcome": "fresh",
-      "run_attempt": 1,
-      "run_id": "32537807621",
-      "schedule": "20 23 * * 1-5",
-      "shard": "1/5"
-    },
-    {
-      "attempts_used": 1,
-      "event_name": "schedule",
-      "failures": [],
       "latency_ms": 1084,
       "natural": true,
       "observed_at": "2026-08-27T04:45:03Z",
@@ -185,6 +172,20 @@
       "run_id": "35943054282",
       "schedule": "20 23 * * 1-5",
       "shard": "1/5"
+    },
+    {
+      "attempts_used": 1,
+      "error": "StockDetailValidationError: Yahoo history close must be a finite number",
+      "event_name": "schedule",
+      "failures": [],
+      "latency_ms": 621,
+      "natural": true,
+      "observed_at": "2026-09-25T01:37:44Z",
+      "outcome": "failed",
+      "run_attempt": 1,
+      "run_id": "36082706783",
+      "schedule": "20 23 * * 1-5",
+      "shard": "0/5"
     }
   ],
   "current": {
@@ -204,14 +205,14 @@
     "error": "StockDetailValidationError: Yahoo history close must be a finite number",
     "event_name": "schedule",
     "failures": [],
-    "latency_ms": 689,
+    "latency_ms": 621,
     "natural": true,
-    "observed_at": "2026-09-24T01:35:01Z",
+    "observed_at": "2026-09-25T01:37:44Z",
     "outcome": "failed",
     "run_attempt": 1,
-    "run_id": "35943054282",
+    "run_id": "36082706783",
     "schedule": "20 23 * * 1-5",
-    "shard": "1/5"
+    "shard": "0/5"
   },
   "last_recovered_failure": {
     "attempts_used": 1,
@@ -233,9 +234,9 @@
     "failure_kind": "unexpected",
     "failures": [],
     "lkg_status": "retained",
-    "observed_at": "2026-09-24T01:35:01Z",
+    "observed_at": "2026-09-25T01:37:44Z",
     "run_attempt": 1,
-    "run_id": "35943054282"
+    "run_id": "36082706783"
   },
   "lkg": {
     "fetched_at": "2026-09-23T01:43:00Z",
@@ -266,5 +267,5 @@
   "retry": true,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "ticker": "XOM",
-  "updated_at": "2026-09-24T01:35:01Z"
+  "updated_at": "2026-09-25T01:37:44Z"
 }
