@@ -8,14 +8,10 @@ import {
   type SectorRow,
   type SectorMomentum,
 } from "@/lib/sectors/types";
+import { formatPercentPoints as formatPp } from "@/lib/sectors/rotation";
 
 function finiteNumber(value: unknown): value is number {
   return typeof value === "number" && Number.isFinite(value);
-}
-
-function formatPp(value: number): string {
-  const sign = value >= 0 ? "+" : "-";
-  return `${sign}${Math.abs(value).toFixed(1)}%p`;
 }
 
 /** Rank (1 = strongest) by relative momentum for one window; empty when the benchmark is missing. */
