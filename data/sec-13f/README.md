@@ -9,11 +9,11 @@
 
 ## Overview
 
-Institutional holdings data from SEC 13F filings. Tracks 63 major investors' portfolio positions across 31 quarters through 2026-Q2 where filings are available (accumulate mode). The converter normalizes SEC 13F value units, supports 13F-HR/A amendments, and marks stale investors so older filings do not contaminate current-quarter analytics.
+Institutional holdings data from SEC 13F filings. Tracks 63 major investors' portfolio positions across 60 quarters (2011-Q3 through 2026-Q2) where filings are available (accumulate mode). The converter normalizes SEC 13F value units, supports 13F-HR/A amendments, and marks stale investors so older filings do not contaminate current-quarter analytics.
 
 Current-quarter integrity indexes are rebuilt from investor filings after conversion. `by_ticker.json` and `analytics/consensus.json` use normalized ticker keys only; company-name aliases and unresolved rows are kept separately in `analytics/ticker_aliases.json`.
 
-Public investor holdings are also backfilled from local `data/yf/finance/*.json` and `data/yf/quarter_closes.json` after conversion. This keeps sector/industry/market-cap/return enrichment deterministic without live Yahoo calls during the 13F publish path. The 2026-Q2 current cohort includes 59 of 63 tracked investors; `ackman`, `einhorn`, `scion`, and `vanguard` are excluded from current-quarter analytics until fresh filings are available.
+Public investor holdings are also backfilled from local `data/yf/finance/*.json` and `data/yf/quarter_closes.json` after conversion. This keeps sector/industry/market-cap/return enrichment deterministic without live Yahoo calls during the 13F publish path. The 2026-Q2 current cohort includes 60 of 63 tracked investors; `einhorn`, `scion`, and `vanguard` are excluded from current-quarter analytics until fresh filings are available.
 
 ## Refresh Route
 
