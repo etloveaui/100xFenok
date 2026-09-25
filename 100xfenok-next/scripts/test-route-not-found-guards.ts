@@ -373,6 +373,12 @@ assert.deepEqual(
 );
 assert.deepEqual(sourceAdminRoutes(middlewareSource), expectedConcreteAdminRoutes());
 assert.equal(getAdminNotFoundRewrite(request("/admin/archive/")), null);
+assert.equal(getAdminNotFoundRewrite(request("/admin/users/")), null);
+assert.equal(
+  getAdminNotFoundRewrite(request("/admin/users/?_rsc=xFVjKFL12UrVWmwy")),
+  null,
+  "registered /admin/users must resolve for RSC prefetch requests too",
+);
 assert.equal(getAdminNotFoundRewrite(request("/admin/live/")), null);
 assert.equal(getAdminNotFoundRewrite(request("/admin/data%2Dlab")), null);
 assert.equal(getAdminNotFoundRewrite(request("/admin/design%2Dgallery")), null);

@@ -287,6 +287,7 @@ export const ADMIN_CONCRETE_ROUTES = new Set<string>([
   "/admin/macro-monitor",
   "/admin/personal",
   "/admin/personal/travel",
+  "/admin/users",
 ]);
 
 const ADMIN_LEGACY_ASSET_SET = new Set<string>(ADMIN_LEGACY_HTML_FILES);
