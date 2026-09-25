@@ -1,8 +1,8 @@
 {
   "ok": true,
   "schema_version": "fenok-edge-etf-daily1y-readiness-admin/v0.1",
-  "generated_at": "2026-09-25T06:13:26.218Z",
-  "classification_as_of": "2026-09-25T06:12:54.261Z",
+  "generated_at": "2026-09-25T06:46:08.930Z",
+  "classification_as_of": "2026-09-25T06:45:26.661Z",
   "purpose": "Admin-only generated S3 ETF daily 1Y readiness evidence for the auto-managed core daily basket. Separates the managed core ETF surface from DAILY/GATED readiness.",
   "asset_type": "etf",
   "stage": "SCORED",
@@ -61,16 +61,16 @@
     "coverage_index_count_ok": true,
     "coverage_index_daily_check_count_ok": true,
     "coverage_index_fetchable_daily_1y_gap": 258,
-    "coverage_index_inception_limited_daily_1y_gap": 704,
-    "coverage_index_terminal_limited_daily_1y_gap": 15,
+    "coverage_index_inception_limited_daily_1y_gap": 705,
+    "coverage_index_terminal_limited_daily_1y_gap": 14,
     "history_gap_report_count_ok": true,
     "history_gap_classification_clock_match": true,
     "coverage_index_classification_clock_match": true,
     "coverage_index_daily_check_classification_clock_match": true,
     "history_gap_report_scored_etf_count": 4579,
     "history_gap_report_fetchable_daily_1y_gap": 258,
-    "history_gap_report_inception_limited_daily_1y_gap": 704,
-    "history_gap_report_terminal_limited_daily_1y_gap": 15
+    "history_gap_report_inception_limited_daily_1y_gap": 705,
+    "history_gap_report_terminal_limited_daily_1y_gap": 14
   },
   "samples": {
     "fetchable": [],
@@ -143,27 +143,17 @@
       "selection": "explicit full-primary daily_1y fetchable tickers; not the scored-ETF scheduled plan",
       "single_writer": true,
       "shard_size": 100,
-      "ticker_count": 164,
-      "shard_count": 2,
+      "ticker_count": 68,
+      "shard_count": 1,
       "shards": [
         {
           "shard": 1,
-          "ticker_count": 100,
+          "ticker_count": 68,
           "inputs": {
             "history_gaps_only": "true",
             "required_history_periods": "daily_1y",
             "incremental_etf_limit": "0",
-            "etfs": "ARLU,AUGU,AVGW,BBB,BCCC,BETE,BETH,BITB,BNDY,BRKW,BRRR,BTC,BTCO,BTCW,BTRN,CBOJ,CBOY,CBTJ,CBTY,CBXY,CEGX,CERY,COIW,CPHY,CPNJ,CPNM,CPNQ,CPNS,CPRA,CPRJ,CPRO,CPRY,CPSA,CPSD,CPSF,CPSJ,CPSM,CPSN,CPSO,CPSP,CPSR,CPST,CPSU,HYGW,KMAR,KMAY,KMLI,KNOV,KOCT,KOLD,KPDD,KPRO,KSEP,KSPY,LABX,LAPR,LFEQ,LGCF,LJUL,LQDW,LQTI,LRCU,LTTI,MAGX,MAGY,MARU,MAYU,METW,MLPB,MLPD,MLPR,MMID,MSFW,MSFX,MSOO,MSTB,MSTQ,MSTW,MTUL,MVPL,MVRL,NAPR,NAUG,NDEC,NFEB,NFLW,NJAN,NJUL,SLON,TOT,UAUG,UCIB,UDEC,UDN,UFEB,UFIV,UJAN,UJUL,UJUN,ULE"
-          }
-        },
-        {
-          "shard": 2,
-          "ticker_count": 64,
-          "inputs": {
-            "history_gaps_only": "true",
-            "required_history_periods": "daily_1y",
-            "incremental_etf_limit": "0",
-            "etfs": "UMAY,UNOV,UNX,UOCT,USE,USEP,USG,USML,USOI,USVN,UTEN,UTHY,UTRE,UTWO,UTWY,UVXY,UX,UXRP,VIXM,VIXY,VXX,VXZ,VYLD,WAGN,WTPI,WXET,XBIL,XDIV,XDQQ,XDSQ,XDTE,XLBI,XLCI,XLEI,XLFI,XLII,XLRI,XLSI,XLVI,XLYI,XRPI,XRPR,XTJA,XTJL,XTOC,YBTC,YCL,YCS,YETH,ZALT,ZAPR,ZAUG,ZDEK,ZFEB,ZJAN,ZJUL,ZJUN,ZMAY,ZNOV,ZOCT,ZSB,ZSC,ZSEP,ZVOL"
+            "etfs": "ARLU,AUGU,AVGW,BBB,BCCC,BETE,BETH,BITB,BNDY,BRKW,BRRR,BTC,BTCO,BTCW,BTRN,CBOJ,CBOY,CBTJ,CBTY,CBXY,CEGX,CERY,COIW,CPHY,CPNJ,CPNM,CPNQ,CPNS,CPRA,CPRJ,CPRO,CPRY,CPSA,CPSD,CPSF,CPSJ,CPSM,CPSN,CPSO,CPSP,CPSR,CPST,CPSU,HYGW,LQDW,SLON,TOT,XLII,XTOC,YBTC,YCL,YCS,YETH,ZALT,ZAPR,ZAUG,ZDEK,ZFEB,ZJAN,ZJUL,ZJUN,ZMAY,ZNOV,ZOCT,ZSB,ZSC,ZSEP,ZVOL"
           }
         }
       ]
