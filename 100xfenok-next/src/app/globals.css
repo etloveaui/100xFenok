@@ -1,6 +1,11 @@
 @import "tailwindcss";
 @import "./fonts/fonts.css";
-@source not "../../data";
+/* Tailwind v4 auto-scans the app root for class candidates. public/ holds the
+   legacy HTML pages (served standalone or in iframes, never styled by this
+   sheet) and ~14k data JSON files, which added tens of KB of unused utilities
+   to the render-blocking stylesheet and slowed every build. */
+@source not "../../public";
+@source not "../../../data";
 @import "../styles/overview-widgets.css";
 @import "../styles/heatmap.css";
 @import "../styles/route-embed.css";
