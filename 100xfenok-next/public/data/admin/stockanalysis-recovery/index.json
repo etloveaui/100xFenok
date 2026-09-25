@@ -1,13 +1,13 @@
 {
   "schema_version": "stockanalysis-recovery-index/v1",
-  "generated_at": "2026-09-24T17:20:16Z",
+  "generated_at": "2026-09-24T23:55:41Z",
   "counts": {
     "tracked": 263,
     "fresh": 100,
     "lkg": 153,
     "unavailable": 10,
     "retry": 163,
-    "failed": 16,
+    "failed": 0,
     "recovered": 0,
     "promotion_deferred": 0
   },
@@ -2510,131 +2510,99 @@
   "recovered_etfs": [],
   "promotion_deferral_details": [],
   "current_attempt": {
-    "run_id": "36033323573",
+    "run_id": "36074962307",
     "run_attempt": 1,
-    "event_name": "workflow_dispatch",
-    "schedule": "",
-    "natural": false,
+    "event_name": "schedule",
+    "schedule": "20 21 * * *",
+    "natural": true,
     "attempted": 16,
-    "successes": 0,
-    "failed": 16,
+    "successes": 16,
+    "failed": 0,
     "recovered": 0,
     "promotion_deferred": 0,
-    "errors": [
+    "errors": [],
+    "success_rows": [
       {
-        "artifact_kind": "etf",
-        "entity": "DVUT",
-        "error": "HTTPError: HTTP Error 404: Not Found",
-        "controlled": false,
-        "data_loss": false
+        "artifact_kind": "stock",
+        "entity": "AAPL",
+        "outcome": "fresh"
       },
       {
-        "artifact_kind": "etf",
-        "entity": "DVXB",
-        "error": "HTTPError: HTTP Error 404: Not Found",
-        "controlled": false,
-        "data_loss": false
+        "artifact_kind": "stock",
+        "entity": "AMZN",
+        "outcome": "fresh"
       },
       {
-        "artifact_kind": "etf",
-        "entity": "DVXC",
-        "error": "HTTPError: HTTP Error 404: Not Found",
-        "controlled": false,
-        "data_loss": false
+        "artifact_kind": "stock",
+        "entity": "GOOGL",
+        "outcome": "fresh"
       },
       {
-        "artifact_kind": "etf",
-        "entity": "DVXE",
-        "error": "HTTPError: HTTP Error 404: Not Found",
-        "controlled": false,
-        "data_loss": false
+        "artifact_kind": "stock",
+        "entity": "JPM",
+        "outcome": "fresh"
       },
       {
-        "artifact_kind": "etf",
-        "entity": "DVXF",
-        "error": "HTTPError: HTTP Error 404: Not Found",
-        "controlled": false,
-        "data_loss": false
+        "artifact_kind": "stock",
+        "entity": "META",
+        "outcome": "fresh"
       },
       {
-        "artifact_kind": "etf",
-        "entity": "DVXK",
-        "error": "HTTPError: HTTP Error 404: Not Found",
-        "controlled": false,
-        "data_loss": false
+        "artifact_kind": "stock",
+        "entity": "MSFT",
+        "outcome": "fresh"
       },
       {
-        "artifact_kind": "etf",
-        "entity": "DVXP",
-        "error": "HTTPError: HTTP Error 404: Not Found",
-        "controlled": false,
-        "data_loss": false
+        "artifact_kind": "stock",
+        "entity": "NVDA",
+        "outcome": "fresh"
       },
       {
-        "artifact_kind": "etf",
-        "entity": "DVXV",
-        "error": "HTTPError: HTTP Error 404: Not Found",
-        "controlled": false,
-        "data_loss": false
+        "artifact_kind": "stock",
+        "entity": "TSLA",
+        "outcome": "fresh"
       },
       {
-        "artifact_kind": "etf",
-        "entity": "DVXY",
-        "error": "HTTPError: HTTP Error 404: Not Found",
-        "controlled": false,
-        "data_loss": false
+        "artifact_kind": "financial",
+        "entity": "AAPL",
+        "outcome": "fresh"
       },
       {
-        "artifact_kind": "etf",
-        "entity": "DZZ",
-        "error": "ValueError: svelte_contract_drift:holdings:missing_required:holdings",
-        "controlled": false,
-        "data_loss": false
+        "artifact_kind": "financial",
+        "entity": "AMZN",
+        "outcome": "fresh"
       },
       {
-        "artifact_kind": "etf",
-        "entity": "ESUM",
-        "error": "ValueError: svelte_contract_drift:holdings:missing_required:holdings",
-        "controlled": false,
-        "data_loss": false
+        "artifact_kind": "financial",
+        "entity": "GOOGL",
+        "outcome": "fresh"
       },
       {
-        "artifact_kind": "etf",
-        "entity": "FEAT",
-        "error": "HTTPError: HTTP Error 404: Not Found",
-        "controlled": false,
-        "data_loss": false
+        "artifact_kind": "financial",
+        "entity": "JPM",
+        "outcome": "fresh"
       },
       {
-        "artifact_kind": "etf",
-        "entity": "FIVY",
-        "error": "HTTPError: HTTP Error 404: Not Found",
-        "controlled": false,
-        "data_loss": false
+        "artifact_kind": "financial",
+        "entity": "META",
+        "outcome": "fresh"
       },
       {
-        "artifact_kind": "etf",
-        "entity": "GLDI",
-        "error": "ValueError: svelte_contract_drift:holdings:missing_required:holdings",
-        "controlled": false,
-        "data_loss": false
+        "artifact_kind": "financial",
+        "entity": "MSFT",
+        "outcome": "fresh"
       },
       {
-        "artifact_kind": "etf",
-        "entity": "GRN",
-        "error": "ValueError: svelte_contract_drift:holdings:missing_required:holdings",
-        "controlled": false,
-        "data_loss": false
+        "artifact_kind": "financial",
+        "entity": "NVDA",
+        "outcome": "fresh"
       },
       {
-        "artifact_kind": "etf",
-        "entity": "HDLB",
-        "error": "ValueError: svelte_contract_drift:holdings:missing_required:holdings",
-        "controlled": false,
-        "data_loss": false
+        "artifact_kind": "financial",
+        "entity": "TSLA",
+        "outcome": "fresh"
       }
     ],
-    "success_rows": [],
     "promotion_deferrals": []
   }
 }
