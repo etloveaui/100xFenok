@@ -188,6 +188,7 @@ class ResolveEtfDetailCandidatesTest(unittest.TestCase):
         entity: str = "SBIL",
         provider_schema: str = "yf-finance/v2",
         reason_code: str = "normalization_invalid",
+        legacy_yahoo_endpoint: bool = False,
     ) -> dict:
         row, _payload = observation(
             provider="yahoo_finance",
@@ -195,6 +196,7 @@ class ResolveEtfDetailCandidatesTest(unittest.TestCase):
             source_as_of=None,
             observed_at="2026-08-18T00:08:06Z",
             valid=False,
+            legacy_yahoo_endpoint=legacy_yahoo_endpoint,
         )
         row["provider_path"] = f"data/yf/finance/{entity}.json"
         row["provider_schema"] = provider_schema
@@ -316,6 +318,24 @@ class ResolveEtfDetailCandidatesTest(unittest.TestCase):
         )
         self.assertEqual(migrated["payload_sha256"], historical["payload_sha256"])
         latest = latest_recorded_observations(self.root, ["SBIL"])["SBIL"]
+        self.assertEqual(latest, [migrated])
+
+    def test_legacy_family_with_historical_failure_schema_migrates_both_contract_fields(self) -> None:
+        historical = self.historical_yahoo_failure(entity="ACII", legacy_yahoo_endpoint=True)
+        self.store.record_observation(historical)
+        migrated = resolve_etf_detail_candidates._canonicalize_legacy_yahoo_observation(
+            self.store,
+            historical,
+        )
+
+        self.assertEqual(migrated["endpoint_family"], "yahoo_finance_etf_detail")
+        self.assertEqual(migrated["provider_schema"], "yf-etf-detail/v1")
+        self.assertEqual(migrated["observation_origin"], "migration")
+        self.assertEqual(
+            migrated["compatibility_migration"],
+            "yahoo_etf_detail_failure_schema_to_yf_etf_detail",
+        )
+        latest = latest_recorded_observations(self.root, ["ACII"])["ACII"]
         self.assertEqual(latest, [migrated])
 
     def test_historical_sbil_failure_preserves_existing_lkg_without_contract_error(self) -> None:

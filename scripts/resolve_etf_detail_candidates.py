@@ -130,21 +130,36 @@ def _canonicalize_legacy_yahoo_observation(
         is_yahoo_etf
         and row["endpoint_family"] == LEGACY_YAHOO_ENDPOINT_FAMILY
     )
-    historical_failure_schema = (
+    failure_schema = (
         is_yahoo_etf
-        and row["endpoint_family"] == CANONICAL_YAHOO_ENDPOINT_FAMILY
         and row["provider_path"] == f"data/yf/finance/{row['entity']}.json"
         and row["provider_schema"] == "yf-finance/v2"
         and row["validation_status"] == "invalid"
         and row.get("payload_available") is False
         and row["reason_code"] == "normalization_invalid"
     )
+    historical_failure_schema = (
+        failure_schema
+        and row["endpoint_family"] == CANONICAL_YAHOO_ENDPOINT_FAMILY
+    )
+    legacy_failure_schema = (
+        failure_schema
+        and row["endpoint_family"] == LEGACY_YAHOO_ENDPOINT_FAMILY
+    )
     if not (legacy_endpoint or historical_failure_schema):
         return row
     source_event_id = row["event_id"]
     if legacy_endpoint:
         row["endpoint_family"] = CANONICAL_YAHOO_ENDPOINT_FAMILY
-        migration = "yahoo_etf_detail_to_yahoo_finance_etf_detail"
+        if legacy_failure_schema:
+            # A legacy row can carry the historical failure schema as well;
+            # fixing only the family leaves yf-finance/v2 in place, which the
+            # resolver rejects as a provider contract mismatch (ACII, run
+            # 36094523285).
+            row["provider_schema"] = "yf-etf-detail/v1"
+            migration = "yahoo_etf_detail_failure_schema_to_yf_etf_detail"
+        else:
+            migration = "yahoo_etf_detail_to_yahoo_finance_etf_detail"
     else:
         row["provider_schema"] = "yf-etf-detail/v1"
         migration = "yahoo_finance_failure_schema_to_yf_etf_detail"
