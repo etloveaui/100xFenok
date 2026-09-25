@@ -9,7 +9,7 @@
 
 ## Overview
 
-Institutional holdings data from SEC 13F filings. Tracks 63 major investors' portfolio positions across 60 quarters (2011-Q3 through 2026-Q2) where filings are available (accumulate mode). The converter normalizes SEC 13F value units, supports 13F-HR/A amendments, and marks stale investors so older filings do not contaminate current-quarter analytics.
+Institutional holdings data from SEC 13F filings. Tracks 63 major investors' portfolio positions across every EDGAR-served quarter that carries a machine-readable XML table (2012-Q1 through 2026-Q2 available; 53–58 quarters per investor), with older pre-XML quarters recorded as named per-investor gaps in the converter's unparsed ledger (accumulate mode). The converter normalizes SEC 13F value units, supports 13F-HR/A amendments, and marks stale investors so older filings do not contaminate current-quarter analytics.
 
 Current-quarter integrity indexes are rebuilt from investor filings after conversion. `by_ticker.json` and `analytics/consensus.json` use normalized ticker keys only; company-name aliases and unresolved rows are kept separately in `analytics/ticker_aliases.json`.
 
