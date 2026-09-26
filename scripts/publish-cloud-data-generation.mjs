@@ -2267,6 +2267,10 @@ export const PUBLISH_RESULT_VOCABULARY = Object.freeze([
   "rolled_back",
   "retention_dry_run",
   "retention_deleted",
+  "retention_batch_applied",
+  "retention_batch_noop",
+  "retention_batch_aborted",
+  "retention_batch_partial",
 ]);
 
 export function classifyResultLine(line) {
@@ -2403,7 +2407,7 @@ export async function verifyGenerationParity({
 // explicitly — the post-publish confirmation gates do. Rollback declares a
 // ceiling derived from family policy and retention declares its measured scan
 // budget (fh-481); neither is read-free, so neither may say zero.
-function runCostGate({ planClassA, planClassB, planBytes, env }) {
+export function runCostGate({ planClassA, planClassB, planBytes, env, timeoutMs = GATE_TIMEOUT_MS }) {
   return new Promise((resolve, reject) => {
     const child = spawn(process.execPath, [
       GATE_SCRIPT,
@@ -2421,7 +2425,7 @@ function runCostGate({ planClassA, planClassB, planBytes, env }) {
     const timer = setTimeout(() => {
       timedOut = true;
       child.kill("SIGKILL");
-    }, GATE_TIMEOUT_MS);
+    }, Math.min(GATE_TIMEOUT_MS, timeoutMs));
     child.stdout.on("data", (chunk) => stdoutChunks.push(chunk));
     child.stderr.on("data", (chunk) => stderrChunks.push(chunk));
     child.on("error", (error) => {

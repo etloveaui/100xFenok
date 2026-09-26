@@ -1,0 +1,101 @@
+# R2 retention sweep — revision 2 (fh-598). MANUAL-GATED INITIAL STATE.
+#
+# The weekly schedule is deliberately DISABLED until the parent accepts this candidate.
+# FINAL ENABLE SWITCH (single change): uncomment the `schedule:` block below.
+# Weekly cleanup uses this same gated path (plan → window → apply); nothing else deletes.
+#
+# Permission probe (parent-owned — actions-write is NOT assumed from this YAML):
+#   gh api repos/{owner}/{repo}/actions/permissions
+#   gh workflow disable <one publisher file> && gh workflow enable <same> && gh workflow list --all
+#
+# Credentials: existing secrets only. The S3 credentials are DERIVED IN MEMORY from
+# CLOUDFLARE_API_TOKEN inside the script (token-verify endpoint); no R2_S3_* secret exists.
+#
+# No YAML anchors/merge keys are used; every step carries its own explicit env (hosted
+# parsers must accept this file as-is).
+name: R2 Retention Sweep
+
+on:
+  workflow_dispatch:
+    inputs:
+      confirm:
+        description: 'Type RUN to confirm this destructive maintenance run'
+        required: true
+        default: ''
+      preflight_only:
+        description: 'true = recovery/idle/plan validation without pausing publishers'
+        required: false
+        type: boolean
+        default: true
+      skip_manifests:
+        description: 'true = payload cleanup only (obsolete manifests stay)'
+        required: false
+        type: boolean
+        default: false
+  # FINAL ENABLE SWITCH (parent, after candidate acceptance): uncomment.
+  # schedule:
+  #   - cron: '17 11 * * 6'
+
+permissions:
+  actions: write
+  contents: read
+  issues: write
+
+concurrency:
+  group: retention-sweep
+  cancel-in-progress: false
+
+jobs:
+  sweep:
+    if: >-
+      (github.event_name == 'workflow_dispatch' && github.event.inputs.confirm == 'RUN')
+      || github.event_name == 'schedule'
+    runs-on: ubuntu-latest
+    # The prescan is independent of any pause deadline and must not be killed by a short
+    # job timeout (fh-598 #10).
+    timeout-minutes: 180
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Confirm gate
+        run: |
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ] && [ "${{ github.event.inputs.confirm }}" != "RUN" ]; then
+            echo "confirm must be RUN"; exit 64
+          fi
+      - name: Plan (outside any pause)
+        env:
+          CLOUDFLARE_ACCOUNT_ID: aeeb5ea3affe55a2219d08ea02dad9e1
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          DATA_PLANE_ENDPOINT: https://100xfenok.etloveaui.workers.dev/internal/cloud-data-plane
+          DATA_PLANE_WRITE_KEY: ${{ secrets.DATA_PLANE_WRITE_KEY }}
+        run: node scripts/ops/retention-sweep.mjs plan --out=plan.json | tee plan-summary.json
+      - name: Short-pause window (lease → pause → drain → apply → restore)
+        env:
+          CLOUDFLARE_ACCOUNT_ID: aeeb5ea3affe55a2219d08ea02dad9e1
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          DATA_PLANE_ENDPOINT: https://100xfenok.etloveaui.workers.dev/internal/cloud-data-plane
+          DATA_PLANE_WRITE_KEY: ${{ secrets.DATA_PLANE_WRITE_KEY }}
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          FLAGS=""
+          if [ "${{ github.event.inputs.preflight_only }}" = "true" ]; then FLAGS="$FLAGS --preflight-only"; fi
+          if [ "${{ github.event.inputs.skip_manifests }}" = "true" ]; then FLAGS="$FLAGS --skip-manifests"; fi
+          node scripts/ops/retention-window.mjs run \
+            --plan=plan.json \
+            --repo="${{ github.repository }}" \
+            --keys-out=apply-keys.json \
+            $FLAGS | tee window-report.json
+      - name: Upload evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: retention-sweep-${{ github.run_id }}
+          path: |
+            plan-summary.json
+            window-report.json
+            apply-keys.json
+          if-no-files-found: ignore
