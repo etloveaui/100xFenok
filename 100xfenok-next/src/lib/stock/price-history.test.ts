@@ -65,6 +65,22 @@ test("skips the in-progress row but keeps its dividend", () => {
   bars.forEach((bar, i) => close(bar.close, QUOTED[i].close));
 });
 
+test("leaves bars as stored when the row before the ex-date has no close", () => {
+  // CINF's stored year: 9/22 kept only its volume, then 9/23 went ex-dividend.
+  // Yahoo did not scale the bars before it: the stored 9/21 close equals the
+  // unadjusted prior close, and Yahoo's 52-week range matches them unscaled.
+  const stored = [
+    { date: "2026-09-18", Open: 169.9, High: 170.11, Low: 167.63, Close: 169, Volume: 2356200, Dividends: 0 },
+    { date: "2026-09-21", Open: 168.3, High: 168.99, Low: 166.76, Close: 166.85, Volume: 520400, Dividends: 0 },
+    { date: "2026-09-22", Volume: 639090, Dividends: 0 },
+    { date: "2026-09-23", Open: 163.88, High: 165.61, Low: 162.38, Close: 162.57, Volume: 800400, Dividends: 0.94 },
+  ];
+  const bars = quotedDailyBars(stored);
+  assert.deepEqual(bars.map((bar) => bar.time), ["2026-09-18", "2026-09-21", "2026-09-23"]);
+  assert.deepEqual(bars.map((bar) => bar.close), [169, 166.85, 162.57]);
+  assert.equal(bars[0].low, 167.63);
+});
+
 test("sorts by date, keeps the last row for a repeated date, and drops undated rows", () => {
   const stored = autoAdjust(QUOTED);
   const shuffled = [stored[3], stored[0], { ...stored[1], Close: 1 }, stored[1], stored[2], { date: "not-a-date", Close: 5 }, stored[5], stored[4]];

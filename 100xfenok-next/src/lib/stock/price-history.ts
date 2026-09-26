@@ -38,8 +38,11 @@ function finite(value: unknown): value is number {
 
 /**
  * A row without a full OHLC (the session still in progress) is not a bar, but
- * a dividend on it still applies to the bars before it. A repeated date keeps
- * its last row, as the producer's merge does.
+ * a dividend on it still applies to the bars before it. When the row before an
+ * ex-date has no close, Yahoo leaves the earlier bars unscaled (CINF on
+ * 2026-09-23: its 52-week range and prior close match them as stored), so
+ * there is nothing to undo. A repeated date keeps its last row, as the
+ * producer's merge does.
  */
 export function quotedDailyBars(history: unknown): DailyBar[] {
   if (!Array.isArray(history)) return [];
