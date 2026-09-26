@@ -2289,7 +2289,9 @@ async function collectRouteChecks(page, route) {
       const surface = document.querySelector("[data-etfs-surface]");
       const hero = document.querySelector(".etf-hero");
       const header = document.querySelector(".etf-eyebrow");
-      const toolLinks = Array.from(document.querySelectorAll('.etf-tabs a[href="/etfs/compare"], .etf-tabs a[href="/etfs/new"]'))
+      // next.config trailingSlash renders these as /etfs/compare/ and /etfs/new/;
+      // the path comparison below already strips the slash.
+      const toolLinks = Array.from(document.querySelectorAll('.etf-tabs a[href^="/etfs/compare"], .etf-tabs a[href^="/etfs/new"]'))
         .filter((node) => {
           const rect = node.getBoundingClientRect();
           return rect.width > 0 && rect.height > 0;
