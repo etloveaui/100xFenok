@@ -3,7 +3,7 @@
 import { useEffect, useMemo, useState } from "react";
 import TransitionLink from "@/components/TransitionLink";
 import { useDashboardData } from "@/hooks/useDashboardData";
-import { clamp, getRegimeLabel } from "@/lib/dashboard/formatters";
+import { MARKET_STRENGTH_NAME, marketStrength } from "@/lib/dashboard/market-strength";
 import { isValidEntityTicker, normalizeForEntityKey } from "@/lib/ticker";
 import { EvidenceRail, Panel, PanelHeader } from "@/components/ui";
 import type { EvidenceRailFreshness } from "@/components/ui/EvidenceRail";
@@ -345,19 +345,7 @@ export default function ChangesClient() {
   const dashboardFailed = failedSources.length > 0;
   const settled = feedsLoaded && dashboardSettled;
 
-  const regime = useMemo(() => {
-    const breadthTotal = Math.max(dashboard.sectorRows.length, 1);
-    const breadthRatio = dashboard.sectorUp / breadthTotal;
-    const score = clamp(
-      (dashboard.fearGreedScore / 100) * 0.45 + breadthRatio * 0.35 + (1 - dashboard.stressScore) * 0.2,
-      0,
-      1,
-    );
-    return {
-      label: getRegimeLabel(score),
-      confidence: Math.round(score * 100),
-    };
-  }, [dashboard]);
+  const regime = useMemo(() => marketStrength(dashboard), [dashboard]);
 
   const revAsOf = useMemo(() => revisionAsOf(revisionDoc), [revisionDoc]);
   const quarter = useMemo(() => tradesQuarter(tradesDoc), [tradesDoc]);
@@ -402,13 +390,13 @@ export default function ChangesClient() {
             id: "snapshot:edge",
             ticker: null,
             title: "단기 Edge 점수",
-            kind: "시장 체력",
+            kind: MARKET_STRENGTH_NAME,
             before: String(snapshot.edgeScore),
             after: String(regime.confidence),
             delta: formatSigned(delta, 0, ""),
             tone: delta > 0 ? "up" : "down",
             accent: "none",
-            href: ROUTES.regime,
+            href: ROUTES.home,
             rank: Math.abs(delta) >= 3 ? 1 : 6,
           });
         }
@@ -417,14 +405,14 @@ export default function ChangesClient() {
         out.push({
           id: "snapshot:regime",
           ticker: null,
-          title: "종합 신호",
-          kind: "시황",
+          title: "체력 판단",
+          kind: MARKET_STRENGTH_NAME,
           before: snapshot.regime,
           after: regime.label,
           delta: "변경",
           tone: "neutral",
           accent: "none",
-          href: ROUTES.regime,
+          href: ROUTES.home,
           rank: 0,
         });
       }

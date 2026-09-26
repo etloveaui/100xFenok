@@ -11,7 +11,7 @@ import { Pill } from "@/components/ui/Pill";
 import { Sparkline } from "@/components/ui/Sparkline";
 import { Tile } from "@/components/ui/Tile";
 import { useDashboardData } from "@/hooks/useDashboardData";
-import { clamp, getRegimeLabel } from "@/lib/dashboard/formatters";
+import { MARKET_STRENGTH_NAME, marketStrength } from "@/lib/dashboard/market-strength";
 import { DATA_STATE_LABELS, oldestAsOf } from "@/lib/data-state";
 import type { DashboardSnapshot, DashboardSourceId, SectorSnapshot } from "@/lib/dashboard/types";
 import { formatEps, formatEpsRevisionChange } from "@/lib/eps-revision";
@@ -22,12 +22,6 @@ import { ROUTES } from "@/lib/routes";
 import type { TradesRankingData, TradesRankingRow } from "@/lib/superinvestors/types";
 
 type IndexSymbol = "SPY" | "QQQ" | "DIA";
-
-type RegimeSummary = {
-  label: string;
-  confidence: number;
-  breadth: number;
-};
 
 type IndexCardDefinition = {
   symbol: IndexSymbol;
@@ -569,22 +563,7 @@ export default function HomeCanvasPlusClient() {
   const regimeReady = dashboard.judgmentInputsReady;
   const sectorDataReady = dashboard.sectorInputsReady;
 
-  const regime = useMemo(() => {
-    const breadthTotal = Math.max(dashboard.sectorRows.length, 1);
-    const breadthRatio = dashboard.sectorUp / breadthTotal;
-    const score = clamp(
-      (dashboard.fearGreedScore / 100) * 0.45 +
-        breadthRatio * 0.35 +
-        (1 - dashboard.stressScore) * 0.2,
-      0,
-      1,
-    );
-    return {
-      label: getRegimeLabel(score),
-      confidence: Math.round(score * 100),
-      breadth: Math.round(breadthRatio * 100),
-    } satisfies RegimeSummary;
-  }, [dashboard]);
+  const regime = useMemo(() => marketStrength(dashboard), [dashboard]);
 
   const forces = useMemo(() => {
     const breadthTotal = Math.max(dashboard.sectorRows.length, 1);
@@ -737,7 +716,7 @@ export default function HomeCanvasPlusClient() {
             <div className="flex min-w-0 flex-wrap items-baseline gap-x-3 gap-y-1">
               <h1 className="m-0 text-[18px] font-semibold text-[var(--c-ink)] md:text-[20px]">오늘 시장</h1>
               <span className="text-[13px] text-[var(--c-ink-3)]">
-                시황 <b className="font-semibold text-[var(--c-ink-2)]">{regimeReady ? regime.label : "판단 대기"}</b>
+                {MARKET_STRENGTH_NAME} <b className="font-semibold text-[var(--c-ink-2)]">{regimeReady ? regime.label : "판단 대기"}</b>
                 {" · "}확인 필요 <b className="font-semibold text-[var(--c-warn-ink)]">{headerAttentionLabel}</b>
                 {failedSources.length > 0 && !anySourceLoading
                   ? " · 일부 소스 미수신"
