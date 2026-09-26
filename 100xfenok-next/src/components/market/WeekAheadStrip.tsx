@@ -3,8 +3,9 @@
 import { useEffect, useMemo, useState } from "react";
 import TransitionLink from "@/components/TransitionLink";
 import { useKstToday } from "@/hooks/useKstToday";
-import { daysUntilKstDate } from "@/lib/data-state";
+import { dateOnly, daysUntilKstDate, isStaleAsOf } from "@/lib/data-state";
 import {
+  MACRO_CALENDAR_STALE_AFTER_DAYS,
   MACRO_CALENDAR_URL,
   formatKstDayHeading,
   isHeadlineMacro,
@@ -96,6 +97,12 @@ export default function WeekAheadStrip() {
       ? "캘린더 수록 기간이 지났습니다"
       : `${formatKstDayHeading(uncoveredFrom)}부터 미수록`
     : null;
+  // A month-old mirror may list releases that have since moved, or miss new
+  // ones, so the strip says how old it is, as the full calendar's rail does.
+  const generatedDay = dateOnly(state.calendar?.generatedAt ?? null);
+  const staleNote = generatedDay !== null && isStaleAsOf(generatedDay, MACRO_CALENDAR_STALE_AFTER_DAYS, today)
+    ? `${formatKstDayHeading(generatedDay)} 기준 · 갱신 지연`
+    : null;
   // What the strip says in place of chips; the link's accessible name carries
   // it too, since an aria-label replaces the visible text for screen readers.
   const status = !state.loaded
@@ -114,7 +121,7 @@ export default function WeekAheadStrip() {
     <TransitionLink
       href={ROUTES.marketEvents}
       data-home-week-ahead
-      aria-label={[summary ? `이번 주 주요 일정: ${summary}` : `이번 주 일정: ${status}`, summary ? coverageNote : null, "경제 일정 전체 보기"].filter(Boolean).join(". ")}
+      aria-label={[summary ? `이번 주 주요 일정: ${summary}` : `이번 주 일정: ${status}`, summary ? coverageNote : null, staleNote, "경제 일정 전체 보기"].filter(Boolean).join(". ")}
       className="group flex min-h-11 items-center gap-2 overflow-x-auto whitespace-nowrap rounded-[8px] text-[12px] [scrollbar-width:none] md:min-h-8 [&::-webkit-scrollbar]:hidden"
     >
       <span className="shrink-0 font-semibold text-[var(--c-ink-2)]">이번 주 일정</span>
@@ -133,6 +140,7 @@ export default function WeekAheadStrip() {
         ))
       )}
       {groups.length > 0 && coverageNote ? <span className="shrink-0 text-[var(--c-ink-4)]">{coverageNote}</span> : null}
+      {staleNote ? <span className="shrink-0 font-semibold text-[var(--c-warn-ink)]">{staleNote}</span> : null}
       <span className="ml-auto shrink-0 pl-1 font-semibold text-[var(--c-brand)] group-hover:underline">전체 일정 →</span>
     </TransitionLink>
   );
