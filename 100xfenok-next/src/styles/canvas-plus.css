@@ -979,6 +979,28 @@
   padding: 16px;
 }
 
+/* Loaded price-section heights on NVDA: 1,061px at 390, 940 at 768, 889 at
+   1024, 802 at 1440. The reservation stays just under them. */
+.cp-stock-price-slot {
+  min-width: 0;
+}
+
+.cp-stock-price-slot[data-reserve] {
+  min-height: 1040px;
+}
+
+@media (min-width: 640px) {
+  .cp-stock-price-slot[data-reserve] {
+    min-height: 920px;
+  }
+}
+
+@media (min-width: 1024px) {
+  .cp-stock-price-slot[data-reserve] {
+    min-height: 800px;
+  }
+}
+
 .cp-stock-chart-card__header,
 .cp-stock-rail-card__header {
   display: flex;

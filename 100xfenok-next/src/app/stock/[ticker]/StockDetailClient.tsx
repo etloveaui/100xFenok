@@ -3136,7 +3136,9 @@ export default function StockDetailClient({
               <span className="cp-number tabular-nums text-[12px] font-semibold" data-tone={heroChangeUp ? "positive" : "negative"}>{heroChangeText}</span>
             </span>
           </div>
-          <div className="flex flex-wrap items-center gap-2 px-4 pb-2">
+          {/* Reserved at the badge's loaded height: the badge renders only once
+              prices land, and this row no longer has link pills to hold it. */}
+          <div className="flex min-h-[30px] flex-wrap items-center gap-2 px-4 pb-2">
             <DataStateBadge state={priceDataState} />
           </div>
           <StockTabsNav
@@ -3152,7 +3154,7 @@ export default function StockDetailClient({
               // One line: the band card in the right rail draws the band itself.
               // The strip used to repeat it as a track whose fill matched the
               // panel, so only the marker tick showed.
-              <p data-stock-summary-verdict className="mb-2 text-[13px] font-bold leading-6 text-[var(--c-ink)]">
+              <p data-stock-summary-verdict className="mb-2 min-h-12 text-[13px] font-bold leading-6 text-[var(--c-ink)] md:min-h-6">
                 {stripBandTone.label}{" "}
                 <span className="font-semibold text-[var(--c-ink-2)]">
                   · 현재 PER {valuationBandSummary.current.toFixed(1)}x · 밴드 {Math.round(stripBandPct)}%
@@ -3163,7 +3165,7 @@ export default function StockDetailClient({
                 </span>
               </p>
             ) : (
-              <p className="mb-2 text-[12px] text-[var(--c-ink-3)]">{rowLoading || detailLoading ? "밴드 확인 중" : "밴드를 확인하지 못했습니다"}</p>
+              <p className="mb-2 min-h-12 text-[13px] leading-6 text-[var(--c-ink-3)] md:min-h-6">{rowLoading || detailLoading ? "밴드 확인 중" : "밴드를 확인하지 못했습니다"}</p>
             )}
             <StatStrip data-stock-summary-cells="true">
               <Stat
@@ -3215,6 +3217,14 @@ export default function StockDetailClient({
                     ))}
                   </div>
                 </header>
+                {/* The chart chunk and the price history both arrive after first
+                    paint; until then the slot holds roughly the loaded section's
+                    height so the figures below do not jump when it lands. An
+                    error or an empty history releases it. */}
+                <div
+                  className="cp-stock-price-slot"
+                  data-reserve={stockAuxData === undefined || rangedStockChartData.length > 0 ? "" : undefined}
+                >
                 <CpPriceChart
                   kind="candlestick"
                   range={stockChartRange}
@@ -3233,6 +3243,7 @@ export default function StockDetailClient({
                   loadError={stockAuxData === null ? "가격 이력 데이터를 찾지 못했습니다." : null}
                   onRetry={stockAuxData === null ? retryStockAux : undefined}
                 />
+                </div>
               </section>
 
               <section className="cp-stock-showcase-metrics" aria-label="핵심 지표">
