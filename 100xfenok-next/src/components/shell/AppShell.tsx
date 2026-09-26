@@ -8,6 +8,7 @@ import {
   useMemo,
   useRef,
   useState,
+  useSyncExternalStore,
   type ReactNode,
   type Ref,
 } from "react";
@@ -40,6 +41,7 @@ import type { DataState } from "@/lib/data-state";
 import { useModal } from "@/hooks/useModal";
 import { NavItemPending, useNavigationPending } from "@/components/shell/navigation-progress";
 import { normalizeShellPathname, resolveShellRoute } from "@/components/shell/shell-routes";
+import { openCommandPalette } from "@/components/ui/CommandPalette";
 
 /**
  * Product shell (v3 design handoff): desktop = left rail + global top bar +
@@ -393,6 +395,15 @@ function marketStatusKST(): { dot: string; text: string } {
   return { dot: "var(--c-neutral)", text: "장 마감" };
 }
 
+function subscribeNever(): () => void {
+  return () => {};
+}
+
+/** Server and first paint say ⌘K; other platforms switch to Ctrl K after hydration. */
+function macShortcutLabel(): string {
+  return /Mac|iPhone|iPad/.test(navigator.platform) ? "⌘K" : "Ctrl K";
+}
+
 function SearchIcon() {
   return (
     <svg viewBox="0 0 20 20" fill="none">
@@ -574,6 +585,7 @@ function ShellChrome({
   const moreCloseRef = useRef<HTMLButtonElement>(null);
   const navActive: ShellPage | null = active && NAV.some((item) => item.id === active) ? active : null;
   const activeTab: MobileTabId | null = navActive ? TAB_FOR_PAGE[navActive] ?? "more" : null;
+  const paletteShortcut = useSyncExternalStore(subscribeNever, macShortcutLabel, () => "⌘K");
   const tape = useTape();
   const tickerVisible = tape.items.length > 0;
   // Only a settled empty tape releases the reserved band height.
@@ -685,6 +697,15 @@ function ShellChrome({
             formClass="flex w-full items-center"
             onStockSelect={handleTypeaheadStockPreview}
           />
+          <button
+            type="button"
+            className="kbd"
+            onClick={openCommandPalette}
+            aria-label={`화면·종목 빠른 이동 열기 (${paletteShortcut})`}
+            title="화면·종목 빠른 이동 · / 키로도 열립니다"
+          >
+            {paletteShortcut}
+          </button>
         </div>
         <div className="spacer" />
         <div className="topbar-actions">
