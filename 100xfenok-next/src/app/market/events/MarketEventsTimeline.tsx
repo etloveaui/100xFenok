@@ -76,6 +76,8 @@ const DAY_MS = 24 * 60 * 60 * 1000;
 const WINDOW_DAYS = 28;
 const WEEK_DAYS = 7;
 const LANE_CAP = 20;
+/** Symbol chips shown for one day of a day-count lane; the rest of that day folds into a "+N건" chip. */
+const DAY_SYMBOL_CAP = 3;
 const LABEL_COL_PX = 140;
 
 const NO_FEED_REASON = "연결된 피드가 없습니다";
@@ -245,12 +247,30 @@ function laneEvents(lane: TimelineLaneDef, doc: TimelineDoc | null | undefined, 
   if (lane.dayCounts) {
     // The feed lists symbols for the collected day only, but it carries the
     // report count of every day it covers; those days get one count chip.
+    // The lane cap applies to neither: a collected day of 17 reports would
+    // otherwise crowd out the later days, and the lane total with them.
     const symbolDays = new Set(events.map((event) => event.date));
+    const shown: TimelineEvent[] = [];
+    for (const date of [...symbolDays].sort()) {
+      const dayEvents = events.filter((event) => event.date === date).sort((a, b) => a.symbol.localeCompare(b.symbol));
+      shown.push(...dayEvents.slice(0, DAY_SYMBOL_CAP));
+      const rest = dayEvents.length - DAY_SYMBOL_CAP;
+      if (rest > 0) {
+        shown.push({
+          key: `${lane.id}-more-${date}`,
+          date,
+          symbol: "-",
+          title: `${date} 실적 발표 ${dayEvents.length.toLocaleString("ko-KR")}건 중 ${rest.toLocaleString("ko-KR")}건 더 · 전체 목록은 아래 표`,
+          chip: `+${rest.toLocaleString("ko-KR")}건`,
+          weight: rest,
+        });
+      }
+    }
     for (const day of Array.isArray(doc?.metadata?.days) ? doc.metadata.days : []) {
       const date = isoDay(typeof day?.date === "string" ? day.date : null);
       const count = typeof day?.count === "number" && Number.isFinite(day.count) ? day.count : 0;
       if (!date || count <= 0 || symbolDays.has(date) || date < startIso || date >= endIso) continue;
-      events.push({
+      shown.push({
         key: `${lane.id}-count-${date}`,
         date,
         symbol: "-",
@@ -259,6 +279,7 @@ function laneEvents(lane: TimelineLaneDef, doc: TimelineDoc | null | undefined, 
         weight: count,
       });
     }
+    return shown.sort((a, b) => a.date.localeCompare(b.date) || a.symbol.localeCompare(b.symbol));
   }
   return events
     .sort((a, b) => a.date.localeCompare(b.date) || a.symbol.localeCompare(b.symbol))
