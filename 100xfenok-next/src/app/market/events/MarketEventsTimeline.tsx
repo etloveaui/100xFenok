@@ -442,16 +442,12 @@ export default function MarketEventsTimeline({ loaded, earnings, actions, splits
   const totalInWindow = laneViews.reduce((sum, view) => sum + eventWeight(view.events), 0);
   const anyFailed = laneViews.some((view) => view.failed);
 
-  if (!loaded && !macroLoaded) {
-    return (
-      <section data-market-events-timeline="true" aria-label="이벤트 타임라인">
-        <Panel loading>
-          <span aria-hidden="true" />
-        </Panel>
-      </section>
-    );
-  }
-
+  // fh-CLS3: the loading placeholder used to swap out as soon as EITHER feed
+  // landed (the macro calendar usually arrives first), unmounting the 195px
+  // skeleton box above the drilldown — recorded as `div[data-panel-loading]
+  // y 672→0 h 195→0` at 768/1440. The frame below already renders pending
+  // lanes as "확인 중", so it IS the placeholder: rendered in place from the
+  // first paint, there is nothing to swap out.
   if (loaded && !earnings && !actions && !splits && !ipoCalendar && macroLoaded && !macroCalendar) {
     return (
       <section data-market-events-timeline="true" aria-label="이벤트 타임라인">

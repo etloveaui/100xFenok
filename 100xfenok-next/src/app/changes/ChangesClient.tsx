@@ -661,10 +661,15 @@ export default function ChangesClient() {
         />
       </Panel>
 
+      {/* fh-CLS3: these three summary panels hold their loaded height while
+          loading. The generic skeleton is taller than any of their loaded
+          boxes, so the old max(children, skeleton) loading box collapsed at
+          settle — recorded as the loading inner grid unmounting at /changes 390
+          (div.grid h 273→0) and the grid reflowing at 1024. */}
       <div className="grid gap-4 md:grid-cols-3">
         <Panel
           loading={!settled}
-          className={!settled ? "min-h-[7.5rem]" : undefined}
+          className={!settled ? "h-[7.5rem]" : undefined}
           empty={settled && rows.length === 0 && !allMissing}
           emptyReason="집계할 변화가 없습니다"
           emptyNextRefresh="다음 수집 시"
@@ -698,6 +703,7 @@ export default function ChangesClient() {
         </Panel>
         <Panel
           loading={!settled}
+          className={!settled ? "h-[7.5rem]" : undefined}
           empty={settled && !first && !allMissing}
           emptyReason="먼저 볼 항목이 없습니다"
           emptyNextRefresh="다음 수집 시"
@@ -729,7 +735,7 @@ export default function ChangesClient() {
             skeletonDelayMs={120}
           />
         </Panel>
-        <Panel loading={!settled}>
+        <Panel loading={!settled} className={!settled ? "h-[7.5rem]" : undefined}>
           <div className="flex flex-col gap-1 px-4 py-3.5">
             <span className="text-[12px] font-semibold uppercase tracking-[0.06em] text-slate-500">다음 diff</span>
             <span className="text-[13px] text-slate-700">{nextDiffLabel}</span>
