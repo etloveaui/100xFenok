@@ -100,6 +100,16 @@ export default function MacroCalendarPanel({ loaded, failed, calendar, onRetry }
   // No usable range.time_max: the mirror does not say how far it reaches, so
   // an empty or short list cannot be read as a quiet fortnight.
   const coverageUnknown = calendar !== null && coverageEnd === null;
+  // The rail names where coverage stops, since a partial list is not empty
+  // and the empty-state explanation never shows. It takes the place of the
+  // importance note so the rail keeps its length and its retry stays in view.
+  const coverageGap = coverageUnknown
+    ? "수록 범위 미확인"
+    : outOfRange && coverageEnd
+      ? coverageEnd <= today
+        ? "캘린더 수록 기간 지남"
+        : `${formatKstDayHeading(coverageEnd)}부터 미수록`
+      : null;
   // The previous-print file is built daily at 15:07 KST, the day after a US
   // evening release. It is behind once a release from before yesterday is
   // still missing from it; those rows then show no previous print at all.
@@ -167,7 +177,7 @@ export default function MacroCalendarPanel({ loaded, failed, calendar, onRetry }
           source="BujaBot USD 캘린더 · 직전값 FRED·활동 서베이"
           asOf={generatedDay ? `${generatedDay} (일정)${previousDay ? ` · ${previousDay} (직전값)` : ""}` : "—"}
           asOfKind="published"
-          coverage={`앞으로 2주 ${events.length}건 · 중요도 높음·보통${coverageUnknown ? " · 수록 범위 미확인" : ""}`}
+          coverage={`앞으로 2주 ${events.length}건 · ${coverageGap ?? "중요도 높음·보통"}`}
           next={next ? `${formatKstDayHeading(next.dateKst)} ${next.timeKst ?? ""} ${next.titleKo}`.replace(/\s+/g, " ").trim() : undefined}
           onRetry={freshness === "error" || freshness === "stale" ? onRetry : undefined}
           skeletonDelayMs={120}
