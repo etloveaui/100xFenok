@@ -1,5 +1,6 @@
 import assert from "node:assert/strict";
 import {
+  coverageEndDay,
   formatKstDayHeading,
   formatPrintDate,
   isHeadlineMacro,
@@ -47,7 +48,7 @@ const calendar = {
 test("parses confirmed, well-formed events in time order and drops the rest", () => {
   const parsed = parseMacroCalendar(calendar, prevValues);
   assert.equal(parsed.generatedAt, "2026-09-18T06:00:43+09:00");
-  assert.equal(parsed.coversThrough, "2027-03-01");
+  assert.equal(parsed.coverageEnd, "2027-03-01");
   assert.deepEqual(parsed.events.map((e) => e.id), ["adp", "ism", "nfp", "min", "opx", "13f"]);
 });
 
@@ -79,6 +80,15 @@ test("short labels and date formatting", () => {
 });
 
 test("a malformed document yields an empty calendar, not an error", () => {
-  assert.deepEqual(parseMacroCalendar(null, prevValues), { generatedAt: null, source: null, coversThrough: null, events: [] });
+  assert.deepEqual(parseMacroCalendar(null, prevValues), { generatedAt: null, source: null, coverageEnd: null, events: [] });
   assert.deepEqual(parseMacroCalendar({ events: "x" }, null).events, []);
+});
+
+test("coverage ends at the first KST day time_max leaves out", () => {
+  assert.equal(coverageEndDay("2027-03-01T00:00:00+09:00"), "2027-03-01");
+  assert.equal(coverageEndDay("2027-02-28T15:00:00Z"), "2027-03-01");
+  assert.equal(coverageEndDay("2027-02-28T23:30:00+09:00"), "2027-03-01");
+  assert.equal(coverageEndDay("2027-02-28T10:00:00+09:00"), "2027-03-01");
+  assert.equal(coverageEndDay(null), null);
+  assert.equal(coverageEndDay("not a date"), null);
 });

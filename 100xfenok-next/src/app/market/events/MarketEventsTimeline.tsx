@@ -7,7 +7,7 @@ import { EmptyState, EvidenceRail, Panel, PanelHeader, Pill } from "@/components
 import type { EvidenceRailFreshness } from "@/components/ui/EvidenceRail";
 import type { EvidenceStage } from "@/lib/evidence/provenance";
 import { isEventCollectionStale } from "@/lib/market-events/freshness";
-import { dateOnly, isStaleAsOf } from "@/lib/data-state";
+import { dateOnly, isStaleAsOf, todayKST } from "@/lib/data-state";
 import {
   MACRO_CALENDAR_STALE_AFTER_DAYS,
   isHeadlineMacro,
@@ -76,6 +76,8 @@ const DAY_MS = 24 * 60 * 60 * 1000;
 const WINDOW_DAYS = 28;
 const WEEK_DAYS = 7;
 const LANE_CAP = 20;
+/** Symbol chips shown for one day of a day-count lane; the rest of that day folds into a "+N건" chip. */
+const DAY_SYMBOL_CAP = 3;
 const LABEL_COL_PX = 140;
 
 const NO_FEED_REASON = "연결된 피드가 없습니다";
@@ -114,15 +116,9 @@ function isoDay(value: string | null | undefined): string | null {
   return `${date.getUTCFullYear()}-${month}-${day}`;
 }
 
-function localToday(): Date {
-  const now = new Date();
-  return new Date(now.getFullYear(), now.getMonth(), now.getDate());
-}
-
-function toIsoDay(date: Date): string {
-  const month = String(date.getMonth() + 1).padStart(2, "0");
-  const day = String(date.getDate()).padStart(2, "0");
-  return `${date.getFullYear()}-${month}-${day}`;
+/** Calendar-day arithmetic on YYYY-MM-DD, independent of the browser's time zone. */
+function addDaysIso(iso: string, days: number): string {
+  return new Date(Date.parse(`${iso}T00:00:00Z`) + days * DAY_MS).toISOString().slice(0, 10);
 }
 
 function shortMd(iso: string): string {
@@ -251,12 +247,30 @@ function laneEvents(lane: TimelineLaneDef, doc: TimelineDoc | null | undefined, 
   if (lane.dayCounts) {
     // The feed lists symbols for the collected day only, but it carries the
     // report count of every day it covers; those days get one count chip.
+    // The lane cap applies to neither: a collected day of 17 reports would
+    // otherwise crowd out the later days, and the lane total with them.
     const symbolDays = new Set(events.map((event) => event.date));
+    const shown: TimelineEvent[] = [];
+    for (const date of [...symbolDays].sort()) {
+      const dayEvents = events.filter((event) => event.date === date).sort((a, b) => a.symbol.localeCompare(b.symbol));
+      shown.push(...dayEvents.slice(0, DAY_SYMBOL_CAP));
+      const rest = dayEvents.length - DAY_SYMBOL_CAP;
+      if (rest > 0) {
+        shown.push({
+          key: `${lane.id}-more-${date}`,
+          date,
+          symbol: "-",
+          title: `${date} 실적 발표 ${dayEvents.length.toLocaleString("ko-KR")}건 중 ${rest.toLocaleString("ko-KR")}건 더 · 전체 목록은 아래 표`,
+          chip: `+${rest.toLocaleString("ko-KR")}건`,
+          weight: rest,
+        });
+      }
+    }
     for (const day of Array.isArray(doc?.metadata?.days) ? doc.metadata.days : []) {
       const date = isoDay(typeof day?.date === "string" ? day.date : null);
       const count = typeof day?.count === "number" && Number.isFinite(day.count) ? day.count : 0;
       if (!date || count <= 0 || symbolDays.has(date) || date < startIso || date >= endIso) continue;
-      events.push({
+      shown.push({
         key: `${lane.id}-count-${date}`,
         date,
         symbol: "-",
@@ -265,6 +279,7 @@ function laneEvents(lane: TimelineLaneDef, doc: TimelineDoc | null | undefined, 
         weight: count,
       });
     }
+    return shown.sort((a, b) => a.date.localeCompare(b.date) || a.symbol.localeCompare(b.symbol));
   }
   return events
     .sort((a, b) => a.date.localeCompare(b.date) || a.symbol.localeCompare(b.symbol))
@@ -290,9 +305,9 @@ function estimateChipPx(event: TimelineEvent): number {
  */
 function packChips(events: TimelineEvent[], startIso: string): Array<{ event: TimelineEvent; slot: number; leftPct: number; widthPx: number }> {
   const rowEnds: number[] = [];
-  const startMs = Date.parse(`${startIso}T00:00:00`);
+  const startMs = Date.parse(`${startIso}T00:00:00Z`);
   return events.map((event) => {
-    const leftPct = ((Date.parse(`${event.date}T00:00:00`) - startMs) / (WINDOW_DAYS * DAY_MS)) * 100;
+    const leftPct = ((Date.parse(`${event.date}T00:00:00Z`) - startMs) / (WINDOW_DAYS * DAY_MS)) * 100;
     const widthPx = estimateChipPx(event);
     // A chip near the window end is pulled left until it fits (same clamp the
     // style applies against the real track width).
@@ -371,17 +386,16 @@ function laneStages(lane: TimelineLaneDef, doc: TimelineDoc | null | undefined, 
 }
 
 export default function MarketEventsTimeline({ loaded, earnings, actions, splits, ipoCalendar, macroLoaded, macroCalendar, onRetry }: MarketEventsTimelineProps) {
+  // The product's day is the KST day (the macro lanes and the calendar panel
+  // above are dated in KST), whatever zone the browser is in.
   const windowDef = useMemo(() => {
-    const today = localToday();
-    const startIso = toIsoDay(today);
-    const endIso = toIsoDay(new Date(today.getTime() + WINDOW_DAYS * DAY_MS));
+    const startIso = todayKST();
+    const endIso = addDaysIso(startIso, WINDOW_DAYS);
     const weeks = Array.from({ length: WINDOW_DAYS / WEEK_DAYS }, (_, week) => {
-      const weekStart = new Date(today.getTime() + week * WEEK_DAYS * DAY_MS);
-      const weekEnd = new Date(weekStart.getTime() + (WEEK_DAYS - 1) * DAY_MS);
-      return `${shortMd(toIsoDay(weekStart))} ~ ${shortMd(toIsoDay(weekEnd))}`;
+      const weekStart = addDaysIso(startIso, week * WEEK_DAYS);
+      return `${shortMd(weekStart)} ~ ${shortMd(addDaysIso(weekStart, WEEK_DAYS - 1))}`;
     });
-    const todayIso = toIsoDay(today);
-    return { startIso, endIso, weeks, todayIso, todayFraction: 0 };
+    return { startIso, endIso, weeks, todayIso: startIso, todayFraction: 0 };
   }, []);
 
   const laneViews = useMemo(() => {

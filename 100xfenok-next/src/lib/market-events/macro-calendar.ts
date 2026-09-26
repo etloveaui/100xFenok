@@ -41,8 +41,8 @@ export type MacroEvent = {
 export type MacroCalendar = {
   generatedAt: string | null;
   source: string | null;
-  /** Last day the mirror covers (KST, YYYY-MM-DD). */
-  coversThrough: string | null;
+  /** First KST day the mirror no longer covers (from range.time_max, an exclusive bound). */
+  coverageEnd: string | null;
   events: MacroEvent[];
 };
 
@@ -116,7 +116,7 @@ export function previousPrint(titles: Array<string | null>, prevValues: unknown)
 
 export function parseMacroCalendar(calendar: unknown, prevValues: unknown): MacroCalendar {
   if (!isRecord(calendar) || !Array.isArray(calendar.events)) {
-    return { generatedAt: null, source: null, coversThrough: null, events: [] };
+    return { generatedAt: null, source: null, coverageEnd: null, events: [] };
   }
   const range = isRecord(calendar.range) ? calendar.range : {};
   const events: MacroEvent[] = [];
@@ -146,13 +146,28 @@ export function parseMacroCalendar(calendar: unknown, prevValues: unknown): Macr
     });
   });
   events.sort((a, b) => a.dateKst.localeCompare(b.dateKst) || (a.timeKst ?? "").localeCompare(b.timeKst ?? "") || a.titleKo.localeCompare(b.titleKo));
-  const timeMax = str(range.time_max);
   return {
     generatedAt: str(calendar.generated_at),
     source: str(calendar.source),
-    coversThrough: timeMax && ISO_DAY.test(timeMax.slice(0, 10)) ? timeMax.slice(0, 10) : null,
+    coverageEnd: coverageEndDay(str(range.time_max)),
     events,
   };
+}
+
+const KST_OFFSET_MS = 9 * 60 * 60 * 1000;
+
+/**
+ * range.time_max is the mirror's exclusive upper bound ("2027-03-01T00:00:00+09:00"
+ * covers through 2/28). At KST midnight its day is the first one not covered;
+ * any later time still covers its own day, so the next day is the first gap.
+ */
+export function coverageEndDay(timeMax: string | null): string | null {
+  const ms = timeMax ? Date.parse(timeMax) : NaN;
+  if (!Number.isFinite(ms)) return null;
+  const kst = new Date(ms + KST_OFFSET_MS);
+  const day = kst.toISOString().slice(0, 10);
+  const atMidnight = kst.getUTCHours() === 0 && kst.getUTCMinutes() === 0 && kst.getUTCSeconds() === 0 && kst.getUTCMilliseconds() === 0;
+  return atMidnight ? day : new Date(Date.parse(`${day}T00:00:00Z`) + 24 * 60 * 60 * 1000).toISOString().slice(0, 10);
 }
 
 /** Events on [fromIso, toIsoExclusive), KST days. */
