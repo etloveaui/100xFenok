@@ -50,7 +50,7 @@ type Item = {
 /* ---- screen items derived from canonical sitemap routes (legacy/retired excluded) ---- */
 const SCREEN_LABELS: Record<string, { label: string; kbd?: string }> = {
   [ROUTES.home]: { label: "홈" },
-  [ROUTES.market]: { label: "시장" },
+  [ROUTES.market]: { label: "시장 밸류에이션" },
   [ROUTES.marketStructure]: { label: "시장 구조" },
   [ROUTES.regime]: { label: "시황" },
   [ROUTES.marketEvents]: { label: "시장 이벤트" },
@@ -130,6 +130,12 @@ function stockRow(s: StockRow, returnTo: string | null): Item {
 }
 
 const G_SEQUENCE_WINDOW_MS = 600;
+const OPEN_EVENT = "fnk:command-palette";
+
+/** Opens the palette from a visible control (the ⌘K button in the top bar). */
+export function openCommandPalette(): void {
+  window.dispatchEvent(new Event(OPEN_EVENT));
+}
 
 function eventTargetInDialog(e: KeyboardEvent): boolean {
   const target = e.target as HTMLElement | null;
@@ -271,6 +277,19 @@ export function CommandPalette({ items, onSelect }: { items?: Item[]; onSelect?:
     setShowHelp(help);
     gArmedAt.current = 0;
   };
+
+  /* Visible entry point: the top bar's ⌘K button dispatches OPEN_EVENT. */
+  React.useEffect(() => {
+    const onOpen = () => {
+      setOpen(true);
+      setQuery("");
+      setActive(0);
+      setShowHelp(false);
+      gArmedAt.current = 0;
+    };
+    window.addEventListener(OPEN_EVENT, onOpen);
+    return () => window.removeEventListener(OPEN_EVENT, onOpen);
+  }, []);
 
   /* Global open shortcuts + g s / g h sequences (palette closed). */
   React.useEffect(() => {

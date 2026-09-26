@@ -20,7 +20,7 @@ export default async function MarketEventsPage({ searchParams }: Props) {
   const params = searchParams ? await searchParams : {};
 
   return (
-    <AppShell active="market" title="시장 이벤트" backHref={ROUTES.market}>
+    <AppShell active="events" title="시장 이벤트" backHref={ROUTES.market}>
       <MarketEventsClient
         initialTab={firstParam(params.tab)}
         initialQuery={firstParam(params.q)}

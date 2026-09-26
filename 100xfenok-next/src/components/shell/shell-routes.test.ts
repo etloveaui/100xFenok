@@ -25,6 +25,9 @@ test("resolves static and dynamic shell routes", () => {
   assert.equal(resolveShellRoute("/etfs/SPY")?.title, "SPY");
   assert.equal(resolveShellRoute("/etfs/compare")?.title, "ETF 비교");
   assert.equal(resolveShellRoute("/posts/2026/some-post")?.active, "posts");
+  // Job-grouped rail: the two pages it now lists light their own item.
+  assert.equal(resolveShellRoute("/changes/")?.active, "changes");
+  assert.equal(resolveShellRoute("/market/events")?.active, "events");
 });
 
 test("keeps immersive and private surfaces out of the shell", () => {

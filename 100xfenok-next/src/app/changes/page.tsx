@@ -10,7 +10,7 @@ export const metadata: Metadata = {
 
 export default function ChangesPage() {
   return (
-    <AppShell title="무엇이 바뀌었나" backHref={ROUTES.home}>
+    <AppShell active="changes" title="무엇이 바뀌었나" backHref={ROUTES.home}>
       <ChangesClient />
     </AppShell>
   );
