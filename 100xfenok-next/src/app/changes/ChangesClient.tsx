@@ -1,14 +1,14 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import TransitionLink from "@/components/TransitionLink";
 import { useDashboardData } from "@/hooks/useDashboardData";
-import { clamp, getRegimeLabel } from "@/lib/dashboard/formatters";
+import { MARKET_STRENGTH_NAME, marketStrength } from "@/lib/dashboard/market-strength";
 import { isValidEntityTicker, normalizeForEntityKey } from "@/lib/ticker";
 import { EvidenceRail, Panel, PanelHeader } from "@/components/ui";
 import type { EvidenceRailFreshness } from "@/components/ui/EvidenceRail";
 import type { EvidenceStage } from "@/lib/evidence/provenance";
-import { formatMoney as formatMoneyByCurrency } from "@/lib/format";
+import { formatEps, formatEpsRevisionChange, readEpsRevision } from "@/lib/eps-revision";
 import { useWatchlist } from "@/lib/watchlist";
 import { ROUTES } from "@/lib/routes";
 
@@ -102,21 +102,6 @@ function writeSnapshot(snapshot: VisitSnapshot): void {
   }
 }
 
-/** Listing suffix → ISO currency: decided by listing market, never a KR-only test. */
-function currencyForTicker(ticker: string): string {
-  const symbol = ticker.toUpperCase();
-  if (symbol.endsWith(".KS") || symbol.endsWith(".KQ")) return "KRW";
-  if (symbol.endsWith(".HK")) return "HKD";
-  if (symbol.endsWith(".SZ") || symbol.endsWith(".SS")) return "CNY";
-  if (symbol.endsWith(".T")) return "JPY";
-  if (symbol.endsWith(".L")) return "GBP";
-  return "USD";
-}
-
-function formatMoney(value: number, ticker: string): string {
-  return formatMoneyByCurrency(value, currencyForTicker(ticker));
-}
-
 function formatSigned(value: number, digits: number, suffix: string): string {
   const prefix = value > 0 ? "+" : value < 0 ? "-" : "";
   return `${prefix}${Math.abs(value).toFixed(digits)}${suffix}`;
@@ -142,21 +127,22 @@ function revisionRows(doc: unknown, watch: Set<string> | null): DiffRow[] {
       // watched ticker present in the source survives to the rows.
       if (watch && !watch.has(ticker)) continue;
       const change = asNumber(raw.change_1w);
-      const eps = asNumber(raw.eps_fy1);
+      const eps = readEpsRevision(raw);
       const asOf = isoDay(raw.as_of);
-      if (change === null || change === 0 || eps === null || asOf === null) continue;
+      if (change === null || change === 0 || eps.after === null || asOf === null) continue;
       if (key === "up" ? change <= 0 : change >= 0) continue;
-      // The revision feed carries no previous-EPS field: before stays unavailable
-      // rather than derived via eps/(1+change), which flips sign on negative EPS.
+      // Before is the prior weekly estimate the feed now carries; older feeds
+      // leave it unknown rather than derived via eps/(1+change), which cannot
+      // be inverted once either side is negative.
       const name = asString(raw.name) ?? ticker;
       rows.push({
         id: `revision:${key}:${ticker}:${asOf}`,
         ticker,
         title: `${ticker} · ${name}`,
         kind: "FY+1 EPS",
-        before: "—",
-        after: formatMoney(eps, ticker),
-        delta: formatSigned(change * 100, 1, "%"),
+        before: formatEps(eps.before, ticker),
+        after: formatEps(eps.after, ticker),
+        delta: formatEpsRevisionChange(change, eps.flip),
         tone: change > 0 ? "up" : "down",
         accent: change > 0 ? "add" : "del",
         href: stockHrefOf(ticker),
@@ -284,10 +270,12 @@ function lastRevisionRefreshMs(nowMs: number): number {
   return refresh;
 }
 
+function nextRevisionRefreshMs(nowMs: number): number {
+  return lastRevisionRefreshMs(nowMs) + 7 * 86400 * 1000;
+}
+
 function nextRevisionRefreshLabel(nowMs: number): string {
-  const last = lastRevisionRefreshMs(nowMs);
-  const next = last > nowMs ? last : last + 7 * 86400 * 1000;
-  const kst = new Date(next + 9 * 3600 * 1000);
+  const kst = new Date(nextRevisionRefreshMs(nowMs) + 9 * 3600 * 1000);
   const mm = String(kst.getUTCMonth() + 1).padStart(2, "0");
   const dd = String(kst.getUTCDate()).padStart(2, "0");
   return `${mm}-${dd} 08:00 리비전 갱신 후 자동 생성`;
@@ -312,7 +300,11 @@ export default function ChangesClient() {
   const [revisionDoc, setRevisionDoc] = useState<unknown>(null);
   const [tradesDoc, setTradesDoc] = useState<unknown>(null);
   const [byTickerDoc, setByTickerDoc] = useState<unknown>(null);
-  const [feedsLoaded, setFeedsLoaded] = useState(false);
+  // The attempt whose feeds have landed: a retry bumps retryKey, so loading is
+  // derived instead of reset by a synchronous setState inside the effect.
+  const [loadedKey, setLoadedKey] = useState<number | null>(null);
+  const [feedsFetchedAtMs, setFeedsFetchedAtMs] = useState<number | null>(null);
+  const [refreshTickMs, setRefreshTickMs] = useState<number | null>(null);
   const [retryKey, setRetryKey] = useState(0);
   // Refetch failure signal: kept separately from the docs so a failed refetch
   // that preserves last-known-good still flags partial/stale, never fresh.
@@ -324,11 +316,11 @@ export default function ChangesClient() {
   const [snapshot] = useState<VisitSnapshot | null>(() => (
     typeof window === "undefined" ? null : readSnapshot()
   ));
-  const [snapshotSaved, setSnapshotSaved] = useState(false);
+  // Once-per-visit guard for the baseline write; a ref, since nothing renders from it.
+  const snapshotSaved = useRef(false);
 
   useEffect(() => {
     let cancelled = false;
-    setFeedsLoaded(false);
     Promise.all([
       fetchJson<unknown>("/data/global-scouter/core/revision_movers.json"),
       fetchJson<unknown>("/data/sec-13f/analytics/trades_ranking.json"),
@@ -343,7 +335,8 @@ export default function ChangesClient() {
       if (byTicker !== null) setByTickerDoc(byTicker);
       setRevFailed(revision === null);
       setHoldersFailed(trades === null || byTicker === null);
-      setFeedsLoaded(true);
+      setFeedsFetchedAtMs(Date.now());
+      setLoadedKey(retryKey);
     });
     return () => {
       cancelled = true;
@@ -355,34 +348,37 @@ export default function ChangesClient() {
     setRetryKey((key) => key + 1);
   };
 
+  const feedsLoaded = loadedKey === retryKey;
   const dashboardSettled = dataReady || failedSources.length > 0;
   const dashboardFailed = failedSources.length > 0;
   const settled = feedsLoaded && dashboardSettled;
 
-  const regime = useMemo(() => {
-    const breadthTotal = Math.max(dashboard.sectorRows.length, 1);
-    const breadthRatio = dashboard.sectorUp / breadthTotal;
-    const score = clamp(
-      (dashboard.fearGreedScore / 100) * 0.45 + breadthRatio * 0.35 + (1 - dashboard.stressScore) * 0.2,
-      0,
-      1,
-    );
-    return {
-      label: getRegimeLabel(score),
-      confidence: Math.round(score * 100),
-    };
-  }, [dashboard]);
+  const regime = useMemo(() => marketStrength(dashboard), [dashboard]);
 
   const revAsOf = useMemo(() => revisionAsOf(revisionDoc), [revisionDoc]);
   const quarter = useMemo(() => tradesQuarter(tradesDoc), [tradesDoc]);
-  const nextDiffLabel = useMemo(() => nextRevisionRefreshLabel(Date.now()), []);
+  // Schedule judgments run on a clock that starts when the feeds arrive and
+  // ticks at each Friday 08:00 KST refresh, not on render time: a re-render
+  // never flips the overdue state on its own, and a page left open across the
+  // refresh re-judges freshness and moves the next-refresh label.
+  const scheduleNowMs = feedsFetchedAtMs === null ? null : Math.max(feedsFetchedAtMs, refreshTickMs ?? 0);
+  useEffect(() => {
+    if (scheduleNowMs === null) return;
+    const delayMs = Math.max(0, nextRevisionRefreshMs(scheduleNowMs) - Date.now()) + 1000;
+    const timer = window.setTimeout(() => setRefreshTickMs(Date.now()), delayMs);
+    return () => window.clearTimeout(timer);
+  }, [scheduleNowMs]);
+  const nextDiffLabel = useMemo(
+    () => (scheduleNowMs === null ? undefined : nextRevisionRefreshLabel(scheduleNowMs)),
+    [scheduleNowMs],
+  );
 
   // Persist this visit as next visit's baseline once everything settles with
   // a real dashboard load. A fallback-contaminated baseline is never saved:
   // the whole write waits for dataReady && !dashboardFailed.
   useEffect(() => {
-    if (!settled || snapshotSaved || dashboardFailed || !dataReady) return;
-    setSnapshotSaved(true);
+    if (!settled || snapshotSaved.current || dashboardFailed || !dataReady) return;
+    snapshotSaved.current = true;
     writeSnapshot({
       at: new Date().toISOString(),
       edgeScore: regime.confidence,
@@ -390,7 +386,7 @@ export default function ChangesClient() {
       revisionAsOf: revAsOf,
       quarter,
     });
-  }, [settled, snapshotSaved, dashboardFailed, dataReady, regime.confidence, regime.label, revAsOf, quarter]);
+  }, [settled, dashboardFailed, dataReady, regime.confidence, regime.label, revAsOf, quarter]);
 
   // Watchlist scope set: null = global. Consumed inside revisionRows /
   // holderRows BEFORE the per-direction caps so every watched ticker present
@@ -416,13 +412,13 @@ export default function ChangesClient() {
             id: "snapshot:edge",
             ticker: null,
             title: "단기 Edge 점수",
-            kind: "시장 체력",
+            kind: MARKET_STRENGTH_NAME,
             before: String(snapshot.edgeScore),
             after: String(regime.confidence),
             delta: formatSigned(delta, 0, ""),
             tone: delta > 0 ? "up" : "down",
             accent: "none",
-            href: ROUTES.regime,
+            href: ROUTES.home,
             rank: Math.abs(delta) >= 3 ? 1 : 6,
           });
         }
@@ -431,14 +427,14 @@ export default function ChangesClient() {
         out.push({
           id: "snapshot:regime",
           ticker: null,
-          title: "종합 신호",
-          kind: "시황",
+          title: "체력 판단",
+          kind: MARKET_STRENGTH_NAME,
           before: snapshot.regime,
           after: regime.label,
           delta: "변경",
           tone: "neutral",
           accent: "none",
-          href: ROUTES.regime,
+          href: ROUTES.home,
           rank: 0,
         });
       }
@@ -469,12 +465,13 @@ export default function ChangesClient() {
   const anyFeedMissing = revMissing || holdersMissing;
   const allMissing = revMissing && holdersMissing;
   const revOverdue = useMemo(() => {
-    if (!isRecord(revisionDoc)) return false;
+    if (!isRecord(revisionDoc) || scheduleNowMs === null) return false;
+    const lastRefreshMs = lastRevisionRefreshMs(scheduleNowMs);
     const stamp = asString(revisionDoc.generated_at);
     const ms = stamp ? Date.parse(stamp) : NaN;
-    if (!Number.isFinite(ms)) return revAsOf !== null && revAsOf < new Date(lastRevisionRefreshMs(Date.now())).toISOString().slice(0, 10);
-    return ms < lastRevisionRefreshMs(Date.now());
-  }, [revisionDoc, revAsOf]);
+    if (!Number.isFinite(ms)) return revAsOf !== null && revAsOf < new Date(lastRefreshMs).toISOString().slice(0, 10);
+    return ms < lastRefreshMs;
+  }, [revisionDoc, revAsOf, scheduleNowMs]);
 
   const mainFreshness: EvidenceRailFreshness = !settled
     ? "pending"

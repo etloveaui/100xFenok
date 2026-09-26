@@ -45,12 +45,18 @@ for (const file of fs.readdirSync(DETAIL_DIR)) {
     const ticker = file.replace(/\.json$/, "");
     const weekly = doc?.eps_consensus?.weekly?.fy_plus_1;
     const latest = Array.isArray(weekly) && weekly.length ? weekly[0] : null;
+    // The week the change is measured from. Readers need it to show 이전 and to
+    // tell a sign flip (281 -> -2,454 reads as -973%) from an ordinary revision;
+    // eps/(1+change) cannot recover it once either side is negative.
+    const prior = Array.isArray(weekly) && weekly.length > 1 ? weekly[1] : null;
     rows.push({
       ticker,
       name: nameByTicker.get(ticker) ?? null,
       change_1w: Math.round(ch * 10000) / 10000,
       eps_fy1: latest && typeof latest.value === "number" ? latest.value : null,
       as_of: latest?.date ?? null,
+      eps_fy1_prev: prior && typeof prior.value === "number" ? prior.value : null,
+      prev_as_of: prior?.date ?? null,
     });
   } catch {
     // skip unreadable detail file

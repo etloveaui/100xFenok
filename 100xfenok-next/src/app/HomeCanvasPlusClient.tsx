@@ -11,22 +11,17 @@ import { Pill } from "@/components/ui/Pill";
 import { Sparkline } from "@/components/ui/Sparkline";
 import { Tile } from "@/components/ui/Tile";
 import { useDashboardData } from "@/hooks/useDashboardData";
-import { clamp, getRegimeLabel } from "@/lib/dashboard/formatters";
+import { MARKET_STRENGTH_NAME, marketStrength } from "@/lib/dashboard/market-strength";
 import { DATA_STATE_LABELS, oldestAsOf } from "@/lib/data-state";
 import type { DashboardSnapshot, DashboardSourceId, SectorSnapshot } from "@/lib/dashboard/types";
-import { projectMaterialChanges } from "@/lib/home/material-change";
+import { formatEps, formatEpsRevisionChange } from "@/lib/eps-revision";
+import { projectMaterialChanges, type MaterialChangeItem } from "@/lib/home/material-change";
 import { PERSONAL_DOC_KEYS, readPersonalFlags, type Flag } from "@/lib/personal/personal-state";
 import { EXPLORE_PRODUCT_TITLE } from "@/lib/product-nav";
 import { ROUTES } from "@/lib/routes";
 import type { TradesRankingData, TradesRankingRow } from "@/lib/superinvestors/types";
 
 type IndexSymbol = "SPY" | "QQQ" | "DIA";
-
-type RegimeSummary = {
-  label: string;
-  confidence: number;
-  breadth: number;
-};
 
 type IndexCardDefinition = {
   symbol: IndexSymbol;
@@ -219,6 +214,18 @@ function formatSignedPercentUnit(value: number | null | undefined, digits = 2): 
   if (typeof value !== "number" || !Number.isFinite(value)) return "-";
   const prefix = value > 0 ? "+" : value < 0 ? "-" : "";
   return `${prefix}${Math.abs(value).toFixed(digits)}%`;
+}
+
+/** Prior -> current FY+1 estimate when the feed carries the prior week, else the current one. */
+function revisionEpsText(item: MaterialChangeItem): string {
+  if (!item.eps) return "—";
+  const after = formatEps(item.eps.after, item.ticker);
+  return item.eps.before === null ? after : `${formatEps(item.eps.before, item.ticker)} → ${after}`;
+}
+
+function revisionChangeText(item: MaterialChangeItem): string {
+  if (item.source !== "revision" || typeof item.value !== "number") return item.detail;
+  return formatEpsRevisionChange(item.value, item.eps?.flip ?? null);
 }
 
 function formatMarketState(value: string | null): string {
@@ -556,22 +563,7 @@ export default function HomeCanvasPlusClient() {
   const regimeReady = dashboard.judgmentInputsReady;
   const sectorDataReady = dashboard.sectorInputsReady;
 
-  const regime = useMemo(() => {
-    const breadthTotal = Math.max(dashboard.sectorRows.length, 1);
-    const breadthRatio = dashboard.sectorUp / breadthTotal;
-    const score = clamp(
-      (dashboard.fearGreedScore / 100) * 0.45 +
-        breadthRatio * 0.35 +
-        (1 - dashboard.stressScore) * 0.2,
-      0,
-      1,
-    );
-    return {
-      label: getRegimeLabel(score),
-      confidence: Math.round(score * 100),
-      breadth: Math.round(breadthRatio * 100),
-    } satisfies RegimeSummary;
-  }, [dashboard]);
+  const regime = useMemo(() => marketStrength(dashboard), [dashboard]);
 
   const forces = useMemo(() => {
     const breadthTotal = Math.max(dashboard.sectorRows.length, 1);
@@ -724,7 +716,7 @@ export default function HomeCanvasPlusClient() {
             <div className="flex min-w-0 flex-wrap items-baseline gap-x-3 gap-y-1">
               <h1 className="m-0 text-[18px] font-semibold text-[var(--c-ink)] md:text-[20px]">오늘 시장</h1>
               <span className="text-[13px] text-[var(--c-ink-3)]">
-                시황 <b className="font-semibold text-[var(--c-ink-2)]">{regimeReady ? regime.label : "판단 대기"}</b>
+                {MARKET_STRENGTH_NAME} <b className="font-semibold text-[var(--c-ink-2)]">{regimeReady ? regime.label : "판단 대기"}</b>
                 {" · "}확인 필요 <b className="font-semibold text-[var(--c-warn-ink)]">{headerAttentionLabel}</b>
                 {failedSources.length > 0 && !anySourceLoading
                   ? " · 일부 소스 미수신"
@@ -938,9 +930,9 @@ export default function HomeCanvasPlusClient() {
                       {item.title !== item.ticker && <span className="truncate text-[var(--c-ink-3)]">{item.title}</span>}
                     </span>
                     <span className="truncate text-[var(--c-ink-2)]">{item.label}</span>
-                    <span className="text-right tabular-nums text-[var(--c-ink-2)]">{isRevision ? (revisionUp ? "상향" : "하향") : "—"}</span>
+                    <span className="truncate text-right tabular-nums text-[var(--c-ink-2)]">{isRevision ? revisionEpsText(item) : "—"}</span>
                     <span className={`text-right tabular-nums font-semibold ${isRevision ? (revisionUp ? "text-[var(--c-up)]" : "text-[var(--c-down)]") : "font-medium text-[var(--c-ink-2)]"}`}>
-                      {isRevision && typeof item.value === "number" ? formatSignedPercentUnit(item.value * 100, 1) : item.detail}
+                      {revisionChangeText(item)}
                     </span>
                   </TransitionLink>
                 );
@@ -961,7 +953,7 @@ export default function HomeCanvasPlusClient() {
                       {item.title !== item.ticker && <span className="truncate text-[12px] text-[var(--c-ink-3)]">{item.title}</span>}
                     </span>
                     <span className={`shrink-0 tabular-nums text-[13px] font-semibold ${isRevision ? (revisionUp ? "text-[var(--c-up)]" : "text-[var(--c-down)]") : "font-medium text-[var(--c-ink-2)]"}`}>
-                      {isRevision && typeof item.value === "number" ? formatSignedPercentUnit(item.value * 100, 1) : item.detail}
+                      {revisionChangeText(item)}
                     </span>
                   </TransitionLink>
                 );
