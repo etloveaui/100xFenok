@@ -92,6 +92,9 @@ test("coverage ends at the first KST day time_max leaves out", () => {
   assert.equal(coverageEndDay("2027-02-28T10:00:00+09:00"), "2027-03-01");
   assert.equal(coverageEndDay(null), null);
   assert.equal(coverageEndDay("not a date"), null);
+  // A mirror without a usable range says nothing about its reach: null, never a guess.
+  assert.equal(parseMacroCalendar({ ...calendar, range: undefined }, prevValues).coverageEnd, null);
+  assert.equal(parseMacroCalendar({ ...calendar, range: { time_max: "soon" } }, prevValues).coverageEnd, null);
 });
 
 test("a print is the previous print only for its series' first release after the file", () => {

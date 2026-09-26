@@ -96,6 +96,9 @@ export default function MacroCalendarPanel({ loaded, failed, calendar, onRetry }
   const stale = generatedDay !== null && isStaleAsOf(generatedDay, MACRO_CALENDAR_STALE_AFTER_DAYS, today);
   const coverageEnd = calendar?.coverageEnd ?? null;
   const outOfRange = coverageEnd !== null && coverageEnd < horizonEnd;
+  // No usable range.time_max: the mirror does not say how far it reaches, so
+  // an empty or short list cannot be read as a quiet fortnight.
+  const coverageUnknown = calendar !== null && coverageEnd === null;
   // The previous-print file is built daily at 15:07 KST, the day after a US
   // evening release. It is behind once a release from before yesterday is
   // still missing from it; those rows then show no previous print at all.
@@ -106,7 +109,7 @@ export default function MacroCalendarPanel({ loaded, failed, calendar, onRetry }
     ? "pending"
     : failed || !calendar
       ? "error"
-      : stale || outOfRange || previousBehind
+      : stale || outOfRange || coverageUnknown || previousBehind
         ? "stale"
         : "fresh";
   const next = events[0];
@@ -120,7 +123,7 @@ export default function MacroCalendarPanel({ loaded, failed, calendar, onRetry }
         onRetry={onRetry}
         retryLabel="다시 읽기"
         empty={loaded && !failed && calendar !== null && events.length === 0}
-        emptyReason={outOfRange && coverageEnd ? `캘린더는 ${formatKstDayHeading(addDaysIso(coverageEnd, -1))}까지만 수록돼 있습니다` : "앞으로 2주 미국 경제 일정이 없습니다"}
+        emptyReason={outOfRange && coverageEnd ? `캘린더는 ${formatKstDayHeading(addDaysIso(coverageEnd, -1))}까지만 수록돼 있습니다` : coverageUnknown ? "캘린더 수록 범위를 확인할 수 없습니다" : "앞으로 2주 미국 경제 일정이 없습니다"}
         emptyNextRefresh="캘린더 갱신 시"
       >
         <PanelHeader
@@ -163,7 +166,7 @@ export default function MacroCalendarPanel({ loaded, failed, calendar, onRetry }
           source="BujaBot USD 캘린더 · 직전값 FRED·활동 서베이"
           asOf={generatedDay ? `${generatedDay} (일정)${previousDay ? ` · ${previousDay} (직전값)` : ""}` : "—"}
           asOfKind="published"
-          coverage={`앞으로 2주 ${events.length}건 · 중요도 높음·보통`}
+          coverage={`앞으로 2주 ${events.length}건 · 중요도 높음·보통${coverageUnknown ? " · 수록 범위 미확인" : ""}`}
           next={next ? `${formatKstDayHeading(next.dateKst)} ${next.timeKst ?? ""} ${next.titleKo}`.replace(/\s+/g, " ").trim() : undefined}
           onRetry={freshness === "error" || freshness === "stale" ? onRetry : undefined}
           skeletonDelayMs={120}
