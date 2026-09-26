@@ -3090,7 +3090,9 @@ export default function StockDetailClient({
             {canonical ? <span className="rounded-full border border-slate-200 bg-slate-50 px-2 py-0.5 text-[11px] text-slate-600">{sectorLabelKo(canonical)}</span> : null}
             {row?.sector && row.sector !== (canonical ? sectorLabelKo(canonical) : null) ? <span className="rounded-full border border-slate-200 bg-slate-50 px-2 py-0.5 text-[11px] text-slate-600">{row.sector}</span> : null}
             <WatchStar ticker={symbol} className="stock-star" />
-            <span className="ml-auto flex items-baseline gap-2">
+            {/* On a phone the price wraps under the name once it lands; it takes
+                its own line from the first paint so the tabs below stay put. */}
+            <span className="ml-auto flex items-baseline gap-2 max-md:basis-full max-md:justify-end">
               <span className="tabular-nums text-[32px] font-semibold text-slate-900">{priceText}</span>
               <span className="cp-number tabular-nums text-[12px] font-semibold" data-tone={heroChangeUp ? "positive" : "negative"}>{heroChangeText}</span>
             </span>
