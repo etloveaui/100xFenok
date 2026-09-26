@@ -43,6 +43,10 @@ export type MacroCalendar = {
   source: string | null;
   /** First KST day the mirror no longer covers (from range.time_max, an exclusive bound). */
   coverageEnd: string | null;
+  /** When the previous-print file was written (its generated_at). */
+  previousAsOf: string | null;
+  /** KST day of the first release that file cannot hold yet; once long past, the file is behind. */
+  previousPendingFrom: string | null;
   events: MacroEvent[];
 };
 
@@ -95,6 +99,10 @@ function normalizePrevKey(value: string): string {
  * previous-value builder keys it (exact title, normalized title, or alias).
  */
 export function previousPrint(titles: Array<string | null>, prevValues: unknown): MacroPrevious | null {
+  return previousPrintEntry(titles, prevValues)?.previous ?? null;
+}
+
+function previousPrintEntry(titles: Array<string | null>, prevValues: unknown): { key: string; previous: MacroPrevious } | null {
   if (!isRecord(prevValues)) return null;
   const values = isRecord(prevValues.values) ? prevValues.values : {};
   const aliases = isRecord(prevValues.aliases) ? prevValues.aliases : {};
@@ -109,17 +117,17 @@ export function previousPrint(titles: Array<string | null>, prevValues: unknown)
     if (!isRecord(match)) continue;
     const value = str(match.value);
     if (!value) continue;
-    return { value, asOf: str(match.asOf), source: str(match.source) };
+    return { key: resolved, previous: { value, asOf: str(match.asOf), source: str(match.source) } };
   }
   return null;
 }
 
 export function parseMacroCalendar(calendar: unknown, prevValues: unknown): MacroCalendar {
   if (!isRecord(calendar) || !Array.isArray(calendar.events)) {
-    return { generatedAt: null, source: null, coverageEnd: null, events: [] };
+    return { generatedAt: null, source: null, coverageEnd: null, previousAsOf: null, previousPendingFrom: null, events: [] };
   }
   const range = isRecord(calendar.range) ? calendar.range : {};
-  const events: MacroEvent[] = [];
+  const rows: Array<{ event: MacroEvent; series: string | null }> = [];
   calendar.events.forEach((raw, index) => {
     if (!isRecord(raw)) return;
     if (raw.status !== undefined && raw.status !== "confirmed") return;
@@ -130,7 +138,8 @@ export function parseMacroCalendar(calendar: unknown, prevValues: unknown): Macr
     if (importance !== "H" && importance !== "M" && importance !== "L") return;
     const timeKst = str(raw.time_kst);
     const titleEn = str(raw.title_en);
-    events.push({
+    const print = previousPrintEntry([titleEn, titleKo], prevValues);
+    rows.push({ series: print?.key ?? null, event: {
       id: str(raw.id) ?? `${dateKst}-${index}`,
       dateKst,
       timeKst: timeKst && HH_MM.test(timeKst) ? timeKst : null,
@@ -142,16 +151,40 @@ export function parseMacroCalendar(calendar: unknown, prevValues: unknown): Macr
       shortLabel: macroShortLabel(titleKo),
       source: str(raw.source),
       sourceUrl: str(raw.source_url),
-      previous: previousPrint([titleEn, titleKo], prevValues),
-    });
+      previous: print?.previous ?? null,
+    } });
   });
-  events.sort((a, b) => a.dateKst.localeCompare(b.dateKst) || (a.timeKst ?? "").localeCompare(b.timeKst ?? "") || a.titleKo.localeCompare(b.titleKo));
+  rows.sort(({ event: a }, { event: b }) => a.dateKst.localeCompare(b.dateKst) || (a.timeKst ?? "").localeCompare(b.timeKst ?? "") || a.titleKo.localeCompare(b.titleKo));
+
+  // The file's print is the previous print only for its series' first release
+  // after the file was written: at or before the file it may already hold that
+  // release's own print, and past a later release it is one print behind. A
+  // file without a timestamp cannot say which release it precedes.
+  const previousAsOf = isRecord(prevValues) ? str(prevValues.generated_at) : null;
+  const writtenMs = previousAsOf ? Date.parse(previousAsOf) : NaN;
+  const firstAfter = new Map<string, number>();
+  for (const { event, series } of rows) {
+    const at = releaseMs(event);
+    if (series && at > writtenMs && !firstAfter.has(series)) firstAfter.set(series, at);
+  }
+  const events = rows.map(({ event, series }) => (
+    event.previous && series && firstAfter.get(series) === releaseMs(event) ? event : { ...event, previous: null }
+  ));
+  const pendingMs = firstAfter.size > 0 ? Math.min(...firstAfter.values()) : NaN;
+
   return {
     generatedAt: str(calendar.generated_at),
     source: str(calendar.source),
     coverageEnd: coverageEndDay(str(range.time_max)),
+    previousAsOf,
+    previousPendingFrom: Number.isFinite(pendingMs) ? new Date(pendingMs + KST_OFFSET_MS).toISOString().slice(0, 10) : null,
     events,
   };
+}
+
+/** A release's moment; an untimed one counts from the start of its KST day. */
+function releaseMs(event: MacroEvent): number {
+  return Date.parse(`${event.dateKst}T${event.timeKst ?? "00:00"}:00+09:00`);
 }
 
 const KST_OFFSET_MS = 9 * 60 * 60 * 1000;
