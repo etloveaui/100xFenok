@@ -36,7 +36,6 @@ import {
 } from "../lib/cloud-data-plane-s3.mjs";
 import { runBoundedAsyncPool, sha256Canonical, validateGenerationManifest } from "../lib/cloud-data-plane-generation.mjs";
 import { createCloudflareCloudDataPlane } from "../lib/cloud-data-plane-cloudflare-adapter.mjs";
-import { createR2RestBucket } from "../lib/cloud-data-plane-r2-rest.mjs";
 import { createRemoteCoordinatorNamespace } from "../lib/cloud-data-plane-remote-coordinator.mjs";
 import {
   FAMILIES,
@@ -80,7 +79,7 @@ function logLine(io, ...parts) {
 
 // --- shared loading -----------------------------------------------------------
 
-async function loadFamiliesState({ env, now, resumeWindowSeconds }) {
+export async function loadFamiliesState({ env, now, resumeWindowSeconds, listing, createNamespace = createRemoteCoordinatorNamespace }) {
   const token = env.CLOUDFLARE_API_TOKEN;
   const endpoint = env.DATA_PLANE_ENDPOINT;
   const writeKey = env.DATA_PLANE_WRITE_KEY;
@@ -92,12 +91,16 @@ async function loadFamiliesState({ env, now, resumeWindowSeconds }) {
     ["DATA_PLANE_WRITE_KEY", writeKey],
   ].filter(([, value]) => !value).map(([name]) => name);
   if (missing.length > 0) fail("SWEEP_CONFIG_INVALID", `missing env ${missing.join(", ")}`);
-  const r2Bucket = createR2RestBucket({ accountId, bucket: bucketName(), token });
+  // inspect() also enumerates object keys. Reuse the complete fresh S3 snapshot
+  // collected by this invocation; do not trigger 26 additional REST bucket scans.
+  // Coordinator pointers/receipts are still fetched fresh for every family.
+  assertListingComplete(listing);
+  const r2Bucket = { list: async () => ({ objects: listing.map(({key}) => ({key})), truncated: false }) };
   return collectFamiliesRetentionState({
     families: Object.keys(FAMILIES).sort(),
     createPlane: (name) => createCloudflareCloudDataPlane({
       r2Bucket,
-      coordinatorNamespace: createRemoteCoordinatorNamespace({ endpoint, key: writeKey, family: name }),
+      coordinatorNamespace: createNamespace({ endpoint, key: writeKey, family: name }),
       coordinatorName: name,
     }),
     now,
@@ -213,7 +216,7 @@ async function buildFreshCanonicalState({ s3, env, now, resumeWindowSeconds, dea
   const manifestEntries = manifestListingEntries.map(row => merged.get(row.key));
   for (const entry of manifestEntries) parseManifestEntry({entry, listingEntry: listingByKey.get(entry.key)});
   const familiesState = deps.familiesState
-    ?? await loadFamiliesState({ env, now, resumeWindowSeconds });
+    ?? await loadFamiliesState({ env, now, resumeWindowSeconds, listing });
   const objectEntries = listing.map(({ key, size, last_modified }) => ({ key, size, uploaded: last_modified }));
   const plan = computeRetentionPlan({
     families: familiesState,

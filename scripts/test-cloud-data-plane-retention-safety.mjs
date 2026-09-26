@@ -61,6 +61,7 @@ import {
   computeSweepIntersection,
   indexManifestEntries,
   loadPlanArtifact,
+  loadFamiliesState,
   parseManifestEntry,
 } from "./ops/retention-sweep.mjs";
 import {
@@ -1016,6 +1017,31 @@ try {
       assert.deepEqual(box.journal.vendored_states, [{file: "b.yml", state: "active"}], "persisted original records survive repeated failures");
     }
     console.log("retention safety 16 ok (window: failed list, foreign lease, partial-disable restore, journal survival)");
+  }
+
+  // The real canonical adapter must reuse the supplied bucket snapshot while
+  // obtaining fresh coordinator state exactly once for each family.
+  {
+    const calls = [];
+    const states = await loadFamiliesState({
+      env: {CLOUDFLARE_API_TOKEN: "test", CLOUDFLARE_ACCOUNT_ID: "test", DATA_PLANE_ENDPOINT: "https://test.invalid", DATA_PLANE_WRITE_KEY: "test"},
+      now: "2026-09-26T00:00:00Z", resumeWindowSeconds: 86400,
+      listing: [{key: "objects/example", size: 1, etag: "test", last_modified: "2026-09-20T00:00:00Z"}],
+      createNamespace: ({family}) => ({
+        idFromName: name => name,
+        get: name => ({fetch: async url => {
+          assert.equal(name, family);
+          assert.equal(new URL(url).pathname, "/inspect");
+          calls.push(family);
+          return new Response(JSON.stringify({result: {receipts: [], pointer: null}}));
+        }}),
+      }),
+    });
+    assert.equal(states.length, 26);
+    assert.equal(calls.length, 26);
+    assert.equal(new Set(calls).size, 26);
+    assert.deepEqual(states.map(row => row.name), calls);
+    console.log("retention safety 17 ok (fresh coordinator states reuse one listing snapshot)");
   }
 
   console.log("test-cloud-data-plane-retention-safety: ok");
