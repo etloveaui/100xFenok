@@ -537,3 +537,15 @@ jobs:
       - name: Smoke SEC 13F private boundary
         if: ${{ env.DEPLOY_DEFERRED != 'true' }}
         run: node scripts/test-sec13f-live-privacy.mjs --base-url https://100xfenok.etloveaui.workers.dev
+
+      # B-346: production admin login had only source-contract coverage. This
+      # logs in with the QA credential and opens every admin iframe route. A
+      # failure means the live admin login or an admin route is broken, or the
+      # stored QA password no longer matches production.
+      - name: Smoke admin login and admin routes
+        if: ${{ env.DEPLOY_DEFERRED != 'true' && env.QA_ADMIN_SMOKE_AVAILABLE == 'true' }}
+        working-directory: 100xfenok-next
+        env:
+          QA_ADMIN_PASSWORD: ${{ secrets.QA_ADMIN_PASSWORD }}
+          QA_ROUTE_IFRAME_ALLOW_REMOTE: "1"
+        run: node scripts/check-route-iframe-contract.mjs --base-url https://100xfenok.etloveaui.workers.dev --scope admin

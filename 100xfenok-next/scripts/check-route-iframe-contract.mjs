@@ -109,8 +109,11 @@ async function fetchAdminSessionCookie(baseUrl) {
   return match[0];
 }
 
+// Intro-first mode redirects a page request without the browse cookie to
+// /intro before the admin layout sees the session, so every request carries
+// fx_browse=1, as in the mobile UX contract.
 function requestHeaders(cookieHeader) {
-  return cookieHeader ? { Cookie: cookieHeader } : {};
+  return { Cookie: cookieHeader ? `${cookieHeader}; fx_browse=1` : "fx_browse=1" };
 }
 
 export async function fetchRouteHtml(baseUrl, route, cookieHeader, options = {}) {
