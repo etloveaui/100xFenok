@@ -3,6 +3,8 @@ import AppShell from "@/components/shell/AppShell";
 import { ROUTES } from "@/lib/routes";
 import ResearchClient from "./ResearchClient";
 
+export const dynamic = "force-dynamic";
+
 export const metadata: Metadata = {
   title: "리서치",
   description: "기업 리서치 자료와 제품 브리프를 모은 목록",

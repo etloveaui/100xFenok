@@ -1,6 +1,8 @@
 import type { Metadata } from "next";
 import DataConsoleClient from "./DataConsoleClient";
 
+export const dynamic = "force-dynamic";
+
 export const metadata: Metadata = {
   title: "데이터 건강 콘솔 | 100xFenok",
   description: "레인별 신선도와 증거 서랍을 모은 관리자 데이터 건강 콘솔",

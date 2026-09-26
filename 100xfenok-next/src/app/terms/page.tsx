@@ -3,6 +3,8 @@ import AppShell from "@/components/shell/AppShell";
 import TransitionLink from "@/components/TransitionLink";
 import { ROUTES } from "@/lib/routes";
 
+export const dynamic = "force-dynamic";
+
 export const metadata: Metadata = {
   title: "서비스 이용약관 | 100xFenok",
   description: "100xFenok 서비스의 이용약관입니다.",
