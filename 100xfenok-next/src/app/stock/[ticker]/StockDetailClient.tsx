@@ -7,6 +7,7 @@ import TransitionLink from "@/components/TransitionLink";
 import CpButton from "@/components/canvas-plus/CpButton";
 import CpPriceChart from "@/components/canvas-plus/charts/CpPriceChart";
 import type { CpChartDatum } from "@/components/canvas-plus/charts/types";
+import { quotedDailyBars } from "@/lib/stock/price-history";
 import DataStateNotice, { DataStateBadge } from "@/components/DataStateNotice";
 import { resolveSector, sectorLabelKo } from "@/lib/design/sectorMap";
 import { bandPct } from "@/lib/screener/bands";
@@ -248,21 +249,6 @@ interface StockanalysisFinancialPayload {
   summary?: Record<string, Record<string, { field_count?: number | null; period_count?: number | null; period?: string | null } | null | undefined>>;
 }
 
-interface StockanalysisStockPayload {
-  ticker?: string;
-  asset_type?: string;
-  fetched_at?: string;
-  normalized?: {
-    overview?: Record<string, unknown> | null;
-    quote?: Record<string, unknown> | null;
-    history?: StockanalysisHistoryPoint[];
-    financials?: {
-      fetched_at?: string | null;
-      summary?: StockanalysisFinancialPayload["summary"];
-    } | null;
-  };
-}
-
 type StockanalysisEtfLoadResult =
   | { kind: "ok"; data: StockanalysisEtfPayload }
   | { kind: "unavailable"; dataSupply: NonNullable<ReturnType<typeof parseEtfDataSupply>> }
@@ -283,19 +269,6 @@ function loadStockanalysisEtf(ticker: string): Promise<StockanalysisEtfLoadResul
       return { kind: result.kind };
     })
     .catch(() => ({ kind: "failed" }));
-}
-
-function loadStockanalysisStock(ticker: string): Promise<StockanalysisStockPayload | null> {
-  const symbol = normalizeForEntityKey(ticker);
-  if (!symbol) return Promise.resolve(null);
-  return fetch(`/api/data/stockanalysis/stocks/${encodeURIComponent(symbol)}`, { cache: "no-store" })
-    .then((res) => (res.ok ? res.json() : null))
-    .then((data) => (
-      data && typeof data === "object" && !Array.isArray(data)
-        ? data as StockanalysisStockPayload
-        : null
-    ))
-    .catch(() => null);
 }
 
 function loadStockanalysisFinancials(ticker: string): Promise<StockanalysisFinancialPayload | null> {
@@ -604,27 +577,33 @@ function stockHistoryDate(value: string): Date | null {
   return Number.isFinite(date.getTime()) ? date : null;
 }
 
-function stockHistoryToChartData(history: StockanalysisHistoryPoint[] | null | undefined): CpChartDatum[] {
-  if (!Array.isArray(history)) return [];
-  return history
-    .filter(
-      (point): point is StockanalysisHistoryPoint & { t: string; o: number; h: number; l: number; c: number } =>
-        typeof point.t === "string" &&
-        isFiniteNumber(point.o) &&
-        isFiniteNumber(point.h) &&
-        isFiniteNumber(point.l) &&
-        isFiniteNumber(point.c),
-    )
-    .map((point) => ({
-      time: point.t,
-      open: point.o,
-      high: point.h,
-      low: point.l,
-      close: point.c,
-      value: point.c,
-      volume: isFiniteNumber(point.v) ? point.v : undefined,
-    }))
-    .sort((a, b) => a.time.localeCompare(b.time));
+const EMPTY_CHART_DATA: CpChartDatum[] = [];
+// Keyed by the yf document's own array (module-cached per ticker), so a
+// re-render hands the chart the same series and it is not rebuilt.
+const yfChartDataCache = new WeakMap<object, CpChartDatum[]>();
+const rangedChartDataCache = new WeakMap<readonly CpChartDatum[], Map<StockChartRange, CpChartDatum[]>>();
+
+/** Daily bars as quoted (split-adjusted, dividends not taken out) from yf `history_1y`. */
+function yfHistoryToChartData(history: unknown): CpChartDatum[] {
+  if (!Array.isArray(history)) return EMPTY_CHART_DATA;
+  const cached = yfChartDataCache.get(history);
+  if (cached) return cached;
+  const data = quotedDailyBars(history).map((bar) => ({ ...bar, value: bar.close }));
+  yfChartDataCache.set(history, data);
+  return data;
+}
+
+function rangedStockChartData(data: readonly CpChartDatum[], range: StockChartRange): CpChartDatum[] {
+  let byRange = rangedChartDataCache.get(data);
+  if (!byRange) {
+    byRange = new Map();
+    rangedChartDataCache.set(data, byRange);
+  }
+  const cached = byRange.get(range);
+  if (cached) return cached;
+  const ranged = filterStockChartRange(data, range);
+  byRange.set(range, ranged);
+  return ranged;
 }
 
 function filterStockChartRange(data: readonly CpChartDatum[], range: StockChartRange): CpChartDatum[] {
@@ -2722,12 +2701,6 @@ export default function StockDetailClient({
   const [stockTab, setStockTab] = useState<StockTab>(initialTab ?? "overview");
   const [etfResult, setEtfResult] = useState<StockanalysisEtfLoadResult | null | undefined>(undefined);
   const [etfSurfaceData, setEtfSurfaceData] = useState<TickerSurfacePayload | null | undefined>(undefined);
-  const [stockAuxData, setStockAuxData] = useState<StockanalysisStockPayload | null | undefined>(undefined);
-  const [stockAuxRetryNonce, setStockAuxRetryNonce] = useState(0);
-  const retryStockAux = useCallback(() => {
-    setStockAuxData(undefined);
-    setStockAuxRetryNonce((n) => n + 1);
-  }, []);
   const [financialCandidate, setFinancialCandidate] = useState<StockanalysisFinancialPayload | null | undefined>(undefined);
   const [fenokSignalLens, setFenokSignalLens] = useState<FenokSignalsSummaryRecord | null | undefined>(undefined);
   const [stockChartRange, setStockChartRange] = useState<StockChartRange>("1Y");
@@ -2799,21 +2772,6 @@ export default function StockDetailClient({
     loadTickerSurfaces(symbol, "etf").then((d) => { if (!cancelled) setEtfSurfaceData(d); });
     return () => { cancelled = true; };
   }, [assetHint, marketFactsAssetType, marketFactsLoading, row, symbol]);
-
-  useEffect(() => {
-    let cancelled = false;
-    if (assetHint === "etf" || !canLoadStockData) {
-      Promise.resolve().then(() => {
-        if (!cancelled) setStockAuxData(null);
-      });
-      return () => { cancelled = true; };
-    }
-    Promise.resolve().then(() => {
-      if (!cancelled) setStockAuxData(undefined);
-    });
-    loadStockanalysisStock(symbol).then((d) => { if (!cancelled) setStockAuxData(d); });
-    return () => { cancelled = true; };
-  }, [assetHint, canLoadStockData, stockAuxRetryNonce, symbol]);
 
   useEffect(() => {
     let cancelled = false;
@@ -3090,9 +3048,10 @@ export default function StockDetailClient({
     ? "error"
     : marketFactsLoading ? "pending" : displayPrice !== null && marketFacts ? "fresh" : displayPrice !== null ? "partial" : "stale";
   const headerLkgAsOf = typeof marketFactsSourceAsOf === "string" && marketFactsSourceAsOf.trim() ? marketFactsSourceAsOf : undefined;
-  const stockChartData = stockHistoryToChartData(stockAuxData?.normalized?.history);
-  const rangedStockChartData = filterStockChartRange(stockChartData, stockChartRange);
-  const stockChartCopy = stockChartSummary(rangedStockChartData, displayCurrency, stockChartRange);
+  const stockChartData = yfHistoryToChartData(yfData?.history_1y);
+  const rangedStockChart = rangedStockChartData(stockChartData, stockChartRange);
+  const stockChartCopy = stockChartSummary(rangedStockChart, displayCurrency, stockChartRange);
+  const stockChartAsOf = stockChartData[stockChartData.length - 1]?.time ?? null;
   const marketChangePct = factNumber(marketFacts, "change_pct");
   const heroChangeText = marketChangePct !== null ? fmtEtfSignedPct(marketChangePct) : returnText ? `12M ${returnText}` : "변화율 대기";
   const heroChangeUp = marketChangePct !== null ? marketChangePct >= 0 : returnUp;
@@ -3223,7 +3182,7 @@ export default function StockDetailClient({
                     error or an empty history releases it. */}
                 <div
                   className="cp-stock-price-slot"
-                  data-reserve={stockAuxData === undefined || rangedStockChartData.length > 0 ? "" : undefined}
+                  data-reserve={yfData === undefined || rangedStockChart.length > 0 ? "" : undefined}
                 >
                 <CpPriceChart
                   kind="candlestick"
@@ -3233,15 +3192,16 @@ export default function StockDetailClient({
                   title={`${symbol} 가격·거래량`}
                   summary={stockChartCopy}
                   headingLevel="h3"
-                  data={rangedStockChartData}
+                  data={rangedStockChart}
                   showVolume
                   composition="w4"
                   volumeTone="muted"
                   className="cp-stock-price-chart"
                   emptyLabel="표시할 가격 이력이 없습니다."
-                  pending={stockAuxData === undefined}
-                  loadError={stockAuxData === null ? "가격 이력 데이터를 찾지 못했습니다." : null}
-                  onRetry={stockAuxData === null ? retryStockAux : undefined}
+                  footnote={stockChartAsOf ? `Yahoo Finance 일봉 · 분할 반영, 배당 미조정 · ${stockChartAsOf} 기준` : undefined}
+                  pending={yfData === undefined}
+                  loadError={yfData === null ? "가격 이력 데이터를 찾지 못했습니다." : null}
+                  onRetry={yfData === null ? retryYfFinance : undefined}
                 />
                 </div>
               </section>
