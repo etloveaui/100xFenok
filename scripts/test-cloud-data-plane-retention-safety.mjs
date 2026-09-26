@@ -610,7 +610,7 @@ try {
     assert.equal(idx.size, 2, "a replaced manifest replaces by key, it is not appended");
     assert.equal(idx.get("manifests/x-0123456789abcdef.json").marker, 2, "last read wins");
 
-    const { manifest } = await buildGeneration({ files: { "only.json": "{\"v\":1}\n" }, now: OLD });
+    const manifest = await buildGeneration({ files: { "only.json": "{\"v\":1}\n" }, now: OLD });
     const key = `manifests/${manifest.generation_id}.json`;
     const text = JSON.stringify(manifest);
     const listingRow = { key, etag: "e1", last_modified: OLD, size: Buffer.byteLength(text) };
@@ -681,7 +681,7 @@ try {
     try {
       const gens = [];
       for (let i = 1; i <= 4; i += 1) {
-        const { manifest } = await buildGeneration({
+        const manifest = await buildGeneration({
           files: { [`g${i}.json`]: `{"v":${i}}\n` },
           now: new Date(Date.parse(OLD) + i * 86_400_000).toISOString(),
         });
