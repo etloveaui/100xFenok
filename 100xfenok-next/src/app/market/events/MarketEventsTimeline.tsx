@@ -7,7 +7,7 @@ import { EmptyState, EvidenceRail, Panel, PanelHeader, Pill } from "@/components
 import type { EvidenceRailFreshness } from "@/components/ui/EvidenceRail";
 import type { EvidenceStage } from "@/lib/evidence/provenance";
 import { isEventCollectionStale } from "@/lib/market-events/freshness";
-import { dateOnly, isStaleAsOf } from "@/lib/data-state";
+import { dateOnly, isStaleAsOf, todayKST } from "@/lib/data-state";
 import {
   MACRO_CALENDAR_STALE_AFTER_DAYS,
   isHeadlineMacro,
@@ -114,15 +114,9 @@ function isoDay(value: string | null | undefined): string | null {
   return `${date.getUTCFullYear()}-${month}-${day}`;
 }
 
-function localToday(): Date {
-  const now = new Date();
-  return new Date(now.getFullYear(), now.getMonth(), now.getDate());
-}
-
-function toIsoDay(date: Date): string {
-  const month = String(date.getMonth() + 1).padStart(2, "0");
-  const day = String(date.getDate()).padStart(2, "0");
-  return `${date.getFullYear()}-${month}-${day}`;
+/** Calendar-day arithmetic on YYYY-MM-DD, independent of the browser's time zone. */
+function addDaysIso(iso: string, days: number): string {
+  return new Date(Date.parse(`${iso}T00:00:00Z`) + days * DAY_MS).toISOString().slice(0, 10);
 }
 
 function shortMd(iso: string): string {
@@ -290,9 +284,9 @@ function estimateChipPx(event: TimelineEvent): number {
  */
 function packChips(events: TimelineEvent[], startIso: string): Array<{ event: TimelineEvent; slot: number; leftPct: number; widthPx: number }> {
   const rowEnds: number[] = [];
-  const startMs = Date.parse(`${startIso}T00:00:00`);
+  const startMs = Date.parse(`${startIso}T00:00:00Z`);
   return events.map((event) => {
-    const leftPct = ((Date.parse(`${event.date}T00:00:00`) - startMs) / (WINDOW_DAYS * DAY_MS)) * 100;
+    const leftPct = ((Date.parse(`${event.date}T00:00:00Z`) - startMs) / (WINDOW_DAYS * DAY_MS)) * 100;
     const widthPx = estimateChipPx(event);
     // A chip near the window end is pulled left until it fits (same clamp the
     // style applies against the real track width).
@@ -371,17 +365,16 @@ function laneStages(lane: TimelineLaneDef, doc: TimelineDoc | null | undefined, 
 }
 
 export default function MarketEventsTimeline({ loaded, earnings, actions, splits, ipoCalendar, macroLoaded, macroCalendar, onRetry }: MarketEventsTimelineProps) {
+  // The product's day is the KST day (the macro lanes and the calendar panel
+  // above are dated in KST), whatever zone the browser is in.
   const windowDef = useMemo(() => {
-    const today = localToday();
-    const startIso = toIsoDay(today);
-    const endIso = toIsoDay(new Date(today.getTime() + WINDOW_DAYS * DAY_MS));
+    const startIso = todayKST();
+    const endIso = addDaysIso(startIso, WINDOW_DAYS);
     const weeks = Array.from({ length: WINDOW_DAYS / WEEK_DAYS }, (_, week) => {
-      const weekStart = new Date(today.getTime() + week * WEEK_DAYS * DAY_MS);
-      const weekEnd = new Date(weekStart.getTime() + (WEEK_DAYS - 1) * DAY_MS);
-      return `${shortMd(toIsoDay(weekStart))} ~ ${shortMd(toIsoDay(weekEnd))}`;
+      const weekStart = addDaysIso(startIso, week * WEEK_DAYS);
+      return `${shortMd(weekStart)} ~ ${shortMd(addDaysIso(weekStart, WEEK_DAYS - 1))}`;
     });
-    const todayIso = toIsoDay(today);
-    return { startIso, endIso, weeks, todayIso, todayFraction: 0 };
+    return { startIso, endIso, weeks, todayIso: startIso, todayFraction: 0 };
   }, []);
 
   const laneViews = useMemo(() => {
