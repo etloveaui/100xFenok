@@ -10,6 +10,7 @@ import {
   formatSignedPercent,
   normalizeCurrency,
 } from "@/lib/format";
+import { readPriceTargets } from "@/lib/stock/price-target";
 
 export { formatCompactMoney, formatMoney };
 
@@ -435,18 +436,19 @@ function OwnershipTab({ data }: { data: YfData }) {
 // Estimates tab
 // ---------------------------------------------------------------------------
 
-function EstimatesTab({ data }: { data: YfData }) {
+function EstimatesTab({ data, quotePrice }: { data: YfData; quotePrice?: number | null }) {
   const infoCurrency = normalizeCurrency(data.info?.currency ?? "USD");
-  const targets = data.analyst_price_targets ?? {};
   const earnings = asArray(data.earnings_estimate);
   const revenue = asArray(data.revenue_estimate);
   const recs = asArray(data.recommendations);
   const lastRec = recs.length > 0 ? recs[recs.length - 1] : null;
-  const targetLow = finiteNumber(targets.low);
-  const targetMean = finiteNumber(targets.mean);
-  const targetHigh = finiteNumber(targets.high);
-  const targetCurrent = finiteNumber(targets.current);
-  const targetMedian = finiteNumber(targets.median);
+  const {
+    low: targetLow,
+    mean: targetMean,
+    high: targetHigh,
+    current: targetCurrent,
+    median: targetMedian,
+  } = readPriceTargets(data.analyst_price_targets, quotePrice ?? finiteNumber(data.info?.currentPrice));
   const targetRangeValid = targetLow !== null && targetHigh !== null && targetCurrent !== null && targetHigh > targetLow;
   const targetPct = targetRangeValid ? clamp(((targetCurrent - targetLow) / (targetHigh - targetLow)) * 100) : null;
 
@@ -922,13 +924,14 @@ export function ThreeSecondSummary({ data, perBand, guruCount, industry }: {
 // Main export
 // ---------------------------------------------------------------------------
 
-export function renderYfTab(tab: string, data: YfData, industry?: IndustryBench | null) {
+/** `quotePrice` is the page's resolved quote, so 현재가 reads the same in every tab. */
+export function renderYfTab(tab: string, data: YfData, industry?: IndustryBench | null, quotePrice?: number | null) {
   if (!data) return null;
   switch (tab) {
     case "financials": return <FinancialsTab data={data} />;
     case "statistics": return <StatisticsTab data={data} industry={industry} />;
     case "ownership": return <OwnershipTab data={data} />;
-    case "estimates": return <EstimatesTab data={data} />;
+    case "estimates": return <EstimatesTab data={data} quotePrice={quotePrice} />;
     default: return null;
   }
 }

@@ -164,6 +164,27 @@ function main(): void {
     assert.equal(forward.changed[0].title, "Alpha");
     assert.deepEqual(forward.changed, reverse.changed);
   });
+
+  test("carries the prior estimate and names a zero crossing instead of a ratio", () => {
+    const result = projectMaterialChanges({
+      down: [
+        // 비나텍 2026-09-18: 281 -> -2,454 is change_1w -9.7331
+        { ticker: "126340.KQ", name: "비나텍", change_1w: -9.7331, eps_fy1: -2454, eps_fy1_prev: 281, as_of: "2026-09-18" },
+        { ticker: "AAL", name: "American Airlines", change_1w: -0.8182, eps_fy1: -0.2, eps_fy1_prev: -0.11, as_of: "2026-09-18" },
+      ],
+    }, null);
+    const byTicker = new Map(result.changed.map((item) => [item.ticker, item]));
+    assert.deepEqual(byTicker.get("126340.KQ")?.eps, { before: 281, after: -2454, flip: "to-loss" });
+    assert.equal(byTicker.get("126340.KQ")?.detail, "FY+1 EPS 추정치 적자 전환");
+    assert.equal(byTicker.get("AAL")?.detail, "FY+1 EPS 추정치 하향 -81.8%");
+
+    // A feed written before eps_fy1_prev existed keeps the ratio and guesses nothing.
+    const legacy = projectMaterialChanges({
+      down: [{ ticker: "NEM", name: "Newmont", change_1w: -0.2524, eps_fy1: 6.99, as_of: "2026-09-18" }],
+    }, null);
+    assert.deepEqual(legacy.changed[0]?.eps, { before: null, after: 6.99, flip: null });
+    assert.equal(legacy.changed[0]?.detail, "FY+1 EPS 추정치 하향 -25.2%");
+  });
 }
 
 main();
