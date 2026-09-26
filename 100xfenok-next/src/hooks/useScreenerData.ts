@@ -110,27 +110,38 @@ async function loadRecords(timeoutMs = FETCH_TIMEOUT_MS): Promise<StockAnalyzerR
   }
 }
 
+// Detached wait only: loadStockConnectionIndex/loadStockServicesIndex share one
+// in-flight request across every caller, so a per-caller timeout must not pass
+// its own signal in and abort that request for everyone else (see 6530a1e685).
+function raceTimeout<T>(promise: Promise<T>, timeoutMs: number): Promise<T> {
+  return new Promise((resolve, reject) => {
+    const timeoutId = window.setTimeout(() => reject(new Error("timeout")), timeoutMs);
+    promise.then(
+      (value) => {
+        window.clearTimeout(timeoutId);
+        resolve(value);
+      },
+      (err) => {
+        window.clearTimeout(timeoutId);
+        reject(err);
+      },
+    );
+  });
+}
+
 async function loadConnectionIndex(timeoutMs = FETCH_TIMEOUT_MS) {
-  const controller = new AbortController();
-  const timeoutId = window.setTimeout(() => controller.abort(), timeoutMs);
   try {
-    return await loadStockConnectionIndex(controller.signal);
+    return await raceTimeout(loadStockConnectionIndex(), timeoutMs);
   } catch {
     return null;
-  } finally {
-    window.clearTimeout(timeoutId);
   }
 }
 
 async function loadServicesIndex(timeoutMs = FETCH_TIMEOUT_MS) {
-  const controller = new AbortController();
-  const timeoutId = window.setTimeout(() => controller.abort(), timeoutMs);
   try {
-    return await loadStockServicesIndex(controller.signal);
+    return await raceTimeout(loadStockServicesIndex(), timeoutMs);
   } catch {
     return null;
-  } finally {
-    window.clearTimeout(timeoutId);
   }
 }
 

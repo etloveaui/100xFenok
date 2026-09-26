@@ -1305,11 +1305,15 @@ export default function EtfDetailClient({ ticker }: { ticker: string }) {
   }, []);
 
   useEffect(() => {
-    const controller = new AbortController();
-    loadStockServicesIndex(controller.signal).then((payload) => {
-      if (!controller.signal.aborted) setStockServicesIndex(payload);
+    // No abort on cleanup: the loader shares one in-flight request across
+    // every caller, so aborting it here would hand the next caller a null index.
+    let cancelled = false;
+    loadStockServicesIndex().then((payload) => {
+      if (!cancelled) setStockServicesIndex(payload);
     });
-    return () => controller.abort();
+    return () => {
+      cancelled = true;
+    };
   }, []);
 
   const currentState = state.symbol === symbol && state.reloadKey === reloadKey;

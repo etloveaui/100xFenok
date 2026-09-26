@@ -188,12 +188,13 @@ export default function PortfolioClient({ initialTicker = "" }: { initialTicker?
   }, [initialTicker]);
 
   useEffect(() => {
-    const controller = new AbortController();
+    // No abort on cleanup: both loaders share one in-flight request across
+    // every caller, so aborting it here would hand the next caller a null index.
     let cancelled = false;
 
     void Promise.all([
-      loadStockConnectionIndex(controller.signal),
-      loadStockServicesIndex(controller.signal),
+      loadStockConnectionIndex(),
+      loadStockServicesIndex(),
     ]).then(([stockIndex, stockServices]) => {
       if (cancelled) return;
       setConnectionIndex(stockIndex);
@@ -202,7 +203,6 @@ export default function PortfolioClient({ initialTicker = "" }: { initialTicker?
 
     return () => {
       cancelled = true;
-      controller.abort();
     };
   }, []);
 
