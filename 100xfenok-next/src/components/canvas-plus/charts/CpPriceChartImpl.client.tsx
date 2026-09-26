@@ -279,8 +279,8 @@ function CpW4PriceSectionInner(props: CpPriceChartProps) {
           />
         </div>
         <StatStrip className="mx-4 mb-3 flex-wrap">
-          <div className="min-w-[46%] flex-1 sm:min-w-[30%]"><Stat label={`${stats.rangeLabel} 고가`} value={formatCurrency(stats.high, currency)} sub={`현재가 대비 ${formatSignedPercent(stats.highGap)}`} /></div>
-          <div className="min-w-[46%] flex-1 sm:min-w-[30%]"><Stat label={`${stats.rangeLabel} 저가`} value={formatCurrency(stats.low, currency)} sub={`현재가 대비 ${formatSignedPercent(stats.lowGain)}`} /></div>
+          <div className="min-w-[46%] flex-1 sm:min-w-[30%]"><Stat label={`${stats.rangeLabel} 고가`} value={formatCurrency(stats.high, currency)} sub={`최근 종가 대비 ${formatSignedPercent(stats.highGap)}`} /></div>
+          <div className="min-w-[46%] flex-1 sm:min-w-[30%]"><Stat label={`${stats.rangeLabel} 저가`} value={formatCurrency(stats.low, currency)} sub={`최근 종가 대비 ${formatSignedPercent(stats.lowGain)}`} /></div>
           <div className="min-w-[46%] flex-1 sm:min-w-[30%]"><Stat label={`${stats.rangeLabel} 수익률`} value={formatSignedPercent(stats.periodReturn)} sub={`${range} 보유 기준`} /></div>
         </StatStrip>
       </Panel>
