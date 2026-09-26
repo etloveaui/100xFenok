@@ -88,32 +88,8 @@ type NavItem = { id: ShellPage; group: NavGroupName; label: string; href: string
 type MobileTabId = ShellPage | "more";
 type NavGroup = { label: NavGroupName; items: NavItem[] };
 
-const NAV_ITEMS: NavItem[] = [
-  {
-    id: "changes",
-    group: "오늘",
-    label: "무엇이 바뀌었나",
-    href: ROUTES.changes,
-    icon: (
-      <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round">
-        <path d="M4 7h10.5M11.5 4l3 3-3 3" />
-        <path d="M16 13H5.5M8.5 10l-3 3 3 3" />
-      </svg>
-    ),
-  },
-  {
-    id: "events",
-    group: "시장",
-    label: "이벤트",
-    href: ROUTES.marketEvents,
-    icon: (
-      <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round">
-        <rect x="3" y="4.5" width="14" height="12.5" rx="2" />
-        <path d="M3 8.5h14M7 3v3M13 3v3" />
-        <path d="M6.5 12h2M11.5 12h2" />
-      </svg>
-    ),
-  },
+/** Nav items in their order inside each group; groups render in NAV_GROUP_ORDER. */
+const NAV: NavItem[] = [
   {
     id: "explore",
     group: "오늘",
@@ -124,6 +100,18 @@ const NAV_ITEMS: NavItem[] = [
         <path d="M3.5 9.2L10 3.8l6.5 5.4" strokeLinecap="round" strokeLinejoin="round" />
         <path d="M5.4 8.6v7.2h9.2V8.6" strokeLinecap="round" strokeLinejoin="round" />
         <path d="M8.4 15.8v-4.2h3.2v4.2" strokeLinecap="round" strokeLinejoin="round" />
+      </svg>
+    ),
+  },
+  {
+    id: "changes",
+    group: "오늘",
+    label: "무엇이 바뀌었나",
+    href: ROUTES.changes,
+    icon: (
+      <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round">
+        <path d="M4 7h10.5M11.5 4l3 3-3 3" />
+        <path d="M16 13H5.5M8.5 10l-3 3 3 3" />
       </svg>
     ),
   },
@@ -153,6 +141,19 @@ const NAV_ITEMS: NavItem[] = [
     ),
   },
   {
+    id: "events",
+    group: "시장",
+    label: "이벤트",
+    href: ROUTES.marketEvents,
+    icon: (
+      <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round">
+        <rect x="3" y="4.5" width="14" height="12.5" rx="2" />
+        <path d="M3 8.5h14M7 3v3M13 3v3" />
+        <path d="M6.5 12h2M11.5 12h2" />
+      </svg>
+    ),
+  },
+  {
     id: "sectors",
     group: "시장",
     label: "섹터",
@@ -167,15 +168,15 @@ const NAV_ITEMS: NavItem[] = [
     ),
   },
   {
-    id: "etfs",
-    group: "발견",
-    label: "ETF",
-    href: ROUTES.etfs,
+    id: "chart",
+    group: "시장",
+    label: CHART_NAV_LABEL,
+    href: CHART_ROUTE,
     icon: (
-      <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinejoin="round">
-        <path d="M10 2.8l7 3.8-7 3.8-7-3.8 7-3.8z" />
-        <path d="M3 10l7 3.8 7-3.8" strokeLinecap="round" />
-        <path d="M3 13.4l7 3.8 7-3.8" strokeLinecap="round" />
+      <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="1.7">
+        <rect x="3" y="3.5" width="14" height="13" rx="2" />
+        <path d="M6 12l2.4-3 2.2 2 3.4-4.2" strokeLinecap="round" strokeLinejoin="round" />
+        <path d="M6 15h8" strokeLinecap="round" />
       </svg>
     ),
   },
@@ -189,6 +190,19 @@ const NAV_ITEMS: NavItem[] = [
         <path d="M3 6h9M15 6h2M3 14h2M9 14h8" />
         <circle cx="13.5" cy="6" r="2" fill="var(--c-panel)" />
         <circle cx="6.5" cy="14" r="2" fill="var(--c-panel)" />
+      </svg>
+    ),
+  },
+  {
+    id: "etfs",
+    group: "발견",
+    label: "ETF",
+    href: ROUTES.etfs,
+    icon: (
+      <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinejoin="round">
+        <path d="M10 2.8l7 3.8-7 3.8-7-3.8 7-3.8z" />
+        <path d="M3 10l7 3.8 7-3.8" strokeLinecap="round" />
+        <path d="M3 13.4l7 3.8 7-3.8" strokeLinecap="round" />
       </svg>
     ),
   },
@@ -219,32 +233,6 @@ const NAV_ITEMS: NavItem[] = [
     ),
   },
   {
-    id: "chart",
-    group: "시장",
-    label: CHART_NAV_LABEL,
-    href: CHART_ROUTE,
-    icon: (
-      <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="1.7">
-        <rect x="3" y="3.5" width="14" height="13" rx="2" />
-        <path d="M6 12l2.4-3 2.2 2 3.4-4.2" strokeLinecap="round" strokeLinejoin="round" />
-        <path d="M6 15h8" strokeLinecap="round" />
-      </svg>
-    ),
-  },
-  {
-    id: "research",
-    group: "도구",
-    label: "리서치",
-    href: ROUTES.research,
-    icon: (
-      <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round">
-        <path d="M5 3.5h7.5L15.5 6.5v10h-10.5z" />
-        <path d="M12 3.5v3.5h3.5" />
-        <path d="M7.5 10.5h5M7.5 13.5h5" />
-      </svg>
-    ),
-  },
-  {
     id: "ib",
     group: "도구",
     label: "무한매수",
@@ -268,27 +256,20 @@ const NAV_ITEMS: NavItem[] = [
       </svg>
     ),
   },
+  {
+    id: "research",
+    group: "도구",
+    label: "리서치",
+    href: ROUTES.research,
+    icon: (
+      <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round">
+        <path d="M5 3.5h7.5L15.5 6.5v10h-10.5z" />
+        <path d="M12 3.5v3.5h3.5" />
+        <path d="M7.5 10.5h5M7.5 13.5h5" />
+      </svg>
+    ),
+  },
 ];
-
-/** Order inside each group; groups render in NAV_GROUP_ORDER. */
-const NAV_ORDER: ShellPage[] = [
-  "explore",
-  "changes",
-  "market",
-  "regime",
-  "events",
-  "sectors",
-  "chart",
-  "screener",
-  "etfs",
-  "superinvestors",
-  "portfolio",
-  "ib",
-  "vr",
-  "research",
-];
-
-const NAV: NavItem[] = NAV_ORDER.map((id) => NAV_ITEMS.find((item) => item.id === id)!);
 
 const MORE_TAB: Omit<NavItem, "id" | "group"> & { id: "more" } = {
   id: "more",
@@ -306,7 +287,19 @@ const MORE_TAB: Omit<NavItem, "id" | "group"> & { id: "more" } = {
 const PRIMARY_TAB_IDS: MobileTabId[] = ["explore", "market", "screener", "portfolio", "more"];
 /** Mobile tab labels where the tab names an area rather than its first page. */
 const TAB_LABELS: Partial<Record<ShellPage, string>> = { market: "시장" };
-const MORE_TAB_IDS: ShellPage[] = NAV.map((item) => item.id).filter((id) => !PRIMARY_TAB_IDS.includes(id));
+/** Every nav page except the primary tabs, in nav order. */
+const MORE_TAB_IDS: ShellPage[] = [
+  "changes",
+  "regime",
+  "events",
+  "sectors",
+  "chart",
+  "etfs",
+  "superinvestors",
+  "ib",
+  "vr",
+  "research",
+];
 /**
  * Which bottom tab lights up for a page. A market page (시황, 이벤트, 섹터, 차트)
  * lights 시장, the same area its in-page 밸류에이션·시황·이벤트·섹터 pills name,
