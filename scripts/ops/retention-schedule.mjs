@@ -46,7 +46,7 @@ export function acceptedReport(report) {
     && restore?.confirmed?.length === 28
     && ['unconfirmed','failed','missing','unsupported'].every(k => !restore[k]?.length)
     && Number.isFinite(report.duration?.first_disable_to_restore_seconds)
-    && report.duration.first_disable_to_restore_seconds <= 900;
+    && report.duration.first_disable_to_restore_seconds <= 1200;
 }
 export function finish(state, {runId, report, now}) {
   const next = structuredClone(state);
@@ -57,7 +57,7 @@ export function finish(state, {runId, report, now}) {
   a.finished_at = now;
   a.outcome = report?.result ?? 'missing_report';
   a.reason = report?.reason ?? null;
-  a.busy_lanes = (report?.preflight?.offenders ?? []).map(row => row.file);
+  a.busy_lanes = [...new Set([...(report?.preflight?.offenders ?? []), ...(report?.drain?.offenders ?? [])].map(row => row.file))];
   if (acceptedReport(report)) {
     a.bytes_freed = (report.apply.payloads?.bytes ?? 0) + (report.apply.manifests?.bytes ?? 0);
     a.pause_seconds = report.duration.first_disable_to_restore_seconds;

@@ -932,7 +932,7 @@ try {
           if (fail.runList) return { ok: false };
           const rest = b.split("/actions/workflows/")[1] ?? "";
           const file = rest.split("/")[0];
-          return { ok: true, stdout: JSON.stringify({ total_count: counts[file] ?? 0 }) };
+          return { ok: true, stdout: JSON.stringify({ total_count: typeof counts[file] === "function" ? counts[file]() : (counts[file] ?? 0) }) };
         }
         throw new Error(`unscripted gh call: ${args.join(" ")}`);
       };
@@ -1017,6 +1017,24 @@ try {
       assert.equal(r.reason, "recovery_incomplete");
       assert.deepEqual(box.journal.vendored_states, [{file: "b.yml", state: "active"}], "persisted original records survive repeated failures");
     }
+    // A busy publisher is disabled only for NEW dispatches, then allowed to drain.
+    let reads=0, applyCalls=0;
+    gh=makeDriver({workflows:mkWf(['a.yml'],'active'),journalBox:{number:7,journal:null},counts:{'a.yml':()=>++reads<=5?1:0}});
+    const common={repo:'o/r',io,deps:{gh,now:clock,sleepImpl:sleepAdvance,
+      publishers:{publishers:[{file:'a.yml',name:'a'}],referenceOnly:[],unclassified:[]},
+      execFileImpl:async()=>{applyCalls++;return {stdout:JSON.stringify({result:'retention_batch_applied'})};}}};
+    const drained=await runWindow(common);
+    assert.equal(drained.result,'retention_window_applied');assert.equal(applyCalls,1);
+    assert.equal(drained.drain.drained,true);assert.equal(gh.workflows[0].state,'active');
+    const disableIndex=gh.calls.findIndex(c=>c[0]==='workflow'&&c[1]==='disable');
+    assert.ok(disableIndex>=0 && gh.calls.slice(disableIndex+1).some(c=>c[0]==='api'),'drain happens after disabling new dispatches');
+    // Persistent in-flight work is not cancelled: at ten minutes restore and defer.
+    gh=makeDriver({workflows:mkWf(['a.yml'],'active'),journalBox:{number:7,journal:null},counts:{'a.yml':1}});
+    const timedOut=await runWindow({...common,deps:{...common.deps,gh,execFileImpl:async()=>{throw new Error('must not apply');}}});
+    assert.equal(timedOut.result,'retention_window_deferred');assert.equal(timedOut.reason,'DRAIN_TIMEOUT');
+    assert.equal(timedOut.drain.drained,false);assert.ok(timedOut.drain.wait_seconds>=600 && timedOut.drain.wait_seconds<=615);
+    assert.equal(gh.workflows[0].state,'active');assert.deepEqual(timedOut.restore.unconfirmed,[]);
+    assert.ok(!gh.calls.some(c=>c[0]==='run'&&c[1]==='cancel'));
     console.log("retention safety 16 ok (window: failed list, foreign lease, partial-disable restore, journal survival)");
   }
 
@@ -1071,7 +1089,7 @@ try {
       restore:{confirmed:Array(28).fill('p'),unconfirmed:[],failed:[]},duration:{first_disable_to_restore_seconds:120},
       apply:{result:'retention_batch_applied',apply_exit_code:0,verification:'ok',verification_datasets:Object.fromEntries(Array.from({length:26},(_,i)=>[i,{missing_referenced_payloads:[]}])),payloads:{bytes:100},manifests:{bytes:20}}};
     assert.equal(acceptedReport(report),true);
-    for(const bad of [null,{result:'retention_window_deferred'}, {...report,restore:{confirmed:[],unconfirmed:['p']}}, {...report,duration:{first_disable_to_restore_seconds:901}}, {...report,apply:{...report.apply,verification:'failed'}}]) assert.equal(acceptedReport(bad),false);
+    for(const bad of [null,{result:'retention_window_deferred'}, {...report,restore:{confirmed:[],unconfirmed:['p']}}, {...report,duration:{first_disable_to_restore_seconds:1201}}, {...report,apply:{...report.apply,verification:'failed'}}]) assert.equal(acceptedReport(bad),false);
     state=finish(state,{now:'2026-09-26T16:02:00Z',runId:'success',report});
     assert.equal(state.weekly_enabled,true);assert.equal(state.first_success.bytes_freed,120);
     assert.equal(claim(state,{now:'2026-09-26T16:30:00Z',runId:'after'}).run,false);

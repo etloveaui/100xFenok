@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 // retention-window.mjs — revision 2 (fh-598 corrections applied).
 //
-// One deadline begins BEFORE the first disable (≤900 s): preflight, drain, the gated
+// One deadline begins BEFORE the first disable (≤1200 s): preflight, drain, the gated
 // apply step and the FULL RESTORE run inside it; the apply child receives
 // `deadline − reserve` and is killed and reaped before restoration so a still-deleting
 // child cannot outlive the window.
@@ -33,9 +33,9 @@ export const JOURNAL_TITLE = "100xFenok R2 retention sweep state";
 export const JOURNAL_MARKER = "[retention-window-journal]";
 export const NONTERMINAL_STATUSES = Object.freeze(["queued", "in_progress", "requested", "waiting", "pending"]);
 export const SUPPORTED_WORKFLOW_STATES = Object.freeze(["active", "disabled_manually", "disabled_inactivity"]);
-export const DEFAULT_DEADLINE_SECONDS = 900;
+export const DEFAULT_DEADLINE_SECONDS = 1200;
 export const DEFAULT_RESERVE_SECONDS = 150;
-export const DEFAULT_DRAIN_CAP_SECONDS = 240;
+export const DEFAULT_DRAIN_CAP_SECONDS = 600;
 const DRAIN_POLL_SECONDS = 15;
 const GH_CALL_MIN_TIMEOUT_MS = 5_000;
 const PUBLISH_INVOCATION = /node\s+scripts\/publish-cloud-data-generation\.mjs/;
@@ -119,7 +119,7 @@ export function parseJournalComment(text) {
 
 // --- gh driver (injectable; every call carries an enforced timeout) -----------
 
-function createGhDriver({ execFileImpl = promisify(execFile), repo = null, now = () => Date.now(), reserveFloorMs = 0, hardDeadline = now() + 900_000 } = {}) {
+function createGhDriver({ execFileImpl = promisify(execFile), repo = null, now = () => Date.now(), reserveFloorMs = 0, hardDeadline = now() + 1200_000 } = {}) {
   const repoArgs = repo ? ["--repo", repo] : [];
   const call = async (args, { allowFailure = false, deadline = null, reserveMs = reserveFloorMs } = {}) => {
     const remaining = Math.floor(Math.min(deadline ?? hardDeadline, hardDeadline) - now() - reserveMs);
@@ -368,11 +368,8 @@ export async function runWindow({
   }
   const busy = summarizeRunCounts({ countsByFile: preCounts });
   report.preflight = { offenders: busy, pending_recovery: 0, reference_only: derived.referenceOnly.length };
-  if (busy.length > 0) {
-    claimedJournal = { ...claimedJournal, lease: { ...claimedJournal.lease, released_at: new Date(now()).toISOString() } };
-    journalIssue = await upsertJournal({ gh, number: journalIssue, journal: claimedJournal, io });
-    return { ...report, result: "retention_window_deferred", reason: "publishers_busy" };
-  }
+  // Busy lanes are allowed here: disable new dispatches globally, then drain
+  // existing runs without cancelling them. Timeout restores first and defers.
 
   // Capture exact enabled states (fresh list; unsupported states fail closed).
   const captured = await workflowStates({ gh, deadline: deadlineMs - reserveMs });
@@ -418,10 +415,18 @@ export async function runWindow({
     let drained = false;
     let verifications = 0;
     let zeroStreak = 0;
+    let drainOffenders = busy;
     while (now() < drainDeadline) {
-      const counts = await nonterminalCounts({ gh, repo: workflowRepo, publisherFiles, deadline: Math.min(drainDeadline, deadlineMs - reserveMs) });
+      let counts;
+      try {
+        counts = await nonterminalCounts({ gh, repo: workflowRepo, publisherFiles, deadline: Math.min(drainDeadline, deadlineMs - reserveMs) });
+      } catch (error) {
+        if (now() + GH_CALL_MIN_TIMEOUT_MS >= drainDeadline) break;
+        throw error;
+      }
       verifications += 1;
       const offenders = summarizeRunCounts({ countsByFile: counts });
+      drainOffenders = offenders;
       if (offenders.length === 0) {
         zeroStreak += 1;
         if (zeroStreak >= 2) { drained = true; break; }
@@ -430,7 +435,7 @@ export async function runWindow({
       }
       await sleepImpl(clampSleepMs(DRAIN_POLL_SECONDS * 1000, drainDeadline, 5_000));
     }
-    report.drain = { drained, verifications, wait_seconds: Math.round((now() - (firstDisableAt ?? now())) / 1000) };
+    report.drain = { drained, verifications, offenders: drainOffenders, wait_seconds: Math.round((now() - (firstDisableAt ?? now())) / 1000) };
     if (!drained) throw Object.assign(new Error("DRAIN_TIMEOUT"), { code: "DRAIN_TIMEOUT" });
 
     // Apply with enforced timeout; on timeout the child is SIGKILLed and reaped by
@@ -502,6 +507,7 @@ export async function runWindow({
   const applyResult = report.apply?.result ?? null;
   if (restoreIncomplete) report.result = "retention_window_aborted";
   else if (applyResult === "retention_batch_applied" || applyResult === "retention_batch_noop") report.result = "retention_window_applied";
+  else if (report.apply?.reason === "DRAIN_TIMEOUT") report.result = "retention_window_deferred";
   else if (applyResult === "retention_batch_partial") report.result = "retention_window_partial";
   else report.result = "retention_window_aborted";
   if (report.reason === null && report.result !== "retention_window_applied") {
