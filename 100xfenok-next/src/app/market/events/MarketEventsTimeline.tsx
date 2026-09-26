@@ -326,9 +326,12 @@ function packChips(events: TimelineEvent[], startIso: string): Array<{ event: Ti
   });
 }
 
-function macroLaneFreshness(macroLoaded: boolean, macroCalendar: MacroCalendar | null): EvidenceRailFreshness {
+function macroLaneFreshness(macroLoaded: boolean, macroCalendar: MacroCalendar | null, uncoveredFrom: string | null): EvidenceRailFreshness {
   if (!macroLoaded) return "pending";
   if (!macroCalendar) return "error";
+  // A mirror that stops inside the window leaves its later days unknown,
+  // however recently it was generated.
+  if (uncoveredFrom !== null) return "stale";
   return isStaleAsOf(dateOnly(macroCalendar.generatedAt), MACRO_CALENDAR_STALE_AFTER_DAYS) ? "stale" : "fresh";
 }
 
@@ -415,11 +418,13 @@ export default function MarketEventsTimeline({ loaded, earnings, actions, splits
       const placed = packChips(events, windowDef.startIso);
       const maxSlots = Math.max(1, ...placed.map((item) => item.slot + 1));
       const failed = lane.macro ? macroLoaded && !macroCalendar : Boolean(doc?.load_failed);
-      const freshness = lane.macro ? macroLaneFreshness(macroLoaded, macroCalendar) : laneFreshness(doc, loaded);
+      const coverageEnd = lane.macro ? macroCalendar?.coverageEnd ?? null : null;
+      const uncoveredFrom = coverageEnd !== null && coverageEnd < windowDef.endIso ? coverageEnd : null;
+      const freshness = lane.macro ? macroLaneFreshness(macroLoaded, macroCalendar, uncoveredFrom) : laneFreshness(doc, loaded);
       const asOf = lane.macro
         ? (dateOnly(macroCalendar?.generatedAt ?? null) ? `${dateOnly(macroCalendar?.generatedAt ?? null)} (일정)` : "원천 기준일 미제공")
         : laneAsOf(doc);
-      return { lane, doc, events, placed, maxSlots, failed, freshness, asOf };
+      return { lane, doc, events, placed, maxSlots, failed, freshness, asOf, uncoveredFrom };
     });
   }, [loaded, earnings, actions, ipoCalendar, macroLoaded, macroCalendar, windowDef]);
 
@@ -472,7 +477,7 @@ export default function MarketEventsTimeline({ loaded, earnings, actions, splits
                 <span key={week} className="num truncate pr-2">{week}</span>
               ))}
             </div>
-            {laneViews.map(({ lane, events, placed, maxSlots, failed, freshness, asOf }) => {
+            {laneViews.map(({ lane, events, placed, maxSlots, failed, freshness, asOf, uncoveredFrom }) => {
               const pendingLane = lane.macro ? !macroLoaded : !loaded;
               return (
                 <div key={lane.id} className="border-t border-slate-100" data-timeline-lane={lane.id}>
@@ -543,7 +548,9 @@ export default function MarketEventsTimeline({ loaded, earnings, actions, splits
                     freshness={freshness}
                     source={lane.sourceLabel}
                     asOf={asOf}
-                    coverage={failed ? "수집 실패 · 0건" : `앞으로 4주 ${eventWeight(events).toLocaleString("ko-KR")}건`}
+                    coverage={failed
+                      ? "수집 실패 · 0건"
+                      : `앞으로 4주 ${eventWeight(events).toLocaleString("ko-KR")}건${uncoveredFrom === null ? "" : uncoveredFrom <= windowDef.startIso ? " · 캘린더 수록 기간 지남" : ` · ${shortMd(uncoveredFrom)}부터 미수록`}`}
                     next={
                       failed
                         ? "수집 시 자동 복구"
