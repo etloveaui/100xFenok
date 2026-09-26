@@ -231,10 +231,6 @@ function CpW4PriceSectionInner(props: CpPriceChartProps) {
   const latestClose = stats.latestClose;
   const annualRows = annualReturns.slice(0, 8);
   const indexRows = indexComparisons.slice(0, 6);
-  const skippedBlocks = [
-    annualRows.length === 0 ? "연도별 수익률" : null,
-    indexRows.length === 0 ? "동일기간 지수 대비" : null,
-  ].filter((item): item is string => Boolean(item));
 
   if (stats.sortedCount === 0) {
     return (
@@ -264,23 +260,14 @@ function CpW4PriceSectionInner(props: CpPriceChartProps) {
       data-chart-range={range}
       aria-label={`${symbol ?? title} 가격 차트 구성`}
     >
+      {/* The chart leads: the card around this section already carries the
+          "가격 차트" title and range buttons, so the panel opens on the range
+          verdict and the candles, and the three range figures follow them.
+          The latest session's open/high/low/volume live in the table below
+          once, not also as stat cells. */}
       <Panel>
-        <PanelHeader eyebrow={`Price · ${stats.rangeLabel}`} title={`${symbol ?? title} 가격 위치`} />
-        <p className="px-4 py-2 text-[13px] font-semibold text-slate-900">{verdict}</p>
-        <StatStrip className="mx-4 my-2 flex-wrap">
-          <div className="min-w-[46%] flex-1 sm:min-w-[30%]"><Stat label={`${stats.rangeLabel} 고가`} value={formatCurrency(stats.high, currency)} sub={`현재가 대비 ${formatSignedPercent(stats.highGap)}`} /></div>
-          <div className="min-w-[46%] flex-1 sm:min-w-[30%]"><Stat label={`${stats.rangeLabel} 저가`} value={formatCurrency(stats.low, currency)} sub={`현재가 대비 ${formatSignedPercent(stats.lowGain)}`} /></div>
-          <div className="min-w-[46%] flex-1 sm:min-w-[30%]"><Stat label={`${stats.rangeLabel} 수익률`} value={formatSignedPercent(stats.periodReturn)} sub={`${range} 보유 기준`} /></div>
-          <div className="min-w-[46%] flex-1 sm:min-w-[30%]"><Stat label="최근 거래일 시가" value={formatCurrency(isFiniteNumber(latest?.open) ? latest.open : null, currency)} /></div>
-          <div className="min-w-[46%] flex-1 sm:min-w-[30%]"><Stat label="최근 거래일 고가" value={formatCurrency(isFiniteNumber(latest?.high) ? latest.high : null, currency)} /></div>
-          <div className="min-w-[46%] flex-1 sm:min-w-[30%]"><Stat label="최근 거래일 저가" value={formatCurrency(isFiniteNumber(latest?.low) ? latest.low : null, currency)} /></div>
-          <div className="min-w-[46%] flex-1 sm:min-w-[30%]"><Stat label="최근 거래일 거래량" value={formatVolume(isFiniteNumber(latest?.volume) ? latest.volume : null)} sub={`10일 평균 ${formatVolume(stats.averageVolume)}`} /></div>
-        </StatStrip>
-      </Panel>
-
-      <Panel>
-        <PanelHeader eyebrow="Price Action · 가격 · 거래량" title="가격 · 거래량" />
-        <p className="px-4 pt-2 text-[12px] text-slate-500" aria-label="차트 범례">상승 마감 · 하락 마감 · 거래량 — 거래량은 강도만, 방향은 캔들이 말합니다</p>
+        <p className="px-4 pt-3 text-[13px] font-semibold text-slate-900">{verdict}</p>
+        <p className="px-4 pt-1 text-[12px] text-slate-500" aria-label="차트 범례">상승 마감 · 하락 마감 · 거래량 — 거래량은 강도만, 방향은 캔들이 말합니다</p>
         <div className="px-4 py-2">
           <CpPriceChartCore
             {...props}
@@ -291,11 +278,20 @@ function CpW4PriceSectionInner(props: CpPriceChartProps) {
             volumeTone="muted"
           />
         </div>
+        <StatStrip className="mx-4 mb-3 flex-wrap">
+          <div className="min-w-[46%] flex-1 sm:min-w-[30%]"><Stat label={`${stats.rangeLabel} 고가`} value={formatCurrency(stats.high, currency)} sub={`현재가 대비 ${formatSignedPercent(stats.highGap)}`} /></div>
+          <div className="min-w-[46%] flex-1 sm:min-w-[30%]"><Stat label={`${stats.rangeLabel} 저가`} value={formatCurrency(stats.low, currency)} sub={`현재가 대비 ${formatSignedPercent(stats.lowGain)}`} /></div>
+          <div className="min-w-[46%] flex-1 sm:min-w-[30%]"><Stat label={`${stats.rangeLabel} 수익률`} value={formatSignedPercent(stats.periodReturn)} sub={`${range} 보유 기준`} /></div>
+        </StatStrip>
       </Panel>
 
       <div className="grid gap-4 lg:grid-cols-2">
         <Panel>
-          <PanelHeader eyebrow={formatDateLabel(latest?.time)} title="최근 거래일 상세" right={<span className="text-[12px] text-slate-500">정규장</span>} />
+          <PanelHeader
+            eyebrow={formatDateLabel(latest?.time)}
+            title="최근 거래일 상세"
+            right={<span className="text-[12px] text-slate-500">10일 평균 거래량 {formatVolume(stats.averageVolume)}</span>}
+          />
           <div className="overflow-x-auto px-4 py-2">
             <table className="w-full min-w-[560px] text-[12px]">
               <thead>
@@ -355,7 +351,7 @@ function CpW4PriceSectionInner(props: CpPriceChartProps) {
         </Panel>
       </div>
 
-      {(annualRows.length > 0 || indexRows.length > 0 || skippedBlocks.length > 0) ? (
+      {(annualRows.length > 0 || indexRows.length > 0) ? (
         <div className="grid gap-4 lg:grid-cols-2">
           {annualRows.length > 0 ? (
             <Panel>
@@ -383,9 +379,6 @@ function CpW4PriceSectionInner(props: CpPriceChartProps) {
             </Panel>
           ) : null}
 
-          {skippedBlocks.length > 0 ? (
-            <p className="px-1 py-1 text-[12px] text-slate-500">소스 미전달로 생략: {skippedBlocks.join(", ")}</p>
-          ) : null}
         </div>
       ) : null}
 

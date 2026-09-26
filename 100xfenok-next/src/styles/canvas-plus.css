@@ -975,7 +975,11 @@
 
 .cp-stock-chart-card {
   display: grid;
+  /* One column that never grows past the card: a figure row inside the price
+     section must wrap or scroll, not widen the page's main column. */
+  grid-template-columns: minmax(0, 1fr);
   gap: 14px;
+  min-width: 0;
   padding: 16px;
 }
 
