@@ -34,6 +34,17 @@
   color: var(--fnk-neutral-500);
 }
 
+/* While loading only (the span carries data-loading until the sentence lands):
+ * reserve its lines so the panels below do not move — measured +56px at
+ * 768 @2283ms. Scoped to the marker, so the loaded span keeps its natural box;
+ * display:block never applies after load. */
+@media (max-width: 1023px) {
+  .mv-verdict[data-loading="true"] {
+    display: block;
+    min-height: 4lh;
+  }
+}
+
 /* One provenance line for the whole page: worst state of the four panels with
  * the oldest date among them. Full-width inside .mv-head so it owns its row. */
 .mv-prov {

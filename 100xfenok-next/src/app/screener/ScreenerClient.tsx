@@ -2816,7 +2816,7 @@ export default function ScreenerClient({
         </section>
       )}
 
-      {screenerDataState.status !== "ready" && !(canvasPlusPreview && screenerDataState.status === "partial") ? (
+      {screenerDataState.status !== "ready" && screenerDataState.status !== "pending" && !(canvasPlusPreview && screenerDataState.status === "partial") ? (
         canvasPlusPreview ? (
           <section className="cp-card cp-screener-data-state-card" data-canvas-plus-screener-data-state="true">
             <DataStateNotice

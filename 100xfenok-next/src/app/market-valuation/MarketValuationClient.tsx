@@ -946,7 +946,7 @@ export default function MarketValuationClient({
       <div className="mv-head">
         <div>
           <h1 className="mv-title">시장 밸류에이션</h1>
-          <span className="mv-verdict">{verdictSentence(sp500)}</span>
+          <span className="mv-verdict" data-loading={!sp500 || sp500.pe.current === null ? "true" : undefined}>{verdictSentence(sp500)}</span>
         </div>
         <div className="mv-tabs">
           <MarketSectionNav active="valuation" />

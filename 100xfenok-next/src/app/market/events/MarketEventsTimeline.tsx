@@ -444,22 +444,22 @@ export default function MarketEventsTimeline({ loaded, earnings, actions, splits
 
   if (!loaded && !macroLoaded) {
     return (
-      <div data-market-events-timeline="true" aria-label="이벤트 타임라인">
+      <section data-market-events-timeline="true" aria-label="이벤트 타임라인">
         <Panel loading>
           <span aria-hidden="true" />
         </Panel>
-      </div>
+      </section>
     );
   }
 
   if (loaded && !earnings && !actions && !splits && !ipoCalendar && macroLoaded && !macroCalendar) {
     return (
-      <div data-market-events-timeline="true" aria-label="이벤트 타임라인">
+      <section data-market-events-timeline="true" aria-label="이벤트 타임라인">
         <Panel error errorDetail="이벤트 데이터를 읽지 못했습니다." onRetry={onRetry} retryLabel="다시 읽기">
           <PanelHeader eyebrow="Timeline Gantt" title="앞으로 4주" />
           <EmptyState reason="이벤트 타임라인을 표시할 수 없습니다" nextRefresh="다음 수집 시 자동 복구됩니다" />
         </Panel>
-      </div>
+      </section>
     );
   }
 

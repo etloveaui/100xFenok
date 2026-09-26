@@ -669,7 +669,7 @@ export default function ChangesClient() {
       <div className="grid gap-4 md:grid-cols-3">
         <Panel
           loading={!settled}
-          className={!settled ? "min-h-[18rem]" : undefined}
+          className={!settled ? "min-h-[7.5rem]" : undefined}
           empty={settled && rows.length === 0 && !allMissing}
           emptyReason="집계할 변화가 없습니다"
           emptyNextRefresh="다음 수집 시"

@@ -221,7 +221,7 @@ function SectorFlowPanel({
   return (
     <Panel
       loading={loading}
-      className={loading ? "min-h-[22rem]" : undefined}
+      className={loading ? "min-h-[36rem]" : undefined}
       empty={empty}
       emptyReason={failed || !ready ? "S&P 500 대비 섹터 초과 성과를 불러오지 못했습니다" : "표시할 섹터 성과 데이터가 없습니다"}
       emptyNextRefresh="다음 마감 후 갱신"
@@ -508,7 +508,7 @@ function SectorsSpreadStrip({
   return (
     <Panel
       loading={loading}
-      className={loading ? "min-h-[20rem]" : undefined}
+      className={loading ? "min-h-[31.5rem] sm:min-h-[15.5rem]" : undefined}
       empty={!loading && !ready}
       emptyReason={failed ? "S&P 500 대비 섹터 분포를 불러오지 못했습니다" : "표시할 상대 모멘텀 자료가 없습니다"}
       emptyNextRefresh="다음 마감 후 갱신"

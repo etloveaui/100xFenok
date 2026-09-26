@@ -58,6 +58,12 @@
   text-wrap: pretty;
 }
 
+/* While loading only (aria-busy is set at SectorsClient.tsx:760; the read
+ * sentence then replaces two skeleton lines and grew ~56px at 1440/768). */
+.sec-title[aria-busy="true"] {
+  min-height: 4lh;
+}
+
 .sec-title-skeleton {
   display: block;
   height: 0.8em;
@@ -81,6 +87,10 @@
   .sec-title {
     font-size: 17px;
     min-height: 3lh;
+  }
+  .sec-title[aria-busy="true"] {
+    /* The measurement at 320 grew +49px (~2 lines) while loading. */
+    min-height: 5lh;
   }
 }
 

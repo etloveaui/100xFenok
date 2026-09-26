@@ -126,6 +126,25 @@ async function prepareDynamicRoute(page, route) {
     await page.locator(readySelector).filter({ visible: true }).first().waitFor({ state: "visible", timeout: 45_000 });
   }
 
+  // Data-readiness waits for routes whose checks sample fetched content
+  // (bounded; a timeout leaves the previous failure mode intact). The analyze
+  // screener sets [data-journey-ready] once its rows exist; the stock summary
+  // strip appears only after the detail candidate resolves.
+  if (pathname === "/screener" && isAnalyzeScreenerRoute(route)) {
+    await page.locator('[data-screener-mode="analyze"][data-journey-ready="true"], tr[data-testid="screener-desktop-row"]')
+      .filter({ visible: true })
+      .first()
+      .waitFor({ state: "visible", timeout: 30_000 })
+      .catch(() => {});
+  }
+  if (pathname.startsWith("/stock/") && !route.includes("tab=")) {
+    await page.locator("[data-stock-summary-module], .cp-stock-action-strip--empty")
+      .filter({ visible: true })
+      .first()
+      .waitFor({ state: "visible", timeout: 30_000 })
+      .catch(() => {});
+  }
+
   if (pathname === "/etfs") {
     const filterDetails = page.locator("details").filter({ has: page.locator(".etf-filter-grid") }).first();
     if ((await filterDetails.count()) > 0 && (await filterDetails.getAttribute("open")) === null) {
@@ -2294,7 +2313,10 @@ async function collectRouteChecks(page, route) {
         failures.push({ check: "market-events-timeline-visible", detail: "missing events timeline" });
       }
 
-      const expectedLanes = ["macro-us", "macro-kr", "earnings", "dividend", "data-refresh", "options-expiry"];
+      // PR #96 (8711658823) intentionally hides feedless lanes and prints a
+      // footnote instead (MarketEventsTimeline.tsx:413 filter, :593 note);
+      // the contract follows the rendered set.
+      const expectedLanes = ["macro-us", "earnings", "options-expiry"];
       const actualLanes = lanes.map((node) => node.getAttribute("data-timeline-lane"));
       if (
         lanes.length !== expectedLanes.length ||
