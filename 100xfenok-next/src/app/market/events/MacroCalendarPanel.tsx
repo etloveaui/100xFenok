@@ -87,7 +87,8 @@ export default function MacroCalendarPanel({ loaded, failed, calendar, onRetry }
   const highCount = events.filter((event) => event.importance === "H").length;
   const generatedDay = dateOnly(calendar?.generatedAt ?? null);
   const stale = generatedDay !== null && isStaleAsOf(generatedDay, MACRO_CALENDAR_STALE_AFTER_DAYS, today);
-  const outOfRange = calendar?.coversThrough != null && calendar.coversThrough < horizonEnd;
+  const coverageEnd = calendar?.coverageEnd ?? null;
+  const outOfRange = coverageEnd !== null && coverageEnd < horizonEnd;
   const freshness: EvidenceRailFreshness = !loaded
     ? "pending"
     : failed || !calendar
@@ -106,7 +107,7 @@ export default function MacroCalendarPanel({ loaded, failed, calendar, onRetry }
         onRetry={onRetry}
         retryLabel="다시 읽기"
         empty={loaded && !failed && calendar !== null && events.length === 0}
-        emptyReason={outOfRange ? `캘린더는 ${calendar?.coversThrough}까지만 수록돼 있습니다` : "앞으로 2주 미국 경제 일정이 없습니다"}
+        emptyReason={outOfRange && coverageEnd ? `캘린더는 ${formatKstDayHeading(addDaysIso(coverageEnd, -1))}까지만 수록돼 있습니다` : "앞으로 2주 미국 경제 일정이 없습니다"}
         emptyNextRefresh="캘린더 갱신 시"
       >
         <PanelHeader
