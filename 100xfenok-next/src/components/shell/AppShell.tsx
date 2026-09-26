@@ -8,6 +8,7 @@ import {
   useMemo,
   useRef,
   useState,
+  useSyncExternalStore,
   type ReactNode,
   type Ref,
 } from "react";
@@ -40,6 +41,7 @@ import type { DataState } from "@/lib/data-state";
 import { useModal } from "@/hooks/useModal";
 import { NavItemPending, useNavigationPending } from "@/components/shell/navigation-progress";
 import { normalizeShellPathname, resolveShellRoute } from "@/components/shell/shell-routes";
+import { openCommandPalette } from "@/components/ui/CommandPalette";
 
 /**
  * Product shell (v3 design handoff): desktop = left rail + global top bar +
@@ -72,17 +74,25 @@ export type ShellPage =
   | "alphaScout"
   | "stockAnalyzer"
   | "ib"
-  | "vr";
+  | "vr"
+  | "changes"
+  | "events";
 
-type NavGroupName = "분석" | "도구" | "더보기";
+/**
+ * The rail is grouped by the job a visit is for, not by page type:
+ * 오늘 = what happened, 시장 = understand the market, 발견 = find names,
+ * 내 투자 = my holdings, 도구 = calculators and reading. URLs are unchanged.
+ */
+type NavGroupName = "오늘" | "시장" | "발견" | "내 투자" | "도구";
 type NavItem = { id: ShellPage; group: NavGroupName; label: string; href: string; icon: ReactNode };
 type MobileTabId = ShellPage | "more";
 type NavGroup = { label: NavGroupName; items: NavItem[] };
 
+/** Nav items in their order inside each group; groups render in NAV_GROUP_ORDER. */
 const NAV: NavItem[] = [
   {
     id: "explore",
-    group: "분석",
+    group: "오늘",
     label: EXPLORE_NAV_LABEL,
     href: EXPLORE_ROUTE,
     icon: (
@@ -94,9 +104,21 @@ const NAV: NavItem[] = [
     ),
   },
   {
+    id: "changes",
+    group: "오늘",
+    label: "무엇이 바뀌었나",
+    href: ROUTES.changes,
+    icon: (
+      <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round">
+        <path d="M4 7h10.5M11.5 4l3 3-3 3" />
+        <path d="M16 13H5.5M8.5 10l-3 3 3 3" />
+      </svg>
+    ),
+  },
+  {
     id: "market",
-    group: "분석",
-    label: "시장",
+    group: "시장",
+    label: "밸류에이션",
     href: ROUTES.market,
     icon: (
       <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="1.7">
@@ -107,7 +129,7 @@ const NAV: NavItem[] = [
   },
   {
     id: "regime",
-    group: "분석",
+    group: "시장",
     label: "시황",
     href: ROUTES.regime,
     icon: (
@@ -119,8 +141,21 @@ const NAV: NavItem[] = [
     ),
   },
   {
+    id: "events",
+    group: "시장",
+    label: "이벤트",
+    href: ROUTES.marketEvents,
+    icon: (
+      <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round">
+        <rect x="3" y="4.5" width="14" height="12.5" rx="2" />
+        <path d="M3 8.5h14M7 3v3M13 3v3" />
+        <path d="M6.5 12h2M11.5 12h2" />
+      </svg>
+    ),
+  },
+  {
     id: "sectors",
-    group: "분석",
+    group: "시장",
     label: "섹터",
     href: ROUTES.sectors,
     icon: (
@@ -133,21 +168,21 @@ const NAV: NavItem[] = [
     ),
   },
   {
-    id: "etfs",
-    group: "분석",
-    label: "ETF",
-    href: ROUTES.etfs,
+    id: "chart",
+    group: "시장",
+    label: CHART_NAV_LABEL,
+    href: CHART_ROUTE,
     icon: (
-      <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinejoin="round">
-        <path d="M10 2.8l7 3.8-7 3.8-7-3.8 7-3.8z" />
-        <path d="M3 10l7 3.8 7-3.8" strokeLinecap="round" />
-        <path d="M3 13.4l7 3.8 7-3.8" strokeLinecap="round" />
+      <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="1.7">
+        <rect x="3" y="3.5" width="14" height="13" rx="2" />
+        <path d="M6 12l2.4-3 2.2 2 3.4-4.2" strokeLinecap="round" strokeLinejoin="round" />
+        <path d="M6 15h8" strokeLinecap="round" />
       </svg>
     ),
   },
   {
     id: "screener",
-    group: "분석",
+    group: "발견",
     label: "스크리너",
     href: ROUTES.screener,
     icon: (
@@ -159,8 +194,21 @@ const NAV: NavItem[] = [
     ),
   },
   {
+    id: "etfs",
+    group: "발견",
+    label: "ETF",
+    href: ROUTES.etfs,
+    icon: (
+      <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinejoin="round">
+        <path d="M10 2.8l7 3.8-7 3.8-7-3.8 7-3.8z" />
+        <path d="M3 10l7 3.8 7-3.8" strokeLinecap="round" />
+        <path d="M3 13.4l7 3.8 7-3.8" strokeLinecap="round" />
+      </svg>
+    ),
+  },
+  {
     id: "superinvestors",
-    group: "분석",
+    group: "발견",
     label: "투자자",
     href: ROUTES.superinvestors,
     icon: (
@@ -173,7 +221,7 @@ const NAV: NavItem[] = [
   },
   {
     id: "portfolio",
-    group: "분석",
+    group: "내 투자",
     label: "포트폴리오",
     href: ROUTES.portfolio,
     icon: (
@@ -181,32 +229,6 @@ const NAV: NavItem[] = [
         <rect x="2.5" y="6" width="15" height="10.5" rx="2" />
         <path d="M7 6V4.6c0-.9.6-1.6 1.5-1.6h3c.9 0 1.5.7 1.5 1.6V6" strokeLinecap="round" />
         <path d="M2.5 10.5h15" />
-      </svg>
-    ),
-  },
-  {
-    id: "chart",
-    group: "분석",
-    label: CHART_NAV_LABEL,
-    href: CHART_ROUTE,
-    icon: (
-      <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="1.7">
-        <rect x="3" y="3.5" width="14" height="13" rx="2" />
-        <path d="M6 12l2.4-3 2.2 2 3.4-4.2" strokeLinecap="round" strokeLinejoin="round" />
-        <path d="M6 15h8" strokeLinecap="round" />
-      </svg>
-    ),
-  },
-  {
-    id: "research",
-    group: "분석",
-    label: "리서치",
-    href: ROUTES.research,
-    icon: (
-      <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round">
-        <path d="M5 3.5h7.5L15.5 6.5v10h-10.5z" />
-        <path d="M12 3.5v3.5h3.5" />
-        <path d="M7.5 10.5h5M7.5 13.5h5" />
       </svg>
     ),
   },
@@ -234,6 +256,19 @@ const NAV: NavItem[] = [
       </svg>
     ),
   },
+  {
+    id: "research",
+    group: "도구",
+    label: "리서치",
+    href: ROUTES.research,
+    icon: (
+      <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round">
+        <path d="M5 3.5h7.5L15.5 6.5v10h-10.5z" />
+        <path d="M12 3.5v3.5h3.5" />
+        <path d="M7.5 10.5h5M7.5 13.5h5" />
+      </svg>
+    ),
+  },
 ];
 
 const MORE_TAB: Omit<NavItem, "id" | "group"> & { id: "more" } = {
@@ -250,18 +285,39 @@ const MORE_TAB: Omit<NavItem, "id" | "group"> & { id: "more" } = {
 };
 
 const PRIMARY_TAB_IDS: MobileTabId[] = ["explore", "market", "screener", "portfolio", "more"];
+/** Mobile tab labels where the tab names an area rather than its first page. */
+const TAB_LABELS: Partial<Record<ShellPage, string>> = { market: "시장" };
+/** Every nav page except the primary tabs, in nav order. */
 const MORE_TAB_IDS: ShellPage[] = [
-  "chart",
-  "research",
-  "ib",
-  "vr",
+  "changes",
   "regime",
+  "events",
   "sectors",
+  "chart",
   "etfs",
   "superinvestors",
+  "ib",
+  "vr",
+  "research",
 ];
+/**
+ * Which bottom tab lights up for a page. A market page (시황, 이벤트, 섹터, 차트)
+ * lights 시장, the same area its in-page 밸류에이션·시황·이벤트·섹터 pills name,
+ * and 무엇이 바뀌었나 lights 홈; everything else without a tab of its own lights 더보기.
+ */
+const TAB_FOR_PAGE: Partial<Record<ShellPage, MobileTabId>> = {
+  explore: "explore",
+  changes: "explore",
+  market: "market",
+  regime: "market",
+  events: "market",
+  sectors: "market",
+  chart: "market",
+  screener: "screener",
+  portfolio: "portfolio",
+};
 
-const NAV_GROUP_ORDER: NavGroupName[] = ["분석", "도구", "더보기"];
+const NAV_GROUP_ORDER: NavGroupName[] = ["오늘", "시장", "발견", "내 투자", "도구"];
 
 const NAV_GROUPS: NavGroup[] = NAV_GROUP_ORDER.map((label) => ({
   label,
@@ -330,6 +386,15 @@ function marketStatusKST(): { dot: string; text: string } {
   if (mins >= 240 && mins < 570) return { dot: "var(--c-warn)", text: "프리마켓" };
   if (mins >= 960 && mins < 1200) return { dot: "var(--c-warn)", text: "애프터마켓" };
   return { dot: "var(--c-neutral)", text: "장 마감" };
+}
+
+function subscribeNever(): () => void {
+  return () => {};
+}
+
+/** Server and first paint say ⌘K; other platforms switch to Ctrl K after hydration. */
+function macShortcutLabel(): string {
+  return /Mac|iPhone|iPad/.test(navigator.platform) ? "⌘K" : "Ctrl K";
 }
 
 function SearchIcon() {
@@ -512,6 +577,8 @@ function ShellChrome({
   const moreOpen = moreModal.isOpen;
   const moreCloseRef = useRef<HTMLButtonElement>(null);
   const navActive: ShellPage | null = active && NAV.some((item) => item.id === active) ? active : null;
+  const activeTab: MobileTabId | null = navActive ? TAB_FOR_PAGE[navActive] ?? "more" : null;
+  const paletteShortcut = useSyncExternalStore(subscribeNever, macShortcutLabel, () => "⌘K");
   const tape = useTape();
   const tickerVisible = tape.items.length > 0;
   // Only a settled empty tape releases the reserved band height.
@@ -623,6 +690,15 @@ function ShellChrome({
             formClass="flex w-full items-center"
             onStockSelect={handleTypeaheadStockPreview}
           />
+          <button
+            type="button"
+            className="kbd"
+            onClick={openCommandPalette}
+            aria-label={`화면·종목 빠른 이동 열기 (${paletteShortcut})`}
+            title="화면·종목 빠른 이동 · / 키로도 열립니다"
+          >
+            {paletteShortcut}
+          </button>
         </div>
         <div className="spacer" />
         <div className="topbar-actions">
@@ -713,7 +789,7 @@ function ShellChrome({
         {PRIMARY_TAB_IDS.map((id) => {
           const n = id === "more" ? MORE_TAB : navById(id);
           if (id === "more") {
-            const moreActive = moreOpen || MORE_TAB_IDS.includes(navActive as ShellPage);
+            const moreActive = moreOpen || activeTab === "more";
             return (
               <button
                 key={id}
@@ -732,10 +808,10 @@ function ShellChrome({
             <TransitionLink
               key={id}
               href={n.href}
-              className={`tab ${id === navActive ? "on" : ""}`}
-              aria-current={id === navActive ? "page" : undefined}
+              className={`tab ${id === activeTab ? "on" : ""}`}
+              aria-current={id === navActive ? "page" : id === activeTab ? "true" : undefined}
             >
-              {n.icon} {n.label}
+              {n.icon} {TAB_LABELS[id as ShellPage] ?? n.label}
               <NavItemPending />
             </TransitionLink>
           );

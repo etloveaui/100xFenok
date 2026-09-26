@@ -688,8 +688,9 @@ async function collectRouteChecks(page, route) {
         failures.push({ check: "multichart-symbol-add-target", detail: symbolAdd ? `height=${Math.round(symbolAdd.getBoundingClientRect().height)}` : "missing symbol add" });
       }
 
+      // Chart pages sit in the 시장 area of the job-grouped nav, so the 시장 tab lights.
       const activeTabLabel = (activeMoreTab?.textContent || "").replace(/\s+/g, " ").trim();
-      if (!activeTabLabel.includes("더보기")) {
+      if (!activeTabLabel.includes("시장")) {
         failures.push({ check: "multichart-mobile-tab-active", detail: `active=${activeTabLabel}` });
       }
       if ((appTitle?.textContent || "").trim() !== "시장 비교") {
