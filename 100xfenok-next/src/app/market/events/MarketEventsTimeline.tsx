@@ -332,7 +332,9 @@ function macroLaneFreshness(macroLoaded: boolean, macroCalendar: MacroCalendar |
   // A mirror that stops inside the window, or does not say where it stops,
   // leaves later days unknown however recently it was generated.
   if (coverageGap !== null) return "stale";
-  return isStaleAsOf(dateOnly(macroCalendar.generatedAt), MACRO_CALENDAR_STALE_AFTER_DAYS) ? "stale" : "fresh";
+  // A mirror without a readable generated_at is of unknown age, never fresh.
+  const generatedDay = dateOnly(macroCalendar.generatedAt);
+  return generatedDay === null || isStaleAsOf(generatedDay, MACRO_CALENDAR_STALE_AFTER_DAYS) ? "stale" : "fresh";
 }
 
 function laneFreshness(doc: TimelineDoc | null | undefined, loaded: boolean, noFeed?: boolean): EvidenceRailFreshness {

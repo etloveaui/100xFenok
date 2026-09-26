@@ -93,7 +93,8 @@ export default function MacroCalendarPanel({ loaded, failed, calendar, onRetry }
 
   const highCount = events.filter((event) => event.importance === "H").length;
   const generatedDay = dateOnly(calendar?.generatedAt ?? null);
-  const stale = generatedDay !== null && isStaleAsOf(generatedDay, MACRO_CALENDAR_STALE_AFTER_DAYS, today);
+  // A mirror without a readable generated_at is of unknown age, never fresh.
+  const stale = calendar !== null && (generatedDay === null || isStaleAsOf(generatedDay, MACRO_CALENDAR_STALE_AFTER_DAYS, today));
   const coverageEnd = calendar?.coverageEnd ?? null;
   const outOfRange = coverageEnd !== null && coverageEnd < horizonEnd;
   // No usable range.time_max: the mirror does not say how far it reaches, so
