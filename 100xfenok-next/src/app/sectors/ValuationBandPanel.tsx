@@ -1,7 +1,7 @@
 "use client";
 
 import { Bar, Button, Panel, PanelHeader } from "@/components/ui";
-import { isStaleAsOf } from "@/lib/data-state";
+import { freshnessVerdict } from "@/lib/freshness-policy.mjs";
 import type { SectorRow } from "@/lib/sectors/types";
 
 function finiteNumber(value: unknown): value is number {
@@ -28,7 +28,8 @@ export default function ValuationBandPanel({
   onCollapse: () => void;
 }) {
   const empty = !loading && (!ready || rows.length === 0);
-  const clockStale = isStaleAsOf(clock);
+  const clockVerdict = freshnessVerdict(clock, "benchmarks");
+  const clockStale = clockVerdict.state === "delayed" || clockVerdict.state === "stopped";
 
   return (
     <Panel

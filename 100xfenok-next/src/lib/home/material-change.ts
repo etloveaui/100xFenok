@@ -54,6 +54,8 @@ export interface MaterialChangeAttentionItem extends MaterialChangeItem {
 
 export interface RevisionSourceEvidence {
   generatedAt: string | null;
+  /** The source content date (revision_movers source_as_of); the honest clock. */
+  sourceAsOf: string | null;
   asOf: string | null;
   asOfs: readonly string[];
   validCandidateCount: number;
@@ -176,6 +178,10 @@ function readGeneratedAt(record: Record<string, unknown>): string | null {
   return asString(record.generated_at ?? record.generatedAt ?? metadata?.generated_at ?? metadata?.generatedAt);
 }
 
+function readSourceAsOf(record: Record<string, unknown>): string | null {
+  return asString(record.source_as_of ?? record.sourceAsOf);
+}
+
 function readQuarter(record: Record<string, unknown>): string | null {
   const metadata = isRecord(record.metadata) ? record.metadata : null;
   return normalizeQuarter(record.quarter ?? metadata?.quarter);
@@ -187,10 +193,12 @@ function revisionEvidence(
   validCandidateCount: number,
   invalidCandidateCount: number,
   reason: string | null,
+  sourceAsOf: string | null = null,
 ): RevisionSourceEvidence {
   const sorted = [...new Set(asOfs)].sort();
   return {
     generatedAt,
+    sourceAsOf,
     asOf: sorted.length === 1 ? sorted[0] : null,
     asOfs: sorted,
     validCandidateCount,
@@ -344,7 +352,7 @@ function parseRevisionSource(input: unknown): ParsedSource<RevisionSourceEvidenc
   }
   return {
     status: "available",
-    evidence: revisionEvidence(readGeneratedAt(input), asOfs, candidates.length, invalidCandidateCount, null),
+    evidence: revisionEvidence(readGeneratedAt(input), asOfs, candidates.length, invalidCandidateCount, null, readSourceAsOf(input)),
     candidates,
   };
 }

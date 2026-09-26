@@ -2,7 +2,8 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { useMarketChartTheme } from "@/lib/market-valuation/charts/chartTheme";
-import { formatAsOf, isStaleAsOf } from "@/lib/market-valuation/freshness";
+import { formatAsOf } from "@/lib/market-valuation/freshness";
+import { freshnessVerdict, freshnessMessage } from "@/lib/freshness-policy.mjs";
 import { formatDecimal, formatInteger, formatMultiple, formatPlainPercent } from "@/lib/format";
 
 interface YardneyRow {
@@ -72,7 +73,8 @@ function fmtNum(value: number | null | undefined, digits = 1): string {
 function AsOfPill({ value }: { value: string | null | undefined }) {
   const label = formatAsOf(value);
   if (!label) return null;
-  const stale = isStaleAsOf(value);
+  const verdict = freshnessVerdict(value, "fred_yardeni");
+  const stale = verdict.state === "delayed" || verdict.state === "stopped";
   return (
     <span
       className={`rounded-full border px-2 py-1 text-[12px] font-black tabular-nums ${
@@ -80,7 +82,7 @@ function AsOfPill({ value }: { value: string | null | undefined }) {
           ? "border-[var(--c-warn)] bg-[var(--c-warn-soft)] text-[var(--c-warn)]"
           : "border-[var(--c-line)] bg-[var(--c-surface-2)] text-[var(--c-ink-3)]"
       }`}
-      title={stale ? "7일 이상 오래된 자료입니다." : undefined}
+      title={freshnessMessage(verdict) ?? undefined}
     >
       기준 {label}
       {stale ? " · 오래됨" : ""}

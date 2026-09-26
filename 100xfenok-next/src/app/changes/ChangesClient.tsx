@@ -466,12 +466,20 @@ export default function ChangesClient() {
   const allMissing = revMissing && holdersMissing;
   const revOverdue = useMemo(() => {
     if (!isRecord(revisionDoc) || scheduleNowMs === null) return false;
+    // When the source content date is present it owns this judgment (the age
+    // verdict below); the Friday-refresh schedule is only the fallback until
+    // the next Build Stocks Analyzer run writes source_as_of.
+    if (asString(revisionDoc.source_as_of)) return false;
     const lastRefreshMs = lastRevisionRefreshMs(scheduleNowMs);
     const stamp = asString(revisionDoc.generated_at);
     const ms = stamp ? Date.parse(stamp) : NaN;
     if (!Number.isFinite(ms)) return revAsOf !== null && revAsOf < new Date(lastRefreshMs).toISOString().slice(0, 10);
     return ms < lastRefreshMs;
   }, [revisionDoc, revAsOf, scheduleNowMs]);
+  const revisionAgeRail = useMemo(() => {
+    const sourceAsOf = isRecord(revisionDoc) ? asString(revisionDoc.source_as_of) : null;
+    return freshnessAgeOverride(freshnessVerdict(sourceAsOf, "global_scouter"));
+  }, [revisionDoc]);
 
   const mainFreshness: EvidenceRailFreshness = !settled
     ? "pending"
@@ -479,9 +487,7 @@ export default function ChangesClient() {
       ? "error"
       : dashboardFailed || anyFeedMissing
         ? "partial"
-        : revOverdue
-          ? "stale"
-          : "fresh";
+        : (revisionAgeRail?.freshness ?? (revOverdue ? "stale" : "fresh"));
   const mainAsOf = `리비전 ${revAsOf ?? "미확인"} · 13F ${quarter ?? "미확인"}${
     segment === "visit" ? ` · 스냅샷 ${snapshot ? snapshot.at.slice(0, 10) : "첫 방문"}` : ""
   }`;
@@ -647,6 +653,7 @@ export default function ChangesClient() {
         })}
         <EvidenceRail
           freshness={mainFreshness}
+          stateLabel={revisionAgeRail?.label ?? undefined}
           source="컨센서스 리비전 · 13F · Fenok Edge"
           asOf={mainAsOf}
           coverage={`행 ${rows.length}건`}
@@ -683,6 +690,7 @@ export default function ChangesClient() {
           </div>
           <EvidenceRail
             freshness={mainFreshness}
+            stateLabel={revisionAgeRail?.label ?? undefined}
             source="리비전 변동 종목 · 13F 집계"
             asOf={mainAsOf}
             coverage={`행 ${rows.length}건`}
@@ -715,6 +723,7 @@ export default function ChangesClient() {
           </div>
           <EvidenceRail
             freshness={mainFreshness}
+            stateLabel={revisionAgeRail?.label ?? undefined}
             source={first ? `${first.kind} · ${first.title}` : "변화 행"}
             asOf={mainAsOf}
             coverage={first ? `변화 ${first.delta}` : "행 없음"}

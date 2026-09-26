@@ -16,6 +16,7 @@ import {
   type QuestionCardId,
 } from "@/lib/screener/question-cards";
 import { formatScreenerSourceDateLabel } from "@/lib/screener/source-dates";
+import { freshnessAgeOverride, freshnessVerdict } from "@/lib/freshness-policy.mjs";
 import type { ScreenerStock } from "@/lib/screener/types";
 import type { HoldingChangeSummary } from "@/lib/superinvestors/types";
 
@@ -91,13 +92,16 @@ function stockByTicker(stocks: ScreenerStock[], ticker: string): ScreenerStock |
   return stocks.find((stock) => stock.ticker === ticker) ?? null;
 }
 
-function resultsFreshness(results: ScreenerStock[], dataReady: boolean, failed: boolean): EvidenceRailFreshness {
-  if (failed) return "error";
-  if (!dataReady) return "pending";
+function resultsFreshness(results: ScreenerStock[], dataReady: boolean, failed: boolean, sourceDate: string | null): { freshness: EvidenceRailFreshness; stateLabel?: string } {
+  if (failed) return { freshness: "error" };
+  if (!dataReady) return { freshness: "pending" };
+  const age = freshnessAgeOverride(freshnessVerdict(sourceDate, "global_scouter"));
+  if (age?.freshness === "error") return { freshness: "error", stateLabel: age.label ?? undefined };
+  if (age?.freshness === "stale") return { freshness: "stale", stateLabel: age.label ?? undefined };
   const partial = results.some(
     (stock) => !hasBand(stock) || !finiteNumber(stock.fenokShortTermScore) || !finiteNumber(stock.guruHolders),
   );
-  return partial ? "partial" : "fresh";
+  return { freshness: partial ? "partial" : "fresh" };
 }
 
 function coverageText(results: ScreenerStock[]): string {
@@ -236,7 +240,9 @@ export default function ScreenerDiscover({
     : null;
   const selectedHeldCount = selectedChange?.held_count ?? selected?.guruHolders ?? null;
   const compareStocks = compareTickers.map((ticker) => stockByTicker(stocks, ticker)).filter((stock): stock is ScreenerStock => stock !== null);
-  const freshness = resultsFreshness(shown, dataReady, failed);
+  const discoverRail = resultsFreshness(shown, dataReady, failed, sourceDate ?? null);
+  const freshness = discoverRail.freshness;
+  const freshnessStateLabel = discoverRail.stateLabel;
   // Evidence drawer stages, mirroring other pages: only feeds that actually
   // loaded (수집). Failed feeds are omitted rather than forged.
   const discoverStages = useMemo<EvidenceStage[] | undefined>(() => {
@@ -424,6 +430,7 @@ export default function ScreenerDiscover({
             )}
             <EvidenceRail
               freshness={freshness}
+              stateLabel={freshnessStateLabel}
               source={DISCOVER_SOURCE}
               asOf={asOfLabel}
               coverage={dataReady ? `${coverageText(shown)} · 상위 ${shown.length}/${results.length} 표시` : "불러오는 중"}
@@ -485,6 +492,7 @@ export default function ScreenerDiscover({
               </div>
               <EvidenceRail
                 freshness={freshness}
+                stateLabel={freshnessStateLabel}
                 source={DISCOVER_SOURCE}
                 asOf={asOfLabel}
                 coverage={`${selected.ticker} 단일 종목`}
@@ -569,6 +577,7 @@ export default function ScreenerDiscover({
           </div>
           <EvidenceRail
             freshness={freshness}
+            stateLabel={freshnessStateLabel}
             source={DISCOVER_SOURCE}
             asOf={asOfLabel}
             coverage={`비교 ${compareStocks.length}/${COMPARE_LIMIT}`}
@@ -595,6 +604,7 @@ export default function ScreenerDiscover({
         </div>
         <EvidenceRail
           freshness={freshness}
+          stateLabel={freshnessStateLabel}
           source={DISCOVER_SOURCE}
           asOf={asOfLabel}
           coverage={`발견 카드 ${SCREENER_QUESTION_CARDS.length}종`}

@@ -26,13 +26,16 @@ import { formatDecimal, formatSignedDecimal } from "@/lib/format";
 import { formatPercent } from "@/lib/dashboard/formatters";
 import {
   freshnessDataState,
-  isStaleAsOf,
   latestAsOf,
   makeDataState,
   oldestAsOf,
   DATA_STATE_LABELS,
   type DataState,
 } from "@/lib/data-state";
+import {
+  freshnessVerdict,
+  freshnessRailState,
+} from "@/lib/freshness-policy.mjs";
 import type {
   MarketIndexValuation,
   ValuationBand,
@@ -179,7 +182,7 @@ function countValuationZones(readings: ReadonlyArray<OrdinalReading>): number[] 
 // against the OLDEST date, because a page is only as fresh as its oldest feed.
 type ProvenanceFreshness = "fresh" | "stale" | "pending" | "error" | "partial";
 
-type PanelProvenance = { freshness: ProvenanceFreshness; asOf: string | null };
+type PanelProvenance = { freshness: ProvenanceFreshness; asOf: string | null; label?: string | null };
 
 // Worst first: an error outranks any pending fetch, which outranks the two
 // warning states; stale outranks partial because this line's date is the age
@@ -203,11 +206,15 @@ const PROVENANCE_LABEL: Record<ProvenanceFreshness, string> = {
 const PROVENANCE_SOURCES = "Bloomberg · Damodaran · Yardeni";
 
 function aggregateProvenance(panels: ReadonlyArray<PanelProvenance>): PanelProvenance {
+  const freshness = PROVENANCE_WORST_FIRST.find(
+    (state) => panels.some((panel) => panel.freshness === state),
+  ) ?? "fresh";
+  // The winning panel's own wording (the verdict's words) wins the header line.
+  const label = panels.find((panel) => panel.freshness === freshness)?.label ?? null;
   return {
-    freshness: PROVENANCE_WORST_FIRST.find(
-      (state) => panels.some((panel) => panel.freshness === state),
-    ) ?? "fresh",
+    freshness,
     asOf: oldestAsOf(panels.map((panel) => panel.asOf)),
+    label,
   };
 }
 
@@ -360,12 +367,14 @@ function ValuationReadPanel({
   const meta = valuationMeta(pct);
   const premium = sp500 ? averagePremiumPct(sp500.pe) : null;
   const empty = !loading && !sp500;
-  const stale = !loading && !failed && isStaleAsOf(sourceDate);
-  const freshness: ProvenanceFreshness = loading ? "pending" : failed ? "error" : stale ? "stale" : "fresh";
+  const sourceVerdict = freshnessVerdict(sourceDate, "benchmarks");
+  const sourceRail = freshnessRailState(sourceVerdict);
+  const stale = !loading && !failed && (sourceVerdict.state === "delayed" || sourceVerdict.state === "stopped");
+  const freshness: ProvenanceFreshness = loading ? "pending" : failed ? "error" : sourceRail?.freshness ?? "fresh";
 
   useEffect(() => {
-    onProvenance({ freshness, asOf: sourceDate });
-  }, [freshness, sourceDate, onProvenance]);
+    onProvenance({ freshness, asOf: sourceDate, label: sourceRail?.label ?? null });
+  }, [freshness, sourceDate, sourceRail?.label, onProvenance]);
 
   return (
     <Panel
@@ -479,12 +488,14 @@ function PeerComparePanel({
     ? rows
     : [...rows].sort((a, b) => comparePeerRows(a, b, sort.key, sort.direction));
   const empty = !loading && rows.length === 0;
-  const stale = !loading && !failed && rows.length > 0 && isStaleAsOf(sourceDate);
-  const freshness: ProvenanceFreshness = loading ? "pending" : failed ? "error" : stale ? "stale" : "fresh";
+  const sourceVerdict = freshnessVerdict(sourceDate, "benchmarks");
+  const sourceRail = freshnessRailState(sourceVerdict);
+  const stale = !loading && !failed && rows.length > 0 && (sourceVerdict.state === "delayed" || sourceVerdict.state === "stopped");
+  const freshness: ProvenanceFreshness = loading ? "pending" : failed ? "error" : sourceRail?.freshness ?? "fresh";
 
   useEffect(() => {
-    onProvenance({ freshness, asOf: sourceDate });
-  }, [freshness, sourceDate, onProvenance]);
+    onProvenance({ freshness, asOf: sourceDate, label: sourceRail?.label ?? null });
+  }, [freshness, sourceDate, sourceRail?.label, onProvenance]);
 
   // First press on a column picks its most useful direction (numbers high to
   // low, names A to Z); pressing the active column flips it.
@@ -636,20 +647,20 @@ function HistoricalPositionPanel({
   const empty = !loading && readable.length === 0;
   const filteredEmpty = !loading && !empty && ranked.length === 0;
   const partial = !loading && !empty && (!ready || groupRefusals.length > 0);
-  const stale = !loading && !empty && !transportFailed && isStaleAsOf(asOf);
+  const boardVerdict = freshnessVerdict(asOf, "benchmarks");
+  const boardRail = freshnessRailState(boardVerdict);
+  const stale = !loading && !empty && !transportFailed && (boardVerdict.state === "delayed" || boardVerdict.state === "stopped");
   const freshness: ProvenanceFreshness = loading
     ? "pending"
     : transportFailed && empty
       ? "error"
       : partial
         ? "partial"
-        : stale
-          ? "stale"
-          : "fresh";
+        : boardRail?.freshness ?? "fresh";
 
   useEffect(() => {
-    onProvenance({ freshness, asOf });
-  }, [freshness, asOf, onProvenance]);
+    onProvenance({ freshness, asOf, label: boardRail?.label ?? null });
+  }, [freshness, asOf, boardRail?.label, onProvenance]);
 
   return (
     <Panel
@@ -755,22 +766,29 @@ function HistoricalReferencePanel({
   const empty = !pending && bothFailed;
   const partial = !pending && !bothFailed && readyCount < 2;
   const asOf = latestAsOf([erp.asOf, yardeni.asOf, erpSourceDate]);
-  const stale = !pending && !bothFailed && (isStaleAsOf(erp.asOf) || isStaleAsOf(yardeni.asOf));
+  const erpVerdict = freshnessVerdict(erp.asOf, "damodaran");
+  const yardeniVerdict = freshnessVerdict(yardeni.asOf, "fred_yardeni");
+  const stale = !pending && !bothFailed && (
+    erpVerdict.state === "delayed" || erpVerdict.state === "stopped"
+    || yardeniVerdict.state === "delayed" || yardeniVerdict.state === "stopped"
+  );
+  const referenceRails = [freshnessRailState(erpVerdict), freshnessRailState(yardeniVerdict)];
+  const referenceRail = referenceRails.find((rail) => rail?.freshness === "error")
+    ?? referenceRails.find((rail) => rail?.freshness === "stale")
+    ?? null;
   const freshness: ProvenanceFreshness = pending
     ? "pending"
     : bothFailed
       ? "error"
       : partial
         ? "partial"
-        : stale
-          ? "stale"
-          : "fresh";
+        : referenceRail?.freshness ?? "fresh";
 
   useEffect(() => {
     // The page clock takes this panel's OLDEST internal date: two charts with
     // different publication dates must not be summarized by the newer one.
-    onProvenance({ freshness, asOf: oldestAsOf([erp.asOf, yardeni.asOf, erpSourceDate]) });
-  }, [freshness, erp.asOf, yardeni.asOf, erpSourceDate, onProvenance]);
+    onProvenance({ freshness, asOf: oldestAsOf([erp.asOf, yardeni.asOf, erpSourceDate]), label: referenceRail?.label ?? null });
+  }, [freshness, erp.asOf, yardeni.asOf, erpSourceDate, referenceRail?.label, onProvenance]);
 
   return (
     // Route-level five-state: the ERP/Yardeni charts load their own feeds, so
@@ -936,7 +954,7 @@ export default function MarketValuationClient({
         <p className="mv-prov" data-market-valuation-provenance>
           <span className="mv-prov-state">
             <i className="mv-prov-dot" data-state={provenance.freshness} aria-hidden="true" />
-            <b>{PROVENANCE_LABEL[provenance.freshness]}</b>
+            <b>{provenance.label ?? PROVENANCE_LABEL[provenance.freshness]}</b>
           </span>
           <span>기준 <b className="tabular-nums">{provenance.asOf ?? "—"}</b></span>
           <span>출처 <b>{PROVENANCE_SOURCES}</b></span>

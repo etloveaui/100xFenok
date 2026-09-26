@@ -16,6 +16,7 @@ import type { ScreenerSortKey, SortDir, ScreenerStock } from "@/lib/screener/typ
 import { formatPercent, formatSignedPercentDecimal } from "@/lib/dashboard/formatters";
 import { bandPct, bandLabel, normalizeBandTuple, BAND_CHEAP, BAND_RICH } from "@/lib/screener/bands";
 import { formatDataDate, makeDataState } from "@/lib/data-state";
+import { freshnessVerdict, freshnessMessage } from "@/lib/freshness-policy.mjs";
 import {
   MAX_JOURNEY_SCROLL_Y,
   clearScreenerJourneySnapshot,
@@ -1920,6 +1921,25 @@ export default function ScreenerClient({
         reason: "required connection source date is missing",
       });
     }
+    const ageVerdict = freshnessVerdict(screenerSourceDate ?? sourceDate, "global_scouter");
+    if (ageVerdict.state === "stopped") {
+      return makeDataState({
+        status: "error",
+        label: freshnessMessage(ageVerdict) ?? "자료 오래됨",
+        detail: "마지막 수집 값 기준으로 표시합니다.",
+        asOf: screenerSourceDate ?? sourceDate,
+        reason: "source-age",
+      });
+    }
+    if (ageVerdict.state === "delayed") {
+      return makeDataState({
+        status: "stale",
+        label: freshnessMessage(ageVerdict) ?? "자료 지연",
+        detail: "마지막 수집 값 기준으로 표시합니다.",
+        asOf: screenerSourceDate ?? sourceDate,
+        reason: "source-age",
+      });
+    }
     return makeDataState({
       status: "ready",
       label: "종목 데이터 준비됨",
@@ -2390,8 +2410,11 @@ export default function ScreenerClient({
   const railFreshness: EvidenceRailFreshness = screenerDataState.status === "ready" ? "fresh"
     : screenerDataState.status === "pending" ? "pending"
     : screenerDataState.status === "error" ? "error"
+    : screenerDataState.status === "stale" ? "stale"
     : screenerDataState.status === "partial" ? "partial"
     : "fixed";
+  // The age verdict's own words ride the rail while it is stale/error, so no
+  // extra constant is needed here.
   const retryScreenerData = useCallback(() => {
     refetchScreenerData();
   }, [refetchScreenerData]);
@@ -2691,6 +2714,7 @@ export default function ScreenerClient({
             <EvidenceRail
               className="cp-screener-toolbar-provenance"
               freshness={railFreshness}
+              stateLabel={screenerDataState.reason === "source-age" ? screenerDataState.label : undefined}
               source="스크리너"
               asOf={screenerSourceDate ?? "미제공"}
               coverage={`가격 확인 ${pricedCount.toLocaleString("ko-KR")} / ${sorted.length.toLocaleString("ko-KR")}`}

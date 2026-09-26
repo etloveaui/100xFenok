@@ -27,6 +27,11 @@ type EvidenceRailProps = {
   stages?: EvidenceStage[];
   /** header-chip variant: compact evidence entry for a PanelHeader right slot */
   variant?: "rail" | "chip";
+  /**
+   * Overrides the chip/rail word only (the dot colour still follows freshness):
+   * the verdict's own wording, e.g. 이번 주 자료 대기 for a delayed owner file.
+   */
+  stateLabel?: string;
 };
 
 const dotColor: Record<EvidenceRailFreshness, string> = {
@@ -81,6 +86,7 @@ export function EvidenceRail({
   skeletonDelayMs = 120,
   stages,
   variant = "rail",
+  stateLabel,
 }: EvidenceRailProps) {
   const showLkg = (freshness === "error" || freshness === "stale") && !!lkgAsOf;
   const showRetry = !!onRetry && freshness !== "fresh";
@@ -93,7 +99,7 @@ export function EvidenceRail({
     const chipInner = (
       <>
         <span className="inline-block w-[6px] h-[6px] rounded-full" style={{ background: dotColor[freshness] }} />
-        <b className="text-[var(--fnk-neutral-700)] font-semibold">{label[freshness]}</b>
+        <b className="text-[var(--fnk-neutral-700)] font-semibold">{stateLabel ?? label[freshness]}</b>
         <span className="tabular-nums">{asOf}</span>
       </>
     );
@@ -124,7 +130,7 @@ export function EvidenceRail({
       >
         <span className="inline-flex items-center gap-1 shrink-0">
           <span className="inline-block w-[6px] h-[6px] rounded-full" style={{ background: dotColor[freshness] }} />
-          <b className="text-[var(--fnk-neutral-700)] font-semibold">{label[freshness]}</b>
+          <b className="text-[var(--fnk-neutral-700)] font-semibold">{stateLabel ?? label[freshness]}</b>
         </span>
         {showMobileSkeleton ? (
           <span aria-hidden="true" className="h-[10px] flex-1 rounded bg-[var(--fnk-neutral-100)] animate-pulse md:hidden" />

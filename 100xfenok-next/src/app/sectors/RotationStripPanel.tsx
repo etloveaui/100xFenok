@@ -1,7 +1,7 @@
 "use client";
 
 import { Panel, PanelHeader } from "@/components/ui";
-import { isStaleAsOf } from "@/lib/data-state";
+import { freshnessVerdict } from "@/lib/freshness-policy.mjs";
 import {
   MOMENTUM_WINDOWS,
   type MomentumWindow,
@@ -69,7 +69,8 @@ export default function RotationStripPanel({
     (a, b) => (orderRank.get(a.key)?.rank ?? 999) - (orderRank.get(b.key)?.rank ?? 999),
   );
   const empty = !loading && (!ready || presentCells === 0);
-  const clockStale = isStaleAsOf(clock);
+  const clockVerdict = freshnessVerdict(clock, "benchmarks");
+  const clockStale = clockVerdict.state === "delayed" || clockVerdict.state === "stopped";
 
   return (
     <Panel

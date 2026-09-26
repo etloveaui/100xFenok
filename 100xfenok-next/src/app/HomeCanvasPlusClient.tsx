@@ -16,6 +16,7 @@ import { DATA_STATE_LABELS, oldestAsOf } from "@/lib/data-state";
 import type { DashboardSnapshot, DashboardSourceId, SectorSnapshot } from "@/lib/dashboard/types";
 import { formatEps, formatEpsRevisionChange } from "@/lib/eps-revision";
 import { projectMaterialChanges, type MaterialChangeItem } from "@/lib/home/material-change";
+import { freshnessAgeOverride, freshnessVerdict } from "@/lib/freshness-policy.mjs";
 import { PERSONAL_DOC_KEYS, readPersonalFlags, type Flag } from "@/lib/personal/personal-state";
 import { EXPLORE_PRODUCT_TITLE } from "@/lib/product-nav";
 import { ROUTES } from "@/lib/routes";
@@ -617,7 +618,7 @@ export default function HomeCanvasPlusClient() {
   const superLegOk = projection.sources.superinvestor.status === "available";
   const laneFresh = revisionLegOk && superLegOk;
   const lanePartial = !laneFresh && (revisionLegOk || superLegOk);
-  const revisionFileMs = parseFileTimeMs(revisionEvidence.generatedAt ?? revisionEvidence.asOf);
+  const revisionFileMs = parseFileTimeMs(revisionEvidence.sourceAsOf ?? revisionEvidence.generatedAt ?? revisionEvidence.asOf);
   // Schedule judgments use the moment the movers file arrived, not render time,
   // so a re-render never flips the lane state on its own.
   const scheduleNowMs = stockMovers.fetchedAtMs;
@@ -630,10 +631,17 @@ export default function HomeCanvasPlusClient() {
   // One page-level provenance line replaces the four per-panel rails and the
   // Edge header chip: the worst panel state against the OLDEST panel date,
   // because the page is only as fresh as its oldest feed.
+  // The revision age verdict may only make the lane worse: Home's vocabulary
+  // has no "error", so both delayed and stopped collapse to 지연 — with the
+  // revision leg available, the lane must not read fresh on an old source.
+  const revisionAgeWorse: HomeFreshness | null = revisionLegOk
+    && freshnessAgeOverride(freshnessVerdict(revisionEvidence.sourceAsOf, "global_scouter"))
+    ? "delayed"
+    : null;
   const lanePanelFreshness: HomeFreshness = anySourceLoading
     ? "pending"
     : laneFresh
-      ? "fresh"
+      ? (revisionAgeWorse ?? "fresh")
       : laneDelayed
         ? "delayed"
         : lanePartial

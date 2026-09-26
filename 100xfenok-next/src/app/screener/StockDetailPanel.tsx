@@ -11,6 +11,7 @@ import { getDisplaySignalHelpBands, lookupBand } from "@/lib/fenok-signals/signa
 import { shortTermCommonBasisCopy } from "@/lib/fenok-signals/conviction-basis-copy.mjs";
 import { bandPct, bandClass } from "@/lib/screener/bands";
 import { commonBasisShortTermView } from "@/lib/screener/common-basis-short-term";
+import { freshnessAgeOverride, freshnessVerdict } from "@/lib/freshness-policy.mjs";
 import type { ScreenerStock } from "@/lib/screener/types";
 import { interpretStockMetrics, type InterpretationReadTone } from "@/lib/screener/deterministicRules";
 import {
@@ -108,6 +109,7 @@ export function SharedEdgePanel({
   hideRail?: boolean;
 }) {
   const hasRows = [...shortRows, ...longRows].some((row) => row.score !== null);
+  const age = freshnessAgeOverride(freshnessVerdict(asOf, "global_scouter"));
   const renderRows = (rows: SharedEdgeAxisRow[]) =>
     rows.map((row) => (
       <Row key={row.key}>
@@ -165,7 +167,8 @@ export function SharedEdgePanel({
       ) : null}
       {hideRail ? null : (
         <EvidenceRail
-          freshness={pending ? "pending" : hasRows ? "fresh" : "stale"}
+          freshness={pending ? "pending" : (age?.freshness ?? (hasRows ? "fresh" : "stale"))}
+          stateLabel={age?.label ?? undefined}
           source={source}
           asOf={asOf}
           coverage={coverage}
@@ -231,6 +234,7 @@ export function SharedValuationBandPanel({
   /** ⑩b strip-flood: true면 하단 EvidenceRail을 생략(집계 출처행이 있는 화면에서 사용) */
   hideRail?: boolean;
 }) {
+  const age = freshnessAgeOverride(freshnessVerdict(asOf, "global_scouter"));
   if (pending || !band) {
     return (
       <Panel loading={pending}>
@@ -238,7 +242,8 @@ export function SharedValuationBandPanel({
         {!pending ? <p className="px-4 py-3 text-[12px] text-[var(--c-ink-3)]">밴드 데이터를 아직 확인하지 못했습니다.</p> : null}
         {hideRail ? null : (
           <EvidenceRail
-            freshness={pending ? "pending" : "stale"}
+            freshness={pending ? "pending" : (age?.freshness ?? "stale")}
+            stateLabel={age?.label ?? undefined}
             source={source}
             asOf={asOf}
             coverage={coverage}
@@ -288,7 +293,14 @@ export function SharedValuationBandPanel({
         </p>
       </div>
       {hideRail ? null : (
-        <EvidenceRail freshness="fresh" source={source} asOf={asOf} coverage={coverage} skeletonDelayMs={120} />
+        <EvidenceRail
+          freshness={age?.freshness ?? "fresh"}
+          stateLabel={age?.label ?? undefined}
+          source={source}
+          asOf={asOf}
+          coverage={coverage}
+          skeletonDelayMs={120}
+        />
       )}
     </Panel>
   );

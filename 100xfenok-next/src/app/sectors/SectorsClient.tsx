@@ -28,7 +28,8 @@ import {
   type RotationWindow,
 } from "@/lib/sectors/rotation";
 import { formatPercent, formatSignedPercentDecimal } from "@/lib/dashboard/formatters";
-import { formatAsOf, isStaleAsOf } from "@/lib/data-state";
+import { formatAsOf } from "@/lib/data-state";
+import { freshnessAgeOverride, freshnessVerdict } from "@/lib/freshness-policy.mjs";
 import { formatDecimal } from "@/lib/format";
 
 function pct(value: number | null | undefined, digits = 1): string {
@@ -642,14 +643,16 @@ export default function SectorsClient() {
     ? rows.filter((row) => typeof row.momentum[sortWindow] === "number").length
     : 0;
   const flowIncomplete = benchmarksReady && flowValuedCount < rows.length;
-  const flowStale = benchmarksReady && (staleSources.includes("benchmarks") || isStaleAsOf(sourceMeta.benchmarksSourceDate));
+  const flowVerdict = freshnessVerdict(sourceMeta.benchmarksSourceDate, "benchmarks");
+  const flowStale = benchmarksReady && (staleSources.includes("benchmarks") || flowVerdict.state === "delayed" || flowVerdict.state === "stopped");
   const flowFailed = loaded && !benchmarksReady;
   const flowCoverage = benchmarksReady
     ? `${rows.filter((row) => typeof row.momentum[sortWindow] === "number").length}/${rows.length} 섹터`
     : "—";
 
   const etfRows = etfsReady ? rows.filter((row) => row.etfInfo) : [];
-  const etfStale = etfsReady && (staleSources.includes("etfs") || isStaleAsOf(sourceMeta.etfSourceDate));
+  const etfVerdict = freshnessVerdict(sourceMeta.etfSourceDate, "global_scouter");
+  const etfStale = etfsReady && (staleSources.includes("etfs") || etfVerdict.state === "delayed" || etfVerdict.state === "stopped");
   const etfFailed = loaded && !etfsReady;
   const etfCoverage = etfsReady ? `${etfRows.length}/${rows.length}` : "—";
   const etfMissingNote = sourceMeta.etfMissing.length > 0 ? sourceMeta.etfMissing.join("·") : null;
@@ -662,7 +665,12 @@ export default function SectorsClient() {
     : "—";
 
   const valuationFailed = loaded && !valuationReady;
-  const valuationStale = valuationReady && (staleSources.includes("us_sectors") || isStaleAsOf(sourceMeta.valuationLatestDate));
+  const valuationVerdict = freshnessVerdict(sourceMeta.valuationLatestDate, "benchmarks");
+  const valuationStale = valuationReady && (staleSources.includes("us_sectors") || valuationVerdict.state === "delayed" || valuationVerdict.state === "stopped");
+  // The age verdict may only make a rail state worse, never erase LKG/partial/fixed.
+  const flowAge = freshnessAgeOverride(flowVerdict);
+  const etfAge = freshnessAgeOverride(etfVerdict);
+  const valuationAge = freshnessAgeOverride(valuationVerdict);
   const bandCount = valuationReady ? rows.filter((row) => bandPosition(row) !== null).length : 0;
   const bandHighCount = valuationReady
     ? rows.filter((row) => {
@@ -818,7 +826,8 @@ export default function SectorsClient() {
           </div>
         )}
         <EvidenceRail
-          freshness={loading ? "pending" : heroFailed ? "error" : flowStale ? "stale" : rotationIncomplete || rotationBandless.length > 0 ? "partial" : sourceMeta.benchmarksSourceDate ? "fresh" : "fixed"}
+          freshness={loading ? "pending" : heroFailed ? "error" : (flowAge?.freshness ?? (flowStale ? "stale" : rotationIncomplete || rotationBandless.length > 0 ? "partial" : sourceMeta.benchmarksSourceDate ? "fresh" : "fixed"))}
+          stateLabel={flowAge?.label ?? undefined}
           source="SlickCharts · Yahoo · 밸류 밴드"
           asOf={heroAsOfLabel}
           coverage={benchmarksReady ? `${rotationPts.length}/${rows.length} · 밴드 ${rotationBandCount}/${rows.length}` : "—"}
@@ -861,7 +870,8 @@ export default function SectorsClient() {
             title="상대성과 바"
             meta={`${rows.length}개 업종 전체`}
             onOpen={() => toggleSection("bars")}
-            freshness={loading ? "pending" : flowFailed ? "error" : flowIncomplete ? "partial" : flowStale ? "stale" : sourceMeta.benchmarksSourceDate ? "fresh" : "fixed"}
+            freshness={loading ? "pending" : flowFailed ? "error" : (flowAge?.freshness ?? (flowIncomplete ? "partial" : flowStale ? "stale" : sourceMeta.benchmarksSourceDate ? "fresh" : "fixed"))}
+            stateLabel={flowAge?.label ?? undefined}
             source="SlickCharts · Yahoo"
             asOf={formatAsOf(sourceMeta.benchmarksSourceDate) ?? "—"}
             coverage={flowCoverage}
@@ -890,7 +900,8 @@ export default function SectorsClient() {
             title="섹터 ETF 비교"
             meta={`${etfCoverage} 섹터 ETF 상세`}
             onOpen={() => toggleSection("etf")}
-            freshness={loading ? "pending" : etfFailed ? "error" : etfsReady && etfRows.length < rows.length ? "partial" : etfStale ? "stale" : sourceMeta.etfSourceDate ? "fresh" : "fixed"}
+            freshness={loading ? "pending" : etfFailed ? "error" : (etfAge?.freshness ?? (etfsReady && etfRows.length < rows.length ? "partial" : etfStale ? "stale" : sourceMeta.etfSourceDate ? "fresh" : "fixed"))}
+            stateLabel={etfAge?.label ?? undefined}
             source="ETF 운용사 공시"
             asOf={formatAsOf(sourceMeta.etfSourceDate) ?? "—"}
             coverage={etfCoverage}
@@ -918,7 +929,8 @@ export default function SectorsClient() {
             title="밸류에이션 밴드"
             meta={valuationReady ? `밴드 확보 ${bandCount}/${rows.length} · 고평가권 ${bandHighCount}개` : "확인 중"}
             onOpen={() => toggleSection("valuation")}
-            freshness={loading ? "pending" : valuationFailed ? "error" : valuationStale ? "stale" : valuationReady && bandCount < rows.length ? "partial" : "fixed"}
+            freshness={loading ? "pending" : valuationFailed ? "error" : (valuationAge?.freshness ?? (valuationStale ? "stale" : valuationReady && bandCount < rows.length ? "partial" : "fixed"))}
+            stateLabel={valuationAge?.label ?? undefined}
             source={sourceMeta.valuationSource ?? "밸류에이션 자료"}
             asOf={formatAsOf(sourceMeta.valuationLatestDate) ?? "—"}
             coverage={valuationCoverage}
