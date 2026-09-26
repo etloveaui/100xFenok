@@ -22,6 +22,7 @@ on:
           - responsive
           - investor-isolated
           - investor-evidence
+          - layout
 
 concurrency:
   group: qa-visual-${{ github.ref }}${{ inputs.suite == 'investor-evidence' && '-evidence' || '' }}
@@ -45,7 +46,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        project: ${{ fromJSON((inputs.suite == 'investor-isolated' || inputs.suite == 'investor-evidence') && '["isolated"]' || inputs.suite == 'responsive' && '["mobile", "tablet"]' || '["desktop-1440", "mobile-390"]') }}
+        project: ${{ fromJSON((inputs.suite == 'investor-isolated' || inputs.suite == 'investor-evidence') && '["isolated"]' || inputs.suite == 'responsive' && '["mobile", "tablet"]' || inputs.suite == 'layout' && '["layout"]' || '["desktop-1440", "mobile-390"]') }}
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -159,11 +160,28 @@ jobs:
               export QA_MOBILE_UX_OUTPUT_DIR="test-results/responsive"
               npm run qa:mobile-ux
               ;;
+            # Layout sweep (overflow, clipping, tap targets, CLS) of the
+            # deployed site at seven widths, so loading-shift fixes are
+            # measured before and after a deploy. It reports against
+            # qa-baselines/layout-sweep.json and never rewrites it here.
+            layout)
+              if [ -n "$RESPONSIVE_ROUTES" ]; then export QA_LAYOUT_ROUTES="$RESPONSIVE_ROUTES"; fi
+              export QA_LAYOUT_OUTPUT="test-results/layout-sweep/report.json"
+              npm run qa:layout-sweep
+              ;;
             *) echo "unsupported visual suite" >&2; exit 64;;
           esac
 
+      - name: Upload layout sweep report
+        if: always() && inputs.suite == 'layout'
+        uses: actions/upload-artifact@v4
+        with:
+          name: layout-sweep
+          path: 100xfenok-next/test-results/layout-sweep/
+          retention-days: 7
+
       - name: Upload visual report
-        if: always() && inputs.suite != 'responsive' && inputs.suite != 'investor-isolated' && inputs.suite != 'investor-evidence'
+        if: always() && inputs.suite != 'responsive' && inputs.suite != 'investor-isolated' && inputs.suite != 'investor-evidence' && inputs.suite != 'layout'
         uses: actions/upload-artifact@v4
         with:
           name: visual-report-${{ matrix.project }}
@@ -171,7 +189,7 @@ jobs:
           retention-days: 7
 
       - name: Upload visual diffs
-        if: always() && inputs.suite != 'responsive' && inputs.suite != 'investor-isolated' && inputs.suite != 'investor-evidence'
+        if: always() && inputs.suite != 'responsive' && inputs.suite != 'investor-isolated' && inputs.suite != 'investor-evidence' && inputs.suite != 'layout'
         uses: actions/upload-artifact@v4
         with:
           name: visual-results-${{ matrix.project }}
