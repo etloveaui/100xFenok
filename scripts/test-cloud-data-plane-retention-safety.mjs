@@ -794,7 +794,7 @@ try {
         deps: { s3: stub, familiesState, postDeleteListing: fullListing, runCostGateImpl: gateOk },
         io: { error: () => {} }, now: () => Date.now(),
       });
-      assert.equal(partialC.result, "retention_batch_partial", "per-key errors can never report applied success");
+      assert.equal(partialC.result, "retention_batch_aborted", "zero successful deletes plus per-key errors aborts the batch");
       assert.equal(partialC.payloads.errors.length, 1);
       assert.equal(partialC.manifests.deleted, 0, "payload errors keep manifest evidence");
 
