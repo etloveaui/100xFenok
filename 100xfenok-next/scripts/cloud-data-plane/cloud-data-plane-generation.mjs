@@ -630,21 +630,35 @@ export async function publishGeneration({
   }
 
   const manifestBytes = new TextEncoder().encode(canonicalJson(manifest));
-  const immutableObjectsByKey = new Map([
-    ...manifest.assets
+  const immutableObjectsByKey = new Map(
+    manifest.assets
       .filter((asset) => !validatedReusableObjects.has(asset.object_key))
       .map((asset) => ({
         key: asset.object_key,
         bytes: payloads.get(asset.path),
         sha256: asset.sha256,
-      })),
-    {
-      key: `manifests/${manifest.generation_id}.json`,
-      bytes: manifestBytes,
-      sha256: summary.manifest_sha256,
-    },
-  ].map((object) => [object.key, object]));
-  let publishedObjectCount = 0;
+      }))
+      .map((object) => [object.key, object]),
+  );
+  const totalImmutableObjects = immutableObjectsByKey.size + 1; // payloads + manifest
+  // The generation manifest is written FIRST, before any payload object (fh-465).
+  // The manifest is the retention-visible record of this generation's references:
+  // from the first payload write onward the generation is its family's newest, so
+  // every reused (possibly old) object it names is inside the retained window and
+  // a concurrent retention sweep can no longer collect a blob this publish reuses.
+  // While the manifest raced inside the payload pool, a receipt-less and
+  // manifest-less window existed in which exactly that could happen.
+  const manifestObjectKey = `manifests/${manifest.generation_id}.json`;
+  {
+    const outcome = await objectStore.putIfAbsent(manifestObjectKey, manifestBytes);
+    if (outcome?.alreadyPresent !== true) {
+      const stored = await objectStore.get(manifestObjectKey);
+      if (!(stored instanceof Uint8Array) || sha256Bytes(stored) !== summary.manifest_sha256) {
+        fail("OBJECT_READBACK_INVALID", manifestObjectKey);
+      }
+    }
+  }
+  let publishedObjectCount = 1; // the manifest is the first durable object
   // putIfAbsent result contract: { written, alreadyPresent }. When the
   // content-addressed object already exists byte-identically, the existence
   // path itself proved immutability, so the caller's immediate readback would
@@ -663,12 +677,12 @@ export async function publishGeneration({
     if (onProgress) {
       publishedObjectCount += 1;
       if (publishedObjectCount % PROGRESS_EVERY === 0) {
-        onProgress({ done: publishedObjectCount, total: immutableObjectsByKey.size });
+        onProgress({ done: publishedObjectCount, total: totalImmutableObjects });
       }
     }
   });
   if (onProgress) {
-    onProgress({ done: publishedObjectCount, total: immutableObjectsByKey.size });
+    onProgress({ done: publishedObjectCount, total: totalImmutableObjects });
   }
 
   const prepared = {

@@ -138,6 +138,14 @@ export { planActiveGenerationReuse };
 import { buildCandidateScope } from "./lib/cloud-data-plane-candidate-scope.mjs";
 import { PLANE_PUBLISH_OUTCOME_BINDINGS, PLANE_PUBLISHER_EXCEPTIONS } from "./lib/lane-registry.mjs";
 import { classifyPreparedReceipts } from "./lib/cloud-data-plane-prepared-receipt-lifecycle.mjs";
+import {
+  BACKOFF_BASE_MS,
+  MAX_ATTEMPTS,
+  MAX_RATE_LIMIT_ATTEMPTS,
+  retryAfterMs,
+  sleep,
+  stableJitterMs,
+} from "./lib/cloudflare-rate-limit.mjs";
 import { createCloudflareCloudDataPlane } from "./lib/cloud-data-plane-cloudflare-adapter.mjs";
 import { createR2RestBucket } from "./lib/cloud-data-plane-r2-rest.mjs";
 import { createRemoteCoordinatorNamespace } from "./lib/cloud-data-plane-remote-coordinator.mjs";
@@ -1741,6 +1749,11 @@ export const RETENTION_PROTECTED_KEYS = Object.freeze(new Set([
 ]));
 
 export const RETENTION_KEEP_NEWEST = 3;
+// fh-465: a young object gets a grace period before it can appear as a deletion
+// candidate, independent of any manifest's reference state. When the caller
+// supplies `now`, an entry whose upload time is missing or unparsable fails the
+// plan closed (RETENTION_TIMESTAMP_UNKNOWN) instead of being treated as old.
+export const RETENTION_UPLOAD_GRACE_SECONDS = 48 * 60 * 60;
 export const RETENTION_OBJECT_PREFIX = "objects/";
 const GENERATION_MANIFEST_KEY = /^manifests\/.+-[0-9a-f]{16}\.json$/;
 
@@ -1759,18 +1772,49 @@ const GENERATION_MANIFEST_KEY = /^manifests\/.+-[0-9a-f]{16}\.json$/;
 // any family survives.
 //
 // Returns { keepNewest, retainedGenerations, retainedByFamily, referencedKeys,
-// candidates, skippedProtected, manifestCount }. candidates are
+// candidates, skippedProtected, manifestCount, ... }. candidates are
 // [{key, size, reason}] sorted by key — the ONLY keys deletion may touch.
 // Throws RETENTION_REFERENCE_SET_INCOMPLETE (before any deletion can happen)
 // when any manifest is unreadable/corrupt or a retained generation has no
 // manifest.
+//
+// Upload-age handling (fh-465): when `now` is supplied, EVERY object entry must
+// carry a parsable `uploaded` instant — missing or garbage timestamps fail the
+// plan closed with RETENTION_TIMESTAMP_UNKNOWN, and unreferenced entries
+// younger than graceSeconds are reported as skipped instead of becoming
+// candidates. The retention CLI always supplies `now`; omitting it keeps the
+// planner's legacy, age-free behaviour for callers that fabricate state without
+// listing timestamps (the offline planner tests).
 export function computeRetentionPlan({
   families = [],
   manifestEntries = [],
   objectEntries = [],
   keepNewest = RETENTION_KEEP_NEWEST,
   protectedKeys = RETENTION_PROTECTED_KEYS,
+  now = undefined,
+  graceSeconds = RETENTION_UPLOAD_GRACE_SECONDS,
 }) {
+  let nowMs = null;
+  if (now !== undefined) {
+    nowMs = Date.parse(now);
+    if (!Number.isFinite(nowMs)) fail("RETENTION_NOW_INVALID", `now is not a parsable instant: ${now}`);
+    if (!Number.isFinite(graceSeconds) || graceSeconds < 0) fail("RETENTION_GRACE_INVALID", String(graceSeconds));
+  }
+  const uploadedMsByKey = new Map();
+  if (nowMs !== null) {
+    for (const { key, uploaded } of objectEntries) {
+      const uploadedMs = typeof uploaded === "string" && uploaded.length > 0 ? Date.parse(uploaded) : Number.NaN;
+      if (!Number.isFinite(uploadedMs)) {
+        fail("RETENTION_TIMESTAMP_UNKNOWN", `${key}: upload time is missing or unparsable`);
+      }
+      uploadedMsByKey.set(key, uploadedMs);
+    }
+  }
+  const isYoung = (key) => {
+    if (nowMs === null) return false;
+    const uploadedMs = uploadedMsByKey.get(key);
+    return Number.isFinite(uploadedMs) && nowMs - uploadedMs < graceSeconds * 1000;
+  };
   const generationManifests = []; // [{key, manifest, family}]
   const nonGenerationManifests = []; // aliases / legacy keys: always retained
   for (const entry of manifestEntries) {
@@ -1864,6 +1908,7 @@ export function computeRetentionPlan({
 
   const candidates = [];
   const skippedProtected = [];
+  const skippedYoung = [];
   for (const { key, size } of objectEntries) {
     if (protectedKeys.has(key)) {
       skippedProtected.push(key);
@@ -1871,6 +1916,10 @@ export function computeRetentionPlan({
     }
     if (!key.startsWith(RETENTION_OBJECT_PREFIX)) continue; // manifests, pointers, probe/*: never collected
     if (referencedKeys.has(key)) continue;
+    if (isYoung(key)) {
+      skippedYoung.push(key);
+      continue;
+    }
     const nonRetained = referencingNonRetained.get(key);
     candidates.push({
       key,
@@ -1897,8 +1946,12 @@ export function computeRetentionPlan({
   // candidate, and protected keys are excluded here as well as in the payload
   // loop, so neither can be reached by a renamed or spoofed key.
   const sizeByKey = new Map(objectEntries.map(({ key, size }) => [key, size ?? null]));
+  const manifestGraceSkipped = generationManifests
+    .filter((entry) => !retainedIds.has(entry.manifest.generation_id) && !protectedKeys.has(entry.key) && isYoung(entry.key))
+    .map((entry) => entry.key)
+    .sort();
   const manifestCandidates = generationManifests
-    .filter((entry) => !retainedIds.has(entry.manifest.generation_id) && !protectedKeys.has(entry.key))
+    .filter((entry) => !retainedIds.has(entry.manifest.generation_id) && !protectedKeys.has(entry.key) && !isYoung(entry.key))
     .map((entry) => ({
       key: entry.key,
       size: sizeByKey.get(entry.key) ?? null,
@@ -1911,17 +1964,42 @@ export function computeRetentionPlan({
 
   return {
     keepNewest,
+    graceSeconds: nowMs === null ? null : graceSeconds,
     retainedGenerations: [...retainedIds].sort(),
     retainedByFamily,
     referencedKeys: [...referencedKeys].sort(),
     candidates,
     skippedProtected,
+    skippedYoung,
     manifestCount: generationManifests.length + nonGenerationManifests.length,
     manifestCandidates,
+    manifestGraceSkipped,
     manifestCandidateBytes: manifestCandidates.reduce((total, entry) => total + (entry.size ?? 0), 0),
     manifestBytes: [...generationManifests, ...nonGenerationManifests]
       .reduce((total, entry) => total + (sizeByKey.get(entry.key) ?? 0), 0),
   };
+}
+
+// fh-465 delete-time revalidation: the destructive phase may only run against
+// the world the plan was computed from. The fingerprint covers exactly the
+// retention-VISIBLE safety inputs — every family's coordinator state (pointer +
+// prepared receipts) and every manifest key with the hash of its bytes — so a
+// new manifest (an in-flight publisher), a changed receipt, or a pointer move
+// between the plan and the deletes aborts with zero deletions instead of racing
+// the writer. Object-listing drift is deliberately not part of it: a newly
+// uploaded object is age-protected by then, and a vanished one is a 404 the
+// deleter already treats as success.
+export function retentionInputFingerprint({ familiesState, manifestEntries }) {
+  const manifests = manifestEntries
+    .map(({ key, text }) => [key, typeof text === "string" ? sha256Canonical([text]) : null])
+    .sort((left, right) => (left[0] < right[0] ? -1 : left[0] > right[0] ? 1 : 0));
+  return sha256Canonical([familiesState, manifests]);
+}
+
+export function assertSameRetentionInputs({ before, after }) {
+  if (before !== after) {
+    fail("RETENTION_STATE_CHANGED", "manifest set, receipts, or pointer changed between the plan and the delete phase");
+  }
 }
 
 // Bucket-level family scan for retention: every family answers with its OWN
@@ -1976,11 +2054,26 @@ export async function collectFamiliesRetentionState({ families, createPlane, now
 
 // Execute an approved plan through an injected deleter (REST live, recording
 // stub in tests). Individual delete failures never throw; they are collected
-// so one bad key cannot strand the rest of the batch.
-export async function executeRetentionPlan({ plan, deleteObject }) {
+// so one bad key cannot strand the rest of the batch. Every delete after the
+// first is spaced by throttleMs (fh-465: a conservative, deliberate pace for
+// destructive calls); tests inject sleepImpl to observe pacing without waiting.
+export const RETENTION_DELETE_THROTTLE_MS = 1_000;
+export async function executeRetentionPlan({
+  plan,
+  deleteObject,
+  throttleMs = RETENTION_DELETE_THROTTLE_MS,
+  sleepImpl = sleep,
+}) {
+  if (!Number.isFinite(throttleMs) || throttleMs < 0) fail("RETENTION_THROTTLE_INVALID", String(throttleMs));
+  let deletesAttempted = 0;
+  const pace = async () => {
+    if (deletesAttempted > 0 && throttleMs > 0) await sleepImpl(throttleMs);
+    deletesAttempted += 1;
+  };
   const deleted = [];
   const failures = [];
   for (const candidate of plan.candidates) {
+    await pace();
     const outcome = await deleteObject(candidate.key);
     if (outcome?.ok === false) {
       failures.push({ key: candidate.key, size: candidate.size, error: outcome.error ?? "delete failed" });
@@ -1996,6 +2089,7 @@ export async function executeRetentionPlan({ plan, deleteObject }) {
   const deletedManifests = [];
   const manifestFailures = [];
   for (const candidate of plan.manifestCandidates ?? []) {
+    await pace();
     const outcome = await deleteObject(candidate.key);
     const row = { key: candidate.key, size: candidate.size, generation_id: candidate.generation_id };
     if (outcome?.ok === false) {
@@ -2267,20 +2361,27 @@ export async function recordPublishOutcome({
 
 // --- retention REST helpers ---------------------------------------------------
 // createR2RestBucket (byte-locked lib) maps list() to keys only and has no
-// delete; retention needs key+size and DeleteObject, so these two helpers talk
-// to the same account-level REST endpoint directly, mirroring the lib's retry
-// policy (never retry 4xx; network/5xx get 3 attempts with backoff) and its
-// per-attempt deadline over the request AND its body.
+// delete; retention needs key+size+upload-time and DeleteObject, so these two
+// helpers talk to the same account-level REST endpoint directly, sharing the
+// ONE Cloudflare rate-limit policy (cloudflare-rate-limit.mjs): never retry
+// other 4xx; network/5xx get MAX_ATTEMPTS with backoff; HTTP 429 gets its own
+// bounded window that honors Retry-After (fh-465: for the destructive path an
+// absent or unparsable Retry-After falls back to a five-minute block rather
+// than retrying immediately), and every attempt carries a deadline over the
+// request AND its body.
 const R2_API_BASE = "https://api.cloudflare.com/client/v4/accounts";
-const R2_REST_MAX_ATTEMPTS = 3;
-const R2_REST_BACKOFF_BASE_MS = 200;
 const R2_REST_TIMEOUT_MS = 60_000;
+export const RETENTION_RATE_LIMIT_DEFAULT_MS = 5 * 60_000; // five-minute block
 
-async function r2DataPlaneRequest({ accountId, bucket, token, fetchImpl, method, keyPath, query }) {
+async function r2DataPlaneRequest({
+  accountId, bucket, token, fetchImpl, method, keyPath, query, sleepImpl = sleep,
+}) {
   const base = `${R2_API_BASE}/${encodeURIComponent(accountId)}/r2/buckets/${encodeURIComponent(bucket)}/objects`;
   const url = `${base}${keyPath ? `/${encodeURIComponent(keyPath)}` : ""}${query ?? ""}`;
   let lastError = null;
-  for (let attempt = 1; attempt <= R2_REST_MAX_ATTEMPTS; attempt += 1) {
+  let transientAttempts = 0;
+  let rateLimitAttempts = 0;
+  while (true) {
     // One attempt is the request AND its body under one deadline. fetch
     // resolves as soon as headers arrive, so without this the body had no
     // deadline and no retry: a socket dying mid-body escaped both bounds.
@@ -2299,30 +2400,43 @@ async function r2DataPlaneRequest({ accountId, bucket, token, fetchImpl, method,
       lastError = controller.signal.aborted
         ? new Error(`r2-rest fetch timed out after ${R2_REST_TIMEOUT_MS}ms`)
         : error;
-      if (attempt < R2_REST_MAX_ATTEMPTS) {
-        await new Promise((resolve) => setTimeout(resolve, R2_REST_BACKOFF_BASE_MS * 2 ** (attempt - 1)));
-      }
+      transientAttempts += 1;
+      if (transientAttempts >= MAX_ATTEMPTS) break;
+      await sleepImpl(BACKOFF_BASE_MS * 2 ** (transientAttempts - 1));
       continue;
     } finally {
       clearTimeout(timer);
     }
-    if (response.status >= 500 && attempt < R2_REST_MAX_ATTEMPTS) {
-      await new Promise((resolve) => setTimeout(resolve, R2_REST_BACKOFF_BASE_MS * 2 ** (attempt - 1)));
+    if (response.status === 429) {
+      rateLimitAttempts += 1;
+      if (rateLimitAttempts >= MAX_RATE_LIMIT_ATTEMPTS) return { response, body };
+      const requested = retryAfterMs(response);
+      await sleepImpl((requested === null ? RETENTION_RATE_LIMIT_DEFAULT_MS : requested) + stableJitterMs(url));
       continue;
+    }
+    if (response.status >= 500) {
+      transientAttempts += 1;
+      if (transientAttempts < MAX_ATTEMPTS) {
+        await sleepImpl(BACKOFF_BASE_MS * 2 ** (transientAttempts - 1));
+        continue;
+      }
     }
     return { response, body };
   }
   fail("R2_REST_NETWORK", lastError?.message ?? "request failed without a response");
 }
 
-// Full bucket listing with sizes (the retention report's per-object size).
-export async function listR2ObjectsDetailed({ accountId, bucket, token, fetchImpl = fetch }) {
+// Full bucket listing with sizes and upload times (the retention report's
+// per-object size and the fh-465 age grace). `uploaded` follows the REST field
+// when present and falls back to the S3-style `last_modified`; a listed object
+// with neither fails the retention planner closed.
+export async function listR2ObjectsDetailed({ accountId, bucket, token, fetchImpl = fetch, sleepImpl = sleep }) {
   const objects = [];
   let cursor;
   do {
     const query = `?per_page=1000${cursor ? `&cursor=${encodeURIComponent(cursor)}` : ""}`;
     const { response, body: responseBody } = await r2DataPlaneRequest({
-      accountId, bucket, token, fetchImpl, method: "GET", query,
+      accountId, bucket, token, fetchImpl, method: "GET", query, sleepImpl,
     });
     if (!response.ok) {
       fail("R2_REST_HTTP", `list http ${response.status}: ${new TextDecoder().decode(responseBody).slice(0, 500)}`);
@@ -2332,7 +2446,11 @@ export async function listR2ObjectsDetailed({ accountId, bucket, token, fetchImp
       fail("R2_REST_HTTP", `list envelope not successful: ${JSON.stringify(body?.errors ?? null)}`);
     }
     for (const object of body.result ?? []) {
-      objects.push({ key: object.key, size: object.size ?? null });
+      objects.push({
+        key: object.key,
+        size: object.size ?? null,
+        uploaded: object.uploaded ?? object.last_modified ?? null,
+      });
     }
     cursor = body?.result_info?.cursor || undefined;
   } while (cursor);
@@ -2342,10 +2460,10 @@ export async function listR2ObjectsDetailed({ accountId, bucket, token, fetchImp
 // DeleteObject for one key. 404 means the key is already gone, which satisfies
 // retention's intent, so it counts as ok. Never throws on an HTTP answer —
 // returns {ok:false, error} so executeRetentionPlan can record the failure.
-export async function deleteR2Object({ accountId, bucket, token, key, fetchImpl = fetch }) {
+export async function deleteR2Object({ accountId, bucket, token, key, fetchImpl = fetch, sleepImpl = sleep }) {
   try {
     const { response, body } = await r2DataPlaneRequest({
-      accountId, bucket, token, fetchImpl, method: "DELETE", keyPath: key,
+      accountId, bucket, token, fetchImpl, method: "DELETE", keyPath: key, sleepImpl,
     });
     if (response.ok || response.status === 404) return { ok: true };
     return { ok: false, error: `http ${response.status}: ${new TextDecoder().decode(body).slice(0, 500)}` };
@@ -2477,39 +2595,56 @@ async function runRetention({ tolerateGateBlock, retentionDelete, json, resumeWi
   }
 
   const r2Bucket = createR2RestBucket({ accountId, bucket: R2_BUCKET, token });
-  // Every family answers from its OWN coordinator instance (the worker route
-  // selects it by the x-data-plane-family header). An unreadable family aborts
-  // the whole run inside collectFamiliesRetentionState.
-  const familiesState = await collectFamiliesRetentionState({
-    families: Object.keys(FAMILIES).sort(),
-    createPlane: (name) => createCloudflareCloudDataPlane({
-      r2Bucket,
-      coordinatorNamespace: createRemoteCoordinatorNamespace({ endpoint, key: writeKey, family: name }),
-      coordinatorName: name,
-    }),
-    now,
-    resumeWindowSeconds,
-  });
   const readObject = async (key) => {
     const entry = await r2Bucket.get(key);
     if (entry === null) return null;
     return new Uint8Array(await entry.arrayBuffer());
   };
-  const objectEntries = await listR2ObjectsDetailed({ accountId, bucket: R2_BUCKET, token });
-  const manifestEntries = [];
-  for (const { key } of objectEntries) {
-    if (!key.startsWith("manifests/")) continue;
-    const bytes = await readObject(key);
-    manifestEntries.push({
-      key,
-      text: bytes instanceof Uint8Array ? new TextDecoder().decode(bytes) : null,
+  // Every family answers from its OWN coordinator instance (the worker route
+  // selects it by the x-data-plane-family header). An unreadable family aborts
+  // the whole run inside collectFamiliesRetentionState. `now` is the run's fixed
+  // instant: it feeds the prepared-receipt window and the fh-465 upload-age
+  // grace, and an absent or unknown timestamp fails the planner closed.
+  const scan = async () => {
+    const familiesState = await collectFamiliesRetentionState({
+      families: Object.keys(FAMILIES).sort(),
+      createPlane: (name) => createCloudflareCloudDataPlane({
+        r2Bucket,
+        coordinatorNamespace: createRemoteCoordinatorNamespace({ endpoint, key: writeKey, family: name }),
+        coordinatorName: name,
+      }),
+      now,
+      resumeWindowSeconds,
     });
+    const objectEntries = await listR2ObjectsDetailed({ accountId, bucket: R2_BUCKET, token });
+    const manifestEntries = [];
+    for (const { key } of objectEntries) {
+      if (!key.startsWith("manifests/")) continue;
+      const bytes = await readObject(key);
+      manifestEntries.push({
+        key,
+        text: bytes instanceof Uint8Array ? new TextDecoder().decode(bytes) : null,
+      });
+    }
+    const plan = computeRetentionPlan({ families: familiesState, manifestEntries, objectEntries, now });
+    return { familiesState, manifestEntries, plan };
+  };
+  let activeScan = await scan();
+  let stateRevalidated = false;
+  if (retentionDelete) {
+    // fh-465: the destructive phase only runs against the world the plan was
+    // computed from. Any manifest, receipt, or pointer change in between aborts
+    // with zero deletions — rerun rather than race a writer.
+    const revalidated = await scan();
+    assertSameRetentionInputs({
+      before: retentionInputFingerprint(activeScan),
+      after: retentionInputFingerprint(revalidated),
+    });
+    activeScan = revalidated;
+    stateRevalidated = true;
   }
-  const retentionPlan = computeRetentionPlan({
-    families: familiesState,
-    manifestEntries,
-    objectEntries,
-  });
+  const familiesState = activeScan.familiesState;
+  const retentionPlan = activeScan.plan;
   const report = {
     result: retentionDelete ? "retention_deleted" : "retention_dry_run",
     scope: "bucket-level",
@@ -2532,6 +2667,12 @@ async function runRetention({ tolerateGateBlock, retentionDelete, json, resumeWi
     },
     referenced_object_count: retentionPlan.referencedKeys.length,
     protected_keys_present: retentionPlan.skippedProtected,
+    state_revalidated: stateRevalidated,
+    grace_seconds: retentionPlan.graceSeconds,
+    grace_skipped_count: retentionPlan.skippedYoung.length,
+    grace_skipped: retentionPlan.skippedYoung,
+    manifest_grace_skipped_count: retentionPlan.manifestGraceSkipped.length,
+    manifest_grace_skipped: retentionPlan.manifestGraceSkipped,
     candidate_count: retentionPlan.candidates.length,
     candidate_bytes: retentionPlan.candidates.reduce((total, candidate) => total + (candidate.size ?? 0), 0),
     candidates: retentionPlan.candidates,

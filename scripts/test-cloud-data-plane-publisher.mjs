@@ -3090,14 +3090,14 @@ await rm(retentionRoot, { recursive: true, force: true });
     {
       success: true,
       result: [
-        { key: "objects/sha256/aa", size: 10 },
-        { key: "objects/sha256/bb", size: 20 },
+        { key: "objects/sha256/aa", size: 10, uploaded: "2026-08-01T00:00:00.000Z" },
+        { key: "objects/sha256/bb", size: 20, last_modified: "2026-08-02T00:00:00.000Z" },
       ],
       result_info: { cursor: "next-page" },
     },
     {
       success: true,
-      result: [{ key: "manifests/oecd-cli-x.json", size: 30 }],
+      result: [{ key: "manifests/oecd-cli-x.json", size: 30, uploaded: "2026-08-03T00:00:00.000Z" }],
       result_info: {},
     },
   ];
@@ -3117,9 +3117,9 @@ await rm(retentionRoot, { recursive: true, force: true });
   });
   assert.equal(listCalls, 2); // cursor followed exactly once
   assert.deepEqual(listed, [
-    { key: "objects/sha256/aa", size: 10 },
-    { key: "objects/sha256/bb", size: 20 },
-    { key: "manifests/oecd-cli-x.json", size: 30 },
+    { key: "objects/sha256/aa", size: 10, uploaded: "2026-08-01T00:00:00.000Z" },
+    { key: "objects/sha256/bb", size: 20, uploaded: "2026-08-02T00:00:00.000Z" },
+    { key: "manifests/oecd-cli-x.json", size: 30, uploaded: "2026-08-03T00:00:00.000Z" },
   ]);
 
   const deleteBase = { accountId: "acct", bucket: "bucket", token: "token", key: "objects/sha256/aa" };
