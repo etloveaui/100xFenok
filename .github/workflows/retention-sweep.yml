@@ -32,9 +32,9 @@ on:
         required: false
         type: boolean
         default: false
-  # FINAL ENABLE SWITCH (parent, after candidate acceptance): uncomment.
+  # Armed only after the hosted schedule tests pass. KST Sunday 01:00..05:30.
   # schedule:
-  #   - cron: '17 11 * * 6'
+  #   - cron: '0,30 16-20 * * 6'
 
 permissions:
   actions: write
@@ -61,12 +61,19 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: '22'
+      - name: Claim bounded night slot
+        id: night
+        if: github.event_name == 'schedule'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: node scripts/ops/retention-schedule.mjs claim
       - name: Confirm gate
         run: |
           if [ "${{ github.event_name }}" = "workflow_dispatch" ] && [ "${{ github.event.inputs.confirm }}" != "RUN" ]; then
             echo "confirm must be RUN"; exit 64
           fi
       - name: Plan (outside any pause)
+        if: github.event_name != 'schedule' || steps.night.outputs.run == 'true'
         env:
           CLOUDFLARE_ACCOUNT_ID: aeeb5ea3affe55a2219d08ea02dad9e1
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
@@ -75,6 +82,7 @@ jobs:
         shell: bash
         run: node scripts/ops/retention-sweep.mjs plan --out=plan.json | tee plan-summary.json
       - name: Short-pause window (lease → pause → drain → apply → restore)
+        if: github.event_name != 'schedule' || steps.night.outputs.run == 'true'
         env:
           CLOUDFLARE_ACCOUNT_ID: aeeb5ea3affe55a2219d08ea02dad9e1
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
@@ -91,6 +99,12 @@ jobs:
             --repo="${{ github.repository }}" \
             --keys-out=apply-keys.json \
             $FLAGS | tee window-report.json
+      - name: Record scheduled outcome
+        if: always() && github.event_name == 'schedule' && steps.night.outputs.run == 'true'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: node scripts/ops/retention-schedule.mjs finish | tee schedule-report.json
+        shell: bash
       - name: Upload evidence
         if: always()
         uses: actions/upload-artifact@v4
@@ -100,4 +114,5 @@ jobs:
             plan-summary.json
             window-report.json
             apply-keys.json
+            schedule-report.json
           if-no-files-found: ignore

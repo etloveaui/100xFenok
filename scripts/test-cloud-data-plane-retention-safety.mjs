@@ -1045,6 +1045,35 @@ try {
     console.log("retention safety 17 ok (fresh coordinator states reuse one listing snapshot)");
   }
 
+  // Scheduled retries are bounded, idempotent, and cannot infer acceptance from a green job.
+  {
+    const {freshState, claim, finish, acceptedReport} = await import('./ops/retention-schedule.mjs');
+    let state=freshState();
+    assert.equal(claim(state,{now:'2026-09-26T15:59:00Z',runId:'x'}).run,false);
+    assert.equal(claim(state,{now:'2026-09-26T21:00:00Z',runId:'x'}).run,false);
+    assert.equal(claim(state,{now:'2026-10-03T16:00:00Z',runId:'x'}).run,false);
+    for(let i=0;i<10;i++) {
+      const now=new Date(Date.parse('2026-09-26T16:00:00Z')+i*1800000).toISOString();
+      const runId=String(i), c=claim(state,{now,runId});assert.equal(c.run,true);state=c.state;
+      assert.equal(claim(state,{now,runId}).run,false);
+      state=finish(state,{now,runId,report:{result:'retention_window_deferred',reason:'publishers_busy',preflight:{offenders:[{file:'busy.yml'}]}}});
+    }
+    assert.equal(claim(state,{now:'2026-09-26T20:59:00Z',runId:'11'}).run,false);
+    assert.equal(state.weekly_enabled,false);
+    assert.equal(state.campaign.attempts.length,10);
+    state=claim(freshState(),{now:'2026-09-26T16:00:00Z',runId:'success'}).state;
+    const report={result:'retention_window_applied',publishers:Array(28).fill('p'),
+      restore:{confirmed:Array(28).fill('p'),unconfirmed:[],failed:[]},duration:{first_disable_to_restore_seconds:120},
+      apply:{result:'retention_batch_applied',apply_exit_code:0,verification:'ok',verification_datasets:Object.fromEntries(Array.from({length:26},(_,i)=>[i,{missing_referenced_payloads:[]}])),payloads:{bytes:100},manifests:{bytes:20}}};
+    assert.equal(acceptedReport(report),true);
+    for(const bad of [null,{result:'retention_window_deferred'}, {...report,restore:{confirmed:[],unconfirmed:['p']}}, {...report,duration:{first_disable_to_restore_seconds:901}}, {...report,apply:{...report.apply,verification:'failed'}}]) assert.equal(acceptedReport(bad),false);
+    state=finish(state,{now:'2026-09-26T16:02:00Z',runId:'success',report});
+    assert.equal(state.weekly_enabled,true);assert.equal(state.first_success.bytes_freed,120);
+    assert.equal(claim(state,{now:'2026-09-26T16:30:00Z',runId:'after'}).run,false);
+    assert.equal(claim(state,{now:'2026-10-03T16:00:00Z',runId:'next_week'}).run,true);
+    console.log('retention safety 18 ok (ten attempts; busy defer; strict success; next-week gate)');
+  }
+
   console.log("test-cloud-data-plane-retention-safety: ok");
 } finally {
   fs.rmSync(root, { recursive: true, force: true });
