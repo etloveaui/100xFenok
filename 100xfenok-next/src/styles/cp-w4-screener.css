@@ -555,6 +555,13 @@
   gap: 8px;
 }
 
+/* fh-029 screener mobile top: the chip row and the quiet status line are
+   mobile-only; the desktop toolbar keeps its own markup at >=921px. */
+.cp-screener-chip-row,
+.cp-screener-status-line {
+  display: none;
+}
+
 /* The table/card toggle only does anything in the desktop results branch, which
    starts at 921px (ScreenerClient.tsx `hidden min-[921px]:block`). Below that the
    mobile card list renders and ignores viewMode, so the control was visible,
@@ -579,6 +586,196 @@
   [data-canvas-plus-screener-title] form button,
   [data-canvas-plus-screener-toolbar] button {
     min-height: 44px;
+  }
+
+  /* fh-029: below 921px the toolbar row is the mobile top stack — full-width
+     search, one non-wrapping chip row, and the quiet status line. Higher
+     specificity than the desktop row rule in canvas-plus.css on purpose. */
+  .canvas-plus.cp-screener-service [data-canvas-plus-screener-toolbar].cp-screener-toolbar-row {
+    flex-direction: column;
+    flex-wrap: nowrap;
+    align-items: stretch;
+    gap: 10px;
+  }
+
+  .canvas-plus.cp-screener-service .cp-screener-toolbar-row .cp-screener-search-form {
+    flex: none;
+    width: 100%;
+    max-width: none;
+  }
+
+  .cp-screener-chip-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    min-width: 0;
+    max-width: 100%;
+    min-height: 44px;
+    overflow-x: auto;
+    overscroll-behavior-x: contain;
+    scrollbar-width: none;
+  }
+
+  .cp-screener-chip-row::-webkit-scrollbar {
+    display: none;
+  }
+
+  .cp-screener-chip {
+    display: inline-flex;
+    flex: 0 0 auto;
+    align-items: center;
+    gap: 6px;
+    padding: 0 12px;
+    border: 1px solid var(--c-line);
+    border-radius: 999px;
+    background: var(--c-panel);
+    color: var(--c-ink-2);
+    font-size: 12px;
+    font-weight: 800;
+    white-space: nowrap;
+  }
+
+  .cp-screener-chip--condition {
+    padding-right: 0;
+  }
+
+  .cp-screener-chip__clear {
+    display: inline-flex;
+    width: 44px;
+    align-items: center;
+    justify-content: center;
+    padding: 0;
+    border: 0;
+    background: transparent;
+    color: var(--c-ink-3);
+    font-size: 14px;
+    font-weight: 900;
+    line-height: 1;
+  }
+
+  .cp-screener-status-line {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    min-height: 30px;
+  }
+
+  .cp-screener-below-rail button,
+  .cp-screener-below-rail a {
+    min-height: 44px;
+  }
+}
+
+/* fh-029: bottom filter sheet (mobile). Mirrors the shell 더보기 sheet geometry
+   (app-shell.css .mobile-more-sheet) at z-index 55: above the tab bar (40) and
+   더보기 (50), below the detail sheet (60). */
+.cp-screener-filter-sheet {
+  position: fixed;
+  inset: 0;
+  z-index: 55;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+}
+
+.cp-screener-filter-sheet__backdrop {
+  position: absolute;
+  inset: 0;
+  border: 0;
+  background: rgba(15, 23, 42, .38);
+}
+
+.cp-screener-filter-sheet__panel {
+  position: relative;
+  display: flex;
+  max-height: min(82dvh, 640px);
+  min-height: 0;
+  flex-direction: column;
+  background: var(--c-panel);
+  border-radius: 20px 20px 0 0;
+  padding: var(--s4) var(--s4) calc(var(--s4) + var(--safe-b));
+  box-shadow: var(--sh-pop);
+}
+
+.cp-screener-filter-sheet__head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: var(--s3);
+}
+
+.cp-screener-filter-sheet__head span {
+  font-size: 15px;
+  font-weight: 800;
+  color: var(--c-ink);
+}
+
+.cp-screener-filter-sheet__close {
+  width: 44px;
+  height: 44px;
+  display: grid;
+  place-items: center;
+  border: 0;
+  border-radius: 10px;
+  background: transparent;
+  color: var(--c-ink-2);
+}
+
+.cp-screener-filter-sheet__body {
+  display: flex;
+  min-height: 0;
+  flex-direction: column;
+  gap: var(--s3);
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
+
+.cp-screener-filter-sheet__footer {
+  display: flex;
+  gap: var(--s3);
+  margin-top: var(--s3);
+  border-top: 1px solid var(--c-line);
+  padding-top: var(--s3);
+}
+
+.cp-screener-filter-sheet__footer .cp-button {
+  min-height: 44px;
+}
+
+.cp-screener-filter-sheet__apply {
+  flex: 1;
+}
+
+.cp-screener-filter-sheet__body :is(button, a, select, input[type="number"], input[type="text"]) {
+  min-height: 44px;
+}
+
+.cp-screener-sheet-block {
+  display: grid;
+  gap: 10px;
+}
+
+.cp-screener-sheet-segment {
+  display: inline-flex;
+  gap: 4px;
+}
+
+.cp-screener-sheet-sort {
+  display: flex;
+  align-items: flex-end;
+  gap: 10px;
+}
+
+.cp-screener-sheet-sort .cp-screener-field {
+  flex: 1;
+  min-width: 0;
+}
+
+/* fh-029: the inline deck is the desktop affordance; below 921px the chip row
+   and the sheet replace it. */
+@media (max-width: 920px) {
+  [data-canvas-plus-screener-filter-deck="true"] {
+    display: none;
   }
 }
 

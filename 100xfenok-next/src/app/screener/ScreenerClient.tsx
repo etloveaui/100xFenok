@@ -33,6 +33,7 @@ import { commonBasisShortTermView, screenerSortValue } from "@/lib/screener/comm
 import { formatScreenerSourceDateLabel } from "@/lib/screener/source-dates";
 import ScreenerDesktopTable from "./ScreenerDesktopTable";
 import ScreenerDetailSheet from "./ScreenerDetailSheet";
+import ScreenerFilterSheet from "./ScreenerFilterSheet";
 import ScreenerDiscover from "./ScreenerDiscover";
 import ScreenerTanstackTable from "./ScreenerTanstackTable";
 import { SCREENER_QUESTION_CARDS, type QuestionCardDef, type QuestionCardId } from "@/lib/screener/question-cards";
@@ -1522,6 +1523,12 @@ export default function ScreenerClient({
   const [viewMode, setViewMode] = useState<ScreenerViewMode>("table");
   const [density, setDensity] = useState<ScreenerDensity>("compact");
   const [columnMenuOpen, setColumnMenuOpen] = useState(false);
+  const [filterSheetOpen, setFilterSheetOpen] = useState(false);
+  const [filterSheetSection, setFilterSheetSection] = useState<"filters" | "sort" | "presets">("filters");
+  const openFilterSheet = useCallback((section: "filters" | "sort" | "presets") => {
+    setFilterSheetSection(section);
+    setFilterSheetOpen(true);
+  }, []);
 
   useEffect(() => {
     const source = currentJourneyReturnTo();
@@ -2405,528 +2412,12 @@ export default function ScreenerClient({
     Number(Boolean(revenueGrowthMin)) + Number(Boolean(epsGrowthMin)) + Number(Boolean(dividendYieldMin)) + Number(Boolean(dividendYieldMax)) + Number(Boolean(return12mMin)) + Number(Boolean(ret3yMin)) + Number(Boolean(ret5yMin));
   const qualityCount = Number(Boolean(roeMin)) + Number(Boolean(roeFy1Min)) + Number(Boolean(opmMin)) + Number(Boolean(durabilityMin)) + Number(Boolean(actionFilter)) + Number(Boolean(shortEdgeMin)) + Number(Boolean(longEdgeMin)) + Number(Boolean(connectionFilter));
   const activeFilterCount = scaleCount + valueCount + growthCount + qualityCount;
-  const pricedCount = sorted.filter((stock) => stock.price !== null).length;
-  const missingPriceCount = Math.max(0, sorted.length - pricedCount);
-  const railFreshness: EvidenceRailFreshness = screenerDataState.status === "ready" ? "fresh"
-    : screenerDataState.status === "pending" ? "pending"
-    : screenerDataState.status === "error" ? "error"
-    : screenerDataState.status === "stale" ? "stale"
-    : screenerDataState.status === "partial" ? "partial"
-    : "fixed";
-  // The age verdict's own words ride the rail while it is stale/error, so no
-  // extra constant is needed here.
-  const retryScreenerData = useCallback(() => {
-    refetchScreenerData();
-  }, [refetchScreenerData]);
-  const screenerNoticeRetryable = screenerDataState.status === "pending" || screenerDataState.status === "error";
-  const priceCoverageRatio = sorted.length > 0 ? Math.round((pricedCount / sorted.length) * 100) : 0;
-  const sourceDateLabel = formatScreenerSourceDateLabel(sourceDate, marketFactsDate, {
-    pending: !dataReady && !connectionIndexReady,
-  });
-  const densityClass = DENSITY_TABLE_CLASS[density];
 
-  useEffect(() => {
-    if (typeof window === "undefined") return;
-    const frame = window.requestAnimationFrame(() => {
-      if (!canvasPlusPreview) return;
-      if (scaleCount > 0) setScaleOpen(true);
-      if (valueCount > 0) setValueOpen(true);
-      if (growthCount > 0) setGrowthOpen(true);
-      if (qualityCount > 0) setQualityOpen(true);
-    });
-    return () => window.cancelAnimationFrame(frame);
-  }, [canvasPlusPreview, scaleCount, valueCount, growthCount, qualityCount]);
-
-  const modeToggle = (
-    <div className="flex flex-wrap items-center gap-3" data-screener-mode-toggle="true" role="group" aria-label="스크리너 모드">
-      <div className="inline-flex gap-0.5 rounded-lg bg-[var(--c-surface-2)] p-0.5">
-        {([
-          { id: "analyze", label: "분석" },
-          { id: "discover", label: "발견" },
-        ] as const).map((mode) => (
-          <button
-            key={mode.id}
-            type="button"
-            aria-pressed={screenerMode === mode.id}
-            onClick={() => handleScreenerModeChange(mode.id)}
-            className={screenerMode === mode.id
-              ? "inline-flex min-h-11 items-center rounded-md bg-[var(--c-brand)] px-4 text-[13px] font-semibold text-white transition focus-visible:outline focus-visible:outline-2 focus-visible:outline-brand-interactive"
-              : "inline-flex min-h-11 items-center rounded-md px-4 text-[13px] font-semibold text-[var(--c-ink-3)] transition hover:text-[var(--c-ink)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-brand-interactive"}
-          >
-            {mode.label}
-          </button>
-        ))}
-      </div>
-      <p className="whitespace-nowrap text-[12px] text-[var(--c-ink-3)]">분석: 표로 거르고 줄세우기 · 발견: 다섯 질문으로 시작</p>
-    </div>
-  );
-
-  if (screenerMode === "discover") {
-    return (
-      <div
-        className="canvas-plus cp-screener-service"
-        data-canvas-plus-screener-service="true"
-        data-screener-mode="discover"
-        data-journey-ready={journeyHydrated}
-      >
-        {modeToggle}
-        <div className="mt-3">
-          <ScreenerDiscover
-            key={activeCardId}
-            stocks={stocks}
-            dataReady={dataReady}
-            failed={failed}
-            sourceDate={screenerSourceDate}
-            marketFactsDate={marketFactsDate}
-            activeCardId={activeCardId}
-            onSelectCard={setActiveCardId}
-            onShowConditions={handleShowCardConditions}
-            onOpenAnalyze={() => handleScreenerModeChange("analyze")}
-            onRetry={retryScreenerData}
-            compareTickers={compareTickers}
-            onToggleCompare={handleToggleCompare}
-            onClearCompare={() => setCompareTickers([])}
-            holdingChanges={holdingChanges}
-            returnTo={journeyReturnTo}
-            onBeforeNavigate={saveJourneyBeforeNavigate}
-          />
-        </div>
-      </div>
-    );
-  }
-
-  return (
-    <div
-      className="canvas-plus cp-screener-service"
-      data-canvas-plus-screener-service="true"
-      data-screener-mode="analyze"
-      data-journey-ready={journeyHydrated}
-    >
-      {modeToggle}
-      {canvasPlusPreview ? (
-        <section data-canvas-plus-screener-title="true">
-          {/* v3.1: title + coverage stat on one line; the full sentence stays a tooltip. */}
-          <div className="flex min-w-0 flex-wrap items-center gap-x-3 gap-y-1">
-            <h1 className="shrink-0 text-[18px] font-semibold text-[var(--c-ink)]">종목 스크리너</h1>
-            <p
-              className="min-w-0 flex-1 truncate text-[12px] font-semibold text-[var(--c-ink-2)]"
-              title={`글로벌 ${stocks.length.toLocaleString("ko-KR")}개 종목 · 현재 ${sorted.length.toLocaleString("ko-KR")}개 중 가격 확인 ${pricedCount.toLocaleString("ko-KR")}개(${priceCoverageRatio}%)${missingPriceCount > 0 ? ` · 가격 미확인 ${missingPriceCount.toLocaleString("ko-KR")}개는 뒤로 정렬됩니다` : ""}`}
-            >
-              글로벌 {stocks.length.toLocaleString("ko-KR")}개 종목 · 현재 {sorted.length.toLocaleString("ko-KR")}개 중 가격 확인 {pricedCount.toLocaleString("ko-KR")}개({priceCoverageRatio}%)
-              {missingPriceCount > 0 ? ` · 가격 미확인 ${missingPriceCount.toLocaleString("ko-KR")}개는 뒤로 정렬됩니다` : null}
-            </p>
-            <Pill tone="neutral" aria-label={`데이터 원천 ${sourceDateLabel}`}>
-              {sourceDateLabel}
-            </Pill>
-          </div>
-
-          {/* v3.1: one compact toolbar row — scope, search, filter toggle, result
-              count, page status, column/view/density controls and provenance. */}
-          <div
-            className="cp-screener-toolbar-row mt-2"
-            data-canvas-plus-screener-toolbar="true"
-            aria-label="스크리너 범위"
-          >
-            <Pill tone="neutral">
-              주식 {stocks.length.toLocaleString("ko-KR")}
-            </Pill>
-            <TransitionLink href={ROUTES.etfs} className="inline-flex min-h-9 items-center rounded-full border border-[var(--c-line)] bg-[var(--c-panel)] px-3 text-[11px] font-black uppercase tracking-[0.1em] text-[var(--c-ink-2)] transition hover:border-[var(--brand-interactive)] hover:text-[var(--brand-interactive)]">
-              ETF
-            </TransitionLink>
-            <div className="cpw4-preset-wrap">
-              <button
-                type="button"
-                aria-expanded={presetMenuOpen}
-                aria-haspopup="menu"
-                onClick={() => setPresetMenuOpen((v) => !v)}
-                className="inline-flex min-h-9 items-center rounded-full border border-[var(--c-line)] bg-[var(--c-panel)] px-3 text-[11px] font-black uppercase tracking-[0.1em] text-[var(--c-ink-2)] transition hover:border-[var(--brand-interactive)] hover:text-[var(--brand-interactive)]"
-              >
-                내 프리셋
-              </button>
-              {presetMenuOpen && (
-                <div className="cp-screener-preset-menu cpw4-saved-preset-menu">
-                  <div className="cp-screener-preset-row">
-                    <input
-                      type="text"
-                      value={presetName}
-                      onChange={(event) => setPresetName(event.target.value)}
-                      onKeyDown={(event) => {
-                        if (event.key === "Enter") handleSavePreset();
-                      }}
-                      placeholder="프리셋 이름"
-                      className="cp-screener-preset-input"
-                    />
-                    <button
-                      type="button"
-                      onClick={handleSavePreset}
-                      disabled={!presetName.trim()}
-                      className="cp-button cp-screener-preset-save"
-                      data-variant="primary"
-                      data-density="compact"
-                    >
-                      저장
-                    </button>
-                  </div>
-                  {savedPresets.length > 0 ? (
-                    <div className="cp-screener-preset-list">
-                      {savedPresets.map((p) => (
-                        <div key={p.name} className="cp-screener-preset-item">
-                          <button
-                            type="button"
-                            onClick={() => handleLoadPreset(p.state)}
-                            className="cp-screener-preset-load"
-                            title={p.name}
-                          >
-                            {p.name}
-                          </button>
-                          <button
-                            type="button"
-                            onClick={() => handleDeletePreset(p.name)}
-                            className="cp-screener-preset-delete"
-                            aria-label={`${p.name} 삭제`}
-                          >
-                            ×
-                          </button>
-                        </div>
-                      ))}
-                    </div>
-                  ) : (
-                    <p className="cpw4-saved-preset-empty">저장된 프리셋이 없습니다.</p>
-                  )}
-                </div>
-              )}
-            </div>
-
-            <form className="flex min-h-9 min-w-24 flex-1 items-center gap-2 md:max-w-72 max-[600px]:order-last max-[600px]:basis-full max-[600px]:w-full" onSubmit={(event) => event.preventDefault()}>
-              <label className="sr-only" htmlFor="cp-screener-search-input">
-                티커 또는 종목명 검색
-              </label>
-              <input
-                id="cp-screener-search-input"
-                type="search"
-                value={search}
-                onChange={(event) => setSearch(event.target.value)}
-                placeholder="NVDA"
-                className="min-h-9 min-w-0 flex-1 rounded-lg border border-[var(--c-line)] bg-[var(--c-panel)] px-3 text-sm font-semibold text-[var(--c-ink)] outline-none transition placeholder:text-[var(--c-ink-3)] focus:border-[var(--brand-interactive)]"
-                data-canvas-plus-screener-search="true"
-              />
-              {search.trim() ? (
-                <button
-                  type="button"
-                  onClick={() => setSearch("")}
-                  className="inline-flex min-h-9 shrink-0 items-center rounded-full border border-[var(--c-line)] bg-[var(--c-panel)] px-3 text-[11px] font-black uppercase tracking-[0.1em] text-[var(--c-ink-2)] transition hover:border-[var(--brand-interactive)] hover:text-[var(--brand-interactive)]"
-                >
-                  초기화
-                </button>
-              ) : (
-                <span aria-hidden="true" className="inline-flex min-h-9 w-9 shrink-0 items-center justify-center rounded-full border border-[var(--c-line)] text-[11px] font-black text-[var(--c-ink-3)]">/</span>
-              )}
-            </form>
-            <button
-              type="button"
-              aria-expanded={filterDeckOpen}
-              onClick={() => setFilterDeckOpen((v) => !v)}
-              className="cp-screener-segment"
-              data-canvas-plus-active={String(filterDeckOpen)}
-              data-screener-filter-toggle="true"
-            >
-              필터
-              {activeFilterCount > 0 ? (
-                <span className="cp-screener-filter-count" data-active="true">{activeFilterCount}</span>
-              ) : null}
-              <span aria-hidden="true">{filterDeckOpen ? "▲" : "▼"}</span>
-            </button>
-
-            <span className="cp-screener-toolbar-stat" title={`결과 ${sorted.length.toLocaleString("ko-KR")}개`}>
-              결과 <b>{sorted.length.toLocaleString("ko-KR")}</b>개
-            </span>
-            <span className="cp-screener-toolbar-stat" data-screener-page-status="true">
-              {safePage + 1} / {pageCount} 페이지
-            </span>
-
-            <div className="relative">
-              <button
-                type="button"
-                aria-expanded={columnMenuOpen}
-                aria-haspopup="menu"
-                onClick={() => setColumnMenuOpen((v) => !v)}
-                className="inline-flex min-h-9 items-center gap-1 rounded-full border border-[var(--c-line)] bg-[var(--c-panel)] px-3 text-[11px] font-black uppercase tracking-[0.1em] text-[var(--c-ink-2)] transition hover:border-[var(--brand-interactive)] hover:text-[var(--brand-interactive)]"
-              >
-                컬럼 {PRESET_LABEL[preset]} <span aria-hidden="true">⌄</span>
-              </button>
-              {columnMenuOpen ? (
-                <div className="absolute right-0 top-full z-15 mt-2 grid min-w-44 gap-1 rounded-lg border border-[var(--c-line)] bg-[var(--c-panel)] p-1.5 shadow-lg" role="menu" aria-label="컬럼 preset">
-                  {(Object.keys(PRESET_KEYS) as ColumnPreset[]).map((p) => (
-                    <button
-                      key={p}
-                      type="button"
-                      role="menuitemradio"
-                      aria-checked={preset === p}
-                      onClick={() => {
-                        handlePresetChange(p);
-                        setColumnMenuOpen(false);
-                      }}
-                      data-canvas-plus-active={String(preset === p)}
-                      className="min-h-9 rounded-md px-2.5 text-left text-[12px] font-black text-[var(--c-ink-2)] transition hover:bg-[var(--c-surface-2)] hover:text-[var(--c-ink)]"
-                    >
-                      {PRESET_LABEL[p]}
-                    </button>
-                  ))}
-                </div>
-              ) : null}
-            </div>
-
-            <div data-screener-view-mode-control className="inline-flex items-center gap-1.5" aria-label="결과 표시 방식">
-              {VIEW_MODE_BUTTONS.map((item) => (
-                <button
-                  key={item}
-                  type="button"
-                  data-screener-view-mode-option={item}
-                  onClick={() => handleViewModeChange(item)}
-                  aria-label={VIEW_MODE_LABEL[item]}
-                  aria-pressed={viewMode === item}
-                  data-canvas-plus-active={String(viewMode === item)}
-                  className="inline-flex min-h-9 items-center rounded-full border border-[var(--c-line)] bg-[var(--c-panel)] px-3 text-[11px] font-black uppercase tracking-[0.1em] text-[var(--c-ink-2)] transition hover:border-[var(--brand-interactive)] hover:text-[var(--brand-interactive)]"
-                >
-                  {VIEW_MODE_LABEL[item]}
-                </button>
-              ))}
-            </div>
-
-            <div data-screener-density-control role="group" className="inline-flex items-center gap-1.5" aria-label="행 밀도">
-              {DENSITY_BUTTONS.map((item) => (
-                <button
-                  key={item}
-                  type="button"
-                  data-screener-density-option={item}
-                  data-canvas-plus-row-height={DENSITY_ROW_HEIGHT[item]}
-                  onClick={() => handleDensityChange(item)}
-                  aria-label={DENSITY_LABEL[item]}
-                  aria-pressed={density === item}
-                  data-canvas-plus-active={String(density === item)}
-                  className="inline-flex min-h-9 items-center rounded-full border border-[var(--c-line)] bg-[var(--c-panel)] px-3 text-[11px] font-black uppercase tracking-[0.1em] text-[var(--c-ink-3)] transition hover:border-[var(--c-ink-4)] hover:text-[var(--c-ink)]"
-                >
-                  {DENSITY_LABEL[item]}
-                </button>
-              ))}
-            </div>
-
-            <EvidenceRail
-              className="cp-screener-toolbar-provenance"
-              freshness={railFreshness}
-              stateLabel={screenerDataState.reason === "source-age" ? screenerDataState.label : undefined}
-              source="스크리너"
-              asOf={screenerSourceDate ?? "미제공"}
-              coverage={`가격 확인 ${pricedCount.toLocaleString("ko-KR")} / ${sorted.length.toLocaleString("ko-KR")}`}
-              onRetry={railFreshness === "fresh" ? undefined : retryScreenerData}
-              lkgAsOf={screenerSourceDate ?? undefined}
-              skeletonDelayMs={120}
-              onEvidence={() => window.open("/data/global-scouter/core/stocks_analyzer.json", "_blank", "noopener")}
-            />
-          </div>
-        </section>
-      ) : (
-        <section className="panel data-shell-header">
-          <div className="data-shell-head-main">
-            <p className="data-shell-kicker">종목 스크리너</p>
-            <h1 className="data-shell-title">종목 스크리너</h1>
-            <p className="data-shell-desc">
-              글로벌 {stocks.length.toLocaleString()}개 종목을 PER·PBR·배당·수익률로 필터링하고 비교합니다.
-            </p>
-          </div>
-          <div className="data-shell-head-actions">
-            <DataStateBadge state={screenerDataState} />
-            <button
-              type="button"
-              onClick={() => downloadConnectionCsv(sorted)}
-              disabled={!connectionIndexReady || sorted.length === 0}
-              className="data-shell-link disabled:cursor-not-allowed disabled:border-slate-200 disabled:bg-slate-50 disabled:text-slate-600"
-            >
-              필터 CSV
-            </button>
-            {singleStockEtfCompareHref ? (
-              <TransitionLink href={singleStockEtfCompareHref} className="data-shell-link">
-                필터 ETF 비교
-              </TransitionLink>
-            ) : null}
-            <TransitionLink href={ROUTES.sectors} className="data-shell-link">
-              섹터
-            </TransitionLink>
-            <MarketQuickLinks />
-            <div className="relative">
-              <button
-                type="button"
-                onClick={() => setPresetMenuOpen((v) => !v)}
-                className="data-shell-link"
-                aria-expanded={presetMenuOpen}
-                aria-haspopup="menu"
-              >
-                필터 저장
-              </button>
-              {presetMenuOpen && (
-                <div className="absolute right-0 top-full z-50 mt-2 w-64 rounded-xl border border-slate-200 bg-white p-3 shadow-lg">
-                  <div className="flex gap-2">
-                    <input
-                      type="text"
-                      value={presetName}
-                      onChange={(event) => setPresetName(event.target.value)}
-                      onKeyDown={(event) => {
-                        if (event.key === "Enter") handleSavePreset();
-                      }}
-                      placeholder="프리셋 이름"
-                      className="min-h-9 flex-1 rounded-lg border border-slate-200 bg-white px-2 text-sm font-semibold text-slate-900 outline-none transition focus:border-brand-interactive"
-                    />
-                    <button
-                      type="button"
-                      onClick={handleSavePreset}
-                      disabled={!presetName.trim()}
-                      className="rounded-lg border border-brand-interactive bg-brand-interactive px-2 text-[12px] font-black text-white transition hover:opacity-90 disabled:cursor-not-allowed disabled:border-slate-200 disabled:bg-slate-200 disabled:text-slate-600"
-                    >
-                      저장
-                    </button>
-                  </div>
-                  {savedPresets.length > 0 && (
-                    <div className="mt-2 space-y-1">
-                      {savedPresets.map((p) => (
-                        <div key={p.name} className="flex items-center justify-between gap-2">
-                          <button
-                            type="button"
-                            onClick={() => handleLoadPreset(p.state)}
-                            className="min-h-8 flex-1 truncate rounded-lg px-2 text-left text-sm font-semibold text-slate-900 transition hover:bg-slate-100"
-                            title={p.name}
-                          >
-                            {p.name}
-                          </button>
-                          <button
-                            type="button"
-                            onClick={() => handleDeletePreset(p.name)}
-                            className="flex h-8 w-8 items-center justify-center rounded-lg text-sm font-bold text-slate-500 transition hover:bg-slate-100 hover:text-red-600"
-                            aria-label={`${p.name} 삭제`}
-                          >
-                            ×
-                          </button>
-                        </div>
-                      ))}
-                    </div>
-                  )}
-                </div>
-              )}
-            </div>
-          </div>
-        </section>
-      )}
-
-      {screenerDataState.status !== "ready" && screenerDataState.status !== "pending" && !(canvasPlusPreview && screenerDataState.status === "partial") ? (
-        canvasPlusPreview ? (
-          <section className="cp-card cp-screener-data-state-card" data-canvas-plus-screener-data-state="true">
-            <DataStateNotice
-              state={screenerDataState}
-              actionLabel={screenerNoticeRetryable ? "다시 불러오기" : undefined}
-              onAction={screenerNoticeRetryable ? retryScreenerData : undefined}
-            />
-          </section>
-        ) : (
-          <DataStateNotice
-            state={screenerDataState}
-            actionLabel={screenerNoticeRetryable ? "다시 불러오기" : undefined}
-            onAction={screenerNoticeRetryable ? retryScreenerData : undefined}
-          />
-        )
-      ) : null}
-
-      {initialMacroContextId ? (
-        <MacroContextCard contextId={initialMacroContextId} surface="screener" />
-      ) : null}
-
-      <section
-        className={canvasPlusPreview
-          ? cx("cp-card cp-screener-selection-card cpw4-selection-card", selectedTickers.size === 0 && "cpw4-selection-card--empty")
-          : "rounded-[1.25rem] border border-slate-200 bg-white p-3 shadow-sm"}
-        data-canvas-plus-screener-selection-actions={canvasPlusPreview ? "true" : undefined}
-      >
-        <div className={canvasPlusPreview ? "cp-screener-selection-layout" : "flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between"}>
-          <div className={canvasPlusPreview ? "cp-screener-selection-copy" : "min-w-0"}>
-            {canvasPlusPreview ? (
-              <p className="cp-screener-selection-summary">
-                <span className="cp-screener-section-label">선택 작업</span>
-                {" · "}현재 필터에서 {selectedRows.length.toLocaleString("ko-KR")}개 선택
-                {selectedRows.length > 0 ? ` · 연결 ETF ${selectedSingleStockEtfCount.toLocaleString("ko-KR")}개` : ""}
-              </p>
-            ) : (
-              <>
-                <p className="text-[12px] font-black uppercase tracking-[0.1em] text-slate-500">선택 작업</p>
-                <p className="mt-1 text-sm font-bold text-slate-700">
-                  현재 필터에서 {selectedRows.length.toLocaleString("ko-KR")}개 선택
-                  {selectedRows.length > 0 ? ` · 연결 ETF ${selectedSingleStockEtfCount.toLocaleString("ko-KR")}개` : ""}
-                </p>
-              </>
-            )}
-          </div>
-          <div className={canvasPlusPreview ? "cp-screener-selection-actions" : "flex flex-wrap gap-2"}>
-            <button
-              type="button"
-              onClick={allPageSelected ? deselectPageRows : selectPageRows}
-              disabled={pageRows.length === 0}
-              className={canvasPlusPreview ? "cp-button cp-screener-action-button" : "min-h-9 rounded-md border border-[var(--c-line)] bg-[var(--c-surface-2)] px-3 text-[12px] font-black text-[var(--c-ink-2)] transition hover:border-[var(--brand-interactive)] hover:text-[var(--brand-interactive)] disabled:cursor-not-allowed disabled:bg-[var(--c-surface-2)] disabled:text-[var(--c-ink-2)]"}
-              data-variant={canvasPlusPreview ? "ghost" : undefined}
-              data-density={canvasPlusPreview ? "compact" : undefined}
-            >
-              {allPageSelected ? "페이지 해제" : "페이지 선택"}
-            </button>
-            <button
-              type="button"
-              onClick={selectFilteredRows}
-              disabled={sorted.length === 0}
-              className={canvasPlusPreview ? "cp-button cp-screener-action-button" : "min-h-9 rounded-md border border-[var(--c-line)] bg-[var(--c-surface-2)] px-3 text-[12px] font-black text-[var(--c-ink-2)] transition hover:border-[var(--brand-interactive)] hover:text-[var(--brand-interactive)] disabled:cursor-not-allowed disabled:bg-[var(--c-surface-2)] disabled:text-[var(--c-ink-2)]"}
-              data-variant={canvasPlusPreview ? "ghost" : undefined}
-              data-density={canvasPlusPreview ? "compact" : undefined}
-            >
-              필터 전체 선택
-            </button>
-            <button
-              type="button"
-              onClick={clearSelectedRows}
-              disabled={selectedTickers.size === 0}
-              className={canvasPlusPreview ? "cp-button cp-screener-action-button" : "min-h-9 rounded-md border border-[var(--c-line)] bg-[var(--c-panel)] px-3 text-[12px] font-black text-[var(--c-ink-2)] transition hover:border-[var(--brand-interactive)] hover:text-[var(--brand-interactive)] disabled:cursor-not-allowed disabled:bg-[var(--c-surface-2)] disabled:text-[var(--c-ink-2)]"}
-              data-variant={canvasPlusPreview ? "ghost" : undefined}
-              data-density={canvasPlusPreview ? "compact" : undefined}
-            >
-              선택 해제
-            </button>
-            <button
-              type="button"
-              onClick={() => downloadConnectionCsv(selectedRows)}
-              disabled={!connectionIndexReady || selectedRows.length === 0}
-              className={canvasPlusPreview ? "cp-button cp-screener-action-button" : "min-h-9 rounded-md bg-[var(--c-ink)] px-3 text-[12px] font-black text-[var(--c-panel)] transition hover:bg-[var(--brand-interactive)] disabled:cursor-not-allowed disabled:bg-[var(--c-surface-2)] disabled:text-[var(--c-ink-2)]"}
-              data-variant={canvasPlusPreview ? "primary" : undefined}
-              data-density={canvasPlusPreview ? "compact" : undefined}
-            >
-              선택 CSV
-            </button>
-            {selectedSingleStockEtfCompareHref ? (
-              <TransitionLink
-                href={selectedSingleStockEtfCompareHref}
-                className={canvasPlusPreview ? "cp-button cp-screener-action-button" : "inline-flex min-h-9 items-center rounded-md bg-[var(--c-ink)] px-3 text-[12px] font-black text-[var(--c-panel)] transition hover:bg-[var(--brand-interactive)]"}
-                data-variant={canvasPlusPreview ? "primary" : undefined}
-                data-density={canvasPlusPreview ? "compact" : undefined}
-              >
-                선택 ETF 비교
-              </TransitionLink>
-            ) : (
-              <span className={canvasPlusPreview ? "cp-screener-disabled-action" : "inline-flex min-h-9 items-center rounded-md border border-[var(--c-line)] bg-[var(--c-surface-2)] px-3 text-[12px] font-black text-[var(--c-ink-2)]"}>
-                선택 ETF 부족
-              </span>
-            )}
-          </div>
-        </div>
-      </section>
-
-      {/* Filter bar — the toggle lives in the toolbar row; the deck opens under it. */}
-      {canvasPlusPreview ? (filterDeckOpen || activeFilterChips.length > 0 ? (
-        <section data-canvas-plus-screener-filter-deck="true">
-          {filterDeckOpen ? (
-            <div className="cp-card cp-screener-filter-deck cpw4-filter-drawer">
-              <div className="cp-screener-filter-groups">
+  // fh-029: one shared element for the four filter groups — the desktop deck
+  // and the mobile sheet render the same controls from this JSX (no prop
+  // drilling of the filter fields).
+  const filterGroupControlsJsx = (
+    <>
             <div className="cp-screener-filter-group">
               <button
                 type="button"
@@ -3274,6 +2765,596 @@ export default function ScreenerClient({
                 </div>
               ) : null}
             </div>
+    </>
+  );
+  const pricedCount = sorted.filter((stock) => stock.price !== null).length;
+  const missingPriceCount = Math.max(0, sorted.length - pricedCount);
+  const railFreshness: EvidenceRailFreshness = screenerDataState.status === "ready" ? "fresh"
+    : screenerDataState.status === "pending" ? "pending"
+    : screenerDataState.status === "error" ? "error"
+    : screenerDataState.status === "stale" ? "stale"
+    : screenerDataState.status === "partial" ? "partial"
+    : "fixed";
+  // The age verdict's own words ride the rail while it is stale/error, so no
+  // extra constant is needed here.
+  const retryScreenerData = useCallback(() => {
+    refetchScreenerData();
+  }, [refetchScreenerData]);
+  const screenerNoticeRetryable = screenerDataState.status === "pending" || screenerDataState.status === "error";
+  const priceCoverageRatio = sorted.length > 0 ? Math.round((pricedCount / sorted.length) * 100) : 0;
+  const sourceDateLabel = formatScreenerSourceDateLabel(sourceDate, marketFactsDate, {
+    pending: !dataReady && !connectionIndexReady,
+  });
+  const densityClass = DENSITY_TABLE_CLASS[density];
+
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const frame = window.requestAnimationFrame(() => {
+      if (!canvasPlusPreview) return;
+      if (scaleCount > 0) setScaleOpen(true);
+      if (valueCount > 0) setValueOpen(true);
+      if (growthCount > 0) setGrowthOpen(true);
+      if (qualityCount > 0) setQualityOpen(true);
+    });
+    return () => window.cancelAnimationFrame(frame);
+  }, [canvasPlusPreview, scaleCount, valueCount, growthCount, qualityCount]);
+
+  const modeToggle = (
+    <div className="flex flex-wrap items-center gap-3" data-screener-mode-toggle="true" role="group" aria-label="스크리너 모드">
+      <div className="inline-flex gap-0.5 rounded-lg bg-[var(--c-surface-2)] p-0.5">
+        {([
+          { id: "analyze", label: "분석" },
+          { id: "discover", label: "발견" },
+        ] as const).map((mode) => (
+          <button
+            key={mode.id}
+            type="button"
+            aria-pressed={screenerMode === mode.id}
+            onClick={() => handleScreenerModeChange(mode.id)}
+            className={screenerMode === mode.id
+              ? "inline-flex min-h-11 items-center rounded-md bg-[var(--c-brand)] px-4 text-[13px] font-semibold text-white transition focus-visible:outline focus-visible:outline-2 focus-visible:outline-brand-interactive"
+              : "inline-flex min-h-11 items-center rounded-md px-4 text-[13px] font-semibold text-[var(--c-ink-3)] transition hover:text-[var(--c-ink)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-brand-interactive"}
+          >
+            {mode.label}
+          </button>
+        ))}
+      </div>
+      <p className="whitespace-nowrap text-[12px] text-[var(--c-ink-3)] max-[920px]:hidden">분석: 표로 거르고 줄세우기 · 발견: 다섯 질문으로 시작</p>
+    </div>
+  );
+
+  if (screenerMode === "discover") {
+    return (
+      <div
+        className="canvas-plus cp-screener-service"
+        data-canvas-plus-screener-service="true"
+        data-screener-mode="discover"
+        data-journey-ready={journeyHydrated}
+      >
+        {modeToggle}
+        <div className="mt-3">
+          <ScreenerDiscover
+            key={activeCardId}
+            stocks={stocks}
+            dataReady={dataReady}
+            failed={failed}
+            sourceDate={screenerSourceDate}
+            marketFactsDate={marketFactsDate}
+            activeCardId={activeCardId}
+            onSelectCard={setActiveCardId}
+            onShowConditions={handleShowCardConditions}
+            onOpenAnalyze={() => handleScreenerModeChange("analyze")}
+            onRetry={retryScreenerData}
+            compareTickers={compareTickers}
+            onToggleCompare={handleToggleCompare}
+            onClearCompare={() => setCompareTickers([])}
+            holdingChanges={holdingChanges}
+            returnTo={journeyReturnTo}
+            onBeforeNavigate={saveJourneyBeforeNavigate}
+          />
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div
+      className="canvas-plus cp-screener-service"
+      data-canvas-plus-screener-service="true"
+      data-screener-mode="analyze"
+      data-journey-ready={journeyHydrated}
+    >
+      {modeToggle}
+      {canvasPlusPreview ? (
+        <section data-canvas-plus-screener-title="true">
+          {/* v3.1: title + coverage stat on one line; the full sentence stays a tooltip.
+              fh-029: below 921px the title row gives way to the mobile stack. */}
+          <div className="flex min-w-0 flex-wrap items-center gap-x-3 gap-y-1 max-[920px]:hidden">
+            <h1 className="shrink-0 text-[18px] font-semibold text-[var(--c-ink)]">종목 스크리너</h1>
+            <p
+              className="min-w-0 flex-1 truncate text-[12px] font-semibold text-[var(--c-ink-2)]"
+              title={`글로벌 ${stocks.length.toLocaleString("ko-KR")}개 종목 · 현재 ${sorted.length.toLocaleString("ko-KR")}개 중 가격 확인 ${pricedCount.toLocaleString("ko-KR")}개(${priceCoverageRatio}%)${missingPriceCount > 0 ? ` · 가격 미확인 ${missingPriceCount.toLocaleString("ko-KR")}개는 뒤로 정렬됩니다` : ""}`}
+            >
+              글로벌 {stocks.length.toLocaleString("ko-KR")}개 종목 · 현재 {sorted.length.toLocaleString("ko-KR")}개 중 가격 확인 {pricedCount.toLocaleString("ko-KR")}개({priceCoverageRatio}%)
+              {missingPriceCount > 0 ? ` · 가격 미확인 ${missingPriceCount.toLocaleString("ko-KR")}개는 뒤로 정렬됩니다` : null}
+            </p>
+            <Pill tone="neutral" aria-label={`데이터 원천 ${sourceDateLabel}`}>
+              {sourceDateLabel}
+            </Pill>
+          </div>
+
+          {/* v3.1: one compact toolbar row — scope, search, filter toggle, result
+              count, page status, column/view/density controls and provenance.
+              fh-029: below 921px this row becomes the mobile top stack:
+              full-width search → horizontally scrolling chip row → quiet
+              status line (결과 N + compact evidence chip). */}
+          <div
+            className="cp-screener-toolbar-row mt-2"
+            data-canvas-plus-screener-toolbar="true"
+            aria-label="스크리너 범위"
+          >
+            <Pill tone="neutral" className="max-[920px]:hidden">
+              주식 {stocks.length.toLocaleString("ko-KR")}
+            </Pill>
+            <TransitionLink href={ROUTES.etfs} className="inline-flex min-h-9 items-center rounded-full border border-[var(--c-line)] bg-[var(--c-panel)] px-3 text-[11px] font-black uppercase tracking-[0.1em] text-[var(--c-ink-2)] transition hover:border-[var(--brand-interactive)] hover:text-[var(--brand-interactive)] max-[920px]:hidden">
+              ETF
+            </TransitionLink>
+            <div className="cpw4-preset-wrap max-[920px]:hidden">
+              <button
+                type="button"
+                aria-expanded={presetMenuOpen}
+                aria-haspopup="menu"
+                onClick={() => setPresetMenuOpen((v) => !v)}
+                className="inline-flex min-h-9 items-center rounded-full border border-[var(--c-line)] bg-[var(--c-panel)] px-3 text-[11px] font-black uppercase tracking-[0.1em] text-[var(--c-ink-2)] transition hover:border-[var(--brand-interactive)] hover:text-[var(--brand-interactive)]"
+              >
+                내 프리셋
+              </button>
+              {presetMenuOpen && (
+                <div className="cp-screener-preset-menu cpw4-saved-preset-menu">
+                  <div className="cp-screener-preset-row">
+                    <input
+                      type="text"
+                      value={presetName}
+                      onChange={(event) => setPresetName(event.target.value)}
+                      onKeyDown={(event) => {
+                        if (event.key === "Enter") handleSavePreset();
+                      }}
+                      placeholder="프리셋 이름"
+                      className="cp-screener-preset-input"
+                    />
+                    <button
+                      type="button"
+                      onClick={handleSavePreset}
+                      disabled={!presetName.trim()}
+                      className="cp-button cp-screener-preset-save"
+                      data-variant="primary"
+                      data-density="compact"
+                    >
+                      저장
+                    </button>
+                  </div>
+                  {savedPresets.length > 0 ? (
+                    <div className="cp-screener-preset-list">
+                      {savedPresets.map((p) => (
+                        <div key={p.name} className="cp-screener-preset-item">
+                          <button
+                            type="button"
+                            onClick={() => handleLoadPreset(p.state)}
+                            className="cp-screener-preset-load"
+                            title={p.name}
+                          >
+                            {p.name}
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => handleDeletePreset(p.name)}
+                            className="cp-screener-preset-delete"
+                            aria-label={`${p.name} 삭제`}
+                          >
+                            ×
+                          </button>
+                        </div>
+                      ))}
+                    </div>
+                  ) : (
+                    <p className="cpw4-saved-preset-empty">저장된 프리셋이 없습니다.</p>
+                  )}
+                </div>
+              )}
+            </div>
+
+            <form className="cp-screener-search-form flex min-h-9 min-w-24 flex-1 items-center gap-2 md:max-w-72" onSubmit={(event) => event.preventDefault()}>
+              <label className="sr-only" htmlFor="cp-screener-search-input">
+                티커 또는 종목명 검색
+              </label>
+              <input
+                id="cp-screener-search-input"
+                type="search"
+                value={search}
+                onChange={(event) => setSearch(event.target.value)}
+                placeholder="NVDA"
+                className="min-h-9 min-w-0 flex-1 rounded-lg border border-[var(--c-line)] bg-[var(--c-panel)] px-3 text-sm font-semibold text-[var(--c-ink)] outline-none transition placeholder:text-[var(--c-ink-3)] focus:border-[var(--brand-interactive)]"
+                data-canvas-plus-screener-search="true"
+              />
+              {search.trim() ? (
+                <button
+                  type="button"
+                  onClick={() => setSearch("")}
+                  className="inline-flex min-h-9 shrink-0 items-center rounded-full border border-[var(--c-line)] bg-[var(--c-panel)] px-3 text-[11px] font-black uppercase tracking-[0.1em] text-[var(--c-ink-2)] transition hover:border-[var(--brand-interactive)] hover:text-[var(--brand-interactive)]"
+                >
+                  초기화
+                </button>
+              ) : (
+                <span aria-hidden="true" className="inline-flex min-h-9 w-9 shrink-0 items-center justify-center rounded-full border border-[var(--c-line)] text-[11px] font-black text-[var(--c-ink-3)]">/</span>
+              )}
+            </form>
+
+            {/* fh-029/fh-035: the mobile condition strip. The filter chip stays
+                visible at every count — label "필터", or "필터 N" with N active
+                conditions; sort and presets open the sheet at their section.
+                Hidden at >=921px by CSS. */}
+            <div className="cp-screener-chip-row" data-screener-chip-row="true">
+              <button
+                type="button"
+                className="cp-screener-chip"
+                onClick={() => openFilterSheet("filters")}
+                aria-haspopup="dialog"
+              >
+                {activeFilterCount > 0 ? `필터 ${activeFilterCount}` : "필터"}
+              </button>
+              {activeFilterChips.map((chip) => (
+                <span key={chip.label} className="cp-screener-chip cp-screener-chip--condition">
+                  {chip.label}
+                  <button
+                    type="button"
+                    className="cp-screener-chip__clear"
+                    onClick={chip.clear}
+                    aria-label={`${chip.label} 해제`}
+                  >
+                    ×
+                  </button>
+                </span>
+              ))}
+              <button
+                type="button"
+                className="cp-screener-chip"
+                onClick={() => openFilterSheet("sort")}
+                aria-haspopup="dialog"
+              >
+                정렬: {COLUMNS.find((column) => column.key === sortKey)?.label ?? sortKey} <span aria-hidden="true">▾</span>
+              </button>
+              <button
+                type="button"
+                className="cp-screener-chip"
+                onClick={() => openFilterSheet("presets")}
+                aria-haspopup="dialog"
+              >
+                내 프리셋
+              </button>
+            </div>
+
+            <button
+              type="button"
+              aria-expanded={filterDeckOpen}
+              onClick={() => setFilterDeckOpen((v) => !v)}
+              className="cp-screener-segment max-[920px]:hidden"
+              data-canvas-plus-active={String(filterDeckOpen)}
+              data-screener-filter-toggle="true"
+            >
+              필터
+              {activeFilterCount > 0 ? (
+                <span className="cp-screener-filter-count" data-active="true">{activeFilterCount}</span>
+              ) : null}
+              <span aria-hidden="true">{filterDeckOpen ? "▲" : "▼"}</span>
+            </button>
+
+            <span className="cp-screener-toolbar-stat max-[920px]:hidden" title={`결과 ${sorted.length.toLocaleString("ko-KR")}개`}>
+              결과 <b>{sorted.length.toLocaleString("ko-KR")}</b>개
+            </span>
+            <span className="cp-screener-toolbar-stat max-[920px]:hidden" data-screener-page-status="true">
+              {safePage + 1} / {pageCount} 페이지
+            </span>
+
+            <div className="relative max-[920px]:hidden">
+              <button
+                type="button"
+                aria-expanded={columnMenuOpen}
+                aria-haspopup="menu"
+                onClick={() => setColumnMenuOpen((v) => !v)}
+                className="inline-flex min-h-9 items-center gap-1 rounded-full border border-[var(--c-line)] bg-[var(--c-panel)] px-3 text-[11px] font-black uppercase tracking-[0.1em] text-[var(--c-ink-2)] transition hover:border-[var(--brand-interactive)] hover:text-[var(--brand-interactive)]"
+              >
+                컬럼 {PRESET_LABEL[preset]} <span aria-hidden="true">⌄</span>
+              </button>
+              {columnMenuOpen ? (
+                <div className="absolute right-0 top-full z-15 mt-2 grid min-w-44 gap-1 rounded-lg border border-[var(--c-line)] bg-[var(--c-panel)] p-1.5 shadow-lg" role="menu" aria-label="컬럼 preset">
+                  {(Object.keys(PRESET_KEYS) as ColumnPreset[]).map((p) => (
+                    <button
+                      key={p}
+                      type="button"
+                      role="menuitemradio"
+                      aria-checked={preset === p}
+                      onClick={() => {
+                        handlePresetChange(p);
+                        setColumnMenuOpen(false);
+                      }}
+                      data-canvas-plus-active={String(preset === p)}
+                      className="min-h-9 rounded-md px-2.5 text-left text-[12px] font-black text-[var(--c-ink-2)] transition hover:bg-[var(--c-surface-2)] hover:text-[var(--c-ink)]"
+                    >
+                      {PRESET_LABEL[p]}
+                    </button>
+                  ))}
+                </div>
+              ) : null}
+            </div>
+
+            <div data-screener-view-mode-control className="inline-flex items-center gap-1.5" aria-label="결과 표시 방식">
+              {VIEW_MODE_BUTTONS.map((item) => (
+                <button
+                  key={item}
+                  type="button"
+                  data-screener-view-mode-option={item}
+                  onClick={() => handleViewModeChange(item)}
+                  aria-label={VIEW_MODE_LABEL[item]}
+                  aria-pressed={viewMode === item}
+                  data-canvas-plus-active={String(viewMode === item)}
+                  className="inline-flex min-h-9 items-center rounded-full border border-[var(--c-line)] bg-[var(--c-panel)] px-3 text-[11px] font-black uppercase tracking-[0.1em] text-[var(--c-ink-2)] transition hover:border-[var(--brand-interactive)] hover:text-[var(--brand-interactive)]"
+                >
+                  {VIEW_MODE_LABEL[item]}
+                </button>
+              ))}
+            </div>
+
+            <div data-screener-density-control role="group" className="inline-flex items-center gap-1.5" aria-label="행 밀도">
+              {DENSITY_BUTTONS.map((item) => (
+                <button
+                  key={item}
+                  type="button"
+                  data-screener-density-option={item}
+                  data-canvas-plus-row-height={DENSITY_ROW_HEIGHT[item]}
+                  onClick={() => handleDensityChange(item)}
+                  aria-label={DENSITY_LABEL[item]}
+                  aria-pressed={density === item}
+                  data-canvas-plus-active={String(density === item)}
+                  className="inline-flex min-h-9 items-center rounded-full border border-[var(--c-line)] bg-[var(--c-panel)] px-3 text-[11px] font-black uppercase tracking-[0.1em] text-[var(--c-ink-3)] transition hover:border-[var(--c-ink-4)] hover:text-[var(--c-ink)]"
+                >
+                  {DENSITY_LABEL[item]}
+                </button>
+              ))}
+            </div>
+
+            <EvidenceRail
+              className="cp-screener-toolbar-provenance max-[920px]:hidden"
+              freshness={railFreshness}
+              stateLabel={screenerDataState.reason === "source-age" ? screenerDataState.label : undefined}
+              source="스크리너"
+              asOf={screenerSourceDate ?? "미제공"}
+              coverage={`가격 확인 ${pricedCount.toLocaleString("ko-KR")} / ${sorted.length.toLocaleString("ko-KR")}`}
+              onRetry={railFreshness === "fresh" ? undefined : retryScreenerData}
+              lkgAsOf={screenerSourceDate ?? undefined}
+              skeletonDelayMs={120}
+              onEvidence={() => window.open("/data/global-scouter/core/stocks_analyzer.json", "_blank", "noopener")}
+            />
+
+            {/* fh-029: mobile-only quiet status line — replaces the toolbar's
+                result count + full provenance rail below 921px. */}
+            <div className="cp-screener-status-line" data-screener-status-line="true">
+              <span className="cp-screener-toolbar-stat" title={`결과 ${sorted.length.toLocaleString("ko-KR")}개`}>
+                결과 <b>{sorted.length.toLocaleString("ko-KR")}</b>개
+              </span>
+              <EvidenceRail
+                variant="chip"
+                freshness={railFreshness}
+                stateLabel={screenerDataState.reason === "source-age" ? screenerDataState.label : undefined}
+                source="스크리너"
+                asOf={screenerSourceDate ?? "미제공"}
+                onEvidence={() => window.open("/data/global-scouter/core/stocks_analyzer.json", "_blank", "noopener")}
+              />
+            </div>
+          </div>
+        </section>
+      ) : (
+        <section className="panel data-shell-header">
+          <div className="data-shell-head-main">
+            <p className="data-shell-kicker">종목 스크리너</p>
+            <h1 className="data-shell-title">종목 스크리너</h1>
+            <p className="data-shell-desc">
+              글로벌 {stocks.length.toLocaleString()}개 종목을 PER·PBR·배당·수익률로 필터링하고 비교합니다.
+            </p>
+          </div>
+          <div className="data-shell-head-actions">
+            <DataStateBadge state={screenerDataState} />
+            <button
+              type="button"
+              onClick={() => downloadConnectionCsv(sorted)}
+              disabled={!connectionIndexReady || sorted.length === 0}
+              className="data-shell-link disabled:cursor-not-allowed disabled:border-slate-200 disabled:bg-slate-50 disabled:text-slate-600"
+            >
+              필터 CSV
+            </button>
+            {singleStockEtfCompareHref ? (
+              <TransitionLink href={singleStockEtfCompareHref} className="data-shell-link">
+                필터 ETF 비교
+              </TransitionLink>
+            ) : null}
+            <TransitionLink href={ROUTES.sectors} className="data-shell-link">
+              섹터
+            </TransitionLink>
+            <MarketQuickLinks />
+            <div className="relative">
+              <button
+                type="button"
+                onClick={() => setPresetMenuOpen((v) => !v)}
+                className="data-shell-link"
+                aria-expanded={presetMenuOpen}
+                aria-haspopup="menu"
+              >
+                필터 저장
+              </button>
+              {presetMenuOpen && (
+                <div className="absolute right-0 top-full z-50 mt-2 w-64 rounded-xl border border-slate-200 bg-white p-3 shadow-lg">
+                  <div className="flex gap-2">
+                    <input
+                      type="text"
+                      value={presetName}
+                      onChange={(event) => setPresetName(event.target.value)}
+                      onKeyDown={(event) => {
+                        if (event.key === "Enter") handleSavePreset();
+                      }}
+                      placeholder="프리셋 이름"
+                      className="min-h-9 flex-1 rounded-lg border border-slate-200 bg-white px-2 text-sm font-semibold text-slate-900 outline-none transition focus:border-brand-interactive"
+                    />
+                    <button
+                      type="button"
+                      onClick={handleSavePreset}
+                      disabled={!presetName.trim()}
+                      className="rounded-lg border border-brand-interactive bg-brand-interactive px-2 text-[12px] font-black text-white transition hover:opacity-90 disabled:cursor-not-allowed disabled:border-slate-200 disabled:bg-slate-200 disabled:text-slate-600"
+                    >
+                      저장
+                    </button>
+                  </div>
+                  {savedPresets.length > 0 && (
+                    <div className="mt-2 space-y-1">
+                      {savedPresets.map((p) => (
+                        <div key={p.name} className="flex items-center justify-between gap-2">
+                          <button
+                            type="button"
+                            onClick={() => handleLoadPreset(p.state)}
+                            className="min-h-8 flex-1 truncate rounded-lg px-2 text-left text-sm font-semibold text-slate-900 transition hover:bg-slate-100"
+                            title={p.name}
+                          >
+                            {p.name}
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => handleDeletePreset(p.name)}
+                            className="flex h-8 w-8 items-center justify-center rounded-lg text-sm font-bold text-slate-500 transition hover:bg-slate-100 hover:text-red-600"
+                            aria-label={`${p.name} 삭제`}
+                          >
+                            ×
+                          </button>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              )}
+            </div>
+          </div>
+        </section>
+      )}
+
+      {screenerDataState.status !== "ready" && screenerDataState.status !== "pending" && !(canvasPlusPreview && screenerDataState.status === "partial") ? (
+        canvasPlusPreview ? (
+          <section className="cp-card cp-screener-data-state-card" data-canvas-plus-screener-data-state="true">
+            <DataStateNotice
+              state={screenerDataState}
+              actionLabel={screenerNoticeRetryable ? "다시 불러오기" : undefined}
+              onAction={screenerNoticeRetryable ? retryScreenerData : undefined}
+            />
+          </section>
+        ) : (
+          <DataStateNotice
+            state={screenerDataState}
+            actionLabel={screenerNoticeRetryable ? "다시 불러오기" : undefined}
+            onAction={screenerNoticeRetryable ? retryScreenerData : undefined}
+          />
+        )
+      ) : null}
+
+      {initialMacroContextId ? (
+        <MacroContextCard contextId={initialMacroContextId} surface="screener" />
+      ) : null}
+
+      <section
+        className={canvasPlusPreview
+          ? cx("cp-card cp-screener-selection-card cpw4-selection-card", selectedTickers.size === 0 && "cpw4-selection-card--empty")
+          : "rounded-[1.25rem] border border-slate-200 bg-white p-3 shadow-sm"}
+        data-canvas-plus-screener-selection-actions={canvasPlusPreview ? "true" : undefined}
+      >
+        <div className={canvasPlusPreview ? "cp-screener-selection-layout" : "flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between"}>
+          <div className={canvasPlusPreview ? "cp-screener-selection-copy" : "min-w-0"}>
+            {canvasPlusPreview ? (
+              <p className="cp-screener-selection-summary">
+                <span className="cp-screener-section-label">선택 작업</span>
+                {" · "}현재 필터에서 {selectedRows.length.toLocaleString("ko-KR")}개 선택
+                {selectedRows.length > 0 ? ` · 연결 ETF ${selectedSingleStockEtfCount.toLocaleString("ko-KR")}개` : ""}
+              </p>
+            ) : (
+              <>
+                <p className="text-[12px] font-black uppercase tracking-[0.1em] text-slate-500">선택 작업</p>
+                <p className="mt-1 text-sm font-bold text-slate-700">
+                  현재 필터에서 {selectedRows.length.toLocaleString("ko-KR")}개 선택
+                  {selectedRows.length > 0 ? ` · 연결 ETF ${selectedSingleStockEtfCount.toLocaleString("ko-KR")}개` : ""}
+                </p>
+              </>
+            )}
+          </div>
+          <div className={canvasPlusPreview ? "cp-screener-selection-actions" : "flex flex-wrap gap-2"}>
+            <button
+              type="button"
+              onClick={allPageSelected ? deselectPageRows : selectPageRows}
+              disabled={pageRows.length === 0}
+              className={canvasPlusPreview ? "cp-button cp-screener-action-button" : "min-h-9 rounded-md border border-[var(--c-line)] bg-[var(--c-surface-2)] px-3 text-[12px] font-black text-[var(--c-ink-2)] transition hover:border-[var(--brand-interactive)] hover:text-[var(--brand-interactive)] disabled:cursor-not-allowed disabled:bg-[var(--c-surface-2)] disabled:text-[var(--c-ink-2)]"}
+              data-variant={canvasPlusPreview ? "ghost" : undefined}
+              data-density={canvasPlusPreview ? "compact" : undefined}
+            >
+              {allPageSelected ? "페이지 해제" : "페이지 선택"}
+            </button>
+            <button
+              type="button"
+              onClick={selectFilteredRows}
+              disabled={sorted.length === 0}
+              className={canvasPlusPreview ? "cp-button cp-screener-action-button" : "min-h-9 rounded-md border border-[var(--c-line)] bg-[var(--c-surface-2)] px-3 text-[12px] font-black text-[var(--c-ink-2)] transition hover:border-[var(--brand-interactive)] hover:text-[var(--brand-interactive)] disabled:cursor-not-allowed disabled:bg-[var(--c-surface-2)] disabled:text-[var(--c-ink-2)]"}
+              data-variant={canvasPlusPreview ? "ghost" : undefined}
+              data-density={canvasPlusPreview ? "compact" : undefined}
+            >
+              필터 전체 선택
+            </button>
+            <button
+              type="button"
+              onClick={clearSelectedRows}
+              disabled={selectedTickers.size === 0}
+              className={canvasPlusPreview ? "cp-button cp-screener-action-button" : "min-h-9 rounded-md border border-[var(--c-line)] bg-[var(--c-panel)] px-3 text-[12px] font-black text-[var(--c-ink-2)] transition hover:border-[var(--brand-interactive)] hover:text-[var(--brand-interactive)] disabled:cursor-not-allowed disabled:bg-[var(--c-surface-2)] disabled:text-[var(--c-ink-2)]"}
+              data-variant={canvasPlusPreview ? "ghost" : undefined}
+              data-density={canvasPlusPreview ? "compact" : undefined}
+            >
+              선택 해제
+            </button>
+            <button
+              type="button"
+              onClick={() => downloadConnectionCsv(selectedRows)}
+              disabled={!connectionIndexReady || selectedRows.length === 0}
+              className={canvasPlusPreview ? "cp-button cp-screener-action-button" : "min-h-9 rounded-md bg-[var(--c-ink)] px-3 text-[12px] font-black text-[var(--c-panel)] transition hover:bg-[var(--brand-interactive)] disabled:cursor-not-allowed disabled:bg-[var(--c-surface-2)] disabled:text-[var(--c-ink-2)]"}
+              data-variant={canvasPlusPreview ? "primary" : undefined}
+              data-density={canvasPlusPreview ? "compact" : undefined}
+            >
+              선택 CSV
+            </button>
+            {selectedSingleStockEtfCompareHref ? (
+              <TransitionLink
+                href={selectedSingleStockEtfCompareHref}
+                className={canvasPlusPreview ? "cp-button cp-screener-action-button" : "inline-flex min-h-9 items-center rounded-md bg-[var(--c-ink)] px-3 text-[12px] font-black text-[var(--c-panel)] transition hover:bg-[var(--brand-interactive)]"}
+                data-variant={canvasPlusPreview ? "primary" : undefined}
+                data-density={canvasPlusPreview ? "compact" : undefined}
+              >
+                선택 ETF 비교
+              </TransitionLink>
+            ) : (
+              <span className={canvasPlusPreview ? "cp-screener-disabled-action" : "inline-flex min-h-9 items-center rounded-md border border-[var(--c-line)] bg-[var(--c-surface-2)] px-3 text-[12px] font-black text-[var(--c-ink-2)]"}>
+                선택 ETF 부족
+              </span>
+            )}
+          </div>
+        </div>
+      </section>
+
+      {/* Filter bar — the toggle lives in the toolbar row; the deck opens under it. */}
+      {canvasPlusPreview ? (filterDeckOpen || activeFilterChips.length > 0 ? (
+        <section data-canvas-plus-screener-filter-deck="true">
+          {filterDeckOpen ? (
+            <div className="cp-card cp-screener-filter-deck cpw4-filter-drawer">
+              <div className="cp-screener-filter-groups">
+            {filterGroupControlsJsx}
           </div>
 
           <div className="cp-screener-filter-footer">
@@ -4088,9 +4169,131 @@ export default function ScreenerClient({
         ) : null}
       </section>
 
+      {/* fh-029: on mobile the toolbar instance is hidden, so the full
+          provenance rail lives below the list with the page controls. */}
+      <div className="min-[921px]:hidden">
+        <EvidenceRail
+          className="cp-screener-below-rail"
+          freshness={railFreshness}
+          stateLabel={screenerDataState.reason === "source-age" ? screenerDataState.label : undefined}
+          source="스크리너"
+          asOf={screenerSourceDate ?? "미제공"}
+          coverage={`가격 확인 ${pricedCount.toLocaleString("ko-KR")} / ${sorted.length.toLocaleString("ko-KR")}`}
+          onRetry={railFreshness === "fresh" ? undefined : retryScreenerData}
+          lkgAsOf={screenerSourceDate ?? undefined}
+          skeletonDelayMs={120}
+          onEvidence={() => window.open("/data/global-scouter/core/stocks_analyzer.json", "_blank", "noopener")}
+        />
+      </div>
+
       <p className="px-1 text-[12px] text-[var(--c-ink-2)]">
         데이터: 기업 실적 · 밸류에이션 · 가격/배당 히스토리 · 기관 공시 · Short/Long Edge 점수. 정렬 시 결측치는 항상 뒤로 정렬됩니다.
       </p>
+
+      {filterSheetOpen ? (
+        <ScreenerFilterSheet
+          section={filterSheetSection}
+          resultCount={sorted.length}
+          onReset={resetFilters}
+          onClose={() => setFilterSheetOpen(false)}
+        >
+          <div className="cp-screener-sheet-block" data-sheet-section="scope">
+            <div className="cp-screener-sheet-segment" role="group" aria-label="대상">
+              <span className="cp-screener-segment" data-canvas-plus-active="true">주식</span>
+              <TransitionLink href={ROUTES.etfs} className="cp-screener-segment" data-canvas-plus-active="false">
+                ETF
+              </TransitionLink>
+            </div>
+          </div>
+          <div className="cp-screener-sheet-block" data-sheet-section="sort">
+            <p className="cp-screener-section-label">정렬</p>
+            <div className="cp-screener-sheet-sort">
+              <label className="cp-screener-field">
+                <span className="cp-screener-field__label">기준</span>
+                <select
+                  value={sortKey}
+                  onChange={(event) => {
+                    const next = event.target.value as ScreenerSortKey;
+                    if (next !== sortKey) toggleSort(next);
+                  }}
+                  className="cp-screener-control"
+                >
+                  {COLUMNS.map((column) => (
+                    <option key={column.key} value={column.key}>{column.label}</option>
+                  ))}
+                  {COLUMNS.some((column) => column.key === sortKey) ? null : (
+                    <option value={sortKey}>{sortKey}</option>
+                  )}
+                </select>
+              </label>
+              <button
+                type="button"
+                className="cp-screener-segment"
+                onClick={() => toggleSort(sortKey)}
+                aria-label={`정렬 방향 ${sortDir === "asc" ? "오름차순" : "내림차순"}`}
+              >
+                {sortDir === "asc" ? "오름차순 ↑" : "내림차순 ↓"}
+              </button>
+            </div>
+          </div>
+          <div className="cp-screener-sheet-block" data-sheet-section="presets">
+            <p className="cp-screener-section-label">내 프리셋</p>
+            <div className="cp-screener-preset-row">
+              <input
+                type="text"
+                value={presetName}
+                onChange={(event) => setPresetName(event.target.value)}
+                onKeyDown={(event) => {
+                  if (event.key === "Enter") handleSavePreset();
+                }}
+                placeholder="프리셋 이름"
+                className="cp-screener-preset-input"
+              />
+              <button
+                type="button"
+                onClick={handleSavePreset}
+                disabled={!presetName.trim()}
+                className="cp-button cp-screener-preset-save"
+                data-variant="primary"
+                data-density="compact"
+              >
+                저장
+              </button>
+            </div>
+            {savedPresets.length > 0 ? (
+              <div className="cp-screener-preset-list">
+                {savedPresets.map((p) => (
+                  <div key={p.name} className="cp-screener-preset-item">
+                    <button
+                      type="button"
+                      onClick={() => handleLoadPreset(p.state)}
+                      className="cp-screener-preset-load"
+                      title={p.name}
+                    >
+                      {p.name}
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => handleDeletePreset(p.name)}
+                      className="cp-screener-preset-delete"
+                      aria-label={`${p.name} 삭제`}
+                    >
+                      ×
+                    </button>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <p className="cpw4-saved-preset-empty">저장된 프리셋이 없습니다.</p>
+            )}
+          </div>
+          <div className="cp-screener-sheet-block" data-sheet-section="filters">
+            <div className="cp-screener-filter-groups">
+              {filterGroupControlsJsx}
+            </div>
+          </div>
+        </ScreenerFilterSheet>
+      ) : null}
 
       {expandedStock && expandedDetailId ? (
         <ScreenerDetailSheet

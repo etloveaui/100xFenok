@@ -2866,7 +2866,7 @@ async function collectRouteChecks(page, route) {
             failures.push({ check: "screener-search-readable-width", detail: `text width=${Math.round(textWidth)}px; ticker/company query is cramped` });
           }
         }
-        Array.from(document.querySelectorAll("[data-canvas-plus-screener-title] form button"))
+        Array.from(document.querySelectorAll("[data-canvas-plus-screener-toolbar] form button"))
           .filter((node) => node.getBoundingClientRect().width > 0)
           .forEach((node, index) => {
             if (node.getBoundingClientRect().height < 44) {
@@ -3816,7 +3816,7 @@ async function collectScreenerCardViewChecks(page, route) {
     await page.waitForTimeout(300);
   }
 
-  return page.evaluate(({ currentRoute, peerBaselineBefore }) => {
+  const result = await page.evaluate(({ currentRoute, peerBaselineBefore }) => {
     const failures = [];
     const viewportWidth = window.innerWidth;
     const scrollWidth = Math.max(
@@ -3879,6 +3879,80 @@ async function collectScreenerCardViewChecks(page, route) {
       failures,
     };
   }, { currentRoute: route, peerBaselineBefore: peerBaseline });
+
+  // Restore the product default before leaving this route: clicking the card
+  // option persists viewMode through writeScreenerView (localStorage), and the
+  // same browser context serves later routes in the run — a later
+  // /screener?mode=analyze pass must still open in table view.
+  await page
+    .locator('[data-screener-view-mode-option="table"]:visible')
+    .first()
+    .click({ timeout: 10000 })
+    .catch(() => {});
+  await page.waitForTimeout(200);
+
+  return result;
+}
+
+async function collectScreenerFilterSheetChecks(page, route) {
+  const viewport = page.viewportSize();
+  if (!viewport || route !== "/screener" || viewport.width > 920) {
+    return { route, failures: [] };
+  }
+
+  const failures = [];
+  try {
+    // The filter chip is always visible below 921px (label "필터", or "필터 N"
+    // with N active conditions), so the plain analyze route opens the sheet.
+    await page.goto(routeUrl(route), { waitUntil: "networkidle", timeout: 45000 });
+    const chip = page.locator("[data-screener-chip-row] > button").first();
+    await chip.waitFor({ state: "visible", timeout: 15000 });
+    await chip.click({ timeout: 10000 });
+    const dialog = page.locator('[data-screener-filter-sheet] [role="dialog"]').first();
+    await dialog.waitFor({ state: "visible", timeout: 10000 });
+
+    const focusInSheet = await page.evaluate(() => {
+      const panel = document.querySelector('[data-screener-filter-sheet] [role="dialog"]');
+      return Boolean(panel && document.activeElement && panel.contains(document.activeElement));
+    });
+    if (!focusInSheet) {
+      failures.push({ check: "screener-filter-sheet-focus", detail: "focus did not move into the sheet" });
+    }
+
+    const undersized = await page.evaluate(() => {
+      const panel = document.querySelector('[data-screener-filter-sheet] [role="dialog"]');
+      if (!panel) return -1;
+      return Array.from(panel.querySelectorAll('button, a, select, input:not([type="checkbox"])'))
+        .filter((node) => {
+          const rect = node.getBoundingClientRect();
+          return rect.width > 0 && rect.height > 0 && rect.height < 44;
+        }).length;
+    });
+    if (undersized !== 0) {
+      failures.push({ check: "screener-filter-sheet-controls", detail: `controls under 44px: ${undersized}` });
+    }
+
+    await page.keyboard.press("Escape");
+    await page.locator('[data-screener-filter-sheet] [role="dialog"]').first()
+      .waitFor({ state: "hidden", timeout: 10000 }).catch(() => {});
+    if ((await page.locator('[data-screener-filter-sheet] [role="dialog"]').count()) > 0) {
+      failures.push({ check: "screener-filter-sheet-escape", detail: "dialog still present after Escape" });
+    }
+    const focusReturned = await page.evaluate(() => {
+      const row = document.querySelector("[data-screener-chip-row]");
+      return Boolean(row && document.activeElement && row.contains(document.activeElement));
+    });
+    if (!focusReturned) {
+      failures.push({ check: "screener-filter-sheet-focus-return", detail: "focus did not return to the chip row" });
+    }
+  } catch (error) {
+    failures.push({ check: "screener-filter-sheet", detail: String(error) });
+  } finally {
+    await page.goto(routeUrl(route), { waitUntil: "domcontentloaded" }).catch(() => {});
+    await prepareDynamicRoute(page, route);
+  }
+
+  return { route, failures };
 }
 
 async function collectStockFinancialChartChecks(page, route) {
@@ -4657,6 +4731,7 @@ try {
           result.cardViewPeerHeightBefore = cardViewChecks.peerHeightBefore;
           result.cardViewPeerHeightAfter = cardViewChecks.peerHeightAfter;
           result.failures.push(...await collectScreenerInvestorFlowChecks(page, route, name));
+          result.failures.push(...(await collectScreenerFilterSheetChecks(page, route)).failures);
         }
         if (route.startsWith("/stock/") && route.includes("tab=financials")) {
           const financialChartChecks = await collectStockFinancialChartChecks(page, route);
