@@ -143,11 +143,13 @@ function createGhDriver({ execFileImpl = promisify(execFile), repo = null, now =
 
 // --- journal ------------------------------------------------------------------
 
-async function readJournal({ gh }) {
+async function readJournal({ gh, number = null }) {
+  if (!number) {
   const list = await gh.call(["issue", "list", "--state", "open", "--search", `${JOURNAL_TITLE} in:title`, "--json", "number"], { allowFailure: true });
   if (!list.ok) fail("GH_COMMAND_FAILED", "issue list");
   const issues = JSON.parse(list.stdout || "[]");
-  const number = issues[0]?.number ?? null;
+  number = issues[0]?.number ?? null;
+  }
   if (!number) return { number: null, journal: null };
   const view = await gh.call(["issue", "view", String(number), "--json", "comments"], { allowFailure: true });
   if (!view.ok) fail("GH_COMMAND_FAILED", "issue view");
@@ -339,7 +341,7 @@ export async function runWindow({
     lease: { run_id: runId, started_at: new Date(startedMs).toISOString(), expires_at: new Date(now() + leaseTtlMs).toISOString() },
   };
   journalIssue = await upsertJournal({ gh, number: journalIssue, journal: claimedJournal, io });
-  const readBack = await readJournal({ gh });
+  const readBack = await readJournal({ gh, number: journalIssue });
   if (readBack.journal?.lease?.run_id !== runId) {
     return { ...report, result: "retention_window_aborted", reason: "lease_readback_mismatch" };
   }

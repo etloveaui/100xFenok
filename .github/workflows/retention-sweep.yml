@@ -72,6 +72,7 @@ jobs:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           DATA_PLANE_ENDPOINT: https://100xfenok.etloveaui.workers.dev/internal/cloud-data-plane
           DATA_PLANE_WRITE_KEY: ${{ secrets.DATA_PLANE_WRITE_KEY }}
+        shell: bash
         run: node scripts/ops/retention-sweep.mjs plan --out=plan.json | tee plan-summary.json
       - name: Short-pause window (lease → pause → drain → apply → restore)
         env:
@@ -80,6 +81,7 @@ jobs:
           DATA_PLANE_ENDPOINT: https://100xfenok.etloveaui.workers.dev/internal/cloud-data-plane
           DATA_PLANE_WRITE_KEY: ${{ secrets.DATA_PLANE_WRITE_KEY }}
           GH_TOKEN: ${{ github.token }}
+        shell: bash
         run: |
           FLAGS=""
           if [ "${{ github.event.inputs.preflight_only }}" = "true" ]; then FLAGS="$FLAGS --preflight-only"; fi

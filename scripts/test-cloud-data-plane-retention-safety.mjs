@@ -907,7 +907,7 @@ try {
         const [a, b] = args;
         if (a === "issue" && b === "list" && args.includes("number,title")) return {ok: true, stdout: "[]"};
         if (a === "issue" && b === "create" && args.includes("100xFenok pipeline job failure alarm")) return {ok: true, stdout: "https://example.test/issues/8"};
-        if (a === "issue" && b === "list") return { ok: true, stdout: JSON.stringify(journalBox.number ? [{ number: journalBox.number }] : []) };
+        if (a === "issue" && b === "list") return { ok: true, stdout: JSON.stringify(journalBox.number && !fail.searchLag ? [{ number: journalBox.number }] : []) };
         if (a === "issue" && b === "view") return { ok: true, stdout: JSON.stringify({ comments: journalBox.journal ? [{ body: serializeJournal(journalBox.journal) }] : [] }) };
         if (a === "issue" && b === "comment") {
           const file = args[args.indexOf("--body-file") + 1];
@@ -978,7 +978,7 @@ try {
     gh = makeDriver({
       workflows: mkWf(["a.yml", "b.yml"], "active"),
       journalBox: { number: 7, journal: null },
-      fail: { disable: "b.yml" },
+      fail: { disable: "b.yml", searchLag: true },
     });
     const partialDisable = await runWindow({
       repo: "o/r", io,
@@ -986,6 +986,7 @@ try {
         publishers: { publishers: [{ file: "a.yml", name: "a.yml" }, { file: "b.yml", name: "b.yml" }], referenceOnly: [], unclassified: [] } },
     });
     assert.equal(partialDisable.result, "retention_window_aborted");
+    assert.equal(gh.calls.filter(c => c[0] === "issue" && c[1] === "list").length, 1, "lease readback uses the returned issue number despite search indexing lag");
     assert.ok(gh.calls.some((c) => c[0] === "workflow" && c[1] === "enable" && c[2] === "a.yml"), "the disabled prefix is restored");
     assert.equal(gh.workflows.find((w) => w.file === "a.yml").state, "active");
 
