@@ -122,9 +122,9 @@ const intersection = secTickers.filter((ticker) => core.has(ticker));
 // are re-pinned to the same measured values. core 1066 and intersection 424
 // are unchanged: source-data growth and resolution, not the graph expanding.
 assert.equal(core.size, 1066, "Global Scouter analyzer core count drifted");
-assert.equal(secTickers.length, 1031, "SEC 13F ticker count drifted");
+assert.equal(secTickers.length, 1032, "SEC 13F ticker count drifted");
 assert.equal(intersection.length, 424, "SEC 13F/core intersection drifted");
-assert.equal(outside.length, 607, "SEC 13F outside-core boundary drifted");
+assert.equal(outside.length, 608, "SEC 13F outside-core boundary drifted");
 
 const expected = new Map();
 for (const ticker of outside) {
@@ -166,12 +166,12 @@ for (const row of index.rows) {
 const countClass = (name) => index.rows.filter((row) => row.classification.classes.includes(name)).length;
 assert.equal(countClass("action_plus_market_facts"), 78);
 assert.equal(countClass("market_facts_only"), 37);
-assert.equal(countClass("no_action_index_overlap"), 529);
-assert.equal(countClass("no_market_facts"), 492);
+assert.equal(countClass("no_action_index_overlap"), 530);
+assert.equal(countClass("no_market_facts"), 493);
 assert.equal(countClass("action_index_only"), 0);
 assert.equal(index.counts.sec13f_extension_stock, 78);
 assert.equal(index.counts.sec13f_market_facts_only, 37);
-assert.equal(index.counts.sec13f_unresolved, 492);
+assert.equal(index.counts.sec13f_unresolved, 493);
 
 const extensionRows = index.rows.filter((row) => row.classification.type === "sec13f_extension_stock");
 assert.equal(extensionRows.length, 78);
@@ -201,7 +201,7 @@ assert.deepEqual(index.counts.estimate, {
   extension_full: 74,
   extension_incomplete: 4,
   market_facts_only_incomplete: 37,
-  unresolved_absent: 492,
+  unresolved_absent: 493,
   as_of: {
     bridge_generated_at: index.generated_at,
     yf_finance: deterministicGeneratedAt(index.rows.map((row) => row.yf_estimates.source_as_of)),
