@@ -307,6 +307,15 @@
   background: var(--fnk-neutral-50);
 }
 
+/* Phone: each 오늘 row is a link to that ETF and drew 17px tall. 28px rows
+   clear the 24px target minimum (WCAG 2.2 AA 2.5.8) with the 3px list gap. */
+@media (max-width: 767px) {
+  .etf-today-row {
+    min-height: 28px;
+    align-items: center;
+  }
+}
+
 .etf-today-row:focus-visible,
 .etf-tool-row:focus-visible,
 .etf-table-ticker:focus-visible,

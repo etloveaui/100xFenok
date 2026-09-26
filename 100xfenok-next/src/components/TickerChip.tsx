@@ -17,7 +17,8 @@ interface TickerChipProps {
 
 const LINK_CLASSES: Record<TickerChipVariant, string> = {
   pill: "inline-flex min-h-8 items-center rounded-full border border-slate-200 bg-white px-2 text-[10px] font-black text-slate-600 transition touch-manipulation hover:border-brand-interactive hover:text-brand-interactive",
-  inline: "inline-block py-1 font-black text-brand-interactive touch-manipulation hover:underline",
+  // A two-letter ticker is otherwise an 18px-wide target (WCAG 2.2 AA 2.5.8 asks 24px); px, not min-w-6, because the root font is 14px (min-w-6 = 21px). The text stays left-aligned.
+  inline: "inline-block min-w-[24px] py-1 font-black text-brand-interactive touch-manipulation hover:underline",
 };
 
 const TEXT_CLASSES: Record<TickerChipVariant, string> = {

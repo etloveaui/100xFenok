@@ -1180,6 +1180,15 @@
   white-space: nowrap;
 }
 
+/* Phone: 그래프 보기 drew 17px tall; 24px is the target minimum (WCAG 2.2 AA 2.5.8). */
+@media (max-width: 767px) {
+  .grn-teaser-cta {
+    display: inline-flex;
+    align-items: center;
+    min-height: 24px;
+  }
+}
+
 .grn-teaser-top {
   margin: 0;
   padding: 4px 16px 0;
@@ -1623,6 +1632,13 @@
   color: var(--fnk-brand-interactive);
   cursor: pointer;
   min-height: 44px;
+}
+
+/* The ticker buttons are 44px tall but only as wide as the ticker (18px for
+   ATI); the whole 44px square is now the target, text still left-aligned. */
+.sup-grand-ticker {
+  min-width: 44px;
+  text-align: left;
 }
 
 /* Graph tab mobile replacement: ranked list instead of the canvas. */

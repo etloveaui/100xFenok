@@ -614,7 +614,7 @@ export default function NewEtfsList({
       {loaded && rows.length > 0 ? (
         <div className="panel-foot flex flex-wrap items-center justify-between gap-2">
           <span>표시 중 {filteredRows.length.toLocaleString("ko-KR")} / {countRows(state.snapshot).toLocaleString("ko-KR")}개 · 신규 ETF는 관찰 목록 기준</span>
-          <TransitionLink href={ROUTES.etfs} className="font-black text-[var(--c-brand)] hover:underline">
+          <TransitionLink href={ROUTES.etfs} className="inline-flex min-h-[24px] items-center font-black text-[var(--c-brand)] hover:underline">
             ETF 센터로 이동
           </TransitionLink>
         </div>
