@@ -8,7 +8,6 @@ import CpButton from "@/components/canvas-plus/CpButton";
 import CpPriceChart from "@/components/canvas-plus/charts/CpPriceChart";
 import type { CpChartDatum } from "@/components/canvas-plus/charts/types";
 import DataStateNotice, { DataStateBadge } from "@/components/DataStateNotice";
-import MarketQuickLinks from "@/components/market/MarketQuickLinks";
 import { resolveSector, sectorLabelKo } from "@/lib/design/sectorMap";
 import { bandPct } from "@/lib/screener/bands";
 import {
@@ -2981,7 +2980,6 @@ export default function StockDetailClient({
                 <span className="delay">{delayText}</span>
               </div>
             </div>
-            <MarketQuickLinks className="stock-market-links" />
             <StockTabsNav
               symbol={symbol}
               tabs={stockTabs}
@@ -3139,7 +3137,6 @@ export default function StockDetailClient({
           </div>
           <div className="flex flex-wrap items-center gap-2 px-4 pb-2">
             <DataStateBadge state={priceDataState} />
-            <MarketQuickLinks className="stock-market-links" />
           </div>
           <StockTabsNav
             symbol={symbol}
@@ -3151,20 +3148,19 @@ export default function StockDetailClient({
           <EvidenceRail freshness={headerFreshness} source="통합 시세" asOf={typeof marketFactsSourceAsOf === "string" ? marketFactsSourceAsOf : "—"} coverage="가격·시가총액" next={marketFactsLoading || (displayPrice !== null && marketFacts) ? undefined : displayPrice !== null ? "통합 지표 연결 시" : "가격 연결 시"} onRetry={headerRetry} lkgAsOf={headerLkgAsOf} skeletonDelayMs={120} />
           <section aria-label={`${symbol} 핵심 요약`} data-stock-summary-strip="true" className="border-t border-[var(--c-line)] px-4 py-3">
             {valuationBandSummary && stripBandTone && stripBandPct !== null ? (
-              <div className="mb-2">
-                <p data-stock-summary-verdict className="text-[13px] font-bold leading-6 text-[var(--c-ink)]">
-                  {stripBandTone.label}{" "}
-                  <span className="font-semibold text-[var(--c-ink-2)]">
-                    · 현재 PER {valuationBandSummary.current.toFixed(1)}x · 밴드 {Math.round(stripBandPct)}%
-                  </span>
-                </p>
-                <div data-stock-summary-band-track className="relative mt-1.5 h-1.5 overflow-hidden rounded-full bg-[var(--c-surface-2)]" role="img" aria-label={`PER 밴드 ${Math.round(stripBandPct)}%, ${stripBandTone.label}`}>
-                  <span data-stock-summary-band-marker className="absolute inset-y-[-2px] w-[3px] rounded-full bg-[var(--c-ink)]" style={{ left: `${stripBandPct}%`, transform: "translateX(-1.5px)" }} />
-                </div>
-                <p className="mt-1 text-[12px] tabular-nums text-[var(--c-ink-3)]">
-                  {valuationBandSummary.min.toFixed(1)}x · 평균 {isFiniteNumber(valuationBandSummary.avg) ? `${valuationBandSummary.avg.toFixed(1)}x` : valuationBandSummary.source} · {valuationBandSummary.max.toFixed(1)}x
-                </p>
-              </div>
+              // One line: the band card in the right rail draws the band itself.
+              // The strip used to repeat it as a track whose fill matched the
+              // panel, so only the marker tick showed.
+              <p data-stock-summary-verdict className="mb-2 text-[13px] font-bold leading-6 text-[var(--c-ink)]">
+                {stripBandTone.label}{" "}
+                <span className="font-semibold text-[var(--c-ink-2)]">
+                  · 현재 PER {valuationBandSummary.current.toFixed(1)}x · 밴드 {Math.round(stripBandPct)}%
+                </span>{" "}
+                <span className="text-[12px] font-normal tabular-nums text-[var(--c-ink-3)]">
+                  ({valuationBandSummary.min.toFixed(1)}x ~ {valuationBandSummary.max.toFixed(1)}x
+                  {isFiniteNumber(valuationBandSummary.avg) ? ` · 평균 ${valuationBandSummary.avg.toFixed(1)}x` : ""})
+                </span>
+              </p>
             ) : (
               <p className="mb-2 text-[12px] text-[var(--c-ink-3)]">{rowLoading || detailLoading ? "밴드 확인 중" : "밴드를 확인하지 못했습니다"}</p>
             )}
