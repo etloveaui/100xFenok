@@ -682,7 +682,9 @@
   position: absolute;
   inset: 0;
   border: 0;
-  background: rgba(15, 23, 42, .38);
+  /* Same token-based scrim as the detail sheet (canvas-plus.css); a raw
+     rgba literal fails the W5 token foundation contract. */
+  background: color-mix(in srgb, var(--cp-text-strong) 38%, transparent);
 }
 
 .cp-screener-filter-sheet__panel {

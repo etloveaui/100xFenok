@@ -3147,6 +3147,7 @@ export default function ScreenerClient({
                 stateLabel={screenerDataState.reason === "source-age" ? screenerDataState.label : undefined}
                 source="스크리너"
                 asOf={screenerSourceDate ?? "미제공"}
+                coverage={`가격 확인 ${pricedCount.toLocaleString("ko-KR")} / ${sorted.length.toLocaleString("ko-KR")}`}
                 onEvidence={() => window.open("/data/global-scouter/core/stocks_analyzer.json", "_blank", "noopener")}
               />
             </div>
