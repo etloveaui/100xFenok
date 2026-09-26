@@ -2,19 +2,6 @@
   "attempts": [
     {
       "attempts_used": 1,
-      "event_name": "schedule",
-      "failures": [],
-      "latency_ms": 843,
-      "natural": true,
-      "observed_at": "2026-09-02T01:27:36Z",
-      "outcome": "fresh",
-      "run_attempt": 1,
-      "run_id": "33577879211",
-      "schedule": "20 23 * * 1-5",
-      "shard": "4/5"
-    },
-    {
-      "attempts_used": 1,
       "error": "StockDetailValidationError: Yahoo history close must be a finite number",
       "event_name": "schedule",
       "failures": [],
@@ -185,30 +172,43 @@
       "run_id": "35943054282",
       "schedule": "20 23 * * 1-5",
       "shard": "4/5"
+    },
+    {
+      "attempts_used": 1,
+      "event_name": "schedule",
+      "failures": [],
+      "latency_ms": 581,
+      "natural": true,
+      "observed_at": "2026-09-26T01:55:30Z",
+      "outcome": "fresh",
+      "run_attempt": 1,
+      "run_id": "36209116164",
+      "schedule": "20 23 * * 1-5",
+      "shard": "4/5"
     }
   ],
   "current": {
-    "fetched_at": "2026-09-24T01:33:48Z",
-    "history_as_of": "2026-09-23",
+    "fetched_at": "2026-09-26T01:58:05Z",
+    "history_as_of": "2026-09-25",
     "path": "data/yf/finance/JNJ.json",
-    "payload_sha256": "08856d850f5a6b47a8fad5ca2f7271ac045c94add0d3e08adc6a3d6ea69f0abd",
-    "quote_as_of": "2026-09-23T20:00:02Z",
-    "source_as_of": "2026-09-23"
+    "payload_sha256": "8f8f50b4c127261a62c93399c39f331e5abe0f0eb272743a2c3b284fb6324f95",
+    "quote_as_of": "2026-09-25T20:00:02Z",
+    "source_as_of": "2026-09-25"
   },
   "discovered_from": [
     "global_scouter_stock",
     "market_facts"
   ],
   "last_attempt": {
-    "attempts_used": 0,
+    "attempts_used": 1,
     "event_name": "schedule",
     "failures": [],
-    "latency_ms": 0,
+    "latency_ms": 581,
     "natural": true,
-    "observed_at": "2026-09-24T01:45:34Z",
-    "outcome": "skipped_fresh",
+    "observed_at": "2026-09-26T01:55:30Z",
+    "outcome": "fresh",
     "run_attempt": 1,
-    "run_id": "35943054282",
+    "run_id": "36209116164",
     "schedule": "20 23 * * 1-5",
     "shard": "4/5"
   },
@@ -235,14 +235,14 @@
   "promotion_contract": "provider_observation/v2",
   "provider_observation": {
     "event_name": "schedule",
-    "history_as_of": "2026-09-23",
-    "observed_at": "2026-09-24T01:29:54Z",
-    "payload_sha256": "558f752bc64c4d18d4e19abad87d1689031a810291c0328a6df82f202a62bd09",
-    "quote_as_of": "2026-09-23T20:00:02Z",
+    "history_as_of": "2026-09-25",
+    "observed_at": "2026-09-26T01:55:30Z",
+    "payload_sha256": "0350ae0e7768e8ebcb9a4a5a2ba7c0ec1624153216d3091b00f2d06fbd6d6a38",
+    "quote_as_of": "2026-09-25T20:00:02Z",
     "run_attempt": 1,
-    "run_id": "35943054282",
+    "run_id": "36209116164",
     "schema_version": "provider_observation/v2",
-    "source_as_of": "2026-09-23"
+    "source_as_of": "2026-09-25"
   },
   "recovered_at": "2026-09-17T01:31:25Z",
   "recovered_from_run_id": "34917681226",
@@ -263,5 +263,5 @@
     "source_as_of": "2026-07-08"
   },
   "ticker": "JNJ",
-  "updated_at": "2026-09-24T01:45:34Z"
+  "updated_at": "2026-09-26T01:55:30Z"
 }

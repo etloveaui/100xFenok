@@ -2,19 +2,6 @@
   "attempts": [
     {
       "attempts_used": 1,
-      "event_name": "schedule",
-      "failures": [],
-      "latency_ms": 833,
-      "natural": true,
-      "observed_at": "2026-09-04T01:04:03Z",
-      "outcome": "fresh",
-      "run_attempt": 1,
-      "run_id": "33824182428",
-      "schedule": "20 23 * * 1-5",
-      "shard": "0/5"
-    },
-    {
-      "attempts_used": 1,
       "error": "ValueError: quote_as_of is unavailable for KMI despite available history",
       "event_name": "schedule",
       "failures": [],
@@ -182,30 +169,43 @@
       "run_id": "35943054282",
       "schedule": "20 23 * * 1-5",
       "shard": "4/5"
+    },
+    {
+      "attempts_used": 1,
+      "event_name": "schedule",
+      "failures": [],
+      "latency_ms": 450,
+      "natural": true,
+      "observed_at": "2026-09-26T01:55:30Z",
+      "outcome": "fresh",
+      "run_attempt": 1,
+      "run_id": "36209116164",
+      "schedule": "20 23 * * 1-5",
+      "shard": "4/5"
     }
   ],
   "current": {
-    "fetched_at": "2026-09-24T01:33:50Z",
-    "history_as_of": "2026-09-23",
+    "fetched_at": "2026-09-26T01:58:06Z",
+    "history_as_of": "2026-09-25",
     "path": "data/yf/finance/KMI.json",
-    "payload_sha256": "2eedae6f9f7148838a1a3f22251f77000233b6ef692e1e5fc66e79e745eb971b",
-    "quote_as_of": "2026-09-23T20:00:02Z",
-    "source_as_of": "2026-09-23"
+    "payload_sha256": "590481d23f04c817dfab900c0204acf89431edd585ac8ac3236a3a4ca3fec9e0",
+    "quote_as_of": "2026-09-25T20:00:02Z",
+    "source_as_of": "2026-09-25"
   },
   "discovered_from": [
     "global_scouter_stock",
     "market_facts"
   ],
   "last_attempt": {
-    "attempts_used": 0,
+    "attempts_used": 1,
     "event_name": "schedule",
     "failures": [],
-    "latency_ms": 0,
+    "latency_ms": 450,
     "natural": true,
-    "observed_at": "2026-09-24T01:45:34Z",
-    "outcome": "skipped_fresh",
+    "observed_at": "2026-09-26T01:55:30Z",
+    "outcome": "fresh",
     "run_attempt": 1,
-    "run_id": "35943054282",
+    "run_id": "36209116164",
     "schedule": "20 23 * * 1-5",
     "shard": "4/5"
   },
@@ -232,14 +232,14 @@
   "promotion_contract": "provider_observation/v2",
   "provider_observation": {
     "event_name": "schedule",
-    "history_as_of": "2026-09-23",
-    "observed_at": "2026-09-24T01:29:54Z",
-    "payload_sha256": "cdc9e49691c0e26ee7ee873e129b3e2cbfa7da01b3c1094817539124330cf1c4",
-    "quote_as_of": "2026-09-23T20:00:02Z",
+    "history_as_of": "2026-09-25",
+    "observed_at": "2026-09-26T01:55:30Z",
+    "payload_sha256": "120b0173cd136570080f6303ad6ff28ecbadd765f5b1a007c5bb9a99f2d4a2e8",
+    "quote_as_of": "2026-09-25T20:00:02Z",
     "run_attempt": 1,
-    "run_id": "35943054282",
+    "run_id": "36209116164",
     "schema_version": "provider_observation/v2",
-    "source_as_of": "2026-09-23"
+    "source_as_of": "2026-09-25"
   },
   "recovered_at": "2026-09-10T01:10:13Z",
   "recovered_from_run_id": "34175958781",
@@ -250,5 +250,5 @@
   "retry": false,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "ticker": "KMI",
-  "updated_at": "2026-09-24T01:45:34Z"
+  "updated_at": "2026-09-26T01:55:30Z"
 }

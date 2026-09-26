@@ -2,19 +2,6 @@
   "attempts": [
     {
       "attempts_used": 1,
-      "event_name": "schedule",
-      "failures": [],
-      "latency_ms": 823,
-      "natural": true,
-      "observed_at": "2026-09-04T01:04:03Z",
-      "outcome": "fresh",
-      "run_attempt": 1,
-      "run_id": "33824182428",
-      "schedule": "20 23 * * 1-5",
-      "shard": "0/5"
-    },
-    {
-      "attempts_used": 1,
       "error": "ValueError: quote_as_of is unavailable for KHC despite available history",
       "event_name": "schedule",
       "failures": [],
@@ -182,30 +169,43 @@
       "run_id": "35943054282",
       "schedule": "20 23 * * 1-5",
       "shard": "4/5"
+    },
+    {
+      "attempts_used": 1,
+      "event_name": "schedule",
+      "failures": [],
+      "latency_ms": 433,
+      "natural": true,
+      "observed_at": "2026-09-26T01:55:30Z",
+      "outcome": "fresh",
+      "run_attempt": 1,
+      "run_id": "36209116164",
+      "schedule": "20 23 * * 1-5",
+      "shard": "4/5"
     }
   ],
   "current": {
-    "fetched_at": "2026-09-24T01:33:49Z",
-    "history_as_of": "2026-09-23",
+    "fetched_at": "2026-09-26T01:58:06Z",
+    "history_as_of": "2026-09-25",
     "path": "data/yf/finance/KHC.json",
-    "payload_sha256": "a8c086501038240122e337be8bd55370539534d1525777e6eb745aab42bb7e65",
-    "quote_as_of": "2026-09-23T20:00:03Z",
-    "source_as_of": "2026-09-23"
+    "payload_sha256": "82ddf12b36d685dd13fb425dc11b1d344970b823f23584926b9ae18afe1d366c",
+    "quote_as_of": "2026-09-25T20:00:03Z",
+    "source_as_of": "2026-09-25"
   },
   "discovered_from": [
     "global_scouter_stock",
     "market_facts"
   ],
   "last_attempt": {
-    "attempts_used": 0,
+    "attempts_used": 1,
     "event_name": "schedule",
     "failures": [],
-    "latency_ms": 0,
+    "latency_ms": 433,
     "natural": true,
-    "observed_at": "2026-09-24T01:45:34Z",
-    "outcome": "skipped_fresh",
+    "observed_at": "2026-09-26T01:55:30Z",
+    "outcome": "fresh",
     "run_attempt": 1,
-    "run_id": "35943054282",
+    "run_id": "36209116164",
     "schedule": "20 23 * * 1-5",
     "shard": "4/5"
   },
@@ -232,14 +232,14 @@
   "promotion_contract": "provider_observation/v2",
   "provider_observation": {
     "event_name": "schedule",
-    "history_as_of": "2026-09-23",
-    "observed_at": "2026-09-24T01:29:54Z",
-    "payload_sha256": "4e26901b23988786a32748d3405737b453ca01d97467ccbd74a15feb9bd31f3c",
-    "quote_as_of": "2026-09-23T20:00:03Z",
+    "history_as_of": "2026-09-25",
+    "observed_at": "2026-09-26T01:55:30Z",
+    "payload_sha256": "08da22189e97f841f64bebd4761525efd235c75bc95d26247247af6a915b62ed",
+    "quote_as_of": "2026-09-25T20:00:03Z",
     "run_attempt": 1,
-    "run_id": "35943054282",
+    "run_id": "36209116164",
     "schema_version": "provider_observation/v2",
-    "source_as_of": "2026-09-23"
+    "source_as_of": "2026-09-25"
   },
   "recovered_at": "2026-09-10T01:10:13Z",
   "recovered_from_run_id": "34175958781",
@@ -250,5 +250,5 @@
   "retry": false,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "ticker": "KHC",
-  "updated_at": "2026-09-24T01:45:34Z"
+  "updated_at": "2026-09-26T01:55:30Z"
 }

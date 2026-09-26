@@ -5,34 +5,6 @@
       "error": "StockDetailValidationError: Yahoo history close must be a finite number",
       "event_name": "schedule",
       "failures": [],
-      "latency_ms": 486,
-      "natural": true,
-      "observed_at": "2026-09-03T01:16:16Z",
-      "outcome": "failed",
-      "run_attempt": 1,
-      "run_id": "33702512577",
-      "schedule": "20 23 * * 1-5",
-      "shard": "1/5"
-    },
-    {
-      "attempts_used": 1,
-      "error": "StockDetailValidationError: Yahoo history close must be a finite number",
-      "event_name": "schedule",
-      "failures": [],
-      "latency_ms": 873,
-      "natural": true,
-      "observed_at": "2026-09-04T01:04:03Z",
-      "outcome": "failed",
-      "run_attempt": 1,
-      "run_id": "33824182428",
-      "schedule": "20 23 * * 1-5",
-      "shard": "0/5"
-    },
-    {
-      "attempts_used": 1,
-      "error": "StockDetailValidationError: Yahoo history close must be a finite number",
-      "event_name": "schedule",
-      "failures": [],
       "latency_ms": 565,
       "natural": true,
       "observed_at": "2026-09-05T01:04:38Z",
@@ -186,32 +158,58 @@
       "run_id": "36082706783",
       "schedule": "20 23 * * 1-5",
       "shard": "0/5"
+    },
+    {
+      "attempts_used": 1,
+      "event_name": "schedule",
+      "failures": [],
+      "latency_ms": 465,
+      "natural": true,
+      "observed_at": "2026-09-26T01:40:57Z",
+      "outcome": "fresh",
+      "run_attempt": 1,
+      "run_id": "36209116164",
+      "schedule": "20 23 * * 1-5",
+      "shard": "0/5"
+    },
+    {
+      "attempts_used": 0,
+      "event_name": "schedule",
+      "failures": [],
+      "latency_ms": 0,
+      "natural": true,
+      "observed_at": "2026-09-26T01:45:52Z",
+      "outcome": "skipped_fresh",
+      "run_attempt": 1,
+      "run_id": "36209116164",
+      "schedule": "20 23 * * 1-5",
+      "shard": "1/5"
     }
   ],
   "current": {
-    "fetched_at": "2026-09-25T01:40:46Z",
-    "history_as_of": "2026-09-24",
+    "fetched_at": "2026-09-26T01:43:46Z",
+    "history_as_of": "2026-09-25",
     "path": "data/yf/finance/AMZN.json",
-    "payload_sha256": "9ea6c23596928fa788f123a5d59eefd36bcd873c6317672f4301f75642455a49",
-    "quote_as_of": "2026-09-24T20:00:01Z",
-    "source_as_of": "2026-09-24"
+    "payload_sha256": "4d1506cff3cdcc7737d1f1c1c70c6686e2057056932b9229522afd61c90d57e4",
+    "quote_as_of": "2026-09-25T20:00:01Z",
+    "source_as_of": "2026-09-25"
   },
   "discovered_from": [
     "global_scouter_stock",
     "market_facts"
   ],
   "last_attempt": {
-    "attempts_used": 1,
+    "attempts_used": 0,
     "event_name": "schedule",
     "failures": [],
-    "latency_ms": 536,
+    "latency_ms": 0,
     "natural": true,
-    "observed_at": "2026-09-25T01:37:44Z",
-    "outcome": "fresh",
+    "observed_at": "2026-09-26T01:45:52Z",
+    "outcome": "skipped_fresh",
     "run_attempt": 1,
-    "run_id": "36082706783",
+    "run_id": "36209116164",
     "schedule": "20 23 * * 1-5",
-    "shard": "0/5"
+    "shard": "1/5"
   },
   "last_recovered_failure": {
     "attempts_used": 1,
@@ -236,14 +234,14 @@
   "promotion_contract": "provider_observation/v2",
   "provider_observation": {
     "event_name": "schedule",
-    "history_as_of": "2026-09-24",
-    "observed_at": "2026-09-25T01:37:44Z",
-    "payload_sha256": "7f2edf2192fe297896ff552c788972cac6bd847f8cbc9599f240b76cf4e6e6fb",
-    "quote_as_of": "2026-09-24T20:00:01Z",
+    "history_as_of": "2026-09-25",
+    "observed_at": "2026-09-26T01:40:57Z",
+    "payload_sha256": "f201735ce6800c539832db158ea4a2dacbb4b57932834371a823cfe83f759d80",
+    "quote_as_of": "2026-09-25T20:00:01Z",
     "run_attempt": 1,
-    "run_id": "36082706783",
+    "run_id": "36209116164",
     "schema_version": "provider_observation/v2",
-    "source_as_of": "2026-09-24"
+    "source_as_of": "2026-09-25"
   },
   "recovered_at": "2026-09-17T01:31:25Z",
   "recovered_from_run_id": "35044200539",
@@ -254,5 +252,5 @@
   "retry": false,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "ticker": "AMZN",
-  "updated_at": "2026-09-25T01:37:44Z"
+  "updated_at": "2026-09-26T01:45:52Z"
 }

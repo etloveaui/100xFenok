@@ -4,19 +4,6 @@
       "attempts_used": 1,
       "event_name": "schedule",
       "failures": [],
-      "latency_ms": 749,
-      "natural": true,
-      "observed_at": "2026-09-01T01:52:51Z",
-      "outcome": "fresh",
-      "run_attempt": 1,
-      "run_id": "33460327385",
-      "schedule": "20 23 * * 1-5",
-      "shard": "0/5"
-    },
-    {
-      "attempts_used": 1,
-      "event_name": "schedule",
-      "failures": [],
       "latency_ms": 865,
       "natural": true,
       "observed_at": "2026-09-02T01:05:40Z",
@@ -186,15 +173,28 @@
       "run_id": "36082706783",
       "schedule": "20 23 * * 1-5",
       "shard": "0/5"
+    },
+    {
+      "attempts_used": 1,
+      "event_name": "schedule",
+      "failures": [],
+      "latency_ms": 563,
+      "natural": true,
+      "observed_at": "2026-09-26T01:40:57Z",
+      "outcome": "fresh",
+      "run_attempt": 1,
+      "run_id": "36209116164",
+      "schedule": "20 23 * * 1-5",
+      "shard": "0/5"
     }
   ],
   "current": {
-    "fetched_at": "2026-09-23T01:46:14Z",
-    "history_as_of": "2026-09-22",
-    "path": "data/admin/yahoo-batch-quote-history/lkg/KO.json",
-    "payload_sha256": "1a3d2e1473c504981ffb5122547d4a240b96c6a833ae8aed0fc1b23658465f4d",
-    "quote_as_of": "2026-09-22T20:00:02Z",
-    "source_as_of": "2026-09-22"
+    "fetched_at": "2026-09-26T01:41:56Z",
+    "history_as_of": "2026-09-25",
+    "path": "data/yf/finance/KO.json",
+    "payload_sha256": "4be2ea2789c500a13f264f683932bbc5212e92f83a6fce3e1f9974e765a09bcd",
+    "quote_as_of": "2026-09-25T20:00:02Z",
+    "source_as_of": "2026-09-25"
   },
   "discovered_from": [
     "global_scouter_stock",
@@ -202,31 +202,18 @@
   ],
   "last_attempt": {
     "attempts_used": 1,
-    "error": "StockDetailValidationError: Yahoo history close must be a finite number",
     "event_name": "schedule",
     "failures": [],
-    "latency_ms": 717,
+    "latency_ms": 563,
     "natural": true,
-    "observed_at": "2026-09-25T01:37:44Z",
-    "outcome": "failed",
+    "observed_at": "2026-09-26T01:40:57Z",
+    "outcome": "fresh",
     "run_attempt": 1,
-    "run_id": "36082706783",
+    "run_id": "36209116164",
     "schedule": "20 23 * * 1-5",
     "shard": "0/5"
   },
   "last_recovered_failure": {
-    "attempts_used": 1,
-    "data_loss": false,
-    "deferred_acquisition": false,
-    "error": "StockDetailValidationError: Yahoo history close must be a finite number",
-    "failure_kind": "unexpected",
-    "failures": [],
-    "lkg_status": "retained",
-    "observed_at": "2026-09-15T01:34:15Z",
-    "run_attempt": 1,
-    "run_id": "34917681226"
-  },
-  "latest_failure": {
     "attempts_used": 1,
     "data_loss": false,
     "deferred_acquisition": false,
@@ -249,23 +236,23 @@
   "promotion_contract": "provider_observation/v2",
   "provider_observation": {
     "event_name": "schedule",
-    "history_as_of": "2026-09-22",
-    "observed_at": "2026-09-23T01:43:04Z",
-    "payload_sha256": "88a03c805412072c070c603dcf50e7f2132535c40d4cb5d21f4cbbdda166a4bf",
-    "quote_as_of": "2026-09-22T20:00:02Z",
+    "history_as_of": "2026-09-25",
+    "observed_at": "2026-09-26T01:40:57Z",
+    "payload_sha256": "085f65d9313d533403ba56669ff80c3727a012da9140bada15bfc7994beaeba2",
+    "quote_as_of": "2026-09-25T20:00:02Z",
     "run_attempt": 1,
-    "run_id": "35806669054",
+    "run_id": "36209116164",
     "schema_version": "provider_observation/v2",
-    "source_as_of": "2026-09-22"
+    "source_as_of": "2026-09-25"
   },
-  "recovered_at": "2026-09-17T01:31:25Z",
-  "recovered_from_run_id": "34917681226",
+  "recovered_at": "2026-09-26T01:40:57Z",
+  "recovered_from_run_id": "36082706783",
   "recovery_event_name": "schedule",
   "recovery_run_attempt": 1,
-  "recovery_run_id": "35170770312",
-  "resolution_state": "lkg_primary",
-  "retry": true,
+  "recovery_run_id": "36209116164",
+  "resolution_state": "fresh_primary",
+  "retry": false,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "ticker": "KO",
-  "updated_at": "2026-09-25T01:37:44Z"
+  "updated_at": "2026-09-26T01:40:57Z"
 }
