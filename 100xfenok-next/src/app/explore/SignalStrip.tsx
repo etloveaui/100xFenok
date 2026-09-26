@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useState } from "react";
 import DataStateNotice, { DataStateBadge } from "@/components/DataStateNotice";
 import { makeDataState } from "@/lib/data-state";
+import { fetchJsonOrNull } from "@/lib/client/data-fetch";
 import {
   loadSummaries,
   pick,
@@ -23,22 +24,10 @@ interface SignalDoc {
   signals?: Record<string, { overallStatus?: SignalStatus }>;
 }
 
-let cache: SignalDoc | null = null;
-let pending: Promise<SignalDoc | null> | null = null;
 function loadSignals(): Promise<SignalDoc | null> {
-  if (cache) return Promise.resolve(cache);
-  if (pending) return pending;
-  pending = fetch("/data/computed/signals.json")
-    .then((r) => (r.ok ? r.json() : null))
-    .then((d) => {
-      cache = d;
-      return d;
-    })
-    .catch(() => {
-      pending = null;
-      return null;
-    });
-  return pending;
+  // Through the shared layer: a failure is never cached, so the next mount
+  // retries instead of leaving blank LEDs for the visit.
+  return fetchJsonOrNull<SignalDoc>("/data/computed/signals.json");
 }
 
 const CHIPS: Array<{ key: string; label: string }> = [

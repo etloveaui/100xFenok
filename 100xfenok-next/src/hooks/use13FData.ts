@@ -12,6 +12,7 @@ import type {
   SuperInvestorsDataResult,
 } from "@/lib/superinvestors/types";
 import { resolveSec13fInvestorPayload } from "@/lib/superinvestors/investor-parts";
+import { DataFetchError, fetchJsonShared } from "@/lib/client/data-fetch";
 
 // One retry remains bounded to 30 seconds, below the hosted QA route wait.
 // This includes connection queueing, download, and JSON parsing for by_ticker.
@@ -33,27 +34,30 @@ export class Fetch13FError extends Error {
   }
 }
 
+function toFetch13FError(url: string, timeoutMs: number, error: unknown): Fetch13FError {
+  if (error instanceof Fetch13FError) return error;
+  if (error instanceof DataFetchError) {
+    if (error.kind === "http" || error.kind === "auth") {
+      return new Fetch13FError(url, "status", error.status, `13F fetch failed with status ${error.status}: ${url}`);
+    }
+    if (error.kind === "parse") {
+      return new Fetch13FError(url, "parse", error.status, `13F fetch returned invalid JSON: ${url}`);
+    }
+    if (error.kind === "timeout") {
+      return new Fetch13FError(url, "timeout", null, `13F fetch timed out after ${timeoutMs}ms: ${url}`);
+    }
+    return new Fetch13FError(url, "timeout", null, `13F fetch failed before response: ${url}`);
+  }
+  return new Fetch13FError(url, "timeout", null, `13F fetch failed before response: ${url}`);
+}
+
 async function request13FOnce<T>(url: string, timeoutMs: number): Promise<T> {
-  const controller = new AbortController();
-  const timeoutId = window.setTimeout(() => controller.abort(), timeoutMs);
   try {
-    const response = await fetch(url, { signal: controller.signal });
-    if (!response.ok) {
-      throw new Fetch13FError(url, "status", response.status, `13F fetch failed with status ${response.status}: ${url}`);
-    }
-    try {
-      return (await response.json()) as T;
-    } catch {
-      throw new Fetch13FError(url, "parse", response.status, `13F fetch returned invalid JSON: ${url}`);
-    }
+    // Transport moves through the shared layer; successes are cached per URL
+    // and failures are never cached, so the retry below is a real re-attempt.
+    return (await fetchJsonShared<T>(url, { timeoutMs })).data;
   } catch (error) {
-    if (error instanceof Fetch13FError) throw error;
-    if (controller.signal.aborted) {
-      throw new Fetch13FError(url, "timeout", null, `13F fetch timed out after ${timeoutMs}ms: ${url}`);
-    }
-    throw new Fetch13FError(url, "timeout", null, `13F fetch failed before response: ${url}`);
-  } finally {
-    window.clearTimeout(timeoutId);
+    throw toFetch13FError(url, timeoutMs, error);
   }
 }
 

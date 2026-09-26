@@ -14,7 +14,7 @@ export default function EtfUniversePanel({ surface }: { surface: EtfSurfaceData 
   const { loaded, universeOk, rows, snapshot, reload } = surface;
   // Universe composition is universe-feed truth: a failed universe feed empties
   // the panel even when the snapshot feed is fine (fh-681 P1).
-  const insights = loaded && universeOk ? computeEtfInsights(rows, snapshot, null) : null;
+  const insights = loaded && universeOk ? computeEtfInsights(rows, snapshot, null, surface.universe) : null;
   const loading = !loaded;
   const empty = loaded && !insights;
   const feedFailed = loaded && !universeOk;

@@ -21,6 +21,7 @@ import {
   type EtfUniverseRecord,
 } from "./etfUniverseUtils";
 import { formatPlainPercent } from "@/lib/format";
+import { fetchJsonOrNull } from "@/lib/client/data-fetch";
 
 export type { EtfClassification, EtfTypeFilter, EtfUniverseRecord } from "./etfUniverseUtils";
 export {
@@ -161,41 +162,16 @@ function matchesExpenseFilter(row: EtfUniverseRecord, filter: EtfExpenseFilter):
   return expense >= 1.00;
 }
 
-let universeCache: EtfUniverseDoc | null = null;
-let universePending: Promise<EtfUniverseDoc | null> | null = null;
-let snapshotCache: EtfSnapshotDoc | null = null;
-let snapshotPending: Promise<EtfSnapshotDoc | null> | null = null;
-
 function loadUniverse(): Promise<EtfUniverseDoc | null> {
-  if (universeCache) return Promise.resolve(universeCache);
-  if (universePending) return universePending;
-  universePending = fetch("/api/data/stockanalysis/etf-universe", { cache: "no-store" })
-    .then((res) => (res.ok ? res.json() as Promise<EtfUniverseDoc> : null))
-    .then((doc) => {
-      universeCache = doc;
-      return doc;
-    })
-    .catch(() => {
-      universePending = null;
-      return null;
-    });
-  return universePending;
+  // Through the shared layer: one request per URL (shared with the /etfs
+  // surface loader), and an HTTP error no longer sticks for the visit.
+  return fetchJsonOrNull<EtfUniverseDoc>("/api/data/stockanalysis/etf-universe", { init: { cache: "no-store" } });
 }
 
 function loadSnapshot(): Promise<EtfSnapshotDoc | null> {
-  if (snapshotCache) return Promise.resolve(snapshotCache);
-  if (snapshotPending) return snapshotPending;
-  snapshotPending = fetch("/api/data/stockanalysis/etf-snapshot", { cache: "no-store" })
-    .then((res) => (res.ok ? res.json() as Promise<EtfSnapshotDoc> : null))
-    .then((doc) => {
-      snapshotCache = doc;
-      return doc;
-    })
-    .catch(() => {
-      snapshotPending = null;
-      return null;
-    });
-  return snapshotPending;
+  // Through the shared layer: one request per URL (shared with the /etfs
+  // surface loader), and an HTTP error no longer sticks for the visit.
+  return fetchJsonOrNull<EtfSnapshotDoc>("/api/data/stockanalysis/etf-snapshot", { init: { cache: "no-store" } });
 }
 
 interface EtfUniverseCardProps {

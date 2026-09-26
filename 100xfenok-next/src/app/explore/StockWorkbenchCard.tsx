@@ -9,6 +9,7 @@ import Tabs, { TabPanel, type TabItem, useTabsBaseId } from "@/components/ui/Tab
 import { formatSignedPercentDecimal } from "@/lib/dashboard/formatters";
 import { formatCurrency, formatInteger, formatSignedPercent } from "@/lib/format";
 import { dateOnly, makeDataState } from "@/lib/data-state";
+import { fetchJsonOrNull } from "@/lib/client/data-fetch";
 import { normalizeForFilePath } from "@/lib/ticker";
 import { ROUTES } from "@/lib/routes";
 import { loadActionSummaryDocument, type ActionSummaryDocument, type ActionSummaryRecord } from "@/features/stock-analyzer/data/action-summary-provider";
@@ -103,9 +104,7 @@ let cache: WorkbenchData | null = null;
 let pending: Promise<WorkbenchData> | null = null;
 
 function loadJson<T>(path: string): Promise<T | null> {
-  return fetch(path, { cache: "no-store" })
-    .then((response) => (response.ok ? response.json() as Promise<T> : null))
-    .catch(() => null);
+  return fetchJsonOrNull<T>(path, { init: { cache: "no-store" } });
 }
 
 function loadWorkbench(): Promise<WorkbenchData> {
@@ -118,8 +117,12 @@ function loadWorkbench(): Promise<WorkbenchData> {
     loadJson<PerBandDoc>("/data/global-scouter/core/per_bands_index.json"),
     loadJson<SourceMetaDoc>("/data/computed/entity_graph_stock_services.json"),
   ]).then(([actions, revisions, discovery, perBands, sourceMeta]) => {
-    cache = { actions, revisions, discovery, perBands, sourceMeta };
-    return cache;
+    const data: WorkbenchData = { actions, revisions, discovery, perBands, sourceMeta };
+    // Cache only a fully successful assembly: a partial one stays retryable
+    // (each successful part is cached by the shared layer).
+    if (actions && revisions && discovery && perBands && sourceMeta) cache = data;
+    pending = null;
+    return data;
   }).catch(() => {
     pending = null;
     return { actions: null, revisions: null, discovery: null, perBands: null, sourceMeta: null };

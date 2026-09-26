@@ -15,6 +15,7 @@ import {
 import { formatCompactNumber, formatCurrency, formatInteger } from "@/lib/format";
 import { formatAsOf, isStaleAsOf, latestAsOf } from "@/lib/data-state";
 import { useEffect, useState } from "react";
+import { fetchJsonOrNull, invalidateData } from "@/lib/client/data-fetch";
 
 export type { EtfUniverseRecord } from "@/app/explore/etfUniverseUtils";
 
@@ -86,44 +87,22 @@ export interface EtfSnapshotDoc {
   } | null;
 }
 
-let universeCache: EtfUniverseDoc | null = null;
-let universePending: Promise<EtfUniverseDoc | null> | null = null;
-let snapshotCache: EtfSnapshotDoc | null = null;
-let snapshotPending: Promise<EtfSnapshotDoc | null> | null = null;
-
-function fetchJson<T>(url: string): Promise<T | null> {
-  return fetch(url, { cache: "no-store" })
-    .then((res) => (res.ok ? (res.json() as Promise<T>) : null))
-    .catch(() => null);
-}
-
 export function loadEtfUniverse(): Promise<EtfUniverseDoc | null> {
-  if (universeCache) return Promise.resolve(universeCache);
-  if (universePending) return universePending;
-  universePending = fetchJson<EtfUniverseDoc>("/api/data/stockanalysis/etf-universe").then((doc) => {
-    universeCache = doc;
-    universePending = null;
-    return doc;
-  });
-  return universePending;
+  // Through the shared layer: one request per URL (shared with the Explore
+  // ETF card), and an HTTP error no longer sticks for the visit.
+  return fetchJsonOrNull<EtfUniverseDoc>("/api/data/stockanalysis/etf-universe", { init: { cache: "no-store" } });
 }
 
 export function loadEtfSnapshot(): Promise<EtfSnapshotDoc | null> {
-  if (snapshotCache) return Promise.resolve(snapshotCache);
-  if (snapshotPending) return snapshotPending;
-  snapshotPending = fetchJson<EtfSnapshotDoc>("/api/data/stockanalysis/etf-snapshot").then((doc) => {
-    snapshotCache = doc;
-    snapshotPending = null;
-    return doc;
-  });
-  return snapshotPending;
+  // Through the shared layer: one request per URL (shared with the Explore
+  // ETF card), and an HTTP error no longer sticks for the visit.
+  return fetchJsonOrNull<EtfSnapshotDoc>("/api/data/stockanalysis/etf-snapshot", { init: { cache: "no-store" } });
 }
 
+/** Drop the layer entries so the next load refetches both surfaces. */
 export function clearEtfSurfaceCaches() {
-  universeCache = null;
-  universePending = null;
-  snapshotCache = null;
-  snapshotPending = null;
+  invalidateData("/api/data/stockanalysis/etf-universe");
+  invalidateData("/api/data/stockanalysis/etf-snapshot");
 }
 
 export function normalizeUniverseRows(doc: EtfUniverseDoc | null, snapshot: EtfSnapshotDoc | null): EtfUniverseRecord[] {
@@ -212,6 +191,7 @@ export function computeEtfInsights(
   rows: EtfUniverseRecord[],
   snapshot: EtfSnapshotDoc | null,
   ignoredGenerationTimestamp: string | null | undefined,
+  universe: EtfUniverseDoc | null,
 ): EtfInsights {
   // Kept only for the existing caller signature; generation time is never a source clock.
   void ignoredGenerationTimestamp;
@@ -261,13 +241,13 @@ export function computeEtfInsights(
   const newCount = rows.filter((row) => row.is_new === true).length || (snapshot?.newEtfs?.counts?.records ?? 0);
 
   const sourceStamps: Array<{ label: string; asOf: string | null; reason: string | null }> = [];
-  if (universeCache) {
+  if (universe) {
     sourceStamps.push({
       label: "ETF universe",
-      asOf: typeof universeCache.source_as_of === "string" && universeCache.source_as_of.length >= 10
-        ? universeCache.source_as_of.slice(0, 10)
+      asOf: typeof universe.source_as_of === "string" && universe.source_as_of.length >= 10
+        ? universe.source_as_of.slice(0, 10)
         : null,
-      reason: universeCache.source_as_of_reason ?? null,
+      reason: universe.source_as_of_reason ?? null,
     });
   }
   const snapshotSources = [

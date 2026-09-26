@@ -30,7 +30,7 @@ export default function EtfTodayPanel({ surface }: { surface: EtfSurfaceData }) 
   // Today leaders + new listings are snapshot-feed truth: a failed snapshot
   // feed empties the panel even when the universe feed is fine, so a blank
   // leader board is never promoted to full fresh (fh-681 P1).
-  const insights = loaded && snapshotOk ? computeEtfInsights(rows, snapshot, null) : null;
+  const insights = loaded && snapshotOk ? computeEtfInsights(rows, snapshot, null, surface.universe) : null;
   const loading = !loaded;
   const empty = loaded && !insights;
   const feedFailed = loaded && !snapshotOk;

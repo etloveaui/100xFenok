@@ -26,7 +26,7 @@ export default function EtfSummaryStrip({ surface }: { surface: EtfSurfaceData }
   const { loaded, universeOk, snapshotOk, rows, snapshot, reload } = surface;
   // Same readiness as the hero: a partial feed pair never renders numbers.
   const ready = loaded && universeOk && snapshotOk;
-  const insights = ready ? computeEtfInsights(rows, snapshot, null) : null;
+  const insights = ready ? computeEtfInsights(rows, snapshot, null, surface.universe) : null;
 
   if (!loaded) {
     // Same cells, band and legend as the loaded strip with placeholder values,

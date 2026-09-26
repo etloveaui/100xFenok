@@ -52,73 +52,33 @@ const FactorExposureRadar = dynamic(() => import("./PortfolioCharts").then((mod)
 });
 
 // ---------------------------------------------------------------------------
-// Module-level caches
+// Feeds
 // ---------------------------------------------------------------------------
 
-let bpCache: BuyingPressureData | null = null;
-let bpPromise: Promise<BuyingPressureData | null> | null = null;
+// fetch13FJson is layer-backed now: the shared layer owns cache/in-flight for
+// these feeds (one request per URL across tabs), and a failure is never cached.
 function loadBuyingPressure(): Promise<BuyingPressureData | null> {
-  if (bpCache) return Promise.resolve(bpCache);
-  if (bpPromise) return bpPromise;
-  bpPromise = fetch13FJson<BuyingPressureData>("/data/sec-13f/analytics/buying_pressure.json")
-    .then((d) => { if (!d) { bpPromise = null; return null; } bpCache = d; return d; })
-    .catch(() => { bpPromise = null; return null; });
-  return bpPromise;
+  return fetch13FJson<BuyingPressureData>("/data/sec-13f/analytics/buying_pressure.json").catch(() => null);
 }
 
-let trCache: TradesRankingData | null = null;
-let trPromise: Promise<TradesRankingData | null> | null = null;
 function loadTradesRanking(): Promise<TradesRankingData | null> {
-  if (trCache) return Promise.resolve(trCache);
-  if (trPromise) return trPromise;
-  trPromise = fetch13FJson<TradesRankingData>("/data/sec-13f/analytics/trades_ranking.json")
-    .then((d) => { if (!d) { trPromise = null; return null; } trCache = d; return d; })
-    .catch(() => { trPromise = null; return null; });
-  return trPromise;
+  return fetch13FJson<TradesRankingData>("/data/sec-13f/analytics/trades_ranking.json").catch(() => null);
 }
 
-let npCache: NewPositionsData | null = null;
-let npPromise: Promise<NewPositionsData | null> | null = null;
 function loadNewPositions(): Promise<NewPositionsData | null> {
-  if (npCache) return Promise.resolve(npCache);
-  if (npPromise) return npPromise;
-  npPromise = fetch13FJson<NewPositionsData>("/data/sec-13f/analytics/new_positions.json")
-    .then((d) => { if (!d) { npPromise = null; return null; } npCache = d; return d; })
-    .catch(() => { npPromise = null; return null; });
-  return npPromise;
+  return fetch13FJson<NewPositionsData>("/data/sec-13f/analytics/new_positions.json").catch(() => null);
 }
 
-let hhiCache: HhiData | null = null;
-let hhiPromise: Promise<HhiData | null> | null = null;
 function loadHhi(): Promise<HhiData | null> {
-  if (hhiCache) return Promise.resolve(hhiCache);
-  if (hhiPromise) return hhiPromise;
-  hhiPromise = fetch13FJson<HhiData>("/data/sec-13f/analytics/hhi.json")
-    .then((d) => { if (!d) { hhiPromise = null; return null; } hhiCache = d; return d; })
-    .catch(() => { hhiPromise = null; return null; });
-  return hhiPromise;
+  return fetch13FJson<HhiData>("/data/sec-13f/analytics/hhi.json").catch(() => null);
 }
 
-let cvCache: ConvictionData | null = null;
-let cvPromise: Promise<ConvictionData | null> | null = null;
 function loadConviction(): Promise<ConvictionData | null> {
-  if (cvCache) return Promise.resolve(cvCache);
-  if (cvPromise) return cvPromise;
-  cvPromise = fetch13FJson<ConvictionData>("/data/sec-13f/analytics/conviction.json")
-    .then((d) => { if (!d) { cvPromise = null; return null; } cvCache = d; return d; })
-    .catch(() => { cvPromise = null; return null; });
-  return cvPromise;
+  return fetch13FJson<ConvictionData>("/data/sec-13f/analytics/conviction.json").catch(() => null);
 }
 
-let ceCache: ConvictionEntriesData | null = null;
-let cePromise: Promise<ConvictionEntriesData | null> | null = null;
 function loadConvictionEntries(): Promise<ConvictionEntriesData | null> {
-  if (ceCache) return Promise.resolve(ceCache);
-  if (cePromise) return cePromise;
-  cePromise = fetch13FJson<ConvictionEntriesData>("/data/sec-13f/analytics/conviction_entries.json")
-    .then((d) => { if (!d) { cePromise = null; return null; } ceCache = d; return d; })
-    .catch(() => { cePromise = null; return null; });
-  return cePromise;
+  return fetch13FJson<ConvictionEntriesData>("/data/sec-13f/analytics/conviction_entries.json").catch(() => null);
 }
 
 // ---------------------------------------------------------------------------

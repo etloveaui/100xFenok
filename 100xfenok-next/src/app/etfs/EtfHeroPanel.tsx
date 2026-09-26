@@ -16,7 +16,7 @@ export default function EtfHeroPanel({ surface }: { surface: EtfSurfaceData }) {
   // The verdict blends both feeds (universe counts + snapshot leaders), so a
   // partial pair never renders: one failed feed empties the hero (fh-681 P1).
   const ready = loaded && universeOk && snapshotOk;
-  const insights = ready ? computeEtfInsights(rows, snapshot, null) : null;
+  const insights = ready ? computeEtfInsights(rows, snapshot, null, surface.universe) : null;
   const loading = !loaded;
   const empty = loaded && !insights;
   const published = etfSurfacePublishedFloor(surface.universe, snapshot);
