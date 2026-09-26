@@ -88,6 +88,14 @@
   outline-offset: 2px;
 }
 
+/* Phone: the 설명 보기 toggle was a 17px-tall target; 4px above and below
+   brings it past 24px (WCAG 2.2 AA 2.5.8). */
+@media (max-width: 767px) {
+  .cpw5-macro-hero-more > summary {
+    padding-block: 4px;
+  }
+}
+
 .cpw5-macro-hero-more .cpw5-hero__sub,
 .cpw5-macro-hero-more .cpw5-macro-description {
   margin-top: 8px;
