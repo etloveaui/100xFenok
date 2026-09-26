@@ -51,8 +51,41 @@
   margin: 0;
   font-size: 20px;
   font-weight: 600;
+  line-height: 1.45;
   color: var(--fnk-neutral-900);
   max-width: 900px;
+  min-height: 2lh;
+  text-wrap: pretty;
+}
+
+.sec-title-skeleton {
+  display: block;
+  height: 0.8em;
+  margin: 0.33em 0 0.32em;
+  border-radius: 6px;
+  background: linear-gradient(90deg, var(--fnk-neutral-100), var(--fnk-neutral-200), var(--fnk-neutral-100));
+  background-size: 200% 100%;
+  animation: sec-title-shimmer 1.4s ease-in-out infinite;
+}
+
+.sec-title-skeleton--short {
+  width: 62%;
+}
+
+@keyframes sec-title-shimmer {
+  from { background-position: 100% 0; }
+  to { background-position: -100% 0; }
+}
+
+@media (max-width: 640px) {
+  .sec-title {
+    font-size: 17px;
+    min-height: 3lh;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .sec-title-skeleton { animation: none; }
 }
 
 .sec-meta-row {

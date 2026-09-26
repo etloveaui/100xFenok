@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState, useSyncExternalStore } from "react";
 import AppShell from "@/components/shell/AppShell";
 import TransitionLink from "@/components/TransitionLink";
 import { Bar } from "@/components/ui/Bar";
@@ -15,7 +15,7 @@ import { clamp, getRegimeLabel } from "@/lib/dashboard/formatters";
 import { DATA_STATE_LABELS, oldestAsOf } from "@/lib/data-state";
 import type { DashboardSnapshot, DashboardSourceId, SectorSnapshot } from "@/lib/dashboard/types";
 import { projectMaterialChanges } from "@/lib/home/material-change";
-import { readPersonalFlags, type Flag } from "@/lib/personal/personal-state";
+import { PERSONAL_DOC_KEYS, readPersonalFlags, type Flag } from "@/lib/personal/personal-state";
 import { EXPLORE_PRODUCT_TITLE } from "@/lib/product-nav";
 import { ROUTES } from "@/lib/routes";
 import type { TradesRankingData, TradesRankingRow } from "@/lib/superinvestors/types";
@@ -181,7 +181,7 @@ function lastRevisionRefreshMs(nowMs: number): number {
   // most recent Friday 08:00 KST at or before nowMs (KST = UTC+9)
   const kst = new Date(nowMs + 9 * 3600 * 1000);
   const day = kst.getUTCDay();
-  let back = (day - REVISION_REFRESH_WEEKDAY_KST + 7) % 7;
+  const back = (day - REVISION_REFRESH_WEEKDAY_KST + 7) % 7;
   const dayStartKstAsUtc = Date.UTC(kst.getUTCFullYear(), kst.getUTCMonth(), kst.getUTCDate()) - 9 * 3600 * 1000;
   let refresh = dayStartKstAsUtc - back * 86400 * 1000 + REVISION_REFRESH_HOUR_KST * 3600 * 1000;
   if (refresh > nowMs) refresh -= 7 * 86400 * 1000;
@@ -408,6 +408,39 @@ function isValidTradesRankingData(value: unknown): value is TradesRankingData {
     && value.sold.every(isSafeTradesRankingRow);
 }
 
+type ReloadableJson<T> = {
+  data: T | null;
+  loading: boolean;
+  /** Wall-clock time the current answer arrived (null until the first one). */
+  fetchedAtMs: number | null;
+};
+
+/**
+ * One JSON source that re-fetches whenever `reloadKey` changes. Loading is
+ * derived (the settled answer belongs to an older key), so the effect never
+ * sets state synchronously; the previous answer stays visible during a retry.
+ */
+function useReloadableJson<T>(url: string, reloadKey: number): ReloadableJson<T> {
+  const [result, setResult] = useState<{ key: number; data: T | null; fetchedAtMs: number } | null>(null);
+
+  useEffect(() => {
+    let cancelled = false;
+    const settle = (data: T | null) => {
+      if (!cancelled) setResult({ key: reloadKey, data, fetchedAtMs: Date.now() });
+    };
+    fetchJson<T>(url).then(settle, () => settle(null));
+    return () => {
+      cancelled = true;
+    };
+  }, [url, reloadKey]);
+
+  return {
+    data: result?.data ?? null,
+    loading: result === null || result.key !== reloadKey,
+    fetchedAtMs: result?.fetchedAtMs ?? null,
+  };
+}
+
 function useInvestorHighlights(reloadKey: number): {
   source: {
     metadata: { quarter: string; generated_at?: string };
@@ -415,26 +448,7 @@ function useInvestorHighlights(reloadKey: number): {
   } | null;
   loading: boolean;
 } {
-  const [data, setData] = useState<unknown>(null);
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    let cancelled = false;
-    setLoading(true);
-    fetchJson<unknown>("/data/sec-13f/analytics/trades_ranking.json")
-      .then((payload) => {
-        if (!cancelled) setData(payload);
-      })
-      .catch(() => {
-        if (!cancelled) setData(null);
-      })
-      .finally(() => {
-        if (!cancelled) setLoading(false);
-      });
-    return () => {
-      cancelled = true;
-    };
-  }, [reloadKey]);
+  const { data, loading } = useReloadableJson<unknown>("/data/sec-13f/analytics/trades_ranking.json", reloadKey);
 
   const source = useMemo(() => {
     if (!isValidTradesRankingData(data)) return null;
@@ -456,32 +470,8 @@ function useInvestorHighlights(reloadKey: number): {
   };
 }
 
-function useStockMovers(reloadKey: number): { data: RevisionMoversData | null; loading: boolean } {
-  const [data, setData] = useState<RevisionMoversData | null>(null);
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    let cancelled = false;
-    setLoading(true);
-    fetchJson<RevisionMoversData>("/data/global-scouter/core/revision_movers.json")
-      .then((payload) => {
-        if (!cancelled) setData(payload);
-      })
-      .catch(() => {
-        if (!cancelled) setData(null);
-      })
-      .finally(() => {
-        if (!cancelled) setLoading(false);
-      });
-    return () => {
-      cancelled = true;
-    };
-  }, [reloadKey]);
-
-  return {
-    data,
-    loading,
-  };
+function useStockMovers(reloadKey: number): ReloadableJson<RevisionMoversData> {
+  return useReloadableJson<RevisionMoversData>("/data/global-scouter/core/revision_movers.json", reloadKey);
 }
 
 function materialFlagLabel(flag: Flag): string {
@@ -514,6 +504,32 @@ function edgeStrengthLabel(score: number): string {
   return "방어 구간";
 }
 
+const NO_PERSONAL_FLAGS: Record<string, Flag> = {};
+let personalFlagsCache: { raw: string | null; flags: Record<string, Flag> } | null = null;
+
+function noPersonalFlags(): Record<string, Flag> {
+  return NO_PERSONAL_FLAGS;
+}
+
+/** Stable snapshot for useSyncExternalStore: re-parse only when the stored document changes. */
+function personalFlagsSnapshot(): Record<string, Flag> {
+  let raw: string | null = null;
+  try {
+    raw = window.localStorage.getItem(PERSONAL_DOC_KEYS.flags);
+  } catch {
+    raw = null;
+  }
+  if (personalFlagsCache?.raw !== raw) {
+    personalFlagsCache = { raw, flags: raw === null ? NO_PERSONAL_FLAGS : readPersonalFlags() };
+  }
+  return personalFlagsCache.flags;
+}
+
+function subscribeToStorage(onChange: () => void): () => void {
+  window.addEventListener("storage", onChange);
+  return () => window.removeEventListener("storage", onChange);
+}
+
 export default function HomeCanvasPlusClient() {
   const { dashboard, dataReady, failedSources } = useDashboardData();
   const indexCards = useIndexCards(dashboard);
@@ -521,11 +537,8 @@ export default function HomeCanvasPlusClient() {
   const [reloadKey, setReloadKey] = useState(0);
   const investor = useInvestorHighlights(reloadKey);
   const stockMovers = useStockMovers(reloadKey);
-  const [personalFlags, setPersonalFlags] = useState<Record<string, Flag>>({});
-
-  useEffect(() => {
-    setPersonalFlags(readPersonalFlags());
-  }, []);
+  // Read after hydration (server snapshot is empty) and follow other tabs.
+  const personalFlags = useSyncExternalStore(subscribeToStorage, personalFlagsSnapshot, noPersonalFlags);
 
   const projection = useMemo(
     () => projectMaterialChanges(stockMovers.data, investor.source, personalFlags),
@@ -637,10 +650,15 @@ export default function HomeCanvasPlusClient() {
   const laneFresh = revisionLegOk && superLegOk;
   const lanePartial = !laneFresh && (revisionLegOk || superLegOk);
   const revisionFileMs = parseFileTimeMs(revisionEvidence.generatedAt ?? revisionEvidence.asOf);
-  const revisionOverdue = !revisionLegOk && (revisionFileMs === null || revisionFileMs < lastRevisionRefreshMs(Date.now()));
+  // Schedule judgments use the moment the movers file arrived, not render time,
+  // so a re-render never flips the lane state on its own.
+  const scheduleNowMs = stockMovers.fetchedAtMs;
+  const revisionOverdue = !revisionLegOk
+    && scheduleNowMs !== null
+    && (revisionFileMs === null || revisionFileMs < lastRevisionRefreshMs(scheduleNowMs));
   const laneDelayed = revisionOverdue;
   const laneAwaiting = !laneFresh && !lanePartial && !laneDelayed;
-  const laneNext = laneAwaiting ? formatNextRefreshLabel(Date.now()) : undefined;
+  const laneNext = laneAwaiting && scheduleNowMs !== null ? formatNextRefreshLabel(scheduleNowMs) : undefined;
   // One page-level provenance line replaces the four per-panel rails and the
   // Edge header chip: the worst panel state against the OLDEST panel date,
   // because the page is only as fresh as its oldest feed.
@@ -779,7 +797,7 @@ export default function HomeCanvasPlusClient() {
             {indexCards.map((card) => {
               const positive = (card.changePercent ?? 0) >= 0;
               return (
-                <Panel key={card.symbol} loading={!dashboardSettled}>
+                <Panel key={card.symbol} loading={!dashboardSettled} loadingMode="placeholder">
                   <div className="flex flex-col gap-[6px] p-3 md:gap-[10px] md:p-[14px_16px]">
                     <div className="flex items-center justify-between gap-2">
                       <span className="font-mono text-[12px] text-[var(--c-ink)] md:text-[13px]">{card.label}</span>
@@ -796,7 +814,7 @@ export default function HomeCanvasPlusClient() {
                 </Panel>
               );
             })}
-            <Panel loading={kospiLoading}>
+            <Panel loading={kospiLoading} loadingMode="placeholder">
               <div className="flex flex-col gap-[6px] p-3 md:gap-[10px] md:p-[14px_16px]">
                 <div className="flex items-center justify-between gap-2">
                   <span className="font-mono text-[12px] text-[var(--c-ink)] md:text-[13px]">KOSPI</span>
@@ -991,10 +1009,8 @@ export default function HomeCanvasPlusClient() {
 
 export function HomeShell() {
   return (
-    <div className="fnk-shell">
-      <AppShell active="explore" title={EXPLORE_PRODUCT_TITLE}>
-        <HomeCanvasPlusClient />
-      </AppShell>
-    </div>
+    <AppShell active="explore" title={EXPLORE_PRODUCT_TITLE}>
+      <HomeCanvasPlusClient />
+    </AppShell>
   );
 }

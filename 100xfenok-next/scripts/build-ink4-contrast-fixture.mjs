@@ -81,6 +81,14 @@ const readSource = (relativePath) => fs.readFileSync(path.join(APP_ROOT, relativ
 // line that does not resolve to the claimed surface (patterns identical to
 // test-ink4-contrast-contract.mjs).
 const CURATED_BACKGROUND_EVIDENCE = {
+  "src/app/error.tsx#f7ddab3a4f8d#1": {
+    // The route error boundary no longer renders its own <body bg-slate-50>
+    // (that nested a second <html> inside the root layout); the eyebrow now
+    // sits on an explicit slate-50 card, so re-pin to that card line.
+    background: "muted",
+    path: "src/app/error.tsx",
+    target_hash: "fe62310161613dd6aad3cbde8bd3ac74e0a42c8c2c4fc9fb463c7f467a7066db",
+  },
   "src/app/stock/[ticker]/StockDetailClient.tsx#9929fa694dcb#1": {
     // GuruSection holdings text renders inside SectionCard > Panel (white);
     // the previous panel witness line was removed by the slice-4b uncard, so

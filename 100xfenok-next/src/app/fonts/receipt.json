@@ -1,15 +1,35 @@
 {
-  "note": "Self-hosted Light System fonts (Pretendard Variable + JetBrains Mono 500). Two families only; Fraunces/Orbitron/Noto removed per SPEC.md:7. Recorded for reproducibility without build-time fetch.",
+  "note": "Self-hosted Light System fonts (Pretendard Variable dynamic subset + JetBrains Mono 500). Two families only; Fraunces/Orbitron/Noto removed per SPEC.md:7. Recorded for reproducibility without build-time fetch.",
   "fonts": [
     {
-      "file": "PretendardVariable.woff2",
+      "directory": "pretendard/",
       "family": "Pretendard Variable",
       "weight": "45-920",
-      "subset": "variable",
-      "bytes": 2057688,
-      "sha256": "9599f12fd42fc0bce1cd50b47a0c022e108d7aa64dd0d1bb0ed44f3282d900b4",
-      "source_url": "https://cdn.jsdelivr.net/gh/orioncactus/pretendard/packages/pretendard/dist/web/variable/woff2/PretendardVariable.woff2",
-      "unicode_range": "U+AC00-D7A3, U+1100-11FF, U+3130-318F, U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD"
+      "subset": "variable, three unicode-range subsets (core / hangul-rest / other)",
+      "source_file": "PretendardVariable.woff2 (pretendard@1.3.9 dist/web/variable/woff2)",
+      "source_sha256": "9599f12fd42fc0bce1cd50b47a0c022e108d7aa64dd0d1bb0ed44f3282d900b4",
+      "tool": "scripts/build-pretendard-subsets.py (fonttools + brotli)",
+      "license": "OFL-1.1 (pretendard/LICENSE.txt)",
+      "slices": [
+        {
+          "file": "PretendardVariable-core.woff2",
+          "codepoints": 2993,
+          "bytes": 518144,
+          "sha256": "e20d4a953d6c4b063909053c58750c28ae920d8aadbfaaf7814eecbf8cefc189"
+        },
+        {
+          "file": "PretendardVariable-hangul-rest.woff2",
+          "codepoints": 8822,
+          "bytes": 1349184,
+          "sha256": "36ef3400c6f631a6c467da8a60502fc81aa84554cc85e19633d407d61ead3b5c"
+        },
+        {
+          "file": "PretendardVariable-other.woff2",
+          "codepoints": 2521,
+          "bytes": 294288,
+          "sha256": "335ae0571887d5d47acec7e48d59bd1b4a4a1d56402f6cc0a5453aa4442d932c"
+        }
+      ]
     },
     {
       "file": "jetbrains-mono-500-latin.woff2",

@@ -1,12 +1,13 @@
 "use client";
 
 import { Button } from "@/components/ui";
-import { QUADRANT_LABEL, ROTATION_WINDOWS, type RotationPoint, type RotationWindow } from "@/lib/sectors/rotation";
-
-function pp(value: number, digits = 1): string {
-  const sign = value >= 0 ? "+" : "-";
-  return `${sign}${Math.abs(value).toFixed(digits)}%p`;
-}
+import {
+  QUADRANT_LABEL,
+  ROTATION_WINDOWS,
+  formatPercentPoints as pp,
+  type RotationPoint,
+  type RotationWindow,
+} from "@/lib/sectors/rotation";
 
 const PLOT = { x0: 90, x1: 1150, y0: 20, y1: 340 };
 

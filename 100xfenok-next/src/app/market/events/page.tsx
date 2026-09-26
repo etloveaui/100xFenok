@@ -20,18 +20,16 @@ export default async function MarketEventsPage({ searchParams }: Props) {
   const params = searchParams ? await searchParams : {};
 
   return (
-    <div className="fnk-shell">
-      <AppShell active="market" title="시장 이벤트" backHref={ROUTES.market}>
-        <MarketEventsClient
-          initialTab={firstParam(params.tab)}
-          initialQuery={firstParam(params.q)}
-          initialSection={firstParam(params.section)}
-          initialRange={firstParam(params.range)}
-          initialFrom={firstParam(params.from)}
-          initialTo={firstParam(params.to)}
-          initialSort={firstParam(params.sort)}
-        />
-      </AppShell>
-    </div>
+    <AppShell active="market" title="시장 이벤트" backHref={ROUTES.market}>
+      <MarketEventsClient
+        initialTab={firstParam(params.tab)}
+        initialQuery={firstParam(params.q)}
+        initialSection={firstParam(params.section)}
+        initialRange={firstParam(params.range)}
+        initialFrom={firstParam(params.from)}
+        initialTo={firstParam(params.to)}
+        initialSort={firstParam(params.sort)}
+      />
+    </AppShell>
   );
 }

@@ -13,7 +13,7 @@ export const metadata: Metadata = {
 
 export default function MultichartPage() {
   return (
-    <div className="fnk-shell" data-multichart-surface="true">
+    <div data-multichart-surface="true">
       <AppShell active="chart" title="시장 비교" backHref={ROUTES.macroChart}>
         <MacroChartClient initialMode="stock-compare" />
       </AppShell>

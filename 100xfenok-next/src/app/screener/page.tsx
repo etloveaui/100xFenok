@@ -28,19 +28,17 @@ export default async function ScreenerPage({ searchParams }: Props) {
   // Table-first landing: ?mode=discover opts back into discovery.
   const initialMode = firstParam(params.mode) === "discover" ? "discover" : "analyze";
   return (
-    <div className="fnk-shell">
-      <AppShell active="screener" title="스크리너" backHref={ROUTES.home}>
-        <ScreenerClientLoader
-          initialSearch={initialSearch}
-          initialSector={initialSector}
-          initialMacroContextId={initialMacroContextId}
-          initialPreset={firstParam(params.preset)}
-          initialActionFilter={firstParam(params.action)}
-          initialConnectionFilter={firstParam(params.connection)}
-          initialFilters={initialFilters}
-          initialMode={initialMode}
-        />
-      </AppShell>
-    </div>
+    <AppShell active="screener" title="스크리너" backHref={ROUTES.home}>
+      <ScreenerClientLoader
+        initialSearch={initialSearch}
+        initialSector={initialSector}
+        initialMacroContextId={initialMacroContextId}
+        initialPreset={firstParam(params.preset)}
+        initialActionFilter={firstParam(params.action)}
+        initialConnectionFilter={firstParam(params.connection)}
+        initialFilters={initialFilters}
+        initialMode={initialMode}
+      />
+    </AppShell>
   );
 }

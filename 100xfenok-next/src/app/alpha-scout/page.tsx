@@ -2,6 +2,7 @@ import type { Metadata } from 'next';
 import { cookies } from 'next/headers';
 import Link from 'next/link';
 import AppShell from '@/components/shell/AppShell';
+import ShellChromeOff from '@/components/shell/ShellChromeOff';
 import RouteEmbedFrame from '@/components/RouteEmbedFrame';
 import { ROUTES } from '@/lib/routes';
 import {
@@ -49,11 +50,9 @@ export default async function AlphaScoutPage({ searchParams }: PageProps) {
 
   if (version !== "v1" && !rawPath && !rawReport) {
     return (
-      <div className="fnk-shell">
-        <AppShell active="alphaScout" title="Alpha Scout" backHref={ROUTES.home}>
-          <AlphaScoutV2Client />
-        </AppShell>
-      </div>
+      <AppShell active="alphaScout" title="Alpha Scout" backHref={ROUTES.home}>
+        <AlphaScoutV2Client />
+      </AppShell>
     );
   }
 
@@ -78,64 +77,62 @@ export default async function AlphaScoutPage({ searchParams }: PageProps) {
     />
   );
 
-  if (version === "v1") return frame;
+  if (version === "v1") return <ShellChromeOff>{frame}</ShellChromeOff>;
 
   return (
-    <div className="fnk-shell">
-      <AppShell active="alphaScout" title="Alpha Scout" backHref={ROUTES.home}>
-        <div
-          className="space-y-[var(--s4)]"
-          data-alpha-scout-report-surface="true"
-          data-alpha-scout-route-owner="legacy-report-html"
-        >
-          <section className="panel" data-alpha-scout-boundary="true">
-            <div className="flex flex-wrap items-center gap-2">
-              <span
-                className="inline-flex min-h-11 items-center rounded-full border border-slate-200 bg-white px-3 text-[12px] font-bold text-slate-600"
-                data-alpha-scout-boundary-chip="legacy-html"
-              >
-                이전 형식
-              </span>
-              <span
-                className="inline-flex min-h-11 items-center rounded-full border border-slate-200 bg-white px-3 text-[12px] font-bold text-slate-600"
-                data-alpha-scout-boundary-chip="report-deeplink"
-              >
-                리포트 연결
-              </span>
-              <span
-                className="inline-flex min-h-11 items-center rounded-full border border-slate-200 bg-white px-3 text-[12px] font-bold text-slate-600"
-                data-alpha-scout-boundary-chip="v2-owner"
-              >
-                아카이브
-              </span>
-            </div>
-            <div className="mt-3 grid gap-2 sm:grid-cols-3">
-              <Link
-                href={ROUTES.alphaScout}
-                className="inline-flex min-h-11 items-center justify-center rounded-lg border border-slate-200 bg-white px-3 text-sm font-semibold text-slate-700"
-                data-alpha-scout-owner-link="v2-archive"
-              >
-                스카우트 아카이브
-              </Link>
-              <Link
-                href={ROUTES.posts}
-                className="inline-flex min-h-11 items-center justify-center rounded-lg border border-slate-200 bg-white px-3 text-sm font-semibold text-slate-700"
-                data-alpha-scout-owner-link="posts"
-              >
-                분석 아카이브
-              </Link>
-              <Link
-                href={ROUTES.dailyWrap}
-                className="inline-flex min-h-11 items-center justify-center rounded-lg border border-slate-200 bg-white px-3 text-sm font-semibold text-slate-700"
-                data-alpha-scout-owner-link="daily-wrap"
-              >
-                Daily Wrap
-              </Link>
-            </div>
-          </section>
-          <div data-alpha-scout-legacy-frame="true">{frame}</div>
-        </div>
-      </AppShell>
-    </div>
+    <AppShell active="alphaScout" title="Alpha Scout" backHref={ROUTES.home}>
+      <div
+        className="space-y-[var(--s4)]"
+        data-alpha-scout-report-surface="true"
+        data-alpha-scout-route-owner="legacy-report-html"
+      >
+        <section className="panel" data-alpha-scout-boundary="true">
+          <div className="flex flex-wrap items-center gap-2">
+            <span
+              className="inline-flex min-h-11 items-center rounded-full border border-slate-200 bg-white px-3 text-[12px] font-bold text-slate-600"
+              data-alpha-scout-boundary-chip="legacy-html"
+            >
+              이전 형식
+            </span>
+            <span
+              className="inline-flex min-h-11 items-center rounded-full border border-slate-200 bg-white px-3 text-[12px] font-bold text-slate-600"
+              data-alpha-scout-boundary-chip="report-deeplink"
+            >
+              리포트 연결
+            </span>
+            <span
+              className="inline-flex min-h-11 items-center rounded-full border border-slate-200 bg-white px-3 text-[12px] font-bold text-slate-600"
+              data-alpha-scout-boundary-chip="v2-owner"
+            >
+              아카이브
+            </span>
+          </div>
+          <div className="mt-3 grid gap-2 sm:grid-cols-3">
+            <Link
+              href={ROUTES.alphaScout}
+              className="inline-flex min-h-11 items-center justify-center rounded-lg border border-slate-200 bg-white px-3 text-sm font-semibold text-slate-700"
+              data-alpha-scout-owner-link="v2-archive"
+            >
+              스카우트 아카이브
+            </Link>
+            <Link
+              href={ROUTES.posts}
+              className="inline-flex min-h-11 items-center justify-center rounded-lg border border-slate-200 bg-white px-3 text-sm font-semibold text-slate-700"
+              data-alpha-scout-owner-link="posts"
+            >
+              분석 아카이브
+            </Link>
+            <Link
+              href={ROUTES.dailyWrap}
+              className="inline-flex min-h-11 items-center justify-center rounded-lg border border-slate-200 bg-white px-3 text-sm font-semibold text-slate-700"
+              data-alpha-scout-owner-link="daily-wrap"
+            >
+              Daily Wrap
+            </Link>
+          </div>
+        </section>
+        <div data-alpha-scout-legacy-frame="true">{frame}</div>
+      </div>
+    </AppShell>
   );
 }

@@ -3,6 +3,7 @@ import { cookies } from "next/headers";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import AppShell from "@/components/shell/AppShell";
+import ShellChromeOff from "@/components/shell/ShellChromeOff";
 import RouteEmbedFrame from "@/components/RouteEmbedFrame";
 import { ROUTES } from "@/lib/routes";
 import { getDesignVersionFromSearchParams } from "@/lib/design/version";
@@ -85,55 +86,53 @@ export default async function PostLegacyPage({ params }: PostLegacyPageProps) {
     />
   );
 
-  if (version === "v1") return frame;
+  if (version === "v1") return <ShellChromeOff>{frame}</ShellChromeOff>;
 
   return (
-    <div className="fnk-shell">
-      <AppShell active="posts" title={post.title} backHref={ROUTES.posts}>
-        <div
-          data-posts-detail-surface
-          data-posts-detail-route-owner="legacy-post-html"
-          className="min-h-screen px-3 py-4 sm:px-4 md:px-6"
-          style={{ backgroundColor: "var(--c-surface-2)" }}
+    <AppShell active="posts" title={post.title} backHref={ROUTES.posts}>
+      <div
+        data-posts-detail-surface
+        data-posts-detail-route-owner="legacy-post-html"
+        className="min-h-screen px-3 py-4 sm:px-4 md:px-6"
+        style={{ backgroundColor: "var(--c-surface-2)" }}
+      >
+        <section
+          data-posts-detail-boundary
+          className="mb-4 rounded-lg border border-slate-200 bg-white p-4 shadow-sm"
         >
-          <section
-            data-posts-detail-boundary
-            className="mb-4 rounded-lg border border-slate-200 bg-white p-4 shadow-sm"
-          >
-            <p className="text-[12px] font-bold uppercase tracking-wide text-slate-500">Route owner</p>
-            <h1 className="mt-2 text-xl font-black text-slate-900">레거시 리포트</h1>
-            <p className="mt-2 text-sm leading-relaxed text-slate-600">
-              기존 HTML 리포트를 분석 아카이브 안에서 읽는 상세 화면입니다. 출처와 이동 경로를 구분해 안내합니다.
-            </p>
-            <div className="mt-4 flex flex-wrap gap-2">
-              {POSTS_DETAIL_BOUNDARY_CHIPS.map((chip) => (
-                <span
-                  key={chip.key}
-                  data-posts-detail-boundary-chip={chip.key}
-                  className="inline-flex min-h-11 items-center rounded-full border border-slate-200 bg-slate-50 px-3 text-[12px] font-bold text-slate-700"
-                >
-                  {chip.label}
-                </span>
-              ))}
-            </div>
-            <div className="mt-4 grid gap-2 sm:grid-cols-3">
-              {POSTS_DETAIL_OWNER_LINKS.map((link) => (
-                <Link
-                  key={link.key}
-                  href={link.href}
-                  data-posts-detail-owner-link={link.key}
-                  className="inline-flex min-h-11 items-center justify-center rounded-lg border border-slate-200 bg-white px-3 text-sm font-bold text-slate-700 shadow-sm transition hover:border-blue-300 hover:text-blue-700"
-                >
-                  {link.label}
-                </Link>
-              ))}
-            </div>
-          </section>
-          <div data-posts-detail-legacy-frame>
-            {frame}
+          <p className="text-[12px] font-bold uppercase tracking-wide text-slate-500">Route owner</p>
+          <h1 className="mt-2 text-xl font-black text-slate-900">레거시 리포트</h1>
+          <p className="mt-2 text-sm leading-relaxed text-slate-600">
+            기존 HTML 리포트를 분석 아카이브 안에서 읽는 상세 화면입니다. 출처와 이동 경로를 구분해 안내합니다.
+          </p>
+          <div className="mt-4 flex flex-wrap gap-2">
+            {POSTS_DETAIL_BOUNDARY_CHIPS.map((chip) => (
+              <span
+                key={chip.key}
+                data-posts-detail-boundary-chip={chip.key}
+                className="inline-flex min-h-11 items-center rounded-full border border-slate-200 bg-slate-50 px-3 text-[12px] font-bold text-slate-700"
+              >
+                {chip.label}
+              </span>
+            ))}
           </div>
+          <div className="mt-4 grid gap-2 sm:grid-cols-3">
+            {POSTS_DETAIL_OWNER_LINKS.map((link) => (
+              <Link
+                key={link.key}
+                href={link.href}
+                data-posts-detail-owner-link={link.key}
+                className="inline-flex min-h-11 items-center justify-center rounded-lg border border-slate-200 bg-white px-3 text-sm font-bold text-slate-700 shadow-sm transition hover:border-blue-300 hover:text-blue-700"
+              >
+                {link.label}
+              </Link>
+            ))}
+          </div>
+        </section>
+        <div data-posts-detail-legacy-frame>
+          {frame}
         </div>
-      </AppShell>
-    </div>
+      </div>
+    </AppShell>
   );
 }

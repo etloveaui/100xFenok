@@ -22,10 +22,8 @@ export default async function PortfolioPage({ searchParams }: Props) {
   const initialTicker = normalizeForEntityKey(firstParam(params.ticker));
 
   return (
-    <div className="fnk-shell">
-      <AppShell active="portfolio" title="포트폴리오">
-        <PortfolioClient initialTicker={initialTicker} />
-      </AppShell>
-    </div>
+    <AppShell active="portfolio" title="포트폴리오">
+      <PortfolioClient initialTicker={initialTicker} />
+    </AppShell>
   );
 }

@@ -23,10 +23,8 @@ export default async function EtfsPage({ searchParams }: Props) {
   const initialMacroContextId = macroContextFromParam(firstParam(params.macro))?.id;
 
   return (
-    <div className="fnk-shell">
-      <AppShell active="etfs" title="ETF" backHref={ROUTES.home}>
-        <EtfPageClient initialMacroContextId={initialMacroContextId} />
-      </AppShell>
-    </div>
+    <AppShell active="etfs" title="ETF" backHref={ROUTES.home}>
+      <EtfPageClient initialMacroContextId={initialMacroContextId} />
+    </AppShell>
   );
 }

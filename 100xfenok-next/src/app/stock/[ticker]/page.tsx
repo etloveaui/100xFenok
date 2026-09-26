@@ -51,21 +51,19 @@ export default async function StockDetailPage({ params, searchParams }: Props) {
       ? "스크리너로 돌아가기"
       : "뒤로";
   return (
-    <div className="fnk-shell">
-      <AppShell title={symbol} backHref={returnTo ?? ROUTES.screenerTicker(symbol)} backLabel={backLabel}>
-        <TransitionLink
-          href={returnTo ?? ROUTES.screenerTicker(symbol)}
-          aria-label={returnTo ? backLabel : "스크리너로 돌아가기"}
-          className="mb-2 inline-flex min-h-11 items-center gap-2 text-sm font-semibold text-[var(--c-ink-2)] hover:text-[var(--brand-interactive)] max-[1023px]:hidden"
-        >
-          <span aria-hidden="true">←</span>
-          {returnTo ? backLabel : "스크리너로 돌아가기"}
-        </TransitionLink>
-        {initialMacroContextId ? (
-          <MacroContextCard contextId={initialMacroContextId} surface="stock" className="mb-[var(--s4)]" />
-        ) : null}
-        <StockDetailClient ticker={symbol} initialTab={initialTab} />
-      </AppShell>
-    </div>
+    <AppShell title={symbol} backHref={returnTo ?? ROUTES.screenerTicker(symbol)} backLabel={backLabel}>
+      <TransitionLink
+        href={returnTo ?? ROUTES.screenerTicker(symbol)}
+        aria-label={returnTo ? backLabel : "스크리너로 돌아가기"}
+        className="mb-2 inline-flex min-h-11 items-center gap-2 text-sm font-semibold text-[var(--c-ink-2)] hover:text-[var(--brand-interactive)] max-[1023px]:hidden"
+      >
+        <span aria-hidden="true">←</span>
+        {returnTo ? backLabel : "스크리너로 돌아가기"}
+      </TransitionLink>
+      {initialMacroContextId ? (
+        <MacroContextCard contextId={initialMacroContextId} surface="stock" className="mb-[var(--s4)]" />
+      ) : null}
+      <StockDetailClient ticker={symbol} initialTab={initialTab} />
+    </AppShell>
   );
 }
