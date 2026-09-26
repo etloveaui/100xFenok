@@ -1110,15 +1110,11 @@ async function searchStockReturnCase(page: Page, runtime: CaseRuntime, condition
     await input.fill("AAPL");
     const result = page.locator('[role="option"]:visible').filter({ hasText: "Synthetic Apple" });
     await waitForCondition(async () => await result.count() === 1, "search stock option did not appear");
+    // A search result opens the stock page directly; its 데이터 연결 panel
+    // (formerly a preview drawer between search and page) lives on the page.
+    const box = await result.boundingBox();
+    assert(box && box.height >= 43.98, "search result touch target must be at least 44px high");
     await result.tap();
-    const drawer = page.locator('[data-testid="typeahead-preview"]');
-    await waitForCondition(async () => await drawer.count() === 1, "stock preview did not open");
-    const full = drawer.getByRole("link", { name: "전체 보기", exact: true });
-    const box = await full.boundingBox();
-    assert(box && box.height >= 43.98, "stock preview primary touch target must be at least 44px high");
-    assert.equal(new URL((await full.getAttribute("href"))!, QA_BASE_URL).searchParams.get("returnTo"), returnTo);
-    await page.waitForLoadState("networkidle", { timeout: WAIT_DATA_MS });
-    await full.tap();
   } else {
     // Ctrl+K is the global opener even while the source checkbox retains focus.
     const dialog = await paletteOpen(page, false, "Control+k");
