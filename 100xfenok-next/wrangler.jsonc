@@ -16,9 +16,11 @@
     "binding": "ASSETS",
     "html_handling": "none",
     // These patterns are derived from the generated public enrollment
-    // authority, with the isolated private Griffin deny route retained
-    // explicitly. The `*` is a deep glob. Every unhealthy data-plane outcome
-    // still falls back to this same asset directory.
+    // authority, with the isolated private Griffin deny route and the
+    // isolated admin design-lab screenshots route (admin-session gated by
+    // middleware, not the data plane) retained explicitly. The `*` is a
+    // deep glob. Every unhealthy data-plane outcome still falls back to
+    // this same asset directory.
     "run_worker_first": [
       "/data/computed/*",
       "/data/damodaran/*",
@@ -30,7 +32,8 @@
       "/data/sentiment/*",
       "/data/slickcharts/*",
       "/data/yardney/*",
-      "/data/sec-13f/investors/griffin.json"
+      "/data/sec-13f/investors/griffin.json",
+      "/admin/design-lab/screenshots/*"
     ]
   },
   "observability": {

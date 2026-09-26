@@ -6,6 +6,7 @@ import fs from "node:fs";
 import { derivedPrivateFileOutputs } from "./lib/derived-asset-registry.mjs";
 import { PLANE_ENROLLMENT_PRIVATE_DENY } from "../100xfenok-next/scripts/cloud-data-plane/cloud-data-plane-enrollment.generated.mjs";
 import {
+  EXPLICIT_WORKER_FIRST_PATH_VALUES,
   FINAL_WORKER_FIRST_PATTERNS,
   PRIVATE_PUBLIC_PATHS,
   PRIVATE_PUBLIC_PATH_VALUES,
@@ -42,12 +43,19 @@ assert.deepEqual(FINAL_WORKER_FIRST_PATTERNS, [
   "/data/slickcharts/*",
   "/data/yardney/*",
   "/data/sec-13f/investors/griffin.json",
-], "selective contract preserves the ten public families plus Griffin");
+  "/admin/design-lab/screenshots/*",
+], "selective contract preserves the ten public families, Griffin, and the isolated admin asset route");
 assert.equal(FINAL_WORKER_FIRST_PATTERNS.includes("/data/*"), false, "broad data glob is absent");
 assert.equal(FINAL_WORKER_FIRST_PATTERNS.some((pattern) => pattern.startsWith("!")), false, "no negative override can bypass Worker-first");
 assert.equal(Object.isFrozen(FINAL_WORKER_FIRST_PATTERNS), true, "Worker-first list is immutable");
 assert.equal(Object.isFrozen(PRIVATE_PUBLIC_PATHS), true, "private deny authority is immutable");
 assert.equal(Object.isFrozen(PRIVATE_PUBLIC_PATH_VALUES), true, "private deny paths are immutable");
+assert.equal(Object.isFrozen(EXPLICIT_WORKER_FIRST_PATH_VALUES), true, "explicit worker-first paths are immutable");
+assert.equal(
+  FINAL_WORKER_FIRST_PATTERNS.includes("/admin/design-lab/screenshots/*"),
+  true,
+  "admin design-lab screenshots must be forced through the Worker so the admin session gate runs",
+);
 
 const expectedDerivedPrivatePaths = derivedPrivateFileOutputs().map((relativePath) => `/${relativePath}`);
 assert.deepEqual(
@@ -72,4 +80,4 @@ for (const relativePath of [
   );
 }
 
-console.log("cloud-data-plane routing authority: ok (10 selective patterns; all private deny paths retained)");
+console.log("cloud-data-plane routing authority: ok (11 selective patterns; all private deny paths retained)");

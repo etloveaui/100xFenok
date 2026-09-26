@@ -19,6 +19,16 @@ export const PRIVATE_PUBLIC_PATH_VALUES = Object.freeze([
 ].sort());
 const PRIVATE_PUBLIC_PATH_SET = new Set(PRIVATE_PUBLIC_PATH_VALUES);
 
+// Non-data-plane static assets that must still be forced through the Worker.
+// Cloudflare's asset layer serves any path matching a file in the assets
+// directory directly, bypassing every Next.js middleware check, unless that
+// path is enrolled here. The admin design-lab screenshots are gated by the
+// admin session middleware, not the data-plane authority above, so they are
+// enrolled explicitly rather than through the generated enrollment registry.
+export const EXPLICIT_WORKER_FIRST_PATH_VALUES = Object.freeze([
+  "/admin/design-lab/screenshots/*",
+]);
+
 // Keep the mutating Set private to this module. Callers receive a frozen
 // authority with the one operation the Worker needs, so the deny boundary
 // cannot be changed by a consumer at runtime.
@@ -52,7 +62,10 @@ export function deriveWorkerFirstPatterns(
   const isolatedPrivatePaths = PRIVATE_PUBLIC_PATH_VALUES
     .filter((pathname) => !sortedFamilies.some((pattern) => coversPath(pattern, pathname)))
     .sort();
-  return Object.freeze([...sortedFamilies, ...isolatedPrivatePaths]);
+  const isolatedWorkerFirstPaths = EXPLICIT_WORKER_FIRST_PATH_VALUES
+    .filter((pattern) => !sortedFamilies.some((familyPattern) => coversPath(familyPattern, pattern)))
+    .sort();
+  return Object.freeze([...sortedFamilies, ...isolatedPrivatePaths, ...isolatedWorkerFirstPaths]);
 }
 
 export const FINAL_WORKER_FIRST_PATTERNS = deriveWorkerFirstPatterns();
