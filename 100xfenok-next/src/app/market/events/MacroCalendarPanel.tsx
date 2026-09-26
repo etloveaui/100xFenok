@@ -165,7 +165,7 @@ export default function MacroCalendarPanel({ loaded, failed, calendar, onRetry }
           asOfKind="published"
           coverage={`앞으로 2주 ${events.length}건 · 중요도 높음·보통`}
           next={next ? `${formatKstDayHeading(next.dateKst)} ${next.timeKst ?? ""} ${next.titleKo}`.replace(/\s+/g, " ").trim() : undefined}
-          onRetry={failed || stale || previousBehind ? onRetry : undefined}
+          onRetry={freshness === "error" || freshness === "stale" ? onRetry : undefined}
           skeletonDelayMs={120}
         />
       </Panel>
