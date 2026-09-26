@@ -3195,6 +3195,7 @@ export default function StockDetailClient({
                   summary={stockChartCopy}
                   headingLevel="h3"
                   data={rangedStockChart}
+                  currency={displayCurrency}
                   showVolume
                   composition="w4"
                   volumeTone="muted"
