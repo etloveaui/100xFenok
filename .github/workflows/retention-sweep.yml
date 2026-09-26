@@ -1,8 +1,7 @@
-# R2 retention sweep — revision 2 (fh-598). MANUAL-GATED INITIAL STATE.
-#
-# The weekly schedule is deliberately DISABLED until the parent accepts this candidate.
-# FINAL ENABLE SWITCH (single change): uncomment the `schedule:` block below.
-# Weekly cleanup uses this same gated path (plan → window → apply); nothing else deletes.
+# R2 retention sweep: bounded Sunday-night campaigns.
+# Initial campaign: 2026-09-27 KST. Future weekly campaigns require persisted
+# acceptance of the initial cleanup. Ten 30-minute slots; stop after success.
+# Each attempt uses the same plan -> guarded window -> verify/restore path.
 #
 # Permission probe (parent-owned — actions-write is NOT assumed from this YAML):
 #   gh api repos/{owner}/{repo}/actions/permissions
@@ -32,9 +31,9 @@ on:
         required: false
         type: boolean
         default: false
-  # Armed only after the hosted schedule tests pass. KST Sunday 01:00..05:30.
-  # schedule:
-  #   - cron: '0,30 16-20 * * 6'
+  # Hosted safety suite passed; KST Sunday 01:00..05:30, completion by 06:00.
+  schedule:
+    - cron: '0,30 16-20 * * 6'
 
 permissions:
   actions: write
