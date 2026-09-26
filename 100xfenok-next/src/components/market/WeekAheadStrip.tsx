@@ -70,26 +70,37 @@ export default function WeekAheadStrip() {
     };
   }, []);
 
+  const horizonEnd = addDaysIso(today, HORIZON_DAYS);
+  // The mirror is refreshed outside CI; past its time_max the file simply has
+  // no rows, which must not read as a quiet week.
+  const coverageEnd = state.calendar?.coverageEnd ?? null;
+  const uncoveredFrom = coverageEnd !== null && coverageEnd < horizonEnd ? coverageEnd : null;
+
   const groups = useMemo(() => {
     if (!state.calendar) return [];
     const byDay = new Map<string, MacroEvent[]>();
-    for (const event of macroEventsBetween(state.calendar.events, today, addDaysIso(today, HORIZON_DAYS)).filter(isHeadlineMacro)) {
+    for (const event of macroEventsBetween(state.calendar.events, today, horizonEnd).filter(isHeadlineMacro)) {
       const list = byDay.get(event.dateKst) ?? [];
       list.push(event);
       byDay.set(event.dateKst, list);
     }
     return [...byDay.entries()];
-  }, [state.calendar, today]);
+  }, [state.calendar, today, horizonEnd]);
 
   const summary = groups.length
     ? groups.map(([day, events]) => `${dayLabel(day, today)} ${events.map((event) => event.titleKo).join(", ")}`).join(" · ")
+    : null;
+  const coverageNote = uncoveredFrom
+    ? uncoveredFrom <= today
+      ? "캘린더 수록 기간이 지났습니다"
+      : `${formatKstDayHeading(uncoveredFrom)}부터 미수록`
     : null;
 
   return (
     <TransitionLink
       href={ROUTES.marketEvents}
       data-home-week-ahead
-      aria-label={summary ? `이번 주 주요 일정: ${summary}. 경제 일정 전체 보기` : "경제 일정 전체 보기"}
+      aria-label={[summary ? `이번 주 주요 일정: ${summary}` : null, coverageNote, "경제 일정 전체 보기"].filter(Boolean).join(". ")}
       className="group flex min-h-11 items-center gap-2 overflow-x-auto whitespace-nowrap rounded-[8px] text-[12px] [scrollbar-width:none] md:min-h-8 [&::-webkit-scrollbar]:hidden"
     >
       <span className="shrink-0 font-semibold text-[var(--c-ink-2)]">이번 주 일정</span>
@@ -98,7 +109,9 @@ export default function WeekAheadStrip() {
       ) : !state.calendar ? (
         <span className="shrink-0 text-[var(--c-ink-4)]">캘린더를 읽지 못했습니다</span>
       ) : groups.length === 0 ? (
-        <span className="shrink-0 text-[var(--c-ink-4)]">7일 안에 주요 미국 지표·연준 일정이 없습니다</span>
+        <span className="shrink-0 text-[var(--c-ink-4)]">
+          {uncoveredFrom && uncoveredFrom <= today ? "캘린더 수록 기간이 지나 일정을 확인할 수 없습니다" : uncoveredFrom ? `${formatKstDayHeading(uncoveredFrom)} 전까지 주요 미국 지표·연준 일정이 없습니다` : "7일 안에 주요 미국 지표·연준 일정이 없습니다"}
+        </span>
       ) : (
         groups.map(([day, events]) => (
           <span
@@ -111,6 +124,7 @@ export default function WeekAheadStrip() {
           </span>
         ))
       )}
+      {groups.length > 0 && coverageNote ? <span className="shrink-0 text-[var(--c-ink-4)]">{coverageNote}</span> : null}
       <span className="ml-auto shrink-0 pl-1 font-semibold text-[var(--c-brand)] group-hover:underline">전체 일정 →</span>
     </TransitionLink>
   );
