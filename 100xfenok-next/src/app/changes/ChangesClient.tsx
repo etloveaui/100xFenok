@@ -11,6 +11,7 @@ import type { EvidenceStage } from "@/lib/evidence/provenance";
 import { formatEps, formatEpsRevisionChange, readEpsRevision } from "@/lib/eps-revision";
 import { useWatchlist } from "@/lib/watchlist";
 import { ROUTES } from "@/lib/routes";
+import { freshnessAgeOverride, freshnessVerdict } from "@/lib/freshness-policy.mjs";
 
 type DiffSegment = "visit" | "week" | "revision";
 type DiffTone = "up" | "down" | "neutral";

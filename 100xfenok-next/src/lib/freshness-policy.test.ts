@@ -28,7 +28,7 @@ test("weekly owner file: fresh <= 13, delayed 14-20, stopped >= 21", () => {
 });
 
 test("daily family counts trading days across a weekend", () => {
-  const daily = { cadence: "daily", releaseLagDays: 0, supplier: "automated", calendar: "us_trading" };
+  const daily = { cadence: "daily", releaseLagDays: 0, supplier: "automated", calendar: "us_trading" } as const;
   const friday = "2026-09-18";
   assert.equal(freshnessVerdict(friday, daily, "2026-09-19").ageDays, 0); // Saturday
   assert.equal(freshnessVerdict(friday, daily, "2026-09-20").ageDays, 0); // Sunday
