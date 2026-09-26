@@ -3,7 +3,8 @@
 import { useMemo } from "react";
 import { EvidenceRail, Panel, PanelHeader, Pill } from "@/components/ui";
 import type { EvidenceRailFreshness } from "@/components/ui/EvidenceRail";
-import { dateOnly, daysUntilKstDate, isStaleAsOf, todayKST } from "@/lib/data-state";
+import { useKstToday } from "@/hooks/useKstToday";
+import { dateOnly, daysUntilKstDate, isStaleAsOf } from "@/lib/data-state";
 import {
   MACRO_CALENDAR_STALE_AFTER_DAYS,
   formatKstDayHeading,
@@ -26,6 +27,12 @@ interface MacroCalendarPanelProps {
 function addDaysIso(iso: string, days: number): string {
   const [y, m, d] = iso.split("-").map(Number);
   return new Date(Date.UTC(y, m - 1, d) + days * DAY_MS).toISOString().slice(0, 10);
+}
+
+/** The KST day of a timestamp ("2026-09-25T11:44Z" -> "2026-09-25"). */
+function kstDay(stamp: string | null): string | null {
+  const ms = stamp ? Date.parse(stamp) : NaN;
+  return Number.isFinite(ms) ? new Date(ms + 9 * 60 * 60 * 1000).toISOString().slice(0, 10) : null;
 }
 
 function dayTag(iso: string, today: string): string | null {
@@ -68,7 +75,7 @@ function EventRow({ event }: { event: MacroEvent }) {
 }
 
 export default function MacroCalendarPanel({ loaded, failed, calendar, onRetry }: MacroCalendarPanelProps) {
-  const today = useMemo(() => todayKST(), []);
+  const today = useKstToday();
   const horizonEnd = addDaysIso(today, HORIZON_DAYS);
   const events = useMemo(
     () => (calendar ? macroEventsBetween(calendar.events, today, horizonEnd).filter((event) => event.importance !== "L") : []),
@@ -89,11 +96,17 @@ export default function MacroCalendarPanel({ loaded, failed, calendar, onRetry }
   const stale = generatedDay !== null && isStaleAsOf(generatedDay, MACRO_CALENDAR_STALE_AFTER_DAYS, today);
   const coverageEnd = calendar?.coverageEnd ?? null;
   const outOfRange = coverageEnd !== null && coverageEnd < horizonEnd;
+  // The previous-print file is built daily at 15:07 KST, the day after a US
+  // evening release. It is behind once a release from before yesterday is
+  // still missing from it; those rows then show no previous print at all.
+  const previousDay = kstDay(calendar?.previousAsOf ?? null);
+  const pendingFrom = calendar?.previousPendingFrom ?? null;
+  const previousBehind = pendingFrom !== null && pendingFrom < addDaysIso(today, -1);
   const freshness: EvidenceRailFreshness = !loaded
     ? "pending"
     : failed || !calendar
       ? "error"
-      : stale || outOfRange
+      : stale || outOfRange || previousBehind
         ? "stale"
         : "fresh";
   const next = events[0];
@@ -148,11 +161,11 @@ export default function MacroCalendarPanel({ loaded, failed, calendar, onRetry }
         <EvidenceRail
           freshness={freshness}
           source="BujaBot USD 캘린더 · 직전값 FRED·활동 서베이"
-          asOf={generatedDay ? `${generatedDay} (일정)` : "—"}
+          asOf={generatedDay ? `${generatedDay} (일정)${previousDay ? ` · ${previousDay} (직전값)` : ""}` : "—"}
           asOfKind="published"
           coverage={`앞으로 2주 ${events.length}건 · 중요도 높음·보통`}
           next={next ? `${formatKstDayHeading(next.dateKst)} ${next.timeKst ?? ""} ${next.titleKo}`.replace(/\s+/g, " ").trim() : undefined}
-          onRetry={failed || stale ? onRetry : undefined}
+          onRetry={failed || stale || previousBehind ? onRetry : undefined}
           skeletonDelayMs={120}
         />
       </Panel>

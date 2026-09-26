@@ -17,6 +17,7 @@ function test(name: string, run: () => void): void {
 }
 
 const prevValues = {
+  generated_at: "2026-09-25T11:44:41.697Z",
   aliases: {
     "Nonfarm Payrolls (NFP)": "nonfarm_payrolls",
     "비농업 고용지수 NFP": "nonfarm_payrolls",
@@ -80,7 +81,7 @@ test("short labels and date formatting", () => {
 });
 
 test("a malformed document yields an empty calendar, not an error", () => {
-  assert.deepEqual(parseMacroCalendar(null, prevValues), { generatedAt: null, source: null, coverageEnd: null, events: [] });
+  assert.deepEqual(parseMacroCalendar(null, prevValues), { generatedAt: null, source: null, coverageEnd: null, previousAsOf: null, previousPendingFrom: null, events: [] });
   assert.deepEqual(parseMacroCalendar({ events: "x" }, null).events, []);
 });
 
@@ -91,4 +92,34 @@ test("coverage ends at the first KST day time_max leaves out", () => {
   assert.equal(coverageEndDay("2027-02-28T10:00:00+09:00"), "2027-03-01");
   assert.equal(coverageEndDay(null), null);
   assert.equal(coverageEndDay("not a date"), null);
+});
+
+test("a print is the previous print only for its series' first release after the file", () => {
+  const claims = (id: string, date: string) => ({ id, status: "confirmed", date_kst: date, time_kst: "21:30", importance: "M", category: "EMP", title_ko: "주간 실업수당 청구", title_en: "Initial Jobless Claims" });
+  const weekly = { ...calendar, events: [claims("c0924", "2026-09-24"), claims("c1001", "2026-10-01"), claims("c1008", "2026-10-08"), ...calendar.events] };
+  const prints = {
+    generated_at: "2026-09-25T06:07:00Z", // 9/25 15:07 KST, after the 9/24 release
+    aliases: { ...prevValues.aliases, "Initial Jobless Claims": "jobless_claims" },
+    values: { ...prevValues.values, jobless_claims: { value: "197K", asOf: "2026-09-19", source: "FRED" } },
+  };
+  const parsed = parseMacroCalendar(weekly, prints);
+  const byId = new Map(parsed.events.map((e) => [e.id, e]));
+  // 9/24 is already in the file (its own print), 10/8 comes after 10/1's print.
+  assert.equal(byId.get("c0924")?.previous, null);
+  assert.equal(byId.get("c1001")?.previous?.value, "197K");
+  assert.equal(byId.get("c1008")?.previous, null);
+  assert.equal(parsed.previousAsOf, "2026-09-25T06:07:00Z");
+  assert.equal(parsed.previousPendingFrom, "2026-10-01");
+
+  // A file last written 9/20 still precedes 9/24, and is one print behind from 10/1 on.
+  const behind = parseMacroCalendar(weekly, { ...prints, generated_at: "2026-09-20T06:07:00Z" });
+  const behindById = new Map(behind.events.map((e) => [e.id, e]));
+  assert.equal(behindById.get("c0924")?.previous?.value, "197K");
+  assert.equal(behindById.get("c1001")?.previous, null);
+  assert.equal(behind.previousPendingFrom, "2026-09-24");
+
+  // Without a timestamp the file cannot say which release it precedes.
+  const undated = parseMacroCalendar(weekly, { ...prints, generated_at: undefined });
+  assert.ok(undated.events.every((e) => e.previous === null));
+  assert.equal(undated.previousPendingFrom, null);
 });
