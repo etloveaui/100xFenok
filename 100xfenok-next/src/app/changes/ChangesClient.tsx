@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import TransitionLink from "@/components/TransitionLink";
 import { useDashboardData } from "@/hooks/useDashboardData";
 import { MARKET_STRENGTH_NAME, marketStrength } from "@/lib/dashboard/market-strength";
@@ -298,7 +298,10 @@ export default function ChangesClient() {
   const [revisionDoc, setRevisionDoc] = useState<unknown>(null);
   const [tradesDoc, setTradesDoc] = useState<unknown>(null);
   const [byTickerDoc, setByTickerDoc] = useState<unknown>(null);
-  const [feedsLoaded, setFeedsLoaded] = useState(false);
+  // The attempt whose feeds have landed: a retry bumps retryKey, so loading is
+  // derived instead of reset by a synchronous setState inside the effect.
+  const [loadedKey, setLoadedKey] = useState<number | null>(null);
+  const [feedsFetchedAtMs, setFeedsFetchedAtMs] = useState<number | null>(null);
   const [retryKey, setRetryKey] = useState(0);
   // Refetch failure signal: kept separately from the docs so a failed refetch
   // that preserves last-known-good still flags partial/stale, never fresh.
@@ -310,11 +313,11 @@ export default function ChangesClient() {
   const [snapshot] = useState<VisitSnapshot | null>(() => (
     typeof window === "undefined" ? null : readSnapshot()
   ));
-  const [snapshotSaved, setSnapshotSaved] = useState(false);
+  // Once-per-visit guard for the baseline write; a ref, since nothing renders from it.
+  const snapshotSaved = useRef(false);
 
   useEffect(() => {
     let cancelled = false;
-    setFeedsLoaded(false);
     Promise.all([
       fetchJson<unknown>("/data/global-scouter/core/revision_movers.json"),
       fetchJson<unknown>("/data/sec-13f/analytics/trades_ranking.json"),
@@ -329,7 +332,8 @@ export default function ChangesClient() {
       if (byTicker !== null) setByTickerDoc(byTicker);
       setRevFailed(revision === null);
       setHoldersFailed(trades === null || byTicker === null);
-      setFeedsLoaded(true);
+      setFeedsFetchedAtMs(Date.now());
+      setLoadedKey(retryKey);
     });
     return () => {
       cancelled = true;
@@ -341,6 +345,7 @@ export default function ChangesClient() {
     setRetryKey((key) => key + 1);
   };
 
+  const feedsLoaded = loadedKey === retryKey;
   const dashboardSettled = dataReady || failedSources.length > 0;
   const dashboardFailed = failedSources.length > 0;
   const settled = feedsLoaded && dashboardSettled;
@@ -349,14 +354,19 @@ export default function ChangesClient() {
 
   const revAsOf = useMemo(() => revisionAsOf(revisionDoc), [revisionDoc]);
   const quarter = useMemo(() => tradesQuarter(tradesDoc), [tradesDoc]);
-  const nextDiffLabel = useMemo(() => nextRevisionRefreshLabel(Date.now()), []);
+  // Schedule judgments use the moment the feeds arrived, not render time, so a
+  // re-render never flips the overdue state or the next-refresh label on its own.
+  const nextDiffLabel = useMemo(
+    () => (feedsFetchedAtMs === null ? undefined : nextRevisionRefreshLabel(feedsFetchedAtMs)),
+    [feedsFetchedAtMs],
+  );
 
   // Persist this visit as next visit's baseline once everything settles with
   // a real dashboard load. A fallback-contaminated baseline is never saved:
   // the whole write waits for dataReady && !dashboardFailed.
   useEffect(() => {
-    if (!settled || snapshotSaved || dashboardFailed || !dataReady) return;
-    setSnapshotSaved(true);
+    if (!settled || snapshotSaved.current || dashboardFailed || !dataReady) return;
+    snapshotSaved.current = true;
     writeSnapshot({
       at: new Date().toISOString(),
       edgeScore: regime.confidence,
@@ -364,7 +374,7 @@ export default function ChangesClient() {
       revisionAsOf: revAsOf,
       quarter,
     });
-  }, [settled, snapshotSaved, dashboardFailed, dataReady, regime.confidence, regime.label, revAsOf, quarter]);
+  }, [settled, dashboardFailed, dataReady, regime.confidence, regime.label, revAsOf, quarter]);
 
   // Watchlist scope set: null = global. Consumed inside revisionRows /
   // holderRows BEFORE the per-direction caps so every watched ticker present
@@ -443,12 +453,13 @@ export default function ChangesClient() {
   const anyFeedMissing = revMissing || holdersMissing;
   const allMissing = revMissing && holdersMissing;
   const revOverdue = useMemo(() => {
-    if (!isRecord(revisionDoc)) return false;
+    if (!isRecord(revisionDoc) || feedsFetchedAtMs === null) return false;
+    const lastRefreshMs = lastRevisionRefreshMs(feedsFetchedAtMs);
     const stamp = asString(revisionDoc.generated_at);
     const ms = stamp ? Date.parse(stamp) : NaN;
-    if (!Number.isFinite(ms)) return revAsOf !== null && revAsOf < new Date(lastRevisionRefreshMs(Date.now())).toISOString().slice(0, 10);
-    return ms < lastRevisionRefreshMs(Date.now());
-  }, [revisionDoc, revAsOf]);
+    if (!Number.isFinite(ms)) return revAsOf !== null && revAsOf < new Date(lastRefreshMs).toISOString().slice(0, 10);
+    return ms < lastRefreshMs;
+  }, [revisionDoc, revAsOf, feedsFetchedAtMs]);
 
   const mainFreshness: EvidenceRailFreshness = !settled
     ? "pending"
