@@ -214,7 +214,9 @@ function macroLaneEvents(lane: TimelineLaneDef, macroEvents: readonly MacroEvent
   return macroEvents
     .filter((event) => lane.macro!(event) && event.dateKst >= startIso && event.dateKst < endIso)
     .map((event) => ({
-      key: `${lane.id}-${event.id}`,
+      // A recurring calendar entry keeps one id across occurrences (CPI on
+      // 10/14 and 11/10), so the occurrence's date and time make the key.
+      key: `${lane.id}-${event.id}-${event.dateKst}-${event.timeKst ?? ""}`,
       date: event.dateKst,
       symbol: "-",
       title: `${event.titleKo}${event.timeKst ? ` · ${event.timeKst} KST` : ""}`,
