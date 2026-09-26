@@ -3092,10 +3092,14 @@
 
 /* Phone: the rail's controls are tap targets, so every button and link in it
    takes 44px (the mobile UX contract's screener-toolbar-target), as the note
-   above this section promises. Pills that only show a count stay 36px. */
+   above this section promises. Pills that only show a count stay 36px. The
+   segment and preset selectors repeat the 36px rule's specificity so this
+   later block wins over it. */
 @media (max-width: 767px) {
   .canvas-plus.cp-screener-service .cp-screener-toolbar-row button,
-  .canvas-plus.cp-screener-service .cp-screener-toolbar-row a {
+  .canvas-plus.cp-screener-service .cp-screener-toolbar-row a,
+  .canvas-plus.cp-screener-service .cp-screener-toolbar-row .cp-screener-segment,
+  .canvas-plus.cp-screener-service .cp-screener-toolbar-row .cpw4-preset-wrap button {
     min-height: 44px;
   }
 
