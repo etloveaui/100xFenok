@@ -1,23 +1,9 @@
 {
   "schema_version": "alarm-state/v1",
-  "generated_at": "2026-09-26T02:13:08.246Z",
+  "generated_at": "2026-09-26T22:59:00.992Z",
   "status": "open",
   "open_incident_count": 14,
   "open_incidents": [
-    {
-      "workflow": "build-stocks-analyzer.yml",
-      "label": "Build Stocks Analyzer",
-      "streak": 3,
-      "failure_streak_threshold": 2,
-      "first_failing_run_id": 35854171999,
-      "first_failing_run_url": "https://github.com/etloveaui/100xFenok/actions/runs/35854171999",
-      "alarm_reasons": [
-        "failure_streak"
-      ],
-      "lane_outcome_lanes": [],
-      "lost_schedule_slot_count": 0,
-      "cadence_status": "no_declaration"
-    },
     {
       "workflow": "fenok-edge-krx-daily.yml",
       "label": "Fenok Edge KRX Daily Data",
@@ -93,6 +79,22 @@
       ],
       "lane_outcome_lanes": [
         "finra_ats_weekly"
+      ],
+      "lost_schedule_slot_count": 0,
+      "cadence_status": "not_due"
+    },
+    {
+      "workflow": "fetch-fred-macro.yml",
+      "label": "Fetch FRED Macro Data",
+      "streak": 0,
+      "failure_streak_threshold": 2,
+      "first_failing_run_id": null,
+      "first_failing_run_url": null,
+      "alarm_reasons": [
+        "lane_outcome_overdue"
+      ],
+      "lane_outcome_lanes": [
+        "fred_macro"
       ],
       "lost_schedule_slot_count": 0,
       "cadence_status": "not_due"
@@ -212,10 +214,10 @@
     {
       "workflow": "validate-workflows.yml",
       "label": "Validate GitHub Workflows",
-      "streak": 3,
+      "streak": 15,
       "failure_streak_threshold": 2,
-      "first_failing_run_id": 36123235463,
-      "first_failing_run_url": "https://github.com/etloveaui/100xFenok/actions/runs/36123235463",
+      "first_failing_run_id": 36212470447,
+      "first_failing_run_url": "https://github.com/etloveaui/100xFenok/actions/runs/36212470447",
       "alarm_reasons": [
         "failure_streak"
       ],
@@ -234,13 +236,13 @@
     "oecd_cli": "2026-09-26",
     "treasury_tga": "2026-09-25",
     "slickcharts": "2026-09-26",
-    "apewisdom_attention": "2026-09-25",
+    "apewisdom_attention": "2026-09-26",
     "sentiment": "2026-09-05",
     "us_indices_daily": "2026-09-25",
     "nasdaq_giw_sox": "2026-09-05",
     "stockanalysis_etf_universe": "2026-09-26",
     "stockanalysis_etf_detail": "2026-09-20",
-    "fred_macro": "2026-09-14",
+    "fred_macro": "2026-09-26",
     "fred_yardeni": "2026-09-22",
     "yahoo_private_options": "2026-09-22"
   },
@@ -478,7 +480,7 @@
       "cadence_status": "not_due",
       "cadence_evidence": [],
       "data_freshness_state": "healthy",
-      "data_freshness_age_hours_at_generation": 24
+      "data_freshness_age_hours_at_generation": 21
     },
     {
       "file": "fetch-treasury-tga.yml",
@@ -538,6 +540,28 @@
     {
       "file": "pins-autosync.yml",
       "label": "Pins Autosync",
+      "events": [
+        "schedule"
+      ],
+      "event": "schedule",
+      "failure_streak_threshold": 2,
+      "cadence_status": "no_declaration",
+      "cadence_evidence": []
+    },
+    {
+      "file": "retention-restore.yml",
+      "label": "R2 Retention Restore Watchdog",
+      "events": [
+        "schedule"
+      ],
+      "event": "schedule",
+      "failure_streak_threshold": 2,
+      "cadence_status": "no_declaration",
+      "cadence_evidence": []
+    },
+    {
+      "file": "retention-sweep.yml",
+      "label": "R2 Retention Sweep",
       "events": [
         "schedule"
       ],
@@ -640,7 +664,7 @@
     "not_due": 26,
     "overdue": 0,
     "recovered": 0,
-    "no_declaration": 9,
+    "no_declaration": 11,
     "unknown": 0
   },
   "excluded_workflows": [
@@ -654,17 +678,17 @@
   "queue_evicted_run_count": 0,
   "queue_evicted_workflows": [],
   "last_firing": {
-    "run_id": "36210844903",
-    "run_url": "https://github.com/etloveaui/100xFenok/actions/runs/36210844903",
-    "observed_at": "2026-09-26T02:13:08.246Z",
-    "event": "workflow_run",
+    "run_id": "36277865968",
+    "run_url": "https://github.com/etloveaui/100xFenok/actions/runs/36277865968",
+    "observed_at": "2026-09-26T22:59:00.992Z",
+    "event": "schedule",
     "workflows": [
-      "build-stocks-analyzer.yml",
       "fenok-edge-krx-daily.yml",
       "fetch-edgar-filings.yml",
       "fetch-fdic.yml",
       "fetch-fenok-news-tone.yml",
       "fetch-finra-ats-weekly.yml",
+      "fetch-fred-macro.yml",
       "fetch-oecd-cli.yml",
       "fetch-stockanalysis.yml",
       "slickcharts-daily.yml",
