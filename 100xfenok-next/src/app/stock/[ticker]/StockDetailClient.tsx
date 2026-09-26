@@ -39,6 +39,7 @@ import { DATA_STATE_LABELS, makeDataState, type LoaderError } from "@/lib/data-s
 import { ROUTES } from "@/lib/routes";
 import { normalizeForEntityKey } from "@/lib/ticker";
 import TickerSurfaceEventsCard, { loadTickerSurfaces, type TickerSurfacePayload } from "./TickerSurfaceEventsCard";
+import StockConnectionsRail from "./StockConnectionsRail";
 import ExternalSourceLinks from "@/components/ExternalSourceLinks";
 import { estimateCompletenessFromSeries, estimateCompletenessTone, hasEstimateGap } from "@/lib/estimate-completeness";
 import { StaticStockAnalyzerDataProvider } from "@/features/stock-analyzer/data/static-data-provider";
@@ -3293,6 +3294,7 @@ export default function StockDetailClient({
                 coverage={formatCoverageRatio(fenokSignalLens?.lensCoverageRatio ?? fenokSignalLens?.coverageRatio)}
               />
               <FinancialSnapshotRail data={financialCandidate} loading={financialCandidate === undefined} currency={displayCurrency} />
+              <StockConnectionsRail key={symbol} ticker={symbol} />
             </aside>
           </div>
           <FenokEdgeSectionCp record={fenokSignalLens} symbol={symbol} />
