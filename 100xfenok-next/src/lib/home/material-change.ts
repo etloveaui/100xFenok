@@ -1,4 +1,5 @@
 import { isValidEntityTicker, normalizeForEntityKey } from "../ticker";
+import { formatEpsRevisionChange, readEpsRevision, type EpsRevision } from "../eps-revision";
 import type { Flag } from "../personal/personal-state";
 
 export const MATERIAL_CHANGE_VERSION = 1 as const;
@@ -43,6 +44,8 @@ export interface MaterialChangeItem {
   title: string;
   detail: string;
   value: number | null;
+  /** Revision rows only: the prior and current FY+1 estimates and whether they crossed zero. */
+  eps?: EpsRevision;
 }
 
 export interface MaterialChangeAttentionItem extends MaterialChangeItem {
@@ -258,17 +261,20 @@ function makeRevisionCandidate(kind: "up" | "down", row: Record<string, unknown>
   const change = asNumber(row.change_1w);
   if (ticker === null || asOf === null || change === null || (kind === "up" ? change <= 0 : change >= 0)) return null;
   const direction = kind === "up" ? "상향" : "하향";
-  const sign = change > 0 ? "+" : change < 0 ? "-" : "";
-  return makeCandidate(
+  const eps = readEpsRevision(row);
+  const candidate = makeCandidate(
     "revision",
     kind,
     ticker,
     asOf,
     readString(row, "name") ?? "내년(FY+1) EPS 추정치",
-    `FY+1 EPS 추정치 ${direction} ${sign}${Math.abs(change * 100).toFixed(1)}%`,
+    eps.flip
+      ? `FY+1 EPS 추정치 ${formatEpsRevisionChange(change, eps.flip)}`
+      : `FY+1 EPS 추정치 ${direction} ${formatEpsRevisionChange(change, null)}`,
     change,
     change,
   );
+  return { ...candidate, eps };
 }
 
 function parseRevisionSource(input: unknown): ParsedSource<RevisionSourceEvidence> {

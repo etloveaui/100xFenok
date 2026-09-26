@@ -8,7 +8,7 @@ import { isValidEntityTicker, normalizeForEntityKey } from "@/lib/ticker";
 import { EvidenceRail, Panel, PanelHeader } from "@/components/ui";
 import type { EvidenceRailFreshness } from "@/components/ui/EvidenceRail";
 import type { EvidenceStage } from "@/lib/evidence/provenance";
-import { formatMoney as formatMoneyByCurrency } from "@/lib/format";
+import { formatEps, formatEpsRevisionChange, readEpsRevision } from "@/lib/eps-revision";
 import { useWatchlist } from "@/lib/watchlist";
 import { ROUTES } from "@/lib/routes";
 
@@ -102,21 +102,6 @@ function writeSnapshot(snapshot: VisitSnapshot): void {
   }
 }
 
-/** Listing suffix → ISO currency: decided by listing market, never a KR-only test. */
-function currencyForTicker(ticker: string): string {
-  const symbol = ticker.toUpperCase();
-  if (symbol.endsWith(".KS") || symbol.endsWith(".KQ")) return "KRW";
-  if (symbol.endsWith(".HK")) return "HKD";
-  if (symbol.endsWith(".SZ") || symbol.endsWith(".SS")) return "CNY";
-  if (symbol.endsWith(".T")) return "JPY";
-  if (symbol.endsWith(".L")) return "GBP";
-  return "USD";
-}
-
-function formatMoney(value: number, ticker: string): string {
-  return formatMoneyByCurrency(value, currencyForTicker(ticker));
-}
-
 function formatSigned(value: number, digits: number, suffix: string): string {
   const prefix = value > 0 ? "+" : value < 0 ? "-" : "";
   return `${prefix}${Math.abs(value).toFixed(digits)}${suffix}`;
@@ -142,21 +127,22 @@ function revisionRows(doc: unknown, watch: Set<string> | null): DiffRow[] {
       // watched ticker present in the source survives to the rows.
       if (watch && !watch.has(ticker)) continue;
       const change = asNumber(raw.change_1w);
-      const eps = asNumber(raw.eps_fy1);
+      const eps = readEpsRevision(raw);
       const asOf = isoDay(raw.as_of);
-      if (change === null || change === 0 || eps === null || asOf === null) continue;
+      if (change === null || change === 0 || eps.after === null || asOf === null) continue;
       if (key === "up" ? change <= 0 : change >= 0) continue;
-      // The revision feed carries no previous-EPS field: before stays unavailable
-      // rather than derived via eps/(1+change), which flips sign on negative EPS.
+      // Before is the prior weekly estimate the feed now carries; older feeds
+      // leave it unknown rather than derived via eps/(1+change), which cannot
+      // be inverted once either side is negative.
       const name = asString(raw.name) ?? ticker;
       rows.push({
         id: `revision:${key}:${ticker}:${asOf}`,
         ticker,
         title: `${ticker} · ${name}`,
         kind: "FY+1 EPS",
-        before: "—",
-        after: formatMoney(eps, ticker),
-        delta: formatSigned(change * 100, 1, "%"),
+        before: formatEps(eps.before, ticker),
+        after: formatEps(eps.after, ticker),
+        delta: formatEpsRevisionChange(change, eps.flip),
         tone: change > 0 ? "up" : "down",
         accent: change > 0 ? "add" : "del",
         href: stockHrefOf(ticker),

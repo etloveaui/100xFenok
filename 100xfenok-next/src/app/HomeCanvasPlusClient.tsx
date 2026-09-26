@@ -14,7 +14,8 @@ import { useDashboardData } from "@/hooks/useDashboardData";
 import { clamp, getRegimeLabel } from "@/lib/dashboard/formatters";
 import { DATA_STATE_LABELS, oldestAsOf } from "@/lib/data-state";
 import type { DashboardSnapshot, DashboardSourceId, SectorSnapshot } from "@/lib/dashboard/types";
-import { projectMaterialChanges } from "@/lib/home/material-change";
+import { formatEps, formatEpsRevisionChange } from "@/lib/eps-revision";
+import { projectMaterialChanges, type MaterialChangeItem } from "@/lib/home/material-change";
 import { PERSONAL_DOC_KEYS, readPersonalFlags, type Flag } from "@/lib/personal/personal-state";
 import { EXPLORE_PRODUCT_TITLE } from "@/lib/product-nav";
 import { ROUTES } from "@/lib/routes";
@@ -219,6 +220,18 @@ function formatSignedPercentUnit(value: number | null | undefined, digits = 2): 
   if (typeof value !== "number" || !Number.isFinite(value)) return "-";
   const prefix = value > 0 ? "+" : value < 0 ? "-" : "";
   return `${prefix}${Math.abs(value).toFixed(digits)}%`;
+}
+
+/** Prior -> current FY+1 estimate when the feed carries the prior week, else the current one. */
+function revisionEpsText(item: MaterialChangeItem): string {
+  if (!item.eps) return "—";
+  const after = formatEps(item.eps.after, item.ticker);
+  return item.eps.before === null ? after : `${formatEps(item.eps.before, item.ticker)} → ${after}`;
+}
+
+function revisionChangeText(item: MaterialChangeItem): string {
+  if (item.source !== "revision" || typeof item.value !== "number") return item.detail;
+  return formatEpsRevisionChange(item.value, item.eps?.flip ?? null);
 }
 
 function formatMarketState(value: string | null): string {
@@ -938,9 +951,9 @@ export default function HomeCanvasPlusClient() {
                       {item.title !== item.ticker && <span className="truncate text-[var(--c-ink-3)]">{item.title}</span>}
                     </span>
                     <span className="truncate text-[var(--c-ink-2)]">{item.label}</span>
-                    <span className="text-right tabular-nums text-[var(--c-ink-2)]">{isRevision ? (revisionUp ? "상향" : "하향") : "—"}</span>
+                    <span className="truncate text-right tabular-nums text-[var(--c-ink-2)]">{isRevision ? revisionEpsText(item) : "—"}</span>
                     <span className={`text-right tabular-nums font-semibold ${isRevision ? (revisionUp ? "text-[var(--c-up)]" : "text-[var(--c-down)]") : "font-medium text-[var(--c-ink-2)]"}`}>
-                      {isRevision && typeof item.value === "number" ? formatSignedPercentUnit(item.value * 100, 1) : item.detail}
+                      {revisionChangeText(item)}
                     </span>
                   </TransitionLink>
                 );
@@ -961,7 +974,7 @@ export default function HomeCanvasPlusClient() {
                       {item.title !== item.ticker && <span className="truncate text-[12px] text-[var(--c-ink-3)]">{item.title}</span>}
                     </span>
                     <span className={`shrink-0 tabular-nums text-[13px] font-semibold ${isRevision ? (revisionUp ? "text-[var(--c-up)]" : "text-[var(--c-down)]") : "font-medium text-[var(--c-ink-2)]"}`}>
-                      {isRevision && typeof item.value === "number" ? formatSignedPercentUnit(item.value * 100, 1) : item.detail}
+                      {revisionChangeText(item)}
                     </span>
                   </TransitionLink>
                 );
