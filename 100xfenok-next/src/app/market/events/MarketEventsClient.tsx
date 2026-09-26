@@ -6,6 +6,13 @@ import MarketSectionNav from "@/components/market/MarketSectionNav";
 import { ROUTES } from "@/lib/routes";
 import { EmptyState } from "@/components/ui";
 import { EVENTS_STALE_LABEL, isEventBoardStale } from "@/lib/market-events/freshness";
+import {
+  MACRO_CALENDAR_URL,
+  MACRO_PREV_VALUES_URL,
+  parseMacroCalendar,
+  type MacroCalendar,
+} from "@/lib/market-events/macro-calendar";
+import MacroCalendarPanel from "./MacroCalendarPanel";
 import MarketEventsTimeline from "./MarketEventsTimeline";
 
 interface SurfaceDoc<T = EventRow> {
@@ -90,6 +97,34 @@ const SURFACES: Record<keyof EventData, string> = {
 
 let cache: EventData | null = null;
 let pending: Promise<EventData | null> | null = null;
+let macroCache: MacroCalendar | null = null;
+let macroPending: Promise<MacroCalendar | null> | null = null;
+
+function fetchOptionalJson(url: string): Promise<unknown> {
+  return fetch(url)
+    .then((response) => (response.ok ? response.json() : null))
+    .catch(() => null);
+}
+
+/**
+ * The macro calendar loads beside the stockanalysis surfaces, never inside
+ * them: a calendar failure must not blank the earnings board, and the other
+ * way round. Missing previous prints only drop the 직전 column.
+ */
+function loadMacroCalendar(): Promise<MacroCalendar | null> {
+  if (macroCache) return Promise.resolve(macroCache);
+  if (macroPending) return macroPending;
+  macroPending = Promise.all([fetchOptionalJson(MACRO_CALENDAR_URL), fetchOptionalJson(MACRO_PREV_VALUES_URL)])
+    .then(([calendar, prevValues]) => {
+      if (calendar === null) {
+        macroPending = null;
+        return null;
+      }
+      macroCache = parseMacroCalendar(calendar, prevValues);
+      return macroCache;
+    });
+  return macroPending;
+}
 
 function loadSurface(name: string): Promise<SurfaceDoc> {
   return fetch(`/api/data/stockanalysis/surfaces/${name}`, { cache: "no-store" })
@@ -233,6 +268,7 @@ export default function MarketEventsClient({
 }: MarketEventsClientProps) {
   const [data, setData] = useState<EventData | null>(null);
   const [loaded, setLoaded] = useState(false);
+  const [macro, setMacro] = useState<{ loaded: boolean; calendar: MacroCalendar | null }>({ loaded: false, calendar: null });
   const [query, setQuery] = useState((initialQuery ?? "").trim());
   const [sort, setSort] = useState<EventSort>(eventSortFromParam(initialSort));
   const [sectionFilter, setSectionFilter] = useState(initialSection && initialSection.trim() ? initialSection.trim() : "전체");
@@ -245,6 +281,8 @@ export default function MarketEventsClient({
   const reload = useCallback(() => {
     cache = null;
     pending = null;
+    macroCache = null;
+    macroPending = null;
     setReloadKey((key) => key + 1);
   }, []);
 
@@ -255,6 +293,16 @@ export default function MarketEventsClient({
         setData(next);
         setLoaded(true);
       }
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [reloadKey]);
+
+  useEffect(() => {
+    let cancelled = false;
+    loadMacroCalendar().then((calendar) => {
+      if (!cancelled) setMacro({ loaded: true, calendar });
     });
     return () => {
       cancelled = true;
@@ -316,7 +364,7 @@ export default function MarketEventsClient({
           <p className="data-shell-kicker">시장 이벤트</p>
           <h1 className="data-shell-title">시장 이벤트</h1>
           <p className="data-shell-desc">
-            어닝·배당 일정을 타임라인에서 보고, IPO를 포함한 전체 이벤트를 검색합니다.
+            미국 경제 지표·연준 일정과 실적 발표를 날짜순으로 보고, IPO를 포함한 전체 이벤트를 검색합니다.
           </p>
         </div>
         <div className="data-shell-head-actions">
@@ -326,12 +374,18 @@ export default function MarketEventsClient({
       </section>
 
       <div style={{ marginTop: "var(--s4)" }}>
+        <MacroCalendarPanel loaded={macro.loaded} failed={macro.loaded && macro.calendar === null} calendar={macro.calendar} onRetry={reload} />
+      </div>
+
+      <div style={{ marginTop: "var(--s4)" }}>
         <MarketEventsTimeline
           loaded={loaded}
           earnings={data?.earnings ?? null}
           actions={data?.actions ?? null}
           splits={data?.splits ?? null}
           ipoCalendar={data?.ipoCalendar ?? null}
+          macroLoaded={macro.loaded}
+          macroCalendar={macro.calendar}
           onRetry={reload}
         />
       </div>
