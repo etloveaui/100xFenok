@@ -153,6 +153,7 @@ function CollapsedSection({
   coverage,
   next,
   onEvidence,
+  stateLabel,
 }: {
   section: AccordionSection;
   eyebrow: string;
@@ -165,6 +166,8 @@ function CollapsedSection({
   coverage: string;
   next?: string;
   onEvidence?: () => void;
+  /** The freshness verdict's wording (DEC-417), forwarded to the rail. */
+  stateLabel?: string;
 }) {
   // Collapsed accordions keep a compact one-line EvidenceRail (source ·
   // 기준 · 커버리지) so the closed state still carries provenance.
@@ -179,6 +182,7 @@ function CollapsedSection({
       />
       <EvidenceRail
         freshness={freshness}
+        stateLabel={stateLabel}
         source={source}
         asOf={asOf}
         coverage={coverage}

@@ -28,6 +28,9 @@ export type FreshnessVerdict = {
   cadence: FreshnessCadence | null;
 };
 
+/** Any verdict-shaped value; only `state` is required (tests pass partial literals). */
+export type FreshnessVerdictLike = Pick<FreshnessVerdict, "state"> & Partial<Omit<FreshnessVerdict, "state">>;
+
 /** EvidenceRail-compatible state plus the verdict's own wording. */
 export type FreshnessRail = {
   freshness: "fresh" | "stale" | "error";
@@ -47,6 +50,6 @@ export declare function freshnessVerdict(
   family: string | FamilyPolicy | null | undefined,
   today?: string,
 ): FreshnessVerdict;
-export declare function freshnessMessage(verdict: FreshnessVerdict | null | undefined): string | null;
-export declare function freshnessRailState(verdict: FreshnessVerdict | null | undefined): FreshnessRail | null;
-export declare function freshnessAgeOverride(verdict: FreshnessVerdict | null | undefined): FreshnessRail | null;
+export declare function freshnessMessage(verdict: FreshnessVerdictLike | null | undefined): string | null;
+export declare function freshnessRailState(verdict: FreshnessVerdictLike | null | undefined): FreshnessRail | null;
+export declare function freshnessAgeOverride(verdict: FreshnessVerdictLike | null | undefined): FreshnessRail | null;
