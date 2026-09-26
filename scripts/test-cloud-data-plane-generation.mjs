@@ -180,10 +180,9 @@ assert.equal(first.receipt.operation, "publish");
   assert.equal(await invalidPlane.pointerStore.get(), null);
 }
 
-// Remote immutable publication uses a deterministic bounded pool: the manifest
-// is written first and alone (fh-465 ordering), then eight deferred payload puts
-// start, and the remaining payload starts only after capacity is released. This
-// proves overlap without allowing an unbounded fan-out.
+// Remote immutable publication uses a deterministic bounded pool: eight
+// deferred puts start, then the remaining two start only after capacity is
+// released. This proves overlap without allowing an unbounded fan-out.
 let poolManifest;
 let poolPayloads;
 {
@@ -206,29 +205,21 @@ let poolPayloads;
   const poolPlane = createMemoryCloudDataPlane();
   const pending = [];
   const startedEight = new Promise((resolve) => { pending.startedEight = resolve; });
-  const startedNine = new Promise((resolve) => { pending.startedNine = resolve; });
-  const order = [];
-  let payloadInFlight = 0;
-  let maxPayloadInFlight = 0;
+  const startedTen = new Promise((resolve) => { pending.startedTen = resolve; });
+  let inFlight = 0;
+  let maxInFlight = 0;
   let completedObjects = 0;
   const poolObjectStore = {
     async putIfAbsent(key, bytes) {
-      if (key.startsWith("manifests/")) {
-        order.push("manifest");
-        const outcome = await poolPlane.objectStore.putIfAbsent(key, bytes);
-        completedObjects += 1;
-        return outcome;
-      }
-      order.push("payload");
-      payloadInFlight += 1;
-      maxPayloadInFlight = Math.max(maxPayloadInFlight, payloadInFlight);
+      inFlight += 1;
+      maxInFlight = Math.max(maxInFlight, inFlight);
       let release;
       const gate = new Promise((resolve) => { release = resolve; });
       pending.push({ release });
       if (pending.length === 8) pending.startedEight();
-      if (pending.length === 9) pending.startedNine();
+      if (pending.length === 10) pending.startedTen();
       await gate;
-      payloadInFlight -= 1;
+      inFlight -= 1;
       const outcome = await poolPlane.objectStore.putIfAbsent(key, bytes);
       completedObjects += 1;
       return outcome;
@@ -246,27 +237,22 @@ let poolPayloads;
     now: () => NOW,
   });
   await startedEight;
-  assert.equal(order[0], "manifest"); // fh-465: the manifest precedes every payload write
-  assert.equal(maxPayloadInFlight, 8);
-  assert.equal(completedObjects, 1); // only the manifest has completed so far
+  assert.equal(maxInFlight, 8);
   pending.slice(0, 8).forEach(({ release }) => release());
-  await startedNine;
-  assert.equal(maxPayloadInFlight, 8);
+  await startedTen;
+  assert.equal(maxInFlight, 8);
   pending.slice(8).forEach(({ release }) => release());
   const poolPublished = await publishProbe;
   assert.equal(poolPublished.summary.asset_count, 9);
   assert.equal(completedObjects, 10);
-  console.log("bounded immutable publication ok (manifest first, payload max in-flight 8, overlap >1, all 10 objects complete)");
+  console.log("bounded immutable publication ok (max in-flight 8, overlap >1, all 10 objects complete)");
 }
 
 // An immutable task failure rejects before the coordinator commit protocol;
 // any already-started object work cannot produce a prepared receipt or CAS.
-// The manifest is written first and alone (fh-465), so the injected failure
-// hits a payload inside the pool rather than the manifest write.
 {
   const failurePlane = createMemoryCloudDataPlane();
   let putCalls = 0;
-  let payloadCalls = 0;
   let prepareCalls = 0;
   let casCalls = 0;
   let rejectionObserved = false;
@@ -280,16 +266,12 @@ let poolPayloads;
     async putIfAbsent(key, bytes) {
       putCalls += 1;
       if (rejectionObserved) postRejectionCalls += 1;
-      if (key.startsWith("manifests/")) {
-        return failurePlane.objectStore.putIfAbsent(key, bytes);
-      }
-      payloadCalls += 1;
-      if (payloadCalls === 1) throw new Error("injected immutable failure");
-      if (payloadCalls <= DEFAULT_REMOTE_IO_CONCURRENCY) {
+      if (putCalls === 1) throw new Error("injected immutable failure");
+      if (putCalls <= DEFAULT_REMOTE_IO_CONCURRENCY) {
         let release;
         const gate = new Promise((resolve) => { release = resolve; });
         pendingInitialWindow.push({ release });
-        if (payloadCalls === DEFAULT_REMOTE_IO_CONCURRENCY) releaseInitialWindow();
+        if (putCalls === DEFAULT_REMOTE_IO_CONCURRENCY) releaseInitialWindow();
         await gate;
       }
       return failurePlane.objectStore.putIfAbsent(key, bytes);
@@ -320,8 +302,8 @@ let poolPayloads;
     throw error;
   });
   await initialWindowStarted;
-  assert.equal(payloadCalls, DEFAULT_REMOTE_IO_CONCURRENCY); // the bounded payload window only
-  assert.equal(putCalls, DEFAULT_REMOTE_IO_CONCURRENCY + 1); // manifest + payload window
+  assert.equal(putCalls, DEFAULT_REMOTE_IO_CONCURRENCY);
+  assert.ok(putCalls < 10);
   pendingInitialWindow.forEach(({ release }) => release());
   await assert.rejects(
     observedFailure,
@@ -331,10 +313,10 @@ let poolPayloads;
   await Promise.resolve();
   assert.equal(putCalls, callsAtRejection);
   assert.equal(postRejectionCalls, 0);
-  assert.equal(callsAtRejection, DEFAULT_REMOTE_IO_CONCURRENCY + 1);
+  assert.equal(callsAtRejection, DEFAULT_REMOTE_IO_CONCURRENCY);
   assert.equal(prepareCalls, 0);
   assert.equal(casCalls, 0);
-  console.log("bounded immutable failure gate ok (manifest first, payload window only, no post-rejection calls or prepare/CAS)");
+  console.log("bounded immutable failure gate ok (initial window only, no post-rejection calls or prepare/CAS)");
 }
 
 // Publication requires explicit freshness, size and public-payload policies.

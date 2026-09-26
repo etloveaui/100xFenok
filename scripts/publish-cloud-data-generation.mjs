@@ -1772,11 +1772,11 @@ const GENERATION_MANIFEST_KEY = /^manifests\/.+-[0-9a-f]{16}\.json$/;
 // any family survives.
 //
 // Returns { keepNewest, retainedGenerations, retainedByFamily, referencedKeys,
-// candidates, skippedProtected, manifestCount, ... }. candidates are
-// [{key, size, reason}] sorted by key — the ONLY keys deletion may touch.
-// Throws RETENTION_REFERENCE_SET_INCOMPLETE (before any deletion can happen)
-// when any manifest is unreadable/corrupt or a retained generation has no
-// manifest.
+// candidates, skippedProtected, graceRoots, familyReferences, manifestCount,
+// ... }. candidates are [{key, size, reason}] sorted by key — the ONLY keys
+// deletion may touch. Throws RETENTION_REFERENCE_SET_INCOMPLETE (before any
+// deletion can happen) when any manifest is unreadable/corrupt or a retained
+// generation has no manifest.
 //
 // Upload-age handling (fh-465): when `now` is supplied, EVERY object entry must
 // carry a parsable `uploaded` instant — missing or garbage timestamps fail the
@@ -1785,6 +1785,13 @@ const GENERATION_MANIFEST_KEY = /^manifests\/.+-[0-9a-f]{16}\.json$/;
 // candidates. The retention CLI always supplies `now`; omitting it keeps the
 // planner's legacy, age-free behaviour for callers that fabricate state without
 // listing timestamps (the offline planner tests).
+//
+// A young manifest is itself protected AND remains a reference ROOT (fh-479):
+// the payloads it names stay out of the candidate set even when its generation
+// sits outside the newest-N window and outside the prepared set, because the
+// manifest still promises them while the upload-age grace is in force.
+// familyReferences carries the per-family report evidence — active/previous
+// generation ids, the family's referenced keys, and its live/rollback key sets.
 export function computeRetentionPlan({
   families = [],
   manifestEntries = [],
@@ -1891,19 +1898,63 @@ export function computeRetentionPlan({
   }
   retainedManifests.push(...nonGenerationManifests.map((entry) => entry.manifest));
 
+  // fh-479: a young (grace-protected) manifest is a reference ROOT, not merely
+  // a skipped deletion candidate. Its generation may sit outside the newest-N
+  // window and outside the prepared set, but the manifest is still live in the
+  // bucket and promises every payload it names: an OLD payload referenced only
+  // by it must not be collected while the upload-age grace protects the
+  // manifest. Roots are assembled BEFORE the reference union so it covers them.
+  const graceRootEntries = generationManifests.filter(
+    (entry) => !retainedIds.has(entry.manifest.generation_id) && isYoung(entry.key),
+  );
+  const graceRootIds = new Set(graceRootEntries.map((entry) => entry.manifest.generation_id));
+  const rootManifests = [...retainedManifests, ...graceRootEntries.map((entry) => entry.manifest)];
+
   const referencedKeys = new Set();
-  for (const manifest of retainedManifests) {
+  for (const manifest of rootManifests) {
     for (const asset of manifest.assets) referencedKeys.add(asset.object_key);
   }
-  // Non-retained manifests still explain WHY a candidate is unreferenced.
+  // Non-retained manifests still explain WHY a candidate is unreferenced. Grace
+  // roots are excluded here: everything they name is already in the union.
   const referencingNonRetained = new Map(); // object_key -> [generation_id]
   for (const { manifest } of generationManifests) {
     if (retainedIds.has(manifest.generation_id)) continue;
+    if (graceRootIds.has(manifest.generation_id)) continue;
     for (const asset of manifest.assets) {
       const list = referencingNonRetained.get(asset.object_key) ?? [];
       list.push(manifest.generation_id);
       referencingNonRetained.set(asset.object_key, list);
     }
+  }
+
+  // fh-479 report evidence: per-family reference accounting. `referenced_keys`
+  // is what the family's protected roots (retained + grace) point at;
+  // `active_keys`/`previous_keys` are the live and rollback payload sets the
+  // operator verifies presence against. Per-family rows can each name the same
+  // shared object; only the plan-level referencedKeys union deduplicates.
+  const familyReferences = {};
+  for (const familyName of [...familyNames].sort()) {
+    const state = familyStateByName.get(familyName);
+    const familyRetained = new Set(retainedByFamily[familyName] ?? []);
+    const keys = new Set();
+    for (const entry of generationManifests) {
+      if (entry.family !== familyName) continue;
+      if (!familyRetained.has(entry.manifest.generation_id) && !graceRootIds.has(entry.manifest.generation_id)) continue;
+      for (const asset of entry.manifest.assets) keys.add(asset.object_key);
+    }
+    const activeId = state?.pointer?.active?.generation_id ?? null;
+    const previousId = state?.pointer?.previous?.generation_id ?? null;
+    const keysOf = (id) => (id && byGenerationId.has(id)
+      ? [...new Set(byGenerationId.get(id).assets.map((asset) => asset.object_key))].sort()
+      : []);
+    familyReferences[familyName] = {
+      active_generation_id: activeId,
+      previous_generation_id: previousId,
+      retained_generations: retainedByFamily[familyName] ?? [],
+      referenced_keys: [...keys].sort(),
+      active_keys: keysOf(activeId),
+      previous_keys: keysOf(previousId),
+    };
   }
 
   const candidates = [];
@@ -1971,6 +2022,8 @@ export function computeRetentionPlan({
     candidates,
     skippedProtected,
     skippedYoung,
+    graceRoots: graceRootEntries.map((entry) => entry.key).sort(),
+    familyReferences,
     manifestCount: generationManifests.length + nonGenerationManifests.length,
     manifestCandidates,
     manifestGraceSkipped,
@@ -2000,6 +2053,75 @@ export function assertSameRetentionInputs({ before, after }) {
   if (before !== after) {
     fail("RETENTION_STATE_CHANGED", "manifest set, receipts, or pointer changed between the plan and the delete phase");
   }
+}
+
+// fh-479 dry-run evidence: what each family's protected roots reference, and
+// whether every referenced payload is actually present in the listing. A
+// missing payload referenced by the live (active) or rollback (previous)
+// generation is reported as a failure — "retained" states what the deletion
+// plan protects, never a claim that the bytes are still there. Per-family rows
+// can each name the same shared object; the unique totals count every key once.
+export function retentionReferenceEvidence({ plan, objectEntries = [] }) {
+  const listing = new Map(objectEntries.map((entry) => [entry.key, entry]));
+  const referencesByKey = new Map(); // payload key -> number of families naming it
+  const families = {};
+  for (const name of Object.keys(plan.familyReferences ?? {}).sort()) {
+    const refs = plan.familyReferences[name];
+    let bytes = 0;
+    const missing = [];
+    for (const key of refs.referenced_keys) {
+      referencesByKey.set(key, (referencesByKey.get(key) ?? 0) + 1);
+      const entry = listing.get(key);
+      if (entry) bytes += entry.size ?? 0;
+      else missing.push(key);
+    }
+    families[name] = {
+      active_generation_id: refs.active_generation_id,
+      previous_generation_id: refs.previous_generation_id,
+      retained_generations: refs.retained_generations,
+      referenced_payload_count: refs.referenced_keys.length,
+      referenced_payload_bytes: bytes,
+      referenced_payload_keys: refs.referenced_keys,
+      active_payload_keys: refs.active_keys,
+      previous_payload_keys: refs.previous_keys,
+      missing_referenced_payloads: missing,
+    };
+  }
+  let uniqueBytes = 0;
+  const missingAll = [];
+  for (const key of plan.referencedKeys ?? []) {
+    const entry = listing.get(key);
+    if (entry) uniqueBytes += entry.size ?? 0;
+    else missingAll.push(key);
+  }
+  const liveMissing = [];
+  const rollbackMissing = [];
+  for (const refs of Object.values(plan.familyReferences ?? {})) {
+    for (const key of refs.active_keys) {
+      if (!listing.has(key) && !liveMissing.includes(key)) liveMissing.push(key);
+    }
+    for (const key of refs.previous_keys) {
+      if (!listing.has(key) && !rollbackMissing.includes(key)) rollbackMissing.push(key);
+    }
+  }
+  const shared = [...referencesByKey.entries()]
+    .filter(([, count]) => count > 1)
+    .map(([key]) => key)
+    .sort();
+  return {
+    note: "per-family rows each include shared payloads; the unique totals count every object key once",
+    families,
+    unique: {
+      referenced_payload_count: (plan.referencedKeys ?? []).length,
+      referenced_payload_bytes: uniqueBytes,
+      shared_payload_count: shared.length,
+      shared_payloads: shared,
+      missing_referenced_payloads: missingAll,
+      live_missing_payloads: liveMissing,
+      rollback_missing_payloads: rollbackMissing,
+      presence_ok: missingAll.length === 0,
+    },
+  };
 }
 
 // Bucket-level family scan for retention: every family answers with its OWN
@@ -2057,6 +2179,11 @@ export async function collectFamiliesRetentionState({ families, createPlane, now
 // so one bad key cannot strand the rest of the batch. Every delete after the
 // first is spaced by throttleMs (fh-465: a conservative, deliberate pace for
 // destructive calls); tests inject sleepImpl to observe pacing without waiting.
+// An outcome that reports an exhausted rate-limit budget (rate_limit_exhausted)
+// stops the WHOLE batch where it happened (fh-479): remaining payloads and all
+// manifests are left untouched, because continuing key-by-key would keep
+// burning a budget the account already refused once per key. The stop is
+// returned structurally as `aborted` alongside the per-key failure row.
 export const RETENTION_DELETE_THROTTLE_MS = 1_000;
 export async function executeRetentionPlan({
   plan,
@@ -2070,6 +2197,7 @@ export async function executeRetentionPlan({
     if (deletesAttempted > 0 && throttleMs > 0) await sleepImpl(throttleMs);
     deletesAttempted += 1;
   };
+  let aborted = null;
   const deleted = [];
   const failures = [];
   for (const candidate of plan.candidates) {
@@ -2077,6 +2205,10 @@ export async function executeRetentionPlan({
     const outcome = await deleteObject(candidate.key);
     if (outcome?.ok === false) {
       failures.push({ key: candidate.key, size: candidate.size, error: outcome.error ?? "delete failed" });
+      if (outcome.rate_limit_exhausted === true) {
+        aborted = { reason: "rate_limit_exhausted", phase: "payloads", key: candidate.key };
+        break;
+      }
     } else {
       deleted.push({ key: candidate.key, size: candidate.size });
     }
@@ -2085,20 +2217,27 @@ export async function executeRetentionPlan({
   // objects a generation held, so deleting it before its payloads would leave a
   // failed payload deletion with nothing left to explain it. Reported as its own
   // class rather than merged into deleted, because a manifest deletion removes
-  // evidence while a payload deletion removes data.
+  // evidence while a payload deletion removes data. A payload-phase abort skips
+  // this entire phase.
   const deletedManifests = [];
   const manifestFailures = [];
-  for (const candidate of plan.manifestCandidates ?? []) {
-    await pace();
-    const outcome = await deleteObject(candidate.key);
-    const row = { key: candidate.key, size: candidate.size, generation_id: candidate.generation_id };
-    if (outcome?.ok === false) {
-      manifestFailures.push({ ...row, error: outcome.error ?? "delete failed" });
-    } else {
-      deletedManifests.push(row);
+  if (aborted === null) {
+    for (const candidate of plan.manifestCandidates ?? []) {
+      await pace();
+      const outcome = await deleteObject(candidate.key);
+      const row = { key: candidate.key, size: candidate.size, generation_id: candidate.generation_id };
+      if (outcome?.ok === false) {
+        manifestFailures.push({ ...row, error: outcome.error ?? "delete failed" });
+        if (outcome.rate_limit_exhausted === true) {
+          aborted = { reason: "rate_limit_exhausted", phase: "manifests", key: candidate.key };
+          break;
+        }
+      } else {
+        deletedManifests.push(row);
+      }
     }
   }
-  return { deleted, failures, deletedManifests, manifestFailures };
+  return { deleted, failures, deletedManifests, manifestFailures, aborted };
 }
 
 // --- result vocabulary + health classifier -----------------------------------
@@ -2409,7 +2548,11 @@ async function r2DataPlaneRequest({
     }
     if (response.status === 429) {
       rateLimitAttempts += 1;
-      if (rateLimitAttempts >= MAX_RATE_LIMIT_ATTEMPTS) return { response, body };
+      if (rateLimitAttempts >= MAX_RATE_LIMIT_ATTEMPTS) {
+        // fh-479: an exhausted budget is a distinct structured outcome, not an
+        // ordinary HTTP answer — the delete executor stops the whole batch on it.
+        return { response, body, rateLimitExhausted: true };
+      }
       const requested = retryAfterMs(response);
       await sleepImpl((requested === null ? RETENTION_RATE_LIMIT_DEFAULT_MS : requested) + stableJitterMs(url));
       continue;
@@ -2457,16 +2600,67 @@ export async function listR2ObjectsDetailed({ accountId, bucket, token, fetchImp
   return objects;
 }
 
+// GET one object body through the same bounded-429 helper as listing and
+// deletion (fh-479). The byte-locked r2Bucket lib caps Retry-After at 10s;
+// retention manifest reads must honour a longer one uncapped, because the
+// dry-run reads every manifest and a shared account budget answers 429 with
+// real waits. 404 returns null (the caller reports the key as unreadable);
+// any other non-ok status fails the read loudly.
+export async function getR2ObjectBytes({ accountId, bucket, token, key, fetchImpl = fetch, sleepImpl = sleep }) {
+  const { response, body } = await r2DataPlaneRequest({
+    accountId, bucket, token, fetchImpl, method: "GET", keyPath: key, sleepImpl,
+  });
+  if (response.status === 404) return null;
+  if (!response.ok) {
+    fail("R2_REST_HTTP", `get http ${response.status}: ${new TextDecoder().decode(body).slice(0, 500)}`);
+  }
+  return new Uint8Array(body);
+}
+
+// Read every manifest listed in the bucket, conservatively paced (fh-479):
+// with ~1750 unpaced GETs the dry-run itself would burn the shared account
+// budget and trigger the very 1200/5min block the run must not create. The
+// first read is unpaced; each following read waits throttleMs. Tests inject
+// readObject/sleepImpl to observe pacing without network or waiting.
+export const RETENTION_MANIFEST_READ_THROTTLE_MS = 1_000;
+export async function readRetentionManifests({
+  objectEntries = [],
+  readObject,
+  throttleMs = RETENTION_MANIFEST_READ_THROTTLE_MS,
+  sleepImpl = sleep,
+} = {}) {
+  if (!Number.isFinite(throttleMs) || throttleMs < 0) fail("RETENTION_THROTTLE_INVALID", String(throttleMs));
+  const manifestEntries = [];
+  let reads = 0;
+  for (const { key } of objectEntries) {
+    if (!key.startsWith("manifests/")) continue;
+    if (reads > 0 && throttleMs > 0) await sleepImpl(throttleMs);
+    reads += 1;
+    const bytes = await readObject(key);
+    manifestEntries.push({
+      key,
+      text: bytes instanceof Uint8Array ? new TextDecoder().decode(bytes) : null,
+    });
+  }
+  return manifestEntries;
+}
+
 // DeleteObject for one key. 404 means the key is already gone, which satisfies
 // retention's intent, so it counts as ok. Never throws on an HTTP answer —
-// returns {ok:false, error} so executeRetentionPlan can record the failure.
+// returns {ok:false, error} so executeRetentionPlan can record the failure. An
+// exhausted 429 budget is flagged (rate_limit_exhausted) so the executor can
+// stop the whole batch instead of retrying key after key.
 export async function deleteR2Object({ accountId, bucket, token, key, fetchImpl = fetch, sleepImpl = sleep }) {
   try {
-    const { response, body } = await r2DataPlaneRequest({
+    const { response, body, rateLimitExhausted } = await r2DataPlaneRequest({
       accountId, bucket, token, fetchImpl, method: "DELETE", keyPath: key, sleepImpl,
     });
     if (response.ok || response.status === 404) return { ok: true };
-    return { ok: false, error: `http ${response.status}: ${new TextDecoder().decode(body).slice(0, 500)}` };
+    return {
+      ok: false,
+      error: `http ${response.status}: ${new TextDecoder().decode(body).slice(0, 500)}`,
+      rate_limit_exhausted: rateLimitExhausted === true,
+    };
   } catch (error) {
     return { ok: false, error: `${error.code ?? "ERROR"}: ${error.message}` };
   }
@@ -2595,11 +2789,12 @@ async function runRetention({ tolerateGateBlock, retentionDelete, json, resumeWi
   }
 
   const r2Bucket = createR2RestBucket({ accountId, bucket: R2_BUCKET, token });
-  const readObject = async (key) => {
-    const entry = await r2Bucket.get(key);
-    if (entry === null) return null;
-    return new Uint8Array(await entry.arrayBuffer());
-  };
+  // fh-479: retention manifest reads go through the same bounded-429 helper as
+  // listing and deletion instead of the byte-locked lib's capped-retry get, and
+  // they are paced so the dry-run cannot trip the shared account rate limit.
+  const readObject = async (key) => getR2ObjectBytes({
+    accountId, bucket: R2_BUCKET, token, key,
+  });
   // Every family answers from its OWN coordinator instance (the worker route
   // selects it by the x-data-plane-family header). An unreadable family aborts
   // the whole run inside collectFamiliesRetentionState. `now` is the run's fixed
@@ -2617,17 +2812,9 @@ async function runRetention({ tolerateGateBlock, retentionDelete, json, resumeWi
       resumeWindowSeconds,
     });
     const objectEntries = await listR2ObjectsDetailed({ accountId, bucket: R2_BUCKET, token });
-    const manifestEntries = [];
-    for (const { key } of objectEntries) {
-      if (!key.startsWith("manifests/")) continue;
-      const bytes = await readObject(key);
-      manifestEntries.push({
-        key,
-        text: bytes instanceof Uint8Array ? new TextDecoder().decode(bytes) : null,
-      });
-    }
+    const manifestEntries = await readRetentionManifests({ objectEntries, readObject });
     const plan = computeRetentionPlan({ families: familiesState, manifestEntries, objectEntries, now });
-    return { familiesState, manifestEntries, plan };
+    return { familiesState, manifestEntries, objectEntries, plan };
   };
   let activeScan = await scan();
   let stateRevalidated = false;
@@ -2673,6 +2860,13 @@ async function runRetention({ tolerateGateBlock, retentionDelete, json, resumeWi
     grace_skipped: retentionPlan.skippedYoung,
     manifest_grace_skipped_count: retentionPlan.manifestGraceSkipped.length,
     manifest_grace_skipped: retentionPlan.manifestGraceSkipped,
+    grace_root_manifest_count: retentionPlan.graceRoots.length,
+    grace_root_manifests: retentionPlan.graceRoots,
+    // fh-479 report evidence: per-family bytes/counts with explicit shared-blob
+    // accounting, active/previous generation ids, referenced keys, and the
+    // presence check — a missing live/rollback payload reports failure instead
+    // of letting "retained" read as "survives".
+    reference_evidence: retentionReferenceEvidence({ plan: retentionPlan, objectEntries: activeScan.objectEntries }),
     candidate_count: retentionPlan.candidates.length,
     candidate_bytes: retentionPlan.candidates.reduce((total, candidate) => total + (candidate.size ?? 0), 0),
     candidates: retentionPlan.candidates,
@@ -2704,8 +2898,12 @@ async function runRetention({ tolerateGateBlock, retentionDelete, json, resumeWi
     report.deleted_manifest_bytes = executed.deletedManifests
       .reduce((total, row) => total + (row.size ?? 0), 0);
     report.manifest_delete_failures = executed.manifestFailures;
+    report.delete_aborted = executed.aborted;
     emit(report);
     const failureCount = executed.failures.length + executed.manifestFailures.length;
+    if (executed.aborted) {
+      fail("RETENTION_DELETE_ABORTED", `${executed.aborted.reason} during ${executed.aborted.phase} at ${executed.aborted.key}`);
+    }
     if (failureCount > 0) {
       fail("RETENTION_DELETE_FAILED", `${failureCount} object(s) could not be deleted`);
     }
