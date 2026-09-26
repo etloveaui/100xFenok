@@ -18,6 +18,7 @@ export function claim(state, {now, runId}) {
   const id = campaignAt(now);
   if (!id) return {run:false, reason:'outside_window', state:next};
   if (id !== FIRST_NIGHT && !next.weekly_enabled) return {run:false, reason:'initial_success_required', state:next};
+  if (next.campaign?.attempts.some(a => a.outcome === 'pending')) return {run:false, reason:'unresolved_attempt', state:next};
   if (next.campaign?.id !== id) next.campaign = {id, attempts:[], succeeded:false};
   const c = next.campaign;
   if (c.succeeded) return {run:false, reason:'already_succeeded', state:next};
@@ -25,6 +26,13 @@ export function claim(state, {now, runId}) {
   if (c.attempts.some(a => a.run_id === runId)) return {run:false, reason:'duplicate_run', state:next};
   c.attempts.push({run_id:runId, claimed_at:now, outcome:'pending'});
   return {run:true, reason:'claimed', state:next};
+}
+export function ready(state, {now, runId}) {
+  const id=campaignAt(now), c=state.campaign;
+  const close=id ? Date.parse(`${id}T06:00:00+09:00`) : NaN;
+  const own=c?.attempts.find(a=>a.run_id===runId && a.outcome==='pending');
+  const run=Boolean(id && c?.id===id && own && !c.succeeded && close-Date.parse(now)>240000);
+  return {run, reason:run?'ready':'window_closed_or_claim_invalid', hard_deadline_epoch_seconds:run?Math.floor(close/1000):null};
 }
 export function acceptedReport(report) {
   const a = report?.apply;
@@ -89,6 +97,12 @@ export function main(argv=process.argv.slice(2), env=process.env) {
   const now=new Date().toISOString();
   const {number,state}=load(repo);
   if (command === 'inspect') {console.log(JSON.stringify({state,eligible:claim(state,{now,runId}).run}));return;}
+  if (command === 'ready') {
+    const result=ready(state,{now,runId});
+    if(env.GITHUB_OUTPUT) fs.appendFileSync(env.GITHUB_OUTPUT,`run=${result.run}\nhard_deadline=${result.hard_deadline_epoch_seconds ?? ''}\n`);
+    if(!result.run) fs.writeFileSync('window-report.json',JSON.stringify({result:'retention_window_deferred',reason:result.reason})+'\n');
+    console.log(JSON.stringify(result));return;
+  }
   if (command === 'claim') {
     const result=claim(state,{now,runId});
     if (result.run) save(repo,number,result.state);

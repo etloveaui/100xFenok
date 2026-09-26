@@ -81,8 +81,14 @@ jobs:
           DATA_PLANE_WRITE_KEY: ${{ secrets.DATA_PLANE_WRITE_KEY }}
         shell: bash
         run: node scripts/ops/retention-sweep.mjs plan --out=plan.json | tee plan-summary.json
+      - name: Recheck night closing time
+        id: ready
+        if: github.event_name == 'schedule' && steps.night.outputs.run == 'true'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: node scripts/ops/retention-schedule.mjs ready
       - name: Short-pause window (lease → pause → drain → apply → restore)
-        if: github.event_name != 'schedule' || steps.night.outputs.run == 'true'
+        if: github.event_name != 'schedule' || steps.ready.outputs.run == 'true'
         env:
           CLOUDFLARE_ACCOUNT_ID: aeeb5ea3affe55a2219d08ea02dad9e1
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
@@ -92,6 +98,7 @@ jobs:
         shell: bash
         run: |
           FLAGS=""
+          if [ "${{ github.event_name }}" = "schedule" ]; then FLAGS="$FLAGS --hard-deadline-epoch-seconds=${{ steps.ready.outputs.hard_deadline }}"; fi
           if [ "${{ github.event.inputs.preflight_only }}" = "true" ]; then FLAGS="$FLAGS --preflight-only"; fi
           if [ "${{ github.event.inputs.skip_manifests }}" = "true" ]; then FLAGS="$FLAGS --skip-manifests"; fi
           node scripts/ops/retention-window.mjs run \

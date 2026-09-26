@@ -243,6 +243,7 @@ export async function runWindow({
   repo = null,
   workflowsDir = ".github/workflows",
   deadlineSeconds = DEFAULT_DEADLINE_SECONDS,
+  hardDeadlineEpochSeconds = null,
   reserveSeconds = DEFAULT_RESERVE_SECONDS,
   drainCapSeconds = DEFAULT_DRAIN_CAP_SECONDS,
   batchMaxKeys = null,
@@ -256,7 +257,9 @@ export async function runWindow({
   const now = deps.now ?? (() => Date.now());
   const sleepImpl = deps.sleepImpl ?? ((ms) => new Promise((resolve) => setTimeout(resolve, ms)));
   const startedMs = now();
-  const deadlineMs = startedMs + Math.min(deadlineSeconds, DEFAULT_DEADLINE_SECONDS) * 1000;
+  if (hardDeadlineEpochSeconds !== null && (!Number.isFinite(hardDeadlineEpochSeconds) || hardDeadlineEpochSeconds <= 0)) fail("WINDOW_BUDGET_INVALID", "invalid absolute deadline");
+  const deadlineMs = Math.min(startedMs + Math.min(deadlineSeconds, DEFAULT_DEADLINE_SECONDS) * 1000,
+    hardDeadlineEpochSeconds === null ? Infinity : hardDeadlineEpochSeconds * 1000);
   const reserveMs = Math.max(30, reserveSeconds) * 1000;
   if (deadlineMs - reserveMs <= startedMs + 60_000) fail("WINDOW_BUDGET_INVALID", "deadline too small for the restore reserve");
   const runId = `${new Date(startedMs).toISOString()}-${process.pid}`;
@@ -544,6 +547,7 @@ export async function restoreStates({ gh, repo = null, recorded, io = console, d
 export async function runRetentionWindowCli({ argv = process.argv.slice(2), env = process.env, io = console } = {}) {
   const args = {
     command: argv[0] ?? "run",
+    hardDeadlineEpochSeconds: null,
     plan: null, workflowsDir: ".github/workflows", repo: null, preflightOnly: false, keysOut: null, skipManifests: false,
   };
   for (const arg of argv.slice(1)) {
@@ -551,6 +555,7 @@ export async function runRetentionWindowCli({ argv = process.argv.slice(2), env 
     else if (arg.startsWith("--workflows-dir=")) args.workflowsDir = arg.slice("--workflows-dir=".length);
     else if (arg.startsWith("--repo=")) args.repo = arg.slice("--repo=".length);
     else if (arg.startsWith("--keys-out=")) args.keysOut = arg.slice("--keys-out=".length);
+    else if (arg.startsWith("--hard-deadline-epoch-seconds=")) args.hardDeadlineEpochSeconds = Number(arg.slice("--hard-deadline-epoch-seconds=".length));
     else if (arg === "--preflight-only") args.preflightOnly = true;
     else if (arg === "--skip-manifests") args.skipManifests = true;
     else fail("ARGS_INVALID", arg);
@@ -579,6 +584,7 @@ export async function runRetentionWindowCli({ argv = process.argv.slice(2), env 
   if (args.command !== "run") fail("ARGS_INVALID", `unknown command ${args.command}`);
   if (!args.plan && !args.preflightOnly) fail("ARGS_INVALID", "run requires --plan=<path>");
   const report = await runWindow({
+    hardDeadlineEpochSeconds: args.hardDeadlineEpochSeconds,
     planPath: args.plan, repo, workflowsDir: args.workflowsDir, preflightOnly: args.preflightOnly, keysOut: args.keysOut, skipManifests: args.skipManifests, env, io,
   });
   io.log(JSON.stringify(report));

@@ -1047,7 +1047,7 @@ try {
 
   // Scheduled retries are bounded, idempotent, and cannot infer acceptance from a green job.
   {
-    const {freshState, claim, finish, acceptedReport} = await import('./ops/retention-schedule.mjs');
+    const {freshState, claim, finish, acceptedReport, ready} = await import('./ops/retention-schedule.mjs');
     let state=freshState();
     assert.equal(claim(state,{now:'2026-09-26T15:59:00Z',runId:'x'}).run,false);
     assert.equal(claim(state,{now:'2026-09-26T21:00:00Z',runId:'x'}).run,false);
@@ -1062,6 +1062,11 @@ try {
     assert.equal(state.weekly_enabled,false);
     assert.equal(state.campaign.attempts.length,10);
     state=claim(freshState(),{now:'2026-09-26T16:00:00Z',runId:'success'}).state;
+    assert.equal(claim(state,{now:'2026-09-26T16:30:00Z',runId:'unresolved'}).run,false);
+    assert.equal(ready(state,{now:'2026-09-26T16:03:00Z',runId:'success'}).run,true);
+    assert.equal(ready(state,{now:'2026-09-26T21:00:00Z',runId:'success'}).run,false);
+    assert.equal(ready(state,{now:'2026-09-26T20:57:00Z',runId:'success'}).run,false);
+    await assert.rejects(runWindow({repo:'o/r',hardDeadlineEpochSeconds:1,io:{error:()=>{}},deps:{now:()=>Date.parse('2026-09-26T21:00:00Z')}}),/WINDOW_BUDGET_INVALID/);
     const report={result:'retention_window_applied',publishers:Array(28).fill('p'),
       restore:{confirmed:Array(28).fill('p'),unconfirmed:[],failed:[]},duration:{first_disable_to_restore_seconds:120},
       apply:{result:'retention_batch_applied',apply_exit_code:0,verification:'ok',verification_datasets:Object.fromEntries(Array.from({length:26},(_,i)=>[i,{missing_referenced_payloads:[]}])),payloads:{bytes:100},manifests:{bytes:20}}};
