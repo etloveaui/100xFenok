@@ -1754,6 +1754,14 @@ export const RETENTION_KEEP_NEWEST = 3;
 // supplies `now`, an entry whose upload time is missing or unparsable fails the
 // plan closed (RETENTION_TIMESTAMP_UNKNOWN) instead of being treated as old.
 export const RETENTION_UPLOAD_GRACE_SECONDS = 48 * 60 * 60;
+// Retention's own R2 operation budget for the cost gate (fh-481), measured live
+// on 2026-09-26 and rounded UP: the bucket listing walks ~51 pages
+// (per_page=1000) and the manifest scan reads ~1751 manifests through the
+// paced GET path. Delete mode repeats the scan for revalidation. DeleteObject
+// is a FREE_ACTION in the gate, so deletes add no class. Never zero: declaring
+// retention read-free was exactly the blind spot planClassB exists to close.
+export const RETENTION_GATE_LIST_PAGES = 60;
+export const RETENTION_GATE_MANIFEST_READS = 2_000;
 export const RETENTION_OBJECT_PREFIX = "objects/";
 const GENERATION_MANIFEST_KEY = /^manifests\/.+-[0-9a-f]{16}\.json$/;
 
@@ -2391,8 +2399,10 @@ export async function verifyGenerationParity({
 // planClassB is required rather than optional-with-a-guess. The gate script has
 // always accepted --plan-class-b and folded it into its projection; the
 // publisher simply never sent it, so every read a publication performs was
-// invisible to the limit check. Callers that genuinely read nothing pass 0
-// explicitly — rollback, retention and the post-publish confirmation gates.
+// invisible to the limit check. A caller that genuinely plans no reads passes 0
+// explicitly — the post-publish confirmation gates do. Rollback declares a
+// ceiling derived from family policy and retention declares its measured scan
+// budget (fh-481); neither is read-free, so neither may say zero.
 function runCostGate({ planClassA, planClassB, planBytes, env }) {
   return new Promise((resolve, reject) => {
     const child = spawn(process.execPath, [
@@ -2755,13 +2765,32 @@ function parseArgs(argv) {
 // The resume window is an owner policy value with no safe default, so it arrives
 // as an explicit argument and its absence aborts the run before any deletion.
 // A default here would silently restore indefinite prepared-receipt protection.
-async function runRetention({ tolerateGateBlock, retentionDelete, json, resumeWindowSeconds, now }) {
+async function runRetention({
+  tolerateGateBlock,
+  retentionDelete,
+  json,
+  resumeWindowSeconds,
+  now,
+  env = process.env,
+  runCostGateImpl = runCostGate,
+}) {
   const log = (line) => {
     if (!json) console.error(line);
   };
   const emit = (summary) => console.log(JSON.stringify(summary));
 
-  const gateBefore = await runCostGate({ planClassA: 10, planBytes: 0, env: process.env });
+  // fh-481: retention is read-heavy, so its gate call declares a real operation
+  // budget instead of the fabricated class-A 10 with no class-B that let the
+  // live dry-run die inside the gate child. Delete mode scans twice (plan +
+  // revalidation); DeleteObject is a FREE_ACTION in the gate. The injected impl
+  // keeps the CLI path testable without spawning the gate script.
+  const gateScans = retentionDelete ? 2 : 1;
+  const gateBefore = await runCostGateImpl({
+    planClassA: RETENTION_GATE_LIST_PAGES * gateScans,
+    planClassB: RETENTION_GATE_MANIFEST_READS * gateScans,
+    planBytes: 0,
+    env,
+  });
   if (gateBefore.stdout.trim()) log(gateBefore.stdout.trim());
   if (gateBefore.code !== 0 && gateBefore.code !== 1) {
     if (gateBefore.stderr.trim()) console.error(gateBefore.stderr.trim());
@@ -2774,10 +2803,10 @@ async function runRetention({ tolerateGateBlock, retentionDelete, json, resumeWi
     process.exit(3);
   }
 
-  const token = process.env.CLOUDFLARE_API_TOKEN;
-  const endpoint = process.env.DATA_PLANE_ENDPOINT;
-  const writeKey = process.env.DATA_PLANE_WRITE_KEY;
-  const accountId = process.env.CLOUDFLARE_ACCOUNT_ID ?? DEFAULT_ACCOUNT_ID;
+  const token = env.CLOUDFLARE_API_TOKEN;
+  const endpoint = env.DATA_PLANE_ENDPOINT;
+  const writeKey = env.DATA_PLANE_WRITE_KEY;
+  const accountId = env.CLOUDFLARE_ACCOUNT_ID ?? DEFAULT_ACCOUNT_ID;
   const missing = [
     ["CLOUDFLARE_API_TOKEN", token],
     ["DATA_PLANE_ENDPOINT", endpoint],
@@ -2968,6 +2997,8 @@ export async function runPublisherCli({
       json: args.json,
       resumeWindowSeconds: args.resumeWindowSeconds,
       now: new Date().toISOString(),
+      env,
+      runCostGateImpl,
     });
     return 0;
   }

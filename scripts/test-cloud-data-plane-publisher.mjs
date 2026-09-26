@@ -58,6 +58,8 @@ import {
   familyDeclaresStrictGate,
   gateBlocksPublication,
   resolveSourceAsOf,
+  RETENTION_GATE_LIST_PAGES,
+  RETENTION_GATE_MANIFEST_READS,
   RETENTION_PROTECTED_KEYS,
   rollbackLiveGeneration,
   runPublisherCli,
@@ -3263,6 +3265,83 @@ function runCli(extraArgs, includeFamily = true, extraEnv = {}) {
   assert.match(retentionChaos.stderr, /ARGS_INVALID/);
   console.log("retention CLI flags ok (bucket-level, gate-first offline, dry-run default, ARGS_INVALID validation)");
   console.log("gate-blocked behaviour ok (tolerate -> typed line exit 0; strict -> exit 3)");
+}
+
+// The retention gate is an integration seam that previously had no injected
+// coverage: the live dry-run died because runRetention never declared planClassB
+// and nothing asserted its gate inputs. These legs pin the declared budget and
+// prove the injected gate is the one the retention path actually calls.
+{
+  const dryRunGateOptions = [];
+  const dryRunExit = await runPublisherCli({
+    argv: ["--retention", "--dry-run", "--tolerate-gate-block"],
+    env: {},
+    runCostGateImpl: async (options) => {
+      dryRunGateOptions.push(options);
+      return { code: 2, stdout: "", stderr: "blocked for the test" };
+    },
+    stdout: () => {},
+    stderr: () => {},
+  });
+  assert.equal(dryRunExit, 0);
+  assert.equal(dryRunGateOptions.length, 1, "the retention path must run exactly one gate call");
+  const dryRunGate = dryRunGateOptions[0];
+  assert.equal(dryRunGate.planClassA, RETENTION_GATE_LIST_PAGES);
+  assert.equal(dryRunGate.planClassB, RETENTION_GATE_MANIFEST_READS);
+  assert.ok(dryRunGate.planClassB >= 1_751,
+    "Class B must cover the measured ~1751 manifest reads, never zero");
+  assert.ok(dryRunGate.planClassA >= 51,
+    "Class A must cover the measured ~51 listing pages");
+  assert.equal(dryRunGate.planBytes, 0);
+  assert.deepEqual(dryRunGate.env, {});
+
+  const deleteGateOptions = [];
+  const deleteExit = await runPublisherCli({
+    argv: ["--retention", "--retention-delete", "--tolerate-gate-block"],
+    env: {},
+    runCostGateImpl: async (options) => {
+      deleteGateOptions.push(options);
+      return { code: 2, stdout: "", stderr: "blocked for the test" };
+    },
+    stdout: () => {},
+    stderr: () => {},
+  });
+  assert.equal(deleteExit, 0);
+  assert.equal(deleteGateOptions.length, 1);
+  assert.equal(deleteGateOptions[0].planClassA, 2 * RETENTION_GATE_LIST_PAGES,
+    "delete mode repeats the listing for revalidation");
+  assert.equal(deleteGateOptions[0].planClassB, 2 * RETENTION_GATE_MANIFEST_READS,
+    "delete mode repeats the manifest scan for revalidation");
+
+  // A passing gate must let the run continue into the scan. The scan has no
+  // injectable plane here, so it fails on the unreachable family — which is the
+  // proof it STARTED: the error is the family read, not a gate or env failure.
+  const passGateOptions = [];
+  let passError = null;
+  try {
+    await runPublisherCli({
+      argv: ["--retention", "--dry-run"],
+      env: {
+        CLOUDFLARE_API_TOKEN: "fixture",
+        DATA_PLANE_ENDPOINT: "https://127.0.0.1:1/internal/cloud-data-plane",
+        DATA_PLANE_WRITE_KEY: "fixture",
+      },
+      runCostGateImpl: async (options) => {
+        passGateOptions.push(options);
+        return { code: 1, stdout: "", stderr: "" };
+      },
+      stdout: () => {},
+      stderr: () => {},
+    });
+  } catch (error) {
+    passError = error;
+  }
+  assert.equal(passGateOptions.length, 1);
+  assert.equal(passGateOptions[0].planClassB, RETENTION_GATE_MANIFEST_READS);
+  assert.ok(passError, "with a passing gate and env present the run must proceed beyond the gate");
+  assert.equal(passError.code, "RETENTION_FAMILY_UNREADABLE",
+    "the first failure after a passing gate is the unreachable family, not a gate or env error");
+  console.log("retention gate integration ok (declared Class A/B budget, delete 2x, injected gate used)");
 }
 
 // --- publish-outcome evidence shard via the real CLI (offline) --------------
