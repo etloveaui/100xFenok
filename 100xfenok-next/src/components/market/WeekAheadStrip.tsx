@@ -103,10 +103,15 @@ export default function WeekAheadStrip() {
       : null;
   // A month-old mirror may list releases that have since moved, or miss new
   // ones, so the strip says how old it is, as the full calendar's rail does.
+  // One without a readable generated_at is of unknown age and says so.
   const generatedDay = dateOnly(state.calendar?.generatedAt ?? null);
-  const staleNote = generatedDay !== null && isStaleAsOf(generatedDay, MACRO_CALENDAR_STALE_AFTER_DAYS, today)
-    ? `${formatKstDayHeading(generatedDay)} 기준 · 갱신 지연`
-    : null;
+  const staleNote = state.calendar === null
+    ? null
+    : generatedDay === null
+      ? "캘린더 기준일 미확인"
+      : isStaleAsOf(generatedDay, MACRO_CALENDAR_STALE_AFTER_DAYS, today)
+        ? `${formatKstDayHeading(generatedDay)} 기준 · 갱신 지연`
+        : null;
   // What the strip says in place of chips; the link's accessible name carries
   // it too, since an aria-label replaces the visible text for screen readers.
   const status = !state.loaded
