@@ -6,6 +6,7 @@ import { useDashboardData } from "@/hooks/useDashboardData";
 import { MARKET_STRENGTH_NAME, marketStrength } from "@/lib/dashboard/market-strength";
 import { isValidEntityTicker, normalizeForEntityKey } from "@/lib/ticker";
 import { EvidenceRail, Panel, PanelHeader } from "@/components/ui";
+import { fetchJsonOrNull } from "@/lib/client/data-fetch";
 import type { EvidenceRailFreshness } from "@/components/ui/EvidenceRail";
 import type { EvidenceStage } from "@/lib/evidence/provenance";
 import { formatEps, formatEpsRevisionChange, readEpsRevision } from "@/lib/eps-revision";
@@ -68,13 +69,7 @@ function isoDay(value: unknown): string | null {
 }
 
 async function fetchJson<T>(url: string): Promise<T | null> {
-  try {
-    const response = await fetch(url);
-    if (!response.ok) return null;
-    return (await response.json()) as T;
-  } catch {
-    return null;
-  }
+  return fetchJsonOrNull<T>(url);
 }
 
 function readSnapshot(): VisitSnapshot | null {

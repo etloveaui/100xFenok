@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
+import { fetchJsonOrNull } from "@/lib/client/data-fetch";
 import { SECTOR_DEFINITIONS } from "@/lib/dashboard/constants";
 import type { QuotePayload } from "@/lib/quote-contract";
 import type {
@@ -90,17 +91,7 @@ const EMPTY_LKG_TICKERS: Record<string, QuotePayload | null> = {};
 // HTTP cache intentional: static /data/*.json has Cache-Control max-age=300;
 // ticker /api/* has its own s-maxage. Mirrors useDashboardData fetch policy.
 async function fetchJson<T>(url: string, timeoutMs = FETCH_TIMEOUT_MS): Promise<T | null> {
-  const controller = new AbortController();
-  const timeoutId = window.setTimeout(() => controller.abort(), timeoutMs);
-  try {
-    const response = await fetch(url, { signal: controller.signal });
-    if (!response.ok) return null;
-    return (await response.json()) as T;
-  } catch {
-    return null;
-  } finally {
-    window.clearTimeout(timeoutId);
-  }
+  return fetchJsonOrNull<T>(url, { timeoutMs });
 }
 
 function num(value: unknown): number | null {

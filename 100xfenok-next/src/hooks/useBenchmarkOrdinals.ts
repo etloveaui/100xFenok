@@ -7,21 +7,12 @@ import {
   type BenchmarkGroupId,
   type BenchmarkOrdinalsView,
 } from "@/lib/market-valuation/benchmarkOrdinals";
+import { fetchJsonOrNull } from "@/lib/client/data-fetch";
 
 const FETCH_TIMEOUT_MS = 4000;
 
 async function fetchJson<T>(url: string, timeoutMs = FETCH_TIMEOUT_MS): Promise<T | null> {
-  const controller = new AbortController();
-  const timeoutId = window.setTimeout(() => controller.abort(), timeoutMs);
-  try {
-    const response = await fetch(url, { signal: controller.signal });
-    if (!response.ok) return null;
-    return (await response.json()) as T;
-  } catch {
-    return null;
-  } finally {
-    window.clearTimeout(timeoutId);
-  }
+  return fetchJsonOrNull<T>(url, { timeoutMs });
 }
 
 export type BenchmarkOrdinalsHookState = "pending" | "ready" | "refused" | "failed";

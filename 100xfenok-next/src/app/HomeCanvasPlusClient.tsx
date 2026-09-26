@@ -13,6 +13,7 @@ import { Tile } from "@/components/ui/Tile";
 import { useDashboardData } from "@/hooks/useDashboardData";
 import { MARKET_STRENGTH_NAME, marketStrength } from "@/lib/dashboard/market-strength";
 import { DATA_STATE_LABELS, oldestAsOf } from "@/lib/data-state";
+import { fetchJsonOrNull, fetchJsonShared } from "@/lib/client/data-fetch";
 import type { DashboardSnapshot, DashboardSourceId, SectorSnapshot } from "@/lib/dashboard/types";
 import { formatEps, formatEpsRevisionChange } from "@/lib/eps-revision";
 import { projectMaterialChanges, type MaterialChangeItem } from "@/lib/home/material-change";
@@ -265,9 +266,7 @@ function historyToChartData(payload: FinanceHistoryResponse | null): ChartPoint[
 }
 
 async function fetchJson<T>(url: string): Promise<T | null> {
-  const response = await fetch(url);
-  if (!response.ok) return null;
-  return (await response.json()) as T;
+  return fetchJsonOrNull<T>(url);
 }
 
 async function loadIndexCardHistory(symbol: IndexSymbol): Promise<ChartPoint[]> {
@@ -434,10 +433,15 @@ function useReloadableJson<T>(url: string, reloadKey: number): ReloadableJson<T>
 
   useEffect(() => {
     let cancelled = false;
-    const settle = (data: T | null) => {
-      if (!cancelled) setResult({ key: reloadKey, data, fetchedAtMs: Date.now() });
+    const settle = (data: T | null, fetchedAtMs: number) => {
+      if (!cancelled) setResult({ key: reloadKey, data, fetchedAtMs });
     };
-    fetchJson<T>(url).then(settle, () => settle(null));
+    // receivedAt is the honest "arrived" clock for the freshness lane; a
+    // reloadKey bump is the retry button's fresh read, so it forces.
+    fetchJsonShared<T>(url, reloadKey === 0 ? undefined : { force: true }).then(
+      ({ data, receivedAt }) => settle(data, receivedAt),
+      () => settle(null, Date.now()),
+    );
     return () => {
       cancelled = true;
     };
