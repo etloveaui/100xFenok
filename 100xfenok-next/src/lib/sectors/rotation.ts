@@ -64,10 +64,33 @@ export function rotationPoints(rows: SectorRow[], windowKey: MomentumWindow, ben
     .sort((a, b) => b.relative - a.relative);
 }
 
-function formatPp(value: number, digits = 1): string {
+/**
+ * Formats a value that is ALREADY in percentage points (e.g. 4.1 → "+4.1%p").
+ * `relativeMomentum` / `rotationPoints().relative` return points, so they must
+ * go through this formatter — never through a fraction-to-percent helper,
+ * which multiplies by 100 a second time ("+410.0%p").
+ */
+export function formatPercentPoints(value: number, digits = 1): string {
+  if (!finiteNumber(value)) return "—";
   const sign = value >= 0 ? "+" : "-";
-  return `${sign}${(Math.abs(value)).toFixed(digits)}%p`;
+  return `${sign}${Math.abs(value).toFixed(digits)}%p`;
 }
+
+/**
+ * Spread-strip read line: strongest / weakest sector vs the S&P benchmark and
+ * the gap between them, all in percentage points.
+ */
+export function spreadReadLine(points: readonly RotationPoint[], windowLabel: string): string | null {
+  const strongest = points[0] ?? null;
+  const weakest = points.length > 1 ? points[points.length - 1] : null;
+  if (strongest === null) return null;
+  if (weakest === null) {
+    return `${windowLabel} 기준 ${strongest.row.name} ${formatPercentPoints(strongest.relative)} 한 곳만 값이 확보됐습니다.`;
+  }
+  const gap = Math.abs(strongest.relative - weakest.relative).toFixed(1);
+  return `${windowLabel} 기준 최강 ${strongest.row.name} ${formatPercentPoints(strongest.relative)} · 최약 ${weakest.row.name} ${formatPercentPoints(weakest.relative)} · 격차 ${gap}%p입니다.`;
+}
+
 
 /**
  * One-sentence rotation read. Quadrant moves compare the selected timeframe
@@ -90,8 +113,8 @@ export function rotationRead(
   const top = points[0];
   const beatCount = points.filter((point) => point.relative > 0).length;
   const topClause = top.quadrant
-    ? `${top.row.name} ${formatPp(top.relative)}가 가장 강한 모멘텀으로 '${QUADRANT_LABEL[top.quadrant]}'에 있고`
-    : `${top.row.name} ${formatPp(top.relative)}가 가장 강한 모멘텀이지만 밴드 미확보로 사분면 밖에 있고`;
+    ? `${top.row.name} ${formatPercentPoints(top.relative)}가 가장 강한 모멘텀으로 '${QUADRANT_LABEL[top.quadrant]}'에 있고`
+    : `${top.row.name} ${formatPercentPoints(top.relative)}가 가장 강한 모멘텀이지만 밴드 미확보로 사분면 밖에 있고`;
   const base = `${windowLabel} 기준 ${topClause}, S&P 500 대비 상회 ${beatCount}/${totalSectors}개 섹터입니다.`;
 
   const prevBenchmark = prevSnapshot?.benchmarkMomentum?.[windowKey] ?? null;

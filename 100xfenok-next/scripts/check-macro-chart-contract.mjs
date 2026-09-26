@@ -77,8 +77,11 @@ async function inspectStaticContracts() {
   if (!macroSource.includes("useState(() => defaultChartState(initialMode))") || !macroSource.includes("if (!clientStateReady")) {
     addFailure(failures, "hydration-safe-initial-state", "MacroChartClient must defer URL/localStorage state until after hydration");
   }
-  if (!macroPageSource.includes('className="fnk-shell"')) {
-    addFailure(failures, "macro-shell-wrapper", "MacroChartPage must use fnk-shell wrapper");
+  // The .fnk-shell wrapper now comes from the persistent AppShellFrame in the
+  // root layout; the page must still render through AppShell so the frame
+  // receives its chrome state (title, back link, active nav).
+  if (!macroPageSource.includes("<AppShell ") || !macroPageSource.includes("data-macro-chart-surface")) {
+    addFailure(failures, "macro-shell-wrapper", "MacroChartPage must render its surface inside AppShell");
   }
   if (!macroSource.includes("변환 CSV 저장됨") || !macroSource.includes("CSV는 선택 기간·변환 후 실제 표시값 기준")) {
     addFailure(failures, "csv-plotted-export-copy", "plotted CSV export copy missing");

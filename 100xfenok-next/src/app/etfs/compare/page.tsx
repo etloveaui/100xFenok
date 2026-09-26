@@ -26,7 +26,7 @@ export default async function EtfComparePage({ searchParams }: Props) {
   const initialTickers = firstParam(params.tickers) ?? firstParam(params.ticker) ?? "SPY,VOO";
 
   return (
-    <div className="fnk-shell" data-etf-compare-surface="true" data-etf-compare-route-owner="holdings-overlap">
+    <div data-etf-compare-surface="true" data-etf-compare-route-owner="holdings-overlap">
       <AppShell active="etfs" title="ETF 비교" backHref={ROUTES.etfs}>
         <section className="panel" data-etf-compare-header="true">
           <div className="data-shell-header">

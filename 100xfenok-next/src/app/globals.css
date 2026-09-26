@@ -1,6 +1,11 @@
 @import "tailwindcss";
 @import "./fonts/fonts.css";
-@source not "../../data";
+/* Tailwind v4 auto-scans the app root for class candidates. public/ holds the
+   legacy HTML pages (served standalone or in iframes, never styled by this
+   sheet) and ~14k data JSON files, which added tens of KB of unused utilities
+   to the render-blocking stylesheet and slowed every build. */
+@source not "../../public";
+@source not "../../../data";
 @import "../styles/overview-widgets.css";
 @import "../styles/heatmap.css";
 @import "../styles/route-embed.css";
@@ -935,6 +940,41 @@ body.fnk-shell-on main { padding-top: 0 !important; padding-bottom: 0 !important
 body:has([data-immersive-route]) #main-content {
   padding-top: 0 !important;
   padding-bottom: 0 !important;
+}
+/* The persistent shell is server-rendered as <main> > .fnk-shell, so the legacy
+   nav padding is dropped in CSS at first paint. The body.fnk-shell-on rule above
+   only applies after hydration, which shifted every shell page up by 64px. */
+#main-content:has(> .fnk-shell) {
+  padding-top: 0 !important;
+  padding-bottom: 0 !important;
+}
+
+/* Panel loadingMode="placeholder": the children already draw a placeholder
+   layout ("—" values), so loading only dims them and sweeps a shimmer across —
+   the panel keeps its exact size when data arrives. Both start after 120ms,
+   matching the skeleton delay, so fast loads never flash. */
+[data-panel-loading="placeholder"] {
+  position: relative;
+}
+[data-panel-loading="placeholder"] > * {
+  opacity: 0.55;
+  transition: opacity 0.2s ease 0.12s;
+}
+[data-panel-loading="placeholder"]::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: linear-gradient(100deg, transparent 20%, color-mix(in srgb, var(--fnk-color-white) 60%, transparent) 50%, transparent 80%);
+  background-size: 200% 100%;
+  animation: fnk-panel-shimmer 1.4s ease-in-out 0.12s infinite both;
+}
+@keyframes fnk-panel-shimmer {
+  from { background-position: 150% 0; }
+  to { background-position: -50% 0; }
+}
+@media (prefers-reduced-motion: reduce) {
+  [data-panel-loading="placeholder"]::after { animation: none; }
 }
 
 /* Line clamp utilities */

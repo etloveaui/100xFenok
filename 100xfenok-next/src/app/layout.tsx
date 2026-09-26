@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import "./globals.css";
 import DesignVersionToggle from "@/components/design/DesignVersionToggle";
+import { AppShellFrame } from "@/components/shell/AppShell";
 import { CommandPalette } from "@/components/ui/CommandPalette";
 import { siteOrigin } from "@/lib/site-url";
 import { Suspense } from "react";
@@ -76,7 +77,9 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="ko" data-theme="light" style={{ colorScheme: "light" }}>
+    // data-scroll-behavior lets Next switch off the CSS smooth scroll while it
+    // resets scroll on a route change, so a new page starts at the top at once.
+    <html lang="ko" data-theme="light" data-scroll-behavior="smooth" style={{ colorScheme: "light" }}>
       <body className={`antialiased min-h-screen bg-background text-foreground overflow-x-hidden`}>
         <a href="#main-content" className="skip-link">
           본문으로 건너뛰기
@@ -85,7 +88,7 @@ export default function RootLayout({
           <DesignVersionToggle />
         </Suspense>
         <main id="main-content" tabIndex={-1} className="pt-safe-nav">
-          {children}
+          <AppShellFrame>{children}</AppShellFrame>
         </main>
         <CommandPalette />
       </body>

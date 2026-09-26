@@ -114,6 +114,7 @@
 .fnk-shell .tk-item{display:inline-flex; align-items:center; gap:7px; padding:0 18px; font-size:13px; border-right:1px solid var(--c-line-2)}
 .fnk-shell .tk-item .s{font-weight:700; color:var(--c-ink-2)}
 .fnk-shell .tk-item .p{color:var(--c-ink-2); font-weight:600}
+.fnk-shell .tk-label{position:relative; z-index:1; flex:none; align-self:stretch; display:inline-flex; align-items:center; padding:0 12px; font-size:12px; font-weight:700; color:var(--c-ink-2); background:var(--c-panel); border-right:1px solid var(--c-line); box-shadow:6px 0 8px -6px color-mix(in srgb,var(--c-ink) 18%,transparent)}
   @keyframes tk{from{transform:translateX(0)}to{transform:translateX(-50%)}}
   /* Tape settled with no rows (fetch failed, or no momentum figures): AppShell
      renders neither strip and drops the height they reserved in .content, the
@@ -520,3 +521,34 @@ body.fnk-shell-ticker-off .fnk-shell{--shell-ticker-h:0px}
     min-height: 44px;
   }
 }
+
+/* ───────────── PERSISTENT FRAME: navigation feedback ─────────────
+   The chrome is mounted once in the root layout (AppShellFrame), so these
+   rules give a click immediate feedback while the next route loads:
+   - .nav-progress: top bar while any TransitionLink navigation is pending;
+     starts after 80ms so prefetched (instant) navigations never flash it.
+   - .nav-pending: rendered inside rail/tab links; the clicked item takes the
+     active style at once and the previously active item lets go of it. */
+.fnk-shell .nav-progress{position:fixed; top:0; left:0; right:0; z-index:60; height:2px; pointer-events:none; opacity:0; transform:scaleX(0); transform-origin:left center; background:linear-gradient(90deg,color-mix(in srgb,var(--c-brand) 40%,transparent),var(--c-brand)); transition:opacity .24s ease}
+.fnk-shell .nav-progress[data-active]{opacity:1; animation:fnk-nav-progress 2.4s cubic-bezier(.12,.7,.24,1) 80ms both}
+@keyframes fnk-nav-progress{from{transform:scaleX(0)} 35%{transform:scaleX(.55)} to{transform:scaleX(.92)}}
+.fnk-shell .content[aria-busy="true"]{opacity:.72; transition:opacity .2s ease .15s}
+.fnk-shell .nav-pending{display:none}
+.fnk-shell .rail-item:has(> .nav-pending[data-pending]){background:var(--c-rail-active); color:var(--c-ink)}
+.fnk-shell .rail-item:has(> .nav-pending[data-pending]) svg{color:var(--c-ink)}
+.fnk-shell .rail-item:has(> .nav-pending[data-pending])::before{content:""; position:absolute; left:calc(-1 * var(--s3)); top:8px; bottom:8px; width:3px; border-radius:0 3px 3px 0; background:var(--c-brand)}
+.fnk-shell .rail-nav:has(.nav-pending[data-pending]) .rail-item.on:not(:has(> .nav-pending[data-pending])){background:transparent; color:var(--c-ink-2)}
+.fnk-shell .rail-nav:has(.nav-pending[data-pending]) .rail-item.on:not(:has(> .nav-pending[data-pending]))::before{content:none}
+.fnk-shell .tab:has(> .nav-pending[data-pending]){color:var(--c-brand)}
+.fnk-shell .tabbar:has(.nav-pending[data-pending]) .tab.on:not(:has(> .nav-pending[data-pending])){color:var(--c-ink-3)}
+
+/* Legacy ?v1=1 full-page views opt out of the chrome (ShellChromeOff). */
+.fnk-shell:has([data-shell-chrome="off"]) > :is(.nav-progress,.rail,.topbar,.ticker,.appbar,.tabbar,.scroll-top){display:none}
+.fnk-shell:has([data-shell-chrome="off"]) > .content{margin:0; padding:0; max-width:none}
+
+@media (prefers-reduced-motion: reduce){
+  .fnk-shell .nav-progress[data-active]{animation:none; transform:scaleX(1); opacity:.85}
+  .fnk-shell .content[aria-busy="true"]{transition:none}
+}
+
+.fnk-shell .route-loading{padding:0; max-width:none}

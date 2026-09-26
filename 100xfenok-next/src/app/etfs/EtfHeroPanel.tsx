@@ -1,6 +1,7 @@
 "use client";
 
-import { Pill, Skeleton, StaleState } from "@/components/ui";
+import { Pill, StaleState } from "@/components/ui";
+import EtfTextSkeleton from "./EtfTextSkeleton";
 import { formatAsOf } from "@/lib/data-state";
 import { formatInteger } from "@/lib/format";
 import {
@@ -22,10 +23,36 @@ export default function EtfHeroPanel({ surface }: { surface: EtfSurfaceData }) {
   const stale = loaded && !!insights && isEtfClockStale(insights.asOf ?? published);
 
   if (loading) {
+    // Same structure and template copy as the loaded hero, drawn as shimmer
+    // bars: the text wraps exactly like the real headline at every width, so
+    // the summary strip below does not jump when the data lands.
     return (
       <div className="etf-hero" aria-busy="true">
-        <span className="etf-eyebrow">ETF · 시장 스냅샷</span>
-        <Skeleton />
+        <div className="etf-hero-top">
+          <div className="etf-hero-title-block">
+            <div className="etf-hero-eyebrow-row">
+              <span className="etf-eyebrow">ETF · 시장 스냅샷</span>
+              <Pill>전체 확인 중</Pill>
+            </div>
+            <h1 className="etf-title">
+              <EtfTextSkeleton>
+                신규 상장 <b className="tabular-nums">000</b>개 · 주식형 비중 <b className="tabular-nums">00.0%</b> 중심 ·
+                레버리지·인버스 비중 <b className="tabular-nums">00.0%</b>
+              </EtfTextSkeleton>
+              <span className="sr-only">ETF 시장 스냅샷을 불러오는 중입니다.</span>
+            </h1>
+            <span className="etf-sub">
+              <EtfTextSkeleton>
+                상장일 0000-00-00~0000-00-00 · 0000-00-00 00:00 수집분 · 오늘 상위 거래량·변동률 종목 0개 중{" "}
+                <b className="tabular-nums">0개</b>가 레버리지·인버스입니다. 관심·거래 쏠림 기준이며 자금 유입·유출액은
+                포함하지 않습니다.
+              </EtfTextSkeleton>
+            </span>
+          </div>
+          <Pill className="etf-hero-clock" aria-hidden="true">
+            <EtfTextSkeleton>게시 0000-00-00 00:00</EtfTextSkeleton>
+          </Pill>
+        </div>
       </div>
     );
   }

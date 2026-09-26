@@ -22,6 +22,8 @@ import {
   bandPosition,
   rotationPoints,
   rotationRead,
+  formatPercentPoints,
+  spreadReadLine,
   type RotationPoint,
   type RotationWindow,
 } from "@/lib/sectors/rotation";
@@ -33,14 +35,10 @@ function pct(value: number | null | undefined, digits = 1): string {
   return typeof value !== "number" || !Number.isFinite(value) ? "—" : formatSignedPercentDecimal(value, digits);
 }
 
-function pp(value: number | null | undefined, digits = 1): string {
+/** Relative performance given as a FRACTION difference (0.041 → "+4.1%p"). */
+function ppFromFraction(value: number | null | undefined, digits = 1): string {
   const formatted = pct(value, digits);
   return formatted === "—" ? formatted : formatted.replace("%", "%p");
-}
-
-/** Spread magnitude between the two ends of the strip: 1 decimal, no sign. */
-function gapPp(value: number): string {
-  return `${formatDecimal(value, { digits: 1 })}%p`;
 }
 
 function toneOf(value: number | null | undefined): "positive" | "negative" | "neutral" {
@@ -281,10 +279,10 @@ function SectorFlowPanel({
                 <Bar
                   value={width}
                   className={positive ? "sec-bar-up" : "sec-bar-down"}
-                  aria-label={`${row.name} 상대 성과 ${pp(relative, 1)}`}
+                  aria-label={`${row.name} 상대 성과 ${ppFromFraction(relative, 1)}`}
                 />
                 <span className="sec-flow-values">
-                  <span className={positive ? "sec-up tabular-nums" : "sec-down tabular-nums"}>{pp(relative, 1)}</span>
+                  <span className={positive ? "sec-up tabular-nums" : "sec-down tabular-nums"}>{ppFromFraction(relative, 1)}</span>
                   <span className="sec-abs tabular-nums">{pct(value, 1)}</span>
                 </span>
               </TransitionLink>
@@ -497,13 +495,9 @@ function SectorsSpreadStrip({
   // The 0 tick needs room beside the end labels; the hairline always prints.
   const showZeroLabel = zeroPct >= 12 && zeroPct <= 88;
   const ariaLabel = ready
-    ? `${windowLabel} S&P 500 대비 상대 모멘텀 분포 · ${points.map((point) => `${point.row.name} ${pp(point.relative)}`).join(" · ")}`
+    ? `${windowLabel} S&P 500 대비 상대 모멘텀 분포 · ${points.map((point) => `${point.row.name} ${formatPercentPoints(point.relative)}`).join(" · ")}`
     : "S&P 500 대비 상대 모멘텀 분포";
-  const readLine = strongest === null
-    ? null
-    : weakest === null
-      ? `${windowLabel} 기준 ${strongest.row.name} ${pp(strongest.relative)} 한 곳만 값이 확보됐습니다.`
-      : `${windowLabel} 기준 최강 ${strongest.row.name} ${pp(strongest.relative)} · 최약 ${weakest.row.name} ${pp(weakest.relative)} · 격차 ${gapPp(strongest.relative - weakest.relative)}입니다.`;
+  const readLine = spreadReadLine(points, windowLabel);
   const noteParts = ["점 크기 = 시가총액"];
   if (missingCount > 0) noteParts.push(`값 미확보 ${missingCount}개 업종 제외`);
   if (bandless.length > 0) noteParts.push(`밴드 미확보 ${bandless.length}개는 지도 밖`);
@@ -539,17 +533,17 @@ function SectorsSpreadStrip({
                     data-sectors-spread-dot={point.row.etf}
                     data-spread-row={index % 3}
                     style={{ left: `${plot.leftPct(point.relative)}%`, width: `min(${size}px, 5.5%)`, aspectRatio: "1" }}
-                    title={`${point.row.name} ${pp(point.relative)} · S&P 500 ${up ? "상회" : "하회"}`}
+                    title={`${point.row.name} ${formatPercentPoints(point.relative)} · S&P 500 ${up ? "상회" : "하회"}`}
                   />
                 );
               })}
             </div>
             <div className="sec-spread-scale">
-              <span className="sec-spread-end tabular-nums">{pp(plot.dLo)}</span>
+              <span className="sec-spread-end tabular-nums">{formatPercentPoints(plot.dLo)}</span>
               {showZeroLabel && (
                 <span className="sec-spread-zero-label tabular-nums" style={{ left: `${zeroPct}%` }}>0</span>
               )}
-              <span className="sec-spread-end tabular-nums">{pp(plot.dHi)}</span>
+              <span className="sec-spread-end tabular-nums">{formatPercentPoints(plot.dHi)}</span>
             </div>
             <p className="sec-spread-count">{`${points.length}개 업종 중 ${aboveCount}개가 S&P 500 상회`}</p>
             {readLine && <p className="sec-spread-read">{readLine}</p>}
@@ -566,13 +560,13 @@ function SectorsSpreadStrip({
               <Stat
                 className="sec-stat"
                 label="최강"
-                value={strongest ? <span className={strongest.relative >= 0 ? "sec-up" : "sec-down"}>{pp(strongest.relative)}</span> : "—"}
+                value={strongest ? <span className={strongest.relative >= 0 ? "sec-up" : "sec-down"}>{formatPercentPoints(strongest.relative)}</span> : "—"}
                 sub={strongest ? `${strongest.row.name} ${strongest.row.etf}` : undefined}
               />
               <Stat
                 className="sec-stat"
                 label="최약"
-                value={weakest ? <span className={weakest.relative >= 0 ? "sec-up" : "sec-down"}>{pp(weakest.relative)}</span> : "—"}
+                value={weakest ? <span className={weakest.relative >= 0 ? "sec-up" : "sec-down"}>{formatPercentPoints(weakest.relative)}</span> : "—"}
                 sub={weakest ? `${weakest.row.name} ${weakest.row.etf}` : undefined}
               />
               <Stat
@@ -750,7 +744,19 @@ export default function SectorsClient() {
             <span className="sec-eyebrow">SECTORS · GICS 기준 11개 업종 흐름</span>
             <Pill>섹터 11개</Pill>
           </div>
-          <h1 className="sec-title">{headline}</h1>
+          {/* The read sentence arrives with the data; the title box reserves its
+              lines up front so the panels below do not jump when it lands. */}
+          <h1 className="sec-title" aria-busy={loading || undefined}>
+            {loading ? (
+              <>
+                <span className="sr-only">{headline}</span>
+                <span className="sec-title-skeleton" aria-hidden="true" />
+                <span className="sec-title-skeleton sec-title-skeleton--short" aria-hidden="true" />
+              </>
+            ) : (
+              headline
+            )}
+          </h1>
           <div className="sec-meta-row">
             <Pill tone={sourceMeta.tickerSourceDate ? "neutral" : "warn"}>시세 수집 {quoteLabel}</Pill>
             {failed && (
