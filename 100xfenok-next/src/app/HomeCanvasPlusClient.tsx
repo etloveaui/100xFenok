@@ -19,6 +19,7 @@ import { projectMaterialChanges, type MaterialChangeItem } from "@/lib/home/mate
 import { PERSONAL_DOC_KEYS, readPersonalFlags, type Flag } from "@/lib/personal/personal-state";
 import { EXPLORE_PRODUCT_TITLE } from "@/lib/product-nav";
 import { ROUTES } from "@/lib/routes";
+import WeekAheadStrip from "@/components/market/WeekAheadStrip";
 import type { TradesRankingData, TradesRankingRow } from "@/lib/superinvestors/types";
 
 type IndexSymbol = "SPY" | "QQQ" | "DIA";
@@ -490,20 +491,6 @@ function materialFlagLabel(flag: Flag): string {
 
 // Band edges mirror the sector heat Tiles (components/ui/Tile.tsx), expressed in
 // --ls-heatmap-* tokens so the breadth strip tracks the shell palette.
-function heatStripTint(changePercent: number): string {
-  if (changePercent === 0) return "var(--ls-heatmap-neutral)";
-  if (changePercent > 0) {
-    if (changePercent <= 0.25) return "var(--ls-heatmap-green2)";
-    if (changePercent <= 0.75) return "var(--ls-heatmap-green3)";
-    if (changePercent <= 1.5) return "var(--ls-heatmap-green4)";
-    return "var(--ls-heatmap-green5)";
-  }
-  if (changePercent >= -0.25) return "var(--ls-heatmap-red2)";
-  if (changePercent >= -0.75) return "var(--ls-heatmap-red3)";
-  if (changePercent >= -1.5) return "var(--ls-heatmap-red4)";
-  return "var(--ls-heatmap-red5)";
-}
-
 function edgeStrengthLabel(score: number): string {
   if (score >= 75) return "강한 상승";
   if (score >= 62) return "상승 우위";
@@ -616,17 +603,6 @@ export default function HomeCanvasPlusClient() {
 
   const breadthSectors = dashboard.sectorRows.slice(0, 11);
   const breadthReady = dashboardSettled && sectorDataReady && breadthSectors.length > 0;
-  const breadthPeriod = dashboard.sectorMode === "LIVE_1D" ? "1일" : "1개월 기준";
-  const breadthRead = regime.breadth >= 60
-    ? "시장 폭이 넓은 편입니다."
-    : regime.breadth >= 40
-      ? "시장 폭은 중립 수준입니다."
-      : "시장 폭이 좁은 편입니다.";
-  const breadthSummary = breadthReady
-    ? `${breadthSectors.length}개 섹터 중 ${dashboard.sectorUp}개 상승 - ${breadthRead}`
-    : dashboardSettled
-      ? "섹터 데이터가 아직 없습니다."
-      : `시장 폭 ${DATA_STATE_LABELS.pending}`;
 
   const revisionEvidence = projection.sources.revision.evidence;
   const superinvestorEvidence = projection.sources.superinvestor.evidence;
@@ -757,32 +733,7 @@ export default function HomeCanvasPlusClient() {
           </div>
         </div>
 
-        <section aria-label="시장 폭" data-home-breadth className="flex flex-col gap-1.5">
-          <p className="m-0 text-[12px] text-[var(--fnk-neutral-700)]">{breadthSummary}</p>
-          {breadthReady ? (
-            <div className="flex flex-col flex-wrap gap-1.5 md:flex-row md:items-center md:gap-3">
-              <div
-                className="flex min-w-0 gap-1 md:flex-none"
-                role="img"
-                aria-label={`섹터 ${breadthSectors.length}개 등락 요약 · 상승 ${dashboard.sectorUp} · 하락 ${dashboard.sectorDown}`}
-              >
-                {breadthSectors.map((sector) => (
-                  <span
-                    key={sector.key}
-                    className="flex h-5 min-w-0 flex-1 items-center justify-center overflow-hidden rounded-[4px] font-mono text-[12px] leading-none text-[var(--ls-heatmap-text)] md:w-10 md:flex-none"
-                    style={{ background: heatStripTint(sector.displayChange * 100) }}
-                  >
-                    <span className="min-w-0 truncate">{sector.etf}</span>
-                  </span>
-                ))}
-              </div>
-              <div className="flex shrink-0 items-baseline gap-2 whitespace-nowrap text-[12px]">
-                <span className="tabular-nums font-semibold text-[var(--fnk-neutral-700)]">상승 {dashboard.sectorUp} · 하락 {dashboard.sectorDown}</span>
-                <span className="text-[var(--fnk-neutral-500)]">{breadthPeriod}</span>
-              </div>
-            </div>
-          ) : null}
-        </section>
+        <WeekAheadStrip />
 
         <section aria-label="주요 지수">
           <div className="grid grid-cols-2 gap-[10px] md:grid-cols-4 md:gap-3">
@@ -863,6 +814,12 @@ export default function HomeCanvasPlusClient() {
                 <div className="pt-0.5 text-[12px] text-[var(--c-ink-3)]">
                   현재 스트레스 {forces.rawStressScore}점 · 낮을수록 유리
                 </div>
+                <TransitionLink
+                  href={ROUTES.regime}
+                  className="inline-flex min-h-11 items-center self-start text-[12px] font-semibold text-[var(--c-brand)] hover:underline md:min-h-6"
+                >
+                  17개 신호 종합 시황 보기 →
+                </TransitionLink>
               </div>
             </div>
           </Panel>
@@ -878,7 +835,15 @@ export default function HomeCanvasPlusClient() {
             <PanelHeader
               eyebrow="Sector Flow"
               title="섹터 히트맵"
-              right={<span className="text-[12px] text-[var(--c-ink-3)]">1일 · {dashboard.sectorMode === "LIVE_1D" ? "실시간" : dashboard.sectorMode === "MIXED" ? "혼합" : "1개월 기준"}</span>}
+              right={
+                <span className="text-[12px] text-[var(--c-ink-3)]">
+                  {breadthReady ? (
+                    <b className="font-semibold tabular-nums text-[var(--c-ink-2)]">상승 {dashboard.sectorUp} · 하락 {dashboard.sectorDown}</b>
+                  ) : null}
+                  {breadthReady ? " · " : null}
+                  {dashboard.sectorMode === "LIVE_1D" ? "1일 · 실시간" : dashboard.sectorMode === "MIXED" ? "1일·1개월 혼합" : "1개월 기준"}
+                </span>
+              }
             />
             <div className="grid grid-cols-3 gap-1.5 p-2.5 md:grid-cols-4 md:p-3">
               {heatSectors.map((sector: SectorSnapshot, i: number) => (
