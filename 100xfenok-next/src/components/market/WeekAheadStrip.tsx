@@ -2,7 +2,8 @@
 
 import { useEffect, useMemo, useState } from "react";
 import TransitionLink from "@/components/TransitionLink";
-import { daysUntilKstDate, todayKST } from "@/lib/data-state";
+import { useKstToday } from "@/hooks/useKstToday";
+import { daysUntilKstDate } from "@/lib/data-state";
 import {
   MACRO_CALENDAR_URL,
   formatKstDayHeading,
@@ -58,7 +59,7 @@ function dayLabel(iso: string, today: string): string {
  */
 export default function WeekAheadStrip() {
   const [state, setState] = useState<{ loaded: boolean; calendar: MacroCalendar | null }>({ loaded: false, calendar: null });
-  const today = useMemo(() => todayKST(), []);
+  const today = useKstToday();
 
   useEffect(() => {
     let cancelled = false;
