@@ -38,6 +38,7 @@ import MetricHelp from "@/components/MetricHelp";
 import { formatDateish, formatSignedPercent } from "@/lib/format";
 import { DATA_STATE_LABELS, makeDataState, type LoaderError } from "@/lib/data-state";
 import { ROUTES } from "@/lib/routes";
+import { readPriceTargets } from "@/lib/stock/price-target";
 import { normalizeForEntityKey } from "@/lib/ticker";
 import TickerSurfaceEventsCard, { loadTickerSurfaces, type TickerSurfacePayload } from "./TickerSurfaceEventsCard";
 import ExternalSourceLinks from "@/components/ExternalSourceLinks";
@@ -1875,12 +1876,8 @@ function ValuationBodyCp({
 // W4 추정치(Estimates) tab surface
 // ---------------------------------------------------------------------------
 
-function EstimatesHeroCp({ yfData, detail, currency, quality }: { yfData: any; detail: any; currency: string; quality?: { loading: boolean; error: LoaderError | null; onRetry?: () => void } }) {
-  const targets = yfData?.analyst_price_targets ?? {};
-  const current = isFiniteNumber(targets.current) ? targets.current : null;
-  const mean = isFiniteNumber(targets.mean) ? targets.mean : null;
-  const low = isFiniteNumber(targets.low) ? targets.low : null;
-  const upsidePct = current && mean && current !== 0 ? (mean - current) / current : null;
+function EstimatesHeroCp({ yfData, detail, currency, quotePrice, quality }: { yfData: any; detail: any; currency: string; quotePrice: number | null; quality?: { loading: boolean; error: LoaderError | null; onRetry?: () => void } }) {
+  const { current, mean, low, upsidePct } = readPriceTargets(yfData?.analyst_price_targets, quotePrice);
 
   const epsActual = lastFinite(numberSeries(detail?.per_share?.eps));
   const epsEst = detail?.per_share_estimates?.eps ?? null;
@@ -1944,17 +1941,12 @@ function EstimatesHeroCp({ yfData, detail, currency, quality }: { yfData: any; d
   );
 }
 
-function EstimatesBandCp({ yfData, currency, quality }: { yfData: any; currency: string; quality?: { loading: boolean; error: LoaderError | null; onRetry?: () => void } }) {
-  const targets = yfData?.analyst_price_targets ?? {};
-  const low = isFiniteNumber(targets.low) ? targets.low : null;
-  const high = isFiniteNumber(targets.high) ? targets.high : null;
-  const mean = isFiniteNumber(targets.mean) ? targets.mean : null;
-  const current = isFiniteNumber(targets.current) ? targets.current : null;
+function EstimatesBandCp({ yfData, currency, quotePrice, quality }: { yfData: any; currency: string; quotePrice: number | null; quality?: { loading: boolean; error: LoaderError | null; onRetry?: () => void } }) {
+  const { low, high, mean, current, upsidePct } = readPriceTargets(yfData?.analyst_price_targets, quotePrice);
   if (low === null || high === null || mean === null || current === null || high <= low) return null;
   const pctFor = (v: number) => Math.max(0, Math.min(100, ((v - low) / (high - low)) * 100));
   const currentPct = pctFor(current);
   const meanPct = pctFor(mean);
-  const upsidePct = current !== 0 ? (mean - current) / current : null;
 
   return (
     <section data-stock-tab-card="estimates-target-band">
@@ -3109,10 +3101,11 @@ export default function StockDetailClient({
     const stripBandPct = valuationBandSummary && valuationBandSummary.max > valuationBandSummary.min
       ? Math.max(0, Math.min(100, ((valuationBandSummary.current - valuationBandSummary.min) / (valuationBandSummary.max - valuationBandSummary.min)) * 100))
       : null;
-    const stripTargets = yfData?.analyst_price_targets ?? {};
-    const stripTargetCurrent = isFiniteNumber(stripTargets.current) ? stripTargets.current : null;
-    const stripTargetMean = isFiniteNumber(stripTargets.mean) ? stripTargets.mean : null;
-    const stripUpsidePct = stripTargetCurrent && stripTargetMean && stripTargetCurrent !== 0 ? (stripTargetMean - stripTargetCurrent) / stripTargetCurrent : null;
+    const {
+      current: stripTargetCurrent,
+      mean: stripTargetMean,
+      upsidePct: stripUpsidePct,
+    } = readPriceTargets(yfData?.analyst_price_targets, displayPrice);
     const stripLongScore = fenokSignalLens
       ? (isFiniteNumber(fenokSignalLens.longTermConvictionScore)
         ? fenokSignalLens.longTermConvictionScore
@@ -3650,8 +3643,8 @@ export default function StockDetailClient({
           </div>
         ) : detail || yfAvailable ? (
           <>
-            {detail ? <EstimatesHeroCp yfData={yfData} detail={detail} currency={displayCurrency} quality={{ loading: detailLoading || !yfLoaded, error: detailError ?? yfError, onRetry: detailError ? retryDetail : yfError ? retryYfFinance : undefined }} /> : null}
-            {yfAvailable ? <EstimatesBandCp yfData={yfData} currency={displayCurrency} quality={{ loading: !yfLoaded, error: yfError, onRetry: retryYfFinance }} /> : null}
+            {detail ? <EstimatesHeroCp yfData={yfData} detail={detail} currency={displayCurrency} quotePrice={displayPrice} quality={{ loading: detailLoading || !yfLoaded, error: detailError ?? yfError, onRetry: detailError ? retryDetail : yfError ? retryYfFinance : undefined }} /> : null}
+            {yfAvailable ? <EstimatesBandCp yfData={yfData} currency={displayCurrency} quotePrice={displayPrice} quality={{ loading: !yfLoaded, error: yfError, onRetry: retryYfFinance }} /> : null}
             {detail ? <EstimatesGrowthTilesCp detail={detail} currency={displayCurrency} /> : null}
             {yfAvailable ? <EstimatesRecoCp yfData={yfData} quality={{ loading: !yfLoaded, error: yfError, onRetry: retryYfFinance }} /> : null}
 

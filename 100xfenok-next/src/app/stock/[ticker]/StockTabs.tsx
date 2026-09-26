@@ -10,6 +10,7 @@ import {
   formatSignedPercent,
   normalizeCurrency,
 } from "@/lib/format";
+import { readPriceTargets } from "@/lib/stock/price-target";
 
 export { formatCompactMoney, formatMoney };
 
@@ -437,16 +438,17 @@ function OwnershipTab({ data }: { data: YfData }) {
 
 function EstimatesTab({ data }: { data: YfData }) {
   const infoCurrency = normalizeCurrency(data.info?.currency ?? "USD");
-  const targets = data.analyst_price_targets ?? {};
   const earnings = asArray(data.earnings_estimate);
   const revenue = asArray(data.revenue_estimate);
   const recs = asArray(data.recommendations);
   const lastRec = recs.length > 0 ? recs[recs.length - 1] : null;
-  const targetLow = finiteNumber(targets.low);
-  const targetMean = finiteNumber(targets.mean);
-  const targetHigh = finiteNumber(targets.high);
-  const targetCurrent = finiteNumber(targets.current);
-  const targetMedian = finiteNumber(targets.median);
+  const {
+    low: targetLow,
+    mean: targetMean,
+    high: targetHigh,
+    current: targetCurrent,
+    median: targetMedian,
+  } = readPriceTargets(data.analyst_price_targets, finiteNumber(data.info?.currentPrice));
   const targetRangeValid = targetLow !== null && targetHigh !== null && targetCurrent !== null && targetHigh > targetLow;
   const targetPct = targetRangeValid ? clamp(((targetCurrent - targetLow) / (targetHigh - targetLow)) * 100) : null;
 
