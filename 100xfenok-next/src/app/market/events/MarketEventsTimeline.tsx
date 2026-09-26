@@ -7,7 +7,8 @@ import { EmptyState, EvidenceRail, Panel, PanelHeader, Pill } from "@/components
 import type { EvidenceRailFreshness } from "@/components/ui/EvidenceRail";
 import type { EvidenceStage } from "@/lib/evidence/provenance";
 import { isEventCollectionStale } from "@/lib/market-events/freshness";
-import { dateOnly, isStaleAsOf, todayKST } from "@/lib/data-state";
+import { useKstToday } from "@/hooks/useKstToday";
+import { dateOnly, isStaleAsOf } from "@/lib/data-state";
 import {
   MACRO_CALENDAR_STALE_AFTER_DAYS,
   isHeadlineMacro,
@@ -389,15 +390,16 @@ function laneStages(lane: TimelineLaneDef, doc: TimelineDoc | null | undefined, 
 export default function MarketEventsTimeline({ loaded, earnings, actions, splits, ipoCalendar, macroLoaded, macroCalendar, onRetry }: MarketEventsTimelineProps) {
   // The product's day is the KST day (the macro lanes and the calendar panel
   // above are dated in KST), whatever zone the browser is in.
+  const today = useKstToday();
   const windowDef = useMemo(() => {
-    const startIso = todayKST();
+    const startIso = today;
     const endIso = addDaysIso(startIso, WINDOW_DAYS);
     const weeks = Array.from({ length: WINDOW_DAYS / WEEK_DAYS }, (_, week) => {
       const weekStart = addDaysIso(startIso, week * WEEK_DAYS);
       return `${shortMd(weekStart)} ~ ${shortMd(addDaysIso(weekStart, WEEK_DAYS - 1))}`;
     });
     return { startIso, endIso, weeks, todayIso: startIso, todayFraction: 0 };
-  }, []);
+  }, [today]);
 
   const laneViews = useMemo(() => {
     const docs: Record<string, TimelineDoc | null> = { earnings, dividend: actions, ipoCalendar };

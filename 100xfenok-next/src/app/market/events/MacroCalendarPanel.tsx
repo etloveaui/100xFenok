@@ -3,7 +3,8 @@
 import { useMemo } from "react";
 import { EvidenceRail, Panel, PanelHeader, Pill } from "@/components/ui";
 import type { EvidenceRailFreshness } from "@/components/ui/EvidenceRail";
-import { dateOnly, daysUntilKstDate, isStaleAsOf, todayKST } from "@/lib/data-state";
+import { useKstToday } from "@/hooks/useKstToday";
+import { dateOnly, daysUntilKstDate, isStaleAsOf } from "@/lib/data-state";
 import {
   MACRO_CALENDAR_STALE_AFTER_DAYS,
   formatKstDayHeading,
@@ -74,7 +75,7 @@ function EventRow({ event }: { event: MacroEvent }) {
 }
 
 export default function MacroCalendarPanel({ loaded, failed, calendar, onRetry }: MacroCalendarPanelProps) {
-  const today = useMemo(() => todayKST(), []);
+  const today = useKstToday();
   const horizonEnd = addDaysIso(today, HORIZON_DAYS);
   const events = useMemo(
     () => (calendar ? macroEventsBetween(calendar.events, today, horizonEnd).filter((event) => event.importance !== "L") : []),
