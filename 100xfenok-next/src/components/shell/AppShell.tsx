@@ -10,11 +10,9 @@ import {
   useState,
   useSyncExternalStore,
   type ReactNode,
-  type Ref,
 } from "react";
 import { usePathname } from "next/navigation";
 import BrandLogo from "@/components/BrandLogo";
-import ConnectedView from "@/components/connected/ConnectedView";
 import TransitionLink from "@/components/TransitionLink";
 import TickerTypeahead from "@/components/TickerTypeahead";
 import AppShellFreshnessPill from "@/components/shell/AppShellFreshnessPill";
@@ -22,21 +20,12 @@ import UserAuthPill from "@/components/shell/UserAuthPill";
 import AdoptStorePrompt from "@/components/personal/AdoptStorePrompt";
 import { useUserHeartbeat } from "@/lib/auth/clientAuth";
 import {
-  getStockConnection,
-  getStockServices,
-  loadStockConnectionIndex,
-  loadStockServicesIndex,
-  type StockConnectionEntry,
-  type StockServicesEntry,
-} from "@/lib/data-entity-graph/stock-index";
-import {
   CHART_NAV_LABEL,
   CHART_ROUTE,
   EXPLORE_NAV_LABEL,
   EXPLORE_ROUTE,
 } from "@/lib/product-nav";
 import { ROUTES } from "@/lib/routes";
-import { currentJourneyReturnTo } from "@/lib/journey-context";
 import type { DataState } from "@/lib/data-state";
 import { useModal } from "@/hooks/useModal";
 import { NavItemPending, useNavigationPending } from "@/components/shell/navigation-progress";
@@ -413,84 +402,6 @@ function SearchIcon() {
   );
 }
 
-function TypeaheadPreviewDrawer({
-  ticker,
-  onClose,
-  panelRef,
-}: {
-  ticker: string;
-  onClose: () => void;
-  panelRef: Ref<HTMLDivElement>;
-}) {
-  const [entry, setEntry] = useState<StockConnectionEntry | null | undefined>(undefined);
-  const [services, setServices] = useState<StockServicesEntry | null>(null);
-  const closeButtonRef = useRef<HTMLButtonElement>(null);
-
-  useEffect(() => {
-    let cancelled = false;
-    const controller = new AbortController();
-    Promise.all([
-      loadStockConnectionIndex(controller.signal),
-      loadStockServicesIndex(controller.signal),
-    ]).then(([stockIndex, servicesIndex]) => {
-      if (cancelled) return;
-      setEntry(getStockConnection(stockIndex, ticker));
-      setServices(getStockServices(servicesIndex, ticker));
-    }).catch(() => {
-      if (cancelled) return;
-      setEntry(null);
-      setServices(null);
-    });
-    return () => {
-      cancelled = true;
-      controller.abort();
-    };
-  }, [ticker]);
-
-  useEffect(() => {
-    closeButtonRef.current?.focus();
-  }, []);
-
-  return (
-    <div
-      ref={panelRef}
-      className="typeahead-preview"
-      data-testid="typeahead-preview"
-      role="dialog"
-      aria-modal="true"
-      aria-labelledby="typeahead-preview-title"
-    >
-      <div className="typeahead-preview__head">
-        <div className="typeahead-preview__title">
-          <span>연결 미리보기</span>
-          <strong id="typeahead-preview-title">{ticker}</strong>
-        </div>
-        <button ref={closeButtonRef} type="button" className="typeahead-preview__close" onClick={onClose} aria-label="미리보기 닫기">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-            <path d="M18 6L6 18M6 6l12 12" />
-          </svg>
-        </button>
-      </div>
-      <div className="typeahead-preview__body">
-        {entry === null ? (
-          <div className="typeahead-preview__empty">
-            <strong>{ticker}</strong>
-            <span>연결 인덱스에는 아직 잡히지 않은 종목입니다.</span>
-          </div>
-        ) : (
-          <ConnectedView ticker={ticker} entry={entry} services={services} variant="drawer" compact />
-        )}
-      </div>
-      <div className="typeahead-preview__actions">
-        <button type="button" onClick={onClose} className="typeahead-preview__secondary">닫기</button>
-        <TransitionLink href={ROUTES.stock(ticker, currentJourneyReturnTo())} onClick={onClose} className="typeahead-preview__primary">
-          전체 보기
-        </TransitionLink>
-      </div>
-    </div>
-  );
-}
-
 // The tape is one shared load: both strips read the same rows, and AppShell
 // renders no strip at all once the load settles empty, so the reserved band
 // height never outlives its content. Until the first result the space stays
@@ -577,10 +488,8 @@ function ShellChrome({
   const navPending = useNavigationPending();
   const [searching, setSearching] = useState(false);
   const [showScrollTop, setShowScrollTop] = useState(false);
-  const [typeaheadPreviewTicker, setTypeaheadPreviewTicker] = useState<string | null>(null);
   const [status, setStatus] = useState<{ dot: string; text: string }>(() => marketStatusKST());
   const moreModal = useModal("mobile-more");
-  const previewModal = useModal("typeahead-preview");
   const moreOpen = moreModal.isOpen;
   const moreCloseRef = useRef<HTMLButtonElement>(null);
   const navActive: ShellPage | null = active && NAV.some((item) => item.id === active) ? active : null;
@@ -598,15 +507,7 @@ function ShellChrome({
     setRoutePath(pathname);
     setSearching(false);
     if (moreModal.isOpen) moreModal.close();
-    if (previewModal.isOpen) previewModal.close();
   }
-
-  const handleTypeaheadStockPreview = (ticker: string) => {
-    moreModal.close();
-    setTypeaheadPreviewTicker(ticker);
-    previewModal.open();
-    setSearching(false);
-  };
 
   useEffect(() => {
     document.body.classList.add("fnk-shell-on");
@@ -639,13 +540,7 @@ function ShellChrome({
     return () => window.removeEventListener("scroll", update);
   }, []);
 
-  const closeTypeaheadPreview = () => {
-    previewModal.close();
-    setTypeaheadPreviewTicker(null);
-  };
-
   const openMore = () => {
-    closeTypeaheadPreview();
     moreModal.open();
   };
 
@@ -692,10 +587,9 @@ function ShellChrome({
         <div className="gsearch">
           <SearchIcon />
           <TickerTypeahead
-            placeholder="종목명, 티커 검색 — 연결 미리보기"
+            placeholder="종목명, 티커 검색"
             className="min-w-0 flex-1 bg-transparent text-[15px] outline-none"
             formClass="flex w-full items-center"
-            onStockSelect={handleTypeaheadStockPreview}
           />
           <button
             type="button"
@@ -767,7 +661,6 @@ function ShellChrome({
               focusOnOpen={searching}
               className="min-w-0 flex-1 bg-transparent text-[15px] outline-none"
               formClass="flex w-full items-center"
-              onStockSelect={handleTypeaheadStockPreview}
             />
           </div>
         </div>
@@ -779,17 +672,6 @@ function ShellChrome({
       </header>
 
       <div className="content" aria-busy={navPending || undefined}>{children}</div>
-      {typeaheadPreviewTicker && previewModal.isOpen ? (
-        <div className="typeahead-preview-layer">
-          <button type="button" className="typeahead-preview-backdrop" aria-label="미리보기 닫기" onClick={closeTypeaheadPreview} />
-          <TypeaheadPreviewDrawer
-            key={typeaheadPreviewTicker}
-            ticker={typeaheadPreviewTicker}
-            onClose={closeTypeaheadPreview}
-            panelRef={previewModal.modalProps.ref}
-          />
-        </div>
-      ) : null}
 
       {/* mobile bottom tab bar */}
       <nav className="tabbar" aria-label="주요 메뉴">

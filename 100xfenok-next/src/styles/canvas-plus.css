@@ -928,10 +928,6 @@
   grid-area: links;
 }
 
-.cp-stock-detail-preview .stock-market-links {
-  margin: 0;
-}
-
 .cp-stock-detail-preview .stock-tabs {
   grid-area: tabs;
   display: flex;
@@ -975,8 +971,34 @@
 
 .cp-stock-chart-card {
   display: grid;
+  /* One column that never grows past the card: a figure row inside the price
+     section must wrap or scroll, not widen the page's main column. */
+  grid-template-columns: minmax(0, 1fr);
   gap: 14px;
+  min-width: 0;
   padding: 16px;
+}
+
+/* Loaded price-section heights on NVDA: 1,061px at 390, 940 at 768, 889 at
+   1024, 802 at 1440. The reservation stays just under them. */
+.cp-stock-price-slot {
+  min-width: 0;
+}
+
+.cp-stock-price-slot[data-reserve] {
+  min-height: 1040px;
+}
+
+@media (min-width: 640px) {
+  .cp-stock-price-slot[data-reserve] {
+    min-height: 920px;
+  }
+}
+
+@media (min-width: 1024px) {
+  .cp-stock-price-slot[data-reserve] {
+    min-height: 800px;
+  }
 }
 
 .cp-stock-chart-card__header,
