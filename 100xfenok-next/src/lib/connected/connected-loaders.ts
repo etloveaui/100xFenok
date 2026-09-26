@@ -1,5 +1,6 @@
 import { normalizeForEntityKey } from "@/lib/ticker";
 import { resolveSec13fInvestorPayload } from "@/lib/superinvestors/investor-parts";
+import { fetchJsonOrNull } from "@/lib/client/data-fetch";
 
 /* ───────────────────────────────────────────────
  * Types
@@ -98,36 +99,35 @@ async function loadHoldersIndex(): Promise<Record<string, TickerHoldersResult | 
   if (holdersCache) return holdersCache;
   if (holdersPromise) return holdersPromise;
 
-  holdersPromise = fetch("/data/sec-13f/by_ticker.json", { cache: "force-cache" })
-    .then((r) => (r.ok ? r.json() : null))
-    .then((raw: Record<string, Record<string, unknown>> | null) => {
+  holdersPromise = fetchJsonOrNull<Record<string, Record<string, unknown>>>("/data/sec-13f/by_ticker.json", { init: { cache: "force-cache" } })
+    .then((raw) => {
+      if (raw === null) {
+        // Failure: not cached, so the next call retries (failures never stick).
+        return {};
+      }
       const index: Record<string, TickerHoldersResult | null> = {};
-      if (raw) {
-        for (const [ticker, entry] of Object.entries(raw)) {
-          const details = Array.isArray(entry?.holder_details) ? entry.holder_details as HolderDetail[] : [];
-          index[norm(ticker)] = {
-            ticker: norm(ticker),
-            holders: Array.isArray(entry?.holders) ? entry.holders as string[] : [],
-            total_shares: typeof entry?.total_shares === "number" ? entry.total_shares : 0,
-            total_market_value: typeof entry?.total_market_value === "number" ? entry.total_market_value : 0,
-            holder_details: details.map((d) => ({
-              investor: String(d.investor ?? ""),
-              shares: typeof d.shares === "number" ? d.shares : 0,
-              market_value: typeof d.market_value === "number" ? d.market_value : 0,
-              weight: typeof d.weight === "number" ? d.weight : 0,
-              classes_held: Array.isArray(d.classes_held) ? d.classes_held : [],
-              position_types: Array.isArray(d.position_types) ? d.position_types : [],
-            })),
-          };
-        }
+      for (const [ticker, entry] of Object.entries(raw)) {
+        const details = Array.isArray(entry?.holder_details) ? entry.holder_details as HolderDetail[] : [];
+        index[norm(ticker)] = {
+          ticker: norm(ticker),
+          holders: Array.isArray(entry?.holders) ? entry.holders as string[] : [],
+          total_shares: typeof entry?.total_shares === "number" ? entry.total_shares : 0,
+          total_market_value: typeof entry?.total_market_value === "number" ? entry.total_market_value : 0,
+          holder_details: details.map((d) => ({
+            investor: String(d.investor ?? ""),
+            shares: typeof d.shares === "number" ? d.shares : 0,
+            market_value: typeof d.market_value === "number" ? d.market_value : 0,
+            weight: typeof d.weight === "number" ? d.weight : 0,
+            classes_held: Array.isArray(d.classes_held) ? d.classes_held : [],
+            position_types: Array.isArray(d.position_types) ? d.position_types : [],
+          })),
+        };
       }
       holdersCache = index;
-      holdersPromise = null;
-      return holdersCache;
+      return index;
     })
-    .catch(() => {
+    .finally(() => {
       holdersPromise = null;
-      return {};
     });
 
   return holdersPromise;
@@ -154,10 +154,14 @@ export async function loadInvestorHoldings(investorName: string): Promise<Invest
   if (key in investorCache) return investorCache[key];
   if (key in investorPending) return investorPending[key];
 
-  investorPending[key] = fetch(`/data/sec-13f/investors/${encodeURIComponent(key)}.json`, { cache: "force-cache" })
-    .then((r) => (r.ok ? r.json() : null))
-    .then(async (rawPayload: Record<string, unknown> | null) => {
+  investorPending[key] = fetchJsonOrNull<Record<string, unknown>>(`/data/sec-13f/investors/${encodeURIComponent(key)}.json`, { init: { cache: "force-cache" } })
+    .then(async (rawPayload) => {
+      if (!rawPayload) {
+        // Failure: not cached, so the next call retries (failures never stick).
+        return null;
+      }
       if (!rawPayload?.investor) {
+        // A real response without an investor stays cacheable ("no holdings").
         investorCache[key] = null;
         return null;
       }
@@ -189,12 +193,11 @@ export async function loadInvestorHoldings(investorName: string): Promise<Invest
         filings,
       };
       investorCache[key] = result;
-      delete investorPending[key];
       return result;
     })
-    .catch(() => {
+    .catch(() => null)
+    .finally(() => {
       delete investorPending[key];
-      return null;
     });
 
   return investorPending[key];
@@ -269,45 +272,35 @@ type IndexCacheShape = {
 let indexCache: IndexCacheShape = null;
 let indexPromise: Promise<IndexCacheShape> | null = null;
 
-async function loadSlickchartsIndex(url: string): Promise<Record<string, IndexMembershipEntry>> {
-  try {
-    const r = await fetch(url, { cache: "force-cache" });
-    if (!r.ok) return {};
-    const raw = await r.json() as { holdings?: Array<Record<string, unknown>> };
-    const holdings = Array.isArray(raw?.holdings) ? raw.holdings : [];
-    const map: Record<string, IndexMembershipEntry> = {};
-    for (const h of holdings) {
-      const symbol = typeof h.symbol === "string" ? h.symbol : "";
-      if (!symbol) continue;
-      map[norm(symbol)] = {
-        rank: typeof h.rank === "number" ? h.rank : 0,
-        symbol,
-        company: typeof h.company === "string" ? h.company : "",
-        weight: typeof h.weight === "number" ? h.weight : 0,
-      };
-    }
-    return map;
-  } catch {
-    return {};
+async function loadSlickchartsIndex(url: string): Promise<Record<string, IndexMembershipEntry> | null> {
+  const raw = await fetchJsonOrNull<{ holdings?: Array<Record<string, unknown>> }>(url, { init: { cache: "force-cache" } });
+  if (raw === null) return null; // failure: the composite below refuses to cache
+  const holdings = Array.isArray(raw?.holdings) ? raw.holdings : [];
+  const map: Record<string, IndexMembershipEntry> = {};
+  for (const h of holdings) {
+    const symbol = typeof h.symbol === "string" ? h.symbol : "";
+    if (!symbol) continue;
+    map[norm(symbol)] = {
+      rank: typeof h.rank === "number" ? h.rank : 0,
+      symbol,
+      company: typeof h.company === "string" ? h.company : "",
+      weight: typeof h.weight === "number" ? h.weight : 0,
+    };
   }
+  return map;
 }
 
-async function loadSlickchartsChanges(): Promise<Record<string, string[]>> {
-  try {
-    const r = await fetch(INDEX_URLS.changes, { cache: "force-cache" });
-    if (!r.ok) return {};
-    const raw = await r.json() as { indices?: Record<string, Record<string, string[]>> };
-    const changes = raw?.indices ?? {};
-    const map: Record<string, string[]> = {};
-    for (const [, indexChanges] of Object.entries(changes)) {
-      for (const [symbol, events] of Object.entries(indexChanges)) {
-        map[norm(symbol)] = Array.isArray(events) ? events as string[] : [];
-      }
+async function loadSlickchartsChanges(): Promise<Record<string, string[]> | null> {
+  const raw = await fetchJsonOrNull<{ indices?: Record<string, Record<string, string[]>> }>(INDEX_URLS.changes, { init: { cache: "force-cache" } });
+  if (raw === null) return null; // failure: the composite below refuses to cache
+  const changes = raw?.indices ?? {};
+  const map: Record<string, string[]> = {};
+  for (const [, indexChanges] of Object.entries(changes)) {
+    for (const [symbol, events] of Object.entries(indexChanges)) {
+      map[norm(symbol)] = Array.isArray(events) ? events as string[] : [];
     }
-    return map;
-  } catch {
-    return {};
   }
+  return map;
 }
 
 async function loadIndexMembershipData() {
@@ -320,12 +313,13 @@ async function loadIndexMembershipData() {
     loadSlickchartsIndex(INDEX_URLS.dowjones),
     loadSlickchartsChanges(),
   ]).then(([sp500, nasdaq100, dowjones, changes]) => {
+    // Any partial failure: nothing is cached, so the next call retries
+    // instead of sticking a half-empty map for the whole visit.
+    if (sp500 === null || nasdaq100 === null || dowjones === null || changes === null) return null;
     indexCache = { sp500, nasdaq100, dowjones, changes };
-    indexPromise = null;
     return indexCache;
-  }).catch(() => {
+  }).finally(() => {
     indexPromise = null;
-    return null;
   });
 
   return indexPromise;

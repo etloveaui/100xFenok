@@ -4,6 +4,7 @@ import { useEffect, useMemo, useState } from "react";
 import DataStateNotice from "@/components/DataStateNotice";
 import { formatSignedPercent, formatPlainPercent } from "@/lib/format";
 import { makeDataState } from "@/lib/data-state";
+import { fetchJsonOrNull } from "@/lib/client/data-fetch";
 
 type Period = "1w" | "1m" | "3m" | "6m" | "ytd" | "1y";
 
@@ -26,23 +27,10 @@ type SummariesDoc = {
 
 export type { SummariesDoc, MomentumRow };
 
-let cache: SummariesDoc | null = null;
-let pending: Promise<SummariesDoc | null> | null = null;
-
 export function loadSummaries(): Promise<SummariesDoc | null> {
-  if (cache) return Promise.resolve(cache);
-  if (pending) return pending;
-  pending = fetch("/data/benchmarks/summaries.json")
-    .then((r) => (r.ok ? r.json() : null))
-    .then((d) => {
-      cache = d;
-      return d;
-    })
-    .catch(() => {
-      pending = null;
-      return null;
-    });
-  return pending;
+  // Through the shared layer: one request per URL per page load (shared with
+  // the shell tape and Explore), and a failure is never cached.
+  return fetchJsonOrNull<SummariesDoc>("/data/benchmarks/summaries.json");
 }
 
 const SECTIONS: Array<{ key: string; label: string }> = [

@@ -1,4 +1,5 @@
 import { normalizeForEntityKey } from "@/lib/ticker";
+import { fetchJsonOrNull } from "@/lib/client/data-fetch";
 
 const EDGAR_KOREAN_SUMMARY_INDEX_URL = "/data/edgar-korean-summaries/index.json";
 export const FOREIGN_EDGAR_FORMS = ["6-K", "20-F", "40-F"] as const;
@@ -123,23 +124,18 @@ export function edgarTickerManifestUrl(ticker: string) {
 function loadEdgarKoreanSummaryIndex(): Promise<EdgarKoreanSummaryIndex | null> {
   if (indexCache) return Promise.resolve(indexCache);
   if (indexPending) return indexPending;
-  indexPending = fetch(EDGAR_KOREAN_SUMMARY_INDEX_URL, { cache: "no-store" })
-    .then((response) => {
-      if (!response.ok) throw new Error(`EDGAR_SUMMARY_INDEX_FAILED:${response.status}`);
-      return response.json() as Promise<EdgarKoreanSummaryIndex>;
-    })
+  indexPending = fetchJsonOrNull<EdgarKoreanSummaryIndex>(EDGAR_KOREAN_SUMMARY_INDEX_URL, { init: { cache: "no-store" } })
     .then((payload) => {
+      if (payload === null) return null; // failure: not cached; the next call retries
       indexCache = {
         ...payload,
         tickers: Array.isArray(payload?.tickers) ? payload.tickers.map(normalizeEdgarTicker) : [],
         byTicker: payload?.byTicker ?? {},
       };
-      indexPending = null;
       return indexCache;
     })
-    .catch(() => {
+    .finally(() => {
       indexPending = null;
-      return null;
     });
   return indexPending;
 }
@@ -174,31 +170,25 @@ export function loadEdgarKoreanSummariesForTicker(ticker: string): Promise<Edgar
   tickerManifestPending[symbol] = loadEdgarKoreanSummaryIndex()
     .then((index) => {
       const matchedSymbol = edgarTickerCandidates(symbol).find((candidate) => index?.tickers.includes(candidate));
-      if (!index || !matchedSymbol) {
-        tickerManifestCache[symbol] = null;
+      if (!index) return null; // failed index: not cached, retried on the next call
+      if (!matchedSymbol) {
+        tickerManifestCache[symbol] = null; // a real index without this ticker stays cacheable
         return null;
       }
-      return fetch(index.byTicker?.[matchedSymbol] ?? edgarTickerManifestUrl(matchedSymbol), { cache: "no-store" });
-    })
-    .then((response) => {
-      if (response === null) return null;
-      return response;
-    })
-    .then((response) => {
-      if (response === null) return null;
-      if (response.status === 404) return null;
-      if (!response.ok) throw new Error(`EDGAR_TICKER_SUMMARY_FAILED:${response.status}`);
-      return response.json() as Promise<EdgarKoreanTickerSummaryManifest>;
+      return fetchJsonOrNull<EdgarKoreanTickerSummaryManifest>(
+        index.byTicker?.[matchedSymbol] ?? edgarTickerManifestUrl(matchedSymbol),
+        { init: { cache: "no-store" } },
+      );
     })
     .then((payload) => {
-      const nextPayload = payload ? { ...payload, filings: Array.isArray(payload.filings) ? payload.filings : [] } : null;
+      if (payload === null) return null;
+      const nextPayload = { ...payload, filings: Array.isArray(payload.filings) ? payload.filings : [] };
       tickerManifestCache[symbol] = nextPayload;
-      delete tickerManifestPending[symbol];
       return nextPayload;
     })
-    .catch(() => {
+    .catch(() => null)
+    .finally(() => {
       delete tickerManifestPending[symbol];
-      return null;
     });
   return tickerManifestPending[symbol];
 }

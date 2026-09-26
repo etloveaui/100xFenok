@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { fetchJsonOrNull } from "@/lib/client/data-fetch";
 import MetricHelp from "@/components/MetricHelp";
 import { Panel, PanelHeader, Stat, StatStrip } from "@/components/ui";
 import {
@@ -80,16 +81,11 @@ type BenchDoc = {
   industries?: Record<string, Omit<IndustryBench, "name">>;
 };
 
-let benchCache: BenchDoc | null = null;
-let benchPending: Promise<BenchDoc | null> | null = null;
 export function loadIndustryBenchmarks(): Promise<BenchDoc | null> {
-  if (benchCache) return Promise.resolve(benchCache);
-  if (benchPending) return benchPending;
-  benchPending = fetch("/data/damodaran/industry_benchmarks.json")
-    .then((r) => (r.ok ? r.json() : null))
-    .then((d) => { benchCache = d; return d; })
-    .catch(() => { benchPending = null; return null; });
-  return benchPending;
+  // Through the shared layer: successes are cached by the layer; a failure is
+  // never cached, so it retries instead of sticking (the old pending promise
+  // used to hold a resolved http-error null for the whole visit).
+  return fetchJsonOrNull<BenchDoc>("/data/damodaran/industry_benchmarks.json");
 }
 
 export function resolveIndustryBench(doc: BenchDoc | null, yfIndustry: string | undefined | null): IndustryBench | null {

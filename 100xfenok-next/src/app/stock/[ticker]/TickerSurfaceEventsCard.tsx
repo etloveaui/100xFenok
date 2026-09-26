@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { normalizeForEntityKey } from "@/lib/ticker";
+import { fetchJsonOrNull } from "@/lib/client/data-fetch";
 
 export type SectionKey = "earnings" | "actions" | "markets" | "etfs" | "ipo" | "industry";
 export type AssetKind = "stock" | "etf";
@@ -35,7 +36,7 @@ const SECTION_LABELS: Record<SectionKey, string> = {
 const SECTION_ORDER: SectionKey[] = ["earnings", "actions", "markets", "etfs", "ipo", "industry"];
 const ETF_SECTION_ORDER: SectionKey[] = ["etfs", "markets", "actions", "industry"];
 
-const surfaceCache: Record<string, TickerSurfacePayload | null> = {};
+const surfaceCache: Record<string, TickerSurfacePayload> = {};
 const surfacePending: Record<string, Promise<TickerSurfacePayload | null>> = {};
 
 export function loadTickerSurfaces(ticker: string, assetKind?: AssetKind): Promise<TickerSurfacePayload | null> {
@@ -46,16 +47,17 @@ export function loadTickerSurfaces(ticker: string, assetKind?: AssetKind): Promi
   if (cacheKey in surfacePending) return surfacePending[cacheKey];
 
   const query = assetKind ? `?asset=${assetKind}` : "";
-  const request = fetch(`/api/data/stockanalysis/ticker/${encodeURIComponent(symbol)}/surfaces/${query}`, { cache: "no-store" })
-    .then((res) => (res.ok ? res.json() as Promise<TickerSurfacePayload> : null))
+  const request = fetchJsonOrNull<TickerSurfacePayload>(
+    `/api/data/stockanalysis/ticker/${encodeURIComponent(symbol)}/surfaces/${query}`,
+    { init: { cache: "no-store" } },
+  )
     .then((payload) => {
-      surfaceCache[cacheKey] = payload;
-      delete surfacePending[cacheKey];
+      // Cache successes only: a failed (or 429) response must not stick.
+      if (payload !== null) surfaceCache[cacheKey] = payload;
       return payload;
     })
-    .catch(() => {
+    .finally(() => {
       delete surfacePending[cacheKey];
-      return null;
     });
 
   surfacePending[cacheKey] = request;

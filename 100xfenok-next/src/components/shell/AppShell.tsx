@@ -19,6 +19,7 @@ import AppShellFreshnessPill from "@/components/shell/AppShellFreshnessPill";
 import UserAuthPill from "@/components/shell/UserAuthPill";
 import AdoptStorePrompt from "@/components/personal/AdoptStorePrompt";
 import { useUserHeartbeat } from "@/lib/auth/clientAuth";
+import { fetchJsonOrNull } from "@/lib/client/data-fetch";
 import {
   CHART_NAV_LABEL,
   CHART_ROUTE,
@@ -328,33 +329,29 @@ interface TapeItem {
   pct: number;
 }
 
-let tapeCache: TapeItem[] | null = null;
-let tapePending: Promise<TapeItem[]> | null = null;
-// indices YTD from the already-cached benchmarks file — no extra API surface
+type TapeBenchDoc = { momentum?: Record<string, { ytd?: number } | undefined> };
+
+// indices YTD from the already-cached benchmarks file — no extra API surface.
+// Through the shared layer: a failure is never cached, so an empty tape
+// retries (the shell calls again on the next route change) instead of
+// sticking for the whole visit.
 function loadTape(): Promise<TapeItem[]> {
-  if (tapeCache) return Promise.resolve(tapeCache);
-  if (tapePending) return tapePending;
-  tapePending = fetch("/data/benchmarks/summaries.json")
-    .then((r) => (r.ok ? r.json() : null))
-    .catch(() => null)
-    .then((bench) => {
-      const items: TapeItem[] = [];
-      const labels: Array<[string, string]> = [
-        ["sp500", "S&P 500"],
-        ["nasdaq100", "나스닥 100"],
-        ["russell2000", "러셀 2000"],
-        ["kospi", "코스피"],
-        ["nikkei", "니케이"],
-        ["emerging", "신흥국"],
-      ];
-      for (const [key, label] of labels) {
-        const v = bench?.momentum?.[key]?.ytd;
-        if (typeof v === "number") items.push({ label, price: null, pct: v * 100 });
-      }
-      tapeCache = items;
-      return items;
-    });
-  return tapePending;
+  return fetchJsonOrNull<TapeBenchDoc>("/data/benchmarks/summaries.json").then((bench) => {
+    const items: TapeItem[] = [];
+    const labels: Array<[string, string]> = [
+      ["sp500", "S&P 500"],
+      ["nasdaq100", "나스닥 100"],
+      ["russell2000", "러셀 2000"],
+      ["kospi", "코스피"],
+      ["nikkei", "니케이"],
+      ["emerging", "신흥국"],
+    ];
+    for (const [key, label] of labels) {
+      const v = bench?.momentum?.[key]?.ytd;
+      if (typeof v === "number") items.push({ label, price: null, pct: v * 100 });
+    }
+    return items;
+  });
 }
 
 function marketStatusKST(): { dot: string; text: string } {
@@ -399,16 +396,24 @@ function SearchIcon() {
 // renders no strip at all once the load settles empty, so the reserved band
 // height never outlives its content. Until the first result the space stays
 // reserved, which keeps the common case free of layout shift.
-function useTape(): { items: TapeItem[]; settled: boolean } {
+function useTape(pathname: string): { items: TapeItem[]; settled: boolean } {
   const [tape, setTape] = useState<{ items: TapeItem[]; settled: boolean }>({ items: [], settled: false });
+  const loadedRef = useRef(false);
   useEffect(() => {
+    // A loaded tape stays; a settled-empty tape retries on the next route
+    // change. The shared layer never caches failures, so the retry is real.
+    if (loadedRef.current) return;
     let cancelled = false;
-    const settle = (items: TapeItem[]) => { if (!cancelled) setTape({ items, settled: true }); };
+    const settle = (items: TapeItem[]) => {
+      if (cancelled) return;
+      if (items.length > 0) loadedRef.current = true;
+      setTape({ items, settled: true });
+    };
     loadTape().then(settle).catch(() => settle([]));
     return () => {
       cancelled = true;
     };
-  }, []);
+  }, [pathname]);
   return tape;
 }
 
@@ -488,7 +493,7 @@ function ShellChrome({
   const navActive: ShellPage | null = active && NAV.some((item) => item.id === active) ? active : null;
   const activeTab: MobileTabId | null = navActive ? TAB_FOR_PAGE[navActive] ?? "more" : null;
   const paletteShortcut = useSyncExternalStore(subscribeNever, macShortcutLabel, () => "⌘K");
-  const tape = useTape();
+  const tape = useTape(pathname);
   const tickerVisible = tape.items.length > 0;
   // Only a settled empty tape releases the reserved band height.
   const tickerOff = tape.settled && !tickerVisible;

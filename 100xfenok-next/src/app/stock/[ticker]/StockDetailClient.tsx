@@ -57,6 +57,7 @@ import {
   type SharedValuationBand,
 } from "@/app/screener/StockDetailPanel";
 import { Panel, PanelHeader, Row, Stat, StatStrip, Bar, EvidenceRail, Pill, EmptyState, Skeleton, useDelayedLoading } from "@/components/ui";
+import { fetchJsonOrNull } from "@/lib/client/data-fetch";
 import {
   edgeAxisSpokeLabel,
 } from "@/lib/fenok-signals/edge-axis-labels.mjs";
@@ -292,24 +293,19 @@ function loadStockanalysisFinancials(ticker: string): Promise<StockanalysisFinan
 type TradesCache = { bought: any[]; sold: any[]; metadata: any };
 type SmartMoneyTrade = any & { action: "buy" | "sell" };
 
-let tradesCache: TradesCache | null = null;
-let tradesPromise: Promise<TradesCache | null> | null = null;
+type TradesRankingDoc = { bought?: unknown; sold?: unknown; metadata?: unknown };
 
 function loadTradesRanking(): Promise<TradesCache | null> {
-  if (tradesCache) return Promise.resolve(tradesCache);
-  if (tradesPromise) return tradesPromise;
-  tradesPromise = fetch("/data/sec-13f/analytics/trades_ranking.json")
-    .then((res) => (res.ok ? res.json() : null))
-    .then((data) => {
-      tradesCache = {
-        bought: Array.isArray(data?.bought) ? data.bought : [],
-        sold: Array.isArray(data?.sold) ? data.sold : [],
-        metadata: data?.metadata ?? null,
-      };
-      return tradesCache;
-    })
-    .catch(() => { tradesPromise = null; return null; });
-  return tradesPromise;
+  // Through the shared layer: a failure is never cached, so the next call
+  // retries instead of sticking empty for the whole visit.
+  return fetchJsonOrNull<TradesRankingDoc>("/data/sec-13f/analytics/trades_ranking.json").then((data) => {
+    if (data === null) return null;
+    return {
+      bought: Array.isArray(data.bought) ? data.bought : [],
+      sold: Array.isArray(data.sold) ? data.sold : [],
+      metadata: data.metadata ?? null,
+    };
+  });
 }
 
 // ---------------------------------------------------------------------------
@@ -317,29 +313,22 @@ function loadTradesRanking(): Promise<TradesCache | null> {
 // SuperinvestorsClient uses: /data/sec-13f/summary.json investors[].name)
 // ---------------------------------------------------------------------------
 
-let summaryNamesCache: Record<string, string> | null = null;
-let summaryNamesPromise: Promise<Record<string, string> | null> | null = null;
+type SummaryNamesDoc = { investors?: Record<string, { name?: unknown }> };
 
 function load13FSummaryNames(): Promise<Record<string, string> | null> {
-  if (summaryNamesCache) return Promise.resolve(summaryNamesCache);
-  if (summaryNamesPromise) return summaryNamesPromise;
-  summaryNamesPromise = fetch("/data/sec-13f/summary.json")
-    .then((res) => (res.ok ? res.json() : null))
-    .then((data) => {
-      const investors = data && typeof data === "object" && !Array.isArray(data)
-        ? (data as { investors?: Record<string, { name?: unknown }> }).investors
-        : null;
-      const names: Record<string, string> = {};
-      if (investors && typeof investors === "object") {
-        for (const [id, profile] of Object.entries(investors)) {
-          if (typeof profile?.name === "string" && profile.name.trim() !== "") names[id] = profile.name;
-        }
+  // Through the shared layer: a failure is never cached, so names reappear on
+  // the next call instead of sticking as an empty map for the whole visit.
+  return fetchJsonOrNull<SummaryNamesDoc>("/data/sec-13f/summary.json").then((data) => {
+    if (data === null) return null;
+    const investors = typeof data === "object" && !Array.isArray(data) ? data.investors : null;
+    const names: Record<string, string> = {};
+    if (investors && typeof investors === "object") {
+      for (const [id, profile] of Object.entries(investors)) {
+        if (typeof profile?.name === "string" && profile.name.trim() !== "") names[id] = profile.name;
       }
-      summaryNamesCache = names;
-      return names;
-    })
-    .catch(() => { summaryNamesPromise = null; return null; });
-  return summaryNamesPromise;
+    }
+    return names;
+  });
 }
 
 // ---------------------------------------------------------------------------
