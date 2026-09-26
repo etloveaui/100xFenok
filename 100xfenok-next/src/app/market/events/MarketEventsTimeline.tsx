@@ -279,7 +279,8 @@ function laneEvents(lane: TimelineLaneDef, doc: TimelineDoc | null | undefined, 
         weight: count,
       });
     }
-    return shown.sort((a, b) => a.date.localeCompare(b.date) || a.symbol.localeCompare(b.symbol));
+    // By date only: the sort is stable, so a day's "+N건" chip stays after its symbols.
+    return shown.sort((a, b) => a.date.localeCompare(b.date));
   }
   return events
     .sort((a, b) => a.date.localeCompare(b.date) || a.symbol.localeCompare(b.symbol))
