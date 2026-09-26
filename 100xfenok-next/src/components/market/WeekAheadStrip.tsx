@@ -77,6 +77,8 @@ export default function WeekAheadStrip() {
   // no rows, which must not read as a quiet week.
   const coverageEnd = state.calendar?.coverageEnd ?? null;
   const uncoveredFrom = coverageEnd !== null && coverageEnd < horizonEnd ? coverageEnd : null;
+  // A mirror without a usable range.time_max does not say how far it reaches.
+  const coverageUnknown = state.calendar !== null && coverageEnd === null;
 
   const groups = useMemo(() => {
     if (!state.calendar) return [];
@@ -96,7 +98,9 @@ export default function WeekAheadStrip() {
     ? uncoveredFrom <= today
       ? "캘린더 수록 기간이 지났습니다"
       : `${formatKstDayHeading(uncoveredFrom)}부터 미수록`
-    : null;
+    : coverageUnknown
+      ? "수록 범위 미확인"
+      : null;
   // A month-old mirror may list releases that have since moved, or miss new
   // ones, so the strip says how old it is, as the full calendar's rail does.
   const generatedDay = dateOnly(state.calendar?.generatedAt ?? null);
@@ -115,7 +119,9 @@ export default function WeekAheadStrip() {
           ? "캘린더 수록 기간이 지나 일정을 확인할 수 없습니다"
           : uncoveredFrom
             ? `${formatKstDayHeading(uncoveredFrom)} 전까지 주요 미국 지표·연준 일정이 없습니다`
-            : "7일 안에 주요 미국 지표·연준 일정이 없습니다";
+            : coverageUnknown
+              ? "캘린더 수록 범위를 확인할 수 없습니다"
+              : "7일 안에 주요 미국 지표·연준 일정이 없습니다";
 
   return (
     <TransitionLink
