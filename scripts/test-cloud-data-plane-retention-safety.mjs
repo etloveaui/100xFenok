@@ -753,6 +753,15 @@ try {
       });
       const future = Math.floor(Date.now() / 1000) + 600;
 
+      // A fresh usage measurement may take longer than a minute, but remains
+      // bounded by the apply deadline and a five-minute cap. Failure precedes scan.
+      const gateBlocked = await applyBatch({planPath,deadlineEpochSeconds:future,
+        deps:{s3:{async listAllObjects(){throw new Error('scan must not run');}},runCostGateImpl:async options=>{
+          assert.equal(options.timeoutMs,300000);return {code:3,stderr:'measurement timeout'};
+        }},io:{error:()=>{}}});
+      assert.equal(gateBlocked.reason,'gate_blocked');
+      assert.equal(gateBlocked.detail.measurement_reason,'measurement timeout');
+
       // (a) insufficient deadline → aborted, zero delete calls.
       let stub = makeStub(() => ({ deleted: [], errors: [], unknown: [] }));
       const abortedA = await applyBatch({

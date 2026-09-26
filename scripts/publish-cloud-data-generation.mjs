@@ -2440,7 +2440,7 @@ export function runCostGate({ planClassA, planClassB, planBytes, env, timeoutMs 
         resolve({
           code: GATE_MEASUREMENT_UNVERIFIED_EXIT,
           stdout,
-          stderr: `${stderrText}\ncost gate timed out after ${GATE_TIMEOUT_MS}ms and was killed`.trim(),
+          stderr: `${stderrText}\ncost gate timed out after ${Math.min(GATE_TIMEOUT_MS, timeoutMs)}ms and was killed`.trim(),
         });
         return;
       }

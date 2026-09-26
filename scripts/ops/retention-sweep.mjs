@@ -405,8 +405,8 @@ export async function applyBatch({
   }
 
   const runCostGateImpl = deps.runCostGateImpl ?? runCostGate;
-  const gate = await runCostGateImpl({planClassA: 400, planClassB: 600, planBytes: 0, env, timeoutMs: Math.max(1, Math.min(60_000, deadline - now() - MIN_APPLY_MS))});
-  if (gate.code !== 0 && gate.code !== 1) return abortReport("gate_blocked", {gate_exit: gate.code});
+  const gate = await runCostGateImpl({planClassA: 400, planClassB: 600, planBytes: 0, env, timeoutMs: Math.max(1, Math.min(300_000, deadline - now() - MIN_APPLY_MS))});
+  if (gate.code !== 0 && gate.code !== 1) return abortReport("gate_blocked", {gate_exit: gate.code, measurement_reason: String(gate.stderr ?? "").slice(0, 500)});
   let s3;
   try {
     s3 = deps.s3 ?? await createR2S3ClientFromExistingToken({ env, timeoutMs: Math.max(1, Math.min(30_000, deadline - now())) });
