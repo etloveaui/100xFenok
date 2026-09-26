@@ -1,8 +1,8 @@
 {
   "schema_version": "alarm-state/v1",
-  "generated_at": "2026-09-26T19:57:29.101Z",
+  "generated_at": "2026-09-26T22:59:00.992Z",
   "status": "open",
-  "open_incident_count": 15,
+  "open_incident_count": 14,
   "open_incidents": [
     {
       "workflow": "fenok-edge-krx-daily.yml",
@@ -130,21 +130,6 @@
       ],
       "lost_schedule_slot_count": 0,
       "cadence_status": "not_due"
-    },
-    {
-      "workflow": "fetch-treasury-tga.yml",
-      "label": "Fetch Treasury TGA Data",
-      "streak": 0,
-      "failure_streak_threshold": 2,
-      "first_failing_run_id": null,
-      "first_failing_run_url": null,
-      "alarm_reasons": [
-        "plane_freshness_unavailable",
-        "unrecovered_overdue"
-      ],
-      "lane_outcome_lanes": [],
-      "lost_schedule_slot_count": 0,
-      "cadence_status": "overdue"
     },
     {
       "workflow": "slickcharts-daily.yml",
@@ -495,7 +480,7 @@
       "cadence_status": "not_due",
       "cadence_evidence": [],
       "data_freshness_state": "healthy",
-      "data_freshness_age_hours_at_generation": 17
+      "data_freshness_age_hours_at_generation": 21
     },
     {
       "file": "fetch-treasury-tga.yml",
@@ -505,10 +490,8 @@
       ],
       "event": "schedule",
       "failure_streak_threshold": 2,
-      "cadence_status": "overdue",
-      "cadence_evidence": [
-        "suspected_skip"
-      ]
+      "cadence_status": "not_due",
+      "cadence_evidence": []
     },
     {
       "file": "fetch-us-indices-daily.yml",
@@ -678,8 +661,8 @@
     }
   ],
   "cadence_state_counts": {
-    "not_due": 25,
-    "overdue": 1,
+    "not_due": 26,
+    "overdue": 0,
     "recovered": 0,
     "no_declaration": 11,
     "unknown": 0
@@ -695,9 +678,9 @@
   "queue_evicted_run_count": 0,
   "queue_evicted_workflows": [],
   "last_firing": {
-    "run_id": "36267673756",
-    "run_url": "https://github.com/etloveaui/100xFenok/actions/runs/36267673756",
-    "observed_at": "2026-09-26T19:57:29.101Z",
+    "run_id": "36277865968",
+    "run_url": "https://github.com/etloveaui/100xFenok/actions/runs/36277865968",
+    "observed_at": "2026-09-26T22:59:00.992Z",
     "event": "schedule",
     "workflows": [
       "fenok-edge-krx-daily.yml",
@@ -708,7 +691,6 @@
       "fetch-fred-macro.yml",
       "fetch-oecd-cli.yml",
       "fetch-stockanalysis.yml",
-      "fetch-treasury-tga.yml",
       "slickcharts-daily.yml",
       "slickcharts-history.yml",
       "slickcharts-monthly.yml",
