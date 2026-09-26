@@ -3352,7 +3352,7 @@ export default function StockDetailClient({
         {activeStockTab === "financials" && <EarningsOverview ticker={symbol} />}
         {yfAvailable ? (
           <section className="panel stock-tab-panel">
-            <div className="panel-b">{renderYfTab(activeStockTab, yfData, industryBench)}</div>
+            <div className="panel-b">{renderYfTab(activeStockTab, yfData, industryBench, displayPrice)}</div>
           </section>
         ) : null}
         {showTabSkeleton ? (
@@ -3663,7 +3663,7 @@ export default function StockDetailClient({
                 {yfAvailable ? (
                   <div>
                     <h3 className="cp-stock-tab-card__subheading">Yahoo Finance 애널리스트 추정치 상세</h3>
-                    {renderYfTab("estimates", yfData, industryBench)}
+                    {renderYfTab("estimates", yfData, industryBench, displayPrice)}
                   </div>
                 ) : null}
               </div>
