@@ -270,10 +270,12 @@ function lastRevisionRefreshMs(nowMs: number): number {
   return refresh;
 }
 
+function nextRevisionRefreshMs(nowMs: number): number {
+  return lastRevisionRefreshMs(nowMs) + 7 * 86400 * 1000;
+}
+
 function nextRevisionRefreshLabel(nowMs: number): string {
-  const last = lastRevisionRefreshMs(nowMs);
-  const next = last > nowMs ? last : last + 7 * 86400 * 1000;
-  const kst = new Date(next + 9 * 3600 * 1000);
+  const kst = new Date(nextRevisionRefreshMs(nowMs) + 9 * 3600 * 1000);
   const mm = String(kst.getUTCMonth() + 1).padStart(2, "0");
   const dd = String(kst.getUTCDate()).padStart(2, "0");
   return `${mm}-${dd} 08:00 리비전 갱신 후 자동 생성`;
@@ -302,6 +304,7 @@ export default function ChangesClient() {
   // derived instead of reset by a synchronous setState inside the effect.
   const [loadedKey, setLoadedKey] = useState<number | null>(null);
   const [feedsFetchedAtMs, setFeedsFetchedAtMs] = useState<number | null>(null);
+  const [refreshTickMs, setRefreshTickMs] = useState<number | null>(null);
   const [retryKey, setRetryKey] = useState(0);
   // Refetch failure signal: kept separately from the docs so a failed refetch
   // that preserves last-known-good still flags partial/stale, never fresh.
@@ -354,11 +357,20 @@ export default function ChangesClient() {
 
   const revAsOf = useMemo(() => revisionAsOf(revisionDoc), [revisionDoc]);
   const quarter = useMemo(() => tradesQuarter(tradesDoc), [tradesDoc]);
-  // Schedule judgments use the moment the feeds arrived, not render time, so a
-  // re-render never flips the overdue state or the next-refresh label on its own.
+  // Schedule judgments run on a clock that starts when the feeds arrive and
+  // ticks at each Friday 08:00 KST refresh, not on render time: a re-render
+  // never flips the overdue state on its own, and a page left open across the
+  // refresh re-judges freshness and moves the next-refresh label.
+  const scheduleNowMs = feedsFetchedAtMs === null ? null : Math.max(feedsFetchedAtMs, refreshTickMs ?? 0);
+  useEffect(() => {
+    if (scheduleNowMs === null) return;
+    const delayMs = Math.max(0, nextRevisionRefreshMs(scheduleNowMs) - Date.now()) + 1000;
+    const timer = window.setTimeout(() => setRefreshTickMs(Date.now()), delayMs);
+    return () => window.clearTimeout(timer);
+  }, [scheduleNowMs]);
   const nextDiffLabel = useMemo(
-    () => (feedsFetchedAtMs === null ? undefined : nextRevisionRefreshLabel(feedsFetchedAtMs)),
-    [feedsFetchedAtMs],
+    () => (scheduleNowMs === null ? undefined : nextRevisionRefreshLabel(scheduleNowMs)),
+    [scheduleNowMs],
   );
 
   // Persist this visit as next visit's baseline once everything settles with
@@ -453,13 +465,13 @@ export default function ChangesClient() {
   const anyFeedMissing = revMissing || holdersMissing;
   const allMissing = revMissing && holdersMissing;
   const revOverdue = useMemo(() => {
-    if (!isRecord(revisionDoc) || feedsFetchedAtMs === null) return false;
-    const lastRefreshMs = lastRevisionRefreshMs(feedsFetchedAtMs);
+    if (!isRecord(revisionDoc) || scheduleNowMs === null) return false;
+    const lastRefreshMs = lastRevisionRefreshMs(scheduleNowMs);
     const stamp = asString(revisionDoc.generated_at);
     const ms = stamp ? Date.parse(stamp) : NaN;
     if (!Number.isFinite(ms)) return revAsOf !== null && revAsOf < new Date(lastRefreshMs).toISOString().slice(0, 10);
     return ms < lastRefreshMs;
-  }, [revisionDoc, revAsOf, feedsFetchedAtMs]);
+  }, [revisionDoc, revAsOf, scheduleNowMs]);
 
   const mainFreshness: EvidenceRailFreshness = !settled
     ? "pending"
