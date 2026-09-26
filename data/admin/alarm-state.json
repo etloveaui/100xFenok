@@ -1,6 +1,6 @@
 {
   "schema_version": "alarm-state/v1",
-  "generated_at": "2026-09-26T05:32:56.397Z",
+  "generated_at": "2026-09-26T07:27:19.704Z",
   "status": "open",
   "open_incident_count": 16,
   "open_incidents": [
@@ -226,7 +226,7 @@
     {
       "workflow": "validate-workflows.yml",
       "label": "Validate GitHub Workflows",
-      "streak": 6,
+      "streak": 7,
       "failure_streak_threshold": 2,
       "first_failing_run_id": 36123235463,
       "first_failing_run_url": "https://github.com/etloveaui/100xFenok/actions/runs/36123235463",
@@ -506,7 +506,7 @@
       "cadence_status": "not_due",
       "cadence_evidence": [],
       "data_freshness_state": "healthy",
-      "data_freshness_age_hours_at_generation": 3
+      "data_freshness_age_hours_at_generation": 5
     },
     {
       "file": "fetch-treasury-tga.yml",
@@ -566,6 +566,17 @@
     {
       "file": "pins-autosync.yml",
       "label": "Pins Autosync",
+      "events": [
+        "schedule"
+      ],
+      "event": "schedule",
+      "failure_streak_threshold": 2,
+      "cadence_status": "no_declaration",
+      "cadence_evidence": []
+    },
+    {
+      "file": "retention-restore.yml",
+      "label": "R2 Retention Restore Watchdog",
       "events": [
         "schedule"
       ],
@@ -668,7 +679,7 @@
     "not_due": 26,
     "overdue": 0,
     "recovered": 0,
-    "no_declaration": 9,
+    "no_declaration": 10,
     "unknown": 0
   },
   "excluded_workflows": [
@@ -678,13 +689,18 @@
       "reason": "self-monitoring would create a recursive alarm loop"
     }
   ],
-  "unknown_workflows": [],
+  "unknown_workflows": [
+    {
+      "workflow": "retention-restore.yml",
+      "status": "unknown"
+    }
+  ],
   "queue_evicted_run_count": 0,
   "queue_evicted_workflows": [],
   "last_firing": {
-    "run_id": "36220983871",
-    "run_url": "https://github.com/etloveaui/100xFenok/actions/runs/36220983871",
-    "observed_at": "2026-09-26T05:32:56.397Z",
+    "run_id": "36226686787",
+    "run_url": "https://github.com/etloveaui/100xFenok/actions/runs/36226686787",
+    "observed_at": "2026-09-26T07:27:19.704Z",
     "event": "workflow_run",
     "workflows": [
       "build-stocks-analyzer.yml",
