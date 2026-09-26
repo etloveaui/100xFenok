@@ -23,11 +23,12 @@ export default function StockConnectionsRail({ ticker }: { ticker: string }) {
   const [services, setServices] = useState<StockServicesEntry | null>(null);
 
   useEffect(() => {
+    // No abort on cleanup: both loaders share one in-flight request across
+    // every caller, so aborting it here would hand the next rail a null index.
     let cancelled = false;
-    const controller = new AbortController();
     Promise.all([
-      loadStockConnectionIndex(controller.signal),
-      loadStockServicesIndex(controller.signal),
+      loadStockConnectionIndex(),
+      loadStockServicesIndex(),
     ]).then(([stockIndex, servicesIndex]) => {
       if (cancelled) return;
       setEntry(getStockConnection(stockIndex, ticker));
@@ -39,7 +40,6 @@ export default function StockConnectionsRail({ ticker }: { ticker: string }) {
     });
     return () => {
       cancelled = true;
-      controller.abort();
     };
   }, [ticker]);
 
