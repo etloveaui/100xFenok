@@ -47,6 +47,18 @@ const viewports = requestedViewports
   .map((name) => ({ name, viewport: viewportCatalog[name] }))
   .filter((entry) => entry.viewport);
 
+// check-route-iframe-contract reads the same variable as a Cookie header
+// ("fenok_admin_session=<value>"); accept that form as well as a bare value.
+const adminSessionCookie = (process.env.QA_ADMIN_SESSION_COOKIE || "")
+  .trim()
+  .replace(/^fenok_admin_session=/, "")
+  .split(";")[0]
+  .trim();
+const adminSessionAvailable = adminSessionCookie.length > 0;
+console.log(
+  `[check-mobile-ux-contract] admin data-lab mode: ${adminSessionAvailable ? "session" : "anonymous"}`,
+);
+
 function routeUrl(route) {
   return new URL(route, baseUrl).toString();
 }
@@ -225,7 +237,7 @@ async function captureBoundedScreenshots(page, route, viewportName, routeIndex) 
 }
 
 async function collectRouteChecks(page, route) {
-  return page.evaluate((currentRoute) => {
+  return page.evaluate(({ currentRoute, adminSessionAvailable }) => {
     const failures = [];
     const viewportWidth = window.innerWidth;
     const scrollWidth = Math.max(
@@ -1216,7 +1228,7 @@ async function collectRouteChecks(page, route) {
       }
     }
 
-    if (new URL(currentRoute, window.location.origin).pathname === "/admin/data-lab") {
+    if (new URL(currentRoute, window.location.origin).pathname === "/admin/data-lab" && adminSessionAvailable) {
       const surface = document.querySelector("[data-admin-data-lab-surface]");
       const owner = document.querySelector("[data-admin-data-lab-route-owner]");
       const boundary = document.querySelector("[data-admin-data-lab-boundary]");
@@ -1292,6 +1304,22 @@ async function collectRouteChecks(page, route) {
       }
       if (tabbar) {
         failures.push({ check: "admin-data-lab-admin-shell", detail: "admin route should not render product mobile tabbar" });
+      }
+    }
+
+    if (new URL(currentRoute, window.location.origin).pathname === "/admin/data-lab" && !adminSessionAvailable) {
+      const gateForm = document.querySelector("#admin-auth-input");
+      const gateLoading = (document.body.textContent || "").includes("관리자 세션을 확인하는 중입니다");
+      const surface = document.querySelector("[data-admin-data-lab-surface]");
+      const legacyFrame = document.querySelector("[data-admin-data-lab-legacy-frame] iframe");
+      if (!gateForm && !gateLoading) {
+        failures.push({ check: "admin-data-lab-gated-anonymous", detail: "admin access gate missing without a session" });
+      }
+      if (surface) {
+        failures.push({ check: "admin-data-lab-gated-anonymous", detail: "admin data lab surface rendered without a session" });
+      }
+      if (legacyFrame) {
+        failures.push({ check: "admin-data-lab-gated-anonymous", detail: "legacy admin iframe rendered without a session" });
       }
     }
 
@@ -1569,6 +1597,7 @@ async function collectRouteChecks(page, route) {
       const radarPath = radarUrl.pathname.replace(/\/+$/, "") || "/";
       if (radarPath === "/radar") {
         const normalizePath = (path) => (path && path !== "/" ? path.replace(/\/+$/, "") : path);
+        const hasDetailPath = Boolean(radarUrl.searchParams.get("path"));
         const surface = document.querySelector("[data-radar-surface]");
         const owner = document.querySelector("[data-radar-route-owner]");
         const boundary = document.querySelector("[data-radar-boundary]");
@@ -1600,15 +1629,16 @@ async function collectRouteChecks(page, route) {
             detail: `owner=${owner?.getAttribute("data-radar-route-owner") || "missing"}`,
           });
         }
-        if (!boundary || boundary.getBoundingClientRect().height <= 0 || !(boundary.textContent || "").includes("Market Radar")) {
+        if (!hasDetailPath && (!boundary || boundary.getBoundingClientRect().height <= 0 || !(boundary.textContent || "").includes("Market Radar"))) {
           failures.push({ check: "radar-boundary-visible", detail: "missing visible radar boundary" });
         }
 
         const expectedChips = ["liquidity-trio", "sentiment-single", "detail-pages"];
         const actualChips = chips.map((node) => node.getAttribute("data-radar-boundary-chip"));
         if (
-          chips.length !== expectedChips.length ||
-          !expectedChips.every((chip, index) => actualChips[index] === chip)
+          !hasDetailPath &&
+          (chips.length !== expectedChips.length ||
+            !expectedChips.every((chip, index) => actualChips[index] === chip))
         ) {
           failures.push({
             check: "radar-boundary-chip-order",
@@ -1625,8 +1655,9 @@ async function collectRouteChecks(page, route) {
         const expectedOwnerLinks = ["/macro-chart", "/market/events", "/market-valuation"];
         const actualOwnerLinks = ownerLinks.map((node) => normalizePath(new URL(node.href, window.location.origin).pathname));
         if (
-          ownerLinks.length !== expectedOwnerLinks.length ||
-          !expectedOwnerLinks.every((link, index) => actualOwnerLinks[index] === link)
+          !hasDetailPath &&
+          (ownerLinks.length !== expectedOwnerLinks.length ||
+            !expectedOwnerLinks.every((link, index) => actualOwnerLinks[index] === link))
         ) {
           failures.push({
             check: "radar-owner-link-order",
@@ -1650,8 +1681,9 @@ async function collectRouteChecks(page, route) {
           return `${normalizePath(url.pathname)}${url.search}`;
         });
         if (
-          categoryLinks.length !== expectedCategoryLinks.length ||
-          !expectedCategoryLinks.every((link, index) => actualCategoryLinks[index] === link)
+          !hasDetailPath &&
+          (categoryLinks.length !== expectedCategoryLinks.length ||
+            !expectedCategoryLinks.every((link, index) => actualCategoryLinks[index] === link))
         ) {
           failures.push({
             check: "radar-category-link-order",
@@ -1665,7 +1697,6 @@ async function collectRouteChecks(page, route) {
           }
         });
 
-        const hasDetailPath = Boolean(radarUrl.searchParams.get("path"));
         const frameSrc = legacyFrame instanceof HTMLIFrameElement
           ? new URL(legacyFrame.src, window.location.origin)
           : null;
@@ -1676,6 +1707,20 @@ async function collectRouteChecks(page, route) {
               check: "radar-legacy-frame-src",
               detail: `src=${legacyFrame instanceof HTMLIFrameElement ? legacyFrame.src : "missing"} expected=${expectedFramePath}`,
             });
+          }
+          const backLink = document.querySelector("[data-radar-detail-back-link]");
+          if (!backLink || backLink.getBoundingClientRect().height <= 0) {
+            failures.push({ check: "radar-detail-back-link-visible", detail: "missing visible radar detail back link" });
+          } else {
+            const backHref = backLink instanceof HTMLAnchorElement ? new URL(backLink.href, window.location.origin) : null;
+            const backPath = backHref ? normalizePath(backHref.pathname) : null;
+            if (backPath !== "/radar") {
+              failures.push({ check: "radar-detail-back-link-href", detail: `href=${backLink.getAttribute("href")}` });
+            }
+            const backRect = backLink.getBoundingClientRect();
+            if (backRect.height < 44) {
+              failures.push({ check: "radar-detail-back-link-target", detail: `height=${Math.round(backRect.height)}` });
+            }
           }
         } else {
           if (legacyFrame) {
@@ -3524,7 +3569,7 @@ async function collectRouteChecks(page, route) {
       scrollWidth,
       failures,
     };
-  }, route);
+  }, { currentRoute: route, adminSessionAvailable });
 }
 
 async function collectCohortPaintProbe(page) {
@@ -4487,7 +4532,13 @@ try {
     const context = await browser.newContext(contextOptionsFor(viewport));
     // The closed-site "intro" gate redirects cookie-less visitors to /intro;
     // the browse cookie keeps QA on the public pages, as in the live-integrity check.
-    await context.addCookies([{ name: "fx_browse", value: "1", url: new URL(baseUrl).origin }]);
+    const qaCookies = [{ name: "fx_browse", value: "1", url: new URL(baseUrl).origin }];
+    if (adminSessionCookie) {
+      // A session cookie turns /admin/data-lab into its six surface assertions;
+      // without it the checker asserts the anonymous access gate instead.
+      qaCookies.push({ name: "fenok_admin_session", value: adminSessionCookie, url: new URL(baseUrl).origin });
+    }
+    await context.addCookies(qaCookies);
     if (isolated) {
       await context.route("**/*", async (requestRoute) => {
         const url = new URL(requestRoute.request().url());

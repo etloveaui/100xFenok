@@ -77,6 +77,15 @@ export default async function RadarPage({ searchParams }: PageProps) {
           className="min-h-screen px-3 py-4 sm:px-4 md:px-6"
           style={{ backgroundColor: "var(--c-surface-2)" }}
         >
+          <div className="mb-3">
+            <Link
+              href={ROUTES.radar}
+              data-radar-detail-back-link
+              className="inline-flex min-h-[44px] items-center justify-center rounded-lg border border-slate-200 bg-white px-3 text-sm font-bold text-slate-700 shadow-sm transition hover:border-blue-300 hover:text-blue-700"
+            >
+              ← Market Radar
+            </Link>
+          </div>
           <div data-radar-legacy-frame>
             {frame}
           </div>
