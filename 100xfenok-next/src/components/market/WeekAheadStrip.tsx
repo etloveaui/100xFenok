@@ -96,23 +96,30 @@ export default function WeekAheadStrip() {
       ? "캘린더 수록 기간이 지났습니다"
       : `${formatKstDayHeading(uncoveredFrom)}부터 미수록`
     : null;
+  // What the strip says in place of chips; the link's accessible name carries
+  // it too, since an aria-label replaces the visible text for screen readers.
+  const status = !state.loaded
+    ? "일정 확인 중"
+    : !state.calendar
+      ? "캘린더를 읽지 못했습니다"
+      : groups.length > 0
+        ? null
+        : uncoveredFrom && uncoveredFrom <= today
+          ? "캘린더 수록 기간이 지나 일정을 확인할 수 없습니다"
+          : uncoveredFrom
+            ? `${formatKstDayHeading(uncoveredFrom)} 전까지 주요 미국 지표·연준 일정이 없습니다`
+            : "7일 안에 주요 미국 지표·연준 일정이 없습니다";
 
   return (
     <TransitionLink
       href={ROUTES.marketEvents}
       data-home-week-ahead
-      aria-label={[summary ? `이번 주 주요 일정: ${summary}` : null, coverageNote, "경제 일정 전체 보기"].filter(Boolean).join(". ")}
+      aria-label={[summary ? `이번 주 주요 일정: ${summary}` : `이번 주 일정: ${status}`, summary ? coverageNote : null, "경제 일정 전체 보기"].filter(Boolean).join(". ")}
       className="group flex min-h-11 items-center gap-2 overflow-x-auto whitespace-nowrap rounded-[8px] text-[12px] [scrollbar-width:none] md:min-h-8 [&::-webkit-scrollbar]:hidden"
     >
       <span className="shrink-0 font-semibold text-[var(--c-ink-2)]">이번 주 일정</span>
-      {!state.loaded ? (
-        <span className="shrink-0 text-[var(--c-ink-4)]">일정 확인 중</span>
-      ) : !state.calendar ? (
-        <span className="shrink-0 text-[var(--c-ink-4)]">캘린더를 읽지 못했습니다</span>
-      ) : groups.length === 0 ? (
-        <span className="shrink-0 text-[var(--c-ink-4)]">
-          {uncoveredFrom && uncoveredFrom <= today ? "캘린더 수록 기간이 지나 일정을 확인할 수 없습니다" : uncoveredFrom ? `${formatKstDayHeading(uncoveredFrom)} 전까지 주요 미국 지표·연준 일정이 없습니다` : "7일 안에 주요 미국 지표·연준 일정이 없습니다"}
-        </span>
+      {status !== null ? (
+        <span className="shrink-0 text-[var(--c-ink-4)]">{status}</span>
       ) : (
         groups.map(([day, events]) => (
           <span
