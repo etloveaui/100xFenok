@@ -34,6 +34,11 @@ test("EPS is formatted in the listing currency", () => {
   assert.equal(listingCurrency("126340.KQ"), "KRW");
   assert.equal(listingCurrency("0700.hk"), "HKD");
   assert.equal(listingCurrency("GILD"), "USD");
+  assert.equal(listingCurrency("BMW.DE"), "EUR");
+  assert.equal(listingCurrency("MC.PA"), "EUR");
+  assert.equal(listingCurrency("2454.TW"), "TWD");
+  assert.equal(listingCurrency("BRK.B"), "USD");
+  assert.equal(formatEps(9.51, "BMW.DE"), "€9.51");
   assert.equal(formatEps(-2454, "126340.KQ"), "-₩2,454");
   assert.equal(formatEps(-0.44, "GILD"), "-$0.44");
   assert.equal(formatEps(null, "GILD"), "—");

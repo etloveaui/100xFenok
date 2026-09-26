@@ -47,15 +47,47 @@ export function formatEpsRevisionChange(change: number, flip: EpsSignFlip | null
   return `${prefix}${Math.abs(change * 100).toFixed(1)}%`;
 }
 
-/** Listing suffix -> ISO currency: decided by listing market, never a KR-only test. */
+/**
+ * Yahoo listing suffix -> ISO currency, decided by listing market. The feed's
+ * universe today spans .KS/.KQ, .T, .SS/.SZ, .HK, .TW, .DE and .PA besides US
+ * names; the other markets are here so a new listing does not print as "$".
+ * A bare ticker or a US share class (BRK.B) is a US listing.
+ */
+const LISTING_CURRENCY: Record<string, string> = {
+  KS: "KRW",
+  KQ: "KRW",
+  T: "JPY",
+  SS: "CNY",
+  SZ: "CNY",
+  HK: "HKD",
+  TW: "TWD",
+  TWO: "TWD",
+  L: "GBP",
+  DE: "EUR",
+  F: "EUR",
+  PA: "EUR",
+  AS: "EUR",
+  MI: "EUR",
+  MC: "EUR",
+  BR: "EUR",
+  LS: "EUR",
+  HE: "EUR",
+  VI: "EUR",
+  IR: "EUR",
+  SW: "CHF",
+  ST: "SEK",
+  CO: "DKK",
+  OL: "NOK",
+  TO: "CAD",
+  AX: "AUD",
+  SI: "SGD",
+  NS: "INR",
+  BO: "INR",
+};
+
 export function listingCurrency(ticker: string): string {
-  const symbol = ticker.toUpperCase();
-  if (symbol.endsWith(".KS") || symbol.endsWith(".KQ")) return "KRW";
-  if (symbol.endsWith(".HK")) return "HKD";
-  if (symbol.endsWith(".SZ") || symbol.endsWith(".SS")) return "CNY";
-  if (symbol.endsWith(".T")) return "JPY";
-  if (symbol.endsWith(".L")) return "GBP";
-  return "USD";
+  const suffix = /\.([A-Z]{1,3})$/.exec(ticker.toUpperCase())?.[1];
+  return (suffix && LISTING_CURRENCY[suffix]) || "USD";
 }
 
 export function formatEps(value: number | null, ticker: string): string {
