@@ -1132,9 +1132,15 @@ function tableSeriesHeader(
 
 function DelayedMacroTableSkeleton() {
   const show = useDelayedLoading(true, 120);
-  if (!show) return null;
+  // Same reserve rule as the chart skeleton: mounted from the first paint,
+  // visibility delayed so a fast expand never flashes.
   return (
-    <div className="cpw5-macro-table-skeleton" aria-label="변환 후 표 데이터를 준비하는 중입니다">
+    <div
+      className="cpw5-macro-table-skeleton transition-opacity duration-150"
+      style={{ opacity: show ? 1 : 0 }}
+      aria-hidden={show ? undefined : true}
+      aria-label="변환 후 표 데이터를 준비하는 중입니다"
+    >
       <i /><i /><i />
     </div>
   );
@@ -1466,9 +1472,15 @@ function PickerButton({
 
 function DelayedMacroChartSkeleton() {
   const show = useDelayedLoading(true, 120);
-  if (!show) return null;
+  // Reserve the chart's space from the first paint; only the skeleton's
+  // visibility waits for the 120 ms delay (anti-flash intent kept).
   return (
-    <div className="cpw5-macro-chart-skeleton" aria-label="차트 데이터를 불러오는 중입니다">
+    <div
+      className="cpw5-macro-chart-skeleton transition-opacity duration-150"
+      style={{ opacity: show ? 1 : 0 }}
+      aria-hidden={show ? undefined : true}
+      aria-label="차트 데이터를 불러오는 중입니다"
+    >
       <span className="sr-only">차트 데이터를 불러오는 중입니다.</span>
       <i />
       <i />

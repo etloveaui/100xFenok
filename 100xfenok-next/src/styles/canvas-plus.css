@@ -1034,6 +1034,18 @@
   gap: 6px;
 }
 
+/* Keep the TradingView attribution (license): give its injected link
+   (#tv-attr-logo) the 24px minimum touch target on touch widths. The element
+   is positioned by lightweight-charts, so this changes only its own hit box. */
+@media (max-width: 767px) {
+  #tv-attr-logo {
+    display: inline-flex;
+    align-items: center;
+    min-width: 24px;
+    min-height: 24px;
+  }
+}
+
 .cp-stock-price-chart.cp-chart-shell {
   padding: 0;
   border: 0;

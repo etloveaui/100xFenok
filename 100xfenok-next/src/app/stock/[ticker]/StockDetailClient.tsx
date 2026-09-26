@@ -2342,8 +2342,17 @@ function FilingsHeroFeedCp({ ticker }: { ticker: string }) {
   }, [feedKey]);
 
   if (filings === null) {
-    if (!showFilingsSkeleton) return null;
-    return <div className="cp-stock-tab-loading"><SkeletonSection /></div>;
+    // Mounted from the first paint so the tab keeps its space; only the
+    // skeleton's visibility waits for the 120 ms delay (anti-flash kept).
+    return (
+      <div
+        className="cp-stock-tab-loading transition-opacity duration-150"
+        style={{ opacity: showFilingsSkeleton ? 1 : 0 }}
+        aria-hidden={showFilingsSkeleton ? undefined : true}
+      >
+        <SkeletonSection />
+      </div>
+    );
   }
   if (filings.length === 0) {
     return (
@@ -2875,9 +2884,14 @@ export default function StockDetailClient({
   // Unknown ticker
   if (!rowLoading && !row) {
     if (marketFactsLoading || etfData === undefined || etfSurfaceData === undefined) {
-      if (!showUnknownLoading) return null;
+      // Mounted from the first paint so the slot keeps its space; only the
+      // visibility waits for the 120 ms delay (anti-flash kept).
       return (
-        <div className="stock-shell">
+        <div
+          className="stock-shell transition-opacity duration-150"
+          style={{ opacity: showUnknownLoading ? 1 : 0 }}
+          aria-hidden={showUnknownLoading ? undefined : true}
+        >
           <Panel loading>
             <PanelHeader eyebrow="Stock" title={`${symbol} 통합 데이터 확인 중`} />
           </Panel>
@@ -3213,7 +3227,7 @@ export default function StockDetailClient({
               </section>
 
               {showTabSkeleton ? (
-                <div className="cp-stock-preview-loading">
+                <div className="cp-stock-preview-loading min-h-[6rem] max-[920px]:min-h-[15rem]">
                   <SkeletonSection />
                 </div>
               ) : detail ? (

@@ -188,6 +188,7 @@ function measureLayout(touch) {
         const r = hitBox(el);
         return `${describe(el)} ${Math.round(r.width)}x${Math.round(r.height)}`;
       }),
+      shifts: window.__layoutSweepShifts || [],
     },
   };
 }
@@ -203,10 +204,31 @@ async function measure(browser, route, width) {
   await context.addCookies([{ name: "fx_browse", value: "1", url: baseUrl }]);
   await context.addInitScript(() => {
     window.__layoutSweepCls = 0;
+    // The largest shifts with the elements that moved and their before/after
+    // box, so a loading-time reservation can be sized from a measurement
+    // instead of a guess. Described at observation time: a node that moved
+    // may be gone by the time the page is measured.
+    window.__layoutSweepShifts = [];
+    const describeNode = (node) => {
+      if (!(node instanceof Element)) return node?.nodeName?.toLowerCase() ?? "?";
+      const id = node.id ? `#${node.id}` : "";
+      const cls = typeof node.className === "string" && node.className.trim() ? `.${node.className.trim().split(/\s+/)[0]}` : "";
+      const data = Array.from(node.attributes).find((attr) => attr.name.startsWith("data-"))?.name ?? "";
+      return `${node.tagName.toLowerCase()}${id}${cls}${data ? `[${data}]` : ""}`;
+    };
     try {
       new PerformanceObserver((list) => {
         for (const entry of list.getEntries()) {
-          if (!entry.hadRecentInput) window.__layoutSweepCls += entry.value;
+          if (entry.hadRecentInput) continue;
+          window.__layoutSweepCls += entry.value;
+          const moved = (entry.sources || []).slice(0, 3).map((source) => {
+            const was = source.previousRect;
+            const now = source.currentRect;
+            return `${describeNode(source.node)} y ${Math.round(was.y)}→${Math.round(now.y)} h ${Math.round(was.height)}→${Math.round(now.height)}`;
+          });
+          window.__layoutSweepShifts.push({ value: Math.round(entry.value * 1000) / 1000, at: Math.round(entry.startTime), moved });
+          window.__layoutSweepShifts.sort((a, b) => b.value - a.value);
+          window.__layoutSweepShifts.length = Math.min(window.__layoutSweepShifts.length, 5);
         }
       }).observe({ type: "layout-shift", buffered: true });
     } catch {

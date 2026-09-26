@@ -129,6 +129,7 @@ export default function MacroCalendarPanel({ loaded, failed, calendar, onRetry }
     <section data-macro-calendar="true" aria-label="미국 경제 일정">
       <Panel
         loading={!loaded}
+        className={!loaded ? "min-h-[26rem]" : undefined}
         error={loaded && (failed || !calendar)}
         errorDetail="경제 일정 캘린더를 읽지 못했습니다."
         onRetry={onRetry}

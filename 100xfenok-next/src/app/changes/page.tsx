@@ -3,6 +3,8 @@ import AppShell from "@/components/shell/AppShell";
 import { ROUTES } from "@/lib/routes";
 import ChangesClient from "./ChangesClient";
 
+export const dynamic = "force-dynamic";
+
 export const metadata: Metadata = {
   title: "무엇이 바뀌었나 | 100xFenok",
   description: "컨센서스 리비전, 13F 보유자 변화, Edge 점수 변화를 한 페이지에서 확인합니다.",

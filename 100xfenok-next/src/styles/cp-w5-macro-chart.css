@@ -307,6 +307,22 @@
   background: linear-gradient(90deg, var(--cp-surface-strong), var(--cp-surface), var(--cp-surface-strong));
 }
 
+/* Reserve the loaded stage's floor so the chart slot does not grow when data
+   lands: 720px is .cpw5-macro-v2-stage's own min-height (this file:1293-1300),
+   the safe lower bound at every width above 520px. [hypothesis] for the actual
+   loaded height; the live sweep replaces it with the measured value. */
+.cpw5-macro-chart-skeleton {
+  min-height: 720px;
+}
+
+@media (max-width: 520px) {
+  .cpw5-macro-chart-skeleton {
+    /* Mobile drops the stage floor (this file:1432-1433; plot 360px); keep the
+       original 22rem so the low mobile numbers cannot regress. */
+    min-height: 22rem;
+  }
+}
+
 .cpw5-macro-empty,
 .cpw5-macro-error {
   display: grid;

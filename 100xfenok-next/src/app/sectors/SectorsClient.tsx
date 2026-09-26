@@ -220,6 +220,7 @@ function SectorFlowPanel({
   return (
     <Panel
       loading={loading}
+      className={loading ? "min-h-[22rem]" : undefined}
       empty={empty}
       emptyReason={failed || !ready ? "S&P 500 대비 섹터 초과 성과를 불러오지 못했습니다" : "표시할 섹터 성과 데이터가 없습니다"}
       emptyNextRefresh="다음 마감 후 갱신"
@@ -321,6 +322,7 @@ function EtfComparePanel({
   return (
     <Panel
       loading={loading}
+      className={loading ? "min-h-[22rem]" : undefined}
       empty={empty}
       emptyReason={failed || !ready ? "섹터 ETF 비교 데이터를 불러오지 못했습니다" : "표시할 섹터 ETF 데이터가 없습니다"}
       emptyNextRefresh="다음 마감 후 갱신"
@@ -505,6 +507,7 @@ function SectorsSpreadStrip({
   return (
     <Panel
       loading={loading}
+      className={loading ? "min-h-[20rem]" : undefined}
       empty={!loading && !ready}
       emptyReason={failed ? "S&P 500 대비 섹터 분포를 불러오지 못했습니다" : "표시할 상대 모멘텀 자료가 없습니다"}
       emptyNextRefresh="다음 마감 후 갱신"
@@ -788,6 +791,7 @@ export default function SectorsClient() {
 
       <Panel
         loading={loading}
+        className={loading ? "min-h-[26rem]" : undefined}
         empty={heroEmpty}
         emptyReason={heroFailed ? "로테이션 지도 자료를 불러오지 못했습니다" : "표시할 로테이션 자료가 없습니다"}
         emptyNextRefresh="다음 마감 후 갱신"
