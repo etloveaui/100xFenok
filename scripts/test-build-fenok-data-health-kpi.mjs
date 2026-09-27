@@ -5549,7 +5549,7 @@ for (const [runId, delayMin] of [["26765173733", 368], ["27940007940", 364]]) {
   const watchdog = buildOutcomeWatchdog("2026-09-03T00:00:00.000Z", [
     laneRow("slickcharts", "2026-09-01"),
     laneRow("fred_yardeni", "2026-08-29"),
-    laneRow("oecd_cli", "2026-07-01"),
+    laneRow("oecd_cli", "2026-06-01"),
     laneRow("fdic_tier1", "2026-07-01"),
     laneRow("stockanalysis_etf_detail", null),
     laneRow("yahoo_ticker_macro", "2026-09-02T23:00:00Z"),
@@ -5562,6 +5562,9 @@ for (const [runId, delayMin] of [["26765173733", 368], ["27940007940", 364]]) {
   assert.equal(rows.get("slickcharts").state, "current");
   assert.equal(rows.get("fred_yardeni").state, "current");
   assert.equal(rows.get("oecd_cli").state, "overdue");
+  const currentMonthly = buildOutcomeWatchdog("2026-09-03T00:00:00.000Z", [laneRow("oecd_cli", "2026-07-01")]).rows[0];
+  assert.equal(currentMonthly.state, "current", "July observations age from July end, not their month label");
+  assert.equal(currentMonthly.source_as_of, "2026-07-01", "the original observation label stays unchanged");
   assert.equal(rows.get("fdic_tier1").state, "current");
   assert.equal(rows.get("stockanalysis_etf_detail").state, "unobservable");
   assert.equal(rows.has("yahoo_ticker_macro"), false,
@@ -5579,7 +5582,7 @@ for (const [runId, delayMin] of [["26765173733", 368], ["27940007940", 364]]) {
     lanes: [
       laneRow("slickcharts", "2026-09-01"),
       laneRow("fred_yardeni", "2026-08-29"),
-      laneRow("oecd_cli", "2026-07-01"),
+      laneRow("oecd_cli", "2026-06-01"),
       laneRow("fdic_tier1", "2026-07-01"),
       laneRow("stockanalysis_etf_detail", null),
     ],
@@ -5594,7 +5597,7 @@ for (const [runId, delayMin] of [["26765173733", 368], ["27940007940", 364]]) {
     lanes: [
       laneRow("slickcharts", "2026-09-01"),
       laneRow("fred_yardeni", "2026-08-29"),
-      laneRow("oecd_cli", "2026-07-01"),
+      laneRow("oecd_cli", "2026-06-01"),
       laneRow("fdic_tier1", "2026-07-01"),
       laneRow("stockanalysis_etf_detail", null),
     ],
