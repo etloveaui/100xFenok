@@ -1,6 +1,6 @@
 {
   "schema_version": "sec13f-bridge-index/v1",
-  "generated_at": "2026-09-27T23:01:26.147Z",
+  "generated_at": "2026-09-27T23:33:24.715Z",
   "purpose": "SEC 13F bridge index of tickers outside the Global Scouter universe, published live with honest 424/1,031 coverage.",
   "contract": {
     "candidate_type": "sec13f_extension_stock",
@@ -31,13 +31,13 @@
   },
   "input_fingerprints": {
     "analyzer": "2db81620e7b031ad0ba19fe8c21a0a4228c5f76b19ad6a445c58fc1aa090635a",
-    "action_index": "e5915221b0a043759357447677feace06ce04db671a1667c35bd98e808a6dda8",
-    "market_facts": "3f49d7b2e1da3c951149fda0a42476af150b2cc6703068a51830dfeb0a9ee5da",
+    "action_index": "b86f0e93b5ceeaac26c37238bc69d9d8d944fa72e65a3621685be025cc655c95",
+    "market_facts": "227638742825dab07d8c8cf061ef83f86a677dd634966ee2d4f774258912eaf3",
     "sec13f_by_ticker": "18744c2a465ef72940da65510b0f80a26077607866ab7186cf4d2985164f8400",
     "sec13f_summary": "608791f2b4b70e0f165e5d6869ad39d8f6bee829207e70d1c06dd9dc995cf7e2",
     "market_facts_details": {
-      "file_count": 115,
-      "sha256": "6a8a771a01df1c98989a368455e59b414c35b5e5a610a7a23e38ba27d640b1d5"
+      "file_count": 116,
+      "sha256": "be92349297a1b65f66d944826480e70524448921970ce8a734af6585646401f8"
     },
     "yf_finance_candidates": {
       "file_count": 78,
@@ -55,20 +55,20 @@
   "counts": {
     "sec13f_outside_core": 608,
     "action_plus_market_facts": 78,
-    "market_facts_only": 37,
+    "market_facts_only": 38,
     "no_action_index_overlap": 530,
-    "no_market_facts": 493,
+    "no_market_facts": 492,
     "action_index_only": 0,
     "sec13f_extension_stock": 78,
-    "sec13f_market_facts_only": 37,
-    "sec13f_unresolved": 493,
+    "sec13f_market_facts_only": 38,
+    "sec13f_unresolved": 492,
     "estimate": {
       "extension_full": 74,
       "extension_incomplete": 4,
       "market_facts_only_incomplete": 37,
-      "unresolved_absent": 493,
+      "unresolved_absent": 492,
       "as_of": {
-        "bridge_generated_at": "2026-09-27T23:01:26.147Z",
+        "bridge_generated_at": "2026-09-27T23:33:24.715Z",
         "yf_finance": "2026-09-25T00:00:00.000Z",
         "market_facts": "2026-09-21",
         "sec13f": "2026-Q2"
@@ -3400,24 +3400,34 @@
     {
       "ticker": "BE",
       "classification": {
-        "type": "sec13f_unresolved",
+        "type": "sec13f_market_facts_only",
         "classes": [
-          "no_action_index_overlap",
-          "no_market_facts"
+          "market_facts_only",
+          "no_action_index_overlap"
         ]
       },
       "source_links": {
         "sec13f_by_ticker": true,
         "global_scouter_core": false,
         "stock_action_index": false,
-        "market_facts": false,
+        "market_facts": true,
         "yf_finance": false
       },
       "sec13f": {
         "holders_count": 10,
         "total_market_value": 8737734266
       },
-      "market_facts": null,
+      "market_facts": {
+        "asset_type": "stock",
+        "source_as_of": "2026-09-27",
+        "price": {
+          "present": true,
+          "value": 288.7,
+          "confidence": "observed",
+          "source": "slickcharts",
+          "as_of": "2026-09-27"
+        }
+      },
       "stock_action_index": null,
       "yf_estimates": {
         "file": false,
@@ -3435,7 +3445,7 @@
         ]
       },
       "completeness": {
-        "market_facts_price_observed": false,
+        "market_facts_price_observed": true,
         "action_price_present": false,
         "action_valuation_present": false,
         "yf_estimate_or_absent_reason": false,
