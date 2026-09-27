@@ -3800,16 +3800,16 @@ async function collectScreenerCardViewChecks(page, route) {
     };
   }, { currentRoute: route, peerBaselineBefore: peerBaseline });
 
-  // Restore the product default before leaving this route: clicking the card
-  // option persists viewMode through writeScreenerView (localStorage), and the
-  // same browser context serves later routes in the run — a later
-  // /screener?mode=analyze pass must still open in table view.
+  // Expansion opens a modal drawer. Close it before restoring table mode;
+  // otherwise its backdrop intercepts the click and leaves card mode stored.
+  await page.keyboard.press("Escape");
+  await page.locator('[id^="screener-card-detail"]').waitFor({ state: "detached", timeout: 5000 });
   await page
     .locator('[data-screener-view-mode-option="table"]:visible')
     .first()
-    .click({ timeout: 10000 })
-    .catch(() => {});
-  await page.waitForTimeout(200);
+    .click({ timeout: 10000 });
+  await page.locator('[data-screener-view-mode-option="table"][aria-pressed="true"]:visible')
+    .waitFor({ state: "visible", timeout: 5000 });
 
   return result;
 }
@@ -4481,9 +4481,30 @@ async function collectScreenerInvestorFlowChecks(page, route, viewportName) {
       const origin = `${sourceUrl.pathname}${sourceUrl.search}${sourceUrl.hash}`;
       const href = new URL(await badge.getAttribute("href"), page.url());
       if (href.searchParams.get("returnTo") !== origin) failures.push({ check: "screener-investor-origin", detail: `${action}: return origin missing or changed` });
-      const target = await badge.boundingBox();
-      if (!target || target.height < 44 || target.width < 44) failures.push({ check: "screener-investor-touch-target", detail: `${action}: ${JSON.stringify(target)}` });
-      await badge.click();
+      // The small visible pill has an invisible ::after tap extension. Verify
+      // its actual hit region, including clipping/overlap, then click outside
+      // the pill so removing that extension breaks this flow.
+      await badge.evaluate((node) => node.scrollIntoView({ block: "center", inline: "center", behavior: "instant" }));
+      const target = await badge.evaluate((node) => {
+        const rect = node.getBoundingClientRect();
+        const pseudo = getComputedStyle(node, "::after");
+        const width = Math.max(rect.width, Number.parseFloat(pseudo.width) || 0);
+        const height = Math.max(rect.height, Number.parseFloat(pseudo.height) || 0);
+        const center = { x: rect.x + rect.width / 2, y: rect.y + rect.height / 2 };
+        const points = [[-21.5, -21.5], [21.5, -21.5], [-21.5, 21.5], [21.5, 21.5]]
+          .map(([x, y]) => ({ x: center.x + x, y: center.y + y }));
+        const ownsPoint = (point) => {
+          const hit = document.elementFromPoint(point.x, point.y);
+          return Boolean(hit && node.contains(hit));
+        };
+        const hitPoint = points.find((point) => (point.x < rect.left || point.x > rect.right
+          || point.y < rect.top || point.y > rect.bottom) && ownsPoint(point)) ?? points[0];
+        return { width, height, cornersOwned: points.every(ownsPoint), hitPoint };
+      });
+      const usableTarget = target.width >= 44 && target.height >= 44 && target.cornersOwned && target.hitPoint;
+      if (!usableTarget) failures.push({ check: "screener-investor-touch-target", detail: `${action}: ${JSON.stringify(target)}` });
+      if (usableTarget) await page.mouse.click(target.hitPoint.x, target.hitPoint.y);
+      else await badge.click();
       await page.locator(`[data-superinvestors-whoholds-result="${ticker}"]`).waitFor({ state: "visible", timeout: 45000 });
       if (new URL(page.url()).searchParams.get("tab") !== "stocks") failures.push({ check: "screener-investor-tab", detail: page.url() });
       const evidence = page.locator(`[data-superinvestors-holding-evidence="${ticker}"]`);
@@ -4545,29 +4566,27 @@ function contextOptionsFor(viewport) {
 
 try {
   for (const { name, viewport } of viewports) {
-    const context = await browser.newContext(contextOptionsFor(viewport));
-    // The closed-site "intro" gate redirects cookie-less visitors to /intro;
-    // the browse cookie keeps QA on the public pages, as in the live-integrity check.
-    const qaCookies = [{ name: "fx_browse", value: "1", url: new URL(baseUrl).origin }];
-    if (adminSessionCookie) {
-      // A session cookie turns /admin/data-lab into its six surface assertions;
-      // without it the checker asserts the anonymous access gate instead.
-      qaCookies.push({ name: "fenok_admin_session", value: adminSessionCookie, url: new URL(baseUrl).origin });
-    }
-    await context.addCookies(qaCookies);
-    if (isolated) {
-      await context.route("**/*", async (requestRoute) => {
-        const url = new URL(requestRoute.request().url());
-        if (url.origin === isolatedOrigin) return requestRoute.continue();
-        blockedExternalRequests.push({ viewport: name, origin: url.origin, path: url.pathname });
-        return requestRoute.abort("blockedbyclient");
-      });
-    }
-    await installQaPortfolio(context);
     for (const [routeIndex, route] of routes.entries()) {
-      // Each route is an independent scenario. A fresh page prevents pending
-      // RSC requests from the previous document leaking errors into this one.
+      // Each route is an independent scenario. A fresh context also prevents
+      // stored view/search state from an earlier scenario changing its default.
       // Journey checks still navigate and restore within this same page.
+      const context = await browser.newContext(contextOptionsFor(viewport));
+      // Keep QA on public pages through the closed-site intro gate.
+      const qaCookies = [{ name: "fx_browse", value: "1", url: new URL(baseUrl).origin }];
+      if (adminSessionCookie) {
+        // Without this cookie the checker asserts the anonymous admin gate.
+        qaCookies.push({ name: "fenok_admin_session", value: adminSessionCookie, url: new URL(baseUrl).origin });
+      }
+      await context.addCookies(qaCookies);
+      if (isolated) {
+        await context.route("**/*", async (requestRoute) => {
+          const url = new URL(requestRoute.request().url());
+          if (url.origin === isolatedOrigin) return requestRoute.continue();
+          blockedExternalRequests.push({ viewport: name, origin: url.origin, path: url.pathname });
+          return requestRoute.abort("blockedbyclient");
+        });
+      }
+      await installQaPortfolio(context);
       const page = await context.newPage();
       const routeErrors = [];
       const routeRequests = [];
@@ -4702,9 +4721,8 @@ try {
       }
       results.push(result);
       await page.close();
+      await context.close();
     }
-
-    await context.close();
   }
 } finally {
   await browser.close();
