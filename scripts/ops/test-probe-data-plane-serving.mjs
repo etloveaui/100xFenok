@@ -29,7 +29,7 @@ const base = {
   family: "fred-macro",
   status: 200,
   nowIso: NOW,
-  maxAgeDays: DEFAULT_MAX_SOURCE_AGE_DAYS,
+  // Omit the optional global cap: normal probes use each source's policy.
   maxPublishedAgeDays: DEFAULT_MAX_PUBLISHED_AGE_DAYS,
 };
 
@@ -952,6 +952,17 @@ const sourceDateForPolicy = ({ path, family }) => {
     });
     assert.equal(r.ok, true, `${path}: ${JSON.stringify(r.failures)}`);
   }
+  const tightenedWeekly = evaluateProbeResponse({
+    ...base,
+    path: "/data/macro/fred-banking-weekly.json",
+    family: "fred-banking",
+    generationHeader: "fred-banking-abc123",
+    sourceAsOfHeader: daysAgo(12, true),
+    publishedAtHeader: hoursAgo(1),
+    maxAgeDays: 5,
+  });
+  assert.equal(tightenedWeekly.ok, false, "an explicit operator cap still tightens the shared weekly policy");
+  assert.match(tightenedWeekly.failures.join("; "), /tightened limit 5/);
   const quarterlyPath = "/data/macro/fred-banking-quarterly.json";
   const quarterly = evaluateProbeResponse({
     ...base,
