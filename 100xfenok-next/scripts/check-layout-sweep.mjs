@@ -20,7 +20,7 @@
  *
  * Env: QA_BASE_URL (default http://127.0.0.1:3105), QA_LAYOUT_ROUTES,
  * QA_LAYOUT_WIDTHS, QA_LAYOUT_CONCURRENCY, QA_CHROMIUM_EXECUTABLE_PATH,
- * QA_LAYOUT_OUTPUT (report path).
+ * QA_LAYOUT_OUTPUT (report path), QA_LAYOUT_ISOLATED=1 (loopback only).
  */
 import { chromium } from "playwright";
 import { mkdir, readFile, writeFile } from "node:fs/promises";
@@ -30,6 +30,11 @@ import { fileURLToPath } from "node:url";
 const APP_ROOT = resolve(dirname(fileURLToPath(import.meta.url)), "..");
 const BASELINE_PATH = resolve(APP_ROOT, "qa-baselines/layout-sweep.json");
 const baseUrl = process.env.QA_BASE_URL || "http://127.0.0.1:3105";
+const isolated = process.env.QA_LAYOUT_ISOLATED === "1";
+const origin = new URL(baseUrl).origin;
+if (isolated && !["127.0.0.1", "localhost", "[::1]"].includes(new URL(baseUrl).hostname)) {
+  throw new Error("Isolated layout QA requires a loopback preview, never production.");
+}
 const updateBaseline = process.argv.includes("--update-baseline");
 const reportPath = resolve(process.env.QA_LAYOUT_OUTPUT || resolve(APP_ROOT, "test-results/layout-sweep/report.json"));
 const concurrency = Math.max(1, Number(process.env.QA_LAYOUT_CONCURRENCY || 3));
@@ -63,9 +68,17 @@ const METRICS = ["overflow", "offscreen", "clipped", "overlap", "tiny"];
 const routes = (process.env.QA_LAYOUT_ROUTES ? process.env.QA_LAYOUT_ROUTES.split(",") : DEFAULT_ROUTES)
   .map((route) => route.trim())
   .filter(Boolean);
+if (routes.length === 0 || routes.some((route) => !route.startsWith("/") || route.startsWith("//") || new URL(route, baseUrl).origin !== origin)) {
+  throw new Error("QA_LAYOUT_ROUTES must select one or more paths on QA_BASE_URL.");
+}
 const widths = (process.env.QA_LAYOUT_WIDTHS ? process.env.QA_LAYOUT_WIDTHS.split(",") : DEFAULT_WIDTHS)
-  .map((width) => Number(width))
-  .filter((width) => Number.isFinite(width) && width > 0);
+  .map((width) => Number(width));
+if (widths.length === 0 || widths.some((width) => !Number.isInteger(width) || width <= 0)) {
+  throw new Error("QA_LAYOUT_WIDTHS must select one or more positive integer widths.");
+}
+if (!Number.isInteger(concurrency) || concurrency < 1) {
+  throw new Error("QA_LAYOUT_CONCURRENCY must be a positive integer.");
+}
 
 /** Runs in the page. Keep it self-contained: it is serialized into the browser. */
 function measureLayout(touch) {
@@ -200,7 +213,21 @@ async function measure(browser, route, width) {
     isMobile: touch,
     hasTouch: touch,
     deviceScaleFactor: 1,
+    ...(isolated ? { serviceWorkers: "block" } : {}),
   });
+  let blockedExternalCount = 0;
+  const blockedExternalRequests = [];
+  if (isolated) {
+    await context.route("**/*", async (requestRoute) => {
+      const url = new URL(requestRoute.request().url());
+      if (url.origin === origin) return requestRoute.continue();
+      blockedExternalCount += 1;
+      if (blockedExternalRequests.length < 20) {
+        blockedExternalRequests.push({ origin: url.origin, path: url.pathname, method: requestRoute.request().method() });
+      }
+      return requestRoute.abort("blockedbyclient");
+    });
+  }
   await context.addCookies([{ name: "fx_browse", value: "1", url: baseUrl }]);
   await context.addInitScript(() => {
     window.__layoutSweepCls = 0;
@@ -240,9 +267,24 @@ async function measure(browser, route, width) {
     await page.goto(new URL(route, baseUrl).toString(), { waitUntil: "load", timeout: 45_000 });
     await page.waitForLoadState("networkidle", { timeout: 10_000 }).catch(() => {});
     await page.waitForTimeout(1_500);
-    return { route, width, ...(await page.evaluate(measureLayout, touch)) };
+    const measured = await page.evaluate(measureLayout, touch);
+    return {
+      route,
+      width,
+      ...measured,
+      ...(blockedExternalCount > 0 ? {
+        error: `${blockedExternalCount} external request(s) blocked in isolated QA`,
+        blockedExternalCount,
+        blockedExternalRequests,
+      } : {}),
+    };
   } catch (error) {
-    return { route, width, error: String(error).slice(0, 200) };
+    return {
+      route,
+      width,
+      error: String(error).slice(0, 200),
+      ...(blockedExternalCount > 0 ? { blockedExternalCount, blockedExternalRequests } : {}),
+    };
   } finally {
     await context.close();
   }
@@ -279,6 +321,7 @@ async function main() {
     executablePath: process.env.QA_CHROMIUM_EXECUTABLE_PATH || undefined,
   });
   const jobs = routes.flatMap((route) => widths.map((width) => ({ route, width })));
+  if (jobs.length === 0) throw new Error("Layout QA selected zero route-width checks.");
   const results = [];
   let next = 0;
   await Promise.all(

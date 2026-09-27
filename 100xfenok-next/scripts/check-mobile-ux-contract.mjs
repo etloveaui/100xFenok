@@ -22,10 +22,13 @@ if (browserName === "webkit" && (browserChannel || browserExecutablePath)) {
 const outputDir = process.env.QA_MOBILE_UX_OUTPUT_DIR?.trim()
   ? resolve(process.env.QA_MOBILE_UX_OUTPUT_DIR.trim())
   : "";
-const routes = (process.env.QA_MOBILE_UX_ROUTES || "/,/?v5=1,/macro-chart,/multichart,/ib,/infinite-buying,/vr,/admin/data-console,/admin/data-lab,/radar,/radar?path=tools%2Fmacro-monitor%2Fdetails%2Fliquidity-flow.html,/market-valuation,/market-valuation/structure,/regime,/market/events,/changes,/etfs,/etfs/SPY,/etfs/new,/etfs/compare,/screener,/screener?mode=analyze,/screener?mode=discover,/sectors,/portfolio,/stock/NVDA,/stock/NVDA?tab=financials,/stock/NVDA?tab=ownership,/stock/NVDA?tab=estimates,/stock/NVDA?tab=filings,/superinvestors,/superinvestors?tab=investors,/superinvestors?guru=blackrock,/research,/intro,/privacy,/terms")
+const routes = (process.env.QA_MOBILE_UX_ROUTES || "/,/explore,/?v5=1,/macro-chart,/multichart,/ib,/infinite-buying,/vr,/admin/data-console,/admin/data-lab,/radar,/radar?path=tools%2Fmacro-monitor%2Fdetails%2Fliquidity-flow.html,/market-valuation,/market-valuation/structure,/regime,/market/events,/changes,/etfs,/etfs/SPY,/etfs/new,/etfs/compare,/screener,/screener?mode=analyze,/screener?mode=discover,/sectors,/portfolio,/stock/NVDA,/stock/NVDA?tab=financials,/stock/NVDA?tab=ownership,/stock/NVDA?tab=estimates,/stock/NVDA?tab=filings,/superinvestors,/superinvestors?tab=investors,/superinvestors?guru=blackrock,/research,/intro,/privacy,/terms")
   .split(",")
   .map((route) => route.trim())
   .filter(Boolean);
+if (routes.length === 0 || routes.some((route) => !route.startsWith("/") || route.startsWith("//") || new URL(route, baseUrl).origin !== isolatedOrigin)) {
+  throw new Error("QA_MOBILE_UX_ROUTES must select one or more paths on QA_BASE_URL.");
+}
 
 const viewportCatalog = {
   mobile: { width: 390, height: 844 },
@@ -46,6 +49,9 @@ const requestedViewports = (process.env.QA_MOBILE_UX_VIEWPORTS || "mobile,narrow
 const viewports = requestedViewports
   .map((name) => ({ name, viewport: viewportCatalog[name] }))
   .filter((entry) => entry.viewport);
+if (viewports.length === 0 || viewports.length !== requestedViewports.length) {
+  throw new Error("QA_MOBILE_UX_VIEWPORTS must select one or more known viewports.");
+}
 
 // check-route-iframe-contract reads the same variable as a Cookie header
 // ("fenok_admin_session=<value>"); accept that form as well as a bare value.
@@ -333,101 +339,15 @@ async function collectRouteChecks(page, route) {
     }
 
     if (new URL(currentRoute, window.location.origin).pathname === "/explore") {
-      const surface = document.querySelector("[data-explore-surface]");
-      const routeRail = document.querySelector("[data-explore-route-rail]");
-      const routeCount = document.querySelector("[data-explore-route-count]");
-      const routeSteps = Array.from(document.querySelectorAll("[data-explore-route-step]"))
-        .filter((node) => {
-          const rect = node.getBoundingClientRect();
-          return rect.width > 0 && rect.height > 0;
-        });
-      const gateway = document.querySelector("[data-explore-gateway]");
-      const ownerLinks = Array.from(document.querySelectorAll("[data-explore-owner-link]"))
-        .filter((node) => {
-          const rect = node.getBoundingClientRect();
-          return rect.width > 0 && rect.height > 0;
-        });
-      const appTitle = document.querySelector(".fnk-shell .appbar .title");
-      const activeTab = document.querySelector('.fnk-shell .tabbar .tab[aria-current="page"]');
-
-      if (!surface || surface.getBoundingClientRect().height <= 0) {
-        failures.push({ check: "explore-surface-visible", detail: "missing explore surface marker" });
+      // The retired-route authority sends /explore to the current home page.
+      if (window.location.pathname !== "/") {
+        failures.push({ check: "explore-retired-destination", detail: `pathname=${window.location.pathname}` });
       }
-
-      if (!routeRail || routeRail.getBoundingClientRect().height <= 0) {
-        failures.push({ check: "explore-route-rail-visible", detail: "missing visible explore route rail" });
-      }
-
-      const ownerRouteCount = Number.parseInt(routeRail?.getAttribute("data-explore-owner-route-count") || "", 10);
-      if (ownerRouteCount !== 7 || !(routeCount?.textContent || "").includes("7")) {
-        failures.push({
-          check: "explore-route-owner-count",
-          detail: `attr=${routeRail?.getAttribute("data-explore-owner-route-count") || "missing"} text=${routeCount?.textContent || ""}`,
-        });
-      }
-
-      const expectedRouteSteps = ["01", "02", "03"];
-      const actualRouteSteps = routeSteps.map((node) => node.getAttribute("data-explore-route-step-index"));
-      if (
-        routeSteps.length !== expectedRouteSteps.length ||
-        !expectedRouteSteps.every((step, index) => actualRouteSteps[index] === step)
-      ) {
-        failures.push({
-          check: "explore-route-step-order",
-          detail: `actual=${JSON.stringify(actualRouteSteps)} expected=${JSON.stringify(expectedRouteSteps)}`,
-        });
-      }
-
-      routeSteps.forEach((node, index) => {
-        const rect = node.getBoundingClientRect();
-        if (rect.height < 44) {
-          failures.push({ check: "explore-route-step-target", detail: `step ${index} height=${Math.round(rect.height)}` });
-        }
-      });
-
-      if (!gateway || gateway.getBoundingClientRect().height <= 0) {
-        failures.push({ check: "explore-gateway-visible", detail: "missing visible explore gateway" });
-      }
-
-      const expectedLinks = [
-        "/market-valuation",
-        "/sectors",
-        "/etfs",
-        "/screener",
-        "/superinvestors",
-        "/portfolio",
-        "/macro-chart",
-      ];
-      const normalizePath = (path) => (path && path !== "/" ? path.replace(/\/+$/, "") : path);
-      const actualLinks = ownerLinks.map((node) => normalizePath(new URL(node.href, window.location.origin).pathname));
-      if (
-        ownerLinks.length !== expectedLinks.length ||
-        !expectedLinks.every((href, index) => actualLinks[index] === href)
-      ) {
-        failures.push({
-          check: "explore-owner-link-order",
-          detail: `actual=${JSON.stringify(actualLinks)} expected=${JSON.stringify(expectedLinks)}`,
-        });
-      }
-
-      ownerLinks.forEach((node, index) => {
-        const rect = node.getBoundingClientRect();
-        if (rect.height < 44) {
-          failures.push({ check: "explore-owner-link-target", detail: `link ${index} height=${Math.round(rect.height)}` });
-        }
-      });
-
-      const activeTabLabel = (activeTab?.textContent || "").replace(/\s+/g, " ").trim();
-      const activeTabPath = activeTab instanceof HTMLAnchorElement ? normalizePath(new URL(activeTab.href, window.location.origin).pathname) : "";
-      if (activeTabLabel !== "홈" || activeTabPath !== "/") {
-        failures.push({
-          check: "explore-mobile-tab-active",
-          detail: `label=${activeTabLabel} path=${activeTabPath}`,
-        });
-      }
-
-      if ((appTitle?.textContent || "").trim() !== "홈") {
-        failures.push({ check: "explore-app-title", detail: `title=${(appTitle?.textContent || "").trim()}` });
+      const homeHeading = Array.from(document.querySelectorAll("h1"))
+        .find((node) => (node.textContent || "").trim() === "오늘 시장" && node.getBoundingClientRect().height > 0);
+      const homeProvenance = document.querySelector("[data-home-provenance]");
+      if (!homeHeading || !homeProvenance || homeProvenance.getBoundingClientRect().height <= 0) {
+        failures.push({ check: "explore-retired-home-visible", detail: "current home heading or provenance is not visible" });
       }
     }
 
@@ -4777,7 +4697,7 @@ try {
 
       result.pageErrorCount = routeErrors.length;
       result.pageErrors = routeErrors.slice(0, 8);
-      if (isolated && routeErrors.length > 0) {
+      if ((isolated || new URL(route, baseUrl).pathname === "/explore") && routeErrors.length > 0) {
         result.failures.push({ check: "page-errors", detail: result.pageErrors.join(" | ") });
       }
       results.push(result);
