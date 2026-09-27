@@ -1,6 +1,6 @@
 {
   "schema_version": "market-source-parity/v1",
-  "generated_at": "2026-09-27T01:28:05Z",
+  "generated_at": "2026-09-27T05:25:38Z",
   "source": "computed/market_facts candidate comparison",
   "summary": {
     "inspected_ticker_files": 6806,
@@ -9,11 +9,11 @@
     "divergence_rows": 62127,
     "percent_scale_warnings": 186,
     "diagnosis_counts": {
-      "agreement": 10734,
+      "agreement": 10733,
       "scale_mismatch": 186,
       "sign_divergence": 2905,
       "stale": 37785,
-      "value_drift": 10517
+      "value_drift": 10518
     },
     "stale_rows": 37785,
     "scale_mismatch_rows": 186,
@@ -16109,6 +16109,47 @@
       }
     },
     {
+      "ticker": "TLT",
+      "asset_type": "etf",
+      "field": "return_1m",
+      "selected_source": "yf.history_1y",
+      "candidate_count": 3,
+      "relative_spread_pct": 192.929252,
+      "values": [
+        {
+          "source": "yf.history_1y",
+          "value": -4.413034564046551
+        },
+        {
+          "source": "stockanalysis.detail.performance",
+          "value": 4.101
+        },
+        {
+          "source": "stockanalysis.etf_universe.performance",
+          "value": 4.101
+        }
+      ],
+      "diagnosis": "sign_divergence",
+      "spread_pct": 192.929252,
+      "fresh_spread_pct": 192.929252,
+      "stale_sources": [
+        "stockanalysis.detail.performance"
+      ],
+      "scale_mismatch": false,
+      "scale_factor": null,
+      "sign_divergence": true,
+      "selected_rationale": {
+        "selected": "yf.history_1y",
+        "policy_rank": 0,
+        "policy_len": 4,
+        "note": "policy-preferred; lower-ranked sources retained as candidates"
+      },
+      "freshness": {
+        "yf.history_1y": 0.0,
+        "stockanalysis.detail.performance": 99.0
+      }
+    },
+    {
       "ticker": "QBIG",
       "asset_type": "etf",
       "field": "return_1m",
@@ -16300,47 +16341,6 @@
       "freshness": {
         "yf.history_1y": 0.0,
         "yf": 0.0
-      }
-    },
-    {
-      "ticker": "NVDL",
-      "asset_type": "etf",
-      "field": "return_1m",
-      "selected_source": "yf.history_1y",
-      "candidate_count": 3,
-      "relative_spread_pct": 192.72765,
-      "values": [
-        {
-          "source": "yf.history_1y",
-          "value": 7.226789125468349
-        },
-        {
-          "source": "stockanalysis.detail.performance",
-          "value": -6.70123172276689
-        },
-        {
-          "source": "stockanalysis.etf_universe.performance",
-          "value": -6.70123172276689
-        }
-      ],
-      "diagnosis": "sign_divergence",
-      "spread_pct": 192.72765,
-      "fresh_spread_pct": 192.72765,
-      "stale_sources": [
-        "stockanalysis.detail.performance"
-      ],
-      "scale_mismatch": false,
-      "scale_factor": null,
-      "sign_divergence": true,
-      "selected_rationale": {
-        "selected": "yf.history_1y",
-        "policy_rank": 0,
-        "policy_len": 4,
-        "note": "policy-preferred; lower-ranked sources retained as candidates"
-      },
-      "freshness": {
-        "yf.history_1y": 0.0,
-        "stockanalysis.detail.performance": 67.0
       }
     }
   ]
