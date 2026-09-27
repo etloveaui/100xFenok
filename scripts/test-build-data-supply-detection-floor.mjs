@@ -1244,7 +1244,7 @@ function runBaselineAndArtifactChecks() {
     assert.equal(row.artifact.status, status, `KRX ${source} source status`);
   }
   const failedKrx = replaceAttempt(attemptsFixture, "krx", null, {
-    ...legalAttempt("unexpected_error"), observed_at: "2026-09-27T12:00:00Z",
+    ...legalAttempt("unexpected_error"), outcome: "error", observed_at: "2026-09-27T12:00:00Z",
   });
   const failedKrxRow = krxAt("2026-09-22", "2026-09-27T12:00:00Z", failedKrx);
   assert.equal(failedKrxRow.artifact.status, "ready");
