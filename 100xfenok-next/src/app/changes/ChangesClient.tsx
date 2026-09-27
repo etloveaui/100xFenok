@@ -532,7 +532,7 @@ export default function ChangesClient() {
 
   return (
     <div className="flex flex-col gap-4" data-changes-surface="true">
-      <div className="flex flex-wrap items-baseline justify-between gap-2">
+      <div className="flex flex-wrap items-baseline justify-between gap-2 md:grid md:grid-cols-1 md:items-center xl:grid-cols-[minmax(0,1fr)_auto]">
         <div className="flex flex-wrap items-baseline gap-x-3 gap-y-1">
           <h1 className="text-[20px] font-semibold text-slate-900">무엇이 바뀌었나</h1>
           <span className="text-[13px] text-slate-500">
@@ -546,7 +546,7 @@ export default function ChangesClient() {
             {` · ${scopeNotice}`}
           </span>
         </div>
-        <div className="flex flex-wrap items-center gap-2">
+        <div className="flex flex-wrap items-center gap-2 xl:justify-self-end">
           <div className="flex gap-0.5 rounded-md bg-slate-100 p-0.5" role="group" aria-label="관심 범위">
             {([
               { key: true, label: "내 종목" },
@@ -586,7 +586,7 @@ export default function ChangesClient() {
 
       <Panel
         loading={!settled}
-        className={!settled ? "min-h-[26rem]" : undefined}
+        className="flex h-[26rem] flex-col !overflow-y-auto"
         empty={settled && rows.length === 0 && !allMissing}
         emptyReason={
           snapshotNotice ?? (revMissing && holdersMissing
@@ -607,8 +607,11 @@ export default function ChangesClient() {
         <PanelHeader
           eyebrow="Diff Review"
           title="전 → 후, 한 줄에 한 변화"
-          right={<span className="text-[12px] text-slate-500">초록 = 상향·신규 · 빨강 = 하향·이탈 · 굵게 = 지금 값</span>}
+          right={<span className="text-[12px] text-slate-500">초록 = 상향·신규 · 빨강 = 하향·이탈 · 굵게 = 지금 값{rows.length > 2 ? " · ↕ 목록 스크롤" : ""}</span>}
         />
+        {/* The list can grow to 14 rows; keep the loading panel footprint while
+            every row remains keyboard-scrollable and the rail stays visible. */}
+        <div className="min-h-0 flex-1 overflow-y-auto [scrollbar-gutter:stable]" role="region" aria-label="변화 목록" tabIndex={0}>
         <div
           className="hidden grid-cols-[180px_minmax(0,1fr)_minmax(0,1fr)_100px] items-center gap-2 border-b border-slate-200 px-4 text-[12px] font-semibold text-slate-500 md:grid md:h-8"
           aria-hidden="true"
@@ -647,6 +650,7 @@ export default function ChangesClient() {
             <div key={row.id} tabIndex={0} className={className}>{body}</div>
           );
         })}
+        </div>
         <EvidenceRail
           freshness={mainFreshness}
           stateLabel={revisionAgeRail?.label ?? undefined}

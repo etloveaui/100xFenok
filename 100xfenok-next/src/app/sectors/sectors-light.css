@@ -68,6 +68,17 @@
  * after loading too, so the tabs and panels do not move when a longer read or
  * an extra source-status pill arrives. Phones keep their separate sizing. */
 @media (min-width: 641px) and (max-width: 1279px) {
+  /* The loaded headline fills the first row. Give navigation its own row
+   * during loading too, instead of letting flex-wrap add 44px + 12px later. */
+  .sec-head {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .sec-title-block {
+    max-width: none;
+  }
+
   .sec-title {
     min-height: 4lh;
   }

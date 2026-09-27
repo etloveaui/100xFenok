@@ -202,6 +202,7 @@ function measureLayout(touch) {
         return `${describe(el)} ${Math.round(r.width)}x${Math.round(r.height)}`;
       }),
       shifts: window.__layoutSweepShifts || [],
+      ...(location.pathname === "/sectors" ? { sectorsGeometry: window.__layoutSweepSectorsGeometry || [] } : {}),
     },
   };
 }
@@ -236,6 +237,44 @@ async function measure(browser, route, width) {
     // instead of a guess. Described at observation time: a node that moved
     // may be gone by the time the page is measured.
     window.__layoutSweepShifts = [];
+    if (location.pathname === "/sectors") {
+      // Capture only the header geometry around loading→ready. The shift API
+      // names moved descendants, which cannot identify a wrapping parent.
+      window.__layoutSweepSectorsGeometry = [];
+      let previous = "";
+      const capture = () => {
+        const head = document.querySelector("[data-sectors-surface] .sec-head");
+        if (!head) return;
+        const box = (selector) => {
+          const node = selector === ":scope" ? head : head.querySelector(selector);
+          if (!node) return null;
+          const rect = node.getBoundingClientRect();
+          return [Math.round(rect.y), Math.round(rect.width), Math.round(rect.height)];
+        };
+        const geometry = {
+          head: box(":scope"),
+          titleBlock: box(".sec-title-block"),
+          eyebrow: box(".sec-eyebrow-row"),
+          title: box(".sec-title"),
+          meta: box(".sec-meta-row"),
+          tabs: box(".sec-tabs"),
+          busy: head.querySelector(".sec-title")?.getAttribute("aria-busy") === "true",
+          metaItems: head.querySelector(".sec-meta-row")?.children.length ?? 0,
+        };
+        const key = JSON.stringify(geometry);
+        if (key === previous) return;
+        previous = key;
+        window.__layoutSweepSectorsGeometry.push({ at: Math.round(performance.now()), ...geometry });
+        if (window.__layoutSweepSectorsGeometry.length > 20) window.__layoutSweepSectorsGeometry.shift();
+      };
+      const start = () => {
+        capture();
+        const timer = setInterval(capture, 40);
+        setTimeout(() => clearInterval(timer), 2_500);
+      };
+      if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", start, { once: true });
+      else start();
+    }
     const describeNode = (node) => {
       if (!(node instanceof Element)) return node?.nodeName?.toLowerCase() ?? "?";
       const id = node.id ? `#${node.id}` : "";
@@ -251,7 +290,11 @@ async function measure(browser, route, width) {
           const moved = (entry.sources || []).slice(0, 3).map((source) => {
             const was = source.previousRect;
             const now = source.currentRect;
-            return `${describeNode(source.node)} y ${Math.round(was.y)}→${Math.round(now.y)} h ${Math.round(was.height)}→${Math.round(now.height)}`;
+            const parents = location.pathname === "/sectors" && source.node instanceof Element
+              ? ` in ${[source.node.parentElement, source.node.parentElement?.parentElement]
+                .filter(Boolean).map(describeNode).join(" < ")}`
+              : "";
+            return `${describeNode(source.node)}${parents} y ${Math.round(was.y)}→${Math.round(now.y)} h ${Math.round(was.height)}→${Math.round(now.height)}`;
           });
           window.__layoutSweepShifts.push({ value: Math.round(entry.value * 1000) / 1000, at: Math.round(entry.startTime), moved });
           window.__layoutSweepShifts.sort((a, b) => b.value - a.value);
@@ -276,10 +319,71 @@ async function measure(browser, route, width) {
     await page.waitForLoadState("networkidle", { timeout: 10_000 }).catch(() => {});
     await page.waitForTimeout(1_500);
     const measured = await page.evaluate(measureLayout, touch);
+    let changesInteraction;
+    if (new URL(route, baseUrl).pathname === "/changes") {
+      // Run after the CLS snapshot: exercise the bounded list without changing
+      // the page-load score or the existing geometry thresholds.
+      try {
+        const list = page.getByRole("region", { name: "변화 목록" });
+        if (await list.count() !== 1) {
+          changesInteraction = { state: "skipped", reason: "list region absent (empty/error or loading)" };
+        } else {
+          const rows = list.locator(":scope > a, :scope > div[tabindex='0']");
+          const rowCount = await rows.count();
+          const linkCount = await list.locator(":scope > a").count();
+          const scroll = () => list.evaluate((node) => ({
+            clientHeight: node.clientHeight,
+            scrollHeight: node.scrollHeight,
+            scrollTop: Math.round(node.scrollTop),
+          }));
+          const initial = await scroll();
+          if (rowCount === 0) {
+            changesInteraction = { state: "skipped", reason: "no change rows", rowCount, linkCount, initial };
+          } else {
+            await rows.last().focus();
+            const lastRowVisible = await list.evaluate((node) => {
+              const row = node.querySelector(":scope > a:last-child, :scope > div[tabindex='0']:last-child");
+              if (!row) return false;
+              const outer = node.getBoundingClientRect();
+              const inner = row.getBoundingClientRect();
+              return inner.top >= outer.top - 1 && inner.bottom <= outer.bottom + 1;
+            });
+            const afterFocus = await scroll();
+            await list.focus();
+            await page.keyboard.press("Home");
+            await page.keyboard.press("End");
+            await page.waitForTimeout(250);
+            const afterEnd = await scroll();
+            const panel = list.locator("xpath=..");
+            const evidence = panel.getByRole("button", { name: "증거 보기", exact: true });
+            let evidenceOpen = null, evidenceClosed = null, detailReachable = null;
+            if (await evidence.count() === 1) {
+              await evidence.click();
+              const drawer = panel.getByRole("region", { name: /^증거:/ });
+              evidenceOpen = await evidence.getAttribute("aria-expanded") === "true" && await drawer.isVisible();
+              if (evidenceOpen) {
+                await drawer.scrollIntoViewIfNeeded();
+                detailReachable = await drawer.isVisible();
+                await evidence.click();
+                evidenceClosed = await evidence.getAttribute("aria-expanded") === "false" && !(await drawer.isVisible());
+              }
+            }
+            const retry = panel.getByRole("button", { name: "지금 재시도", exact: true });
+            changesInteraction = { state: "checked", rowCount, linkCount, initial, afterFocus, lastRowVisible,
+              afterEnd, endReached: afterEnd.scrollTop >= afterEnd.scrollHeight - afterEnd.clientHeight - 1,
+              evidenceOpen, evidenceClosed, detailReachable,
+              retryAccessible: await retry.count() > 0 ? await retry.isVisible() : null };
+          }
+        }
+      } catch (error) {
+        changesInteraction = { state: "error", detail: String(error).slice(0, 160) };
+      }
+    }
     return {
       route,
       width,
       ...measured,
+      ...(changesInteraction ? { changesInteraction } : {}),
       pageErrors: pageErrors.slice(0, 8),
       treePrefetchCounts: Object.fromEntries(treePrefetchCounts),
       ...(blockedExternalCount > 0 ? { blockedExternalCount, blockedExternalRequests } : {}),
