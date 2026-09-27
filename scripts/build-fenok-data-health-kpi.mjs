@@ -1785,6 +1785,9 @@ export function buildDetectionFloorLanes(report, recoveryStates = undefined, opt
       kpi_required: true,
       status: "unobserved",
       reason: "workflow_unobserved",
+      ...(laneConfig.id === "edgar_filings" ? {
+        endpoint: { status: "unobserved", reason: "workflow_unobserved", observed_at: null },
+      } : {}),
       artifact: { status: "unobserved", reason: "workflow_unobserved", source_as_of: null },
     }, recoveryStates === undefined ? undefined : recoveryStates[laneConfig.id] ?? null, options));
   }

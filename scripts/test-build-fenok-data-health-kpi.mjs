@@ -2007,6 +2007,19 @@ assert.equal(PRODUCT_SURFACE_SLA?.max_staleness, 10, "weekly ETF universe cadenc
     assert.equal(item.artifact.source_as_of, null);
     assert.match(item.status_message, /workflow_unobserved/i);
   }
+  const missingEdgar = missing.find((item) => item.id === "edgar_filings");
+  assert.deepEqual(missingEdgar.details.poll_endpoint, {
+    lane_id: "edgar_filings", status: "unobserved", reason: "workflow_unobserved", observed_at: null,
+  });
+  const missingEdgarErrors = [];
+  checkDetectionFloorLane(missingEdgar, missingEdgarErrors,
+    liveConfigs.find((item) => item.id === "edgar_filings"));
+  assert.deepEqual(missingEdgarErrors, [], "an absent report projects an honestly unobserved EDGAR poll");
+  const missingEdgarWatchdog = buildOutcomeWatchdog("2026-07-11T12:00:00Z", [missingEdgar], {
+    lanes: LANE_REGISTRY.lanes.filter((item) => item.id === "edgar_filings"),
+  }).rows[0];
+  assert.equal(missingEdgarWatchdog.state, "unobservable");
+  assert.equal(missingEdgarWatchdog.advance_basis, null, "an absent report cannot certify an EDGAR poll");
 
   for (const malformed of [
     {},
