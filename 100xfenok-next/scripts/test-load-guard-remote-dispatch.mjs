@@ -406,6 +406,20 @@ const expectedUploads = [
     "          if-no-files-found: error",
     "          retention-days: 7",
   ].join("\n"),
+  [
+    "      - name: Upload verified source freshness evidence",
+    "        if: ${{ success() && inputs.suite == 'npm-script' && inputs.script == 'build:source-freshness-pins' }}",
+    "        uses: actions/upload-artifact@v4",
+    "        with:",
+    "          name: verified-source-freshness-evidence",
+    "          path: |",
+    "            scripts/fixtures/data_supply/detection_floor/cases.expected.json",
+    "            data/admin/data-supply-detection-floor.json",
+    "            data/admin/fenok-data-health-kpi.json",
+    "            100xfenok-next/public/data/admin/fenok-data-health-kpi.json",
+    "          if-no-files-found: error",
+    "          retention-days: 7",
+  ].join("\n"),
 ];
 let nonExportWorkflow = workflow;
 for (const block of expectedUploads) {
