@@ -51,6 +51,7 @@ const {
   buildEtfLane,
   buildYahooBatchLane,
   buildSlickChartsDeliveryLane,
+  assessSlickChartsDelivery,
   buildFinraOccLane,
   buildDetectionFloorLanes,
   mapDetectionFloorRow,
@@ -98,7 +99,10 @@ const { buildFetchCronAttemptCoverage } = await import("./build-data-supply-dete
 const { deriveProductSurfaceStampEvidence } = await import("./lib/product-surface-stamp-v2.mjs");
 const { ProducerLkgStateStore } = await import("./lib/producer-lkg-state.mjs");
 const { checkKpiRecoverySourcesAgainstRegistry } = await import("./check-lane-registry-kpi.mjs");
-const { bootstrapSlickchartsCompositeIndex } = await import("./lib/slickcharts-composite-recovery.mjs");
+const {
+  bootstrapSlickchartsCompositeIndex,
+  inspectSlickchartsCompositeLiveIntegrity,
+} = await import("./lib/slickcharts-composite-recovery.mjs");
 const { registerKpiFixtureRoot } = await import("./lib/kpi-fixture-hermetic-fs-guard.mjs");
 
 const BUILDER = path.join(__dirname, "build-fenok-data-health-kpi.mjs");
@@ -638,6 +642,128 @@ assert.equal(PRODUCT_SURFACE_SLA?.max_staleness, 10, "weekly ETF universe cadenc
   const identity = buildSlickChartsDeliveryLane(now, { dataRoot });
   assert.equal(identity.status, "blocked");
   assert.match(identity.checks.find((item) => item.id === "universe_identity")?.detail, /duplicate symbols.*AAPL/i);
+}
+
+// An unchanged history payload keeps its content timestamp while a successful
+// full producer promotion proves Fenok acquired and delivered the complete
+// history bundle. Only the saved producer-bound promotion may supply the
+// history SLA clock; current attempts, failures, invalid/future timestamps, or
+// any live bundle mismatch must not advance it.
+{
+  const now = "2026-09-27T12:00:00.000Z";
+  const oldContentAt = "2026-08-23T00:00:00.000Z"; // 852h old; over the 750h history SLA
+  const recentPromotionAt = "2026-09-07T12:00:00.000Z"; // 480h old; within the history SLA
+  const oldPromotionAt = "2026-08-01T12:00:00.000Z";
+  const historyGroup = SLICKCHARTS_DELIVERY_GROUPS.find((group) => group.id === "slickcharts_history_delivery");
+  const historyFixture = (name, {
+    promotedAt = recentPromotionAt,
+    mutateIndex = null,
+    tamperBoundFile = null,
+  } = {}) => {
+    const root = mkTmp(name);
+    const dataRoot = path.join(root, "data");
+    const base = path.join(dataRoot, "slickcharts");
+    const otherGroupsUpdated = "2026-09-27T11:00:00.000Z";
+    for (const group of SLICKCHARTS_DELIVERY_GROUPS) {
+      const updated = group.id === historyGroup.id ? oldContentAt : otherGroupsUpdated;
+      for (const filename of group.files) writeJson(path.join(base, filename), { updated });
+    }
+    writeJson(path.join(base, "universe.json"), {
+      updated: otherGroupsUpdated,
+      uniqueCount: 1,
+      stocks: [{ symbol: "AAPL", indices: ["sp500"] }],
+    });
+    writeJson(path.join(base, "stocks", "AAPL.json"), { symbol: "AAPL", updated: oldContentAt });
+
+    const index = readySlickchartsCompositeIndex(promotedAt, root);
+    if (mutateIndex) mutateIndex(index);
+    writeJson(path.join(dataRoot, "admin", "slickcharts-composite-recovery", "index.json"), index);
+    if (tamperBoundFile) {
+      const target = path.join(base, tamperBoundFile);
+      const payload = JSON.parse(fs.readFileSync(target, "utf8"));
+      payload.tampered_after_promotion = true;
+      writeJson(target, payload);
+    }
+    const assessment = assessSlickChartsDelivery(now, { dataRoot, slickchartsRepoRoot: root });
+    return {
+      root,
+      dataRoot,
+      index,
+      assessment,
+      lane: buildSlickChartsDeliveryLane(now, { assessment }),
+      historySla: assessment.workflow_sla.find((row) => row.source_id === historyGroup.id),
+    };
+  };
+
+  const promoted = historyFixture("slickcharts-history-promoted");
+  assert.equal(promoted.index.members.history.resolution_state, "fresh_primary");
+  assert.equal(promoted.index.members.history.retry, false);
+  assert.equal(promoted.index.members.history.promoted_run.observed_at, recentPromotionAt);
+  assert.equal(inspectSlickchartsCompositeLiveIntegrity(promoted.root, promoted.index).valid, true,
+    "the saved history member bundle must match all current file paths and hashes");
+  assert.equal(promoted.lane.status, "ready",
+    "a recent full promotion should satisfy history delivery freshness when bytes are unchanged");
+  assert.equal(promoted.historySla.stale, 0);
+  assert.equal(promoted.historySla.current, historyGroup.files.length + 1);
+  assert.equal(JSON.parse(fs.readFileSync(path.join(promoted.dataRoot, "slickcharts", "stocks-dividends.json"), "utf8")).updated, oldContentAt,
+    "promotion freshness must not rewrite provider/content timestamps");
+
+  const partialAttempt = historyFixture("slickcharts-history-partial-attempt", {
+    promotedAt: oldPromotionAt,
+    mutateIndex(index) {
+      index.current_attempt = {
+        run_id: "partial-history-run",
+        run_attempt: 1,
+        event_name: "schedule",
+        observed_at: recentPromotionAt,
+        member_id: "history",
+        decision: "partial_run_deferred",
+      };
+    },
+  });
+  assert.equal(partialAttempt.historySla.stale, historyGroup.files.length + 1,
+    "a recent single-member/partial attempt cannot refresh the old full-promotion clock");
+
+  const failedAttempt = historyFixture("slickcharts-history-failed-attempt", {
+    promotedAt: oldPromotionAt,
+    mutateIndex(index) {
+      index.current_attempt = {
+        run_id: "failed-history-run",
+        run_attempt: 1,
+        event_name: "schedule",
+        observed_at: recentPromotionAt,
+        member_id: "history",
+        decision: "bootstrap_failure_retained",
+      };
+    },
+  });
+  assert.equal(failedAttempt.historySla.stale, historyGroup.files.length + 1,
+    "a failed attempt cannot refresh the prior successful promotion timestamp");
+
+  const tampered = historyFixture("slickcharts-history-tampered", {
+    tamperBoundFile: "stocks-dividends.json",
+  });
+  assert.equal(inspectSlickchartsCompositeLiveIntegrity(tampered.root, tampered.index).valid, false);
+  assert.equal(tampered.historySla.stale, historyGroup.files.length + 1,
+    "a changed bound payload cannot acquire freshness from the saved promotion");
+  const recoveryLane = mapDetectionFloorRow(row("slickcharts"), tampered.index, {
+    slickchartsRepoRoot: tampered.root,
+  });
+  assert.equal(recoveryLane.checks.find((item) => item.id === "recovery_lkg_integrity")?.status, "blocked",
+    "the independent recovery integrity gate must still block the tampered live bundle");
+
+  for (const [label, timestamp] of [
+    ["invalid", "not-a-timestamp"],
+    ["future", "2026-09-28T12:00:00.000Z"],
+  ]) {
+    const invalidPromotion = historyFixture(`slickcharts-history-${label}-promotion`, {
+      mutateIndex(index) {
+        index.members.history.promoted_run.observed_at = timestamp;
+      },
+    });
+    assert.equal(invalidPromotion.historySla.stale, historyGroup.files.length + 1,
+      `${label} promotion timestamp cannot clear the history SLA`);
+  }
 }
 
 // A Monday-morning KPI run reading Friday's SlickCharts daily delivery (stock

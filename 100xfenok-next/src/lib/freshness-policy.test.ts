@@ -122,6 +122,17 @@ test("FRED files use independent daily, weekly and monthly clocks", () => {
   assert.equal(freshnessVerdict("2026-09-01", daily, "2026-09-27").state, "stopped");
 });
 
+test("OECD monthly observations retain their month label but age from month end", () => {
+  const policy = resolveSourcePolicy({ laneId: "oecd_cli", cadence: "monthly" })!;
+  assert.equal(sourceAgeAnchor("2026-08-01", policy), "2026-08-31");
+  const september = freshnessVerdict("2026-08-01", policy, "2026-09-27");
+  assert.equal(september.ageDays, 27);
+  assert.equal(september.state, "fresh");
+  assert.equal(freshnessVerdict("2026-08-01", policy, "2026-10-16").state, "delayed");
+  assert.equal(freshnessVerdict("2026-08-01", policy, "2026-11-15").state, "stopped");
+  assert.equal(freshnessVerdict("2026-09-01", policy, "2026-09-27").state, "unknown");
+});
+
 test("unknown dates and unknown families read unknown", () => {
   for (const value of [null, undefined, "", "not-a-date", "2026-13", "2026-02-30", "2026-09-28"]) {
     const verdict = freshnessVerdict(value, "global_scouter", "2026-09-27");

@@ -1674,21 +1674,26 @@ try {
   {
     const asofRoot = await mkdtemp(path.join(os.tmpdir(), "cloud-data-plane-asof-"));
     try {
-      // Live-shaped oecd-cli tree: index.json carries the real as-of date.
-      await mkdir(path.join(asofRoot, "data/admin/oecd_cli"), { recursive: true });
+      // The retained index pointer owns the observation period. A newer
+      // shadow candidate or acquisition stamp must not advance source_as_of.
+      await mkdir(path.join(asofRoot, "data/admin/oecd_cli/shadow"), { recursive: true });
       await writeFile(
         path.join(asofRoot, "data/admin/oecd_cli/index.json"),
-        JSON.stringify({ updated_at: "2026-08-02T10:00:00.000Z" }),
+        JSON.stringify({ updated_at: "2026-09-08T12:18:57.000Z", items: { oecd_cli: { current: { source_as_of: "2026-08-01" } } } }),
+      );
+      await writeFile(
+        path.join(asofRoot, "data/admin/oecd_cli/shadow/oecd-cli.json"),
+        JSON.stringify({ generated_at: "2026-09-27T12:18:57.000Z", latest_date: "2026-09-01" }),
       );
       await writeFile(path.join(asofRoot, "data/admin/oecd_cli/obs.json"), "{\"a\":1}\n");
       const withIndex = await buildFamilyManifest({
         familyName: "oecd-cli",
         absRoot: path.join(asofRoot, "data/admin/oecd_cli"),
         relRoot: "data/admin/oecd_cli",
-        now: () => "2026-08-03T00:00:00.000Z",
+        now: () => "2026-09-27T00:00:00.000Z",
       });
       assert.equal(withIndex.sourceAsOf.origin, "family-index");
-      assert.ok(withIndex.manifest.assets.every((asset) => asset.source_as_of === "2026-08-02"));
+      assert.ok(withIndex.manifest.assets.every((asset) => asset.source_as_of === "2026-08-01"));
 
       // Fixture-shaped tree without index.json: acquisition time is NOT
       // silently blurred into source time — the fallback is explicit.
@@ -1707,7 +1712,7 @@ try {
       // A declared source that is present but not a date fails loudly.
       await rm(asofRoot, { recursive: true, force: true });
       await mkdir(asofRoot, { recursive: true });
-      await writeFile(path.join(asofRoot, "index.json"), JSON.stringify({ updated_at: "not a date" }));
+      await writeFile(path.join(asofRoot, "index.json"), JSON.stringify({ updated_at: "2026-09-08T12:18:57.000Z", items: { oecd_cli: { current: { source_as_of: "not a date" } } } }));
       await writeFile(path.join(asofRoot, "obs.json"), "{\"a\":1}\n");
       await assertRejectsCode(
         buildFamilyManifest({
