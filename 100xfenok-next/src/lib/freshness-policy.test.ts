@@ -129,6 +129,7 @@ test("unknown dates and unknown families read unknown", () => {
     assert.equal(verdict.ageDays, null);
   }
   assert.equal(freshnessVerdict("2026-09-18", "no-such-family", "2026-09-27").state, "unknown");
+  // @ts-expect-error Deliberately malformed external cadence must fail closed at runtime.
   assert.equal(freshnessVerdict("2026-09-18", { cadence: "fortnightly", releaseLagDays: 0, supplier: "automated", calendar: "calendar" }, "2026-09-27").state, "unknown");
   assert.equal(freshnessVerdict("2026-09-01", resolveSourcePolicy({ artifactId: "fred_banking_monthly" }), "2026-09-27").state, "unknown",
     "a future month-end anchor cannot look fresh mid-month");
