@@ -37,6 +37,7 @@ export const KRX_MARKET_HOLIDAYS_2026 = Object.freeze([
   "2026-05-01", // Labour Day (KRX closed)
   "2026-05-05", // Children's Day
   "2026-05-25", // Buddha's Birthday (substitute, May 24 is Sunday)
+  "2026-06-03", // Nationwide local election (NEC schedule; KRX election-day closure)
   "2026-08-17", // Liberation Day (substitute, Aug 15 is Saturday)
   "2026-09-24", // Chuseok holiday
   "2026-09-25", // Chuseok

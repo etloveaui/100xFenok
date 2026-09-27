@@ -66,6 +66,8 @@ test("US and KRX holidays do not accrue source age", () => {
   const kr = { ...us, calendar: "kr_trading" } as const;
   assert.equal(freshnessVerdict("2026-09-04", us, "2026-09-07").ageDays, 0); // US Labor Day
   assert.equal(freshnessVerdict("2026-09-23", kr, "2026-09-25").ageDays, 0); // Chuseok
+  assert.equal(freshnessVerdict("2026-06-02", kr, "2026-06-03").ageDays, 0); // Local election
+  assert.equal(freshnessVerdict("2026-06-02", kr, "2026-06-04").ageDays, 1);
 });
 
 test("TGA uses federal holidays, not NYSE closures", () => {

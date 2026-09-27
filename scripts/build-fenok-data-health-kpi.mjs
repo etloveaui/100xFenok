@@ -487,9 +487,10 @@ export function slaStatusForAge(age, maxStaleness) {
 //   (d) none                             -> last_advance null, "unobservable"
 // The row keeps source_as_of verbatim (null under b/c): publication or
 // generation time is an observed advance, never a relabeled source date.
-// Age: lanes whose detection freshness policy is business_days are folded by
-// the lane's own declared calendar through the floor's evaluateFreshness
-// (age = business days x 24); every other lane keeps flat wall-clock hours.
+// Age: canonical source dates use the shared content policy, including its
+// family calendar and release lag (age_days x 24 in this row). Publish-outcome
+// and generated_at fallbacks retain the operational 1.5x cadence threshold:
+// declared business-day lanes fold their calendar, other lanes use wall hours.
 export const OUTCOME_WATCHDOG_BASIS = "per_row_advance_basis";
 export const OUTCOME_ADVANCE_BASES = Object.freeze([
   "canonical_file_source_as_of",

@@ -5578,18 +5578,10 @@ for (const [runId, delayMin] of [["26765173733", 368], ["27940007940", 364]]) {
   ok("outcome watchdog ages notApplicableSource lanes from their canonical artifact generated_at without inventing a source date");
 }
 
-// B-OUTCOME-CLOCKS (c): daily lanes whose detection freshness policy already
-// declares unit business_days with a market/federal calendar (treasury_tga:
-// us_federal_business; finra_short_volume: us_trading) must not accrue weekend
-// hours as staleness. A Friday advance read on Saturday/Sunday is current; the
-// same Friday advance read on Tuesday (two business days later) is overdue. The
-// fold reuses the lane's own declared calendar (DATA_SUPPLY_DETECTION_CONFIG
-// freshness.unit/calendar) and the market-calendar business-hour helper the
-// builder already imports for the per-source SLA path -- no second clock. A
-// daily lane declared on plain calendar days (defillama_stablecoins, utc) is
-// the control and keeps flat wall-clock hours. Live reproduction: Saturday
-// 2026-09-05 02:22Z showed treasury_tga/finra_short_volume/occ_options_volume
-// overdue at ~50h vs 36h after a normal Friday advance.
+// B-OUTCOME-CLOCKS (c): source dates use shared content-age limits and their
+// own calendars. TGA allows three federal business days; default daily sources
+// allow two trading/calendar days. Generated/published fallback clocks keep the
+// operational 36-hour threshold and wall-clock age on dateless daily lanes.
 {
   const laneRow = (id, artifact) => ({ id, as_of: artifact.source_as_of ?? null, artifact });
   const freshnessOf = (id) => DATA_SUPPLY_DETECTION_CONFIG.lanes.find((item) => item.id === id).freshness;
@@ -5601,15 +5593,20 @@ for (const [runId, delayMin] of [["26765173733", 368], ["27940007940", 364]]) {
   assert.equal(freshnessOf("defillama_stablecoins").calendar, "utc");
 
   const fridayAdvance = "2026-09-11"; // Friday; date-only, as the detection floor stamps these lanes
+  const fridayHeartbeat = "2026-09-11T00:00:00Z";
   const businessDayLanes = ["treasury_tga", "finra_short_volume"];
   const rowsFor = (now) => new Map(buildOutcomeWatchdog(now, [
     ...businessDayLanes.map((id) => laneRow(id, { source_as_of: fridayAdvance })),
     laneRow("defillama_stablecoins", { source_as_of: fridayAdvance }),
-  ]).rows.map((entry) => [entry.lane_id, entry]));
+    laneRow("stockanalysis_etf_universe", { source_as_of: null, generated_at: fridayHeartbeat }),
+    laneRow("stockanalysis_etf_detail", { source_as_of: null }),
+  ], undefined, { publication: {
+    schema_version: "fenok-kpi-publication-outcomes/v1",
+    families: [{ family: "stockanalysis-etf-detail", result: "published", observed_at: fridayHeartbeat, gate_after: "ok" }],
+  } }).rows.map((entry) => [entry.lane_id, entry]));
 
-  // Saturday 23:00Z: 47h wall-clock (> 36h) but only Friday's 24 business hours elapsed.
+  // Weekend days do not age the Friday business-day source date.
   const saturday = rowsFor("2026-09-12T23:00:00Z");
-  // Sunday 23:00Z: 71h wall-clock, still 24 business hours.
   const sunday = rowsFor("2026-09-13T23:00:00Z");
   for (const id of businessDayLanes) {
     for (const [label, rows] of [["Saturday", saturday], ["Sunday", sunday]]) {
@@ -5624,23 +5621,47 @@ for (const [runId, delayMin] of [["26765173733", 368], ["27940007940", 364]]) {
       assert.equal(row.source_as_of, fridayAdvance);
     }
   }
-  // Tuesday 23:00Z: Friday + Monday + 23h of Tuesday = 71 business hours -> overdue.
+  // Friday to Tuesday is two completed market/federal business days.
   const tuesday = rowsFor("2026-09-15T23:00:00Z");
   for (const id of businessDayLanes) {
-    assert.equal(tuesday.get(id).state, "overdue",
-      `${id}: a Friday advance still unrefreshed on Tuesday is overdue on its business-day calendar`);
+    assert.equal(tuesday.get(id).state, "current", `${id}: Friday source is current on Tuesday at two business days`);
+    assert.equal(tuesday.get(id).age_hours, 48);
   }
-  // Control: the 7-day provider lane stays on plain hours and is overdue on Saturday.
-  assert.equal(saturday.get("defillama_stablecoins").state, "overdue",
-    "a calendar_days/utc daily lane keeps flat wall-clock aging (47h > 36h on Saturday)");
-  assert.equal(saturday.get("defillama_stablecoins").age_hours, 47);
+  const wednesday = rowsFor("2026-09-16T23:00:00Z");
+  assert.equal(wednesday.get("treasury_tga").state, "current", "TGA Friday source remains fresh at three federal business days");
+  assert.equal(wednesday.get("finra_short_volume").state, "overdue", "FINRA Friday source is stale at three trading days");
+  assert.equal(wednesday.get("treasury_tga").age_hours, 72);
+  assert.equal(wednesday.get("treasury_tga").threshold_hours, 72);
+  assert.equal(wednesday.get("finra_short_volume").age_hours, 72);
+  assert.equal(wednesday.get("finra_short_volume").threshold_hours, 48);
+  const thursday = rowsFor("2026-09-17T23:00:00Z");
+  for (const id of businessDayLanes) {
+    assert.equal(thursday.get(id).state, "overdue", `${id}: Friday source is stale at four business days`);
+    assert.equal(thursday.get(id).age_hours, 96);
+  }
+  // Calendar-day source dates also use whole civil days, while dateless
+  // generated/publish outcomes still use the 36-hour operational heartbeat.
+  const monday = rowsFor("2026-09-14T23:00:00Z");
+  assert.equal(saturday.get("defillama_stablecoins").state, "current");
+  assert.equal(saturday.get("defillama_stablecoins").age_hours, 24);
+  assert.equal(monday.get("defillama_stablecoins").state, "overdue", "Friday calendar-day source is stale on Monday at three days");
+  assert.equal(monday.get("defillama_stablecoins").age_hours, 72);
+  assert.equal(monday.get("defillama_stablecoins").threshold_hours, 48);
+  assert.equal(monday.get("defillama_stablecoins").advance_basis, "canonical_file_source_as_of");
   assert.equal(saturday.get("defillama_stablecoins").calendar, "utc");
+  for (const [id, basis] of [["stockanalysis_etf_universe", "canonical_file_generated_at"], ["stockanalysis_etf_detail", "publish_outcome"]]) {
+    const row = saturday.get(id);
+    assert.equal(row.advance_basis, basis);
+    assert.equal(row.state, "overdue", `${id}: Friday 00:00 heartbeat is overdue by Saturday 23:00`);
+    assert.equal(row.age_hours, 47);
+    assert.equal(row.threshold_hours, 36);
+  }
   assert.deepEqual(
-    { current: saturday.get("treasury_tga").state, control: saturday.get("defillama_stablecoins").state },
+    { current: saturday.get("treasury_tga").state, control: monday.get("defillama_stablecoins").state },
     { current: "current", control: "overdue" },
-    "weekend folding applies only to lanes that declare a business-day calendar",
+    "source-age calendars apply by lane while heartbeat clocks remain independent",
   );
-  ok("outcome watchdog folds business-day lanes by their declared calendar and keeps plain-hour lanes on wall-clock");
+  ok("outcome watchdog applies source-age calendar limits and retains operational generated/publish heartbeats");
 }
 
 // B-OUTCOME-CLOCKS (i)-(iii): calendar identity, a true weekday overdue, and
@@ -5651,9 +5672,8 @@ for (const [runId, delayMin] of [["26765173733", 368], ["27940007940", 364]]) {
   const rowsOf = (watchdog) => new Map(watchdog.rows.map((entry) => [entry.lane_id, entry]));
 
   // (i) Monday 2026-10-12 is a federal holiday (Columbus Day) but a trading
-  // day: the same Friday 10-09 advance read on Tuesday 10-13 12:00Z is one
-  // federal business day old (treasury_tga: current) yet two trading days old
-  // (finra_short_volume: overdue). The row's calendar is the lane's own.
+  // day. Tuesday counts one federal day or two trading days; both sources are
+  // still fresh. Wednesday counts two federal days or three trading days.
   const holidayControl = rowsOf(buildOutcomeWatchdog("2026-10-13T12:00:00Z", [
     laneRow("treasury_tga", { source_as_of: "2026-10-09" }),
     laneRow("finra_short_volume", { source_as_of: "2026-10-09" }),
@@ -5662,20 +5682,34 @@ for (const [runId, delayMin] of [["26765173733", 368], ["27940007940", 364]]) {
     "federal calendar: Columbus Day does not elapse, one business day since Friday");
   assert.equal(holidayControl.get("treasury_tga").age_hours, 24);
   assert.equal(holidayControl.get("treasury_tga").calendar, "us_federal_business");
-  assert.equal(holidayControl.get("finra_short_volume").state, "overdue",
-    "trading calendar: Columbus Day is a trading day, two business days since Friday");
+  assert.equal(holidayControl.get("finra_short_volume").state, "current",
+    "trading calendar: Columbus Day counts, but two days remain inside the daily source limit");
   assert.equal(holidayControl.get("finra_short_volume").age_hours, 48);
   assert.equal(holidayControl.get("finra_short_volume").calendar, "us_trading");
+  const holidayBoundary = rowsOf(buildOutcomeWatchdog("2026-10-14T12:00:00Z", [
+    laneRow("treasury_tga", { source_as_of: "2026-10-09" }),
+    laneRow("finra_short_volume", { source_as_of: "2026-10-09" }),
+  ]));
+  assert.equal(holidayBoundary.get("treasury_tga").state, "current", "TGA source remains fresh after two federal business days");
+  assert.equal(holidayBoundary.get("treasury_tga").age_hours, 48);
+  assert.equal(holidayBoundary.get("finra_short_volume").state, "overdue", "FINRA source is stale after three trading days");
+  assert.equal(holidayBoundary.get("finra_short_volume").age_hours, 72);
 
-  // (ii) A Monday advance still unrefreshed on Thursday is overdue on a
-  // business-day calendar (three weekday business days, no weekend involved).
-  const weekdayOverdue = rowsOf(buildOutcomeWatchdog("2026-09-17T12:00:00Z", [
+  // (ii) Monday through Thursday is three days: TGA remains fresh, while OCC
+  // crosses the default daily limit. By Friday both are overdue at four days.
+  const weekdayBoundary = rowsOf(buildOutcomeWatchdog("2026-09-17T12:00:00Z", [
+    laneRow("treasury_tga", { source_as_of: "2026-09-14" }),
+    laneRow("occ_options_volume", { source_as_of: "2026-09-14" }),
+  ]));
+  assert.equal(weekdayBoundary.get("treasury_tga").state, "current", "TGA is fresh at three federal business days");
+  assert.equal(weekdayBoundary.get("occ_options_volume").state, "overdue", "OCC is stale at three trading days");
+  const weekdayOverdue = rowsOf(buildOutcomeWatchdog("2026-09-18T12:00:00Z", [
     laneRow("treasury_tga", { source_as_of: "2026-09-14" }),
     laneRow("occ_options_volume", { source_as_of: "2026-09-14" }),
   ]));
   for (const id of ["treasury_tga", "occ_options_volume"]) {
-    assert.equal(weekdayOverdue.get(id).state, "overdue", `${id}: Monday advance read on Thursday is overdue`);
-    assert.equal(weekdayOverdue.get(id).age_hours, 72);
+    assert.equal(weekdayOverdue.get(id).state, "overdue", `${id}: Monday source read on Friday is overdue`);
+    assert.equal(weekdayOverdue.get(id).age_hours, 96);
     assert.equal(weekdayOverdue.get(id).advance_basis, "canonical_file_source_as_of");
   }
 
@@ -5768,7 +5802,7 @@ for (const [runId, delayMin] of [["26765173733", 368], ["27940007940", 364]]) {
   };
   const lanes = [
     laneRow("treasury_tga", { source_as_of: "2026-09-11" }),
-    laneRow("defillama_stablecoins", { source_as_of: "2026-09-11" }),
+    laneRow("defillama_stablecoins", { source_as_of: "2026-09-09" }),
     laneRow("stockanalysis_etf_universe", { ...dateless, generated_at: "2026-09-12T00:00:00Z" }),
     laneRow("stockanalysis_etf_detail", dateless),
     laneRow("yahoo_etf_fallback", dateless),
@@ -5776,7 +5810,7 @@ for (const [runId, delayMin] of [["26765173733", 368], ["27940007940", 364]]) {
   const watchdog = buildOutcomeWatchdog(now, lanes, undefined, { publication });
   const rows = new Map(watchdog.rows.map((entry) => [entry.lane_id, entry]));
   assert.equal(rows.get("treasury_tga").state, "current", "Friday advance on Saturday, federal calendar");
-  assert.equal(rows.get("defillama_stablecoins").state, "overdue", "47h wall-clock on a calendar_days lane");
+  assert.equal(rows.get("defillama_stablecoins").state, "overdue", "three calendar days exceeds the daily source-age limit");
   assert.equal(rows.get("stockanalysis_etf_universe").advance_basis, "canonical_file_generated_at");
   assert.equal(rows.get("stockanalysis_etf_detail").advance_basis, "publish_outcome");
   assert.equal(rows.get("stockanalysis_etf_detail").state, "current");
