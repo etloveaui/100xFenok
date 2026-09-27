@@ -25,6 +25,7 @@ import {
   MISSED_WINDOW_MULTIPLIER,
   MISSED_WINDOW_WORKFLOWS,
   cronIntervalHours,
+  declaredMissedSlotCount,
   evaluateWorkflow,
   mergeWorkflowRunBatches,
   missedSlotCount,
@@ -75,9 +76,23 @@ assert.ok(!MISSED_WINDOW_WORKFLOWS.has("retention-sweep.yml"), "the owner-contro
 assert.equal(missedSlotCount("11 * * * *", Date.parse("2026-08-20T23:35:33Z"), NOW), 2);
 assert.equal(missedSlotCount("7 * * * *", Date.parse("2026-08-20T23:35:01Z"), NOW), 2);
 assert.equal(missedSlotCount("41 */6 * * *", Date.parse("2026-08-20T19:18:23Z"), NOW), 1);
-assert.equal(missedSlotCount(RESTORE_CRON, Date.parse("2026-08-21T00:50:00Z"), NOW), 2);
-assert.equal(missedSlotCount(RESTORE_CRON, Date.parse("2026-08-21T01:05:00Z"), NOW), 1);
+assert.equal(declaredMissedSlotCount(RESTORE_CRON, Date.parse("2026-08-21T00:50:00Z"), NOW), 2);
+assert.equal(declaredMissedSlotCount(RESTORE_CRON, Date.parse("2026-08-21T01:05:00Z"), NOW), 1);
 assert.equal(missedSlotCount("not a cron", 0, NOW), null);
+assert.equal(declaredMissedSlotCount("not a cron", 0, NOW), null);
+// Existing hourly observers let an early any-event run satisfy its hour;
+// the restore watchdog counts exact scheduled instants and must not borrow it.
+const earlyRun = Date.parse("2026-08-21T00:00:00Z");
+const halfHour = Date.parse("2026-08-21T00:30:00Z");
+assert.equal(missedSlotCount("23 * * * *", earlyRun, halfHour), 0);
+assert.equal(declaredMissedSlotCount("23 * * * *", earlyRun, halfHour), 1);
+const legacyEarly = evaluateWorkflow(detector("data-plane-serving-probe.yml", "23 * * * *"),
+  [run(41, "2026-08-21T00:00:00Z")], { now: halfHour });
+assert.equal(legacyEarly.missed_schedule_slot_count, 0, "existing detectors keep the legacy counter");
+const reorderedStarts = evaluateWorkflow(detector("data-plane-serving-probe.yml", "23 * * * *"),
+  [run(43, "2026-08-21T00:00:00Z"), run(42, "2026-08-21T01:00:00Z")], { now: NOW });
+assert.equal(reorderedStarts.missed_schedule_slot_count, 1, "existing detectors keep the newest-counted-run anchor even when queue delays reorder start times");
+
 
 {
   // One missed slot is tolerated: GitHub drops scheduled runs routinely.
@@ -214,7 +229,7 @@ assert.equal(missedSlotCount("not a cron", 0, NOW), null);
 assert.equal(MISSED_WINDOW_MULTIPLIER, 2, "the tolerated missed-slot count is part of the contract");
 
 // fh-258 stale-page fixture. Measured 2026-09-14T08:11:53Z: the serving-probe
-// row anchored at 2026-08-19T07:24:30Z with 104 passed slots while run
+// row anchored at 2026-08-19T07:24:30Z with 105 counted slots while run
 // 34809685448 had already succeeded on 2026-09-14T05:27:04Z. The detector had
 // accepted a stale single page; nothing else reproduces that row.
 const STALE_PROBE_NOW = Date.parse("2026-09-14T08:11:53Z");
@@ -227,7 +242,7 @@ const STALE_ANCHOR = run(32227682844, "2026-08-19T07:24:30Z", { conclusion: "fai
     { now: STALE_PROBE_NOW },
   );
   assert.equal(result.latest_run_started_at, "2026-08-19T07:24:30Z");
-  assert.equal(result.missed_schedule_slot_count, 104, "the actual cron slots from Aug 19 12:41Z to Sep 14 06:41Z total 104");
+  assert.equal(result.missed_schedule_slot_count, 105, "existing serving-probe counting stays unchanged");
   assert.equal(result.alarm_reasons.includes("missed_schedule_window"), true);
   assert.equal(
     needsMissedWindowReverification(result),
@@ -238,7 +253,7 @@ const STALE_ANCHOR = run(32227682844, "2026-08-19T07:24:30Z", { conclusion: "fai
 
 {
   // Disagreeing second read: the widened page carries the fresh success, so the
-  // merged evaluation clears the false positive (one slot, not 104).
+  // merged evaluation clears the false positive (one slot, not 105).
   const merged = mergeWorkflowRunBatches([
     [STALE_ANCHOR],
     [run(34809685448, "2026-09-14T05:27:04Z")],
@@ -265,7 +280,7 @@ const STALE_ANCHOR = run(32227682844, "2026-08-19T07:24:30Z", { conclusion: "fai
     agreeing,
     { now: STALE_PROBE_NOW },
   );
-  assert.equal(result.missed_schedule_slot_count, 104);
+  assert.equal(result.missed_schedule_slot_count, 105);
   assert.equal(result.alarm_reasons.includes("missed_schedule_window"), true);
 }
 

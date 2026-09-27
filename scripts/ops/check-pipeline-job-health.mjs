@@ -1440,13 +1440,35 @@ export const MISSED_WINDOW_ACTIVE_RUN_MAX_AGE_MS = 10 * 60_000;
 // slots had both plainly passed unrun.
 export const MISSED_WINDOW_MULTIPLIER = 2;
 
+// Preserve the existing detector policy and its independent-observer parity.
+// Exact declared instants are a separate restore-watchdog contract below.
+export function missedSlotCount(cron, sinceMs, nowMs) {
+  const intervalHours = cronIntervalHours(cron);
+  if (intervalHours === null || !Number.isFinite(sinceMs) || !Number.isFinite(nowMs)) return null;
+  const fields = cron.trim().split(/\s+/);
+  const minute = Number(fields[0]);
+  if (!Number.isInteger(minute) || minute < 0 || minute > 59) return null;
+  const stepMs = intervalHours * 3_600_000;
+  // Walk from the slot at or before `since` forward, so a slot is counted only
+  // once it has actually passed.
+  const start = new Date(sinceMs);
+  const anchor = Date.UTC(
+    start.getUTCFullYear(), start.getUTCMonth(), start.getUTCDate(),
+    start.getUTCHours(), minute, 0, 0,
+  );
+  let slot = (intervalHours === 1 || anchor <= sinceMs) ? anchor + stepMs : anchor;
+  let missed = 0;
+  while (slot <= nowMs && missed <= 1000) { missed += 1; slot += stepMs; }
+  return missed;
+}
+
 // Scheduled instants strictly after `since` and at or before `now`. Reuse the
 // existing cron parser so minute lists such as the restore watchdog's
 // `4,19,34,49` are counted as real schedule slots rather than rejected as a
 // non-numeric minute field. Stop after 1001 slots: callers only need to know
 // whether the two-slot alarm threshold was crossed, and the cap bounds stale
 // records without changing their alarm result.
-export function missedSlotCount(cron, sinceMs, nowMs) {
+export function declaredMissedSlotCount(cron, sinceMs, nowMs) {
   if (!Number.isFinite(sinceMs) || !Number.isFinite(nowMs)) return null;
   let parsed;
   try {
@@ -1509,7 +1531,7 @@ export function isLostScheduledSlot(run) {
 // A missed_schedule_window verdict hinges entirely on the run page's newest
 // entry, and a stale or truncated page fabricates it. Measured twice
 // (2026-09-13T12:10:47Z, 2026-09-14T08:11:53Z): the serving-probe row anchored
-// at 2026-08-19T07:24:30Z with 104 passed slots while run 34809685448 had
+// at 2026-08-19T07:24:30Z with 105 counted slots while run 34809685448 had
 // succeeded on 2026-09-14T05:27:04Z. The verdict is therefore re-read once
 // with a wide page and the second read adjudicates; genuine silence reproduces.
 export function needsMissedWindowReverification(row) {
@@ -1578,33 +1600,37 @@ export function evaluateWorkflow(workflow, runs, { now = Date.now(), activeSched
   let missedWindowHours = null;
   let missedSlots = null;
   if (MISSED_WINDOW_WORKFLOWS.has(workflow.file) && intervalHours !== null) {
-    // A manual dispatch is useful recovery evidence for a lost acquisition
-    // slot, but it is not evidence that the schedule itself remains live.
-    // Anchor missed-window counting only to scheduled runs, with an additional
-    // recent in-progress schedule observation for the bounded restore watchdog.
-    const completedLivenessRuns = MISSED_WINDOW_ACTIVE_RUN_WORKFLOWS.has(workflow.file)
-      ? countedRuns.filter((run) => run?.event === "schedule")
-      : countedRuns;
-    const completedScheduleEvidence = completedLivenessRuns
-      .map((run) => run?.run_started_at || run?.created_at)
-      .map((timestamp) => Date.parse(timestamp))
-      .filter((timestamp) => Number.isFinite(timestamp) && timestamp <= now);
-    const inProgressScheduleEvidence = MISSED_WINDOW_ACTIVE_RUN_WORKFLOWS.has(workflow.file)
-      && Array.isArray(activeScheduledRuns)
-      ? activeScheduledRuns
-        .filter((run) => run?.event === "schedule" && run?.status === "in_progress")
-        // Use actual execution start, not created_at: a long queue wait is
-        // outside the job timeout and cannot establish a healthy run window.
-        .map((run) => Date.parse(run?.run_started_at))
-        .filter((startedAt) => Number.isFinite(startedAt)
-          && startedAt <= now
-          && now - startedAt <= MISSED_WINDOW_ACTIVE_RUN_MAX_AGE_MS)
-      : [];
-    const scheduleEvidence = [...completedScheduleEvidence, ...inProgressScheduleEvidence];
-    const sinceMs = scheduleEvidence.length > 0 ? Math.max(...scheduleEvidence) : null;
+    const isRestoreWatchdog = MISSED_WINDOW_ACTIVE_RUN_WORKFLOWS.has(workflow.file);
+    // Existing detectors retain their newest-counted-run anchor, including
+    // queue-delayed execution order. Only restore observes schedule liveness.
+    let sinceMs = latestStartedAt ? Date.parse(latestStartedAt) : null;
+    if (isRestoreWatchdog) {
+      // A manual dispatch is useful recovery evidence for a lost acquisition
+      // slot, but it is not evidence that the schedule itself remains live.
+      // Anchor missed-window counting only to scheduled runs, with an additional
+      // recent in-progress schedule observation for the bounded restore watchdog.
+      const completedLivenessRuns = countedRuns.filter((run) => run?.event === "schedule");
+      const completedScheduleEvidence = completedLivenessRuns
+        .map((run) => run?.run_started_at || run?.created_at)
+        .map((timestamp) => Date.parse(timestamp))
+        .filter((timestamp) => Number.isFinite(timestamp) && timestamp <= now);
+      const inProgressScheduleEvidence = Array.isArray(activeScheduledRuns)
+        ? activeScheduledRuns
+          .filter((run) => run?.event === "schedule" && run?.status === "in_progress")
+          // Use actual execution start, not created_at: a long queue wait is
+          // outside the job timeout and cannot establish a healthy run window.
+          .map((run) => Date.parse(run?.run_started_at))
+          .filter((startedAt) => Number.isFinite(startedAt)
+            && startedAt <= now
+            && now - startedAt <= MISSED_WINDOW_ACTIVE_RUN_MAX_AGE_MS)
+        : [];
+      const scheduleEvidence = [...completedScheduleEvidence, ...inProgressScheduleEvidence];
+      sinceMs = scheduleEvidence.length > 0 ? Math.max(...scheduleEvidence) : null;
+    }
     const tightestCron = (Array.isArray(workflow.crons) ? workflow.crons : [])
       .find((cron) => cronIntervalHours(cron) === intervalHours) ?? null;
-    missedSlots = tightestCron === null || sinceMs === null ? null : missedSlotCount(tightestCron, sinceMs, now);
+    const countSlots = isRestoreWatchdog ? declaredMissedSlotCount : missedSlotCount;
+    missedSlots = tightestCron === null || sinceMs === null ? null : countSlots(tightestCron, sinceMs, now);
     if (Number.isFinite(missedSlots) && missedSlots >= MISSED_WINDOW_MULTIPLIER) {
       missedWindowHours = (now - sinceMs) / 3_600_000;
     }
