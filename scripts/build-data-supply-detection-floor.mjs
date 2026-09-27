@@ -14,6 +14,7 @@ import {
 import { LANE_REGISTRY, registryDigest } from "./lib/lane-registry.mjs";
 import { matchesDayWeekday } from "./lib/schedule-day-weekday.mjs";
 import { freshnessVerdict, policyToday, resolveSourcePolicy, sourceAgeAnchor } from "../100xfenok-next/src/lib/freshness-policy.mjs";
+import { KRX_MARKET_HOLIDAYS_2026 } from "./lib/market-calendar.mjs";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -644,6 +645,11 @@ function evaluateArtifactContract(contract, artifactRootInfo, claimedPaths, fsMo
 }
 
 function calendarById(calendars, id) {
+  // KRX source age uses the canonical market calendar. The detector JSON
+  // continues to own workflow schedules and never copies these holidays.
+  if (id === "kr_trading") return {
+    id, timezone: "Asia/Seoul", weekend_days: [0, 6], holidays: KRX_MARKET_HOLIDAYS_2026,
+  };
   const row = calendars.calendars.find((candidate) => candidate.id === id);
   if (!row) fail("calendar_error", `calendar ${id} is missing`);
   return row;
@@ -975,7 +981,11 @@ export function evaluateFreshness(sourceAsOf, policy, nowValue, calendars) {
   const calendar = calendarById(calendars, policy.calendar);
   const localDateFuture = DATE_ONLY.test(source.value)
     && sourceOrdinal(source.epoch, source.value, calendar) > calendarParts(now.epoch, calendar.timezone).ordinal;
-  if (source.epoch > now.epoch || localDateFuture) return reasonResult("future_source", { source_as_of: sourceAsOf, age: null, unit: policy.unit });
+  // A KRX date-only stamp describes the Seoul civil day, which can begin
+  // while UTC is still on the previous date. Timestamps keep the instant guard.
+  const futureInstant = source.epoch > now.epoch
+    && !(policy.calendar === "kr_trading" && DATE_ONLY.test(source.value));
+  if (futureInstant || localDateFuture) return reasonResult("future_source", { source_as_of: sourceAsOf, age: null, unit: policy.unit });
   if (policy.unit === "due_window") {
     if (policy.due_policy.kind === "source_date_plus_days") {
       const due = source.epoch + policy.due_policy.days * 86_400_000;
@@ -1099,7 +1109,14 @@ export function validateConfigCalendarBindings(config, calendars) {
   validateCalendars(calendars);
   const calendarIds = new Set(calendars.calendars.map((row) => row.id));
   for (const lane of config.lanes) {
-    if (!calendarIds.has(lane.freshness.calendar)) fail("calendar_error", `${lane.id} source freshness calendar is missing`);
+    const krxCanonicalCalendar = lane.id === "krx" && lane.freshness.calendar === "kr_trading"
+      && lane.freshness.unit === "business_days";
+    if (lane.id === "krx" && !krxCanonicalCalendar) {
+      fail("calendar_error", "krx source freshness must use kr_trading business days");
+    }
+    if (!krxCanonicalCalendar && !calendarIds.has(lane.freshness.calendar)) {
+      fail("calendar_error", `${lane.id} source freshness calendar is missing`);
+    }
     for (const member of lane.producer_members) {
       if (member.cadence_declaration?.kind !== "github_workflow") continue;
       if (!calendarIds.has(member.cadence_calendar)) fail("calendar_error", `${lane.id}:${member.id} cadence calendar is missing`);
@@ -1426,7 +1443,7 @@ function attemptMap(document) {
 
 const SHARED_SOURCE_LANES = new Set([
   "benchmarks", "global_scouter", "fred_yardeni",
-  "fred_banking", "treasury_tga", "finra_ats_weekly",
+  "fred_banking", "treasury_tga", "finra_ats_weekly", "krx",
 ]);
 
 function sharedSourceResult(source, lane, now, calendars, artifactId = undefined) {

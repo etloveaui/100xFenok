@@ -15,6 +15,7 @@ import {
   validateDetectionConfig,
 } from "./lib/data-supply-detection-config.mjs";
 import { registryDigest } from "./lib/lane-registry.mjs";
+import { KRX_MARKET_HOLIDAYS_2026 } from "./lib/market-calendar.mjs";
 import {
   ATTEMPT_SCHEMA,
   ATTEMPT_SHARD_SCHEMA,
@@ -723,6 +724,11 @@ function runConfigAndFixtureChecks() {
   assert.deepEqual(krx.producer_members[0].schedule, ["30 10 * * 1-5"]);
   assert.equal(krx.producer_members[0].artifact_contracts[0].path, "data/admin/fenok-edge-korea-krx-daily-index.json");
   assert.equal(krx.endpoint_contract.transport, "library");
+  assert.deepEqual({ unit: krx.freshness.unit, calendar: krx.freshness.calendar, max: krx.freshness.max_staleness },
+    { unit: "business_days", calendar: "kr_trading", max: 2 });
+  const misboundKrx = clone(DATA_SUPPLY_DETECTION_CONFIG);
+  misboundKrx.lanes.find((item) => item.id === "krx").freshness.calendar = "utc";
+  assertThrowsCode(() => validateConfigCalendarBindings(misboundKrx, calendarsFixture), "calendar_error");
   assert.equal(treasuryTga.freshness.unit, "business_days");
   assert.equal(treasuryTga.freshness.calendar, "us_federal_business");
   assert.equal(treasuryTga.freshness.max_staleness, 2);
@@ -1193,6 +1199,7 @@ function runBaselineAndArtifactChecks() {
     calendars: calendarsFixture,
     now: expectedFixture.baseline.now,
   });
+  assert.equal(lane(report, "krx").artifact.unit, "business_days");
   assert.equal(lane(report, "gdelt_news_tone").artifact.reason, "ok",
     "GDELT RFC3339 row timestamps must remain valid source evidence");
   assert.equal(lane(report, "gdelt_news_tone").artifact.source_as_of, "2026-07-10T15:02:00Z",
@@ -1219,6 +1226,38 @@ function runBaselineAndArtifactChecks() {
   assert.equal(fredSources[3].source_state, "fresh");
   assert.deepEqual(report, expectedFixture.baseline.expected_report);
   assert.equal(createSha(reportBytes(report)), expectedFixture.baseline.report_file_sha256);
+
+  const krxRoot = materializeArtifacts("all_valid");
+  const krxPath = path.join(krxRoot.raw, "data", "admin", "fenok-edge-korea-krx-daily-index.json");
+  const krxDocument = readJson(krxPath);
+  const krxAt = (source, now, attempts = attemptsFixture) => {
+    krxDocument.as_of = source;
+    fs.writeFileSync(krxPath, JSON.stringify(krxDocument), { encoding: "utf8", mode: 0o600 });
+    return lane(buildDetectionReport({ artifactRoot: krxRoot.raw, attempts, calendars: calendarsFixture, now }), "krx");
+  };
+  for (const [source, age, status] of [
+    ["2026-09-22", 1, "ready"], ["2026-09-21", 2, "ready"],
+    ["2026-09-18", 3, "stale"],
+  ]) {
+    const row = krxAt(source, "2026-09-27T12:00:00Z");
+    assert.equal(row.artifact.age, age, `KRX ${source} source age`);
+    assert.equal(row.artifact.status, status, `KRX ${source} source status`);
+  }
+  const failedKrx = replaceAttempt(attemptsFixture, "krx", null, {
+    ...legalAttempt("unexpected_error"), observed_at: "2026-09-27T12:00:00Z",
+  });
+  const failedKrxRow = krxAt("2026-09-22", "2026-09-27T12:00:00Z", failedKrx);
+  assert.equal(failedKrxRow.artifact.status, "ready");
+  assert.equal(failedKrxRow.endpoint.reason, "unexpected_error");
+  assert.equal(failedKrxRow.status, "unavailable", "fresh KRX content cannot hide the latest failed attempt");
+  for (const source of ["2026-02-30", "2026-09-28"]) {
+    const row = krxAt(source, "2026-09-27T12:00:00Z");
+    assert.notEqual(row.artifact.status, "ready", `${source} cannot become fresh KRX content`);
+  }
+  assert.equal(krxAt("2026-09-28", "2026-09-27T14:30:00Z").artifact.reason, "future_source",
+    "KRX tomorrow remains future before Seoul midnight");
+  assert.equal(krxAt("2026-09-28", "2026-09-27T15:30:00Z").artifact.status, "ready",
+    "KRX date-only today is valid after Seoul midnight, before UTC midnight");
 
   const staleDailyRoot = materializeArtifacts("all_valid");
   const staleDailyPath = path.join(staleDailyRoot.raw, "data", "macro", "fred-banking-daily.json");
@@ -2075,7 +2114,7 @@ function runCliReproduction(artifactRoot) {
   const verifierSource = String.raw`
     const fs = require("node:fs");
     const { createHash } = require("node:crypto");
-    const [configPath, reportPath, expectedPath, attemptsPath, artifactsPath, calendarsPath] = process.argv.slice(1);
+    const [configPath, reportPath, expectedPath, attemptsPath, artifactsPath, calendarsPath, krxHolidaysJson] = process.argv.slice(1);
     const hash = (value) => createHash("sha256").update(value).digest("hex");
     const canonicalize = (value) => {
       if (value === null || typeof value === "string" || typeof value === "boolean") return value;
@@ -2095,6 +2134,7 @@ function runCliReproduction(artifactRoot) {
     const attempts = JSON.parse(fs.readFileSync(attemptsPath, "utf8"));
     const artifacts = JSON.parse(fs.readFileSync(artifactsPath, "utf8"));
     const calendars = JSON.parse(fs.readFileSync(calendarsPath, "utf8"));
+    const krxCalendar = { id: "kr_trading", timezone: "Asia/Seoul", weekend_days: [0, 6], holidays: JSON.parse(krxHolidaysJson) };
     const pointer = (document, raw) => raw === "" ? document : raw.slice(1).split("/").reduce((value, token) => value == null ? undefined : value[token.replaceAll("~1", "/").replaceAll("~0", "~")], document);
     const reasonStatus = { ok: "ready", declared_cadence: "ready", workflow_unobserved: "unobserved", stale: "stale", schema_drift: "drift", decode_error: "drift", missing_artifact: "unavailable", transport_error: "unavailable", http_error: "unavailable", auth_error: "unavailable", provider_throttled: "unavailable", rate_limited: "unavailable", empty_payload: "unavailable", future_source: "unavailable", unexpected_error: "unavailable" };
     const severity = { ready: 0, unobserved: 1, stale: 2, drift: 3, unavailable: 4 };
@@ -2208,10 +2248,15 @@ function runCliReproduction(artifactRoot) {
     const freshnessReason = (source, policy) => {
       if (source === null) return "ok";
       const now = expected.baseline.now;
-      const calendar = calendars.calendars.find((row) => row.id === policy.calendar);
+      const calendar = policy.calendar === "kr_trading" ? krxCalendar
+        : calendars.calendars.find((row) => row.id === policy.calendar);
       const nowEpoch = Date.parse(now);
       const sourceEpoch = Date.parse(/^\d{4}-\d{2}-\d{2}$/.test(source) ? source + "T00:00:00Z" : source);
-      if (sourceEpoch > nowEpoch || (/^\d{4}-\d{2}-\d{2}$/.test(source) && sourceOrdinal(source, calendar) > ordinal(calendarParts(nowEpoch, calendar.timezone)))) return "future_source";
+      const localDateFuture = /^\d{4}-\d{2}-\d{2}$/.test(source)
+        && sourceOrdinal(source, calendar) > ordinal(calendarParts(nowEpoch, calendar.timezone));
+      const futureInstant = sourceEpoch > nowEpoch
+        && !(policy.calendar === "kr_trading" && /^\d{4}-\d{2}-\d{2}$/.test(source));
+      if (futureInstant || localDateFuture) return "future_source";
       if (policy.unit === "due_window") {
         if (policy.due_policy.kind === "source_date_plus_days") return nowEpoch <= sourceEpoch + policy.due_policy.days * 86400000 ? "ok" : "stale";
         return "ok";
@@ -2288,7 +2333,7 @@ function runCliReproduction(artifactRoot) {
     if (canonical(counts) !== canonical(report.counts) || canonical(modes) !== canonical(report.monitoring_mode_counts)) throw new Error("aggregate mismatch");
     process.stdout.write(JSON.stringify({ config_digest: configDigest, report_file_sha256: reportDigest, logical_lanes: report.lanes.length, producer_members: Object.values(members).reduce((sum, value) => sum + value, 0) }) + "\n");
   `;
-  const verifier = spawnSync(process.execPath, ["-e", verifierSource, configPath, reportPath, EXPECTED_PATH, ATTEMPTS_PATH, ARTIFACTS_PATH, CALENDARS_PATH], {
+  const verifier = spawnSync(process.execPath, ["-e", verifierSource, configPath, reportPath, EXPECTED_PATH, ATTEMPTS_PATH, ARTIFACTS_PATH, CALENDARS_PATH, JSON.stringify(KRX_MARKET_HOLIDAYS_2026)], {
     cwd: REPO_ROOT,
     encoding: "utf8",
     env: { ...process.env, TZ: "Pacific/Honolulu", LC_ALL: "C" },

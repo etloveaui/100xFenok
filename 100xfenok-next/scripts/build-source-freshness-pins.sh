@@ -20,6 +20,8 @@ node ../scripts/build-data-supply-detection-floor.mjs \
 node ../scripts/build-data-supply-detection-floor.mjs --verify-report "$floor_output/data-supply-detection-floor.json"
 install -m 0644 "$floor_output/data-supply-detection-floor.json" "$repo_root/data/admin/data-supply-detection-floor.json"
 
+npm run build:fenok-edge-coverage-index
+npm run qa:fenok-edge-coverage-index
 npm run build:fenok-data-health-kpi
 npm run qa:source-freshness-policy
 npm run qa:fenok-data-health-kpi:artifact

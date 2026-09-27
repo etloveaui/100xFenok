@@ -70,6 +70,32 @@ test("US and KRX holidays do not accrue source age", () => {
   assert.equal(freshnessVerdict("2026-06-02", kr, "2026-06-04").ageDays, 1);
 });
 
+test("KRX daily source age uses Seoul trading days with no release lag", () => {
+  const policy = resolveSourcePolicy({ laneId: "krx", cadence: "daily" })!;
+  assert.equal(policy, FAMILY_POLICY.krx);
+  assert.equal(policy.calendar, "kr_trading");
+  assert.equal(policy.releaseLagDays, 0);
+  for (const [source, age, state] of [
+    ["2026-09-23", 0, "fresh"], // Chuseok and weekend add no age.
+    ["2026-09-22", 1, "fresh"],
+    ["2026-09-21", 2, "fresh"],
+    ["2026-09-18", 3, "delayed"],
+    ["2026-09-17", 4, "stopped"],
+  ] as const) {
+    assert.deepEqual(freshnessVerdict(source, policy, "2026-09-27"), {
+      state, ageDays: age, supplier: "automated", cadence: "daily",
+    });
+  }
+  const beforeSeoulMidnight = "2026-09-27T14:30:00Z";
+  const afterSeoulMidnight = "2026-09-27T15:30:00Z";
+  assert.equal(policyToday(beforeSeoulMidnight, policy), "2026-09-27");
+  assert.equal(policyToday(afterSeoulMidnight, policy), "2026-09-28");
+  assert.equal(freshnessVerdict("2026-09-21", policy, policyToday(beforeSeoulMidnight, policy)).state, "fresh");
+  assert.equal(freshnessVerdict("2026-09-21", policy, policyToday(afterSeoulMidnight, policy)).state, "delayed");
+  assert.equal(freshnessVerdict("2026-09-28", policy, policyToday(beforeSeoulMidnight, policy)).state, "unknown");
+  assert.equal(freshnessVerdict("2026-02-30", policy, "2026-09-27").state, "unknown");
+});
+
 test("TGA uses federal holidays, not NYSE closures", () => {
   assert.equal(freshnessVerdict("2026-10-09", "treasury_tga", "2026-10-13", { calendars }).ageDays, 1);
   assert.equal(freshnessVerdict("2026-10-09", "treasury_tga", "2026-10-13").state, "unknown");

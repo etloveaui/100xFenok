@@ -32,6 +32,7 @@ import {
   selectExplicitJapanRows,
   selectJapanTickerAnomalies,
 } from "./lib/japan-universe.mjs";
+import { FAMILY_POLICY, FRESHNESS_CLASSES, freshnessVerdict, policyToday } from "../100xfenok-next/src/lib/freshness-policy.mjs";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const REPO_ROOT = path.resolve(__dirname, "..");
@@ -268,6 +269,21 @@ function countedDailySourceFresh(date) {
 function countedDailySourceStatus({ coverageReady, sourceDate }) {
   if (!coverageReady) return "blocked";
   return countedDailySourceFresh(sourceDate) ? "ready" : "stale";
+}
+
+export function krxDailySourceEvidence({ sourceDate, coverageReady, now }) {
+  const policy = FAMILY_POLICY.krx;
+  const klass = FRESHNESS_CLASSES[policy.cadence];
+  const verdict = freshnessVerdict(sourceDate, policy, policyToday(now, policy));
+  const sourceStatus = verdict.state === "fresh" ? "ready" : "stale";
+  return {
+    source_state: verdict.state,
+    age_days: verdict.ageDays,
+    age_unit: "kr_trading_days",
+    max_age_days: klass.cycleDays + policy.releaseLagDays + klass.graceDays,
+    source_status: sourceStatus,
+    full_status: coverageReady ? sourceStatus : "blocked",
+  };
 }
 
 function ageHours(timestamp, now = Date.now()) {
@@ -611,6 +627,9 @@ const koreaCoverage = krxCoverageContract({
   sourceDenominator: koreaRows.length,
   receiptValidation: koreaReceiptValidation,
 });
+const koreaSourceEvidence = krxDailySourceEvidence({
+  sourceDate: koreaCountedSourceDate, coverageReady: koreaCoverage.coverage_ready, now: buildNow,
+});
 const koreaCoveredCount = koreaCoverage.covered_count;
 const s0DailyEligibleCount = s0DailyEligibleRows.length - koreaCoverage.excluded_count;
 
@@ -857,7 +876,6 @@ function activeS0BlockingEvidence() {
   const finraRowBreakdown = countByCategory(finraMissingRows, classifyFinraRowGap);
   const finraStrictBreakdown = countByCategory(finraStrictGapRows, (row) => classifyFinraStrictGap(row, flowRowsByTicker.get(rowTicker(row))));
   const occBreakdown = countByCategory(occMissingRows, classifyOccGap);
-  const krxCoverageReady = koreaCoverage.coverage_ready;
   const finraCoverageReady = finraEligibleSourceReadyRows.length === finraEligibleRows.length;
   const occDailyReady = occPlainSourceReadyRows.length === occDailyEligibleRows.length;
   const usClassYfDailyReady = usClassYfReadyEvidenceRows.length === usClassYfRows.length;
@@ -866,15 +884,17 @@ function activeS0BlockingEvidence() {
   const checks = [
     {
       id: "krx_full_daily_source_ready",
-      status: countedDailySourceStatus({ coverageReady: krxCoverageReady, sourceDate: koreaCountedSourceDate }),
+      status: koreaSourceEvidence.full_status,
       covered_count: koreaCoverage.covered_count,
       denominator: koreaCoverage.denominator,
       source_denominator: koreaCoverage.source_denominator,
       excluded_count: koreaCoverage.excluded_count,
       missing_count: koreaCoverage.missing_count,
       source_date: koreaCountedSourceDate,
-      age_days: ageDays(koreaCountedSourceDate),
-      max_age_days: MAX_COUNTED_DAILY_SOURCE_AGE_DAYS,
+      age_days: koreaSourceEvidence.age_days,
+      age_unit: koreaSourceEvidence.age_unit,
+      source_state: koreaSourceEvidence.source_state,
+      max_age_days: koreaSourceEvidence.max_age_days,
       evidence_source: koreaEvidence.source,
       receipt_validation: koreaReceiptValidation.ok ? "valid" : koreaReceiptValidation.reason,
       eligibility_policy: "Validated v3 receipt eligibility uses the current KRX issuer master; aggregate source, eligible, and excluded counts are disclosed without publishing per-issuer evidence.",
@@ -1574,7 +1594,8 @@ const index = {
     },
   },
   freshness_gate: {
-    max_calendar_age_days_for_counted_daily_sources: MAX_COUNTED_DAILY_SOURCE_AGE_DAYS,
+    max_calendar_age_days_for_other_counted_daily_sources: MAX_COUNTED_DAILY_SOURCE_AGE_DAYS,
+    krx_max_trading_age_days: koreaSourceEvidence.max_age_days,
     checks: [
       {
         id: "coverage_index_generated",
@@ -1584,8 +1605,11 @@ const index = {
       {
         id: "korea_counted_source_date",
         source_date: koreaCountedSourceDate,
-        age_days: ageDays(koreaCountedSourceDate),
-        status: countedDailySourceFresh(koreaCountedSourceDate) ? "ready" : "stale",
+        age_days: koreaSourceEvidence.age_days,
+        age_unit: koreaSourceEvidence.age_unit,
+        source_state: koreaSourceEvidence.source_state,
+        max_age_days: koreaSourceEvidence.max_age_days,
+        status: koreaSourceEvidence.source_status,
         evidence_source: koreaEvidence.source,
         receipt_validation: koreaReceiptValidation.ok ? "valid" : koreaReceiptValidation.reason,
         caveat: "Gate uses the latest fully populated issuer proof date; a private-absence rebuild accepts only a receipt bound to the current bridge and active universe.",

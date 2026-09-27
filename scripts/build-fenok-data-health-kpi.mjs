@@ -524,7 +524,10 @@ export function sourceAdvanceMs(value, nowMs, freshness = null, calendars = FETC
   if (typeof value === "string" && /^\d{4}-\d{2}-\d{2}$/.test(value)) {
     if (!isRealCalendarDate(value)) return null;
     const ms = Date.parse(value);
-    if (!Number.isFinite(ms) || ms > nowMs || !Number.isFinite(nowMs)) return null;
+    if (!Number.isFinite(ms) || !Number.isFinite(nowMs)) return null;
+    // Seoul's date-only today can precede its UTC-midnight representation.
+    // The source calendar below still rejects tomorrow; timestamps stay strict.
+    if (ms > nowMs && freshness?.calendar !== "kr_trading") return null;
     if (freshness && evaluateFreshness(value, freshness, new Date(nowMs).toISOString(), calendars).reason === "future_source") return null;
     return ms;
   }
@@ -1645,7 +1648,7 @@ export function mapDetectionFloorRow(row, recoveryState = undefined, options = {
       throw new Error("detection floor fred_banking source file identities differ from config");
     }
   }
-  const sharedAgeLanes = new Set(["benchmarks", "global_scouter", "fred_yardeni", "treasury_tga", "finra_ats_weekly", "fred_banking"]);
+  const sharedAgeLanes = new Set(["benchmarks", "global_scouter", "fred_yardeni", "treasury_tga", "finra_ats_weekly", "fred_banking", "krx"]);
   const sourceVerdicts = sharedAgeLanes.has(laneId) && options.nowIso && sourceAsOf !== null
     ? (sourceArtifacts ?? [{ id: laneId, source_as_of: sourceAsOf }]).map((item) => {
       const policy = resolveSourcePolicy({

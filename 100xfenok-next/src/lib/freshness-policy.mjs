@@ -69,6 +69,10 @@ export const FAMILY_POLICY = Object.freeze({
     cadence: "daily", releaseLagDays: 1, supplier: "automated",
     calendar: "us_federal_business", label: "Treasury TGA",
   }),
+  krx: Object.freeze({
+    cadence: "daily", releaseLagDays: 0, supplier: "automated",
+    calendar: "kr_trading", label: "KRX Open API daily",
+  }),
   finra_ats_weekly: Object.freeze({
     cadence: "weekly", releaseLagDays: 28, supplier: "automated",
     calendar: "calendar", sourceAnchor: "week_end", label: "FINRA ATS weekly",

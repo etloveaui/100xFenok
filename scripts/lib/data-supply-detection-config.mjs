@@ -19,6 +19,17 @@ function ownerWeeklyFreshLimit(laneId) {
   return cadence.cycleDays + policy.releaseLagDays + cadence.graceDays;
 }
 
+function krxFreshLimit() {
+  const policy = FAMILY_POLICY.krx;
+  const cadence = FRESHNESS_CLASSES[policy?.cadence];
+  if (policy?.cadence !== "daily" || policy.calendar !== "kr_trading"
+    || policy.supplier !== "automated" || !Number.isInteger(policy.releaseLagDays)
+    || !Number.isInteger(cadence?.cycleDays) || !Number.isInteger(cadence?.graceDays)) {
+    throw new Error("krx: trading-day source-age policy is missing or invalid");
+  }
+  return cadence.cycleDays + policy.releaseLagDays + cadence.graceDays;
+}
+
 // LANE_IDS derives from the lane registry — the SSOT for lane existence
 // (#366 derivation). Values stay exact-value pinned by cases.expected.json's
 // config_digest, so drift is a conscious edit (DEC-266).
@@ -103,7 +114,7 @@ const JSON_TYPES = new Set(["array", "boolean", "null", "number", "object", "str
 const FOLDS = new Set(["oldest", "latest", "member_worst"]);
 const UNITS = new Set(["hours", "calendar_days", "business_days", "due_window"]);
 const VISIBILITIES = new Set(["public_safe_aggregate", "admin_only"]);
-const CALENDAR_IDS = new Set(["utc", "us_federal_business", "us_trading"]);
+const CALENDAR_IDS = new Set(["utc", "us_federal_business", "us_trading", "kr_trading"]);
 const SOURCE_FORMATS = new Set(["date", "rfc3339", "yyyymmdd", "unix_seconds"]);
 const SOURCE_SELECTOR_KINDS = new Set(["pointer", "max_array_field", "max_object_series_field", "max_object_field", "max_quarter", "not_applicable"]);
 const CADENCE_DECLARATION_KINDS = new Set(["github_workflow", "owner_contract", "payload_field"]);
@@ -882,7 +893,7 @@ const config = {
           latest_run: "object",
         }),
         "library",),
-      freshnessPolicy: freshness({ fold: "latest", unit: "calendar_days", calendar: "utc", maxStaleness: 4 }),
+      freshnessPolicy: freshness({ fold: "latest", unit: "business_days", calendar: "kr_trading", maxStaleness: krxFreshLimit() }),
       affectedSurfaceIds: ["rim_index_inputs"],
     }),
     lane({

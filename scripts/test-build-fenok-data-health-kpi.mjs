@@ -1141,6 +1141,34 @@ assert.equal(PRODUCT_SURFACE_SLA?.max_staleness, 10, "weekly ETF universe cadenc
     checkDetectionFloorLane(projected, errors, liveConfigs.find((item) => item.id === "fred_yardeni"), nowIso);
     assert.deepEqual(errors, []);
   }
+  for (const [source, age, status] of [
+    ["2026-09-22", 1, "ready"], ["2026-09-21", 2, "ready"],
+    ["2026-09-18", 3, "degraded"],
+  ]) {
+    const raw = row("krx", { artifact: { status: "ready", reason: "ok", source_as_of: source } });
+    const projected = mapDetectionFloorRow(raw, undefined, { nowIso: "2026-09-27T12:00:00Z" });
+    assert.equal(projected.status, status, `KRX ${source} KPI status`);
+    assert.equal(projected.details.source_verdicts[0].age_days, age);
+    assert.equal(projected.details.source_verdicts[0].state, status === "ready" ? "fresh" : "delayed");
+    const errors = [];
+    checkDetectionFloorLane(projected, errors, liveConfigs.find((item) => item.id === "krx"), "2026-09-27T12:00:00Z");
+    assert.deepEqual(errors, [], `KRX ${source} canonical KPI check`);
+    const tampered = structuredClone(projected);
+    tampered.details.source_verdicts[0].age_days = 99;
+    const tamperedErrors = [];
+    checkDetectionFloorLane(tampered, tamperedErrors, liveConfigs.find((item) => item.id === "krx"), "2026-09-27T12:00:00Z");
+    assert.ok(tamperedErrors.includes("krx: source verdicts differ from canonical source dates"),
+      "KRX canonical checker rejects altered source-age evidence");
+  }
+  const failedKrx = mapDetectionFloorRow(row("krx", {
+    status: "unavailable", reason: "unexpected_error",
+    artifact: { status: "ready", reason: "ok", source_as_of: "2026-09-22" },
+  }), undefined, { nowIso: "2026-09-27T12:00:00Z" });
+  assert.equal(failedKrx.status, "degraded", "fresh KRX content cannot promote a failed latest attempt");
+  assert.equal(failedKrx.details.detection_reason, "unexpected_error");
+  const failedKrxErrors = [];
+  checkDetectionFloorLane(failedKrx, failedKrxErrors, liveConfigs.find((item) => item.id === "krx"), "2026-09-27T12:00:00Z");
+  assert.deepEqual(failedKrxErrors, [], "KRX checker preserves the latest failed attempt");
   const freshPolicyLanes = buildDetectionFloorLanes(report(), undefined, {
     nowIso: "2026-07-11T00:00:00Z", calendars: DETECTION_CALENDAR_FIXTURE,
   });
@@ -1885,7 +1913,7 @@ function readyDetectionProjection(id, now) {
   const config = DATA_SUPPLY_DETECTION_CONFIG.lanes.find((item) => item.id === id && item.enforcement === "live");
   if (!config) return {};
   const providerDateless = config.freshness.source_basis.length === 0;
-  const sharedAgeLanes = new Set(["benchmarks", "global_scouter", "fred_yardeni", "treasury_tga", "finra_ats_weekly", "fred_banking"]);
+  const sharedAgeLanes = new Set(["benchmarks", "global_scouter", "fred_yardeni", "treasury_tga", "finra_ats_weekly", "fred_banking", "krx"]);
   const row = {
     id,
     label: config.label,
@@ -3012,7 +3040,7 @@ console.log("# KPI v2 runtime self-proof fixtures");
   const runtime = makeProducerRuntime({ builtAt: now, slotKey: "update-manifest.yml:30 2 * * *@2026-07-10T02:30Z", runId: "e2e" });
   runtime.cadence.v2_activated_at = now; // due set empty -> missed empty
   const { root } = seedReadyV2(tmp, { now, runtime, sla: readySla(now) });
-  for (const id of ["fred_banking", "fred_yardeni", "treasury_tga", "finra_ats_weekly"]) {
+  for (const id of ["fred_banking", "fred_yardeni", "treasury_tga", "finra_ats_weekly", "krx"]) {
     const lane = root.lanes.find((item) => item.id === id);
     assert.ok(lane.details.source_verdicts.length > 0, `${id} carries content-age evidence`);
     assert.ok(lane.details.source_verdicts.every((item) => item.state === "fresh"), `${id} is fresh at the fixture clock`);
@@ -5662,6 +5690,33 @@ for (const [runId, delayMin] of [["26765173733", 368], ["27940007940", 364]]) {
     "source-age calendars apply by lane while heartbeat clocks remain independent",
   );
   ok("outcome watchdog applies source-age calendar limits and retains operational generated/publish heartbeats");
+}
+
+// KRX date-only source admission follows the Seoul civil day, including the
+// interval before UTC midnight. Actual future timestamps never qualify.
+{
+  const rowAt = (source, now) => buildOutcomeWatchdog(now, [{
+    id: "krx", as_of: source, artifact: { source_as_of: source },
+  }]).rows.find((row) => row.lane_id === "krx");
+  const before = rowAt("2026-09-28", "2026-09-27T14:30:00Z");
+  assert.equal(before.state, "unobservable", "tomorrow is not a KRX advance before Seoul midnight");
+  assert.equal(before.advance_basis, null);
+  const after = rowAt("2026-09-28", "2026-09-27T15:30:00Z");
+  assert.equal(after.state, "current");
+  assert.equal(after.advance_basis, "canonical_file_source_as_of");
+  assert.equal(after.last_advance, "2026-09-28");
+  assert.equal(after.age_hours, 0);
+  assert.equal(after.calendar, "kr_trading");
+  for (const source of ["2026-09-29", "2026-02-30", "2026-09-27T16:00:00Z"]) {
+    const rejected = rowAt(source, "2026-09-27T15:30:00Z");
+    assert.equal(rejected.state, "unobservable", `${source} cannot advance the KRX watchdog`);
+    assert.equal(rejected.advance_basis, null);
+  }
+  assert.equal(rowAt("2026-09-22", "2026-09-27T12:00:00Z").age_hours, 24,
+    "Chuseok and weekend days do not accrue KRX watchdog age");
+  assert.equal(rowAt("2026-09-21", "2026-09-27T12:00:00Z").state, "current");
+  assert.equal(rowAt("2026-09-18", "2026-09-27T12:00:00Z").state, "overdue");
+  ok("KRX watchdog shares the trading-day and Seoul date admission policy");
 }
 
 // B-OUTCOME-CLOCKS (i)-(iii): calendar identity, a true weekday overdue, and
