@@ -220,8 +220,32 @@ async function captureScreenerFirstView(page, route, viewportName, routeIndex) {
   await mkdir(routeDir, { recursive: true });
   const path = join(routeDir, "first-view.png");
   await page.evaluate(() => window.scrollTo({ top: 0, left: 0, behavior: "instant" }));
+  const stockVisibility = await page.evaluate(() => {
+    const stock = Array.from(document.querySelectorAll('[data-screener-stock-card], [data-testid="screener-desktop-row"]'))
+      .find((node) => {
+        const rect = node.getBoundingClientRect();
+        return rect.width > 0 && rect.height > 0 && getComputedStyle(node).visibility !== "hidden";
+      });
+    if (!stock) return { firstStock: null, stockHeaderVisible: false };
+    const ticker = stock.getAttribute("data-ticker") ?? stock.querySelector('button[aria-expanded][aria-controls][aria-label]')
+      ?.getAttribute("aria-label")?.split(" 상세 ")[0];
+    // The card's first strip contains selection controls. Measure the ticker
+    // itself so a visible checkbox cannot stand in for visible stock content.
+    const identity = ticker && Array.from(stock.querySelectorAll("*")).find((node) =>
+      Array.from(node.childNodes).some((child) => child.nodeType === Node.TEXT_NODE && child.textContent?.trim() === ticker));
+    if (!identity) return { firstStock: { ticker: ticker ?? null }, stockHeaderVisible: false };
+    const rect = identity.getBoundingClientRect();
+    const left = Math.max(0, rect.left);
+    const right = Math.min(window.innerWidth, rect.right);
+    const hit = document.elementFromPoint((left + right) / 2, rect.top + rect.height / 2);
+    return {
+      firstStock: { ticker, top: rect.top, bottom: rect.bottom, height: rect.height },
+      stockHeaderVisible: rect.height > 0 && rect.top >= 0 && rect.bottom <= window.innerHeight
+        && right > left && Boolean(hit && (identity.contains(hit) || hit.contains(identity))),
+    };
+  });
   await page.screenshot({ path, animations: "disabled" });
-  return { path, url: page.url(), phase: "before-interactions" };
+  return { path, url: page.url(), phase: "before-interactions", ...stockVisibility };
 }
 
 async function captureBoundedScreenshots(page, route, viewportName, routeIndex) {
@@ -4537,7 +4561,7 @@ async function collectScreenerInvestorFlowChecks(page, route, viewportName) {
         const band = page.locator(`[data-superinvestors-per-band="${ticker}"]`);
         await band.waitFor({ state: "visible", timeout: 45000 });
         if (await band.getAttribute("data-source-date") !== perBands.source_date) failures.push({ check: "investor-per-source-date", detail: ticker });
-        if (!(await band.innerText()).includes(`현재 ${perBands.data[ticker].current.toFixed(1)}x`)) failures.push({ check: "investor-per-current", detail: ticker });
+        if (!(await band.innerText()).includes(`기준연도 ${perBands.data[ticker].current.toFixed(1)}x`)) failures.push({ check: "investor-per-current", detail: ticker });
       }
       const back = page.getByRole("link", { name: "스크리너로 돌아가기", exact: true }).filter({ visible: true }).first();
       await back.click();
@@ -4655,6 +4679,9 @@ try {
         }
         const checks = await collectRouteChecks(page, route);
         result.failures = checks.failures;
+        if (result.firstView && isAnalyzeScreenerRoute(route) && !result.firstView.stockHeaderVisible) {
+          result.failures.push({ check: "screener-first-stock-visible", detail: JSON.stringify(result.firstView.firstStock) });
+        }
         const structureChecks = await collectInvestorStructureChecks(page, route, routeRequests);
         result.failures.push(...structureChecks.failures);
         if (isolated) result.investorStructure = structureChecks.observations;
