@@ -1054,7 +1054,7 @@ const sourceDateForPolicy = ({ path, family }) => {
           status: 200,
           headers: {
             "x-data-plane-generation": `${family}-abc123`,
-            "x-data-plane-source-as-of": daysAgo(1, true),
+            "x-data-plane-source-as-of": sourceDateForPolicy({ path, family }),
             "x-data-plane-published-at": daysAgo(50),
           },
         });
@@ -1090,26 +1090,33 @@ const sourceDateForPolicy = ({ path, family }) => {
         status: 200,
         headers: {
           "x-data-plane-generation": `${family}-abc123`,
-          "x-data-plane-source-as-of": daysAgo(sourceDays, true),
+          "x-data-plane-source-as-of": sourceDays === null
+            ? sourceDateForPolicy({ path, family }) : daysAgo(sourceDays, true),
           "x-data-plane-published-at": hoursAgo(1),
         },
       });
     },
   });
 
-  const tightened = await runWithLegacyCap(30, (path) => path === "/data/macro/fdic-tier1.json" ? 40 : 1);
+  const tightened = await runWithLegacyCap(30, (path) => path === "/data/macro/fdic-tier1.json" ? 40 : null);
   const tightenedFdic = tightened.find((r) => r.path === "/data/macro/fdic-tier1.json");
   assert.equal(tightenedFdic.ok, false);
   assert.match(tightenedFdic.failures[0], /days old \(limit 30\)/);
+  assert.equal(tightened.filter((r) => !r.ok).every((r) => r.failures.every((failure) => /tightened limit 30|days old \(limit 30\)/.test(failure))), true,
+    "the global cap is the only reason untargeted paths can fail this sweep");
 
-  const cannotLoosen = await runWithLegacyCap(999, (path) => path === "/data/macro/fred-macro.json" ? 6 : 1);
+  const cannotLoosen = await runWithLegacyCap(999, (path) => path === "/data/macro/fred-macro.json" ? 6 : null);
   const defaultPath = cannotLoosen.find((r) => r.path === "/data/macro/fred-macro.json");
   assert.equal(defaultPath.ok, false);
   assert.match(defaultPath.failures[0], /days old \(limit 5\)/);
+  assert.deepEqual(cannotLoosen.filter((r) => !r.ok).map((r) => r.path), ["/data/macro/fred-macro.json"],
+    "a loose override leaves every other policy-aged path healthy");
 
-  const zeroUsesPolicy = await runWithLegacyCap(0, (path) => path === "/data/macro/fdic-tier1.json" ? 132 : 1);
+  const zeroUsesPolicy = await runWithLegacyCap(0, (path) => path === "/data/macro/fdic-tier1.json" ? 132 : null);
   const zeroFdic = zeroUsesPolicy.find((r) => r.path === "/data/macro/fdic-tier1.json");
   assert.equal(zeroFdic.ok, true, JSON.stringify(zeroFdic.failures));
+  assert.deepEqual(zeroUsesPolicy.filter((r) => !r.ok).map((r) => ({ path: r.path, failures: r.failures })), [],
+    "zero override leaves every unmodified source on its valid policy date");
 }
 
 // A published family is NOT allowlisted: the 2026-08-03 incident shape (200,
