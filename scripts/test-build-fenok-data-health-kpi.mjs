@@ -92,6 +92,7 @@ const {
 const { checkRimInputsCanonicalHealth } = await import("./check-fenok-data-health-kpi.mjs");
 const { projectFenokDataHealthKpiPublicMirror } = await import("../100xfenok-next/sync-static-overrides.mjs");
 const { DATA_SUPPLY_DETECTION_CONFIG } = await import("./lib/data-supply-detection-config.mjs");
+const { LANE_REGISTRY } = await import("./lib/lane-registry.mjs");
 const { buildFetchCronAttemptCoverage } = await import("./build-data-supply-detection-floor.mjs");
 const { deriveProductSurfaceStampEvidence } = await import("./lib/product-surface-stamp-v2.mjs");
 const { ProducerLkgStateStore } = await import("./lib/producer-lkg-state.mjs");
@@ -1120,6 +1121,62 @@ assert.equal(PRODUCT_SURFACE_SLA?.max_staleness, 10, "weekly ETF universe cadenc
 
   const readyLanes = buildDetectionFloorLanes(report());
   assert.deepEqual(readyLanes.map((item) => item.id), liveLaneIds);
+  for (const [offset, status, sourceState] of [[13, "ready", "fresh"], [14, "degraded", "delayed"],
+    [20, "degraded", "delayed"], [21, "degraded", "stopped"]]) {
+    const raw = structuredClone(report().lanes.find((item) => item.id === "fred_yardeni"));
+    raw.artifact.source_as_of = "2026-07-10";
+    const detectionStatus = status === "ready" ? "ready" : "stale";
+    raw.status = detectionStatus;
+    raw.reason = status === "ready" ? "ok" : "stale";
+    raw.artifact.status = detectionStatus;
+    raw.artifact.reason = raw.reason;
+    const nowIso = new Date(Date.UTC(2026, 6, 10 + offset, 12)).toISOString();
+    const projected = mapDetectionFloorRow(raw, undefined, { nowIso });
+    assert.equal(projected.status, status, `owner KPI source day ${offset}`);
+    assert.equal(projected.details.source_verdicts[0].state, sourceState);
+    assert.equal(projected.checks.find((item) => item.id === "content_age_policy")?.status,
+      status === "ready" ? "ready" : "blocked");
+    const errors = [];
+    checkDetectionFloorLane(projected, errors, liveConfigs.find((item) => item.id === "fred_yardeni"), nowIso);
+    assert.deepEqual(errors, []);
+  }
+  const freshPolicyLanes = buildDetectionFloorLanes(report(), undefined, {
+    nowIso: "2026-07-11T00:00:00Z", calendars: DETECTION_CALENDAR_FIXTURE,
+  });
+  const freshFred = freshPolicyLanes.find((item) => item.id === "fred_banking");
+  assert.equal(freshFred.checks.find((item) => item.id === "content_age_policy")?.status, "ready");
+  assert.equal(freshFred.artifact.source_artifacts.length, 4);
+  const staleDaily = structuredClone(report().lanes.find((item) => item.id === "fred_banking"));
+  staleDaily.source_artifacts[0].source_as_of = "2026-06-01";
+  const staleFred = mapDetectionFloorRow(staleDaily, undefined, {
+    nowIso: "2026-07-11T00:00:00Z", calendars: DETECTION_CALENDAR_FIXTURE,
+  });
+  assert.equal(staleFred.status, "degraded", "a good attempt cannot promote stale required daily content");
+  assert.equal(staleFred.reason, "stale");
+  assert.equal(staleFred.details.detection_reason, "ok", "content age preserves the original detector verdict");
+  assert.equal(staleFred.checks.find((item) => item.id === "detection_floor_status")?.status, "ready");
+  const staleFredErrors = [];
+  checkDetectionFloorLane(staleFred, staleFredErrors, liveConfigs.find((item) => item.id === "fred_banking"), "2026-07-11T00:00:00Z");
+  assert.deepEqual(staleFredErrors, []);
+  const fredConfig = liveConfigs.find((item) => item.id === "fred_banking");
+  const repeatedQuarterly = structuredClone(freshFred);
+  const quarterlySource = repeatedQuarterly.artifact.source_artifacts.find((item) => item.id === "fred_banking_quarterly");
+  const quarterlyVerdict = repeatedQuarterly.details.source_verdicts.find((item) => item.id === "fred_banking_quarterly");
+  repeatedQuarterly.artifact.source_artifacts = Array.from({ length: 4 }, () => structuredClone(quarterlySource));
+  repeatedQuarterly.details.source_verdicts = Array.from({ length: 4 }, () => structuredClone(quarterlyVerdict));
+  const repeatedErrors = [];
+  checkDetectionFloorLane(repeatedQuarterly, repeatedErrors, fredConfig, "2026-07-11T00:00:00Z");
+  assert.ok(repeatedErrors.some((error) => error.includes("source file identities")), "four slow duplicates cannot replace required fast files");
+  const wrongPath = structuredClone(freshFred);
+  wrongPath.artifact.source_artifacts[0].path = quarterlySource.path;
+  const pathErrors = [];
+  checkDetectionFloorLane(wrongPath, pathErrors, fredConfig, "2026-07-11T00:00:00Z");
+  assert.ok(pathErrors.some((error) => error.includes("source file identities")), "required IDs must bind their canonical paths");
+  const forgedDetection = structuredClone(staleDaily);
+  forgedDetection.source_artifacts = structuredClone(repeatedQuarterly.artifact.source_artifacts);
+  assert.throws(() => mapDetectionFloorRow(forgedDetection, undefined, {
+    nowIso: "2026-07-11T00:00:00Z", calendars: DETECTION_CALENDAR_FIXTURE,
+  }), /source file identities/);
   for (const ready of readyLanes) {
     assert.equal(ready.status, "ready");
     assert.equal(ready.reason, "ok");
@@ -5182,9 +5239,9 @@ for (const [runId, delayMin] of [["26765173733", 368], ["27940007940", 364]]) {
   const rows = new Map(watchdog.rows.map((row) => [row.lane_id, row]));
   assert.equal(watchdog.schema_version, "lane-outcome-watchdog/v1");
   assert.equal(watchdog.threshold_multiplier, OUTCOME_WATCHDOG_THRESHOLD_MULTIPLIER);
-  assert.equal(rows.get("slickcharts").threshold_hours,
-    OUTCOME_WATCHDOG_CADENCE_HOURS.daily * OUTCOME_WATCHDOG_THRESHOLD_MULTIPLIER);
-  assert.equal(rows.get("slickcharts").state, "overdue");
+  assert.equal(rows.get("slickcharts").threshold_hours, (1 + 1) * 24,
+    "SOURCE clock uses shared daily policy instead of the operational multiplier");
+  assert.equal(rows.get("slickcharts").state, "current");
   assert.equal(rows.get("fred_yardeni").state, "current");
   assert.equal(rows.get("oecd_cli").state, "overdue");
   assert.equal(rows.get("fdic_tier1").state, "current");
@@ -5193,8 +5250,8 @@ for (const [runId, delayMin] of [["26765173733", 368], ["27940007940", 364]]) {
     "hourly lanes stay outside the owner-approved daily/weekly/monthly/quarterly watchdog contract");
   assert.deepEqual(watchdog.counts, {
     monitored: 5,
-    current: 2,
-    overdue: 2,
+    current: 3,
+    overdue: 1,
     unobservable: 1,
   });
   assert.equal(watchdog.status, "overdue");
@@ -5228,6 +5285,27 @@ for (const [runId, delayMin] of [["26765173733", 368], ["27940007940", 364]]) {
   assert.ok(tamperErrors.some((message) => /threshold_hours/.test(message)),
     "checker must reject an artifact-defined outcome threshold");
   ok("outcome watchdog derives per-lane advance state from registry cadence and canonical as-of");
+}
+
+// Source dates use the shared content clock. The operational fallback retains
+// the existing 1.5x cadence threshold and keeps its own basis.
+{
+  const registry = { lanes: LANE_REGISTRY.lanes.filter((item) => item.id === "finra_ats_weekly") };
+  const nowIso = "2026-09-27T12:00:00Z";
+  const lane = { id: "finra_ats_weekly", artifact: { source_as_of: "2026-08-17" } };
+  const source = buildOutcomeWatchdog(nowIso, [lane], registry).rows[0];
+  assert.equal(source.advance_basis, "canonical_file_source_as_of");
+  assert.equal(source.last_advance, "2026-08-17", "raw week-start date stays visible");
+  assert.equal(source.state, "current", "FINRA content may arrive four weeks after week end");
+  assert.equal(source.threshold_hours, (7 + 28 + 4) * 24);
+  const stale = buildOutcomeWatchdog("2026-10-02T12:00:00Z", [lane], registry).rows[0];
+  assert.equal(stale.state, "overdue");
+
+  const fallback = buildOutcomeWatchdog(nowIso,
+    [{ id: "finra_ats_weekly", artifact: { source_as_of: null, generated_at: "2026-09-15T12:00:00Z" } }], registry).rows[0];
+  assert.equal(fallback.advance_basis, "canonical_file_generated_at");
+  assert.equal(fallback.threshold_hours, OUTCOME_WATCHDOG_CADENCE_HOURS.weekly * OUTCOME_WATCHDOG_THRESHOLD_MULTIPLIER);
+  assert.equal(fallback.state, "overdue");
 }
 
 // Source-artifact projection migration pin (#366 item 5): the built

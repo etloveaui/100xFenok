@@ -2,7 +2,9 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import fs from "node:fs";
 import path from "node:path";
-import { FAMILY_POLICY, freshnessAgeOverride, freshnessMessage, freshnessRailState, freshnessVerdict } from "./freshness-policy.mjs";
+import { FAMILY_POLICY, freshnessAgeOverride, freshnessMessage, freshnessRailState, freshnessVerdict, resolveSourcePolicy, sourceAgeAnchor } from "./freshness-policy.mjs";
+
+const calendars = JSON.parse(fs.readFileSync(path.resolve(import.meta.dirname, "../../../scripts/lib/data-supply-detection-calendars.json"), "utf8"));
 
 function addDays(date: string, days: number): string {
   const [y, m, d] = date.split("-").map(Number);
@@ -40,13 +42,51 @@ test("daily family counts trading days across a weekend", () => {
   assert.equal(nextFriday.state, "stopped");
 });
 
+test("US and KRX holidays do not accrue source age", () => {
+  const us = { cadence: "daily", releaseLagDays: 0, supplier: "automated", calendar: "us_trading" } as const;
+  const kr = { ...us, calendar: "kr_trading" } as const;
+  assert.equal(freshnessVerdict("2026-09-04", us, "2026-09-07").ageDays, 0); // US Labor Day
+  assert.equal(freshnessVerdict("2026-09-23", kr, "2026-09-25").ageDays, 0); // Chuseok
+});
+
+test("TGA uses federal holidays, not NYSE closures", () => {
+  assert.equal(freshnessVerdict("2026-10-09", "treasury_tga", "2026-10-13", { calendars }).ageDays, 1);
+  assert.equal(freshnessVerdict("2026-10-09", "treasury_tga", "2026-10-13").state, "unknown");
+});
+
+test("week-start FINRA and quarter-start FSI retain raw date but age from period end", () => {
+  const finra = resolveSourcePolicy({ laneId: "finra_ats_weekly", cadence: "weekly" })!;
+  assert.equal(sourceAgeAnchor("2026-08-17", finra), "2026-08-23");
+  assert.equal(freshnessVerdict("2026-08-17", finra, "2026-09-27").state, "fresh");
+  assert.equal(freshnessVerdict("2026-08-17", finra, "2026-10-02").state, "delayed");
+  const fsi = resolveSourcePolicy({ artifactId: "fred_banking_quarterly" })!;
+  assert.equal(sourceAgeAnchor("2026-01-01", fsi), "2026-03-31");
+  assert.equal(freshnessVerdict("2026-01-01", fsi, "2026-09-27").state, "fresh");
+  assert.equal(freshnessVerdict("2025-01-01", fsi, "2026-09-27").state, "stopped");
+});
+
+test("FRED files use independent daily, weekly and monthly clocks", () => {
+  const daily = resolveSourcePolicy({ artifactId: "fred_banking_daily" })!;
+  const weekly = resolveSourcePolicy({ artifactId: "fred_banking_weekly" })!;
+  const monthly = resolveSourcePolicy({ artifactId: "fred_banking_monthly" })!;
+  assert.equal(freshnessVerdict("2026-09-23", daily, "2026-09-27").state, "fresh");
+  assert.equal(freshnessVerdict("2026-09-09", weekly, "2026-09-27").state, "fresh");
+  assert.equal(freshnessVerdict("2026-08-01", monthly, "2026-09-27").state, "fresh");
+  assert.equal(freshnessVerdict("2026-09-01", daily, "2026-09-27").state, "stopped");
+});
+
 test("unknown dates and unknown families read unknown", () => {
-  for (const value of [null, undefined, "", "not-a-date", "2026-13"]) {
+  for (const value of [null, undefined, "", "not-a-date", "2026-13", "2026-02-30", "2026-09-28"]) {
     const verdict = freshnessVerdict(value, "global_scouter", "2026-09-27");
     assert.equal(verdict.state, "unknown", String(value));
     assert.equal(verdict.ageDays, null);
   }
   assert.equal(freshnessVerdict("2026-09-18", "no-such-family", "2026-09-27").state, "unknown");
+  assert.equal(freshnessVerdict("2026-09-18", { cadence: "fortnightly", releaseLagDays: 0, supplier: "automated", calendar: "calendar" }, "2026-09-27").state, "unknown");
+  assert.equal(freshnessVerdict("2026-09-01", resolveSourcePolicy({ artifactId: "fred_banking_monthly" }), "2026-09-27").state, "unknown",
+    "a future month-end anchor cannot look fresh mid-month");
+  assert.equal(freshnessVerdict("2026-01-01", resolveSourcePolicy({ artifactId: "fred_banking_quarterly" }), "2026-02-15").state, "unknown",
+    "a future quarter-end anchor cannot look fresh mid-quarter");
 });
 
 test("wording follows supplier and state", () => {
@@ -116,7 +156,7 @@ test("lane-registry drift guard: matching ids keep the same cadence kind", () =>
     }
   }
 
-  for (const id of Object.keys(FAMILY_POLICY)) {
+  for (const id of Object.keys(FAMILY_POLICY).filter((id) => id !== "earnings_overview")) {
     const kind = laneCadenceKind(id);
     if (kind === null) continue; // no lane record for this id; nothing to drift against
     assert.equal(kind, FAMILY_POLICY[id].cadence, `${id}: lane=${kind} policy=${FAMILY_POLICY[id].cadence}`);

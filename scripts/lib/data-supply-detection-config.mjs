@@ -366,19 +366,19 @@ const config = {
       label: "FRED banking series",
       members: [registryMember("fred_banking", ["0 7 * * *"], [
         artifact("fred_banking_daily", "data/macro/fred-banking-daily.json", {
-          sourceSelector: maxObjectSeriesFieldSource("/series", "date", "date"),
+          sourceSelector: pointerSource("/source_as_of", "date"),
           assertions: [exactAssertion("type_daily", "/type", "daily"), typeAssertion("series_object", "/series", "object"), minKeysAssertion("series_count", "/series", 2), nonEmptySeriesAssertion("series_non_empty", "/series"), requiredAssertion("series_dgs10", "/series/DGS10"), requiredAssertion("series_hy_spread", "/series/BAMLH0A0HYM2")],
         }),
         artifact("fred_banking_weekly", "data/macro/fred-banking-weekly.json", {
-          sourceSelector: maxObjectSeriesFieldSource("/series", "date", "date"),
+          sourceSelector: pointerSource("/source_as_of", "date"),
           assertions: [exactAssertion("type_weekly", "/type", "weekly"), typeAssertion("series_object", "/series", "object"), minKeysAssertion("series_count", "/series", 2), nonEmptySeriesAssertion("series_non_empty", "/series"), requiredAssertion("series_totll", "/series/TOTLL"), requiredAssertion("series_deposits", "/series/DPSACBW027SBOG")],
         }),
         artifact("fred_banking_monthly", "data/macro/fred-banking-monthly.json", {
-          sourceSelector: maxObjectSeriesFieldSource("/series", "date", "date"),
+          sourceSelector: pointerSource("/source_as_of", "date"),
           assertions: [exactAssertion("type_monthly", "/type", "monthly"), typeAssertion("series_object", "/series", "object"), minKeysAssertion("series_count", "/series", 1), nonEmptySeriesAssertion("series_non_empty", "/series"), requiredAssertion("series_korea_rate", "/series/IRLTLT01KRM156N")],
         }),
         artifact("fred_banking_quarterly", "data/macro/fred-banking-quarterly.json", {
-          sourceSelector: maxObjectSeriesFieldSource("/series", "date", "date"),
+          sourceSelector: pointerSource("/source_as_of", "date"),
           assertions: [
             exactAssertion("type_quarterly", "/type", "quarterly"),
             typeAssertion("series_object", "/series", "object"),
