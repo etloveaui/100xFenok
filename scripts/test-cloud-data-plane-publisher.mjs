@@ -1694,6 +1694,18 @@ try {
       });
       assert.equal(withIndex.sourceAsOf.origin, "family-index");
       assert.ok(withIndex.manifest.assets.every((asset) => asset.source_as_of === "2026-08-01"));
+      const selectorInput = {
+        payloads: new Map([["data/test/index.json", Buffer.from(JSON.stringify({ updated_at: "2026-09-08" }))]]),
+        createdIsoDay: "2026-09-27",
+      };
+      assert.equal(resolveSourceAsOf({
+        ...selectorInput, family: { root: "data/test", source_as_of: { file: "index.json", key: "updated_at" } },
+      }).value, "2026-09-08", "existing flat index keys retain their meaning");
+      for (const key of [[], ["items", ""], ["items", 0], ["items", "missing"]]) {
+        assert.throws(() => resolveSourceAsOf({
+          ...selectorInput, family: { root: "data/test", source_as_of: { file: "index.json", key } },
+        }), (error) => error.code === "FAMILY_ASOF_INVALID");
+      }
 
       // Fixture-shaped tree without index.json: acquisition time is NOT
       // silently blurred into source time — the fallback is explicit.
@@ -2162,8 +2174,7 @@ try {
     );
     console.log("stockanalysis detail source clock ok (source priority, empty observation fallback, malformed evidence fail)");
 
-    // Legacy modes unchanged: { key } payload mode and { file, key }
-    // family-index mode still produce one uniform family date.
+    // Payload and family-index modes still produce one uniform family date.
     await writeFile(
       path.join(macroDir, "fred-macro.json"),
       JSON.stringify({ updated: "2026-07-01T00:00:00.000Z" }),
@@ -2180,7 +2191,7 @@ try {
     assert.ok(legacyPayload.manifest.assets.every((asset) => asset.source_as_of === "2026-07-01"));
     const oecdDir = path.join(asofFilesRoot, "data/admin/oecd_cli");
     await mkdir(oecdDir, { recursive: true });
-    await writeFile(path.join(oecdDir, "index.json"), JSON.stringify({ updated_at: "2026-08-02T10:00:00.000Z" }));
+    await writeFile(path.join(oecdDir, "index.json"), JSON.stringify({ updated_at: "2026-08-02T10:00:00.000Z", items: { oecd_cli: { current: { source_as_of: "2026-08-01" } } } }));
     await writeFile(path.join(oecdDir, "obs.json"), "{\"a\":1}\n");
     const legacyIndex = await buildFamilyManifest({
       familyName: "oecd-cli",
@@ -2190,7 +2201,7 @@ try {
     });
     assert.equal(legacyIndex.sourceAsOf.origin, "family-index");
     assert.equal(legacyIndex.sourceAsOf.perAsset, undefined);
-    assert.ok(legacyIndex.manifest.assets.every((asset) => asset.source_as_of === "2026-08-02"));
+    assert.ok(legacyIndex.manifest.assets.every((asset) => asset.source_as_of === "2026-08-01"));
     console.log("legacy source_as_of modes unchanged ok (payload origin, family-index origin, no perAsset)");
   } finally {
     await rm(asofFilesRoot, { recursive: true, force: true });

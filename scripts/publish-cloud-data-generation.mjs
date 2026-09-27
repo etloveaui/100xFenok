@@ -393,8 +393,9 @@ export const FAMILIES = {
   "oecd-cli": {
     root: "data/admin/oecd_cli",
     privacy_class: "private",
-    // The lane's LKG state index records when the family data was acquired.
-    source_as_of: { file: "index.json", key: "updated_at" },
+    // Follow the retained observation pointer, never acquisition time or a
+    // shadow that may differ from the selected last-known-good artifact.
+    source_as_of: { file: "index.json", key: ["items", "oecd_cli", "current", "source_as_of"] },
     // Gate declaration: >= 2x the measured 5 PutObject / 597,283 bytes.
     plan: { class_a: 40, bytes: 1_200_000 },
     policy: { max_assets: 64, max_total_bytes: 16_000_000 },
@@ -1130,7 +1131,8 @@ const PER_ASSET_SOURCE_RESOLVERS = new Map([
 
 // Resolve the family's SOURCE time for the manifest's source_as_of field.
 //   - { file, key }: read key from the JSON file at <root>/<file>; the value
-//     must be date-like (fail FAMILY_ASOF_INVALID otherwise).
+//     must be date-like (fail FAMILY_ASOF_INVALID otherwise). key may be a
+//     flat property name or an explicit array of nested property names.
 //   - { key } (no file): read key from the single enrolled payload (fail
 //     FAMILY_ASOF_AMBIGUOUS if the family enrolls more than one file).
 //   - { files: { "<rel>": { key } | { max_date: { array, key } } } }:
@@ -1357,6 +1359,10 @@ export function resolveSourceAsOf({ family, payloads, createdIsoDay, relRoot = n
       origin: "payload-max-date",
     };
   }
+  const keys = Array.isArray(config.key) ? config.key : [config.key];
+  if (keys.length === 0 || keys.some((key) => typeof key !== "string" || key.length === 0)) {
+    fail("FAMILY_ASOF_INVALID", "source_as_of.key must be a non-empty string or string array");
+  }
   let json;
   let origin;
   if (config.file) {
@@ -1375,10 +1381,15 @@ export function resolveSourceAsOf({ family, payloads, createdIsoDay, relRoot = n
     json = decodeJson(payloads.values().next().value);
     origin = "payload";
   }
-  const raw = json?.[config.key];
+  // Array keys select a nested retained-state value without interpreting dots
+  // in existing flat keys. JSON own properties alone may supply source time.
+  const raw = keys.reduce((value, key) => (
+    value !== null && typeof value === "object" && Object.hasOwn(value, key)
+      ? value[key] : undefined
+  ), json);
   const value = toIsoDay(raw);
   if (value === null) {
-    fail("FAMILY_ASOF_INVALID", `${config.file ?? "<payload>"}.${config.key} = ${JSON.stringify(raw)} is not an ISO date or date-time`);
+    fail("FAMILY_ASOF_INVALID", `${config.file ?? "<payload>"}.${keys.join(".")} = ${JSON.stringify(raw)} is not an ISO date or date-time`);
   }
   return { value, origin };
 }

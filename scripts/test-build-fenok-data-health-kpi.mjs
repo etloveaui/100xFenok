@@ -668,6 +668,9 @@ assert.equal(PRODUCT_SURFACE_SLA?.max_staleness, 10, "weekly ETF universe cadenc
       const updated = group.id === historyGroup.id ? oldContentAt : otherGroupsUpdated;
       for (const filename of group.files) writeJson(path.join(base, filename), { updated });
     }
+    // The composite recovery contract also binds symbols-all.json, which is
+    // intentionally outside the delivery SLA group denominator.
+    writeJson(path.join(base, "symbols-all.json"), { symbols: ["AAPL"] });
     writeJson(path.join(base, "universe.json"), {
       updated: otherGroupsUpdated,
       uniqueCount: 1,
@@ -699,6 +702,8 @@ assert.equal(PRODUCT_SURFACE_SLA?.max_staleness, 10, "weekly ETF universe cadenc
   assert.equal(promoted.index.members.history.resolution_state, "fresh_primary");
   assert.equal(promoted.index.members.history.retry, false);
   assert.equal(promoted.index.members.history.promoted_run.observed_at, recentPromotionAt);
+  assert.equal(promoted.index.members.symbols.bundle?.file_count, 2,
+    "the complete producer fixture includes both required symbols-member files");
   assert.equal(inspectSlickchartsCompositeLiveIntegrity(promoted.root, promoted.index).valid, true,
     "the saved history member bundle must match all current file paths and hashes");
   assert.equal(promoted.lane.status, "ready",
