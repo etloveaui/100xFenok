@@ -23,7 +23,7 @@
  * Saturday workflow.
  */
 
-import { businessDayAge, businessDayAgeWithCalendar, isRealCalendarDate } from "../../../scripts/lib/market-calendar.mjs";
+import { businessDayAge, businessDayAgeWithCalendar, isRealCalendarDate } from "./market-calendar.mjs";
 
 const DAY_MS = 86_400_000;
 const DATE_RE = /^\d{4}-\d{2}-\d{2}$/;

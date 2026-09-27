@@ -5,7 +5,7 @@ import {
 } from "./fenok-proxy-formula-contract.mjs";
 import { canonicalJson } from "./json-canonical.mjs";
 import { LANE_REGISTRY, registryLaneById } from "./lane-registry.mjs";
-import { FAMILY_POLICY, FRESHNESS_CLASSES } from "../../100xfenok-next/src/lib/freshness-policy.mjs";
+import { FAMILY_POLICY, FRESHNESS_CLASSES, resolveSourcePolicy } from "../../100xfenok-next/src/lib/freshness-policy.mjs";
 
 function ownerWeeklyFreshLimit(laneId) {
   const policy = FAMILY_POLICY[laneId];
@@ -26,6 +26,17 @@ function krxFreshLimit() {
     || policy.supplier !== "automated" || !Number.isInteger(policy.releaseLagDays)
     || !Number.isInteger(cadence?.cycleDays) || !Number.isInteger(cadence?.graceDays)) {
     throw new Error("krx: trading-day source-age policy is missing or invalid");
+  }
+  return cadence.cycleDays + policy.releaseLagDays + cadence.graceDays;
+}
+
+function fredMacroFreshLimit() {
+  const policy = resolveSourcePolicy({ laneId: "fred_macro", cadence: "daily", calendar: "utc" });
+  const cadence = FRESHNESS_CLASSES[policy?.cadence];
+  if (policy?.cadence !== "daily" || policy.calendar !== "calendar"
+    || policy.supplier !== "automated" || policy.releaseLagDays !== 0
+    || !Number.isInteger(cadence?.cycleDays) || !Number.isInteger(cadence?.graceDays)) {
+    throw new Error("fred_macro: daily UTC source-age policy is missing or invalid");
   }
   return cadence.cycleDays + policy.releaseLagDays + cadence.graceDays;
 }
@@ -382,7 +393,7 @@ const config = {
         }),
       ])],
       endpointContract: endpoint("fred_api", "observations_array", "/observations", "array", "http"),
-      freshnessPolicy: freshness({ fold: "latest", unit: "hours", calendar: "utc", maxStaleness: 48 }),
+      freshnessPolicy: freshness({ fold: "latest", unit: "calendar_days", calendar: "utc", maxStaleness: fredMacroFreshLimit() }),
       affectedSurfaceIds: ["macro_fred"],
     }),
     lane({

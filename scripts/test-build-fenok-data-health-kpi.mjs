@@ -1141,6 +1141,36 @@ assert.equal(PRODUCT_SURFACE_SLA?.max_staleness, 10, "weekly ETF universe cadenc
     checkDetectionFloorLane(projected, errors, liveConfigs.find((item) => item.id === "fred_yardeni"), nowIso);
     assert.deepEqual(errors, []);
   }
+  for (const [nowIso, age, state, status] of [
+    ["2026-09-27T09:18:00Z", 2, "fresh", "ready"],
+    ["2026-09-28T09:18:00Z", 3, "delayed", "degraded"],
+  ]) {
+    const raw = row("fred_macro", { artifact: { status: "ready", reason: "ok", source_as_of: "2026-09-25" } });
+    const projected = mapDetectionFloorRow(raw, undefined, { nowIso });
+    assert.equal(projected.status, status, `FRED macro content age at ${nowIso}`);
+    assert.deepEqual(projected.details.source_verdicts, [{ id: "fred_macro", state, age_days: age }]);
+    assert.equal(projected.checks.find((item) => item.id === "content_age_policy")?.status,
+      state === "fresh" ? "ready" : "blocked");
+    const errors = [];
+    checkDetectionFloorLane(projected, errors, liveConfigs.find((item) => item.id === "fred_macro"), nowIso);
+    assert.deepEqual(errors, [], `FRED macro ${state} independent checker`);
+    const tampered = structuredClone(projected);
+    tampered.details.source_verdicts[0].age_days = 99;
+    const tamperedErrors = [];
+    checkDetectionFloorLane(tampered, tamperedErrors, liveConfigs.find((item) => item.id === "fred_macro"), nowIso);
+    assert.ok(tamperedErrors.includes("fred_macro: source verdicts differ from canonical source dates"),
+      "FRED macro checker rejects altered observation age");
+  }
+  const staleMacroAttempt = mapDetectionFloorRow(row("fred_macro", {
+    status: "stale", reason: "stale",
+    artifact: { status: "ready", reason: "ok", source_as_of: "2026-09-25" },
+  }), undefined, { nowIso: "2026-09-27T09:18:00Z" });
+  assert.equal(staleMacroAttempt.status, "degraded", "fresh FRED content cannot clear a stale acquisition attempt");
+  assert.equal(staleMacroAttempt.details.detection_reason, "stale");
+  const staleMacroErrors = [];
+  checkDetectionFloorLane(staleMacroAttempt, staleMacroErrors,
+    liveConfigs.find((item) => item.id === "fred_macro"), "2026-09-27T09:18:00Z");
+  assert.deepEqual(staleMacroErrors, []);
   for (const [source, age, status] of [
     ["2026-09-22", 1, "ready"], ["2026-09-21", 2, "ready"],
     ["2026-09-18", 3, "degraded"],
@@ -1913,7 +1943,7 @@ function readyDetectionProjection(id, now) {
   const config = DATA_SUPPLY_DETECTION_CONFIG.lanes.find((item) => item.id === id && item.enforcement === "live");
   if (!config) return {};
   const providerDateless = config.freshness.source_basis.length === 0;
-  const sharedAgeLanes = new Set(["benchmarks", "global_scouter", "fred_yardeni", "treasury_tga", "finra_ats_weekly", "fred_banking", "krx"]);
+  const sharedAgeLanes = new Set(["benchmarks", "global_scouter", "fred_yardeni", "fred_macro", "treasury_tga", "finra_ats_weekly", "fred_banking", "krx"]);
   const row = {
     id,
     label: config.label,
@@ -3040,7 +3070,7 @@ console.log("# KPI v2 runtime self-proof fixtures");
   const runtime = makeProducerRuntime({ builtAt: now, slotKey: "update-manifest.yml:30 2 * * *@2026-07-10T02:30Z", runId: "e2e" });
   runtime.cadence.v2_activated_at = now; // due set empty -> missed empty
   const { root } = seedReadyV2(tmp, { now, runtime, sla: readySla(now) });
-  for (const id of ["fred_banking", "fred_yardeni", "treasury_tga", "finra_ats_weekly", "krx"]) {
+  for (const id of ["fred_macro", "fred_banking", "fred_yardeni", "treasury_tga", "finra_ats_weekly", "krx"]) {
     const lane = root.lanes.find((item) => item.id === id);
     assert.ok(lane.details.source_verdicts.length > 0, `${id} carries content-age evidence`);
     assert.ok(lane.details.source_verdicts.every((item) => item.state === "fresh"), `${id} is fresh at the fixture clock`);

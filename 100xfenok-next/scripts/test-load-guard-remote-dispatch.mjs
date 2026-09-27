@@ -400,6 +400,7 @@ const expectedUploads = [
     "        with:",
     "          name: verified-scouter-projections",
     "          path: |",
+    "            data/admin/lane-commit-manifest.json",
     "            data/admin/lane-registry-projection.json",
     "            100xfenok-next/public/data/admin/lane-registry-projection.json",
     "            scripts/fixtures/cloud-data-plane/global-scouter-migration-demand.json",

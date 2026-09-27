@@ -414,7 +414,7 @@ export function checkDetectionFloorLane(lane, errors, expectedConfig, nowIso = n
     && recoveryRecovered.every((item, index) => index === 0 || recoveryRecovered[index - 1].key.localeCompare(item.key) < 0)
     && recoveryRecovered.every((item) => !recoveryRetrySet.some((retryItem) => retryItem.key === item.key));
   const hasRetry = !targetRecovery && Array.isArray(recoveryRetrySet) && recoveryRetrySet.length > 0;
-  const sharedAgeLanes = new Set(["benchmarks", "global_scouter", "fred_yardeni", "treasury_tga", "finra_ats_weekly", "fred_banking", "krx"]);
+  const sharedAgeLanes = new Set(["benchmarks", "global_scouter", "fred_yardeni", "fred_macro", "treasury_tga", "finra_ats_weekly", "fred_banking", "krx"]);
   const sourceRows = laneId === "fred_banking" ? lane?.artifact?.source_artifacts : [{ id: laneId, source_as_of: sourceAsOf }];
   if (laneId === "fred_banking" && sourceAsOf !== null) {
     push(errors, Array.isArray(sourceRows) && sourceRows.length === 4,

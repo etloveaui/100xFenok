@@ -1442,7 +1442,7 @@ function attemptMap(document) {
 }
 
 const SHARED_SOURCE_LANES = new Set([
-  "benchmarks", "global_scouter", "fred_yardeni",
+  "benchmarks", "global_scouter", "fred_yardeni", "fred_macro",
   "fred_banking", "treasury_tga", "finra_ats_weekly", "krx",
 ]);
 

@@ -719,6 +719,13 @@ function runConfigAndFixtureChecks() {
   assert.deepEqual(oecdCli.producer_members[0].schedule, oecdWorkflowCrons);
   assert.equal(oecdCli.producer_members[0].artifact_contracts[0].path, "data/admin/oecd_cli/shadow/oecd-cli.json");
   const krx = DATA_SUPPLY_DETECTION_CONFIG.lanes.find((item) => item.id === "krx");
+  const fredMacro = DATA_SUPPLY_DETECTION_CONFIG.lanes.find((item) => item.id === "fred_macro");
+  assert.deepEqual({ unit: fredMacro.freshness.unit, calendar: fredMacro.freshness.calendar,
+    max: fredMacro.freshness.max_staleness },
+    { unit: "calendar_days", calendar: "utc", max: 2 },
+    "FRED macro observation age follows the daily UTC content policy");
+  assert.equal(fredMacro.producer_members[0].artifact_contracts[0].source_selector.kind, "max_object_series_field",
+    "FRED macro content age reads observation dates, not publication time");
   assert.equal(krx.enforcement, "live");
   assert.equal(krx.kpi_required, true);
   assert.deepEqual(krx.producer_members[0].schedule, ["30 10 * * 1-5"]);
@@ -918,6 +925,10 @@ function runConfigAndFixtureChecks() {
       fs.copyFileSync(
         path.join(REPO_ROOT, "100xfenok-next", "src", "lib", "freshness-policy.mjs"),
         path.join(policyDir, "freshness-policy.mjs"),
+      );
+      fs.copyFileSync(
+        path.join(REPO_ROOT, "100xfenok-next", "src", "lib", "market-calendar.mjs"),
+        path.join(policyDir, "market-calendar.mjs"),
       );
       return spawnSync(
         process.execPath,
@@ -1226,6 +1237,17 @@ function runBaselineAndArtifactChecks() {
   assert.equal(fredSources[3].source_state, "fresh");
   assert.deepEqual(report, expectedFixture.baseline.expected_report);
   assert.equal(createSha(reportBytes(report)), expectedFixture.baseline.report_file_sha256);
+
+  for (const [now, age, status] of [
+    ["2026-07-12T09:18:00Z", 2, "ready"],
+    ["2026-07-13T09:18:00Z", 3, "stale"],
+  ]) {
+    const macro = lane(buildDetectionReport({ artifactRoot: artifactRoot.raw,
+      attempts: attemptsFixture, calendars: calendarsFixture, now }), "fred_macro");
+    assert.equal(macro.artifact.source_as_of, "2026-07-10");
+    assert.equal(macro.artifact.age, age, `FRED macro content age at ${now}`);
+    assert.equal(macro.artifact.status, status, `FRED macro content status at ${now}`);
+  }
 
   const krxRoot = materializeArtifacts("all_valid");
   const krxPath = path.join(krxRoot.raw, "data", "admin", "fenok-edge-korea-krx-daily-index.json");
@@ -1576,6 +1598,9 @@ function runAttemptChecks(artifactRoot) {
   staleAttempt.attempts.find((row) => row.lane_id === "fred_macro").observed_at = "2026-07-08T00:00:00Z";
   const staleAttemptReport = buildDetectionReport({ artifactRoot: artifactRoot.raw, attempts: staleAttempt, calendars: calendarsFixture, now: expectedFixture.baseline.now });
   assert.equal(lane(staleAttemptReport, "fred_macro").endpoint.reason, "stale");
+  assert.equal(lane(staleAttemptReport, "fred_macro").artifact.status, "ready");
+  assert.equal(lane(staleAttemptReport, "fred_macro").status, "stale",
+    "a fresh FRED observation cannot clear a stale acquisition attempt");
   const futureAttempt = clone(attemptsFixture);
   futureAttempt.attempts.find((row) => row.lane_id === "fred_macro").observed_at = "2026-07-11T00:00:01Z";
   const futureAttemptReport = buildDetectionReport({ artifactRoot: artifactRoot.raw, attempts: futureAttempt, calendars: calendarsFixture, now: expectedFixture.baseline.now });

@@ -1648,7 +1648,7 @@ export function mapDetectionFloorRow(row, recoveryState = undefined, options = {
       throw new Error("detection floor fred_banking source file identities differ from config");
     }
   }
-  const sharedAgeLanes = new Set(["benchmarks", "global_scouter", "fred_yardeni", "treasury_tga", "finra_ats_weekly", "fred_banking", "krx"]);
+  const sharedAgeLanes = new Set(["benchmarks", "global_scouter", "fred_yardeni", "fred_macro", "treasury_tga", "finra_ats_weekly", "fred_banking", "krx"]);
   const sourceVerdicts = sharedAgeLanes.has(laneId) && options.nowIso && sourceAsOf !== null
     ? (sourceArtifacts ?? [{ id: laneId, source_as_of: sourceAsOf }]).map((item) => {
       const policy = resolveSourcePolicy({
