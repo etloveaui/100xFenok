@@ -1677,9 +1677,14 @@ try {
       // The retained index pointer owns the observation period. A newer
       // shadow candidate or acquisition stamp must not advance source_as_of.
       await mkdir(path.join(asofRoot, "data/admin/oecd_cli/shadow"), { recursive: true });
+      await mkdir(path.join(asofRoot, "data/admin/oecd_cli/lkg"), { recursive: true });
       await writeFile(
         path.join(asofRoot, "data/admin/oecd_cli/index.json"),
-        JSON.stringify({ updated_at: "2026-09-08T12:18:57.000Z", items: { oecd_cli: { current: { source_as_of: "2026-08-01" } } } }),
+        JSON.stringify({ updated_at: "2026-09-08T12:18:57.000Z", items: { oecd_cli: { current: { path: "data/admin/oecd_cli/lkg/oecd_cli.json", source_as_of: "2026-08-01" } } } }),
+      );
+      await writeFile(
+        path.join(asofRoot, "data/admin/oecd_cli/lkg/oecd_cli.json"),
+        JSON.stringify({ generated_at: "2026-09-08T12:18:57.000Z", latest_date: "2026-08-01" }),
       );
       await writeFile(
         path.join(asofRoot, "data/admin/oecd_cli/shadow/oecd-cli.json"),

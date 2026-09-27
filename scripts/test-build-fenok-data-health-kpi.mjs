@@ -698,7 +698,12 @@ assert.equal(PRODUCT_SURFACE_SLA?.max_staleness, 10, "weekly ETF universe cadenc
     };
   };
 
-  const promoted = historyFixture("slickcharts-history-promoted");
+  const promoted = historyFixture("slickcharts-history-promoted", {
+    mutateIndex(index) {
+      // Bundle object key order is not part of its hash/file-set identity.
+      index.members.history.bundle = Object.fromEntries(Object.entries(index.members.history.bundle).reverse());
+    },
+  });
   assert.equal(promoted.index.members.history.resolution_state, "fresh_primary");
   assert.equal(promoted.index.members.history.retry, false);
   assert.equal(promoted.index.members.history.promoted_run.observed_at, recentPromotionAt);
@@ -710,6 +715,8 @@ assert.equal(PRODUCT_SURFACE_SLA?.max_staleness, 10, "weekly ETF universe cadenc
     "a recent full promotion should satisfy history delivery freshness when bytes are unchanged");
   assert.equal(promoted.historySla.stale, 0);
   assert.equal(promoted.historySla.current, historyGroup.files.length + 1);
+  assert.equal(promoted.historySla.oldest_delivery_at, recentPromotionAt,
+    "history SLA reporting should expose the verified delivery clock, not the older unchanged content timestamp");
   assert.equal(JSON.parse(fs.readFileSync(path.join(promoted.dataRoot, "slickcharts", "stocks-dividends.json"), "utf8")).updated, oldContentAt,
     "promotion freshness must not rewrite provider/content timestamps");
 
@@ -745,6 +752,33 @@ assert.equal(PRODUCT_SURFACE_SLA?.max_staleness, 10, "weekly ETF universe cadenc
   assert.equal(failedAttempt.historySla.stale, historyGroup.files.length + 1,
     "a failed attempt cannot refresh the prior successful promotion timestamp");
 
+  const retainedPromotion = historyFixture("slickcharts-history-retained-promotion", {
+    mutateIndex(index) {
+      index.current_attempt = { ...failedAttempt.index.current_attempt, observed_at: now };
+    },
+  });
+  assert.equal(retainedPromotion.historySla.oldest_delivery_at, recentPromotionAt,
+    "a later failed attempt preserves the valid saved promotion without advancing it");
+  const retrying = historyFixture("slickcharts-history-retrying", {
+    mutateIndex(index) { index.members.history.retry = true; },
+  });
+  assert.equal(retrying.historySla.stale, historyGroup.files.length + 1,
+    "a retrying member cannot supply a successful full-promotion clock");
+
+  for (const [label, patch] of [
+    ["timestamp-only", { run_id: undefined, run_attempt: undefined, event_name: undefined, head_sha: undefined }],
+    ["missing-revision", { head_sha: undefined }],
+    ["missing-attempt", { run_attempt: undefined }],
+    ["rerun", { run_attempt: 2 }],
+    ["unbound-dispatch", { event_name: "workflow_dispatch", run_id: "local" }],
+  ]) {
+    const unbound = historyFixture(`slickcharts-history-${label}`, {
+      mutateIndex(index) { Object.assign(index.members.history.promoted_run, patch); },
+    });
+    assert.equal(unbound.historySla.stale, historyGroup.files.length + 1,
+      `${label} metadata cannot supply a producer-bound delivery clock`);
+  }
+
   const tampered = historyFixture("slickcharts-history-tampered", {
     tamperBoundFile: "stocks-dividends.json",
   });
@@ -756,6 +790,25 @@ assert.equal(PRODUCT_SURFACE_SLA?.max_staleness, 10, "weekly ETF universe cadenc
   });
   assert.equal(recoveryLane.checks.find((item) => item.id === "recovery_lkg_integrity")?.status, "blocked",
     "the independent recovery integrity gate must still block the tampered live bundle");
+
+  const mismatchedRoots = historyFixture("slickcharts-history-mismatched-roots");
+  const unrelatedRepoRoot = mkTmp("slickcharts-history-unrelated-repo-root");
+  fs.cpSync(
+    path.join(mismatchedRoots.dataRoot, "slickcharts"),
+    path.join(unrelatedRepoRoot, "data", "slickcharts"),
+    { recursive: true },
+  );
+  const dataRootOnlyFile = path.join(mismatchedRoots.dataRoot, "slickcharts", "stocks-dividends.json");
+  const dataRootOnlyPayload = JSON.parse(fs.readFileSync(dataRootOnlyFile, "utf8"));
+  dataRootOnlyPayload.changed_after_copy = true;
+  writeJson(dataRootOnlyFile, dataRootOnlyPayload);
+  const mismatchedAssessment = assessSlickChartsDelivery(now, {
+    dataRoot: mismatchedRoots.dataRoot,
+    slickchartsRepoRoot: unrelatedRepoRoot,
+  });
+  assert.equal(mismatchedAssessment.workflow_sla.find((row) => row.source_id === historyGroup.id).stale,
+    historyGroup.files.length + 1,
+    "a matching bundle in a different repository root cannot refresh files read from dataRoot");
 
   for (const [label, timestamp] of [
     ["invalid", "not-a-timestamp"],

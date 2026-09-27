@@ -8,12 +8,14 @@ import {
   validateDetectionReport,
 } from "./build-data-supply-detection-floor.mjs";
 import { DATA_SUPPLY_DETECTION_CONFIG } from "./lib/data-supply-detection-config.mjs";
-import { hasStructuredGithubRunBinding } from "./lib/data-supply-lkg-store.mjs";
+import { hasStructuredGithubRunBinding, isEligibleRecoveryRun } from "./lib/data-supply-lkg-store.mjs";
+import { canonicalJson } from "./lib/json-canonical.mjs";
 import { LANE_REGISTRY } from "./lib/lane-registry.mjs";
 import { validatePublishOutcomeShard } from "./lib/publish-outcome-shard.mjs";
 import {
   SLICKCHARTS_COMPOSITE_MEMBERS,
   inspectSlickchartsCompositeLiveIntegrity,
+  inspectSlickchartsMemberBundle,
   validateSlickchartsCompositeIndex,
 } from "./lib/slickcharts-composite-recovery.mjs";
 import { EXCLUDED_PUBLIC_DATA_FILES, EXCLUDED_PUBLIC_DATA_ROOTS } from "../100xfenok-next/scripts/sync-public-data.mjs";
@@ -2440,7 +2442,41 @@ function strictDeliveryTimestamp(value, nowIso) {
   return { valid: true, normalized, age_hours: hoursAge(normalized, nowIso) };
 }
 
-export function assessSlickChartsDelivery(nowIso, { dataRoot = DATA_ROOT } = {}) {
+function verifiedSlickChartsHistoryPromotion(nowIso, { dataRoot, slickchartsRepoRoot }) {
+  if (typeof slickchartsRepoRoot !== "string" || !slickchartsRepoRoot) return null;
+  if (path.resolve(dataRoot) !== path.resolve(slickchartsRepoRoot, "data")) return null;
+  const indexPath = path.join(dataRoot, "admin", "slickcharts-composite-recovery", "index.json");
+  const indexRead = readSlickChartsArtifact(indexPath);
+  if (indexRead.kind !== "parsed") return null;
+
+  try {
+    validateSlickchartsCompositeIndex(indexRead.payload);
+    const history = indexRead.payload.members?.history;
+    if (history?.resolution_state !== "fresh_primary" || history.retry !== false) return null;
+
+    const run = history.promoted_run;
+    if (typeof run?.run_id !== "string" || !run.run_id.trim()
+      || Number(run.run_attempt) !== 1
+      || !/^[a-f0-9]{40}$/i.test(run.head_sha ?? "")
+      || !isEligibleRecoveryRun({
+        runId: run.run_id, runAttempt: run.run_attempt, eventName: run.event_name,
+      }, true)) return null;
+    const observedAt = run.observed_at;
+    if (!isDetectionSourceStamp(observedAt) || !observedAt.includes("T")) return null;
+    const promotionStamp = strictDeliveryTimestamp(observedAt, nowIso);
+    const nowMs = Date.parse(nowIso);
+    if (!promotionStamp.valid || !Number.isFinite(nowMs) || Date.parse(promotionStamp.normalized) > nowMs) return null;
+
+    const savedBundle = history.bundle;
+    const liveBundle = inspectSlickchartsMemberBundle(slickchartsRepoRoot, "history");
+    if (canonicalJson(savedBundle) !== canonicalJson(liveBundle)) return null;
+    return promotionStamp;
+  } catch {
+    return null;
+  }
+}
+
+export function assessSlickChartsDelivery(nowIso, { dataRoot = DATA_ROOT, slickchartsRepoRoot = null } = {}) {
   const base = path.join(dataRoot, "slickcharts");
   const universeResult = readSlickChartsArtifact(path.join(base, "universe.json"));
   const identityIssues = [];
@@ -2480,6 +2516,7 @@ export function assessSlickChartsDelivery(nowIso, { dataRoot = DATA_ROOT } = {})
 
   const offenders = [];
   const rows = [];
+  const historyPromotionStamp = verifiedSlickChartsHistoryPromotion(nowIso, { dataRoot, slickchartsRepoRoot });
   let corruptionCount = universeResult.kind === "corrupt" ? 1 : 0;
   for (const item of artifacts) {
     const read = readSlickChartsArtifact(item.filePath);
@@ -2502,6 +2539,9 @@ export function assessSlickChartsDelivery(nowIso, { dataRoot = DATA_ROOT } = {})
       rows.push({ ...item, status: "invalid", delivery_at: null, age_hours: null, reason: stamp.reason, integrity: "delivery" });
       continue;
     }
+    const deliveryStamp = item.group.id === "slickcharts_history_delivery" && historyPromotionStamp
+      ? historyPromotionStamp
+      : stamp;
     // Market-day-bound groups (SlickCharts daily: stock movers, Treasury yields,
     // daily FX/mortgage rates) only gain new content on a US market business day;
     // a Friday delivery read on a Monday morning must not accrue the weekend's
@@ -2510,13 +2550,13 @@ export function assessSlickChartsDelivery(nowIso, { dataRoot = DATA_ROOT } = {})
     // weekend/holiday data. Weekly/symbols/monthly/history groups are genuinely
     // continuous (fixed Sunday/1st-of-month crons) and keep raw wall-clock hours.
     const ageHours = item.group.market_day_bound
-      ? businessHoursAge(stamp.normalized, nowIso, "us_market")
-      : stamp.age_hours;
+      ? businessHoursAge(deliveryStamp.normalized, nowIso, "us_market")
+      : deliveryStamp.age_hours;
     const isStale = ageHours > item.group.max_hours;
     rows.push({
       ...item,
       status: isStale ? "stale" : "current",
-      delivery_at: stamp.normalized,
+      delivery_at: deliveryStamp.normalized,
       age_hours: ageHours,
       reason: isStale
         ? `${ageHours}h old exceeds ${item.group.max_hours}h delivery SLA${item.group.market_day_bound ? " (business hours, us_market calendar)" : ""}`
@@ -2591,7 +2631,7 @@ export function assessSlickChartsDelivery(nowIso, { dataRoot = DATA_ROOT } = {})
     offenders: offenders.slice(0, 20),
     workflow_sla: workflowSla,
     oldest_delivery_at: validDeliveries[0] ?? null,
-    timestamp_semantics: "updated is Fenok fetch/write delivery time, not provider publication time.",
+    timestamp_semantics: "updated is Fenok fetch/write delivery time, not provider publication time, except history where it remains content-change evidence and the unchanged producer-bound bundle may use its verified full-promotion time.",
   };
 }
 
@@ -3836,7 +3876,7 @@ export function buildPayload(
     sentimentState: recoveryStates.sentiment ?? null,
     slickchartsTreasuryState,
   });
-  const slickchartsDelivery = assessSlickChartsDelivery(nowIso, { dataRoot });
+  const slickchartsDelivery = assessSlickChartsDelivery(nowIso, { dataRoot, slickchartsRepoRoot });
 
   const detectionFloorLanes = buildDetectionFloorLanes(
     detectionFloor,
