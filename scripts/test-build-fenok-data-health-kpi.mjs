@@ -1867,6 +1867,14 @@ function readyDetectionProjection(id, now) {
     reason: "ok",
     artifact: { status: "ready", reason: "ok", source_as_of: providerDateless ? null : "2026-07-10" },
   };
+  if (id === "fred_banking") {
+    // Reuse the hermetic detector fixture's four distinct source clocks.
+    // A synthetic ready lane must satisfy the same identity contract as production.
+    const fixture = JSON.parse(fs.readFileSync(DETECTION_EXPECTED, "utf8"));
+    const fred = fixture.baseline.expected_report.lanes.find((item) => item.id === id);
+    row.artifact = structuredClone(fred.artifact);
+    row.source_artifacts = structuredClone(fred.source_artifacts);
+  }
   const recovery = TARGET_RECOVERY_FIXTURES[id];
   return mapDetectionFloorRow(row, recovery
     ? recovery.composite
