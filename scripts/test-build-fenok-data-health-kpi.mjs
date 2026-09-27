@@ -785,7 +785,12 @@ assert.equal(PRODUCT_SURFACE_SLA?.max_staleness, 10, "weekly ETF universe cadenc
   assert.equal(inspectSlickchartsCompositeLiveIntegrity(tampered.root, tampered.index).valid, false);
   assert.equal(tampered.historySla.stale, historyGroup.files.length + 1,
     "a changed bound payload cannot acquire freshness from the saved promotion");
-  const recoveryLane = mapDetectionFloorRow(row("slickcharts"), tampered.index, {
+  const recoveryLane = mapDetectionFloorRow({
+    id: "slickcharts",
+    label: DATA_SUPPLY_DETECTION_CONFIG.lanes.find((lane) => lane.id === "slickcharts").label,
+    enforcement: "live", kpi_required: true, status: "ready", reason: "ok",
+    artifact: { status: "ready", reason: "ok", source_as_of: "2026-09-27" },
+  }, tampered.index, {
     slickchartsRepoRoot: tampered.root,
   });
   assert.equal(recoveryLane.checks.find((item) => item.id === "recovery_lkg_integrity")?.status, "blocked",
