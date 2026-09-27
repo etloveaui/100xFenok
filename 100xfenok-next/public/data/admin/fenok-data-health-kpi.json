@@ -1,9 +1,9 @@
 {
   "schema_version": "fenok-data-health-kpi/v2",
-  "generated_at": "2026-09-27T08:33:52.045Z",
+  "generated_at": "2026-09-27T09:18:16.758Z",
   "status": "degraded",
   "status_label": "저하",
-  "status_message": "10 required lane(s) are not ready; healthy lanes may still publish.",
+  "status_message": "8 required lane(s) are not ready; healthy lanes may still publish.",
   "purpose": "Admin-safe service data health KPI: current data freshness, daily gates, public mirror safety, and automation contracts.",
   "raw_policy": {
     "public_mirror_allowed": true,
@@ -21,14 +21,14 @@
   },
   "outcome_watchdog": {
     "schema_version": "lane-outcome-watchdog/v1",
-    "evaluated_at": "2026-09-27T08:33:52.045Z",
+    "evaluated_at": "2026-09-27T09:18:16.758Z",
     "basis": "per_row_advance_basis",
     "threshold_multiplier": 1.5,
     "status": "overdue",
     "counts": {
       "monitored": 22,
-      "current": 14,
-      "overdue": 8,
+      "current": 17,
+      "overdue": 5,
       "unobservable": 0
     },
     "advance_bases": {
@@ -41,10 +41,10 @@
         "lane_id": "fred_macro",
         "cadence_kind": "daily",
         "cadence_hours": 24,
-        "threshold_hours": 36,
+        "threshold_hours": 48,
         "last_advance": "2026-09-25",
-        "age_hours": 56.56,
-        "state": "overdue",
+        "age_hours": 48,
+        "state": "current",
         "source_as_of": "2026-09-25",
         "advance_basis": "canonical_file_source_as_of",
         "calendar": "utc"
@@ -53,9 +53,9 @@
         "lane_id": "fred_yardeni",
         "cadence_kind": "weekly",
         "cadence_hours": 168,
-        "threshold_hours": 252,
+        "threshold_hours": 312,
         "last_advance": "2026-09-18",
-        "age_hours": 224.56,
+        "age_hours": 216,
         "state": "current",
         "source_as_of": "2026-09-18",
         "advance_basis": "canonical_file_source_as_of",
@@ -65,9 +65,9 @@
         "lane_id": "fdic_tier1",
         "cadence_kind": "quarterly",
         "cadence_hours": 2160,
-        "threshold_hours": 3240,
+        "threshold_hours": 2904,
         "last_advance": "2026-06-30",
-        "age_hours": 2144.56,
+        "age_hours": 2136,
         "state": "current",
         "source_as_of": "2026-06-30",
         "advance_basis": "canonical_file_source_as_of",
@@ -77,7 +77,7 @@
         "lane_id": "treasury_tga",
         "cadence_kind": "daily",
         "cadence_hours": 24,
-        "threshold_hours": 36,
+        "threshold_hours": 72,
         "last_advance": "2026-09-24",
         "age_hours": 24,
         "state": "current",
@@ -89,9 +89,9 @@
         "lane_id": "defillama_stablecoins",
         "cadence_kind": "daily",
         "cadence_hours": 24,
-        "threshold_hours": 36,
+        "threshold_hours": 48,
         "last_advance": "2026-09-27",
-        "age_hours": 8.56,
+        "age_hours": 0,
         "state": "current",
         "source_as_of": "2026-09-27",
         "advance_basis": "canonical_file_source_as_of",
@@ -103,7 +103,7 @@
         "cadence_hours": 24,
         "threshold_hours": 36,
         "last_advance": "2026-09-26T23:40:33Z",
-        "age_hours": 8.89,
+        "age_hours": 9.63,
         "state": "current",
         "source_as_of": null,
         "advance_basis": "canonical_file_generated_at",
@@ -115,7 +115,7 @@
         "cadence_hours": 24,
         "threshold_hours": 36,
         "last_advance": "2026-09-21T01:14:16Z",
-        "age_hours": 151.33,
+        "age_hours": 152.07,
         "state": "overdue",
         "source_as_of": null,
         "advance_basis": "canonical_file_generated_at",
@@ -127,7 +127,7 @@
         "cadence_hours": 24,
         "threshold_hours": 36,
         "last_advance": "2026-09-26T02:28:38.413Z",
-        "age_hours": 30.09,
+        "age_hours": 30.83,
         "state": "current",
         "source_as_of": null,
         "advance_basis": "publish_outcome",
@@ -137,9 +137,9 @@
         "lane_id": "stockanalysis_stock_financial",
         "cadence_kind": "daily",
         "cadence_hours": 24,
-        "threshold_hours": 36,
+        "threshold_hours": 48,
         "last_advance": "2026-09-26T23:40:10Z",
-        "age_hours": 8.9,
+        "age_hours": 24,
         "state": "current",
         "source_as_of": "2026-09-26T23:40:10Z",
         "advance_basis": "canonical_file_source_as_of",
@@ -149,7 +149,7 @@
         "lane_id": "sentiment",
         "cadence_kind": "daily",
         "cadence_hours": 24,
-        "threshold_hours": 36,
+        "threshold_hours": 48,
         "last_advance": "2026-09-26",
         "age_hours": 0,
         "state": "current",
@@ -161,7 +161,7 @@
         "lane_id": "nasdaq_giw_sox",
         "cadence_kind": "daily",
         "cadence_hours": 24,
-        "threshold_hours": 36,
+        "threshold_hours": 48,
         "last_advance": "2026-09-25",
         "age_hours": 0,
         "state": "current",
@@ -173,7 +173,7 @@
         "lane_id": "us_indices_daily",
         "cadence_kind": "daily",
         "cadence_hours": 24,
-        "threshold_hours": 36,
+        "threshold_hours": 48,
         "last_advance": "2026-09-25",
         "age_hours": 0,
         "state": "current",
@@ -187,7 +187,7 @@
         "cadence_hours": 720,
         "threshold_hours": 1080,
         "last_advance": "2026-08-01",
-        "age_hours": 1376.56,
+        "age_hours": 1368,
         "state": "overdue",
         "source_as_of": "2026-08-01",
         "advance_basis": "canonical_file_source_as_of",
@@ -197,21 +197,21 @@
         "lane_id": "krx",
         "cadence_kind": "daily",
         "cadence_hours": 24,
-        "threshold_hours": 36,
+        "threshold_hours": 48,
         "last_advance": "2026-09-22",
-        "age_hours": 128.56,
-        "state": "overdue",
+        "age_hours": 24,
+        "state": "current",
         "source_as_of": "2026-09-22",
         "advance_basis": "canonical_file_source_as_of",
-        "calendar": "utc"
+        "calendar": "kr_trading"
       },
       {
         "lane_id": "slickcharts",
         "cadence_kind": "daily",
         "cadence_hours": 24,
-        "threshold_hours": 36,
+        "threshold_hours": 48,
         "last_advance": "2026-09-20",
-        "age_hours": 176.56,
+        "age_hours": 168,
         "state": "overdue",
         "source_as_of": "2026-09-20",
         "advance_basis": "canonical_file_source_as_of",
@@ -221,9 +221,9 @@
         "lane_id": "edgar_filings",
         "cadence_kind": "weekly",
         "cadence_hours": 168,
-        "threshold_hours": 252,
+        "threshold_hours": 264,
         "last_advance": "2026-09-03",
-        "age_hours": 584.56,
+        "age_hours": 576,
         "state": "overdue",
         "source_as_of": "2026-09-03",
         "advance_basis": "canonical_file_source_as_of",
@@ -233,7 +233,7 @@
         "lane_id": "finra_short_volume",
         "cadence_kind": "daily",
         "cadence_hours": 24,
-        "threshold_hours": 36,
+        "threshold_hours": 48,
         "last_advance": "2026-09-25",
         "age_hours": 0,
         "state": "current",
@@ -245,10 +245,10 @@
         "lane_id": "finra_ats_weekly",
         "cadence_kind": "weekly",
         "cadence_hours": 168,
-        "threshold_hours": 252,
+        "threshold_hours": 936,
         "last_advance": "2026-08-17",
-        "age_hours": 992.56,
-        "state": "overdue",
+        "age_hours": 840,
+        "state": "current",
         "source_as_of": "2026-08-17",
         "advance_basis": "canonical_file_source_as_of",
         "calendar": "utc"
@@ -257,7 +257,7 @@
         "lane_id": "occ_options_volume",
         "cadence_kind": "daily",
         "cadence_hours": 24,
-        "threshold_hours": 36,
+        "threshold_hours": 48,
         "last_advance": "2026-09-25",
         "age_hours": 0,
         "state": "current",
@@ -269,7 +269,7 @@
         "lane_id": "yahoo_private_options",
         "cadence_kind": "daily",
         "cadence_hours": 24,
-        "threshold_hours": 36,
+        "threshold_hours": 48,
         "last_advance": "2026-09-26T06:08:59.956Z",
         "age_hours": 0,
         "state": "current",
@@ -281,9 +281,9 @@
         "lane_id": "apewisdom_attention",
         "cadence_kind": "daily",
         "cadence_hours": 24,
-        "threshold_hours": 36,
+        "threshold_hours": 48,
         "last_advance": "2026-09-26",
-        "age_hours": 32.56,
+        "age_hours": 24,
         "state": "current",
         "source_as_of": "2026-09-26",
         "advance_basis": "canonical_file_source_as_of",
@@ -293,9 +293,9 @@
         "lane_id": "gdelt_news_tone",
         "cadence_kind": "daily",
         "cadence_hours": 24,
-        "threshold_hours": 36,
+        "threshold_hours": 48,
         "last_advance": "2026-09-23T18:32:00Z",
-        "age_hours": 86.03,
+        "age_hours": 96,
         "state": "overdue",
         "source_as_of": "2026-09-23T18:32:00Z",
         "advance_basis": "canonical_file_source_as_of",
@@ -306,7 +306,7 @@
   "runtime": {
     "projection": "kpi_runtime_projection.v2",
     "built_at": "2026-09-27T08:33:52.045Z",
-    "evaluated_at": "2026-09-27T08:33:52.045Z",
+    "evaluated_at": "2026-09-27T09:18:16.758Z",
     "verdict": "degraded",
     "slot_status": "degraded",
     "status_message": "2 retained missed slot(s) remain lane-local degradation for incremental/owner-gated workflow(s); deployment_blocking:false. 5 other retained miss(es) recovered. Recovery evidence: dispatch_snapshot:3, scheduled_slot:2.",
@@ -322,7 +322,7 @@
     "fetch_cron_skip_detection": {
       "schema_version": "fetch-cron-attempt-coverage/v1",
       "mode": "shadow",
-      "evaluated_at": "2026-09-27T08:33:48.605Z",
+      "evaluated_at": "2026-09-27T09:18:02.618Z",
       "status": "warning",
       "deployment_blocking": false,
       "counts": {
@@ -764,7 +764,7 @@
               "collection_fresh_count": 23,
               "stale_count": 0,
               "collected_at_floor": "2026-09-26T02:05:28Z",
-              "collection_age_hours": 30.473,
+              "collection_age_hours": 31.214,
               "max_age_hours": 50,
               "reason": "provider publishes no date; recency = collection time"
             },
@@ -958,7 +958,7 @@
               "collection_fresh_count": 16,
               "stale_count": 0,
               "collected_at_floor": "2026-09-26T02:05:41Z",
-              "collection_age_hours": 30.47,
+              "collection_age_hours": 31.21,
               "max_age_hours": 50,
               "reason": "provider publishes no date; recency = collection time"
             },
@@ -1015,7 +1015,7 @@
               "collection_fresh_count": 3,
               "stale_count": 0,
               "collected_at_floor": "2026-09-26T02:05:53Z",
-              "collection_age_hours": 30.466,
+              "collection_age_hours": 31.207,
               "max_age_hours": 50,
               "reason": "provider publishes no date; recency = collection time"
             },
@@ -5998,7 +5998,7 @@
               "collection_fresh_count": 5,
               "stale_count": 0,
               "collected_at_floor": "2026-09-26T02:05:28Z",
-              "collection_age_hours": 30.473,
+              "collection_age_hours": 31.214,
               "max_age_hours": 50,
               "reason": "provider publishes no date; recency = collection time"
             },
@@ -6066,7 +6066,7 @@
       "calendar": "wall_clock",
       "max_staleness": 50,
       "required": false,
-      "age": 0.01,
+      "age": 0.75,
       "status": "ready"
     },
     {
@@ -6088,7 +6088,7 @@
       "calendar": "wall_clock",
       "max_staleness": 174,
       "required": true,
-      "age": 164.05,
+      "age": 164.79,
       "status": "ready"
     },
     {
@@ -6099,7 +6099,7 @@
       "calendar": "wall_clock",
       "max_staleness": 174,
       "required": true,
-      "age": 163.23,
+      "age": 163.97,
       "status": "ready"
     },
     {
@@ -6110,7 +6110,7 @@
       "calendar": "wall_clock",
       "max_staleness": 750,
       "required": true,
-      "age": 558.06,
+      "age": 558.8,
       "status": "ready"
     },
     {
@@ -6121,14 +6121,14 @@
       "calendar": "wall_clock",
       "max_staleness": 750,
       "required": true,
-      "age": 839.33,
+      "age": 840.07,
       "status": "stale"
     }
   ],
   "source_artifacts": [
     {
       "id": "fenok_edge_coverage_index",
-      "generated_at": "2026-09-27T08:33:13.687Z",
+      "generated_at": "2026-09-27T09:18:06.391Z",
       "public_mirror": true,
       "public_safe": true
     },
@@ -6182,7 +6182,7 @@
     },
     {
       "id": "data_supply_detection_floor",
-      "generated_at": "2026-09-27T08:33:48.605Z",
+      "generated_at": "2026-09-27T09:18:02.618Z",
       "public_mirror": false,
       "public_safe": false
     },
@@ -6201,24 +6201,24 @@
   ],
   "totals": {
     "lanes": 35,
-    "ready": 25,
-    "degraded": 10,
+    "ready": 27,
+    "degraded": 8,
     "warning": 0,
     "blocked": 0,
     "unavailable": 0,
-    "required_not_ready": 10,
+    "required_not_ready": 8,
     "platform_blocking_not_ready": 0
   },
   "lanes": [
     {
       "id": "stock_s0_active_daily_gate",
       "label": "S0 active stocks daily gate",
-      "status": "degraded",
-      "status_label": "저하",
-      "status_message": "S0 active stocks daily gate is not ready: PUBLIC+DAILY+GATED: PUBLIC; daily ready: all active stock source lanes fresh; gated ready: gate blockers empty; blockers: 1 blockers; krx_full_daily_source_ready: 336 / 336 · 2026-09-22. Other lanes may publish.",
+      "status": "ready",
+      "status_label": "정상",
+      "status_message": "S0 active stocks daily gate is ready.",
       "deployment_blocking": false,
       "required": true,
-      "as_of": "2026-09-27T08:33:13.687Z",
+      "as_of": "2026-09-27T09:18:06.391Z",
       "counts": {
         "active_total": 1184,
         "by_market": [
@@ -6271,45 +6271,45 @@
         {
           "id": "requirements_complete",
           "label": "PUBLIC+DAILY+GATED",
-          "status": "blocked",
-          "status_label": "차단",
+          "status": "ready",
+          "status_label": "정상",
           "detail": "PUBLIC",
           "platform_blocking": false
         },
         {
           "id": "daily_ready",
           "label": "daily ready",
-          "status": "blocked",
-          "status_label": "차단",
+          "status": "ready",
+          "status_label": "정상",
           "detail": "all active stock source lanes fresh",
           "platform_blocking": false
         },
         {
           "id": "gated_ready",
           "label": "gated ready",
-          "status": "blocked",
-          "status_label": "차단",
+          "status": "ready",
+          "status_label": "정상",
           "detail": "gate blockers empty",
           "platform_blocking": false
         },
         {
           "id": "blockers_empty",
           "label": "blockers",
-          "status": "blocked",
-          "status_label": "차단",
-          "detail": "1 blockers",
+          "status": "ready",
+          "status_label": "정상",
+          "detail": "0 blockers",
           "platform_blocking": false
         },
         {
           "id": "krx_full_daily_source_ready",
           "label": "krx_full_daily_source_ready",
-          "status": "stale",
-          "status_label": "차단",
+          "status": "ready",
+          "status_label": "정상",
           "detail": "336 / 336 · 2026-09-22",
           "platform_blocking": false,
           "source_date": "2026-09-22",
-          "age_days": 5,
-          "max_age_days": 4,
+          "age_days": 1,
+          "max_age_days": 2,
           "covered_count": 336,
           "denominator": 336,
           "missing_count": 0
@@ -6389,9 +6389,9 @@
     {
       "id": "stock_s1_candidate_gate",
       "label": "S1 candidate promotion gate",
-      "status": "degraded",
-      "status_label": "저하",
-      "status_message": "S1 candidate promotion gate is not ready: PUBLIC+DAILY+GATED with blocked ledger: NORMALIZED; gate blockers: 2 blockers. Other lanes may publish.",
+      "status": "ready",
+      "status_label": "정상",
+      "status_message": "S1 candidate promotion gate is ready.",
       "deployment_blocking": false,
       "required": true,
       "as_of": "2026-09-27T08:31:52.412Z",
@@ -6796,9 +6796,9 @@
         {
           "id": "requirements_complete",
           "label": "PUBLIC+DAILY+GATED with blocked ledger",
-          "status": "blocked",
-          "status_label": "차단",
-          "detail": "NORMALIZED",
+          "status": "ready",
+          "status_label": "정상",
+          "detail": "PUBLIC_GATED_WITH_BLOCKED_LEDGER",
           "platform_blocking": false
         },
         {
@@ -6828,9 +6828,9 @@
         {
           "id": "blockers_empty",
           "label": "gate blockers",
-          "status": "blocked",
-          "status_label": "차단",
-          "detail": "2 blockers",
+          "status": "ready",
+          "status_label": "정상",
+          "detail": "0 blockers",
           "platform_blocking": false
         },
         {
@@ -14897,7 +14897,7 @@
       "label": "SlickCharts delivery freshness",
       "status": "degraded",
       "status_label": "저하",
-      "status_message": "SlickCharts delivery freshness is not ready: SlickCharts delivery readiness: 552 current, 0 missing, 1 stale, 0 invalid; slickcharts-history/stocks-dividends-historical.json: 839.33h old exceeds 750h delivery SLA. Other lanes may publish.",
+      "status_message": "SlickCharts delivery freshness is not ready: SlickCharts delivery readiness: 552 current, 0 missing, 1 stale, 0 invalid; slickcharts-history/stocks-dividends-historical.json: 840.07h old exceeds 750h delivery SLA. Other lanes may publish.",
       "deployment_blocking": false,
       "required": true,
       "as_of": "2026-08-23T09:13:53.000Z",
@@ -14973,9 +14973,9 @@
             "workflow_id": "slickcharts-history",
             "artifact": "stocks-dividends-historical.json",
             "symbol": null,
-            "reason": "839.33h old exceeds 750h delivery SLA",
+            "reason": "840.07h old exceeds 750h delivery SLA",
             "delivery_at": "2026-08-23T09:13:53.000Z",
-            "age_hours": 839.33,
+            "age_hours": 840.07,
             "max_hours": 750,
             "status": "stale"
           }
@@ -15007,7 +15007,7 @@
           "label": "SlickCharts delivery readiness",
           "status": "blocked",
           "status_label": "차단",
-          "detail": "552 current, 0 missing, 1 stale, 0 invalid; slickcharts-history/stocks-dividends-historical.json: 839.33h old exceeds 750h delivery SLA",
+          "detail": "552 current, 0 missing, 1 stale, 0 invalid; slickcharts-history/stocks-dividends-historical.json: 840.07h old exceeds 750h delivery SLA",
           "platform_blocking": false
         }
       ]
@@ -15471,7 +15471,7 @@
       "status_message": "Daily automation and deploy gates is ready.",
       "deployment_blocking": false,
       "required": true,
-      "as_of": "2026-09-27T08:33:52.552Z",
+      "as_of": "2026-09-27T09:18:17.312Z",
       "counts": {},
       "details": {
         "credential_dependent_for_build": false,
@@ -15634,8 +15634,10 @@
       "as_of": "2026-09-25",
       "counts": {},
       "details": {
+        "detection_reason": "stale",
         "recovery_retry_set": [],
         "recovery_recovered": [],
+        "source_verdicts": [],
         "last_attempt": {
           "event_name": null,
           "observed_at": "2026-09-25T13:12:42.041Z",
@@ -15675,9 +15677,10 @@
       "status_message": "FRED banking series is ready.",
       "deployment_blocking": false,
       "required": true,
-      "as_of": "2026-04-01",
+      "as_of": "2026-01-01",
       "counts": {},
       "details": {
+        "detection_reason": "ok",
         "recovery_retry_set": [],
         "recovery_recovered": [
           {
@@ -15717,6 +15720,28 @@
             "source_as_of": "2026-09-16"
           }
         ],
+        "source_verdicts": [
+          {
+            "id": "fred_banking_daily",
+            "state": "fresh",
+            "age_days": 2
+          },
+          {
+            "id": "fred_banking_weekly",
+            "state": "fresh",
+            "age_days": 11
+          },
+          {
+            "id": "fred_banking_monthly",
+            "state": "fresh",
+            "age_days": 27
+          },
+          {
+            "id": "fred_banking_quarterly",
+            "state": "fresh",
+            "age_days": 180
+          }
+        ],
         "last_attempt": {
           "event_name": null,
           "observed_at": "2026-09-27T06:40:35.474Z",
@@ -15731,7 +15756,15 @@
           "label": "Detection floor status",
           "status": "ready",
           "status_label": "정상",
-          "detail": "ok; source_as_of 2026-04-01",
+          "detail": "ok; source_as_of 2026-01-01",
+          "platform_blocking": false
+        },
+        {
+          "id": "content_age_policy",
+          "label": "Source content age",
+          "status": "ready",
+          "status_label": "정상",
+          "detail": "fred_banking_daily:fresh:2, fred_banking_weekly:fresh:11, fred_banking_monthly:fresh:27, fred_banking_quarterly:fresh:180",
           "platform_blocking": false
         },
         {
@@ -15745,7 +15778,49 @@
       ],
       "reason": "ok",
       "artifact": {
-        "source_as_of": "2026-04-01"
+        "source_as_of": "2026-01-01",
+        "source_artifacts": [
+          {
+            "id": "fred_banking_daily",
+            "path": "data/macro/fred-banking-daily.json",
+            "reason": "ok",
+            "source_age_anchor": "2026-09-23",
+            "source_age_days": 2,
+            "source_as_of": "2026-09-23",
+            "source_state": "fresh",
+            "status": "ready"
+          },
+          {
+            "id": "fred_banking_weekly",
+            "path": "data/macro/fred-banking-weekly.json",
+            "reason": "ok",
+            "source_age_anchor": "2026-09-16",
+            "source_age_days": 11,
+            "source_as_of": "2026-09-16",
+            "source_state": "fresh",
+            "status": "ready"
+          },
+          {
+            "id": "fred_banking_monthly",
+            "path": "data/macro/fred-banking-monthly.json",
+            "reason": "ok",
+            "source_age_anchor": "2026-08-31",
+            "source_age_days": 27,
+            "source_as_of": "2026-08-01",
+            "source_state": "fresh",
+            "status": "ready"
+          },
+          {
+            "id": "fred_banking_quarterly",
+            "path": "data/macro/fred-banking-quarterly.json",
+            "reason": "ok",
+            "source_age_anchor": "2026-03-31",
+            "source_age_days": 180,
+            "source_as_of": "2026-01-01",
+            "source_state": "fresh",
+            "status": "ready"
+          }
+        ]
       }
     },
     {
@@ -15759,6 +15834,7 @@
       "as_of": "2026-09-18",
       "counts": {},
       "details": {
+        "detection_reason": "ok",
         "recovery_retry_set": [],
         "recovery_recovered": [
           {
@@ -15772,6 +15848,13 @@
             "recovered_at": "2026-08-01T12:02:53.419Z",
             "lkg_source_as_of": "2026-07-17",
             "source_as_of": "2026-09-18"
+          }
+        ],
+        "source_verdicts": [
+          {
+            "id": "fred_yardeni",
+            "state": "fresh",
+            "age_days": 9
           }
         ],
         "last_attempt": {
@@ -15789,6 +15872,14 @@
           "status": "ready",
           "status_label": "정상",
           "detail": "ok; source_as_of 2026-09-18",
+          "platform_blocking": false
+        },
+        {
+          "id": "content_age_policy",
+          "label": "Source content age",
+          "status": "ready",
+          "status_label": "정상",
+          "detail": "fred_yardeni:fresh:9",
           "platform_blocking": false
         },
         {
@@ -15816,8 +15907,10 @@
       "as_of": "2026-06-30",
       "counts": {},
       "details": {
+        "detection_reason": "ok",
         "recovery_retry_set": [],
         "recovery_recovered": [],
+        "source_verdicts": [],
         "last_attempt": {
           "event_name": null,
           "observed_at": "2026-09-24T10:41:13.525Z",
@@ -15860,6 +15953,7 @@
       "as_of": "2026-09-24",
       "counts": {},
       "details": {
+        "detection_reason": "ok",
         "recovery_retry_set": [],
         "recovery_recovered": [
           {
@@ -15873,6 +15967,13 @@
             "recovered_at": "2026-09-21T21:26:46.337Z",
             "lkg_source_as_of": "2026-09-17",
             "source_as_of": "2026-09-24"
+          }
+        ],
+        "source_verdicts": [
+          {
+            "id": "treasury_tga",
+            "state": "fresh",
+            "age_days": 1
           }
         ],
         "last_attempt": {
@@ -15890,6 +15991,14 @@
           "status": "ready",
           "status_label": "정상",
           "detail": "ok; source_as_of 2026-09-24",
+          "platform_blocking": false
+        },
+        {
+          "id": "content_age_policy",
+          "label": "Source content age",
+          "status": "ready",
+          "status_label": "정상",
+          "detail": "treasury_tga:fresh:1",
           "platform_blocking": false
         },
         {
@@ -15917,6 +16026,7 @@
       "as_of": "2026-09-27",
       "counts": {},
       "details": {
+        "detection_reason": "ok",
         "recovery_retry_set": [],
         "recovery_recovered": [
           {
@@ -15932,6 +16042,7 @@
             "source_as_of": "2026-09-27"
           }
         ],
+        "source_verdicts": [],
         "last_attempt": {
           "event_name": null,
           "observed_at": "2026-09-27T08:12:37.859Z",
@@ -15974,6 +16085,7 @@
       "as_of": null,
       "counts": {},
       "details": {
+        "detection_reason": "ok",
         "recovery_retry_set": [],
         "recovery_recovered": [
           {
@@ -15989,6 +16101,7 @@
             "source_as_of": "2026-07-27T20:00:00Z"
           }
         ],
+        "source_verdicts": [],
         "last_attempt": {
           "event_name": null,
           "observed_at": "2026-09-26T23:40:33Z",
@@ -16033,8 +16146,10 @@
       "as_of": null,
       "counts": {},
       "details": {
+        "detection_reason": "ok",
         "recovery_retry_set": [],
         "recovery_recovered": [],
+        "source_verdicts": [],
         "last_attempt": {
           "event_name": null,
           "observed_at": "2026-09-21T01:24:48Z",
@@ -16079,8 +16194,10 @@
       "as_of": null,
       "counts": {},
       "details": {
+        "detection_reason": "ok",
         "recovery_retry_set": [],
         "recovery_recovered": [],
+        "source_verdicts": [],
         "last_attempt": {
           "event_name": null,
           "observed_at": "2026-09-26T02:20:05Z",
@@ -16125,8 +16242,10 @@
       "as_of": "2026-09-26T23:40:10Z",
       "counts": {},
       "details": {
+        "detection_reason": "ok",
         "recovery_retry_set": [],
         "recovery_recovered": [],
+        "source_verdicts": [],
         "last_attempt": {
           "event_name": null,
           "observed_at": "2026-09-26T23:40:33Z",
@@ -16195,6 +16314,7 @@
             "promotion_deferral_keys": []
           }
         },
+        "source_verdicts": [],
         "last_attempt": {
           "event_name": null,
           "observed_at": "2026-09-27T08:02:08.050Z",
@@ -16261,6 +16381,7 @@
       "as_of": "2026-09-26",
       "counts": {},
       "details": {
+        "detection_reason": "ok",
         "recovery_retry_set": [],
         "recovery_recovered": [
           {
@@ -16324,6 +16445,7 @@
             "source_as_of": "2026-09-25"
           }
         ],
+        "source_verdicts": [],
         "last_attempt": {
           "event_name": null,
           "observed_at": "2026-09-26T00:18:53.304Z",
@@ -16380,8 +16502,10 @@
       "as_of": "2026-09-25",
       "counts": {},
       "details": {
+        "detection_reason": "ok",
         "recovery_retry_set": [],
         "recovery_recovered": [],
+        "source_verdicts": [],
         "last_attempt": {
           "event_name": null,
           "observed_at": "2026-09-26T02:02:47.829Z",
@@ -16452,6 +16576,7 @@
             "promotion_deferral_keys": []
           }
         },
+        "source_verdicts": [],
         "last_attempt": {
           "event_name": null,
           "observed_at": "2026-09-26T00:20:40.104Z",
@@ -16518,6 +16643,7 @@
       "as_of": "2026-08-01",
       "counts": {},
       "details": {
+        "detection_reason": "ok",
         "recovery_retry_set": [],
         "recovery_recovered": [
           {
@@ -16533,6 +16659,7 @@
             "source_as_of": "2026-08-01"
           }
         ],
+        "source_verdicts": [],
         "last_attempt": {
           "event_name": null,
           "observed_at": "2026-09-08T12:18:57.984Z",
@@ -16575,6 +16702,7 @@
       "as_of": "2026-09-22",
       "counts": {},
       "details": {
+        "detection_reason": "unexpected_error",
         "recovery_retry_set": [
           {
             "key": "bridge",
@@ -16586,6 +16714,13 @@
           }
         ],
         "recovery_recovered": [],
+        "source_verdicts": [
+          {
+            "id": "krx",
+            "state": "fresh",
+            "age_days": 1
+          }
+        ],
         "last_attempt": {
           "event_name": null,
           "observed_at": "2026-09-25T15:30:19.000Z",
@@ -16601,6 +16736,14 @@
           "status": "blocked",
           "status_label": "차단",
           "detail": "unexpected_error; source_as_of 2026-09-22",
+          "platform_blocking": false
+        },
+        {
+          "id": "content_age_policy",
+          "label": "Source content age",
+          "status": "ready",
+          "status_label": "정상",
+          "detail": "krx:fresh:1",
           "platform_blocking": false
         },
         {
@@ -16683,6 +16826,7 @@
             "decision": "candidate_promoted"
           }
         },
+        "source_verdicts": [],
         "last_attempt": {
           "event_name": null,
           "observed_at": "2026-09-25T11:29:06.934Z",
@@ -16763,8 +16907,10 @@
       "as_of": "2026-09-03",
       "counts": {},
       "details": {
+        "detection_reason": "ok",
         "recovery_retry_set": [],
         "recovery_recovered": [],
+        "source_verdicts": [],
         "last_attempt": {
           "event_name": null,
           "observed_at": "2026-09-21T05:24:45.856Z",
@@ -16807,6 +16953,7 @@
       "as_of": "2026-09-26T15:00:48.645Z",
       "counts": {},
       "details": {
+        "detection_reason": "ok",
         "recovery_retry_set": [],
         "recovery_recovered": [
           {
@@ -16822,6 +16969,7 @@
             "source_as_of": "2026-07-01"
           }
         ],
+        "source_verdicts": [],
         "last_attempt": {
           "event_name": null,
           "observed_at": "2026-09-27T01:34:08.866Z",
@@ -16864,6 +17012,7 @@
       "as_of": "2026-09-25",
       "counts": {},
       "details": {
+        "detection_reason": "ok",
         "recovery_retry_set": [],
         "recovery_recovered": [
           {
@@ -16879,6 +17028,7 @@
             "source_as_of": "2026-09-25"
           }
         ],
+        "source_verdicts": [],
         "last_attempt": {
           "event_name": null,
           "observed_at": "2026-09-26T05:18:37.958Z",
@@ -16921,6 +17071,7 @@
       "as_of": "2026-08-17",
       "counts": {},
       "details": {
+        "detection_reason": "ok",
         "recovery_retry_set": [],
         "recovery_recovered": [
           {
@@ -16934,6 +17085,13 @@
             "recovered_at": "2026-08-24T13:51:03.237Z",
             "lkg_source_as_of": "2026-07-13",
             "source_as_of": "2026-08-17"
+          }
+        ],
+        "source_verdicts": [
+          {
+            "id": "finra_ats_weekly",
+            "state": "fresh",
+            "age_days": 35
           }
         ],
         "last_attempt": {
@@ -16951,6 +17109,14 @@
           "status": "ready",
           "status_label": "정상",
           "detail": "ok; source_as_of 2026-08-17",
+          "platform_blocking": false
+        },
+        {
+          "id": "content_age_policy",
+          "label": "Source content age",
+          "status": "ready",
+          "status_label": "정상",
+          "detail": "finra_ats_weekly:fresh:35",
           "platform_blocking": false
         },
         {
@@ -16978,6 +17144,7 @@
       "as_of": "2026-09-25",
       "counts": {},
       "details": {
+        "detection_reason": "ok",
         "recovery_retry_set": [],
         "recovery_recovered": [
           {
@@ -16993,6 +17160,7 @@
             "source_as_of": "2026-09-25"
           }
         ],
+        "source_verdicts": [],
         "last_attempt": {
           "event_name": null,
           "observed_at": "2026-09-26T05:28:37.291Z",
@@ -17035,6 +17203,7 @@
       "as_of": "2026-09-26T06:08:59.956Z",
       "counts": {},
       "details": {
+        "detection_reason": "ok",
         "recovery_retry_set": [],
         "recovery_recovered": [
           {
@@ -17050,6 +17219,7 @@
             "source_as_of": "2026-09-26T06:08:59.956Z"
           }
         ],
+        "source_verdicts": [],
         "last_attempt": {
           "event_name": null,
           "observed_at": "2026-09-26T06:08:59.956Z",
@@ -17092,6 +17262,7 @@
       "as_of": "2026-09-26",
       "counts": {},
       "details": {
+        "detection_reason": "ok",
         "recovery_retry_set": [],
         "recovery_recovered": [
           {
@@ -17107,6 +17278,7 @@
             "source_as_of": "2026-09-26T17:09:55.000Z"
           }
         ],
+        "source_verdicts": [],
         "last_attempt": {
           "event_name": null,
           "observed_at": "2026-09-26T17:09:54.800Z",
@@ -17149,6 +17321,7 @@
       "as_of": "2026-09-23T18:32:00Z",
       "counts": {},
       "details": {
+        "detection_reason": "rate_limited",
         "recovery_retry_set": [
           {
             "key": "news_tone_proxy",
@@ -17160,6 +17333,7 @@
           }
         ],
         "recovery_recovered": [],
+        "source_verdicts": [],
         "last_attempt": {
           "event_name": null,
           "observed_at": "2026-09-25T18:53:02.668Z",
@@ -17193,62 +17367,6 @@
     }
   ],
   "non_ready_checks": [
-    {
-      "lane_id": "stock_s0_active_daily_gate",
-      "check_id": "requirements_complete",
-      "status": "blocked",
-      "label": "PUBLIC+DAILY+GATED",
-      "detail": "PUBLIC",
-      "required": true
-    },
-    {
-      "lane_id": "stock_s0_active_daily_gate",
-      "check_id": "daily_ready",
-      "status": "blocked",
-      "label": "daily ready",
-      "detail": "all active stock source lanes fresh",
-      "required": true
-    },
-    {
-      "lane_id": "stock_s0_active_daily_gate",
-      "check_id": "gated_ready",
-      "status": "blocked",
-      "label": "gated ready",
-      "detail": "gate blockers empty",
-      "required": true
-    },
-    {
-      "lane_id": "stock_s0_active_daily_gate",
-      "check_id": "blockers_empty",
-      "status": "blocked",
-      "label": "blockers",
-      "detail": "1 blockers",
-      "required": true
-    },
-    {
-      "lane_id": "stock_s0_active_daily_gate",
-      "check_id": "krx_full_daily_source_ready",
-      "status": "stale",
-      "label": "krx_full_daily_source_ready",
-      "detail": "336 / 336 · 2026-09-22",
-      "required": true
-    },
-    {
-      "lane_id": "stock_s1_candidate_gate",
-      "check_id": "requirements_complete",
-      "status": "blocked",
-      "label": "PUBLIC+DAILY+GATED with blocked ledger",
-      "detail": "NORMALIZED",
-      "required": true
-    },
-    {
-      "lane_id": "stock_s1_candidate_gate",
-      "check_id": "blockers_empty",
-      "status": "blocked",
-      "label": "gate blockers",
-      "detail": "2 blockers",
-      "required": true
-    },
     {
       "lane_id": "stock_s1_candidate_gate",
       "check_id": "stockanalysis_retry_empty",
@@ -17342,7 +17460,7 @@
       "check_id": "delivery_ready",
       "status": "blocked",
       "label": "SlickCharts delivery readiness",
-      "detail": "552 current, 0 missing, 1 stale, 0 invalid; slickcharts-history/stocks-dividends-historical.json: 839.33h old exceeds 750h delivery SLA",
+      "detail": "552 current, 0 missing, 1 stale, 0 invalid; slickcharts-history/stocks-dividends-historical.json: 840.07h old exceeds 750h delivery SLA",
       "required": true
     },
     {
@@ -17391,6 +17509,54 @@
       "status": "blocked",
       "label": "product surface true-date/collection taxonomy v2",
       "detail": "etf_center:pending_true_date",
+      "required": true
+    },
+    {
+      "lane_id": "fred_macro",
+      "check_id": "detection_floor_status",
+      "status": "blocked",
+      "label": "Detection floor status",
+      "detail": "stale; source_as_of 2026-09-25",
+      "required": true
+    },
+    {
+      "lane_id": "krx",
+      "check_id": "detection_floor_status",
+      "status": "blocked",
+      "label": "Detection floor status",
+      "detail": "unexpected_error; source_as_of 2026-09-22",
+      "required": true
+    },
+    {
+      "lane_id": "krx",
+      "check_id": "lkg_retry_set_empty",
+      "status": "blocked",
+      "label": "LKG retry set empty",
+      "detail": "bridge lkg_primary after run 36154182529; recovery_not_advanced_by_provider at run 36154182529",
+      "required": true
+    },
+    {
+      "lane_id": "slickcharts",
+      "check_id": "detection_floor_status",
+      "status": "blocked",
+      "label": "Detection floor status",
+      "detail": "stale; source_as_of 2026-09-20",
+      "required": true
+    },
+    {
+      "lane_id": "gdelt_news_tone",
+      "check_id": "detection_floor_status",
+      "status": "blocked",
+      "label": "Detection floor status",
+      "detail": "rate_limited; source_as_of 2026-09-23T18:32:00Z",
+      "required": true
+    },
+    {
+      "lane_id": "gdelt_news_tone",
+      "check_id": "lkg_retry_set_empty",
+      "status": "blocked",
+      "label": "LKG retry set empty",
+      "detail": "news_tone_proxy lkg_primary after run 36176166711",
       "required": true
     }
   ]
