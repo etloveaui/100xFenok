@@ -1,8 +1,8 @@
 {
   "schema_version": "alarm-state/v1",
-  "generated_at": "2026-09-27T05:23:14.618Z",
+  "generated_at": "2026-09-27T08:20:24.683Z",
   "status": "open",
-  "open_incident_count": 16,
+  "open_incident_count": 14,
   "open_incidents": [
     {
       "workflow": "data-plane-serving-probe.yml",
@@ -105,13 +105,14 @@
       "first_failing_run_id": null,
       "first_failing_run_url": null,
       "alarm_reasons": [
-        "lane_outcome_overdue"
+        "lane_outcome_overdue",
+        "unrecovered_overdue"
       ],
       "lane_outcome_lanes": [
         "fred_macro"
       ],
       "lost_schedule_slot_count": 0,
-      "cadence_status": "not_due"
+      "cadence_status": "overdue"
     },
     {
       "workflow": "fetch-oecd-cli.yml",
@@ -146,20 +147,6 @@
       "cadence_status": "not_due"
     },
     {
-      "workflow": "global-writer-queue-observer.yml",
-      "label": "Global Writer Queue Observability",
-      "streak": 0,
-      "failure_streak_threshold": 2,
-      "first_failing_run_id": null,
-      "first_failing_run_url": null,
-      "alarm_reasons": [
-        "missed_schedule_window"
-      ],
-      "lane_outcome_lanes": [],
-      "lost_schedule_slot_count": 0,
-      "cadence_status": "no_declaration"
-    },
-    {
       "workflow": "slickcharts-daily.yml",
       "label": "SlickCharts Daily",
       "streak": 0,
@@ -167,13 +154,14 @@
       "first_failing_run_id": null,
       "first_failing_run_url": null,
       "alarm_reasons": [
-        "lane_outcome_overdue"
+        "lane_outcome_overdue",
+        "unrecovered_overdue"
       ],
       "lane_outcome_lanes": [
         "slickcharts"
       ],
       "lost_schedule_slot_count": 0,
-      "cadence_status": "not_due"
+      "cadence_status": "overdue"
     },
     {
       "workflow": "slickcharts-history.yml",
@@ -238,20 +226,6 @@
       ],
       "lost_schedule_slot_count": 0,
       "cadence_status": "not_due"
-    },
-    {
-      "workflow": "worker-request-budget-alarm.yml",
-      "label": "Worker Request Budget Alarm",
-      "streak": 0,
-      "failure_streak_threshold": 2,
-      "first_failing_run_id": null,
-      "first_failing_run_url": null,
-      "alarm_reasons": [
-        "missed_schedule_window"
-      ],
-      "lane_outcome_lanes": [],
-      "lost_schedule_slot_count": 0,
-      "cadence_status": "no_declaration"
     }
   ],
   "lane_outcome_notified": {
@@ -450,8 +424,10 @@
       ],
       "event": "schedule",
       "failure_streak_threshold": 2,
-      "cadence_status": "not_due",
-      "cadence_evidence": []
+      "cadence_status": "overdue",
+      "cadence_evidence": [
+        "suspected_skip"
+      ]
     },
     {
       "file": "fetch-fred-yardeni.yml",
@@ -508,7 +484,7 @@
       "cadence_status": "not_due",
       "cadence_evidence": [],
       "data_freshness_state": "healthy",
-      "data_freshness_age_hours_at_generation": 27
+      "data_freshness_age_hours_at_generation": 30
     },
     {
       "file": "fetch-treasury-tga.yml",
@@ -606,8 +582,10 @@
       ],
       "event": "schedule",
       "failure_streak_threshold": 2,
-      "cadence_status": "not_due",
-      "cadence_evidence": []
+      "cadence_status": "overdue",
+      "cadence_evidence": [
+        "suspected_skip"
+      ]
     },
     {
       "file": "slickcharts-history.yml",
@@ -689,8 +667,8 @@
     }
   ],
   "cadence_state_counts": {
-    "not_due": 26,
-    "overdue": 0,
+    "not_due": 24,
+    "overdue": 2,
     "recovered": 0,
     "no_declaration": 11,
     "unknown": 0
@@ -706,10 +684,10 @@
   "queue_evicted_run_count": 0,
   "queue_evicted_workflows": [],
   "last_firing": {
-    "run_id": "36296926268",
-    "run_url": "https://github.com/etloveaui/100xFenok/actions/runs/36296926268",
-    "observed_at": "2026-09-27T05:23:14.618Z",
-    "event": "workflow_run",
+    "run_id": "36305742821",
+    "run_url": "https://github.com/etloveaui/100xFenok/actions/runs/36305742821",
+    "observed_at": "2026-09-27T08:20:24.683Z",
+    "event": "schedule",
     "workflows": [
       "data-plane-serving-probe.yml",
       "fenok-edge-krx-daily.yml",
@@ -720,13 +698,11 @@
       "fetch-fred-macro.yml",
       "fetch-oecd-cli.yml",
       "fetch-stockanalysis.yml",
-      "global-writer-queue-observer.yml",
       "slickcharts-daily.yml",
       "slickcharts-history.yml",
       "slickcharts-monthly.yml",
       "slickcharts-symbols.yml",
-      "slickcharts-weekly.yml",
-      "worker-request-budget-alarm.yml"
+      "slickcharts-weekly.yml"
     ],
     "title": "100xFenok pipeline job failure alarm"
   },
