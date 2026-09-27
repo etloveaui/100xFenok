@@ -551,11 +551,11 @@ const sourceDateForPolicy = ({ path, family }) => {
     path: "/data/slickcharts/stocks/TSLA.json",
     family: "slickcharts-history",
     generationHeader: "slickcharts-history-abc123",
-    sourceAsOfHeader: "2026-07-20",
+    sourceAsOfHeader: daysAgo(41, true),
     publishedAtHeader: hoursAgo(1),
   });
   assert.equal(r.ok, false);
-  assert.match(r.failures[0], /days old/);
+  assert.match(r.failures[0], /days old \(limit 40\)/);
 }
 
 // ---- Two-axis freshness policy ----
