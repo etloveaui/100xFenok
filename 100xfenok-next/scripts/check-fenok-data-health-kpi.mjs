@@ -57,7 +57,7 @@ import {
 } from "../../scripts/build-fenok-data-health-kpi.mjs";
 import { DATA_SUPPLY_DETECTION_CONFIG } from "../../scripts/lib/data-supply-detection-config.mjs";
 import { hasStructuredGithubRunBinding } from "../../scripts/lib/data-supply-lkg-store.mjs";
-import { buildFetchCronAttemptCoverage, evaluateFreshness } from "../../scripts/build-data-supply-detection-floor.mjs";
+import { buildFetchCronAttemptCoverage, evaluateAttemptCadence, evaluateFreshness } from "../../scripts/build-data-supply-detection-floor.mjs";
 import { inspectSlickchartsCompositeLiveIntegrity } from "../../scripts/lib/slickcharts-composite-recovery.mjs";
 import { LANE_REGISTRY } from "../../scripts/lib/lane-registry.mjs";
 
@@ -307,7 +307,10 @@ function checkFetchCronSkipDetection(runtime, { errors, warnings }, buildNow) {
 
 export function checkFetchCronSourceParity(rootDoc, rootKpiPath, { errors, warnings }) {
   const diagnostic = rootDoc?.runtime?.fetch_cron_skip_detection;
-  if (diagnostic === undefined) return;
+  const kpiEdgar = rootDoc?.lanes?.find((row) => row.id === "edgar_filings");
+  const pollClaimed = rootDoc?.outcome_watchdog?.rows?.some((row) => row?.lane_id === "edgar_filings"
+    && row?.advance_basis === "verified_poll_observed_at");
+  if (diagnostic === undefined && !kpiEdgar && !pollClaimed) return;
   const reportPath = path.join(path.dirname(rootKpiPath), "data-supply-detection-floor.json");
   let report;
   try {
@@ -317,6 +320,9 @@ export function checkFetchCronSourceParity(rootDoc, rootKpiPath, { errors, warni
     return;
   }
   if (report === null) {
+    if (pollClaimed) {
+      errors.push("edgar_filings: verified poll advance requires the canonical detection report");
+    }
     warnings.push("fetch cron source report is absent; schedule metadata is canonical but attempt-source parity is not verified");
     return;
   }
@@ -331,8 +337,17 @@ export function checkFetchCronSourceParity(rootDoc, rootKpiPath, { errors, warni
     errors.push(`fetch cron source projection failed: ${error.message}`);
     return;
   }
-  push(errors, JSON.stringify(diagnostic) === JSON.stringify(expected),
-    "runtime.fetch_cron_skip_detection does not match canonical detection-floor projection");
+  if (diagnostic !== undefined) {
+    push(errors, JSON.stringify(diagnostic) === JSON.stringify(expected),
+      "runtime.fetch_cron_skip_detection does not match canonical detection-floor projection");
+  }
+  if (kpiEdgar || pollClaimed) {
+    const rawEdgar = report.lanes.find((row) => row.id === "edgar_filings");
+    push(errors, rawEdgar && kpiEdgar && JSON.stringify(kpiEdgar.details?.poll_endpoint) === JSON.stringify({
+      lane_id: "edgar_filings", status: rawEdgar.endpoint.status, reason: rawEdgar.endpoint.reason,
+      observed_at: rawEdgar.endpoint.observed_at,
+    }), "edgar_filings: poll witness differs from the validated detection report");
+  }
 }
 
 const DETECTION_KPI_REASONS = new Set([
@@ -483,6 +498,23 @@ export function checkDetectionFloorLane(lane, errors, expectedConfig, nowIso = n
   push(errors, providerDateless || !["ok", "stale"].includes(detectionReason) || sourceAsOf !== null,
     `${laneId}: ready/stale reason contradicts null source_as_of`);
   push(errors, lane?.as_of === sourceAsOf, `${laneId}: as_of must preserve artifact.source_as_of`);
+  const poll = lane?.details?.poll_endpoint;
+  if (laneId === "edgar_filings") {
+    push(errors, poll && JSON.stringify(Object.keys(poll).sort()) === JSON.stringify(["lane_id", "observed_at", "reason", "status"]),
+      "edgar_filings: poll witness shape is invalid");
+    push(errors, poll?.lane_id === laneId, "edgar_filings: poll witness lane binding is invalid");
+    push(errors, ["ready", "stale", "drift", "unavailable", "unobserved"].includes(poll?.status)
+      && (poll?.status === "ready") === (poll?.reason === "ok"),
+    "edgar_filings: poll witness status/reason is invalid");
+    push(errors, poll?.observed_at === null
+      ? ["workflow_unobserved", "declared_cadence"].includes(poll?.reason)
+      : isDetectionSourceStamp(poll?.observed_at),
+    "edgar_filings: poll witness observed_at is malformed");
+    push(errors, detectionReason !== "ok" || poll?.status === "ready",
+      "edgar_filings: a ready detector must have a ready poll endpoint");
+  } else {
+    push(errors, poll === undefined, `${laneId}: foreign poll witness is forbidden`);
+  }
   push(errors, statusCheck?.status === expectedDetectionStatus,
     `${laneId}: detection_floor_status check does not match detection reason`);
   push(errors, statusCheck?.platform_blocking === false,
@@ -511,6 +543,21 @@ export function checkDetectionFloorLane(lane, errors, expectedConfig, nowIso = n
     push(errors, retryCheck?.platform_blocking === false,
       `${laneId}: lkg_retry_set_empty must not be platform blocking`);
   }
+}
+
+function detailScheduleContract(calendars) {
+  const member = DATA_SUPPLY_DETECTION_CONFIG.lanes.find((lane) => lane.id === "stockanalysis_etf_detail")?.producer_members?.[0];
+  if (!member || member.cadence_calendar !== "utc" || !Array.isArray(member.schedule) || member.schedule.length === 0) {
+    throw new Error("stockanalysis_etf_detail schedule declaration is missing");
+  }
+  return {
+    calendar: member.cadence_calendar,
+    schedules: member.schedule.map((cron) => {
+      const matches = calendars.schedules.filter((row) => row.cron === cron && row.calendar_id === member.cadence_calendar);
+      if (matches.length !== 1) throw new Error(`stockanalysis_etf_detail schedule binding is not unique: ${cron}`);
+      return { id: matches[0].id, cron, grace: matches[0].grace };
+    }),
+  };
 }
 
 export function checkOutcomeWatchdog(rootDoc, errors, { dataRoot = null } = {}) {
@@ -561,7 +608,20 @@ export function checkOutcomeWatchdog(rootDoc, errors, { dataRoot = null } = {}) 
     let advanceBasis = null;
     let advanceMs = NaN;
     const sourceMs = sourceAdvanceMs(sourceAsOf, nowMs, freshness, FETCH_CRON_CALENDARS);
-    if (sourceMs !== null) {
+    const pollOnlyEdgar = laneId === "edgar_filings"
+      && freshness?.unit === "due_window" && freshness?.due_policy?.kind === "poll_only";
+    const poll = lane?.details?.poll_endpoint;
+    const pollMs = pollOnlyEdgar && poll?.lane_id === laneId
+      && poll.status === "ready" && poll.reason === "ok"
+      && lane?.details?.detection_reason === "ok"
+      ? observedAdvanceMs(poll.observed_at, nowMs) : null;
+    if (pollOnlyEdgar) {
+      if (pollMs !== null) {
+        lastAdvance = poll.observed_at;
+        advanceBasis = "verified_poll_observed_at";
+        advanceMs = pollMs;
+      }
+    } else if (sourceMs !== null) {
       lastAdvance = sourceAsOf;
       advanceBasis = "canonical_file_source_as_of";
       advanceMs = sourceMs;
@@ -586,7 +646,8 @@ export function checkOutcomeWatchdog(rootDoc, errors, { dataRoot = null } = {}) 
     const sourceVerdict = sourcePolicy
       ? freshnessVerdict(lastAdvance, sourcePolicy, policyToday(rootDoc.generated_at, sourcePolicy), { calendars: FETCH_CRON_CALENDARS }) : null;
     const sourceClass = sourcePolicy ? FRESHNESS_CLASSES[sourcePolicy.cadence] : null;
-    const thresholdHours = sourceVerdict
+    const detailSchedule = laneId === "stockanalysis_etf_detail" ? detailScheduleContract(FETCH_CRON_CALENDARS) : null;
+    const thresholdHours = detailSchedule && advanceBasis !== "canonical_file_source_as_of" ? null : sourceVerdict
       ? (sourceClass.cycleDays + sourceClass.graceDays + sourcePolicy.releaseLagDays) * 24
       : cadenceHours * OUTCOME_WATCHDOG_THRESHOLD_MULTIPLIER;
     let ageHours = null;
@@ -604,7 +665,13 @@ export function checkOutcomeWatchdog(rootDoc, errors, { dataRoot = null } = {}) 
         ageHours = Math.round(((nowMs - advanceMs) / 3600000) * 100) / 100;
       }
     }
-    const state = sourceVerdict ? (sourceVerdict.state === "fresh" ? "current" : "overdue") : ageHours === null
+    const detailAttempt = detailSchedule && advanceBasis !== "canonical_file_source_as_of" && lastAdvance !== null
+      ? evaluateAttemptCadence(lastAdvance, detailSchedule.schedules.map((item) => item.cron), detailSchedule.calendar,
+        rootDoc.generated_at, FETCH_CRON_CALENDARS) : null;
+    const state = pollOnlyEdgar && pollMs === null ? (poll?.status === "stale" ? "overdue" : "unobservable")
+      : detailSchedule && advanceBasis !== "canonical_file_source_as_of"
+        ? detailAttempt?.reason === "ok" ? "current" : detailAttempt?.reason === "stale" ? "overdue" : "unobservable"
+        : sourceVerdict ? (sourceVerdict.state === "fresh" ? "current" : "overdue") : ageHours === null
       ? "unobservable"
       : ageHours > thresholdHours ? "overdue" : "current";
     expectedCounts[state] += 1;
@@ -627,6 +694,10 @@ export function checkOutcomeWatchdog(rootDoc, errors, { dataRoot = null } = {}) 
       `${laneId}: outcome last_advance differs from the ${advanceBasis ?? "unobservable"} advance`);
     push(errors, row?.calendar === (freshness?.calendar ?? null),
       `${laneId}: outcome calendar differs from the lane's declared detection calendar`);
+    push(errors, detailSchedule
+      ? JSON.stringify(row?.schedule_contract) === JSON.stringify(detailSchedule)
+      : !Object.hasOwn(row ?? {}, "schedule_contract"),
+    `${laneId}: outcome schedule_contract differs from the configured cadence and grace`);
     push(errors, row?.age_hours === ageHours,
       `${laneId}: outcome age_hours differs from the KPI clock`);
     push(errors, row?.state === state,

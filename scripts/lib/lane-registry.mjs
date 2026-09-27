@@ -378,7 +378,7 @@ const lanes = [
     provider_refs: [{ provider_id: "stockanalysis", role: "source", members: null }],
     store_kind: "payload",
     lane_class: "detection_floor",
-    cadence: { kind: "daily" },
+    cadence: { kind: "weekly" },
     enforcement: "live",
     privacy_class: "public_mirror",
     admin_store: "data/admin/stockanalysis-recovery",

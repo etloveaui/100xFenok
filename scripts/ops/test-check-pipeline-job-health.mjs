@@ -1518,6 +1518,30 @@ const ranJobs = jobsOf({ name: "fetch", conclusion: "failure", steps: [{ name: "
   assert.equal(absent.decision, "overdue");
   assert.equal(absent.generation_id, null);
 
+  // ETF detail uses declared delivery slots, so a null numeric threshold is
+  // deliberate; an expired slot still takes the existing overdue alarm path.
+  const detailBindings = { "stockanalysis-etf-detail": {
+    lane_id: "stockanalysis_etf_detail", workflow: ".github/workflows/fetch-stockanalysis.yml",
+  } };
+  const [detailOverdue] = deriveLaneOutcomeAlarms({
+    watchdog: laneWatchdog([watchdogRow("stockanalysis_etf_detail", "overdue", {
+      threshold_hours: null, last_advance: "2026-08-06T02:28:00Z", age_hours: 96.03,
+      schedule_contract: { calendar: "utc", schedules: [
+        { id: "weekday_2350_utc", cron: "50 23 * * 1-5", grace: { unit: "hours", value: 24 } },
+        { id: "weekly_2320_sun_utc", cron: "20 23 * * 0", grace: { unit: "calendar_days", value: 2 } },
+      ] },
+    })]),
+    shards: {}, bindings: detailBindings, now: FIXTURE_NOW,
+  });
+  assert.deepEqual(detailOverdue.conditions, [LANE_OUTCOME_ALARM_REASONS.overdue]);
+  assert.equal(detailOverdue.threshold_hours, null);
+  const [detailAttached] = attachLaneOutcomeAlarms(
+    [{ file: "fetch-stockanalysis.yml", status: "ok", alarming: false, alarm_reasons: [] }],
+    [detailOverdue], { bindings: detailBindings },
+  );
+  assert.equal(detailAttached.status, "alarm");
+  assert.deepEqual(detailAttached.alarm_reasons, [LANE_OUTCOME_ALARM_REASONS.overdue]);
+
   // One lane, two families: the newest record across families represents.
   const [collapsed] = deriveLaneOutcomeAlarms({
     watchdog: laneWatchdog([watchdogRow("fred_macro", "overdue")]),

@@ -85,6 +85,7 @@ const {
   checkSourceSla,
   checkPublicProjection,
   checkDetectionFloorLane,
+  checkFetchCronSourceParity,
   checkRecoveryStateSources,
   checkOutcomeWatchdog,
   checkSourceStatusProjections,
@@ -5703,6 +5704,17 @@ for (const [runId, delayMin] of [["26765173733", 368], ["27940007940", 364]]) {
   const witnessErrors = [];
   checkOutcomeWatchdog({ generated_at: nowIso, lanes: [forgedWitness], outcome_watchdog: watchdog }, witnessErrors);
   assert.ok(witnessErrors.length > 0, "independent checker rejects a foreign-lane poll witness");
+
+  const noReportPath = path.join(mkTmp("edgar-poll-source-parity"), "data", KPI_REL);
+  const partial = { generated_at: nowIso, lanes: [] };
+  const partialResult = { errors: [], warnings: [] };
+  checkFetchCronSourceParity(partial, noReportPath, partialResult);
+  assert.deepEqual(partialResult, { errors: [], warnings: [] },
+    "unrelated partial documents retain the original runtime-only parity boundary");
+  const missingReport = { errors: [], warnings: [] };
+  checkFetchCronSourceParity({ generated_at: nowIso, lanes: [lane], outcome_watchdog: watchdog }, noReportPath, missingReport);
+  assert.ok(missingReport.errors.some((error) => error.includes("verified poll advance requires the canonical detection report")),
+    "a claimed verified poll cannot pass without its source report");
   ok("EDGAR poll-only watchdog uses validated successful polls and preserves filing dates");
 }
 
@@ -5837,7 +5849,7 @@ for (const [runId, delayMin] of [["26765173733", 368], ["27940007940", 364]]) {
   const laneRow = (id, artifact) => ({ id, as_of: artifact.source_as_of ?? null, artifact });
   const dateless = { source_as_of: null, source_as_of_reason: "dateless_by_provider" };
   const publishedAt = "2026-09-05T02:29:08.285Z";
-  const now = "2026-09-05T20:00:00.000Z"; // 17.51h after publication; daily threshold 36h
+  const now = "2026-09-05T20:00:00.000Z"; // 17.51h after publication; declared delivery is still current
   const publicationFor = (result) => ({
     schema_version: "fenok-kpi-publication-outcomes/v1",
     families: [{ family: "stockanalysis-etf-detail", result, observed_at: publishedAt, gate_after: "ok" }],
@@ -5846,13 +5858,15 @@ for (const [runId, delayMin] of [["26765173733", 368], ["27940007940", 364]]) {
     laneRow("stockanalysis_etf_detail", dateless),
   ], undefined, { publication: publicationFor("published") });
   const row = watchdog.rows.find((entry) => entry.lane_id === "stockanalysis_etf_detail");
-  assert.ok(row, "stockanalysis_etf_detail must stay a monitored daily row");
+  assert.ok(row, "stockanalysis_etf_detail must stay a monitored row");
   assert.equal(row.state, "current",
-    "a successful publish outcome 17.5h ago is an observed advance inside the daily threshold, not unobservable");
+    "a successful publish outcome is current under the declared delivery schedule, not unobservable");
   assert.equal(row.advance_basis, "publish_outcome",
     "the row must declare that its advance came from the publish-outcome shard, not from a canonical source date");
   assert.equal(row.last_advance, publishedAt, "last_advance is the publication observed_at");
   assert.equal(row.age_hours, 17.51, "age_hours is measured from the publication time on the KPI clock");
+  assert.equal(row.threshold_hours, null, "ETF detail has schedule/grace, not an invented flat deadline");
+  assert.deepEqual(row.schedule_contract.schedules.map((item) => item.id), ["weekday_2350_utc", "weekly_2320_sun_utc"]);
   assert.equal(row.source_as_of, null,
     "publication must not be relabeled as the metric observation date: the source as-of stays null");
   assert.deepEqual(watchdog.counts, { monitored: 1, current: 1, overdue: 0, unobservable: 0 });
@@ -5877,7 +5891,7 @@ for (const [runId, delayMin] of [["26765173733", 368], ["27940007940", 364]]) {
 // run (etf_universe.json / coverage/etf_detail.json both carry generated_at).
 // That generation time is the lane's honest advance evidence: the row must be
 // neither "unobservable" nor "current" by fiat. It is aged against the lane's
-// declared cadence from generated_at, declared as advance_basis
+// weekly declared cadence from generated_at, declared as advance_basis
 // "canonical_file_generated_at", and the source as-of stays null (provider
 // publishes no aggregate source date). No generated_at => still unobservable;
 // nothing is fabricated.
@@ -5894,10 +5908,11 @@ for (const [runId, delayMin] of [["26765173733", 368], ["27940007940", 364]]) {
   const rows = new Map(watchdog.rows.map((entry) => [entry.lane_id, entry]));
   const universe = rows.get("stockanalysis_etf_universe");
   assert.equal(universe.state, "current",
-    "a dateless lane regenerated 20h ago is current on its daily cadence, not unobservable");
+    "a dateless lane regenerated 20h ago is current on its weekly cadence, not unobservable");
   assert.equal(universe.advance_basis, "canonical_file_generated_at");
   assert.equal(universe.last_advance, universeGeneratedAt);
   assert.equal(universe.age_hours, 20.31);
+  assert.equal(universe.threshold_hours, 7 * 24 * OUTCOME_WATCHDOG_THRESHOLD_MULTIPLIER);
   assert.equal(universe.source_as_of, null, "generated_at must not be presented as a source observation date");
   const fallback = rows.get("yahoo_etf_fallback");
   assert.equal(fallback.state, "overdue",
@@ -5914,6 +5929,46 @@ for (const [runId, delayMin] of [["26765173733", 368], ["27940007940", 364]]) {
   assert.equal(bare.state, "unobservable", "no source date and no generated_at stays unobservable (no fabrication)");
   assert.equal(bare.advance_basis, null);
   ok("outcome watchdog ages notApplicableSource lanes from their canonical artifact generated_at without inventing a source date");
+}
+
+// The universe publishes weekly. Detail has two actual delivery slots and no
+// Saturday slot; an observed Saturday completion remains valid on Sunday.
+{
+  const dateless = { source_as_of: null, source_as_of_reason: "dateless_by_provider" };
+  const universeRegistry = { lanes: LANE_REGISTRY.lanes.filter((item) => item.id === "stockanalysis_etf_universe") };
+  const detailRegistry = { lanes: LANE_REGISTRY.lanes.filter((item) => item.id === "stockanalysis_etf_detail") };
+  const universeLane = [{ id: "stockanalysis_etf_universe", artifact: { ...dateless, generated_at: "2026-09-21T23:40:00Z" } }];
+  const universeCurrent = buildOutcomeWatchdog("2026-09-27T18:14:00Z", universeLane, universeRegistry).rows[0];
+  assert.equal(universeCurrent.cadence_kind, "weekly");
+  assert.equal(universeCurrent.threshold_hours, 252);
+  assert.equal(universeCurrent.state, "current", "Sep 21 universe generation remains within weekly operational cadence on Sep 27");
+  const universeExpired = buildOutcomeWatchdog("2026-10-03T12:00:00Z", universeLane, universeRegistry).rows[0];
+  assert.equal(universeExpired.state, "overdue", "weekly universe generation eventually expires");
+
+  const publishedAt = "2026-09-26T02:28:00Z";
+  const publication = { families: [{ family: "stockanalysis-etf-detail", result: "published", observed_at: publishedAt }] };
+  const detailLane = [{ id: "stockanalysis_etf_detail", artifact: dateless }];
+  const detailCurrent = buildOutcomeWatchdog("2026-09-27T18:14:00Z", detailLane, detailRegistry, { publication }).rows[0];
+  assert.equal(detailCurrent.state, "current", "Saturday delivery remains valid before the next declared slot and grace expire");
+  assert.equal(detailCurrent.advance_basis, "publish_outcome");
+  assert.equal(detailCurrent.age_hours, 39.77, "wall-clock age remains visible even though state follows the schedule");
+  assert.equal(detailCurrent.threshold_hours, null);
+  assert.equal(detailCurrent.source_as_of, null);
+  assert.deepEqual(detailCurrent.schedule_contract, {
+    calendar: "utc",
+    schedules: [
+      { id: "weekday_2350_utc", cron: "50 23 * * 1-5", grace: { unit: "hours", value: 24 } },
+      { id: "weekly_2320_sun_utc", cron: "20 23 * * 0", grace: { unit: "calendar_days", value: 2 } },
+    ],
+  });
+  const detailExpired = buildOutcomeWatchdog("2026-09-30T00:00:00Z", detailLane, detailRegistry, { publication }).rows[0];
+  assert.equal(detailExpired.state, "overdue", "unchanged delivery becomes overdue after the declared grace window");
+  assert.equal(detailExpired.threshold_hours, null);
+  const detailAbsent = buildOutcomeWatchdog("2026-09-27T18:14:00Z", detailLane, detailRegistry).rows[0];
+  assert.equal(detailAbsent.state, "unobservable");
+  assert.equal(detailAbsent.threshold_hours, null, "missing evidence does not invent a flat deadline");
+  assert.deepEqual(detailAbsent.schedule_contract, detailCurrent.schedule_contract);
+  ok("ETF universe and detail watchdogs use their declared weekly and delivery schedules");
 }
 
 // B-OUTCOME-CLOCKS (c): source dates use shared content-age limits and their
@@ -5938,6 +5993,7 @@ for (const [runId, delayMin] of [["26765173733", 368], ["27940007940", 364]]) {
     laneRow("defillama_stablecoins", { source_as_of: fridayAdvance }),
     laneRow("stockanalysis_etf_universe", { source_as_of: null, generated_at: fridayHeartbeat }),
     laneRow("stockanalysis_etf_detail", { source_as_of: null }),
+    laneRow("yahoo_etf_fallback", { source_as_of: null, generated_at: fridayHeartbeat }),
   ], undefined, { publication: {
     schema_version: "fenok-kpi-publication-outcomes/v1",
     families: [{ family: "stockanalysis-etf-detail", result: "published", observed_at: fridayHeartbeat, gate_after: "ok" }],
@@ -5977,8 +6033,9 @@ for (const [runId, delayMin] of [["26765173733", 368], ["27940007940", 364]]) {
     assert.equal(thursday.get(id).state, "overdue", `${id}: Friday source is stale at four business days`);
     assert.equal(thursday.get(id).age_hours, 96);
   }
-  // Calendar-day source dates also use whole civil days, while dateless
-  // generated/publish outcomes still use the 36-hour operational heartbeat.
+  // Calendar-day source dates use whole civil days. Universe follows its
+  // weekly cadence, ETF detail its declared delivery schedule, and the
+  // unrelated Yahoo fallback retains its 36-hour daily heartbeat.
   const monday = rowsFor("2026-09-14T23:00:00Z");
   assert.equal(saturday.get("defillama_stablecoins").state, "current");
   assert.equal(saturday.get("defillama_stablecoins").age_hours, 24);
@@ -5990,10 +6047,13 @@ for (const [runId, delayMin] of [["26765173733", 368], ["27940007940", 364]]) {
   for (const [id, basis] of [["stockanalysis_etf_universe", "canonical_file_generated_at"], ["stockanalysis_etf_detail", "publish_outcome"]]) {
     const row = saturday.get(id);
     assert.equal(row.advance_basis, basis);
-    assert.equal(row.state, "overdue", `${id}: Friday 00:00 heartbeat is overdue by Saturday 23:00`);
+    assert.equal(row.state, "current", `${id}: Friday heartbeat stays current before its declared due slot`);
     assert.equal(row.age_hours, 47);
-    assert.equal(row.threshold_hours, 36);
   }
+  assert.equal(saturday.get("stockanalysis_etf_universe").threshold_hours, 252);
+  assert.equal(saturday.get("stockanalysis_etf_detail").threshold_hours, null);
+  assert.equal(saturday.get("yahoo_etf_fallback").state, "overdue", "other daily heartbeat retains 36-hour limit");
+  assert.equal(saturday.get("yahoo_etf_fallback").threshold_hours, 36);
   assert.deepEqual(
     { current: saturday.get("treasury_tga").state, control: monday.get("defillama_stablecoins").state },
     { current: "current", control: "overdue" },
@@ -6146,6 +6206,7 @@ for (const [runId, delayMin] of [["26765173733", 368], ["27940007940", 364]]) {
     laneRow("stockanalysis_etf_detail", dateless),
   ], undefined, { publication: publicationOf("published", "2026-09-05T19:00:00Z") }).advance_bases, {
     canonical_file_source_as_of: 1,
+    verified_poll_observed_at: 0,
     publish_outcome: 1,
     canonical_file_generated_at: 1,
   });
@@ -6179,12 +6240,28 @@ for (const [runId, delayMin] of [["26765173733", 368], ["27940007940", 364]]) {
   assert.equal(rows.get("stockanalysis_etf_universe").advance_basis, "canonical_file_generated_at");
   assert.equal(rows.get("stockanalysis_etf_detail").advance_basis, "publish_outcome");
   assert.equal(rows.get("stockanalysis_etf_detail").state, "current");
+  assert.equal(rows.get("stockanalysis_etf_detail").threshold_hours, null);
+  assert.equal(rows.get("stockanalysis_etf_universe").threshold_hours, 252);
   assert.equal(rows.get("yahoo_etf_fallback").state, "unobservable");
   assert.deepEqual(watchdog.counts, { monitored: 5, current: 3, overdue: 1, unobservable: 1 });
   const rootDoc = () => ({ generated_at: now, lanes: structuredClone(lanes), publication: structuredClone(publication), outcome_watchdog: structuredClone(watchdog) });
   const cleanErrors = [];
   checkOutcomeWatchdog(rootDoc(), cleanErrors);
   assert.deepEqual(cleanErrors, [], "checker accepts calendar-folded, publish-outcome and generated_at rows it can re-derive");
+
+  for (const [field, forgedValue, errorPattern] of [
+    ["state", "overdue", /stockanalysis_etf_detail: outcome state/],
+    ["advance_basis", "canonical_file_generated_at", /stockanalysis_etf_detail: outcome advance_basis/],
+    ["threshold_hours", 36, /stockanalysis_etf_detail: outcome threshold_hours/],
+    ["schedule_contract", { calendar: "utc", schedules: [] }, /stockanalysis_etf_detail: outcome schedule_contract/],
+  ]) {
+    const forged = rootDoc();
+    forged.outcome_watchdog.rows.find((entry) => entry.lane_id === "stockanalysis_etf_detail")[field] = forgedValue;
+    const errors = [];
+    checkOutcomeWatchdog(forged, errors);
+    assert.ok(errors.some((message) => errorPattern.test(message)),
+      `independent checker must reject forged ETF detail ${field}: ${JSON.stringify(errors)}`);
+  }
 
   const contradiction = rootDoc();
   contradiction.outcome_watchdog.rows.find((entry) => entry.lane_id === "treasury_tga").advance_basis = "publish_outcome";
@@ -6253,7 +6330,7 @@ for (const [runId, delayMin] of [["26765173733", 368], ["27940007940", 364]]) {
     { recursive: true },
   );
   const installedReport = structuredClone(DETECTION_BASELINE_REPORT);
-  const universeGeneratedAt = "2026-07-14T00:00:00Z"; // 12h before now -> current on the daily cadence
+  const universeGeneratedAt = "2026-07-14T00:00:00Z"; // 12h before now -> current on the weekly cadence
   const universeRow = installedReport.lanes.find((item) => item.id === "stockanalysis_etf_universe");
   universeRow.artifact = { ...universeRow.artifact, generated_at: universeGeneratedAt };
   const fallbackRow = installedReport.lanes.find((item) => item.id === "yahoo_etf_fallback");

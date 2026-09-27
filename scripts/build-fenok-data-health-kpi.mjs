@@ -3,6 +3,7 @@ import fs from "node:fs";
 import path from "node:path";
 import {
   buildFetchCronAttemptCoverage,
+  evaluateAttemptCadence,
   evaluateFreshness,
   validateAttemptShard,
   validateDetectionReport,
@@ -479,7 +480,9 @@ export function slaStatusForAge(age, maxStaleness) {
 
 // ── Outcome watchdog (B-OUTCOME-CLOCKS) ─────────────────────────────────────
 //
-// Each monitored lane resolves ONE advance clock, first hit wins:
+// Each monitored lane resolves ONE advance clock, first hit wins. EDGAR's
+// poll_only endpoint is an exception: a successful, bound poll owns its clock
+// even when no newer filingDate exists; failed polls borrow no other clock.
 //   (a) artifact.source_as_of            -> "canonical_file_source_as_of"
 //   (b) registry-bound publish-outcome family whose latest result is a
 //       successful publish (observed_at valid, not future)
@@ -490,12 +493,13 @@ export function slaStatusForAge(age, maxStaleness) {
 // The row keeps source_as_of verbatim (null under b/c): publication or
 // generation time is an observed advance, never a relabeled source date.
 // Age: canonical source dates use the shared content policy, including its
-// family calendar and release lag (age_days x 24 in this row). Publish-outcome
-// and generated_at fallbacks retain the operational 1.5x cadence threshold:
-// declared business-day lanes fold their calendar, other lanes use wall hours.
+// family calendar and release lag (age_days x 24 in this row). Most operational
+// fallbacks use the 1.5x cadence threshold. ETF detail follows its declared
+// delivery schedule/grace; its threshold is null and actual wall age remains.
 export const OUTCOME_WATCHDOG_BASIS = "per_row_advance_basis";
 export const OUTCOME_ADVANCE_BASES = Object.freeze([
   "canonical_file_source_as_of",
+  "verified_poll_observed_at",
   "publish_outcome",
   "canonical_file_generated_at",
 ]);
@@ -536,6 +540,21 @@ export function sourceAdvanceMs(value, nowMs, freshness = null, calendars = FETC
   return observedAdvanceMs(value, nowMs);
 }
 
+function detailScheduleContract(calendars) {
+  const member = DATA_SUPPLY_DETECTION_CONFIG.lanes.find((lane) => lane.id === "stockanalysis_etf_detail")?.producer_members?.[0];
+  if (!member || member.cadence_calendar !== "utc" || !Array.isArray(member.schedule) || member.schedule.length === 0) {
+    throw new Error("stockanalysis_etf_detail schedule declaration is missing");
+  }
+  return {
+    calendar: member.cadence_calendar,
+    schedules: member.schedule.map((cron) => {
+      const matches = calendars.schedules.filter((row) => row.cron === cron && row.calendar_id === member.cadence_calendar);
+      if (matches.length !== 1) throw new Error(`stockanalysis_etf_detail schedule binding is not unique: ${cron}`);
+      return { id: matches[0].id, cron, grace: matches[0].grace };
+    }),
+  };
+}
+
 export function evaluateOutcomeWatchdogRow({
   registryLane,
   laneEntry,
@@ -550,7 +569,22 @@ export function evaluateOutcomeWatchdogRow({
   let advanceBasis = null;
   let advanceMs = NaN;
   const sourceMs = sourceAdvanceMs(sourceAsOf, nowMs, freshness, calendars);
-  if (sourceMs !== null) {
+  const pollOnlyEdgar = registryLane.id === "edgar_filings"
+    && freshness?.unit === "due_window" && freshness?.due_policy?.kind === "poll_only";
+  const poll = laneEntry?.details?.poll_endpoint;
+  const pollMs = pollOnlyEdgar && poll?.lane_id === registryLane.id
+    && poll.status === "ready" && poll.reason === "ok"
+    && laneEntry?.details?.detection_reason === "ok"
+    ? observedAdvanceMs(poll.observed_at, nowMs) : null;
+  if (pollOnlyEdgar) {
+    // A quiet, successful poll advances the operational clock without changing
+    // the older filingDate. Failed/absent polls cannot borrow publish or file clocks.
+    if (pollMs !== null) {
+      lastAdvance = poll.observed_at;
+      advanceBasis = "verified_poll_observed_at";
+      advanceMs = pollMs;
+    }
+  } else if (sourceMs !== null) {
     lastAdvance = sourceAsOf;
     advanceBasis = "canonical_file_source_as_of";
     advanceMs = sourceMs;
@@ -575,7 +609,8 @@ export function evaluateOutcomeWatchdogRow({
   const sourceVerdict = sourcePolicy
     ? freshnessVerdict(lastAdvance, sourcePolicy, policyToday(nowIso, sourcePolicy), { calendars }) : null;
   const sourceClass = sourcePolicy ? FRESHNESS_CLASSES[sourcePolicy.cadence] : null;
-  const thresholdHours = sourceVerdict
+  const detailSchedule = registryLane.id === "stockanalysis_etf_detail" ? detailScheduleContract(calendars) : null;
+  const thresholdHours = detailSchedule && advanceBasis !== "canonical_file_source_as_of" ? null : sourceVerdict
     ? (sourceClass.cycleDays + sourceClass.graceDays + sourcePolicy.releaseLagDays) * 24
     : cadenceHours * OUTCOME_WATCHDOG_THRESHOLD_MULTIPLIER;
   let ageHours = null;
@@ -589,7 +624,12 @@ export function evaluateOutcomeWatchdogRow({
       ageHours = Math.round(((nowMs - advanceMs) / 3600000) * 100) / 100;
     }
   }
-  const state = sourceVerdict ? (sourceVerdict.state === "fresh" ? "current" : "overdue") : ageHours === null
+  const detailAttempt = detailSchedule && advanceBasis !== "canonical_file_source_as_of" && lastAdvance !== null
+    ? evaluateAttemptCadence(lastAdvance, detailSchedule.schedules.map((row) => row.cron), detailSchedule.calendar, nowIso, calendars) : null;
+  const state = pollOnlyEdgar && pollMs === null ? (poll?.status === "stale" ? "overdue" : "unobservable")
+    : detailSchedule && advanceBasis !== "canonical_file_source_as_of"
+      ? detailAttempt?.reason === "ok" ? "current" : detailAttempt?.reason === "stale" ? "overdue" : "unobservable"
+      : sourceVerdict ? (sourceVerdict.state === "fresh" ? "current" : "overdue") : ageHours === null
     ? "unobservable"
     : ageHours > thresholdHours ? "overdue" : "current";
   return {
@@ -603,6 +643,7 @@ export function evaluateOutcomeWatchdogRow({
     source_as_of: sourceAsOf,
     advance_basis: advanceBasis,
     calendar: freshness?.calendar ?? null,
+    ...(detailSchedule ? { schedule_contract: detailSchedule } : {}),
   };
 }
 
@@ -1719,7 +1760,10 @@ export function mapDetectionFloorRow(row, recoveryState = undefined, options = {
     asOf: sourceAsOf,
     details: targetRecovery
       ? { detection_reason: row.reason, recovery: recovery.details, source_verdicts: sourceVerdicts, ...lastAttemptDetail(recoveryState) }
-      : { detection_reason: row.reason, recovery_retry_set: recoveryRetrySet, recovery_recovered: recoveryRecovered, source_verdicts: sourceVerdicts, ...lastAttemptDetail(recoveryState) },
+      : { detection_reason: row.reason, recovery_retry_set: recoveryRetrySet, recovery_recovered: recoveryRecovered, source_verdicts: sourceVerdicts,
+        ...(laneId === "edgar_filings" ? { poll_endpoint: { lane_id: laneId, status: row.endpoint?.status ?? null,
+          reason: row.endpoint?.reason ?? null, observed_at: row.endpoint?.observed_at ?? null } } : {}),
+        ...lastAttemptDetail(recoveryState) },
   });
   return {
     ...result,
