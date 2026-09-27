@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import RouteEmbedFrame from "@/components/RouteEmbedFrame";
 import { ROUTES } from "@/lib/routes";
+import catalogShape from "../../../public/research/catalog.json";
 
 type ResearchItemStatus = "live" | "coming-soon";
 
@@ -140,7 +141,20 @@ export default function ResearchClient() {
 
       <div className="mt-4">
         {loading ? (
-          <p className="text-sm text-slate-500" data-research-state="loading">불러오는 중입니다.</p>
+          <>
+            <p className="sr-only" role="status" data-research-state="loading">불러오는 중입니다.</p>
+            <ul className="grid gap-3 md:grid-cols-2 xl:grid-cols-3" aria-hidden="true">
+              {Array.from({ length: catalogShape.items.length }, (_, index) => (
+                <li key={index}>
+                  <article className="flex min-h-44 flex-col rounded-[10px] border border-slate-200 bg-white p-4">
+                    <span className="h-3 w-20 rounded bg-slate-200" />
+                    <span className="mt-3 h-5 w-3/4 rounded bg-slate-200" />
+                    <span className="mt-auto h-4 w-14 rounded bg-slate-200" />
+                  </article>
+                </li>
+              ))}
+            </ul>
+          </>
         ) : failed || !catalog ? (
           <div data-research-state="error">
             <p className="text-sm text-slate-500">목록을 불러오지 못했습니다.</p>

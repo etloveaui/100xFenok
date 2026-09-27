@@ -661,15 +661,12 @@ export default function ChangesClient() {
         />
       </Panel>
 
-      {/* fh-CLS3: these three summary panels hold their loaded height while
-          loading. The generic skeleton is taller than any of their loaded
-          boxes, so the old max(children, skeleton) loading box collapsed at
-          settle — recorded as the loading inner grid unmounting at /changes 390
-          (div.grid h 273→0) and the grid reflowing at 1024. */}
+      {/* These summaries already have an honest pending state. Keep their own
+          layout mounted while loading instead of swapping a taller skeleton. */}
       <div className="grid gap-4 md:grid-cols-3">
         <Panel
           loading={!settled}
-          className={!settled ? "h-[7.5rem]" : undefined}
+          loadingMode="placeholder"
           empty={settled && rows.length === 0 && !allMissing}
           emptyReason="집계할 변화가 없습니다"
           emptyNextRefresh="다음 수집 시"
@@ -684,9 +681,9 @@ export default function ChangesClient() {
           keepContentOnStale
         >
           <div className="flex flex-col gap-1 px-4 py-3.5">
-            <span className="text-[12px] font-semibold uppercase tracking-[0.06em] text-slate-500">변화 {rows.length}건</span>
+            <span className="text-[12px] font-semibold uppercase tracking-[0.06em] text-slate-500">변화 {settled ? `${rows.length}건` : "확인 중"}</span>
             <span className="text-[13px] text-slate-700">
-              상향·신규 {upCount} · 하향·이탈 {downCount} · 중립 {flatCount}
+              상향·신규 {settled ? upCount : "—"} · 하향·이탈 {settled ? downCount : "—"} · 중립 {settled ? flatCount : "—"}
             </span>
           </div>
           <EvidenceRail
@@ -694,7 +691,7 @@ export default function ChangesClient() {
             stateLabel={revisionAgeRail?.label ?? undefined}
             source="리비전 변동 종목 · 13F 집계"
             asOf={mainAsOf}
-            coverage={`행 ${rows.length}건`}
+            coverage={settled ? `행 ${rows.length}건` : "행 확인 중"}
             onRetry={settled ? retryFeeds : undefined}
             lkgAsOf={snapshot?.revisionAsOf ?? undefined}
             stages={feedStages}
@@ -703,7 +700,7 @@ export default function ChangesClient() {
         </Panel>
         <Panel
           loading={!settled}
-          className={!settled ? "h-[7.5rem]" : undefined}
+          loadingMode="placeholder"
           empty={settled && !first && !allMissing}
           emptyReason="먼저 볼 항목이 없습니다"
           emptyNextRefresh="다음 수집 시"
@@ -728,20 +725,20 @@ export default function ChangesClient() {
             stateLabel={revisionAgeRail?.label ?? undefined}
             source={first ? `${first.kind} · ${first.title}` : "변화 행"}
             asOf={mainAsOf}
-            coverage={first ? `변화 ${first.delta}` : "행 없음"}
+            coverage={!settled ? "행 확인 중" : first ? `변화 ${first.delta}` : "행 없음"}
             onRetry={settled ? retryFeeds : undefined}
             lkgAsOf={snapshot?.revisionAsOf ?? undefined}
             stages={feedStages}
             skeletonDelayMs={120}
           />
         </Panel>
-        <Panel loading={!settled} className={!settled ? "h-[7.5rem]" : undefined}>
+        <Panel loading={!settled} loadingMode="placeholder">
           <div className="flex flex-col gap-1 px-4 py-3.5">
             <span className="text-[12px] font-semibold uppercase tracking-[0.06em] text-slate-500">다음 diff</span>
-            <span className="text-[13px] text-slate-700">{nextDiffLabel}</span>
+            <span className="text-[13px] text-slate-700">{nextDiffLabel ?? "확인 중"}</span>
           </div>
           <EvidenceRail
-            freshness="fixed"
+            freshness={settled ? "fixed" : "pending"}
             source="리비전 발행 주기"
             asOf={revAsOf ?? "미확인"}
             coverage="주 1회 배치"

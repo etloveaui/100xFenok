@@ -45,6 +45,16 @@
   }
 }
 
+@media (max-width: 600px) {
+  /* On phones the completed verdict occupies two lines. Share that footprint
+   * with loading instead of dropping a four-line reserve at settle. */
+  .mv-verdict,
+  .mv-verdict[data-loading="true"] {
+    display: block;
+    min-height: 2lh;
+  }
+}
+
 /* One provenance line for the whole page: worst state of the four panels with
  * the oldest date among them. Full-width inside .mv-head so it owns its row. */
 .mv-prov {

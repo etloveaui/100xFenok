@@ -305,12 +305,11 @@ function ValuationSummaryPanel({
   };
 
   return (
-    // fh-CLS3: hold this panel's loaded height while loading — the loaded box
-    // grows ~77px past the skeleton box below 1024 (measured 195→272 at 768,
-    // 215→345 at 430), which pushed every panel below it at settle.
+    // The board and index feeds settle independently. Keep the loaded panel's
+    // footprint through their intermediate states as well as initial loading.
     <Panel
       loading={loading && boardLoading}
-      className={(loading && boardLoading) ? "min-h-[345px] min-[721px]:min-h-[272px]" : undefined}
+      className={!empty && !failed && !boardFailed ? "min-h-[345px] min-[721px]:min-h-[272px]" : undefined}
       empty={empty}
       emptyReason={failed || boardFailed ? "밸류에이션 요약을 불러오지 못했습니다" : "요약할 밸류에이션 데이터가 없습니다"}
       emptyNextRefresh="다음 마감 후 갱신"

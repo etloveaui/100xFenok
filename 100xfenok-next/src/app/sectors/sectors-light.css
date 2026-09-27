@@ -64,14 +64,12 @@
   min-height: 4lh;
 }
 
-/* fh-CLS3: from 641px up the loaded sentence is 2 lines at these widths
- * (≈77em of Korean + ASCII against the 900px cap; 20px × 1.45 = 29px/line),
- * so the 4lh reserve overshot by two lines and .sec-meta-row moved up 58px at
- * 768/1024. 3lh = two lines plus one line of width slack (the sentence tail
- * varies with the snapshot state). Phones keep the 5lh block below. */
+/* The read sentence varies with the snapshot. Keep its tablet-sized footprint
+ * after loading too, so the tabs and panels do not move when a longer read or
+ * an extra source-status pill arrives. Phones keep their separate sizing. */
 @media (min-width: 641px) and (max-width: 1279px) {
-  .sec-title[aria-busy="true"] {
-    min-height: 3lh;
+  .sec-title {
+    min-height: 4lh;
   }
 }
 

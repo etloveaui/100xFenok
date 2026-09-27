@@ -305,6 +305,11 @@ export default function SignalPanel({
     ? `상위 컨빅션 ${formatInteger(roster.ids.length)}명 로스터: ${rosterNames.join(" · ") || "—"} · 신규 ≥${newBuyThreshold}명`
     : `전체 ${formatInteger(dataReady ? investorCount : null)}명 기준 · 신규 로스터 ≥${newBuyThreshold}명`;
   const pressureCoverage = "13F 집계값 · 주식수 증가·감소 투자자 수 · 개별 투자자 내역 미제공";
+  // The 2-column first row grows when the independent rank feeds arrive.
+  // Reserve its measured loaded footprint only during that pending interval.
+  const loadingGridClass = loading
+    ? "min-[761px]:max-[900px]:[grid-template-rows:minmax(390px,auto)_auto] min-[901px]:max-[1199px]:[grid-template-rows:minmax(340px,auto)_auto] min-[1200px]:min-h-[340px]"
+    : "";
 
   return (
     <div data-superinvestors-signal>
@@ -335,7 +340,7 @@ export default function SignalPanel({
         </span>
       </div>
 
-      <div className="sup-signal-grid">
+      <div className={`sup-signal-grid ${loadingGridClass}`}>
         <Panel
           loading={loading}
           error={!loading && (failed || newPositions === null)}
