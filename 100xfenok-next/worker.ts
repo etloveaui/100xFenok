@@ -6,6 +6,7 @@ import handler from "./.open-next/worker.js";
 import { handleCloudDataPlaneRequest } from "../scripts/lib/cloud-data-plane-worker-route.mjs";
 import { handleCloudDataPlaneAsset, isEnrolledPath } from "./scripts/cloud-data-plane/cloud-data-plane-worker-read.mjs";
 import { PRIVATE_PUBLIC_PATHS } from "./scripts/cloud-data-plane/cloud-data-plane-routing-authority.mjs";
+import { isProtectedAdminImageRequest } from "./scripts/admin-image-source-guard.mjs";
 import {
   handleMonaVnextProfileCoordinatorRequest,
   type WindDownReviewCoordinatorEnv,
@@ -33,6 +34,18 @@ const worker = {
     if (PRIVATE_PUBLIC_PATHS.has(url.pathname)) {
       return new Response(null, {
         status: 404,
+        headers: {
+          "cache-control": "no-store",
+          "x-content-type-options": "nosniff",
+        },
+      });
+    }
+
+    // OpenNext's image handler runs before Next middleware and reads local
+    // sources from ASSETS. Deny admin sources before that handler is entered.
+    if (isProtectedAdminImageRequest(url)) {
+      return new Response(null, {
+        status: 403,
         headers: {
           "cache-control": "no-store",
           "x-content-type-options": "nosniff",

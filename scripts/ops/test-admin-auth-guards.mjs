@@ -496,30 +496,32 @@ function assertAdminRateLimitPolicy() {
   );
 }
 
-function assertAdminDesignLabScreenshotsRouteThroughWorker() {
+function assertAdminStaticAssetsRouteThroughWorker() {
   // Cloudflare's asset layer serves any path matching a file under the
   // assets directory directly, without invoking the Worker (and therefore
   // without ever running this middleware), unless that path is enrolled in
-  // wrangler.jsonc's run_worker_first. The admin design-lab screenshots are
-  // real static files under public/admin/design-lab/screenshots/, so they
-  // must be enrolled there for the admin session gate below to run at all.
+  // wrangler.jsonc's run_worker_first. Every admin static file must be
+  // enrolled there for the admin session gate below to run at all.
   const wrangler = fs.readFileSync(wranglerConfigPath, "utf8");
   const runWorkerFirstMatch = wrangler.match(/"run_worker_first"\s*:\s*\[([\s\S]*?)\]/u);
   assert.ok(runWorkerFirstMatch, "wrangler run_worker_first array exists");
   assert(
-    runWorkerFirstMatch[1].includes('"/admin/design-lab/screenshots/*"'),
-    "admin design-lab screenshots must be enrolled in run_worker_first so the asset layer cannot bypass the admin middleware gate",
+    runWorkerFirstMatch[1].includes('"/admin/*"'),
+    "admin static files must be enrolled in run_worker_first so the asset layer cannot bypass the admin middleware gate",
   );
 
   const middleware = fs.readFileSync(middlewarePath, "utf8");
   const matcherMatch = middleware.match(/matcher:\s*\[\s*"((?:\\.|[^"\\])*)"/u);
   assert.ok(matcherMatch, "middleware config.matcher is a single string pattern");
   const matcherRegex = new RegExp(`^${JSON.parse(`"${matcherMatch[1]}"`)}$`, "u");
-  assert.equal(
-    matcherRegex.test("/admin/design-lab/screenshots/figma-profile-avatar.jpg"),
-    true,
-    "middleware matcher must not exclude admin design-lab screenshot .jpg paths",
-  );
+  for (const pathname of [
+    "/admin/DEV.md",
+    "/admin/data-lab/index.html",
+    "/admin/data-lab/app/renderer.js",
+    "/admin/design-lab/screenshots/figma-profile-avatar.jpg",
+  ]) {
+    assert.equal(matcherRegex.test(pathname), true, `middleware matcher must include ${pathname}`);
+  }
 }
 
 function assertAdminAuthWorkflowTracksServerFiles() {
@@ -550,7 +552,7 @@ await assertAdminSessionPolicy();
 assertAdminLoginThrottle();
 assertAdminSessionRouteUsesServerThrottle();
 assertAdminRateLimitPolicy();
-assertAdminDesignLabScreenshotsRouteThroughWorker();
+assertAdminStaticAssetsRouteThroughWorker();
 assertAdminAuthWorkflowTracksServerFiles();
 
 console.log("admin auth guards passed");

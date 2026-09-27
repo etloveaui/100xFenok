@@ -147,6 +147,19 @@ jobs:
         working-directory: 100xfenok-next
         run: npm ci
 
+      - name: Verify admin static asset source boundary
+        run: |
+          set -euo pipefail
+          node scripts/test-cloud-data-plane-routing-authority.mjs
+          node scripts/test-admin-image-source-guard.mjs
+
+      - name: Verify admin static middleware gate
+        working-directory: 100xfenok-next
+        run: |
+          set -euo pipefail
+          node scripts/test-admin-static-auth-guard.mjs
+          node scripts/test-deploy-smoke-retry.mjs
+
       # Fail source-policy defects before data projection and the OpenNext
       # bundle. cf:build deliberately checks again after sync-static because
       # generated output can introduce a new violation.
@@ -538,6 +551,13 @@ jobs:
         if: ${{ env.DEPLOY_DEFERRED != 'true' }}
         run: node scripts/test-sec13f-live-privacy.mjs --base-url https://100xfenok.etloveaui.workers.dev
 
+      - name: Smoke anonymous admin static boundary
+        if: ${{ env.DEPLOY_DEFERRED != 'true' }}
+        working-directory: 100xfenok-next
+        env:
+          QA_ROUTE_IFRAME_ALLOW_REMOTE: "1"
+        run: node scripts/check-route-iframe-contract.mjs --base-url https://100xfenok.etloveaui.workers.dev --scope admin-static
+
       # B-346: production admin login had only source-contract coverage. This
       # logs in with the QA credential and opens every admin iframe route. A
       # failure means the live admin login or an admin route is broken, or the
@@ -547,5 +567,6 @@ jobs:
         working-directory: 100xfenok-next
         env:
           QA_ADMIN_PASSWORD: ${{ secrets.QA_ADMIN_PASSWORD }}
+          QA_ADMIN_SESSION_COOKIE: ${{ secrets.QA_ADMIN_SESSION_COOKIE }}
           QA_ROUTE_IFRAME_ALLOW_REMOTE: "1"
         run: node scripts/check-route-iframe-contract.mjs --base-url https://100xfenok.etloveaui.workers.dev --scope admin

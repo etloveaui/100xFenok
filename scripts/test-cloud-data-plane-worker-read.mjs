@@ -81,14 +81,12 @@ function extractRunWorkerFirstPatterns(source) {
     deriveWorkerFirstPatterns(PLANE_ENROLLMENT_EXACT, PLANE_ENROLLMENT_PREFIXES),
     "final Worker-first patterns derive from generated enrollment",
   );
-  // 10 public data families + the isolated Griffin deny route + the isolated
-  // admin design-lab screenshots route (this count was stale at 10, one
-  // short of the pre-existing 11, before the admin route was added here).
+  // 10 public data families + the isolated Griffin deny route + the admin tree.
   assert.equal(FINAL_WORKER_FIRST_PATTERNS.length, 12, "selective Worker-first pattern count");
   assert.equal(
-    FINAL_WORKER_FIRST_PATTERNS.includes("/admin/design-lab/screenshots/*"),
+    FINAL_WORKER_FIRST_PATTERNS.includes("/admin/*"),
     true,
-    "admin design-lab screenshots stay isolated in the Worker-first list",
+    "admin tree stays isolated in the Worker-first list",
   );
   assert.equal(FINAL_WORKER_FIRST_PATTERNS.includes("/data/*"), false, "broad data glob removed");
   assert.equal(

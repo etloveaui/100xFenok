@@ -4,12 +4,14 @@
  *
  * Reads the canonical QA route catalog, then checks a local Next.js runtime:
  * route HTML -> iframe src -> public legacy asset with ?embed=1.
+ * The admin scope also checks static asset authentication at the live edge.
  * This is read-only and localhost-only by default.
  */
 
 import { pathToFileURL } from "node:url";
 import { EXPECTED_IFRAME_SRC_BY_ROUTE } from "./qa-route-catalog.mjs";
 import { DEPLOY_SMOKE_ATTEMPTS, fetchTextWithBoundedRetry } from "./deploy-smoke-retry.mjs";
+import { liveRequestHeaders } from "../../scripts/lib/live-request-headers.mjs";
 
 const DEFAULT_BASE_URL = "http://127.0.0.1:3105";
 const REQUEST_TIMEOUT_MS = Number(process.env.QA_ROUTE_IFRAME_TIMEOUT_MS ?? 15000);
@@ -54,7 +56,7 @@ function parseArgs(argv) {
 
 function normalizeScope(rawScope) {
   const scope = String(rawScope ?? "all").trim().toLowerCase();
-  if (scope === "all" || scope === "public" || scope === "admin") return scope;
+  if (["all", "public", "admin", "admin-static"].includes(scope)) return scope;
   throw new Error(`unknown scope: ${rawScope}`);
 }
 
@@ -161,6 +163,137 @@ export async function fetchAssetStatus(baseUrl, iframeSrc, cookieHeader, options
   return response.status;
 }
 
+const ADMIN_STATIC_PATHS = [
+  "/admin/DEV.md",
+  "/admin/data-lab/index.html?embed=1",
+  "/admin/data-lab/app/renderer.js",
+];
+const PUBLIC_STATIC_PATH = "/ib/ib-helper/index.html?embed=1";
+const ADMIN_IMAGE_SOURCE = "/admin/design-lab/screenshots/figma-profile-avatar.jpg";
+const ADMIN_IMAGE_HOST_ALIAS = `/\\foreign.invalid${ADMIN_IMAGE_SOURCE}`;
+const PUBLIC_IMAGE_SOURCE = "/pwa-icon-192-v6.png";
+
+export async function fetchStaticProbe(baseUrl, pathname, cookieHeader = "", options = {}) {
+  const url = new URL(pathname, baseUrl);
+  const { response, text } = await fetchTextWithBoundedRetry(
+    url,
+    {
+      method: "GET",
+      headers: requestHeaders(cookieHeader),
+      redirect: "manual",
+    },
+    {
+      attempts: options.attempts ?? DEPLOY_SMOKE_ATTEMPTS,
+      delayMs: options.delayMs ?? ROUTE_FETCH_RETRY_DELAY_MS,
+      fetchImpl: options.fetchImpl,
+      label: `GET ${url.pathname}${url.search}`,
+      sleep: options.sleep,
+      timeoutMs: options.timeoutMs ?? REQUEST_TIMEOUT_MS,
+    },
+  );
+  return {
+    status: response.status,
+    location: response.headers.get("location"),
+    bodyBytes: Buffer.byteLength(text),
+  };
+}
+
+export function staticProbeErrors(baseUrl, pathname, result, expected) {
+  const label = `${expected} ${pathname}`;
+  if (expected === "authenticated" || expected === "public") {
+    return result.status === 200 && result.bodyBytes > 0
+      ? []
+      : [`${label}: expected nonempty HTTP 200, got ${result.status} (${result.bodyBytes} bytes)`];
+  }
+  if (result.status < 300 || result.status >= 400 || !result.location) {
+    return [`${label}: expected redirect without protected bytes, got ${result.status}`];
+  }
+  if (result.bodyBytes !== 0) {
+    return [`${label}: redirect carried ${result.bodyBytes} protected byte(s)`];
+  }
+  const target = new URL(result.location, baseUrl);
+  const expectedPath = pathname.startsWith("/admin/data-lab/index.html")
+    ? "/admin/data-lab"
+    : "/admin";
+  const validTarget = target.origin === baseUrl.origin
+    && (target.pathname === expectedPath || target.pathname === `${expectedPath}/`);
+  return validTarget ? [] : [`${label}: unexpected redirect target ${target.origin}${target.pathname}`];
+}
+
+export async function fetchImageOptimizerProbe(baseUrl, source, options = {}) {
+  const url = new URL("/_next/image/", baseUrl);
+  url.searchParams.set("url", source);
+  url.searchParams.set("w", "640");
+  url.searchParams.set("q", "75");
+  return withTimeout(async (signal) => {
+    const response = await (options.fetchImpl ?? fetch)(url, {
+      method: "GET",
+      headers: { ...liveRequestHeaders(), ...requestHeaders("") },
+      redirect: "manual",
+      signal,
+    });
+    const body = await response.arrayBuffer();
+    return {
+      status: response.status,
+      bodyBytes: body.byteLength,
+      contentType: response.headers.get("content-type"),
+      cacheControl: response.headers.get("cache-control"),
+    };
+  }, `GET ${url.pathname} for ${source}`);
+}
+
+export function imageOptimizerProbeErrors(source, result, expected) {
+  if (expected === "denied") {
+    return result.status === 403 && result.bodyBytes === 0 && /\bno-store\b/i.test(result.cacheControl ?? "")
+      ? []
+      : [`optimizer ${source}: expected empty HTTP 403 with no-store, got ${result.status} (${result.bodyBytes} bytes, cache=${result.cacheControl})`];
+  }
+  return result.status === 200 && result.bodyBytes > 0 && /^image\//i.test(result.contentType ?? "")
+    ? []
+    : [`optimizer ${source}: expected nonempty public image HTTP 200, got ${result.status} (${result.bodyBytes} bytes, type=${result.contentType})`];
+}
+
+async function checkAdminStaticBoundary(baseUrl, adminCookie) {
+  const rows = [];
+  const errors = [];
+  const probes = [
+    ...ADMIN_STATIC_PATHS.flatMap((pathname) => [
+      { pathname, cookie: "", expected: "anonymous" },
+      { pathname, cookie: "fenok_admin_session=malformed", expected: "malformed" },
+    ]),
+    { pathname: PUBLIC_STATIC_PATH, cookie: "", expected: "public" },
+    ...(adminCookie ? ADMIN_STATIC_PATHS.map((pathname) => ({
+      pathname, cookie: adminCookie, expected: "authenticated",
+    })) : []),
+    ...(adminCookie ? ADMIN_STATIC_PATHS.map((pathname) => ({
+      pathname, cookie: "", expected: "anonymous-recheck",
+    })) : []),
+  ];
+  for (const { pathname, cookie, expected } of probes) {
+    try {
+      const result = await fetchStaticProbe(baseUrl, pathname, cookie);
+      rows.push({ pathname, expected, ...result });
+      errors.push(...staticProbeErrors(baseUrl, pathname, result, expected));
+    } catch (error) {
+      errors.push(`${expected} ${pathname}: ${error instanceof Error ? error.message : String(error)}`);
+    }
+  }
+  for (const [source, expected] of [
+    [ADMIN_IMAGE_SOURCE, "denied"],
+    [ADMIN_IMAGE_HOST_ALIAS, "denied"],
+    [PUBLIC_IMAGE_SOURCE, "public"],
+  ]) {
+    try {
+      const result = await fetchImageOptimizerProbe(baseUrl, source);
+      rows.push({ pathname: "/_next/image/", source, expected, ...result });
+      errors.push(...imageOptimizerProbeErrors(source, result, expected));
+    } catch (error) {
+      errors.push(`optimizer ${source}: ${error instanceof Error ? error.message : String(error)}`);
+    }
+  }
+  return { rows, errors };
+}
+
 export function firstIframeSrc(html) {
   return html.match(/<iframe\b[^>]*\bsrc="([^"]+)"/i)?.[1] ?? null;
 }
@@ -210,21 +343,28 @@ async function main() {
   const scope = normalizeScope(args.scope);
   const baseUrl = normalizeBaseUrl(args.baseUrl);
   assertLocalBaseUrl(baseUrl);
-  const adminCookie = scope === "public" ? "" : await fetchAdminSessionCookie(baseUrl);
+  const adminCookie = scope === "public" || scope === "admin-static"
+    ? ""
+    : await fetchAdminSessionCookie(baseUrl);
 
   const rows = [];
   const errors = [];
   const allEntries = Object.entries(EXPECTED_IFRAME_SRC_BY_ROUTE);
-  const entries = allEntries.filter(([route]) => {
+  const entries = scope === "admin-static" ? [] : allEntries.filter(([route]) => {
     const adminRoute = isAdminRoute(route);
     if (scope === "public") return !adminRoute;
     if (scope === "admin") return adminRoute;
     return true;
   });
 
-  if (entries.length === 0) {
+  if (entries.length === 0 && scope !== "admin-static") {
     throw new Error(`route iframe scope selected zero routes: ${scope}`);
   }
+
+  const staticBoundary = scope === "public"
+    ? { rows: [], errors: [] }
+    : await checkAdminStaticBoundary(baseUrl, adminCookie);
+  errors.push(...staticBoundary.errors);
 
   for (const [route, expectedTarget] of entries) {
     try {
@@ -272,6 +412,7 @@ async function main() {
     routes_checked: entries.length,
     routes_total: allEntries.length,
     rows,
+    static_rows: staticBoundary.rows,
     errors,
   };
 
@@ -279,7 +420,7 @@ async function main() {
   if (args.json) {
     printJson(report);
   } else {
-    console.log(`[qa:route-iframe-contract] OK scope=${scope} routes=${entries.length} base=${baseUrl.origin}`);
+    console.log(`[qa:route-iframe-contract] OK scope=${scope} routes=${entries.length} static=${staticBoundary.rows.length} base=${baseUrl.origin}`);
   }
 }
 

@@ -22,11 +22,11 @@ const PRIVATE_PUBLIC_PATH_SET = new Set(PRIVATE_PUBLIC_PATH_VALUES);
 // Non-data-plane static assets that must still be forced through the Worker.
 // Cloudflare's asset layer serves any path matching a file in the assets
 // directory directly, bypassing every Next.js middleware check, unless that
-// path is enrolled here. The admin design-lab screenshots are gated by the
-// admin session middleware, not the data-plane authority above, so they are
+// path is enrolled here. Every admin asset is gated by the admin session
+// middleware, not the data-plane authority above, so the admin tree is
 // enrolled explicitly rather than through the generated enrollment registry.
 export const EXPLICIT_WORKER_FIRST_PATH_VALUES = Object.freeze([
-  "/admin/design-lab/screenshots/*",
+  "/admin/*",
 ]);
 
 // Keep the mutating Set private to this module. Callers receive a frozen
