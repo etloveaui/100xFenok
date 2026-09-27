@@ -350,10 +350,27 @@ async function measure(browser, route, width) {
             });
             const afterFocus = await scroll();
             await list.focus();
+            const listHandle = await list.elementHandle();
             await page.keyboard.press("Home");
+            // Keyboard scrolling is asynchronous. Finish Home before issuing
+            // End, otherwise its pending scroll can override the second key.
+            const homeReached = await page.waitForFunction((node) => node.scrollTop <= 1,
+              listHandle, { timeout: 2000 }).then(() => true, () => false);
             await page.keyboard.press("End");
-            await page.waitForTimeout(250);
+            await page.waitForFunction((node) => node.scrollTop >= node.scrollHeight - node.clientHeight - 1,
+              listHandle, { timeout: 2000 }).catch(() => {});
             const afterEnd = await scroll();
+            await list.focus();
+            let tabTraversal = true;
+            for (let index = 0; index < rowCount; index += 1) {
+              await page.keyboard.press("Tab");
+              tabTraversal = tabTraversal && await rows.nth(index).evaluate((node) => {
+                const outer = node.parentElement.getBoundingClientRect();
+                const inner = node.getBoundingClientRect();
+                return document.activeElement === node && inner.top >= outer.top - 1 && inner.bottom <= outer.bottom + 1;
+              });
+            }
+            await listHandle.dispose();
             const panel = list.locator("xpath=..");
             const evidence = panel.getByRole("button", { name: "증거 보기", exact: true });
             let evidenceOpen = null, evidenceClosed = null, detailReachable = null;
@@ -370,7 +387,8 @@ async function measure(browser, route, width) {
             }
             const retry = panel.getByRole("button", { name: "지금 재시도", exact: true });
             changesInteraction = { state: "checked", rowCount, linkCount, initial, afterFocus, lastRowVisible,
-              afterEnd, endReached: afterEnd.scrollTop >= afterEnd.scrollHeight - afterEnd.clientHeight - 1,
+              homeReached, afterEnd, endReached: afterEnd.scrollTop >= afterEnd.scrollHeight - afterEnd.clientHeight - 1,
+              tabTraversal,
               evidenceOpen, evidenceClosed, detailReachable,
               retryAccessible: await retry.count() > 0 ? await retry.isVisible() : null };
           }
