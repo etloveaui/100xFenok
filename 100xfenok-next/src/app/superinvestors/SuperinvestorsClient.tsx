@@ -1286,7 +1286,7 @@ export default function SuperinvestorsClient({
             <Pill data-superinvestors-count>투자자 {formatInteger(dataReady ? investorCount : null)}명</Pill>
           </div>
           <h1 className="sup-title">
-            {loading ? "투자자 데이터를 불러오는 중입니다." : failed ? "투자자 데이터를 불러오지 못했습니다. 다시 시도해 주세요." : (
+            {failed ? "투자자 데이터를 불러오지 못했습니다. 다시 시도해 주세요." : (
               <>이번 분기 무엇을 새로 사고 팔았나 — 지금 봐야 할 시그널부터</>
             )}
           </h1>
