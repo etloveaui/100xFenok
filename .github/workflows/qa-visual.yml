@@ -112,6 +112,10 @@ jobs:
           node --input-type=module -e 'import { emitDetectionExpectedFixture } from "../scripts/build-data-supply-detection-floor.mjs"; emitDetectionExpectedFixture();'
           npm run qa:journey-continuity
           node ../scripts/build-guru-holders-index.mjs
+          # The isolated preview must derive its screener from this candidate's
+          # owner export. These runner-only files never publish to main.
+          node ../scripts/build-stocks-analyzer.mjs
+          node ../scripts/build-revision-movers.mjs
           repo_root="$(git rev-parse --show-toplevel)"
           floor_output="$(mktemp -d /tmp/investor-detection-floor-XXXXXX)"
           trap 'rm -rf "$floor_output"' EXIT
@@ -254,6 +258,18 @@ jobs:
               ;;
             *) echo "unsupported visual suite" >&2; exit 64;;
           esac
+
+      - name: Upload isolated Scouter derivation evidence
+        if: ${{ success() && inputs.suite == 'responsive' && inputs.include_layout && inputs.execution_target != 'live' }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: preview-scouter-derived
+          path: |
+            data/global-scouter/core/stocks_analyzer.json
+            data/global-scouter/core/per_bands_index.json
+            data/global-scouter/core/revision_movers.json
+          if-no-files-found: error
+          retention-days: 7
 
       - name: Upload layout sweep report
         if: always() && (inputs.suite == 'layout' || (inputs.suite == 'responsive' && inputs.include_layout))
