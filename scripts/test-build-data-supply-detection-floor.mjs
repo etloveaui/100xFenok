@@ -15,6 +15,7 @@ import {
   validateDetectionConfig,
 } from "./lib/data-supply-detection-config.mjs";
 import { registryDigest } from "./lib/lane-registry.mjs";
+import { KRX_MARKET_HOLIDAYS_2026 } from "./lib/market-calendar.mjs";
 import {
   ATTEMPT_SCHEMA,
   ATTEMPT_SHARD_SCHEMA,
@@ -718,11 +719,23 @@ function runConfigAndFixtureChecks() {
   assert.deepEqual(oecdCli.producer_members[0].schedule, oecdWorkflowCrons);
   assert.equal(oecdCli.producer_members[0].artifact_contracts[0].path, "data/admin/oecd_cli/shadow/oecd-cli.json");
   const krx = DATA_SUPPLY_DETECTION_CONFIG.lanes.find((item) => item.id === "krx");
+  const fredMacro = DATA_SUPPLY_DETECTION_CONFIG.lanes.find((item) => item.id === "fred_macro");
+  assert.deepEqual({ unit: fredMacro.freshness.unit, calendar: fredMacro.freshness.calendar,
+    max: fredMacro.freshness.max_staleness },
+    { unit: "calendar_days", calendar: "utc", max: 2 },
+    "FRED macro observation age follows the daily UTC content policy");
+  assert.equal(fredMacro.producer_members[0].artifact_contracts[0].source_selector.kind, "max_object_series_field",
+    "FRED macro content age reads observation dates, not publication time");
   assert.equal(krx.enforcement, "live");
   assert.equal(krx.kpi_required, true);
   assert.deepEqual(krx.producer_members[0].schedule, ["30 10 * * 1-5"]);
   assert.equal(krx.producer_members[0].artifact_contracts[0].path, "data/admin/fenok-edge-korea-krx-daily-index.json");
   assert.equal(krx.endpoint_contract.transport, "library");
+  assert.deepEqual({ unit: krx.freshness.unit, calendar: krx.freshness.calendar, max: krx.freshness.max_staleness },
+    { unit: "business_days", calendar: "kr_trading", max: 2 });
+  const misboundKrx = clone(DATA_SUPPLY_DETECTION_CONFIG);
+  misboundKrx.lanes.find((item) => item.id === "krx").freshness.calendar = "utc";
+  assertThrowsCode(() => validateConfigCalendarBindings(misboundKrx, calendarsFixture), "calendar_error");
   assert.equal(treasuryTga.freshness.unit, "business_days");
   assert.equal(treasuryTga.freshness.calendar, "us_federal_business");
   assert.equal(treasuryTga.freshness.max_staleness, 2);
@@ -890,6 +903,7 @@ function runConfigAndFixtureChecks() {
       "fenok-proxy-formula-contract.mjs",
       "slickcharts-composite-recovery.mjs",
       "data-supply-detection-config.mjs",
+      "market-calendar.mjs",
     ];
     const loadConfigWithRegistry = (mutateRegistry) => {
       const root = fs.mkdtempSync(path.join(os.tmpdir(), "detfloor-derivation-red-"));
@@ -906,6 +920,16 @@ function runConfigAndFixtureChecks() {
         if (file === "lane-registry.mjs") source = mutateRegistry(source);
         fs.writeFileSync(path.join(libDir, file), source);
       }
+      const policyDir = path.join(root, "100xfenok-next", "src", "lib");
+      fs.mkdirSync(policyDir, { recursive: true });
+      fs.copyFileSync(
+        path.join(REPO_ROOT, "100xfenok-next", "src", "lib", "freshness-policy.mjs"),
+        path.join(policyDir, "freshness-policy.mjs"),
+      );
+      fs.copyFileSync(
+        path.join(REPO_ROOT, "100xfenok-next", "src", "lib", "market-calendar.mjs"),
+        path.join(policyDir, "market-calendar.mjs"),
+      );
       return spawnSync(
         process.execPath,
         ["-e", `import(${JSON.stringify(`file://${path.join(libDir, "data-supply-detection-config.mjs")}`)}).then(() => process.exit(0)).catch((error) => { console.error(error?.message ?? error); process.exit(1); })`],
@@ -1186,14 +1210,112 @@ function runBaselineAndArtifactChecks() {
     calendars: calendarsFixture,
     now: expectedFixture.baseline.now,
   });
+  assert.equal(lane(report, "krx").artifact.unit, "business_days");
   assert.equal(lane(report, "gdelt_news_tone").artifact.reason, "ok",
     "GDELT RFC3339 row timestamps must remain valid source evidence");
   assert.equal(lane(report, "gdelt_news_tone").artifact.source_as_of, "2026-07-10T15:02:00Z",
     "GDELT source freshness uses the latest provider row timestamp");
   assert.equal(lane(report, "fred_banking").artifact.reason, "ok",
     "the daily FRED contract must not require a series emitted by the monthly artifact");
+  for (const [offset, state, status] of [
+    [13, "fresh", "ready"], [14, "delayed", "stale"],
+    [20, "delayed", "stale"], [21, "stopped", "stale"],
+  ]) {
+    const now = new Date(Date.UTC(2026, 6, 10 + offset, 12)).toISOString();
+    const ownerReport = buildDetectionReport({ artifactRoot: artifactRoot.raw,
+      attempts: attemptsFixture, calendars: calendarsFixture, now });
+    const ownerLane = lane(ownerReport, "global_scouter");
+    assert.equal(ownerLane.artifact.status, status, `owner source day ${offset}: ${state}`);
+    assert.equal(ownerLane.status, status, `owner lane day ${offset}: ${state}`);
+  }
+  const fredSources = lane(report, "fred_banking").source_artifacts;
+  assert.deepEqual(fredSources.map((row) => row.id), [
+    "fred_banking_daily", "fred_banking_weekly", "fred_banking_monthly", "fred_banking_quarterly",
+  ]);
+  assert.equal(fredSources[3].source_as_of, "2026-01-01", "the canonical raw quarter-start date remains visible");
+  assert.equal(fredSources[3].source_age_anchor, "2026-03-31", "only age calculation moves to quarter end");
+  assert.equal(fredSources[3].source_state, "fresh");
   assert.deepEqual(report, expectedFixture.baseline.expected_report);
   assert.equal(createSha(reportBytes(report)), expectedFixture.baseline.report_file_sha256);
+
+  for (const [now, age, status] of [
+    ["2026-07-12T09:18:00Z", 2, "ready"],
+    ["2026-07-13T09:18:00Z", 3, "stale"],
+  ]) {
+    const macro = lane(buildDetectionReport({ artifactRoot: artifactRoot.raw,
+      attempts: attemptsFixture, calendars: calendarsFixture, now }), "fred_macro");
+    assert.equal(macro.artifact.source_as_of, "2026-07-10");
+    assert.equal(macro.artifact.age, age, `FRED macro content age at ${now}`);
+    assert.equal(macro.artifact.status, status, `FRED macro content status at ${now}`);
+  }
+
+  const krxRoot = materializeArtifacts("all_valid");
+  const krxPath = path.join(krxRoot.raw, "data", "admin", "fenok-edge-korea-krx-daily-index.json");
+  const krxDocument = readJson(krxPath);
+  const krxAt = (source, now, attempts = attemptsFixture) => {
+    krxDocument.as_of = source;
+    fs.writeFileSync(krxPath, JSON.stringify(krxDocument), { encoding: "utf8", mode: 0o600 });
+    return lane(buildDetectionReport({ artifactRoot: krxRoot.raw, attempts, calendars: calendarsFixture, now }), "krx");
+  };
+  for (const [source, age, status] of [
+    ["2026-09-22", 1, "ready"], ["2026-09-21", 2, "ready"],
+    ["2026-09-18", 3, "stale"],
+  ]) {
+    const row = krxAt(source, "2026-09-27T12:00:00Z");
+    assert.equal(row.artifact.age, age, `KRX ${source} source age`);
+    assert.equal(row.artifact.status, status, `KRX ${source} source status`);
+  }
+  const failedKrx = replaceAttempt(attemptsFixture, "krx", null, {
+    ...legalAttempt("unexpected_error"), outcome: "error", observed_at: "2026-09-27T12:00:00Z",
+  });
+  const failedKrxRow = krxAt("2026-09-22", "2026-09-27T12:00:00Z", failedKrx);
+  assert.equal(failedKrxRow.artifact.status, "ready");
+  assert.equal(failedKrxRow.endpoint.reason, "unexpected_error");
+  assert.equal(failedKrxRow.status, "unavailable", "fresh KRX content cannot hide the latest failed attempt");
+  for (const source of ["2026-02-30", "2026-09-28"]) {
+    const row = krxAt(source, "2026-09-27T12:00:00Z");
+    assert.notEqual(row.artifact.status, "ready", `${source} cannot become fresh KRX content`);
+  }
+  assert.equal(krxAt("2026-09-28", "2026-09-27T14:30:00Z").artifact.reason, "future_source",
+    "KRX tomorrow remains future before Seoul midnight");
+  assert.equal(krxAt("2026-09-28", "2026-09-27T15:30:00Z").artifact.status, "ready",
+    "KRX date-only today is valid after Seoul midnight, before UTC midnight");
+
+  const staleDailyRoot = materializeArtifacts("all_valid");
+  const staleDailyPath = path.join(staleDailyRoot.raw, "data", "macro", "fred-banking-daily.json");
+  const staleDaily = readJson(staleDailyPath);
+  staleDaily.source_as_of = "2026-06-01";
+  fs.writeFileSync(staleDailyPath, JSON.stringify(staleDaily), { encoding: "utf8", mode: 0o600 });
+  const staleDailyReport = buildDetectionReport({
+    artifactRoot: staleDailyRoot.raw, attempts: attemptsFixture,
+    calendars: calendarsFixture, now: expectedFixture.baseline.now,
+  });
+  assert.equal(lane(staleDailyReport, "fred_banking").source_artifacts[0].source_state, "stopped");
+  assert.equal(lane(staleDailyReport, "fred_banking").source_artifacts[3].source_state, "fresh");
+  assert.equal(lane(staleDailyReport, "fred_banking").artifact.status, "stale",
+    "a stale daily file must not hide behind a fresh slow quarterly file");
+
+  const failedAttempt = replaceAttempt(attemptsFixture, "fred_banking", null, legalAttempt("transport_error"));
+  const failedAttemptReport = buildDetectionReport({ artifactRoot: artifactRoot.raw,
+    attempts: failedAttempt, calendars: calendarsFixture, now: expectedFixture.baseline.now });
+  assert.equal(lane(failedAttemptReport, "fred_banking").artifact.status, "ready");
+  assert.equal(lane(failedAttemptReport, "fred_banking").endpoint.reason, "transport_error");
+  assert.equal(lane(failedAttemptReport, "fred_banking").status, "unavailable",
+    "fresh FRED files must not hide the latest failed attempt");
+
+  for (const invalid of ["2026-02-30", "2026-07-12"]) {
+    const invalidRoot = materializeArtifacts("all_valid");
+    const invalidPath = path.join(invalidRoot.raw, "data", "macro", "fred-banking-daily.json");
+    const document = readJson(invalidPath);
+    document.source_as_of = invalid;
+    fs.writeFileSync(invalidPath, JSON.stringify(document), { encoding: "utf8", mode: 0o600 });
+    const invalidReport = buildDetectionReport({
+      artifactRoot: invalidRoot.raw, attempts: attemptsFixture,
+      calendars: calendarsFixture, now: expectedFixture.baseline.now,
+    });
+    assert.notEqual(lane(invalidReport, "fred_banking").artifact.status, "ready",
+      `${invalid} cannot become fresh`);
+  }
 
   const wrongMonthlyRoot = materializeArtifacts("all_valid");
   const monthlyPath = path.join(wrongMonthlyRoot.raw, "data", "macro", "fred-banking-monthly.json");
@@ -1476,6 +1598,9 @@ function runAttemptChecks(artifactRoot) {
   staleAttempt.attempts.find((row) => row.lane_id === "fred_macro").observed_at = "2026-07-08T00:00:00Z";
   const staleAttemptReport = buildDetectionReport({ artifactRoot: artifactRoot.raw, attempts: staleAttempt, calendars: calendarsFixture, now: expectedFixture.baseline.now });
   assert.equal(lane(staleAttemptReport, "fred_macro").endpoint.reason, "stale");
+  assert.equal(lane(staleAttemptReport, "fred_macro").artifact.status, "ready");
+  assert.equal(lane(staleAttemptReport, "fred_macro").status, "stale",
+    "a fresh FRED observation cannot clear a stale acquisition attempt");
   const futureAttempt = clone(attemptsFixture);
   futureAttempt.attempts.find((row) => row.lane_id === "fred_macro").observed_at = "2026-07-11T00:00:01Z";
   const futureAttemptReport = buildDetectionReport({ artifactRoot: artifactRoot.raw, attempts: futureAttempt, calendars: calendarsFixture, now: expectedFixture.baseline.now });
@@ -2014,7 +2139,7 @@ function runCliReproduction(artifactRoot) {
   const verifierSource = String.raw`
     const fs = require("node:fs");
     const { createHash } = require("node:crypto");
-    const [configPath, reportPath, expectedPath, attemptsPath, artifactsPath, calendarsPath] = process.argv.slice(1);
+    const [configPath, reportPath, expectedPath, attemptsPath, artifactsPath, calendarsPath, krxHolidaysJson] = process.argv.slice(1);
     const hash = (value) => createHash("sha256").update(value).digest("hex");
     const canonicalize = (value) => {
       if (value === null || typeof value === "string" || typeof value === "boolean") return value;
@@ -2034,6 +2159,7 @@ function runCliReproduction(artifactRoot) {
     const attempts = JSON.parse(fs.readFileSync(attemptsPath, "utf8"));
     const artifacts = JSON.parse(fs.readFileSync(artifactsPath, "utf8"));
     const calendars = JSON.parse(fs.readFileSync(calendarsPath, "utf8"));
+    const krxCalendar = { id: "kr_trading", timezone: "Asia/Seoul", weekend_days: [0, 6], holidays: JSON.parse(krxHolidaysJson) };
     const pointer = (document, raw) => raw === "" ? document : raw.slice(1).split("/").reduce((value, token) => value == null ? undefined : value[token.replaceAll("~1", "/").replaceAll("~0", "~")], document);
     const reasonStatus = { ok: "ready", declared_cadence: "ready", workflow_unobserved: "unobserved", stale: "stale", schema_drift: "drift", decode_error: "drift", missing_artifact: "unavailable", transport_error: "unavailable", http_error: "unavailable", auth_error: "unavailable", provider_throttled: "unavailable", rate_limited: "unavailable", empty_payload: "unavailable", future_source: "unavailable", unexpected_error: "unavailable" };
     const severity = { ready: 0, unobserved: 1, stale: 2, drift: 3, unavailable: 4 };
@@ -2147,10 +2273,15 @@ function runCliReproduction(artifactRoot) {
     const freshnessReason = (source, policy) => {
       if (source === null) return "ok";
       const now = expected.baseline.now;
-      const calendar = calendars.calendars.find((row) => row.id === policy.calendar);
+      const calendar = policy.calendar === "kr_trading" ? krxCalendar
+        : calendars.calendars.find((row) => row.id === policy.calendar);
       const nowEpoch = Date.parse(now);
       const sourceEpoch = Date.parse(/^\d{4}-\d{2}-\d{2}$/.test(source) ? source + "T00:00:00Z" : source);
-      if (sourceEpoch > nowEpoch || (/^\d{4}-\d{2}-\d{2}$/.test(source) && sourceOrdinal(source, calendar) > ordinal(calendarParts(nowEpoch, calendar.timezone)))) return "future_source";
+      const localDateFuture = /^\d{4}-\d{2}-\d{2}$/.test(source)
+        && sourceOrdinal(source, calendar) > ordinal(calendarParts(nowEpoch, calendar.timezone));
+      const futureInstant = sourceEpoch > nowEpoch
+        && !(policy.calendar === "kr_trading" && /^\d{4}-\d{2}-\d{2}$/.test(source));
+      if (futureInstant || localDateFuture) return "future_source";
       if (policy.unit === "due_window") {
         if (policy.due_policy.kind === "source_date_plus_days") return nowEpoch <= sourceEpoch + policy.due_policy.days * 86400000 ? "ok" : "stale";
         return "ok";
@@ -2227,7 +2358,7 @@ function runCliReproduction(artifactRoot) {
     if (canonical(counts) !== canonical(report.counts) || canonical(modes) !== canonical(report.monitoring_mode_counts)) throw new Error("aggregate mismatch");
     process.stdout.write(JSON.stringify({ config_digest: configDigest, report_file_sha256: reportDigest, logical_lanes: report.lanes.length, producer_members: Object.values(members).reduce((sum, value) => sum + value, 0) }) + "\n");
   `;
-  const verifier = spawnSync(process.execPath, ["-e", verifierSource, configPath, reportPath, EXPECTED_PATH, ATTEMPTS_PATH, ARTIFACTS_PATH, CALENDARS_PATH], {
+  const verifier = spawnSync(process.execPath, ["-e", verifierSource, configPath, reportPath, EXPECTED_PATH, ATTEMPTS_PATH, ARTIFACTS_PATH, CALENDARS_PATH, JSON.stringify(KRX_MARKET_HOLIDAYS_2026)], {
     cwd: REPO_ROOT,
     encoding: "utf8",
     env: { ...process.env, TZ: "Pacific/Honolulu", LC_ALL: "C" },

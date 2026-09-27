@@ -263,6 +263,14 @@ async function measure(browser, route, width) {
     }
   });
   const page = await context.newPage();
+  const pageErrors = [];
+  const treePrefetchCounts = new Map();
+  page.on("pageerror", (error) => pageErrors.push(String(error)));
+  page.on("request", (request) => {
+    if (request.headers()["next-router-segment-prefetch"] !== "/_tree") return;
+    const path = new URL(request.url()).pathname;
+    treePrefetchCounts.set(path, (treePrefetchCounts.get(path) ?? 0) + 1);
+  });
   try {
     await page.goto(new URL(route, baseUrl).toString(), { waitUntil: "load", timeout: 45_000 });
     await page.waitForLoadState("networkidle", { timeout: 10_000 }).catch(() => {});
@@ -272,10 +280,14 @@ async function measure(browser, route, width) {
       route,
       width,
       ...measured,
-      ...(blockedExternalCount > 0 ? {
-        error: `${blockedExternalCount} external request(s) blocked in isolated QA`,
-        blockedExternalCount,
-        blockedExternalRequests,
+      pageErrors: pageErrors.slice(0, 8),
+      treePrefetchCounts: Object.fromEntries(treePrefetchCounts),
+      ...(blockedExternalCount > 0 ? { blockedExternalCount, blockedExternalRequests } : {}),
+      ...((blockedExternalCount > 0 || pageErrors.length > 0) ? {
+        error: [
+          ...(blockedExternalCount > 0 ? [`${blockedExternalCount} external request(s) blocked in isolated QA`] : []),
+          ...pageErrors.slice(0, 3),
+        ].join(" | "),
       } : {}),
     };
   } catch (error) {

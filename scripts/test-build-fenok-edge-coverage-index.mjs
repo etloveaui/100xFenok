@@ -172,6 +172,38 @@ assert(
   "validated KRX v3 exclusions use the eligible denominator and stay disclosed",
 );
 
+for (const [sourceDate, age, sourceState, sourceStatus] of [
+  ["2026-09-22", 1, "fresh", "ready"],
+  ["2026-09-21", 2, "fresh", "ready"],
+  ["2026-09-18", 3, "delayed", "stale"],
+]) {
+  const evidence = coverageBuilderModule.krxDailySourceEvidence({
+    sourceDate, coverageReady: true, now: "2026-09-27T12:00:00Z",
+  });
+  assert(evidence.age_days === age && evidence.source_state === sourceState
+    && evidence.source_status === sourceStatus && evidence.full_status === sourceStatus,
+  `KRX ${sourceDate} uses trading-day source status`);
+  assert(evidence.age_unit === "kr_trading_days" && evidence.max_age_days === 2,
+    "KRX age evidence declares the shared two-trading-day policy");
+}
+const holidayKrx = coverageBuilderModule.krxDailySourceEvidence({
+  sourceDate: "2026-09-23", coverageReady: true, now: "2026-09-27T12:00:00Z",
+});
+assert(holidayKrx.age_days === 0 && holidayKrx.full_status === "ready",
+  "Chuseok and the weekend do not age KRX content");
+const incompleteKrx = coverageBuilderModule.krxDailySourceEvidence({
+  sourceDate: "2026-09-22", coverageReady: false, now: "2026-09-27T12:00:00Z",
+});
+assert(incompleteKrx.source_status === "ready" && incompleteKrx.full_status === "blocked",
+  "fresh KRX content cannot promote incomplete issuer coverage");
+for (const sourceDate of ["2026-02-30", "2026-09-28"]) {
+  const unknown = coverageBuilderModule.krxDailySourceEvidence({
+    sourceDate, coverageReady: true, now: "2026-09-27T12:00:00Z",
+  });
+  assert(unknown.source_state === "unknown" && unknown.age_days === null && unknown.full_status === "stale",
+    `${sourceDate} cannot promote KRX readiness`);
+}
+
 const preservedTaiwanIndex = {
   active_scoring_universe: { total: 100 },
   source_availability: {

@@ -1,7 +1,7 @@
 {
   "folder": "global-scouter",
   "version": "2.3.0",
-  "updated": "2026-09-20",
+  "updated": "2026-09-27",
   "source": "Global Scouter Tool",
   "update_frequency": "on-demand",
   "maintainer": "Manual conversion scripts",
@@ -23,7 +23,7 @@
     "core/metadata.json": {
       "description": "System metadata",
       "size_kb": 0.4,
-      "source_date": "2026-09-18",
+      "source_date": "2026-09-25",
       "schema": {
         "version": "string",
         "last_updated": "ISO timestamp"
@@ -113,14 +113,15 @@
           "_coverage": "100% (1,066 stocks) - v2.2.0"
         },
         "per_bands": {
-          "current": "number",
+          "current": "number|null (explicit FY0 only; no older-period fallback)",
           "min_8y": "number",
           "avg_8y": "number",
           "max_8y": "number",
           "source": "string (S_Valuation|calculated)",
-          "per": "object (PER bands + FY-4..FY+3 raw values) - v2.3.0",
+          "per": "object (FY0 current, original source_current, and FY-4..FY+3 source values) - v2.3.0",
           "pbr": "object (PBR bands + FY-4..FY+3 raw values) - v2.3.0",
-          "_coverage": "98.2% (1,047 stocks; direct S_Valuation or calculated/fallback) - v2.3.0"
+          "_coverage": "98.2% (1,047 stocks; direct S_Valuation or calculated/fallback) - v2.3.0",
+          "current_basis": "optional string (FY0)"
         },
         "profitability_estimates": "object (FY+1..FY+3 margins/ROE/ROA) - v2.3.0",
         "per_share_estimates": "object (FY+1..FY+3 EPS/BPS/CPS/SPS) - v2.3.0",
@@ -157,7 +158,7 @@
     "indicators/economic.json": {
       "added_in": "2.1.0",
       "description": "Treasury rates, spreads, HY yields, TIPS",
-      "record_count": 1078,
+      "record_count": 1079,
       "schema": {
         "records[]": {
           "date": "YYYY-MM-DD",

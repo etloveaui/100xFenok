@@ -2566,9 +2566,8 @@
   font-weight: 900;
 }
 
-/* Guru badge: the visible pill stays small, but the tap target keeps its
-   44px rail through an invisible ::after extension. Putting min-height on
-   the pill itself drew a 44px empty ring next to the ticker. */
+/* Guru badge: keep the visible pill small and center a 44px invisible tap
+   target on it. Putting min-height on the pill drew an empty ring. */
 [data-testid="screener-guru-badge"] {
   position: relative;
 }
@@ -2576,7 +2575,11 @@
 [data-testid="screener-guru-badge"]::after {
   content: "";
   position: absolute;
-  inset: -12px -10px;
+  top: 50%;
+  right: -10px;
+  left: -10px;
+  height: 44px;
+  transform: translateY(-50%);
 }
 
 .cp-screener-inline-chip-row {

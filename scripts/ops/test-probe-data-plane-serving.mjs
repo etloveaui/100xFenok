@@ -29,7 +29,7 @@ const base = {
   family: "fred-macro",
   status: 200,
   nowIso: NOW,
-  maxAgeDays: DEFAULT_MAX_SOURCE_AGE_DAYS,
+  // Omit the optional global cap: normal probes use each source's policy.
   maxPublishedAgeDays: DEFAULT_MAX_PUBLISHED_AGE_DAYS,
 };
 
@@ -40,6 +40,12 @@ const daysAgo = (days, dateOnly = false) => {
 };
 const hoursAgo = (hours) => new Date(Date.parse(NOW) - hours * 3600000).toISOString();
 const sourceDateForPolicy = ({ path, family }) => {
+  if (family === "earnings-overview") return "2026-06-30";
+  if (path === "/data/macro/fred-banking-daily.json") return "2026-07-31";
+  if (path === "/data/macro/fred-banking-weekly.json") return "2026-07-22";
+  if (path === "/data/macro/fred-banking-monthly.json") return "2026-07-01";
+  if (path === "/data/macro/fred-banking-quarterly.json") return "2026-01-01";
+  if (path === "/data/macro/tga.json") return "2026-07-31";
   const sourceLimit = resolveSourceAgeDays({ path, family });
   return daysAgo(sourceLimit === null ? 365 : sourceLimit - 1, true);
 };
@@ -325,14 +331,19 @@ const sourceDateForPolicy = ({ path, family }) => {
   const asked = [];
   const requestTimeoutMs = 5;
   const totalDeadlineMs = 30;
+  let monotonicMs = 0;
   const results = await probeAll({
     baseUrl: "https://example.test",
     nowIso: NOW,
     requestTimeoutMs,
     totalDeadlineMs,
     concurrency: 1,
+    monotonicNowFn: () => monotonicMs,
     fetchFn: async (url) => {
       asked.push(url);
+      // Model timer rounding: the clock can still show a fractional remainder
+      // when cleanup declares the deadline reached. That signal must be sticky.
+      monotonicMs = totalDeadlineMs - 0.25;
       return new Promise(() => {});
     },
   });
@@ -540,11 +551,11 @@ const sourceDateForPolicy = ({ path, family }) => {
     path: "/data/slickcharts/stocks/TSLA.json",
     family: "slickcharts-history",
     generationHeader: "slickcharts-history-abc123",
-    sourceAsOfHeader: "2026-07-20",
+    sourceAsOfHeader: daysAgo(41, true),
     publishedAtHeader: hoursAgo(1),
   });
   assert.equal(r.ok, false);
-  assert.match(r.failures[0], /days old/);
+  assert.match(r.failures[0], /days old \(limit 40\)/);
 }
 
 // ---- Two-axis freshness policy ----
@@ -723,7 +734,7 @@ const sourceDateForPolicy = ({ path, family }) => {
     maxAgeDays: 999,
   });
   assert.equal(cannotLoosenSource.ok, false);
-  assert.match(cannotLoosenSource.failures[0], /days old \(limit 180\)/);
+  assert.match(cannotLoosenSource.failures[0], /delayed content age/);
 
   const cannotLoosenHeartbeat = evaluateProbeResponse({
     ...base,
@@ -836,7 +847,9 @@ const sourceDateForPolicy = ({ path, family }) => {
         status: 200,
         headers: {
           "x-data-plane-generation": `${family}-abc123`,
-          "x-data-plane-source-as-of": sourceDateForInstant(1),
+          "x-data-plane-source-as-of": path === "/data/macro/fred-banking-quarterly.json" ? "2026-04-01"
+            : path === "/data/macro/fred-banking-monthly.json" ? "2026-07-01"
+              : sourceDateForInstant(1),
           "x-data-plane-published-at": fetchCount === 1 ? "2026-08-11T22:00:00.000Z" : promotionInstant,
         },
       });
@@ -920,13 +933,12 @@ const sourceDateForPolicy = ({ path, family }) => {
   assert.equal(r.ok, true, JSON.stringify(r.failures));
 }
 
-// Banking cadence overrides: daily 4d, weekly 12d, monthly 70d all pass;
-// quarterly 313d exceeds its 180-day limit and fails.
+// Banking files use their own shared cadence, release lag, and period anchor.
 {
   const passes = [
     { path: "/data/macro/fred-banking-daily.json", sourceDays: 4 },
     { path: "/data/macro/fred-banking-weekly.json", sourceDays: 12 },
-    { path: "/data/macro/fred-banking-monthly.json", sourceDays: 70 },
+    { path: "/data/macro/fred-banking-monthly.json", sourceDays: 33 },
   ];
   for (const { path, sourceDays } of passes) {
     const r = evaluateProbeResponse({
@@ -936,11 +948,21 @@ const sourceDateForPolicy = ({ path, family }) => {
       generationHeader: "fred-banking-abc123",
       sourceAsOfHeader: daysAgo(sourceDays, true),
       publishedAtHeader: hoursAgo(1),
-      maxAgeDays: resolveSourceAgeDays({ path, family: "fred-banking" }),
       maxPublishedAgeDays: resolvePublishedAgeDays({ path, family: "fred-banking" }),
     });
     assert.equal(r.ok, true, `${path}: ${JSON.stringify(r.failures)}`);
   }
+  const tightenedWeekly = evaluateProbeResponse({
+    ...base,
+    path: "/data/macro/fred-banking-weekly.json",
+    family: "fred-banking",
+    generationHeader: "fred-banking-abc123",
+    sourceAsOfHeader: daysAgo(12, true),
+    publishedAtHeader: hoursAgo(1),
+    maxAgeDays: 5,
+  });
+  assert.equal(tightenedWeekly.ok, false, "an explicit operator cap still tightens the shared weekly policy");
+  assert.match(tightenedWeekly.failures.join("; "), /tightened limit 5/);
   const quarterlyPath = "/data/macro/fred-banking-quarterly.json";
   const quarterly = evaluateProbeResponse({
     ...base,
@@ -949,11 +971,36 @@ const sourceDateForPolicy = ({ path, family }) => {
     generationHeader: "fred-banking-abc123",
     sourceAsOfHeader: daysAgo(313, true),
     publishedAtHeader: hoursAgo(1),
-    maxAgeDays: resolveSourceAgeDays({ path: quarterlyPath, family: "fred-banking" }),
     maxPublishedAgeDays: resolvePublishedAgeDays({ path: quarterlyPath, family: "fred-banking" }),
   });
   assert.equal(quarterly.ok, false);
-  assert.match(quarterly.failures[0], /days old \(limit 180\)/);
+  assert.match(quarterly.failures[0], /delayed content age/);
+}
+
+// The six formerly false-positive alarms use source-period semantics, while a
+// stalled publication remains an independent failure.
+{
+  const nowIso = "2026-09-27T12:00:00Z";
+  const publishedAtHeader = "2026-09-27T11:00:00Z";
+  const cases = [
+    ...["AAPL", "AMZN", "META", "MSFT"].map((symbol) => ({ path: `/data/earnings-overview/${symbol}.json`, family: "earnings-overview", sourceAsOfHeader: "2026-06-30" })),
+    { path: "/data/macro/fred-banking-weekly.json", family: "fred-banking", sourceAsOfHeader: "2026-09-09" },
+    { path: "/data/macro/fred-banking-quarterly.json", family: "fred-banking", sourceAsOfHeader: "2026-01-01" },
+  ];
+  for (const item of cases) {
+    const response = evaluateProbeResponse({ ...item, status: 200, nowIso,
+      generationHeader: `${item.family}-abc123`, publishedAtHeader });
+    assert.equal(response.ok, true, `${item.path}: ${response.failures}`);
+  }
+  const staleHeartbeat = evaluateProbeResponse({ ...cases[0], status: 200, nowIso,
+    generationHeader: "earnings-overview-abc123", publishedAtHeader: "2026-09-01T00:00:00Z" });
+  assert.equal(staleHeartbeat.ok, false);
+  assert.match(staleHeartbeat.failures.join("; "), /heartbeat limit/);
+  const staleDaily = evaluateProbeResponse({ path: "/data/macro/fred-banking-daily.json", family: "fred-banking",
+    status: 200, nowIso, generationHeader: "fred-banking-abc123",
+    sourceAsOfHeader: "2026-09-01", publishedAtHeader });
+  assert.equal(staleDaily.ok, false);
+  assert.match(staleDaily.failures.join("; "), /stopped content age/);
 }
 
 // Default source limit: a 6-day-old source fails the 5-day default even with
@@ -1007,7 +1054,7 @@ const sourceDateForPolicy = ({ path, family }) => {
           status: 200,
           headers: {
             "x-data-plane-generation": `${family}-abc123`,
-            "x-data-plane-source-as-of": daysAgo(1, true),
+            "x-data-plane-source-as-of": sourceDateForPolicy({ path, family }),
             "x-data-plane-published-at": daysAgo(50),
           },
         });
@@ -1043,26 +1090,33 @@ const sourceDateForPolicy = ({ path, family }) => {
         status: 200,
         headers: {
           "x-data-plane-generation": `${family}-abc123`,
-          "x-data-plane-source-as-of": daysAgo(sourceDays, true),
+          "x-data-plane-source-as-of": sourceDays === null
+            ? sourceDateForPolicy({ path, family }) : daysAgo(sourceDays, true),
           "x-data-plane-published-at": hoursAgo(1),
         },
       });
     },
   });
 
-  const tightened = await runWithLegacyCap(30, (path) => path === "/data/macro/fdic-tier1.json" ? 40 : 1);
+  const tightened = await runWithLegacyCap(30, (path) => path === "/data/macro/fdic-tier1.json" ? 40 : null);
   const tightenedFdic = tightened.find((r) => r.path === "/data/macro/fdic-tier1.json");
   assert.equal(tightenedFdic.ok, false);
   assert.match(tightenedFdic.failures[0], /days old \(limit 30\)/);
+  assert.equal(tightened.filter((r) => !r.ok).every((r) => r.failures.every((failure) => /tightened limit 30|days old \(limit 30\)/.test(failure))), true,
+    "the global cap is the only reason untargeted paths can fail this sweep");
 
-  const cannotLoosen = await runWithLegacyCap(999, (path) => path === "/data/macro/fred-macro.json" ? 6 : 1);
+  const cannotLoosen = await runWithLegacyCap(999, (path) => path === "/data/macro/fred-macro.json" ? 6 : null);
   const defaultPath = cannotLoosen.find((r) => r.path === "/data/macro/fred-macro.json");
   assert.equal(defaultPath.ok, false);
   assert.match(defaultPath.failures[0], /days old \(limit 5\)/);
+  assert.deepEqual(cannotLoosen.filter((r) => !r.ok).map((r) => r.path), ["/data/macro/fred-macro.json"],
+    "a loose override leaves every other policy-aged path healthy");
 
-  const zeroUsesPolicy = await runWithLegacyCap(0, (path) => path === "/data/macro/fdic-tier1.json" ? 132 : 1);
+  const zeroUsesPolicy = await runWithLegacyCap(0, (path) => path === "/data/macro/fdic-tier1.json" ? 132 : null);
   const zeroFdic = zeroUsesPolicy.find((r) => r.path === "/data/macro/fdic-tier1.json");
   assert.equal(zeroFdic.ok, true, JSON.stringify(zeroFdic.failures));
+  assert.deepEqual(zeroUsesPolicy.filter((r) => !r.ok).map((r) => ({ path: r.path, failures: r.failures })), [],
+    "zero override leaves every unmodified source on its valid policy date");
 }
 
 // A published family is NOT allowlisted: the 2026-08-03 incident shape (200,

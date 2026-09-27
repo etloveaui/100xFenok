@@ -149,7 +149,7 @@ const COLUMNS: ReadonlyArray<{ key: ScreenerSortKey; label: string; align: "left
   { key: "country", label: "국가", align: "left" },
   { key: "price", label: "가격", align: "right" },
   { key: "marketCap", label: "시총", align: "right" },
-  { key: "per", label: "PER", align: "right" },
+  { key: "per", label: "선행 PER", align: "right" },
   { key: "pbr", label: "PBR", align: "right" },
   { key: "peg", label: "PEG", align: "right" },
   { key: "dividendYield", label: "배당", align: "right" },
@@ -2382,7 +2382,7 @@ export default function ScreenerClient({
     { active: Boolean(epsGrowthMin), label: `EPS+1 ≥ ${epsGrowthMin}%`, clear: () => setEpsGrowthMin("") },
     { active: profitableOnly, label: "흑자만", clear: () => setProfitableOnly(false) },
     ...(bandFilter
-      ? [{ active: true, label: `밴드: ${bandFilter === "cheap" ? "저평가" : bandFilter === "fair" ? "적정" : "고평가"}`, clear: () => setBandFilter("") }]
+      ? [{ active: true, label: `밴드: ${bandFilter === "cheap" ? "하단" : bandFilter === "fair" ? "중간" : "상단"}`, clear: () => setBandFilter("") }]
       : []),
     ...(actionFilter
       ? [{ active: true, label: `신호: ${ACTION_FILTER_LABEL[actionFilter]}`, clear: () => setActionFilter("") }]
@@ -2594,9 +2594,9 @@ export default function ScreenerClient({
                       className="cp-screener-control"
                     >
                       <option value="">전체 밴드</option>
-                      <option value="cheap">저평가 (하위 25%)</option>
-                      <option value="fair">적정 (중간 50%)</option>
-                      <option value="rich">고평가 (상위 25%)</option>
+                      <option value="cheap">하단 (하위 25%)</option>
+                      <option value="fair">중간 (중간 50%)</option>
+                      <option value="rich">상단 (상위 25%)</option>
                     </select>
                   </label>
                   <label data-screener-checkbox-target className="cp-screener-check">
@@ -3623,9 +3623,9 @@ export default function ScreenerClient({
                     className="min-h-10 rounded-xl border border-slate-200 bg-white px-3 text-sm font-semibold text-slate-900 outline-none transition focus:border-brand-interactive"
                   >
                     <option value="">전체 밴드</option>
-                    <option value="cheap">저평가 (하위 25%)</option>
-                    <option value="fair">적정 (중간 50%)</option>
-                    <option value="rich">고평가 (상위 25%)</option>
+                    <option value="cheap">하단 (하위 25%)</option>
+                    <option value="fair">중간 (중간 50%)</option>
+                    <option value="rich">상단 (상위 25%)</option>
                   </select>
                 </label>
                 <label data-screener-checkbox-target className="inline-flex items-center gap-2 self-end text-sm font-bold text-[var(--c-ink-2)]">

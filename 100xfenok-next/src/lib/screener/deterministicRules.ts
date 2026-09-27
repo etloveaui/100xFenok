@@ -151,11 +151,11 @@ function buildEstimateReads(stock: ScreenerStock, context?: InterpretationContex
     const [current, min, max] = bandTuple;
     const pct = bandPct(current, min, max);
     const label = bandLabel(pct);
-    const avgText = typeof avgBand === "number" && Number.isFinite(avgBand) ? `, 평균 ${avgBand.toFixed(1)}배 ${current >= avgBand ? "위" : "아래"}` : "";
+    const avgText = typeof avgBand === "number" && Number.isFinite(avgBand) ? `, 비교 평균 ${avgBand.toFixed(1)}배 ${current >= avgBand ? "위" : "아래"}` : "";
     reads.push({
       id: "bandPosition",
       label: "밴드 위치",
-      text: `현재 PER은 8년 범위의 ${Math.round(pct * 100)}% 지점(${label})입니다${avgText}.`,
+      text: `기준연도 PER은 비교 구간의 ${Math.round(pct * 100)}% 지점(${label})입니다${avgText}.`,
       shortText: `밴드 ${Math.round(pct * 100)}%(${label})`,
       tone: pct <= 0.25 ? "positive" : pct >= 0.75 ? "risk" : "neutral",
     });

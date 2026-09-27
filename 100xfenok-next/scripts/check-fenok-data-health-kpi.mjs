@@ -11,6 +11,7 @@ import {
   validateCronDeferrals,
 } from "../../scripts/lib/kpi-runtime-slots.mjs";
 import { isFutureSource, isRealCalendarDate, yahooBusinessDayAge, calendar_version } from "../../scripts/lib/market-calendar.mjs";
+import { FRESHNESS_CLASSES, freshnessVerdict, policyToday, resolveSourcePolicy } from "../src/lib/freshness-policy.mjs";
 // Canonical definitions come from the CONSTANTS module, NOT the artifact and NOT
 // the builder — the checker validates the artifact against these.
 import {
@@ -356,7 +357,7 @@ function isDetectionSourceStamp(value) {
 // workflow_dispatch run; every other lane stays natural-schedule-only.
 const BOUND_DISPATCH_RECOVERY_LANE_IDS = Object.freeze(new Set(["finra_ats_weekly"]));
 
-export function checkDetectionFloorLane(lane, errors, expectedConfig) {
+export function checkDetectionFloorLane(lane, errors, expectedConfig, nowIso = null) {
   const laneId = expectedConfig?.id ?? lane?.id ?? "<unknown>";
   const sourceAsOf = lane?.artifact?.source_as_of;
   const sourceAsOfReason = lane?.artifact?.source_as_of_reason;
@@ -365,7 +366,7 @@ export function checkDetectionFloorLane(lane, errors, expectedConfig) {
   const statusCheck = (lane?.checks || []).find((item) => item?.id === "detection_floor_status");
   const recoveryChecks = (lane?.checks || []).filter((item) => String(item?.id ?? "").startsWith("recovery_"));
   const targetRecovery = TARGET_RECOVERY_LANE_IDS.has(laneId);
-  const detectionReason = targetRecovery ? lane?.details?.detection_reason : lane?.reason;
+  const detectionReason = lane?.details?.detection_reason ?? (targetRecovery ? undefined : lane?.reason);
   const expectedDetectionStatus = detectionReason === "ok" ? "ready" : "blocked";
   const recoveryRetrySet = lane?.details?.recovery_retry_set;
   const recoveryRecovered = lane?.details?.recovery_recovered;
@@ -413,9 +414,36 @@ export function checkDetectionFloorLane(lane, errors, expectedConfig) {
     && recoveryRecovered.every((item, index) => index === 0 || recoveryRecovered[index - 1].key.localeCompare(item.key) < 0)
     && recoveryRecovered.every((item) => !recoveryRetrySet.some((retryItem) => retryItem.key === item.key));
   const hasRetry = !targetRecovery && Array.isArray(recoveryRetrySet) && recoveryRetrySet.length > 0;
+  const sharedAgeLanes = new Set(["benchmarks", "global_scouter", "fred_yardeni", "fred_macro", "treasury_tga", "finra_ats_weekly", "fred_banking", "krx"]);
+  const sourceRows = laneId === "fred_banking" ? lane?.artifact?.source_artifacts : [{ id: laneId, source_as_of: sourceAsOf }];
+  if (laneId === "fred_banking" && sourceAsOf !== null) {
+    push(errors, Array.isArray(sourceRows) && sourceRows.length === 4,
+      "fred_banking: four required per-file source rows are missing");
+  }
+  if (laneId === "fred_banking" && Array.isArray(sourceRows)) {
+    const contracts = expectedConfig.producer_members[0].artifact_contracts;
+    push(errors, sourceRows.length === contracts.length && sourceRows.every((item, index) =>
+      item?.id === contracts[index].id && item?.path === contracts[index].path),
+    "fred_banking: source file identities differ from canonical required files");
+  }
+  const registryLane = LANE_REGISTRY.lanes.find((item) => item.id === laneId);
+  const sourceVerdicts = nowIso && sharedAgeLanes.has(laneId) && sourceAsOf !== null && Array.isArray(sourceRows)
+    ? sourceRows.map((item) => {
+      const policy = resolveSourcePolicy({
+        laneId, cadence: registryLane?.cadence?.kind,
+        artifactId: laneId === "fred_banking" ? item?.id : undefined,
+        calendar: expectedConfig?.freshness?.calendar,
+      });
+      const verdict = freshnessVerdict(item?.source_as_of, policy, policyToday(nowIso, policy), { calendars: FETCH_CRON_CALENDARS });
+      return { id: item?.id, state: verdict.state, age_days: verdict.ageDays };
+    }) : [];
+  const contentAgeBlocked = sourceVerdicts.some((item) => item.state !== "fresh");
+  const contentAgeCheck = (lane?.checks || []).find((item) => item?.id === "content_age_policy");
+  push(errors, !contentAgeCheck || typeof lane?.details?.detection_reason === "string",
+    `${laneId}: content age reassessment requires the original detector reason`);
   const expectedStatus = targetRecovery
-    ? (lane?.reason === "recovery_degraded" || detectionReason !== "ok" ? "degraded" : "ready")
-    : (lane?.reason === "ok" && !hasRetry ? "ready" : "degraded");
+    ? (lane?.reason === "recovery_degraded" || contentAgeBlocked || detectionReason !== "ok" ? "degraded" : "ready")
+    : (detectionReason === "ok" && !contentAgeBlocked && !hasRetry ? "ready" : "degraded");
   const retryCheck = (lane?.checks || []).find((item) => item?.id === "lkg_retry_set_empty");
   push(errors, expectedConfig?.enforcement === "live" && expectedConfig?.kpi_required === true,
     `${laneId}: canonical detection-floor config is not live/required`);
@@ -427,6 +455,21 @@ export function checkDetectionFloorLane(lane, errors, expectedConfig) {
     `${laneId}: detection reason is invalid (${detectionReason})`);
   push(errors, lane?.status === expectedStatus,
     `${laneId}: status ${lane?.status} contradicts reason ${lane?.reason}`);
+  push(errors, detectionReason !== "ok" || !contentAgeBlocked || lane?.reason === "stale",
+    `${laneId}: stale content age must have a stale lane reason`);
+  push(errors, detectionReason !== "ok" || contentAgeBlocked
+    || lane?.reason === "ok" || (targetRecovery && lane?.reason === "recovery_degraded"),
+  `${laneId}: fresh content age cannot claim a stale lane reason`);
+  if (nowIso && sharedAgeLanes.has(laneId) && sourceAsOf !== null) {
+    push(errors, JSON.stringify(lane?.details?.source_verdicts) === JSON.stringify(sourceVerdicts),
+      `${laneId}: source verdicts differ from canonical source dates`);
+    push(errors, contentAgeCheck?.status === (contentAgeBlocked ? "blocked" : "ready"),
+      `${laneId}: content_age_policy check contradicts source verdicts`);
+    push(errors, contentAgeCheck?.platform_blocking === false,
+      `${laneId}: content age must remain lane-local`);
+    push(errors, !contentAgeBlocked || lane?.status !== "ready",
+      `${laneId}: stale source content cannot be promoted by a successful attempt`);
+  }
   push(errors, !targetRecovery || lane?.reason !== "recovery_degraded"
     || (detectionReason === "ok" && recoveryChecks.some((item) => item?.status === "blocked")),
     `${laneId}: recovery_degraded lacks a failed named recovery check`);
@@ -538,9 +581,18 @@ export function checkOutcomeWatchdog(rootDoc, errors, { dataRoot = null } = {}) 
       }
     }
     const cadenceHours = OUTCOME_WATCHDOG_CADENCE_HOURS[registryLane.cadence.kind];
-    const thresholdHours = cadenceHours * OUTCOME_WATCHDOG_THRESHOLD_MULTIPLIER;
+    const sourcePolicy = advanceBasis === "canonical_file_source_as_of"
+      ? resolveSourcePolicy({ laneId, cadence: registryLane.cadence.kind, calendar: freshness?.calendar }) : null;
+    const sourceVerdict = sourcePolicy
+      ? freshnessVerdict(lastAdvance, sourcePolicy, policyToday(rootDoc.generated_at, sourcePolicy), { calendars: FETCH_CRON_CALENDARS }) : null;
+    const sourceClass = sourcePolicy ? FRESHNESS_CLASSES[sourcePolicy.cadence] : null;
+    const thresholdHours = sourceVerdict
+      ? (sourceClass.cycleDays + sourceClass.graceDays + sourcePolicy.releaseLagDays) * 24
+      : cadenceHours * OUTCOME_WATCHDOG_THRESHOLD_MULTIPLIER;
     let ageHours = null;
-    if (Number.isFinite(advanceMs) && Number.isFinite(nowMs)) {
+    if (sourceVerdict) {
+      ageHours = sourceVerdict.ageDays === null ? null : sourceVerdict.ageDays * 24;
+    } else if (Number.isFinite(advanceMs) && Number.isFinite(nowMs)) {
       if (freshness?.unit === "business_days") {
         try {
           const folded = evaluateFreshness(lastAdvance, freshness, rootDoc.generated_at, FETCH_CRON_CALENDARS);
@@ -552,7 +604,7 @@ export function checkOutcomeWatchdog(rootDoc, errors, { dataRoot = null } = {}) 
         ageHours = Math.round(((nowMs - advanceMs) / 3600000) * 100) / 100;
       }
     }
-    const state = ageHours === null
+    const state = sourceVerdict ? (sourceVerdict.state === "fresh" ? "current" : "overdue") : ageHours === null
       ? "unobservable"
       : ageHours > thresholdHours ? "overdue" : "current";
     expectedCounts[state] += 1;
@@ -898,7 +950,7 @@ function validateCoreShape(payload, errors, expectedVersion, warnings = []) {
         `totals.${status} mismatch: ${payload?.totals?.[status]} vs derived ${count}`);
     }
     for (const laneConfig of DETECTION_LIVE_LANE_CONFIGS) {
-      checkDetectionFloorLane(lanesById.get(laneConfig.id), errors, laneConfig);
+      checkDetectionFloorLane(lanesById.get(laneConfig.id), errors, laneConfig, payload.generated_at);
     }
     push(errors, Number(payload?.totals?.required_not_ready) === derivedRequiredNotReady,
       `totals.required_not_ready mismatch: ${payload?.totals?.required_not_ready} vs derived ${derivedRequiredNotReady}`);

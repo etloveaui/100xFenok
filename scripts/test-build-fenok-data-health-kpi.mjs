@@ -92,6 +92,8 @@ const {
 const { checkRimInputsCanonicalHealth } = await import("./check-fenok-data-health-kpi.mjs");
 const { projectFenokDataHealthKpiPublicMirror } = await import("../100xfenok-next/sync-static-overrides.mjs");
 const { DATA_SUPPLY_DETECTION_CONFIG } = await import("./lib/data-supply-detection-config.mjs");
+const { LANE_REGISTRY } = await import("./lib/lane-registry.mjs");
+const { FAMILY_POLICY, FRESHNESS_CLASSES, policyToday, resolveSourcePolicy } = await import("../100xfenok-next/src/lib/freshness-policy.mjs");
 const { buildFetchCronAttemptCoverage } = await import("./build-data-supply-detection-floor.mjs");
 const { deriveProductSurfaceStampEvidence } = await import("./lib/product-surface-stamp-v2.mjs");
 const { ProducerLkgStateStore } = await import("./lib/producer-lkg-state.mjs");
@@ -1120,6 +1122,120 @@ assert.equal(PRODUCT_SURFACE_SLA?.max_staleness, 10, "weekly ETF universe cadenc
 
   const readyLanes = buildDetectionFloorLanes(report());
   assert.deepEqual(readyLanes.map((item) => item.id), liveLaneIds);
+  for (const [offset, status, sourceState] of [[13, "ready", "fresh"], [14, "degraded", "delayed"],
+    [20, "degraded", "delayed"], [21, "degraded", "stopped"]]) {
+    const raw = structuredClone(report().lanes.find((item) => item.id === "fred_yardeni"));
+    raw.artifact.source_as_of = "2026-07-10";
+    const detectionStatus = status === "ready" ? "ready" : "stale";
+    raw.status = detectionStatus;
+    raw.reason = status === "ready" ? "ok" : "stale";
+    raw.artifact.status = detectionStatus;
+    raw.artifact.reason = raw.reason;
+    const nowIso = new Date(Date.UTC(2026, 6, 10 + offset, 12)).toISOString();
+    const projected = mapDetectionFloorRow(raw, undefined, { nowIso });
+    assert.equal(projected.status, status, `owner KPI source day ${offset}`);
+    assert.equal(projected.details.source_verdicts[0].state, sourceState);
+    assert.equal(projected.checks.find((item) => item.id === "content_age_policy")?.status,
+      status === "ready" ? "ready" : "blocked");
+    const errors = [];
+    checkDetectionFloorLane(projected, errors, liveConfigs.find((item) => item.id === "fred_yardeni"), nowIso);
+    assert.deepEqual(errors, []);
+  }
+  for (const [nowIso, age, state, status] of [
+    ["2026-09-27T09:18:00Z", 2, "fresh", "ready"],
+    ["2026-09-28T09:18:00Z", 3, "delayed", "degraded"],
+  ]) {
+    const raw = row("fred_macro", { artifact: { status: "ready", reason: "ok", source_as_of: "2026-09-25" } });
+    const projected = mapDetectionFloorRow(raw, undefined, { nowIso });
+    assert.equal(projected.status, status, `FRED macro content age at ${nowIso}`);
+    assert.deepEqual(projected.details.source_verdicts, [{ id: "fred_macro", state, age_days: age }]);
+    assert.equal(projected.checks.find((item) => item.id === "content_age_policy")?.status,
+      state === "fresh" ? "ready" : "blocked");
+    const errors = [];
+    checkDetectionFloorLane(projected, errors, liveConfigs.find((item) => item.id === "fred_macro"), nowIso);
+    assert.deepEqual(errors, [], `FRED macro ${state} independent checker`);
+    const tampered = structuredClone(projected);
+    tampered.details.source_verdicts[0].age_days = 99;
+    const tamperedErrors = [];
+    checkDetectionFloorLane(tampered, tamperedErrors, liveConfigs.find((item) => item.id === "fred_macro"), nowIso);
+    assert.ok(tamperedErrors.includes("fred_macro: source verdicts differ from canonical source dates"),
+      "FRED macro checker rejects altered observation age");
+  }
+  const staleMacroAttempt = mapDetectionFloorRow(row("fred_macro", {
+    status: "stale", reason: "stale",
+    artifact: { status: "ready", reason: "ok", source_as_of: "2026-09-25" },
+  }), undefined, { nowIso: "2026-09-27T09:18:00Z" });
+  assert.equal(staleMacroAttempt.status, "degraded", "fresh FRED content cannot clear a stale acquisition attempt");
+  assert.equal(staleMacroAttempt.details.detection_reason, "stale");
+  const staleMacroErrors = [];
+  checkDetectionFloorLane(staleMacroAttempt, staleMacroErrors,
+    liveConfigs.find((item) => item.id === "fred_macro"), "2026-09-27T09:18:00Z");
+  assert.deepEqual(staleMacroErrors, []);
+  for (const [source, age, status] of [
+    ["2026-09-22", 1, "ready"], ["2026-09-21", 2, "ready"],
+    ["2026-09-18", 3, "degraded"],
+  ]) {
+    const raw = row("krx", { artifact: { status: "ready", reason: "ok", source_as_of: source } });
+    const projected = mapDetectionFloorRow(raw, undefined, { nowIso: "2026-09-27T12:00:00Z" });
+    assert.equal(projected.status, status, `KRX ${source} KPI status`);
+    assert.equal(projected.details.source_verdicts[0].age_days, age);
+    assert.equal(projected.details.source_verdicts[0].state, status === "ready" ? "fresh" : "delayed");
+    const errors = [];
+    checkDetectionFloorLane(projected, errors, liveConfigs.find((item) => item.id === "krx"), "2026-09-27T12:00:00Z");
+    assert.deepEqual(errors, [], `KRX ${source} canonical KPI check`);
+    const tampered = structuredClone(projected);
+    tampered.details.source_verdicts[0].age_days = 99;
+    const tamperedErrors = [];
+    checkDetectionFloorLane(tampered, tamperedErrors, liveConfigs.find((item) => item.id === "krx"), "2026-09-27T12:00:00Z");
+    assert.ok(tamperedErrors.includes("krx: source verdicts differ from canonical source dates"),
+      "KRX canonical checker rejects altered source-age evidence");
+  }
+  const failedKrx = mapDetectionFloorRow(row("krx", {
+    status: "unavailable", reason: "unexpected_error",
+    artifact: { status: "ready", reason: "ok", source_as_of: "2026-09-22" },
+  }), undefined, { nowIso: "2026-09-27T12:00:00Z" });
+  assert.equal(failedKrx.status, "degraded", "fresh KRX content cannot promote a failed latest attempt");
+  assert.equal(failedKrx.details.detection_reason, "unexpected_error");
+  const failedKrxErrors = [];
+  checkDetectionFloorLane(failedKrx, failedKrxErrors, liveConfigs.find((item) => item.id === "krx"), "2026-09-27T12:00:00Z");
+  assert.deepEqual(failedKrxErrors, [], "KRX checker preserves the latest failed attempt");
+  const freshPolicyLanes = buildDetectionFloorLanes(report(), undefined, {
+    nowIso: "2026-07-11T00:00:00Z", calendars: DETECTION_CALENDAR_FIXTURE,
+  });
+  const freshFred = freshPolicyLanes.find((item) => item.id === "fred_banking");
+  assert.equal(freshFred.checks.find((item) => item.id === "content_age_policy")?.status, "ready");
+  assert.equal(freshFred.artifact.source_artifacts.length, 4);
+  const staleDaily = structuredClone(report().lanes.find((item) => item.id === "fred_banking"));
+  staleDaily.source_artifacts[0].source_as_of = "2026-06-01";
+  const staleFred = mapDetectionFloorRow(staleDaily, undefined, {
+    nowIso: "2026-07-11T00:00:00Z", calendars: DETECTION_CALENDAR_FIXTURE,
+  });
+  assert.equal(staleFred.status, "degraded", "a good attempt cannot promote stale required daily content");
+  assert.equal(staleFred.reason, "stale");
+  assert.equal(staleFred.details.detection_reason, "ok", "content age preserves the original detector verdict");
+  assert.equal(staleFred.checks.find((item) => item.id === "detection_floor_status")?.status, "ready");
+  const staleFredErrors = [];
+  checkDetectionFloorLane(staleFred, staleFredErrors, liveConfigs.find((item) => item.id === "fred_banking"), "2026-07-11T00:00:00Z");
+  assert.deepEqual(staleFredErrors, []);
+  const fredConfig = liveConfigs.find((item) => item.id === "fred_banking");
+  const repeatedQuarterly = structuredClone(freshFred);
+  const quarterlySource = repeatedQuarterly.artifact.source_artifacts.find((item) => item.id === "fred_banking_quarterly");
+  const quarterlyVerdict = repeatedQuarterly.details.source_verdicts.find((item) => item.id === "fred_banking_quarterly");
+  repeatedQuarterly.artifact.source_artifacts = Array.from({ length: 4 }, () => structuredClone(quarterlySource));
+  repeatedQuarterly.details.source_verdicts = Array.from({ length: 4 }, () => structuredClone(quarterlyVerdict));
+  const repeatedErrors = [];
+  checkDetectionFloorLane(repeatedQuarterly, repeatedErrors, fredConfig, "2026-07-11T00:00:00Z");
+  assert.ok(repeatedErrors.some((error) => error.includes("source file identities")), "four slow duplicates cannot replace required fast files");
+  const wrongPath = structuredClone(freshFred);
+  wrongPath.artifact.source_artifacts[0].path = quarterlySource.path;
+  const pathErrors = [];
+  checkDetectionFloorLane(wrongPath, pathErrors, fredConfig, "2026-07-11T00:00:00Z");
+  assert.ok(pathErrors.some((error) => error.includes("source file identities")), "required IDs must bind their canonical paths");
+  const forgedDetection = structuredClone(staleDaily);
+  forgedDetection.source_artifacts = structuredClone(repeatedQuarterly.artifact.source_artifacts);
+  assert.throws(() => mapDetectionFloorRow(forgedDetection, undefined, {
+    nowIso: "2026-07-11T00:00:00Z", calendars: DETECTION_CALENDAR_FIXTURE,
+  }), /source file identities/);
   for (const ready of readyLanes) {
     assert.equal(ready.status, "ready");
     assert.equal(ready.reason, "ok");
@@ -1797,10 +1913,37 @@ function readyRecoveryIndex(laneId, keys, generatedAt = "2026-07-14T11:00:00Z") 
   };
 }
 
+function fixtureSourceDate(id, now, artifactId) {
+  const config = DATA_SUPPLY_DETECTION_CONFIG.lanes.find((item) => item.id === id);
+  const registryLane = LANE_REGISTRY.lanes.find((item) => item.id === id);
+  const policy = resolveSourcePolicy({
+    laneId: id, cadence: registryLane?.cadence?.kind, artifactId,
+    calendar: config?.freshness?.calendar,
+  });
+  const today = policyToday(now, policy);
+  const [year, month] = today.split("-").map(Number);
+  if (artifactId === "fred_banking_monthly") {
+    // The source stamp is a period start; its age anchor is the previous month end.
+    return new Date(Date.UTC(year, month - 2, 1)).toISOString().slice(0, 10);
+  }
+  if (artifactId === "fred_banking_quarterly") {
+    return new Date(Date.UTC(year, Math.floor((month - 1) / 3) * 3 - 3, 1)).toISOString().slice(0, 10);
+  }
+  const day = new Date(`${today}T00:00:00Z`);
+  if (id === "finra_ats_weekly") {
+    // FINRA stamps week start, so choose the last fully ended week.
+    day.setUTCDate(day.getUTCDate() - ((day.getUTCDay() + 6) % 7) - 7);
+  } else {
+    day.setUTCDate(day.getUTCDate() - (policy?.cadence === "weekly" ? 7 : 1));
+  }
+  return day.toISOString().slice(0, 10);
+}
+
 function readyDetectionProjection(id, now) {
   const config = DATA_SUPPLY_DETECTION_CONFIG.lanes.find((item) => item.id === id && item.enforcement === "live");
   if (!config) return {};
   const providerDateless = config.freshness.source_basis.length === 0;
+  const sharedAgeLanes = new Set(["benchmarks", "global_scouter", "fred_yardeni", "fred_macro", "treasury_tga", "finra_ats_weekly", "fred_banking", "krx"]);
   const row = {
     id,
     label: config.label,
@@ -1808,14 +1951,21 @@ function readyDetectionProjection(id, now) {
     kpi_required: true,
     status: "ready",
     reason: "ok",
-    artifact: { status: "ready", reason: "ok", source_as_of: providerDateless ? null : "2026-07-10" },
+    artifact: { status: "ready", reason: "ok", source_as_of: providerDateless ? null : sharedAgeLanes.has(id) ? fixtureSourceDate(id, now) : now.slice(0, 10) },
   };
+  if (id === "fred_banking") {
+    // Use canonical required files, each with a source date fresh at this fixture clock.
+    row.source_artifacts = config.producer_members[0].artifact_contracts.map(({ id: artifactId, path: artifactPath }) => ({
+      id: artifactId, path: artifactPath, source_as_of: fixtureSourceDate(id, now, artifactId),
+    }));
+    row.artifact.source_as_of = row.source_artifacts.map((item) => item.source_as_of).sort()[0];
+  }
   const recovery = TARGET_RECOVERY_FIXTURES[id];
   return mapDetectionFloorRow(row, recovery
     ? recovery.composite
       ? readySlickchartsCompositeIndex(now)
       : readyRecoveryIndex(recovery.laneId, recovery.keys, now)
-    : undefined);
+    : undefined, { nowIso: now, calendars: DETECTION_CALENDAR_FIXTURE });
 }
 
 // HERMETIC ready core — synthesized in-process with ZERO inheritance from the repo's
@@ -2452,8 +2602,19 @@ console.log("# KPI v2 runtime self-proof fixtures");
     // The fixture artifact set has no ETF-detail payloads and no FINRA ATS
     // weekly marker, so both live lanes surface as honestly degraded.
     const baselineUnavailable = ["stockanalysis_etf_detail", "finra_ats_weekly"].includes(laneConfig.id);
-    assert.equal(mapped.status, baselineUnobserved || baselineUnavailable ? "degraded" : "ready");
-    assert.equal(mapped.reason, baselineUnobserved ? "workflow_unobserved" : baselineUnavailable ? "missing_artifact" : "ok");
+    // The installed FRED macro source is July 10. Reassess that unchanged
+    // observation at this CLI's July 14 clock while retaining its detector result.
+    const baselineSourceAged = laneConfig.id === "fred_macro";
+    assert.equal(mapped.status, baselineUnobserved || baselineUnavailable || baselineSourceAged ? "degraded" : "ready");
+    assert.equal(mapped.reason, baselineUnobserved ? "workflow_unobserved" : baselineUnavailable ? "missing_artifact" : baselineSourceAged ? "stale" : "ok");
+    if (baselineSourceAged) {
+      assert.equal(mapped.details.detection_reason, "ok");
+      assert.deepEqual(mapped.details.source_verdicts, [{ id: "fred_macro", state: "stopped", age_days: 4 }]);
+      assert.equal(mapped.checks.find((item) => item.id === "content_age_policy")?.status, "blocked");
+      const publicMapped = pub.lanes.find((item) => item.id === laneConfig.id);
+      assert.equal(publicMapped.status, "degraded");
+      assert.deepEqual(publicMapped.details.source_verdicts, mapped.details.source_verdicts);
+    }
     assert.equal(mapped.artifact.source_as_of, sourceRow.artifact.source_as_of);
     assert.equal(mapped.deployment_blocking, false);
     assert.equal(root.deployment_integrity.blockers.some((item) => item.lane_id === laneConfig.id), false);
@@ -2919,7 +3080,13 @@ console.log("# KPI v2 runtime self-proof fixtures");
   const now = "2026-07-10T02:35:00.000Z";
   const runtime = makeProducerRuntime({ builtAt: now, slotKey: "update-manifest.yml:30 2 * * *@2026-07-10T02:30Z", runId: "e2e" });
   runtime.cadence.v2_activated_at = now; // due set empty -> missed empty
-  seedReadyV2(tmp, { now, runtime, sla: readySla(now) });
+  const { root } = seedReadyV2(tmp, { now, runtime, sla: readySla(now) });
+  for (const id of ["fred_macro", "fred_banking", "fred_yardeni", "treasury_tga", "finra_ats_weekly", "krx"]) {
+    const lane = root.lanes.find((item) => item.id === id);
+    assert.ok(lane.details.source_verdicts.length > 0, `${id} carries content-age evidence`);
+    assert.ok(lane.details.source_verdicts.every((item) => item.state === "fresh"), `${id} is fresh at the fixture clock`);
+    assert.equal(lane.checks.find((item) => item.id === "content_age_policy")?.status, "ready");
+  }
   const readyResult = runChecker(tmp, now);
   assert.equal(readyResult.exit, 0,
     `checker green on ready v2 doc (fresh sources):\n${readyResult.stderr}`);
@@ -4205,6 +4372,7 @@ for (const [runId, delayMin] of [["26765173733", 368], ["27940007940", 364]]) {
 
 // 27. real generator on temp root — source dates remain distinct from collection clocks.
 {
+  const generatorClock = new Date().toISOString();
   const runGen = (seed) => {
     const tmp = mkTmp("real-generator");
     const w = (rel, o) => writeJson(path.join(tmp, "data", ...rel), o);
@@ -4250,7 +4418,7 @@ for (const [runId, delayMin] of [["26765173733", 368], ["27940007940", 364]]) {
     ] });
     w(["stockanalysis", "etf_universe.json"], { source_as_of: universeDay, records: [] });
     w(["stockanalysis", "index.json"], { source_as_of: { surfaces: domainStamps, etf_universe: universeDay } });
-    execFileSync("node", [path.join(__dirname, "generate-product-surface-coverage.mjs"), "--data-root", tmp], { env: { ...baseEnv() }, stdio: ["ignore", "pipe", "pipe"] });
+    execFileSync("node", [path.join(__dirname, "generate-product-surface-coverage.mjs"), "--data-root", tmp], { env: { ...baseEnv(), PS_GENERATED_AT: generatorClock }, stdio: ["ignore", "pipe", "pipe"] });
     const out = JSON.parse(fs.readFileSync(path.join(tmp, "data", "admin", "product-surface-coverage.json"), "utf8"));
     assert.equal(out.schema_version, "product-surface-coverage/v2");
     assert.equal(out.source_stamp_version, 2);
@@ -4341,31 +4509,49 @@ for (const [runId, delayMin] of [["26765173733", 368], ["27940007940", 364]]) {
   }
   ok("#331: real generator uses upstream source dates and never promotes collection clocks");
 
-  // Cadence-derived freshness bounds: weekly-declared converter lanes must be
-  // judged against their DECLARED cadence + grace (detection-config
-  // freshness.max_staleness), never a tighter hardcoded constant — a weekly
-  // Friday export is legitimately ~7 days old mid-week. Mutation proof: the
-  // emitted bound is asserted against the LIVE declaration, so deleting the
-  // derivation and falling back to any diverging hardcoded constant fails.
+  // Cadence-derived freshness bounds: active Yardeni and screener checks must
+  // use their declared source-age bounds, not a tighter hardcoded constant.
+  // Quarantined RIM still has readiness checks but no source-age surface check.
   const declaredMaxAge = (laneId) => DATA_SUPPLY_DETECTION_CONFIG.lanes
     .find((lane) => lane.id === laneId)?.freshness?.max_staleness;
-  const daysAgo = (n) => new Date(Date.now() - n * 86_400_000).toISOString().slice(0, 10);
+  for (const laneId of ["fred_yardeni", "benchmarks", "global_scouter"]) {
+    const policy = FAMILY_POLICY[laneId];
+    const cadence = FRESHNESS_CLASSES[policy.cadence];
+    assert.equal(declaredMaxAge(laneId), cadence.cycleDays + policy.releaseLagDays + cadence.graceDays,
+      `${laneId} declaration matches shared owner-weekly fresh cutoff`);
+  }
+  assert.equal(declaredMaxAge("fred_yardeni"), 13, "owner-weekly fresh cutoff is day 13");
+  const daysAgo = (n) => new Date(new Date(generatorClock).getTime() - n * 86_400_000).toISOString().slice(0, 10);
   const freshnessRow = (run, surfaceId, label) => run.full.surfaces
     .find((s) => s.id === surfaceId)?.checks.find((c) => c.label === label);
 
-  const midWeek = runGen({ rim: daysAgo(6), yard: daysAgo(6), screener: daysAgo(9), marketFacts: daysAgo(6), surfaces: `${daysAgo(1)}T02:23:02Z`, etfUniverse: `${daysAgo(1)}T22:37:04Z` });
-  const rimWeekly = freshnessRow(midWeek, "market_valuation", "RIM 입력 기준일");
-  assert.equal(rimWeekly.max_age_days, declaredMaxAge("benchmarks"), "RIM bound derives from the declared benchmarks weekly cadence+grace, not a hardcoded constant");
-  assert.equal(rimWeekly.calendar ?? null, null, "declared benchmarks freshness unit is calendar_days, not us_market business days");
-  assert.equal(rimWeekly.status, "ready", "6-day-old weekly RIM export is inside its declared cadence+grace");
+  const activeWeeklyDate = daysAgo(6);
+  const midWeek = runGen({ rim: daysAgo(20), yard: activeWeeklyDate, screener: daysAgo(9), marketFacts: activeWeeklyDate, surfaces: `${daysAgo(1)}T02:23:02Z`, etfUniverse: `${daysAgo(1)}T22:37:04Z` });
+  assert.equal(midWeek("market_valuation"), activeWeeklyDate, "old quarantined RIM cannot lower the active market-valuation source floor");
+  assert.equal(freshnessRow(midWeek, "market_valuation", "RIM 입력 기준일"), undefined,
+    "quarantined RIM must not regain a market-valuation source-age check");
+  assert.ok(freshnessRow(midWeek, "market_valuation", "KOSPI RIM 입력"), "RIM readiness disclosure remains visible");
+  const yardeniWeekly = freshnessRow(midWeek, "market_valuation", "Yardeni 기준일");
+  assert.ok(yardeniWeekly, "active Yardeni source-age check remains present");
+  assert.equal(yardeniWeekly.max_age_days, declaredMaxAge("fred_yardeni"), "Yardeni bound derives from its declared weekly cadence+grace, not a hardcoded constant");
+  assert.equal(yardeniWeekly.calendar ?? null, null, "declared Yardeni freshness unit is calendar_days, not us_market business days");
+  assert.equal(yardeniWeekly.status, "ready", "6-day-old weekly Yardeni source is inside its declared cadence+grace");
   const screenerWeekly = freshnessRow(midWeek, "screener", "스크리너 기준일");
   assert.equal(screenerWeekly.max_age_days, declaredMaxAge("global_scouter"), "screener bound derives from the declared global_scouter weekly cadence+grace, not a hardcoded constant");
   assert.equal(screenerWeekly.status, "ready", "9-day-old weekly screener export is inside its declared cadence+grace");
 
+  for (const [age, status] of [[13, "ready"], [14, "stale"]]) {
+    const boundary = runGen({ rim: daysAgo(20), yard: daysAgo(age), screener: daysAgo(age), marketFacts: daysAgo(1), surfaces: `${daysAgo(1)}T02:23:02Z`, etfUniverse: `${daysAgo(1)}T22:37:04Z` });
+    assert.equal(freshnessRow(boundary, "market_valuation", "Yardeni 기준일")?.status, status,
+      `Yardeni source age day ${age} is ${status}`);
+    assert.equal(freshnessRow(boundary, "screener", "스크리너 기준일")?.status, status,
+      `screener source age day ${age} is ${status}`);
+  }
+
   const overdue = runGen({ rim: daysAgo(20), yard: daysAgo(20), screener: daysAgo(20), marketFacts: daysAgo(20), surfaces: `${daysAgo(1)}T02:23:02Z`, etfUniverse: `${daysAgo(1)}T22:37:04Z` });
-  assert.equal(freshnessRow(overdue, "market_valuation", "RIM 입력 기준일").status, "stale", "weekly RIM source past cadence+grace still trips stale (no blind spot)");
+  assert.equal(freshnessRow(overdue, "market_valuation", "Yardeni 기준일").status, "stale", "weekly Yardeni source past cadence+grace still trips stale (no blind spot)");
   assert.equal(freshnessRow(overdue, "screener", "스크리너 기준일").status, "stale", "weekly screener source past cadence+grace still trips stale (no blind spot)");
-  ok("weekly-declared lanes derive freshness bound from declared cadence+grace; overdue still trips stale");
+  ok("active weekly surface checks derive their declared bounds; overdue stays stale and quarantined RIM stays retired");
 }
 
 // 27b. real v2 artifact -> builder -> checker integration and v2-only lineage.
@@ -5182,9 +5368,9 @@ for (const [runId, delayMin] of [["26765173733", 368], ["27940007940", 364]]) {
   const rows = new Map(watchdog.rows.map((row) => [row.lane_id, row]));
   assert.equal(watchdog.schema_version, "lane-outcome-watchdog/v1");
   assert.equal(watchdog.threshold_multiplier, OUTCOME_WATCHDOG_THRESHOLD_MULTIPLIER);
-  assert.equal(rows.get("slickcharts").threshold_hours,
-    OUTCOME_WATCHDOG_CADENCE_HOURS.daily * OUTCOME_WATCHDOG_THRESHOLD_MULTIPLIER);
-  assert.equal(rows.get("slickcharts").state, "overdue");
+  assert.equal(rows.get("slickcharts").threshold_hours, (1 + 1) * 24,
+    "SOURCE clock uses shared daily policy instead of the operational multiplier");
+  assert.equal(rows.get("slickcharts").state, "current");
   assert.equal(rows.get("fred_yardeni").state, "current");
   assert.equal(rows.get("oecd_cli").state, "overdue");
   assert.equal(rows.get("fdic_tier1").state, "current");
@@ -5193,8 +5379,8 @@ for (const [runId, delayMin] of [["26765173733", 368], ["27940007940", 364]]) {
     "hourly lanes stay outside the owner-approved daily/weekly/monthly/quarterly watchdog contract");
   assert.deepEqual(watchdog.counts, {
     monitored: 5,
-    current: 2,
-    overdue: 2,
+    current: 3,
+    overdue: 1,
     unobservable: 1,
   });
   assert.equal(watchdog.status, "overdue");
@@ -5228,6 +5414,27 @@ for (const [runId, delayMin] of [["26765173733", 368], ["27940007940", 364]]) {
   assert.ok(tamperErrors.some((message) => /threshold_hours/.test(message)),
     "checker must reject an artifact-defined outcome threshold");
   ok("outcome watchdog derives per-lane advance state from registry cadence and canonical as-of");
+}
+
+// Source dates use the shared content clock. The operational fallback retains
+// the existing 1.5x cadence threshold and keeps its own basis.
+{
+  const registry = { lanes: LANE_REGISTRY.lanes.filter((item) => item.id === "finra_ats_weekly") };
+  const nowIso = "2026-09-27T12:00:00Z";
+  const lane = { id: "finra_ats_weekly", artifact: { source_as_of: "2026-08-17" } };
+  const source = buildOutcomeWatchdog(nowIso, [lane], registry).rows[0];
+  assert.equal(source.advance_basis, "canonical_file_source_as_of");
+  assert.equal(source.last_advance, "2026-08-17", "raw week-start date stays visible");
+  assert.equal(source.state, "current", "FINRA content may arrive four weeks after week end");
+  assert.equal(source.threshold_hours, (7 + 28 + 4) * 24);
+  const stale = buildOutcomeWatchdog("2026-10-02T12:00:00Z", [lane], registry).rows[0];
+  assert.equal(stale.state, "overdue");
+
+  const fallback = buildOutcomeWatchdog(nowIso,
+    [{ id: "finra_ats_weekly", artifact: { source_as_of: null, generated_at: "2026-09-15T12:00:00Z" } }], registry).rows[0];
+  assert.equal(fallback.advance_basis, "canonical_file_generated_at");
+  assert.equal(fallback.threshold_hours, OUTCOME_WATCHDOG_CADENCE_HOURS.weekly * OUTCOME_WATCHDOG_THRESHOLD_MULTIPLIER);
+  assert.equal(fallback.state, "overdue");
 }
 
 // Source-artifact projection migration pin (#366 item 5): the built
@@ -5440,18 +5647,10 @@ for (const [runId, delayMin] of [["26765173733", 368], ["27940007940", 364]]) {
   ok("outcome watchdog ages notApplicableSource lanes from their canonical artifact generated_at without inventing a source date");
 }
 
-// B-OUTCOME-CLOCKS (c): daily lanes whose detection freshness policy already
-// declares unit business_days with a market/federal calendar (treasury_tga:
-// us_federal_business; finra_short_volume: us_trading) must not accrue weekend
-// hours as staleness. A Friday advance read on Saturday/Sunday is current; the
-// same Friday advance read on Tuesday (two business days later) is overdue. The
-// fold reuses the lane's own declared calendar (DATA_SUPPLY_DETECTION_CONFIG
-// freshness.unit/calendar) and the market-calendar business-hour helper the
-// builder already imports for the per-source SLA path -- no second clock. A
-// daily lane declared on plain calendar days (defillama_stablecoins, utc) is
-// the control and keeps flat wall-clock hours. Live reproduction: Saturday
-// 2026-09-05 02:22Z showed treasury_tga/finra_short_volume/occ_options_volume
-// overdue at ~50h vs 36h after a normal Friday advance.
+// B-OUTCOME-CLOCKS (c): source dates use shared content-age limits and their
+// own calendars. TGA allows three federal business days; default daily sources
+// allow two trading/calendar days. Generated/published fallback clocks keep the
+// operational 36-hour threshold and wall-clock age on dateless daily lanes.
 {
   const laneRow = (id, artifact) => ({ id, as_of: artifact.source_as_of ?? null, artifact });
   const freshnessOf = (id) => DATA_SUPPLY_DETECTION_CONFIG.lanes.find((item) => item.id === id).freshness;
@@ -5463,15 +5662,20 @@ for (const [runId, delayMin] of [["26765173733", 368], ["27940007940", 364]]) {
   assert.equal(freshnessOf("defillama_stablecoins").calendar, "utc");
 
   const fridayAdvance = "2026-09-11"; // Friday; date-only, as the detection floor stamps these lanes
+  const fridayHeartbeat = "2026-09-11T00:00:00Z";
   const businessDayLanes = ["treasury_tga", "finra_short_volume"];
   const rowsFor = (now) => new Map(buildOutcomeWatchdog(now, [
     ...businessDayLanes.map((id) => laneRow(id, { source_as_of: fridayAdvance })),
     laneRow("defillama_stablecoins", { source_as_of: fridayAdvance }),
-  ]).rows.map((entry) => [entry.lane_id, entry]));
+    laneRow("stockanalysis_etf_universe", { source_as_of: null, generated_at: fridayHeartbeat }),
+    laneRow("stockanalysis_etf_detail", { source_as_of: null }),
+  ], undefined, { publication: {
+    schema_version: "fenok-kpi-publication-outcomes/v1",
+    families: [{ family: "stockanalysis-etf-detail", result: "published", observed_at: fridayHeartbeat, gate_after: "ok" }],
+  } }).rows.map((entry) => [entry.lane_id, entry]));
 
-  // Saturday 23:00Z: 47h wall-clock (> 36h) but only Friday's 24 business hours elapsed.
+  // Weekend days do not age the Friday business-day source date.
   const saturday = rowsFor("2026-09-12T23:00:00Z");
-  // Sunday 23:00Z: 71h wall-clock, still 24 business hours.
   const sunday = rowsFor("2026-09-13T23:00:00Z");
   for (const id of businessDayLanes) {
     for (const [label, rows] of [["Saturday", saturday], ["Sunday", sunday]]) {
@@ -5486,23 +5690,74 @@ for (const [runId, delayMin] of [["26765173733", 368], ["27940007940", 364]]) {
       assert.equal(row.source_as_of, fridayAdvance);
     }
   }
-  // Tuesday 23:00Z: Friday + Monday + 23h of Tuesday = 71 business hours -> overdue.
+  // Friday to Tuesday is two completed market/federal business days.
   const tuesday = rowsFor("2026-09-15T23:00:00Z");
   for (const id of businessDayLanes) {
-    assert.equal(tuesday.get(id).state, "overdue",
-      `${id}: a Friday advance still unrefreshed on Tuesday is overdue on its business-day calendar`);
+    assert.equal(tuesday.get(id).state, "current", `${id}: Friday source is current on Tuesday at two business days`);
+    assert.equal(tuesday.get(id).age_hours, 48);
   }
-  // Control: the 7-day provider lane stays on plain hours and is overdue on Saturday.
-  assert.equal(saturday.get("defillama_stablecoins").state, "overdue",
-    "a calendar_days/utc daily lane keeps flat wall-clock aging (47h > 36h on Saturday)");
-  assert.equal(saturday.get("defillama_stablecoins").age_hours, 47);
+  const wednesday = rowsFor("2026-09-16T23:00:00Z");
+  assert.equal(wednesday.get("treasury_tga").state, "current", "TGA Friday source remains fresh at three federal business days");
+  assert.equal(wednesday.get("finra_short_volume").state, "overdue", "FINRA Friday source is stale at three trading days");
+  assert.equal(wednesday.get("treasury_tga").age_hours, 72);
+  assert.equal(wednesday.get("treasury_tga").threshold_hours, 72);
+  assert.equal(wednesday.get("finra_short_volume").age_hours, 72);
+  assert.equal(wednesday.get("finra_short_volume").threshold_hours, 48);
+  const thursday = rowsFor("2026-09-17T23:00:00Z");
+  for (const id of businessDayLanes) {
+    assert.equal(thursday.get(id).state, "overdue", `${id}: Friday source is stale at four business days`);
+    assert.equal(thursday.get(id).age_hours, 96);
+  }
+  // Calendar-day source dates also use whole civil days, while dateless
+  // generated/publish outcomes still use the 36-hour operational heartbeat.
+  const monday = rowsFor("2026-09-14T23:00:00Z");
+  assert.equal(saturday.get("defillama_stablecoins").state, "current");
+  assert.equal(saturday.get("defillama_stablecoins").age_hours, 24);
+  assert.equal(monday.get("defillama_stablecoins").state, "overdue", "Friday calendar-day source is stale on Monday at three days");
+  assert.equal(monday.get("defillama_stablecoins").age_hours, 72);
+  assert.equal(monday.get("defillama_stablecoins").threshold_hours, 48);
+  assert.equal(monday.get("defillama_stablecoins").advance_basis, "canonical_file_source_as_of");
   assert.equal(saturday.get("defillama_stablecoins").calendar, "utc");
+  for (const [id, basis] of [["stockanalysis_etf_universe", "canonical_file_generated_at"], ["stockanalysis_etf_detail", "publish_outcome"]]) {
+    const row = saturday.get(id);
+    assert.equal(row.advance_basis, basis);
+    assert.equal(row.state, "overdue", `${id}: Friday 00:00 heartbeat is overdue by Saturday 23:00`);
+    assert.equal(row.age_hours, 47);
+    assert.equal(row.threshold_hours, 36);
+  }
   assert.deepEqual(
-    { current: saturday.get("treasury_tga").state, control: saturday.get("defillama_stablecoins").state },
+    { current: saturday.get("treasury_tga").state, control: monday.get("defillama_stablecoins").state },
     { current: "current", control: "overdue" },
-    "weekend folding applies only to lanes that declare a business-day calendar",
+    "source-age calendars apply by lane while heartbeat clocks remain independent",
   );
-  ok("outcome watchdog folds business-day lanes by their declared calendar and keeps plain-hour lanes on wall-clock");
+  ok("outcome watchdog applies source-age calendar limits and retains operational generated/publish heartbeats");
+}
+
+// KRX date-only source admission follows the Seoul civil day, including the
+// interval before UTC midnight. Actual future timestamps never qualify.
+{
+  const rowAt = (source, now) => buildOutcomeWatchdog(now, [{
+    id: "krx", as_of: source, artifact: { source_as_of: source },
+  }]).rows.find((row) => row.lane_id === "krx");
+  const before = rowAt("2026-09-28", "2026-09-27T14:30:00Z");
+  assert.equal(before.state, "unobservable", "tomorrow is not a KRX advance before Seoul midnight");
+  assert.equal(before.advance_basis, null);
+  const after = rowAt("2026-09-28", "2026-09-27T15:30:00Z");
+  assert.equal(after.state, "current");
+  assert.equal(after.advance_basis, "canonical_file_source_as_of");
+  assert.equal(after.last_advance, "2026-09-28");
+  assert.equal(after.age_hours, 0);
+  assert.equal(after.calendar, "kr_trading");
+  for (const source of ["2026-09-29", "2026-02-30", "2026-09-27T16:00:00Z"]) {
+    const rejected = rowAt(source, "2026-09-27T15:30:00Z");
+    assert.equal(rejected.state, "unobservable", `${source} cannot advance the KRX watchdog`);
+    assert.equal(rejected.advance_basis, null);
+  }
+  assert.equal(rowAt("2026-09-22", "2026-09-27T12:00:00Z").age_hours, 24,
+    "Chuseok and weekend days do not accrue KRX watchdog age");
+  assert.equal(rowAt("2026-09-21", "2026-09-27T12:00:00Z").state, "current");
+  assert.equal(rowAt("2026-09-18", "2026-09-27T12:00:00Z").state, "overdue");
+  ok("KRX watchdog shares the trading-day and Seoul date admission policy");
 }
 
 // B-OUTCOME-CLOCKS (i)-(iii): calendar identity, a true weekday overdue, and
@@ -5513,9 +5768,8 @@ for (const [runId, delayMin] of [["26765173733", 368], ["27940007940", 364]]) {
   const rowsOf = (watchdog) => new Map(watchdog.rows.map((entry) => [entry.lane_id, entry]));
 
   // (i) Monday 2026-10-12 is a federal holiday (Columbus Day) but a trading
-  // day: the same Friday 10-09 advance read on Tuesday 10-13 12:00Z is one
-  // federal business day old (treasury_tga: current) yet two trading days old
-  // (finra_short_volume: overdue). The row's calendar is the lane's own.
+  // day. Tuesday counts one federal day or two trading days; both sources are
+  // still fresh. Wednesday counts two federal days or three trading days.
   const holidayControl = rowsOf(buildOutcomeWatchdog("2026-10-13T12:00:00Z", [
     laneRow("treasury_tga", { source_as_of: "2026-10-09" }),
     laneRow("finra_short_volume", { source_as_of: "2026-10-09" }),
@@ -5524,20 +5778,34 @@ for (const [runId, delayMin] of [["26765173733", 368], ["27940007940", 364]]) {
     "federal calendar: Columbus Day does not elapse, one business day since Friday");
   assert.equal(holidayControl.get("treasury_tga").age_hours, 24);
   assert.equal(holidayControl.get("treasury_tga").calendar, "us_federal_business");
-  assert.equal(holidayControl.get("finra_short_volume").state, "overdue",
-    "trading calendar: Columbus Day is a trading day, two business days since Friday");
+  assert.equal(holidayControl.get("finra_short_volume").state, "current",
+    "trading calendar: Columbus Day counts, but two days remain inside the daily source limit");
   assert.equal(holidayControl.get("finra_short_volume").age_hours, 48);
   assert.equal(holidayControl.get("finra_short_volume").calendar, "us_trading");
+  const holidayBoundary = rowsOf(buildOutcomeWatchdog("2026-10-14T12:00:00Z", [
+    laneRow("treasury_tga", { source_as_of: "2026-10-09" }),
+    laneRow("finra_short_volume", { source_as_of: "2026-10-09" }),
+  ]));
+  assert.equal(holidayBoundary.get("treasury_tga").state, "current", "TGA source remains fresh after two federal business days");
+  assert.equal(holidayBoundary.get("treasury_tga").age_hours, 48);
+  assert.equal(holidayBoundary.get("finra_short_volume").state, "overdue", "FINRA source is stale after three trading days");
+  assert.equal(holidayBoundary.get("finra_short_volume").age_hours, 72);
 
-  // (ii) A Monday advance still unrefreshed on Thursday is overdue on a
-  // business-day calendar (three weekday business days, no weekend involved).
-  const weekdayOverdue = rowsOf(buildOutcomeWatchdog("2026-09-17T12:00:00Z", [
+  // (ii) Monday through Thursday is three days: TGA remains fresh, while OCC
+  // crosses the default daily limit. By Friday both are overdue at four days.
+  const weekdayBoundary = rowsOf(buildOutcomeWatchdog("2026-09-17T12:00:00Z", [
+    laneRow("treasury_tga", { source_as_of: "2026-09-14" }),
+    laneRow("occ_options_volume", { source_as_of: "2026-09-14" }),
+  ]));
+  assert.equal(weekdayBoundary.get("treasury_tga").state, "current", "TGA is fresh at three federal business days");
+  assert.equal(weekdayBoundary.get("occ_options_volume").state, "overdue", "OCC is stale at three trading days");
+  const weekdayOverdue = rowsOf(buildOutcomeWatchdog("2026-09-18T12:00:00Z", [
     laneRow("treasury_tga", { source_as_of: "2026-09-14" }),
     laneRow("occ_options_volume", { source_as_of: "2026-09-14" }),
   ]));
   for (const id of ["treasury_tga", "occ_options_volume"]) {
-    assert.equal(weekdayOverdue.get(id).state, "overdue", `${id}: Monday advance read on Thursday is overdue`);
-    assert.equal(weekdayOverdue.get(id).age_hours, 72);
+    assert.equal(weekdayOverdue.get(id).state, "overdue", `${id}: Monday source read on Friday is overdue`);
+    assert.equal(weekdayOverdue.get(id).age_hours, 96);
     assert.equal(weekdayOverdue.get(id).advance_basis, "canonical_file_source_as_of");
   }
 
@@ -5630,7 +5898,7 @@ for (const [runId, delayMin] of [["26765173733", 368], ["27940007940", 364]]) {
   };
   const lanes = [
     laneRow("treasury_tga", { source_as_of: "2026-09-11" }),
-    laneRow("defillama_stablecoins", { source_as_of: "2026-09-11" }),
+    laneRow("defillama_stablecoins", { source_as_of: "2026-09-09" }),
     laneRow("stockanalysis_etf_universe", { ...dateless, generated_at: "2026-09-12T00:00:00Z" }),
     laneRow("stockanalysis_etf_detail", dateless),
     laneRow("yahoo_etf_fallback", dateless),
@@ -5638,7 +5906,7 @@ for (const [runId, delayMin] of [["26765173733", 368], ["27940007940", 364]]) {
   const watchdog = buildOutcomeWatchdog(now, lanes, undefined, { publication });
   const rows = new Map(watchdog.rows.map((entry) => [entry.lane_id, entry]));
   assert.equal(rows.get("treasury_tga").state, "current", "Friday advance on Saturday, federal calendar");
-  assert.equal(rows.get("defillama_stablecoins").state, "overdue", "47h wall-clock on a calendar_days lane");
+  assert.equal(rows.get("defillama_stablecoins").state, "overdue", "three calendar days exceeds the daily source-age limit");
   assert.equal(rows.get("stockanalysis_etf_universe").advance_basis, "canonical_file_generated_at");
   assert.equal(rows.get("stockanalysis_etf_detail").advance_basis, "publish_outcome");
   assert.equal(rows.get("stockanalysis_etf_detail").state, "current");

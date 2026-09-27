@@ -4,7 +4,7 @@
 
 export type FreshnessCadence = "daily" | "weekly" | "monthly" | "quarterly" | "annual";
 export type FreshnessSupplier = "owner" | "automated";
-export type FreshnessCalendar = "us_trading" | "kr_trading" | "calendar";
+export type FreshnessCalendar = "us_trading" | "kr_trading" | "us_federal_business" | "calendar";
 export type FreshnessState = "fresh" | "delayed" | "stopped" | "unknown";
 
 export type FreshnessClass = {
@@ -18,6 +18,7 @@ export type FamilyPolicy = {
   readonly releaseLagDays: number;
   readonly supplier: FreshnessSupplier;
   readonly calendar: FreshnessCalendar;
+  readonly sourceAnchor?: "week_end" | "month_end" | "quarter_end";
   readonly label?: string;
 };
 
@@ -39,16 +40,27 @@ export type FreshnessRail = {
 
 export declare const FRESHNESS_CLASSES: Readonly<Record<FreshnessCadence, FreshnessClass>>;
 export declare const FAMILY_POLICY: Readonly<Record<string, FamilyPolicy>>;
+export declare const FRED_BANKING_FILE_POLICY: Readonly<Record<string, FamilyPolicy>>;
 
 export declare function todayKST(now?: Date): string;
+export declare function policyToday(now: string | Date, policy: FamilyPolicy | null): string;
 export declare function dateOnly(value: unknown): string | null;
 export declare function ageInDays(asOf: string, today: string): number;
 export declare function ageInTradingDays(asOf: string, today: string): number;
+export declare function sourceAgeAnchor(asOf: string, policy: FamilyPolicy): string | null;
+export declare function resolveSourcePolicy(input?: {
+  laneId?: string;
+  cadence?: string;
+  artifactId?: string;
+  path?: string;
+  calendar?: string;
+}): FamilyPolicy | null;
 export declare function resolveFamilyPolicy(family: string | FamilyPolicy | null | undefined): FamilyPolicy | null;
 export declare function freshnessVerdict(
   asOf: string | null | undefined,
   family: string | FamilyPolicy | null | undefined,
   today?: string,
+  options?: { calendars?: { calendars: Array<{ id: string; weekend_days: number[]; holidays: string[] }> } | null },
 ): FreshnessVerdict;
 export declare function freshnessMessage(verdict: FreshnessVerdictLike | null | undefined): string | null;
 export declare function freshnessRailState(verdict: FreshnessVerdictLike | null | undefined): FreshnessRail | null;

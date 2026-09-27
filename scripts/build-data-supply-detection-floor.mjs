@@ -13,6 +13,8 @@ import {
 } from "./lib/data-supply-detection-config.mjs";
 import { LANE_REGISTRY, registryDigest } from "./lib/lane-registry.mjs";
 import { matchesDayWeekday } from "./lib/schedule-day-weekday.mjs";
+import { freshnessVerdict, policyToday, resolveSourcePolicy, sourceAgeAnchor } from "../100xfenok-next/src/lib/freshness-policy.mjs";
+import { KRX_MARKET_HOLIDAYS_2026 } from "./lib/market-calendar.mjs";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -643,6 +645,11 @@ function evaluateArtifactContract(contract, artifactRootInfo, claimedPaths, fsMo
 }
 
 function calendarById(calendars, id) {
+  // KRX source age uses the canonical market calendar. The detector JSON
+  // continues to own workflow schedules and never copies these holidays.
+  if (id === "kr_trading") return {
+    id, timezone: "Asia/Seoul", weekend_days: [0, 6], holidays: KRX_MARKET_HOLIDAYS_2026,
+  };
   const row = calendars.calendars.find((candidate) => candidate.id === id);
   if (!row) fail("calendar_error", `calendar ${id} is missing`);
   return row;
@@ -974,7 +981,11 @@ export function evaluateFreshness(sourceAsOf, policy, nowValue, calendars) {
   const calendar = calendarById(calendars, policy.calendar);
   const localDateFuture = DATE_ONLY.test(source.value)
     && sourceOrdinal(source.epoch, source.value, calendar) > calendarParts(now.epoch, calendar.timezone).ordinal;
-  if (source.epoch > now.epoch || localDateFuture) return reasonResult("future_source", { source_as_of: sourceAsOf, age: null, unit: policy.unit });
+  // A KRX date-only stamp describes the Seoul civil day, which can begin
+  // while UTC is still on the previous date. Timestamps keep the instant guard.
+  const futureInstant = source.epoch > now.epoch
+    && !(policy.calendar === "kr_trading" && DATE_ONLY.test(source.value));
+  if (futureInstant || localDateFuture) return reasonResult("future_source", { source_as_of: sourceAsOf, age: null, unit: policy.unit });
   if (policy.unit === "due_window") {
     if (policy.due_policy.kind === "source_date_plus_days") {
       const due = source.epoch + policy.due_policy.days * 86_400_000;
@@ -1098,7 +1109,14 @@ export function validateConfigCalendarBindings(config, calendars) {
   validateCalendars(calendars);
   const calendarIds = new Set(calendars.calendars.map((row) => row.id));
   for (const lane of config.lanes) {
-    if (!calendarIds.has(lane.freshness.calendar)) fail("calendar_error", `${lane.id} source freshness calendar is missing`);
+    const krxCanonicalCalendar = lane.id === "krx" && lane.freshness.calendar === "kr_trading"
+      && lane.freshness.unit === "business_days";
+    if (lane.id === "krx" && !krxCanonicalCalendar) {
+      fail("calendar_error", "krx source freshness must use kr_trading business days");
+    }
+    if (!krxCanonicalCalendar && !calendarIds.has(lane.freshness.calendar)) {
+      fail("calendar_error", `${lane.id} source freshness calendar is missing`);
+    }
     for (const member of lane.producer_members) {
       if (member.cadence_declaration?.kind !== "github_workflow") continue;
       if (!calendarIds.has(member.cadence_calendar)) fail("calendar_error", `${lane.id}:${member.id} cadence calendar is missing`);
@@ -1423,6 +1441,25 @@ function attemptMap(document) {
   return new Map(document.attempts.map((row) => [`${row.lane_id}:${row.member_id ?? "_lane"}`, row]));
 }
 
+const SHARED_SOURCE_LANES = new Set([
+  "benchmarks", "global_scouter", "fred_yardeni", "fred_macro",
+  "fred_banking", "treasury_tga", "finra_ats_weekly", "krx",
+]);
+
+function sharedSourceResult(source, lane, now, calendars, artifactId = undefined) {
+  const registryLane = LANE_REGISTRY.lanes.find((item) => item.id === lane.id);
+  const policy = resolveSourcePolicy({
+    laneId: lane.id, cadence: registryLane?.cadence?.kind, artifactId,
+    calendar: lane.freshness.calendar,
+  });
+  const verdict = freshnessVerdict(source, policy, policyToday(now, policy), { calendars });
+  const legacy = source === null ? null : evaluateFreshness(source, lane.freshness, now, calendars);
+  const reason = legacy?.reason === "future_source" ? "future_source"
+    : verdict.state === "unknown" ? "schema_drift"
+      : verdict.state === "fresh" ? "ok" : "stale";
+  return { verdict, policy, result: reasonResult(reason, { source_as_of: source, age: verdict.ageDays, unit: lane.freshness.unit }) };
+}
+
 function evaluateMember(lane, member, attemptsByKey, artifactRootInfo, claimedPaths, now, calendars, fsModule = fs) {
   const attemptKey = `${lane.id}:${lane.monitoring_mode === "composite" ? member.id : "_lane"}`;
   const row = attemptsByKey.get(attemptKey) ?? null;
@@ -1435,7 +1472,10 @@ function evaluateMember(lane, member, attemptsByKey, artifactRootInfo, claimedPa
     : cadenceKind === "owner_contract" || cadenceKind === "payload_field"
       ? reasonResult("declared_cadence", { observed_at: null })
       : reasonResult("workflow_unobserved", { observed_at: null });
-  const artifacts = member.artifact_contracts.flatMap((contract) => evaluateArtifactContract(contract, artifactRootInfo, claimedPaths, fsModule));
+  const evaluatedContracts = member.artifact_contracts.map((contract) => ({
+    contract, results: evaluateArtifactContract(contract, artifactRootInfo, claimedPaths, fsModule),
+  }));
+  const artifacts = evaluatedContracts.flatMap((entry) => entry.results);
   const artifactWorst = worstResult(artifacts);
   const sourceAsOf = foldSourceTimes(artifacts, lane.freshness);
   const hasSourceContract = artifacts.some((artifact) => artifact.source_required !== false);
@@ -1451,8 +1491,27 @@ function evaluateMember(lane, member, attemptsByKey, artifactRootInfo, claimedPa
   // StockAnalysis ETF membership has no provider source date. Preserve
   // source_as_of=null and use the successful scheduled attempt as its only
   // freshness authority. A collection clock is never promoted into source time.
+  const sourceArtifacts = lane.id === "fred_banking" ? evaluatedContracts.map(({ contract, results }) => {
+    const result = worstResult(results);
+    const source = result.source_as_of ?? null;
+    const shared = source === null ? null : sharedSourceResult(source, lane, now, calendars, contract.id);
+    return {
+      id: contract.id, path: contract.path, source_as_of: source,
+      source_age_anchor: shared ? sourceAgeAnchor(source, shared.policy) : null,
+      source_age_days: shared?.verdict.ageDays ?? null,
+      source_state: shared?.verdict.state ?? "unknown",
+      status: result.status === "ready" ? shared.result.status : result.status,
+      reason: result.status === "ready" ? shared.result.reason : result.reason,
+    };
+  }) : null;
   const freshness = artifactWorst.status === "ready" && hasSourceContract
-    ? evaluateFreshness(sourceAsOf, lane.freshness, now, calendars)
+    ? lane.id === "fred_banking"
+      ? worstResult(sourceArtifacts.map((row) => reasonResult(row.reason, {
+          source_as_of: row.source_as_of, age: row.source_age_days, unit: lane.freshness.unit,
+        })))
+      : SHARED_SOURCE_LANES.has(lane.id)
+        ? sharedSourceResult(sourceAsOf, lane, now, calendars).result
+        : evaluateFreshness(sourceAsOf, lane.freshness, now, calendars)
     : providerDatelessAttemptContract
       ? {
           status: endpoint.status,
@@ -1479,6 +1538,7 @@ function evaluateMember(lane, member, attemptsByKey, artifactRootInfo, claimedPa
       unit: lane.freshness.unit,
       ...generatedAtProjection,
     },
+    ...(sourceArtifacts ? { source_artifacts: sourceArtifacts } : {}),
   };
 }
 
@@ -1546,6 +1606,7 @@ export function buildDetectionReport({
       affected_surface_ids: [...lane.affected_surface_ids],
     };
     if (lane.monitoring_mode === "composite") laneRow.members = members;
+    if (lane.id === "fred_banking") laneRow.source_artifacts = firstMember.source_artifacts;
     return laneRow;
   });
   const counts = {
@@ -1656,7 +1717,7 @@ export function validateDetectionReport(report, config = DATA_SUPPLY_DETECTION_C
     const composite = laneConfig.monitoring_mode === "composite";
     exactKeys(row, composite
       ? ["id", "label", "enforcement", "kpi_required", "monitoring_mode", "status", "reason", "endpoint", "artifact", "affected_surface_ids", "members"]
-      : ["id", "label", "enforcement", "kpi_required", "monitoring_mode", "status", "reason", "endpoint", "artifact", "affected_surface_ids"], `report.lanes[${index}]`);
+      : ["id", "label", "enforcement", "kpi_required", "monitoring_mode", "status", "reason", "endpoint", "artifact", "affected_surface_ids", ...(row.id === "fred_banking" ? ["source_artifacts"] : [])], `report.lanes[${index}]`);
     if (row.id !== laneConfig.id || row.label !== laneConfig.label || row.monitoring_mode !== laneConfig.monitoring_mode
       || row.enforcement !== laneConfig.enforcement || row.kpi_required !== laneConfig.kpi_required
       || canonicalJson(row.affected_surface_ids) !== canonicalJson(laneConfig.affected_surface_ids)) {
@@ -1665,6 +1726,23 @@ export function validateDetectionReport(report, config = DATA_SUPPLY_DETECTION_C
     validateStatusReason(row, `report.lanes[${index}]`, { allowUnavailableSchemaDrift: true });
     validateEndpointReport(row.endpoint, `report.lanes[${index}].endpoint`);
     validateArtifactReport(row.artifact, `report.lanes[${index}].artifact`, laneConfig.freshness);
+    if (row.id === "fred_banking") {
+      const contracts = laneConfig.producer_members[0].artifact_contracts;
+      if (!Array.isArray(row.source_artifacts) || row.source_artifacts.length !== contracts.length) {
+        fail("schema_error", "fred_banking source artifact denominator is invalid");
+      }
+      row.source_artifacts.forEach((sourceRow, sourceIndex) => {
+        const contract = contracts[sourceIndex];
+        exactKeys(sourceRow, ["id", "path", "source_as_of", "source_age_anchor", "source_age_days", "source_state", "status", "reason"], `fred_banking.source_artifacts[${sourceIndex}]`);
+        if (sourceRow.id !== contract.id || sourceRow.path !== contract.path) fail("schema_error", "fred_banking source artifact identity differs from config");
+        if (sourceRow.source_as_of !== null) strictUtc(sourceRow.source_as_of, `${sourceRow.id}.source_as_of`, { allowDate: true });
+        if (sourceRow.source_age_anchor !== null) strictUtc(sourceRow.source_age_anchor, `${sourceRow.id}.source_age_anchor`, { allowDate: true });
+        if (sourceRow.source_age_days !== null && (!Number.isFinite(sourceRow.source_age_days) || sourceRow.source_age_days < 0)) fail("schema_error", `${sourceRow.id} source age is invalid`);
+        if (!["fresh", "delayed", "stopped", "unknown"].includes(sourceRow.source_state)) fail("schema_error", `${sourceRow.id} source state is invalid`);
+        validateStatusReason(sourceRow, `fred_banking.source_artifacts[${sourceIndex}]`, { allowUnavailableSchemaDrift: true });
+      });
+      if (row.artifact.status !== worstStatus(row.source_artifacts)) fail("schema_error", "fred_banking artifact status differs from its required files");
+    }
     modeCounts[row.monitoring_mode] += 1;
     increment(logicalCounts, row.status);
 

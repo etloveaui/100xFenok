@@ -1,7 +1,7 @@
 {
   "manifest_version": "1.1.0",
   "created": "2026-01-20",
-  "last_updated": "2026-09-26",
+  "last_updated": "2026-09-27",
   "purpose": "Central registry for data folder schemas and versions. Agents should read this first.",
   "folders": {
     "admin": {
@@ -34,12 +34,12 @@
     },
     "global-scouter": {
       "version": "2.4.0",
-      "updated": "2026-09-18",
+      "updated": "2026-09-25",
       "update_frequency": "on-demand",
       "source": "Global Scouter Tool",
       "file_count": 1084,
       "schema": true,
-      "description": "Stock screening (1,066), ETFs (22), indicators (1,078 records) from the owner's weekly Global Scouter export"
+      "description": "Stock screening (1,066), ETFs (22), indicators (1,079 records) from the owner's weekly Global Scouter export"
     },
     "indices": {
       "version": "2.0.0",
@@ -216,6 +216,13 @@
     }
   },
   "recent_changes": [
+    {
+      "date": "2026-09-27",
+      "folder": "global-scouter",
+      "version": "2.4.0",
+      "change": "Weekly refresh from the 2026-09-25 export: 1,066 stocks with unchanged canonical keys, 1,079 economic observations, 22 ETFs and 1,047 PER-band profiles. Exact-source Berkshire and TSM unit corrections preserve raw evidence and normal forecasts; current PER bands use explicit FY0. Existing hosted derivation and cloud publication remain authoritative for the live site.",
+      "breaking": false
+    },
     {
       "date": "2026-09-22",
       "folder": "benchmarks",
@@ -996,9 +1003,9 @@
       "path": "/data/global-scouter/",
       "schemaVersion": "2.3.0",
       "fileCount": 1084,
-      "lastUpdated": "2026-09-18",
+      "lastUpdated": "2026-09-25",
       "lastUpdatedReason": null,
-      "notes": "Stock screening (1,066), ETFs (22), indicators (1,078 records) from the owner's weekly Global Scouter export"
+      "notes": "Stock screening (1,066), ETFs (22), indicators (1,079 records) from the owner's weekly Global Scouter export"
     },
     {
       "name": "macro",

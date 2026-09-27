@@ -5,6 +5,41 @@ import {
 } from "./fenok-proxy-formula-contract.mjs";
 import { canonicalJson } from "./json-canonical.mjs";
 import { LANE_REGISTRY, registryLaneById } from "./lane-registry.mjs";
+import { FAMILY_POLICY, FRESHNESS_CLASSES, resolveSourcePolicy } from "../../100xfenok-next/src/lib/freshness-policy.mjs";
+
+function ownerWeeklyFreshLimit(laneId) {
+  const policy = FAMILY_POLICY[laneId];
+  const cadence = FRESHNESS_CLASSES[policy?.cadence];
+  if (policy?.supplier !== "owner" || policy.cadence !== "weekly" || policy.calendar !== "calendar"
+    || !Number.isInteger(policy.releaseLagDays) || policy.releaseLagDays < 0
+    || !Number.isInteger(cadence?.cycleDays) || cadence.cycleDays < 1
+    || !Number.isInteger(cadence?.graceDays) || cadence.graceDays < 0) {
+    throw new Error(`${laneId}: owner weekly source-age policy is missing or invalid`);
+  }
+  return cadence.cycleDays + policy.releaseLagDays + cadence.graceDays;
+}
+
+function krxFreshLimit() {
+  const policy = FAMILY_POLICY.krx;
+  const cadence = FRESHNESS_CLASSES[policy?.cadence];
+  if (policy?.cadence !== "daily" || policy.calendar !== "kr_trading"
+    || policy.supplier !== "automated" || !Number.isInteger(policy.releaseLagDays)
+    || !Number.isInteger(cadence?.cycleDays) || !Number.isInteger(cadence?.graceDays)) {
+    throw new Error("krx: trading-day source-age policy is missing or invalid");
+  }
+  return cadence.cycleDays + policy.releaseLagDays + cadence.graceDays;
+}
+
+function fredMacroFreshLimit() {
+  const policy = resolveSourcePolicy({ laneId: "fred_macro", cadence: "daily", calendar: "utc" });
+  const cadence = FRESHNESS_CLASSES[policy?.cadence];
+  if (policy?.cadence !== "daily" || policy.calendar !== "calendar"
+    || policy.supplier !== "automated" || policy.releaseLagDays !== 0
+    || !Number.isInteger(cadence?.cycleDays) || !Number.isInteger(cadence?.graceDays)) {
+    throw new Error("fred_macro: daily UTC source-age policy is missing or invalid");
+  }
+  return cadence.cycleDays + policy.releaseLagDays + cadence.graceDays;
+}
 
 // LANE_IDS derives from the lane registry — the SSOT for lane existence
 // (#366 derivation). Values stay exact-value pinned by cases.expected.json's
@@ -90,7 +125,7 @@ const JSON_TYPES = new Set(["array", "boolean", "null", "number", "object", "str
 const FOLDS = new Set(["oldest", "latest", "member_worst"]);
 const UNITS = new Set(["hours", "calendar_days", "business_days", "due_window"]);
 const VISIBILITIES = new Set(["public_safe_aggregate", "admin_only"]);
-const CALENDAR_IDS = new Set(["utc", "us_federal_business", "us_trading"]);
+const CALENDAR_IDS = new Set(["utc", "us_federal_business", "us_trading", "kr_trading"]);
 const SOURCE_FORMATS = new Set(["date", "rfc3339", "yyyymmdd", "unix_seconds"]);
 const SOURCE_SELECTOR_KINDS = new Set(["pointer", "max_array_field", "max_object_series_field", "max_object_field", "max_quarter", "not_applicable"]);
 const CADENCE_DECLARATION_KINDS = new Set(["github_workflow", "owner_contract", "payload_field"]);
@@ -358,7 +393,7 @@ const config = {
         }),
       ])],
       endpointContract: endpoint("fred_api", "observations_array", "/observations", "array", "http"),
-      freshnessPolicy: freshness({ fold: "latest", unit: "hours", calendar: "utc", maxStaleness: 48 }),
+      freshnessPolicy: freshness({ fold: "latest", unit: "calendar_days", calendar: "utc", maxStaleness: fredMacroFreshLimit() }),
       affectedSurfaceIds: ["macro_fred"],
     }),
     lane({
@@ -366,19 +401,19 @@ const config = {
       label: "FRED banking series",
       members: [registryMember("fred_banking", ["0 7 * * *"], [
         artifact("fred_banking_daily", "data/macro/fred-banking-daily.json", {
-          sourceSelector: maxObjectSeriesFieldSource("/series", "date", "date"),
+          sourceSelector: pointerSource("/source_as_of", "date"),
           assertions: [exactAssertion("type_daily", "/type", "daily"), typeAssertion("series_object", "/series", "object"), minKeysAssertion("series_count", "/series", 2), nonEmptySeriesAssertion("series_non_empty", "/series"), requiredAssertion("series_dgs10", "/series/DGS10"), requiredAssertion("series_hy_spread", "/series/BAMLH0A0HYM2")],
         }),
         artifact("fred_banking_weekly", "data/macro/fred-banking-weekly.json", {
-          sourceSelector: maxObjectSeriesFieldSource("/series", "date", "date"),
+          sourceSelector: pointerSource("/source_as_of", "date"),
           assertions: [exactAssertion("type_weekly", "/type", "weekly"), typeAssertion("series_object", "/series", "object"), minKeysAssertion("series_count", "/series", 2), nonEmptySeriesAssertion("series_non_empty", "/series"), requiredAssertion("series_totll", "/series/TOTLL"), requiredAssertion("series_deposits", "/series/DPSACBW027SBOG")],
         }),
         artifact("fred_banking_monthly", "data/macro/fred-banking-monthly.json", {
-          sourceSelector: maxObjectSeriesFieldSource("/series", "date", "date"),
+          sourceSelector: pointerSource("/source_as_of", "date"),
           assertions: [exactAssertion("type_monthly", "/type", "monthly"), typeAssertion("series_object", "/series", "object"), minKeysAssertion("series_count", "/series", 1), nonEmptySeriesAssertion("series_non_empty", "/series"), requiredAssertion("series_korea_rate", "/series/IRLTLT01KRM156N")],
         }),
         artifact("fred_banking_quarterly", "data/macro/fred-banking-quarterly.json", {
-          sourceSelector: maxObjectSeriesFieldSource("/series", "date", "date"),
+          sourceSelector: pointerSource("/source_as_of", "date"),
           assertions: [
             exactAssertion("type_quarterly", "/type", "quarterly"),
             typeAssertion("series_object", "/series", "object"),
@@ -417,7 +452,7 @@ const config = {
         }),
       ])],
       endpointContract: endpoint("fred_api", "observations_array", "/observations", "array", "http"),
-      freshnessPolicy: freshness({ fold: "latest", unit: "calendar_days", calendar: "utc", maxStaleness: 10 }),
+      freshnessPolicy: freshness({ fold: "latest", unit: "calendar_days", calendar: "utc", maxStaleness: ownerWeeklyFreshLimit("fred_yardeni") }),
       affectedSurfaceIds: ["yardeni_model"],
     }),
     lane({
@@ -869,7 +904,7 @@ const config = {
           latest_run: "object",
         }),
         "library",),
-      freshnessPolicy: freshness({ fold: "latest", unit: "calendar_days", calendar: "utc", maxStaleness: 4 }),
+      freshnessPolicy: freshness({ fold: "latest", unit: "business_days", calendar: "kr_trading", maxStaleness: krxFreshLimit() }),
       affectedSurfaceIds: ["rim_index_inputs"],
     }),
     lane({
@@ -1054,7 +1089,7 @@ const config = {
         ],
       })))],
       endpointContract: endpoint("converter_payload"),
-      freshnessPolicy: freshness({ fold: "oldest", unit: "calendar_days", calendar: "utc", maxStaleness: 14 }),
+      freshnessPolicy: freshness({ fold: "oldest", unit: "calendar_days", calendar: "utc", maxStaleness: ownerWeeklyFreshLimit("benchmarks") }),
       affectedSurfaceIds: ["market_valuation", "sectors", "dashboard"],
     }),
     lane({
@@ -1077,7 +1112,7 @@ const config = {
         }),
       ])],
       endpointContract: endpoint("converter_payload"),
-      freshnessPolicy: freshness({ fold: "latest", unit: "calendar_days", calendar: "utc", maxStaleness: 14 }),
+      freshnessPolicy: freshness({ fold: "latest", unit: "calendar_days", calendar: "utc", maxStaleness: ownerWeeklyFreshLimit("global_scouter") }),
       affectedSurfaceIds: ["screener", "stock_detail", "explore"],
     }),
     lane({

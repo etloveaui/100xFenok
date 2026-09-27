@@ -25,7 +25,7 @@ export const METRIC_GLOSSARY = {
   },
   perBand: {
     label: "PER 밴드",
-    description: "과거 PER이 오르내린 범위를 띠 형태로 보여 주는 그래프입니다. 현재 PER이 그 범위의 위쪽인지 아래쪽인지로 비싼지 싼지를 가늠합니다.",
+    description: "여러 회계연도의 PER 범위와 기준연도 PER의 위치를 보여 줍니다. 구간에는 예상치가 포함될 수 있으며, 위치만으로 현재 가격의 적정성을 판단할 수는 없습니다.",
   },
   opm: {
     label: "OPM",

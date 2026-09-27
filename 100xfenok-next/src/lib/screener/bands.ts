@@ -32,7 +32,7 @@ export function bandClass(pct: number): "emerald" | "slate" | "rose" {
 }
 
 export function bandLabel(pct: number): string {
-  if (pct <= BAND_CHEAP) return "저평가";
-  if (pct >= BAND_RICH) return "고평가";
-  return "적정";
+  if (pct <= BAND_CHEAP) return "하단";
+  if (pct >= BAND_RICH) return "상단";
+  return "중간";
 }

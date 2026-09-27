@@ -42,8 +42,16 @@ export default function SuperinvestorsSummaryStrip({ investors, overlapRows, dat
 
   if (loading || (!dataReady && !failed)) {
     return (
-      <section aria-label="투자자 요약" data-superinvestors-summary-strip="true" className="sup-sum">
-        <p className="sup-sum-note">투자자 요약 확인 중</p>
+      <section aria-label="투자자 요약" aria-busy="true" data-superinvestors-summary-strip="true" className="sup-sum">
+        <StatStrip data-superinvestors-summary-cells="true" aria-hidden="true">
+          {[0, 1, 2, 3].map((index) => (
+            <Stat key={index} label="—" value="—" sub="코호트 —%" />
+          ))}
+        </StatStrip>
+        <div aria-hidden="true">
+          <DistributionBand segments={[]} />
+        </div>
+        <p className="sup-sum-legend" role="status">공통 보유 종목 확인 중</p>
       </section>
     );
   }

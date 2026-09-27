@@ -24,6 +24,14 @@ on:
         description: "Optional comma-separated routes for a focused responsive recheck"
         required: false
         default: ""
+      responsive_viewports:
+        description: "Optional named viewports for isolated responsive verification"
+        required: false
+        default: ""
+      layout_routes:
+        description: "Optional independent layout routes when sharing a responsive preview build"
+        required: false
+        default: ""
       suite:
         description: 'Interaction scope (all keeps the existing snapshot coverage)'
         required: false
@@ -102,8 +110,13 @@ jobs:
           git rev-parse --show-toplevel
           node scripts/build-ink4-contrast-fixture.mjs
           node --input-type=module -e 'import { emitDetectionExpectedFixture } from "../scripts/build-data-supply-detection-floor.mjs"; emitDetectionExpectedFixture();'
+          npx tsx src/lib/freshness-policy.test.ts
           npm run qa:journey-continuity
           node ../scripts/build-guru-holders-index.mjs
+          # The isolated preview must derive its screener from this candidate's
+          # owner export. These runner-only files never publish to main.
+          node ../scripts/build-stocks-analyzer.mjs
+          node ../scripts/build-revision-movers.mjs
           repo_root="$(git rev-parse --show-toplevel)"
           floor_output="$(mktemp -d /tmp/investor-detection-floor-XXXXXX)"
           trap 'rm -rf "$floor_output"' EXIT
@@ -116,6 +129,7 @@ jobs:
             --output-root "$floor_output"
           node ../scripts/build-data-supply-detection-floor.mjs --verify-report "$floor_output/data-supply-detection-floor.json"
           install -m 0644 "$floor_output/data-supply-detection-floor.json" "$repo_root/data/admin/data-supply-detection-floor.json"
+          npm run build:fenok-edge-coverage-index
           npm run build:fenok-data-health-kpi
           if [ "$QA_EVIDENCE_ONLY" = "1" ]; then
             npm run qa:fenok-data-health-kpi:artifact
@@ -134,8 +148,8 @@ jobs:
           QA_BASE_URL: http://127.0.0.1:3107
           QA_MOBILE_UX_ISOLATED: "1"
           QA_LAYOUT_ISOLATED: "1"
-          QA_LAYOUT_ROUTES: ${{ inputs.responsive_routes }}
-          QA_MOBILE_UX_VIEWPORTS: narrow,mobile,tablet-portrait,tablet-mid,tablet,tablet-landscape
+          QA_LAYOUT_ROUTES: ${{ inputs.layout_routes || inputs.responsive_routes }}
+          QA_MOBILE_UX_VIEWPORTS: ${{ inputs.responsive_viewports || 'narrow,mobile,tablet-portrait,tablet-mid,tablet,tablet-landscape' }}
           QA_MOBILE_UX_ROUTES: ${{ inputs.responsive_routes || '/superinvestors,/superinvestors?tab=investors,/superinvestors?tab=stocks,/superinvestors?guru=blackrock,/superinvestors?tab=trades,/superinvestors?tab=insights,/superinvestors?tab=graph,/screener,/screener?mode=analyze' }}
           QA_MOBILE_UX_OUTPUT_DIR: test-results/responsive
           NEXT_TELEMETRY_DISABLED: "1"
@@ -246,6 +260,18 @@ jobs:
               ;;
             *) echo "unsupported visual suite" >&2; exit 64;;
           esac
+
+      - name: Upload isolated Scouter derivation evidence
+        if: ${{ success() && inputs.suite == 'responsive' && inputs.include_layout && inputs.execution_target != 'live' }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: preview-scouter-derived
+          path: |
+            data/global-scouter/core/stocks_analyzer.json
+            data/global-scouter/core/per_bands_index.json
+            data/global-scouter/core/revision_movers.json
+          if-no-files-found: error
+          retention-days: 7
 
       - name: Upload layout sweep report
         if: always() && (inputs.suite == 'layout' || (inputs.suite == 'responsive' && inputs.include_layout))
