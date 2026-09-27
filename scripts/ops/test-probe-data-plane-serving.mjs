@@ -331,14 +331,19 @@ const sourceDateForPolicy = ({ path, family }) => {
   const asked = [];
   const requestTimeoutMs = 5;
   const totalDeadlineMs = 30;
+  let monotonicMs = 0;
   const results = await probeAll({
     baseUrl: "https://example.test",
     nowIso: NOW,
     requestTimeoutMs,
     totalDeadlineMs,
     concurrency: 1,
+    monotonicNowFn: () => monotonicMs,
     fetchFn: async (url) => {
       asked.push(url);
+      // Model timer rounding: the clock can still show a fractional remainder
+      // when cleanup declares the deadline reached. That signal must be sticky.
+      monotonicMs = totalDeadlineMs - 0.25;
       return new Promise(() => {});
     },
   });

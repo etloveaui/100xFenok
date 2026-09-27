@@ -380,6 +380,7 @@ export async function probeAll({
   const enrolledEntries = [...ENROLLED_PATHS];
   const results = new Array(enrolledEntries.length);
   let nextIndex = 0;
+  let totalDeadlineReached = false;
   // This enumerates exact ENROLLED_PATHS only. Prefix-enrolled EDGAR policy is
   // defined above but has no live probe coverage here; adding representative
   // prefix paths requires a separate contract and is intentionally out of scope.
@@ -387,7 +388,7 @@ export async function probeAll({
     for (;;) {
       // No await between admission and increment: each index is owned by one
       // worker, and no request starts once the total deadline is exhausted.
-      if (nextIndex >= enrolledEntries.length || remainingTotalMs() <= 0) return;
+      if (totalDeadlineReached || nextIndex >= enrolledEntries.length || remainingTotalMs() <= 0) return;
       const index = nextIndex;
       nextIndex += 1;
       const [path, family] = enrolledEntries[index];
@@ -402,6 +403,9 @@ export async function probeAll({
           remainingTotalMs,
         );
       } catch (error) {
+        // A cleanup timer can fire with a fractional monotonic remainder.
+        // Its explicit deadline signal closes admission for every worker.
+        if (error?.totalProbeDeadlineReached) totalDeadlineReached = true;
         results[index] = {
           path,
           family,
