@@ -149,7 +149,7 @@ const COLUMNS: ReadonlyArray<{ key: ScreenerSortKey; label: string; align: "left
   { key: "country", label: "국가", align: "left" },
   { key: "price", label: "가격", align: "right" },
   { key: "marketCap", label: "시총", align: "right" },
-  { key: "per", label: "PER", align: "right" },
+  { key: "per", label: "선행 PER", align: "right" },
   { key: "pbr", label: "PBR", align: "right" },
   { key: "peg", label: "PEG", align: "right" },
   { key: "dividendYield", label: "배당", align: "right" },

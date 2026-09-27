@@ -212,6 +212,18 @@ function routeArtifactSlug(route) {
   return value || "home";
 }
 
+async function captureScreenerFirstView(page, route, viewportName, routeIndex) {
+  await page.locator('[data-screener-mode][data-journey-ready="true"]')
+    .filter({ visible: true }).first().waitFor({ state: "visible", timeout: 30_000 });
+  const routeDir = join(outputDir, viewportName,
+    `route-${String(routeIndex + 1).padStart(2, "0")}-${routeArtifactSlug(route)}`);
+  await mkdir(routeDir, { recursive: true });
+  const path = join(routeDir, "first-view.png");
+  await page.evaluate(() => window.scrollTo({ top: 0, left: 0, behavior: "instant" }));
+  await page.screenshot({ path, animations: "disabled" });
+  return { path, url: page.url(), phase: "before-interactions" };
+}
+
 async function captureBoundedScreenshots(page, route, viewportName, routeIndex) {
   if (!outputDir) return null;
 
@@ -4638,6 +4650,9 @@ try {
         if (outputDir) await page.waitForLoadState("networkidle", { timeout: 5000 }).catch(() => {});
         await page.waitForTimeout(250);
         await prepareDynamicRoute(page, route);
+        if (outputDir && route.startsWith("/screener")) {
+          result.firstView = await captureScreenerFirstView(page, route, name, routeIndex);
+        }
         const checks = await collectRouteChecks(page, route);
         result.failures = checks.failures;
         const structureChecks = await collectInvestorStructureChecks(page, route, routeRequests);

@@ -3052,7 +3052,7 @@ export default function StockDetailClient({
   const heroChangeUp = marketChangePct !== null ? marketChangePct >= 0 : returnUp;
   const previewMetricCards = [
     { label: "시가총액", value: marketCapText, note: yfMarketCap !== null ? "Yahoo" : "분석 USD" },
-    { label: "PER", value: isFiniteNumber(row?.per) ? `${row.per.toFixed(1)}x` : "—", note: "현재" },
+    { label: "선행 PER", value: isFiniteNumber(row?.per) ? `${row.per.toFixed(1)}x` : "—", note: "예상 이익 기준" },
     { label: "PBR", value: isFiniteNumber(row?.pbr) ? `${row.pbr.toFixed(2)}x` : "—", note: "장부가" },
     { label: "12M 수익률", value: returnText ?? "—", note: "후행 성과" },
   ];
