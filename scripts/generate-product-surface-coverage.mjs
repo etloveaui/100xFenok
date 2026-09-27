@@ -348,10 +348,17 @@ const yardneyAsOf = latestDate(
   yardneyModel?.meta?.last_update?.last_public_date,
   yardneyModel?.meta?.generated_at,
 );
-const yardeniMaxAgeDays = DATA_SUPPLY_DETECTION_CONFIG.lanes
-  .find((lane) => lane.id === "fred_yardeni")?.freshness?.max_staleness ?? 10;
-const globalScouterMaxAgeDays = DATA_SUPPLY_DETECTION_CONFIG.lanes
-  .find((lane) => lane.id === "global_scouter")?.freshness?.max_staleness ?? 14;
+function requiredCalendarSourceAgeLimit(laneId) {
+  const lanes = DATA_SUPPLY_DETECTION_CONFIG.lanes.filter((lane) => lane.id === laneId);
+  const policy = lanes[0]?.freshness;
+  if (lanes.length !== 1 || policy?.unit !== "calendar_days" || policy.calendar !== "utc"
+    || !Number.isInteger(policy.max_staleness) || policy.max_staleness < 1) {
+    throw new Error(`${laneId}: required calendar-day source-age declaration is missing or invalid`);
+  }
+  return policy.max_staleness;
+}
+const yardeniMaxAgeDays = requiredCalendarSourceAgeLimit("fred_yardeni");
+const globalScouterMaxAgeDays = requiredCalendarSourceAgeLimit("global_scouter");
 // Per-surface TRUE source stamps (contract §5). Only surfaces whose data inputs
 // carry genuine nested source dates get a real stamp; the rest stay null until
 // their upstream artifacts expose one (the KPI reports them pending, not fresh).

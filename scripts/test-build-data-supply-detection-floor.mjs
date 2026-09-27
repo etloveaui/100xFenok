@@ -890,6 +890,7 @@ function runConfigAndFixtureChecks() {
       "fenok-proxy-formula-contract.mjs",
       "slickcharts-composite-recovery.mjs",
       "data-supply-detection-config.mjs",
+      "market-calendar.mjs",
     ];
     const loadConfigWithRegistry = (mutateRegistry) => {
       const root = fs.mkdtempSync(path.join(os.tmpdir(), "detfloor-derivation-red-"));
@@ -906,6 +907,12 @@ function runConfigAndFixtureChecks() {
         if (file === "lane-registry.mjs") source = mutateRegistry(source);
         fs.writeFileSync(path.join(libDir, file), source);
       }
+      const policyDir = path.join(root, "100xfenok-next", "src", "lib");
+      fs.mkdirSync(policyDir, { recursive: true });
+      fs.copyFileSync(
+        path.join(REPO_ROOT, "100xfenok-next", "src", "lib", "freshness-policy.mjs"),
+        path.join(policyDir, "freshness-policy.mjs"),
+      );
       return spawnSync(
         process.execPath,
         ["-e", `import(${JSON.stringify(`file://${path.join(libDir, "data-supply-detection-config.mjs")}`)}).then(() => process.exit(0)).catch((error) => { console.error(error?.message ?? error); process.exit(1); })`],

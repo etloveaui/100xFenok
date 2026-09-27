@@ -5,6 +5,19 @@ import {
 } from "./fenok-proxy-formula-contract.mjs";
 import { canonicalJson } from "./json-canonical.mjs";
 import { LANE_REGISTRY, registryLaneById } from "./lane-registry.mjs";
+import { FAMILY_POLICY, FRESHNESS_CLASSES } from "../../100xfenok-next/src/lib/freshness-policy.mjs";
+
+function ownerWeeklyFreshLimit(laneId) {
+  const policy = FAMILY_POLICY[laneId];
+  const cadence = FRESHNESS_CLASSES[policy?.cadence];
+  if (policy?.supplier !== "owner" || policy.cadence !== "weekly" || policy.calendar !== "calendar"
+    || !Number.isInteger(policy.releaseLagDays) || policy.releaseLagDays < 0
+    || !Number.isInteger(cadence?.cycleDays) || cadence.cycleDays < 1
+    || !Number.isInteger(cadence?.graceDays) || cadence.graceDays < 0) {
+    throw new Error(`${laneId}: owner weekly source-age policy is missing or invalid`);
+  }
+  return cadence.cycleDays + policy.releaseLagDays + cadence.graceDays;
+}
 
 // LANE_IDS derives from the lane registry — the SSOT for lane existence
 // (#366 derivation). Values stay exact-value pinned by cases.expected.json's
@@ -417,7 +430,7 @@ const config = {
         }),
       ])],
       endpointContract: endpoint("fred_api", "observations_array", "/observations", "array", "http"),
-      freshnessPolicy: freshness({ fold: "latest", unit: "calendar_days", calendar: "utc", maxStaleness: 10 }),
+      freshnessPolicy: freshness({ fold: "latest", unit: "calendar_days", calendar: "utc", maxStaleness: ownerWeeklyFreshLimit("fred_yardeni") }),
       affectedSurfaceIds: ["yardeni_model"],
     }),
     lane({
@@ -1054,7 +1067,7 @@ const config = {
         ],
       })))],
       endpointContract: endpoint("converter_payload"),
-      freshnessPolicy: freshness({ fold: "oldest", unit: "calendar_days", calendar: "utc", maxStaleness: 14 }),
+      freshnessPolicy: freshness({ fold: "oldest", unit: "calendar_days", calendar: "utc", maxStaleness: ownerWeeklyFreshLimit("benchmarks") }),
       affectedSurfaceIds: ["market_valuation", "sectors", "dashboard"],
     }),
     lane({
@@ -1077,7 +1090,7 @@ const config = {
         }),
       ])],
       endpointContract: endpoint("converter_payload"),
-      freshnessPolicy: freshness({ fold: "latest", unit: "calendar_days", calendar: "utc", maxStaleness: 14 }),
+      freshnessPolicy: freshness({ fold: "latest", unit: "calendar_days", calendar: "utc", maxStaleness: ownerWeeklyFreshLimit("global_scouter") }),
       affectedSurfaceIds: ["screener", "stock_detail", "explore"],
     }),
     lane({

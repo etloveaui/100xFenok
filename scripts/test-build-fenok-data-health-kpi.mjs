@@ -93,7 +93,7 @@ const { checkRimInputsCanonicalHealth } = await import("./check-fenok-data-healt
 const { projectFenokDataHealthKpiPublicMirror } = await import("../100xfenok-next/sync-static-overrides.mjs");
 const { DATA_SUPPLY_DETECTION_CONFIG } = await import("./lib/data-supply-detection-config.mjs");
 const { LANE_REGISTRY } = await import("./lib/lane-registry.mjs");
-const { policyToday, resolveSourcePolicy } = await import("../100xfenok-next/src/lib/freshness-policy.mjs");
+const { FAMILY_POLICY, FRESHNESS_CLASSES, policyToday, resolveSourcePolicy } = await import("../100xfenok-next/src/lib/freshness-policy.mjs");
 const { buildFetchCronAttemptCoverage } = await import("./build-data-supply-detection-floor.mjs");
 const { deriveProductSurfaceStampEvidence } = await import("./lib/product-surface-stamp-v2.mjs");
 const { ProducerLkgStateStore } = await import("./lib/producer-lkg-state.mjs");
@@ -4303,6 +4303,7 @@ for (const [runId, delayMin] of [["26765173733", 368], ["27940007940", 364]]) {
 
 // 27. real generator on temp root — source dates remain distinct from collection clocks.
 {
+  const generatorClock = new Date().toISOString();
   const runGen = (seed) => {
     const tmp = mkTmp("real-generator");
     const w = (rel, o) => writeJson(path.join(tmp, "data", ...rel), o);
@@ -4348,7 +4349,7 @@ for (const [runId, delayMin] of [["26765173733", 368], ["27940007940", 364]]) {
     ] });
     w(["stockanalysis", "etf_universe.json"], { source_as_of: universeDay, records: [] });
     w(["stockanalysis", "index.json"], { source_as_of: { surfaces: domainStamps, etf_universe: universeDay } });
-    execFileSync("node", [path.join(__dirname, "generate-product-surface-coverage.mjs"), "--data-root", tmp], { env: { ...baseEnv() }, stdio: ["ignore", "pipe", "pipe"] });
+    execFileSync("node", [path.join(__dirname, "generate-product-surface-coverage.mjs"), "--data-root", tmp], { env: { ...baseEnv(), PS_GENERATED_AT: generatorClock }, stdio: ["ignore", "pipe", "pipe"] });
     const out = JSON.parse(fs.readFileSync(path.join(tmp, "data", "admin", "product-surface-coverage.json"), "utf8"));
     assert.equal(out.schema_version, "product-surface-coverage/v2");
     assert.equal(out.source_stamp_version, 2);
@@ -4439,31 +4440,49 @@ for (const [runId, delayMin] of [["26765173733", 368], ["27940007940", 364]]) {
   }
   ok("#331: real generator uses upstream source dates and never promotes collection clocks");
 
-  // Cadence-derived freshness bounds: weekly-declared converter lanes must be
-  // judged against their DECLARED cadence + grace (detection-config
-  // freshness.max_staleness), never a tighter hardcoded constant — a weekly
-  // Friday export is legitimately ~7 days old mid-week. Mutation proof: the
-  // emitted bound is asserted against the LIVE declaration, so deleting the
-  // derivation and falling back to any diverging hardcoded constant fails.
+  // Cadence-derived freshness bounds: active Yardeni and screener checks must
+  // use their declared source-age bounds, not a tighter hardcoded constant.
+  // Quarantined RIM still has readiness checks but no source-age surface check.
   const declaredMaxAge = (laneId) => DATA_SUPPLY_DETECTION_CONFIG.lanes
     .find((lane) => lane.id === laneId)?.freshness?.max_staleness;
-  const daysAgo = (n) => new Date(Date.now() - n * 86_400_000).toISOString().slice(0, 10);
+  for (const laneId of ["fred_yardeni", "benchmarks", "global_scouter"]) {
+    const policy = FAMILY_POLICY[laneId];
+    const cadence = FRESHNESS_CLASSES[policy.cadence];
+    assert.equal(declaredMaxAge(laneId), cadence.cycleDays + policy.releaseLagDays + cadence.graceDays,
+      `${laneId} declaration matches shared owner-weekly fresh cutoff`);
+  }
+  assert.equal(declaredMaxAge("fred_yardeni"), 13, "owner-weekly fresh cutoff is day 13");
+  const daysAgo = (n) => new Date(new Date(generatorClock).getTime() - n * 86_400_000).toISOString().slice(0, 10);
   const freshnessRow = (run, surfaceId, label) => run.full.surfaces
     .find((s) => s.id === surfaceId)?.checks.find((c) => c.label === label);
 
-  const midWeek = runGen({ rim: daysAgo(6), yard: daysAgo(6), screener: daysAgo(9), marketFacts: daysAgo(6), surfaces: `${daysAgo(1)}T02:23:02Z`, etfUniverse: `${daysAgo(1)}T22:37:04Z` });
-  const rimWeekly = freshnessRow(midWeek, "market_valuation", "RIM 입력 기준일");
-  assert.equal(rimWeekly.max_age_days, declaredMaxAge("benchmarks"), "RIM bound derives from the declared benchmarks weekly cadence+grace, not a hardcoded constant");
-  assert.equal(rimWeekly.calendar ?? null, null, "declared benchmarks freshness unit is calendar_days, not us_market business days");
-  assert.equal(rimWeekly.status, "ready", "6-day-old weekly RIM export is inside its declared cadence+grace");
+  const activeWeeklyDate = daysAgo(6);
+  const midWeek = runGen({ rim: daysAgo(20), yard: activeWeeklyDate, screener: daysAgo(9), marketFacts: activeWeeklyDate, surfaces: `${daysAgo(1)}T02:23:02Z`, etfUniverse: `${daysAgo(1)}T22:37:04Z` });
+  assert.equal(midWeek("market_valuation"), activeWeeklyDate, "old quarantined RIM cannot lower the active market-valuation source floor");
+  assert.equal(freshnessRow(midWeek, "market_valuation", "RIM 입력 기준일"), undefined,
+    "quarantined RIM must not regain a market-valuation source-age check");
+  assert.ok(freshnessRow(midWeek, "market_valuation", "KOSPI RIM 입력"), "RIM readiness disclosure remains visible");
+  const yardeniWeekly = freshnessRow(midWeek, "market_valuation", "Yardeni 기준일");
+  assert.ok(yardeniWeekly, "active Yardeni source-age check remains present");
+  assert.equal(yardeniWeekly.max_age_days, declaredMaxAge("fred_yardeni"), "Yardeni bound derives from its declared weekly cadence+grace, not a hardcoded constant");
+  assert.equal(yardeniWeekly.calendar ?? null, null, "declared Yardeni freshness unit is calendar_days, not us_market business days");
+  assert.equal(yardeniWeekly.status, "ready", "6-day-old weekly Yardeni source is inside its declared cadence+grace");
   const screenerWeekly = freshnessRow(midWeek, "screener", "스크리너 기준일");
   assert.equal(screenerWeekly.max_age_days, declaredMaxAge("global_scouter"), "screener bound derives from the declared global_scouter weekly cadence+grace, not a hardcoded constant");
   assert.equal(screenerWeekly.status, "ready", "9-day-old weekly screener export is inside its declared cadence+grace");
 
+  for (const [age, status] of [[13, "ready"], [14, "stale"]]) {
+    const boundary = runGen({ rim: daysAgo(20), yard: daysAgo(age), screener: daysAgo(age), marketFacts: daysAgo(1), surfaces: `${daysAgo(1)}T02:23:02Z`, etfUniverse: `${daysAgo(1)}T22:37:04Z` });
+    assert.equal(freshnessRow(boundary, "market_valuation", "Yardeni 기준일")?.status, status,
+      `Yardeni source age day ${age} is ${status}`);
+    assert.equal(freshnessRow(boundary, "screener", "스크리너 기준일")?.status, status,
+      `screener source age day ${age} is ${status}`);
+  }
+
   const overdue = runGen({ rim: daysAgo(20), yard: daysAgo(20), screener: daysAgo(20), marketFacts: daysAgo(20), surfaces: `${daysAgo(1)}T02:23:02Z`, etfUniverse: `${daysAgo(1)}T22:37:04Z` });
-  assert.equal(freshnessRow(overdue, "market_valuation", "RIM 입력 기준일").status, "stale", "weekly RIM source past cadence+grace still trips stale (no blind spot)");
+  assert.equal(freshnessRow(overdue, "market_valuation", "Yardeni 기준일").status, "stale", "weekly Yardeni source past cadence+grace still trips stale (no blind spot)");
   assert.equal(freshnessRow(overdue, "screener", "스크리너 기준일").status, "stale", "weekly screener source past cadence+grace still trips stale (no blind spot)");
-  ok("weekly-declared lanes derive freshness bound from declared cadence+grace; overdue still trips stale");
+  ok("active weekly surface checks derive their declared bounds; overdue stays stale and quarantined RIM stays retired");
 }
 
 // 27b. real v2 artifact -> builder -> checker integration and v2-only lineage.
