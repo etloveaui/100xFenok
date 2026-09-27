@@ -15,6 +15,11 @@ on:
         options:
           - isolated
           - live
+      include_layout:
+        description: 'Also check layout in the same isolated responsive preview'
+        required: false
+        type: boolean
+        default: false
       responsive_routes:
         description: "Optional comma-separated routes for a focused responsive recheck"
         required: false
@@ -58,6 +63,17 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+
+      - name: Validate combined verification target
+        env:
+          INCLUDE_LAYOUT: ${{ inputs.include_layout }}
+          SUITE: ${{ inputs.suite }}
+          EXECUTION_TARGET: ${{ inputs.execution_target }}
+        run: |
+          if [ "$INCLUDE_LAYOUT" = "true" ] && { [ "$SUITE" != "responsive" ] || [ "$EXECUTION_TARGET" = "live" ]; }; then
+            echo "include_layout requires an isolated responsive run" >&2
+            exit 64
+          fi
 
       - name: Setup Node
         uses: actions/setup-node@v4
@@ -114,6 +130,7 @@ jobs:
           CI: "true"
           SUITE: ${{ inputs.suite }}
           RESPONSIVE_ROUTES: ${{ inputs.responsive_routes }}
+          INCLUDE_LAYOUT: ${{ inputs.include_layout }}
           QA_BASE_URL: http://127.0.0.1:3107
           QA_MOBILE_UX_ISOLATED: "1"
           QA_LAYOUT_ISOLATED: "1"
@@ -144,7 +161,14 @@ jobs:
             responsive)
               export QA_MOBILE_UX_ROUTES="/,/explore,/screener,/screener?mode=analyze,/stock/NVDA,/stock/NVDA?tab=financials,/superinvestors,/superinvestors?tab=investors,/superinvestors?guru=blackrock,/etfs,/etfs/SPY,/market-valuation,/regime,/sectors,/portfolio,/macro-chart,/superinvestors?tab=stocks"
               if [ -n "$RESPONSIVE_ROUTES" ]; then export QA_MOBILE_UX_ROUTES="$RESPONSIVE_ROUTES"; fi
-              npm run qa:mobile-ux
+              responsive_status=0
+              npm run qa:mobile-ux || responsive_status=$?
+              layout_status=0
+              if [ "$INCLUDE_LAYOUT" = "true" ]; then
+                export QA_LAYOUT_OUTPUT="test-results/layout-sweep/report.json"
+                npm run qa:layout-sweep || layout_status=$?
+              fi
+              if [ "$responsive_status" -ne 0 ] || [ "$layout_status" -ne 0 ]; then exit 1; fi
               ;;
             layout)
               export QA_LAYOUT_OUTPUT="test-results/layout-sweep/report.json"
@@ -224,7 +248,7 @@ jobs:
           esac
 
       - name: Upload layout sweep report
-        if: always() && inputs.suite == 'layout'
+        if: always() && (inputs.suite == 'layout' || (inputs.suite == 'responsive' && inputs.include_layout))
         uses: actions/upload-artifact@v4
         with:
           name: layout-sweep
