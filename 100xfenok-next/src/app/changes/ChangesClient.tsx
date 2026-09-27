@@ -611,7 +611,20 @@ export default function ChangesClient() {
         />
         {/* The list can grow to 14 rows; keep the loading panel footprint while
             every row remains keyboard-scrollable and the rail stays visible. */}
-        <div className="min-h-0 flex-1 overflow-y-auto [scrollbar-gutter:stable]" role="region" aria-label="변화 목록" tabIndex={0}>
+        <div
+          className="min-h-0 flex-1 overflow-y-auto [scrollbar-gutter:stable]"
+          role="region"
+          aria-label="변화 목록"
+          tabIndex={0}
+          onKeyDown={(event) => {
+            if (event.target !== event.currentTarget || event.altKey || event.ctrlKey || event.metaKey || event.shiftKey) return;
+            if (event.key !== "Home" && event.key !== "End") return;
+            // Keep these keys inside the focused list instead of letting nested
+            // page/list scrolling compete; links retain their native shortcuts.
+            event.preventDefault();
+            event.currentTarget.scrollTop = event.key === "Home" ? 0 : event.currentTarget.scrollHeight;
+          }}
+        >
         <div
           className="hidden grid-cols-[180px_minmax(0,1fr)_minmax(0,1fr)_100px] items-center gap-2 border-b border-slate-200 px-4 text-[12px] font-semibold text-slate-500 md:grid md:h-8"
           aria-hidden="true"
