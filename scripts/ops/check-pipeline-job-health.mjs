@@ -187,6 +187,10 @@ export const CADENCE_DECLARATION_EXEMPTIONS = Object.freeze({
     "derived-index builder rather than a source lane; its inputs carry the acquisition cadences and it follows them",
   "pins-autosync.yml":
     "maintenance autosync for the generated projection pins, not a data-supply lane; it owns no acquisition clock and its absence is bounded by the next qa:pins failure on a CI push",
+  "retention-restore.yml":
+    "operational recovery watchdog that reconciles the retention journal every fifteen minutes, not an acquisition lane or data publisher; declaration coverage does not establish missed-schedule liveness for this watchdog",
+  "retention-sweep.yml":
+    "bounded owner-controlled weekly retention campaign, not an acquisition lane or data publisher; journal and schedule state deliberately make most timer slots no-ops, and this exemption does not establish missed-schedule liveness",
 });
 
 // A publish-capable family whose cloud-plane outcome has never been recorded is
