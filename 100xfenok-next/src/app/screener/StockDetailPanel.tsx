@@ -199,28 +199,28 @@ export function sharedValuationBandTone(
   const neutralStart = Math.max(0.18, avgPct - 0.1);
   const neutralEnd = Math.min(0.82, avgPct + 0.1);
   if (pct < neutralStart && weak) {
-    return { label: "밸류트랩 점검", detail: "PER은 낮지만 성장·수익성 점수 약세가 함께 보입니다.", zone: "trap" };
+    return { label: "낮은 PER · 실적 점검", detail: "비교 구간 내 PER 위치는 낮지만 성장·수익성 점수 약세가 함께 보입니다.", zone: "trap" };
   }
   if (pct < neutralStart * 0.55) {
-    return { label: "강한 할인 구간", detail: "PER 밴드 하단 깊숙한 구간입니다. 다음은 성장·마진 방어를 확인합니다.", zone: "deep-discount" };
+    return { label: "PER 밴드 하단권", detail: "PER 밴드의 낮은 위치입니다. 성장·마진 방어를 함께 확인합니다.", zone: "deep-discount" };
   }
   if (pct < neutralStart) {
-    return { label: "할인 구간", detail: "현재 PER이 공정가치권 아래에 있습니다.", zone: "discount" };
+    return { label: "평균 부근보다 낮음", detail: "기준연도 PER이 밴드의 평균 부근 구간 아래에 있습니다.", zone: "discount" };
   }
   if (pct <= neutralEnd) {
-    return { label: "공정가치권", detail: "현재 PER은 평균 밴드의 ±10% 중립권입니다.", zone: "neutral" };
+    return { label: "비교 평균 부근", detail: "기준연도 PER이 비교 구간 평균 부근에 있습니다.", zone: "neutral" };
   }
   if (pct < neutralEnd + (1 - neutralEnd) * 0.55) {
-    return { label: "프리미엄 구간", detail: "현재 PER이 공정가치권 위에 있습니다. 성장 기대와 추정치 상향을 확인합니다.", zone: "premium" };
+    return { label: "평균 부근보다 높음", detail: "기준연도 PER이 밴드의 평균 부근 구간 위에 있습니다. 성장 기대와 추정치 상향을 확인합니다.", zone: "premium" };
   }
-  return { label: "과열 프리미엄", detail: "PER 밴드 상단권입니다. 기대 성장과 추정치 상향이 필요합니다.", zone: "overheated" };
+  return { label: "PER 밴드 상단권", detail: "PER 밴드의 높은 위치입니다. 기대 성장과 추정치 상향을 확인합니다.", zone: "overheated" };
 }
 
 export function SharedValuationBandPanel({
   band,
   weak = false,
   pending = false,
-  source = "8Y PER band",
+  source = "PER 비교 구간",
   asOf = "—",
   coverage = "—",
   hideRail = false,
@@ -289,7 +289,7 @@ export function SharedValuationBandPanel({
           <span className="text-right">{band.max.toFixed(1)}x</span>
         </div>
         <p data-stock-valuation-verdict={tone.zone} className="mt-2 text-[12px] text-[var(--c-ink-2)]">
-          {tone.label} · 현재 PER {band.current.toFixed(1)}x · {tone.detail}
+          {tone.label} · 기준연도 PER {band.current.toFixed(1)}x · {tone.detail}
         </p>
       </div>
       {hideRail ? null : (
@@ -982,14 +982,14 @@ function buildScreenerThreeSecondVerdict({
     const pct = bandPct(bands.current, bands.min_8y, bands.max_8y);
     const pctLabel = `${Math.round(pct * 100)}%`;
     const avgText = isFiniteNumber(bands.avg_8y)
-      ? `평균 ${bands.avg_8y.toFixed(1)}배 ${bands.current >= bands.avg_8y ? "위" : "아래"}`
-      : "평균 미확인";
+      ? `비교 평균 ${bands.avg_8y.toFixed(1)}배 ${bands.current >= bands.avg_8y ? "위" : "아래"}`
+      : "비교 평균 미확인";
     const tone: InterpretationReadTone = pct <= 0.3 ? "positive" : pct >= 0.75 ? "risk" : "neutral";
     signals.push({
       id: "valuation",
       label: "밸류",
       shortText: `밴드 ${pctLabel}`,
-      text: `PER은 8년 밴드의 ${pctLabel} 지점, ${avgText}입니다.`,
+      text: `기준연도 PER은 비교 구간의 ${pctLabel} 지점, ${avgText}입니다.`,
       tone,
     });
   }

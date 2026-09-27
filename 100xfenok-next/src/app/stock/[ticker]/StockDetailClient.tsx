@@ -749,10 +749,10 @@ function resolveValuationBandSummary(
       min: detailPerBands.min_8y,
       max: detailPerBands.max_8y,
       avg: detailPerBands.avg_8y,
-      source: "8Y PER band",
+      source: "PER 비교 구간",
     };
   }
-  return rowPerBand ? { ...rowPerBand, source: "Screener PER band" } : null;
+  return rowPerBand ? { ...rowPerBand, source: "PER 비교 구간" } : null;
 }
 
 function FinancialSnapshotRail({
@@ -1661,35 +1661,35 @@ function ValuationHeroCp({ detailPerBands, years, quality }: { detailPerBands: {
   const pct = bandPct(current, min_8y, max_8y);
   const clampedPct = Math.max(0, Math.min(100, pct * 100));
   const diffFromAvg = avg_8y !== 0 ? (current - avg_8y) / avg_8y : 0;
-  const zoneLabel = clampedPct < 30 ? "저평가 구간" : clampedPct > 70 ? "고평가 구간" : "평균 밴드 · 중립권";
+  const zoneLabel = clampedPct < 30 ? "하단 구간" : clampedPct > 70 ? "상단 구간" : "중간 구간";
   const verdictDetail = Math.abs(diffFromAvg) < 0.03
-    ? `현재 PER ${current.toFixed(1)}x는 8년 밸류에이션 밴드의 평균과 거의 일치합니다 — 싸지도, 비싸지도 않은 자리입니다.`
+    ? `기준연도 PER ${current.toFixed(1)}x는 비교 구간 평균과 거의 일치합니다.`
     : diffFromAvg < 0
-      ? `현재 PER ${current.toFixed(1)}x는 8년 평균(${avg_8y.toFixed(1)}x) 대비 ${fmtPct(Math.abs(diffFromAvg))} 낮은 자리입니다.`
-      : `현재 PER ${current.toFixed(1)}x는 8년 평균(${avg_8y.toFixed(1)}x) 대비 ${fmtPct(diffFromAvg)} 높은 자리입니다.`;
+      ? `기준연도 PER ${current.toFixed(1)}x는 비교 평균(${avg_8y.toFixed(1)}x)보다 ${fmtPct(Math.abs(diffFromAvg))} 낮습니다.`
+      : `기준연도 PER ${current.toFixed(1)}x는 비교 평균(${avg_8y.toFixed(1)}x)보다 ${fmtPct(diffFromAvg)} 높습니다.`;
 
   return (
     <section data-stock-tab-card="valuation-band">
     <Panel>
       <PanelHeader
-        eyebrow="VALUATION · PER 밴드 위치 (8년)"
-        title={`지금 가격은 ${zoneLabel}입니다`}
-        right={<span className="tabular-nums text-[12px] font-semibold text-slate-600">현재 PER {current.toFixed(1)}x</span>}
+        eyebrow="VALUATION · PER 비교 구간 위치"
+        title={`기준연도 PER은 ${zoneLabel}입니다`}
+        right={<span className="tabular-nums text-[12px] font-semibold text-slate-600">기준연도 PER {current.toFixed(1)}x</span>}
       />
       <div className="px-4 py-3">
         <p className="pb-2 text-[12px] text-slate-600">{verdictDetail}</p>
         <Row>
           <span className="truncate text-[12px] text-slate-700">PER 밴드 위치</span>
-          <Bar value={clampedPct} aria-label={`PER 밸류에이션 밴드: 최저 ${min_8y.toFixed(1)}배, 평균 ${avg_8y.toFixed(1)}배, 현재 ${current.toFixed(1)}배, 최고 ${max_8y.toFixed(1)}배`} />
+          <Bar value={clampedPct} aria-label={`PER 비교 구간: 최저 ${min_8y.toFixed(1)}배, 평균 ${avg_8y.toFixed(1)}배, 기준연도 ${current.toFixed(1)}배, 최고 ${max_8y.toFixed(1)}배`} />
           <span className="tabular-nums text-right text-[12px] font-semibold text-slate-900">{Math.round(clampedPct)}%</span>
         </Row>
         <div className="grid grid-cols-3 px-4 py-2 text-[12px] tabular-nums text-slate-500">
-          <span>{min_8y.toFixed(1)}x · 8년 최저</span>
-          <span className="text-center">{avg_8y.toFixed(1)}x · 평균</span>
-          <span className="text-right">{max_8y.toFixed(1)}x · 8년 최고</span>
+          <span>{min_8y.toFixed(1)}x · 구간 최저</span>
+          <span className="text-center">{avg_8y.toFixed(1)}x · 비교 평균</span>
+          <span className="text-right">{max_8y.toFixed(1)}x · 구간 최고</span>
         </div>
       </div>
-      <EvidenceRail freshness={quality?.error ? "error" : quality?.loading ? "pending" : years.length > 0 ? "fresh" : "stale"} source="PER 밴드" asOf={years.length > 0 ? years[years.length - 1] : "—"} coverage="8Y PER" onRetry={quality?.onRetry} skeletonDelayMs={120} />
+      <EvidenceRail freshness={quality?.error ? "error" : quality?.loading ? "pending" : years.length > 0 ? "fresh" : "stale"} source="PER 밴드" asOf={years.length > 0 ? years[years.length - 1] : "—"} coverage="PER 비교 구간" onRetry={quality?.onRetry} skeletonDelayMs={120} />
     </Panel>
     </section>
   );
@@ -3114,11 +3114,11 @@ export default function StockDetailClient({
               <p data-stock-summary-verdict className="mb-2 min-h-12 text-[13px] font-bold leading-6 text-[var(--c-ink)] md:min-h-6">
                 {stripBandTone.label}{" "}
                 <span className="font-semibold text-[var(--c-ink-2)]">
-                  · 현재 PER {valuationBandSummary.current.toFixed(1)}x · 밴드 {Math.round(stripBandPct)}%
+                  · 기준연도 PER {valuationBandSummary.current.toFixed(1)}x · 밴드 {Math.round(stripBandPct)}%
                 </span>{" "}
                 <span className="text-[12px] font-normal tabular-nums text-[var(--c-ink-3)]">
                   ({valuationBandSummary.min.toFixed(1)}x ~ {valuationBandSummary.max.toFixed(1)}x
-                  {isFiniteNumber(valuationBandSummary.avg) ? ` · 평균 ${valuationBandSummary.avg.toFixed(1)}x` : ""})
+                  {isFiniteNumber(valuationBandSummary.avg) ? ` · 비교 평균 ${valuationBandSummary.avg.toFixed(1)}x` : ""})
                 </span>
               </p>
             ) : (
@@ -3367,7 +3367,7 @@ export default function StockDetailClient({
                 <SectionCard title="밸류에이션">
                   <div className="grid gap-5 sm:grid-cols-2">
                     <div>
-                      <h4 className="mb-2 text-[12px] font-black tracking-[0.08em] text-slate-500">PER 밴드 (8Y)</h4>
+                      <h4 className="mb-2 text-[12px] font-black tracking-[0.08em] text-slate-500">PER 비교 구간</h4>
                       {finiteValues(detail.valuation?.per).length >= 2 ? (
                         <PerBandChart years={detail.years} per={numberSeries(detail.valuation?.per)} perBands={detail.per_bands} estimates={detail.valuation_estimates?.per} />
                       ) : <span className="text-[12px] text-slate-300">—</span>}
@@ -3376,7 +3376,7 @@ export default function StockDetailClient({
                       <div>
                         <h4 className="mb-2 text-[12px] font-black tracking-[0.08em] text-slate-500">PER 밴드 위치</h4>
                         <div className="space-y-2">
-                          {[{ label: "최고", v: detailPerBands.max_8y }, { label: "평균", v: detailPerBands.avg_8y }, { label: "현재", v: detailPerBands.current, highlight: true }, { label: "최저", v: detailPerBands.min_8y }].map(({ label, v, highlight }) => {
+                          {[{ label: "최고", v: detailPerBands.max_8y }, { label: "평균", v: detailPerBands.avg_8y }, { label: "기준", v: detailPerBands.current, highlight: true }, { label: "최저", v: detailPerBands.min_8y }].map(({ label, v, highlight }) => {
                             const range = detailPerBands.max_8y - detailPerBands.min_8y || 1;
                             const pct = Math.min(100, Math.max(0, ((v - detailPerBands.min_8y) / range) * 100));
                             const barColor = highlight ? "bg-brand-interactive" : "bg-slate-300";
@@ -3534,7 +3534,7 @@ export default function StockDetailClient({
     );
   }
 
-  // W4 밸류 tab: hero (PER 8Y 밴드 그라디언트 + 판정 문장) → 리레이팅 타일 → 산업 대비
+  // W4 밸류 tab: hero (PER 비교 구간 그라디언트 + 위치 문장) → 리레이팅 타일 → 산업 대비
   // 델타 칩 → 수익성/성장 FY+1 그리드 + WACC 인사이트 → 가격·배당/전체지표 아코디언.
   function renderStatisticsCpTab(showSkeleton: boolean) {
     return (
@@ -3555,7 +3555,7 @@ export default function StockDetailClient({
                 <div className="px-4 py-2">
                   <PerBandChart years={detail.years} per={numberSeries(detail.valuation?.per)} perBands={detail.per_bands} estimates={detail.valuation_estimates?.per} />
                 </div>
-                <EvidenceRail freshness={(detailError || yfError) ? "error" : detailLoading ? "pending" : years.length > 0 ? "fresh" : "stale"} source="PER 밴드" asOf={years.length > 0 ? years[years.length - 1] : "—"} coverage="8Y PER" onRetry={detailError ? retryDetail : yfError ? retryYfFinance : undefined} skeletonDelayMs={120} />
+                <EvidenceRail freshness={(detailError || yfError) ? "error" : detailLoading ? "pending" : years.length > 0 ? "fresh" : "stale"} source="PER 밴드" asOf={years.length > 0 ? years[years.length - 1] : "—"} coverage="PER 비교 구간" onRetry={detailError ? retryDetail : yfError ? retryYfFinance : undefined} skeletonDelayMs={120} />
               </Panel>
               </section>
             ) : null}
