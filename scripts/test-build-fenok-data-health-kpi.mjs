@@ -2602,8 +2602,19 @@ console.log("# KPI v2 runtime self-proof fixtures");
     // The fixture artifact set has no ETF-detail payloads and no FINRA ATS
     // weekly marker, so both live lanes surface as honestly degraded.
     const baselineUnavailable = ["stockanalysis_etf_detail", "finra_ats_weekly"].includes(laneConfig.id);
-    assert.equal(mapped.status, baselineUnobserved || baselineUnavailable ? "degraded" : "ready");
-    assert.equal(mapped.reason, baselineUnobserved ? "workflow_unobserved" : baselineUnavailable ? "missing_artifact" : "ok");
+    // The installed FRED macro source is July 10. Reassess that unchanged
+    // observation at this CLI's July 14 clock while retaining its detector result.
+    const baselineSourceAged = laneConfig.id === "fred_macro";
+    assert.equal(mapped.status, baselineUnobserved || baselineUnavailable || baselineSourceAged ? "degraded" : "ready");
+    assert.equal(mapped.reason, baselineUnobserved ? "workflow_unobserved" : baselineUnavailable ? "missing_artifact" : baselineSourceAged ? "stale" : "ok");
+    if (baselineSourceAged) {
+      assert.equal(mapped.details.detection_reason, "ok");
+      assert.deepEqual(mapped.details.source_verdicts, [{ id: "fred_macro", state: "stopped", age_days: 4 }]);
+      assert.equal(mapped.checks.find((item) => item.id === "content_age_policy")?.status, "blocked");
+      const publicMapped = pub.lanes.find((item) => item.id === laneConfig.id);
+      assert.equal(publicMapped.status, "degraded");
+      assert.deepEqual(publicMapped.details.source_verdicts, mapped.details.source_verdicts);
+    }
     assert.equal(mapped.artifact.source_as_of, sourceRow.artifact.source_as_of);
     assert.equal(mapped.deployment_blocking, false);
     assert.equal(root.deployment_integrity.blockers.some((item) => item.lane_id === laneConfig.id), false);
