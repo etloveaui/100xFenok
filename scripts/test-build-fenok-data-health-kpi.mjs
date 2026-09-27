@@ -93,6 +93,7 @@ const { checkRimInputsCanonicalHealth } = await import("./check-fenok-data-healt
 const { projectFenokDataHealthKpiPublicMirror } = await import("../100xfenok-next/sync-static-overrides.mjs");
 const { DATA_SUPPLY_DETECTION_CONFIG } = await import("./lib/data-supply-detection-config.mjs");
 const { LANE_REGISTRY } = await import("./lib/lane-registry.mjs");
+const { policyToday, resolveSourcePolicy } = await import("../100xfenok-next/src/lib/freshness-policy.mjs");
 const { buildFetchCronAttemptCoverage } = await import("./build-data-supply-detection-floor.mjs");
 const { deriveProductSurfaceStampEvidence } = await import("./lib/product-surface-stamp-v2.mjs");
 const { ProducerLkgStateStore } = await import("./lib/producer-lkg-state.mjs");
@@ -1854,10 +1855,37 @@ function readyRecoveryIndex(laneId, keys, generatedAt = "2026-07-14T11:00:00Z") 
   };
 }
 
+function fixtureSourceDate(id, now, artifactId) {
+  const config = DATA_SUPPLY_DETECTION_CONFIG.lanes.find((item) => item.id === id);
+  const registryLane = LANE_REGISTRY.lanes.find((item) => item.id === id);
+  const policy = resolveSourcePolicy({
+    laneId: id, cadence: registryLane?.cadence?.kind, artifactId,
+    calendar: config?.freshness?.calendar,
+  });
+  const today = policyToday(now, policy);
+  const [year, month] = today.split("-").map(Number);
+  if (artifactId === "fred_banking_monthly") {
+    // The source stamp is a period start; its age anchor is the previous month end.
+    return new Date(Date.UTC(year, month - 2, 1)).toISOString().slice(0, 10);
+  }
+  if (artifactId === "fred_banking_quarterly") {
+    return new Date(Date.UTC(year, Math.floor((month - 1) / 3) * 3 - 3, 1)).toISOString().slice(0, 10);
+  }
+  const day = new Date(`${today}T00:00:00Z`);
+  if (id === "finra_ats_weekly") {
+    // FINRA stamps week start, so choose the last fully ended week.
+    day.setUTCDate(day.getUTCDate() - ((day.getUTCDay() + 6) % 7) - 7);
+  } else {
+    day.setUTCDate(day.getUTCDate() - (policy?.cadence === "weekly" ? 7 : 1));
+  }
+  return day.toISOString().slice(0, 10);
+}
+
 function readyDetectionProjection(id, now) {
   const config = DATA_SUPPLY_DETECTION_CONFIG.lanes.find((item) => item.id === id && item.enforcement === "live");
   if (!config) return {};
   const providerDateless = config.freshness.source_basis.length === 0;
+  const sharedAgeLanes = new Set(["benchmarks", "global_scouter", "fred_yardeni", "treasury_tga", "finra_ats_weekly", "fred_banking"]);
   const row = {
     id,
     label: config.label,
@@ -1865,22 +1893,21 @@ function readyDetectionProjection(id, now) {
     kpi_required: true,
     status: "ready",
     reason: "ok",
-    artifact: { status: "ready", reason: "ok", source_as_of: providerDateless ? null : "2026-07-10" },
+    artifact: { status: "ready", reason: "ok", source_as_of: providerDateless ? null : sharedAgeLanes.has(id) ? fixtureSourceDate(id, now) : now.slice(0, 10) },
   };
   if (id === "fred_banking") {
-    // Reuse the hermetic detector fixture's four distinct source clocks.
-    // A synthetic ready lane must satisfy the same identity contract as production.
-    const fixture = JSON.parse(fs.readFileSync(DETECTION_EXPECTED, "utf8"));
-    const fred = fixture.baseline.expected_report.lanes.find((item) => item.id === id);
-    row.artifact = structuredClone(fred.artifact);
-    row.source_artifacts = structuredClone(fred.source_artifacts);
+    // Use canonical required files, each with a source date fresh at this fixture clock.
+    row.source_artifacts = config.producer_members[0].artifact_contracts.map(({ id: artifactId, path: artifactPath }) => ({
+      id: artifactId, path: artifactPath, source_as_of: fixtureSourceDate(id, now, artifactId),
+    }));
+    row.artifact.source_as_of = row.source_artifacts.map((item) => item.source_as_of).sort()[0];
   }
   const recovery = TARGET_RECOVERY_FIXTURES[id];
   return mapDetectionFloorRow(row, recovery
     ? recovery.composite
       ? readySlickchartsCompositeIndex(now)
       : readyRecoveryIndex(recovery.laneId, recovery.keys, now)
-    : undefined);
+    : undefined, { nowIso: now, calendars: DETECTION_CALENDAR_FIXTURE });
 }
 
 // HERMETIC ready core — synthesized in-process with ZERO inheritance from the repo's
@@ -2984,7 +3011,13 @@ console.log("# KPI v2 runtime self-proof fixtures");
   const now = "2026-07-10T02:35:00.000Z";
   const runtime = makeProducerRuntime({ builtAt: now, slotKey: "update-manifest.yml:30 2 * * *@2026-07-10T02:30Z", runId: "e2e" });
   runtime.cadence.v2_activated_at = now; // due set empty -> missed empty
-  seedReadyV2(tmp, { now, runtime, sla: readySla(now) });
+  const { root } = seedReadyV2(tmp, { now, runtime, sla: readySla(now) });
+  for (const id of ["fred_banking", "fred_yardeni", "treasury_tga", "finra_ats_weekly"]) {
+    const lane = root.lanes.find((item) => item.id === id);
+    assert.ok(lane.details.source_verdicts.length > 0, `${id} carries content-age evidence`);
+    assert.ok(lane.details.source_verdicts.every((item) => item.state === "fresh"), `${id} is fresh at the fixture clock`);
+    assert.equal(lane.checks.find((item) => item.id === "content_age_policy")?.status, "ready");
+  }
   const readyResult = runChecker(tmp, now);
   assert.equal(readyResult.exit, 0,
     `checker green on ready v2 doc (fresh sources):\n${readyResult.stderr}`);
