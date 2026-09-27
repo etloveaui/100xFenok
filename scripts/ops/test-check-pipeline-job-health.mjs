@@ -1643,8 +1643,18 @@ assert.equal(needsMissedWindowReverification({}), false);
 assert.equal(needsMissedWindowReverification(null), false);
 assert.match(buildWorkflowRunsUrl({ owner: "o", repo: "r", file: "x.yml" }), /per_page=15/);
 assert.match(
+  buildWorkflowRunsUrl({ owner: "o", repo: "r", file: "x.yml" }),
+  /status=completed/,
+  "the completed-run query remains the default",
+);
+assert.match(
   buildWorkflowRunsUrl({ owner: "o", repo: "r", file: "x.yml", event: "schedule", perPage: 100 }),
   /per_page=100/,
+);
+assert.match(
+  buildWorkflowRunsUrl({ owner: "o", repo: "r", file: "x.yml", event: "schedule", status: "in_progress" }),
+  /status=in_progress.*event=schedule/,
+  "the restore liveness query can inspect active scheduled runs",
 );
 
 console.log("check-pipeline-job-health tests passed");

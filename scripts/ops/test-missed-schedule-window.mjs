@@ -33,6 +33,7 @@ import {
 
 const HOUR = 3_600_000;
 const NOW = Date.parse("2026-08-21T01:30:00Z");
+const RESTORE_CRON = "4,19,34,49 * * * *";
 
 function run(id, startedAt, { event = "schedule", conclusion = "success" } = {}) {
   return {
@@ -64,6 +65,8 @@ assert.ok(
   !MISSED_WINDOW_WORKFLOWS.has("update-manifest.yml") && !MISSED_WINDOW_WORKFLOWS.has("deploy-worker.yml"),
   "workflows that follow their producers must stay out of scope",
 );
+assert.ok(MISSED_WINDOW_WORKFLOWS.has("retention-restore.yml"), "the restore watchdog owns a schedule to monitor");
+assert.ok(!MISSED_WINDOW_WORKFLOWS.has("retention-sweep.yml"), "the owner-controlled sweep campaign stays exempt");
 
 // Slots are counted, not elapsed multiples. This is the regression that matters:
 // an elapsed-multiple rule passed its own unit test and still missed the real
@@ -72,6 +75,8 @@ assert.ok(
 assert.equal(missedSlotCount("11 * * * *", Date.parse("2026-08-20T23:35:33Z"), NOW), 2);
 assert.equal(missedSlotCount("7 * * * *", Date.parse("2026-08-20T23:35:01Z"), NOW), 2);
 assert.equal(missedSlotCount("41 */6 * * *", Date.parse("2026-08-20T19:18:23Z"), NOW), 1);
+assert.equal(missedSlotCount(RESTORE_CRON, Date.parse("2026-08-21T00:50:00Z"), NOW), 2);
+assert.equal(missedSlotCount(RESTORE_CRON, Date.parse("2026-08-21T01:05:00Z"), NOW), 1);
 assert.equal(missedSlotCount("not a cron", 0, NOW), null);
 
 {
@@ -118,10 +123,98 @@ assert.equal(missedSlotCount("not a cron", 0, NOW), null);
   assert.equal(result.alarm_reasons.includes("missed_schedule_window"), false);
 }
 
+{
+  // The actual restore cadence is a minute-list cron. The first passed slot is
+  // tolerated; two passed slots (30 minutes) alarm if no scheduled run exists.
+  const restore = detector("retention-restore.yml", RESTORE_CRON);
+  const oneSlot = evaluateWorkflow(restore, [run(10, "2026-08-21T01:05:00Z")], { now: NOW });
+  assert.equal(oneSlot.missed_schedule_slot_count, 1);
+  assert.equal(oneSlot.alarm_reasons.includes("missed_schedule_window"), false);
+
+  const twoSlots = evaluateWorkflow(restore, [run(9, "2026-08-21T00:50:00Z")], { now: NOW });
+  assert.equal(twoSlots.missed_schedule_slot_count, 2);
+  assert.equal(twoSlots.alarm_reasons.includes("missed_schedule_window"), true);
+}
+
+{
+  // A successful scheduled no-op is still proof the watchdog ran. A manual
+  // dispatch cannot refresh the schedule clock or erase two missed slots.
+  const restore = detector("retention-restore.yml", RESTORE_CRON);
+  const noOpSuccess = evaluateWorkflow(restore, [run(12, "2026-08-21T01:20:00Z")], { now: NOW });
+  assert.equal(noOpSuccess.missed_schedule_slot_count, 0);
+  assert.equal(noOpSuccess.alarm_reasons.includes("missed_schedule_window"), false);
+
+  const withManualDispatch = evaluateWorkflow(
+    restore,
+    [
+      run(14, "2026-08-21T01:25:00Z", { event: "workflow_dispatch" }),
+      run(13, "2026-08-21T00:50:00Z"),
+    ],
+    { now: NOW },
+  );
+  assert.equal(withManualDispatch.latest_run_started_at, "2026-08-21T00:50:00Z");
+  assert.equal(withManualDispatch.missed_schedule_slot_count, 2);
+  assert.equal(withManualDispatch.alarm_reasons.includes("missed_schedule_window"), true);
+}
+
+{
+  // A recent in-progress scheduled watchdog counts as liveness evidence.
+  // Queued-only and timeout-expired execution records do not.
+  const restore = detector("retention-restore.yml", RESTORE_CRON);
+  const recentInProgress = evaluateWorkflow(
+    restore,
+    [run(20, "2026-08-21T00:50:00Z")],
+    {
+      now: NOW,
+      activeScheduledRuns: [{ id: 21, event: "schedule", status: "in_progress", run_started_at: "2026-08-21T01:20:00Z" }],
+    },
+  );
+  assert.equal(recentInProgress.missed_schedule_slot_count, 0);
+  assert.equal(recentInProgress.alarm_reasons.includes("missed_schedule_window"), false);
+
+  const queuedOnly = evaluateWorkflow(
+    restore,
+    [run(20, "2026-08-21T00:50:00Z")],
+    {
+      now: NOW,
+      activeScheduledRuns: [
+        { id: 22, event: "schedule", status: "queued", created_at: "2026-08-21T01:05:00Z" },
+        { id: 23, event: "schedule", status: "queued", created_at: "2026-08-21T01:20:00Z" },
+      ],
+    },
+  );
+  assert.equal(queuedOnly.missed_schedule_slot_count, 2);
+  assert.equal(queuedOnly.alarm_reasons.includes("missed_schedule_window"), true,
+    "queued runs do not prove the watchdog executed or hide a stuck runner queue");
+
+  const expiredInProgress = evaluateWorkflow(
+    restore,
+    [run(20, "2026-08-21T00:50:00Z")],
+    {
+      now: NOW,
+      activeScheduledRuns: [{ id: 24, event: "schedule", status: "in_progress", run_started_at: "2026-08-21T00:50:00Z" }],
+    },
+  );
+  assert.equal(expiredInProgress.missed_schedule_slot_count, 2);
+  assert.equal(expiredInProgress.alarm_reasons.includes("missed_schedule_window"), true,
+    "an execution older than the workflow timeout is not indefinite liveness evidence");
+}
+
+{
+  // An unsupported/malformed minute list fails open: no fabricated alarm.
+  const result = evaluateWorkflow(
+    detector("retention-restore.yml", "4,not-a-minute * * * *"),
+    [run(30, "2026-08-21T00:50:00Z")],
+    { now: NOW },
+  );
+  assert.equal(result.missed_schedule_slot_count, null);
+  assert.equal(result.alarm_reasons.includes("missed_schedule_window"), false);
+}
+
 assert.equal(MISSED_WINDOW_MULTIPLIER, 2, "the tolerated missed-slot count is part of the contract");
 
 // fh-258 stale-page fixture. Measured 2026-09-14T08:11:53Z: the serving-probe
-// row anchored at 2026-08-19T07:24:30Z with 105 passed slots while run
+// row anchored at 2026-08-19T07:24:30Z with 104 passed slots while run
 // 34809685448 had already succeeded on 2026-09-14T05:27:04Z. The detector had
 // accepted a stale single page; nothing else reproduces that row.
 const STALE_PROBE_NOW = Date.parse("2026-09-14T08:11:53Z");
@@ -134,7 +227,7 @@ const STALE_ANCHOR = run(32227682844, "2026-08-19T07:24:30Z", { conclusion: "fai
     { now: STALE_PROBE_NOW },
   );
   assert.equal(result.latest_run_started_at, "2026-08-19T07:24:30Z");
-  assert.equal(result.missed_schedule_slot_count, 105, "the measured stale row is 105 passed slots");
+  assert.equal(result.missed_schedule_slot_count, 104, "the actual cron slots from Aug 19 12:41Z to Sep 14 06:41Z total 104");
   assert.equal(result.alarm_reasons.includes("missed_schedule_window"), true);
   assert.equal(
     needsMissedWindowReverification(result),
@@ -145,7 +238,7 @@ const STALE_ANCHOR = run(32227682844, "2026-08-19T07:24:30Z", { conclusion: "fai
 
 {
   // Disagreeing second read: the widened page carries the fresh success, so the
-  // merged evaluation clears the false positive (one slot, not 105).
+  // merged evaluation clears the false positive (one slot, not 104).
   const merged = mergeWorkflowRunBatches([
     [STALE_ANCHOR],
     [run(34809685448, "2026-09-14T05:27:04Z")],
@@ -172,7 +265,7 @@ const STALE_ANCHOR = run(32227682844, "2026-08-19T07:24:30Z", { conclusion: "fai
     agreeing,
     { now: STALE_PROBE_NOW },
   );
-  assert.equal(result.missed_schedule_slot_count, 105);
+  assert.equal(result.missed_schedule_slot_count, 104);
   assert.equal(result.alarm_reasons.includes("missed_schedule_window"), true);
 }
 

@@ -1400,11 +1400,11 @@ export function isQueueEvictedRun(jobs) {
   return jobs.every((job) => job?.conclusion === "cancelled" && (job?.steps?.length ?? 0) === 0);
 }
 
-// A slot that ran and produced nothing is already visible as a lost slot. A slot
-// that never became a run at all is not: there is no object to inspect, and the
-// run list is fetched with status=completed. Elapsed time since the newest
-// counted run, measured against the workflow's own cron, is the only evidence
-// available for that case.
+// A slot that ran and produced nothing is already visible as a lost slot. A
+// slot that never became a run has no object to inspect in the completed-run
+// list, so these workflows also use their own cron to detect silence. The
+// restore watchdog additionally reads recent in-progress schedule runs so a
+// legitimate bounded execution is not mistaken for an absent trigger.
 //
 // Scope is deliberately the detectors. A workflow that follows its producers
 // rather than owning a clock - Update Manifest, Deploy Worker,
@@ -1416,7 +1416,18 @@ export const MISSED_WINDOW_WORKFLOWS = new Set([
   "check-sec13f-live-parity.yml",
   "global-writer-queue-observer.yml",
   "worker-request-budget-alarm.yml",
+  "retention-restore.yml",
 ]);
+
+// The restore watchdog is bounded to ten minutes and runs every fifteen. Only
+// an actually running scheduled job, younger than that timeout, is extra
+// liveness evidence; a queued run can wait indefinitely because job timeouts do
+// not include queue time. Other detector behavior and cadence exemptions remain
+// unchanged.
+export const MISSED_WINDOW_ACTIVE_RUN_WORKFLOWS = new Set([
+  "retention-restore.yml",
+]);
+export const MISSED_WINDOW_ACTIVE_RUN_MAX_AGE_MS = 10 * 60_000;
 
 // GitHub drops scheduled runs routinely, so one skipped slot is normal and two
 // consecutive ones are not. Measured 2026-08-21T01:30Z, the hourly observers had
@@ -1429,25 +1440,42 @@ export const MISSED_WINDOW_WORKFLOWS = new Set([
 // slots had both plainly passed unrun.
 export const MISSED_WINDOW_MULTIPLIER = 2;
 
-// Scheduled instants strictly after `since` and at or before `now`, for the
-// coarse cadence classes cronIntervalHours recognises.
+// Scheduled instants strictly after `since` and at or before `now`. Reuse the
+// existing cron parser so minute lists such as the restore watchdog's
+// `4,19,34,49` are counted as real schedule slots rather than rejected as a
+// non-numeric minute field. Stop after 1001 slots: callers only need to know
+// whether the two-slot alarm threshold was crossed, and the cap bounds stale
+// records without changing their alarm result.
 export function missedSlotCount(cron, sinceMs, nowMs) {
-  const intervalHours = cronIntervalHours(cron);
-  if (intervalHours === null || !Number.isFinite(sinceMs) || !Number.isFinite(nowMs)) return null;
-  const fields = cron.trim().split(/\s+/);
-  const minute = Number(fields[0]);
-  if (!Number.isInteger(minute) || minute < 0 || minute > 59) return null;
-  const stepMs = intervalHours * 3_600_000;
-  // Walk from the slot at or before `since` forward, so a slot is counted only
-  // once it has actually passed.
-  const start = new Date(sinceMs);
-  const anchor = Date.UTC(
-    start.getUTCFullYear(), start.getUTCMonth(), start.getUTCDate(),
-    start.getUTCHours(), minute, 0, 0,
-  );
-  let slot = (intervalHours === 1 || anchor <= sinceMs) ? anchor + stepMs : anchor;
+  if (!Number.isFinite(sinceMs) || !Number.isFinite(nowMs)) return null;
+  let parsed;
+  try {
+    parsed = parseDeclaredCron(cron);
+  } catch {
+    return null;
+  }
+  if (nowMs <= sinceMs) return 0;
+  const dayMs = 86_400_000;
+  const hourMs = 3_600_000;
+  const minuteMs = 60_000;
+  const firstDay = Math.floor(sinceMs / dayMs) * dayMs;
+  const hours = [...parsed.hour].sort((a, b) => a - b);
+  const minutes = [...parsed.minute].sort((a, b) => a - b);
   let missed = 0;
-  while (slot <= nowMs && missed <= 1000) { missed += 1; slot += stepMs; }
+  let scannedDays = 0;
+  for (let dayEpoch = firstDay; dayEpoch <= nowMs && scannedDays < 146_097; dayEpoch += dayMs) {
+    scannedDays += 1;
+    const date = new Date(dayEpoch);
+    if (!Number.isFinite(date.getTime()) || !cronMatchesUtcDay(date, parsed)) continue;
+    for (const hour of hours) {
+      for (const minute of minutes) {
+        const slot = dayEpoch + hour * hourMs + minute * minuteMs;
+        if (slot <= sinceMs || slot > nowMs) continue;
+        missed += 1;
+        if (missed > 1000) return missed;
+      }
+    }
+  }
   return missed;
 }
 
@@ -1481,14 +1509,14 @@ export function isLostScheduledSlot(run) {
 // A missed_schedule_window verdict hinges entirely on the run page's newest
 // entry, and a stale or truncated page fabricates it. Measured twice
 // (2026-09-13T12:10:47Z, 2026-09-14T08:11:53Z): the serving-probe row anchored
-// at 2026-08-19T07:24:30Z with 105 passed slots while run 34809685448 had
+// at 2026-08-19T07:24:30Z with 104 passed slots while run 34809685448 had
 // succeeded on 2026-09-14T05:27:04Z. The verdict is therefore re-read once
 // with a wide page and the second read adjudicates; genuine silence reproduces.
 export function needsMissedWindowReverification(row) {
   return row?.missed_schedule_window_hours != null;
 }
 
-export function evaluateWorkflow(workflow, runs, { now = Date.now() } = {}) {
+export function evaluateWorkflow(workflow, runs, { now = Date.now(), activeScheduledRuns = [] } = {}) {
   const countedRuns = runs.filter((run) => {
     if (run?.event === "workflow_dispatch") return false;
     return !Array.isArray(workflow.events) || !run?.event || workflow.events.includes(run.event);
@@ -1549,11 +1577,34 @@ export function evaluateWorkflow(workflow, runs, { now = Date.now() } = {}) {
   const intervalHours = intervals.length > 0 ? Math.min(...intervals) : null;
   let missedWindowHours = null;
   let missedSlots = null;
-  if (MISSED_WINDOW_WORKFLOWS.has(workflow.file) && intervalHours !== null && latestStartedAt) {
-    const sinceMs = Date.parse(latestStartedAt);
+  if (MISSED_WINDOW_WORKFLOWS.has(workflow.file) && intervalHours !== null) {
+    // A manual dispatch is useful recovery evidence for a lost acquisition
+    // slot, but it is not evidence that the schedule itself remains live.
+    // Anchor missed-window counting only to scheduled runs, with an additional
+    // recent in-progress schedule observation for the bounded restore watchdog.
+    const completedLivenessRuns = MISSED_WINDOW_ACTIVE_RUN_WORKFLOWS.has(workflow.file)
+      ? countedRuns.filter((run) => run?.event === "schedule")
+      : countedRuns;
+    const completedScheduleEvidence = completedLivenessRuns
+      .map((run) => run?.run_started_at || run?.created_at)
+      .map((timestamp) => Date.parse(timestamp))
+      .filter((timestamp) => Number.isFinite(timestamp) && timestamp <= now);
+    const inProgressScheduleEvidence = MISSED_WINDOW_ACTIVE_RUN_WORKFLOWS.has(workflow.file)
+      && Array.isArray(activeScheduledRuns)
+      ? activeScheduledRuns
+        .filter((run) => run?.event === "schedule" && run?.status === "in_progress")
+        // Use actual execution start, not created_at: a long queue wait is
+        // outside the job timeout and cannot establish a healthy run window.
+        .map((run) => Date.parse(run?.run_started_at))
+        .filter((startedAt) => Number.isFinite(startedAt)
+          && startedAt <= now
+          && now - startedAt <= MISSED_WINDOW_ACTIVE_RUN_MAX_AGE_MS)
+      : [];
+    const scheduleEvidence = [...completedScheduleEvidence, ...inProgressScheduleEvidence];
+    const sinceMs = scheduleEvidence.length > 0 ? Math.max(...scheduleEvidence) : null;
     const tightestCron = (Array.isArray(workflow.crons) ? workflow.crons : [])
       .find((cron) => cronIntervalHours(cron) === intervalHours) ?? null;
-    missedSlots = tightestCron === null ? null : missedSlotCount(tightestCron, sinceMs, now);
+    missedSlots = tightestCron === null || sinceMs === null ? null : missedSlotCount(tightestCron, sinceMs, now);
     if (Number.isFinite(missedSlots) && missedSlots >= MISSED_WINDOW_MULTIPLIER) {
       missedWindowHours = (now - sinceMs) / 3_600_000;
     }
@@ -1682,9 +1733,17 @@ export function buildIssueBody(alarms) {
   return lines.join("\n");
 }
 
-export function buildWorkflowRunsUrl({ owner, repo, file, branch = "main", event = null, perPage = RUNS_PER_PAGE }) {
+export function buildWorkflowRunsUrl({
+  owner,
+  repo,
+  file,
+  branch = "main",
+  event = null,
+  perPage = RUNS_PER_PAGE,
+  status = "completed",
+}) {
   const query = new URLSearchParams({
-    status: "completed",
+    status,
     branch,
     per_page: String(perPage),
   });
@@ -1714,8 +1773,8 @@ export function mergeWorkflowRunBatches(batches) {
   });
 }
 
-async function fetchCompletedRuns({ token, owner, repo, file, branch, event, perPage = RUNS_PER_PAGE }) {
-  const url = buildWorkflowRunsUrl({ owner, repo, file, branch, event, perPage });
+async function fetchWorkflowRuns({ token, owner, repo, file, branch, event, perPage = RUNS_PER_PAGE, status = "completed" }) {
+  const url = buildWorkflowRunsUrl({ owner, repo, file, branch, event, perPage, status });
   let lastError = null;
   for (let attempt = 1; attempt <= 2; attempt += 1) {
     try {
@@ -1855,7 +1914,7 @@ export async function main() {
         ? workflow.events
         : [...workflow.events, "workflow_dispatch"];
       for (const event of fetchEvents) {
-        batches.push(await fetchCompletedRuns({
+        batches.push(await fetchWorkflowRuns({
           token,
           owner,
           repo,
@@ -1864,15 +1923,29 @@ export async function main() {
           event,
         }));
       }
+      const fetchInProgressScheduledRuns = async () => {
+        if (!MISSED_WINDOW_ACTIVE_RUN_WORKFLOWS.has(workflow.file)) return [];
+        return fetchWorkflowRuns({
+          token,
+          owner,
+          repo,
+          file: workflow.file,
+          branch,
+          event: "schedule",
+          perPage: 5,
+          status: "in_progress",
+        });
+      };
+      let activeScheduledRuns = await fetchInProgressScheduledRuns();
       const runs = await annotateQueueEvictions({
         runs: mergeWorkflowRunBatches(batches),
         fetchJobsFn: (runId) => fetchRunJobs({ token, owner, repo, runId }),
       });
-      let evaluated = evaluateWorkflow(workflow, runs);
+      let evaluated = evaluateWorkflow(workflow, runs, { activeScheduledRuns });
       if (needsMissedWindowReverification(evaluated)) {
         const verifyBatches = [];
         for (const event of fetchEvents) {
-          verifyBatches.push(await fetchCompletedRuns({
+          verifyBatches.push(await fetchWorkflowRuns({
             token,
             owner,
             repo,
@@ -1882,10 +1955,11 @@ export async function main() {
             perPage: 100,
           }));
         }
+        activeScheduledRuns = await fetchInProgressScheduledRuns();
         evaluated = evaluateWorkflow(workflow, await annotateQueueEvictions({
           runs: mergeWorkflowRunBatches([...batches, ...verifyBatches]),
           fetchJobsFn: (runId) => fetchRunJobs({ token, owner, repo, runId }),
-        }));
+        }), { activeScheduledRuns });
       }
       workflows.push(evaluated);
     } catch (error) {
