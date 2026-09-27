@@ -5629,6 +5629,83 @@ for (const [runId, delayMin] of [["26765173733", 368], ["27940007940", 364]]) {
   assert.equal(fallback.state, "overdue");
 }
 
+// EDGAR's filingDate is an observation, not proof that the weekly poll ran.
+// A quiet successful poll must keep that date and use only the detector's
+// verified endpoint outcome as its operational watchdog clock.
+{
+  const nowIso = "2026-09-27T12:00:00Z";
+  const registry = { lanes: LANE_REGISTRY.lanes.filter((item) => item.id === "edgar_filings") };
+  const detector = structuredClone(DETECTION_BASELINE_REPORT.lanes.find((item) => item.id === "edgar_filings"));
+  const poll = { lane_id: "edgar_filings", status: "ready", reason: "ok", observed_at: "2026-09-21T12:00:00Z" };
+  detector.status = "ready";
+  detector.reason = "ok";
+  detector.endpoint = { status: poll.status, reason: poll.reason, observed_at: poll.observed_at };
+  detector.artifact.status = "ready";
+  detector.artifact.reason = "ok";
+  detector.artifact.source_as_of = "2026-09-03";
+  const lane = mapDetectionFloorRow(detector, undefined, { nowIso });
+  assert.deepEqual(lane.details.poll_endpoint, poll, "only the bound, validated EDGAR endpoint may witness a poll");
+  assert.equal(lane.artifact.source_as_of, "2026-09-03", "a quiet poll cannot relabel the last filing date");
+  assert.deepEqual(projectPublicKpi({ lanes: [lane] }, nowIso).lanes[0].details.poll_endpoint, poll,
+    "the bounded poll witness must survive the public KPI projection");
+
+  const watchdog = buildOutcomeWatchdog(nowIso, [lane], registry);
+  const current = watchdog.rows[0];
+  assert.equal(current.advance_basis, "verified_poll_observed_at");
+  assert.equal(current.last_advance, poll.observed_at);
+  assert.equal(current.source_as_of, "2026-09-03");
+  assert.equal(current.threshold_hours, OUTCOME_WATCHDOG_CADENCE_HOURS.weekly * OUTCOME_WATCHDOG_THRESHOLD_MULTIPLIER);
+  assert.equal(current.state, "current", "no new filing is expected after a successful quiet poll");
+  assert.equal(watchdog.advance_bases.verified_poll_observed_at, 1);
+  const stalePoll = buildOutcomeWatchdog("2026-10-03T12:00:00Z", [lane], registry).rows[0];
+  assert.equal(stalePoll.advance_basis, "verified_poll_observed_at");
+  assert.equal(stalePoll.state, "overdue", "a once-successful poll eventually expires");
+
+  const checked = [];
+  checkOutcomeWatchdog({ generated_at: nowIso, lanes: [lane], outcome_watchdog: watchdog }, checked);
+  assert.deepEqual(checked, [], "builder and independent checker agree on the quiet-poll basis");
+  const forged = structuredClone(watchdog);
+  forged.rows[0].last_advance = nowIso;
+  const tamperErrors = [];
+  checkOutcomeWatchdog({ generated_at: nowIso, lanes: [lane], outcome_watchdog: forged }, tamperErrors);
+  assert.ok(tamperErrors.some((error) => error.includes("edgar_filings: outcome last_advance")),
+    "a forged poll clock in the watchdog row must fail independent re-derivation");
+
+  const nonCurrent = (mutate, label, options = {}) => {
+    const candidate = structuredClone(lane);
+    mutate(candidate);
+    const row = buildOutcomeWatchdog(nowIso, [candidate], registry, options).rows[0];
+    assert.notEqual(row.state, "current", `${label}: no unverified poll can claim current`);
+    assert.notEqual(row.advance_basis, "verified_poll_observed_at", `${label}: no verified poll basis`);
+    assert.equal(row.source_as_of, candidate.artifact.source_as_of, `${label}: filing date remains verbatim`);
+    return candidate;
+  };
+  nonCurrent((item) => {
+    item.details.poll_endpoint = null;
+    item.artifact.source_as_of = "2026-09-25";
+  }, "absent poll despite a recent filing");
+  nonCurrent((item) => {
+    item.details.poll_endpoint = { ...poll, status: "unavailable", reason: "unexpected_error", observed_at: nowIso };
+    item.details.detection_reason = "unexpected_error";
+    item.status = "degraded";
+    item.artifact.source_as_of = "2026-09-25";
+  }, "failed latest attempt");
+  nonCurrent((item) => { item.details.poll_endpoint = { ...poll, observed_at: "2026-10-01T12:00:00Z" }; }, "future poll");
+  nonCurrent((item) => { item.details.poll_endpoint = { ...poll, observed_at: "not-a-stamp" }; }, "malformed poll");
+  nonCurrent((item) => { item.details.poll_endpoint = { ...poll, lane_id: "fred_yardeni" }; }, "foreign lane witness");
+  nonCurrent((item) => {
+    item.details.poll_endpoint = null;
+    item.artifact.source_as_of = null;
+    item.artifact.generated_at = nowIso;
+  }, "generated-only artifact", { publication: { families: [{ family: "edgar-korean-summaries", result: "published", observed_at: nowIso }] } });
+  const forgedWitness = structuredClone(lane);
+  forgedWitness.details.poll_endpoint.lane_id = "fred_yardeni";
+  const witnessErrors = [];
+  checkOutcomeWatchdog({ generated_at: nowIso, lanes: [forgedWitness], outcome_watchdog: watchdog }, witnessErrors);
+  assert.ok(witnessErrors.length > 0, "independent checker rejects a foreign-lane poll witness");
+  ok("EDGAR poll-only watchdog uses validated successful polls and preserves filing dates");
+}
+
 // Source-artifact projection migration pin (#366 item 5): the built
 // source_artifacts array must deep-equal the legacy hand list it replaces —
 // ids, order, and both public flags per entry.
