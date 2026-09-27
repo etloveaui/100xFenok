@@ -1,23 +1,9 @@
 {
   "schema_version": "alarm-state/v1",
-  "generated_at": "2026-09-27T09:40:31.719Z",
+  "generated_at": "2026-09-27T14:05:43.702Z",
   "status": "open",
-  "open_incident_count": 14,
+  "open_incident_count": 12,
   "open_incidents": [
-    {
-      "workflow": "data-plane-serving-probe.yml",
-      "label": "Data Plane Serving Probe",
-      "streak": 0,
-      "failure_streak_threshold": 2,
-      "first_failing_run_id": null,
-      "first_failing_run_url": null,
-      "alarm_reasons": [
-        "missed_schedule_window"
-      ],
-      "lane_outcome_lanes": [],
-      "lost_schedule_slot_count": 0,
-      "cadence_status": "no_declaration"
-    },
     {
       "workflow": "fenok-edge-krx-daily.yml",
       "label": "Fenok Edge KRX Daily Data",
@@ -26,12 +12,9 @@
       "first_failing_run_id": 36019903433,
       "first_failing_run_url": "https://github.com/etloveaui/100xFenok/actions/runs/36019903433",
       "alarm_reasons": [
-        "failure_streak",
-        "lane_outcome_overdue"
+        "failure_streak"
       ],
-      "lane_outcome_lanes": [
-        "krx"
-      ],
+      "lane_outcome_lanes": [],
       "lost_schedule_slot_count": 0,
       "cadence_status": "not_due"
     },
@@ -82,22 +65,6 @@
       "cadence_status": "not_due"
     },
     {
-      "workflow": "fetch-finra-ats-weekly.yml",
-      "label": "Fetch FINRA ATS OTC Weekly Summary",
-      "streak": 0,
-      "failure_streak_threshold": 1,
-      "first_failing_run_id": null,
-      "first_failing_run_url": null,
-      "alarm_reasons": [
-        "lane_outcome_overdue"
-      ],
-      "lane_outcome_lanes": [
-        "finra_ats_weekly"
-      ],
-      "lost_schedule_slot_count": 0,
-      "cadence_status": "not_due"
-    },
-    {
       "workflow": "fetch-fred-macro.yml",
       "label": "Fetch FRED Macro Data",
       "streak": 0,
@@ -105,12 +72,9 @@
       "first_failing_run_id": null,
       "first_failing_run_url": null,
       "alarm_reasons": [
-        "lane_outcome_overdue",
         "unrecovered_overdue"
       ],
-      "lane_outcome_lanes": [
-        "fred_macro"
-      ],
+      "lane_outcome_lanes": [],
       "lost_schedule_slot_count": 0,
       "cadence_status": "overdue"
     },
@@ -154,14 +118,13 @@
       "first_failing_run_id": null,
       "first_failing_run_url": null,
       "alarm_reasons": [
-        "lane_outcome_overdue",
-        "unrecovered_overdue"
+        "lane_outcome_overdue"
       ],
       "lane_outcome_lanes": [
         "slickcharts"
       ],
       "lost_schedule_slot_count": 0,
-      "cadence_status": "overdue"
+      "cadence_status": "not_due"
     },
     {
       "workflow": "slickcharts-history.yml",
@@ -484,7 +447,7 @@
       "cadence_status": "not_due",
       "cadence_evidence": [],
       "data_freshness_state": "healthy",
-      "data_freshness_age_hours_at_generation": 31
+      "data_freshness_age_hours_at_generation": 36
     },
     {
       "file": "fetch-treasury-tga.yml",
@@ -582,10 +545,8 @@
       ],
       "event": "schedule",
       "failure_streak_threshold": 2,
-      "cadence_status": "overdue",
-      "cadence_evidence": [
-        "suspected_skip"
-      ]
+      "cadence_status": "not_due",
+      "cadence_evidence": []
     },
     {
       "file": "slickcharts-history.yml",
@@ -667,8 +628,8 @@
     }
   ],
   "cadence_state_counts": {
-    "not_due": 24,
-    "overdue": 2,
+    "not_due": 25,
+    "overdue": 1,
     "recovered": 0,
     "no_declaration": 11,
     "unknown": 0
@@ -684,17 +645,15 @@
   "queue_evicted_run_count": 0,
   "queue_evicted_workflows": [],
   "last_firing": {
-    "run_id": "36309981609",
-    "run_url": "https://github.com/etloveaui/100xFenok/actions/runs/36309981609",
-    "observed_at": "2026-09-27T09:40:31.719Z",
-    "event": "workflow_run",
+    "run_id": "36324496226",
+    "run_url": "https://github.com/etloveaui/100xFenok/actions/runs/36324496226",
+    "observed_at": "2026-09-27T14:05:43.702Z",
+    "event": "schedule",
     "workflows": [
-      "data-plane-serving-probe.yml",
       "fenok-edge-krx-daily.yml",
       "fetch-edgar-filings.yml",
       "fetch-fdic.yml",
       "fetch-fenok-news-tone.yml",
-      "fetch-finra-ats-weekly.yml",
       "fetch-fred-macro.yml",
       "fetch-oecd-cli.yml",
       "fetch-stockanalysis.yml",
