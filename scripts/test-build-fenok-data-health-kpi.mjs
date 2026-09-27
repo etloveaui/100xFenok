@@ -203,6 +203,7 @@ function fixtureDetectionReport(evaluatedAt) {
     && Number.isFinite(new Date(evaluatedAt).getTime())
     ? evaluatedAt
     : DETECTION_BASELINE_REPORT.generated_at;
+  report.lanes.find((item) => item.id === "edgar_filings").endpoint.observed_at = report.generated_at;
   return report;
 }
 function fixtureFetchCronCoverage(evaluatedAt) {
@@ -2145,6 +2146,8 @@ function fixtureSourceDate(id, now, artifactId) {
 function readyDetectionProjection(id, now) {
   const config = DATA_SUPPLY_DETECTION_CONFIG.lanes.find((item) => item.id === id && item.enforcement === "live");
   if (!config) return {};
+  const edgarEvidence = id === "edgar_filings"
+    ? fixtureDetectionReport(now).lanes.find((item) => item.id === id) : null;
   const providerDateless = config.freshness.source_basis.length === 0;
   const sharedAgeLanes = new Set(["benchmarks", "global_scouter", "fred_yardeni", "fred_macro", "treasury_tga", "finra_ats_weekly", "fred_banking", "krx"]);
   const row = {
@@ -2154,7 +2157,9 @@ function readyDetectionProjection(id, now) {
     kpi_required: true,
     status: "ready",
     reason: "ok",
-    artifact: { status: "ready", reason: "ok", source_as_of: providerDateless ? null : sharedAgeLanes.has(id) ? fixtureSourceDate(id, now) : now.slice(0, 10) },
+    ...(edgarEvidence ? { endpoint: structuredClone(edgarEvidence.endpoint) } : {}),
+    artifact: { status: "ready", reason: "ok", source_as_of: edgarEvidence
+      ? edgarEvidence.artifact.source_as_of : providerDateless ? null : sharedAgeLanes.has(id) ? fixtureSourceDate(id, now) : now.slice(0, 10) },
   };
   if (id === "fred_banking") {
     // Use canonical required files, each with a source date fresh at this fixture clock.
@@ -3284,6 +3289,12 @@ console.log("# KPI v2 runtime self-proof fixtures");
   const runtime = makeProducerRuntime({ builtAt: now, slotKey: "update-manifest.yml:30 2 * * *@2026-07-10T02:30Z", runId: "e2e" });
   runtime.cadence.v2_activated_at = now; // due set empty -> missed empty
   const { root } = seedReadyV2(tmp, { now, runtime, sla: readySla(now) });
+  const reportEdgar = fixtureDetectionReport(now).lanes.find((item) => item.id === "edgar_filings");
+  const kpiEdgar = root.lanes.find((item) => item.id === "edgar_filings");
+  assert.deepEqual(kpiEdgar.details.poll_endpoint, { lane_id: "edgar_filings", ...reportEdgar.endpoint },
+    "ready EDGAR poll witness must match the installed detector report");
+  assert.equal(kpiEdgar.artifact.source_as_of, reportEdgar.artifact.source_as_of,
+    "quiet EDGAR poll must retain the detector's filing date");
   for (const id of ["fred_macro", "fred_banking", "fred_yardeni", "treasury_tga", "finra_ats_weekly", "krx"]) {
     const lane = root.lanes.find((item) => item.id === id);
     assert.ok(lane.details.source_verdicts.length > 0, `${id} carries content-age evidence`);
@@ -3348,8 +3359,8 @@ console.log("# KPI v2 runtime self-proof fixtures");
   ok("fetch-cron schedule/expected/observed/evaluated tamper is rejected against source parity");
 }
 
-// 4b1c. A missing detection-floor report is valid before the next projection.
-// A later checkout retains canonical schedule validation but cannot claim source parity.
+// 4b1c. Runtime-only schedule evidence can warn when the report is absent, but
+// a full KPI claiming a verified EDGAR poll must retain its source report.
 {
   const tmp = mkTmp("cron-shadow-ephemeral-source-absent");
   const now = "2026-07-10T02:35:00.000Z";
@@ -3357,8 +3368,14 @@ console.log("# KPI v2 runtime self-proof fixtures");
   runtime.cadence.v2_activated_at = now;
   seedReadyV2(tmp, { now, runtime, sla: readySla(now) });
   fs.unlinkSync(path.join(tmp, "data", "admin", "data-supply-detection-floor.json"));
-  assert.equal(runChecker(tmp, now, { strict: true, context: "reconcile" }).exit, 0);
-  ok("missing detection-floor source is warn-only while canonical schedule checks remain active");
+  const runtimeOnly = { errors: [], warnings: [] };
+  checkFetchCronSourceParity({ generated_at: now, runtime }, path.join(tmp, "data", KPI_REL), runtimeOnly);
+  assert.deepEqual(runtimeOnly.errors, [], "runtime-only diagnostics do not claim a verified poll");
+  assert.ok(runtimeOnly.warnings.some((message) => /source report is absent/.test(message)));
+  const fullResult = runChecker(tmp, now, { strict: true, context: "reconcile" });
+  assert.equal(fullResult.exit, 1);
+  assert.match(fullResult.stderr, /edgar_filings: verified poll advance requires the canonical detection report/);
+  ok("missing source warns for runtime-only diagnostics but rejects a verified EDGAR poll claim");
 }
 
 // 4b2. Checker independently compares bounded KPI recovery evidence to the source index.
