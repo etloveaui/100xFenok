@@ -2,7 +2,7 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import fs from "node:fs";
 import path from "node:path";
-import { FAMILY_POLICY, freshnessAgeOverride, freshnessMessage, freshnessRailState, freshnessVerdict, resolveSourcePolicy, sourceAgeAnchor } from "./freshness-policy.mjs";
+import { FAMILY_POLICY, freshnessAgeOverride, freshnessMessage, freshnessRailState, freshnessVerdict, policyToday, resolveSourcePolicy, sourceAgeAnchor } from "./freshness-policy.mjs";
 
 const calendars = JSON.parse(fs.readFileSync(path.resolve(import.meta.dirname, "../../../scripts/lib/data-supply-detection-calendars.json"), "utf8"));
 
@@ -27,6 +27,25 @@ test("weekly owner file: fresh <= 13, delayed 14-20, stopped >= 21", () => {
     assert.equal(verdict.supplier, "owner");
     assert.equal(verdict.cadence, "weekly");
   }
+});
+
+test("implicit UI and explicit detector clocks agree across civil midnight", (t) => {
+  const now = new Date("2026-10-01T16:30:00Z"); // October 2 in Seoul, October 1 UTC.
+  t.mock.timers.enable({ apis: ["Date"], now });
+  const ownerToday = policyToday(now, FAMILY_POLICY.benchmarks);
+  assert.equal(ownerToday, "2026-10-01");
+  const implicit = freshnessVerdict("2026-09-18", "benchmarks");
+  assert.deepEqual(implicit, freshnessVerdict("2026-09-18", "benchmarks", ownerToday));
+  assert.equal(implicit.ageDays, 13);
+  assert.equal(implicit.state, "fresh");
+
+  t.mock.timers.setTime(new Date("2026-10-02T02:30:00Z").getTime());
+  const federalToday = policyToday(new Date(), FAMILY_POLICY.treasury_tga);
+  assert.equal(federalToday, "2026-10-01");
+  assert.deepEqual(
+    freshnessVerdict("2026-10-01", "treasury_tga", undefined, { calendars }),
+    freshnessVerdict("2026-10-01", "treasury_tga", federalToday, { calendars }),
+  );
 });
 
 test("daily family counts trading days across a weekend", () => {

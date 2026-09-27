@@ -110,6 +110,7 @@ jobs:
           git rev-parse --show-toplevel
           node scripts/build-ink4-contrast-fixture.mjs
           node --input-type=module -e 'import { emitDetectionExpectedFixture } from "../scripts/build-data-supply-detection-floor.mjs"; emitDetectionExpectedFixture();'
+          npx tsx src/lib/freshness-policy.test.ts
           npm run qa:journey-continuity
           node ../scripts/build-guru-holders-index.mjs
           # The isolated preview must derive its screener from this candidate's

@@ -1,7 +1,8 @@
 /**
  * Freshness policy by cadence — one pure module shared by the app and scripts.
  *
- * Age = whole days from the data's own as-of date to "today" in KST.
+ * Age = whole days from the data's own as-of date to the policy's civil date:
+ * US calendars use New York, KR calendars use Seoul, calendar-day families UTC.
  * Families declare: cadence (daily | weekly | monthly | quarterly | annual),
  * releaseLagDays (source-specific), supplier ("owner" | "automated") and
  * calendar ("us_trading" | "kr_trading" | "calendar").
@@ -163,7 +164,7 @@ export function resolveFamilyPolicy(family) {
   return null;
 }
 
-export function freshnessVerdict(asOf, family, today = todayKST(), { calendars = null } = {}) {
+export function freshnessVerdict(asOf, family, today, { calendars = null } = {}) {
   const policy = resolveFamilyPolicy(family);
   const unknown = {
     state: "unknown",
@@ -173,7 +174,7 @@ export function freshnessVerdict(asOf, family, today = todayKST(), { calendars =
   };
   if (!policy) return unknown;
   const asOfDate = dateOnly(asOf);
-  const todayDate = dateOnly(today);
+  const todayDate = dateOnly(today === undefined ? policyToday(new Date(), policy) : today);
   if (!asOfDate || !todayDate || asOfDate > todayDate) return unknown;
   const klass = FRESHNESS_CLASSES[policy.cadence];
   if (!klass) return unknown;
