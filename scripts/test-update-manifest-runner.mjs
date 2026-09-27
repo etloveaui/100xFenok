@@ -27,6 +27,7 @@ const workflowPath = path.join(repoRoot, ".github/workflows/update-manifest.yml"
 const runnerPath = path.join(repoRoot, "scripts/update-manifest-projections.sh");
 const workflowText = fs.readFileSync(workflowPath, "utf8");
 const runnerText = fs.readFileSync(runnerPath, "utf8");
+const historyWorkflowText = fs.readFileSync(path.join(repoRoot, ".github/workflows/slickcharts-history.yml"), "utf8");
 const workflowLines = workflowText.split("\n").map((line) => line.trim());
 const runnerLines = runnerText.split("\n").map((line) => line.trim());
 
@@ -115,6 +116,11 @@ printf '%s' "\${0##*/}" >> "$STUB_RECORD"
 for arg in "$@"; do printf ' %s' "$arg" >> "$STUB_RECORD"; done
 printf '\\n' >> "$STUB_RECORD"
 case "\${0##*/}" in
+  node)
+    if [ "$1" = "scripts/slickcharts-composite-recovery.mjs" ] && [ "$2" = "validate-live" ]; then
+      [ -n "\${COMPOSITE_VALIDATION_EXIT:-}" ] && exit "$COMPOSITE_VALIDATION_EXIT"
+    fi
+    ;;
   python3)
     if [ "$1" = "scripts/update-manifest.py" ]; then
       printf 'before_sha %s\n' "$BEFORE_SHA" >> "$STUB_RECORD"
@@ -157,10 +163,32 @@ function runRunner(env) {
   return { result, records };
 }
 
-const SKIP_PUBLIC = "python3 scripts/validate-slickcharts-integrity.py --skip-public";
+const COMPOSITE_GUARD = "node scripts/slickcharts-composite-recovery.mjs validate-live --index data/admin/slickcharts-composite-recovery/index.json";
+const SKIP_PUBLIC = "python3 scripts/validate-slickcharts-integrity.py --skip-public --allow-history-coverage-lag";
+const FULL_PUBLIC = "python3 scripts/validate-slickcharts-integrity.py --allow-history-coverage-lag";
 const SNAPSHOT_RESET = "rm -rf 100xfenok-next/public/data/stockanalysis/etfs/shards/snapshots";
 const SYNC_PUBLIC = "node 100xfenok-next/scripts/sync-public-data.mjs --write --etf-shards-only";
 const PUSH_SHA = "0123456789abcdef0123456789abcdef01234567";
+
+// Only central projection can tolerate retained-history coverage gaps.
+assert.match(historyWorkflowText, /python scripts\/validate-slickcharts-integrity\.py --skip-public/);
+assert.equal(historyWorkflowText.includes("--allow-history-coverage-lag"), false,
+  "history acquisition must keep its completeness guard");
+for (const skipPublic of ["true", "false"]) {
+  const checked = runRunner({ VALIDATE_SLICKCHARTS_SKIP_PUBLIC: skipPublic });
+  assert.equal(checked.result.status, 0, checked.result.stderr);
+  assert.ok(checked.records.includes(COMPOSITE_GUARD), "retained bundle must be validated");
+  assert.ok(checked.records.includes(FULL_PUBLIC), "central mirror validation must expose coverage lag");
+  assert.equal(checked.records.includes(SKIP_PUBLIC), skipPublic === "true");
+  for (const validation of checked.records.filter((line) => line.startsWith("python3 scripts/validate-slickcharts-integrity.py"))) {
+    assert.ok(checked.records.indexOf(COMPOSITE_GUARD) < checked.records.indexOf(validation),
+      "saved bundle integrity must pass before coverage degradation is allowed");
+  }
+  const corrupt = runRunner({ VALIDATE_SLICKCHARTS_SKIP_PUBLIC: skipPublic, COMPOSITE_VALIDATION_EXIT: "2" });
+  assert.equal(corrupt.result.status, 2, "tampered retained bundle must abort central projection");
+  assert.equal(corrupt.records.some((line) => line.startsWith("python3 scripts/validate-slickcharts-integrity.py")), false,
+    "bundle failure must not reach relaxed coverage validation");
+}
 
 // Missing/non-boolean mode flags and malformed BEFORE_SHA fail before S1.
 for (const name of ["REBUILD_SLICKCHARTS", "VALIDATE_SLICKCHARTS_SKIP_PUBLIC", "RESET_ETF_SNAPSHOTS", "BEFORE_SHA"]) {

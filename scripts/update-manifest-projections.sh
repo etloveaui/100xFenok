@@ -293,8 +293,12 @@ if [ "$REBUILD_SLICKCHARTS" = "true" ]; then
   node scripts/build-slickcharts-discovery.mjs
 fi
 
+# Weekly holdings may advance before monthly history. Accept retained-history
+# coverage gaps only while its producer-bound bytes remain intact; acquisition
+# workflows keep the validator's strict default.
+node scripts/slickcharts-composite-recovery.mjs validate-live --index data/admin/slickcharts-composite-recovery/index.json
 if [ "$VALIDATE_SLICKCHARTS_SKIP_PUBLIC" = "true" ]; then
-  python3 scripts/validate-slickcharts-integrity.py --skip-public
+  python3 scripts/validate-slickcharts-integrity.py --skip-public --allow-history-coverage-lag
 fi
 
 # --- S2: Build shared market and stock promotion state ----------------------
@@ -318,7 +322,7 @@ if [ "$RESET_ETF_SNAPSHOTS" = "true" ]; then
   rm -rf 100xfenok-next/public/data/stockanalysis/etfs/shards/snapshots
 fi
 node 100xfenok-next/scripts/sync-public-data.mjs --write --etf-shards-only
-python3 scripts/validate-slickcharts-integrity.py
+python3 scripts/validate-slickcharts-integrity.py --allow-history-coverage-lag
 diff -qr data/slickcharts 100xfenok-next/public/data/slickcharts
 # The surfaces mirror sat two producer cycles behind its source without
 # anything noticing: the producer's own run of the surface contract

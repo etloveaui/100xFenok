@@ -4,6 +4,8 @@ from __future__ import annotations
 
 import importlib.util
 import json
+import subprocess
+import sys
 import tempfile
 import unittest
 from pathlib import Path
@@ -24,7 +26,9 @@ def write_json(path: Path, payload: object) -> None:
 
 class SlickChartsIntegrityPolicyTest(unittest.TestCase):
     def setUp(self) -> None:
-        self.root = Path(tempfile.mkdtemp())
+        temporary = tempfile.TemporaryDirectory(prefix="slickcharts-integrity-")
+        self.addCleanup(temporary.cleanup)
+        self.root = Path(temporary.name)
         self.current = {
             "AAA": ["sp500"],
             "BBB": ["nasdaq100"],
@@ -61,6 +65,7 @@ class SlickChartsIntegrityPolicyTest(unittest.TestCase):
 
     def write_aggregate(self, symbols: list[str]) -> None:
         write_json(self.root / "stocks-returns.json", {
+            "updated": "2026-09-07T07:41:09Z",
             "count": len(symbols),
             "stocks": [{"symbol": symbol} for symbol in symbols],
         })
@@ -113,6 +118,72 @@ class SlickChartsIntegrityPolicyTest(unittest.TestCase):
                 [],
                 membership_complete=True,
             )
+
+    def test_projection_retains_history_bytes_and_reports_new_member_gap(self) -> None:
+        for index_name, filename in integrity.INDEX_FILES.items():
+            symbols = [symbol for symbol, indices in self.current.items() if index_name in indices]
+            write_json(self.root / filename, {
+                "count": len(symbols),
+                "holdings": [{"symbol": symbol} for symbol in symbols],
+            })
+        self.write_aggregate(["AAA", "BBB", "OLD"])
+        history = self.root / "stocks-returns.json"
+        before = history.read_bytes()
+        result = subprocess.run([
+            sys.executable, str(SCRIPT), "--data-dir", str(self.root),
+            "--skip-public", "--allow-history-coverage-lag",
+        ], text=True, capture_output=True)
+        self.assertEqual(result.returncode, 0, result.stderr)
+        report = json.loads(result.stdout)
+        self.assertEqual(report["status"], "degraded")
+        self.assertTrue(any(
+            "history coverage lag" in warning
+            and "missing=['CCC']" in warning and "retained=['OLD']" in warning
+            for warning in report["warnings"]
+        ), report)
+        self.assertEqual(history.read_bytes(), before)
+
+    def test_coverage_lag_never_allows_corrupt_history(self) -> None:
+        for payload, message in [
+            ({"count": 3, "stocks": [{"symbol": "AAA"}]}, "count mismatch"),
+            ({"count": 2, "stocks": [{"symbol": "AAA"}, {"symbol": "AAA"}]}, "duplicate ticker"),
+            ({"count": 1, "stocks": [{}]}, "missing ticker identity"),
+            ({"count": 1, "stocks": ["AAA"]}, "malformed row"),
+            ({"stocks": {}}, "must be an array"),
+        ]:
+            with self.subTest(message=message):
+                write_json(self.root / "stocks-returns.json", payload)
+                with self.assertRaisesRegex(RuntimeError, message):
+                    integrity.assert_aggregate(
+                        self.root, "stocks-returns.json", ["AAA", "BBB", "CCC"], [],
+                        allow_history_coverage_lag=True,
+                    )
+
+    def test_coverage_lag_never_allows_invalid_json_or_nonfinite_numbers(self) -> None:
+        for text in ['{"stocks":', '{"stocks": [], "value": NaN}', '{"stocks": [], "value": Infinity}']:
+            with self.subTest(text=text):
+                (self.root / "stocks-returns.json").write_text(text, encoding="utf-8")
+                with self.assertRaisesRegex(RuntimeError, "Invalid JSON"):
+                    integrity.assert_aggregate(
+                        self.root, "stocks-returns.json", ["AAA", "BBB", "CCC"], [],
+                        allow_history_coverage_lag=True,
+                    )
+
+    def test_coverage_lag_does_not_replace_mirror_validation(self) -> None:
+        self.write_aggregate(["AAA", "BBB", "OLD"])
+        integrity.assert_aggregate(
+            self.root, "stocks-returns.json", ["AAA", "BBB", "CCC"], [],
+            allow_history_coverage_lag=True,
+        )
+        public = self.root / "public"
+        public.mkdir()
+        for filename in integrity.CRITICAL_MIRROR_FILES:
+            source = self.root / filename
+            if source.exists():
+                (public / filename).write_bytes(source.read_bytes())
+        (public / "stocks-returns.json").write_text("{}", encoding="utf-8")
+        with self.assertRaisesRegex(RuntimeError, "Public mirror drift"):
+            integrity.assert_public_mirror(self.root, public, ["AAA", "BBB", "CCC"], [])
 
 
 if __name__ == "__main__":
