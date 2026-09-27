@@ -52,31 +52,44 @@
       "run_id": "31225112049",
       "schedule": "7 22 * * 0-5",
       "shard": "71/72"
+    },
+    {
+      "attempts_used": 1,
+      "event_name": "schedule",
+      "failures": [],
+      "latency_ms": 751,
+      "natural": true,
+      "observed_at": "2026-09-27T05:14:22Z",
+      "outcome": "fresh",
+      "run_attempt": 1,
+      "run_id": "36296516883",
+      "schedule": "7 0 * * 0-5",
+      "shard": "0/6"
     }
   ],
   "current": {
-    "fetched_at": "2026-08-07T20:50:30Z",
-    "history_as_of": "2026-08-07",
-    "path": "data/admin/yahoo-batch-quote-history/lkg/TBIL.json",
-    "payload_sha256": "6fadc1a5fcc7de0cbfec82b9257f195a3768be71a1b775b827705ebebf7b7cd7",
-    "quote_as_of": "2026-08-07T20:00:00Z",
-    "source_as_of": "2026-08-07"
+    "fetched_at": "2026-09-27T05:14:36Z",
+    "history_as_of": "2026-09-25",
+    "path": "data/yf/finance/TBIL.json",
+    "payload_sha256": "483ce71c98f37f1cc25786d120ca0e007cc1b6db66cf6b939365acdbd95848c7",
+    "quote_as_of": "2026-09-25T20:00:00Z",
+    "source_as_of": "2026-09-25"
   },
   "discovered_from": [
-    "stockanalysis_etf"
+    "core_daily_basket"
   ],
   "last_attempt": {
-    "attempts_used": 0,
+    "attempts_used": 1,
     "event_name": "schedule",
     "failures": [],
-    "latency_ms": 0,
+    "latency_ms": 751,
     "natural": true,
-    "observed_at": "2026-08-07T22:50:55Z",
-    "outcome": "skipped_fresh",
+    "observed_at": "2026-09-27T05:14:22Z",
+    "outcome": "fresh",
     "run_attempt": 1,
-    "run_id": "31225112049",
-    "schedule": "7 22 * * 0-5",
-    "shard": "71/72"
+    "run_id": "36296516883",
+    "schedule": "7 0 * * 0-5",
+    "shard": "0/6"
   },
   "lkg": {
     "fetched_at": "2026-08-07T20:50:30Z",
@@ -89,17 +102,17 @@
   "promotion_contract": "provider_observation/v2",
   "provider_observation": {
     "event_name": "schedule",
-    "history_as_of": "2026-08-07",
-    "observed_at": "2026-08-07T20:49:21Z",
-    "payload_sha256": "bb70b06138e0c6b68e962ca31d3e795f3dc03ded7099115e1e2face9513be1e7",
-    "quote_as_of": "2026-08-07T20:00:00Z",
+    "history_as_of": "2026-09-25",
+    "observed_at": "2026-09-27T05:14:22Z",
+    "payload_sha256": "6406a1f2ca9eea1c401285fea9ce766b6b96c1f6ee2ac9300173f294c28b64f8",
+    "quote_as_of": "2026-09-25T20:00:00Z",
     "run_attempt": 1,
-    "run_id": "31217379411",
+    "run_id": "36296516883",
     "schema_version": "provider_observation/v2",
-    "source_as_of": "2026-08-07"
+    "source_as_of": "2026-09-25"
   },
-  "resolution_state": "lkg_primary",
-  "retry": true,
+  "resolution_state": "fresh_primary",
+  "retry": false,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "stale": {
     "age_business_days": 8,
@@ -112,5 +125,5 @@
     "source_as_of": "2026-08-07"
   },
   "ticker": "TBIL",
-  "updated_at": "2026-08-19T23:42:29Z"
+  "updated_at": "2026-09-27T05:14:22Z"
 }

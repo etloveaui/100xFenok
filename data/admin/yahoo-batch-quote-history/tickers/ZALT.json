@@ -38,31 +38,44 @@
       "run_id": "31401948552",
       "schedule": "7 14 * * 0-5",
       "shard": "19/72"
+    },
+    {
+      "attempts_used": 1,
+      "event_name": "schedule",
+      "failures": [],
+      "latency_ms": 697,
+      "natural": true,
+      "observed_at": "2026-09-27T05:14:22Z",
+      "outcome": "fresh",
+      "run_attempt": 1,
+      "run_id": "36296516883",
+      "schedule": "7 0 * * 0-5",
+      "shard": "0/6"
     }
   ],
   "current": {
-    "fetched_at": "2026-08-10T15:14:06Z",
-    "history_as_of": "2026-08-10",
-    "path": "data/admin/yahoo-batch-quote-history/lkg/ZALT.json",
-    "payload_sha256": "4602e8e896b5f3f2d3dafb36531e49d21ce68cf6a869d4863c887abf939b2754",
-    "quote_as_of": "2026-08-10T15:13:51Z",
-    "source_as_of": "2026-08-10"
+    "fetched_at": "2026-09-27T05:14:58Z",
+    "history_as_of": "2026-09-25",
+    "path": "data/yf/finance/ZALT.json",
+    "payload_sha256": "6e9c7e7a164612bea9b656f49dae4ebf1f4cdcae76d2edfa9547f6279dd9286c",
+    "quote_as_of": "2026-09-25T20:00:00Z",
+    "source_as_of": "2026-09-25"
   },
   "discovered_from": [
-    "stockanalysis_etf"
+    "core_daily_basket"
   ],
   "last_attempt": {
     "attempts_used": 1,
     "event_name": "schedule",
     "failures": [],
-    "latency_ms": 453,
+    "latency_ms": 697,
     "natural": true,
-    "observed_at": "2026-08-10T15:10:15Z",
+    "observed_at": "2026-09-27T05:14:22Z",
     "outcome": "fresh",
     "run_attempt": 1,
-    "run_id": "31401948552",
-    "schedule": "7 14 * * 0-5",
-    "shard": "19/72"
+    "run_id": "36296516883",
+    "schedule": "7 0 * * 0-5",
+    "shard": "0/6"
   },
   "lkg": {
     "fetched_at": "2026-08-10T15:14:06Z",
@@ -75,17 +88,17 @@
   "promotion_contract": "provider_observation/v2",
   "provider_observation": {
     "event_name": "schedule",
-    "history_as_of": "2026-08-10",
-    "observed_at": "2026-08-10T15:10:15Z",
-    "payload_sha256": "f6aff93bb7c43fb4b0a73ef98739739e2341cd9cb3d152b611ca939036420d46",
-    "quote_as_of": "2026-08-10T15:13:51Z",
+    "history_as_of": "2026-09-25",
+    "observed_at": "2026-09-27T05:14:22Z",
+    "payload_sha256": "8d5026f38871447f6f1ac237eff1ce1564795e9d75eced0f9496db3b849cd5b7",
+    "quote_as_of": "2026-09-25T20:00:00Z",
     "run_attempt": 1,
-    "run_id": "31401948552",
+    "run_id": "36296516883",
     "schema_version": "provider_observation/v2",
-    "source_as_of": "2026-08-10"
+    "source_as_of": "2026-09-25"
   },
-  "resolution_state": "lkg_primary",
-  "retry": true,
+  "resolution_state": "fresh_primary",
+  "retry": false,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "stale": {
     "age_business_days": 7,
@@ -98,5 +111,5 @@
     "source_as_of": "2026-08-10"
   },
   "ticker": "ZALT",
-  "updated_at": "2026-08-19T23:42:29Z"
+  "updated_at": "2026-09-27T05:14:22Z"
 }

@@ -52,31 +52,44 @@
       "run_id": "31382906749",
       "schedule": "7 10 * * 0-5",
       "shard": "17/72"
+    },
+    {
+      "attempts_used": 1,
+      "event_name": "schedule",
+      "failures": [],
+      "latency_ms": 763,
+      "natural": true,
+      "observed_at": "2026-09-27T05:14:22Z",
+      "outcome": "fresh",
+      "run_attempt": 1,
+      "run_id": "36296516883",
+      "schedule": "7 0 * * 0-5",
+      "shard": "0/6"
     }
   ],
   "current": {
-    "fetched_at": "2026-08-10T11:23:15Z",
-    "history_as_of": "2026-08-07",
-    "path": "data/admin/yahoo-batch-quote-history/lkg/SIVR.json",
-    "payload_sha256": "3ff6595078ca1388d3e5ee86ad3384203f788461c8935f0ef46864d1a0e7cd20",
-    "quote_as_of": "2026-08-07T20:00:00Z",
-    "source_as_of": "2026-08-07"
+    "fetched_at": "2026-09-27T05:14:57Z",
+    "history_as_of": "2026-09-25",
+    "path": "data/yf/finance/SIVR.json",
+    "payload_sha256": "6eba069db44e1ba323f858568f651d529437a61228028d6aa90e7adf0e3de8c6",
+    "quote_as_of": "2026-09-25T20:00:00Z",
+    "source_as_of": "2026-09-25"
   },
   "discovered_from": [
-    "stockanalysis_etf"
+    "core_daily_basket"
   ],
   "last_attempt": {
     "attempts_used": 1,
     "event_name": "schedule",
     "failures": [],
-    "latency_ms": 609,
+    "latency_ms": 763,
     "natural": true,
-    "observed_at": "2026-08-10T11:19:59Z",
+    "observed_at": "2026-09-27T05:14:22Z",
     "outcome": "fresh",
     "run_attempt": 1,
-    "run_id": "31382906749",
-    "schedule": "7 10 * * 0-5",
-    "shard": "17/72"
+    "run_id": "36296516883",
+    "schedule": "7 0 * * 0-5",
+    "shard": "0/6"
   },
   "lkg": {
     "fetched_at": "2026-08-10T11:23:15Z",
@@ -89,17 +102,17 @@
   "promotion_contract": "provider_observation/v2",
   "provider_observation": {
     "event_name": "schedule",
-    "history_as_of": "2026-08-07",
-    "observed_at": "2026-08-10T11:19:59Z",
-    "payload_sha256": "d498fecb8e72b35c66029dfd8b42c4f3e871c68c181b68b5bd5e60f8b1574480",
-    "quote_as_of": "2026-08-07T20:00:00Z",
+    "history_as_of": "2026-09-25",
+    "observed_at": "2026-09-27T05:14:22Z",
+    "payload_sha256": "9e7f26817db2a45bebe1a8f123d5684f434aa4bab09998b0ed7deb50bc334b67",
+    "quote_as_of": "2026-09-25T20:00:00Z",
     "run_attempt": 1,
-    "run_id": "31382906749",
+    "run_id": "36296516883",
     "schema_version": "provider_observation/v2",
-    "source_as_of": "2026-08-07"
+    "source_as_of": "2026-09-25"
   },
-  "resolution_state": "lkg_primary",
-  "retry": true,
+  "resolution_state": "fresh_primary",
+  "retry": false,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "stale": {
     "age_business_days": 8,
@@ -112,5 +125,5 @@
     "source_as_of": "2026-08-07"
   },
   "ticker": "SIVR",
-  "updated_at": "2026-08-19T23:42:29Z"
+  "updated_at": "2026-09-27T05:14:22Z"
 }

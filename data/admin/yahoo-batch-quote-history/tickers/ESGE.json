@@ -12,18 +12,31 @@
       "run_id": "31367988319",
       "schedule": "7 6 * * 0-5",
       "shard": "15/72"
+    },
+    {
+      "attempts_used": 1,
+      "event_name": "schedule",
+      "failures": [],
+      "latency_ms": 804,
+      "natural": true,
+      "observed_at": "2026-09-27T05:14:22Z",
+      "outcome": "fresh",
+      "run_attempt": 1,
+      "run_id": "36296516883",
+      "schedule": "7 0 * * 0-5",
+      "shard": "0/6"
     }
   ],
   "current": {
-    "fetched_at": "2026-08-10T08:02:02Z",
-    "history_as_of": "2026-08-07",
-    "path": "data/admin/yahoo-batch-quote-history/lkg/ESGE.json",
-    "payload_sha256": "d929f60f620d8ed13b42286aa1fbf02f56e6ac79eead6eb3971f9f6a3deb6ea8",
-    "quote_as_of": "2026-08-07T20:00:01Z",
-    "source_as_of": "2026-08-07"
+    "fetched_at": "2026-09-27T05:14:53Z",
+    "history_as_of": "2026-09-25",
+    "path": "data/yf/finance/ESGE.json",
+    "payload_sha256": "d76dbc47c44168eb4c24b784617ba7e0085df0e19feaafd47524faa52f84ae6c",
+    "quote_as_of": "2026-09-25T20:00:01Z",
+    "source_as_of": "2026-09-25"
   },
   "discovered_from": [
-    "stockanalysis_etf"
+    "core_daily_basket"
   ],
   "last_attempt": {
     "attempts_used": 1,
@@ -31,12 +44,12 @@
     "failures": [],
     "latency_ms": 804,
     "natural": true,
-    "observed_at": "2026-08-10T07:59:31Z",
+    "observed_at": "2026-09-27T05:14:22Z",
     "outcome": "fresh",
     "run_attempt": 1,
-    "run_id": "31367988319",
-    "schedule": "7 6 * * 0-5",
-    "shard": "15/72"
+    "run_id": "36296516883",
+    "schedule": "7 0 * * 0-5",
+    "shard": "0/6"
   },
   "lkg": {
     "fetched_at": "2026-08-10T08:02:02Z",
@@ -49,17 +62,17 @@
   "promotion_contract": "provider_observation/v2",
   "provider_observation": {
     "event_name": "schedule",
-    "history_as_of": "2026-08-07",
-    "observed_at": "2026-08-10T07:59:31Z",
-    "payload_sha256": "39e818f65c0c3cdd435682c2d98151f526f493b596566506ebde5de2baf14c6b",
-    "quote_as_of": "2026-08-07T20:00:01Z",
+    "history_as_of": "2026-09-25",
+    "observed_at": "2026-09-27T05:14:22Z",
+    "payload_sha256": "42e8cc3ea68100134b34851ba26bc20d0d1fbdbfa3e522ffa0e5272e1bb0bd06",
+    "quote_as_of": "2026-09-25T20:00:01Z",
     "run_attempt": 1,
-    "run_id": "31367988319",
+    "run_id": "36296516883",
     "schema_version": "provider_observation/v2",
-    "source_as_of": "2026-08-07"
+    "source_as_of": "2026-09-25"
   },
-  "resolution_state": "lkg_primary",
-  "retry": true,
+  "resolution_state": "fresh_primary",
+  "retry": false,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "stale": {
     "age_business_days": 8,
@@ -72,5 +85,5 @@
     "source_as_of": "2026-08-07"
   },
   "ticker": "ESGE",
-  "updated_at": "2026-08-19T23:42:29Z"
+  "updated_at": "2026-09-27T05:14:22Z"
 }

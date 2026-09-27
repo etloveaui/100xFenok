@@ -52,31 +52,44 @@
       "run_id": "31296241377",
       "schedule": "7 4 * * 0-5",
       "shard": "2/72"
+    },
+    {
+      "attempts_used": 1,
+      "event_name": "schedule",
+      "failures": [],
+      "latency_ms": 768,
+      "natural": true,
+      "observed_at": "2026-09-27T05:14:22Z",
+      "outcome": "fresh",
+      "run_attempt": 1,
+      "run_id": "36296516883",
+      "schedule": "7 0 * * 0-5",
+      "shard": "0/6"
     }
   ],
   "current": {
-    "fetched_at": "2026-08-09T05:19:34Z",
-    "history_as_of": "2026-08-07",
-    "path": "data/admin/yahoo-batch-quote-history/lkg/PAPR.json",
-    "payload_sha256": "bd9b8834fb89cefd52a535cc4b0a34b62726adcbfa126f6539beb5eeb8cc0c80",
-    "quote_as_of": "2026-08-07T19:59:58Z",
-    "source_as_of": "2026-08-07"
+    "fetched_at": "2026-09-27T05:14:42Z",
+    "history_as_of": "2026-09-25",
+    "path": "data/yf/finance/PAPR.json",
+    "payload_sha256": "cb5c4cc0312a28f7c7028aee28c93953eaeefd77215d1570fbd356703972d1d8",
+    "quote_as_of": "2026-09-25T19:59:59Z",
+    "source_as_of": "2026-09-25"
   },
   "discovered_from": [
-    "stockanalysis_etf"
+    "core_daily_basket"
   ],
   "last_attempt": {
     "attempts_used": 1,
     "event_name": "schedule",
     "failures": [],
-    "latency_ms": 1100,
+    "latency_ms": 768,
     "natural": true,
-    "observed_at": "2026-08-09T05:15:44Z",
+    "observed_at": "2026-09-27T05:14:22Z",
     "outcome": "fresh",
     "run_attempt": 1,
-    "run_id": "31296241377",
-    "schedule": "7 4 * * 0-5",
-    "shard": "2/72"
+    "run_id": "36296516883",
+    "schedule": "7 0 * * 0-5",
+    "shard": "0/6"
   },
   "lkg": {
     "fetched_at": "2026-08-09T05:19:34Z",
@@ -89,17 +102,17 @@
   "promotion_contract": "provider_observation/v2",
   "provider_observation": {
     "event_name": "schedule",
-    "history_as_of": "2026-08-07",
-    "observed_at": "2026-08-09T05:15:44Z",
-    "payload_sha256": "17b90df2959b8af7530bed51b9a4df812fda42875a81efa6b88e0d080fb06421",
-    "quote_as_of": "2026-08-07T19:59:58Z",
+    "history_as_of": "2026-09-25",
+    "observed_at": "2026-09-27T05:14:22Z",
+    "payload_sha256": "bdd07e4d266550d9a61b0a5afcbefb64adc3bea9753fd7f76d8c4c8bada51a64",
+    "quote_as_of": "2026-09-25T19:59:59Z",
     "run_attempt": 1,
-    "run_id": "31296241377",
+    "run_id": "36296516883",
     "schema_version": "provider_observation/v2",
-    "source_as_of": "2026-08-07"
+    "source_as_of": "2026-09-25"
   },
-  "resolution_state": "lkg_primary",
-  "retry": true,
+  "resolution_state": "fresh_primary",
+  "retry": false,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "stale": {
     "age_business_days": 8,
@@ -112,5 +125,5 @@
     "source_as_of": "2026-08-07"
   },
   "ticker": "PAPR",
-  "updated_at": "2026-08-19T23:42:29Z"
+  "updated_at": "2026-09-27T05:14:22Z"
 }

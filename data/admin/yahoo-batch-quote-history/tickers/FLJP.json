@@ -25,31 +25,44 @@
       "run_id": "31349898588",
       "schedule": "7 0 * * 0-5",
       "shard": "12/72"
+    },
+    {
+      "attempts_used": 1,
+      "event_name": "schedule",
+      "failures": [],
+      "latency_ms": 834,
+      "natural": true,
+      "observed_at": "2026-09-27T05:14:22Z",
+      "outcome": "fresh",
+      "run_attempt": 1,
+      "run_id": "36296516883",
+      "schedule": "7 0 * * 0-5",
+      "shard": "0/6"
     }
   ],
   "current": {
-    "fetched_at": "2026-08-10T02:32:58Z",
-    "history_as_of": "2026-08-07",
-    "path": "data/admin/yahoo-batch-quote-history/lkg/FLJP.json",
-    "payload_sha256": "7edcf244cdca4deee59ccc1c7ddbf75d6b5bdb49c660f82493e779c28174a914",
-    "quote_as_of": "2026-08-07T20:00:00Z",
-    "source_as_of": "2026-08-07"
+    "fetched_at": "2026-09-27T05:14:51Z",
+    "history_as_of": "2026-09-25",
+    "path": "data/yf/finance/FLJP.json",
+    "payload_sha256": "127a06030d72b3b22e9d19fdd4abb6c18e2cc445c27c57509bbbe116c6ada913",
+    "quote_as_of": "2026-09-25T20:00:00Z",
+    "source_as_of": "2026-09-25"
   },
   "discovered_from": [
-    "stockanalysis_etf"
+    "core_daily_basket"
   ],
   "last_attempt": {
     "attempts_used": 1,
     "event_name": "schedule",
     "failures": [],
-    "latency_ms": 658,
+    "latency_ms": 834,
     "natural": true,
-    "observed_at": "2026-08-10T02:30:39Z",
+    "observed_at": "2026-09-27T05:14:22Z",
     "outcome": "fresh",
     "run_attempt": 1,
-    "run_id": "31349898588",
+    "run_id": "36296516883",
     "schedule": "7 0 * * 0-5",
-    "shard": "12/72"
+    "shard": "0/6"
   },
   "lkg": {
     "fetched_at": "2026-08-10T02:32:58Z",
@@ -62,17 +75,17 @@
   "promotion_contract": "provider_observation/v2",
   "provider_observation": {
     "event_name": "schedule",
-    "history_as_of": "2026-08-07",
-    "observed_at": "2026-08-10T02:30:39Z",
-    "payload_sha256": "e1bd20748c61db9875571ad491e5a4931a99067a3034775cf90425371f83f595",
-    "quote_as_of": "2026-08-07T20:00:00Z",
+    "history_as_of": "2026-09-25",
+    "observed_at": "2026-09-27T05:14:22Z",
+    "payload_sha256": "c157c02420d3c98f57bcbe678e1eb118389d4ab3626da53ec8e8f04f73e3329a",
+    "quote_as_of": "2026-09-25T20:00:00Z",
     "run_attempt": 1,
-    "run_id": "31349898588",
+    "run_id": "36296516883",
     "schema_version": "provider_observation/v2",
-    "source_as_of": "2026-08-07"
+    "source_as_of": "2026-09-25"
   },
-  "resolution_state": "lkg_primary",
-  "retry": true,
+  "resolution_state": "fresh_primary",
+  "retry": false,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "stale": {
     "age_business_days": 8,
@@ -85,5 +98,5 @@
     "source_as_of": "2026-08-07"
   },
   "ticker": "FLJP",
-  "updated_at": "2026-08-19T23:42:29Z"
+  "updated_at": "2026-09-27T05:14:22Z"
 }
