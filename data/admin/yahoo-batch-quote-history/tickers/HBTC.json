@@ -153,7 +153,7 @@
   "current": {
     "fetched_at": "2026-09-28T04:45:11Z",
     "history_as_of": "2026-09-25",
-    "path": "data/yf/finance/HBTC.json",
+    "path": "data/admin/yahoo-batch-quote-history/lkg/HBTC.json",
     "payload_sha256": "74a5c7b75974710ba9468cd16b29ef094a02e1a179674aa84cfbd461f5edc0aa",
     "quote_as_of": "2026-08-26T17:31:04Z",
     "source_as_of": "2026-08-26T17:31:04Z"
@@ -175,12 +175,12 @@
     "shard": ""
   },
   "lkg": {
-    "fetched_at": "2026-08-12T13:44:02Z",
-    "history_as_of": "2026-08-10",
+    "fetched_at": "2026-09-28T04:45:11Z",
+    "history_as_of": "2026-09-25",
     "path": "data/admin/yahoo-batch-quote-history/lkg/HBTC.json",
-    "payload_sha256": "8a8407987044a0ef29540af02a7b1b4169a33e6a73b0f2114f8fb588df221bb5",
-    "quote_as_of": "2026-08-10T18:13:30Z",
-    "source_as_of": "2026-08-10"
+    "payload_sha256": "74a5c7b75974710ba9468cd16b29ef094a02e1a179674aa84cfbd461f5edc0aa",
+    "quote_as_of": "2026-08-26T17:31:04Z",
+    "source_as_of": "2026-08-26T17:31:04Z"
   },
   "promotion_contract": "provider_observation/v2",
   "provider_observation": {
@@ -194,19 +194,19 @@
     "schema_version": "provider_observation/v2",
     "source_as_of": "2026-08-26T17:31:04Z"
   },
-  "resolution_state": "fresh_primary",
-  "retry": false,
+  "resolution_state": "lkg_primary",
+  "retry": true,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "stale": {
-    "age_business_days": 7,
-    "classified_at": "2026-08-19T23:42:29Z",
-    "classified_run_id": "32314261503",
+    "age_business_days": 22,
+    "classified_at": "2026-09-28T05:23:15Z",
+    "classified_run_id": "36367832955",
     "expected_resolution": "next_natural_yahoo_run",
     "max_business_days": 6,
-    "message": "HBTC holds LKG because Yahoo source date 2026-08-10 is 7 business days old, beyond the 6-day bound; it will retry on the next natural Yahoo run.",
+    "message": "HBTC holds LKG because Yahoo source date 2026-08-26T17:31:04Z is 22 business days old, beyond the 6-day bound; it will retry on the next natural Yahoo run.",
     "reason": "source_age_exceeds_lane_bound",
-    "source_as_of": "2026-08-10"
+    "source_as_of": "2026-08-26T17:31:04Z"
   },
   "ticker": "HBTC",
-  "updated_at": "2026-09-28T04:37:06Z"
+  "updated_at": "2026-09-28T05:23:15Z"
 }

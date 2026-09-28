@@ -90,31 +90,44 @@
       "run_id": "31334785949",
       "schedule": "7 20 * * 0-5",
       "shard": "10/72"
+    },
+    {
+      "attempts_used": 1,
+      "event_name": "workflow_dispatch",
+      "failures": [],
+      "latency_ms": 478,
+      "natural": false,
+      "observed_at": "2026-09-28T05:23:15Z",
+      "outcome": "fresh",
+      "run_attempt": 1,
+      "run_id": "36367832955",
+      "schedule": "",
+      "shard": ""
     }
   ],
   "current": {
-    "fetched_at": "2026-08-09T20:43:52Z",
-    "history_as_of": "2026-08-07",
-    "path": "data/admin/yahoo-batch-quote-history/lkg/LEUX.json",
-    "payload_sha256": "955b5194417a3db718545476111f31f3ba5f04728cb21dc3601e8c6720c3db5f",
-    "quote_as_of": "2026-08-07T20:00:00Z",
-    "source_as_of": "2026-08-07"
+    "fetched_at": "2026-09-28T05:27:28Z",
+    "history_as_of": "2026-09-25",
+    "path": "data/yf/finance/LEUX.json",
+    "payload_sha256": "092af9e6fb3de4b8a218af5cb8616b49eda5278f751f0e680265700de37a32d9",
+    "quote_as_of": "2026-09-25T19:59:51Z",
+    "source_as_of": "2026-09-25"
   },
   "discovered_from": [
     "stockanalysis_etf"
   ],
   "last_attempt": {
     "attempts_used": 1,
-    "event_name": "schedule",
+    "event_name": "workflow_dispatch",
     "failures": [],
-    "latency_ms": 795,
-    "natural": true,
-    "observed_at": "2026-08-09T20:40:44Z",
+    "latency_ms": 478,
+    "natural": false,
+    "observed_at": "2026-09-28T05:23:15Z",
     "outcome": "fresh",
     "run_attempt": 1,
-    "run_id": "31334785949",
-    "schedule": "7 20 * * 0-5",
-    "shard": "10/72"
+    "run_id": "36367832955",
+    "schedule": "",
+    "shard": ""
   },
   "lkg": {
     "fetched_at": "2026-08-09T20:43:52Z",
@@ -126,18 +139,18 @@
   },
   "promotion_contract": "provider_observation/v2",
   "provider_observation": {
-    "event_name": "schedule",
-    "history_as_of": "2026-08-07",
-    "observed_at": "2026-08-09T20:40:44Z",
-    "payload_sha256": "6a0663e3d2dca3dfa44c1e24ce9afe8eba568d56de6e8d735fc67bcc365a486a",
-    "quote_as_of": "2026-08-07T20:00:00Z",
+    "event_name": "workflow_dispatch",
+    "history_as_of": "2026-09-25",
+    "observed_at": "2026-09-28T05:23:15Z",
+    "payload_sha256": "f78a839dd1f6caaf2282c3c9ee96f95ff9cec48b675a00323b877473e3327650",
+    "quote_as_of": "2026-09-25T19:59:51Z",
     "run_attempt": 1,
-    "run_id": "31334785949",
+    "run_id": "36367832955",
     "schema_version": "provider_observation/v2",
-    "source_as_of": "2026-08-07"
+    "source_as_of": "2026-09-25"
   },
-  "resolution_state": "lkg_primary",
-  "retry": true,
+  "resolution_state": "fresh_primary",
+  "retry": false,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "stale": {
     "age_business_days": 8,
@@ -150,5 +163,5 @@
     "source_as_of": "2026-08-07"
   },
   "ticker": "LEUX",
-  "updated_at": "2026-08-19T23:42:29Z"
+  "updated_at": "2026-09-28T05:23:15Z"
 }

@@ -93,6 +93,20 @@
       "run_id": "31620820614",
       "schedule": "7 16 * * 0-5",
       "shard": "44/72"
+    },
+    {
+      "attempts_used": 1,
+      "error": "foreign_writer_conflict",
+      "event_name": "workflow_dispatch",
+      "failures": [],
+      "latency_ms": 486,
+      "natural": false,
+      "observed_at": "2026-09-28T05:23:15Z",
+      "outcome": "failed",
+      "run_attempt": 1,
+      "run_id": "36367832955",
+      "schedule": "",
+      "shard": ""
     }
   ],
   "current": {
@@ -108,16 +122,26 @@
   ],
   "last_attempt": {
     "attempts_used": 1,
-    "event_name": "schedule",
+    "error": "foreign_writer_conflict",
+    "event_name": "workflow_dispatch",
     "failures": [],
-    "latency_ms": 650,
-    "natural": true,
-    "observed_at": "2026-08-12T17:16:04Z",
-    "outcome": "fresh",
+    "latency_ms": 486,
+    "natural": false,
+    "observed_at": "2026-09-28T05:23:15Z",
+    "outcome": "failed",
     "run_attempt": 1,
-    "run_id": "31620820614",
-    "schedule": "7 16 * * 0-5",
-    "shard": "44/72"
+    "run_id": "36367832955",
+    "schedule": "",
+    "shard": ""
+  },
+  "latest_promotion_deferral": {
+    "event_name": "workflow_dispatch",
+    "observed_at": "2026-09-28T05:23:15Z",
+    "provider_history_as_of": "2026-09-25",
+    "provider_quote_as_of": "2026-08-03T18:30:03Z",
+    "reason": "foreign_writer_conflict",
+    "run_attempt": 1,
+    "run_id": "36367832955"
   },
   "lkg": {
     "fetched_at": "2026-08-12T17:16:30Z",
@@ -153,5 +177,5 @@
     "source_as_of": "2026-08-12"
   },
   "ticker": "LFDR",
-  "updated_at": "2026-08-21T23:43:33Z"
+  "updated_at": "2026-09-28T05:23:15Z"
 }

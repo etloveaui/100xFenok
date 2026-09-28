@@ -108,31 +108,44 @@
       "run_id": "31422533403",
       "schedule": "7 18 * * 0-5",
       "shard": "21/72"
+    },
+    {
+      "attempts_used": 1,
+      "event_name": "workflow_dispatch",
+      "failures": [],
+      "latency_ms": 468,
+      "natural": false,
+      "observed_at": "2026-09-28T05:23:15Z",
+      "outcome": "fresh",
+      "run_attempt": 1,
+      "run_id": "36367832955",
+      "schedule": "",
+      "shard": ""
     }
   ],
   "current": {
-    "fetched_at": "2026-08-10T19:10:37Z",
-    "history_as_of": "2026-08-10",
-    "path": "data/admin/yahoo-batch-quote-history/lkg/NVC.json",
-    "payload_sha256": "3edd681a256738bd8e8a1fd0187fcdffb750d7815bd7992e79000e4e7e2e61b0",
-    "quote_as_of": "2026-08-10T13:46:06Z",
-    "source_as_of": "2026-08-10"
+    "fetched_at": "2026-09-28T05:37:35Z",
+    "history_as_of": "2026-09-25",
+    "path": "data/yf/finance/NVC.json",
+    "payload_sha256": "a0e7b354efdfa53fa6a1fe56c77dadb329e645e962c41c1dc185aa1508e9d49f",
+    "quote_as_of": "2026-09-21T16:09:48Z",
+    "source_as_of": "2026-09-21T16:09:48Z"
   },
   "discovered_from": [
     "stockanalysis_etf"
   ],
   "last_attempt": {
     "attempts_used": 1,
-    "event_name": "schedule",
+    "event_name": "workflow_dispatch",
     "failures": [],
-    "latency_ms": 755,
-    "natural": true,
-    "observed_at": "2026-08-10T19:09:16Z",
+    "latency_ms": 468,
+    "natural": false,
+    "observed_at": "2026-09-28T05:23:15Z",
     "outcome": "fresh",
     "run_attempt": 1,
-    "run_id": "31422533403",
-    "schedule": "7 18 * * 0-5",
-    "shard": "21/72"
+    "run_id": "36367832955",
+    "schedule": "",
+    "shard": ""
   },
   "last_recovered_failure": {
     "attempts_used": 1,
@@ -156,23 +169,23 @@
   },
   "promotion_contract": "provider_observation/v2",
   "provider_observation": {
-    "event_name": "schedule",
-    "history_as_of": "2026-08-10",
-    "observed_at": "2026-08-10T19:09:16Z",
-    "payload_sha256": "64fabde6e9e60a05448e6c72e6c0dee707c48441c463745059efe29457c7a121",
-    "quote_as_of": "2026-08-10T13:46:06Z",
+    "event_name": "workflow_dispatch",
+    "history_as_of": "2026-09-25",
+    "observed_at": "2026-09-28T05:23:15Z",
+    "payload_sha256": "1ab0329f5fc6a412bf89b566ff587d1e6de01206ca10c813dbdfdff639b67427",
+    "quote_as_of": "2026-09-21T16:09:48Z",
     "run_attempt": 1,
-    "run_id": "31422533403",
+    "run_id": "36367832955",
     "schema_version": "provider_observation/v2",
-    "source_as_of": "2026-08-10"
+    "source_as_of": "2026-09-21T16:09:48Z"
   },
   "recovered_at": "2026-08-10T19:09:16Z",
   "recovered_from_run_id": "31324627429",
   "recovery_event_name": "schedule",
   "recovery_run_attempt": 1,
   "recovery_run_id": "31422533403",
-  "resolution_state": "lkg_primary",
-  "retry": true,
+  "resolution_state": "fresh_primary",
+  "retry": false,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "stale": {
     "age_business_days": 7,
@@ -185,5 +198,5 @@
     "source_as_of": "2026-08-10"
   },
   "ticker": "NVC",
-  "updated_at": "2026-08-19T23:42:29Z"
+  "updated_at": "2026-09-28T05:23:15Z"
 }

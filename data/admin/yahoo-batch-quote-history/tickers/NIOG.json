@@ -12,31 +12,44 @@
       "run_id": "31111230701",
       "schedule": "7 12 * * 0-5",
       "shard": "54/72"
+    },
+    {
+      "attempts_used": 1,
+      "event_name": "workflow_dispatch",
+      "failures": [],
+      "latency_ms": 511,
+      "natural": false,
+      "observed_at": "2026-09-28T05:23:15Z",
+      "outcome": "fresh",
+      "run_attempt": 1,
+      "run_id": "36367832955",
+      "schedule": "",
+      "shard": ""
     }
   ],
   "current": {
-    "fetched_at": "2026-08-06T14:35:53Z",
-    "history_as_of": "2026-08-05",
-    "path": "data/admin/yahoo-batch-quote-history/lkg/NIOG.json",
-    "payload_sha256": "518f8cdee7d7c201ee6649c90f6723df354f8132053046bbcddf7a0922e3dbef",
-    "quote_as_of": "2026-08-06T14:26:19Z",
-    "source_as_of": "2026-08-05"
+    "fetched_at": "2026-09-28T05:36:04Z",
+    "history_as_of": "2026-09-25",
+    "path": "data/yf/finance/NIOG.json",
+    "payload_sha256": "f3696b917f400132b8978aa59db0e360d9e0ae887875a1227851bd8df16db26e",
+    "quote_as_of": "2026-09-25T20:00:00Z",
+    "source_as_of": "2026-09-25"
   },
   "discovered_from": [
     "stockanalysis_etf"
   ],
   "last_attempt": {
     "attempts_used": 1,
-    "event_name": "schedule",
+    "event_name": "workflow_dispatch",
     "failures": [],
-    "latency_ms": 828,
-    "natural": true,
-    "observed_at": "2026-08-06T14:33:02Z",
+    "latency_ms": 511,
+    "natural": false,
+    "observed_at": "2026-09-28T05:23:15Z",
     "outcome": "fresh",
     "run_attempt": 1,
-    "run_id": "31111230701",
-    "schedule": "7 12 * * 0-5",
-    "shard": "54/72"
+    "run_id": "36367832955",
+    "schedule": "",
+    "shard": ""
   },
   "lkg": {
     "fetched_at": "2026-08-06T14:35:53Z",
@@ -48,18 +61,18 @@
   },
   "promotion_contract": "provider_observation/v2",
   "provider_observation": {
-    "event_name": "schedule",
-    "history_as_of": "2026-08-05",
-    "observed_at": "2026-08-06T14:33:02Z",
-    "payload_sha256": "99c4e3d93cb4b9ab384241d415865d607b124233913985c020c1932d102c8747",
-    "quote_as_of": "2026-08-06T14:26:19Z",
+    "event_name": "workflow_dispatch",
+    "history_as_of": "2026-09-25",
+    "observed_at": "2026-09-28T05:23:15Z",
+    "payload_sha256": "767475b802ac8d06ca1a20dc7577d57e22888ebaa676851ed4849674602ff427",
+    "quote_as_of": "2026-09-25T20:00:00Z",
     "run_attempt": 1,
-    "run_id": "31111230701",
+    "run_id": "36367832955",
     "schema_version": "provider_observation/v2",
-    "source_as_of": "2026-08-05"
+    "source_as_of": "2026-09-25"
   },
-  "resolution_state": "lkg_primary",
-  "retry": true,
+  "resolution_state": "fresh_primary",
+  "retry": false,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "stale": {
     "age_business_days": 7,
@@ -72,5 +85,5 @@
     "source_as_of": "2026-08-05"
   },
   "ticker": "NIOG",
-  "updated_at": "2026-08-14T00:10:47Z"
+  "updated_at": "2026-09-28T05:23:15Z"
 }

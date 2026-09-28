@@ -100,62 +100,44 @@
       "run_id": "31182487397",
       "schedule": "7 12 * * 0-5",
       "shard": "66/72"
+    },
+    {
+      "attempts_used": 1,
+      "event_name": "workflow_dispatch",
+      "failures": [],
+      "latency_ms": 446,
+      "natural": false,
+      "observed_at": "2026-09-28T05:23:15Z",
+      "outcome": "fresh",
+      "run_attempt": 1,
+      "run_id": "36367832955",
+      "schedule": "",
+      "shard": ""
     }
   ],
   "current": {
-    "fetched_at": "2026-08-07T13:26:46Z",
-    "history_as_of": "2026-08-06",
-    "path": "data/admin/yahoo-batch-quote-history/lkg/JUDB.json",
-    "payload_sha256": "8799bdbe07426181ccc0b3dea1647b89d14390152a83c18c7d6cea8277c488cc",
-    "quote_as_of": "2026-08-06T19:40:49Z",
-    "source_as_of": "2026-08-06"
+    "fetched_at": "2026-09-28T05:24:20Z",
+    "history_as_of": "2026-09-25",
+    "path": "data/yf/finance/JUDB.json",
+    "payload_sha256": "31ba296a98317ee976ca536c03a716a477f006e15d6b4082325ec40d49726193",
+    "quote_as_of": "2026-09-25T16:45:00Z",
+    "source_as_of": "2026-09-25"
   },
   "discovered_from": [
     "stockanalysis_etf"
   ],
   "last_attempt": {
     "attempts_used": 1,
-    "event_name": "schedule",
-    "failures": [
-      {
-        "attempt": 1,
-        "error": "YFDataException: JUDB: No Fund data found.",
-        "source": "provider_safe_call"
-      },
-      {
-        "attempt": 1,
-        "error": "YFDataException: JUDB: No Fund data found.",
-        "source": "provider_safe_call"
-      },
-      {
-        "attempt": 1,
-        "error": "YFDataException: JUDB: No Fund data found.",
-        "source": "provider_safe_call"
-      },
-      {
-        "attempt": 1,
-        "error": "YFDataException: JUDB: No Fund data found.",
-        "source": "provider_safe_call"
-      },
-      {
-        "attempt": 1,
-        "error": "YFDataException: JUDB: No Fund data found.",
-        "source": "provider_safe_call"
-      },
-      {
-        "attempt": 1,
-        "error": "YFDataException: JUDB: No Fund data found.",
-        "source": "provider_safe_call"
-      }
-    ],
-    "latency_ms": 1364,
-    "natural": true,
-    "observed_at": "2026-08-07T13:26:16Z",
+    "event_name": "workflow_dispatch",
+    "failures": [],
+    "latency_ms": 446,
+    "natural": false,
+    "observed_at": "2026-09-28T05:23:15Z",
     "outcome": "fresh",
     "run_attempt": 1,
-    "run_id": "31182487397",
-    "schedule": "7 12 * * 0-5",
-    "shard": "66/72"
+    "run_id": "36367832955",
+    "schedule": "",
+    "shard": ""
   },
   "lkg": {
     "fetched_at": "2026-08-07T13:26:46Z",
@@ -167,18 +149,18 @@
   },
   "promotion_contract": "provider_observation/v2",
   "provider_observation": {
-    "event_name": "schedule",
-    "history_as_of": "2026-08-06",
-    "observed_at": "2026-08-07T13:26:16Z",
-    "payload_sha256": "2411504b12f592950e06563ef5daea29c1696709b287f2ad832259e4d0790e00",
-    "quote_as_of": "2026-08-06T19:40:49Z",
+    "event_name": "workflow_dispatch",
+    "history_as_of": "2026-09-25",
+    "observed_at": "2026-09-28T05:23:15Z",
+    "payload_sha256": "bb429e51a7a2b528d77f4ffe3e23715ece543fe4ca76bd5b8203ae3f93ae5b1f",
+    "quote_as_of": "2026-09-25T16:45:00Z",
     "run_attempt": 1,
-    "run_id": "31182487397",
+    "run_id": "36367832955",
     "schema_version": "provider_observation/v2",
-    "source_as_of": "2026-08-06"
+    "source_as_of": "2026-09-25"
   },
-  "resolution_state": "lkg_primary",
-  "retry": true,
+  "resolution_state": "fresh_primary",
+  "retry": false,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "stale": {
     "age_business_days": 9,
@@ -191,5 +173,5 @@
     "source_as_of": "2026-08-06"
   },
   "ticker": "JUDB",
-  "updated_at": "2026-08-19T23:42:29Z"
+  "updated_at": "2026-09-28T05:23:15Z"
 }

@@ -136,34 +136,46 @@
       "run_id": "31648785047",
       "schedule": "7 22 * * 0-5",
       "shard": "47/72"
+    },
+    {
+      "attempts_used": 1,
+      "event_name": "workflow_dispatch",
+      "failures": [],
+      "latency_ms": 522,
+      "natural": false,
+      "observed_at": "2026-09-28T05:23:15Z",
+      "outcome": "fresh",
+      "run_attempt": 1,
+      "run_id": "36367832955",
+      "schedule": "",
+      "shard": ""
     }
   ],
   "current": {
-    "fetched_at": "2026-08-10T15:11:00Z",
-    "history_as_of": "2026-08-10",
-    "path": "data/admin/yahoo-batch-quote-history/lkg/LIAE.json",
-    "payload_sha256": "54323bc1e23f22c2d44fb39e44732b7a8bd844e9c7be797eefe6fc56f96516e9",
-    "quote_as_of": "2026-08-10T13:46:05Z",
-    "source_as_of": "2026-08-10"
+    "fetched_at": "2026-09-28T05:27:52Z",
+    "history_as_of": "2026-09-25",
+    "path": "data/yf/finance/LIAE.json",
+    "payload_sha256": "50db06b1c6b5f876d7febdaa80096c86357064c5ea57e4ff1d033ce403890ae6",
+    "quote_as_of": "2026-09-18T15:01:43Z",
+    "source_as_of": "2026-09-18T15:01:43Z"
   },
   "discovered_from": [
     "stockanalysis_etf"
   ],
   "last_attempt": {
     "attempts_used": 1,
-    "error": "foreign_writer_conflict",
-    "event_name": "schedule",
+    "event_name": "workflow_dispatch",
     "failures": [],
-    "latency_ms": 646,
-    "natural": true,
-    "observed_at": "2026-08-12T22:55:30Z",
-    "outcome": "failed",
+    "latency_ms": 522,
+    "natural": false,
+    "observed_at": "2026-09-28T05:23:15Z",
+    "outcome": "fresh",
     "run_attempt": 1,
-    "run_id": "31648785047",
-    "schedule": "7 22 * * 0-5",
-    "shard": "47/72"
+    "run_id": "36367832955",
+    "schedule": "",
+    "shard": ""
   },
-  "latest_failure": {
+  "last_recovered_failure": {
     "attempts_used": 1,
     "data_loss": false,
     "deferred_acquisition": false,
@@ -175,15 +187,6 @@
     "run_attempt": 1,
     "run_id": "31639747711"
   },
-  "latest_promotion_deferral": {
-    "event_name": "schedule",
-    "observed_at": "2026-08-12T22:55:30Z",
-    "provider_history_as_of": "2026-08-11",
-    "provider_quote_as_of": "2026-07-21T15:51:39Z",
-    "reason": "foreign_writer_conflict",
-    "run_attempt": 1,
-    "run_id": "31648785047"
-  },
   "lkg": {
     "fetched_at": "2026-08-10T15:11:00Z",
     "history_as_of": "2026-08-10",
@@ -194,18 +197,23 @@
   },
   "promotion_contract": "provider_observation/v2",
   "provider_observation": {
-    "event_name": "schedule",
-    "history_as_of": "2026-08-10",
-    "observed_at": "2026-08-10T15:10:15Z",
-    "payload_sha256": "3276ac4d91ea148bb8a01016211ea2fa8077fc3bd2ec18d65844e160af61b9dd",
-    "quote_as_of": "2026-08-10T13:46:05Z",
+    "event_name": "workflow_dispatch",
+    "history_as_of": "2026-09-25",
+    "observed_at": "2026-09-28T05:23:15Z",
+    "payload_sha256": "7837215c022e6501390aa4a43177aeefad96010026e670aad829fddcab2c7b26",
+    "quote_as_of": "2026-09-18T15:01:43Z",
     "run_attempt": 1,
-    "run_id": "31401948552",
+    "run_id": "36367832955",
     "schema_version": "provider_observation/v2",
-    "source_as_of": "2026-08-10"
+    "source_as_of": "2026-09-18T15:01:43Z"
   },
-  "resolution_state": "lkg_primary",
-  "retry": true,
+  "recovered_at": "2026-09-28T05:23:15Z",
+  "recovered_from_run_id": "31639747711",
+  "recovery_event_name": "workflow_dispatch",
+  "recovery_run_attempt": 1,
+  "recovery_run_id": "36367832955",
+  "resolution_state": "fresh_primary",
+  "retry": false,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "stale": {
     "age_business_days": 13,
@@ -218,5 +226,5 @@
     "source_as_of": "2026-07-21T15:51:39Z"
   },
   "ticker": "LIAE",
-  "updated_at": "2026-08-12T22:55:30Z"
+  "updated_at": "2026-09-28T05:23:15Z"
 }

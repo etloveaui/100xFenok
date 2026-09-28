@@ -43,62 +43,44 @@
       "run_id": "31401948552",
       "schedule": "7 14 * * 0-5",
       "shard": "19/72"
+    },
+    {
+      "attempts_used": 1,
+      "event_name": "workflow_dispatch",
+      "failures": [],
+      "latency_ms": 481,
+      "natural": false,
+      "observed_at": "2026-09-28T05:23:15Z",
+      "outcome": "fresh",
+      "run_attempt": 1,
+      "run_id": "36367832955",
+      "schedule": "",
+      "shard": ""
     }
   ],
   "current": {
-    "fetched_at": "2026-08-10T15:13:04Z",
-    "history_as_of": "2026-08-10",
-    "path": "data/admin/yahoo-batch-quote-history/lkg/JPRF.json",
-    "payload_sha256": "8ef2dc05e43d3d5af18964270f8b3c6a37a2582b1116592021f32649b3ec4701",
-    "quote_as_of": "2026-08-10T15:05:35Z",
-    "source_as_of": "2026-08-10"
+    "fetched_at": "2026-09-28T05:24:01Z",
+    "history_as_of": "2026-09-25",
+    "path": "data/yf/finance/JPRF.json",
+    "payload_sha256": "357e39a046dc46bfa610546964dc5b969d44375c23abbd1b8b60f732430ffc99",
+    "quote_as_of": "2026-09-25T19:59:54Z",
+    "source_as_of": "2026-09-25"
   },
   "discovered_from": [
     "stockanalysis_etf"
   ],
   "last_attempt": {
     "attempts_used": 1,
-    "event_name": "schedule",
-    "failures": [
-      {
-        "attempt": 1,
-        "error": "YFDataException: JPRF: No Fund data found.",
-        "source": "provider_safe_call"
-      },
-      {
-        "attempt": 1,
-        "error": "YFDataException: JPRF: No Fund data found.",
-        "source": "provider_safe_call"
-      },
-      {
-        "attempt": 1,
-        "error": "YFDataException: JPRF: No Fund data found.",
-        "source": "provider_safe_call"
-      },
-      {
-        "attempt": 1,
-        "error": "YFDataException: JPRF: No Fund data found.",
-        "source": "provider_safe_call"
-      },
-      {
-        "attempt": 1,
-        "error": "YFDataException: JPRF: No Fund data found.",
-        "source": "provider_safe_call"
-      },
-      {
-        "attempt": 1,
-        "error": "YFDataException: JPRF: No Fund data found.",
-        "source": "provider_safe_call"
-      }
-    ],
-    "latency_ms": 513,
-    "natural": true,
-    "observed_at": "2026-08-10T15:10:15Z",
+    "event_name": "workflow_dispatch",
+    "failures": [],
+    "latency_ms": 481,
+    "natural": false,
+    "observed_at": "2026-09-28T05:23:15Z",
     "outcome": "fresh",
     "run_attempt": 1,
-    "run_id": "31401948552",
-    "schedule": "7 14 * * 0-5",
-    "shard": "19/72"
+    "run_id": "36367832955",
+    "schedule": "",
+    "shard": ""
   },
   "lkg": {
     "fetched_at": "2026-08-10T15:13:04Z",
@@ -110,18 +92,18 @@
   },
   "promotion_contract": "provider_observation/v2",
   "provider_observation": {
-    "event_name": "schedule",
-    "history_as_of": "2026-08-10",
-    "observed_at": "2026-08-10T15:10:15Z",
-    "payload_sha256": "0d72d48f6366269c6f2b0ca359750596a079c4eb83eec2af0202172555bf0871",
-    "quote_as_of": "2026-08-10T15:05:35Z",
+    "event_name": "workflow_dispatch",
+    "history_as_of": "2026-09-25",
+    "observed_at": "2026-09-28T05:23:15Z",
+    "payload_sha256": "20ddd5c11f501ca5da7ad28ee19b71e69bb8ef74bc6f2fe6d5ce3ca8769bfc53",
+    "quote_as_of": "2026-09-25T19:59:54Z",
     "run_attempt": 1,
-    "run_id": "31401948552",
+    "run_id": "36367832955",
     "schema_version": "provider_observation/v2",
-    "source_as_of": "2026-08-10"
+    "source_as_of": "2026-09-25"
   },
-  "resolution_state": "lkg_primary",
-  "retry": true,
+  "resolution_state": "fresh_primary",
+  "retry": false,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "stale": {
     "age_business_days": 7,
@@ -134,5 +116,5 @@
     "source_as_of": "2026-08-10"
   },
   "ticker": "JPRF",
-  "updated_at": "2026-08-19T23:42:29Z"
+  "updated_at": "2026-09-28T05:23:15Z"
 }

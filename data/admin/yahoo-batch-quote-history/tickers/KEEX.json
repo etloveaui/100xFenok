@@ -90,31 +90,44 @@
       "run_id": "31164940276",
       "schedule": "7 8 * * 0-5",
       "shard": "64/72"
+    },
+    {
+      "attempts_used": 1,
+      "event_name": "workflow_dispatch",
+      "failures": [],
+      "latency_ms": 443,
+      "natural": false,
+      "observed_at": "2026-09-28T05:23:15Z",
+      "outcome": "fresh",
+      "run_attempt": 1,
+      "run_id": "36367832955",
+      "schedule": "",
+      "shard": ""
     }
   ],
   "current": {
-    "fetched_at": "2026-08-07T09:17:02Z",
-    "history_as_of": "2026-08-06",
-    "path": "data/admin/yahoo-batch-quote-history/lkg/KEEX.json",
-    "payload_sha256": "fef39e185516833bcb1f5695d2f1c75550f07b3ac3441e8747e2c976eeb6b620",
-    "quote_as_of": "2026-08-06T19:41:07Z",
-    "source_as_of": "2026-08-06"
+    "fetched_at": "2026-09-28T05:25:23Z",
+    "history_as_of": "2026-09-25",
+    "path": "data/yf/finance/KEEX.json",
+    "payload_sha256": "1bac19da6086244e89606ebea1c912917b8bdec711bcc90303cfc2ec7cd9ee6f",
+    "quote_as_of": "2026-09-25T19:59:50Z",
+    "source_as_of": "2026-09-25"
   },
   "discovered_from": [
     "stockanalysis_etf"
   ],
   "last_attempt": {
     "attempts_used": 1,
-    "event_name": "schedule",
+    "event_name": "workflow_dispatch",
     "failures": [],
-    "latency_ms": 529,
-    "natural": true,
-    "observed_at": "2026-08-07T09:14:45Z",
+    "latency_ms": 443,
+    "natural": false,
+    "observed_at": "2026-09-28T05:23:15Z",
     "outcome": "fresh",
     "run_attempt": 1,
-    "run_id": "31164940276",
-    "schedule": "7 8 * * 0-5",
-    "shard": "64/72"
+    "run_id": "36367832955",
+    "schedule": "",
+    "shard": ""
   },
   "lkg": {
     "fetched_at": "2026-08-07T09:17:02Z",
@@ -126,18 +139,18 @@
   },
   "promotion_contract": "provider_observation/v2",
   "provider_observation": {
-    "event_name": "schedule",
-    "history_as_of": "2026-08-06",
-    "observed_at": "2026-08-07T09:14:45Z",
-    "payload_sha256": "a380b9fad13dbfe37845f77a3c67ef4ca562b165b6bd1de50f544a97da7fcc22",
-    "quote_as_of": "2026-08-06T19:41:07Z",
+    "event_name": "workflow_dispatch",
+    "history_as_of": "2026-09-25",
+    "observed_at": "2026-09-28T05:23:15Z",
+    "payload_sha256": "89bb82ed623fa6a6858951ad9a2ddb17b68367256ca8d7c7c549f97c429653bf",
+    "quote_as_of": "2026-09-25T19:59:50Z",
     "run_attempt": 1,
-    "run_id": "31164940276",
+    "run_id": "36367832955",
     "schema_version": "provider_observation/v2",
-    "source_as_of": "2026-08-06"
+    "source_as_of": "2026-09-25"
   },
-  "resolution_state": "lkg_primary",
-  "retry": true,
+  "resolution_state": "fresh_primary",
+  "retry": false,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "stale": {
     "age_business_days": 9,
@@ -150,5 +163,5 @@
     "source_as_of": "2026-08-06"
   },
   "ticker": "KEEX",
-  "updated_at": "2026-08-19T23:42:29Z"
+  "updated_at": "2026-09-28T05:23:15Z"
 }

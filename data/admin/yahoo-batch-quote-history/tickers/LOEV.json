@@ -12,31 +12,44 @@
       "run_id": "31505333713",
       "schedule": "7 14 * * 0-5",
       "shard": "31/72"
+    },
+    {
+      "attempts_used": 1,
+      "event_name": "workflow_dispatch",
+      "failures": [],
+      "latency_ms": 438,
+      "natural": false,
+      "observed_at": "2026-09-28T05:23:15Z",
+      "outcome": "fresh",
+      "run_attempt": 1,
+      "run_id": "36367832955",
+      "schedule": "",
+      "shard": ""
     }
   ],
   "current": {
-    "fetched_at": "2026-08-11T15:11:53Z",
-    "history_as_of": "2026-08-11",
-    "path": "data/admin/yahoo-batch-quote-history/lkg/LOEV.json",
-    "payload_sha256": "7793de4cbb23443bbf879c07446824d0386bd5d78e39c99798b7b813c887ac6b",
-    "quote_as_of": "2026-08-11T14:48:01Z",
-    "source_as_of": "2026-08-11"
+    "fetched_at": "2026-09-28T05:28:23Z",
+    "history_as_of": "2026-09-25",
+    "path": "data/yf/finance/LOEV.json",
+    "payload_sha256": "4f02b29da3f193f01ff51d28bc5d895ea5ccad718d3b4398acb4ee19af41fd76",
+    "quote_as_of": "2026-09-25T20:00:00Z",
+    "source_as_of": "2026-09-25"
   },
   "discovered_from": [
     "stockanalysis_etf"
   ],
   "last_attempt": {
     "attempts_used": 1,
-    "event_name": "schedule",
+    "event_name": "workflow_dispatch",
     "failures": [],
-    "latency_ms": 569,
-    "natural": true,
-    "observed_at": "2026-08-11T15:09:25Z",
+    "latency_ms": 438,
+    "natural": false,
+    "observed_at": "2026-09-28T05:23:15Z",
     "outcome": "fresh",
     "run_attempt": 1,
-    "run_id": "31505333713",
-    "schedule": "7 14 * * 0-5",
-    "shard": "31/72"
+    "run_id": "36367832955",
+    "schedule": "",
+    "shard": ""
   },
   "lkg": {
     "fetched_at": "2026-08-11T15:11:53Z",
@@ -48,18 +61,18 @@
   },
   "promotion_contract": "provider_observation/v2",
   "provider_observation": {
-    "event_name": "schedule",
-    "history_as_of": "2026-08-11",
-    "observed_at": "2026-08-11T15:09:25Z",
-    "payload_sha256": "bf63a2079714f6d15f6e74e02693aa030ec5015220cc1db1f25ca00a5bcaee37",
-    "quote_as_of": "2026-08-11T14:48:01Z",
+    "event_name": "workflow_dispatch",
+    "history_as_of": "2026-09-25",
+    "observed_at": "2026-09-28T05:23:15Z",
+    "payload_sha256": "6ba50847b98550a149ce5a877af3ae12dd2ea65c1d5804886a980e0871fd7899",
+    "quote_as_of": "2026-09-25T20:00:00Z",
     "run_attempt": 1,
-    "run_id": "31505333713",
+    "run_id": "36367832955",
     "schema_version": "provider_observation/v2",
-    "source_as_of": "2026-08-11"
+    "source_as_of": "2026-09-25"
   },
-  "resolution_state": "lkg_primary",
-  "retry": true,
+  "resolution_state": "fresh_primary",
+  "retry": false,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "stale": {
     "age_business_days": 7,
@@ -72,5 +85,5 @@
     "source_as_of": "2026-08-11"
   },
   "ticker": "LOEV",
-  "updated_at": "2026-08-20T14:20:12Z"
+  "updated_at": "2026-09-28T05:23:15Z"
 }

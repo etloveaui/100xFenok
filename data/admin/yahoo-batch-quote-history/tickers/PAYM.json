@@ -12,31 +12,44 @@
       "run_id": "31340064113",
       "schedule": "7 22 * * 0-5",
       "shard": "11/72"
+    },
+    {
+      "attempts_used": 1,
+      "event_name": "workflow_dispatch",
+      "failures": [],
+      "latency_ms": 485,
+      "natural": false,
+      "observed_at": "2026-09-28T05:23:15Z",
+      "outcome": "fresh",
+      "run_attempt": 1,
+      "run_id": "36367832955",
+      "schedule": "",
+      "shard": ""
     }
   ],
   "current": {
-    "fetched_at": "2026-08-09T22:47:19Z",
-    "history_as_of": "2026-08-07",
-    "path": "data/admin/yahoo-batch-quote-history/lkg/PAYM.json",
-    "payload_sha256": "c8023e6ac35ec6b0274f4bfb49c26092478bbe4e543ea97989b0d118ce13a035",
-    "quote_as_of": "2026-08-07T19:59:14Z",
-    "source_as_of": "2026-08-07"
+    "fetched_at": "2026-09-28T05:40:36Z",
+    "history_as_of": "2026-09-25",
+    "path": "data/yf/finance/PAYM.json",
+    "payload_sha256": "c064a9ec963e1cd677e8ed42ca655be244f6e27cfb88201c6070c272aca52c19",
+    "quote_as_of": "2026-09-25T19:59:46Z",
+    "source_as_of": "2026-09-25"
   },
   "discovered_from": [
     "stockanalysis_etf"
   ],
   "last_attempt": {
     "attempts_used": 1,
-    "event_name": "schedule",
+    "event_name": "workflow_dispatch",
     "failures": [],
-    "latency_ms": 770,
-    "natural": true,
-    "observed_at": "2026-08-09T22:44:05Z",
+    "latency_ms": 485,
+    "natural": false,
+    "observed_at": "2026-09-28T05:23:15Z",
     "outcome": "fresh",
     "run_attempt": 1,
-    "run_id": "31340064113",
-    "schedule": "7 22 * * 0-5",
-    "shard": "11/72"
+    "run_id": "36367832955",
+    "schedule": "",
+    "shard": ""
   },
   "lkg": {
     "fetched_at": "2026-08-09T22:47:19Z",
@@ -48,18 +61,18 @@
   },
   "promotion_contract": "provider_observation/v2",
   "provider_observation": {
-    "event_name": "schedule",
-    "history_as_of": "2026-08-07",
-    "observed_at": "2026-08-09T22:44:05Z",
-    "payload_sha256": "57fe4b717615bd97187bb42950c958d7808e194ef0d48accf76a796e0bb4832c",
-    "quote_as_of": "2026-08-07T19:59:14Z",
+    "event_name": "workflow_dispatch",
+    "history_as_of": "2026-09-25",
+    "observed_at": "2026-09-28T05:23:15Z",
+    "payload_sha256": "bfe9e70be03c4272ee7dd40c1aa51efc2f75947ba1c87ae83041f934e8cd1083",
+    "quote_as_of": "2026-09-25T19:59:46Z",
     "run_attempt": 1,
-    "run_id": "31340064113",
+    "run_id": "36367832955",
     "schema_version": "provider_observation/v2",
-    "source_as_of": "2026-08-07"
+    "source_as_of": "2026-09-25"
   },
-  "resolution_state": "lkg_primary",
-  "retry": true,
+  "resolution_state": "fresh_primary",
+  "retry": false,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "stale": {
     "age_business_days": 8,
@@ -72,5 +85,5 @@
     "source_as_of": "2026-08-07"
   },
   "ticker": "PAYM",
-  "updated_at": "2026-08-19T23:42:29Z"
+  "updated_at": "2026-09-28T05:23:15Z"
 }

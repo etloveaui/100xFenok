@@ -52,31 +52,44 @@
       "run_id": "31393796703",
       "schedule": "7 12 * * 0-5",
       "shard": "18/72"
+    },
+    {
+      "attempts_used": 1,
+      "event_name": "workflow_dispatch",
+      "failures": [],
+      "latency_ms": 456,
+      "natural": false,
+      "observed_at": "2026-09-28T05:23:15Z",
+      "outcome": "fresh",
+      "run_attempt": 1,
+      "run_id": "36367832955",
+      "schedule": "",
+      "shard": ""
     }
   ],
   "current": {
-    "fetched_at": "2026-08-10T13:41:46Z",
-    "history_as_of": "2026-08-07",
-    "path": "data/admin/yahoo-batch-quote-history/lkg/ORAC.json",
-    "payload_sha256": "7a55a4717ffe4fecec3c8fe9f00b26da7b7962abbe70c49bf055020530e6ba81",
-    "quote_as_of": "2026-08-07T17:56:27Z",
-    "source_as_of": "2026-08-07"
+    "fetched_at": "2026-09-28T05:39:39Z",
+    "history_as_of": "2026-09-25",
+    "path": "data/yf/finance/ORAC.json",
+    "payload_sha256": "1c5dfacf0c9a5fa0f147a84ebf27e9f4a563d6ad9e1281c271715564c7f352a1",
+    "quote_as_of": "2026-09-25T19:34:14Z",
+    "source_as_of": "2026-09-25"
   },
   "discovered_from": [
     "stockanalysis_etf"
   ],
   "last_attempt": {
     "attempts_used": 1,
-    "event_name": "schedule",
+    "event_name": "workflow_dispatch",
     "failures": [],
-    "latency_ms": 483,
-    "natural": true,
-    "observed_at": "2026-08-10T13:38:56Z",
+    "latency_ms": 456,
+    "natural": false,
+    "observed_at": "2026-09-28T05:23:15Z",
     "outcome": "fresh",
     "run_attempt": 1,
-    "run_id": "31393796703",
-    "schedule": "7 12 * * 0-5",
-    "shard": "18/72"
+    "run_id": "36367832955",
+    "schedule": "",
+    "shard": ""
   },
   "lkg": {
     "fetched_at": "2026-08-10T13:41:46Z",
@@ -88,18 +101,18 @@
   },
   "promotion_contract": "provider_observation/v2",
   "provider_observation": {
-    "event_name": "schedule",
-    "history_as_of": "2026-08-07",
-    "observed_at": "2026-08-10T13:38:56Z",
-    "payload_sha256": "357f958f006290d0bdede0b46d97d3a43b0f4532dd14289a3a9eb81bfc0a577b",
-    "quote_as_of": "2026-08-07T17:56:27Z",
+    "event_name": "workflow_dispatch",
+    "history_as_of": "2026-09-25",
+    "observed_at": "2026-09-28T05:23:15Z",
+    "payload_sha256": "b78629b8abb2dab4108a723f9f7026806c52dc37285215543bb1ea9f6647346d",
+    "quote_as_of": "2026-09-25T19:34:14Z",
     "run_attempt": 1,
-    "run_id": "31393796703",
+    "run_id": "36367832955",
     "schema_version": "provider_observation/v2",
-    "source_as_of": "2026-08-07"
+    "source_as_of": "2026-09-25"
   },
-  "resolution_state": "lkg_primary",
-  "retry": true,
+  "resolution_state": "fresh_primary",
+  "retry": false,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "stale": {
     "age_business_days": 8,
@@ -112,5 +125,5 @@
     "source_as_of": "2026-08-07"
   },
   "ticker": "ORAC",
-  "updated_at": "2026-08-19T23:42:29Z"
+  "updated_at": "2026-09-28T05:23:15Z"
 }

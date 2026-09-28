@@ -12,31 +12,44 @@
       "run_id": "31340064113",
       "schedule": "7 22 * * 0-5",
       "shard": "11/72"
+    },
+    {
+      "attempts_used": 1,
+      "event_name": "workflow_dispatch",
+      "failures": [],
+      "latency_ms": 462,
+      "natural": false,
+      "observed_at": "2026-09-28T05:23:15Z",
+      "outcome": "fresh",
+      "run_attempt": 1,
+      "run_id": "36367832955",
+      "schedule": "",
+      "shard": ""
     }
   ],
   "current": {
-    "fetched_at": "2026-08-09T22:47:09Z",
-    "history_as_of": "2026-08-07",
-    "path": "data/admin/yahoo-batch-quote-history/lkg/LENS.json",
-    "payload_sha256": "1d20c66bd4537a165a9aa6b037c090d6b6a7b3143a7e87f48023d2bad024308f",
-    "quote_as_of": "2026-08-07T19:35:20Z",
-    "source_as_of": "2026-08-07"
+    "fetched_at": "2026-09-28T05:27:27Z",
+    "history_as_of": "2026-09-25",
+    "path": "data/yf/finance/LENS.json",
+    "payload_sha256": "dfc60999885a7ae3024838171943942133ad5fa964aabadb13a9622a9df28b80",
+    "quote_as_of": "2026-09-25T19:20:53Z",
+    "source_as_of": "2026-09-25"
   },
   "discovered_from": [
     "stockanalysis_etf"
   ],
   "last_attempt": {
     "attempts_used": 1,
-    "event_name": "schedule",
+    "event_name": "workflow_dispatch",
     "failures": [],
-    "latency_ms": 899,
-    "natural": true,
-    "observed_at": "2026-08-09T22:44:05Z",
+    "latency_ms": 462,
+    "natural": false,
+    "observed_at": "2026-09-28T05:23:15Z",
     "outcome": "fresh",
     "run_attempt": 1,
-    "run_id": "31340064113",
-    "schedule": "7 22 * * 0-5",
-    "shard": "11/72"
+    "run_id": "36367832955",
+    "schedule": "",
+    "shard": ""
   },
   "lkg": {
     "fetched_at": "2026-08-09T22:47:09Z",
@@ -48,18 +61,18 @@
   },
   "promotion_contract": "provider_observation/v2",
   "provider_observation": {
-    "event_name": "schedule",
-    "history_as_of": "2026-08-07",
-    "observed_at": "2026-08-09T22:44:05Z",
-    "payload_sha256": "d81dc79f834dcd85a84dea00aafc9254e8071f1e832f71c52fc87e917f78120f",
-    "quote_as_of": "2026-08-07T19:35:20Z",
+    "event_name": "workflow_dispatch",
+    "history_as_of": "2026-09-25",
+    "observed_at": "2026-09-28T05:23:15Z",
+    "payload_sha256": "42e5b00b5b7ab8ac28f62b78b1bfa787392256009b214dc6d85f06a7580a3b42",
+    "quote_as_of": "2026-09-25T19:20:53Z",
     "run_attempt": 1,
-    "run_id": "31340064113",
+    "run_id": "36367832955",
     "schema_version": "provider_observation/v2",
-    "source_as_of": "2026-08-07"
+    "source_as_of": "2026-09-25"
   },
-  "resolution_state": "lkg_primary",
-  "retry": true,
+  "resolution_state": "fresh_primary",
+  "retry": false,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "stale": {
     "age_business_days": 8,
@@ -72,5 +85,5 @@
     "source_as_of": "2026-08-07"
   },
   "ticker": "LENS",
-  "updated_at": "2026-08-19T23:42:29Z"
+  "updated_at": "2026-09-28T05:23:15Z"
 }

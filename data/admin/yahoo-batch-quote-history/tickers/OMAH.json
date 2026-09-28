@@ -25,31 +25,44 @@
       "run_id": "31575211549",
       "schedule": "7 6 * * 0-5",
       "shard": "39/72"
+    },
+    {
+      "attempts_used": 1,
+      "event_name": "workflow_dispatch",
+      "failures": [],
+      "latency_ms": 454,
+      "natural": false,
+      "observed_at": "2026-09-28T05:23:15Z",
+      "outcome": "fresh",
+      "run_attempt": 1,
+      "run_id": "36367832955",
+      "schedule": "",
+      "shard": ""
     }
   ],
   "current": {
-    "fetched_at": "2026-08-12T08:02:42Z",
-    "history_as_of": "2026-08-11",
-    "path": "data/admin/yahoo-batch-quote-history/lkg/OMAH.json",
-    "payload_sha256": "f1fe9078edeecb62824af7a81c8b22924197ceb07f10df0dff0e3710252f11d6",
-    "quote_as_of": "2026-08-11T20:00:00Z",
-    "source_as_of": "2026-08-11"
+    "fetched_at": "2026-09-28T05:39:07Z",
+    "history_as_of": "2026-09-25",
+    "path": "data/yf/finance/OMAH.json",
+    "payload_sha256": "61171fae3c00a4046a78d1d6f8e18c3b7ac8bcf6c752ed323e3be9ea9c395928",
+    "quote_as_of": "2026-09-25T20:00:00Z",
+    "source_as_of": "2026-09-25"
   },
   "discovered_from": [
     "stockanalysis_etf"
   ],
   "last_attempt": {
     "attempts_used": 1,
-    "event_name": "schedule",
+    "event_name": "workflow_dispatch",
     "failures": [],
-    "latency_ms": 637,
-    "natural": true,
-    "observed_at": "2026-08-12T07:59:44Z",
+    "latency_ms": 454,
+    "natural": false,
+    "observed_at": "2026-09-28T05:23:15Z",
     "outcome": "fresh",
     "run_attempt": 1,
-    "run_id": "31575211549",
-    "schedule": "7 6 * * 0-5",
-    "shard": "39/72"
+    "run_id": "36367832955",
+    "schedule": "",
+    "shard": ""
   },
   "lkg": {
     "fetched_at": "2026-08-12T08:02:42Z",
@@ -61,18 +74,18 @@
   },
   "promotion_contract": "provider_observation/v2",
   "provider_observation": {
-    "event_name": "schedule",
-    "history_as_of": "2026-08-11",
-    "observed_at": "2026-08-12T07:59:44Z",
-    "payload_sha256": "5210ca32dc22f0a7271bb2b5a058c447e2f5c40323887a75c5f9ce88b360d2ee",
-    "quote_as_of": "2026-08-11T20:00:00Z",
+    "event_name": "workflow_dispatch",
+    "history_as_of": "2026-09-25",
+    "observed_at": "2026-09-28T05:23:15Z",
+    "payload_sha256": "447db09803ce926d69c8b363bd93644698c3e83c8d84dc448ff7dc6d8e550198",
+    "quote_as_of": "2026-09-25T20:00:00Z",
     "run_attempt": 1,
-    "run_id": "31575211549",
+    "run_id": "36367832955",
     "schema_version": "provider_observation/v2",
-    "source_as_of": "2026-08-11"
+    "source_as_of": "2026-09-25"
   },
-  "resolution_state": "lkg_primary",
-  "retry": true,
+  "resolution_state": "fresh_primary",
+  "retry": false,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "stale": {
     "age_business_days": 7,
@@ -85,5 +98,5 @@
     "source_as_of": "2026-08-11"
   },
   "ticker": "OMAH",
-  "updated_at": "2026-08-20T14:20:12Z"
+  "updated_at": "2026-09-28T05:23:15Z"
 }
