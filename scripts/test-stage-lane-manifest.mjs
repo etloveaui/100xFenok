@@ -352,7 +352,10 @@ assertTrackedFileFromGlobBelowIgnoredParentStillStages();
   const always = run(fixture.root, "always_if_exists", [], BUILD_STOCKS_ANALYZER_WORKFLOW);
   const alwaysCount = fixture.materialized.always.length;
   assert.equal(always.status, 0, `${always.stderr}\n${always.stdout}`);
-  assert.match(always.stdout, new RegExp(`declared=${alwaysCount} stage_selected=${alwaysCount} staged_index_total=${alwaysCount}`));
+  // This one legitimately declares 17 and selects 18: a directory entry plus
+  // its files. Keep the two numbers apart rather than deriving both from the
+  // materialized count.
+  assert.match(always.stdout, /declared=17 stage_selected=18 staged_index_total=18/);
   assert.deepEqual(cached(fixture.root), fixture.materialized.always.sort());
 
   execFileSync("git", ["add", "-A"], { cwd: fixture.root });
