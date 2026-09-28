@@ -126,7 +126,7 @@ for (const workflowRel of writerWorkflows) {
       if (spec.kind === "dynamic_set") continue;
       assert.ok(
         sourceRepresentsSpec(sourceTexts, spec)
-          || workflowAppliesManifestStage(workflowText, workflowRel, stage)
+          || workflowAppliesManifestStage(workflowText, workflowRel, stage),
         `${workflowRel} ${stage} path is not present in workflow/script source or an exact manifest-driven stage/helper: ${spec.path}`,
       );
     }
