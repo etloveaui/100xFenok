@@ -96,6 +96,9 @@ class StockanalysisSurfaceContractTest(unittest.TestCase):
         projection_workflow = (
             ROOT / ".github" / "workflows" / "update-manifest.yml"
         ).read_text(encoding="utf-8")
+        projection_runner = (
+            ROOT / "scripts" / "update-manifest-projections.sh"
+        ).read_text(encoding="utf-8")
         lane_manifest = json.loads(
             (ROOT / "data" / "admin" / "lane-commit-manifest.json").read_text(encoding="utf-8")
         )
@@ -111,22 +114,162 @@ class StockanalysisSurfaceContractTest(unittest.TestCase):
             "delete": True,
             "required": True,
             "trailing_slash": True,
+            "excludes": ["etfs"],
         }])
 
         materialize = "node scripts/materialize-update-manifest-routes.mjs --all"
         validate_only = f"{materialize} --validate-only --assert-no-untracked"
-        initial_block = projection_workflow.split("      - name: Check if manifest changed", 1)[0]
         retry_block = projection_workflow.split("          for attempt in 1 2 3; do", 1)[1]
-        initial_lines = [line.strip() for line in initial_block.splitlines()]
         retry_lines = [line.strip() for line in retry_block.splitlines()]
-        self.assertEqual(initial_lines.count(materialize), 1)
-        self.assertEqual(retry_lines.count(materialize), 1)
+        runner_call = "bash scripts/update-manifest-projections.sh"
+        runner_lines = [line.strip() for line in projection_runner.splitlines()]
+        self.assertNotIn(f"run: {runner_call}", projection_workflow)
+        self.assertEqual(retry_lines.count(runner_call), 1)
+        self.assertEqual(runner_lines.count(materialize), 1)
         self.assertEqual(retry_lines.count(validate_only), 1)
-        self.assertLess(retry_lines.index(validate_only), retry_lines.index(materialize))
+        self.assertLess(retry_lines.index(validate_only), retry_lines.index(runner_call))
         self.assertNotIn(
             "rsync -a --checksum --delete data/stockanalysis/ 100xfenok-next/public/data/stockanalysis/",
             projection_workflow,
         )
+
+        # Run 30689758451 died at the immutable-snapshot guard because the retry
+        # attempt re-projected on top of an earlier projection's snapshot
+        # directory still present in the working tree. A content-addressed
+        # directory may be replaced, never compared against a stale sibling, so
+        # the retry must start from an empty snapshot root every attempt.
+        shard_projection = "node 100xfenok-next/scripts/sync-public-data.mjs --write --etf-shards-only"
+        snapshot_reset = (
+            "rm -rf 100xfenok-next/public/data/stockanalysis/etfs/shards/snapshots"
+        )
+        self.assertEqual(runner_lines.count(shard_projection), 1)
+        self.assertEqual(
+            runner_lines.count(snapshot_reset),
+            1,
+            "the retry attempt must clear the ETF shard snapshot root exactly once",
+        )
+        self.assertLess(
+            runner_lines.index(snapshot_reset),
+            runner_lines.index(shard_projection),
+            "the snapshot root must be cleared BEFORE the shard projection re-runs",
+        )
+
+        # The surfaces mirror drifted two producer cycles behind its source and
+        # nothing noticed: the only CI run of this contract overrides the
+        # comparison target with a copy of the source, so its byte-equality
+        # assertion cannot fail there. SlickCharts already proves the mirror
+        # immediately after projection; StockAnalysis surfaces must too. Scoped to
+        # surfaces on purpose -- `etfs/` is deliberately shard-only and excluded
+        # from this mirror, so a whole-tree diff would fail by contract.
+        surfaces_diff = (
+            "diff -qr data/stockanalysis/surfaces "
+            "100xfenok-next/public/data/stockanalysis/surfaces"
+        )
+        self.assertEqual(
+            runner_lines.count(surfaces_diff),
+            1,
+            "the shared runner must verify the surfaces mirror exactly once",
+        )
+        self.assertLess(
+            runner_lines.index(materialize),
+            runner_lines.index(surfaces_diff),
+            "the surfaces check must run AFTER the projection it verifies",
+        )
+        self.assertNotIn(
+            "diff -qr data/stockanalysis 100xfenok-next/public/data/stockanalysis",
+            projection_workflow,
+            "a whole-tree stockanalysis diff would fail by contract; etfs/ is shard-only",
+        )
+
+    def test_cloud_overlay_materializes_once_and_restores_lkg_before_staging(self) -> None:
+        projection_workflow = (
+            ROOT / ".github" / "workflows" / "update-manifest.yml"
+        ).read_text(encoding="utf-8")
+        projection_runner = (
+            ROOT / "scripts" / "update-manifest-projections.sh"
+        ).read_text(encoding="utf-8")
+
+        materialize_lines = [
+            line.strip()
+            for line in projection_workflow.splitlines()
+            if "materialize-cloud-data-plane-family.mjs" in line
+        ]
+        self.assertEqual(
+            len(materialize_lines),
+            1,
+            "the verified cloud overlay must be materialized exactly once per Update Manifest job",
+        )
+        self.assertIn("--family stockanalysis-etf-detail", projection_workflow)
+        self.assertIn("--manifest-prefix data/stockanalysis/etfs/", projection_workflow)
+
+        runner_call = "bash scripts/update-manifest-projections.sh"
+        self.assertLess(
+            projection_workflow.index("materialize-cloud-data-plane-family.mjs"),
+            projection_workflow.index(runner_call),
+            "materialization must precede the single projection pass",
+        )
+        retry_block = projection_workflow.split("          for attempt in 1 2 3; do", 1)[1]
+        self.assertNotIn(
+            "materialize-cloud-data-plane-family.mjs",
+            retry_block,
+            "retry passes must reuse the same external snapshot; no second materialization",
+        )
+        self.assertIn("ETF_DETAIL_OVERLAY_ROOT", projection_workflow)
+        self.assertIn("ETF_DETAIL_OVERLAY_RECEIPT", projection_workflow)
+
+        runner_lines = [line.strip() for line in projection_runner.splitlines()]
+        for marker in (
+            'ETF_LKG_TREE="data/stockanalysis/etfs"',
+            "require_etf_overlay_env",
+            "verify_etf_overlay_pointer_current() {",
+            "verify_etf_overlay_binding",
+            "restore_etf_lkg_tree() {",
+            "etf_overlay_restore_and_exit() {",
+            "trap 'etf_overlay_restore_and_exit' EXIT",
+            "trap 'exit 129' HUP",
+            "trap 'exit 130' INT",
+            "trap 'exit 143' TERM",
+        ):
+            self.assertIn(marker, runner_lines)
+        self.assertEqual(
+            projection_runner.count("materialize-cloud-data-plane-family.mjs"),
+            1,
+            "the runner may call only the manifest-only receipt verifier",
+        )
+        self.assertIn('--verify-receipt "$ETF_DETAIL_OVERLAY_RECEIPT"', projection_runner)
+        self.assertEqual(
+            runner_lines.count("verify_etf_overlay_pointer_current"),
+            2,
+            "the pointer must stay current before and after every projection pass",
+        )
+        backup_copy = 'cp -a "$ETF_LKG_TREE/." "$ETF_OVERLAY_BACKUP_ROOT/etfs/"'
+        overlay_copy = 'cp -a "$ETF_DETAIL_OVERLAY_ROOT/." "$ETF_LKG_TREE/"'
+        self.assertIn(backup_copy, runner_lines)
+        self.assertIn(overlay_copy, runner_lines)
+        self.assertLess(
+            runner_lines.index(backup_copy),
+            runner_lines.index(overlay_copy),
+            "the Git LKG snapshot must be taken BEFORE the overlay replaces the tree",
+        )
+        self.assertTrue(
+            any("restore_etf_lkg_tree" in line for line in runner_lines),
+            "the runner must carry the LKG restore routine",
+        )
+        # The runner restores LKG and asserts scoped cleanliness before the
+        # caller's central change probe / staging runs (workflow-owned).
+        self.assertTrue(
+            any('git ls-files --others --exclude-standard -- "$ETF_LKG_TREE"' in line for line in runner_lines),
+            "the runner must assert scoped git cleanliness of the canonical ETF tree",
+        )
+
+        # Least privilege on materialization credentials: values are bound to
+        # the step env and never echoed into the log.
+        materialize_step = projection_workflow.split("      - name: Materialize verified stockanalysis ETF cloud generation once", 1)[1]
+        materialize_step = materialize_step.split("      - name: Rebuild and project shared derived state", 1)[0]
+        self.assertIn("secrets.CLOUDFLARE_API_TOKEN", materialize_step)
+        self.assertIn("secrets.DATA_PLANE_WRITE_KEY", materialize_step)
+        self.assertNotIn('echo "$CLOUDFLARE_API_TOKEN"', materialize_step)
+        self.assertNotIn('echo "$DATA_PLANE_WRITE_KEY"', materialize_step)
 
     # NOTE: test_surface_catalog_labels_cover_all_index_groups removed — it validated
     # SurfaceCatalogCard.tsx groupLabel coverage, but that public diagnostic card was

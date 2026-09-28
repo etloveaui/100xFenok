@@ -1,8 +1,8 @@
 #!/usr/bin/env node
 // Lane Registry ⇄ public-sync exclusion cross-check (BACKLOG #366, step 2).
 //
-// The hand-written EXCLUDED_PUBLIC_DATA_ROOTS stays authoritative; this gate
-// makes it impossible to FORGET a lane — the exact 07-18 finra leak class
+// EXCLUDED_PUBLIC_DATA_ROOTS is registry-derived in the sync consumer; this
+// independent bidirectional gate keeps the exact 07-18 FINRA leak class
 // (a new admin-private store silently syncing to the public mirror):
 //   1. every registry lane whose privacy_class is "private" must have its
 //      admin_store root present in EXCLUDED_PUBLIC_DATA_ROOTS;

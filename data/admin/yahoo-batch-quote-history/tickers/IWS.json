@@ -1,0 +1,102 @@
+{
+  "attempts": [
+    {
+      "attempts_used": 1,
+      "event_name": "schedule",
+      "failures": [],
+      "latency_ms": 773,
+      "natural": true,
+      "observed_at": "2026-08-05T08:49:49Z",
+      "outcome": "fresh",
+      "run_attempt": 1,
+      "run_id": "30990520626",
+      "schedule": "7 6 * * 0-5",
+      "shard": "39/72"
+    },
+    {
+      "attempts_used": 1,
+      "event_name": "schedule",
+      "failures": [],
+      "latency_ms": 808,
+      "natural": true,
+      "observed_at": "2026-08-12T07:59:44Z",
+      "outcome": "fresh",
+      "run_attempt": 1,
+      "run_id": "31575211549",
+      "schedule": "7 6 * * 0-5",
+      "shard": "39/72"
+    },
+    {
+      "attempts_used": 1,
+      "event_name": "workflow_dispatch",
+      "failures": [],
+      "latency_ms": 571,
+      "natural": false,
+      "observed_at": "2026-09-28T04:37:06Z",
+      "outcome": "fresh",
+      "run_attempt": 1,
+      "run_id": "36367831133",
+      "schedule": "",
+      "shard": ""
+    }
+  ],
+  "current": {
+    "fetched_at": "2026-09-28T04:54:14Z",
+    "history_as_of": "2026-09-25",
+    "path": "data/yf/finance/IWS.json",
+    "payload_sha256": "264667eb19efa465869772fe04e58ee3eb26d328c2dd77bc9bcc64633655db97",
+    "quote_as_of": "2026-09-25T20:00:00Z",
+    "source_as_of": "2026-09-25"
+  },
+  "discovered_from": [
+    "stockanalysis_etf"
+  ],
+  "last_attempt": {
+    "attempts_used": 1,
+    "event_name": "workflow_dispatch",
+    "failures": [],
+    "latency_ms": 571,
+    "natural": false,
+    "observed_at": "2026-09-28T04:37:06Z",
+    "outcome": "fresh",
+    "run_attempt": 1,
+    "run_id": "36367831133",
+    "schedule": "",
+    "shard": ""
+  },
+  "lkg": {
+    "fetched_at": "2026-08-12T08:02:20Z",
+    "history_as_of": "2026-08-11",
+    "path": "data/admin/yahoo-batch-quote-history/lkg/IWS.json",
+    "payload_sha256": "64e0f3a98163dc5dbf6277dc7acdcd9c379eae35d9aa621249bb6cff5a5a9f47",
+    "quote_as_of": "2026-08-11T20:00:00Z",
+    "source_as_of": "2026-08-11"
+  },
+  "promotion_contract": "provider_observation/v2",
+  "provider_observation": {
+    "event_name": "workflow_dispatch",
+    "history_as_of": "2026-09-25",
+    "observed_at": "2026-09-28T04:37:06Z",
+    "payload_sha256": "e89ee953846e0c602213b0e6a35a57a747746337b93b5df7937edcb3667152dd",
+    "quote_as_of": "2026-09-25T20:00:00Z",
+    "run_attempt": 1,
+    "run_id": "36367831133",
+    "schema_version": "provider_observation/v2",
+    "source_as_of": "2026-09-25"
+  },
+  "resolution_state": "fresh_primary",
+  "retry": false,
+  "schema_version": "yahoo-batch-quote-history-state/v1",
+  "stale": {
+    "age_business_days": 7,
+    "classified_at": "2026-08-20T14:20:12Z",
+    "classified_run_id": "32379322022",
+    "expected_resolution": "next_natural_yahoo_run",
+    "max_business_days": 6,
+    "message": "IWS holds LKG because Yahoo source date 2026-08-11 is 7 business days old, beyond the 6-day bound; it will retry on the next natural Yahoo run.",
+    "reason": "source_age_exceeds_lane_bound",
+    "source_as_of": "2026-08-11"
+  },
+  "ticker": "IWS",
+  "updated_at": "2026-09-28T04:37:06Z"
+}

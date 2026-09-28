@@ -1,0 +1,89 @@
+{
+  "attempts": [
+    {
+      "attempts_used": 1,
+      "event_name": "schedule",
+      "failures": [],
+      "latency_ms": 773,
+      "natural": true,
+      "observed_at": "2026-08-11T21:30:39Z",
+      "outcome": "fresh",
+      "run_attempt": 1,
+      "run_id": "31535092071",
+      "schedule": "7 20 * * 0-5",
+      "shard": "34/72"
+    },
+    {
+      "attempts_used": 1,
+      "event_name": "workflow_dispatch",
+      "failures": [],
+      "latency_ms": 561,
+      "natural": false,
+      "observed_at": "2026-09-28T04:37:06Z",
+      "outcome": "fresh",
+      "run_attempt": 1,
+      "run_id": "36367831133",
+      "schedule": "",
+      "shard": ""
+    }
+  ],
+  "current": {
+    "fetched_at": "2026-09-28T04:43:10Z",
+    "history_as_of": "2026-09-25",
+    "path": "data/yf/finance/GOVZ.json",
+    "payload_sha256": "272c7f102638c1c6e747ef45ff99aa575983f6e8d580648f10cc03a629259721",
+    "quote_as_of": "2026-09-25T20:00:00Z",
+    "source_as_of": "2026-09-25"
+  },
+  "discovered_from": [
+    "stockanalysis_etf"
+  ],
+  "last_attempt": {
+    "attempts_used": 1,
+    "event_name": "workflow_dispatch",
+    "failures": [],
+    "latency_ms": 561,
+    "natural": false,
+    "observed_at": "2026-09-28T04:37:06Z",
+    "outcome": "fresh",
+    "run_attempt": 1,
+    "run_id": "36367831133",
+    "schedule": "",
+    "shard": ""
+  },
+  "lkg": {
+    "fetched_at": "2026-08-11T21:33:10Z",
+    "history_as_of": "2026-08-11",
+    "path": "data/admin/yahoo-batch-quote-history/lkg/GOVZ.json",
+    "payload_sha256": "f648fa9ea0afced49be6f8146e5f8dba393db68be83fb786384ee4fe0e6683df",
+    "quote_as_of": "2026-08-11T19:59:59Z",
+    "source_as_of": "2026-08-11"
+  },
+  "promotion_contract": "provider_observation/v2",
+  "provider_observation": {
+    "event_name": "workflow_dispatch",
+    "history_as_of": "2026-09-25",
+    "observed_at": "2026-09-28T04:37:06Z",
+    "payload_sha256": "138853bf1f8586525ef5b691bc5026411ebfbbe00672ee42ef50e5112f1038ca",
+    "quote_as_of": "2026-09-25T20:00:00Z",
+    "run_attempt": 1,
+    "run_id": "36367831133",
+    "schema_version": "provider_observation/v2",
+    "source_as_of": "2026-09-25"
+  },
+  "resolution_state": "fresh_primary",
+  "retry": false,
+  "schema_version": "yahoo-batch-quote-history-state/v1",
+  "stale": {
+    "age_business_days": 7,
+    "classified_at": "2026-08-20T14:20:12Z",
+    "classified_run_id": "32379322022",
+    "expected_resolution": "next_natural_yahoo_run",
+    "max_business_days": 6,
+    "message": "GOVZ holds LKG because Yahoo source date 2026-08-11 is 7 business days old, beyond the 6-day bound; it will retry on the next natural Yahoo run.",
+    "reason": "source_age_exceeds_lane_bound",
+    "source_as_of": "2026-08-11"
+  },
+  "ticker": "GOVZ",
+  "updated_at": "2026-09-28T04:37:06Z"
+}

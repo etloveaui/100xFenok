@@ -1,24 +1,21 @@
-"""Real LLM provider chains for the Mona distill engine (Slice 2).
+"""Mona distill LLM calls through the shared FENO LLM task door.
 
-Each adapter is (system, prompt) -> raw text; ChainProvider walks the chain
-and returns the first non-empty answer. All-fail raises ChainExhaustedError,
-which the worker converts into a soft-fail alert (previous profile preserved).
+Every model call goes through ``feno_llm.facade.generate_for_task`` by registry
+task name only. CCH's shared registry owns the model chain (priority and
+fallback hops), credentials, transport and per-hop policy; this module owns the
+prompts and parsing. A failed task raises ChainExhaustedError, which the worker
+converts into a soft-fail alert (previous profile preserved).
 """
 from __future__ import annotations
 
 import json
 import os
+import re
 import sys
-import urllib.request
+import time
 from pathlib import Path
-from typing import Any, Callable
+from typing import Any, Sequence
 
-Adapter = Callable[[str, str], str]
-
-DEFAULT_AA_SCRIPTS = (
-    Path.home()
-    / "agents-workspace/00_my_data/01_El_Fenomeno/00_Project/Asset_Allocator/scripts"
-)
 DEFAULT_FENO_LLM_PYTHON = (
     Path.home()
     / "agents-workspace/00_my_data/01_El_Fenomeno/00_Project/claude-code-hub/docs/products/llm-runtime/python"
@@ -27,18 +24,24 @@ DEFAULT_FENO_LLM_REGISTRY = (
     Path.home()
     / "agents-workspace/00_my_data/01_El_Fenomeno/00_Project/claude-code-hub/docs/references/shared-model-provider-registry.yaml"
 )
-SECRETS_FILE = Path.home() / ".secrets/all-keys.env"
-DEEPSEEK_URL = "https://api.deepseek.com/chat/completions"
+
+# Shared-registry task names (claude-code-hub shared-model-provider-registry.yaml
+# task_routing). DISTILL_TASK serves every text lane: learner-profile distill
+# (interrupt + nightly) and the Ppalmo transcript lanes (bank extraction,
+# enrichment, teaching notes). DISTILL_VIDEO_TASK is the video-capable route for
+# the bank refresher's transcript-less video fallback.
+DISTILL_TASK = "mona_distill"
+DISTILL_VIDEO_TASK = "mona_distill_video"
+
+RATE_LIMIT_CODES = frozenset({"rate_limit", "http_429"})
 
 
 class ChainExhaustedError(RuntimeError):
-    """Every provider in the chain failed."""
+    """The registry task failed on every hop, or could not run at all."""
 
-
-def _ensure_aa_path() -> None:
-    path = str(Path(os.environ.get("AA_SCRIPTS_DIR", str(DEFAULT_AA_SCRIPTS))))
-    if path not in sys.path:
-        sys.path.insert(0, path)
+    def __init__(self, message: str, *, rate_limited: bool = False) -> None:
+        super().__init__(message)
+        self.rate_limited = rate_limited
 
 
 def _find_sibling_cch_path(*parts: str) -> Path | None:
@@ -76,37 +79,6 @@ def _load_feno_llm_facade():
     from feno_llm import facade  # noqa: PLC0415
 
     return facade
-
-
-def _resolve_model_id(alias: str, fallback: str) -> str:
-    try:
-        _ensure_feno_llm_path()
-        from feno_llm.resolver import resolve
-
-        return resolve(alias, registry_path=str(_feno_llm_registry_path())).wire_id
-    except Exception as exc:
-        print(
-            f"[chains] resolver failed for alias {alias!r}; using fallback {fallback!r}: {exc}",
-            file=sys.stderr,
-        )
-        return fallback
-
-
-def unquote(value: str) -> str:
-    return value.strip().strip('"').strip("'")
-
-
-def _read_secret(name: str) -> str:
-    value = os.environ.get(name, "")
-    if value:
-        return value
-    try:
-        for line in SECRETS_FILE.read_text(encoding="utf-8").splitlines():
-            if line.startswith(f"{name}="):
-                return unquote(line.split("=", 1)[1])
-    except OSError:
-        pass
-    return ""
 
 
 def strip_code_fence(text: str) -> str:
@@ -185,134 +157,96 @@ def build_distill_prompt(payload: dict[str, Any]) -> tuple[str, str]:
     return system, prompt
 
 
-# --- adapters (lazy AA imports; each raises on failure) ----------------------
+# --- task door ---------------------------------------------------------------
 
-def call_gemini_flash_lite(system: str, prompt: str) -> str:
-    _ensure_aa_path()
-    from _gemini_api import call_gemini
-
-    payload = {
-        "contents": [{"parts": [{"text": f"{system}\n\n{prompt}"}]}],
-        "generationConfig": {"responseMimeType": "application/json", "temperature": 0.2},
-    }
-    result = call_gemini(_resolve_model_id("gemini-3.1-flash-lite", "gemini-3.1-flash-lite"), payload)
-    if not result.success or not result.text.strip():
-        raise RuntimeError(f"gemini: {result.error or 'empty response'}")
-    return result.text
-
-
-def make_gpt_adapter(model_id: str) -> Adapter:
-    def call(system: str, prompt: str) -> str:
-        result = _load_feno_llm_facade().generate_text(
-            prompt,
-            model=model_id,
-            provider="openai",
-            system=system,
+def _safe_error_details(details: Any) -> str:
+    """Keep only bounded provider diagnostics, never a raw body or credential."""
+    if not isinstance(details, dict):
+        return ""
+    fields = []
+    for name in ("provider_error_code", "upstream_message"):
+        value = details.get(name)
+        if not isinstance(value, str):
+            continue
+        value = " ".join(value.split())
+        value = re.sub(r"https?://\S+", "[url redacted]", value, flags=re.IGNORECASE)
+        value = re.sub(
+            r"\b(?:api[_-]?key|key|token|authorization)\b[\"']?\s*[:=]\s*[\"']?(?:Bearer\s+)?[^\s,;\"'}\]]+|\bBearer\s+[^\s,;\"'}\]]+",
+            "[credential redacted]", value, flags=re.IGNORECASE,
         )
-        if result.error:
-            if result.error.code == "no_auth":
-                raise RuntimeError("codex token unavailable")
-            raise RuntimeError(f"{model_id}: {result.error.code}")
-        if not result.text.strip():
-            raise RuntimeError(f"{model_id}: empty response")
-        return result.text
-
-    return call
+        value = re.sub(r"[A-Za-z0-9_.-]{24,}", "[redacted]", value)
+        if value:
+            fields.append(f"{name}={value[:200]}")
+    return "; ".join(fields)
 
 
-def call_kimi_thinking(system: str, prompt: str) -> str:
-    _ensure_aa_path()
-    from _kimi_api import call_kimi
+def _attempt_summary(attempts: list[dict[str, Any]]) -> str:
+    return ", ".join(
+        f"{attempt.get('model') or attempt.get('alias')}:{attempt.get('error_code') or 'ok'}"
+        + (f" ({safe})" if (safe := _safe_error_details(attempt.get("error_details"))) else "")
+        for attempt in attempts
+        if isinstance(attempt, dict)
+    )
 
-    # max_tokens stays on the module default (KIMI_DEFAULT_MAX_TOKENS, 32768).
-    text, _meta = call_kimi(prompt, system=system, thinking_budget=16384, response_format="json")
+
+def _rate_limited(error: Any, attempts: list[dict[str, Any]]) -> bool:
+    if getattr(error, "code", None) in RATE_LIMIT_CODES or getattr(error, "http_status", None) == 429:
+        return True
+    return any(
+        isinstance(attempt, dict)
+        and (attempt.get("error_code") in RATE_LIMIT_CODES or attempt.get("error_http_status") == 429)
+        for attempt in attempts
+    )
+
+
+def call_task(task_name: str, system: str | None, prompt: str, **task_inputs: Any) -> str:
+    """One call through the FENO LLM task door; raises ChainExhaustedError on failure.
+
+    ``task_inputs`` are the facade's caller-owned task inputs only (for example
+    response_format or video_url/video_mime_type); model selection stays in the
+    registry.
+    """
+    try:
+        result = _load_feno_llm_facade().generate_for_task(task_name, prompt, system=system, **task_inputs)
+    except Exception as exc:  # noqa: BLE001 - a runtime defect must still soft-fail
+        raise ChainExhaustedError(f"{task_name}: runtime error {type(exc).__name__}: {exc}") from exc
+    attempts = list(getattr(result, "attempts", None) or [])
+    if result.error is not None:
+        raise ChainExhaustedError(
+            f"{task_name}: {result.error.code}: {result.error.message} [{_attempt_summary(attempts)}]",
+            rate_limited=_rate_limited(result.error, attempts),
+        )
+    text = result.text or ""
     if not text.strip():
-        raise RuntimeError("kimi: empty response")
+        raise ChainExhaustedError(f"{task_name}: empty response [{_attempt_summary(attempts)}]")
     return text
 
 
-def mimo_v25_adapter(system: str, prompt: str) -> str:
-    result = _load_feno_llm_facade().generate_text(
-        prompt,
-        model=_resolve_model_id("mimo-2.5", "mimo-v2.5"),
-        provider="mimo",
-        system=system,
-        response_format="json",
-    )
-    if result.error:
-        raise RuntimeError(f"mimo: {result.error.code}")
-    if not result.text.strip():
-        raise RuntimeError("mimo: empty response")
-    return result.text
+def call_task_with_backoff(task_name: str, system: str, prompt: str, sleeps: Sequence[float]) -> str:
+    """call_task plus the bulk transcript lanes' existing rate-limit ladder.
+
+    The same task is asked again after each sleep only while the failure was rate
+    limiting; any other failure stops immediately.
+    """
+    errors: list[str] = []
+    for sleep_s in (0.0, *sleeps):
+        if sleep_s:
+            time.sleep(sleep_s)
+        try:
+            return call_task(task_name, system, prompt)
+        except ChainExhaustedError as exc:
+            errors.append(str(exc))
+            if not exc.rate_limited:
+                break
+    raise ChainExhaustedError(" | ".join(errors) or f"{task_name}: no attempt made")
 
 
-def call_deepseek_v4_pro(system: str, prompt: str) -> str:
-    key = _read_secret("DEEPSEEK_API_KEY")
-    if not key:
-        raise RuntimeError("deepseek: DEEPSEEK_API_KEY not found")
-    body = {
-        "model": _resolve_model_id("deepseek-v4-pro", "deepseek-v4-pro"),
-        "messages": [
-            {"role": "system", "content": system},
-            {"role": "user", "content": prompt},
-        ],
-        "response_format": {"type": "json_object"},
-        "temperature": 0.2,
-        "stream": False,
-    }
-    request = urllib.request.Request(
-        DEEPSEEK_URL,
-        data=json.dumps(body).encode("utf-8"),
-        headers={"Content-Type": "application/json", "Authorization": f"Bearer {key}"},
-        method="POST",
-    )
-    with urllib.request.urlopen(request, timeout=120) as response:
-        parsed = json.loads(response.read().decode("utf-8"))
-    text = parsed.get("choices", [{}])[0].get("message", {}).get("content", "")
-    if not isinstance(text, str) or not text.strip():
-        raise RuntimeError("deepseek: empty response")
-    return text
+class TaskProvider:
+    """Distill provider backed by one registry task; the model chain lives in CCH."""
 
-
-# --- chain provider ----------------------------------------------------------
-
-class ChainProvider:
-    """Provider that walks an ordered adapter chain until one succeeds."""
-
-    def __init__(self, adapters: list[tuple[str, Adapter]]) -> None:
-        self.adapters = adapters
+    def __init__(self, task_name: str = DISTILL_TASK) -> None:
+        self.task_name = task_name
 
     def call(self, payload: dict[str, Any]) -> str:
         system, prompt = build_distill_prompt(payload)
-        errors: list[str] = []
-        for name, adapter in self.adapters:
-            try:
-                text = adapter(system, prompt)
-                if text.strip():
-                    return strip_code_fence(text)
-                errors.append(f"{name}: empty")
-            except Exception as exc:  # noqa: BLE001 — chain must keep falling through
-                errors.append(f"{name}: {exc}")
-        raise ChainExhaustedError(" | ".join(errors) or "no adapters configured")
-
-
-def interrupt_chain() -> ChainProvider:
-    """Fast/free chain for post-session interrupt distill (spec v3 bench)."""
-    return ChainProvider(
-        [
-            (_resolve_model_id("gemini-3.1-flash-lite", "gemini-3.1-flash-lite"), call_gemini_flash_lite),
-            (_resolve_model_id("gpt-5.4-mini", "gpt-5.4-mini"), make_gpt_adapter(_resolve_model_id("gpt-5.4-mini", "gpt-5.4-mini"))),
-            (_resolve_model_id("mimo-2.5", "mimo-v2.5"), mimo_v25_adapter),
-        ]
-    )
-
-
-def nightly_chain() -> ChainProvider:
-    """Quality chain for the nightly deep distill (spec v3 bench)."""
-    return ChainProvider(
-        [
-            ("kimi-for-coding+thinking", call_kimi_thinking),
-            (_resolve_model_id("gpt-5.5", "gpt-5.5"), make_gpt_adapter(_resolve_model_id("gpt-5.5", "gpt-5.5"))),
-            (_resolve_model_id("deepseek-v4-pro", "deepseek-v4-pro"), call_deepseek_v4_pro),
-        ]
-    )
+        return strip_code_fence(call_task(self.task_name, system, prompt))

@@ -1,0 +1,115 @@
+{
+  "attempts": [
+    {
+      "attempts_used": 1,
+      "event_name": "workflow_dispatch",
+      "failures": [],
+      "latency_ms": 554,
+      "natural": true,
+      "observed_at": "2026-08-01T18:28:23Z",
+      "outcome": "fresh",
+      "run_attempt": 1,
+      "run_id": "30711923637",
+      "schedule": "",
+      "shard": "2/6"
+    },
+    {
+      "attempts_used": 1,
+      "event_name": "schedule",
+      "failures": [],
+      "latency_ms": 537,
+      "natural": true,
+      "observed_at": "2026-08-11T03:59:23Z",
+      "outcome": "fresh",
+      "run_attempt": 1,
+      "run_id": "31456720047",
+      "schedule": "7 2 * * 0-5",
+      "shard": "25/72"
+    },
+    {
+      "attempts_used": 0,
+      "event_name": "schedule",
+      "failures": [],
+      "latency_ms": 0,
+      "natural": true,
+      "observed_at": "2026-08-11T05:18:59Z",
+      "outcome": "skipped_fresh",
+      "run_attempt": 1,
+      "run_id": "31461137754",
+      "schedule": "7 4 * * 0-5",
+      "shard": "26/72"
+    },
+    {
+      "attempts_used": 1,
+      "event_name": "workflow_dispatch",
+      "failures": [],
+      "latency_ms": 438,
+      "natural": false,
+      "observed_at": "2026-09-28T03:11:20Z",
+      "outcome": "fresh",
+      "run_attempt": 1,
+      "run_id": "36367829153",
+      "schedule": "",
+      "shard": ""
+    }
+  ],
+  "current": {
+    "fetched_at": "2026-09-28T03:28:42Z",
+    "history_as_of": "2026-09-25",
+    "path": "data/yf/finance/FGRU.json",
+    "payload_sha256": "7f1ec658e789764921d88b9044799244c517facc1847932ca4f3c3f9e3c74399",
+    "quote_as_of": "2026-09-25T19:42:07Z",
+    "source_as_of": "2026-09-25"
+  },
+  "discovered_from": [
+    "stockanalysis_etf"
+  ],
+  "last_attempt": {
+    "attempts_used": 1,
+    "event_name": "workflow_dispatch",
+    "failures": [],
+    "latency_ms": 438,
+    "natural": false,
+    "observed_at": "2026-09-28T03:11:20Z",
+    "outcome": "fresh",
+    "run_attempt": 1,
+    "run_id": "36367829153",
+    "schedule": "",
+    "shard": ""
+  },
+  "lkg": {
+    "fetched_at": "2026-08-11T04:00:29Z",
+    "history_as_of": "2026-08-10",
+    "path": "data/admin/yahoo-batch-quote-history/lkg/FGRU.json",
+    "payload_sha256": "32d19a45764606a62dc876511afbd2b4a6ebea28948e1d85f078748bc71e96cf",
+    "quote_as_of": "2026-08-10T19:55:00Z",
+    "source_as_of": "2026-08-10"
+  },
+  "promotion_contract": "provider_observation/v2",
+  "provider_observation": {
+    "event_name": "workflow_dispatch",
+    "history_as_of": "2026-09-25",
+    "observed_at": "2026-09-28T03:11:20Z",
+    "payload_sha256": "bbfb38362706c7701124ec40afad35ce0e9a9953cd33d0f1039f42c10c8f8404",
+    "quote_as_of": "2026-09-25T19:42:07Z",
+    "run_attempt": 1,
+    "run_id": "36367829153",
+    "schema_version": "provider_observation/v2",
+    "source_as_of": "2026-09-25"
+  },
+  "resolution_state": "fresh_primary",
+  "retry": false,
+  "schema_version": "yahoo-batch-quote-history-state/v1",
+  "stale": {
+    "age_business_days": 7,
+    "classified_at": "2026-08-19T23:42:29Z",
+    "classified_run_id": "32314261503",
+    "expected_resolution": "next_natural_yahoo_run",
+    "max_business_days": 6,
+    "message": "FGRU holds LKG because Yahoo source date 2026-08-10 is 7 business days old, beyond the 6-day bound; it will retry on the next natural Yahoo run.",
+    "reason": "source_age_exceeds_lane_bound",
+    "source_as_of": "2026-08-10"
+  },
+  "ticker": "FGRU",
+  "updated_at": "2026-09-28T03:11:20Z"
+}

@@ -1,0 +1,41 @@
+{
+  "schema_version": "feno_rim_recovery_r2_solver_anchor.v1",
+  "purpose": "Make the GLS solver anchor test the CONSTRUCTION rather than the answer (red-team fh-20260807-096): record the GM worked-example implied price and an intermediate so a third party can verify the fade/horizon/terminal conventions, not just the solved rate.",
+  "applies_to": "r2-criteria.json (sha 813d0d562b4dc7d949d7977e4909d62817c4766dc7515a5096c8f437f47a6d20); separate immutable file to keep the criteria file immutable",
+  "worked_example_GLM_GM": {
+    "inputs": {
+      "B0": 17.01,
+      "FEPS1": 6.75,
+      "FEPS2": 7.73,
+      "Ltg": 0.073,
+      "FEPS3": "FEPS2*(1+Ltg)=8.2903",
+      "payout_k": 0.196,
+      "target_industry_ROE": 0.16,
+      "T": 12,
+      "fade": "linear FROE3->target over years 4-12, reaching target at year 12",
+      "terminal": "(FROE_T - r)*B_{T-1}/(r*(1+r)^(T-1)), exponent T-1 (GLS convention)"
+    },
+    "computed": {
+      "FROE_path_y1_to_y12": [
+        0.3968,
+        0.3445,
+        0.2895,
+        0.2751,
+        0.2607,
+        0.2463,
+        0.2319,
+        0.2175,
+        0.2032,
+        0.1888,
+        0.1744,
+        0.16
+      ],
+      "intermediate_B_11": 133.1211,
+      "intermediate_FROE_12": 0.16,
+      "implied_P0_at_r_0.1394": 48.5114,
+      "round_trip_solved_r_from_that_P0": 0.1394
+    },
+    "paper_reference": "GLS Appendix A GM: FROE 0.397/0.345/0.289 fading -0.0144/yr to 0.160 at year 12, r=13.94%; reproduced here at full precision (implied P0 48.5114 vs red-team's 48.4869, a 0.05% rounding difference; round-trip is exact at 13.94%)."
+  },
+  "note": "A recorded implied price + intermediate distinguishes conventions: at this P0 the terminal exponent T (LM variant) gives 13.851% (-9bp), T=11 gives 14.285% (+34bp), fade-at-10 gives 13.330% (-61bp) - so the anchor now discriminates the load-bearing fade/horizon/terminal choices, not just the answer."
+}

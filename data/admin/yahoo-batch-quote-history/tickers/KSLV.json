@@ -1,0 +1,89 @@
+{
+  "attempts": [
+    {
+      "attempts_used": 1,
+      "event_name": "schedule",
+      "failures": [],
+      "latency_ms": 1113,
+      "natural": true,
+      "observed_at": "2026-08-09T13:12:35Z",
+      "outcome": "fresh",
+      "run_attempt": 1,
+      "run_id": "31315136344",
+      "schedule": "7 12 * * 0-5",
+      "shard": "6/72"
+    },
+    {
+      "attempts_used": 1,
+      "event_name": "workflow_dispatch",
+      "failures": [],
+      "latency_ms": 465,
+      "natural": false,
+      "observed_at": "2026-09-28T05:23:15Z",
+      "outcome": "fresh",
+      "run_attempt": 1,
+      "run_id": "36367832955",
+      "schedule": "",
+      "shard": ""
+    }
+  ],
+  "current": {
+    "fetched_at": "2026-09-28T05:26:29Z",
+    "history_as_of": "2026-09-25",
+    "path": "data/yf/finance/KSLV.json",
+    "payload_sha256": "5cb3df5e7d4ec01c7e4e19c06d9e2f406d38663d9d8dd89fd889bce6249ed48a",
+    "quote_as_of": "2026-09-25T19:58:04Z",
+    "source_as_of": "2026-09-25"
+  },
+  "discovered_from": [
+    "stockanalysis_etf"
+  ],
+  "last_attempt": {
+    "attempts_used": 1,
+    "event_name": "workflow_dispatch",
+    "failures": [],
+    "latency_ms": 465,
+    "natural": false,
+    "observed_at": "2026-09-28T05:23:15Z",
+    "outcome": "fresh",
+    "run_attempt": 1,
+    "run_id": "36367832955",
+    "schedule": "",
+    "shard": ""
+  },
+  "lkg": {
+    "fetched_at": "2026-08-09T13:16:27Z",
+    "history_as_of": "2026-08-07",
+    "path": "data/admin/yahoo-batch-quote-history/lkg/KSLV.json",
+    "payload_sha256": "fcf0151198db765a5de299df61fee373be91e7612a0a22a2627db1565328958e",
+    "quote_as_of": "2026-08-07T19:57:47Z",
+    "source_as_of": "2026-08-07"
+  },
+  "promotion_contract": "provider_observation/v2",
+  "provider_observation": {
+    "event_name": "workflow_dispatch",
+    "history_as_of": "2026-09-25",
+    "observed_at": "2026-09-28T05:23:15Z",
+    "payload_sha256": "61210e808ac89791aac0e8ba1041b9e05be69b3acbbaceb9e28cf27e16052769",
+    "quote_as_of": "2026-09-25T19:58:04Z",
+    "run_attempt": 1,
+    "run_id": "36367832955",
+    "schema_version": "provider_observation/v2",
+    "source_as_of": "2026-09-25"
+  },
+  "resolution_state": "fresh_primary",
+  "retry": false,
+  "schema_version": "yahoo-batch-quote-history-state/v1",
+  "stale": {
+    "age_business_days": 8,
+    "classified_at": "2026-08-19T23:42:29Z",
+    "classified_run_id": "32314261503",
+    "expected_resolution": "next_natural_yahoo_run",
+    "max_business_days": 6,
+    "message": "KSLV holds LKG because Yahoo source date 2026-08-07 is 8 business days old, beyond the 6-day bound; it will retry on the next natural Yahoo run.",
+    "reason": "source_age_exceeds_lane_bound",
+    "source_as_of": "2026-08-07"
+  },
+  "ticker": "KSLV",
+  "updated_at": "2026-09-28T05:23:15Z"
+}

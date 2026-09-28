@@ -1,0 +1,76 @@
+{
+  "attempts": [
+    {
+      "attempts_used": 1,
+      "event_name": "workflow_dispatch",
+      "failures": [],
+      "latency_ms": 505,
+      "natural": false,
+      "observed_at": "2026-09-28T06:02:24Z",
+      "outcome": "fresh",
+      "run_attempt": 1,
+      "run_id": "36367834787",
+      "schedule": "",
+      "shard": ""
+    }
+  ],
+  "current": {
+    "fetched_at": "2026-09-28T06:22:38Z",
+    "history_as_of": "2026-09-25",
+    "path": "data/admin/yahoo-batch-quote-history/lkg/TIPH.json",
+    "payload_sha256": "7bd962ebfed60010217393bbcf430ea1946fb43c375bba02ff71dbd2659f4e68",
+    "quote_as_of": "2026-09-16T18:59:48Z",
+    "source_as_of": "2026-09-16T18:59:48Z"
+  },
+  "discovered_from": [
+    "stockanalysis_etf"
+  ],
+  "last_attempt": {
+    "attempts_used": 1,
+    "event_name": "workflow_dispatch",
+    "failures": [],
+    "latency_ms": 505,
+    "natural": false,
+    "observed_at": "2026-09-28T06:02:24Z",
+    "outcome": "fresh",
+    "run_attempt": 1,
+    "run_id": "36367834787",
+    "schedule": "",
+    "shard": ""
+  },
+  "lkg": {
+    "fetched_at": "2026-09-28T06:22:38Z",
+    "history_as_of": "2026-09-25",
+    "path": "data/admin/yahoo-batch-quote-history/lkg/TIPH.json",
+    "payload_sha256": "7bd962ebfed60010217393bbcf430ea1946fb43c375bba02ff71dbd2659f4e68",
+    "quote_as_of": "2026-09-16T18:59:48Z",
+    "source_as_of": "2026-09-16T18:59:48Z"
+  },
+  "promotion_contract": "provider_observation/v2",
+  "provider_observation": {
+    "event_name": "workflow_dispatch",
+    "history_as_of": "2026-09-25",
+    "observed_at": "2026-09-28T06:02:24Z",
+    "payload_sha256": "97da852c64df2a82a0bd9a56e06b4c53cfc448f9c048fb6f58a99ac915b17392",
+    "quote_as_of": "2026-09-16T18:59:48Z",
+    "run_attempt": 1,
+    "run_id": "36367834787",
+    "schema_version": "provider_observation/v2",
+    "source_as_of": "2026-09-16T18:59:48Z"
+  },
+  "resolution_state": "lkg_primary",
+  "retry": true,
+  "schema_version": "yahoo-batch-quote-history-state/v1",
+  "stale": {
+    "age_business_days": 8,
+    "classified_at": "2026-09-28T06:30:00Z",
+    "classified_run_id": "36367836615",
+    "expected_resolution": "next_natural_yahoo_run",
+    "max_business_days": 6,
+    "message": "TIPH holds LKG because Yahoo source date 2026-09-16T18:59:48Z is 8 business days old, beyond the 6-day bound; it will retry on the next natural Yahoo run.",
+    "reason": "source_age_exceeds_lane_bound",
+    "source_as_of": "2026-09-16T18:59:48Z"
+  },
+  "ticker": "TIPH",
+  "updated_at": "2026-09-28T06:30:00Z"
+}

@@ -1,0 +1,142 @@
+{
+  "attempts": [
+    {
+      "attempts_used": 1,
+      "event_name": "workflow_dispatch",
+      "failures": [],
+      "latency_ms": 595,
+      "natural": true,
+      "observed_at": "2026-08-01T18:41:58Z",
+      "outcome": "fresh",
+      "run_attempt": 1,
+      "run_id": "30711925747",
+      "schedule": "",
+      "shard": "4/6"
+    },
+    {
+      "attempts_used": 1,
+      "event_name": "schedule",
+      "failures": [],
+      "latency_ms": 1034,
+      "natural": true,
+      "observed_at": "2026-08-06T10:49:28Z",
+      "outcome": "fresh",
+      "run_attempt": 1,
+      "run_id": "31094670683",
+      "schedule": "7 8 * * 0-5",
+      "shard": "52/72"
+    },
+    {
+      "attempts_used": 1,
+      "event_name": "schedule",
+      "failures": [],
+      "latency_ms": 970,
+      "natural": true,
+      "observed_at": "2026-08-11T09:13:07Z",
+      "outcome": "fresh",
+      "run_attempt": 1,
+      "run_id": "31476569032",
+      "schedule": "7 8 * * 0-5",
+      "shard": "28/72"
+    },
+    {
+      "attempts_used": 1,
+      "error": "recovery_not_advanced_by_provider",
+      "event_name": "schedule",
+      "failures": [],
+      "latency_ms": 891,
+      "natural": true,
+      "observed_at": "2026-08-11T13:36:55Z",
+      "outcome": "failed",
+      "run_attempt": 1,
+      "run_id": "31496919771",
+      "schedule": "7 12 * * 0-5",
+      "shard": "30/72"
+    },
+    {
+      "attempts_used": 1,
+      "event_name": "schedule",
+      "failures": [],
+      "latency_ms": 654,
+      "natural": true,
+      "observed_at": "2026-08-11T17:08:04Z",
+      "outcome": "fresh",
+      "run_attempt": 1,
+      "run_id": "31515819191",
+      "schedule": "7 16 * * 0-5",
+      "shard": "32/72"
+    },
+    {
+      "attempts_used": 1,
+      "event_name": "workflow_dispatch",
+      "failures": [],
+      "latency_ms": 498,
+      "natural": false,
+      "observed_at": "2026-09-28T03:11:20Z",
+      "outcome": "fresh",
+      "run_attempt": 1,
+      "run_id": "36367829153",
+      "schedule": "",
+      "shard": ""
+    }
+  ],
+  "current": {
+    "fetched_at": "2026-09-28T03:30:49Z",
+    "history_as_of": "2026-09-25",
+    "path": "data/yf/finance/FMCX.json",
+    "payload_sha256": "adeca865c2e73431f9cfbeaf059534e76c56725df0aaa7118a5cbca2ce29d4a2",
+    "quote_as_of": "2026-09-24T13:30:01Z",
+    "source_as_of": "2026-09-24T13:30:01Z"
+  },
+  "discovered_from": [
+    "stockanalysis_etf"
+  ],
+  "last_attempt": {
+    "attempts_used": 1,
+    "event_name": "workflow_dispatch",
+    "failures": [],
+    "latency_ms": 498,
+    "natural": false,
+    "observed_at": "2026-09-28T03:11:20Z",
+    "outcome": "fresh",
+    "run_attempt": 1,
+    "run_id": "36367829153",
+    "schedule": "",
+    "shard": ""
+  },
+  "lkg": {
+    "fetched_at": "2026-08-11T17:08:31Z",
+    "history_as_of": "2026-08-11",
+    "path": "data/admin/yahoo-batch-quote-history/lkg/FMCX.json",
+    "payload_sha256": "e58dd00a6a2b4abf3cd11a41e9954aa934afb0be822994e5fba050b8e5aa4f77",
+    "quote_as_of": "2026-08-11T13:46:04Z",
+    "source_as_of": "2026-08-11"
+  },
+  "promotion_contract": "provider_observation/v2",
+  "provider_observation": {
+    "event_name": "workflow_dispatch",
+    "history_as_of": "2026-09-25",
+    "observed_at": "2026-09-28T03:11:20Z",
+    "payload_sha256": "768c393291fee2a182463f58b12838727deb03d159d8b8204dda145c8107cdca",
+    "quote_as_of": "2026-09-24T13:30:01Z",
+    "run_attempt": 1,
+    "run_id": "36367829153",
+    "schema_version": "provider_observation/v2",
+    "source_as_of": "2026-09-24T13:30:01Z"
+  },
+  "resolution_state": "fresh_primary",
+  "retry": false,
+  "schema_version": "yahoo-batch-quote-history-state/v1",
+  "stale": {
+    "age_business_days": 7,
+    "classified_at": "2026-08-20T14:20:12Z",
+    "classified_run_id": "32379322022",
+    "expected_resolution": "next_natural_yahoo_run",
+    "max_business_days": 6,
+    "message": "FMCX holds LKG because Yahoo source date 2026-08-11 is 7 business days old, beyond the 6-day bound; it will retry on the next natural Yahoo run.",
+    "reason": "source_age_exceeds_lane_bound",
+    "source_as_of": "2026-08-11"
+  },
+  "ticker": "FMCX",
+  "updated_at": "2026-09-28T03:11:20Z"
+}

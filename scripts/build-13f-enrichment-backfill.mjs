@@ -8,9 +8,9 @@
  *   - data/yf/quarter_closes.json for report-date close and latest close
  *
  * Outputs:
- *   - data/sec-13f/investors/*.json (+ public mirror)
- *   - data/sec-13f/summary.json (+ public mirror)
- *   - data/sec-13f/by_sector.json (+ public mirror)
+ *   - data/sec-13f/investors/*.json
+ *   - data/sec-13f/summary.json
+ *   - data/sec-13f/by_sector.json
  */
 
 import fs from "node:fs";
@@ -31,7 +31,6 @@ import {
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const INVESTORS_DIR = path.join(ROOT, "data/sec-13f/investors");
-const PUBLIC_INVESTORS_DIR = path.join(ROOT, "100xfenok-next/public/data/sec-13f/investors");
 const SUMMARY_PATH = path.join(ROOT, "data/sec-13f/summary.json");
 const BY_SECTOR_PATH = path.join(ROOT, "data/sec-13f/by_sector.json");
 const YF_DIR = path.join(ROOT, "data/yf/finance");
@@ -66,11 +65,6 @@ const YAHOO_SECTOR_TO_GICS = new Map([
 function writeJson(filePath, data) {
   fs.mkdirSync(path.dirname(filePath), { recursive: true });
   fs.writeFileSync(filePath, `${JSON.stringify(data, null, 2)}\n`);
-}
-
-function writeRootAndPublic(relPath, data) {
-  writeJson(path.join(ROOT, relPath), data);
-  writeJson(path.join(ROOT, "100xfenok-next/public", relPath), data);
 }
 
 function readExistingJson(filePath, fallback, guardFn) {
@@ -297,12 +291,17 @@ function profileForSymbol(symbol) {
 }
 
 function resolveProfile(holding) {
+  const resolved = resolver.resolveHoldingSymbol(holding);
+  if (resolved.source === "sec-liberty-live-2025-annual-report") {
+    // Exact CUSIP identity is authoritative. If its own profile is unavailable,
+    // leave enrichment empty instead of falling back to the stale IVE alias.
+    return resolved.symbol ? profileForSymbol(resolved.symbol) : null;
+  }
   const raw = String(holding?.ticker ?? "").trim().toUpperCase();
   const candidates = [];
   if (raw) {
     candidates.push(raw, raw.replace(".", "-"), raw.replace("-", "."));
   }
-  const resolved = resolver.resolveHoldingSymbol(holding);
   if (resolved.symbol) candidates.push(resolved.symbol);
   const nameHit = resolver.nameMap.get(normalizeCompanyName(holding?.name));
   if (nameHit?.symbol) candidates.push(nameHit.symbol);
@@ -504,12 +503,19 @@ for (const doc of investorDocs) {
   const id = doc.__id;
   delete doc.__id;
   writeJson(path.join(INVESTORS_DIR, `${id}.json`), doc);
-  writeJson(path.join(PUBLIC_INVESTORS_DIR, `${id}.json`), doc);
 }
 
 const summary = readExistingJson(SUMMARY_PATH, {}, guardSummaryDoc);
+const sourceGeneratedAt = String(
+  summary.metadata?.source_generated_at ?? summary.metadata?.generated_at ?? "",
+).trim() || null;
+const sourceQuarter = String(
+  summary.metadata?.source_quarter ?? summary.metadata?.quarters_covered?.[0] ?? "",
+).trim() || null;
 summary.metadata = {
   ...(summary.metadata ?? {}),
+  source_generated_at: sourceGeneratedAt,
+  source_quarter: sourceQuarter,
   enrichment_coverage: coverage.coverage,
   enrichment_source_mix: coverage.sourceMix,
   enrichment_denominator: "public_filtered_holdings",
@@ -534,8 +540,8 @@ summary.metadata = {
     local_yf_backfill: true,
   },
 };
-writeRootAndPublic("data/sec-13f/summary.json", summary);
-writeRootAndPublic("data/sec-13f/by_sector.json", bySector);
+writeJson(SUMMARY_PATH, summary);
+writeJson(BY_SECTOR_PATH, bySector);
 
 for (const warning of yfWarnings) console.warn(`::warning:: 13F enrichment degraded: ${warning}`);
 

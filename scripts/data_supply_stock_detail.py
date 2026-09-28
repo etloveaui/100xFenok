@@ -62,10 +62,26 @@ def _fail(reason_code: str, detail: str):
     raise StockDetailValidationError(reason_code, detail)
 
 
+# Yahoo serves single-letter class-share suffixes in dash form (BRK.B -> BRK-B),
+# but single-letter EXCHANGE suffixes keep the dot. Guard the known single-letter
+# exchange suffixes first so exchange symbols are never rewritten: .T Tokyo
+# (including TSE new-format listing codes such as 285A.T = KIOXIA HOLDINGS),
+# .L London, .F Frankfurt, .V TSX Venture. The fetch lane relies on the same
+# set, so consumers of this helper and the fetch lane stay aligned.
+SINGLE_LETTER_EXCHANGE_SUFFIXES = frozenset({"T", "L", "F", "V"})
+
+
 def yahoo_provider_symbol(entity: str) -> str:
     """Return Yahoo's alias only for single-letter class-share suffixes."""
     head, separator, tail = entity.rpartition(".")
-    if separator and head and tail.isalpha() and len(tail) == 1 and not head[-1].isdigit():
+    if (
+        separator
+        and head
+        and tail.isalpha()
+        and len(tail) == 1
+        and tail not in SINGLE_LETTER_EXCHANGE_SUFFIXES
+        and not head[-1].isdigit()
+    ):
         return f"{head}-{tail}"
     return entity
 
@@ -177,6 +193,13 @@ def _yahoo_source_as_of(payload: dict[str, Any]) -> str | None:
     )
 
 
+def _is_positive_number(value: Any) -> bool:
+    """True when value is a finite positive real — the shape _positive_number accepts."""
+    if isinstance(value, bool) or not isinstance(value, (int, float)):
+        return False
+    return math.isfinite(value) and value > 0
+
+
 def _finite_number(value: Any, label: str) -> float:
     if isinstance(value, bool) or not isinstance(value, (int, float)) or not math.isfinite(value):
         _fail("quote_invalid", f"{label} must be a finite number")
@@ -277,6 +300,17 @@ def _validate_yahoo(entity: str, payload: dict[str, Any]) -> None:
     _positive_number(previous, "Yahoo previous close")
     if not isinstance(history, list) or not history or any(not isinstance(row, dict) for row in history):
         _fail("schema_invalid", "Yahoo history_1y is missing")
+    # Yahoo publishes the current session's row before its close settles, so the last
+    # rows can carry a null close. Drop that tail rather than rejecting the ticker;
+    # an interior gap is still a malformed series and stays fail-closed. Same rule the
+    # indices lane already applies (38c64ac296).
+    retained = len(history)
+    while retained > 0 and not _is_positive_number(history[retained - 1].get("Close")):
+        retained -= 1
+    if retained == 0:
+        _fail("quote_invalid", "Yahoo history close must be a finite number")
+    if retained != len(history):
+        del history[retained:]
     for row in history:
         if not isinstance(row.get("date"), str) or not row["date"]:
             _fail("schema_invalid", "Yahoo history date is missing")

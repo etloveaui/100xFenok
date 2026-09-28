@@ -4,30 +4,22 @@ import path from "node:path";
 import { createHash } from "node:crypto";
 import { fileURLToPath } from "node:url";
 
-import {
-  attemptResult,
-  atomicWrite,
-  classifyEndpointResponse,
-  defaultAttemptId,
-  threwTuple,
-  transportError,
-  worstRequestResult,
-  writeAttemptShard,
-} from "./lib/data-supply-attempt-shard.mjs";
+import { atomicWrite } from "./lib/atomic-file.mjs";
+import { attemptResult, classifyEndpointResponse, threwTuple, transportError, worstRequestResult } from "./lib/provider-fetch-result.mjs";
 import {
   LaneLkgStore,
   PROMOTION_CONTRACT_PROVIDER_OBSERVATION_V2,
   buildProviderObservationV2,
   classifyLkgFailure,
-  isNaturalScheduleRun,
+  isEligibleRecoveryRun,
   systemicLkgFailureReason,
 } from "./lib/data-supply-lkg-store.mjs";
+import { boundedDiagnosticDetail, diagnosticSuffix } from "./lib/diagnostic-detail.mjs";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 const REPO_ROOT = path.resolve(__dirname, "..");
 const DATA_ROOT = path.join(REPO_ROOT, "data");
-const PUBLIC_DATA_ROOT = path.join(REPO_ROOT, "100xfenok-next", "public", "data");
 
 const SCHEMA_VERSION = "nasdaq_giw_sox_constituents.v1";
 const DEFAULT_OUTPUT = "indices/nasdaq-giw-sox-constituents.json";
@@ -56,7 +48,6 @@ function parseArgs(argv) {
     lookbackDays: 10,
     output: DEFAULT_OUTPUT,
     write: true,
-    publicMirror: true,
     check: false,
   };
   for (let i = 0; i < argv.length; i += 1) {
@@ -71,7 +62,10 @@ function parseArgs(argv) {
       args.check = true;
       args.write = false;
     } else if (arg === "--no-write") args.write = false;
-    else if (arg === "--no-public-mirror") args.publicMirror = false;
+    else if (arg === "--no-public-mirror") {
+      // Accepted for CI command compatibility; this producer is canonical-only
+      // (the public mirror is boundary-owned, #377 batch 3).
+    }
     else throw new Error(`Unknown argument: ${arg}`);
   }
   if (!Number.isFinite(args.lookbackDays) || args.lookbackDays < 0 || args.lookbackDays > 30) {
@@ -139,6 +133,7 @@ async function evaluateTradeDate({ request, tradeDate, controlled }) {
         exceptionKind === "transport" ? "transport_error" : "unexpected_error",
         threwTuple(exceptionKind),
       ),
+      failure_detail: boundedDiagnosticDetail(error),
       tradeDate,
     };
   }
@@ -326,25 +321,28 @@ function controlledFailure(controlledFailureKey, eventName) {
 export async function runNasdaqGiwSox({
   repoRoot = REPO_ROOT,
   canonicalPath = path.join(REPO_ROOT, "data", DEFAULT_OUTPUT),
-  publicPath = path.join(REPO_ROOT, "100xfenok-next", "public", "data", DEFAULT_OUTPUT),
-  attemptShardPath = path.join(REPO_ROOT, "data", "admin", "data-supply-state", "detection-attempts", `${LANE_ID}.json`),
   dates = candidateDates(null, 10),
   request = requestWeightingData,
   observedAt = new Date().toISOString(),
-  attemptId = defaultAttemptId("nasdaq-giw-sox", observedAt),
   runId = process.env.GITHUB_RUN_ID || "local",
   runAttempt = Number(process.env.GITHUB_RUN_ATTEMPT || 1),
   eventName = process.env.GITHUB_EVENT_NAME || "local",
   controlledFailureKey = process.env.INPUT_CONTROLLED_FAILURE_KEY || "",
   write = true,
-  publicMirror = false,
 } = {}) {
   if (!Array.isArray(dates) || dates.length === 0 || dates.some((date) => !validDate(date))) {
     throw new Error("SOX candidate dates must be a non-empty YYYY-MM-DD array");
   }
   const controlled = controlledFailure(controlledFailureKey, eventName);
   const run = { runId: String(runId), runAttempt: Number(runAttempt), eventName, observedAt };
-  const lkgStore = new LaneLkgStore({ repoRoot, laneId: LANE_ID });
+  // SOX opts into recovery promotion for authentic first-attempt
+  // workflow_dispatch runs only; every other LaneLkgStore caller keeps the
+  // natural-schedule-only default.
+  const lkgStore = new LaneLkgStore({
+    repoRoot,
+    laneId: LANE_ID,
+    allowBoundWorkflowDispatchRecovery: true,
+  });
   const lkgArtifacts = [{
     key: LKG_KEY,
     canonicalPath,
@@ -362,7 +360,7 @@ export async function runNasdaqGiwSox({
     }
   }
   const folded = selected ?? worstRequestResult(requestResults);
-  const attempt = write ? writeAttemptShard({ laneId: LANE_ID, attemptShardPath, observedAt, attemptId, result: folded }) : null;
+  const attempt = write ? (folded).attempt : null;
 
   if (selected === null) {
     const failureReason = systemicLkgFailureReason(requestResults.map((row) => row.reason))
@@ -382,7 +380,18 @@ export async function runNasdaqGiwSox({
       hasCompleteLkg: failure.hasCompleteLkg,
       systemic: nonTransientHttp,
     });
-    return { ok: false, reason: failureReason, updated: false, attempt, retrySet: failure.retrySet, ...outcome };
+    const failureDetail = failureReason === "controlled_failure"
+      ? null
+      : folded.failure_detail ?? requestResults.find((row) => row.failure_detail)?.failure_detail ?? null;
+    return {
+      ok: false,
+      reason: failureReason,
+      updated: false,
+      attempt,
+      retrySet: failure.retrySet,
+      ...(failureDetail ? { failure_detail: failureDetail } : {}),
+      ...outcome,
+    };
   }
 
   const payload = buildPayload({ tradeDate: selected.tradeDate, rows: selected.rows, generatedAt: observedAt });
@@ -408,7 +417,7 @@ export async function runNasdaqGiwSox({
   if (!write) return { ok: true, reason: "ok", updated: false, attempt, payload, asOf: payload.as_of, rowCount: payload.row_count };
 
   const recoveryState = lkgStore.stateSnapshot();
-  if (recoveryState.items[LKG_KEY]?.retry === true && !isNaturalScheduleRun(run)) {
+  if (recoveryState.items[LKG_KEY]?.retry === true && !isEligibleRecoveryRun(run, true)) {
     return {
       ok: false,
       reason: "recovery_requires_schedule",
@@ -480,7 +489,6 @@ export async function runNasdaqGiwSox({
     };
   }
   atomicWrite(canonicalPath, serialized);
-  if (publicMirror) atomicWrite(publicPath, serialized);
   const success = lkgStore.recordSuccess({ artifacts: promotable, run });
   const recovered = success.state.items[LKG_KEY]?.recovered_at === observedAt;
   const history = rotateSoxSnapshotHistory({ repoRoot, payload, generatedAt: observedAt });
@@ -501,17 +509,14 @@ export async function runNasdaqGiwSox({
 async function main() {
   const args = parseArgs(process.argv.slice(2));
   const canonicalPath = path.join(DATA_ROOT, args.output);
-  const publicPath = path.join(PUBLIC_DATA_ROOT, args.output);
   const result = await runNasdaqGiwSox({
     canonicalPath,
-    publicPath,
     dates: candidateDates(args.date, args.lookbackDays),
     write: args.write,
-    publicMirror: args.publicMirror,
   });
   if (!result.ok) {
     const prefix = result.degraded ? "[degraded]" : "[corrupt]";
-    const message = `${prefix} Nasdaq GIW SOX ${result.reason}; retry set: ${(result.retrySet || []).join(", ") || "none"}`;
+    const message = `${prefix} Nasdaq GIW SOX ${result.reason}; retry set: ${(result.retrySet || []).join(", ") || "none"}${diagnosticSuffix(result.failure_detail)}`;
     if (result.degraded) console.log(message);
     else console.error(message);
     process.exitCode = result.exitCode ?? 2;
@@ -522,16 +527,10 @@ async function main() {
     if (!current || JSON.stringify(stableComparable(current)) !== JSON.stringify(stableComparable(result.payload))) {
       throw new Error(`${path.join("data", args.output)} is not up to date with Nasdaq GIW SOX constituents`);
     }
-    if (args.publicMirror) {
-      const mirror = fs.existsSync(publicPath) ? JSON.parse(fs.readFileSync(publicPath, "utf8")) : null;
-      if (!mirror || JSON.stringify(stableComparable(mirror)) !== JSON.stringify(stableComparable(result.payload))) {
-        throw new Error(`${path.join("100xfenok-next/public/data", args.output)} is not up to date with Nasdaq GIW SOX constituents`);
-      }
-    }
   }
   console.log(JSON.stringify({
     ok: true,
-    wrote: args.write ? [path.join("data", args.output), ...(args.publicMirror ? [path.join("100xfenok-next/public/data", args.output)] : [])] : [],
+    wrote: args.write ? [path.join("data", args.output)] : [],
     as_of: result.asOf,
     row_count: result.rowCount,
     symbols: result.symbols ?? result.payload?.symbols,

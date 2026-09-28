@@ -18,8 +18,10 @@ import unittest
 
 ROOT = Path(__file__).resolve().parents[1]
 FETCH_PATH = ROOT / "scripts" / "fetch-yf-finance.py"
+YAHOO_BATCH_STATE_PATH = ROOT / "scripts" / "yahoo_batch_state.py"
 YF_WORKFLOW_PATH = ROOT / ".github" / "workflows" / "fetch-yf-finance.yml"
 MANIFEST_WORKFLOW_PATH = ROOT / ".github" / "workflows" / "update-manifest.yml"
+MANIFEST_RUNNER_PATH = ROOT / "scripts" / "update-manifest-projections.sh"
 
 
 def load_fetch_module():
@@ -27,6 +29,15 @@ def load_fetch_module():
     spec = importlib.util.spec_from_file_location("fetch_yf_finance", FETCH_PATH)
     if spec is None or spec.loader is None:
         raise RuntimeError(f"Cannot load fetch module from {FETCH_PATH}")
+    module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
+    return module
+
+
+def load_yahoo_batch_state_module():
+    spec = importlib.util.spec_from_file_location("yahoo_batch_state", YAHOO_BATCH_STATE_PATH)
+    if spec is None or spec.loader is None:
+        raise RuntimeError(f"Cannot load state module from {YAHOO_BATCH_STATE_PATH}")
     module = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(module)
     return module
@@ -40,10 +51,12 @@ def write_json(path: Path, payload: dict) -> None:
 class FetchYfFinanceSelectionTest(unittest.TestCase):
     def setUp(self) -> None:
         self.fetcher = load_fetch_module()
+        self.state = load_yahoo_batch_state_module()
         self.tmp = TemporaryDirectory()
         self.root = Path(self.tmp.name)
         self.fetcher.STOCKANALYSIS_ETF_UNIVERSE = self.root / "stockanalysis" / "etf_universe.json"
         self.fetcher.STOCKANALYSIS_ETF_SCREENER = self.root / "stockanalysis" / "surfaces" / "etf_screener.json"
+        self.fetcher.ETF_CORE_DAILY_BASKET = self.root / "admin" / "fenok-etf-core-daily-basket.json"
         self.fetcher.STOCK_UNIVERSE_DIR = self.root / "global-scouter" / "stocks" / "detail"
         self.fetcher.ETF_INDEX = self.root / "global-scouter" / "etfs" / "index.json"
         self.fetcher.MARKET_FACTS_INDEX = self.root / "computed" / "market_facts" / "index.json"
@@ -53,16 +66,34 @@ class FetchYfFinanceSelectionTest(unittest.TestCase):
         self.fetcher.YAHOO_BATCH_STATE_ROOT = self.root / "data" / "admin" / "yahoo-batch-quote-history"
         self.fetcher.DATA_SUPPLY_STATE_ROOT = self.root / "data" / "admin" / "data-supply-state" / "v1"
         self.fetcher.DATA_SUPPLY_PROVIDER_TRUTH_ROOT = self.root
+        self.fetcher._ESTIMATE_ARCHIVE = self.fetcher.EstimateArchive(
+            self.root / "data" / "yf" / "estimates-archive"
+        )
         self.fetcher.STOCK_UNIVERSE_DIR.mkdir(parents=True)
 
     def tearDown(self) -> None:
         self.tmp.cleanup()
 
-    def test_yahoo_symbol_delegates_to_stock_detail_alias_contract(self) -> None:
+    def test_yahoo_symbol_preserves_single_letter_exchange_suffixes(self) -> None:
+        # TSE new-format listing codes end in a letter and must keep the dotted
+        # exchange suffix: 285A.T is KIOXIA HOLDINGS on JPX, and 285A-T is a
+        # real Yahoo "Not Found" (verified against the live provider 2026-08-11).
+        # This is the corpus shape that produced 14 consecutive empty-payload
+        # failures classified as transient provider misses (regression #285A).
+        self.assertEqual(self.fetcher.yahoo_symbol("285A.T"), "285A.T")
+        self.assertEqual(self.fetcher.yahoo_symbol("7203.T"), "7203.T")
+        # Other single-letter exchange suffixes are equally exchange suffixes,
+        # not class shares.
+        self.assertEqual(self.fetcher.yahoo_symbol("VOD.L"), "VOD.L")
+        self.assertEqual(self.fetcher.yahoo_symbol("SAP.F"), "SAP.F")
+        self.assertEqual(self.fetcher.yahoo_symbol("ACB.V"), "ACB.V")
+
+    def test_yahoo_symbol_keeps_class_share_and_suffix_aliases(self) -> None:
         self.assertEqual(self.fetcher.yahoo_symbol("BRK.A"), "BRK-A")
         self.assertEqual(self.fetcher.yahoo_symbol("BRK.B"), "BRK-B")
         self.assertEqual(self.fetcher.yahoo_symbol("005930.KS"), "005930.KS")
         self.assertEqual(self.fetcher.yahoo_symbol("BMW.DE"), "BMW.DE")
+        self.assertEqual(self.fetcher.yahoo_symbol("MC.PA"), "MC.PA")
 
     def _daily_payload(self, ticker: str) -> dict:
         return self.fetcher.decorate_finance_payload(
@@ -328,6 +359,107 @@ class FetchYfFinanceSelectionTest(unittest.TestCase):
         self.assertTrue(detail["retry"])
         self.assertEqual(detail["expected_resolution"], "next_natural_yahoo_run")
 
+    def test_terminal_failed_last_attempt_stays_out_of_retry_pending_failed_count(self) -> None:
+        """counts.failed excludes terminal symbols while retryable failures still count.
+
+        Regression: a terminal classification (provider-unsupported, e.g. acquired or
+        delisted) keeps the pre-terminal last_attempt.outcome == "failed", which used
+        to inflate counts.failed beyond the strict KPI retry-capable equation
+        failed <= lkg + pending_history + unavailable. The index rebuild must stay
+        deterministic and offline: it reads only per-ticker state files plus the
+        passed active universe, so this test drives rebuild_index directly on a
+        temporary store with zero provider or network access.
+        """
+        store = self.fetcher.YahooBatchStateStore(
+            self.fetcher.YAHOO_BATCH_STATE_ROOT,
+            self.fetcher.OUT_DIR,
+        )
+        run = self._run("retry-capable-count-equation")
+        terminal_failed_attempt = {
+            "run_id": "pre-terminal-run",
+            "run_attempt": 1,
+            "observed_at": "2026-08-08T00:05:10Z",
+            "outcome": "failed",
+            "attempts_used": 1,
+            "failures": [],
+        }
+        write_json(store._state_path("TERM"), {
+            "schema_version": "yahoo-batch-quote-history-state/v1",
+            "ticker": "TERM",
+            "resolution_state": self.state.TERMINAL_RESOLUTION_STATE,
+            "retry": False,
+            "last_attempt": terminal_failed_attempt,
+            "attempts": [terminal_failed_attempt],
+            "terminal": {
+                "classified_run_id": run["run_id"],
+                "classified_at": run["observed_at"],
+            },
+        })
+        for ticker, resolution, outcome in (
+            ("LKG1", "lkg_primary", "failed"),
+            ("UNA1", "unavailable", "failed"),
+            ("PEND1", "pending_history", "pending_history"),
+            ("FRESH1", "fresh_primary", "fresh"),
+        ):
+            current_attempt = {
+                "run_id": run["run_id"],
+                "run_attempt": run["run_attempt"],
+                "observed_at": run["observed_at"],
+                "outcome": outcome,
+                "attempts_used": 1,
+                "failures": [],
+            }
+            write_json(store._state_path(ticker), {
+                "schema_version": "yahoo-batch-quote-history-state/v1",
+                "ticker": ticker,
+                "resolution_state": resolution,
+                "retry": resolution != "fresh_primary",
+                "last_attempt": current_attempt,
+                "attempts": [current_attempt],
+            })
+
+        index = store.rebuild_index({"TERM", "LKG1", "UNA1", "PEND1", "FRESH1"}, run)
+
+        counts = index["counts"]
+        retry_capable = counts["lkg"] + counts["pending_history"] + counts["unavailable"]
+        self.assertEqual(
+            {
+                "active": counts["active"],
+                "untracked": counts["untracked"],
+                "pending_acquisition": counts["pending_acquisition"],
+                "fresh": counts["fresh"],
+                "lkg": counts["lkg"],
+                "pending_history": counts["pending_history"],
+                "unavailable": counts["unavailable"],
+                "terminal": counts["terminal"],
+                "retry": counts["retry"],
+                "failed": counts["failed"],
+                "stale": counts["stale"],
+            },
+            {
+                "active": 5,
+                "untracked": 0,
+                "pending_acquisition": 0,
+                "fresh": 1,
+                "lkg": 1,
+                "pending_history": 1,
+                "unavailable": 1,
+                "terminal": 1,
+                "retry": 3,
+                "failed": 2,
+                "stale": 0,
+            },
+        )
+        # The strict KPI equation: every counted failure is retry-capable.
+        self.assertLessEqual(counts["failed"], retry_capable)
+        self.assertEqual(index["terminal_symbols"], ["TERM"])
+        self.assertEqual(index["retry_symbols"], ["LKG1", "PEND1", "UNA1"])
+        # latest_attempt accounting still reports the real current-run failures.
+        self.assertEqual(index["current_attempt"]["attempted"], 4)
+        self.assertEqual(index["current_attempt"]["successes"], 2)
+        self.assertEqual(index["current_attempt"]["failed"], 2)
+        self.assertEqual(index["current_attempt"]["skipped"], 0)
+
     def test_data_loss_unavailable_cannot_be_laundered_by_promotion_deferral(self) -> None:
         store = self.fetcher.YahooBatchStateStore(self.fetcher.YAHOO_BATCH_STATE_ROOT, self.fetcher.OUT_DIR)
         run = {**self._run("data-loss-deferral"), "event_name": "workflow_dispatch", "natural": False}
@@ -509,6 +641,129 @@ class FetchYfFinanceSelectionTest(unittest.TestCase):
             ["BND", "VOO", "AAA", "ZZZ"],
         )
 
+    def test_load_core_daily_basket_validates_daily_refresh_universe_tickers(self) -> None:
+        with self.assertRaisesRegex(ValueError, "core daily basket is unreadable"):
+            self.fetcher.load_core_daily_basket()
+        write_json(
+            self.fetcher.ETF_CORE_DAILY_BASKET,
+            {
+                "daily_refresh_universe": {
+                    "count": 3,
+                    "tickers": ["SPY", "qqq", "VTI "],
+                }
+            },
+        )
+
+        self.assertEqual(
+            self.fetcher.load_core_daily_basket(),
+            {"SPY", "QQQ", "VTI"},
+        )
+
+        # The scheduled lane's labeled union is the basket plus the three
+        # configured ETF sets, never the StockAnalysis universe/screener.
+        sources = self.fetcher.load_core_daily_basket_sources()
+        self.assertEqual(
+            sources["SPY"],
+            ["core_daily_basket", "major_etf_configuration", "rim_tracker_configuration"],
+        )
+        self.assertEqual(sources["QQQ"], ["core_daily_basket", "major_etf_configuration", "rim_tracker_configuration"])
+        self.assertEqual(sources["VTI"], ["core_daily_basket", "major_etf_configuration"])
+        self.assertEqual(sources["TQQQ"], ["focus_etf_configuration"])
+        self.assertEqual(sources["ONEQ"], ["rim_tracker_configuration"])
+        self.assertEqual(len(sources), 56)
+        self.assertEqual(list(sources), sorted(sources))
+
+        self.fetcher.ETF_CORE_DAILY_BASKET.write_text("{broken", encoding="utf-8")
+        with self.assertRaisesRegex(ValueError, "core daily basket is unreadable"):
+            self.fetcher.load_core_daily_basket()
+
+        for payload, pattern in [
+            (["not", "an", "object"], "core daily basket must be an object"),
+            ({"daily_refresh_universe": []}, "daily_refresh_universe must be an object"),
+            ({"daily_refresh_universe": {"count": 1, "tickers": "SPY"}}, "tickers must be a list"),
+            ({"daily_refresh_universe": {"count": 0, "tickers": []}}, "core daily basket is empty"),
+            ({"daily_refresh_universe": {"count": 1, "tickers": ["BAD_SYMBOL"]}}, "invalid tickers"),
+            ({"daily_refresh_universe": {"count": 2, "tickers": ["SPY"]}}, "count mismatch"),
+            ({"daily_refresh_universe": {"tickers": ["SPY"]}}, "count must be an integer"),
+        ]:
+            with self.subTest(pattern=pattern):
+                write_json(self.fetcher.ETF_CORE_DAILY_BASKET, payload)
+                with self.assertRaisesRegex(ValueError, pattern):
+                    self.fetcher.load_core_daily_basket()
+
+    def test_core_daily_basket_mode_selects_bounded_union_plus_explicit_tickers(self) -> None:
+        write_json(self.fetcher.ETF_CORE_DAILY_BASKET, {"daily_refresh_universe": {"count": 2, "tickers": ["SMALL", "BIG"]}})
+        # The StockAnalysis universe/screener must not enter the candidate set.
+        write_json(self.fetcher.STOCKANALYSIS_ETF_UNIVERSE, {"records": [{"ticker": "ZZSA", "aum": "9B"}]})
+        write_json(self.fetcher.STOCKANALYSIS_ETF_SCREENER, {"records": [{"s": "YYSA", "aum": "8B"}]})
+        expected_union = (
+            {"BIG", "SMALL"}
+            | self.fetcher.MAJOR_ETFS
+            | self.fetcher.LEVERAGED_AND_FOCUS_ETFS
+            | self.fetcher.RIM_TRACKER_ETFS
+        )
+        self.fetcher.fetch_with_retry = lambda *args, **kwargs: None
+        original_argv, original_stdout = sys.argv, sys.stdout
+        buffer = io.StringIO()
+        try:
+            sys.argv = [
+                "fetch-yf-finance.py", "--core-daily-basket", "--plan-only", "--plan-sample-size", "10",
+            ]
+            sys.stdout = buffer
+            self.fetcher.main()
+        finally:
+            sys.argv, sys.stdout = original_argv, original_stdout
+
+        payload = json.loads(buffer.getvalue())
+        self.assertEqual(payload["candidate_count_before_filters"], len(expected_union))
+        self.assertEqual(payload["sample"], sorted(expected_union)[:10])
+        self.assertEqual(payload["priority"], "ticker")
+        self.assertTrue(payload["core_daily_basket"])
+
+        # Manual explicit tickers still work and are the whole plan.
+        buffer = io.StringIO()
+        try:
+            sys.argv = [
+                "fetch-yf-finance.py", "--core-daily-basket", "--tickers", "ZZZ,SMALL",
+                "--plan-only", "--plan-sample-size", "10",
+            ]
+            sys.stdout = buffer
+            self.fetcher.main()
+        finally:
+            sys.argv, sys.stdout = original_argv, original_stdout
+
+        payload = json.loads(buffer.getvalue())
+        self.assertEqual(payload["candidate_count_before_filters"], 2)
+        self.assertEqual(payload["sample"], ["ZZZ", "SMALL"])
+        self.assertTrue(payload["tickers_override"])
+
+    def test_core_daily_basket_six_stable_shards_attempt_each_ticker_once(self) -> None:
+        canonical = json.loads((ROOT / "data/admin/fenok-etf-core-daily-basket.json").read_text(encoding="utf-8"))
+        universe = canonical["daily_refresh_universe"]
+        core = set(universe["tickers"])
+        self.assertEqual(universe["count"], len(core))
+        self.assertGreaterEqual(len(core), 75)
+        bounded_union = core | self.fetcher.MAJOR_ETFS | self.fetcher.LEVERAGED_AND_FOCUS_ETFS | self.fetcher.RIM_TRACKER_ETFS
+        retry = sorted(bounded_union)[:50]
+        plans = [
+            self.fetcher.select_ticker_plan(
+                sorted(bounded_union),
+                retry,
+                shard=f"{shard_index}/6",
+                natural=True,
+                all_shards=True,
+                retry_limit=40,
+                stable_shards=True,
+                pin_rim_trackers=False,
+                return_retry_overflow_to_regular=True,
+            )
+            for shard_index in range(6)
+        ]
+        attempted = [ticker for plan in plans for ticker in plan]
+        self.assertEqual(set(attempted), bounded_union)
+        self.assertEqual(len(attempted), len(bounded_union))
+        self.assertEqual(len(set(attempted)), len(bounded_union))
+
     def test_load_universe_keeps_stockanalysis_etfs_aum_first_for_limited_backfills(self) -> None:
         write_json(self.fetcher.STOCKANALYSIS_ETF_UNIVERSE, {"records": [{"ticker": "SMALL", "aum": "1M"}]})
         write_json(self.fetcher.STOCKANALYSIS_ETF_SCREENER, {"records": [{"s": "BIG", "aum": "10B"}]})
@@ -654,6 +909,141 @@ class FetchYfFinanceSelectionTest(unittest.TestCase):
             ),
             "systemic_rate_limit",
         )
+
+    def test_safe_provider_failure_evidence_is_bounded_and_sanitized(self) -> None:
+        raw_error = (
+            "provider optional endpoint failed "
+            + "x" * 100
+            + " diagnostic-marker https://provider.example/quote?api_key=secret-value "
+            + "Authorization: Bearer abc.def payload: {\"token\":\"secret-value\",\"rows\":[1,2,3]}"
+        )
+
+        def swallowed_provider_error(*_args, **_kwargs):
+            self.fetcher.safe(lambda: (_ for _ in ()).throw(RuntimeError(raw_error)))
+            return {"info": {"symbol": "SAFE"}, "history_1y": None}, 1
+
+        self.fetcher.fetch_ticker = swallowed_provider_error
+        _data, _latency_ms, error, evidence = self.fetcher.fetch_with_retry(
+            "SAFE",
+            retries=0,
+            timeout_seconds=1,
+            include_evidence=True,
+        )
+
+        self.assertIsNone(error)
+        detail = evidence["failures"][0]["error"]
+        self.assertIn("RuntimeError: provider optional endpoint failed", detail)
+        self.assertLessEqual(len(detail), 320)
+        self.assertNotIn("secret-value", detail)
+        self.assertNotIn("abc.def", detail)
+        self.assertNotIn('"rows"', detail)
+
+    def test_record_finance_failure_uses_bounded_sanitized_detail(self) -> None:
+        raw_error = (
+            "provider failure "
+            + "x" * 1000
+            + " https://provider.example/quote?api_key=secret-value Authorization: Bearer abc.def"
+        )
+        captured = {}
+        self.fetcher.is_enrolled_stock_detail = lambda _ticker: True
+        self.fetcher.record_stock_detail_failure = lambda **kwargs: captured.update(kwargs)
+
+        self.fetcher.record_finance_failure("AAPL", raw_error)
+
+        detail = captured["failure_detail"]
+        self.assertEqual(len(detail), 320)
+        self.assertNotIn("secret-value", detail)
+        self.assertNotIn("abc.def", detail)
+
+    def test_failure_log_keeps_a_bounded_sanitized_diagnostic(self) -> None:
+        error = (
+            "ValueError: "
+            + "x" * 100
+            + " endpoint moved diagnostic-marker "
+            + "https://provider.example/quote?api_key=secret-value "
+            + "Authorization: Bearer abc.def payload: {\"token\":\"secret-value\",\"rows\":[1,2,3]}"
+        )
+        self.fetcher.fetch_with_retry = lambda *_args, **_kwargs: (
+            None,
+            0,
+            error,
+            {"attempts_used": 1, "failures": [{"attempt": 1, "error": error}], "latency_ms": 0},
+        )
+        stdout = io.StringIO()
+        original_argv, original_stdout = sys.argv, sys.stdout
+        try:
+            sys.argv = ["fetch-yf-finance.py", "--tickers", "FAIL", "--sleep", "0", "--retries", "0"]
+            sys.stdout = stdout
+            with self.assertRaises(SystemExit) as raised:
+                self.fetcher.main()
+        finally:
+            sys.argv, sys.stdout = original_argv, original_stdout
+
+        self.assertEqual(raised.exception.code, 2)
+        diagnostic = next(line.split("FAIL: ", 1)[1] for line in stdout.getvalue().splitlines() if "FAIL: " in line)
+        self.assertIn("endpoint moved diagnostic-marker", diagnostic)
+        self.assertLessEqual(len(diagnostic), 320)
+        self.assertNotIn("secret-value", diagnostic)
+        self.assertNotIn("abc.def", diagnostic)
+        self.assertNotIn('"rows"', diagnostic)
+        self.assertIn("[redacted]", diagnostic)
+        self.assertEqual(len(self.fetcher.bounded_diagnostic_detail("x" * 1000)), 320)
+        userinfo = self.fetcher.bounded_diagnostic_detail(
+            RuntimeError("request failed https://alice:supersecret@example.com/quote")
+        )
+        self.assertNotIn("alice", userinfo)
+        self.assertNotIn("supersecret", userinfo)
+        self.assertIn("https://example.com/quote", userinfo)
+        summary = json.loads((self.fetcher.OUT_DIR / "_summary.json").read_text(encoding="utf-8"))
+        persisted_error = summary["errors"][0]["error"]
+        self.assertLessEqual(len(persisted_error), 320)
+        self.assertNotIn("secret-value", persisted_error)
+        self.assertNotIn("abc.def", persisted_error)
+        self.assertNotIn('"rows"', persisted_error)
+
+    def test_batch_state_persists_only_bounded_sanitized_failure_details(self) -> None:
+        raw_error = (
+            "ValueError: "
+            + "x" * 100
+            + " diagnostic-marker https://provider.example/quote?api_key=secret-value "
+            + "Authorization: Bearer abc.def payload: {\"token\":\"secret-value\",\"rows\":[1,2,3]}"
+        )
+        self.fetcher.load_universe_sources = lambda **_kwargs: {"FAIL": ["test_fixture"]}
+        self.fetcher.fetch_with_retry = lambda *_args, **_kwargs: (
+            None,
+            0,
+            raw_error,
+            {"attempts_used": 1, "failures": [{"attempt": 1, "error": raw_error}], "latency_ms": 0},
+        )
+        stdout = io.StringIO()
+        original_argv, original_stdout = sys.argv, sys.stdout
+        try:
+            sys.argv = [
+                "fetch-yf-finance.py", "--tickers", "FAIL", "--record-batch-state",
+                "--run-id", "redaction-state", "--run-attempt", "1", "--event-name", "workflow_dispatch",
+                "--sleep", "0", "--retries", "0",
+            ]
+            sys.stdout = stdout
+            with self.assertRaises(SystemExit) as raised:
+                self.fetcher.main()
+        finally:
+            sys.argv, sys.stdout = original_argv, original_stdout
+
+        self.assertEqual(raised.exception.code, 2)
+        state = json.loads((self.fetcher.YAHOO_BATCH_STATE_ROOT / "tickers" / "FAIL.json").read_text(encoding="utf-8"))
+        serialized = "\n".join(
+            [
+                json.dumps(state),
+                (self.fetcher.YAHOO_BATCH_STATE_ROOT / "index.json").read_text(encoding="utf-8"),
+                (self.fetcher.OUT_DIR / "_summary.json").read_text(encoding="utf-8"),
+                stdout.getvalue(),
+            ]
+        )
+        self.assertLessEqual(len(state["latest_failure"]["error"]), 320)
+        self.assertIn("diagnostic-marker", state["latest_failure"]["error"])
+        self.assertNotIn("secret-value", serialized)
+        self.assertNotIn("abc.def", serialized)
+        self.assertNotIn('"rows"', serialized)
 
     def test_source_timestamps_are_provider_derived_and_distinct_from_fetch_time(self) -> None:
         payload = self.fetcher.decorate_finance_payload(
@@ -893,7 +1283,7 @@ class FetchYfFinanceSelectionTest(unittest.TestCase):
         manual_proof = store.build_provider_observation("AAPL", advanced_provider, manual_run)
         self.assertEqual(
             store.evaluate_recovery_candidate("AAPL", candidate, manual_proof, manual_run)["reason"],
-            "recovery_requires_schedule",
+            "ok",
         )
         rerun = {**self._run("rerun", attempt=2), "natural": True}
         rerun_proof = store.build_provider_observation("AAPL", advanced_provider, rerun)
@@ -1376,7 +1766,9 @@ class FetchYfFinanceSelectionTest(unittest.TestCase):
         self.assertEqual(first["pending"]["expected_resolution"], "next_natural_yahoo_run")
         self.assertEqual(first["pending"]["reason"], "recent_listing")
 
-        manual_run = {**self._run("manual-pending"), "event_name": "workflow_dispatch", "natural": False}
+        manual_run = {
+            **self._run("manual-pending", attempt=2), "event_name": "workflow_dispatch", "natural": False,
+        }
         manual_proof = store.build_provider_observation("NEW", pending, manual_run)
         manual_decision = store.evaluate_recovery_candidate("NEW", pending, manual_proof, manual_run)
         self.assertEqual(manual_decision["reason"], "recovery_requires_schedule")
@@ -1500,6 +1892,58 @@ class FetchYfFinanceSelectionTest(unittest.TestCase):
         self.assertNotIn("AAPL", shard_one)
         self.assertEqual(weekly[0], "AAPL")
 
+    def test_daily_retry_cap_rotates_oldest_candidates_without_dropping_regular_shards(self) -> None:
+        store = self.fetcher.YahooBatchStateStore(
+            self.root / "admin" / "yahoo-batch-quote-history",
+            self.fetcher.OUT_DIR,
+        )
+        retries = [f"RETRY{index:03d}" for index in range(45)]
+        regular = [f"STOCK{index:04d}" for index in range(1185)]
+        for index, ticker in enumerate(retries):
+            write_json(store._state_path(ticker), {
+                "schema_version": "yahoo-batch-quote-history-state/v1",
+                "ticker": ticker,
+                "retry": True,
+                "last_attempt": {"observed_at": f"2026-07-01T00:{index:02d}:00Z"},
+                "attempts": [],
+            })
+
+        first_order = store.retry_tickers_ordered(set(retries))
+        plans = [
+            self.fetcher.select_ticker_plan(
+                [*first_order, *regular],
+                first_order,
+                shard=f"{shard_index}/5",
+                natural=True,
+                all_shards=True,
+                retry_limit=40,
+            )
+            for shard_index in range(5)
+        ]
+        first_retry_batch = [ticker for ticker in plans[0] if ticker in set(retries)]
+        self.assertEqual(first_retry_batch, retries[:40])
+        self.assertTrue(all(ticker not in set(retries) for plan in plans[1:] for ticker in plan))
+        selected_regular = [ticker for plan in plans for ticker in plan if ticker in set(regular)]
+        self.assertEqual(len(selected_regular), 1185)
+        self.assertEqual(set(selected_regular), set(regular))
+
+        for index, ticker in enumerate(first_retry_batch):
+            state = json.loads(store._state_path(ticker).read_text(encoding="utf-8"))
+            state["last_attempt"]["observed_at"] = f"2026-07-02T00:{index:02d}:00Z"
+            write_json(store._state_path(ticker), state)
+
+        second_order = store.retry_tickers_ordered(set(retries))
+        second_plan = self.fetcher.select_ticker_plan(
+            [*second_order, *regular],
+            second_order,
+            shard="0/5",
+            natural=True,
+            all_shards=True,
+            retry_limit=40,
+        )
+        second_retry_batch = [ticker for ticker in second_plan if ticker in set(retries)]
+        self.assertEqual(second_retry_batch[:5], retries[40:])
+
     def test_weekly_stable_shards_survive_gap_removal(self) -> None:
         tickers = [f"ETF{i:04d}" for i in range(240)]
         assignments = {}
@@ -1571,6 +2015,129 @@ class FetchYfFinanceSelectionTest(unittest.TestCase):
             ),
         )
 
+    def test_untracked_campaign_drains_a_mutating_shard_from_the_front(self) -> None:
+        tickers = [f"ETF{i:04d}" for i in range(4200)]
+        remaining = self.fetcher.select_ticker_plan(
+            tickers,
+            [],
+            shard="0/6",
+            stable_shards=True,
+        )
+        expected = set(remaining)
+        selected = []
+        while remaining:
+            batch = self.fetcher.select_ticker_plan(
+                remaining,
+                [],
+                regular_limit=100,
+                shard_cycle_index=0,
+            )
+            self.assertLessEqual(len(batch), 100)
+            selected.extend(batch)
+            batch_set = set(batch)
+            remaining = [ticker for ticker in remaining if ticker not in batch_set]
+
+        self.assertEqual(set(selected), expected)
+        self.assertEqual(len(selected), len(expected))
+
+    def test_untracked_campaign_falls_back_to_rotation_when_its_shard_is_empty(self) -> None:
+        tickers = [f"ETF{i:04d}" for i in range(200)]
+        shard_zero = [ticker for ticker in tickers if self.fetcher.stable_shard_index(ticker, 6) == 0]
+        shard_one = [ticker for ticker in tickers if self.fetcher.stable_shard_index(ticker, 6) == 1]
+        selected_universe = set(tickers)
+
+        campaign = self.fetcher.select_campaign_or_rotation_plan(
+            tickers,
+            shard_zero[:3],
+            [],
+            selected_universe,
+            shard="0/6",
+            natural=True,
+            all_shards=False,
+            retry_limit=40,
+            stable_shards=True,
+            regular_limit=100,
+            untracked_limit=100,
+            shard_cycle_index=4,
+        )
+        fallback = self.fetcher.select_campaign_or_rotation_plan(
+            tickers,
+            shard_one[:3],
+            [],
+            selected_universe,
+            shard="0/6",
+            natural=True,
+            all_shards=False,
+            retry_limit=40,
+            stable_shards=True,
+            regular_limit=100,
+            untracked_limit=100,
+            shard_cycle_index=0,
+        )
+
+        self.assertEqual(campaign[:3], shard_zero[:3])
+        self.assertEqual(set(campaign), set(shard_zero))
+        self.assertEqual(set(fallback), set(shard_zero))
+
+    def test_untracked_campaign_reserves_regular_maintenance_capacity(self) -> None:
+        tickers = [f"ETF{i:04d}" for i in range(1000)]
+        shard_zero = [
+            ticker
+            for ticker in tickers
+            if self.fetcher.stable_shard_index(ticker, 6) == 0
+        ]
+        untracked = shard_zero[:20]
+
+        selected = self.fetcher.select_campaign_or_rotation_plan(
+            tickers,
+            untracked,
+            [],
+            set(tickers),
+            shard="0/6",
+            natural=True,
+            all_shards=False,
+            retry_limit=40,
+            stable_shards=True,
+            regular_limit=10,
+            untracked_limit=6,
+            shard_cycle_index=0,
+        )
+
+        self.assertEqual(selected[:6], untracked[:6])
+        self.assertEqual(len(selected), 10)
+        self.assertTrue(set(selected[6:]).isdisjoint(untracked))
+
+    def test_untracked_campaign_does_not_reclassify_retries_as_maintenance(self) -> None:
+        retries = [f"RETRY{i:04d}" for i in range(60)]
+        regular = [f"ZZZ{i:04d}" for i in range(2000)]
+        shard_zero = [
+            ticker
+            for ticker in regular
+            if self.fetcher.stable_shard_index(ticker, 6) == 0
+        ]
+        untracked = shard_zero[:100]
+
+        selected = self.fetcher.select_campaign_or_rotation_plan(
+            regular,
+            untracked,
+            retries,
+            set([*retries, *regular]),
+            shard="0/6",
+            natural=True,
+            all_shards=False,
+            retry_limit=40,
+            stable_shards=True,
+            regular_limit=100,
+            untracked_limit=80,
+            shard_cycle_index=0,
+        )
+
+        self.assertEqual(selected[:40], retries[:40])
+        self.assertEqual(len([ticker for ticker in selected if ticker in untracked]), 80)
+        self.assertTrue(set(selected[40:]).isdisjoint(retries))
+        self.assertEqual(len(selected), 140)
+        self.assertEqual(len(set(selected)), 140)
+
     def test_full_active_scale_has_twelve_cycle_upper_bound(self) -> None:
         tickers = [f"ETF{i:04d}" for i in range(6722)]
         for shard_index in range(6):
@@ -1641,6 +2208,75 @@ class FetchYfFinanceSelectionTest(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, "scheduled weekday must be within 0..5"):
             self.fetcher.validate_scheduled_shard("6/6", 6)
 
+    def test_multi_slot_shard_contract_binds_slot_to_weekday(self) -> None:
+        # A lane running several slots a day declares the slot separately from
+        # the weekday. Overloading the weekday field with a 0..71 slot index
+        # parser-blocked every scheduled ETF run before it fetched anything.
+        for shard, weekday, slot in (("0/72", 0, 0), ("12/72", 1, 12), ("71/72", 5, 71)):
+            self.assertIsNone(self.fetcher.validate_scheduled_shard(shard, weekday, slot))
+        # The legacy single-slot contract must keep working untouched.
+        self.assertIsNone(self.fetcher.validate_scheduled_shard("3/6", 3))
+        with self.assertRaisesRegex(ValueError, "belongs to weekday 1, not the declared weekday 0"):
+            self.fetcher.validate_scheduled_shard("12/72", 0, 12)
+        with self.assertRaisesRegex(ValueError, "must start with the declared slot"):
+            self.fetcher.validate_scheduled_shard("13/72", 1, 12)
+        with self.assertRaisesRegex(ValueError, "must divide into 6 days"):
+            self.fetcher.validate_scheduled_shard("12/71", 1, 12)
+        with self.assertRaisesRegex(ValueError, "scheduled slot must be within 0..71"):
+            self.fetcher.validate_scheduled_shard("72/72", 5, 72)
+
+    def test_scheduled_slot_survives_a_real_argv_run(self) -> None:
+        # The unit check above still passes when the flag never reaches the
+        # parser, which is exactly how the shipped lane broke: the workflow was
+        # text-asserted only, and every scheduled slot exited 2 before
+        # fetching. Drive the real entry point with the shipped scheduled ETF
+        # lane shape: one slot a day on the six-shard cycle, core daily basket
+        # union selection, natural retries, stable shards, and the scheduled
+        # slot/limit budget.
+        script = Path(__file__).resolve().parent / "fetch-yf-finance.py"
+        base = [
+            sys.executable, str(script), "--plan-only", "--core-daily-basket",
+            "--natural-run", "--stable-shards", "--limit", "200",
+            "--regular-limit", "140", "--retry-limit", "40",
+        ]
+
+        def run(shard, weekday, slot):
+            argv = [*base, "--shard", shard, "--scheduled-weekday", str(weekday)]
+            if slot is not None:
+                argv += ["--scheduled-slot", str(slot)]
+            return subprocess.run(argv, capture_output=True, text=True, cwd=script.parent.parent)
+
+        for shard in range(6):
+            result = run(f"{shard}/6", shard, shard)
+            self.assertEqual(result.returncode, 0, f"{shard}/6 must plan, got: {result.stderr[-400:]}")
+
+        mismatched = run("1/6", 0, 1)
+        self.assertEqual(mismatched.returncode, 2)
+        self.assertIn("belongs to weekday 1", mismatched.stderr)
+
+        overloaded = run("5/6", 6, None)
+        self.assertEqual(overloaded.returncode, 2, "the overloaded-weekday form must stay rejected")
+
+    def test_scheduled_etf_lane_defaults_to_core_basket_not_stockanalysis_universe(self) -> None:
+        workflow = YF_WORKFLOW_PATH.read_text(encoding="utf-8")
+        fetcher_source = FETCH_PATH.read_text(encoding="utf-8")
+        run_step = workflow[
+            workflow.index("      - name: Run batch fetch"):workflow.index("      - name: Refresh owned Yahoo quarter-close source")
+        ]
+        # Scheduled ETF slots always stay on the bounded core union; broad
+        # acquisition remains a manual-dispatch opt-in.
+        self.assertIn('INPUT_STOCKANALYSIS_ETFS="false"', run_step)
+        self.assertNotIn("YF_WEEKLY_ETF_STOCKANALYSIS_ETFS", run_step)
+        self.assertIn('INPUT_CORE_DAILY_BASKET="true"', run_step)
+        self.assertNotIn("YF_WEEKLY_ETF_CORE_DAILY_BASKET", run_step)
+        self.assertIn("--core-daily-basket", run_step)
+        self.assertIn("INPUT_CORE_DAILY_BASKET: 'false'", run_step)
+        self.assertIn("if args.core_daily_basket", fetcher_source)
+        self.assertIn(
+            "load_universe_sources(stocks_only=False, stockanalysis_etfs=True)",
+            fetcher_source,
+        )
+
     def test_weekly_budget_reserves_retry_and_regular_capacity(self) -> None:
         retries = [f"RETRY{i:04d}" for i in range(200)]
         regular = [f"ETF{i:04d}" for i in range(200)]
@@ -1674,6 +2310,194 @@ class FetchYfFinanceSelectionTest(unittest.TestCase):
         self.assertEqual(
             store.retry_tickers_ordered({"NEWEST", "OLDEST", "MIDDLE"}),
             ["OLDEST", "MIDDLE", "NEWEST"],
+        )
+
+    def test_scheduled_campaign_selects_only_untracked_regular_candidates(self) -> None:
+        store = self.fetcher.YahooBatchStateStore(
+            self.root / "admin" / "yahoo-batch-quote-history",
+            self.fetcher.OUT_DIR,
+        )
+        write_json(store._state_path("TRACKED"), {
+            "schema_version": "yahoo-batch-quote-history-state/v1",
+            "ticker": "TRACKED",
+            "resolution_state": "fresh_primary",
+            "retry": False,
+            "attempts": [],
+        })
+        filter_candidates = getattr(
+            self.fetcher,
+            "filter_untracked_candidates",
+            lambda tickers, _store, _active: list(tickers),
+        )
+
+        self.assertEqual(
+            filter_candidates(["TRACKED", "UNTRACKED"], store, {"TRACKED", "UNTRACKED"}),
+            ["UNTRACKED"],
+            "scheduled Yahoo campaign must exclude state-tracked regular candidates",
+        )
+
+    def test_active_universe_pending_acquisition_is_honest_and_keeps_first_seen_provenance(self) -> None:
+        store = self.fetcher.YahooBatchStateStore(
+            self.root / "admin" / "yahoo-batch-quote-history",
+            self.fetcher.OUT_DIR,
+        )
+        first = {**self._run("first-discovery"), "observed_at": "2026-08-01T01:00:00Z"}
+        store.reconcile_active_universe({"PENDING"}, {"PENDING": ["stockanalysis_etf"]}, first)
+        second = {**self._run("second-discovery"), "observed_at": "2026-08-02T01:00:00Z"}
+        store.reconcile_active_universe({"PENDING"}, {"PENDING": ["dashboard_configuration"]}, second)
+
+        inventory = json.loads(store.active_universe_path.read_text(encoding="utf-8"))
+        pending = inventory["items"]["PENDING"]
+        self.assertEqual(pending["resolution_state"], "pending_acquisition")
+        self.assertFalse(pending["coverage"])
+        self.assertEqual(pending["coverage_status"], "not_observed")
+        self.assertEqual(pending["provider_reachability"], "not_attempted")
+        self.assertEqual(pending["first_seen_at"], first["observed_at"])
+        self.assertEqual(pending["first_seen_run_id"], "first-discovery")
+        self.assertEqual(pending["first_seen_from"], ["stockanalysis_etf"])
+        self.assertEqual(pending["discovered_from"], ["dashboard_configuration", "stockanalysis_etf"])
+        index = store.rebuild_index({"PENDING"}, second)
+        self.assertEqual(index["counts"]["pending_acquisition"], 1)
+        self.assertEqual(index["counts"]["untracked"], 0)
+        self.assertEqual(index["counts"]["fresh"], 0)
+        self.assertEqual(index["counts"]["lkg"], 0)
+
+    def test_core_etf_index_does_not_replace_stock_compatible_index(self) -> None:
+        store = self.fetcher.YahooBatchStateStore(
+            self.root / "admin" / "yahoo-batch-quote-history",
+            self.fetcher.OUT_DIR,
+        )
+        core_run = {**self._run("core-etf"), "active_universe_scope": "core_etf"}
+        core_index = store.rebuild_index({"ETF"}, core_run)
+        core_path = store.root / "index-core-etf.json"
+        stock_path = store.root / "index.json"
+
+        self.assertEqual(core_index["active_universe_scope"], "core_etf")
+        self.assertTrue(core_path.exists())
+        self.assertFalse(stock_path.exists())
+
+        stock_run = {**self._run("stock"), "active_universe_scope": "all_sources"}
+        stock_index = store.rebuild_index({"STOCK"}, stock_run)
+        self.assertEqual(stock_index["active_universe_scope"], "all_sources")
+        self.assertEqual(json.loads(core_path.read_text(encoding="utf-8"))["active_universe_scope"], "core_etf")
+        self.assertEqual(json.loads(stock_path.read_text(encoding="utf-8"))["active_universe_scope"], "all_sources")
+
+    def test_observed_and_terminal_state_win_over_stale_pending_inventory(self) -> None:
+        store = self.fetcher.YahooBatchStateStore(
+            self.root / "admin" / "yahoo-batch-quote-history",
+            self.fetcher.OUT_DIR,
+        )
+        run = self._run("precedence")
+        write_json(store.active_universe_path, {
+            "schema_version": "yahoo-batch-active-universe/v1",
+            "generated_at": run["observed_at"],
+            "items": {
+                ticker: {
+                    "resolution_state": "pending_acquisition",
+                    "coverage": False,
+                    "coverage_status": "not_observed",
+                    "provider_reachability": "not_attempted",
+                    "discovered_from": ["stockanalysis_etf"],
+                    "first_seen_at": run["observed_at"],
+                    "first_seen_run_id": run["run_id"],
+                    "last_seen_at": run["observed_at"],
+                    "last_seen_run_id": run["run_id"],
+                }
+                for ticker in ("FRESH", "BLD", "PENDING")
+            },
+        })
+        write_json(store._state_path("FRESH"), {
+            "schema_version": "yahoo-batch-quote-history-state/v1", "ticker": "FRESH",
+            "resolution_state": "fresh_primary", "retry": False, "attempts": [],
+        })
+        write_json(store._state_path("BLD"), {
+            "schema_version": "yahoo-batch-quote-history-state/v1", "ticker": "BLD",
+            "resolution_state": "terminal_provider_unsupported", "retry": False, "attempts": [],
+        })
+
+        index = store.rebuild_index({"FRESH", "BLD", "PENDING"}, run)
+        self.assertEqual(index["counts"]["fresh"], 1)
+        self.assertEqual(index["counts"]["terminal"], 1)
+        self.assertEqual(index["counts"]["pending_acquisition"], 1)
+        self.assertEqual(index["counts"]["untracked"], 0)
+        self.assertEqual(store.pending_acquisition_tickers({"FRESH", "BLD", "PENDING"}), {"PENDING"})
+
+    def test_terminal_artifact_excludes_bld_day_holx_but_retains_mmc_alias_retry(self) -> None:
+        store = self.fetcher.YahooBatchStateStore(
+            self.root / "admin" / "yahoo-batch-quote-history",
+            self.fetcher.OUT_DIR,
+        )
+        run = self._run("terminal-transition")
+        for ticker in ("BLD", "DAY", "HOLX", "MMC"):
+            write_json(store._state_path(ticker), {
+                "schema_version": "yahoo-batch-quote-history-state/v1", "ticker": ticker,
+                "resolution_state": "unavailable", "retry": True,
+                "last_attempt": {"observed_at": "2026-07-30T00:00:00Z"}, "attempts": [],
+            })
+        artifact = self.root / "terminal-evidence.json"
+        write_json(artifact, {
+            "schema_version": "fenok-s1-stock-public-promotion-dry-run/v0.1",
+            "generated_at": run["observed_at"], "dry_run": True,
+            "blocked_rows": [
+                {"ticker": ticker, "corporate_action_policy": {"evidence": [
+                    {"symbol": ticker, "terminal": terminal, "alias_target": alias}
+                ]}}
+                for ticker, terminal, alias in (
+                    ("BLD", True, None), ("DAY", True, None), ("HOLX", True, None), ("MMC", False, "MRSH"),
+                )
+            ],
+        })
+        evidence = store.load_terminal_evidence(artifact)
+        store.transition_terminal_tickers({"BLD", "DAY", "HOLX", "MMC"}, evidence, run)
+
+        self.assertEqual(store.retry_tickers_ordered({"BLD", "DAY", "HOLX", "MMC"}), ["MMC"])
+        for ticker in ("BLD", "DAY", "HOLX"):
+            state = json.loads(store._state_path(ticker).read_text(encoding="utf-8"))
+            self.assertEqual(state["resolution_state"], "terminal_provider_unsupported")
+            self.assertFalse(state["retry"])
+            self.assertEqual(state["terminal"]["evidence_sha256"], evidence["artifact_sha256"])
+        self.assertTrue(json.loads(store._state_path("MMC").read_text(encoding="utf-8"))["retry"])
+
+        checked_in = store.load_terminal_evidence(self.fetcher.S1_STOCK_PROMOTION_DRY_RUN)
+        self.assertTrue({"BLD", "DAY", "HOLX"}.issubset(checked_in["tickers"]))
+        self.assertNotIn("MMC", checked_in["tickers"])
+
+        write_json(artifact, {"schema_version": "bad", "blocked_rows": []})
+        with self.assertRaisesRegex(ValueError, "terminal evidence"):
+            store.load_terminal_evidence(artifact)
+
+    def test_observed_state_is_written_before_pending_inventory_cleanup(self) -> None:
+        store = self.fetcher.YahooBatchStateStore(
+            self.root / "admin" / "yahoo-batch-quote-history",
+            self.fetcher.OUT_DIR,
+        )
+        run = self._run("crash-safe")
+        store.reconcile_active_universe({"AAPL"}, {"AAPL": ["stockanalysis_etf"]}, run)
+        payload = self._daily_payload("AAPL")
+        write_json(self.fetcher.OUT_DIR / "AAPL.json", payload)
+        original_cleanup = store._remove_pending_after_state
+        store._remove_pending_after_state = lambda _ticker: None
+        try:
+            store.record_success("AAPL", payload, run, ["stockanalysis_etf"], {"attempts_used": 1, "failures": [], "latency_ms": 1})
+        finally:
+            store._remove_pending_after_state = original_cleanup
+
+        self.assertTrue(store._state_path("AAPL").exists())
+        self.assertIn("AAPL", json.loads(store.active_universe_path.read_text())["items"])
+        index = store.rebuild_index({"AAPL"}, run)
+        self.assertEqual(index["counts"]["fresh"], 1)
+        self.assertEqual(index["counts"]["pending_acquisition"], 0)
+        store.reconcile_active_universe({"AAPL"}, {"AAPL": ["stockanalysis_etf"]}, run)
+        self.assertNotIn("AAPL", json.loads(store.active_universe_path.read_text())["items"])
+
+    def test_untracked_campaign_bootstraps_usable_local_payloads_before_selection(self) -> None:
+        self.assertEqual(
+            self.fetcher.bootstrap_exclusions(["LOCAL", "MISSING"], untracked_only=True),
+            set(),
+        )
+        self.assertEqual(
+            self.fetcher.bootstrap_exclusions(["LOCAL", "MISSING"], untracked_only=False),
+            {"LOCAL", "MISSING"},
         )
 
     def test_controlled_failure_scope_is_manual_targeted_and_stateful_only(self) -> None:
@@ -1801,7 +2625,7 @@ class FetchYfFinanceSelectionTest(unittest.TestCase):
         source = FETCH_PATH.read_text(encoding="utf-8")
         self.assertLess(
             source.index("state_store.bootstrap_existing("),
-            source.index("retry_queue = state_store.retry_tickers_ordered"),
+            source.index("retry_queue = ("),
             "stale classification must enter the retry set before natural-run selection",
         )
 
@@ -1883,6 +2707,26 @@ class FetchYfFinanceSelectionTest(unittest.TestCase):
         self.assertEqual(payload["count"], 1)
         self.assertTrue(payload["history_gaps_only"])
         self.assertEqual(payload["priority"], "stockanalysis_etf_aum")
+
+    def test_stateful_plan_only_prospectively_selects_pending_without_writing_inventory(self) -> None:
+        self.fetcher.load_universe_sources = lambda **_kwargs: {"PENDING": ["stockanalysis_etf"]}
+        before = list(self.fetcher.YAHOO_BATCH_STATE_ROOT.rglob("*")) if self.fetcher.YAHOO_BATCH_STATE_ROOT.exists() else []
+        original_argv, original_stdout = sys.argv, sys.stdout
+        buffer = io.StringIO()
+        try:
+            sys.argv = [
+                "fetch-yf-finance.py", "--tickers", "PENDING", "--record-batch-state",
+                "--natural-run", "--untracked-only", "--untracked-limit", "1",
+                "--regular-limit", "1", "--plan-only", "--plan-sample-size", "1",
+            ]
+            sys.stdout = buffer
+            self.fetcher.main()
+        finally:
+            sys.argv, sys.stdout = original_argv, original_stdout
+
+        self.assertEqual(json.loads(buffer.getvalue())["sample"], ["PENDING"])
+        self.assertFalse(self.fetcher.YAHOO_BATCH_STATE_ROOT.exists())
+        self.assertEqual(before, [])
 
     def test_enrolled_yahoo_write_records_exact_manual_object(self) -> None:
         self.fetcher.DATA_SUPPLY_STATE_ROOT = self.root / "state"
@@ -2092,24 +2936,23 @@ assert callable(namespace["load_universe"])
     def test_workflow_persists_candidates_before_public_promotion(self) -> None:
         workflow = YF_WORKFLOW_PATH.read_text(encoding="utf-8")
         quarter_start = workflow.index("      - name: Refresh owned Yahoo quarter-close source")
-        candidate_start = workflow.index("      - name: Persist fetched Yahoo source data")
-        failure_dispatch_start = workflow.index("      - name: Publish failed Yahoo attempt evidence")
+        candidate_start = workflow.index("      - name: Commit and push fetched Yahoo source data")
         shared_dispatch_start = workflow.index("      - name: Dispatch shared projection rebuild")
-        candidate_step = workflow[candidate_start:failure_dispatch_start]
-        failure_dispatch = workflow[failure_dispatch_start:shared_dispatch_start]
+        candidate_step = workflow[candidate_start:shared_dispatch_start]
         shared_dispatch = workflow[shared_dispatch_start:]
 
         self.assertLess(quarter_start, candidate_start)
-        self.assertLess(candidate_start, failure_dispatch_start)
-        self.assertLess(failure_dispatch_start, shared_dispatch_start)
+        self.assertLess(candidate_start, shared_dispatch_start)
         self.assertIn("git add -- \\", candidate_step)
         self.assertIn("data/yf/finance", candidate_step)
         self.assertIn("data/admin/yahoo-batch-quote-history", candidate_step)
         self.assertIn("data/yf/quarter_closes.json", candidate_step)
-        self.assertIn("100xfenok-next/public/data/yf/quarter_closes.json", candidate_step)
         self.assertIn("git restore --staged --worktree -- data/yf/finance/_summary.json", candidate_step)
         self.assertIn("always()", candidate_step)
-        self.assertNotIn("100xfenok-next/public/data/yf/finance", candidate_step)
+        # #377 slice 2: the lane persists canonical candidates only; the public
+        # mirror is owned by the merge boundary, so no public path may be
+        # staged from this lane (03365d7c44 removed the last one).
+        self.assertNotIn("100xfenok-next/public", candidate_step)
 
         run_step = workflow[workflow.index("      - name: Run batch fetch"):quarter_start]
         self.assertIn("id: fetch_batch", run_step)
@@ -2117,27 +2960,80 @@ assert callable(namespace["load_universe"])
         self.assertIn("--run-id", run_step)
         self.assertIn("--natural-run", run_step)
         self.assertIn("--all-shards-run", run_step)
-        for weekday in range(6):
-            self.assertIn(f"0 22 * * {weekday}", workflow)
-            self.assertIn(f"'0 22 * * {weekday}') DAILY_INDEX={weekday}", run_step)
-        self.assertNotIn('date -u +%w', run_step)
+        # One scheduled ETF slot a day, Sunday-Friday at 00:07 UTC: six runs a
+        # week on the six-shard cycle. The weekday is read from the clock and
+        # maps directly to the shard index; the daily stock cron stays
+        # untouched. Seven minutes past, not on the hour: GitHub warns
+        # hour-start schedules may be delayed or dropped, and three
+        # consecutive :00 slots did not fire.
+        self.assertIn("- cron: '20 23 * * 1-5'", workflow)
+        self.assertIn("- cron: '7 0 * * 0-5'", workflow)
+        for hour in range(2, 24, 2):
+            self.assertNotIn(f"- cron: '7 {hour} * * 0-5'", workflow)
+        self.assertNotIn("- cron: '0 0 * * 0-5'", workflow)
+        self.assertNotIn("SLOT_HOUR=", run_step)
+        self.assertNotIn("SLOT_WEEKDAY * 12", run_step)
+        self.assertIn("DAILY_SHARDS=6", run_step)
+        self.assertIn('DAILY_INDEX="$SLOT_WEEKDAY"', run_step)
+        self.assertIn("date -u +%w", run_step)
+        # The weekday field must carry the real weekday and the slot must be
+        # coherent with the shard, or the runtime validator rejects the run.
+        self.assertIn('INPUT_SCHEDULED_WEEKDAY="$SLOT_WEEKDAY"', run_step)
+        self.assertIn('INPUT_SCHEDULED_SLOT="$DAILY_INDEX"', run_step)
+        self.assertIn("--scheduled-slot", run_step)
+        # workflow_dispatch is hard-capped at 25 inputs. Exceeding it makes
+        # GitHub reject the whole file, which took the lane down after
+        # e0c95a68f6, so the count is asserted rather than trusted.
+        dispatch_inputs = workflow.split("  workflow_dispatch:")[1].split("\npermissions:")[0]
+        declared = [
+            line for line in dispatch_inputs.split("\n")
+            if line.startswith("      ") and line.rstrip().endswith(":") and not line.startswith("       ")
+        ]
+        self.assertLessEqual(len(declared), 25, f"workflow_dispatch declares {len(declared)} inputs; the limit is 25")
+        # A manual run of a multi-slot shard must still resolve its slot.
+        self.assertIn('SHARD_COUNT="${INPUT_SHARD#*/}"', run_step)
         self.assertIn("--scheduled-weekday", run_step)
+        self.assertIn('INPUT_RETRY_LIMIT="${YF_DAILY_STOCK_RETRY_LIMIT:-40}"', run_step)
         self.assertIn("YF_WEEKLY_ETF_RETRY_LIMIT:-40", run_step)
-        self.assertIn("YF_WEEKLY_ETF_REGULAR_LIMIT:-100", run_step)
+        # The regular cap must clear the largest 6-way shard, or that shard's
+        # tail is never collected.
+        self.assertIn("YF_WEEKLY_ETF_REGULAR_LIMIT:-140", run_step)
+        self.assertIn("YF_WEEKLY_ETF_LIMIT:-200", run_step)
+        self.assertIn("YF_WEEKLY_ETF_UNTRACKED_LIMIT:-80", run_step)
+        # The ETF slot is a refresh pass. Either narrowing flag turns it back
+        # into an acquisition-and-backfill pass that never revisits a tracked
+        # ticker with complete history.
+        self.assertIn('INPUT_UNTRACKED_ONLY="${YF_WEEKLY_ETF_UNTRACKED_ONLY:-false}"', run_step)
+        self.assertIn('INPUT_HISTORY_GAPS_ONLY="${YF_WEEKLY_ETF_HISTORY_GAPS_ONLY:-false}"', run_step)
+        # Quarter-close owns a universe of its own and belongs to the stock
+        # lane; running it after an ETF slot is what produced the 429 storm.
+        self.assertIn("YF_LANE=", run_step)
+        self.assertIn("env.YF_LANE != 'etf'", workflow)
         self.assertIn("--retry-limit", run_step)
         self.assertIn("--regular-limit", run_step)
+        self.assertIn("--untracked-limit", run_step)
+        self.assertIn("--untracked-only", run_step)
         self.assertIn("--shard-cycle-index", run_step)
         self.assertIn("--stable-shards", run_step)
         self.assertNotIn("GITHUB_RUN_NUMBER", run_step)
         self.assertIn("controlled_failure_tickers", workflow)
         self.assertIn("--controlled-failure-tickers", run_step)
-        self.assertIn("steps.fetch_batch.outcome == 'failure'", failure_dispatch)
-        self.assertIn("steps.quarter_closes.outcome == 'failure'", failure_dispatch)
-        self.assertIn("steps.persist_yahoo_state.outcome == 'success'", failure_dispatch)
-        self.assertIn("steps.persist_yahoo_state.outputs.persisted == 'true'", failure_dispatch)
+        # The job split moved acquisition into its own job, so the dispatch reads
+        # the acquire job's outputs rather than sibling step outcomes. Assert the
+        # producing half too: without it this passes while the outputs are gone
+        # and every condition silently evaluates empty.
+        self.assertIn("fetch_outcome: ${{ steps.fetch_batch.outcome }}", workflow)
+        self.assertIn("quarter_closes_outcome: ${{ steps.quarter_closes.outcome }}", workflow)
+        self.assertIn("always()", shared_dispatch)
+        self.assertIn("success()", shared_dispatch)
+        self.assertIn("needs.acquire-yf-finance.outputs.fetch_outcome == 'failure'", shared_dispatch)
+        self.assertIn("needs.acquire-yf-finance.outputs.quarter_closes_outcome == 'failure'", shared_dispatch)
+        self.assertIn("steps.persist_yahoo_state.outcome == 'success'", shared_dispatch)
+        self.assertIn("steps.persist_yahoo_state.outputs.persisted == 'true'", shared_dispatch)
+        self.assertIn("steps.readback.outputs.confirmed == 'true'", shared_dispatch)
         self.assertIn('persisted=true', candidate_step)
-        self.assertIn("gh workflow run update-manifest.yml --ref main", failure_dispatch)
         self.assertIn("gh workflow run update-manifest.yml --ref main", shared_dispatch)
+        self.assertEqual(workflow.count("gh workflow run update-manifest.yml --ref main"), 1)
         self.assertNotIn("build-market-facts.py", workflow)
         self.assertNotIn("build-rim-index.mjs", workflow)
         self.assertNotIn("data/manifest.json", workflow)
@@ -2145,11 +3041,19 @@ assert callable(namespace["load_universe"])
         self.assertIn("python3 scripts/build-quarter-closes.py", workflow[quarter_start:candidate_start])
 
         manifest_workflow = MANIFEST_WORKFLOW_PATH.read_text(encoding="utf-8")
+        manifest_runner = MANIFEST_RUNNER_PATH.read_text(encoding="utf-8")
         self.assertIn("      - '!data/yf/**'", manifest_workflow)
         self.assertIn("      - '!data/admin/yahoo-batch-quote-history/**'", manifest_workflow)
-        self.assertIn("python3 scripts/rebuild-yf-finance-summary.py", manifest_workflow)
-        self.assertIn("python3 scripts/build-market-facts.py --no-public-mirror", manifest_workflow)
-        self.assertIn("node scripts/build-rim-index.mjs", manifest_workflow)
+        self.assertNotIn("run: bash scripts/update-manifest-projections.sh", manifest_workflow)
+        self.assertEqual(manifest_workflow.count("bash scripts/update-manifest-projections.sh"), 1)
+        self.assertIn("python3 scripts/rebuild-yf-finance-summary.py", manifest_runner)
+        self.assertIn("python3 scripts/build-market-facts.py --no-public-mirror", manifest_runner)
+        for command in (
+            "node scripts/build-rim-index.mjs",
+            "node scripts/build-rim-index-five-canonical.mjs",
+            "node scripts/check-rim-index-five-canonical.mjs",
+        ):
+            self.assertNotIn(command, manifest_workflow)
         self.assertNotIn("python3 scripts/build-quarter-closes.py", manifest_workflow)
 
     def test_ticker_names_containing_key_are_not_dropped_as_secret_files(self) -> None:
@@ -2162,6 +3066,397 @@ assert callable(namespace["load_universe"])
                     check=False,
                 )
                 self.assertNotEqual(ignored.returncode, 0, f"{candidate} must remain persistable")
+
+
+    def test_issuer_notice_does_not_subtract_from_active_universe(self) -> None:
+        self.fetcher.load_universe_sources = lambda **_kwargs: {
+            "IWDL": ["stockanalysis_etf"],
+            "LIVE": ["stockanalysis_etf"],
+        }
+        write_json(
+            self.root / "admin" / "issuer-lifecycle.json",
+            {
+                "schema_version": "yahoo-issuer-lifecycle/v1",
+                "events": [{
+                    "symbol": "IWDL",
+                    "event": "issuer_announced_redemption",
+                    "effective_date": "2026-08-19",
+                    "issuer": "UBS AG",
+                    "primary_source_domain": "etracs.ubs.com",
+                    "source_urls": ["https://etracs.ubs.com/news/show-article/id/724"],
+                    "last_trading_date_expected": "2026-08-18",
+                    "settlement_date_expected": "2026-08-19",
+                    "payment_status": "not_verified",
+                }],
+            },
+        )
+        self.fetcher._observed_now = lambda: "2026-09-28T01:00:00Z"
+        original_argv, original_stdout = sys.argv, sys.stdout
+        output = io.StringIO()
+        try:
+            sys.argv = ["fetch-yf-finance.py", "--plan-only", "--record-batch-state", "--natural-run"]
+            sys.stdout = output
+            self.fetcher.main()
+        finally:
+            sys.argv, sys.stdout = original_argv, original_stdout
+        self.assertEqual(json.loads(output.getvalue())["sample"], ["IWDL", "LIVE"])
+
+
+class YahooChartQuoteTest(unittest.TestCase):
+    setUp = FetchYfFinanceSelectionTest.setUp
+    tearDown = FetchYfFinanceSelectionTest.tearDown
+
+    NOW = "2026-09-28T03:00:00Z"
+    OLD = int(datetime(2026, 9, 10, 20, tzinfo=timezone.utc).timestamp())
+    CURRENT = int(datetime(2026, 9, 25, 20, tzinfo=timezone.utc).timestamp())
+
+    def _data(self, stamp=None):
+        return {"info": {"symbol": "AVB", "quoteType": "EQUITY", "currency": "USD",
+                         "regularMarketTime": self.OLD if stamp is None else stamp,
+                         "currentPrice": 180, "regularMarketPrice": 180, "previousClose": 179,
+                         "regularMarketChange": 1, "regularMarketChangePercent": 0.5, "marketCap": 123},
+                "income_statement": {"2025": {"Revenue": 50}},
+                "history_1y": [{"date": "2026-09-24", "Close": 190}, {"date": "2026-09-25", "Close": 191}]}
+
+    def _metadata(self, **changes):
+        return {"symbol": "AVB", "instrumentType": "EQUITY", "currency": "USD",
+                "exchangeTimezoneName": "America/New_York", "regularMarketPrice": 200,
+                "regularMarketTime": self.CURRENT, "chartPreviousClose": 3, **changes}
+
+    def _collect(self, data=None, metadata=None, enrolled=False, rows=None):
+        data = self._data() if data is None else data
+        metadata = self._metadata() if metadata is None else metadata
+        rows = [{"date": "2026-09-24", "Close": 198}, {"date": "2026-09-25", "Close": 200}] if rows is None else rows
+        calls = []
+        class SelectedOnly(dict):
+            def __iter__(self):
+                raise AssertionError("metadata must not be enumerated")
+            def keys(self):
+                raise AssertionError("metadata must not be enumerated")
+            def get(self, key, default=None):
+                if key == "tradingPeriods": raise AssertionError("lazy metadata must not be read")
+                return super().get(key, default)
+        class Client:
+            def get_history_metadata(self):
+                calls.append("metadata")
+                return SelectedOnly(metadata)
+            def history(self, **kwargs):
+                calls.append(kwargs)
+                return rows
+        self.fetcher._observed_now = lambda: self.NOW
+        self.fetcher.compact_history = lambda frame: frame
+        self.fetcher.is_enrolled_stock_detail = lambda _ticker: enrolled
+        result = self.fetcher.capture_chart_quote("AVB", data, Client(), yfinance_version="fixture-1")
+        return result, calls
+
+    def test_newer_quote_pair_advances_atomically_without_replacing_financial_or_adjusted_history(self):
+        data = self._data()
+        result, calls = self._collect(data=data)
+        self.assertEqual(calls, ["metadata"])
+        self.assertEqual(result["info"]["currentPrice"], 200)
+        self.assertEqual(result["info"]["regularMarketPrice"], 200)
+        self.assertEqual(result["info"]["regularMarketTime"], self.CURRENT)
+        self.assertEqual(result["info"]["marketCap"], 123)
+        self.assertIs(result["history_1y"], data["history_1y"])
+        self.assertEqual(result["income_statement"], data["income_statement"])
+        self.assertNotIn("previousClose", result["info"])
+        self.assertNotIn("regularMarketChange", result["info"])
+        self.assertEqual(result["quote_observation"]["source"], "yahoo_chart_metadata")
+        self.assertEqual(result["quote_observation"]["quote_as_of"], "2026-09-25T20:00:00Z")
+        payload = self.fetcher.decorate_finance_payload("AVB", "daily", self.NOW, result)
+        self.assertEqual(payload["source_as_of"], "2026-09-25")
+        self.assertNotEqual(payload["quote_as_of"], payload["fetched_at"])
+
+    def test_metadata_cannot_override_current_info_pair(self):
+        result, calls = self._collect(data=self._data(self.CURRENT))
+        self.assertEqual(calls, [])
+        self.assertEqual(result["info"]["regularMarketPrice"], 180)
+
+    def test_six_business_day_boundary_does_not_request_metadata(self):
+        stamp = int(datetime(2026, 9, 18, 20, tzinfo=timezone.utc).timestamp())
+        _, calls = self._collect(data=self._data(stamp))
+        self.assertEqual(calls, [])
+
+    def test_missing_clock_with_full_fresh_identity_can_use_real_pair(self):
+        data = self._data(); data["info"].pop("regularMarketTime")
+        result, calls = self._collect(data=data)
+        self.assertEqual(result["info"]["regularMarketTime"], self.CURRENT)
+        self.assertEqual(calls, ["metadata"])
+
+    def test_empty_info_does_not_become_synthetic_success(self):
+        data = self._data(); data["info"] = None
+        result, calls = self._collect(data=data)
+        self.assertEqual(calls, [])
+        self.assertIsNone(result["info"])
+        with self.assertRaisesRegex(ValueError, "quote_as_of is unavailable"):
+            self.fetcher.decorate_finance_payload("AVB", "daily", self.NOW, result)
+
+    def test_missing_or_mismatched_quote_metadata_is_rejected(self):
+        mutations = [{"symbol": None}, {"symbol": "BK"}, {"instrumentType": None}, {"instrumentType": "ETF"},
+                     {"currency": None}, {"currency": "KRW"}, {"exchangeTimezoneName": "Asia/Seoul"},
+                     {"regularMarketPrice": None}, {"regularMarketPrice": float("nan")},
+                     {"regularMarketPrice": 0}, {"regularMarketTime": None}, {"regularMarketTime": float("inf")},
+                     {"regularMarketTime": True}]
+        for fields in mutations:
+            with self.subTest(fields=fields), self.assertRaises(ValueError):
+                self._collect(metadata=self._metadata(**fields))
+
+    def test_future_metadata_cannot_replace_old_quote(self):
+        future = int(datetime(2026, 9, 29, 20, tzinfo=timezone.utc).timestamp())
+        with self.assertRaisesRegex(ValueError, "future"):
+            self._collect(metadata=self._metadata(regularMarketTime=future))
+
+    def test_metadata_regression_is_rejected(self):
+        with self.assertRaisesRegex(ValueError, "regression"):
+            self._collect(metadata=self._metadata(regularMarketTime=self.OLD - 3600))
+
+    def test_equal_clock_conflicting_price_is_rejected(self):
+        with self.assertRaisesRegex(ValueError, "conflict"):
+            self._collect(metadata=self._metadata(regularMarketTime=self.OLD))
+
+    def test_same_old_pair_does_not_invent_advancement(self):
+        result, calls = self._collect(metadata=self._metadata(regularMarketTime=self.OLD, regularMarketPrice=180))
+        self.assertEqual(result["info"]["regularMarketTime"], self.OLD)
+        self.assertNotIn("quote_observation", result)
+        self.assertEqual(calls, ["metadata"])
+
+    def test_enrolled_previous_close_uses_one_unadjusted_request_and_actual_prior_session(self):
+        result, calls = self._collect(enrolled=True)
+        self.assertEqual(calls, ["metadata", {"period": "5d", "interval": "1d", "auto_adjust": False}])
+        self.assertEqual(result["info"]["previousClose"], 198)
+        self.assertEqual(result["info"]["regularMarketPreviousClose"], 198)
+        self.assertEqual(result["info"]["regularMarketChange"], 2)
+        self.assertEqual(result["info"]["regularMarketChangePercent"], 100 * 2 / 198)
+        proof = result["quote_observation"]["previous_close"]
+        self.assertEqual(proof["source_as_of"], "2026-09-24")
+        self.assertEqual(proof["query"], {"period": "5d", "interval": "1d", "auto_adjust": False})
+        self.assertNotEqual(result["info"]["previousClose"], 3, "chartPreviousClose is not previous session close")
+        self.assertEqual(result["history_1y"][-1]["Close"], 191, "adjusted main history stays unchanged")
+
+    def test_missing_prior_session_rejects_enrolled_pair_instead_of_using_adjusted_main_history(self):
+        with self.assertRaisesRegex(ValueError, "previous.session"):
+            self._collect(enrolled=True, rows=[{"date": "2026-09-23", "Close": 197}, {"date": "2026-09-25", "Close": 200}])
+
+    def test_unadjusted_series_must_end_at_quote_session(self):
+        with self.assertRaises(ValueError):
+            self._collect(enrolled=True, rows=[{"date": "2026-09-24", "Close": 198}, {"date": "2026-09-25", "Close": 200},
+                                               {"date": "2026-09-28", "Close": 201}])
+
+    def test_duplicate_or_nonpositive_previous_close_is_rejected(self):
+        for rows in [[{"date": "2026-09-24", "Close": 0}, {"date": "2026-09-25", "Close": 200}],
+                     [{"date": "2026-09-24", "Close": 198}, {"date": "2026-09-24", "Close": 199}, {"date": "2026-09-25", "Close": 200}]]:
+            with self.subTest(rows=rows), self.assertRaises(ValueError): self._collect(enrolled=True, rows=rows)
+
+    def test_previous_session_calendar_handles_us_holiday_and_korean_closure(self):
+        us = self.fetcher.chart_quote_session_dates("AVB", "2026-09-08T20:00:00Z")
+        kr = self.fetcher.chart_quote_session_dates("005930.KS", "2026-09-28T06:30:00Z")
+        self.assertEqual(us, ("2026-09-08", "2026-09-04"))
+        self.assertEqual(kr, ("2026-09-28", "2026-09-23"))
+
+    def test_rejected_alternate_retains_canonical_and_lkg_bytes(self):
+        self.fetcher._observed_now = lambda: self.NOW
+        data = self._data()
+        seed = self.fetcher.decorate_finance_payload("AVB", "daily", self.NOW, data)
+        canonical = self.fetcher.OUT_DIR / "AVB.json"; write_json(canonical, seed)
+        store = self.state.YahooBatchStateStore(self.fetcher.YAHOO_BATCH_STATE_ROOT, self.fetcher.OUT_DIR)
+        run = {"run_id": "seed", "run_attempt": 1, "event_name": "workflow_dispatch", "natural": False, "observed_at": self.NOW}
+        evidence = {"attempts_used": 1, "latency_ms": 1, "failures": []}
+        store.record_success("AVB", seed, run, ["fixture"], evidence)
+        store.record_failure("AVB", "seed miss", run, ["fixture"], evidence, failure_kind="transient_provider_miss")
+        lkg = store._lkg_path("AVB")
+        canonical_bytes, lkg_bytes = canonical.read_bytes(), lkg.read_bytes()
+        test = self
+        class Client:
+            info = data["info"]
+            fast_info = {}
+            def history(self, **kwargs): return data["history_1y"]
+            def get_history_metadata(self): return test._metadata(regularMarketPrice=0)
+        prior = sys.modules["yfinance"]
+        sys.modules["yfinance"] = types.SimpleNamespace(Ticker=lambda _ticker: Client(), __version__="fixture-1")
+        self.fetcher.compact_history = lambda frame: frame
+        self.fetcher.load_universe_sources = lambda **_kwargs: {"AVB": ["fixture"]}
+        original_argv, original_stdout = sys.argv, sys.stdout
+        try:
+            sys.argv = ["fetch-yf-finance.py", "--tickers", "AVB", "--profile", "daily", "--merge-existing",
+                        "--record-batch-state", "--run-id", "chart-rejection", "--run-attempt", "1",
+                        "--event-name", "workflow_dispatch", "--max-age-hours", "0", "--sleep", "0", "--retries", "0"]
+            sys.stdout = io.StringIO()
+            with self.assertRaises(SystemExit): self.fetcher.main()
+        finally: sys.modules["yfinance"] = prior; sys.argv, sys.stdout = original_argv, original_stdout
+        self.assertEqual(canonical.read_bytes(), canonical_bytes)
+        self.assertEqual(lkg.read_bytes(), lkg_bytes)
+        state = json.loads(store._state_path("AVB").read_text())
+        self.assertTrue(state["retry"])
+        self.assertIn("chart quote", state["latest_failure"]["error"])
+
+    def test_selected_pair_still_rejects_regression_against_canonical_payload(self):
+        result, _ = self._collect()
+        candidate = self.fetcher.decorate_finance_payload("AVB", "daily", self.NOW, result)
+        old = self._data(self.CURRENT + 3)
+        existing = self.fetcher.decorate_finance_payload("AVB", "daily", self.NOW, old)
+        with self.assertRaisesRegex(ValueError, "quote_as_of"):
+            self.fetcher.validate_source_progression(existing, candidate)
+
+    def test_provider_timestamp_format_requires_timezone_and_session_calendar(self):
+        aware = datetime(2026, 9, 25, 20, tzinfo=timezone.utc)
+        result, _ = self._collect(metadata=self._metadata(regularMarketTime=aware))
+        self.assertEqual(result["info"]["regularMarketTime"], self.CURRENT)
+        for value in [datetime(2026, 9, 25, 20), int(datetime(2026, 9, 26, 20, tzinfo=timezone.utc).timestamp())]:
+            with self.subTest(value=value), self.assertRaises(ValueError):
+                self._collect(metadata=self._metadata(regularMarketTime=value))
+
+    def test_merge_drops_prior_alternate_receipt_when_new_observation_has_no_alternate(self):
+        existing = {"data": {**self._data(), "quote_observation": {"source": "yahoo_chart_metadata", "price": 1}}}
+        merged = self.fetcher.merge_existing_payload_data(existing, self._data(self.CURRENT))
+        self.assertNotIn("quote_observation", merged)
+
+    def _collector_merge_write(self, ticker, enrolled, existing_data, incoming_info, metadata, *, expect_rejected=False):
+        self.fetcher._observed_now = lambda: self.NOW
+        self.fetcher.compact_history = lambda rows: rows
+        self.fetcher.is_enrolled_stock_detail = lambda _ticker: enrolled
+        self.fetcher.load_universe_sources = lambda **_kwargs: {ticker: ["fixture"]}
+        canonical = self.fetcher.OUT_DIR / (ticker + ".json")
+        seed = self.fetcher.decorate_finance_payload(ticker, "daily", self.NOW, existing_data)
+        write_json(canonical, seed)
+        store = self.state.YahooBatchStateStore(self.fetcher.YAHOO_BATCH_STATE_ROOT, self.fetcher.OUT_DIR)
+        run = {"run_id": "seed", "run_attempt": 1, "event_name": "workflow_dispatch", "natural": False, "observed_at": self.NOW}
+        evidence = {"attempts_used": 1, "latency_ms": 1, "failures": []}
+        store.record_success(ticker, seed, run, ["fixture"], evidence)
+        store.record_failure(ticker, "seed retry", run, ["fixture"], evidence, failure_kind="transient_provider_miss")
+        lkg = store._lkg_path(ticker)
+        before, lkg_before = canonical.read_bytes(), lkg.read_bytes()
+        calls = []
+        class Client:
+            info = incoming_info
+            fast_info = {}
+            def history(self, **kwargs):
+                calls.append(kwargs)
+                if kwargs.get("auto_adjust") is False:
+                    return [{"date": "2026-09-24", "Close": 198}, {"date": "2026-09-25", "Close": 200}]
+                return [{"date": "2026-09-24", "Close": 190}, {"date": "2026-09-25", "Close": 191}]
+            def get_history_metadata(self):
+                calls.append("metadata")
+                if metadata is None: raise AssertionError("current normal info quote must not acquire metadata")
+                return metadata
+        prior = sys.modules["yfinance"]
+        sys.modules["yfinance"] = types.SimpleNamespace(Ticker=lambda _ticker: Client(), __version__="fixture-1")
+        original_argv, original_stdout = sys.argv, sys.stdout
+        try:
+            sys.argv = ["fetch-yf-finance.py", "--tickers", ticker, "--profile", "daily", "--merge-existing",
+                        "--record-batch-state", "--run-id", "chart-merge", "--run-attempt", "1",
+                        "--event-name", "workflow_dispatch", "--max-age-hours", "0", "--sleep", "0", "--retries", "0"]
+            sys.stdout = io.StringIO()
+            try: self.fetcher.main()
+            except SystemExit as exc: self.assertEqual(exc.code, 0)
+        finally: sys.modules["yfinance"] = prior; sys.argv, sys.stdout = original_argv, original_stdout
+        if expect_rejected:
+            self.assertEqual(canonical.read_bytes(), before)
+            self.assertEqual(lkg.read_bytes(), lkg_before)
+            self.assertTrue(json.loads(store._state_path(ticker).read_text())["retry"])
+        return json.loads(canonical.read_text()), calls
+
+    def test_nonenrolled_chart_pair_collector_merge_writer_readback_clears_all_old_dependents(self):
+        data = self._data(); data["info"].update(symbol="ETF1", quoteType="ETF", regularMarketPreviousClose=177)
+        data["history_1y"].insert(0, {"date": "2026-09-23", "Close": 189})
+        meta = self._metadata(symbol="ETF1", instrumentType="ETF")
+        result, calls = self._collector_merge_write("ETF1", False, data, dict(data["info"]), meta)
+        info = result["data"]["info"]
+        self.assertEqual((info["currentPrice"], info["regularMarketPrice"], info["regularMarketTime"]), (200, 200, self.CURRENT))
+        for key in ["previousClose", "regularMarketPreviousClose", "regularMarketChange", "regularMarketChangePercent"]:
+            self.assertNotIn(key, info, key + " cannot be resurrected during nested merge")
+        self.assertEqual(info["marketCap"], 123)
+        self.assertEqual(result["data"]["income_statement"], data["income_statement"])
+        self.assertEqual(result["data"]["history_1y"], data["history_1y"])
+        self.assertNotIn("previous_close", result["data"]["quote_observation"])
+        self.assertEqual(calls, [{"period": "1y", "interval": "1d", "auto_adjust": True}, "metadata"])
+
+    def test_enrolled_chart_pair_collector_merge_writer_readback_retains_new_unadjusted_dependents(self):
+        data = self._data(); data["info"].update(symbol="AAPL", regularMarketPreviousClose=177)
+        result, calls = self._collector_merge_write("AAPL", True, data, dict(data["info"]), self._metadata(symbol="AAPL"))
+        verified = self.fetcher.validate_stock_detail_candidate(
+            provider="yahoo_finance", entity="AAPL", provider_path="data/yf/finance/AAPL.json",
+            payload_bytes=(self.fetcher.OUT_DIR / "AAPL.json").read_bytes(), observed_at=self.NOW,
+            provider_truth_root=self.fetcher.DATA_SUPPLY_PROVIDER_TRUTH_ROOT,
+        )
+        self.assertEqual((verified.entity, verified.provider_path), ("AAPL", "data/yf/finance/AAPL.json"))
+        info = result["data"]["info"]
+        self.assertEqual((info["currentPrice"], info["regularMarketPrice"], info["regularMarketTime"]), (200, 200, self.CURRENT))
+        self.assertEqual((info["previousClose"], info["regularMarketPreviousClose"], info["regularMarketChange"]), (198, 198, 2))
+        self.assertEqual(info["regularMarketChangePercent"], 100 * 2 / 198)
+        self.assertEqual(result["data"]["history_1y"], data["history_1y"])
+        self.assertEqual(result["data"]["income_statement"], data["income_statement"])
+        self.assertEqual(calls, [{"period": "1y", "interval": "1d", "auto_adjust": True}, "metadata",
+                                {"period": "5d", "interval": "1d", "auto_adjust": False}])
+
+    def test_normal_info_after_chart_receipt_collector_merge_writer_rebinds_new_pair_without_stale_fields(self):
+        for with_previous in [False, True]:
+            with self.subTest(with_previous=with_previous):
+                ticker = "ETF2" if with_previous else "ETF1"
+                data = self._data(); data["info"].update(symbol=ticker, quoteType="ETF", regularMarketPreviousClose=177)
+                data["quote_observation"] = {"source": "yahoo_chart_metadata", "price": 180, "previous_close": {"price": 177}}
+                incoming = {"symbol": ticker, "quoteType": "ETF", "currency": "USD", "currentPrice": 210,
+                            "regularMarketPrice": 210, "regularMarketTime": self.CURRENT + 60}
+                if with_previous: incoming.update(previousClose=205, regularMarketChange=5, regularMarketChangePercent=100 * 5 / 205)
+                result, calls = self._collector_merge_write(ticker, False, data, incoming, None)
+                info = result["data"]["info"]
+                self.assertEqual((info["currentPrice"], info["regularMarketTime"]), (210, self.CURRENT + 60))
+                self.assertNotIn("quote_observation", result["data"])
+                self.assertNotIn("regularMarketPreviousClose", info)
+                if with_previous:
+                    self.assertEqual(info["previousClose"], 205); self.assertEqual(info["regularMarketChange"], 5)
+                else:
+                    for key in ["previousClose", "regularMarketChange", "regularMarketChangePercent"]: self.assertNotIn(key, info)
+                self.assertEqual(info["marketCap"], 123)
+                self.assertEqual(result["data"]["income_statement"], data["income_statement"])
+                self.assertEqual(calls, [{"period": "1y", "interval": "1d", "auto_adjust": True}])
+
+    def test_rejected_nonenrolled_chart_pair_collector_merge_writer_preserves_truth_history_and_lkg(self):
+        data = self._data(); data["info"].update(symbol="ETF1", quoteType="ETF", regularMarketPreviousClose=177)
+        self._collector_merge_write("ETF1", False, data, dict(data["info"]),
+                                    self._metadata(symbol="ETF1", instrumentType="ETF", regularMarketPrice=0), expect_rejected=True)
+
+    def test_metadata_timeout_uses_existing_attempt_budget_and_never_requests_previous_close(self):
+        calls = []; test = self
+        class Client:
+            info = test._data()["info"]
+            fast_info = {}
+            def history(self, **kwargs):
+                calls.append(kwargs); return test._data()["history_1y"]
+            def get_history_metadata(self):
+                calls.append("metadata")
+                raise test.fetcher.FetchTimeout("existing ticker deadline reached")
+        prior = sys.modules["yfinance"]
+        sys.modules["yfinance"] = types.SimpleNamespace(Ticker=lambda _ticker: Client(), __version__="fixture-1")
+        self.fetcher._observed_now = lambda: self.NOW
+        self.fetcher.compact_history = lambda frame: frame
+        self.fetcher.is_enrolled_stock_detail = lambda _ticker: True
+        try:
+            data, _, error, evidence = self.fetcher.fetch_with_retry("AVB", profile="daily", retries=0,
+                                                                   timeout_seconds=30, include_evidence=True)
+        finally: sys.modules["yfinance"] = prior
+        self.assertIsNone(data)
+        self.assertIn("existing ticker deadline", error)
+        self.assertEqual(evidence["attempts_used"], 1)
+        self.assertEqual(calls, [{"period": "1y", "interval": "1d", "auto_adjust": True}, "metadata"])
+
+    def test_collector_captures_after_main_history_inside_existing_attempt(self):
+        calls = []; test = self
+        class Client:
+            info = test._data()["info"]
+            fast_info = {}
+            def history(self, **kwargs):
+                calls.append(kwargs); return test._data()["history_1y"]
+            def get_history_metadata(self):
+                calls.append("metadata"); return test._metadata()
+        prior = sys.modules["yfinance"]
+        sys.modules["yfinance"] = types.SimpleNamespace(Ticker=lambda _ticker: Client(), __version__="fixture-1")
+        self.fetcher._observed_now = lambda: self.NOW
+        self.fetcher.compact_history = lambda frame: frame
+        self.fetcher.is_enrolled_stock_detail = lambda _ticker: False
+        try: result, _ = self.fetcher.fetch_ticker("AVB", profile="daily")
+        finally: sys.modules["yfinance"] = prior
+        self.assertEqual(calls, [{"period": "1y", "interval": "1d", "auto_adjust": True}, "metadata"])
+        self.assertEqual(result["quote_observation"]["yfinance_version"], "fixture-1")
 
 
 if __name__ == "__main__":

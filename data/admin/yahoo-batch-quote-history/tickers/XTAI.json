@@ -90,66 +90,104 @@
       "run_id": "29544227703",
       "schedule": "20 23 * * 1-5",
       "shard": "4/5"
+    },
+    {
+      "attempts_used": 1,
+      "event_name": "schedule",
+      "failures": [],
+      "latency_ms": 542,
+      "natural": true,
+      "observed_at": "2026-08-04T23:07:26Z",
+      "outcome": "fresh",
+      "run_attempt": 1,
+      "run_id": "30958820437",
+      "schedule": "0 22 * * 2",
+      "shard": "2/6"
+    },
+    {
+      "attempts_used": 1,
+      "event_name": "schedule",
+      "failures": [],
+      "latency_ms": 732,
+      "natural": true,
+      "observed_at": "2026-08-12T02:41:04Z",
+      "outcome": "fresh",
+      "run_attempt": 1,
+      "run_id": "31557511991",
+      "schedule": "7 0 * * 0-5",
+      "shard": "36/72"
+    },
+    {
+      "attempts_used": 1,
+      "event_name": "workflow_dispatch",
+      "failures": [],
+      "latency_ms": 473,
+      "natural": false,
+      "observed_at": "2026-09-28T06:30:00Z",
+      "outcome": "fresh",
+      "run_attempt": 1,
+      "run_id": "36367836615",
+      "schedule": "",
+      "shard": ""
     }
   ],
   "current": {
-    "fetched_at": "2026-07-17T00:21:07Z",
-    "history_as_of": "2026-07-16",
+    "fetched_at": "2026-09-28T06:47:53Z",
+    "history_as_of": "2026-09-25",
     "path": "data/yf/finance/XTAI.json",
-    "payload_sha256": "64ca486a750c1be3f352a91fb5bfbf14826458dbe359196b6d372953937a4524",
-    "quote_as_of": "2026-07-16T19:39:16Z",
-    "source_as_of": "2026-07-16"
+    "payload_sha256": "4d17677fd118e29a564599fa7bfdfa30d65c5ccf33b1e4747a3ff91ecf0b187e",
+    "quote_as_of": "2026-09-23T14:33:27Z",
+    "source_as_of": "2026-09-23T14:33:27Z"
   },
   "discovered_from": [
-    "market_facts",
     "stockanalysis_etf"
   ],
   "last_attempt": {
-    "attempts_used": 0,
-    "event_name": "schedule",
+    "attempts_used": 1,
+    "event_name": "workflow_dispatch",
     "failures": [],
-    "latency_ms": 0,
-    "natural": true,
-    "observed_at": "2026-07-17T00:31:14Z",
-    "outcome": "skipped_fresh",
+    "latency_ms": 473,
+    "natural": false,
+    "observed_at": "2026-09-28T06:30:00Z",
+    "outcome": "fresh",
     "run_attempt": 1,
-    "run_id": "29544227703",
-    "schedule": "20 23 * * 1-5",
-    "shard": "4/5"
+    "run_id": "36367836615",
+    "schedule": "",
+    "shard": ""
   },
   "lkg": {
-    "fetched_at": "2026-06-18T19:31:12Z",
-    "history_as_of": "2026-06-18",
+    "fetched_at": "2026-08-12T02:45:42Z",
+    "history_as_of": "2026-08-11",
     "path": "data/admin/yahoo-batch-quote-history/lkg/XTAI.json",
-    "payload_sha256": "561b7a04abf1c3b1a97d7a4bea096a0dba0b955a2a22a8433cd13c3a2018a210",
-    "quote_as_of": null,
-    "source_as_of": "2026-06-18"
+    "payload_sha256": "0cf4ba4992db8de3cf233e0e1f5b8e29bf562c3fe6e0e10925aa6f0f670baaf0",
+    "quote_as_of": "2026-08-11T14:55:41Z",
+    "source_as_of": "2026-08-11"
   },
   "promotion_contract": "provider_observation/v2",
   "provider_observation": {
-    "event_name": "schedule",
-    "history_as_of": "2026-07-16",
-    "observed_at": "2026-07-17T00:15:36Z",
-    "payload_sha256": "6235b0a2c116b301c93a3dd2ef4aaeaf3e210f56e3aeddab18af94154f5cff63",
-    "quote_as_of": "2026-07-16T19:39:16Z",
+    "event_name": "workflow_dispatch",
+    "history_as_of": "2026-09-25",
+    "observed_at": "2026-09-28T06:30:00Z",
+    "payload_sha256": "d4b753b1e764328213fa562aa8dda8fd39dcb1b4656f4f7f33d720a85c7d16c2",
+    "quote_as_of": "2026-09-23T14:33:27Z",
     "run_attempt": 1,
-    "run_id": "29544227703",
+    "run_id": "36367836615",
     "schema_version": "provider_observation/v2",
-    "source_as_of": "2026-07-16"
+    "source_as_of": "2026-09-23T14:33:27Z"
   },
   "resolution_state": "fresh_primary",
   "retry": false,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "stale": {
-    "age_business_days": 15,
-    "classified_at": "2026-07-13T04:33:56Z",
-    "classified_run_id": "29224221077",
+    "age_business_days": 7,
+    "classified_at": "2026-08-20T14:20:12Z",
+    "classified_run_id": "32379322022",
     "expected_resolution": "next_natural_yahoo_run",
     "max_business_days": 6,
-    "message": "XTAI holds LKG because Yahoo source date 2026-06-18 is 15 business days old, beyond the 6-day bound; it will retry on the next natural Yahoo run.",
+    "message": "XTAI holds LKG because Yahoo source date 2026-08-11 is 7 business days old, beyond the 6-day bound; it will retry on the next natural Yahoo run.",
     "reason": "source_age_exceeds_lane_bound",
-    "source_as_of": "2026-06-18"
+    "source_as_of": "2026-08-11"
   },
   "ticker": "XTAI",
-  "updated_at": "2026-07-17T00:31:14Z"
+  "updated_at": "2026-09-28T06:30:00Z"
 }

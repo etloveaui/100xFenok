@@ -243,3 +243,51 @@ export function formatCompactMoney(value: unknown, currency: unknown = "USD"): s
     return `${symbol}${formatCompactNumber(v)}`;
   }
 }
+
+/**
+ * An elapsed span, written at the granularity a reader actually uses.
+ *
+ * The market-valuation strip rendered `currentStaleDays` raw, so a series whose
+ * last computable date is genuinely fifteen years old printed "마지막 계산 가능일
+ * 5628일 전". The number was correct; the unit was not, and a four-digit day
+ * count is the tell that nobody chose it. Capping the value was rejected - that
+ * would hide real staleness, which this project treats as fabrication - so the
+ * span is reported at the scale it belongs to and nothing is lost.
+ */
+export function formatElapsedKo(days: unknown, empty = "—"): string {
+  const value = finiteNumber(days);
+  if (value === null || value < 0) return empty;
+  const whole = Math.round(value);
+  if (whole < 60) return `${whole.toLocaleString("ko-KR")}일`;
+  // Floor rather than round at each boundary, so a span never reads as a unit it
+  // has not reached: 364 days is 11개월, not the 12개월 a reader hears as a year.
+  if (whole < 365) return `${Math.floor(whole / 30.44)}개월`;
+  return `${Math.max(1, Math.floor(whole / 365.25)).toLocaleString("ko-KR")}년`;
+}
+
+/**
+ * A date-ish value as the payload gave it, trimmed, with a dash for nothing.
+ *
+ * Four identical-looking copies of this lived in four components, and they were
+ * not identical: three returned the raw string and one sliced an ISO value to
+ * its date, so the same field rendered `2026-08-22T00:00:00Z` on one page and
+ * `2026-08-22` on another. Consolidating them here preserves each call site's
+ * current output exactly - the ones that sliced now say so by calling
+ * `formatDateOnly` - so the divergence is a visible choice at one call site
+ * instead of an invisible one in four function bodies.
+ *
+ * The two are NOT interchangeable and the difference is not cosmetic. Several
+ * call sites pass a pipeline `generated_at`, where the time is real information;
+ * slicing that to a date would report a run as older and vaguer than it was.
+ */
+export function formatDateish(value: unknown, empty = "—"): string {
+  if (typeof value !== "string" || !value.trim()) return empty;
+  return value.trim();
+}
+
+/** As `formatDateish`, but an ISO value is reported as its calendar date only. */
+export function formatDateOnly(value: unknown, empty = "—"): string {
+  if (typeof value !== "string" || !value.trim()) return empty;
+  const text = value.trim();
+  return /^\d{4}-\d{2}-\d{2}/.test(text) ? text.slice(0, 10) : text;
+}

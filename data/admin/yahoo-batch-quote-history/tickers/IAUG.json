@@ -12,53 +12,117 @@
       "run_id": "29224221077",
       "schedule": "",
       "shard": ""
+    },
+    {
+      "attempts_used": 1,
+      "event_name": "schedule",
+      "failures": [],
+      "latency_ms": 470,
+      "natural": true,
+      "observed_at": "2026-07-27T22:58:21Z",
+      "outcome": "fresh",
+      "run_attempt": 1,
+      "run_id": "30312518312",
+      "schedule": "0 22 * * 1",
+      "shard": "1/6"
+    },
+    {
+      "attempts_used": 1,
+      "event_name": "schedule",
+      "failures": [],
+      "latency_ms": 1067,
+      "natural": true,
+      "observed_at": "2026-08-07T07:38:03Z",
+      "outcome": "fresh",
+      "run_attempt": 1,
+      "run_id": "31158308843",
+      "schedule": "7 6 * * 0-5",
+      "shard": "63/72"
+    },
+    {
+      "attempts_used": 0,
+      "event_name": "schedule",
+      "failures": [],
+      "latency_ms": 0,
+      "natural": true,
+      "observed_at": "2026-08-07T11:06:01Z",
+      "outcome": "skipped_fresh",
+      "run_attempt": 1,
+      "run_id": "31172586227",
+      "schedule": "7 10 * * 0-5",
+      "shard": "65/72"
+    },
+    {
+      "attempts_used": 1,
+      "event_name": "workflow_dispatch",
+      "failures": [],
+      "latency_ms": 472,
+      "natural": false,
+      "observed_at": "2026-09-28T04:37:06Z",
+      "outcome": "fresh",
+      "run_attempt": 1,
+      "run_id": "36367831133",
+      "schedule": "",
+      "shard": ""
     }
   ],
   "current": {
-    "fetched_at": "2026-06-29T23:33:52Z",
-    "history_as_of": "2026-06-29",
-    "path": "data/admin/yahoo-batch-quote-history/lkg/IAUG.json",
-    "payload_sha256": "5b6c5661bc60faf3649dcf3d393642ac4e8bc56b2436d97785ec4ab89cc2885d",
-    "quote_as_of": null,
-    "source_as_of": "2026-06-29"
+    "fetched_at": "2026-09-28T04:47:54Z",
+    "history_as_of": "2026-09-25",
+    "path": "data/yf/finance/IAUG.json",
+    "payload_sha256": "67a33b49abcc4e5b3d92330d3e2c14d8798ee980bd5b61c14237fd69639b10ad",
+    "quote_as_of": "2026-09-25T19:44:37Z",
+    "source_as_of": "2026-09-25"
   },
   "discovered_from": [
     "stockanalysis_etf"
   ],
   "last_attempt": {
-    "attempts_used": 0,
+    "attempts_used": 1,
     "event_name": "workflow_dispatch",
     "failures": [],
-    "latency_ms": 0,
+    "latency_ms": 472,
     "natural": false,
-    "observed_at": "2026-07-13T04:33:56Z",
-    "outcome": "skipped_fresh",
+    "observed_at": "2026-09-28T04:37:06Z",
+    "outcome": "fresh",
     "run_attempt": 1,
-    "run_id": "29224221077",
+    "run_id": "36367831133",
     "schedule": "",
     "shard": ""
   },
   "lkg": {
-    "fetched_at": "2026-06-29T23:33:52Z",
-    "history_as_of": "2026-06-29",
+    "fetched_at": "2026-08-07T07:39:19Z",
+    "history_as_of": "2026-08-06",
     "path": "data/admin/yahoo-batch-quote-history/lkg/IAUG.json",
-    "payload_sha256": "5b6c5661bc60faf3649dcf3d393642ac4e8bc56b2436d97785ec4ab89cc2885d",
-    "quote_as_of": null,
-    "source_as_of": "2026-06-29"
+    "payload_sha256": "db757db831ebc51e63a7d003f314cfdf0f7411f698a75142087a73f5248567a0",
+    "quote_as_of": "2026-08-06T19:59:03Z",
+    "source_as_of": "2026-08-06"
   },
-  "resolution_state": "lkg_primary",
-  "retry": true,
+  "promotion_contract": "provider_observation/v2",
+  "provider_observation": {
+    "event_name": "workflow_dispatch",
+    "history_as_of": "2026-09-25",
+    "observed_at": "2026-09-28T04:37:06Z",
+    "payload_sha256": "9c7dd17c7ae87ab442179b82d839ed6bd6cc4f2672d7edf2dfb8c4638a6a451e",
+    "quote_as_of": "2026-09-25T19:44:37Z",
+    "run_attempt": 1,
+    "run_id": "36367831133",
+    "schema_version": "provider_observation/v2",
+    "source_as_of": "2026-09-25"
+  },
+  "resolution_state": "fresh_primary",
+  "retry": false,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "stale": {
     "age_business_days": 9,
-    "classified_at": "2026-07-13T04:33:56Z",
-    "classified_run_id": "29224221077",
+    "classified_at": "2026-08-19T23:42:29Z",
+    "classified_run_id": "32314261503",
     "expected_resolution": "next_natural_yahoo_run",
     "max_business_days": 6,
-    "message": "IAUG holds LKG because Yahoo source date 2026-06-29 is 9 business days old, beyond the 6-day bound; it will retry on the next natural Yahoo run.",
+    "message": "IAUG holds LKG because Yahoo source date 2026-08-06 is 9 business days old, beyond the 6-day bound; it will retry on the next natural Yahoo run.",
     "reason": "source_age_exceeds_lane_bound",
-    "source_as_of": "2026-06-29"
+    "source_as_of": "2026-08-06"
   },
   "ticker": "IAUG",
-  "updated_at": "2026-07-13T04:33:56Z"
+  "updated_at": "2026-09-28T04:37:06Z"
 }

@@ -1,0 +1,89 @@
+{
+  "attempts": [
+    {
+      "attempts_used": 1,
+      "event_name": "schedule",
+      "failures": [],
+      "latency_ms": 530,
+      "natural": true,
+      "observed_at": "2026-08-07T04:33:03Z",
+      "outcome": "fresh",
+      "run_attempt": 1,
+      "run_id": "31147671265",
+      "schedule": "7 2 * * 0-5",
+      "shard": "61/72"
+    },
+    {
+      "attempts_used": 1,
+      "event_name": "workflow_dispatch",
+      "failures": [],
+      "latency_ms": 518,
+      "natural": false,
+      "observed_at": "2026-09-28T06:02:24Z",
+      "outcome": "fresh",
+      "run_attempt": 1,
+      "run_id": "36367834787",
+      "schedule": "",
+      "shard": ""
+    }
+  ],
+  "current": {
+    "fetched_at": "2026-09-28T06:10:31Z",
+    "history_as_of": "2026-09-25",
+    "path": "data/yf/finance/RFIX.json",
+    "payload_sha256": "cd82f8811c3fe43c69b4d44730c07a84001443f8524d5e4df9c16ad16f59fefc",
+    "quote_as_of": "2026-09-25T19:59:31Z",
+    "source_as_of": "2026-09-25"
+  },
+  "discovered_from": [
+    "stockanalysis_etf"
+  ],
+  "last_attempt": {
+    "attempts_used": 1,
+    "event_name": "workflow_dispatch",
+    "failures": [],
+    "latency_ms": 518,
+    "natural": false,
+    "observed_at": "2026-09-28T06:02:24Z",
+    "outcome": "fresh",
+    "run_attempt": 1,
+    "run_id": "36367834787",
+    "schedule": "",
+    "shard": ""
+  },
+  "lkg": {
+    "fetched_at": "2026-08-07T04:35:34Z",
+    "history_as_of": "2026-08-06",
+    "path": "data/admin/yahoo-batch-quote-history/lkg/RFIX.json",
+    "payload_sha256": "62e29130af8a27a916d4012ecb93fcb6b22b7ff8cdb949c2731ad8ffed9f964b",
+    "quote_as_of": "2026-08-06T19:59:51Z",
+    "source_as_of": "2026-08-06"
+  },
+  "promotion_contract": "provider_observation/v2",
+  "provider_observation": {
+    "event_name": "workflow_dispatch",
+    "history_as_of": "2026-09-25",
+    "observed_at": "2026-09-28T06:02:24Z",
+    "payload_sha256": "503bb5a179e323651d077c3cca1b1f89fccb9e2e481b8a1af74181384f7cdada",
+    "quote_as_of": "2026-09-25T19:59:31Z",
+    "run_attempt": 1,
+    "run_id": "36367834787",
+    "schema_version": "provider_observation/v2",
+    "source_as_of": "2026-09-25"
+  },
+  "resolution_state": "fresh_primary",
+  "retry": false,
+  "schema_version": "yahoo-batch-quote-history-state/v1",
+  "stale": {
+    "age_business_days": 9,
+    "classified_at": "2026-08-19T23:42:29Z",
+    "classified_run_id": "32314261503",
+    "expected_resolution": "next_natural_yahoo_run",
+    "max_business_days": 6,
+    "message": "RFIX holds LKG because Yahoo source date 2026-08-06 is 9 business days old, beyond the 6-day bound; it will retry on the next natural Yahoo run.",
+    "reason": "source_age_exceeds_lane_bound",
+    "source_as_of": "2026-08-06"
+  },
+  "ticker": "RFIX",
+  "updated_at": "2026-09-28T06:02:24Z"
+}

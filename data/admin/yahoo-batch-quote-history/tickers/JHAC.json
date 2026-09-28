@@ -1,0 +1,102 @@
+{
+  "attempts": [
+    {
+      "attempts_used": 1,
+      "event_name": "schedule",
+      "failures": [],
+      "latency_ms": 896,
+      "natural": true,
+      "observed_at": "2026-08-05T21:19:22Z",
+      "outcome": "fresh",
+      "run_attempt": 1,
+      "run_id": "31047972318",
+      "schedule": "7 20 * * 0-5",
+      "shard": "46/72"
+    },
+    {
+      "attempts_used": 1,
+      "event_name": "schedule",
+      "failures": [],
+      "latency_ms": 614,
+      "natural": true,
+      "observed_at": "2026-08-12T20:54:05Z",
+      "outcome": "fresh",
+      "run_attempt": 1,
+      "run_id": "31639747711",
+      "schedule": "7 20 * * 0-5",
+      "shard": "46/72"
+    },
+    {
+      "attempts_used": 1,
+      "event_name": "workflow_dispatch",
+      "failures": [],
+      "latency_ms": 487,
+      "natural": false,
+      "observed_at": "2026-09-28T04:37:06Z",
+      "outcome": "fresh",
+      "run_attempt": 1,
+      "run_id": "36367831133",
+      "schedule": "",
+      "shard": ""
+    }
+  ],
+  "current": {
+    "fetched_at": "2026-09-28T04:55:43Z",
+    "history_as_of": "2026-09-25",
+    "path": "data/yf/finance/JHAC.json",
+    "payload_sha256": "a982bccd33cd42d24f739016c62bca8354e163a59755a4163cb787fd855de65b",
+    "quote_as_of": "2026-09-24T19:57:09Z",
+    "source_as_of": "2026-09-24T19:57:09Z"
+  },
+  "discovered_from": [
+    "stockanalysis_etf"
+  ],
+  "last_attempt": {
+    "attempts_used": 1,
+    "event_name": "workflow_dispatch",
+    "failures": [],
+    "latency_ms": 487,
+    "natural": false,
+    "observed_at": "2026-09-28T04:37:06Z",
+    "outcome": "fresh",
+    "run_attempt": 1,
+    "run_id": "36367831133",
+    "schedule": "",
+    "shard": ""
+  },
+  "lkg": {
+    "fetched_at": "2026-08-12T20:57:22Z",
+    "history_as_of": "2026-08-11",
+    "path": "data/admin/yahoo-batch-quote-history/lkg/JHAC.json",
+    "payload_sha256": "f1684cd28be2272f1851236ad87e2411e17312e5d915a92316ad9d893723bf7e",
+    "quote_as_of": "2026-08-04T14:34:32Z",
+    "source_as_of": "2026-08-04T14:34:32Z"
+  },
+  "promotion_contract": "provider_observation/v2",
+  "provider_observation": {
+    "event_name": "workflow_dispatch",
+    "history_as_of": "2026-09-25",
+    "observed_at": "2026-09-28T04:37:06Z",
+    "payload_sha256": "becf0c726300843c4a4007bef899249dd3eb909d853accfa3a6080d93d17d4f2",
+    "quote_as_of": "2026-09-24T19:57:09Z",
+    "run_attempt": 1,
+    "run_id": "36367831133",
+    "schema_version": "provider_observation/v2",
+    "source_as_of": "2026-09-24T19:57:09Z"
+  },
+  "resolution_state": "fresh_primary",
+  "retry": false,
+  "schema_version": "yahoo-batch-quote-history-state/v1",
+  "stale": {
+    "age_business_days": 7,
+    "classified_at": "2026-08-13T00:06:17Z",
+    "classified_run_id": "31652949582",
+    "expected_resolution": "next_natural_yahoo_run",
+    "max_business_days": 6,
+    "message": "JHAC holds LKG because Yahoo source date 2026-08-04T14:34:32Z is 7 business days old, beyond the 6-day bound; it will retry on the next natural Yahoo run.",
+    "reason": "source_age_exceeds_lane_bound",
+    "source_as_of": "2026-08-04T14:34:32Z"
+  },
+  "ticker": "JHAC",
+  "updated_at": "2026-09-28T04:37:06Z"
+}

@@ -1,0 +1,89 @@
+{
+  "attempts": [
+    {
+      "attempts_used": 1,
+      "event_name": "schedule",
+      "failures": [],
+      "latency_ms": 1152,
+      "natural": true,
+      "observed_at": "2026-08-11T11:03:07Z",
+      "outcome": "fresh",
+      "run_attempt": 1,
+      "run_id": "31484759300",
+      "schedule": "7 10 * * 0-5",
+      "shard": "29/72"
+    },
+    {
+      "attempts_used": 1,
+      "event_name": "workflow_dispatch",
+      "failures": [],
+      "latency_ms": 526,
+      "natural": false,
+      "observed_at": "2026-09-28T05:23:15Z",
+      "outcome": "fresh",
+      "run_attempt": 1,
+      "run_id": "36367832955",
+      "schedule": "",
+      "shard": ""
+    }
+  ],
+  "current": {
+    "fetched_at": "2026-09-28T05:27:24Z",
+    "history_as_of": "2026-09-25",
+    "path": "data/yf/finance/LEMB.json",
+    "payload_sha256": "5a662ae2d30e2c0ec8b7b07427d6f81959a289a1c7155b6a81572935b1fd7888",
+    "quote_as_of": "2026-09-25T19:59:50Z",
+    "source_as_of": "2026-09-25"
+  },
+  "discovered_from": [
+    "stockanalysis_etf"
+  ],
+  "last_attempt": {
+    "attempts_used": 1,
+    "event_name": "workflow_dispatch",
+    "failures": [],
+    "latency_ms": 526,
+    "natural": false,
+    "observed_at": "2026-09-28T05:23:15Z",
+    "outcome": "fresh",
+    "run_attempt": 1,
+    "run_id": "36367832955",
+    "schedule": "",
+    "shard": ""
+  },
+  "lkg": {
+    "fetched_at": "2026-08-11T11:05:24Z",
+    "history_as_of": "2026-08-10",
+    "path": "data/admin/yahoo-batch-quote-history/lkg/LEMB.json",
+    "payload_sha256": "0d95f101f44c8ad11daac924ff5f5b8eb660332af293a454abcd438c6ec35797",
+    "quote_as_of": "2026-08-10T20:00:00Z",
+    "source_as_of": "2026-08-10"
+  },
+  "promotion_contract": "provider_observation/v2",
+  "provider_observation": {
+    "event_name": "workflow_dispatch",
+    "history_as_of": "2026-09-25",
+    "observed_at": "2026-09-28T05:23:15Z",
+    "payload_sha256": "86688e510b07244c0f270e0ea24b313bdd1f9f1a109bb8c29aa8bbb94745f8ec",
+    "quote_as_of": "2026-09-25T19:59:50Z",
+    "run_attempt": 1,
+    "run_id": "36367832955",
+    "schema_version": "provider_observation/v2",
+    "source_as_of": "2026-09-25"
+  },
+  "resolution_state": "fresh_primary",
+  "retry": false,
+  "schema_version": "yahoo-batch-quote-history-state/v1",
+  "stale": {
+    "age_business_days": 7,
+    "classified_at": "2026-08-19T23:42:29Z",
+    "classified_run_id": "32314261503",
+    "expected_resolution": "next_natural_yahoo_run",
+    "max_business_days": 6,
+    "message": "LEMB holds LKG because Yahoo source date 2026-08-10 is 7 business days old, beyond the 6-day bound; it will retry on the next natural Yahoo run.",
+    "reason": "source_age_exceeds_lane_bound",
+    "source_as_of": "2026-08-10"
+  },
+  "ticker": "LEMB",
+  "updated_at": "2026-09-28T05:23:15Z"
+}

@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Fail-closed parity comparison for the frozen SEC 13F 73-output base."""
+"""Fail-closed parity comparison for the frozen SEC 13F 76-output base."""
 
 from __future__ import annotations
 
@@ -13,7 +13,7 @@ from typing import Any
 
 
 ROOT = Path(__file__).resolve().parents[2]
-EXPECTED_OUTPUT_COUNT = 73
+EXPECTED_OUTPUT_COUNT = 76
 PLATFORM_PREFIX = "data/sec-13f/"
 REPORT_SCHEMA_VERSION = "sec13f-slice-a-parity/v1"
 ONLY_SUPPORTED_VOLATILE_PATH = "$.metadata.generated_at"
@@ -413,7 +413,7 @@ def compare_parity(
     derived_manifest_path: Path | None = None,
     mismatch_sample_limit: int = 200,
 ) -> dict[str, Any]:
-    """Compare the exact frozen 73-output boundary against current platform data."""
+    """Compare the exact frozen 76-output boundary against current platform data."""
 
     cch_root = Path(cch_root)
     platform_root = Path(platform_root)
@@ -421,7 +421,7 @@ def compare_parity(
     platform_paths, _ = _manifest_paths(Path(base_manifest_path), platform=True)
     if len(cch_paths) != EXPECTED_OUTPUT_COUNT or len(platform_paths) != EXPECTED_OUTPUT_COUNT:
         raise ParityError(
-            "exact 73-output manifests are required: "
+            "exact 76-output manifests are required: "
             f"cch={len(cch_paths)} platform={len(platform_paths)}"
         )
     if cch_paths != platform_paths:

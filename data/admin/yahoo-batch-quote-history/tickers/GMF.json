@@ -1,0 +1,89 @@
+{
+  "attempts": [
+    {
+      "attempts_used": 1,
+      "event_name": "schedule",
+      "failures": [],
+      "latency_ms": 717,
+      "natural": true,
+      "observed_at": "2026-08-11T21:30:39Z",
+      "outcome": "fresh",
+      "run_attempt": 1,
+      "run_id": "31535092071",
+      "schedule": "7 20 * * 0-5",
+      "shard": "34/72"
+    },
+    {
+      "attempts_used": 1,
+      "event_name": "workflow_dispatch",
+      "failures": [],
+      "latency_ms": 503,
+      "natural": false,
+      "observed_at": "2026-09-28T04:37:06Z",
+      "outcome": "fresh",
+      "run_attempt": 1,
+      "run_id": "36367831133",
+      "schedule": "",
+      "shard": ""
+    }
+  ],
+  "current": {
+    "fetched_at": "2026-09-28T04:42:30Z",
+    "history_as_of": "2026-09-25",
+    "path": "data/yf/finance/GMF.json",
+    "payload_sha256": "2cf096ee13481215d856ee5e3efc4b65f41f7311e4cccd22099106a21c8aeed2",
+    "quote_as_of": "2026-09-25T19:46:31Z",
+    "source_as_of": "2026-09-25"
+  },
+  "discovered_from": [
+    "stockanalysis_etf"
+  ],
+  "last_attempt": {
+    "attempts_used": 1,
+    "event_name": "workflow_dispatch",
+    "failures": [],
+    "latency_ms": 503,
+    "natural": false,
+    "observed_at": "2026-09-28T04:37:06Z",
+    "outcome": "fresh",
+    "run_attempt": 1,
+    "run_id": "36367831133",
+    "schedule": "",
+    "shard": ""
+  },
+  "lkg": {
+    "fetched_at": "2026-08-11T21:33:09Z",
+    "history_as_of": "2026-08-11",
+    "path": "data/admin/yahoo-batch-quote-history/lkg/GMF.json",
+    "payload_sha256": "b6ccb7bf194e794d0afdc368c93020168554af1d8ed538283a0dfa310a5f01c0",
+    "quote_as_of": "2026-08-11T19:29:58Z",
+    "source_as_of": "2026-08-11"
+  },
+  "promotion_contract": "provider_observation/v2",
+  "provider_observation": {
+    "event_name": "workflow_dispatch",
+    "history_as_of": "2026-09-25",
+    "observed_at": "2026-09-28T04:37:06Z",
+    "payload_sha256": "f1f6f1329f13f5d6d030630d0bb46451d43baa99aeccfb5b26071679eca12fd8",
+    "quote_as_of": "2026-09-25T19:46:31Z",
+    "run_attempt": 1,
+    "run_id": "36367831133",
+    "schema_version": "provider_observation/v2",
+    "source_as_of": "2026-09-25"
+  },
+  "resolution_state": "fresh_primary",
+  "retry": false,
+  "schema_version": "yahoo-batch-quote-history-state/v1",
+  "stale": {
+    "age_business_days": 7,
+    "classified_at": "2026-08-20T14:20:12Z",
+    "classified_run_id": "32379322022",
+    "expected_resolution": "next_natural_yahoo_run",
+    "max_business_days": 6,
+    "message": "GMF holds LKG because Yahoo source date 2026-08-11 is 7 business days old, beyond the 6-day bound; it will retry on the next natural Yahoo run.",
+    "reason": "source_age_exceeds_lane_bound",
+    "source_as_of": "2026-08-11"
+  },
+  "ticker": "GMF",
+  "updated_at": "2026-09-28T04:37:06Z"
+}

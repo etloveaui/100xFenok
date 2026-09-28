@@ -1,0 +1,115 @@
+{
+  "attempts": [
+    {
+      "attempts_used": 1,
+      "event_name": "schedule",
+      "failures": [],
+      "latency_ms": 569,
+      "natural": true,
+      "observed_at": "2026-07-24T23:12:06Z",
+      "outcome": "fresh",
+      "run_attempt": 1,
+      "run_id": "30132647097",
+      "schedule": "0 22 * * 5",
+      "shard": "5/6"
+    },
+    {
+      "attempts_used": 1,
+      "event_name": "schedule",
+      "failures": [],
+      "latency_ms": 675,
+      "natural": true,
+      "observed_at": "2026-08-06T14:33:02Z",
+      "outcome": "fresh",
+      "run_attempt": 1,
+      "run_id": "31111230701",
+      "schedule": "7 12 * * 0-5",
+      "shard": "54/72"
+    },
+    {
+      "attempts_used": 1,
+      "event_name": "schedule",
+      "failures": [],
+      "latency_ms": 863,
+      "natural": true,
+      "observed_at": "2026-08-10T22:52:08Z",
+      "outcome": "fresh",
+      "run_attempt": 1,
+      "run_id": "31439945275",
+      "schedule": "7 22 * * 0-5",
+      "shard": "23/72"
+    },
+    {
+      "attempts_used": 1,
+      "event_name": "workflow_dispatch",
+      "failures": [],
+      "latency_ms": 506,
+      "natural": false,
+      "observed_at": "2026-09-28T01:17:59Z",
+      "outcome": "fresh",
+      "run_attempt": 1,
+      "run_id": "36365270594",
+      "schedule": "",
+      "shard": ""
+    }
+  ],
+  "current": {
+    "fetched_at": "2026-09-28T01:25:18Z",
+    "history_as_of": "2026-09-25",
+    "path": "data/yf/finance/AVMV.json",
+    "payload_sha256": "2c4aff62423cfb6ec865b94f3689d12756c8636b886bb134a9c23134cf76201a",
+    "quote_as_of": "2026-09-25T20:00:00Z",
+    "source_as_of": "2026-09-25"
+  },
+  "discovered_from": [
+    "stockanalysis_etf"
+  ],
+  "last_attempt": {
+    "attempts_used": 1,
+    "event_name": "workflow_dispatch",
+    "failures": [],
+    "latency_ms": 506,
+    "natural": false,
+    "observed_at": "2026-09-28T01:17:59Z",
+    "outcome": "fresh",
+    "run_attempt": 1,
+    "run_id": "36365270594",
+    "schedule": "",
+    "shard": ""
+  },
+  "lkg": {
+    "fetched_at": "2026-08-10T22:53:57Z",
+    "history_as_of": "2026-08-10",
+    "path": "data/admin/yahoo-batch-quote-history/lkg/AVMV.json",
+    "payload_sha256": "5d9d9fe7ae51f6983e9caaa403e2a78d051aa50c45123205e3eb783225b89516",
+    "quote_as_of": "2026-08-10T20:00:00Z",
+    "source_as_of": "2026-08-10"
+  },
+  "promotion_contract": "provider_observation/v2",
+  "provider_observation": {
+    "event_name": "workflow_dispatch",
+    "history_as_of": "2026-09-25",
+    "observed_at": "2026-09-28T01:17:59Z",
+    "payload_sha256": "ed7a16da88f8373aa18ce04c995f7f20c561f9c9cd079092d1989071d79f9c4d",
+    "quote_as_of": "2026-09-25T20:00:00Z",
+    "run_attempt": 1,
+    "run_id": "36365270594",
+    "schema_version": "provider_observation/v2",
+    "source_as_of": "2026-09-25"
+  },
+  "resolution_state": "fresh_primary",
+  "retry": false,
+  "schema_version": "yahoo-batch-quote-history-state/v1",
+  "stale": {
+    "age_business_days": 7,
+    "classified_at": "2026-08-19T23:42:29Z",
+    "classified_run_id": "32314261503",
+    "expected_resolution": "next_natural_yahoo_run",
+    "max_business_days": 6,
+    "message": "AVMV holds LKG because Yahoo source date 2026-08-10 is 7 business days old, beyond the 6-day bound; it will retry on the next natural Yahoo run.",
+    "reason": "source_age_exceeds_lane_bound",
+    "source_as_of": "2026-08-10"
+  },
+  "ticker": "AVMV",
+  "updated_at": "2026-09-28T01:17:59Z"
+}

@@ -1,5 +1,6 @@
 #!/usr/bin/env node
 import assert from "node:assert/strict";
+import fs from "node:fs";
 
 import {
   ETF_CORE_DAILY_BASKET_CONFIG,
@@ -9,6 +10,13 @@ import {
   validateEtfCoreDailyBasket,
 } from "./build-fenok-etf-core-daily-basket.mjs";
 import { classifyEtfCoreReadiness } from "../100xfenok-next/scripts/check-fenok-etf-core-daily-basket.mjs";
+
+const producerSource = fs.readFileSync(new URL("./build-fenok-etf-core-daily-basket.mjs", import.meta.url), "utf8");
+const writeBlock = producerSource.match(/if \(!args\.noWrite && validation\.ok\) \{([\s\S]*?)\n  \}/)?.[1];
+assert.ok(writeBlock, "producer write block must remain explicit");
+assert.match(writeBlock, /writeJson\(ADMIN_REL, payload\.admin\)/, "producer must write the canonical admin artifact");
+assert.match(writeBlock, /writeJson\(SUMMARY_REL, payload\.summary\)/, "producer must write the canonical summary");
+assert.doesNotMatch(writeBlock, /PUBLIC_SUMMARY_REL/, "producer must not mutate the public summary destination");
 
 function fixtureCandidates(count, { status, scoreBase, prefix }) {
   const candidates = [];
@@ -38,6 +46,11 @@ assert.equal(admin.raw_policy.public, false);
 assert.equal(summary.raw_policy.public, true);
 assert.equal(admin.coverage.selected_count, admin.rows.length);
 assert.equal(summary.rows.length, admin.rows.length);
+assert.deepEqual(summary.coverage.cohort_metrics, admin.coverage.cohort_metrics);
+assert.deepEqual(
+  Object.keys(admin.coverage.cohort_metrics),
+  [...Object.keys(admin.coverage.cohort_metrics)].sort((left, right) => left.localeCompare(right)),
+);
 assert.equal(admin.daily_refresh_universe.count, admin.rows.length);
 assert.equal(admin.daily_refresh_universe.tickers.length, admin.rows.length);
 assert.ok(admin.rows.length >= ETF_CORE_DAILY_BASKET_CONFIG.minSelectedCount);
@@ -47,6 +60,78 @@ assert.ok(
   Number(admin.coverage.excluded_reason_counts?.single_stock_or_concentrated_derivative_income_strategy || 0) > 0,
   "Core Basket must explicitly exclude single-stock/concentrated derivative-income ETF strategies",
 );
+
+const clonePayload = (payload) => JSON.parse(JSON.stringify(payload));
+const firstCohortCategory = Object.keys(admin.coverage.cohort_metrics)[0];
+assert.ok(firstCohortCategory, "fixture must expose at least one cohort metric");
+
+const invalidMetricCases = [
+  ["negative eligible_count", (invalidAdmin) => {
+    invalidAdmin.coverage.cohort_metrics[firstCohortCategory].eligible_count = -1;
+  }],
+  ["non-integer selected_count", (invalidAdmin) => {
+    invalidAdmin.coverage.cohort_metrics[firstCohortCategory].selected_count = 1.5;
+  }],
+  ["selected count does not equal fresh plus stale", (invalidAdmin) => {
+    const metric = invalidAdmin.coverage.cohort_metrics[firstCohortCategory];
+    metric.fresh_selected_count += 1;
+  }],
+  ["selected count exceeds eligible count", (invalidAdmin) => {
+    Object.assign(invalidAdmin.coverage.cohort_metrics[firstCohortCategory], {
+      eligible_count: 0,
+      selected_count: 1,
+      fresh_selected_count: 1,
+      stale_selected_count: 0,
+      achieved_coverage_pct: 0,
+    });
+  }],
+  ["coverage percentage outside range", (invalidAdmin) => {
+    invalidAdmin.coverage.cohort_metrics[firstCohortCategory].achieved_coverage_pct = 101;
+  }],
+  ["negative max quote age", (invalidAdmin) => {
+    invalidAdmin.coverage.cohort_metrics[firstCohortCategory].max_quote_age_days = -1;
+  }],
+  ["missing metric field", (invalidAdmin) => {
+    delete invalidAdmin.coverage.cohort_metrics[firstCohortCategory].max_quote_age_days;
+  }],
+  ["unsorted category keys", (invalidAdmin, invalidSummary) => {
+    const template = admin.coverage.cohort_metrics[firstCohortCategory];
+    const malformed = { Zebra: { ...template }, Alpha: { ...template } };
+    invalidAdmin.coverage.cohort_metrics = malformed;
+    invalidSummary.coverage.cohort_metrics = clonePayload(malformed);
+  }],
+  ["summary/admin metrics mismatch", (_invalidAdmin, invalidSummary) => {
+    const metric = invalidSummary.coverage.cohort_metrics[firstCohortCategory];
+    metric.achieved_coverage_pct = metric.achieved_coverage_pct === 100 ? 99 : 100;
+  }],
+];
+
+for (const [label, mutate] of invalidMetricCases) {
+  const invalidAdmin = clonePayload(admin);
+  const invalidSummary = clonePayload(summary);
+  mutate(invalidAdmin, invalidSummary);
+  const invalidValidation = validateEtfCoreDailyBasket(invalidAdmin, invalidSummary);
+  assert.equal(invalidValidation.ok, false, label);
+}
+
+{
+  const fetchedAt = "2026-06-29T23:45:00.000Z";
+  const withDatelessNewEtfSurface = buildEtfCoreDailyBasket({
+    generatedAt,
+    now: generatedAt,
+    newEtfs: {
+      generated_at: null,
+      fetched_at: fetchedAt,
+      source_as_of: null,
+      records: [],
+    },
+  });
+  assert.equal(
+    withDatelessNewEtfSurface.admin.source_generated_at.new_etfs,
+    fetchedAt,
+    "dateless new-ETF surfaces must expose acquisition age through fetched_at",
+  );
+}
 
 for (const row of admin.rows) {
   assert.equal(row.asset_type, "etf", `${row.ticker}: asset_type`);
@@ -159,6 +244,102 @@ if (admin.readiness.core_daily_basket_ready) {
   const { selected } = selectBasketRows([...stale, ...fresh]);
   assert.equal(selected.length, ETF_CORE_DAILY_BASKET_CONFIG.minSelectedCount);
   assert.ok(selected.some((row) => row.status === "needs_refresh"));
+}
+
+{
+  const { cohortMetrics } = selectBasketRows([
+    {
+      ticker: "EQFRESH1",
+      category: "Equity",
+      status: "fresh",
+      action_score: 4,
+      proof: { quote_age_days: 1 },
+    },
+    {
+      ticker: "EQFRESH2",
+      category: "Equity",
+      status: "fresh",
+      action_score: 3,
+      proof: { quote_age_days: 3 },
+    },
+    {
+      ticker: "FISTALE1",
+      category: "Fixed Income",
+      status: "needs_refresh",
+      action_score: 2,
+      proof: { quote_age_days: 8 },
+    },
+    {
+      ticker: "FISTALE2",
+      category: "Fixed Income",
+      status: "needs_refresh",
+      action_score: 1,
+      proof: { quote_age_days: null },
+    },
+  ]);
+  assert.deepEqual(cohortMetrics, {
+    Equity: {
+      eligible_count: 2,
+      selected_count: 2,
+      fresh_selected_count: 2,
+      stale_selected_count: 0,
+      achieved_coverage_pct: 100,
+      max_quote_age_days: 3,
+    },
+    "Fixed Income": {
+      eligible_count: 2,
+      selected_count: 2,
+      fresh_selected_count: 0,
+      stale_selected_count: 2,
+      achieved_coverage_pct: 100,
+      max_quote_age_days: 8,
+    },
+  });
+}
+
+{
+  const category = "Equity";
+  const eligibleCount = ETF_CORE_DAILY_BASKET_CONFIG.categoryCaps[category] + 1;
+  const { selected, cohortMetrics } = selectBasketRows(
+    Array.from({ length: eligibleCount }, (_, index) => ({
+      ticker: `CAP${String(index + 1).padStart(3, "0")}`,
+      category,
+      status: "fresh",
+      action_score: eligibleCount - index,
+    })),
+  );
+  assert.equal(selected.length, ETF_CORE_DAILY_BASKET_CONFIG.categoryCaps[category]);
+  assert.deepEqual(cohortMetrics[category], {
+    eligible_count: eligibleCount,
+    selected_count: ETF_CORE_DAILY_BASKET_CONFIG.categoryCaps[category],
+    fresh_selected_count: ETF_CORE_DAILY_BASKET_CONFIG.categoryCaps[category],
+    stale_selected_count: 0,
+    achieved_coverage_pct: 98.04,
+    max_quote_age_days: null,
+  });
+}
+
+{
+  const category = "Currency";
+  const { selected, cohortMetrics } = selectBasketRows([
+    {
+      ticker: "NULLAGE1",
+      category,
+      status: "fresh",
+      action_score: 2,
+      proof: { quote_age_days: null },
+    },
+    {
+      ticker: "NULLAGE2",
+      category,
+      status: "fresh",
+      action_score: 1,
+      proof: { quote_age_days: null },
+    },
+  ]);
+  assert.equal(selected.length, 2);
+  assert.equal(cohortMetrics[category].selected_count, 2);
+  assert.equal(cohortMetrics[category].max_quote_age_days, null);
 }
 
 {

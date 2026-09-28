@@ -1,0 +1,100 @@
+{
+  "attempts": [
+    {
+      "attempts_used": 1,
+      "event_name": "schedule",
+      "failures": [],
+      "latency_ms": 888,
+      "natural": true,
+      "observed_at": "2026-08-11T09:13:07Z",
+      "outcome": "fresh",
+      "run_attempt": 1,
+      "run_id": "31476569032",
+      "schedule": "7 8 * * 0-5",
+      "shard": "28/72"
+    },
+    {
+      "attempts_used": 1,
+      "error": "recovery_not_advanced_by_provider",
+      "event_name": "schedule",
+      "failures": [],
+      "latency_ms": 747,
+      "natural": true,
+      "observed_at": "2026-08-11T13:36:55Z",
+      "outcome": "failed",
+      "run_attempt": 1,
+      "run_id": "31496919771",
+      "schedule": "7 12 * * 0-5",
+      "shard": "30/72"
+    }
+  ],
+  "current": {
+    "fetched_at": "2026-08-11T09:16:28Z",
+    "history_as_of": "2026-07-24",
+    "path": "data/admin/yahoo-batch-quote-history/lkg/QRFT.json",
+    "payload_sha256": "d81a1a672adea79e16f98b27259dcc61da8c3124616bb2ad1eec5f2445106321",
+    "quote_as_of": "2026-07-21T19:59:50Z",
+    "source_as_of": "2026-07-21T19:59:50Z"
+  },
+  "discovered_from": [
+    "stockanalysis_etf"
+  ],
+  "last_attempt": {
+    "attempts_used": 1,
+    "error": "recovery_not_advanced_by_provider",
+    "event_name": "schedule",
+    "failures": [],
+    "latency_ms": 747,
+    "natural": true,
+    "observed_at": "2026-08-11T13:36:55Z",
+    "outcome": "failed",
+    "run_attempt": 1,
+    "run_id": "31496919771",
+    "schedule": "7 12 * * 0-5",
+    "shard": "30/72"
+  },
+  "latest_promotion_deferral": {
+    "event_name": "schedule",
+    "observed_at": "2026-08-11T13:36:55Z",
+    "provider_history_as_of": "2026-07-24",
+    "provider_quote_as_of": "2026-07-21T19:59:50Z",
+    "reason": "recovery_not_advanced_by_provider",
+    "run_attempt": 1,
+    "run_id": "31496919771"
+  },
+  "lkg": {
+    "fetched_at": "2026-08-11T09:16:28Z",
+    "history_as_of": "2026-07-24",
+    "path": "data/admin/yahoo-batch-quote-history/lkg/QRFT.json",
+    "payload_sha256": "d81a1a672adea79e16f98b27259dcc61da8c3124616bb2ad1eec5f2445106321",
+    "quote_as_of": "2026-07-21T19:59:50Z",
+    "source_as_of": "2026-07-21T19:59:50Z"
+  },
+  "promotion_contract": "provider_observation/v2",
+  "provider_observation": {
+    "event_name": "schedule",
+    "history_as_of": "2026-07-24",
+    "observed_at": "2026-08-11T09:13:07Z",
+    "payload_sha256": "c94d0d1aebd8b87be17b8414d4e1447ca6fe451801f2100bc1043742479977d3",
+    "quote_as_of": "2026-07-21T19:59:50Z",
+    "run_attempt": 1,
+    "run_id": "31476569032",
+    "schema_version": "provider_observation/v2",
+    "source_as_of": "2026-07-21T19:59:50Z"
+  },
+  "resolution_state": "lkg_primary",
+  "retry": true,
+  "schema_version": "yahoo-batch-quote-history-state/v1",
+  "stale": {
+    "age_business_days": 15,
+    "classified_at": "2026-08-11T11:03:07Z",
+    "classified_run_id": "31484759300",
+    "expected_resolution": "next_natural_yahoo_run",
+    "max_business_days": 6,
+    "message": "QRFT holds LKG because Yahoo source date 2026-07-21T19:59:50Z is 15 business days old, beyond the 6-day bound; it will retry on the next natural Yahoo run.",
+    "reason": "source_age_exceeds_lane_bound",
+    "source_as_of": "2026-07-21T19:59:50Z"
+  },
+  "ticker": "QRFT",
+  "updated_at": "2026-08-11T13:36:55Z"
+}

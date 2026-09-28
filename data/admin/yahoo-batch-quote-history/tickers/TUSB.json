@@ -1,0 +1,102 @@
+{
+  "attempts": [
+    {
+      "attempts_used": 1,
+      "event_name": "schedule",
+      "failures": [],
+      "latency_ms": 630,
+      "natural": true,
+      "observed_at": "2026-08-05T14:29:49Z",
+      "outcome": "fresh",
+      "run_attempt": 1,
+      "run_id": "31015333400",
+      "schedule": "7 12 * * 0-5",
+      "shard": "42/72"
+    },
+    {
+      "attempts_used": 1,
+      "event_name": "schedule",
+      "failures": [],
+      "latency_ms": 953,
+      "natural": true,
+      "observed_at": "2026-08-12T13:41:31Z",
+      "outcome": "fresh",
+      "run_attempt": 1,
+      "run_id": "31602424796",
+      "schedule": "7 12 * * 0-5",
+      "shard": "42/72"
+    },
+    {
+      "attempts_used": 1,
+      "event_name": "workflow_dispatch",
+      "failures": [],
+      "latency_ms": 484,
+      "natural": false,
+      "observed_at": "2026-09-28T06:30:00Z",
+      "outcome": "fresh",
+      "run_attempt": 1,
+      "run_id": "36367836615",
+      "schedule": "",
+      "shard": ""
+    }
+  ],
+  "current": {
+    "fetched_at": "2026-09-28T06:36:10Z",
+    "history_as_of": "2026-09-25",
+    "path": "data/yf/finance/TUSB.json",
+    "payload_sha256": "52c02dc18066b348a51e1fa4f71f26d5207c877fc1a2b16158d6bb7e7510ebc6",
+    "quote_as_of": "2026-09-25T19:59:51Z",
+    "source_as_of": "2026-09-25"
+  },
+  "discovered_from": [
+    "stockanalysis_etf"
+  ],
+  "last_attempt": {
+    "attempts_used": 1,
+    "event_name": "workflow_dispatch",
+    "failures": [],
+    "latency_ms": 484,
+    "natural": false,
+    "observed_at": "2026-09-28T06:30:00Z",
+    "outcome": "fresh",
+    "run_attempt": 1,
+    "run_id": "36367836615",
+    "schedule": "",
+    "shard": ""
+  },
+  "lkg": {
+    "fetched_at": "2026-08-12T13:45:08Z",
+    "history_as_of": "2026-08-10",
+    "path": "data/admin/yahoo-batch-quote-history/lkg/TUSB.json",
+    "payload_sha256": "dba18fa9f60389782cd22964b5963f8b820290c2e3e7aaa91721df85925c64dc",
+    "quote_as_of": "2026-08-11T19:59:45Z",
+    "source_as_of": "2026-08-10"
+  },
+  "promotion_contract": "provider_observation/v2",
+  "provider_observation": {
+    "event_name": "workflow_dispatch",
+    "history_as_of": "2026-09-25",
+    "observed_at": "2026-09-28T06:30:00Z",
+    "payload_sha256": "483cfd6c059d71a741e32c5688b9c4a63becc30609ff0da25ff32b65472fe645",
+    "quote_as_of": "2026-09-25T19:59:51Z",
+    "run_attempt": 1,
+    "run_id": "36367836615",
+    "schema_version": "provider_observation/v2",
+    "source_as_of": "2026-09-25"
+  },
+  "resolution_state": "fresh_primary",
+  "retry": false,
+  "schema_version": "yahoo-batch-quote-history-state/v1",
+  "stale": {
+    "age_business_days": 7,
+    "classified_at": "2026-08-19T23:42:29Z",
+    "classified_run_id": "32314261503",
+    "expected_resolution": "next_natural_yahoo_run",
+    "max_business_days": 6,
+    "message": "TUSB holds LKG because Yahoo source date 2026-08-10 is 7 business days old, beyond the 6-day bound; it will retry on the next natural Yahoo run.",
+    "reason": "source_age_exceeds_lane_bound",
+    "source_as_of": "2026-08-10"
+  },
+  "ticker": "TUSB",
+  "updated_at": "2026-09-28T06:30:00Z"
+}

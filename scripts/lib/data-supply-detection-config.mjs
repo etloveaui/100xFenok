@@ -1,14 +1,50 @@
-import { createHash } from "node:crypto";
 import {
   FLOW_PROXY_FORMULA_VERSION,
   OCC_OPTIONS_FORMULA_VERSION,
 } from "./fenok-proxy-formula-contract.mjs";
 import { canonicalJson } from "./json-canonical.mjs";
 import { LANE_REGISTRY, registryLaneById } from "./lane-registry.mjs";
+import { FAMILY_POLICY, FRESHNESS_CLASSES, resolveSourcePolicy } from "../../100xfenok-next/src/lib/freshness-policy.mjs";
+
+// Freshness day limits are never restated as local constants: each lane
+// resolves its family policy from the shared DEC-417 policy module and the
+// fresh limit is the policy's own cycle + releaseLag + grace.
+function policyFreshLimitDays(laneId, policy, label, expectations = {}) {
+  const cadence = FRESHNESS_CLASSES[policy?.cadence];
+  if (!cadence
+    || (expectations.supplier !== undefined && policy.supplier !== expectations.supplier)
+    || (expectations.cadence !== undefined && policy.cadence !== expectations.cadence)
+    || (expectations.calendar !== undefined && policy.calendar !== expectations.calendar)
+    || (expectations.releaseLagDays !== undefined && policy.releaseLagDays !== expectations.releaseLagDays)
+    || !Number.isInteger(policy.releaseLagDays) || policy.releaseLagDays < 0
+    || !Number.isInteger(cadence.cycleDays) || cadence.cycleDays < 1
+    || !Number.isInteger(cadence.graceDays) || cadence.graceDays < 0) {
+    throw new Error(`${laneId}: ${label} source-age policy is missing or invalid`);
+  }
+  return cadence.cycleDays + policy.releaseLagDays + cadence.graceDays;
+}
+
+function ownerWeeklyFreshLimit(laneId) {
+  return policyFreshLimitDays(laneId, FAMILY_POLICY[laneId], "owner weekly", {
+    supplier: "owner", cadence: "weekly", calendar: "calendar",
+  });
+}
+
+function krxFreshLimit() {
+  return policyFreshLimitDays("krx", FAMILY_POLICY.krx, "trading-day", {
+    supplier: "automated", cadence: "daily", calendar: "kr_trading",
+  });
+}
+
+function fredMacroFreshLimit() {
+  return policyFreshLimitDays("fred_macro", resolveSourcePolicy({ laneId: "fred_macro", cadence: "daily", calendar: "utc" }), "daily UTC", {
+    supplier: "automated", cadence: "daily", calendar: "calendar", releaseLagDays: 0,
+  });
+}
 
 // LANE_IDS derives from the lane registry — the SSOT for lane existence
-// (#366 derivation). Values stay exact-value pinned by cases.expected.json's
-// config_digest, so drift is a conscious edit (DEC-266).
+// (#366 derivation). Values stay exact-value pinned by the expected-case
+// fixture, so drift is a conscious edit (DEC-266).
 const LANE_IDS = Object.freeze(
   LANE_REGISTRY.lanes
     .filter((lane) => lane.lane_class === "detection_floor")
@@ -17,8 +53,8 @@ const LANE_IDS = Object.freeze(
 
 // LIVE_LANE_IDS derives from the lane registry — the SSOT for lane existence
 // and enforcement (#366 derivation, hand list removed). The VALUES are still
-// exact-value pinned by cases.expected.json's config_digest, so any
-// registry/config drift fails loudly as a conscious edit (DEC-266).
+// exact-value pinned by the expected-case fixture, so any registry/config
+// drift fails loudly as a conscious edit (DEC-266).
 const LIVE_LANE_IDS = Object.freeze(
   LANE_REGISTRY.lanes
     .filter((lane) => lane.enforcement === "live")
@@ -33,6 +69,21 @@ const SLICKCHARTS_MEMBER_IDS = Object.freeze([
   "history",
   "symbols",
 ]);
+
+// B-394: composite membership is DECLARED per lane rather than hardcoded to the
+// one lane that happened to have it. Member ids stay pinned, so a member
+// appearing or disappearing is still a conscious edit. The two shapes are kept
+// apart because they are genuinely different: slickcharts is a detection
+// composite across five sibling workflows and therefore has no single owner,
+// while yahoo_batch_quote_history is ONE workflow with two crons, so its
+// members share that owner workflow.
+const COMPOSITE_LANE_MEMBERS = Object.freeze({
+  slickcharts: Object.freeze({ members: SLICKCHARTS_MEMBER_IDS, sharedOwnerWorkflow: false }),
+  yahoo_batch_quote_history: Object.freeze({
+    members: Object.freeze(["stock", "etf"]),
+    sharedOwnerWorkflow: true,
+  }),
+});
 
 const STOCKANALYSIS_STOCK_FINANCIAL_TICKERS = Object.freeze([
   "AAPL",
@@ -75,11 +126,21 @@ const JSON_TYPES = new Set(["array", "boolean", "null", "number", "object", "str
 const FOLDS = new Set(["oldest", "latest", "member_worst"]);
 const UNITS = new Set(["hours", "calendar_days", "business_days", "due_window"]);
 const VISIBILITIES = new Set(["public_safe_aggregate", "admin_only"]);
-const CALENDAR_IDS = new Set(["utc", "us_federal_business", "us_trading"]);
+const CALENDAR_IDS = new Set(["utc", "us_federal_business", "us_trading", "kr_trading"]);
 const SOURCE_FORMATS = new Set(["date", "rfc3339", "yyyymmdd", "unix_seconds"]);
 const SOURCE_SELECTOR_KINDS = new Set(["pointer", "max_array_field", "max_object_series_field", "max_object_field", "max_quarter", "not_applicable"]);
 const CADENCE_DECLARATION_KINDS = new Set(["github_workflow", "owner_contract", "payload_field"]);
 const OWNER_CONTRACT_RE = /^[a-z][a-z0-9._:/-]{2,127}$/;
+
+function isStrictUtcTimestamp(value) {
+  if (typeof value !== "string"
+    || !/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}Z$/.test(value)) {
+    return false;
+  }
+  const parsed = new Date(value);
+  return Number.isFinite(parsed.getTime())
+    && parsed.toISOString() === value.replace(/Z$/, ".000Z");
+}
 
 function artifact(id, path, { schemaVersion = null, sourceSelector, assertions, selection = path.includes("*") ? "all" : "single" }) {
   return {
@@ -182,6 +243,7 @@ function member(
   artifactContracts,
   cadenceCalendar = workflow === null ? null : "utc",
   cadenceDeclaration = workflow === null ? null : { kind: "github_workflow", evidence: workflow },
+  activatedAt = undefined,
 ) {
   return {
     id,
@@ -189,6 +251,7 @@ function member(
     schedule,
     cadence_calendar: cadenceCalendar,
     cadence_declaration: cadenceDeclaration,
+    ...(activatedAt !== undefined ? { activated_at: activatedAt } : {}),
     artifact_contracts: artifactContracts,
   };
 }
@@ -198,37 +261,69 @@ function registryMember(id, schedule, artifactContracts, cadenceCalendar = "utc"
   if (!registryLane || registryLane.owner_workflow === null) {
     throw new TypeError(`detection member ${id} has no registry-owned workflow`);
   }
-  return member(id, registryLane.owner_workflow, schedule, artifactContracts, cadenceCalendar);
+  return member(
+    id,
+    registryLane.owner_workflow,
+    schedule,
+    artifactContracts,
+    cadenceCalendar,
+    undefined,
+    registryLane.activated_at,
+  );
 }
 
 function externalMember(id, cadenceDeclaration, artifactContracts) {
   return member(id, null, [], artifactContracts, null, cadenceDeclaration);
 }
 
-function endpoint(endpointFamily, assertionId = null, pointer = null, expected = null) {
+// The two transports a probed lane can have. There is no third value and no
+// default: see validateEndpointContract for why absence is now a load failure.
+const ENDPOINT_TRANSPORTS = new Set(["http", "library"]);
+
+function declaredTransport(transport, endpointFamily) {
+  if (!ENDPOINT_TRANSPORTS.has(transport)) {
+    throw new TypeError(
+      `${endpointFamily}: endpoint transport must be declared explicitly as "http" or "library"`,
+    );
+  }
+  return transport;
+}
+
+function endpoint(endpointFamily, assertionId = null, pointer = null, expected = null, transport = null) {
   const artifactOnly = assertionId === null;
+  if (artifactOnly) {
+    if (transport !== null) {
+      throw new TypeError(`${endpointFamily}: an artifact-only endpoint has no transport to declare`);
+    }
+    return {
+      endpoint_family: endpointFamily,
+      probe_mode: "artifact_only",
+      assertions: [],
+    };
+  }
   return {
     endpoint_family: endpointFamily,
-    probe_mode: artifactOnly ? "artifact_only" : "injected_post_fetch",
-    assertions: artifactOnly ? [] : [{ id: assertionId, kind: "type", pointer, expected }],
+    probe_mode: "injected_post_fetch",
+    assertions: [{ id: assertionId, kind: "type", pointer, expected }],
+    transport: declaredTransport(transport, endpointFamily),
   };
 }
 
-function endpointAssertion(endpointFamily, assertion, transport = null) {
-  const contract = {
+function endpointAssertion(endpointFamily, assertion, transport) {
+  return {
     endpoint_family: endpointFamily,
     probe_mode: "injected_post_fetch",
     assertions: [assertion],
+    transport: declaredTransport(transport, endpointFamily),
   };
-  if (transport !== null) contract.transport = transport;
-  return contract;
 }
 
-function endpointAssertions(endpointFamily, assertions) {
+function endpointAssertions(endpointFamily, assertions, transport) {
   return {
     endpoint_family: endpointFamily,
     probe_mode: "injected_post_fetch",
     assertions,
+    transport: declaredTransport(transport, endpointFamily),
   };
 }
 
@@ -298,8 +393,8 @@ const config = {
           ],
         }),
       ])],
-      endpointContract: endpoint("fred_api", "observations_array", "/observations", "array"),
-      freshnessPolicy: freshness({ fold: "latest", unit: "hours", calendar: "utc", maxStaleness: 48 }),
+      endpointContract: endpoint("fred_api", "observations_array", "/observations", "array", "http"),
+      freshnessPolicy: freshness({ fold: "latest", unit: "calendar_days", calendar: "utc", maxStaleness: fredMacroFreshLimit() }),
       affectedSurfaceIds: ["macro_fred"],
     }),
     lane({
@@ -307,15 +402,19 @@ const config = {
       label: "FRED banking series",
       members: [registryMember("fred_banking", ["0 7 * * *"], [
         artifact("fred_banking_daily", "data/macro/fred-banking-daily.json", {
-          sourceSelector: maxObjectSeriesFieldSource("/series", "date", "date"),
-          assertions: [exactAssertion("type_daily", "/type", "daily"), typeAssertion("series_object", "/series", "object"), minKeysAssertion("series_count", "/series", 3), nonEmptySeriesAssertion("series_non_empty", "/series"), requiredAssertion("series_dgs10", "/series/DGS10"), requiredAssertion("series_hy_spread", "/series/BAMLH0A0HYM2"), requiredAssertion("series_korea_rate", "/series/IRLTLT01KRM156N")],
+          sourceSelector: pointerSource("/source_as_of", "date"),
+          assertions: [exactAssertion("type_daily", "/type", "daily"), typeAssertion("series_object", "/series", "object"), minKeysAssertion("series_count", "/series", 2), nonEmptySeriesAssertion("series_non_empty", "/series"), requiredAssertion("series_dgs10", "/series/DGS10"), requiredAssertion("series_hy_spread", "/series/BAMLH0A0HYM2")],
         }),
         artifact("fred_banking_weekly", "data/macro/fred-banking-weekly.json", {
-          sourceSelector: maxObjectSeriesFieldSource("/series", "date", "date"),
+          sourceSelector: pointerSource("/source_as_of", "date"),
           assertions: [exactAssertion("type_weekly", "/type", "weekly"), typeAssertion("series_object", "/series", "object"), minKeysAssertion("series_count", "/series", 2), nonEmptySeriesAssertion("series_non_empty", "/series"), requiredAssertion("series_totll", "/series/TOTLL"), requiredAssertion("series_deposits", "/series/DPSACBW027SBOG")],
         }),
+        artifact("fred_banking_monthly", "data/macro/fred-banking-monthly.json", {
+          sourceSelector: pointerSource("/source_as_of", "date"),
+          assertions: [exactAssertion("type_monthly", "/type", "monthly"), typeAssertion("series_object", "/series", "object"), minKeysAssertion("series_count", "/series", 1), nonEmptySeriesAssertion("series_non_empty", "/series"), requiredAssertion("series_korea_rate", "/series/IRLTLT01KRM156N")],
+        }),
         artifact("fred_banking_quarterly", "data/macro/fred-banking-quarterly.json", {
-          sourceSelector: maxObjectSeriesFieldSource("/series", "date", "date"),
+          sourceSelector: pointerSource("/source_as_of", "date"),
           assertions: [
             exactAssertion("type_quarterly", "/type", "quarterly"),
             typeAssertion("series_object", "/series", "object"),
@@ -335,8 +434,8 @@ const config = {
           ],
         }),
       ])],
-      endpointContract: endpoint("fred_api", "observations_array", "/observations", "array"),
-      freshnessPolicy: freshness({ fold: "oldest", unit: "calendar_days", calendar: "utc", maxStaleness: 120 }),
+      endpointContract: endpoint("fred_api", "observations_array", "/observations", "array", "http"),
+      freshnessPolicy: freshness({ fold: "oldest", unit: "calendar_days", calendar: "utc", maxStaleness: 250 }),
       affectedSurfaceIds: ["banking_liquidity", "rim_index_inputs"],
     }),
     lane({
@@ -353,20 +452,20 @@ const config = {
           ],
         }),
       ])],
-      endpointContract: endpoint("fred_api", "observations_array", "/observations", "array"),
-      freshnessPolicy: freshness({ fold: "latest", unit: "calendar_days", calendar: "utc", maxStaleness: 10 }),
+      endpointContract: endpoint("fred_api", "observations_array", "/observations", "array", "http"),
+      freshnessPolicy: freshness({ fold: "latest", unit: "calendar_days", calendar: "utc", maxStaleness: ownerWeeklyFreshLimit("fred_yardeni") }),
       affectedSurfaceIds: ["yardeni_model"],
     }),
     lane({
       id: "fdic_tier1",
       label: "FDIC Tier 1 capital",
-      members: [registryMember("fdic_tier1", ["0 6 1-7 * 1"], [
+      members: [registryMember("fdic_tier1", ["0 6 * * 1", "0 6 * * 4"], [
         artifact("fdic_tier1", "data/macro/fdic-tier1.json", {
           sourceSelector: maxArrayFieldSource("/data", "date", "date"),
           assertions: [exactAssertion("source_fdic", "/source", "FDIC"), typeAssertion("data_array", "/data", "array"), minRowsAssertion("data_non_empty", "/data")],
         }),
-      ], "us_federal_business")],
-      endpointContract: endpoint("fdic_bankfind", "bank_data_array", "/data", "array"),
+      ])],
+      endpointContract: endpoint("fdic_bankfind", "bank_data_array", "/data", "array", "http"),
       freshnessPolicy: freshness({
         fold: "latest",
         unit: "due_window",
@@ -389,7 +488,7 @@ const config = {
           ],
         }),
       ])],
-      endpointContract: endpoint("treasury_fiscal_data", "data_array", "/data", "array"),
+      endpointContract: endpoint("treasury_fiscal_data", "data_array", "/data", "array", "http"),
       freshnessPolicy: freshness({ fold: "latest", unit: "business_days", calendar: "us_federal_business", maxStaleness: 2 }),
       affectedSurfaceIds: ["macro_tga"],
     }),
@@ -411,7 +510,7 @@ const config = {
       endpointContract: endpointAssertions("defillama_stablecoins_api", [
         minRowsAssertion("chart_array", "/chart"),
         minRowsAssertion("pegged_assets_array", "/stablecoins/peggedAssets"),
-      ]),
+      ], "http"),
       freshnessPolicy: freshness({ fold: "latest", unit: "calendar_days", calendar: "utc", maxStaleness: 2 }),
       affectedSurfaceIds: ["macro_stablecoins"],
     }),
@@ -419,7 +518,6 @@ const config = {
       id: "yahoo_etf_fallback",
       label: "Yahoo ETF fallback",
       members: [registryMember("yahoo_etf_fallback", [
-        "50 22 * * 1-5",
         "50 23 * * 1-5",
         "20 23 * * 0",
       ], [
@@ -439,8 +537,7 @@ const config = {
           symbol: "string",
           quoteType: "string",
         }),
-        "library",
-      ),
+        "library",),
       freshnessPolicy: freshness({ fold: "latest", unit: "calendar_days", calendar: "utc", maxStaleness: 8 }),
       affectedSurfaceIds: ["stockanalysis_etf_detail_coverage"],
     }),
@@ -467,9 +564,51 @@ const config = {
           nonEmptyFields: ["ticker", "name"],
           uniqueBy: "ticker",
         }),
-      ),
+      "http"),
       freshnessPolicy: freshness({ fold: "latest", unit: "calendar_days", calendar: "utc", maxStaleness: 8 }),
       affectedSurfaceIds: ["stockanalysis_etf_universe"],
+    }),
+    lane({
+      id: "stockanalysis_etf_detail",
+      label: "StockAnalysis per-ticker ETF detail",
+      // The per-ticker payloads are written by the same workflow as the universe
+      // index but are a distinct acquisition unit with distinct failure modes, so
+      // they carry their own detection row rather than inheriting the universe
+      // lane's. Without this row the 5,605-file canonical output had no owner.
+      // ETF detail is a member of the ETF/surface schedules. The separate
+      // stocks-only schedule must not create a synthetic detail failure row.
+      members: [registryMember("stockanalysis_etf_detail", ["50 23 * * 1-5", "20 23 * * 0"], [
+        artifact("stockanalysis_etf_detail_recovery_index", "data/admin/stockanalysis-recovery/index.json", {
+          schemaVersion: schemaVersion("/schema_version", "stockanalysis-recovery-index/v1"),
+          sourceSelector: notApplicableSource(),
+          assertions: [
+            typeAssertion("counts_by_kind_object", "/counts_by_kind", "object"),
+          ],
+        }),
+      ])],
+      // Library transport, for the same reason stockanalysis_stock_financial uses
+      // it: this lane fetches many tickers per run and its attempt evidence is one
+      // aggregated producer outcome, not a per-request HTTP status. The producer
+      // records error, path and latency per ticker and no status code, so an http
+      // contract demands evidence the producer cannot produce. Run 31792421833
+      // failed on exactly that mismatch.
+      // The assertions match the document the producer actually emits. The first
+      // draft asserted a /rows array of tickers, which the producer never sends
+      // and could not sensibly send: a run writes up to 5,605 payloads and an
+      // attempt shard carrying every ticker would be the payload again. Run
+      // 31795350702 executed successfully and still recorded
+      // {"id":"etf_detail_rows","passed":false} for exactly that reason, which
+      // denied the lane ready credit while nothing was actually wrong with it.
+      // The aggregate counts are the honest evidence, and failed === 0 is the
+      // claim that matters; stockanalysis_stock_financial asserts its own counts
+      // the same way.
+      endpointContract: endpointAssertions("stockanalysis_etf_detail_json", [
+        typeAssertion("etf_detail_requested", "/requested", "number"),
+        typeAssertion("etf_detail_written", "/written", "number"),
+        exactAssertion("etf_detail_failed", "/failed", 0),
+      ], "library"),
+      freshnessPolicy: freshness({ fold: "latest", unit: "calendar_days", calendar: "utc", maxStaleness: 3 }),
+      affectedSurfaceIds: ["stockanalysis_etf_detail"],
     }),
     lane({
       id: "stockanalysis_stock_financial",
@@ -503,22 +642,19 @@ const config = {
             ],
           }),
         ]))],
-      endpointContract: {
-        ...endpointAssertions("stockanalysis_stock_financial_batch", [
-          exactAssertion("stock_financial_requested", "/counts/requested", 8),
-          exactAssertion("stock_financial_stock_ok", "/counts/stock_ok", 8),
-          exactAssertion("stock_financial_financial_ok", "/counts/financial_ok", 8),
-          exactAssertion("stock_financial_failed", "/counts/failed", 0),
-          exactAssertion("stock_financial_tickers", "/tickers", STOCKANALYSIS_STOCK_FINANCIAL_TICKERS),
-          objectArrayFieldsAssertion("stock_financial_pairs", "/pairs", {
-            fields: { ticker: "string", stock_path: "string", financial_path: "string" },
-            min: 8,
-            nonEmptyFields: ["ticker", "stock_path", "financial_path"],
-            uniqueBy: "ticker",
-          }),
-        ]),
-        transport: "library",
-      },
+      endpointContract: endpointAssertions("stockanalysis_stock_financial_batch", [
+        exactAssertion("stock_financial_requested", "/counts/requested", 8),
+        exactAssertion("stock_financial_stock_ok", "/counts/stock_ok", 8),
+        exactAssertion("stock_financial_financial_ok", "/counts/financial_ok", 8),
+        exactAssertion("stock_financial_failed", "/counts/failed", 0),
+        exactAssertion("stock_financial_tickers", "/tickers", STOCKANALYSIS_STOCK_FINANCIAL_TICKERS),
+        objectArrayFieldsAssertion("stock_financial_pairs", "/pairs", {
+          fields: { ticker: "string", stock_path: "string", financial_path: "string" },
+          min: 8,
+          nonEmptyFields: ["ticker", "stock_path", "financial_path"],
+          uniqueBy: "ticker",
+        }),
+      ], "library"),
       freshnessPolicy: freshness({ fold: "oldest", unit: "calendar_days", calendar: "utc", maxStaleness: 2 }),
       affectedSurfaceIds: ["stockanalysis_stock_financial_candidates"],
     }),
@@ -570,7 +706,7 @@ const config = {
           nonEmptyFields: ["surface", "status", "endpoint"],
           uniqueBy: "surface",
         }),
-      ]),
+      ], "http"),
       freshnessPolicy: freshness({ fold: "latest", unit: "calendar_days", calendar: "utc", maxStaleness: 3 }),
       affectedSurfaceIds: ["market_events_stockanalysis"],
     }),
@@ -592,23 +728,79 @@ const config = {
         symbol: "string",
         price: "number",
         regularMarketTime: "number",
-      })),
-      freshnessPolicy: freshness({ fold: "latest", unit: "hours", calendar: "utc", maxStaleness: 3 }),
+      }), "http"),
+      // The stamp is a US regular-session quote time, so it freezes at the
+      // close and only moves at the next open. Judged in raw hours on the utc
+      // calendar this lane was stale roughly sixteen hours a day and every
+      // weekend - a permanent false alarm on a required lane. Judged in
+      // us_trading business days it is fresh through a normal overnight or
+      // weekend and still trips when the feed stops across trading days,
+      // matching every sibling market-data lane.
+      freshnessPolicy: freshness({ fold: "latest", unit: "business_days", calendar: "us_trading", maxStaleness: 1 }),
       affectedSurfaceIds: ["macro_tickers"],
     }),
     lane({
       id: "sentiment",
       label: "Market sentiment",
       members: [registryMember("sentiment", ["0 22 * * 1-5"], [
+        artifact("sentiment_cnn", "data/sentiment/cnn-fear-greed.json", {
+          sourceSelector: maxArrayFieldSource("", "date", "date"),
+          assertions: [typeAssertion("root_array", "", "array"), minRowsAssertion("cnn_non_empty", "")],
+        }),
+        artifact("sentiment_cftc", "data/sentiment/cftc-sp500.json", {
+          sourceSelector: maxArrayFieldSource("", "date", "date"),
+          assertions: [typeAssertion("root_array", "", "array"), minRowsAssertion("cftc_non_empty", "")],
+        }),
+        artifact("sentiment_crypto", "data/sentiment/crypto-fear-greed.json", {
+          sourceSelector: maxArrayFieldSource("", "date", "date"),
+          assertions: [typeAssertion("root_array", "", "array"), minRowsAssertion("crypto_non_empty", "")],
+        }),
         artifact("sentiment_vix", "data/sentiment/vix.json", {
           sourceSelector: maxArrayFieldSource("", "date", "date"),
           assertions: [typeAssertion("root_array", "", "array"), minRowsAssertion("vix_non_empty", "")],
+        }),
+        artifact("sentiment_move", "data/sentiment/move.json", {
+          sourceSelector: maxArrayFieldSource("", "date", "date"),
+          assertions: [typeAssertion("root_array", "", "array"), minRowsAssertion("move_non_empty", "")],
+        }),
+        // The remaining CNN outputs are written by the same producer in the same
+        // run and carry the same {date, ...} row shape, but had no contract, so
+        // they had no source-family freshness gate. computed signals reported
+        // cnn-put-call as unresolved for exactly that reason. aaii.json is
+        // deliberately absent: it has no automated producer (BACKLOG #362).
+        artifact("sentiment_cnn_put_call", "data/sentiment/cnn-put-call.json", {
+          sourceSelector: maxArrayFieldSource("", "date", "date"),
+          assertions: [typeAssertion("root_array", "", "array"), minRowsAssertion("cnn_put_call_non_empty", "")],
+        }),
+        artifact("sentiment_cnn_breadth", "data/sentiment/cnn-breadth.json", {
+          sourceSelector: maxArrayFieldSource("", "date", "date"),
+          assertions: [typeAssertion("root_array", "", "array"), minRowsAssertion("cnn_breadth_non_empty", "")],
+        }),
+        artifact("sentiment_cnn_components", "data/sentiment/cnn-components.json", {
+          sourceSelector: maxArrayFieldSource("", "date", "date"),
+          assertions: [typeAssertion("root_array", "", "array"), minRowsAssertion("cnn_components_non_empty", "")],
+        }),
+        artifact("sentiment_cnn_junk_bond", "data/sentiment/cnn-junk-bond.json", {
+          sourceSelector: maxArrayFieldSource("", "date", "date"),
+          assertions: [typeAssertion("root_array", "", "array"), minRowsAssertion("cnn_junk_bond_non_empty", "")],
+        }),
+        artifact("sentiment_cnn_momentum", "data/sentiment/cnn-momentum.json", {
+          sourceSelector: maxArrayFieldSource("", "date", "date"),
+          assertions: [typeAssertion("root_array", "", "array"), minRowsAssertion("cnn_momentum_non_empty", "")],
+        }),
+        artifact("sentiment_cnn_safe_haven", "data/sentiment/cnn-safe-haven.json", {
+          sourceSelector: maxArrayFieldSource("", "date", "date"),
+          assertions: [typeAssertion("root_array", "", "array"), minRowsAssertion("cnn_safe_haven_non_empty", "")],
+        }),
+        artifact("sentiment_cnn_strength", "data/sentiment/cnn-strength.json", {
+          sourceSelector: maxArrayFieldSource("", "date", "date"),
+          assertions: [typeAssertion("root_array", "", "array"), minRowsAssertion("cnn_strength_non_empty", "")],
         }),
       ], "us_trading")],
       endpointContract: endpointAssertion(
         "sentiment_normalized_sources",
         normalizedSeriesBundleAssertion("series_array", "/series"),
-      ),
+      "http"),
       freshnessPolicy: freshness({ fold: "latest", unit: "business_days", calendar: "us_trading", maxStaleness: 3 }),
       affectedSurfaceIds: ["sentiment_dashboard"],
     }),
@@ -647,7 +839,7 @@ const config = {
           nonEmptyFields: ["Name", "Symbol"],
           uniqueBy: "Symbol",
         }),
-      ),
+      "http"),
       freshnessPolicy: freshness({ fold: "latest", unit: "business_days", calendar: "us_trading", maxStaleness: 3 }),
       affectedSurfaceIds: ["rim_index_inputs"],
     }),
@@ -664,28 +856,34 @@ const config = {
           assertions: [typeAssertion("root_array", "", "array"), minRowsAssertion("nasdaq_non_empty", "")],
         }),
       ], "us_trading")],
-      endpointContract: endpoint("yahoo_chart_v8", "chart_result_array", "/chart/result", "array"),
+      endpointContract: endpoint("yahoo_chart_v8", "chart_result_array", "/chart/result", "array", "http"),
       freshnessPolicy: freshness({ fold: "latest", unit: "business_days", calendar: "us_trading", maxStaleness: 3 }),
       affectedSurfaceIds: ["rim_index_inputs", "macro_index_charts"],
     }),
     lane({
       id: "oecd_cli",
-      label: "OECD composite leading indicators shadow",
-      members: [registryMember("oecd_cli", ["0 8 1 * *"], [
+      label: "OECD composite leading indicators",
+      // OECD publishes CLI around the 7th monthly, skips August; July+August
+      // publish 2026-09-07. Probe on both the 1st and 8th so the post-skip
+      // release is caught without flagging June data as stale before Sep 8.
+      members: [registryMember("oecd_cli", ["0 8 1 * *", "0 8 8 * *"], [
         artifact("oecd_cli_shadow", "data/admin/oecd_cli/shadow/oecd-cli.json", {
           schemaVersion: schemaVersion("/schema_version", "oecd-cli-shadow/v1"),
           sourceSelector: pointerSource("/latest_date", "date"),
           assertions: [typeAssertion("series_object", "/series", "object"), minKeysAssertion("series_count", "/series", 22), typeAssertion("records_array", "/records", "array"), minRowsAssertion("records_non_empty", "/records")],
         }),
       ])],
-      endpointContract: endpoint("oecd_sdmx", "sdmx_cli_rows", "/data", "array"),
-      freshnessPolicy: freshness({ fold: "latest", unit: "calendar_days", calendar: "utc", maxStaleness: 70 }),
+      endpointContract: endpoint("oecd_sdmx", "sdmx_cli_rows", "/data", "array", "http"),
+      // June period (2026-06-01) remains current through the August gap until
+      // 2026-09-07; 70d would flag it ~Aug 10. Use 100d to cover June->Sep 7
+      // (~98d) with margin, calendar utc, so June is not stale before Sep 8.
+      freshnessPolicy: freshness({ fold: "latest", unit: "calendar_days", calendar: "utc", maxStaleness: 100 }),
       affectedSurfaceIds: ["activity_surveys"],
       visibility: "admin_only",
     }),
     lane({
       id: "krx",
-      label: "KRX Open API daily shadow",
+      label: "KRX Open API daily",
       members: [registryMember("krx", ["30 10 * * 1-5"], [
         artifact("krx_daily_bridge", "data/admin/fenok-edge-korea-krx-daily-index.json", {
           schemaVersion: schemaVersion("/schema_version", "fenok-edge-korea-krx-bridge/v1"),
@@ -706,9 +904,8 @@ const config = {
           as_of: "string",
           latest_run: "object",
         }),
-        "library",
-      ),
-      freshnessPolicy: freshness({ fold: "latest", unit: "calendar_days", calendar: "utc", maxStaleness: 4 }),
+        "library",),
+      freshnessPolicy: freshness({ fold: "latest", unit: "business_days", calendar: "kr_trading", maxStaleness: krxFreshLimit() }),
       affectedSurfaceIds: ["rim_index_inputs"],
     }),
     lane({
@@ -765,7 +962,14 @@ const config = {
           }),
         ]),
       ],
-      endpointContract: endpoint("slickcharts_html", "table_rows", "/rows", "array"),
+      endpointContract: {
+        // Per-shape page-assertion acceptance: table pages carry exactly
+        // {table_rows}, the three SvelteKit-hydrated yield pages exactly
+        // {yield_value}. Evidence validation checks each event against the
+        // set for its own page_shape, never a global exact set.
+        ...endpoint("slickcharts_html", "table_rows", "/rows", "array", "http"),
+        assertion_sets: { table: ["table_rows"], yield: ["yield_value"] },
+      },
       freshnessPolicy: freshness({ fold: "member_worst", unit: "calendar_days", calendar: "utc", maxStaleness: 40 }),
       affectedSurfaceIds: ["slickcharts_discovery", "stock_signals"],
     }),
@@ -795,7 +999,7 @@ const config = {
           ],
         }),
       ], "us_federal_business")],
-      endpointContract: endpoint("sec_edgar", "recent_form_array", "/filings/recent/form", "array"),
+      endpointContract: endpoint("sec_edgar", "recent_form_array", "/filings/recent/form", "array", "http"),
       freshnessPolicy: freshness({
         fold: "latest",
         unit: "due_window",
@@ -834,6 +1038,34 @@ const config = {
       visibility: "admin_only",
     }),
     lane({
+      id: "sentiment_aaii",
+      label: "AAII investor sentiment survey (owner-run Apps Script)",
+      ownerWorkflow: null,
+      monitoringMode: "artifact_only",
+      // The payload is a bare array of survey rows with no metadata block, so
+      // there is no update_frequency to assert weekly against. The cadence rests
+      // on the owner ruling that keeps acquisition Apps-Script owned; the source
+      // clock still comes from the newest survey date in the rows.
+      members: [externalMember("sentiment_aaii", {
+        kind: "owner_contract",
+        evidence: "backlog/b-362/aaii-gas-owned",
+      }, [
+        artifact("sentiment_aaii_survey", "data/sentiment/aaii.json", {
+          sourceSelector: maxArrayFieldSource("", "date", "date"),
+          assertions: [
+            typeAssertion("sentiment_aaii_root_array", "", "array"),
+            minRowsAssertion("sentiment_aaii_non_empty", ""),
+          ],
+        }),
+      ])],
+      endpointContract: endpoint("converter_payload"),
+      // Weekly publication with the same grace the probe uses for weekly
+      // families. Measured history: 32 commits from 2025-12-29 to 2026-08-13,
+      // 28 on a Thursday, five gaps longer than a week.
+      freshnessPolicy: freshness({ fold: "oldest", unit: "calendar_days", calendar: "utc", maxStaleness: 10 }),
+      affectedSurfaceIds: ["market_valuation"],
+    }),
+    lane({
       id: "benchmarks",
       label: "Bloomberg benchmark converter payloads",
       ownerWorkflow: null,
@@ -858,7 +1090,7 @@ const config = {
         ],
       })))],
       endpointContract: endpoint("converter_payload"),
-      freshnessPolicy: freshness({ fold: "oldest", unit: "calendar_days", calendar: "utc", maxStaleness: 14 }),
+      freshnessPolicy: freshness({ fold: "oldest", unit: "calendar_days", calendar: "utc", maxStaleness: ownerWeeklyFreshLimit("benchmarks") }),
       affectedSurfaceIds: ["market_valuation", "sectors", "dashboard"],
     }),
     lane({
@@ -881,13 +1113,13 @@ const config = {
         }),
       ])],
       endpointContract: endpoint("converter_payload"),
-      freshnessPolicy: freshness({ fold: "latest", unit: "calendar_days", calendar: "utc", maxStaleness: 14 }),
+      freshnessPolicy: freshness({ fold: "latest", unit: "calendar_days", calendar: "utc", maxStaleness: ownerWeeklyFreshLimit("global_scouter") }),
       affectedSurfaceIds: ["screener", "stock_detail", "explore"],
     }),
     lane({
       id: "damodaran",
       label: "Damodaran owner-guard producer",
-      members: [registryMember("damodaran", ["17 11 * * 6"], [
+      members: [registryMember("damodaran", ["17 11,23 * * 6"], [
         artifact("damodaran_owner_guard", "data/admin/damodaran/owner-guard.json", {
           schemaVersion: schemaVersion("/schema_version", "damodaran-owner-guard/v1"),
           sourceSelector: pointerSource("/fetched_at", "rfc3339"),
@@ -901,8 +1133,11 @@ const config = {
       endpointContract: endpointAssertion(
         "damodaran_converter",
         exactAssertion("owner_guard_match", "/status", "match"),
-      ),
-      freshnessPolicy: freshness({ fold: "latest", unit: "calendar_days", calendar: "utc", maxStaleness: 10 }),
+        "library",),
+      // FH-20260902-394: per-source freshness not supported — lane window ~400d
+      // covers annual January editions without flagging stale before next January;
+      // ctryprem is semiannual (Jan + ~July) so 400d also tolerates a missed July.
+      freshnessPolicy: freshness({ fold: "latest", unit: "calendar_days", calendar: "utc", maxStaleness: 400 }),
       affectedSurfaceIds: ["market_valuation", "stock_detail", "regime"],
     }),
     lane({
@@ -915,9 +1150,35 @@ const config = {
           assertions: [exactAssertion("formula_version", "/formula_version", FLOW_PROXY_FORMULA_VERSION), typeAssertion("rows_array", "/rows", "array"), minRowsAssertion("rows_non_empty", "/rows")],
         }),
       ], "us_trading")],
-      endpointContract: endpoint("finra_regsho", "regsho_rows", "/rows", "array"),
+      endpointContract: endpoint("finra_regsho", "regsho_rows", "/rows", "array", "http"),
       freshnessPolicy: freshness({ fold: "latest", unit: "business_days", calendar: "us_trading", maxStaleness: 3 }),
       affectedSurfaceIds: ["fenok_flow_proxies"],
+      visibility: "admin_only",
+    }),
+    lane({
+      id: "finra_ats_weekly",
+      label: "FINRA delayed ATS/OTC weekly summary",
+      members: [registryMember("finra_ats_weekly", ["17 11 * * 3"], [
+        artifact("finra_ats_weekly_marker", "data/admin/finra-ats/current/weekly-summary.json", {
+          schemaVersion: schemaVersion("/schema_version", "fenok-finra-ats-weekly-marker/v1"),
+          sourceSelector: pointerSource("/source_as_of", "date"),
+          assertions: [
+            exactAssertion("raw_public_false", "/raw_public", false),
+            exactAssertion("public_mirror_disallowed", "/public_mirror_allowed", false),
+            exactAssertion("rows_excluded", "/rows_included", false),
+            typeAssertion("counts_object", "/counts", "object"),
+          ],
+        }),
+      ])],
+      endpointContract: endpointAssertions("finra_otc_weekly_summary", [
+        minRowsAssertion("weekly_summary_rows", "/rows"),
+        exactAssertion("weekly_summary_row_shape", "/row_shape_valid", true),
+      ], "http"),
+      // The marker folds to the older tranche date. Forty-two calendar days
+      // keeps a normal four-week T2/OTCE publication fresh while the producer
+      // separately enforces the exact two-/four-week tier targets.
+      freshnessPolicy: freshness({ fold: "latest", unit: "calendar_days", calendar: "utc", maxStaleness: 42 }),
+      affectedSurfaceIds: ["finra_ats_weekly_admin"],
       visibility: "admin_only",
     }),
     lane({
@@ -930,7 +1191,7 @@ const config = {
           assertions: [exactAssertion("formula_version", "/formula_version", OCC_OPTIONS_FORMULA_VERSION), typeAssertion("rows_array", "/rows", "array"), minRowsAssertion("rows_non_empty", "/rows")],
         }),
       ], "us_trading")],
-      endpointContract: endpoint("occ_market_data", "csv_rows", "/rows", "array"),
+      endpointContract: endpoint("occ_market_data", "csv_rows", "/rows", "array", "http"),
       freshnessPolicy: freshness({ fold: "latest", unit: "business_days", calendar: "us_trading", maxStaleness: 3 }),
       affectedSurfaceIds: ["fenok_occ_options"],
       visibility: "admin_only",
@@ -972,7 +1233,7 @@ const config = {
       endpointContract: endpointAssertions("apewisdom", [
         typeAssertion("results_array", "/results", "array"),
         minRowsAssertion("results_non_empty", "/results"),
-      ]),
+      ], "http"),
       freshnessPolicy: freshness({
         fold: "latest",
         unit: "calendar_days",
@@ -988,13 +1249,13 @@ const config = {
       members: [registryMember("gdelt_news_tone", ["43 14 * * *"], [
         artifact("gdelt_news_tone", "data/computed/fenok_news_tone_proxy.json", {
           schemaVersion: schemaVersion("/schema_version", 1),
-          sourceSelector: maxArrayFieldSource("/rows", "as_of", "date"),
+          sourceSelector: maxArrayFieldSource("/rows", "as_of", "rfc3339"),
           assertions: [typeAssertion("rows_array", "/rows", "array"), minRowsAssertion("rows_non_empty", "/rows")],
         }),
       ])],
       endpointContract: endpointAssertions("gdelt_doc", [
         typeAssertion("articles_array", "/articles", "array"),
-      ]),
+      ], "http"),
       freshnessPolicy: freshness({
         fold: "latest",
         unit: "calendar_days",
@@ -1002,6 +1263,52 @@ const config = {
         maxStaleness: 3,
       }),
       affectedSurfaceIds: ["fenok_news_tone"],
+      visibility: "admin_only",
+    }),
+    lane({
+      id: "yahoo_batch_quote_history",
+      label: "Yahoo batch quote/history",
+      // B-394: one stock slot and one ETF slot, now declared as two MEMBERS
+      // rather than one member holding both crons. The producer already
+      // separated them - it writes index.json for the stock cron and
+      // index-core-etf.json for the ETF cron, each with its own run_id and
+      // schedule - but a single member could only carry one observation, so
+      // the ETF slot never saw one and raised unrecovered_overdue.
+      //
+      // These keys must stay identical to the workflow's own `on.schedule`,
+      // or the detection observer cannot attribute a missed slot; the
+      // workflow file is the SSOT and this list mirrors it exactly.
+      monitoringMode: "composite",
+      members: [
+        member("stock", ".github/workflows/fetch-yf-finance.yml", ["20 23 * * 1-5"], [
+          artifact("yahoo_batch_quote_history_index", "data/admin/yahoo-batch-quote-history/index.json", {
+            schemaVersion: schemaVersion("/schema_version", "yahoo-batch-quote-history-index/v1"),
+            sourceSelector: pointerSource("/generated_at", "rfc3339"),
+            assertions: [
+              exactAssertion("lane_identity", "/lane_id", "yahoo_batch_quote_history"),
+              typeAssertion("counts_object", "/counts", "object"),
+              typeAssertion("current_attempt_object", "/current_attempt", "object"),
+            ],
+          }),
+        ], "utc", undefined, registryLaneById("yahoo_batch_quote_history").activated_at),
+        member("etf", ".github/workflows/fetch-yf-finance.yml", ["7 0 * * 0-5"], [
+          artifact("yahoo_batch_quote_history_etf_index", "data/admin/yahoo-batch-quote-history/index-core-etf.json", {
+            schemaVersion: schemaVersion("/schema_version", "yahoo-batch-quote-history-index/v1"),
+            sourceSelector: pointerSource("/generated_at", "rfc3339"),
+            assertions: [
+              exactAssertion("lane_identity", "/lane_id", "yahoo_batch_quote_history"),
+              typeAssertion("counts_object", "/counts", "object"),
+              typeAssertion("current_attempt_object", "/current_attempt", "object"),
+            ],
+          }),
+        ], "utc", undefined, registryLaneById("yahoo_batch_quote_history").activated_at),
+      ],
+      endpointContract: endpointAssertion(
+        "yfinance_batch_library",
+        typeAssertion("current_attempt_completed", "/current_attempt/attempted", "number"),
+        "library",),
+      freshnessPolicy: freshness({ fold: "latest", unit: "hours", calendar: "utc", maxStaleness: 30 }),
+      affectedSurfaceIds: ["yahoo_batch_quote_history_admin"],
       visibility: "admin_only",
     }),
   ],
@@ -1143,6 +1450,14 @@ function validateAssertions(assertions, context, { allowEmpty = false } = {}) {
   });
 }
 
+function validateAssertionSets(sets, context) {
+  if (!isPlainObject(sets) || Object.keys(sets).length === 0) fail(`${context} must be a non-empty object`);
+  for (const [shape, ids] of Object.entries(sets)) {
+    requireIdentifier(shape, `${context}.${shape}`);
+    requireUniqueStrings(ids, `${context}.${shape}`, { identifiers: true });
+  }
+}
+
 function validateArtifactContract(contract, context) {
   exactKeys(contract, ["id", "path", "selection", "schema_version", "source_selector", "assertions"], context);
   requireIdentifier(contract.id, `${context}.id`);
@@ -1175,8 +1490,16 @@ function validateArtifactContract(contract, context) {
 }
 
 function validateMember(memberValue, context) {
-  exactKeys(memberValue, ["id", "workflow", "schedule", "cadence_calendar", "cadence_declaration", "artifact_contracts"], context);
+  exactKeys(memberValue, [
+    "id", "workflow", "schedule", "cadence_calendar", "cadence_declaration",
+    ...(Object.hasOwn(memberValue, "activated_at") ? ["activated_at"] : []),
+    "artifact_contracts",
+  ], context);
   requireIdentifier(memberValue.id, `${context}.id`);
+  if (memberValue.activated_at !== undefined
+    && !isStrictUtcTimestamp(memberValue.activated_at)) {
+    fail(`${context}.activated_at must be a strict UTC timestamp`);
+  }
   if (memberValue.workflow !== null && !WORKFLOW_RE.test(memberValue.workflow)) fail(`${context}.workflow is invalid`);
   if (memberValue.cadence_declaration !== null) {
     exactKeys(memberValue.cadence_declaration, ["kind", "evidence"], `${context}.cadence_declaration`);
@@ -1232,16 +1555,27 @@ function validateMember(memberValue, context) {
 }
 
 function validateEndpointContract(endpointValue, context, artifactOnly) {
-  const library = endpointValue?.transport === "library";
-  exactKeys(endpointValue, library
-    ? ["endpoint_family", "probe_mode", "transport", "assertions"]
-    : ["endpoint_family", "probe_mode", "assertions"], context);
+  // Transport is declared, never inferred. Until 2026-08-14 the key was
+  // forbidden unless it was exactly "library", so http had no representation at
+  // all: a lane that was http and a lane whose author never considered
+  // transport were the same bytes. The classifier then read that silence as
+  // http and demanded a per-observation status code, which an aggregating
+  // producer does not emit — that is how run 31792421833 died. Absence is now a
+  // load failure, and every non-artifact-only lane states which one it is.
+  exactKeys(endpointValue, artifactOnly
+    ? ["endpoint_family", "probe_mode", "assertions"]
+    : ["endpoint_family", "probe_mode", "transport", "assertions"].concat(
+      Object.hasOwn(endpointValue, "assertion_sets") ? ["assertion_sets"] : [],
+    ), context);
   requireIdentifier(endpointValue.endpoint_family, `${context}.endpoint_family`);
   if (!new Set(["injected_post_fetch", "artifact_only"]).has(endpointValue.probe_mode)) fail(`${context}.probe_mode is invalid`);
-  if (library && artifactOnly) fail(`${context}.transport library is invalid for artifact-only lanes`);
+  if (!artifactOnly && !ENDPOINT_TRANSPORTS.has(endpointValue.transport)) {
+    fail(`${context}.transport must be declared explicitly as "http" or "library"`);
+  }
   if (artifactOnly !== (endpointValue.probe_mode === "artifact_only")) fail(`${context}.probe_mode contradicts monitoring mode`);
   validateAssertions(endpointValue.assertions, `${context}.assertions`, { allowEmpty: artifactOnly });
   if (artifactOnly && endpointValue.assertions.length !== 0) fail(`${context}.assertions must be empty for artifact-only lanes`);
+  if (Object.hasOwn(endpointValue, "assertion_sets")) validateAssertionSets(endpointValue.assertion_sets, `${context}.assertion_sets`);
 }
 
 function validateFreshness(freshnessValue, context) {
@@ -1338,10 +1672,22 @@ function validateLane(laneValue, index) {
     if (laneValue.producer_members.some((memberValue) => memberValue.workflow !== null || memberValue.cadence_declaration !== null || memberValue.schedule.length !== 0)) {
       fail(`${context} fabricates an owner or cadence`);
     }
-  } else if (laneValue.id === "slickcharts") {
-    if (laneValue.owner_workflow !== null || laneValue.monitoring_mode !== "composite") fail(`${context} must be composite`);
+  } else if (Object.hasOwn(COMPOSITE_LANE_MEMBERS, laneValue.id)) {
+    const declared = COMPOSITE_LANE_MEMBERS[laneValue.id];
+    if (laneValue.monitoring_mode !== "composite") fail(`${context} must be composite`);
+    if (declared.sharedOwnerWorkflow) {
+      if (laneValue.owner_workflow === null) fail(`${context} composite shares one owner workflow and must name it`);
+      if (laneValue.producer_members.some((memberValue) => memberValue.workflow !== laneValue.owner_workflow)) {
+        fail(`${context} every member must bind to the lane's own owner workflow`);
+      }
+    } else if (laneValue.owner_workflow !== null) {
+      fail(`${context} must be composite`);
+    }
+    if (laneValue.producer_members.some((memberValue) => memberValue.cadence_declaration === null)) {
+      fail(`${context} every composite member must carry an evidence-backed cadence declaration`);
+    }
     const actualIds = laneValue.producer_members.map((memberValue) => memberValue.id);
-    if (canonicalJson(actualIds) !== canonicalJson(SLICKCHARTS_MEMBER_IDS)) fail(`${context} has the wrong five members`);
+    if (canonicalJson(actualIds) !== canonicalJson(declared.members)) fail(`${context} has the wrong members`);
   } else {
     if (laneValue.producer_members.length !== 1 || laneValue.producer_members[0].id !== laneValue.id) {
       fail(`${context} must have exactly one canonical member`);
@@ -1416,8 +1762,3 @@ function deepFreeze(value) {
 validateDetectionConfig(config);
 
 export const DATA_SUPPLY_DETECTION_CONFIG = deepFreeze(config);
-
-export function configDigest() {
-  validateDetectionConfig(DATA_SUPPLY_DETECTION_CONFIG);
-  return createHash("sha256").update(canonicalJson(DATA_SUPPLY_DETECTION_CONFIG), "utf8").digest("hex");
-}

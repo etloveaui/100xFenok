@@ -25,65 +25,91 @@
       "run_id": "29707016827",
       "schedule": "0 22 * * 0",
       "shard": "0/6"
+    },
+    {
+      "attempts_used": 1,
+      "event_name": "schedule",
+      "failures": [],
+      "latency_ms": 937,
+      "natural": true,
+      "observed_at": "2026-08-10T19:09:16Z",
+      "outcome": "fresh",
+      "run_attempt": 1,
+      "run_id": "31422533403",
+      "schedule": "7 18 * * 0-5",
+      "shard": "21/72"
+    },
+    {
+      "attempts_used": 1,
+      "event_name": "workflow_dispatch",
+      "failures": [],
+      "latency_ms": 509,
+      "natural": false,
+      "observed_at": "2026-09-28T01:17:59Z",
+      "outcome": "fresh",
+      "run_attempt": 1,
+      "run_id": "36365270594",
+      "schedule": "",
+      "shard": ""
     }
   ],
   "current": {
-    "fetched_at": "2026-07-19T23:00:11Z",
-    "history_as_of": "2026-07-17",
+    "fetched_at": "2026-09-28T01:18:26Z",
+    "history_as_of": "2026-09-25",
     "path": "data/yf/finance/AAAU.json",
-    "payload_sha256": "b80106557ca91b6f15a98b2108d42498e890a824ca28d278f4be79828810e34e",
-    "quote_as_of": "2026-07-17T20:00:00Z",
-    "source_as_of": "2026-07-17"
+    "payload_sha256": "cba220b8a8e8ae98f81f574d26a6a98f082cc444f97975b5c145eebd5576842a",
+    "quote_as_of": "2026-09-25T20:00:00Z",
+    "source_as_of": "2026-09-25"
   },
   "discovered_from": [
     "stockanalysis_etf"
   ],
   "last_attempt": {
     "attempts_used": 1,
-    "event_name": "schedule",
+    "event_name": "workflow_dispatch",
     "failures": [],
-    "latency_ms": 1196,
-    "natural": true,
-    "observed_at": "2026-07-19T22:59:54Z",
+    "latency_ms": 509,
+    "natural": false,
+    "observed_at": "2026-09-28T01:17:59Z",
     "outcome": "fresh",
     "run_attempt": 1,
-    "run_id": "29707016827",
-    "schedule": "0 22 * * 0",
-    "shard": "0/6"
+    "run_id": "36365270594",
+    "schedule": "",
+    "shard": ""
   },
   "lkg": {
-    "fetched_at": "2026-06-29T23:05:08Z",
-    "history_as_of": "2026-06-29",
+    "fetched_at": "2026-08-10T19:11:29Z",
+    "history_as_of": "2026-08-10",
     "path": "data/admin/yahoo-batch-quote-history/lkg/AAAU.json",
-    "payload_sha256": "db1403cbcb86c929462d6fa61ce246f4cfdda5e149819760be71ccc2fa68511a",
-    "quote_as_of": null,
-    "source_as_of": "2026-06-29"
+    "payload_sha256": "64be359e39e64799045afe22eb74595bc8194739496356fa8264a882b3539b75",
+    "quote_as_of": "2026-08-10T19:11:07Z",
+    "source_as_of": "2026-08-10"
   },
   "promotion_contract": "provider_observation/v2",
   "provider_observation": {
-    "event_name": "schedule",
-    "history_as_of": "2026-07-17",
-    "observed_at": "2026-07-19T22:59:54Z",
-    "payload_sha256": "af0f0c75110ff428fa397cf0b80b95d8699570ddb6f041494f8d611de7930503",
-    "quote_as_of": "2026-07-17T20:00:00Z",
+    "event_name": "workflow_dispatch",
+    "history_as_of": "2026-09-25",
+    "observed_at": "2026-09-28T01:17:59Z",
+    "payload_sha256": "3c8dfcf836858d1309e6c2d7971e1ff2de4282bf03061dd17266c68b0f76ce67",
+    "quote_as_of": "2026-09-25T20:00:00Z",
     "run_attempt": 1,
-    "run_id": "29707016827",
+    "run_id": "36365270594",
     "schema_version": "provider_observation/v2",
-    "source_as_of": "2026-07-17"
+    "source_as_of": "2026-09-25"
   },
   "resolution_state": "fresh_primary",
   "retry": false,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "stale": {
-    "age_business_days": 9,
-    "classified_at": "2026-07-13T04:33:56Z",
-    "classified_run_id": "29224221077",
+    "age_business_days": 7,
+    "classified_at": "2026-08-19T23:42:29Z",
+    "classified_run_id": "32314261503",
     "expected_resolution": "next_natural_yahoo_run",
     "max_business_days": 6,
-    "message": "AAAU holds LKG because Yahoo source date 2026-06-29 is 9 business days old, beyond the 6-day bound; it will retry on the next natural Yahoo run.",
+    "message": "AAAU holds LKG because Yahoo source date 2026-08-10 is 7 business days old, beyond the 6-day bound; it will retry on the next natural Yahoo run.",
     "reason": "source_age_exceeds_lane_bound",
-    "source_as_of": "2026-06-29"
+    "source_as_of": "2026-08-10"
   },
   "ticker": "AAAU",
-  "updated_at": "2026-07-19T22:59:54Z"
+  "updated_at": "2026-09-28T01:17:59Z"
 }

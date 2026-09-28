@@ -90,66 +90,104 @@
       "run_id": "29622560422",
       "schedule": "20 23 * * 1-5",
       "shard": "1/5"
+    },
+    {
+      "attempts_used": 1,
+      "event_name": "schedule",
+      "failures": [],
+      "latency_ms": 576,
+      "natural": true,
+      "observed_at": "2026-08-05T08:49:49Z",
+      "outcome": "fresh",
+      "run_attempt": 1,
+      "run_id": "30990520626",
+      "schedule": "7 6 * * 0-5",
+      "shard": "39/72"
+    },
+    {
+      "attempts_used": 1,
+      "event_name": "schedule",
+      "failures": [],
+      "latency_ms": 1012,
+      "natural": true,
+      "observed_at": "2026-08-06T08:51:05Z",
+      "outcome": "fresh",
+      "run_attempt": 1,
+      "run_id": "31086476783",
+      "schedule": "7 6 * * 0-5",
+      "shard": "51/72"
+    },
+    {
+      "attempts_used": 1,
+      "event_name": "workflow_dispatch",
+      "failures": [],
+      "latency_ms": 449,
+      "natural": false,
+      "observed_at": "2026-09-28T05:23:15Z",
+      "outcome": "fresh",
+      "run_attempt": 1,
+      "run_id": "36367832955",
+      "schedule": "",
+      "shard": ""
     }
   ],
   "current": {
-    "fetched_at": "2026-07-18T00:44:49Z",
-    "history_as_of": "2026-07-17",
+    "fetched_at": "2026-09-28T05:33:55Z",
+    "history_as_of": "2026-09-25",
     "path": "data/yf/finance/MUZ.json",
-    "payload_sha256": "93ead120914cbc376ec92836152fdb172ccf9ffdd265493fce4ad68fa1a134a1",
-    "quote_as_of": "2026-07-17T20:00:00Z",
-    "source_as_of": "2026-07-17"
+    "payload_sha256": "94e0ba2c1009d2b8758d6504a544e4990fe5c12ebe9c3cc9ef4c4bdf58dd47ba",
+    "quote_as_of": "2026-09-25T20:00:00Z",
+    "source_as_of": "2026-09-25"
   },
   "discovered_from": [
-    "market_facts",
     "stockanalysis_etf"
   ],
   "last_attempt": {
     "attempts_used": 1,
-    "event_name": "schedule",
+    "event_name": "workflow_dispatch",
     "failures": [],
-    "latency_ms": 743,
-    "natural": true,
-    "observed_at": "2026-07-18T00:42:07Z",
+    "latency_ms": 449,
+    "natural": false,
+    "observed_at": "2026-09-28T05:23:15Z",
     "outcome": "fresh",
     "run_attempt": 1,
-    "run_id": "29622560422",
-    "schedule": "20 23 * * 1-5",
-    "shard": "1/5"
+    "run_id": "36367832955",
+    "schedule": "",
+    "shard": ""
   },
   "lkg": {
-    "fetched_at": "2026-06-18T19:30:07Z",
-    "history_as_of": "2026-06-18",
+    "fetched_at": "2026-08-06T08:53:36Z",
+    "history_as_of": "2026-08-05",
     "path": "data/admin/yahoo-batch-quote-history/lkg/MUZ.json",
-    "payload_sha256": "db02bb51907055e91f96a70d691c5af729c33d9be015d72995c0271d3e7416c6",
-    "quote_as_of": null,
-    "source_as_of": "2026-06-18"
+    "payload_sha256": "1cb19576329c14ee4fdb25c1fe90e12ce57c9a9736c961b562d82a2d235c1fc9",
+    "quote_as_of": "2026-08-05T20:00:00Z",
+    "source_as_of": "2026-08-05"
   },
   "promotion_contract": "provider_observation/v2",
   "provider_observation": {
-    "event_name": "schedule",
-    "history_as_of": "2026-07-17",
-    "observed_at": "2026-07-18T00:42:07Z",
-    "payload_sha256": "50fa1ee41a42f5a9c31ac62b66a62e2d9f51dacd1fa38ddf876b5ecd2abc5bc6",
-    "quote_as_of": "2026-07-17T20:00:00Z",
+    "event_name": "workflow_dispatch",
+    "history_as_of": "2026-09-25",
+    "observed_at": "2026-09-28T05:23:15Z",
+    "payload_sha256": "1a52abef113c07e56a382af3e3e7a22191a3dbc27288a593687a38735d8b1905",
+    "quote_as_of": "2026-09-25T20:00:00Z",
     "run_attempt": 1,
-    "run_id": "29622560422",
+    "run_id": "36367832955",
     "schema_version": "provider_observation/v2",
-    "source_as_of": "2026-07-17"
+    "source_as_of": "2026-09-25"
   },
   "resolution_state": "fresh_primary",
   "retry": false,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "stale": {
-    "age_business_days": 15,
-    "classified_at": "2026-07-13T04:33:56Z",
-    "classified_run_id": "29224221077",
+    "age_business_days": 7,
+    "classified_at": "2026-08-14T00:10:47Z",
+    "classified_run_id": "31755913658",
     "expected_resolution": "next_natural_yahoo_run",
     "max_business_days": 6,
-    "message": "MUZ holds LKG because Yahoo source date 2026-06-18 is 15 business days old, beyond the 6-day bound; it will retry on the next natural Yahoo run.",
+    "message": "MUZ holds LKG because Yahoo source date 2026-08-05 is 7 business days old, beyond the 6-day bound; it will retry on the next natural Yahoo run.",
     "reason": "source_age_exceeds_lane_bound",
-    "source_as_of": "2026-06-18"
+    "source_as_of": "2026-08-05"
   },
   "ticker": "MUZ",
-  "updated_at": "2026-07-18T00:42:07Z"
+  "updated_at": "2026-09-28T05:23:15Z"
 }

@@ -1,0 +1,89 @@
+{
+  "attempts": [
+    {
+      "attempts_used": 1,
+      "event_name": "schedule",
+      "failures": [],
+      "latency_ms": 1049,
+      "natural": true,
+      "observed_at": "2026-08-06T08:51:05Z",
+      "outcome": "fresh",
+      "run_attempt": 1,
+      "run_id": "31086476783",
+      "schedule": "7 6 * * 0-5",
+      "shard": "51/72"
+    },
+    {
+      "attempts_used": 1,
+      "event_name": "workflow_dispatch",
+      "failures": [],
+      "latency_ms": 514,
+      "natural": false,
+      "observed_at": "2026-09-28T06:30:00Z",
+      "outcome": "fresh",
+      "run_attempt": 1,
+      "run_id": "36367836615",
+      "schedule": "",
+      "shard": ""
+    }
+  ],
+  "current": {
+    "fetched_at": "2026-09-28T06:39:01Z",
+    "history_as_of": "2026-09-25",
+    "path": "data/admin/yahoo-batch-quote-history/lkg/USNZ.json",
+    "payload_sha256": "ad1aec397074de619278686ec02de8513fa425cda2f8deff9856a8c5563f7663",
+    "quote_as_of": "2026-09-14T16:48:28Z",
+    "source_as_of": "2026-09-14T16:48:28Z"
+  },
+  "discovered_from": [
+    "stockanalysis_etf"
+  ],
+  "last_attempt": {
+    "attempts_used": 1,
+    "event_name": "workflow_dispatch",
+    "failures": [],
+    "latency_ms": 514,
+    "natural": false,
+    "observed_at": "2026-09-28T06:30:00Z",
+    "outcome": "fresh",
+    "run_attempt": 1,
+    "run_id": "36367836615",
+    "schedule": "",
+    "shard": ""
+  },
+  "lkg": {
+    "fetched_at": "2026-09-28T06:39:01Z",
+    "history_as_of": "2026-09-25",
+    "path": "data/admin/yahoo-batch-quote-history/lkg/USNZ.json",
+    "payload_sha256": "ad1aec397074de619278686ec02de8513fa425cda2f8deff9856a8c5563f7663",
+    "quote_as_of": "2026-09-14T16:48:28Z",
+    "source_as_of": "2026-09-14T16:48:28Z"
+  },
+  "promotion_contract": "provider_observation/v2",
+  "provider_observation": {
+    "event_name": "workflow_dispatch",
+    "history_as_of": "2026-09-25",
+    "observed_at": "2026-09-28T06:30:00Z",
+    "payload_sha256": "e8be4fd527e83272e17496cfdade899a300c5a9fbeed4deffe41977e4b473141",
+    "quote_as_of": "2026-09-14T16:48:28Z",
+    "run_attempt": 1,
+    "run_id": "36367836615",
+    "schema_version": "provider_observation/v2",
+    "source_as_of": "2026-09-14T16:48:28Z"
+  },
+  "resolution_state": "lkg_primary",
+  "retry": true,
+  "schema_version": "yahoo-batch-quote-history-state/v1",
+  "stale": {
+    "age_business_days": 10,
+    "classified_at": "2026-09-28T07:38:17Z",
+    "classified_run_id": "36369581504",
+    "expected_resolution": "next_natural_yahoo_run",
+    "max_business_days": 6,
+    "message": "USNZ holds LKG because Yahoo source date 2026-09-14T16:48:28Z is 10 business days old, beyond the 6-day bound; it will retry on the next natural Yahoo run.",
+    "reason": "source_age_exceeds_lane_bound",
+    "source_as_of": "2026-09-14T16:48:28Z"
+  },
+  "ticker": "USNZ",
+  "updated_at": "2026-09-28T07:38:17Z"
+}

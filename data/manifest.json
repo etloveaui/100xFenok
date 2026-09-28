@@ -1,7 +1,7 @@
 {
   "manifest_version": "1.1.0",
   "created": "2026-01-20",
-  "last_updated": "2026-07-22",
+  "last_updated": "2026-09-28",
   "purpose": "Central registry for data folder schemas and versions. Agents should read this first.",
   "folders": {
     "admin": {
@@ -9,68 +9,68 @@
       "updated": null,
       "update_frequency": "hourly",
       "source": "GitHub repository tree",
-      "file_count": 7445,
+      "file_count": 17586,
       "schema": false,
       "description": "Hourly folder listing cache for notification-control-panel-web.html",
       "updated_reason": "internal listing cache has a build time but no upstream source date"
     },
     "benchmarks": {
       "version": "3.8.0",
-      "updated": "2026-07-17",
+      "updated": "2026-09-25",
       "update_frequency": "weekly",
       "source": "Bloomberg Terminal",
       "file_count": 7,
       "schema": true,
-      "description": "Market indices P/E, P/B, ROE - 32,019 records, 2010-01-01 ~ 2026-07-17, 38 sections, 864 S&P 500 data points + source_summaries for price/EPS/PER/PBR/ROE"
+      "description": "Market indices P/E, P/B, ROE - 32,399 records, 2010-01-01 ~ 2026-09-25, 38 sections, 874 S&P 500 data points + source_summaries for price/EPS/PER/PBR/ROE"
     },
     "damodaran": {
       "version": "2.3.0",
       "updated": "2026-01-01",
       "update_frequency": "yearly + ERP interim",
       "source": "NYU Stern (Aswath Damodaran)",
-      "file_count": 7,
+      "file_count": 8,
       "schema": true,
       "description": "Industry valuation data, extended US metrics, non-US regional metrics, ERP, credit ratings"
     },
     "global-scouter": {
-      "version": "2.3.0",
-      "updated": "2026-07-17",
+      "version": "2.4.0",
+      "updated": "2026-09-25",
       "update_frequency": "on-demand",
       "source": "Global Scouter Tool",
-      "file_count": 1082,
+      "file_count": 1084,
       "schema": true,
-      "description": "Stock screening (1,064), ETFs (22), indicators (1,068), raw preservation files (9) + FY+1~FY+3 forward/revision extensions"
+      "description": "Stock screening (1,066), ETFs (22), indicators (1,079 records) from the owner's weekly Global Scouter export"
     },
     "indices": {
       "version": "2.0.0",
-      "updated": "2026-07-21",
+      "updated": "2026-09-25",
       "update_frequency": "daily",
       "source": "Google Sheets (Apps Script)",
-      "file_count": 3,
+      "file_count": 5,
       "schema": true,
       "description": "S&P 500 and NASDAQ daily price history (1980-present, 46 years)"
     },
     "macro": {
       "version": "1.0.0",
-      "updated": "2025-10-01",
+      "updated": "2026-01-01",
       "update_frequency": "daily/weekly/monthly/quarterly",
       "source": "FRED + FDIC + OECD + PMI workbooks",
       "file_count": 10,
       "schema": true,
-      "description": "Macro banking, liquidity, and monthly activity survey series: 930 activity records, OECD CLI through 2026-06, PMI/ISM through 2026-06"
+      "description": "Macro banking, liquidity, and monthly activity survey series: 940 activity records, OECD CLI and PMI/ISM through 2026-08"
     },
     "sec-13f": {
       "version": "3.4.0",
-      "updated": "2026-05-01",
+      "updated": "2026-07-31",
       "update_frequency": "quarterly",
       "source": "SEC EDGAR",
-      "file_count": 78,
+      "file_count": 81,
       "schema": true,
-      "description": "Institutional holdings from 60 tracked investors across 30 quarters; 57 current 2026-Q1 cohort investors, 14 analytics files, local YF enrichment, passive/institutional cohorts, and stale-investor exclusion."
+      "description": "Institutional holdings from 63 tracked investors; every EDGAR-served quarter attempted (2012-Q1..2026-Q2 available, 53-58 quarters per investor; pre-XML quarters recorded as named per-investor gaps), 60 current 2026-Q2 cohort investors, 15 analytics files, local YF enrichment, passive/institutional cohorts, and stale-investor exclusion."
     },
     "sentiment": {
       "version": "1.0.0",
-      "updated": "2026-07-14",
+      "updated": "2026-09-22",
       "update_frequency": "daily",
       "source": "Multiple (AAII, CNN, CFTC, CBOE)",
       "file_count": 13,
@@ -82,26 +82,26 @@
       "updated": null,
       "update_frequency": "daily/weekly/monthly",
       "source": "SlickCharts.com (32 scrapers)",
-      "file_count": 576,
+      "file_count": 582,
       "schema": true,
       "description": "Index holdings, returns, individual stocks",
       "updated_reason": "provider payload publishes no source date; updated is collection time"
     },
     "yardney": {
       "version": "1.2.0",
-      "updated": "2026-07-17",
+      "updated": "2026-09-18",
       "update_frequency": "weekly",
       "source": "Feno Yardeni: official FRED WAAA/WBAA + Bloomberg-sourced 100x benchmark S&P 500 price/EPS",
       "file_count": 1,
       "schema": false,
-      "description": "Feno Yardeni Bond PER derived S&P 500 fair value model - public payload excludes raw bond-yield components; 1,890 records through 2026-07-17 with all benchmark rows matched to FRED yield observations."
+      "description": "Feno Yardeni model — 1,899 records (1990-02-02 ~ 2026-09-18), fair value 6,437.00 (+18.85%)"
     },
     "computed": {
       "version": "1.0.0",
       "updated": "2026-01-09",
       "update_frequency": "after source data refresh",
       "source": "Macro Monitor computed signal export",
-      "file_count": 7298,
+      "file_count": 8135,
       "schema": false,
       "description": "Deterministic computed signals and normalized market facts derived from macro, sentiment, Yahoo, StockAnalysis, and SlickCharts data."
     },
@@ -120,17 +120,17 @@
       "updated": null,
       "update_frequency": "weekly / on-demand",
       "source": "Yahoo Finance via yfinance",
-      "file_count": 3119,
+      "file_count": 7749,
       "schema": false,
       "description": "Ticker-level quote, financial statement, holder, analyst, event, history, and quarter-close payloads used by Stock, Screener, Portfolio, and ETF surfaces.",
-      "updated_reason": "source date unavailable for required Yahoo finance histories: finance/DAY.json"
+      "updated_reason": "source date unavailable for required Yahoo finance histories: finance/DAY.json, finance/EWCO.json"
     },
     "stockanalysis": {
       "version": "1.2.0",
       "updated": null,
       "update_frequency": "weekly / on-demand",
       "source": "StockAnalysis public JSON, Svelte/devalue payloads, and HTML tables",
-      "file_count": 5713,
+      "file_count": 5748,
       "schema": true,
       "description": "ETF holdings, ETF metadata, quote/history cross-checks, stock financial statement candidates, stock overview snapshots, and market event surfaces.",
       "updated_reason": "provider publishes no aggregate source date"
@@ -140,7 +140,7 @@
       "updated": "2026-04-22",
       "update_frequency": "weekly / on-demand",
       "source": "SEC EDGAR + feno-edgar Korean summary artifacts",
-      "file_count": 1842,
+      "file_count": 1843,
       "schema": true,
       "description": "Ticker availability index, ticker-level Korean SEC filing summary manifests, and generated summary artifacts. Current coverage: NVDA 2026 Form 10-K pilot."
     },
@@ -149,7 +149,7 @@
       "updated": null,
       "update_frequency": "weekly / on-demand",
       "source": "SEC company_tickers.json",
-      "file_count": 1,
+      "file_count": 39,
       "schema": true,
       "description": "Normalized SEC ticker-to-CIK cache used by the EDGAR filing timeline builder.",
       "updated_reason": "SEC company ticker feed publishes no aggregate source date"
@@ -163,9 +163,210 @@
       "schema": false,
       "description": "Macro chart service catalog mapping public macro series ids to local JSON source paths, analysis lenses, and connected product surfaces.",
       "updated_reason": "curated catalog has an edit time but no upstream source date"
+    },
+    "kf-french": {
+      "version": "1.0.0",
+      "updated": null,
+      "updated_reason": "no aggregate source date is published for this folder",
+      "update_frequency": "on-demand",
+      "source": "TBD",
+      "file_count": 1,
+      "schema": false,
+      "description": "TBD"
+    },
+    "factset-earnings-insight": {
+      "version": "1.0.0",
+      "updated": null,
+      "updated_reason": "no aggregate source date is published for this folder",
+      "update_frequency": "on-demand",
+      "source": "TBD",
+      "file_count": 1,
+      "schema": false,
+      "description": "TBD"
+    },
+    "metadata": {
+      "version": "1.0.0",
+      "updated": null,
+      "updated_reason": "no aggregate source date is published for this folder",
+      "update_frequency": "on-demand",
+      "source": "TBD",
+      "file_count": 52,
+      "schema": false,
+      "description": "TBD"
+    },
+    "winddown": {
+      "version": "1.0.0",
+      "updated": null,
+      "updated_reason": "no aggregate source date is published for this folder",
+      "update_frequency": "on-demand",
+      "source": "TBD",
+      "file_count": 2,
+      "schema": false,
+      "description": "TBD"
+    },
+    "earnings-overview": {
+      "version": "1.0.0",
+      "updated": null,
+      "updated_reason": "no aggregate source date is published for this folder",
+      "update_frequency": "on-demand",
+      "source": "TBD",
+      "file_count": 4,
+      "schema": false,
+      "description": "TBD"
     }
   },
   "recent_changes": [
+    {
+      "date": "2026-09-28",
+      "folder": "benchmarks",
+      "version": "3.8.0",
+      "change": "Weekly refresh from the 2026-09-25 Bloomberg workbook: 32,399 records (+38), 2010-01-01 ~ 2026-09-25, 38 sections, 874 data points per index (kosdaq_150 873, hang_seng_tech 613, star50 323); source summaries hold 2,404 values and 66 nulls. History preservation follows DEC-275 source-wins with floor-only retention.",
+      "breaking": false
+    },
+    {
+      "date": "2026-09-27",
+      "folder": "global-scouter",
+      "version": "2.4.0",
+      "change": "Weekly refresh from the 2026-09-25 export: 1,066 stocks with unchanged canonical keys, 1,079 economic observations, 22 ETFs and 1,047 PER-band profiles. Exact-source Berkshire and TSM unit corrections preserve raw evidence and normal forecasts; current PER bands use explicit FY0. Existing hosted derivation and cloud publication remain authoritative for the live site.",
+      "breaking": false
+    },
+    {
+      "date": "2026-09-22",
+      "folder": "benchmarks",
+      "version": "3.8.0",
+      "change": "Weekly refresh from the 2026-09-18 Bloomberg workbook: 32,361 records (+38), 2010-01-01 ~ 2026-09-20, 38 sections, 873 data points per index (kosdaq_150 872, hang_seng_tech 612, star50 322); source summaries hold 2,404 values and 66 nulls. History preservation follows DEC-275 source-wins with floor-only retention.",
+      "breaking": false
+    },
+    {
+      "date": "2026-09-14",
+      "folder": "benchmarks",
+      "version": "3.8.0",
+      "change": "Weekly refresh from the 2026-09-11 Bloomberg workbook: 32,323 records (+38), 2010-01-01 ~ 2026-09-13, 38 sections, 872 data points per index (kosdaq_150 871, hang_seng_tech 611, star50 321); source summaries hold 2,404 values and 66 nulls. History preservation follows DEC-275 source-wins with floor-only retention.",
+      "breaking": false
+    },
+    {
+      "date": "2026-09-20",
+      "folder": "global-scouter",
+      "version": "2.4.0",
+      "change": "Weekly refresh from the 2026-09-18 export: 1,066 stocks with the same canonical ticker set, 1,078 economic observations, 22 ETFs and 1,047 PER-band profiles. The recurring Berkshire B historical unit anomaly is normalized only for the exact validated workbook fingerprint while raw source values remain preserved. Existing hosted derivation, cloud publication and deploy paths own live propagation.",
+      "breaking": false
+    },
+    {
+      "date": "2026-09-07",
+      "folder": "macro",
+      "version": "1.0.0",
+      "change": "Owner workbook refresh: 940 activity records (+6); OECD CLI and manufacturing/services PMI/ISM through 2026-08. Existing observations preserved; 121 source revision records retained in the private conversion report.",
+      "breaking": false
+    },
+    {
+      "date": "2026-09-07",
+      "folder": "benchmarks",
+      "version": "3.8.0",
+      "change": "Weekly refresh from the 2026-09-04 Bloomberg workbook: 32,285 records (+38), 2010-01-01 ~ 2026-09-04, 38 sections, 871 data points per index (kosdaq_150 870, hang_seng_tech 610, star50 320); source summaries hold 2,404 values and 66 nulls. History preservation follows DEC-275 source-wins with floor-only retention.",
+      "breaking": false
+    },
+    {
+      "date": "2026-09-06",
+      "folder": "global-scouter",
+      "version": "2.4.0",
+      "change": "Weekly refresh from the 2026-09-04 export: 1,066 stocks with the same canonical ticker set, 1,076 economic observations (latest-row omission repaired), 22 ETFs and 1,047 PER-band profiles. Berkshire source aliases BRKA/BRKB retain BRK.A/BRK.B identity and raw spelling; site joins are repaired. Existing hosted derivation, cloud publication and deploy paths own live propagation.",
+      "breaking": false
+    },
+    {
+      "date": "2026-09-02",
+      "folder": "benchmarks",
+      "version": "3.8.0",
+      "change": "Weekly refresh from the owner-supplied 20260831 EPS workbook (data through 2026-08-28): 32,247 records (+38), 2010-01-01 ~ 2026-08-28, 38 sections, 870 data points per index (kosdaq_150 869, hang_seng_tech 609, star50 319); source summaries 2,404 values + 66 nulls. RIM index and Fenok RIM regeneration is closed per DEC-302/DEC-326 (owner-ordered, reopening requires an owner-level restore) and is not run for this or future weekly refreshes. Feno Yardeni rebuild is dispatched separately via the hosted fetch-fred-yardeni.yml workflow (DEC-403 local-execution restriction).",
+      "breaking": false
+    },
+    {
+      "date": "2026-08-30",
+      "folder": "global-scouter",
+      "version": "2.4.0",
+      "change": "Weekly refresh from the 2026-08-28 export: 1,066 stocks (0 net, same ticker set), 1,074 indicators (+1), 22 ETFs, per_bands 98.2% (1,047), and 9 raw files; downstream analyzer and revision artifacts follow the existing hosted rebuild path.",
+      "breaking": false
+    },
+    {
+      "date": "2026-08-25",
+      "folder": "benchmarks",
+      "version": "3.8.0",
+      "change": "Weekly refresh from the owner-supplied 20260824 EPS workbook (data through 2026-08-21): 32,209 records (+38), 2010-01-01 ~ 2026-08-21, 38 sections, 869 data points per index (kosdaq_150 868, hang_seng_tech 608, star50 318); source summaries 2,403 values + 67 nulls. RIM inputs and Feno Yardeni rebuilt from the new us.json; Yardeni advances to 1,895 records through 2026-08-21, latest fair value 6,353.97, premium +20.78%. Fenok RIM remains quarantined (display_ready=false, DEC-302) with non-diverged calibration checks.",
+      "breaking": false
+    },
+    {
+      "date": "2026-08-23",
+      "folder": "global-scouter",
+      "change": "Weekly refresh from the 2026-08-21 export: 1,066 stocks (0 net, same ticker set), 1,073 indicators (+1), 22 ETFs, per_bands 98.2% (1,047); stocks_analyzer, per_bands_index, slick_index and revision_movers rebuilt."
+    },
+    {
+      "date": "2026-08-19",
+      "folder": "benchmarks",
+      "version": "3.8.0",
+      "change": "Weekly refresh from the owner-supplied 2026-08-14 EPS workbook: 32,171 records (+38), 2010-01-01 ~ 2026-08-14, 38 sections, 868 data points per index (kosdaq_150 867, hang_seng_tech 607, star50 317); source summaries 2,404 values + 66 nulls. RIM inputs and Feno Yardeni rebuilt from the new us.json; Yardeni advances to 1,894 records through 2026-08-14, latest fair value 6,341.71, premium +22.77%. Fenok RIM remains quarantined (display_ready=false, DEC-302) with non-diverged calibration checks.",
+      "breaking": false
+    },
+    {
+      "date": "2026-08-17",
+      "folder": "sec-13f",
+      "version": "3.4.0",
+      "change": "63-investor SEC 13F refresh (60 + atreides/himalaya/gmo per DEC-379): 21Q fetch per investor, 31 quarters retained, 59/63 current cohort, 15 analytics, converter stage + 6 builders in isolated worktree."
+    },
+    {
+      "date": "2026-08-16",
+      "folder": "global-scouter",
+      "version": "2.4.0",
+      "change": "2026-08-14 source weekly refresh: 1,066 stocks (0 net), 1,072 indicators (+1), 22 ETFs, per_bands 98.2% (1,047), 9 raw files; rebuilt stocks_analyzer/per_bands_index/slick_index and revision_movers (up 12/down 12)"
+    },
+    {
+      "date": "2026-08-15",
+      "folder": "sec-13f",
+      "version": "3.4.0",
+      "change": "Q2 2026 SEC 13F refresh: 60 tracked investors, 31 quarters covered where filed, 79 JSON files including schema, and 15 analytics files. Current-quarter analytics use 56 non-stale investors; ackman, einhorn, scion, and vanguard remain stale-excluded. Canonical and public mirrors were rebuilt together after local YF enrichment.",
+      "breaking": false
+    },
+    {
+      "date": "2026-08-10",
+      "folder": "benchmarks",
+      "version": "3.8.0",
+      "change": "Weekly refresh from the owner-supplied 2026-08-07 EPS workbook: 32,133 records (+38), 2010-01-01 ~ 2026-08-07, 38 sections, 867 data points per index (kosdaq_150 866, hang_seng_tech 606, star50 316); source summaries 2,404 values + 66 nulls. RIM index inputs and Feno Yardeni model rebuilt from the new us.json; Yardeni advances to 1,892 records through 2026-07-31, latest fair value 6,303.87, premium +18.81%, with the 2026-08-07 benchmark row pending the FRED weekly yield. Fenok RIM remains quarantined (display_ready=false, DEC-302).",
+      "breaking": false
+    },
+    {
+      "date": "2026-08-09",
+      "folder": "global-scouter",
+      "version": "2.4.0",
+      "change": "Weekly refresh from the owner-supplied 2026-08-07 Global Scouter workbook: 1,066 stocks (-1), 22 ETFs, 1,071 indicator records; EA was absent from the new source index and removed, and stocks_analyzer, per_bands_index, slick_index and revision_movers were rebuilt."
+    },
+    {
+      "date": "2026-08-09",
+      "folder": "macro",
+      "version": "1.0.0",
+      "change": "Appended the owner-supplied 2026-07 manufacturing and services PMI workbooks: 934 total activity records, PMI and ISM datasets through 2026-07, OECD CLI preserved through 2026-06; historical revisions were reported without overwriting existing non-empty values."
+    },
+    {
+      "date": "2026-08-03",
+      "folder": "benchmarks",
+      "version": "3.8.0",
+      "change": "Weekly refresh from the owner-supplied 2026-07-31 EPS workbook: 32,095 records (+6, one new weekly point per index family), end dates 2026-07-31 (weekly) / 2026-08-02 (emerging daily-close), 866 data points per index, source summaries 2,404 values + 66 nulls. RIM index inputs and Feno Yardeni model rebuilt from the new us.json; Yardeni last computed date stays 2026-07-24 pending the FRED weekly yield release."
+    },
+    {
+      "date": "2026-08-02",
+      "folder": "global-scouter",
+      "version": "2.4.0",
+      "change": "Weekly refresh from the owner-supplied 2026-07-31 Global Scouter workbook: 1,067 stocks (+2), 22 ETFs, 1,070 indicator records; stocks_analyzer, per_bands_index, slick_index and revision_movers rebuilt so the screener reads 2026-07-31 instead of 2026-07-24. Added Kioxia Holdings (285A.T, Tokyo) and CXMT A (688825.SS, Shanghai) with zero symbols dropped. Provider states Tokyo and Shanghai listings have no realtime current price, so both carry null price - matching the unchanged non-US baseline. CXMT has no forward consensus yet and its forward blocks are honest nulls with a market_cap_not_comparable quality annotation; Kioxia's ROE(Fwd) 174.3% and PER(Fwd) 4.27 are preserved without clamping."
+    },
+    {
+      "date": "2026-07-27",
+      "folder": "benchmarks",
+      "version": "3.8.0",
+      "change": "Weekly refresh from the owner-supplied 2026-07-24 Bloomberg workbook: 32,057 records (+38), 2010-01-01 ~ 2026-07-26, 38 sections, 865 S&P 500 data points; source summaries hold 2,404 non-null values and 66 null placeholders"
+    },
+    {
+      "date": "2026-07-26",
+      "folder": "global-scouter",
+      "version": "2.4.0",
+      "change": "Weekly refresh from the owner-supplied 2026-07-24 Global Scouter workbook: 1,065 stocks (+1), 22 ETFs, 1,069 indicator records; stocks_analyzer and revision_movers rebuilt so the screener reads 2026-07-24 instead of 2026-07-17. New listing SKHY (SK hynix ADR) carries a market cap 29.23% above its own KOSPI line 000660.KS - source-faithful, flagged for the owner as a possible duplicate-company modelling question."
+    },
     {
       "date": "2026-07-21",
       "folder": "benchmarks",
@@ -712,13 +913,13 @@
     "on_new_file": "Add to folder schema.json files section",
     "version_format": "MAJOR.MINOR.PATCH (breaking.feature.fix)"
   },
-  "generatedAt": "2026-07-22T23:12:59Z",
+  "generatedAt": "2026-09-28T11:33:57Z",
   "categories": [
     {
       "name": "computed",
       "path": "/data/computed/",
       "schemaVersion": "1.0.0",
-      "fileCount": 7298,
+      "fileCount": 8135,
       "lastUpdated": "2026-01-09",
       "lastUpdatedReason": null,
       "notes": "Deterministic computed signals and normalized market facts derived from macro, sentiment, Yahoo, StockAnalysis, and SlickCharts data."
@@ -737,7 +938,7 @@
       "path": "/data/sentiment/",
       "schemaVersion": "1.0.0",
       "fileCount": 13,
-      "lastUpdated": "2026-07-14",
+      "lastUpdated": "2026-09-22",
       "lastUpdatedReason": null,
       "notes": "Market sentiment indicators"
     },
@@ -745,7 +946,7 @@
       "name": "slickcharts",
       "path": "/data/slickcharts/",
       "schemaVersion": "2.1.0",
-      "fileCount": 576,
+      "fileCount": 582,
       "lastUpdated": null,
       "lastUpdatedReason": "provider payload publishes no source date; updated is collection time",
       "notes": "Index holdings, returns, individual stocks"
@@ -754,7 +955,7 @@
       "name": "stockanalysis",
       "path": "/data/stockanalysis/",
       "schemaVersion": "1.2.0",
-      "fileCount": 5713,
+      "fileCount": 5748,
       "lastUpdated": null,
       "lastUpdatedReason": "provider publishes no aggregate source date",
       "notes": "ETF holdings, ETF metadata, quote/history cross-checks, stock financial statement candidates, stock overview snapshots, and market event surfaces."
@@ -763,34 +964,34 @@
       "name": "yf",
       "path": "/data/yf/",
       "schemaVersion": "1.0.0",
-      "fileCount": 3119,
+      "fileCount": 7749,
       "lastUpdated": null,
-      "lastUpdatedReason": "source date unavailable for required Yahoo finance histories: finance/DAY.json",
+      "lastUpdatedReason": "source date unavailable for required Yahoo finance histories: finance/DAY.json, finance/EWCO.json",
       "notes": "Ticker-level quote, financial statement, holder, analyst, event, history, and quarter-close payloads used by Stock, Screener, Portfolio, and ETF surfaces."
     },
     {
       "name": "sec-13f",
       "path": "/data/sec-13f/",
       "schemaVersion": "3.4.0",
-      "fileCount": 78,
-      "lastUpdated": "2026-05-01",
+      "fileCount": 81,
+      "lastUpdated": "2026-07-31",
       "lastUpdatedReason": null,
-      "notes": "Institutional holdings from 60 tracked investors across 30 quarters; 57 current 2026-Q1 cohort investors, 14 analytics files, local YF enrichment, passive/institutional cohorts, and stale-investor exclusion."
+      "notes": "Institutional holdings from 63 tracked investors; every EDGAR-served quarter attempted (2012-Q1..2026-Q2 available, 53-58 quarters per investor; pre-XML quarters recorded as named per-investor gaps), 60 current 2026-Q2 cohort investors, 15 analytics files, local YF enrichment, passive/institutional cohorts, and stale-investor exclusion."
     },
     {
       "name": "benchmarks",
       "path": "/data/benchmarks/",
       "schemaVersion": "3.8.0",
       "fileCount": 7,
-      "lastUpdated": "2026-07-17",
+      "lastUpdated": "2026-09-25",
       "lastUpdatedReason": null,
-      "notes": "Market indices P/E, P/B, ROE - 32,019 records, 2010-01-01 ~ 2026-07-17, 38 sections, 864 S&P 500 data points + source_summaries for price/EPS/PER/PBR/ROE"
+      "notes": "Market indices P/E, P/B, ROE - 32,399 records, 2010-01-01 ~ 2026-09-25, 38 sections, 874 S&P 500 data points + source_summaries for price/EPS/PER/PBR/ROE"
     },
     {
       "name": "damodaran",
       "path": "/data/damodaran/",
       "schemaVersion": "2.3.0",
-      "fileCount": 7,
+      "fileCount": 8,
       "lastUpdated": "2026-01-01",
       "lastUpdatedReason": null,
       "notes": "Industry valuation data, extended US metrics, non-US regional metrics, ERP, credit ratings"
@@ -799,8 +1000,8 @@
       "name": "indices",
       "path": "/data/indices/",
       "schemaVersion": "2.0.0",
-      "fileCount": 3,
-      "lastUpdated": "2026-07-21",
+      "fileCount": 5,
+      "lastUpdated": "2026-09-25",
       "lastUpdatedReason": null,
       "notes": "S&P 500 and NASDAQ daily price history (1980-present, 46 years)"
     },
@@ -808,28 +1009,28 @@
       "name": "global-scouter",
       "path": "/data/global-scouter/",
       "schemaVersion": "2.3.0",
-      "fileCount": 1082,
-      "lastUpdated": "2026-07-17",
+      "fileCount": 1084,
+      "lastUpdated": "2026-09-25",
       "lastUpdatedReason": null,
-      "notes": "Stock screening (1,064), ETFs (22), indicators (1,068), raw preservation files (9) + FY+1~FY+3 forward/revision extensions"
+      "notes": "Stock screening (1,066), ETFs (22), indicators (1,079 records) from the owner's weekly Global Scouter export"
     },
     {
       "name": "macro",
       "path": "/data/macro/",
       "schemaVersion": "1.0.0",
       "fileCount": 10,
-      "lastUpdated": "2025-10-01",
+      "lastUpdated": "2026-01-01",
       "lastUpdatedReason": null,
-      "notes": "Macro banking, liquidity, and monthly activity survey series: 930 activity records, OECD CLI through 2026-06, PMI/ISM through 2026-06"
+      "notes": "Macro banking, liquidity, and monthly activity survey series: 940 activity records, OECD CLI and PMI/ISM through 2026-08"
     },
     {
       "name": "yardney",
       "path": "/data/yardney/",
       "schemaVersion": "1.2.0",
       "fileCount": 1,
-      "lastUpdated": "2026-07-17",
+      "lastUpdated": "2026-09-18",
       "lastUpdatedReason": null,
-      "notes": "Feno Yardeni Bond PER derived S&P 500 fair value model - public payload excludes raw bond-yield components; 1,890 records through 2026-07-17 with all benchmark rows matched to FRED yield observations."
+      "notes": "Feno Yardeni model — 1,899 records (1990-02-02 ~ 2026-09-18), fair value 6,437.00 (+18.85%)"
     },
     {
       "name": "catalog",
@@ -841,10 +1042,19 @@
       "notes": "Macro chart service catalog mapping public macro series ids to local JSON source paths, analysis lenses, and connected product surfaces."
     },
     {
+      "name": "earnings-overview",
+      "path": "/data/earnings-overview/",
+      "schemaVersion": "1.0.0",
+      "fileCount": 4,
+      "lastUpdated": null,
+      "lastUpdatedReason": "no aggregate source date is published for this folder",
+      "notes": "TBD"
+    },
+    {
       "name": "edgar",
       "path": "/data/edgar/",
       "schemaVersion": "1.0.0",
-      "fileCount": 1,
+      "fileCount": 39,
       "lastUpdated": null,
       "lastUpdatedReason": "SEC company ticker feed publishes no aggregate source date",
       "notes": "Normalized SEC ticker-to-CIK cache used by the EDGAR filing timeline builder."
@@ -853,10 +1063,46 @@
       "name": "edgar-korean-summaries",
       "path": "/data/edgar-korean-summaries/",
       "schemaVersion": "1.0.0",
-      "fileCount": 1842,
+      "fileCount": 1843,
       "lastUpdated": "2026-04-22",
       "lastUpdatedReason": null,
       "notes": "Ticker availability index, ticker-level Korean SEC filing summary manifests, and generated summary artifacts. Current coverage: NVDA 2026 Form 10-K pilot."
+    },
+    {
+      "name": "factset-earnings-insight",
+      "path": "/data/factset-earnings-insight/",
+      "schemaVersion": "1.0.0",
+      "fileCount": 1,
+      "lastUpdated": null,
+      "lastUpdatedReason": "no aggregate source date is published for this folder",
+      "notes": "TBD"
+    },
+    {
+      "name": "kf-french",
+      "path": "/data/kf-french/",
+      "schemaVersion": "1.0.0",
+      "fileCount": 1,
+      "lastUpdated": null,
+      "lastUpdatedReason": "no aggregate source date is published for this folder",
+      "notes": "TBD"
+    },
+    {
+      "name": "metadata",
+      "path": "/data/metadata/",
+      "schemaVersion": "1.0.0",
+      "fileCount": 52,
+      "lastUpdated": null,
+      "lastUpdatedReason": "no aggregate source date is published for this folder",
+      "notes": "TBD"
+    },
+    {
+      "name": "winddown",
+      "path": "/data/winddown/",
+      "schemaVersion": "1.0.0",
+      "fileCount": 2,
+      "lastUpdated": null,
+      "lastUpdatedReason": "no aggregate source date is published for this folder",
+      "notes": "TBD"
     }
   ]
 }

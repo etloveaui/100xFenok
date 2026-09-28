@@ -1,0 +1,102 @@
+{
+  "attempts": [
+    {
+      "attempts_used": 1,
+      "event_name": "schedule",
+      "failures": [],
+      "latency_ms": 677,
+      "natural": true,
+      "observed_at": "2026-08-05T12:11:49Z",
+      "outcome": "fresh",
+      "run_attempt": 1,
+      "run_id": "31004461242",
+      "schedule": "7 10 * * 0-5",
+      "shard": "41/72"
+    },
+    {
+      "attempts_used": 1,
+      "event_name": "schedule",
+      "failures": [],
+      "latency_ms": 1008,
+      "natural": true,
+      "observed_at": "2026-08-12T11:11:11Z",
+      "outcome": "fresh",
+      "run_attempt": 1,
+      "run_id": "31590557839",
+      "schedule": "7 10 * * 0-5",
+      "shard": "41/72"
+    },
+    {
+      "attempts_used": 1,
+      "event_name": "workflow_dispatch",
+      "failures": [],
+      "latency_ms": 502,
+      "natural": false,
+      "observed_at": "2026-09-28T05:23:15Z",
+      "outcome": "fresh",
+      "run_attempt": 1,
+      "run_id": "36367832955",
+      "schedule": "",
+      "shard": ""
+    }
+  ],
+  "current": {
+    "fetched_at": "2026-09-28T05:38:07Z",
+    "history_as_of": "2026-09-25",
+    "path": "data/yf/finance/NXTI.json",
+    "payload_sha256": "68f064c51f68123fce47e7526a0e4b5f779ae8b03089e44668f82708eabd3aaa",
+    "quote_as_of": "2026-09-25T19:49:39Z",
+    "source_as_of": "2026-09-25"
+  },
+  "discovered_from": [
+    "stockanalysis_etf"
+  ],
+  "last_attempt": {
+    "attempts_used": 1,
+    "event_name": "workflow_dispatch",
+    "failures": [],
+    "latency_ms": 502,
+    "natural": false,
+    "observed_at": "2026-09-28T05:23:15Z",
+    "outcome": "fresh",
+    "run_attempt": 1,
+    "run_id": "36367832955",
+    "schedule": "",
+    "shard": ""
+  },
+  "lkg": {
+    "fetched_at": "2026-08-12T11:14:16Z",
+    "history_as_of": "2026-08-11",
+    "path": "data/admin/yahoo-batch-quote-history/lkg/NXTI.json",
+    "payload_sha256": "24b4ca4df9b711b6174da5bde9c1427d8f7cb2ab74b2dbc1eccb88194b0bd4a5",
+    "quote_as_of": "2026-08-11T14:14:27Z",
+    "source_as_of": "2026-08-11"
+  },
+  "promotion_contract": "provider_observation/v2",
+  "provider_observation": {
+    "event_name": "workflow_dispatch",
+    "history_as_of": "2026-09-25",
+    "observed_at": "2026-09-28T05:23:15Z",
+    "payload_sha256": "bef20016dc363e45a88d7890e0b5fc596eee00706a9ad7256ca01e8cac809035",
+    "quote_as_of": "2026-09-25T19:49:39Z",
+    "run_attempt": 1,
+    "run_id": "36367832955",
+    "schema_version": "provider_observation/v2",
+    "source_as_of": "2026-09-25"
+  },
+  "resolution_state": "fresh_primary",
+  "retry": false,
+  "schema_version": "yahoo-batch-quote-history-state/v1",
+  "stale": {
+    "age_business_days": 7,
+    "classified_at": "2026-08-20T14:20:12Z",
+    "classified_run_id": "32379322022",
+    "expected_resolution": "next_natural_yahoo_run",
+    "max_business_days": 6,
+    "message": "NXTI holds LKG because Yahoo source date 2026-08-11 is 7 business days old, beyond the 6-day bound; it will retry on the next natural Yahoo run.",
+    "reason": "source_age_exceeds_lane_bound",
+    "source_as_of": "2026-08-11"
+  },
+  "ticker": "NXTI",
+  "updated_at": "2026-09-28T05:23:15Z"
+}

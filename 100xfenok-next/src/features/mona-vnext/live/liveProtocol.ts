@@ -40,6 +40,9 @@ export type MonaVnextSessionResponse = {
     expressionBankSize?: number;
     expressionBankSource?: string;
     expressionBankSeed?: string;
+    learningProfileApplied?: boolean;
+    learningProfileRecordCount?: number;
+    reviewPriorityCount?: number;
     thinkingLevel: string;
     namespace: string;
     productionWriteEnabled: false;

@@ -12,53 +12,104 @@
       "run_id": "29224221077",
       "schedule": "",
       "shard": ""
+    },
+    {
+      "attempts_used": 1,
+      "event_name": "schedule",
+      "failures": [],
+      "latency_ms": 593,
+      "natural": true,
+      "observed_at": "2026-07-30T23:31:53Z",
+      "outcome": "fresh",
+      "run_attempt": 1,
+      "run_id": "30589620986",
+      "schedule": "0 22 * * 4",
+      "shard": "4/6"
+    },
+    {
+      "attempts_used": 1,
+      "event_name": "schedule",
+      "failures": [],
+      "latency_ms": 492,
+      "natural": true,
+      "observed_at": "2026-08-10T02:30:39Z",
+      "outcome": "fresh",
+      "run_attempt": 1,
+      "run_id": "31349898588",
+      "schedule": "7 0 * * 0-5",
+      "shard": "12/72"
+    },
+    {
+      "attempts_used": 1,
+      "event_name": "workflow_dispatch",
+      "failures": [],
+      "latency_ms": 444,
+      "natural": false,
+      "observed_at": "2026-09-28T05:23:15Z",
+      "outcome": "fresh",
+      "run_attempt": 1,
+      "run_id": "36367832955",
+      "schedule": "",
+      "shard": ""
     }
   ],
   "current": {
-    "fetched_at": "2026-07-09T09:22:35Z",
-    "history_as_of": "2026-07-08",
-    "path": "data/admin/yahoo-batch-quote-history/lkg/KMEM.json",
-    "payload_sha256": "71c23a02f79f6af54e837a70fd920dec3dd985a7cbb55b4a5058870ed46ae600",
-    "quote_as_of": "2026-07-08T20:00:00Z",
-    "source_as_of": "2026-07-08"
+    "fetched_at": "2026-09-28T05:25:54Z",
+    "history_as_of": "2026-09-25",
+    "path": "data/yf/finance/KMEM.json",
+    "payload_sha256": "d3e7b9e22022ddb2c3f9d9f8c091ab83fc7d8c2cb78202d37f94b071deb1b5d4",
+    "quote_as_of": "2026-09-25T19:37:31Z",
+    "source_as_of": "2026-09-25"
   },
   "discovered_from": [
     "stockanalysis_etf"
   ],
   "last_attempt": {
-    "attempts_used": 0,
+    "attempts_used": 1,
     "event_name": "workflow_dispatch",
     "failures": [],
-    "latency_ms": 0,
+    "latency_ms": 444,
     "natural": false,
-    "observed_at": "2026-07-13T04:33:56Z",
-    "outcome": "skipped_fresh",
+    "observed_at": "2026-09-28T05:23:15Z",
+    "outcome": "fresh",
     "run_attempt": 1,
-    "run_id": "29224221077",
+    "run_id": "36367832955",
     "schedule": "",
     "shard": ""
   },
   "lkg": {
-    "fetched_at": "2026-07-09T09:22:35Z",
-    "history_as_of": "2026-07-08",
+    "fetched_at": "2026-08-10T02:31:55Z",
+    "history_as_of": "2026-08-07",
     "path": "data/admin/yahoo-batch-quote-history/lkg/KMEM.json",
-    "payload_sha256": "71c23a02f79f6af54e837a70fd920dec3dd985a7cbb55b4a5058870ed46ae600",
-    "quote_as_of": "2026-07-08T20:00:00Z",
-    "source_as_of": "2026-07-08"
+    "payload_sha256": "e760f0cdc99c957900962d4dc0e0fb1623d79836f70a474395e8a745c997f69e",
+    "quote_as_of": "2026-08-07T19:59:24Z",
+    "source_as_of": "2026-08-07"
   },
-  "resolution_state": "lkg_primary",
-  "retry": true,
+  "promotion_contract": "provider_observation/v2",
+  "provider_observation": {
+    "event_name": "workflow_dispatch",
+    "history_as_of": "2026-09-25",
+    "observed_at": "2026-09-28T05:23:15Z",
+    "payload_sha256": "b573600cefb7cc79607ea780c0c3b603a61ecd85b6603cd154f14049d0f94ef3",
+    "quote_as_of": "2026-09-25T19:37:31Z",
+    "run_attempt": 1,
+    "run_id": "36367832955",
+    "schema_version": "provider_observation/v2",
+    "source_as_of": "2026-09-25"
+  },
+  "resolution_state": "fresh_primary",
+  "retry": false,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "stale": {
-    "age_business_days": 7,
-    "classified_at": "2026-07-17T00:15:36Z",
-    "classified_run_id": "29544227703",
+    "age_business_days": 8,
+    "classified_at": "2026-08-19T23:42:29Z",
+    "classified_run_id": "32314261503",
     "expected_resolution": "next_natural_yahoo_run",
     "max_business_days": 6,
-    "message": "KMEM holds LKG because Yahoo source date 2026-07-08 is 7 business days old, beyond the 6-day bound; it will retry on the next natural Yahoo run.",
+    "message": "KMEM holds LKG because Yahoo source date 2026-08-07 is 8 business days old, beyond the 6-day bound; it will retry on the next natural Yahoo run.",
     "reason": "source_age_exceeds_lane_bound",
-    "source_as_of": "2026-07-08"
+    "source_as_of": "2026-08-07"
   },
   "ticker": "KMEM",
-  "updated_at": "2026-07-17T00:15:36Z"
+  "updated_at": "2026-09-28T05:23:15Z"
 }

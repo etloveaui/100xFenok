@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import { ROUTES } from "@/lib/routes";
 
 export const dynamic = "force-dynamic";
 
@@ -9,6 +10,20 @@ export const metadata: Metadata = {
 };
 
 const adminLinks = [
+  {
+    href: ROUTES.adminUsers,
+    title: "사용자 관리 (User Registry)",
+    description: "실시간 접속자, 로그인 통계, 계정 차단 및 원격 기기 세션 초기화",
+    icon: "fa-users",
+    badge: "USERS",
+  },
+  {
+    href: ROUTES.dataConsole,
+    title: "데이터 건강 콘솔",
+    description: "레인별 신선도와 증거 서랍을 모은 Light System 운영 콘솔입니다.",
+    icon: "fa-heart-pulse",
+    badge: "OPS",
+  },
   {
     href: "/admin/data-lab",
     title: "Data Lab",
@@ -58,35 +73,42 @@ const adminLinks = [
     icon: "fa-calculator",
     badge: "TRADING",
   },
+  {
+    href: "/admin/archive",
+    title: "Public Archive",
+    description: "공개 경로에서 보관한 레거시 화면을 관리자 전용으로 엽니다.",
+    icon: "fa-box-archive",
+    badge: "ARCHIVE",
+  },
 ];
 
 export default function AdminRootPage() {
   return (
     <main className="container mx-auto px-4 py-5">
       <section className="rounded-2xl border border-slate-200 bg-gradient-to-r from-slate-900 via-brand-navy to-brand-interactive p-5 text-white shadow-[0_26px_55px_-38px_rgba(2,6,23,0.92)]">
-        <p className="text-xs font-semibold uppercase tracking-[0.16em] text-white/75">100xFenok Control Tower</p>
+        <p className="text-[12px] font-semibold uppercase tracking-[0.16em] text-white/75">100xFenok Control Tower</p>
         <h1 className="mt-2 text-3xl font-black tracking-tight">Admin Hub</h1>
         <p className="mt-3 max-w-2xl text-sm text-white/85">
-          마이그레이션 검증, 레거시 브리지 점검, 디자인 고도화를 하나의 진입점에서 관리합니다.
+          마이그레이션 검증, 레거시 브리지 점검, 디자인 점검을 하나의 진입점에서 관리합니다.
         </p>
         <div className="mt-4 flex flex-wrap gap-2">
           <Link
             href="/admin/design-lab?mode=home-preview"
             className="min-h-11 rounded-xl border border-white/25 bg-white/10 px-4 text-sm font-bold text-white transition hover:bg-white/20"
           >
-            Home Candidate 열기
+            홈 후보 열기
           </Link>
           <Link
             href="/admin/design-lab?mode=native"
             className="min-h-11 rounded-xl border border-white/25 bg-transparent px-4 text-sm font-bold text-white transition hover:bg-white/15"
           >
-            Native Preview 열기
+            네이티브 미리보기 열기
           </Link>
           <Link
             href="/admin/design-lab"
             className="min-h-11 rounded-xl border border-white/25 bg-transparent px-4 text-sm font-bold text-white transition hover:bg-white/15"
           >
-            Legacy Bridge 열기
+            레거시 브리지 열기
           </Link>
         </div>
       </section>
@@ -114,7 +136,7 @@ export default function AdminRootPage() {
         ))}
       </section>
 
-      <p className="mt-6 text-xs font-semibold uppercase tracking-[0.16em] text-slate-500">Personal</p>
+      <p className="mt-6 text-[12px] font-semibold uppercase tracking-[0.16em] text-slate-500">Personal</p>
       <section className="mt-2 grid grid-cols-1 gap-3 md:grid-cols-2">
         <Link
           href="/admin/personal"

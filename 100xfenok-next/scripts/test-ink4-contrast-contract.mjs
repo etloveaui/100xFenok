@@ -140,9 +140,9 @@ assert.match(
   "the retained order chevron must remain hidden from assistive technology",
 );
 assert.match(
-  read("src/styles/cp-w4-screener.css"),
-  /\.cpw4-search__input\s*\{[^}]*font-size:\s*18px;[^}]*font-weight:\s*900;[^}]*\}[\s\S]*?\.cpw4-search__input::placeholder\s*\{\s*color:\s*#64748b;/,
-  "the approved 18px placeholder stays on body ink-3",
+  read("src/app/screener/ScreenerClient.tsx"),
+  /id="cp-screener-search-input"[\s\S]{0,800}placeholder:text-\[var\(--c-ink-3\)\]/,
+  "the screener search placeholder stays on body ink-3",
 );
 
 assert.throws(
@@ -207,8 +207,8 @@ function renderContractHash(sites) {
 
 export function validateRenderManifest(manifest, reader = read) {
   assert.equal(manifest.schema_version, "ink4-render-sites/v2");
-  assert.equal(manifest.site_count, 121, "77 original + 44 residual render lines must stay pinned");
-  assert.equal(manifest.consumer_count, 122, "77 original + 45 residual consumers must stay classified");
+  assert.equal(manifest.site_count, 92, "94-site five-screens builder roster minus the 1 MarketEventsClient tab-count witness retired by 8b (legacy tab board removed in fd3df4565) and the 1 ScreenerClient signal-cell witness retired by screener-density fh-463 (second line removed for one-line density: line no longer carries an ink token)");
+  assert.equal(manifest.consumer_count, 93, "builder-derived consumer count remains exactly one above the render-site count");
   assert.equal(manifest.sites.length, manifest.site_count, "render manifest denominator drifted");
   assert.deepEqual(
     manifest.surfaces,
@@ -223,8 +223,8 @@ export function validateRenderManifest(manifest, reader = read) {
   }, {});
   assert.deepEqual(
     roles,
-    { body_text: 110, non_text: 8, mixed_text_non_text: 1, inactive_control: 2 },
-    "text, non-text, or inactive-control classification drifted",
+    { body_text: 85, non_text: 4, mixed_text_non_text: 1, inactive_control: 2 },
+    "text, non-text, or inactive-control classification drifted from the five-screens builder roster (body_text 87 minus the 1 retired MarketEventsClient tab-count witness and the 1 retired ScreenerClient signal-cell witness)",
   );
 
   const byPath = new Map();
@@ -232,7 +232,7 @@ export function validateRenderManifest(manifest, reader = read) {
   for (const site of manifest.sites) {
     if (!byPath.has(site.path)) byPath.set(site.path, targetOccurrences(reader(site.path)));
     const actualCount = byPath.get(site.path).get(site.target_hash) ?? 0;
-    assert.ok(actualCount >= site.occurrence, `${site.id} render target hash drifted`);
+    assert.equal(actualCount, site.occurrence, `${site.id} render target hash drifted (expected ${site.occurrence}, found ${actualCount})`);
     assert.equal(site.foreground, "ink3", `${site.id} foreground token drifted`);
 
     assert.equal(site.background_evidence.surface, site.background, `${site.id} background evidence surface mismatch`);
@@ -240,7 +240,7 @@ export function validateRenderManifest(manifest, reader = read) {
       evidenceByPath.set(site.background_evidence.path, lineEvidence(reader(site.background_evidence.path)));
     }
     const evidence = evidenceByPath.get(site.background_evidence.path).get(site.background_evidence.target_hash);
-    assert.ok(evidence?.count >= site.background_evidence.occurrence, `${site.id} background evidence hash drifted`);
+    assert.equal(evidence?.count ?? 0, site.background_evidence.occurrence, `${site.id} background evidence hash drifted (expected ${site.background_evidence.occurrence}, found ${evidence?.count ?? 0})`);
     assert.ok(supportsBackground(evidence.line, site.background), `${site.id} background evidence does not resolve to ${site.background}`);
 
     const backgroundHex = manifest.surfaces[site.background];
@@ -274,8 +274,8 @@ assert.throws(() => validateRenderManifest(manifest, revertedReader), /render ta
 
 const removedReader = (relativePath) => relativePath === "src/components/admin-live/AdminLiveBench.tsx"
   ? read(relativePath).replace(
-      '<span className="text-xs font-semibold text-slate-500">{log.at}</span>',
-      '<span className="text-xs font-semibold text-slate-600">{log.at}</span>',
+      '<span className="text-[12px] font-semibold text-slate-500">{log.at}</span>',
+      '<span className="text-[12px] font-semibold text-slate-600">{log.at}</span>',
     )
   : read(relativePath);
 assert.throws(() => validateRenderManifest(manifest, removedReader), /render target hash drifted/);

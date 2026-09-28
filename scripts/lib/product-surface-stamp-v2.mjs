@@ -36,20 +36,22 @@ export function deriveProductSurfaceStampEvidence(members, nowIso) {
   for (const member of members) {
     const id = String(member?.id ?? "").trim();
     if (!id) errors.push("member id is required");
-    else if (ids.has(id)) errors.push(`duplicate member ${id}`);
+    else if (ids.has(id)) errors.push("duplicate member " + id);
     ids.add(id);
-    if (!['date_bearing', 'dateless_by_provider'].includes(member?.stamp_class)) errors.push(`member ${id || "<unknown>"} has invalid stamp_class`);
+    if (!["date_bearing", "dateless_by_provider"].includes(member?.stamp_class)) {
+      errors.push("member " + (id || "<unknown>") + " has invalid stamp_class");
+    }
   }
 
-  const dateMembers = members.filter((m) => m?.stamp_class === "date_bearing");
-  const datelessMembers = members.filter((m) => m?.stamp_class === "dateless_by_provider");
+  const dateMembers = members.filter((member) => member?.stamp_class === "date_bearing");
+  const datelessMembers = members.filter((member) => member?.stamp_class === "dateless_by_provider");
   const dates = [];
   for (const member of dateMembers) {
     if (member.source_as_of === null) continue;
-    if (!isRealCalendarDate(member.source_as_of)) errors.push(`malformed true source date for ${member.id}: ${JSON.stringify(member.source_as_of)}`);
+    if (!isRealCalendarDate(member.source_as_of)) errors.push("malformed true source date for " + member.id + ": " + JSON.stringify(member.source_as_of));
     else {
       dates.push(member.source_as_of);
-      if (new Date(`${member.source_as_of}T00:00:00Z`).getTime() > nowMs) errors.push(`${member.id}: source_as_of is in the future`);
+      if (new Date(member.source_as_of + "T00:00:00Z").getTime() > nowMs) errors.push(member.id + ": source_as_of is in the future");
     }
   }
   const collectionTimes = [];
@@ -57,21 +59,21 @@ export function deriveProductSurfaceStampEvidence(members, nowIso) {
   let stale = 0;
   for (const member of datelessMembers) {
     if (member.source_as_of !== null) {
-      errors.push(`${member.id}: provider now publishes a date; reclassify surface to date_bearing`);
+      errors.push(member.id + ": provider now publishes a date; reclassify surface to date_bearing");
     }
     if (typeof member.source_as_of_reason !== "string" || !member.source_as_of_reason.trim()) {
-      errors.push(`${member.id}: dateless_by_provider source_as_of_reason must preserve the provider reason`);
+      errors.push(member.id + ": dateless_by_provider source_as_of_reason must preserve the provider reason");
     }
     if (member.recency_label !== PRODUCT_SURFACE_DATELESS_REASON) {
-      errors.push(`${member.id}: dateless_by_provider recency_label must be ${JSON.stringify(PRODUCT_SURFACE_DATELESS_REASON)}`);
+      errors.push(member.id + ": dateless_by_provider recency_label must be " + JSON.stringify(PRODUCT_SURFACE_DATELESS_REASON));
     }
     if (!validTimestamp(member.collected_at)) {
-      errors.push(`${member.id}: dateless_by_provider collected_at must be a valid timestamp`);
+      errors.push(member.id + ": dateless_by_provider collected_at must be a valid timestamp");
       continue;
     }
     const collectedMs = new Date(member.collected_at).getTime();
     collectionTimes.push(member.collected_at);
-    if (collectedMs > nowMs) errors.push(`${member.id}: collected_at is in the future`);
+    if (collectedMs > nowMs) errors.push(member.id + ": collected_at is in the future");
     else if ((nowMs - collectedMs) / HOUR_MS <= PRODUCT_SURFACE_COLLECTION_MAX_AGE_HOURS) fresh += 1;
     else stale += 1;
   }
@@ -83,7 +85,7 @@ export function deriveProductSurfaceStampEvidence(members, nowIso) {
   const dateRequired = dateMembers.length;
   const dateStamped = dates.length;
   let state = "stamped";
-  if (errors.length) state = errors.some((e) => e.includes("future")) ? "future_anomaly" : "shape_error";
+  if (errors.length) state = errors.some((error) => error.includes("future")) ? "future_anomaly" : "shape_error";
   else if (dateStamped < dateRequired) state = "pending_true_date";
   else if (stale > 0) state = "collection_stale";
   return {
@@ -158,8 +160,8 @@ export function classifyProductSurfaceV2(requiredRows, nowIso, requiredIds) {
   const errors = [];
   for (const id of requiredIds) {
     const count = counts.get(id) || 0;
-    if (count === 0) errors.push(`missing required surface ${id}`);
-    else if (count > 1) errors.push(`duplicate required surface ${id}`);
+    if (count === 0) errors.push("missing required surface " + id);
+    else if (count > 1) errors.push("duplicate required surface " + id);
   }
   if (errors.length) return { kind: "shape_error", source_date: null, shape_errors: errors };
   const evidenceById = [];
@@ -177,19 +179,29 @@ export function classifyProductSurfaceV2(requiredRows, nowIso, requiredIds) {
   for (const id of requiredIds) {
     const row = rows.find((item) => item?.id === id);
     if (!own(row, "stamp_evidence")) {
-      errors.push(`v2 surface ${id} lacks stamp_evidence`);
+      errors.push("v2 surface " + id + " lacks stamp_evidence");
       continue;
     }
     const derived = deriveProductSurfaceStampEvidence(row.stamp_evidence?.members, nowIso);
-    if (JSON.stringify(stableProjection(derived)) !== JSON.stringify(stableProjection(row.stamp_evidence))) errors.push(`v2 surface ${id} stamp_evidence re-derivation mismatch`);
-    if (row.source_as_of !== derived.date_bearing.source_floor_as_of) errors.push(`v2 surface ${id} source_as_of must equal true-date subset floor`);
+    if (JSON.stringify(stableProjection(derived)) !== JSON.stringify(stableProjection(row.stamp_evidence))) {
+      errors.push("v2 surface " + id + " stamp_evidence re-derivation mismatch");
+    }
+    if (row.source_as_of !== derived.date_bearing.source_floor_as_of) {
+      errors.push("v2 surface " + id + " source_as_of must equal true-date subset floor");
+    }
     evidenceById.push({ id, evidence: derived });
     normalizedRows.push({ ...row, stamp_evidence: derived });
-    errors.push(...derived.shape_errors.map((message) => `${id}: ${message}`));
+    errors.push(...derived.shape_errors.map((message) => id + ": " + message));
   }
-  if (errors.length) return { kind: errors.some((e) => e.includes("future")) ? "future" : "shape_error", source_date: null, shape_errors: errors };
-  if (evidenceById.some(({ evidence }) => evidence.state === "pending_true_date")) return { kind: "pending_true_date", source_date: null, normalized_rows: normalizedRows };
-  if (evidenceById.some(({ evidence }) => evidence.state === "collection_stale")) return { kind: "collection_stale", source_date: null, normalized_rows: normalizedRows };
+  if (errors.length) {
+    return { kind: errors.some((error) => error.includes("future")) ? "future" : "shape_error", source_date: null, shape_errors: errors };
+  }
+  if (evidenceById.some(({ evidence }) => evidence.state === "pending_true_date")) {
+    return { kind: "pending_true_date", source_date: null, normalized_rows: normalizedRows };
+  }
+  if (evidenceById.some(({ evidence }) => evidence.state === "collection_stale")) {
+    return { kind: "collection_stale", source_date: null, normalized_rows: normalizedRows };
+  }
   const floors = evidenceById.map(({ evidence }) => evidence.date_bearing.source_floor_as_of).filter(Boolean);
   return { kind: "stamped", source_date: floors.length ? [...floors].sort()[0] : null, normalized_rows: normalizedRows };
 }

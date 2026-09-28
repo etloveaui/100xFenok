@@ -1,0 +1,106 @@
+{
+ "schema_version": "feno_rim_b3_criteria.v1",
+ "phase": "B3",
+ "gate": "Yoo-successor fair-value prototype — S&P 500 only",
+ "research_only": true,
+ "frozen_before_any_result": true,
+ "mandate_sections": ["6", "7"],
+ "handler": "cc (Opus) — adjudicator. worker: DeepSeek.",
+
+ "inherited_state": {
+  "B1": "KE_CORE_RANGE_ONLY (ce50b8529d) — Ke is a band, median width 4.05-5.17pp, no same-date price in any input",
+  "B2_A": "point-in-time rosters, seven origins, zero unresolved (DEC-294)",
+  "B2_B": "PAYOUT_GROWTH_NOT_DEFENSIBLE (7bb632c37f) — admitted coverage 39.6-63.1% of proxy index weight. Mandate §11 permits proceeding on admitted firms with coverage published.",
+  "scope": "S&P 500 only. NDX, CCMP, SOX, KOSPI and RUT are not attempted until SPX returns a verdict."
+ },
+
+ "the_prohibition_that_defines_this_gate": {
+  "statement": "A current fair-value band is NOT compared against the price level 36 months later. Mandate §7 forbids it and the reason is not procedural: intrinsic value is not a dated price target, so 'the band contained the future price' measures nothing about whether the model carries information.",
+  "what_is_measured_instead": "whether the CROSS-SECTIONAL RANK of FV/P at an origin predicts subsequent excess return",
+  "why_this_is_the_correct_test": "A valuation lens earns its place by ordering firms, not by bracketing an index level. The retired heuristic was judged by band coverage and that is part of why its failure took so long to see."
+ },
+
+ "firm_level_valuation": {
+  "residual_income": "RI_(i,t) = NI_(i,t) - Ke_i * B_(i,t-1)",
+  "value": "V_i = B_(i,0) + sum over t=1..H of RI_(i,t) / (1+Ke_i)^t + Terminal_i",
+  "H": 3,
+  "H_rationale": "the mechanical Li-Mohanram forecasts are defined for tau 1..3 and no further; extending the explicit horizon would require inventing forecasts",
+  "terminal": "Terminal_i = RI_(i,H) / (Ke_i * (1+Ke_i)^(H-1)) — the frozen perpetuity form already used by the committed engine. NOT re-tuned in B3.",
+  "book_path": "B_(i,t) = B_(i,t-1) + FEPS_(i,t) * (1 - NetPayoutRatio_i), from FENO_RIM_FORWARD_BOOK_PATH.json",
+  "earnings": "NI_(i,t) = FEPS_(i,t), the Li-Mohanram mechanical forecast at tau t",
+  "Ke": "the B1 independent core Ke for that firm-origin. NEVER the GLS-ICC. NEVER the implied-ERP context Ke.",
+  "eligibility": "a firm enters only if it is in the origin's PIT roster, is clean-surplus ADMITTED at that origin, has a complete tau 1-3 forecast strip, has a B1 Ke, and has B_0 > 0. Every exclusion reason is counted and its proxy weight disclosed."
+ },
+
+ "uncertainty_sweep_declared_before_any_result": {
+  "why_a_sweep_and_not_a_point": "Ke is a band by B1's verdict, and the forecast path has two admissible constructions. Publishing one number would require choosing among them, and choosing after seeing output is what this whole mission has been built to prevent.",
+  "axes": {
+   "Ke": ["ke_low", "ke_point", "ke_high"],
+   "forecast": ["ri", "ep"]
+  },
+  "combinations": 6,
+  "FV_over_P_low": "the MINIMUM index FV/P across all six combinations at that origin",
+  "FV_over_P_high": "the MAXIMUM index FV/P across all six combinations at that origin",
+  "point_is_recorded_never_published_alone": "the ke_point x ri combination is recorded as a reference but is not the product; the product is the interval",
+  "no_median_selection": "selecting a central combination after seeing results is prohibited"
+ },
+
+ "index_aggregation": {
+  "primary": "FV_over_P = sum of V_i over eligible firms / sum of MarketCap_i over the SAME eligible firms",
+  "market_cap": "the G0-settled basis — as-reported shares restated to the origin, times the origin close",
+  "coverage_weight": "sum of MarketCap_i over eligible firms / sum of MarketCap_j over ALL firms in the origin roster that have a computable market cap; reported at every origin alongside every FV/P",
+  "no_price_level_conversion": "the product is the FV/P RATIO. Converting to an index price level requires a proven divisor and unit bridge, which does not exist here. Any price-level number is forbidden output.",
+  "sensitivities_reported_without_threshold": ["equal-weighted mean of firm-level V_i/MarketCap_i", "5% winsorized cap-weighted FV/P"]
+ },
+
+ "validation": {
+  "primary_signal": "the cross-sectional rank of firm-level V_i / MarketCap_i at each origin",
+  "dependent": "EXC_(i,h) = R_(i,h) - rf_(origin), where R is the annualized total return over h months from the origin, split-adjusted closes plus dividends",
+  "horizons": [12, 24, 36],
+  "primary_horizon": 12,
+  "primary_horizon_rationale": "origins are one year apart, so only the 12-month window is non-overlapping. With seven origins T_eff is 7.0 at 12 months, 3.5 at 24 and 2.33 at 36. G3 established that a result visible only where windows overlap is a result about the overlap.",
+  "required_statistics": [
+   "rank IC: Spearman(V/P, EXC) per origin, on average ranks; report all seven values, the mean, and the count positive",
+   "incremental coefficient: EXC ~ const + BP + SIZE + FV_over_P, origin fixed effects, origin-clustered SEs; report the FV/P coefficient and clustered t",
+   "B/P-stratified spread: within B/P terciles cut nearest-rank at 1/3 and 2/3, order by V/P, H = top ceil(n/2), L = the rest, spread = mean(EXC over H) - mean(EXC over L); aggregate across terciles by EQUAL-WEIGHT mean, count-weighted reported alongside",
+   "sector-neutral: the same regression with SIC2 fixed effects added and V/P in levels — the standard within estimator, per the G1 adjudication",
+   "sign consistency: the count of origins with a positive per-origin coefficient",
+   "cross-sectional permutation at each origin: permute V/P within B/P terciles, 10,000 reps, seed 20260808, report the empirical one-sided p"
+  ],
+  "conventions": "identical to g3-criteria-v2 — nearest-rank quantiles with no interpolation, ties broken by ascending symbol, Spearman on average ranks, origin-clustered sandwich",
+  "expected_return_calibration": "report the cross-sectional correlation between (implied expected return from V/P) and realized EXC; descriptive only, no threshold"
+ },
+
+ "verdict_rules": {
+  "YOO_SUCCESSOR_SUPPORTED": "ALL of: rank IC mean positive at all three horizons; at the 12-month horizon the incremental FV/P coefficient is positive with clustered |t| >= 2 and the per-origin sign is positive at >= 5 of 7; the equal-weight B/P-stratified spread is positive at >= 5 of 7 origins at 12 months; and the permutation p is <= 0.05 at >= 5 of 7 origins",
+  "YOO_SUCCESSOR_INCONCLUSIVE": "direction is positive but the 12-month significance or sign-consistency conditions fail, or the two forecast paths disagree in direction",
+  "YOO_SUCCESSOR_FAIL": "the incremental coefficient is negative with clustered |t| >= 2 at the 12-month horizon, or rank IC mean is negative at two or more horizons",
+  "VALIDATED_IS_NOT_AVAILABLE": "mandate §7.1 forbids a VALIDATED label on five to seven annual origins. SUPPORTED is the ceiling and carries evidence class SUPPORTED_NOT_VALIDATED.",
+  "coverage_disclosure_is_mandatory": "every verdict is stated together with the eligible-firm coverage weight per origin. A verdict without coverage is not a verdict."
+ },
+
+ "prohibitions": [
+  "no GLS-ICC as a discount rate anywhere in the valuation",
+  "no implied-ERP context Ke as a core discount rate",
+  "no calibration of any input to a published Yoo figure",
+  "no comparison of a fair-value band against a future price level",
+  "no index price-level output",
+  "no post-result selection among the six sweep combinations",
+  "no post-result change to any threshold, horizon, or statistic definition",
+  "no re-tuning of the terminal form or the ROE fade",
+  "no extension of the explicit horizon beyond tau 3",
+  "no publication or promotion; the public surface remains quarantined"
+ ],
+
+ "deliverables": [
+  "FENO_YOO_SUCCESSOR_SPX_VALUATION.json — per firm-origin: B0, Ke triple, both forecast paths, RI stream, terminal, V, market cap, V/P; per origin: FV/P low/point/high, coverage weight, exclusion counts by reason",
+  "FENO_YOO_SUCCESSOR_VALIDATION.json — every required statistic at every horizon"
+ ],
+
+ "result_paths_blocked_until_this_file_is_committed": [
+  "data/computed/feno-rim-recovery/FENO_YOO_SUCCESSOR_SPX_VALUATION.json",
+  "data/computed/feno-rim-recovery/FENO_YOO_SUCCESSOR_VALIDATION.json"
+ ],
+
+ "frozen_at_utc": "2026-08-08T04:55:00Z"
+}

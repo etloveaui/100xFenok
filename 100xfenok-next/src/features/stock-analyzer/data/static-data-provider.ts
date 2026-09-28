@@ -4,7 +4,7 @@ import type {
   StockAnalyzerRecord,
 } from "@/lib/stock-analyzer/types";
 import { normalizeForEntityKey } from "@/lib/ticker";
-import { loadActionSummaryMap } from "./action-summary-provider";
+import { loadActionSummaryMap, type ActionSummaryRecord } from "./action-summary-provider";
 
 type JsonValue = string | number | boolean | null | undefined;
 type JsonRecord = Record<string, JsonValue>;
@@ -14,10 +14,18 @@ interface DatasetResponse {
   data?: JsonRecord[];
 }
 
-interface NormalizedDataset {
+export interface StockAnalyzerIdentity {
+  symbol: string;
+  companyName: string;
+  sector: string;
+}
+
+interface NormalizedBaseDataset {
   sourceDate: string | null;
   records: StockAnalyzerRecord[];
 }
+
+type NormalizedDataset = NormalizedBaseDataset;
 
 function parseNumber(value: JsonValue): number | undefined {
   if (typeof value === "number" && Number.isFinite(value)) {
@@ -65,100 +73,149 @@ async function fetchDatasetDocument(
 }
 
 const DATASET_CACHE_TTL_MS = 5 * 60 * 1000;
+let cachedBaseDataset: NormalizedBaseDataset | null = null;
+let cachedBaseDatasetAt = 0;
+let cachedBaseDatasetPromise: Promise<NormalizedBaseDataset> | null = null;
 let cachedDataset: NormalizedDataset | null = null;
 let cachedDatasetAt = 0;
 let cachedDatasetPromise: Promise<NormalizedDataset> | null = null;
 
-async function loadDataset(
+function normalizeBaseRecord(row: JsonRecord): StockAnalyzerRecord | null {
+  const symbol = normalizeString(row.symbol).toUpperCase();
+  if (!symbol) return null;
+
+  return {
+    symbol,
+    companyName:
+      normalizeString(row.companyName) || normalizeString(row.Corp),
+    sector:
+      normalizeString(row.sector) || normalizeString(row.WI26),
+    industry: normalizeString(row.industry) || normalizeString(row.Exchange),
+    country: normalizeString(row.country),
+    price: parseNumber(row.price),
+    marketCap: parseNumber(row.marketCap) ?? parseNumber(row["(USD mn)"]),
+    growthRate: parseNumber(row.growthRate) ?? parseNumber(row["3 M"]),
+    eps: parseNumber(row.eps) ?? parseNumber(row["EPS (Oct-25)"]),
+    per: parseNumber(row.per) ?? parseNumber(row["PER (Fwd)"]),
+    rank: parseNumber(row.rank) ?? parseNumber(row["PER+PBR"]),
+    pbr: parseNumber(row.pbr) ?? parseNumber(row["PBR (Fwd)"]),
+    dividendYield: parseNumber(row.dividendYield),
+    return12m: parseNumber(row.return12m),
+    roe: parseNumber(row.roe) ?? parseNumber(row["ROE (Fwd)"]),
+    opm: parseNumber(row.opm) ?? parseNumber(row["OPM (Fwd)"]),
+    momentum1m:
+      parseNumber(row.momentum1m) ?? parseNumber(row["1 M"]),
+    momentum3m:
+      parseNumber(row.momentum3m) ?? parseNumber(row["3 M"]),
+    momentum6m:
+      parseNumber(row.momentum6m) ?? parseNumber(row["6 M"]),
+    momentum12m:
+      parseNumber(row.momentum12m) ?? parseNumber(row["12 M"]),
+    perBandCurrent: parseNumber(row.perBandCurrent),
+    perBandMin: parseNumber(row.perBandMin),
+    perBandAvg: parseNumber(row.perBandAvg),
+    perBandMax: parseNumber(row.perBandMax),
+    peForward: parseNumber(row.peForward),
+    epsForward: parseNumber(row.epsForward),
+    dividendTtm: parseNumber(row.dividendTtm),
+    ret1y: parseNumber(row.ret1y),
+    ret3y: parseNumber(row.ret3y),
+    ret5y: parseNumber(row.ret5y),
+  } satisfies StockAnalyzerRecord;
+}
+
+async function loadBaseDatasetUncached(
   context?: StockAnalyzerDataProviderContext,
-): Promise<NormalizedDataset> {
-  const [dataset, actionMap] = await Promise.all([
-    fetchDatasetDocument(
-      "/data/global-scouter/core/stocks_analyzer.json",
-      context,
-    ),
-    loadActionSummaryMap(context),
-  ]);
+): Promise<NormalizedBaseDataset> {
+  const dataset = await fetchDatasetDocument(
+    "/data/global-scouter/core/stocks_analyzer.json",
+    context,
+  );
   const rows = Array.isArray(dataset.data) ? dataset.data : [];
   const sourceDate = typeof dataset.source_date === "string" ? dataset.source_date : null;
 
   const records = rows
-    .map((row) => {
-      const symbol = normalizeString(row.symbol).toUpperCase();
-      if (!symbol) return null;
-      const action = actionMap.get(symbol);
-
-      return {
-        symbol,
-        companyName:
-          normalizeString(row.companyName) || normalizeString(row.Corp),
-        sector:
-          normalizeString(row.sector) || normalizeString(row.WI26),
-        industry: normalizeString(row.industry) || normalizeString(row.Exchange),
-        country: normalizeString(row.country),
-        price: parseNumber(row.price),
-        marketCap: parseNumber(row.marketCap) ?? parseNumber(row["(USD mn)"]),
-        growthRate: parseNumber(row.growthRate) ?? parseNumber(row["3 M"]),
-        eps: parseNumber(row.eps) ?? parseNumber(row["EPS (Oct-25)"]),
-        per: parseNumber(row.per) ?? parseNumber(row["PER (Fwd)"]),
-        rank: parseNumber(row.rank) ?? parseNumber(row["PER+PBR"]),
-        pbr: parseNumber(row.pbr) ?? parseNumber(row["PBR (Fwd)"]),
-        dividendYield: parseNumber(row.dividendYield),
-        return12m: parseNumber(row.return12m) ?? action?.return12m ?? undefined,
-        roe: parseNumber(row.roe) ?? parseNumber(row["ROE (Fwd)"]),
-        opm: parseNumber(row.opm) ?? parseNumber(row["OPM (Fwd)"]),
-        momentum1m:
-          parseNumber(row.momentum1m) ?? parseNumber(row["1 M"]),
-        momentum3m:
-          parseNumber(row.momentum3m) ?? parseNumber(row["3 M"]),
-        momentum6m:
-          parseNumber(row.momentum6m) ?? parseNumber(row["6 M"]),
-        momentum12m:
-          parseNumber(row.momentum12m) ?? parseNumber(row["12 M"]),
-        perBandCurrent: parseNumber(row.perBandCurrent),
-        perBandMin: parseNumber(row.perBandMin),
-        perBandAvg: parseNumber(row.perBandAvg),
-        perBandMax: parseNumber(row.perBandMax),
-        peForward: parseNumber(row.peForward),
-        epsForward: parseNumber(row.epsForward),
-        dividendTtm: parseNumber(row.dividendTtm),
-        ret1y: parseNumber(row.ret1y),
-        ret3y: parseNumber(row.ret3y),
-        ret5y: parseNumber(row.ret5y),
-        guruHolders: action?.guruHolders ?? null,
-        actionScore: action?.actionScore ?? null,
-        confidenceLabel: action?.confidenceLabel ?? null,
-        actionLabel: action?.actionLabel ?? null,
-        actionBucket: action?.actionBucket ?? null,
-        actionReasons: action?.actionReasons ?? [],
-        lowEvidence: action?.lowEvidence ?? null,
-        forwardPeFy1: action?.forwardPeFy1 ?? parseNumber(row.peForward) ?? null,
-        forwardEpsFy1: action?.forwardEpsFy1 ?? parseNumber(row.epsForward) ?? null,
-        revenueGrowthFy1: action?.revenueGrowthFy1 ?? null,
-        epsGrowthFy1: action?.epsGrowthFy1 ?? null,
-        grossMarginFy1: action?.grossMarginFy1 ?? null,
-        operatingMarginFy1: action?.operatingMarginFy1 ?? null,
-        roeFy1: action?.roeFy1 ?? null,
-        forwardPeFy2: action?.forwardPeFy2 ?? null,
-        forwardEpsFy2: action?.forwardEpsFy2 ?? null,
-        revenueGrowthFy2: action?.revenueGrowthFy2 ?? null,
-        epsGrowthFy2: action?.epsGrowthFy2 ?? null,
-        grossMarginFy2: action?.grossMarginFy2 ?? null,
-        operatingMarginFy2: action?.operatingMarginFy2 ?? null,
-        roeFy2: action?.roeFy2 ?? null,
-        forwardPeFy3: action?.forwardPeFy3 ?? null,
-        forwardEpsFy3: action?.forwardEpsFy3 ?? null,
-        revenueGrowthFy3: action?.revenueGrowthFy3 ?? null,
-        epsGrowthFy3: action?.epsGrowthFy3 ?? null,
-        grossMarginFy3: action?.grossMarginFy3 ?? null,
-        operatingMarginFy3: action?.operatingMarginFy3 ?? null,
-        roeFy3: action?.roeFy3 ?? null,
-      } satisfies StockAnalyzerRecord;
-    })
-    .filter((row) => row !== null)
+    .map(normalizeBaseRecord)
+    .filter((row): row is StockAnalyzerRecord => row !== null)
     .sort((a, b) => (b.marketCap ?? 0) - (a.marketCap ?? 0));
 
   return { sourceDate, records: records as StockAnalyzerRecord[] };
+}
+
+function loadBaseDataset(
+  context?: StockAnalyzerDataProviderContext,
+): Promise<NormalizedBaseDataset> {
+  if (context?.signal) return loadBaseDatasetUncached(context);
+
+  if (cachedBaseDataset && Date.now() - cachedBaseDatasetAt < DATASET_CACHE_TTL_MS) {
+    return Promise.resolve(cachedBaseDataset);
+  }
+
+  if (!cachedBaseDatasetPromise) {
+    cachedBaseDatasetPromise = loadBaseDatasetUncached()
+      .then((dataset) => {
+        cachedBaseDataset = dataset;
+        cachedBaseDatasetAt = Date.now();
+        cachedBaseDatasetPromise = null;
+        return dataset;
+      })
+      .catch((error) => {
+        cachedBaseDatasetPromise = null;
+        throw error;
+      });
+  }
+
+  return cachedBaseDatasetPromise;
+}
+
+function enrichBaseRecord(
+  record: StockAnalyzerRecord,
+  action: ActionSummaryRecord | undefined,
+): StockAnalyzerRecord {
+  return {
+    ...record,
+    return12m: record.return12m ?? action?.return12m ?? undefined,
+    guruHolders: action?.guruHolders ?? null,
+    actionScore: action?.actionScore ?? null,
+    confidenceLabel: action?.confidenceLabel ?? null,
+    actionLabel: action?.actionLabel ?? null,
+    actionBucket: action?.actionBucket ?? null,
+    actionReasons: action?.actionReasons ?? [],
+    lowEvidence: action?.lowEvidence ?? null,
+    forwardPeFy1: action?.forwardPeFy1 ?? record.peForward ?? null,
+    forwardEpsFy1: action?.forwardEpsFy1 ?? record.epsForward ?? null,
+    revenueGrowthFy1: action?.revenueGrowthFy1 ?? null,
+    epsGrowthFy1: action?.epsGrowthFy1 ?? null,
+    grossMarginFy1: action?.grossMarginFy1 ?? null,
+    operatingMarginFy1: action?.operatingMarginFy1 ?? null,
+    roeFy1: action?.roeFy1 ?? null,
+    forwardPeFy2: action?.forwardPeFy2 ?? null,
+    forwardEpsFy2: action?.forwardEpsFy2 ?? null,
+    revenueGrowthFy2: action?.revenueGrowthFy2 ?? null,
+    epsGrowthFy2: action?.epsGrowthFy2 ?? null,
+    grossMarginFy2: action?.grossMarginFy2 ?? null,
+    operatingMarginFy2: action?.operatingMarginFy2 ?? null,
+    roeFy2: action?.roeFy2 ?? null,
+    forwardPeFy3: action?.forwardPeFy3 ?? null,
+    forwardEpsFy3: action?.forwardEpsFy3 ?? null,
+    revenueGrowthFy3: action?.revenueGrowthFy3 ?? null,
+    epsGrowthFy3: action?.epsGrowthFy3 ?? null,
+    grossMarginFy3: action?.grossMarginFy3 ?? null,
+    operatingMarginFy3: action?.operatingMarginFy3 ?? null,
+    roeFy3: action?.roeFy3 ?? null,
+  };
+}
+
+async function loadDataset(
+  context?: StockAnalyzerDataProviderContext,
+): Promise<NormalizedDataset> {
+  const [baseDataset, actionMap] = await Promise.all([
+    loadBaseDataset(context),
+    loadActionSummaryMap(context),
+  ]);
+
+  const records = baseDataset.records.map((record) => enrichBaseRecord(record, actionMap.get(record.symbol)));
+  return { sourceDate: baseDataset.sourceDate, records };
 }
 
 export class StaticStockAnalyzerDataProvider
@@ -205,6 +262,18 @@ export class StaticStockAnalyzerDataProvider
     const dataset = await cachedDatasetPromise;
     this.sourceDate = dataset.sourceDate;
     return dataset.records;
+  }
+
+  async loadIdentity(
+    context?: StockAnalyzerDataProviderContext,
+  ): Promise<StockAnalyzerIdentity[]> {
+    const dataset = await loadBaseDataset(context);
+    this.sourceDate = dataset.sourceDate;
+    return dataset.records.map(({ symbol, companyName, sector }) => ({
+      symbol,
+      companyName,
+      sector: sector ?? "",
+    }));
   }
 
   getSourceDate(): string | null {

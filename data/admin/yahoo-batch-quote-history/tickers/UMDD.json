@@ -1,0 +1,89 @@
+{
+  "attempts": [
+    {
+      "attempts_used": 1,
+      "event_name": "schedule",
+      "failures": [],
+      "latency_ms": 671,
+      "natural": true,
+      "observed_at": "2026-08-07T11:06:01Z",
+      "outcome": "fresh",
+      "run_attempt": 1,
+      "run_id": "31172586227",
+      "schedule": "7 10 * * 0-5",
+      "shard": "65/72"
+    },
+    {
+      "attempts_used": 1,
+      "event_name": "workflow_dispatch",
+      "failures": [],
+      "latency_ms": 557,
+      "natural": false,
+      "observed_at": "2026-09-28T06:30:00Z",
+      "outcome": "fresh",
+      "run_attempt": 1,
+      "run_id": "36367836615",
+      "schedule": "",
+      "shard": ""
+    }
+  ],
+  "current": {
+    "fetched_at": "2026-09-28T06:37:41Z",
+    "history_as_of": "2026-09-25",
+    "path": "data/yf/finance/UMDD.json",
+    "payload_sha256": "2f64d6e08e8e1aea986ecc9cb04ed1b8f25fda6cefb0fb844596dfaa9ea35d1a",
+    "quote_as_of": "2026-09-25T19:45:06Z",
+    "source_as_of": "2026-09-25"
+  },
+  "discovered_from": [
+    "stockanalysis_etf"
+  ],
+  "last_attempt": {
+    "attempts_used": 1,
+    "event_name": "workflow_dispatch",
+    "failures": [],
+    "latency_ms": 557,
+    "natural": false,
+    "observed_at": "2026-09-28T06:30:00Z",
+    "outcome": "fresh",
+    "run_attempt": 1,
+    "run_id": "36367836615",
+    "schedule": "",
+    "shard": ""
+  },
+  "lkg": {
+    "fetched_at": "2026-08-07T11:09:05Z",
+    "history_as_of": "2026-08-06",
+    "path": "data/admin/yahoo-batch-quote-history/lkg/UMDD.json",
+    "payload_sha256": "680a10e2bd296f47c025043c406729aed447685ecf73844b9c69cbb0913f9424",
+    "quote_as_of": "2026-08-06T19:59:26Z",
+    "source_as_of": "2026-08-06"
+  },
+  "promotion_contract": "provider_observation/v2",
+  "provider_observation": {
+    "event_name": "workflow_dispatch",
+    "history_as_of": "2026-09-25",
+    "observed_at": "2026-09-28T06:30:00Z",
+    "payload_sha256": "033c9f65695a0e1e08431f8e29bfa90d600dd1432e0c3510499e2b9b66199b2f",
+    "quote_as_of": "2026-09-25T19:45:06Z",
+    "run_attempt": 1,
+    "run_id": "36367836615",
+    "schema_version": "provider_observation/v2",
+    "source_as_of": "2026-09-25"
+  },
+  "resolution_state": "fresh_primary",
+  "retry": false,
+  "schema_version": "yahoo-batch-quote-history-state/v1",
+  "stale": {
+    "age_business_days": 9,
+    "classified_at": "2026-08-19T23:42:29Z",
+    "classified_run_id": "32314261503",
+    "expected_resolution": "next_natural_yahoo_run",
+    "max_business_days": 6,
+    "message": "UMDD holds LKG because Yahoo source date 2026-08-06 is 9 business days old, beyond the 6-day bound; it will retry on the next natural Yahoo run.",
+    "reason": "source_age_exceeds_lane_bound",
+    "source_as_of": "2026-08-06"
+  },
+  "ticker": "UMDD",
+  "updated_at": "2026-09-28T06:30:00Z"
+}

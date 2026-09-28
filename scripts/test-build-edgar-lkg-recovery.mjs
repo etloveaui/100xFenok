@@ -27,10 +27,6 @@ import {
   EDGAR_LANE_ID,
   EDGAR_LKG_KEY,
 } from "./build-edgar-filing-timeline.mjs";
-import {
-  projectRecoveryRecoveredSet,
-  projectRecoveryRetrySet,
-} from "./build-fenok-data-health-kpi.mjs";
 import { DATA_SUPPLY_DETECTION_CONFIG } from "./lib/data-supply-detection-config.mjs";
 import { LaneLkgStore } from "./lib/data-supply-lkg-store.mjs";
 import { checkWorkflowCommitShardsAgainstRegistry } from "./check-lane-registry-commit-shards.mjs";
@@ -45,7 +41,6 @@ function pathsFor(root) {
     edgarCachePath: path.join(root, "data/edgar/company_tickers.json"),
     summaryRoot: path.join(root, "data/edgar-korean-summaries"),
     publicSummaryRoot: path.join(root, "100xfenok-next/public/data/edgar-korean-summaries"),
-    attemptShardPath: path.join(root, "data/admin/data-supply-state/detection-attempts/edgar_filings.json"),
   };
 }
 
@@ -202,11 +197,8 @@ function runLane(root, { gen, failures, request, run, controlledFailureKey = "" 
   assert.equal(retained.items[EDGAR_LKG_KEY].latest_failure.run_id, "partial-run");
   assert.deepEqual(readJson(lkgPath(root)), seedMarker, "only the public-safe freshness marker is retained");
 
-  // (g) the retry-state index round-trips through the KPI validator
-  const retrySet = projectRecoveryRetrySet(retained, EDGAR_LANE_ID);
-  assert.equal(retrySet.length, 1);
-  assert.equal(retrySet[0].key, EDGAR_LKG_KEY);
-  assert.equal(retrySet[0].failure_run_id, "partial-run");
+  // Retry provenance stays in the private LKG index; the slim KPI does not project it.
+  assert.deepEqual(retained.retry_set, [EDGAR_LKG_KEY]);
 
   // same-source natural poll cannot recover (provider filingDate not advanced)
   const sameSource = await runLane(root, { gen: GEN1, run: naturalRun("same-source-run", "2026-07-17T00:40:00Z") });
@@ -240,14 +232,7 @@ function runLane(root, { gen, failures, request, run, controlledFailureKey = "" 
   assert.equal(item.recovery_event_name, "schedule");
   assert.equal(item.last_recovered_failure.reason, "http_error");
 
-  // (g) the recovered-state index round-trips through the KPI validator
-  const recoveredSet = projectRecoveryRecoveredSet(finalState, EDGAR_LANE_ID);
-  assert.equal(recoveredSet.length, 1);
-  assert.equal(recoveredSet[0].key, EDGAR_LKG_KEY);
-  assert.equal(recoveredSet[0].recovered_from_run_id, "partial-run");
-  assert.equal(recoveredSet[0].recovery_event_name, "schedule");
-  assert.equal(recoveredSet[0].lkg_source_as_of, "2026-07-14");
-  assert.equal(recoveredSet[0].source_as_of, "2026-07-20");
+  assert.deepEqual(finalState.retry_set, []);
 }
 
 // --- (e) a systemic break is corruption, not degradation ----------------------
@@ -444,10 +429,19 @@ function runLane(root, { gen, failures, request, run, controlledFailureKey = "" 
   assert.deepEqual(gate.lanes, ["edgar_filings"], "the registry must attribute this lane to fetch-edgar-filings.yml");
   assert.match(workflowText, /scripts\/stage-lane-manifest\.sh/);
   assert.match(workflowText, /--stage always_if_exists/);
-  assert.match(
-    workflowText,
-    /if \[ "\$\{EDGAR_PLAN_ONLY:-false\}" != "true" \] && \[ "\$FETCH_OUTCOME" = "success" \] && \[ "\$VERIFY_OUTCOME" = "success" \]; then[\s\S]*?scripts\/stage-lane-manifest\.sh[\s\S]*?--stage success_if_exists[\s\S]*?git add --/,
-    "EDGAR directories must be manifest-staged inside the verified non-plan success branch",
+  const successBranch = workflowText.match(
+    /if \[ "\$\{EDGAR_PLAN_ONLY:-false\}" != "true" \] && \[ "\$FETCH_OUTCOME" = "success" \] && \[ "\$VERIFY_OUTCOME" = "success" \]; then([\s\S]*?)\n\s+fi/,
+  )?.[1] ?? "";
+  assert.deepEqual(
+    {
+      legacy_admin_loop: /for SHARD in[\s\S]*?data\/admin\/edgar_filings\/lkg\/edgar_filings\.json; do/.test(workflowText),
+      verified_success_directory_rail: /scripts\/stage-lane-manifest\.sh[\s\S]*?--stage success_if_exists[\s\S]*?git add --[\s\S]*?data\/edgar[\s\S]*?data\/edgar-korean-summaries/.test(successBranch),
+    },
+    {
+      legacy_admin_loop: false,
+      verified_success_directory_rail: true,
+    },
+    "EDGAR admin staging must be manifest-owned while directory deletion staging remains manual",
   );
 }
 

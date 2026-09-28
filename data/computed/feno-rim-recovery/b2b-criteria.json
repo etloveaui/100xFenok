@@ -1,0 +1,94 @@
+{
+ "schema_version": "feno_rim_b2b_criteria.v1",
+ "phase": "B2-B",
+ "gate": "sustainable payout and book-growth contract — can a firm's book value be rolled forward from its own disclosed flows?",
+ "research_only": true,
+ "frozen_before_any_result": true,
+ "mandate_section": "5",
+ "handler": "cc (Opus) — adjudicator. worker: DeepSeek.",
+
+ "what_this_blocker_actually_is": {
+  "statement": "A residual-income model needs next year's book value. Book grows by earnings and shrinks by what is returned to shareholders, so the model needs a payout rule that holds out of sample.",
+  "why_the_previous_attempt_failed": "The retired heuristic never identified payout separately from the risk premium. The 2026-08-06 constituent aggregate could not compute a historical payout at all, because it held four fiscal years on CURRENT membership — the same point-in-time defect G4 hit from another direction, now fixed by the B2-A reconstruction.",
+  "why_top_down_is_forbidden": "An index-level payout ratio computed on today's members and applied backward is the exact error just removed. Every quantity here is computed per firm from that firm's own filings, and only value is aggregated at the end."
+ },
+
+ "acquisition_required_first": {
+  "note": "The r1-panel cache holds 18 concepts. It has StockholdersEquity and NetIncomeLoss — the left side of the bridge — and NONE of the shareholder-flow concepts on the right. Those must be fetched before any bridge can be computed.",
+  "source": "SEC EDGAR companyfacts, official endpoint only",
+  "scope": "every firm in the B2-A point-in-time rosters, all seven origins",
+  "concepts_and_fallback_order_frozen_now": {
+   "book": ["StockholdersEquity", "StockholdersEquityIncludingPortionAttributableToNoncontrollingInterest"],
+   "earnings": ["IncomeLossFromContinuingOperationsNetOfTaxAttributableToReportingEntity", "NetIncomeLoss"],
+   "common_dividends": ["PaymentsOfDividendsCommonStock", "PaymentsOfDividends", "DividendsCommonStock"],
+   "repurchases": ["PaymentsForRepurchaseOfCommonStock", "PaymentsForRepurchaseOfEquity"],
+   "issuance": ["ProceedsFromIssuanceOfCommonStock", "ProceedsFromIssuanceOfSharesUnderIncentiveAndShareBasedCompensationPlans", "StockIssuedDuringPeriodValueNewIssues"],
+   "oci": ["OtherComprehensiveIncomeLossNetOfTax", "OtherComprehensiveIncomeLossNetOfTaxPortionAttributableToParent"]
+  },
+  "fallback_rule": "first concept present with a usable annual value wins; the concept actually used is recorded per firm-year. Never sum two concepts from the same group.",
+  "annual_identification": "form 10-K or 10-K/A with a duration of 300 to 400 days — the same rule the committed pipeline uses. Never the fp field: SEC tags some annual facts fp=Q4 and some quarterly facts form=10-K fp=FY.",
+  "pit_rule": "only facts with filed <= origin may enter that origin's computation"
+ },
+
+ "clean_surplus_bridge": {
+  "identity": "B_t = B_(t-1) + NI_t - CommonDividends_t - Repurchases_t + Issuance_t + OCI_t + Other_t",
+  "sign_convention_frozen": {
+   "NI_t": "positive increases book",
+   "CommonDividends_t": "EDGAR reports cash paid as a POSITIVE number; it is SUBTRACTED",
+   "Repurchases_t": "EDGAR reports cash paid as a POSITIVE number; it is SUBTRACTED",
+   "Issuance_t": "EDGAR reports proceeds as a POSITIVE number; it is ADDED",
+   "OCI_t": "signed as reported; added",
+   "Other_t": "the residual, never a fitted plug — see below"
+  },
+  "Other_is_not_a_free_parameter": "Other_t is defined as the residual between reported and modeled book change. It is REPORTED, never solved for and never used to force the identity to close. A firm whose residual is large is excluded from the forward path, not repaired.",
+  "bridge_error": "bridge_error = (reported B_t - B_(t-1) - NI_t + CommonDividends_t + Repurchases_t - Issuance_t - OCI_t) / |B_(t-1)|",
+  "admission_threshold_frozen": "a firm-year is CLEAN_SURPLUS_ADMITTED if |bridge_error| <= 0.02. A firm is admitted for the forward path at an origin only if its most recent three available firm-years are all admitted.",
+  "threshold_rationale": "Genuine clean-surplus violations in US GAAP are small — share-based compensation, minority interests, translation. Two percent of opening book is loose enough to survive those and tight enough to reject a firm whose book moves for reasons its own cash-flow statement does not explain."
+ },
+
+ "shareholder_payout": {
+  "why_not_dividends_alone": "Dividend-only payout has not described US book growth for two decades; buybacks are the larger channel for most large-cap firms. A dividend-only rule would systematically overstate retained book.",
+  "primary": "NetShareholderPayout = CommonDividends + Repurchases - Issuance",
+  "ratio": "NetPayoutRatio = NetShareholderPayout / NormalizedEarnings",
+  "normalized_earnings_frozen": "the arithmetic mean of the firm's annual earnings over the three most recent available fiscal years with filed <= origin. Three years, not one, because a single year's payout ratio is dominated by that year's earnings volatility rather than by policy.",
+  "negative_earnings_rule_frozen": "if NormalizedEarnings <= 0 the ratio is UNDEFINED and is not computed. That firm-year instead reports NetShareholderPayout / |B_(t-1)| as a payout-to-book figure, tagged distinctly, and is excluded from any cross-sectional statistic that mixes the two.",
+  "sensitivity_reported_without_threshold": "dividend-only payout ratio, same denominator"
+ },
+
+ "forward_book_path": {
+  "forecasts": "the existing Li-Mohanram mechanical RI and EP forecasts. No analyst point-in-time data is a prerequisite.",
+  "roll_forward": "for clean-surplus admitted firms: B_(t+k) = B_(t+k-1) + FEPS_(t+k) * (1 - NetPayoutRatio), for k = 1..3",
+  "beyond_year_three": "ROE fades to the industry normal level declared independently in B1's industry mapping, over the terminal horizon already frozen in the committed engine. The fade length and terminal rule are NOT re-tuned here.",
+  "non_admitted_firms": "excluded from the retention-based forward path and retained only as an empirical diagnostic, with their count and index weight disclosed"
+ },
+
+ "verdict_rules": {
+  "PAYOUT_GROWTH_IDENTIFIED": "clean-surplus admitted firms cover at least 70% of index weight at every origin, AND the median absolute bridge error among admitted firms is at most 0.005, AND the cross-sectional NetPayoutRatio distribution is stable enough that its median moves by less than 15 percentage points between adjacent origins",
+  "PAYOUT_GROWTH_PARTIAL": "admitted coverage is between 40% and 70% of index weight at any origin, or the median payout ratio moves more than 15 points between adjacent origins. Proceed with admitted firms only and publish the coverage weight.",
+  "PAYOUT_GROWTH_NOT_DEFENSIBLE": "admitted coverage falls below 40% of index weight at any origin, or the bridge cannot be computed for a majority of firms because the concepts are absent from EDGAR",
+  "partial_does_not_block": "mandate section 5.6 — PARTIAL proceeds with usable firms and discloses cap coverage"
+ },
+
+ "prohibitions": [
+  "no index-level aggregate payout or book applied backward to a reconstructed roster",
+  "no solving for Other_t to force the bridge to close",
+  "no post-result change to the admission threshold, the concept fallback order, or the normalization window",
+  "no re-tuning of the ROE fade or the terminal rule",
+  "no substitution of a dividend-only payout for the net figure in the primary",
+  "no paid source, login, or credential",
+  "no publication or promotion; the public surface remains quarantined"
+ ],
+
+ "deliverables": [
+  "FENO_RIM_SUSTAINABLE_PAYOUT_CONTRACT.md",
+  "FENO_RIM_CLEAN_SURPLUS_BRIDGE.json — per firm-year: every component, the concept actually used for each, bridge_error, admission flag",
+  "FENO_RIM_FORWARD_BOOK_PATH.json — per firm-origin: NetPayoutRatio, normalized earnings, three-year book path, admission basis"
+ ],
+
+ "result_paths_blocked_until_this_file_is_committed": [
+  "data/computed/feno-rim-recovery/FENO_RIM_CLEAN_SURPLUS_BRIDGE.json",
+  "data/computed/feno-rim-recovery/FENO_RIM_FORWARD_BOOK_PATH.json"
+ ],
+
+ "frozen_at_utc": "2026-08-08T03:45:00Z"
+}

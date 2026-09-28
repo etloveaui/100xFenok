@@ -12,53 +12,105 @@
       "run_id": "29224221077",
       "schedule": "",
       "shard": ""
+    },
+    {
+      "attempts_used": 1,
+      "error": "recovery_requires_schedule",
+      "event_name": "workflow_dispatch",
+      "failures": [],
+      "latency_ms": 530,
+      "natural": true,
+      "observed_at": "2026-08-01T18:41:58Z",
+      "outcome": "failed",
+      "run_attempt": 1,
+      "run_id": "30711925747",
+      "schedule": "",
+      "shard": "4/6"
+    },
+    {
+      "attempts_used": 1,
+      "event_name": "schedule",
+      "failures": [],
+      "latency_ms": 1331,
+      "natural": true,
+      "observed_at": "2026-08-07T22:50:55Z",
+      "outcome": "fresh",
+      "run_attempt": 1,
+      "run_id": "31225112049",
+      "schedule": "7 22 * * 0-5",
+      "shard": "71/72"
+    },
+    {
+      "attempts_used": 1,
+      "event_name": "workflow_dispatch",
+      "failures": [],
+      "latency_ms": 414,
+      "natural": false,
+      "observed_at": "2026-09-28T06:30:00Z",
+      "outcome": "fresh",
+      "run_attempt": 1,
+      "run_id": "36367836615",
+      "schedule": "",
+      "shard": ""
     }
   ],
   "current": {
-    "fetched_at": "2026-06-30T14:34:27Z",
-    "history_as_of": "2026-06-30",
-    "path": "data/admin/yahoo-batch-quote-history/lkg/TESC.json",
-    "payload_sha256": "1b9534bc3eb29456c9a9dfaeb0498f5ac1b0ded36782cd6f80813509faf08c83",
-    "quote_as_of": null,
-    "source_as_of": "2026-06-30"
+    "fetched_at": "2026-09-28T06:32:01Z",
+    "history_as_of": "2026-09-25",
+    "path": "data/yf/finance/TESC.json",
+    "payload_sha256": "f5e46d45e6591f745d2d0ad60b86ce3e8f4508831366042cc1e9e55c6c234857",
+    "quote_as_of": "2026-09-25T18:24:43Z",
+    "source_as_of": "2026-09-25"
   },
   "discovered_from": [
     "stockanalysis_etf"
   ],
   "last_attempt": {
-    "attempts_used": 0,
+    "attempts_used": 1,
     "event_name": "workflow_dispatch",
     "failures": [],
-    "latency_ms": 0,
+    "latency_ms": 414,
     "natural": false,
-    "observed_at": "2026-07-13T04:33:56Z",
-    "outcome": "skipped_fresh",
+    "observed_at": "2026-09-28T06:30:00Z",
+    "outcome": "fresh",
     "run_attempt": 1,
-    "run_id": "29224221077",
+    "run_id": "36367836615",
     "schedule": "",
     "shard": ""
   },
   "lkg": {
-    "fetched_at": "2026-06-30T14:34:27Z",
-    "history_as_of": "2026-06-30",
+    "fetched_at": "2026-08-07T22:51:09Z",
+    "history_as_of": "2026-08-07",
     "path": "data/admin/yahoo-batch-quote-history/lkg/TESC.json",
-    "payload_sha256": "1b9534bc3eb29456c9a9dfaeb0498f5ac1b0ded36782cd6f80813509faf08c83",
-    "quote_as_of": null,
-    "source_as_of": "2026-06-30"
+    "payload_sha256": "070a01e70775f88dbb5f816e02c43ffcc8da808bea47722ea21fe8217d4c4ba9",
+    "quote_as_of": "2026-08-07T18:27:38Z",
+    "source_as_of": "2026-08-07"
   },
-  "resolution_state": "lkg_primary",
-  "retry": true,
+  "promotion_contract": "provider_observation/v2",
+  "provider_observation": {
+    "event_name": "workflow_dispatch",
+    "history_as_of": "2026-09-25",
+    "observed_at": "2026-09-28T06:30:00Z",
+    "payload_sha256": "838621ca7d1fbbbe7e46b5dae85fbce74af714075ede7284c47fc3e6449895f6",
+    "quote_as_of": "2026-09-25T18:24:43Z",
+    "run_attempt": 1,
+    "run_id": "36367836615",
+    "schema_version": "provider_observation/v2",
+    "source_as_of": "2026-09-25"
+  },
+  "resolution_state": "fresh_primary",
+  "retry": false,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "stale": {
     "age_business_days": 8,
-    "classified_at": "2026-07-13T04:33:56Z",
-    "classified_run_id": "29224221077",
+    "classified_at": "2026-08-19T23:42:29Z",
+    "classified_run_id": "32314261503",
     "expected_resolution": "next_natural_yahoo_run",
     "max_business_days": 6,
-    "message": "TESC holds LKG because Yahoo source date 2026-06-30 is 8 business days old, beyond the 6-day bound; it will retry on the next natural Yahoo run.",
+    "message": "TESC holds LKG because Yahoo source date 2026-08-07 is 8 business days old, beyond the 6-day bound; it will retry on the next natural Yahoo run.",
     "reason": "source_age_exceeds_lane_bound",
-    "source_as_of": "2026-06-30"
+    "source_as_of": "2026-08-07"
   },
   "ticker": "TESC",
-  "updated_at": "2026-07-13T04:33:56Z"
+  "updated_at": "2026-09-28T06:30:00Z"
 }

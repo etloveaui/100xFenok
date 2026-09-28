@@ -1,13 +1,28 @@
 import assert from "node:assert/strict";
 import { createHash } from "node:crypto";
+import { readFileSync } from "node:fs";
+import { createRequire } from "node:module";
 import { createElement } from "react";
 import { renderToStaticMarkup } from "react-dom/server";
 
-import {
-  PerBandChart,
-  Sparkline,
-  chartValueLabelPlacement,
-} from "../src/app/screener/StockDetailPanel";
+// StockDetailPanel now imports the shared earnings panel and its CSS module.
+// Node's static renderer needs a CSS-module loader before that dependency loads.
+const testRequire = createRequire(import.meta.url);
+const previousCssLoader = testRequire.extensions[".css"];
+testRequire.extensions[".css"] = (module, filename) => {
+  const classNames = new Set(
+    Array.from(readFileSync(filename, "utf8").matchAll(/\.([A-Za-z_][A-Za-z0-9_-]*)/g), match => match[1]),
+  );
+  module.exports = Object.fromEntries(Array.from(classNames, name => [name, name]));
+};
+let sharedPanel: typeof import("../src/app/screener/StockDetailPanel");
+try {
+  sharedPanel = testRequire("../src/app/screener/StockDetailPanel");
+} finally {
+  if (previousCssLoader) testRequire.extensions[".css"] = previousCssLoader;
+  else delete testRequire.extensions[".css"];
+}
+const { PerBandChart, Sparkline, chartValueLabelPlacement } = sharedPanel;
 
 function sha256(value: string): string {
   return createHash("sha256").update(value).digest("hex");
@@ -98,7 +113,7 @@ const renderHashes = {
 };
 assert.equal(renderHashes.sparkIncomplete, "c6b2aa3b8253190c8c9fb02a93ebf31a76bf3cfb50eb0cfaef2729e500b207b2");
 assert.equal(renderHashes.sparkComplete, "e6f9745693172f5f152c34b20655057f9e24c60f5080efa1ce1f1321f62bb655");
-assert.equal(renderHashes.perIncomplete, "e33cbdd9ec65e367287b0a61979631b7a28bd809ba0b58e654045cd4808c7db3");
-assert.equal(renderHashes.perComplete, "cb4c4f8773a4cabebe1603a8e12a94953b8169f357415062ac93e1b74c1e281a");
+assert.equal(renderHashes.perIncomplete, "83bdd6461923adbd1efbbe5baf04256f925bd6fdd4fbc03d660bdf42e78f0626");
+assert.equal(renderHashes.perComplete, "081bd17bea18c726c3bdb1a8bd0628b6b59e2393b816605e4dd4232d877e6ce8");
 
 console.log("[test-stock-detail-panel-dedupe] OK");

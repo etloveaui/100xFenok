@@ -4,12 +4,10 @@
 // BEFORE its smokes leaves the live Worker serving a bundle no smoke ever
 // verified, while the CI ledger records no green (BACKLOG #361, incident
 // 2026-07-16: cancelled run 29502469123 served ~15h unverified). This module is
-// the pure-logic core for three call sites:
+// the pure-logic core for two call sites:
 //   1. scripts/write-deploy-provenance.mjs — stamps run identity into the bundle
 //   2. scripts/check-live-deploy-provenance.mjs — classifies the CURRENT live
 //      bundle's provenance before (and after) a deploy
-//   3. scripts/check-deploy-supersession.mjs — decides whether a queued deploy
-//      job may skip itself because a newer run exists
 //
 // Contract rules (DEC-264/DEC-266):
 //   - Detection never blocks remediation: an unverified live bundle is named
@@ -18,7 +16,12 @@
 //     the run that built it; absence is reported as legacy, never guessed.
 
 export const DEPLOY_PROVENANCE_SCHEMA = "deploy-provenance/v1";
-export const DEPLOY_PROVENANCE_PUBLIC_PATH = "data/admin/deploy-provenance.json";
+export const DEPLOY_PROVENANCE_PUBLIC_PATH = "deploy-provenance.json";
+export const DEPLOY_SOURCE_FENCE_MODE_STRICT = "strict";
+export const DEPLOY_SOURCE_FENCE_MODE_REMEDIATE_UNPROVENANCED_LIVE = "remediate-unprovenanced-live";
+export const DEPLOY_SOURCE_FENCE_LIVE_STATE_LEGACY_UNPROVENANCED = "legacy-unprovenanced";
+export const DEPLOY_SOURCE_FENCE_LIVE_STATE_PRESENT_INVALID = "present-invalid";
+export const DEPLOY_SOURCE_FENCE_LIVE_STATE_PRESENT_MISMATCH = "present-mismatched";
 
 // Conclusions that mean "this run's smokes never passed".
 const UNVERIFIED_CONCLUSIONS = new Set([
@@ -180,31 +183,213 @@ export function classifyLiveProvenance({
   };
 }
 
-// Given the workflow's recent runs, decide whether THIS run's deploy job may
-// skip itself because a newer run is active (queued supersession: the deploy
-// job is cancel-in-progress:false, so skipping must happen BEFORE any upload,
-// never after — a superseded skip is only ever a no-op).
-// Returns the newest active run object, or null when this run is the newest
-// active one. "Active" = not completed; a completed newer run (even failed) is
-// ignored so this run still ships its bundle.
-const ACTIVE_RUN_STATUSES = new Set([
-  "queued",
-  "in_progress",
-  "pending",
-  "waiting",
-  "requested",
-]);
+// Fail closed unless the downloaded artifact belongs to this workflow run,
+// remains on current main, and is not older than the source serving live.
+// Main may advance while a build runs; that alone must not starve publication.
+// The live-source relation is the monotonicity boundary that prevents an older
+// scheduled artifact from overwriting a newer accepted deployment. The only
+// exception is the explicit remediation mode, where both provenance surfaces
+// are proven absent; artifact/run identity and current-main ancestry still run.
+export function evaluateDeploySourceFence({
+  artifactSha,
+  runSha,
+  currentMainSha,
+  liveSha,
+  artifactRunId,
+  currentRunId,
+  artifactRunNumber,
+  currentRunNumber,
+  artifactRunAttempt,
+  currentRunAttempt,
+  liveRunNumber,
+  liveRunAttempt,
+  artifactIsAncestorOfCurrentMain,
+  liveIsAncestorOfArtifact,
+  artifactIsAncestorOfLive,
+  artifactBuildId = null,
+  expectedBuildId = null,
+  mode = DEPLOY_SOURCE_FENCE_MODE_STRICT,
+  liveProvenanceState = null,
+  liveBuildId = null,
+}) {
+  const validSha = (value) => typeof value === "string" && /^[0-9a-f]{40}$/i.test(value);
+  if (
+    mode !== DEPLOY_SOURCE_FENCE_MODE_STRICT
+    && mode !== DEPLOY_SOURCE_FENCE_MODE_REMEDIATE_UNPROVENANCED_LIVE
+  ) {
+    return {
+      allowed: false,
+      verdict: "identity-unavailable",
+      detail: `unsupported deploy source fence mode: ${String(mode)}`,
+    };
+  }
+  const remediationLiveIdentityAbsent = mode === DEPLOY_SOURCE_FENCE_MODE_REMEDIATE_UNPROVENANCED_LIVE
+    && liveProvenanceState === DEPLOY_SOURCE_FENCE_LIVE_STATE_LEGACY_UNPROVENANCED
+    && typeof liveBuildId === "string"
+    && liveBuildId.length > 0
+    && liveSha === null
+    && liveRunNumber === null
+    && liveRunAttempt === null
+    && liveIsAncestorOfArtifact === null
+    && artifactIsAncestorOfLive === null;
+  const sourceIds = { artifactSha, runSha, currentMainSha };
+  if (
+    Object.values(sourceIds).some((value) => !validSha(value))
+    || (!remediationLiveIdentityAbsent && !validSha(liveSha))
+  ) {
+    return {
+      allowed: false,
+      verdict: "identity-unavailable",
+      detail: "artifact, workflow run, current origin/main, and live deployment must each provide a full Git SHA",
+    };
+  }
 
-// Supersession candidates are branch-scoped: a run dispatched from a non-main
-// branch must never skip a main deploy (review condition for #361).
-export function filterRunsByHeadBranch(runs, branch) {
-  if (!Array.isArray(runs)) {
-    throw new Error("filterRunsByHeadBranch requires an array of runs");
+  const artifactBuildBindingRequested = artifactBuildId !== null || expectedBuildId !== null;
+  if (
+    artifactBuildBindingRequested
+    && (
+      typeof artifactBuildId !== "string"
+      || artifactBuildId.length === 0
+      || typeof expectedBuildId !== "string"
+      || expectedBuildId.length === 0
+      || artifactBuildId !== expectedBuildId
+    )
+  ) {
+    return {
+      allowed: false,
+      verdict: "artifact-build-mismatch",
+      detail: "artifact provenance build_id does not match the expected artifact BUILD_ID",
+    };
   }
-  if (typeof branch !== "string" || branch.length === 0) {
-    throw new Error("filterRunsByHeadBranch requires a branch name");
+  if (
+    typeof liveBuildId === "string"
+    && liveBuildId.length > 0
+    && typeof expectedBuildId === "string"
+    && expectedBuildId.length > 0
+    && liveBuildId === expectedBuildId
+  ) {
+    return {
+      allowed: false,
+      verdict: "reused-live-build-id",
+      detail: "expected artifact BUILD_ID is already live; deployment identity would be ambiguous",
+    };
   }
-  return runs.filter((run) => run && run.head_branch === branch);
+
+  if (liveProvenanceState === DEPLOY_SOURCE_FENCE_LIVE_STATE_PRESENT_INVALID) {
+    return {
+      allowed: false,
+      verdict: "identity-unavailable",
+      detail: "live deploy provenance is present but malformed or does not satisfy the provenance contract",
+    };
+  }
+  if (liveProvenanceState === DEPLOY_SOURCE_FENCE_LIVE_STATE_PRESENT_MISMATCH) {
+    return {
+      allowed: false,
+      verdict: "provenance-mismatch",
+      detail: "live deploy provenance build_id does not match the live BUILD_ID",
+    };
+  }
+
+  const artifact = artifactSha.toLowerCase();
+  const run = runSha.toLowerCase();
+  if (artifact !== run) {
+    return {
+      allowed: false,
+      verdict: "artifact-run-mismatch",
+      detail: `artifact source ${artifact} does not match workflow source ${run}`,
+    };
+  }
+  if (
+    typeof artifactRunId !== "string"
+    || artifactRunId.length === 0
+    || artifactRunId !== currentRunId
+    || !Number.isInteger(artifactRunNumber)
+    || artifactRunNumber !== currentRunNumber
+    || !Number.isInteger(artifactRunAttempt)
+    || artifactRunAttempt !== currentRunAttempt
+  ) {
+    return {
+      allowed: false,
+      verdict: "artifact-run-mismatch",
+      detail: "artifact run id, run number, or run attempt does not match the current workflow run",
+    };
+  }
+  if (typeof artifactIsAncestorOfCurrentMain !== "boolean") {
+    return {
+      allowed: false,
+      verdict: "ancestry-unavailable",
+      detail: "Git ancestry required for the current-main and live-source fence is unavailable",
+    };
+  }
+  if (!artifactIsAncestorOfCurrentMain) {
+    return {
+      allowed: false,
+      verdict: "source-diverged",
+      detail: `workflow source ${run} is not an ancestor of current origin/main ${currentMainSha.toLowerCase()}`,
+    };
+  }
+  if (remediationLiveIdentityAbsent) {
+    return {
+      allowed: true,
+      verdict: DEPLOY_SOURCE_FENCE_MODE_REMEDIATE_UNPROVENANCED_LIVE,
+      detail:
+        "artifact matches this workflow run and current main; exact legacy live provenance absence "
+        + "was explicitly authorized for this dispatch, so live source/run monotonicity is unavailable",
+    };
+  }
+  if (
+    !Number.isInteger(liveRunNumber)
+    || liveRunNumber < 0
+    || !Number.isInteger(liveRunAttempt)
+    || liveRunAttempt < 1
+  ) {
+    return {
+      allowed: false,
+      verdict: "identity-unavailable",
+      detail: "live deployment run number and run attempt must be available",
+    };
+  }
+  if (
+    typeof liveIsAncestorOfArtifact !== "boolean"
+    || typeof artifactIsAncestorOfLive !== "boolean"
+  ) {
+    return {
+      allowed: false,
+      verdict: "ancestry-unavailable",
+      detail: "Git ancestry required for the current-main and live-source fence is unavailable",
+    };
+  }
+  if (!liveIsAncestorOfArtifact) {
+    if (artifactIsAncestorOfLive) {
+      return {
+        allowed: false,
+        verdict: "stale-live",
+        detail: `workflow source ${run} is older than live deployment source ${liveSha.toLowerCase()}`,
+      };
+    }
+    return {
+      allowed: false,
+      verdict: "live-diverged",
+      detail: `live deployment source ${liveSha.toLowerCase()} is not on the workflow source lineage`,
+    };
+  }
+  const candidateIsNewerRun = artifactRunNumber > liveRunNumber
+    || (artifactRunNumber === liveRunNumber && artifactRunAttempt > liveRunAttempt);
+  if (!candidateIsNewerRun) {
+    return {
+      allowed: false,
+      verdict: "stale-run",
+      detail:
+        `workflow run ${artifactRunNumber}.${artifactRunAttempt} is not newer than `
+        + `live deployment run ${liveRunNumber}.${liveRunAttempt}`,
+    };
+  }
+  return {
+    allowed: true,
+    verdict: "source-monotonic",
+    detail:
+      "artifact matches this workflow run, remains on current main, and advances both live source and run order",
+  };
 }
 
 // Evaluate one post-deploy observation of the live surface against this run.
@@ -246,25 +431,4 @@ export function evaluatePostObservation({ currentRunId, expectedBuildId, liveBui
     };
   }
   return { match: true, kind: "match", detail: "live bundle declared by this run" };
-}
-
-export function selectNewerActiveRun({ currentRunId, currentRunNumber, runs }) {
-  if (!Number.isFinite(currentRunNumber)) {
-    throw new Error("selectNewerActiveRun requires a numeric currentRunNumber");
-  }
-  if (!Array.isArray(runs)) {
-    throw new Error("selectNewerActiveRun requires an array of runs");
-  }
-  let best = null;
-  for (const run of runs) {
-    if (!run || typeof run !== "object") continue;
-    if (String(run.id) === String(currentRunId)) continue;
-    if (typeof run.run_number !== "number") continue;
-    if (run.run_number <= currentRunNumber) continue;
-    if (!ACTIVE_RUN_STATUSES.has(run.status)) continue;
-    if (best === null || run.run_number < best.run_number) {
-      best = run;
-    }
-  }
-  return best;
 }

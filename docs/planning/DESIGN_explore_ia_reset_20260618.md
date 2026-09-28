@@ -5,6 +5,12 @@ Scope: `100xfenok-next/src/app/explore`
 Status: Inventory accepted; public Explore surface grid removed pending
 dedicated-tab completion.
 
+> **SUPERSEDED 2026-08-24.** This file preserves the June inventory and should not be used as a
+> current Explore worklist. Field-level comparison later proved `WeekAheadCard`,
+> `RevisionMoversCard`, `SlickchartsDiscoveryCard` and `MarketStructureIndexCard` had zero
+> importers and no unique product field or action beyond reachable market/workbench surfaces. All
+> four duplicate components were deleted; their data sources remain owned by live consumers.
+
 ## Problem
 
 `/explore` drifted from a curated 30-second guide into a long content list.

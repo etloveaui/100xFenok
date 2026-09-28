@@ -110,6 +110,8 @@ export type BankingTone = 'stable' | 'watch' | 'stress';
 export type StressTone = 'low' | 'medium' | 'high';
 
 export type DashboardSnapshot = {
+  judgmentInputsReady: boolean;
+  sectorInputsReady: boolean;
   fearGreedScore: number;
   fearGreedLabel: string;
   freshness: DashboardFreshnessMap;
@@ -146,4 +148,6 @@ export type DashboardDataResult = {
   dataReady: boolean;
   failedSources: DashboardSourceId[];
   freshness: DashboardFreshnessMap;
+  /** manual refetch of every dashboard source (retry path) */
+  retry: () => void;
 };

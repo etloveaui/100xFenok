@@ -1,0 +1,1076 @@
+{
+  "schema_version": "feno_rim_v2_h2_research_scoring.v1",
+  "phase": "3B",
+  "spec_ref": "docs/analysis/yoo-rim-audit/FENO_RIM_RECONSTRUCTION_SPEC_v3_0.md §9",
+  "research_only": true,
+  "promotion": null,
+  "status": "PERFORMANCE_EVALUABLE",
+  "performance_evaluable": true,
+  "reason": null,
+  "indices_without_core_erp": [],
+  "scoring_method": "walk-forward: per-origin B1 diagnostic hull (computeFamilyB, b2_admitted=false, erp_band=null) at each scored origin's as-of, realized level inside that origin's hull, directional agreement of the band midpoint, MAE of band midpoint vs realized, 36m block bootstrap CIs, ESS from the feasibility receipt; naive baseline (trailing-10y P/B band) on the same origins, independent of Family B output",
+  "per_index": {
+    "sp500": {
+      "as_of": "2023-06-16",
+      "price": 4409.59,
+      "hull": {
+        "low": 1724.1187891602306,
+        "high": 3607.2833394491477,
+        "public_status": "NULL",
+        "null_reasons": [
+          "holdout_interval_calibration_not_met"
+        ]
+      },
+      "walk_forward": {
+        "origins_scored": 34,
+        "refused_total": 21,
+        "refusals": {
+          "no_growth_window": 21
+        },
+        "hull_width_pct_mean": 46.362744,
+        "point_band_origins": 2,
+        "range_band_origins": 32,
+        "coverage_rate": 0,
+        "directional_rate": 0.029412,
+        "mae_level": 2335.719591,
+        "ci": {
+          "coverage": {
+            "mean": 0,
+            "ci_lower": 0,
+            "ci_upper": 0,
+            "ci_level": 0.95,
+            "n": 34,
+            "block_size_quarters": 12,
+            "block_months": 36,
+            "reps": 2000,
+            "seed": 539363334,
+            "method": "moving_block_bootstrap_36m"
+          },
+          "directional": {
+            "mean": 0.029412,
+            "ci_lower": 0,
+            "ci_upper": 0.088235,
+            "ci_level": 0.95,
+            "n": 34,
+            "block_size_quarters": 12,
+            "block_months": 36,
+            "reps": 2000,
+            "seed": 539363334,
+            "method": "moving_block_bootstrap_36m"
+          },
+          "mae": {
+            "mean": 2335.719591,
+            "ci_lower": 1725.936376,
+            "ci_upper": 2721.135909,
+            "ci_level": 0.95,
+            "n": 34,
+            "block_size_quarters": 12,
+            "block_months": 36,
+            "reps": 2000,
+            "seed": 539363334,
+            "method": "moving_block_bootstrap_36m"
+          }
+        }
+      },
+      "coverage_rate": 0,
+      "directional_rate": 0.029412,
+      "mae_level": 2335.719591,
+      "ci": {
+        "coverage": {
+          "mean": 0,
+          "ci_lower": 0,
+          "ci_upper": 0,
+          "ci_level": 0.95,
+          "n": 34,
+          "block_size_quarters": 12,
+          "block_months": 36,
+          "reps": 2000,
+          "seed": 539363334,
+          "method": "moving_block_bootstrap_36m"
+        },
+        "directional": {
+          "mean": 0.029412,
+          "ci_lower": 0,
+          "ci_upper": 0.088235,
+          "ci_level": 0.95,
+          "n": 34,
+          "block_size_quarters": 12,
+          "block_months": 36,
+          "reps": 2000,
+          "seed": 539363334,
+          "method": "moving_block_bootstrap_36m"
+        },
+        "mae": {
+          "mean": 2335.719591,
+          "ci_lower": 1725.936376,
+          "ci_upper": 2721.135909,
+          "ci_level": 0.95,
+          "n": 34,
+          "block_size_quarters": 12,
+          "block_months": 36,
+          "reps": 2000,
+          "seed": 539363334,
+          "method": "moving_block_bootstrap_36m"
+        }
+      },
+      "origins_scored": 55,
+      "dividend_adjusted": 55,
+      "bias_unadjusted_origins": 0,
+      "dividend_source": "sibling_full_history",
+      "ess_capped": 55,
+      "payout_consumed": false,
+      "erp_present": true,
+      "baseline": {
+        "origins_scored": 55,
+        "coverage_rate": 0,
+        "directional_rate": 0.127273,
+        "mae_level": 1623.792978,
+        "ci": {
+          "coverage": {
+            "mean": 0,
+            "ci_lower": 0,
+            "ci_upper": 0,
+            "ci_level": 0.95,
+            "n": 55,
+            "block_size_quarters": 12,
+            "block_months": 36,
+            "reps": 2000,
+            "seed": 539363334,
+            "method": "moving_block_bootstrap_36m"
+          },
+          "directional": {
+            "mean": 0.127273,
+            "ci_lower": 0.018182,
+            "ci_upper": 0.272727,
+            "ci_level": 0.95,
+            "n": 55,
+            "block_size_quarters": 12,
+            "block_months": 36,
+            "reps": 2000,
+            "seed": 539363334,
+            "method": "moving_block_bootstrap_36m"
+          },
+          "mae": {
+            "mean": 1623.792978,
+            "ci_lower": 943.343066,
+            "ci_upper": 2142.069532,
+            "ci_level": 0.95,
+            "n": 55,
+            "block_size_quarters": 12,
+            "block_months": 36,
+            "reps": 2000,
+            "seed": 539363334,
+            "method": "moving_block_bootstrap_36m"
+          }
+        },
+        "hull_beats_on_coverage": true,
+        "hull_beats_on_mae": false
+      }
+    },
+    "nasdaq100": {
+      "as_of": "2023-06-16",
+      "price": 15083.92,
+      "hull": {
+        "low": 4948.379979646114,
+        "high": 13441.914461261535,
+        "public_status": "NULL",
+        "null_reasons": [
+          "holdout_interval_calibration_not_met"
+        ]
+      },
+      "walk_forward": {
+        "origins_scored": 34,
+        "refused_total": 21,
+        "refusals": {
+          "no_growth_window": 21
+        },
+        "hull_width_pct_mean": 73.30053,
+        "point_band_origins": 2,
+        "range_band_origins": 32,
+        "coverage_rate": 0.088235,
+        "directional_rate": 0.147059,
+        "mae_level": 8144.666894,
+        "ci": {
+          "coverage": {
+            "mean": 0.088235,
+            "ci_lower": 0,
+            "ci_upper": 0.117647,
+            "ci_level": 0.95,
+            "n": 34,
+            "block_size_quarters": 12,
+            "block_months": 36,
+            "reps": 2000,
+            "seed": 539363334,
+            "method": "moving_block_bootstrap_36m"
+          },
+          "directional": {
+            "mean": 0.147059,
+            "ci_lower": 0.029412,
+            "ci_upper": 0.235294,
+            "ci_level": 0.95,
+            "n": 34,
+            "block_size_quarters": 12,
+            "block_months": 36,
+            "reps": 2000,
+            "seed": 539363334,
+            "method": "moving_block_bootstrap_36m"
+          },
+          "mae": {
+            "mean": 8144.666894,
+            "ci_lower": 5532.497752,
+            "ci_upper": 9720.417037,
+            "ci_level": 0.95,
+            "n": 34,
+            "block_size_quarters": 12,
+            "block_months": 36,
+            "reps": 2000,
+            "seed": 539363334,
+            "method": "moving_block_bootstrap_36m"
+          }
+        }
+      },
+      "coverage_rate": 0.088235,
+      "directional_rate": 0.147059,
+      "mae_level": 8144.666894,
+      "ci": {
+        "coverage": {
+          "mean": 0.088235,
+          "ci_lower": 0,
+          "ci_upper": 0.117647,
+          "ci_level": 0.95,
+          "n": 34,
+          "block_size_quarters": 12,
+          "block_months": 36,
+          "reps": 2000,
+          "seed": 539363334,
+          "method": "moving_block_bootstrap_36m"
+        },
+        "directional": {
+          "mean": 0.147059,
+          "ci_lower": 0.029412,
+          "ci_upper": 0.235294,
+          "ci_level": 0.95,
+          "n": 34,
+          "block_size_quarters": 12,
+          "block_months": 36,
+          "reps": 2000,
+          "seed": 539363334,
+          "method": "moving_block_bootstrap_36m"
+        },
+        "mae": {
+          "mean": 8144.666894,
+          "ci_lower": 5532.497752,
+          "ci_upper": 9720.417037,
+          "ci_level": 0.95,
+          "n": 34,
+          "block_size_quarters": 12,
+          "block_months": 36,
+          "reps": 2000,
+          "seed": 539363334,
+          "method": "moving_block_bootstrap_36m"
+        }
+      },
+      "origins_scored": 55,
+      "dividend_adjusted": 55,
+      "bias_unadjusted_origins": 0,
+      "dividend_source": "sibling_full_history",
+      "ess_capped": 55,
+      "payout_consumed": false,
+      "erp_present": true,
+      "baseline": {
+        "origins_scored": 55,
+        "coverage_rate": 0,
+        "directional_rate": 0.163636,
+        "mae_level": 5934.668958,
+        "ci": {
+          "coverage": {
+            "mean": 0,
+            "ci_lower": 0,
+            "ci_upper": 0,
+            "ci_level": 0.95,
+            "n": 55,
+            "block_size_quarters": 12,
+            "block_months": 36,
+            "reps": 2000,
+            "seed": 539363334,
+            "method": "moving_block_bootstrap_36m"
+          },
+          "directional": {
+            "mean": 0.163636,
+            "ci_lower": 0,
+            "ci_upper": 0.363636,
+            "ci_level": 0.95,
+            "n": 55,
+            "block_size_quarters": 12,
+            "block_months": 36,
+            "reps": 2000,
+            "seed": 539363334,
+            "method": "moving_block_bootstrap_36m"
+          },
+          "mae": {
+            "mean": 5934.668958,
+            "ci_lower": 2620.973,
+            "ci_upper": 8465.347574,
+            "ci_level": 0.95,
+            "n": 55,
+            "block_size_quarters": 12,
+            "block_months": 36,
+            "reps": 2000,
+            "seed": 539363334,
+            "method": "moving_block_bootstrap_36m"
+          }
+        },
+        "hull_beats_on_coverage": true,
+        "hull_beats_on_mae": false
+      }
+    },
+    "nasdaq_composite": {
+      "as_of": "2023-06-16",
+      "price": 13689.57,
+      "hull": {
+        "low": 4060.6240494545204,
+        "high": 9193.994638859458,
+        "public_status": "NULL",
+        "null_reasons": [
+          "holdout_interval_calibration_not_met"
+        ]
+      },
+      "walk_forward": {
+        "origins_scored": 34,
+        "refused_total": 21,
+        "refusals": {
+          "no_growth_window": 21
+        },
+        "hull_width_pct_mean": 49.457492,
+        "point_band_origins": 2,
+        "range_band_origins": 32,
+        "coverage_rate": 0,
+        "directional_rate": 0,
+        "mae_level": 8351.388262,
+        "ci": {
+          "coverage": {
+            "mean": 0,
+            "ci_lower": 0,
+            "ci_upper": 0,
+            "ci_level": 0.95,
+            "n": 34,
+            "block_size_quarters": 12,
+            "block_months": 36,
+            "reps": 2000,
+            "seed": 539363334,
+            "method": "moving_block_bootstrap_36m"
+          },
+          "directional": {
+            "mean": 0,
+            "ci_lower": 0,
+            "ci_upper": 0,
+            "ci_level": 0.95,
+            "n": 34,
+            "block_size_quarters": 12,
+            "block_months": 36,
+            "reps": 2000,
+            "seed": 539363334,
+            "method": "moving_block_bootstrap_36m"
+          },
+          "mae": {
+            "mean": 8351.388262,
+            "ci_lower": 6214.048595,
+            "ci_upper": 9606.783712,
+            "ci_level": 0.95,
+            "n": 34,
+            "block_size_quarters": 12,
+            "block_months": 36,
+            "reps": 2000,
+            "seed": 539363334,
+            "method": "moving_block_bootstrap_36m"
+          }
+        }
+      },
+      "coverage_rate": 0,
+      "directional_rate": 0,
+      "mae_level": 8351.388262,
+      "ci": {
+        "coverage": {
+          "mean": 0,
+          "ci_lower": 0,
+          "ci_upper": 0,
+          "ci_level": 0.95,
+          "n": 34,
+          "block_size_quarters": 12,
+          "block_months": 36,
+          "reps": 2000,
+          "seed": 539363334,
+          "method": "moving_block_bootstrap_36m"
+        },
+        "directional": {
+          "mean": 0,
+          "ci_lower": 0,
+          "ci_upper": 0,
+          "ci_level": 0.95,
+          "n": 34,
+          "block_size_quarters": 12,
+          "block_months": 36,
+          "reps": 2000,
+          "seed": 539363334,
+          "method": "moving_block_bootstrap_36m"
+        },
+        "mae": {
+          "mean": 8351.388262,
+          "ci_lower": 6214.048595,
+          "ci_upper": 9606.783712,
+          "ci_level": 0.95,
+          "n": 34,
+          "block_size_quarters": 12,
+          "block_months": 36,
+          "reps": 2000,
+          "seed": 539363334,
+          "method": "moving_block_bootstrap_36m"
+        }
+      },
+      "origins_scored": 55,
+      "dividend_adjusted": 55,
+      "bias_unadjusted_origins": 0,
+      "dividend_source": "sibling_full_history",
+      "ess_capped": 55,
+      "payout_consumed": false,
+      "erp_present": true,
+      "baseline": {
+        "origins_scored": 55,
+        "coverage_rate": 0,
+        "directional_rate": 0.072727,
+        "mae_level": 5331.235671,
+        "ci": {
+          "coverage": {
+            "mean": 0,
+            "ci_lower": 0,
+            "ci_upper": 0,
+            "ci_level": 0.95,
+            "n": 55,
+            "block_size_quarters": 12,
+            "block_months": 36,
+            "reps": 2000,
+            "seed": 539363334,
+            "method": "moving_block_bootstrap_36m"
+          },
+          "directional": {
+            "mean": 0.072727,
+            "ci_lower": 0,
+            "ci_upper": 0.181818,
+            "ci_level": 0.95,
+            "n": 55,
+            "block_size_quarters": 12,
+            "block_months": 36,
+            "reps": 2000,
+            "seed": 539363334,
+            "method": "moving_block_bootstrap_36m"
+          },
+          "mae": {
+            "mean": 5331.235671,
+            "ci_lower": 2797.874721,
+            "ci_upper": 7247.535825,
+            "ci_level": 0.95,
+            "n": 55,
+            "block_size_quarters": 12,
+            "block_months": 36,
+            "reps": 2000,
+            "seed": 539363334,
+            "method": "moving_block_bootstrap_36m"
+          }
+        },
+        "hull_beats_on_coverage": true,
+        "hull_beats_on_mae": false
+      }
+    },
+    "russell2000": {
+      "as_of": null,
+      "price": null,
+      "hull": null,
+      "walk_forward": {
+        "origins_scored": 0,
+        "refused_total": 55,
+        "refusals": {
+          "lseg_factsheet_not_first_knowable": 55
+        },
+        "hull_width_pct_mean": null,
+        "point_band_origins": 0,
+        "range_band_origins": 0,
+        "coverage_rate": null,
+        "directional_rate": null,
+        "mae_level": null,
+        "ci": {
+          "coverage": null,
+          "directional": null,
+          "mae": null
+        }
+      },
+      "coverage_rate": null,
+      "directional_rate": null,
+      "mae_level": null,
+      "ci": {
+        "coverage": null,
+        "directional": null,
+        "mae": null
+      },
+      "origins_scored": 55,
+      "dividend_adjusted": 55,
+      "bias_unadjusted_origins": 0,
+      "dividend_source": "sibling_full_history",
+      "ess_capped": 55,
+      "payout_consumed": null,
+      "erp_present": null,
+      "baseline": {
+        "origins_scored": 55,
+        "coverage_rate": 0,
+        "directional_rate": 0.345455,
+        "mae_level": 445.502069,
+        "ci": {
+          "coverage": {
+            "mean": 0,
+            "ci_lower": 0,
+            "ci_upper": 0,
+            "ci_level": 0.95,
+            "n": 55,
+            "block_size_quarters": 12,
+            "block_months": 36,
+            "reps": 2000,
+            "seed": 539363334,
+            "method": "moving_block_bootstrap_36m"
+          },
+          "directional": {
+            "mean": 0.345455,
+            "ci_lower": 0.163636,
+            "ci_upper": 0.472727,
+            "ci_level": 0.95,
+            "n": 55,
+            "block_size_quarters": 12,
+            "block_months": 36,
+            "reps": 2000,
+            "seed": 539363334,
+            "method": "moving_block_bootstrap_36m"
+          },
+          "mae": {
+            "mean": 445.502069,
+            "ci_lower": 381.595706,
+            "ci_upper": 501.816377,
+            "ci_level": 0.95,
+            "n": 55,
+            "block_size_quarters": 12,
+            "block_months": 36,
+            "reps": 2000,
+            "seed": 539363334,
+            "method": "moving_block_bootstrap_36m"
+          }
+        },
+        "hull_beats_on_coverage": false,
+        "hull_beats_on_mae": false
+      }
+    },
+    "kospi": {
+      "as_of": "2023-06-23",
+      "price": 2570.1,
+      "hull": {
+        "low": 1867.0442991431896,
+        "high": 3713.5422430154867,
+        "public_status": "NULL",
+        "null_reasons": [
+          "holdout_interval_calibration_not_met"
+        ]
+      },
+      "walk_forward": {
+        "origins_scored": 34,
+        "refused_total": 21,
+        "refusals": {
+          "no_growth_window": 21
+        },
+        "hull_width_pct_mean": 78.055786,
+        "point_band_origins": 2,
+        "range_band_origins": 32,
+        "coverage_rate": 0.705882,
+        "directional_rate": 0.794118,
+        "mae_level": 991.535713,
+        "ci": {
+          "coverage": {
+            "mean": 0.705882,
+            "ci_lower": 0.617647,
+            "ci_upper": 0.882353,
+            "ci_level": 0.95,
+            "n": 34,
+            "block_size_quarters": 12,
+            "block_months": 36,
+            "reps": 2000,
+            "seed": 539363334,
+            "method": "moving_block_bootstrap_36m"
+          },
+          "directional": {
+            "mean": 0.794118,
+            "ci_lower": 0.588235,
+            "ci_upper": 0.941176,
+            "ci_level": 0.95,
+            "n": 34,
+            "block_size_quarters": 12,
+            "block_months": 36,
+            "reps": 2000,
+            "seed": 539363334,
+            "method": "moving_block_bootstrap_36m"
+          },
+          "mae": {
+            "mean": 991.535713,
+            "ci_lower": 468.841151,
+            "ci_upper": 1109.800498,
+            "ci_level": 0.95,
+            "n": 34,
+            "block_size_quarters": 12,
+            "block_months": 36,
+            "reps": 2000,
+            "seed": 539363334,
+            "method": "moving_block_bootstrap_36m"
+          }
+        }
+      },
+      "coverage_rate": 0.705882,
+      "directional_rate": 0.794118,
+      "mae_level": 991.535713,
+      "ci": {
+        "coverage": {
+          "mean": 0.705882,
+          "ci_lower": 0.617647,
+          "ci_upper": 0.882353,
+          "ci_level": 0.95,
+          "n": 34,
+          "block_size_quarters": 12,
+          "block_months": 36,
+          "reps": 2000,
+          "seed": 539363334,
+          "method": "moving_block_bootstrap_36m"
+        },
+        "directional": {
+          "mean": 0.794118,
+          "ci_lower": 0.588235,
+          "ci_upper": 0.941176,
+          "ci_level": 0.95,
+          "n": 34,
+          "block_size_quarters": 12,
+          "block_months": 36,
+          "reps": 2000,
+          "seed": 539363334,
+          "method": "moving_block_bootstrap_36m"
+        },
+        "mae": {
+          "mean": 991.535713,
+          "ci_lower": 468.841151,
+          "ci_upper": 1109.800498,
+          "ci_level": 0.95,
+          "n": 34,
+          "block_size_quarters": 12,
+          "block_months": 36,
+          "reps": 2000,
+          "seed": 539363334,
+          "method": "moving_block_bootstrap_36m"
+        }
+      },
+      "origins_scored": 55,
+      "dividend_adjusted": 54,
+      "bias_unadjusted_origins": 1,
+      "dividend_source": "sibling_full_history",
+      "ess_capped": 42.180311,
+      "payout_consumed": false,
+      "erp_present": true,
+      "baseline": {
+        "origins_scored": 55,
+        "coverage_rate": 0.509091,
+        "directional_rate": 0.872727,
+        "mae_level": 442.183961,
+        "ci": {
+          "coverage": {
+            "mean": 0.509091,
+            "ci_lower": 0.4,
+            "ci_upper": 0.8,
+            "ci_level": 0.95,
+            "n": 55,
+            "block_size_quarters": 12,
+            "block_months": 36,
+            "reps": 2000,
+            "seed": 539363334,
+            "method": "moving_block_bootstrap_36m"
+          },
+          "directional": {
+            "mean": 0.872727,
+            "ci_lower": 0.781818,
+            "ci_upper": 1,
+            "ci_level": 0.95,
+            "n": 55,
+            "block_size_quarters": 12,
+            "block_months": 36,
+            "reps": 2000,
+            "seed": 539363334,
+            "method": "moving_block_bootstrap_36m"
+          },
+          "mae": {
+            "mean": 442.183961,
+            "ci_lower": 193.398817,
+            "ci_upper": 473.59408,
+            "ci_level": 0.95,
+            "n": 55,
+            "block_size_quarters": 12,
+            "block_months": 36,
+            "reps": 2000,
+            "seed": 539363334,
+            "method": "moving_block_bootstrap_36m"
+          }
+        },
+        "hull_beats_on_coverage": true,
+        "hull_beats_on_mae": false
+      }
+    },
+    "philadelphia_semi": {
+      "as_of": "2023-06-16",
+      "price": 3673.144,
+      "hull": {
+        "low": 1828.7066160953032,
+        "high": 8305.997791932456,
+        "public_status": "NULL",
+        "null_reasons": [
+          "holdout_interval_calibration_not_met"
+        ]
+      },
+      "walk_forward": {
+        "origins_scored": 34,
+        "refused_total": 21,
+        "refusals": {
+          "no_growth_window": 21
+        },
+        "hull_width_pct_mean": 128.493144,
+        "point_band_origins": 2,
+        "range_band_origins": 32,
+        "coverage_rate": 0.382353,
+        "directional_rate": 0.529412,
+        "mae_level": 1527.044302,
+        "ci": {
+          "coverage": {
+            "mean": 0.382353,
+            "ci_lower": 0,
+            "ci_upper": 0.764706,
+            "ci_level": 0.95,
+            "n": 34,
+            "block_size_quarters": 12,
+            "block_months": 36,
+            "reps": 2000,
+            "seed": 539363334,
+            "method": "moving_block_bootstrap_36m"
+          },
+          "directional": {
+            "mean": 0.529412,
+            "ci_lower": 0.176471,
+            "ci_upper": 0.852941,
+            "ci_level": 0.95,
+            "n": 34,
+            "block_size_quarters": 12,
+            "block_months": 36,
+            "reps": 2000,
+            "seed": 539363334,
+            "method": "moving_block_bootstrap_36m"
+          },
+          "mae": {
+            "mean": 1527.044302,
+            "ci_lower": 1124.270966,
+            "ci_upper": 1703.179574,
+            "ci_level": 0.95,
+            "n": 34,
+            "block_size_quarters": 12,
+            "block_months": 36,
+            "reps": 2000,
+            "seed": 539363334,
+            "method": "moving_block_bootstrap_36m"
+          }
+        }
+      },
+      "coverage_rate": 0.382353,
+      "directional_rate": 0.529412,
+      "mae_level": 1527.044302,
+      "ci": {
+        "coverage": {
+          "mean": 0.382353,
+          "ci_lower": 0,
+          "ci_upper": 0.764706,
+          "ci_level": 0.95,
+          "n": 34,
+          "block_size_quarters": 12,
+          "block_months": 36,
+          "reps": 2000,
+          "seed": 539363334,
+          "method": "moving_block_bootstrap_36m"
+        },
+        "directional": {
+          "mean": 0.529412,
+          "ci_lower": 0.176471,
+          "ci_upper": 0.852941,
+          "ci_level": 0.95,
+          "n": 34,
+          "block_size_quarters": 12,
+          "block_months": 36,
+          "reps": 2000,
+          "seed": 539363334,
+          "method": "moving_block_bootstrap_36m"
+        },
+        "mae": {
+          "mean": 1527.044302,
+          "ci_lower": 1124.270966,
+          "ci_upper": 1703.179574,
+          "ci_level": 0.95,
+          "n": 34,
+          "block_size_quarters": 12,
+          "block_months": 36,
+          "reps": 2000,
+          "seed": 539363334,
+          "method": "moving_block_bootstrap_36m"
+        }
+      },
+      "origins_scored": 55,
+      "dividend_adjusted": 55,
+      "bias_unadjusted_origins": 0,
+      "dividend_source": "sibling_full_history",
+      "ess_capped": 55,
+      "payout_consumed": false,
+      "erp_present": true,
+      "baseline": {
+        "origins_scored": 55,
+        "coverage_rate": 0,
+        "directional_rate": 0.272727,
+        "mae_level": 1597.705645,
+        "ci": {
+          "coverage": {
+            "mean": 0,
+            "ci_lower": 0,
+            "ci_upper": 0,
+            "ci_level": 0.95,
+            "n": 55,
+            "block_size_quarters": 12,
+            "block_months": 36,
+            "reps": 2000,
+            "seed": 539363334,
+            "method": "moving_block_bootstrap_36m"
+          },
+          "directional": {
+            "mean": 0.272727,
+            "ci_lower": 0.036364,
+            "ci_upper": 0.527273,
+            "ci_level": 0.95,
+            "n": 55,
+            "block_size_quarters": 12,
+            "block_months": 36,
+            "reps": 2000,
+            "seed": 539363334,
+            "method": "moving_block_bootstrap_36m"
+          },
+          "mae": {
+            "mean": 1597.705645,
+            "ci_lower": 547.439923,
+            "ci_upper": 2290.834462,
+            "ci_level": 0.95,
+            "n": 55,
+            "block_size_quarters": 12,
+            "block_months": 36,
+            "reps": 2000,
+            "seed": 539363334,
+            "method": "moving_block_bootstrap_36m"
+          }
+        },
+        "hull_beats_on_coverage": true,
+        "hull_beats_on_mae": true
+      }
+    }
+  },
+  "baseline_comparison": {
+    "method": "naive baseline = trailing-10y price-per-book distribution (P25/P50/P75) × origin book; same scored origins as the hull",
+    "per_index": {
+      "sp500": {
+        "hull": {
+          "coverage_rate": 0,
+          "directional_rate": 0.029412,
+          "mae_level": 2335.719591
+        },
+        "baseline": {
+          "coverage_rate": 0,
+          "directional_rate": 0.127273,
+          "mae_level": 1623.792978,
+          "origins_scored": 55
+        },
+        "hull_beats_baseline_on_coverage": true,
+        "hull_beats_baseline_on_mae": false
+      },
+      "nasdaq100": {
+        "hull": {
+          "coverage_rate": 0.088235,
+          "directional_rate": 0.147059,
+          "mae_level": 8144.666894
+        },
+        "baseline": {
+          "coverage_rate": 0,
+          "directional_rate": 0.163636,
+          "mae_level": 5934.668958,
+          "origins_scored": 55
+        },
+        "hull_beats_baseline_on_coverage": true,
+        "hull_beats_baseline_on_mae": false
+      },
+      "nasdaq_composite": {
+        "hull": {
+          "coverage_rate": 0,
+          "directional_rate": 0,
+          "mae_level": 8351.388262
+        },
+        "baseline": {
+          "coverage_rate": 0,
+          "directional_rate": 0.072727,
+          "mae_level": 5331.235671,
+          "origins_scored": 55
+        },
+        "hull_beats_baseline_on_coverage": true,
+        "hull_beats_baseline_on_mae": false
+      },
+      "russell2000": {
+        "hull": {
+          "coverage_rate": null,
+          "directional_rate": null,
+          "mae_level": null
+        },
+        "baseline": {
+          "coverage_rate": 0,
+          "directional_rate": 0.345455,
+          "mae_level": 445.502069,
+          "origins_scored": 55
+        },
+        "hull_beats_baseline_on_coverage": false,
+        "hull_beats_baseline_on_mae": false
+      },
+      "kospi": {
+        "hull": {
+          "coverage_rate": 0.705882,
+          "directional_rate": 0.794118,
+          "mae_level": 991.535713
+        },
+        "baseline": {
+          "coverage_rate": 0.509091,
+          "directional_rate": 0.872727,
+          "mae_level": 442.183961,
+          "origins_scored": 55
+        },
+        "hull_beats_baseline_on_coverage": true,
+        "hull_beats_baseline_on_mae": false
+      },
+      "philadelphia_semi": {
+        "hull": {
+          "coverage_rate": 0.382353,
+          "directional_rate": 0.529412,
+          "mae_level": 1527.044302
+        },
+        "baseline": {
+          "coverage_rate": 0,
+          "directional_rate": 0.272727,
+          "mae_level": 1597.705645,
+          "origins_scored": 55
+        },
+        "hull_beats_baseline_on_coverage": true,
+        "hull_beats_baseline_on_mae": true
+      }
+    }
+  },
+  "spec9_minimum_pass": {
+    "spec_minimums": {
+      "evaluation_span_years": 8,
+      "indices_passing": 4,
+      "effective_origins_per_index": 30,
+      "effective_origins_per_regime_bucket": 20
+    },
+    "evaluation_span_8y": {
+      "minimum": "evaluation span >= 8 years",
+      "met": true,
+      "indices_meeting": [
+        "sp500",
+        "nasdaq100",
+        "nasdaq_composite",
+        "russell2000",
+        "kospi",
+        "philadelphia_semi"
+      ]
+    },
+    "indices_passing_4": {
+      "minimum": ">= 4 indices pass individually (span + effective origins)",
+      "met": true,
+      "indices_meeting": [
+        "sp500",
+        "nasdaq100",
+        "nasdaq_composite",
+        "russell2000",
+        "kospi",
+        "philadelphia_semi"
+      ]
+    },
+    "effective_origins_30": {
+      "minimum": ">= 30 effective origins per index",
+      "met": true,
+      "indices_meeting": [
+        "sp500",
+        "nasdaq100",
+        "nasdaq_composite",
+        "russell2000",
+        "kospi",
+        "philadelphia_semi"
+      ]
+    },
+    "regime_buckets_20": {
+      "minimum": "each regime bucket >= 20 effective origins or reported insufficient and excluded from the pass count",
+      "met": true,
+      "sufficient_buckets": [
+        "sp500.low_rate",
+        "nasdaq100.low_rate",
+        "nasdaq_composite.low_rate",
+        "russell2000.low_rate",
+        "kospi.low_rate",
+        "philadelphia_semi.low_rate"
+      ],
+      "insufficient_buckets": [
+        "sp500.high_rate",
+        "sp500.crisis_2008_09",
+        "sp500.crisis_2020_03",
+        "nasdaq100.high_rate",
+        "nasdaq100.crisis_2008_09",
+        "nasdaq100.crisis_2020_03",
+        "nasdaq_composite.high_rate",
+        "nasdaq_composite.crisis_2008_09",
+        "nasdaq_composite.crisis_2020_03",
+        "russell2000.high_rate",
+        "russell2000.crisis_2008_09",
+        "russell2000.crisis_2020_03",
+        "kospi.high_rate",
+        "kospi.crisis_2008_09",
+        "kospi.crisis_2020_03",
+        "philadelphia_semi.high_rate",
+        "philadelphia_semi.crisis_2008_09",
+        "philadelphia_semi.crisis_2020_03"
+      ]
+    },
+    "coverage_within_bootstrap_ci": {
+      "minimum": "interval coverage within bootstrap CI of the nominal level",
+      "nominal_level": 0.95,
+      "research_only": true,
+      "promotion": null
+    },
+    "directional_vs_naive_baseline": {
+      "minimum": "directional rate beats the naive baseline on the same origins",
+      "research_only": true,
+      "promotion": null
+    }
+  },
+  "data_gaps": [
+    "sp500: 21/55 scored origins refused in walk-forward ({\"no_growth_window\":21})",
+    "nasdaq100: 21/55 scored origins refused in walk-forward ({\"no_growth_window\":21})",
+    "nasdaq_composite: 21/55 scored origins refused in walk-forward ({\"no_growth_window\":21})",
+    "russell2000: 55/55 scored origins refused in walk-forward ({\"lseg_factsheet_not_first_knowable\":55})",
+    "kospi: 21/55 scored origins refused in walk-forward ({\"no_growth_window\":21})",
+    "philadelphia_semi: 21/55 scored origins refused in walk-forward ({\"no_growth_window\":21})",
+    "walk-forward: per-origin B1 hulls at each origin's as-of (payout check scoped to the B2 branch per owner ruling; RUT keeps its consumed LSEG factsheet check)"
+  ],
+  "generated_at": "2026-08-06T06:44:49.137Z",
+  "scoring_sha256": "0efc9e7a6cd0c0e038d7e412d443ca406a25419d299f32fcd63130c62cadc618"
+}

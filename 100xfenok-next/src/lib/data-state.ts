@@ -12,6 +12,9 @@ export interface DataState {
   reason?: string | null;
 }
 
+export type LoaderErrorKind = "status" | "timeout" | "parse";
+export type LoaderError = { kind: LoaderErrorKind; status?: number | null };
+
 export const DATA_STATE_LABELS: Record<DataReadinessStatus, string> = {
   ready: "준비됨",
   partial: "부분 준비",
@@ -78,6 +81,19 @@ export function latestAsOf(values: Array<string | null | undefined>): string | n
     .filter((item): item is { raw: string; key: string } => Boolean(item.raw && item.key))
     .sort((a, b) => a.key.localeCompare(b.key))
     .at(-1)?.raw ?? null;
+}
+
+/**
+ * Mirror of latestAsOf for conservative clocks: the OLDEST dated value, raw
+ * (not normalized) like its sibling, so a caller can print what the source
+ * actually carried. Undated values take no part in either selection.
+ */
+export function oldestAsOf(values: Array<string | null | undefined>): string | null {
+  return values
+    .map((value) => ({ raw: value ?? null, key: dateOnly(value) }))
+    .filter((item): item is { raw: string; key: string } => Boolean(item.raw && item.key))
+    .sort((a, b) => a.key.localeCompare(b.key))
+    .at(0)?.raw ?? null;
 }
 
 export function makeDataState(params: {

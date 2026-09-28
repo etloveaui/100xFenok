@@ -1,0 +1,128 @@
+{
+  "attempts": [
+    {
+      "attempts_used": 1,
+      "event_name": "schedule",
+      "failures": [],
+      "latency_ms": 549,
+      "natural": true,
+      "observed_at": "2026-07-24T23:12:06Z",
+      "outcome": "fresh",
+      "run_attempt": 1,
+      "run_id": "30132647097",
+      "schedule": "0 22 * * 5",
+      "shard": "5/6"
+    },
+    {
+      "attempts_used": 1,
+      "event_name": "schedule",
+      "failures": [],
+      "latency_ms": 664,
+      "natural": true,
+      "observed_at": "2026-08-06T12:16:00Z",
+      "outcome": "fresh",
+      "run_attempt": 1,
+      "run_id": "31100540842",
+      "schedule": "7 10 * * 0-5",
+      "shard": "53/72"
+    },
+    {
+      "attempts_used": 0,
+      "event_name": "schedule",
+      "failures": [],
+      "latency_ms": 0,
+      "natural": true,
+      "observed_at": "2026-08-07T01:34:03Z",
+      "outcome": "skipped_fresh",
+      "run_attempt": 1,
+      "run_id": "31138342067",
+      "schedule": "7 22 * * 0-5",
+      "shard": "71/72"
+    },
+    {
+      "attempts_used": 1,
+      "event_name": "schedule",
+      "failures": [],
+      "latency_ms": 1237,
+      "natural": true,
+      "observed_at": "2026-08-07T22:50:55Z",
+      "outcome": "fresh",
+      "run_attempt": 1,
+      "run_id": "31225112049",
+      "schedule": "7 22 * * 0-5",
+      "shard": "71/72"
+    },
+    {
+      "attempts_used": 1,
+      "event_name": "workflow_dispatch",
+      "failures": [],
+      "latency_ms": 694,
+      "natural": false,
+      "observed_at": "2026-09-28T01:17:59Z",
+      "outcome": "fresh",
+      "run_attempt": 1,
+      "run_id": "36365270594",
+      "schedule": "",
+      "shard": ""
+    }
+  ],
+  "current": {
+    "fetched_at": "2026-09-28T01:18:41Z",
+    "history_as_of": "2026-09-25",
+    "path": "data/yf/finance/AAPU.json",
+    "payload_sha256": "a80181915de9d8f8d624bdf44aa4692bd5a715a195a073a85cf4b2a80f0620ec",
+    "quote_as_of": "2026-09-25T20:00:01Z",
+    "source_as_of": "2026-09-25"
+  },
+  "discovered_from": [
+    "stockanalysis_etf"
+  ],
+  "last_attempt": {
+    "attempts_used": 1,
+    "event_name": "workflow_dispatch",
+    "failures": [],
+    "latency_ms": 694,
+    "natural": false,
+    "observed_at": "2026-09-28T01:17:59Z",
+    "outcome": "fresh",
+    "run_attempt": 1,
+    "run_id": "36365270594",
+    "schedule": "",
+    "shard": ""
+  },
+  "lkg": {
+    "fetched_at": "2026-08-07T22:52:53Z",
+    "history_as_of": "2026-08-07",
+    "path": "data/admin/yahoo-batch-quote-history/lkg/AAPU.json",
+    "payload_sha256": "7d1e0b0996f16a871d44e70f7e82a18a4784b0f969e15176a7fe2e03d7a96089",
+    "quote_as_of": "2026-08-07T20:00:00Z",
+    "source_as_of": "2026-08-07"
+  },
+  "promotion_contract": "provider_observation/v2",
+  "provider_observation": {
+    "event_name": "workflow_dispatch",
+    "history_as_of": "2026-09-25",
+    "observed_at": "2026-09-28T01:17:59Z",
+    "payload_sha256": "51c492daa83d35dbe8466cfe7d4b8be9f75c3e82467896eace62f14140f2c761",
+    "quote_as_of": "2026-09-25T20:00:01Z",
+    "run_attempt": 1,
+    "run_id": "36365270594",
+    "schema_version": "provider_observation/v2",
+    "source_as_of": "2026-09-25"
+  },
+  "resolution_state": "fresh_primary",
+  "retry": false,
+  "schema_version": "yahoo-batch-quote-history-state/v1",
+  "stale": {
+    "age_business_days": 8,
+    "classified_at": "2026-08-19T23:42:29Z",
+    "classified_run_id": "32314261503",
+    "expected_resolution": "next_natural_yahoo_run",
+    "max_business_days": 6,
+    "message": "AAPU holds LKG because Yahoo source date 2026-08-07 is 8 business days old, beyond the 6-day bound; it will retry on the next natural Yahoo run.",
+    "reason": "source_age_exceeds_lane_bound",
+    "source_as_of": "2026-08-07"
+  },
+  "ticker": "AAPU",
+  "updated_at": "2026-09-28T01:17:59Z"
+}

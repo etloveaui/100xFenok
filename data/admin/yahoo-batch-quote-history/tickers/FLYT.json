@@ -90,66 +90,91 @@
       "run_id": "29622560422",
       "schedule": "20 23 * * 1-5",
       "shard": "4/5"
+    },
+    {
+      "attempts_used": 1,
+      "event_name": "schedule",
+      "failures": [],
+      "latency_ms": 510,
+      "natural": true,
+      "observed_at": "2026-08-10T11:19:59Z",
+      "outcome": "fresh",
+      "run_attempt": 1,
+      "run_id": "31382906749",
+      "schedule": "7 10 * * 0-5",
+      "shard": "17/72"
+    },
+    {
+      "attempts_used": 1,
+      "event_name": "workflow_dispatch",
+      "failures": [],
+      "latency_ms": 442,
+      "natural": false,
+      "observed_at": "2026-09-28T03:11:20Z",
+      "outcome": "fresh",
+      "run_attempt": 1,
+      "run_id": "36367829153",
+      "schedule": "",
+      "shard": ""
     }
   ],
   "current": {
-    "fetched_at": "2026-07-18T00:51:36Z",
-    "history_as_of": "2026-07-17",
+    "fetched_at": "2026-09-28T03:30:40Z",
+    "history_as_of": "2026-09-25",
     "path": "data/yf/finance/FLYT.json",
-    "payload_sha256": "5af82568591bf01d75dbbf4ab75262ccb33cbec6527b251cf2e210551301d072",
-    "quote_as_of": "2026-07-17T20:00:00Z",
-    "source_as_of": "2026-07-17"
+    "payload_sha256": "dc85cfadb2db4644ccfb8176117d5e88c0611b6a8a8d1d737bd39981334e91a2",
+    "quote_as_of": "2026-09-25T20:00:00Z",
+    "source_as_of": "2026-09-25"
   },
   "discovered_from": [
-    "market_facts",
     "stockanalysis_etf"
   ],
   "last_attempt": {
-    "attempts_used": 0,
-    "event_name": "schedule",
+    "attempts_used": 1,
+    "event_name": "workflow_dispatch",
     "failures": [],
-    "latency_ms": 0,
-    "natural": true,
-    "observed_at": "2026-07-18T00:52:19Z",
-    "outcome": "skipped_fresh",
+    "latency_ms": 442,
+    "natural": false,
+    "observed_at": "2026-09-28T03:11:20Z",
+    "outcome": "fresh",
     "run_attempt": 1,
-    "run_id": "29622560422",
-    "schedule": "20 23 * * 1-5",
-    "shard": "4/5"
+    "run_id": "36367829153",
+    "schedule": "",
+    "shard": ""
   },
   "lkg": {
-    "fetched_at": "2026-06-18T11:56:31Z",
-    "history_as_of": "2026-06-17",
+    "fetched_at": "2026-08-10T11:22:03Z",
+    "history_as_of": "2026-08-07",
     "path": "data/admin/yahoo-batch-quote-history/lkg/FLYT.json",
-    "payload_sha256": "827cfb8893152b42e2631dae3c2efba147222eaadd67a25e3c9c25e5862a9830",
-    "quote_as_of": null,
-    "source_as_of": "2026-06-17"
+    "payload_sha256": "f81e9497b257313298578111e1d6eb11a64934aa3b62357df8e7c70a751c1341",
+    "quote_as_of": "2026-08-07T19:59:59Z",
+    "source_as_of": "2026-08-07"
   },
   "promotion_contract": "provider_observation/v2",
   "provider_observation": {
-    "event_name": "schedule",
-    "history_as_of": "2026-07-17",
-    "observed_at": "2026-07-18T00:49:31Z",
-    "payload_sha256": "3823c16c5da2ef7bb86054a967eadfccba6ca1b8ee9b9f603ca44ec14ee16fc7",
-    "quote_as_of": "2026-07-17T20:00:00Z",
+    "event_name": "workflow_dispatch",
+    "history_as_of": "2026-09-25",
+    "observed_at": "2026-09-28T03:11:20Z",
+    "payload_sha256": "671910c63020c2c8e9fa598a6e83c2b0c3cf08ade73e4c4ad6a5513e91432001",
+    "quote_as_of": "2026-09-25T20:00:00Z",
     "run_attempt": 1,
-    "run_id": "29622560422",
+    "run_id": "36367829153",
     "schema_version": "provider_observation/v2",
-    "source_as_of": "2026-07-17"
+    "source_as_of": "2026-09-25"
   },
   "resolution_state": "fresh_primary",
   "retry": false,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "stale": {
-    "age_business_days": 16,
-    "classified_at": "2026-07-13T04:33:56Z",
-    "classified_run_id": "29224221077",
+    "age_business_days": 8,
+    "classified_at": "2026-08-19T23:42:29Z",
+    "classified_run_id": "32314261503",
     "expected_resolution": "next_natural_yahoo_run",
     "max_business_days": 6,
-    "message": "FLYT holds LKG because Yahoo source date 2026-06-17 is 16 business days old, beyond the 6-day bound; it will retry on the next natural Yahoo run.",
+    "message": "FLYT holds LKG because Yahoo source date 2026-08-07 is 8 business days old, beyond the 6-day bound; it will retry on the next natural Yahoo run.",
     "reason": "source_age_exceeds_lane_bound",
-    "source_as_of": "2026-06-17"
+    "source_as_of": "2026-08-07"
   },
   "ticker": "FLYT",
-  "updated_at": "2026-07-18T00:52:19Z"
+  "updated_at": "2026-09-28T03:11:20Z"
 }

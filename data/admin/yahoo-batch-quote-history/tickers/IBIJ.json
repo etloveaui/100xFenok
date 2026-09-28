@@ -12,53 +12,117 @@
       "run_id": "29224221077",
       "schedule": "",
       "shard": ""
+    },
+    {
+      "attempts_used": 1,
+      "event_name": "schedule",
+      "failures": [],
+      "latency_ms": 646,
+      "natural": true,
+      "observed_at": "2026-07-27T22:58:21Z",
+      "outcome": "fresh",
+      "run_attempt": 1,
+      "run_id": "30312518312",
+      "schedule": "0 22 * * 1",
+      "shard": "1/6"
+    },
+    {
+      "attempts_used": 1,
+      "event_name": "schedule",
+      "failures": [],
+      "latency_ms": 1316,
+      "natural": true,
+      "observed_at": "2026-08-07T07:38:03Z",
+      "outcome": "fresh",
+      "run_attempt": 1,
+      "run_id": "31158308843",
+      "schedule": "7 6 * * 0-5",
+      "shard": "63/72"
+    },
+    {
+      "attempts_used": 1,
+      "event_name": "schedule",
+      "failures": [],
+      "latency_ms": 1106,
+      "natural": true,
+      "observed_at": "2026-08-10T17:04:11Z",
+      "outcome": "fresh",
+      "run_attempt": 1,
+      "run_id": "31411954324",
+      "schedule": "7 16 * * 0-5",
+      "shard": "20/72"
+    },
+    {
+      "attempts_used": 1,
+      "event_name": "workflow_dispatch",
+      "failures": [],
+      "latency_ms": 507,
+      "natural": false,
+      "observed_at": "2026-09-28T04:37:06Z",
+      "outcome": "fresh",
+      "run_attempt": 1,
+      "run_id": "36367831133",
+      "schedule": "",
+      "shard": ""
     }
   ],
   "current": {
-    "fetched_at": "2026-06-29T23:34:10Z",
-    "history_as_of": "2026-06-29",
-    "path": "data/admin/yahoo-batch-quote-history/lkg/IBIJ.json",
-    "payload_sha256": "ac867f0a7e3f3d67732b8fb49079373f545cb7462b430fdbeaccd4176be28959",
-    "quote_as_of": null,
-    "source_as_of": "2026-06-29"
+    "fetched_at": "2026-09-28T04:48:42Z",
+    "history_as_of": "2026-09-25",
+    "path": "data/yf/finance/IBIJ.json",
+    "payload_sha256": "f4a6be438ae72c9518ff5480fe6fd7d7b9e39680ff6bedff275dd100d03ffc6e",
+    "quote_as_of": "2026-09-25T19:59:45Z",
+    "source_as_of": "2026-09-25"
   },
   "discovered_from": [
     "stockanalysis_etf"
   ],
   "last_attempt": {
-    "attempts_used": 0,
+    "attempts_used": 1,
     "event_name": "workflow_dispatch",
     "failures": [],
-    "latency_ms": 0,
+    "latency_ms": 507,
     "natural": false,
-    "observed_at": "2026-07-13T04:33:56Z",
-    "outcome": "skipped_fresh",
+    "observed_at": "2026-09-28T04:37:06Z",
+    "outcome": "fresh",
     "run_attempt": 1,
-    "run_id": "29224221077",
+    "run_id": "36367831133",
     "schedule": "",
     "shard": ""
   },
   "lkg": {
-    "fetched_at": "2026-06-29T23:34:10Z",
-    "history_as_of": "2026-06-29",
+    "fetched_at": "2026-08-10T17:07:07Z",
+    "history_as_of": "2026-08-10",
     "path": "data/admin/yahoo-batch-quote-history/lkg/IBIJ.json",
-    "payload_sha256": "ac867f0a7e3f3d67732b8fb49079373f545cb7462b430fdbeaccd4176be28959",
-    "quote_as_of": null,
-    "source_as_of": "2026-06-29"
+    "payload_sha256": "7c0b1e0e85458a71b0ea8474de8d852bdd3eaed1f0d7dfceac5fbad764ccc9c9",
+    "quote_as_of": "2026-08-10T16:44:22Z",
+    "source_as_of": "2026-08-10"
   },
-  "resolution_state": "lkg_primary",
-  "retry": true,
+  "promotion_contract": "provider_observation/v2",
+  "provider_observation": {
+    "event_name": "workflow_dispatch",
+    "history_as_of": "2026-09-25",
+    "observed_at": "2026-09-28T04:37:06Z",
+    "payload_sha256": "3b071c5f92fcbed262b292715f33914e3565cac8d10abcdd389bf685c07d7bd5",
+    "quote_as_of": "2026-09-25T19:59:45Z",
+    "run_attempt": 1,
+    "run_id": "36367831133",
+    "schema_version": "provider_observation/v2",
+    "source_as_of": "2026-09-25"
+  },
+  "resolution_state": "fresh_primary",
+  "retry": false,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "stale": {
-    "age_business_days": 9,
-    "classified_at": "2026-07-13T04:33:56Z",
-    "classified_run_id": "29224221077",
+    "age_business_days": 7,
+    "classified_at": "2026-08-19T23:42:29Z",
+    "classified_run_id": "32314261503",
     "expected_resolution": "next_natural_yahoo_run",
     "max_business_days": 6,
-    "message": "IBIJ holds LKG because Yahoo source date 2026-06-29 is 9 business days old, beyond the 6-day bound; it will retry on the next natural Yahoo run.",
+    "message": "IBIJ holds LKG because Yahoo source date 2026-08-10 is 7 business days old, beyond the 6-day bound; it will retry on the next natural Yahoo run.",
     "reason": "source_age_exceeds_lane_bound",
-    "source_as_of": "2026-06-29"
+    "source_as_of": "2026-08-10"
   },
   "ticker": "IBIJ",
-  "updated_at": "2026-07-13T04:33:56Z"
+  "updated_at": "2026-09-28T04:37:06Z"
 }

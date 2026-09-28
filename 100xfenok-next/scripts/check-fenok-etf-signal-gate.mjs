@@ -49,6 +49,7 @@ const PUBLIC_SUMMARY_TOP_LEVEL_KEYS = [
   "generated_at",
   "rows",
   "schema_version",
+  "signal_definitions",
   "source_file",
 ];
 const PUBLIC_SUMMARY_ROW_KEYS = [
@@ -216,6 +217,25 @@ export function checkEtfSignalPayload(
     }
     if (!sameJson(payload.fields, PUBLIC_SUMMARY_FIELDS)) {
       errors.push(`${name} fields differ from the public summary allowlist`);
+    }
+    // signal_definitions is deliberately public explanatory metadata: exactly
+    // tracking_quality {label, meaning} with nonempty strings. Extra private or
+    // raw nested fields are rejected rather than permitted.
+    const definitions = payload.signal_definitions;
+    if (definitions === undefined) {
+      errors.push(`${name} signal_definitions must be present`);
+    } else if (!definitions || typeof definitions !== "object" || Array.isArray(definitions)
+      || !sameKeys(definitions, ["tracking_quality"])) {
+      errors.push(`${name} signal_definitions must contain exactly tracking_quality`);
+    } else {
+      const quality = definitions.tracking_quality;
+      if (!quality || typeof quality !== "object" || Array.isArray(quality)
+        || !sameKeys(quality, ["label", "meaning"])) {
+        errors.push(`${name} signal_definitions.tracking_quality must contain exactly label and meaning`);
+      } else if (typeof quality.label !== "string" || quality.label.trim() === ""
+        || typeof quality.meaning !== "string" || quality.meaning.trim() === "") {
+        errors.push(`${name} signal_definitions.tracking_quality label/meaning must be nonempty strings`);
+      }
     }
   }
 
@@ -420,13 +440,51 @@ export function runEtfSignalGateChecks(options = {}) {
   const publicMirrorExists = publicSummaryArtifact.exists;
   const publicFullLeak = fileExists(root, PUBLIC_ETF_SIGNALS_REL);
   const publicMirrorMatches = Boolean(etfSummary && publicSummary && sameJson(etfSummary, publicSummary));
-  const apiRouteReady = fileContains(root, "100xfenok-next/src/app/api/data/fenok-etf-signals/[ticker]/route.ts", [
-    "fenok_etf_signals_summary.json",
+  // Refactored routes delegate; the proof follows the chain: the real route
+  // entry imports AND invokes both helpers, the helper keeps its four
+  // semantics, and the summary file is read inside getFenokEtfSignalsSummary
+  // itself. A missing route, a disconnected helper, or a filename mentioned
+  // only by an unrelated function must still fail.
+  const API_ROUTE_REL = "100xfenok-next/src/app/api/data/fenok-etf-signals/[ticker]/route.ts";
+  const SIGNAL_ROUTE_HELPER_REL = "100xfenok-next/src/lib/server/fenok-etf-signal-route.ts";
+  const DATA_LOADER_REL = "100xfenok-next/src/lib/server/data-loader.ts";
+  const routeText = fileExists(root, API_ROUTE_REL)
+    ? fs.readFileSync(path.join(root, API_ROUTE_REL), "utf8")
+    : null;
+  const routeExists = routeText !== null;
+  const routeDelegates = Boolean(routeText
+    && routeText.includes('from "@/lib/server/fenok-etf-signal-route"')
+    && routeText.includes('from "@/lib/server/data-loader"')
+    && routeText.includes("buildEtfSignalRouteResponse(")
+    && routeText.includes("getFenokEtfSignalsSummary("));
+  const helperSemantics = fileContains(root, SIGNAL_ROUTE_HELPER_REL, [
     "fields?: string[]",
     "normalizeEtfSignalRow",
     "Array.isArray(rawRow)",
     "FENOK_ETF_SIGNAL_NOT_FOUND",
   ]);
+  const loaderText = fileExists(root, DATA_LOADER_REL)
+    ? fs.readFileSync(path.join(root, DATA_LOADER_REL), "utf8")
+    : null;
+  const loaderFnStart = loaderText ? loaderText.indexOf("function getFenokEtfSignalsSummary") : -1;
+  // Prove the declaration plus its immediate first statement only: the real
+  // loader starts with `const result = await readDataAsset(<summary path>)`.
+  // An export-delimited span would let a later non-exported function smuggle
+  // the filename in, and a filename without a read is not linkage either.
+  const loaderDecl = loaderFnStart >= 0
+    ? loaderText.slice(loaderFnStart).match(/function getFenokEtfSignalsSummary\s*\([^)]*\)\s*(?::[^{\n]+)?\{/)
+    : null;
+  const loaderFirstStmt = loaderDecl
+    ? (() => {
+      const start = loaderFnStart + loaderDecl.index + loaderDecl[0].length;
+      const semi = loaderText.indexOf(";", start);
+      return semi === -1 ? "" : loaderText.slice(start, semi);
+    })()
+    : "";
+  const summaryLoaderLinkage = Boolean(loaderDecl)
+    && /\bawait\s+readDataAsset\s*\(/.test(loaderFirstStmt)
+    && loaderFirstStmt.includes("fenok_etf_signals_summary.json");
+  const apiRouteReady = routeExists && routeDelegates && helperSemantics && summaryLoaderLinkage;
   const detailUiReady = fileContains(root, "100xfenok-next/src/app/etfs/[ticker]/EtfDetailClient.tsx", [
     "/api/data/fenok-etf-signals/",
     "Fenok Edge ETF 시그널",
@@ -479,10 +537,18 @@ export function runEtfSignalGateChecks(options = {}) {
       public_mirror_matches_internal_summary: publicMirrorMatches,
       api_route_ready: apiRouteReady,
       detail_ui_card_ready: detailUiReady,
+      route_proof: {
+        route_exists: routeExists,
+        route_delegates: routeDelegates,
+        helper_semantics: helperSemantics,
+        summary_loader_linkage: summaryLoaderLinkage,
+      },
       files: {
         public_summary: "100xfenok-next/public/data/computed/fenok_etf_signals_summary.json",
         api_route: "100xfenok-next/src/app/api/data/fenok-etf-signals/[ticker]/route.ts",
         detail_ui: "100xfenok-next/src/app/etfs/[ticker]/EtfDetailClient.tsx",
+        signal_route_helper: "100xfenok-next/src/lib/server/fenok-etf-signal-route.ts",
+        summary_loader: "100xfenok-next/src/lib/server/data-loader.ts",
       },
     },
   };

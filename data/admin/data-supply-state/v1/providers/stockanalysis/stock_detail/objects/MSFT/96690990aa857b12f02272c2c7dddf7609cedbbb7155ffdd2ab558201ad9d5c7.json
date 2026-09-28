@@ -1,0 +1,846 @@
+{
+  "schema_version": "stockanalysis/v1",
+  "source": "stockanalysis",
+  "asset_type": "stock",
+  "ticker": "MSFT",
+  "source_as_of": "2026-08-21T20:00:00Z",
+  "fetched_at": "2026-08-22T21:40:39Z",
+  "endpoints": {
+    "overview": "/stocks/msft/__data.json",
+    "history": "/api/symbol/s/MSFT/history?range=1Y&period=Monthly",
+    "quote": "/api/quotes/s/MSFT"
+  },
+  "normalized": {
+    "overview": {
+      "marketCap": "3.59T",
+      "revenue": "331.84B",
+      "revenue_type": "ttm",
+      "netIncome": "133.75B",
+      "sharesOut": "7.43B",
+      "eps": "17.95",
+      "peRatio": "26.92",
+      "forwardPE": "24.49",
+      "dividend": "$3.64 (0.75%)",
+      "beta": "1.10",
+      "analysts": "Strong Buy",
+      "target": "569.56 (+17.86%)",
+      "earningsDate": "Jul 29, 2026"
+    },
+    "quote": {
+      "c": 2.09,
+      "e": true,
+      "h": 486.36,
+      "l": 478.53,
+      "o": 479.88,
+      "p": 483.24,
+      "u": "Aug 21, 2026, 4:00 PM EDT",
+      "v": 22515215,
+      "cl": 481.15,
+      "cp": 0.43,
+      "ec": 0.37,
+      "ep": 483.61,
+      "es": "After-hours",
+      "eu": "Aug 21, 2026, 7:59 PM EDT",
+      "ex": "NASDAQ",
+      "ms": "closed",
+      "pd": 483.24,
+      "td": "2026-08-21",
+      "ts": 1787342400000,
+      "cdr": 1,
+      "ecp": 0.08,
+      "epd": 483.61,
+      "etd": "2026-08-21",
+      "ets": 1787356790428.4878,
+      "exp": 1787559300000,
+      "fms": "closed",
+      "h52": 553.72,
+      "l52": 349.2,
+      "uid": "MSFT",
+      "days": 0,
+      "symbol": "MSFT"
+    },
+    "history": [
+      {
+        "t": "2026-08-03",
+        "o": 476.125,
+        "h": 513.73,
+        "l": 475,
+        "c": 483.24,
+        "a": 483.24,
+        "v": 453434698,
+        "ch": 4.18
+      },
+      {
+        "t": "2026-07-01",
+        "o": 380.825,
+        "h": 466.84,
+        "l": 373.35,
+        "c": 464.72,
+        "a": 463.846809,
+        "v": 815183615,
+        "ch": 24.58
+      },
+      {
+        "t": "2026-06-01",
+        "o": 464.84,
+        "h": 466.32,
+        "l": 349.2,
+        "c": 373.02,
+        "a": 372.31911,
+        "v": 1018052145,
+        "ch": -17.15
+      },
+      {
+        "t": "2026-05-01",
+        "o": 412.8,
+        "h": 450.33,
+        "l": 400.88,
+        "c": 450.24,
+        "a": 449.394016,
+        "v": 698954934,
+        "ch": 10.65
+      },
+      {
+        "t": "2026-04-01",
+        "o": 373.49,
+        "h": 433.7,
+        "l": 364.15,
+        "c": 407.78,
+        "a": 406.134154,
+        "v": 716519026,
+        "ch": 10.16
+      },
+      {
+        "t": "2026-03-02",
+        "o": 392.855,
+        "h": 413.05,
+        "l": 356.28,
+        "c": 370.17,
+        "a": 368.675952,
+        "v": 745288132,
+        "ch": -5.75
+      },
+      {
+        "t": "2026-02-02",
+        "o": 430.235,
+        "h": 430.736,
+        "l": 381.71,
+        "c": 392.74,
+        "a": 391.154857,
+        "v": 800257151,
+        "ch": -8.52
+      },
+      {
+        "t": "2026-01-02",
+        "o": 484.385,
+        "h": 489.7,
+        "l": 421.02,
+        "c": 430.29,
+        "a": 427.577366,
+        "v": 684062568,
+        "ch": -11.03
+      },
+      {
+        "t": "2025-12-01",
+        "o": 488.435,
+        "h": 493.5,
+        "l": 470.88,
+        "c": 483.62,
+        "a": 480.571163,
+        "v": 496558381,
+        "ch": -1.71
+      },
+      {
+        "t": "2025-11-03",
+        "o": 519.805,
+        "h": 524.96,
+        "l": 464.89,
+        "c": 492.01,
+        "a": 488.908271,
+        "v": 479480836,
+        "ch": -4.8
+      },
+      {
+        "t": "2025-10-01",
+        "o": 514.8,
+        "h": 553.72,
+        "l": 506,
+        "c": 517.81,
+        "a": 513.584388,
+        "v": 468447068,
+        "ch": -0.03
+      }
+    ],
+    "financials": {
+      "path": "financials/MSFT.json",
+      "fetched_at": "2026-08-22T21:40:39Z",
+      "role": "financial statement cross-check candidate; not valuation SSOT",
+      "summary": {
+        "annual": {
+          "income": {
+            "field_count": 39,
+            "period_count": 6,
+            "period": "annual"
+          },
+          "balance_sheet": {
+            "field_count": 50,
+            "period_count": 6,
+            "period": "annual"
+          },
+          "cash_flow": {
+            "field_count": 41,
+            "period_count": 6,
+            "period": "annual"
+          },
+          "ratios": {
+            "field_count": 35,
+            "period_count": 6,
+            "period": "annual"
+          }
+        },
+        "quarterly": {
+          "income": {
+            "field_count": 38,
+            "period_count": 20,
+            "period": "quarterly"
+          },
+          "balance_sheet": {
+            "field_count": 50,
+            "period_count": 20,
+            "period": "quarterly"
+          },
+          "cash_flow": {
+            "field_count": 41,
+            "period_count": 20,
+            "period": "quarterly"
+          },
+          "ratios": {
+            "field_count": 35,
+            "period_count": 21,
+            "period": "quarterly"
+          }
+        }
+      }
+    }
+  },
+  "financials_path": "financials/MSFT.json",
+  "raw": {
+    "overview": {
+      "trust": {
+        "sources": [
+          {
+            "name": "S&P Global Market Intelligence",
+            "short": "S&P Global",
+            "url": "https://www.spglobal.com/market-intelligence/en"
+          },
+          {
+            "name": "CBOE",
+            "short": "CBOE",
+            "url": "https://www.cboe.com/"
+          },
+          {
+            "name": "Nasdaq UTP",
+            "short": "Nasdaq UTP",
+            "url": "https://www.utpplan.com/overview",
+            "noUtm": true
+          }
+        ],
+        "topic": "overview",
+        "ticker": "MSFT",
+        "lastChecked": 1787358685448,
+        "summary": {
+          "text": "Fundamental and historical data is provided by S&P Global Market Intelligence. Real-time stock price data is provided by CBOE and 15-minute delayed consolidated tape pricing data is provided by Nasdaq UTP."
+        }
+      },
+      "marketCap": "3.59T",
+      "marketCapGrowth": -4.543115534062945,
+      "revenue": "331.84B",
+      "revenue_type": "ttm",
+      "revenueGrowth": 17.789,
+      "netIncome": "133.75B",
+      "netIncomeGrowth": 31.343,
+      "sharesOut": "7.43B",
+      "eps": "17.95",
+      "epsGrowth": 31.598,
+      "peRatio": "26.92",
+      "forwardPE": "24.49",
+      "dividend": "$3.64 (0.75%)",
+      "exDividendDate": "Aug 20, 2026",
+      "beta": "1.10",
+      "analysts": "Strong Buy",
+      "target": "569.56 (+17.86%)",
+      "earningsDate": "Jul 29, 2026",
+      "description": "Microsoft Corporation, a technology company, develops and supports a portfolio of technology solutions for individuals and businesses worldwide. Its products include operating systems, server applications, business solution applications, software development tools, desktop and server management tools, and video games; and devices, such as PCs, tablets, gaming and entertainment consoles, other intelligent devices, and related accessories. The company's Productivity and Business Processes segment offers Microsoft 365 Commercial, Enterprise Mobili...",
+      "infoTable": [
+        {
+          "t": "Industry",
+          "v": "Software - Infrastructure",
+          "u": "stocks/industry/software-infrastructure"
+        },
+        {
+          "t": "Sector",
+          "v": "Technology",
+          "u": "stocks/sector/technology"
+        },
+        {
+          "t": "IPO Date",
+          "v": "Mar 13, 1986"
+        },
+        {
+          "t": "Employees",
+          "v": "223,000",
+          "u": "stocks/msft/employees"
+        },
+        {
+          "t": "Stock Exchange",
+          "v": "NASDAQ"
+        },
+        {
+          "t": "Ticker Symbol",
+          "v": "MSFT"
+        },
+        {
+          "t": "Website",
+          "v": "https://www.microsoft.com",
+          "eu": "https://www.microsoft.com"
+        }
+      ],
+      "financialIntro": "In fiscal year 2026, Microsoft's revenue was $331.84 billion, an increase of 17.79% compared to the previous year's $281.72 billion. Earnings were $133.75 billion, an increase of 31.34%.",
+      "financialChart": [
+        {
+          "year": "2022",
+          "revenue": 198270000000,
+          "earnings": 72738000000,
+          "revenueGrowth": 17.956,
+          "earningsGrowth": 18.715
+        },
+        {
+          "year": "2023",
+          "revenue": 211915000000,
+          "earnings": 72361000000,
+          "revenueGrowth": 6.882000000000001,
+          "earningsGrowth": -0.518
+        },
+        {
+          "year": "2024",
+          "revenue": 245122000000,
+          "earnings": 88136000000,
+          "revenueGrowth": 15.67,
+          "earningsGrowth": 21.8
+        },
+        {
+          "year": "2025",
+          "revenue": 281724000000,
+          "earnings": 101832000000,
+          "revenueGrowth": 14.932,
+          "earningsGrowth": 15.54
+        },
+        {
+          "year": "2026",
+          "revenue": 331839000000,
+          "earnings": 133749000000,
+          "revenueGrowth": 17.788999999999998,
+          "earningsGrowth": 31.343
+        }
+      ],
+      "analystIntro": "According to 56 analysts, the average rating for MSFT stock is \"Strong Buy.\" The 12-month stock price target is $569.56, which is an increase of 17.86% from the latest price.",
+      "analystTarget": {
+        "target": "$569.56",
+        "change": "17.86%",
+        "changeWord": "upside"
+      },
+      "analystChart": {
+        "strongBuy": 39,
+        "buy": 14,
+        "hold": 3,
+        "sell": 0,
+        "strongSell": 0
+      },
+      "news": {
+        "exp": "1787438364322",
+        "data": [
+          {
+            "url": "https://www.tipranks.com/news/3-strong-buy-magnificent-seven-stocks-spending-615b-on-ai-this-year",
+            "img": "https://blog.tipranks.com/wp-content/uploads/2026/07/shutterstock_2810482069-750x406.jpg",
+            "title": "3 Strong Buy Magnificent Seven Stocks Spending $615B on AI This Year",
+            "text": "Tech giant stocks Microsoft ($MSFT), Amazon ($AMZN) and Alphabet-owned Google ($GOOGL) are cumulatively spending $615 billion on AI infrastructure this year alone. That is more than the GDP of most…",
+            "source": "TipRanks",
+            "type": "Article",
+            "tickers": [
+              "$AMZN",
+              "$GOOGL"
+            ],
+            "time": "2026-08-21T19:12:23.000Z",
+            "ago": "1 day ago"
+          },
+          {
+            "url": "https://www.tipranks.com/news/microsoft-stock-nasdaqmsft-notches-up-with-22-new-security-patches",
+            "img": "https://blog.tipranks.com/wp-content/uploads/2026/08/microsoft-shutterstock_2828965749-750x406.jpg",
+            "title": "Microsoft Stock (NASDAQ:MSFT) Notches Up With 22 New Security Patches",
+            "text": "You have to give tech giant Microsoft ($MSFT) credit, because it is always looking for ways to improve security. And in many cases, it finds these ways. Sometimes there are…",
+            "source": "TipRanks",
+            "type": "Article",
+            "tickers": null,
+            "time": "2026-08-21T17:03:48.000Z",
+            "ago": "1 day ago"
+          },
+          {
+            "url": "https://www.tipranks.com/news/the-fly/meta-becomes-one-of-microsofts-biggest-ai-customers-bloomberg-says-thefly-news",
+            "img": "https://blog.tipranks.com/wp-content/uploads/2023/06/Communication-Services-2-750x406.jpg",
+            "title": "Meta becomes one of Microsoft’s biggest AI customers, Bloomberg says",
+            "text": "Meta (META) has become one of Microsoft’s (MSFT) largest AI customers, with the social media company spending hundreds of millions of dollars a year on AI models on Microsoft’s Azure…",
+            "source": "TheFly",
+            "type": "Article",
+            "tickers": [
+              "$META"
+            ],
+            "time": "2026-08-21T10:21:06.000Z",
+            "ago": "1 day ago"
+          },
+          {
+            "url": "qKJr8H73sEM",
+            "img": "https://cdn.snapi.dev/images/v1/4/i/o/data-internet36-3882336.jpg",
+            "title": "Meta Is Now One of Microsoft's Largest AI Customers",
+            "text": "Meta has quietly become one of Microsoft's largest AI customers, spending hundreds of millions of dollars a year to access the Azure cloud service - and reviving concerns around circular business deal...",
+            "source": "Bloomberg Technology",
+            "type": "Video",
+            "tickers": [
+              "$META"
+            ],
+            "time": "Aug 20, 2026, 2:15 PM EDT",
+            "ago": "2 days ago"
+          },
+          {
+            "url": "https://www.tipranks.com/news/microsoft-stock-nasdaqmsft-notches-up-as-it-looks-for-ai-capable-lawyers",
+            "img": "https://blog.tipranks.com/wp-content/uploads/2026/08/microsoft-shutterstock_2820204917-750x406.jpg",
+            "title": "Microsoft Stock (NASDAQ:MSFT) Notches Up as It Looks for AI-Capable Lawyers",
+            "text": "Tech giant Microsoft ($MSFT) is looking for lawyers with a particular set of skills, and it is willing to pay big for those lawyers. A recent report from Business Insider…",
+            "source": "TipRanks",
+            "type": "Article",
+            "tickers": null,
+            "time": "2026-08-20T17:02:33.000Z",
+            "ago": "2 days ago"
+          },
+          {
+            "url": "https://www.businessinsider.com/microsoft-hiring-legal-engineer-ai-lawyers-2026-8",
+            "img": "https://cdn.snapi.dev/images/v1/u/f/p/micros16-3604729-3880736.jpg",
+            "title": "Microsoft will pay up to $279K for a lawyer who can build AI",
+            "text": "Microsoft is hiring a legal engineer — a role that blends legal experience and technical skills. The hire will help shape how Microsoft's commercial lawyers use artificial intelligence.",
+            "source": "Business Insider",
+            "type": "Article",
+            "tickers": null,
+            "time": "Aug 20, 2026, 6:00 AM EDT",
+            "ago": "2 days ago"
+          },
+          {
+            "url": "https://www.investopedia.com/a-bullish-signal-could-point-to-gains-ahead-for-these-big-tech-stocks-nvda-googl-msft-amzn-aapl-12063894",
+            "img": "https://cdn.snapi.dev/images/v1/0/k/t/computer-electronic10-3880301.jpg",
+            "title": "A Bullish Signal Could Point to Gains Ahead for These Big Tech Stocks",
+            "text": "Some of America's biggest tech stocks have been flashing a bullish signal lately, according to Morgan Stanley.",
+            "source": "Investopedia",
+            "type": "Article",
+            "tickers": [
+              "$AAPL",
+              "$AMZN",
+              "$GOOG",
+              "$GOOGL",
+              "$NVDA",
+              "$SNDK"
+            ],
+            "time": "Aug 19, 2026, 5:51 PM EDT",
+            "ago": "2 days ago"
+          },
+          {
+            "url": "https://www.businessinsider.com/microsoft-ai-cmo-is-leaving-the-company-details-memo-2026-8",
+            "img": "https://cdn.snapi.dev/images/v1/4/w/g/micros40-3596137-3878527.jpg",
+            "title": "Microsoft AI's CMO is leaving as the company rethinks consumer marketing efforts",
+            "text": "Microsoft AI's chief marketing officer, Andréa Mallard, is leaving the company. She joined Microsoft's AI unit in January.",
+            "source": "Business Insider",
+            "type": "Article",
+            "tickers": null,
+            "time": "Aug 19, 2026, 6:30 AM EDT",
+            "ago": "3 days ago"
+          },
+          {
+            "url": "5OkWovFI4gw",
+            "img": "https://cdn.snapi.dev/images/v1/z/w/f/data9-3661966-3878076.jpg",
+            "title": "Pence: NVDA \"Pivotal Chokepoint\" of AI & Likes MSFT, AMZN, GOOGL in Mag 7",
+            "text": "Dryden Pence returns to the Watch List and walks investors through some of his top stock picks, which includes Nvidia (NVDA), a company he calls a \"pivotal chokepoint\" in AI. He doesn't see the AI tra...",
+            "source": "Schwab Network",
+            "type": "Video",
+            "tickers": [
+              "$NVDA",
+              "$AMZN",
+              "$GOOG",
+              "$GOOGL"
+            ],
+            "time": "Aug 18, 2026, 6:00 PM EDT",
+            "ago": "3 days ago"
+          },
+          {
+            "url": "XcmLbWfHBzs",
+            "img": "https://cdn.snapi.dev/images/v1/t/2/i/etf8-3562123-3877669.jpg",
+            "title": "Market Pullback Ahead? Dryden Pence Says Buy These Stocks On A Dip",
+            "text": "Dryden Pence, CIO of Pence Capital Management explains why he sees a pullback ahead—revealing the stocks he'd add on a dip.",
+            "source": "The Street",
+            "type": "Video",
+            "tickers": [
+              "$AAPL",
+              "$ASML",
+              "$AVGO",
+              "$LMT",
+              "$NVDA",
+              "$WMT"
+            ],
+            "time": "Aug 18, 2026, 2:50 PM EDT",
+            "ago": "4 days ago"
+          },
+          {
+            "url": "https://www.forbes.com/sites/greatspeculations/2026/08/18/has-microsoft-stock-found-the-next-growth-driver/",
+            "img": "https://cdn.snapi.dev/images/v1/w/g/t/has-microsoft-stock-found-the--3876782.jpg",
+            "title": "Has Microsoft Stock Found The Next Growth Driver?",
+            "text": "This article was written by Doug Nathman, with research by his team at Trefis.",
+            "source": "Forbes",
+            "type": "Article",
+            "tickers": null,
+            "time": "Aug 18, 2026, 9:55 AM EDT",
+            "ago": "4 days ago"
+          },
+          {
+            "url": "dza47iPbq0E",
+            "img": "https://cdn.snapi.dev/images/v1/t/j/g/ocme2e-2582932-3875834.jpg",
+            "title": "Nyland: MSFT & TSLA Top Mag 7 Stocks for Growth, AI CapEx Story \"Healthy\"",
+            "text": "Tim Nyland offers his bearish and bullish thoughts for the back half of 2026 on expectations that the Fed will hold interest rates. He considers the broadening price action across Wall Street healthy ...",
+            "source": "Schwab Network",
+            "type": "Video",
+            "tickers": [
+              "$TSLA"
+            ],
+            "time": "Aug 17, 2026, 8:00 PM EDT",
+            "ago": "4 days ago"
+          },
+          {
+            "url": "https://invezz.com/news/2026/08/17/why-is-microsoft-stock-falling-3-today/",
+            "img": "https://cdn.snapi.dev/images/v1/p/i/n/micros39-3596529-3875315.jpg",
+            "title": "Why is Microsoft stock falling 3% today?",
+            "text": "Microsoft MSFT shares fell about 3.2% on Monday after a Guardian investigation raised questions about whether the company has enough advanced chips installed to support its rapid artificial intelligen...",
+            "source": "Invezz",
+            "type": "Article",
+            "tickers": null,
+            "time": "Aug 17, 2026, 2:04 PM EDT",
+            "ago": "5 days ago"
+          },
+          {
+            "url": "https://www.nytimes.com/2026/08/17/technology/ai-slop.html",
+            "img": "https://cdn.snapi.dev/images/v1/a/s/asset-management27-3874862.jpg",
+            "title": "AI Slop Is Everywhere. Spotify, LinkedIn and Others Have Had Enough.",
+            "text": "Spotify, LinkedIn and others are trying to dig out of a digital sewage heap full of low-quality content made with artificial intelligence.",
+            "source": "NYTimes",
+            "type": "Article",
+            "tickers": [
+              "$SPOT"
+            ],
+            "time": "Aug 17, 2026, 11:36 AM EDT",
+            "ago": "5 days ago"
+          },
+          {
+            "url": "https://www.fxempire.com/forecasts/article/stock-forecast-tesla-microsoft-and-super-micro-eye-pullbacks-for-dip-buying-setups-1617219",
+            "img": "https://cdn.snapi.dev/images/v1/3/d/6/asset-management21-3852227-3874746.jpg",
+            "title": "Stock Forecast – Tesla, Microsoft, and Super Micro Eye Pullbacks for Dip-Buying Setups",
+            "text": "Major stocks look a touch tired in the premarket trading for Monday.",
+            "source": "FXEmpire",
+            "type": "Article",
+            "tickers": [
+              "$SMCI",
+              "$TSLA"
+            ],
+            "time": "Aug 17, 2026, 10:41 AM EDT",
+            "ago": "5 days ago"
+          },
+          {
+            "url": "https://www.theguardian.com/technology/2026/aug/17/are-microsofts-ai-plans-being-held-back-by-a-shortage-of-chips",
+            "img": "https://cdn.snapi.dev/images/v1/i/w/e/micros36-3599704-3873789.jpg",
+            "title": "Are Microsoft's AI plans being held back by a shortage of chips?",
+            "text": "Guardian investigation finds apparent discrepancy between what tech company has said about its AI capacity – and the number of advanced chips it has in operation",
+            "source": "The Guardian",
+            "type": "Article",
+            "tickers": null,
+            "time": "Aug 17, 2026, 12:00 AM EDT",
+            "ago": "5 days ago"
+          },
+          {
+            "url": "yRZMGcVCS8M",
+            "img": "https://cdn.snapi.dev/images/v1/h/u/s/asset-management11-3665356-3870538.jpg",
+            "title": "Finding AI \"Picks and Shovels:\" What Makes MSFT & CAT Stand Out",
+            "text": "Tiffany McGhee believes markets are currently in a good spot with earnings strength and policy changes offering reprieve from volatility. She likes the AI \"picks and shovels\" stocks she sees offering ...",
+            "source": "Schwab Network",
+            "type": "Video",
+            "tickers": [
+              "$CAT"
+            ],
+            "time": "Aug 13, 2026, 6:00 PM EDT",
+            "ago": "8 days ago"
+          },
+          {
+            "url": "https://techcrunch.com/2026/08/13/microsoft-kills-off-unsuccessful-ai-features-while-merging-its-separate-copilot-apps/",
+            "img": "https://cdn.snapi.dev/images/v1/v/p/5/micros32-3600330-3869264.jpg",
+            "title": "Microsoft kills off unsuccessful AI features while merging its separate Copilot apps",
+            "text": "Two years ago, Microsoft described AI as a “generational shift” in technology that it wanted to lead. Today, the company is merging its Copilot-branded consumer and business apps, and ditching a numbe...",
+            "source": "TechCrunch",
+            "type": "Article",
+            "tickers": null,
+            "time": "Aug 13, 2026, 11:30 AM EDT",
+            "ago": "9 days ago"
+          },
+          {
+            "url": "https://www.geekwire.com/2026/microsoft-starts-merging-its-copilot-consumer-and-business-apps-in-advance-of-super-app-rollout/",
+            "img": "https://cdn.snapi.dev/images/v1/m/w/c/micros10-3608237-3868754.jpg",
+            "title": "Microsoft starts merging its Copilot consumer and business apps in advance of ‘Super App' rollout",
+            "text": "Microsoft is combining its consumer and business Copilot apps into a single app, in a gradual transition starting this week.",
+            "source": "GeekWire",
+            "type": "Article",
+            "tickers": null,
+            "time": "Aug 13, 2026, 9:30 AM EDT",
+            "ago": "9 days ago"
+          },
+          {
+            "url": "https://www.reuters.com/world/china/microsoft-retreats-china-ai-boom-helps-it-keep-window-open-2026-08-13/",
+            "img": "https://cdn.snapi.dev/images/v1/f/k/j/micros12-3606041-3868018.jpg",
+            "title": "Microsoft retreats in China, but AI boom helps it keep a window open",
+            "text": "Microsoft once regarded the idea of quitting China as unthinkable.",
+            "source": "Reuters",
+            "type": "Article",
+            "tickers": null,
+            "time": "Aug 13, 2026, 6:03 AM EDT",
+            "ago": "9 days ago"
+          },
+          {
+            "url": "https://invezz.com/news/2026/08/12/why-is-microsoft-stock-falling-2-today/",
+            "img": "https://cdn.snapi.dev/images/v1/v/i/y/micros30-3600575-3866836.jpg",
+            "title": "Why is Microsoft stock falling 2% today?",
+            "text": "Microsoft Corp. shares MSFT fell 2% in Wednesday morning trading as investors weighed fresh speculation about the company's in-house Maia AI chips against its rapidly rising infrastructure spending. W...",
+            "source": "Invezz",
+            "type": "Article",
+            "tickers": null,
+            "time": "Aug 12, 2026, 3:13 PM EDT",
+            "ago": "10 days ago"
+          },
+          {
+            "url": "https://techcrunch.com/2026/08/12/after-microsoft-threatened-legal-action-a-security-researcher-publishes-a-new-windows-zero-day-bug/",
+            "img": "https://cdn.snapi.dev/images/v1/s/8/l/micros7-3607380-3866159.jpg",
+            "title": "After Microsoft threatened legal action, a security researcher publishes a new Windows zero-day bug",
+            "text": "A security researcher has published details of a new vulnerability in the latest versions of Windows that allows hackers to gain system-wide access to the user's device and data, despite facing a lega...",
+            "source": "TechCrunch",
+            "type": "Article",
+            "tickers": null,
+            "time": "Aug 12, 2026, 11:18 AM EDT",
+            "ago": "10 days ago"
+          },
+          {
+            "url": "https://www.businesswire.com/news/home/20260812028467/en/Sionic-Launches-Instant-Bank-Pay-in-U.S.-Through-Microsoft-Marketplace/",
+            "img": "https://cdn.snapi.dev/images/v1/y/i/x/press9-3865501.jpg",
+            "title": "Sionic Launches Instant Bank Pay in U.S. Through Microsoft Marketplace",
+            "text": "ATLANTA--(BUSINESS WIRE)--Sionic, a leader in real-time, bank-to-bank payments at the point of sale, today announced the availability launch of its Instant Bank Pay service alongside Fraud Detection S...",
+            "source": "Business Wire",
+            "type": "Article",
+            "tickers": null,
+            "time": "Aug 12, 2026, 8:30 AM EDT",
+            "ago": "10 days ago"
+          },
+          {
+            "url": "https://www.barrons.com/articles/palantir-software-stocks-chip-81e21d89",
+            "img": "https://cdn.snapi.dev/images/v1/k/w/h/pl5-2730201-3865449.jpg",
+            "title": "Palantir and These Software Stocks Slide in Seesaw With Chip Giants",
+            "text": "Software and chip stocks tend to move in different directions—and that's it's all tied to AI.",
+            "source": "Barrons",
+            "type": "Article",
+            "tickers": [
+              "$PLTR",
+              "$CRM",
+              "$NOW",
+              "$WDAY"
+            ],
+            "time": "Aug 12, 2026, 8:29 AM EDT",
+            "ago": "10 days ago"
+          },
+          {
+            "url": "https://www.investopedia.com/tech-stocks-have-stumbled-other-sectors-have-risen-has-that-made-the-market-stronger-12057290",
+            "img": "https://cdn.snapi.dev/images/v1/p/l/v/catalog-mail10-3863623.jpg",
+            "title": "Tech Stocks Have Stumbled. Other Sectors Have Risen.",
+            "text": "The bull market that began in late 2022 has in recent months appeared to have run its course. Experts say that may be the opposite of what was happening.",
+            "source": "Investopedia",
+            "type": "Article",
+            "tickers": [
+              "$AMZN",
+              "$GOOG",
+              "$GOOGL",
+              "$META"
+            ],
+            "time": "Aug 11, 2026, 2:46 PM EDT",
+            "ago": "11 days ago"
+          }
+        ]
+      },
+      "chart": {
+        "expiration": null,
+        "data": null
+      },
+      "changes": {
+        "price1w": 495.4,
+        "price1m": 402.29,
+        "price3m": 421.06,
+        "price6m": 397.23,
+        "priceYTD": 483.62,
+        "price1y": 505.72,
+        "price5y": 304.36,
+        "priceMAX": 0.0972
+      },
+      "source": "polygon"
+    },
+    "history": [
+      {
+        "t": "2026-08-03",
+        "o": 476.125,
+        "h": 513.73,
+        "l": 475,
+        "c": 483.24,
+        "a": 483.24,
+        "v": 453434698,
+        "ch": 4.18
+      },
+      {
+        "t": "2026-07-01",
+        "o": 380.825,
+        "h": 466.84,
+        "l": 373.35,
+        "c": 464.72,
+        "a": 463.846809,
+        "v": 815183615,
+        "ch": 24.58
+      },
+      {
+        "t": "2026-06-01",
+        "o": 464.84,
+        "h": 466.32,
+        "l": 349.2,
+        "c": 373.02,
+        "a": 372.31911,
+        "v": 1018052145,
+        "ch": -17.15
+      },
+      {
+        "t": "2026-05-01",
+        "o": 412.8,
+        "h": 450.33,
+        "l": 400.88,
+        "c": 450.24,
+        "a": 449.394016,
+        "v": 698954934,
+        "ch": 10.65
+      },
+      {
+        "t": "2026-04-01",
+        "o": 373.49,
+        "h": 433.7,
+        "l": 364.15,
+        "c": 407.78,
+        "a": 406.134154,
+        "v": 716519026,
+        "ch": 10.16
+      },
+      {
+        "t": "2026-03-02",
+        "o": 392.855,
+        "h": 413.05,
+        "l": 356.28,
+        "c": 370.17,
+        "a": 368.675952,
+        "v": 745288132,
+        "ch": -5.75
+      },
+      {
+        "t": "2026-02-02",
+        "o": 430.235,
+        "h": 430.736,
+        "l": 381.71,
+        "c": 392.74,
+        "a": 391.154857,
+        "v": 800257151,
+        "ch": -8.52
+      },
+      {
+        "t": "2026-01-02",
+        "o": 484.385,
+        "h": 489.7,
+        "l": 421.02,
+        "c": 430.29,
+        "a": 427.577366,
+        "v": 684062568,
+        "ch": -11.03
+      },
+      {
+        "t": "2025-12-01",
+        "o": 488.435,
+        "h": 493.5,
+        "l": 470.88,
+        "c": 483.62,
+        "a": 480.571163,
+        "v": 496558381,
+        "ch": -1.71
+      },
+      {
+        "t": "2025-11-03",
+        "o": 519.805,
+        "h": 524.96,
+        "l": 464.89,
+        "c": 492.01,
+        "a": 488.908271,
+        "v": 479480836,
+        "ch": -4.8
+      },
+      {
+        "t": "2025-10-01",
+        "o": 514.8,
+        "h": 553.72,
+        "l": 506,
+        "c": 517.81,
+        "a": 513.584388,
+        "v": 468447068,
+        "ch": -0.03
+      }
+    ],
+    "quote": {
+      "c": 2.09,
+      "e": true,
+      "h": 486.36,
+      "l": 478.53,
+      "o": 479.88,
+      "p": 483.24,
+      "u": "Aug 21, 2026, 4:00 PM EDT",
+      "v": 22515215,
+      "cl": 481.15,
+      "cp": 0.43,
+      "ec": 0.37,
+      "ep": 483.61,
+      "es": "After-hours",
+      "eu": "Aug 21, 2026, 7:59 PM EDT",
+      "ex": "NASDAQ",
+      "ms": "closed",
+      "pd": 483.24,
+      "td": "2026-08-21",
+      "ts": 1787342400000,
+      "cdr": 1,
+      "ecp": 0.08,
+      "epd": 483.61,
+      "etd": "2026-08-21",
+      "ets": 1787356790428.4878,
+      "exp": 1787559300000,
+      "fms": "closed",
+      "h52": 553.72,
+      "l52": 349.2,
+      "uid": "MSFT",
+      "days": 0,
+      "symbol": "MSFT"
+    }
+  }
+}

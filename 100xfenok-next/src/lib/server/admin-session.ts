@@ -111,6 +111,38 @@ async function hmacHex(message: string, secret: string): Promise<string> {
   return bytesToHex(signature);
 }
 
+/**
+ * Sign a server-owned value with the same configured secret that protects the
+ * admin session, while domain-separating it from the cookie token protocol.
+ * The secret itself never leaves this server-only module.
+ */
+export async function signAdminScopedServerValue(
+  scope: string,
+  value: string,
+): Promise<string> {
+  const secret = getAdminSessionSecret();
+  if (!secret) throw new Error("ADMIN_AUTH_NOT_CONFIGURED");
+  return hmacHex(`${scope}\n${value}`, secret);
+}
+
+export async function verifyAdminScopedServerValue(
+  scope: string,
+  value: string,
+  signature: string,
+): Promise<boolean> {
+  const secret = getAdminSessionSecret();
+  if (!secret || !/^[a-f0-9]{64}$/.test(signature)) return false;
+  const expected = await hmacHex(`${scope}\n${value}`, secret);
+  const a = new TextEncoder().encode(expected);
+  const b = new TextEncoder().encode(signature);
+  if (a.byteLength !== b.byteLength) return false;
+  let diff = 0;
+  for (let i = 0; i < a.byteLength; i++) {
+    diff |= a[i] ^ b[i];
+  }
+  return diff === 0;
+}
+
 function serializePayload(payload: AdminSessionPayload): string {
   return bytesToBase64Url(
     new TextEncoder().encode(JSON.stringify(payload)),

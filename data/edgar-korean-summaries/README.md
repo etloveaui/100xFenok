@@ -18,7 +18,6 @@ This folder mirrors the public Korean SEC filing summary data contract.
 - `translationKo.scopeNote` must say the Korean rendering is AI-generated and not an official/verbatim legal translation.
 - Each `translationKo.sections[]` row must include `id`, `sourceSection`, `titleKo`, `bodyKo`, and non-empty `sourceAnchors`. `sourceAnchors` must reference summary artifact evidence IDs, and every numeric token in `bodyKo` must appear in the cited evidence digests. Korean translation text may be long; do not embed long English SEC source text.
 - Each translation artifact must include `generation.generatedAtUtc`, `generation.promptVersion`, `generation.model`, `generation.paidQuotaUsed`, and `generation.costUsedUsd` for auditability.
-- Run `npm run qa:edgar-summaries` from `100xfenok-next` after adding or editing manifests/artifacts. The check blocks missing evidence anchors and numeric claims that are not present in cited evidence digests.
 - Run `npm run qa:edgar-translations` from `100xfenok-next` after adding or editing `translationPath` artifacts. The check validates the translation artifact schema and source/public mirrors.
 
 ## Current Coverage

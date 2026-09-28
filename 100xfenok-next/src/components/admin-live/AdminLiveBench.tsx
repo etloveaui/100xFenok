@@ -1,8 +1,6 @@
 'use client';
 
 import { useEffect, useMemo, useRef, useState } from "react";
-import MonaWindDown, { type WindDownPhase } from "@/components/admin-live/MonaWindDown";
-import MonaVnextEntry from "@/components/admin-live/MonaVnextEntry";
 import { BUILD_VERSION } from "@/generated/build-version";
 import { inspectAdminLiveModelOutput } from "@/lib/admin-live-output-safety";
 import {
@@ -829,10 +827,9 @@ async function readSocketData(data: MessageEvent["data"]): Promise<string> {
 
 type AdminLiveBenchProps = {
   initialMode?: BenchMode;
-  simpleUi?: boolean;
 };
 
-export default function AdminLiveBench({ initialMode = "fenok", simpleUi = false }: AdminLiveBenchProps = {}) {
+export default function AdminLiveBench({ initialMode = "fenok" }: AdminLiveBenchProps = {}) {
   const [mode, setMode] = useState<BenchMode>(initialMode);
   const [status, setStatus] = useState<SessionStatus>("checking");
   const [sessionId, setSessionId] = useState<string | null>(null);
@@ -3037,52 +3034,6 @@ export default function AdminLiveBench({ initialMode = "fenok", simpleUi = false
     });
   };
 
-  if (simpleUi) {
-    const phase: WindDownPhase = status === "listening"
-      ? "live"
-      : status === "connecting"
-        ? "connecting"
-        : status === "checking"
-          ? "boot"
-          : status === "blocked"
-            ? "blocked"
-            : status === "stopped"
-              ? "stopped"
-              : "ready";
-    const lastCoachLine = logs.find((entry) => entry.role === "bench")?.text ?? null;
-    return (
-      <>
-        <MonaWindDown
-          phase={phase}
-          message={mainMessage}
-          card={card}
-          coachLine={lastCoachLine}
-          errorText={metrics.lastError}
-          voiceName={voiceName}
-          vadPreset={vadPreset}
-          onVoiceChange={setVoiceName}
-          onVadChange={setVadPreset}
-          settingsSlot={mode === "mona" ? (
-            <>
-              <CoachConfigControls
-                config={normalizedCoachConfig}
-                locked={settingsLocked}
-                onUpdate={updateCoachConfig}
-                interruptionMode={interruptionMode}
-                onInterruptionModeChange={setInterruptionMode}
-                variant="winddown"
-              />
-              <MonaVnextEntry locked={settingsLocked} />
-            </>
-          ) : undefined}
-          onStart={() => void startSession()}
-          onStop={() => void stopSession()}
-        />
-        <BuildVersionBadge onCopy={copyBuildVersion} />
-      </>
-    );
-  }
-
   return (
     <main className="min-h-[calc(100vh-80px)] bg-slate-50 px-4 pb-[max(env(safe-area-inset-bottom),16px)] pt-5">
       <BuildVersionBadge onCopy={copyBuildVersion} />
@@ -3138,7 +3089,7 @@ export default function AdminLiveBench({ initialMode = "fenok", simpleUi = false
             <button
               type="button"
               disabled
-              className="flex size-14 items-center justify-center rounded-full border border-slate-200 bg-slate-50 text-xs font-black text-slate-500"
+              className="flex size-14 items-center justify-center rounded-full border border-slate-200 bg-slate-50 text-[12px] font-black text-slate-500"
               title="카메라/이미지 입력 준비 중"
             >
               CAM
@@ -3266,7 +3217,7 @@ export default function AdminLiveBench({ initialMode = "fenok", simpleUi = false
                       type="button"
                       onClick={() => setVadPreset(preset)}
                       disabled={settingsLocked}
-                      className={`min-h-10 rounded-md px-2 text-xs font-black transition ${
+                      className={`min-h-10 rounded-md px-2 text-[12px] font-black transition ${
                         vadPreset === preset ? "bg-slate-950 text-white" : "text-slate-600 hover:bg-white"
                       } disabled:cursor-not-allowed disabled:opacity-50`}
                     >
@@ -3285,7 +3236,7 @@ export default function AdminLiveBench({ initialMode = "fenok", simpleUi = false
                       type="button"
                       onClick={() => setInterruptionMode(im)}
                       disabled={settingsLocked}
-                      className={`min-h-10 rounded-md px-2 text-xs font-black transition ${
+                      className={`min-h-10 rounded-md px-2 text-[12px] font-black transition ${
                         interruptionMode === im ? "bg-slate-950 text-white" : "text-slate-600 hover:bg-white"
                       } disabled:cursor-not-allowed disabled:opacity-50`}
                     >
@@ -3314,7 +3265,7 @@ export default function AdminLiveBench({ initialMode = "fenok", simpleUi = false
                     setPromptEdited(false);
                   }}
                   disabled={settingsLocked}
-                  className="min-h-8 rounded-md border border-slate-300 px-2 text-xs font-black text-slate-600 disabled:cursor-not-allowed disabled:opacity-50"
+                  className="min-h-8 rounded-md border border-slate-300 px-2 text-[12px] font-black text-slate-600 disabled:cursor-not-allowed disabled:opacity-50"
                 >
                   기본값
                 </button>
@@ -3327,7 +3278,7 @@ export default function AdminLiveBench({ initialMode = "fenok", simpleUi = false
                 }}
                 disabled={settingsLocked}
                 rows={7}
-                className="mt-2 w-full resize-y rounded-lg border border-slate-300 bg-white px-3 py-3 font-mono text-xs leading-5 text-slate-900 outline-none transition focus:border-brand-interactive focus:ring-2 focus:ring-brand-interactive/20 disabled:cursor-not-allowed disabled:opacity-50"
+                className="mt-2 w-full resize-y rounded-lg border border-slate-300 bg-white px-3 py-3 font-mono text-[12px] leading-5 text-slate-900 outline-none transition focus:border-brand-interactive focus:ring-2 focus:ring-brand-interactive/20 disabled:cursor-not-allowed disabled:opacity-50"
               />
             </label>
 
@@ -3365,12 +3316,12 @@ export default function AdminLiveBench({ initialMode = "fenok", simpleUi = false
             ) : logs.map((log) => (
               <div key={log.id} className="rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-left">
                 <div className="flex items-center justify-between gap-2">
-                  <span className={`text-xs font-black ${
+                  <span className={`text-[12px] font-black ${
                     log.role === "bench" ? "text-emerald-700" : log.role === "user" ? "text-blue-700" : log.role === "error" ? "text-red-700" : "text-slate-500"
                   }`}>
                     {LOG_ROLE_TEXT[log.role]}
                   </span>
-                  <span className="text-xs font-semibold text-slate-500">{log.at}</span>
+                  <span className="text-[12px] font-semibold text-slate-500">{log.at}</span>
                 </div>
                 <p className="mt-1 text-sm leading-6 text-slate-700">{log.text}</p>
               </div>
@@ -3487,7 +3438,7 @@ function CoachConfigControls({
         ? "border-[var(--wd-accent)] bg-[var(--wd-accent-soft)] text-[var(--wd-accent)]"
         : "border-[var(--wd-line)] text-[var(--wd-muted)]"
     } disabled:cursor-not-allowed disabled:opacity-50`
-    : `min-h-10 rounded-md px-2 text-xs font-black transition ${
+    : `min-h-10 rounded-md px-2 text-[12px] font-black transition ${
       active ? "bg-slate-950 text-white" : "text-slate-600 hover:bg-white"
     } disabled:cursor-not-allowed disabled:opacity-50`;
   const testerButtonClass = (active: boolean) => winddown
@@ -3496,7 +3447,7 @@ function CoachConfigControls({
         ? "border-[var(--wd-apricot)] bg-[var(--wd-apricot-soft)] text-[var(--wd-apricot)]"
         : "border-[var(--wd-line)] text-[var(--wd-muted)]"
     } disabled:cursor-not-allowed disabled:opacity-50`
-    : `min-h-10 rounded-md px-2 text-xs font-black transition ${
+    : `min-h-10 rounded-md px-2 text-[12px] font-black transition ${
       active ? "bg-amber-950 text-white" : "text-amber-900 hover:bg-white"
     } disabled:cursor-not-allowed disabled:opacity-50`;
   const detailClass = winddown
@@ -3621,7 +3572,7 @@ function CoachConfigControls({
 function MetricCard({ label, value }: { label: string; value: string }) {
   return (
     <div className="rounded-xl border border-slate-200 bg-slate-50 p-3">
-      <dt className="text-[10px] font-black uppercase tracking-[0.12em] text-slate-500">{label}</dt>
+      <dt className="text-[12px] font-black uppercase tracking-[0.12em] text-slate-500">{label}</dt>
       <dd className="mt-1 break-words text-base font-black text-slate-950">{value}</dd>
     </div>
   );
@@ -3656,7 +3607,7 @@ function ToolBoard({
           <p className="mt-1 text-sm font-semibold text-slate-500">{toolTokenHint(activeCount)}</p>
         </div>
         {locked ? (
-          <span className="rounded-md border border-amber-200 bg-amber-50 px-2 py-1 text-xs font-black text-amber-800">
+          <span className="rounded-md border border-amber-200 bg-amber-50 px-2 py-1 text-[12px] font-black text-amber-800">
             다시 시작하면 반영
           </span>
         ) : null}
@@ -3698,7 +3649,7 @@ function ToolBoard({
                         }`} />
                         <span className="text-sm font-black text-slate-950">{tool.label}</span>
                       </span>
-                      <span className={`rounded px-1.5 py-0.5 text-[10px] font-black ${
+                      <span className={`rounded px-1.5 py-0.5 text-[12px] font-black ${
                         enabled
                           ? "bg-emerald-100 text-emerald-800"
                           : tool.status === "available"
@@ -3710,7 +3661,7 @@ function ToolBoard({
                         {enabled ? "켜짐" : TOOL_STATUS_TEXT[tool.status]}
                       </span>
                     </span>
-                    <span className="mt-1 block text-xs font-semibold leading-5 text-slate-500">
+                    <span className="mt-1 block text-[12px] font-semibold leading-5 text-slate-500">
                       {tool.reason ?? tool.description}
                     </span>
                   </button>
@@ -3729,7 +3680,7 @@ function ExpressionCardView({ card }: { card: ExpressionCard | null }) {
 
   return (
     <section aria-live="polite" className="rounded-lg border border-slate-200 bg-white p-5 shadow-sm">
-      <div className="flex items-center gap-2 text-xs font-black text-slate-500">
+      <div className="flex items-center gap-2 text-[12px] font-black text-slate-500">
         {card.state === "prompt" && <span aria-label="locked">🔒</span>}
         <span>
           {card.state === "prompt" ? "듣기 전" : card.state === "reveal" ? "교정" : "드릴"}

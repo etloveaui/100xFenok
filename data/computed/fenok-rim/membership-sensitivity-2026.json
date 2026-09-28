@@ -1,0 +1,819 @@
+{
+  "schema_version": "fenok_rim_membership_sensitivity.v1",
+  "analysis_type": "2026_observed_membership_sensitivity",
+  "deterministic": true,
+  "eligibility": {
+    "production_eligible": false,
+    "historical_survivorship_evidence": false,
+    "blocking_reasons": [
+      "not_effective_date_history",
+      "not_2022_2025_point_in_time_membership",
+      "finance_files_are_current_local_copies_not_as_of_snapshots",
+      "trailing_realised_payout_is_not_forward_policy"
+    ]
+  },
+  "payout_basis": {
+    "formula": "sum(abs(Cash Dividends Paid)) / sum(Net Income)",
+    "aggregation": "aggregate numerator and denominator across the explicit membership set per statement period end year",
+    "positive_net_income_required": true,
+    "loss_making_constituent_periods_excluded": true,
+    "dividend_measure": "Cash Dividends Paid from current local yfinance cash-flow statements",
+    "year_retention_threshold": {
+      "minimum_peak_reporting_share": 0.6,
+      "denominator": "peak positive_income_with_dividend_constituents across all candidate statement period end years",
+      "rule": "retain a year when its positive_income_with_dividend_constituents is at least 60% of that peak",
+      "per_year_gate_share_published": true,
+      "derivation": "each retained row count divided by the maximum retained row count; the unfiltered peak necessarily survives its own 60% gate"
+    }
+  },
+  "source_inputs": [
+    {
+      "path": "data/slickcharts/membership-changes.json",
+      "sha256": "b86feb068368fedb08980d7d3398844d305806d24d0b613b1b57850781e4a945"
+    },
+    {
+      "path": "data/slickcharts/sp500.json",
+      "sha256": "fa79770ccb9c4f702bc107610fa616ce651ff26adf43b1df194ec74e71fd7771"
+    },
+    {
+      "path": "data/slickcharts/nasdaq100.json",
+      "sha256": "6739361b44cf671e4e9f67487eb271103ea2d93efdcd8e7fc6be00860e841063"
+    },
+    {
+      "path": "scripts/build-index-payout-history.mjs",
+      "sha256": "7b322ec6e397903d47cbe99af943271a15597b1b96d7b051e28acfb345faf2be"
+    },
+    {
+      "path": "scripts/build-fenok-rim-membership-sensitivity.mjs",
+      "sha256": "6e6174c784c34e4166abdef191aa848fe5b15f02cb13192aae9314bff65d600f"
+    },
+    {
+      "path_pattern": "data/yf/finance/{symbol}.json",
+      "manifest_method": "sha256(sorted(path + NUL + file_sha256) joined with LF)",
+      "manifest_sha256": "ecbfe7b41dfd78460f07e60f11e17c4388f6c6e502d3c909696f86fe6b8dbded",
+      "requested_file_count": 538,
+      "present_file_count": 538,
+      "missing_symbols": []
+    }
+  ],
+  "method": "reverse locally observed membership deltas from the current ledger, then rerun the same realised payout calculation for each reconstructed universe",
+  "limitations": [
+    "not_effective_date_history",
+    "not_2022_2025_point_in_time_membership",
+    "tracker_recorded_dates_are_collector_run_dates",
+    "finance_files_are_current_local_copies_not_as_of_snapshots",
+    "trailing_realised_payout_is_not_forward_policy"
+  ],
+  "indices": {
+    "sp500": {
+      "name": "S&P 500",
+      "bootstrap": {
+        "tracker_recorded_date": "2026-01-09",
+        "record_type": "bootstrap_exact_observed_set",
+        "previous_count": 0,
+        "current_count": 503,
+        "exact_symbol_count": 503,
+        "exact_set_sha256": "fc7fd7866becc75d5fdbf46baf207f92f897d71fca63fea095ea564cc5df6257",
+        "reverse_transition_validation": "passed"
+      },
+      "current": {
+        "ledger_processed_at": "2026-08-10T10:57:36+00:00",
+        "membership_snapshot_collected_at": "2026-08-09T07:57:41+00:00",
+        "count": 503,
+        "membership_snapshot_matches_ledger": true,
+        "coverage": {
+          "constituents_requested": 503,
+          "constituents_with_any_usable_positive_income_and_dividend_statement": 264,
+          "any_usable_statement_coverage_ratio": 0.524851,
+          "newest_statement_period": "2026-05-31"
+        }
+      },
+      "observations": [
+        {
+          "tracker_recorded_date": "2026-01-09",
+          "boundary": "state_after_last_tracker_run_recorded_on_utc_date",
+          "reconstructed_count": 503,
+          "changed_symbols": {
+            "current_added_since_observation": [
+              "BNY",
+              "CASY",
+              "CIEN",
+              "COHR",
+              "ECHO",
+              "FDXF",
+              "FERG",
+              "FLEX",
+              "HONA",
+              "LITE",
+              "MRSH",
+              "MRVL",
+              "VEEV",
+              "VRT"
+            ],
+            "current_removed_since_observation": [
+              "BK",
+              "CAG",
+              "CPB",
+              "CTRA",
+              "DAY",
+              "EA",
+              "EPAM",
+              "HOLX",
+              "LW",
+              "MMC",
+              "MOH",
+              "MTCH",
+              "PAYC",
+              "POOL"
+            ],
+            "total_distinct": 28
+          },
+          "coverage": {
+            "constituents_requested": 503,
+            "constituents_with_any_usable_positive_income_and_dividend_statement": 267,
+            "any_usable_statement_coverage_ratio": 0.530815,
+            "newest_statement_period": "2026-05-31"
+          },
+          "per_statement_period_end_year": [
+            {
+              "statement_period_end_year": "2022",
+              "current_payout_ratio": 0.3447,
+              "reconstructed_payout_ratio": 0.3456,
+              "delta_percentage_points": 0.09,
+              "current_positive_income_with_dividend_constituents": 232,
+              "reconstructed_positive_income_with_dividend_constituents": 236,
+              "current_coverage_of_constituents_with_any_usable_statement": 0.878788,
+              "reconstructed_coverage_of_constituents_with_any_usable_statement": 0.883895,
+              "current_threshold_gate_reporting_share": 0.899225,
+              "reconstructed_threshold_gate_reporting_share": 0.904215
+            },
+            {
+              "statement_period_end_year": "2023",
+              "current_payout_ratio": 0.3746,
+              "reconstructed_payout_ratio": 0.375,
+              "delta_percentage_points": 0.04,
+              "current_positive_income_with_dividend_constituents": 255,
+              "reconstructed_positive_income_with_dividend_constituents": 258,
+              "current_coverage_of_constituents_with_any_usable_statement": 0.965909,
+              "reconstructed_coverage_of_constituents_with_any_usable_statement": 0.966292,
+              "current_threshold_gate_reporting_share": 0.988372,
+              "reconstructed_threshold_gate_reporting_share": 0.988506
+            },
+            {
+              "statement_period_end_year": "2024",
+              "current_payout_ratio": 0.3653,
+              "reconstructed_payout_ratio": 0.3659,
+              "delta_percentage_points": 0.06,
+              "current_positive_income_with_dividend_constituents": 258,
+              "reconstructed_positive_income_with_dividend_constituents": 261,
+              "current_coverage_of_constituents_with_any_usable_statement": 0.977273,
+              "reconstructed_coverage_of_constituents_with_any_usable_statement": 0.977528,
+              "current_threshold_gate_reporting_share": 1,
+              "reconstructed_threshold_gate_reporting_share": 1
+            },
+            {
+              "statement_period_end_year": "2025",
+              "current_payout_ratio": 0.3405,
+              "reconstructed_payout_ratio": 0.3413,
+              "delta_percentage_points": 0.08,
+              "current_positive_income_with_dividend_constituents": 249,
+              "reconstructed_positive_income_with_dividend_constituents": 252,
+              "current_coverage_of_constituents_with_any_usable_statement": 0.943182,
+              "reconstructed_coverage_of_constituents_with_any_usable_statement": 0.94382,
+              "current_threshold_gate_reporting_share": 0.965116,
+              "reconstructed_threshold_gate_reporting_share": 0.965517
+            }
+          ]
+        },
+        {
+          "tracker_recorded_date": "2026-06-08",
+          "boundary": "state_after_last_tracker_run_recorded_on_utc_date",
+          "reconstructed_count": 503,
+          "changed_symbols": {
+            "current_added_since_observation": [
+              "ECHO",
+              "FERG",
+              "FLEX",
+              "HONA",
+              "MRVL"
+            ],
+            "current_removed_since_observation": [
+              "CAG",
+              "CPB",
+              "EA",
+              "POOL",
+              "SATS"
+            ],
+            "total_distinct": 10
+          },
+          "coverage": {
+            "constituents_requested": 503,
+            "constituents_with_any_usable_positive_income_and_dividend_statement": 265,
+            "any_usable_statement_coverage_ratio": 0.526839,
+            "newest_statement_period": "2026-05-31"
+          },
+          "per_statement_period_end_year": [
+            {
+              "statement_period_end_year": "2022",
+              "current_payout_ratio": 0.3447,
+              "reconstructed_payout_ratio": 0.3451,
+              "delta_percentage_points": 0.04,
+              "current_positive_income_with_dividend_constituents": 232,
+              "reconstructed_positive_income_with_dividend_constituents": 234,
+              "current_coverage_of_constituents_with_any_usable_statement": 0.878788,
+              "reconstructed_coverage_of_constituents_with_any_usable_statement": 0.883019,
+              "current_threshold_gate_reporting_share": 0.899225,
+              "reconstructed_threshold_gate_reporting_share": 0.903475
+            },
+            {
+              "statement_period_end_year": "2023",
+              "current_payout_ratio": 0.3746,
+              "reconstructed_payout_ratio": 0.375,
+              "delta_percentage_points": 0.04,
+              "current_positive_income_with_dividend_constituents": 255,
+              "reconstructed_positive_income_with_dividend_constituents": 256,
+              "current_coverage_of_constituents_with_any_usable_statement": 0.965909,
+              "reconstructed_coverage_of_constituents_with_any_usable_statement": 0.966038,
+              "current_threshold_gate_reporting_share": 0.988372,
+              "reconstructed_threshold_gate_reporting_share": 0.988417
+            },
+            {
+              "statement_period_end_year": "2024",
+              "current_payout_ratio": 0.3653,
+              "reconstructed_payout_ratio": 0.3658,
+              "delta_percentage_points": 0.05,
+              "current_positive_income_with_dividend_constituents": 258,
+              "reconstructed_positive_income_with_dividend_constituents": 259,
+              "current_coverage_of_constituents_with_any_usable_statement": 0.977273,
+              "reconstructed_coverage_of_constituents_with_any_usable_statement": 0.977358,
+              "current_threshold_gate_reporting_share": 1,
+              "reconstructed_threshold_gate_reporting_share": 1
+            },
+            {
+              "statement_period_end_year": "2025",
+              "current_payout_ratio": 0.3405,
+              "reconstructed_payout_ratio": 0.3409,
+              "delta_percentage_points": 0.04,
+              "current_positive_income_with_dividend_constituents": 249,
+              "reconstructed_positive_income_with_dividend_constituents": 250,
+              "current_coverage_of_constituents_with_any_usable_statement": 0.943182,
+              "reconstructed_coverage_of_constituents_with_any_usable_statement": 0.943396,
+              "current_threshold_gate_reporting_share": 0.965116,
+              "reconstructed_threshold_gate_reporting_share": 0.965251
+            }
+          ]
+        },
+        {
+          "tracker_recorded_date": "2026-06-28",
+          "boundary": "state_after_last_tracker_run_recorded_on_utc_date",
+          "reconstructed_count": 503,
+          "changed_symbols": {
+            "current_added_since_observation": [
+              "ECHO",
+              "FERG",
+              "HONA"
+            ],
+            "current_removed_since_observation": [
+              "CAG",
+              "EA",
+              "SATS"
+            ],
+            "total_distinct": 6
+          },
+          "coverage": {
+            "constituents_requested": 503,
+            "constituents_with_any_usable_positive_income_and_dividend_statement": 264,
+            "any_usable_statement_coverage_ratio": 0.524851,
+            "newest_statement_period": "2026-05-31"
+          },
+          "per_statement_period_end_year": [
+            {
+              "statement_period_end_year": "2022",
+              "current_payout_ratio": 0.3447,
+              "reconstructed_payout_ratio": 0.3449,
+              "delta_percentage_points": 0.02,
+              "current_positive_income_with_dividend_constituents": 232,
+              "reconstructed_positive_income_with_dividend_constituents": 233,
+              "current_coverage_of_constituents_with_any_usable_statement": 0.878788,
+              "reconstructed_coverage_of_constituents_with_any_usable_statement": 0.882576,
+              "current_threshold_gate_reporting_share": 0.899225,
+              "reconstructed_threshold_gate_reporting_share": 0.903101
+            },
+            {
+              "statement_period_end_year": "2023",
+              "current_payout_ratio": 0.3746,
+              "reconstructed_payout_ratio": 0.3749,
+              "delta_percentage_points": 0.03,
+              "current_positive_income_with_dividend_constituents": 255,
+              "reconstructed_positive_income_with_dividend_constituents": 255,
+              "current_coverage_of_constituents_with_any_usable_statement": 0.965909,
+              "reconstructed_coverage_of_constituents_with_any_usable_statement": 0.965909,
+              "current_threshold_gate_reporting_share": 0.988372,
+              "reconstructed_threshold_gate_reporting_share": 0.988372
+            },
+            {
+              "statement_period_end_year": "2024",
+              "current_payout_ratio": 0.3653,
+              "reconstructed_payout_ratio": 0.3656,
+              "delta_percentage_points": 0.03,
+              "current_positive_income_with_dividend_constituents": 258,
+              "reconstructed_positive_income_with_dividend_constituents": 258,
+              "current_coverage_of_constituents_with_any_usable_statement": 0.977273,
+              "reconstructed_coverage_of_constituents_with_any_usable_statement": 0.977273,
+              "current_threshold_gate_reporting_share": 1,
+              "reconstructed_threshold_gate_reporting_share": 1
+            },
+            {
+              "statement_period_end_year": "2025",
+              "current_payout_ratio": 0.3405,
+              "reconstructed_payout_ratio": 0.3408,
+              "delta_percentage_points": 0.03,
+              "current_positive_income_with_dividend_constituents": 249,
+              "reconstructed_positive_income_with_dividend_constituents": 249,
+              "current_coverage_of_constituents_with_any_usable_statement": 0.943182,
+              "reconstructed_coverage_of_constituents_with_any_usable_statement": 0.943182,
+              "current_threshold_gate_reporting_share": 0.965116,
+              "reconstructed_threshold_gate_reporting_share": 0.965116
+            }
+          ]
+        },
+        {
+          "tracker_recorded_date": "2026-07-05",
+          "boundary": "state_after_last_tracker_run_recorded_on_utc_date",
+          "reconstructed_count": 503,
+          "changed_symbols": {
+            "current_added_since_observation": [
+              "ECHO",
+              "FERG"
+            ],
+            "current_removed_since_observation": [
+              "EA",
+              "SATS"
+            ],
+            "total_distinct": 4
+          },
+          "coverage": {
+            "constituents_requested": 503,
+            "constituents_with_any_usable_positive_income_and_dividend_statement": 263,
+            "any_usable_statement_coverage_ratio": 0.522863,
+            "newest_statement_period": "2026-05-31"
+          },
+          "per_statement_period_end_year": [
+            {
+              "statement_period_end_year": "2022",
+              "current_payout_ratio": 0.3447,
+              "reconstructed_payout_ratio": 0.3447,
+              "delta_percentage_points": 0,
+              "current_positive_income_with_dividend_constituents": 232,
+              "reconstructed_positive_income_with_dividend_constituents": 232,
+              "current_coverage_of_constituents_with_any_usable_statement": 0.878788,
+              "reconstructed_coverage_of_constituents_with_any_usable_statement": 0.882129,
+              "current_threshold_gate_reporting_share": 0.899225,
+              "reconstructed_threshold_gate_reporting_share": 0.902724
+            },
+            {
+              "statement_period_end_year": "2023",
+              "current_payout_ratio": 0.3746,
+              "reconstructed_payout_ratio": 0.3746,
+              "delta_percentage_points": 0,
+              "current_positive_income_with_dividend_constituents": 255,
+              "reconstructed_positive_income_with_dividend_constituents": 254,
+              "current_coverage_of_constituents_with_any_usable_statement": 0.965909,
+              "reconstructed_coverage_of_constituents_with_any_usable_statement": 0.965779,
+              "current_threshold_gate_reporting_share": 0.988372,
+              "reconstructed_threshold_gate_reporting_share": 0.988327
+            },
+            {
+              "statement_period_end_year": "2024",
+              "current_payout_ratio": 0.3653,
+              "reconstructed_payout_ratio": 0.3652,
+              "delta_percentage_points": -0.01,
+              "current_positive_income_with_dividend_constituents": 258,
+              "reconstructed_positive_income_with_dividend_constituents": 257,
+              "current_coverage_of_constituents_with_any_usable_statement": 0.977273,
+              "reconstructed_coverage_of_constituents_with_any_usable_statement": 0.977186,
+              "current_threshold_gate_reporting_share": 1,
+              "reconstructed_threshold_gate_reporting_share": 1
+            },
+            {
+              "statement_period_end_year": "2025",
+              "current_payout_ratio": 0.3405,
+              "reconstructed_payout_ratio": 0.3406,
+              "delta_percentage_points": 0.01,
+              "current_positive_income_with_dividend_constituents": 249,
+              "reconstructed_positive_income_with_dividend_constituents": 248,
+              "current_coverage_of_constituents_with_any_usable_statement": 0.943182,
+              "reconstructed_coverage_of_constituents_with_any_usable_statement": 0.942966,
+              "current_threshold_gate_reporting_share": 0.965116,
+              "reconstructed_threshold_gate_reporting_share": 0.964981
+            }
+          ]
+        },
+        {
+          "tracker_recorded_date": "2026-07-19",
+          "boundary": "state_after_last_tracker_run_recorded_on_utc_date",
+          "reconstructed_count": 503,
+          "changed_symbols": {
+            "current_added_since_observation": [
+              "FERG"
+            ],
+            "current_removed_since_observation": [
+              "EA"
+            ],
+            "total_distinct": 2
+          },
+          "coverage": {
+            "constituents_requested": 503,
+            "constituents_with_any_usable_positive_income_and_dividend_statement": 263,
+            "any_usable_statement_coverage_ratio": 0.522863,
+            "newest_statement_period": "2026-05-31"
+          },
+          "per_statement_period_end_year": [
+            {
+              "statement_period_end_year": "2022",
+              "current_payout_ratio": 0.3447,
+              "reconstructed_payout_ratio": 0.3447,
+              "delta_percentage_points": 0,
+              "current_positive_income_with_dividend_constituents": 232,
+              "reconstructed_positive_income_with_dividend_constituents": 232,
+              "current_coverage_of_constituents_with_any_usable_statement": 0.878788,
+              "reconstructed_coverage_of_constituents_with_any_usable_statement": 0.882129,
+              "current_threshold_gate_reporting_share": 0.899225,
+              "reconstructed_threshold_gate_reporting_share": 0.902724
+            },
+            {
+              "statement_period_end_year": "2023",
+              "current_payout_ratio": 0.3746,
+              "reconstructed_payout_ratio": 0.3746,
+              "delta_percentage_points": 0,
+              "current_positive_income_with_dividend_constituents": 255,
+              "reconstructed_positive_income_with_dividend_constituents": 254,
+              "current_coverage_of_constituents_with_any_usable_statement": 0.965909,
+              "reconstructed_coverage_of_constituents_with_any_usable_statement": 0.965779,
+              "current_threshold_gate_reporting_share": 0.988372,
+              "reconstructed_threshold_gate_reporting_share": 0.988327
+            },
+            {
+              "statement_period_end_year": "2024",
+              "current_payout_ratio": 0.3653,
+              "reconstructed_payout_ratio": 0.3652,
+              "delta_percentage_points": -0.01,
+              "current_positive_income_with_dividend_constituents": 258,
+              "reconstructed_positive_income_with_dividend_constituents": 257,
+              "current_coverage_of_constituents_with_any_usable_statement": 0.977273,
+              "reconstructed_coverage_of_constituents_with_any_usable_statement": 0.977186,
+              "current_threshold_gate_reporting_share": 1,
+              "reconstructed_threshold_gate_reporting_share": 1
+            },
+            {
+              "statement_period_end_year": "2025",
+              "current_payout_ratio": 0.3405,
+              "reconstructed_payout_ratio": 0.3406,
+              "delta_percentage_points": 0.01,
+              "current_positive_income_with_dividend_constituents": 249,
+              "reconstructed_positive_income_with_dividend_constituents": 248,
+              "current_coverage_of_constituents_with_any_usable_statement": 0.943182,
+              "reconstructed_coverage_of_constituents_with_any_usable_statement": 0.942966,
+              "current_threshold_gate_reporting_share": 0.965116,
+              "reconstructed_threshold_gate_reporting_share": 0.964981
+            }
+          ]
+        },
+        {
+          "tracker_recorded_date": "2026-08-09",
+          "boundary": "state_after_last_tracker_run_recorded_on_utc_date",
+          "reconstructed_count": 503,
+          "changed_symbols": {
+            "current_added_since_observation": [],
+            "current_removed_since_observation": [],
+            "total_distinct": 0
+          },
+          "coverage": {
+            "constituents_requested": 503,
+            "constituents_with_any_usable_positive_income_and_dividend_statement": 264,
+            "any_usable_statement_coverage_ratio": 0.524851,
+            "newest_statement_period": "2026-05-31"
+          },
+          "per_statement_period_end_year": [
+            {
+              "statement_period_end_year": "2022",
+              "current_payout_ratio": 0.3447,
+              "reconstructed_payout_ratio": 0.3447,
+              "delta_percentage_points": 0,
+              "current_positive_income_with_dividend_constituents": 232,
+              "reconstructed_positive_income_with_dividend_constituents": 232,
+              "current_coverage_of_constituents_with_any_usable_statement": 0.878788,
+              "reconstructed_coverage_of_constituents_with_any_usable_statement": 0.878788,
+              "current_threshold_gate_reporting_share": 0.899225,
+              "reconstructed_threshold_gate_reporting_share": 0.899225
+            },
+            {
+              "statement_period_end_year": "2023",
+              "current_payout_ratio": 0.3746,
+              "reconstructed_payout_ratio": 0.3746,
+              "delta_percentage_points": 0,
+              "current_positive_income_with_dividend_constituents": 255,
+              "reconstructed_positive_income_with_dividend_constituents": 255,
+              "current_coverage_of_constituents_with_any_usable_statement": 0.965909,
+              "reconstructed_coverage_of_constituents_with_any_usable_statement": 0.965909,
+              "current_threshold_gate_reporting_share": 0.988372,
+              "reconstructed_threshold_gate_reporting_share": 0.988372
+            },
+            {
+              "statement_period_end_year": "2024",
+              "current_payout_ratio": 0.3653,
+              "reconstructed_payout_ratio": 0.3653,
+              "delta_percentage_points": 0,
+              "current_positive_income_with_dividend_constituents": 258,
+              "reconstructed_positive_income_with_dividend_constituents": 258,
+              "current_coverage_of_constituents_with_any_usable_statement": 0.977273,
+              "reconstructed_coverage_of_constituents_with_any_usable_statement": 0.977273,
+              "current_threshold_gate_reporting_share": 1,
+              "reconstructed_threshold_gate_reporting_share": 1
+            },
+            {
+              "statement_period_end_year": "2025",
+              "current_payout_ratio": 0.3405,
+              "reconstructed_payout_ratio": 0.3405,
+              "delta_percentage_points": 0,
+              "current_positive_income_with_dividend_constituents": 249,
+              "reconstructed_positive_income_with_dividend_constituents": 249,
+              "current_coverage_of_constituents_with_any_usable_statement": 0.943182,
+              "reconstructed_coverage_of_constituents_with_any_usable_statement": 0.943182,
+              "current_threshold_gate_reporting_share": 0.965116,
+              "reconstructed_threshold_gate_reporting_share": 0.965116
+            }
+          ]
+        }
+      ]
+    },
+    "nasdaq100": {
+      "name": "Nasdaq-100",
+      "bootstrap": {
+        "tracker_recorded_date": "2026-01-09",
+        "record_type": "bootstrap_exact_observed_set",
+        "previous_count": 0,
+        "current_count": 101,
+        "exact_symbol_count": 101,
+        "exact_set_sha256": "23fc2638fe71f67e8fe9d698ce2acad94180f6550151c26a4d7e534277bfab06",
+        "reverse_transition_validation": "passed"
+      },
+      "current": {
+        "ledger_processed_at": "2026-08-10T10:57:36+00:00",
+        "membership_snapshot_collected_at": "2026-08-01T21:34:32+00:00",
+        "count": 103,
+        "membership_snapshot_matches_ledger": true,
+        "coverage": {
+          "constituents_requested": 103,
+          "constituents_with_any_usable_positive_income_and_dividend_statement": 45,
+          "any_usable_statement_coverage_ratio": 0.436893,
+          "newest_statement_period": "2026-03-31"
+        }
+      },
+      "observations": [
+        {
+          "tracker_recorded_date": "2026-01-09",
+          "boundary": "state_after_last_tracker_run_recorded_on_utc_date",
+          "reconstructed_count": 101,
+          "changed_symbols": {
+            "current_added_since_observation": [
+              "ALAB",
+              "ALNY",
+              "CRWV",
+              "FER",
+              "HONA",
+              "LITE",
+              "MPWR",
+              "NBIS",
+              "RKLB",
+              "SNDK",
+              "SPCX",
+              "STX",
+              "TER",
+              "WDC",
+              "WMT"
+            ],
+            "current_removed_since_observation": [
+              "AZN",
+              "BIIB",
+              "CDW",
+              "CHTR",
+              "CSGP",
+              "CTSH",
+              "GFS",
+              "LULU",
+              "ON",
+              "TEAM",
+              "TTD",
+              "VRSK",
+              "ZS"
+            ],
+            "total_distinct": 28
+          },
+          "coverage": {
+            "constituents_requested": 101,
+            "constituents_with_any_usable_positive_income_and_dividend_statement": 47,
+            "any_usable_statement_coverage_ratio": 0.465347,
+            "newest_statement_period": "2026-03-31"
+          },
+          "per_statement_period_end_year": [
+            {
+              "statement_period_end_year": "2022",
+              "current_payout_ratio": 0.2094,
+              "reconstructed_payout_ratio": 0.219,
+              "delta_percentage_points": 0.96,
+              "current_positive_income_with_dividend_constituents": 36,
+              "reconstructed_positive_income_with_dividend_constituents": 39,
+              "current_coverage_of_constituents_with_any_usable_statement": 0.8,
+              "reconstructed_coverage_of_constituents_with_any_usable_statement": 0.829787,
+              "current_threshold_gate_reporting_share": 0.837209,
+              "reconstructed_threshold_gate_reporting_share": 0.866667
+            },
+            {
+              "statement_period_end_year": "2023",
+              "current_payout_ratio": 0.1945,
+              "reconstructed_payout_ratio": 0.194,
+              "delta_percentage_points": -0.05,
+              "current_positive_income_with_dividend_constituents": 43,
+              "reconstructed_positive_income_with_dividend_constituents": 45,
+              "current_coverage_of_constituents_with_any_usable_statement": 0.955556,
+              "reconstructed_coverage_of_constituents_with_any_usable_statement": 0.957447,
+              "current_threshold_gate_reporting_share": 1,
+              "reconstructed_threshold_gate_reporting_share": 1
+            },
+            {
+              "statement_period_end_year": "2024",
+              "current_payout_ratio": 0.2111,
+              "reconstructed_payout_ratio": 0.2131,
+              "delta_percentage_points": 0.2,
+              "current_positive_income_with_dividend_constituents": 42,
+              "reconstructed_positive_income_with_dividend_constituents": 44,
+              "current_coverage_of_constituents_with_any_usable_statement": 0.933333,
+              "reconstructed_coverage_of_constituents_with_any_usable_statement": 0.93617,
+              "current_threshold_gate_reporting_share": 0.976744,
+              "reconstructed_threshold_gate_reporting_share": 0.977778
+            },
+            {
+              "statement_period_end_year": "2025",
+              "current_payout_ratio": 0.1795,
+              "reconstructed_payout_ratio": 0.18,
+              "delta_percentage_points": 0.05,
+              "current_positive_income_with_dividend_constituents": 41,
+              "reconstructed_positive_income_with_dividend_constituents": 43,
+              "current_coverage_of_constituents_with_any_usable_statement": 0.911111,
+              "reconstructed_coverage_of_constituents_with_any_usable_statement": 0.914894,
+              "current_threshold_gate_reporting_share": 0.953488,
+              "reconstructed_threshold_gate_reporting_share": 0.955556
+            }
+          ]
+        },
+        {
+          "tracker_recorded_date": "2026-06-08",
+          "boundary": "state_after_last_tracker_run_recorded_on_utc_date",
+          "reconstructed_count": 101,
+          "changed_symbols": {
+            "current_added_since_observation": [
+              "ALAB",
+              "CRWV",
+              "HONA",
+              "NBIS",
+              "RKLB",
+              "SPCX",
+              "TER"
+            ],
+            "current_removed_since_observation": [
+              "CHTR",
+              "CTSH",
+              "INSM",
+              "VRSK",
+              "ZS"
+            ],
+            "total_distinct": 12
+          },
+          "coverage": {
+            "constituents_requested": 101,
+            "constituents_with_any_usable_positive_income_and_dividend_statement": 47,
+            "any_usable_statement_coverage_ratio": 0.465347,
+            "newest_statement_period": "2026-03-31"
+          },
+          "per_statement_period_end_year": [
+            {
+              "statement_period_end_year": "2022",
+              "current_payout_ratio": 0.2094,
+              "reconstructed_payout_ratio": 0.2096,
+              "delta_percentage_points": 0.02,
+              "current_positive_income_with_dividend_constituents": 36,
+              "reconstructed_positive_income_with_dividend_constituents": 38,
+              "current_coverage_of_constituents_with_any_usable_statement": 0.8,
+              "reconstructed_coverage_of_constituents_with_any_usable_statement": 0.808511,
+              "current_threshold_gate_reporting_share": 0.837209,
+              "reconstructed_threshold_gate_reporting_share": 0.844444
+            },
+            {
+              "statement_period_end_year": "2023",
+              "current_payout_ratio": 0.1945,
+              "reconstructed_payout_ratio": 0.195,
+              "delta_percentage_points": 0.05,
+              "current_positive_income_with_dividend_constituents": 43,
+              "reconstructed_positive_income_with_dividend_constituents": 45,
+              "current_coverage_of_constituents_with_any_usable_statement": 0.955556,
+              "reconstructed_coverage_of_constituents_with_any_usable_statement": 0.957447,
+              "current_threshold_gate_reporting_share": 1,
+              "reconstructed_threshold_gate_reporting_share": 1
+            },
+            {
+              "statement_period_end_year": "2024",
+              "current_payout_ratio": 0.2111,
+              "reconstructed_payout_ratio": 0.2114,
+              "delta_percentage_points": 0.03,
+              "current_positive_income_with_dividend_constituents": 42,
+              "reconstructed_positive_income_with_dividend_constituents": 44,
+              "current_coverage_of_constituents_with_any_usable_statement": 0.933333,
+              "reconstructed_coverage_of_constituents_with_any_usable_statement": 0.93617,
+              "current_threshold_gate_reporting_share": 0.976744,
+              "reconstructed_threshold_gate_reporting_share": 0.977778
+            },
+            {
+              "statement_period_end_year": "2025",
+              "current_payout_ratio": 0.1795,
+              "reconstructed_payout_ratio": 0.1799,
+              "delta_percentage_points": 0.04,
+              "current_positive_income_with_dividend_constituents": 41,
+              "reconstructed_positive_income_with_dividend_constituents": 43,
+              "current_coverage_of_constituents_with_any_usable_statement": 0.911111,
+              "reconstructed_coverage_of_constituents_with_any_usable_statement": 0.914894,
+              "current_threshold_gate_reporting_share": 0.953488,
+              "reconstructed_threshold_gate_reporting_share": 0.955556
+            }
+          ]
+        },
+        {
+          "tracker_recorded_date": "2026-07-13",
+          "boundary": "state_after_last_tracker_run_recorded_on_utc_date",
+          "reconstructed_count": 103,
+          "changed_symbols": {
+            "current_added_since_observation": [],
+            "current_removed_since_observation": [],
+            "total_distinct": 0
+          },
+          "coverage": {
+            "constituents_requested": 103,
+            "constituents_with_any_usable_positive_income_and_dividend_statement": 45,
+            "any_usable_statement_coverage_ratio": 0.436893,
+            "newest_statement_period": "2026-03-31"
+          },
+          "per_statement_period_end_year": [
+            {
+              "statement_period_end_year": "2022",
+              "current_payout_ratio": 0.2094,
+              "reconstructed_payout_ratio": 0.2094,
+              "delta_percentage_points": 0,
+              "current_positive_income_with_dividend_constituents": 36,
+              "reconstructed_positive_income_with_dividend_constituents": 36,
+              "current_coverage_of_constituents_with_any_usable_statement": 0.8,
+              "reconstructed_coverage_of_constituents_with_any_usable_statement": 0.8,
+              "current_threshold_gate_reporting_share": 0.837209,
+              "reconstructed_threshold_gate_reporting_share": 0.837209
+            },
+            {
+              "statement_period_end_year": "2023",
+              "current_payout_ratio": 0.1945,
+              "reconstructed_payout_ratio": 0.1945,
+              "delta_percentage_points": 0,
+              "current_positive_income_with_dividend_constituents": 43,
+              "reconstructed_positive_income_with_dividend_constituents": 43,
+              "current_coverage_of_constituents_with_any_usable_statement": 0.955556,
+              "reconstructed_coverage_of_constituents_with_any_usable_statement": 0.955556,
+              "current_threshold_gate_reporting_share": 1,
+              "reconstructed_threshold_gate_reporting_share": 1
+            },
+            {
+              "statement_period_end_year": "2024",
+              "current_payout_ratio": 0.2111,
+              "reconstructed_payout_ratio": 0.2111,
+              "delta_percentage_points": 0,
+              "current_positive_income_with_dividend_constituents": 42,
+              "reconstructed_positive_income_with_dividend_constituents": 42,
+              "current_coverage_of_constituents_with_any_usable_statement": 0.933333,
+              "reconstructed_coverage_of_constituents_with_any_usable_statement": 0.933333,
+              "current_threshold_gate_reporting_share": 0.976744,
+              "reconstructed_threshold_gate_reporting_share": 0.976744
+            },
+            {
+              "statement_period_end_year": "2025",
+              "current_payout_ratio": 0.1795,
+              "reconstructed_payout_ratio": 0.1795,
+              "delta_percentage_points": 0,
+              "current_positive_income_with_dividend_constituents": 41,
+              "reconstructed_positive_income_with_dividend_constituents": 41,
+              "current_coverage_of_constituents_with_any_usable_statement": 0.911111,
+              "reconstructed_coverage_of_constituents_with_any_usable_statement": 0.911111,
+              "current_threshold_gate_reporting_share": 0.953488,
+              "reconstructed_threshold_gate_reporting_share": 0.953488
+            }
+          ]
+        }
+      ]
+    }
+  }
+}

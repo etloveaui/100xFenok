@@ -1,10 +1,13 @@
 #!/usr/bin/env node
 
-import { pathToFileURL } from "node:url";
+import { pathToFileURL, fileURLToPath } from "node:url";
+import path from "node:path";
 import { FATAL_MARKERS, SMOKE_PAGE_ROUTES } from "./qa-route-catalog.mjs";
 import { DEPLOY_SMOKE_ATTEMPTS, fetchTextWithBoundedRetry } from "./deploy-smoke-retry.mjs";
 import { PRODUCT_SURFACE_COLLECTION_MAX_AGE_HOURS } from "../../scripts/lib/kpi-contract-constants.mjs";
 import { validateProductSurfaceCoverageV2Artifact } from "../../scripts/lib/product-surface-stamp-v2.mjs";
+import { liveRequestHeaders } from "../../scripts/lib/live-request-headers.mjs";
+import { STOCKANALYSIS_ETF_SHARD_COUNT } from "../src/lib/stockanalysis-etf-shard.mjs";
 
 const DEFAULT_BASE_URL = "https://100xfenok.etloveaui.workers.dev";
 const TIMEOUT_MS = Number(process.env.QA_STOCKANALYSIS_TIMEOUT_MS || 25000);
@@ -53,8 +56,8 @@ function assert(condition, message) {
   if (!condition) fail(message);
 }
 
-export function assertProductSurfaceCoverageV2Contract(payload) {
-  const errors = validateProductSurfaceCoverageV2Artifact(payload);
+export function assertProductSurfaceCoverageV2Contract(payload, {dataRoot = null, verificationNowIso = payload?.generated_at} = {}) {
+  const errors = validateProductSurfaceCoverageV2Artifact(payload, {dataRoot, verificationNowIso});
   assert(errors.length === 0, `Product surface coverage contract failed: ${errors.join("; ")}`);
 }
 
@@ -251,7 +254,10 @@ async function fetchText(url) {
     const controller = new AbortController();
     const timer = setTimeout(() => controller.abort(), TIMEOUT_MS);
     try {
-      const response = await fetch(url, { signal: controller.signal });
+      const response = await fetch(url, {
+        headers: liveRequestHeaders(),
+        signal: controller.signal,
+      });
       const text = await response.text();
       // Detect a truncated body: a large response can arrive HTTP 200 with the
       // stream cut short (no thrown error), which JSON.parse then rejects with
@@ -305,6 +311,45 @@ async function fetchJsonResponse(url) {
   }
   assertFiniteNumbers(payload, url);
   return { response, payload };
+}
+
+export function validateEtfRetirementStaticManifest(manifest) {
+  const compatibilityMode = manifest?.compatibility_mode;
+  if (typeof compatibilityMode !== "string" || compatibilityMode.length === 0) {
+    fail("ETF shard manifest has no compatibility_mode");
+  }
+
+  if (compatibilityMode !== "shard-only") {
+    return {
+      compatibility_mode: compatibilityMode,
+      retirement_contract_required: false,
+    };
+  }
+
+  if (!Array.isArray(manifest.shards) || manifest.shards.length !== STOCKANALYSIS_ETF_SHARD_COUNT) {
+    fail(`ETF shard-only manifest must declare exactly ${STOCKANALYSIS_ETF_SHARD_COUNT} shards; received ${Array.isArray(manifest.shards) ? manifest.shards.length : "non-array"}`);
+  }
+  if (manifest.shard_count !== STOCKANALYSIS_ETF_SHARD_COUNT || manifest.payload_count !== 5586) {
+    fail(`ETF shard-only manifest count mismatch: shard_count=${manifest.shard_count}, payload_count=${manifest.payload_count}`);
+  }
+  return {
+    compatibility_mode: compatibilityMode,
+    retirement_contract_required: true,
+  };
+}
+
+async function checkEtfRetirementStaticContract(root) {
+  const manifest = await fetchJson(`${root}/data/stockanalysis/etfs/shards/index.json`);
+  const contract = validateEtfRetirementStaticManifest(manifest);
+  if (!contract.retirement_contract_required) return contract;
+  const direct = await fetchText(`${root}/data/stockanalysis/etfs/SPY.json`);
+  if (direct.response.status !== 404) {
+    fail(`ETF shard-only contract requires direct SPY static JSON to return 404; received HTTP ${direct.response.status}`);
+  }
+  return {
+    ...contract,
+    direct_spy_static_status: direct.response.status,
+  };
 }
 
 export async function fetchProducerJson(url, options = {}) {
@@ -499,7 +544,7 @@ export async function checkProductSurfaceFreshness(root) {
     readPublicJson(PRODUCER_SOURCE_PATHS.yardeni),
     readPublicJson(PRODUCER_SOURCE_PATHS.stocksAnalyzer),
   ]);
-  assertProductSurfaceCoverageV2Contract(coverage);
+  assertProductSurfaceCoverageV2Contract(coverage, {dataRoot: path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..", "..", "data"), verificationNowIso: new Date().toISOString()});
   const surfaces = requiredArray(coverage?.surfaces, "Product surface coverage surfaces");
   const producerEvidence = buildProducerEvidence({ marketFacts, rimInputs, yardeni, stocksAnalyzer });
   const seenIds = new Set();
@@ -899,6 +944,7 @@ async function main() {
   const snapshot = await checkEtfSnapshot(root);
   const universe = await checkEtfUniverse(root);
   const details = await checkEtfDetails(root);
+  const etfRetirementStatic = await checkEtfRetirementStaticContract(root);
   const r2Resolution = await checkR2EtfResolution(root);
   const surfaces = await checkSurfaceContracts(root);
 
@@ -919,6 +965,7 @@ async function main() {
     snapshot,
     universe,
     details,
+    etfRetirementStatic,
     r2Resolution,
     surfaces,
   }, null, 2));

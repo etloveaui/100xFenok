@@ -1,0 +1,89 @@
+{
+  "attempts": [
+    {
+      "attempts_used": 1,
+      "event_name": "schedule",
+      "failures": [],
+      "latency_ms": 552,
+      "natural": true,
+      "observed_at": "2026-07-27T22:58:21Z",
+      "outcome": "fresh",
+      "run_attempt": 1,
+      "run_id": "30312518312",
+      "schedule": "0 22 * * 1",
+      "shard": "1/6"
+    },
+    {
+      "attempts_used": 1,
+      "event_name": "schedule",
+      "failures": [],
+      "latency_ms": 557,
+      "natural": true,
+      "observed_at": "2026-08-07T05:49:05Z",
+      "outcome": "fresh",
+      "run_attempt": 1,
+      "run_id": "31151738848",
+      "schedule": "7 4 * * 0-5",
+      "shard": "62/72"
+    }
+  ],
+  "current": {
+    "fetched_at": "2026-08-07T05:50:11Z",
+    "history_as_of": "2026-08-06",
+    "path": "data/admin/yahoo-batch-quote-history/lkg/BNKU.json",
+    "payload_sha256": "30209c466e3218e772afe24e6e117f943ada123dd618b84c72d67144550a2312",
+    "quote_as_of": "2026-08-06T19:57:08Z",
+    "source_as_of": "2026-08-06"
+  },
+  "discovered_from": [
+    "stockanalysis_etf"
+  ],
+  "last_attempt": {
+    "attempts_used": 1,
+    "event_name": "schedule",
+    "failures": [],
+    "latency_ms": 557,
+    "natural": true,
+    "observed_at": "2026-08-07T05:49:05Z",
+    "outcome": "fresh",
+    "run_attempt": 1,
+    "run_id": "31151738848",
+    "schedule": "7 4 * * 0-5",
+    "shard": "62/72"
+  },
+  "lkg": {
+    "fetched_at": "2026-08-07T05:50:11Z",
+    "history_as_of": "2026-08-06",
+    "path": "data/admin/yahoo-batch-quote-history/lkg/BNKU.json",
+    "payload_sha256": "30209c466e3218e772afe24e6e117f943ada123dd618b84c72d67144550a2312",
+    "quote_as_of": "2026-08-06T19:57:08Z",
+    "source_as_of": "2026-08-06"
+  },
+  "promotion_contract": "provider_observation/v2",
+  "provider_observation": {
+    "event_name": "schedule",
+    "history_as_of": "2026-08-06",
+    "observed_at": "2026-08-07T05:49:05Z",
+    "payload_sha256": "bc8448adc4636f840b3076ce562b07572d6ceb586418e8630a3d04a2762bcbdc",
+    "quote_as_of": "2026-08-06T19:57:08Z",
+    "run_attempt": 1,
+    "run_id": "31151738848",
+    "schema_version": "provider_observation/v2",
+    "source_as_of": "2026-08-06"
+  },
+  "resolution_state": "lkg_primary",
+  "retry": true,
+  "schema_version": "yahoo-batch-quote-history-state/v1",
+  "stale": {
+    "age_business_days": 9,
+    "classified_at": "2026-08-19T23:42:29Z",
+    "classified_run_id": "32314261503",
+    "expected_resolution": "next_natural_yahoo_run",
+    "max_business_days": 6,
+    "message": "BNKU holds LKG because Yahoo source date 2026-08-06 is 9 business days old, beyond the 6-day bound; it will retry on the next natural Yahoo run.",
+    "reason": "source_age_exceeds_lane_bound",
+    "source_as_of": "2026-08-06"
+  },
+  "ticker": "BNKU",
+  "updated_at": "2026-08-19T23:42:29Z"
+}

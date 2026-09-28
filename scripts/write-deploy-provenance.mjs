@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 
 // write-deploy-provenance — stamp the CI run's identity into the built bundle
-// as data/admin/deploy-provenance.json so that any later run can ask: "which
+// as deploy-provenance.json so that any later run can ask: "which
 // run shipped the currently-live bundle, and did its smokes pass?" (BACKLOG #361)
 //
 // Runs AFTER cf:build, BEFORE wrangler deploy. Writes into the bundle assets

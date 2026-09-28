@@ -1,0 +1,102 @@
+{
+  "attempts": [
+    {
+      "attempts_used": 1,
+      "event_name": "schedule",
+      "failures": [],
+      "latency_ms": 794,
+      "natural": true,
+      "observed_at": "2026-08-05T19:49:13Z",
+      "outcome": "fresh",
+      "run_attempt": 1,
+      "run_id": "31041046015",
+      "schedule": "7 18 * * 0-5",
+      "shard": "45/72"
+    },
+    {
+      "attempts_used": 1,
+      "event_name": "schedule",
+      "failures": [],
+      "latency_ms": 1081,
+      "natural": true,
+      "observed_at": "2026-08-12T19:14:55Z",
+      "outcome": "fresh",
+      "run_attempt": 1,
+      "run_id": "31631524598",
+      "schedule": "7 18 * * 0-5",
+      "shard": "45/72"
+    },
+    {
+      "attempts_used": 1,
+      "event_name": "workflow_dispatch",
+      "failures": [],
+      "latency_ms": 538,
+      "natural": false,
+      "observed_at": "2026-09-28T03:11:20Z",
+      "outcome": "fresh",
+      "run_attempt": 1,
+      "run_id": "36367829153",
+      "schedule": "",
+      "shard": ""
+    }
+  ],
+  "current": {
+    "fetched_at": "2026-09-28T03:20:27Z",
+    "history_as_of": "2026-09-25",
+    "path": "data/yf/finance/EBIT.json",
+    "payload_sha256": "d33396ef3dc1fc85ce1ba80081af159390189558cbc2c87417d2f00555b8e473",
+    "quote_as_of": "2026-09-25T17:04:04Z",
+    "source_as_of": "2026-09-25"
+  },
+  "discovered_from": [
+    "stockanalysis_etf"
+  ],
+  "last_attempt": {
+    "attempts_used": 1,
+    "event_name": "workflow_dispatch",
+    "failures": [],
+    "latency_ms": 538,
+    "natural": false,
+    "observed_at": "2026-09-28T03:11:20Z",
+    "outcome": "fresh",
+    "run_attempt": 1,
+    "run_id": "36367829153",
+    "schedule": "",
+    "shard": ""
+  },
+  "lkg": {
+    "fetched_at": "2026-08-12T19:17:49Z",
+    "history_as_of": "2026-08-12",
+    "path": "data/admin/yahoo-batch-quote-history/lkg/EBIT.json",
+    "payload_sha256": "43d8f28a0e90775d231458815ff33810d37aac2e6c4dc3f8fc561b87ebc17d6d",
+    "quote_as_of": "2026-08-12T13:46:04Z",
+    "source_as_of": "2026-08-12"
+  },
+  "promotion_contract": "provider_observation/v2",
+  "provider_observation": {
+    "event_name": "workflow_dispatch",
+    "history_as_of": "2026-09-25",
+    "observed_at": "2026-09-28T03:11:20Z",
+    "payload_sha256": "8dc27a9c9065a888737498f294357256b0af7a7150de12763910e48098ec03d4",
+    "quote_as_of": "2026-09-25T17:04:04Z",
+    "run_attempt": 1,
+    "run_id": "36367829153",
+    "schema_version": "provider_observation/v2",
+    "source_as_of": "2026-09-25"
+  },
+  "resolution_state": "fresh_primary",
+  "retry": false,
+  "schema_version": "yahoo-batch-quote-history-state/v1",
+  "stale": {
+    "age_business_days": 7,
+    "classified_at": "2026-08-21T23:43:33Z",
+    "classified_run_id": "32537807621",
+    "expected_resolution": "next_natural_yahoo_run",
+    "max_business_days": 6,
+    "message": "EBIT holds LKG because Yahoo source date 2026-08-12 is 7 business days old, beyond the 6-day bound; it will retry on the next natural Yahoo run.",
+    "reason": "source_age_exceeds_lane_bound",
+    "source_as_of": "2026-08-12"
+  },
+  "ticker": "EBIT",
+  "updated_at": "2026-09-28T03:11:20Z"
+}

@@ -7,7 +7,11 @@ import os from "node:os";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 
-import { replaceTriggerPathsBlock, renderTriggerPathsBlock } from "./sync-update-manifest-trigger-paths.mjs";
+import {
+  projectUpdateManifestTriggerPaths,
+  replaceTriggerPathsBlock,
+  renderTriggerPathsBlock,
+} from "./sync-update-manifest-trigger-paths.mjs";
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const workflowPath = path.join(root, ".github/workflows/update-manifest.yml");
@@ -16,10 +20,30 @@ const scriptPath = path.join(root, "scripts/sync-update-manifest-trigger-paths.m
 const startMarker = "      # BEGIN GENERATED lane-commit-manifest trigger_paths";
 const endMarker = "      # END GENERATED lane-commit-manifest trigger_paths";
 const manifest = JSON.parse(fs.readFileSync(manifestPath, "utf8"));
-const triggerPaths = manifest.update_manifest.trigger_paths;
+const baseTriggerPaths = manifest.update_manifest.trigger_paths;
+const triggerPaths = projectUpdateManifestTriggerPaths(baseTriggerPaths);
 const workflow = fs.readFileSync(workflowPath, "utf8");
 
-assert.equal(triggerPaths.length, 47);
+assert.ok(baseTriggerPaths.length > 0);
+assert.deepEqual(triggerPaths, baseTriggerPaths, "generated trigger paths must be exactly the canonical manifest paths");
+assert.throws(
+  () => projectUpdateManifestTriggerPaths([...baseTriggerPaths, "scripts/archive/RIM-five-audit.mjs"]),
+  /RIM path token is forbidden/,
+  "RIM path tokens must fail closed before workflow projection",
+);
+for (const entry of [
+  "scripts/build-rim-index.mjs",
+  "scripts/test-build-rim-index.mjs",
+  "scripts/build-rim-index-five-canonical.mjs",
+  "scripts/check-rim-index-five-canonical.mjs",
+  "scripts/test-check-rim-index-five-canonical.mjs",
+  "scripts/test-build-feno-rim-five-index-canonical.mjs",
+  "100xfenok-next/package.json",
+  "data/computed/rim-index/feno-index-rim-five-canonical-criteria.json",
+]) {
+  assert.equal(triggerPaths.includes(entry), false, `retired RIM-only trigger path must stay absent: ${entry}`);
+}
+assert.equal(triggerPaths.includes("data/computed/**"), false, "generic computed data must remain excluded");
 const expectedBlock = [
   startMarker,
   ...triggerPaths.map((entry) => `      - '${entry.replaceAll("'", "''")}'`),
@@ -63,30 +87,34 @@ for (const entry of positives) assert.equal(pathIncluded(representative(entry)),
 for (const entry of negatives) assert.equal(pathIncluded(representative(entry)), false, `${entry} must not self-trigger`);
 
 const changedSetIncluded = (changedPaths) => changedPaths.some((candidate) => pathIncluded(candidate));
-assert.equal(changedSetIncluded(["data/macro/fred-macro.json"]), true, "eligible-only push must trigger");
+// The six coordinator-source families' owned canonical/admin paths are
+// excluded (their completions drive coordinate-computed-signals instead);
+// unrelated macro data stays eligible.
+assert.equal(changedSetIncluded(["data/macro/yahoo-ticker.json"]), true, "eligible-only push must trigger");
 assert.equal(changedSetIncluded(negatives.map(representative)), false, "excluded-only push must not trigger");
 assert.equal(changedSetIncluded([representative(negatives[0]), "scripts/update-manifest.py"]), true, "mixed push with one eligible path must trigger");
 
-const directDispatchWorkflows = [
-  "build-stocks-analyzer.yml",
-  "fenok-edge-daily.yml",
-  "fenok-edge-krx-daily.yml",
-  "fetch-defillama.yml",
-  "fetch-fdic.yml",
-  "fetch-fenok-private-options.yml",
-  "fetch-fred-banking.yml",
-  "fetch-fred-macro.yml",
-  "fetch-fred-yardeni.yml",
-  "fetch-sentiment.yml",
-  "fetch-stockanalysis.yml",
-  "fetch-treasury-tga.yml",
-  "fetch-yahoo-ticker.yml",
-  "fetch-yf-finance.yml",
-  "slickcharts-history.yml",
-];
-for (const workflowFile of directDispatchWorkflows) {
-  const text = fs.readFileSync(path.join(root, ".github/workflows", workflowFile), "utf8");
-  assert.match(text, /gh workflow run update-manifest\.yml/, `${workflowFile} must retain its direct dispatch`);
+// Exact owned commit paths of the six decoupled families must never implicitly
+// trigger the full Update Manifest reconciliation.
+for (const ownedPath of [
+  "data/macro/fred-macro.json",
+  "data/macro/tga.json",
+  "data/macro/stablecoins.json",
+  "data/macro/fred-banking-daily.json",
+  "data/macro/fred-banking-weekly.json",
+  "data/macro/fred-banking-monthly.json",
+  "data/macro/fred-banking-quarterly.json",
+  "data/macro/fdic-tier1.json",
+  "data/sentiment/vix.json",
+  "data/admin/fred_macro/index.json",
+  "data/admin/treasury_tga/lkg/tga.json",
+  "data/admin/defillama_stablecoins/index.json",
+  "data/admin/fred_banking/lkg/daily.json",
+  "data/admin/fdic_tier1/lkg/fdic_tier1.json",
+  "data/admin/sentiment/current/cnn-fear-greed.json",
+  "data/admin/sentiment/source-observations/crypto.json",
+]) {
+  assert.equal(pathIncluded(ownedPath), false, `${ownedPath} must not implicitly trigger Update Manifest`);
 }
 
 const liveCheck = spawnSync(process.execPath, [scriptPath, "--check"], { cwd: root, encoding: "utf8" });

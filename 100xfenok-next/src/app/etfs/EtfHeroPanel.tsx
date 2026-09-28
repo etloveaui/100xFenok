@@ -1,227 +1,123 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
-import TransitionLink from "@/components/TransitionLink";
-import {
-  CpBandVisual,
-  CpCTARow,
-  CpGaugeCard,
-  CpMetricTile,
-  CpMetricTileGrid,
-  CpVerdictHero,
-} from "@/components/canvas-plus/kit";
+import { Pill, StaleState } from "@/components/ui";
+import EtfTextSkeleton from "./EtfTextSkeleton";
 import { formatAsOf } from "@/lib/data-state";
-import { ROUTES } from "@/lib/routes";
 import { formatInteger } from "@/lib/format";
-import EtfRetryCallout from "./EtfRetryCallout";
 import {
-  clearEtfSurfaceCaches,
   computeEtfInsights,
-  fmtSignedPct,
-  fmtVolumeCompact,
-  loadEtfSnapshot,
-  loadEtfUniverse,
-  normalizeUniverseRows,
-  type EtfScreenerLeaderRow,
+  etfSurfacePublishedFloor,
+  isEtfClockStale,
+  type EtfSurfaceData,
 } from "./etfSurfaceData";
 
-interface NewEtfPreviewRow {
-  s?: string;
-  n?: string;
-  inceptionDate?: string;
-}
+export default function EtfHeroPanel({ surface }: { surface: EtfSurfaceData }) {
+  const { loaded, universeOk, snapshotOk, rows, snapshot, reload } = surface;
+  // The verdict blends both feeds (universe counts + snapshot leaders), so a
+  // partial pair never renders: one failed feed empties the hero (fh-681 P1).
+  const ready = loaded && universeOk && snapshotOk;
+  const insights = ready ? computeEtfInsights(rows, snapshot, null, surface.universe) : null;
+  const loading = !loaded;
+  const empty = loaded && !insights;
+  const published = etfSurfacePublishedFloor(surface.universe, snapshot);
+  const stale = loaded && !!insights && isEtfClockStale(insights.asOf ?? published);
 
-interface HeroSnapshotDoc {
-  newEtfs?: { records?: NewEtfPreviewRow[] } | null;
-  screener?: { volumeLeaders?: EtfScreenerLeaderRow[]; changeLeaders?: EtfScreenerLeaderRow[] } | null;
-  bitcoin?: { records?: Array<{ symbol?: string }> } | null;
-}
-
-function MoverLink({ ticker, valueLabel }: { ticker?: string; valueLabel: string }) {
-  if (!ticker) return null;
-  return (
-    <TransitionLink href={ROUTES.etf(ticker)} className="cpw5-etfs-mini-link">
-      <span>{ticker}</span>
-      <b>{valueLabel}</b>
-    </TransitionLink>
-  );
-}
-
-export default function EtfHeroPanel() {
-  const [reloadKey, setReloadKey] = useState(0);
-  const [state, setState] = useState<{
-    reloadKey: number;
-    loaded: boolean;
-    failed: boolean;
-    universeGeneratedAt: string | null;
-    rows: ReturnType<typeof normalizeUniverseRows>;
-    snapshot: HeroSnapshotDoc | null;
-  }>({ reloadKey: 0, loaded: false, failed: false, universeGeneratedAt: null, rows: [], snapshot: null });
-
-  useEffect(() => {
-    let cancelled = false;
-    Promise.all([loadEtfUniverse(), loadEtfSnapshot()]).then(([universe, snapshot]) => {
-      if (cancelled) return;
-      if (!universe && !snapshot) {
-        setState((prev) => ({ ...prev, reloadKey, loaded: true, failed: true }));
-        return;
-      }
-      const rows = normalizeUniverseRows(universe, snapshot);
-      setState({
-        reloadKey,
-        loaded: true,
-        failed: false,
-        universeGeneratedAt: universe?.generated_at ?? null,
-        rows,
-        snapshot,
-      });
-    });
-    return () => {
-      cancelled = true;
-    };
-  }, [reloadKey]);
-
-  const newPreview = state.snapshot?.newEtfs?.records?.slice(0, 3) ?? [];
-  const volumeLeaders = state.snapshot?.screener?.volumeLeaders?.slice(0, 3) ?? [];
-  const changeLeaders = state.snapshot?.screener?.changeLeaders?.slice(0, 3) ?? [];
-
-  const insights = useMemo(
-    () => (state.loaded && !state.failed ? computeEtfInsights(state.rows, state.snapshot, state.universeGeneratedAt) : null),
-    [state],
-  );
-
-  const retryLoad = () => {
-    clearEtfSurfaceCaches();
-    setReloadKey((value) => value + 1);
-  };
-
-  if (!state.loaded) {
+  if (loading) {
+    // Same structure and template copy as the loaded hero, drawn as shimmer
+    // bars: the text wraps exactly like the real headline at every width, so
+    // the summary strip below does not jump when the data lands.
     return (
-      <section className="cpw5-etfs-hero-block" aria-busy="true">
-        <CpVerdictHero eyebrow="ETF · 시장 스냅샷" verdict="ETF 시장 현황을 계산하는 중입니다" sub="신규 상장·자산군 구성·레버리지 비중을 읽고 있습니다." />
-      </section>
-    );
-  }
-
-  if (state.failed || !insights) {
-    return (
-      <section className="cpw5-etfs-hero-block">
-        <EtfRetryCallout
-          title="ETF 시장 스냅샷을 불러오지 못했습니다"
-          desc="ETF 전체 목록과 신규 상장·거래 상위 데이터를 연결하지 못했습니다. 다시 시도하면 최신 데이터를 새로 요청합니다."
-          onRetry={retryLoad}
-        />
-      </section>
-    );
-  }
-
-  const { compositionBuckets, dominantBucket, leverageInversePct, leverageInverseCount, totalCount, newCount, topMoversCount, topMoversLeverageInverseCount, asOf, asOfReason } = insights;
-  const gaugeTone = leverageInversePct >= 15 ? "warning" : "neutral";
-  const compositionSummary = compositionBuckets
-    .filter((bucket) => bucket.count > 0)
-    .map((bucket) => `${bucket.label} ${bucket.pct}%`)
-    .join(" · ");
-
-  return (
-    <section className="cpw5-etfs-hero-block">
-      <CpVerdictHero
-        eyebrow="ETF · 시장 스냅샷"
-        verdict={
-          <>
-            오늘 신규 상장 <b>{newCount}개</b> · {dominantBucket?.label ?? "주식형"} 비중 <b>{dominantBucket?.pct ?? 0}%</b> 중심 · 레버리지·인버스 비중{" "}
-            <b className={gaugeTone === "warning" ? "warn" : undefined}>{leverageInversePct}%</b>
-          </>
-        }
-        sub={
-          <>
-            오늘 상위 거래량·변동률 종목 {topMoversCount}개 중 <b>{topMoversLeverageInverseCount}개</b>가 레버리지·인버스입니다. 관심·거래 쏠림 기준이며 자금 유입·유출액은 포함하지 않습니다.
-          </>
-        }
-        trustChips={[
-          {
-            id: "asof",
-            label: "기준일",
-            value: formatAsOf(asOf) ?? (asOfReason?.includes("publishes no aggregate source date") ? "제공자 미공개" : "미확인"),
-            freshness: true,
-          },
-          { id: "total", label: "전체", value: `${formatInteger(totalCount)}개` },
-        ]}
-      />
-
-      <div className="cpw5-etfs-hero-visuals">
-        <CpBandVisual
-          className="cpw5-etfs-band--neutral"
-          label={`자산군 구성비 · 전체 ${formatInteger(totalCount)}개 중 최대 비중`}
-          currentLabel={dominantBucket?.label ?? "—"}
-          currentValue={`${dominantBucket?.pct ?? 0}%`}
-          position={dominantBucket?.pct ?? 0}
-          lowLabel="0%"
-          midLabel="50%"
-          highLabel="100%"
-          summary={compositionSummary}
-        />
-        <CpGaugeCard
-          value={leverageInversePct}
-          max={100}
-          displayValue={`${leverageInversePct}%`}
-          unitLabel="레버리지·인버스"
-          tone={gaugeTone}
-          sub={
-            <>
-              전체 {formatInteger(totalCount)}개 중 <strong>{formatInteger(leverageInverseCount)}개</strong>가 레버리지 또는 인버스입니다.
-            </>
-          }
-        />
+      <div className="etf-hero" aria-busy="true">
+        <div className="etf-hero-top">
+          <div className="etf-hero-title-block">
+            <div className="etf-hero-eyebrow-row">
+              <span className="etf-eyebrow">ETF · 시장 스냅샷</span>
+              <Pill>전체 확인 중</Pill>
+            </div>
+            <h1 className="etf-title">
+              <EtfTextSkeleton>
+                신규 상장 <b className="tabular-nums">000</b>개 · 주식형 비중 <b className="tabular-nums">00.0%</b> 중심 ·
+                레버리지·인버스 비중 <b className="tabular-nums">00.0%</b>
+              </EtfTextSkeleton>
+              <span className="sr-only">ETF 시장 스냅샷을 불러오는 중입니다.</span>
+            </h1>
+            <span className="etf-sub">
+              <EtfTextSkeleton>
+                상장일 0000-00-00~0000-00-00 · 0000-00-00 00:00 수집분 · 오늘 상위 거래량·변동률 종목 0개 중{" "}
+                <b className="tabular-nums">0개</b>가 레버리지·인버스입니다. 관심·거래 쏠림 기준이며 자금 유입·유출액은
+                포함하지 않습니다.
+              </EtfTextSkeleton>
+            </span>
+          </div>
+          <Pill className="etf-hero-clock" aria-hidden="true">
+            <EtfTextSkeleton>게시 0000-00-00 00:00</EtfTextSkeleton>
+          </Pill>
+        </div>
       </div>
+    );
+  }
 
-      <CpCTARow
-        primary={{ label: "ETF 비교", href: ROUTES.etfCompare }}
-        secondary={{ label: "신규 ETF", href: ROUTES.etfNew }}
-      />
+  if (empty || !insights) {
+    return (
+      <div className="etf-hero">
+        <span className="etf-eyebrow">ETF · 시장 스냅샷</span>
+        <p className="etf-hero-loading">
+          ETF 시장 스냅샷을 불러오지 못했습니다.{" "}
+          <button type="button" className="etf-retry" onClick={reload}>
+            다시 시도
+          </button>
+        </p>
+      </div>
+    );
+  }
 
-      <CpMetricTileGrid>
-        <CpMetricTile
-          label="신규 상장 ETF"
-          value={newCount}
-          unit="개"
-          sub={
-            newPreview.length > 0 ? (
-              <span className="cpw5-etfs-mini-list">
-                {newPreview.map((row) => (
-                  <MoverLink key={`new-${row.s}`} ticker={row.s} valueLabel={row.inceptionDate ?? "—"} />
-                ))}
-              </span>
-            ) : (
-              "신규 상장 없음"
-            )
-          }
-        />
-        <CpMetricTile
-          label="거래량 상위 TOP 3"
-          value={volumeLeaders.length}
-          unit="종목"
-          sub={
-            <span className="cpw5-etfs-mini-list">
-              {volumeLeaders.map((row) => (
-                <MoverLink key={`vol-${row.s}`} ticker={row.s} valueLabel={fmtVolumeCompact(row.volume)} />
-              ))}
-            </span>
-          }
-        />
-        <CpMetricTile
-          label="변동률 상위 TOP 3"
-          value={changeLeaders.length}
-          unit="종목"
-          tone={typeof changeLeaders[0]?.change === "number" ? (changeLeaders[0]!.change! >= 0 ? "positive" : "negative") : "neutral"}
-          sub={
-            <span className="cpw5-etfs-mini-list">
-              {changeLeaders.map((row) => (
-                <MoverLink key={`chg-${row.s}`} ticker={row.s} valueLabel={fmtSignedPct(row.change)} />
-              ))}
-            </span>
-          }
-        />
-      </CpMetricTileGrid>
-    </section>
+  const { dominantBucket, leverageInversePct, newCount, topMoversCount, topMoversLeverageInverseCount, totalCount, asOf } = insights;
+  // New-listings feed is a trailing watchlist window (fh-380 item 2): label the
+  // real inception span + collection date, never "today".
+  const newRecords = snapshot?.newEtfs?.records ?? [];
+  const inceptionSpan = newRecords
+    .map((row) => (typeof row.inceptionDate === "string" && row.inceptionDate.length >= 10 ? row.inceptionDate.slice(0, 10) : null))
+    .filter((value): value is string => value !== null)
+    .sort();
+  const newSpanLabel = inceptionSpan.length > 0 ? `${inceptionSpan[0]}~${inceptionSpan[inceptionSpan.length - 1]}` : null;
+  const newCollectedLabel = formatAsOf(snapshot?.newEtfs?.fetched_at);
+  const newWindowLabel = [newSpanLabel ? `상장일 ${newSpanLabel}` : null, newCollectedLabel ? `${newCollectedLabel} 수집분` : null]
+    .filter((value): value is string => value !== null)
+    .join(" · ");
+  const observedLabel = formatAsOf(asOf);
+  const publishedLabel = formatAsOf(published);
+  const pillLabel = observedLabel
+    ? `기준일 ${observedLabel}`
+    : publishedLabel
+      ? `게시 ${publishedLabel}`
+      : (insights.asOfReason ? "제공자 미공개" : "미확인");
+
+  return (
+    <div className="etf-hero">
+      {stale ? <StaleState asOf={asOf ?? undefined} onRetry={reload} /> : null}
+      <div className="etf-hero-top">
+        <div className="etf-hero-title-block">
+          <div className="etf-hero-eyebrow-row">
+            <span className="etf-eyebrow">ETF · 시장 스냅샷</span>
+            <Pill>전체 {formatInteger(totalCount)}개</Pill>
+          </div>
+          {/* B2 (B5 §6): H1 is one line — the listing-window detail lives in
+              the sub line, not the headline. */}
+          <h1 className="etf-title">
+            신규 상장 <b className="tabular-nums">{formatInteger(newCount)}</b>개 · {dominantBucket?.label ?? "주식형"} 비중{" "}
+            <b className="tabular-nums">{dominantBucket?.pct ?? 0}%</b> 중심 · 레버리지·인버스 비중{" "}
+            <b className="tabular-nums">{leverageInversePct}%</b>
+          </h1>
+          <span className="etf-sub">
+            {newWindowLabel ? `${newWindowLabel} · ` : null}오늘 상위 거래량·변동률 종목 {formatInteger(topMoversCount)}개 중{" "}
+            <b className="tabular-nums">{formatInteger(topMoversLeverageInverseCount)}개</b>가 레버리지·인버스입니다. 관심·거래 쏠림
+            기준이며 자금 유입·유출액은 포함하지 않습니다.
+          </span>
+        </div>
+        <Pill className="etf-hero-clock">{pillLabel}</Pill>
+      </div>
+      {/* B2 (B4): single source strip lives with the list — the hero keeps its
+          stale banner + inline retry, no per-panel rail. */}
+    </div>
   );
 }

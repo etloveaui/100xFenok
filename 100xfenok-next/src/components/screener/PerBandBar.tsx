@@ -37,7 +37,7 @@ export default function PerBandBar({ current, min, avg, max }: PerBandBarProps) 
   const label = bandLabel(pct);
   const badgeClass = BADGE_CLASS_MAP[cls];
   const dotClass = DOT_CLASS_MAP[cls];
-  const title = `현재 ${safeCurrent.toFixed(1)} · 평균 ${safeAvg !== null ? safeAvg.toFixed(1) : "—"} · 8Y ${safeMin.toFixed(1)}~${safeMax.toFixed(1)} · ${Math.round(pct * 100)}%`;
+  const title = `기준연도 PER ${safeCurrent.toFixed(1)} · 비교 평균 ${safeAvg !== null ? safeAvg.toFixed(1) : "—"} · 비교 구간 ${safeMin.toFixed(1)}~${safeMax.toFixed(1)} · ${Math.round(pct * 100)}%`;
   const isClampedHigh = pct >= 1;
   const isClampedLow = pct <= 0;
 
@@ -74,16 +74,16 @@ export default function PerBandBar({ current, min, avg, max }: PerBandBarProps) 
           )}
         </div>
 
-        <span className="orbitron shrink-0 tabular-nums text-[9px] font-black text-[var(--c-ink-2)]">
-          현재 {safeCurrent.toFixed(1)}x
+        <span className="shrink-0 tabular-nums text-[12px] font-black text-[var(--c-ink-2)]">
+          기준연도 {safeCurrent.toFixed(1)}x
         </span>
 
-        <span className={cx("orbitron shrink-0 tabular-nums rounded px-1.5 py-0.5 text-[10px] font-black uppercase tracking-wide", badgeClass)}>
+        <span className={cx(" shrink-0 tabular-nums rounded px-1.5 py-0.5 text-[10px] font-black uppercase tracking-wide", badgeClass)}>
           {label} {Math.round(pct * 100)}%
         </span>
       </div>
-      <span className="max-w-full truncate text-[9px] font-bold tabular-nums text-[var(--c-ink-3)]">
-        평균 {safeAvg !== null ? safeAvg.toFixed(1) : "—"} · 8Y {safeMin.toFixed(1)}~{safeMax.toFixed(1)}
+      <span className="max-w-full truncate text-[12px] font-bold tabular-nums text-[var(--c-ink-3)]">
+        비교 평균 {safeAvg !== null ? safeAvg.toFixed(1) : "—"} · 구간 {safeMin.toFixed(1)}~{safeMax.toFixed(1)}
       </span>
     </div>
   );

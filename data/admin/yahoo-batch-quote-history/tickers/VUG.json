@@ -1,0 +1,115 @@
+{
+  "attempts": [
+    {
+      "attempts_used": 1,
+      "event_name": "schedule",
+      "failures": [],
+      "latency_ms": 1024,
+      "natural": true,
+      "observed_at": "2026-08-05T17:51:24Z",
+      "outcome": "fresh",
+      "run_attempt": 1,
+      "run_id": "31031814422",
+      "schedule": "7 16 * * 0-5",
+      "shard": "44/72"
+    },
+    {
+      "attempts_used": 1,
+      "event_name": "workflow_dispatch",
+      "failures": [],
+      "latency_ms": 772,
+      "natural": false,
+      "observed_at": "2026-08-09T15:40:09Z",
+      "outcome": "fresh",
+      "run_attempt": 1,
+      "run_id": "31321645091",
+      "schedule": "",
+      "shard": ""
+    },
+    {
+      "attempts_used": 1,
+      "event_name": "schedule",
+      "failures": [],
+      "latency_ms": 938,
+      "natural": true,
+      "observed_at": "2026-08-12T17:16:04Z",
+      "outcome": "fresh",
+      "run_attempt": 1,
+      "run_id": "31620820614",
+      "schedule": "7 16 * * 0-5",
+      "shard": "44/72"
+    },
+    {
+      "attempts_used": 1,
+      "event_name": "workflow_dispatch",
+      "failures": [],
+      "latency_ms": 518,
+      "natural": false,
+      "observed_at": "2026-09-28T06:30:00Z",
+      "outcome": "fresh",
+      "run_attempt": 1,
+      "run_id": "36367836615",
+      "schedule": "",
+      "shard": ""
+    }
+  ],
+  "current": {
+    "fetched_at": "2026-09-28T06:42:33Z",
+    "history_as_of": "2026-09-25",
+    "path": "data/yf/finance/VUG.json",
+    "payload_sha256": "3b05cd9e7775eecb68a119b2249ca1df48120d7b2b7204c59b98574d1a72def6",
+    "quote_as_of": "2026-09-25T20:00:00Z",
+    "source_as_of": "2026-09-25"
+  },
+  "discovered_from": [
+    "stockanalysis_etf"
+  ],
+  "last_attempt": {
+    "attempts_used": 1,
+    "event_name": "workflow_dispatch",
+    "failures": [],
+    "latency_ms": 518,
+    "natural": false,
+    "observed_at": "2026-09-28T06:30:00Z",
+    "outcome": "fresh",
+    "run_attempt": 1,
+    "run_id": "36367836615",
+    "schedule": "",
+    "shard": ""
+  },
+  "lkg": {
+    "fetched_at": "2026-08-12T17:19:46Z",
+    "history_as_of": "2026-08-12",
+    "path": "data/admin/yahoo-batch-quote-history/lkg/VUG.json",
+    "payload_sha256": "28b008da427b45036a4e571fd77a64903a26db6465f6e2d5493d3326f7c32dd8",
+    "quote_as_of": "2026-08-12T17:19:43Z",
+    "source_as_of": "2026-08-12"
+  },
+  "promotion_contract": "provider_observation/v2",
+  "provider_observation": {
+    "event_name": "workflow_dispatch",
+    "history_as_of": "2026-09-25",
+    "observed_at": "2026-09-28T06:30:00Z",
+    "payload_sha256": "34c508b5756e3b1047104f7e72b20180deea2acb3d87883950bc549bc474c3bc",
+    "quote_as_of": "2026-09-25T20:00:00Z",
+    "run_attempt": 1,
+    "run_id": "36367836615",
+    "schema_version": "provider_observation/v2",
+    "source_as_of": "2026-09-25"
+  },
+  "resolution_state": "fresh_primary",
+  "retry": false,
+  "schema_version": "yahoo-batch-quote-history-state/v1",
+  "stale": {
+    "age_business_days": 7,
+    "classified_at": "2026-08-21T23:43:33Z",
+    "classified_run_id": "32537807621",
+    "expected_resolution": "next_natural_yahoo_run",
+    "max_business_days": 6,
+    "message": "VUG holds LKG because Yahoo source date 2026-08-12 is 7 business days old, beyond the 6-day bound; it will retry on the next natural Yahoo run.",
+    "reason": "source_age_exceeds_lane_bound",
+    "source_as_of": "2026-08-12"
+  },
+  "ticker": "VUG",
+  "updated_at": "2026-09-28T06:30:00Z"
+}

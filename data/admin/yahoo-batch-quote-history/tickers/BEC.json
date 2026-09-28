@@ -25,65 +25,117 @@
       "run_id": "29785605821",
       "schedule": "0 22 * * 1",
       "shard": "1/6"
+    },
+    {
+      "attempts_used": 1,
+      "event_name": "schedule",
+      "failures": [],
+      "latency_ms": 876,
+      "natural": true,
+      "observed_at": "2026-07-22T23:45:22Z",
+      "outcome": "fresh",
+      "run_attempt": 1,
+      "run_id": "29965324287",
+      "schedule": "0 22 * * 3",
+      "shard": "3/6"
+    },
+    {
+      "attempts_used": 1,
+      "event_name": "schedule",
+      "failures": [],
+      "latency_ms": 777,
+      "natural": true,
+      "observed_at": "2026-08-06T05:27:19Z",
+      "outcome": "fresh",
+      "run_attempt": 1,
+      "run_id": "31074084652",
+      "schedule": "7 2 * * 0-5",
+      "shard": "49/72"
+    },
+    {
+      "attempts_used": 1,
+      "event_name": "schedule",
+      "failures": [],
+      "latency_ms": 1005,
+      "natural": true,
+      "observed_at": "2026-08-12T19:14:55Z",
+      "outcome": "fresh",
+      "run_attempt": 1,
+      "run_id": "31631524598",
+      "schedule": "7 18 * * 0-5",
+      "shard": "45/72"
+    },
+    {
+      "attempts_used": 1,
+      "event_name": "workflow_dispatch",
+      "failures": [],
+      "latency_ms": 408,
+      "natural": false,
+      "observed_at": "2026-09-28T01:17:59Z",
+      "outcome": "fresh",
+      "run_attempt": 1,
+      "run_id": "36365270594",
+      "schedule": "",
+      "shard": ""
     }
   ],
   "current": {
-    "fetched_at": "2026-07-20T23:04:28Z",
-    "history_as_of": "2026-07-20",
+    "fetched_at": "2026-09-28T01:27:42Z",
+    "history_as_of": "2026-09-25",
     "path": "data/yf/finance/BEC.json",
-    "payload_sha256": "fb395ae54b400a6b73994813ca086f529957a11baa6138ce1be90c45711721a9",
-    "quote_as_of": "2026-07-20T16:11:44Z",
-    "source_as_of": "2026-07-20"
+    "payload_sha256": "5f8d3f363b8954e6b050e5fe5cc1ab487741ffd68920cc17a3d2414a1cbd4a22",
+    "quote_as_of": "2026-09-25T19:56:28Z",
+    "source_as_of": "2026-09-25"
   },
   "discovered_from": [
     "stockanalysis_etf"
   ],
   "last_attempt": {
     "attempts_used": 1,
-    "event_name": "schedule",
+    "event_name": "workflow_dispatch",
     "failures": [],
-    "latency_ms": 1014,
-    "natural": true,
-    "observed_at": "2026-07-20T23:03:20Z",
+    "latency_ms": 408,
+    "natural": false,
+    "observed_at": "2026-09-28T01:17:59Z",
     "outcome": "fresh",
     "run_attempt": 1,
-    "run_id": "29785605821",
-    "schedule": "0 22 * * 1",
-    "shard": "1/6"
+    "run_id": "36365270594",
+    "schedule": "",
+    "shard": ""
   },
   "lkg": {
-    "fetched_at": "2026-07-08T22:43:32Z",
-    "history_as_of": "2026-07-08",
+    "fetched_at": "2026-08-12T19:17:03Z",
+    "history_as_of": "2026-08-12",
     "path": "data/admin/yahoo-batch-quote-history/lkg/BEC.json",
-    "payload_sha256": "d627e4881876219d474d69a769fd256eee12105fdd7fceab291f01839f9cae6f",
-    "quote_as_of": null,
-    "source_as_of": "2026-07-08"
+    "payload_sha256": "e1e685bc2d8cb7c4aeda44b91ae6fc8b131aaf96ec7842182305766286f35e57",
+    "quote_as_of": "2026-08-12T18:16:31Z",
+    "source_as_of": "2026-08-12"
   },
   "promotion_contract": "provider_observation/v2",
   "provider_observation": {
-    "event_name": "schedule",
-    "history_as_of": "2026-07-20",
-    "observed_at": "2026-07-20T23:03:20Z",
-    "payload_sha256": "9164d0e6a813402a5671f02b8251745eec1a08ad05c6763276a5b2ede3d18c95",
-    "quote_as_of": "2026-07-20T16:11:44Z",
+    "event_name": "workflow_dispatch",
+    "history_as_of": "2026-09-25",
+    "observed_at": "2026-09-28T01:17:59Z",
+    "payload_sha256": "ac41486e1580173113c6cb3a91c7463c89fc17f51757bf3de21a1c206b526b4f",
+    "quote_as_of": "2026-09-25T19:56:28Z",
     "run_attempt": 1,
-    "run_id": "29785605821",
+    "run_id": "36365270594",
     "schema_version": "provider_observation/v2",
-    "source_as_of": "2026-07-20"
+    "source_as_of": "2026-09-25"
   },
   "resolution_state": "fresh_primary",
   "retry": false,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "stale": {
     "age_business_days": 7,
-    "classified_at": "2026-07-17T00:15:36Z",
-    "classified_run_id": "29544227703",
+    "classified_at": "2026-08-21T23:43:33Z",
+    "classified_run_id": "32537807621",
     "expected_resolution": "next_natural_yahoo_run",
     "max_business_days": 6,
-    "message": "BEC holds LKG because Yahoo source date 2026-07-08 is 7 business days old, beyond the 6-day bound; it will retry on the next natural Yahoo run.",
+    "message": "BEC holds LKG because Yahoo source date 2026-08-12 is 7 business days old, beyond the 6-day bound; it will retry on the next natural Yahoo run.",
     "reason": "source_age_exceeds_lane_bound",
-    "source_as_of": "2026-07-08"
+    "source_as_of": "2026-08-12"
   },
   "ticker": "BEC",
-  "updated_at": "2026-07-20T23:03:20Z"
+  "updated_at": "2026-09-28T01:17:59Z"
 }

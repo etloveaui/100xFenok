@@ -61,7 +61,11 @@ function loadPolicy(options) {
   const builtPaths = buildLaneCommitManifest().update_manifest.central_commit_paths;
   const paths = manifest.update_manifest.central_commit_paths;
   if (canonicalJson(paths) !== canonicalJson(builtPaths)) fail("central_commit_paths are stale");
-  if (paths.length !== 60 || new Set(paths).size !== paths.length) fail("central_commit_paths must contain exactly 60 unique paths");
+  // The exact count is derived from the generator (single source of truth)
+  // rather than hand-bumped per boundary addition.
+  if (paths.length !== builtPaths.length || new Set(paths).size !== paths.length) {
+    fail(`central_commit_paths must contain exactly ${builtPaths.length} unique paths`);
+  }
   const specs = manifest.workflows[WORKFLOW]?.stages?.[STAGE];
   if (!Array.isArray(specs) || canonicalJson(specs.map((spec) => spec.path)) !== canonicalJson(paths)) fail("workflow central stage is stale");
   for (const [index, spec] of specs.entries()) {
@@ -73,6 +77,17 @@ function loadPolicy(options) {
 
 function pathCovered(candidate, specs) {
   return specs.some((spec) => candidate === spec.path || (spec.kind === "directory" && candidate.startsWith(`${spec.path}/`)));
+}
+
+function cleanupCandidates(paths, specs, label) {
+  const candidates = [...new Set(paths)].sort();
+  const outside = [];
+  for (const candidate of candidates) {
+    assertSafePath(candidate, `${label} candidate`);
+    if (!pathCovered(candidate, specs)) outside.push(candidate);
+  }
+  if (outside.length) fail(`${label} candidates outside central policy: ${outside.join(", ")}`);
+  return candidates;
 }
 
 function listScoped(repoRoot, args, paths) {
@@ -123,8 +138,12 @@ function cleanUntrackedAfterReset(repoRoot, policy) {
   if (cached.length || tracked.length) {
     fail(`cleanup requires clean tracked state: cached=${cached.length} changed=${tracked.length}`);
   }
-  const untracked = collectUntracked(repoRoot, policy);
+  const untracked = cleanupCandidates(collectUntracked(repoRoot, policy), policy.specs, "ordinary cleanup");
+  const ignored = cleanupCandidates(collectIgnored(repoRoot, policy), policy.specs, "ignored cleanup");
   if (untracked.length) runGit(repoRoot, ["clean", "-fd", "--", ...untracked]);
+  console.log(`update-manifest central cleanup delete log: kind=ordinary count=${untracked.length} paths=${JSON.stringify(untracked)}`);
+  if (ignored.length) runGit(repoRoot, ["clean", "-fdX", "--", ...ignored]);
+  console.log(`update-manifest central cleanup delete log: kind=ignored count=${ignored.length} paths=${JSON.stringify(ignored)}`);
   return assertCleanAfterReset(repoRoot, policy);
 }
 

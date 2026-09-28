@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { StaticStockAnalyzerDataProvider } from "@/features/stock-analyzer/data/static-data-provider";
 import {
   loadFenokSignalsSummaryMap,
@@ -64,17 +64,22 @@ type FenokShortTermFields = Pick<
   | "fenokShortTermCommonBasisCall"
   | "fenokShortTermInputCount"
   | "fenokShortTermBasisCode"
+  | "fenokShortTermComparableScore"
+  | "fenokShortTermComparableCall"
 >;
 
 export function projectFenokShortTermFields(
   fenokSignal: FenokSignalsSummaryRecord | null | undefined,
 ): FenokShortTermFields {
   return {
-    fenokShortTermScore: fenokSignal?.shortTermScore ?? fenokSignal?.shortTermConvictionScore ?? fenokSignal?.convictionScore ?? null,
-    fenokShortTermConvictionScore: fenokSignal?.shortTermConvictionScore ?? fenokSignal?.convictionScore ?? null,
+    // No convictionScore fallback anywhere on this path. That is the retired
+    // integrated score, and a fallback would land it on screen under a 단기 label
+    // for exactly the tickers whose short-term axes are missing.
+    fenokShortTermScore: fenokSignal?.shortTermScore ?? fenokSignal?.shortTermConvictionScore ?? null,
+    fenokShortTermConvictionScore: fenokSignal?.shortTermConvictionScore ?? null,
     fenokShortTermConvictionCall: convictionCallFromRecord(
       fenokSignal?.shortTermConvictionCall,
-      fenokSignal?.shortTermConvictionScore ?? fenokSignal?.convictionScore,
+      fenokSignal?.shortTermConvictionScore,
     ),
     fenokShortTermCommonBasisScore: fenokSignal?.shortTermCommonBasisScore ?? null,
     fenokShortTermCommonBasisCall: convictionCallFromRecord(
@@ -83,6 +88,11 @@ export function projectFenokShortTermFields(
     ),
     fenokShortTermInputCount: fenokSignal?.shortTermInputCount ?? null,
     fenokShortTermBasisCode: fenokSignal?.shortTermBasisCode ?? null,
+    fenokShortTermComparableScore: fenokSignal?.shortTermComparableScore ?? null,
+    fenokShortTermComparableCall: convictionCallFromRecord(
+      fenokSignal?.shortTermComparableCall,
+      fenokSignal?.shortTermComparableScore,
+    ),
   };
 }
 
@@ -100,27 +110,38 @@ async function loadRecords(timeoutMs = FETCH_TIMEOUT_MS): Promise<StockAnalyzerR
   }
 }
 
+// Detached wait only: loadStockConnectionIndex/loadStockServicesIndex share one
+// in-flight request across every caller, so a per-caller timeout must not pass
+// its own signal in and abort that request for everyone else (see 6530a1e685).
+function raceTimeout<T>(promise: Promise<T>, timeoutMs: number): Promise<T> {
+  return new Promise((resolve, reject) => {
+    const timeoutId = window.setTimeout(() => reject(new Error("timeout")), timeoutMs);
+    promise.then(
+      (value) => {
+        window.clearTimeout(timeoutId);
+        resolve(value);
+      },
+      (err) => {
+        window.clearTimeout(timeoutId);
+        reject(err);
+      },
+    );
+  });
+}
+
 async function loadConnectionIndex(timeoutMs = FETCH_TIMEOUT_MS) {
-  const controller = new AbortController();
-  const timeoutId = window.setTimeout(() => controller.abort(), timeoutMs);
   try {
-    return await loadStockConnectionIndex(controller.signal);
+    return await raceTimeout(loadStockConnectionIndex(), timeoutMs);
   } catch {
     return null;
-  } finally {
-    window.clearTimeout(timeoutId);
   }
 }
 
 async function loadServicesIndex(timeoutMs = FETCH_TIMEOUT_MS) {
-  const controller = new AbortController();
-  const timeoutId = window.setTimeout(() => controller.abort(), timeoutMs);
   try {
-    return await loadStockServicesIndex(controller.signal);
+    return await raceTimeout(loadStockServicesIndex(), timeoutMs);
   } catch {
     return null;
-  } finally {
-    window.clearTimeout(timeoutId);
   }
 }
 
@@ -148,12 +169,17 @@ const EMPTY: ScreenerDataResult = {
   countries: [],
 };
 
-export function useScreenerData(): ScreenerDataResult {
+export function useScreenerData(): ScreenerDataResult & { refetch: () => void } {
   const [result, setResult] = useState<ScreenerDataResult>(EMPTY);
-  const isMountedRef = useRef(true);
+  const [attempt, setAttempt] = useState(0);
+  // Attempt token in the effect deps: a retry re-runs the loaders in place
+  // while the per-run flag (the previous run's cleanup fires first) keeps a
+  // superseded attempt or an unmount from writing over newer state. The last
+  // result stays on screen until the new one lands.
+  const refetch = useCallback(() => setAttempt((value) => value + 1), []);
 
   useEffect(() => {
-    isMountedRef.current = true;
+    let cancelled = false;
 
     void (async () => {
       const [records, connectionIndex, servicesIndex, fenokSignals] = await Promise.all([
@@ -162,10 +188,12 @@ export function useScreenerData(): ScreenerDataResult {
         loadServicesIndex(),
         loadFenokSignalsMap(),
       ]);
-      if (!isMountedRef.current) return;
+      if (cancelled) return;
 
       if (!records) {
-        setResult({ ...EMPTY, failed: true });
+        // Fetch error keeps last-known-good rows (five-state rule): the rail
+        // flips to error with retry while results stay on screen.
+        setResult((prev) => ({ ...prev, failed: true }));
         return;
       }
 
@@ -232,8 +260,13 @@ export function useScreenerData(): ScreenerDataResult {
           ret5y: num(item.ret5y),
           guruHolders: num(item.guruHolders),
           actionScore: num(item.actionScore),
-          fenokEdgeScore: fenokSignal?.upsideDownsideScore ?? null,
-          fenokEdgeDirection: fenokSignal?.upsideDownsideDirection ?? null,
+          // The integrated "Fenok Edge" single score is retired (owner mandate
+          // 2026-08-03): no stated aggregation existed — it picked the first
+          // available of four candidates. The two axes carry the substance:
+          // 단기 = short-term conviction/common-basis composite, 장기 = the
+          // five-axis long-term mean. Both are computed in
+          // scripts/build-fenok-signals.mjs with stated formulas and weights;
+          // the UI only reads the summary fields below.
           fenokSignalConfidence: fenokSignal?.confidence ?? null,
           fenokSignalCoverageRatio: fenokSignal?.coverageRatio ?? null,
           fenokSignalAsOf: fenokSignal?.asOf ?? null,
@@ -241,11 +274,11 @@ export function useScreenerData(): ScreenerDataResult {
           fenokConvictionScore: fenokSignal?.convictionScore ?? null,
           fenokConvictionCall: convictionCallFromRecord(fenokSignal?.convictionCall, fenokSignal?.convictionScore),
           ...fenokShortTermFields,
-          fenokLongTermScore: fenokSignal?.longTermConvictionScore ?? fenokSignal?.longTermScore ?? fenokSignal?.convictionScore ?? null,
-          fenokLongTermConvictionScore: fenokSignal?.longTermConvictionScore ?? fenokSignal?.convictionScore ?? null,
+          fenokLongTermScore: fenokSignal?.longTermConvictionScore ?? fenokSignal?.longTermScore ?? null,
+          fenokLongTermConvictionScore: fenokSignal?.longTermConvictionScore ?? null,
           fenokLongTermConvictionCall: convictionCallFromRecord(
             fenokSignal?.longTermConvictionCall,
-            fenokSignal?.longTermConvictionScore ?? fenokSignal?.convictionScore,
+            fenokSignal?.longTermConvictionScore,
           ),
           profitabilityScore: fenokSignal?.profitabilityScore ?? null,
           profitabilityDirection: fenokSignal?.profitabilityDirection ?? null,
@@ -327,9 +360,9 @@ export function useScreenerData(): ScreenerDataResult {
     })();
 
     return () => {
-      isMountedRef.current = false;
+      cancelled = true;
     };
-  }, []);
+  }, [attempt]);
 
-  return result;
+  return { ...result, refetch };
 }

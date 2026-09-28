@@ -11,9 +11,22 @@ import {
 } from "@/lib/admin-legacy-candidates";
 import { resolvePostCandidates } from "@/lib/post-candidates";
 import {
+  getRetiredPublicDestination,
+  isRetiredPublicDeepLink,
+} from "@/lib/retired-public-routes";
+import {
   ADMIN_SESSION_COOKIE,
   verifyAdminSessionToken,
 } from "@/lib/server/admin-session";
+import { ROUTES } from "@/lib/routes";
+import {
+  gateMode,
+  isAlwaysOpenPath,
+  isGated,
+  verifyRequestToken,
+} from "@/lib/server/closed-site";
+import { resolveCurrentSession } from "@/lib/server/authSession";
+
 
 const BLOCKED_AI_BOT_PATTERNS = [
   /\bClaudeBot\b/i,
@@ -264,6 +277,8 @@ function rateLimitResponse(): NextResponse {
 // page.tsx`; adding an admin page without adding it here 404s that new page.
 export const ADMIN_CONCRETE_ROUTES = new Set<string>([
   "/admin",
+  "/admin/archive",
+  "/admin/data-console",
   "/admin/data-lab",
   "/admin/design-gallery",
   "/admin/design-lab",
@@ -272,6 +287,7 @@ export const ADMIN_CONCRETE_ROUTES = new Set<string>([
   "/admin/macro-monitor",
   "/admin/personal",
   "/admin/personal/travel",
+  "/admin/users",
 ]);
 
 const ADMIN_LEGACY_ASSET_SET = new Set<string>(ADMIN_LEGACY_HTML_FILES);
@@ -414,6 +430,15 @@ function getAdminGateRedirect(request: NextRequest): NextResponse {
   return withNoindexHeader(NextResponse.redirect(targetUrl));
 }
 
+function getClosedSiteRedirect(request: NextRequest): NextResponse {
+  const { pathname, search } = request.nextUrl;
+  const targetUrl = request.nextUrl.clone();
+  targetUrl.pathname = ROUTES.intro;
+  targetUrl.search = "";
+  targetUrl.searchParams.set("next", `${pathname}${search}`);
+  return withNoindexHeader(NextResponse.redirect(targetUrl, 302));
+}
+
 function normalizeAdminLegacyPath(pathname: string): string | null {
   if (!pathname.startsWith("/admin/") || !pathname.endsWith(".html")) {
     return null;
@@ -463,6 +488,46 @@ export async function middleware(request: NextRequest) {
     return rateLimitResponse();
   }
 
+  if (!isAlwaysOpenPath(pathname)) {
+    let env: unknown;
+    try {
+      const ctx = await getCloudflareContext({ async: true });
+      env = ctx.env;
+    } catch {
+      // Not in Cloudflare runtime (Node / unit test)
+    }
+
+    const mode = gateMode(env);
+    const isDataOrApi = pathname.startsWith("/api/") || pathname.startsWith("/data/");
+    if (isGated(request, mode) && !(mode === "intro" && isDataOrApi)) {
+      const verifyToken = (env as Record<string, unknown> | undefined)?.FENOK_VERIFY_TOKEN as
+        | string
+        | undefined;
+      const isVerifyValid = await verifyRequestToken(request, verifyToken);
+      if (!isVerifyValid) {
+        let session = null;
+        try {
+          session = await resolveCurrentSession(request, env);
+        } catch {
+          session = null;
+        }
+        if (!session) {
+          if (pathname.startsWith("/api/")) {
+            return new NextResponse(JSON.stringify({ ok: false, error: "login required" }), {
+              status: 401,
+              headers: {
+                "Content-Type": "application/json",
+                "Cache-Control": "no-store",
+                "X-Robots-Tag": NOINDEX_HEADER_VALUE,
+              },
+            });
+          }
+          return getClosedSiteRedirect(request);
+        }
+      }
+    }
+  }
+
   // Ahead of any bridge response: a safe, known-missing post must leave with
   // a real 404 rather than a 200 carrying a not-found body.
   const postsNotFoundRewrite = getPostsNotFoundRewrite(request);
@@ -492,6 +557,25 @@ export async function middleware(request: NextRequest) {
     }
     return authenticated;
   };
+
+  const retiredDestination = getRetiredPublicDestination(pathname);
+  const preservedRetiredDeepLink = isRetiredPublicDeepLink(
+    pathname,
+    request.nextUrl.searchParams,
+  );
+  if (
+    retiredDestination &&
+    !preservedRetiredDeepLink &&
+    !(await hasAdminSession())
+  ) {
+    const targetUrl = request.nextUrl.clone();
+    targetUrl.pathname = retiredDestination;
+    targetUrl.search = "";
+    return withNoindexHeader(NextResponse.redirect(targetUrl, 307));
+  }
+  if (retiredDestination || preservedRetiredDeepLink) {
+    return withNoindexHeader(NextResponse.next());
+  }
 
   if (!normalizedAdminPath && !normalizedTravelPath) {
     if (isProtectedAdminStaticAssetPath(pathname) && !(await hasAdminSession())) {

@@ -14,6 +14,9 @@ import {
   buildRowsForTest,
   candidateDates,
   classifyOccEndpointResponse,
+  defaultOccTargetYmd,
+  detectOccMissingTradingDays,
+  enforceOccRequestBudget,
   estimateMaxLiveRequests,
   loadS0OccClassShareUniverse,
   loadS0OccMissingUniverse,
@@ -23,9 +26,11 @@ import {
   mergeOutputSnapshot,
   OCC_AVAILABILITY_POLICY,
   OCC_PERSISTENCE_POLICY,
+  occOutputSourceAsOf,
   parseControlledFailureLanes,
   parseOccCsv,
   parseArgs,
+  planOccMissingDayBackfill,
   reduceOccEndpointResults,
   retainLatestTickerSourceDates,
   scoreOptionsLogRatio,
@@ -33,6 +38,23 @@ import {
   summarizeDateAttempt,
   summarizeTickerAvailability,
 } from "./fetch-fenok-occ-options-volume.mjs";
+
+assert.equal(
+  occOutputSourceAsOf({
+    rows: [
+      { source_date: "20260716" },
+      { source_date: "20260718" },
+      { source_date: "20260717" },
+    ],
+  }),
+  "2026-07-18",
+  "OCC source_as_of must use the provider-max source date",
+);
+assert.equal(
+  occOutputSourceAsOf({ rows: [{ source_date: "" }, { source_date: "invalid" }] }),
+  null,
+  "OCC source_as_of must stay honestly null without a valid provider date",
+);
 
 assert.deepEqual(parseControlledFailureLanes("", "schedule"), []);
 assert.deepEqual(
@@ -170,86 +192,101 @@ for (const exact of [
   );
 }
 
-{
-  const root = fs.mkdtempSync(path.join(os.tmpdir(), "occ-emitter-ready-"));
-  const attemptShardPath = path.join(root, "occ_options_volume.json");
-  const options = {
-    cacheDir: path.join(root, "cache-ready"),
-    attemptShardPath,
-    observedAt: "2026-07-15T03:30:00Z",
-    attemptId: "occ-options-volume-test-run-1",
-    request: async (url) => ({
-      statusCode: 200,
-      body: new URL(url).searchParams.get("porc") === "C" ? callCsv : putCsv,
-    }),
-  };
-  const result = await build(parseArgs([
-    "--tickers", "NVDA",
-    "--date", "20260626",
-    "--max-walkback-days", "0",
-    "--max-requests", "2",
-    "--sleep-ms", "0",
-    "--no-write",
-  ]), options);
-  assert.equal(result.no_usable_rows, undefined);
-  let shard = JSON.parse(fs.readFileSync(attemptShardPath, "utf8"));
-  assert.deepEqual(shard.attempts[0].assertions, [{ id: "csv_rows", passed: true }]);
+const dateNotAvailableBody = "Report date cannot be greater than 7/25/2026.";
+const futureDateTickers = Array.from(
+  { length: 25 },
+  (_, index) => `FUT${String(index + 1).padStart(2, "0")}`,
+);
+let futureDateRequests = 0;
+const futureDateRoot = fs.mkdtempSync(path.join(os.tmpdir(), "occ-date-not-available-"));
+const futureDateResult = await build(parseArgs([
+  "--tickers", futureDateTickers.join(","),
+  "--date", "20260726",
+  "--max-walkback-days", "0",
+  "--fail-threshold", "26",
+  "--sleep-ms", "0",
+  "--no-write",
+]), {
+  request: async () => {
+    futureDateRequests += 1;
+    return { statusCode: 200, body: dateNotAvailableBody };
+  },
+  cacheDir: path.join(futureDateRoot, "cache"),
+  observedAt: "2026-07-26T12:30:00Z",
+  attemptId: "occ-date-not-available-25-test",
+});
+assert.equal(futureDateResult.date_attempts[0].hard_failure_count, 0);
+assert.equal(futureDateRequests, 25 * 2, "25 expected-unavailable tickers must still query both OCC sides");
+assert.equal(futureDateResult.date_attempts[0].stopped_fail_threshold, false);
+assert.equal(futureDateResult.date_attempts[0].status_counts.date_not_available, 25);
+assert.equal(futureDateResult.coverage.failed_attempts, 0);
+assert.equal(futureDateResult.coverage.date_not_available_attempts, 25);
 
-  await build(parseArgs([
-    "--tickers", "NVDA",
-    "--date", "20260626",
-    "--max-walkback-days", "0",
-    "--max-requests", "2",
-    "--sleep-ms", "0",
-    "--no-write",
-  ]), {
-    ...options,
-    cacheDir: path.join(root, "cache-rate-limited"),
-    observedAt: "2026-07-15T03:31:00Z",
-    request: async () => ({ statusCode: 429, body: "rate limited" }),
-  });
-  shard = JSON.parse(fs.readFileSync(attemptShardPath, "utf8"));
-  assert.equal(shard.attempts[0].http_status, 429, "same-run later batch failure is retained");
-}
+const noRecordRoot = fs.mkdtempSync(path.join(os.tmpdir(), "occ-no-record-control-"));
+const noRecordResult = await build(parseArgs([
+  "--tickers", "FTV",
+  "--date", "20260726",
+  "--max-walkback-days", "0",
+  "--sleep-ms", "0",
+  "--no-write",
+]), {
+  request: async () => ({ statusCode: 200, body: "No record(s) found" }),
+  cacheDir: path.join(noRecordRoot, "cache"),
+  observedAt: "2026-07-26T12:31:00Z",
+  attemptId: "occ-no-record-control-test",
+});
+assert.equal(noRecordResult.date_attempts[0].hard_failure_count, 0);
+assert.equal(noRecordResult.date_attempts[0].status_counts.no_record, 1);
+assert.equal(noRecordResult.coverage.failed_attempts, 0);
 
-{
-  const root = fs.mkdtempSync(path.join(os.tmpdir(), "occ-emitter-empty-tail-"));
-  const attemptShardPath = path.join(root, "occ_options_volume.json");
-  const options = {
-    cacheDir: path.join(root, "cache"),
-    attemptShardPath,
-    observedAt: "2026-07-15T03:40:00Z",
-    attemptId: "occ-options-volume-test-empty-tail",
-    request: async (url) => ({
+const hardFailureRoot = fs.mkdtempSync(path.join(os.tmpdir(), "occ-hard-failure-control-"));
+const hardFailureResult = await build(parseArgs([
+  "--tickers", "ERR",
+  "--date", "20260726",
+  "--max-walkback-days", "0",
+  "--sleep-ms", "0",
+  "--no-write",
+]), {
+  request: async () => ({ statusCode: 500, body: "provider failure" }),
+  cacheDir: path.join(hardFailureRoot, "cache"),
+  observedAt: "2026-07-26T12:32:00Z",
+  attemptId: "occ-hard-failure-control-test",
+});
+assert.equal(hardFailureResult.date_attempts[0].hard_failure_count, 1);
+assert.equal(hardFailureResult.coverage.failed_attempts, 1);
+
+const mixedDateRoot = fs.mkdtempSync(path.join(os.tmpdir(), "occ-mixed-date-"));
+const mixedDateResult = await build(parseArgs([
+  "--tickers", "NVDA,FUTURE",
+  "--date", "20260726",
+  "--max-walkback-days", "0",
+  "--fail-threshold", "5",
+  "--sleep-ms", "0",
+  "--no-write",
+]), {
+  request: async (url) => {
+    const params = new URL(url).searchParams;
+    if (params.get("symbol") === "FUTURE") {
+      return { statusCode: 200, body: dateNotAvailableBody };
+    }
+    return {
       statusCode: 200,
-      body: new URL(url).searchParams.get("porc") === "C" ? callCsv : putCsv,
-    }),
-  };
-  await build(parseArgs([
-    "--tickers", "NVDA",
-    "--date", "20260626",
-    "--max-walkback-days", "0",
-    "--max-requests", "2",
-    "--sleep-ms", "0",
-    "--no-write",
-  ]), options);
-  await build(parseArgs([
-    "--all-eligible",
-    "--batch-size", "1",
-    "--batch-index", "999999",
-    "--date", "20260626",
-    "--max-walkback-days", "0",
-    "--no-fetch",
-    "--no-write",
-  ]), {
-    ...options,
-    observedAt: "2026-07-15T03:41:00Z",
-    request: async () => { throw new Error("empty tail must not request"); },
-  });
-  const shard = JSON.parse(fs.readFileSync(attemptShardPath, "utf8"));
-  assert.equal(shard.attempts[0].attempt_id, options.attemptId);
-  assert.equal(shard.attempts[0].payload, "non_empty", "empty tail cannot erase observed same-run evidence");
-}
+      body: params.get("porc") === "C" ? callCsv : putCsv,
+    };
+  },
+  cacheDir: path.join(mixedDateRoot, "cache"),
+  observedAt: "2026-07-26T12:33:00Z",
+  attemptId: "occ-mixed-date-test",
+});
+assert.equal(mixedDateResult.batch_coverage.row_count, 1);
+assert.equal(mixedDateResult.batch_coverage.failed_attempts, 0);
+assert.equal(mixedDateResult.batch_coverage.date_not_available_attempts, 1);
+assert.equal(mixedDateResult.date_attempts[0].status_counts.options_activity_available, 1);
+assert.equal(mixedDateResult.date_attempts[0].status_counts.date_not_available, 1);
+assert(
+  mixedDateResult.reference_rows.some((row) => row.ticker === "NVDA"),
+  "the loaded ticker must remain accepted in a mixed date",
+);
 
 assert.deepEqual(
   candidateDates({ requestedDate: "20260628", maxWalkbackDays: 4 }),
@@ -263,6 +300,26 @@ assert.deepEqual(
   candidateDates({ requestedDate: "20260705", maxWalkbackDays: 0 }),
   ["20260703"],
 );
+assert.equal(
+  defaultOccTargetYmd(new Date("2026-07-28T00:30:00Z")),
+  "20260727",
+  "the early-UTC schedule must target the completed New York trading date",
+);
+assert.equal(
+  defaultOccTargetYmd(new Date("2026-07-28T15:00:00Z")),
+  "20260727",
+  "a New York trading day before the 18:00 provider cutoff must target the prior trading date",
+);
+assert.equal(
+  defaultOccTargetYmd(new Date("2026-07-28T23:00:00Z")),
+  "20260728",
+  "a New York trading day after the 18:00 provider cutoff may target the same date",
+);
+assert.equal(
+  defaultOccTargetYmd(new Date("2026-07-05T23:00:00Z")),
+  "20260702",
+  "weekend and observed-holiday dates must walk back to the latest trading date",
+);
 assert.deepEqual(
   applyTickerBatch(["A", "B", "C", "D", "E"], { batchSize: 2, batchIndex: 1 }),
   ["C", "D"],
@@ -275,6 +332,149 @@ assert.equal(
   estimateMaxLiveRequests({ tickers: ["A", "MSFT"], dates: ["20260626", "20260625"] }),
   8,
 );
+
+const occHistoryDates = [
+  "20260630", "20260701", "20260702",
+  "20260706", "20260707", "20260708", "20260709", "20260710",
+  "20260713", "20260714", "20260715", "20260716", "20260717",
+  "20260720", "20260721", "20260722", "20260723", "20260724",
+];
+function occHistoryRows(countByDate) {
+  return occHistoryDates.flatMap((sourceDate) => Array.from(
+    { length: countByDate[sourceDate] ?? 100 },
+    (_, index) => ({ ticker: `T${String(index).padStart(3, "0")}`, source_date: sourceDate }),
+  ));
+}
+
+const oldestHolePlan = planOccMissingDayBackfill({
+  rows: occHistoryRows({ 20260708: 0, 20260720: 0 }),
+  referenceYmd: "20260724",
+  normalDates: ["20260724", "20260723", "20260722"],
+  attemptRef: "history-hole-run",
+  attemptNumber: 1,
+});
+assert.deepEqual(
+  oldestHolePlan.extra_dates,
+  ["20260708"],
+  "a history hole must add exactly one recovery date, oldest first",
+);
+
+const noHolePlan = planOccMissingDayBackfill({
+  rows: occHistoryRows({}),
+  referenceYmd: "20260724",
+  normalDates: ["20260724", "20260723", "20260722"],
+  attemptRef: "no-hole-run",
+  attemptNumber: 1,
+});
+assert.deepEqual(noHolePlan.extra_dates, [], "complete history must add no recovery date");
+assert.equal(
+  estimateMaxLiveRequests({
+    tickers: Array.from({ length: 250 }, (_, index) => `T${index}`),
+    dates: ["20260724", "20260723", "20260722", ...noHolePlan.extra_dates],
+  }),
+  1500,
+  "no-hole request count must remain unchanged",
+);
+
+const partialHoleDetection = detectOccMissingTradingDays({
+  rows: occHistoryRows({ 20260708: 27, 20260720: 98 }),
+  referenceYmd: "20260724",
+});
+assert.deepEqual(
+  partialHoleDetection.in_lookback_holes.map((row) => row.source_date),
+  ["2026-07-08"],
+  "a 27%-populated day is a hole while a 98%-populated day is not",
+);
+
+const oldHoleDetection = detectOccMissingTradingDays({
+  rows: occHistoryRows({ 20260701: 0 }),
+  referenceYmd: "20260724",
+});
+assert.deepEqual(oldHoleDetection.in_lookback_holes, []);
+assert.deepEqual(
+  oldHoleDetection.outside_lookback_holes.map((row) => row.source_date),
+  ["2026-07-01"],
+  "a hole older than the lookback must be reported but not fetched",
+);
+
+const fourDateEstimate = estimateMaxLiveRequests({
+  tickers: Array.from({ length: 250 }, (_, index) => `T${index}`),
+  dates: ["20260724", "20260723", "20260722", "20260708"],
+});
+assert.equal(fourDateEstimate, 2000);
+assert.doesNotThrow(() => enforceOccRequestBudget({
+  estimatedMaxLiveRequests: fourDateEstimate,
+  maxRequests: 2000,
+}));
+assert.throws(
+  () => enforceOccRequestBudget({
+    estimatedMaxLiveRequests: fourDateEstimate,
+    maxRequests: 1500,
+  }),
+  /estimated 2000, max 1500/,
+  "the four-date estimate must remain fail-closed at the old 1500 budget",
+);
+
+const pinnedHolePlan = planOccMissingDayBackfill({
+  rows: occHistoryRows({ 20260708: 75, 20260720: 0 }),
+  referenceYmd: "20260724",
+  normalDates: ["20260724", "20260723", "20260722"],
+  attemptRef: "history-hole-run",
+  attemptNumber: 1,
+  previousCurrentAttempt: {
+    attempt_ref: "history-hole-run",
+    attempt_number: 1,
+    missing_day_backfill: { selected_source_date: "2026-07-08" },
+  },
+});
+assert.deepEqual(
+  pinnedHolePlan.extra_dates,
+  ["20260708"],
+  "all batches in one run must keep the original recovery day even after it crosses the hole threshold",
+);
+
+{
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), "occ-missing-day-integration-"));
+  const eligibleManifest = path.join(root, "eligible.json");
+  fs.writeFileSync(eligibleManifest, `${JSON.stringify(["NVDA"])}\n`);
+  const requestedDates = [];
+  const result = await build(parseArgs([
+    "--all-eligible",
+    "--eligible-manifest", eligibleManifest,
+    "--batch-size", "1",
+    "--max-walkback-days", "2",
+    "--max-requests", "8",
+    "--sleep-ms", "0",
+    "--no-write",
+  ]), {
+    request: async (url) => {
+      const params = new URL(url).searchParams;
+      requestedDates.push(params.get("reportDate"));
+      return {
+        statusCode: 200,
+        body: params.get("porc") === "C" ? callCsv : putCsv,
+      };
+    },
+    cacheDir: path.join(root, "cache"),
+    observedAt: "2026-07-24T12:30:00Z",
+    attemptId: "occ-missing-day-integration",
+    runId: "history-hole-run",
+    runAttempt: 1,
+    referenceDate: new Date("2026-07-24T23:00:00Z"),
+    publishedOutput: {
+      rows: occHistoryRows({ 20260708: 0, 20260720: 0 }),
+      current_attempt: null,
+    },
+  });
+  assert.deepEqual(
+    [...new Set(requestedDates)],
+    ["20260724", "20260708"],
+    "the live path must resolve the normal date first, then fetch only the oldest missing day",
+  );
+  assert.equal(result.missing_day_backfill.backfilled_source_date, "2026-07-08");
+  assert.equal(result.missing_day_backfill.accepted_rows, 1);
+  assert.ok(result.missing_day_backfill.holes_remaining.includes("2026-07-20"));
+}
 assert.equal(OCC_AVAILABILITY_POLICY.availability_status, "not_verified");
 assert.equal(OCC_AVAILABILITY_POLICY.exact_volume_query_release_time, null);
 assert.equal(OCC_AVAILABILITY_POLICY.scheduler_guidance.initial_daily_run_kst, "08:30");
@@ -439,7 +639,7 @@ const allEligiblePlan = await build(parseArgs(["--all-eligible", "--plan-only"])
 assert.equal(allEligiblePlan.collection_mode, "all_eligible_batched");
 assert.ok(allEligiblePlan.eligible_count > allEligiblePlan.selected_tickers);
 assert.equal(allEligiblePlan.selected_tickers, 50);
-assert.equal(allEligiblePlan.request_budget.max_requests, 100);
+assert.equal(allEligiblePlan.request_budget.max_requests, 200);
 assert.equal(allEligiblePlan.request_budget.status, "within_budget");
 const finraOnlyPlan = await build(parseArgs(["--all-eligible", "--plan-only"]), {
   eventName: "workflow_dispatch",
@@ -480,7 +680,6 @@ await assert.rejects(
   ]), {
     ...incompatibleInjectionOptions,
     cacheDir: path.join(root, "cache"),
-    attemptShardPath: path.join(root, "attempts", "occ_options_volume.json"),
     lkgRepoRoot: root,
     lkgMarkerPath: path.join(root, "marker.json"),
     request: async () => {
@@ -608,6 +807,41 @@ assert.equal(noRecordSummary.scoring_row_eligible, false);
 assert.equal(noRecordSummary.coverage_row_eligible, false);
 assert.equal(noRecordSummary.no_listed_options_policy_status, "pending_owner_acceptance");
 
+const dateNotAvailableSummary = summarizeTickerAvailability({
+  ticker: "FUTURE",
+  ymd: "20260726",
+  sideAttempts: [
+    { ticker: "FUTURE", source_date: "20260726", side: "C", attempted_form: "FUTURE", status: "date_not_available" },
+    { ticker: "FUTURE", source_date: "20260726", side: "P", attempted_form: "FUTURE", status: "date_not_available" },
+  ],
+});
+assert.equal(dateNotAvailableSummary.status, "date_not_available");
+assert.equal(dateNotAvailableSummary.accepted_form, null);
+assert.equal(dateNotAvailableSummary.accepted_form_policy, null);
+assert.equal(dateNotAvailableSummary.no_listed_options_policy_status, null);
+assert.equal(dateNotAvailableSummary.evidence_policy, null);
+
+for (const [otherStatus, expectedStatus] of [
+  ["loaded", "unavailable"],
+  ["no_record", "partial_no_record_or_form_gap"],
+  ["cache_missing_no_fetch", "cache_missing_no_fetch"],
+  ["transient_failed", "transient_failed"],
+]) {
+  const prioritySummary = summarizeTickerAvailability({
+    ticker: "MIXED",
+    ymd: "20260726",
+    sideAttempts: [
+      { ticker: "MIXED", source_date: "20260726", side: "C", attempted_form: "MIXED", status: otherStatus },
+      { ticker: "MIXED", source_date: "20260726", side: "P", attempted_form: "MIXED", status: "date_not_available" },
+    ],
+  });
+  assert.equal(
+    prioritySummary.status,
+    expectedStatus,
+    `${otherStatus} must outrank a one-side date_not_available status`,
+  );
+}
+
 const partialNoRecordSummary = summarizeTickerAvailability({
   ticker: "ATO",
   ymd: "20260626",
@@ -685,11 +919,18 @@ const readyBatch = buildOccBatchAttempt({
   attemptRef: "28982598913", attemptNumber: 1, batchIndex: 1, selectedTickers: 50,
   targetYmd: "20260708", servedYmd: "20260708",
   dateAttempts: [{ source_date: "2026-07-08", accepted_rows: 50, usable_rows: 50, status_counts: { options_activity_available: 50 }, hard_failure_count: 0, stopped_fail_threshold: false }],
+  missingDayBackfill: {
+    status: "backfilled",
+    selected_source_date: "2026-07-01",
+    backfilled_source_date: "2026-07-01",
+    holes_remaining: ["2026-07-02"],
+  },
 });
 let mergedAttempt = mergeOccCurrentAttempt(null, walkbackBatch);
 mergedAttempt = mergeOccCurrentAttempt(mergedAttempt, readyBatch);
 assert.equal(mergedAttempt.status, "degraded_walkback", "one walked-back batch keeps the whole current run degraded");
 assert.equal(mergedAttempt.batches.length, 2);
+assert.equal(mergedAttempt.missing_day_backfill.selected_source_date, "2026-07-01");
 
 const emptyTail = buildOccBatchAttempt({
   attemptRef: "28982598913", attemptNumber: 1, batchIndex: 4, selectedTickers: 0,
@@ -698,6 +939,16 @@ const emptyTail = buildOccBatchAttempt({
 mergedAttempt = mergeOccCurrentAttempt(mergedAttempt, emptyTail);
 assert.equal(mergedAttempt.status, "degraded_walkback", "empty tail batch cannot overwrite non-empty run evidence");
 assert.equal(mergedAttempt.batches.length, 3);
+assert.equal(
+  mergedAttempt.missing_day_backfill.backfilled_source_date,
+  "2026-07-01",
+  "an empty tail batch cannot erase same-run backfill visibility",
+);
+assert.equal(
+  mergedAttempt.missing_day_backfill.status,
+  "backfilled",
+  "an empty tail batch cannot contradict a same-run successful backfill",
+);
 
 const unavailableBatch = buildOccBatchAttempt({
   attemptRef: "new-run", attemptNumber: 1, batchIndex: 0, selectedTickers: 10,
@@ -708,6 +959,7 @@ const resetAttempt = mergeOccCurrentAttempt(mergedAttempt, unavailableBatch);
 assert.equal(resetAttempt.status, "unavailable");
 assert.equal(resetAttempt.served_source_date, null);
 assert.equal(resetAttempt.batches.length, 1, "new run resets the bounded current-attempt batch list");
+assert.equal(resetAttempt.missing_day_backfill, null, "new run resets prior-run backfill visibility");
 
 const noFetchAttemptRoot = fs.mkdtempSync(path.join(os.tmpdir(), "occ-no-fetch-attempt-"));
 const noFetchNoWrite = await build(parseArgs([
@@ -721,7 +973,6 @@ const noFetchNoWrite = await build(parseArgs([
   "--no-write",
 ]), {
   cacheDir: path.join(noFetchAttemptRoot, "cache"),
-  attemptShardPath: path.join(noFetchAttemptRoot, "occ_options_volume.json"),
   observedAt: "2026-07-15T04:00:00Z",
   attemptId: "occ-options-volume-no-fetch-test",
 });

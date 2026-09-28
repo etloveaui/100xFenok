@@ -6,7 +6,7 @@ import https from "node:https";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 
-import { ATTEMPT_SHARD_SCHEMA } from "./build-data-supply-detection-floor.mjs";
+import { boundedDiagnosticDetail, diagnosticSuffix } from "./lib/diagnostic-detail.mjs";
 import {
   LaneLkgStore,
   PROMOTION_CONTRACT_PROVIDER_OBSERVATION_V2,
@@ -21,7 +21,6 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 const REPO_ROOT = path.resolve(__dirname, "..");
 
-export { ATTEMPT_SHARD_SCHEMA };
 export const ACCOUNT_TYPES = Object.freeze([
   "Federal Reserve Account",
   "Treasury General Account (TGA)",
@@ -161,11 +160,14 @@ function classifyResponse(response) {
   let document;
   try {
     document = JSON.parse(String(response.body ?? ""));
-  } catch {
-    return result("decode_error", returnedTuple({
-      httpStatus: statusCode,
-      decode: "error",
-    }));
+  } catch (error) {
+    return {
+      ...result("decode_error", returnedTuple({
+        httpStatus: statusCode,
+        decode: "error",
+      })),
+      failure_detail: boundedDiagnosticDetail(error),
+    };
   }
   if (!Array.isArray(document?.data)) {
     return result("schema_drift", returnedTuple({
@@ -226,6 +228,7 @@ async function evaluateRequest(request, bucket, controlledFailureKey) {
       ...result(exceptionKind === "transport" ? "transport_error" : "unexpected_error", threwTuple(exceptionKind)),
       bucketKey: bucket.key,
       controlled: false,
+      failure_detail: boundedDiagnosticDetail(error),
     };
   }
 }
@@ -246,14 +249,6 @@ function attemptRow(worst, observedAt, attemptId) {
     attempt_id: attemptId,
     observed_at: observedAt,
     ...worst.attempt,
-  };
-}
-
-function attemptShard(row) {
-  return {
-    schema_version: ATTEMPT_SHARD_SCHEMA,
-    lane_id: "treasury_tga",
-    attempts: [row],
   };
 }
 
@@ -282,10 +277,6 @@ function atomicWrite(filePath, bytes) {
     try { fs.unlinkSync(temporary); } catch {}
     throw error;
   }
-}
-
-function writeJsonAtomic(filePath, document) {
-  atomicWrite(filePath, `${JSON.stringify(document, null, 2)}\n`);
 }
 
 function buildOutput(documents, observedAt) {
@@ -436,8 +427,6 @@ function controlledFailureKey(value, eventName) {
 export async function runTreasuryTga({
   repoRoot = REPO_ROOT,
   canonicalPath = path.join(repoRoot, "data", "macro", "tga.json"),
-  publicPath = path.join(repoRoot, "100xfenok-next", "public", "data", "macro", "tga.json"),
-  attemptShardPath = path.join(repoRoot, "data", "admin", "data-supply-state", "detection-attempts", "treasury_tga.json"),
   request = requestBytes,
   observedAt = new Date().toISOString(),
   attemptId = `tga-${new Date().toISOString().replace(/[^0-9a-z]/gi, "").toLowerCase()}-${randomBytes(4).toString("hex")}`,
@@ -487,7 +476,6 @@ export async function runTreasuryTga({
   }
 
   const row = attemptRow(worst, observedAt, attemptId);
-  writeJsonAtomic(attemptShardPath, attemptShard(row));
   if (worst.status !== "ready") {
     const systemicOutage = allNaturalRequestsFailed(requestResults, (requestResult) => requestResult.controlled === true);
     const nonTransientHttp = requestResults.some((requestResult) => (
@@ -504,7 +492,16 @@ export async function runTreasuryTga({
       hasCompleteLkg: failure.hasCompleteLkg,
       systemic: systemicOutage || nonTransientHttp,
     });
-    return { ok: false, reason: failureReason, updated: false, attempt: row, retrySet: failure.retrySet, ...outcome };
+    const failureDetail = naturalWorst?.failure_detail ?? worst.failure_detail ?? null;
+    return {
+      ok: false,
+      reason: failureReason,
+      failure_detail: failureDetail,
+      updated: false,
+      attempt: row,
+      retrySet: failure.retrySet,
+      ...outcome,
+    };
   }
 
   const serialized = `${JSON.stringify(output, null, 2)}\n`;
@@ -597,7 +594,6 @@ export async function runTreasuryTga({
     };
   }
   atomicWrite(canonicalPath, serialized);
-  atomicWrite(publicPath, serialized);
   const success = lkgStore.recordSuccess({ artifacts: promotable, run });
   const recovered = success.state.items[LKG_KEY]?.recovered_at === observedAt;
   return { ok: true, reason: "ok", updated: true, attempt: row, points: output.series.length, recovered };
@@ -607,7 +603,7 @@ async function main() {
   const resultValue = await runTreasuryTga();
   if (!resultValue.ok) {
     const prefix = resultValue.degraded ? "[degraded]" : "[corrupt]";
-    const message = `${prefix} Treasury TGA ${resultValue.reason}; retry set: ${(resultValue.retrySet || []).join(", ") || "none"}`;
+    const message = `${prefix} Treasury TGA ${resultValue.reason}; retry set: ${(resultValue.retrySet || []).join(", ") || "none"}${diagnosticSuffix(resultValue.failure_detail)}`;
     if (resultValue.degraded) console.log(message);
     else console.error(message);
     process.exitCode = resultValue.exitCode ?? 2;

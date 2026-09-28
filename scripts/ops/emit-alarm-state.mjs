@@ -4,9 +4,10 @@
  * on BOTH firing and quiet-success resolution, so the owner dashboard can read
  * "is any alarm open" without opening GitHub Actions.
  *
- * The alarm-state commit must NEVER mask the alarm itself: the workflow runs this
- * with continue-on-error and keeps the OPS issue + job failure as the primary
- * channel (spec P3 constraint). This script only computes/writes the state file.
+ * The emitter and OPS issue reporting are non-best-effort, so their machinery
+ * failures turn the run red. The later alarm-state Git commit is best-effort and
+ * can never mask the issue channel (spec P3 constraint). This script computes/
+ * writes the state file and publishes its transition outputs.
  *
  * Content is public-safe by construction: GitHub run ids, workflow FILE basenames,
  * actions run URLs, and our own issue title — no store roots, private paths, or
@@ -18,8 +19,6 @@ import path from "node:path";
 import { fileURLToPath } from "node:url";
 
 export const ALARM_STATE_SCHEMA = "alarm-state/v1";
-const CADENCE_STATES = Object.freeze(["not_due", "overdue", "recovered", "no_declaration", "unknown"]);
-const PUBLIC_CADENCE_EVIDENCE = new Set(["suspected_skip", "attempt_gap"]);
 
 function isoNow(now) {
   return now instanceof Date ? now.toISOString() : new Date().toISOString();
@@ -29,9 +28,27 @@ function isoNow(now) {
 export function buildAlarmState({ health, prior = null, env = {}, now = new Date() } = {}) {
   const at = isoNow(now);
   const workflows = Array.isArray(health?.workflows) ? health.workflows : [];
-  const alarming = workflows.filter((w) => w?.status === "alarm");
+  const workflowAlarms = workflows.filter((w) => w?.status === "alarm");
+  const dataHealthKpi = health?.data_health_kpi ?? null;
+  const kpiAlarm = dataHealthKpi?.status === "alarm"
+    ? {
+        workflow: "data-health-kpi",
+        label: "Data stopped advancing",
+        alarm_reasons: ["data_stopped_two_generations"],
+        stopped_sets: Array.isArray(dataHealthKpi.stopped_sets)
+          ? [...new Set(dataHealthKpi.stopped_sets.filter((set) => typeof set === "string"))].sort()
+          : [],
+        latest_generated_at: dataHealthKpi.latest_generated_at ?? null,
+        previous_generated_at: dataHealthKpi.previous_generated_at ?? null,
+      }
+    : null;
+  const alarming = [...workflowAlarms, ...(kpiAlarm ? [kpiAlarm] : [])];
   const healthStatus = health?.status ?? "unknown";
-  const status = healthStatus === "alarm" ? "open" : healthStatus === "ok" ? "clear" : "unknown";
+  const status = alarming.length > 0 || healthStatus === "alarm"
+    ? "open"
+    : healthStatus === "ok" && dataHealthKpi?.status !== "unknown"
+      ? "clear"
+      : "unknown";
 
   // evaluateWorkflow (check-pipeline-job-health.mjs) returns firstFailingRunId
   // and firstFailingRunUrl at the TOP LEVEL of the workflow object. Reading only
@@ -39,14 +56,19 @@ export function buildAlarmState({ health, prior = null, env = {}, now = new Date
   // body, built from the same evaluator, printed the run id correctly. The nested
   // read is kept as a fallback so any caller still passing that shape keeps
   // working, but top level wins because that is what the producer emits.
-  const openIncidents = alarming.map((w) => ({
+  const openIncidents = workflowAlarms.map((w) => ({
     workflow: w.file ?? null,
     label: w.label ?? w.name ?? w.file ?? null,
     streak: typeof w.streak === "number" ? w.streak : null,
     failure_streak_threshold: w.failure_streak_threshold === 1 ? 1 : 2,
     first_failing_run_id: w.firstFailingRunId ?? w.alarm?.firstFailingRunId ?? null,
     first_failing_run_url: w.firstFailingRunUrl ?? w.alarm?.firstFailingRunUrl ?? null,
+    alarm_reasons: Array.isArray(w.alarm_reasons) ? [...new Set(w.alarm_reasons)].sort() : [],
+    lost_schedule_slot_count: Number.isInteger(w.lost_schedule_slot_count)
+      ? w.lost_schedule_slot_count
+      : 0,
   }));
+  if (kpiAlarm) openIncidents.push(kpiAlarm);
 
   // A run the API could not classify is a real state, and going from one unknown
   // workflow to several is a deterioration. Without recording WHICH workflows are
@@ -54,6 +76,9 @@ export function buildAlarmState({ health, prior = null, env = {}, now = new Date
   const unknownWorkflows = workflows
     .filter((w) => w?.status !== "alarm" && w?.status !== "ok")
     .map((w) => ({ workflow: w?.file ?? null, status: w?.status ?? null }))
+    .concat(dataHealthKpi?.status === "unknown"
+      ? [{ workflow: "data-health-kpi", status: "unknown" }]
+      : [])
     .sort((a, b) => String(a.workflow).localeCompare(String(b.workflow)));
   const excludedWorkflows = Array.isArray(health?.excluded)
     ? health.excluded
@@ -64,22 +89,24 @@ export function buildAlarmState({ health, prior = null, env = {}, now = new Date
       }))
       .sort((a, b) => String(a.file).localeCompare(String(b.file)))
     : [];
-  const cadence_state_counts = Object.fromEntries(CADENCE_STATES.map((state) => [state, 0]));
+  // Queue eviction evidence remains visible by workflow. A scheduled lost slot
+  // pages through `lost_schedule_slot`; an observer/manual eviction alone does
+  // not. Counts only, sorted, no raw run evidence.
+  const queueEvictedWorkflows = workflows
+    .map((w) => ({
+      workflow: w?.file ?? null,
+      count: Array.isArray(w?.queue_evicted_run_urls) ? w.queue_evicted_run_urls.length : 0,
+    }))
+    .filter((row) => row.count > 0)
+    .sort((a, b) => String(a.workflow).localeCompare(String(b.workflow)));
+  const queueEvictedRunCount = queueEvictedWorkflows.reduce((sum, row) => sum + row.count, 0);
   const watchedWorkflows = workflows.map((w) => {
-    const cadence_status = CADENCE_STATES.includes(w?.cadence_status) ? w.cadence_status : "unknown";
-    cadence_state_counts[cadence_status] += 1;
     return {
       file: w.file ?? null,
       label: w.label ?? w.name ?? null,
       events: Array.isArray(w.events) ? w.events : (w.event ? [w.event] : []),
       event: w.event ?? (w.events?.length === 1 ? w.events[0] : null),
       failure_streak_threshold: w.failure_streak_threshold === 1 ? 1 : 2,
-      cadence_status,
-      // Preserve the existing point-in-time uncertainty vocabulary without
-      // publishing cron strings, paths, timestamps, or raw run evidence.
-      cadence_evidence: Array.isArray(w?.cadence_evidence)
-        ? [...new Set(w.cadence_evidence.filter((value) => PUBLIC_CADENCE_EVIDENCE.has(value)))].sort()
-        : [],
     };
   });
 
@@ -95,14 +122,14 @@ export function buildAlarmState({ health, prior = null, env = {}, now = new Date
         run_url: runUrl,
         observed_at: at,
         event: env.GITHUB_EVENT_NAME ?? null,
-        workflows: alarming.map((w) => w.file ?? null),
+        workflows: alarming.map((w) => w.file ?? w.workflow ?? null),
         title: health?.issueTitle ?? null,
       }
     : (prior?.last_firing ?? null);
 
-  // last_resolved_at: stamp the transition open -> clear; otherwise preserve.
+  // last_resolved_at: stamp an alarm/uncertain -> clear transition; otherwise preserve.
   let lastResolvedAt = prior?.last_resolved_at ?? null;
-  if (status === "clear" && prior?.status === "open") lastResolvedAt = at;
+  if (status === "clear" && ["open", "unknown", "blind"].includes(prior?.status)) lastResolvedAt = at;
 
   return {
     schema_version: ALARM_STATE_SCHEMA,
@@ -111,9 +138,10 @@ export function buildAlarmState({ health, prior = null, env = {}, now = new Date
     open_incident_count: openIncidents.length,
     open_incidents: openIncidents,
     watched_workflows: watchedWorkflows,
-    cadence_state_counts,
     excluded_workflows: excludedWorkflows,
     unknown_workflows: unknownWorkflows,
+    queue_evicted_run_count: queueEvictedRunCount,
+    queue_evicted_workflows: queueEvictedWorkflows,
     last_firing: lastFiring,
     last_resolved_at: lastResolvedAt,
   };
@@ -135,9 +163,10 @@ const ALARM_STATE_SIGNIFICANT_KEYS = Object.freeze([
   "open_incident_count",
   "open_incidents",
   "watched_workflows",
-  "cadence_state_counts",
   "excluded_workflows",
   "unknown_workflows",
+  "queue_evicted_run_count",
+  "queue_evicted_workflows",
   "last_resolved_at",
 ]);
 
@@ -163,21 +192,90 @@ function significantAlarmState(state) {
  * repeated ourselves".
  *
  * This deliberately does NOT touch the alarm's firing path. The job still exits
- * non-zero and the OPS issue is still the primary channel; only the redundant
- * commit is suppressed.
+ * green when emission and reporting succeed, and the OPS issue is still the
+ * primary channel; only the redundant commit is suppressed.
  */
 export function alarmStateUnchanged(prior, next) {
   const a = significantAlarmState(prior);
   return a !== null && a === significantAlarmState(next);
 }
 
+// The persisted document carries operator-useful detail that changes while one
+// incident remains open: counters, run evidence, and watch policy. Keep
+// those changes for state/body refresh, but do not use them to notify an issue
+// commenter. An incident identity is the workflow plus its reason set and, for
+// KPI alarms, the stopped data sets. Unknown workflows are operator-visible.
+function incidentIdentityProjection(state) {
+  if (!state || typeof state !== "object") return null;
+  const openIncidents = Array.isArray(state.open_incidents)
+    ? state.open_incidents
+      .map((incident) => ({
+        workflow: incident?.workflow ?? null,
+        alarm_reasons: Array.isArray(incident?.alarm_reasons)
+          ? [...new Set(incident.alarm_reasons)].sort()
+          : [],
+        stopped_sets: Array.isArray(incident?.stopped_sets)
+          ? [...new Set(incident.stopped_sets)].sort()
+          : [],
+      }))
+      .sort((a, b) => JSON.stringify(a).localeCompare(JSON.stringify(b)))
+    : [];
+  const unknownWorkflows = Array.isArray(state.unknown_workflows)
+    ? state.unknown_workflows
+      .map((workflow) => ({
+        workflow: workflow?.workflow ?? null,
+        status: workflow?.status ?? null,
+      }))
+      .sort((a, b) => JSON.stringify(a).localeCompare(JSON.stringify(b)))
+    : [];
+  const healthUncertain = state.status === "unknown" || state.status === "blind";
+  if (openIncidents.length === 0 && unknownWorkflows.length === 0 && !healthUncertain) return null;
+  return {
+    open_incidents: openIncidents,
+    unknown_workflows: unknownWorkflows,
+    health_uncertain: healthUncertain,
+  };
+}
+
+/**
+ * Compare only the identities that should trigger a new OPS issue comment.
+ * Full alarm-state equality remains owned by alarmStateUnchanged so counters,
+ * ages, run evidence, and policy changes still persist and refresh the body.
+ * Resolution has its own output and must not be reported as a new incident.
+ */
+export function incidentIdentitiesChanged(prior, next) {
+  if (next?.status === "clear") return false;
+  return JSON.stringify(incidentIdentityProjection(prior))
+    !== JSON.stringify(incidentIdentityProjection(next));
+}
+
+/**
+ * True when an open alarm or an uncertain/blind read recovers to clear, so the
+ * recovery can be ANNOUNCED and not merely recorded. `buildAlarmState` already
+ * stamps `last_resolved_at`, but the alarm's notification channel is gated on
+ * the failing path, which means the OPS issue collects alerts and is never told
+ * the incident ended; a reader cannot separate a live outage from a finished one.
+ *
+ * A first-ever clear run (no prior document) has nothing to announce.
+ */
+export function alarmStateResolved(prior, next) {
+  return ["open", "unknown", "blind"].includes(prior?.status) && next?.status === "clear";
+}
+
 export function writeAlarmStateMirrors({ state, outPath, publicOutPath }) {
   const json = `${JSON.stringify(state, null, 2)}\n`;
-  for (const target of [outPath, publicOutPath]) {
+  // Public mirror is boundary-owned (#377 slice 2); write canonical only.
+  const targets = [outPath, publicOutPath].filter(Boolean);
+  for (const target of targets) {
     fs.mkdirSync(path.dirname(target), { recursive: true });
     fs.writeFileSync(target, json);
   }
   return json;
+}
+
+export function writeWorkflowOutputs({ outputPath, incidentChanged, incidentResolved }) {
+  fs.appendFileSync(outputPath, `incident_changed=${incidentChanged}\n`);
+  fs.appendFileSync(outputPath, `incident_resolved=${incidentResolved}\n`);
 }
 
 function main() {
@@ -185,7 +283,6 @@ function main() {
   const repoRoot = path.resolve(__dirname, "..", "..");
   const healthPath = process.env.PIPELINE_JOB_HEALTH_RESULT || "pipeline-job-health-result.json";
   const outPath = path.join(repoRoot, "data", "admin", "alarm-state.json");
-  const publicOutPath = path.join(repoRoot, "100xfenok-next", "public", "data", "admin", "alarm-state.json");
 
   const health = readJson(healthPath) ?? { status: "unknown", workflows: [] };
   const prior = readJson(outPath);
@@ -193,20 +290,24 @@ function main() {
 
   const unchanged = alarmStateUnchanged(prior, state);
   const emitted = unchanged ? prior : state;
-  writeAlarmStateMirrors({ state: emitted, outPath, publicOutPath });
-  // Published so the workflow can gate the OPS issue comment on it. Suppressing
-  // the redundant commit without suppressing the comment would have left the
-  // louder half of the churn in place: 9 comments on issue #88 between 04:53 and
-  // 06:35 on 2026-07-22, all restating one unchanged incident.
-  const incidentChanged = unchanged ? "false" : "true";
+  writeAlarmStateMirrors({ state: emitted, outPath });
+  // Published separately from full state equality: the latest state remains
+  // available for body refresh, while only identity changes notify the issue.
+  const incidentChanged = incidentIdentitiesChanged(prior, state) ? "true" : "false";
+  // Published alongside `incident_changed` so the notification channel can post an
+  // all-clear instead of leaving the OPS issue reading as a live outage forever.
+  // The workflow consumes this output on its all-clear path.
+  const incidentResolved = alarmStateResolved(prior, emitted) ? "true" : "false";
   if (process.env.GITHUB_OUTPUT) {
-    try {
-      fs.appendFileSync(process.env.GITHUB_OUTPUT, `incident_changed=${incidentChanged}\n`);
-    } catch (error) {
-      // Never let output plumbing mask the alarm; the job exit code and the OPS
-      // issue remain the primary channel.
-      console.warn(`::warning::alarm-state could not write GITHUB_OUTPUT: ${error.message}`);
-    }
+    // Output publication is machinery, not best-effort persistence: without
+    // these values the workflow cannot safely report a new incident or recovery.
+    // Let any write failure reject the emitter step directly; later reporting
+    // and persistence remain skipped by GitHub's default success semantics.
+    writeWorkflowOutputs({
+      outputPath: process.env.GITHUB_OUTPUT,
+      incidentChanged,
+      incidentResolved,
+    });
   }
 
   const suffix = unchanged

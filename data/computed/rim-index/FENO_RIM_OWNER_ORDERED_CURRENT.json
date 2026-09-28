@@ -1,0 +1,226 @@
+{
+  "schema_version": "fenok_rim_owner_ordered_current.v1",
+  "generated_at": "2026-08-09T10:20:22.973Z",
+  "classification": "OWNER_CONSTRAINED_ACTIONABLE_RESEARCH_LINE",
+  "exact_yoo": false,
+  "public_promotion": false,
+  "yoo_status": "NOT_IDENTIFIED",
+  "public_surface": {
+    "status": "QUARANTINED",
+    "rule": "owner-constrained research line; quarantined from public promotion until separate owner approval"
+  },
+  "normalization": {
+    "order": [
+      "SPX",
+      "CCMP",
+      "NDX",
+      "SOXX",
+      "KOSPI"
+    ],
+    "rule": "selected = max(raw_center, floor); raw centers imported unmodified from existing repo functions; floors loaded by evidence_id; no parameter refit; no order projection",
+    "min_adjacent_gap_pp": 2
+  },
+  "determination_split": {
+    "floor_determined": 3,
+    "model_center_determined": 2,
+    "order_adjusted": 0,
+    "floor_determined_rows": [
+      "SPX",
+      "CCMP",
+      "SOXX"
+    ],
+    "model_center_determined_rows": [
+      "NDX",
+      "KOSPI"
+    ]
+  },
+  "adjacent_gaps": [
+    {
+      "next": "CCMP",
+      "gap": 0.04999999999999999,
+      "gap_pp": 4.999999999999999
+    },
+    {
+      "next": "NDX",
+      "gap": 0.19803499181538453,
+      "gap_pp": 19.803499181538452
+    },
+    {
+      "next": "SOXX",
+      "gap": 0.19196500818461548,
+      "gap_pp": 19.196500818461548
+    },
+    {
+      "next": "KOSPI",
+      "gap": 0.20912008213347566,
+      "gap_pp": 20.912008213347566
+    }
+  ],
+  "input_clocks": {
+    "rim_inputs_generated_at": "2026-08-09T07:43:28.464Z",
+    "payout_history_generated_at": "2026-08-04T09:06:51.365Z",
+    "soxx_quote_source_as_of": "2026-08-07",
+    "fixture_source_ledger": "docs/agent-work/fenok-rim-evidence-ledger-20260804.json"
+  },
+  "qqq_equivalent": {
+    "asset": "QQQ",
+    "formula": "FENO_RIM_FINAL_CURRENT_QQQ.current * (1 + NDX selected)",
+    "current": 687.99,
+    "as_of": "2026-07-31",
+    "fair_value": 989.3536940190664,
+    "label": "NDX-ratio indicative equivalent, not a reconstructed ETF NAV fair value",
+    "caveats": [
+      "expense ratio and tracking difference are disclosed and do not block the number"
+    ]
+  },
+  "rows": [
+    {
+      "asset": "SPX",
+      "order_position": 1,
+      "raw_center": -0.13113235012357038,
+      "raw_center_instrument": "SPX",
+      "raw_center_source": "buildCurrentYooLogicSharedInferredRanges",
+      "model_status": "yoo_logic_inferred_range_only",
+      "floor": 0.19,
+      "floor_evidence": {
+        "evidence_id": "rim-ccea4d31accf70a35d5a095e",
+        "date": "2026-07-26",
+        "asset": "SP500",
+        "metric": "RIM 12m 상승여력(%)",
+        "raw_value": "19~29",
+        "source": "https://yellow.kr/blog/economy-board/?mod=document&uid=1666",
+        "parse": "lower edge of 19~29"
+      },
+      "selected": 0.19,
+      "determined_by": "published_floor",
+      "spot": 7489.72,
+      "as_of": "2026-07-31",
+      "fair_value": 8912.7668,
+      "gap_to_next": {
+        "next": "CCMP",
+        "gap": 0.04999999999999999,
+        "gap_pp": 4.999999999999999
+      },
+      "caveats": []
+    },
+    {
+      "asset": "CCMP",
+      "order_position": 2,
+      "raw_center": 0.06344850134721991,
+      "raw_center_instrument": "CCMP",
+      "raw_center_source": "buildCurrentExtendedYooLogicProxyRanges",
+      "model_status": "yoo_logic_inferred_range_only",
+      "floor": 0.24,
+      "floor_evidence": {
+        "evidence_id": "rim-694e999c6f76b4d205ede3c2",
+        "date": "2026-07-12",
+        "asset": "NASDAQ",
+        "metric": "RIM 6~12m 상승여력(%, 최소)",
+        "raw_value": "24 이상",
+        "source": "https://yellow.kr/blog/economy-board/?mod=document&uid=1656",
+        "parse": "fixture asset is NASDAQ; CCMP mapping is FENO_MAPPING, not independently explicit"
+      },
+      "selected": 0.24,
+      "determined_by": "published_floor",
+      "spot": 25373.85,
+      "as_of": "2026-07-31",
+      "fair_value": 31463.573999999997,
+      "gap_to_next": {
+        "next": "NDX",
+        "gap": 0.19803499181538453,
+        "gap_pp": 19.803499181538452
+      },
+      "caveats": [
+        "fixture asset is NASDAQ; CCMP mapping is FENO_MAPPING, not independently explicit",
+        "ONEQ_sampling_proxy_for_COMP",
+        "exact_COMP_weights_require_Nasdaq_entitlement"
+      ]
+    },
+    {
+      "asset": "NDX",
+      "order_position": 3,
+      "raw_center": 0.4380349918153845,
+      "raw_center_instrument": "NDX",
+      "raw_center_source": "buildCurrentYooLogicSharedInferredRanges",
+      "model_status": "yoo_logic_inferred_range_only",
+      "floor": 0.36,
+      "floor_evidence": {
+        "evidence_id": "rim-00269321d964013833efea9f",
+        "date": "2026-07-12",
+        "asset": "NASDAQ100",
+        "metric": "RIM 6~12m 상승여력(%, 최소)",
+        "raw_value": "36 이상",
+        "source": "https://yellow.kr/blog/economy-board/?mod=document&uid=1656",
+        "parse": "minimum of 36%"
+      },
+      "selected": 0.4380349918153845,
+      "determined_by": "model_center",
+      "spot": 28274.2,
+      "as_of": "2026-07-31",
+      "fair_value": 40659.288965586544,
+      "gap_to_next": {
+        "next": "SOXX",
+        "gap": 0.19196500818461548,
+        "gap_pp": 19.196500818461548
+      },
+      "caveats": []
+    },
+    {
+      "asset": "SOXX",
+      "order_position": 4,
+      "raw_center": 0.1119684277185764,
+      "raw_center_instrument": "SOX (Philadelphia Semiconductor index)",
+      "raw_center_source": "buildCurrentYooLogicSharedInferredRanges",
+      "model_status": "yoo_logic_inferred_range_only",
+      "floor": 0.63,
+      "floor_evidence": {
+        "evidence_id": "rim-1d69c85650aa0c41e37616c7",
+        "date": "2026-06-28",
+        "asset": "SOXX",
+        "metric": "RIM 6~12m 상승여력(%)",
+        "raw_value": "63",
+        "source": "https://yellow.kr/blog/economy-board/?mod=document&uid=1647",
+        "parse": "63%"
+      },
+      "selected": 0.63,
+      "determined_by": "published_floor",
+      "spot": 543.27001953125,
+      "as_of": "2026-08-07",
+      "fair_value": 885.5301318359375,
+      "gap_to_next": {
+        "next": "KOSPI",
+        "gap": 0.20912008213347566,
+        "gap_pp": 20.912008213347566
+      },
+      "caveats": [
+        "raw center is SOX (Philadelphia Semiconductor index) based; selected is floor-determined on ETF (SOXX) basis",
+        "SOXX_not_PHLX"
+      ]
+    },
+    {
+      "asset": "KOSPI",
+      "order_position": 5,
+      "raw_center": 0.8391200821334757,
+      "raw_center_instrument": "KOSPI",
+      "raw_center_source": "buildCurrentYooLogicSharedInferredRanges",
+      "model_status": "yoo_logic_inferred_range_only",
+      "floor": 0.495,
+      "floor_evidence": {
+        "evidence_id": "rim-7041d3d1604bd6d9b5683c04",
+        "date": "2026-06-14",
+        "asset": "KOSPI",
+        "metric": "RIM 12m 상승여력(%)",
+        "raw_value": "49.5",
+        "source": "https://yellow.kr/blog/economy-board/?mod=document&uid=1638",
+        "parse": "published 49.5"
+      },
+      "selected": 0.8391200821334757,
+      "determined_by": "model_center",
+      "spot": 6595.45,
+      "as_of": "2026-08-02",
+      "fair_value": 12129.824545707232,
+      "gap_to_next": null,
+      "caveats": []
+    }
+  ]
+}

@@ -1,0 +1,2410 @@
+{
+  "schema_version": "stockanalysis/v1",
+  "source": "stockanalysis",
+  "asset_type": "stock",
+  "ticker": "AMZN",
+  "source_as_of": "2026-08-27T20:00:00Z",
+  "fetched_at": "2026-08-28T05:28:21Z",
+  "endpoints": {
+    "overview": "/stocks/amzn/__data.json",
+    "history": "/api/symbol/s/AMZN/history?range=1Y&period=Monthly",
+    "quote": "/api/quotes/s/AMZN"
+  },
+  "normalized": {
+    "overview": {
+      "marketCap": "2.76T",
+      "revenue": "775.68B",
+      "revenue_type": "ttm",
+      "netIncome": "135.28B",
+      "sharesOut": "10.79B",
+      "eps": "12.44",
+      "peRatio": "20.61",
+      "forwardPE": "27.66",
+      "dividend": "n/a",
+      "beta": "1.45",
+      "analysts": "Strong Buy",
+      "target": "327.00 (+27.61%)",
+      "earningsDate": "Jul 30, 2026"
+    },
+    "quote": {
+      "c": -4.02,
+      "e": true,
+      "h": 259.66,
+      "l": 255.02,
+      "o": 259.23,
+      "p": 256.26,
+      "u": "Aug 27, 2026, 4:00 PM EDT",
+      "v": 35927853,
+      "cl": 260.28,
+      "cp": -1.54,
+      "ec": 0.05,
+      "ep": 256.31,
+      "es": "After-hours",
+      "eu": "Aug 27, 2026, 7:59 PM EDT",
+      "ex": "NASDAQ",
+      "ms": "closed",
+      "pd": 256.26,
+      "td": "2026-08-27",
+      "ts": 1787860800000,
+      "cdr": -1,
+      "ecp": 0.02,
+      "epd": 256.31,
+      "etd": "2026-08-27",
+      "ets": 1787875195156.9478,
+      "exp": 1787904900000,
+      "fms": "closed",
+      "h52": 287.2,
+      "l52": 196,
+      "uid": "AMZN",
+      "days": 0,
+      "symbol": "AMZN"
+    },
+    "history": [
+      {
+        "t": "2026-08-03",
+        "o": 278.29,
+        "h": 287.2,
+        "l": 255.02,
+        "c": 256.26,
+        "a": 256.26,
+        "v": 698809176,
+        "ch": -5.64
+      },
+      {
+        "t": "2026-07-01",
+        "o": 239.75,
+        "h": 273.23,
+        "l": 226.16,
+        "c": 271.58,
+        "a": 271.58,
+        "v": 992121844,
+        "ch": 13.95
+      },
+      {
+        "t": "2026-06-01",
+        "o": 266.285,
+        "h": 266.63,
+        "l": 225.55,
+        "c": 238.34,
+        "a": 238.34,
+        "v": 1314074715,
+        "ch": -11.93
+      },
+      {
+        "t": "2026-05-01",
+        "o": 265.58,
+        "h": 278.56,
+        "l": 255.19,
+        "c": 270.64,
+        "a": 270.64,
+        "v": 790289453,
+        "ch": 2.11
+      },
+      {
+        "t": "2026-04-01",
+        "o": 210.435,
+        "h": 273.88,
+        "l": 204.9,
+        "c": 265.06,
+        "a": 265.06,
+        "v": 1028512917,
+        "ch": 27.27
+      },
+      {
+        "t": "2026-03-02",
+        "o": 204.55,
+        "h": 220.47,
+        "l": 199.14,
+        "c": 208.27,
+        "a": 208.27,
+        "v": 1009324207,
+        "ch": -0.82
+      },
+      {
+        "t": "2026-02-02",
+        "o": 238.31,
+        "h": 246.35,
+        "l": 196,
+        "c": 210,
+        "a": 210,
+        "v": 1263271652,
+        "ch": -12.24
+      },
+      {
+        "t": "2026-01-02",
+        "o": 231.34,
+        "h": 248.94,
+        "l": 224.7,
+        "c": 239.3,
+        "a": 239.3,
+        "v": 842060387,
+        "ch": 3.67
+      },
+      {
+        "t": "2025-12-01",
+        "o": 233.22,
+        "h": 238.97,
+        "l": 220.99,
+        "c": 230.82,
+        "a": 230.82,
+        "v": 787960441,
+        "ch": -1.03
+      },
+      {
+        "t": "2025-11-03",
+        "o": 255.36,
+        "h": 258.6,
+        "l": 215.18,
+        "c": 233.22,
+        "a": 233.22,
+        "v": 902272884,
+        "ch": -4.5
+      },
+      {
+        "t": "2025-10-01",
+        "o": 217.36,
+        "h": 250.5,
+        "l": 211.03,
+        "c": 244.22,
+        "a": 244.22,
+        "v": 1196876750,
+        "ch": 11.23
+      }
+    ],
+    "financials": {
+      "path": "financials/AMZN.json",
+      "fetched_at": "2026-08-28T05:28:18Z",
+      "role": "financial statement cross-check candidate; not valuation SSOT",
+      "summary": {
+        "annual": {
+          "income": {
+            "field_count": 38,
+            "period_count": 6,
+            "period": "annual"
+          },
+          "balance_sheet": {
+            "field_count": 49,
+            "period_count": 6,
+            "period": "annual"
+          },
+          "cash_flow": {
+            "field_count": 36,
+            "period_count": 6,
+            "period": "annual"
+          },
+          "ratios": {
+            "field_count": 32,
+            "period_count": 6,
+            "period": "annual"
+          }
+        },
+        "quarterly": {
+          "income": {
+            "field_count": 38,
+            "period_count": 20,
+            "period": "quarterly"
+          },
+          "balance_sheet": {
+            "field_count": 50,
+            "period_count": 20,
+            "period": "quarterly"
+          },
+          "cash_flow": {
+            "field_count": 38,
+            "period_count": 20,
+            "period": "quarterly"
+          },
+          "ratios": {
+            "field_count": 32,
+            "period_count": 21,
+            "period": "quarterly"
+          }
+        }
+      }
+    }
+  },
+  "financials_path": "financials/AMZN.json",
+  "raw": {
+    "overview": {
+      "trust": {
+        "sources": [
+          {
+            "name": "S&P Global Market Intelligence",
+            "short": "S&P Global",
+            "url": "https://www.spglobal.com/market-intelligence/en"
+          },
+          {
+            "name": "CBOE",
+            "short": "CBOE",
+            "url": "https://www.cboe.com/"
+          },
+          {
+            "name": "Nasdaq UTP",
+            "short": "Nasdaq UTP",
+            "url": "https://www.utpplan.com/overview",
+            "noUtm": true
+          }
+        ],
+        "topic": "overview",
+        "ticker": "AMZN",
+        "lastChecked": 1787877096561,
+        "summary": {
+          "text": "Fundamental and historical data is provided by S&P Global Market Intelligence. Real-time stock price data is provided by CBOE and 15-minute delayed consolidated tape pricing data is provided by Nasdaq UTP."
+        }
+      },
+      "marketCap": "2.76T",
+      "marketCapGrowth": 13.321271151070938,
+      "revenue": "775.68B",
+      "revenue_type": "ttm",
+      "revenueGrowth": 15.767,
+      "netIncome": "135.28B",
+      "netIncomeGrowth": 91.554,
+      "sharesOut": "10.79B",
+      "eps": "12.44",
+      "epsGrowth": 89.663,
+      "peRatio": "20.61",
+      "forwardPE": "27.66",
+      "dividend": "n/a",
+      "exDividendDate": "n/a",
+      "beta": "1.45",
+      "analysts": "Strong Buy",
+      "target": "327.00 (+27.61%)",
+      "earningsDate": "Jul 30, 2026",
+      "description": "Amazon.com, Inc. engages in the retail sale of consumer products, advertising, and subscriptions service through online and physical stores in North America and internationally. The company operates through three segments: North America, International, and Amazon Web Services (AWS). It also manufactures and sells electronic devices, including Kindle, fire tablets, fire TVs, echo, ring, blink, and eero; and develops and produces media content. In addition, the company offers programs that enable sellers to sell their products in its stores; and ...",
+      "infoTable": [
+        {
+          "t": "Industry",
+          "v": "Internet Retail",
+          "u": "stocks/industry/internet-retail"
+        },
+        {
+          "t": "Sector",
+          "v": "Consumer Discretionary",
+          "u": "stocks/sector/consumer-discretionary"
+        },
+        {
+          "t": "IPO Date",
+          "v": "May 15, 1997"
+        },
+        {
+          "t": "Employees",
+          "v": "1,576,000",
+          "u": "stocks/amzn/employees"
+        },
+        {
+          "t": "Stock Exchange",
+          "v": "NASDAQ"
+        },
+        {
+          "t": "Ticker Symbol",
+          "v": "AMZN"
+        },
+        {
+          "t": "Website",
+          "v": "https://www.amazon.com",
+          "eu": "https://www.amazon.com"
+        }
+      ],
+      "financialIntro": "In 2025, Amazon's revenue was $716.92 billion, an increase of 12.38% compared to the previous year's $637.96 billion. Earnings were $77.67 billion, an increase of 31.09%.",
+      "financialChart": [
+        {
+          "year": "2021",
+          "revenue": 469822000000,
+          "earnings": 33364000000,
+          "revenueGrowth": 21.695,
+          "earningsGrowth": 56.411
+        },
+        {
+          "year": "2022",
+          "revenue": 513983000000,
+          "earnings": -2722000000,
+          "revenueGrowth": 9.4,
+          "earningsGrowth": null
+        },
+        {
+          "year": "2023",
+          "revenue": 574785000000,
+          "earnings": 30425000000,
+          "revenueGrowth": 11.83,
+          "earningsGrowth": null
+        },
+        {
+          "year": "2024",
+          "revenue": 637959000000,
+          "earnings": 59248000000,
+          "revenueGrowth": 10.991,
+          "earningsGrowth": 94.735
+        },
+        {
+          "year": "2025",
+          "revenue": 716924000000,
+          "earnings": 77670000000,
+          "revenueGrowth": 12.378,
+          "earningsGrowth": 31.093
+        }
+      ],
+      "analystIntro": "According to 60 analysts, the average rating for AMZN stock is \"Strong Buy.\" The 12-month stock price target is $327.0, which is an increase of 27.61% from the latest price.",
+      "analystTarget": {
+        "target": "$327.0",
+        "change": "27.61%",
+        "changeWord": "upside"
+      },
+      "analystChart": {
+        "strongBuy": 43,
+        "buy": 15,
+        "hold": 2,
+        "sell": 0,
+        "strongSell": 0
+      },
+      "news": {
+        "exp": "1787896690524",
+        "data": [
+          {
+            "url": "https://www.reuters.com/legal/litigation/judge-likely-deny-californias-bid-stop-amazons-alleged-price-fixing-2026-08-27/",
+            "img": "https://cdn.snapi.dev/images/v1/u/c/u/amz26-3548161-3894502.jpg",
+            "title": "Judge likely to deny California's bid to stop Amazon's alleged price fixing",
+            "text": "A California judge on Thursday said he was likely to deny a bid to ​block Amazon from allegedly fixing prices by ‌pressuring rivals to raise prices, in a setback for California Attorney General Rob Bo...",
+            "source": "Reuters",
+            "type": "Article",
+            "tickers": null,
+            "time": "Aug 27, 2026, 5:25 PM EDT",
+            "ago": "8 hours ago"
+          },
+          {
+            "url": "https://techcrunch.com/2026/08/27/youtube-now-lets-creators-tag-amazon-products-and-earn-commissions-from-purchases/",
+            "img": "https://cdn.snapi.dev/images/v1/n/b/u/rewwedf-3322300-3894170.jpg",
+            "title": "YouTube now lets creators tag Amazon products and earn commissions from purchases",
+            "text": "YouTube announced on Thursday that eligible creators in the U.S. can now tag Amazon products in their content and receive a cut of sales. Creators can link Amazon products in their shorts, long-form v...",
+            "source": "TechCrunch",
+            "type": "Article",
+            "tickers": [
+              "$GOOG",
+              "$GOOGL"
+            ],
+            "time": "Aug 27, 2026, 3:54 PM EDT",
+            "ago": "9 hours ago"
+          },
+          {
+            "url": "https://www.barrons.com/articles/amazon-nvidia-spacex-1-trillion-sales-f74a973f",
+            "img": "https://cdn.snapi.dev/images/v1/w/f/w/catalog-mail10-3894052.jpg",
+            "title": "Amazon, Nvidia, and SpaceX Are Racing to $1 Trillion in Sales. Who Gets There First?",
+            "text": "Who will win the race to a once-unthinkable sales milestone? Barron's looks at the top candidates.",
+            "source": "Barrons",
+            "type": "Article",
+            "tickers": [
+              "$NVDA",
+              "$SPCX"
+            ],
+            "time": "Aug 27, 2026, 2:50 PM EDT",
+            "ago": "10 hours ago"
+          },
+          {
+            "url": "https://www.reuters.com/legal/litigation/major-tech-companies-call-defensive-surge-defeat-ai-driven-hacks-2026-08-27/",
+            "img": "https://cdn.snapi.dev/images/v1/8/b/9/etf8-3562123-3893847.jpg",
+            "title": "Major tech companies call for defensive surge to defeat AI-driven hacks",
+            "text": "Major tech companies including OpenAI, Anthropic, Microsoft , Alphabet , and Amazon are calling for a ​society-wide defensive surge to defeat what they describe ‌as an impending wave of hacks driven b...",
+            "source": "Reuters",
+            "type": "Article",
+            "tickers": [
+              "$GOOG",
+              "$GOOGL",
+              "$MSFT"
+            ],
+            "time": "Aug 27, 2026, 1:02 PM EDT",
+            "ago": "12 hours ago"
+          },
+          {
+            "url": "https://techcrunch.com/2026/08/27/sprains-pain-and-whiplash-waymo-and-zoox-test-drivers-are-getting-hurt-as-robotaxis-scale/",
+            "img": "https://cdn.snapi.dev/images/v1/a/u/auto8-3893242.jpg",
+            "title": "Sprains, pain, and whiplash: Waymo and Zoox test drivers are getting hurt as robotaxis scale",
+            "text": "The rapid scaling of robotaxis over the last two years has come with a hidden human cost.",
+            "source": "TechCrunch",
+            "type": "Article",
+            "tickers": [
+              "$GOOG",
+              "$GOOGL"
+            ],
+            "time": "Aug 27, 2026, 10:36 AM EDT",
+            "ago": "14 hours ago"
+          },
+          {
+            "url": "https://www.tipranks.com/news/amazon-nvidia-ink-expanded-deal-for-2m-ai-gpus-by-2028",
+            "img": "https://blog.tipranks.com/wp-content/uploads/2026/08/shutterstock_2822301785-750x406.jpg",
+            "title": "Amazon Inks Expanded Deal with Nvidia for 2M AI GPUs by 2028",
+            "text": "Tech giants Nvidia ($NVDA) and Amazon ($AMZN) announced an expanded strategic collaboration to include the deployment of 2 million additional NVDA GPUs across AWS’ (Amazon Web Services) global infrast...",
+            "source": "TipRanks",
+            "type": "Article",
+            "tickers": [
+              "$NVDA"
+            ],
+            "time": "2026-08-27T11:00:00.000Z",
+            "ago": "18 hours ago"
+          },
+          {
+            "url": "https://www.tipranks.com/news/the-fly/labor-department-signs-data-sharing-deals-with-tech-giants-axios-reports-thefly-news",
+            "img": "https://blog.tipranks.com/wp-content/uploads/2023/06/Communication-Services-4-750x406.jpg",
+            "title": "Labor Department signs data-sharing deals with tech giants, Axios reports",
+            "text": "The Trump administration has struck data-sharing deals with OpenAI, Google (GOOGL), Meta (META), Amazon (AMZN), and other tech companies to track how AI is affecting jobs and hiring, Courtenay Brown…",
+            "source": "TheFly",
+            "type": "Article",
+            "tickers": [
+              "$GOOG",
+              "$GOOGL",
+              "$META"
+            ],
+            "time": "2026-08-27T10:06:05.000Z",
+            "ago": "19 hours ago"
+          },
+          {
+            "url": "https://www.tipranks.com/news/the-fly/amazon-says-mechanical-turk-will-close-september-30-thefly-news",
+            "img": "https://blog.tipranks.com/wp-content/uploads/2022/09/shutterstock_2050982990-750x406.jpg",
+            "title": "Amazon says Mechanical Turk will close September 30",
+            "text": "Amazon announced that it will shut down its Mechanical Turk crowdsourced labor platform on September 30. The company said it made the decision following an internal assessment of its programs…",
+            "source": "TheFly",
+            "type": "Article",
+            "tickers": null,
+            "time": "2026-08-27T09:55:13.000Z",
+            "ago": "19 hours ago"
+          },
+          {
+            "url": "https://techcrunch.com/2026/08/26/amazon-just-tripled-its-order-of-nvidia-chips-over-surging-demand/",
+            "img": "https://cdn.snapi.dev/images/v1/a/y/8/amz15-3552493-3892036.jpg",
+            "title": "Amazon just tripled its order of Nvidia chips over ‘surging demand'",
+            "text": "Amazon and Nvidia just got a lot closer. The two companies announced Wednesday an expanded partnership that includes a deal to add another 2 million Nvidia GPU chips to Amazon's data centers.",
+            "source": "TechCrunch",
+            "type": "Article",
+            "tickers": [
+              "$NVDA"
+            ],
+            "time": "Aug 26, 2026, 7:47 PM EDT",
+            "ago": "1 day ago"
+          },
+          {
+            "url": "0nlKIACcZe8",
+            "img": "https://cdn.snapi.dev/images/v1/1/0/n/catalog-mail9-3891862.jpg",
+            "title": "Wednesday's Final Takeaways: Moonshot AI's Talks with MSFT, AMZN, GOOGL; PCE Sees Uptick",
+            "text": "China's Moonshot AI is reportedly in talks with several Mag 7 companies over Kimi revenue sharing. In the U.S., investors are keeping a close eye on inflation after core PCE came in slightly hotter th...",
+            "source": "Schwab Network",
+            "type": "Video",
+            "tickers": [
+              "$GOOG",
+              "$GOOGL",
+              "$MSFT"
+            ],
+            "time": "Aug 26, 2026, 5:30 PM EDT",
+            "ago": "1 day ago"
+          },
+          {
+            "url": "https://www.tipranks.com/news/the-fly/nvidia-aws-announce-major-expansion-of-strategic-collaboration-thefly-news",
+            "img": "https://blog.tipranks.com/wp-content/uploads/2022/09/shutterstock_1938746143-750x406.jpg",
+            "title": "Nvidia, AWS announce major expansion of strategic collaboration",
+            "text": "Amazon Web Services, an Amazon.com (AMZN) company, and Nvidia (NVDA) announced a major expansion of their strategic collaboration to meet surging global demand for AI infrastructure as demand continue...",
+            "source": "TheFly",
+            "type": "Article",
+            "tickers": [
+              "$NVDA"
+            ],
+            "time": "2026-08-26T21:10:16.000Z",
+            "ago": "1 day ago"
+          },
+          {
+            "url": "https://www.globenewswire.com/news-release/2026/08/26/3351716/0/en/aws-and-nvidia-to-deliver-2-million-additional-gpus-and-next-generation-infrastructure-for-agentic-and-physical-ai.html",
+            "img": "https://cdn.snapi.dev/images/v1/7/r/t/press9-3891822.jpg",
+            "title": "AWS and NVIDIA to Deliver 2 Million Additional GPUs and Next-Generation Infrastructure for Agentic and Physical AI",
+            "text": "Companies Deepen Integration Across the AI Stack, Bringing NVIDIA Vera CPUs, Advanced Networking, Nemotron Open Models and Physical AI Technologies to AWS as Customer Demand Accelerates Companies Deep...",
+            "source": "GlobeNewsWire",
+            "type": "Article",
+            "tickers": [
+              "$NVDA"
+            ],
+            "time": "Aug 26, 2026, 5:05 PM EDT",
+            "ago": "1 day ago"
+          },
+          {
+            "url": "https://www.tipranks.com/news/amazon-is-shutting-down-its-artificial-artificial-intelligence-platform-after-21-years",
+            "img": "https://blog.tipranks.com/wp-content/uploads/2026/08/shutterstock_2584945531-750x406.jpg",
+            "title": "Amazon Is Shutting Down Its ‘Artificial Artificial Intelligence’ Platform After 21 Years",
+            "text": "E-commerce and cloud giant Amazon ($AMZN) is shutting down Mechanical Turk, the service that Amazon founder Jeff Bezos once described as “artificial artificial intelligence.” This will occur on Septem...",
+            "source": "TipRanks",
+            "type": "Article",
+            "tickers": null,
+            "time": "2026-08-26T16:13:03.000Z",
+            "ago": "1 day ago"
+          },
+          {
+            "url": "https://www.tipranks.com/news/amazon-stock-amzn-in-focus-on-news-of-ducklabs-acquisition",
+            "img": "https://blog.tipranks.com/wp-content/uploads/2026/08/aaa-149-750x406.jpg",
+            "title": "Amazon Stock (AMZN) in Focus on News of DuckLabs Acquisition",
+            "text": "Terms of the deal were not made public.",
+            "source": "TipRanks",
+            "type": "Article",
+            "tickers": null,
+            "time": "2026-08-26T16:00:47.000Z",
+            "ago": "1 day ago"
+          },
+          {
+            "url": "https://www.businessinsider.com/amazon-mechanical-turk-shuttered-amid-rise-of-ai-driven-tasks-2026-8",
+            "img": "https://cdn.snapi.dev/images/v1/o/u/g/amz7-3554850-3891015.jpg",
+            "title": "Amazon is shutting down a go-to option for gig workers. It's the latest casualty of AI growth.",
+            "text": "Amazon is shutting down crowdsourced work platform Mechanical Turk, it said on Tuesday. Mechanical Turk became a favorite with gig workers who completed tasks to earn money.",
+            "source": "Business Insider",
+            "type": "Article",
+            "tickers": null,
+            "time": "Aug 26, 2026, 11:27 AM EDT",
+            "ago": "1 day ago"
+          },
+          {
+            "url": "https://www.geekwire.com/2026/amazon-acquires-ducklabs-adding-the-team-behind-duckdb-amid-broader-shakeup-in-cloud-data/",
+            "img": "https://cdn.snapi.dev/images/v1/u/t/y/amz19-3550743-3891041.jpg",
+            "title": "Amazon to acquire DuckLabs, adding the team behind DuckDB amid broader shakeup in cloud data",
+            "text": "Amazon is acquiring DuckLabs, the Amsterdam company behind DuckDB, the fast-growing open-source database developers use to analyze large amounts of data without paying for a cloud data warehouse.",
+            "source": "GeekWire",
+            "type": "Article",
+            "tickers": null,
+            "time": "Aug 26, 2026, 11:19 AM EDT",
+            "ago": "1 day ago"
+          },
+          {
+            "url": "https://www.pymnts.com/amazon/2026/amazon-sunsets-crowd-sourced-work-platform-mturk/",
+            "img": "https://cdn.snapi.dev/images/v1/c/n/p/22ddew-3337835-3890911.jpg",
+            "title": "Amazon Sunsets Crowd-Sourced Work Platform MTurk",
+            "text": "After 21 years, Amazon is shutting down its crowdsourced work platform Mechanical Turk. “We regularly evaluate our programs, tools and services and make adjustments based on those assessments,” the te...",
+            "source": "PYMNTS",
+            "type": "Article",
+            "tickers": null,
+            "time": "Aug 26, 2026, 10:58 AM EDT",
+            "ago": "1 day ago"
+          },
+          {
+            "url": "https://www.wsj.com/logistics-report/new-york-mayor-faces-off-against-amazon-d39dc991",
+            "img": "https://cdn.snapi.dev/images/v1/x/p/r/amz43-3544169-3890142.jpg",
+            "title": "New York Mayor Faces Off Against Amazon",
+            "text": "Plus: Canada plans retaliatory tariffs of up to 50% on U.S. imports; Persian Gulf shipping insurance costs surge higher.",
+            "source": "WSJ",
+            "type": "Article",
+            "tickers": null,
+            "time": "Aug 26, 2026, 7:07 AM EDT",
+            "ago": "1 day ago"
+          },
+          {
+            "url": "https://invezz.com/news/2026/08/26/moonshot-ai-discusses-kimi-k3-hosting-deals-with-microsoft-amazon-google-report/",
+            "img": "https://cdn.snapi.dev/images/v1/n/q/p/openai9-3475716-3889959.jpg",
+            "title": "Moonshot AI discusses Kimi K3 hosting deals with Microsoft, Amazon, Google: report",
+            "text": "China's Moonshot AI is negotiating revenue-sharing agreements with Microsoft, Amazon and Alphabet's Google that would allow the US cloud giants to host its Kimi K3 artificial intelligence model, Reute...",
+            "source": "Invezz",
+            "type": "Article",
+            "tickers": [
+              "$GOOG",
+              "$GOOGL",
+              "$MSFT"
+            ],
+            "time": "Aug 26, 2026, 5:06 AM EDT",
+            "ago": "1 day ago"
+          },
+          {
+            "url": "https://www.businessinsider.com/tarriff-war-amazon-growth-canada-ecommerce-2026-8",
+            "img": "https://cdn.snapi.dev/images/v1/x/o/b/amz31-3547437-3889946.jpg",
+            "title": "The tariff war is colliding with Amazon's plan for growth in Canada",
+            "text": "Amazon plans to expand fulfillment and same-day delivery in Canada. Amazon was already changing some sourcing decisions to avoid tariffs.",
+            "source": "Business Insider",
+            "type": "Article",
+            "tickers": null,
+            "time": "Aug 26, 2026, 5:00 AM EDT",
+            "ago": "1 day ago"
+          },
+          {
+            "url": "https://www.reuters.com/business/retail-consumer/chinas-moonshot-talks-with-microsoft-amazon-google-over-k3-revenue-sharing-2026-08-26/",
+            "img": "https://cdn.snapi.dev/images/v1/y/l/i/catalog-mail4-3889906.jpg",
+            "title": "China's Moonshot in talks with Microsoft, Amazon, Google over K3 revenue sharing, sources say",
+            "text": "China's Moonshot AI is negotiating revenue-sharing agreements with Microsoft , Amazon and ​Alphabet's Google that would allow the U.S. cloud giants to host its blockbuster Kimi K3 model, three people ...",
+            "source": "Reuters",
+            "type": "Article",
+            "tickers": [
+              "$GOOG",
+              "$GOOGL",
+              "$MSFT"
+            ],
+            "time": "Aug 26, 2026, 3:53 AM EDT",
+            "ago": "1 day ago"
+          },
+          {
+            "url": "https://www.cnbc.com/2026/08/25/amazon-service-that-jeff-bezos-called-artificial-ai-is-shutting-down.html",
+            "img": "https://cdn.snapi.dev/images/v1/i/e/z/542erfe-3407175-3889745.jpg",
+            "title": "Amazon service Bezos once called 'artificial artificial intelligence' is shutting down",
+            "text": "Amazon announced it's shuttering Mechanical Turk, a platform that matches workers with small digital tasks, on Sept. 30. The platform launched in 2005 as a way to farm out tasks that are easy for huma...",
+            "source": "CNBC",
+            "type": "Article",
+            "tickers": null,
+            "time": "Aug 25, 2026, 8:34 PM EDT",
+            "ago": "2 days ago"
+          },
+          {
+            "url": "https://www.pymnts.com/news/retail/2026/amazon-clothing-share-doubles-as-walmart-loses-ground/",
+            "img": "https://cdn.snapi.dev/images/v1/v/z/b/catalog-mail2-3889377.jpg",
+            "title": "Amazon Clothing Share Doubles as Walmart Loses Ground",
+            "text": "Amazon's share of U.S. clothing spending has doubled since 2019 while Walmart's has edged lower, a six-year divergence that was still widening during the first half of 2026. PYMNTS Intelligence estima...",
+            "source": "PYMNTS",
+            "type": "Article",
+            "tickers": [
+              "$WMT"
+            ],
+            "time": "Aug 25, 2026, 4:25 PM EDT",
+            "ago": "2 days ago"
+          },
+          {
+            "url": "Rzb8P4yGsSU",
+            "img": "https://cdn.snapi.dev/images/v1/g/h/0/catalog-mail1-3889022.jpg",
+            "title": "The Big 3: GOOGL, AMZN, SPCX",
+            "text": "As the AI trade sees risk-off activity heading into Nvidia (NVDA) earnings, @ProsperTradingAcademy's Charles Moon sees trading opportunities in Big Tech. He points to Alphabet (GOOGL) and Amazon (AMZN...",
+            "source": "Schwab Network",
+            "type": "Video",
+            "tickers": [
+              "$GOOG",
+              "$GOOGL",
+              "$SPCX"
+            ],
+            "time": "Aug 25, 2026, 1:00 PM EDT",
+            "ago": "2 days ago"
+          },
+          {
+            "url": "https://www.geekwire.com/2026/amazon-eyes-fully-automated-delivery-stations-to-bring-robotics-to-the-last-mile/",
+            "img": "https://cdn.snapi.dev/images/v1/l/9/e/amz27-3548064-3889011.jpg",
+            "title": "Report: Amazon eyes ‘fully automated' delivery stations to bring robotics to the last mile",
+            "text": "Amazon is developing an internal initiative called Project Tetromino to build \"fully automated\" delivery stations, according to an internal planning document obtained by Business Insider.",
+            "source": "GeekWire",
+            "type": "Article",
+            "tickers": null,
+            "time": "Aug 25, 2026, 12:53 PM EDT",
+            "ago": "2 days ago"
+          }
+        ]
+      },
+      "chart": {
+        "expiration": 1787923800000,
+        "data": [
+          {
+            "c": 259.28,
+            "o": 259.23,
+            "t": 1787823000
+          },
+          {
+            "c": 258.29,
+            "t": 1787823060
+          },
+          {
+            "c": 257.98,
+            "t": 1787823120
+          },
+          {
+            "c": 258.16,
+            "t": 1787823180
+          },
+          {
+            "c": 258.04,
+            "t": 1787823240
+          },
+          {
+            "c": 257.68,
+            "t": 1787823300
+          },
+          {
+            "c": 257.21,
+            "t": 1787823360
+          },
+          {
+            "c": 256.01,
+            "t": 1787823420
+          },
+          {
+            "c": 255.83,
+            "t": 1787823480
+          },
+          {
+            "c": 255.99,
+            "t": 1787823540
+          },
+          {
+            "c": 256.23,
+            "t": 1787823600
+          },
+          {
+            "c": 256.58,
+            "t": 1787823660
+          },
+          {
+            "c": 257.04,
+            "t": 1787823720
+          },
+          {
+            "c": 257.55,
+            "t": 1787823780
+          },
+          {
+            "c": 257.81,
+            "t": 1787823840
+          },
+          {
+            "c": 258.39,
+            "t": 1787823900
+          },
+          {
+            "c": 258.05,
+            "t": 1787823960
+          },
+          {
+            "c": 257.92,
+            "t": 1787824020
+          },
+          {
+            "c": 258.04,
+            "t": 1787824080
+          },
+          {
+            "c": 257.38,
+            "t": 1787824140
+          },
+          {
+            "c": 257.5,
+            "t": 1787824200
+          },
+          {
+            "c": 257.47,
+            "t": 1787824260
+          },
+          {
+            "c": 257.37,
+            "t": 1787824320
+          },
+          {
+            "c": 257.47,
+            "t": 1787824380
+          },
+          {
+            "c": 257.22,
+            "t": 1787824440
+          },
+          {
+            "c": 257.59,
+            "t": 1787824500
+          },
+          {
+            "c": 257.11,
+            "t": 1787824560
+          },
+          {
+            "c": 257.17,
+            "t": 1787824620
+          },
+          {
+            "c": 257.04,
+            "t": 1787824680
+          },
+          {
+            "c": 257.48,
+            "t": 1787824740
+          },
+          {
+            "c": 257.33,
+            "t": 1787824800
+          },
+          {
+            "c": 256.92,
+            "t": 1787824860
+          },
+          {
+            "c": 256.86,
+            "t": 1787824920
+          },
+          {
+            "c": 256.98,
+            "t": 1787824980
+          },
+          {
+            "c": 257.21,
+            "t": 1787825040
+          },
+          {
+            "c": 257.1,
+            "t": 1787825100
+          },
+          {
+            "c": 256.89,
+            "t": 1787825160
+          },
+          {
+            "c": 257.28,
+            "t": 1787825220
+          },
+          {
+            "c": 257.23,
+            "t": 1787825280
+          },
+          {
+            "c": 257.32,
+            "t": 1787825340
+          },
+          {
+            "c": 257.63,
+            "t": 1787825400
+          },
+          {
+            "c": 257.49,
+            "t": 1787825460
+          },
+          {
+            "c": 257.39,
+            "t": 1787825520
+          },
+          {
+            "c": 257.42,
+            "t": 1787825580
+          },
+          {
+            "c": 257.4,
+            "t": 1787825640
+          },
+          {
+            "c": 257.34,
+            "t": 1787825700
+          },
+          {
+            "c": 257.28,
+            "t": 1787825760
+          },
+          {
+            "c": 257.36,
+            "t": 1787825820
+          },
+          {
+            "c": 257.26,
+            "t": 1787825880
+          },
+          {
+            "c": 257.2,
+            "t": 1787825940
+          },
+          {
+            "c": 257.17,
+            "t": 1787826000
+          },
+          {
+            "c": 256.75,
+            "t": 1787826060
+          },
+          {
+            "c": 257.27,
+            "t": 1787826120
+          },
+          {
+            "c": 257.16,
+            "t": 1787826180
+          },
+          {
+            "c": 257.36,
+            "t": 1787826240
+          },
+          {
+            "c": 257.08,
+            "t": 1787826300
+          },
+          {
+            "c": 257.15,
+            "t": 1787826360
+          },
+          {
+            "c": 257.01,
+            "t": 1787826420
+          },
+          {
+            "c": 257.2,
+            "t": 1787826480
+          },
+          {
+            "c": 257.13,
+            "t": 1787826540
+          },
+          {
+            "c": 256.94,
+            "t": 1787826600
+          },
+          {
+            "c": 256.86,
+            "t": 1787826660
+          },
+          {
+            "c": 256.74,
+            "t": 1787826720
+          },
+          {
+            "c": 256.85,
+            "t": 1787826780
+          },
+          {
+            "c": 256.86,
+            "t": 1787826840
+          },
+          {
+            "c": 256.97,
+            "t": 1787826900
+          },
+          {
+            "c": 256.95,
+            "t": 1787826960
+          },
+          {
+            "c": 257.08,
+            "t": 1787827020
+          },
+          {
+            "c": 257.23,
+            "t": 1787827080
+          },
+          {
+            "c": 257.1,
+            "t": 1787827140
+          },
+          {
+            "c": 257.04,
+            "t": 1787827200
+          },
+          {
+            "c": 256.88,
+            "t": 1787827260
+          },
+          {
+            "c": 256.95,
+            "t": 1787827320
+          },
+          {
+            "c": 256.82,
+            "t": 1787827380
+          },
+          {
+            "c": 256.73,
+            "t": 1787827440
+          },
+          {
+            "c": 257.01,
+            "t": 1787827500
+          },
+          {
+            "c": 256.85,
+            "t": 1787827560
+          },
+          {
+            "c": 256.75,
+            "t": 1787827620
+          },
+          {
+            "c": 256.95,
+            "t": 1787827680
+          },
+          {
+            "c": 257.05,
+            "t": 1787827740
+          },
+          {
+            "c": 256.84,
+            "t": 1787827800
+          },
+          {
+            "c": 256.83,
+            "t": 1787827860
+          },
+          {
+            "c": 257.05,
+            "t": 1787827920
+          },
+          {
+            "c": 256.94,
+            "t": 1787827980
+          },
+          {
+            "c": 256.84,
+            "t": 1787828040
+          },
+          {
+            "c": 256.74,
+            "t": 1787828100
+          },
+          {
+            "c": 256.74,
+            "t": 1787828160
+          },
+          {
+            "c": 256.76,
+            "t": 1787828220
+          },
+          {
+            "c": 256.76,
+            "t": 1787828280
+          },
+          {
+            "c": 256.78,
+            "t": 1787828340
+          },
+          {
+            "c": 256.73,
+            "t": 1787828400
+          },
+          {
+            "c": 256.67,
+            "t": 1787828460
+          },
+          {
+            "c": 256.63,
+            "t": 1787828520
+          },
+          {
+            "c": 256.61,
+            "t": 1787828580
+          },
+          {
+            "c": 257.14,
+            "t": 1787828640
+          },
+          {
+            "c": 257.28,
+            "t": 1787828700
+          },
+          {
+            "c": 257.17,
+            "t": 1787828760
+          },
+          {
+            "c": 257.14,
+            "t": 1787828820
+          },
+          {
+            "c": 257.09,
+            "t": 1787828880
+          },
+          {
+            "c": 257.17,
+            "t": 1787828940
+          },
+          {
+            "c": 257.18,
+            "t": 1787829000
+          },
+          {
+            "c": 257.21,
+            "t": 1787829060
+          },
+          {
+            "c": 257.24,
+            "t": 1787829120
+          },
+          {
+            "c": 257.23,
+            "t": 1787829180
+          },
+          {
+            "c": 257.25,
+            "t": 1787829240
+          },
+          {
+            "c": 257.42,
+            "t": 1787829300
+          },
+          {
+            "c": 257.33,
+            "t": 1787829360
+          },
+          {
+            "c": 257.42,
+            "t": 1787829420
+          },
+          {
+            "c": 257.48,
+            "t": 1787829480
+          },
+          {
+            "c": 257.36,
+            "t": 1787829540
+          },
+          {
+            "c": 257.36,
+            "t": 1787829600
+          },
+          {
+            "c": 257.35,
+            "t": 1787829660
+          },
+          {
+            "c": 257.3,
+            "t": 1787829720
+          },
+          {
+            "c": 257.13,
+            "t": 1787829780
+          },
+          {
+            "c": 256.83,
+            "t": 1787829840
+          },
+          {
+            "c": 256.71,
+            "t": 1787829900
+          },
+          {
+            "c": 256.77,
+            "t": 1787829960
+          },
+          {
+            "c": 256.7,
+            "t": 1787830020
+          },
+          {
+            "c": 256.64,
+            "t": 1787830080
+          },
+          {
+            "c": 256.42,
+            "t": 1787830140
+          },
+          {
+            "c": 256.32,
+            "t": 1787830200
+          },
+          {
+            "c": 256.23,
+            "t": 1787830260
+          },
+          {
+            "c": 256.34,
+            "t": 1787830320
+          },
+          {
+            "c": 256.39,
+            "t": 1787830380
+          },
+          {
+            "c": 256.31,
+            "t": 1787830440
+          },
+          {
+            "c": 256.37,
+            "t": 1787830500
+          },
+          {
+            "c": 256.39,
+            "t": 1787830560
+          },
+          {
+            "c": 256.3,
+            "t": 1787830620
+          },
+          {
+            "c": 256.24,
+            "t": 1787830680
+          },
+          {
+            "c": 255.96,
+            "t": 1787830740
+          },
+          {
+            "c": 256.12,
+            "t": 1787830800
+          },
+          {
+            "c": 256.5,
+            "t": 1787830860
+          },
+          {
+            "c": 256.4,
+            "t": 1787830920
+          },
+          {
+            "c": 256.22,
+            "t": 1787830980
+          },
+          {
+            "c": 256.08,
+            "t": 1787831040
+          },
+          {
+            "c": 256.13,
+            "t": 1787831100
+          },
+          {
+            "c": 256.02,
+            "t": 1787831160
+          },
+          {
+            "c": 256.1,
+            "t": 1787831220
+          },
+          {
+            "c": 256.32,
+            "t": 1787831280
+          },
+          {
+            "c": 256.14,
+            "t": 1787831340
+          },
+          {
+            "c": 256.25,
+            "t": 1787831400
+          },
+          {
+            "c": 256.34,
+            "t": 1787831460
+          },
+          {
+            "c": 256.42,
+            "t": 1787831520
+          },
+          {
+            "c": 256.44,
+            "t": 1787831580
+          },
+          {
+            "c": 256.38,
+            "t": 1787831640
+          },
+          {
+            "c": 256.36,
+            "t": 1787831700
+          },
+          {
+            "c": 256.34,
+            "t": 1787831760
+          },
+          {
+            "c": 256.46,
+            "t": 1787831820
+          },
+          {
+            "c": 256.35,
+            "t": 1787831880
+          },
+          {
+            "c": 256.35,
+            "t": 1787831940
+          },
+          {
+            "c": 256.31,
+            "t": 1787832000
+          },
+          {
+            "c": 256.29,
+            "t": 1787832060
+          },
+          {
+            "c": 256.27,
+            "t": 1787832120
+          },
+          {
+            "c": 256.41,
+            "t": 1787832180
+          },
+          {
+            "c": 256.39,
+            "t": 1787832240
+          },
+          {
+            "c": 256.43,
+            "t": 1787832300
+          },
+          {
+            "c": 256.4,
+            "t": 1787832360
+          },
+          {
+            "c": 256.35,
+            "t": 1787832420
+          },
+          {
+            "c": 256.36,
+            "t": 1787832480
+          },
+          {
+            "c": 256.5,
+            "t": 1787832540
+          },
+          {
+            "c": 256.7,
+            "t": 1787832600
+          },
+          {
+            "c": 256.59,
+            "t": 1787832660
+          },
+          {
+            "c": 256.54,
+            "t": 1787832720
+          },
+          {
+            "c": 256.36,
+            "t": 1787832780
+          },
+          {
+            "c": 256.51,
+            "t": 1787832840
+          },
+          {
+            "c": 256.63,
+            "t": 1787832900
+          },
+          {
+            "c": 256.58,
+            "t": 1787832960
+          },
+          {
+            "c": 256.48,
+            "t": 1787833020
+          },
+          {
+            "c": 256.45,
+            "t": 1787833080
+          },
+          {
+            "c": 256.46,
+            "t": 1787833140
+          },
+          {
+            "c": 256.46,
+            "t": 1787833200
+          },
+          {
+            "c": 256.46,
+            "t": 1787833260
+          },
+          {
+            "c": 256.32,
+            "t": 1787833320
+          },
+          {
+            "c": 256.23,
+            "t": 1787833380
+          },
+          {
+            "c": 256.29,
+            "t": 1787833440
+          },
+          {
+            "c": 256.26,
+            "t": 1787833500
+          },
+          {
+            "c": 256.21,
+            "t": 1787833560
+          },
+          {
+            "c": 256.47,
+            "t": 1787833620
+          },
+          {
+            "c": 256.39,
+            "t": 1787833680
+          },
+          {
+            "c": 256.46,
+            "t": 1787833740
+          },
+          {
+            "c": 256.5,
+            "t": 1787833800
+          },
+          {
+            "c": 256.39,
+            "t": 1787833860
+          },
+          {
+            "c": 256.33,
+            "t": 1787833920
+          },
+          {
+            "c": 256.35,
+            "t": 1787833980
+          },
+          {
+            "c": 256.26,
+            "t": 1787834040
+          },
+          {
+            "c": 256.24,
+            "t": 1787834100
+          },
+          {
+            "c": 256.22,
+            "t": 1787834160
+          },
+          {
+            "c": 256.35,
+            "t": 1787834220
+          },
+          {
+            "c": 256.44,
+            "t": 1787834280
+          },
+          {
+            "c": 256.525,
+            "t": 1787834340
+          },
+          {
+            "c": 256.44,
+            "t": 1787834400
+          },
+          {
+            "c": 256.59,
+            "t": 1787834460
+          },
+          {
+            "c": 256.555,
+            "t": 1787834520
+          },
+          {
+            "c": 256.645,
+            "t": 1787834580
+          },
+          {
+            "c": 256.52,
+            "t": 1787834640
+          },
+          {
+            "c": 256.71,
+            "t": 1787834700
+          },
+          {
+            "c": 256.515,
+            "t": 1787834760
+          },
+          {
+            "c": 256.295,
+            "t": 1787834820
+          },
+          {
+            "c": 256.3,
+            "t": 1787834880
+          },
+          {
+            "c": 256.275,
+            "t": 1787834940
+          },
+          {
+            "c": 256.24,
+            "t": 1787835000
+          },
+          {
+            "c": 256.1,
+            "t": 1787835060
+          },
+          {
+            "c": 256.04,
+            "t": 1787835120
+          },
+          {
+            "c": 256.1,
+            "t": 1787835180
+          },
+          {
+            "c": 256.14,
+            "t": 1787835240
+          },
+          {
+            "c": 256.19,
+            "t": 1787835300
+          },
+          {
+            "c": 256.23,
+            "t": 1787835360
+          },
+          {
+            "c": 256.12,
+            "t": 1787835420
+          },
+          {
+            "c": 256.13,
+            "t": 1787835480
+          },
+          {
+            "c": 256.29,
+            "t": 1787835540
+          },
+          {
+            "c": 256.039,
+            "t": 1787835600
+          },
+          {
+            "c": 256.09,
+            "t": 1787835660
+          },
+          {
+            "c": 256.09,
+            "t": 1787835720
+          },
+          {
+            "c": 256.08,
+            "t": 1787835780
+          },
+          {
+            "c": 256.08,
+            "t": 1787835840
+          },
+          {
+            "c": 255.95,
+            "t": 1787835900
+          },
+          {
+            "c": 255.85,
+            "t": 1787835960
+          },
+          {
+            "c": 255.785,
+            "t": 1787836020
+          },
+          {
+            "c": 255.85,
+            "t": 1787836080
+          },
+          {
+            "c": 255.89,
+            "t": 1787836140
+          },
+          {
+            "c": 255.87,
+            "t": 1787836200
+          },
+          {
+            "c": 255.84,
+            "t": 1787836260
+          },
+          {
+            "c": 255.89,
+            "t": 1787836320
+          },
+          {
+            "c": 255.92,
+            "t": 1787836380
+          },
+          {
+            "c": 256.01,
+            "t": 1787836440
+          },
+          {
+            "c": 255.945,
+            "t": 1787836500
+          },
+          {
+            "c": 255.83,
+            "t": 1787836560
+          },
+          {
+            "c": 255.77,
+            "t": 1787836620
+          },
+          {
+            "c": 255.671,
+            "t": 1787836680
+          },
+          {
+            "c": 255.56,
+            "t": 1787836740
+          },
+          {
+            "c": 255.52,
+            "t": 1787836800
+          },
+          {
+            "c": 255.64,
+            "t": 1787836860
+          },
+          {
+            "c": 255.58,
+            "t": 1787836920
+          },
+          {
+            "c": 255.73,
+            "t": 1787836980
+          },
+          {
+            "c": 255.739,
+            "t": 1787837040
+          },
+          {
+            "c": 255.647,
+            "t": 1787837100
+          },
+          {
+            "c": 255.77,
+            "t": 1787837160
+          },
+          {
+            "c": 255.79,
+            "t": 1787837220
+          },
+          {
+            "c": 255.88,
+            "t": 1787837280
+          },
+          {
+            "c": 255.895,
+            "t": 1787837340
+          },
+          {
+            "c": 255.88,
+            "t": 1787837400
+          },
+          {
+            "c": 255.73,
+            "t": 1787837460
+          },
+          {
+            "c": 255.84,
+            "t": 1787837520
+          },
+          {
+            "c": 255.86,
+            "t": 1787837580
+          },
+          {
+            "c": 255.74,
+            "t": 1787837640
+          },
+          {
+            "c": 255.828,
+            "t": 1787837700
+          },
+          {
+            "c": 255.825,
+            "t": 1787837760
+          },
+          {
+            "c": 255.85,
+            "t": 1787837820
+          },
+          {
+            "c": 255.88,
+            "t": 1787837880
+          },
+          {
+            "c": 255.96,
+            "t": 1787837940
+          },
+          {
+            "c": 255.98,
+            "t": 1787838000
+          },
+          {
+            "c": 256.025,
+            "t": 1787838060
+          },
+          {
+            "c": 256.085,
+            "t": 1787838120
+          },
+          {
+            "c": 256.15,
+            "t": 1787838180
+          },
+          {
+            "c": 256.285,
+            "t": 1787838240
+          },
+          {
+            "c": 256.23,
+            "t": 1787838300
+          },
+          {
+            "c": 256.155,
+            "t": 1787838360
+          },
+          {
+            "c": 256.02,
+            "t": 1787838420
+          },
+          {
+            "c": 255.985,
+            "t": 1787838480
+          },
+          {
+            "c": 255.876,
+            "t": 1787838540
+          },
+          {
+            "c": 255.825,
+            "t": 1787838600
+          },
+          {
+            "c": 255.68,
+            "t": 1787838660
+          },
+          {
+            "c": 255.58,
+            "t": 1787838720
+          },
+          {
+            "c": 255.596,
+            "t": 1787838780
+          },
+          {
+            "c": 255.789,
+            "t": 1787838840
+          },
+          {
+            "c": 255.63,
+            "t": 1787838900
+          },
+          {
+            "c": 255.765,
+            "t": 1787838960
+          },
+          {
+            "c": 255.716,
+            "t": 1787839020
+          },
+          {
+            "c": 255.63,
+            "t": 1787839080
+          },
+          {
+            "c": 255.855,
+            "t": 1787839140
+          },
+          {
+            "c": 255.94,
+            "t": 1787839200
+          },
+          {
+            "c": 255.395,
+            "t": 1787839260
+          },
+          {
+            "c": 255.48,
+            "t": 1787839320
+          },
+          {
+            "c": 255.59,
+            "t": 1787839380
+          },
+          {
+            "c": 255.66,
+            "t": 1787839440
+          },
+          {
+            "c": 255.756,
+            "t": 1787839500
+          },
+          {
+            "c": 255.731,
+            "t": 1787839560
+          },
+          {
+            "c": 255.75,
+            "t": 1787839620
+          },
+          {
+            "c": 255.78,
+            "t": 1787839680
+          },
+          {
+            "c": 255.8,
+            "t": 1787839740
+          },
+          {
+            "c": 255.65,
+            "t": 1787839800
+          },
+          {
+            "c": 255.721,
+            "t": 1787839860
+          },
+          {
+            "c": 255.73,
+            "t": 1787839920
+          },
+          {
+            "c": 255.35,
+            "t": 1787839980
+          },
+          {
+            "c": 255.15,
+            "t": 1787840040
+          },
+          {
+            "c": 255.265,
+            "t": 1787840100
+          },
+          {
+            "c": 255.26,
+            "t": 1787840160
+          },
+          {
+            "c": 255.285,
+            "t": 1787840220
+          },
+          {
+            "c": 255.3,
+            "t": 1787840280
+          },
+          {
+            "c": 255.26,
+            "t": 1787840340
+          },
+          {
+            "c": 255.45,
+            "t": 1787840400
+          },
+          {
+            "c": 255.37,
+            "t": 1787840460
+          },
+          {
+            "c": 255.35,
+            "t": 1787840520
+          },
+          {
+            "c": 255.3,
+            "t": 1787840580
+          },
+          {
+            "c": 255.34,
+            "t": 1787840640
+          },
+          {
+            "c": 255.19,
+            "t": 1787840700
+          },
+          {
+            "c": 255.15,
+            "t": 1787840760
+          },
+          {
+            "c": 255.09,
+            "t": 1787840820
+          },
+          {
+            "c": 255.105,
+            "t": 1787840880
+          },
+          {
+            "c": 255.08,
+            "t": 1787840940
+          },
+          {
+            "c": 255.2,
+            "t": 1787841000
+          },
+          {
+            "c": 255.24,
+            "t": 1787841060
+          },
+          {
+            "c": 255.25,
+            "t": 1787841120
+          },
+          {
+            "c": 255.175,
+            "t": 1787841180
+          },
+          {
+            "c": 255.18,
+            "t": 1787841240
+          },
+          {
+            "c": 255.2,
+            "t": 1787841300
+          },
+          {
+            "c": 255.25,
+            "t": 1787841360
+          },
+          {
+            "c": 255.189,
+            "t": 1787841420
+          },
+          {
+            "c": 255.406,
+            "t": 1787841480
+          },
+          {
+            "c": 255.45,
+            "t": 1787841540
+          },
+          {
+            "c": 255.6,
+            "t": 1787841600
+          },
+          {
+            "c": 255.45,
+            "t": 1787841660
+          },
+          {
+            "c": 255.46,
+            "t": 1787841720
+          },
+          {
+            "c": 255.43,
+            "t": 1787841780
+          },
+          {
+            "c": 255.375,
+            "t": 1787841840
+          },
+          {
+            "c": 255.39,
+            "t": 1787841900
+          },
+          {
+            "c": 255.49,
+            "t": 1787841960
+          },
+          {
+            "c": 255.445,
+            "t": 1787842020
+          },
+          {
+            "c": 255.42,
+            "t": 1787842080
+          },
+          {
+            "c": 255.22,
+            "t": 1787842140
+          },
+          {
+            "c": 255.24,
+            "t": 1787842200
+          },
+          {
+            "c": 255.32,
+            "t": 1787842260
+          },
+          {
+            "c": 255.28,
+            "t": 1787842320
+          },
+          {
+            "c": 255.25,
+            "t": 1787842380
+          },
+          {
+            "c": 255.321,
+            "t": 1787842440
+          },
+          {
+            "c": 255.295,
+            "t": 1787842500
+          },
+          {
+            "c": 255.3,
+            "t": 1787842560
+          },
+          {
+            "c": 255.54,
+            "t": 1787842620
+          },
+          {
+            "c": 255.631,
+            "t": 1787842680
+          },
+          {
+            "c": 255.563,
+            "t": 1787842740
+          },
+          {
+            "c": 255.56,
+            "t": 1787842800
+          },
+          {
+            "c": 255.63,
+            "t": 1787842860
+          },
+          {
+            "c": 255.6,
+            "t": 1787842920
+          },
+          {
+            "c": 255.57,
+            "t": 1787842980
+          },
+          {
+            "c": 255.689,
+            "t": 1787843040
+          },
+          {
+            "c": 255.67,
+            "t": 1787843100
+          },
+          {
+            "c": 255.6,
+            "t": 1787843160
+          },
+          {
+            "c": 255.68,
+            "t": 1787843220
+          },
+          {
+            "c": 255.695,
+            "t": 1787843280
+          },
+          {
+            "c": 255.687,
+            "t": 1787843340
+          },
+          {
+            "c": 255.66,
+            "t": 1787843400
+          },
+          {
+            "c": 255.665,
+            "t": 1787843460
+          },
+          {
+            "c": 255.72,
+            "t": 1787843520
+          },
+          {
+            "c": 255.635,
+            "t": 1787843580
+          },
+          {
+            "c": 255.7,
+            "t": 1787843640
+          },
+          {
+            "c": 255.72,
+            "t": 1787843700
+          },
+          {
+            "c": 255.835,
+            "t": 1787843760
+          },
+          {
+            "c": 255.76,
+            "t": 1787843820
+          },
+          {
+            "c": 255.8,
+            "t": 1787843880
+          },
+          {
+            "c": 255.79,
+            "t": 1787843940
+          },
+          {
+            "c": 255.789,
+            "t": 1787844000
+          },
+          {
+            "c": 255.82,
+            "t": 1787844060
+          },
+          {
+            "c": 255.894,
+            "t": 1787844120
+          },
+          {
+            "c": 256.035,
+            "t": 1787844180
+          },
+          {
+            "c": 255.965,
+            "t": 1787844240
+          },
+          {
+            "c": 255.835,
+            "t": 1787844300
+          },
+          {
+            "c": 255.82,
+            "t": 1787844360
+          },
+          {
+            "c": 255.785,
+            "t": 1787844420
+          },
+          {
+            "c": 255.71,
+            "t": 1787844480
+          },
+          {
+            "c": 255.81,
+            "t": 1787844540
+          },
+          {
+            "c": 255.82,
+            "t": 1787844600
+          },
+          {
+            "c": 255.85,
+            "t": 1787844660
+          },
+          {
+            "c": 255.92,
+            "t": 1787844720
+          },
+          {
+            "c": 255.92,
+            "t": 1787844780
+          },
+          {
+            "c": 255.99,
+            "t": 1787844840
+          },
+          {
+            "c": 255.97,
+            "t": 1787844900
+          },
+          {
+            "c": 256.04,
+            "t": 1787844960
+          },
+          {
+            "c": 256.193,
+            "t": 1787845020
+          },
+          {
+            "c": 256.175,
+            "t": 1787845080
+          },
+          {
+            "c": 256.21,
+            "t": 1787845140
+          },
+          {
+            "c": 256.23,
+            "t": 1787845200
+          },
+          {
+            "c": 256.4,
+            "t": 1787845260
+          },
+          {
+            "c": 256.65,
+            "t": 1787845320
+          },
+          {
+            "c": 256.78,
+            "t": 1787845380
+          },
+          {
+            "c": 256.85,
+            "t": 1787845440
+          },
+          {
+            "c": 256.87,
+            "t": 1787845500
+          },
+          {
+            "c": 256.91,
+            "t": 1787845560
+          },
+          {
+            "c": 256.835,
+            "t": 1787845620
+          },
+          {
+            "c": 256.99,
+            "t": 1787845680
+          },
+          {
+            "c": 257.01,
+            "t": 1787845740
+          },
+          {
+            "c": 256.91,
+            "t": 1787845800
+          },
+          {
+            "c": 256.725,
+            "t": 1787845860
+          },
+          {
+            "c": 256.841,
+            "t": 1787845920
+          },
+          {
+            "c": 256.973,
+            "t": 1787845980
+          },
+          {
+            "c": 256.84,
+            "t": 1787846040
+          },
+          {
+            "c": 256.77,
+            "t": 1787846100
+          },
+          {
+            "c": 256.72,
+            "t": 1787846160
+          },
+          {
+            "c": 256.32,
+            "t": 1787846220
+          },
+          {
+            "c": 256.28,
+            "t": 1787846280
+          },
+          {
+            "c": 256.15,
+            "t": 1787846340
+          },
+          {
+            "c": 256.26,
+            "t": 1787846400
+          }
+        ]
+      },
+      "changes": {
+        "price1w": 260.11,
+        "price1m": 232.11,
+        "price3m": 265.29,
+        "price6m": 207.92,
+        "priceYTD": 230.82,
+        "price1y": 228.71,
+        "price5y": 165.8,
+        "priceMAX": 0.0979
+      },
+      "source": "polygon"
+    },
+    "history": [
+      {
+        "t": "2026-08-03",
+        "o": 278.29,
+        "h": 287.2,
+        "l": 255.02,
+        "c": 256.26,
+        "a": 256.26,
+        "v": 698809176,
+        "ch": -5.64
+      },
+      {
+        "t": "2026-07-01",
+        "o": 239.75,
+        "h": 273.23,
+        "l": 226.16,
+        "c": 271.58,
+        "a": 271.58,
+        "v": 992121844,
+        "ch": 13.95
+      },
+      {
+        "t": "2026-06-01",
+        "o": 266.285,
+        "h": 266.63,
+        "l": 225.55,
+        "c": 238.34,
+        "a": 238.34,
+        "v": 1314074715,
+        "ch": -11.93
+      },
+      {
+        "t": "2026-05-01",
+        "o": 265.58,
+        "h": 278.56,
+        "l": 255.19,
+        "c": 270.64,
+        "a": 270.64,
+        "v": 790289453,
+        "ch": 2.11
+      },
+      {
+        "t": "2026-04-01",
+        "o": 210.435,
+        "h": 273.88,
+        "l": 204.9,
+        "c": 265.06,
+        "a": 265.06,
+        "v": 1028512917,
+        "ch": 27.27
+      },
+      {
+        "t": "2026-03-02",
+        "o": 204.55,
+        "h": 220.47,
+        "l": 199.14,
+        "c": 208.27,
+        "a": 208.27,
+        "v": 1009324207,
+        "ch": -0.82
+      },
+      {
+        "t": "2026-02-02",
+        "o": 238.31,
+        "h": 246.35,
+        "l": 196,
+        "c": 210,
+        "a": 210,
+        "v": 1263271652,
+        "ch": -12.24
+      },
+      {
+        "t": "2026-01-02",
+        "o": 231.34,
+        "h": 248.94,
+        "l": 224.7,
+        "c": 239.3,
+        "a": 239.3,
+        "v": 842060387,
+        "ch": 3.67
+      },
+      {
+        "t": "2025-12-01",
+        "o": 233.22,
+        "h": 238.97,
+        "l": 220.99,
+        "c": 230.82,
+        "a": 230.82,
+        "v": 787960441,
+        "ch": -1.03
+      },
+      {
+        "t": "2025-11-03",
+        "o": 255.36,
+        "h": 258.6,
+        "l": 215.18,
+        "c": 233.22,
+        "a": 233.22,
+        "v": 902272884,
+        "ch": -4.5
+      },
+      {
+        "t": "2025-10-01",
+        "o": 217.36,
+        "h": 250.5,
+        "l": 211.03,
+        "c": 244.22,
+        "a": 244.22,
+        "v": 1196876750,
+        "ch": 11.23
+      }
+    ],
+    "quote": {
+      "c": -4.02,
+      "e": true,
+      "h": 259.66,
+      "l": 255.02,
+      "o": 259.23,
+      "p": 256.26,
+      "u": "Aug 27, 2026, 4:00 PM EDT",
+      "v": 35927853,
+      "cl": 260.28,
+      "cp": -1.54,
+      "ec": 0.05,
+      "ep": 256.31,
+      "es": "After-hours",
+      "eu": "Aug 27, 2026, 7:59 PM EDT",
+      "ex": "NASDAQ",
+      "ms": "closed",
+      "pd": 256.26,
+      "td": "2026-08-27",
+      "ts": 1787860800000,
+      "cdr": -1,
+      "ecp": 0.02,
+      "epd": 256.31,
+      "etd": "2026-08-27",
+      "ets": 1787875195156.9478,
+      "exp": 1787904900000,
+      "fms": "closed",
+      "h52": 287.2,
+      "l52": 196,
+      "uid": "AMZN",
+      "days": 0,
+      "symbol": "AMZN"
+    }
+  }
+}

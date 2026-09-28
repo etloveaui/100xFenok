@@ -2,9 +2,12 @@
 
 import dynamic from "next/dynamic";
 
+import { useDelayedLoading } from "@/components/ui";
 import type { CpPriceChartProps } from "@/components/canvas-plus/charts/types";
 
 function CpPriceChartLoading() {
+  const show = useDelayedLoading(true, 120);
+  if (!show) return null;
   return (
     <div className="cp-chart-shell" data-cp-price-chart-loading>
       <div className="cp-chart-skeleton" aria-hidden="true" />

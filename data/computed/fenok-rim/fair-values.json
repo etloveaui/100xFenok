@@ -1,0 +1,775 @@
+{
+  "schema_version": "fenok-rim-index/v7",
+  "generated_at": "2026-08-24T23:34:40.404Z",
+  "method": "fenok_rim_forward_book_compounding_residual_income",
+  "display_note": "상대적 매력도 지표이며 목표가가 아님. 컨센서스 변화에 따라 언제든 크게 바뀔 수 있음.",
+  "weekly_exports": [
+    {
+      "label": "benchmark workbook",
+      "as_of": "2026-08-21",
+      "age_days": 4,
+      "late": false,
+      "note": "benchmark workbook export is 4 days old, within the weekly window"
+    },
+    {
+      "label": "global scouter",
+      "as_of": "2026-08-21",
+      "age_days": 4,
+      "late": false,
+      "note": "global scouter export is 4 days old, within the weekly window"
+    }
+  ],
+  "index_math_pinned": true,
+  "display_ready": false,
+  "display_block_reason": "formula structure reproduces the captured grids, but risk premium and payout are not separately identified, bounded holdout reproduction is incomplete, and the discount slope remains fitted",
+  "kospi_erp_resolution": {
+    "status": "unresolved_not_separately_identified_from_payout",
+    "current_erp": 0.12,
+    "current_erp_source": "sheet 2026-08-03 dated anchor; not independently identified from payout",
+    "sheet_cell_erp": 0.12,
+    "evidence": [
+      "the 2026-08-03 sheet prints 12% and the current row consumes 12%",
+      "Damodaran Korea ERP is a comparison series and is not the row input",
+      "premium inversion is conditional on a payout basis declared before scoring"
+    ],
+    "note": "Do not interpret the 12% anchor as a sustainable ERP rule or publish its implied point value until payout is fixed ex ante and bounded holdouts pass."
+  },
+  "rows": [
+    {
+      "key": "sp500",
+      "name": "S&P 500",
+      "status": "NULL",
+      "computation_status": "ready",
+      "as_of": "2026-08-21",
+      "px_last": 7674.37,
+      "pbr": 5.8313,
+      "book_value": 1316.07,
+      "roe_path": [
+        0.297
+      ],
+      "roe_path_source": "weekly consensus grid (rim-index) — vendor index-level aggregate ROE (best_eps / book), used as published",
+      "roe_observed": 0.297,
+      "roe_median_5y": 0.2349,
+      "roe_cap": {
+        "applied": false,
+        "multiple": 2.3,
+        "note": "spot 0.297 is 1.26x its 5-year median, inside the 2.3x bound"
+      },
+      "retention": 0.6891,
+      "retention_source": "sheet payout 0.3109 (2026-08-03) [drift check: our derived payout 0.2037, -34.5% off]",
+      "payout_basis_comparison": {
+        "sheet_anchor": {
+          "value": 0.3109,
+          "basis": "printed dated sheet field",
+          "production_eligible": false,
+          "reason": "manual anchor; no sustainable refresh rule"
+        },
+        "forward_current": {
+          "value": 0.203727,
+          "basis": "current index dividend yield / forward benchmark earnings yield",
+          "production_eligible": false,
+          "reason": "forward denominator is observable but the model role has not passed held-out bounded validation"
+        },
+        "realised_trailing": {
+          "range": [
+            0.3445,
+            0.3761
+          ],
+          "mean": 0.3611,
+          "basis": "realised_cash_dividends_over_positive_net_income_current_membership",
+          "production_eligible": false,
+          "reason": [
+            "current_membership_applied_to_historical_years",
+            "trailing_realised_basis_not_forward_policy",
+            "loss_making_constituent_years_excluded"
+          ]
+        }
+      },
+      "payout_candidate_band": {
+        "basis_id": "realised_cash_dividends_over_positive_net_income_current_membership",
+        "generated_at": "2026-08-04T09:06:51.365Z",
+        "newest_statement_period": "2026-05-31",
+        "summary": {
+          "years": 4,
+          "mean": 0.3611,
+          "min": 0.3445,
+          "max": 0.3761,
+          "latest": 0.3494
+        },
+        "eligibility": {
+          "status": "measured_candidate_band_only",
+          "production_eligible": false,
+          "blocking_reasons": [
+            "current_membership_applied_to_historical_years",
+            "trailing_realised_basis_not_forward_policy",
+            "loss_making_constituent_years_excluded"
+          ]
+        }
+      },
+      "erp_center": 0.05,
+      "erp_source": "sheet 2026-08-03; Damodaran US 5.03% agrees to 3bp [drift check: Damodaran US 0.0503, workbook April 1, 2026, 146 days old]",
+      "risk_free": 0.0469,
+      "risk_free_source": "observed US 10Y (FRED DGS10 via rim-index, daily)",
+      "discount_rate": 0.102264,
+      "discount_extrapolation": {
+        "gap": 0.004899999999999995,
+        "outside": true,
+        "beyondTolerance": false,
+        "note": "risk-free 0.0469 is 49bp above the fitted band 0.035~0.042 — within tolerance"
+      },
+      "publication": {
+        "status": "NULL",
+        "reasons": [
+          "material_input_latent:book_roe_basis",
+          "material_input_latent:payout",
+          "material_input_latent:risk_premium",
+          "fitted_relation_outside_domain:discount_relation",
+          "bounded_non_floor_holdout_required"
+        ]
+      },
+      "diagnostic": {
+        "rate_current": {
+          "erp_center": 0.05,
+          "risk_free": 0.0469,
+          "fair_value": 9222.06,
+          "upside_pct": 20.17,
+          "upside_min_pct": 13.18,
+          "upside_max_pct": 27.39
+        },
+        "rate_scenario_35": {
+          "erp_center": 0.05,
+          "risk_free": 0.035,
+          "fair_value": 10461.18,
+          "upside_pct": 36.31,
+          "upside_min_pct": 28.53,
+          "upside_max_pct": 44.36
+        }
+      }
+    },
+    {
+      "key": "nasdaq100",
+      "name": "나스닥 100",
+      "status": "NULL",
+      "computation_status": "ready",
+      "as_of": "2026-08-21",
+      "px_last": 29308.86,
+      "pbr": 9.161,
+      "book_value": 3199.31,
+      "roe_path": [
+        0.4286
+      ],
+      "roe_path_source": "weekly consensus grid (rim-index) — vendor index-level aggregate ROE (best_eps / book), used as published",
+      "roe_observed": 0.4286,
+      "roe_median_5y": 0.3157,
+      "roe_cap": {
+        "applied": false,
+        "multiple": 2.3,
+        "note": "spot 0.4286 is 1.36x its 5-year median, inside the 2.3x bound"
+      },
+      "retention": 0.7435,
+      "retention_source": "sheet payout 0.2565 (2026-08-03) [drift check: our derived payout 0.0953, -62.9% off]",
+      "payout_basis_comparison": {
+        "sheet_anchor": {
+          "value": 0.2565,
+          "basis": "printed dated sheet field",
+          "production_eligible": false,
+          "reason": "manual anchor; no sustainable refresh rule"
+        },
+        "forward_current": {
+          "value": 0.095284,
+          "basis": "current index dividend yield / forward benchmark earnings yield",
+          "production_eligible": false,
+          "reason": "forward denominator is observable but the model role has not passed held-out bounded validation"
+        },
+        "realised_trailing": {
+          "range": [
+            0.2004,
+            0.2411
+          ],
+          "mean": 0.2224,
+          "basis": "realised_cash_dividends_over_positive_net_income_current_membership",
+          "production_eligible": false,
+          "reason": [
+            "current_membership_applied_to_historical_years",
+            "trailing_realised_basis_not_forward_policy",
+            "loss_making_constituent_years_excluded"
+          ]
+        }
+      },
+      "payout_candidate_band": {
+        "basis_id": "realised_cash_dividends_over_positive_net_income_current_membership",
+        "generated_at": "2026-08-04T09:06:51.365Z",
+        "newest_statement_period": "2026-03-31",
+        "summary": {
+          "years": 4,
+          "mean": 0.2224,
+          "min": 0.2004,
+          "max": 0.2411,
+          "latest": 0.2004
+        },
+        "eligibility": {
+          "status": "measured_candidate_band_only",
+          "production_eligible": false,
+          "blocking_reasons": [
+            "current_membership_applied_to_historical_years",
+            "trailing_realised_basis_not_forward_policy",
+            "loss_making_constituent_years_excluded"
+          ]
+        }
+      },
+      "erp_center": 0.055,
+      "erp_source": "sheet 2026-08-03 [drift check: Damodaran US 0.0503, workbook April 1, 2026, 146 days old]",
+      "risk_free": 0.0469,
+      "risk_free_source": "observed US 10Y (FRED DGS10 via rim-index, daily)",
+      "discount_rate": 0.102264,
+      "discount_extrapolation": {
+        "gap": 0.004899999999999995,
+        "outside": true,
+        "beyondTolerance": false,
+        "note": "risk-free 0.0469 is 49bp above the fitted band 0.035~0.042 — within tolerance"
+      },
+      "publication": {
+        "status": "NULL",
+        "reasons": [
+          "material_input_latent:book_roe_basis",
+          "material_input_latent:payout",
+          "material_input_latent:risk_premium",
+          "fitted_relation_outside_domain:discount_relation",
+          "bounded_non_floor_holdout_required"
+        ]
+      },
+      "diagnostic": {
+        "rate_current": {
+          "erp_center": 0.055,
+          "risk_free": 0.0469,
+          "fair_value": 61496.94,
+          "upside_pct": 109.82,
+          "upside_min_pct": 99.94,
+          "upside_max_pct": 120.03
+        },
+        "rate_scenario_35": {
+          "erp_center": 0.055,
+          "risk_free": 0.035,
+          "fair_value": 69614.93,
+          "upside_pct": 137.52,
+          "upside_min_pct": 126.46,
+          "upside_max_pct": 148.94
+        }
+      }
+    },
+    {
+      "key": "nasdaq_composite",
+      "name": "나스닥 종합",
+      "status": "NULL",
+      "computation_status": "ready",
+      "as_of": "2026-08-21",
+      "px_last": 26180.46,
+      "pbr": 7.8355,
+      "book_value": 3341.26,
+      "roe_path": [
+        0.3252
+      ],
+      "roe_path_source": "spot forward ROE held constant (no consensus grid for this index)",
+      "roe_observed": 0.3252,
+      "roe_median_5y": 0.2286,
+      "roe_cap": {
+        "applied": false,
+        "multiple": 2.3,
+        "note": "spot 0.3252 is 1.42x its 5-year median, inside the 2.3x bound"
+      },
+      "retention": 0.782,
+      "retention_source": "sheet payout 0.218 (2026-08-03) [drift check unavailable: our derived payout is missing or out of bounds]",
+      "payout_basis_comparison": {
+        "sheet_anchor": {
+          "value": 0.218,
+          "basis": "printed dated sheet field",
+          "production_eligible": false,
+          "reason": "manual anchor; no sustainable refresh rule"
+        },
+        "forward_current": {
+          "value": null,
+          "basis": "current index dividend yield / forward benchmark earnings yield",
+          "production_eligible": false,
+          "reason": "forward denominator is observable but the model role has not passed held-out bounded validation"
+        },
+        "realised_trailing": {
+          "range": null,
+          "mean": null,
+          "basis": "realised_cash_dividends_over_positive_net_income_current_membership",
+          "production_eligible": false,
+          "reason": [
+            "candidate unavailable"
+          ]
+        }
+      },
+      "payout_candidate_band": null,
+      "erp_center": 0.055,
+      "erp_source": "sheet 2026-08-03 [drift check: Damodaran US 0.0503, workbook April 1, 2026, 146 days old]",
+      "risk_free": 0.0469,
+      "risk_free_source": "observed US 10Y (FRED DGS10 via rim-index, daily)",
+      "discount_rate": 0.102264,
+      "discount_extrapolation": {
+        "gap": 0.004899999999999995,
+        "outside": true,
+        "beyondTolerance": false,
+        "note": "risk-free 0.0469 is 49bp above the fitted band 0.035~0.042 — within tolerance"
+      },
+      "publication": {
+        "status": "NULL",
+        "reasons": [
+          "material_input_latent:book_roe_basis",
+          "material_input_latent:payout",
+          "material_input_latent:risk_premium",
+          "fitted_relation_outside_domain:discount_relation",
+          "bounded_non_floor_holdout_required"
+        ]
+      },
+      "diagnostic": {
+        "rate_current": {
+          "erp_center": 0.055,
+          "risk_free": 0.0469,
+          "fair_value": 32743.46,
+          "upside_pct": 25.07,
+          "upside_min_pct": 17.77,
+          "upside_max_pct": 32.63
+        },
+        "rate_scenario_35": {
+          "erp_center": 0.055,
+          "risk_free": 0.035,
+          "fair_value": 37264.16,
+          "upside_pct": 42.34,
+          "upside_min_pct": 34.18,
+          "upside_max_pct": 50.79
+        }
+      }
+    },
+    {
+      "key": "russell2000",
+      "name": "러셀 2000",
+      "status": "NULL",
+      "computation_status": "ready",
+      "as_of": "2026-08-21",
+      "px_last": 3017.87,
+      "pbr": 2.6187,
+      "book_value": 1152.43,
+      "roe_path": [
+        0.0343
+      ],
+      "roe_path_source": "spot forward ROE held constant (no consensus grid for this index)",
+      "roe_observed": 0.0343,
+      "roe_median_5y": 0.0896,
+      "roe_cap": {
+        "applied": false,
+        "multiple": 2.3,
+        "note": "spot 0.0343 is 0.38x its 5-year median, inside the 2.3x bound"
+      },
+      "retention": 0.955,
+      "retention_source": "sheet payout 0.045 (2025-12-09 grid, implied by the captured cells) [drift check unavailable: our derived payout is missing or out of bounds]",
+      "payout_basis_comparison": {
+        "sheet_anchor": {
+          "value": 0.045,
+          "basis": "printed dated sheet field",
+          "production_eligible": false,
+          "reason": "manual anchor; no sustainable refresh rule"
+        },
+        "forward_current": {
+          "value": null,
+          "basis": "current index dividend yield / forward benchmark earnings yield",
+          "production_eligible": false,
+          "reason": "forward denominator is observable but the model role has not passed held-out bounded validation"
+        },
+        "realised_trailing": {
+          "range": null,
+          "mean": null,
+          "basis": "realised_cash_dividends_over_positive_net_income_current_membership",
+          "production_eligible": false,
+          "reason": [
+            "candidate unavailable"
+          ]
+        }
+      },
+      "payout_candidate_band": null,
+      "erp_center": 0.045,
+      "erp_source": "sheet 2025-12-09 [drift check: Damodaran US 0.0503, workbook April 1, 2026, 146 days old]",
+      "risk_free": 0.0469,
+      "risk_free_source": "observed US 10Y (FRED DGS10 via rim-index, daily)",
+      "discount_rate": 0.102264,
+      "discount_extrapolation": {
+        "gap": 0.004899999999999995,
+        "outside": true,
+        "beyondTolerance": false,
+        "note": "risk-free 0.0469 is 49bp above the fitted band 0.035~0.042 — within tolerance"
+      },
+      "publication": {
+        "status": "NULL",
+        "reasons": [
+          "material_input_latent:book_roe_basis",
+          "material_input_latent:payout",
+          "material_input_latent:risk_premium",
+          "fitted_relation_outside_domain:discount_relation",
+          "bounded_non_floor_holdout_required"
+        ]
+      },
+      "diagnostic": {
+        "rate_current": {
+          "erp_center": 0.045,
+          "risk_free": 0.0469,
+          "fair_value": 379.09,
+          "upside_pct": -87.44,
+          "upside_min_pct": -91.12,
+          "upside_max_pct": -83.54
+        },
+        "rate_scenario_35": {
+          "erp_center": 0.045,
+          "risk_free": 0.035,
+          "fair_value": 493.39,
+          "upside_pct": -83.65,
+          "upside_min_pct": -87.74,
+          "upside_max_pct": -79.33
+        }
+      }
+    },
+    {
+      "key": "kospi",
+      "name": "코스피",
+      "status": "NULL",
+      "computation_status": "ready",
+      "as_of": "2026-08-21",
+      "px_last": 6912.95,
+      "pbr": 1.717,
+      "book_value": 4026.18,
+      "roe_path": [
+        0.2341
+      ],
+      "roe_path_source": "weekly consensus grid (rim-index) — vendor index-level aggregate ROE (best_eps / book), used as published",
+      "roe_observed": 0.3112,
+      "roe_median_5y": 0.1018,
+      "roe_cap": {
+        "applied": true,
+        "multiple": 2.3,
+        "note": "spot 0.3112 is 3.06x its 5-year median of 0.1018; capped to 0.2341 at the 2.3x bound"
+      },
+      "retention": 0.6211,
+      "retention_source": "sheet payout 0.3789 (2026-08-03) [drift check: our derived payout 0.0653, -82.8% off]",
+      "payout_basis_comparison": {
+        "sheet_anchor": {
+          "value": 0.3789,
+          "basis": "printed dated sheet field",
+          "production_eligible": false,
+          "reason": "manual anchor; no sustainable refresh rule"
+        },
+        "forward_current": {
+          "value": 0.065278,
+          "basis": "current index dividend yield / forward benchmark earnings yield",
+          "production_eligible": false,
+          "reason": "forward denominator is observable but the model role has not passed held-out bounded validation"
+        },
+        "realised_trailing": {
+          "range": [
+            0.2049,
+            0.345
+          ],
+          "mean": 0.2543,
+          "basis": "realised_cash_dividends_over_positive_net_income_current_membership",
+          "production_eligible": false,
+          "reason": [
+            "current_membership_applied_to_historical_years",
+            "trailing_realised_basis_not_forward_policy",
+            "loss_making_constituent_years_excluded",
+            "exact_historical_index_membership_unavailable"
+          ]
+        }
+      },
+      "payout_candidate_band": {
+        "basis_id": "realised_cash_dividends_over_positive_net_income_current_membership",
+        "generated_at": "2026-08-04T09:06:51.365Z",
+        "newest_statement_period": "2025-12-31",
+        "summary": {
+          "years": 4,
+          "mean": 0.2543,
+          "min": 0.2049,
+          "max": 0.345,
+          "latest": 0.2049
+        },
+        "eligibility": {
+          "status": "measured_candidate_band_only",
+          "production_eligible": false,
+          "blocking_reasons": [
+            "current_membership_applied_to_historical_years",
+            "trailing_realised_basis_not_forward_policy",
+            "loss_making_constituent_years_excluded",
+            "exact_historical_index_membership_unavailable"
+          ]
+        }
+      },
+      "erp_center": 0.12,
+      "erp_source": "sheet 2026-08-03; reproduces his published 10,000~12,000 under the solved formula (10,074), whereas Damodaran 5.49% gives 15,634 [drift check: Damodaran KR 0.0549, workbook April 1, 2026, 146 days old]",
+      "risk_free": 0.0438,
+      "risk_free_source": "observed KRX KTS 10Y benchmark government bond 0.04376 (as of 2026-08-21, fenok-edge-korea lane, daily)",
+      "discount_rate": 0.100506,
+      "discount_extrapolation": {
+        "gap": 0.0017599999999999977,
+        "outside": true,
+        "beyondTolerance": false,
+        "note": "risk-free 0.0438 is 18bp above the fitted band 0.035~0.042 — within tolerance"
+      },
+      "publication": {
+        "status": "NULL",
+        "reasons": [
+          "material_input_latent:book_roe_basis",
+          "material_input_latent:payout",
+          "material_input_latent:risk_premium",
+          "fitted_relation_outside_domain:discount_relation",
+          "bounded_non_floor_holdout_required"
+        ]
+      },
+      "diagnostic": {
+        "rate_current": {
+          "erp_center": 0.12,
+          "risk_free": 0.0438,
+          "fair_value": 10288.41,
+          "upside_pct": 48.83,
+          "upside_min_pct": 34.63,
+          "upside_max_pct": 63.5
+        },
+        "rate_scenario_35": {
+          "erp_center": 0.12,
+          "risk_free": 0.035,
+          "fair_value": 11515.95,
+          "upside_pct": 66.59,
+          "upside_min_pct": 51.26,
+          "upside_max_pct": 82.43
+        }
+      }
+    },
+    {
+      "key": "philadelphia_semi",
+      "name": "필라델피아 반도체",
+      "status": "NULL",
+      "computation_status": "ready",
+      "as_of": "2026-08-21",
+      "px_last": 11740.37,
+      "pbr": 10.8088,
+      "book_value": 1086.19,
+      "roe_path": [
+        0.5336
+      ],
+      "roe_path_source": "weekly consensus grid (rim-index) — vendor index-level aggregate ROE (best_eps / book), used as published",
+      "roe_observed": 0.5505,
+      "roe_median_5y": 0.232,
+      "roe_cap": {
+        "applied": true,
+        "multiple": 2.3,
+        "note": "spot 0.5505 is 2.37x its 5-year median of 0.232; capped to 0.5336 at the 2.3x bound"
+      },
+      "retention": 0.8877,
+      "retention_source": "observed derived payout_ratio 0.1124 — no sheet anchor for this index",
+      "payout_basis_comparison": {
+        "sheet_anchor": {
+          "value": null,
+          "basis": "printed dated sheet field",
+          "production_eligible": false,
+          "reason": "manual anchor; no sustainable refresh rule"
+        },
+        "forward_current": {
+          "value": 0.11235,
+          "basis": "current index dividend yield / forward benchmark earnings yield",
+          "production_eligible": false,
+          "reason": "forward denominator is observable but the model role has not passed held-out bounded validation"
+        },
+        "realised_trailing": {
+          "range": [
+            0.2699,
+            0.3481
+          ],
+          "mean": 0.3069,
+          "basis": "realised_cash_dividends_over_positive_net_income_current_membership",
+          "production_eligible": false,
+          "reason": [
+            "current_membership_applied_to_historical_years",
+            "trailing_realised_basis_not_forward_policy",
+            "loss_making_constituent_years_excluded",
+            "published_anchor_instrument_identity_unresolved"
+          ]
+        }
+      },
+      "payout_candidate_band": {
+        "basis_id": "realised_cash_dividends_over_positive_net_income_current_membership",
+        "generated_at": "2026-08-04T09:06:51.365Z",
+        "newest_statement_period": "2026-03-31",
+        "summary": {
+          "years": 4,
+          "mean": 0.3069,
+          "min": 0.2699,
+          "max": 0.3481,
+          "latest": 0.2699
+        },
+        "eligibility": {
+          "status": "measured_candidate_band_only",
+          "production_eligible": false,
+          "blocking_reasons": [
+            "current_membership_applied_to_historical_years",
+            "trailing_realised_basis_not_forward_policy",
+            "loss_making_constituent_years_excluded",
+            "published_anchor_instrument_identity_unresolved"
+          ]
+        }
+      },
+      "erp_center": 0.055,
+      "erp_source": "estimated: NASDAQ-family centre, no dedicated sheet [drift check: Damodaran US 0.0503, workbook April 1, 2026, 146 days old]",
+      "risk_free": 0.0469,
+      "risk_free_source": "observed US 10Y (FRED DGS10 via rim-index, daily)",
+      "discount_rate": 0.102264,
+      "discount_extrapolation": {
+        "gap": 0.004899999999999995,
+        "outside": true,
+        "beyondTolerance": false,
+        "note": "risk-free 0.0469 is 49bp above the fitted band 0.035~0.042 — within tolerance"
+      },
+      "publication": {
+        "status": "NULL",
+        "reasons": [
+          "asset_identity_unverified",
+          "material_input_latent:book_roe_basis",
+          "material_input_latent:payout",
+          "material_input_latent:risk_premium",
+          "fitted_relation_outside_domain:discount_relation",
+          "bounded_non_floor_holdout_required"
+        ]
+      },
+      "diagnostic": {
+        "rate_current": {
+          "erp_center": 0.055,
+          "risk_free": 0.0469,
+          "fair_value": 59508.64,
+          "upside_pct": 406.87,
+          "upside_min_pct": 384.64,
+          "upside_max_pct": 429.84
+        },
+        "rate_scenario_35": {
+          "erp_center": 0.055,
+          "risk_free": 0.035,
+          "fair_value": 67464.34,
+          "upside_pct": 474.64,
+          "upside_min_pct": 449.65,
+          "upside_max_pct": 500.44
+        }
+      }
+    }
+  ],
+  "calibration_check": {
+    "description": "Computed Likely upside vs the source analyst's dated published outputs. diverged = refresh anchors from new material; never silently refit.",
+    "results": [
+      {
+        "key": "nasdaq100",
+        "evidence_id": "rim-df8e2e5aa81bfca036c8b547",
+        "evidence_label": "RIM",
+        "status": "constraint_satisfied",
+        "computed": 109.82,
+        "published": 30,
+        "target_kind": "lower_bound",
+        "floor_multiple": 3.6606666666666663,
+        "published_as_of": "2026-04-18",
+        "source": "https://yellow.kr/blog/economy-board/?mod=document&uid=1606"
+      },
+      {
+        "key": "kospi",
+        "evidence_id": "rim-7041d3d1604bd6d9b5683c04",
+        "evidence_label": "RIM",
+        "status": "within_tolerance",
+        "computed": 48.83,
+        "published": [
+          49.5,
+          49.5
+        ],
+        "target_kind": "point",
+        "floor_multiple": null,
+        "published_as_of": "2026-06-14",
+        "source": "https://yellow.kr/blog/economy-board/?mod=document&uid=1638"
+      }
+    ]
+  },
+  "constants_provenance": {
+    "price": {
+      "why": "the benchmark feed's index close, which matches the 현재지수 printed on his master tables to the decimal — same vendor, same close",
+      "refresh": "weekly conversion, automatic",
+      "kind": "observed"
+    },
+    "book_value": {
+      "why": "price divided by the benchmark feed's PBR. His master tables print a PBR too, and it is NOT this: feeding his displayed PBR misses his own published fair values by +14~41% while the feed's book reproduces them",
+      "refresh": "weekly conversion, automatic",
+      "kind": "observed"
+    },
+    "roe_cap": {
+      "why": "2.3x the index's own 5-year median was fitted on two KOSPI observations, one since withdrawn as FUNDAMENTAL rather than RIM; against the sole admissible KOSPI row it misses by -24.5%. It remains only in computation-ready rows for continuity and is not a sustainable publication rule",
+      "refresh": "replace only after a pre-declared candidate passes bounded held-out rows and every floor constraint in scripts/check-fenok-rim-calibration.mjs",
+      "kind": "fitted",
+      "open": "no admissible candidate remains after floors are removed from MAE and SOXX observations are excluded from the Philadelphia index"
+    },
+    "roe": {
+      "why": "the benchmark feed's index-level aggregate — recomputing best_eps/(price/PBR) reproduces it to 0.46bp, so it is earnings over book, not a cap-weighted mean of constituents (that returns 47.6% for the S&P against his 26.0%)",
+      "refresh": "weekly conversion, automatic",
+      "kind": "observed",
+      "open": "his long-run ROE is NOT this number and no mechanical transform of it reproduces his series — see calibration_check and docs/references/fenok-rim-formula-identification.md"
+    },
+    "risk_free_us": {
+      "why": "observed FRED DGS10 via rim-index inputs",
+      "refresh": "daily lane, automatic",
+      "kind": "observed"
+    },
+    "risk_free_kr": {
+      "why": "KRX KTS 10Y benchmark government bond captured by the fenok-edge-korea lane; the domestic rate is what his Korean sheets discount with",
+      "refresh": "daily lane, automatic; falls back to a dated 4.4% sheet value and says so in risk_free_source",
+      "kind": "observed"
+    },
+    "explicit_years": {
+      "why": "9 explicit years is the current fitted hypothesis and reproduces the 54 machine-linked cells under anchored book/payout inputs; the present suite does not independently identify N against alternatives",
+      "refresh": "only against new captured grids with frozen alternative-N tests",
+      "kind": "fitted"
+    },
+    "discount_rate": {
+      "why": "0.076 + 0.560 x risk-free. The risk premium does NOT enter discounting inside the candidate: on the captured grids a 1%p risk-free move shifts value 11.2% against 4.77% for a 1%p premium move. Conditional 54-cell reproduction is RMS 0.41% under anchored book/payout inputs",
+      "refresh": "only against new captured grids",
+      "kind": "fitted",
+      "open": "the coefficient has no identified mechanism and is calibrated only over risk-free 3.5~4.2%; conditional reproduction does not identify the full level model"
+    },
+    "grid_step": {
+      "why": "0.5%p row and column spacing printed on every captured sheet",
+      "refresh": "manual with new sheets",
+      "kind": "read"
+    },
+    "rate_scenario": {
+      "why": "the 3.5% 10Y alternate column printed on every captured index sheet",
+      "refresh": "manual with new sheets",
+      "kind": "read"
+    },
+    "fair_value_definition": {
+      "why": "the centre cell, not the mean of nine. His sheets print both — 상승여력 적정가 and 평균 — and his master tables' 적정지수 matches the centre: his week1 S&P grid centres on 7,193 against the table's 7,195",
+      "refresh": "manual with new sheets",
+      "kind": "read"
+    },
+    "erp_centers": {
+      "why": "read off dated sheets per index. Damodaran and beta substitutions failed as direct replacements, but the premium is not separately identified from payout; it remains an anchor rather than a sustainable derived rule",
+      "refresh": "manual with new sheets until an ex-ante payout estimator and bounded holdouts identify a replacement",
+      "kind": "anchor",
+      "open": "premium and payout trade off; never select either by minimising the same outputs later used to score it"
+    },
+    "retention": {
+      "why": "1 minus the payout printed on dated sheets. The engine now exposes filings-based trailing and current-forward candidates beside that anchor, but does not promote either candidate into the valuation because their denominator, horizon, and historical-membership bases are not production-eligible",
+      "refresh": "daily candidate history plus manual sheet anchor; production replacement requires a pre-declared basis and held-out bounded validation",
+      "kind": "anchor",
+      "open": "the payout-history candidates are comparison evidence only; the valuation still consumes the dated sheet anchor"
+    },
+    "discount_extrapolation_guard": {
+      "why": "the discount relation is calibrated over risk-free 3.5~4.2% and fails in the 2021 low-rate grid across the tested payout band: at Korean 10Y near 1.7%, the grid implies discount 5.04~6.61% for payout 60~5%, while the linear relation returns 8.55%. The previously quoted 5.6% point hid a 39.35% payout assumption",
+      "refresh": "widens only when a captured grid at a new rate extends the calibration",
+      "kind": "fitted"
+    },
+    "calibration_anchors": {
+      "why": "dated outputs admitted only when the evidence ledger labels the exact sentence RIM and its raw value is not ambiguous; bottom-up, fundamental, and model-unnamed values are quarantined",
+      "refresh": "he publishes weekly; scripts/check-fenok-rim-calibration.mjs scores candidate inputs against the whole admissible series",
+      "kind": "target"
+    }
+  },
+  "disclaimer": "Model-implied fair values under stated assumptions. Not price targets, not investment advice."
+}

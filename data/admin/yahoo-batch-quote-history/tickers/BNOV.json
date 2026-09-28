@@ -25,65 +25,104 @@
       "run_id": "29875696340",
       "schedule": "0 22 * * 2",
       "shard": "2/6"
+    },
+    {
+      "attempts_used": 1,
+      "event_name": "schedule",
+      "failures": [],
+      "latency_ms": 659,
+      "natural": true,
+      "observed_at": "2026-08-05T19:49:13Z",
+      "outcome": "fresh",
+      "run_attempt": 1,
+      "run_id": "31041046015",
+      "schedule": "7 18 * * 0-5",
+      "shard": "45/72"
+    },
+    {
+      "attempts_used": 1,
+      "event_name": "schedule",
+      "failures": [],
+      "latency_ms": 1045,
+      "natural": true,
+      "observed_at": "2026-08-12T19:14:55Z",
+      "outcome": "fresh",
+      "run_attempt": 1,
+      "run_id": "31631524598",
+      "schedule": "7 18 * * 0-5",
+      "shard": "45/72"
+    },
+    {
+      "attempts_used": 1,
+      "event_name": "workflow_dispatch",
+      "failures": [],
+      "latency_ms": 475,
+      "natural": false,
+      "observed_at": "2026-09-28T01:17:59Z",
+      "outcome": "fresh",
+      "run_attempt": 1,
+      "run_id": "36365270594",
+      "schedule": "",
+      "shard": ""
     }
   ],
   "current": {
-    "fetched_at": "2026-07-21T23:05:15Z",
-    "history_as_of": "2026-07-21",
+    "fetched_at": "2026-09-28T01:30:24Z",
+    "history_as_of": "2026-09-25",
     "path": "data/yf/finance/BNOV.json",
-    "payload_sha256": "b1425681788961d7d5ec6af364ba2a0d1bc4a8e2e063627152c1709caf86eea6",
-    "quote_as_of": "2026-07-21T19:37:54Z",
-    "source_as_of": "2026-07-21"
+    "payload_sha256": "c2233db77b9bc459162e8aa5379cc8f664601167e2dee94bc9bcb8940abaa240",
+    "quote_as_of": "2026-09-25T19:37:07Z",
+    "source_as_of": "2026-09-25"
   },
   "discovered_from": [
     "stockanalysis_etf"
   ],
   "last_attempt": {
     "attempts_used": 1,
-    "event_name": "schedule",
+    "event_name": "workflow_dispatch",
     "failures": [],
-    "latency_ms": 1461,
-    "natural": true,
-    "observed_at": "2026-07-21T23:04:26Z",
+    "latency_ms": 475,
+    "natural": false,
+    "observed_at": "2026-09-28T01:17:59Z",
     "outcome": "fresh",
     "run_attempt": 1,
-    "run_id": "29875696340",
-    "schedule": "0 22 * * 2",
-    "shard": "2/6"
+    "run_id": "36365270594",
+    "schedule": "",
+    "shard": ""
   },
   "lkg": {
-    "fetched_at": "2026-06-29T23:08:52Z",
-    "history_as_of": "2026-06-29",
+    "fetched_at": "2026-08-12T19:17:09Z",
+    "history_as_of": "2026-08-12",
     "path": "data/admin/yahoo-batch-quote-history/lkg/BNOV.json",
-    "payload_sha256": "c696b94acc98b1aad241ccbed5007915a17c308cd54119aa81baacf0fbbbcf79",
-    "quote_as_of": null,
-    "source_as_of": "2026-06-29"
+    "payload_sha256": "8696fde99c463b8ddf09bfe23cf9f7d3948661f3a88273d625cebc28cbd9ae1b",
+    "quote_as_of": "2026-08-12T16:44:25Z",
+    "source_as_of": "2026-08-12"
   },
   "promotion_contract": "provider_observation/v2",
   "provider_observation": {
-    "event_name": "schedule",
-    "history_as_of": "2026-07-21",
-    "observed_at": "2026-07-21T23:04:26Z",
-    "payload_sha256": "9845fba0d189b13708930f1bdbc8b41b94f6390927f084e5a47ea759a6c4752a",
-    "quote_as_of": "2026-07-21T19:37:54Z",
+    "event_name": "workflow_dispatch",
+    "history_as_of": "2026-09-25",
+    "observed_at": "2026-09-28T01:17:59Z",
+    "payload_sha256": "92e05789dae82b1bd0a293d9b070225fac102fac21e545961a76acdc6b42905c",
+    "quote_as_of": "2026-09-25T19:37:07Z",
     "run_attempt": 1,
-    "run_id": "29875696340",
+    "run_id": "36365270594",
     "schema_version": "provider_observation/v2",
-    "source_as_of": "2026-07-21"
+    "source_as_of": "2026-09-25"
   },
   "resolution_state": "fresh_primary",
   "retry": false,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "stale": {
-    "age_business_days": 9,
-    "classified_at": "2026-07-13T04:33:56Z",
-    "classified_run_id": "29224221077",
+    "age_business_days": 7,
+    "classified_at": "2026-08-21T23:43:33Z",
+    "classified_run_id": "32537807621",
     "expected_resolution": "next_natural_yahoo_run",
     "max_business_days": 6,
-    "message": "BNOV holds LKG because Yahoo source date 2026-06-29 is 9 business days old, beyond the 6-day bound; it will retry on the next natural Yahoo run.",
+    "message": "BNOV holds LKG because Yahoo source date 2026-08-12 is 7 business days old, beyond the 6-day bound; it will retry on the next natural Yahoo run.",
     "reason": "source_age_exceeds_lane_bound",
-    "source_as_of": "2026-06-29"
+    "source_as_of": "2026-08-12"
   },
   "ticker": "BNOV",
-  "updated_at": "2026-07-21T23:04:26Z"
+  "updated_at": "2026-09-28T01:17:59Z"
 }

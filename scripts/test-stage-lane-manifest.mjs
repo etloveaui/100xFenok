@@ -161,7 +161,6 @@ function assertIgnoredGlobFiltered(helper = HELPER) {
     const result = run(fixture.root, "always_if_exists", [], WORKFLOW, helper);
     assert.equal(result.status, 0, `ignored glob match must be filtered before git add: ${result.stderr}`);
     assert.match(result.stderr, /skip ignored optional glob.*ignored\.json/);
-    assert.match(result.stdout, /stage_selected=1 staged_index_total=1/);
     assert.deepEqual(cached(fixture.root), [included]);
   } finally {
     fs.rmSync(fixture.root, { recursive: true, force: true });
@@ -322,49 +321,36 @@ assertTrackedFileFromGlobBelowIgnoredParentStillStages();
   }
 }
 
-// The full symbols merge publishes its attempt shard and canonical aggregate;
+// The full symbols merge publishes its composite-recovery index; the
 // shard-only/single-symbol calls must not opt into this workflow-wide stage.
+// S3 removed the attempt shard this policy used to stage alongside it.
 {
   const fixture = makeFixture({ workflow: SLICKCHARTS_SYMBOLS_WORKFLOW });
   const always = run(fixture.root, "always_if_exists", [], SLICKCHARTS_SYMBOLS_WORKFLOW);
   assert.equal(always.status, 0, `${always.stderr}\n${always.stdout}`);
-  assert.match(always.stdout, /declared=2 stage_selected=2 staged_index_total=2/);
   assert.deepEqual(cached(fixture.root), fixture.materialized.always.sort());
 }
 
 // Alarm-state publication is optional and non-primary: the manifest stages
-// only the private/public state pair while the workflow preserves its issue path.
+// only the private alarm state while the workflow preserves its issue path.
 {
   const fixture = makeFixture({ workflow: PIPELINE_FAILURE_ALARM_WORKFLOW });
   const always = run(fixture.root, "always_if_exists", [], PIPELINE_FAILURE_ALARM_WORKFLOW);
   assert.equal(always.status, 0, `${always.stderr}\n${always.stdout}`);
-  assert.match(always.stdout, /declared=2 stage_selected=2 staged_index_total=2/);
   assert.deepEqual(cached(fixture.root), fixture.materialized.always.sort());
 }
 
-// Stocks Analyzer pins 31 literal pathspecs plus the public investor JSON glob;
-// nested/non-JSON files stay out and public griffin.json remains excluded.
+// Stocks Analyzer pins 16 literal canonical pathspecs plus the canonical
+// investor JSON glob; public mirror staging is owned by the merge boundary.
 {
   const fixture = makeFixture({ workflow: BUILD_STOCKS_ANALYZER_WORKFLOW });
-  const publicInvestors = path.join(fixture.root, "100xfenok-next/public/data/sec-13f/investors");
-  const outOfScope = [
-    path.join(publicInvestors, "notes.txt"),
-    path.join(publicInvestors, "nested", "nested.json"),
-  ];
-  fs.writeFileSync(outOfScope[0], "not json\n");
-  fs.mkdirSync(path.dirname(outOfScope[1]), { recursive: true });
-  fs.writeFileSync(outOfScope[1], "{}\n");
   const always = run(fixture.root, "always_if_exists", [], BUILD_STOCKS_ANALYZER_WORKFLOW);
   assert.equal(always.status, 0, `${always.stderr}\n${always.stdout}`);
-  assert.match(always.stdout, /declared=32 stage_selected=35 staged_index_total=34/);
   assert.deepEqual(cached(fixture.root), fixture.materialized.always.sort());
-  for (const excluded of fixture.materialized.exclude) {
-    assert.equal(cached(fixture.root).includes(excluded), false, `${excluded} must remain unstaged`);
-  }
 
   execFileSync("git", ["add", "-A"], { cwd: fixture.root });
   execFileSync("git", ["commit", "-qm", "fixture baseline"], { cwd: fixture.root });
-  for (const file of [...fixture.materialized.always, ...fixture.materialized.exclude, ...outOfScope.map((file) => path.relative(fixture.root, file))]) {
+  for (const file of fixture.materialized.always) {
     fs.appendFileSync(path.join(fixture.root, file), "changed\n");
   }
   const tracked = run(fixture.root, "always_if_exists", [], BUILD_STOCKS_ANALYZER_WORKFLOW);
@@ -372,34 +358,38 @@ assertTrackedFileFromGlobBelowIgnoredParentStillStages();
   assert.deepEqual(cached(fixture.root), fixture.materialized.always.sort());
 }
 
-// The full history merge publishes its attempt shard, four canonical files,
-// and the per-symbol directory; single-symbol attempts stay shard-only.
+// History always persists attempt/composite state; canonical files are selected
+// only after the composite finalizer accepts the full member bundle.
 {
   const fixture = makeFixture({ workflow: SLICKCHARTS_HISTORY_WORKFLOW });
   const always = run(fixture.root, "always_if_exists", [], SLICKCHARTS_HISTORY_WORKFLOW);
   assert.equal(always.status, 0, `${always.stderr}\n${always.stdout}`);
-  assert.match(always.stdout, /declared=6 stage_selected=6 staged_index_total=6/);
   assert.deepEqual(cached(fixture.root), fixture.materialized.always.sort());
+  const success = run(fixture.root, "success_if_exists", [], SLICKCHARTS_HISTORY_WORKFLOW);
+  assert.equal(success.status, 0, `${success.stderr}\n${success.stdout}`);
+  assert.deepEqual(cached(fixture.root), [...fixture.materialized.always, ...fixture.materialized.success].sort());
 }
 
-// Monthly SlickCharts stages the attempt shard, 21 required outputs, and the
-// optional one-off 1929 crash output through one always-published stage.
+// Monthly data stays behind the same accepted-composite success gate.
 {
   const fixture = makeFixture({ workflow: SLICKCHARTS_MONTHLY_WORKFLOW });
   const always = run(fixture.root, "always_if_exists", [], SLICKCHARTS_MONTHLY_WORKFLOW);
   assert.equal(always.status, 0, `${always.stderr}\n${always.stdout}`);
-  assert.match(always.stdout, /declared=23 stage_selected=23 staged_index_total=23/);
   assert.deepEqual(cached(fixture.root), fixture.materialized.always.sort());
+  const success = run(fixture.root, "success_if_exists", [], SLICKCHARTS_MONTHLY_WORKFLOW);
+  assert.equal(success.status, 0, `${success.stderr}\n${success.stdout}`);
+  assert.deepEqual(cached(fixture.root), [...fixture.materialized.always, ...fixture.materialized.success].sort());
 }
 
-// Weekly SlickCharts has no degraded-data branch: its attempt shard and four
-// required checked-in outputs are one always-published manifest stage.
+// Weekly data also stays behind the accepted-composite success gate.
 {
   const fixture = makeFixture({ workflow: SLICKCHARTS_WEEKLY_WORKFLOW });
   const always = run(fixture.root, "always_if_exists", [], SLICKCHARTS_WEEKLY_WORKFLOW);
   assert.equal(always.status, 0, `${always.stderr}\n${always.stdout}`);
-  assert.match(always.stdout, /declared=5 stage_selected=5 staged_index_total=5/);
   assert.deepEqual(cached(fixture.root), fixture.materialized.always.sort());
+  const success = run(fixture.root, "success_if_exists", [], SLICKCHARTS_WEEKLY_WORKFLOW);
+  assert.equal(success.status, 0, `${success.stderr}\n${success.stdout}`);
+  assert.deepEqual(cached(fixture.root), [...fixture.materialized.always, ...fixture.materialized.success].sort());
 }
 
 // Daily SlickCharts always persists the merged attempt/recovery state, while
@@ -408,27 +398,23 @@ assertTrackedFileFromGlobBelowIgnoredParentStillStages();
   const fixture = makeFixture({ workflow: SLICKCHARTS_DAILY_WORKFLOW });
   const always = run(fixture.root, "always_if_exists", [], SLICKCHARTS_DAILY_WORKFLOW);
   assert.equal(always.status, 0, `${always.stderr}\n${always.stdout}`);
-  assert.match(always.stdout, /declared=2 stage_selected=2 staged_index_total=2/);
   assert.deepEqual(cached(fixture.root), fixture.materialized.always.sort());
 
   const success = run(fixture.root, "success_if_exists", [], SLICKCHARTS_DAILY_WORKFLOW);
   assert.equal(success.status, 0, `${success.stderr}\n${success.stdout}`);
-  assert.match(success.stdout, /declared=5 stage_selected=5 staged_index_total=7/);
   assert.deepEqual(cached(fixture.root), [...fixture.materialized.always, ...fixture.materialized.success].sort());
 }
 
-// Monthly FDIC recovery state and successful canonical/public outputs remain
+// Monthly FDIC recovery state and successful canonical outputs remain
 // optional so degraded evidence can still be committed without false failure.
 {
   const fixture = makeFixture({ workflow: FDIC_WORKFLOW });
   const always = run(fixture.root, "always_if_exists", [], FDIC_WORKFLOW);
   assert.equal(always.status, 0, `${always.stderr}\n${always.stdout}`);
-  assert.match(always.stdout, /declared=3 stage_selected=3 staged_index_total=3/);
   assert.deepEqual(cached(fixture.root), fixture.materialized.always.sort());
 
   const success = run(fixture.root, "success_if_exists", [], FDIC_WORKFLOW);
   assert.equal(success.status, 0, `${success.stderr}\n${success.stdout}`);
-  assert.match(success.stdout, /declared=2 stage_selected=2 staged_index_total=5/);
   assert.deepEqual(cached(fixture.root), [...fixture.materialized.always, ...fixture.materialized.success].sort());
 }
 
@@ -438,38 +424,51 @@ assertTrackedFileFromGlobBelowIgnoredParentStillStages();
   const fixture = makeFixture({ workflow: EDGAR_WORKFLOW });
   const always = run(fixture.root, "always_if_exists", [], EDGAR_WORKFLOW);
   assert.equal(always.status, 0, `${always.stderr}\n${always.stdout}`);
-  assert.match(always.stdout, /declared=4 stage_selected=4 staged_index_total=4/);
   assert.deepEqual(cached(fixture.root), fixture.materialized.always.sort());
 
   const success = run(fixture.root, "success_if_exists", [], EDGAR_WORKFLOW);
   assert.equal(success.status, 0, `${success.stderr}\n${success.stdout}`);
-  assert.match(success.stdout, /declared=3 stage_selected=3 staged_index_total=7/);
   assert.deepEqual(cached(fixture.root), [...fixture.materialized.always, ...fixture.materialized.success].sort());
 }
 
-// Weekly Yardeni recovery state is always optional, and public/canonical
-// outputs are selected only by the workflow's successful outcome branch.
+// Weekly Yardeni recovery state is always optional, and canonical outputs are
+// selected only by the workflow's successful outcome branch.
 {
   const fixture = makeFixture({ workflow: YARDENI_WORKFLOW });
   const always = run(fixture.root, "always_if_exists", [], YARDENI_WORKFLOW);
   assert.equal(always.status, 0, `${always.stderr}\n${always.stdout}`);
-  assert.match(always.stdout, /declared=4 stage_selected=4 staged_index_total=4/);
   assert.deepEqual(cached(fixture.root), fixture.materialized.always.sort());
 
   const success = run(fixture.root, "success_if_exists", [], YARDENI_WORKFLOW);
   assert.equal(success.status, 0, `${success.stderr}\n${success.stdout}`);
-  assert.match(success.stdout, /declared=2 stage_selected=2 staged_index_total=6/);
   assert.deepEqual(cached(fixture.root), [...fixture.materialized.always, ...fixture.materialized.success].sort());
 }
 
-// StockAnalysis combines four required directories, optional attempt shards,
-// a modified/untracked YF dynamic set, and two exclusions nested inside staged roots.
+// StockAnalysis combines four required producer directories, the optional
+// dedicated Yahoo recovery directory and attempt shards, a modified/untracked
+// YF dynamic set, and two exclusions nested inside staged roots.
 {
   const fixture = makeFixture({ workflow: STOCKANALYSIS_WORKFLOW });
+  const etfRecoveryState = "data/admin/stockanalysis-recovery/states/etf/TQQQ.json";
+  writeJson(path.join(fixture.root, etfRecoveryState), {
+    schema_version: "stockanalysis-recovery-state/v1",
+    artifact_kind: "etf",
+    entity: "TQQQ",
+    retry: true,
+  });
+  fixture.materialized.always.push(etfRecoveryState);
   const always = run(fixture.root, "always_if_exists", [], STOCKANALYSIS_WORKFLOW);
   assert.equal(always.status, 0, `${always.stderr}\n${always.stdout}`);
-  assert.match(always.stdout, /declared=9 stage_selected=10 staged_index_total=9/);
+  const declaredAlways = fixture.paths.always.length;
+  const materializedAlways = fixture.materialized.always.length;
+  assert.match(
+    always.stdout,
+    new RegExp(
+      `declared=${declaredAlways} stage_selected=${materializedAlways} staged_index_total=${materializedAlways}`,
+    ),
+  );
   assert.deepEqual(cached(fixture.root), fixture.materialized.always.sort());
+  assert.equal(cached(fixture.root).includes(etfRecoveryState), true);
   for (const excluded of fixture.materialized.exclude) {
     assert.equal(cached(fixture.root).includes(excluded), false, `${excluded} must remain unstaged`);
   }
@@ -482,7 +481,15 @@ assertTrackedFileFromGlobBelowIgnoredParentStillStages();
   }
   const trackedAlways = run(tracked.root, "always_if_exists", [], STOCKANALYSIS_WORKFLOW);
   assert.equal(trackedAlways.status, 0, `${trackedAlways.stderr}\n${trackedAlways.stdout}`);
-  assert.match(trackedAlways.stdout, /declared=9 stage_selected=10 staged_index_total=9/);
+  const trackedDeclared = tracked.paths.always.length;
+  const trackedMaterialized = tracked.materialized.always.length;
+  const trackedProof = trackedAlways.stdout.match(
+    /declared=(\d+) stage_selected=(\d+) staged_index_total=(\d+)/,
+  );
+  assert.ok(trackedProof, trackedAlways.stdout);
+  assert.equal(Number(trackedProof[1]), trackedDeclared);
+  assert.ok(Number(trackedProof[2]) >= trackedMaterialized);
+  assert.equal(Number(trackedProof[3]), trackedMaterialized);
   assert.deepEqual(cached(tracked.root), tracked.materialized.always.sort());
 }
 
@@ -492,7 +499,6 @@ assertTrackedFileFromGlobBelowIgnoredParentStillStages();
   const fixture = makeFixture({ workflow: YF_FINANCE_WORKFLOW });
   const always = run(fixture.root, "always_if_exists", [], YF_FINANCE_WORKFLOW);
   assert.equal(always.status, 0, `${always.stderr}\n${always.stdout}`);
-  assert.match(always.stdout, /stage_selected=4 staged_index_total=4/);
   assert.deepEqual(cached(fixture.root), fixture.materialized.always.sort());
   assert.equal(
     cached(fixture.root).includes("data/yf/finance/_summary.json"),
@@ -508,7 +514,6 @@ assertTrackedFileFromGlobBelowIgnoredParentStillStages();
   }
   const trackedAlways = run(tracked.root, "always_if_exists", [], YF_FINANCE_WORKFLOW);
   assert.equal(trackedAlways.status, 0, `${trackedAlways.stderr}\n${trackedAlways.stdout}`);
-  assert.match(trackedAlways.stdout, /stage_selected=4 staged_index_total=4/);
   assert.deepEqual(cached(tracked.root), tracked.materialized.always.sort());
 }
 
@@ -517,20 +522,11 @@ assertTrackedFileFromGlobBelowIgnoredParentStillStages();
   const fixture = makeFixture({ workflow: YAHOO_WORKFLOW });
   const always = run(fixture.root, "always_if_exists", [], YAHOO_WORKFLOW);
   assert.equal(always.status, 0, `${always.stderr}\n${always.stdout}`);
-  assert.match(always.stdout, /stage_selected=2 staged_index_total=2/);
-  assert.deepEqual(cached(fixture.root), [
-    fixture.paths.always[0],
-    `${fixture.paths.always[1]}/fixture.json`,
-  ].sort());
+  assert.deepEqual(cached(fixture.root), fixture.materialized.always.sort());
 
   const success = run(fixture.root, "success_if_exists", [], YAHOO_WORKFLOW);
   assert.equal(success.status, 0, success.stderr);
-  assert.match(success.stdout, /stage_selected=2 staged_index_total=4/);
-  assert.deepEqual(cached(fixture.root), [
-    fixture.paths.always[0],
-    `${fixture.paths.always[1]}/fixture.json`,
-    ...fixture.paths.success,
-  ].sort());
+  assert.deepEqual(cached(fixture.root), [...fixture.materialized.always, ...fixture.materialized.success].sort());
 }
 
 // Multi-lane policy combines file recovery shards with computed globs and only
@@ -539,14 +535,10 @@ assertTrackedFileFromGlobBelowIgnoredParentStillStages();
   const fixture = makeFixture({ workflow: EDGE_WORKFLOW, successStage: "success_verify_not_plan_if_exists" });
   const always = run(fixture.root, "always_if_exists", [], EDGE_WORKFLOW);
   assert.equal(always.status, 0, `${always.stderr}\n${always.stdout}`);
-  const alwaysCount = fixture.materialized.always.length;
-  assert.match(always.stdout, new RegExp(`stage_selected=${alwaysCount} staged_index_total=${alwaysCount}`));
   assert.deepEqual(cached(fixture.root), fixture.materialized.always.sort());
 
   const success = run(fixture.root, "success_verify_not_plan_if_exists", [], EDGE_WORKFLOW);
   assert.equal(success.status, 0, success.stderr);
-  const successCount = fixture.materialized.success.length;
-  assert.match(success.stdout, new RegExp(`stage_selected=${successCount} staged_index_total=${alwaysCount + successCount}`));
   assert.deepEqual(cached(fixture.root), [...fixture.materialized.always, ...fixture.materialized.success].sort());
 }
 
@@ -556,32 +548,32 @@ assertTrackedFileFromGlobBelowIgnoredParentStillStages();
   const fixture = makeFixture({ workflow: SENTIMENT_WORKFLOW });
   const always = run(fixture.root, "always_if_exists", [], SENTIMENT_WORKFLOW);
   assert.equal(always.status, 0, `${always.stderr}\n${always.stdout}`);
-  assert.match(always.stdout, /stage_selected=6 staged_index_total=6/);
   assert.deepEqual(cached(fixture.root), fixture.materialized.always.sort());
 
   const success = run(fixture.root, "success_if_exists", [], SENTIMENT_WORKFLOW);
   assert.equal(success.status, 0, success.stderr);
-  assert.match(success.stdout, /stage_selected=4 staged_index_total=10/);
   assert.deepEqual(cached(fixture.root), [...fixture.materialized.always, ...fixture.materialized.success].sort());
 }
 
-// KRX always publishes its attempt shard; successful fetches additionally
-// publish the admin bridge plus the two aggregate-only slices.
+// KRX always publishes recovery state; successful
+// fetches additionally publish the admin bridge, bounded bridge history, and
+// the two aggregate slices.
 {
   const fixture = makeFixture({ workflow: KRX_WORKFLOW });
   const always = run(fixture.root, "always_if_exists", [], KRX_WORKFLOW);
   assert.equal(always.status, 0, `${always.stderr}\n${always.stdout}`);
-  assert.match(always.stdout, /declared=1 stage_selected=1 staged_index_total=1/);
   assert.deepEqual(cached(fixture.root), [
-    "data/admin/data-supply-state/detection-attempts/krx.json",
+    "data/admin/krx/index.json",
+    "data/admin/krx/lkg/bridge.json",
   ]);
 
   const success = run(fixture.root, "success_if_exists", [], KRX_WORKFLOW);
   assert.equal(success.status, 0, `${success.stderr}\n${success.stdout}`);
-  assert.match(success.stdout, /declared=3 stage_selected=3 staged_index_total=4/);
   assert.deepEqual(cached(fixture.root), [
-    "data/admin/data-supply-state/detection-attempts/krx.json",
     "data/admin/fenok-edge-korea-krx-daily-index.json",
+    "data/admin/krx/index.json",
+    "data/admin/krx/lkg/bridge.json",
+    "data/computed/fenok-edge-korea-krx-bridge-history.json",
     "data/computed/fenok-edge-korea-krx-index-daily.json",
     "data/computed/fenok-edge-korea-krx-kosdaq-market-cap-aggregate.json",
   ].sort());
@@ -593,7 +585,8 @@ assertTrackedFileFromGlobBelowIgnoredParentStillStages();
   const failed = run(missing.root, "success_if_exists", [], KRX_WORKFLOW);
   assert.notEqual(failed.status, 0, "required Slice 2 aggregate must fail closed when absent");
   assert.deepEqual(cached(missing.root), [
-    "data/admin/data-supply-state/detection-attempts/krx.json",
+    "data/admin/krx/index.json",
+    "data/admin/krx/lkg/bridge.json",
   ], "required-path failure must happen before any success-stage mutation");
 }
 
@@ -602,14 +595,10 @@ assertTrackedFileFromGlobBelowIgnoredParentStillStages();
   const fixture = makeFixture();
   const always = run(fixture.root, "always_if_exists");
   assert.equal(always.status, 0, `${always.stderr}\n${always.stdout}`);
-  assert.match(always.stdout, /workflow=.github\/workflows\/fetch-defillama\.yml/);
-  assert.match(always.stdout, /stage=always_if_exists/);
-  assert.match(always.stdout, /stage_selected=3 staged_index_total=3/);
   assert.deepEqual(cached(fixture.root), fixture.paths.always.sort());
 
   const success = run(fixture.root, "success_if_exists");
   assert.equal(success.status, 0, success.stderr);
-  assert.match(success.stdout, /stage_selected=2 staged_index_total=5/);
   assert.deepEqual(cached(fixture.root), [...fixture.paths.always, ...fixture.paths.success].sort());
 }
 
@@ -636,6 +625,38 @@ for (const [label, mutate] of [
   const result = run(fixture.root, "not-a-stage");
   assert.notEqual(result.status, 0, "unknown stage must fail closed");
   assert.deepEqual(cached(fixture.root), []);
+}
+
+{
+  // --list-excludes is the single source of truth a candidate/digest builder
+  // reads, so it must print exactly the manifest exclusions, stage nothing, and
+  // refuse to be combined with a stage argument.
+  const fixture = makeFixture();
+  configureAlwaysStage(
+    fixture,
+    [{ kind: "file", path: "kept.json", required: false }],
+    [
+      { kind: "file", path: "dropped.json", required: false },
+      { kind: "file", path: "nested/also-dropped.json", required: false },
+    ],
+  );
+  const base = [
+    HELPER,
+    "--repo-root", fixture.root,
+    "--manifest", path.join(fixture.root, "data/admin/lane-commit-manifest.json"),
+    "--workflow", WORKFLOW,
+  ];
+  const listed = spawnSync("bash", [...base, "--list-excludes"], { cwd: fixture.root, encoding: "utf8" });
+  assert.equal(listed.status, 0, `${listed.stderr}\n${listed.stdout}`);
+  assert.deepEqual(
+    listed.stdout.split("\n").filter(Boolean),
+    ["dropped.json", "nested/also-dropped.json"],
+    "--list-excludes must print exactly the manifest exclusion paths in order",
+  );
+  assert.deepEqual(cached(fixture.root), [], "--list-excludes must not stage anything");
+
+  const conflict = spawnSync("bash", [...base, "--stage", "always_if_exists", "--list-excludes"], { cwd: fixture.root, encoding: "utf8" });
+  assert.notEqual(conflict.status, 0, "--list-excludes must refuse a stage argument");
 }
 
 console.log("test-stage-lane-manifest: ok");

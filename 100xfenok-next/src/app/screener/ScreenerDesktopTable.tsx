@@ -4,7 +4,6 @@ import { Fragment, type ReactNode } from "react";
 import MetricHelp from "@/components/MetricHelp";
 import type { ScreenerSortKey, SortDir, ScreenerStock } from "@/lib/screener/types";
 import type { ColumnPreset } from "@/lib/screener/filter-url";
-import StockDetailPanel from "./StockDetailPanel";
 
 export type ScreenerColumn = {
   key: ScreenerSortKey;
@@ -36,6 +35,8 @@ export type ScreenerDesktopTableProps = {
   sortKey: ScreenerSortKey;
   deselectPageRows: () => void;
   onResetFilters?: () => void;
+  returnTo?: string | null;
+  onBeforeNavigate?: () => void;
   onToggleExpandedTicker: (ticker: string) => void;
   renderCell: (stock: ScreenerStock, key: ScreenerSortKey, preset?: ColumnPreset) => ReactNode;
   renderGuruHolderBadge: (stock: ScreenerStock) => ReactNode;
@@ -78,7 +79,7 @@ export default function ScreenerDesktopTable({
     >
       <table className={cx("w-full min-w-[760px]", densityClass.table)}>
         <thead>
-          <tr className="sticky top-0 z-10 border-b border-[var(--c-line)] bg-[var(--c-panel)] text-[11px] font-black uppercase tracking-[0.08em] text-[var(--c-ink-2)]">
+          <tr className="sticky top-0 z-10 border-b border-[var(--c-line)] bg-[var(--c-panel)] text-[12px] font-black uppercase tracking-[0.08em] text-[var(--c-ink-2)]">
             <th className={cx("w-12 text-left", densityClass.headerCell)}>
               <label data-screener-checkbox-target onClick={(event) => event.stopPropagation()}>
                 <input
@@ -104,14 +105,14 @@ export default function ScreenerDesktopTable({
                       onClick={() => toggleSort(column.key)}
                       aria-label={`${column.label} 정렬 ${active ? (sortDir === "asc" ? "오름차순" : "내림차순") : "정렬 안 됨"}`}
                       className={cx(
-                        "inline-flex items-center gap-1 text-[var(--c-ink)] transition hover:text-[var(--c-ink)]",
+                        "inline-flex items-center gap-3 text-[var(--c-ink)] transition hover:text-[var(--c-ink)]",
                         column.align === "right" && "flex-row-reverse",
                       )}
                     >
                       {column.label}
-                      <span className="text-[9px]">{active ? (sortDir === "asc" ? "▲" : "▼") : "↕"}</span>
+                      <span className={active ? "text-[12px] text-[var(--c-ink)]" : "text-[12px] text-[var(--c-ink-2)]"}>{active ? (sortDir === "asc" ? "▲" : "▼") : "↕"}</span>
                     </button>
-                    <MetricHelp label={column.label} metricKey={column.key} showLabel={false} align={column.align === "right" ? "right" : "left"} />
+                    <MetricHelp label={column.label} metricKey={column.key} showLabel={false} align={column.align === "right" ? "right" : "left"} glyph="ⓘ" buttonSize="sm" />
                   </div>
                 </th>
               );
@@ -147,42 +148,32 @@ export default function ScreenerDesktopTable({
                       key={column.key}
                       className={cx(densityClass.bodyCell, column.align === "right" ? "text-right" : "text-left")}
                     >
-                      {column.key === "ticker" ? (
-                        <div className={cx("flex max-w-full items-center gap-1.5", densityClass.tickerCell)}>
-                          <button
-                            type="button"
-                            aria-expanded={expanded}
-                            aria-controls={detailId}
-                            aria-label={`${stock.ticker} 상세 ${expanded ? "접기" : "펼치기"}`}
-                            onClick={(event) => {
-                              event.stopPropagation();
-                              onToggleExpandedTicker(stock.ticker);
-                            }}
-                            className="inline-flex items-center gap-1 rounded-md text-left text-sm font-black text-[var(--c-ink)] transition hover:bg-[var(--c-surface-2)] focus:outline-none focus:ring-2 focus:ring-brand-interactive/40"
-                          >
-                            <span className="w-5 text-center text-[12px] text-[var(--c-ink-3)]" aria-hidden="true">{expanded ? "-" : "+"}</span>
-                            <span className="truncate">{stock.ticker}</span>
-                          </button>
-                          {renderGuruHolderBadge(stock)}
-                        </div>
-                      ) : renderCell(stock, column.key, preset)}
+                      <span className="group/screener-cell inline-flex w-full min-w-0 items-center gap-1">
+                        <span className="min-w-0 flex-1">
+                          {column.key === "ticker" ? (
+                            <div className={cx("flex max-w-full items-center gap-1.5", densityClass.tickerCell)}>
+                              <button
+                                type="button"
+                                aria-expanded={expanded}
+                                aria-controls={detailId}
+                                aria-label={`${stock.ticker} 상세 ${expanded ? "접기" : "펼치기"}`}
+                                onClick={(event) => {
+                                  event.stopPropagation();
+                                  onToggleExpandedTicker(stock.ticker);
+                                }}
+                                className="inline-flex items-center gap-1 rounded-md text-left text-sm font-black text-[var(--c-ink)] transition hover:bg-[var(--c-surface-2)] focus:outline-none focus:ring-2 focus:ring-brand-interactive/40"
+                              >
+                                <span className="w-5 text-center text-[12px] text-[var(--c-ink-3)]" aria-hidden="true">{expanded ? "-" : "+"}</span>
+                                <span className="truncate">{stock.ticker}</span>
+                              </button>
+                              {renderGuruHolderBadge(stock)}
+                            </div>
+                          ) : renderCell(stock, column.key, preset)}
+                        </span>
+                      </span>
                     </td>
                   ))}
                 </tr>
-                {expanded ? (
-                  <tr
-                    id={detailId}
-                    data-testid="screener-desktop-detail-row"
-                    data-ticker={stock.ticker}
-                    data-canvas-plus-detail-row={canvasPlusPreview ? "true" : undefined}
-                  >
-	                    <td colSpan={activeColumns.length + 1} className="p-0">
-	                      <div className={canvasPlusPreview ? "cp-screener-detail-shell" : undefined}>
-	                        <StockDetailPanel ticker={stock.ticker} stock={stock} canvasPlusPreview={canvasPlusPreview} />
-	                      </div>
-	                    </td>
-                  </tr>
-                ) : null}
               </Fragment>
             );
           })}

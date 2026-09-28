@@ -14,7 +14,6 @@ export const metadata: Metadata = {
 export default function StockAnalyzerNativePage() {
   return (
     <div
-      className="fnk-shell"
       data-stock-analyzer-native-surface="true"
       data-stock-analyzer-native-route-owner="native-dashboard"
     >

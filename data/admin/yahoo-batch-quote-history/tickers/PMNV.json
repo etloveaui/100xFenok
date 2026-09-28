@@ -1,0 +1,115 @@
+{
+  "attempts": [
+    {
+      "attempts_used": 1,
+      "event_name": "schedule",
+      "failures": [],
+      "latency_ms": 518,
+      "natural": true,
+      "observed_at": "2026-08-05T10:46:42Z",
+      "outcome": "fresh",
+      "run_attempt": 1,
+      "run_id": "30998672232",
+      "schedule": "7 8 * * 0-5",
+      "shard": "40/72"
+    },
+    {
+      "attempts_used": 1,
+      "event_name": "schedule",
+      "failures": [],
+      "latency_ms": 739,
+      "natural": true,
+      "observed_at": "2026-08-09T03:52:19Z",
+      "outcome": "fresh",
+      "run_attempt": 1,
+      "run_id": "31293276520",
+      "schedule": "7 2 * * 0-5",
+      "shard": "1/72"
+    },
+    {
+      "attempts_used": 1,
+      "event_name": "schedule",
+      "failures": [],
+      "latency_ms": 503,
+      "natural": true,
+      "observed_at": "2026-08-12T09:23:29Z",
+      "outcome": "fresh",
+      "run_attempt": 1,
+      "run_id": "31582524321",
+      "schedule": "7 8 * * 0-5",
+      "shard": "40/72"
+    },
+    {
+      "attempts_used": 1,
+      "event_name": "workflow_dispatch",
+      "failures": [],
+      "latency_ms": 486,
+      "natural": false,
+      "observed_at": "2026-09-28T06:02:24Z",
+      "outcome": "fresh",
+      "run_attempt": 1,
+      "run_id": "36367834787",
+      "schedule": "",
+      "shard": ""
+    }
+  ],
+  "current": {
+    "fetched_at": "2026-09-28T06:03:30Z",
+    "history_as_of": "2026-09-25",
+    "path": "data/yf/finance/PMNV.json",
+    "payload_sha256": "48f93eacc0c5a8f29c2fa8bae32cfcb9e108d9da6b6896f12f0c8b6a9392a1cb",
+    "quote_as_of": "2026-09-18T16:02:50Z",
+    "source_as_of": "2026-09-18T16:02:50Z"
+  },
+  "discovered_from": [
+    "stockanalysis_etf"
+  ],
+  "last_attempt": {
+    "attempts_used": 1,
+    "event_name": "workflow_dispatch",
+    "failures": [],
+    "latency_ms": 486,
+    "natural": false,
+    "observed_at": "2026-09-28T06:02:24Z",
+    "outcome": "fresh",
+    "run_attempt": 1,
+    "run_id": "36367834787",
+    "schedule": "",
+    "shard": ""
+  },
+  "lkg": {
+    "fetched_at": "2026-08-12T09:26:17Z",
+    "history_as_of": "2026-08-11",
+    "path": "data/admin/yahoo-batch-quote-history/lkg/PMNV.json",
+    "payload_sha256": "b5010b0674018b3a990ba9baf463a0f4eb2eaf9ade25eeaa697be82b69effaec",
+    "quote_as_of": "2026-08-05T15:08:35Z",
+    "source_as_of": "2026-08-05T15:08:35Z"
+  },
+  "promotion_contract": "provider_observation/v2",
+  "provider_observation": {
+    "event_name": "workflow_dispatch",
+    "history_as_of": "2026-09-25",
+    "observed_at": "2026-09-28T06:02:24Z",
+    "payload_sha256": "27ddb3e9849504e5307b1c27083d8c76dc41f77a28497b48012bbb2d3de9fd69",
+    "quote_as_of": "2026-09-18T16:02:50Z",
+    "run_attempt": 1,
+    "run_id": "36367834787",
+    "schema_version": "provider_observation/v2",
+    "source_as_of": "2026-09-18T16:02:50Z"
+  },
+  "resolution_state": "fresh_primary",
+  "retry": false,
+  "schema_version": "yahoo-batch-quote-history-state/v1",
+  "stale": {
+    "age_business_days": 7,
+    "classified_at": "2026-08-14T00:10:47Z",
+    "classified_run_id": "31755913658",
+    "expected_resolution": "next_natural_yahoo_run",
+    "max_business_days": 6,
+    "message": "PMNV holds LKG because Yahoo source date 2026-08-05T15:08:35Z is 7 business days old, beyond the 6-day bound; it will retry on the next natural Yahoo run.",
+    "reason": "source_age_exceeds_lane_bound",
+    "source_as_of": "2026-08-05T15:08:35Z"
+  },
+  "ticker": "PMNV",
+  "updated_at": "2026-09-28T06:02:24Z"
+}

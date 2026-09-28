@@ -23,7 +23,11 @@ DEFAULT_WORKFLOW = ".github/workflows/fetch-stockanalysis.yml"
 DEFAULT_LANE_MANIFEST = "data/admin/lane-commit-manifest.json"
 MAX_FILE_COUNT = 20_000
 MAX_TOTAL_BYTES = 750 * 1024 * 1024
-PUBLIC_PREFIX = "100xfenok-next/public/"
+# The Next.js public mirror tree is materialized by the shared projection
+# workflow, never by this source lane. The whole tree is structurally outside
+# the artifact boundary: creation ignores it before validation, extraction
+# still fails closed if it is injected into a manifest.
+PUBLIC_MIRROR_ROOT = "100xfenok-next/public"
 TRAILER_NUMBER = "StockAnalysis-Run-Number:"
 TRAILER_ATTEMPT = "StockAnalysis-Run-Attempt:"
 TRAILER_ID = "StockAnalysis-Run-ID:"
@@ -43,6 +47,61 @@ def sha256_file(path: Path) -> str:
         for chunk in iter(lambda: handle.read(1024 * 1024), b""):
             digest.update(chunk)
     return digest.hexdigest()
+
+
+def copy_file_consistently(
+    *,
+    source: Path,
+    target: Path,
+    rel: str,
+    size_at_hash: int,
+    digest_at_hash: str,
+    mtime_ns_at_hash: int,
+    inode_at_hash: int,
+) -> tuple[int, str, int, int, int]:
+    before_copy = source.lstat()
+    if (
+        before_copy.st_size != size_at_hash
+        or before_copy.st_mtime_ns != mtime_ns_at_hash
+        or before_copy.st_ino != inode_at_hash
+    ):
+        fail(
+            "artifact source changed after initial hash and before copy: "
+            f"{rel}; size_at_hash={size_at_hash}; size_before_copy={before_copy.st_size}"
+        )
+
+    target.parent.mkdir(parents=True, exist_ok=True)
+    digest = hashlib.sha256()
+    copied_size = 0
+    with source.open("rb") as source_handle, target.open("wb") as target_handle:
+        for chunk in iter(lambda: source_handle.read(1024 * 1024), b""):
+            target_handle.write(chunk)
+            digest.update(chunk)
+            copied_size += len(chunk)
+    shutil.copystat(source, target, follow_symlinks=False)
+
+    after_copy = source.lstat()
+    copied_digest = digest.hexdigest()
+    if (
+        after_copy.st_size != before_copy.st_size
+        or after_copy.st_mtime_ns != before_copy.st_mtime_ns
+        or after_copy.st_ino != before_copy.st_ino
+        or copied_size != after_copy.st_size
+        or copied_digest != digest_at_hash
+    ):
+        fail(
+            "artifact source changed while copying after initial hash: "
+            f"{rel}; size_at_hash={size_at_hash}; "
+            f"size_before_copy={before_copy.st_size}; "
+            f"size_after_copy={after_copy.st_size}; copied_size={copied_size}"
+        )
+    return (
+        copied_size,
+        copied_digest,
+        after_copy.st_size,
+        after_copy.st_mtime_ns,
+        after_copy.st_ino,
+    )
 
 
 def run_git(repo_root: Path, *args: str, check: bool = True) -> subprocess.CompletedProcess:
@@ -119,11 +178,16 @@ def is_runtime_lock_path(path: str) -> bool:
     return ".locks" in parts or (name.startswith(".") and name.endswith(".lock"))
 
 
+def is_public_mirror_path(path: str) -> bool:
+    normalized = normalize_rel(path)
+    return normalized == PUBLIC_MIRROR_ROOT or normalized.startswith(PUBLIC_MIRROR_ROOT + "/")
+
+
 def validate_allowed_path(path: str, specs: list[dict], excludes: list[dict]) -> None:
     path = normalize_rel(path)
     if is_runtime_lock_path(path):
         fail(f"runtime lock path is forbidden in StockAnalysis artifact: {path}")
-    if path.startswith(PUBLIC_PREFIX):
+    if is_public_mirror_path(path):
         fail(f"public path is forbidden in StockAnalysis artifact: {path}")
     if any(spec_matches(path, spec) for spec in excludes):
         fail(f"excluded path is forbidden in StockAnalysis artifact: {path}")
@@ -204,6 +268,8 @@ def seed_candidate(
             rel = source.relative_to(repo).as_posix()
             if rel in copied:
                 continue
+            if is_public_mirror_path(rel):
+                continue
             copy_source(source, candidate / rel)
             copied.add(rel)
     assert_regular_tree(candidate)
@@ -235,6 +301,8 @@ def repository_owned_files(repo: Path, specs: list[dict], excludes: list[dict]) 
             for leaf in leaves:
                 rel = normalize_rel(leaf.relative_to(repo).as_posix())
                 if is_runtime_lock_path(rel):
+                    continue
+                if is_public_mirror_path(rel):
                     continue
                 if any(spec_matches(rel, excluded) for excluded in excludes):
                     continue
@@ -269,6 +337,8 @@ def pack_artifact(
     for rel, path in all_leaves.items():
         if is_runtime_lock_path(rel):
             continue
+        if is_public_mirror_path(rel):
+            continue
         if any(spec_matches(rel, excluded) for excluded in excludes):
             source = repo / rel
             if not source.is_file() or sha256_file(source) != sha256_file(path):
@@ -279,16 +349,30 @@ def pack_artifact(
     missing = repository_owned_files(repo, specs, excludes) - set(leaves)
     if missing:
         fail(f"candidate deletion is forbidden: {sorted(missing)[0]}")
-    changed: list[tuple[str, Path, int, str]] = []
+    changed: list[tuple[str, Path, int, str, int, int]] = []
     total = 0
     for rel, path in sorted(leaves.items()):
         source = repo / rel
+        before_hash = path.lstat()
         digest = sha256_file(path)
-        if source.is_file() and sha256_file(source) == digest:
+        after_hash = path.lstat()
+        changed_during_hash = (
+            after_hash.st_size != before_hash.st_size
+            or after_hash.st_mtime_ns != before_hash.st_mtime_ns
+            or after_hash.st_ino != before_hash.st_ino
+        )
+        if not changed_during_hash and source.is_file() and sha256_file(source) == digest:
             continue
-        size = path.stat().st_size
+        size = before_hash.st_size
         total += size
-        changed.append((rel, path, size, digest))
+        changed.append((
+            rel,
+            path,
+            size,
+            digest,
+            before_hash.st_mtime_ns,
+            before_hash.st_ino,
+        ))
     if len(changed) > MAX_FILE_COUNT or total > MAX_TOTAL_BYTES:
         fail("artifact file count or total size exceeds the safety limit")
     if artifact.exists():
@@ -296,11 +380,54 @@ def pack_artifact(
     files_root = artifact / "files"
     files_root.mkdir(parents=True)
     file_rows = []
-    for rel, source, size, digest in changed:
+    packed_sources: list[tuple[str, Path, int, int, int]] = []
+    total = 0
+    for rel, source, size, digest, mtime_ns, inode in changed:
         target = files_root / rel
-        target.parent.mkdir(parents=True, exist_ok=True)
-        shutil.copy2(source, target)
-        file_rows.append({"path": rel, "sha256": digest, "size": size})
+        (
+            copied_size,
+            copied_digest,
+            source_size_after_copy,
+            source_mtime_after_copy,
+            source_inode_after_copy,
+        ) = copy_file_consistently(
+            source=source,
+            target=target,
+            rel=rel,
+            size_at_hash=size,
+            digest_at_hash=digest,
+            mtime_ns_at_hash=mtime_ns,
+            inode_at_hash=inode,
+        )
+        total += copied_size
+        if total > MAX_TOTAL_BYTES:
+            fail("artifact file count or total size exceeds the safety limit")
+        file_rows.append({"path": rel, "sha256": copied_digest, "size": copied_size})
+        packed_sources.append((
+            rel,
+            source,
+            source_size_after_copy,
+            source_mtime_after_copy,
+            source_inode_after_copy,
+        ))
+    for rel, source, size_after_copy, mtime_after_copy, inode_after_copy in packed_sources:
+        try:
+            before_manifest = source.lstat()
+        except FileNotFoundError:
+            fail(
+                "artifact source disappeared after copy and before manifest: "
+                f"{rel}; size_after_copy={size_after_copy}"
+            )
+        if (
+            before_manifest.st_size != size_after_copy
+            or before_manifest.st_mtime_ns != mtime_after_copy
+            or before_manifest.st_ino != inode_after_copy
+        ):
+            fail(
+                "artifact source changed after copy and before manifest: "
+                f"{rel}; size_after_copy={size_after_copy}; "
+                f"size_before_manifest={before_manifest.st_size}"
+            )
     manifest = {
         "protocol": PROTOCOL,
         "workflow": workflow,
@@ -474,7 +601,12 @@ def apply_artifact(
     assert_clean_targets(repo, manifest["paths"])
     reason = stale_reason(repo, manifest)
     if reason:
-        return {"status": "stale", "reason": reason, "paths": manifest["paths"]}
+        return {
+            "status": "stale",
+            "confirmation": "not_confirmed",
+            "reason": reason,
+            "paths": manifest["paths"],
+        }
     artifact = Path(artifact_root).resolve(strict=True)
     backups: dict[str, tuple[bytes, int] | None] = {}
     temp_paths: list[Path] = []
@@ -490,6 +622,7 @@ def apply_artifact(
             replace_fn(temp_path, target)
         return {
             "status": "applied",
+            "confirmation": "pending",
             "reason": None,
             "paths": manifest["paths"],
             "artifact_digest": artifact_digest,
@@ -511,6 +644,36 @@ def apply_artifact(
     finally:
         for temp_path in temp_paths:
             temp_path.unlink(missing_ok=True)
+
+
+def verify_artifact_readback(*, repo_root: Path, artifact_root: Path) -> dict:
+    """Confirm latest main still carries the exact packed candidate files."""
+    repo = Path(repo_root).resolve(strict=True)
+    artifact = external_root(repo, Path(artifact_root), "artifact root")
+    manifest_path = artifact / "manifest.json"
+    try:
+        context = json.loads(manifest_path.read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError) as exc:
+        fail(f"StockAnalysis artifact manifest is not valid JSON: {exc}")
+    if not isinstance(context, dict):
+        fail("StockAnalysis artifact manifest must be an object")
+    manifest = load_and_validate_artifact(
+        repo_root=repo,
+        artifact_root=artifact,
+        workflow=DEFAULT_WORKFLOW,
+        run_id=context.get("run_id"),
+        run_number=context.get("run_number"),
+        run_attempt=context.get("run_attempt"),
+        artifact_name=context.get("artifact_name"),
+    )
+    for row in manifest["files"]:
+        rel = normalize_rel(row["path"])
+        target = repo / rel
+        if target.is_symlink() or not target.is_file():
+            fail(f"StockAnalysis readback file is missing or unsafe: {rel}")
+        if target.stat().st_size != row["size"] or sha256_file(target) != row["sha256"]:
+            fail(f"StockAnalysis readback differs from packed candidate: {rel}")
+    return {"status": "confirmed", "confirmation": "confirmed", "reason": None, "paths": len(manifest["files"])}
 
 
 def audit_staged_paths(repo_root: Path, artifact_root: Path) -> None:
@@ -574,7 +737,7 @@ def write_outputs(path: str | None, result: dict) -> None:
     if not path:
         return
     with Path(path).open("a", encoding="utf-8") as handle:
-        for key in ("status", "reason"):
+        for key in ("status", "confirmation", "reason"):
             handle.write(f"{key}={str(result.get(key) or '')}\n")
 
 
@@ -585,9 +748,12 @@ def main() -> None:
     pack = subparsers.add_parser("pack")
     apply = subparsers.add_parser("apply")
     audit = subparsers.add_parser("audit-stage")
+    verify = subparsers.add_parser("verify-readback")
     for item in (seed, pack, apply, audit):
         item.add_argument("--repo-root", default=".")
         item.add_argument("--workflow", default=DEFAULT_WORKFLOW)
+    verify.add_argument("--repo-root", default=".")
+    verify.add_argument("--artifact-root", required=True)
     seed.add_argument("--candidate-root", required=True)
     seed.add_argument("--replace", action="store_true")
     pack.add_argument("--candidate-root", required=True)
@@ -630,6 +796,8 @@ def main() -> None:
             artifact_digest=args.artifact_digest,
         )
         write_outputs(args.github_output, result)
+    elif args.command == "verify-readback":
+        result = verify_artifact_readback(repo_root=repo, artifact_root=Path(args.artifact_root))
     else:
         audit_staged_paths(repo, Path(args.artifact_root))
         result = {"status": "ok"}

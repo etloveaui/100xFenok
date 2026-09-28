@@ -1,0 +1,2418 @@
+{
+  "schema_version": "stockanalysis/v1",
+  "source": "stockanalysis",
+  "asset_type": "stock",
+  "ticker": "TSLA",
+  "source_as_of": "2026-08-20T20:00:00Z",
+  "fetched_at": "2026-08-20T21:48:03Z",
+  "endpoints": {
+    "overview": "/stocks/tsla/__data.json",
+    "history": "/api/symbol/s/TSLA/history?range=1Y&period=Monthly",
+    "quote": "/api/quotes/s/TSLA"
+  },
+  "normalized": {
+    "overview": {
+      "marketCap": "1.36T",
+      "revenue": "103.62B",
+      "revenue_type": "ttm",
+      "netIncome": "3.81B",
+      "sharesOut": "3.95B",
+      "eps": "1.08",
+      "peRatio": "358.15",
+      "forwardPE": "179.03",
+      "dividend": "n/a",
+      "beta": "1.83",
+      "analysts": "Buy",
+      "target": "395.34 (+14.55%)",
+      "earningsDate": "Jul 22, 2026"
+    },
+    "quote": {
+      "p": 345.13,
+      "pd": 345.13,
+      "c": -5.99,
+      "cp": -1.71,
+      "cl": 351.12,
+      "cdr": -1,
+      "o": 346.2,
+      "h": 347.5,
+      "l": 338.96,
+      "v": 30678988,
+      "ts": 1787256000000,
+      "u": "Aug 20, 2026, 4:00 PM EDT",
+      "td": "2026-08-20",
+      "h52": 498.83,
+      "l52": 297.38,
+      "ex": "NASDAQ",
+      "ms": "closed",
+      "fms": "post",
+      "e": true,
+      "ep": 345.9,
+      "epd": 345.9,
+      "ec": 0.77,
+      "ecp": 0.22,
+      "eu": "Aug 20, 2026, 5:47 PM EDT",
+      "es": "After-hours",
+      "ets": 1787262462681.7256,
+      "etd": "2026-08-20",
+      "epv": null,
+      "days": 0,
+      "exp": 1787262485068,
+      "symbol": "TSLA",
+      "uid": "TSLA"
+    },
+    "history": [
+      {
+        "t": "2026-08-03",
+        "o": 310.96,
+        "h": 351.62,
+        "l": 310.425,
+        "c": 345.13,
+        "a": 345.13,
+        "v": 442297795,
+        "ch": 10.9
+      },
+      {
+        "t": "2026-07-01",
+        "o": 421.46,
+        "h": 432.86,
+        "l": 297.38,
+        "c": 311.21,
+        "a": 311.21,
+        "v": 934904171,
+        "ch": -26.01
+      },
+      {
+        "t": "2026-06-01",
+        "o": 427.49,
+        "h": 433.6,
+        "l": 368.6,
+        "c": 420.6,
+        "a": 420.6,
+        "v": 1002561005,
+        "ch": -3.49
+      },
+      {
+        "t": "2026-05-01",
+        "o": 382.485,
+        "h": 453.4,
+        "l": 378.8,
+        "c": 435.79,
+        "a": 435.79,
+        "v": 1051619619,
+        "ch": 14.19
+      },
+      {
+        "t": "2026-04-01",
+        "o": 378.63,
+        "h": 409.28,
+        "l": 337.24,
+        "c": 381.63,
+        "a": 381.63,
+        "v": 1416250380,
+        "ch": 2.66
+      },
+      {
+        "t": "2026-03-02",
+        "o": 390.6,
+        "h": 416.38,
+        "l": 352.14,
+        "c": 371.75,
+        "a": 371.75,
+        "v": 1362671997,
+        "ch": -7.64
+      },
+      {
+        "t": "2026-02-02",
+        "o": 421.29,
+        "h": 436.35,
+        "l": 387.531,
+        "c": 402.51,
+        "a": 402.51,
+        "v": 1123487705,
+        "ch": -6.48
+      },
+      {
+        "t": "2026-01-02",
+        "o": 457.8,
+        "h": 458.34,
+        "l": 414.62,
+        "c": 430.41,
+        "a": 430.41,
+        "v": 1275015552,
+        "ch": -4.29
+      },
+      {
+        "t": "2025-12-01",
+        "o": 425.32,
+        "h": 498.83,
+        "l": 422.12,
+        "c": 449.72,
+        "a": 449.72,
+        "v": 1635943862,
+        "ch": 4.54
+      },
+      {
+        "t": "2025-11-03",
+        "o": 455.99,
+        "h": 474.07,
+        "l": 382.78,
+        "c": 430.17,
+        "a": 430.17,
+        "v": 1628434598,
+        "ch": -5.78
+      },
+      {
+        "t": "2025-10-01",
+        "o": 443.8,
+        "h": 470.75,
+        "l": 411.45,
+        "c": 456.56,
+        "a": 456.56,
+        "v": 2032094864,
+        "ch": 2.66
+      }
+    ],
+    "financials": {
+      "path": "financials/TSLA.json",
+      "fetched_at": "2026-08-20T21:48:03Z",
+      "role": "financial statement cross-check candidate; not valuation SSOT",
+      "summary": {
+        "annual": {
+          "income": {
+            "field_count": 42,
+            "period_count": 6,
+            "period": "annual"
+          },
+          "balance_sheet": {
+            "field_count": 54,
+            "period_count": 6,
+            "period": "annual"
+          },
+          "cash_flow": {
+            "field_count": 35,
+            "period_count": 6,
+            "period": "annual"
+          },
+          "ratios": {
+            "field_count": 32,
+            "period_count": 6,
+            "period": "annual"
+          }
+        },
+        "quarterly": {
+          "income": {
+            "field_count": 42,
+            "period_count": 20,
+            "period": "quarterly"
+          },
+          "balance_sheet": {
+            "field_count": 55,
+            "period_count": 20,
+            "period": "quarterly"
+          },
+          "cash_flow": {
+            "field_count": 38,
+            "period_count": 20,
+            "period": "quarterly"
+          },
+          "ratios": {
+            "field_count": 32,
+            "period_count": 21,
+            "period": "quarterly"
+          }
+        }
+      }
+    }
+  },
+  "financials_path": "financials/TSLA.json",
+  "raw": {
+    "overview": {
+      "trust": {
+        "sources": [
+          {
+            "name": "S&P Global Market Intelligence",
+            "short": "S&P Global",
+            "url": "https://www.spglobal.com/market-intelligence/en"
+          },
+          {
+            "name": "CBOE",
+            "short": "CBOE",
+            "url": "https://www.cboe.com/"
+          },
+          {
+            "name": "Nasdaq UTP",
+            "short": "Nasdaq UTP",
+            "url": "https://www.utpplan.com/overview",
+            "noUtm": true
+          }
+        ],
+        "topic": "overview",
+        "ticker": "TSLA",
+        "lastChecked": 1787262311919,
+        "summary": {
+          "text": "Fundamental and historical data is provided by S&P Global Market Intelligence. Real-time stock price data is provided by CBOE and 15-minute delayed consolidated tape pricing data is provided by Nasdaq UTP."
+        }
+      },
+      "marketCap": "1.36T",
+      "marketCapGrowth": 26.09205272732949,
+      "revenue": "103.62B",
+      "revenue_type": "ttm",
+      "revenueGrowth": 11.755,
+      "netIncome": "3.81B",
+      "netIncomeGrowth": -35.328,
+      "sharesOut": "3.95B",
+      "eps": "1.08",
+      "epsGrowth": -35.643,
+      "peRatio": "358.15",
+      "forwardPE": "179.03",
+      "dividend": "n/a",
+      "exDividendDate": "n/a",
+      "beta": "1.83",
+      "analysts": "Buy",
+      "target": "395.34 (+14.55%)",
+      "earningsDate": "Jul 22, 2026",
+      "description": "Tesla, Inc. designs, develops, manufactures, leases, and sells electric vehicles, and energy generation and storage systems in the United States, China, and internationally. The company operates in two segments, Automotive; and Energy Generation and Storage. The company offers electric vehicles, as well as sells automotive regulatory credits; and non-warranty maintenance services and collision, automotive insurance services, as well as part sales and retail merchandise sale. It also provides sedans and sport utility vehicles through direct and ...",
+      "infoTable": [
+        {
+          "t": "Industry",
+          "v": "Auto Manufacturers",
+          "u": "stocks/industry/auto-manufacturers"
+        },
+        {
+          "t": "Sector",
+          "v": "Consumer Discretionary",
+          "u": "stocks/sector/consumer-discretionary"
+        },
+        {
+          "t": "IPO Date",
+          "v": "Jun 29, 2010"
+        },
+        {
+          "t": "Employees",
+          "v": "134,785",
+          "u": "stocks/tsla/employees"
+        },
+        {
+          "t": "Stock Exchange",
+          "v": "NASDAQ"
+        },
+        {
+          "t": "Ticker Symbol",
+          "v": "TSLA"
+        },
+        {
+          "t": "Website",
+          "v": "https://www.tesla.com",
+          "eu": "https://www.tesla.com"
+        }
+      ],
+      "financialIntro": "In 2025, Tesla's revenue was $94.83 billion, a decrease of -2.93% compared to the previous year's $97.69 billion. Earnings were $3.79 billion, a decrease of -46.79%.",
+      "financialChart": [
+        {
+          "year": "2021",
+          "revenue": 53823000000,
+          "earnings": 5524000000,
+          "revenueGrowth": 70.672,
+          "earningsGrowth": 665.465
+        },
+        {
+          "year": "2022",
+          "revenue": 81462000000,
+          "earnings": 12583000000,
+          "revenueGrowth": 51.352,
+          "earningsGrowth": 127.505
+        },
+        {
+          "year": "2023",
+          "revenue": 96773000000,
+          "earnings": 14999000000,
+          "revenueGrowth": 18.795,
+          "earningsGrowth": 19.441
+        },
+        {
+          "year": "2024",
+          "revenue": 97690000000,
+          "earnings": 7130000000,
+          "revenueGrowth": 0.948,
+          "earningsGrowth": -52.717000000000006
+        },
+        {
+          "year": "2025",
+          "revenue": 94827000000,
+          "earnings": 3794000000,
+          "revenueGrowth": -2.931,
+          "earningsGrowth": -46.495999999999995
+        }
+      ],
+      "analystIntro": "According to 47 analysts, the average rating for TSLA stock is \"Buy.\" The 12-month stock price target is $395.34, which is an increase of 14.55% from the latest price.",
+      "analystTarget": {
+        "target": "$395.34",
+        "change": "14.55%",
+        "changeWord": "upside"
+      },
+      "analystChart": {
+        "strongBuy": 17,
+        "buy": 6,
+        "hold": 19,
+        "sell": 2,
+        "strongSell": 3
+      },
+      "news": {
+        "exp": "1787263777928",
+        "data": [
+          {
+            "url": "https://www.tipranks.com/news/tesla-stock-tsla-slips-after-a-robotaxi-hits-bollards",
+            "img": "https://blog.tipranks.com/wp-content/uploads/2026/08/shutterstock_2632489339-750x406.jpg",
+            "title": "Tesla Stock (TSLA) Slips after a Robotaxi Hits Bollards",
+            "text": "Tesla’s ($TSLA) driverless Robotaxi drove through a row of plastic posts in Austin less than a month after the company said its autonomous fleet had completed more than 380,000 unsupervised…",
+            "source": "TipRanks",
+            "type": "Article",
+            "tickers": null,
+            "time": "2026-08-20T17:04:58.000Z",
+            "ago": "4 hours ago"
+          },
+          {
+            "url": "https://www.tipranks.com/news/tesla-stock-nasdaqtsla-dips-as-tesla-refuses-its-own-vehicles-in-trade-in-canada",
+            "img": "https://blog.tipranks.com/wp-content/uploads/2026/08/tesla-shutterstock_2829282843-750x406.jpg",
+            "title": "Tesla Stock (NASDAQ:TSLA) Dips as Tesla Refuses Its Own Vehicles in Trade in Canada",
+            "text": "When you want to buy a new car, or just one that is new to you, one of the biggest points that comes up is the value of your trade-in.",
+            "source": "TipRanks",
+            "type": "Article",
+            "tickers": null,
+            "time": "2026-08-20T16:32:18.000Z",
+            "ago": "5 hours ago"
+          },
+          {
+            "url": "https://www.tipranks.com/news/the-fly/tesla-call-buyer-realizes-34-same-day-gains-thefly-news",
+            "img": "https://blog.tipranks.com/wp-content/uploads/2022/09/shutterstock_1057729850-750x406.jpg",
+            "title": "Tesla call buyer realizes 34% same-day gains",
+            "text": "Notable profits for the buyer who lifted the $4.10 offer for 1,717 Tesla (TSLA) Aug-26 350 calls yesterday at 11:34ET when underlying shares were trading at $347.58. Shares closed at…",
+            "source": "TheFly",
+            "type": "Article",
+            "tickers": null,
+            "time": "2026-08-20T12:00:15.000Z",
+            "ago": "9 hours ago"
+          },
+          {
+            "url": "https://invezz.com/news/2026/08/19/why-tesla-stock-is-gaining-3-today/",
+            "img": "https://cdn.snapi.dev/images/v1/a/6/v/tsla9-3536871-3879847.jpg",
+            "title": "Why Tesla stock is gaining 3% today",
+            "text": "Tesla stock TSLA gained 3% on Wednesday, ending a two-session losing streak as investors looked ahead to a potential Cybercab launch event. The company teased the event on X on Monday, saying customer...",
+            "source": "Invezz",
+            "type": "Article",
+            "tickers": null,
+            "time": "Aug 19, 2026, 1:52 PM EDT",
+            "ago": "1 day ago"
+          },
+          {
+            "url": "https://www.tipranks.com/news/tesla-stock-nasdaqtsla-up-despite-a-dead-hand-in-las-vegas",
+            "img": "https://blog.tipranks.com/wp-content/uploads/2026/08/tesla-shutterstock_2831040591-750x406.jpg",
+            "title": "Tesla Stock (NASDAQ:TSLA) Up Despite a Dead Hand in Las Vegas",
+            "text": "Electric vehicle giant Tesla ($TSLA) wants to get its robotaxi operations going in Las Vegas, but authorities there are not making it easy for them. Tesla landed far, far fewer…",
+            "source": "TipRanks",
+            "type": "Article",
+            "tickers": [
+              "$SPCX"
+            ],
+            "time": "2026-08-19T16:34:34.000Z",
+            "ago": "1 day ago"
+          },
+          {
+            "url": "https://www.tipranks.com/news/tesla-stock-tsla-is-boring-investors-as-cybercab-event-tease-fails-to-lift-shares",
+            "img": "https://blog.tipranks.com/wp-content/uploads/2026/08/shutterstock_2685807731-750x406.jpg",
+            "title": "Tesla Stock (TSLA) Is Boring Investors as Cybercab Event Tease Fails to Lift Shares",
+            "text": "Tesla stock ($TSLA) is boring investors who were hoping that the Cybercab tease would bring excitement and move the stock up, but it has barely budged. Shares traded down 0.3%…",
+            "source": "TipRanks",
+            "type": "Article",
+            "tickers": [
+              "$AMZN",
+              "$GOOGL",
+              "$SPCX"
+            ],
+            "time": "2026-08-19T13:05:15.000Z",
+            "ago": "1 day ago"
+          },
+          {
+            "url": "https://www.fxempire.com/forecasts/article/us-stock-forecast-tesla-amazon-and-apple-rebound-near-key-moving-averages-1617620",
+            "img": "https://cdn.snapi.dev/images/v1/n/y/e/computer-electronic17-3879002.jpg",
+            "title": "US Stock Forecast – Tesla, Amazon, and Apple Rebound Near Key Moving Averages",
+            "text": "US stock forecasts turn to Tesla, Amazon, and Apple as all three stabilize near key technical levels following recent volatility.",
+            "source": "FXEmpire",
+            "type": "Article",
+            "tickers": [
+              "$AAPL",
+              "$AMZN"
+            ],
+            "time": "Aug 19, 2026, 8:59 AM EDT",
+            "ago": "1 day ago"
+          },
+          {
+            "url": "https://www.geekwire.com/2026/filings-show-amazons-stake-in-electric-trucking-company-that-just-struck-a-deal-for-500-tesla-semis/",
+            "img": "https://cdn.snapi.dev/images/v1/t/b/e/catalog-mail1-3877939.jpg",
+            "title": "Filings show Amazon's stake in electric trucking company that just struck a deal for 500 Tesla Semis",
+            "text": "Einride's first earnings report as a public company shows Amazon holding warrants for about 12% of the Swedish electric trucking company, vesting as Amazon buys freight services.",
+            "source": "GeekWire",
+            "type": "Article",
+            "tickers": [
+              "$AMZN"
+            ],
+            "time": "Aug 18, 2026, 5:00 PM EDT",
+            "ago": "2 days ago"
+          },
+          {
+            "url": "p7WBi4qD6F0",
+            "img": "https://cdn.snapi.dev/images/v1/o/k/d/tsla34-3526744-3877938.jpg",
+            "title": "Tuesday's Final Takeaways: TSLA Readies Cybercab Launch & Global Bond Sell-Off",
+            "text": "Marley Kayden and Sam Vadas turn to the macro and micro headlines many investors likely missed on Tuesday's trading session. They highlight Tesla (TSLA) and the company's push to launch its Cybercab v...",
+            "source": "Schwab Network",
+            "type": "Video",
+            "tickers": null,
+            "time": "Aug 18, 2026, 4:36 PM EDT",
+            "ago": "2 days ago"
+          },
+          {
+            "url": "https://www.tipranks.com/news/tesla-tsla-plans-robotaxi-hub-with-up-to-80-wireless-chargers-as-cybercab-launch-nears",
+            "img": "https://blog.tipranks.com/wp-content/uploads/2026/08/shutterstock_2560438749-750x406.jpg",
+            "title": "Tesla (TSLA) Plans Robotaxi Hub With Up to 80 Wireless Chargers as Cybercab Launch Nears",
+            "text": "EV and AI company Tesla ($TSLA) is preparing more infrastructure for its robotaxi expansion. In fact, the company has filed plans for a new charging hub in Austin, Texas, across…",
+            "source": "TipRanks",
+            "type": "Article",
+            "tickers": null,
+            "time": "2026-08-18T19:56:30.000Z",
+            "ago": "2 days ago"
+          },
+          {
+            "url": "https://www.tipranks.com/news/the-fly/glj-research-downgrading-teslas-autonomous-narrative-to-sell-thefly-news",
+            "img": "https://blog.tipranks.com/wp-content/uploads/2022/09/shutterstock_1917964574-750x406.jpg",
+            "title": "GLJ Research downgrading Tesla’s ‘autonomous’ narrative to Sell",
+            "text": "GLJ Research is downgrading Tesla’s (TSLA) “Autonomous” narrative to Sell, arguing that the stock is “not down 25% this year because the quarter was bad” but because the company’s robotaxi…",
+            "source": "TheFly",
+            "type": "Article",
+            "tickers": null,
+            "time": "2026-08-18T17:15:12.000Z",
+            "ago": "2 days ago"
+          },
+          {
+            "url": "https://www.tipranks.com/news/way-cooler-than-a-minivan-tesla-stock-nasdaqtsla-slips-despite-new-release",
+            "img": "https://blog.tipranks.com/wp-content/uploads/2026/08/tesla-shutterstock_2828763785-750x406.jpg",
+            "title": "“Way Cooler Than a Minivan”: Tesla Stock (NASDAQ:TSLA) Slips Despite New Release",
+            "text": "Electric vehicle giant Tesla ($TSLA) has an exciting new plan for a vehicle release, but no one knows as yet just what that looks like. The only thing Tesla has…",
+            "source": "TipRanks",
+            "type": "Article",
+            "tickers": [
+              "$AMZN",
+              "$ENRD"
+            ],
+            "time": "2026-08-18T17:01:15.000Z",
+            "ago": "2 days ago"
+          },
+          {
+            "url": "https://invezz.com/news/2026/08/18/tesla-stock-reverses-early-losses-as-investors-await-ai-robotaxi-progress/",
+            "img": "https://cdn.snapi.dev/images/v1/f/m/8/tsla28-3530189-3877340.jpg",
+            "title": "Tesla stock reverses early losses as investors await AI, robotaxi progress",
+            "text": "Tesla TSLA shares reversed earlier losses on Tuesday and were trading in the green as investors focused on the electric-vehicle maker's artificial intelligence ambitions and potential robotaxi and hum...",
+            "source": "Invezz",
+            "type": "Article",
+            "tickers": null,
+            "time": "Aug 18, 2026, 12:14 PM EDT",
+            "ago": "2 days ago"
+          },
+          {
+            "url": "https://www.reuters.com/business/autos-transportation/einride-deploy-500-tesla-electric-trucks-north-american-fleet-2026-08-18/",
+            "img": "https://cdn.snapi.dev/images/v1/i/k/v/tsla5-3540257-3876135.jpg",
+            "title": "Einride to deploy 500 Tesla electric trucks for North American fleet",
+            "text": "Einride AB said on Tuesday it plans to deploy 500 Tesla trucks across ​its North American operations over the next ‌two years, in what would be the largest rollout of heavy-duty electric vehicles to d...",
+            "source": "Reuters",
+            "type": "Article",
+            "tickers": [
+              "$ENRD"
+            ],
+            "time": "Aug 18, 2026, 6:33 AM EDT",
+            "ago": "2 days ago"
+          },
+          {
+            "url": "https://techcrunch.com/2026/08/18/einride-strikes-deal-to-add-500-tesla-semis-to-its-fleet/",
+            "img": "https://cdn.snapi.dev/images/v1/q/o/b/auto30-3876111.jpg",
+            "title": "Einride strikes deal to add 500 Tesla Semis to its fleet",
+            "text": "Swedish electric and autonomous trucking company Einride said Tuesday it plans to buy 500 Tesla Semis and make the electric big rigs available to Amazon and other customers. The Tesla Semis will be ad...",
+            "source": "TechCrunch",
+            "type": "Article",
+            "tickers": [
+              "$ENRD"
+            ],
+            "time": "Aug 18, 2026, 6:30 AM EDT",
+            "ago": "2 days ago"
+          },
+          {
+            "url": "https://invezz.com/news/2026/08/18/bond-yields-just-hit-a-2007-high-5-stocks-wall-street-should-watch-today/",
+            "img": "https://cdn.snapi.dev/images/v1/7/y/g/asset-management42-3765669-3876006.jpg",
+            "title": "Bond yields just hit a 2007 high: 5 stocks Wall Street should watch today",
+            "text": "US Treasury yields pushed into territory unseen since before the financial crisis on Tuesday, putting a spotlight on stocks exposed to housing and expensive long-duration growth. The 30-year Treasury ...",
+            "source": "Invezz",
+            "type": "Article",
+            "tickers": [
+              "$DHI",
+              "$HD",
+              "$LEN",
+              "$PLTR"
+            ],
+            "time": "Aug 18, 2026, 4:42 AM EDT",
+            "ago": "2 days ago"
+          },
+          {
+            "url": "dza47iPbq0E",
+            "img": "https://cdn.snapi.dev/images/v1/t/j/g/ocme2e-2582932-3875834.jpg",
+            "title": "Nyland: MSFT & TSLA Top Mag 7 Stocks for Growth, AI CapEx Story \"Healthy\"",
+            "text": "Tim Nyland offers his bearish and bullish thoughts for the back half of 2026 on expectations that the Fed will hold interest rates. He considers the broadening price action across Wall Street healthy ...",
+            "source": "Schwab Network",
+            "type": "Video",
+            "tickers": [
+              "$MSFT"
+            ],
+            "time": "Aug 17, 2026, 8:00 PM EDT",
+            "ago": "2 days ago"
+          },
+          {
+            "url": "https://www.reuters.com/business/autos-transportation/tesla-prepares-cybercab-launch-august-starting-with-rides-employees-information-2026-08-17/",
+            "img": "https://cdn.snapi.dev/images/v1/k/v/o/tsla37-3551436-3875628.jpg",
+            "title": "Tesla prepares for Cybercab launch in August starting with rides to employees, the Information reports",
+            "text": "Tesla has told employees it is gearing up for a public launch of Cybercab, ​starting with a rollout in Austin, Texas, ‌as soon as this month, the Information reported on Monday, citing people with kno...",
+            "source": "Reuters",
+            "type": "Article",
+            "tickers": null,
+            "time": "Aug 17, 2026, 4:58 PM EDT",
+            "ago": "3 days ago"
+          },
+          {
+            "url": "ZxeXJ8_tcbE",
+            "img": "https://cdn.snapi.dev/images/v1/v/r/o/tsla2-3540981-3875343.jpg",
+            "title": "Idea for flying Roadster has been around 'since the beginning': Former Tesla president Jon McNeill",
+            "text": "Jon McNeill, VistaShares co-founder, DVx CEO and former Tesla president, joins 'Squawk on the Street' to discuss Tesla's plans to unveil a new design for a flying roadster as soon as this month.",
+            "source": "CNBC Television",
+            "type": "Video",
+            "tickers": null,
+            "time": "Aug 17, 2026, 2:18 PM EDT",
+            "ago": "3 days ago"
+          },
+          {
+            "url": "https://www.fxempire.com/forecasts/article/stock-forecast-tesla-microsoft-and-super-micro-eye-pullbacks-for-dip-buying-setups-1617219",
+            "img": "https://cdn.snapi.dev/images/v1/3/d/6/asset-management21-3852227-3874746.jpg",
+            "title": "Stock Forecast – Tesla, Microsoft, and Super Micro Eye Pullbacks for Dip-Buying Setups",
+            "text": "Major stocks look a touch tired in the premarket trading for Monday.",
+            "source": "FXEmpire",
+            "type": "Article",
+            "tickers": [
+              "$MSFT",
+              "$SMCI"
+            ],
+            "time": "Aug 17, 2026, 10:41 AM EDT",
+            "ago": "3 days ago"
+          },
+          {
+            "url": "https://www.marketwatch.com/story/stanley-druckenmiller-ditched-these-chip-plays-before-the-selloff-heres-how-hes-playing-the-tech-sector-now-9115c06f",
+            "img": "https://cdn.snapi.dev/images/v1/r/z/7/data9-3661966-3874654.jpg",
+            "title": "Stanley Druckenmiller ditched these chip plays before the selloff. Here's how he's playing the tech sector now.",
+            "text": "The closely followed investor has beefed up some technology holdings in the second quarter.",
+            "source": "Market Watch",
+            "type": "Article",
+            "tickers": [
+              "$AMD",
+              "$AMZN",
+              "$GOOG",
+              "$GOOGL",
+              "#IWM",
+              "$META",
+              "$PANW"
+            ],
+            "time": "Aug 17, 2026, 10:29 AM EDT",
+            "ago": "3 days ago"
+          },
+          {
+            "url": "https://www.forbes.com/sites/current-climate/2026/08/17/ev-battery-sales-help-q2-cleantech-investment-rebound/",
+            "img": "https://cdn.snapi.dev/images/v1/a/u/auto23-3874459.jpg",
+            "title": "EV, Battery Sales Help Q2 Cleantech Investment Rebound",
+            "text": "Current Climate brings you the latest news about the business of sustainability every Monday. Sign up to get it in your inbox.",
+            "source": "Forbes",
+            "type": "Article",
+            "tickers": [
+              "$KNDI",
+              "$LI",
+              "$NIO",
+              "$WKHS",
+              "$XPEV"
+            ],
+            "time": "Aug 17, 2026, 9:30 AM EDT",
+            "ago": "3 days ago"
+          },
+          {
+            "url": "https://www.cnbc.com/2026/08/15/rivian-tesla-self-driving-adas-fsd.html",
+            "img": "https://cdn.snapi.dev/images/v1/8/b/g/auto10-3873102.jpg",
+            "title": "I drove Tesla FSD, Rivian Autonomy+ ‘hands-free' driving systems. Here's how they compare",
+            "text": "Rivian is trying to catch up to Tesla's \"hands-free\" capabilities, but with additional safety guardrails. Based on recent drives totaling hundreds of miles, Rivian has surpassed legacy competitors suc...",
+            "source": "CNBC",
+            "type": "Article",
+            "tickers": [
+              "$RIVN"
+            ],
+            "time": "Aug 15, 2026, 8:00 AM EDT",
+            "ago": "5 days ago"
+          },
+          {
+            "url": "https://www.cnbc.com/2026/08/15/software-defined-vehicles-rivian-tesla.html",
+            "img": "https://cdn.snapi.dev/images/v1/u/9/u/g3erf-2670755-3873142.jpg",
+            "title": "How long will software-defined cars last? The auto industry doesn't know yet",
+            "text": "Software-defined vehicles are becoming more common, especially among brands such as Tesla and Rivian. They have more complex computers that can give continuous software updates, as well as the ability...",
+            "source": "CNBC",
+            "type": "Article",
+            "tickers": [
+              "$RIVN"
+            ],
+            "time": "Aug 15, 2026, 8:00 AM EDT",
+            "ago": "5 days ago"
+          },
+          {
+            "url": "qygho73UGFE",
+            "img": "https://cdn.snapi.dev/images/v1/y/j/k/asset-management14-3750108-3872788.jpg",
+            "title": "Direxion Discusses SPCX, TSLA & Rise of Single Stock Leverage ETFs",
+            "text": "As international markets curb back on single-stock leveraged ETFs, Direxion's Global ETF Strategist Bilal Little talks about how his firm is boosting exposure for stocks like SpaceX (SPCX). He talks a...",
+            "source": "Schwab Network",
+            "type": "Video",
+            "tickers": [
+              "$SPCX",
+              "#LOFD"
+            ],
+            "time": "Aug 14, 2026, 5:00 PM EDT",
+            "ago": "6 days ago"
+          }
+        ]
+      },
+      "chart": {
+        "expiration": 1787265906379,
+        "data": [
+          {
+            "c": 345.01,
+            "o": 346.2,
+            "t": 1787218200
+          },
+          {
+            "c": 347.1,
+            "t": 1787218260
+          },
+          {
+            "c": 345.46,
+            "t": 1787218320
+          },
+          {
+            "c": 345.42,
+            "t": 1787218380
+          },
+          {
+            "c": 344,
+            "t": 1787218440
+          },
+          {
+            "c": 343.5,
+            "t": 1787218500
+          },
+          {
+            "c": 343.73,
+            "t": 1787218560
+          },
+          {
+            "c": 343.49,
+            "t": 1787218620
+          },
+          {
+            "c": 343.24,
+            "t": 1787218680
+          },
+          {
+            "c": 343.04,
+            "t": 1787218740
+          },
+          {
+            "c": 342.5,
+            "t": 1787218800
+          },
+          {
+            "c": 342.93,
+            "t": 1787218860
+          },
+          {
+            "c": 343.08,
+            "t": 1787218920
+          },
+          {
+            "c": 343.07,
+            "t": 1787218980
+          },
+          {
+            "c": 343.56,
+            "t": 1787219040
+          },
+          {
+            "c": 343.39,
+            "t": 1787219100
+          },
+          {
+            "c": 343.48,
+            "t": 1787219160
+          },
+          {
+            "c": 344.66,
+            "t": 1787219220
+          },
+          {
+            "c": 344.38,
+            "t": 1787219280
+          },
+          {
+            "c": 344.28,
+            "t": 1787219340
+          },
+          {
+            "c": 344.95,
+            "t": 1787219400
+          },
+          {
+            "c": 345.25,
+            "t": 1787219460
+          },
+          {
+            "c": 344.69,
+            "t": 1787219520
+          },
+          {
+            "c": 345.13,
+            "t": 1787219580
+          },
+          {
+            "c": 345.04,
+            "t": 1787219640
+          },
+          {
+            "c": 344.58,
+            "t": 1787219700
+          },
+          {
+            "c": 344.36,
+            "t": 1787219760
+          },
+          {
+            "c": 344.48,
+            "t": 1787219820
+          },
+          {
+            "c": 345.1,
+            "t": 1787219880
+          },
+          {
+            "c": 345.17,
+            "t": 1787219940
+          },
+          {
+            "c": 344.4,
+            "t": 1787220000
+          },
+          {
+            "c": 344.62,
+            "t": 1787220060
+          },
+          {
+            "c": 344.11,
+            "t": 1787220120
+          },
+          {
+            "c": 344.5,
+            "t": 1787220180
+          },
+          {
+            "c": 344.24,
+            "t": 1787220240
+          },
+          {
+            "c": 344.09,
+            "t": 1787220300
+          },
+          {
+            "c": 343.39,
+            "t": 1787220360
+          },
+          {
+            "c": 343.44,
+            "t": 1787220420
+          },
+          {
+            "c": 343.51,
+            "t": 1787220480
+          },
+          {
+            "c": 343.73,
+            "t": 1787220540
+          },
+          {
+            "c": 342.76,
+            "t": 1787220600
+          },
+          {
+            "c": 342.64,
+            "t": 1787220660
+          },
+          {
+            "c": 342.78,
+            "t": 1787220720
+          },
+          {
+            "c": 342.49,
+            "t": 1787220780
+          },
+          {
+            "c": 342.44,
+            "t": 1787220840
+          },
+          {
+            "c": 342.21,
+            "t": 1787220900
+          },
+          {
+            "c": 342.13,
+            "t": 1787220960
+          },
+          {
+            "c": 342.12,
+            "t": 1787221020
+          },
+          {
+            "c": 342,
+            "t": 1787221080
+          },
+          {
+            "c": 341.62,
+            "t": 1787221140
+          },
+          {
+            "c": 342.14,
+            "t": 1787221200
+          },
+          {
+            "c": 342,
+            "t": 1787221260
+          },
+          {
+            "c": 342.29,
+            "t": 1787221320
+          },
+          {
+            "c": 342.16,
+            "t": 1787221380
+          },
+          {
+            "c": 342.08,
+            "t": 1787221440
+          },
+          {
+            "c": 341.53,
+            "t": 1787221500
+          },
+          {
+            "c": 340.57,
+            "t": 1787221560
+          },
+          {
+            "c": 340.43,
+            "t": 1787221620
+          },
+          {
+            "c": 340.08,
+            "t": 1787221680
+          },
+          {
+            "c": 340.36,
+            "t": 1787221740
+          },
+          {
+            "c": 340.41,
+            "t": 1787221800
+          },
+          {
+            "c": 340.3,
+            "t": 1787221860
+          },
+          {
+            "c": 339.45,
+            "t": 1787221920
+          },
+          {
+            "c": 339.7,
+            "t": 1787221980
+          },
+          {
+            "c": 339.19,
+            "t": 1787222040
+          },
+          {
+            "c": 339.25,
+            "t": 1787222100
+          },
+          {
+            "c": 339.93,
+            "t": 1787222160
+          },
+          {
+            "c": 339.61,
+            "t": 1787222220
+          },
+          {
+            "c": 339.73,
+            "t": 1787222280
+          },
+          {
+            "c": 340.27,
+            "t": 1787222340
+          },
+          {
+            "c": 340.07,
+            "t": 1787222400
+          },
+          {
+            "c": 339.99,
+            "t": 1787222460
+          },
+          {
+            "c": 339.88,
+            "t": 1787222520
+          },
+          {
+            "c": 340.21,
+            "t": 1787222580
+          },
+          {
+            "c": 339.98,
+            "t": 1787222640
+          },
+          {
+            "c": 339.91,
+            "t": 1787222700
+          },
+          {
+            "c": 340.28,
+            "t": 1787222760
+          },
+          {
+            "c": 339.95,
+            "t": 1787222820
+          },
+          {
+            "c": 340.07,
+            "t": 1787222880
+          },
+          {
+            "c": 340.04,
+            "t": 1787222940
+          },
+          {
+            "c": 340.21,
+            "t": 1787223000
+          },
+          {
+            "c": 340.17,
+            "t": 1787223060
+          },
+          {
+            "c": 340.6,
+            "t": 1787223120
+          },
+          {
+            "c": 340.39,
+            "t": 1787223180
+          },
+          {
+            "c": 340.08,
+            "t": 1787223240
+          },
+          {
+            "c": 340.3,
+            "t": 1787223300
+          },
+          {
+            "c": 340.1,
+            "t": 1787223360
+          },
+          {
+            "c": 340.01,
+            "t": 1787223420
+          },
+          {
+            "c": 339.74,
+            "t": 1787223480
+          },
+          {
+            "c": 340.14,
+            "t": 1787223540
+          },
+          {
+            "c": 340.41,
+            "t": 1787223600
+          },
+          {
+            "c": 341.27,
+            "t": 1787223660
+          },
+          {
+            "c": 341.34,
+            "t": 1787223720
+          },
+          {
+            "c": 341.33,
+            "t": 1787223780
+          },
+          {
+            "c": 341.35,
+            "t": 1787223840
+          },
+          {
+            "c": 340.34,
+            "t": 1787223900
+          },
+          {
+            "c": 341.09,
+            "t": 1787223960
+          },
+          {
+            "c": 341.68,
+            "t": 1787224020
+          },
+          {
+            "c": 341.55,
+            "t": 1787224080
+          },
+          {
+            "c": 341.74,
+            "t": 1787224140
+          },
+          {
+            "c": 341.77,
+            "t": 1787224200
+          },
+          {
+            "c": 341.54,
+            "t": 1787224260
+          },
+          {
+            "c": 341.86,
+            "t": 1787224320
+          },
+          {
+            "c": 342.7,
+            "t": 1787224380
+          },
+          {
+            "c": 342.52,
+            "t": 1787224440
+          },
+          {
+            "c": 342.96,
+            "t": 1787224500
+          },
+          {
+            "c": 342.8,
+            "t": 1787224560
+          },
+          {
+            "c": 343.13,
+            "t": 1787224620
+          },
+          {
+            "c": 343.14,
+            "t": 1787224680
+          },
+          {
+            "c": 343.03,
+            "t": 1787224740
+          },
+          {
+            "c": 342.81,
+            "t": 1787224800
+          },
+          {
+            "c": 342.61,
+            "t": 1787224860
+          },
+          {
+            "c": 342.32,
+            "t": 1787224920
+          },
+          {
+            "c": 342.86,
+            "t": 1787224980
+          },
+          {
+            "c": 342.85,
+            "t": 1787225040
+          },
+          {
+            "c": 342.57,
+            "t": 1787225100
+          },
+          {
+            "c": 342.59,
+            "t": 1787225160
+          },
+          {
+            "c": 343.06,
+            "t": 1787225220
+          },
+          {
+            "c": 343.05,
+            "t": 1787225280
+          },
+          {
+            "c": 343.93,
+            "t": 1787225340
+          },
+          {
+            "c": 343.96,
+            "t": 1787225400
+          },
+          {
+            "c": 344.32,
+            "t": 1787225460
+          },
+          {
+            "c": 344.45,
+            "t": 1787225520
+          },
+          {
+            "c": 343.99,
+            "t": 1787225580
+          },
+          {
+            "c": 343.84,
+            "t": 1787225640
+          },
+          {
+            "c": 343.83,
+            "t": 1787225700
+          },
+          {
+            "c": 344.33,
+            "t": 1787225760
+          },
+          {
+            "c": 344.2,
+            "t": 1787225820
+          },
+          {
+            "c": 343.91,
+            "t": 1787225880
+          },
+          {
+            "c": 344,
+            "t": 1787225940
+          },
+          {
+            "c": 343.65,
+            "t": 1787226000
+          },
+          {
+            "c": 343.49,
+            "t": 1787226060
+          },
+          {
+            "c": 343.77,
+            "t": 1787226120
+          },
+          {
+            "c": 343.7,
+            "t": 1787226180
+          },
+          {
+            "c": 343.68,
+            "t": 1787226240
+          },
+          {
+            "c": 344.26,
+            "t": 1787226300
+          },
+          {
+            "c": 344.57,
+            "t": 1787226360
+          },
+          {
+            "c": 344.68,
+            "t": 1787226420
+          },
+          {
+            "c": 344.46,
+            "t": 1787226480
+          },
+          {
+            "c": 344.47,
+            "t": 1787226540
+          },
+          {
+            "c": 344.55,
+            "t": 1787226600
+          },
+          {
+            "c": 345.05,
+            "t": 1787226660
+          },
+          {
+            "c": 345.22,
+            "t": 1787226720
+          },
+          {
+            "c": 345.31,
+            "t": 1787226780
+          },
+          {
+            "c": 345.74,
+            "t": 1787226840
+          },
+          {
+            "c": 345.45,
+            "t": 1787226900
+          },
+          {
+            "c": 345.58,
+            "t": 1787226960
+          },
+          {
+            "c": 345.68,
+            "t": 1787227020
+          },
+          {
+            "c": 345.65,
+            "t": 1787227080
+          },
+          {
+            "c": 345.77,
+            "t": 1787227140
+          },
+          {
+            "c": 345.92,
+            "t": 1787227200
+          },
+          {
+            "c": 346.06,
+            "t": 1787227260
+          },
+          {
+            "c": 346.16,
+            "t": 1787227320
+          },
+          {
+            "c": 345.9,
+            "t": 1787227380
+          },
+          {
+            "c": 345.92,
+            "t": 1787227440
+          },
+          {
+            "c": 345.77,
+            "t": 1787227500
+          },
+          {
+            "c": 345.35,
+            "t": 1787227560
+          },
+          {
+            "c": 345.9,
+            "t": 1787227620
+          },
+          {
+            "c": 345.6,
+            "t": 1787227680
+          },
+          {
+            "c": 345.53,
+            "t": 1787227740
+          },
+          {
+            "c": 345.58,
+            "t": 1787227800
+          },
+          {
+            "c": 346.11,
+            "t": 1787227860
+          },
+          {
+            "c": 346.1,
+            "t": 1787227920
+          },
+          {
+            "c": 345.97,
+            "t": 1787227980
+          },
+          {
+            "c": 345.52,
+            "t": 1787228040
+          },
+          {
+            "c": 345.48,
+            "t": 1787228100
+          },
+          {
+            "c": 345.2,
+            "t": 1787228160
+          },
+          {
+            "c": 345.35,
+            "t": 1787228220
+          },
+          {
+            "c": 345.34,
+            "t": 1787228280
+          },
+          {
+            "c": 345.17,
+            "t": 1787228340
+          },
+          {
+            "c": 345.03,
+            "t": 1787228400
+          },
+          {
+            "c": 345.36,
+            "t": 1787228460
+          },
+          {
+            "c": 345.25,
+            "t": 1787228520
+          },
+          {
+            "c": 345.14,
+            "t": 1787228580
+          },
+          {
+            "c": 344.8,
+            "t": 1787228640
+          },
+          {
+            "c": 344.78,
+            "t": 1787228700
+          },
+          {
+            "c": 344.87,
+            "t": 1787228760
+          },
+          {
+            "c": 344.82,
+            "t": 1787228820
+          },
+          {
+            "c": 344.8,
+            "t": 1787228880
+          },
+          {
+            "c": 344.82,
+            "t": 1787228940
+          },
+          {
+            "c": 344.52,
+            "t": 1787229000
+          },
+          {
+            "c": 344.52,
+            "t": 1787229060
+          },
+          {
+            "c": 344.52,
+            "t": 1787229120
+          },
+          {
+            "c": 344.69,
+            "t": 1787229180
+          },
+          {
+            "c": 344.66,
+            "t": 1787229240
+          },
+          {
+            "c": 344.54,
+            "t": 1787229300
+          },
+          {
+            "c": 344.725,
+            "t": 1787229360
+          },
+          {
+            "c": 344.637,
+            "t": 1787229420
+          },
+          {
+            "c": 344.77,
+            "t": 1787229480
+          },
+          {
+            "c": 344.76,
+            "t": 1787229540
+          },
+          {
+            "c": 345.06,
+            "t": 1787229600
+          },
+          {
+            "c": 344.84,
+            "t": 1787229660
+          },
+          {
+            "c": 344.65,
+            "t": 1787229720
+          },
+          {
+            "c": 344.69,
+            "t": 1787229780
+          },
+          {
+            "c": 345.025,
+            "t": 1787229840
+          },
+          {
+            "c": 345.28,
+            "t": 1787229900
+          },
+          {
+            "c": 345.26,
+            "t": 1787229960
+          },
+          {
+            "c": 345.11,
+            "t": 1787230020
+          },
+          {
+            "c": 344.565,
+            "t": 1787230080
+          },
+          {
+            "c": 344.26,
+            "t": 1787230140
+          },
+          {
+            "c": 344.335,
+            "t": 1787230200
+          },
+          {
+            "c": 344.182,
+            "t": 1787230260
+          },
+          {
+            "c": 343.79,
+            "t": 1787230320
+          },
+          {
+            "c": 343.715,
+            "t": 1787230380
+          },
+          {
+            "c": 343.754,
+            "t": 1787230440
+          },
+          {
+            "c": 343.87,
+            "t": 1787230500
+          },
+          {
+            "c": 343.858,
+            "t": 1787230560
+          },
+          {
+            "c": 344.17,
+            "t": 1787230620
+          },
+          {
+            "c": 344.27,
+            "t": 1787230680
+          },
+          {
+            "c": 344.56,
+            "t": 1787230740
+          },
+          {
+            "c": 344.845,
+            "t": 1787230800
+          },
+          {
+            "c": 344.307,
+            "t": 1787230860
+          },
+          {
+            "c": 344.325,
+            "t": 1787230920
+          },
+          {
+            "c": 344.285,
+            "t": 1787230980
+          },
+          {
+            "c": 344.265,
+            "t": 1787231040
+          },
+          {
+            "c": 344.29,
+            "t": 1787231100
+          },
+          {
+            "c": 343.932,
+            "t": 1787231160
+          },
+          {
+            "c": 343.94,
+            "t": 1787231220
+          },
+          {
+            "c": 343.55,
+            "t": 1787231280
+          },
+          {
+            "c": 343.46,
+            "t": 1787231340
+          },
+          {
+            "c": 343.725,
+            "t": 1787231400
+          },
+          {
+            "c": 343.6,
+            "t": 1787231460
+          },
+          {
+            "c": 343.574,
+            "t": 1787231520
+          },
+          {
+            "c": 343.52,
+            "t": 1787231580
+          },
+          {
+            "c": 343.528,
+            "t": 1787231640
+          },
+          {
+            "c": 343.26,
+            "t": 1787231700
+          },
+          {
+            "c": 343.13,
+            "t": 1787231760
+          },
+          {
+            "c": 342.963,
+            "t": 1787231820
+          },
+          {
+            "c": 342.9,
+            "t": 1787231880
+          },
+          {
+            "c": 342.664,
+            "t": 1787231940
+          },
+          {
+            "c": 342.84,
+            "t": 1787232000
+          },
+          {
+            "c": 342.812,
+            "t": 1787232060
+          },
+          {
+            "c": 342.842,
+            "t": 1787232120
+          },
+          {
+            "c": 342.88,
+            "t": 1787232180
+          },
+          {
+            "c": 342.87,
+            "t": 1787232240
+          },
+          {
+            "c": 342.715,
+            "t": 1787232300
+          },
+          {
+            "c": 342.7,
+            "t": 1787232360
+          },
+          {
+            "c": 342.416,
+            "t": 1787232420
+          },
+          {
+            "c": 342.477,
+            "t": 1787232480
+          },
+          {
+            "c": 342.41,
+            "t": 1787232540
+          },
+          {
+            "c": 342.42,
+            "t": 1787232600
+          },
+          {
+            "c": 342.68,
+            "t": 1787232660
+          },
+          {
+            "c": 342.42,
+            "t": 1787232720
+          },
+          {
+            "c": 342.29,
+            "t": 1787232780
+          },
+          {
+            "c": 342.24,
+            "t": 1787232840
+          },
+          {
+            "c": 342.31,
+            "t": 1787232900
+          },
+          {
+            "c": 342.235,
+            "t": 1787232960
+          },
+          {
+            "c": 341.94,
+            "t": 1787233020
+          },
+          {
+            "c": 341.945,
+            "t": 1787233080
+          },
+          {
+            "c": 341.95,
+            "t": 1787233140
+          },
+          {
+            "c": 341.87,
+            "t": 1787233200
+          },
+          {
+            "c": 341.82,
+            "t": 1787233260
+          },
+          {
+            "c": 341.848,
+            "t": 1787233320
+          },
+          {
+            "c": 341.88,
+            "t": 1787233380
+          },
+          {
+            "c": 341.87,
+            "t": 1787233440
+          },
+          {
+            "c": 342.015,
+            "t": 1787233500
+          },
+          {
+            "c": 342.144,
+            "t": 1787233560
+          },
+          {
+            "c": 342.42,
+            "t": 1787233620
+          },
+          {
+            "c": 342.57,
+            "t": 1787233680
+          },
+          {
+            "c": 342.48,
+            "t": 1787233740
+          },
+          {
+            "c": 342.69,
+            "t": 1787233800
+          },
+          {
+            "c": 342.75,
+            "t": 1787233860
+          },
+          {
+            "c": 342.545,
+            "t": 1787233920
+          },
+          {
+            "c": 342.54,
+            "t": 1787233980
+          },
+          {
+            "c": 342.395,
+            "t": 1787234040
+          },
+          {
+            "c": 342.29,
+            "t": 1787234100
+          },
+          {
+            "c": 342.33,
+            "t": 1787234160
+          },
+          {
+            "c": 342.63,
+            "t": 1787234220
+          },
+          {
+            "c": 342.798,
+            "t": 1787234280
+          },
+          {
+            "c": 342.62,
+            "t": 1787234340
+          },
+          {
+            "c": 342.46,
+            "t": 1787234400
+          },
+          {
+            "c": 342.41,
+            "t": 1787234460
+          },
+          {
+            "c": 342.31,
+            "t": 1787234520
+          },
+          {
+            "c": 342.42,
+            "t": 1787234580
+          },
+          {
+            "c": 342.315,
+            "t": 1787234640
+          },
+          {
+            "c": 342.385,
+            "t": 1787234700
+          },
+          {
+            "c": 342.16,
+            "t": 1787234760
+          },
+          {
+            "c": 341.96,
+            "t": 1787234820
+          },
+          {
+            "c": 341.9,
+            "t": 1787234880
+          },
+          {
+            "c": 341.97,
+            "t": 1787234940
+          },
+          {
+            "c": 341.66,
+            "t": 1787235000
+          },
+          {
+            "c": 341.84,
+            "t": 1787235060
+          },
+          {
+            "c": 341.77,
+            "t": 1787235120
+          },
+          {
+            "c": 341.849,
+            "t": 1787235180
+          },
+          {
+            "c": 341.715,
+            "t": 1787235240
+          },
+          {
+            "c": 341.783,
+            "t": 1787235300
+          },
+          {
+            "c": 341.7,
+            "t": 1787235360
+          },
+          {
+            "c": 341.86,
+            "t": 1787235420
+          },
+          {
+            "c": 342.22,
+            "t": 1787235480
+          },
+          {
+            "c": 342.464,
+            "t": 1787235540
+          },
+          {
+            "c": 342.625,
+            "t": 1787235600
+          },
+          {
+            "c": 342.609,
+            "t": 1787235660
+          },
+          {
+            "c": 342.615,
+            "t": 1787235720
+          },
+          {
+            "c": 342.77,
+            "t": 1787235780
+          },
+          {
+            "c": 342.915,
+            "t": 1787235840
+          },
+          {
+            "c": 342.83,
+            "t": 1787235900
+          },
+          {
+            "c": 342.78,
+            "t": 1787235960
+          },
+          {
+            "c": 343.005,
+            "t": 1787236020
+          },
+          {
+            "c": 343.41,
+            "t": 1787236080
+          },
+          {
+            "c": 343.33,
+            "t": 1787236140
+          },
+          {
+            "c": 343.37,
+            "t": 1787236200
+          },
+          {
+            "c": 343.36,
+            "t": 1787236260
+          },
+          {
+            "c": 343.385,
+            "t": 1787236320
+          },
+          {
+            "c": 343.25,
+            "t": 1787236380
+          },
+          {
+            "c": 343.14,
+            "t": 1787236440
+          },
+          {
+            "c": 343.23,
+            "t": 1787236500
+          },
+          {
+            "c": 343.48,
+            "t": 1787236560
+          },
+          {
+            "c": 343.33,
+            "t": 1787236620
+          },
+          {
+            "c": 343.205,
+            "t": 1787236680
+          },
+          {
+            "c": 343.102,
+            "t": 1787236740
+          },
+          {
+            "c": 343.2,
+            "t": 1787236800
+          },
+          {
+            "c": 343.185,
+            "t": 1787236860
+          },
+          {
+            "c": 343.16,
+            "t": 1787236920
+          },
+          {
+            "c": 343.465,
+            "t": 1787236980
+          },
+          {
+            "c": 343.445,
+            "t": 1787237040
+          },
+          {
+            "c": 343.366,
+            "t": 1787237100
+          },
+          {
+            "c": 343.331,
+            "t": 1787237160
+          },
+          {
+            "c": 343.53,
+            "t": 1787237220
+          },
+          {
+            "c": 343.67,
+            "t": 1787237280
+          },
+          {
+            "c": 343.69,
+            "t": 1787237340
+          },
+          {
+            "c": 343.453,
+            "t": 1787237400
+          },
+          {
+            "c": 343.575,
+            "t": 1787237460
+          },
+          {
+            "c": 343.59,
+            "t": 1787237520
+          },
+          {
+            "c": 343.355,
+            "t": 1787237580
+          },
+          {
+            "c": 343.355,
+            "t": 1787237640
+          },
+          {
+            "c": 343.36,
+            "t": 1787237700
+          },
+          {
+            "c": 343.58,
+            "t": 1787237760
+          },
+          {
+            "c": 343.604,
+            "t": 1787237820
+          },
+          {
+            "c": 343.52,
+            "t": 1787237880
+          },
+          {
+            "c": 343.52,
+            "t": 1787237940
+          },
+          {
+            "c": 343.29,
+            "t": 1787238000
+          },
+          {
+            "c": 343.36,
+            "t": 1787238060
+          },
+          {
+            "c": 343.68,
+            "t": 1787238120
+          },
+          {
+            "c": 343.4,
+            "t": 1787238180
+          },
+          {
+            "c": 343.42,
+            "t": 1787238240
+          },
+          {
+            "c": 343.27,
+            "t": 1787238300
+          },
+          {
+            "c": 343.3,
+            "t": 1787238360
+          },
+          {
+            "c": 342.98,
+            "t": 1787238420
+          },
+          {
+            "c": 343.075,
+            "t": 1787238480
+          },
+          {
+            "c": 343.27,
+            "t": 1787238540
+          },
+          {
+            "c": 343.2,
+            "t": 1787238600
+          },
+          {
+            "c": 343.09,
+            "t": 1787238660
+          },
+          {
+            "c": 342.99,
+            "t": 1787238720
+          },
+          {
+            "c": 343.144,
+            "t": 1787238780
+          },
+          {
+            "c": 342.96,
+            "t": 1787238840
+          },
+          {
+            "c": 343.21,
+            "t": 1787238900
+          },
+          {
+            "c": 343.2,
+            "t": 1787238960
+          },
+          {
+            "c": 342.98,
+            "t": 1787239020
+          },
+          {
+            "c": 342.95,
+            "t": 1787239080
+          },
+          {
+            "c": 342.59,
+            "t": 1787239140
+          },
+          {
+            "c": 342.65,
+            "t": 1787239200
+          },
+          {
+            "c": 342.86,
+            "t": 1787239260
+          },
+          {
+            "c": 343.29,
+            "t": 1787239320
+          },
+          {
+            "c": 343.48,
+            "t": 1787239380
+          },
+          {
+            "c": 343.38,
+            "t": 1787239440
+          },
+          {
+            "c": 343.365,
+            "t": 1787239500
+          },
+          {
+            "c": 343.35,
+            "t": 1787239560
+          },
+          {
+            "c": 342.972,
+            "t": 1787239620
+          },
+          {
+            "c": 343.23,
+            "t": 1787239680
+          },
+          {
+            "c": 343.3,
+            "t": 1787239740
+          },
+          {
+            "c": 343.46,
+            "t": 1787239800
+          },
+          {
+            "c": 343.44,
+            "t": 1787239860
+          },
+          {
+            "c": 343.79,
+            "t": 1787239920
+          },
+          {
+            "c": 343.57,
+            "t": 1787239980
+          },
+          {
+            "c": 343.29,
+            "t": 1787240040
+          },
+          {
+            "c": 343.45,
+            "t": 1787240100
+          },
+          {
+            "c": 343.745,
+            "t": 1787240160
+          },
+          {
+            "c": 343.63,
+            "t": 1787240220
+          },
+          {
+            "c": 343.715,
+            "t": 1787240280
+          },
+          {
+            "c": 343.67,
+            "t": 1787240340
+          },
+          {
+            "c": 343.75,
+            "t": 1787240400
+          },
+          {
+            "c": 343.815,
+            "t": 1787240460
+          },
+          {
+            "c": 343.666,
+            "t": 1787240520
+          },
+          {
+            "c": 343.635,
+            "t": 1787240580
+          },
+          {
+            "c": 343.6,
+            "t": 1787240640
+          },
+          {
+            "c": 343.48,
+            "t": 1787240700
+          },
+          {
+            "c": 343.26,
+            "t": 1787240760
+          },
+          {
+            "c": 343.29,
+            "t": 1787240820
+          },
+          {
+            "c": 343.25,
+            "t": 1787240880
+          },
+          {
+            "c": 343.56,
+            "t": 1787240940
+          },
+          {
+            "c": 344.06,
+            "t": 1787241000
+          },
+          {
+            "c": 343.97,
+            "t": 1787241060
+          },
+          {
+            "c": 344.05,
+            "t": 1787241120
+          },
+          {
+            "c": 344.19,
+            "t": 1787241180
+          },
+          {
+            "c": 343.52,
+            "t": 1787241240
+          },
+          {
+            "c": 344.08,
+            "t": 1787241300
+          },
+          {
+            "c": 344.63,
+            "t": 1787241360
+          },
+          {
+            "c": 344.96,
+            "t": 1787241420
+          },
+          {
+            "c": 345.25,
+            "t": 1787241480
+          },
+          {
+            "c": 345.06,
+            "t": 1787241540
+          },
+          {
+            "c": 345.13,
+            "t": 1787241600
+          }
+        ]
+      },
+      "changes": {
+        "price1w": 339.96,
+        "price1m": 380.84,
+        "price3m": 404.11,
+        "price6m": 411.71,
+        "priceYTD": 449.72,
+        "price1y": 329.31,
+        "price5y": 224.49,
+        "priceMAX": 1.593
+      },
+      "source": "polygon"
+    },
+    "history": [
+      {
+        "t": "2026-08-03",
+        "o": 310.96,
+        "h": 351.62,
+        "l": 310.425,
+        "c": 345.13,
+        "a": 345.13,
+        "v": 442297795,
+        "ch": 10.9
+      },
+      {
+        "t": "2026-07-01",
+        "o": 421.46,
+        "h": 432.86,
+        "l": 297.38,
+        "c": 311.21,
+        "a": 311.21,
+        "v": 934904171,
+        "ch": -26.01
+      },
+      {
+        "t": "2026-06-01",
+        "o": 427.49,
+        "h": 433.6,
+        "l": 368.6,
+        "c": 420.6,
+        "a": 420.6,
+        "v": 1002561005,
+        "ch": -3.49
+      },
+      {
+        "t": "2026-05-01",
+        "o": 382.485,
+        "h": 453.4,
+        "l": 378.8,
+        "c": 435.79,
+        "a": 435.79,
+        "v": 1051619619,
+        "ch": 14.19
+      },
+      {
+        "t": "2026-04-01",
+        "o": 378.63,
+        "h": 409.28,
+        "l": 337.24,
+        "c": 381.63,
+        "a": 381.63,
+        "v": 1416250380,
+        "ch": 2.66
+      },
+      {
+        "t": "2026-03-02",
+        "o": 390.6,
+        "h": 416.38,
+        "l": 352.14,
+        "c": 371.75,
+        "a": 371.75,
+        "v": 1362671997,
+        "ch": -7.64
+      },
+      {
+        "t": "2026-02-02",
+        "o": 421.29,
+        "h": 436.35,
+        "l": 387.531,
+        "c": 402.51,
+        "a": 402.51,
+        "v": 1123487705,
+        "ch": -6.48
+      },
+      {
+        "t": "2026-01-02",
+        "o": 457.8,
+        "h": 458.34,
+        "l": 414.62,
+        "c": 430.41,
+        "a": 430.41,
+        "v": 1275015552,
+        "ch": -4.29
+      },
+      {
+        "t": "2025-12-01",
+        "o": 425.32,
+        "h": 498.83,
+        "l": 422.12,
+        "c": 449.72,
+        "a": 449.72,
+        "v": 1635943862,
+        "ch": 4.54
+      },
+      {
+        "t": "2025-11-03",
+        "o": 455.99,
+        "h": 474.07,
+        "l": 382.78,
+        "c": 430.17,
+        "a": 430.17,
+        "v": 1628434598,
+        "ch": -5.78
+      },
+      {
+        "t": "2025-10-01",
+        "o": 443.8,
+        "h": 470.75,
+        "l": 411.45,
+        "c": 456.56,
+        "a": 456.56,
+        "v": 2032094864,
+        "ch": 2.66
+      }
+    ],
+    "quote": {
+      "p": 345.13,
+      "pd": 345.13,
+      "c": -5.99,
+      "cp": -1.71,
+      "cl": 351.12,
+      "cdr": -1,
+      "o": 346.2,
+      "h": 347.5,
+      "l": 338.96,
+      "v": 30678988,
+      "ts": 1787256000000,
+      "u": "Aug 20, 2026, 4:00 PM EDT",
+      "td": "2026-08-20",
+      "h52": 498.83,
+      "l52": 297.38,
+      "ex": "NASDAQ",
+      "ms": "closed",
+      "fms": "post",
+      "e": true,
+      "ep": 345.9,
+      "epd": 345.9,
+      "ec": 0.77,
+      "ecp": 0.22,
+      "eu": "Aug 20, 2026, 5:47 PM EDT",
+      "es": "After-hours",
+      "ets": 1787262462681.7256,
+      "etd": "2026-08-20",
+      "epv": null,
+      "days": 0,
+      "exp": 1787262485068,
+      "symbol": "TSLA",
+      "uid": "TSLA"
+    }
+  }
+}

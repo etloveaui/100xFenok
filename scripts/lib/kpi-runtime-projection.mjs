@@ -14,12 +14,19 @@
 
 import { PUBLIC_RUNTIME_DENY_KEYS } from "./kpi-contract-constants.mjs";
 import { classifyRuntimeSlotRecoveries, classifyRuntimeSlots } from "./kpi-runtime-slots.mjs";
+import { LANE_REGISTRY } from "./lane-registry.mjs";
 
 export const PUBLIC_PROJECTION_VERSION = "kpi_runtime_projection.v2";
 
 // Canonical deny-key list lives in kpi-contract-constants.mjs; re-exported here
 // for existing importers of the projection module.
 export { PUBLIC_RUNTIME_DENY_KEYS };
+
+const PUBLIC_PRE_ACTIVATION_LANE_IDS = new Set(
+  LANE_REGISTRY.lanes
+    .filter((lane) => lane.public_mirror_allowed !== false)
+    .map((lane) => lane.id),
+);
 
 function deepClone(value) {
   return value == null ? value : JSON.parse(JSON.stringify(value));
@@ -35,6 +42,8 @@ function projectLaneRecoveryDetails(doc) {
       lane.details.last_attempt = {
         event_name: lastAttempt.event_name ?? null,
         observed_at: lastAttempt.observed_at ?? null,
+        ...(Object.hasOwn(lastAttempt, "outcome") ? { outcome: lastAttempt.outcome ?? null } : {}),
+        ...(Object.hasOwn(lastAttempt, "failure_class") ? { failure_class: lastAttempt.failure_class ?? null } : {}),
       };
     }
     const recovered = lane?.details?.recovery_recovered;
@@ -54,6 +63,29 @@ function projectLaneRecoveryDetails(doc) {
     }
     const recovery = lane?.details?.recovery;
     if (!recovery || typeof recovery !== "object" || Array.isArray(recovery)) continue;
+    if (recovery.lane_id === "slickcharts" && typeof recovery.composite_state === "string") {
+      lane.details.recovery = {
+        lane_id: "slickcharts",
+        generated_at: recovery.generated_at ?? null,
+        composite_state: recovery.composite_state,
+        members: Object.fromEntries(Object.entries(recovery.members ?? {}).map(([member, row]) => [member, {
+          resolution_state: row?.resolution_state ?? null,
+          retry: row?.retry ?? null,
+          file_count: row?.file_count ?? 0,
+          recovered_at: row?.last_recovery?.recovered_at ?? null,
+          recovery_run_attempt: row?.last_recovery?.recovery_run_attempt ?? null,
+          recovery_event_name: row?.last_recovery?.recovery_event_name ?? null,
+        }])),
+        retry_members: Array.isArray(recovery.retry_members) ? recovery.retry_members : [],
+        current_attempt: recovery.current_attempt ? {
+          event_name: recovery.current_attempt.event_name ?? null,
+          observed_at: recovery.current_attempt.observed_at ?? null,
+          member_id: recovery.current_attempt.member_id ?? null,
+          decision: recovery.current_attempt.decision ?? null,
+        } : null,
+      };
+      continue;
+    }
     lane.details.recovery = {
       lane_id: recovery.lane_id ?? null,
       generated_at: recovery.generated_at ?? null,
@@ -90,6 +122,9 @@ function ageHours(fromIso, nowIso) {
 
 function projectFetchCronSkipDetection(diagnostic) {
   const rows = Array.isArray(diagnostic?.rows) ? diagnostic.rows : [];
+  const preActivationMembers = Array.isArray(diagnostic?.pre_activation_members)
+    ? diagnostic.pre_activation_members
+    : [];
   const laneIds = (state) => [...new Set(rows
     .filter((row) => row?.state === state && typeof row?.lane_id === "string")
     .map((row) => row.lane_id))].sort();
@@ -100,6 +135,10 @@ function projectFetchCronSkipDetection(diagnostic) {
     status: diagnostic?.status ?? null,
     deployment_blocking: diagnostic?.deployment_blocking === true,
     counts: deepClone(diagnostic?.counts ?? null),
+    pre_activation_lane_ids: [...new Set(preActivationMembers
+      .filter((row) => typeof row?.lane_id === "string"
+        && PUBLIC_PRE_ACTIVATION_LANE_IDS.has(row.lane_id))
+      .map((row) => row.lane_id))].sort(),
     suspected_skip_lane_ids: laneIds("suspected_skip"),
     attempt_gap_lane_ids: laneIds("attempt_gap"),
   };

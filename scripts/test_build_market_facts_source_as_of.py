@@ -48,8 +48,33 @@ with tempfile.TemporaryDirectory() as tmp:
     stamps = bmf.market_fact_source_stamps(rows, {"AAA", "BBB"}, root)
     assert stamps["core_surface_source_as_of"] == "2026-07-08"
     assert stamps["full_universe_floor_as_of"] == "2026-06-17"
-    assert stamps["source_stamp_diagnostics"]["core_price_stamped_count"] == 2
-    assert bmf.market_fact_source_stamps(rows, {"MISSING"}, root)["core_surface_source_as_of"] is None
+    complete_diagnostics = stamps["source_stamp_diagnostics"]
+    assert complete_diagnostics["core_price_stamped_count"] == 2
+    assert complete_diagnostics["core_price_missing_count"] == 0
+    assert complete_diagnostics["core_price_missing_tickers"] == []
+    assert complete_diagnostics["core_price_absent_from_index_count"] == 0
+    assert complete_diagnostics["core_price_absent_from_index_tickers"] == []
+    assert (
+        complete_diagnostics["core_price_stamped_count"]
+        + complete_diagnostics["core_price_missing_count"]
+        + complete_diagnostics["core_price_absent_from_index_count"]
+        == complete_diagnostics["core_member_count"]
+    )
+
+    absent = bmf.market_fact_source_stamps(rows, {"AAA", "SKHY"}, root)
+    absent_diagnostics = absent["source_stamp_diagnostics"]
+    assert absent["core_surface_source_as_of"] is None
+    assert absent_diagnostics["core_price_stamped_count"] == 1
+    assert absent_diagnostics["core_price_missing_count"] == 0
+    assert absent_diagnostics["core_price_missing_tickers"] == []
+    assert absent_diagnostics["core_price_absent_from_index_count"] == 1
+    assert absent_diagnostics["core_price_absent_from_index_tickers"] == ["SKHY"]
+    assert (
+        absent_diagnostics["core_price_stamped_count"]
+        + absent_diagnostics["core_price_missing_count"]
+        + absent_diagnostics["core_price_absent_from_index_count"]
+        == absent_diagnostics["core_member_count"]
+    )
     assert bmf.market_fact_source_stamps([None], {"AAA"}, root)["source_stamp_diagnostics"]["status"] == "invalid_index_rows"
 
     payloads["BBB"]["facts"]["price"].pop("as_of")
@@ -59,6 +84,14 @@ with tempfile.TemporaryDirectory() as tmp:
     assert missing["full_universe_floor_as_of"] == "2026-06-17", "full observed floor is not erased by one missing stamp"
     assert missing["source_stamp_diagnostics"]["core_price_source_complete"] is False
     assert missing["source_stamp_diagnostics"]["core_price_missing_tickers"] == ["BBB"]
+    assert missing["source_stamp_diagnostics"]["core_price_absent_from_index_count"] == 0
+    assert missing["source_stamp_diagnostics"]["core_price_absent_from_index_tickers"] == []
+    assert (
+        missing["source_stamp_diagnostics"]["core_price_stamped_count"]
+        + missing["source_stamp_diagnostics"]["core_price_missing_count"]
+        + missing["source_stamp_diagnostics"]["core_price_absent_from_index_count"]
+        == missing["source_stamp_diagnostics"]["core_member_count"]
+    )
     assert missing["source_stamp_diagnostics"]["full_fact_source_complete"] is False
 
 assert bmf.yf_source_as_of({"source_as_of": "2026-07-12", "fetched_at": "2026-07-12"}) is None

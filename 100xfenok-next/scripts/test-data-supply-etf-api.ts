@@ -4,6 +4,10 @@ import {
   buildUnavailableEtfRepresentation,
   canonicalJsonSha256,
   mergeEtfDataSupply,
+  ETF_FRESHNESS_WORKFLOW_FILE,
+  reconstructEtfFreshness,
+  etfStaleRefusalActive,
+  evaluateEtfStaleRefusal,
   resolveDataSupplyEtfDetail,
   sha256Text,
   validateDataSupplyPolicyRegistryForConsumer,
@@ -26,17 +30,26 @@ function document(value: JsonRecord, raw = JSON.stringify(value)): PublicJsonDoc
 async function fixture(options: {
   ticker?: string;
   enrolledTicker?: string;
-  state?: "fresh_fallback" | "lkg_fallback" | "unavailable";
+  state?: "fresh_primary" | "fresh_fallback" | "lkg_primary" | "lkg_fallback" | "unavailable";
   direct?: JsonRecord | null;
   payload?: JsonRecord | null;
   guardMissing?: boolean;
   indexMissing?: boolean;
   invalidCounts?: boolean;
   crossbind?: boolean;
+  shardMissing?: boolean;
+  shardUnavailable?: boolean;
+  staleRefusalActive?: boolean;
+  alarmState?: JsonRecord | null;
+  plane?: JsonRecord | null;
+  planeUnavailable?: boolean;
+  planeThrows?: boolean;
+  planeBytesPrefixBom?: boolean;
 }) {
   const ticker = options.ticker ?? "ADIU";
   const enrolledTicker = options.enrolledTicker ?? ticker;
   const unavailable = options.state === "unavailable";
+  const primary = options.state === "fresh_primary" || options.state === "lkg_primary";
   const entry = unavailable
     ? {
         ticker,
@@ -54,8 +67,8 @@ async function fixture(options: {
         ticker,
         enrollment_state: "enrolled",
         resolution_state: options.state ?? "fresh_fallback",
-        provider_role: "fallback",
-        fallback_depth: 1,
+        provider_role: primary ? "primary" : "fallback",
+        fallback_depth: primary ? 0 : 1,
         source_as_of: "2026-07-02T01:57:29Z",
         selected_at: "2026-07-11T00:00:00Z",
         reason_code: "primary_unavailable",
@@ -106,10 +119,50 @@ async function fixture(options: {
 
   return resolveDataSupplyEtfDetail(ticker, {
     now: () => new Date("2026-07-12T00:00:00Z"),
+    staleRefusalActive: () => options.staleRefusalActive === true,
+    readAlarmState: async () => options.alarmState ? document(options.alarmState) : null,
     readEnrollment: async () => options.guardMissing ? null : document(guard),
     readIndex: async () => options.indexMissing ? null : document(index),
     readProjectionPayload: async () => payloadDoc,
-    readDirectPayload: async () => options.direct ? document(options.direct) : null,
+    readPlanePayload: async () => {
+      if (options.planeThrows) throw new Error("fixture plane failure");
+      if (options.planeUnavailable || !options.plane) {
+        return { kind: "unavailable", reason: "fixture" } as const;
+      }
+      const raw = JSON.stringify(options.plane);
+      return {
+        kind: "ok",
+        document: {
+          ...document(options.plane, raw),
+          bytes: new TextEncoder().encode(`${options.planeBytesPrefixBom ? "\uFEFF" : ""}${raw}`).buffer,
+        },
+        generationId: "stockanalysis-etf-detail-fixture",
+        sourceAsOf: "2026-08-16",
+      } as const;
+    },
+    readShardPayload: async () => {
+      if (options.shardUnavailable) {
+        return {
+          kind: "shard_integrity_unavailable",
+          reason: "fixture",
+          manifestSha256: "d".repeat(64),
+          snapshotId: "e".repeat(64),
+        } as const;
+      }
+      if (options.shardMissing || !options.direct) {
+        return {
+          kind: "ticker_not_found",
+          manifestSha256: "d".repeat(64),
+          snapshotId: "e".repeat(64),
+        } as const;
+      }
+      return {
+        kind: "ok",
+        document: document(options.direct),
+        manifestSha256: "d".repeat(64),
+        snapshotId: "e".repeat(64),
+      } as const;
+    },
   });
 }
 
@@ -154,6 +207,111 @@ const lkg = await fixture({ state: "lkg_fallback" });
 assert.equal(lkg.kind, "selected");
 if (lkg.kind === "selected") assert.equal(lkg.dataSupply.resolution_state, "lkg_fallback");
 
+const primaryPayload = {
+  schema_version: "stockanalysis/v1",
+  source: "stockanalysis",
+  asset_type: "etf",
+  ticker: "ADIU",
+  fetched_at: "2026-07-02T01:57:29Z",
+  source_as_of: "2026-07-02T01:57:29Z",
+  normalized: { holdings: [] },
+};
+for (const state of ["fresh_primary", "lkg_primary"] as const) {
+  const primary = await fixture({ state, payload: primaryPayload });
+  assert.equal(primary.kind, "selected", `${state} must accept the primary provider schema`);
+}
+const rejectedPrimaryProviderMismatch = await fixture({
+  state: "fresh_primary",
+  payload: { ...primaryPayload, source: "yahoo_finance" },
+});
+assert.equal(rejectedPrimaryProviderMismatch.kind, "error");
+
+const planePayload = {
+  schema_version: "stockanalysis/v1",
+  source: "stockanalysis",
+  asset_type: "etf",
+  ticker: "SPY",
+  fetched_at: "2026-08-16T00:00:00Z",
+  name: "미국 대형주 ETF",
+};
+const staticPayload = { ...planePayload };
+const planeShadowMatch = await fixture({
+  ticker: "SPY",
+  enrolledTicker: "ADIU",
+  plane: planePayload,
+  direct: staticPayload,
+});
+assert.equal(planeShadowMatch.kind, "shard");
+if (planeShadowMatch.kind === "shard") {
+  assert.equal(planeShadowMatch.planeShadowParity, "match");
+  assert.equal(planeShadowMatch.document.value.fetched_at, "2026-08-16T00:00:00Z");
+}
+
+const planeShadowMismatch = await fixture({
+  ticker: "SPY",
+  enrolledTicker: "ADIU",
+  plane: planePayload,
+  direct: { ...staticPayload, fetched_at: "2026-08-15T00:00:00Z" },
+});
+assert.equal(planeShadowMismatch.kind, "shard");
+if (planeShadowMismatch.kind === "shard") {
+  assert.equal(planeShadowMismatch.planeShadowParity, "mismatch");
+  assert.equal(planeShadowMismatch.document.value.fetched_at, "2026-08-15T00:00:00Z");
+}
+
+const planeBomMismatch = await fixture({
+  ticker: "SPY",
+  enrolledTicker: "ADIU",
+  plane: planePayload,
+  direct: staticPayload,
+  planeBytesPrefixBom: true,
+});
+assert.equal(planeBomMismatch.kind, "shard");
+if (planeBomMismatch.kind === "shard") {
+  assert.equal(planeBomMismatch.planeShadowParity, "mismatch", "parity compares exact UTF-8 bytes");
+}
+
+const invalidPlaneShadow = await fixture({
+  ticker: "SPY",
+  enrolledTicker: "ADIU",
+  plane: { ...planePayload, source: "unexpected" },
+  direct: staticPayload,
+});
+assert.equal(invalidPlaneShadow.kind, "shard");
+if (invalidPlaneShadow.kind === "shard") {
+  assert.equal(invalidPlaneShadow.planeShadowParity, "mismatch");
+}
+
+const unavailablePlaneFallback = await fixture({
+  ticker: "SPY",
+  enrolledTicker: "ADIU",
+  planeUnavailable: true,
+  direct: staticPayload,
+});
+assert.equal(unavailablePlaneFallback.kind, "shard", "unavailable plane falls back to static LKG shard");
+if (unavailablePlaneFallback.kind === "shard") {
+  assert.equal(unavailablePlaneFallback.planeShadowParity, "unavailable");
+}
+
+const failedPlaneFallback = await fixture({
+  ticker: "SPY",
+  enrolledTicker: "ADIU",
+  planeThrows: true,
+  direct: staticPayload,
+});
+assert.equal(failedPlaneFallback.kind, "shard", "a failed shadow probe cannot break static serving");
+if (failedPlaneFallback.kind === "shard") {
+  assert.equal(failedPlaneFallback.planeShadowParity, "unavailable");
+}
+
+const planeCannotRescueMissingShard = await fixture({
+  ticker: "SPY",
+  enrolledTicker: "ADIU",
+  plane: planePayload,
+  shardMissing: true,
+});
+assert.equal(planeCannotRescueMissingShard.kind, "not_found");
+
 const unavailable = await fixture({ state: "unavailable", payload: null });
 assert.equal(unavailable.kind, "unavailable");
 if (unavailable.kind === "unavailable") {
@@ -162,12 +320,37 @@ if (unavailable.kind === "unavailable") {
   const rawSummary = { schema_version: "stockanalysis/v1", ticker: "ADIU", detail_status: "surface_only" };
   const summary = mergeEtfDataSupply(rawSummary, unavailable.dataSupply);
   assert.equal((summary.data_supply as JsonRecord).resolution_state, "unavailable");
-  const summaryRepresentation = buildUnavailableEtfRepresentation("ADIU", unavailable.dataSupply, rawSummary);
-  assert.equal(summaryRepresentation.kind, "summary");
-  const typedRepresentation = buildUnavailableEtfRepresentation("ADIU", unavailable.dataSupply, null);
+  const typedRepresentation = buildUnavailableEtfRepresentation("ADIU", unavailable.dataSupply);
   assert.equal(typedRepresentation.kind, "typed_unavailable");
   assert.equal(typedRepresentation.body.error, "DATA_SUPPLY_UNAVAILABLE");
 }
+
+const { buildEtfResponse, getEtfResponse } = await import("../src/app/api/data/stockanalysis/[assetType]/[ticker]/route");
+const shardUnavailableResponse = await buildEtfResponse({
+  kind: "shard_unavailable",
+  reason: "fixture-corrupt-shard",
+  projectionDigest: "d".repeat(64),
+}, "SPY");
+assert.equal(shardUnavailableResponse.status, 503);
+assert.equal(shardUnavailableResponse.headers.get("Cache-Control"), "no-store");
+assert.equal((await shardUnavailableResponse.json()).error, "STOCKANALYSIS_ETF_SHARD_UNAVAILABLE");
+
+const shadowResponse = await buildEtfResponse(planeShadowMatch, "SPY");
+assert.equal(shadowResponse.status, 200);
+assert.equal(shadowResponse.headers.get("X-100x-ETF-Detail-Authority"), null);
+assert.equal(shadowResponse.headers.get("X-Data-Plane-Generation"), null);
+assert.deepEqual(await shadowResponse.json(), staticPayload);
+
+const absentResponse = await buildEtfResponse({
+  kind: "not_found",
+  projectionDigest: "d".repeat(64),
+}, "ZZZZ");
+assert.equal(absentResponse.status, 404);
+assert.equal((await absentResponse.json()).error, "STOCKANALYSIS_ASSET_NOT_FOUND");
+
+const unavailableResponse = await buildEtfResponse(unavailable, "ADIU");
+assert.equal(unavailableResponse.status, 503);
+assert.equal((await unavailableResponse.json()).error, "DATA_SUPPLY_UNAVAILABLE");
 
 assert.equal(unavailableStateAgeHours(
   "2026-07-11T00:00:00Z",
@@ -260,21 +443,52 @@ const direct = {
   normalized: { holdings: [] },
 };
 const unenrolled = await fixture({ ticker: "IEFA", enrolledTicker: "ADIU", indexMissing: true, direct });
-assert.equal(unenrolled.kind, "direct");
+assert.equal(unenrolled.kind, "shard");
 const unenrolledWithIndex = await fixture({ ticker: "IEFA", enrolledTicker: "ADIU", direct });
-assert.equal(unenrolledWithIndex.kind, "direct");
+assert.equal(unenrolledWithIndex.kind, "shard");
 const sourceProviderDirect = await fixture({
   ticker: "IEFA",
   enrolledTicker: "ADIU",
   direct: { ...direct, source: undefined, source_provider: "stockanalysis" },
 });
-assert.equal(sourceProviderDirect.kind, "direct");
+assert.equal(sourceProviderDirect.kind, "shard");
+const stockanalysisWithYahooNewsAttribution = await fixture({
+  ticker: "IEFA",
+  enrolledTicker: "ADIU",
+  direct: {
+    ...direct,
+    raw: {
+      overview: {
+        news: {
+          data: [{ source: "Yahoo Finance" }],
+        },
+      },
+    },
+  },
+});
+assert.equal(
+  stockanalysisWithYahooNewsAttribution.kind,
+  "shard",
+  "nested news attribution must not be confused with the ETF payload provider",
+);
 const rejectedYahooDirect = await fixture({
   ticker: "IEFA",
   enrolledTicker: "ADIU",
   direct: { ...direct, source: "yahoo_finance", detail_status: "yf_fallback" },
 });
-assert.equal(rejectedYahooDirect.kind, "error");
+assert.equal(rejectedYahooDirect.kind, "shard_unavailable");
+const missingShardTicker = await fixture({
+  ticker: "IEFA",
+  enrolledTicker: "ADIU",
+  shardMissing: true,
+});
+assert.equal(missingShardTicker.kind, "not_found");
+const unavailableShard = await fixture({
+  ticker: "IEFA",
+  enrolledTicker: "ADIU",
+  shardUnavailable: true,
+});
+assert.equal(unavailableShard.kind, "shard_unavailable");
 
 const collision = await fixture({ payload: {
   schema_version: "yf-etf-detail/v1",
@@ -287,13 +501,17 @@ assert.equal(collision.kind, "error");
 
 const originalCaches = globalThis.caches;
 let stored: Response | null = null;
+let storedKey: string | null = null;
 let loads = 0;
 Object.defineProperty(globalThis, "caches", {
   configurable: true,
   value: {
     default: {
-      match: async () => stored?.clone(),
-      put: async (_request: Request, response: Response) => { stored = response.clone(); },
+      match: async (request: Request) => request.url === storedKey ? stored?.clone() : undefined,
+      put: async (request: Request, response: Response) => {
+        storedKey = request.url;
+        stored = response.clone();
+      },
     },
   },
 });
@@ -317,8 +535,103 @@ try {
   assert.equal(second.headers.get("X-100x-Cache"), "HIT");
   assert.equal(second.headers.get("Cache-Control"), "public, max-age=15, s-maxage=60");
   assert.equal(loads, 1);
+
+  stored = null;
+  let resolutions = 0;
+  const shardRaw = `{
+  "schema_version": "stockanalysis/v1",
+  "source": "stockanalysis",
+  "asset_type": "etf",
+  "ticker": "SPY",
+  "escaped": "\\u2603"
+}
+`;
+  const resolveShard = async () => {
+    resolutions += 1;
+    return {
+      kind: "shard",
+      document: document(JSON.parse(shardRaw), shardRaw),
+      projectionDigest: "d".repeat(64),
+      planeShadowParity: "unavailable",
+    } as const;
+  };
+  const firstEtf = await getEtfResponse("SPY", "build-a", resolveShard);
+  const secondEtf = await getEtfResponse("SPY", "build-a", resolveShard);
+  assert.equal(firstEtf.headers.get("X-100x-Cache"), "MISS");
+  assert.equal(secondEtf.headers.get("X-100x-Cache"), "HIT");
+  assert.equal(await firstEtf.text(), shardRaw, "cache MISS must preserve exact canonical ETF bytes");
+  assert.equal(await secondEtf.text(), shardRaw, "cache HIT must preserve exact canonical ETF bytes");
+  assert.equal(resolutions, 1, "a cache hit must not rerun ETF registry and shard validation");
+  await getEtfResponse("SPY", "build-b", resolveShard);
+  assert.equal(resolutions, 2, "a new build version must not reuse the prior artifact response");
+
+  stored = Response.json(
+    { schema_version: "stockanalysis/v1", source: "stockanalysis", asset_type: "etf", ticker: "SPY" },
+    { headers: { "Cache-Control": "public, max-age=300" } },
+  );
+  storedKey = "https://100xfenok-cache.local/responses/negative%3AADIU%3Adigest";
+  let bypassLoads = 0;
+  const bypassed = await withResponseCache(
+    "negative:ADIU:digest",
+    300,
+    async () => {
+      bypassLoads += 1;
+      return Response.json(
+        { error: "STOCKANALYSIS_ETF_SHARD_UNAVAILABLE", ticker: "SPY" },
+        { status: 503, headers: { "Cache-Control": "no-store" } },
+      );
+    },
+    { bypassCache: true },
+  );
+  assert.equal(bypassed.status, 503, "a cached success must not mask shard integrity failure");
+  assert.equal(bypassLoads, 1);
 } finally {
   Object.defineProperty(globalThis, "caches", { configurable: true, value: originalCaches });
+}
+
+// D3 static-LKG aging is active on the public ETF detail resolver. A signal that
+// cannot be trusted refuses rather than serves; healthy publication state keeps
+// the existing selected response unmarked.
+{
+  const alarm = (state: string | null, age: unknown, generatedAt: unknown = "2026-07-12T00:00:00Z") => ({
+    generated_at: generatedAt,
+    watched_workflows: [{
+      file: ETF_FRESHNESS_WORKFLOW_FILE,
+      ...(state === null ? {} : { data_freshness_state: state }),
+      data_freshness_age_hours_at_generation: age,
+    }],
+  });
+  const armed = (alarmState: JsonRecord | null) =>
+    fixture({ state: "fresh_fallback", staleRefusalActive: true, alarmState });
+
+  assert.equal(etfStaleRefusalActive(), true, "runtime publication-cycle refusal must be active");
+
+  // One representative per rejection branch. A present-but-absurd field is not a
+  // lesser problem than a missing one, and a future clock must not be clamped.
+  for (const [label, alarmState] of [
+    ["negative age", alarm("healthy", -1)],
+    ["non-finite age", alarm("healthy", Number.NaN)],
+    ["invalid document clock", alarm("healthy", 12, "not-a-date")],
+    ["document clock later than now", alarm("healthy", 12, "2026-07-13T00:00:00Z")],
+    ["absent signal", null],
+  ] as const) {
+    assert.equal((await armed(alarmState)).kind, "unavailable", `${label} must refuse`);
+  }
+  assert.equal(reconstructEtfFreshness(alarm("healthy", 12), new Date(Number.NaN)).ageHours, null, "non-finite now");
+  assert.equal(evaluateEtfStaleRefusal({ state: "healthy", ageHours: Number.NaN, active: true }).verdict, "unavailable");
+
+  const delayed = await armed(alarm("delayed", 1));
+  assert.equal(
+    delayed.kind === "selected" ? delayed.dataSupply.publication_freshness : null,
+    "delayed",
+    "an active delayed verdict marks the selected response",
+  );
+  assert.equal((await armed(alarm("healthy", 61))).kind, "unavailable", "past the ceiling refuses");
+  const healthy = await armed(alarm("healthy", 1));
+  assert.ok(
+    healthy.kind === "selected" && !("publication_freshness" in healthy.dataSupply),
+    "a healthy signal serves unmarked, which is also how recovery clears",
+  );
 }
 
 console.log("data-supply ETF API tests passed");

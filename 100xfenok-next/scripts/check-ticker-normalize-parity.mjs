@@ -117,7 +117,10 @@ function existingDataSnapshot() {
   const dataRoot = path.join(APP_ROOT, "public", "data");
   const stockIndexPath = path.join(dataRoot, "computed", "entity_graph_stock_index.json");
   const graphPath = path.join(dataRoot, "computed", "entity_graph.json");
-  const edgarIndexPath = path.join(dataRoot, "edgar-korean-summaries", "index.json");
+  const mirrorEdgarIndexPath = path.join(dataRoot, "edgar-korean-summaries", "index.json");
+  const edgarIndexPath = fs.existsSync(mirrorEdgarIndexPath)
+    ? mirrorEdgarIndexPath
+    : path.join(APP_ROOT, "..", "data", "edgar-korean-summaries", "index.json");
   return {
     dataRoot,
     stocks: readJson(stockIndexPath).stocks ?? {},

@@ -64,65 +64,117 @@
       "run_id": "29707016827",
       "schedule": "0 22 * * 0",
       "shard": "0/6"
+    },
+    {
+      "attempts_used": 1,
+      "event_name": "schedule",
+      "failures": [],
+      "latency_ms": 494,
+      "natural": true,
+      "observed_at": "2026-07-26T23:02:52Z",
+      "outcome": "fresh",
+      "run_attempt": 1,
+      "run_id": "30224292652",
+      "schedule": "0 22 * * 0",
+      "shard": "0/6"
+    },
+    {
+      "attempts_used": 1,
+      "event_name": "schedule",
+      "failures": [],
+      "latency_ms": 520,
+      "natural": true,
+      "observed_at": "2026-08-07T00:55:33Z",
+      "outcome": "fresh",
+      "run_attempt": 1,
+      "run_id": "31136222210",
+      "schedule": "7 20 * * 0-5",
+      "shard": "70/72"
+    },
+    {
+      "attempts_used": 1,
+      "event_name": "schedule",
+      "failures": [],
+      "latency_ms": 544,
+      "natural": true,
+      "observed_at": "2026-08-10T13:38:56Z",
+      "outcome": "fresh",
+      "run_attempt": 1,
+      "run_id": "31393796703",
+      "schedule": "7 12 * * 0-5",
+      "shard": "18/72"
+    },
+    {
+      "attempts_used": 1,
+      "event_name": "workflow_dispatch",
+      "failures": [],
+      "latency_ms": 479,
+      "natural": false,
+      "observed_at": "2026-09-28T01:17:59Z",
+      "outcome": "fresh",
+      "run_attempt": 1,
+      "run_id": "36365270594",
+      "schedule": "",
+      "shard": ""
     }
   ],
   "current": {
-    "fetched_at": "2026-07-19T23:03:29Z",
-    "history_as_of": "2026-07-17",
+    "fetched_at": "2026-09-28T01:25:47Z",
+    "history_as_of": "2026-09-25",
     "path": "data/yf/finance/AXTU.json",
-    "payload_sha256": "605a557bfe2cd2095a79e7d157a3bad8d4c507cda3ee5a478a4279a14294830e",
-    "quote_as_of": "2026-07-17T19:59:54Z",
-    "source_as_of": "2026-07-17"
+    "payload_sha256": "9cfd8e56dff6363773512d1fdb7c1664b1e5b931c02ac374029cce108b2ad3df",
+    "quote_as_of": "2026-09-25T19:59:14Z",
+    "source_as_of": "2026-09-25"
   },
   "discovered_from": [
     "stockanalysis_etf"
   ],
   "last_attempt": {
     "attempts_used": 1,
-    "event_name": "schedule",
+    "event_name": "workflow_dispatch",
     "failures": [],
-    "latency_ms": 1012,
-    "natural": true,
-    "observed_at": "2026-07-19T22:59:54Z",
+    "latency_ms": 479,
+    "natural": false,
+    "observed_at": "2026-09-28T01:17:59Z",
     "outcome": "fresh",
     "run_attempt": 1,
-    "run_id": "29707016827",
-    "schedule": "0 22 * * 0",
-    "shard": "0/6"
+    "run_id": "36365270594",
+    "schedule": "",
+    "shard": ""
   },
   "lkg": {
-    "fetched_at": "2026-06-18T19:31:23Z",
-    "history_as_of": "2026-06-18",
+    "fetched_at": "2026-08-10T13:40:40Z",
+    "history_as_of": "2026-08-10",
     "path": "data/admin/yahoo-batch-quote-history/lkg/AXTU.json",
-    "payload_sha256": "b64a514c8633e7917200f9d4f8fe262020ada489f12f96473f0eb7e3732cfced",
-    "quote_as_of": null,
-    "source_as_of": "2026-06-18"
+    "payload_sha256": "3f7786bceb71f10ecff57a5ac8a3be77fa9459f837bc65327069b009caa20e21",
+    "quote_as_of": "2026-08-10T13:40:37Z",
+    "source_as_of": "2026-08-10"
   },
   "promotion_contract": "provider_observation/v2",
   "provider_observation": {
-    "event_name": "schedule",
-    "history_as_of": "2026-07-17",
-    "observed_at": "2026-07-19T22:59:54Z",
-    "payload_sha256": "0985637455a5408cfab471d6c689f22c8d3d98574f21e46dc028472d2db21843",
-    "quote_as_of": "2026-07-17T19:59:54Z",
+    "event_name": "workflow_dispatch",
+    "history_as_of": "2026-09-25",
+    "observed_at": "2026-09-28T01:17:59Z",
+    "payload_sha256": "eea9bf0e59b7cacb6544b9f172b5291fcb093ca488c8c4ea1c95222cb9eeeefb",
+    "quote_as_of": "2026-09-25T19:59:14Z",
     "run_attempt": 1,
-    "run_id": "29707016827",
+    "run_id": "36365270594",
     "schema_version": "provider_observation/v2",
-    "source_as_of": "2026-07-17"
+    "source_as_of": "2026-09-25"
   },
   "resolution_state": "fresh_primary",
   "retry": false,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "stale": {
-    "age_business_days": 15,
-    "classified_at": "2026-07-13T04:33:56Z",
-    "classified_run_id": "29224221077",
+    "age_business_days": 7,
+    "classified_at": "2026-08-19T23:42:29Z",
+    "classified_run_id": "32314261503",
     "expected_resolution": "next_natural_yahoo_run",
     "max_business_days": 6,
-    "message": "AXTU holds LKG because Yahoo source date 2026-06-18 is 15 business days old, beyond the 6-day bound; it will retry on the next natural Yahoo run.",
+    "message": "AXTU holds LKG because Yahoo source date 2026-08-10 is 7 business days old, beyond the 6-day bound; it will retry on the next natural Yahoo run.",
     "reason": "source_age_exceeds_lane_bound",
-    "source_as_of": "2026-06-18"
+    "source_as_of": "2026-08-10"
   },
   "ticker": "AXTU",
-  "updated_at": "2026-07-19T22:59:54Z"
+  "updated_at": "2026-09-28T01:17:59Z"
 }

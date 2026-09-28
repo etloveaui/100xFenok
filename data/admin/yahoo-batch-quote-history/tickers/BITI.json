@@ -51,54 +51,91 @@
       "run_id": "29460793523",
       "schedule": "20 23 * * 1-5",
       "shard": "1/5"
+    },
+    {
+      "attempts_used": 1,
+      "event_name": "schedule",
+      "failures": [],
+      "latency_ms": 605,
+      "natural": true,
+      "observed_at": "2026-08-09T18:54:49Z",
+      "outcome": "fresh",
+      "run_attempt": 1,
+      "run_id": "31330182297",
+      "schedule": "7 18 * * 0-5",
+      "shard": "9/72"
+    },
+    {
+      "attempts_used": 1,
+      "event_name": "workflow_dispatch",
+      "failures": [],
+      "latency_ms": 448,
+      "natural": false,
+      "observed_at": "2026-09-28T01:17:59Z",
+      "outcome": "fresh",
+      "run_attempt": 1,
+      "run_id": "36365270594",
+      "schedule": "",
+      "shard": ""
     }
   ],
   "current": {
-    "fetched_at": "2026-07-16T00:21:47Z",
-    "history_as_of": "2026-07-15",
+    "fetched_at": "2026-09-28T01:28:52Z",
+    "history_as_of": "2026-09-25",
     "path": "data/yf/finance/BITI.json",
-    "payload_sha256": "d8fb72488a6b96ed088e57c64755c9714473f3a238326faa63610644ef2a03c4",
-    "quote_as_of": "2026-07-15T20:00:00Z",
-    "source_as_of": "2026-07-15"
+    "payload_sha256": "6bb0e9b68402cf776b68c0fd9276dd4dbafbc9e442960e1450f49d09e9f01ef6",
+    "quote_as_of": "2026-09-25T20:00:00Z",
+    "source_as_of": "2026-09-25"
   },
   "discovered_from": [
-    "market_facts",
     "stockanalysis_etf"
   ],
   "last_attempt": {
     "attempts_used": 1,
-    "event_name": "schedule",
+    "event_name": "workflow_dispatch",
     "failures": [],
-    "latency_ms": 707,
-    "natural": true,
-    "observed_at": "2026-07-16T00:19:31Z",
+    "latency_ms": 448,
+    "natural": false,
+    "observed_at": "2026-09-28T01:17:59Z",
     "outcome": "fresh",
     "run_attempt": 1,
-    "run_id": "29460793523",
-    "schedule": "20 23 * * 1-5",
-    "shard": "1/5"
+    "run_id": "36365270594",
+    "schedule": "",
+    "shard": ""
   },
   "lkg": {
-    "fetched_at": "2026-06-18T11:25:23Z",
-    "history_as_of": "2026-06-17",
+    "fetched_at": "2026-08-09T18:56:43Z",
+    "history_as_of": "2026-08-07",
     "path": "data/admin/yahoo-batch-quote-history/lkg/BITI.json",
-    "payload_sha256": "85fc9e314712d2b28f0a6e59423942465fc3fb5dd830bbde7c0514317091164d",
-    "quote_as_of": null,
-    "source_as_of": "2026-06-17"
+    "payload_sha256": "d742862ae259d1109095294e2b4b43282a00b99d8b489645ac0b752b01716bf8",
+    "quote_as_of": "2026-08-07T20:00:00Z",
+    "source_as_of": "2026-08-07"
+  },
+  "promotion_contract": "provider_observation/v2",
+  "provider_observation": {
+    "event_name": "workflow_dispatch",
+    "history_as_of": "2026-09-25",
+    "observed_at": "2026-09-28T01:17:59Z",
+    "payload_sha256": "0def12f3c1cc69fcef6333dd15de3158d50ca6176ac1fe42601fd0e9fba0e43f",
+    "quote_as_of": "2026-09-25T20:00:00Z",
+    "run_attempt": 1,
+    "run_id": "36365270594",
+    "schema_version": "provider_observation/v2",
+    "source_as_of": "2026-09-25"
   },
   "resolution_state": "fresh_primary",
   "retry": false,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "stale": {
-    "age_business_days": 16,
-    "classified_at": "2026-07-13T04:33:56Z",
-    "classified_run_id": "29224221077",
+    "age_business_days": 8,
+    "classified_at": "2026-08-19T23:42:29Z",
+    "classified_run_id": "32314261503",
     "expected_resolution": "next_natural_yahoo_run",
     "max_business_days": 6,
-    "message": "BITI holds LKG because Yahoo source date 2026-06-17 is 16 business days old, beyond the 6-day bound; it will retry on the next natural Yahoo run.",
+    "message": "BITI holds LKG because Yahoo source date 2026-08-07 is 8 business days old, beyond the 6-day bound; it will retry on the next natural Yahoo run.",
     "reason": "source_age_exceeds_lane_bound",
-    "source_as_of": "2026-06-17"
+    "source_as_of": "2026-08-07"
   },
   "ticker": "BITI",
-  "updated_at": "2026-07-16T00:19:31Z"
+  "updated_at": "2026-09-28T01:17:59Z"
 }

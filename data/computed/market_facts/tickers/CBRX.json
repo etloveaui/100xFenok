@@ -2,10 +2,10 @@
   "schema_version": "market-facts/v1",
   "ticker": "CBRX",
   "asset_type": "etf",
-  "generated_at": "2026-07-22T02:28:28Z",
-  "source_as_of": null,
+  "generated_at": "2026-09-28T04:28:25Z",
+  "source_as_of": "2026-09-25",
   "source_as_of_scope": "selected_price_fact",
-  "source_as_of_reason": "selected price fact has no provider source date",
+  "source_as_of_reason": null,
   "identity": {
     "name": "CBRX",
     "exchange": null,
@@ -16,11 +16,149 @@
     "category": null
   },
   "facts": {
+    "price": {
+      "value": 10.98,
+      "source": "stockanalysis.quote",
+      "as_of": "2026-09-25",
+      "fetched_at": "2026-09-28T03:56:51Z",
+      "confidence": "observed",
+      "policy": [
+        "yf",
+        "yf.fast_info",
+        "stockanalysis.quote",
+        "yf.stockanalysis_fallback.quote",
+        "slickcharts"
+      ],
+      "candidates": [
+        {
+          "value": 10.98,
+          "source": "stockanalysis.quote",
+          "as_of": "2026-09-25",
+          "fetched_at": "2026-09-28T03:56:51Z",
+          "confidence": "observed"
+        }
+      ],
+      "candidate_count": 1
+    },
+    "previous_close": {
+      "value": 10.98,
+      "source": "stockanalysis.quote",
+      "as_of": "2026-09-25",
+      "fetched_at": "2026-09-28T03:56:51Z",
+      "confidence": "observed",
+      "policy": [
+        "yf",
+        "stockanalysis.quote",
+        "yf.stockanalysis_fallback.quote"
+      ],
+      "candidates": [
+        {
+          "value": 10.98,
+          "source": "stockanalysis.quote",
+          "as_of": "2026-09-25",
+          "fetched_at": "2026-09-28T03:56:51Z",
+          "confidence": "observed"
+        }
+      ],
+      "candidate_count": 1
+    },
+    "change": {
+      "value": 0,
+      "source": "stockanalysis.quote",
+      "as_of": "2026-09-25",
+      "fetched_at": "2026-09-28T03:56:51Z",
+      "confidence": "observed",
+      "policy": [
+        "stockanalysis.quote",
+        "yf",
+        "yf.derived",
+        "yf.stockanalysis_fallback.quote"
+      ],
+      "candidates": [
+        {
+          "value": 0,
+          "source": "stockanalysis.quote",
+          "as_of": "2026-09-25",
+          "fetched_at": "2026-09-28T03:56:51Z",
+          "confidence": "observed"
+        }
+      ],
+      "candidate_count": 1
+    },
+    "change_pct": {
+      "value": 0,
+      "source": "stockanalysis.quote",
+      "as_of": "2026-09-25",
+      "fetched_at": "2026-09-28T03:56:51Z",
+      "confidence": "observed",
+      "policy": [
+        "stockanalysis.quote",
+        "yf",
+        "yf.derived",
+        "yf.stockanalysis_fallback.quote"
+      ],
+      "candidates": [
+        {
+          "value": 0,
+          "source": "stockanalysis.quote",
+          "as_of": "2026-09-25",
+          "fetched_at": "2026-09-28T03:56:51Z",
+          "confidence": "observed"
+        }
+      ],
+      "candidate_count": 1
+    },
+    "total_assets": {
+      "value": 12020000.0,
+      "source": "stockanalysis.overview",
+      "as_of": "2026-09-25",
+      "fetched_at": "2026-09-28T03:56:51Z",
+      "confidence": "observed",
+      "policy": [
+        "yf",
+        "stockanalysis.overview",
+        "yf.stockanalysis_fallback.overview"
+      ],
+      "candidates": [
+        {
+          "value": 12020000.0,
+          "source": "stockanalysis.overview",
+          "as_of": "2026-09-25",
+          "fetched_at": "2026-09-28T03:56:51Z",
+          "confidence": "observed"
+        }
+      ],
+      "candidate_count": 1
+    },
+    "expense_ratio": {
+      "value": 1.49,
+      "source": "stockanalysis.overview",
+      "as_of": "2026-09-25",
+      "fetched_at": "2026-09-28T03:56:51Z",
+      "confidence": "observed",
+      "unit": "percent_points",
+      "policy": [
+        "yf",
+        "stockanalysis.overview",
+        "yf.stockanalysis_fallback.overview"
+      ],
+      "candidates": [
+        {
+          "value": 1.49,
+          "source": "stockanalysis.overview",
+          "as_of": "2026-09-25",
+          "fetched_at": "2026-09-28T03:56:51Z",
+          "confidence": "observed",
+          "unit": "percent_points"
+        }
+      ],
+      "candidate_count": 1
+    },
     "return_1m": {
-      "value": -42.44354371742907,
-      "source": "stockanalysis.etf_screener.performance",
-      "as_of": null,
-      "fetched_at": "2026-07-22T01:09:51Z",
+      "value": 18.319,
+      "source": "stockanalysis.detail.performance",
+      "as_of": "2026-09-25",
+      "fetched_at": "2026-09-28T03:56:51Z",
       "confidence": "observed",
       "unit": "percent_points",
       "policy": [
@@ -31,11 +169,42 @@
       ],
       "candidates": [
         {
-          "value": -42.44354371742907,
-          "source": "stockanalysis.etf_screener.performance",
-          "as_of": null,
-          "fetched_at": "2026-07-22T01:09:51Z",
+          "value": 18.319,
+          "source": "stockanalysis.detail.performance",
+          "as_of": "2026-09-25",
+          "fetched_at": "2026-09-28T03:56:51Z",
           "confidence": "observed",
+          "unit": "percent_points"
+        },
+        {
+          "value": 18.319,
+          "source": "stockanalysis.etf_universe.performance",
+          "as_of": null,
+          "fetched_at": "2026-09-21T01:14:16Z",
+          "confidence": "observed",
+          "unit": "percent_points"
+        }
+      ],
+      "candidate_count": 2
+    },
+    "return_3m": {
+      "value": -7.963118189438386,
+      "source": "stockanalysis.detail.history",
+      "as_of": "2026-09-25",
+      "fetched_at": "2026-09-28T03:56:51Z",
+      "confidence": "derived",
+      "unit": "percent_points",
+      "policy": [
+        "yf.history_1y",
+        "stockanalysis.detail.history"
+      ],
+      "candidates": [
+        {
+          "value": -7.963118189438386,
+          "source": "stockanalysis.detail.history",
+          "as_of": "2026-09-25",
+          "fetched_at": "2026-09-28T03:56:51Z",
+          "confidence": "derived",
           "unit": "percent_points"
         }
       ],
@@ -43,33 +212,82 @@
     }
   },
   "etf": {
-    "holdings_count": null,
-    "holdings_updated": null,
-    "top_holdings": [],
+    "holdings_count": 4,
+    "holdings_updated": "Sep 25, 2026",
+    "top_holdings": [
+      {
+        "name": "Cfd Cerebras Systems Inc - A",
+        "weight_pct": 200.0,
+        "shares": 109734,
+        "raw": {
+          "n": "Cfd Cerebras Systems Inc - A",
+          "as": "200.00%",
+          "sh": "109,734"
+        }
+      },
+      {
+        "name": "Cashusd",
+        "weight_pct": 108.26,
+        "shares": 12280428,
+        "raw": {
+          "n": "Cashusd",
+          "as": "108.26%",
+          "sh": "12,280,428"
+        }
+      },
+      {
+        "name": "Net Other Assets",
+        "weight_pct": -32.96,
+        "shares": 3738394,
+        "raw": {
+          "n": "Net Other Assets",
+          "as": "-32.96%",
+          "sh": "3,738,394"
+        }
+      },
+      {
+        "name": "Cfd Cerebras Systems Inc - A",
+        "weight_pct": -175.3,
+        "shares": 19885861,
+        "raw": {
+          "n": "Cfd Cerebras Systems Inc - A",
+          "as": "-175.30%",
+          "sh": "19,885,861"
+        }
+      }
+    ],
     "asset_allocation": null,
     "sectors": null,
     "countries": null,
-    "classification": null,
+    "classification": {
+      "is_leveraged": true,
+      "leverage_factor": 2.0,
+      "is_inverse": false,
+      "is_single_stock": true,
+      "underlying": "CBRS",
+      "source": "stockanalysis.overview.description",
+      "confidence": "high"
+    },
     "yahoo_funds_data_available": false
   },
   "financials": null,
   "sources": {
     "yf": false,
-    "stockanalysis": false,
+    "stockanalysis": true,
     "stockanalysis_yf_fallback": false,
     "stockanalysis_etf_catalog": true,
     "slickcharts": false
   },
   "source_files": {
     "yf": null,
-    "stockanalysis": null,
+    "stockanalysis": "computed/data-supply/etf-detail/payloads/CBRX.json",
     "stockanalysis_yf_fallback": null,
-    "stockanalysis_etf_catalog": "stockanalysis/surfaces/etf_screener.json",
+    "stockanalysis_etf_catalog": "stockanalysis/etf_universe.json",
     "slickcharts": null
   },
   "resolver": {
     "version": "market-facts-resolver/v1",
-    "detail_authority": "data_supply:unavailable",
+    "detail_authority": "data_supply:fresh_primary",
     "field_source_policy": {
       "price": [
         "yf",

@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { normalizeForEntityKey } from "@/lib/ticker";
+import { fetchJsonOrNull } from "@/lib/client/data-fetch";
 
 export type SectionKey = "earnings" | "actions" | "markets" | "etfs" | "ipo" | "industry";
 export type AssetKind = "stock" | "etf";
@@ -35,7 +36,7 @@ const SECTION_LABELS: Record<SectionKey, string> = {
 const SECTION_ORDER: SectionKey[] = ["earnings", "actions", "markets", "etfs", "ipo", "industry"];
 const ETF_SECTION_ORDER: SectionKey[] = ["etfs", "markets", "actions", "industry"];
 
-const surfaceCache: Record<string, TickerSurfacePayload | null> = {};
+const surfaceCache: Record<string, TickerSurfacePayload> = {};
 const surfacePending: Record<string, Promise<TickerSurfacePayload | null>> = {};
 
 export function loadTickerSurfaces(ticker: string, assetKind?: AssetKind): Promise<TickerSurfacePayload | null> {
@@ -46,16 +47,17 @@ export function loadTickerSurfaces(ticker: string, assetKind?: AssetKind): Promi
   if (cacheKey in surfacePending) return surfacePending[cacheKey];
 
   const query = assetKind ? `?asset=${assetKind}` : "";
-  const request = fetch(`/api/data/stockanalysis/ticker/${encodeURIComponent(symbol)}/surfaces/${query}`, { cache: "no-store" })
-    .then((res) => (res.ok ? res.json() as Promise<TickerSurfacePayload> : null))
+  const request = fetchJsonOrNull<TickerSurfacePayload>(
+    `/api/data/stockanalysis/ticker/${encodeURIComponent(symbol)}/surfaces/${query}`,
+    { init: { cache: "no-store" } },
+  )
     .then((payload) => {
-      surfaceCache[cacheKey] = payload;
-      delete surfacePending[cacheKey];
+      // Cache successes only: a failed (or 429) response must not stick.
+      if (payload !== null) surfaceCache[cacheKey] = payload;
       return payload;
     })
-    .catch(() => {
+    .finally(() => {
       delete surfacePending[cacheKey];
-      return null;
     });
 
   surfacePending[cacheKey] = request;
@@ -151,7 +153,7 @@ export default function TickerSurfaceEventsCard({
       <section className="panel stock-section">
         <div className="panel-h"><h2>관련 이벤트</h2></div>
         <div className="panel-b">
-          <p className="text-xs font-semibold text-slate-500">티커별 관련 이벤트를 확인하고 있습니다.</p>
+          <p className="text-[12px] font-semibold text-slate-500">티커별 관련 이벤트를 확인하고 있습니다.</p>
         </div>
       </section>
     );
@@ -168,21 +170,21 @@ export default function TickerSurfaceEventsCard({
       <div className="panel-b space-y-3">
         {sections.map(({ section, rows }) => (
           <div key={section}>
-            <p className="mb-1 text-[10px] font-black uppercase tracking-[0.08em] text-slate-500">
+            <p className="mb-1 text-[12px] font-black uppercase tracking-[0.08em] text-slate-500">
               {SECTION_LABELS[section]}
             </p>
             <div className="space-y-1.5">
               {rows.map(({ surface, row }, index) => (
                 <div key={`${surface.surface}-${index}`} className="rounded-lg border border-slate-200 bg-white/70 px-2.5 py-2">
                   <div className="flex items-center justify-between gap-2">
-                    <span className="min-w-0 truncate text-[11px] font-black text-slate-800">
+                    <span className="min-w-0 truncate text-[12px] font-black text-slate-800">
                       {pickName(row)}
                     </span>
                     <span className="shrink-0 rounded-full border border-slate-300 bg-white px-2 py-0.5 text-[9px] font-black uppercase tracking-[0.06em] text-slate-700">
                       {surface.label}
                     </span>
                   </div>
-                  <p className="mt-1 min-w-0 truncate text-[10px] font-semibold text-slate-500">
+                  <p className="mt-1 min-w-0 truncate text-[12px] font-semibold text-slate-500">
                     {pickTicker(row)} · {rowLine(section, row)}
                   </p>
                 </div>
@@ -190,7 +192,7 @@ export default function TickerSurfaceEventsCard({
             </div>
           </div>
         ))}
-        <p className="text-[9px] font-semibold text-slate-500">
+        <p className="text-[12px] font-semibold text-slate-500">
           관련 이벤트는 서버에서 티커별로 정리해 표시합니다.
         </p>
       </div>

@@ -37,9 +37,13 @@ export interface ScreenerConnectionMeta {
 
 export interface ScreenerStock {
   guruHolders?: number | null;
+  guruNewCount?: number | null;
+  guruIncreasedCount?: number | null;
+  guruDecreasedCount?: number | null;
+  guruMeanWeightDelta?: number | null;
+  guruCurrentQuarter?: string | null;
+  guruPreviousQuarter?: string | null;
   actionScore?: number | null;
-  fenokEdgeScore?: number | null;
-  fenokEdgeDirection?: string | null;
   fenokSignalConfidence?: string | null;
   fenokSignalCoverageRatio?: number | null;
   fenokSignalAsOf?: string | null;
@@ -53,6 +57,8 @@ export interface ScreenerStock {
   fenokShortTermCommonBasisCall?: "집중" | "혼재" | "희석" | null;
   fenokShortTermInputCount?: number | null;
   fenokShortTermBasisCode?: string | null;
+  fenokShortTermComparableScore?: number | null;
+  fenokShortTermComparableCall?: "집중" | "혼재" | "희석" | null;
   fenokLongTermScore?: number | null;
   fenokLongTermConvictionScore?: number | null;
   fenokLongTermConvictionCall?: "집중" | "혼재" | "희석" | null;
@@ -178,7 +184,6 @@ export type ScreenerSortKey =
   | "ret3y"
   | "ret5y"
   | "actionScore"
-  | "fenokEdgeScore"
   | "guruHolders"
   | "operatingMarginFy1"
   | "roeFy1"
@@ -202,7 +207,8 @@ export type ScreenerSortKey =
   | "upsidePotentialScore"
   | "downsidePressureScore"
   | "marketSimilarityScore"
-  | "sp500TrackingSimilarityScore";
+  | "sp500TrackingSimilarityScore"
+  | "edgeGap";
 
 export const SCREENER_SORT_KEYS: ScreenerSortKey[] = [
   "ticker",
@@ -244,7 +250,6 @@ export const SCREENER_SORT_KEYS: ScreenerSortKey[] = [
   "ret3y",
   "ret5y",
   "actionScore",
-  "fenokEdgeScore",
   "guruHolders",
   "operatingMarginFy1",
   "roeFy1",
@@ -269,6 +274,7 @@ export const SCREENER_SORT_KEYS: ScreenerSortKey[] = [
   "downsidePressureScore",
   "marketSimilarityScore",
   "sp500TrackingSimilarityScore",
+  "edgeGap",
 ];
 
 export type SortDir = "asc" | "desc";

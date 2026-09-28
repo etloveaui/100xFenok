@@ -19,6 +19,12 @@ from pathlib import Path
 
 TICKERS = ["AAPL", "NVDA", "MSFT", "GOOGL", "AMZN", "META", "TSLA", "AVGO", "JPM", "LLY"]
 ROOT = Path(__file__).resolve().parent.parent
+SCRIPT_DIR = Path(__file__).resolve().parent
+if str(SCRIPT_DIR) not in sys.path:
+    sys.path.insert(0, str(SCRIPT_DIR))
+
+from lib.diagnostic_detail import bounded_diagnostic_detail
+
 OUT_DIR = ROOT / "data" / "yf" / "finance"
 DEPRECATION_MESSAGE = (
     "DS-P1-008 closed: fetch-yf-finance-v0.py is a deprecated 10-ticker PoC. "
@@ -138,20 +144,21 @@ def main(argv=None):
     for ticker in TICKERS:
         print(f"[fetch] {ticker} ...", end=" ", flush=True)
         data, latency_ms, error = fetch_ticker(ticker)
+        error_detail = bounded_diagnostic_detail(error) if error else error
 
         out_path = OUT_DIR / f"{ticker}.json"
         payload = {
             "ticker": ticker,
             "fetched_at": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()),
             "latency_ms": latency_ms,
-            "error": error,
+            "error": error_detail,
             "data": data,
         }
         out_path.write_text(json.dumps(payload, indent=2, default=str), encoding="utf-8")
 
-        status = "OK" if not error else f"ERR: {error[:60]}"
+        status = "OK" if not error else f"ERR: {error_detail}"
         print(f"{status} ({latency_ms}ms) -> {out_path}")
-        results.append({"ticker": ticker, "latency_ms": latency_ms, "error": error, "path": str(out_path)})
+        results.append({"ticker": ticker, "latency_ms": latency_ms, "error": error_detail, "path": str(out_path)})
 
         # Rate-limit safety: small sleep between tickers
         time.sleep(0.8)

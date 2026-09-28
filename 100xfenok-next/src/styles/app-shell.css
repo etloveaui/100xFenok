@@ -14,7 +14,7 @@
     --shell-multiple:#1B73D3; --shell-track:#eaeef4; --shell-zero:#e0e6ef;
     --c-bg:var(--shell-background); --c-panel:var(--shell-panel); --c-surface-2:var(--shell-surface-muted); --c-rail:var(--shell-rail); --c-rail-active:var(--shell-rail-active);
     --c-ink:var(--shell-foreground); --c-ink-2:var(--shell-foreground-muted); --c-ink-3:var(--shell-foreground-subtle); --c-ink-4:var(--shell-foreground-faint);
-    --c-line:var(--shell-border); --c-line-2:var(--shell-border-muted);
+    --c-line:var(--shell-border); --c-line-2:var(--shell-border-muted); --c-band:var(--fnk-neutral-200);
     --c-brand:var(--shell-brand); --c-brand-soft:var(--shell-brand-soft); --c-brand-active:var(--c-brand);
     --c-up:var(--shell-gain); --c-up-soft:var(--shell-gain-soft); --c-down:var(--shell-loss); --c-down-soft:var(--shell-loss-soft);
     --c-warn:var(--shell-warn); --c-warn-soft:var(--shell-warn-soft); --c-neutral:var(--shell-flat);
@@ -26,6 +26,10 @@
     --sh-pop:0 12px 32px -8px rgba(15,23,42,0.18);
     --sh-focus:0 0 0 3px rgba(27,115,211,0.18);
     --rail-w:210px; --topbar-h:48px; --ticker-h:30px; --tabbar-h:56px; --appbar-h:46px;
+    /* Height the shell charges for the ticker band. AppShell sets
+       body.fnk-shell-ticker-off when the tape has no rows, so the band and
+       every offset it owns leave together instead of leaving a dead strip. */
+    --shell-ticker-h:var(--ticker-h);
     --panel-pad:12px; --panel-r:6px;
     --font:var(--font-body),system-ui,-apple-system,sans-serif;
     --safe-t:env(safe-area-inset-top,0px); --safe-b:env(safe-area-inset-bottom,0px);
@@ -75,7 +79,7 @@
 .fnk-shell .rail-logo b{color:var(--c-ink)}
 .fnk-shell .rail-nav{flex:1; padding:var(--s4) var(--s3); display:flex; flex-direction:column; gap:2px; overflow-y:auto}
 .fnk-shell .rail-group{display:flex; flex-direction:column; gap:2px}
-.fnk-shell .rail-sect{font-size:11px; font-weight:700; letter-spacing:.1em; color:var(--c-ink-2); padding:var(--s3) var(--s3) var(--s2)}
+.fnk-shell .rail-sect{font-size:12px; font-weight:700; letter-spacing:.1em; color:var(--c-ink-2); padding:var(--s3) var(--s3) var(--s2)}
 .fnk-shell .rail-item{display:flex; align-items:center; gap:var(--s3); padding:10px var(--s3); border-radius:10px; color:var(--c-ink-2); font-size:15px; font-weight:600; cursor:pointer; text-decoration:none; position:relative; transition:.14s}
 .fnk-shell .rail-item svg{width:20px; height:20px; flex:none; color:var(--c-ink-3); transition:.14s}
 .fnk-shell .rail-item:hover{background:#eef1f4; color:var(--c-ink)}
@@ -93,6 +97,9 @@
 .fnk-shell .gsearch input{flex:1; min-width:0; border:0; outline:0; background:transparent; font-family:var(--font); font-size:15px; color:var(--c-ink)}
 .fnk-shell .gsearch input::placeholder{color:var(--c-ink-3)}
 .fnk-shell .gsearch .kbd{font-size:12px; font-weight:600; color:var(--c-ink-3); border:1px solid var(--c-line); border-radius:6px; padding:1px 7px; background:#fff}
+.fnk-shell .gsearch button.kbd{flex:none; white-space:nowrap; font-family:var(--font); line-height:18px; cursor:pointer}
+.fnk-shell .gsearch button.kbd:hover{color:var(--c-ink)}
+.fnk-shell .gsearch button.kbd:focus-visible{outline:2px solid var(--c-brand); outline-offset:2px}
 .fnk-shell .topbar .spacer{flex:1}
 .fnk-shell .mstatus{display:inline-flex; align-items:center; gap:7px; font-size:13px; font-weight:600; color:var(--c-ink-2); background:var(--c-surface-2); border:1px solid var(--c-line); border-radius:var(--r-pill); padding:6px 12px; white-space:nowrap}
 .fnk-shell .mstatus .dot{width:7px; height:7px; border-radius:50%; background:var(--c-neutral)}
@@ -110,34 +117,21 @@
 .fnk-shell .tk-item{display:inline-flex; align-items:center; gap:7px; padding:0 18px; font-size:13px; border-right:1px solid var(--c-line-2)}
 .fnk-shell .tk-item .s{font-weight:700; color:var(--c-ink-2)}
 .fnk-shell .tk-item .p{color:var(--c-ink-2); font-weight:600}
+.fnk-shell .tk-label{position:relative; z-index:1; flex:none; align-self:stretch; display:inline-flex; align-items:center; padding:0 12px; font-size:12px; font-weight:700; color:var(--c-ink-2); background:var(--c-panel); border-right:1px solid var(--c-line); box-shadow:6px 0 8px -6px color-mix(in srgb,var(--c-ink) 18%,transparent)}
   @keyframes tk{from{transform:translateX(0)}to{transform:translateX(-50%)}}
+  /* Tape settled with no rows (fetch failed, or no momentum figures): AppShell
+     renders neither strip and drops the height they reserved in .content, the
+     typeahead drawer, .stock-side and the route-embed frames. */
+body.fnk-shell-ticker-off .fnk-shell{--shell-ticker-h:0px}
 
   /* ───────────── MOBILE APP HEADER + TABBAR (hidden desktop) ───────────── */
 .fnk-shell .appbar{display:none}
 .fnk-shell .tabbar{display:none}
 
   /* ───────────── CONTENT ───────────── */
-.fnk-shell .content{margin-left:var(--rail-w); padding:calc(var(--topbar-h) + var(--ticker-h) + var(--s5)) var(--s6) var(--s10); max-width:1320px; overflow-x:hidden}
+.fnk-shell .content{margin-left:var(--rail-w); padding:calc(var(--topbar-h) + var(--shell-ticker-h) + var(--s5)) var(--s6) var(--s10); max-width:1320px; overflow-x:hidden}
 
   /* ───────────── TYPEAHEAD PREVIEW DRAWER ───────────── */
-.fnk-shell .typeahead-preview{position:fixed; top:calc(var(--topbar-h) + var(--ticker-h) + var(--s4)); right:var(--s6); z-index:45; width:min(380px,calc(100vw - var(--rail-w) - 48px)); max-height:calc(100dvh - var(--topbar-h) - var(--ticker-h) - 40px); overflow:auto; border:1px solid var(--c-line); border-radius:12px; background:color-mix(in srgb,var(--c-panel) 96%,transparent); box-shadow:var(--sh-pop); backdrop-filter:blur(16px) saturate(1.2)}
-.fnk-shell .typeahead-preview__head{position:sticky; top:0; z-index:1; display:flex; align-items:center; justify-content:space-between; gap:var(--s3); padding:12px var(--s4); border-bottom:1px solid var(--c-line-2); background:inherit}
-.fnk-shell .typeahead-preview__title{min-width:0; display:grid; gap:1px}
-.fnk-shell .typeahead-preview__title span{font-size:11px; font-weight:800; color:var(--c-ink-3)}
-.fnk-shell .typeahead-preview__title strong{font-size:18px; line-height:1.2; font-weight:800; color:var(--c-ink)}
-.fnk-shell .typeahead-preview__close{width:40px; height:40px; flex:none; display:grid; place-items:center; border:1px solid transparent; border-radius:10px; background:transparent; color:var(--c-ink-2); cursor:pointer}
-.fnk-shell .typeahead-preview__close:hover{background:var(--c-surface-2); border-color:var(--c-line)}
-.fnk-shell .typeahead-preview__close svg{width:20px; height:20px}
-.fnk-shell .typeahead-preview__body{padding:0}
-.fnk-shell .typeahead-preview__body .panel.stock-section{border:0; border-radius:0; box-shadow:none; background:transparent}
-.fnk-shell .typeahead-preview__body .panel-h{padding:12px var(--s4)}
-.fnk-shell .typeahead-preview__body .panel-b{padding:12px var(--s4)}
-.fnk-shell .typeahead-preview__empty{display:grid; gap:4px; padding:18px var(--s4); font-size:13px; color:var(--c-ink-3)}
-.fnk-shell .typeahead-preview__empty strong{font-size:16px; color:var(--c-ink)}
-.fnk-shell .typeahead-preview__actions{display:flex; align-items:center; justify-content:flex-end; gap:var(--s2); padding:12px var(--s4); border-top:1px solid var(--c-line-2); background:var(--c-panel)}
-.fnk-shell .typeahead-preview__secondary,.fnk-shell .typeahead-preview__primary{min-height:38px; display:inline-flex; align-items:center; justify-content:center; border-radius:10px; padding:0 14px; font-size:13px; font-weight:800; cursor:pointer}
-.fnk-shell .typeahead-preview__secondary{border:1px solid var(--c-line); background:var(--c-panel); color:var(--c-ink-2)}
-.fnk-shell .typeahead-preview__primary{border:1px solid var(--c-brand); background:var(--c-brand); color:var(--fnk-color-white)}
 
   /* panels */
 .fnk-shell .panel{background:var(--c-panel); border:1px solid var(--c-line); border-radius:var(--panel-r); box-shadow:var(--sh-sm); overflow:hidden}
@@ -150,7 +144,7 @@
 .fnk-shell .panel-foot{padding:10px var(--panel-pad); border-top:1px solid var(--c-line-2); font-size:12px; color:var(--c-ink-2)}
 
 .fnk-shell .seg{display:flex; gap:2px; background:var(--c-surface-2); border:1px solid var(--c-line); border-radius:10px; padding:2px}
-.fnk-shell .seg button{background:transparent; border:0; color:var(--c-ink-3); padding:5px 12px; border-radius:8px; font-size:13px; font-weight:600; cursor:pointer; white-space:nowrap; transition:.14s}
+.fnk-shell .seg button{background:transparent; border:0; color:var(--c-ink-3); padding:5px 12px; border-radius:var(--cp-radius-sm); font-size:13px; font-weight:600; cursor:pointer; white-space:nowrap; transition:.14s}
 .fnk-shell .seg button.on{background:var(--c-ink); color:#fff}
 
   /* ─── top signal bar (3-second read) ─── */
@@ -184,7 +178,7 @@
 .fnk-shell .row:hover{background:var(--c-surface-2)}
 
   /* watchlist */
-.fnk-shell .wl .av{width:30px; height:30px; border-radius:8px; background:var(--c-ink); color:#fff; font-size:11px; font-weight:700; display:grid; place-items:center; flex:none}
+.fnk-shell .wl .av{width:30px; height:30px; border-radius:var(--cp-radius-sm); background:var(--c-ink); color:#fff; font-size:12px; font-weight:700; display:grid; place-items:center; flex:none}
 .fnk-shell .wl .nm{font-size:15px; font-weight:700}
 .fnk-shell .wl .sub{font-size:12px; color:var(--c-ink-3)}
 .fnk-shell .wl .pc{margin-left:auto; font-size:15px; font-weight:700; text-align:right}
@@ -207,7 +201,7 @@
 .fnk-shell .db-bar{position:absolute; top:0; bottom:0; border-radius:5px}
 .fnk-shell .db-bar.eps{background:var(--c-up)} .fnk-shell .db-bar.per{background:var(--c-mult)}
 .fnk-shell .db-row .dv{font-size:13px; font-weight:600; color:var(--c-ink-2); text-align:right; font-variant-numeric:tabular-nums; white-space:nowrap}
-.fnk-shell .ti-why{display:flex; min-width:0; align-items:center; gap:var(--s2); flex-wrap:wrap; font-size:12.5px; line-height:1.45; color:var(--c-ink-3); margin-top:8px; overflow-wrap:anywhere}
+.fnk-shell .ti-why{display:flex; min-width:0; align-items:center; gap:var(--s2); flex-wrap:wrap; font-size:13px; line-height:1.45; color:var(--c-ink-3); margin-top:8px; overflow-wrap:anywhere}
 .fnk-shell .ti-why .tag{flex:none; max-width:100%; font-size:11px; font-weight:700; color:var(--c-up); background:var(--c-up-soft); border-radius:var(--r-pill); padding:3px 9px; white-space:normal; overflow-wrap:break-word}
 
   /* sectors */
@@ -244,7 +238,7 @@
 .fnk-shell .mv-row:hover{background:var(--c-surface-2)}
 .fnk-shell .mv-row .co{min-width:0; display:flex; flex-direction:column; gap:2px}
 .fnk-shell .mv-row .co .n{font-size:14px; font-weight:700; line-height:1.25; color:var(--c-ink); white-space:nowrap; overflow:hidden; text-overflow:ellipsis}
-.fnk-shell .mv-row .co .tk{display:-webkit-box; overflow:hidden; -webkit-box-orient:vertical; -webkit-line-clamp:2; overflow-wrap:anywhere; font-size:11px; line-height:1.35; color:var(--c-ink-3)}
+.fnk-shell .mv-row .co .tk{display:-webkit-box; overflow:hidden; -webkit-box-orient:vertical; -webkit-line-clamp:2; overflow-wrap:anywhere; font-size:12px; line-height:1.35; color:var(--c-ink-3)}
 .fnk-shell .mv-row .co .tk .ticker-pill{font-size:10px; font-weight:700; color:var(--c-ink-2); background:var(--c-surface-2); border:1px solid var(--c-line); border-radius:var(--r-pill); padding:1px 6px; margin-right:4px}
 .fnk-shell .mv-row .pc{justify-self:end; font-size:15px; font-weight:700; font-variant-numeric:tabular-nums; white-space:nowrap}
 
@@ -276,10 +270,9 @@
 .fnk-shell .stock-price{margin-left:auto; display:flex; align-items:flex-end; justify-content:flex-end; flex-wrap:wrap; gap:var(--s2); min-width:0}
 .fnk-shell .stock-price .big{font-size:30px; font-weight:700; line-height:1; letter-spacing:-.02em}
 .fnk-shell .stock-chip{display:inline-flex; align-items:center; border-radius:var(--r-pill); padding:5px 11px; font-size:14px; font-weight:700; white-space:nowrap}
-.fnk-shell .stock-chip.up{background:var(--c-up-soft); color:var(--c-up)}
-.fnk-shell .stock-chip.down{background:var(--c-down-soft); color:var(--c-down)}
+.fnk-shell .stock-chip.up{background:none; color:var(--c-up)}
+.fnk-shell .stock-chip.down{background:none; color:var(--c-down)}
 .fnk-shell .stock-price .delay{font-size:12px; color:var(--c-ink-3); padding-bottom:3px; white-space:nowrap}
-.fnk-shell .stock-market-links{justify-content:flex-start; border-top:1px solid var(--c-line-2); padding:var(--s3) var(--panel-pad) 0}
 .fnk-shell .stock-tabs{position:relative; display:flex; align-items:flex-end; gap:var(--s1); padding:var(--s4) var(--panel-pad) 0; overflow-x:auto; scrollbar-width:none; scroll-padding-right:var(--s6)}
 .fnk-shell .stock-tabs.can-scroll{box-shadow:inset -24px 0 18px -22px rgba(15,23,42,.38)}
 .fnk-shell .stock-tabs::-webkit-scrollbar{display:none}
@@ -302,7 +295,7 @@
 .fnk-shell .data-shell-page{display:flex; flex-direction:column; gap:var(--s4); min-width:0}
 .fnk-shell .data-shell-header{display:flex; flex-wrap:wrap; align-items:flex-end; justify-content:space-between; gap:var(--s4); padding:var(--s5) var(--panel-pad)}
 .fnk-shell .data-shell-head-main{min-width:0; max-width:720px}
-.fnk-shell .data-shell-kicker{font-size:11px; font-weight:700; letter-spacing:.14em; color:var(--c-ink-2); text-transform:uppercase}
+.fnk-shell .data-shell-kicker{font-size:12px; font-weight:700; letter-spacing:.14em; color:var(--c-ink-2); text-transform:uppercase}
 .fnk-shell .data-shell-title{margin-top:3px; font-size:24px; font-weight:700; letter-spacing:-.02em; line-height:1.18; color:var(--c-ink)}
 .fnk-shell .data-shell-desc{margin-top:7px; font-size:14px; line-height:1.55; color:var(--c-ink-2)}
 .fnk-shell .data-shell-head-actions{display:flex; flex-wrap:wrap; align-items:center; justify-content:flex-end; gap:var(--s2); margin-left:auto}
@@ -317,11 +310,18 @@
 .fnk-shell .data-shell-link:hover{border-color:var(--c-brand); color:var(--c-brand)}
 .fnk-shell .data-shell-link.on,.fnk-shell .data-shell-link[aria-current="page"]{border-color:var(--c-brand); background:var(--c-brand); color:#fff; box-shadow:0 8px 18px rgba(37,99,235,.18)}
 .fnk-shell .data-shell-link:focus-visible{outline:2px solid var(--c-brand); outline-offset:2px}
-.fnk-shell .data-shell-note{font-size:11px; font-weight:600; color:var(--c-ink-3); white-space:nowrap}
+.fnk-shell .data-shell-note{font-size:12px; font-weight:600; color:var(--c-ink-3); white-space:nowrap}
 .fnk-shell .data-shell-note.warn{color:var(--c-warn-ink-strong)}
 .fnk-shell .scroll-hint-x{position:relative; overflow-x:auto; overscroll-behavior-x:contain; scrollbar-width:thin; box-shadow:inset -22px 0 18px -22px rgba(15,23,42,.42)}
 .fnk-shell .scroll-hint-x:focus-visible{outline:2px solid var(--c-brand); outline-offset:2px}
 .fnk-shell .scroll-hint-x::after{content:""; position:sticky; right:0; top:0; float:right; width:22px; min-height:1px; height:100%; pointer-events:none; background:linear-gradient(90deg,rgba(255,255,255,0),rgba(255,255,255,.96))}
+
+  /* ───────────── SHARED SCROLL AFFORDANCE ───────────── */
+.fnk-shell .scroll-top{position:fixed; right:var(--s6); bottom:var(--s6); z-index:39; width:44px; height:44px; display:grid; place-items:center; border:1px solid var(--c-line); border-radius:50%; background:color-mix(in srgb,var(--c-panel) 94%,transparent); color:var(--c-ink-2); box-shadow:var(--sh-md); cursor:pointer; transition:opacity .16s,transform .16s,background .16s}
+.fnk-shell .scroll-top:hover{background:var(--c-panel); color:var(--c-brand); transform:translateY(-2px)}
+.fnk-shell .scroll-top:focus-visible{outline:2px solid var(--c-brand); outline-offset:3px}
+.fnk-shell .scroll-top svg{width:19px; height:19px}
+.fnk-shell .scroll-top[hidden]{display:none}
 
   /* ───────────── RESPONSIVE: tablet+ ───────────── */
   @media(min-width:1024px){
@@ -331,7 +331,7 @@
   .fnk-shell .mv-split .mv-col + .mv-col{border-left:1px solid var(--c-line-2)}
   .fnk-shell .f13-grid{grid-template-columns:repeat(3,1fr)}
   .fnk-shell .stock-overview-grid{grid-template-columns:minmax(240px, 280px) minmax(0, 1fr)}
-  .fnk-shell .stock-side{position:sticky; top:calc(var(--topbar-h) + var(--ticker-h) + var(--s5)); align-self:start}
+  .fnk-shell .stock-side{position:sticky; top:calc(var(--topbar-h) + var(--shell-ticker-h) + var(--s5)); align-self:start}
   }
 @media(min-width:1320px){
   .fnk-shell .ti-bars{grid-template-columns:1fr 1fr}
@@ -340,23 +340,24 @@
   .fnk-shell .ti-bars{grid-template-columns:1fr}
   }
 
-  /* ───────────── RESPONSIVE: mobile (PWA standalone) ───────────── */
-  @media(max-width:1023px){
+  /* ───────────── RESPONSIVE: mobile (PWA standalone, §12 ≤920px) ───────────── */
+  @media(max-width:920px){
   .fnk-shell .rail, .fnk-shell .topbar, .fnk-shell .ticker{display:none}
-  .fnk-shell .content{margin-left:0; padding:calc(var(--appbar-h) + var(--safe-t) + var(--ticker-h) + var(--s4)) var(--s4) calc(var(--tabbar-h) + var(--safe-b) + var(--s5)); max-width:none}
-  .fnk-shell .typeahead-preview{top:calc(var(--safe-t) + var(--appbar-h) + var(--ticker-h) + var(--s3)); left:var(--s3); right:var(--s3); width:auto; max-height:calc(100dvh - var(--safe-t) - var(--appbar-h) - var(--ticker-h) - var(--tabbar-h) - var(--s6))}
+  .fnk-shell .content{margin-left:0; padding:calc(var(--appbar-h) + var(--safe-t) + var(--shell-ticker-h) + var(--s4)) var(--s4) calc(var(--tabbar-h) + var(--safe-b) + var(--s5)); max-width:none}
+  .fnk-shell .appbar.searching ~ .content{padding-top:calc(var(--appbar-h) + var(--safe-t) + var(--shell-ticker-h) + var(--s4) + 48px)}
 
   .fnk-shell .appbar{display:flex; position:fixed; top:0; left:0; right:0; z-index:40; flex-direction:column; background:rgba(242,244,246,.9); backdrop-filter:blur(16px) saturate(1.4); border-bottom:1px solid var(--c-line); padding-top:var(--safe-t)}
-  .fnk-shell .appbar-main{height:var(--appbar-h); display:flex; align-items:center; gap:var(--s3); padding:0 var(--s4)}
+  .fnk-shell .appbar-main{height:var(--appbar-h); min-width:0; display:flex; align-items:center; gap:var(--s3); padding:0 var(--s4)}
   .fnk-shell .appbar .back{width:44px; height:44px; border-radius:10px; background:none; border:0; color:var(--c-ink-2); display:grid; place-items:center; flex:none}
   .fnk-shell .appbar .back:hover{background:var(--c-surface-2)}
   .fnk-shell .appbar .back svg{width:22px; height:22px}
-  .fnk-shell .appbar-logo{display:inline-flex; align-items:center; justify-content:center; flex:none}
-  .fnk-shell .appbar .title{font-size:19px; font-weight:700; letter-spacing:-.02em}
-  .fnk-shell .appbar .mstat{display:inline-flex; align-items:center; gap:5px; font-size:12px; font-weight:600; color:var(--c-ink-2)}
+  .fnk-shell .appbar-logo{min-width:44px; min-height:44px; display:inline-flex; align-items:center; justify-content:center; flex:none}
+  .fnk-shell .appbar .title{min-width:0; flex:1 1 auto; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; font-size:19px; font-weight:700; letter-spacing:-.02em}
+  .fnk-shell .appbar .mstat{display:inline-flex; min-width:0; max-width:26vw; flex:0 1 auto; align-items:center; gap:5px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; font-size:12px; font-weight:600; color:var(--c-ink-2)}
   .fnk-shell .appbar .mstat .dot{width:6px; height:6px; border-radius:50%; background:var(--c-neutral)}
-  .fnk-shell .appbar .grow{flex:1}
-  .fnk-shell .appbar .ic-btn{width:44px; height:44px}
+  .fnk-shell .appbar [data-app-shell-freshness]{min-width:0; max-width:30vw; flex:0 1 auto; overflow:hidden; text-overflow:ellipsis; white-space:nowrap}
+  .fnk-shell .appbar .grow{min-width:0; flex:1 1 0}
+  .fnk-shell .appbar .ic-btn{width:44px; height:44px; flex:0 0 44px}
   .fnk-shell .appbar .ic-btn svg{width:20px; height:20px}
     /* mobile ticker under header */
   .fnk-shell .mticker{height:var(--ticker-h); overflow:hidden; display:flex; align-items:center; border-top:1px solid var(--c-line-2)}
@@ -366,12 +367,12 @@
   .fnk-shell .msearch{display:none; padding:0 var(--s4) var(--s2)}
   .fnk-shell .appbar.searching .msearch{display:block}
   .fnk-shell .appbar.searching .appbar-main .title, .fnk-shell .appbar.searching .appbar-main .mstat{display:none}
-  .fnk-shell .msearch .gs2{display:flex; align-items:center; gap:var(--s3); height:42px; padding:0 var(--s4); background:#fff; border:1px solid var(--c-brand); border-radius:var(--r-pill); box-shadow:var(--sh-focus)}
+  .fnk-shell .msearch .gs2{display:flex; align-items:center; gap:var(--s3); height:44px; padding:0 var(--s4); background:#fff; border:1px solid var(--c-brand); border-radius:var(--r-pill); box-shadow:var(--sh-focus)}
   .fnk-shell .msearch .gs2 svg{width:18px; height:18px; color:var(--c-ink-3)}
   .fnk-shell .msearch .gs2 input{flex:1; border:0; outline:0; background:transparent; font-family:var(--font); font-size:15px}
 
   .fnk-shell .tabbar{display:grid; position:fixed; bottom:0; left:0; right:0; z-index:40; grid-template-columns:repeat(5,minmax(0,1fr)); background:rgba(255,255,255,.94); backdrop-filter:blur(16px) saturate(1.4); border-top:1px solid var(--c-line); padding-bottom:var(--safe-b)}
-  .fnk-shell .tab{display:flex; flex-direction:column; align-items:center; justify-content:center; gap:3px; min-width:0; height:var(--tabbar-h); background:none; border:0; color:var(--c-ink-3); font-size:11px; font-weight:600; cursor:pointer; padding:0 2px}
+  .fnk-shell .tab{display:flex; flex-direction:column; align-items:center; justify-content:center; gap:3px; min-width:0; height:var(--tabbar-h); background:none; border:0; color:var(--c-ink-3); font-size:12px; font-weight:600; cursor:pointer; padding:0 2px}
   .fnk-shell .tab svg{width:22px; height:22px}
   .fnk-shell .tab.on{color:var(--c-brand)}
   .fnk-shell .tab:focus-visible{outline:2px solid var(--c-brand); outline-offset:-4px}
@@ -384,20 +385,24 @@
   .fnk-shell .mobile-more-close{width:44px; height:44px; display:grid; place-items:center; border:0; border-radius:10px; background:transparent; color:var(--c-ink-2)}
   .fnk-shell .mobile-more-close:hover{background:var(--c-surface-2)}
   .fnk-shell .mobile-more-close svg{width:20px; height:20px}
-  .fnk-shell .mobile-more-list{display:grid; gap:2px; overflow-y:auto; overscroll-behavior:contain}
-  .fnk-shell .mobile-more-item{display:flex; min-height:48px; align-items:center; gap:var(--s3); padding:0 var(--s3); border-radius:12px; color:var(--c-ink); font-size:15px; font-weight:700}
+  .fnk-shell .mobile-more-list{display:flex; min-height:0; flex-direction:column; gap:var(--s4); overflow-y:auto; overscroll-behavior:contain}
+  .fnk-shell .mobile-more-group{display:grid; gap:var(--s2)}
+  .fnk-shell .mobile-more-group-title{padding:0 var(--s3); color:var(--c-ink-3); font-size:12px; font-weight:800; letter-spacing:.1em}
+  .fnk-shell .mobile-more-group-items{display:grid; gap:2px}
+  .fnk-shell .mobile-more-item{display:flex; min-height:48px; align-items:center; gap:var(--s3); padding:0 var(--s3); border-radius:var(--cp-radius-md); color:var(--c-ink); font-size:15px; font-weight:700}
   .fnk-shell .mobile-more-item:hover{background:var(--c-surface-2)}
   .fnk-shell .mobile-more-item.on{background:var(--c-brand-soft); color:var(--c-brand)}
   .fnk-shell .mobile-more-icon{width:24px; height:24px; color:var(--c-ink-3)}
   .fnk-shell .mobile-more-icon svg{width:24px; height:24px}
   .fnk-shell .mobile-more-item.on .mobile-more-icon{color:var(--c-brand)}
+  .fnk-shell .scroll-top{right:var(--s4); bottom:calc(var(--tabbar-h) + var(--safe-b) + var(--s3))}
 
   .fnk-shell .panel-h{padding:13px var(--s4)}
   .fnk-shell .data-shell-header{align-items:flex-start; padding:var(--s4)}
   .fnk-shell .data-shell-title{font-size:21px}
   .fnk-shell .data-shell-head-actions{width:100%; justify-content:flex-start; margin-left:0}
   .fnk-shell .stock-entity-in{flex-wrap:wrap; gap:var(--s3); padding:var(--s4) var(--s4) 0}
-  .fnk-shell .stock-logo{width:46px; height:46px; border-radius:12px; font-size:20px}
+  .fnk-shell .stock-logo{width:46px; height:46px; border-radius:var(--cp-radius-md); font-size:20px}
   .fnk-shell .stock-name h1{font-size:21px}
   .fnk-shell .stock-price{width:100%; margin-left:0; justify-content:flex-start; align-items:baseline}
   .fnk-shell .stock-price .big{font-size:28px}
@@ -431,7 +436,6 @@
 [data-theme="dark"] .fnk-shell .stock-section,
 [data-theme="dark"] .fnk-shell .stock-tab-panel{box-shadow:var(--sh-sm)}
 [data-theme="dark"] .fnk-shell .topbar{background:color-mix(in srgb,var(--c-panel) 86%,transparent)}
-[data-theme="dark"] .fnk-shell .typeahead-preview{background:color-mix(in srgb,var(--c-panel) 94%,transparent)}
 [data-theme="dark"] .fnk-shell .appbar{background:color-mix(in srgb,var(--c-bg) 90%,transparent)}
 [data-theme="dark"] .fnk-shell .ticker,
 [data-theme="dark"] .fnk-shell .tabbar{background:color-mix(in srgb,var(--c-panel) 94%,transparent)}
@@ -456,3 +460,65 @@
 [data-theme="dark"] .fnk-shell .bg-white\/70{background-color:color-mix(in srgb,var(--c-panel) 72%,transparent)}
 [data-theme="dark"] .fnk-shell .border-white{border-color:var(--c-panel)}
 [data-theme="dark"] .fnk-shell .scroll-hint-x::after{background:linear-gradient(90deg,transparent,var(--c-panel))}
+
+@media (prefers-reduced-motion: reduce){
+  .fnk-shell .ticker-track{animation:none}
+  .fnk-shell *,
+  .fnk-shell *::before,
+  .fnk-shell *::after{animation-duration:.01ms !important; animation-iteration-count:1 !important; scroll-behavior:auto !important; transition-duration:.01ms !important}
+}
+
+/* Touch targets follow pointer capability, including tablets using the desktop shell. */
+@media (pointer: coarse) {
+  .fnk-shell .evidence-rail-row,
+  .fnk-shell .stale-state {
+    height: auto;
+    min-height: 44px;
+    flex-wrap: wrap;
+    white-space: normal;
+    padding-block: 4px;
+  }
+  .fnk-shell .stale-state { gap: 4px 12px; }
+  .fnk-shell .stale-state__retry { margin-left: auto; flex-shrink: 0; }
+  .fnk-shell [data-etf-detail-owner-action],
+  .fnk-shell [data-etf-detail-holdings-csv],
+  .fnk-shell .evidence-rail-action,
+  .fnk-shell .stale-state__retry {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 44px;
+    min-height: 44px;
+  }
+}
+
+/* ───────────── PERSISTENT FRAME: navigation feedback ─────────────
+   The chrome is mounted once in the root layout (AppShellFrame), so these
+   rules give a click immediate feedback while the next route loads:
+   - .nav-progress: top bar while any TransitionLink navigation is pending;
+     starts after 80ms so prefetched (instant) navigations never flash it.
+   - .nav-pending: rendered inside rail/tab links; the clicked item takes the
+     active style at once and the previously active item lets go of it. */
+.fnk-shell .nav-progress{position:fixed; top:0; left:0; right:0; z-index:60; height:2px; pointer-events:none; opacity:0; transform:scaleX(0); transform-origin:left center; background:linear-gradient(90deg,color-mix(in srgb,var(--c-brand) 40%,transparent),var(--c-brand)); transition:opacity .24s ease}
+.fnk-shell .nav-progress[data-active]{opacity:1; animation:fnk-nav-progress 2.4s cubic-bezier(.12,.7,.24,1) 80ms both}
+@keyframes fnk-nav-progress{from{transform:scaleX(0)} 35%{transform:scaleX(.55)} to{transform:scaleX(.92)}}
+.fnk-shell .content[aria-busy="true"]{opacity:.72; transition:opacity .2s ease .15s}
+.fnk-shell .nav-pending{display:none}
+.fnk-shell .rail-item:has(> .nav-pending[data-pending]){background:var(--c-rail-active); color:var(--c-ink)}
+.fnk-shell .rail-item:has(> .nav-pending[data-pending]) svg{color:var(--c-ink)}
+.fnk-shell .rail-item:has(> .nav-pending[data-pending])::before{content:""; position:absolute; left:calc(-1 * var(--s3)); top:8px; bottom:8px; width:3px; border-radius:0 3px 3px 0; background:var(--c-brand)}
+.fnk-shell .rail-nav:has(.nav-pending[data-pending]) .rail-item.on:not(:has(> .nav-pending[data-pending])){background:transparent; color:var(--c-ink-2)}
+.fnk-shell .rail-nav:has(.nav-pending[data-pending]) .rail-item.on:not(:has(> .nav-pending[data-pending]))::before{content:none}
+.fnk-shell .tab:has(> .nav-pending[data-pending]){color:var(--c-brand)}
+.fnk-shell .tabbar:has(.nav-pending[data-pending]) .tab.on:not(:has(> .nav-pending[data-pending])){color:var(--c-ink-3)}
+
+/* Legacy ?v1=1 full-page views opt out of the chrome (ShellChromeOff). */
+.fnk-shell:has([data-shell-chrome="off"]) > :is(.nav-progress,.rail,.topbar,.ticker,.appbar,.tabbar,.scroll-top){display:none}
+.fnk-shell:has([data-shell-chrome="off"]) > .content{margin:0; padding:0; max-width:none}
+
+@media (prefers-reduced-motion: reduce){
+  .fnk-shell .nav-progress[data-active]{animation:none; transform:scaleX(1); opacity:.85}
+  .fnk-shell .content[aria-busy="true"]{transition:none}
+}
+
+.fnk-shell .route-loading{padding:0; max-width:none}

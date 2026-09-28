@@ -25,65 +25,104 @@
       "run_id": "29707016827",
       "schedule": "0 22 * * 0",
       "shard": "0/6"
+    },
+    {
+      "attempts_used": 1,
+      "event_name": "schedule",
+      "failures": [],
+      "latency_ms": 507,
+      "natural": true,
+      "observed_at": "2026-08-05T10:46:42Z",
+      "outcome": "fresh",
+      "run_attempt": 1,
+      "run_id": "30998672232",
+      "schedule": "7 8 * * 0-5",
+      "shard": "40/72"
+    },
+    {
+      "attempts_used": 1,
+      "event_name": "schedule",
+      "failures": [],
+      "latency_ms": 776,
+      "natural": true,
+      "observed_at": "2026-08-12T02:41:04Z",
+      "outcome": "fresh",
+      "run_attempt": 1,
+      "run_id": "31557511991",
+      "schedule": "7 0 * * 0-5",
+      "shard": "36/72"
+    },
+    {
+      "attempts_used": 1,
+      "event_name": "workflow_dispatch",
+      "failures": [],
+      "latency_ms": 403,
+      "natural": false,
+      "observed_at": "2026-09-28T01:17:59Z",
+      "outcome": "fresh",
+      "run_attempt": 1,
+      "run_id": "36365270594",
+      "schedule": "",
+      "shard": ""
     }
   ],
   "current": {
-    "fetched_at": "2026-07-19T23:01:07Z",
-    "history_as_of": "2026-07-17",
+    "fetched_at": "2026-09-28T01:22:07Z",
+    "history_as_of": "2026-09-25",
     "path": "data/yf/finance/AMGR.json",
-    "payload_sha256": "d76893fccf8730ac4ec18302dd98a16b4e60490369d8375a16702ee112870579",
-    "quote_as_of": "2026-07-17T20:00:00Z",
-    "source_as_of": "2026-07-17"
+    "payload_sha256": "3c8ef55279b311a22ab8abec2dd447890c245eec18d9163418ff14d196f5bab2",
+    "quote_as_of": "2026-09-25T20:00:00Z",
+    "source_as_of": "2026-09-25"
   },
   "discovered_from": [
     "stockanalysis_etf"
   ],
   "last_attempt": {
     "attempts_used": 1,
-    "event_name": "schedule",
+    "event_name": "workflow_dispatch",
     "failures": [],
-    "latency_ms": 1162,
-    "natural": true,
-    "observed_at": "2026-07-19T22:59:54Z",
+    "latency_ms": 403,
+    "natural": false,
+    "observed_at": "2026-09-28T01:17:59Z",
     "outcome": "fresh",
     "run_attempt": 1,
-    "run_id": "29707016827",
-    "schedule": "0 22 * * 0",
-    "shard": "0/6"
+    "run_id": "36365270594",
+    "schedule": "",
+    "shard": ""
   },
   "lkg": {
-    "fetched_at": "2026-06-30T23:53:48Z",
-    "history_as_of": "2026-06-30",
+    "fetched_at": "2026-08-12T02:42:42Z",
+    "history_as_of": "2026-08-11",
     "path": "data/admin/yahoo-batch-quote-history/lkg/AMGR.json",
-    "payload_sha256": "8048215988eec906530ea8494d06afa6acdb899ad5cf25dee5fbe20c7790682e",
-    "quote_as_of": null,
-    "source_as_of": "2026-06-30"
+    "payload_sha256": "83f698ee23aaadcccabbd3bffa43b6488fcc052c7faf34055175ad3844052963",
+    "quote_as_of": "2026-08-11T20:00:00Z",
+    "source_as_of": "2026-08-11"
   },
   "promotion_contract": "provider_observation/v2",
   "provider_observation": {
-    "event_name": "schedule",
-    "history_as_of": "2026-07-17",
-    "observed_at": "2026-07-19T22:59:54Z",
-    "payload_sha256": "2f614ccd360e61c042f1e325aad0603343a92f13fa72fe1c0539c10f2c2947fa",
-    "quote_as_of": "2026-07-17T20:00:00Z",
+    "event_name": "workflow_dispatch",
+    "history_as_of": "2026-09-25",
+    "observed_at": "2026-09-28T01:17:59Z",
+    "payload_sha256": "b256ecb3d6d436b22be916fe4951d7c5ba5ff6b5a65f6ae8f3d5ca68f258f6b4",
+    "quote_as_of": "2026-09-25T20:00:00Z",
     "run_attempt": 1,
-    "run_id": "29707016827",
+    "run_id": "36365270594",
     "schema_version": "provider_observation/v2",
-    "source_as_of": "2026-07-17"
+    "source_as_of": "2026-09-25"
   },
   "resolution_state": "fresh_primary",
   "retry": false,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "stale": {
-    "age_business_days": 8,
-    "classified_at": "2026-07-13T04:33:56Z",
-    "classified_run_id": "29224221077",
+    "age_business_days": 7,
+    "classified_at": "2026-08-20T14:20:12Z",
+    "classified_run_id": "32379322022",
     "expected_resolution": "next_natural_yahoo_run",
     "max_business_days": 6,
-    "message": "AMGR holds LKG because Yahoo source date 2026-06-30 is 8 business days old, beyond the 6-day bound; it will retry on the next natural Yahoo run.",
+    "message": "AMGR holds LKG because Yahoo source date 2026-08-11 is 7 business days old, beyond the 6-day bound; it will retry on the next natural Yahoo run.",
     "reason": "source_age_exceeds_lane_bound",
-    "source_as_of": "2026-06-30"
+    "source_as_of": "2026-08-11"
   },
   "ticker": "AMGR",
-  "updated_at": "2026-07-19T22:59:54Z"
+  "updated_at": "2026-09-28T01:17:59Z"
 }

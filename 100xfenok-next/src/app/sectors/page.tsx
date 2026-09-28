@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import AppShell from "@/components/shell/AppShell";
 import { ROUTES } from "@/lib/routes";
 import SectorsClient from "./SectorsClient";
-import "@/styles/cp-w5-sectors.css";
+import "./sectors-light.css";
 
 export const dynamic = "force-dynamic";
 
@@ -13,10 +13,8 @@ export const metadata: Metadata = {
 
 export default function SectorsPage() {
   return (
-    <div className="fnk-shell">
-      <AppShell active="sectors" title="섹터" backHref={ROUTES.home}>
-        <SectorsClient />
-      </AppShell>
-    </div>
+    <AppShell active="sectors" title="섹터" backHref={ROUTES.home}>
+      <SectorsClient />
+    </AppShell>
   );
 }

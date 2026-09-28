@@ -5,6 +5,7 @@
 // eagerly pulling multi-MB raw files into the ledger page.
 
 import { buildCoverage, registerCoverage } from "./coverage";
+import { fetchJsonOrNull } from "@/lib/client/data-fetch";
 import type {
   CoverageEntry,
   CoverageRegistry,
@@ -116,8 +117,6 @@ export const MARKET_SOURCES = {
 
 export type MarketSourceId = keyof typeof MARKET_SOURCES;
 
-const fetchCache = new Map<string, Promise<unknown | null>>();
-
 export function dataUrl(path: string): string {
   const trimmed = path.trim().split("#", 1)[0]?.replace(/^\/+/, "") ?? "";
   if (trimmed.startsWith("data/")) return `/${trimmed}`;
@@ -125,26 +124,9 @@ export function dataUrl(path: string): string {
 }
 
 async function fetchData(path: string, timeoutMs = DEFAULT_TIMEOUT_MS): Promise<unknown | null> {
-  const url = dataUrl(path);
-  const cached = fetchCache.get(url);
-  if (cached) return cached;
-
-  const promise = (async () => {
-    const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), timeoutMs);
-    try {
-      const response = await fetch(url, { signal: controller.signal });
-      if (!response.ok) return null;
-      return (await response.json()) as unknown;
-    } catch {
-      return null;
-    } finally {
-      clearTimeout(timeoutId);
-    }
-  })();
-
-  fetchCache.set(url, promise);
-  return promise;
+  // Through the shared layer: successful payloads are cached per URL; a
+  // failure resolves null without being stored, so a panel refetch retries.
+  return fetchJsonOrNull<unknown>(dataUrl(path), { timeoutMs });
 }
 
 export async function loadSummary<T = unknown>(source: string): Promise<T | null> {

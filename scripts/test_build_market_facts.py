@@ -67,6 +67,25 @@ class BuildMarketFactsTest(unittest.TestCase):
         self.assertEqual(result["unit"], "percent_points")
         self.assertAlmostEqual(result["value"], ((179.0 - 158.0) / 158.0) * 100)
 
+    def test_previous_close_uses_regular_session_close(self) -> None:
+        cases = {
+            "AAPL": {"p": 336.13, "cl": 337.0, "pd": 334.8, "c": -0.87, "cp": -0.2582},
+            "SPY": {"p": 761.69, "cl": 760.71, "pd": 758.2, "c": 0.98, "cp": 0.1288},
+        }
+        for ticker, quote in cases.items():
+            with self.subTest(ticker=ticker):
+                stockanalysis = {
+                    "asset_type": "stock",
+                    "source_as_of": "2026-09-19",
+                    "normalized": {"quote": quote},
+                }
+
+                result = self.mod.build_one(ticker, None, stockanalysis, None)
+                previous = result["facts"]["previous_close"]["value"]
+                change = result["facts"]["change"]["value"]
+                self.assertEqual(previous, quote["cl"])
+                self.assertAlmostEqual(change, quote["p"] - quote["cl"])
+
     def test_build_one_derives_history_returns_and_normalizes_average_returns(self) -> None:
         yf_payload = {
             "fetched_at": "2026-06-19T00:00:00Z",
@@ -292,7 +311,6 @@ class BuildMarketFactsTest(unittest.TestCase):
     def test_main_preserves_ticker_generated_at_across_noop_rebuilds(self) -> None:
         original_data = self.mod.DATA
         original_out = self.mod.OUT
-        original_public_out = self.mod.PUBLIC_OUT
         original_now_iso = self.mod.now_iso
 
         with TemporaryDirectory() as tmp:
@@ -302,7 +320,6 @@ class BuildMarketFactsTest(unittest.TestCase):
             yf_dir.mkdir(parents=True)
             self.mod.DATA = data_root
             self.mod.OUT = data_root / "computed" / "market_facts"
-            self.mod.PUBLIC_OUT = root / "public" / "data" / "computed" / "market_facts"
 
             source_payload = {
                 "fetched_at": "2026-06-19T00:00:00Z",
@@ -335,17 +352,15 @@ class BuildMarketFactsTest(unittest.TestCase):
             finally:
                 self.mod.DATA = original_data
                 self.mod.OUT = original_out
-                self.mod.PUBLIC_OUT = original_public_out
                 self.mod.now_iso = original_now_iso
 
         self.assertEqual(first["generated_at"], "2026-06-19T01:00:00Z")
         self.assertEqual(second["generated_at"], "2026-06-19T01:00:00Z")
         self.assertEqual(third["generated_at"], "2026-06-19T03:00:00Z")
 
-    def test_main_no_public_mirror_skips_public_output(self) -> None:
+    def test_main_default_is_canonical_only_and_compat_flag_accepted(self) -> None:
         original_data = self.mod.DATA
         original_out = self.mod.OUT
-        original_public_out = self.mod.PUBLIC_OUT
         original_now_iso = self.mod.now_iso
 
         with TemporaryDirectory() as tmp:
@@ -355,7 +370,6 @@ class BuildMarketFactsTest(unittest.TestCase):
             yf_dir.mkdir(parents=True)
             self.mod.DATA = data_root
             self.mod.OUT = data_root / "computed" / "market_facts"
-            self.mod.PUBLIC_OUT = root / "public" / "data" / "computed" / "market_facts"
 
             source_payload = {
                 "fetched_at": "2026-06-19T00:00:00Z",
@@ -372,21 +386,22 @@ class BuildMarketFactsTest(unittest.TestCase):
 
             try:
                 self.mod.now_iso = lambda: "2026-06-19T01:00:00Z"
+                self.mod.main([])
+                # --no-public-mirror stays accepted as a no-op for CI compatibility.
+                self.mod.now_iso = lambda: "2026-06-19T02:00:00Z"
                 self.mod.main(["--no-public-mirror"])
             finally:
                 self.mod.DATA = original_data
                 self.mod.OUT = original_out
-                self.mod.PUBLIC_OUT = original_public_out
                 self.mod.now_iso = original_now_iso
 
             self.assertTrue((data_root / "computed" / "market_facts" / "index.json").exists())
             self.assertTrue((data_root / "computed" / "market_facts" / "tickers" / "PRIV.json").exists())
             self.assertFalse((root / "public").exists())
 
-    def test_main_targeted_tickers_preserve_full_index_and_skip_public_output(self) -> None:
+    def test_main_targeted_tickers_preserve_full_index(self) -> None:
         original_data = self.mod.DATA
         original_out = self.mod.OUT
-        original_public_out = self.mod.PUBLIC_OUT
         original_now_iso = self.mod.now_iso
 
         def yf_payload(ticker, price):
@@ -409,7 +424,6 @@ class BuildMarketFactsTest(unittest.TestCase):
             yf_dir.mkdir(parents=True)
             self.mod.DATA = data_root
             self.mod.OUT = data_root / "computed" / "market_facts"
-            self.mod.PUBLIC_OUT = root / "public" / "data" / "computed" / "market_facts"
 
             aaa_path = yf_dir / "AAA.json"
             aaa_path.write_text(json.dumps(yf_payload("AAA", 10.0)), encoding="utf-8")
@@ -418,27 +432,23 @@ class BuildMarketFactsTest(unittest.TestCase):
             try:
                 self.mod.now_iso = lambda: "2026-06-19T01:00:00Z"
                 self.mod.main([])
-                public_aaa_before = self.mod.load_json(self.mod.PUBLIC_OUT / "tickers" / "AAA.json")
 
                 aaa_path.write_text(json.dumps(yf_payload("AAA", 11.0)), encoding="utf-8")
                 self.mod.now_iso = lambda: "2026-06-19T02:00:00Z"
-                self.mod.main(["--tickers", "AAA", "--no-public-mirror"])
+                self.mod.main(["--tickers", "AAA"])
 
                 index = self.mod.load_json(self.mod.OUT / "index.json")
                 canonical_aaa = self.mod.load_json(self.mod.OUT / "tickers" / "AAA.json")
                 canonical_bbb = self.mod.load_json(self.mod.OUT / "tickers" / "BBB.json")
-                public_aaa_after = self.mod.load_json(self.mod.PUBLIC_OUT / "tickers" / "AAA.json")
             finally:
                 self.mod.DATA = original_data
                 self.mod.OUT = original_out
-                self.mod.PUBLIC_OUT = original_public_out
                 self.mod.now_iso = original_now_iso
 
         self.assertEqual(index["count"], 2)
         self.assertEqual([row["ticker"] for row in index["rows"]], ["AAA", "BBB"])
         self.assertEqual(canonical_aaa["facts"]["price"]["value"], 11.0)
         self.assertEqual(canonical_bbb["facts"]["price"]["value"], 20.0)
-        self.assertEqual(public_aaa_before, public_aaa_after)
 
     def test_market_facts_contract_accepts_valid_generated_payload(self) -> None:
         payload = self.mod.build_one(
@@ -462,7 +472,6 @@ class BuildMarketFactsTest(unittest.TestCase):
     def test_enrolled_etf_uses_committed_projection_without_mutable_bypass(self) -> None:
         original_data = self.mod.DATA
         original_out = self.mod.OUT
-        original_public_out = self.mod.PUBLIC_OUT
         original_now_iso = self.mod.now_iso
         with TemporaryDirectory() as tmp:
             root = Path(tmp)
@@ -512,7 +521,6 @@ class BuildMarketFactsTest(unittest.TestCase):
 
             self.mod.DATA = data_root
             self.mod.OUT = data_root / "computed" / "market_facts"
-            self.mod.PUBLIC_OUT = root / "public" / "data" / "computed" / "market_facts"
             self.mod.now_iso = lambda: "2026-07-11T00:00:00Z"
             try:
                 self.mod.main(["--no-public-mirror"])
@@ -520,7 +528,6 @@ class BuildMarketFactsTest(unittest.TestCase):
             finally:
                 self.mod.DATA = original_data
                 self.mod.OUT = original_out
-                self.mod.PUBLIC_OUT = original_public_out
                 self.mod.now_iso = original_now_iso
 
         self.assertEqual(result["facts"]["price"]["value"], 123.0)

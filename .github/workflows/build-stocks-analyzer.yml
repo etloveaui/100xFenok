@@ -2,9 +2,24 @@ name: Build Stocks Analyzer
 
 # Merge Global Scouter + SlickCharts with bounded Yahoo forward-metric fallbacks
 # into a single native-ready stocks_analyzer.json for the stock-analyzer feature.
-# Runs daily after the global-scouter raw export window.
+# Runs daily after the global-scouter raw export window. SEC 13F ingestion is
+# owned by the external CCH converter; this workflow only enriches and derives
+# from the canonical SEC payload after the provenance guard passes.
 
 on:
+  # DEC-360 added a push filter here over seven input families so the
+  # review-only SEC 13F bridge would re-seal when those inputs advanced. It was
+  # removed on 2026-08-21 (B-384) because it could never fire: GitHub does not
+  # start a workflow from a push made with the default GITHUB_TOKEN, and every
+  # producer pushes that way. Measured, this workflow has three push runs in its
+  # entire history, all on 2026-08-16 and all authored by a human.
+  #
+  # It was also wrong by construction rather than merely dead - the push path
+  # ran the bridge builder without the S2/S5 regeneration whose ordering the
+  # test's pinned counts encode, which is the 69-versus-67 disagreement recorded
+  # on B-384. Update Manifest owns both the rebuild and the git copies of all
+  # three sealed inputs, from a full non-sparse checkout; its own script says so
+  # at scripts/update-manifest-projections.sh:343-345.
   schedule:
     - cron: '7 6 * * *'
   workflow_dispatch:
@@ -21,6 +36,7 @@ concurrency:
 jobs:
   build-stocks-analyzer:
     runs-on: ubuntu-latest
+    timeout-minutes: 60
 
     steps:
       - name: Checkout repository
@@ -37,44 +53,57 @@ jobs:
           node-version: '22'
 
       - name: Build stocks_analyzer.json
+        if: github.event_name != 'push'
         run: |
           node scripts/test-yf-screener-enrichment.mjs
           node scripts/build-stocks-analyzer.mjs
 
-      - name: Build 13F analytics (trades ranking + portfolio views)
+      - name: Verify SEC 13F source provenance
+        if: github.event_name != 'push'
+        run: node scripts/test-sec13f-source-route.mjs
+
+      - name: Build 13F downstream analytics (SEC ingestion is external)
+        if: github.event_name != 'push'
         run: |
           node scripts/build-13f-enrichment-backfill.mjs
           node scripts/build-13f-integrity-indexes.mjs
           node scripts/build-13f-trades.mjs
           node scripts/build-13f-portfolio-views.mjs
+          node scripts/build-13f-factor-radar-v2.mjs
           node scripts/build-guru-holders-index.mjs
 
+      - name: Build the SEC 13F bridge index from the regenerated tree
+        run: node scripts/build-sec13f-bridge-index.mjs
+
       - name: Build revision movers + industry benchmarks
+        if: github.event_name != 'push'
         run: |
           node scripts/build-revision-movers.mjs
           node scripts/build-industry-benchmarks.mjs
 
+      # Fenok RIM was retired under DEC-302. Its build and verification steps
+      # are removed from this active pipeline so a retired gate can no longer
+      # block the stocks-analyzer publication. Research artifacts under
+      # data/computed/fenok-rim/ and the public quarantine are preserved; the
+      # scripts remain runnable on demand for archived research.
+
       - name: Build calendar previous-release values (FRED)
+        if: github.event_name != 'push'
         env:
           FRED_API_KEY: ${{ secrets.FRED_API_KEY }}
         # non-fatal: calendar context is an enhancement, not a build gate
         run: node scripts/build-calendar-prev.mjs || echo "calendar prev-values skipped"
 
       - name: Verify output
+        if: github.event_name != 'push'
         run: |
           echo "=== stocks_analyzer.json header ==="
           head -20 data/global-scouter/core/stocks_analyzer.json
           echo "..."
           echo "Total stocks: $(node -e "console.log(JSON.parse(require('fs').readFileSync('data/global-scouter/core/stocks_analyzer.json','utf8')).count)")"
 
-      - name: Sync global-scouter docs to public
-        # README.md/schema.json are written only to data/ by the converter; mirror
-        # them to public/ so the weekly refresh never leaves stale public docs.
-        run: |
-          cp data/global-scouter/README.md 100xfenok-next/public/data/global-scouter/README.md
-          cp data/global-scouter/schema.json 100xfenok-next/public/data/global-scouter/schema.json
-
       - name: Commit and push
+        id: publish
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
@@ -92,36 +121,27 @@ jobs:
             data/sec-13f/summary.json \
             data/sec-13f/investors/*.json \
             data/sec-13f/analytics/consensus.json \
+            data/sec-13f/analytics/conviction_entries.json \
             data/sec-13f/analytics/ticker_aliases.json \
             data/sec-13f/analytics/trades_ranking.json \
+            data/sec-13f/analytics/turnover.json \
             data/sec-13f/analytics/portfolio_views.json \
+            data/sec-13f/analytics/factor_exposures_summary.json \
             data/sec-13f/analytics/guru_holders_index.json \
+            data/computed/sec13f_bridge_index.json \
             data/global-scouter/core/revision_movers.json \
             data/damodaran/industry_benchmarks.json \
-            data/calendar/prev-values.json \
-            100xfenok-next/public/data/calendar/prev-values.json \
-            100xfenok-next/public/data/global-scouter/core/revision_movers.json \
-            100xfenok-next/public/data/damodaran/industry_benchmarks.json \
-            100xfenok-next/public/data/global-scouter/core/stocks_analyzer.json \
-            100xfenok-next/public/data/global-scouter/core/per_bands_index.json \
-            100xfenok-next/public/data/global-scouter/core/slick_index.json \
-            100xfenok-next/public/data/global-scouter/README.md \
-            100xfenok-next/public/data/global-scouter/schema.json \
-            100xfenok-next/public/data/sec-13f/by_ticker.json \
-            100xfenok-next/public/data/sec-13f/by_sector.json \
-            100xfenok-next/public/data/sec-13f/summary.json \
-            100xfenok-next/public/data/sec-13f/analytics/consensus.json \
-            100xfenok-next/public/data/sec-13f/analytics/ticker_aliases.json \
-            100xfenok-next/public/data/sec-13f/analytics/trades_ranking.json \
-            100xfenok-next/public/data/sec-13f/analytics/portfolio_views.json \
-            100xfenok-next/public/data/sec-13f/analytics/guru_holders_index.json
-          find 100xfenok-next/public/data/sec-13f/investors \
-            -maxdepth 1 -name '*.json' ! -name 'griffin.json' -print0 | xargs -0 git add
+            data/calendar/prev-values.json
           if git diff --staged --quiet; then
             echo "No stocks analyzer or 13F analytics changes to publish"
+            echo "bridge_review_ready=true" >> "$GITHUB_OUTPUT"
             exit 0
           fi
-          git commit -m "data: refresh stocks_analyzer.json + 13f analytics"
+          if [[ "$GITHUB_EVENT_NAME" == "push" ]]; then
+            git commit -m "chore: refresh SEC 13F bridge index"
+          else
+            git commit -m "data: refresh stocks_analyzer.json + 13f analytics"
+          fi
           for attempt in $(seq 1 5); do
             if ! git pull --rebase --autostash origin main; then
               echo "git rebase failed on attempt ${attempt}; aborting and retrying"
@@ -129,8 +149,21 @@ jobs:
               sleep 3
               continue
             fi
+            # The bridge fingerprints every input listed in the trigger. A
+            # successful rebase may advance one of those inputs, so rebuild
+            # after the rebase and amend before attempting push. The full
+            # review contract runs after publication so its count pin cannot
+            # block production output.
+            node scripts/build-sec13f-bridge-index.mjs
+            git add data/computed/sec13f_bridge_index.json
+            if ! git diff --staged --quiet; then
+              git commit --amend --no-edit
+            fi
             if git push; then
-              gh workflow run update-manifest.yml --ref main -f rebuild_slickcharts=true
+              echo "bridge_review_ready=true" >> "$GITHUB_OUTPUT"
+              if [[ "$GITHUB_EVENT_NAME" != "push" ]]; then
+                gh workflow run update-manifest.yml --ref main -f rebuild_slickcharts=true
+              fi
               exit 0
             fi
             echo "git push race on attempt ${attempt}; retrying after rebase"
@@ -138,3 +171,7 @@ jobs:
           done
           echo "git push failed after retrying concurrent main updates"
           exit 1
+
+      - name: Verify the SEC 13F bridge index against the regenerated tree
+        if: ${{ always() && steps.publish.outputs.bridge_review_ready == 'true' }}
+        run: node scripts/test-sec13f-bridge-index.mjs

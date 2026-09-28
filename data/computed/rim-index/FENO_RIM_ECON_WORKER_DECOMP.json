@@ -1,0 +1,337 @@
+{
+ "schema_version": "feno_rim_econ_worker_decomp.v1",
+ "criteria": "feno-index-rim-canonical-criteria.json",
+ "g_base": 0.0404,
+ "rf": 0.0469,
+ "erp_base": 0.0503,
+ "ke_identical_across_indices": true,
+ "g_identical_across_indices": true,
+ "decomposition": {
+  "SPX": {
+   "components": {
+    "B0": {
+     "points": 1315.9252231358494,
+     "pct": 0.2198377565365591
+    },
+    "PV_RI1": {
+     "points": 232.79052890192804,
+     "pct": 0.03888985993809446
+    },
+    "PV_RI2": {
+     "points": 245.45705761358101,
+     "pct": 0.04100592337856872
+    },
+    "PV_RI3": {
+     "points": 261.2428008823614,
+     "pct": 0.043643081117061666
+    },
+    "PV_terminal": {
+     "points": 3930.477094466709,
+     "pct": 0.6566233790297161
+    }
+   },
+   "total": 5985.892705000429,
+   "residual": 0.0,
+   "base_fv": 5985.892705000429,
+   "ke": 0.0972,
+   "g": 0.0404,
+   "ltroe": 0.2198,
+   "payout": 0.2070154100450172
+  },
+  "NDX": {
+   "components": {
+    "B0": {
+     "points": 3199.48851998959,
+     "pct": 0.11237061334753488
+    },
+    "PV_RI1": {
+     "points": 923.8416112440867,
+     "pct": 0.03244663884332696
+    },
+    "PV_RI2": {
+     "points": 984.2755608983197,
+     "pct": 0.03456916559947306
+    },
+    "PV_RI3": {
+     "points": 1257.4923739028275,
+     "pct": 0.044164930879567015
+    },
+    "PV_terminal": {
+     "points": 22107.54637966516,
+     "pct": 0.776448651330098
+    }
+   },
+   "total": 28472.644445699985,
+   "residual": 0.0,
+   "base_fv": 28472.64444569998,
+   "ke": 0.0972,
+   "g": 0.0404,
+   "ltroe": 0.3081,
+   "payout": 0.097071099881803
+  }
+ },
+ "assumptions": {
+  "SPX": {
+   "current_pb": 5.6916,
+   "b0_per_point": 1315.9252231358494,
+   "b0_over_p": 0.17569751915102957,
+   "eps_fy1_3": [
+    383.3257,
+    452.94689776854585,
+    537.4318856847196
+   ],
+   "eps_over_p": [
+    0.05118024438830824,
+    0.06047581188195898,
+    0.07175593823063073
+   ],
+   "implied_roe_fy1_3": [
+    0.2912974789604952,
+    0.2796146981477671,
+    0.27155690242887337
+   ],
+   "ltroe": 0.2198,
+   "ke_base": 0.0972,
+   "ltroe_minus_ke": 0.1226,
+   "terminal_g": 0.0404,
+   "terminal_retention": 0.18380345768880801,
+   "terminal_payout": 0.816196542311192,
+   "implied_pb": 4.548809157055329,
+   "base_fv": 5985.892705000429
+  },
+  "NDX": {
+   "current_pb": 8.8371,
+   "b0_per_point": 3199.48851998959,
+   "b0_over_p": 0.11315929433864051,
+   "eps_fy1_3": [
+    1324.6293,
+    1612.163970771195,
+    2229.7107358927383
+   ],
+   "eps_over_p": [
+    0.04684939980618373,
+    0.05701890666300709,
+    0.07886025903094476
+   ],
+   "implied_roe_fy1_3": [
+    0.4140128310272262,
+    0.366773127415973,
+    0.38106870337669113
+   ],
+   "ltroe": 0.3081,
+   "ke_base": 0.0972,
+   "ltroe_minus_ke": 0.21089999999999998,
+   "terminal_g": 0.0404,
+   "terminal_retention": 0.1311262577085362,
+   "terminal_payout": 0.8688737422914639,
+   "implied_pb": 8.899123803011058,
+   "base_fv": 28472.64444569998
+  }
+ },
+ "shapley": {
+  "groups": [
+   "b0",
+   "eps",
+   "ltroe",
+   "ke",
+   "payout",
+   "g"
+  ],
+  "f_spx": 0.7992144839861075,
+  "f_ndx": 1.0070185697809304,
+  "gap": 0.2078040857948229,
+  "contributions": {
+   "b0": -0.1863436041258706,
+   "eps": -0.0019531147363237482,
+   "ltroe": 0.35267980535171967,
+   "ke": 0.0,
+   "payout": 0.04342099930529755,
+   "g": 0.0
+  },
+  "reconciliation_error": -2.7755575615628914e-17,
+  "shares_sum": 0.9999999999999999,
+  "normalisation": "each index divided by its OWN price (price-normalised space); scale-free",
+  "note": "Ke and terminal g are identical scalar values for SPX and NDX under the canonical criteria; their Shapley contributions are exactly zero. Handler correction fh-007 applied: the first-pass decomposition normalised both indices by the SPX price, which leaked the 3.775x index-scale factor into the gap; corrected endpoints are SPX 0.799214, NDX 1.007019, gap 0.207804."
+ },
+ "cross_swaps": {
+  "SPX": {
+   "+NDX_b0": 0.6496728039137245,
+   "+NDX_eps": 0.797620435316732,
+   "+NDX_ltroe": 1.1771780353598826,
+   "+NDX_ke": 0.7992144839861075,
+   "+NDX_payout": 0.8308090511860159,
+   "+NDX_g": 0.7992144839861075
+  },
+  "NDX": {
+   "+SPX_b0": 1.2301640979602888,
+   "+SPX_eps": 1.0093602287107433,
+   "+SPX_ltroe": 0.6796519885778067,
+   "+SPX_ke": 1.0070185697809304,
+   "+SPX_payout": 0.9518006164967845,
+   "+SPX_g": 1.0070185697809304
+  }
+ },
+ "sensitivity": {
+  "SPX": {
+   "rows": {
+    "canonical": 5985.892705000429,
+    "g-50bp": {
+     "fv": 5667.892940075937,
+     "delta": -317.9997649244915,
+     "delta_pct": -5.312486885353696
+    },
+    "g-100bp": {
+     "fv": 5397.497930379664,
+     "delta": -588.394774620765,
+     "delta_pct": -9.829691302840061
+    },
+    "g-150bp": {
+     "fv": 5164.762392785935,
+     "delta": -821.1303122144936,
+     "delta_pct": -13.717758614826936
+    },
+    "ltroe-50bp": {
+     "fv": 5825.595923007496,
+     "delta": -160.29678199293267,
+     "delta_pct": -2.6779093761407635
+    },
+    "ltroe-100bp": {
+     "fv": 5665.299141014563,
+     "delta": -320.59356398586533,
+     "delta_pct": -5.355818752281538
+    },
+    "erp+50bp": {
+     "fv": 5446.7771450692735,
+     "delta": -539.1155599311551,
+     "delta_pct": -9.006435405713075
+    },
+    "erp-50bp": {
+     "fv": 6630.270279124954,
+     "delta": 644.3775741245254,
+     "delta_pct": 10.764936925552181
+    }
+   },
+   "elasticity_per_100bp": {
+    "g": 9.829691302840061,
+    "ltroe": 5.355818752281538,
+    "erp": -18.01287081142615
+   }
+  },
+  "NDX": {
+   "rows": {
+    "canonical": 28472.64444569998,
+    "g-50bp": {
+     "fv": 26684.00800721575,
+     "delta": -1788.636438484231,
+     "delta_pct": -6.2819470172337795
+    },
+    "g-100bp": {
+     "fv": 25163.13151461238,
+     "delta": -3309.5129310876,
+     "delta_pct": -11.623482804342789
+    },
+    "g-150bp": {
+     "fv": 23854.07626053317,
+     "delta": -4618.568185166812,
+     "delta_pct": -16.22107210299647
+    },
+    "ltroe-50bp": {
+     "fv": 27948.52053911712,
+     "delta": -524.1239065828631,
+     "delta_pct": -1.8407981302278276
+    },
+    "ltroe-100bp": {
+     "fv": 27424.396632534255,
+     "delta": -1048.2478131657263,
+     "delta_pct": -3.681596260455655
+    },
+    "erp+50bp": {
+     "fv": 25848.95377713951,
+     "delta": -2623.69066856047,
+     "delta_pct": -9.214776918821489
+    },
+    "erp-50bp": {
+     "fv": 31609.811017807442,
+     "delta": 3137.1665721074605,
+     "delta_pct": 11.018177739304601
+    }
+   },
+   "elasticity_per_100bp": {
+    "g": 11.623482804342789,
+    "ltroe": 3.681596260455655,
+    "erp": -18.429553837642977
+   }
+  }
+ },
+ "market_implied": {
+  "SPX": {
+   "implied_ltroe": 0.2667075946665136,
+   "implied_erp": 0.03986595425754785,
+   "implied_g": 0.05611818286785855,
+   "domain_searched": {
+    "ltroe": "[0.0, 1.50]",
+    "erp": "[-0.02, 0.30]",
+    "g": "[0.0, 0.0962) (below Ke pole)"
+   }
+  },
+  "NDX": {
+   "implied_ltroe": 0.30620689374336507,
+   "implied_erp": 0.05064936000853775,
+   "implied_g": 0.03988552687289193,
+   "domain_searched": {
+    "ltroe": "[0.0, 1.50]",
+    "erp": "[-0.02, 0.30]",
+    "g": "[0.0, 0.0962) (below Ke pole)"
+   }
+  }
+ },
+ "identity_sanity": {
+  "SPX": {
+   "current_pb_vs_implied_pb": {
+    "current": 5.6916,
+    "implied": 4.548809157055329,
+    "consistent": true
+   },
+   "fwd_roe_vs_ltroe": {
+    "fy1_roe": 0.2912974789604952,
+    "ltroe": 0.2198,
+    "consistent": true
+   },
+   "earnings_yield": 0.05118024438830824,
+   "roe_minus_ke": {
+    "fy1": 0.19409747896049517,
+    "ltroe_minus_ke": 0.1226
+   },
+   "retention_book_growth": 0.2309944119084085,
+   "book_growth_vs_g": {
+    "retention_growth": 0.2309944119084085,
+    "terminal_g": 0.0404,
+    "note": "explicit-period book growth is ROE*retention; terminal book growth is g"
+   }
+  },
+  "NDX": {
+   "current_pb_vs_implied_pb": {
+    "current": 8.8371,
+    "implied": 8.899123803011058,
+    "consistent": true
+   },
+   "fwd_roe_vs_ltroe": {
+    "fy1_roe": 0.4140128310272262,
+    "ltroe": 0.3081,
+    "consistent": true
+   },
+   "earnings_yield": 0.04684939980618373,
+   "roe_minus_ke": {
+    "fy1": 0.3168128310272262,
+    "ltroe_minus_ke": 0.21089999999999998
+   },
+   "retention_book_growth": 0.3738241501542343,
+   "book_growth_vs_g": {
+    "retention_growth": 0.3738241501542343,
+    "terminal_g": 0.0404,
+    "note": "explicit-period book growth is ROE*retention; terminal book growth is g"
+   }
+  }
+ },
+ "cross_swaps_note": "normalised space: each driver swapped in its own price-normalised units; no raw-dollar units mismatch"
+}

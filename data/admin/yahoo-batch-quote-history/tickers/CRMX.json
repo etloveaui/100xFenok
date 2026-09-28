@@ -77,66 +77,91 @@
       "run_id": "29544227703",
       "schedule": "20 23 * * 1-5",
       "shard": "1/5"
+    },
+    {
+      "attempts_used": 1,
+      "event_name": "schedule",
+      "failures": [],
+      "latency_ms": 403,
+      "natural": true,
+      "observed_at": "2026-08-11T23:29:49Z",
+      "outcome": "fresh",
+      "run_attempt": 1,
+      "run_id": "31544436443",
+      "schedule": "7 22 * * 0-5",
+      "shard": "35/72"
+    },
+    {
+      "attempts_used": 1,
+      "event_name": "workflow_dispatch",
+      "failures": [],
+      "latency_ms": 448,
+      "natural": false,
+      "observed_at": "2026-09-28T03:11:20Z",
+      "outcome": "fresh",
+      "run_attempt": 1,
+      "run_id": "36367829153",
+      "schedule": "",
+      "shard": ""
     }
   ],
   "current": {
-    "fetched_at": "2026-07-17T00:22:47Z",
-    "history_as_of": "2026-07-16",
+    "fetched_at": "2026-09-28T03:12:41Z",
+    "history_as_of": "2026-09-25",
     "path": "data/yf/finance/CRMX.json",
-    "payload_sha256": "5001879558c09eab120d6df6cb71a1f3cfea9badbc9f236d5fe37293c69b1684",
-    "quote_as_of": "2026-07-16T19:59:51Z",
-    "source_as_of": "2026-07-16"
+    "payload_sha256": "cfbc227ba354701391d512dce75ee2426d6efcb7a35d54b83df18342ca875e8c",
+    "quote_as_of": "2026-09-25T20:00:00Z",
+    "source_as_of": "2026-09-25"
   },
   "discovered_from": [
-    "market_facts",
     "stockanalysis_etf"
   ],
   "last_attempt": {
     "attempts_used": 1,
-    "event_name": "schedule",
+    "event_name": "workflow_dispatch",
     "failures": [],
-    "latency_ms": 378,
-    "natural": true,
-    "observed_at": "2026-07-17T00:21:09Z",
+    "latency_ms": 448,
+    "natural": false,
+    "observed_at": "2026-09-28T03:11:20Z",
     "outcome": "fresh",
     "run_attempt": 1,
-    "run_id": "29544227703",
-    "schedule": "20 23 * * 1-5",
-    "shard": "1/5"
+    "run_id": "36367829153",
+    "schedule": "",
+    "shard": ""
   },
   "lkg": {
-    "fetched_at": "2026-06-18T11:53:46Z",
-    "history_as_of": "2026-06-17",
+    "fetched_at": "2026-08-11T23:31:42Z",
+    "history_as_of": "2026-08-11",
     "path": "data/admin/yahoo-batch-quote-history/lkg/CRMX.json",
-    "payload_sha256": "29dac59b0199047bfb27f6372630acda28ed48dede8a2f3188c96ee08518e0ff",
-    "quote_as_of": null,
-    "source_as_of": "2026-06-17"
+    "payload_sha256": "e1c1d9bc676a9c6204e150cccf38f6b307cb8605b7e223550a6e76def8f21ff5",
+    "quote_as_of": "2026-08-11T20:00:00Z",
+    "source_as_of": "2026-08-11"
   },
   "promotion_contract": "provider_observation/v2",
   "provider_observation": {
-    "event_name": "schedule",
-    "history_as_of": "2026-07-16",
-    "observed_at": "2026-07-17T00:21:09Z",
-    "payload_sha256": "154381f4e1c22d92693093caa1e2200569197249a386766286dede2b9128790a",
-    "quote_as_of": "2026-07-16T19:59:51Z",
+    "event_name": "workflow_dispatch",
+    "history_as_of": "2026-09-25",
+    "observed_at": "2026-09-28T03:11:20Z",
+    "payload_sha256": "84e61e9f7dba08435ce6488af390e1d385e62250d24b8e799f76b678e4e18ad5",
+    "quote_as_of": "2026-09-25T20:00:00Z",
     "run_attempt": 1,
-    "run_id": "29544227703",
+    "run_id": "36367829153",
     "schema_version": "provider_observation/v2",
-    "source_as_of": "2026-07-16"
+    "source_as_of": "2026-09-25"
   },
   "resolution_state": "fresh_primary",
   "retry": false,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "stale": {
-    "age_business_days": 16,
-    "classified_at": "2026-07-13T04:33:56Z",
-    "classified_run_id": "29224221077",
+    "age_business_days": 7,
+    "classified_at": "2026-08-20T14:20:12Z",
+    "classified_run_id": "32379322022",
     "expected_resolution": "next_natural_yahoo_run",
     "max_business_days": 6,
-    "message": "CRMX holds LKG because Yahoo source date 2026-06-17 is 16 business days old, beyond the 6-day bound; it will retry on the next natural Yahoo run.",
+    "message": "CRMX holds LKG because Yahoo source date 2026-08-11 is 7 business days old, beyond the 6-day bound; it will retry on the next natural Yahoo run.",
     "reason": "source_age_exceeds_lane_bound",
-    "source_as_of": "2026-06-17"
+    "source_as_of": "2026-08-11"
   },
   "ticker": "CRMX",
-  "updated_at": "2026-07-17T00:21:09Z"
+  "updated_at": "2026-09-28T03:11:20Z"
 }

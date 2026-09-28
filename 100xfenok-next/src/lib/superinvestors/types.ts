@@ -72,12 +72,22 @@ export interface PerformanceSeries {
   coverage: number[];
 }
 
+export interface PortfolioCoverage {
+  reported_value: number;
+  mapped_value: number;
+  unmapped_value: number;
+  mapped_ratio: number;
+  unmapped_rows: number;
+  unrepresented_value?: number;
+}
+
 export interface InvestorPortfolioView {
   name: string;
   quarter: string;
   quarters: string[];
   sector_history: Record<string, number[]>;
   treemap: PortfolioRow[];
+  coverage?: PortfolioCoverage;
   performance?: PerformanceSeries | null;
 }
 
@@ -100,6 +110,7 @@ export interface PortfolioViewsData {
   total: {
     treemap: PortfolioRow[];
     sectors: Record<string, number>;
+    coverage?: PortfolioCoverage;
     sector_history?: AggregateSectorHistory;
   };
   investors: Record<string, InvestorPortfolioView>;
@@ -140,7 +151,9 @@ export interface FactorExposuresSummaryData {
   coverage?: {
     row_count?: number | null;
     same_period_cohort_count?: number | null;
+    common_performance_start_date?: string | null;
     common_performance_end_date?: string | null;
+    common_performance_observation_count?: number | null;
     factor_aligned_as_of?: string | null;
     observation_count_min?: number | null;
     observation_count_max?: number | null;
@@ -181,6 +194,40 @@ export interface NewPositionRow {
 export interface NewPositionsData {
   metadata: { quarter: string; new_positions_count: number; unique_tickers: number };
   new_positions: NewPositionRow[];
+}
+
+/** Public cohort comparison for one ticker across exact adjacent 13F quarters. */
+export interface HoldingChangeSummary {
+  held_count: number;
+  new_count: number;
+  increased_count: number;
+  decreased_count: number;
+  unchanged_count: number;
+  sold_count: number;
+  comparable_count: number;
+  mean_weight_delta: number | null;
+  current_quarter: string;
+  previous_quarter: string;
+}
+
+export interface GuruHoldersIndexMetadata {
+  quarter?: string;
+  tickers?: number;
+  generated_at?: string;
+  change_coverage?: {
+    comparison_basis?: string;
+    current_quarter?: string;
+    previous_quarter?: string;
+    comparable_ticker_count?: number;
+    [key: string]: unknown;
+  };
+  [key: string]: unknown;
+}
+
+export interface GuruHoldersIndexData {
+  metadata: GuruHoldersIndexMetadata;
+  holders: Record<string, number>;
+  holding_changes?: Record<string, HoldingChangeSummary>;
 }
 
 export interface HhiRow {
@@ -280,6 +327,7 @@ export interface SummaryData {
   metadata: {
     version?: string;
     generated_at?: string;
+    source_quarter?: string;
     latest_quarter?: string;
     investor_count?: number;
     total_investors?: number;
@@ -363,6 +411,8 @@ export interface InvestorFiling {
   quarter: string;
   filing_date: string;
   report_date: string;
+  form?: string;
+  accession_number?: string;
   aum_total: number;
   holdings_count: number;
   top_10_weight: number;

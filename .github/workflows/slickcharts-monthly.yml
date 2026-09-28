@@ -50,6 +50,11 @@ on:
           # Historical (one-time)
           - 1929crash
           - inflation
+      controlled_failure_after_fetch:
+        description: 'Dispatch-only composite recovery exercise after a complete fetch'
+        required: false
+        default: false
+        type: boolean
 
 permissions:
   contents: write
@@ -63,10 +68,14 @@ concurrency:
 jobs:
   scrape-monthly:
     runs-on: ubuntu-latest
+    timeout-minutes: 90
 
     steps:
       - name: Configure attempt telemetry path
-        run: echo "SLICKCHARTS_ATTEMPT_EVENTS_PATH=$RUNNER_TEMP/slickcharts-monthly-attempt-events.jsonl" >> "$GITHUB_ENV"
+        run: |
+          echo "SLICKCHARTS_ATTEMPT_EVENTS_PATH=$RUNNER_TEMP/slickcharts-monthly-attempt-events.jsonl" >> "$GITHUB_ENV"
+          echo "SLICKCHARTS_COMPOSITE_SNAPSHOT_DIR=$RUNNER_TEMP/slickcharts-composite-monthly-baseline" >> "$GITHUB_ENV"
+          echo "SLICKCHARTS_COMPOSITE_STATUS_PATH=$RUNNER_TEMP/slickcharts-composite-monthly-status.json" >> "$GITHUB_ENV"
 
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -85,6 +94,12 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: '22'
+
+      - name: Prepare composite member baseline
+        run: |
+          node scripts/slickcharts-composite-recovery.mjs prepare \
+            --member monthly \
+            --snapshot "$SLICKCHARTS_COMPOSITE_SNAPSHOT_DIR"
 
       - name: Verify lane-registry commit-shard contract
         run: node scripts/test-slickcharts-commit-shards.mjs
@@ -271,14 +286,31 @@ jobs:
             --output data/slickcharts/inflation.json \
             --pretty
 
-      - name: Emit SlickCharts monthly attempt
+      - name: Exercise controlled composite degradation
+        if: ${{ github.event_name == 'workflow_dispatch' && inputs.controlled_failure_after_fetch }}
+        run: |
+          echo "::error::Controlled SlickCharts monthly composite failure"
+          exit 1
+
+      - name: Build SlickCharts monthly run row
         if: ${{ always() }}
         run: |
-          node scripts/emit-slickcharts-attempt.mjs \
+          node scripts/build-slickcharts-run-row.mjs \
             --member monthly \
             --events "$SLICKCHARTS_ATTEMPT_EVENTS_PATH" \
             --outcome "${{ job.status }}" \
             --row "$RUNNER_TEMP/slickcharts-monthly-row.json"
+
+      - name: Finalize SlickCharts composite recovery
+        if: ${{ always() }}
+        run: |
+          node scripts/slickcharts-composite-recovery.mjs finalize \
+            --member monthly \
+            --snapshot "$SLICKCHARTS_COMPOSITE_SNAPSHOT_DIR" \
+            --row "$RUNNER_TEMP/slickcharts-monthly-row.json" \
+            --receipts "$SLICKCHARTS_ATTEMPT_EVENTS_PATH" \
+            --status "$SLICKCHARTS_COMPOSITE_STATUS_PATH" \
+            --full-run "${{ (github.event_name == 'schedule' || github.event.inputs.scraper == 'all') && 'true' || 'false' }}"
 
       - name: Commit and push changes
         if: ${{ always() }}
@@ -319,5 +351,15 @@ jobs:
             "chore: update SlickCharts monthly data $(date -u +%Y-%m-%d)" \
             --manifest-workflow .github/workflows/slickcharts-monthly.yml \
             --manifest-always always_if_exists \
+            --manifest-data success_if_exists \
             -- \
             "${paths[@]}"
+      - name: Publish slickcharts-monthly generation to the cloud data plane
+        id: publish_cloud_generation
+        if: success()
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: aeeb5ea3affe55a2219d08ea02dad9e1
+          DATA_PLANE_ENDPOINT: https://100xfenok.etloveaui.workers.dev/internal/cloud-data-plane
+          DATA_PLANE_WRITE_KEY: ${{ secrets.DATA_PLANE_WRITE_KEY }}
+        run: node scripts/publish-cloud-data-generation.mjs --family=slickcharts-monthly --tolerate-gate-block --json

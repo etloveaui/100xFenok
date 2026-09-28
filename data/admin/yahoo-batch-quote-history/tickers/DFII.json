@@ -1,0 +1,115 @@
+{
+  "attempts": [
+    {
+      "attempts_used": 1,
+      "event_name": "workflow_dispatch",
+      "failures": [],
+      "latency_ms": 812,
+      "natural": true,
+      "observed_at": "2026-08-01T18:35:05Z",
+      "outcome": "fresh",
+      "run_attempt": 1,
+      "run_id": "30711924670",
+      "schedule": "",
+      "shard": "3/6"
+    },
+    {
+      "attempts_used": 1,
+      "event_name": "schedule",
+      "failures": [],
+      "latency_ms": 516,
+      "natural": true,
+      "observed_at": "2026-08-05T08:49:49Z",
+      "outcome": "fresh",
+      "run_attempt": 1,
+      "run_id": "30990520626",
+      "schedule": "7 6 * * 0-5",
+      "shard": "39/72"
+    },
+    {
+      "attempts_used": 1,
+      "event_name": "schedule",
+      "failures": [],
+      "latency_ms": 563,
+      "natural": true,
+      "observed_at": "2026-08-12T07:59:44Z",
+      "outcome": "fresh",
+      "run_attempt": 1,
+      "run_id": "31575211549",
+      "schedule": "7 6 * * 0-5",
+      "shard": "39/72"
+    },
+    {
+      "attempts_used": 1,
+      "event_name": "workflow_dispatch",
+      "failures": [],
+      "latency_ms": 543,
+      "natural": false,
+      "observed_at": "2026-09-28T03:11:20Z",
+      "outcome": "fresh",
+      "run_attempt": 1,
+      "run_id": "36367829153",
+      "schedule": "",
+      "shard": ""
+    }
+  ],
+  "current": {
+    "fetched_at": "2026-09-28T03:16:14Z",
+    "history_as_of": "2026-09-25",
+    "path": "data/yf/finance/DFII.json",
+    "payload_sha256": "3d302f9b7f6b924db051e994504c4d84be7c387feeff1f4babea1ff7e4d259bb",
+    "quote_as_of": "2026-09-25T17:23:19Z",
+    "source_as_of": "2026-09-25"
+  },
+  "discovered_from": [
+    "stockanalysis_etf"
+  ],
+  "last_attempt": {
+    "attempts_used": 1,
+    "event_name": "workflow_dispatch",
+    "failures": [],
+    "latency_ms": 543,
+    "natural": false,
+    "observed_at": "2026-09-28T03:11:20Z",
+    "outcome": "fresh",
+    "run_attempt": 1,
+    "run_id": "36367829153",
+    "schedule": "",
+    "shard": ""
+  },
+  "lkg": {
+    "fetched_at": "2026-08-12T08:01:43Z",
+    "history_as_of": "2026-08-11",
+    "path": "data/admin/yahoo-batch-quote-history/lkg/DFII.json",
+    "payload_sha256": "a7cfbf2011c698c20552c0f4e4fc60426503f87c1cf6fb5d7658e642526826a3",
+    "quote_as_of": "2026-08-11T17:45:06Z",
+    "source_as_of": "2026-08-11"
+  },
+  "promotion_contract": "provider_observation/v2",
+  "provider_observation": {
+    "event_name": "workflow_dispatch",
+    "history_as_of": "2026-09-25",
+    "observed_at": "2026-09-28T03:11:20Z",
+    "payload_sha256": "7c8b582cd6cafbccac30fb8657bcb92b89cd294f49d15742719805091a433284",
+    "quote_as_of": "2026-09-25T17:23:19Z",
+    "run_attempt": 1,
+    "run_id": "36367829153",
+    "schema_version": "provider_observation/v2",
+    "source_as_of": "2026-09-25"
+  },
+  "resolution_state": "fresh_primary",
+  "retry": false,
+  "schema_version": "yahoo-batch-quote-history-state/v1",
+  "stale": {
+    "age_business_days": 7,
+    "classified_at": "2026-08-20T14:20:12Z",
+    "classified_run_id": "32379322022",
+    "expected_resolution": "next_natural_yahoo_run",
+    "max_business_days": 6,
+    "message": "DFII holds LKG because Yahoo source date 2026-08-11 is 7 business days old, beyond the 6-day bound; it will retry on the next natural Yahoo run.",
+    "reason": "source_age_exceeds_lane_bound",
+    "source_as_of": "2026-08-11"
+  },
+  "ticker": "DFII",
+  "updated_at": "2026-09-28T03:11:20Z"
+}

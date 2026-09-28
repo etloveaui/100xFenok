@@ -281,11 +281,10 @@ function corporateActionEvidenceFor(item, context) {
 
 function corporateActionPolicyStatusFor(item, context) {
   const evidence = corporateActionEvidenceFor(item, context);
-  const policyRows = evidence.filter((row) => row.terminal || row.alias_target);
   return {
-    status: policyRows.length > 0 ? "policy_required_before_promotion" : "none",
-    reason: policyRows.length > 0
-      ? "StockAnalysis corporate-action surface indicates an acquired/delisted or old-symbol row; do not synthesize identity or promote without an explicit terminal/alias policy."
+    status: evidence.length > 0 ? "policy_required_before_promotion" : "none",
+    reason: evidence.length > 0
+      ? "Any StockAnalysis corporate-action evidence requires an explicit policy before promotion; do not synthesize identity or promote from the action row alone."
       : null,
     evidence,
   };
@@ -2295,6 +2294,7 @@ export {
   evidenceFamilyFlagsForTicker,
   evidenceFamiliesForTicker,
   corporateActionEvidenceFor,
+  corporateActionPolicyStatusFor,
   localSourceFilesFor,
   expectedStockPromotionGapCount,
   stockanalysisCorporateActionsByTicker,

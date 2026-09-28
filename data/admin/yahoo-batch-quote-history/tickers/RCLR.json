@@ -12,35 +12,91 @@
       "run_id": "29789662473",
       "schedule": "20 23 * * 1-5",
       "shard": "0/5"
+    },
+    {
+      "attempts_used": 1,
+      "event_name": "schedule",
+      "failures": [],
+      "latency_ms": 553,
+      "natural": true,
+      "observed_at": "2026-08-06T12:16:00Z",
+      "outcome": "fresh",
+      "run_attempt": 1,
+      "run_id": "31100540842",
+      "schedule": "7 10 * * 0-5",
+      "shard": "53/72"
+    },
+    {
+      "attempts_used": 1,
+      "event_name": "workflow_dispatch",
+      "failures": [],
+      "latency_ms": 424,
+      "natural": false,
+      "observed_at": "2026-09-28T06:02:24Z",
+      "outcome": "fresh",
+      "run_attempt": 1,
+      "run_id": "36367834787",
+      "schedule": "",
+      "shard": ""
     }
   ],
   "current": {
-    "fetched_at": "2026-07-18T00:01:00Z",
-    "history_as_of": "2026-07-16",
+    "fetched_at": "2026-09-28T06:09:42Z",
+    "history_as_of": "2026-09-25",
     "path": "data/yf/finance/RCLR.json",
-    "payload_sha256": "10db8e52f07faca644dfd1b71c4fa4e1425bfc99fff35f88259338cba102ce16",
-    "quote_as_of": "2026-07-13T14:44:13Z",
-    "source_as_of": "2026-07-13T14:44:13Z"
+    "payload_sha256": "c1d3653f71f7e4075015d0225ff5d0b9caae076fa3eeafa7fc2bb695d379528d",
+    "quote_as_of": "2026-09-24T19:06:36Z",
+    "source_as_of": "2026-09-24T19:06:36Z"
   },
   "discovered_from": [
     "stockanalysis_etf"
   ],
   "last_attempt": {
-    "attempts_used": 0,
-    "event_name": "schedule",
+    "attempts_used": 1,
+    "event_name": "workflow_dispatch",
     "failures": [],
-    "latency_ms": 0,
-    "natural": true,
-    "observed_at": "2026-07-21T00:18:00Z",
-    "outcome": "skipped_fresh",
+    "latency_ms": 424,
+    "natural": false,
+    "observed_at": "2026-09-28T06:02:24Z",
+    "outcome": "fresh",
     "run_attempt": 1,
-    "run_id": "29789662473",
-    "schedule": "20 23 * * 1-5",
-    "shard": "0/5"
+    "run_id": "36367834787",
+    "schedule": "",
+    "shard": ""
+  },
+  "lkg": {
+    "fetched_at": "2026-08-06T12:18:21Z",
+    "history_as_of": "2026-08-05",
+    "path": "data/admin/yahoo-batch-quote-history/lkg/RCLR.json",
+    "payload_sha256": "c81c33de74e1214bfd642c8a2ec987d9e53af8b28463f8006d70d616855a8d01",
+    "quote_as_of": "2026-08-05T19:59:43Z",
+    "source_as_of": "2026-08-05"
+  },
+  "promotion_contract": "provider_observation/v2",
+  "provider_observation": {
+    "event_name": "workflow_dispatch",
+    "history_as_of": "2026-09-25",
+    "observed_at": "2026-09-28T06:02:24Z",
+    "payload_sha256": "11f75d57e6b37cf41aca84599a1c21b64aa27022a00e880c7cce2e46feba4f41",
+    "quote_as_of": "2026-09-24T19:06:36Z",
+    "run_attempt": 1,
+    "run_id": "36367834787",
+    "schema_version": "provider_observation/v2",
+    "source_as_of": "2026-09-24T19:06:36Z"
   },
   "resolution_state": "fresh_primary",
   "retry": false,
   "schema_version": "yahoo-batch-quote-history-state/v1",
+  "stale": {
+    "age_business_days": 7,
+    "classified_at": "2026-08-14T00:10:47Z",
+    "classified_run_id": "31755913658",
+    "expected_resolution": "next_natural_yahoo_run",
+    "max_business_days": 6,
+    "message": "RCLR holds LKG because Yahoo source date 2026-08-05 is 7 business days old, beyond the 6-day bound; it will retry on the next natural Yahoo run.",
+    "reason": "source_age_exceeds_lane_bound",
+    "source_as_of": "2026-08-05"
+  },
   "ticker": "RCLR",
-  "updated_at": "2026-07-21T00:18:00Z"
+  "updated_at": "2026-09-28T06:02:24Z"
 }

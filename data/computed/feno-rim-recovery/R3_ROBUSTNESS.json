@@ -1,0 +1,43 @@
+{
+ "schema_version": "feno_rim_recovery_r3_robustness.v1",
+ "phase": "R3-robustness",
+ "research_only": true,
+ "note": "Red-team fh-20260807-096 pre-committed robustness: survivorship bound + bi-dimensional leg.",
+ "panel_rows": 1638,
+ "dropped_top_appreciation": 74,
+ "bounded_rows": 1310,
+ "survivorship_bound": {
+  "s3_full": {
+   "icc_beta": 1.278702,
+   "tstat": 10.575215,
+   "pval": 0,
+   "n": 1638
+  },
+  "s3_bounded": {
+   "icc_beta": 0.445466,
+   "tstat": 3.388315,
+   "pval": 0.000703,
+   "n": 1310
+  }
+ },
+ "bi_dimensional": {
+  "mean_spread": 0.061416,
+  "tstat": 5.34708,
+  "n_origins": 5,
+  "per_origin": {
+   "2019": 0.034097,
+   "2020": 0.071795,
+   "2021": 0.040467,
+   "2022": 0.062645,
+   "2023": 0.098078
+  },
+  "positive_origins": 5
+ },
+ "verdict": {
+  "legA_bounded_S3_significant": true,
+  "legB_biDim_significant": true,
+  "agreement": true,
+  "label": "ROBUST_INCREMENTAL"
+ },
+ "generated_at": "2026-08-07T08:53:49.368Z"
+}

@@ -1,0 +1,102 @@
+{
+  "attempts": [
+    {
+      "attempts_used": 1,
+      "event_name": "workflow_dispatch",
+      "failures": [],
+      "latency_ms": 596,
+      "natural": true,
+      "observed_at": "2026-08-01T18:28:23Z",
+      "outcome": "fresh",
+      "run_attempt": 1,
+      "run_id": "30711923637",
+      "schedule": "",
+      "shard": "2/6"
+    },
+    {
+      "attempts_used": 1,
+      "event_name": "schedule",
+      "failures": [],
+      "latency_ms": 522,
+      "natural": true,
+      "observed_at": "2026-08-10T05:42:10Z",
+      "outcome": "fresh",
+      "run_attempt": 1,
+      "run_id": "31359333130",
+      "schedule": "7 4 * * 0-5",
+      "shard": "14/72"
+    },
+    {
+      "attempts_used": 1,
+      "event_name": "workflow_dispatch",
+      "failures": [],
+      "latency_ms": 455,
+      "natural": false,
+      "observed_at": "2026-09-28T03:11:20Z",
+      "outcome": "fresh",
+      "run_attempt": 1,
+      "run_id": "36367829153",
+      "schedule": "",
+      "shard": ""
+    }
+  ],
+  "current": {
+    "fetched_at": "2026-09-28T03:20:44Z",
+    "history_as_of": "2026-09-25",
+    "path": "data/yf/finance/EDGE.json",
+    "payload_sha256": "9cc2241b288466d3af8fd6ad8cf25b74b76caee6b797623fad41d14ce035f57d",
+    "quote_as_of": "2026-09-24T19:59:51Z",
+    "source_as_of": "2026-09-24T19:59:51Z"
+  },
+  "discovered_from": [
+    "stockanalysis_etf"
+  ],
+  "last_attempt": {
+    "attempts_used": 1,
+    "event_name": "workflow_dispatch",
+    "failures": [],
+    "latency_ms": 455,
+    "natural": false,
+    "observed_at": "2026-09-28T03:11:20Z",
+    "outcome": "fresh",
+    "run_attempt": 1,
+    "run_id": "36367829153",
+    "schedule": "",
+    "shard": ""
+  },
+  "lkg": {
+    "fetched_at": "2026-08-10T05:44:15Z",
+    "history_as_of": "2026-08-07",
+    "path": "data/admin/yahoo-batch-quote-history/lkg/EDGE.json",
+    "payload_sha256": "4678969ac9fb8d5a328fef6e8e4ee14bb6347c2c7d8be33cfba57ee01e997120",
+    "quote_as_of": "2026-08-07T19:25:20Z",
+    "source_as_of": "2026-08-07"
+  },
+  "promotion_contract": "provider_observation/v2",
+  "provider_observation": {
+    "event_name": "workflow_dispatch",
+    "history_as_of": "2026-09-25",
+    "observed_at": "2026-09-28T03:11:20Z",
+    "payload_sha256": "e5bd24357e8fab3f7089d740c06b6376e478ee7f583790f6caeb3105137f2b6d",
+    "quote_as_of": "2026-09-24T19:59:51Z",
+    "run_attempt": 1,
+    "run_id": "36367829153",
+    "schema_version": "provider_observation/v2",
+    "source_as_of": "2026-09-24T19:59:51Z"
+  },
+  "resolution_state": "fresh_primary",
+  "retry": false,
+  "schema_version": "yahoo-batch-quote-history-state/v1",
+  "stale": {
+    "age_business_days": 8,
+    "classified_at": "2026-08-19T23:42:29Z",
+    "classified_run_id": "32314261503",
+    "expected_resolution": "next_natural_yahoo_run",
+    "max_business_days": 6,
+    "message": "EDGE holds LKG because Yahoo source date 2026-08-07 is 8 business days old, beyond the 6-day bound; it will retry on the next natural Yahoo run.",
+    "reason": "source_age_exceeds_lane_bound",
+    "source_as_of": "2026-08-07"
+  },
+  "ticker": "EDGE",
+  "updated_at": "2026-09-28T03:11:20Z"
+}

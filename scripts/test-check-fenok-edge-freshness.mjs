@@ -1,6 +1,7 @@
 #!/usr/bin/env node
 import assert from "node:assert/strict";
 import "./test-fenok-edge-source-stamp.mjs";
+import "./test-fenok-edge-krx-coverage-receipt.mjs";
 
 import {
   activeS0DailyGatedReady,
@@ -150,5 +151,15 @@ const s0Ledger = s0FinraOccLedgerEvidence(coverageIndex, coverageIndex.active_sc
 assert.equal(s0Ledger.ready, true);
 assert.equal(s0Ledger.integrity_ready, true);
 assert.equal(s0Ledger.raw_policy.admin_local_only, true);
+const explicitTaiwanCount = coverageIndex.active_scoring_universe.buckets.explicit_taiwan;
+assert.ok(explicitTaiwanCount >= 1, "the reviewed Taiwan mapping must remain in the active universe");
+assert.deepEqual(coverageIndex.active_scoring_universe.taiwan_ticker_anomalies, []);
+const taiwanYfSource = coverageIndex.source_availability.sources.find((row) => row.id === "taiwan_yf_daily_source");
+assert.equal(taiwanYfSource?.availability_status, "ready");
+assert.equal(taiwanYfSource?.covered_count, explicitTaiwanCount);
+assert.equal(taiwanYfSource?.denominator, explicitTaiwanCount);
+assert.ok(Array.isArray(coverageIndex.active_scoring_universe.japan_ticker_anomalies));
+assert.ok(coverageIndex.active_scoring_universe.japan_ticker_anomalies.length >= 1);
+assert.ok(coverageIndex.active_scoring_universe.japan_ticker_anomalies.every((row) => row.market === "US_CLASS" && row.market_scope === "us"));
 
 console.log("test-check-fenok-edge-freshness: ok");

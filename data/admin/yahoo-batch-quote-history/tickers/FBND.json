@@ -1,0 +1,115 @@
+{
+  "attempts": [
+    {
+      "attempts_used": 1,
+      "event_name": "workflow_dispatch",
+      "failures": [],
+      "latency_ms": 668,
+      "natural": true,
+      "observed_at": "2026-08-01T18:41:58Z",
+      "outcome": "fresh",
+      "run_attempt": 1,
+      "run_id": "30711925747",
+      "schedule": "",
+      "shard": "4/6"
+    },
+    {
+      "attempts_used": 1,
+      "event_name": "schedule",
+      "failures": [],
+      "latency_ms": 646,
+      "natural": true,
+      "observed_at": "2026-08-09T08:59:39Z",
+      "outcome": "fresh",
+      "run_attempt": 1,
+      "run_id": "31304762930",
+      "schedule": "7 8 * * 0-5",
+      "shard": "4/72"
+    },
+    {
+      "attempts_used": 0,
+      "event_name": "workflow_dispatch",
+      "failures": [],
+      "latency_ms": 0,
+      "natural": false,
+      "observed_at": "2026-08-09T15:40:09Z",
+      "outcome": "skipped_fresh",
+      "run_attempt": 1,
+      "run_id": "31321645091",
+      "schedule": "",
+      "shard": ""
+    },
+    {
+      "attempts_used": 1,
+      "event_name": "workflow_dispatch",
+      "failures": [],
+      "latency_ms": 510,
+      "natural": false,
+      "observed_at": "2026-09-28T03:11:20Z",
+      "outcome": "fresh",
+      "run_attempt": 1,
+      "run_id": "36367829153",
+      "schedule": "",
+      "shard": ""
+    }
+  ],
+  "current": {
+    "fetched_at": "2026-09-28T03:26:16Z",
+    "history_as_of": "2026-09-25",
+    "path": "data/yf/finance/FBND.json",
+    "payload_sha256": "e28abaa891a96d8a2733e8ebeef2691b67509b25d7fafabc596de1690c449fdd",
+    "quote_as_of": "2026-09-25T20:00:00Z",
+    "source_as_of": "2026-09-25"
+  },
+  "discovered_from": [
+    "stockanalysis_etf"
+  ],
+  "last_attempt": {
+    "attempts_used": 1,
+    "event_name": "workflow_dispatch",
+    "failures": [],
+    "latency_ms": 510,
+    "natural": false,
+    "observed_at": "2026-09-28T03:11:20Z",
+    "outcome": "fresh",
+    "run_attempt": 1,
+    "run_id": "36367829153",
+    "schedule": "",
+    "shard": ""
+  },
+  "lkg": {
+    "fetched_at": "2026-08-09T09:01:54Z",
+    "history_as_of": "2026-08-07",
+    "path": "data/admin/yahoo-batch-quote-history/lkg/FBND.json",
+    "payload_sha256": "9e826c5b6084131842eb2ef1d1f636920615dac6eab2b1b5adceed0912368c7e",
+    "quote_as_of": "2026-08-07T20:00:00Z",
+    "source_as_of": "2026-08-07"
+  },
+  "promotion_contract": "provider_observation/v2",
+  "provider_observation": {
+    "event_name": "workflow_dispatch",
+    "history_as_of": "2026-09-25",
+    "observed_at": "2026-09-28T03:11:20Z",
+    "payload_sha256": "01cc0dfc64c60fcbfe5da5aa6e9a7a917a6107c043f981094171cc2aadbd5ebc",
+    "quote_as_of": "2026-09-25T20:00:00Z",
+    "run_attempt": 1,
+    "run_id": "36367829153",
+    "schema_version": "provider_observation/v2",
+    "source_as_of": "2026-09-25"
+  },
+  "resolution_state": "fresh_primary",
+  "retry": false,
+  "schema_version": "yahoo-batch-quote-history-state/v1",
+  "stale": {
+    "age_business_days": 8,
+    "classified_at": "2026-08-19T23:42:29Z",
+    "classified_run_id": "32314261503",
+    "expected_resolution": "next_natural_yahoo_run",
+    "max_business_days": 6,
+    "message": "FBND holds LKG because Yahoo source date 2026-08-07 is 8 business days old, beyond the 6-day bound; it will retry on the next natural Yahoo run.",
+    "reason": "source_age_exceeds_lane_bound",
+    "source_as_of": "2026-08-07"
+  },
+  "ticker": "FBND",
+  "updated_at": "2026-09-28T03:11:20Z"
+}

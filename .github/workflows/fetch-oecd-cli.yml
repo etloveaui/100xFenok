@@ -3,23 +3,56 @@ name: Fetch OECD CLI Shadow
 on:
   schedule:
     - cron: '0 8 1 * *'
+    # OECD skips the August release; July+August data publish 2026-09-07
+    # 12:00 CET. The 1st-of-month probe misses that release, so add an
+    # 8th-of-month probe (day after OECD's ~7th). Both crons expect the same
+    # payload; the detection floor's freshness is aware of the August gap.
+    - cron: '0 8 8 * *'
   workflow_dispatch:
+    inputs:
+      controlled_failure:
+        description: 'Dispatch-only OECD LKG chaos injection'
+        required: false
+        type: boolean
+        default: false
 
 permissions:
   contents: write
   actions: write
 
 concurrency:
-  group: fenok-data-writer-${{ github.ref }}
+  group: fenok-data-writer-refs/heads/main
   cancel-in-progress: false
   queue: max
 
 jobs:
   fetch-oecd-cli:
     runs-on: ubuntu-latest
+    # The cloud data plane's credentials live in the production environment.
+    # This lane publishes a generation after its git write; git stays
+    # authoritative either way.
+    environment: production
     timeout-minutes: 15
     steps:
+      # Measured on this repo: a plain shallow checkout costs ~66s, of which
+      # ~53s is fetching blob content for 49,082 files and ~13s is writing them
+      # out — to do 2 seconds of actual work. `filter: blob:none` stops the
+      # blob transfer and cone-mode sparse-checkout stops materialising the
+      # tree, so only this lane's own paths are ever fetched.
+      #
+      # The cone must cover everything this lane reads or stages. If it does
+      # not, the failure is loud rather than silent: git refuses `git add` on a
+      # path outside the cone, and stage-lane-manifest.sh exits non-zero when a
+      # required path is absent.
       - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with:
+          filter: blob:none
+          sparse-checkout: |
+            scripts
+            100xfenok-next/scripts/cloud-data-plane
+            100xfenok-next/src/lib
+            .github/workflows
+            data/admin/oecd_cli
       - uses: actions/setup-node@0a44ba7841725637a19e28fa30b79a866c81b0a6
         with:
           node-version: '20'
@@ -27,6 +60,8 @@ jobs:
         run: node scripts/test-fetch-oecd-cli.mjs
       - name: Fetch OECD CLI shadow
         id: fetch_oecd
+        env:
+          INPUT_CONTROLLED_FAILURE: ${{ github.event.inputs.controlled_failure || 'false' }}
         run: node scripts/fetch-oecd-cli.mjs
       - name: Commit OECD evidence
         if: ${{ always() }}
@@ -48,7 +83,23 @@ jobs:
           git commit -m "data: refresh OECD CLI shadow"
           for attempt in $(seq 1 5); do
             if ! git pull --rebase --autostash origin main; then git rebase --abort >/dev/null 2>&1 || true; sleep 3; continue; fi
-            if git push; then gh workflow run update-manifest.yml --ref main; exit "$RECOVERY_EXIT"; fi
+            # No Update Manifest dispatch: OECD CLI is a private, non-servable
+            # family with no manifest consumer; scheduled update-manifest.yml
+            # reconciliation (daily 02:30/09:30 UTC) remains the fallback.
+            if git push; then exit "$RECOVERY_EXIT"; fi
             sleep 3
           done
           exit 1
+      # Publish the same artifact this run just committed as an immutable
+      # generation in the cloud data plane. Nothing switches and no consumer
+      # reads it: git remains authoritative, so a blocked cost gate or a failed
+      # publish is loud but never fatal to the lane.
+      - name: Publish OECD generation to the cloud data plane
+        id: publish_cloud_generation
+        if: ${{ steps.fetch_oecd.outcome == 'success' }}
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: aeeb5ea3affe55a2219d08ea02dad9e1
+          DATA_PLANE_ENDPOINT: https://100xfenok.etloveaui.workers.dev/internal/cloud-data-plane
+          DATA_PLANE_WRITE_KEY: ${{ secrets.DATA_PLANE_WRITE_KEY }}
+        run: node scripts/publish-cloud-data-generation.mjs --family=oecd-cli --tolerate-gate-block --json

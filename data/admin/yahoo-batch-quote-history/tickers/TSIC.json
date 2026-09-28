@@ -1,0 +1,102 @@
+{
+  "attempts": [
+    {
+      "attempts_used": 1,
+      "event_name": "schedule",
+      "failures": [],
+      "latency_ms": 860,
+      "natural": true,
+      "observed_at": "2026-08-06T10:49:28Z",
+      "outcome": "fresh",
+      "run_attempt": 1,
+      "run_id": "31094670683",
+      "schedule": "7 8 * * 0-5",
+      "shard": "52/72"
+    },
+    {
+      "attempts_used": 1,
+      "event_name": "schedule",
+      "failures": [],
+      "latency_ms": 690,
+      "natural": true,
+      "observed_at": "2026-08-11T09:13:07Z",
+      "outcome": "fresh",
+      "run_attempt": 1,
+      "run_id": "31476569032",
+      "schedule": "7 8 * * 0-5",
+      "shard": "28/72"
+    },
+    {
+      "attempts_used": 1,
+      "event_name": "workflow_dispatch",
+      "failures": [],
+      "latency_ms": 493,
+      "natural": false,
+      "observed_at": "2026-09-28T06:30:00Z",
+      "outcome": "fresh",
+      "run_attempt": 1,
+      "run_id": "36367836615",
+      "schedule": "",
+      "shard": ""
+    }
+  ],
+  "current": {
+    "fetched_at": "2026-09-28T06:35:15Z",
+    "history_as_of": "2026-09-25",
+    "path": "data/yf/finance/TSIC.json",
+    "payload_sha256": "86716a6224e2539b735dfff32f1ffd7be0e26a041a092cf3796d66e00f8f5e94",
+    "quote_as_of": "2026-09-24T18:16:15Z",
+    "source_as_of": "2026-09-24T18:16:15Z"
+  },
+  "discovered_from": [
+    "stockanalysis_etf"
+  ],
+  "last_attempt": {
+    "attempts_used": 1,
+    "event_name": "workflow_dispatch",
+    "failures": [],
+    "latency_ms": 493,
+    "natural": false,
+    "observed_at": "2026-09-28T06:30:00Z",
+    "outcome": "fresh",
+    "run_attempt": 1,
+    "run_id": "36367836615",
+    "schedule": "",
+    "shard": ""
+  },
+  "lkg": {
+    "fetched_at": "2026-08-11T09:13:42Z",
+    "history_as_of": "2026-08-10",
+    "path": "data/admin/yahoo-batch-quote-history/lkg/TSIC.json",
+    "payload_sha256": "c0d3b93695ae9edb7db422ecbd9b9b62ecc9cf57cc9d5ddc4eb00b69be48acf9",
+    "quote_as_of": "2026-08-07T16:37:42Z",
+    "source_as_of": "2026-08-07T16:37:42Z"
+  },
+  "promotion_contract": "provider_observation/v2",
+  "provider_observation": {
+    "event_name": "workflow_dispatch",
+    "history_as_of": "2026-09-25",
+    "observed_at": "2026-09-28T06:30:00Z",
+    "payload_sha256": "513e4552037f6b4928eaf9fbb573c2b44603634be02e9cb97a5c177cf560569c",
+    "quote_as_of": "2026-09-24T18:16:15Z",
+    "run_attempt": 1,
+    "run_id": "36367836615",
+    "schema_version": "provider_observation/v2",
+    "source_as_of": "2026-09-24T18:16:15Z"
+  },
+  "resolution_state": "fresh_primary",
+  "retry": false,
+  "schema_version": "yahoo-batch-quote-history-state/v1",
+  "stale": {
+    "age_business_days": 8,
+    "classified_at": "2026-08-19T23:42:29Z",
+    "classified_run_id": "32314261503",
+    "expected_resolution": "next_natural_yahoo_run",
+    "max_business_days": 6,
+    "message": "TSIC holds LKG because Yahoo source date 2026-08-07T16:37:42Z is 8 business days old, beyond the 6-day bound; it will retry on the next natural Yahoo run.",
+    "reason": "source_age_exceeds_lane_bound",
+    "source_as_of": "2026-08-07T16:37:42Z"
+  },
+  "ticker": "TSIC",
+  "updated_at": "2026-09-28T06:30:00Z"
+}

@@ -1,12 +1,12 @@
 {
-  "schema_version": "data-supply-detection-attempt-shard/v1",
+  "schema_version": "data-supply-detection-attempt-shard/v2",
   "lane_id": "gdelt_news_tone",
   "attempts": [
     {
       "lane_id": "gdelt_news_tone",
       "member_id": null,
-      "attempt_id": "gdelt-news-tone-20260722t160736379z-98249303",
-      "observed_at": "2026-07-22T16:07:36.379Z",
+      "attempt_id": "gdelt-news-tone-20260928t031139692z-df344dc6",
+      "observed_at": "2026-09-28T03:11:39.692Z",
       "execution": "returned",
       "exception_kind": null,
       "http_status": 429,
@@ -14,7 +14,18 @@
       "rate_limited": true,
       "decode": "not_attempted",
       "payload": "not_available",
-      "assertions": []
+      "assertions": [
+        {
+          "id": "articles_array",
+          "passed": false
+        }
+      ],
+      "retry_reason": "rate_limited",
+      "retry_count": 2,
+      "retry_wait_ms": 19500,
+      "event_name": "workflow_dispatch",
+      "run_id": "36369067291",
+      "run_attempt": 1
     }
   ]
 }

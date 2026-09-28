@@ -103,66 +103,104 @@
       "run_id": "29622560422",
       "schedule": "20 23 * * 1-5",
       "shard": "4/5"
+    },
+    {
+      "attempts_used": 1,
+      "event_name": "schedule",
+      "failures": [],
+      "latency_ms": 493,
+      "natural": true,
+      "observed_at": "2026-08-05T08:49:49Z",
+      "outcome": "fresh",
+      "run_attempt": 1,
+      "run_id": "30990520626",
+      "schedule": "7 6 * * 0-5",
+      "shard": "39/72"
+    },
+    {
+      "attempts_used": 1,
+      "event_name": "schedule",
+      "failures": [],
+      "latency_ms": 809,
+      "natural": true,
+      "observed_at": "2026-08-12T02:41:04Z",
+      "outcome": "fresh",
+      "run_attempt": 1,
+      "run_id": "31557511991",
+      "schedule": "7 0 * * 0-5",
+      "shard": "36/72"
+    },
+    {
+      "attempts_used": 1,
+      "event_name": "workflow_dispatch",
+      "failures": [],
+      "latency_ms": 448,
+      "natural": false,
+      "observed_at": "2026-09-28T04:37:06Z",
+      "outcome": "fresh",
+      "run_attempt": 1,
+      "run_id": "36367831133",
+      "schedule": "",
+      "shard": ""
     }
   ],
   "current": {
-    "fetched_at": "2026-07-18T00:51:41Z",
-    "history_as_of": "2026-07-17",
+    "fetched_at": "2026-09-28T04:42:20Z",
+    "history_as_of": "2026-09-25",
     "path": "data/yf/finance/GLWG.json",
-    "payload_sha256": "7d334a4423f2492d52bd38753b56def22da2ab404b01ebeedcca5eb56d9bd350",
-    "quote_as_of": "2026-07-17T20:00:01Z",
-    "source_as_of": "2026-07-17"
+    "payload_sha256": "013486a1f5f80b9b9369c8c3bb98a885590179425aee9d3d89372096ef4fb738",
+    "quote_as_of": "2026-09-25T20:00:00Z",
+    "source_as_of": "2026-09-25"
   },
   "discovered_from": [
-    "market_facts",
     "stockanalysis_etf"
   ],
   "last_attempt": {
-    "attempts_used": 0,
-    "event_name": "schedule",
+    "attempts_used": 1,
+    "event_name": "workflow_dispatch",
     "failures": [],
-    "latency_ms": 0,
-    "natural": true,
-    "observed_at": "2026-07-18T00:52:19Z",
-    "outcome": "skipped_fresh",
+    "latency_ms": 448,
+    "natural": false,
+    "observed_at": "2026-09-28T04:37:06Z",
+    "outcome": "fresh",
     "run_attempt": 1,
-    "run_id": "29622560422",
-    "schedule": "20 23 * * 1-5",
-    "shard": "4/5"
+    "run_id": "36367831133",
+    "schedule": "",
+    "shard": ""
   },
   "lkg": {
-    "fetched_at": "2026-06-18T12:38:32Z",
-    "history_as_of": "2026-06-17",
+    "fetched_at": "2026-08-12T02:43:33Z",
+    "history_as_of": "2026-08-11",
     "path": "data/admin/yahoo-batch-quote-history/lkg/GLWG.json",
-    "payload_sha256": "f18f20a7bb449a3c9d3674a6d06b239b5e69398cecf3ddbcb719a42f04e647e2",
-    "quote_as_of": null,
-    "source_as_of": "2026-06-17"
+    "payload_sha256": "416f6b680129ca6077e8064a1793b61dee32f4cd762a2819d9945a39684d95a0",
+    "quote_as_of": "2026-08-11T20:00:01Z",
+    "source_as_of": "2026-08-11"
   },
   "promotion_contract": "provider_observation/v2",
   "provider_observation": {
-    "event_name": "schedule",
-    "history_as_of": "2026-07-17",
-    "observed_at": "2026-07-18T00:49:31Z",
-    "payload_sha256": "71a008fdda9d368b3bb25b9621f467955cd013988e6a9e3cdaa8f4d37e2a4c70",
-    "quote_as_of": "2026-07-17T20:00:01Z",
+    "event_name": "workflow_dispatch",
+    "history_as_of": "2026-09-25",
+    "observed_at": "2026-09-28T04:37:06Z",
+    "payload_sha256": "b7621cc7de5eb3fcf60835ef63357ebcc3ca44ce64377a75d7edb6c87db14a7d",
+    "quote_as_of": "2026-09-25T20:00:00Z",
     "run_attempt": 1,
-    "run_id": "29622560422",
+    "run_id": "36367831133",
     "schema_version": "provider_observation/v2",
-    "source_as_of": "2026-07-17"
+    "source_as_of": "2026-09-25"
   },
   "resolution_state": "fresh_primary",
   "retry": false,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "stale": {
-    "age_business_days": 16,
-    "classified_at": "2026-07-13T04:33:56Z",
-    "classified_run_id": "29224221077",
+    "age_business_days": 7,
+    "classified_at": "2026-08-20T14:20:12Z",
+    "classified_run_id": "32379322022",
     "expected_resolution": "next_natural_yahoo_run",
     "max_business_days": 6,
-    "message": "GLWG holds LKG because Yahoo source date 2026-06-17 is 16 business days old, beyond the 6-day bound; it will retry on the next natural Yahoo run.",
+    "message": "GLWG holds LKG because Yahoo source date 2026-08-11 is 7 business days old, beyond the 6-day bound; it will retry on the next natural Yahoo run.",
     "reason": "source_age_exceeds_lane_bound",
-    "source_as_of": "2026-06-17"
+    "source_as_of": "2026-08-11"
   },
   "ticker": "GLWG",
-  "updated_at": "2026-07-18T00:52:19Z"
+  "updated_at": "2026-09-28T04:37:06Z"
 }

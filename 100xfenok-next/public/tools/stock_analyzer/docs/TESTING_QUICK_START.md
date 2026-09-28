@@ -9,8 +9,11 @@
 ## 1. Installation (5 minutes)
 
 ```bash
-# Navigate to project directory
-cd C:\Users\etlov\agents-workspace\projects\100xFenok\tools\stock_analyzer
+# From the 100xFenok-platform parent root
+cd source/100xFenok/tools/stock_analyzer
+
+# Or from the nested 100xFenok root
+# cd tools/stock_analyzer
 
 # Install testing dependencies (if not already installed)
 npm install --save-dev vitest @vitest/ui jsdom @vitest/coverage-v8
@@ -44,7 +47,8 @@ stock_analyzer/
 ├── vitest.config.js                      # ✅ Enhanced
 ├── playwright.config.js                  # TODO: Sprint 4 Task 4.T5
 └── docs/
-    ├── COMPREHENSIVE_TEST_STRATEGY.md    # ✅ Created
+    ├── archives/
+    │   └── COMPREHENSIVE_TEST_STRATEGY.md # ✅ Created
     └── TESTING_QUICK_START.md            # ✅ This file
 ```
 
@@ -191,7 +195,7 @@ describe('CSV Schema Validation', () => {
 **File**: `playwright.config.js`
 
 **Setup**:
-1. Create `playwright.config.js` (see COMPREHENSIVE_TEST_STRATEGY.md Section 7.3)
+1. Create `playwright.config.js` (see `archives/COMPREHENSIVE_TEST_STRATEGY.md` Section 7.3)
 2. Configure base URL: `http://localhost:5173`
 3. Set up browser projects (Chromium, Firefox, WebKit)
 
@@ -255,7 +259,7 @@ describe('Performance Baseline', () => {
 ### Task 4.T7: Documentation ⏳ TODO
 **Files to Update**:
 - `README.md` (add Testing section)
-- `docs/COMPREHENSIVE_TEST_STRATEGY.md` (already created ✅)
+- `docs/archives/COMPREHENSIVE_TEST_STRATEGY.md` (already created ✅)
 - `docs/TESTING_QUICK_START.md` (this file ✅)
 
 **README.md Addition**:
@@ -281,7 +285,7 @@ npx playwright test
 - Integration Tests: ≥70%
 - E2E Tests: 100% of critical paths
 
-See [Testing Strategy](docs/COMPREHENSIVE_TEST_STRATEGY.md) for details.
+See [Testing Strategy](archives/COMPREHENSIVE_TEST_STRATEGY.md) for details.
 ```
 
 ---
@@ -309,7 +313,7 @@ See [Testing Strategy](docs/COMPREHENSIVE_TEST_STRATEGY.md) for details.
 - E2E tests in CI with screenshots on failure
 - Performance regression checks
 
-**File**: `.github/workflows/test.yml` (see COMPREHENSIVE_TEST_STRATEGY.md Section 7.1)
+**File**: `.github/workflows/test.yml` (see `archives/COMPREHENSIVE_TEST_STRATEGY.md` Section 7.1)
 
 ---
 

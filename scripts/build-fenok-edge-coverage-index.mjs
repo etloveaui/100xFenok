@@ -17,13 +17,22 @@ import {
 } from "../100xfenok-next/scripts/history-gap-profile.mjs";
 import {
   recomputeFenokEdgeSourceAsOf,
-  shouldPreserveKoreaPrivateEvidence,
 } from "./lib/fenok-edge-source-stamp.mjs";
+import {
+  selectKrxIssuerDailyCoverageEvidence,
+  validateKrxIssuerDailyCoverageReceipt,
+} from "./lib/fenok-edge-krx-coverage-receipt.mjs";
+import { buildEtfScoringLaneReadiness } from "./lib/etf-readiness-gate.mjs";
 import {
   reconcileTaiwanCurrentUniverseDenominator,
   selectExplicitTaiwanRows,
   selectTaiwanTickerAnomalies,
 } from "./lib/taiwan-universe.mjs";
+import {
+  selectExplicitJapanRows,
+  selectJapanTickerAnomalies,
+} from "./lib/japan-universe.mjs";
+import { FAMILY_POLICY, FRESHNESS_CLASSES, freshnessVerdict, policyToday } from "../100xfenok-next/src/lib/freshness-policy.mjs";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const REPO_ROOT = path.resolve(__dirname, "..");
@@ -262,6 +271,21 @@ function countedDailySourceStatus({ coverageReady, sourceDate }) {
   return countedDailySourceFresh(sourceDate) ? "ready" : "stale";
 }
 
+export function krxDailySourceEvidence({ sourceDate, coverageReady, now }) {
+  const policy = FAMILY_POLICY.krx;
+  const klass = FRESHNESS_CLASSES[policy.cadence];
+  const verdict = freshnessVerdict(sourceDate, policy, policyToday(now, policy));
+  const sourceStatus = verdict.state === "fresh" ? "ready" : "stale";
+  return {
+    source_state: verdict.state,
+    age_days: verdict.ageDays,
+    age_unit: "kr_trading_days",
+    max_age_days: klass.cycleDays + policy.releaseLagDays + klass.graceDays,
+    source_status: sourceStatus,
+    full_status: coverageReady ? sourceStatus : "blocked",
+  };
+}
+
 function ageHours(timestamp, now = Date.now()) {
   const text = String(timestamp ?? "").trim();
   if (!text) return null;
@@ -417,6 +441,7 @@ function recomputeSourceComposites(index) {
   const occCount = Number(findById(sources, "us_occ_options_proxy")?.covered_count) || 0;
   const usClassYfCount = Number(findById(sources, "us_class_yf_daily_source")?.covered_count) || 0;
   const asiaYfCount = Number(findById(sources, "asia_ex_taiwan_yf_daily_source")?.covered_count) || 0;
+  const taiwanYfCount = Number(findById(sources, "taiwan_yf_daily_source")?.covered_count) || 0;
   const latestUsCount = Number(findById(sources, "us_latest_bounded_backfill_run")?.covered_count) || 0;
   const composites = index.source_availability_composites ?? {};
 
@@ -433,21 +458,15 @@ function recomputeSourceComposites(index) {
     composites.strict_new_bounded_run_plus_kr.coverage_pct = pct(krxCount + latestUsCount, activeTotal);
   }
   if (composites.latest_available_all_active_daily_sources) {
-    composites.latest_available_all_active_daily_sources.covered_count = krxCount + finraCount + usClassYfCount + asiaYfCount;
-    composites.latest_available_all_active_daily_sources.coverage_pct = pct(krxCount + finraCount + usClassYfCount + asiaYfCount, activeTotal);
+    composites.latest_available_all_active_daily_sources.covered_count = krxCount + finraCount + usClassYfCount + asiaYfCount + taiwanYfCount;
+    composites.latest_available_all_active_daily_sources.coverage_pct = pct(krxCount + finraCount + usClassYfCount + asiaYfCount + taiwanYfCount, activeTotal);
   }
 }
 
-function preservePriorPrivateBackedEvidence(index, priorIndex, conditions) {
+export function preservePriorPrivateBackedEvidence(index, priorIndex, conditions, activeScoringTotal) {
   const priorSources = priorIndex.source_availability?.sources ?? [];
   const currentSources = index.source_availability?.sources ?? [];
-  const priorFreshnessChecks = priorIndex.freshness_gate?.checks ?? [];
-  const currentFreshnessChecks = index.freshness_gate?.checks ?? [];
 
-  if (conditions.koreaProofMissing) {
-    replaceById(currentSources, "krx_issuer_daily_latest_full_proof", findById(priorSources, "krx_issuer_daily_latest_full_proof"));
-    replaceById(currentFreshnessChecks, "korea_counted_source_date", findById(priorFreshnessChecks, "korea_counted_source_date"));
-  }
   if (conditions.latestUsRunMissing) {
     replaceById(currentSources, "us_latest_bounded_backfill_run", findById(priorSources, "us_latest_bounded_backfill_run"));
   }
@@ -470,18 +489,30 @@ function recomputeBlockingEvidence(evidence) {
   evidence.blockers = checks.filter((check) => check?.status !== "ready");
 }
 
-function preservePriorPrivateBackedActiveS0Evidence(evidence, priorIndex, conditions) {
-  const priorTrack = (priorIndex.public_scoring_readiness?.tracks ?? [])
-    .find((track) => track?.id === "active_stock_scoring_current");
-  const priorChecks = priorTrack?.blocking_evidence?.checks ?? [];
-
-  if (conditions.koreaProofMissing) {
-    replaceById(evidence.checks, "krx_full_daily_source_ready", findById(priorChecks, "krx_full_daily_source_ready"));
-  }
-
+function preservePriorPrivateBackedActiveS0Evidence(evidence) {
   recomputeBlockingEvidence(evidence);
 }
 
+export function krxCoverageContract({ evidence, sourceDenominator, receiptValidation }) {
+  const coveredCount = Math.max(0, Number(evidence?.covered_count) || 0);
+  const denominator = Math.max(0, Number(evidence?.denominator) || 0);
+  const validatedFilter = evidence?.source === "bound_bridge_receipt"
+    && receiptValidation?.ok === true
+    && receiptValidation?.receipt?.schema_version === "fenok_krx_issuer_daily_coverage_receipt/v3"
+    ? receiptValidation.receipt.listing_status_filter
+    : null;
+  const excludedCount = Math.max(0, Number(validatedFilter?.excluded_count) || 0);
+  return {
+    covered_count: coveredCount,
+    denominator,
+    source_denominator: Math.max(0, Number(validatedFilter?.source_denominator) || Number(sourceDenominator) || 0),
+    excluded_count: excludedCount,
+    missing_count: Math.max(0, denominator - coveredCount),
+    coverage_ready: coveredCount === denominator,
+  };
+}
+
+function main() {
 const buildNow = new Date();
 const generatedAt = buildNow.toISOString();
 const signals = readJson("data/computed/fenok_signals.json", {});
@@ -508,11 +539,15 @@ const etfEligible = Number(etfSignals?.coverage?.eligible_etf_count) || Number(m
 const usRows = universeRows.filter((row) => row.market === "US" || row.market === "US_CLASS");
 const koreaRows = universeRows.filter((row) => row.market === "KRX" || row.market === "KOSDAQ");
 const asiaExTwRows = universeRows.filter((row) => row.market === "HKEX" || row.market === "SSE" || row.market === "SZSE");
-const s0DailyEligibleRows = [...usRows, ...koreaRows, ...asiaExTwRows];
 const explicitTaiwanRows = selectExplicitTaiwanRows(universeRows);
+const taiwanRows = explicitTaiwanRows;
+const explicitJapanRows = selectExplicitJapanRows(universeRows);
+const japanRows = explicitJapanRows;
+const s0DailyEligibleRows = [...usRows, ...koreaRows, ...asiaExTwRows, ...taiwanRows];
 const finraEligibleRows = usRows.filter((row) => row.market === "US");
 const usClassYfRows = usRows.filter((row) => row.market !== "US");
 const taiwanTickerAnomalies = selectTaiwanTickerAnomalies(universeRows, explicitTaiwanRows);
+const japanTickerAnomalies = selectJapanTickerAnomalies(universeRows, explicitJapanRows);
 
 const usUniverse = new Set(usRows.map((row) => normTicker(row.ticker_normalized ?? row.ticker)));
 const krUniverseCodes = new Set(koreaRows.map((row) => krCode(row.ticker_normalized ?? row.ticker)).filter(Boolean));
@@ -552,25 +587,51 @@ const koreaLatestCalendarManifest = readJson(
 const koreaProofDates = unique((koreaProofManifest.files ?? [])
   .filter((file) => Number(file.row_count) > 0)
   .map((file) => toIsoDate(file.source_date ?? file.date ?? file.basDd)));
-const koreaCountedSourceDate = koreaProofDates.at(-1) ?? null;
-const koreaCountedSourceYmd = ymd(koreaCountedSourceDate) ?? "20260626";
+const koreaRawProofAvailable = hasManifestPayload(koreaProofManifest) && koreaProofDates.length > 0;
+const koreaReceiptValidation = validateKrxIssuerDailyCoverageReceipt({
+  bridgeDocument: koreaBridge,
+  activeUniverseCodes: krUniverseCodes,
+  activeUniverseRows: koreaRows,
+});
+const koreaCountedSourceYmd = koreaRawProofAvailable ? ymd(koreaProofDates.at(-1)) : null;
 const koreaLatestCalendarDailyHistoryRows = (koreaLatestCalendarManifest.files ?? [])
   .filter((file) => file.endpoint_class === "daily-history")
   .reduce((sum, file) => sum + (Number(file.row_count) || 0), 0);
-const koreaProofRoot = repoRelPath(koreaProofManifest.runtime?.output_root ?? koreaBridge.private_artifacts?.output_root);
+const koreaProofRoot = koreaRawProofAvailable
+  ? repoRelPath(koreaProofManifest.runtime?.output_root ?? koreaBridge.private_artifacts?.output_root)
+  : null;
 const koreaStk = readJsonFirst([
-  koreaProofRoot ? `${koreaProofRoot}/raw/core_stock_index/stk_bydd_trd/${koreaCountedSourceYmd}.json` : null,
-  "_private/admin/fenok-edge-korea/backfill/20260629/krx_daily_smoke_5d/raw/core_stock_index/stk_bydd_trd/20260626.json",
+  koreaProofRoot && koreaCountedSourceYmd
+    ? `${koreaProofRoot}/raw/core_stock_index/stk_bydd_trd/${koreaCountedSourceYmd}.json`
+    : null,
 ], {});
 const koreaKsq = readJsonFirst([
-  koreaProofRoot ? `${koreaProofRoot}/raw/core_stock_index/ksq_bydd_trd/${koreaCountedSourceYmd}.json` : null,
-  "_private/admin/fenok-edge-korea/backfill/20260629/krx_daily_smoke_5d/raw/core_stock_index/ksq_bydd_trd/20260626.json",
+  koreaProofRoot && koreaCountedSourceYmd
+    ? `${koreaProofRoot}/raw/core_stock_index/ksq_bydd_trd/${koreaCountedSourceYmd}.json`
+    : null,
 ], {});
 const koreaIssueCodes = new Set([
   ...(Array.isArray(koreaStk.OutBlock_1) ? koreaStk.OutBlock_1 : []),
   ...(Array.isArray(koreaKsq.OutBlock_1) ? koreaKsq.OutBlock_1 : []),
 ].map((row) => krCode(row.ISU_CD)).filter(Boolean));
-const koreaIntersection = [...krUniverseCodes].filter((code) => koreaIssueCodes.has(code));
+const koreaRawIntersection = [...krUniverseCodes].filter((code) => koreaIssueCodes.has(code));
+const koreaEvidence = selectKrxIssuerDailyCoverageEvidence({
+  rawProofDates: koreaRawProofAvailable ? koreaProofDates : [],
+  rawCoveredCount: koreaRawIntersection.length,
+  denominator: koreaRows.length,
+  receiptValidation: koreaReceiptValidation,
+});
+const koreaCountedSourceDate = koreaEvidence.source_date;
+const koreaCoverage = krxCoverageContract({
+  evidence: koreaEvidence,
+  sourceDenominator: koreaRows.length,
+  receiptValidation: koreaReceiptValidation,
+});
+const koreaSourceEvidence = krxDailySourceEvidence({
+  sourceDate: koreaCountedSourceDate, coverageReady: koreaCoverage.coverage_ready, now: buildNow,
+});
+const koreaCoveredCount = koreaCoverage.covered_count;
+const s0DailyEligibleCount = s0DailyEligibleRows.length - koreaCoverage.excluded_count;
 
 const usClassYfEvidenceRows = usClassYfRows.map(yfDailySourceEvidence);
 const usClassYfReadyEvidenceRows = usClassYfEvidenceRows.filter((row) => row.ready);
@@ -585,19 +646,21 @@ const asiaYfBlockingEvidenceRows = asiaYfEvidenceRows.filter((row) => !row.ready
 const asiaYfSourceDates = unique(asiaYfEvidenceRows.map((row) => row.source_date));
 const asiaYfOldestSourceDate = asiaYfSourceDates.at(0) ?? null;
 const asiaYfLatestSourceDate = asiaYfSourceDates.at(-1) ?? null;
+const taiwanYfEvidenceRows = taiwanRows.map(yfDailySourceEvidence);
+const taiwanYfReadyEvidenceRows = taiwanYfEvidenceRows.filter((row) => row.ready);
+const taiwanYfBlockingEvidenceRows = taiwanYfEvidenceRows.filter((row) => !row.ready);
+const taiwanYfSourceDates = unique(taiwanYfEvidenceRows.map((row) => row.source_date));
+const taiwanYfOldestSourceDate = taiwanYfSourceDates.at(0) ?? null;
+const taiwanYfLatestSourceDate = taiwanYfSourceDates.at(-1) ?? null;
 
 const taiwanBridge = readJson("data/admin/taiwan-data-bridge-index.json", readJson("data/computed/taiwan-data-bridge-index.json", {}));
 const taiwanHistorical = readJson("_private/admin/fenok-edge-taiwan/backfill/20260629/historical_smoke/historical_manifest.json", {});
-const koreaProofMissing = shouldPreserveKoreaPrivateEvidence({
-  proofDates: koreaProofDates,
-  rawIntersectionCount: koreaIntersection.length,
-});
 const latestUsRunMissing = latestUsIntersection.length === 0 && !latestUsTargetUniverse && !hasManifestPayload(latestUsManifest);
 const taiwanHistoricalMissing = !hasManifestPayload(taiwanHistorical);
 
-const combinedKrUsFlow = koreaIntersection.length + flowIntersection.length;
-const combinedKrUsOcc = koreaIntersection.length + occIntersection.length;
-const combinedKrUsLatestBounded = koreaIntersection.length + latestUsIntersection.length;
+const combinedKrUsFlow = koreaCoveredCount + flowIntersection.length;
+const combinedKrUsOcc = koreaCoveredCount + occIntersection.length;
+const combinedKrUsLatestBounded = koreaCoveredCount + latestUsIntersection.length;
 const marketFactsCoverage = marketFacts.coverage ?? {};
 const etfSignalGate = runEtfSignalGateChecks({ repoRoot: REPO_ROOT });
 
@@ -641,11 +704,14 @@ function computeEtfReadinessEvidence() {
   const fetchableGap = Number(etfHistoryGap.fetchable_required_history) || 0;
   const missingGap = Number(etfHistoryGap.missing_required_history) || 0;
   const inceptionLimitedGap = Number(etfHistoryGap.inception_limited_required_history) || 0;
+  const terminalLimitedGap = Number(etfHistoryGap.terminal_limited_required_history) || 0;
   const daily1yGap = asObject(etfHistoryGap.daily_1y_gap);
   const scoredDaily1yGap = asObject(daily1yGap.scored_etfs);
-  const fetchableDaily1yGap = Number(etfDaily1yExactPlan.counts?.fetchable) || 0;
-  const inceptionLimitedDaily1yGap = Number(etfDaily1yExactPlan.counts?.inception_limited) || 0;
-  const terminalLimitedDaily1yGap = Number(etfDaily1yExactPlan.counts?.terminal_limited) || 0;
+  const completeDaily1y = Number(etfDaily1yExactPlan.counts?.scored_complete) || 0;
+  const fetchableDaily1yGap = Number(etfDaily1yExactPlan.counts?.scored_fetchable) || 0;
+  const inceptionLimitedDaily1yGap = Number(etfDaily1yExactPlan.counts?.scored_inception_limited) || 0;
+  const terminalLimitedDaily1yGap = Number(etfDaily1yExactPlan.counts?.scored_terminal_limited) || 0;
+  const exactPlanScoredCount = Number(etfDaily1yExactPlan.counts?.scored_etf_count) || 0;
   const historyGapDaily1yMatches = (
     etfDaily1yExactPlan.classification_as_of === etfHistoryGap.classification_as_of
     && Number(scoredDaily1yGap.scored_etf_count) === Number(etfDaily1yExactPlan.counts?.scored_etf_count)
@@ -654,46 +720,36 @@ function computeEtfReadinessEvidence() {
     && Number(scoredDaily1yGap.terminal_limited) === terminalLimitedDaily1yGap
   );
   const publicReady = Boolean(etfSignalGate.public_surface_proof?.ready && etfScoredPublic > 0);
-  const dailyChecks = [
-    {
-      id: "etf_signal_summary_fresh",
-      ok: signalAgeHours != null && signalAgeHours <= maxAgeHours,
-      generated_at: etfSignals.generated_at ?? null,
-      age_hours: signalAgeHours,
-      max_age_hours: maxAgeHours,
-    },
-    {
-      id: "etf_history_gap_report_fresh",
-      ok: historyGapAgeHours != null && historyGapAgeHours <= maxAgeHours,
-      generated_at: etfHistoryGap.generated_at ?? null,
-      age_hours: historyGapAgeHours,
-      max_age_hours: maxAgeHours,
-    },
-    {
-      id: "etf_no_fetchable_required_history_gap",
-      ok: fetchableGap === 0,
-      fetchable_required_history: fetchableGap,
-      missing_required_history: missingGap,
-      inception_limited_required_history: inceptionLimitedGap,
-      caveat: "Inception-limited gaps are allowed; fetchable required-history gaps keep daily=false.",
-    },
-    {
-      id: "etf_no_fetchable_daily_1y_gap",
-      ok: fetchableDaily1yGap === 0,
-      classification_as_of: etfDaily1yExactPlan.classification_as_of,
-      fetchable_daily_1y_gap: fetchableDaily1yGap,
-      inception_limited_daily_1y_gap: inceptionLimitedDaily1yGap,
-      terminal_limited_daily_1y_gap: terminalLimitedDaily1yGap,
-      history_gap_report_match: historyGapDaily1yMatches,
-      claim_scope: "full_scored_etf_universe_diagnostic",
-      service_gate: false,
-      caveat: "Full scored-ETF daily 1Y continuity is a rolling diagnostic/backfill track. It must not block ETF Core Daily Basket service readiness; only immediately fetchable gaps keep the full-universe diagnostic lane daily=false.",
-    },
-  ];
-  const serviceDailyChecks = dailyChecks.filter((check) => check.service_gate !== false);
-  const diagnosticDailyChecks = dailyChecks.filter((check) => check.service_gate === false);
-  const dailyReady = serviceDailyChecks.every((check) => check.ok);
-  const gatedReady = publicReady && dailyReady && etfSignalGate.ok;
+  const dailyReadiness = buildEtfScoringLaneReadiness({
+    signalGeneratedAt: etfSignals.generated_at,
+    signalAgeHours,
+    historyGapGeneratedAt: etfHistoryGap.generated_at,
+    historyGapAgeHours,
+    maxAgeHours,
+    publicReady,
+    qaGateOk: etfSignalGate.ok,
+    classificationAsOf: etfDaily1yExactPlan.classification_as_of,
+    scoredDenominatorCount: etfEligible,
+    exactPlanScoredCount,
+    scoredCompleteDaily1y: completeDaily1y,
+    scoredFetchableDaily1yGap: fetchableDaily1yGap,
+    scoredInceptionLimitedDaily1yGap: inceptionLimitedDaily1yGap,
+    scoredTerminalLimitedDaily1yGap: terminalLimitedDaily1yGap,
+    exactPlanCountEquationOk: etfDaily1yExactPlan.counts?.scored_equation_ok === true,
+    historyGapDaily1yMatches,
+    fullPrimaryFetchableRequiredHistory: fetchableGap,
+    fullPrimaryMissingRequiredHistory: missingGap,
+    fullPrimaryInceptionLimitedRequiredHistory: inceptionLimitedGap,
+    fullPrimaryTerminalLimitedRequiredHistory: terminalLimitedGap,
+    fullPrimaryFetchableRows: Array.isArray(etfHistoryGap.samples?.fetchable)
+      ? etfHistoryGap.samples.fetchable
+      : [],
+  });
+  const dailyChecks = dailyReadiness.dailyChecks;
+  const serviceDailyChecks = dailyReadiness.serviceChecks;
+  const diagnosticDailyChecks = dailyReadiness.diagnosticChecks;
+  const dailyReady = dailyReadiness.dailyReady;
+  const gatedReady = dailyReadiness.gatedReady;
   return {
     classification_as_of: etfDaily1yExactPlan.classification_as_of,
     public_ready: publicReady,
@@ -702,14 +758,14 @@ function computeEtfReadinessEvidence() {
     gate_ok: etfSignalGate.ok,
     public_surface_proof: etfSignalGate.public_surface_proof ?? null,
     public_surface_errors: etfSignalGate.errors ?? [],
-    service_gate_scope: "ETF Core Daily Basket owns ETF service DAILY/GATED readiness; full scored-ETF daily 1Y continuity stays diagnostic until explicitly promoted.",
+    service_gate_scope: "Full ETF S3 uses only the exact scored eligible denominator. Full-primary gaps are diagnostic, and Core Daily Basket readiness is a separate track that cannot flip full S3.",
     daily_checks: dailyChecks,
+    scoring_lane_checks: dailyReadiness.scoringLaneChecks,
+    gated_checks: dailyReadiness.gatedChecks,
     service_daily_checks: serviceDailyChecks,
     diagnostic_backlog_checks: diagnosticDailyChecks,
     blockers: [
-      ...(!publicReady ? ["public_surface_proof"] : []),
-      ...serviceDailyChecks.filter((check) => !check.ok).map((check) => check.id),
-      ...(!etfSignalGate.ok ? ["qa_fenok_etf_signal_gate"] : []),
+      ...dailyReadiness.gatedBlockers,
       ...(!gatedReady ? ["gated_ready"] : []),
     ],
     diagnostic_backlog: diagnosticDailyChecks
@@ -720,11 +776,17 @@ function computeEtfReadinessEvidence() {
       eligible_etf_count: etfEligible,
       public_summary_rows: etfSignalGate.counts?.public_summary?.rows ?? null,
       internal_summary_rows: etfSignalGate.counts?.internal_summary?.rows ?? null,
+      scored_denominator_count: etfEligible,
+      exact_plan_scored_count: exactPlanScoredCount,
+      complete_daily_1y: completeDaily1y,
       fetchable_required_history: fetchableGap,
+      missing_required_history: missingGap,
       inception_limited_required_history: inceptionLimitedGap,
+      terminal_limited_required_history: terminalLimitedGap,
       fetchable_daily_1y_gap: fetchableDaily1yGap,
       inception_limited_daily_1y_gap: inceptionLimitedDaily1yGap,
       terminal_limited_daily_1y_gap: terminalLimitedDaily1yGap,
+      exact_plan_count_equation_ok: etfDaily1yExactPlan.counts?.scored_equation_ok === true,
       history_gap_report_match: historyGapDaily1yMatches,
     },
   };
@@ -779,7 +841,7 @@ function computeEtfCoreDailyBasketEvidence() {
         ? "ready"
         : "blocked_refresh_needed",
     blockers: [...new Set(blockers.filter(Boolean))],
-    caveat: "Core Daily Basket is a smaller ETF sublane. It does not flip full etf_scoring_lane daily/gated readiness.",
+    caveat: "Core Daily Basket is a separate ETF service sublane. It does not flip full etf_scoring_lane daily/gated readiness in either direction.",
   };
 }
 
@@ -814,23 +876,29 @@ function activeS0BlockingEvidence() {
   const finraRowBreakdown = countByCategory(finraMissingRows, classifyFinraRowGap);
   const finraStrictBreakdown = countByCategory(finraStrictGapRows, (row) => classifyFinraStrictGap(row, flowRowsByTicker.get(rowTicker(row))));
   const occBreakdown = countByCategory(occMissingRows, classifyOccGap);
-  const krxCoverageReady = koreaIntersection.length === koreaRows.length;
   const finraCoverageReady = finraEligibleSourceReadyRows.length === finraEligibleRows.length;
   const occDailyReady = occPlainSourceReadyRows.length === occDailyEligibleRows.length;
   const usClassYfDailyReady = usClassYfReadyEvidenceRows.length === usClassYfRows.length;
   const asiaYfDailyReady = asiaYfReadyEvidenceRows.length === asiaExTwRows.length;
+  const taiwanYfDailyReady = taiwanYfReadyEvidenceRows.length === taiwanRows.length;
   const checks = [
     {
       id: "krx_full_daily_source_ready",
-      status: countedDailySourceStatus({ coverageReady: krxCoverageReady, sourceDate: koreaCountedSourceDate }),
-      covered_count: koreaIntersection.length,
-      denominator: koreaRows.length,
-      missing_count: Math.max(0, koreaRows.length - koreaIntersection.length),
+      status: koreaSourceEvidence.full_status,
+      covered_count: koreaCoverage.covered_count,
+      denominator: koreaCoverage.denominator,
+      source_denominator: koreaCoverage.source_denominator,
+      excluded_count: koreaCoverage.excluded_count,
+      missing_count: koreaCoverage.missing_count,
       source_date: koreaCountedSourceDate,
-      age_days: ageDays(koreaCountedSourceDate),
-      max_age_days: MAX_COUNTED_DAILY_SOURCE_AGE_DAYS,
-      eligibility_policy: "active_scoring_universe rows where market=KRX or KOSDAQ; counted date is the latest fully populated issuer daily proof date.",
-      caveat: "Empty KRX calendar runs are not counted as issuer daily coverage.",
+      age_days: koreaSourceEvidence.age_days,
+      age_unit: koreaSourceEvidence.age_unit,
+      source_state: koreaSourceEvidence.source_state,
+      max_age_days: koreaSourceEvidence.max_age_days,
+      evidence_source: koreaEvidence.source,
+      receipt_validation: koreaReceiptValidation.ok ? "valid" : koreaReceiptValidation.reason,
+      eligibility_policy: "Validated v3 receipt eligibility uses the current KRX issuer master; aggregate source, eligible, and excluded counts are disclosed without publishing per-issuer evidence.",
+      caveat: "Empty KRX calendar runs are not counted as issuer daily coverage; when private raw is absent, only a bridge receipt bound to the current bridge and active universe is accepted.",
     },
     {
       id: "finra_full_us_source_ready",
@@ -943,7 +1011,7 @@ function activeS0BlockingEvidence() {
       markets: marketCounts(usClassYfRows),
       claim_scope: "yf_daily_source_available",
       source_file_pattern: "data/yf/finance/{TICKER}.json",
-      daily_gated_scope_denominator: s0DailyEligibleRows.length,
+      daily_gated_scope_denominator: s0DailyEligibleCount,
       daily_gated_scope_policy: "US_CLASS/non-plain active rows are included in S0 daily/gated via YF daily source freshness; FINRA/OCC proxy mapping remains a separate signal-expansion problem.",
       sample_blockers: usClassYfBlockingEvidenceRows.slice(0, 10),
       next_action: "If this blocks, rerun fetch-yf-finance.yml daily stock shards or targeted YF refresh for the listed US_CLASS/non-plain tickers before claiming all active S0 stocks as daily/gated.",
@@ -961,10 +1029,28 @@ function activeS0BlockingEvidence() {
       markets: marketCounts(asiaExTwRows),
       claim_scope: "yf_daily_source_available",
       source_file_pattern: "data/yf/finance/{TICKER}.json",
-      daily_gated_scope_denominator: s0DailyEligibleRows.length,
+      daily_gated_scope_denominator: s0DailyEligibleCount,
       daily_gated_scope_policy: "Current S0 daily/gated source scope is all active stock rows: KRX/KOSDAQ via KRX, plain US via FINRA/OCC source proof, HKEX/SSE/SZSE via scheduled YF daily stock shards.",
       sample_blockers: asiaYfBlockingEvidenceRows.slice(0, 10),
       next_action: "If this blocks, rerun fetch-yf-finance.yml daily stock shards or targeted YF refresh for the listed Asia tickers before claiming all active S0 stocks as daily/gated.",
+    },
+    {
+      id: "taiwan_yf_daily_source_ready",
+      status: countedDailySourceStatus({ coverageReady: taiwanYfDailyReady, sourceDate: taiwanYfOldestSourceDate }),
+      covered_count: taiwanYfReadyEvidenceRows.length,
+      denominator: taiwanRows.length,
+      missing_count: taiwanYfBlockingEvidenceRows.length,
+      source_date: taiwanYfOldestSourceDate,
+      latest_source_date: taiwanYfLatestSourceDate,
+      age_days: ageDays(taiwanYfOldestSourceDate),
+      max_age_days: MAX_COUNTED_DAILY_SOURCE_AGE_DAYS,
+      markets: marketCounts(taiwanRows),
+      claim_scope: "yf_daily_source_available",
+      source_file_pattern: "data/yf/finance/{TICKER}.json",
+      daily_gated_scope_denominator: s0DailyEligibleCount,
+      daily_gated_scope_policy: "Explicit Taiwan rows use the scheduled YF daily stock source for S0 daily/gated readiness; Taiwan official flow/options collection remains a separate proxy expansion lane.",
+      sample_blockers: taiwanYfBlockingEvidenceRows.slice(0, 10),
+      next_action: "If this blocks, rerun the targeted Taiwan YF daily shard before claiming all active S0 stocks as daily/gated.",
     },
   ];
   return {
@@ -978,11 +1064,7 @@ function activeS0BlockingEvidence() {
 }
 
 const activeS0Evidence = activeS0BlockingEvidence();
-preservePriorPrivateBackedActiveS0Evidence(activeS0Evidence, priorIndex, {
-  koreaProofMissing,
-  latestUsRunMissing,
-  taiwanHistoricalMissing,
-});
+preservePriorPrivateBackedActiveS0Evidence(activeS0Evidence);
 
 function checksOk(rows) {
   return Array.isArray(rows) && rows.length > 0 && rows.every((row) => row?.ok === true);
@@ -1093,20 +1175,27 @@ const index = {
     },
     s0_daily_gated_scope: {
       policy: "all_active_stock_current_daily_sources",
-      eligible_count: s0DailyEligibleRows.length,
+      eligible_count: s0DailyEligibleCount,
       eligible_buckets: {
         us: usRows.length,
         us_plain_finra_occ: finraEligibleRows.length,
         us_class_or_non_plain_yf: usClassYfRows.length,
-        korea: koreaRows.length,
+        korea: koreaCoverage.denominator,
         asia_ex_taiwan: asiaExTwRows.length,
+        taiwan_yf: taiwanRows.length,
       },
-      excluded_count: 0,
-      excluded_markets: [],
-      asia_source_policy: "HKEX/SSE/SZSE rows use scheduled YF daily stock shards as the counted daily source.",
+      excluded_count: koreaCoverage.excluded_count,
+      excluded_markets: koreaCoverage.excluded_count > 0 ? ["KRX/KOSDAQ listing-status filter"] : [],
+      asia_source_policy: "HKEX/SSE/SZSE rows use scheduled YF daily stock shards; explicit Taiwan rows use the targeted Taiwan YF daily shard as the counted daily source.",
       public_scoring_total_remains: activeScoringTotal,
     },
     taiwan_ticker_anomalies: taiwanTickerAnomalies,
+    japan_ticker_anomalies: japanTickerAnomalies,
+    japan_mapping: {
+      explicit_count: japanRows.length,
+      anomaly_count: japanTickerAnomalies.length,
+      source_policy: "JP rows require committed YF daily evidence with JPX exchange, JPY currency and Japan country metadata; this does not create FINRA/OCC proxy authority.",
+    },
   },
   expanded_stock_candidate_universe: {
     source_file: "data/computed/market_facts/index.json",
@@ -1146,15 +1235,20 @@ const index = {
     coverageRow({
       id: "krx_issuer_daily_latest_full_proof",
       label: "Korea KRX issuer daily coverage, latest fully populated proof",
-      count: koreaIntersection.length,
-      denominator: koreaRows.length,
-      denominatorLabel: "active_scoring_universe.korea",
+      count: koreaCoverage.covered_count,
+      denominator: koreaCoverage.denominator,
+      denominatorLabel: "validated_krx_receipt.eligible_denominator",
       sourceDate: koreaCountedSourceDate,
-      status: koreaIntersection.length === koreaRows.length ? "ready" : "partial",
+      status: koreaCoverage.coverage_ready ? "ready" : "partial",
       claimScope: "source_available",
       activeTotal: activeScoringTotal,
-      caveat: "Counted from the latest KRX daily stock/KOSDAQ raw files with non-empty rows. Empty calendar runs are not counted as issuer daily coverage.",
+      caveat: "Counted from current private KRX raw files when present, otherwise from a bridge receipt bound to the current bridge and active universe. Empty calendar runs are not counted as issuer daily coverage.",
       extra: {
+        evidence_source: koreaEvidence.source,
+        receipt_validation: koreaReceiptValidation.ok ? "valid" : koreaReceiptValidation.reason,
+        source_denominator: koreaCoverage.source_denominator,
+        eligible_denominator: koreaCoverage.denominator,
+        listing_status_excluded_count: koreaCoverage.excluded_count,
         private_manifest_file: koreaProofManifestPath,
         counted_batch: {
           run_id: koreaLatestRun.run_id ?? null,
@@ -1259,6 +1353,25 @@ const index = {
       },
     }),
     coverageRow({
+      id: "taiwan_yf_daily_source",
+      label: "Taiwan YF daily source coverage",
+      count: taiwanYfReadyEvidenceRows.length,
+      denominator: taiwanRows.length,
+      denominatorLabel: "active_scoring_universe.explicit_taiwan",
+      sourceDate: taiwanYfOldestSourceDate,
+      status: taiwanYfReadyEvidenceRows.length === taiwanRows.length ? "ready" : "partial",
+      claimScope: "yf_daily_source_available",
+      activeTotal: activeScoringTotal,
+      caveat: "YF daily stock shards provide counted daily freshness for explicitly mapped Taiwan rows. Taiwan official flow/options collection remains separate proxy expansion work.",
+      extra: {
+        source_file_pattern: "data/yf/finance/{TICKER}.json",
+        latest_source_date: taiwanYfLatestSourceDate,
+        ready_basis_counts: countByCategory(taiwanYfReadyEvidenceRows, (row) => row.ready_basis),
+        markets: marketCounts(taiwanRows),
+        sample_blockers: taiwanYfBlockingEvidenceRows.slice(0, 10),
+      },
+    }),
+    coverageRow({
       id: "us_latest_bounded_backfill_run",
       label: "US latest bounded backfill run coverage",
       count: latestUsIntersection.length,
@@ -1339,19 +1452,19 @@ const index = {
       not_public_scoring: true,
       excluded_from_s0_daily_gated_scope: false,
       blocks_daily_ready: asiaYfBlockingEvidenceRows.length > 0,
-      daily_gated_scope_denominator: s0DailyEligibleRows.length,
+      daily_gated_scope_denominator: s0DailyEligibleCount,
       daily_gated_scope_label: "active_scoring_universe.us + active_scoring_universe.korea + active_scoring_universe.asia_ex_taiwan",
       excluded_markets: marketCounts(asiaExTwRows),
       caveat: "HKEX/SSE/SZSE active rows are included in the current S0 daily/gated source scope through YF daily stock shards; any nonzero count here blocks the all-active-stock daily claim.",
     },
     latest_available_all_active_daily_sources: {
-      covered_count: koreaIntersection.length + finraEligibleSourceReadyRows.length + usClassYfReadyEvidenceRows.length + asiaYfReadyEvidenceRows.length,
+      covered_count: koreaCoveredCount + finraEligibleSourceReadyRows.length + usClassYfReadyEvidenceRows.length + asiaYfReadyEvidenceRows.length + taiwanYfReadyEvidenceRows.length,
       denominator: activeScoringTotal,
       denominator_label: "active_scoring_universe.total",
-      coverage_pct: pct(koreaIntersection.length + finraEligibleSourceReadyRows.length + usClassYfReadyEvidenceRows.length + asiaYfReadyEvidenceRows.length, activeScoringTotal),
+      coverage_pct: pct(koreaCoveredCount + finraEligibleSourceReadyRows.length + usClassYfReadyEvidenceRows.length + asiaYfReadyEvidenceRows.length + taiwanYfReadyEvidenceRows.length, activeScoringTotal),
       claim_scope: "source_availability_composite",
       not_public_scoring: true,
-      formula: "KRX latest fully populated issuer daily proof + US FINRA source-ready rows + US_CLASS/non-plain YF daily source-ready rows + HKEX/SSE/SZSE YF daily source-ready rows",
+      formula: "KRX latest fully populated issuer daily proof + US FINRA source-ready rows + US_CLASS/non-plain YF daily source-ready rows + HKEX/SSE/SZSE YF daily source-ready rows + explicit Taiwan YF daily source-ready rows",
     },
   },
   public_scoring_readiness: {
@@ -1414,7 +1527,7 @@ const index = {
           daily: etfReadinessEvidence.daily_ready,
           gated: etfReadinessEvidence.gated_ready,
         },
-        caveat: "ETF scores are public-surfaced by the named ETF gate. Full-universe DAILY/GATED remains a diagnostic/backlog track; ETF service DAILY/GATED is evaluated by the Core Daily Basket sublane.",
+        caveat: "Full ETF DAILY/GATED is evaluated on the exact scored eligible denominator. Full-primary gaps remain diagnostic, and Core Daily Basket readiness is reported on its separate track.",
         extra: {
           evidence_based_readiness: etfReadinessEvidence,
         },
@@ -1481,7 +1594,8 @@ const index = {
     },
   },
   freshness_gate: {
-    max_calendar_age_days_for_counted_daily_sources: MAX_COUNTED_DAILY_SOURCE_AGE_DAYS,
+    max_calendar_age_days_for_other_counted_daily_sources: MAX_COUNTED_DAILY_SOURCE_AGE_DAYS,
+    krx_max_trading_age_days: koreaSourceEvidence.max_age_days,
     checks: [
       {
         id: "coverage_index_generated",
@@ -1491,9 +1605,14 @@ const index = {
       {
         id: "korea_counted_source_date",
         source_date: koreaCountedSourceDate,
-        age_days: ageDays(koreaCountedSourceDate),
-        status: countedDailySourceFresh(koreaCountedSourceDate) ? "ready" : "stale",
-        caveat: "20260629 KRX run exists but is mostly empty; gate uses latest fully populated proof date.",
+        age_days: koreaSourceEvidence.age_days,
+        age_unit: koreaSourceEvidence.age_unit,
+        source_state: koreaSourceEvidence.source_state,
+        max_age_days: koreaSourceEvidence.max_age_days,
+        status: koreaSourceEvidence.source_status,
+        evidence_source: koreaEvidence.source,
+        receipt_validation: koreaReceiptValidation.ok ? "valid" : koreaReceiptValidation.reason,
+        caveat: "Gate uses the latest fully populated issuer proof date; a private-absence rebuild accepts only a receipt bound to the current bridge and active universe.",
       },
       {
         id: "us_flow_source_date",
@@ -1528,6 +1647,16 @@ const index = {
         caveat: "Oldest YF history_1y observation date across HKEX/SSE/SZSE active rows; any missing/stale ticker blocks the all-active-stock S0 daily claim.",
       },
       {
+        id: "taiwan_yf_source_date",
+        source_date: taiwanYfOldestSourceDate,
+        latest_source_date: taiwanYfLatestSourceDate,
+        age_days: ageDays(taiwanYfOldestSourceDate),
+        status: countedDailySourceFresh(taiwanYfOldestSourceDate) && taiwanYfReadyEvidenceRows.length === taiwanRows.length ? "ready" : "stale",
+        covered_count: taiwanYfReadyEvidenceRows.length,
+        denominator: taiwanRows.length,
+        caveat: "Oldest YF history_1y observation date across explicitly mapped Taiwan active rows; any missing/stale ticker blocks the all-active-stock S0 daily claim.",
+      },
+      {
         id: "etf_public_surface",
         status: etfReadinessEvidence.public_ready ? "ready" : "blocked",
         scored_public_etf: etfScoredPublic,
@@ -1549,7 +1678,14 @@ const index = {
         fetchable_required_history: Number(etfHistoryGap.fetchable_required_history) || 0,
         inception_limited_required_history: Number(etfHistoryGap.inception_limited_required_history) || 0,
         status: etfReadinessEvidence.daily_checks.find((check) => check.id === "etf_no_fetchable_required_history_gap")?.ok ? "ready" : "blocked_fetchable_gap",
-        caveat: "Fetchable required-history gaps keep ETF daily=false. Inception-limited gaps are tracked but do not block daily readiness by themselves.",
+        missing_required_history: Number(etfHistoryGap.missing_required_history) || 0,
+        terminal_limited_required_history: Number(etfHistoryGap.terminal_limited_required_history) || 0,
+        fetchable_rows: Array.isArray(etfHistoryGap.samples?.fetchable)
+          ? etfHistoryGap.samples.fetchable
+          : [],
+        claim_scope: "full_primary_etf_universe_diagnostic",
+        service_gate: false,
+        caveat: "Full-primary gaps outside the scored denominator stay visible for diagnostic backfill and do not block full ETF S3.",
       },
       {
         id: "etf_daily_1y_gap",
@@ -1560,9 +1696,9 @@ const index = {
         terminal_limited_daily_1y_gap: etfReadinessEvidence.counts.terminal_limited_daily_1y_gap,
         history_gap_report_match: etfReadinessEvidence.counts.history_gap_report_match,
         status: etfReadinessEvidence.daily_checks.find((check) => check.id === "etf_no_fetchable_daily_1y_gap")?.ok ? "ready" : "blocked_fetchable_daily_gap",
-        claim_scope: "full_scored_etf_universe_diagnostic",
-        service_gate: false,
-        caveat: "Full scored-ETF daily 1Y continuity is a diagnostic/backfill track, not the ETF Core Daily Basket service gate.",
+        claim_scope: "scored_eligible_etf_denominator",
+        service_gate: true,
+        caveat: "The exact scored daily-1Y gap is a full ETF S3 gate and is independent of Core Daily Basket readiness.",
       },
       {
         id: "etf_core_daily_basket",
@@ -1572,7 +1708,7 @@ const index = {
         fresh_selected_count: etfCoreDailyBasketEvidence.counts.fresh_selected_count,
         stale_selected_count: etfCoreDailyBasketEvidence.counts.stale_selected_count,
         status: etfCoreDailyBasketEvidence.status,
-        caveat: "This is the ETF service daily/gated target. Full ETF daily 1Y gaps stay in the separate rolling diagnostic/backfill lane.",
+        caveat: "This separately named service sublane uses its own selected denominator and cannot set, clear, or substitute for full ETF S3.",
       },
       {
         id: "taiwan_universe_mapping",
@@ -1586,14 +1722,13 @@ const index = {
 };
 
 preservePriorPrivateBackedEvidence(index, priorIndex, {
-  koreaProofMissing,
   latestUsRunMissing,
   taiwanHistoricalMissing,
-});
+}, activeScoringTotal);
 
-// Compute the root SLA stamp only after private-backed evidence preservation.
-// Otherwise a no-private rebuild restores the KRX row/freshness but leaves the
-// root source_as_of null, making strict KPI disagree with the preserved row.
+// Compute the root SLA stamp only after the remaining private-backed carry-over
+// rows are reconciled. KRX itself is selected from current raw proof or its
+// bridge-bound receipt above; an unbound no-private rebuild stays fail-closed.
 recomputeFenokEdgeSourceAsOf(index);
 
 const publicIndex = compactPublicCoverageIndex(index);
@@ -1611,3 +1746,8 @@ console.log(JSON.stringify({
   taiwan_explicit_count: explicitTaiwanRows.length,
   taiwan_anomaly_count: taiwanTickerAnomalies.length,
 }, null, 2));
+}
+
+if (process.argv[1] && fileURLToPath(import.meta.url) === path.resolve(process.argv[1])) {
+  main();
+}

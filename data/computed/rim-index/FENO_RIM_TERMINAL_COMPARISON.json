@@ -1,0 +1,239 @@
+{
+ "schema_version": "feno_rim_terminal_comparison.v1",
+ "criteria": "feno-index-rim-terminal-criteria.json (3adf5c077d)",
+ "held_fixed": {
+  "erp_grid": {
+   "low": 0.0453,
+   "base": 0.0503,
+   "high": 0.0553
+  },
+  "ltroe_grid": {
+   "SPX": {
+    "low": 0.2148,
+    "base": 0.2198,
+    "high": 0.2248
+   },
+   "NDX": {
+    "low": 0.3031,
+    "base": 0.3081,
+    "high": 0.3131
+   }
+  },
+  "risk_free": 0.0463,
+  "explicit_years": 3
+ },
+ "g_stable": 0.0463,
+ "fade_years": 10,
+ "specifications": {
+  "A": {
+   "SPX": {
+    "full_3x3": {
+     "low|low": 4573.1144261407335,
+     "low|base": 4674.050075554665,
+     "low|high": 4774.985724968597,
+     "base|low": 4290.474434797572,
+     "base|base": 4384.882432154162,
+     "base|high": 4479.290429510753,
+     "high|low": 4036.4314659147067,
+     "high|base": 4124.9766910586695,
+     "high|high": 4213.5219162026315
+    },
+    "bear": 4036.4314659147067,
+    "base": 4384.882432154162,
+    "bull": 4774.985724968597,
+    "grid_mean": 4394.636399589166,
+    "base_vs_current": -0.4145465475139041,
+    "terminal_value_share_at_base": 0.5305075086639421,
+    "implied_ltroe_at_current_price": 0.3842372116124064,
+    "implied_erp_at_current_price": 0.014827212988159356,
+    "implied_erp_converged_on_valid_branch": true,
+    "payout_base_shift": 2.7071409075207775e-05,
+    "payout_grid_mean_shift": 2.7131686869408256e-05,
+    "monotonic": true,
+    "gates": {
+     "finite": true,
+     "monotonic": true,
+     "terminal_share_below_0_90": true,
+     "implied_ltroe_inside_alarm": true,
+     "implied_erp_inside_band": true,
+     "stable_retention_in_0_1": null
+    },
+    "passes_all_gates": true
+   },
+   "NDX": {
+    "full_3x3": {
+     "low|low": 20421.953655800524,
+     "low|base": 20751.983849507582,
+     "low|high": 21082.014043214636,
+     "base|low": 19124.111621884276,
+     "base|base": 19432.798293402237,
+     "base|high": 19741.484964920208,
+     "high|low": 17958.11731683666,
+     "high|base": 18247.63442972763,
+     "high|high": 18537.151542618598
+    },
+    "bear": 17958.11731683666,
+    "base": 19432.798293402237,
+    "bull": 21082.014043214636,
+    "grid_mean": 19477.47219087915,
+    "base_vs_current": -0.31270209967382856,
+    "terminal_value_share_at_base": 0.6719282528467923,
+    "implied_ltroe_at_current_price": 0.4513099685924279,
+    "implied_erp_at_current_price": 0.02456965954310529,
+    "implied_erp_converged_on_valid_branch": true,
+    "payout_base_shift": 0.007729264616028408,
+    "payout_grid_mean_shift": 0.0077387361436020985,
+    "monotonic": true,
+    "gates": {
+     "finite": true,
+     "monotonic": true,
+     "terminal_share_below_0_90": true,
+     "implied_ltroe_inside_alarm": true,
+     "implied_erp_inside_band": true,
+     "stable_retention_in_0_1": null
+    },
+    "passes_all_gates": true
+   }
+  },
+  "B": {
+   "SPX": {
+    "full_3x3": {
+     "low|low": 7115.070690869094,
+     "low|base": 7319.170149728168,
+     "low|high": 7523.269608587245,
+     "base|low": 6344.799964871206,
+     "base|base": 6526.1083653611995,
+     "base|high": 6707.416765851192,
+     "high|low": 5714.839032697814,
+     "high|base": 5877.51886768202,
+     "high|high": 6040.1987026662255
+    },
+    "bear": 5714.839032697814,
+    "base": 6526.1083653611995,
+    "bull": 7523.269608587245,
+    "grid_mean": 6574.2657942571295,
+    "base_vs_current": -0.12865789837788333,
+    "terminal_value_share_at_base": 0.6845486985452731,
+    "implied_ltroe_at_current_price": 0.24637382757871676,
+    "implied_erp_at_current_price": 0.04435271572075444,
+    "implied_erp_converged_on_valid_branch": true,
+    "payout_base_shift": 3.617845102288353e-05,
+    "payout_grid_mean_shift": 3.631417474025955e-05,
+    "monotonic": true,
+    "gates": {
+     "finite": true,
+     "monotonic": true,
+     "terminal_share_below_0_90": true,
+     "implied_ltroe_inside_alarm": true,
+     "implied_erp_inside_band": true,
+     "stable_retention_in_0_1": true
+    },
+    "passes_all_gates": true
+   },
+   "NDX": {
+    "full_3x3": {
+     "low|low": 34690.40473909702,
+     "low|base": 35357.75056125081,
+     "low|high": 36025.09638340459,
+     "base|low": 30859.053300014228,
+     "base|base": 31451.878995215724,
+     "base|high": 32044.704690417224,
+     "high|low": 27726.780712354433,
+     "high|base": 28258.696420667686,
+     "high|high": 28790.61212898093
+    },
+    "bear": 27726.780712354433,
+    "base": 31451.878995215724,
+    "bull": 36025.09638340459,
+    "grid_mean": 31689.441992378073,
+    "base_vs_current": 0.11238793653633783,
+    "terminal_value_share_at_base": 0.7972982126389928,
+    "implied_ltroe_at_current_price": 0.28129887598549813,
+    "implied_erp_at_current_price": 0.055273294949383045,
+    "implied_erp_converged_on_valid_branch": true,
+    "payout_base_shift": 0.009342600721614303,
+    "payout_grid_mean_shift": 0.00936202537487607,
+    "monotonic": true,
+    "gates": {
+     "finite": true,
+     "monotonic": true,
+     "terminal_share_below_0_90": true,
+     "implied_ltroe_inside_alarm": true,
+     "implied_erp_inside_band": true,
+     "stable_retention_in_0_1": true
+    },
+    "passes_all_gates": true
+   }
+  },
+  "C": {
+   "SPX": {
+    "full_3x3": {
+     "low|low": 11864.451157034546,
+     "low|base": 12326.564200486635,
+     "low|high": 12801.226750926573,
+     "base|low": 10710.678782190756,
+     "base|base": 11125.10224417824,
+     "base|high": 11550.760065838695,
+     "high|low": 9700.850423483298,
+     "high|base": 10073.62724585176,
+     "high|high": 10456.491025972577
+    },
+    "bear": 9700.850423483298,
+    "base": 11125.10224417824,
+    "bull": 12801.226750926573,
+    "grid_mean": 11178.861321773675,
+    "base_vs_current": 0.4853829307608617,
+    "terminal_value_share_at_base": 0.8149527678844417,
+    "implied_ltroe_at_current_price": 0.1704384408347963,
+    "implied_erp_at_current_price": 0.07118348587015194,
+    "implied_erp_converged_on_valid_branch": true,
+    "payout_base_shift": 0.00013839481074673365,
+    "payout_grid_mean_shift": 0.00013877212999402477,
+    "monotonic": true,
+    "gates": {
+     "finite": true,
+     "monotonic": true,
+     "terminal_share_below_0_90": true,
+     "implied_ltroe_inside_alarm": true,
+     "implied_erp_inside_band": true,
+     "stable_retention_in_0_1": null
+    },
+    "passes_all_gates": true
+   },
+   "NDX": {
+    "full_3x3": {
+     "low|low": 124583.13996427262,
+     "low|base": 128990.39706342953,
+     "low|high": 133515.42571199517,
+     "base|low": 111656.23017765068,
+     "base|base": 115599.26430702327,
+     "base|high": 119647.60657152777,
+     "high|low": 100375.88733975163,
+     "high|base": 103914.09613027745,
+     "high|high": 107546.74768315173
+    },
+    "bear": 100375.88733975163,
+    "base": 115599.26430702327,
+    "bull": 133515.42571199517,
+    "grid_mean": 116203.19943878664,
+    "base_vs_current": 3.088506988951881,
+    "terminal_value_share_at_base": 0.9448495444464087,
+    "implied_ltroe_at_current_price": 0.13929411155052696,
+    "implied_erp_at_current_price": 0.12720839137123158,
+    "implied_erp_converged_on_valid_branch": true,
+    "payout_base_shift": 0.03890907767700724,
+    "payout_grid_mean_shift": 0.038954464363149977,
+    "monotonic": true,
+    "gates": {
+     "finite": true,
+     "monotonic": true,
+     "terminal_share_below_0_90": false,
+     "implied_ltroe_inside_alarm": true,
+     "implied_erp_inside_band": false,
+     "stable_retention_in_0_1": null
+    },
+    "passes_all_gates": false
+   }
+  }
+ }
+}

@@ -20,6 +20,7 @@ const privatePresent = {
       source("us_occ_options_proxy", "2026-07-07"),
       source("us_class_yf_daily_source", "2026-07-09"),
       source("asia_ex_taiwan_yf_daily_source", "2026-07-09"),
+      source("taiwan_yf_daily_source", "2026-07-09"),
     ],
   },
 };

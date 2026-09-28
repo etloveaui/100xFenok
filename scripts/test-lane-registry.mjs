@@ -15,10 +15,14 @@ import { fileURLToPath } from "node:url";
 import {
   LANE_REGISTRY,
   LANE_REGISTRY_SCHEMA,
+  PLANE_PUBLISH_FAMILY_BINDINGS,
+  PLANE_PUBLISHER_EXCEPTIONS,
   declaredAdminRoots,
   declaredExceptionPaths,
+  providerBlastRadius,
   registryDigest,
   registryLaneById,
+  registryProviderById,
   validateLaneRegistry,
 } from "./lib/lane-registry.mjs";
 import { checkLaneRegistryCompleteness } from "./check-lane-registry-completeness.mjs";
@@ -50,8 +54,34 @@ function clone(value) {
   const base = clone(LANE_REGISTRY);
   const cases = [
     ["duplicate lane id", (draft) => { draft.lanes.push(clone(draft.lanes[0])); }],
+    ["duplicate provider id", (draft) => { draft.providers.push(clone(draft.providers[0])); }],
+    ["unknown provider class", (draft) => { draft.providers[0].class = "mystery"; }],
+    ["duplicate provider reference", (draft) => {
+      draft.lanes[0].provider_refs.push(clone(draft.lanes[0].provider_refs[0]));
+    }],
+    ["unknown provider reference", (draft) => {
+      draft.lanes[0].provider_refs[0].provider_id = "missing_provider";
+    }],
+    ["empty provider references", (draft) => { draft.lanes[0].provider_refs = []; }],
+    ["invalid provider role", (draft) => { draft.lanes[0].provider_refs[0].role = "backup"; }],
+    ["provider class and role mismatch", (draft) => { draft.lanes[0].provider_refs[0].role = "transport"; }],
+    ["duplicate provider members", (draft) => {
+      draft.lanes.find((row) => row.id === "sentiment").provider_refs[0].members = ["cnn", "cnn"];
+    }],
+    ["undeclared provider member", (draft) => {
+      draft.lanes.find((row) => row.id === "sentiment").provider_refs[3].members = ["vixx", "move"];
+    }],
+    ["missing provider member coverage", (draft) => {
+      draft.lanes.find((row) => row.id === "sentiment").provider_refs[3].members = ["vix"];
+    }],
+    ["unreferenced provider", (draft) => {
+      draft.providers.push({ id: "unused_provider", label: "Unused provider", class: "external_data" });
+    }],
     ["unknown key on a record", (draft) => { draft.lanes[0].surprise = true; }],
     ["bad lane id", (draft) => { draft.lanes[0].id = "Bad Id"; }],
+    ["impossible activation date", (draft) => {
+      draft.lanes.find((row) => row.id === "damodaran").activated_at = "2026-02-31T00:00:00Z";
+    }],
     ["absolute store path", (draft) => { draft.lanes[0].roots.admin_store = "/etc/passwd"; }],
     ["path escape", (draft) => { draft.lanes[0].roots.admin_store = "data/admin/../secret"; }],
     ["artifact_only with a store", (draft) => {
@@ -66,7 +96,21 @@ function clone(value) {
     ["undeclared exception kind", (draft) => { draft.declared_exceptions[0].kind = "directory"; }],
     ["duplicate exception", (draft) => { draft.declared_exceptions.push(clone(draft.declared_exceptions[0])); }],
     ["invalid cadence", (draft) => { draft.lanes[0].cadence.kind = "fortnightly"; }],
+    ["legacy cadence provider text", (draft) => { draft.lanes[0].cadence.provider = "fred"; }],
     ["invalid privacy class", (draft) => { draft.lanes[0].privacy_class = "publicish"; }],
+    ["non-boolean public mirror flag", (draft) => {
+      draft.lanes.find((row) => row.id === "finra_ats_weekly").public_mirror_allowed = "false";
+    }],
+    ["false public mirror flag with a mirror", (draft) => {
+      draft.lanes.find((row) => row.id === "finra_ats_weekly").roots.public_mirror = ["100xfenok-next/public/leak.json"];
+    }],
+    ["public canonical outside canonical outputs", (draft) => {
+      draft.lanes.find((row) => row.id === "yahoo_etf_fallback").public_canonical_outputs = ["data/yf/not-canonical"];
+    }],
+    ["public canonical on a public lane", (draft) => {
+      const lane = draft.lanes.find((row) => row.id === "stockanalysis_etf_universe");
+      lane.public_canonical_outputs = [lane.roots.canonical_outputs[0]];
+    }],
     ["missing lane_class", (draft) => { delete draft.lanes[0].lane_class; }],
     ["invalid lane_class", (draft) => { draft.lanes[0].lane_class = "sometimes"; }],
     ["recovery store without shape", (draft) => {
@@ -87,6 +131,12 @@ function clone(value) {
       const lane = draft.lanes.find((row) => row.commit_shards.length > 1);
       lane.commit_shards.push(lane.commit_shards[0]);
     }],
+    // Owner workflows must list every lane they own.
+    ["workflow policy omits a lane it owns", (draft) => {
+      const lane = draft.lanes.find((row) => row.owner_workflow);
+      const policyValue = draft.workflow_policies[lane.owner_workflow];
+      policyValue.lanes = policyValue.lanes.filter((id) => id !== lane.id);
+    }],
   ];
   for (const [label, mutate] of cases) {
     const draft = clone(base);
@@ -99,6 +149,56 @@ function clone(value) {
 {
   const detectionIds = DATA_SUPPLY_DETECTION_CONFIG.lanes.map((lane) => lane.id).sort();
   const registryIds = LANE_REGISTRY.lanes.map((lane) => lane.id).sort();
+  assert.equal(registryProviderById("fred")?.label, "FRED");
+  assert.throws(
+    () => providerBlastRadius("missing_provider"),
+    /unknown provider/,
+    "unknown provider lookups must not silently report an empty blast radius",
+  );
+  assert.deepEqual(
+    providerBlastRadius("fred"),
+    [
+      { lane_id: "fred_macro", role: "source", members: null },
+      { lane_id: "fred_banking", role: "source", members: null },
+      { lane_id: "fred_yardeni", role: "source", members: null },
+    ],
+    "all FRED lanes must share one stable provider identity",
+  );
+  assert.deepEqual(
+    providerBlastRadius("yahoo_finance").map((entry) => entry.lane_id),
+    [
+      "yahoo_etf_fallback",
+      "yahoo_ticker_macro",
+      "sentiment",
+      "us_indices_daily",
+      "yahoo_private_options",
+      "yahoo_batch_quote_history",
+    ],
+    "Yahoo blast radius must be queryable without cadence free-text parsing",
+  );
+  assert.equal(registryProviderById("open_dart"), null, "retired OpenDART must not remain an active registry provider");
+  assert.throws(
+    () => providerBlastRadius("open_dart"),
+    /unknown provider/,
+    "retired OpenDART must not expose an active blast radius",
+  );
+  assert.equal(registryLaneById("kospi_dart_payout"), null, "retired KOSPI DART must not remain an active lane");
+  assert.deepEqual(
+    registryLaneById("sentiment").provider_members,
+    ["cnn", "cftc", "vix", "move", "crypto"],
+    "the sentiment lane member universe is an explicit closed set",
+  );
+  assert.deepEqual(
+    registryLaneById("sentiment").provider_refs,
+    [
+      { provider_id: "cnn_fear_and_greed", role: "source", members: ["cnn"] },
+      { provider_id: "fenok_cnn_proxy", role: "transport", members: ["cnn"] },
+      { provider_id: "cftc", role: "source", members: ["cftc"] },
+      { provider_id: "yahoo_finance", role: "source", members: ["vix", "move"] },
+      { provider_id: "alternative_me", role: "source", members: ["crypto"] },
+    ],
+    "the multi-source sentiment lane must declare direct sources and its proxy boundary",
+  );
   for (const id of detectionIds) {
     assert.ok(registryIds.includes(id), `detection lane ${id} is missing from the registry`);
   }
@@ -118,20 +218,64 @@ function clone(value) {
         `owner workflow missing on disk: ${lane.owner_workflow}`,
       );
     }
-    if (lane.roots.detection_attempt !== null) {
-      assert.equal(
-        lane.roots.detection_attempt.startsWith("data/admin/data-supply-state/detection-attempts/"),
-        true,
-        `detection attempt shard must live under the shared root: ${lane.id}`,
-      );
-    }
+    assert.equal(lane.roots.detection_attempt, null, `${lane.id} must not declare persistent attempt evidence`);
   }
   // shared stores declare every claimant
   const roots = declaredAdminRoots();
   assert.deepEqual(
     [...(roots.get("data/admin/stockanalysis-recovery") ?? [])].sort(),
-    ["stockanalysis_etf_universe", "stockanalysis_stock_financial", "stockanalysis_surfaces", "yahoo_etf_fallback"].sort(),
+    ["stockanalysis_etf_detail", "stockanalysis_etf_universe", "stockanalysis_stock_financial", "stockanalysis_surfaces"].sort(),
     "the StockAnalysis recovery store must list every claimant lane",
+  );
+  // P0 ownership: the stockanalysis-etf-detail publish family belongs
+  // to the natural StockAnalysis workflow (the acquisition workflow that runs
+  // the publish and persistence jobs), with exactly one owner and no retired
+  // shadow caller claim.
+  {
+    assert.equal(
+      fs.existsSync(path.join(REPO_ROOT, ".github/workflows/stockanalysis-etf-shadow-publish.yml")),
+      false,
+      "the superseded manual ETF shadow publisher must be removed",
+    );
+    const etfDetail = registryLaneById("stockanalysis_etf_detail");
+    assert.equal(etfDetail.caller_workflows, undefined,
+      "the retired shadow publisher must no longer claim the stockanalysis-etf-detail outcome shard");
+    const binding = PLANE_PUBLISH_FAMILY_BINDINGS["stockanalysis-etf-detail"];
+    assert.ok(binding, "the stockanalysis-etf-detail family must stay bound");
+    assert.equal(binding.workflow, ".github/workflows/fetch-stockanalysis.yml",
+      "the natural StockAnalysis workflow must own the stockanalysis-etf-detail publish outcome");
+    assert.equal(binding.lane_id, "stockanalysis_etf_detail",
+      "the stockanalysis-etf-detail family must stay bound to its lane");
+    assert.notEqual(binding.workflow, ".github/workflows/stockanalysis-etf-shadow-publish.yml",
+      "the retired shadow workflow must not own the publish outcome");
+  }
+  // Global Scouter remains a caller-only publisher with no Git commit output.
+  {
+    const globalScouter = registryLaneById("global_scouter");
+    const globalWorkflow = ".github/workflows/global-scouter-shadow-publish.yml";
+    assert.equal(globalScouter.owner_workflow, null);
+    assert.equal(globalScouter.enforcement, "shadow");
+    assert.deepEqual(globalScouter.caller_workflows?.[globalWorkflow], {
+      commit_shards: [],
+      script_sources: ["scripts/publish-cloud-data-generation.mjs"],
+    });
+    assert.deepEqual(PLANE_PUBLISH_FAMILY_BINDINGS["global-scouter"], {
+      lane_id: "global_scouter",
+      workflow: globalWorkflow,
+    });
+    const policy = LANE_REGISTRY.workflow_policies[globalWorkflow];
+    for (const stage of Object.values(policy.stages)) assert.deepEqual(stage, []);
+    assert.equal(PLANE_PUBLISHER_EXCEPTIONS["global-scouter"].strict_gate, true);
+  }
+  assert.deepEqual(
+    [...(roots.get("data/admin/yahoo_etf_fallback") ?? [])],
+    ["yahoo_etf_fallback"],
+    "the private Yahoo ETF fallback store must have exactly its own lane claimant",
+  );
+  assert.deepEqual(
+    registryLaneById("yahoo_etf_fallback").public_canonical_outputs,
+    ["data/yf/finance"],
+    "the shared Yahoo finance namespace must remain explicitly public while ETF details stay private",
   );
   // every recovery_store-bearing lane's index lives under its admin root
   for (const lane of LANE_REGISTRY.lanes) {
@@ -152,16 +296,18 @@ function clone(value) {
       acc[lane.lane_class] = (acc[lane.lane_class] ?? 0) + 1;
       return acc;
     }, {});
-    assert.deepEqual(byClass, { detection_floor: 27, auxiliary: 4 }, "lane_class partition drifted");
-    assert.equal(registryLaneById("yahoo_batch_quote_history").lane_class, "auxiliary",
-      "yahoo_batch_quote_history remains auxiliary (not a detection-floor lane)");
-    for (const id of ["benchmarks", "global_scouter", "damodaran"]) {
+    assert.deepEqual(byClass, { detection_floor: 31, auxiliary: 4 }, "lane_class partition drifted");
+    assert.equal(registryLaneById("yahoo_batch_quote_history").lane_class, "detection_floor",
+      "yahoo_batch_quote_history is a standard detection-floor producer");
+    for (const id of ["benchmarks", "global_scouter"]) {
       const converterLane = registryLaneById(id);
       assert.ok(converterLane, `${id} converter lane is registered`);
       assert.equal(converterLane.lane_class, "detection_floor", `${id} belongs to the detection floor`);
       assert.equal(converterLane.cadence.kind, "weekly", `${id} carries its declared weekly cadence`);
       assert.equal(converterLane.enforcement, "shadow", `${id} remains shadow until separately promoted`);
     }
+    assert.equal(registryLaneById("damodaran").enforcement, "live",
+      "Damodaran is live after the emitted healthy bundle/history/public parity run");
     assert.equal(registryLaneById("benchmarks").owner_workflow, null,
       "Benchmark cadence is declared by the external converter payload, not a fabricated workflow");
     assert.equal(registryLaneById("global_scouter").owner_workflow, null,
@@ -170,8 +316,74 @@ function clone(value) {
       "Damodaran keeps its measured in-repo owner workflow");
     assert.equal(registryLaneById("stockanalysis_stock_financial").enforcement, "live",
       "the bounded StockAnalysis pair lane is live after its first committed natural 8-pair attempt");
+    assert.equal(registryLaneById("stockanalysis_etf_detail").enforcement, "live",
+      "the bounded StockAnalysis ETF detail lane is live after its first committed natural fence-confirmed attempt");
     assert.equal(registryLaneById("yahoo_private_options").enforcement, "live",
       "the targeted Yahoo options lane is live after its first committed natural schedule attempt");
+    for (const {
+      id,
+      enforcement,
+      recoveryStore,
+      lkgShard,
+      kpiRequired,
+    } of [
+      {
+        id: "apewisdom_attention",
+        enforcement: "live",
+        recoveryStore: "data/admin/apewisdom_attention/index.json",
+        lkgShard: "data/admin/apewisdom_attention/lkg/social_attention_proxy.json",
+        kpiRequired: true,
+      },
+      {
+        id: "gdelt_news_tone",
+        enforcement: "live",
+        recoveryStore: "data/admin/gdelt_news_tone/index.json",
+        lkgShard: "data/admin/gdelt_news_tone/lkg/news_tone_proxy.json",
+        kpiRequired: true,
+      },
+    ]) {
+      const recoveryLane = registryLaneById(id);
+      const detectionLane = DATA_SUPPLY_DETECTION_CONFIG.lanes.find((row) => row.id === id);
+      assert.equal(recoveryLane.enforcement, enforcement, `${id} enforcement must not drift`);
+      assert.equal(recoveryLane.recovery_store, recoveryStore, `${id} recovery index is registry-owned`);
+      assert.equal(recoveryLane.kpi_recovery_shape, "general", `${id} uses the generic LaneLkgStore KPI adapter`);
+      assert.ok(recoveryLane.commit_shards.includes(recoveryStore), `${id} recovery index must be committed`);
+      assert.ok(recoveryLane.commit_shards.includes(lkgShard), `${id} retained LKG must be committed`);
+      assert.equal(detectionLane?.kpi_required, kpiRequired, `${id} KPI requirement follows enforcement`);
+    }
+    assert.deepEqual(
+      registryLaneById("finra_ats_weekly"),
+      {
+        id: "finra_ats_weekly",
+        label: "FINRA delayed ATS/OTC weekly summary",
+        owner_workflow: ".github/workflows/fetch-finra-ats-weekly.yml",
+        provider_members: null,
+        provider_refs: [{ provider_id: "finra", role: "source", members: null }],
+        store_kind: "payload",
+        lane_class: "detection_floor",
+        cadence: { kind: "weekly" },
+        enforcement: "live",
+        privacy_class: "private",
+        public_mirror_allowed: false,
+        roots: {
+          admin_store: "data/admin/finra-ats",
+          detection_attempt: null,
+          canonical_outputs: ["data/admin/finra-ats/current/weekly-summary.json"],
+          public_mirror: [],
+        },
+    commit_shards: [
+      "data/admin/finra-ats/index.json",
+      "data/admin/finra-ats/current/weekly-summary.json",
+      "data/admin/finra-ats/lkg/weekly-summary.json",
+          "data/admin/finra-ats/weeks",
+        ],
+        recovery_store: "data/admin/finra-ats/index.json",
+        declared_exception: null,
+        script_sources: ["scripts/fetch-finra-ats-weekly.mjs"],
+        kpi_recovery_shape: "general",
+      },
+      "FINRA ATS weekly registry contract must remain exact",
+    );
     for (const id of ["admin_live_voice_logs", "mona_production_study_state", "mona_vnext_kv"]) {
       const lane = registryLaneById(id);
       assert.ok(lane, `private/runtime denominator lane missing: ${id}`);
@@ -179,6 +391,8 @@ function clone(value) {
       assert.deepEqual(
         {
           owner_workflow: lane.owner_workflow,
+          provider_members: lane.provider_members,
+          provider_refs: lane.provider_refs,
           store_kind: lane.store_kind,
           lane_class: lane.lane_class,
           cadence: lane.cadence,
@@ -190,6 +404,15 @@ function clone(value) {
         },
         {
           owner_workflow: null,
+          provider_members: null,
+          provider_refs: id === "admin_live_voice_logs"
+            ? [{ provider_id: "local_mac_bridge", role: "runtime", members: null }]
+            : id === "mona_production_study_state"
+              ? [
+                  { provider_id: "mona_life_ssot", role: "source", members: null },
+                  { provider_id: "local_mac_bridge", role: "runtime", members: null },
+                ]
+              : [{ provider_id: "cloudflare_kv", role: "storage", members: null }],
           store_kind: "artifact_only",
           lane_class: "auxiliary",
           cadence: { kind: "unknown" },
@@ -210,13 +433,20 @@ function clone(value) {
     }
     const indices = registryLaneById("us_indices_daily");
     assert.equal(indices.enforcement, "live", "Yahoo owns US indices after the atomic GAS cutover");
+    assert.equal(indices.label, "US index daily close (S&P 500 / NASDAQ Composite / Nasdaq 100 / SOX)");
     assert.deepEqual(indices.roots.canonical_outputs, [
       "data/indices/sp500.json",
       "data/indices/nasdaq.json",
+      "data/indices/nasdaq100.json",
+      "data/indices/sox.json",
     ]);
-    assert.deepEqual(indices.roots.public_mirror, [
-      "100xfenok-next/public/data/indices/sp500.json",
-      "100xfenok-next/public/data/indices/nasdaq.json",
+    assert.deepEqual(indices.roots.public_mirror, []);
+    assert.deepEqual(indices.commit_shards, [
+      "data/admin/us-indices-daily",
+      "data/indices/sp500.json",
+      "data/indices/nasdaq.json",
+      "data/indices/nasdaq100.json",
+      "data/indices/sox.json",
     ]);
     assert.equal(indices.declared_exception, null, "the retired shadow qualification exception must be removed");
     assert.deepEqual(indices.script_sources, ["scripts/fetch-us-indices-daily.mjs", "scripts/check-us-indices-parity.mjs"],
@@ -231,19 +461,51 @@ function clone(value) {
       "the live workflow must stage canonical/public outputs only after producer success");
     assert.match(workflowSource, /atomic (?:cutover|GAS ownership cutover)/,
       "the workflow must document the atomic GAS-to-Yahoo ownership cutover");
+    assert.equal(
+      Object.keys(LANE_REGISTRY.workflow_policies).some((workflow) => workflow.endsWith("fetch-kospi-dart-payout.yml")),
+      false,
+      "retired KOSPI DART must not retain an automatic workflow policy",
+    );
     const oecd = registryLaneById("oecd_cli");
-    assert.equal(oecd.enforcement, "shadow");
+    assert.equal(oecd.enforcement, "live",
+      "OECD is live after its complete bounded private attempt was committed");
     assert.deepEqual(oecd.roots.canonical_outputs, ["data/admin/oecd_cli/shadow/oecd-cli.json"]);
     assert.deepEqual(oecd.roots.public_mirror, []);
     const krx = registryLaneById("krx");
-    assert.equal(krx.enforcement, "shadow", "KRX stays shadow until a natural workflow run commits attempt evidence");
-    assert.equal(krx.roots.detection_attempt, "data/admin/data-supply-state/detection-attempts/krx.json");
-    assert.deepEqual(krx.roots.public_mirror, ["100xfenok-next/public/data/admin/fenok-edge-korea-krx-daily-index.json"]);
+    assert.equal(krx.enforcement, "live", "KRX is live after natural run 30270187601 committed valid attempt evidence");
+    assert.deepEqual(krx.roots.canonical_outputs, [
+      "data/admin/fenok-edge-korea-krx-daily-index.json",
+      "data/computed/fenok-edge-korea-krx-bridge-history.json",
+      "data/computed/fenok-edge-korea-krx-index-daily.json",
+      "data/computed/fenok-edge-korea-krx-kosdaq-market-cap-aggregate.json",
+    ]);
+    assert.deepEqual(krx.roots.public_mirror, [
+      "100xfenok-next/public/data/admin/fenok-edge-korea-krx-daily-index.json",
+      "100xfenok-next/public/data/computed/fenok-edge-korea-krx-bridge-history.json",
+    ]);
   }
   const floorException = LANE_REGISTRY.declared_exceptions
     .find((entry) => entry.path === "data/admin/data-supply-detection-floor.json");
   assert.equal(floorException?.may_be_absent, true,
-    "the ephemeral detection-floor report must be declared may_be_absent (intentionally not committed)");
+    "the detection-floor report may be absent before a projection run");
+  assert.equal(floorException?.owner, "detection-floor",
+    "the detection-floor report remains owned by the detection-floor producer");
+  assert.equal(floorException?.public_sync, "exclude",
+    "the detection-floor report remains excluded from public synchronization");
+  const proxyCoverageReview = LANE_REGISTRY.declared_exceptions
+    .find((entry) => entry.path === "data/admin/fenok-edge-proxy-coverage-review.json");
+  assert.equal(proxyCoverageReview?.owner, "platform");
+  assert.equal(proxyCoverageReview?.public_sync, "exclude",
+    "the review-only proxy coverage audit must remain excluded from public synchronization");
+  const privateSec13fInvestor = LANE_REGISTRY.declared_exceptions
+    .find((entry) => entry.path === "data/sec-13f/investors/griffin.json");
+  assert.equal(privateSec13fInvestor?.kind, "file");
+  assert.equal(privateSec13fInvestor?.public_sync, "exclude",
+    "the private SEC 13F investor payload must remain excluded from generic public synchronization");
+  const privateSec13fBridge = LANE_REGISTRY.declared_exceptions
+    .find((entry) => entry.path === "data/computed/sec13f_bridge_index.json");
+  assert.equal(privateSec13fBridge, undefined,
+    "the SEC 13F bridge is now live public and must not be excluded from public synchronization");
 }
 
 // --- (c) checker fixtures: declared / undeclared / absent ------------------------
@@ -321,10 +583,14 @@ function clone(value) {
     // natural run, so assert the pending set is a SUBSET of the known
     // pre-launch lanes rather than an exact list.
     const pendingLanes = new Set([
+      // The first bounded earnings refresh creates its actual attempt report.
+      // Do not fabricate a successful report just to enroll the new store.
+      "earnings_overview",
       "edgar_filings",
       "fred_yardeni",
       "occ_options_volume",
       "yahoo_private_options",
+      "yahoo_etf_fallback",
       // #366 proxy-lane wiring (2026-07-19): admin stores are declared but
       // reserved — shard-only producers write nothing there until a future
       // recovery-state slice; they stay pending indefinitely by design.
@@ -334,6 +600,8 @@ function clone(value) {
       "us_indices_daily",
       "oecd_cli",
       "krx",
+      "finra_ats_weekly",
+      "slickcharts",
     ]);
     for (const row of summary.absent_store_roots) {
       assert.ok(pendingLanes.has(row.lane), `unexpected absent store: ${row.lane} (${row.path})`);

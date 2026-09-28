@@ -1,0 +1,120 @@
+{
+  "attempts": [
+    {
+      "attempts_used": 1,
+      "event_name": "schedule",
+      "failures": [
+        {
+          "attempt": 1,
+          "error": "YFDataException: PRVT: No Fund data found.",
+          "source": "provider_safe_call"
+        },
+        {
+          "attempt": 1,
+          "error": "YFDataException: PRVT: No Fund data found.",
+          "source": "provider_safe_call"
+        },
+        {
+          "attempt": 1,
+          "error": "YFDataException: PRVT: No Fund data found.",
+          "source": "provider_safe_call"
+        },
+        {
+          "attempt": 1,
+          "error": "YFDataException: PRVT: No Fund data found.",
+          "source": "provider_safe_call"
+        },
+        {
+          "attempt": 1,
+          "error": "YFDataException: PRVT: No Fund data found.",
+          "source": "provider_safe_call"
+        },
+        {
+          "attempt": 1,
+          "error": "YFDataException: PRVT: No Fund data found.",
+          "source": "provider_safe_call"
+        }
+      ],
+      "latency_ms": 545,
+      "natural": true,
+      "observed_at": "2026-08-09T08:59:39Z",
+      "outcome": "fresh",
+      "run_attempt": 1,
+      "run_id": "31304762930",
+      "schedule": "7 8 * * 0-5",
+      "shard": "4/72"
+    },
+    {
+      "attempts_used": 1,
+      "event_name": "workflow_dispatch",
+      "failures": [],
+      "latency_ms": 426,
+      "natural": false,
+      "observed_at": "2026-09-28T06:02:24Z",
+      "outcome": "fresh",
+      "run_attempt": 1,
+      "run_id": "36367834787",
+      "schedule": "",
+      "shard": ""
+    }
+  ],
+  "current": {
+    "fetched_at": "2026-09-28T06:04:21Z",
+    "history_as_of": "2026-09-02",
+    "path": "data/admin/yahoo-batch-quote-history/lkg/PRVT.json",
+    "payload_sha256": "647270da9c30a7af63a3d6a8c91e8d49dbfdf4660e23388ba68868bf7ac63efd",
+    "quote_as_of": "2026-09-02T15:25:19Z",
+    "source_as_of": "2026-09-02"
+  },
+  "discovered_from": [
+    "stockanalysis_etf"
+  ],
+  "last_attempt": {
+    "attempts_used": 1,
+    "event_name": "workflow_dispatch",
+    "failures": [],
+    "latency_ms": 426,
+    "natural": false,
+    "observed_at": "2026-09-28T06:02:24Z",
+    "outcome": "fresh",
+    "run_attempt": 1,
+    "run_id": "36367834787",
+    "schedule": "",
+    "shard": ""
+  },
+  "lkg": {
+    "fetched_at": "2026-09-28T06:04:21Z",
+    "history_as_of": "2026-09-02",
+    "path": "data/admin/yahoo-batch-quote-history/lkg/PRVT.json",
+    "payload_sha256": "647270da9c30a7af63a3d6a8c91e8d49dbfdf4660e23388ba68868bf7ac63efd",
+    "quote_as_of": "2026-09-02T15:25:19Z",
+    "source_as_of": "2026-09-02"
+  },
+  "promotion_contract": "provider_observation/v2",
+  "provider_observation": {
+    "event_name": "workflow_dispatch",
+    "history_as_of": "2026-09-02",
+    "observed_at": "2026-09-28T06:02:24Z",
+    "payload_sha256": "81ccb0057c217c0a96693d094fc47c4da48358265d072f8b0fd6e9ca767ae8da",
+    "quote_as_of": "2026-09-02T15:25:19Z",
+    "run_attempt": 1,
+    "run_id": "36367834787",
+    "schema_version": "provider_observation/v2",
+    "source_as_of": "2026-09-02"
+  },
+  "resolution_state": "lkg_primary",
+  "retry": true,
+  "schema_version": "yahoo-batch-quote-history-state/v1",
+  "stale": {
+    "age_business_days": 17,
+    "classified_at": "2026-09-28T06:30:00Z",
+    "classified_run_id": "36367836615",
+    "expected_resolution": "next_natural_yahoo_run",
+    "max_business_days": 6,
+    "message": "PRVT holds LKG because Yahoo source date 2026-09-02 is 17 business days old, beyond the 6-day bound; it will retry on the next natural Yahoo run.",
+    "reason": "source_age_exceeds_lane_bound",
+    "source_as_of": "2026-09-02"
+  },
+  "ticker": "PRVT",
+  "updated_at": "2026-09-28T06:30:00Z"
+}

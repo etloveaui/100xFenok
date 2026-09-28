@@ -90,66 +90,91 @@
       "run_id": "29622560422",
       "schedule": "20 23 * * 1-5",
       "shard": "4/5"
+    },
+    {
+      "attempts_used": 1,
+      "event_name": "schedule",
+      "failures": [],
+      "latency_ms": 505,
+      "natural": true,
+      "observed_at": "2026-08-05T08:49:49Z",
+      "outcome": "fresh",
+      "run_attempt": 1,
+      "run_id": "30990520626",
+      "schedule": "7 6 * * 0-5",
+      "shard": "39/72"
+    },
+    {
+      "attempts_used": 1,
+      "event_name": "workflow_dispatch",
+      "failures": [],
+      "latency_ms": 441,
+      "natural": false,
+      "observed_at": "2026-09-28T05:23:15Z",
+      "outcome": "fresh",
+      "run_attempt": 1,
+      "run_id": "36367832955",
+      "schedule": "",
+      "shard": ""
     }
   ],
   "current": {
-    "fetched_at": "2026-07-18T00:41:09Z",
-    "history_as_of": "2026-07-16",
+    "fetched_at": "2026-09-28T05:39:52Z",
+    "history_as_of": "2026-09-25",
     "path": "data/yf/finance/OSSL.json",
-    "payload_sha256": "875069f98476058b134345e65bf20a3fa7ee4b739c7f04701f2feb62526efc78",
-    "quote_as_of": "2026-07-16T19:49:30Z",
-    "source_as_of": "2026-07-16"
+    "payload_sha256": "9a47b409c9e40c3cb5718627a3a38744c0fe79a1fda12bbb77761ce1adaed578",
+    "quote_as_of": "2026-09-25T19:31:42Z",
+    "source_as_of": "2026-09-25"
   },
   "discovered_from": [
-    "market_facts",
     "stockanalysis_etf"
   ],
   "last_attempt": {
-    "attempts_used": 0,
-    "event_name": "schedule",
+    "attempts_used": 1,
+    "event_name": "workflow_dispatch",
     "failures": [],
-    "latency_ms": 0,
-    "natural": true,
-    "observed_at": "2026-07-18T00:52:19Z",
-    "outcome": "skipped_fresh",
+    "latency_ms": 441,
+    "natural": false,
+    "observed_at": "2026-09-28T05:23:15Z",
+    "outcome": "fresh",
     "run_attempt": 1,
-    "run_id": "29622560422",
-    "schedule": "20 23 * * 1-5",
-    "shard": "4/5"
+    "run_id": "36367832955",
+    "schedule": "",
+    "shard": ""
   },
   "lkg": {
-    "fetched_at": "2026-06-18T15:44:14Z",
-    "history_as_of": "2026-06-18",
+    "fetched_at": "2026-08-05T08:50:51Z",
+    "history_as_of": "2026-08-04",
     "path": "data/admin/yahoo-batch-quote-history/lkg/OSSL.json",
-    "payload_sha256": "b8a626fe09c441595a3e70cb5c6935ee919aa1abe8ad2862697c750bb2c500ef",
-    "quote_as_of": null,
-    "source_as_of": "2026-06-18"
+    "payload_sha256": "89ead9249e8bf8048f7741528cc7f3e36d5fb43b981d1bdc59111301d89b1e4d",
+    "quote_as_of": "2026-08-04T18:49:52Z",
+    "source_as_of": "2026-08-04"
   },
   "promotion_contract": "provider_observation/v2",
   "provider_observation": {
-    "event_name": "schedule",
-    "history_as_of": "2026-07-16",
-    "observed_at": "2026-07-18T00:37:10Z",
-    "payload_sha256": "0529a60941fe77c7012e1d62d2253c8eee3c6dad6abf5f36a8ecc48ac0070063",
-    "quote_as_of": "2026-07-16T19:49:30Z",
+    "event_name": "workflow_dispatch",
+    "history_as_of": "2026-09-25",
+    "observed_at": "2026-09-28T05:23:15Z",
+    "payload_sha256": "2adc8bbb3a7a2fc7ec812b35cc4347de82e8984d5ad6ba5f80f641d37831492e",
+    "quote_as_of": "2026-09-25T19:31:42Z",
     "run_attempt": 1,
-    "run_id": "29622560422",
+    "run_id": "36367832955",
     "schema_version": "provider_observation/v2",
-    "source_as_of": "2026-07-16"
+    "source_as_of": "2026-09-25"
   },
   "resolution_state": "fresh_primary",
   "retry": false,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "stale": {
-    "age_business_days": 15,
-    "classified_at": "2026-07-13T04:33:56Z",
-    "classified_run_id": "29224221077",
+    "age_business_days": 7,
+    "classified_at": "2026-08-13T00:06:17Z",
+    "classified_run_id": "31652949582",
     "expected_resolution": "next_natural_yahoo_run",
     "max_business_days": 6,
-    "message": "OSSL holds LKG because Yahoo source date 2026-06-18 is 15 business days old, beyond the 6-day bound; it will retry on the next natural Yahoo run.",
+    "message": "OSSL holds LKG because Yahoo source date 2026-08-04 is 7 business days old, beyond the 6-day bound; it will retry on the next natural Yahoo run.",
     "reason": "source_age_exceeds_lane_bound",
-    "source_as_of": "2026-06-18"
+    "source_as_of": "2026-08-04"
   },
   "ticker": "OSSL",
-  "updated_at": "2026-07-18T00:52:19Z"
+  "updated_at": "2026-09-28T05:23:15Z"
 }

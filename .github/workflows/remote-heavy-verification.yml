@@ -1,0 +1,260 @@
+name: Remote Heavy Verification
+
+on:
+  workflow_dispatch:
+    inputs:
+      suite:
+        description: Closed heavy verification suite
+        required: true
+        type: choice
+        options:
+          - runtime-build
+          - static-build
+          - cloudflare-build
+          - contracts
+          - sec13f-contract
+          - npm-script
+      script:
+        description: Exact package.json script for one hosted-only verification
+        required: false
+        type: string
+      revision:
+        description: Exact pushed commit to verify
+        required: true
+        type: string
+
+permissions:
+  contents: read
+
+concurrency:
+  group: remote-heavy-verification
+  cancel-in-progress: false
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    defaults:
+      run:
+        working-directory: 100xfenok-next
+    steps:
+      - name: Validate requested revision
+        working-directory: .
+        env:
+          REVISION: ${{ inputs.revision }}
+        run: |
+          set -euo pipefail
+          if [[ ! "$REVISION" =~ ^[0-9a-f]{40}$ ]]; then
+            echo "revision must be an exact 40-hex commit" >&2
+            exit 64
+          fi
+
+      - name: Checkout requested revision
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.revision }}
+          fetch-depth: 1
+          persist-credentials: false
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Validate requested package script
+        if: ${{ inputs.suite == 'npm-script' }}
+        env:
+          SCRIPT: ${{ inputs.script }}
+        run: |
+          set -euo pipefail
+          if [[ ! "$SCRIPT" =~ ^(build|test|qa|check|verify|lint|typecheck)(:[A-Za-z0-9._-]+)*$ ]] \
+            && [ "$SCRIPT" != "reconcile:verify" ] \
+            && [ "$SCRIPT" != "sync-static" ]; then
+            echo "script must be one exact hosted verification package script" >&2
+            exit 64
+          fi
+          node - <<'NODE'
+          const fs = require('node:fs');
+          const script = process.env.SCRIPT;
+          const pkg = JSON.parse(fs.readFileSync('package.json', 'utf8'));
+          if (!pkg.scripts || typeof pkg.scripts[script] !== 'string') {
+            process.stderr.write(`unknown package script: ${script}\n`);
+            process.exit(64);
+          }
+          NODE
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run closed verification suite
+        id: verification
+        env:
+          SUITE: ${{ inputs.suite }}
+          SCRIPT: ${{ inputs.script }}
+          FENOK_REMOTE_HEAVY_NESTED_EXECUTION: "1"
+          FENOK_REMOTE_HEAVY_EXPECTED_REVISION: ${{ inputs.revision }}
+        run: |
+          set -euo pipefail
+          case "$SUITE" in
+            runtime-build) npm run build:runtime;;
+            static-build) npm run build:static;;
+            cloudflare-build) npm run cf:build;;
+            contracts) npm run verify:contracts;;
+            sec13f-contract) npm run qa:sec13f-contract;;
+            npm-script) npm run "$SCRIPT";;
+            *) echo "unsupported suite" >&2; exit 64;;
+          esac
+
+      - name: Upload data integrity live evidence
+        if: ${{ always() && inputs.suite == 'npm-script' && inputs.script == 'qa:data-integrity-live' }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: data-integrity-live
+          path: 100xfenok-next/test-results/data-integrity/*
+          if-no-files-found: ignore
+          retention-days: 7
+
+      - name: Upload synthetic WIND DOWN UI evidence
+        if: ${{ always() && inputs.suite == 'npm-script' && (inputs.script == 'qa:winddown-preservation-isolated' || inputs.script == 'qa:winddown-continuity-isolated' || inputs.script == 'qa:winddown-story-isolated' || inputs.script == 'qa:winddown-coach-isolated') }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: winddown-preservation-ui
+          path: 100xfenok-next/test-results/winddown-preservation/*.png
+          if-no-files-found: ignore
+          retention-days: 7
+
+      - name: Upload synthetic product flow evidence
+        if: ${{ always() && inputs.suite == 'npm-script' && inputs.script == 'qa:product-flow-isolated' }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: product-flow-ui
+          path: |
+            100xfenok-next/test-results/product-flow/*.png
+            100xfenok-next/test-results/product-flow/*.json
+          if-no-files-found: ignore
+          retention-days: 7
+
+      - name: Upload WIND DOWN practice projection
+        if: ${{ success() && inputs.suite == 'npm-script' && inputs.script == 'qa:winddown-practice-publication' }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: winddown-practice-projection
+          path: |
+            100xfenok-next/src/generated/winddown-published-lkg.ts
+            data/winddown/runtime-lkg/blobs/*.json
+          if-no-files-found: error
+          retention-days: 7
+
+      - name: Upload verified Scouter data projections
+        if: ${{ success() && inputs.suite == 'npm-script' && inputs.script == 'build:verification-pins' }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: verified-scouter-projections
+          path: |
+            data/admin/lane-commit-manifest.json
+            data/admin/lane-registry-projection.json
+            100xfenok-next/public/data/admin/lane-registry-projection.json
+            scripts/fixtures/cloud-data-plane/global-scouter-migration-demand.json
+          if-no-files-found: error
+          retention-days: 7
+
+      - name: Upload verified source freshness evidence
+        if: ${{ success() && inputs.suite == 'npm-script' && inputs.script == 'build:source-freshness-pins' }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: verified-source-freshness-evidence
+          path: |
+            scripts/fixtures/data_supply/detection_floor/cases.expected.json
+            data/admin/data-supply-detection-floor.json
+            data/admin/fenok-edge-coverage-index.json
+            100xfenok-next/public/data/admin/fenok-edge-coverage-index.json
+            data/admin/fenok-data-health-kpi.json
+            100xfenok-next/public/data/admin/fenok-data-health-kpi.json
+          if-no-files-found: error
+          retention-days: 7
+
+      - name: Upload verified earnings data
+        if: ${{ success() && inputs.suite == 'npm-script' && inputs.script == 'qa:earnings-overview-data' }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: verified-earnings-data
+          path: |
+            data/earnings-overview/AAPL.json
+            data/earnings-overview/AMZN.json
+            data/earnings-overview/MSFT.json
+            data/earnings-overview/META.json
+          if-no-files-found: error
+          retention-days: 7
+
+      - name: Upload earnings UI evidence
+        if: ${{ always() && inputs.suite == 'npm-script' && (inputs.script == 'qa:earnings-overview-isolated' || inputs.script == 'qa:earnings-overview-browser' || inputs.script == 'qa:earnings-overview-live') }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: earnings-overview-ui
+          path: 100xfenok-next/test-results/earnings-overview/*.png
+          if-no-files-found: ignore
+          retention-days: 7
+
+      - name: Upload earnings registry projections
+        if: ${{ success() && inputs.suite == 'npm-script' && inputs.script == 'build:earnings-overview-pins' }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: earnings-registry-projections
+          path: |
+            scripts/fixtures/lane-registry/registry.expected.json
+            scripts/fixtures/derived-asset-registry/registry.expected.json
+            scripts/fixtures/data_supply/policy_registry/registry.expected.json
+            data/admin/lane-commit-manifest.json
+            scripts/fixtures/update-manifest/materializations.expected.json
+            data/admin/lane-registry-projection.json
+            100xfenok-next/public/data/admin/lane-registry-projection.json
+            100xfenok-next/scripts/cloud-data-plane/cloud-data-plane-enrollment.generated.mjs
+            scripts/fixtures/cloud-data-plane/etf-migration-demand.json
+            scripts/fixtures/cloud-data-plane/global-scouter-migration-demand.json
+            scripts/fixtures/data_supply/detection_floor/cases.expected.json
+            data/admin/data-supply-detection-floor.json
+            data/admin/fenok-data-health-kpi.json
+            100xfenok-next/public/data/admin/fenok-data-health-kpi.json
+            100xfenok-next/scripts/fixtures/ink4-contrast-sites.json
+          if-no-files-found: error
+          retention-days: 7
+
+      - name: Emit completion receipt
+        if: always()
+        working-directory: .
+        env:
+          STATUS: ${{ job.status }}
+          CONCLUSION: ${{ steps.verification.conclusion }}
+          RUN_ID: ${{ github.run_id }}
+          RUN_ATTEMPT: ${{ github.run_attempt }}
+          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+          SUITE: ${{ inputs.suite }}
+          SCRIPT: ${{ inputs.script }}
+          REVISION: ${{ inputs.revision }}
+          WORKFLOW: ${{ github.workflow }}
+          WORKFLOW_REF: ${{ github.workflow_ref }}
+          WORKFLOW_SHA: ${{ github.sha }}
+        run: |
+          set -euo pipefail
+          node_version="$(node --version 2>/dev/null || printf 'unavailable')"
+          npm_version="$(npm --version 2>/dev/null || printf 'unavailable')"
+          node_path="$(command -v node 2>/dev/null || printf 'unavailable')"
+          npm_path="$(command -v npm 2>/dev/null || printf 'unavailable')"
+          {
+            printf '%s\n' '## Remote heavy verification completion receipt'
+            printf 'status=%s\n' "$STATUS"
+            printf 'conclusion=%s\n' "$CONCLUSION"
+            printf 'run_id=%s\n' "$RUN_ID"
+            printf 'run_attempt=%s\n' "$RUN_ATTEMPT"
+            printf 'run_url=%s\n' "$RUN_URL"
+            printf 'suite=%s\n' "$SUITE"
+            printf 'script=%s\n' "$SCRIPT"
+            printf 'revision=%s\n' "$REVISION"
+            printf 'workflow=%s\n' "$WORKFLOW"
+            printf 'workflow_ref=%s\n' "$WORKFLOW_REF"
+            printf 'workflow_sha=%s\n' "$WORKFLOW_SHA"
+            printf 'node_version=%s\n' "$node_version"
+            printf 'npm_version=%s\n' "$npm_version"
+            printf 'node_path=%s\n' "$node_path"
+            printf 'npm_path=%s\n' "$npm_path"
+          } | tee -a "${GITHUB_STEP_SUMMARY:-/dev/null}"

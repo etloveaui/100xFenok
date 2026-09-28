@@ -90,66 +90,104 @@
       "run_id": "29622560422",
       "schedule": "20 23 * * 1-5",
       "shard": "4/5"
+    },
+    {
+      "attempts_used": 1,
+      "event_name": "schedule",
+      "failures": [],
+      "latency_ms": 478,
+      "natural": true,
+      "observed_at": "2026-08-05T08:49:49Z",
+      "outcome": "fresh",
+      "run_attempt": 1,
+      "run_id": "30990520626",
+      "schedule": "7 6 * * 0-5",
+      "shard": "39/72"
+    },
+    {
+      "attempts_used": 1,
+      "event_name": "schedule",
+      "failures": [],
+      "latency_ms": 526,
+      "natural": true,
+      "observed_at": "2026-08-10T11:19:59Z",
+      "outcome": "fresh",
+      "run_attempt": 1,
+      "run_id": "31382906749",
+      "schedule": "7 10 * * 0-5",
+      "shard": "17/72"
+    },
+    {
+      "attempts_used": 1,
+      "event_name": "workflow_dispatch",
+      "failures": [],
+      "latency_ms": 432,
+      "natural": false,
+      "observed_at": "2026-09-28T06:30:00Z",
+      "outcome": "fresh",
+      "run_attempt": 1,
+      "run_id": "36367836615",
+      "schedule": "",
+      "shard": ""
     }
   ],
   "current": {
-    "fetched_at": "2026-07-18T00:49:11Z",
-    "history_as_of": "2026-07-17",
+    "fetched_at": "2026-09-28T06:36:56Z",
+    "history_as_of": "2026-09-25",
     "path": "data/yf/finance/UCOP.json",
-    "payload_sha256": "ec6d363b358f9fd82985762f43558ce515e0829626c8b1f558eaaa6f4ee40e88",
-    "quote_as_of": "2026-07-17T16:20:19Z",
-    "source_as_of": "2026-07-17"
+    "payload_sha256": "cbb5ff83e0f1ac6730ad061011f0daa239db3c89549d69b7b900fcea40ecf07d",
+    "quote_as_of": "2026-09-24T18:00:35Z",
+    "source_as_of": "2026-09-24T18:00:35Z"
   },
   "discovered_from": [
-    "market_facts",
     "stockanalysis_etf"
   ],
   "last_attempt": {
-    "attempts_used": 0,
-    "event_name": "schedule",
+    "attempts_used": 1,
+    "event_name": "workflow_dispatch",
     "failures": [],
-    "latency_ms": 0,
-    "natural": true,
-    "observed_at": "2026-07-18T00:52:19Z",
-    "outcome": "skipped_fresh",
+    "latency_ms": 432,
+    "natural": false,
+    "observed_at": "2026-09-28T06:30:00Z",
+    "outcome": "fresh",
     "run_attempt": 1,
-    "run_id": "29622560422",
-    "schedule": "20 23 * * 1-5",
-    "shard": "4/5"
+    "run_id": "36367836615",
+    "schedule": "",
+    "shard": ""
   },
   "lkg": {
-    "fetched_at": "2026-06-18T16:17:09Z",
-    "history_as_of": "2026-06-18",
+    "fetched_at": "2026-08-10T11:23:33Z",
+    "history_as_of": "2026-08-07",
     "path": "data/admin/yahoo-batch-quote-history/lkg/UCOP.json",
-    "payload_sha256": "0553032b3920fecbcb7c7f7bbfd0963b689ef9441870494555bf17bcf46ef421",
-    "quote_as_of": null,
-    "source_as_of": "2026-06-18"
+    "payload_sha256": "a49818d250a00e1cc00b7b907240571c8793dc9c9debbe705f5f2dae6a231488",
+    "quote_as_of": "2026-08-07T17:15:48Z",
+    "source_as_of": "2026-08-07"
   },
   "promotion_contract": "provider_observation/v2",
   "provider_observation": {
-    "event_name": "schedule",
-    "history_as_of": "2026-07-17",
-    "observed_at": "2026-07-18T00:45:55Z",
-    "payload_sha256": "03dcba39c99b20d6e0853722f909ef1025ac58b5ea3820d9979937b97aeae91c",
-    "quote_as_of": "2026-07-17T16:20:19Z",
+    "event_name": "workflow_dispatch",
+    "history_as_of": "2026-09-25",
+    "observed_at": "2026-09-28T06:30:00Z",
+    "payload_sha256": "ee0efb11ac2469be184241ad60109bfab57645989e6d04990c2b4398ba060901",
+    "quote_as_of": "2026-09-24T18:00:35Z",
     "run_attempt": 1,
-    "run_id": "29622560422",
+    "run_id": "36367836615",
     "schema_version": "provider_observation/v2",
-    "source_as_of": "2026-07-17"
+    "source_as_of": "2026-09-24T18:00:35Z"
   },
   "resolution_state": "fresh_primary",
   "retry": false,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "stale": {
-    "age_business_days": 15,
-    "classified_at": "2026-07-13T04:33:56Z",
-    "classified_run_id": "29224221077",
+    "age_business_days": 8,
+    "classified_at": "2026-08-19T23:42:29Z",
+    "classified_run_id": "32314261503",
     "expected_resolution": "next_natural_yahoo_run",
     "max_business_days": 6,
-    "message": "UCOP holds LKG because Yahoo source date 2026-06-18 is 15 business days old, beyond the 6-day bound; it will retry on the next natural Yahoo run.",
+    "message": "UCOP holds LKG because Yahoo source date 2026-08-07 is 8 business days old, beyond the 6-day bound; it will retry on the next natural Yahoo run.",
     "reason": "source_age_exceeds_lane_bound",
-    "source_as_of": "2026-06-18"
+    "source_as_of": "2026-08-07"
   },
   "ticker": "UCOP",
-  "updated_at": "2026-07-18T00:52:19Z"
+  "updated_at": "2026-09-28T06:30:00Z"
 }

@@ -8,7 +8,7 @@
 // - AnnualReturnsChartPanel: 101-year S&P returns as a responsive bar chart, which
 //   fixes the 760px fixed-width clipping — feedback #8.
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { formatInteger } from "@/lib/format";
 
 import {
@@ -25,7 +25,8 @@ import {
   yardeniOverlayModel,
   type YardeniOverlayModel,
 } from "../models/yardeniOverlayModel";
-import { formatAsOf, isStaleAsOf } from "../freshness";
+import { formatAsOf } from "../freshness";
+import { freshnessVerdict, freshnessMessage } from "@/lib/freshness-policy.mjs";
 
 import { MarketChartFrame } from "./MarketChartFrame";
 import type { MarketChartSeries, MarketChartValueFormatter } from "./types";
@@ -65,7 +66,8 @@ function cx(...parts: Array<string | false | undefined>): string {
 function AsOfPill({ value }: { value: string | null | undefined }) {
   const label = formatAsOf(value);
   if (!label) return null;
-  const stale = isStaleAsOf(value);
+  const verdict = freshnessVerdict(value, "fred_yardeni");
+  const stale = verdict.state === "delayed" || verdict.state === "stopped";
   return (
     <span
       className={cx(
@@ -74,7 +76,7 @@ function AsOfPill({ value }: { value: string | null | undefined }) {
           ? "border-[var(--c-warn)] bg-[var(--c-warn-soft)] text-[var(--c-warn)]"
           : "border-[var(--c-line)] bg-[var(--c-surface-2)] text-[var(--c-ink-3)]",
       )}
-      title={stale ? "7일 이상 오래된 자료입니다." : undefined}
+      title={freshnessMessage(verdict) ?? undefined}
     >
       기준 {label}
       {stale ? " · 오래됨" : ""}
@@ -124,13 +126,53 @@ function toneDot(tone: string): string {
   return "bg-[var(--c-neutral)]";
 }
 
-export function ErpHistoryPanel() {
+export type LedgerChartLoadState = "pending" | "ready" | "failed";
+
+export interface LedgerChartLoadStatus {
+  state: LedgerChartLoadState;
+  asOf: string | null;
+}
+
+function latestDate(dates: Array<string | undefined>): string | null {
+  const dated = dates.filter((date): date is string => typeof date === "string" && date.length > 0);
+  return dated.length > 0 ? dated.sort().at(-1) ?? null : null;
+}
+
+export function ErpHistoryPanel({
+  bare = false,
+  onStatus,
+  cursorLabel = null,
+  onCursor,
+}: {
+  bare?: boolean;
+  onStatus?: (status: LedgerChartLoadStatus) => void;
+  /** Shared cursor date broadcast by the sibling chart (tab link). */
+  cursorLabel?: string | null;
+  /** Reports this chart's hovered label up to the shared cursor. */
+  onCursor?: (label: string | null) => void;
+}) {
   const [model, setModel] = useState<ErpHistoryModel | null>(null);
+  const onStatusRef = useRef(onStatus);
+  onStatusRef.current = onStatus;
 
   useEffect(() => {
     let cancelled = false;
     loadErpHistoryModel().then((next) => {
-      if (!cancelled) setModel(next);
+      if (cancelled) return;
+      setModel(next);
+      if (next) {
+        onStatusRef.current?.({
+          state: "ready",
+          asOf: latestDate([
+            next.erpFcfe.at(-1)?.date,
+            next.erpDdm.at(-1)?.date,
+            next.tbond.at(-1)?.date,
+            next.sp500Annual.at(-1)?.date,
+          ]),
+        });
+      } else {
+        onStatusRef.current?.({ state: "failed", asOf: null });
+      }
     });
     return () => {
       cancelled = true;
@@ -155,7 +197,8 @@ export function ErpHistoryPanel() {
 
   return (
     <MarketChartFrame
-      title="Damodaran ERP 역사 (vs 금리 · S&P)"
+      bare={bare}
+      title={bare ? undefined : "Damodaran ERP 역사 (vs 금리 · S&P)"}
       ariaLabel="Damodaran 내재 ERP, 10Y 금리, S&P 500 연말값 추이"
       series={series}
       type="line"
@@ -166,8 +209,10 @@ export function ErpHistoryPanel() {
         { id: "40Y", label: "40Y", count: 40 },
         { id: "MAX", label: "전체" },
       ]}
-      defaultRangeId="MAX"
+      defaultRangeId="20Y"
       footnote="Damodaran 내재 ERP · 좌축 %, S&P는 우축 · 토글로 비교"
+      cursorLabel={cursorLabel}
+      onHoverLabel={onCursor}
     />
   );
 }
@@ -215,13 +260,33 @@ export function AnnualReturnsChartPanel() {
   );
 }
 
-export function YardeniOverlayChartPanel() {
+export function YardeniOverlayChartPanel({
+  bare = false,
+  onStatus,
+  cursorLabel = null,
+  onCursor,
+}: {
+  bare?: boolean;
+  onStatus?: (status: LedgerChartLoadStatus) => void;
+  /** Shared cursor date broadcast by the sibling chart (tab link). */
+  cursorLabel?: string | null;
+  /** Reports this chart's hovered label up to the shared cursor. */
+  onCursor?: (label: string | null) => void;
+}) {
   const [model, setModel] = useState<YardeniOverlayModel | null>(null);
+  const onStatusRef = useRef(onStatus);
+  onStatusRef.current = onStatus;
 
   useEffect(() => {
     let cancelled = false;
     yardeniOverlayModel().then((next) => {
-      if (!cancelled) setModel(next);
+      if (cancelled) return;
+      setModel(next);
+      if (next) {
+        onStatusRef.current?.({ state: "ready", asOf: next.latest.date || null });
+      } else {
+        onStatusRef.current?.({ state: "failed", asOf: null });
+      }
     });
     return () => {
       cancelled = true;
@@ -248,6 +313,51 @@ export function YardeniOverlayChartPanel() {
 
   const verdict = yardeniVerdict(model?.latest.premiumPct ?? null);
 
+  const stats: Array<[string, string]> = [
+    ["S&P 500", fmtIndex(model?.latest.spx ?? null)],
+    ["적정가", fmtIndex(model?.latest.fairValue ?? null)],
+    ["프리미엄", fmtMetric(model?.latest.premiumPct ?? null, 1, "%")],
+    ["EPS", fmtMetric(model?.latest.eps ?? null, 2, "")],
+    ["Bond PER", fmtMetric(model?.latest.bondPer ?? null, 1, "x")],
+  ];
+
+  if (bare) {
+    return (
+      <div className="min-w-0">
+        <MarketChartFrame
+          bare
+          ariaLabel="Yardeni Bond PER 기반 S&P 500 적정가 비교"
+          series={series}
+          type="line"
+          formatValue={indexFormat}
+          ranges={[
+            { id: "1Y", label: "1Y", count: 52 },
+            { id: "5Y", label: "5Y", count: 260 },
+            { id: "20Y", label: "20Y", count: 1040 },
+            { id: "MAX", label: "전체" },
+          ]}
+          defaultRangeId="20Y"
+          footnote={`야데니 공개 파생 데이터 ${model?.meta.reachable_count.toLocaleString("ko-KR") ?? "—"}주 · 전체 기간은 1990년 이후`}
+          cursorLabel={cursorLabel}
+          onHoverLabel={onCursor}
+        />
+        <dl className="mt-2 grid min-w-0 grid-cols-2 gap-x-4 gap-y-1 sm:grid-cols-5">
+          {stats.map(([label, value]) => (
+            <div key={label} className="flex min-w-0 items-baseline justify-between gap-2 border-t border-[var(--fnk-neutral-100)] py-1">
+              <dt className="truncate text-[12px] font-semibold text-[var(--fnk-neutral-500)]">{label}</dt>
+              <dd className="shrink-0 text-[12px] font-semibold tabular-nums text-[var(--fnk-neutral-900)]">{value}</dd>
+            </div>
+          ))}
+        </dl>
+        {typeof model?.latest.premiumPercentile === "number" ? (
+          <p className="mt-1 text-[12px] font-semibold text-[var(--fnk-neutral-500)]">
+            1990년 이후 프리미엄 상위 {model.latest.premiumPercentile}% 수준
+          </p>
+        ) : null}
+      </div>
+    );
+  }
+
   return (
     <section className="min-w-0 rounded-[1.2rem] border border-[var(--c-line)] bg-[var(--c-panel)] p-4 shadow-[var(--sh-sm)]">
       <div className="mb-3 flex min-w-0 flex-wrap items-start justify-between gap-3">
@@ -255,12 +365,12 @@ export function YardeniOverlayChartPanel() {
           <h2 className="text-sm font-black tracking-tight text-[var(--c-ink)]">
             Yardeni Bond PER
           </h2>
-          <p className="mt-1 min-w-0 break-words text-[11px] font-semibold leading-5 text-[var(--c-ink-3)]">
+          <p className="mt-1 min-w-0 break-words text-[12px] font-semibold leading-5 text-[var(--c-ink-3)]">
             S&P 500과 Yardeni Bond PER 기반 적정가를 같은 축에서 비교합니다.
           </p>
         </div>
         <div className="shrink-0 text-right">
-          <p className={cx("text-xs font-black", verdict.tone)}>{verdict.label}</p>
+          <p className={cx("text-[12px] font-black", verdict.tone)}>{verdict.label}</p>
           <AsOfPill value={model?.latest.date} />
         </div>
       </div>
@@ -274,32 +384,29 @@ export function YardeniOverlayChartPanel() {
         ranges={[
           { id: "1Y", label: "1Y", count: 52 },
           { id: "5Y", label: "5Y", count: 260 },
+          { id: "20Y", label: "20Y", count: 1040 },
           { id: "MAX", label: "전체" },
         ]}
-        defaultRangeId="5Y"
+        defaultRangeId="20Y"
         footnote={`야데니 공개 파생 데이터 ${model?.meta.reachable_count.toLocaleString("ko-KR") ?? "—"}주 · 전체 기간은 1990년 이후`}
+        cursorLabel={cursorLabel}
+        onHoverLabel={onCursor}
       />
 
       <div className="mt-3 grid min-w-0 gap-2 sm:grid-cols-5">
-        {[
-          ["S&P 500", fmtIndex(model?.latest.spx ?? null)],
-          ["적정가", fmtIndex(model?.latest.fairValue ?? null)],
-          ["프리미엄", fmtMetric(model?.latest.premiumPct ?? null, 1, "%")],
-          ["EPS", fmtMetric(model?.latest.eps ?? null, 2, "")],
-          ["Bond PER", fmtMetric(model?.latest.bondPer ?? null, 1, "x")],
-        ].map(([label, value]) => (
+        {stats.map(([label, value]) => (
           <div key={label} className="min-w-0 rounded-xl border border-[var(--c-line)] bg-[var(--c-surface-2)] px-3 py-2">
-            <p className="truncate text-[9px] font-black uppercase tracking-[0.08em] text-[var(--c-ink-2)]">
+            <p className="truncate text-[12px] font-black uppercase tracking-[0.08em] text-[var(--c-ink-2)]">
               {label}
             </p>
-            <p className="orbitron mt-1 truncate text-xs font-black tabular-nums text-[var(--c-ink)]">
+            <p className="mt-1 truncate text-[12px] font-black tabular-nums text-[var(--c-ink)]">
               {value}
             </p>
           </div>
         ))}
       </div>
       {typeof model?.latest.premiumPercentile === "number" ? (
-        <p className="mt-3 text-[11px] font-bold text-[var(--c-ink-3)]">
+        <p className="mt-3 text-[12px] font-bold text-[var(--c-ink-3)]">
           1990년 이후 프리미엄 상위 {model.latest.premiumPercentile}% 수준
         </p>
       ) : null}
@@ -341,7 +448,7 @@ export function PmiActivityChartPanel() {
           <h2 className="text-sm font-black tracking-tight text-[var(--c-ink)]">
             PMI · ISM 활동 시계열
           </h2>
-          <p className="mt-1 min-w-0 break-words text-[11px] font-semibold leading-5 text-[var(--c-ink-3)]">
+          <p className="mt-1 min-w-0 break-words text-[12px] font-semibold leading-5 text-[var(--c-ink-3)]">
             PMI/ISM은 좌축, OECD CLI 미국은 우축으로 비교합니다.
           </p>
         </div>
@@ -376,10 +483,10 @@ export function PmiActivityChartPanel() {
           <div key={group.id} className="min-w-0 rounded-xl border border-[var(--c-line)] bg-[var(--c-surface-2)] p-3">
             <div className="flex min-w-0 flex-wrap items-start justify-between gap-2">
               <div className="min-w-0">
-                <p className="truncate text-[11px] font-black uppercase tracking-[0.08em] text-[var(--c-ink-3)]">
+                <p className="truncate text-[12px] font-black uppercase tracking-[0.08em] text-[var(--c-ink-3)]">
                   {group.label}
                 </p>
-                <p className="mt-1 text-[10px] font-bold uppercase tracking-[0.08em] text-[var(--c-ink-2)]">
+                <p className="mt-1 text-[12px] font-bold uppercase tracking-[0.08em] text-[var(--c-ink-2)]">
                   {group.period ?? group.releaseDate ?? "—"}
                 </p>
               </div>
@@ -391,18 +498,18 @@ export function PmiActivityChartPanel() {
               {group.components.map((component) => (
                 <div key={component.id} className="min-w-0 rounded-lg bg-[var(--c-panel)] px-2.5 py-2">
                   <div className="flex min-w-0 items-center justify-between gap-2">
-                    <span className="truncate text-[10px] font-black text-[var(--c-ink-3)]">
+                    <span className="truncate text-[12px] font-black text-[var(--c-ink-3)]">
                       {component.label}
                     </span>
                     <span className={cx("h-1.5 w-1.5 shrink-0 rounded-full", toneDot(component.tone))} />
                   </div>
                   <div className="mt-1 flex min-w-0 items-baseline justify-between gap-2">
-                    <span className="orbitron text-sm font-black tabular-nums text-[var(--c-ink)]">
+                    <span className="text-sm font-black tabular-nums text-[var(--c-ink)]">
                       {fmtMetric(component.value, 1)}
                     </span>
                     <span
                       className={cx(
-                        "text-[10px] font-black tabular-nums",
+                        "text-[12px] font-black tabular-nums",
                         component.delta1m === null
                           ? "text-[var(--c-ink-3)]"
                           : component.delta1m >= 0

@@ -128,10 +128,10 @@ class SliceC0LocalInputTest(unittest.TestCase):
             )
 
         self.assertEqual(prepared["schema_version"], "sec13f-local-prepared-input/v1")
-        self.assertEqual(prepared["investor_count"], 60)
-        self.assertEqual(prepared["filing_count"], 60)
-        self.assertEqual(len(prepared["investors_data"]), 60)
-        self.assertEqual(len(prepared["documents"]), 60)
+        self.assertEqual(prepared["investor_count"], 63)
+        self.assertEqual(prepared["filing_count"], 63)
+        self.assertEqual(len(prepared["investors_data"]), 63)
+        self.assertEqual(len(prepared["documents"]), 63)
         first = prepared["investors_data"][sorted(prepared["investors_data"])[0]]["filings"][0]
         self.assertEqual(first["holdings"][0]["ticker"], "AAA")
         self.assertEqual(first["holdings"][0]["market_value"], 100_000)

@@ -1,0 +1,114 @@
+{
+ "schema_version": "feno_rim_recovery_g2_criteria.v1",
+ "phase": "G2",
+ "gate": "permutation and placebo — is the ICC result a leak or a mechanical artifact?",
+ "research_only": true,
+ "frozen_before_any_result": true,
+ "mandate_section": "9",
+ "handler": "cc (Opus) — adjudicator. worker: DeepSeek.",
+
+ "why_every_statistic_carries_a_formula_here": "G0 and G1 each lost a gate condition to an underspecified phrase — 'as-reported shares_t' silently permitted a filing-dated share count, and 'within-sector rank result' admitted four constructions with opposite signs. Every reported quantity below is defined as an expression over named fields. If a formula here is ambiguous, stop and ask; do not choose.",
+
+ "inherited_state": {
+  "G0": "PASS (03f5bad73a) — market-cap basis settled",
+  "G1": "INCREMENTAL_SURVIVES (cfc2ea8748), evidence class SUPPORTED_NOT_VALIDATED; primary pooled b_icc 0.819823 on 1324 cells, 4 origins",
+  "frozen_inputs": "R2_GLS_ICC.json rows; r1-edgar-panel forecasts; r3-panel prices and dividends; r1-panel SIC"
+ },
+
+ "known_sample_limits_stated_before_running": {
+  "note": "Recorded here so no rule below references an origin count that the data cannot supply.",
+  "origins_total": [2019, 2020, 2021, 2022, 2023],
+  "momentum_available": "2020-2023 only; r3-panel closes begin 2019-05-01 and 12-1 momentum needs a close twelve months before the origin, so 2019 has 0 of 314 cells",
+  "pre_origin_12m_return_available": "2020-2023 only, same cause",
+  "pre_origin_24m_return_available": "2021-2023 only; a 2020 origin would need a 2018-06-30 close",
+  "consequence": "G2-B is evaluated on the origins where each lookback exists, and every rule below states its own denominator"
+ },
+
+ "definitions": {
+  "i": "a firm-origin cell from R2_GLS_ICC.json with icc_ri non-null",
+  "t": "origin year in {2019..2023}, anchored at t-06-30",
+  "ICC_i": "row.icc_ri",
+  "R_i": "((P_{t+3} + D)/P_t)^(1/3) - 1, r3-panel split-adjusted closes and r3-panel dividends, dividends summed over (t, t+3]",
+  "BP_i": "row.B0 / row.price",
+  "SIZE_i": "log(row.mcap)",
+  "MOM_i": "P_{t-30d}/P_{t-365d} - 1",
+  "SEC_i": "first two digits of the SIC in data/edgar/r1-panel/sic/{sym}.json",
+  "rf_t": "DGS10 on or before t-06-30, divided by 100",
+  "EXC_i": "R_i - rf_t"
+ },
+
+ "G2_A_stratified_permutation": {
+  "purpose": "Is the observed ICC spread larger than what random assignment inside comparable firms produces?",
+  "strata_are_run_separately_not_crossed": "Crossing B/P tercile x size tercile x 62 sectors leaves most cells empty at ~330 firms per origin. Run three separate stratifications and report all three. Do not cross them, and do not substitute a coarser sector grouping.",
+  "stratifications": [
+   "S_bp: within-origin B/P terciles, cut at the 33.33 and 66.67 percentiles of BP",
+   "S_size: within-origin SIZE terciles, same cut rule",
+   "S_sec: within-origin SEC groups holding at least 6 firms; groups below 6 are excluded from this stratification only, and the excluded cell count is reported per origin"
+  ],
+  "test_statistic": {
+   "name": "T_t",
+   "formula": "For each stratum g at origin t: order its cells by ICC; H_g = the top ceil(n_g/2) cells, L_g = the remaining floor(n_g/2). spread_g = mean(EXC over H_g) - mean(EXC over L_g). T_t = the count-weighted mean of spread_g over strata with n_g >= 4, weights n_g.",
+   "note": "EXC not R, so a common risk-free level cannot enter the spread"
+  },
+  "null": "Within each stratum independently, permute the ICC values across cells while holding EXC, BP, SIZE and SEC fixed. Recompute T_t. This preserves the stratum composition and destroys only the ICC-to-return pairing.",
+  "reps": 10000,
+  "seed": 20260808,
+  "rng": "Deterministic and stated in the artifact: a linear congruential generator with multiplier 1664525, increment 1013904223, modulus 2^32, seeded per (origin, stratification) as seed + 1000*origin_index + stratification_index. Any generator is acceptable provided the artifact records it exactly and a rerun reproduces the p-values.",
+  "reported": [
+   "T_t observed, per origin per stratification",
+   "empirical one-sided p_t = (1 + #{T_null >= T_obs}) / (reps + 1)",
+   "the null mean and the 2.5th/97.5th percentiles",
+   "the count of strata used and cells excluded"
+  ]
+ },
+
+ "G2_B_negative_control": {
+  "purpose": "ICC computed at t must not explain returns that already happened before t. If it does, an input is leaking.",
+  "dependent_variables": [
+   "PRE12_i = P_{t}/P_{t-365d} - 1",
+   "PRE24_i = P_{t}/P_{t-730d} - 1"
+  ],
+  "specification": "PRE ~ const + BP + SIZE + MOM + ICC, origin fixed effects, origin-clustered SEs. MOM is included precisely because 12-1 momentum overlaps PRE12 by construction; the ICC coefficient after that control is the quantity of interest.",
+  "samples": {"PRE12": "origins 2020-2023", "PRE24": "origins 2021-2023"},
+  "reported": ["ICC coefficient and clustered t for both dependent variables", "per-origin ICC coefficients", "the same with MOM removed, to show how much of any effect momentum was absorbing", "partial R-squared of ICC in each specification"],
+  "interpretation_rule_fixed_now": "A positive and significant ICC coefficient on past returns is a leakage signal. A coefficient whose absolute t is below 2, or whose partial R-squared is below 0.01, is not. Mechanical association through book and price is expected and is not by itself leakage; the artifact must state which channel it attributes any association to."
+ },
+
+ "G2_C_shuffled_price_placebo": {
+  "purpose": "The ICC is solved from price. If the solve itself manufactures a return relation, a fake price will produce one too.",
+  "construction": "Within each origin, permute P across firms. Recompute the ICC for every cell using the permuted price and that cell's own B0, forecasts, payout, target ROE and horizon. Every other regressor keeps its TRUE value: BP, SIZE and MOM are not recomputed from the permuted price. Only the ICC is fake.",
+  "regression": "R ~ const + BP + SIZE + MOM + ICC_shuffled, origin fixed effects, origin-clustered SEs, on the 1324-cell momentum sample",
+  "reps": 200,
+  "reps_rationale": "Each rep re-solves roughly 1,300 root-finding problems. 200 reps resolve a two-sided p to about 0.005, which is far finer than this gate needs, and the cost is bounded. If the true coefficient falls inside the placebo distribution, no larger rep count will rescue it.",
+  "seed": 20260808,
+  "reported": [
+   "the placebo distribution of b_icc: mean, sd, 2.5th, 50th, 97.5th percentiles",
+   "the observed G1 coefficient 0.819823 placed in that distribution",
+   "the fraction of reps whose b_icc exceeds the observed value",
+   "the count of non-convergent solves per rep and how they were handled"
+  ],
+  "non_convergence_rule": "A cell whose permuted-price solve does not converge is dropped from that rep and counted. If more than 5% of cells drop in any rep, report it as a stop condition rather than proceeding."
+ },
+
+ "verdict_rules": {
+  "G2_PASS": "ALL of: (a) G2-A observed T_t exceeds the null at p <= 0.05 in at least 3 of 4 origins for the B/P stratification AND at least 3 of 4 for the size stratification; (b) G2-B shows no leakage signal by the fixed interpretation rule above, on both PRE12 and PRE24; (c) G2-C places the observed coefficient above the 97.5th percentile of the placebo distribution.",
+  "G2_LEAKAGE_OR_MECHANICAL_ARTIFACT": "ANY of: G2-B shows a leakage signal; G2-C places the observed coefficient inside the central 95% of the placebo distribution; G2-A fails in both the B/P and size stratifications.",
+  "G2_INCONCLUSIVE": "anything else, including a split between the B/P and size stratifications, or a stop condition in G2-C",
+  "denominator_note": "The 3-of-4 counts are written against 4 origins because the momentum sample holds 4. The sector stratification is reported but does not enter any threshold, because sector groups are thin and G1 already showed that sector constructions are sensitive to specification."
+ },
+
+ "prohibitions": [
+  "no post-result change to any threshold, statistic definition, stratification, rep count, or seed",
+  "no substitution of a coarser grouping to make a stratum viable",
+  "no change to the GLS equation, forecast equations, ROE fade, terminal horizon, payout policy, industry target, or solver",
+  "no selection of the best-performing stratification",
+  "no network acquisition",
+  "no publication or promotion; the public surface remains quarantined"
+ ],
+
+ "result_paths_blocked_until_this_file_is_committed": [
+  "data/computed/feno-rim-recovery/RIM_ICC_G2_PERMUTATION_PLACEBO.json"
+ ],
+
+ "frozen_at_utc": "2026-08-08T00:32:00Z"
+}

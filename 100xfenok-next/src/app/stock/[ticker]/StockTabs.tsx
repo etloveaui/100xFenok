@@ -1,7 +1,9 @@
 "use client";
 
 import { useState } from "react";
+import { fetchJsonOrNull } from "@/lib/client/data-fetch";
 import MetricHelp from "@/components/MetricHelp";
+import { Panel, PanelHeader, Stat, StatStrip } from "@/components/ui";
 import {
   formatCompactMoney,
   formatMoney,
@@ -9,6 +11,7 @@ import {
   formatSignedPercent,
   normalizeCurrency,
 } from "@/lib/format";
+import { readPriceTargets } from "@/lib/stock/price-target";
 
 export { formatCompactMoney, formatMoney };
 
@@ -78,16 +81,11 @@ type BenchDoc = {
   industries?: Record<string, Omit<IndustryBench, "name">>;
 };
 
-let benchCache: BenchDoc | null = null;
-let benchPending: Promise<BenchDoc | null> | null = null;
 export function loadIndustryBenchmarks(): Promise<BenchDoc | null> {
-  if (benchCache) return Promise.resolve(benchCache);
-  if (benchPending) return benchPending;
-  benchPending = fetch("/data/damodaran/industry_benchmarks.json")
-    .then((r) => (r.ok ? r.json() : null))
-    .then((d) => { benchCache = d; return d; })
-    .catch(() => { benchPending = null; return null; });
-  return benchPending;
+  // Through the shared layer: successes are cached by the layer; a failure is
+  // never cached, so it retries instead of sticking (the old pending promise
+  // used to hold a resolved http-error null for the whole visit).
+  return fetchJsonOrNull<BenchDoc>("/data/damodaran/industry_benchmarks.json");
 }
 
 export function resolveIndustryBench(doc: BenchDoc | null, yfIndustry: string | undefined | null): IndustryBench | null {
@@ -154,12 +152,12 @@ function FinancialsTab({ data }: { data: YfData }) {
   ) {
     const sourceDates = Object.keys(source ?? {}).sort();
     const revDates = [...sourceDates].reverse();
-    if (!source || revDates.length === 0) return <p className="text-xs text-slate-500">데이터 없음</p>;
+    if (!source || revDates.length === 0) return <p className="text-[12px] text-slate-500">데이터 없음</p>;
     return (
       <div className="-mx-1 overflow-x-auto px-1">
-        <table data-stock-financial-table="yf" className="w-full min-w-[500px] text-xs">
+        <table data-stock-financial-table="yf" className="w-full min-w-[500px] text-[12px]">
           <thead>
-            <tr className="border-b border-slate-200 text-[10px] font-black uppercase tracking-[0.06em] text-slate-500">
+            <tr className="border-b border-slate-200 text-[12px] font-black uppercase tracking-[0.06em] text-slate-500">
               <th className="sticky left-0 z-20 min-w-[5.5rem] bg-[var(--c-panel)] px-2 py-1.5 text-left shadow-[2px_0_0_var(--c-line-2)]" />
               {revDates.map((d) => (
                 <th key={d} className="px-2 py-1.5 text-right">{d.slice(0, 7)}</th>
@@ -173,9 +171,9 @@ function FinancialsTab({ data }: { data: YfData }) {
               if (!hasData) return null;
               return (
                 <tr key={eng} className="border-b border-slate-100 last:border-b-0">
-                  <td className="sticky left-0 z-10 min-w-[5.5rem] bg-[var(--c-panel)] px-2 py-1.5 text-[10px] font-bold text-slate-700 shadow-[2px_0_0_var(--c-line-2)]">{ko}</td>
+                  <td className="sticky left-0 z-10 min-w-[5.5rem] bg-[var(--c-panel)] px-2 py-1.5 text-[12px] font-bold text-slate-700 shadow-[2px_0_0_var(--c-line-2)]">{ko}</td>
                   {vals.map((v, i) => (
-                    <td key={i} className="px-2 py-1.5 text-right orbitron tabular-nums text-xs font-semibold text-slate-900">
+                    <td key={i} className="px-2 py-1.5 text-right tabular-nums text-[12px] font-semibold text-slate-900">
                       {formatFn(v, eng)}
                     </td>
                   ))}
@@ -247,17 +245,15 @@ function IndustryCompareBlock({ info, industry }: { info: Record<string, any>; i
   if (rows.length === 0) return null;
   const fmt = (v: number, frac: boolean) => (frac ? `${(v * 100).toFixed(1)}%` : v.toFixed(1));
   return (
-    <div className="rounded-lg border border-slate-100 bg-slate-50/60 p-3">
-      <p className="text-[10px] font-black uppercase tracking-[0.08em] text-slate-500">
-        산업 대비 — {industry.name}{industry.num_firms ? ` (${industry.num_firms}개사, 다모다란)` : " (다모다란)"}
-      </p>
-      <div className="mt-2 grid gap-1.5 sm:grid-cols-2 lg:grid-cols-3">
+    <Panel>
+      <PanelHeader eyebrow="Industry Compare · 다모다란" title={`산업 대비 — ${industry.name}${industry.num_firms ? ` (${industry.num_firms}개사)` : ""}`} />
+      <div className="grid gap-1.5 px-4 py-2 sm:grid-cols-2 lg:grid-cols-3">
         {rows.map((r) => {
           const better = r.lowerBetter ? (r.stock as number) < (r.ind as number) : (r.stock as number) > (r.ind as number);
           return (
-            <div key={r.label} className="flex items-center justify-between rounded-lg border border-slate-100 bg-white px-3 py-2">
-              <MetricHelp label={r.label} className="text-[10px] font-medium text-slate-500" />
-              <span className="orbitron tabular-nums text-[11px] font-black">
+            <div key={r.label} className="flex items-center justify-between rounded-[8px] border border-slate-200 bg-white px-3 py-2">
+              <MetricHelp label={r.label} className="text-[12px] font-medium text-slate-500" />
+              <span className="tabular-nums text-[12px] font-black">
                 <span className={better ? "text-emerald-700" : "text-slate-900"}>{fmt(r.stock as number, r.isFraction)}</span>
                 <span className="mx-1 font-semibold text-slate-300">/</span>
                 <span className="font-bold text-slate-500">산업 {fmt(r.ind as number, r.isFraction)}</span>
@@ -266,7 +262,7 @@ function IndustryCompareBlock({ info, industry }: { info: Record<string, any>; i
           );
         })}
       </div>
-    </div>
+    </Panel>
   );
 }
 
@@ -374,19 +370,16 @@ function OwnershipTab({ data }: { data: YfData }) {
       {/* Major holders summary */}
       <div>
         <h3 className="mb-2 text-[12px] font-black uppercase tracking-[0.08em] text-slate-500">주요 보유 현황</h3>
-        <div className="grid gap-3 sm:grid-cols-4">
+        <StatStrip className="flex-wrap">
           {[
             ["기관 보유율", fmtPct(mh.institutionsPercentHeld, true)],
             ["유통주 기관 보유", fmtPct(mh.institutionsFloatPercentHeld, true)],
             ["내부자 보유율", fmtPct(mh.insidersPercentHeld, true)],
             ["기관 수", finiteNumber(mh.institutionsCount)?.toLocaleString() ?? "—"],
           ].map(([label, value]) => (
-            <div key={label as string} className="rounded-xl border border-slate-200 bg-white p-3 text-center">
-              <p className="text-[10px] font-bold text-slate-500">{label as string}</p>
-              <p className="orbitron mt-1 text-lg font-black text-slate-900">{value}</p>
-            </div>
+            <div key={label as string} className="min-w-[22%] flex-1"><Stat label={label as string} value={value} /></div>
           ))}
-        </div>
+        </StatStrip>
       </div>
 
       {/* Institutional holders table */}
@@ -394,10 +387,10 @@ function OwnershipTab({ data }: { data: YfData }) {
         <div>
           <h3 className="mb-2 text-[12px] font-black uppercase tracking-[0.08em] text-slate-500">기관 보유 TOP 10</h3>
           <div className="-mx-1 overflow-x-auto px-1">
-            <table className="w-full min-w-[640px] text-xs">
+            <table className="w-full min-w-[560px] text-[12px]">
               <thead>
-                <tr className="border-b border-slate-200 text-[10px] font-black uppercase tracking-[0.06em] text-slate-500">
-                  <th className="px-2 py-1.5 text-left">기관명</th>
+                <tr className="border-b border-slate-200 text-[12px] font-black uppercase tracking-[0.06em] text-slate-500">
+                  <th className="sticky left-0 z-20 bg-white px-2 py-1.5 text-left shadow-[2px_0_0_var(--c-line-2)]">기관명</th>
                   <th className="px-2 py-1.5 text-right">지분율</th>
                   <th className="px-2 py-1.5 text-right">주식수</th>
                   <th className="px-2 py-1.5 text-right">평가액</th>
@@ -415,14 +408,14 @@ function OwnershipTab({ data }: { data: YfData }) {
                   const pctChange = pctChangeRaw !== null ? pctChangeRaw * 100 : null;
                   return (
                     <tr key={i} className="border-b border-slate-100 last:border-b-0">
-                      <td className="px-2 py-1.5 max-w-[180px] truncate text-[10px] font-bold text-slate-700">{h.Holder}</td>
-                      <td className="px-2 py-1.5 text-right orbitron tabular-nums text-xs font-semibold">{pctHeld !== null ? `${(pctHeld * 100).toFixed(2)}%` : "—"}</td>
-                      <td className="px-2 py-1.5 text-right orbitron tabular-nums text-xs font-semibold text-slate-600">{shares !== null ? shares.toLocaleString() : "—"}</td>
-                      <td className="px-2 py-1.5 text-right orbitron tabular-nums text-xs font-semibold text-slate-600">{value !== null ? formatCompactMoney(value, currency) : "—"}</td>
-                      <td className={`px-2 py-1.5 text-right orbitron tabular-nums text-xs font-bold ${pctChange != null ? (pctChange >= 0 ? "text-emerald-700" : "text-rose-700") : "text-slate-500"}`}>
+                      <td className="sticky left-0 z-10 max-w-[180px] truncate bg-white px-2 py-1.5 text-[12px] font-bold text-slate-700 shadow-[2px_0_0_var(--c-line-2)]">{h.Holder}</td>
+                      <td className="px-2 py-1.5 text-right tabular-nums text-[12px] font-semibold">{pctHeld !== null ? `${(pctHeld * 100).toFixed(2)}%` : "—"}</td>
+                      <td className="px-2 py-1.5 text-right tabular-nums text-[12px] font-semibold text-slate-600">{shares !== null ? shares.toLocaleString() : "—"}</td>
+                      <td className="px-2 py-1.5 text-right tabular-nums text-[12px] font-semibold text-slate-600">{value !== null ? formatCompactMoney(value, currency) : "—"}</td>
+                      <td className={`px-2 py-1.5 text-right  tabular-nums text-[12px] font-bold ${pctChange != null ? (pctChange >= 0 ? "text-emerald-700" : "text-rose-700") : "text-slate-500"}`}>
                         {pctChange != null ? `${pctChange > 0 ? "+" : ""}${pctChange.toFixed(1)}%` : "—"}
                       </td>
-                      <td className="px-2 py-1.5 text-right orbitron tabular-nums text-[10px] font-semibold text-slate-500">{h["Date Reported"] ?? "—"}</td>
+                      <td className="px-2 py-1.5 text-right tabular-nums text-[12px] font-semibold text-slate-500">{h["Date Reported"] ?? "—"}</td>
                     </tr>
                   );
                 })}
@@ -439,18 +432,19 @@ function OwnershipTab({ data }: { data: YfData }) {
 // Estimates tab
 // ---------------------------------------------------------------------------
 
-function EstimatesTab({ data }: { data: YfData }) {
+function EstimatesTab({ data, quotePrice }: { data: YfData; quotePrice?: number | null }) {
   const infoCurrency = normalizeCurrency(data.info?.currency ?? "USD");
-  const targets = data.analyst_price_targets ?? {};
   const earnings = asArray(data.earnings_estimate);
   const revenue = asArray(data.revenue_estimate);
   const recs = asArray(data.recommendations);
   const lastRec = recs.length > 0 ? recs[recs.length - 1] : null;
-  const targetLow = finiteNumber(targets.low);
-  const targetMean = finiteNumber(targets.mean);
-  const targetHigh = finiteNumber(targets.high);
-  const targetCurrent = finiteNumber(targets.current);
-  const targetMedian = finiteNumber(targets.median);
+  const {
+    low: targetLow,
+    mean: targetMean,
+    high: targetHigh,
+    current: targetCurrent,
+    median: targetMedian,
+  } = readPriceTargets(data.analyst_price_targets, quotePrice ?? finiteNumber(data.info?.currentPrice));
   const targetRangeValid = targetLow !== null && targetHigh !== null && targetCurrent !== null && targetHigh > targetLow;
   const targetPct = targetRangeValid ? clamp(((targetCurrent - targetLow) / (targetHigh - targetLow)) * 100) : null;
 
@@ -460,10 +454,10 @@ function EstimatesTab({ data }: { data: YfData }) {
     <div className="space-y-5">
       {/* Analyst price targets banner */}
       {targetCurrent !== null ? (
-        <div>
-          <h3 className="mb-2 text-[12px] font-black uppercase tracking-[0.08em] text-slate-500">애널리스트 목표가</h3>
-          <div className="rounded-xl border border-slate-200 bg-white p-4">
-            <div className="flex flex-wrap items-center justify-between gap-x-3 gap-y-1 text-[10px] font-bold text-slate-500">
+        <Panel>
+          <PanelHeader eyebrow="Analyst Price Targets" title="애널리스트 목표가" />
+          <div className="px-4 py-3">
+            <div className="flex flex-wrap items-center justify-between gap-x-3 gap-y-1 text-[12px] font-bold text-slate-500">
               <span>최저 {formatMoney(targetLow, infoCurrency)}</span>
               <span>평균 {formatMoney(targetMean, infoCurrency)}</span>
               <span>최고 {formatMoney(targetHigh, infoCurrency)}</span>
@@ -479,11 +473,11 @@ function EstimatesTab({ data }: { data: YfData }) {
                 </>
               ) : null}
             </div>
-            <p className="mt-1 text-center text-[10px] font-bold text-slate-500">
+            <p className="mt-1 text-center text-[12px] font-bold text-slate-500">
               현재가 {formatMoney(targetCurrent, infoCurrency)} · 중간값 {formatMoney(targetMedian, infoCurrency)}
             </p>
           </div>
-        </div>
+        </Panel>
       ) : null}
 
       {/* Earnings & Revenue estimate table */}
@@ -492,10 +486,10 @@ function EstimatesTab({ data }: { data: YfData }) {
           <div>
             <h3 className="mb-2 text-[12px] font-black uppercase tracking-[0.08em] text-slate-500">EPS 추정치</h3>
             <div className="-mx-1 overflow-x-auto px-1">
-              <table className="w-full min-w-[560px] text-xs">
+              <table className="w-full min-w-[560px] text-[12px]">
                 <thead>
-                  <tr className="border-b border-slate-200 text-[10px] font-black uppercase tracking-[0.06em] text-slate-500">
-                    <th className="px-2 py-1.5 text-left" />
+                  <tr className="border-b border-slate-200 text-[12px] font-black uppercase tracking-[0.06em] text-slate-500">
+                    <th className="sticky left-0 z-20 bg-white px-2 py-1.5 text-left shadow-[2px_0_0_var(--c-line-2)]" />
                     <th className="px-2 py-1.5 text-right">평균</th>
                     <th className="px-2 py-1.5 text-right">최저</th>
                     <th className="px-2 py-1.5 text-right">최고</th>
@@ -510,13 +504,13 @@ function EstimatesTab({ data }: { data: YfData }) {
                     const rowCurrency = normalizeCurrency(e.currency ?? infoCurrency);
                     return (
                       <tr key={e._index} className="border-b border-slate-100 last:border-b-0">
-                        <td className="px-2 py-1.5 text-[10px] font-bold text-slate-700">{indexLabels[e._index] ?? e._index}</td>
-                        <td className="px-2 py-1.5 text-right orbitron tabular-nums text-xs font-semibold">{formatMoney(e.avg, rowCurrency)}</td>
-                        <td className="px-2 py-1.5 text-right orbitron tabular-nums text-xs text-slate-500">{formatMoney(e.low, rowCurrency)}</td>
-                        <td className="px-2 py-1.5 text-right orbitron tabular-nums text-xs text-slate-500">{formatMoney(e.high, rowCurrency)}</td>
-                        <td className="px-2 py-1.5 text-right orbitron tabular-nums text-xs text-slate-500">{formatMoney(e.yearAgoEps, rowCurrency)}</td>
-                        <td className="px-2 py-1.5 text-right orbitron tabular-nums text-xs text-slate-500">{finiteNumber(e.numberOfAnalysts)?.toLocaleString() ?? "—"}</td>
-                        <td className={`px-2 py-1.5 text-right orbitron tabular-nums text-xs font-bold ${growth !== null ? (growth >= 0 ? "text-emerald-700" : "text-rose-700") : ""}`}>
+                        <td className="sticky left-0 z-10 bg-white px-2 py-1.5 text-[12px] font-bold text-slate-700 shadow-[2px_0_0_var(--c-line-2)]">{indexLabels[e._index] ?? e._index}</td>
+                        <td className="px-2 py-1.5 text-right tabular-nums text-[12px] font-semibold">{formatMoney(e.avg, rowCurrency)}</td>
+                        <td className="px-2 py-1.5 text-right tabular-nums text-[12px] text-slate-500">{formatMoney(e.low, rowCurrency)}</td>
+                        <td className="px-2 py-1.5 text-right tabular-nums text-[12px] text-slate-500">{formatMoney(e.high, rowCurrency)}</td>
+                        <td className="px-2 py-1.5 text-right tabular-nums text-[12px] text-slate-500">{formatMoney(e.yearAgoEps, rowCurrency)}</td>
+                        <td className="px-2 py-1.5 text-right tabular-nums text-[12px] text-slate-500">{finiteNumber(e.numberOfAnalysts)?.toLocaleString() ?? "—"}</td>
+                        <td className={`px-2 py-1.5 text-right  tabular-nums text-[12px] font-bold ${growth !== null ? (growth >= 0 ? "text-emerald-700" : "text-rose-700") : ""}`}>
                           {fmtSignedPct(growth, true)}
                         </td>
                       </tr>
@@ -532,10 +526,10 @@ function EstimatesTab({ data }: { data: YfData }) {
           <div>
             <h3 className="mb-2 text-[12px] font-black uppercase tracking-[0.08em] text-slate-500">매출 추정치</h3>
             <div className="-mx-1 overflow-x-auto px-1">
-              <table className="w-full min-w-[580px] text-xs">
+              <table className="w-full min-w-[580px] text-[12px]">
                 <thead>
-                  <tr className="border-b border-slate-200 text-[10px] font-black uppercase tracking-[0.06em] text-slate-500">
-                    <th className="px-2 py-1.5 text-left" />
+                  <tr className="border-b border-slate-200 text-[12px] font-black uppercase tracking-[0.06em] text-slate-500">
+                    <th className="sticky left-0 z-20 bg-white px-2 py-1.5 text-left shadow-[2px_0_0_var(--c-line-2)]" />
                     <th className="px-2 py-1.5 text-right">평균</th>
                     <th className="px-2 py-1.5 text-right">최저</th>
                     <th className="px-2 py-1.5 text-right">최고</th>
@@ -550,13 +544,13 @@ function EstimatesTab({ data }: { data: YfData }) {
                     const rowCurrency = normalizeCurrency(r.currency ?? infoCurrency);
                     return (
                       <tr key={r._index} className="border-b border-slate-100 last:border-b-0">
-                        <td className="px-2 py-1.5 text-[10px] font-bold text-slate-700">{indexLabels[r._index] ?? r._index}</td>
-                        <td className="px-2 py-1.5 text-right orbitron tabular-nums text-xs font-semibold">{formatCompactMoney(r.avg, rowCurrency)}</td>
-                        <td className="px-2 py-1.5 text-right orbitron tabular-nums text-xs text-slate-500">{formatCompactMoney(r.low, rowCurrency)}</td>
-                        <td className="px-2 py-1.5 text-right orbitron tabular-nums text-xs text-slate-500">{formatCompactMoney(r.high, rowCurrency)}</td>
-                        <td className="px-2 py-1.5 text-right orbitron tabular-nums text-xs text-slate-500">{formatCompactMoney(r.yearAgoRevenue, rowCurrency)}</td>
-                        <td className="px-2 py-1.5 text-right orbitron tabular-nums text-xs text-slate-500">{finiteNumber(r.numberOfAnalysts)?.toLocaleString() ?? "—"}</td>
-                        <td className={`px-2 py-1.5 text-right orbitron tabular-nums text-xs font-bold ${growth !== null ? (growth >= 0 ? "text-emerald-700" : "text-rose-700") : ""}`}>
+                        <td className="sticky left-0 z-10 bg-white px-2 py-1.5 text-[12px] font-bold text-slate-700 shadow-[2px_0_0_var(--c-line-2)]">{indexLabels[r._index] ?? r._index}</td>
+                        <td className="px-2 py-1.5 text-right tabular-nums text-[12px] font-semibold">{formatCompactMoney(r.avg, rowCurrency)}</td>
+                        <td className="px-2 py-1.5 text-right tabular-nums text-[12px] text-slate-500">{formatCompactMoney(r.low, rowCurrency)}</td>
+                        <td className="px-2 py-1.5 text-right tabular-nums text-[12px] text-slate-500">{formatCompactMoney(r.high, rowCurrency)}</td>
+                        <td className="px-2 py-1.5 text-right tabular-nums text-[12px] text-slate-500">{formatCompactMoney(r.yearAgoRevenue, rowCurrency)}</td>
+                        <td className="px-2 py-1.5 text-right tabular-nums text-[12px] text-slate-500">{finiteNumber(r.numberOfAnalysts)?.toLocaleString() ?? "—"}</td>
+                        <td className={`px-2 py-1.5 text-right  tabular-nums text-[12px] font-bold ${growth !== null ? (growth >= 0 ? "text-emerald-700" : "text-rose-700") : ""}`}>
                           {fmtSignedPct(growth, true)}
                         </td>
                       </tr>
@@ -571,9 +565,9 @@ function EstimatesTab({ data }: { data: YfData }) {
 
       {/* Recommendations bar */}
       {lastRec ? (
-        <div>
-          <h3 className="mb-2 text-[12px] font-black uppercase tracking-[0.08em] text-slate-500">애널리스트 추천</h3>
-          <div className="rounded-xl border border-slate-200 bg-white p-4">
+        <Panel>
+          <PanelHeader eyebrow="Analyst Recommendations" title="애널리스트 추천" />
+          <div className="px-4 py-3">
             <div className="flex h-6 overflow-hidden rounded-full">
               {[
                 ["strongBuy", "bg-emerald-600"],
@@ -587,13 +581,13 @@ function EstimatesTab({ data }: { data: YfData }) {
                 const pct = total > 0 ? (count / total) * 100 : 0;
                 if (pct === 0) return null;
                 return (
-                  <div key={key} className={`${cls} flex items-center justify-center text-[10px] font-bold text-white`} style={{ width: `${pct}%` }}>
+                  <div key={key} className={`${cls} flex items-center justify-center text-[12px] font-bold text-white`} style={{ width: `${pct}%` }}>
                     {pct > 10 ? count : ""}
                   </div>
                 );
               })}
             </div>
-            <div className="mt-2 flex justify-between text-[9px] font-bold text-slate-500">
+            <div className="mt-2 flex justify-between text-[12px] font-bold text-slate-500">
               <span>적극매수</span>
               <span>매수</span>
               <span>보유</span>
@@ -601,7 +595,7 @@ function EstimatesTab({ data }: { data: YfData }) {
               <span>적극매도</span>
             </div>
           </div>
-        </div>
+        </Panel>
       ) : null}
     </div>
   );
@@ -623,22 +617,24 @@ export function FiftyTwoWeekBar({ info }: { info: Record<string, any> }) {
   const fmtBound = (v: number) => (Math.abs(v) >= 100_000 ? formatCompactMoney(v, currency) : formatMoney(v, currency, 0));
 
   return (
-    <div className="rounded-lg border border-slate-200 bg-white p-3">
-      <p className="text-[10px] font-bold text-slate-500 mb-1">52주 범위</p>
-      <div className="flex items-center gap-2">
-        <span className="max-w-[5.5rem] truncate text-[10px] orbitron font-semibold text-slate-500">{fmtBound(low)}</span>
-        <div className="relative h-2 flex-1 rounded-full bg-slate-100">
-          <div
-            className="absolute top-0 h-2 w-2 rounded-full bg-brand-interactive"
-            style={{ left: `${pct}%`, transform: "translateX(-50%)" }}
-          />
+    <Panel>
+      <PanelHeader eyebrow="Range" title="52주 범위" />
+      <div className="px-4 py-3">
+        <div className="flex items-center gap-2">
+          <span className="max-w-[5.5rem] truncate text-[12px] font-semibold text-slate-500">{fmtBound(low)}</span>
+          <div className="relative h-2 flex-1 rounded-full bg-slate-100">
+            <div
+              className="absolute top-0 h-2 w-2 rounded-full bg-brand-interactive"
+              style={{ left: `${pct}%`, transform: "translateX(-50%)" }}
+            />
+          </div>
+          <span className="max-w-[5.5rem] truncate text-[12px] font-semibold text-slate-500">{fmtBound(high)}</span>
         </div>
-        <span className="max-w-[5.5rem] truncate text-[10px] orbitron font-semibold text-slate-500">{fmtBound(high)}</span>
+        <p className="mt-1 text-center text-[12px] font-bold text-slate-600">
+          52주 범위 {pct >= 50 ? "상단" : "하단"} {Math.round(pct >= 50 ? pct : 100 - pct)}% 구간
+        </p>
       </div>
-      <p className="mt-1 text-center text-[10px] font-bold text-slate-600">
-        52주 범위 {pct >= 50 ? "상단" : "하단"} {Math.round(pct >= 50 ? pct : 100 - pct)}% 구간
-      </p>
-    </div>
+    </Panel>
   );
 }
 
@@ -772,70 +768,72 @@ export function SummaryScoreCard({ data, perBand, industry, onAreaSelect }: {
   const verdict = ratio >= 0.75 ? "우량 신호 우세" : ratio >= 0.5 ? "혼조 — 강점·약점 공존" : "주의 신호 우세";
 
   return (
-    <div className="rounded-lg border border-[var(--c-line)] bg-[var(--c-panel)] p-3">
-      <button
-        type="button"
-        onClick={() => setOpen((v) => !v)}
-        className="flex w-full items-center justify-between gap-3 text-left"
-        aria-expanded={open}
-      >
-        <div>
-          <p className="text-[10px] font-bold text-slate-500">투자 체크 요약</p>
-          <p className="text-sm font-black text-slate-900">
-            {score}/{total} 통과 · <span style={{ color: scoreColor(ratio) }}>{verdict}</span>
-          </p>
-        </div>
-        <span className="text-[10px] font-bold text-slate-500">{open ? "접기 ▲" : "상세 ▼"}</span>
-      </button>
+    <Panel>
+      <div className="px-4 py-3">
+        <button
+          type="button"
+          onClick={() => setOpen((v) => !v)}
+          className="flex w-full items-center justify-between gap-3 text-left"
+          aria-expanded={open}
+        >
+          <div>
+            <p className="text-[12px] font-bold text-slate-500">투자 체크 요약</p>
+            <p className="text-sm font-black text-slate-900">
+              {score}/{total} 통과 · <span style={{ color: scoreColor(ratio) }}>{verdict}</span>
+            </p>
+          </div>
+          <span className="text-[12px] font-bold text-slate-500">{open ? "접기 ▲" : "상세 ▼"}</span>
+        </button>
 
-      <div className="mt-2 grid gap-1.5 sm:grid-cols-5">
-        {areas.map((a) => {
-          const r = a.total > 0 ? a.score / a.total : 0;
-          const target = SUMMARY_SCORE_AREA_TARGETS[a.area];
-          return (
-            <button
-              key={a.area}
-              type="button"
-              data-stock-summary-axis-link
-              data-stock-summary-axis={a.area}
-              data-stock-summary-axis-tab={target?.tab ?? ""}
-              data-stock-summary-axis-hash={target?.hash ?? ""}
-              onClick={() => target ? onAreaSelect?.(target.tab, target.hash) : undefined}
-              className="min-h-11 rounded-md border border-slate-100 bg-slate-50 px-2 py-1.5 text-left transition hover:border-brand-interactive hover:bg-white"
-              aria-label={`${a.area} 체크 ${a.score}/${a.total}, ${target ? `${target.label} 섹션으로 이동` : "상세 확인"}`}
-            >
-              <div className="flex items-baseline justify-between gap-2">
-                <span className="text-[10px] font-bold text-slate-600">{a.area}</span>
-                <span className="orbitron tabular-nums text-[10px] font-black text-slate-700">{a.score}/{a.total}</span>
+        <div className="mt-2 grid gap-1.5 sm:grid-cols-5">
+          {areas.map((a) => {
+            const r = a.total > 0 ? a.score / a.total : 0;
+            const target = SUMMARY_SCORE_AREA_TARGETS[a.area];
+            return (
+              <button
+                key={a.area}
+                type="button"
+                data-stock-summary-axis-link
+                data-stock-summary-axis={a.area}
+                data-stock-summary-axis-tab={target?.tab ?? ""}
+                data-stock-summary-axis-hash={target?.hash ?? ""}
+                onClick={() => target ? onAreaSelect?.(target.tab, target.hash) : undefined}
+                className="min-h-11 rounded-md border border-slate-100 bg-slate-50 px-2 py-1.5 text-left transition hover:border-brand-interactive hover:bg-white"
+                aria-label={`${a.area} 체크 ${a.score}/${a.total}, ${target ? `${target.label} 섹션으로 이동` : "상세 확인"}`}
+              >
+                <div className="flex items-baseline justify-between gap-2">
+                  <span className="text-[12px] font-bold text-slate-600">{a.area}</span>
+                  <span className="tabular-nums text-[12px] font-black text-slate-700">{a.score}/{a.total}</span>
+                </div>
+                <div className="mt-0.5 h-1.5 rounded-full bg-slate-100">
+                  <div className="h-1.5 rounded-full" style={{ width: `${r * 100}%`, backgroundColor: scoreColor(r) }} />
+                </div>
+                {target ? <span className="mt-1 block text-[12px] font-bold text-slate-500">{target.label} · {target.description}</span> : null}
+              </button>
+            );
+          })}
+        </div>
+
+        {open ? (
+          <div className="mt-3 grid gap-3 border-t border-slate-100 pt-3 sm:grid-cols-2 lg:grid-cols-5">
+            {areas.map((a) => (
+              <div key={a.area}>
+                <p className="mb-1 text-[12px] font-black uppercase tracking-[0.06em] text-slate-500">{a.area}</p>
+                <ul className="space-y-1">
+                  {a.checks.map((c) => (
+                    <li key={c.label} className="flex items-start gap-1.5 text-[12px] font-semibold">
+                      <span className={c.pass ? "text-emerald-600" : "text-rose-500"}>{c.pass ? "✓" : "✗"}</span>
+                      <span className={c.pass ? "text-slate-700" : "text-slate-500"}>{c.label}</span>
+                    </li>
+                  ))}
+                </ul>
               </div>
-              <div className="mt-0.5 h-1.5 rounded-full bg-slate-100">
-                <div className="h-1.5 rounded-full" style={{ width: `${r * 100}%`, backgroundColor: scoreColor(r) }} />
-              </div>
-              {target ? <span className="mt-1 block text-[9px] font-bold text-slate-500">{target.label} · {target.description}</span> : null}
-            </button>
-          );
-        })}
+            ))}
+          </div>
+        ) : null}
+        <p className="mt-2 text-[12px] font-semibold text-slate-500">데이터 없는 항목은 채점에서 제외 · 투자 참고용 단순 체크리스트</p>
       </div>
-
-      {open ? (
-        <div className="mt-3 grid gap-3 border-t border-slate-100 pt-3 sm:grid-cols-2 lg:grid-cols-5">
-          {areas.map((a) => (
-            <div key={a.area}>
-              <p className="mb-1 text-[10px] font-black uppercase tracking-[0.06em] text-slate-500">{a.area}</p>
-              <ul className="space-y-1">
-                {a.checks.map((c) => (
-                  <li key={c.label} className="flex items-start gap-1.5 text-[10px] font-semibold">
-                    <span className={c.pass ? "text-emerald-600" : "text-rose-500"}>{c.pass ? "✓" : "✗"}</span>
-                    <span className={c.pass ? "text-slate-700" : "text-slate-500"}>{c.label}</span>
-                  </li>
-                ))}
-              </ul>
-            </div>
-          ))}
-        </div>
-      ) : null}
-      <p className="mt-2 text-[9px] font-semibold text-slate-500">데이터 없는 항목은 채점에서 제외 · 투자 참고용 단순 체크리스트</p>
-    </div>
+    </Panel>
   );
 }
 
@@ -911,10 +909,10 @@ export function ThreeSecondSummary({ data, perBand, guruCount, industry }: {
   const sentences = buildThreeSecondSummary(data, perBand, guruCount, industry);
   if (sentences.length === 0) return null;
   return (
-    <div className="rounded-lg border border-brand-interactive/20 bg-brand-interactive/[0.03] p-3">
-      <p className="text-[10px] font-black uppercase tracking-[0.1em] text-brand-interactive">3초 요약</p>
-      <p className="mt-1 text-[13px] font-bold leading-6 text-slate-800">{sentences.join(" ")}</p>
-    </div>
+    <Panel>
+      <PanelHeader eyebrow="Summary" title="3초 요약" />
+      <p className="px-4 py-3 text-[13px] font-bold leading-6 text-slate-800">{sentences.join(" ")}</p>
+    </Panel>
   );
 }
 
@@ -922,13 +920,14 @@ export function ThreeSecondSummary({ data, perBand, guruCount, industry }: {
 // Main export
 // ---------------------------------------------------------------------------
 
-export function renderYfTab(tab: string, data: YfData, industry?: IndustryBench | null) {
+/** `quotePrice` is the page's resolved quote, so 현재가 reads the same in every tab. */
+export function renderYfTab(tab: string, data: YfData, industry?: IndustryBench | null, quotePrice?: number | null) {
   if (!data) return null;
   switch (tab) {
     case "financials": return <FinancialsTab data={data} />;
     case "statistics": return <StatisticsTab data={data} industry={industry} />;
     case "ownership": return <OwnershipTab data={data} />;
-    case "estimates": return <EstimatesTab data={data} />;
+    case "estimates": return <EstimatesTab data={data} quotePrice={quotePrice} />;
     default: return null;
   }
 }
@@ -936,8 +935,8 @@ export function renderYfTab(tab: string, data: YfData, industry?: IndustryBench 
 function KV({ label, value }: { label: string; value: string }) {
   return (
     <div className="flex items-center justify-between rounded-lg border border-slate-100 bg-white px-3 py-2">
-      <MetricHelp label={label} className="text-[10px] font-medium text-slate-500" />
-      <span className="orbitron tabular-nums text-xs font-black text-slate-900">{value}</span>
+      <MetricHelp label={label} className="text-[12px] font-medium text-slate-500" />
+      <span className="tabular-nums text-[12px] font-black text-slate-900">{value}</span>
     </div>
   );
 }

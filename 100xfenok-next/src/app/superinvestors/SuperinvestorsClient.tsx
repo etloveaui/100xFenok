@@ -1,69 +1,54 @@
 "use client";
 
-import { useMemo, useState, useEffect } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import dynamic from "next/dynamic";
+import { useRouter } from "next/navigation";
 import TickerChip from "@/components/TickerChip";
-import TransitionLink from "@/components/TransitionLink";
-import Tabs, { TabPanel, type TabItem, useTabsBaseId } from "@/components/ui/Tabs";
 import { use13FData, useInvestorDetail } from "@/hooks/use13FData";
-import { ROUTES } from "@/lib/routes";
-import { normalizeForEntityKey } from "@/lib/ticker";
-import { CANONICAL_SECTORS, resolveSector, sectorColor, sectorLabelKo } from "@/lib/design/sectorMap";
-import type { CanonicalSector } from "@/lib/design/sectorMap";
-import {
-  CpVerdictHero,
-  CpDivergingBar,
-  CpSectionCard,
-  CpMeterRow,
-  CpMetricTile,
-  CpMetricTileGrid,
-  CpInsightCard,
-  CpAccordion,
-  CpEmptyState,
-} from "@/components/canvas-plus/kit";
+import { Button, EmptyState, EvidenceRail, Panel, PanelHeader, Pill, Row } from "@/components/ui";
+import { TabPanel, getPanelId, getTabId, useTabsBaseId } from "@/components/ui/Tabs";
 import {
   formatCurrencyCompact,
-  formatCompactNumber,
   formatInteger,
   formatPercent,
 } from "@/lib/format";
+import { ROUTES, withQuery } from "@/lib/routes";
+import { isValidRouteTicker, normalizeForRouteTicker } from "@/lib/ticker";
+import {
+  MAX_JOURNEY_SCROLL_Y,
+  clearJourneyScrollSnapshot,
+  currentJourneyReturnTo,
+  journeyReturnTo as validateJourneyReturnTo,
+  readJourneyScrollSnapshot,
+  saveJourneyScrollSnapshot,
+} from "@/lib/journey-context";
+import { CANONICAL_SECTORS, resolveSector, sectorColor, sectorLabelKo } from "@/lib/design/sectorMap";
+import type { CanonicalSector } from "@/lib/design/sectorMap";
+import type {
+  ConsensusTicker,
+  FactorExposuresSummaryData,
+  InvestorFiling,
+  PortfolioViewsData,
+  SectorHoldingsData,
+  SectorHoldingsEntry,
+  SummaryInvestor,
+  TradesRankingData,
+} from "@/lib/superinvestors/types";
+import { buildGraphNetwork } from "./graphNetwork";
+import GraphNetworkPanel, { GraphNetworkTeaser } from "./GraphNetworkPanel";
 import GuruTrendBlock from "./GuruTrendBlock";
 import InsightsTab from "./InsightsTab";
-import type {
-  SuperInvestorsTab,
-  ConsensusTicker,
-  EnhancedConsensusTicker,
-  SummaryInvestor,
-  InvestorHolding,
-  InvestorFiling,
-  SectorHoldingsEntry,
-  TradesRankingData,
-  TradesRankingRow,
-  TurnoverData,
-  PortfolioViewsData,
-} from "@/lib/superinvestors/types";
-
-const PAGE_SIZE = 50;
-const SUPERINVESTOR_TABS_ID = "superinvestors-main-tabs";
-const SUPERINVESTOR_TAB_ITEMS = {
-  consensus: { id: "consensus", label: "공통 보유" },
-  gurus: { id: "gurus", label: "투자자 목록" },
-  "by-ticker": { id: "by-ticker", label: "종목별 보유" },
-  trades: { id: "trades", label: "매매 동향" },
-  insights: { id: "insights", label: "인사이트" },
-} satisfies Record<SuperInvestorsTab, TabItem<SuperInvestorsTab>>;
-// Reordered by decision value (brief-superinvestors.md D/H): 매매 동향 leads, methodology-flavored
-// tiles no longer gate the page. Default active tab stays "consensus" (unchanged in function).
-const SUPERINVESTOR_TABS: Array<TabItem<SuperInvestorsTab>> = [
-  SUPERINVESTOR_TAB_ITEMS.trades,
-  SUPERINVESTOR_TAB_ITEMS.consensus,
-  SUPERINVESTOR_TAB_ITEMS["by-ticker"],
-  SUPERINVESTOR_TAB_ITEMS.gurus,
-  SUPERINVESTOR_TAB_ITEMS.insights,
-];
+import SignalPanel from "./SignalPanel";
+import SuperinvestorsSummaryStrip from "./SuperinvestorsSummaryStrip";
+import WhoHoldsPanel from "./WhoHoldsPanel";
+import {
+  ResponsiveHoldingsTable,
+  ResponsiveTradeRankingPanel,
+} from "./InvestorResponsiveRows";
+import { useInvestorTabData } from "./useInvestorTabData";
 
 const ChartLoading = () => (
-  <div className="grid h-[220px] place-items-center rounded-xl border border-dashed border-[var(--c-line)] bg-[var(--c-surface-2)] text-xs font-bold text-[var(--c-ink-3)]">
+  <div className="grid h-[220px] place-items-center rounded-xl border border-dashed border-[var(--c-line)] bg-[var(--c-surface-2)] text-[12px] font-bold text-[var(--c-ink-3)]">
     차트 로딩 중
   </div>
 );
@@ -80,10 +65,18 @@ const SectorMixPanel = dynamic(() => import("./PortfolioCharts").then((mod) => m
   ssr: false,
   loading: ChartLoading,
 });
-
-function cx(...parts: Array<string | false | undefined>) {
-  return parts.filter(Boolean).join(" ");
-}
+const RiskReturnScatter = dynamic(() => import("./PortfolioCharts").then((mod) => mod.RiskReturnScatter), {
+  ssr: false,
+  loading: ChartLoading,
+});
+const CumulativeReturnOverlay = dynamic(() => import("./PortfolioCharts").then((mod) => mod.CumulativeReturnOverlay), {
+  ssr: false,
+  loading: ChartLoading,
+});
+const FactorExposureRadar = dynamic(() => import("./PortfolioCharts").then((mod) => mod.FactorExposureRadar), {
+  ssr: false,
+  loading: ChartLoading,
+});
 
 const CANONICAL_SECTOR_SET = new Set<string>(CANONICAL_SECTORS);
 
@@ -95,151 +88,8 @@ function normalizeSuperSector(gicsRaw?: string | null, scouterRaw?: string | nul
   return resolveSector(gicsRaw, scouterRaw);
 }
 
-// Module-level turnover cache — fetched lazily once per page
-let turnoverCache: TurnoverData["by_investor"] | null = null;
-let turnoverPromise: Promise<TurnoverData["by_investor"] | null> | null = null;
-
-function loadTurnover(): Promise<TurnoverData["by_investor"] | null> {
-  if (turnoverCache) return Promise.resolve(turnoverCache);
-  if (turnoverPromise) return turnoverPromise;
-  turnoverPromise = fetch("/data/sec-13f/analytics/turnover.json")
-    .then((res) => {
-      if (!res.ok) throw new Error(`HTTP ${res.status}`);
-      return res.json() as Promise<TurnoverData>;
-    })
-    .then((data) => {
-      turnoverCache = data.by_investor ?? {};
-      return turnoverCache;
-    })
-    .catch(() => {
-      turnoverPromise = null;
-      return null;
-    });
-  return turnoverPromise;
-}
-
-let pvCache: PortfolioViewsData | null = null;
-let pvPromise: Promise<PortfolioViewsData | null> | null = null;
-
-function normalizePortfolioViews(data: unknown): PortfolioViewsData | null {
-  const raw = data as Partial<PortfolioViewsData> | null;
-  if (!raw?.metadata) return null;
-  const investors: PortfolioViewsData["investors"] = {};
-  for (const [id, view] of Object.entries(raw.investors ?? {})) {
-    investors[id] = {
-      name: view.name ?? id,
-      quarter: view.quarter ?? raw.metadata.quarter ?? "—",
-      quarters: Array.isArray(view.quarters) ? view.quarters : [],
-      sector_history: view.sector_history ?? {},
-      treemap: Array.isArray(view.treemap) ? view.treemap : [],
-      performance: view.performance ?? null,
-    };
-  }
-  return {
-    metadata: {
-      ...raw.metadata,
-      quarter: raw.metadata.quarter ?? "—",
-      cohort_count: raw.metadata.cohort_count ?? Object.keys(investors).length,
-    },
-    total: {
-      treemap: Array.isArray(raw.total?.treemap) ? raw.total.treemap : [],
-      sectors: raw.total?.sectors ?? {},
-      sector_history:
-        raw.total?.sector_history &&
-        Array.isArray(raw.total.sector_history.quarters) &&
-        raw.total.sector_history.series &&
-        typeof raw.total.sector_history.series === "object" &&
-        !Array.isArray(raw.total.sector_history.series)
-          ? raw.total.sector_history
-          : undefined,
-    },
-    investors,
-  };
-}
-
-function loadPortfolioViews(): Promise<PortfolioViewsData | null> {
-  if (pvCache) return Promise.resolve(pvCache);
-  if (pvPromise) return pvPromise;
-  pvPromise = fetch("/data/sec-13f/analytics/portfolio_views.json")
-    .then((res) => {
-      if (!res.ok) throw new Error(`HTTP ${res.status}`);
-      return res.json();
-    })
-    .then((data) => {
-      pvCache = normalizePortfolioViews(data);
-      return pvCache;
-    })
-    .catch(() => {
-      pvPromise = null;
-      return null;
-    });
-  return pvPromise;
-}
-
-function normalizeTradesRanking(data: unknown): TradesRankingData | null {
-  const raw = data as Partial<TradesRankingData> | null;
-  if (!raw?.metadata) return null;
-  return {
-    metadata: raw.metadata,
-    bought: Array.isArray(raw.bought) ? raw.bought : [],
-    sold: Array.isArray(raw.sold) ? raw.sold : [],
-  };
-}
-
-function tradeShare(amount: number | null | undefined, totalAmount: number): number | null {
-  if (amount === null || amount === undefined || Number.isNaN(amount) || totalAmount <= 0) return null;
-  return (amount / totalAmount) * 100;
-}
-
-function formatTradeShare(amount: number | null | undefined, totalAmount: number): string {
-  return formatPercent(tradeShare(amount, totalAmount), { digits: 1, fraction: false });
-}
-
-function fmtDateTimeKo(value: string | null | undefined): string | null {
-  if (!value) return null;
-  const date = new Date(value);
-  if (Number.isNaN(date.getTime())) return null;
-  return new Intl.DateTimeFormat("ko-KR", {
-    dateStyle: "medium",
-    timeStyle: "short",
-    timeZone: "Asia/Seoul",
-  }).format(date);
-}
-
-function uniqueHolders(holdersList: string[]): string[] {
-  const seen = new Set<string>();
-  return holdersList.filter((h) => {
-    if (seen.has(h)) return false;
-    seen.add(h);
-    return true;
-  });
-}
-
-function groupBadgeClass(group: string): string {
-  if (group === "value") return "bg-emerald-100 text-emerald-700";
-  if (group === "hedge") return "bg-violet-100 text-violet-700";
-  if (group === "activist") return "bg-amber-100 text-amber-700";
-  if (group === "growth") return "bg-sky-100 text-sky-700";
-  return "bg-slate-100 text-slate-600";
-}
-
-function sortConsensus(rows: ConsensusTicker[], dir: "asc" | "desc") {
-  const d = dir === "asc" ? 1 : -1;
-  return [...rows].sort((a, b) => {
-    if (a.holders_count !== b.holders_count) return (a.holders_count - b.holders_count) * d;
-    return a.ticker.localeCompare(b.ticker) * d;
-  });
-}
-
 function isSectorEntry(value: unknown): value is SectorHoldingsEntry {
   return !!value && typeof value === "object" && Array.isArray((value as SectorHoldingsEntry).top_holdings);
-}
-
-function classSummary(entry: EnhancedConsensusTicker | undefined): string {
-  if (!entry) return "—";
-  const extra = Math.max(0, entry.total_holders - entry.equity_holders);
-  if (extra > 0) return `${entry.equity_holders}/${entry.total_holders}`;
-  return `${entry.equity_holders}`;
 }
 
 function buildSectorRotationRows(
@@ -271,135 +121,142 @@ function buildSectorRotationRows(
     .slice(0, 8);
 }
 
-function EmptyState({ title, desc }: { title: string; desc: string }) {
-  return (
-    <div className="rounded-[1.2rem] border border-dashed border-[var(--c-line)] bg-[var(--c-surface-2)] px-6 py-10 text-center">
-      <p className="text-sm font-black text-slate-700">{title}</p>
-      <p className="mt-1 text-xs font-semibold text-slate-500">{desc}</p>
-    </div>
-  );
+function fmtDateTimeKo(value: string | null | undefined): string | null {
+  if (!value) return null;
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return null;
+  return new Intl.DateTimeFormat("ko-KR", {
+    dateStyle: "medium",
+    timeStyle: "short",
+    timeZone: "Asia/Seoul",
+  }).format(date);
 }
 
-function SkeletonRows({ count = 6 }: { count?: number }) {
-  return (
-    <>
-      {Array.from({ length: count }).map((_, i) => (
-        <tr key={i} className="border-b border-slate-100 last:border-b-0">
-          <td className="px-3 py-3"><div className="h-4 w-8 rounded bg-slate-200" /></td>
-          <td className="px-3 py-3"><div className="h-4 w-20 rounded bg-slate-200" /></td>
-          <td className="px-3 py-3"><div className="h-4 w-12 rounded bg-slate-200" /></td>
-          <td className="px-3 py-3"><div className="h-4 w-16 rounded bg-slate-200" /></td>
-          <td className="px-3 py-3"><div className="h-4 w-40 rounded bg-slate-200" /></td>
-          <td className="px-3 py-3"><div className="h-4 w-16 rounded bg-slate-200" /></td>
-        </tr>
-      ))}
-    </>
-  );
+type HolderSort = "aum" | "holdings" | "change";
+
+type SupTab = "signal" | "investors" | "stocks" | "trades" | "insights" | "graph";
+
+const SUP_TABS: Array<{ id: SupTab; label: string }> = [
+  { id: "signal", label: "시그널" },
+  { id: "investors", label: "투자자" },
+  { id: "stocks", label: "종목" },
+  { id: "trades", label: "매매 동향" },
+  { id: "insights", label: "인사이트" },
+  { id: "graph", label: "그래프" },
+];
+
+function resolveInitialTab(value: string | null, guru: string | null): SupTab {
+  if (guru) return "investors";
+  if (value === "by-ticker") return "stocks";
+  if (value === "gurus") return "investors";
+  if (value === "investors" || value === "stocks" || value === "graph" || value === "signal" || value === "trades" || value === "insights") return value;
+  return "signal";
 }
 
-function SkeletonCards({ count = 6 }: { count?: number }) {
-  return (
-    <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-      {Array.from({ length: count }).map((_, i) => (
-        <div key={i} className="rounded-[1.2rem] border border-slate-200 bg-white p-4">
-          <div className="h-5 w-1/2 rounded bg-slate-200" />
-          <div className="mt-2 h-3 w-1/3 rounded bg-slate-200" />
-          <div className="mt-4 h-3 w-2/3 rounded bg-slate-200" />
-        </div>
-      ))}
-    </div>
-  );
+const HOLDER_SORTS: Array<{ key: HolderSort; label: string }> = [
+  { key: "aum", label: "AUM 순" },
+  { key: "holdings", label: "보유종목 순" },
+  { key: "change", label: "변화율 순" },
+];
+
+function openEvidence(path: string) {
+  window.open(path, "_blank", "noopener");
 }
 
-function LatestHoldingsTable({ holdings }: { holdings: InvestorHolding[] }) {
-  const rows = useMemo(() => {
-    // Filings carry one row per share class / CUSIP — aggregate by ticker.
-    const byTicker = new Map<string, InvestorHolding>();
-    for (const h of holdings) {
-      if (!h.ticker) continue;
-      const cur = byTicker.get(h.ticker);
-      if (cur) {
-        cur.weight = (cur.weight || 0) + (h.weight || 0);
-        cur.shares = (cur.shares || 0) + (h.shares || 0);
-        cur.market_value = (cur.market_value || 0) + (h.market_value || 0);
-      } else {
-        byTicker.set(h.ticker, { ...h });
-      }
-    }
-    return [...byTicker.values()]
-      .sort((a, b) => (b.weight || 0) - (a.weight || 0))
-      .slice(0, 50);
-  }, [holdings]);
-
-  if (rows.length === 0) {
-    return <EmptyState title="보유 종목이 없습니다" desc="최신 분기에 유효한 티커 보유가 없습니다." />;
+function readSourceReturnTo(): string | null {
+  if (typeof window === "undefined") return null;
+  const raw = new URLSearchParams(window.location.search).get("returnTo");
+  const safe = validateJourneyReturnTo(raw);
+  if (!safe) return null;
+  try {
+    return new URL(safe, "https://journey.invalid").pathname === ROUTES.screener ? safe : null;
+  } catch {
+    return null;
   }
+}
 
-  return (
-    <div
-      data-superinvestor-guru-top-holdings
-      className="scroll-hint-x -mx-1 px-1"
-      role="region"
-      tabIndex={0}
-      aria-label="최신 보유 종목 표 가로 스크롤"
-    >
-      <table className="w-full min-w-[480px] text-xs">
-        <thead>
-          <tr className="border-b border-slate-200 text-[10px] font-black uppercase tracking-[0.08em] text-slate-500">
-            <th className="px-2 py-2 text-left">티커</th>
-            <th className="px-2 py-2 text-left">종목</th>
-            <th className="px-2 py-2 text-right">비중</th>
-            <th className="px-2 py-2 text-right">주식수</th>
-            <th className="px-2 py-2 text-right">시가총액</th>
-          </tr>
-        </thead>
-        <tbody>
-          {rows.map((h) => (
-            <tr
-              key={`${h.ticker}-${h.cusip}`}
-              data-superinvestor-guru-holding-row
-              data-superinvestor-guru-holding-ticker={h.ticker ?? ""}
-              className="border-b border-slate-100 last:border-b-0"
-            >
-              <td className="px-2 py-2">
-                {h.ticker ? (
-                  <TickerChip ticker={h.ticker} variant="pill" className="min-h-11" />
-                ) : (
-                  <span className="text-[var(--c-ink-3)]">—</span>
-                )}
-              </td>
-              <td className="px-2 py-2">
-                <span className="block max-w-[200px] truncate font-semibold text-slate-700">{h.name}</span>
-                {h.sector ? <span className="text-[10px] text-[var(--c-ink-3)]">{h.sector}</span> : null}
-              </td>
-              <td className="px-2 py-2 text-right">
-                <span className="orbitron tabular-nums font-bold text-slate-900">{formatPercent(h.weight, { digits: 2 })}</span>
-              </td>
-              <td className="px-2 py-2 text-right">
-                <span className="orbitron tabular-nums text-slate-700">{formatCompactNumber(h.shares)}</span>
-              </td>
-              <td className="px-2 py-2 text-right">
-                <span className="orbitron tabular-nums text-slate-700">{formatCurrencyCompact(h.market_value, "USD")}</span>
-              </td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
-    </div>
-  );
+function syncTabParam(tab: SupTab) {
+  if (typeof window === "undefined") return;
+  const params = new URLSearchParams(window.location.search);
+  params.set("tab", tab);
+  const queryString = params.toString();
+  const nextUrl = `${window.location.pathname}${queryString ? `?${queryString}` : ""}${window.location.hash}`;
+  const currentUrl = `${window.location.pathname}${window.location.search}${window.location.hash}`;
+  if (nextUrl !== currentUrl) window.history.replaceState(window.history.state, "", nextUrl);
+}
+
+function syncGuruParam(guru: string | null) {
+  if (typeof window === "undefined") return;
+  const params = new URLSearchParams(window.location.search);
+  if (guru) params.set("guru", guru);
+  else params.delete("guru");
+  const queryString = params.toString();
+  const nextUrl = `${window.location.pathname}${queryString ? `?${queryString}` : ""}${window.location.hash}`;
+  const currentUrl = `${window.location.pathname}${window.location.search}${window.location.hash}`;
+  if (nextUrl !== currentUrl) window.history.replaceState(window.history.state, "", nextUrl);
+}
+
+function syncTickerParam(ticker: string) {
+  if (typeof window === "undefined") return;
+  const params = new URLSearchParams(window.location.search);
+  params.set("tab", "stocks");
+  params.set("ticker", ticker);
+  const queryString = params.toString();
+  const nextUrl = `${window.location.pathname}${queryString ? `?${queryString}` : ""}${window.location.hash}`;
+  const currentUrl = `${window.location.pathname}${window.location.search}${window.location.hash}`;
+  if (nextUrl !== currentUrl) window.history.replaceState(window.history.state, "", nextUrl);
+}
+
+function sortConsensusByHolders(rows: ConsensusTicker[]): ConsensusTicker[] {
+  return [...rows].sort((a, b) => {
+    if (a.holders_count !== b.holders_count) return b.holders_count - a.holders_count;
+    return a.ticker.localeCompare(b.ticker);
+  });
 }
 
 function GuruDetailPanel({
   id,
   summary,
+  turnover,
+  turnoverLoading,
+  turnoverFailed,
+  onRetryTurnover,
   pvData,
+  pvLoading,
+  pvFailed,
+  onRetryPv,
+  factorData,
+  factorLoading,
+  factorFailed,
+  onRetryFactor,
+  asOf,
+  returnTo,
+  onBeforeNavigate,
+  onReady,
 }: {
   id: string;
   summary: SummaryInvestor;
+  turnover: number | null | undefined;
+  turnoverLoading: boolean;
+  turnoverFailed: boolean;
+  onRetryTurnover?: () => void;
   pvData: PortfolioViewsData | null;
+  pvLoading: boolean;
+  pvFailed: boolean;
+  onRetryPv?: () => void;
+  factorData: FactorExposuresSummaryData | null;
+  factorLoading: boolean;
+  factorFailed: boolean;
+  onRetryFactor?: () => void;
+  asOf: string;
+  returnTo?: string | null;
+  onBeforeNavigate?: () => void;
+  onReady?: (id: string) => void;
 }) {
-  const { data, loading } = useInvestorDetail(id);
-  const [turnover, setTurnover] = useState<number | null | undefined>(undefined);
+  const { data, loading, status } = useInvestorDetail(id);
+  useEffect(() => {
+    if (!loading) onReady?.(id);
+  }, [id, loading, onReady]);
 
   const latest: InvestorFiling | null = data?.investor?.filings?.[data.investor.filings.length - 1] ?? null;
   const prev: InvestorFiling | null =
@@ -409,20 +266,59 @@ function GuruDetailPanel({
   const sectorHistory = investorView?.sector_history ?? {};
   const sectorQuarters = Array.isArray(investorView?.quarters) ? investorView.quarters : [];
   const hasSectorHistory = sectorQuarters.length > 0 && Object.keys(sectorHistory).length > 0;
-  const hasPortfolioView = !!investorView && (treemapRows.length > 0 || hasSectorHistory || !!investorView.performance);
   const latestQuarter = latest?.quarter ?? summary.quarter ?? "—";
   const reportDate = latest?.report_date ?? "—";
   const filingDate = latest?.filing_date ?? "—";
+  const cik = data?.investor?.cik ?? data?.metadata?.cik ?? "";
+  const secBrowseUrl = cik
+    ? `https://www.sec.gov/edgar/browse/?CIK=${encodeURIComponent(cik)}&owner=exclude&action=getcompany`
+    : null;
 
-  useEffect(() => {
-    let cancelled = false;
-    loadTurnover().then((map) => {
-      if (cancelled) return;
-      const entry = map?.[id];
-      setTurnover(entry?.turnover ?? null);
-    });
-    return () => { cancelled = true; };
-  }, [id]);
+  const cohortCount = pvData?.metadata?.cohort_count ?? null;
+  const plottableCount = useMemo(() => {
+    if (!pvData) return 0;
+    let count = 0;
+    for (const view of Object.values(pvData.investors ?? {})) {
+      const dates = view?.performance?.dates;
+      if (Array.isArray(dates) && dates.length > 1) count += 1;
+    }
+    return count;
+  }, [pvData]);
+  const investorMissing = !!pvData && !investorView;
+  const scatterFailed = !pvLoading && (pvFailed || !pvData);
+  const scatterEmpty = !pvLoading && !!pvData && plottableCount === 0;
+  const scatterFreshness: "pending" | "error" | "partial" | "stale" =
+    pvLoading ? "pending" : scatterFailed ? "error" : scatterEmpty || investorMissing ? "partial" : "stale";
+  const scatterCoverage = !pvData
+    ? "—"
+    : plottableCount === 0
+      ? "표시할 수익 시리즈 없음"
+      : `코호트 ${formatInteger(cohortCount)}명 중 ${formatInteger(plottableCount)}명 표시${investorMissing ? " · 이 투자자 시리즈 없음" : ""}`;
+
+  const factorRows = factorData?.rows ?? [];
+  const hasFactorRecord = factorRows.some((row) => row?.investorId === id);
+  const radarFailed = !factorLoading && (factorFailed || !factorData);
+  const radarEmpty = !factorLoading && !!factorData && !hasFactorRecord;
+  const radarFreshness: "pending" | "error" | "partial" | "stale" =
+    factorLoading ? "pending" : radarFailed ? "error" : radarEmpty || !hasFactorRecord ? "partial" : "stale";
+  const radarCoverage = !factorData
+    ? "—"
+    : factorRows.length === 0
+      ? "표시할 팩터 행 없음"
+      : `투자자 ${formatInteger(factorRows.length)}행${hasFactorRecord ? "" : " · 이 투자자 기록 없음"}`;
+
+  const kpiError = !loading && status === "error";
+  const kpiEmpty = !loading && status !== "error" && status !== "private" && !latest;
+  const kpiPending = loading || turnoverLoading;
+  const kpiPartial = !kpiPending && !kpiError && !kpiEmpty && (status === "private" || turnover == null || turnoverFailed);
+  const kpiFreshness: "pending" | "error" | "partial" | "stale" =
+    kpiPending ? "pending" : kpiError ? "error" : kpiEmpty || kpiPartial ? "partial" : "stale";
+  const kpiCoverage =
+    status === "private"
+      ? `요약 기준 ${latestQuarter} · 상세 비공개`
+      : latest
+        ? `13F ${latestQuarter} 기준${turnover == null ? " · 회전율 없음" : ""}`
+        : "—";
 
   return (
     <div
@@ -432,86 +328,134 @@ function GuruDetailPanel({
       data-superinvestor-guru-quarter={latestQuarter}
       data-superinvestor-guru-report-date={reportDate}
       data-superinvestor-guru-filing-date={filingDate}
-      className="mt-3 rounded-[1.2rem] border border-slate-200 bg-slate-50 p-4"
+      tabIndex={-1}
+      aria-label={`${summary.name} 포트폴리오 상세`}
+      className="sup-guru-profile mt-3"
     >
-      <div data-superinvestor-guru-profile-hero className="mb-3 grid gap-2 sm:grid-cols-3">
-        <div className="rounded-xl border border-amber-200 bg-amber-50 px-3 py-2">
-          <p className="text-[10px] font-black uppercase tracking-[0.08em] text-amber-700">13F 기준</p>
-          <p data-superinvestor-guru-asof className="mt-1 text-sm font-black text-amber-950">
+      <div data-superinvestor-guru-identity className="sup-guru-identity">
+        <div className="min-w-0">
+          <span className="inline-flex items-center rounded-md bg-slate-100 px-1.5 py-0.5 text-[12px] font-black uppercase tracking-wide text-slate-600">
+            {summary.group}
+          </span>
+          {summary.is_stale ? <span className="sup-stale-badge ml-1">지연</span> : null}
+          <h2 className="mt-1 truncate text-lg font-black tracking-tight text-slate-950">{summary.name}</h2>
+        </div>
+        <div className="flex flex-wrap gap-x-4 gap-y-1 text-[12px] font-bold text-slate-700">
+          <span>운용 자산 <b className="tabular-nums text-slate-900">{formatCurrencyCompact(latest?.aum_total ?? summary.aum, "USD")}</b></span>
+          <span>보유 종목 <b className="tabular-nums text-slate-900">{formatInteger(latest?.holdings_count ?? summary.holdings_count)}개</b></span>
+          <span>기준 분기 <b className="tabular-nums text-slate-900">{latestQuarter}</b></span>
+        </div>
+      </div>
+      <div data-superinvestor-guru-profile-hero className="sup-guru-disclosures">
+        <div className="sup-guru-disclosure sup-guru-disclosure-quarter">
+          <p className="sup-guru-disclosure-label">13F 기준</p>
+          <p data-superinvestor-guru-asof className="sup-guru-disclosure-value">
             {latestQuarter}
           </p>
-          <p className="mt-1 text-[10px] font-semibold text-amber-700">
+          <p className="sup-guru-disclosure-note">
             보고 기준일 {reportDate}
           </p>
         </div>
-        <div className="rounded-xl border border-slate-200 bg-white px-3 py-2">
-          <p className="text-[10px] font-black uppercase tracking-[0.08em] text-slate-500">공시일</p>
-          <p data-superinvestor-guru-filing className="mt-1 text-sm font-black text-slate-950">
+        <div className="sup-guru-disclosure sup-guru-disclosure-filing">
+          <p className="sup-guru-disclosure-label">공시일</p>
+          <p data-superinvestor-guru-filing className="sup-guru-disclosure-value">
             {filingDate}
           </p>
-          <p className="mt-1 text-[10px] font-semibold text-[var(--c-ink-3)]">
-            SEC 13F 데이터 변환
+          <p className="sup-guru-disclosure-note">
+            {latest?.form ?? "SEC 13F 데이터 변환"}
           </p>
+          {secBrowseUrl ? (
+            <a
+              href={secBrowseUrl}
+              target="_blank"
+              rel="noreferrer"
+              className="sup-guru-sec-link mt-2 inline-flex text-[12px] font-black underline underline-offset-2"
+            >
+              SEC 원문 탐색 ↗
+            </a>
+          ) : null}
+          {latest?.accession_number ? (
+            <p className="sup-guru-accession mt-1 break-all text-[12px] font-semibold">
+              접수번호 {latest.accession_number}
+            </p>
+          ) : null}
         </div>
         <div
           data-superinvestor-guru-lag-disclosure
-          className="rounded-xl border border-sky-200 bg-sky-50 px-3 py-2"
+          className="sup-guru-disclosure sup-guru-disclosure-lag"
         >
-          <p className="text-[10px] font-black uppercase tracking-[0.08em] text-sky-700">공시 지연</p>
-          <p className="mt-1 text-sm font-black text-sky-950">최대 45일</p>
-          <p className="mt-1 text-[10px] font-semibold text-sky-700">
+          <p className="sup-guru-disclosure-label">공시 지연</p>
+          <p className="sup-guru-disclosure-value">최대 45일</p>
+          <p className="sup-guru-disclosure-note">
             오늘 보유가 아니라 분기 보고치
           </p>
         </div>
       </div>
 
-      {/* Row 1 — KPI strip (panel lives inside a narrow card column — keep 2x2) */}
-      <div className="grid grid-cols-2 gap-2">
-        <KpiCard label="운용 자산" value={formatCurrencyCompact(latest?.aum_total ?? summary.aum, "USD")} isLoading={loading} dataKey="aum" />
-        <KpiCard
-          label="보유 종목"
-          value={latest ? formatInteger(latest.holdings_count) : "—"}
-          isLoading={loading}
-          dataKey="holdings"
-        />
-        <KpiCard
-          label="TOP 10 비중"
-          value={latest?.top_10_weight != null ? formatPercent(latest.top_10_weight, { digits: 1 }) : "—"}
-          isLoading={loading}
-          dataKey="top10"
-        />
-        <KpiCard
-          label="회전율"
-          value={turnover === undefined ? "..." : turnover === null ? "—" : formatPercent(turnover, { digits: 1 })}
-          isLoading={loading || turnover === undefined}
-          dataKey="turnover"
-        />
+      {/* Row 1 — unframed metric strip */}
+      <Panel
+        loading={kpiPending}
+        empty={kpiEmpty}
+        emptyReason="이 투자자의 자료 없음"
+        emptyNextRefresh="다음 분기 공시 반영 후 갱신"
+        error={kpiError}
+        errorDetail="KPI 데이터를 불러오지 못했습니다."
+        asOf={latestQuarter}
+        onRetry={!kpiError && turnoverFailed ? onRetryTurnover : undefined}
+        retryLabel="다시 시도"
+      >
+      <div className="sup-guru-stat-strip" data-superinvestor-guru-metrics>
+        <div data-superinvestor-guru-kpi="aum">
+          <p>운용 자산</p>
+          {kpiPending ? <div className="sup-guru-stat-skeleton" /> : <strong>{formatCurrencyCompact(latest?.aum_total ?? summary.aum, "USD")}</strong>}
+        </div>
+        <div data-superinvestor-guru-kpi="holdings">
+          <p>보유 종목</p>
+          {kpiPending ? <div className="sup-guru-stat-skeleton" /> : <strong>{latest ? formatInteger(latest.holdings_count) : "—"}</strong>}
+        </div>
+        <div data-superinvestor-guru-kpi="top10">
+          <p>TOP 10 비중</p>
+          {kpiPending ? <div className="sup-guru-stat-skeleton" /> : <strong>{latest?.top_10_weight != null ? formatPercent(latest.top_10_weight, { digits: 1 }) : "—"}</strong>}
+        </div>
+        <div data-superinvestor-guru-kpi="turnover">
+          <p>회전율</p>
+          {kpiPending ? <div className="sup-guru-stat-skeleton" /> : <strong>{turnover == null ? "—" : formatPercent(turnover, { digits: 1 })}</strong>}
+        </div>
       </div>
+        <EvidenceRail
+          freshness={kpiFreshness}
+          source="SEC EDGAR 13F"
+          asOf={latestQuarter}
+          coverage={kpiCoverage}
+          next="분기 종료 후 최대 45일"
+          onRetry={!kpiError && turnoverFailed ? onRetryTurnover : undefined}
+        />
+      </Panel>
 
       {/* Row 2 — 분기 매매 내역 */}
       {latest?.changes_summary ? (
         <div className="mt-3 grid grid-cols-2 gap-2 sm:grid-cols-4">
           <div className="rounded-xl border border-emerald-200 bg-emerald-50 px-3 py-2 text-center">
-            <p className="text-[10px] font-black uppercase tracking-[0.08em] text-emerald-700">신규매수 ↑</p>
-            <p className="orbitron mt-1 text-sm font-black text-emerald-800">
+            <p className="text-[12px] font-black uppercase tracking-[0.08em] text-emerald-700">신규매수 ↑</p>
+            <p className="mt-1 text-sm font-black text-emerald-800">
               {latest.changes_summary.new?.length ?? 0}
             </p>
           </div>
           <div className="rounded-xl border border-rose-200 bg-rose-50 px-3 py-2 text-center">
-            <p className="text-[10px] font-black uppercase tracking-[0.08em] text-rose-700">청산매도 ↓</p>
-            <p className="orbitron mt-1 text-sm font-black text-rose-800">
+            <p className="text-[12px] font-black uppercase tracking-[0.08em] text-rose-700">청산매도 ↓</p>
+            <p className="mt-1 text-sm font-black text-rose-800">
               {latest.changes_summary.sold?.length ?? 0}
             </p>
           </div>
           <div className="rounded-xl border border-sky-200 bg-sky-50 px-3 py-2 text-center">
-            <p className="text-[10px] font-black uppercase tracking-[0.08em] text-sky-700">비중확대 ↑</p>
-            <p className="orbitron mt-1 text-sm font-black text-sky-800">
+            <p className="text-[12px] font-black uppercase tracking-[0.08em] text-sky-700">비중확대 ↑</p>
+            <p className="mt-1 text-sm font-black text-sky-800">
               {latest.changes_summary.increased?.length ?? 0}
             </p>
           </div>
           <div className="rounded-xl border border-amber-200 bg-amber-50 px-3 py-2 text-center">
-            <p className="text-[10px] font-black uppercase tracking-[0.08em] text-amber-700">비중축소 ↓</p>
-            <p className="orbitron mt-1 text-sm font-black text-amber-800">
+            <p className="text-[12px] font-black uppercase tracking-[0.08em] text-amber-700">비중축소 ↓</p>
+            <p className="mt-1 text-sm font-black text-amber-800">
               {latest.changes_summary.decreased?.length ?? 0}
             </p>
           </div>
@@ -520,55 +464,217 @@ function GuruDetailPanel({
 
       {/* Quarter label */}
       <div className="mt-3 flex flex-wrap items-center justify-between gap-2">
-        <p className="text-[10px] font-black uppercase tracking-[0.08em] text-slate-500">
+        <p className="text-[12px] font-black uppercase tracking-[0.08em] text-slate-500">
           {latestQuarter}
         </p>
         {prev ? (
-          <p className="text-[10px] font-semibold text-slate-500">
+          <p className="text-[12px] font-semibold text-slate-500">
             이전 분기: {prev.quarter}
           </p>
         ) : null}
       </div>
 
-      {/* Portfolio charts (from portfolio_views.json) */}
-      {hasPortfolioView ? (
+      {/* Portfolio charts (from portfolio_views.json) — the panels always mount;
+          each Panel owns its loading / error / empty / partial / ready state. */}
         <div
           data-superinvestor-guru-portfolio
           data-superinvestor-guru-portfolio-quarter={investorView?.quarter ?? ""}
+          data-superinvestor-guru-portfolio-state={pvLoading ? "loading" : pvFailed ? "error" : investorView ? "ready" : "empty"}
           className="mt-4 border-t border-slate-200 pt-4"
         >
-          <p className="text-[11px] font-black uppercase tracking-[0.1em] text-slate-500">보유 포트폴리오</p>
+          <p className="text-[12px] font-black uppercase tracking-[0.1em] text-slate-500">보유 포트폴리오</p>
           <div className="mt-2 space-y-4">
-            {treemapRows.length > 0 ? (
-              <div data-superinvestor-guru-treemap data-superinvestor-guru-treemap-count={treemapRows.length}>
-                <PortfolioTreemap
-                  rows={treemapRows}
-                  quarterLabel={investorView.quarter}
+            <Panel
+              loading={pvLoading}
+              empty={!pvLoading && !pvFailed && (!investorView || treemapRows.length === 0)}
+              emptyReason={investorView ? "표시할 보유 비중 데이터가 없습니다" : "이 투자자의 자료 없음"}
+              emptyNextRefresh="다음 분기 공시 반영 후 갱신"
+              error={pvFailed}
+              errorDetail="보유 포트폴리오 데이터를 불러오지 못했습니다."
+              asOf={investorView?.quarter ?? asOf}
+              onRetry={pvFailed ? onRetryPv : undefined}
+              retryLabel="다시 시도"
+            >
+              {treemapRows.length > 0 ? (
+                <div data-superinvestor-guru-treemap data-superinvestor-guru-treemap-count={treemapRows.length}>
+                  <PortfolioTreemap
+                    rows={treemapRows}
+                    quarterLabel={investorView?.quarter ?? asOf}
+                  />
+                </div>
+              ) : null}
+              <EvidenceRail
+                freshness={pvLoading ? "pending" : pvFailed ? "error" : treemapRows.length > 0 ? "stale" : "partial"}
+                source="SEC EDGAR 13F"
+                asOf={investorView?.quarter ?? asOf}
+                coverage={treemapRows.length > 0 ? `13F 보고금액 대비 비중 · 매핑 ${formatPercent(investorView?.coverage?.mapped_ratio ?? 1, { fraction: true, digits: 1 })}` : "이 투자자 트리맵 행 없음"}
+                next="분기 종료 후 최대 45일"
+                onRetry={pvFailed ? onRetryPv : undefined}
+                onEvidence={() => openEvidence("/data/sec-13f/analytics/portfolio_views.json")}
+              />
+            </Panel>
+            <Panel
+              loading={pvLoading}
+              empty={!pvLoading && !pvFailed && (!investorView || !hasSectorHistory)}
+              emptyReason={investorView ? "표시할 섹터 구성 데이터가 없습니다" : "이 투자자의 자료 없음"}
+              emptyNextRefresh="다음 분기 공시 반영 후 갱신"
+              error={pvFailed}
+              errorDetail="보유 포트폴리오 데이터를 불러오지 못했습니다."
+              asOf={investorView?.quarter ?? asOf}
+              onRetry={pvFailed ? onRetryPv : undefined}
+              retryLabel="다시 시도"
+            >
+              {hasSectorHistory ? (
+                <SectorMixPanel
+                  currentSectors={Object.fromEntries(
+                    Object.entries(sectorHistory).map(([s, h]) => [
+                      s,
+                      Array.isArray(h) ? h[h.length - 1] ?? 0 : 0,
+                    ]),
+                  )}
+                  history={sectorHistory}
+                  quarters={sectorQuarters}
                 />
-              </div>
-            ) : null}
-            {hasSectorHistory ? (
-              <SectorMixPanel
-                currentSectors={Object.fromEntries(
-                  Object.entries(sectorHistory).map(([s, h]) => [
-                    s,
-                    Array.isArray(h) ? h[h.length - 1] ?? 0 : 0,
-                  ]),
-                )}
-                history={sectorHistory}
-                quarters={sectorQuarters}
+              ) : null}
+              <EvidenceRail
+                freshness={pvLoading ? "pending" : pvFailed ? "error" : hasSectorHistory ? "stale" : "partial"}
+                source="SEC EDGAR 13F"
+                asOf={investorView?.quarter ?? asOf}
+                coverage={hasSectorHistory ? `${formatInteger(sectorQuarters.length)}분기 추적 · ${investorView?.quarter ?? asOf}` : "이 투자자 섹터 기록 없음"}
+                next="분기 종료 후 최대 45일"
+                onRetry={pvFailed ? onRetryPv : undefined}
+                onEvidence={() => openEvidence("/data/sec-13f/analytics/portfolio_views.json")}
               />
-            ) : null}
-            {investorView.performance ? (
-              <PerformanceChart
-                performance={investorView.performance}
-                investorName={investorView.name}
+            </Panel>
+            <Panel
+              loading={pvLoading}
+              empty={!pvLoading && !pvFailed && !investorView?.performance}
+              emptyReason={investorView ? "표시할 성과 데이터가 없습니다" : "이 투자자의 자료 없음"}
+              emptyNextRefresh="다음 분기 공시 반영 후 갱신"
+              error={pvFailed}
+              errorDetail="보유 포트폴리오 데이터를 불러오지 못했습니다."
+              asOf={investorView?.quarter ?? asOf}
+              onRetry={pvFailed ? onRetryPv : undefined}
+              retryLabel="다시 시도"
+            >
+              {investorView?.performance ? (
+                <PerformanceChart
+                  performance={investorView.performance}
+                  investorName={investorView?.name ?? id}
+                />
+              ) : null}
+              <EvidenceRail
+                freshness={pvLoading ? "pending" : pvFailed ? "error" : investorView?.performance ? "stale" : "partial"}
+                source="SEC EDGAR 13F"
+                asOf={investorView?.quarter ?? asOf}
+                coverage={investorView?.performance ? `${investorView.name} · ${investorView.quarter}` : "이 투자자 성과 시리즈 없음"}
+                next="분기 종료 후 최대 45일"
+                onRetry={pvFailed ? onRetryPv : undefined}
+                onEvidence={() => openEvidence("/data/sec-13f/analytics/portfolio_views.json")}
               />
-            ) : null}
-            <GuruTrendBlock investorId={id} />
+            </Panel>
           </div>
         </div>
-      ) : null}
+      <GuruTrendBlock investorId={id} />
+
+      {/* Cohort cross-investor charts — full PortfolioViewsData required */}
+      <div className="mt-4 space-y-3">
+        <Panel
+          loading={pvLoading}
+          empty={scatterEmpty}
+          emptyReason="표시할 위험·수익 데이터가 없습니다"
+          emptyNextRefresh="다음 분기 공시 반영 후 갱신"
+          error={scatterFailed}
+          errorDetail="포트폴리오 수익 데이터를 불러오지 못했습니다."
+          asOf={asOf}
+          onRetry={scatterFailed ? onRetryPv : undefined}
+          retryLabel="다시 시도"
+        >
+          {pvData && plottableCount > 0 ? (
+            <div data-superinvestor-guru-risk-return>
+              <PanelHeader
+                eyebrow="Risk · Return"
+                title="위험 대비 수익"
+                right={<span className="sup-head-note">동일 기간 기준</span>}
+              />
+              <RiskReturnScatter data={pvData} />
+            </div>
+          ) : null}
+          <EvidenceRail
+            freshness={scatterFreshness}
+            source="SEC EDGAR 13F"
+            asOf={asOf}
+            coverage={scatterCoverage}
+            next="분기 종료 후 최대 45일"
+            onRetry={scatterFailed ? onRetryPv : undefined}
+            onEvidence={pvData ? () => openEvidence("/data/sec-13f/analytics/portfolio_views.json") : undefined}
+          />
+        </Panel>
+
+        <Panel
+          loading={pvLoading}
+          empty={scatterEmpty}
+          emptyReason="표시할 누적 수익 데이터가 없습니다"
+          emptyNextRefresh="다음 분기 공시 반영 후 갱신"
+          error={scatterFailed}
+          errorDetail="포트폴리오 수익 데이터를 불러오지 못했습니다."
+          asOf={asOf}
+          onRetry={scatterFailed ? onRetryPv : undefined}
+          retryLabel="다시 시도"
+        >
+          {pvData && plottableCount > 0 ? (
+            <div data-superinvestor-guru-cumulative>
+              <PanelHeader
+                eyebrow="Cumulative"
+                title="누적 수익률 겹보기"
+                right={<span className="sup-head-note">동일 기간 기준</span>}
+              />
+              <CumulativeReturnOverlay data={pvData} />
+            </div>
+          ) : null}
+          <EvidenceRail
+            freshness={scatterFreshness}
+            source="SEC EDGAR 13F"
+            asOf={asOf}
+            coverage={scatterCoverage}
+            next="분기 종료 후 최대 45일"
+            onRetry={scatterFailed ? onRetryPv : undefined}
+            onEvidence={pvData ? () => openEvidence("/data/sec-13f/analytics/portfolio_views.json") : undefined}
+          />
+        </Panel>
+
+        <Panel
+          loading={factorLoading}
+          empty={radarEmpty}
+          emptyReason={hasFactorRecord ? "표시할 팩터 노출 데이터가 없습니다" : "이 투자자의 자료 없음"}
+          emptyNextRefresh="다음 분기 공시 반영 후 갱신"
+          error={radarFailed}
+          errorDetail="팩터 노출 데이터를 불러오지 못했습니다."
+          asOf={asOf}
+          onRetry={radarFailed ? onRetryFactor : undefined}
+          retryLabel="다시 시도"
+        >
+          {factorData && hasFactorRecord ? (
+            <div data-superinvestor-guru-factor>
+              <PanelHeader
+                eyebrow="Factor"
+                title="팩터 노출"
+                right={<span className="sup-head-note">FF 파생 틸트</span>}
+              />
+              <FactorExposureRadar data={factorData} investorId={id} />
+            </div>
+          ) : null}
+          <EvidenceRail
+            freshness={radarFreshness}
+            source="SEC EDGAR 13F"
+            asOf={asOf}
+            coverage={radarCoverage}
+            next="분기 종료 후 최대 45일"
+            onRetry={radarFailed ? onRetryFactor : undefined}
+            onEvidence={factorData ? () => openEvidence("/data/sec-13f/analytics/factor_exposures_summary.json") : undefined}
+          />
+        </Panel>
+      </div>
 
       {loading ? (
         <div className="mt-4 space-y-2">
@@ -578,200 +684,346 @@ function GuruDetailPanel({
         </div>
       ) : latest ? (
         <div className="mt-4">
-          <p className="text-[11px] font-black uppercase tracking-[0.1em] text-slate-500">Top 보유</p>
-          <LatestHoldingsTable holdings={latest.holdings ?? []} />
+          <p className="text-[12px] font-black uppercase tracking-[0.1em] text-slate-500">보유 · 청산 종목</p>
+          <ResponsiveHoldingsTable holdings={latest.holdings ?? []} changes={latest.changes_summary} returnTo={returnTo} onBeforeNavigate={onBeforeNavigate} />
+        </div>
+      ) : status === "private" ? (
+        <div className="mt-4">
+          <Panel empty emptyReason="상세 데이터는 비공개입니다" emptyNextRefresh="요약·포트폴리오 정보는 공개 범위에서 제공되며, 원문 보유내역은 공개하지 않습니다."><span>상세 데이터는 비공개입니다</span></Panel>
         </div>
       ) : (
         <div className="mt-4">
-          <EmptyState title="상세 데이터를 불러오지 못했습니다" desc="잠시 후 다시 시도하거나 다른 투자자를 선택해 주세요." />
+          <Panel empty emptyReason="상세 데이터를 불러오지 못했습니다" emptyNextRefresh="잠시 후 다시 시도하거나 다른 투자자를 선택해 주세요."><span>상세 데이터를 불러오지 못했습니다</span></Panel>
         </div>
       )}
     </div>
   );
 }
 
-function KpiCard({
-  label,
-  value,
-  isLoading,
-  dataKey,
+function CohortTreemapPanel({
+  pvData,
+  pvLoading,
+  pvFailed,
+  onRetryPv,
+  onSelectTicker,
 }: {
-  label: string;
-  value: string;
-  isLoading?: boolean;
-  dataKey?: string;
+  pvData: PortfolioViewsData | null;
+  pvLoading: boolean;
+  pvFailed: boolean;
+  onRetryPv?: () => void;
+  onSelectTicker?: (ticker: string) => void;
 }) {
+  const treemap = pvData?.total?.treemap ?? [];
+  const quarter = pvData?.metadata?.quarter ?? "—";
+  const cohort = pvData?.metadata?.cohort_count ?? null;
+  const failed = !pvLoading && (pvFailed || !pvData);
+  const empty = !pvLoading && !pvFailed && !!pvData && treemap.length === 0;
+  const partial = !pvLoading && !failed && !empty && cohort == null;
+  const headNote =
+    treemap.length > 0
+      ? `13F 보고금액 대비 비중 · 매핑 ${formatPercent(pvData?.total?.coverage?.mapped_ratio ?? 1, { fraction: true, digits: 1 })}`
+      : "—";
   return (
-    <div data-superinvestor-guru-kpi={dataKey} className="min-w-0 rounded-xl border border-slate-200 bg-white p-3">
-      <p className="truncate text-[11px] font-medium text-slate-500">{label}</p>
-      {isLoading ? (
-        <div className="mt-1 h-6 w-3/4 rounded bg-slate-200" />
-      ) : (
-        <p className="mt-1 truncate text-lg font-black tracking-tight text-slate-950 orbitron tabular-nums sm:text-xl">
-          {value}
-        </p>
-      )}
-    </div>
+    <Panel
+      loading={pvLoading}
+      empty={empty}
+      emptyReason="표시할 코호트 트리맵 데이터가 없습니다"
+      emptyNextRefresh="다음 분기 공시 반영 후 갱신"
+      error={failed}
+      errorDetail="거장 토탈 포트폴리오 데이터를 불러오지 못했습니다."
+      asOf={quarter}
+      onRetry={failed ? onRetryPv : undefined}
+      retryLabel="다시 시도"
+    >
+      {treemap.length > 0 ? (
+        <div data-superinvestor-cohort-treemap data-superinvestor-cohort-treemap-count={treemap.length}>
+          <PanelHeader
+            eyebrow="Cohort"
+            title="거장 토탈 포트폴리오"
+            right={<span className="sup-head-note">{headNote}</span>}
+          />
+          <PortfolioTreemap rows={treemap} quarterLabel={quarter} onSelectTicker={onSelectTicker} />
+          {pvData?.metadata?.disclaimer ? (
+            <p className="mt-2 text-[12px] font-semibold text-[var(--c-ink-3)]">{pvData.metadata.disclaimer}</p>
+          ) : null}
+        </div>
+      ) : null}
+      <EvidenceRail
+        freshness={pvLoading ? "pending" : failed ? "error" : empty || partial ? "partial" : "stale"}
+        source="SEC EDGAR 13F"
+        asOf={quarter}
+        coverage={treemap.length > 0 ? headNote : "표시할 코호트 행 없음"}
+        next="분기 종료 후 최대 45일"
+        onRetry={failed ? onRetryPv : undefined}
+        onEvidence={pvData ? () => openEvidence("/data/sec-13f/analytics/portfolio_views.json") : undefined}
+      />
+    </Panel>
   );
 }
 
-type AmountColor = "emerald" | "rose";
+type RotationSort = "abs" | "desc" | "asc";
 
-function TradeRankingPanel({
-  title,
-  rows,
-  totalAmount,
-  amountColor,
-  side,
-  expanded,
-  onToggle,
-  actionLabel,
+const ROTATION_SORTS: Array<{ key: RotationSort; label: string }> = [
+  { key: "abs", label: "변동폭 순" },
+  { key: "desc", label: "확대 순" },
+  { key: "asc", label: "축소 순" },
+];
+
+function SectorRotationPanel({
+  pvData,
+  pvLoading,
+  pvFailed,
+  onRetryPv,
+  tradesData,
+  tradesLoading,
+  tradesFailed,
+  bySector,
+  returnTo,
+  onBeforeNavigate,
 }: {
-  title: string;
-  rows: TradesRankingRow[];
-  totalAmount: number;
-  amountColor: AmountColor;
-  side: "bought" | "sold";
-  expanded: boolean;
-  onToggle: () => void;
-  actionLabel: (r: TradesRankingRow) => string | undefined;
+  pvData: PortfolioViewsData | null;
+  pvLoading: boolean;
+  pvFailed: boolean;
+  onRetryPv?: () => void;
+  tradesData: TradesRankingData | null;
+  tradesLoading: boolean;
+  tradesFailed: boolean;
+  bySector: SectorHoldingsData | null;
+  returnTo?: string | null;
+  onBeforeNavigate?: () => void;
 }) {
-  const visibleRows = expanded ? rows : rows.slice(0, 10);
-  const amountTextClass = amountColor === "emerald" ? "text-emerald-700" : "text-rose-700";
-  const topLabel = amountColor === "emerald" ? "TOP 매수자" : "TOP 매도자";
-  const shareScopeLabel = side === "bought" ? "매수 상위권 내 비중" : "매도 상위권 내 비중";
+  const [sortMode, setSortMode] = useState<RotationSort>("abs");
+  const rotation = useMemo(() => {
+    const base = buildSectorRotationRows(pvData?.total?.sector_history);
+    const rows = [...base];
+    if (sortMode === "desc") rows.sort((a, b) => b.deltaPp - a.deltaPp);
+    else if (sortMode === "asc") rows.sort((a, b) => a.deltaPp - b.deltaPp);
+    return rows;
+  }, [pvData, sortMode]);
+  const participation = useMemo(() => {
+    const bought = new Map<CanonicalSector, number>();
+    const sold = new Map<CanonicalSector, number>();
+    // Participation = payload-provided investors_count summed over the sector's
+    // ranked tickers (investor×ticker pairs). Rows without the field add nothing;
+    // a sector with no valid aggregate stays absent so the UI renders "—".
+    for (const row of tradesData?.bought ?? []) {
+      if (typeof row.investors_count !== "number" || !Number.isFinite(row.investors_count)) continue;
+      const sector = normalizeSuperSector(row.sector_gics ?? row.sector, row.sector);
+      bought.set(sector, (bought.get(sector) ?? 0) + row.investors_count);
+    }
+    for (const row of tradesData?.sold ?? []) {
+      if (typeof row.investors_count !== "number" || !Number.isFinite(row.investors_count)) continue;
+      const sector = normalizeSuperSector(row.sector_gics ?? row.sector, row.sector);
+      sold.set(sector, (sold.get(sector) ?? 0) + row.investors_count);
+    }
+    return { bought, sold };
+  }, [tradesData]);
+  const holdingsBySector = useMemo(() => {
+    const map = new Map<CanonicalSector, SectorHoldingsEntry>();
+    if (!bySector) return map;
+    for (const [key, entry] of Object.entries(bySector)) {
+      if (key === "_meta" || !isSectorEntry(entry)) continue;
+      const canonical = normalizeSuperSector(key, key);
+      if (!map.has(canonical)) map.set(canonical, entry);
+    }
+    return map;
+  }, [bySector]);
 
-  if (rows.length === 0) {
-    return (
-      <div className="rounded-[1.5rem] border border-[var(--c-line)] bg-[var(--c-panel)] p-3 shadow-[var(--sh-sm)] sm:p-4">
-        <h3 className="text-sm font-black tracking-tight text-slate-900">{title}</h3>
-        <EmptyState title="데이터가 없습니다" desc="해당 분기 매매 데이터가 존재하지 않습니다." />
-      </div>
-    );
-  }
-
+  const quarter = pvData?.metadata?.quarter ?? "—";
+  const quarterCount = pvData?.total?.sector_history?.quarters.length ?? 0;
+  const failed = !pvLoading && (pvFailed || !pvData);
+  const empty = !pvLoading && !tradesLoading && !pvFailed && !!pvData && rotation.length === 0;
+  const tradesPartFailed = !tradesLoading && (tradesFailed || !tradesData);
+  const chipsMissing = !bySector;
+  const partial = !pvLoading && !failed && !empty && (tradesPartFailed || chipsMissing);
+  const coverage =
+    rotation.length > 0
+      ? `${formatInteger(rotation.length)}섹터 · ${formatInteger(quarterCount)}분기${tradesPartFailed ? " · 매매 참여 미반영" : ""}${chipsMissing ? " · 보유 칩 미반영" : ""}`
+      : "표시할 섹터 행 없음";
   return (
-    <div
-      data-superinvestor-trades-panel
-      data-superinvestor-trades-side={side}
-      className="cpw5-super-trades-panel rounded-[1.5rem] border border-[var(--c-line)] bg-[var(--c-panel)] p-3 shadow-[var(--sh-sm)] sm:p-4"
+    <Panel
+      loading={pvLoading || tradesLoading}
+      empty={empty}
+      emptyReason="표시할 섹터 로테이션 데이터가 없습니다"
+      emptyNextRefresh="다음 분기 공시 반영 후 갱신"
+      error={failed}
+      errorDetail="섹터 로테이션 데이터를 불러오지 못했습니다."
+      asOf={quarter}
+      onRetry={failed ? onRetryPv : undefined}
+      retryLabel="다시 시도"
     >
-      <h3 className="text-sm font-black tracking-tight text-slate-900">{title}</h3>
-      <div
-        data-superinvestor-trades-region
-        data-superinvestor-trades-side={side}
-        className="cpw5-super-trades-region scroll-hint-x mt-3 -mx-1 px-1"
-        role="region"
-        tabIndex={0}
-        aria-label={`${title} 표`}
-      >
-        <table className="cpw5-super-trades-table w-full min-w-0 table-fixed text-xs">
-          <colgroup>
-            <col className="w-[9%]" />
-            <col className="w-[23%]" />
-            <col className="w-[17%]" />
-            <col className="w-[14%]" />
-            <col className="w-[14%]" />
-            <col className="w-[23%]" />
-          </colgroup>
-          <thead>
-            <tr className="border-b border-slate-200 text-[10px] font-black uppercase tracking-[0.08em] text-slate-500">
-              <th className="px-2 py-2 text-left">순위</th>
-              <th className="px-2 py-2 text-left">종목</th>
-              <th className="px-2 py-2 text-left">섹터</th>
-              <th className="px-2 py-2 text-right">비중</th>
-              <th className="px-2 py-2 text-right">투자자</th>
-              <th className="px-2 py-2 text-left">{topLabel}</th>
-            </tr>
-          </thead>
-          <tbody>
-            {visibleRows.map((r) => {
-              const canonicalSector = normalizeSuperSector(r.sector_gics ?? r.sector, r.sector);
+      {rotation.length > 0 ? (
+        <div data-superinvestor-sector-rotation data-superinvestor-sector-rotation-count={rotation.length}>
+          <PanelHeader
+            eyebrow="Sector"
+            title="섹터 로테이션"
+            right={<span className="sup-head-note">{quarter} · 전분기 대비</span>}
+          />
+          <div className="mt-2 flex flex-wrap gap-1" role="group" aria-label="섹터 정렬 기준">
+            {ROTATION_SORTS.map((option) => (
+              <button
+                key={option.key}
+                type="button"
+                onClick={() => setSortMode(option.key)}
+                aria-pressed={sortMode === option.key}
+                className={`inline-flex min-h-11 items-center rounded-full border px-3 text-[10px] font-black uppercase tracking-[0.1em] transition sm:min-h-8 ${
+                  sortMode === option.key
+                    ? "border-brand-interactive bg-brand-interactive/10 text-brand-interactive"
+                    : "border-slate-200 bg-white text-slate-600 hover:border-slate-300"
+                }`}
+              >
+                {option.label}
+              </button>
+            ))}
+          </div>
+          <div className="mt-2 space-y-2">
+            {rotation.map((row) => {
+              const up = row.deltaPp > 0.05;
+              const down = row.deltaPp < -0.05;
+              const deltaClass = up ? "text-emerald-700" : down ? "text-rose-700" : "text-slate-500";
+              const bought = participation.bought.get(row.sector);
+              const sold = participation.sold.get(row.sector);
+              const chips = holdingsBySector.get(row.sector)?.top_holdings?.slice(0, 3) ?? [];
               return (
-                <tr
-                  key={`${r.ticker}-${r.rank}`}
-                  data-superinvestor-trades-row
-                  data-superinvestor-trades-side={side}
-                  data-superinvestor-trades-ticker={r.ticker}
-                  className="border-b border-slate-100 last:border-b-0"
+                <div
+                  key={row.sector}
+                  data-superinvestor-sector-rotation-row
+                  data-superinvestor-sector-rotation-sector={row.sector}
+                  className="rounded-xl border border-slate-200 bg-white p-3"
                 >
-                  <td className="min-w-0 px-1 py-2 sm:px-2">
-                    <span className="orbitron tabular-nums text-xs font-bold text-[var(--c-ink-3)]">{r.rank}</span>
-                  </td>
-                  <td className="min-w-0 px-1 py-2 sm:px-2">
-                    <TransitionLink
-                      href={ROUTES.stock(r.ticker)}
-                      data-superinvestor-trades-action
-                      data-superinvestor-trades-stock-link
-                      className="inline-flex min-h-11 w-full min-w-0 max-w-full flex-col justify-center rounded-xl border border-slate-200 bg-white px-2 py-1 transition hover:border-brand-interactive hover:text-brand-interactive"
-                    >
-                      <span className="block max-w-full truncate font-bold text-slate-900">{r.name}</span>
-                      <span className="mt-0.5 text-[10px] font-black text-brand-interactive">{r.ticker}</span>
-                    </TransitionLink>
-                  </td>
-                  <td className="min-w-0 px-1 py-2 sm:px-2">
-                    <span className="inline-flex max-w-full items-center gap-1 rounded-full border border-slate-200 px-1.5 py-0.5 text-[10px] font-semibold sm:px-2">
+                  <div className="flex items-center justify-between gap-2">
+                    <span className="inline-flex min-w-0 items-center gap-1 rounded-full border border-slate-200 px-2 py-0.5 text-[10px] font-semibold">
                       <span
                         className="h-1.5 w-1.5 shrink-0 rounded-full"
-                        style={{ backgroundColor: sectorColor(canonicalSector) }}
+                        style={{ backgroundColor: sectorColor(row.sector) }}
                       />
-                      <span className="truncate">{sectorLabelKo(canonicalSector)}</span>
+                      <span className="truncate">{sectorLabelKo(row.sector)}</span>
                     </span>
-                  </td>
-                  <td className="min-w-0 px-1 py-2 text-right sm:px-2" title={shareScopeLabel}>
-                    <span className={`orbitron tabular-nums font-bold ${amountTextClass}`}>
-                      {formatTradeShare(r.amount, totalAmount)}
+                    <span className={`shrink-0 text-[12px] font-black tabular-nums ${deltaClass}`}>
+                      {row.deltaPp >= 0 ? "▲" : "▼"}{Math.abs(row.deltaPp).toFixed(1)}%p
                     </span>
-                  </td>
-                  <td className="min-w-0 px-1 py-2 text-right sm:px-2">
-                    <span className="orbitron tabular-nums font-bold text-slate-900">{r.investors_count}</span>
-                    {actionLabel(r) ? (
-                      <span className="block truncate text-[10px] font-semibold text-[var(--c-ink-3)]">{actionLabel(r)}</span>
-                    ) : null}
-                  </td>
-                  <td className="min-w-0 px-1 py-2 sm:px-2">
-                    {r.top_investor?.id ? (
-                      <TransitionLink
-                        href={ROUTES.superinvestorsGuru(r.top_investor.id)}
-                        data-superinvestor-trades-action
-                        data-superinvestor-trades-investor-link
-                        className="inline-flex min-h-11 w-full min-w-0 max-w-full items-center rounded-xl border border-slate-200 bg-white px-2 py-1 text-[10px] font-bold text-slate-700 transition hover:border-brand-interactive hover:text-brand-interactive"
-                        title={r.top_investor.name}
-                      >
-                        <span className="truncate">{r.top_investor.name}</span>
-                      </TransitionLink>
+                  </div>
+                  <div className="mt-2 flex flex-wrap gap-x-4 gap-y-1 text-[12px] font-bold text-slate-700">
+                    <span>보유 <b className="tabular-nums text-slate-900">{formatPercent(row.current, { digits: 1 })}</b></span>
+                    <span>매수 참여 <b className="tabular-nums text-slate-900">{tradesPartFailed || bought == null ? "—" : `${formatInteger(bought)}건`}</b></span>
+                    <span>매도 참여 <b className="tabular-nums text-slate-900">{tradesPartFailed || sold == null ? "—" : `${formatInteger(sold)}건`}</b></span>
+                  </div>
+                  <div className="mt-2 flex flex-wrap gap-1">
+                    {chips.length > 0 ? (
+                      chips.map((ticker) => <TickerChip key={ticker} ticker={ticker} variant="inline" href={ROUTES.stock(ticker, returnTo)} onClick={onBeforeNavigate} className="inline-flex min-h-11 items-center" />)
                     ) : (
-                      <span className="block truncate text-[10px] font-bold text-slate-700">—</span>
+                      <span className="text-[12px] font-bold text-slate-700">—</span>
                     )}
-                  </td>
-                </tr>
+                  </div>
+                </div>
               );
             })}
-          </tbody>
-        </table>
-      </div>
-      {rows.length > 10 ? (
-        <button
-          type="button"
-          onClick={onToggle}
-          aria-pressed={expanded}
-          className="mt-3 inline-flex min-h-11 w-full items-center justify-center rounded-full border border-slate-200 bg-white px-3 text-[11px] font-black uppercase tracking-[0.1em] text-slate-700 transition hover:border-brand-interactive hover:text-brand-interactive sm:min-h-8"
-        >
-          {expanded ? "접기" : "전체 50개 보기"}
-        </button>
+          </div>
+          <p className="mt-2 text-[12px] font-semibold text-[var(--c-ink-3)]">
+            가중치는 거장 코호트 합산 보유 시가총액 기준, 델타는 직전 분기 대비 %p입니다. 매수·매도 참여는 매매 상위권 종목의 공시 참여 투자자 수를 섹터별로 합산한 값(투자자×종목 건수)이며, 집계가 없는 섹터는 —로 표시합니다.
+          </p>
+        </div>
       ) : null}
+      <EvidenceRail
+        freshness={pvLoading || tradesLoading ? "pending" : failed ? "error" : empty || partial ? "partial" : "stale"}
+        source="SEC EDGAR 13F"
+        asOf={quarter}
+        coverage={coverage}
+        next="분기 종료 후 최대 45일"
+        onRetry={failed ? onRetryPv : undefined}
+        onEvidence={pvData ? () => openEvidence("/data/sec-13f/analytics/portfolio_views.json") : undefined}
+      />
+    </Panel>
+  );
+}
+function GuruDetailView({
+  id,
+  summary,
+  turnover,
+  turnoverLoading,
+  turnoverFailed,
+  onRetryTurnover,
+  pvData,
+  pvLoading,
+  pvFailed,
+  onRetryPv,
+  factorData,
+  factorLoading,
+  factorFailed,
+  onRetryFactor,
+  asOf,
+  returnTo,
+  onBeforeNavigate,
+  onReady,
+  onBack,
+}: {
+  id: string;
+  summary: SummaryInvestor;
+  turnover: number | null | undefined;
+  turnoverLoading: boolean;
+  turnoverFailed: boolean;
+  onRetryTurnover?: () => void;
+  pvData: PortfolioViewsData | null;
+  pvLoading: boolean;
+  pvFailed: boolean;
+  onRetryPv?: () => void;
+  factorData: FactorExposuresSummaryData | null;
+  factorLoading: boolean;
+  factorFailed: boolean;
+  onRetryFactor?: () => void;
+  asOf: string;
+  returnTo?: string | null;
+  onBeforeNavigate?: () => void;
+  onReady?: (id: string) => void;
+  onBack: () => void;
+}) {
+  return (
+    <div
+      data-superinvestors-guru-detail-view
+      data-superinvestors-holder-detail
+      data-superinvestors-holder-detail-id={id}
+      className="sup-guru-layout w-full"
+    >
+      <button
+        type="button"
+        onClick={onBack}
+        data-superinvestors-guru-back
+        className="sup-guru-back inline-flex min-h-11 items-center gap-1 rounded-full border px-3 text-[11px] font-black uppercase tracking-[0.1em] transition"
+      >
+        ← 투자자 목록
+      </button>
+      <GuruDetailPanel
+        id={id}
+        summary={summary}
+        turnover={turnover}
+        turnoverLoading={turnoverLoading}
+        turnoverFailed={turnoverFailed}
+        onRetryTurnover={onRetryTurnover}
+        pvData={pvData}
+        pvLoading={pvLoading}
+        pvFailed={pvFailed}
+        onRetryPv={onRetryPv}
+        factorData={factorData}
+        factorLoading={factorLoading}
+        factorFailed={factorFailed}
+        onRetryFactor={onRetryFactor}
+        asOf={asOf}
+        returnTo={returnTo}
+        onBeforeNavigate={onBeforeNavigate}
+        onReady={onReady}
+      />
     </div>
   );
 }
 
 export default function SuperinvestorsClient({
-  initialTab,
-  initialSearch = "",
   initialGuru = null,
+  initialTab = null,
+  initialTicker = null,
 }: {
-  initialTab?: SuperInvestorsTab;
-  initialSearch?: string;
   initialGuru?: string | null;
+  initialTab?: string | null;
+  initialTicker?: string | null;
 }) {
   const {
     consensus,
@@ -784,1071 +1036,609 @@ export default function SuperinvestorsClient({
     failed,
     quarter,
     excludedStale,
+    failedRequests,
+    retry,
   } = use13FData();
-  const [tab, setTab] = useState<SuperInvestorsTab>(initialTab ?? "consensus");
-  const tabsId = useTabsBaseId(SUPERINVESTOR_TABS_ID);
-  const [search, setSearch] = useState(initialSearch);
-  const [group, setGroup] = useState("");
+  const [sort, setSort] = useState<HolderSort>("aum");
   const [expandedGuru, setExpandedGuru] = useState<string | null>(initialGuru);
-  const [tradesData, setTradesData] = useState<TradesRankingData | null>(null);
-  const [tradesLoading, setTradesLoading] = useState(true);
-  const [tradesFailed, setTradesFailed] = useState(false);
-  const [tradesBoughtExpanded, setTradesBoughtExpanded] = useState(false);
-  const [tradesSoldExpanded, setTradesSoldExpanded] = useState(false);
-  const [pvData, setPvData] = useState<PortfolioViewsData | null>(null);
-  const [pvFailed, setPvFailed] = useState(false);
-  const [totalPortfolioOpen, setTotalPortfolioOpen] = useState(false);
-
+  const [tab, setTab] = useState<SupTab>(() => resolveInitialTab(initialTab, initialGuru));
+  const [journeyReturnTo, setJourneyReturnTo] = useState<string | null>(null);
+  const [sourceReturnTo, setSourceReturnTo] = useState<string | null>(null);
+  const journeySourceRef = useRef<string | null | undefined>(undefined);
+  const sourceReturnRef = useRef<string | null | undefined>(undefined);
+  const pendingJourneyScrollRef = useRef<ReturnType<typeof readJourneyScrollSnapshot> | undefined>(undefined);
+  const journeyScrollRestoredRef = useRef(false);
+  const journeyUserInteractedRef = useRef(false);
+  const [readyGuruId, setReadyGuruId] = useState<string | null>(null);
   useEffect(() => {
-    setTab(initialTab ?? "consensus");
-    setSearch(initialSearch);
-    setExpandedGuru(initialGuru);
-  }, [initialTab, initialSearch, initialGuru]);
-
-  // Open the total-portfolio treemap by default on desktop only (mobile stays collapsed).
-  useEffect(() => {
-    if (typeof window !== "undefined" && window.matchMedia("(min-width: 1024px)").matches) {
-      setTotalPortfolioOpen(true);
-    }
+    const cancel = () => { journeyUserInteractedRef.current = true; };
+    const events = ["wheel", "touchstart", "pointerdown", "keydown"] as const;
+    for (const event of events) window.addEventListener(event, cancel, { passive: true });
+    return () => { for (const event of events) window.removeEventListener(event, cancel); };
   }, []);
-  const [consensusSortDir, setConsensusSortDir] = useState<"asc" | "desc">("desc");
-  const [page, setPage] = useState(0);
+  const [prevInitial, setPrevInitial] = useState({ guru: initialGuru, tab: initialTab });
+  if (prevInitial.guru !== initialGuru || prevInitial.tab !== initialTab) {
+    setPrevInitial({ guru: initialGuru, tab: initialTab });
+    setExpandedGuru(initialGuru);
+    setTab(resolveInitialTab(initialTab, initialGuru));
+  }
+  const tabsBaseId = useTabsBaseId("sup");
+  const router = useRouter();
 
-  const consensusRows = useMemo<ConsensusTicker[]>(() => {
-    if (!consensus) return [];
-    const query = search.trim().toLowerCase();
-    const rows = Object.values(consensus.consensus).filter((row) => {
-      if (!query) return true;
-      return row.ticker.toLowerCase().includes(query);
-    });
-    return sortConsensus(rows, consensusSortDir);
-  }, [consensus, search, consensusSortDir]);
-
-  const guruEntries = useMemo<[string, SummaryInvestor][]>(() => {
-    if (!summary) return [];
-    const rows = Object.entries(summary.investors);
-    const filtered = group ? rows.filter(([, inv]) => inv.group === group) : rows;
-    if (!expandedGuru) return filtered;
-    return [...filtered].sort(([a], [b]) => {
-      if (a === expandedGuru) return -1;
-      if (b === expandedGuru) return 1;
-      return 0;
-    });
-  }, [summary, group, expandedGuru]);
-  const selectedGuruEntry =
-    expandedGuru && summary?.investors[expandedGuru]
-      ? ([expandedGuru, summary.investors[expandedGuru]] as const)
-      : null;
-
-  const groups = useMemo(() => {
-    if (!summary) return [];
-    return Array.from(new Set(Object.values(summary.investors).map((i) => i.group))).sort();
-  }, [summary]);
-
-  const byTickerEntry = useMemo(() => {
-    if (!byTicker || !search.trim()) return null;
-    const key = normalizeForEntityKey(search);
-    return byTicker[key] ?? null;
-  }, [byTicker, search]);
-
-  const byTickerEnhanced = useMemo(() => {
-    if (!enhancedConsensus || !search.trim()) return null;
-    const key = normalizeForEntityKey(search);
-    return enhancedConsensus.enhanced_consensus?.[key] ?? null;
-  }, [enhancedConsensus, search]);
-
-  const selectedTicker = normalizeForEntityKey(search);
-  const byTickerHolderRows = useMemo(() => {
-    if (!byTickerEntry) return [];
-    return [...byTickerEntry.holder_details].sort((a, b) => (b.weight || 0) - (a.weight || 0));
-  }, [byTickerEntry]);
-
-  const sectorRows = useMemo(() => {
-    if (!bySector) return [];
-    return Object.entries(bySector)
-      .filter(([sector, entry]) => sector !== "_meta" && isSectorEntry(entry))
-      .map(([sector, entry]) => ({ sector, ...(entry as SectorHoldingsEntry) }))
-      .sort((a, b) => b.avg_weight - a.avg_weight)
-      .slice(0, 8);
-  }, [bySector]);
-
-  const sectorBreakdownCount = useMemo(() => {
-    if (!bySector) return 0;
-    return Object.entries(bySector).filter(([sector, entry]) => sector !== "_meta" && isSectorEntry(entry)).length;
-  }, [bySector]);
-
-  const pageCount = Math.max(1, Math.ceil(consensusRows.length / PAGE_SIZE));
-  const safePage = Math.min(page, pageCount - 1);
-  const pageRows = consensusRows.slice(safePage * PAGE_SIZE, safePage * PAGE_SIZE + PAGE_SIZE);
-
-  const stateKey = `${tab}|${search}|${group}|${consensusSortDir}`;
-  const [prevStateKey, setPrevStateKey] = useState(stateKey);
-  if (prevStateKey !== stateKey) {
-    setPrevStateKey(stateKey);
-    if (page !== 0) setPage(0);
+  function refreshJourneyReturnTo() {
+    const source = currentJourneyReturnTo();
+    journeySourceRef.current = source;
+    setJourneyReturnTo(source);
+    const sourceReturn = readSourceReturnTo();
+    sourceReturnRef.current = sourceReturn;
+    setSourceReturnTo(sourceReturn);
   }
 
   useEffect(() => {
-    let cancelled = false;
-    async function load() {
-      setTradesLoading(true);
-      setTradesFailed(false);
-      try {
-        const res = await fetch("/data/sec-13f/analytics/trades_ranking.json");
-        if (!res.ok) throw new Error(`HTTP ${res.status}`);
-        const json = normalizeTradesRanking(await res.json());
-        if (!json) throw new Error("Invalid trades_ranking shape");
-        if (!cancelled) setTradesData(json);
-      } catch {
-        if (!cancelled) setTradesFailed(true);
-      } finally {
-        if (!cancelled) setTradesLoading(false);
-      }
+    const source = currentJourneyReturnTo();
+    const sourceReturn = readSourceReturnTo();
+    if (sourceReturn !== sourceReturnRef.current) {
+      sourceReturnRef.current = sourceReturn;
+      setSourceReturnTo(sourceReturn);
     }
-    load();
-    return () => { cancelled = true; };
-  }, []);
+    if (source === journeySourceRef.current) return;
+    journeySourceRef.current = source;
+    setJourneyReturnTo(source);
+    pendingJourneyScrollRef.current = readJourneyScrollSnapshot(source);
+  });
+  const [tradesBoughtExpanded, setTradesBoughtExpanded] = useState(false);
+  const [tradesSoldExpanded, setTradesSoldExpanded] = useState(false);
+  const tabData = useInvestorTabData(tab, expandedGuru);
+  const turnover = tabData.turnover.data;
+  const turnoverLoading = tabData.turnover.status === "not-requested" || tabData.turnover.status === "loading";
+  const turnoverError = tabData.turnover.status === "error" || tabData.turnover.status === "unavailable";
+  const tradesData = tabData.trades.data;
+  const tradesLoading = tabData.trades.status === "not-requested" || tabData.trades.status === "loading";
+  const tradesFailed = tabData.trades.status === "error" || tabData.trades.status === "unavailable";
+  const pvData = tabData.portfolio.data;
+  const pvLoading = tabData.portfolio.status === "not-requested" || tabData.portfolio.status === "loading";
+  const pvFailed = tabData.portfolio.status === "error" || tabData.portfolio.status === "unavailable";
+  const factorData = tabData.factor.data;
+  const factorLoading = tabData.factor.status === "not-requested" || tabData.factor.status === "loading";
+  const factorFailed = tabData.factor.status === "error" || tabData.factor.status === "unavailable";
+  const retryTurnover = tabData.retryTurnover;
+  const retryTrades = tabData.retryTrades;
+  const retryPv = tabData.retryPortfolio;
+  const retryFactor = tabData.retryFactor;
+  const retrySignal = tabData.retrySignal;
 
-  useEffect(() => {
-    let cancelled = false;
-    loadPortfolioViews().then((data) => {
-      if (cancelled) return;
-      if (data) setPvData(data);
-      else setPvFailed(true);
-    });
-    return () => { cancelled = true; };
-  }, []);
-
-  const delayLabel = "기관 공시는 분기 종료 후 최대 45일 지연됩니다";
-  const generatedAtLabel = fmtDateTimeKo(summary?.metadata?.generated_at);
-  const investorCount =
-    consensus?.metadata?.current_cohort_investors ??
-    summary?.metadata?.investor_count ??
-    summary?.metadata?.total_investors ??
-    null;
-  const tickerCount =
-    consensus?.metadata?.tickers_count ??
-    summary?.metadata?.total_tickers ??
-    (byTicker ? Object.keys(byTicker).length : null);
-  const topSector = sectorRows[0] ?? null;
-  const topSectorLabel = topSector ? sectorLabelKo(normalizeSuperSector(topSector.sector, topSector.sector)) : "—";
-  const topSectorHoldings = topSector?.top_holdings?.slice(0, 3).join(", ") || "—";
-  const convictionNewCount = convictionEntries?.metadata?.high_conviction_new_count ?? null;
-  const convictionHoldCount = convictionEntries?.metadata?.top_conviction_hold_count ?? null;
-  const topBoughtTrade = tradesData?.bought[0] ?? null;
-  const topSoldTrade = tradesData?.sold[0] ?? null;
-  const tradesBoughtAmount = tradesData?.bought.reduce((sum, row) => sum + (row.amount || 0), 0) ?? 0;
-  const tradesSoldAmount = tradesData?.sold.reduce((sum, row) => sum + (row.amount || 0), 0) ?? 0;
-  const tradesGeneratedAtLabel = fmtDateTimeKo(tradesData?.metadata.generated_at);
-  const tradeTotalAmount = tradesBoughtAmount + tradesSoldAmount;
-  const boughtSegmentPct = tradeTotalAmount > 0 ? (tradesBoughtAmount / tradeTotalAmount) * 100 : 50;
-  const soldSegmentPct = tradeTotalAmount > 0 ? (tradesSoldAmount / tradeTotalAmount) * 100 : 50;
-  const netFlowPct = tradeTotalAmount > 0 ? ((tradesBoughtAmount - tradesSoldAmount) / tradeTotalAmount) * 100 : 0;
-  const topBoughtShare = formatTradeShare(topBoughtTrade?.amount, tradesBoughtAmount);
-  const topSoldShare = formatTradeShare(topSoldTrade?.amount, tradesSoldAmount);
-
-  // ---- CANVAS+ hero + Tier 2 (brief-superinvestors.md D/G/H) --------------
-  const heroReady = dataReady && !tradesFailed && !!tradesData && !!topBoughtTrade && !!topSoldTrade;
-  const heroInvestorCount = investorCount ?? tradesData?.metadata.investors_included.length ?? null;
-  const heroVerdict = heroReady ? (
-    <>
-      이번 분기 거장 {formatInteger(heroInvestorCount)}명 중 <b className="up">{topBoughtTrade!.investors_count}명</b>이{" "}
-      <b>{topBoughtTrade!.ticker}</b>을 순매수(<b className="up">매수 상위권 {topBoughtShare}</b>), 최대 매도는{" "}
-      <b className="down">{topSoldTrade!.ticker}</b>(<b className="down">매도 상위권 {topSoldShare}</b>) —
-      자금은 <b>{topSectorLabel}</b> 섹터로 쏠렸다.
-    </>
-  ) : failed || tradesFailed ? (
-    "13F 매매 데이터를 불러오지 못했습니다."
-  ) : (
-    "13F 매매 데이터를 불러오는 중입니다…"
+  const investors = useMemo<[string, SummaryInvestor][]>(
+    () => (summary ? Object.entries(summary.investors) : []),
+    [summary],
   );
 
-  const sectorRotationRows = useMemo(() => {
-    const hist = pvData?.total?.sector_history;
-    return buildSectorRotationRows(hist);
-  }, [pvData]);
+  // Per-investor top holding: max within-investor weight across by_ticker
+  // holder_details. Falls back to summary top5[0] (ticker only, no weight).
+  const topHoldings = useMemo(() => {
+    const map = new Map<string, { ticker: string; weight: number }>();
+    if (!byTicker) return map;
+    for (const [ticker, entry] of Object.entries(byTicker)) {
+      if (!entry || !Array.isArray(entry.holder_details)) continue;
+      for (const h of entry.holder_details) {
+        if (!h || typeof h.investor !== "string") continue;
+        const w = typeof h.weight === "number" && Number.isFinite(h.weight) ? h.weight : null;
+        if (w === null) continue;
+        const cur = map.get(h.investor);
+        if (!cur || w > cur.weight) map.set(h.investor, { ticker, weight: w });
+      }
+    }
+    return map;
+  }, [byTicker]);
 
-  const highConvictionNewRows = convictionEntries?.high_conviction_new?.slice(0, 3) ?? [];
-  const topConvictionHoldRows = convictionEntries?.top_conviction_hold?.slice(0, 3) ?? [];
+  const sortedInvestors = useMemo(() => {
+    const rows = [...investors];
+    if (sort === "aum") rows.sort(([, a], [, b]) => (b.aum ?? -1) - (a.aum ?? -1));
+    else if (sort === "holdings") rows.sort(([, a], [, b]) => (b.holdings_count ?? -1) - (a.holdings_count ?? -1));
+    else {
+      rows.sort(([a], [b]) => (turnover?.[b]?.turnover ?? -1) - (turnover?.[a]?.turnover ?? -1));
+    }
+    return rows;
+  }, [investors, sort, turnover]);
+
+  const selectedGuruEntry = useMemo(
+    () => (expandedGuru ? investors.find(([id]) => id === expandedGuru) ?? null : null),
+    [investors, expandedGuru],
+  );
+  const focusedTickerCandidate = normalizeForRouteTicker(initialTicker);
+  const focusedTicker = isValidRouteTicker(focusedTickerCandidate) ? focusedTickerCandidate : null;
+  const overlapRows = useMemo(() => {
+    if (!consensus) return [];
+    return sortConsensusByHolders(Object.values(consensus.consensus)).slice(0, 4);
+  }, [consensus]);
+
+  // Mobile graph replacement: ranked list of the most-held tickers.
+  const graphRankRows = useMemo(() => {
+    if (!consensus) return [];
+    return sortConsensusByHolders(Object.values(consensus.consensus)).slice(0, 10);
+  }, [consensus]);
+
+  const loading = !dataReady && !failed;
+  const guruContentReady = tab !== "investors" || !selectedGuruEntry || readyGuruId === expandedGuru;
+  const journeyContentReady = !loading && tabData.readyFor(tab, expandedGuru) && guruContentReady;
+  useEffect(() => {
+    const snapshot = pendingJourneyScrollRef.current;
+    const source = journeySourceRef.current;
+    if (journeyScrollRestoredRef.current || snapshot === undefined || !journeyContentReady) return;
+    if (snapshot === null) {
+      if (source) clearJourneyScrollSnapshot(source);
+      pendingJourneyScrollRef.current = null;
+      journeyScrollRestoredRef.current = true;
+      return;
+    }
+    const frame = window.requestAnimationFrame(() => {
+      if (!journeyUserInteractedRef.current) {
+        const holdings = document.querySelector<HTMLElement>("[data-journey-holdings-scroll]");
+        if (holdings && snapshot.holdingsScrollTop !== undefined) holdings.scrollTop = snapshot.holdingsScrollTop;
+        window.scrollTo({ top: snapshot.scrollY, behavior: "auto" });
+      }
+      if (source) clearJourneyScrollSnapshot(source);
+      pendingJourneyScrollRef.current = null;
+      journeyScrollRestoredRef.current = true;
+    });
+    return () => {
+      window.cancelAnimationFrame(frame);
+    };
+  }, [journeyContentReady]);
+  const investorCount = summary
+    ? (consensus?.metadata?.current_cohort_investors ??
+      summary?.metadata?.investor_count ??
+      summary?.metadata?.total_investors ??
+      investors.length)
+    : null;
+  const totalTracked = summary
+    ? (consensus?.metadata?.total_investors ??
+      summary?.metadata?.investor_count ??
+      summary?.metadata?.total_investors ??
+      investors.length)
+    : null;
+  const coverage = dataReady ? `${formatInteger(investorCount)}/${formatInteger(totalTracked)} 투자자` : "—";
+  const submittedTotal = summary?.metadata?.investor_count ?? null;
+  // No average-filing-lag field exists in the loaded 13F payloads, so the chip
+  // carries submitted/total/stale only — a never-produced field stays off the
+  // screen (fh-386 policy b).
+  const freshnessChip = `${formatInteger(dataReady ? investorCount : null)}/${formatInteger(dataReady ? submittedTotal : null)} 제출 · 정체 ${formatInteger(dataReady && summary ? excludedStale.length : null)}명 제외`;
+  const turnoverCovered = turnover ? Object.keys(turnover).length : 0;
+  const holdersCoverage =
+    turnoverError
+      ? `${coverage} · 회전율 확인 불가`
+      : turnover !== undefined && turnoverCovered > 0
+        ? `${coverage} · 회전율 ${formatInteger(turnoverCovered)}명`
+        : coverage;
+  // 13F filings land up to 45 days after quarter end: the quarter label names
+  // the cohort, never a fresh as-of. Rails carry the real build clock when the
+  // summary stamps one, else the true quarter as-of — always stale, never
+  // fresh from the quarter label alone.
+  const generatedClock = summary?.metadata?.generated_at?.slice(0, 10) ?? null;
+  const asOfLabel = generatedClock ?? quarter ?? "—";
+  const partialFeeds = failedRequests.length > 0;
+
+  const holdersFailed = !loading && summary === null && failedRequests.includes("summary");
+  const overlapFailed = !loading && consensus === null && failedRequests.includes("consensus");
+  const holdersEmpty = !loading && !holdersFailed && dataReady && sortedInvestors.length === 0;
+  const overlapEmpty = !loading && !overlapFailed && dataReady && overlapRows.length === 0;
+  const holdersFreshness: "pending" | "error" | "partial" | "stale" =
+    loading ? "pending" : holdersFailed ? "error" : partialFeeds || excludedStale.length > 0 || turnoverError ? "partial" : "stale";
+  const overlapFreshness: "pending" | "error" | "partial" | "stale" =
+    loading ? "pending" : overlapFailed ? "error" : partialFeeds || excludedStale.length > 0 ? "partial" : "stale";
+
+  const delayLabel = "기관 공시는 분기 종료 후 최대 45일 지연됩니다";
+  const tradesBoughtAmount = tradesData?.bought.reduce((sum, row) => sum + (row.amount || 0), 0) ?? 0;
+  const tradesSoldAmount = tradesData?.sold.reduce((sum, row) => sum + (row.amount || 0), 0) ?? 0;
+
+  const [selectedGraphTicker, setSelectedGraphTicker] = useState<string | null>(null);
+  const graphNetwork = useMemo(
+    () => buildGraphNetwork({ summary, byTicker, excludedStale, failedRequests }),
+    [summary, byTicker, excludedStale, failedRequests],
+  );
+  const graphFailed = !loading && byTicker === null && graphNetwork.edges.length === 0 && failedRequests.includes("by_ticker");
+  const graphReady = !loading && !graphFailed && (byTicker !== null || graphNetwork.edges.length > 0);
+  const graphFreshness: "pending" | "error" | "partial" | "stale" =
+    loading ? "pending" : graphFailed ? "error" : partialFeeds || excludedStale.length > 0 ? "partial" : "stale";
+  const graphCoverage = graphReady
+    ? `투자자 ${formatInteger(graphNetwork.investorCount)}${graphNetwork.totalInvestors !== null ? `/${formatInteger(graphNetwork.totalInvestors)}` : ""}명 · 종목 ${formatInteger(graphNetwork.tickerCount)}/${formatInteger(graphNetwork.totalTickers)} 연결`
+    : coverage;
+  function openGraphEvidence() {
+    openEvidence("/data/sec-13f/summary.json");
+    openEvidence("/data/sec-13f/by_ticker.json");
+  }
+
+  function openGuru(id: string) {
+    setExpandedGuru(id);
+    syncGuruParam(id);
+    refreshJourneyReturnTo();
+  }
+
+  function closeGuru() {
+    setExpandedGuru(null);
+    syncGuruParam(null);
+    refreshJourneyReturnTo();
+  }
+
+  function selectTab(next: SupTab) {
+    setTab(next);
+    syncTabParam(next);
+    refreshJourneyReturnTo();
+  }
+
+  function saveJourneyBeforeNavigate() {
+    if (typeof window !== "undefined") {
+      const holdings = document.querySelector<HTMLElement>("[data-journey-holdings-scroll]");
+      saveJourneyScrollSnapshot(currentJourneyReturnTo(), {
+        scrollY: Math.round(Math.max(0, Math.min(window.scrollY, MAX_JOURNEY_SCROLL_Y))),
+        ...(holdings ? { holdingsScrollTop: Math.round(Math.min(holdings.scrollTop, MAX_JOURNEY_SCROLL_Y)) } : {}),
+      });
+    }
+  }
 
   return (
-    <div className="data-shell-page">
-      <section className="panel data-shell-header">
-        <div className="data-shell-head-main">
-          <p className="data-shell-kicker">기관 공시 분석</p>
-          <h1 className="data-shell-title">거장 보유 현황</h1>
-          <p className="data-shell-desc">
-            분기 공시로 공개되는 주요 투자자의 보유·매매·집중도를 함께 탐색합니다.
-          </p>
-        </div>
-        <div className="data-shell-head-actions">
-          <span className="data-shell-note">{delayLabel}</span>
-          {excludedStale.length > 0 ? (
-            <span className="data-shell-note warn">
-              최신 분기에서 제외: {excludedStale.join(", ")}
+    <div className="sup" data-superinvestors-surface>
+      <div className="sup-head">
+        <div className="sup-title-block">
+          <div className="sup-eyebrow-row">
+            <span className="sup-eyebrow" data-superinvestors-eyebrow>
+              SUPERINVESTORS · 13F {quarter ?? "분기 확인 중"}
             </span>
-          ) : null}
-        </div>
-      </section>
-
-      {failed ? (
-        <div className="rounded-[1.2rem] border border-rose-200 bg-rose-50 px-4 py-3 text-sm font-bold text-rose-700">
-          기관 공시 데이터를 불러오지 못했습니다.
-        </div>
-      ) : null}
-
-      {/* Hero — verdict-first (cp-design-system-spec.md §A.1). Buy/sell balance is the
-          route's single dominant visual; methodology detail moves to the bottom accordion. */}
-      <CpVerdictHero
-        eyebrow="13F · 이번 분기 자금 흐름"
-        verdict={heroVerdict}
-        sub={delayLabel}
-        trustChips={[
-          { id: "quarter", label: "기준 분기", value: quarter ?? "—", freshness: true, tone: "positive" },
-          { id: "generated", label: "데이터 변환", value: generatedAtLabel ?? "확인 중" },
-        ]}
-      />
-
-      {tradeTotalAmount > 0 ? (
-        <CpDivergingBar
-          data-superinvestor-hero-meter
-          segments={[
-            { id: "bought", label: `매수 ${formatPercent(boughtSegmentPct, { digits: 1, fraction: false })}`, percent: boughtSegmentPct, tone: "positive" },
-            { id: "sold", label: `매도 ${formatPercent(soldSegmentPct, { digits: 1, fraction: false })}`, percent: soldSegmentPct, tone: "negative" },
-          ]}
-          net={{
-            label: "매수/매도 균형",
-            value: `${netFlowPct >= 0 ? "매수" : "매도"} 우위 ${formatPercent(Math.abs(netFlowPct), { digits: 1, fraction: false })}`,
-            direction: netFlowPct >= 0 ? "up" : "down",
-            sub: tradesData ? `${tradesData.metadata.quarter} · 상위 ${tradesData.metadata.top_n}개 랭킹 내부 상대 비중` : undefined,
-          }}
-        />
-      ) : null}
-
-      {/* Tier 2 — sector rotation band + compressed metric tiles + promoted insight cards. */}
-      <section className="cpw5-super-tier2">
-        <div className="cpw5-super-tier2__tiles">
-          <CpMetricTileGrid>
-            <CpMetricTile label="코호트" value={formatInteger(investorCount)} unit="명" sub="추적 중인 거장 투자자" />
-            <CpMetricTile label="추적 종목" value={formatInteger(tickerCount)} unit="개" sub="13F 보유 유니버스" />
-            <CpMetricTile label="신규 고비중" value={formatInteger(convictionNewCount)} unit="건" sub="이번 분기 신규 진입" />
-          </CpMetricTileGrid>
-        </div>
-
-        <div className="cpw5-super-tier2__band">
-          <CpSectionCard
-            title="섹터 로테이션"
-            meta={pvData ? `${pvData.metadata.quarter} · 전분기 대비` : undefined}
-            footnote="가중치는 거장 코호트 합산 보유 시가총액 기준, 델타는 직전 분기 대비 %p입니다."
-          >
-            {sectorRotationRows.length > 0 ? (
-              sectorRotationRows.map((row) => {
-                const canonicalSector = row.sector;
-                const tone = row.deltaPp > 0.05 ? "positive" : row.deltaPp < -0.05 ? "negative" : "neutral";
-                return (
-                  <CpMeterRow
-                    key={row.sector}
-                    variant="axis"
-                    label={sectorLabelKo(canonicalSector)}
-                    value={formatPercent(row.current, { digits: 1 })}
-                    percent={row.current * 100}
-                    tone={tone}
-                    toneWord={`${row.deltaPp >= 0 ? "▲" : "▼"}${Math.abs(row.deltaPp).toFixed(1)}%p`}
-                  />
-                );
-              })
-            ) : (
-              <CpEmptyState message={pvFailed ? "섹터 로테이션 데이터를 불러오지 못했습니다." : "섹터 로테이션 데이터를 불러오는 중입니다…"} />
+            <Pill data-superinvestors-count>투자자 {formatInteger(dataReady ? investorCount : null)}명</Pill>
+          </div>
+          <h1 className="sup-title">
+            {failed ? "투자자 데이터를 불러오지 못했습니다. 다시 시도해 주세요." : (
+              <>이번 분기 무엇을 새로 사고 팔았나 — 지금 봐야 할 시그널부터</>
             )}
-          </CpSectionCard>
-        </div>
-
-        <div className="cpw5-super-tier2__insights">
-          <div>
-            <CpInsightCard
-              badgeLabel="신규 고비중"
-              badgeTone="positive"
-              dateLabel={quarter ?? "—"}
-              headline={`이번 분기 고비중 신규 진입 ${formatInteger(convictionNewCount)}건`}
-              bullets={highConvictionNewRows.map((r) => ({
-                id: `${r.investor}-${r.ticker}`,
-                tone: "fact",
-                tagLabel: r.ticker,
-                text: `${r.investor} · 비중 ${formatPercent(r.weight, { digits: 2 })}`,
-              }))}
-            />
-            <button
-              type="button"
-              onClick={() => setTab("insights")}
-              className="mt-2 inline-flex min-h-11 items-center rounded-full border border-slate-200 bg-white px-3 text-[10px] font-black uppercase tracking-[0.1em] text-slate-600 transition hover:border-brand-interactive hover:text-brand-interactive sm:min-h-8"
-            >
-              인사이트 탭에서 더 보기
-            </button>
-          </div>
-          <div>
-            <CpInsightCard
-              badgeLabel="상위 확신 유지"
-              badgeTone="neutral"
-              dateLabel={quarter ?? "—"}
-              headline={`상위 확신 보유 유지 ${formatInteger(convictionHoldCount)}건`}
-              bullets={topConvictionHoldRows.map((r) => ({
-                id: `${r.investor}-${r.ticker}`,
-                tone: "note",
-                tagLabel: r.ticker,
-                text: `${r.investor} · 비중 ${formatPercent(r.weight, { digits: 2 })}`,
-              }))}
-            />
-            <button
-              type="button"
-              onClick={() => setTab("insights")}
-              className="mt-2 inline-flex min-h-11 items-center rounded-full border border-slate-200 bg-white px-3 text-[10px] font-black uppercase tracking-[0.1em] text-slate-600 transition hover:border-brand-interactive hover:text-brand-interactive sm:min-h-8"
-            >
-              인사이트 탭에서 더 보기
-            </button>
+          </h1>
+          <div className="sup-meta-row">
+            <Pill data-superinvestors-quarter>기준 {quarter ?? "—"} 제출분</Pill>
+            <Pill tone="warn" data-superinvestors-freshness>{freshnessChip}</Pill>
+            {excludedStale.length > 0 ? <Pill tone="warn">최신 분기 제외 {excludedStale.length}명</Pill> : null}
+            {!failed && partialFeeds ? <Pill tone="warn">일부 피드 {failedRequests.length}개 미반영</Pill> : null}
+            {!failed && !partialFeeds && turnoverError ? <Pill tone="warn">회전율 확인 불가</Pill> : null}
+            {failed ? <Button variant="secondary" onClick={retry}>다시 시도</Button> : null}
           </div>
         </div>
-      </section>
+      </div>
 
-      {dataReady && selectedGuruEntry ? (
-        <section
-          data-superinvestor-guru-landing
-          data-superinvestor-guru-id={selectedGuruEntry[0]}
-          className="rounded-[1.5rem] border border-brand-interactive/30 bg-gradient-to-br from-white via-slate-50 to-emerald-50 p-4 shadow-[var(--sh-sm)]"
-          aria-label={`${selectedGuruEntry[1].name} 투자자 프로필 바로가기`}
-        >
-          <div className="flex flex-wrap items-start justify-between gap-3">
-            <div className="min-w-0">
-              <p className="text-[10px] font-black uppercase tracking-[0.12em] text-brand-interactive">선택 투자자</p>
-              <h2 className="mt-1 text-xl font-black tracking-tight text-slate-950">
-                {selectedGuruEntry[1].name}
-              </h2>
-              <p className="mt-1 text-xs font-semibold text-[var(--c-ink-3)]">
-                {selectedGuruEntry[1].group} · {formatCurrencyCompact(selectedGuruEntry[1].aum, "USD")} · {selectedGuruEntry[1].holdings_count}종목
-              </p>
-            </div>
-            <div className="flex flex-wrap items-center gap-2">
-              <span
-                data-superinvestor-guru-landing-asof
-                className="inline-flex min-h-11 items-center rounded-full border border-amber-200 bg-amber-50 px-3 text-[10px] font-black text-amber-700"
-              >
-                {selectedGuruEntry[1].latest_quarter || quarter || "—"}
-              </span>
-              <span
-                data-superinvestor-guru-landing-lag
-                className="inline-flex min-h-11 items-center rounded-full border border-sky-200 bg-sky-50 px-3 text-[10px] font-black text-sky-700"
-              >
-                13F 최대 45일 지연
-              </span>
-            </div>
-          </div>
-          <div className="mt-3 flex flex-wrap items-center gap-2">
-            <a
-              href={`#superinvestor-guru-profile-${selectedGuruEntry[0]}`}
-              data-superinvestor-guru-action
-              className="inline-flex min-h-11 items-center rounded-full bg-slate-950 px-4 text-[11px] font-black uppercase tracking-[0.1em] text-white transition hover:bg-brand-interactive"
-            >
-              프로필 보기
-            </a>
-            <TransitionLink
-              href={`${ROUTES.screener}?preset=guru`}
-              data-superinvestor-guru-action
-              data-superinvestor-guru-screener-link
-              className="inline-flex min-h-11 items-center rounded-full border border-slate-200 bg-white px-3 text-[10px] font-black uppercase tracking-wide text-slate-700 transition hover:border-brand-interactive hover:text-brand-interactive"
-            >
-              스크리너 guru 보기
-            </TransitionLink>
-            {[...new Set(selectedGuruEntry[1].top5)].slice(0, 5).map((ticker, i) => (
-              <TransitionLink
-                key={`${ticker}-${i}`}
-                href={ROUTES.stock(ticker)}
-                data-superinvestor-guru-action
-                data-superinvestor-guru-landing-stock-link
-                className="inline-flex min-h-11 items-center rounded-full border border-slate-200 bg-white px-3 text-[10px] font-black uppercase tracking-wide text-slate-700 transition hover:border-brand-interactive hover:text-brand-interactive"
-              >
-                {ticker}
-              </TransitionLink>
-            ))}
-          </div>
-        </section>
-      ) : null}
-
-      {dataReady && tab === "by-ticker" && selectedTicker && byTickerEntry && byTickerHolderRows.length > 0 ? (
-        <section
-          data-superinvestor-ticker-landing
-          data-superinvestor-ticker-symbol={selectedTicker}
-          data-superinvestor-ticker-quarter={quarter ?? ""}
-          className="rounded-[1.5rem] border border-brand-interactive/30 bg-gradient-to-br from-white via-slate-50 to-sky-50 p-4 shadow-[var(--sh-sm)]"
-          aria-label={`${selectedTicker} 13F 보유 투자자 요약`}
-        >
-          <div className="flex flex-wrap items-start justify-between gap-3">
-            <div className="min-w-0">
-              <p className="text-[10px] font-black uppercase tracking-[0.12em] text-brand-interactive">선택 종목</p>
-              <h2 className="mt-1 text-xl font-black tracking-tight text-slate-950">
-                {selectedTicker}
-              </h2>
-              <p className="mt-1 text-xs font-semibold text-[var(--c-ink-3)]">
-                {byTickerEntry.holder_details.length}명 보유 · 총 {formatCompactNumber(byTickerEntry.total_shares)}주
-              </p>
-            </div>
-            <div className="flex flex-wrap items-center gap-2">
-              <span
-                data-superinvestor-ticker-landing-asof
-                className="inline-flex min-h-11 items-center rounded-full border border-amber-200 bg-amber-50 px-3 text-[10px] font-black text-amber-700"
-              >
-                {quarter ?? "—"}
-              </span>
-              <span
-                data-superinvestor-ticker-landing-lag
-                className="inline-flex min-h-11 items-center rounded-full border border-sky-200 bg-sky-50 px-3 text-[10px] font-black text-sky-700"
-              >
-                13F 최대 45일 지연
-              </span>
-            </div>
-          </div>
-          <div className="mt-3 grid gap-2 sm:grid-cols-3">
-            <div data-superinvestor-ticker-kpi="holders" className="rounded-xl border border-slate-100 bg-white px-3 py-2">
-              <p className="text-[10px] font-black uppercase tracking-[0.08em] text-slate-500">보유 투자자</p>
-              <p className="mt-1 orbitron text-sm font-black text-slate-950">{byTickerEntry.holder_details.length}명</p>
-            </div>
-            <div data-superinvestor-ticker-kpi="equity" className="rounded-xl border border-slate-100 bg-white px-3 py-2">
-              <p className="text-[10px] font-black uppercase tracking-[0.08em] text-slate-500">주식 기준</p>
-              <p className="mt-1 orbitron text-sm font-black text-slate-950">
-                {byTickerEnhanced ? `${byTickerEnhanced.equity_holders}/${byTickerEnhanced.total_holders}명` : "—"}
-              </p>
-            </div>
-            <div data-superinvestor-ticker-kpi="score" className="rounded-xl border border-slate-100 bg-white px-3 py-2">
-              <p className="text-[10px] font-black uppercase tracking-[0.08em] text-slate-500">확신 점수</p>
-              <p className="mt-1 orbitron text-sm font-black text-slate-950">
-                {byTickerEnhanced ? formatPercent(byTickerEnhanced.equity_score, { digits: 0 }) : "—"}
-              </p>
-            </div>
-          </div>
-          <div className="mt-3 flex flex-wrap items-center gap-2">
-            <TransitionLink
-              href={ROUTES.stock(selectedTicker)}
-              data-superinvestor-ticker-action
-              data-superinvestor-ticker-stock-link
-              className="inline-flex min-h-11 items-center rounded-full bg-slate-950 px-4 text-[11px] font-black uppercase tracking-[0.1em] text-white transition hover:bg-brand-interactive"
-            >
-              종목 상세
-            </TransitionLink>
-            <TransitionLink
-              href={ROUTES.screenerTicker(selectedTicker)}
-              data-superinvestor-ticker-action
-              data-superinvestor-ticker-screener-link
-              className="inline-flex min-h-11 items-center rounded-full border border-slate-200 bg-white px-3 text-[10px] font-black uppercase tracking-wide text-slate-700 transition hover:border-brand-interactive hover:text-brand-interactive"
-            >
-              스크리너
-            </TransitionLink>
-            {byTickerHolderRows.slice(0, 5).map((holder) => (
-              <TransitionLink
-                key={holder.investor}
-                href={ROUTES.superinvestorsGuru(holder.investor)}
-                data-superinvestor-ticker-action
-                data-superinvestor-ticker-investor-link
-                className="inline-flex min-h-11 max-w-full items-center rounded-full border border-slate-200 bg-white px-3 text-[10px] font-black uppercase tracking-wide text-slate-700 transition hover:border-brand-interactive hover:text-brand-interactive"
-              >
-                <span className="max-w-[150px] truncate">{holder.investor}</span>
-              </TransitionLink>
-            ))}
-          </div>
-        </section>
-      ) : null}
-
-      {tab === "trades" && tradesData && (topBoughtTrade || topSoldTrade) ? (
-        <section
-          data-superinvestor-trades-landing
-          data-superinvestor-trades-quarter={tradesData.metadata.quarter}
-          className="rounded-[1.5rem] border border-brand-interactive/30 bg-gradient-to-br from-white via-slate-50 to-emerald-50 p-4 shadow-[var(--sh-sm)]"
-          aria-label={`${tradesData.metadata.quarter} 13F 매매 순위 요약`}
-        >
-          <div className="flex flex-wrap items-start justify-between gap-3">
-            <div className="min-w-0">
-              <p className="text-[10px] font-black uppercase tracking-[0.12em] text-brand-interactive">13F 매매 순위</p>
-              <h2 className="mt-1 text-xl font-black tracking-tight text-slate-950">
-                {tradesData.metadata.quarter}
-              </h2>
-              <p className="mt-1 text-xs font-semibold text-[var(--c-ink-3)]">
-                {tradesData.metadata.investors_included.length}명 코호트 · 상위 {tradesData.metadata.top_n}개 매수/매도
-                {tradesGeneratedAtLabel ? ` · 변환 ${tradesGeneratedAtLabel}` : ""}
-              </p>
-            </div>
-            <div className="flex flex-wrap items-center gap-2">
-              <span
-                data-superinvestor-trades-asof
-                className="inline-flex min-h-11 items-center rounded-full border border-amber-200 bg-amber-50 px-3 text-[10px] font-black text-amber-700"
-              >
-                {tradesData.metadata.quarter}
-              </span>
-              <span
-                data-superinvestor-trades-lag
-                className="inline-flex min-h-11 items-center rounded-full border border-sky-200 bg-sky-50 px-3 text-[10px] font-black text-sky-700"
-              >
-                13F 최대 45일 지연
-              </span>
-            </div>
-          </div>
-          <div className="mt-3 grid gap-2 sm:grid-cols-3">
-            <div data-superinvestor-trades-kpi="bought" className="rounded-xl border border-emerald-100 bg-white px-3 py-2">
-              <p className="text-[10px] font-black uppercase tracking-[0.08em] text-emerald-700">상위 매수 비중</p>
-              <p className="mt-1 orbitron text-sm font-black text-slate-950">{formatPercent(boughtSegmentPct, { digits: 1, fraction: false })}</p>
-            </div>
-            <div data-superinvestor-trades-kpi="sold" className="rounded-xl border border-rose-100 bg-white px-3 py-2">
-              <p className="text-[10px] font-black uppercase tracking-[0.08em] text-rose-700">상위 매도 비중</p>
-              <p className="mt-1 orbitron text-sm font-black text-slate-950">{formatPercent(soldSegmentPct, { digits: 1, fraction: false })}</p>
-            </div>
-            <div data-superinvestor-trades-kpi="cohort" className="rounded-xl border border-slate-100 bg-white px-3 py-2">
-              <p className="text-[10px] font-black uppercase tracking-[0.08em] text-slate-500">분석 투자자</p>
-              <p className="mt-1 orbitron text-sm font-black text-slate-950">{tradesData.metadata.investors_included.length}명</p>
-            </div>
-          </div>
-          <div className="mt-3 flex flex-wrap items-center gap-2">
-            {topBoughtTrade ? (
-              <TransitionLink
-                href={ROUTES.stock(topBoughtTrade.ticker)}
-                data-superinvestor-trades-action
-                data-superinvestor-trades-stock-link
-                className="inline-flex min-h-11 items-center rounded-full bg-emerald-700 px-4 text-[11px] font-black uppercase tracking-[0.1em] text-white transition hover:bg-brand-interactive"
-              >
-                매수 1위 {topBoughtTrade.ticker}
-              </TransitionLink>
-            ) : null}
-            {topSoldTrade ? (
-              <TransitionLink
-                href={ROUTES.stock(topSoldTrade.ticker)}
-                data-superinvestor-trades-action
-                data-superinvestor-trades-stock-link
-                className="inline-flex min-h-11 items-center rounded-full bg-rose-700 px-4 text-[11px] font-black uppercase tracking-[0.1em] text-white transition hover:bg-brand-interactive"
-              >
-                매도 1위 {topSoldTrade.ticker}
-              </TransitionLink>
-            ) : null}
-            {[topBoughtTrade, topSoldTrade].filter(Boolean).map((row) => (
-              <TransitionLink
-                key={`${row?.ticker}-${row?.top_investor?.id}`}
-                href={ROUTES.superinvestorsGuru(row?.top_investor.id ?? "")}
-                data-superinvestor-trades-action
-                data-superinvestor-trades-investor-link
-                className="inline-flex min-h-11 max-w-full items-center rounded-full border border-slate-200 bg-white px-3 text-[10px] font-black uppercase tracking-wide text-slate-700 transition hover:border-brand-interactive hover:text-brand-interactive"
-              >
-                <span className="max-w-[150px] truncate">{row?.top_investor.name}</span>
-              </TransitionLink>
-            ))}
-          </div>
-        </section>
-      ) : null}
-
-      {/* Tabs */}
-      <Tabs
-        idBase={tabsId}
-        items={SUPERINVESTOR_TABS}
-        value={tab}
-        onValueChange={(next) => {
-          setTab(next);
-          setSearch("");
-          setExpandedGuru(null);
-        }}
-        ariaLabel="거장 보유 현황 분류"
-        className="flex flex-wrap items-center gap-2 border-b border-[var(--c-line)] pb-1"
-        getTabClassName={(_, selected) => cx(
-          "relative inline-flex min-h-9 items-center px-3 text-[11px] font-black uppercase tracking-[0.12em] transition",
-          selected ? "text-[var(--c-brand)]" : "text-[var(--c-ink-3)] hover:text-[var(--c-ink)]",
-        )}
-        renderLabel={(item, selected) => (
-          <>
-            {item.label}
-            {selected ? <span className="absolute bottom-[-5px] left-0 right-0 h-[2px] rounded-full bg-[var(--c-brand)]" /> : null}
-          </>
-        )}
+      <SuperinvestorsSummaryStrip
+        investors={investors}
+        overlapRows={overlapRows}
+        dataReady={dataReady}
+        failed={failed}
+        loading={loading}
+        onRetry={retry}
       />
 
-      {/* Consensus */}
-      <TabPanel idBase={tabsId} item={SUPERINVESTOR_TAB_ITEMS.consensus} active={tab === "consensus"} className="space-y-3">
-          {/* Total portfolio (collapsible) */}
-          {pvData && !pvFailed ? (
-            <div className="rounded-[1.5rem] border border-[var(--c-line)] bg-[var(--c-panel)] p-3 shadow-[var(--sh-sm)] sm:p-4">
-              <button
-                type="button"
-                onClick={() => setTotalPortfolioOpen((v) => !v)}
-                aria-pressed={totalPortfolioOpen}
-                className="flex w-full items-center justify-between text-left"
-              >
-                <div>
-                  <h2 className="text-sm font-black tracking-tight text-slate-900">
-                    거장 토탈 포트폴리오
-                  </h2>
-                  <div className="mt-1 flex flex-wrap items-center gap-2">
-                    <span className="inline-flex items-center gap-1 rounded-full border border-emerald-200 bg-emerald-50 px-2 py-0.5 text-[10px] font-black uppercase tracking-[0.08em] text-emerald-700">
-                      {pvData.metadata.quarter}
-                    </span>
-                    <span className="text-[10px] font-semibold text-[var(--c-ink-3)]">
-                      {pvData.total.treemap.length}종목 · 30인 합산
-                    </span>
-                  </div>
-                </div>
-                <span className="text-[10px] font-black uppercase tracking-[0.1em] text-slate-500">
-                  {totalPortfolioOpen ? "접기" : "펼치기"}
-                </span>
-              </button>
-              {totalPortfolioOpen ? (
-                <div className="mt-3 space-y-4 border-t border-slate-100 pt-3">
-                  {pvData.total.treemap.length > 0 ? (
-                    <PortfolioTreemap rows={pvData.total.treemap} quarterLabel={pvData.metadata.quarter} />
-                  ) : (
-                    <EmptyState title="포트폴리오 차트 데이터가 없습니다" desc="차트 데이터가 아직 준비되지 않았습니다." />
-                  )}
-                  {pvData.metadata.disclaimer ? (
-                    <p className="text-[10px] font-semibold text-[var(--c-ink-3)]">{pvData.metadata.disclaimer}</p>
-                  ) : null}
-                </div>
-              ) : null}
-            </div>
-          ) : null}
+      {sourceReturnTo ? (
+        <div className="mt-2">
+          <a
+            href={sourceReturnTo}
+            data-superinvestors-return-to-screener="true"
+            className="inline-flex min-h-11 items-center gap-1 rounded-full border border-[var(--c-line)] px-3 text-[11px] font-bold text-[var(--c-ink-2)] transition hover:border-[var(--c-brand)] hover:text-[var(--c-brand)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-brand-interactive"
+          >
+            <span aria-hidden="true">←</span>
+            <span>스크리너로 돌아가기</span>
+          </a>
+        </div>
+      ) : null}
 
-          <div className="flex flex-wrap items-center justify-between gap-3">
-            <label className="flex min-w-[220px] flex-col gap-1">
-              <span className="text-[11px] font-black uppercase tracking-[0.1em] text-slate-700">티커 검색</span>
-              <input
-                type="search"
-                value={search}
-                onChange={(e) => setSearch(e.target.value)}
-                placeholder="예: AAPL"
-                className="min-h-10 rounded-xl border border-slate-200 bg-white px-3 text-sm font-semibold text-slate-900 outline-none transition focus:border-brand-interactive"
-              />
-            </label>
+      <div className="sup-tabs scroll-hint-x" role="region" tabIndex={0} aria-label="투자자 화면 탭 가로 스크롤">
+        <div role="tablist" aria-label="투자자 화면 전환" className="sup-tablist">
+          {SUP_TABS.map((item) => (
             <button
+              key={item.id}
               type="button"
-              onClick={() => setConsensusSortDir((d) => (d === "desc" ? "asc" : "desc"))}
-              className="inline-flex min-h-9 items-center rounded-full border border-slate-200 bg-white px-3 text-[11px] font-black uppercase tracking-[0.1em] text-slate-700 transition hover:border-brand-interactive hover:text-brand-interactive"
+              role="tab"
+              id={getTabId(tabsBaseId, item)}
+              aria-selected={tab === item.id}
+              aria-controls={getPanelId(tabsBaseId, item)}
+              data-superinvestors-tab={item.id}
+              className={`sup-tab${tab === item.id ? " on" : ""}`}
+              onClick={() => selectTab(item.id)}
             >
-              보유 투자자 수 {consensusSortDir === "desc" ? "내림차순" : "오름차순"}
+              {item.label}
             </button>
-          </div>
+          ))}
+        </div>
+      </div>
 
-          <div className={cx("rounded-[1.5rem] border border-[var(--c-line)] bg-[var(--c-panel)] p-2 shadow-[var(--sh-sm)] sm:p-3", !dataReady && "opacity-60")}>
-            <div className="scroll-hint-x -mx-1 px-1" role="region" tabIndex={0} aria-label="공통 보유 종목 표 가로 스크롤">
-              <table className="w-full min-w-[720px] text-sm">
-                <thead>
-                  <tr className="border-b border-slate-200 text-[11px] font-black uppercase tracking-[0.08em] text-[var(--c-ink)]">
-                    <th className="px-3 py-2 text-left">#</th>
-                    <th className="px-3 py-2 text-left">티커</th>
-                    <th className="px-3 py-2 text-right">보유자</th>
-                    <th className="px-3 py-2 text-right">주식 기준</th>
-                    <th className="px-3 py-2 text-left">보유자 목록</th>
-                    <th className="px-3 py-2 text-right">보기</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {!dataReady ? (
-                    <SkeletonRows count={6} />
-                  ) : pageRows.length === 0 ? (
-                    <tr>
-                      <td colSpan={6} className="px-3 py-8 text-center">
-                        <EmptyState title="결과가 없습니다" desc="검색어를 바꾸거나 필터를 초기화해 주세요." />
-                      </td>
-                    </tr>
-                  ) : (
-                    pageRows.map((row, idx) => {
-                      const rank = safePage * PAGE_SIZE + idx + 1;
-                      const holders = uniqueHolders(row.holders_list);
-                      const enhanced = enhancedConsensus?.enhanced_consensus?.[row.ticker];
-                      return (
-                        <tr key={row.ticker} className="border-b border-slate-100 last:border-b-0">
-                          <td className="px-3 py-3">
-                            <span className="orbitron tabular-nums text-xs font-bold text-[var(--c-ink-3)]">{rank}</span>
-                          </td>
-                          <td className="px-3 py-3">
-                            <TickerChip ticker={row.ticker} variant="inline" />
-                          </td>
-                          <td className="px-3 py-3 text-right">
-                            <span className="orbitron tabular-nums text-base font-black text-brand-interactive">
-                              {holders.length}
-                            </span>
-                          </td>
-                          <td className="px-3 py-3 text-right">
-                            {enhanced ? (
-                              <div className="ml-auto max-w-[120px]">
-                                <div className="flex items-center justify-end gap-2">
-                                  <span className="orbitron tabular-nums text-xs font-black text-slate-900">
-                                    {classSummary(enhanced)}
-                                  </span>
-                                  <span className="text-[10px] font-bold text-[var(--c-ink-3)]">
-                                    {formatPercent(enhanced.equity_score, { digits: 0 })}
-                                  </span>
-                                </div>
-                                <div className="mt-1 h-1.5 rounded-full bg-slate-100">
-                                  <div
-                                    className="h-1.5 rounded-full bg-brand-interactive"
-                                    style={{ width: `${Math.max(0, Math.min(1, enhanced.equity_score)) * 100}%` }}
-                                  />
-                                </div>
-                              </div>
-                            ) : (
-                              <span className="text-xs font-bold text-slate-300">—</span>
-                            )}
-                          </td>
-                          <td className="px-3 py-3">
-                            <div className="flex flex-wrap gap-1">
-                              {holders.slice(0, 8).map((h) => (
-                                <span
-                                  key={h}
-                                  className="inline-flex items-center rounded-md bg-slate-100 px-1.5 py-0.5 text-[10px] font-black uppercase tracking-wide text-slate-700"
-                                >
-                                  {h}
-                                </span>
-                              ))}
-                              {holders.length > 8 ? (
-                                <span className="inline-flex items-center rounded-md bg-slate-50 px-1.5 py-0.5 text-[10px] font-black text-slate-500">
-                                  +{holders.length - 8}
-                                </span>
-                              ) : null}
-                            </div>
-                          </td>
-                          <td className="px-3 py-3 text-right">
-                            <button
-                              type="button"
-                              onClick={() => {
-                                setSearch(row.ticker);
-                                setTab("by-ticker");
-                              }}
-                              className="inline-flex min-h-11 items-center rounded-full border border-slate-200 bg-white px-2.5 text-[10px] font-black uppercase tracking-[0.1em] text-slate-600 transition hover:border-brand-interactive hover:text-brand-interactive sm:min-h-7"
-                            >
-                              보유 보기
-                            </button>
-                          </td>
-                        </tr>
-                      );
-                    })
-                  )}
-                </tbody>
-              </table>
-            </div>
-
-            {dataReady && pageCount > 1 ? (
-              <div className="mt-3 flex items-center justify-between px-2">
-                <button
-                  type="button"
-                  disabled={safePage === 0}
-                  onClick={() => setPage((p) => Math.max(0, p - 1))}
-                  className="inline-flex min-h-11 items-center rounded-full border border-slate-200 bg-white px-3 text-[11px] font-black uppercase tracking-[0.1em] text-slate-700 transition hover:border-brand-interactive disabled:opacity-40 sm:min-h-8"
-                >
-                  이전
-                </button>
-                <span className="text-xs font-bold text-slate-500">
-                  <span className="orbitron tabular-nums text-slate-900">{safePage + 1}</span> / {pageCount}
-                </span>
-                <button
-                  type="button"
-                  disabled={safePage >= pageCount - 1}
-                  onClick={() => setPage((p) => Math.min(pageCount - 1, p + 1))}
-                  className="inline-flex min-h-11 items-center rounded-full border border-slate-200 bg-white px-3 text-[11px] font-black uppercase tracking-[0.1em] text-slate-700 transition hover:border-brand-interactive disabled:opacity-40 sm:min-h-8"
-                >
-                  다음
-                </button>
-              </div>
-            ) : null}
-          </div>
+      <TabPanel item={{ id: "signal" as SupTab, label: "시그널" }} active={tab === "signal"} idBase={tabsBaseId}>
+        <SignalPanel
+          summary={summary}
+          consensus={consensus}
+          enhancedConsensus={enhancedConsensus}
+          byTicker={byTicker}
+          convictionEntries={convictionEntries}
+          quarter={quarter}
+          asOf={asOfLabel}
+          dataReady={dataReady}
+          failed={failed}
+          partialFeeds={partialFeeds}
+          investorCount={investorCount}
+          returnTo={journeyReturnTo}
+          onRetry={retry}
+          signalFeeds={tabData.signal}
+          onRetrySignal={retrySignal}
+        />
+        <div className="sup-signal-teaser">
+          <GraphNetworkTeaser
+            network={graphNetwork}
+            href={withQuery(ROUTES.superinvestors, { tab: "graph" })}
+            status={loading ? "pending" : graphFailed ? "error" : "ready"}
+            freshness={graphFreshness}
+            source="SEC EDGAR 13F"
+            asOf={asOfLabel}
+            coverage={graphCoverage}
+            onRetry={graphFailed || (graphReady && partialFeeds) ? retry : undefined}
+            onEvidence={dataReady && !failed ? openGraphEvidence : undefined}
+          />
+        </div>
       </TabPanel>
 
-      {/* Gurus */}
-      <TabPanel idBase={tabsId} item={SUPERINVESTOR_TAB_ITEMS.gurus} active={tab === "gurus"} className="space-y-3">
-          <div className="flex flex-wrap items-end justify-between gap-3">
-            <label className="flex min-w-[200px] flex-col gap-1">
-              <span className="text-[11px] font-black uppercase tracking-[0.1em] text-slate-700">스타일</span>
-              <select
-                value={group}
-                onChange={(e) => {
-                  setGroup(e.target.value);
-                  setExpandedGuru(null);
-                }}
-                className="min-h-11 rounded-xl border border-slate-200 bg-white px-3 text-sm font-semibold text-slate-900 outline-none transition focus:border-brand-interactive"
-              >
-                <option value="">전체 스타일</option>
-                {groups.map((g) => (
-                  <option key={g} value={g}>
-                    {g}
-                  </option>
-                ))}
-              </select>
-            </label>
-            <span className="text-sm font-bold text-slate-700">
-              <strong className="orbitron text-slate-900">{guruEntries.length}</strong>명
-            </span>
-          </div>
-
-          {!dataReady ? (
-            <SkeletonCards count={6} />
-          ) : guruEntries.length === 0 ? (
-            <EmptyState title="투자자가 없습니다" desc="스타일 필터를 변경해 주세요." />
-          ) : (
-            <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-              {guruEntries.map(([id, inv]) => {
-                const isOpen = expandedGuru === id;
-                return (
-                  <div
-                    key={id}
-                    data-superinvestor-guru-card
-                    data-superinvestor-guru-id={id}
-                    data-superinvestor-guru-expanded={isOpen ? "true" : "false"}
-                    className={cx(
-                      "rounded-[1.5rem] border border-[var(--c-line)] bg-[var(--c-panel)] p-4 shadow-[var(--sh-sm)] transition",
-                      // expanded detail (KPI + treemap + sector mix) needs the full row width
-                      isOpen ? "border-brand-interactive sm:col-span-2 lg:col-span-3" : "border-slate-200",
-                    )}
-                  >
-                    <div className="flex items-start justify-between gap-2">
-                      <div>
-                        <span
-                          className={cx(
-                            "inline-flex rounded-md px-1.5 py-0.5 text-[10px] font-black uppercase tracking-wide",
-                            groupBadgeClass(inv.group),
-                          )}
-                        >
-                          {inv.group}
-                        </span>
-                        <h3 className="mt-1 text-lg font-black tracking-tight text-slate-950">{inv.name}</h3>
-                        <p className="text-xs font-semibold text-slate-500">{id}</p>
-                      </div>
-                    </div>
-
-                    <div className="mt-3 grid grid-cols-2 gap-2">
-                      <div className="rounded-xl border border-slate-100 bg-slate-50 px-3 py-2">
-                        <p className="text-[10px] font-black uppercase tracking-[0.08em] text-[var(--c-ink-3)]">AUM</p>
-                        <p className="orbitron tabular-nums mt-0.5 text-sm font-black text-slate-900">{formatCurrencyCompact(inv.aum, "USD")}</p>
-                      </div>
-                      <div className="rounded-xl border border-slate-100 bg-slate-50 px-3 py-2">
-                        <p className="text-[10px] font-black uppercase tracking-[0.08em] text-[var(--c-ink-3)]">보유</p>
-                        <p className="orbitron mt-0.5 text-sm font-black text-slate-900">{inv.holdings_count}종목</p>
-                      </div>
-                    </div>
-
-                    {inv.top5.length > 0 ? (
-                      <div className="mt-3">
-                        <p className="text-[10px] font-black uppercase tracking-[0.08em] text-[var(--c-ink-3)]">Top 5</p>
-                        <div className="mt-1 flex flex-wrap gap-1">
-                          {[...new Set(inv.top5)].slice(0, 5).map((ticker, i) => (
-                            <TransitionLink
-                              key={`${ticker}-${i}`}
-                              href={ROUTES.stock(ticker)}
-                              data-superinvestor-guru-top5-link
-                              className="inline-flex min-h-11 items-center rounded-md bg-slate-100 px-2 py-0.5 text-[10px] font-black uppercase tracking-wide text-slate-700 transition hover:bg-slate-200 hover:text-brand-interactive"
-                            >
-                              {ticker}
-                            </TransitionLink>
-                          ))}
-                        </div>
-                      </div>
-                    ) : null}
-
-                    <div className="mt-4 flex flex-wrap gap-2">
-                      <button
-                        type="button"
-                        onClick={() => setExpandedGuru(isOpen ? null : id)}
-                        aria-pressed={isOpen}
-                        className="inline-flex min-h-11 flex-1 items-center justify-center rounded-full border border-slate-200 bg-white px-3 text-[11px] font-black uppercase tracking-[0.1em] text-slate-700 transition hover:border-brand-interactive hover:text-brand-interactive sm:min-h-8"
-                      >
-                        {isOpen ? "접기" : "포트폴리오 보기"}
-                      </button>
-                      <TransitionLink
-                        href={`${ROUTES.screener}?preset=guru`}
-                        data-superinvestor-guru-screener-link
-                        className="inline-flex min-h-11 items-center justify-center rounded-full border border-slate-200 bg-white px-3 text-[11px] font-black uppercase tracking-[0.1em] text-slate-700 transition hover:border-brand-interactive hover:text-brand-interactive sm:min-h-8"
-                      >
-                        스크리너 guru 보기
-                      </TransitionLink>
-                    </div>
-
-                    {isOpen ? <GuruDetailPanel id={id} summary={inv} pvData={pvData} /> : null}
-                  </div>
-                );
-              })}
-            </div>
-          )}
-      </TabPanel>
-
-      {/* By ticker */}
-      <TabPanel idBase={tabsId} item={SUPERINVESTOR_TAB_ITEMS["by-ticker"]} active={tab === "by-ticker"} className="space-y-3">
-        <label className="flex max-w-md flex-col gap-1">
-          <span className="text-[11px] font-black uppercase tracking-[0.1em] text-slate-700">티커 검색</span>
-          <div className="flex gap-2">
-            <input
-              type="search"
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              placeholder="예: AAPL"
-              className="min-h-11 flex-1 rounded-xl border border-slate-200 bg-white px-3 text-sm font-semibold text-slate-900 outline-none transition focus:border-brand-interactive"
-            />
-            <button
-              type="button"
-              onClick={() => setSearch("")}
-              className="inline-flex min-h-11 items-center rounded-full border border-slate-200 bg-white px-3 text-[11px] font-black uppercase tracking-[0.1em] text-slate-600 transition hover:border-rose-300 hover:text-rose-600"
-            >
-              초기화
-            </button>
-          </div>
-        </label>
-
-        <div
-          data-superinvestor-ticker-panel
-          data-superinvestor-ticker-symbol={selectedTicker}
-          className={cx("rounded-[1.5rem] border border-[var(--c-line)] bg-[var(--c-panel)] p-3 shadow-[var(--sh-sm)] sm:p-4", !dataReady && "opacity-60")}
+      <TabPanel item={{ id: "investors" as SupTab, label: "투자자" }} active={tab === "investors"} idBase={tabsBaseId}>
+      {selectedGuruEntry ? (
+        <GuruDetailView
+          id={selectedGuruEntry[0]}
+          summary={selectedGuruEntry[1]}
+          turnover={turnover?.[selectedGuruEntry[0]]?.turnover ?? null}
+          turnoverLoading={turnoverLoading}
+          turnoverFailed={turnoverError}
+          onRetryTurnover={retryTurnover}
+          pvData={pvData}
+          pvLoading={pvLoading}
+          pvFailed={pvFailed}
+          onRetryPv={retryPv}
+          factorData={factorData}
+          factorLoading={factorLoading}
+          factorFailed={factorFailed}
+          onRetryFactor={retryFactor}
+          asOf={asOfLabel}
+          returnTo={journeyReturnTo}
+          onBeforeNavigate={saveJourneyBeforeNavigate}
+          onBack={closeGuru}
+          onReady={setReadyGuruId}
+        />
+      ) : (
+      <div className="sup-grid">
+        <Panel
+          loading={loading}
+          empty={holdersEmpty}
+          emptyReason="표시할 투자자가 없습니다"
+          emptyNextRefresh="다음 분기 공시 반영 후 갱신"
+          error={holdersFailed}
+          errorDetail="투자자 목록을 불러오지 못했습니다."
+          onRetry={holdersFailed ? retry : undefined}
+          retryLabel="다시 시도"
         >
-          {!dataReady ? (
-            <div className="space-y-3">
-              <div className="h-5 w-1/3 rounded bg-slate-200" />
-              <div className="h-4 w-1/2 rounded bg-slate-200" />
-              <div className="h-4 w-2/3 rounded bg-slate-200" />
-            </div>
-          ) : !search.trim() ? (
-            <EmptyState title="티커를 입력해 주세요" desc="보유 투자자를 확인할 종목 코드를 검색해 주세요." />
-          ) : !byTickerEntry ? (
-            <EmptyState
-              title={`${normalizeForEntityKey(search)} 데이터 없음`}
-              desc="해당 종목의 공시 보유 데이터가 아직 없습니다."
-            />
-          ) : byTickerEntry.holder_details.length === 0 ? (
-            <EmptyState
-              title={`${normalizeForEntityKey(search)}에 보유자가 없습니다`}
-              desc="현재 추적 중인 투자자 중 이 종목 보유자가 없습니다."
-            />
-          ) : (
-            <div className="space-y-3">
-              <div data-superinvestor-ticker-result className="flex flex-wrap items-start justify-between gap-3">
-                <div>
-                  <h2 className="text-xl font-black tracking-tight text-slate-950">
-                    {selectedTicker}
-                  </h2>
-                  {byTickerEnhanced ? (
-                    <p data-superinvestor-ticker-equity-score className="mt-1 text-[10px] font-bold text-[var(--c-ink-3)]">
-                      주식 기준 {byTickerEnhanced.equity_holders}/{byTickerEnhanced.total_holders}명 · 확신 점수 {formatPercent(byTickerEnhanced.equity_score, { digits: 0 })}
-                    </p>
-                  ) : null}
-                </div>
-                <div className="flex flex-wrap items-center gap-2">
-                  <span
-                    data-superinvestor-ticker-asof
-                    className="inline-flex min-h-11 items-center rounded-full border border-amber-200 bg-amber-50 px-3 text-[10px] font-black text-amber-700"
-                  >
-                    {quarter ?? "—"}
-                  </span>
-                  <span
-                    data-superinvestor-ticker-lag
-                    className="inline-flex min-h-11 items-center rounded-full border border-sky-200 bg-sky-50 px-3 text-[10px] font-black text-sky-700"
-                  >
-                    13F 최대 45일 지연
-                  </span>
-                  <span className="text-sm font-bold text-slate-500">
-                    보유자{" "}
-                    <strong className="orbitron text-slate-900">{byTickerEntry.holder_details.length}</strong>명
-                  </span>
-                  <TransitionLink
-                    href={ROUTES.screenerTicker(selectedTicker)}
-                    data-superinvestor-ticker-action
-                    data-superinvestor-ticker-screener-link
-                    className="inline-flex min-h-11 items-center rounded-full border border-slate-200 bg-white px-3 text-[10px] font-black uppercase tracking-[0.1em] text-slate-700 transition hover:border-brand-interactive hover:text-brand-interactive"
-                  >
-                    스크리너에서 보기
-                  </TransitionLink>
-                </div>
-              </div>
-              <div
-                data-superinvestor-ticker-holders
-                className="scroll-hint-x -mx-1 px-1"
-                role="region"
-                tabIndex={0}
-                aria-label="종목별 보유자 표 가로 스크롤"
-              >
-                <table className="w-full min-w-[820px] table-fixed text-sm">
-                  <colgroup>
-                    <col className="w-[190px]" />
-                    <col className="w-[104px]" />
-                    <col className="w-[132px]" />
-                    <col className="w-[128px]" />
-                    <col className="w-[104px]" />
-                    <col className="w-[162px]" />
-                  </colgroup>
+          {dataReady && sortedInvestors.length > 0 && (
+            <div data-superinvestors-holders data-superinvestors-holders-count={sortedInvestors.length}>
+              <PanelHeader
+                eyebrow="Holders"
+                title="투자자 목록"
+                right={(
+                  <div className="sup-sort-toggle" data-superinvestors-sort-toggle role="group" aria-label="투자자 정렬 기준">
+                    {HOLDER_SORTS.map((item) => (
+                      <Button
+                        key={item.key}
+                        type="button"
+                        variant="tab"
+                        active={sort === item.key}
+                        aria-pressed={sort === item.key}
+                        data-superinvestors-sort={item.key}
+                        className="sup-sort-btn"
+                        onClick={() => setSort(item.key)}
+                      >
+                        {item.label}
+                      </Button>
+                    ))}
+                  </div>
+                )}
+              />
+              <div className="sup-hold-scroll scroll-hint-x" role="region" tabIndex={0} aria-label="투자자 목록 표 가로 스크롤">
+                <table className="sup-hold-table">
                   <thead>
-                    <tr className="border-b border-slate-200 text-[11px] font-black uppercase tracking-[0.08em] text-[var(--c-ink)]">
-                      <th className="px-3 py-2 text-left">보유자</th>
-                      <th className="px-3 py-2 text-right">비중</th>
-                      <th className="px-3 py-2 text-right">평가액</th>
-                      <th className="px-3 py-2 text-right">주식수</th>
-                      <th className="px-3 py-2 text-right">전체 비중</th>
-                      <th className="px-3 py-2 text-left">보유 구분</th>
+                    <tr>
+                      <th scope="col" className="sup-th-name">투자자</th>
+                      <th scope="col">AUM</th>
+                      <th scope="col">보유종목</th>
+                      <th scope="col">최대 비중</th>
+                      <th scope="col">분기 변화</th>
                     </tr>
                   </thead>
                   <tbody>
-                    {byTickerHolderRows.map((h) => (
-                      <tr
-                        key={h.investor}
-                        data-superinvestor-ticker-holder-row
-                        data-superinvestor-ticker-holder-investor={h.investor}
-                        className="border-b border-slate-100 last:border-b-0"
-                      >
-                        <td className="px-3 py-3">
-                          <TransitionLink
-                            href={ROUTES.superinvestorsGuru(h.investor)}
-                            data-superinvestor-ticker-holder-link
-                            className="inline-flex min-h-11 max-w-full items-center rounded-full border border-slate-200 bg-white px-3 text-[10px] font-black uppercase tracking-wide text-slate-700 transition hover:border-brand-interactive hover:text-brand-interactive"
-                            title={h.investor}
+                    {sortedInvestors.map(([id, inv]) => {
+                      const top = topHoldings.get(id);
+                      const topTicker = top?.ticker ?? inv.top5?.[0] ?? null;
+                      const change = turnover?.[id] ?? null;
+                      const changeValue = change && typeof change.turnover === "number" && Number.isFinite(change.turnover)
+                        ? formatPercent(change.turnover, { digits: 1 })
+                        : change
+                          ? `신규 ${formatInteger(change.new_count)} · 청산 ${formatInteger(change.sold_count)}`
+                          : "—";
+                      return (
+                        <tr
+                          key={id}
+                          className="sup-hold-row cursor-pointer focus-visible:outline focus-visible:outline-2 focus-visible:outline-brand-interactive"
+                          data-superinvestors-holder-row
+                          data-superinvestors-holder-id={id}
+                          tabIndex={0}
+                          role="button"
+                          aria-label={`${inv.name} 상세 보기`}
+                          onClick={() => openGuru(id)}
+                          onKeyDown={(e) => {
+                            if (e.key === "Enter" || e.key === " ") {
+                              e.preventDefault();
+                              openGuru(id);
+                            }
+                          }}
+                        >
+                          <th scope="row" className="sup-holder-name-cell" data-label="투자자">
+                            {/* The row is the single interactive element; the name is plain content. */}
+                            <span className="sup-holder-name">
+                              <span className="sup-holder-name-text">{inv.name}</span>
+                              <span className="sup-holder-sub">
+                                {inv.group}
+                                {inv.is_stale ? <span className="sup-stale-badge">지연</span> : null}
+                              </span>
+                            </span>
+                          </th>
+                          <td className="tabular-nums" data-label="AUM">{formatCurrencyCompact(inv.aum, "USD")}</td>
+                          <td className="tabular-nums" data-label="보유종목">{formatInteger(inv.holdings_count)}개</td>
+                          <td data-label="최대 비중">
+                            {topTicker ? (
+                              <span className="sup-top">
+                                <span className="sup-mono">{topTicker}</span>
+                                <span className="tabular-nums">{top ? formatPercent(top.weight, { digits: 1 }) : "—"}</span>
+                              </span>
+                            ) : (
+                              <span className="sup-mute">—</span>
+                            )}
+                          </td>
+                          <td
+                            className="tabular-nums"
+                            data-label="분기 변화"
+                            title={change ? `신규 ${change.new_count} · 청산 ${change.sold_count} · ${change.total_positions}포지션` : undefined}
                           >
-                            <span className="max-w-[150px] truncate">{h.investor}</span>
-                          </TransitionLink>
-                        </td>
-                        <td className="whitespace-nowrap px-3 py-3 text-right">
-                          <span className="orbitron tabular-nums font-bold text-slate-900">{formatPercent(h.weight, { digits: 2 })}</span>
-                        </td>
-                        <td className="whitespace-nowrap px-3 py-3 text-right">
-                          <span className="orbitron tabular-nums text-slate-700">{formatCurrencyCompact(h.market_value, "USD")}</span>
-                        </td>
-                        <td className="whitespace-nowrap px-3 py-3 text-right">
-                          <span className="orbitron tabular-nums text-slate-700">{formatCompactNumber(h.shares)}</span>
-                        </td>
-                        <td className="whitespace-nowrap px-3 py-3 text-right">
-                          <span className="orbitron tabular-nums text-slate-500">
-                            {formatPercent(h.shares / (byTickerEntry.total_shares || 1), { digits: 1 })}
-                          </span>
-                        </td>
-                        <td className="px-3 py-3">
-                          <div className="flex max-w-[180px] flex-wrap gap-1">
-                            {(h.classes_held ?? []).slice(0, 2).map((item) => (
-                              <span key={item} className="rounded-md bg-slate-100 px-1.5 py-0.5 text-[9px] font-black uppercase tracking-wide text-slate-600">
-                                {item}
-                              </span>
-                            ))}
-                            {(h.position_types ?? []).map((item) => (
-                              <span key={item} className="rounded-md bg-amber-100 px-1.5 py-0.5 text-[9px] font-black uppercase tracking-wide text-amber-700">
-                                {item}
-                              </span>
-                            ))}
-                            {!(h.classes_held?.length || h.position_types?.length) ? (
-                              <span className="text-[10px] font-bold text-slate-300">—</span>
-                            ) : null}
-                          </div>
-                        </td>
-                      </tr>
-                    ))}
+                            {changeValue}
+                          </td>
+                        </tr>
+                      );
+                    })}
                   </tbody>
                 </table>
               </div>
-              <div className="flex justify-end">
-                <TransitionLink
-                  href={ROUTES.stock(selectedTicker)}
-                  data-superinvestor-ticker-action
-                  data-superinvestor-ticker-stock-link
-                  className="inline-flex min-h-11 items-center rounded-full border border-slate-200 bg-white px-3 text-[11px] font-black uppercase tracking-[0.1em] text-slate-700 transition hover:border-brand-interactive hover:text-brand-interactive"
-                >
-                  종목 상세 보기 →
-                </TransitionLink>
-              </div>
             </div>
           )}
+          <EvidenceRail
+            freshness={holdersFreshness}
+            source="SEC EDGAR 13F"
+            asOf={asOfLabel}
+            coverage={holdersCoverage}
+            next="분기 종료 후 최대 45일"
+            onRetry={failed ? retry : partialFeeds ? retry : turnoverError ? retryTurnover : undefined}
+            onEvidence={dataReady && !failed ? () => openEvidence("/data/sec-13f/summary.json") : undefined}
+          />
+        </Panel>
+
+        <div className="sup-rail">
+          <Panel
+            loading={loading}
+            empty={overlapEmpty}
+            emptyReason="표시할 공통 보유 종목이 없습니다"
+            emptyNextRefresh="다음 분기 공시 반영 후 갱신"
+            error={overlapFailed}
+            errorDetail="공통 보유 종목을 불러오지 못했습니다."
+            onRetry={overlapFailed ? retry : undefined}
+            retryLabel="다시 시도"
+          >
+            {dataReady && overlapRows.length > 0 && (
+              <div data-superinvestors-overlap data-superinvestors-overlap-count={overlapRows.length}>
+                <PanelHeader
+                  eyebrow="Overlap"
+                  title="공통 보유"
+                  right={<span className="sup-head-note">가장 많이 겹치는 종목</span>}
+                />
+                {overlapRows.map((row) => {
+                  const enhanced = enhancedConsensus?.enhanced_consensus?.[row.ticker];
+                  return (
+                    <Row
+                      key={row.ticker}
+                      className="sup-olap-row"
+                      data-superinvestors-overlap-row
+                      data-superinvestors-overlap-ticker={row.ticker}
+                      data-superinvestors-overlap-holders={row.holders_count}
+                    >
+                      <span className="sup-mono sup-ticker-strong">{row.ticker}</span>
+                      <span className="sup-olap-holders">
+                        <b className="tabular-nums">{formatInteger(row.holders_count)}명</b>
+                        {enhanced ? (
+                          <span className="sup-mute tabular-nums">주식 {enhanced.equity_holders}/{enhanced.total_holders}</span>
+                        ) : null}
+                      </span>
+                      <span className="tabular-nums sup-olap-score">
+                        {enhanced ? formatPercent(enhanced.equity_score, { digits: 0 }) : "—"}
+                      </span>
+                    </Row>
+                  );
+                })}
+              </div>
+            )}
+            <EvidenceRail
+              freshness={overlapFreshness}
+              source="SEC EDGAR 13F"
+              asOf={asOfLabel}
+              coverage={coverage}
+              next="분기 종료 후 최대 45일"
+              onRetry={failed ? retry : partialFeeds ? retry : undefined}
+              onEvidence={dataReady && !failed ? () => openEvidence("/data/sec-13f/analytics/consensus.json") : undefined}
+            />
+          </Panel>
+
+          <GraphNetworkTeaser
+            network={graphNetwork}
+            href={withQuery(ROUTES.superinvestors, { tab: "graph" })}
+            status={loading ? "pending" : graphFailed ? "error" : "ready"}
+            freshness={graphFreshness}
+            source="SEC EDGAR 13F"
+            asOf={asOfLabel}
+            coverage={graphCoverage}
+            onRetry={graphFailed || (graphReady && partialFeeds) ? retry : undefined}
+            onEvidence={dataReady && !failed ? openGraphEvidence : undefined}
+          />
+        </div>
+      </div>
+      )}
+      </TabPanel>
+
+      <TabPanel item={{ id: "stocks" as SupTab, label: "종목" }} active={tab === "stocks"} idBase={tabsBaseId}>
+        <div className="space-y-4">
+        <CohortTreemapPanel
+          pvData={pvData}
+          pvLoading={pvLoading}
+          pvFailed={pvFailed}
+          onRetryPv={retryPv}
+          onSelectTicker={(ticker) => {
+            saveJourneyBeforeNavigate();
+            router.push(ROUTES.stock(ticker, journeyReturnTo));
+          }}
+        />
+        <WhoHoldsPanel
+          summary={summary}
+          consensus={consensus}
+          enhancedConsensus={enhancedConsensus}
+          byTicker={byTicker}
+          quarter={quarter}
+          asOf={asOfLabel}
+          dataReady={dataReady}
+          failed={failed}
+          partialFeeds={partialFeeds}
+          onRetry={retry}
+          signalFeeds={tabData.signal}
+          onRetrySignal={retrySignal}
+          initialTicker={focusedTicker}
+          onTickerChange={(ticker) => {
+            syncTickerParam(ticker);
+            refreshJourneyReturnTo();
+          }}
+        />
         </div>
       </TabPanel>
 
-      {/* Trades ranking */}
-      <TabPanel idBase={tabsId} item={SUPERINVESTOR_TAB_ITEMS.trades} active={tab === "trades"} className="space-y-4">
-          {/* Header strip */}
+      <TabPanel item={{ id: "trades" as SupTab, label: "매매 동향" }} active={tab === "trades"} idBase={tabsBaseId}>
+        <div className="space-y-4">
+          <SectorRotationPanel
+            pvData={pvData}
+            pvLoading={pvLoading}
+            pvFailed={pvFailed}
+            onRetryPv={retryPv}
+            tradesData={tradesData}
+            tradesLoading={tradesLoading}
+            tradesFailed={tradesFailed}
+            bySector={bySector}
+            returnTo={journeyReturnTo}
+            onBeforeNavigate={saveJourneyBeforeNavigate}
+          />
           {tradesData ? (
             <div className="space-y-1">
               <div className="flex flex-wrap items-center gap-2">
@@ -1856,17 +1646,21 @@ export default function SuperinvestorsClient({
                   <span className="h-1.5 w-1.5 rounded-full bg-emerald-400" />
                   {tradesData.metadata.quarter} 기준
                 </span>
-                <span className="text-[10px] font-bold text-[var(--c-ink-3)]">{delayLabel}</span>
+                <span className="text-[12px] font-bold text-[var(--c-ink-3)]">{delayLabel}</span>
               </div>
               {tradesData.metadata.disclaimer ? (
-                <p className="text-[10px] font-semibold text-[var(--c-ink-3)]">{tradesData.metadata.disclaimer}</p>
+                <p className="text-[12px] font-semibold text-[var(--c-ink-3)]">{tradesData.metadata.disclaimer}</p>
+              ) : null}
+              {tradesData.metadata.generated_at && fmtDateTimeKo(tradesData.metadata.generated_at) ? (
+                <p className="text-[12px] font-semibold text-[var(--c-ink-3)]">
+                  생성 {fmtDateTimeKo(tradesData.metadata.generated_at)}
+                </p>
               ) : null}
             </div>
           ) : null}
 
-          {/* Loading skeleton */}
           {tradesLoading ? (
-            <div className="grid gap-4 lg:grid-cols-2">
+            <div className="sup-trades-grid">
               {[0, 1].map((p) => (
                 <div key={p} className="rounded-[1.5rem] border border-[var(--c-line)] bg-[var(--c-panel)] p-3 shadow-[var(--sh-sm)] sm:p-4">
                   <div className="h-5 w-1/3 rounded bg-slate-200" />
@@ -1879,109 +1673,135 @@ export default function SuperinvestorsClient({
               ))}
             </div>
           ) : tradesFailed ? (
-            <div className="rounded-[1.2rem] border border-rose-200 bg-rose-50 px-4 py-3 text-sm font-bold text-rose-700">
-              매매랭킹 데이터를 불러오지 못했습니다. 잠시 후 다시 시도해 주세요.
+            <div className="flex flex-wrap items-center justify-between gap-3 rounded-[1.2rem] border border-rose-200 bg-rose-50 px-4 py-3 text-sm font-bold text-rose-700">
+              <span>매매랭킹 데이터를 불러오지 못했습니다. 잠시 후 다시 시도해 주세요.</span>
+              <Button variant="secondary" onClick={retryTrades}>다시 시도</Button>
             </div>
           ) : tradesData ? (
-            <>
-              {/* Panels */}
-              <div className="grid gap-4 lg:grid-cols-2">
-                <TradeRankingPanel
-                  title="많이 매수된 종목"
-                  rows={tradesData.bought}
-                  totalAmount={tradesBoughtAmount}
-                  amountColor="emerald"
-                  side="bought"
-                  expanded={tradesBoughtExpanded}
-                  onToggle={() => setTradesBoughtExpanded((v) => !v)}
-                  actionLabel={(r) =>
-                    r.new_count != null && r.new_count > 0
-                      ? `${r.new_count}개 신규`
-                      : undefined
-                  }
-                />
-                <TradeRankingPanel
-                  title="많이 매도된 종목"
-                  rows={tradesData.sold}
-                  totalAmount={tradesSoldAmount}
-                  amountColor="rose"
-                  side="sold"
-                  expanded={tradesSoldExpanded}
-                  onToggle={() => setTradesSoldExpanded((v) => !v)}
-                  actionLabel={(r) =>
-                    r.exit_count != null && r.exit_count > 0
-                      ? `${r.exit_count}개 청산`
-                      : undefined
-                  }
-                />
-              </div>
-            </>
+            <div className="sup-trades-grid">
+              <ResponsiveTradeRankingPanel
+                title="많이 매수된 종목"
+                rows={tradesData.bought}
+                totalAmount={tradesBoughtAmount}
+                amountColor="emerald"
+                side="bought"
+                expanded={tradesBoughtExpanded}
+                onToggle={() => setTradesBoughtExpanded((v) => !v)}
+                returnTo={journeyReturnTo}
+                onBeforeNavigate={saveJourneyBeforeNavigate}
+                actionLabel={(r) =>
+                  r.new_count != null && r.new_count > 0
+                    ? `${r.new_count}개 신규`
+                    : undefined
+                }
+              />
+              <ResponsiveTradeRankingPanel
+                title="많이 매도된 종목"
+                rows={tradesData.sold}
+                totalAmount={tradesSoldAmount}
+                amountColor="rose"
+                side="sold"
+                expanded={tradesSoldExpanded}
+                onToggle={() => setTradesSoldExpanded((v) => !v)}
+                returnTo={journeyReturnTo}
+                onBeforeNavigate={saveJourneyBeforeNavigate}
+                actionLabel={(r) =>
+                  r.exit_count != null && r.exit_count > 0
+                    ? `${r.exit_count}개 청산`
+                    : undefined
+                }
+              />
+            </div>
           ) : null}
+        </div>
       </TabPanel>
 
-      {/* Insights */}
-      <TabPanel idBase={tabsId} item={SUPERINVESTOR_TAB_ITEMS.insights} active={tab === "insights"}>
+      <TabPanel item={{ id: "insights" as SupTab, label: "인사이트" }} active={tab === "insights"} idBase={tabsBaseId}>
         <InsightsTab />
       </TabPanel>
 
-      {/* Methodology — demoted per brief-superinvestors.md D (content preserved verbatim,
-          just relocated from a top-of-page card into a collapsed bottom accordion). */}
-      {dataReady ? (
-      <CpAccordion
-        title="자료 기준 · SEC 13F 공시 변환 데이터"
-        meta={`${quarter ?? "—"} · 45일 지연`}
-      >
-        <p className="text-xs font-semibold leading-5 text-[var(--c-ink-3)]">
-          SEC 13F 공시 원문을 가공한 분석 자료만 사용합니다. 실시간 보유가 아니라 분기 보고 기준이며,
-          분기 종료 후 최대 45일 지연됩니다.
-        </p>
-        <div className="mt-4 grid gap-2 sm:grid-cols-2 xl:grid-cols-5">
-          <div className="rounded-xl border border-slate-100 bg-slate-50 p-3">
-            <p className="text-[10px] font-black uppercase tracking-[0.08em] text-slate-500">기준 분기</p>
-            <p className="mt-1 orbitron text-sm font-black text-slate-950">{quarter ?? "—"}</p>
-            <p className="mt-1 text-[10px] font-semibold text-[var(--c-ink-3)]">
-              {generatedAtLabel ? `생성 ${generatedAtLabel}` : "생성 시각 정보 없음"}
-            </p>
-          </div>
-          <div className="rounded-xl border border-slate-100 bg-slate-50 p-3">
-            <p className="text-[10px] font-black uppercase tracking-[0.08em] text-slate-500">분석 범위</p>
-            <p className="mt-1 orbitron text-sm font-black text-slate-950">
-              {formatInteger(investorCount)}명 · {formatInteger(tickerCount)}종목
-            </p>
-            <p className="mt-1 text-[10px] font-semibold text-[var(--c-ink-3)]">
-              오래된 공시는 최신 분기 계산에서 제외
-            </p>
-          </div>
-          <div className="rounded-xl border border-slate-100 bg-slate-50 p-3">
-            <p className="text-[10px] font-black uppercase tracking-[0.08em] text-slate-500">섹터 분해</p>
-            <p className="mt-1 text-sm font-black text-slate-950">{topSectorLabel}</p>
-            <p className="mt-1 text-[10px] font-semibold text-[var(--c-ink-3)]">
-              {sectorBreakdownCount}개 섹터 · 대표 {topSectorHoldings}
-            </p>
-          </div>
-          <div className="rounded-xl border border-slate-100 bg-slate-50 p-3">
-            <p className="text-[10px] font-black uppercase tracking-[0.08em] text-slate-500">종목별 보유</p>
-            <p className="mt-1 orbitron text-sm font-black text-slate-950">{formatInteger(tickerCount)}</p>
-            <p className="mt-1 text-[10px] font-semibold text-[var(--c-ink-3)]">
-              보유 투자자·비중은 종목별 보유 탭에서 확인
-            </p>
-          </div>
-          <div className="rounded-xl border border-slate-100 bg-slate-50 p-3">
-            <p className="text-[10px] font-black uppercase tracking-[0.08em] text-slate-500">확신 신호</p>
-            <p className="mt-1 orbitron text-sm font-black text-slate-950">
-              {formatInteger(convictionNewCount)} / {formatInteger(convictionHoldCount)}
-            </p>
-            <p className="mt-1 text-[10px] font-semibold text-[var(--c-ink-3)]">
-              신규 고비중 / 상위 보유 유지
-            </p>
-          </div>
+      <TabPanel item={{ id: "graph" as SupTab, label: "그래프" }} active={tab === "graph"} idBase={tabsBaseId}>
+      <section className="sup-graph-full" id="superinvestors-graph-full" aria-label="투자자 종목 연결 그래프">
+        {graphFailed ? (
+          <Panel
+            error
+            errorDetail="종목별 보유 피드를 불러오지 못했습니다."
+            asOf={asOfLabel}
+            onRetry={retry}
+            retryLabel="다시 시도"
+          >
+            <div data-superinvestors-graph>
+              <PanelHeader eyebrow="Graph Network" title="누가 무엇을 함께 들고 있나" />
+              <EvidenceRail
+                freshness="error"
+                source="SEC EDGAR 13F"
+                asOf={asOfLabel}
+                coverage="—"
+                onRetry={retry}
+                onEvidence={dataReady && !failed ? openGraphEvidence : undefined}
+              />
+            </div>
+          </Panel>
+        ) : graphReady ? (
+          <GraphNetworkPanel
+            network={graphNetwork}
+            selectedTicker={selectedGraphTicker}
+            onSelectTicker={setSelectedGraphTicker}
+            rail={{
+              freshness: graphFreshness,
+              source: "SEC EDGAR 13F",
+              asOf: asOfLabel,
+              coverage: graphCoverage,
+              onRetry: failed ? retry : partialFeeds ? retry : undefined,
+              onEvidence: dataReady && !failed ? openGraphEvidence : undefined,
+            }}
+          />
+        ) : (
+          <Panel>
+            <div data-superinvestors-graph>
+              <PanelHeader eyebrow="Graph Network" title="누가 무엇을 함께 들고 있나" />
+              <EmptyState
+                reason="그래프 데이터를 불러오는 중입니다"
+                nextRefresh="잠시 후 다시 확인해 주세요"
+              />
+              <EvidenceRail
+                freshness="pending"
+                source="SEC EDGAR 13F"
+                asOf={asOfLabel}
+                coverage="—"
+              />
+            </div>
+          </Panel>
+        )}
+      </section>
+      {graphRankRows.length > 0 ? (
+        <div className="sup-graph-ranklist" data-superinvestors-graph-ranklist>
+          <PanelHeader eyebrow="Graph · Ranked" title="함께 가장 많이 들고 있는 종목" />
+          {graphRankRows.map((row) => (
+            <Row
+              key={row.ticker}
+              data-superinvestors-graph-rank-row
+              data-superinvestors-graph-rank-ticker={row.ticker}
+            >
+              <span className="sup-mono sup-ticker-strong">{row.ticker}</span>
+              <span className="tabular-nums"><b>{formatInteger(row.holders_count)}명</b></span>
+            </Row>
+          ))}
+          <EvidenceRail
+            freshness={graphFreshness}
+            source="SEC EDGAR 13F"
+            asOf={asOfLabel}
+            coverage={graphCoverage}
+            onEvidence={dataReady && !failed ? openGraphEvidence : undefined}
+          />
         </div>
-        <p className="mt-3 text-[10px] font-semibold leading-4 text-[var(--c-ink-3)]">
-          섹터·종목·확신 신호는 같은 기준 분기의 변환 데이터에서 계산합니다. 공시 지연 때문에 오늘의 실제 보유와 다를 수 있습니다.
-        </p>
-      </CpAccordion>
       ) : null}
+      </TabPanel>
 
+      <div className="sup-cta">
+        <span className="sup-cta-note">13F 공시 기반 장기 보유 포지션만 집계합니다. 공시는 최대 45일 늦게 반영됩니다.</span>
+        <span className="sup-cta-note sup-mute">투자 조언 아님 · 데이터 지연 가능</span>
+      </div>
     </div>
   );
 }

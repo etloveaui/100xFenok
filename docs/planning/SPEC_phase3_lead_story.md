@@ -3,7 +3,8 @@
 > Architect: Claude (right-top %1623). Implementor: Codex (left-top %1622).
 > Parent spec: `docs/planning/v5_master_design.md` §2 (connected UX), §5 (phase order).
 > Scope: `?v5=1` + `fenok_design_version=v5` cookie ONLY. V1 (`/`) untouched. Light-only. No backend/cron regression.
-> Status: **READY** — Wave-1 audit (Codex) + data recon (MiMo) + AGY guardrails folded in. All open questions resolved.
+> Status: **HISTORICAL v5 IMPLEMENTATION SPEC** — retained for design provenance;
+> it is not a current dispatch contract after the v6 default promotion.
 > Date: 2026-06-26
 
 ---

@@ -6,8 +6,12 @@ import { DEPLOY_SMOKE_ATTEMPTS } from "./deploy-smoke-retry.mjs";
 import {
   checkIframeTarget,
   fetchAssetStatus,
+  fetchImageOptimizerProbe,
   fetchRouteHtml,
+  fetchStaticProbe,
   firstIframeSrc,
+  imageOptimizerProbeErrors,
+  staticProbeErrors,
 } from "./check-route-iframe-contract.mjs";
 import {
   buildProducerEvidence,
@@ -66,6 +70,60 @@ assert.equal(DEPLOY_SMOKE_ATTEMPTS, 3, "production deploy-smoke retry bound must
   assert.equal(status, 200);
   assert.equal(mock.calls.length, 2, "iframe asset HEAD must retry an HTTP 503");
   console.log("  ok - iframe asset HEAD retries 503 then passes");
+}
+
+{
+  const baseUrl = new URL("https://example.test");
+  const mock = sequenceFetch([response(200, "protected bytes")]);
+  const result = await fetchStaticProbe(baseUrl, "/admin/DEV.md", "", {
+    attempts: 1,
+    delayMs: 0,
+    fetchImpl: mock.fetchImpl,
+    sleep: noSleep,
+    timeoutMs: 50,
+  });
+  assert.match(staticProbeErrors(baseUrl, "/admin/DEV.md", result, "anonymous")[0], /expected redirect/);
+  assert.equal(mock.calls[0][1].redirect, "manual", "admin static probe must not follow a redirect to public login HTML");
+  console.log("  ok - anonymous admin static HTTP 200 fails even with protected bytes");
+}
+
+{
+  const baseUrl = new URL("https://example.test");
+  const denied = { status: 307, location: "/admin/?redirect=%2Fadmin%2FDEV.md", bodyBytes: 0 };
+  const normalized = { status: 307, location: "/admin/data-lab?redirect=%2Fadmin%2Fdata-lab%2Findex.html", bodyBytes: 0 };
+  const served = { status: 200, location: null, bodyBytes: 10 };
+  assert.deepEqual(staticProbeErrors(baseUrl, "/admin/DEV.md", denied, "anonymous"), []);
+  assert.match(
+    staticProbeErrors(baseUrl, "/admin/DEV.md", { ...denied, bodyBytes: 15 }, "anonymous")[0],
+    /redirect carried 15 protected byte/,
+  );
+  assert.deepEqual(staticProbeErrors(baseUrl, "/admin/data-lab/index.html?embed=1", normalized, "malformed"), []);
+  assert.deepEqual(staticProbeErrors(baseUrl, "/admin/data-lab/app/renderer.js", served, "authenticated"), []);
+  assert.deepEqual(staticProbeErrors(baseUrl, "/ib/ib-helper/index.html?embed=1", served, "public"), []);
+  console.log("  ok - denied admin assets and served signed-in/public assets retain their expected boundary");
+}
+
+{
+  const baseUrl = new URL("https://example.test");
+  const mock = sequenceFetch([{
+    status: 403,
+    headers: { get: (name) => name.toLowerCase() === "cache-control" ? "no-store" : null },
+    arrayBuffer: async () => new ArrayBuffer(0),
+  }]);
+  const denied = await fetchImageOptimizerProbe(baseUrl, "/admin/design-lab/screenshots/figma-profile-avatar.jpg", {
+    fetchImpl: mock.fetchImpl,
+  });
+  assert.deepEqual(imageOptimizerProbeErrors("/admin/design-lab/screenshots/figma-profile-avatar.jpg", denied, "denied"), []);
+  assert.equal(mock.calls[0][1].redirect, "manual");
+  assert.match(mock.calls[0][0].pathname, /^\/_next\/image\/$/);
+  assert.match(
+    imageOptimizerProbeErrors("/admin/image.jpg", { ...denied, status: 302, bodyBytes: 8 }, "denied")[0],
+    /expected empty HTTP 403/,
+  );
+  assert.deepEqual(imageOptimizerProbeErrors("/pwa-icon-192-v6.png", {
+    status: 200, bodyBytes: 12, contentType: "image/png", cacheControl: null,
+  }, "public"), []);
+  console.log("  ok - optimizer denies protected bytes and retains a public image control");
 }
 
 {

@@ -70,8 +70,24 @@ function runControlledFailureValidation(overrides = {}) {
 const dispatchInputs = extractIndentedBlock(workflow, /^\s{4}inputs:\s*$/);
 const inputNames = [...dispatchInputs.matchAll(/^\s{6}([a-z0-9_]+):\s*$/gm)].map((match) => match[1]);
 const runBlocks = [...workflow.matchAll(/^(\s+)run:\s*\|\n((?:(?:\1  ).*\n?)*)/gm)].map((match) => match[2]);
+const refreshRun = extractStepRun(workflow, "Refresh FINRA and OCC derived proxies");
 
-assert.match(workflow, /node scripts\/test-data-supply-attempt-producer\.mjs/);
+assert.equal(
+  refreshRun.split("\n").filter((line) => line.trim() === "npm --prefix 100xfenok-next run qa:fenok-signal-lens-proxies").length,
+  1,
+  "the base proxy verification must appear exactly once",
+);
+assert.equal(
+  refreshRun.split("\n").filter((line) => line.trim() === "npm --prefix 100xfenok-next run qa:fenok-signal-lens-proxies:artifacts").length,
+  1,
+  "the artifact proxy verification must appear exactly once",
+);
+assert.match(
+  refreshRun,
+  /if \[ "\$\{FENOK_EDGE_PLAN_ONLY:-false\}" = "true" \]; then\s+npm --prefix 100xfenok-next run qa:fenok-signal-lens-proxies\s+else\s+npm --prefix 100xfenok-next run qa:fenok-signal-lens-proxies:artifacts\s+fi/,
+  "plan and artifact verification must be mutually exclusive",
+);
+
 assert.match(workflow, /node scripts\/test-fetch-fenok-finra-daily-private\.mjs/);
 assert.match(workflow, /npm --prefix 100xfenok-next run qa:fenok-occ-options/);
 const occQaScript = appPackage.scripts?.["qa:fenok-occ-options"] ?? "";
@@ -88,8 +104,6 @@ assert.throws(
   /must chain all OCC suites with &&/,
   "a semicolon mutation must not swallow an earlier OCC suite failure",
 );
-assert.match(workflow, /detection-attempts\/finra_short_volume\.json/);
-assert.match(workflow, /detection-attempts\/occ_options_volume\.json/);
 assert.match(workflow, /scripts\/stage-lane-manifest\.sh/);
 assert.match(workflow, /--stage always_if_exists/);
 assert.match(workflow, /--stage success_verify_not_plan_if_exists/);
@@ -99,10 +113,30 @@ assert.match(
   "computed artifacts must be manifest-staged only after a non-plan successful refresh",
 );
 assert.match(workflow, /- name: Commit and push owned source artifacts\n\s+if: \$\{\{ always\(\) \}\}/);
+assert.match(
+  workflow,
+  /- name: Publish FINRA short volume generation to the cloud data plane\n\s+id: publish_cloud_generation\n\s+if: \$\{\{ steps\.refresh_edge\.outcome == 'success' && env\.FENOK_EDGE_PLAN_ONLY != 'true' \}\}/,
+  "plan-only runs must not publish a cloud generation",
+);
 assert.doesNotMatch(workflow, /git add -A/);
 
 assert.equal(inputNames.length, 11, "workflow_dispatch must expose exactly 11 inputs");
 assert.ok(inputNames.includes("controlled_failure_lanes"));
+assert.match(
+  dispatchInputs,
+  /occ_max_requests:[\s\S]*?default: '2000'/,
+  "OCC workflow_dispatch must expose the four-date 2000-request budget",
+);
+assert.match(
+  workflow,
+  /250 tickers x up to 4 dates x 2 sides = 2000\./,
+  "the OCC request-budget arithmetic must stay adjacent to the workflow setting",
+);
+assert.match(
+  workflow,
+  /INPUT_OCC_MAX_REQUESTS:\s*\$\{\{ github\.event\.inputs\.occ_max_requests \|\| '2000' \}\}/,
+  "scheduled OCC runs must default to the four-date 2000-request budget",
+);
 assert.match(
   workflow,
   /INPUT_CONTROLLED_FAILURE_LANES:\s*\$\{\{ github\.event\.inputs\.controlled_failure_lanes \|\| '' \}\}/,

@@ -75,10 +75,10 @@ function MetricCard({
       data-market-structure-summary-card="true"
     >
       <p className="truncate text-[10px] font-black uppercase tracking-[0.1em] text-[var(--c-ink-3)]">{label}</p>
-      <p className="orbitron mt-1 text-2xl font-black tabular-nums text-[var(--c-ink)]">
+      <p className="mt-1 text-2xl font-black tabular-nums text-[var(--c-ink)]">
         {value}
       </p>
-      <p className="mt-1 min-w-0 break-words text-[11px] font-semibold leading-4 text-[var(--c-ink-3)]">
+      <p className="mt-1 min-w-0 break-words text-[12px] font-semibold leading-4 text-[var(--c-ink-3)]">
         {detail}
       </p>
     </div>
@@ -100,7 +100,7 @@ function SlotShell({
     <section
       data-slot={`market-structure-${id}`}
       data-market-structure-slot={id}
-      className="min-w-0 rounded-[1.2rem] border border-[var(--c-line)] bg-[var(--c-panel)] p-4 shadow-[var(--sh-sm)]"
+      className="min-w-0 rounded-2xl border border-[var(--c-line)] bg-[var(--c-panel)] p-4 shadow-[var(--sh-sm)]"
     >
       <header className="mb-3 flex min-w-0 flex-wrap items-baseline justify-between gap-2">
         <h2 className="min-w-0 text-sm font-black tracking-tight text-[var(--c-ink)]">{title}</h2>
@@ -115,7 +115,7 @@ function SlotShell({
 
 function Placeholder({ children }: { children: ReactNode }) {
   return (
-    <div className="grid min-h-48 place-items-center rounded-xl border border-dashed border-[var(--c-line)] bg-[var(--c-surface-2)] px-4 text-center text-xs font-bold leading-5 text-[var(--c-ink-3)]">
+    <div className="grid min-h-48 place-items-center rounded-xl border border-dashed border-[var(--c-line)] bg-[var(--c-surface-2)] px-4 text-center text-[12px] font-bold leading-5 text-[var(--c-ink-3)]">
       {children}
     </div>
   );
@@ -189,7 +189,7 @@ export default function MarketStructureDetailClient({
           <p className="data-shell-kicker">시장 구조</p>
           <h1 className="data-shell-title">시장 구조 상세</h1>
           <p className="data-shell-desc">
-            벤치마크 매트릭스, 신용 스프레드, Magnificent 7, 편입·제외 이벤트, 유동성, 집중도, CNN 하위 심리와 AAII까지 한 화면에서 확장합니다.
+            벤치마크 매트릭스, 신용 스프레드, Magnificent 7, 편입·제외 이벤트, 유동성, 집중도, CNN 하위 심리와 AAII까지 한 화면에서 다룹니다.
           </p>
         </div>
         <div className="data-shell-head-actions">
@@ -225,7 +225,7 @@ export default function MarketStructureDetailClient({
       ) : null}
 
       {state === "failed" ? (
-        <div className="rounded-[1.2rem] border border-[var(--c-line-2)] bg-[var(--c-surface-2)] px-4 py-3 text-sm font-semibold text-[var(--c-ink-2)]">
+        <div className="rounded-2xl border border-[var(--c-line-2)] bg-[var(--c-surface-2)] px-4 py-3 text-sm font-semibold text-[var(--c-ink-2)]">
           시장 구조 데이터를 불러오지 못했습니다.
         </div>
       ) : null}

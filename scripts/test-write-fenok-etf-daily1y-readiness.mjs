@@ -12,10 +12,12 @@ import {
 } from "./effective-etf-detail-reader.mjs";
 import {
   buildScoredEtfDaily1yFetchablePlan,
+  buildFullScoredFetchableCandidates,
   buildEtfDaily1yReadiness,
   classifyDaily1yGap,
   etfInceptionDate,
 } from "./write-fenok-etf-daily1y-readiness.mjs";
+import { buildScoredDaily1yReport } from "../100xfenok-next/scripts/report-stockanalysis-history-gap.mjs";
 import {
   DAILY_1Y_HISTORY_EVIDENCE_POLICY,
   classifyDaily1yShortHistory,
@@ -151,6 +153,37 @@ const recentProviderFailure = {
   last_attempt_utc: "2026-07-08T18:00:00Z",
   failure_reason: "ValueError: Yahoo fallback quoteType is not ETF/MUTUALFUND: EQUITY",
 };
+const providerAbsentFutureProbe = {
+  last_attempt_utc: "2026-07-01T00:00:00Z",
+  availability_status: "provider_absent",
+  failure_class: "provider_coverage_gap",
+  failure_reason: null,
+  next_probe_after_utc: "2026-07-10T00:00:00Z",
+  next_attempt_after_utc: "2026-07-10T00:00:00Z",
+};
+const providerAbsentElapsedProbe = {
+  ...providerAbsentFutureProbe,
+  next_probe_after_utc: "2026-07-08T00:00:00Z",
+  next_attempt_after_utc: "2026-07-08T00:00:00Z",
+};
+const providerAbsentByStatusOnly = {
+  ...providerAbsentFutureProbe,
+  failure_class: null,
+};
+const providerAbsentByClassOnly = {
+  ...providerAbsentFutureProbe,
+  availability_status: null,
+};
+const retryTimestampWithoutTerminalEvidence = {
+  last_attempt_utc: "2026-07-01T00:00:00Z",
+  failure_reason: null,
+  next_probe_after_utc: "2026-07-10T00:00:00Z",
+  next_attempt_after_utc: "2026-07-10T00:00:00Z",
+};
+const elapsedNonEtfFailure = {
+  last_attempt_utc: "2026-07-01T00:00:00Z",
+  failure_reason: "ValueError: Yahoo fallback quoteType is not ETF/MUTUALFUND: EQUITY",
+};
 
 function writeFixture(rootDir, relPath, payload) {
   const target = path.join(rootDir, relPath);
@@ -233,9 +266,79 @@ function activeSelection(rootDir, ticker) {
   return { stateRoot, active, selection: current[ticker] };
 }
 
+const scoredDaily1yFixture = buildScoredDaily1yReport({
+  scoredEtfCount: 5,
+  completeRows: [{ ticker: "AAA" }],
+  fetchableRows: [
+    { ticker: "CCC", daily_1y_gap_source: "yahoo_fallback_short_rows" },
+    { ticker: "BBB", daily_1y_gap_source: "stockanalysis_short_rows" },
+  ],
+  inceptionLimitedRows: [{ ticker: "DDD", classification_reason: "inception_limited" }],
+  terminalLimitedRows: [{ ticker: "EEE", terminal_limit_source: "recent_provider_failure" }],
+});
+assert.equal(scoredDaily1yFixture.scored_etf_count, 5);
+assert.equal(scoredDaily1yFixture.fetchable, 2);
+assert.deepEqual(scoredDaily1yFixture.fetchable_rows.map((row) => row.ticker), ["BBB", "CCC"]);
+assert.equal(scoredDaily1yFixture.fetchable_classification_projection.row_count, 2);
+assert.deepEqual(
+  scoredDaily1yFixture.fetchable_rows,
+  [
+    { ticker: "BBB", daily_1y_gap_source: "stockanalysis_short_rows" },
+    { ticker: "CCC", daily_1y_gap_source: "yahoo_fallback_short_rows" },
+  ],
+);
+
+const fullScoredCandidates = buildFullScoredFetchableCandidates(scoredDaily1yFixture);
+assert.equal(fullScoredCandidates.status, "complete");
+assert.equal(fullScoredCandidates.eligible_count, 5);
+assert.equal(fullScoredCandidates.scored_etf_count, 5);
+assert.equal(fullScoredCandidates.fetchable_count, 2);
+assert.equal(fullScoredCandidates.classified_count, 5);
+assert.equal(fullScoredCandidates.count_equation_ok, true);
+assert.equal(fullScoredCandidates.classification_projection_matches, true);
+assert.equal(fullScoredCandidates.candidate_count_matches_report, true);
+assert.deepEqual(fullScoredCandidates.identity_projection, {
+  row_count: 2,
+  sha256: scoredDaily1yFixture.fetchable_classification_projection.sha256,
+});
+assert.equal(fullScoredCandidates.unique_ticker_count, 2);
+assert.deepEqual(fullScoredCandidates.tickers, ["BBB", "CCC"]);
+assert.deepEqual(fullScoredCandidates.rows, scoredDaily1yFixture.fetchable_rows);
+assert.equal(fullScoredCandidates.dispatch_authorized, false);
+
+const duplicateCandidateRows = [
+  { ticker: "BBB", daily_1y_gap_source: "stockanalysis_short_rows" },
+  { ticker: "bbb", daily_1y_gap_source: "yahoo_fallback_short_rows" },
+];
+const duplicateCandidatePlan = buildFullScoredFetchableCandidates({
+  ...scoredDaily1yFixture,
+  fetchable_rows: duplicateCandidateRows,
+  fetchable_classification_projection: daily1yClassificationProjection({ fetchable: duplicateCandidateRows }),
+});
+assert.equal(duplicateCandidatePlan.status, "invalid_source_rows");
+assert.equal(duplicateCandidatePlan.unique_ticker_count, 1);
+assert.deepEqual(duplicateCandidatePlan.rows, []);
+assert.equal(duplicateCandidatePlan.dispatch_authorized, false);
+
+const legacyCandidatePlan = buildFullScoredFetchableCandidates({
+  ...scoredDaily1yFixture,
+  fetchable_rows: undefined,
+  fetchable_classification_projection: undefined,
+});
+assert.equal(legacyCandidatePlan.status, "missing_exact_source_rows");
+assert.deepEqual(legacyCandidatePlan.rows, []);
+assert.equal(legacyCandidatePlan.dispatch_authorized, false);
+
 const fixtureRoot = fs.mkdtempSync(path.join(os.tmpdir(), "fenok-etf-daily1y-readiness-"));
 const fixtureGeneratedAt = "2026-07-09T00:00:00.000Z";
-writeFixture(fixtureRoot, "data/computed/fenok_etf_signals_summary.json", { rows: [{ ticker: "AAA" }] });
+writeFixture(fixtureRoot, "data/computed/fenok_etf_signals_summary.json", {
+  rows: ["AAA", "BBB", "CCC", "DDD"].map((ticker) => ({ ticker })),
+});
+writeFixture(fixtureRoot, "data/admin/fenok-etf-core-daily-basket.json", {
+  schema_version: "fenok-etf-core-daily-basket/v1",
+  generated_at: fixtureGeneratedAt,
+  daily_refresh_universe: { source: "core", count: 1, tickers: ["AAA"], workflow: "daily" },
+});
 writeFixture(fixtureRoot, "data/stockanalysis/backfill/history_gap_report_latest.json", {
   generated_at: fixtureGeneratedAt,
   classification_as_of: fixtureGeneratedAt,
@@ -248,12 +351,14 @@ writeFixture(fixtureRoot, "data/stockanalysis/backfill/history_gap_report_latest
   },
   daily_1y_gap: {
     scored_etfs: {
-      scored_etf_count: 1,
-      complete: 1,
+      scored_etf_count: 4,
+      complete: 4,
       fetchable: 0,
       inception_limited: 0,
       terminal_limited: 0,
-      classification_projection: daily1yClassificationProjection({ complete: [{ ticker: "AAA" }] }),
+      classification_projection: daily1yClassificationProjection({
+        complete: ["AAA", "BBB", "CCC", "DDD"].map((ticker) => ({ ticker })),
+      }),
     },
   },
   recommended_dispatch: null,
@@ -277,7 +382,7 @@ writeFixture(fixtureRoot, "data/admin/fenok-edge-coverage-index.json", {
         daily_ready: true,
         gated_ready: true,
         counts: {
-          scored_public_etf: 1,
+          scored_public_etf: 4,
           fetchable_daily_1y_gap: 0,
           inception_limited_daily_1y_gap: 0,
           terminal_limited_daily_1y_gap: 0,
@@ -304,6 +409,19 @@ assert.deepEqual(classifyDaily1yGap(recentStockAnalysisShortRows, currentNow).te
 assert.equal(classifyDaily1yGap(recentStockAnalysisShortRows, currentNow).terminalLimitSource, "stockanalysis_recent_short_rows");
 assert.deepEqual(classifyDaily1yGap(oldYahooFallback, currentNow, recentProviderFailure).terminalLimited, ["daily_1y"]);
 assert.equal(classifyDaily1yGap(oldYahooFallback, currentNow, recentProviderFailure).terminalLimitSource, "provider_rejected_non_etf");
+assert.deepEqual(classifyDaily1yGap(oldYahooFallback, currentNow, providerAbsentFutureProbe).terminalLimited, ["daily_1y"]);
+assert.equal(
+  classifyDaily1yGap(oldYahooFallback, currentNow, providerAbsentFutureProbe).terminalLimitSource,
+  "source_unavailable_recent_failure",
+);
+assert.deepEqual(classifyDaily1yGap(oldYahooFallback, currentNow, providerAbsentElapsedProbe).fetchable, ["daily_1y"]);
+assert.deepEqual(classifyDaily1yGap(oldYahooFallback, currentNow, providerAbsentByStatusOnly).terminalLimited, ["daily_1y"]);
+assert.deepEqual(classifyDaily1yGap(oldYahooFallback, currentNow, providerAbsentByClassOnly).terminalLimited, ["daily_1y"]);
+assert.deepEqual(
+  classifyDaily1yGap(oldYahooFallback, currentNow, retryTimestampWithoutTerminalEvidence).fetchable,
+  ["daily_1y"],
+);
+assert.deepEqual(classifyDaily1yGap(oldYahooFallback, currentNow, elapsedNonEtfFailure).fetchable, ["daily_1y"]);
 
 const denseRecentRows = weekdayRows(25, "2026-06-01");
 const denseRecentYfRows = weekdayRows(25, "2026-06-02");
@@ -657,10 +775,24 @@ assert.equal(payload.readiness_status, "ready");
 
 assert.equal(Object.keys(payload).includes("fetchable_plan"), false);
 assert.equal(payload.exact_fetchable_plan.fetchable_count, readiness.daily_1y_fetchable);
+assert.equal(payload.exact_fetchable_plan.full_scored_candidate_status, "missing_exact_source_rows");
+assert.equal(plan.full_scored_fetchable_candidates.status, "missing_exact_source_rows");
+assert.deepEqual(plan.full_scored_fetchable_candidates.rows, []);
 assert.equal(payload.exact_fetchable_plan.can_drive_bounded_ticker_batches, true);
 assert.equal(payload.exact_fetchable_plan.batch_count, Math.ceil(readiness.daily_1y_fetchable / 120));
 
-assert.equal(plan.counts.scored_etf_count, readiness.denominator);
+assert.equal(plan.counts.scored_etf_count, 4);
+assert.equal(plan.counts.managed_etf_count, readiness.denominator);
+assert.equal(plan.counts.scored_universe_total, 4);
+assert.notEqual(plan.counts.scored_etf_count, plan.counts.managed_etf_count);
+assert.equal(plan.counts.scored_etf_count, plan.counts.scored_universe_total);
+assert.equal(plan.counts.scored_complete, 4);
+assert.equal(plan.counts.scored_fetchable, 0);
+assert.equal(plan.counts.scored_inception_limited, 0);
+assert.equal(plan.counts.scored_terminal_limited, 0);
+assert.equal(plan.counts.scored_equation_ok, true);
+assert.equal(plan.counts.core_basket_ticker_count, 1);
+assert.equal(plan.counts.core_tickers_missing_from_summary, 0);
 assert.equal(plan.counts.complete, readiness.daily_1y_complete);
 assert.equal(plan.counts.fetchable, readiness.daily_1y_fetchable);
 assert.equal(plan.counts.inception_limited, readiness.inception_limited_daily_1y_gap);
@@ -678,7 +810,60 @@ assert.equal(new Set(plan.tickers).size, readiness.daily_1y_fetchable);
 assert.deepEqual(plan.tickers, [...plan.tickers].sort());
 assert.equal(planBreakdownTotal, readiness.daily_1y_fetchable);
 
+const fullScoredHistory = {
+  ...scoredDaily1yFixture,
+  scored_etf_count: 5,
+  complete: 1,
+  fetchable: 2,
+  inception_limited: 1,
+  terminal_limited: 1,
+};
+const corePlanWithFullScoredRows = buildScoredEtfDaily1yFetchablePlan({
+  signalSummary: { rows: ["AAA", "BBB", "CCC", "DDD", "EEE"].map((ticker) => ({ ticker })) },
+  coreBasket: { daily_refresh_universe: { tickers: ["AAA"] } },
+  historyGap: {
+    classification_as_of: fixtureGeneratedAt,
+    daily_1y_gap: { scored_etfs: fullScoredHistory },
+  },
+  coverageIndex: null,
+  generatedAt: currentNow,
+  classificationAsOf: fixtureGeneratedAt,
+  rootDir: fixtureRoot,
+});
+const corePlanWithoutFullScoredRows = buildScoredEtfDaily1yFetchablePlan({
+  signalSummary: { rows: ["AAA", "BBB", "CCC", "DDD", "EEE"].map((ticker) => ({ ticker })) },
+  coreBasket: { daily_refresh_universe: { tickers: ["AAA"] } },
+  historyGap: {
+    classification_as_of: fixtureGeneratedAt,
+    daily_1y_gap: {
+      scored_etfs: {
+        ...fullScoredHistory,
+        fetchable_rows: undefined,
+        fetchable_classification_projection: undefined,
+      },
+    },
+  },
+  coverageIndex: null,
+  generatedAt: currentNow,
+  classificationAsOf: fixtureGeneratedAt,
+  rootDir: fixtureRoot,
+});
+const { full_scored_fetchable_candidates: _fullScoredRows, ...coreOnlyWithRows } = corePlanWithFullScoredRows;
+const { full_scored_fetchable_candidates: _legacyFullScoredRows, ...coreOnlyWithoutRows } = corePlanWithoutFullScoredRows;
+assert.deepEqual(coreOnlyWithRows, coreOnlyWithoutRows);
+assert.deepEqual(
+  corePlanWithFullScoredRows.full_scored_fetchable_candidates.tickers,
+  ["BBB", "CCC"],
+);
+assert.equal(corePlanWithFullScoredRows.full_scored_fetchable_candidates.count_equation_ok, true);
+assert.deepEqual(
+  corePlanWithFullScoredRows.full_scored_fetchable_candidates.rows.map((row) => row.ticker),
+  ["BBB", "CCC"],
+);
+
 assert.equal(plan.bounded_batches.can_drive_bounded_ticker_batches, true);
+assert.equal(plan.bounded_batches.gate_evidence.core_basket_ok, true);
+assert.equal(plan.bounded_batches.gate_evidence.core_equation_ok, true);
 assert.equal(plan.bounded_batches.default_batch_size, 120);
 assert.equal(plan.bounded_batches.batch_count, Math.ceil(readiness.daily_1y_fetchable / 120));
 assert.equal(plan.bounded_batches.first_batch_tickers.length, Math.min(120, readiness.daily_1y_fetchable));
@@ -709,6 +894,29 @@ assert.equal(historyCountMismatch.public_done_claim_allowed, false);
 assert.equal(historyCountMismatch.readiness_status, "not_ready");
 assert.equal(historyCountMismatch.fetchable_plan.counts.matches_history_gap_report, false);
 assert.ok(historyCountMismatch.errors.some((error) => error.id === "fetchable_plan_history_gap_report_match"));
+
+assert.throws(
+  () => buildScoredEtfDaily1yFetchablePlan({
+    signalSummary: { rows: [{ ticker: "AAA" }] },
+    coreBasket: { daily_refresh_universe: { tickers: [] } },
+    historyGap: { classification_as_of: fixtureGeneratedAt, daily_1y_gap: { scored_etfs: {} } },
+    coverageIndex: null,
+    generatedAt: currentNow,
+    classificationAsOf: fixtureGeneratedAt,
+  }),
+  /core daily basket is empty/,
+);
+assert.throws(
+  () => buildScoredEtfDaily1yFetchablePlan({
+    signalSummary: { rows: [{ ticker: "AAA" }] },
+    coreBasket: { daily_refresh_universe: { tickers: ["AAA", "ZZZ"] } },
+    historyGap: { classification_as_of: fixtureGeneratedAt, daily_1y_gap: { scored_etfs: {} } },
+    coverageIndex: null,
+    generatedAt: currentNow,
+    classificationAsOf: fixtureGeneratedAt,
+  }),
+  /absent from scored signal summary/,
+);
 
 fs.rmSync(fixtureRoot, { recursive: true, force: true });
 
@@ -768,6 +976,11 @@ for (const [caseName, mutateObject, expectedPattern] of [
 
 writeFixture(effectiveRoot, "data/computed/fenok_etf_signals_summary.json", {
   rows: ["FBC", "FBI", "PRI", "UNAV"].map((ticker) => ({ ticker })),
+});
+writeFixture(effectiveRoot, "data/admin/fenok-etf-core-daily-basket.json", {
+  schema_version: "fenok-etf-core-daily-basket/v1",
+  generated_at: "2026-07-11T00:00:00.000Z",
+  daily_refresh_universe: { source: "core", count: 4, tickers: ["FBC", "FBI", "PRI", "UNAV"], workflow: "daily" },
 });
 const effectiveNextRoot = path.join(effectiveRoot, "100xfenok-next");
 fs.mkdirSync(effectiveNextRoot, { recursive: true });

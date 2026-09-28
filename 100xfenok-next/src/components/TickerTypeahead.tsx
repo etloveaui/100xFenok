@@ -1,10 +1,11 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useId, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import TickerChip from "@/components/TickerChip";
 import { ROUTES } from "@/lib/routes";
 import { normalizeForRouteTicker } from "@/lib/ticker";
+import { currentJourneyReturnTo } from "@/lib/journey-context";
 import { StaticStockAnalyzerDataProvider } from "@/features/stock-analyzer/data/static-data-provider";
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
@@ -42,7 +43,7 @@ const stocksProvider = new StaticStockAnalyzerDataProvider();
 function loadStocks(): Promise<StockRow[]> {
   if (stocksCache) return Promise.resolve(stocksCache);
   if (stocksPromise) return stocksPromise;
-  stocksPromise = stocksProvider.load()
+  stocksPromise = stocksProvider.loadIdentity()
     .then((records) => records.map((record) => ({
       symbol: String(record.symbol ?? ""),
       companyName: String(record.companyName ?? ""),
@@ -63,10 +64,23 @@ function loadGurus(): Promise<GuruRow[]> {
   if (gurusCache) return Promise.resolve(gurusCache);
   if (gurusPromise) return gurusPromise;
   gurusPromise = fetch("/data/sec-13f/analytics/portfolio_views.json")
-    .then((r) => (r.ok ? r.json() : null))
+    .then((r) => {
+      if (!r.ok) throw new Error(`Guru search data fetch failed (${r.status})`);
+      return r.json();
+    })
     .then((d: any) => {
+      if (
+        !d ||
+        typeof d !== "object" ||
+        Array.isArray(d) ||
+        !d.investors ||
+        typeof d.investors !== "object" ||
+        Array.isArray(d.investors)
+      ) {
+        throw new Error("Invalid guru search data");
+      }
       const rows: GuruRow[] = [];
-      const investors = d?.investors ?? {};
+      const investors = d.investors;
       for (const [id, inv] of Object.entries(investors) as Array<[string, any]>) {
         rows.push({ id, name: String(inv.name ?? id) });
       }
@@ -103,12 +117,25 @@ function matchGurus(query: string, gurus: GuruRow[]): GuruRow[] {
   return gurus.filter((g) => g.id.toLowerCase().includes(q) || g.name.toLowerCase().includes(q)).slice(0, 3);
 }
 
+function buildSuggestions(query: string, stocks: StockRow[], gurus: GuruRow[]): Suggestion[] {
+  const sMatches = matchStocks(query, stocks);
+  const gMatches = matchGurus(query, gurus);
+  const items: Suggestion[] = sMatches.map((s) => ({ type: "stock" as const, key: `s:${s.symbol}`, stock: s }));
+  if (gMatches.length > 0) {
+    items.push({ type: "divider" as const, key: "div" });
+    gMatches.forEach((g) => items.push({ type: "guru" as const, key: `g:${g.id}`, guru: g }));
+  }
+  return items;
+}
+
 // ---------------------------------------------------------------------------
 // Component
 // ---------------------------------------------------------------------------
 
 interface TickerTypeaheadProps {
   placeholder?: string;
+  label?: string;
+  focusOnOpen?: boolean;
   className?: string;
   onSubmit?: (value: string) => void;
   onStockSelect?: (ticker: string) => void;
@@ -120,6 +147,8 @@ interface TickerTypeaheadProps {
 
 export default function TickerTypeahead({
   placeholder = "티커 또는 투자자 검색…",
+  label = "종목명 또는 티커 검색",
+  focusOnOpen = false,
   className = "",
   onSubmit,
   onStockSelect,
@@ -129,6 +158,9 @@ export default function TickerTypeahead({
   formClass = "",
 }: TickerTypeaheadProps) {
   const router = useRouter();
+  const idSeed = useId().replace(/[^a-zA-Z0-9_-]/g, "") || "instance";
+  const inputId = `ticker-input-${idSeed}`;
+  const listboxId = `ticker-listbox-${idSeed}`;
   const [value, setValue] = useState("");
   const [suggestions, setSuggestions] = useState<Suggestion[]>([]);
   const [open, setOpen] = useState(false);
@@ -136,39 +168,81 @@ export default function TickerTypeahead({
   const [loading, setLoading] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
   const listRef = useRef<HTMLUListElement>(null);
+  const optionRefs = useRef<Array<HTMLLIElement | null>>([]);
   const debounceRef = useRef<number>(0);
   const wrapRef = useRef<HTMLDivElement>(null);
+  const searchGenerationRef = useRef(0);
+  const activeSuggestionKeyRef = useRef<string | null>(null);
+  const composingRef = useRef(false);
 
-  const doSearch = (q: string) => {
-    if (!q.trim()) { setSuggestions([]); setOpen(false); return; }
+  const invalidateSearch = useCallback(() => {
+    searchGenerationRef.current += 1;
+    window.clearTimeout(debounceRef.current);
+    debounceRef.current = 0;
+    setSuggestions([]);
+    setActiveIdx(-1);
+    activeSuggestionKeyRef.current = null;
+    setLoading(false);
+  }, []);
+
+  const doSearch = (q: string, generation: number) => {
+    if (searchGenerationRef.current !== generation) return;
+    if (!q.trim()) { invalidateSearch(); setOpen(false); return; }
     setLoading(true);
-    Promise.all([loadStocks(), loadGurus()]).then(([stocks, gurus]) => {
-      const sMatches = matchStocks(q, stocks);
-      const gMatches = matchGurus(q, gurus);
-      const items: Suggestion[] = sMatches.map((s) => ({ type: "stock" as const, key: `s:${s.symbol}`, stock: s }));
-      if (gMatches.length > 0) {
-        items.push({ type: "divider" as const, key: "div" });
-        gMatches.forEach((g) => items.push({ type: "guru" as const, key: `g:${g.id}`, guru: g }));
-      }
+    setOpen(true);
+    let stocks: StockRow[] | null = null;
+    let gurus: GuruRow[] | null = null;
+    let stocksSettled = false;
+    const publish = () => {
+      if (searchGenerationRef.current !== generation) return;
+      const items = buildSuggestions(q, stocks ?? [], gurus ?? []);
       setSuggestions(items);
-      setOpen(items.length > 0);
-      setActiveIdx(-1);
-      setLoading(false);
+      const selectable = items.filter((s) => s.type !== "divider");
+      const activeKey = activeSuggestionKeyRef.current;
+      const nextActiveIdx = activeKey
+        ? selectable.findIndex((item) => item.key === activeKey)
+        : -1;
+      if (nextActiveIdx >= 0) {
+        setActiveIdx(nextActiveIdx);
+      } else {
+        activeSuggestionKeyRef.current = null;
+        setActiveIdx(-1);
+      }
+      setOpen(items.length > 0 || !stocksSettled);
+      setLoading(!stocksSettled);
+    };
+    loadStocks().then((rows) => {
+      if (searchGenerationRef.current !== generation) return;
+      stocks = rows;
+      stocksSettled = true;
+      publish();
+    });
+    loadGurus().then((rows) => {
+      if (searchGenerationRef.current !== generation) return;
+      gurus = rows;
+      publish();
     });
   };
 
   const onChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const v = e.target.value;
     setValue(v);
+    const generation = ++searchGenerationRef.current;
     clearTimeout(debounceRef.current);
-    debounceRef.current = window.setTimeout(() => doSearch(v), 120);
+    setSuggestions([]);
+    setActiveIdx(-1);
+    activeSuggestionKeyRef.current = null;
+    setLoading(false);
+    setOpen(false);
+    debounceRef.current = window.setTimeout(() => doSearch(v, generation), 120);
   };
 
   const selectItem = (s: Suggestion) => {
+    invalidateSearch();
     if (s.type === "stock" && s.stock) {
       const ticker = normalizeForRouteTicker(s.stock.symbol);
       if (onStockSelect) onStockSelect(ticker);
-      else router.push(ROUTES.stock(ticker));
+      else router.push(ROUTES.stock(ticker, currentJourneyReturnTo()));
     } else if (s.type === "guru" && s.guru) {
       router.push(`${ROUTES.superinvestors}?tab=gurus&guru=${encodeURIComponent(s.guru.id)}`);
     }
@@ -177,20 +251,42 @@ export default function TickerTypeahead({
   };
 
   const onKeyDown = (e: React.KeyboardEvent) => {
+    if (composingRef.current || e.nativeEvent.isComposing || e.nativeEvent.keyCode === 229 || e.key === "Process") return;
+    if (e.key === "Escape") {
+      invalidateSearch();
+      setOpen(false);
+      return;
+    }
     if (!open) return;
     const selectable = suggestions.filter((s) => s.type !== "divider");
-    if (e.key === "ArrowDown") { e.preventDefault(); setActiveIdx((i) => Math.min(i + 1, selectable.length - 1)); return; }
-    if (e.key === "ArrowUp") { e.preventDefault(); setActiveIdx((i) => Math.max(i - 1, -1)); return; }
+    if (e.key === "ArrowDown") {
+      e.preventDefault();
+      setActiveIdx((i) => {
+        const next = Math.min(i + 1, selectable.length - 1);
+        activeSuggestionKeyRef.current = selectable[next]?.key ?? null;
+        return next;
+      });
+      return;
+    }
+    if (e.key === "ArrowUp") {
+      e.preventDefault();
+      setActiveIdx((i) => {
+        const next = Math.max(i - 1, -1);
+        activeSuggestionKeyRef.current = selectable[next]?.key ?? null;
+        return next;
+      });
+      return;
+    }
     if (e.key === "Enter" && activeIdx >= 0) {
       e.preventDefault();
       const sel = selectable[activeIdx];
       if (sel) selectItem(sel);
       return;
     }
-    if (e.key === "Escape") { setOpen(false); return; }
   };
 
   const handleSubmit = () => {
+    invalidateSearch();
     if (activeIdx >= 0) {
       const selectable = suggestions.filter((s) => s.type !== "divider");
       const sel = selectable[activeIdx];
@@ -200,7 +296,7 @@ export default function TickerTypeahead({
     if (t) {
       if (onSubmit) onSubmit(t);
       else if (onStockSelect) onStockSelect(t);
-      else router.push(ROUTES.stock(t));
+      else router.push(ROUTES.stock(t, currentJourneyReturnTo()));
     }
     setOpen(false);
     return !!t;
@@ -209,34 +305,58 @@ export default function TickerTypeahead({
   // Click outside
   useEffect(() => {
     const handler = (e: MouseEvent) => {
-      if (wrapRef.current && !wrapRef.current.contains(e.target as Node)) setOpen(false);
+      if (wrapRef.current && !wrapRef.current.contains(e.target as Node)) {
+        invalidateSearch();
+        setOpen(false);
+      }
     };
     document.addEventListener("mousedown", handler);
     return () => document.removeEventListener("mousedown", handler);
+  }, [invalidateSearch]);
+
+  useEffect(() => () => {
+    searchGenerationRef.current += 1;
+    window.clearTimeout(debounceRef.current);
   }, []);
 
   const selectableItems = suggestions.filter((s) => s.type !== "divider");
-  const activeId = activeIdx >= 0 && activeIdx < selectableItems.length ? selectableItems[activeIdx].key : undefined;
+  const activeId = activeIdx >= 0 && activeIdx < selectableItems.length
+    ? `${listboxId}-option-${activeIdx}`
+    : undefined;
+
+  useEffect(() => {
+    if (!open || activeIdx < 0) return;
+    optionRefs.current[activeIdx]?.scrollIntoView?.({ block: "nearest" });
+  }, [activeIdx, open]);
+
+  useEffect(() => {
+    if (focusOnOpen) inputRef.current?.focus();
+  }, [focusOnOpen]);
 
   const doSubmit = (e: React.SyntheticEvent) => {
     e.preventDefault();
+    if (composingRef.current || (e.nativeEvent as KeyboardEvent).isComposing) return;
     handleSubmit();
   };
 
   return (
     <div ref={wrapRef} className="relative w-full">
       <form onSubmit={doSubmit} className={formClass}>
+        <label htmlFor={inputId} className="sr-only">{label}</label>
         <input
           ref={inputRef}
+          id={inputId}
           role="combobox"
           aria-expanded={open}
           aria-haspopup="listbox"
           aria-autocomplete="list"
-          aria-controls="ticker-listbox"
+          aria-controls={listboxId}
           aria-activedescendant={activeId ?? undefined}
           value={value}
           onChange={onChange}
           onKeyDown={onKeyDown}
+          onCompositionStart={() => { composingRef.current = true; }}
+          onCompositionEnd={() => { composingRef.current = false; }}
           onFocus={() => { if (suggestions.length > 0) setOpen(true); }}
           placeholder={placeholder}
           className={className}
@@ -251,12 +371,12 @@ export default function TickerTypeahead({
       {open ? (
         <ul
           ref={listRef}
-          id="ticker-listbox"
+          id={listboxId}
           role="listbox"
           className="absolute left-0 top-full z-50 mt-1 max-h-64 w-full overflow-y-auto rounded-xl border border-slate-200 bg-white shadow-lg"
         >
-          {loading ? (
-            <li className="px-4 py-3 text-xs text-slate-500">검색 중…</li>
+          {loading && suggestions.length === 0 ? (
+            <li className="px-4 py-3 text-[12px] text-slate-500">검색 중…</li>
           ) : (
             suggestions.map((s) => {
               if (s.type === "divider") {
@@ -267,24 +387,28 @@ export default function TickerTypeahead({
               return (
                 <li
                   key={s.key}
-                  id={s.key}
+                  id={`${listboxId}-option-${selIdx}`}
+                  ref={(node) => { optionRefs.current[selIdx] = node; }}
                   role="option"
                   aria-selected={isActive}
                   onClick={() => selectItem(s)}
-                  onMouseEnter={() => setActiveIdx(selIdx)}
-                  className={`flex cursor-pointer items-center gap-2 px-4 py-2 text-sm ${isActive ? "bg-slate-100" : ""}`}
+                  onMouseEnter={() => {
+                    activeSuggestionKeyRef.current = s.key;
+                    setActiveIdx(selIdx);
+                  }}
+                  className={`flex min-h-[44px] cursor-pointer items-center gap-2 px-4 py-2 text-sm ${isActive ? "bg-slate-100" : ""}`}
                 >
                   {s.type === "stock" && s.stock ? (
                     <>
-                      <span className="orbitron text-sm">
+                      <span className="text-sm">
                         <TickerChip ticker={s.stock.symbol} variant="inline" />
                       </span>
-                      <span className="truncate text-xs font-semibold text-slate-600">{s.stock.companyName}</span>
+                      <span className="truncate text-[12px] font-semibold text-slate-600">{s.stock.companyName}</span>
                       <span className="ml-auto shrink-0 text-[10px] text-slate-500">{s.stock.sector}</span>
                     </>
                   ) : s.type === "guru" && s.guru ? (
                     <>
-                      <span className="text-xs">👤</span>
+                      <span className="text-[12px]">👤</span>
                       <span className="text-sm font-bold text-amber-700">{s.guru.name}</span>
                       <span className="ml-auto rounded-full bg-amber-100 px-1.5 py-0.5 text-[9px] font-black uppercase text-amber-700">투자자</span>
                     </>

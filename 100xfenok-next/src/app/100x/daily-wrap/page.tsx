@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { cookies } from "next/headers";
 import AppShell from "@/components/shell/AppShell";
+import ShellChromeOff from "@/components/shell/ShellChromeOff";
 import RouteEmbedFrame from "@/components/RouteEmbedFrame";
 import TransitionLink from "@/components/TransitionLink";
 import { ROUTES } from "@/lib/routes";
@@ -44,11 +45,9 @@ export default async function DailyWrapPage({ searchParams }: DailyWrapPageProps
   if (version === "v2" || version === "v3" || version === "v4") {
     const native = <MarketWrapV2 />;
     return (
-      <div className="fnk-shell">
-        <AppShell active="dailyWrap" title="100x Daily Wrap" backHref={ROUTES.home}>
-          {native}
-        </AppShell>
-      </div>
+      <AppShell active="dailyWrap" title="100x Daily Wrap" backHref={ROUTES.home}>
+        {native}
+      </AppShell>
     );
   }
 
@@ -66,10 +65,10 @@ export default async function DailyWrapPage({ searchParams }: DailyWrapPageProps
     />
   );
 
-  if (version === "v1") return frame;
+  if (version === "v1") return <ShellChromeOff>{frame}</ShellChromeOff>;
 
   return (
-    <div className="fnk-shell" data-daily-wrap-surface="true">
+    <div data-daily-wrap-surface="true">
       <AppShell active="dailyWrap" title="100x Daily Wrap" backHref={ROUTES.home}>
         <div className="space-y-[var(--s4)]" data-daily-wrap-route-owner="legacy-viewer">
           <section className="panel" data-daily-wrap-boundary="true">
@@ -81,7 +80,7 @@ export default async function DailyWrapPage({ searchParams }: DailyWrapPageProps
                   기본 경로는 레거시 Daily Wrap 뷰어입니다. 네이티브 랩은 별도 미리보기로 분리하고, 날짜별
                   아카이브는 기존 viewer의 date 파라미터로 유지합니다.
                 </p>
-                <div className="mt-3 flex flex-wrap gap-2 text-[11px] font-black uppercase tracking-[0.08em]">
+                <div className="mt-3 flex flex-wrap gap-2 text-[12px] font-black uppercase tracking-[0.08em]">
                   {DAILY_WRAP_BOUNDARY_CHIPS.map((chip) => (
                     <span
                       key={chip.key}

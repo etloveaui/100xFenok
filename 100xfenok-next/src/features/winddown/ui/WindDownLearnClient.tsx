@@ -1,0 +1,831 @@
+"use client";
+
+import Link from "next/link";
+import { useCallback, useEffect, useMemo, useState } from "react";
+import {
+  WINDDOWN_LEARN_CREDIT_TARGET,
+  applyWindDownLearnAction,
+  createWindDownLearnSession,
+  normalizeWindDownLearnState,
+  type WindDownLearnAction,
+  type WindDownLearnCard,
+  type WindDownLearnState,
+} from "@/features/winddown/learn/engine";
+import {
+  WindDownLumi,
+  type WindDownLumiState,
+} from "@/features/winddown/ui/WindDownLumi";
+import {
+  WIND_DOWN_IDLE_ASSIST_DELAY_MS,
+  firstWrongChoiceId,
+} from "@/features/winddown/ui/windDownAssistiveHints";
+import {
+  WindDownDeviceSpeechPractice,
+} from "@/features/winddown/speech/WindDownDeviceSpeechPractice";
+import {
+  shouldOfferWindDownLearnSpeech,
+} from "@/features/winddown/speech/deviceSpeech";
+
+type StudyResponse = {
+  schemaVersion: 1;
+  mode: "learn";
+  modelOpened: false;
+  cards: WindDownLearnCard[];
+  selectionBasis?: string;
+  inventory: {
+    selectedCount: number;
+    insufficientFreshCount: number;
+  };
+  material: {
+    source: "published-lkg" | "legacy-fallback";
+    publicationStatus: "active" | "absent" | "invalid";
+    contentDigest: string | null;
+  };
+  learnSession: {
+    manifest: {
+      schemaVersion: 1;
+      sessionId: string;
+      habitKstDay: string;
+      seed: string;
+      cardIds: string[];
+      contentDigest: string;
+      issuedAtIso: string;
+      expiresAtIso: string;
+    };
+    proof: string;
+    resumeState: unknown | null;
+  };
+};
+
+type LearnAvailability =
+  | "loading"
+  | "ready"
+  | "resume-unavailable"
+  | "no-new-material";
+
+type LearnUnavailableResponse = {
+  schemaVersion: 1;
+  mode: "learn";
+  modelOpened: false;
+  error:
+    | "WINDDOWN_LEARN_RESUME_UNAVAILABLE"
+    | "WINDDOWN_LEARN_NO_NEW_MATERIAL";
+  availability: Exclude<LearnAvailability, "loading" | "ready">;
+  links: {
+    review: "/winddown/review";
+    drill: "/winddown/drill";
+    home: "/winddown";
+  };
+};
+
+type ProgressPayload = {
+  schemaVersion: 2;
+  activity: "learn";
+  attemptId: string;
+  sessionProof: string;
+  action: WindDownLearnAction;
+};
+
+type Feedback = {
+  outcome: "miss" | "practice" | "correct" | "complete";
+  nextState: WindDownLearnState;
+  card: WindDownLearnCard;
+  progress: ProgressPayload | null;
+  persisted: boolean;
+  saveError: boolean;
+};
+
+function kstDay() {
+  return new Intl.DateTimeFormat("en-CA", {
+    timeZone: "Asia/Seoul",
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+  }).format(new Date());
+}
+
+function newAttemptId(sessionId: string) {
+  const suffix = typeof crypto !== "undefined" && "randomUUID" in crypto
+    ? crypto.randomUUID()
+    : Date.now().toString(36);
+  return `${sessionId}:${suffix}`;
+}
+
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return Boolean(value) && typeof value === "object" && !Array.isArray(value);
+}
+
+function isIsoDate(value: unknown): value is string {
+  return typeof value === "string" && Number.isFinite(Date.parse(value));
+}
+
+function isLearnCard(value: unknown): value is WindDownLearnCard {
+  if (!isRecord(value)) return false;
+  return typeof value.id === "string"
+    && value.id.length > 0
+    && value.id.trim() === value.id
+    && typeof value.ko === "string"
+    && value.ko.length > 0
+    && value.ko.trim() === value.ko
+    && typeof value.en === "string"
+    && value.en.length > 0
+    && value.en.trim() === value.en
+    && (
+      value.acceptedVariants === undefined
+      || (
+        Array.isArray(value.acceptedVariants)
+        && value.acceptedVariants.every((item) => typeof item === "string")
+      )
+    );
+}
+
+function isLearnManifest(
+  value: unknown,
+): value is StudyResponse["learnSession"]["manifest"] {
+  if (!isRecord(value)) return false;
+  const cardIds = value.cardIds;
+  const issuedAt = value.issuedAtIso;
+  const expiresAt = value.expiresAtIso;
+  return value.schemaVersion === 1
+    && typeof value.sessionId === "string"
+    && value.sessionId.length > 0
+    && typeof value.habitKstDay === "string"
+    && /^\d{4}-\d{2}-\d{2}$/.test(value.habitKstDay)
+    && typeof value.seed === "string"
+    && value.seed.length > 0
+    && Array.isArray(cardIds)
+    && cardIds.length === WINDDOWN_LEARN_CREDIT_TARGET
+    && cardIds.every((cardId) => typeof cardId === "string" && cardId.length > 0)
+    && new Set(cardIds).size === cardIds.length
+    && typeof value.contentDigest === "string"
+    && /^[a-f0-9]{64}$/.test(value.contentDigest)
+    && isIsoDate(issuedAt)
+    && isIsoDate(expiresAt)
+    && Date.parse(expiresAt) > Date.parse(issuedAt);
+}
+
+function isUnavailableResponse(
+  value: unknown,
+): value is LearnUnavailableResponse {
+  if (!isRecord(value)) return false;
+  const links = value.links;
+  const availability = value.availability;
+  return value.schemaVersion === 1
+    && value.mode === "learn"
+    && value.modelOpened === false
+    && (
+      value.error === "WINDDOWN_LEARN_RESUME_UNAVAILABLE"
+      || value.error === "WINDDOWN_LEARN_NO_NEW_MATERIAL"
+    )
+    && (
+      availability === "resume-unavailable"
+      || availability === "no-new-material"
+    )
+    && isRecord(links)
+    && links.review === "/winddown/review"
+    && links.drill === "/winddown/drill"
+    && links.home === "/winddown";
+}
+
+function isStudyResponse(value: unknown): value is StudyResponse {
+  if (!isRecord(value)) return false;
+  const source = value as Partial<StudyResponse>;
+  if (
+    source.schemaVersion !== 1
+    || source.mode !== "learn"
+    || source.modelOpened !== false
+    || !Array.isArray(source.cards)
+    || source.cards.length !== WINDDOWN_LEARN_CREDIT_TARGET
+    || !source.cards.every(isLearnCard)
+  ) return false;
+  const material = source.material;
+  if (!isRecord(material) || material.source !== "published-lkg" || material.publicationStatus !== "active") {
+    return false;
+  }
+  const contentDigest = material.contentDigest;
+  if (typeof contentDigest !== "string") return false;
+  const learnSession = source.learnSession;
+  if (!isRecord(learnSession) || typeof learnSession.proof !== "string" || learnSession.proof.length === 0) {
+    return false;
+  }
+  const manifest = learnSession.manifest;
+  return isLearnManifest(manifest)
+    && "resumeState" in learnSession
+    && manifest.contentDigest === contentDigest;
+}
+
+class LearnAvailabilityError extends Error {
+  constructor(readonly availability: Exclude<LearnAvailability, "loading" | "ready">) {
+    super(`winddown_learn_${availability}`);
+    this.name = "LearnAvailabilityError";
+  }
+}
+
+export default function WindDownLearnClient() {
+  const [session, setSession] = useState<WindDownLearnState | null>(null);
+  const [selectionBasis, setSelectionBasis] = useState<string | null>(null);
+  const [sessionProof, setSessionProof] = useState<string | null>(null);
+  const [manifestSessionId, setManifestSessionId] = useState<string | null>(null);
+  const [selectedTokenIds, setSelectedTokenIds] = useState<string[]>([]);
+  const [feedback, setFeedback] = useState<Feedback | null>(null);
+  const [idleAssistVisible, setIdleAssistVisible] = useState(false);
+  const [status, setStatus] = useState<"loading" | "ready" | "error">(
+    "loading",
+  );
+  const [availability, setAvailability] = useState<LearnAvailability>(
+    "loading",
+  );
+
+  const loadQuest = useCallback(async () => {
+    setStatus("loading");
+    setSelectionBasis(null);
+    setAvailability("loading");
+    setFeedback(null);
+    setSelectedTokenIds([]);
+    try {
+      const seed = `${kstDay()}:learn`;
+      const response = await fetch(
+        `/api/winddown/study?mode=learn&seed=${encodeURIComponent(seed)}`,
+        { cache: "no-store" },
+      );
+      const body: unknown = await response.json();
+      if (isUnavailableResponse(body)) {
+        throw new LearnAvailabilityError(body.availability);
+      }
+      if (
+        !response.ok ||
+        !isStudyResponse(body) ||
+        body.cards.length !== WINDDOWN_LEARN_CREDIT_TARGET
+      ) {
+        throw new Error("winddown_learn_bootstrap_invalid");
+      }
+      const nextState = body.learnSession.resumeState === null
+        ? createWindDownLearnSession({
+            cards: body.cards,
+            seed: body.learnSession.manifest.seed,
+          })
+        : normalizeWindDownLearnState(body.learnSession.resumeState, {
+            cards: body.cards,
+            seed: body.learnSession.manifest.seed,
+          });
+      if (!nextState) {
+        throw new LearnAvailabilityError("resume-unavailable");
+      }
+      setSelectionBasis(body.selectionBasis ?? null);
+      setSessionProof(body.learnSession.proof);
+      setManifestSessionId(body.learnSession.manifest.sessionId);
+      setSession(nextState);
+      setAvailability("ready");
+      setStatus("ready");
+    } catch (error) {
+      setSession(null);
+      setSessionProof(null);
+      setManifestSessionId(null);
+      setAvailability(
+        error instanceof LearnAvailabilityError
+          ? error.availability
+          : "resume-unavailable",
+      );
+      setStatus("error");
+    }
+  }, []);
+
+  useEffect(() => {
+    void loadQuest();
+  }, [loadQuest]);
+
+  const current = session?.queue[0] ?? null;
+  const progress = session
+    ? Math.round((session.creditedCardIds.length / session.targetActions) * 100)
+    : 0;
+  const lumiState: WindDownLumiState =
+    status === "loading"
+      ? "thinking"
+      : status === "error"
+        ? "rescue"
+        : session?.isComplete
+          ? "celebrate"
+          : feedback?.saveError
+            ? "rescue"
+            : feedback && !feedback.persisted
+              ? "thinking"
+              : feedback?.outcome === "miss"
+                ? "retry"
+                : feedback
+                  ? feedback.outcome === "complete"
+                    ? "celebrate"
+                    : "correct"
+                  : "prompt";
+  const lumiMessage =
+    status === "loading"
+      ? "오늘 문장을 고르는 중"
+      : status === "error"
+        ? "기록을 추측하지 않고 멈췄어"
+        : session?.isComplete
+          ? "다섯 문장이 오늘 밤에 쌓였어"
+          : feedback?.saveError
+            ? "같은 결과를 안전하게 다시 저장할게"
+            : feedback && !feedback.persisted
+              ? "방금 결과를 저장하는 중"
+              : feedback?.outcome === "miss"
+                ? "괜찮아, 잠시 뒤 다시 만나자"
+                : feedback
+                  ? "좋아, 한 문장 쌓였어"
+                  : "네 차례야";
+  const selectedTokens = useMemo(() => {
+    if (!current || current.kind !== "sentence-builder") return [];
+    const byId = new Map(current.tokens.map((token) => [token.id, token]));
+    return selectedTokenIds.flatMap((id) => {
+      const token = byId.get(id);
+      return token ? [token] : [];
+    });
+  }, [current, selectedTokenIds]);
+  const assistiveWrongChoiceId = useMemo(
+    () =>
+      current?.kind === "meaning-choice"
+        ? firstWrongChoiceId(current.choices, current.correctChoiceId)
+        : null,
+    [current],
+  );
+  const canShowIdleAssist =
+    status === "ready"
+    && Boolean(current)
+    && !session?.isComplete
+    && !feedback
+    && (current?.kind === "meaning-choice" || selectedTokenIds.length === 0);
+
+  useEffect(() => {
+    setIdleAssistVisible(false);
+    if (!canShowIdleAssist) return;
+    const timeoutId = window.setTimeout(
+      () => setIdleAssistVisible(true),
+      WIND_DOWN_IDLE_ASSIST_DELAY_MS,
+    );
+    return () => window.clearTimeout(timeoutId);
+  }, [canShowIdleAssist, current?.card.id, current?.kind, selectedTokenIds]);
+
+  const persistProgress = useCallback(
+    async (
+      payload: ProgressPayload,
+      stateContext: WindDownLearnState,
+    ) => {
+      const response = await fetch("/api/winddown/progress", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+      });
+      const body = (await response.json().catch(() => null)) as {
+        persisted?: boolean;
+        outcome?: Feedback["outcome"];
+        state?: unknown;
+      } | null;
+      const cards = Object.values(stateContext.exerciseByCardId).map(
+        (exercise) => exercise.card,
+      );
+      const state = normalizeWindDownLearnState(body?.state, {
+        cards,
+        seed: stateContext.seed,
+      });
+      const outcome = body?.outcome;
+      if (
+        !response.ok
+        || body?.persisted !== true
+        || !state
+        || (
+          outcome !== "miss"
+          && outcome !== "practice"
+          && outcome !== "correct"
+          && outcome !== "complete"
+        )
+      ) {
+        throw new Error("winddown_learn_progress_failed");
+      }
+      return { outcome, state };
+    },
+    [],
+  );
+
+  const saveFeedback = useCallback(
+    async (currentFeedback: Feedback) => {
+      if (!currentFeedback.progress) return;
+      const attemptId = currentFeedback.progress.attemptId;
+      setFeedback({ ...currentFeedback, saveError: false });
+      try {
+        const persisted = await persistProgress(
+          currentFeedback.progress,
+          currentFeedback.nextState,
+        );
+        setFeedback((latest) =>
+          latest && latest.progress?.attemptId === attemptId
+            ? {
+                ...latest,
+                outcome: persisted.outcome,
+                nextState: persisted.state,
+                persisted: true,
+                saveError: false,
+              }
+            : latest,
+        );
+      } catch {
+        setFeedback((latest) =>
+          latest && latest.progress?.attemptId === attemptId
+            ? { ...latest, persisted: false, saveError: true }
+            : latest,
+        );
+      }
+    },
+    [persistProgress],
+  );
+
+  const submit = useCallback(
+    (action: WindDownLearnAction) => {
+      if (
+        !session
+        || !current
+        || feedback
+        || !sessionProof
+        || !manifestSessionId
+      ) return;
+      const result = applyWindDownLearnAction(session, action);
+      if (result.outcome === "invalid") return;
+      const progressPayload: ProgressPayload = {
+        schemaVersion: 2,
+        activity: "learn",
+        attemptId: newAttemptId(manifestSessionId),
+        sessionProof,
+        action,
+      };
+      const nextFeedback: Feedback = {
+        outcome: result.outcome,
+        nextState: result.state,
+        card: current.card,
+        progress: progressPayload,
+        persisted: false,
+        saveError: false,
+      };
+      setFeedback(nextFeedback);
+      setSelectedTokenIds([]);
+      void saveFeedback(nextFeedback);
+    },
+    [
+      current,
+      feedback,
+      manifestSessionId,
+      saveFeedback,
+      session,
+      sessionProof,
+    ],
+  );
+
+  const continueQuest = () => {
+    if (!feedback?.persisted) return;
+    setSession(feedback.nextState);
+    setFeedback(null);
+    setSelectedTokenIds([]);
+  };
+
+  return (
+    <div
+      data-winddown-learn-availability={availability}
+      className="fixed inset-0 z-[70] min-h-[100dvh] overflow-y-auto bg-[var(--wd-bg)] text-[var(--wd-text)]"
+    >
+      <div className="mx-auto flex min-h-[100dvh] w-full max-w-lg flex-col px-5 pb-[max(env(safe-area-inset-bottom),20px)] pt-[max(env(safe-area-inset-top),18px)]">
+        <header>
+          <div className="flex items-center justify-between gap-4">
+            <div>
+              <p className="text-[12px] font-black tracking-[0.2em] text-[var(--wd-accent)]">
+                WIND DOWN · LEARN
+              </p>
+              <h1 className="mt-1 text-xl font-black">오늘의 다섯 문장</h1>
+              {selectionBasis ? <p data-learning-selection className="mt-2 max-w-[240px] text-[12px] leading-5 text-[var(--wd-muted)]">{selectionBasis === "review-patterns" ? "복습에서 어려웠던 문형·주제와 이어지는 새 표현을 골랐어." : selectionBasis === "review-pace" ? "복습 결과와 문장 길이를 참고해 새 표현을 골랐어." : selectionBasis === "saved-session" ? "저장해 둔 문장을 이어서 연습해." : "짧은 표현부터 시작해 보고, 복습 결과에 맞춰 조절할게."}</p> : null}
+            </div>
+            <Link
+              href="/winddown"
+              className="inline-flex min-h-14 items-center rounded-full border border-[var(--wd-border)] px-4 text-[12px] font-black text-[var(--wd-text-muted)]"
+            >
+              나가기
+            </Link>
+          </div>
+          <div className="mt-5 flex items-center gap-3">
+            <div className="h-2 flex-1 overflow-hidden rounded-full bg-[var(--wd-surface-raised)]">
+              <div
+                className="h-full rounded-full bg-[var(--wd-accent)] transition-[width] motion-reduce:transition-none"
+                style={{ width: `${progress}%` }}
+              />
+            </div>
+            <span className="min-w-10 text-right text-[12px] font-black tabular-nums text-[var(--wd-text-muted)]">
+              {session?.creditedCardIds.length ?? 0}/
+              {WINDDOWN_LEARN_CREDIT_TARGET}
+            </span>
+          </div>
+          <WindDownLumi
+            state={lumiState}
+            message={lumiMessage}
+            compact
+            className="mt-5 rounded-2xl border border-[var(--wd-border)] bg-[var(--wd-surface)] px-4 py-3"
+          />
+        </header>
+
+        <main className="flex flex-1 flex-col justify-center py-6">
+          {status === "loading" ? (
+            <section
+              aria-live="polite"
+              className="rounded-[28px] border border-[var(--wd-border)] bg-[var(--wd-surface)] p-8 text-center"
+            >
+              <p className="text-base font-black">
+                루미가 오늘 문장을 고르는 중
+              </p>
+            </section>
+          ) : null}
+
+          {status === "error" ? (
+            <section
+              className="rounded-[28px] border border-[var(--wd-border)] bg-[var(--wd-surface)] p-7 text-center"
+            >
+              <p className="text-lg font-black">
+                {availability === "no-new-material"
+                  ? "오늘은 새 문장이 없어."
+                  : "공부하던 내용을 불러오지 못했어."}
+              </p>
+              <p className="mt-2 text-sm font-semibold leading-6 text-[var(--wd-text-muted)]">
+                {availability === "no-new-material"
+                  ? "다른 연습으로 이어가거나 오늘 여정으로 돌아가면 돼."
+                  : "진행 기록은 보관되어 있어. 다시 불러오거나 다른 연습을 선택해 줘."}
+              </p>
+              <div className="mt-6 grid gap-3">
+                <Link
+                  href="/winddown/review"
+                  className="inline-flex min-h-14 items-center justify-center rounded-2xl border border-[var(--wd-border)] px-5 text-sm font-black text-[var(--wd-text)]"
+                >
+                  복습으로 이동
+                </Link>
+                <Link
+                  href="/winddown/drill"
+                  className="inline-flex min-h-14 items-center justify-center rounded-2xl border border-[var(--wd-border)] px-5 text-sm font-black text-[var(--wd-text)]"
+                >
+                  짧게 연습하기
+                </Link>
+                <Link
+                  href="/winddown"
+                  className="inline-flex min-h-14 items-center justify-center rounded-2xl border border-[var(--wd-border)] px-5 text-sm font-black text-[var(--wd-text)]"
+                >
+                  오늘 여정 보기
+                </Link>
+              </div>
+              <button
+                type="button"
+                onClick={() => void loadQuest()}
+                className="mt-3 min-h-14 w-full rounded-2xl bg-[var(--wd-accent)] px-5 text-sm font-black text-[var(--wd-bg)]"
+              >
+                다시 불러오기
+              </button>
+            </section>
+          ) : null}
+
+          {status === "ready" && session?.isComplete ? (
+            <section className="rounded-[28px] border border-[var(--wd-border)] bg-[var(--wd-surface)] p-7 text-center">
+              <p className="mt-4 text-[12px] font-black tracking-[0.18em] text-[var(--wd-accent)]">
+                QUEST COMPLETE
+              </p>
+              <h2 className="mt-2 text-2xl font-black">다섯 문장 완료!</h2>
+              <p className="mt-3 text-sm font-semibold text-[var(--wd-text-muted)]">
+                틀린 문장 {session.completion?.mistakeRecap.length ?? 0}개도
+                다시 성공했어.
+              </p>
+              {(session.completion?.mistakeRecap.length ?? 0) > 0 ? (
+                <ul className="mt-5 space-y-2 text-left">
+                  {session.completion?.mistakeRecap.map((mistake) => (
+                    <li
+                      key={mistake.card.id}
+                      className="rounded-2xl bg-[var(--wd-surface-raised)] px-4 py-3"
+                    >
+                      <p className="text-[12px] font-bold text-[var(--wd-text-muted)]">
+                        {mistake.card.ko}
+                      </p>
+                      <p className="mt-1 text-sm font-black">
+                        {mistake.card.en}
+                      </p>
+                    </li>
+                  ))}
+                </ul>
+              ) : null}
+              <Link
+                href="/winddown/roleplay"
+                className="mt-7 inline-flex min-h-14 w-full items-center justify-center rounded-2xl bg-[var(--wd-accent)] px-5 text-sm font-black text-[var(--wd-bg)]"
+              >
+                다음: 말하기
+              </Link>
+              <Link
+                href="/winddown"
+                className="mt-3 inline-flex min-h-[44px] w-full items-center justify-center rounded-2xl border border-[var(--wd-border)] px-5 text-sm font-black text-[var(--wd-text)]"
+              >
+                오늘 여정 보기
+              </Link>
+            </section>
+          ) : null}
+
+          {status === "ready" && current && !session?.isComplete ? (
+            <section className="rounded-[28px] border border-[var(--wd-border)] bg-[var(--wd-surface)] p-6 shadow-2xl">
+              {feedback ? (
+                <div aria-live="polite" className="text-center">
+                  <h2 className="text-xl font-black">
+                    {feedback.outcome === "miss"
+                      ? "괜찮아, 잠시 뒤 다시 만나자."
+                      : feedback.outcome === "practice"
+                        ? "좋아, 감각을 되찾았어."
+                        : feedback.outcome === "complete"
+                          ? "마지막 문장까지 성공!"
+                          : "좋아, 한 문장 쌓였어."}
+                  </h2>
+                  <p className="mt-3 text-base font-black">
+                    {feedback.card.en}
+                  </p>
+                  <WindDownDeviceSpeechPractice
+                    key={`feedback:${feedback.card.id}`}
+                    targetText={feedback.card.en}
+                    controls="listen-and-speak"
+                  />
+                  {feedback.saveError ? (
+                    <p className="mt-4 rounded-2xl bg-[var(--fnk-loss-900)] px-4 py-3 text-sm font-bold">
+                      결과가 아직 저장되지 않았어. 같은 기록으로 다시 저장할게.
+                    </p>
+                  ) : null}
+                  {feedback.progress && !feedback.persisted ? (
+                    <button
+                      type="button"
+                      onClick={() => void saveFeedback(feedback)}
+                      disabled={!feedback.saveError}
+                      className="mt-6 min-h-14 w-full rounded-2xl bg-[var(--wd-accent)] px-5 text-sm font-black text-[var(--wd-bg)] disabled:opacity-60"
+                    >
+                      {feedback.saveError ? "저장 다시 시도" : "결과 저장 중"}
+                    </button>
+                  ) : (
+                    <button
+                      type="button"
+                      onClick={continueQuest}
+                      className="mt-6 min-h-14 w-full rounded-2xl bg-[var(--wd-accent)] px-5 text-sm font-black text-[var(--wd-bg)]"
+                    >
+                      {feedback.outcome === "complete"
+                        ? "오늘 결과 보기"
+                        : "다음 문제"}
+                    </button>
+                  )}
+                </div>
+              ) : (
+                <>
+                  <div className="flex items-center justify-between gap-3">
+                    <span className="rounded-full bg-[var(--wd-surface-raised)] px-3 py-1.5 text-[10px] font-black tracking-[0.1em] text-[var(--wd-text-muted)]">
+                      {current.kind === "meaning-choice"
+                        ? "뜻 고르기"
+                        : "문장 조립"}
+                    </span>
+                    <span className="text-[12px] font-black tabular-nums text-[var(--wd-text-muted)]">
+                      {current.creditPolicy === "practice-only"
+                        ? "보상 없는 짧은 연습"
+                        : `${(session?.creditedCardIds.length ?? 0) + 1}번째`}
+                    </span>
+                  </div>
+
+                  {shouldOfferWindDownLearnSpeech({
+                    exerciseKind: current.kind,
+                    answerVisible: false,
+                  }) ? (
+                    <WindDownDeviceSpeechPractice
+                      key={current.card.id}
+                      targetText={current.card.en}
+                      controls="listen-and-speak"
+                    />
+                  ) : null}
+
+                  {current.kind === "meaning-choice" ? (
+                    <>
+                      <p className="mt-7 text-[12px] font-black tracking-[0.15em] text-[var(--wd-accent)]">
+                        이 영어의 뜻은?
+                      </p>
+                      <h2 className="mt-3 text-2xl font-black leading-snug">
+                        {current.card.en}
+                      </h2>
+                      <div className="mt-7 grid gap-3">
+                        {current.choices.map((choice) => (
+                          <button
+                            key={choice.id}
+                            type="button"
+                            onClick={() =>
+                              submit({
+                                type: "choose-meaning",
+                                cardId: current.card.id,
+                                choiceId: choice.id,
+                              })
+                            }
+                            className={[
+                              "min-h-14 rounded-2xl border border-[var(--wd-border)] bg-[var(--wd-surface-raised)] px-4 py-3 text-left text-sm font-black transition active:scale-[0.98] motion-reduce:transition-none",
+                              idleAssistVisible && choice.id === assistiveWrongChoiceId
+                                ? "opacity-40"
+                                : "",
+                            ].join(" ")}
+                          >
+                            {choice.text}
+                          </button>
+                        ))}
+                      </div>
+                      <p role="status" className="mt-3 min-h-[20px] text-center text-[12px] font-bold text-[var(--wd-text-muted)]">
+                        {idleAssistVisible && assistiveWrongChoiceId
+                          ? "루미 힌트: 하나의 선택지를 살짝 흐리게 했어."
+                          : null}
+                      </p>
+                    </>
+                  ) : (
+                    <>
+                      <p className="mt-7 text-[12px] font-black tracking-[0.15em] text-[var(--wd-accent)]">
+                        영어 문장을 만들어 봐
+                      </p>
+                      <h2 className="mt-3 text-xl font-black leading-snug">
+                        {current.card.ko}
+                      </h2>
+                      <div
+                        aria-label="선택한 단어"
+                        className="mt-6 flex min-h-20 flex-wrap content-start gap-2 rounded-2xl border border-dashed border-[var(--wd-border)] bg-[var(--wd-bg)] p-3"
+                      >
+                        {selectedTokens.length === 0 ? (
+                          <span className="text-sm font-semibold text-[var(--wd-text-muted)]">
+                            아래 단어를 순서대로 눌러봐
+                          </span>
+                        ) : null}
+                        {selectedTokens.map((token) => (
+                          <button
+                            key={token.id}
+                            type="button"
+                            onClick={() =>
+                              setSelectedTokenIds((ids) =>
+                                ids.filter((id) => id !== token.id),
+                              )
+                            }
+                            className="min-h-[44px] rounded-xl bg-[var(--wd-accent)] px-3 text-sm font-black text-[var(--wd-bg)]"
+                          >
+                            {token.text}
+                          </button>
+                        ))}
+                      </div>
+                      <div className="mt-4 flex flex-wrap gap-2">
+                        {current.tokens.map((token) => {
+                          const selected = selectedTokenIds.includes(token.id);
+                          const isAssistiveFirstToken =
+                            idleAssistVisible
+                            && token.id === current.canonicalTokenIds[0];
+                          return (
+                            <button
+                              key={token.id}
+                              type="button"
+                              disabled={selected}
+                              onClick={() =>
+                                setSelectedTokenIds((ids) => [...ids, token.id])
+                              }
+                              className={[
+                                "min-h-[44px] rounded-xl border border-[var(--wd-border)] bg-[var(--wd-surface-raised)] px-3 text-sm font-black disabled:opacity-25",
+                                isAssistiveFirstToken
+                                  ? "ring-2 ring-[var(--wd-listening)]"
+                                  : "",
+                              ].join(" ")}
+                            >
+                              {token.text}
+                            </button>
+                          );
+                        })}
+                      </div>
+                      <p role="status" className="mt-3 min-h-[20px] text-center text-[12px] font-bold text-[var(--wd-text-muted)]">
+                        {idleAssistVisible
+                          ? "루미 힌트: 첫 단어부터 시작해 봐."
+                          : null}
+                      </p>
+                      <button
+                        type="button"
+                        disabled={
+                          selectedTokenIds.length !==
+                          current.canonicalTokenIds.length
+                        }
+                        onClick={() =>
+                          submit({
+                            type: "submit-sentence",
+                            cardId: current.card.id,
+                            tokenIds: selectedTokenIds,
+                          })
+                        }
+                        className="mt-6 min-h-14 w-full rounded-2xl bg-[var(--wd-accent)] px-5 text-sm font-black text-[var(--wd-bg)] disabled:opacity-35"
+                      >
+                        확인
+                      </button>
+                    </>
+                  )}
+                </>
+              )}
+            </section>
+          ) : null}
+        </main>
+
+        <p className="pb-1 text-center text-[12px] font-bold text-[var(--wd-text-muted)]">
+          기기 음성 연습은 선택 사항이며, 정답·보상·진행 기록을 바꾸지 않아.
+        </p>
+      </div>
+    </div>
+  );
+}

@@ -1,0 +1,2414 @@
+{
+  "schema_version": "stockanalysis/v1",
+  "source": "stockanalysis",
+  "asset_type": "stock",
+  "ticker": "JPM",
+  "source_as_of": "2026-08-05T20:00:00Z",
+  "fetched_at": "2026-08-05T22:32:07Z",
+  "endpoints": {
+    "overview": "/stocks/jpm/__data.json",
+    "history": "/api/symbol/s/JPM/history?range=1Y&period=Monthly",
+    "quote": "/api/quotes/s/JPM"
+  },
+  "normalized": {
+    "overview": {
+      "marketCap": "954.93B",
+      "revenue": "186.33B",
+      "revenue_type": "ttm",
+      "netIncome": "63.63B",
+      "sharesOut": "2.66B",
+      "eps": "23.30",
+      "peRatio": "15.42",
+      "forwardPE": "14.88",
+      "dividend": "$6.00 (1.67%)",
+      "beta": "0.98",
+      "analysts": "Buy",
+      "target": "372.65 (+3.73%)",
+      "earningsDate": "Jul 14, 2026"
+    },
+    "quote": {
+      "p": 359.24,
+      "pd": 359.24,
+      "c": 1.72,
+      "cp": 0.48,
+      "cl": 357.52,
+      "cdr": 1,
+      "o": 358.97,
+      "h": 362.17,
+      "l": 358.2,
+      "v": 5253066,
+      "ts": 1785960000000,
+      "u": "Aug 5, 2026, 4:00 PM EDT",
+      "td": "2026-08-05",
+      "h52": 363,
+      "l52": 279.1,
+      "ex": "NYSE",
+      "ms": "closed",
+      "fms": "post",
+      "e": true,
+      "ep": 360.3613,
+      "epd": 360.36,
+      "ec": 1.12,
+      "ecp": 0.31,
+      "eu": "Aug 5, 2026, 6:15 PM EDT",
+      "es": "After-hours",
+      "ets": 1785968126269.3076,
+      "etd": "2026-08-05",
+      "epv": null,
+      "days": 0,
+      "exp": 1785969131267,
+      "symbol": "JPM",
+      "uid": "JPM"
+    },
+    "history": [
+      {
+        "t": "2026-08-03",
+        "o": 353.75,
+        "h": 363,
+        "l": 350.84,
+        "c": 359.24,
+        "a": 359.24,
+        "v": 19894058,
+        "ch": 2.12
+      },
+      {
+        "t": "2026-07-01",
+        "o": 328.365,
+        "h": 359.3,
+        "l": 325.01,
+        "c": 351.79,
+        "a": 351.79,
+        "v": 205116577,
+        "ch": 7.96
+      },
+      {
+        "t": "2026-06-01",
+        "o": 297.69,
+        "h": 343.449,
+        "l": 295.27,
+        "c": 327.33,
+        "a": 325.862021,
+        "v": 205970203,
+        "ch": 9.36
+      },
+      {
+        "t": "2026-05-01",
+        "o": 313.95,
+        "h": 316.3,
+        "l": 293.67,
+        "c": 299.31,
+        "a": 297.967682,
+        "v": 171077408,
+        "ch": -4.44
+      },
+      {
+        "t": "2026-04-01",
+        "o": 295.39,
+        "h": 320.235,
+        "l": 288.72,
+        "c": 313.23,
+        "a": 311.825255,
+        "v": 172933401,
+        "ch": 7.03
+      },
+      {
+        "t": "2026-03-02",
+        "o": 294.81,
+        "h": 302.39,
+        "l": 279.1,
+        "c": 294.16,
+        "a": 291.349736,
+        "v": 244149902,
+        "ch": -2.04
+      },
+      {
+        "t": "2026-02-02",
+        "o": 304.46,
+        "h": 326.4,
+        "l": 291.38,
+        "c": 300.3,
+        "a": 297.431077,
+        "v": 203073086,
+        "ch": -1.83
+      },
+      {
+        "t": "2026-01-02",
+        "o": 322.5,
+        "h": 337.25,
+        "l": 296.51,
+        "c": 305.89,
+        "a": 302.967673,
+        "v": 243474092,
+        "ch": -4.64
+      },
+      {
+        "t": "2025-12-01",
+        "o": 312.95,
+        "h": 330.86,
+        "l": 298.46,
+        "c": 322.22,
+        "a": 317.708565,
+        "v": 211615701,
+        "ch": 2.92
+      },
+      {
+        "t": "2025-11-03",
+        "o": 311,
+        "h": 322.25,
+        "l": 292.81,
+        "c": 313.08,
+        "a": 308.696535,
+        "v": 150219069,
+        "ch": 0.63
+      },
+      {
+        "t": "2025-10-01",
+        "o": 313.97,
+        "h": 314.59,
+        "l": 290.545,
+        "c": 311.12,
+        "a": 306.763977,
+        "v": 189429731,
+        "ch": -0.89
+      }
+    ],
+    "financials": {
+      "path": "financials/JPM.json",
+      "fetched_at": "2026-08-05T22:32:06Z",
+      "role": "financial statement cross-check candidate; not valuation SSOT",
+      "summary": {
+        "annual": {
+          "income": {
+            "field_count": 23,
+            "period_count": 6,
+            "period": "annual"
+          },
+          "balance_sheet": {
+            "field_count": 35,
+            "period_count": 6,
+            "period": "annual"
+          },
+          "cash_flow": {
+            "field_count": 38,
+            "period_count": 6,
+            "period": "annual"
+          },
+          "ratios": {
+            "field_count": 22,
+            "period_count": 6,
+            "period": "annual"
+          }
+        },
+        "quarterly": {
+          "income": {
+            "field_count": 23,
+            "period_count": 20,
+            "period": "quarterly"
+          },
+          "balance_sheet": {
+            "field_count": 35,
+            "period_count": 20,
+            "period": "quarterly"
+          },
+          "cash_flow": {
+            "field_count": 38,
+            "period_count": 20,
+            "period": "quarterly"
+          },
+          "ratios": {
+            "field_count": 22,
+            "period_count": 20,
+            "period": "quarterly"
+          }
+        }
+      }
+    }
+  },
+  "financials_path": "financials/JPM.json",
+  "raw": {
+    "overview": {
+      "trust": {
+        "sources": [
+          {
+            "name": "S&P Global Market Intelligence",
+            "short": "S&P Global",
+            "url": "https://www.spglobal.com/market-intelligence/en"
+          },
+          {
+            "name": "CBOE",
+            "short": "CBOE",
+            "url": "https://www.cboe.com/"
+          },
+          {
+            "name": "Nasdaq UTP",
+            "short": "Nasdaq UTP",
+            "url": "https://www.utpplan.com/overview",
+            "noUtm": true
+          }
+        ],
+        "topic": "overview",
+        "ticker": "JPM",
+        "lastChecked": 1785969096817,
+        "summary": {
+          "text": "Fundamental and historical data is provided by S&P Global Market Intelligence. Real-time stock price data is provided by CBOE and 15-minute delayed consolidated tape pricing data is provided by Nasdaq UTP."
+        }
+      },
+      "marketCap": "954.93B",
+      "marketCapGrowth": 18.74504847506785,
+      "revenue": "186.33B",
+      "revenue_type": "ttm",
+      "revenueGrowth": 13.789,
+      "netIncome": "63.63B",
+      "netIncomeGrowth": 15.096,
+      "sharesOut": "2.66B",
+      "eps": "23.30",
+      "epsGrowth": 19.618,
+      "peRatio": "15.42",
+      "forwardPE": "14.88",
+      "dividend": "$6.00 (1.67%)",
+      "exDividendDate": "Jul 6, 2026",
+      "beta": "0.98",
+      "analysts": "Buy",
+      "target": "372.65 (+3.73%)",
+      "earningsDate": "Jul 14, 2026",
+      "description": "JPMorgan Chase & Co. operates as a bank and financial holding company in the United States, rest of North America, Europe, the Middle East, Africa, the Asia Pacific, Latin America, and the Caribbean. It operates in three segments: Consumer & Community Banking, Commercial & Investment Bank, and Asset & Wealth Management. The company offers deposit, investment and lending products, and cash management; mortgage origination and servicing activities; residential mortgages and home equity loans; and credit cards, payment solutions, travel services, ...",
+      "infoTable": [
+        {
+          "t": "Industry",
+          "v": "Banks - Diversified",
+          "u": "stocks/industry/banks-diversified"
+        },
+        {
+          "t": "Sector",
+          "v": "Financials",
+          "u": "stocks/sector/financials"
+        },
+        {
+          "t": "Founded",
+          "v": 1799
+        },
+        {
+          "t": "Employees",
+          "v": "318,512",
+          "u": "stocks/jpm/employees"
+        },
+        {
+          "t": "Stock Exchange",
+          "v": "NYSE"
+        },
+        {
+          "t": "Ticker Symbol",
+          "v": "JPM"
+        },
+        {
+          "t": "Website",
+          "v": "https://www.jpmorganchase.com",
+          "eu": "https://www.jpmorganchase.com"
+        }
+      ],
+      "financialIntro": "In 2025, JPMorgan Chase's revenue was $168.24 billion, an increase of 0.88% compared to the previous year's $166.78 billion. Earnings were $55.68 billion, a decrease of -2.09%.",
+      "financialChart": [
+        {
+          "year": "2021",
+          "revenue": 130898000000,
+          "earnings": 46503000000,
+          "revenueGrowth": 27.742,
+          "earningsGrowth": 65.91900000000001
+        },
+        {
+          "year": "2022",
+          "revenue": 122306000000,
+          "earnings": 35892000000,
+          "revenueGrowth": -6.564,
+          "earningsGrowth": -22.051
+        },
+        {
+          "year": "2023",
+          "revenue": 145670000000,
+          "earnings": 47760000000,
+          "revenueGrowth": 19.103,
+          "earningsGrowth": 31.521
+        },
+        {
+          "year": "2024",
+          "revenue": 166775000000,
+          "earnings": 56868000000,
+          "revenueGrowth": 14.488,
+          "earningsGrowth": 17.999000000000002
+        },
+        {
+          "year": "2025",
+          "revenue": 168235000000,
+          "earnings": 55681000000,
+          "revenueGrowth": 0.8750000000000001,
+          "earningsGrowth": -2.434
+        }
+      ],
+      "analystIntro": "According to 23 analysts, the average rating for JPM stock is \"Buy.\" The 12-month stock price target is $372.65, which is an increase of 3.73% from the latest price.",
+      "analystTarget": {
+        "target": "$372.65",
+        "change": "3.73%",
+        "changeWord": "upside"
+      },
+      "analystChart": {
+        "strongBuy": 9,
+        "buy": 3,
+        "hold": 11,
+        "sell": 0,
+        "strongSell": 0
+      },
+      "news": {
+        "exp": "1785969188570",
+        "data": [
+          {
+            "url": "https://www.reuters.com/business/finance/jpmorgan-chase-hires-lissauer-activism-defense-2026-08-05/",
+            "img": "https://cdn.snapi.dev/images/v1/0/r/1/chhase12-2448793-3849820.jpg",
+            "title": "JPMorgan Chase hires Lissauer for activism defense",
+            "text": "JPMorgan Chase ​is hiring Bank of ‌America executive Amy Lissauer, a veteran adviser ​to companies ​facing pressure from activist investors, ⁠to bolster ​its global shareholder engagement ​practice, a...",
+            "source": "Reuters",
+            "type": "Article",
+            "tickers": null,
+            "time": "Aug 5, 2026, 3:45 PM EDT",
+            "ago": "2 hours ago"
+          },
+          {
+            "url": "https://www.tipranks.com/news/the-fly/jpmorgan-ceo-asks-other-ceos-join-group-focusing-on-risks-of-ai-reuters-says-thefly-news",
+            "img": "https://blog.tipranks.com/wp-content/uploads/2022/09/shutterstock_2092362163-750x406.jpg",
+            "title": "JPMorgan CEO asks other CEOs join group focusing on risks of AI, Reuters says",
+            "text": "JPMorgan (JPM) CEO Jamie Dimon is personally reaching out to other CEOs of large and major banks, asking them to join an industry group that focuses on addressing risks posed…",
+            "source": "TheFly",
+            "type": "Article",
+            "tickers": null,
+            "time": "2026-08-05T10:36:23.000Z",
+            "ago": "11 hours ago"
+          },
+          {
+            "url": "https://www.reuters.com/world/jpmorgan-ceo-dimon-leads-new-cross-industry-effort-tackle-ai-risks-2026-08-05/",
+            "img": "https://cdn.snapi.dev/images/v1/6/g/a/chhase5-2468366-3847511.jpg",
+            "title": "JPMorgan CEO Dimon leads new cross-industry effort to tackle AI risks",
+            "text": "JPMorgan Chase CEO Jamie Dimon is urging corporate leaders to join a U.S.-focused industry group to address risks posed by ​AI, as corporate America rapidly adopts the developing technology, two sourc...",
+            "source": "Reuters",
+            "type": "Article",
+            "tickers": null,
+            "time": "Aug 5, 2026, 6:03 AM EDT",
+            "ago": "12 hours ago"
+          },
+          {
+            "url": "https://www.tipranks.com/news/time-to-sell-nike-stock-says-top-rated-analyst",
+            "img": "https://blog.tipranks.com/wp-content/uploads/2026/08/shutterstock_1336400795-750x406.jpg",
+            "title": "‘Time to Sell Nike Stock,’ Says Five-Star Analyst",
+            "text": "Nike ($NKE) stock was downgraded by investment firm JPMorgan ($JPM) after analysts warned that CEO Elliott Hill’s turnaround plan may take longer to improve the apparel giant’s results. More specifica...",
+            "source": "TipRanks",
+            "type": "Article",
+            "tickers": [
+              "$NKE"
+            ],
+            "time": "2026-08-04T16:14:02.000Z",
+            "ago": "1 day ago"
+          },
+          {
+            "url": "https://www.etftrends.com/coinshares-content-hub/wall-street-buying-cryptos-plumbing-not-ideology/",
+            "img": "https://cdn.snapi.dev/images/v1/o/u/y/asset-management49-3844183.jpg",
+            "title": "Wall Street Is Buying Crypto's Plumbing, Not Its Ideology",
+            "text": "BitMEX, the exchange that launched crypto's first perpetual futures contract, will close on September 23 after 11 years. BitMart, another crypto exchange, plans to wind down by January, according to J...",
+            "source": "ETF Trends",
+            "type": "Article",
+            "tickers": [
+              "$BLK",
+              "#BRRR",
+              "#BTF",
+              "$CBOE",
+              "$CME"
+            ],
+            "time": "Aug 4, 2026, 8:06 AM EDT",
+            "ago": "1 day ago"
+          },
+          {
+            "url": "https://www.fastcompany.com/91582536/jamie-dimon-jp-morgan-ceo-played-this-childrens-game-to-develop-legendary-investing-skills",
+            "img": "https://cdn.snapi.dev/images/v1/q/v/c/chhase1-2478323-2499547-270524-3843997.jpg",
+            "title": "JPMorgan CEO Jamie Dimon says playing this game as a child helped develop his legendary investing skills",
+            "text": "Jamie Dimon has run JPMorgan Chase as CEO for 20 years, and under his leadership, it's become the largest bank in the world by market capitalization. But Dimon's business savvy started long before he ...",
+            "source": "Fast Company",
+            "type": "Article",
+            "tickers": null,
+            "time": "Aug 4, 2026, 7:12 AM EDT",
+            "ago": "1 day ago"
+          },
+          {
+            "url": "https://nypost.com/2026/08/03/business/worlds-most-powerful-banker-places-big-gamble-on-california/",
+            "img": "https://cdn.snapi.dev/images/v1/4/f/a/chhase2-2472376-2609957-270332-3843445.jpg",
+            "title": "JPMorgan Chase announces new investments in the Bay Area",
+            "text": "JPMorgan Chase designated the Bay Area as its 24th corporate center and announced a new round of investments on Monday—underscoring the region's growing importance to the nation's largest bank.",
+            "source": "New York Post",
+            "type": "Article",
+            "tickers": null,
+            "time": "Aug 3, 2026, 8:30 PM EDT",
+            "ago": "1 day ago"
+          },
+          {
+            "url": "https://nypost.com/2026/08/03/business/jpmorgan-to-invest-750b-to-help-500k-americans-buy-homes/",
+            "img": "https://cdn.snapi.dev/images/v1/z/6/1/bank19-3630763-3843183.jpg",
+            "title": "JPMorgan to invest $750B to help 500K Americans buy homes",
+            "text": "JPMorgan Chase says it's investing a whopping $750 billion through 2035 to help millions of Americans buy homes as many report the economic milestone slipping further out of reach.",
+            "source": "New York Post",
+            "type": "Article",
+            "tickers": null,
+            "time": "Aug 3, 2026, 5:21 PM EDT",
+            "ago": "2 days ago"
+          },
+          {
+            "url": "https://www.wsj.com/finance/banking/jpmorgan-chase-to-invest-750-billion-to-boost-u-s-housing-supply-homeownership-11a389e5",
+            "img": "https://cdn.snapi.dev/images/v1/o/3/w/chhase2-2472376-2609957-270332-3841945.jpg",
+            "title": "JPMorgan Chase to Invest $750 Billion to Boost U.S. Housing Supply, Homeownership",
+            "text": "JPMorgan Chase said it is investing $750 billion through 2035 as part of an initiative to support homeownership in the U.S.",
+            "source": "WSJ",
+            "type": "Article",
+            "tickers": null,
+            "time": "Aug 3, 2026, 10:30 AM EDT",
+            "ago": "2 days ago"
+          },
+          {
+            "url": "https://www.reuters.com/business/finance/jpmorgan-aims-deploy-750-billion-into-housing-through-2035-2026-08-03/",
+            "img": "https://cdn.snapi.dev/images/v1/m/v/j/bank28-3488229-3841812.jpg",
+            "title": "JPMorgan aims to deploy $750 billion into housing through 2035",
+            "text": "JPMorgan said on Monday it was planning to deploy more ​than $750 billion into housing through ‌2035, in a push to increase supply and support homeownership in the U.S.",
+            "source": "Reuters",
+            "type": "Article",
+            "tickers": null,
+            "time": "Aug 3, 2026, 9:59 AM EDT",
+            "ago": "2 days ago"
+          },
+          {
+            "url": "https://www.tipranks.com/news/the-fly/jpmorgan-to-deploy-750b-through-2035-to-increase-housing-supply-thefly-news",
+            "img": "https://blog.tipranks.com/wp-content/uploads/2022/09/shutterstock_718391044-750x406.jpg",
+            "title": "JPMorgan to deploy $750B through 2035 to increase housing supply",
+            "text": "JPMorgan (JPM)Chase announced the firm intends to deploy over $750B through 2035 to increase housing supply and support homeownership in the United States. This marks a nearly 40% increase in…",
+            "source": "TheFly",
+            "type": "Article",
+            "tickers": null,
+            "time": "2026-08-03T13:55:29.000Z",
+            "ago": "2 days ago"
+          },
+          {
+            "url": "https://www.businesswire.com/news/home/20260803532776/en/JPMorganChase-Doubles-Down-on-Housing-Aiming-to-Deploy-750-Billion-Through-2035%E2%80%94Up-by-More-Than-200-Billion%E2%80%94Through-Its-American-Dream-Initiative/",
+            "img": "https://cdn.snapi.dev/images/v1/v/s/w/press9-3841750.jpg",
+            "title": "JPMorganChase Doubles Down on Housing, Aiming to Deploy $750 Billion Through 2035—Up by More Than $200 Billion—Through Its American Dream Initiative",
+            "text": "NEW YORK--(BUSINESS WIRE)--JPMorganChase today announced the firm intends to deploy over $750 billion through 2035 to increase housing supply and support homeownership in the United States. This marks...",
+            "source": "Business Wire",
+            "type": "Article",
+            "tickers": null,
+            "time": "Aug 3, 2026, 9:48 AM EDT",
+            "ago": "2 days ago"
+          },
+          {
+            "url": "https://www.tipranks.com/news/the-fly/jpmorgan-price-target-raised-to-400-from-384-at-ubs-thefly-news",
+            "img": "https://blog.tipranks.com/wp-content/uploads/2022/09/shutterstock_1697986822-750x406.jpg",
+            "title": "JPMorgan price target raised to $400 from $384 at UBS",
+            "text": "UBS analyst Erika Najarian raised the firm’s price target on JPMorgan (JPM) to $400 from $384 and keeps a Buy rating on the shares.",
+            "source": "TheFly",
+            "type": "Article",
+            "tickers": null,
+            "time": "2026-08-03T12:16:14.000Z",
+            "ago": "2 days ago"
+          },
+          {
+            "url": "https://www.wsj.com/finance/banking/jpmorgans-pitch-to-put-a-value-on-fifa-863e7597",
+            "img": "https://cdn.snapi.dev/images/v1/m/y/e/bank28-3488229-3839990.jpg",
+            "title": "JPMorgan's Pitch to Put a Value on FIFA",
+            "text": "The deal would give FIFA a path to more than double the number of players and competitions, according to a pitch deck.",
+            "source": "WSJ",
+            "type": "Article",
+            "tickers": null,
+            "time": "Jul 31, 2026, 6:45 PM EDT",
+            "ago": "4 days ago"
+          },
+          {
+            "url": "https://www.prnewswire.com/news-releases/jp-morgan-asset-management-launches-jpmorgan-us-large-cap-value-plus-etf-jlvp-bringing-its-extension-strategy-expertise-to-an-etf-302839608.html",
+            "img": "https://cdn.snapi.dev/images/v1/x/9/e/press13-3838397.jpg",
+            "title": "J.P. Morgan Asset Management Launches JPMorgan U.S. Large Cap Value Plus ETF (JLVP), Bringing Its Extension Strategy Expertise to an ETF",
+            "text": "JLVP brings an institutional long/short extension approach to a broader range of investors  NEW YORK, July 31, 2026 /PRNewswire/ -- J.P. Morgan Asset Management today announced the launch of its first...",
+            "source": "PRNewsWire",
+            "type": "Article",
+            "tickers": null,
+            "time": "Jul 31, 2026, 9:30 AM EDT",
+            "ago": "5 days ago"
+          },
+          {
+            "url": "https://www.cnbc.com/2026/07/29/trump-banking-investments-jpmorgan-schwab-ubs-financial-disclosure.html",
+            "img": "https://cdn.snapi.dev/images/v1/r/q/6/bank44-3830435.jpg",
+            "title": "Inside the financial network managing Trump's $858 million investment portfolio",
+            "text": "CNBC linked JPMorgan Chase, Charles Schwab, UBS and Stephens Inc. to at least four of President Donald Trump's eight investment accounts by analyzing firm-specific funds, deposit programs and credit a...",
+            "source": "CNBC",
+            "type": "Article",
+            "tickers": [
+              "$SCHW",
+              "$UBS"
+            ],
+            "time": "Jul 29, 2026, 7:00 AM EDT",
+            "ago": "7 days ago"
+          },
+          {
+            "url": "https://www.etftrends.com/sector-investing-content-hub/financial-sector-etf-hits-record-high-on-fintech-gains/",
+            "img": "https://cdn.snapi.dev/images/v1/h/h/y/asset-management33-3828777.jpg",
+            "title": "Financial Sector ETF Hits Record High on Fintech Gains",
+            "text": "Shares of the State Street Financial Select Sector SPDR ETF (XLF) touched a fresh all-time high Tuesday. That gain is part of a broader shift in the market.",
+            "source": "ETF Trends",
+            "type": "Article",
+            "tickers": [
+              "$ARES",
+              "$BX",
+              "$CBOE",
+              "$COIN",
+              "$FDS",
+              "$FIS",
+              "$GPN"
+            ],
+            "time": "Jul 28, 2026, 1:48 PM EDT",
+            "ago": "8 days ago"
+          },
+          {
+            "url": "https://www.reuters.com/business/energy/japan-considers-foreign-bank-financing-33-billion-us-power-projects-2026-07-27/",
+            "img": "https://cdn.snapi.dev/images/v1/e/l/s/22effdre-3211100-3824078.jpg",
+            "title": "Japan considers foreign bank financing for $33 billion US power projects",
+            "text": "Japan is considering financing from foreign banks for natural gas-fired power generation ​projects in the United States that form ‌part of its $550 billion U.S. investment pledge.",
+            "source": "Reuters",
+            "type": "Article",
+            "tickers": null,
+            "time": "Jul 26, 2026, 9:50 PM EDT",
+            "ago": "9 days ago"
+          },
+          {
+            "url": "https://www.wsj.com/finance/banking/big-banks-are-wading-back-into-commercial-real-estate-lending-07faec10",
+            "img": "https://cdn.snapi.dev/images/v1/w/b/e/bgfre2wsd-3559555-3821097.jpg",
+            "title": "Big Banks Are Wading Back Into Commercial Real-Estate Lending",
+            "text": "Lenders had shunned the category just a few years ago, with investors and analysts warning of a wave of defaults.",
+            "source": "WSJ",
+            "type": "Article",
+            "tickers": [
+              "$BAC",
+              "$C",
+              "$GS",
+              "$MS",
+              "$WFC"
+            ],
+            "time": "Jul 23, 2026, 8:00 PM EDT",
+            "ago": "12 days ago"
+          },
+          {
+            "url": "https://www.reuters.com/business/finance/jpmorgan-other-us-banks-set-help-finance-japans-550-billion-us-investment-plan-2026-07-21/",
+            "img": "https://cdn.snapi.dev/images/v1/6/f/4/bank28-3488229-3811899.jpg",
+            "title": "JPMorgan, other US banks set to help finance Japan's $550 billion US investment plan, sources say",
+            "text": "JPMorgan and other U.S. banks are close to agreeing to provide some financing under Japan's $550 billion U.S. investment pledge, according to ​two people familiar with talks between the lenders and th...",
+            "source": "Reuters",
+            "type": "Article",
+            "tickers": null,
+            "time": "Jul 21, 2026, 3:33 AM EDT",
+            "ago": "15 days ago"
+          },
+          {
+            "url": "https://www.etftrends.com/equity-etf-content-hub/south-korea-semiconductors-last-weeks-top-etf-inflows/",
+            "img": "https://cdn.snapi.dev/images/v1/z/a/e/etf49-3811483.jpg",
+            "title": "From South Korea to Semiconductors: Last Week's Top ETF Inflows",
+            "text": "The ETF market saw inflows shift notably this past week, as investors funneled capital toward international valuation gaps and domestic large-cap equities. This, coupled with aggressive buying in the ...",
+            "source": "ETF Trends",
+            "type": "Article",
+            "tickers": [
+              "#DRAM",
+              "#EFV",
+              "#EWY",
+              "#FINA",
+              "#QQQM",
+              "$SKHY",
+              "#SOXL"
+            ],
+            "time": "Jul 20, 2026, 5:17 PM EDT",
+            "ago": "16 days ago"
+          },
+          {
+            "url": "https://www.reuters.com/world/india/coca-cola-appoints-jpmorgan-citi-india-bottler-ipo-sources-say-2026-07-20/",
+            "img": "https://cdn.snapi.dev/images/v1/9/a/d/cokes14-2425919-2534451-266820-3810192.jpg",
+            "title": "Coca-Cola appoints JPMorgan, Citi for India bottler IPO, sources say",
+            "text": "Coca-Cola has appointed JPMorgan and Citi as bankers for a planned 2027 initial public ​offering of one of its majority-owned bottling partners in ‌India, a critical growth market, two sources with di...",
+            "source": "Reuters",
+            "type": "Article",
+            "tickers": [
+              "$KO",
+              "$C"
+            ],
+            "time": "Jul 20, 2026, 8:56 AM EDT",
+            "ago": "16 days ago"
+          },
+          {
+            "url": "https://www.fxempire.com/forecasts/article/gs-c-and-jpm-forecasts-financial-giants-ride-earnings-wave-despite-resistance-1610822",
+            "img": "https://cdn.snapi.dev/images/v1/x/9/a/bank1-3804931.jpg",
+            "title": "GS, C and JPM Forecasts – Financial Giants Ride Earnings Wave Despite Resistance",
+            "text": "US banks look like they are trying to move to the upside, but this is a market that has a lot of external influences.",
+            "source": "FXEmpire",
+            "type": "Article",
+            "tickers": [
+              "$C",
+              "$GS"
+            ],
+            "time": "Jul 16, 2026, 7:59 AM EDT",
+            "ago": "20 days ago"
+          },
+          {
+            "url": "https://www.reuters.com/legal/transactional/wall-st-banks-q2-saw-deal-fees-trading-windfall-boost-profit-2026-07-16/",
+            "img": "https://cdn.snapi.dev/images/v1/d/t/w/bank36-3479654-3804599.jpg",
+            "title": "Wall St banks' Q2 saw deal fees, trading windfall boost profit",
+            "text": "Wall Street's biggest banks found few reasons to complain this earnings season. Investment bankers were busier than they have been in years, trading desks thrived on volatility and resilient consumers...",
+            "source": "Reuters",
+            "type": "Article",
+            "tickers": [
+              "$BAC",
+              "$C",
+              "$GS",
+              "$MS",
+              "$WFC"
+            ],
+            "time": "Jul 16, 2026, 6:03 AM EDT",
+            "ago": "20 days ago"
+          },
+          {
+            "url": "https://www.businesswire.com/news/home/20260715145283/en/JPMorganChase-Declares-Preferred-Stock-Dividends/",
+            "img": "https://cdn.snapi.dev/images/v1/z/m/q/press2-3804052.jpg",
+            "title": "JPMorganChase Declares Preferred Stock Dividends",
+            "text": "NEW YORK--(BUSINESS WIRE)--JPMorgan Chase & Co. (NYSE: JPM) (“JPMorganChase” or the “Firm”) has declared dividends on the outstanding shares of the Firm's Series DD, EE, GG, JJ, LL, MM and NN preferre...",
+            "source": "Business Wire",
+            "type": "Article",
+            "tickers": null,
+            "time": "Jul 15, 2026, 4:28 PM EDT",
+            "ago": "21 days ago"
+          }
+        ]
+      },
+      "chart": {
+        "expiration": 1785971606190,
+        "data": [
+          {
+            "c": 361.55,
+            "o": 359.11,
+            "t": 1785922200
+          },
+          {
+            "c": 361.165,
+            "t": 1785922260
+          },
+          {
+            "c": 361.04,
+            "t": 1785922320
+          },
+          {
+            "c": 360.36,
+            "t": 1785922380
+          },
+          {
+            "c": 360.46,
+            "t": 1785922440
+          },
+          {
+            "c": 360.91,
+            "t": 1785922500
+          },
+          {
+            "c": 360.71,
+            "t": 1785922560
+          },
+          {
+            "c": 360.855,
+            "t": 1785922620
+          },
+          {
+            "c": 360.845,
+            "t": 1785922680
+          },
+          {
+            "c": 360.67,
+            "t": 1785922740
+          },
+          {
+            "c": 360.695,
+            "t": 1785922800
+          },
+          {
+            "c": 361.115,
+            "t": 1785922860
+          },
+          {
+            "c": 360.94,
+            "t": 1785922920
+          },
+          {
+            "c": 360.745,
+            "t": 1785922980
+          },
+          {
+            "c": 361.1,
+            "t": 1785923040
+          },
+          {
+            "c": 360.54,
+            "t": 1785923100
+          },
+          {
+            "c": 360.05,
+            "t": 1785923160
+          },
+          {
+            "c": 360.19,
+            "t": 1785923220
+          },
+          {
+            "c": 360.155,
+            "t": 1785923280
+          },
+          {
+            "c": 360.06,
+            "t": 1785923340
+          },
+          {
+            "c": 359.97,
+            "t": 1785923400
+          },
+          {
+            "c": 360.13,
+            "t": 1785923460
+          },
+          {
+            "c": 360.39,
+            "t": 1785923520
+          },
+          {
+            "c": 360.365,
+            "t": 1785923580
+          },
+          {
+            "c": 360.57,
+            "t": 1785923640
+          },
+          {
+            "c": 360.785,
+            "t": 1785923700
+          },
+          {
+            "c": 361.27,
+            "t": 1785923760
+          },
+          {
+            "c": 361.44,
+            "t": 1785923820
+          },
+          {
+            "c": 361.32,
+            "t": 1785923880
+          },
+          {
+            "c": 360.935,
+            "t": 1785923940
+          },
+          {
+            "c": 360.59,
+            "t": 1785924000
+          },
+          {
+            "c": 360.72,
+            "t": 1785924060
+          },
+          {
+            "c": 361.1,
+            "t": 1785924120
+          },
+          {
+            "c": 361.26,
+            "t": 1785924180
+          },
+          {
+            "c": 361.28,
+            "t": 1785924240
+          },
+          {
+            "c": 361.38,
+            "t": 1785924300
+          },
+          {
+            "c": 361.35,
+            "t": 1785924360
+          },
+          {
+            "c": 361.56,
+            "t": 1785924420
+          },
+          {
+            "c": 361.59,
+            "t": 1785924480
+          },
+          {
+            "c": 361.63,
+            "t": 1785924540
+          },
+          {
+            "c": 361.37,
+            "t": 1785924600
+          },
+          {
+            "c": 361.65,
+            "t": 1785924660
+          },
+          {
+            "c": 361.57,
+            "t": 1785924720
+          },
+          {
+            "c": 361.92,
+            "t": 1785924780
+          },
+          {
+            "c": 361.82,
+            "t": 1785924840
+          },
+          {
+            "c": 361.58,
+            "t": 1785924900
+          },
+          {
+            "c": 361.45,
+            "t": 1785924960
+          },
+          {
+            "c": 361.76,
+            "t": 1785925020
+          },
+          {
+            "c": 361.83,
+            "t": 1785925080
+          },
+          {
+            "c": 361.68,
+            "t": 1785925140
+          },
+          {
+            "c": 361.425,
+            "t": 1785925200
+          },
+          {
+            "c": 361.64,
+            "t": 1785925260
+          },
+          {
+            "c": 361.53,
+            "t": 1785925320
+          },
+          {
+            "c": 361.475,
+            "t": 1785925380
+          },
+          {
+            "c": 361.65,
+            "t": 1785925440
+          },
+          {
+            "c": 361.595,
+            "t": 1785925500
+          },
+          {
+            "c": 361.29,
+            "t": 1785925560
+          },
+          {
+            "c": 361.76,
+            "t": 1785925620
+          },
+          {
+            "c": 361.715,
+            "t": 1785925680
+          },
+          {
+            "c": 361.31,
+            "t": 1785925740
+          },
+          {
+            "c": 361.37,
+            "t": 1785925800
+          },
+          {
+            "c": 361.452,
+            "t": 1785925860
+          },
+          {
+            "c": 361.48,
+            "t": 1785925920
+          },
+          {
+            "c": 361.395,
+            "t": 1785925980
+          },
+          {
+            "c": 361.265,
+            "t": 1785926040
+          },
+          {
+            "c": 361.17,
+            "t": 1785926100
+          },
+          {
+            "c": 360.68,
+            "t": 1785926160
+          },
+          {
+            "c": 360.985,
+            "t": 1785926220
+          },
+          {
+            "c": 361,
+            "t": 1785926280
+          },
+          {
+            "c": 360.81,
+            "t": 1785926340
+          },
+          {
+            "c": 360.815,
+            "t": 1785926400
+          },
+          {
+            "c": 360.49,
+            "t": 1785926460
+          },
+          {
+            "c": 360.78,
+            "t": 1785926520
+          },
+          {
+            "c": 360.55,
+            "t": 1785926580
+          },
+          {
+            "c": 360.67,
+            "t": 1785926640
+          },
+          {
+            "c": 360.91,
+            "t": 1785926700
+          },
+          {
+            "c": 361.85,
+            "t": 1785926760
+          },
+          {
+            "c": 361.53,
+            "t": 1785926820
+          },
+          {
+            "c": 361.45,
+            "t": 1785926880
+          },
+          {
+            "c": 361.74,
+            "t": 1785926940
+          },
+          {
+            "c": 361.477,
+            "t": 1785927000
+          },
+          {
+            "c": 361.41,
+            "t": 1785927060
+          },
+          {
+            "c": 361.11,
+            "t": 1785927120
+          },
+          {
+            "c": 360.96,
+            "t": 1785927180
+          },
+          {
+            "c": 360.96,
+            "t": 1785927240
+          },
+          {
+            "c": 360.88,
+            "t": 1785927300
+          },
+          {
+            "c": 360.95,
+            "t": 1785927360
+          },
+          {
+            "c": 361.02,
+            "t": 1785927420
+          },
+          {
+            "c": 360.58,
+            "t": 1785927480
+          },
+          {
+            "c": 360.74,
+            "t": 1785927540
+          },
+          {
+            "c": 360.88,
+            "t": 1785927600
+          },
+          {
+            "c": 360.92,
+            "t": 1785927660
+          },
+          {
+            "c": 360.93,
+            "t": 1785927720
+          },
+          {
+            "c": 361.08,
+            "t": 1785927780
+          },
+          {
+            "c": 361.205,
+            "t": 1785927840
+          },
+          {
+            "c": 361.15,
+            "t": 1785927900
+          },
+          {
+            "c": 361.01,
+            "t": 1785927960
+          },
+          {
+            "c": 361.05,
+            "t": 1785928020
+          },
+          {
+            "c": 360.9,
+            "t": 1785928080
+          },
+          {
+            "c": 361.25,
+            "t": 1785928140
+          },
+          {
+            "c": 361.22,
+            "t": 1785928200
+          },
+          {
+            "c": 361.095,
+            "t": 1785928260
+          },
+          {
+            "c": 360.74,
+            "t": 1785928320
+          },
+          {
+            "c": 360.52,
+            "t": 1785928380
+          },
+          {
+            "c": 360.57,
+            "t": 1785928440
+          },
+          {
+            "c": 360.36,
+            "t": 1785928500
+          },
+          {
+            "c": 360.425,
+            "t": 1785928560
+          },
+          {
+            "c": 359.84,
+            "t": 1785928620
+          },
+          {
+            "c": 359.58,
+            "t": 1785928680
+          },
+          {
+            "c": 359.98,
+            "t": 1785928740
+          },
+          {
+            "c": 360.08,
+            "t": 1785928800
+          },
+          {
+            "c": 360.32,
+            "t": 1785928860
+          },
+          {
+            "c": 360.26,
+            "t": 1785928920
+          },
+          {
+            "c": 360.117,
+            "t": 1785928980
+          },
+          {
+            "c": 360.04,
+            "t": 1785929040
+          },
+          {
+            "c": 359.77,
+            "t": 1785929100
+          },
+          {
+            "c": 359.99,
+            "t": 1785929160
+          },
+          {
+            "c": 360.2,
+            "t": 1785929220
+          },
+          {
+            "c": 359.995,
+            "t": 1785929280
+          },
+          {
+            "c": 359.935,
+            "t": 1785929340
+          },
+          {
+            "c": 360.09,
+            "t": 1785929400
+          },
+          {
+            "c": 359.975,
+            "t": 1785929460
+          },
+          {
+            "c": 359.73,
+            "t": 1785929520
+          },
+          {
+            "c": 359.74,
+            "t": 1785929580
+          },
+          {
+            "c": 359.82,
+            "t": 1785929640
+          },
+          {
+            "c": 359.645,
+            "t": 1785929700
+          },
+          {
+            "c": 359.515,
+            "t": 1785929760
+          },
+          {
+            "c": 359.47,
+            "t": 1785929820
+          },
+          {
+            "c": 359.37,
+            "t": 1785929880
+          },
+          {
+            "c": 359.58,
+            "t": 1785929940
+          },
+          {
+            "c": 359.535,
+            "t": 1785930000
+          },
+          {
+            "c": 359.43,
+            "t": 1785930060
+          },
+          {
+            "c": 359.68,
+            "t": 1785930120
+          },
+          {
+            "c": 359.595,
+            "t": 1785930180
+          },
+          {
+            "c": 359.785,
+            "t": 1785930240
+          },
+          {
+            "c": 359.745,
+            "t": 1785930300
+          },
+          {
+            "c": 359.71,
+            "t": 1785930360
+          },
+          {
+            "c": 359.71,
+            "t": 1785930420
+          },
+          {
+            "c": 359.91,
+            "t": 1785930480
+          },
+          {
+            "c": 359.71,
+            "t": 1785930540
+          },
+          {
+            "c": 359.45,
+            "t": 1785930600
+          },
+          {
+            "c": 359.45,
+            "t": 1785930660
+          },
+          {
+            "c": 359.545,
+            "t": 1785930720
+          },
+          {
+            "c": 359.582,
+            "t": 1785930780
+          },
+          {
+            "c": 359.485,
+            "t": 1785930840
+          },
+          {
+            "c": 359.47,
+            "t": 1785930900
+          },
+          {
+            "c": 359.45,
+            "t": 1785930960
+          },
+          {
+            "c": 359.39,
+            "t": 1785931020
+          },
+          {
+            "c": 359.51,
+            "t": 1785931080
+          },
+          {
+            "c": 359.41,
+            "t": 1785931140
+          },
+          {
+            "c": 359.43,
+            "t": 1785931200
+          },
+          {
+            "c": 359.605,
+            "t": 1785931260
+          },
+          {
+            "c": 359.76,
+            "t": 1785931320
+          },
+          {
+            "c": 359.8,
+            "t": 1785931380
+          },
+          {
+            "c": 359.85,
+            "t": 1785931440
+          },
+          {
+            "c": 359.87,
+            "t": 1785931500
+          },
+          {
+            "c": 359.65,
+            "t": 1785931560
+          },
+          {
+            "c": 359.89,
+            "t": 1785931620
+          },
+          {
+            "c": 359.48,
+            "t": 1785931680
+          },
+          {
+            "c": 359.88,
+            "t": 1785931740
+          },
+          {
+            "c": 359.73,
+            "t": 1785931800
+          },
+          {
+            "c": 359.96,
+            "t": 1785931860
+          },
+          {
+            "c": 359.88,
+            "t": 1785931920
+          },
+          {
+            "c": 359.685,
+            "t": 1785931980
+          },
+          {
+            "c": 359.735,
+            "t": 1785932040
+          },
+          {
+            "c": 359.7,
+            "t": 1785932100
+          },
+          {
+            "c": 360.055,
+            "t": 1785932160
+          },
+          {
+            "c": 359.825,
+            "t": 1785932220
+          },
+          {
+            "c": 359.62,
+            "t": 1785932280
+          },
+          {
+            "c": 359.69,
+            "t": 1785932340
+          },
+          {
+            "c": 359.85,
+            "t": 1785932400
+          },
+          {
+            "c": 359.97,
+            "t": 1785932460
+          },
+          {
+            "c": 360.06,
+            "t": 1785932520
+          },
+          {
+            "c": 360.08,
+            "t": 1785932580
+          },
+          {
+            "c": 359.65,
+            "t": 1785932640
+          },
+          {
+            "c": 359.81,
+            "t": 1785932700
+          },
+          {
+            "c": 359.761,
+            "t": 1785932760
+          },
+          {
+            "c": 359.88,
+            "t": 1785932820
+          },
+          {
+            "c": 360.01,
+            "t": 1785932880
+          },
+          {
+            "c": 360.025,
+            "t": 1785932940
+          },
+          {
+            "c": 360.24,
+            "t": 1785933000
+          },
+          {
+            "c": 360.33,
+            "t": 1785933060
+          },
+          {
+            "c": 360.405,
+            "t": 1785933120
+          },
+          {
+            "c": 360.27,
+            "t": 1785933180
+          },
+          {
+            "c": 360.41,
+            "t": 1785933240
+          },
+          {
+            "c": 360.225,
+            "t": 1785933300
+          },
+          {
+            "c": 360.26,
+            "t": 1785933360
+          },
+          {
+            "c": 360.305,
+            "t": 1785933420
+          },
+          {
+            "c": 360.34,
+            "t": 1785933480
+          },
+          {
+            "c": 360.12,
+            "t": 1785933540
+          },
+          {
+            "c": 360.33,
+            "t": 1785933600
+          },
+          {
+            "c": 360.3,
+            "t": 1785933660
+          },
+          {
+            "c": 360.125,
+            "t": 1785933720
+          },
+          {
+            "c": 360.21,
+            "t": 1785933780
+          },
+          {
+            "c": 360.4,
+            "t": 1785933840
+          },
+          {
+            "c": 360.33,
+            "t": 1785933900
+          },
+          {
+            "c": 360.37,
+            "t": 1785933960
+          },
+          {
+            "c": 360.405,
+            "t": 1785934020
+          },
+          {
+            "c": 360.365,
+            "t": 1785934080
+          },
+          {
+            "c": 360.355,
+            "t": 1785934140
+          },
+          {
+            "c": 360.3,
+            "t": 1785934200
+          },
+          {
+            "c": 360.24,
+            "t": 1785934260
+          },
+          {
+            "c": 360.26,
+            "t": 1785934320
+          },
+          {
+            "c": 360.41,
+            "t": 1785934380
+          },
+          {
+            "c": 360.43,
+            "t": 1785934440
+          },
+          {
+            "c": 360.3,
+            "t": 1785934500
+          },
+          {
+            "c": 360.36,
+            "t": 1785934560
+          },
+          {
+            "c": 360.54,
+            "t": 1785934620
+          },
+          {
+            "c": 360.51,
+            "t": 1785934680
+          },
+          {
+            "c": 360.5,
+            "t": 1785934740
+          },
+          {
+            "c": 360.375,
+            "t": 1785934800
+          },
+          {
+            "c": 360.371,
+            "t": 1785934860
+          },
+          {
+            "c": 360.43,
+            "t": 1785934920
+          },
+          {
+            "c": 360.405,
+            "t": 1785934980
+          },
+          {
+            "c": 360.18,
+            "t": 1785935040
+          },
+          {
+            "c": 360.35,
+            "t": 1785935100
+          },
+          {
+            "c": 360.27,
+            "t": 1785935160
+          },
+          {
+            "c": 360.22,
+            "t": 1785935220
+          },
+          {
+            "c": 360.255,
+            "t": 1785935280
+          },
+          {
+            "c": 360.485,
+            "t": 1785935340
+          },
+          {
+            "c": 360.42,
+            "t": 1785935400
+          },
+          {
+            "c": 360.44,
+            "t": 1785935460
+          },
+          {
+            "c": 360.515,
+            "t": 1785935520
+          },
+          {
+            "c": 360.48,
+            "t": 1785935580
+          },
+          {
+            "c": 360.28,
+            "t": 1785935640
+          },
+          {
+            "c": 360.32,
+            "t": 1785935700
+          },
+          {
+            "c": 360.1,
+            "t": 1785935760
+          },
+          {
+            "c": 360.21,
+            "t": 1785935820
+          },
+          {
+            "c": 360.18,
+            "t": 1785935880
+          },
+          {
+            "c": 360.17,
+            "t": 1785935940
+          },
+          {
+            "c": 360.2,
+            "t": 1785936000
+          },
+          {
+            "c": 360.235,
+            "t": 1785936060
+          },
+          {
+            "c": 360.155,
+            "t": 1785936120
+          },
+          {
+            "c": 360.09,
+            "t": 1785936180
+          },
+          {
+            "c": 360.14,
+            "t": 1785936240
+          },
+          {
+            "c": 360.19,
+            "t": 1785936300
+          },
+          {
+            "c": 360.32,
+            "t": 1785936360
+          },
+          {
+            "c": 360.28,
+            "t": 1785936420
+          },
+          {
+            "c": 360.19,
+            "t": 1785936480
+          },
+          {
+            "c": 360.125,
+            "t": 1785936540
+          },
+          {
+            "c": 360.03,
+            "t": 1785936600
+          },
+          {
+            "c": 360.045,
+            "t": 1785936660
+          },
+          {
+            "c": 360.17,
+            "t": 1785936720
+          },
+          {
+            "c": 360.26,
+            "t": 1785936780
+          },
+          {
+            "c": 360.35,
+            "t": 1785936840
+          },
+          {
+            "c": 360.63,
+            "t": 1785936900
+          },
+          {
+            "c": 360.64,
+            "t": 1785936960
+          },
+          {
+            "c": 360.87,
+            "t": 1785937020
+          },
+          {
+            "c": 360.84,
+            "t": 1785937080
+          },
+          {
+            "c": 361.2,
+            "t": 1785937140
+          },
+          {
+            "c": 361.06,
+            "t": 1785937200
+          },
+          {
+            "c": 361.125,
+            "t": 1785937260
+          },
+          {
+            "c": 361.14,
+            "t": 1785937320
+          },
+          {
+            "c": 361.21,
+            "t": 1785937380
+          },
+          {
+            "c": 361.215,
+            "t": 1785937440
+          },
+          {
+            "c": 361.13,
+            "t": 1785937500
+          },
+          {
+            "c": 361.02,
+            "t": 1785937560
+          },
+          {
+            "c": 361.09,
+            "t": 1785937620
+          },
+          {
+            "c": 361.25,
+            "t": 1785937680
+          },
+          {
+            "c": 361.295,
+            "t": 1785937740
+          },
+          {
+            "c": 361.28,
+            "t": 1785937800
+          },
+          {
+            "c": 361.26,
+            "t": 1785937860
+          },
+          {
+            "c": 361.26,
+            "t": 1785937920
+          },
+          {
+            "c": 361.18,
+            "t": 1785937980
+          },
+          {
+            "c": 361.24,
+            "t": 1785938040
+          },
+          {
+            "c": 361.27,
+            "t": 1785938100
+          },
+          {
+            "c": 361.37,
+            "t": 1785938160
+          },
+          {
+            "c": 361.26,
+            "t": 1785938220
+          },
+          {
+            "c": 360.96,
+            "t": 1785938280
+          },
+          {
+            "c": 360.95,
+            "t": 1785938340
+          },
+          {
+            "c": 360.86,
+            "t": 1785938400
+          },
+          {
+            "c": 360.75,
+            "t": 1785938460
+          },
+          {
+            "c": 360.72,
+            "t": 1785938520
+          },
+          {
+            "c": 360.9,
+            "t": 1785938580
+          },
+          {
+            "c": 360.96,
+            "t": 1785938640
+          },
+          {
+            "c": 361.02,
+            "t": 1785938700
+          },
+          {
+            "c": 360.97,
+            "t": 1785938760
+          },
+          {
+            "c": 361.002,
+            "t": 1785938820
+          },
+          {
+            "c": 360.88,
+            "t": 1785938880
+          },
+          {
+            "c": 360.944,
+            "t": 1785938940
+          },
+          {
+            "c": 360.85,
+            "t": 1785939000
+          },
+          {
+            "c": 360.97,
+            "t": 1785939060
+          },
+          {
+            "c": 360.98,
+            "t": 1785939120
+          },
+          {
+            "c": 360.88,
+            "t": 1785939180
+          },
+          {
+            "c": 360.6,
+            "t": 1785939240
+          },
+          {
+            "c": 360.75,
+            "t": 1785939300
+          },
+          {
+            "c": 360.78,
+            "t": 1785939360
+          },
+          {
+            "c": 360.83,
+            "t": 1785939420
+          },
+          {
+            "c": 360.88,
+            "t": 1785939480
+          },
+          {
+            "c": 360.78,
+            "t": 1785939540
+          },
+          {
+            "c": 360.72,
+            "t": 1785939600
+          },
+          {
+            "c": 360.61,
+            "t": 1785939660
+          },
+          {
+            "c": 360.545,
+            "t": 1785939720
+          },
+          {
+            "c": 360.62,
+            "t": 1785939780
+          },
+          {
+            "c": 360.65,
+            "t": 1785939840
+          },
+          {
+            "c": 360.7,
+            "t": 1785939900
+          },
+          {
+            "c": 360.72,
+            "t": 1785939960
+          },
+          {
+            "c": 360.53,
+            "t": 1785940020
+          },
+          {
+            "c": 360.45,
+            "t": 1785940080
+          },
+          {
+            "c": 360.36,
+            "t": 1785940140
+          },
+          {
+            "c": 360.5,
+            "t": 1785940200
+          },
+          {
+            "c": 360.23,
+            "t": 1785940260
+          },
+          {
+            "c": 360.34,
+            "t": 1785940320
+          },
+          {
+            "c": 360.405,
+            "t": 1785940380
+          },
+          {
+            "c": 360.345,
+            "t": 1785940440
+          },
+          {
+            "c": 360.495,
+            "t": 1785940500
+          },
+          {
+            "c": 360.58,
+            "t": 1785940560
+          },
+          {
+            "c": 360.415,
+            "t": 1785940620
+          },
+          {
+            "c": 360.445,
+            "t": 1785940680
+          },
+          {
+            "c": 360.33,
+            "t": 1785940740
+          },
+          {
+            "c": 360.465,
+            "t": 1785940800
+          },
+          {
+            "c": 360.335,
+            "t": 1785940860
+          },
+          {
+            "c": 360.47,
+            "t": 1785940920
+          },
+          {
+            "c": 360.52,
+            "t": 1785940980
+          },
+          {
+            "c": 360.49,
+            "t": 1785941040
+          },
+          {
+            "c": 360.64,
+            "t": 1785941100
+          },
+          {
+            "c": 360.76,
+            "t": 1785941160
+          },
+          {
+            "c": 360.69,
+            "t": 1785941220
+          },
+          {
+            "c": 360.72,
+            "t": 1785941280
+          },
+          {
+            "c": 360.79,
+            "t": 1785941340
+          },
+          {
+            "c": 360.675,
+            "t": 1785941400
+          },
+          {
+            "c": 360.61,
+            "t": 1785941460
+          },
+          {
+            "c": 360.6,
+            "t": 1785941520
+          },
+          {
+            "c": 360.32,
+            "t": 1785941580
+          },
+          {
+            "c": 360.475,
+            "t": 1785941640
+          },
+          {
+            "c": 360.46,
+            "t": 1785941700
+          },
+          {
+            "c": 360.4,
+            "t": 1785941760
+          },
+          {
+            "c": 360.35,
+            "t": 1785941820
+          },
+          {
+            "c": 360.335,
+            "t": 1785941880
+          },
+          {
+            "c": 360.175,
+            "t": 1785941940
+          },
+          {
+            "c": 360.115,
+            "t": 1785942000
+          },
+          {
+            "c": 360.2,
+            "t": 1785942060
+          },
+          {
+            "c": 360.225,
+            "t": 1785942120
+          },
+          {
+            "c": 360.36,
+            "t": 1785942180
+          },
+          {
+            "c": 360.26,
+            "t": 1785942240
+          },
+          {
+            "c": 360.223,
+            "t": 1785942300
+          },
+          {
+            "c": 360.11,
+            "t": 1785942360
+          },
+          {
+            "c": 360.2,
+            "t": 1785942420
+          },
+          {
+            "c": 360.25,
+            "t": 1785942480
+          },
+          {
+            "c": 360.21,
+            "t": 1785942540
+          },
+          {
+            "c": 360.14,
+            "t": 1785942600
+          },
+          {
+            "c": 360.075,
+            "t": 1785942660
+          },
+          {
+            "c": 360,
+            "t": 1785942720
+          },
+          {
+            "c": 360.09,
+            "t": 1785942780
+          },
+          {
+            "c": 360.005,
+            "t": 1785942840
+          },
+          {
+            "c": 359.91,
+            "t": 1785942900
+          },
+          {
+            "c": 359.97,
+            "t": 1785942960
+          },
+          {
+            "c": 359.84,
+            "t": 1785943020
+          },
+          {
+            "c": 359.85,
+            "t": 1785943080
+          },
+          {
+            "c": 359.67,
+            "t": 1785943140
+          },
+          {
+            "c": 359.825,
+            "t": 1785943200
+          },
+          {
+            "c": 359.765,
+            "t": 1785943260
+          },
+          {
+            "c": 359.66,
+            "t": 1785943320
+          },
+          {
+            "c": 359.558,
+            "t": 1785943380
+          },
+          {
+            "c": 359.776,
+            "t": 1785943440
+          },
+          {
+            "c": 359.81,
+            "t": 1785943500
+          },
+          {
+            "c": 359.76,
+            "t": 1785943560
+          },
+          {
+            "c": 359.78,
+            "t": 1785943620
+          },
+          {
+            "c": 359.78,
+            "t": 1785943680
+          },
+          {
+            "c": 359.85,
+            "t": 1785943740
+          },
+          {
+            "c": 359.81,
+            "t": 1785943800
+          },
+          {
+            "c": 359.78,
+            "t": 1785943860
+          },
+          {
+            "c": 359.83,
+            "t": 1785943920
+          },
+          {
+            "c": 359.83,
+            "t": 1785943980
+          },
+          {
+            "c": 360.08,
+            "t": 1785944040
+          },
+          {
+            "c": 360.035,
+            "t": 1785944100
+          },
+          {
+            "c": 360.05,
+            "t": 1785944160
+          },
+          {
+            "c": 360.02,
+            "t": 1785944220
+          },
+          {
+            "c": 360.14,
+            "t": 1785944280
+          },
+          {
+            "c": 360.26,
+            "t": 1785944340
+          },
+          {
+            "c": 360.305,
+            "t": 1785944400
+          },
+          {
+            "c": 360.27,
+            "t": 1785944460
+          },
+          {
+            "c": 360.377,
+            "t": 1785944520
+          },
+          {
+            "c": 360.37,
+            "t": 1785944580
+          },
+          {
+            "c": 360.055,
+            "t": 1785944640
+          },
+          {
+            "c": 360.1,
+            "t": 1785944700
+          },
+          {
+            "c": 359.975,
+            "t": 1785944760
+          },
+          {
+            "c": 360.03,
+            "t": 1785944820
+          },
+          {
+            "c": 360.02,
+            "t": 1785944880
+          },
+          {
+            "c": 360.18,
+            "t": 1785944940
+          },
+          {
+            "c": 360.165,
+            "t": 1785945000
+          },
+          {
+            "c": 360.15,
+            "t": 1785945060
+          },
+          {
+            "c": 360.11,
+            "t": 1785945120
+          },
+          {
+            "c": 360.08,
+            "t": 1785945180
+          },
+          {
+            "c": 360.01,
+            "t": 1785945240
+          },
+          {
+            "c": 359.64,
+            "t": 1785945300
+          },
+          {
+            "c": 359.69,
+            "t": 1785945360
+          },
+          {
+            "c": 359.855,
+            "t": 1785945420
+          },
+          {
+            "c": 359.64,
+            "t": 1785945480
+          },
+          {
+            "c": 359.18,
+            "t": 1785945540
+          },
+          {
+            "c": 359.24,
+            "t": 1785945600
+          }
+        ]
+      },
+      "changes": {
+        "price1w": 344.71,
+        "price1m": 334.47,
+        "price3m": 307.65,
+        "price6m": 317.27,
+        "priceYTD": 322.22,
+        "price1y": 294.26,
+        "price5y": 151.24,
+        "priceMAX": 9.556
+      },
+      "source": "polygon"
+    },
+    "history": [
+      {
+        "t": "2026-08-03",
+        "o": 353.75,
+        "h": 363,
+        "l": 350.84,
+        "c": 359.24,
+        "a": 359.24,
+        "v": 19894058,
+        "ch": 2.12
+      },
+      {
+        "t": "2026-07-01",
+        "o": 328.365,
+        "h": 359.3,
+        "l": 325.01,
+        "c": 351.79,
+        "a": 351.79,
+        "v": 205116577,
+        "ch": 7.96
+      },
+      {
+        "t": "2026-06-01",
+        "o": 297.69,
+        "h": 343.449,
+        "l": 295.27,
+        "c": 327.33,
+        "a": 325.862021,
+        "v": 205970203,
+        "ch": 9.36
+      },
+      {
+        "t": "2026-05-01",
+        "o": 313.95,
+        "h": 316.3,
+        "l": 293.67,
+        "c": 299.31,
+        "a": 297.967682,
+        "v": 171077408,
+        "ch": -4.44
+      },
+      {
+        "t": "2026-04-01",
+        "o": 295.39,
+        "h": 320.235,
+        "l": 288.72,
+        "c": 313.23,
+        "a": 311.825255,
+        "v": 172933401,
+        "ch": 7.03
+      },
+      {
+        "t": "2026-03-02",
+        "o": 294.81,
+        "h": 302.39,
+        "l": 279.1,
+        "c": 294.16,
+        "a": 291.349736,
+        "v": 244149902,
+        "ch": -2.04
+      },
+      {
+        "t": "2026-02-02",
+        "o": 304.46,
+        "h": 326.4,
+        "l": 291.38,
+        "c": 300.3,
+        "a": 297.431077,
+        "v": 203073086,
+        "ch": -1.83
+      },
+      {
+        "t": "2026-01-02",
+        "o": 322.5,
+        "h": 337.25,
+        "l": 296.51,
+        "c": 305.89,
+        "a": 302.967673,
+        "v": 243474092,
+        "ch": -4.64
+      },
+      {
+        "t": "2025-12-01",
+        "o": 312.95,
+        "h": 330.86,
+        "l": 298.46,
+        "c": 322.22,
+        "a": 317.708565,
+        "v": 211615701,
+        "ch": 2.92
+      },
+      {
+        "t": "2025-11-03",
+        "o": 311,
+        "h": 322.25,
+        "l": 292.81,
+        "c": 313.08,
+        "a": 308.696535,
+        "v": 150219069,
+        "ch": 0.63
+      },
+      {
+        "t": "2025-10-01",
+        "o": 313.97,
+        "h": 314.59,
+        "l": 290.545,
+        "c": 311.12,
+        "a": 306.763977,
+        "v": 189429731,
+        "ch": -0.89
+      }
+    ],
+    "quote": {
+      "p": 359.24,
+      "pd": 359.24,
+      "c": 1.72,
+      "cp": 0.48,
+      "cl": 357.52,
+      "cdr": 1,
+      "o": 358.97,
+      "h": 362.17,
+      "l": 358.2,
+      "v": 5253066,
+      "ts": 1785960000000,
+      "u": "Aug 5, 2026, 4:00 PM EDT",
+      "td": "2026-08-05",
+      "h52": 363,
+      "l52": 279.1,
+      "ex": "NYSE",
+      "ms": "closed",
+      "fms": "post",
+      "e": true,
+      "ep": 360.3613,
+      "epd": 360.36,
+      "ec": 1.12,
+      "ecp": 0.31,
+      "eu": "Aug 5, 2026, 6:15 PM EDT",
+      "es": "After-hours",
+      "ets": 1785968126269.3076,
+      "etd": "2026-08-05",
+      "epv": null,
+      "days": 0,
+      "exp": 1785969131267,
+      "symbol": "JPM",
+      "uid": "JPM"
+    }
+  }
+}

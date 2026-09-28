@@ -1,7 +1,7 @@
 # Update Manifest — single writer for shared derived/public projections
 #
 # Source workflows commit only their owned acquisition artifacts. This workflow
-# rebuilds shared market/ETF/edge/RIM/KPI projections from committed source data,
+# rebuilds shared market/ETF/edge/KPI projections from committed source data,
 # then publishes one conflict-free generated-data commit.
 #
 # Infinite loop prevention:
@@ -19,13 +19,17 @@ on:
     branches: [main]
     paths:
       # BEGIN GENERATED lane-commit-manifest trigger_paths
+      - '100x/data/metadata/**'
+      - 'alpha-scout/data/metadata/**'
       - 'data/**'
+      - '!data/metadata/**'
       - '!data/yf/**'
       - '!data/admin/yahoo-batch-quote-history/**'
       - '!data/manifest.json'
       - '!data/computed/**'
       - '!data/admin/data-usage-manifest.json'
       - '!data/admin/product-surface-coverage.json'
+      - '!data/admin/data-supply-detection-floor.json'
       - '!data/admin/fenok-data-health-kpi.json'
       - '!data/admin/damodaran-shadow-parity.json'
       - '!data/admin/sec-13f-shadow-parity.json'
@@ -40,11 +44,43 @@ on:
       - '!data/admin/lane-registry-projection.json'
       - '!data/admin/lane-commit-manifest.json'
       - '!data/admin/alarm-state.json'
+      - '!data/macro/fred-macro.json'
+      - '!data/macro/tga.json'
+      - '!data/macro/stablecoins.json'
+      - '!data/macro/fred-banking-daily.json'
+      - '!data/macro/fred-banking-weekly.json'
+      - '!data/macro/fred-banking-monthly.json'
+      - '!data/macro/fred-banking-quarterly.json'
+      - '!data/macro/fdic-tier1.json'
+      - '!data/sentiment/README.md'
+      - '!data/sentiment/cftc-sp500.json'
+      - '!data/sentiment/cnn-breadth.json'
+      - '!data/sentiment/cnn-components.json'
+      - '!data/sentiment/cnn-fear-greed.json'
+      - '!data/sentiment/cnn-junk-bond.json'
+      - '!data/sentiment/cnn-momentum.json'
+      - '!data/sentiment/cnn-put-call.json'
+      - '!data/sentiment/cnn-safe-haven.json'
+      - '!data/sentiment/cnn-strength.json'
+      - '!data/sentiment/crypto-fear-greed.json'
+      - '!data/sentiment/move.json'
+      - '!data/sentiment/schema.json'
+      - '!data/sentiment/vix.json'
+      - '!data/sentiment/**'
+      - '!data/admin/fred_macro/**'
+      - '!data/admin/treasury_tga/**'
+      - '!data/admin/defillama_stablecoins/**'
+      - '!data/admin/fred_banking/**'
+      - '!data/admin/fdic_tier1/**'
+      - '!data/admin/sentiment/**'
       - '!data/stockanalysis/**'
+      - '!data/earnings-overview/**'
+      - '!data/admin/earnings_overview/**'
       - '!data/slickcharts/discovery-summary.json'
       - '!data/slickcharts/membership-changes.json'
       - '!data/slickcharts/universe.json'
       - 'scripts/update-manifest.py'
+      - 'scripts/materialize-site-metadata.mjs'
       - 'scripts/export-computed-signals.mjs'
       - 'scripts/build-phase2-closeout-indexes.mjs'
       - 'scripts/build-fenok-signals.mjs'
@@ -56,12 +92,11 @@ on:
       - 'scripts/write-fenok-etf-daily1y-readiness.mjs'
       - 'scripts/audit-fenok-stock-promotion-candidates.mjs'
       - 'scripts/stock-action-score-core.mjs'
-      - 'scripts/build-rim-index.mjs'
-      - 'scripts/test-build-rim-index.mjs'
       - 'scripts/fetch-nasdaq-giw-sox-constituents.mjs'
       - 'scripts/generate-product-surface-coverage.mjs'
       - 'scripts/build-fenok-data-health-kpi.mjs'
       - 'scripts/lib/market-calendar.mjs'
+      - '100xfenok-next/src/lib/market-calendar.mjs'
       - 'scripts/lib/kpi-runtime-projection.mjs'
       - 'scripts/lib/kpi-runtime-slots.mjs'
       - 'scripts/lib/kpi-contract-constants.mjs'
@@ -74,32 +109,18 @@ on:
     - cron: '30 9 * * *'
   workflow_dispatch:
     inputs:
-      # KPI v2 authoritative-dispatch envelope (contract §3). Populated by the
-      # edge/krx daily workflows when they dispatch this reconciliation.
-      source_workflow:
-        description: 'Origin workflow file that dispatched this run (allowlist)'
+      etf_cloud_generation:
+        description: 'True only when a natural StockAnalysis ETF plane generation was published; enables the verified cloud overlay for this projection run'
         required: false
-        default: ''
-      source_run_id:
-        description: 'Origin workflow run id'
-        required: false
-        default: ''
-      source_run_attempt:
-        description: 'Origin workflow run attempt'
-        required: false
-        default: ''
-      original_event:
-        description: 'Origin trigger event (schedule for authoritative)'
-        required: false
-        default: ''
-      slot_key:
-        description: 'Origin canonical slot_key (§2)'
-        required: false
-        default: ''
+        default: 'false'
+      # Legacy compatibility input, intentionally IGNORED by the rebuild policy
+      # below: legacy callers still pass -f rebuild_slickcharts=true and the
+      # supplied value must never gate the rebuild. Every workflow_dispatch
+      # rebuilds current SlickCharts membership regardless of this value.
       rebuild_slickcharts:
-        description: 'Rebuild SlickCharts membership, discovery, and public mirror from committed canonical data'
+        description: 'Legacy compatibility flag (ignored): every workflow_dispatch rebuilds SlickCharts membership unconditionally'
         required: false
-        default: false
+        default: true
         type: boolean
 
 concurrency:
@@ -110,16 +131,7 @@ concurrency:
 jobs:
   update-manifest:
     runs-on: ubuntu-latest
-    # KPI v2 builder reads GITHUB_* defaults plus this origin envelope from env.
-    # KPI_EVENT_SCHEDULE = the exact cron that triggered a scheduled run, so slot
-    # inference uses the run's OWN cron (never latest-across-crons).
-    env:
-      KPI_EVENT_SCHEDULE: ${{ github.event.schedule || '' }}
-      KPI_ORIGIN_SOURCE_WORKFLOW: ${{ github.event.inputs.source_workflow || '' }}
-      KPI_ORIGIN_SOURCE_RUN_ID: ${{ github.event.inputs.source_run_id || '' }}
-      KPI_ORIGIN_SOURCE_RUN_ATTEMPT: ${{ github.event.inputs.source_run_attempt || '' }}
-      KPI_ORIGIN_ORIGINAL_EVENT: ${{ github.event.inputs.original_event || '' }}
-      KPI_ORIGIN_SLOT_KEY: ${{ github.event.inputs.slot_key || '' }}
+    timeout-minutes: 60
     permissions:
       contents: write  # Required for git push (manifest.json update)
       actions: write   # Required to dispatch Worker deploy after bot-authored commits
@@ -140,138 +152,67 @@ jobs:
         with:
           python-version: '3.11'
 
-      - name: Rebuild and verify SlickCharts canonical source
+      - name: Materialize verified stockanalysis ETF cloud generation once
+        if: ${{ github.event.inputs.etf_cloud_generation == 'true' }}
         env:
-          REBUILD_SLICKCHARTS: ${{ github.event_name == 'push' || github.event_name == 'schedule' || github.event.inputs.rebuild_slickcharts == 'true' }}
-        run: |
-          if [ "$REBUILD_SLICKCHARTS" = "true" ]; then
-            python scripts/scrapers/membership-tracker.py --quiet
-            node scripts/build-slickcharts-discovery.mjs
-          fi
-          python3 scripts/validate-slickcharts-integrity.py --skip-public
-
-      - name: Build shared market and stock promotion state
-        run: |
-          python3 scripts/rebuild-yf-finance-summary.py
-          python3 scripts/build-market-facts.py --no-public-mirror
-          python3 scripts/build-market-source-parity.py
-          python3 scripts/audit-market-data.py --output data/computed/market_data_audit.json --mirror-public
-          node scripts/write-fenok-s1-stock-public-promotion-dry-run.mjs --check
-
-      - name: Project manifest-owned public mirrors
-        run: |
-          node scripts/materialize-update-manifest-routes.mjs --all
-          python3 scripts/validate-slickcharts-integrity.py
-          diff -qr data/slickcharts 100xfenok-next/public/data/slickcharts
-
-      - name: Export computed signals
-        run: node scripts/export-computed-signals.mjs
-
-      - name: Build phase2 closeout indexes
-        run: node scripts/build-phase2-closeout-indexes.mjs
-
-      - name: Build Fenok stock signals
-        run: node scripts/build-fenok-signals.mjs
-
-      - name: Build RIM and ETF projections
-        run: |
-          node scripts/build-rim-index.mjs
-          node scripts/build-fenok-etf-signals.mjs
-          npm --prefix 100xfenok-next run build:history-gap-daily1y
-          node scripts/build-fenok-etf-action-index.mjs
-          node scripts/build-fenok-etf-core-daily-basket.mjs --check
-
-      - name: Build Fenok edge projections
-        run: |
-          node scripts/build-fenok-edge-coverage-index.mjs
-          node scripts/audit-fenok-s0-source-gaps.mjs --check --write-ledger
-          node scripts/write-fenok-etf-daily1y-readiness.mjs --check
-          npm --prefix 100xfenok-next run build:fenok-etf-daily1y-dispatch-plan
-
-      - name: Run update-manifest.py
-        # Exit code 1 = warnings only (orphan files / missing folders)
-        # These are non-fatal — the manifest update still proceeds
-        # BEFORE_SHA: covers ALL commits in the push (not just HEAD~1)
-        # Scheduled/manual runs infer the last manifest refresh commit.
-        env:
-          BEFORE_SHA: ${{ github.event_name == 'push' && github.event.before || 'AUTO' }}
-        run: |
-          set +e
-          python3 scripts/update-manifest.py
-          status=$?
-          if [ "$status" -eq 1 ]; then
-            exit 0
-          fi
-          exit "$status"
-
-      - name: Rebuild RIM index inputs after manifest refresh
-        run: |
-          node scripts/build-rim-index.mjs
-          npm --prefix 100xfenok-next run build:data-entity-graph
-
-      - name: Build product surface coverage
-        run: node scripts/generate-product-surface-coverage.mjs
-
-      - name: Sync static overrides
-        run: (cd 100xfenok-next && node sync-static-overrides.mjs)
-
-      - name: Build data supply detection floor
+          # Read-only materialization through the existing plane bridge; the
+          # materializer never mutates the plane. Credentials are bound to this
+          # step only and never printed.
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: aeeb5ea3affe55a2219d08ea02dad9e1
+          DATA_PLANE_ENDPOINT: https://100xfenok.etloveaui.workers.dev/internal/cloud-data-plane
+          DATA_PLANE_WRITE_KEY: ${{ secrets.DATA_PLANE_WRITE_KEY }}
         run: |
           set -euo pipefail
+          if [ -z "${CLOUDFLARE_API_TOKEN:-}" ] || [ -z "${CLOUDFLARE_ACCOUNT_ID:-}" ] \
+            || [ -z "${DATA_PLANE_ENDPOINT:-}" ] || [ -z "${DATA_PLANE_WRITE_KEY:-}" ]; then
+            echo "::error::ETF cloud overlay materialization requires plane read credentials; failing closed" >&2
+            exit 2
+          fi
+          OVERLAY_ROOT="$RUNNER_TEMP/stockanalysis-etf-detail-overlay"
+          if [ -e "$OVERLAY_ROOT" ]; then
+            echo "::error::ETF overlay output root must not pre-exist: $OVERLAY_ROOT" >&2
+            exit 2
+          fi
+          MATERIALIZE_LOG="$RUNNER_TEMP/stockanalysis-etf-detail-materialize.out"
+          node scripts/materialize-cloud-data-plane-family.mjs \
+            --family stockanalysis-etf-detail \
+            --manifest-prefix data/stockanalysis/etfs/ \
+            --output-root "$OVERLAY_ROOT" | tee "$MATERIALIZE_LOG"
+          RECEIPT="$RUNNER_TEMP/stockanalysis-etf-detail-verified-receipt.json"
+          python3 - "$MATERIALIZE_LOG" "$RECEIPT" <<'PYEOF'
+          import json
+          import sys
 
-          repo_root="$(pwd -P)"
-          shard_root="$repo_root/data/admin/data-supply-state/detection-attempts"
-          output_root="$(mktemp -d "/tmp/fenok-data-supply-detection-floor-${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}-XXXXXX")"
-          report_path="$output_root/data-supply-detection-floor.json"
-          installed_path="$repo_root/data/admin/data-supply-detection-floor.json"
-          trap 'rm -rf "$output_root"' EXIT
+          log_path, receipt_path = sys.argv[1], sys.argv[2]
+          lines = [line.strip() for line in open(log_path, encoding="utf-8") if line.strip()]
+          if len(lines) != 1:
+              raise SystemExit("materializer must emit exactly one JSON receipt object on stdout")
+          try:
+              candidate = json.loads(lines[0])
+          except ValueError as error:
+              raise SystemExit(f"materializer receipt is not JSON: {error}") from error
+          if not isinstance(candidate, dict):
+              raise SystemExit("materializer receipt must be a JSON object")
+          with open(receipt_path, "w", encoding="utf-8") as handle:
+              json.dump(candidate, handle)
+          PYEOF
+          {
+            echo "ETF_DETAIL_OVERLAY_ROOT=$OVERLAY_ROOT"
+            echo "ETF_DETAIL_OVERLAY_RECEIPT=$RECEIPT"
+          } >> "$GITHUB_ENV"
 
-          mkdir -p "$shard_root"
-          chmod 0700 "$output_root"
-          now="$(node -e 'process.stdout.write(new Date().toISOString())')"
-
-          node scripts/build-data-supply-detection-floor.mjs \
-            --artifact-root "$repo_root" \
-            --attempt-shard-root "$shard_root" \
-            --calendars "$repo_root/scripts/lib/data-supply-detection-calendars.json" \
-            --now "$now" \
-            --output-root "$output_root"
-          node scripts/build-data-supply-detection-floor.mjs --verify-report "$report_path"
-
-          install -m 0644 "$report_path" "$installed_path"
-          cmp -s "$report_path" "$installed_path"
-          node scripts/build-data-supply-detection-floor.mjs --verify-report "$installed_path"
-
-      - name: Build data health KPI
-        run: |
-          npm --prefix 100xfenok-next run build:fenok-data-health-kpi
-          npm --prefix 100xfenok-next run build:lane-registry-projection
-          node 100xfenok-next/scripts/check-fenok-public-mirror-guard.mjs
-          node scripts/test-build-fenok-data-health-kpi.mjs
-          node scripts/test-update-manifest-workflow.mjs
-          node scripts/test-update-manifest-central-staging.mjs
-          node 100xfenok-next/scripts/check-fenok-data-health-kpi.mjs --strict --context=reconcile
-          npm --prefix 100xfenok-next run build:static-route-manifest
-
-      - name: Check if manifest changed
-        id: check
-        run: |
-          set +e
-          node scripts/stage-update-manifest-central.mjs --check
-          status=$?
-          set -e
-          case "$status" in
-            0) echo "changed=true" >> "$GITHUB_OUTPUT" ;;
-            3) echo "changed=false" >> "$GITHUB_OUTPUT" ;;
-            *) exit "$status" ;;
-          esac
-
-      - name: Commit and push manifest (with rebase retry)
+      - name: Rebuild, commit and push manifest (with retry)
         id: commit
-        if: steps.check.outputs.changed == 'true'
         env:
           BEFORE_SHA: ${{ github.event_name == 'push' && github.event.before || 'AUTO' }}
-          REBUILD_SLICKCHARTS: ${{ github.event_name == 'push' || github.event_name == 'schedule' || github.event.inputs.rebuild_slickcharts == 'true' }}
+          REBUILD_SLICKCHARTS: ${{ github.event_name == 'push' || github.event_name == 'schedule' || github.event_name == 'workflow_dispatch' }}
+          VALIDATE_SLICKCHARTS_SKIP_PUBLIC: 'false'
+          RESET_ETF_SNAPSHOTS: 'true'
+          CLOUDFLARE_API_TOKEN: ${{ github.event.inputs.etf_cloud_generation == 'true' && secrets.CLOUDFLARE_API_TOKEN || '' }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ github.event.inputs.etf_cloud_generation == 'true' && 'aeeb5ea3affe55a2219d08ea02dad9e1' || '' }}
+          DATA_PLANE_ENDPOINT: ${{ github.event.inputs.etf_cloud_generation == 'true' && 'https://100xfenok.etloveaui.workers.dev/internal/cloud-data-plane' || '' }}
+          DATA_PLANE_WRITE_KEY: ${{ github.event.inputs.etf_cloud_generation == 'true' && secrets.DATA_PLANE_WRITE_KEY || '' }}
         run: |
           git config user.name  "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
@@ -279,81 +220,10 @@ jobs:
           for attempt in 1 2 3; do
             git fetch origin main
             git reset --hard origin/main
-            node scripts/test-update-manifest-materializations.mjs
-            node scripts/test-update-manifest-central-staging.mjs
             node scripts/stage-update-manifest-central.mjs --clean-untracked-after-reset
             node scripts/stage-update-manifest-central.mjs --assert-clean-after-reset
             node scripts/materialize-update-manifest-routes.mjs --all --validate-only --assert-no-untracked
-
-            if [ "$REBUILD_SLICKCHARTS" = "true" ]; then
-              python scripts/scrapers/membership-tracker.py --quiet
-              node scripts/build-slickcharts-discovery.mjs
-            fi
-            python3 scripts/validate-slickcharts-integrity.py --skip-public
-
-            python3 scripts/rebuild-yf-finance-summary.py
-            python3 scripts/build-market-facts.py --no-public-mirror
-            python3 scripts/build-market-source-parity.py
-            python3 scripts/audit-market-data.py --output data/computed/market_data_audit.json --mirror-public
-            node scripts/write-fenok-s1-stock-public-promotion-dry-run.mjs --check
-            node scripts/materialize-update-manifest-routes.mjs --all
-            python3 scripts/validate-slickcharts-integrity.py
-            diff -qr data/slickcharts 100xfenok-next/public/data/slickcharts
-            node scripts/export-computed-signals.mjs
-            node scripts/build-phase2-closeout-indexes.mjs
-            node scripts/build-fenok-signals.mjs
-            node scripts/build-rim-index.mjs
-            node scripts/build-fenok-etf-signals.mjs
-            npm --prefix 100xfenok-next run build:history-gap-daily1y
-            node scripts/build-fenok-etf-action-index.mjs
-            node scripts/build-fenok-etf-core-daily-basket.mjs --check
-            node scripts/build-fenok-edge-coverage-index.mjs
-            node scripts/audit-fenok-s0-source-gaps.mjs --check --write-ledger
-            node scripts/write-fenok-etf-daily1y-readiness.mjs --check
-            npm --prefix 100xfenok-next run build:fenok-etf-daily1y-dispatch-plan
-
-            status=0
-            BEFORE_SHA="${BEFORE_SHA}" python3 scripts/update-manifest.py || status=$?
-            if [ "$status" -ne 0 ] && [ "$status" -ne 1 ]; then
-              echo "update-manifest.py exited with $status on attempt $attempt"
-              exit "$status"
-            fi
-            node scripts/build-rim-index.mjs
-            npm --prefix 100xfenok-next run build:data-entity-graph
-            node scripts/generate-product-surface-coverage.mjs
-            (cd 100xfenok-next && node sync-static-overrides.mjs)
-            (
-              set -euo pipefail
-
-              repo_root="$(pwd -P)"
-              shard_root="$repo_root/data/admin/data-supply-state/detection-attempts"
-              output_root="$(mktemp -d "/tmp/fenok-data-supply-detection-floor-${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}-XXXXXX")"
-              report_path="$output_root/data-supply-detection-floor.json"
-              installed_path="$repo_root/data/admin/data-supply-detection-floor.json"
-              trap 'rm -rf "$output_root"' EXIT
-
-              mkdir -p "$shard_root"
-              chmod 0700 "$output_root"
-              now="$(node -e 'process.stdout.write(new Date().toISOString())')"
-
-              node scripts/build-data-supply-detection-floor.mjs \
-                --artifact-root "$repo_root" \
-                --attempt-shard-root "$shard_root" \
-                --calendars "$repo_root/scripts/lib/data-supply-detection-calendars.json" \
-                --now "$now" \
-                --output-root "$output_root"
-              node scripts/build-data-supply-detection-floor.mjs --verify-report "$report_path"
-
-              install -m 0644 "$report_path" "$installed_path"
-              cmp -s "$report_path" "$installed_path"
-              node scripts/build-data-supply-detection-floor.mjs --verify-report "$installed_path"
-            )
-            npm --prefix 100xfenok-next run build:fenok-data-health-kpi
-            npm --prefix 100xfenok-next run build:lane-registry-projection
-            node 100xfenok-next/scripts/check-fenok-public-mirror-guard.mjs
-            node scripts/test-build-fenok-data-health-kpi.mjs
-            node 100xfenok-next/scripts/check-fenok-data-health-kpi.mjs --strict --context=reconcile
-            npm --prefix 100xfenok-next run build:static-route-manifest
+            bash scripts/update-manifest-projections.sh
 
             set +e
             node scripts/stage-update-manifest-central.mjs --check
@@ -383,31 +253,42 @@ jobs:
           echo "All 3 attempts failed"
           exit 1
 
-      - name: No changes needed
-        if: steps.check.outputs.changed == 'false'
-        run: echo "manifest.json already up to date — nothing to commit"
-
-      - name: Read publication gate after reconcile
-        id: publication
+      - name: Check deploy dispatch gate (recovery in flight, duplicate pending deploy)
+        id: recovery-gate
+        if: steps.commit.outputs.pushed == 'true'
+        env:
+          GH_TOKEN: ${{ github.token }}
         run: |
-          node <<'NODE'
-          const fs = require("node:fs");
-          const doc = JSON.parse(fs.readFileSync("data/admin/fenok-data-health-kpi.json", "utf8"));
-          const gate = doc?.runtime?.publication_gate;
-          if (!gate || typeof gate.publication_halted !== "boolean") {
-            throw new Error("KPI runtime.publication_gate.publication_halted is missing or invalid");
-          }
-          fs.appendFileSync(process.env.GITHUB_OUTPUT, `halted=${gate.publication_halted}\n`);
-          console.log(`Publication dispatch gate: ${gate.status_message}`);
-          NODE
-
-      - name: Skip Worker deploy while publication is halted
-        if: steps.publication.outputs.halted == 'true'
-        run: |
-          node -e 'const doc=require("./data/admin/fenok-data-health-kpi.json"); console.log(`Worker deploy skipped: Publication halted: ${doc.runtime.publication_gate.blocking_unrecovered_missed_slot_keys.join(", ")}`)'
+          set -euo pipefail
+          pushed_sha="$(git rev-parse HEAD)"
+          guard="$(node scripts/check-recovery-deploy-gate.mjs \
+            --mode dispatch \
+            --pushed-sha "$pushed_sha" \
+            --recovery-workflows slickcharts-history.yml)"
+          case "$guard" in
+            skip)
+              echo "skip=true" >> "$GITHUB_OUTPUT"
+              echo "::notice::SlickCharts recovery-family workflow nonterminal; deploy dispatch deferred to the recovery-completion requeue or the daily schedule."
+              ;;
+            skip-duplicate)
+              echo "skip=true" >> "$GITHUB_OUTPUT"
+              echo "::notice::A deploy run for main is already pre-start at ${pushed_sha}; it checks out at start and therefore carries this commit. Dispatching again would only supersede and cancel it."
+              ;;
+            proceed-uncertain)
+              echo "skip=false" >> "$GITHUB_OUTPUT"
+              echo "::warning::Recovery dispatch gate uncertain (provider query unreadable); dispatching with strict KPI as the fail-close backstop."
+              ;;
+            proceed)
+              echo "skip=false" >> "$GITHUB_OUTPUT"
+              ;;
+            *)
+              echo "::error::Unexpected recovery dispatch gate output: $guard"
+              exit 1
+              ;;
+          esac
 
       - name: Dispatch Worker deploy for generated-data commit
-        if: steps.commit.outputs.pushed == 'true' && steps.publication.outputs.halted == 'false'
+        if: ${{ steps.commit.outputs.pushed == 'true' && steps.recovery-gate.outputs.skip != 'true' }}
         env:
           GH_TOKEN: ${{ github.token }}
         run: |

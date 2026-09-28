@@ -123,15 +123,15 @@ Boundary:
 - `metadata_endpoint`: `https://api.finra.org/metadata/group/otcMarket/name/weeklySummary`
 - `historic_endpoint`: `https://api.finra.org/data/group/otcMarket/name/weeklySummaryHistoric`
 - `access_type`: `free_public_credential_or_public_endpoint_observed`
-- `terms_status`: `approved_for_public_reference_needs_owner_review_for_api_integration`
+- `terms_status`: `owner_approved_for_admin_only_api_integration_2026_07_24`
 - `redistribution_policy`: `derived_only_raw_admin_only`
 - `cadence`: weekly
 - `lag`: FINRA specification states Tier 1 NMS has a two-week delay and Tier 2/OTC has a four-week delay
-- `rate_limit`: published platform limits exist; exact local account policy remains owner-review gated
+- `rate_limit`: synchronous Query API hard-capped locally at 100 requests per run; FINRA platform limits remain an outer bound
 - `raw_public`: false
 - `public_derived_path`: future delayed ATS/OTC proxy
 - `fallback`: existing 13F/YF institutional proxy only
-- `verification_status`: API sample and metadata sample verified on 2026-06-28
+- `verification_status`: metadata, unauthenticated bounded POST batch filter, tier delays, and current OAuth contract re-measured on 2026-07-24; live secret OAuth remains dispatch-gated
 - `evidence`: https://www.finra.org/filing-reporting/otc-transparency
 - `api_spec_evidence`: https://www.finra.org/sites/default/files/OTC-Transparency-Data-File-Download-API-v04.pdf
 - `rate_limit_evidence`: https://developer.finra.org/docs
@@ -154,7 +154,9 @@ Boundary:
 - Use as delayed ATS/OTC activity proxy only.
 - Do not label as real-time dark-pool prints.
 - Raw venue/MPID rows stay admin-only unless terms are explicitly cleared.
-- API integration remains gated on FINRA credential/TOS review.
+- API integration is owner-cleared for this admin-only lane by work order
+  `fh-20260724-081-cc-d01b63ea`; credential failures fail closed and never
+  downgrade automatically to public access.
 
 ### FINRA ATS Block Data
 
@@ -183,7 +185,8 @@ Boundary:
 
 Before any collector is added:
 
-1. Owner accepts or updates `terms_status=needs_owner_review`.
+1. Owner accepts or updates `terms_status=needs_owner_review`. Completed for
+   weeklySummary only by `fh-20260724-081-cc-d01b63ea` on 2026-07-24.
 2. Raw storage path is admin-only.
 3. Public artifact contains only derived proxy scores.
 4. Rate-limit and retry policy are encoded in the collector contract.

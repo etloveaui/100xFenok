@@ -14,6 +14,7 @@ import {
 export const START_MARKER = "      # BEGIN GENERATED lane-commit-manifest trigger_paths";
 export const END_MARKER = "      # END GENERATED lane-commit-manifest trigger_paths";
 const DEFAULT_WORKFLOW = path.join(REPO_ROOT, ".github/workflows/update-manifest.yml");
+const RIM_TRIGGER_PATH_PATTERN = /(?:^|[\/._:-])rim(?:$|[\/._:-])/i;
 
 function fail(message) {
   throw new Error(`update-manifest trigger paths: ${message}`);
@@ -21,6 +22,17 @@ function fail(message) {
 
 function yamlSingleQuote(value) {
   return `'${value.replaceAll("'", "''")}'`;
+}
+
+export function projectUpdateManifestTriggerPaths(triggerPaths) {
+  if (!Array.isArray(triggerPaths) || triggerPaths.length === 0) fail("trigger_paths must be non-empty");
+  const projected = [...triggerPaths];
+  const forbidden = projected.find((entry) => typeof entry === "string" && RIM_TRIGGER_PATH_PATTERN.test(entry));
+  if (forbidden) fail(`RIM path token is forbidden in trigger_paths: ${forbidden}`);
+  if (projected.some((entry) => entry === "data/computed/**")) {
+    fail("generic data/computed/** must remain excluded from update-manifest triggers");
+  }
+  return projected;
 }
 
 export function renderTriggerPathsBlock(triggerPaths) {
@@ -70,14 +82,15 @@ export function syncUpdateManifestTriggerPaths({ check = false, workflowPath = D
     fail("manifest trigger_paths are stale");
   }
   const workflowText = fs.readFileSync(workflowPath, "utf8");
-  const renderedBlock = renderTriggerPathsBlock(manifest.update_manifest.trigger_paths);
+  const triggerPaths = projectUpdateManifestTriggerPaths(manifest.update_manifest.trigger_paths);
+  const renderedBlock = renderTriggerPathsBlock(triggerPaths);
   const updated = replaceTriggerPathsBlock(workflowText, renderedBlock);
   if (check) {
     if (updated !== workflowText) fail("generated trigger_paths block is stale");
-    return { changed: false, count: manifest.update_manifest.trigger_paths.length };
+    return { changed: false, count: triggerPaths.length };
   }
   if (updated !== workflowText) fs.writeFileSync(workflowPath, updated);
-  return { changed: updated !== workflowText, count: manifest.update_manifest.trigger_paths.length };
+  return { changed: updated !== workflowText, count: triggerPaths.length };
 }
 
 function main() {

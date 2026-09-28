@@ -1,0 +1,102 @@
+{
+  "attempts": [
+    {
+      "attempts_used": 1,
+      "event_name": "schedule",
+      "failures": [],
+      "latency_ms": 574,
+      "natural": true,
+      "observed_at": "2026-07-24T23:12:06Z",
+      "outcome": "fresh",
+      "run_attempt": 1,
+      "run_id": "30132647097",
+      "schedule": "0 22 * * 5",
+      "shard": "5/6"
+    },
+    {
+      "attempts_used": 1,
+      "event_name": "schedule",
+      "failures": [],
+      "latency_ms": 774,
+      "natural": true,
+      "observed_at": "2026-08-07T00:55:33Z",
+      "outcome": "fresh",
+      "run_attempt": 1,
+      "run_id": "31136222210",
+      "schedule": "7 20 * * 0-5",
+      "shard": "70/72"
+    },
+    {
+      "attempts_used": 1,
+      "event_name": "schedule",
+      "failures": [],
+      "latency_ms": 1212,
+      "natural": true,
+      "observed_at": "2026-08-09T10:51:07Z",
+      "outcome": "fresh",
+      "run_attempt": 1,
+      "run_id": "31309259913",
+      "schedule": "7 10 * * 0-5",
+      "shard": "5/72"
+    }
+  ],
+  "current": {
+    "fetched_at": "2026-08-09T10:53:49Z",
+    "history_as_of": "2026-08-07",
+    "path": "data/admin/yahoo-batch-quote-history/lkg/BULZ.json",
+    "payload_sha256": "fda212e2e021ad0893e17493e870283d01f4e30698fc16ba0cebecb36ba4d914",
+    "quote_as_of": "2026-08-07T20:00:00Z",
+    "source_as_of": "2026-08-07"
+  },
+  "discovered_from": [
+    "stockanalysis_etf"
+  ],
+  "last_attempt": {
+    "attempts_used": 1,
+    "event_name": "schedule",
+    "failures": [],
+    "latency_ms": 1212,
+    "natural": true,
+    "observed_at": "2026-08-09T10:51:07Z",
+    "outcome": "fresh",
+    "run_attempt": 1,
+    "run_id": "31309259913",
+    "schedule": "7 10 * * 0-5",
+    "shard": "5/72"
+  },
+  "lkg": {
+    "fetched_at": "2026-08-09T10:53:49Z",
+    "history_as_of": "2026-08-07",
+    "path": "data/admin/yahoo-batch-quote-history/lkg/BULZ.json",
+    "payload_sha256": "fda212e2e021ad0893e17493e870283d01f4e30698fc16ba0cebecb36ba4d914",
+    "quote_as_of": "2026-08-07T20:00:00Z",
+    "source_as_of": "2026-08-07"
+  },
+  "promotion_contract": "provider_observation/v2",
+  "provider_observation": {
+    "event_name": "schedule",
+    "history_as_of": "2026-08-07",
+    "observed_at": "2026-08-09T10:51:07Z",
+    "payload_sha256": "ff36c30b83a1de59645f87cb0c46eb005df74b8f43b1ebb3e16e9ed99a735e22",
+    "quote_as_of": "2026-08-07T20:00:00Z",
+    "run_attempt": 1,
+    "run_id": "31309259913",
+    "schema_version": "provider_observation/v2",
+    "source_as_of": "2026-08-07"
+  },
+  "resolution_state": "lkg_primary",
+  "retry": true,
+  "schema_version": "yahoo-batch-quote-history-state/v1",
+  "stale": {
+    "age_business_days": 8,
+    "classified_at": "2026-08-19T23:42:29Z",
+    "classified_run_id": "32314261503",
+    "expected_resolution": "next_natural_yahoo_run",
+    "max_business_days": 6,
+    "message": "BULZ holds LKG because Yahoo source date 2026-08-07 is 8 business days old, beyond the 6-day bound; it will retry on the next natural Yahoo run.",
+    "reason": "source_age_exceeds_lane_bound",
+    "source_as_of": "2026-08-07"
+  },
+  "ticker": "BULZ",
+  "updated_at": "2026-08-19T23:42:29Z"
+}

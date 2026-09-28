@@ -6,7 +6,6 @@ import path from "node:path";
 import { fileURLToPath } from "node:url";
 
 import { DATA_SUPPLY_DETECTION_CONFIG } from "./lib/data-supply-detection-config.mjs";
-import { validateAttemptEvidence, validateAttemptShard } from "./build-data-supply-detection-floor.mjs";
 import {
   buildFenoYardeniPayload,
   parseFredObservations,
@@ -178,16 +177,7 @@ function makeRunPaths(root) {
   });
   assert.equal(result.ok, true);
   assert.deepEqual(fs.readFileSync(paths.publicOutputPath), fs.readFileSync(paths.publicMirrorPath));
-  const shard = JSON.parse(fs.readFileSync(paths.attemptShardPath, "utf8"));
-  assert.equal(validateAttemptShard(shard, "fred_yardeni"), true);
-  assert.equal(validateAttemptEvidence({
-    schema_version: "data-supply-detection-attempts/v1",
-    attempts: shard.attempts,
-  }), true);
-  assert.equal(shard.lane_id, "fred_yardeni");
-  assert.equal(shard.attempts.length, 1);
-  const row = shard.attempts[0];
-  assert.equal(row.member_id, null);
+  const row = result.attempt;
   assert.equal(row.http_status, 200);
   assert.equal(row.auth, "ok");
   assert.deepEqual(expectedAssertionIds("fred_yardeni"), ["observations_array"]);
@@ -219,21 +209,146 @@ function makeRunPaths(root) {
   assert.equal(result.reason, "rate_limited");
   assert.equal(fs.readFileSync(paths.publicOutputPath, "utf8"), lkg);
   assert.equal(fs.readFileSync(paths.publicMirrorPath, "utf8"), lkg);
-  const shard = JSON.parse(fs.readFileSync(paths.attemptShardPath, "utf8"));
-  assert.equal(validateAttemptShard(shard, "fred_yardeni"), true);
-  assert.equal(validateAttemptEvidence({
-    schema_version: "data-supply-detection-attempts/v1",
-    attempts: shard.attempts,
-  }), true);
-  const row = shard.attempts[0];
+  const row = result.attempt;
   assert.equal(row.http_status, 429);
   assert.equal(row.rate_limited, true);
 }
 
+// Natural request/build failures preserve a bounded, sanitized explanation on
+// the runner result only.
+{
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), "fetch-fred-yardeni-diagnostic-test-"));
+  const paths = makeRunPaths(root);
+  const transport = new Error("FRED socket reset Bearer secret-token https://fred.example/path?api_key=private");
+  transport.code = "ECONNRESET";
+  const result = await runFenoYardeni({
+    ...paths,
+    seedPayload,
+    privateSeedPayload: null,
+    benchmarkPayload,
+    apiKey: "test-key",
+    request: async () => { throw transport; },
+    observedAt: "2026-07-14T12:34:56.000Z",
+    attemptId: "fred-yardeni-diagnostic-request",
+  });
+  assert.equal(result.reason, "transport_error");
+  assert.match(result.failure_detail ?? "", /FRED socket reset/, "natural request failure retains a diagnostic detail");
+  assert.ok(result.failure_detail.length <= 320, "diagnostic detail stays bounded");
+  assert.equal(result.failure_detail.includes("secret-token"), false, "diagnostic detail redacts bearer credentials");
+  assert.equal(result.failure_detail.includes("api_key=private"), false, "diagnostic detail redacts URL query values");
+  assert.equal(Object.hasOwn(result.attempt, "failure_detail"), false, "request tuple stays bounded");
+
+  const buildResult = await runFenoYardeni({
+    ...paths,
+    seedPayload,
+    privateSeedPayload: null,
+    benchmarkPayload: {},
+    apiKey: "test-key",
+    request: async (_url, seriesId) => response(200, {
+      observations: fredSeries[seriesId].map((row) => ({ date: row.date, value: String(row.value) })),
+    }),
+    observedAt: "2026-07-14T12:35:56.000Z",
+    attemptId: "fred-yardeni-diagnostic-build",
+  });
+  assert.equal(buildResult.reason, "unexpected_error");
+  assert.match(buildResult.failure_detail ?? "", /sections\.sp500\.data\[\] is required/, "natural build failure retains a diagnostic detail");
+  assert.ok(buildResult.failure_detail.length <= 320, "build diagnostic detail stays bounded");
+
+  const missingKey = await runFenoYardeni({
+    ...paths,
+    seedPayload,
+    privateSeedPayload: null,
+    benchmarkPayload,
+    apiKey: "",
+    request: async () => { throw new Error("missing FRED key must not request"); },
+    observedAt: "2026-07-14T12:36:56.000Z",
+    attemptId: "fred-yardeni-diagnostic-missing-key",
+  });
+  assert.equal(missingKey.reason, "unexpected_error");
+  assert.match(missingKey.failure_detail ?? "", /FRED_API_KEY is required/, "missing FRED credentials retain a safe static detail");
+  assert.ok(missingKey.failure_detail.length <= 320, "static diagnostic detail stays bounded");
+}
+
 {
   const workflow = fs.readFileSync(path.join(REPO_ROOT, ".github", "workflows", "fetch-fred-yardeni.yml"), "utf8");
-  assert.match(workflow, /detection-attempts\/fred_yardeni\.json/);
+  const manifest = JSON.parse(fs.readFileSync(
+    path.join(REPO_ROOT, "data", "admin", "lane-commit-manifest.json"),
+    "utf8",
+  ));
+  const workflowLanes = manifest.workflows[".github/workflows/fetch-fred-yardeni.yml"];
+  const canonicalSpec = workflowLanes?.stages?.success_if_exists
+    ?.find((spec) => spec.path === "data/yardney/yardney_model.json");
+  assert.equal(
+    canonicalSpec?.required,
+    true,
+    "successful Feno Yardeni fetch must require the canonical payload",
+  );
   assert.match(workflow, /- name: Commit and push Feno Yardeni data\n\s+if: \$\{\{ always\(\) \}\}/);
+
+  // Durable checkout contract for the R2.4 public mirror guard: the Yardeni
+  // sparse cone must pair the canonical data/computed tree (which activates
+  // the guard's projection comparison) with the exact matching public
+  // projection path. Dropping either side makes "Validate public payload"
+  // fail with "public R2.4 enrollment: missing" / "public R2.4 index: missing"
+  // in CI even though a full local checkout passes the guard.
+  function parseSparseCone(yaml) {
+    const lines = yaml.split("\n");
+    const marker = lines.findIndex((line) => /^\s*sparse-checkout:\s*\|\s*$/.test(line));
+    assert.ok(marker !== -1, "fetch-fred-yardeni.yml must declare a sparse-checkout block");
+    const markerIndent = lines[marker].match(/^\s*/)[0].length;
+    const firstContentLine = lines.slice(marker + 1).find((line) => line.trim());
+    assert.ok(firstContentLine, "fetch-fred-yardeni.yml sparse-checkout block must not be empty");
+    const scalarIndent = firstContentLine.match(/^\s*/)[0].length;
+    assert.ok(scalarIndent > markerIndent, "fetch-fred-yardeni.yml sparse-checkout content must be indented");
+    const cone = [];
+    for (const line of lines.slice(marker + 1)) {
+      if (!line.trim()) continue;
+      if (line.match(/^\s*/)[0].length < scalarIndent) break;
+      cone.push(line.slice(scalarIndent).trimEnd());
+    }
+    return cone;
+  }
+
+  const publicProjection = "100xfenok-next/public/data/computed/data-supply/etf-detail";
+  function assertSparseConeContract(cone) {
+    for (const requiredPath of [
+      "data/computed",
+      publicProjection,
+      "100xfenok-next/scripts",
+    ]) {
+      assert.equal(
+        cone.filter((entry) => entry === requiredPath).length,
+        1,
+        `Yardeni sparse cone must include ${requiredPath} exactly once so the R2.4 public mirror guard sees both projection sides`,
+      );
+    }
+
+    const publicDataRoot = "100xfenok-next/public/data";
+    const publicDataEntries = cone.filter(
+      (entry) => entry === publicDataRoot
+        || entry.startsWith(`${publicDataRoot}/`)
+        || publicDataRoot.startsWith(`${entry}/`),
+    );
+    assert.deepEqual(
+      publicDataEntries,
+      [publicProjection],
+      `Yardeni sparse cone must expose only the exact public projection ${publicProjection}`,
+    );
+  }
+
+  const cone = parseSparseCone(workflow);
+  assertSparseConeContract(cone);
+  assert.deepEqual(
+    parseSparseCone("steps:\n  sparse-checkout: |\n    data/computed\n  - uses: unnamed/action@v1\n    path: unrelated"),
+    ["data/computed"],
+    "sparse cone parsing must stop before an unnamed step at the scalar indentation boundary",
+  );
+  assert.throws(() => assertSparseConeContract([...cone, publicProjection]), /exactly once/);
+  assert.throws(() => assertSparseConeContract([...cone, "100xfenok-next/public/data"]), /only the exact public projection/);
+  assert.throws(
+    () => assertSparseConeContract([...cone, "100xfenok-next/public/data/unrelated"]),
+    /only the exact public projection/,
+  );
 }
 
 console.log("build-feno-yardeni-model tests passed");

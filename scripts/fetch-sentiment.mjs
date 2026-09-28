@@ -6,10 +6,11 @@
  * dashboard sentiment series frozen because there was NO fetch cron. Pulls the
  * same free sources and MERGES-BY-DATE into the existing arrays — today's date
  * is updated in place if present, otherwise appended and the array re-sorted.
- * History is NEVER overwritten.
+ * Each file retains the latest 10,000 distinct provider dates; older dates are
+ * evicted deterministically without truncating the existing long-range charts.
  *
- * Targets (array of { date, ... } objects, written to BOTH the repo-root SSOT
- * `data/sentiment/` and the Next.js build mirror `100xfenok-next/public/data/sentiment/`):
+ * Targets (array of { date, ... } objects, written to the repo-root SSOT
+ * `data/sentiment/`; the public mirror is boundary-owned (#377 slice 2)):
  *   - cnn-fear-greed.json   {date, score}                (CNN proxy)
  *   - cnn-components.json    {date, market_momentum,...}  (CNN proxy, 7 components)
  *   - cnn-put-call.json      {date, value, rating}        (CNN proxy put/call data tail)
@@ -40,18 +41,9 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
-import {
-  atomicWrite,
-  buildAttemptRow,
-  buildSingleLaneShard,
-  classifyHttpResponse,
-  evaluateEndpointAssertions,
-  foldWorstTuples,
-  threwTuple,
-  transportError,
-  tupleStatus,
-  writeJsonAtomic,
-} from './lib/data-supply-attempt-shard.mjs';
+import { atomicWrite, writeJsonAtomic } from "./lib/atomic-file.mjs";
+import { classifyHttpResponse, evaluateEndpointAssertions, foldWorstTuples, returnedTuple, threwTuple, transportError, tupleStatus } from "./lib/provider-fetch-result.mjs";
+import { buildAttemptRow } from "./lib/provider-fetch-result.mjs";
 import {
   LaneLkgStore,
   PROMOTION_CONTRACT_PROVIDER_OBSERVATION_V2,
@@ -63,14 +55,8 @@ import {
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const REPO_ROOT = path.resolve(__dirname, '..');
 
-// Canonical SSOT + the build-consumed mirror. The Next.js app serves
-// `/data/sentiment/*` from public/data (see useDashboardData.ts / data-loader.ts),
-// while data/sentiment/ is the source of truth the GAS scripts historically
-// wrote. fetch-fred-banking.yml established the dual-write pattern; we follow it.
-const DEFAULT_OUTPUT_DIRS = [
-  path.join(REPO_ROOT, 'data', 'sentiment'),
-  path.join(REPO_ROOT, '100xfenok-next', 'public', 'data', 'sentiment'),
-];
+// Canonical SSOT; the public mirror is boundary-owned (#377 slice 2).
+const DEFAULT_OUTPUT_DIR = path.join(REPO_ROOT, 'data', 'sentiment');
 
 export const SENTIMENT_LKG_SOURCE_FILES = Object.freeze({
   cnn: Object.freeze([
@@ -86,9 +72,18 @@ export const SENTIMENT_LKG_SOURCE_FILES = Object.freeze({
   cftc: Object.freeze(['cftc-sp500.json']),
   vix: Object.freeze(['vix.json']),
   move: Object.freeze(['move.json']),
+  crypto: Object.freeze(['crypto-fear-greed.json']),
 });
 export const SENTIMENT_LKG_SOURCE_KEYS = Object.freeze(Object.keys(SENTIMENT_LKG_SOURCE_FILES));
-const SENTIMENT_BUNDLE_SCHEMA = 'sentiment-source-bundle/v1';
+export const SENTIMENT_MAX_DISTINCT_SOURCE_DATES = 10_000;
+export const SENTIMENT_PERSISTENCE_POLICY = Object.freeze({
+  schema_version: 'sentiment-bounded-persistence/v1',
+  basis: 'distinct_source_date_per_file',
+  max_distinct_source_dates_per_file: SENTIMENT_MAX_DISTINCT_SOURCE_DATES,
+  eviction: 'oldest_source_date_first',
+});
+const SENTIMENT_BUNDLE_SCHEMA = 'sentiment-source-bundle/v2';
+const SENTIMENT_SOURCE_OBSERVATION_SCHEMA = 'sentiment-source-observation/v1';
 
 const CNN_PROXY_URL = 'https://fed-proxy.etloveaui.workers.dev/cnn';
 const CRYPTO_FNG_URL = 'https://api.alternative.me/fng/?limit=1';
@@ -174,11 +169,11 @@ function providerDate(value, label) {
 }
 
 /**
- * Read the existing array from the FIRST output dir (the SSOT). Both mirrors
- * are kept identical, so the SSOT copy is authoritative for the merge base.
+ * Read the existing array from the canonical output directory, which is
+ * authoritative for the merge base.
  */
-function readExisting(fileName, outputDirs = DEFAULT_OUTPUT_DIRS) {
-  const ssotPath = path.join(outputDirs[0], fileName);
+function readExisting(fileName, outputDir = DEFAULT_OUTPUT_DIR) {
+  const ssotPath = path.join(outputDir, fileName);
   try {
     const parsed = JSON.parse(fs.readFileSync(ssotPath, 'utf-8'));
     return Array.isArray(parsed) ? parsed : [];
@@ -208,11 +203,90 @@ function mergeByDate(existing, entry) {
   return { array: arr, action, before, after: arr.length };
 }
 
-function writeAll(fileName, array, outputDirs = DEFAULT_OUTPUT_DIRS) {
+export function retainLatestDistinctSourceDates(
+  rows,
+  maxDistinctDates = SENTIMENT_MAX_DISTINCT_SOURCE_DATES,
+) {
+  if (!Array.isArray(rows)) throw new Error('sentiment persistence rows must be an array');
+  if (!Number.isInteger(maxDistinctDates) || maxDistinctDates < 1) {
+    throw new Error('sentiment persistence bound must be a positive integer');
+  }
+  for (const row of rows) {
+    const parsedDate = row && typeof row === 'object' && /^\d{4}-\d{2}-\d{2}$/.test(row.date)
+      ? new Date(`${row.date}T00:00:00.000Z`)
+      : new Date(Number.NaN);
+    if (!Number.isFinite(parsedDate.getTime()) || parsedDate.toISOString().slice(0, 10) !== row.date) {
+      throw new Error('sentiment persistence requires a valid source date on every row');
+    }
+  }
+  if (new Set(rows.map((row) => row.date)).size !== rows.length) {
+    throw new Error('sentiment persistence requires unique source dates per file');
+  }
+  const availableDates = [...new Set(rows.map((row) => row.date))].sort();
+  const retainedDates = availableDates.slice(-maxDistinctDates);
+  const retainedDateSet = new Set(retainedDates);
+  const retainedRows = rows.filter((row) => retainedDateSet.has(row.date));
+  return {
+    rows: retainedRows,
+    persistence_state: {
+      available_distinct_source_dates: availableDates.length,
+      retained_distinct_source_dates: retainedDates.length,
+      pruned_distinct_source_dates: availableDates.length - retainedDates.length,
+      retained_rows: retainedRows.length,
+    },
+  };
+}
+
+function applyBoundedPersistence(results) {
+  return results.map((result) => {
+    const retained = retainLatestDistinctSourceDates(result.array);
+    return {
+      ...result,
+      array: retained.rows,
+      after: retained.rows.length,
+      persistence_state: retained.persistence_state,
+    };
+  });
+}
+
+function writeAll(fileName, array, outputDir = DEFAULT_OUTPUT_DIR) {
   const json = JSON.stringify(array, null, 2) + '\n';
-  for (const dir of outputDirs) {
-    fs.mkdirSync(dir, { recursive: true });
-    atomicWrite(path.join(dir, fileName), json);
+  fs.mkdirSync(outputDir, { recursive: true });
+  atomicWrite(path.join(outputDir, fileName), json);
+}
+
+function snapshotFiles(filePaths) {
+  return [...new Set(filePaths)].map((filePath) => ({
+    filePath,
+    bytes: fs.existsSync(filePath) ? fs.readFileSync(filePath) : null,
+  }));
+}
+
+function restoreFiles(snapshots) {
+  for (const { filePath, bytes } of snapshots) {
+    if (bytes === null) {
+      fs.rmSync(filePath, { force: true });
+      continue;
+    }
+    fs.mkdirSync(path.dirname(filePath), { recursive: true });
+    atomicWrite(filePath, bytes);
+  }
+}
+
+function withFileRollback(filePaths, action) {
+  const snapshots = snapshotFiles(filePaths);
+  try {
+    return action();
+  } catch (error) {
+    try {
+      restoreFiles(snapshots);
+    } catch (rollbackError) {
+      throw new AggregateError(
+        [error, rollbackError],
+        `sentiment publication rollback failed: ${rollbackError.message}`,
+      );
+    }
+    throw error;
   }
 }
 
@@ -404,6 +478,21 @@ async function runCftc(readExistingFn = readExisting) {
   return [{ file: 'cftc-sp500.json', array: r.array, ...r, sample: entry, providerRows: [entry] }];
 }
 
+export function cryptoSourceStamp(value) {
+  const timestamp = Number(value);
+  const parsed = timestamp > 0 ? new Date(timestamp * 1000) : new Date(Number.NaN);
+  if (!Number.isFinite(parsed.getTime())) {
+    return {
+      source_as_of: null,
+      source_as_of_reason: 'alternative.me data[0].timestamp is missing or invalid',
+    };
+  }
+  return {
+    source_as_of: parsed.toISOString().slice(0, 10),
+    source_as_of_reason: null,
+  };
+}
+
 async function runCrypto(readExistingFn = readExisting) {
   const data = await fetchJson(CRYPTO_FNG_URL);
   const row = Array.isArray(data?.data) ? data.data[0] : null;
@@ -412,12 +501,21 @@ async function runCrypto(readExistingFn = readExisting) {
   }
   // Use the source's own timestamp date (UTC) so the point lands on the day the
   // index was actually computed, matching the existing crypto-fear-greed.json.
-  const ts = Number(row.timestamp);
-  const srcDate = Number.isFinite(ts)
-    ? new Date(ts * 1000).toISOString().slice(0, 10)
-    : today;
+  const stamp = cryptoSourceStamp(row.timestamp);
+  if (stamp.source_as_of === null) {
+    recordSentimentAttemptTuple(returnedTuple({
+      httpStatus: 200,
+      decode: 'ok',
+      payload: 'non_empty',
+      assertions: [{ id: 'series_array', passed: false }],
+    }));
+    throw Object.assign(new Error(stamp.source_as_of_reason), {
+      sourceAsOf: null,
+      sourceAsOfReason: stamp.source_as_of_reason,
+    });
+  }
   const entry = {
-    date: srcDate,
+    date: stamp.source_as_of,
     value: Number(row.value),
     classification: String(row.value_classification ?? ''),
   };
@@ -468,6 +566,13 @@ function buildSourceBundle(key, fileNames, results) {
     schema_version: SENTIMENT_BUNDLE_SCHEMA,
     source_key: key,
     source_as_of: sourceAsOf,
+    persistence_policy: SENTIMENT_PERSISTENCE_POLICY,
+    persistence_state: {
+      files: Object.fromEntries(fileNames.map((fileName) => {
+        const result = results.find((item) => item.file === fileName);
+        return [fileName, result?.persistence_state ?? null];
+      })),
+    },
     files,
   };
 }
@@ -477,12 +582,23 @@ function buildProviderBundle(key, fileNames, results) {
   if (byFile.size !== fileNames.length || fileNames.some((fileName) => !validSeriesArray(byFile.get(fileName)))) {
     throw new Error(`${key}: incomplete or invalid current-run provider observation`);
   }
-  const files = Object.fromEntries(fileNames.map((fileName) => [fileName, byFile.get(fileName)]));
+  const retainedByFile = Object.fromEntries(fileNames.map((fileName) => [
+    fileName,
+    retainLatestDistinctSourceDates(byFile.get(fileName)),
+  ]));
+  const files = Object.fromEntries(fileNames.map((fileName) => [fileName, retainedByFile[fileName].rows]));
   const sourceAsOf = sourceAsOfFromFiles(files);
   return {
     schema_version: SENTIMENT_BUNDLE_SCHEMA,
     source_key: key,
     source_as_of: sourceAsOf,
+    persistence_policy: SENTIMENT_PERSISTENCE_POLICY,
+    persistence_state: {
+      files: Object.fromEntries(fileNames.map((fileName) => [
+        fileName,
+        retainedByFile[fileName].persistence_state,
+      ])),
+    },
     files,
   };
 }
@@ -500,9 +616,25 @@ function sourceBundleContainsObservation(candidateDocument, providerDocument) {
 function validSourceBundle(key, fileNames, document) {
   if (document?.schema_version !== SENTIMENT_BUNDLE_SCHEMA || document?.source_key !== key
     || !document.files || typeof document.files !== 'object' || Array.isArray(document.files)) return false;
+  if (JSON.stringify(document.persistence_policy) !== JSON.stringify(SENTIMENT_PERSISTENCE_POLICY)
+    || !document.persistence_state?.files
+    || typeof document.persistence_state.files !== 'object'
+    || Array.isArray(document.persistence_state.files)) return false;
   const actualNames = Object.keys(document.files);
   if (actualNames.length !== fileNames.length || fileNames.some((fileName) => !validSeriesArray(document.files[fileName]))) {
     return false;
+  }
+  for (const fileName of fileNames) {
+    const rows = document.files[fileName];
+    const state = document.persistence_state.files[fileName];
+    const distinctDates = new Set(rows.map((row) => row.date)).size;
+    if (!state || rows.length !== distinctDates || rows.length > SENTIMENT_MAX_DISTINCT_SOURCE_DATES
+      || state.retained_distinct_source_dates !== distinctDates
+      || state.retained_rows !== rows.length
+      || !Number.isInteger(state.available_distinct_source_dates)
+      || !Number.isInteger(state.pruned_distinct_source_dates)
+      || state.available_distinct_source_dates
+        !== state.retained_distinct_source_dates + state.pruned_distinct_source_dates) return false;
   }
   return sourceAsOfFromFiles(document.files) === document.source_as_of;
 }
@@ -540,7 +672,7 @@ function defaultSources() {
     { key: 'cftc', label: 'CFTC COT', fileNames: SENTIMENT_LKG_SOURCE_FILES.cftc, lkg: true, run: runCftc },
     { key: 'vix', label: 'VIX (Yahoo)', fileNames: SENTIMENT_LKG_SOURCE_FILES.vix, lkg: true, run: runVix },
     { key: 'move', label: 'MOVE (Yahoo)', fileNames: SENTIMENT_LKG_SOURCE_FILES.move, lkg: true, run: runMove },
-    { key: 'crypto', label: 'Crypto (alternative.me)', fileNames: ['crypto-fear-greed.json'], lkg: false, run: runCrypto },
+    { key: 'crypto', label: 'Crypto (alternative.me)', fileNames: SENTIMENT_LKG_SOURCE_FILES.crypto, lkg: true, run: runCrypto },
   ];
 }
 
@@ -550,6 +682,26 @@ function currentBundlePath(repoRoot, key) {
 
 function currentBundleRelativePath(key) {
   return `data/admin/sentiment/current/${key}.json`;
+}
+
+function writeCryptoSourceObservation(repoRoot, { sourceAsOf, sourceAsOfReason, run }) {
+  writeJsonAtomic(
+    path.join(repoRoot, 'data', 'admin', 'sentiment', 'source-observations', 'crypto.json'),
+    {
+      schema_version: SENTIMENT_SOURCE_OBSERVATION_SCHEMA,
+      source_key: 'crypto',
+      source_as_of: sourceAsOf,
+      source_as_of_reason: sourceAsOfReason,
+      observed_at: run.observedAt,
+      run_id: run.runId,
+      run_attempt: Number(run.runAttempt),
+      event_name: run.eventName,
+    },
+  );
+}
+
+function cryptoSourceObservationPath(repoRoot) {
+  return path.join(repoRoot, 'data', 'admin', 'sentiment', 'source-observations', 'crypto.json');
 }
 
 function bundleArtifact(repoRoot, source) {
@@ -583,17 +735,37 @@ function bundleCandidate(source, bundle, serialized, providerBundle, providerSer
   };
 }
 
-function publishSourceResults(results, outputDirs) {
-  for (const result of results) writeAll(result.file, result.array, outputDirs);
+function publishSourceResults(results, outputDir) {
+  for (const result of results) writeAll(result.file, result.array, outputDir);
 }
 
-function bootstrapCurrentBundle(repoRoot, source, outputDirs) {
-  const files = Object.fromEntries(source.fileNames.map((fileName) => [fileName, readExisting(fileName, outputDirs)]));
+function sourcePublicationPaths({ repoRoot, outputDir, source, results, lkgStore }) {
+  const paths = results.map((result) => path.join(outputDir, result.file));
+  if (source.lkg === true) {
+    paths.push(currentBundlePath(repoRoot, source.key), lkgStore.statePath);
+  }
+  if (source.key === 'crypto') paths.push(cryptoSourceObservationPath(repoRoot));
+  return paths;
+}
+
+function bootstrapCurrentBundle(repoRoot, source, outputDir) {
+  const retainedByFile = Object.fromEntries(source.fileNames.map((fileName) => [
+    fileName,
+    retainLatestDistinctSourceDates(readExisting(fileName, outputDir)),
+  ]));
+  const files = Object.fromEntries(source.fileNames.map((fileName) => [fileName, retainedByFile[fileName].rows]));
   if (source.fileNames.some((fileName) => !validSeriesArray(files[fileName]))) return false;
   const bundle = {
     schema_version: SENTIMENT_BUNDLE_SCHEMA,
     source_key: source.key,
     source_as_of: sourceAsOfFromFiles(files),
+    persistence_policy: SENTIMENT_PERSISTENCE_POLICY,
+    persistence_state: {
+      files: Object.fromEntries(source.fileNames.map((fileName) => [
+        fileName,
+        retainedByFile[fileName].persistence_state,
+      ])),
+    },
     files,
   };
   if (!validSourceBundle(source.key, source.fileNames, bundle)) return false;
@@ -603,18 +775,15 @@ function bootstrapCurrentBundle(repoRoot, source, outputDirs) {
 
 export async function runSentiment({
   repoRoot = REPO_ROOT,
-  outputDirs = [
-    path.join(repoRoot, 'data', 'sentiment'),
-    path.join(repoRoot, '100xfenok-next', 'public', 'data', 'sentiment'),
-  ],
+  outputDir = path.join(repoRoot, 'data', 'sentiment'),
   sources = defaultSources(),
-  attemptShardPath = path.join(repoRoot, 'data', 'admin', 'data-supply-state', 'detection-attempts', 'sentiment.json'),
   observedAt = new Date().toISOString(),
   attemptId = `gh-${process.env.GITHUB_RUN_ID ?? Date.now()}-${process.env.GITHUB_RUN_ATTEMPT ?? 1}-sentiment`,
   runId = process.env.GITHUB_RUN_ID || 'local',
   runAttempt = Number(process.env.GITHUB_RUN_ATTEMPT || 1),
   eventName = process.env.GITHUB_EVENT_NAME || 'local',
   controlledFailureSource = process.env.INPUT_CONTROLLED_FAILURE_SOURCE || '',
+  recordSuccessFn = ({ store, artifacts, run }) => store.recordSuccess({ artifacts, run }),
   quiet = false,
 } = {}) {
   sentimentAttemptTuples = [];
@@ -626,7 +795,7 @@ export async function runSentiment({
     console.log('='.repeat(60));
     console.log('fetch-sentiment.mjs');
     console.log(`  date    : ${today}`);
-    console.log(`  outputs : ${outputDirs.map((d) => path.relative(repoRoot, d)).join(', ')}`);
+    console.log(`  output  : ${path.relative(repoRoot, outputDir)}`);
     console.log('='.repeat(60));
   }
 
@@ -645,8 +814,8 @@ export async function runSentiment({
         recordSentimentAttemptTuple(threwTuple('transport'));
         throw new Error('controlled failure');
       }
-      const readExistingFn = (fileName) => readExisting(fileName, outputDirs);
-      const results = await source.run(readExistingFn);
+      const readExistingFn = (fileName) => readExisting(fileName, outputDir);
+      const results = applyBoundedPersistence(await source.run(readExistingFn));
       const sourceTuples = sentimentAttemptTuples.slice(tupleCountBefore);
       if (sourceTuples.length === 0) throw new Error('source returned without current-attempt evidence');
       if (sourceTuples.some((tuple) => tupleStatus(tuple) !== 'ready')) {
@@ -689,12 +858,36 @@ export async function runSentiment({
           failCount++;
           continue;
         }
-        publishSourceResults(results, outputDirs);
-        atomicWrite(currentBundlePath(repoRoot, source.key), serialized);
-        const success = lkgStore.recordSuccess({ artifacts: [candidate], run });
+        const success = withFileRollback(
+          sourcePublicationPaths({ repoRoot, outputDir, source, results, lkgStore }),
+          () => {
+            if (source.key === 'crypto') {
+              writeCryptoSourceObservation(repoRoot, {
+                sourceAsOf: results[0]?.sample?.date ?? null,
+                sourceAsOfReason: null,
+                run,
+              });
+            }
+            publishSourceResults(results, outputDir);
+            atomicWrite(currentBundlePath(repoRoot, source.key), serialized);
+            return recordSuccessFn({ store: lkgStore, artifacts: [candidate], run });
+          },
+        );
         if (success.state.items[source.key]?.recovered_at === observedAt) recoveredSources.push(source.key);
       } else {
-        publishSourceResults(results, outputDirs);
+        withFileRollback(
+          sourcePublicationPaths({ repoRoot, outputDir, source, results, lkgStore }),
+          () => {
+            if (source.key === 'crypto') {
+              writeCryptoSourceObservation(repoRoot, {
+                sourceAsOf: results[0]?.sample?.date ?? null,
+                sourceAsOfReason: null,
+                run,
+              });
+            }
+            publishSourceResults(results, outputDir);
+          },
+        );
       }
       okCount++;
       sourceOutcomes.push({ key: source.key, status: 'ready', reason: 'ok' });
@@ -715,9 +908,24 @@ export async function runSentiment({
       failCount++;
       const failureTuple = foldWorstTuples(sentimentAttemptTuples.slice(tupleCountBefore));
       const reason = source.key === injectedSource ? 'controlled_failure' : tupleReason(failureTuple);
-      sourceOutcomes.push({ key: source.key, status: 'failed', reason });
+      if (source.key === 'crypto' && Object.hasOwn(e, 'sourceAsOf')) {
+        writeCryptoSourceObservation(repoRoot, {
+          sourceAsOf: e.sourceAsOf,
+          sourceAsOfReason: e.sourceAsOfReason,
+          run,
+        });
+      }
+      sourceOutcomes.push({
+        key: source.key,
+        status: 'failed',
+        reason,
+        ...(Object.hasOwn(e, 'sourceAsOf') ? {
+          source_as_of: e.sourceAsOf,
+          source_as_of_reason: e.sourceAsOfReason,
+        } : {}),
+      });
       if (source.lkg === true) {
-        bootstrapCurrentBundle(repoRoot, source, outputDirs);
+        bootstrapCurrentBundle(repoRoot, source, outputDir);
         const failure = lkgStore.recordFailure({ artifacts: [bundleArtifact(repoRoot, source)], run, reason });
         const classification = classifyLkgFailure({ reason, hasCompleteLkg: failure.hasCompleteLkg });
         failedTracked.push({ source, reason, requestFailed: source.key !== injectedSource });
@@ -739,8 +947,6 @@ export async function runSentiment({
     };
   }
   const row = buildAttemptRow({ laneId: 'sentiment', memberId: null, observedAt, attemptId, tuple });
-  const shard = buildSingleLaneShard({ laneId: 'sentiment', row });
-  writeJsonAtomic(attemptShardPath, shard);
 
   const naturalTracked = trackedSources.filter((source) => source.key !== injectedSource);
   const naturalFailures = failedTracked.filter((failure) => failure.requestFailed).map((failure) => failure.source.key);
@@ -761,7 +967,6 @@ export async function runSentiment({
     okCount,
     failCount,
     row,
-    shard,
     retrySet,
     recoveredSources,
     sourceOutcomes,

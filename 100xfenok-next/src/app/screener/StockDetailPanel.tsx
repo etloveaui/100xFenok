@@ -1,17 +1,17 @@
 "use client";
 
 import { Component, useEffect, useState, type ErrorInfo, type ReactNode } from "react";
+import EarningsOverview from "@/components/earnings/EarningsOverview";
 import TransitionLink from "@/components/TransitionLink";
 import DataStateNotice from "@/components/DataStateNotice";
 import { type FenokSignalRadarHexagonAxis } from "@/components/screener/FenokSignalRadarHexagon";
-import { FenokSignalRadarHexagonPair } from "@/components/screener/FenokSignalRadarHexagonPair";
-import FenokSignalHelpPopover from "@/components/screener/FenokSignalHelpPopover";
+import { edgeAxisSpokeLabel } from "@/lib/fenok-signals/edge-axis-labels.mjs";
 import type { FenokSignalHelpKey } from "@/lib/fenok-signals/signal-help-config";
-import { getDisplaySignalHelpBands, lookupBand, toneClass } from "@/lib/fenok-signals/signal-help-config";
-import { directionKo } from "@/lib/fenok-signals/direction-ko";
+import { getDisplaySignalHelpBands, lookupBand } from "@/lib/fenok-signals/signal-help-config";
 import { shortTermCommonBasisCopy } from "@/lib/fenok-signals/conviction-basis-copy.mjs";
 import { bandPct, bandClass } from "@/lib/screener/bands";
 import { commonBasisShortTermView } from "@/lib/screener/common-basis-short-term";
+import { freshnessAgeOverride, freshnessVerdict } from "@/lib/freshness-policy.mjs";
 import type { ScreenerStock } from "@/lib/screener/types";
 import { interpretStockMetrics, type InterpretationReadTone } from "@/lib/screener/deterministicRules";
 import {
@@ -20,7 +20,7 @@ import {
   hasEstimateGap,
   type EstimateCompleteness,
 } from "@/lib/estimate-completeness";
-import { makeDataState } from "@/lib/data-state";
+import { makeDataState, type LoaderError } from "@/lib/data-state";
 import {
   formatCurrency,
   formatCurrencyCompact,
@@ -35,44 +35,275 @@ import {
 import { ROUTES } from "@/lib/routes";
 import { normalizeForEntityKey } from "@/lib/ticker";
 import { fetchMarketFactsFromShard } from "@/lib/market-facts-shard.mjs";
+import { Panel, PanelHeader, Row, Bar, EdgeMark, EvidenceRail } from "@/components/ui";
 
 export type MaybeNumber = number | null | undefined;
 
-function convictionTone(call: ScreenerStock["fenokConvictionCall"]): string {
-  if (call === "집중") return "border-[var(--up-border)] bg-[var(--c-up-soft)] text-[var(--c-up)]";
-  if (call === "혼재") return "border-cyan-200 bg-cyan-50 text-cyan-700";
-  if (call === "희석") return "border-[var(--c-warn)] bg-[var(--c-warn-soft)] text-[var(--c-warn)]";
-  return "border-[var(--c-line)] bg-[var(--c-surface-2)] text-[var(--c-ink-3)]";
-}
-
-function signalScoreTone(score: number | null): string {
-  if (score === null || score === undefined) return "border-[var(--c-line)] bg-[var(--c-surface-2)] text-[var(--c-ink-3)]";
-  if (score >= 70) return "border-[var(--up-border)] bg-[var(--c-up-soft)] text-[var(--c-up)]";
-  if (score >= 60) return "border-cyan-200 bg-cyan-50 text-cyan-700";
-  if (score >= 50) return "border-[var(--c-warn)] bg-[var(--c-warn-soft)] text-[var(--c-warn)]";
-  return "border-[var(--c-line)] bg-[var(--c-surface-2)] text-[var(--c-ink-3)]";
-}
-
-function edgeDirectionLabel(direction: string | null | undefined): string {
-  if (direction === "upside_bias") return "상방 우세";
-  if (direction === "downside_bias") return "하방 우세";
-  if (direction === "balanced") return "균형";
-  return "방향 미확인";
-}
-
-function edgeLeadLabel(shortScore: number | null, longScore: number | null): string {
-  if (shortScore === null && longScore === null) return "신호 미확인";
-  if (shortScore !== null && longScore !== null) {
-    if (shortScore >= longScore + 5) return "단기 우세";
-    if (longScore >= shortScore + 5) return "장기 우세";
-    return "단기·장기 균형";
-  }
-  return shortScore !== null ? "단기만 확인" : "장기만 확인";
+function edgeLeadLabel(): string {
+  return "단기·장기 독립 진단";
 }
 
 function formatSignalCoverage(value: number | null | undefined): string {
   if (!isFiniteNumber(value)) return "커버리지 미확인";
   return `커버리지 ${Math.round(Math.max(0, Math.min(1, value)) * 100)}%`;
+}
+
+// ---------------------------------------------------------------------------
+// Shared light-system panels (slice-4 single implementation)
+// Used by the rewritten stock page AND the screener expanded rows so both
+// surfaces share one implementation. No gauges/radars/donuts — EdgeMark +
+// bar rows only. Every panel ends with an EvidenceRail.
+// ---------------------------------------------------------------------------
+
+export interface SharedEdgeAxisRow {
+  key: string;
+  label: string;
+  score: number | null;
+  referenceOnly?: boolean;
+}
+
+function sharedEdgeTone(score: number | null): string {
+  if (!isFiniteNumber(score)) return "—";
+  if (score >= 65) return "양호";
+  if (score >= 45) return "관리";
+  return "약함";
+}
+
+export function SharedEdgePanel({
+  title,
+  eyebrow = "Fenok Edge",
+  shortScore,
+  longScore,
+  shortLabel = "단기",
+  longLabel = "장기",
+  shortRows,
+  longRows,
+  shortTitle = "단기 축",
+  longTitle = "장기 축",
+  summary,
+  pending = false,
+  source = "FENOK 신호",
+  asOf = "—",
+  coverage = "—",
+  hero,
+  hideRail = false,
+}: {
+  title: string;
+  eyebrow?: string;
+  shortScore: number | null;
+  longScore: number | null;
+  shortLabel?: string;
+  longLabel?: string;
+  shortRows: SharedEdgeAxisRow[];
+  longRows: SharedEdgeAxisRow[];
+  shortTitle?: string;
+  longTitle?: string;
+  summary?: ReactNode;
+  pending?: boolean;
+  source?: string;
+  asOf?: string;
+  coverage?: string;
+  /** 88px EdgeMark hero per Signature (Stock); its ring is the only score, so surfaces without a hero keep the 22px compact row instead */
+  hero?: Array<{ label: string; score: number | null }>;
+  /** ⑩b strip-flood: true면 하단 EvidenceRail을 생략(집계 출처행이 있는 화면에서 사용) */
+  hideRail?: boolean;
+}) {
+  const hasRows = [...shortRows, ...longRows].some((row) => row.score !== null);
+  const age = freshnessAgeOverride(freshnessVerdict(asOf, "global_scouter"));
+  const renderRows = (rows: SharedEdgeAxisRow[]) =>
+    rows.map((row) => (
+      <Row key={row.key}>
+        <span className="truncate text-[12px] text-[var(--c-ink-2)]">{row.label}{row.referenceOnly ? " · 참고" : ""}</span>
+        <Bar value={row.score ?? 0} aria-label={`${row.label} ${row.score !== null ? Math.round(row.score) : "대기"}점`} />
+        <span className="flex items-center justify-end gap-2">
+          {row.score !== null ? <EdgeMark score={row.score} size={16} showValue={false} /> : null}
+          <strong className="tabular-nums text-[12px] font-semibold text-[var(--c-ink)]">
+            {row.score !== null ? Math.round(row.score) : "—"}
+          </strong>
+          <span className="w-8 text-right text-[12px] text-[var(--c-ink-3)]">{sharedEdgeTone(row.score)}</span>
+        </span>
+      </Row>
+    ));
+  return (
+    <Panel loading={pending}>
+      <PanelHeader eyebrow={eyebrow} title={title} right={<span className="text-[12px] text-[var(--c-ink-3)]">{coverage}</span>} />
+      {hero && hero.some((head) => head.score !== null) ? (
+        <div className="flex items-center gap-6 px-4 pt-3">
+          {hero.map((head) => head.score !== null ? (
+            <span key={head.label} className="flex flex-col items-center gap-1">
+              <EdgeMark score={head.score} size={88} />
+              <span className="text-[12px] text-[var(--c-ink-3)]">{head.label}</span>
+            </span>
+          ) : null)}
+        </div>
+      ) : (
+        <div className="flex items-center gap-4 px-4 py-3">
+          {[
+            { label: shortLabel, score: shortScore },
+            { label: longLabel, score: longScore },
+          ].map((head) => (
+            <span key={head.label} className="flex items-center gap-2">
+              {head.score !== null ? <EdgeMark score={head.score} size={22} showValue={false} /> : null}
+              <span className="text-[12px] text-[var(--c-ink-3)]">{head.label}</span>
+              <strong className="tabular-nums text-[22px] font-semibold leading-none text-[var(--c-ink)]">
+                {head.score !== null ? Math.round(head.score) : "—"}
+              </strong>
+            </span>
+          ))}
+        </div>
+      )}
+      {summary ? <div className="px-4 pb-2 text-[12px] text-[var(--c-ink-2)]">{summary}</div> : null}
+      {shortRows.length > 0 ? (
+        <div>
+          <p className="px-4 pb-1 pt-2 text-[12px] font-semibold uppercase tracking-[0.06em] text-[var(--c-ink-3)]">{shortTitle}</p>
+          {renderRows(shortRows)}
+        </div>
+      ) : null}
+      {longRows.length > 0 ? (
+        <div>
+          <p className="px-4 pb-1 pt-2 text-[12px] font-semibold uppercase tracking-[0.06em] text-[var(--c-ink-3)]">{longTitle}</p>
+          {renderRows(longRows)}
+        </div>
+      ) : null}
+      {hideRail ? null : (
+        <EvidenceRail
+          freshness={pending ? "pending" : (age?.freshness ?? (hasRows ? "fresh" : "stale"))}
+          stateLabel={age?.label ?? undefined}
+          source={source}
+          asOf={asOf}
+          coverage={coverage}
+          next={hasRows || pending ? undefined : "다음 갱신 시"}
+          skeletonDelayMs={120}
+        />
+      )}
+    </Panel>
+  );
+}
+
+export type SharedValuationZone = "deep-discount" | "discount" | "neutral" | "premium" | "overheated" | "trap";
+
+export interface SharedValuationBand {
+  current: number;
+  min: number;
+  max: number;
+  avg?: number | null;
+  source: string;
+}
+
+export function sharedValuationBandTone(
+  band: SharedValuationBand,
+  weak: boolean,
+): { label: string; detail: string; zone: SharedValuationZone } {
+  const pct = bandPct(band.current, band.min, band.max);
+  const avgPct = isFiniteNumber(band.avg) ? bandPct(band.avg, band.min, band.max) : 0.5;
+  const neutralStart = Math.max(0.18, avgPct - 0.1);
+  const neutralEnd = Math.min(0.82, avgPct + 0.1);
+  if (pct < neutralStart && weak) {
+    return { label: "낮은 PER · 실적 점검", detail: "비교 구간 내 PER 위치는 낮지만 성장·수익성 점수 약세가 함께 보입니다.", zone: "trap" };
+  }
+  if (pct < neutralStart * 0.55) {
+    return { label: "PER 밴드 하단권", detail: "PER 밴드의 낮은 위치입니다. 성장·마진 방어를 함께 확인합니다.", zone: "deep-discount" };
+  }
+  if (pct < neutralStart) {
+    return { label: "평균 부근보다 낮음", detail: "기준연도 PER이 밴드의 평균 부근 구간 아래에 있습니다.", zone: "discount" };
+  }
+  if (pct <= neutralEnd) {
+    return { label: "비교 평균 부근", detail: "기준연도 PER이 비교 구간 평균 부근에 있습니다.", zone: "neutral" };
+  }
+  if (pct < neutralEnd + (1 - neutralEnd) * 0.55) {
+    return { label: "평균 부근보다 높음", detail: "기준연도 PER이 밴드의 평균 부근 구간 위에 있습니다. 성장 기대와 추정치 상향을 확인합니다.", zone: "premium" };
+  }
+  return { label: "PER 밴드 상단권", detail: "PER 밴드의 높은 위치입니다. 기대 성장과 추정치 상향을 확인합니다.", zone: "overheated" };
+}
+
+export function SharedValuationBandPanel({
+  band,
+  weak = false,
+  pending = false,
+  source = "PER 비교 구간",
+  asOf = "—",
+  coverage = "—",
+  hideRail = false,
+}: {
+  band: SharedValuationBand | null;
+  weak?: boolean;
+  pending?: boolean;
+  source?: string;
+  asOf?: string;
+  coverage?: string;
+  /** ⑩b strip-flood: true면 하단 EvidenceRail을 생략(집계 출처행이 있는 화면에서 사용) */
+  hideRail?: boolean;
+}) {
+  const age = freshnessAgeOverride(freshnessVerdict(asOf, "global_scouter"));
+  if (pending || !band) {
+    return (
+      <Panel loading={pending}>
+        <PanelHeader eyebrow="Valuation Band" title="밸류에이션 밴드" />
+        {!pending ? <p className="px-4 py-3 text-[12px] text-[var(--c-ink-3)]">밴드 데이터를 아직 확인하지 못했습니다.</p> : null}
+        {hideRail ? null : (
+          <EvidenceRail
+            freshness={pending ? "pending" : (age?.freshness ?? "stale")}
+            stateLabel={age?.label ?? undefined}
+            source={source}
+            asOf={asOf}
+            coverage={coverage}
+            next={pending ? undefined : "다음 갱신 시"}
+            skeletonDelayMs={120}
+          />
+        )}
+      </Panel>
+    );
+  }
+  const pct = bandPct(band.current, band.min, band.max);
+  const clampedPct = Math.max(0, Math.min(100, pct * 100));
+  const tone = sharedValuationBandTone(band, weak);
+  const avgPct = isFiniteNumber(band.avg) ? bandPct(band.avg, band.min, band.max) : 0.5;
+  const neutralStartPct = Math.max(18, Math.min(82, avgPct * 100 - 10));
+  const neutralEndPct = Math.max(18, Math.min(82, avgPct * 100 + 10));
+  const lowMidPct = neutralStartPct * 0.55;
+  const highMidPct = neutralEndPct + (100 - neutralEndPct) * 0.55;
+  return (
+    <Panel>
+      <PanelHeader
+        eyebrow="Valuation Band"
+        title="밸류에이션 밴드"
+        right={<span className="tabular-nums text-[12px] font-semibold text-[var(--c-ink-2)]">{Math.round(clampedPct)}%</span>}
+      />
+      <div className="px-4 py-3">
+        <div
+          data-stock-valuation-band-track
+          className="relative h-3 overflow-hidden rounded-full border border-[var(--c-line)] bg-white"
+          role="img"
+          aria-label={`PER 밴드 ${Math.round(clampedPct)}%, ${tone.label}`}
+        >
+          <span data-stock-valuation-zone="deep-discount" className="absolute inset-y-0 left-0 bg-[var(--c-up)] opacity-45" style={{ width: `${lowMidPct}%` }} />
+          <span data-stock-valuation-zone="discount" className="absolute inset-y-0 bg-[var(--c-up)] opacity-30" style={{ left: `${lowMidPct}%`, width: `${Math.max(0, neutralStartPct - lowMidPct)}%` }} />
+          <span data-stock-valuation-zone="neutral" className="absolute inset-y-0 bg-white" style={{ left: `${neutralStartPct}%`, width: `${Math.max(0, neutralEndPct - neutralStartPct)}%` }} />
+          <span data-stock-valuation-zone="premium" className="absolute inset-y-0 bg-[var(--c-down)] opacity-30" style={{ left: `${neutralEndPct}%`, width: `${Math.max(0, highMidPct - neutralEndPct)}%` }} />
+          <span data-stock-valuation-zone="overheated" className="absolute inset-y-0 bg-[var(--c-down)] opacity-45" style={{ left: `${highMidPct}%`, width: `${Math.max(0, 100 - highMidPct)}%` }} />
+          <span className="absolute inset-y-[-3px] w-[3px] rounded-full bg-[var(--c-ink)] shadow-sm" style={{ left: `${clampedPct}%`, transform: "translateX(-1.5px)" }} />
+        </div>
+        <div className="mt-1 grid grid-cols-3 text-[12px] tabular-nums text-[var(--c-ink-3)]">
+          <span>{band.min.toFixed(1)}x</span>
+          <span className="text-center">{isFiniteNumber(band.avg) ? `${band.avg.toFixed(1)}x ±10%` : band.source}</span>
+          <span className="text-right">{band.max.toFixed(1)}x</span>
+        </div>
+        <p data-stock-valuation-verdict={tone.zone} className="mt-2 text-[12px] text-[var(--c-ink-2)]">
+          {tone.label} · 기준연도 PER {band.current.toFixed(1)}x · {tone.detail}
+        </p>
+      </div>
+      {hideRail ? null : (
+        <EvidenceRail
+          freshness={age?.freshness ?? "fresh"}
+          stateLabel={age?.label ?? undefined}
+          source={source}
+          asOf={asOf}
+          coverage={coverage}
+          skeletonDelayMs={120}
+        />
+      )}
+    </Panel>
+  );
 }
 
 export type NumberSeries = MaybeNumber[];
@@ -253,7 +484,7 @@ class StockDetailBoundary extends Component<StockDetailBoundaryProps, StockDetai
     if (this.state.hasError) {
       return (
         <div role="alert" className="rounded-xl border border-[var(--c-line)] bg-[var(--c-panel)] px-4 py-3 text-sm font-semibold text-[var(--c-ink-3)]">
-          이 종목 상세를 표시하는 중 일시적 오류가 발생했습니다. 다른 종목과 스크리너 목록은 계속 사용할 수 있습니다.
+          이 종목 상세를 표시하는 중 일시적 오류가 발생했습니다. 다른 종목과 스크리너 목록은 정상 표시됩니다.
         </div>
       );
     }
@@ -360,6 +591,14 @@ interface MarketFactsData {
   source_files?: Record<string, string | null>;
 }
 
+function requireSpokeLabel(scoreKey: string): string {
+  const label = edgeAxisSpokeLabel(scoreKey);
+  if (label === null) {
+    throw new Error(`edge axis ${scoreKey} has no spoke label in the shared map`);
+  }
+  return label;
+}
+
 function isFiniteNumber(value: unknown): value is number {
   return typeof value === "number" && Number.isFinite(value);
 }
@@ -371,12 +610,24 @@ interface DetailLongTermAxis extends FenokSignalRadarHexagonAxis {
   coverage: number | null;
   tooltipNote?: string | null;
   invertedDisplay?: boolean;
+  referenceOnly?: boolean;
   meta: { tier: string | null; tone: "up" | "warn" | "down" | "neutral" };
+}
+
+export function rankFenokEdgeAxes<T extends { score: number | null; referenceOnly?: boolean }>(
+  axes: readonly T[],
+  direction: "asc" | "desc",
+  limit: number,
+): T[] {
+  const multiplier = direction === "desc" ? -1 : 1;
+  return [...axes]
+    .filter((axis) => axis.score !== null && !axis.referenceOnly)
+    .sort((left, right) => multiplier * ((left.score ?? 0) - (right.score ?? 0)))
+    .slice(0, limit);
 }
 
 interface DetailLongTermAxisConfig {
   key: string;
-  spokeLabel: string;
   fullLabel: string;
   scoreKey: keyof ScreenerStock;
   directionKey?: keyof ScreenerStock;
@@ -384,12 +635,12 @@ interface DetailLongTermAxisConfig {
   helpKey: FenokSignalHelpKey;
   invertScore?: boolean;
   tooltipNote?: string;
+  referenceOnly?: boolean;
 }
 
 const DETAIL_LONG_TERM_AXIS_CONFIG: DetailLongTermAxisConfig[] = [
   {
     key: "profitability",
-    spokeLabel: "수익성",
     fullLabel: "수익성",
     scoreKey: "profitabilityScore",
     directionKey: "profitabilityDirection",
@@ -397,7 +648,6 @@ const DETAIL_LONG_TERM_AXIS_CONFIG: DetailLongTermAxisConfig[] = [
   },
   {
     key: "growth",
-    spokeLabel: "성장",
     fullLabel: "성장",
     scoreKey: "growthScore",
     directionKey: "growthDirection",
@@ -405,14 +655,12 @@ const DETAIL_LONG_TERM_AXIS_CONFIG: DetailLongTermAxisConfig[] = [
   },
   {
     key: "upsidePotential",
-    spokeLabel: "상방",
     fullLabel: "상승 잠재력",
     scoreKey: "upsidePotentialScore",
     helpKey: "upsidePotential",
   },
   {
     key: "downsidePressure",
-    spokeLabel: "하방",
     fullLabel: "하락 압력 완화",
     scoreKey: "downsidePressureScore",
     helpKey: "downsidePressure",
@@ -421,14 +669,13 @@ const DETAIL_LONG_TERM_AXIS_CONFIG: DetailLongTermAxisConfig[] = [
   },
   {
     key: "marketSimilarity",
-    spokeLabel: "동종군",
     fullLabel: "동종군 유사도",
     scoreKey: "marketSimilarityScore",
     helpKey: "marketSimilarity",
+    referenceOnly: true,
   },
   {
     key: "durabilityProfitability",
-    spokeLabel: "내구",
     fullLabel: "내구 수익성",
     scoreKey: "durabilityProfitabilityScore",
     coverageKey: "durabilityProfitabilityCoverage",
@@ -439,7 +686,6 @@ const DETAIL_LONG_TERM_AXIS_CONFIG: DetailLongTermAxisConfig[] = [
 const DETAIL_SHORT_TERM_AXIS_CONFIG: DetailLongTermAxisConfig[] = [
   {
     key: "technicalFlow",
-    spokeLabel: "기술",
     fullLabel: "기술·자금 흐름",
     scoreKey: "technicalFlowScore",
     directionKey: "technicalFlowDirection",
@@ -447,7 +693,6 @@ const DETAIL_SHORT_TERM_AXIS_CONFIG: DetailLongTermAxisConfig[] = [
   },
   {
     key: "volumeLiquidityTrend",
-    spokeLabel: "거래",
     fullLabel: "거래량·유동성 추세",
     scoreKey: "volumeLiquidityTrendScore",
     directionKey: "volumeLiquidityTrendDirection",
@@ -456,7 +701,6 @@ const DETAIL_SHORT_TERM_AXIS_CONFIG: DetailLongTermAxisConfig[] = [
   },
   {
     key: "shortTermRelativeStrength",
-    spokeLabel: "강도",
     fullLabel: "단기 상대 강도",
     scoreKey: "shortTermRelativeStrengthScore",
     directionKey: "shortTermRelativeStrengthDirection",
@@ -465,7 +709,6 @@ const DETAIL_SHORT_TERM_AXIS_CONFIG: DetailLongTermAxisConfig[] = [
   },
   {
     key: "netOptionsProxy",
-    spokeLabel: "옵션",
     fullLabel: "옵션 활동 프록시",
     scoreKey: "netOptionsProxyScore",
     helpKey: "netOptionsProxy",
@@ -473,15 +716,14 @@ const DETAIL_SHORT_TERM_AXIS_CONFIG: DetailLongTermAxisConfig[] = [
   },
   {
     key: "offExchangeActivityProxy",
-    spokeLabel: "장외",
     fullLabel: "장외거래 활동 프록시",
     scoreKey: "offExchangeActivityProxyScore",
     helpKey: "offExchangeActivityProxy",
     tooltipNote: "미국 금융산업규제청(FINRA) 공개 장외 거래 데이터로 만든 보조 신호입니다. 방향성 확정 신호가 아닙니다.",
+    referenceOnly: true,
   },
   {
     key: "shortPressureProxy",
-    spokeLabel: "숏완화",
     fullLabel: "숏압력 완화",
     scoreKey: "shortPressureProxyScore",
     helpKey: "shortPressureProxy",
@@ -524,7 +766,7 @@ function buildDetailLongTermAxes(stock: ScreenerStock): DetailLongTermAxis[] {
     const meta = deriveDetailAxisMeta(score, config.helpKey, Boolean(config.invertScore));
     return {
       key: config.key,
-      label: config.spokeLabel,
+      label: requireSpokeLabel(config.scoreKey),
       fullLabel: config.fullLabel,
       score,
       direction: explicitDirection ?? meta.direction,
@@ -533,6 +775,7 @@ function buildDetailLongTermAxes(stock: ScreenerStock): DetailLongTermAxis[] {
       tooltipNote: config.tooltipNote ?? null,
       coverage,
       invertedDisplay: Boolean(config.invertScore),
+      referenceOnly: Boolean(config.referenceOnly),
       meta,
     };
   });
@@ -557,7 +800,7 @@ function buildDetailShortTermAxes(stock: ScreenerStock): DetailLongTermAxis[] {
     const meta = deriveDetailAxisMeta(score, config.helpKey, Boolean(config.invertScore));
     return {
       key: config.key,
-      label: config.spokeLabel,
+      label: requireSpokeLabel(config.scoreKey),
       fullLabel: config.fullLabel,
       score,
       direction: explicitDirection ?? meta.direction,
@@ -569,65 +812,6 @@ function buildDetailShortTermAxes(stock: ScreenerStock): DetailLongTermAxis[] {
       meta,
     };
   });
-}
-
-function DetailAxisLegend({ axis }: { axis: DetailLongTermAxis }) {
-  const width = axis.score === null ? 0 : Math.max(0, Math.min(100, axis.score));
-  const scoreText = axis.score === null ? "—" : Math.round(axis.score).toString();
-  const tierText = axis.meta.tier ?? "미확인";
-  const compactTierText =
-    tierText === "압력 큼"
-      ? "높음"
-      : tierText === "강하게 낮음"
-        ? "낮음"
-        : tierText;
-  const directionText = directionKo(axis.direction, "미확인");
-  const ariaLabel = `${axis.fullLabel}: ${scoreText}점, ${directionText}, ${tierText}${axis.tooltipNote ? ` · ${axis.tooltipNote}` : ""}`;
-  return (
-    <div
-      aria-label={ariaLabel}
-      className="flex min-w-0 items-center gap-2 rounded-lg border border-[var(--c-line)] bg-[var(--c-panel)] px-2.5 py-2"
-    >
-      <div className="min-w-0 flex-1">
-        <div className="truncate text-[11px] font-black text-[var(--c-ink)]">
-          {axis.fullLabel}
-        </div>
-        {axis.coverage !== null ? (
-          <div className="truncate text-[10px] font-semibold text-[var(--c-ink-2)]">
-            데이터 {Math.round(axis.coverage * 100)}%
-          </div>
-        ) : null}
-      </div>
-      <FenokSignalHelpPopover
-        signal={axis.helpKey}
-        score={axis.score}
-        direction={axis.direction}
-        invertedDisplay={axis.invertedDisplay}
-      />
-      {axis.meta.tier && axis.score !== null ? (
-        <span className={`shrink-0 rounded px-1.5 py-0.5 text-[10px] font-black ${toneClass(axis.meta.tone)}`}>
-          {compactTierText}
-        </span>
-      ) : null}
-      <span className="orbitron shrink-0 text-sm font-black tabular-nums text-[var(--c-ink)]">
-        {scoreText}
-      </span>
-      <div className="hidden h-1.5 w-12 overflow-hidden rounded-full bg-[var(--c-surface-2)] sm:block">
-        <div
-          className={`h-full rounded-full ${
-            axis.meta.tone === "up"
-              ? "bg-[var(--c-up)]"
-              : axis.meta.tone === "warn"
-                ? "bg-[var(--c-warn)]"
-                : axis.meta.tone === "down"
-                  ? "bg-[var(--c-down)]"
-                  : "bg-[var(--c-line)]"
-          }`}
-          style={{ width: `${width}%` }}
-        />
-      </div>
-    </div>
-  );
 }
 
 function isRecord(value: unknown): value is Record<string, unknown> {
@@ -798,14 +982,14 @@ function buildScreenerThreeSecondVerdict({
     const pct = bandPct(bands.current, bands.min_8y, bands.max_8y);
     const pctLabel = `${Math.round(pct * 100)}%`;
     const avgText = isFiniteNumber(bands.avg_8y)
-      ? `평균 ${bands.avg_8y.toFixed(1)}배 ${bands.current >= bands.avg_8y ? "위" : "아래"}`
-      : "평균 미확인";
+      ? `비교 평균 ${bands.avg_8y.toFixed(1)}배 ${bands.current >= bands.avg_8y ? "위" : "아래"}`
+      : "비교 평균 미확인";
     const tone: InterpretationReadTone = pct <= 0.3 ? "positive" : pct >= 0.75 ? "risk" : "neutral";
     signals.push({
       id: "valuation",
       label: "밸류",
       shortText: `밴드 ${pctLabel}`,
-      text: `PER은 8년 밴드의 ${pctLabel} 지점, ${avgText}입니다.`,
+      text: `기준연도 PER은 비교 구간의 ${pctLabel} 지점, ${avgText}입니다.`,
       tone,
     });
   }
@@ -909,9 +1093,17 @@ function toneText(value: MaybeNumber): string {
   return value >= 0 ? "text-[var(--c-up)]" : "text-[var(--c-down)]";
 }
 
+function loaderErrorDetail(error: LoaderError, subject: string): string {
+  if (error.kind === "status") return `${subject}를 불러오지 못했습니다(HTTP ${error.status ?? "오류"}). 다시 시도해 주세요.`;
+  if (error.kind === "parse") return `${subject}의 데이터 형식을 확인하지 못했습니다. 다시 시도해 주세요.`;
+  return `${subject} 요청이 시간 초과되었습니다. 네트워크 확인 후 다시 시도해 주세요.`;
+}
+
 export function useStockDetail(ticker: string, enabled = true) {
   const [detail, setDetail] = useState<DetailData | null>(null);
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<LoaderError | null>(null);
+  const [retryNonce, setRetryNonce] = useState(0);
 
   useEffect(() => {
     let cancelled = false;
@@ -919,16 +1111,24 @@ export function useStockDetail(ticker: string, enabled = true) {
     if (!enabled || !symbol) {
       setDetail(null);
       setLoading(false);
+      setError(null);
       return;
     }
     const run = async () => {
       setLoading(true);
       try {
         const r = await fetch(`/data/global-scouter/stocks/detail/${encodeURIComponent(symbol)}.json`);
-        const d = r.ok ? await r.json() : null;
-        if (!cancelled) setDetail(isRecord(d) ? (d as unknown as DetailData) : null);
-      } catch {
-        if (!cancelled) setDetail(null);
+        if (!r.ok) {
+          if (!cancelled) setError({ kind: "status", status: r.status });
+          return;
+        }
+        const d = await r.json();
+        if (!cancelled) {
+          setDetail(isRecord(d) ? (d as unknown as DetailData) : null);
+          setError(null);
+        }
+      } catch (err) {
+        if (!cancelled) setError(err instanceof SyntaxError ? { kind: "parse" } : { kind: "timeout" });
       } finally {
         if (!cancelled) setLoading(false);
       }
@@ -937,22 +1137,27 @@ export function useStockDetail(ticker: string, enabled = true) {
     return () => {
       cancelled = true;
     };
-  }, [ticker, enabled]);
+  }, [ticker, enabled, retryNonce]);
 
-  return { detail, loading };
+  return { detail, loading, error, retry: () => setRetryNonce((n) => n + 1) };
 }
 
 const F13_CACHE = new Map<string, F13Entry[]>();
 
 export function use13FData(ticker: string) {
   const [entries, setEntries] = useState<F13Entry[] | null>(null);
+  const [error, setError] = useState<LoaderError | null>(null);
+  const [retryNonce, setRetryNonce] = useState(0);
 
   useEffect(() => {
     let cancelled = false;
     const symbol = normalizeForEntityKey(ticker);
     if (!symbol) {
       Promise.resolve().then(() => {
-        if (!cancelled) setEntries([]);
+        if (!cancelled) {
+          setEntries([]);
+          setError(null);
+        }
       });
       return () => {
         cancelled = true;
@@ -962,11 +1167,16 @@ export function use13FData(ticker: string) {
       const cached = F13_CACHE.get(symbol);
       if (cached !== undefined) {
         setEntries(cached);
+        setError(null);
         return;
       }
       try {
         const r = await fetch("/data/sec-13f/by_ticker.json");
-        const d = r.ok ? await r.json() : null;
+        if (!r.ok) {
+          if (!cancelled) setError({ kind: "status", status: r.status });
+          return;
+        }
+        const d = await r.json();
         const holders = Array.isArray(d?.[symbol]?.holder_details) ? d[symbol].holder_details : [];
         const seen = new Set<string>();
         const unique = holders.filter((h: { investor?: unknown }) => {
@@ -976,19 +1186,29 @@ export function use13FData(ticker: string) {
           return true;
         }) as F13Entry[];
         F13_CACHE.set(symbol, unique);
-        if (!cancelled) setEntries(unique);
-      } catch {
-        F13_CACHE.set(symbol, []);
-        if (!cancelled) setEntries([]);
+        if (!cancelled) {
+          setEntries(unique);
+          setError(null);
+        }
+      } catch (err) {
+        if (!cancelled) setError(err instanceof SyntaxError ? { kind: "parse" } : { kind: "timeout" });
       }
     };
     run();
     return () => {
       cancelled = true;
     };
-  }, [ticker]);
+  }, [ticker, retryNonce]);
 
-  return entries;
+  return {
+    entries,
+    error,
+    retry: () => {
+      const symbol = normalizeForEntityKey(ticker);
+      if (symbol) F13_CACHE.delete(symbol);
+      setRetryNonce((n) => n + 1);
+    },
+  };
 }
 
 const SLICK_STOCK_CACHE = new Map<string, SlickStockData | null>();
@@ -1108,6 +1328,8 @@ function normalizeMarketFacts(value: unknown): MarketFactsData | null {
 export function useMarketFacts(ticker: string, enabled = true) {
   const [data, setData] = useState<MarketFactsData | null>(null);
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<LoaderError | null>(null);
+  const [retryNonce, setRetryNonce] = useState(0);
 
   useEffect(() => {
     let cancelled = false;
@@ -1115,12 +1337,14 @@ export function useMarketFacts(ticker: string, enabled = true) {
     if (!enabled || !symbol) {
       setData(null);
       setLoading(false);
+      setError(null);
       return;
     }
     const cached = MARKET_FACTS_CACHE.get(symbol);
     if (cached !== undefined) {
       setData(cached);
       setLoading(false);
+      setError(null);
       return;
     }
 
@@ -1129,10 +1353,17 @@ export function useMarketFacts(ticker: string, enabled = true) {
       try {
         const parsed = normalizeMarketFacts(await fetchMarketFactsFromShard(symbol));
         MARKET_FACTS_CACHE.set(symbol, parsed);
-        if (!cancelled) setData(parsed);
-      } catch {
-        MARKET_FACTS_CACHE.set(symbol, null);
-        if (!cancelled) setData(null);
+        if (!cancelled) {
+          setData(parsed);
+          setError(null);
+        }
+      } catch (err) {
+        // fetchMarketFactsFromShard throws Error("... status NNN") on HTTP !ok.
+        const statusText = err instanceof Error ? /status (\d{3})/.exec(err.message)?.[1] : undefined;
+        const status = statusText !== undefined ? Number(statusText) : null;
+        if (!cancelled) {
+          setError(err instanceof SyntaxError ? { kind: "parse" } : status !== null ? { kind: "status", status } : { kind: "timeout" });
+        }
       } finally {
         if (!cancelled) setLoading(false);
       }
@@ -1141,9 +1372,18 @@ export function useMarketFacts(ticker: string, enabled = true) {
     return () => {
       cancelled = true;
     };
-  }, [ticker, enabled]);
+  }, [ticker, enabled, retryNonce]);
 
-  return { data, loading };
+  return {
+    data,
+    loading,
+    error,
+    retry: () => {
+      const symbol = normalizeForEntityKey(ticker);
+      if (symbol) MARKET_FACTS_CACHE.delete(symbol);
+      setRetryNonce((n) => n + 1);
+    },
+  };
 }
 
 function sourceLabel(source?: string): string {
@@ -1214,7 +1454,7 @@ function EtfBreakdownStrip({
           return (
             <span key={`${title}-${index}-${etfBreakdownLabel(row)}`} className="max-w-full rounded-full bg-[var(--c-panel)] px-2 py-0.5 text-[10px] font-bold text-[var(--c-ink-3)] ring-1 ring-[var(--c-line)]">
               <span className="inline-block max-w-[9rem] truncate align-bottom">{etfBreakdownLabel(row)}</span>
-              {weight !== null ? <span className="orbitron ml-1 font-black tabular-nums text-[var(--c-ink)]">{formatPlainPercent(weight, { digits: 1, fraction: false })}</span> : null}
+              {weight !== null ? <span className="ml-1 font-black tabular-nums text-[var(--c-ink)]">{formatPlainPercent(weight, { digits: 1, fraction: false })}</span> : null}
             </span>
           );
         })}
@@ -1229,12 +1469,12 @@ function MarketFactCard({ label, field, fact, currency }: { label: string; field
   return (
     <div className="min-w-0 rounded-xl border border-[var(--c-line)] bg-[var(--c-panel)] px-3 py-2.5">
       <div className="flex min-w-0 items-start justify-between gap-2">
-        <p className="min-w-0 truncate text-[10px] font-black uppercase tracking-[0.08em] text-[var(--c-ink-3)]">{label}</p>
+        <p className="min-w-0 truncate text-[12px] font-black uppercase tracking-[0.08em] text-[var(--c-ink-3)]">{label}</p>
         <span className="shrink-0 rounded-full bg-[var(--c-surface-2)] px-1.5 py-0.5 text-[9px] font-black text-[var(--c-ink-3)]">
           기준 {candidateCount}곳 확인
         </span>
       </div>
-      <p className="orbitron mt-1 min-w-0 break-words text-base font-black tabular-nums text-[var(--c-ink)]">
+      <p className="mt-1 min-w-0 break-words text-base font-black tabular-nums text-[var(--c-ink)]">
         {formatMarketFact(field, fact, currency)}
       </p>
       <p className="mt-1 min-w-0 truncate text-[10px] font-bold text-[var(--c-ink-3)]" title={sourceLabel(fact.source)}>
@@ -1245,7 +1485,7 @@ function MarketFactCard({ label, field, fact, currency }: { label: string; field
 }
 
 export function MarketFactsDepth({ ticker, compact = false }: { ticker: string; compact?: boolean }) {
-  const { data, loading } = useMarketFacts(ticker);
+  const { data, loading, error, retry } = useMarketFacts(ticker);
   if (loading) {
     return (
       <DataStateNotice
@@ -1258,6 +1498,19 @@ export function MarketFactsDepth({ ticker, compact = false }: { ticker: string; 
     );
   }
   if (!data) {
+    if (error) {
+      return (
+        <DataStateNotice
+          state={makeDataState({
+            status: "unavailable",
+            detail: loaderErrorDetail(error, "이 종목의 가격·분류·보조 지표"),
+          })}
+          actionLabel="지금 재시도"
+          onAction={retry}
+          className="mt-4"
+        />
+      );
+    }
     return (
       <DataStateNotice
         state={makeDataState({
@@ -1310,7 +1563,7 @@ export function MarketFactsDepth({ ticker, compact = false }: { ticker: string; 
         <div className="min-w-0">
           <h4 className="text-[12px] font-black uppercase tracking-[0.08em] text-[var(--c-ink-3)]">통합 데이터</h4>
           <p className="mt-0.5 min-w-0 text-[11px] font-bold text-[var(--c-ink-3)]">
-            <span className="orbitron font-black">{data.ticker ?? ticker}</span>
+            <span className="font-black">{data.ticker ?? ticker}</span>
             {data.identity?.name ? (
               <span className="block max-w-[14rem] truncate" title={data.identity.name}>
                 {data.identity.name}
@@ -1355,13 +1608,13 @@ export function MarketFactsDepth({ ticker, compact = false }: { ticker: string; 
       {topHoldings.length > 0 ? (
         <div className="mt-3 min-w-0">
           <div className="mb-1.5 flex min-w-0 flex-wrap items-center justify-between gap-2">
-            <p className="text-[11px] font-black uppercase tracking-[0.08em] text-[var(--c-ink-3)]">ETF 상위 보유 종목</p>
+            <p className="text-[12px] font-black uppercase tracking-[0.08em] text-[var(--c-ink-3)]">ETF 상위 보유 종목</p>
             <span className="text-[10px] font-bold text-[var(--c-ink-3)]">
               {data.etf?.holdings_updated ?? "—"} · {data.etf?.holdings_count ?? topHoldings.length}개
             </span>
           </div>
           <div className="-mx-1 overflow-x-auto px-1">
-            <table className="w-full min-w-[360px] text-[11px]">
+            <table className="w-full min-w-[360px] text-[12px]">
               <thead>
                 <tr className="border-b border-[var(--c-line)] font-black uppercase tracking-[0.06em] text-[var(--c-ink-3)]">
                   <th className="px-2 py-1.5 text-left">보유 항목</th>
@@ -1374,7 +1627,7 @@ export function MarketFactsDepth({ ticker, compact = false }: { ticker: string; 
                   <tr key={`${row.rank ?? index}-${row.name ?? "holding"}`} className="border-b border-[var(--c-line-2)] last:border-b-0">
                     <td className="px-2 py-1.5 min-w-0">
                       {row.symbol ? (
-                        <span className="orbitron text-xs font-black text-[var(--c-ink)]">{row.symbol}</span>
+                        <span className="text-[12px] font-black text-[var(--c-ink)]">{row.symbol}</span>
                       ) : null}
                       {row.name ? (
                         <span className="block max-w-[14rem] truncate text-[11px] font-semibold text-[var(--c-ink-3)]" title={row.name}>
@@ -1384,7 +1637,7 @@ export function MarketFactsDepth({ ticker, compact = false }: { ticker: string; 
                         <span className="text-[11px] text-[var(--c-ink-3)]">—</span>
                       )}
                     </td>
-                    <td className="px-2 py-1.5 text-right orbitron font-black tabular-nums text-[var(--c-ink)]">
+                    <td className="px-2 py-1.5 text-right font-black tabular-nums text-[var(--c-ink)]">
                       {formatPlainPercent(row.weight_pct, { digits: 2, fraction: false })}
                     </td>
                     <td className="px-2 py-1.5 text-right font-bold tabular-nums text-[var(--c-ink-3)]">
@@ -1429,7 +1682,7 @@ export function Sparkline({
   const actualPoints = points.filter((point) => !point.estimate);
   const estimatePoints = points.filter((point) => point.estimate);
   const firstEstimatePoint = estimatePoints[0] ?? null;
-  if (points.length < 2 || labels.length < 2) return <span className="text-xs text-[var(--c-ink-3)]">—</span>;
+  if (points.length < 2 || labels.length < 2) return <span className="text-[12px] text-[var(--c-ink-3)]">—</span>;
   const values = points.map((point) => point.value);
   const min = Math.min(...values);
   const max = Math.max(...values);
@@ -1549,7 +1802,7 @@ export function PerBandChart({
   const perPoints = allPerPoints.filter((point) => !point.estimate);
   const forwardPoints = allPerPoints.filter((point) => point.estimate);
   const forwardPoint = forwardPoints[0] ?? null;
-  if (perPoints.length < 2) return <span className="text-xs text-[var(--c-ink-3)]">—</span>;
+  if (perPoints.length < 2) return <span className="text-[12px] text-[var(--c-ink-3)]">—</span>;
 
   const allValues = allPerPoints.map((point) => point.value);
 
@@ -1745,7 +1998,7 @@ export function PerBandChart({
               x={placement.x}
               y={placement.y}
               textAnchor={placement.anchor}
-              className="text-[9px] font-black fill-[var(--c-ink-2)]"
+              className="text-[12px] font-black fill-[var(--c-ink-2)]"
               paintOrder="stroke"
               stroke="var(--c-panel)"
               strokeWidth={3}
@@ -1758,7 +2011,7 @@ export function PerBandChart({
 
         {/* X-axis labels */}
         {periodLabels.map((label, index) => (
-          <text key={label} x={toX(index)} y={h - 8} textAnchor="middle" className="text-[9px] font-black fill-[var(--c-ink-3)]">
+          <text key={label} x={toX(index)} y={h - 8} textAnchor="middle" className="text-[12px] font-black fill-[var(--c-ink-3)]">
             {label}
           </text>
         ))}
@@ -1770,7 +2023,7 @@ export function PerBandChart({
               x={padL - 4}
               y={toY(bands.max_8y) + 3}
               textAnchor="end"
-              className="text-[8px] font-black fill-[var(--c-ink-3)] orbitron tabular-nums"
+              className="text-[8px] font-black fill-[var(--c-ink-3)] tabular-nums"
             >
               {bands.max_8y.toFixed(0)}
             </text>
@@ -1778,7 +2031,7 @@ export function PerBandChart({
               x={padL - 4}
               y={toY(bands.avg_8y) + 3}
               textAnchor="end"
-              className="text-[8px] font-black fill-[var(--c-ink-3)] orbitron tabular-nums"
+              className="text-[8px] font-black fill-[var(--c-ink-3)] tabular-nums"
             >
               {bands.avg_8y.toFixed(1)}
             </text>
@@ -1786,7 +2039,7 @@ export function PerBandChart({
               x={padL - 4}
               y={toY(bands.min_8y) + 3}
               textAnchor="end"
-              className="text-[8px] font-black fill-[var(--c-ink-3)] orbitron tabular-nums"
+              className="text-[8px] font-black fill-[var(--c-ink-3)] tabular-nums"
             >
               {bands.min_8y.toFixed(0)}
             </text>
@@ -1827,7 +2080,7 @@ export function RevisionPulse({ detail, compact = false }: { detail: DetailData;
   return (
     <div className="mt-4 rounded-xl border border-[var(--c-line)] bg-[var(--c-panel)]/95 p-3">
       <div className="mb-2 flex min-w-0 flex-wrap items-baseline justify-between gap-2">
-        <h4 className="text-[11px] font-black uppercase tracking-[0.1em] text-[var(--c-ink-3)]">추정치 변화·시장 예상</h4>
+        <h4 className="text-[12px] font-black uppercase tracking-[0.1em] text-[var(--c-ink-3)]">추정치 변화·시장 예상</h4>
         <span className="text-[10px] font-bold text-[var(--c-ink-3)]">EPS 주간 예상</span>
       </div>
       {epsRows.length > 0 ? (
@@ -1838,13 +2091,13 @@ export function RevisionPulse({ detail, compact = false }: { detail: DetailData;
             return (
               <div key={row.key} className="min-w-0 rounded-lg border border-[var(--c-line-2)] bg-[var(--c-surface-2)] px-3 py-2">
                 <div className="flex min-w-0 items-center justify-between gap-2">
-                  <span className="min-w-0 truncate text-[10px] font-black uppercase tracking-[0.08em] text-[var(--c-ink-3)]">{row.label}</span>
-                  <span className={`shrink-0 text-[10px] font-black tabular-nums ${toneText(row.change)}`}>
+                  <span className="min-w-0 truncate text-[12px] font-black uppercase tracking-[0.08em] text-[var(--c-ink-3)]">{row.label}</span>
+                  <span className={`shrink-0 text-[12px] font-black tabular-nums ${toneText(row.change)}`}>
                     {fmtSignedFractionPercent(row.change)}
                   </span>
                 </div>
-                <p className="orbitron mt-1 text-sm font-black tabular-nums text-[var(--c-ink)]">{fmtEps(latest?.value)}</p>
-                <p className="mt-1 truncate text-[9px] font-bold tabular-nums text-[var(--c-ink-3)]">
+                <p className="mt-1 text-sm font-black tabular-nums text-[var(--c-ink)]">{fmtEps(latest?.value)}</p>
+                <p className="mt-1 truncate text-[12px] font-bold tabular-nums text-[var(--c-ink-3)]">
                   {latest?.date ?? "—"} · 전주 {fmtEps(previous?.value)}
                 </p>
               </div>
@@ -1854,7 +2107,7 @@ export function RevisionPulse({ detail, compact = false }: { detail: DetailData;
       ) : null}
       {historyRows.length > 0 ? (
         <div className="-mx-1 mt-3 overflow-x-auto px-1">
-          <table className="w-full min-w-[520px] text-[10px]">
+          <table className="w-full min-w-[520px] text-[12px]">
             <thead>
               <tr className="border-b border-[var(--c-line)] font-black uppercase tracking-[0.06em] text-[var(--c-ink-3)]">
                 <th className="sticky left-0 z-10 bg-[var(--c-panel)] px-2 py-1 text-left">일자</th>
@@ -1868,10 +2121,10 @@ export function RevisionPulse({ detail, compact = false }: { detail: DetailData;
               {historyRows.map((row, index) => (
                 <tr key={`${row.date}-${index}`} className="border-b border-[var(--c-line-2)] last:border-b-0">
                   <td className="sticky left-0 z-10 bg-[var(--c-panel)] px-2 py-1.5 font-bold tabular-nums text-[var(--c-ink-2)]">{row.date}</td>
-                  <td className="px-2 py-1.5 text-right orbitron tabular-nums text-[var(--c-ink-2)]">{fmtPlainNumber(row.price, 2)}</td>
-                  <td className="px-2 py-1.5 text-right orbitron tabular-nums text-[var(--c-ink-2)]">{fmtLarge(row.revenue_consensus)}</td>
-                  <td className="px-2 py-1.5 text-right orbitron tabular-nums text-[var(--c-ink-2)]">{fmtEps(row.eps_consensus)}</td>
-                  <td className={`px-2 py-1.5 text-right orbitron font-black tabular-nums ${toneText(row.eps_change)}`}>
+                  <td className="px-2 py-1.5 text-right tabular-nums text-[var(--c-ink-2)]">{fmtPlainNumber(row.price, 2)}</td>
+                  <td className="px-2 py-1.5 text-right tabular-nums text-[var(--c-ink-2)]">{fmtLarge(row.revenue_consensus)}</td>
+                  <td className="px-2 py-1.5 text-right tabular-nums text-[var(--c-ink-2)]">{fmtEps(row.eps_consensus)}</td>
+                  <td className={`px-2 py-1.5 text-right  font-black tabular-nums ${toneText(row.eps_change)}`}>
                     {fmtSignedNumber(row.eps_change, 2)}
                   </td>
                 </tr>
@@ -1909,11 +2162,11 @@ export function RawFinancialDepth({ detail, compact = false }: { detail: DetailD
   return (
     <div className="mt-4 rounded-xl border border-[var(--c-line)] bg-[var(--c-panel)]/95 p-3">
       <div className="mb-2 flex min-w-0 flex-wrap items-baseline justify-between gap-2">
-        <h4 className="text-[11px] font-black uppercase tracking-[0.1em] text-[var(--c-ink-3)]">실적·예상치 상세</h4>
+        <h4 className="text-[12px] font-black uppercase tracking-[0.1em] text-[var(--c-ink-3)]">실적·예상치 상세</h4>
         <span className="text-[10px] font-bold text-[var(--c-ink-3)]">과거 4년~3년차(FY+3) 표준화 데이터</span>
       </div>
       <div className="-mx-1 overflow-x-auto px-1">
-        <table className="w-full min-w-[720px] text-[10px]">
+        <table className="w-full min-w-[720px] text-[12px]">
           <thead>
             <tr className="border-b border-[var(--c-line)] font-black uppercase tracking-[0.06em] text-[var(--c-ink-3)]">
               <th className="sticky left-0 z-10 bg-[var(--c-panel)] px-2 py-1.5 text-left">항목</th>
@@ -1929,7 +2182,7 @@ export function RawFinancialDepth({ detail, compact = false }: { detail: DetailD
                 {periods.map((period, index) => {
                   const value = row.data?.[index];
                   return (
-                    <td key={`${row.label}-${period}`} className="px-2 py-1.5 text-right orbitron tabular-nums text-[var(--c-ink)]">
+                    <td key={`${row.label}-${period}`} className="px-2 py-1.5 text-right tabular-nums text-[var(--c-ink)]">
                       {row.fmt(value)}
                     </td>
                   );
@@ -1996,8 +2249,8 @@ function fmtRelativeDelta(current: MaybeNumber, previous: MaybeNumber) {
 function SlickMetricCard({ label, value, delta }: { label: string; value: string; delta?: string | null }) {
   return (
     <div className="min-w-0 rounded-lg border border-[var(--c-line-2)] bg-[var(--c-surface-2)] px-3 py-2">
-      <p className="min-w-0 truncate text-[11px] font-black uppercase tracking-[0.08em] text-[var(--c-ink-3)]">{label}</p>
-      <p className="orbitron mt-1 min-w-0 break-words text-base font-black tabular-nums text-[var(--c-ink)]">{value}</p>
+      <p className="min-w-0 truncate text-[12px] font-black uppercase tracking-[0.08em] text-[var(--c-ink-3)]">{label}</p>
+      <p className="mt-1 min-w-0 break-words text-base font-black tabular-nums text-[var(--c-ink)]">{value}</p>
       <p className="mt-1 min-h-[16px] text-[11px] font-bold tabular-nums text-[var(--c-ink-3)]">{delta ? `직전 ${delta}` : ""}</p>
     </div>
   );
@@ -2104,9 +2357,9 @@ export function PriceDividendHistoryDepth({
       <div className="mt-3 grid min-w-0 gap-3 lg:grid-cols-2">
         {returnRows.length > 0 ? (
           <div className="min-w-0">
-            <p className="mb-1.5 text-[11px] font-black uppercase tracking-[0.08em] text-[var(--c-ink-3)]">연도별 수익률</p>
+            <p className="mb-1.5 text-[12px] font-black uppercase tracking-[0.08em] text-[var(--c-ink-3)]">연도별 수익률</p>
             <div className="-mx-1 overflow-x-auto px-1">
-              <table className="w-full min-w-[240px] text-[11px]">
+              <table className="w-full min-w-[240px] text-[12px]">
                 <thead>
                   <tr className="border-b border-[var(--c-line)] font-black uppercase tracking-[0.06em] text-[var(--c-ink-3)]">
                     <th className="px-2 py-1.5 text-left">연도</th>
@@ -2117,7 +2370,7 @@ export function PriceDividendHistoryDepth({
                   {returnRows.map((row) => (
                     <tr key={row.year} className="border-b border-[var(--c-line-2)] last:border-b-0">
                       <td className="px-2 py-1.5 font-bold tabular-nums text-[var(--c-ink-2)]">{row.year}</td>
-                      <td className={`px-2 py-1.5 text-right orbitron font-black tabular-nums ${toneText(row.return)}`}>
+                      <td className={`px-2 py-1.5 text-right  font-black tabular-nums ${toneText(row.return)}`}>
                         {fmtSlickReturn(row.return)}
                       </td>
                     </tr>
@@ -2130,9 +2383,9 @@ export function PriceDividendHistoryDepth({
 
         {dividendRows.length > 0 ? (
           <div className="min-w-0">
-            <p className="mb-1.5 text-[11px] font-black uppercase tracking-[0.08em] text-[var(--c-ink-3)]">배당 이력</p>
+            <p className="mb-1.5 text-[12px] font-black uppercase tracking-[0.08em] text-[var(--c-ink-3)]">배당 이력</p>
             <div className="-mx-1 overflow-x-auto px-1">
-              <table className="w-full min-w-[320px] text-[11px]">
+              <table className="w-full min-w-[320px] text-[12px]">
                 <thead>
                   <tr className="border-b border-[var(--c-line)] font-black uppercase tracking-[0.06em] text-[var(--c-ink-3)]">
                     <th className="px-2 py-1.5 text-left">락일</th>
@@ -2144,7 +2397,7 @@ export function PriceDividendHistoryDepth({
                   {dividendRows.map((row, index) => (
                     <tr key={`${row.exDate ?? "ex"}-${index}`} className="border-b border-[var(--c-line-2)] last:border-b-0">
                       <td className="px-2 py-1.5 font-bold tabular-nums text-[var(--c-ink-2)]">{row.exDate ?? "—"}</td>
-                      <td className="px-2 py-1.5 text-right orbitron font-black tabular-nums text-[var(--c-ink)]">
+                      <td className="px-2 py-1.5 text-right font-black tabular-nums text-[var(--c-ink)]">
                         {fmtSlickMoney(row.amount, 3)}
                       </td>
                       <td className="px-2 py-1.5 text-right font-bold tabular-nums text-[var(--c-ink-3)]">{row.payDate ?? "—"}</td>
@@ -2165,7 +2418,7 @@ function ScreenerThreeSecondVerdictCard({ verdict }: { verdict: ScreenerThreeSec
     <div className="mb-4 rounded-2xl border border-[color:color-mix(in_srgb,var(--brand-interactive)_20%,transparent)] bg-[color:color-mix(in_srgb,var(--brand-interactive)_3.5%,transparent)] p-3.5 shadow-[var(--sh-sm)]">
       <div className="mb-2 flex flex-wrap items-center justify-between gap-2">
         <div className="min-w-0">
-          <p className="text-[11px] font-black uppercase tracking-[0.15em] text-[var(--brand-interactive)]">3초 판정</p>
+          <p className="text-[12px] font-black uppercase tracking-[0.15em] text-[var(--brand-interactive)]">3초 판정</p>
           <p className="mt-0.5 text-[10px] font-bold text-[var(--c-ink-3)]">스크리너 상세 데이터를 핵심 신호로 압축</p>
         </div>
         <span className={`shrink-0 rounded-full border px-2 py-1 text-[10px] font-black leading-none ${verdict.badgeClass}`}>
@@ -2190,11 +2443,15 @@ export function StockDetailBody({
   f13Entries,
   ticker,
   stock,
+  f13Error,
+  f13Retry,
 }: {
   detail: DetailData;
   f13Entries: F13Entry[] | null;
   ticker?: string;
   stock?: ScreenerStock;
+  f13Error?: LoaderError | null;
+  f13Retry?: () => void;
 }) {
   const revenue = detail.income_statement?.revenue ?? [];
   const eps = detail.per_share?.eps ?? [];
@@ -2227,13 +2484,13 @@ export function StockDetailBody({
               {interpretation.badge}
             </span>
           </div>
-          <p className="text-xs font-semibold leading-relaxed text-[var(--c-ink-2)]">
+          <p className="text-[12px] font-semibold leading-relaxed text-[var(--c-ink-2)]">
             {interpretation.text}
           </p>
           {interpretationReads.length > 0 ? (
             <ul className="mt-3 space-y-1.5 border-t border-[var(--c-line-2)] pt-2">
               {interpretationReads.map((read) => (
-                <li key={read.id} className="flex min-w-0 flex-wrap items-start gap-2 text-[11px] leading-relaxed">
+                <li key={read.id} className="flex min-w-0 flex-wrap items-start gap-2 text-[12px] leading-relaxed">
                   <span className={`shrink-0 rounded-full border px-2 py-0.5 font-black ${readToneClass(read.tone)}`}>
                     {read.label}
                   </span>
@@ -2248,7 +2505,7 @@ export function StockDetailBody({
       <div className="grid gap-5 sm:grid-cols-3">
         {/* PER Band Chart */}
         <div>
-          <h4 className="mb-2 text-[11px] font-black uppercase tracking-[0.1em] text-[var(--c-ink-3)]">
+          <h4 className="mb-2 text-[12px] font-black uppercase tracking-[0.1em] text-[var(--c-ink-3)]">
             PER 밴드
           </h4>
           {hasPer ? (
@@ -2259,13 +2516,13 @@ export function StockDetailBody({
               estimates={detail.valuation_estimates?.per}
             />
           ) : (
-            <span className="text-xs text-[var(--c-ink-3)]">—</span>
+            <span className="text-[12px] text-[var(--c-ink-3)]">—</span>
           )}
         </div>
 
         {/* Revenue Sparkline */}
         <div>
-          <h4 className="mb-2 text-[11px] font-black uppercase tracking-[0.1em] text-[var(--c-ink-3)]">
+          <h4 className="mb-2 text-[12px] font-black uppercase tracking-[0.1em] text-[var(--c-ink-3)]">
             매출 추이
           </h4>
           {hasRevenue ? (
@@ -2277,19 +2534,19 @@ export function StockDetailBody({
                 estimates={detail.income_statement_estimates?.revenue}
                 formatValue={fmtLarge}
               />
-              <div className="orbitron tabular-nums mt-1 text-[10px] font-bold text-[var(--c-ink-3)]">
+              <div className="tabular-nums mt-1 text-[10px] font-bold text-[var(--c-ink-3)]">
                 {fmtLarge(latestRevenue)}
                 {" (최신)"}
               </div>
             </>
           ) : (
-            <span className="text-xs text-[var(--c-ink-3)]">—</span>
+            <span className="text-[12px] text-[var(--c-ink-3)]">—</span>
           )}
         </div>
 
         {/* EPS Sparkline */}
         <div>
-          <h4 className="mb-2 text-[11px] font-black uppercase tracking-[0.1em] text-[var(--c-ink-3)]">
+          <h4 className="mb-2 text-[12px] font-black uppercase tracking-[0.1em] text-[var(--c-ink-3)]">
             EPS 추이
           </h4>
           {hasEps ? (
@@ -2301,12 +2558,12 @@ export function StockDetailBody({
                 estimates={detail.per_share_estimates?.eps}
                 formatValue={(value) => formatCurrency(value, "USD", { digits: 2 })}
               />
-              <div className="orbitron tabular-nums mt-1 text-[10px] font-bold text-[var(--c-ink-3)]">
+              <div className="tabular-nums mt-1 text-[10px] font-bold text-[var(--c-ink-3)]">
                 {latestEps != null ? `${fmtEps(latestEps)} (최신)` : "—"}
               </div>
             </>
           ) : (
-            <span className="text-xs text-[var(--c-ink-3)]">—</span>
+            <span className="text-[12px] text-[var(--c-ink-3)]">—</span>
           )}
         </div>
       </div>
@@ -2318,7 +2575,7 @@ export function StockDetailBody({
       {/* 13F Badges */}
       {f13Entries && f13Entries.length > 0 ? (
         <div className="mt-4">
-          <h4 className="mb-1.5 text-[11px] font-black uppercase tracking-[0.1em] text-[var(--c-ink-3)]">
+          <h4 className="mb-1.5 text-[12px] font-black uppercase tracking-[0.1em] text-[var(--c-ink-3)]">
             기관 공시 보유
           </h4>
           <div className="flex flex-wrap gap-1.5">
@@ -2332,26 +2589,24 @@ export function StockDetailBody({
             ))}
           </div>
         </div>
+      ) : f13Error ? (
+        <div className="mt-4">
+          <h4 className="mb-1.5 text-[12px] font-black uppercase tracking-[0.1em] text-[var(--c-ink-3)]">
+            기관 공시 보유
+          </h4>
+          <DataStateNotice
+            state={makeDataState({
+              status: "unavailable",
+              detail: "기관 공시 보유 데이터를 불러오지 못했습니다. 다시 시도해 주세요.",
+            })}
+            actionLabel="지금 재시도"
+            onAction={f13Retry}
+          />
+        </div>
       ) : null}
     </>
 	  );
 	}
-
-function w4ClampScore(score: number | null): number {
-  if (!isFiniteNumber(score)) return 0;
-  return Math.max(0, Math.min(100, score));
-}
-
-function w4ScoreText(score: number | null): string {
-  return isFiniteNumber(score) ? Math.round(score).toString() : "—";
-}
-
-function w4ScoreTone(score: number | null): "strong" | "balanced" | "watch" | "muted" {
-  if (!isFiniteNumber(score)) return "muted";
-  if (score >= 70) return "strong";
-  if (score >= 55) return "balanced";
-  return "watch";
-}
 
 function w4FormatPrice(value: MaybeNumber): string {
   return formatCurrency(value, "USD", { digits: 2 });
@@ -2374,78 +2629,30 @@ function w4FormatSignedFractionPercent(value: MaybeNumber, digits = 1): string {
   return formatSignedPercent(value, { digits });
 }
 
-function w4DirectionEnglish(direction: string): string {
-  if (direction === "상방 우세") return "UPSIDE";
-  if (direction === "하방 우세") return "DOWNSIDE";
-  if (direction === "균형") return "BALANCED";
-  return "UNCONFIRMED";
-}
-
 function w4Initials(ticker: string): string {
   return ticker.trim().slice(0, 2).toUpperCase() || "ST";
-}
-
-function W4ScoreDonut({ score }: { score: number | null }) {
-  const value = w4ClampScore(score);
-  return (
-    <div
-      className="cpw4-detail-donut"
-      style={{
-        background: `conic-gradient(var(--cpw4-accent) 0 ${value * 3.6}deg, var(--cp-divider) ${value * 3.6}deg 360deg)`,
-      }}
-      aria-label={`Fenok Edge ${w4ScoreText(score)}점`}
-    >
-      <span>{w4ScoreText(score)}</span>
-      <small>/100</small>
-    </div>
-  );
-}
-
-function W4Meter({ label, score, call }: { label: string; score: number | null; call: string | null }) {
-  const value = w4ClampScore(score);
-  return (
-    <div className="cpw4-meter" data-tone={w4ScoreTone(score)}>
-      <div className="cpw4-meter__head">
-        <span>{label}</span>
-        <strong>{w4ScoreText(score)} {call ?? "미정"}</strong>
-      </div>
-      <div className="cpw4-meter__track" aria-hidden="true">
-        <span style={{ width: `${value}%` }} />
-      </div>
-    </div>
-  );
-}
-
-function W4AxisCard({ axis, rank }: { axis: DetailLongTermAxis; rank: number }) {
-  const value = w4ClampScore(axis.score);
-  return (
-    <div className="cpw4-axis-card" data-tone={w4ScoreTone(axis.score)}>
-      <div className="cpw4-axis-card__head">
-        <span>TOP {rank}</span>
-        <strong>{w4ScoreText(axis.score)}</strong>
-      </div>
-      <p>{axis.fullLabel}</p>
-      <div className="cpw4-axis-card__bar" aria-hidden="true">
-        <span style={{ width: `${value}%` }} />
-      </div>
-    </div>
-  );
 }
 
 export default function StockDetailPanel({
   ticker,
   stock,
   canvasPlusPreview = false,
+  returnTo,
+  onBeforeNavigate,
 }: {
   ticker: string;
   stock?: ScreenerStock;
   canvasPlusPreview?: boolean;
+  returnTo?: string | null;
+  onBeforeNavigate?: () => void;
 }) {
-  const { detail, loading } = useStockDetail(ticker);
-  const f13Entries = use13FData(ticker);
+  const { detail, loading, error: detailError, retry: retryDetail } = useStockDetail(ticker);
+  const { entries: f13Entries, error: f13Error, retry: retryF13 } = use13FData(ticker);
 
   if (loading) {
     return (
+      <div className="col-span-full">
+      <EarningsOverview ticker={ticker} compact />
       <DataStateNotice
         state={makeDataState({
           status: "pending",
@@ -2453,11 +2660,30 @@ export default function StockDetailPanel({
         })}
         className="col-span-full border-t border-[var(--c-line-2)]"
       />
+      </div>
     );
   }
 
   if (!detail) {
+    if (detailError) {
+      return (
+        <div className="col-span-full">
+        <EarningsOverview ticker={ticker} compact />
+        <DataStateNotice
+          state={makeDataState({
+            status: "unavailable",
+            detail: loaderErrorDetail(detailError, "이 종목의 상세 재무·추정치 데이터"),
+          })}
+          actionLabel="지금 재시도"
+          onAction={retryDetail}
+          className="col-span-full border-t border-[var(--c-line-2)]"
+        />
+        </div>
+      );
+    }
     return (
+      <div className="col-span-full">
+      <EarningsOverview ticker={ticker} compact />
       <DataStateNotice
         state={makeDataState({
           status: "unavailable",
@@ -2465,28 +2691,31 @@ export default function StockDetailPanel({
         })}
         className="col-span-full border-t border-[var(--c-line-2)]"
       />
+      </div>
     );
   }
 
-  const convictionScore = isFiniteNumber(stock?.fenokConvictionScore)
-    ? Math.round(stock.fenokConvictionScore)
-    : null;
+  // fenokShortTermCommonBasisScore is a composition disclosure, not the score —
+  // the data contract says so. Reading it as the headline made this panel and
+  // the stock page disagree with every other surface (NVDA 53 against 61).
   const shortTerm = stock ? commonBasisShortTermView(stock) : null;
-  const shortTermConvictionScore = shortTerm?.score ?? null;
-  const shortTermConvictionCall = shortTerm?.call ?? null;
+  const shortTermConvictionScore = isFiniteNumber(stock?.fenokShortTermConvictionScore)
+    ? Math.round(stock.fenokShortTermConvictionScore)
+    : null;
   const longTermConvictionScore = isFiniteNumber(stock?.fenokLongTermConvictionScore)
     ? Math.round(stock.fenokLongTermConvictionScore)
     : null;
-  const longTermConvictionCall = stock?.fenokLongTermConvictionCall ?? null;
   const shortTermAxes = stock ? buildDetailShortTermAxes(stock) : [];
   const longTermAxes = stock ? buildDetailLongTermAxes(stock) : [];
   const hasShortTermSignal = shortTermAxes.some((axis) => axis.score !== null);
   const hasLongTermSignal = longTermAxes.some((axis) => axis.score !== null);
-  const edgeScore = isFiniteNumber(stock?.fenokEdgeScore)
-    ? Math.round(stock.fenokEdgeScore)
-    : null;
-  const edgeDirection = edgeDirectionLabel(stock?.fenokEdgeDirection);
-  const edgeLead = edgeLeadLabel(shortTermConvictionScore, longTermConvictionScore);
+  // The integrated "Fenok Edge" single score (fenokEdgeScore / direction) is
+  // retired (owner mandate 2026-08-03): the panel shows the two axes — Short
+  // Edge (단기) and Long Edge (장기) — as the substance.
+  const edgeLead = edgeLeadLabel();
+  const longDirectionalCount = longTermAxes.filter(
+    (axis) => axis.key !== "marketSimilarity" && axis.score !== null,
+  ).length;
   const signalCoverage = formatSignalCoverage(stock?.fenokSignalCoverageRatio);
   const shortTermBasis = shortTermCommonBasisCopy(stock?.fenokMarketScope, {
     sourceInputCount: shortTerm?.sourceInputCount ?? null,
@@ -2494,123 +2723,30 @@ export default function StockDetailPanel({
   });
 
   if (!canvasPlusPreview) {
+  const toSharedRows = (axes: DetailLongTermAxis[]): SharedEdgeAxisRow[] =>
+    axes.map((axis) => ({ key: axis.key, label: axis.fullLabel, score: axis.score, referenceOnly: axis.referenceOnly }));
   return (
     <div className="col-span-full border-t border-[var(--c-line-2)] bg-[var(--c-surface-2)]/50 px-2 py-3 sm:p-4">
-      {stock && (
-        <div className="mb-4 rounded-xl border border-[var(--c-line)] bg-[var(--c-panel)] p-2.5 shadow-[var(--sh-sm)] sm:p-3">
-          <div className="mb-2 flex flex-wrap items-center justify-between gap-2">
-            <span className="text-[11px] font-black uppercase tracking-[0.1em] text-[var(--c-ink-3)]">
-              Fenok 신호 한눈에 보기 · 투자 조언이 아닙니다
-            </span>
-            <div className="flex flex-wrap items-center gap-1.5">
-              <span
-                className={`inline-flex items-center gap-1 rounded-full border px-2 py-0.5 text-[10px] font-black tabular-nums ${convictionTone(shortTermConvictionCall)}`}
-                title={`${shortTermBasis.detail} ${shortTermBasis.comparisonNote}`}
-              >
-                <span aria-hidden="true">{shortTermConvictionCall ?? "미정"}</span>
-                {shortTermConvictionScore ?? "—"}
-              </span>
-              <span
-                className={`inline-flex items-center gap-1 rounded-full border px-2 py-0.5 text-[10px] font-black tabular-nums ${convictionTone(longTermConvictionCall)}`}
-                title="Fenok 장기 6축 종합 점수"
-              >
-                <span aria-hidden="true">{longTermConvictionCall ?? "미정"}</span>
-                {longTermConvictionScore ?? "—"}
-              </span>
-            </div>
-          </div>
-          <div className="mb-3 grid gap-2 md:grid-cols-3">
-            <div className="min-w-0 rounded-lg border border-[var(--c-line)] bg-[var(--c-surface-2)] px-3 py-2">
-              <div className="text-[10px] font-black uppercase tracking-[0.08em] text-[var(--c-ink-3)]">
-                Fenok Edge Score
-              </div>
-              <div className="mt-1 flex items-end justify-between gap-2">
-                <span className={`orbitron text-2xl font-black tabular-nums ${signalScoreTone(edgeScore)}`}>
-                  {edgeScore ?? "—"}
-                </span>
-                <span className="pb-1 text-[10px] font-black text-[var(--c-ink-2)]">
-                  {edgeDirection}
-                </span>
-              </div>
-              <div className="mt-1 truncate text-[10px] font-semibold text-[var(--c-ink-3)]">
-                {signalCoverage}
-              </div>
-            </div>
-            <div className="min-w-0 rounded-lg border border-[var(--c-line)] bg-[var(--c-surface-2)] px-3 py-2">
-              <div className="text-[10px] font-black uppercase tracking-[0.08em] text-[var(--c-ink-3)]">
-                Short Edge
-              </div>
-              <div className="mt-1 flex items-end justify-between gap-2">
-                <span className={`orbitron text-2xl font-black tabular-nums ${signalScoreTone(shortTermConvictionScore)}`}>
-                  {shortTermConvictionScore ?? "—"}
-                </span>
-                <span className="pb-1 text-[10px] font-black text-[var(--c-ink-2)]">
-                  {shortTermConvictionCall ?? "미정"}
-                </span>
-              </div>
-              <div className="mt-1 text-[10px] font-semibold leading-tight text-[var(--c-ink-3)]">
-                {shortTermBasis.label} · {edgeLead}
-              </div>
-            </div>
-            <div className="min-w-0 rounded-lg border border-[var(--c-line)] bg-[var(--c-surface-2)] px-3 py-2">
-              <div className="text-[10px] font-black uppercase tracking-[0.08em] text-[var(--c-ink-3)]">
-                Long Edge
-              </div>
-              <div className="mt-1 flex items-end justify-between gap-2">
-                <span className={`orbitron text-2xl font-black tabular-nums ${signalScoreTone(longTermConvictionScore)}`}>
-                  {longTermConvictionScore ?? "—"}
-                </span>
-                <span className="pb-1 text-[10px] font-black text-[var(--c-ink-2)]">
-                  {longTermConvictionCall ?? "미정"}
-                </span>
-              </div>
-              <div className="mt-1 truncate text-[10px] font-semibold text-[var(--c-ink-3)]">
-                장기 6축 · {edgeLead}
-              </div>
-            </div>
-          </div>
-          <div className="space-y-4">
-            <FenokSignalRadarHexagonPair
-              leftTitle="Short-term"
-              rightTitle="Long-term"
-              leftAxes={shortTermAxes}
-              rightAxes={longTermAxes}
-              size="md"
-            />
-            <p className="text-center text-[10px] font-bold text-[var(--c-ink-3)]">
-              Fenok 파생 신호 · 투자 조언이 아닙니다
-            </p>
-            <div className="grid gap-4 lg:grid-cols-2">
-              {hasShortTermSignal ? (
-                <div className="space-y-2">
-                  <h3 className="text-[10px] font-black uppercase tracking-[0.08em] text-[var(--c-ink-3)]">
-                    단기 축
-                  </h3>
-                  <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-1 xl:grid-cols-2">
-                    {shortTermAxes.map((axis) => (
-                      <DetailAxisLegend key={axis.key} axis={axis} />
-                    ))}
-                  </div>
-                </div>
-              ) : null}
-              {hasLongTermSignal ? (
-                <div className="space-y-2">
-                  <h3 className="text-[10px] font-black uppercase tracking-[0.08em] text-[var(--c-ink-3)]">
-                    장기 축
-                  </h3>
-                  <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-1 xl:grid-cols-2">
-                    {longTermAxes.map((axis) => (
-                      <DetailAxisLegend key={axis.key} axis={axis} />
-                    ))}
-                  </div>
-                </div>
-              ) : null}
-            </div>
-          </div>
+      <EarningsOverview ticker={ticker} compact />
+      {stock && (hasShortTermSignal || hasLongTermSignal) ? (
+        <div className="mb-4">
+          <SharedEdgePanel
+            title={edgeLead}
+            shortScore={shortTermConvictionScore}
+            longScore={longTermConvictionScore}
+            shortRows={toSharedRows(shortTermAxes)}
+            longRows={toSharedRows(longTermAxes)}
+            shortTitle={`단기 축 · ${shortTermBasis.label} · ${shortTermBasis.windowLabel} · ${shortTermBasis.sourceInputCount ?? "—"}/3–5 입력`}
+            longTitle={`장기 축 · 5개 방향성 축 ${longDirectionalCount}/5 · 동종군 유사도 참고축`}
+            summary={`${shortTermBasis.exclusionNote} ${shortTermBasis.comparisonNote} Fenok 파생 신호 · 투자 조언이 아닙니다`.trim()}
+            source="FENOK 신호"
+            asOf={stock.fenokSignalAsOf ? stock.fenokSignalAsOf.slice(0, 10) : "—"}
+            coverage={signalCoverage}
+          />
         </div>
-      )}
+      ) : null}
       <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
-        <span className="text-[11px] font-black uppercase tracking-[0.1em] text-[var(--c-ink-3)]">
+        <span className="text-[12px] font-black uppercase tracking-[0.1em] text-[var(--c-ink-3)]">
           종목 상세
         </span>
         <div className="flex flex-wrap items-center gap-2">
@@ -2621,10 +2757,10 @@ export default function StockDetailPanel({
             포트폴리오
           </TransitionLink>
           <TransitionLink
-            href={ROUTES.stock(ticker)}
+            href={ROUTES.stock(ticker, returnTo)} onClick={onBeforeNavigate}
             className="inline-flex min-h-9 items-center gap-2 rounded-full border border-[var(--brand-interactive)] bg-[color:color-mix(in_srgb,var(--brand-interactive)_8%,transparent)] px-3 text-[10px] font-black text-[var(--brand-interactive)] transition hover:bg-[color:color-mix(in_srgb,var(--brand-interactive)_14%,transparent)]"
           >
-            <span className="orbitron rounded-full bg-[var(--brand-interactive)] px-2 py-0.5 text-[9px] font-black text-white">
+            <span className="rounded-full bg-[var(--brand-interactive)] px-2 py-0.5 text-[9px] font-black text-white">
               {ticker}
             </span>
             종목 상세 →
@@ -2632,34 +2768,19 @@ export default function StockDetailPanel({
         </div>
       </div>
       <StockDetailBoundary ticker={ticker}>
-        <StockDetailBody detail={detail} f13Entries={f13Entries} ticker={ticker} stock={stock} />
+        <StockDetailBody detail={detail} f13Entries={f13Entries} ticker={ticker} stock={stock} f13Error={f13Error} f13Retry={retryF13} />
       </StockDetailBoundary>
     </div>
   );
   }
 
-  const allAxes = [...longTermAxes, ...shortTermAxes];
-  const topAxes = allAxes
-    .filter((axis) => axis.score !== null)
-    .sort((left, right) => (right.score ?? 0) - (left.score ?? 0))
-    .slice(0, 3);
-  const weakAxis = allAxes
-    .filter((axis) => axis.score !== null)
-    .sort((left, right) => (left.score ?? 0) - (right.score ?? 0))[0] ?? null;
-  const detailScore = edgeScore ?? convictionScore;
-  const verdictHeadline = `${edgeLead}${shortTermConvictionCall ? `, 단기 ${shortTermConvictionCall}` : ""}`;
-  const verdictCopy = [
-    longTermConvictionScore !== null ? `장기 ${longTermConvictionScore}` : "장기 미확인",
-    shortTermConvictionScore !== null ? `단기 ${shortTermConvictionScore}` : "단기 미확인",
-    signalCoverage,
-    shortTermBasis.label,
-  ].join(" · ");
   const etfCompareHref = stock?.connection?.singleStockEtfs?.length
     ? ROUTES.etfCompareTickers(stock.connection.singleStockEtfs.map((link) => link.ticker).slice(0, 4))
     : null;
 
   return (
     <div className="cpw4-detail-panel">
+      <EarningsOverview ticker={ticker} compact />
       {stock ? (
         <>
           <div className="cpw4-detail-context">
@@ -2681,60 +2802,24 @@ export default function StockDetailPanel({
             </div>
           </div>
 
-          <section className="cpw4-edge-card" aria-label={`${stock.ticker} Fenok Edge`}>
-            <div className="cpw4-edge-card__meta">
-              <span className="cpw4-edge-kicker">
-                <span aria-hidden="true" /> Fenok Edge · 투자 조언이 아닙니다
-              </span>
-              <span>{stock.fenokSignalAsOf ? `기준일 ${stock.fenokSignalAsOf.slice(0, 10)}` : signalCoverage}</span>
-            </div>
+          <div className="mb-4">
+            <SharedEdgePanel
+              title={edgeLead}
+              shortScore={shortTermConvictionScore}
+              longScore={longTermConvictionScore}
+              shortRows={shortTermAxes.map((axis) => ({ key: axis.key, label: axis.fullLabel, score: axis.score, referenceOnly: axis.referenceOnly }))}
+              longRows={longTermAxes.map((axis) => ({ key: axis.key, label: axis.fullLabel, score: axis.score, referenceOnly: axis.referenceOnly }))}
+              shortTitle={`단기 축 · ${shortTermBasis.label} · ${shortTermBasis.windowLabel} · ${shortTermBasis.sourceInputCount ?? "—"}/3–5 입력`}
+              longTitle={`장기 축 · 5개 방향성 축 ${longDirectionalCount}/5 · 동종군 유사도 참고축`}
+              summary={`${shortTermBasis.exclusionNote} ${shortTermBasis.comparisonNote} Fenok 파생 신호 · 투자 조언이 아닙니다`.trim()}
+              source="FENOK 신호"
+              asOf={stock.fenokSignalAsOf ? stock.fenokSignalAsOf.slice(0, 10) : "—"}
+              coverage={signalCoverage}
+            />
+          </div>
 
-            <div className="cpw4-edge-identity">
-              <div className="cpw4-edge-identity__left">
-                <span className="cpw4-detail-avatar cpw4-detail-avatar--large">{w4Initials(stock.ticker)}</span>
-                <div>
-                  <h2>{stock.ticker}</h2>
-                  <p>{stock.name} · {stock.sector || "섹터 미정"} · {stock.country || "국가 미정"}</p>
-                </div>
-              </div>
-              <div className="cpw4-edge-price">
-                <strong>{w4FormatPrice(stock.price)}</strong>
-                <span>12M {w4FormatSignedFractionPercent(stock.return12m)}</span>
-              </div>
-            </div>
-
-            <div className="cpw4-hero-verdict">
-              <W4ScoreDonut score={detailScore} />
-              <div className="cpw4-hero-verdict__copy">
-                <span className="cpw4-verdict-badge">
-                  {edgeDirection} · {w4DirectionEnglish(edgeDirection)}
-                </span>
-                <h3>{verdictHeadline}</h3>
-                <p>{verdictCopy}. {shortTermBasis.comparisonNote} Fenok 파생 신호는 축별 강도와 약점을 함께 보여주는 참고 지표입니다.</p>
-              </div>
-              <div className="cpw4-hero-verdict__meters">
-                <W4Meter label="단기" score={shortTermConvictionScore} call={shortTermConvictionCall ?? null} />
-                <W4Meter label="장기" score={longTermConvictionScore} call={longTermConvictionCall ?? null} />
-              </div>
-            </div>
-
-            <div className="cpw4-top3-grid">
-              {topAxes.length > 0 ? (
-                topAxes.map((axis, index) => <W4AxisCard key={axis.key} axis={axis} rank={index + 1} />)
-              ) : (
-                <p className="cpw4-empty-axis">확인된 강점 축이 없습니다.</p>
-              )}
-            </div>
-
-            {weakAxis ? (
-              <div className="cpw4-weak-axis-callout">
-                <strong>약점 축 · {weakAxis.fullLabel} {w4ScoreText(weakAxis.score)}</strong>
-                <span>{weakAxis.tooltipNote ?? "점수가 낮은 축은 추가 확인이 필요한 구간입니다."}</span>
-              </div>
-            ) : null}
-
-            <div className="cpw4-cta-row">
-              <TransitionLink href={ROUTES.stock(ticker)} className="cpw4-primary-cta">
+          <div className="cpw4-cta-row">
+              <TransitionLink href={ROUTES.stock(ticker, returnTo)} onClick={onBeforeNavigate} className="cpw4-primary-cta">
                 종목 상세 보기 →
               </TransitionLink>
               <TransitionLink href={ROUTES.portfolioTicker(ticker)} className="cpw4-secondary-cta">
@@ -2749,45 +2834,6 @@ export default function StockDetailPanel({
               )}
               <span className="cpw4-cta-note">Fenok 파생 신호 · 투자 조언 아님</span>
             </div>
-          </section>
-
-          <details className="cpw4-axis-detail">
-            <summary>
-              <span>12축 전체 보기</span>
-              <small>단기 6축 · 장기 6축 레이더 + 전체 스코어</small>
-            </summary>
-            <div className="cpw4-axis-detail__body">
-              <FenokSignalRadarHexagonPair
-                leftTitle="Short-term"
-                rightTitle="Long-term"
-                leftAxes={shortTermAxes}
-                rightAxes={longTermAxes}
-                size="md"
-              />
-              <div className="cpw4-axis-detail__grid">
-                {hasShortTermSignal ? (
-                  <div>
-                    <h3>단기 축</h3>
-                    <div className="cpw4-axis-legend-grid">
-                      {shortTermAxes.map((axis) => (
-                        <DetailAxisLegend key={axis.key} axis={axis} />
-                      ))}
-                    </div>
-                  </div>
-                ) : null}
-                {hasLongTermSignal ? (
-                  <div>
-                    <h3>장기 축</h3>
-                    <div className="cpw4-axis-legend-grid">
-                      {longTermAxes.map((axis) => (
-                        <DetailAxisLegend key={axis.key} axis={axis} />
-                      ))}
-                    </div>
-                  </div>
-                ) : null}
-              </div>
-            </div>
-          </details>
         </>
       ) : null}
 
@@ -2798,7 +2844,7 @@ export default function StockDetailPanel({
         </summary>
         <div className="cpw4-financial-detail__body">
           <StockDetailBoundary ticker={ticker}>
-            <StockDetailBody detail={detail} f13Entries={f13Entries} ticker={ticker} stock={stock} />
+            <StockDetailBody detail={detail} f13Entries={f13Entries} ticker={ticker} stock={stock} f13Error={f13Error} f13Retry={retryF13} />
           </StockDetailBoundary>
         </div>
       </details>

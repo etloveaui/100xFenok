@@ -12,47 +12,104 @@
       "run_id": "29785605821",
       "schedule": "0 22 * * 1",
       "shard": "1/6"
+    },
+    {
+      "attempts_used": 1,
+      "event_name": "schedule",
+      "failures": [],
+      "latency_ms": 776,
+      "natural": true,
+      "observed_at": "2026-08-05T16:06:31Z",
+      "outcome": "fresh",
+      "run_attempt": 1,
+      "run_id": "31023479262",
+      "schedule": "7 14 * * 0-5",
+      "shard": "43/72"
+    },
+    {
+      "attempts_used": 1,
+      "event_name": "schedule",
+      "failures": [],
+      "latency_ms": 700,
+      "natural": true,
+      "observed_at": "2026-08-07T15:04:20Z",
+      "outcome": "fresh",
+      "run_attempt": 1,
+      "run_id": "31190633378",
+      "schedule": "7 14 * * 0-5",
+      "shard": "67/72"
+    },
+    {
+      "attempts_used": 1,
+      "event_name": "workflow_dispatch",
+      "failures": [],
+      "latency_ms": 474,
+      "natural": false,
+      "observed_at": "2026-09-28T03:11:20Z",
+      "outcome": "fresh",
+      "run_attempt": 1,
+      "run_id": "36367829153",
+      "schedule": "",
+      "shard": ""
     }
   ],
   "current": {
-    "fetched_at": "2026-07-20T23:05:49Z",
-    "history_as_of": "2026-07-20",
+    "fetched_at": "2026-09-28T03:14:10Z",
+    "history_as_of": "2026-09-25",
     "path": "data/yf/finance/DAPP.json",
-    "payload_sha256": "ff66184a4aa76b0dc43ece2e8484c2a1f7d0fcb0bfabe9c927fb686d67c0bae3",
-    "quote_as_of": "2026-07-20T20:00:01Z",
-    "source_as_of": "2026-07-20"
+    "payload_sha256": "6bb3254763e50da3ad961e70bdd0f91189f9de1670a051317ab84a29785b17db",
+    "quote_as_of": "2026-09-25T20:00:01Z",
+    "source_as_of": "2026-09-25"
   },
   "discovered_from": [
     "stockanalysis_etf"
   ],
   "last_attempt": {
     "attempts_used": 1,
-    "event_name": "schedule",
+    "event_name": "workflow_dispatch",
     "failures": [],
-    "latency_ms": 1008,
-    "natural": true,
-    "observed_at": "2026-07-20T23:03:20Z",
+    "latency_ms": 474,
+    "natural": false,
+    "observed_at": "2026-09-28T03:11:20Z",
     "outcome": "fresh",
     "run_attempt": 1,
-    "run_id": "29785605821",
-    "schedule": "0 22 * * 1",
-    "shard": "1/6"
+    "run_id": "36367829153",
+    "schedule": "",
+    "shard": ""
+  },
+  "lkg": {
+    "fetched_at": "2026-08-07T15:06:00Z",
+    "history_as_of": "2026-08-07",
+    "path": "data/admin/yahoo-batch-quote-history/lkg/DAPP.json",
+    "payload_sha256": "89875393a74c72cf56c84ecb7b96d716d1771156a9e603352e42de9eef04066b",
+    "quote_as_of": "2026-08-07T15:05:28Z",
+    "source_as_of": "2026-08-07"
   },
   "promotion_contract": "provider_observation/v2",
   "provider_observation": {
-    "event_name": "schedule",
-    "history_as_of": "2026-07-20",
-    "observed_at": "2026-07-20T23:03:20Z",
-    "payload_sha256": "af2f3b0b8fc3f02c243d177e2089c24eecd256d64bae19a91a66ad3beff038d2",
-    "quote_as_of": "2026-07-20T20:00:01Z",
+    "event_name": "workflow_dispatch",
+    "history_as_of": "2026-09-25",
+    "observed_at": "2026-09-28T03:11:20Z",
+    "payload_sha256": "a30b8562709c8c1b15c44d5bd3170a895213c1bee8e0aa6537191198af3dabb9",
+    "quote_as_of": "2026-09-25T20:00:01Z",
     "run_attempt": 1,
-    "run_id": "29785605821",
+    "run_id": "36367829153",
     "schema_version": "provider_observation/v2",
-    "source_as_of": "2026-07-20"
+    "source_as_of": "2026-09-25"
   },
   "resolution_state": "fresh_primary",
   "retry": false,
   "schema_version": "yahoo-batch-quote-history-state/v1",
+  "stale": {
+    "age_business_days": 8,
+    "classified_at": "2026-08-19T23:42:29Z",
+    "classified_run_id": "32314261503",
+    "expected_resolution": "next_natural_yahoo_run",
+    "max_business_days": 6,
+    "message": "DAPP holds LKG because Yahoo source date 2026-08-07 is 8 business days old, beyond the 6-day bound; it will retry on the next natural Yahoo run.",
+    "reason": "source_age_exceeds_lane_bound",
+    "source_as_of": "2026-08-07"
+  },
   "ticker": "DAPP",
-  "updated_at": "2026-07-20T23:03:20Z"
+  "updated_at": "2026-09-28T03:11:20Z"
 }

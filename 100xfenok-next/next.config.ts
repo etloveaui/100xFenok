@@ -19,11 +19,11 @@ const nextConfig: NextConfig = {
     ],
   },
 
-  // Turbopack root configuration
-  turbopack: {
-    root: process.cwd(),
-  },
   allowedDevOrigins: ["127.0.0.1"],
+
+  env: {
+    NEXT_PUBLIC_GOOGLE_CLIENT_ID: "1047143661358-ppe3u3k58dcbi59usbkmd0fggbi5dkpd.apps.googleusercontent.com",
+  },
 
   // Trailing slash for consistent URLs
   trailingSlash: true,
@@ -52,11 +52,35 @@ const nextConfig: NextConfig = {
       {
         source: "/briefing",
         destination: "/",
+        permanent: true,
+      },
+      {
+        source: "/filings",
+        destination: "/stock/NVDA?tab=filings",
         permanent: false,
       },
       {
         source: "/filings/nvda-10k",
         destination: "/stock/NVDA?tab=filings",
+        permanent: false,
+      },
+      // Measured 2026-08-23: a redirect declared HERE is served as a real HTTP
+      // redirect, and the same redirect written only as redirect() inside a page
+      // component is not - the adapter renders that page and emits 200 with a
+      // meta refresh in the body. /briefing and /filings/nvda-10k above proved
+      // the working half; /market and /live-bench were the failing half, and
+      // neither the redirect/permanentRedirect choice nor an exported metadata
+      // object made any difference. A 200 is indexable and a redirect is not, so
+      // the difference is not cosmetic. Their page components stay in place and
+      // are simply never reached, exactly like the two above.
+      {
+        source: "/market",
+        destination: "/market-valuation",
+        permanent: true,
+      },
+      {
+        source: "/live-bench",
+        destination: "/admin/live",
         permanent: false,
       },
       {

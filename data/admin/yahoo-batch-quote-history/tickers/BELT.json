@@ -12,15 +12,41 @@
       "run_id": "29707016827",
       "schedule": "0 22 * * 0",
       "shard": "0/6"
+    },
+    {
+      "attempts_used": 1,
+      "event_name": "schedule",
+      "failures": [],
+      "latency_ms": 600,
+      "natural": true,
+      "observed_at": "2026-08-05T12:11:49Z",
+      "outcome": "fresh",
+      "run_attempt": 1,
+      "run_id": "31004461242",
+      "schedule": "7 10 * * 0-5",
+      "shard": "41/72"
+    },
+    {
+      "attempts_used": 1,
+      "event_name": "schedule",
+      "failures": [],
+      "latency_ms": 817,
+      "natural": true,
+      "observed_at": "2026-08-12T02:41:04Z",
+      "outcome": "fresh",
+      "run_attempt": 1,
+      "run_id": "31557511991",
+      "schedule": "7 0 * * 0-5",
+      "shard": "36/72"
     }
   ],
   "current": {
-    "fetched_at": "2026-07-19T23:04:00Z",
-    "history_as_of": "2026-07-17",
+    "fetched_at": "2026-08-12T02:42:51Z",
+    "history_as_of": "2026-08-11",
     "path": "data/yf/finance/BELT.json",
-    "payload_sha256": "eee36b16b0745dd8d91cd0230087cd090cdc865eca48a635fd03ba045051eb87",
-    "quote_as_of": "2026-07-17T20:00:00Z",
-    "source_as_of": "2026-07-17"
+    "payload_sha256": "e2f546f1d1873928910ff77d3fd9db3d99194b39f8a6dfa0374da269b0758fb9",
+    "quote_as_of": "2026-08-11T20:00:00Z",
+    "source_as_of": "2026-08-11"
   },
   "discovered_from": [
     "stockanalysis_etf"
@@ -29,30 +55,48 @@
     "attempts_used": 1,
     "event_name": "schedule",
     "failures": [],
-    "latency_ms": 1311,
+    "latency_ms": 817,
     "natural": true,
-    "observed_at": "2026-07-19T22:59:54Z",
+    "observed_at": "2026-08-12T02:41:04Z",
     "outcome": "fresh",
     "run_attempt": 1,
-    "run_id": "29707016827",
-    "schedule": "0 22 * * 0",
-    "shard": "0/6"
+    "run_id": "31557511991",
+    "schedule": "7 0 * * 0-5",
+    "shard": "36/72"
+  },
+  "lkg": {
+    "fetched_at": "2026-07-19T23:04:00Z",
+    "history_as_of": "2026-07-17",
+    "path": "data/admin/yahoo-batch-quote-history/lkg/BELT.json",
+    "payload_sha256": "eee36b16b0745dd8d91cd0230087cd090cdc865eca48a635fd03ba045051eb87",
+    "quote_as_of": "2026-07-17T20:00:00Z",
+    "source_as_of": "2026-07-17"
   },
   "promotion_contract": "provider_observation/v2",
   "provider_observation": {
     "event_name": "schedule",
-    "history_as_of": "2026-07-17",
-    "observed_at": "2026-07-19T22:59:54Z",
-    "payload_sha256": "4c7f8d42c1703090f22c3d02b4d42881daf5946fc0696b332e1a5d9c7fcfa590",
-    "quote_as_of": "2026-07-17T20:00:00Z",
+    "history_as_of": "2026-08-11",
+    "observed_at": "2026-08-12T02:41:04Z",
+    "payload_sha256": "9055fb4869e017546e7256bcab1eb0917cd8e7712e31c7e8ce3cb0afcae52649",
+    "quote_as_of": "2026-08-11T20:00:00Z",
     "run_attempt": 1,
-    "run_id": "29707016827",
+    "run_id": "31557511991",
     "schema_version": "provider_observation/v2",
-    "source_as_of": "2026-07-17"
+    "source_as_of": "2026-08-11"
   },
   "resolution_state": "fresh_primary",
   "retry": false,
   "schema_version": "yahoo-batch-quote-history-state/v1",
+  "stale": {
+    "age_business_days": 7,
+    "classified_at": "2026-07-28T00:14:11Z",
+    "classified_run_id": "30316637722",
+    "expected_resolution": "next_natural_yahoo_run",
+    "max_business_days": 6,
+    "message": "BELT holds LKG because Yahoo source date 2026-07-17 is 7 business days old, beyond the 6-day bound; it will retry on the next natural Yahoo run.",
+    "reason": "source_age_exceeds_lane_bound",
+    "source_as_of": "2026-07-17"
+  },
   "ticker": "BELT",
-  "updated_at": "2026-07-19T22:59:54Z"
+  "updated_at": "2026-08-12T02:41:04Z"
 }

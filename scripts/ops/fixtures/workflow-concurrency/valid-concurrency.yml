@@ -1,0 +1,23 @@
+# Control fixture: every supported key and queue enum at both the top level and
+# job level. This must keep passing, so the guard cannot reject concurrency
+# blocks or GitHub's native deep queue.
+name: Valid Concurrency
+
+on:
+  workflow_dispatch:
+
+concurrency:
+  group: fixture-writer
+  cancel-in-progress: false
+  queue: max
+
+jobs:
+  noop:
+    runs-on: ubuntu-latest
+    concurrency:
+      group: fixture-writer-job
+      cancel-in-progress: true
+      queue: single
+    steps:
+      - name: Noop
+        run: echo noop

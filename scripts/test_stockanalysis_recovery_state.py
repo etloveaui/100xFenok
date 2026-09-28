@@ -17,7 +17,9 @@ if str(SCRIPT_DIR) not in sys.path:
     sys.path.insert(0, str(SCRIPT_DIR))
 
 from stockanalysis_recovery_state import (  # noqa: E402
+    StockAnalysisRecoveryStateError,
     StockAnalysisRecoveryStateStore,
+    is_natural_schedule_run,
     payload_source_fields,
     validate_controlled_failure_scope,
 )
@@ -62,6 +64,18 @@ def financial_payload(ticker: str, period_as_of: str) -> dict:
         "fetched_at": f"{period_as_of}T23:00:00Z",
         "statements": {"annual": {"income": statement}},
         "summary": {"annual": {"income": {"period_count": 2}}},
+    }
+
+
+def etf_payload(ticker: str, source_as_of: str | None) -> dict:
+    return {
+        "schema_version": "stockanalysis/v1",
+        "source": "stockanalysis",
+        "asset_type": "etf",
+        "ticker": ticker,
+        "source_as_of": source_as_of,
+        "fetched_at": "2026-07-15T23:00:00Z",
+        "normalized": {"overview": {"aum": 1}},
     }
 
 
@@ -127,6 +141,49 @@ class StockAnalysisRecoveryStateTest(unittest.TestCase):
             "natural": False,
             "observed_at": "2026-07-15T08:00:00Z",
         }
+
+    def test_bound_remote_manual_etf_can_recover_but_other_kinds_keep_natural_gate(self):
+        retained = etf_payload("VYMI", "2026-07-14T00:00:00Z")
+        path = self.data_root / "etfs" / "VYMI.json"
+        write_json(path, retained)
+        self.store.record_failure("etf", "VYMI", "HTTP 503", self.run_context("failure"))
+        payload = {**retained, "source_as_of": "2026-07-15T00:00:00Z",
+                   "raw": {"quote": {"td": "2026-07-15"}},
+                   "normalized": {"overview": {"aum": 1}, "holdings": [{"ticker": "AAPL", "weight": 1}]}}
+        raw = write_json(path, payload)
+        run = {**self.run_context("901"), "observed_at": payload["fetched_at"]}
+        run["etf_acquisition"] = {"run_id": "901", "run_attempt": 1, "event_name": "workflow_dispatch",
+                                  "remote": True, "fresh_fetch": True,
+                                  "started_at": payload["fetched_at"], "completed_at": payload["fetched_at"],
+                                  "fetched_at": payload["fetched_at"], "source_as_of": payload["source_as_of"],
+                                  "payload_sha256": hashlib.sha256(raw).hexdigest()}
+        state = self.store.record_success("etf", "VYMI", payload, run)
+        self.assertFalse(state["retry"])
+        self.assertEqual(state["recovery_event_name"], "workflow_dispatch")
+        self.assertFalse(state["last_attempt"]["natural"])
+        stock = stock_payload("AAPL", "2026-07-14T00:00:00Z")
+        write_json(self.data_root / "stocks" / "AAPL.json", stock)
+        self.store.record_failure("stock", "AAPL", "HTTP 503", self.run_context("failure"))
+        with self.assertRaisesRegex(ValueError, "natural schedule"):
+            self.store.record_success("stock", "AAPL", stock, run)
+
+    def test_unadvanced_manual_etf_keeps_lkg_and_records_honest_deferral(self):
+        payload = {**etf_payload("VYMI", "2026-07-15T00:00:00Z"),
+                   "raw": {"quote": {"td": "2026-07-15"}},
+                   "normalized": {"overview": {"aum": 1}, "holdings": [{"ticker": "AAPL", "weight": 1}]}}
+        path = self.data_root / "etfs" / "VYMI.json"
+        raw = write_json(path, payload)
+        self.store.record_failure("etf", "VYMI", "HTTP 503", self.run_context("failure"))
+        run = {**self.run_context("902"), "observed_at": payload["fetched_at"]}
+        run["etf_acquisition"] = {"run_id": "902", "run_attempt": 1, "event_name": "workflow_dispatch",
+                                  "remote": True, "fresh_fetch": True,
+                                  "started_at": payload["fetched_at"], "completed_at": payload["fetched_at"],
+                                  "fetched_at": payload["fetched_at"], "source_as_of": payload["source_as_of"],
+                                  "payload_sha256": hashlib.sha256(raw).hexdigest()}
+        state = self.store.record_promotion_deferred("etf", "VYMI", payload, run)
+        self.assertTrue(state["retry"])
+        self.assertEqual(path.read_bytes(), raw)
+        self.assertEqual(state["last_attempt"]["event_name"], "workflow_dispatch")
 
     def seed_lane(self) -> dict[tuple[str, str], bytes]:
         return {
@@ -233,13 +290,30 @@ class StockAnalysisRecoveryStateTest(unittest.TestCase):
             entity = "actions_recent" if kind == "surface" else "AAPL"
             self.assertTrue(self.store.recovery_candidate_advances(kind, entity, payload))
             write_json(self.store.canonical_path(kind, entity), payload)
-            state = self.store.record_success(kind, entity, payload, self.run_context("real-2"))
+            with self.assertRaisesRegex(ValueError, "natural schedule run"):
+                self.store.record_success(
+                    kind, entity, payload, self.run_context("dispatch-cannot-recover")
+                )
+            retained = self.store._load_state(kind, entity)
+            self.assertTrue(retained["retry"])
+            self.assertEqual(retained["latest_failure"]["run_id"], "chaos-2")
+            natural_run = {
+                **self.run_context("real-2"),
+                "event_name": "schedule",
+                "natural": True,
+            }
+            state = self.store.record_success(kind, entity, payload, natural_run)
             self.assertEqual(state["resolution_state"], "fresh_primary")
             self.assertFalse(state["retry"])
             self.assertEqual(state["recovered_from_run_id"], "chaos-2")
+            self.assertEqual(state["recovery_event_name"], "schedule")
             self.assertEqual(state["last_recovered_failure"]["run_id"], "chaos-2")
 
-        index = self.store.rebuild_index(self.run_context("real-2"))
+        index = self.store.rebuild_index({
+            **self.run_context("real-2"),
+            "event_name": "schedule",
+            "natural": True,
+        })
         self.assertEqual(index["current_attempt"]["recovered"], 3)
         self.assertEqual(index["recovered_tickers"], ["AAPL"])
         self.assertEqual(index["recovered_surfaces"], ["actions_recent"])
@@ -318,6 +392,25 @@ class StockAnalysisRecoveryStateTest(unittest.TestCase):
             ],
         )
 
+    def test_natural_schedule_gate_requires_schedule_attempt_one_in_both_directions(self) -> None:
+        self.assertTrue(is_natural_schedule_run({
+            **self.run_context("natural"),
+            "event_name": "schedule",
+            "run_attempt": 1,
+        }))
+        self.assertFalse(is_natural_schedule_run({
+            **self.run_context("dispatch"),
+            "event_name": "workflow_dispatch",
+            "run_attempt": 1,
+            "natural": True,
+        }))
+        self.assertFalse(is_natural_schedule_run({
+            **self.run_context("rerun"),
+            "event_name": "schedule",
+            "run_attempt": 2,
+            "natural": True,
+        }))
+
     def test_financial_recovery_accepts_new_collection_of_same_fiscal_source_only(self) -> None:
         self.seed_lane()
         self.store.bootstrap_existing(self.run_context("bootstrap"))
@@ -355,6 +448,105 @@ class StockAnalysisRecoveryStateTest(unittest.TestCase):
                 "financial", "AAPL", advanced_source_old_fetch
             )
         )
+
+    def test_etf_recovery_requires_strict_provider_advance_and_defers_without_replacing_failure(self) -> None:
+        ticker = "TQQQ"
+        canonical = self.data_root / "etfs" / f"{ticker}.json"
+        retained_bytes = write_json(
+            canonical,
+            etf_payload(ticker, "2026-07-14T20:00:00Z"),
+        )
+
+        # ETF details are deliberately not bulk-bootstrapped; a recovery state
+        # begins only after a source-specific failure target exists.
+        self.assertEqual(self.store.bootstrap_existing(self.run_context("bootstrap")), 0)
+        failed = self.store.record_failure(
+            "etf",
+            ticker,
+            "controlled failure injection",
+            self.run_context("etf-chaos"),
+            controlled=True,
+        )
+        self.assertEqual(failed["resolution_state"], "lkg_primary")
+        self.assertTrue(failed["retry"])
+        self.assertTrue(failed["latest_failure"]["had_canonical_before_failure"])
+        self.assertEqual(
+            (self.state_root / "lkg" / "etf" / f"{ticker}.json").read_bytes(),
+            retained_bytes,
+        )
+
+        for candidate in (
+            etf_payload(ticker, "2026-07-14T20:00:00Z"),
+            etf_payload(ticker, None),
+            etf_payload(ticker, "2026-07-13T20:00:00Z"),
+        ):
+            with self.subTest(source_as_of=candidate["source_as_of"]):
+                self.assertFalse(
+                    self.store.recovery_candidate_advances("etf", ticker, candidate)
+                )
+
+        deferred = self.store.record_promotion_deferred(
+            "etf",
+            ticker,
+            etf_payload(ticker, "2026-07-14T20:00:00Z"),
+            {
+                **self.run_context("etf-natural-deferred"),
+                "event_name": "schedule",
+                "natural": True,
+            },
+        )
+        self.assertTrue(deferred["retry"])
+        self.assertEqual(deferred["latest_failure"]["run_id"], "etf-chaos")
+        self.assertEqual(deferred["last_attempt"]["outcome"], "promotion_deferred")
+
+        deferred_index = self.store.rebuild_index({
+            **self.run_context("etf-natural-deferred"),
+            "event_name": "schedule",
+            "natural": True,
+        })
+        self.assertEqual(deferred_index["current_attempt"]["promotion_deferred"], 1)
+        self.assertEqual(
+            deferred_index["promotion_deferral_details"],
+            [{
+                "artifact_kind": "etf",
+                "entity": ticker,
+                "source_as_of": "2026-07-14T20:00:00Z",
+                "retained_source_as_of": "2026-07-14T20:00:00Z",
+                "reason_code": "source_not_advanced",
+            }],
+        )
+
+        advanced = etf_payload(ticker, "2026-07-15T20:00:00Z")
+        write_json(canonical, advanced)
+        with self.assertRaisesRegex(ValueError, "natural schedule run"):
+            self.store.record_success(
+                "etf", ticker, advanced, self.run_context("etf-dispatch-cannot-recover")
+            )
+        with self.assertRaisesRegex(ValueError, "natural schedule run"):
+            self.store.record_success(
+                "etf",
+                ticker,
+                advanced,
+                {
+                    **self.run_context("etf-schedule-rerun", attempt=2),
+                    "event_name": "schedule",
+                    "natural": True,
+                },
+            )
+
+        recovered = self.store.record_success(
+            "etf",
+            ticker,
+            advanced,
+            {
+                **self.run_context("etf-natural-recovered"),
+                "event_name": "schedule",
+                "natural": True,
+            },
+        )
+        self.assertFalse(recovered["retry"])
+        self.assertEqual(recovered["recovered_from_run_id"], "etf-chaos")
+        self.assertEqual(recovered["recovery_run_id"], "etf-natural-recovered")
 
     def test_existing_payload_loss_is_corruption(self) -> None:
         self.seed_lane()
@@ -428,14 +620,76 @@ class StockAnalysisRecoveryStateTest(unittest.TestCase):
 
         advanced = universe_payload("2026-07-15T08:05:00Z", "AAA", "BBB", "CCC")
         write_json(canonical, advanced)
+        with self.assertRaisesRegex(ValueError, "natural schedule run"):
+            self.store.record_success(
+                "universe", entity, advanced, self.run_context("dispatch-recovered")
+            )
         recovered = self.store.record_success(
-            "universe", entity, advanced, self.run_context("universe-recovered")
+            "universe",
+            entity,
+            advanced,
+            {
+                **self.run_context("universe-recovered"),
+                "event_name": "schedule",
+                "natural": True,
+            },
         )
         self.assertEqual(recovered["resolution_state"], "fresh_primary")
         self.assertFalse(recovered["retry"])
         self.assertEqual(recovered["recovered_from_run_id"], "universe-failed")
         recovered_index = self.store.rebuild_index(self.run_context("universe-recovered"))
         self.assertEqual(recovered_index["recovered_universes"], [entity])
+
+    def test_reconcile_current_payload_sha_fails_closed_and_distinguishes_noop(self) -> None:
+        entity = "etf_universe"
+        canonical = self.data_root / "etf_universe.json"
+        write_json(canonical, universe_payload("2026-07-15T07:00:00Z", "AAA"))
+        self.store.bootstrap_existing(self.run_context("bootstrap"))
+
+        self.assertFalse(
+            self.store.reconcile_current_payload_sha256("universe", entity),
+            "matching canonical bytes are a no-op, not a reconciliation failure",
+        )
+        state_path = self.state_root / "states" / "universe" / f"{entity}.json"
+        state_path.unlink()
+        with self.assertRaisesRegex(StockAnalysisRecoveryStateError, "missing recovery state"):
+            self.store.reconcile_current_payload_sha256("universe", entity)
+
+        state_path.write_text("{broken", encoding="utf-8")
+        with self.assertRaisesRegex(StockAnalysisRecoveryStateError, "malformed recovery state"):
+            self.store.reconcile_current_payload_sha256("universe", entity)
+
+        self.store.bootstrap_existing(self.run_context("rebootstrap"))
+        canonical.unlink()
+        with self.assertRaisesRegex(StockAnalysisRecoveryStateError, "canonical payload is unreadable"):
+            self.store.reconcile_current_payload_sha256("universe", entity)
+
+    def test_reconcile_current_payload_sha_preserves_degraded_lkg_binding(self) -> None:
+        entity = "etf_universe"
+        canonical = self.data_root / "etf_universe.json"
+        payload = universe_payload("2026-07-15T07:00:00Z", "AAA")
+        write_json(canonical, payload)
+        self.store.bootstrap_existing(self.run_context("bootstrap"))
+        self.store.record_failure(
+            "universe",
+            entity,
+            "controlled failure",
+            self.run_context("controlled-failure"),
+            controlled=True,
+        )
+
+        reclassified = {**payload, "classification_refreshed_at": "2026-07-15T08:00:00Z"}
+        write_json(canonical, reclassified)
+
+        self.assertFalse(
+            self.store.reconcile_current_payload_sha256("universe", entity),
+            "a degraded current pointer must remain bound to its retained LKG",
+        )
+        state = json.loads(
+            (self.state_root / "states" / "universe" / f"{entity}.json").read_text()
+        )
+        self.assertEqual(state["current"], state["lkg"])
+        self.assertTrue(self.store.valid_retained_lkg("universe", entity, state))
 
     def test_controlled_failure_scope_is_dispatch_only_and_explicit(self) -> None:
         validate_controlled_failure_scope(

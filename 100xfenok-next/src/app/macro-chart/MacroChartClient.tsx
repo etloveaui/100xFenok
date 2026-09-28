@@ -1,20 +1,26 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
 import DataProvenanceNote from "@/components/DataProvenanceNote";
 import { DataStateBadge } from "@/components/DataStateNotice";
 import TransitionLink from "@/components/TransitionLink";
+import { CpDataTable, type CpDataTableColumn } from "@/components/canvas-plus/kit";
+import { EmptyState, EvidenceRail, Panel, RankBars, useDelayedLoading } from "@/components/ui";
+import { okabeItoPalette } from "@/lib/chart-theme";
 import { formatAsOf, freshnessDataState } from "@/lib/data-state";
 import { MarketChartFrame, type MarketChartRange } from "@/lib/market-valuation/charts/MarketChartFrame";
-import type { MarketChartSeries } from "@/lib/market-valuation/charts/types";
+import type { MarketChartDateBand, MarketChartSeries } from "@/lib/market-valuation/charts/types";
 import {
+  MACRO_CATALOG_CURATED_AT,
+  MACRO_CATALOG_SERIES_COUNT,
   MACRO_CHART_PRESETS,
   MACRO_GROUP_LABELS,
   MACRO_SERIES_CATALOG,
   MACRO_TRANSFORM_LABELS,
+  NBER_US_RECESSION_TABLE,
   seriesById,
-} from "@/lib/macro-chart/catalog";
+} from "@/lib/macro-chart/registry";
 import {
   DEFAULT_MACRO_CONTEXT_ID,
   MACRO_CONTEXTS,
@@ -23,18 +29,25 @@ import {
   type MacroContextId,
   type MacroWorkbenchContext,
 } from "@/lib/macro-chart/context";
-import { buildMarketSeries, loadMacroSeries, unitLabel } from "@/lib/macro-chart/loader";
+import { buildMarketSeries, loadMacroSeries, transformedUnitGroupLabel, unitLabel } from "@/lib/macro-chart/loader";
 import { stooqSeriesIdFromInput } from "@/lib/macro-chart/stooq";
+import { transformUnitLabel } from "@/lib/macro-chart/transforms";
+import { ROUTES, withQuery } from "@/lib/routes";
+import * as personalStore from "@/lib/personal/personalStore";
 import type { LoadedMacroSeries } from "@/lib/macro-chart/loader";
-import type { MacroSeriesDefinition, MacroValueTransform } from "@/lib/macro-chart/types";
+import type {
+  MacroAggregation,
+  MacroOutputFrequency,
+  MacroSeriesDefinition,
+  MacroSeriesViewOptions,
+  MacroValueTransform,
+} from "@/lib/macro-chart/types";
 
 const DEFAULT_PRESET_ID = "risk-liquidity";
 const DEFAULT_RANGE_ID = "5Y";
 const MAX_SELECTED_SERIES = 8;
 const MAX_FORMULA_SERIES = 3;
 const USER_PRESET_STORAGE_KEY = "100xfenok.macroChart.userPresets.v1";
-const MACRO_CATALOG_CURATED_AT = "2026-06-24";
-const MACRO_CATALOG_SERIES_COUNT = 30;
 const MACRO_RANGES: readonly MarketChartRange[] = [
   { id: "3M", label: "3M", months: 3 },
   { id: "6M", label: "6M", months: 6 },
@@ -44,14 +57,34 @@ const MACRO_RANGES: readonly MarketChartRange[] = [
   { id: "10Y", label: "10Y", months: 120 },
   { id: "MAX", label: "전체" },
 ];
+
+function nextMonthStart(month: string) {
+  const [year, oneBasedMonth] = month.split("-").map((part) => Number.parseInt(part, 10));
+  const nextMonthIndex = oneBasedMonth;
+  const nextYear = year + Math.floor(nextMonthIndex / 12);
+  const nextMonth = (nextMonthIndex % 12) + 1;
+  return `${nextYear}-${String(nextMonth).padStart(2, "0")}-01`;
+}
+
+const NBER_RECESSION_DATE_BANDS: readonly MarketChartDateBand[] = NBER_US_RECESSION_TABLE.periods.map(
+  ({ peakMonth, troughMonth }) => ({
+    start: `${peakMonth}-01`,
+    end: nextMonthStart(troughMonth),
+    label: `${peakMonth}–${troughMonth} 미국 경기침체`,
+  }),
+);
 const MACRO_RANGE_IDS = new Set(MACRO_RANGES.map((range) => range.id));
-const MACRO_RANGE_ORDER = MACRO_RANGES.map((range) => range.id);
-const MACRO_TRANSFORM_IDS = new Set<MacroValueTransform>(["raw", "rebase100", "yoy", "change"]);
+const MACRO_TRANSFORM_IDS = new Set<MacroValueTransform>(["raw", "change", "pctChange", "yoy", "rebase100"]);
+const MACRO_FREQUENCY_IDS = new Set<MacroOutputFrequency>(["daily", "weekly", "monthly", "quarterly"]);
+const MACRO_AGGREGATION_IDS = new Set<MacroAggregation>(["average", "sum", "end"]);
 const MACRO_AXIS_IDS = new Set(["auto", "left", "right"]);
-const MACRO_FORMULA_OPERATORS = new Set<string>(["spread", "ratio"]);
+const MACRO_COLOR_OPTIONS = okabeItoPalette.slice(0, 6);
+const MACRO_TEN_YEAR_COLOR = okabeItoPalette[1];
+const MACRO_FORMULA_OPERATORS = new Set<string>(["subtract", "ratio", "scale"]);
 const MACRO_FORMULA_LABELS: Record<MacroFormulaOperator, string> = {
-  spread: "차이",
-  ratio: "비율 ×100",
+  subtract: "a − b",
+  ratio: "a / b",
+  scale: "a × k",
 };
 
 type LoadState =
@@ -59,18 +92,26 @@ type LoadState =
   | { status: "ready"; series: MarketChartSeries[]; loaded: LoadedMacroSeries[] }
   | { status: "error"; message: string };
 
-type SelectedMacroSeries = { id: string; transform?: MacroValueTransform };
+type SelectedMacroSeries = {
+  id: string;
+  transform?: MacroValueTransform;
+  frequency?: MacroOutputFrequency;
+  aggregation?: MacroAggregation;
+  color?: string;
+};
 type MacroAxisId = "auto" | "left" | "right";
-type MacroFormulaOperator = "spread" | "ratio";
+type MacroFormulaOperator = "subtract" | "ratio" | "scale";
 type MacroFormulaSeries = {
   id: string;
   leftId: string;
-  rightId: string;
+  rightId?: string;
+  scalar?: number;
   operator: MacroFormulaOperator;
 };
 
-function isFormulaOperator(value: string): value is MacroFormulaOperator {
-  return MACRO_FORMULA_OPERATORS.has(value);
+function normalizeFormulaOperator(value: string): MacroFormulaOperator | null {
+  if (value === "spread") return "subtract";
+  return MACRO_FORMULA_OPERATORS.has(value) ? value as MacroFormulaOperator : null;
 }
 
 type InitialChartState = {
@@ -116,12 +157,22 @@ type UserMacroPreset = {
   updatedAt: string;
 };
 
+type MacroSurfaceState = "loading" | "empty" | "error" | "stale" | "ready";
+type MacroTableRow = {
+  date: string;
+  values: Record<string, number | null>;
+};
+type UserPresetReadResult = {
+  presets: UserMacroPreset[];
+  persistent: boolean;
+};
+
 function cx(...parts: Array<string | false | null | undefined>) {
   return parts.filter(Boolean).join(" ");
 }
 
 function cloneSelection(selection: readonly SelectedMacroSeries[]) {
-  return selection.map((item) => ({ id: item.id, transform: item.transform }));
+  return selection.map((item) => withSeriesDefaults({ ...item }));
 }
 
 function stq(symbol: string) {
@@ -132,10 +183,37 @@ function defaultSelection(): SelectedMacroSeries[] {
   return cloneSelection(MACRO_CHART_PRESETS.find((preset) => preset.id === DEFAULT_PRESET_ID)?.series ?? []);
 }
 
-function coerceTransform(value: string | undefined, fallback: MacroValueTransform): MacroValueTransform {
+function coerceTransform(value: string | undefined, fallback: MacroValueTransform, legacyChange = false): MacroValueTransform {
+  if (legacyChange && value === "change") return "pctChange";
   return value && MACRO_TRANSFORM_IDS.has(value as MacroValueTransform)
     ? (value as MacroValueTransform)
     : fallback;
+}
+
+function serializeTransform(value: MacroValueTransform) {
+  return value;
+}
+
+function coerceFrequency(value: string | undefined, fallback: MacroOutputFrequency): MacroOutputFrequency {
+  return value && MACRO_FREQUENCY_IDS.has(value as MacroOutputFrequency)
+    ? (value as MacroOutputFrequency)
+    : fallback;
+}
+
+function coerceAggregation(value: string | undefined): MacroAggregation {
+  return value && MACRO_AGGREGATION_IDS.has(value as MacroAggregation)
+    ? (value as MacroAggregation)
+    : "average";
+}
+
+function withSeriesDefaults(item: SelectedMacroSeries): SelectedMacroSeries {
+  const definition = seriesById(item.id);
+  return {
+    ...item,
+    frequency: item.frequency ?? definition?.frequency,
+    aggregation: item.aggregation ?? "average",
+    color: item.color ?? (item.id === "DGS10" ? MACRO_TEN_YEAR_COLOR : undefined),
+  };
 }
 
 function parseKnownHiddenIds(raw: string | null, knownIds: readonly string[]) {
@@ -152,8 +230,8 @@ function parseKnownHiddenIds(raw: string | null, knownIds: readonly string[]) {
     });
 }
 
-function formulaId(leftId: string, operator: MacroFormulaOperator, rightId: string) {
-  return `formula-${operator}-${leftId}-${rightId}`;
+function formulaId(leftId: string, operator: MacroFormulaOperator, operand: string | number) {
+  return `formula-${operator}-${leftId}-${operand}`;
 }
 
 const MACRO_ANALYSIS_LENSES: readonly MacroAnalysisLens[] = [
@@ -200,10 +278,10 @@ const MACRO_ANALYSIS_LENSES: readonly MacroAnalysisLens[] = [
       axisById: { fdic_tier1: "right", HY_spread: "right", DGS10: "right" },
       formulas: [
         {
-          id: formulaId("bank_credit", "spread", "deposits"),
+          id: formulaId("bank_credit", "subtract", "deposits"),
           leftId: "bank_credit",
           rightId: "deposits",
-          operator: "spread",
+          operator: "subtract",
         },
       ],
     },
@@ -251,6 +329,56 @@ const MACRO_ANALYSIS_LENSES: readonly MacroAnalysisLens[] = [
     },
   },
 ];
+
+const MACRO_TOP_LENSES = [
+  {
+    id: "risk-liquidity",
+    label: "리스크·유동성",
+    state: {
+      selected: [
+        { id: "sp500", transform: "rebase100" as const },
+        { id: "DGS10", transform: "raw" as const },
+        { id: "HY_spread", transform: "raw" as const },
+        { id: "M2SL", transform: "yoy" as const },
+      ],
+      rangeId: "10Y",
+      axisById: { DGS10: "right" as const, HY_spread: "right" as const, M2SL: "right" as const },
+      macroContextId: "risk-liquidity" as const,
+    },
+  },
+  {
+    id: "growth",
+    label: "성장",
+    state: {
+      selected: [
+        { id: "GDP", transform: "yoy" as const },
+        { id: "oecd_cli_us", transform: "raw" as const },
+        { id: "ism_mfg_headline", transform: "raw" as const },
+        { id: "ism_services_headline", transform: "raw" as const },
+      ],
+      rangeId: "10Y",
+      axisById: { GDP: "right" as const },
+      macroContextId: "activity" as const,
+    },
+  },
+  { id: "inflation", label: "인플레이션", unavailable: "인플레이션 시리즈는 아직 없습니다" },
+  {
+    id: "rates-credit",
+    label: "금리·신용",
+    state: {
+      selected: [
+        { id: "DGS10", transform: "raw" as const },
+        { id: "HY_spread", transform: "raw" as const },
+        { id: "SOFR", transform: "raw" as const },
+        { id: "IORB", transform: "raw" as const },
+      ],
+      rangeId: "5Y",
+      axisById: {},
+      macroContextId: "bank-credit" as const,
+    },
+  },
+  { id: "collection", label: "내 컬렉션", collection: true },
+] as const;
 
 const MARKET_COMPARE_LENSES: readonly MarketCompareLens[] = [
   {
@@ -347,7 +475,7 @@ const MACRO_CONNECTION_LINKS: readonly MacroConnectionLink[] = [
   {
     id: "etfs",
     label: "ETF 센터",
-    detail: "국면을 ETF 자산군, 레버리지, 단일종목 ETF로 연결한다.",
+    detail: "ETF 자산군·레버리지·단일종목 ETF로 이어서 본다.",
     href: (context) => context.etfHref,
     groups: ["equity", "rates", "credit", "liquidity", "activity", "sentiment"],
   },
@@ -355,21 +483,21 @@ const MACRO_CONNECTION_LINKS: readonly MacroConnectionLink[] = [
     id: "market-structure",
     label: "시장 구조",
     detail: "밸류에이션·리스크 구조 차트와 비교한다.",
-    href: (context) => `/market-valuation/structure?macro=${context.id}`,
+    href: (context) => withQuery(ROUTES.marketStructure, { macro: context.id }),
     groups: ["equity", "rates", "credit", "liquidity"],
   },
   {
     id: "events",
     label: "이벤트",
     detail: "실적, 분할, 장전·시간외 움직임으로 이어 본다.",
-    href: (context) => `/market/events?macro=${context.id}`,
+    href: (context) => withQuery(ROUTES.marketEvents, { macro: context.id }),
     groups: ["equity", "sentiment", "activity"],
   },
   {
     id: "portfolio",
     label: "포트폴리오",
     detail: "내 보유 종목의 연결 데이터와 대조한다.",
-    href: (context) => `/portfolio?macro=${context.id}`,
+    href: (context) => withQuery(ROUTES.portfolio, { macro: context.id }),
     groups: ["equity", "rates", "credit", "liquidity", "banking", "activity", "sentiment"],
   },
 ] as const;
@@ -381,27 +509,32 @@ function parseFormulaSeries(raw: string | null, selected: readonly SelectedMacro
   return raw
     .split(",")
     .map((token) => token.split(":").map((part) => part.trim()))
-    .filter((parts): parts is [MacroFormulaOperator, string, string] => {
+    .map((parts): MacroFormulaSeries | false => {
       if (parts.length !== 3) return false;
-      const [operator, leftId, rightId] = parts;
-      if (!isFormulaOperator(operator) || leftId === rightId) return false;
-      if (!selectedIds.has(leftId) || !selectedIds.has(rightId)) return false;
-      const id = formulaId(leftId, operator, rightId);
+      const [rawOperator, leftId, operand] = parts;
+      const operator = normalizeFormulaOperator(rawOperator);
+      if (!operator || !selectedIds.has(leftId)) return false;
+      const scalar = operator === "scale" ? Number(operand) : undefined;
+      if (operator === "scale" && (typeof scalar !== "number" || !Number.isFinite(scalar) || scalar === 0)) return false;
+      if (operator !== "scale" && (leftId === operand || !selectedIds.has(operand))) return false;
+      const normalizedOperand = operator === "scale" ? scalar! : operand;
+      const id = formulaId(leftId, operator, normalizedOperand);
       if (seen.has(id)) return false;
       seen.add(id);
-      return true;
+      return {
+        id,
+        leftId,
+        rightId: operator === "scale" ? undefined : operand,
+        scalar: operator === "scale" ? scalar : undefined,
+        operator,
+      } satisfies MacroFormulaSeries;
     })
-    .slice(0, MAX_FORMULA_SERIES)
-    .map(([operator, leftId, rightId]) => ({
-      id: formulaId(leftId, operator, rightId),
-      leftId,
-      rightId,
-      operator,
-    }));
+    .filter((formula): formula is MacroFormulaSeries => formula !== false)
+    .slice(0, MAX_FORMULA_SERIES);
 }
 
 function formulaParam(formulas: readonly MacroFormulaSeries[]) {
-  return formulas.map((formula) => `${formula.operator}:${formula.leftId}:${formula.rightId}`).join(",");
+  return formulas.map((formula) => `${formula.operator}:${formula.leftId}:${formula.operator === "scale" ? formula.scalar : formula.rightId}`).join(",");
 }
 
 function parseAxisById(raw: string | null, selected: readonly SelectedMacroSeries[]) {
@@ -429,13 +562,41 @@ function parseAxisById(raw: string | null, selected: readonly SelectedMacroSerie
   );
 }
 
-function safeReadUserPresets(): UserMacroPreset[] {
-  if (typeof window === "undefined") return [];
+function selectedWithUrlOptions(selected: readonly SelectedMacroSeries[], params: URLSearchParams) {
+  const transforms = params.get("transform")?.split(",") ?? [];
+  const legacyChange = params.get("transformVersion") !== "2";
+  const frequencies = params.get("frequency")?.split(",") ?? [];
+  const aggregations = params.get("aggregation")?.split(",") ?? [];
+  const colors = params.get("color")?.split(",") ?? [];
+  return selected.map((item, index) => {
+    const definition = seriesById(item.id);
+    return withSeriesDefaults({
+      ...item,
+      transform: coerceTransform(transforms[index], item.transform ?? definition?.defaultTransform ?? "raw", legacyChange),
+      frequency: coerceFrequency(frequencies[index], item.frequency ?? definition?.frequency ?? "daily"),
+      aggregation: coerceAggregation(aggregations[index] ?? item.aggregation),
+      color: MACRO_COLOR_OPTIONS.includes(colors[index] as (typeof MACRO_COLOR_OPTIONS)[number])
+        ? colors[index]
+        : item.color,
+    });
+  });
+}
+
+function selectedViewOptions(selected: readonly SelectedMacroSeries[]) {
+  return new Map<string, MacroSeriesViewOptions>(selected.map((item) => [
+    item.id,
+    { frequency: item.frequency, aggregation: item.aggregation },
+  ]));
+}
+
+function safeReadUserPresets(): UserPresetReadResult {
+  if (typeof window === "undefined") return { presets: [], persistent: false };
   try {
-    const raw = window.localStorage.getItem(USER_PRESET_STORAGE_KEY);
-    const parsed = raw ? JSON.parse(raw) : [];
-    if (!Array.isArray(parsed)) return [];
-    return parsed
+    const rawFromStore = personalStore.read<unknown>("macro-presets");
+    const rawLocal = window.localStorage.getItem(USER_PRESET_STORAGE_KEY);
+    const parsed = rawFromStore ?? (rawLocal ? JSON.parse(rawLocal) : []);
+    if (!Array.isArray(parsed)) return { presets: [], persistent: false };
+    const presets = parsed
       .map((item): UserMacroPreset | null => {
         if (!item || typeof item !== "object") return null;
         const record = item as Partial<UserMacroPreset>;
@@ -444,6 +605,18 @@ function safeReadUserPresets(): UserMacroPreset[] {
               .filter((entry): entry is SelectedMacroSeries =>
                 Boolean(entry && typeof entry.id === "string" && seriesById(entry.id)),
               )
+              .map((entry) => {
+                const definition = seriesById(entry.id)!;
+                return withSeriesDefaults({
+                  id: entry.id,
+                  transform: coerceTransform(entry.transform, definition.defaultTransform ?? "raw"),
+                  frequency: coerceFrequency(entry.frequency, definition.frequency),
+                  aggregation: coerceAggregation(entry.aggregation),
+                  color: entry.color && MACRO_COLOR_OPTIONS.includes(entry.color as (typeof MACRO_COLOR_OPTIONS)[number])
+                    ? entry.color
+                    : undefined,
+                });
+              })
               .slice(0, MAX_SELECTED_SERIES)
           : [];
         if (!selected.length || typeof record.name !== "string") return null;
@@ -455,11 +628,11 @@ function safeReadUserPresets(): UserMacroPreset[] {
                     Boolean(
                       entry &&
                         typeof entry.leftId === "string" &&
-                        typeof entry.rightId === "string" &&
-                        typeof entry.operator === "string",
+                        typeof entry.operator === "string" &&
+                        (entry.operator === "scale" ? typeof entry.scalar === "number" : typeof entry.rightId === "string"),
                     ),
                 )
-                .map((entry) => `${entry.operator}:${entry.leftId}:${entry.rightId}`)
+                .map((entry) => formulaParam([entry]))
                 .join(","),
               selected,
             )
@@ -481,15 +654,17 @@ function safeReadUserPresets(): UserMacroPreset[] {
       })
       .filter((item): item is UserMacroPreset => item !== null)
       .slice(0, 8);
+    return { presets, persistent: true };
   } catch {
-    return [];
+    return { presets: [], persistent: false };
   }
 }
 
 function writeUserPresets(presets: readonly UserMacroPreset[]) {
   if (typeof window === "undefined") return false;
   try {
-    window.localStorage.setItem(USER_PRESET_STORAGE_KEY, JSON.stringify(presets.slice(0, 8)));
+    const sliced = presets.slice(0, 8);
+    personalStore.write("macro-presets", sliced);
     return true;
   } catch {
     return false;
@@ -530,7 +705,7 @@ function initialChartStateFromUrl(fallback: InitialChartState): InitialChartStat
   const rangeParam = params.get("range") ?? "";
   const rangeId = MACRO_RANGE_IDS.has(rangeParam) ? rangeParam : DEFAULT_RANGE_ID;
   if (preset) {
-    const selected = cloneSelection(preset.series);
+    const selected = selectedWithUrlOptions(cloneSelection(preset.series), params);
     const formulas = parseFormulaSeries(params.get("formula"), selected);
     return {
       selected,
@@ -543,17 +718,16 @@ function initialChartStateFromUrl(fallback: InitialChartState): InitialChartStat
   }
   const ids = params.get("series")?.split(",").map((id) => id.trim()).filter(Boolean) ?? [];
   if (!ids.length) return { ...fallback, rangeId, macroContextId };
-  const transforms = params.get("transform")?.split(",") ?? [];
-  const selected = ids
+  const selected = selectedWithUrlOptions(ids
     .filter((id) => seriesById(id))
     .slice(0, MAX_SELECTED_SERIES)
     .map((id, index) => ({
       id,
       transform: coerceTransform(
-        transforms[index],
+        params.get("transform")?.split(",")[index],
         seriesById(id)?.defaultTransform ?? "raw",
       ),
-    }));
+    })), params);
   const finalSelected = selected.length ? selected : fallback.selected;
   const formulas = parseFormulaSeries(params.get("formula"), finalSelected);
   return {
@@ -620,28 +794,58 @@ function formatValue(value: number | null) {
   }).format(value);
 }
 
+const MACRO_FREQUENCY_LABELS: Record<MacroOutputFrequency, string> = {
+  daily: "일",
+  weekly: "주",
+  monthly: "월",
+  quarterly: "분기",
+};
+
+const MACRO_AGGREGATION_LABELS: Record<MacroAggregation, string> = {
+  average: "평균",
+  sum: "합",
+  end: "기말",
+};
+
+const MACRO_FREQUENCY_RANK: Record<MacroOutputFrequency, number> = {
+  daily: 0,
+  weekly: 1,
+  monthly: 2,
+  quarterly: 3,
+};
+
+function frequencyAvailable(definition: MacroSeriesDefinition, frequency: MacroOutputFrequency) {
+  return MACRO_FREQUENCY_RANK[frequency] >= MACRO_FREQUENCY_RANK[definition.frequency];
+}
+
+function latestStepChange(series: MarketChartSeries) {
+  const finite = series.points.filter((point) => typeof point.value === "number" && Number.isFinite(point.value));
+  const latest = finite.at(-1)?.value;
+  const previous = finite.at(-2)?.value;
+  return typeof latest === "number" && typeof previous === "number" ? latest - previous : null;
+}
+
 function sourceSummary(definitions: readonly MacroSeriesDefinition[]) {
   const files = new Set(definitions.map((item) => item.sourcePath.replace("/data/", "")));
   return `${definitions.length}개 시리즈 · ${files.size}개 데이터 파일`;
 }
 
-function downloadCsv(series: readonly MarketChartSeries[], selected: readonly SelectedMacroSeries[]) {
+function downloadCsv(series: readonly MarketChartSeries[], selected: readonly SelectedMacroSeries[], rangeId: string) {
   const labels = new Set<string>();
   for (const item of series) {
     for (const point of item.points) labels.add(point.label);
   }
   const dates = [...labels].sort((a, b) => a.localeCompare(b));
   const valuesBySeries = series.map((item) => new Map(item.points.map((point) => [point.label, point.value])));
-  const transformById = selectedTransformMap(selected);
+  const frequencyById = new Map(selected.map((item) => [item.id, item.frequency ?? seriesById(item.id)?.frequency]));
+  const aggregationById = new Map(selected.map((item) => [item.id, item.aggregation ?? "average"]));
   const header = [
     "date",
-    ...series.map((item) => {
-      const transform = transformById.get(item.id);
-      return transform ? `${item.id}_${transform}` : item.id;
-    }),
+    ...series.map((item) => tableSeriesHeader(item, selected, rangeLabel(rangeId))),
   ];
   const sourceRow = ["__meta_source", ...series.map((item) => sourceKindLabel(seriesById(item.id)))];
-  const frequencyRow = ["__meta_frequency", ...series.map((item) => frequencyDisplayLabel(seriesById(item.id)))];
+  const frequencyRow = ["__meta_frequency", ...series.map((item) => frequencyById.get(item.id) ?? frequencyDisplayLabel(seriesById(item.id)))];
+  const aggregationRow = ["__meta_aggregation", ...series.map((item) => aggregationById.get(item.id) ?? "computed")];
   const rows = dates.map((date) => [
     date,
     ...valuesBySeries.map((values) => {
@@ -649,7 +853,7 @@ function downloadCsv(series: readonly MarketChartSeries[], selected: readonly Se
       return typeof value === "number" && Number.isFinite(value) ? String(value) : "";
     }),
   ]);
-  const csv = [header, sourceRow, frequencyRow, ...rows]
+  const csv = [header, sourceRow, frequencyRow, aggregationRow, ...rows]
     .map((row) => row.map((cell) => `"${String(cell).replace(/"/g, '""')}"`).join(","))
     .join("\n");
   const blob = new Blob([csv], { type: "text/csv;charset=utf-8" });
@@ -671,16 +875,21 @@ function waitForPaint() {
 
 async function downloadChartPng() {
   await waitForPaint();
-  const canvas = document.querySelector<HTMLCanvasElement>('[role="group"][aria-label*="매크로 시계열 비교 차트"] canvas');
-  if (!canvas) return false;
+  const canvases = [...document.querySelectorAll<HTMLCanvasElement>('.cpw5-macro-chart-rows [role="group"][aria-label*="매크로 시계열 비교 차트"] canvas')];
+  if (!canvases.length) return false;
+  const gap = 16;
   const exportCanvas = document.createElement("canvas");
-  exportCanvas.width = canvas.width;
-  exportCanvas.height = canvas.height;
+  exportCanvas.width = Math.max(...canvases.map((canvas) => canvas.width));
+  exportCanvas.height = canvases.reduce((height, canvas) => height + canvas.height, 0) + gap * (canvases.length - 1);
   const ctx = exportCanvas.getContext("2d");
   if (!ctx) return false;
   ctx.fillStyle = getComputedStyle(document.documentElement).getPropertyValue("--c-panel").trim() || "Canvas";
   ctx.fillRect(0, 0, exportCanvas.width, exportCanvas.height);
-  ctx.drawImage(canvas, 0, 0);
+  let y = 0;
+  for (const canvas of canvases) {
+    ctx.drawImage(canvas, 0, y);
+    y += canvas.height + gap;
+  }
   const link = document.createElement("a");
   link.href = exportCanvas.toDataURL("image/png");
   link.download = `100xfenok-macro-chart-${new Date().toISOString().slice(0, 10)}.png`;
@@ -695,6 +904,11 @@ function applyAxisOverrides(series: readonly MarketChartSeries[], axisById: Reco
     if (axis === "right") return { ...item, yAxisId: "y1" as const };
     return item;
   });
+}
+
+function applySeriesColors(series: readonly MarketChartSeries[], selected: readonly SelectedMacroSeries[]) {
+  const colorById = new Map(selected.map((item) => [item.id, item.color]));
+  return series.map((item) => ({ ...item, color: colorById.get(item.id) ?? item.color }));
 }
 
 function axisParam(selected: readonly SelectedMacroSeries[], axisById: Record<string, MacroAxisId>) {
@@ -720,11 +934,38 @@ function explicitRightAxisTitle(definitions: readonly MacroSeriesDefinition[], a
   return "보조축";
 }
 
+function formatFormulaScalar(value: number | undefined) {
+  return new Intl.NumberFormat("ko-KR", { maximumFractionDigits: 4 }).format(value ?? 1);
+}
+
 function formulaLabel(formula: MacroFormulaSeries) {
   const left = seriesById(formula.leftId)?.shortLabel ?? formula.leftId;
-  const right = seriesById(formula.rightId)?.shortLabel ?? formula.rightId;
-  if (formula.operator === "ratio") return `${left}/${right} ×100`;
-  return `${left}-${right}`;
+  if (formula.operator === "scale") return `${left} × ${formatFormulaScalar(formula.scalar)}`;
+  const rightId = formula.rightId ?? "";
+  const right = seriesById(rightId)?.shortLabel ?? rightId;
+  if (formula.operator === "ratio") return `${left} / ${right}`;
+  return `${left} − ${right}`;
+}
+
+function formulaSeriesMetadata(
+  formula: MacroFormulaSeries,
+  left: MarketChartSeries,
+  right: MarketChartSeries | null,
+) {
+  const leftUnit = left.unitGroup ?? "level";
+  if (formula.operator === "ratio") {
+    return { unitGroup: "ratio", unitLabel: "비율", yAxisId: "y1" as const };
+  }
+  if (formula.operator === "scale") {
+    return { unitGroup: leftUnit, unitLabel: transformedUnitGroupLabel(leftUnit), yAxisId: left.yAxisId ?? "y" };
+  }
+  const rightUnit = right?.unitGroup ?? leftUnit;
+  const sameUnit = leftUnit === rightUnit;
+  return {
+    unitGroup: sameUnit ? leftUnit : "derived",
+    unitLabel: sameUnit ? transformedUnitGroupLabel(leftUnit) : "합성값",
+    yAxisId: sameUnit ? left.yAxisId ?? "y" : "y" as const,
+  };
 }
 
 function buildFormulaSeries(baseSeries: readonly MarketChartSeries[], formulas: readonly MacroFormulaSeries[]) {
@@ -732,45 +973,255 @@ function buildFormulaSeries(baseSeries: readonly MarketChartSeries[], formulas: 
   return formulas
     .map((formula): MarketChartSeries | null => {
       const left = byId.get(formula.leftId);
-      const right = byId.get(formula.rightId);
-      if (!left || !right) return null;
-      const rightByLabel = new Map(right.points.map((point) => [point.label, point.value]));
-      const points = left.points
-        .map((point) => {
-          const rightValue = rightByLabel.get(point.label);
-          if (typeof point.value !== "number" || typeof rightValue !== "number") return { label: point.label, value: null };
-          if (formula.operator === "ratio") {
-            return {
-              label: point.label,
-              value: rightValue === 0 ? null : (point.value / rightValue) * 100,
-            };
-          }
-          return {
+      const right = formula.operator === "scale" ? null : formula.rightId ? byId.get(formula.rightId) ?? null : null;
+      if (!left || (formula.operator !== "scale" && !right)) return null;
+      const rightByLabel = new Map(right?.points.map((point) => [point.label, point.value]) ?? []);
+      const points = left.points.flatMap((point) => {
+        if (typeof point.value !== "number") return [{ label: point.label, value: null }];
+        if (formula.operator === "scale") {
+          return [{ label: point.label, value: point.value * (formula.scalar ?? 1) }];
+        }
+        if (!rightByLabel.has(point.label)) return [];
+        const rightValue = rightByLabel.get(point.label);
+        if (typeof rightValue !== "number") return [{ label: point.label, value: null }];
+        if (formula.operator === "ratio") {
+          return [{
             label: point.label,
-            value: point.value - rightValue,
-          };
-        })
-        .filter((point) => point.value !== null);
-      if (!points.length) return null;
+            value: rightValue === 0 ? null : point.value / rightValue,
+          }];
+        }
+        return [{
+          label: point.label,
+          value: point.value - rightValue,
+        }];
+      });
+      if (!points.some((point) => typeof point.value === "number" && Number.isFinite(point.value))) return null;
+      const displayFormula = formulaLabel(formula);
+      const metadata = formulaSeriesMetadata(formula, left, right);
       return {
         id: formula.id,
-        label: formulaLabel(formula),
+        label: `${displayFormula} · ${metadata.unitLabel}`,
+        formulaLabel: displayFormula,
+        unitLabel: metadata.unitLabel,
+        color: okabeItoPalette[(baseSeries.length + formulas.indexOf(formula)) % okabeItoPalette.length],
         colorToken: "fairValue",
-        yAxisId: "y",
+        yAxisId: metadata.yAxisId,
+        unitGroup: metadata.unitGroup,
+        paletteIndex: baseSeries.length + formulas.indexOf(formula),
+        lineRole: "secondary",
         points,
       };
     })
     .filter((item): item is MarketChartSeries => item !== null);
 }
 
-function nextRangeId(current: string, delta: -1 | 1) {
-  const index = MACRO_RANGE_ORDER.indexOf(current);
-  const safeIndex = index >= 0 ? index : MACRO_RANGE_ORDER.indexOf(DEFAULT_RANGE_ID);
-  return MACRO_RANGE_ORDER[Math.min(Math.max(safeIndex + delta, 0), MACRO_RANGE_ORDER.length - 1)] ?? DEFAULT_RANGE_ID;
+function sparklineSegments(series: MarketChartSeries) {
+  const finiteValues = series.points.flatMap((point) =>
+    typeof point.value === "number" && Number.isFinite(point.value) ? [point.value] : [],
+  );
+  if (finiteValues.length < 2) return [];
+  const min = Math.min(...finiteValues);
+  const max = Math.max(...finiteValues);
+  const span = max - min || 1;
+  const denominator = Math.max(series.points.length - 1, 1);
+  const segments: string[] = [];
+  let active: string[] = [];
+  const flush = () => {
+    if (active.length >= 2) segments.push(active.join(" "));
+    active = [];
+  };
+  series.points.forEach((point, index) => {
+    if (typeof point.value !== "number" || !Number.isFinite(point.value)) {
+      flush();
+      return;
+    }
+    const x = (index / denominator) * 100;
+    const y = 29 - ((point.value - min) / span) * 26;
+    active.push(`${x.toFixed(2)},${y.toFixed(2)}`);
+  });
+  flush();
+  return segments;
 }
+
+function lensRecessionRects(series: MarketChartSeries, bands: readonly MarketChartDateBand[]) {
+  const timestamps = series.points
+    .map((point) => Date.parse(point.label))
+    .filter((value) => Number.isFinite(value));
+  if (timestamps.length < 2) return [];
+  const first = Math.min(...timestamps);
+  const last = Math.max(...timestamps);
+  const span = last - first;
+  if (span <= 0) return [];
+  return bands.flatMap((band) => {
+    const start = Math.max(first, Date.parse(band.start));
+    const end = Math.min(last, Date.parse(band.end));
+    if (!Number.isFinite(start) || !Number.isFinite(end) || end <= start) return [];
+    return [{
+      label: band.label,
+      x: ((start - first) / span) * 100,
+      width: ((end - start) / span) * 100,
+    }];
+  });
+}
+
+function LensSparkline({
+  series,
+  state,
+  showRecessionShading,
+}: {
+  series?: MarketChartSeries;
+  state: MacroSurfaceState;
+  showRecessionShading: boolean;
+}) {
+  const segments = series ? sparklineSegments(series) : [];
+  const recessionRects = series && showRecessionShading
+    ? lensRecessionRects(series, NBER_RECESSION_DATE_BANDS)
+    : [];
+  if (state === "loading") {
+    return <div className="cpw5-macro-lens-sparkline cpw5-macro-lens-sparkline--loading" data-macro-v2-lens-sparkline="loading" aria-hidden />;
+  }
+  if (!segments.length) {
+    return <div className="cpw5-macro-lens-sparkline cpw5-macro-lens-sparkline--empty" data-macro-v2-lens-sparkline="empty">불러오면 미리보기를 표시합니다.</div>;
+  }
+  return (
+    <svg className="cpw5-macro-lens-sparkline" data-macro-v2-lens-sparkline="ready" viewBox="0 0 100 32" preserveAspectRatio="none" aria-hidden>
+      {showRecessionShading ? (
+        <g data-macro-v2-recession-overlay="lens">
+          {recessionRects.map((rect) => (
+            <rect key={rect.label} className="cpw5-macro-recession-band" x={rect.x} y="0" width={rect.width} height="32" />
+          ))}
+        </g>
+      ) : null}
+      {segments.map((points, index) => (
+        <polyline key={index} fill="none" stroke="var(--cp-accent)" strokeWidth="1.8" vectorEffect="non-scaling-stroke" points={points} />
+      ))}
+    </svg>
+  );
+}
+
+function buildMacroTableRows(series: readonly MarketChartSeries[]): MacroTableRow[] {
+  const dates = new Set<string>();
+  const pointsBySeries = new Map<string, Map<string, number | null>>();
+  for (const item of series) {
+    const points = new Map<string, number | null>();
+    for (const point of item.points) {
+      dates.add(point.label);
+      points.set(point.label, point.value);
+    }
+    pointsBySeries.set(item.id, points);
+  }
+  return [...dates]
+    .sort((left, right) => right.localeCompare(left))
+    .map((date) => ({
+      date,
+      values: Object.fromEntries(series.map((item) => [item.id, pointsBySeries.get(item.id)?.get(date) ?? null])),
+    }));
+}
+
+function tableSeriesHeader(
+  series: MarketChartSeries,
+  selected: readonly SelectedMacroSeries[],
+  windowLabel: string,
+) {
+  if (series.formulaLabel) return `${series.formulaLabel} · 합성 · ${windowLabel}`;
+  const selection = selected.find((item) => item.id === series.id);
+  const definition = seriesById(series.id);
+  const transform = selection?.transform ?? definition?.defaultTransform ?? "raw";
+  return `${definition?.shortLabel ?? series.label} · ${MACRO_TRANSFORM_LABELS[transform]} · ${windowLabel}`;
+}
+
+function DelayedMacroTableSkeleton() {
+  const show = useDelayedLoading(true, 120);
+  // Same reserve rule as the chart skeleton: mounted from the first paint,
+  // visibility delayed so a fast expand never flashes.
+  return (
+    <div
+      className="cpw5-macro-table-skeleton transition-opacity duration-150"
+      style={{ opacity: show ? 1 : 0 }}
+      aria-hidden={show ? undefined : true}
+      aria-label="변환 후 표 데이터를 준비하는 중입니다"
+    >
+      <i /><i /><i />
+    </div>
+  );
+}
+
+type MacroChartRow = {
+  id: string;
+  series: MarketChartSeries[];
+  yAxisTitle: string;
+  y1AxisTitle?: string;
+};
+
+function buildChartRows(
+  series: readonly MarketChartSeries[],
+  autoGroupAxes = true,
+  axisById: Record<string, MacroAxisId> = {},
+): MacroChartRow[] {
+  const groups = [...new Set(series.map((item) => item.unitGroup ?? "level"))];
+  if (!autoGroupAxes) {
+    return [{
+      id: "manual-axis",
+      series: [...series],
+      yAxisTitle: "왼쪽 축",
+      y1AxisTitle: series.some((item) => item.yAxisId === "y1") ? "오른쪽 축" : undefined,
+    }];
+  }
+  if (groups.length <= 2) {
+    return [{
+      id: groups.join("-") || "empty",
+      series: series.map((item) => ({
+        ...item,
+        yAxisId: axisById[item.id] === "right"
+          ? "y1"
+          : axisById[item.id] === "left"
+            ? "y"
+            : groups.indexOf(item.unitGroup ?? "level") === 1 ? "y1" : "y",
+      })),
+      yAxisTitle: transformedUnitGroupLabel(groups[0] ?? "level"),
+      y1AxisTitle: groups[1] ? transformedUnitGroupLabel(groups[1]) : undefined,
+    }];
+  }
+  return groups.map((group) => ({
+    id: group,
+    series: series.filter((item) => (item.unitGroup ?? "level") === group).map((item) => ({
+      ...item,
+      yAxisId: axisById[item.id] === "right" ? "y1" : "y",
+    })),
+    yAxisTitle: transformedUnitGroupLabel(group),
+    y1AxisTitle: series.some((item) => (item.unitGroup ?? "level") === group && axisById[item.id] === "right")
+      ? "오른쪽 축"
+      : undefined,
+  }));
+}
+
+function supportsLogScale(series: readonly MarketChartSeries[]) {
+  const values = series.flatMap((item) => item.points.map((point) => point.value));
+  return values.some((value) => typeof value === "number" && Number.isFinite(value)) &&
+    values.every((value) => value === null || (typeof value === "number" && value > 0));
+}
+
+function finiteRange(series: MarketChartSeries) {
+  const values = series.points.flatMap((point) => typeof point.value === "number" && Number.isFinite(point.value) ? [point.value] : []);
+  return values.length ? { min: Math.min(...values), max: Math.max(...values) } : null;
+}
+
+const MACRO_RANGE_WINDOW_LABELS: Record<string, string> = {
+  "3M": "3개월",
+  "6M": "6개월",
+  "1Y": "1년",
+  "3Y": "3년",
+  "5Y": "5년",
+  "10Y": "10년",
+  MAX: "전체",
+};
 
 function rangeLabel(rangeId: string) {
   return MACRO_RANGES.find((range) => range.id === rangeId)?.label ?? rangeId;
+}
+
+function rangeWindowLabel(rangeId: string) {
+  return MACRO_RANGE_WINDOW_LABELS[rangeId] ?? rangeLabel(rangeId);
 }
 
 function latestFiniteLabel(series: readonly MarketChartSeries[], hiddenIds: readonly string[]) {
@@ -811,6 +1262,62 @@ function seriesDelta(series: MarketChartSeries) {
     latestValue,
     delta: latestValue - firstValue,
   };
+}
+
+/* Latest value's percentile within the plotted window. The denominator is the
+ * same transformed points the loader plotted, so the strip cannot disagree
+ * with the chart below it. Neutral "백분위 N" wording only — no judgment. */
+function windowPercentile(series: MarketChartSeries): number | null {
+  const values = series.points
+    .map((point) => point.value)
+    .filter((value): value is number => typeof value === "number" && Number.isFinite(value));
+  const latest = latestFinitePoint(series)?.value;
+  if (values.length === 0 || typeof latest !== "number") return null;
+  return Math.round((values.filter((value) => value <= latest).length / values.length) * 100);
+}
+
+type WindowChangeReading = {
+  /** signed window change, expressed in the display suffix's unit */
+  change: number;
+  /** "%", "%p", or the series' own unit for delta-valued series */
+  suffix: string;
+  /** whether the change may be drawn as a bar next to the other visible series */
+  barEligible: boolean;
+};
+
+type WindowSummaryRow = {
+  key: string;
+  label: string;
+  value: number | null;
+  display?: string;
+  tone: "gain" | "loss" | "muted";
+};
+
+/* Window change for the compact summary strip. A bar only compares plotted
+ * levels, so a rebased series measures from the 100 base the loader set and a
+ * raw price/level series from its first observation. Percent-valued series
+ * (percent, spread, YoY, period deltas) print their percentage-point difference
+ * with no bar — their size is not a window performance — and a mixed-unit derived
+ * series prints its delta with no bar because no shared scale exists. The
+ * transform comes from the same selection the loader plotted, so the strip cannot
+ * disagree with the chart above it. */
+function windowChangeReading(series: MarketChartSeries, transform: MacroValueTransform | null): WindowChangeReading | null {
+  const delta = seriesDelta(series);
+  if (!delta) return null;
+  const unitGroup = series.unitGroup ?? "level";
+  if (transform === "rebase100") return { change: delta.latestValue - 100, suffix: "%", barEligible: true };
+  if (transform === "yoy" || transform === "pctChange" || unitGroup === "percent" || unitGroup === "%") {
+    return { change: delta.delta, suffix: "%p", barEligible: false };
+  }
+  if (transform === "change") return { change: delta.delta, suffix: unitGroup, barEligible: false };
+  if (unitGroup === "derived") return { change: delta.delta, suffix: "합성값", barEligible: false };
+  if (delta.firstValue === 0) return null;
+  return { change: (delta.delta / Math.abs(delta.firstValue)) * 100, suffix: "%", barEligible: true };
+}
+
+function signedChangeText(change: number, suffix: string) {
+  const formatted = `${change > 0 ? "+" : ""}${formatValue(change)}`;
+  return suffix === "%" || suffix === "%p" ? `${formatted}${suffix}` : `${formatted} ${suffix}`;
 }
 
 function deltaTone(delta: number | null | undefined): "positive" | "negative" | "warning" | "neutral" {
@@ -863,9 +1370,35 @@ function verdictRelationshipLabel(primaryDelta: number, secondaryDelta: number |
     : `${context.label} 흐름은 엇갈린 방향입니다.`;
 }
 
+function signedPercent(value: number) {
+  return `${value > 0 ? "+" : ""}${formatValue(value)}%`;
+}
+
+function verdictLeadValue(
+  series: MarketChartSeries,
+  delta: NonNullable<ReturnType<typeof seriesDelta>>,
+  transform: MacroValueTransform | undefined,
+  hasSecondary: boolean,
+) {
+  if (transform === "rebase100") {
+    return `기준 100 대비 ${signedPercent(delta.delta)}${hasSecondary ? "이고" : "입니다"}`;
+  }
+  return `${verdictValue(series, delta.latestValue)}로 ${movementLead(delta.delta, hasSecondary)}`;
+}
+
+function verdictSecondaryValue(
+  series: MarketChartSeries,
+  delta: NonNullable<ReturnType<typeof seriesDelta>>,
+  transform: MacroValueTransform | undefined,
+) {
+  if (transform === "rebase100") return `기준 100 대비 ${signedPercent(delta.delta)}입니다`;
+  return `${verdictValue(series, delta.latestValue)}로 ${movementConnector(delta.delta)}`;
+}
+
 function macroVerdictText(params: {
   context: MacroWorkbenchContext;
   visibleSeries: readonly MarketChartSeries[];
+  selected: readonly SelectedMacroSeries[];
   rangeId: string;
   latestVisibleDate: string | null;
 }) {
@@ -888,14 +1421,16 @@ function macroVerdictText(params: {
   const primaryName = verdictSeriesName(primary);
   const primaryValue = verdictValue(primary, primaryDelta.latestValue);
   const relationship = verdictRelationshipLabel(primaryDelta.delta, secondaryDelta?.delta, params.context);
+  const primaryTransform = params.selected.find((item) => item.id === primary.id)?.transform;
+  const secondaryTransform = secondary ? params.selected.find((item) => item.id === secondary.id)?.transform : undefined;
   const secondaryClause = secondary && secondaryDelta
-    ? `, ${verdictSeriesName(secondary)}는 ${verdictValue(secondary, secondaryDelta.latestValue)}로 ${movementConnector(secondaryDelta.delta)}`
+    ? `, ${verdictSeriesName(secondary)}는 ${verdictSecondaryValue(secondary, secondaryDelta, secondaryTransform)}`
     : "";
 
   return {
     tone,
-    lead: `${primaryName}는 ${primaryValue}로 ${movementLead(primaryDelta.delta, Boolean(secondary && secondaryDelta))}${secondaryClause} — ${relationship}`,
-    detail: `${latestLabel} · ${rangeLabel(params.rangeId)} 구간의 실제 로드 시리즈에서 계산했습니다.`,
+    lead: `${primaryName}는 ${verdictLeadValue(primary, primaryDelta, primaryTransform, Boolean(secondary && secondaryDelta))}${secondaryClause} — ${relationship}`,
+    detail: `${latestLabel} · ${rangeLabel(params.rangeId)} 구간 · 표시 중인 데이터 기준.`,
     primaryValue: `${primaryName} ${primaryValue}`,
     secondaryValue: secondary && secondaryDelta ? `${verdictSeriesName(secondary)} ${verdictValue(secondary, secondaryDelta.latestValue)}` : "보조 시리즈 없음",
   };
@@ -918,26 +1453,46 @@ function PickerButton({
       className={cx(
         "flex min-h-14 w-full items-start justify-between gap-2 rounded-lg border px-3 py-2 text-left transition",
         active
-          ? "border-slate-900 bg-slate-900 text-white"
+          ? "border-[var(--c-brand)] bg-[var(--c-brand)] text-white"
           : "border-slate-200 bg-white text-slate-700 hover:border-brand-interactive",
       )}
     >
       <span className="min-w-0">
-        <span className="block truncate text-xs font-black">{item.shortLabel}</span>
-        <span className={cx("block truncate text-[10px] font-semibold", active ? "text-slate-200" : "text-slate-600")}>
+        <span className="block truncate text-[12px] font-black">{item.shortLabel}</span>
+        <span className={cx("block truncate text-[12px] font-semibold", active ? "text-white" : "text-slate-600")}>
           {definitionMetaLabel(item)}
         </span>
       </span>
-      <span className={cx("shrink-0 rounded-full px-2 py-0.5 text-[10px] font-black", active ? "bg-white text-slate-900" : "bg-slate-100 text-slate-700")}>
+      <span className={cx("shrink-0 rounded-full px-2 py-0.5 text-[10px] font-black", active ? "bg-white text-[var(--c-brand)]" : "bg-slate-100 text-slate-700")}>
         {active ? "선택" : "추가"}
       </span>
     </button>
   );
 }
 
+function DelayedMacroChartSkeleton() {
+  const show = useDelayedLoading(true, 120);
+  // Reserve the chart's space from the first paint; only the skeleton's
+  // visibility waits for the 120 ms delay (anti-flash intent kept).
+  return (
+    <div
+      className="cpw5-macro-chart-skeleton transition-opacity duration-150"
+      style={{ opacity: show ? 1 : 0 }}
+      aria-hidden={show ? undefined : true}
+      aria-label="차트 데이터를 불러오는 중입니다"
+    >
+      <span className="sr-only">차트 데이터를 불러오는 중입니다.</span>
+      <i />
+      <i />
+      <i />
+      <i />
+    </div>
+  );
+}
+
 export default function MacroChartClient({ initialMode = "macro" }: { initialMode?: MacroChartInitialMode }) {
   const stockCompareMode = initialMode === "stock-compare";
-  const headerEyebrow = stockCompareMode ? "Multi Chart" : "Macro Chart";
+  const headerEyebrow = stockCompareMode ? "시장 비교" : "Macro Chart";
   const headerTitle = stockCompareMode ? "시장 비교" : "매크로 차트";
   const headerDescription = stockCompareMode
     ? "주식, ETF, 지수, 매크로 시리즈를 같은 시간축으로 맞춰 수익률·가격·상대강도를 비교합니다."
@@ -958,9 +1513,13 @@ export default function MacroChartClient({ initialMode = "macro" }: { initialMod
   const [macroContextId, setMacroContextId] = useState<MacroContextId>(initialMacroContextId);
   const [formulaLeftId, setFormulaLeftId] = useState(initialSelected[0]?.id ?? "");
   const [formulaRightId, setFormulaRightId] = useState(initialSelected[1]?.id ?? "");
-  const [formulaOperator, setFormulaOperator] = useState<MacroFormulaOperator>("spread");
+  const [formulaOperator, setFormulaOperator] = useState<MacroFormulaOperator>("subtract");
+  const [formulaScalar, setFormulaScalar] = useState("1");
   const [formulaNotice, setFormulaNotice] = useState<string | null>(null);
   const [userPresets, setUserPresets] = useState<UserMacroPreset[]>([]);
+  const [collectionStorageMode, setCollectionStorageMode] = useState<"local" | "session">("local");
+  const [renamingPresetId, setRenamingPresetId] = useState<string | null>(null);
+  const [renamePresetDraft, setRenamePresetDraft] = useState("");
   const [clientStateReady, setClientStateReady] = useState(false);
   const [presetName, setPresetName] = useState("나의 매크로 뷰");
   const [presetNotice, setPresetNotice] = useState<string | null>(null);
@@ -973,12 +1532,21 @@ export default function MacroChartClient({ initialMode = "macro" }: { initialMod
   const [loadRetryKey, setLoadRetryKey] = useState(0);
   const [seriesEditorOpen, setSeriesEditorOpen] = useState(stockCompareMode);
   const [limitNotice, setLimitNotice] = useState<string | null>(null);
+  const [searchOpen, setSearchOpen] = useState(false);
+  const [activeTopLensId, setActiveTopLensId] = useState("risk-liquidity");
+  const [editingSeriesId, setEditingSeriesId] = useState<string | null>(null);
+  const [showRecessionShading, setShowRecessionShading] = useState(false);
+  const [logScale, setLogScale] = useState(false);
+  const [autoGroupAxes, setAutoGroupAxes] = useState(true);
+  const [tableOpen, setTableOpen] = useState(false);
+  const formulaBuilderRef = useRef<HTMLElement>(null);
 
   const selectedDefinitions = useMemo(
     () => selected.map((item) => seriesById(item.id)).filter((item): item is MacroSeriesDefinition => Boolean(item)),
     [selected],
   );
   const transformMap = useMemo(() => selectedTransformMap(selected), [selected]);
+  const viewOptions = useMemo(() => selectedViewOptions(selected), [selected]);
   const selectedIds = useMemo(() => new Set(selected.map((item) => item.id)), [selected]);
   const formulaIds = useMemo(() => new Set(formulas.map((formula) => formula.id)), [formulas]);
   const chartSeriesIds = useMemo(
@@ -1014,11 +1582,25 @@ export default function MacroChartClient({ initialMode = "macro" }: { initialMod
       setMacroContextId(nextState.macroContextId);
       setFormulaLeftId(nextState.selected[0]?.id ?? "");
       setFormulaRightId(nextState.selected[1]?.id ?? "");
-      setUserPresets(safeReadUserPresets());
+      const params = new URLSearchParams(window.location.search);
+      setLogScale(params.get("log") === "1");
+      setAutoGroupAxes(params.get("axes") !== "manual");
+      const storedPresets = safeReadUserPresets();
+      setUserPresets(storedPresets.presets);
+      setCollectionStorageMode(storedPresets.persistent ? "local" : "session");
       setClientStateReady(true);
     }, 0);
     return () => window.clearTimeout(timer);
   }, [initialMode]);
+
+  useEffect(() => {
+    const unsub = personalStore.subscribe("macro-presets", () => {
+      const stored = safeReadUserPresets();
+      setUserPresets(stored.presets);
+      setCollectionStorageMode(stored.persistent ? "local" : "session");
+    });
+    return unsub;
+  }, []);
 
   useEffect(() => {
     const timer = window.setTimeout(() => setQuery(queryInput), 180);
@@ -1031,10 +1613,16 @@ export default function MacroChartClient({ initialMode = "macro" }: { initialMod
     Promise.resolve().then(() => {
       if (!cancelled) setLoadState({ status: "loading" });
     });
-    loadMacroSeries(selectedDefinitions, transformMap)
+    const selectedRange = MACRO_RANGES.find((range) => range.id === rangeId);
+    loadMacroSeries(selectedDefinitions, transformMap, { months: selectedRange?.months }, viewOptions)
       .then((loaded) => {
         if (cancelled) return;
-        setLoadState({ status: "ready", series: buildMarketSeries(loaded), loaded });
+        const series = buildMarketSeries(loaded, { alignDates: false, preserveCadenceGaps: true });
+        if (!series.length && loaded.some((item) => item.error)) {
+          setLoadState({ status: "error", message: "선택한 시리즈를 모두 불러오지 못했습니다." });
+          return;
+        }
+        setLoadState({ status: "ready", series, loaded });
       })
       .catch((error: unknown) => {
         if (cancelled) return;
@@ -1045,23 +1633,29 @@ export default function MacroChartClient({ initialMode = "macro" }: { initialMod
     return () => {
       cancelled = true;
     };
-  }, [clientStateReady, loadRetryKey, selectedDefinitions, transformMap]);
+  }, [clientStateReady, loadRetryKey, rangeId, selectedDefinitions, transformMap, viewOptions]);
 
   useEffect(() => {
     if (!clientStateReady || typeof window === "undefined") return;
     const params = new URLSearchParams();
     params.set("macro", macroContextId);
     params.set("series", selected.map((item) => item.id).join(","));
-    params.set("transform", selected.map((item) => item.transform ?? seriesById(item.id)?.defaultTransform ?? "raw").join(","));
+    params.set("transform", selected.map((item) => serializeTransform(item.transform ?? seriesById(item.id)?.defaultTransform ?? "raw")).join(","));
+    params.set("transformVersion", "2");
+    params.set("frequency", selected.map((item) => item.frequency ?? seriesById(item.id)?.frequency ?? "daily").join(","));
+    params.set("aggregation", selected.map((item) => item.aggregation ?? "average").join(","));
+    if (selected.some((item) => item.color)) params.set("color", selected.map((item) => item.color ?? "").join(","));
     params.set("range", rangeId);
     if (visibleHiddenIds.length) params.set("hidden", visibleHiddenIds.join(","));
     const axis = axisParam(selected, axisById);
     if (axis) params.set("axis", axis);
     const formula = formulaParam(formulas);
     if (formula) params.set("formula", formula);
+    if (logScale) params.set("log", "1");
+    if (!autoGroupAxes) params.set("axes", "manual");
     const next = `${window.location.pathname}?${params.toString()}`;
     window.history.replaceState(null, "", next);
-  }, [axisById, clientStateReady, formulas, macroContextId, rangeId, selected, visibleHiddenIds]);
+  }, [autoGroupAxes, axisById, clientStateReady, formulas, logScale, macroContextId, rangeId, selected, visibleHiddenIds]);
 
   const filteredCatalog = useMemo(() => {
     const needle = query.trim().toLowerCase();
@@ -1073,11 +1667,24 @@ export default function MacroChartClient({ initialMode = "macro" }: { initialMod
         .includes(needle),
     );
   }, [query]);
+  const typeaheadCatalog = useMemo(() => {
+    if (query.trim()) return filteredCatalog.slice(0, 8);
+    const popularIds = ["sp500", "DGS10", "HY_spread", "M2SL"];
+    const relatedGroups = new Set(selectedDefinitions.map((item) => item.group));
+    const popular = popularIds.map((id) => seriesById(id)).filter((item): item is MacroSeriesDefinition => Boolean(item));
+    const related = MACRO_SERIES_CATALOG.filter(
+      (item) => relatedGroups.has(item.group) && !popularIds.includes(item.id) && !selectedIds.has(item.id),
+    ).slice(0, 4);
+    return [...popular, ...related];
+  }, [filteredCatalog, query, selectedDefinitions, selectedIds]);
 
   const applyChartState = useCallback((state: InitialChartState) => {
     const nextSelected = cloneSelection(state.selected).slice(0, MAX_SELECTED_SERIES);
     const nextSelectedIds = new Set(nextSelected.map((item) => item.id));
-    const nextFormulas = state.formulas.filter((formula) => nextSelectedIds.has(formula.leftId) && nextSelectedIds.has(formula.rightId));
+    const nextFormulas = state.formulas.filter((formula) =>
+      nextSelectedIds.has(formula.leftId) &&
+      (formula.operator === "scale" || Boolean(formula.rightId && nextSelectedIds.has(formula.rightId))),
+    );
     const nextChartIds = new Set([...nextSelectedIds, ...nextFormulas.map((formula) => formula.id)]);
     setSelected(nextSelected);
     setRangeId(MACRO_RANGE_IDS.has(state.rangeId) ? state.rangeId : DEFAULT_RANGE_ID);
@@ -1097,6 +1704,7 @@ export default function MacroChartClient({ initialMode = "macro" }: { initialMod
   }, []);
 
   const toggleSeries = useCallback((id: string) => {
+    setActiveTopLensId("custom");
     if (selected.some((item) => item.id === id)) {
       setSelected((prev) => prev.filter((item) => item.id !== id));
       setHiddenIds((prev) => prev.filter((hiddenId) => hiddenId !== id));
@@ -1112,14 +1720,15 @@ export default function MacroChartClient({ initialMode = "macro" }: { initialMod
     const definition = seriesById(id);
     if (!definition) return;
     if (selected.length >= MAX_SELECTED_SERIES) {
-      setLimitNotice(`비교 시리즈는 최대 ${MAX_SELECTED_SERIES}개까지 선택할 수 있습니다.`);
+      setLimitNotice(`비교 시리즈는 최대 ${MAX_SELECTED_SERIES}개까지입니다.`);
       return;
     }
-    setSelected((prev) => [...prev, { id, transform: definition.defaultTransform ?? "raw" }]);
+    setSelected((prev) => [...prev, withSeriesDefaults({ id, transform: definition.defaultTransform ?? "raw" })]);
     setLimitNotice(null);
   }, [selected]);
 
   const addStooqSeries = useCallback(() => {
+    setActiveTopLensId("custom");
     const id = stooqSeriesIdFromInput(stooqTickerInput);
     if (!id) {
       setStooqTickerNotice("심볼 형식을 확인하세요. 예: NVDA, SPY.US, 005930.KS");
@@ -1135,11 +1744,11 @@ export default function MacroChartClient({ initialMode = "macro" }: { initialMod
       return;
     }
     if (selected.length >= MAX_SELECTED_SERIES) {
-      setLimitNotice(`비교 시리즈는 최대 ${MAX_SELECTED_SERIES}개까지 선택할 수 있습니다.`);
+      setLimitNotice(`비교 시리즈는 최대 ${MAX_SELECTED_SERIES}개까지입니다.`);
       setStooqTickerNotice(null);
       return;
     }
-    setSelected((prev) => [...prev, { id, transform: definition.defaultTransform ?? "raw" }]);
+    setSelected((prev) => [...prev, withSeriesDefaults({ id, transform: definition.defaultTransform ?? "raw" })]);
     setStooqTickerInput("");
     setStooqTickerNotice(`${definition.shortLabel} 추가됨`);
     setLimitNotice(null);
@@ -1147,6 +1756,18 @@ export default function MacroChartClient({ initialMode = "macro" }: { initialMod
 
   const setTransform = useCallback((id: string, transform: MacroValueTransform) => {
     setSelected((prev) => prev.map((item) => (item.id === id ? { ...item, transform } : item)));
+  }, []);
+
+  const setFrequency = useCallback((id: string, frequency: MacroOutputFrequency) => {
+    setSelected((prev) => prev.map((item) => (item.id === id ? { ...item, frequency } : item)));
+  }, []);
+
+  const setAggregation = useCallback((id: string, aggregation: MacroAggregation) => {
+    setSelected((prev) => prev.map((item) => (item.id === id ? { ...item, aggregation } : item)));
+  }, []);
+
+  const setSeriesColor = useCallback((id: string, color: string) => {
+    setSelected((prev) => prev.map((item) => (item.id === id ? { ...item, color } : item)));
   }, []);
 
   const setAxis = useCallback((id: string, axis: MacroAxisId) => {
@@ -1181,12 +1802,48 @@ export default function MacroChartClient({ initialMode = "macro" }: { initialMod
       formulas: preset.formulas,
       macroContextId: preset.macroContextId ?? macroContextId,
     });
+    setPresetName(preset.name);
+    window.setTimeout(() => document.querySelector('[data-macro-chart-hero="true"]')?.scrollIntoView({ behavior: "smooth", block: "start" }), 0);
   }, [applyChartState, macroContextId]);
 
   const applyAnalysisLens = useCallback((lens: MacroAnalysisLens) => {
     applyChartState({ ...lens.state, macroContextId: macroContextFromParam(lens.id)?.id ?? DEFAULT_MACRO_CONTEXT_ID });
     setPresetName(`${lens.label.replace(" 렌즈", "")} 뷰`);
+    window.setTimeout(() => document.querySelector('[data-macro-chart-hero="true"]')?.scrollIntoView({ behavior: "smooth", block: "start" }), 0);
   }, [applyChartState]);
+
+  const applyTopLens = useCallback((lens: (typeof MACRO_TOP_LENSES)[number]) => {
+    setActiveTopLensId(lens.id);
+    if ("unavailable" in lens) {
+      setLimitNotice(lens.unavailable);
+      return;
+    }
+    if ("collection" in lens) {
+      setSeriesEditorOpen(true);
+      window.setTimeout(() => document.querySelector('[data-macro-chart-collections="true"]')?.scrollIntoView({ behavior: "smooth", block: "center" }), 0);
+      return;
+    }
+    if ("state" in lens) {
+      applyChartState({
+        selected: cloneSelection(lens.state.selected),
+        rangeId: lens.state.rangeId,
+        hiddenIds: [],
+        axisById: lens.state.axisById,
+        formulas: [],
+        macroContextId: lens.state.macroContextId,
+      });
+      setPresetName(`${lens.label} 뷰`);
+    }
+  }, [applyChartState]);
+
+  const copyShareLink = useCallback(async () => {
+    try {
+      await navigator.clipboard.writeText(window.location.href);
+      setExportNotice("공유 링크가 복사되었습니다.");
+    } catch {
+      setExportNotice("링크 복사를 지원하지 않는 브라우저입니다.");
+    }
+  }, []);
 
   const applyMarketCompareLens = useCallback((lens: MarketCompareLens) => {
     applyChartState(lens.state);
@@ -1195,18 +1852,28 @@ export default function MacroChartClient({ initialMode = "macro" }: { initialMod
   }, [applyChartState]);
 
   const addFormula = useCallback(() => {
-    if (!currentFormulaLeftId || !currentFormulaRightId || currentFormulaLeftId === currentFormulaRightId) {
+    const nextFormulaScalar = Number(formulaScalar);
+    if (!currentFormulaLeftId) {
+      setFormulaNotice("시리즈를 먼저 선택하세요.");
+      return;
+    }
+    if (formulaOperator !== "scale" && (!currentFormulaRightId || currentFormulaLeftId === currentFormulaRightId)) {
       setFormulaNotice("서로 다른 시리즈 2개를 선택하세요.");
       return;
     }
+    if (formulaOperator === "scale" && (!Number.isFinite(nextFormulaScalar) || nextFormulaScalar === 0)) {
+      setFormulaNotice("k에는 0이 아닌 숫자를 입력하세요.");
+      return;
+    }
     if (formulas.length >= MAX_FORMULA_SERIES) {
-      setFormulaNotice(`합성 시리즈는 최대 ${MAX_FORMULA_SERIES}개까지 추가할 수 있습니다.`);
+      setFormulaNotice(`합성 시리즈는 최대 ${MAX_FORMULA_SERIES}개까지입니다.`);
       return;
     }
     const nextFormula: MacroFormulaSeries = {
-      id: formulaId(currentFormulaLeftId, formulaOperator, currentFormulaRightId),
+      id: formulaId(currentFormulaLeftId, formulaOperator, formulaOperator === "scale" ? nextFormulaScalar : currentFormulaRightId),
       leftId: currentFormulaLeftId,
-      rightId: currentFormulaRightId,
+      rightId: formulaOperator === "scale" ? undefined : currentFormulaRightId,
+      scalar: formulaOperator === "scale" ? nextFormulaScalar : undefined,
       operator: formulaOperator,
     };
     if (formulas.some((formula) => formula.id === nextFormula.id)) {
@@ -1215,12 +1882,27 @@ export default function MacroChartClient({ initialMode = "macro" }: { initialMod
     }
     setFormulas((prev) => [...prev, nextFormula]);
     setFormulaNotice("합성 시리즈 추가됨");
-  }, [currentFormulaLeftId, currentFormulaRightId, formulaOperator, formulas]);
+  }, [currentFormulaLeftId, currentFormulaRightId, formulaOperator, formulaScalar, formulas]);
 
   const removeFormula = useCallback((formulaIdToRemove: string) => {
     setFormulas((prev) => prev.filter((formula) => formula.id !== formulaIdToRemove));
     setHiddenIds((prev) => prev.filter((id) => id !== formulaIdToRemove));
     setFormulaNotice("합성 시리즈 삭제됨");
+  }, []);
+
+  const openFormulaBuilder = useCallback(() => {
+    setSeriesEditorOpen(true);
+    window.setTimeout(() => {
+      formulaBuilderRef.current?.scrollIntoView({ behavior: "smooth", block: "center" });
+      formulaBuilderRef.current?.focus({ preventScroll: true });
+    }, 0);
+  }, []);
+
+  const commitUserPresetList = useCallback((next: UserMacroPreset[], successMessage: string) => {
+    const persistent = writeUserPresets(next);
+    setUserPresets(next);
+    setCollectionStorageMode(persistent ? "local" : "session");
+    setPresetNotice(persistent ? successMessage : `${successMessage} · 이 브라우저 세션에만 저장됨`);
   }, []);
 
   const saveUserPreset = useCallback(() => {
@@ -1242,27 +1924,41 @@ export default function MacroChartClient({ initialMode = "macro" }: { initialMod
       updatedAt: new Date().toISOString(),
     };
     const next = [nextPreset, ...userPresets.filter((preset) => preset.name !== name)].slice(0, 8);
-    if (writeUserPresets(next)) {
-      setUserPresets(next);
-      setPresetNotice("프리셋 저장됨");
-    } else {
-      setPresetNotice("브라우저 저장소에 저장하지 못했습니다.");
-    }
-  }, [axisById, formulas, macroContextId, presetName, rangeId, selected, userPresets, visibleHiddenIds]);
+    commitUserPresetList(next, "컬렉션 저장됨");
+  }, [axisById, commitUserPresetList, formulas, macroContextId, presetName, rangeId, selected, userPresets, visibleHiddenIds]);
 
   const deleteUserPreset = useCallback((presetId: string) => {
     const next = userPresets.filter((preset) => preset.id !== presetId);
-    if (writeUserPresets(next)) {
-      setUserPresets(next);
-      setPresetNotice("프리셋 삭제됨");
-    } else {
-      setPresetNotice("브라우저 저장소를 갱신하지 못했습니다.");
+    commitUserPresetList(next, "컬렉션에서 삭제됨");
+    if (renamingPresetId === presetId) {
+      setRenamingPresetId(null);
+      setRenamePresetDraft("");
     }
-  }, [userPresets]);
+  }, [commitUserPresetList, renamingPresetId, userPresets]);
 
-  const handleHiddenSeriesChange = useCallback((nextHiddenIds: string[]) => {
-    setHiddenIds([...new Set(nextHiddenIds)].filter((id) => chartSeriesIds.has(id)));
-  }, [chartSeriesIds]);
+  const startRenameUserPreset = useCallback((preset: UserMacroPreset) => {
+    setRenamingPresetId(preset.id);
+    setRenamePresetDraft(preset.name);
+    setPresetNotice(null);
+  }, []);
+
+  const renameUserPreset = useCallback((presetId: string) => {
+    const name = renamePresetDraft.trim().slice(0, 32);
+    if (!name) {
+      setPresetNotice("새 컬렉션 이름을 입력하세요.");
+      return;
+    }
+    if (userPresets.some((preset) => preset.id !== presetId && preset.name === name)) {
+      setPresetNotice("같은 이름의 컬렉션이 이미 있습니다.");
+      return;
+    }
+    const next = userPresets.map((preset) => preset.id === presetId
+      ? { ...preset, name, updatedAt: new Date().toISOString() }
+      : preset);
+    commitUserPresetList(next, "컬렉션 이름 변경됨");
+    setRenamingPresetId(null);
+    setRenamePresetDraft("");
+  }, [commitUserPresetList, renamePresetDraft, userPresets]);
 
   const activeLoadState = useMemo<LoadState>(
     () => (selectedDefinitions.length ? loadState : { status: "ready", series: [], loaded: [] }),
@@ -1271,11 +1967,31 @@ export default function MacroChartClient({ initialMode = "macro" }: { initialMod
   const ready = activeLoadState.status === "ready";
   const chartSeries = useMemo(() => {
     if (activeLoadState.status !== "ready") return [];
-    const baseSeries = applyAxisOverrides(activeLoadState.series, axisById);
+    const baseSeries = applyAxisOverrides(applySeriesColors(activeLoadState.series, selected), axisById);
     return [...baseSeries, ...buildFormulaSeries(baseSeries, formulas)];
-  }, [activeLoadState, axisById, formulas]);
-  const canZoomIn = MACRO_RANGE_ORDER.indexOf(rangeId) > 0;
-  const canZoomOut = MACRO_RANGE_ORDER.indexOf(rangeId) >= 0 && MACRO_RANGE_ORDER.indexOf(rangeId) < MACRO_RANGE_ORDER.length - 1;
+  }, [activeLoadState, axisById, formulas, selected]);
+  const chartRows = useMemo(() => buildChartRows(chartSeries, autoGroupAxes, axisById), [autoGroupAxes, axisById, chartSeries]);
+  const canUseLogScale = useMemo(() => supportsLogScale(chartSeries), [chartSeries]);
+  useEffect(() => {
+    if (logScale && !canUseLogScale) setLogScale(false);
+  }, [canUseLogScale, logScale]);
+  const failedLoadedSeries = useMemo(
+    () => activeLoadState.status === "ready" ? activeLoadState.loaded.filter((item) => item.error || !item.transformedPoints.length) : [],
+    [activeLoadState],
+  );
+  const healthyLoadedSeries = useMemo(
+    () => activeLoadState.status === "ready" ? activeLoadState.loaded.filter((item) => !item.error && item.transformedPoints.length) : [],
+    [activeLoadState],
+  );
+  const evidenceFreshness = activeLoadState.status === "loading" || activeLoadState.status === "idle"
+    ? "pending"
+    : activeLoadState.status === "error"
+      ? "error"
+      : failedLoadedSeries.length
+        ? "partial"
+        : chartSeries.length
+          ? "fresh"
+          : "stale";
   const selectedSourceCount = useMemo(
     () => new Set(selectedDefinitions.map((definition) => definition.sourcePath)).size,
     [selectedDefinitions],
@@ -1319,8 +2035,8 @@ export default function MacroChartClient({ initialMode = "macro" }: { initialMod
     [chartSeries, visibleHiddenIds],
   );
   const macroVerdict = useMemo(
-    () => macroVerdictText({ context: activeMacroContext, visibleSeries: visibleChartSeries, rangeId, latestVisibleDate }),
-    [activeMacroContext, latestVisibleDate, rangeId, visibleChartSeries],
+    () => macroVerdictText({ context: activeMacroContext, visibleSeries: visibleChartSeries, selected, rangeId, latestVisibleDate }),
+    [activeMacroContext, latestVisibleDate, rangeId, selected, visibleChartSeries],
   );
   const freshnessState = useMemo(
     () =>
@@ -1345,7 +2061,7 @@ export default function MacroChartClient({ initialMode = "macro" }: { initialMod
         detail: `${selectedSourceCount}개 파일 · ${selectedGroupLabels || "그룹 없음"}`,
       },
       {
-        label: "워크벤치",
+        label: "차트 설정",
         value: `합성 ${formulas.length}개`,
         detail: visibleHiddenIds.length
           ? `숨김 ${visibleHiddenIds.length}개 · 축 고정 ${visibleAxisOverrides}개`
@@ -1364,6 +2080,155 @@ export default function MacroChartClient({ initialMode = "macro" }: { initialMod
       visibleHiddenIds.length,
     ],
   );
+  const chartSeriesById = useMemo(() => new Map(chartSeries.map((item) => [item.id, item])), [chartSeries]);
+  const legendItems = useMemo(() => selected.map((item, index) => {
+    const definition = seriesById(item.id);
+    const series = chartSeriesById.get(item.id);
+    return {
+      selection: item,
+      definition,
+      series,
+      color: item.color ?? series?.color ?? okabeItoPalette[index % okabeItoPalette.length],
+      unit: definition ? transformUnitLabel(item.transform ?? definition.defaultTransform ?? "raw", unitLabel(definition.unit)) : "—",
+      latest: series ? latestFinitePoint(series)?.value ?? null : null,
+      change: series ? latestStepChange(series) : null,
+    };
+  }), [chartSeriesById, selected]);
+  /* One reading of the visible series for the hero's window-performance strip.
+   * The rows are the series the plot draws (formulas included) and each change
+   * comes from the same transform the loader applied, so the compact claim above
+   * the chart cannot disagree with it. */
+  const windowSummary = useMemo(() => {
+    type ReadingRow = { key: string; label: string; reading: WindowChangeReading | null };
+    const legendById = new Map(legendItems.map((item) => [item.selection.id, item]));
+    const rows: ReadingRow[] = visibleChartSeries.map((series) => {
+      const legend = legendById.get(series.id);
+      const definition = legend?.definition ?? seriesById(series.id);
+      return {
+        key: series.id,
+        label: definition?.shortLabel ?? series.formulaLabel ?? (series.label.split("·")[0]?.trim() || series.id),
+        reading: windowChangeReading(series, legend?.selection.transform ?? definition?.defaultTransform ?? null),
+      };
+    });
+    rows.sort((left, right) =>
+      (right.reading?.change ?? Number.NEGATIVE_INFINITY) - (left.reading?.change ?? Number.NEGATIVE_INFINITY));
+    const ranked = rows.filter((row): row is ReadingRow & { reading: WindowChangeReading } => row.reading !== null);
+    const barMax = ranked.reduce(
+      (max, row) => (row.reading.barEligible ? Math.max(max, Math.abs(row.reading.change)) : max),
+      0,
+    );
+    const barlessCount = ranked.filter((row) => !row.reading.barEligible).length;
+    const top = ranked.slice(0, 3);
+    const windowText = rangeWindowLabel(rangeId);
+    const readLine = rows.length === 0
+      ? null
+      : top.length === 0
+        ? `같은 ${windowText} 창에서 구간 성과가 없습니다 — 표시 시리즈의 값이 없습니다.`
+        : top.length === 1
+          ? `같은 ${windowText} 창에서 ${top[0].label} ${signedChangeText(top[0].reading.change, top[0].reading.suffix)}입니다.`
+          : `같은 ${windowText} 창에서 ${top.map((row) => `${row.label} ${signedChangeText(row.reading.change, row.reading.suffix)}`).join(", ")} 순입니다.`;
+    const rankRows: WindowSummaryRow[] = rows.map((row) => ({
+      key: row.key,
+      label: row.label,
+      value: row.reading ? (row.reading.barEligible ? Math.abs(row.reading.change) : 0) : null,
+      display: row.reading ? signedChangeText(row.reading.change, row.reading.suffix) : undefined,
+      tone: row.reading?.barEligible
+        ? Math.abs(row.reading.change) < 0.01 ? "muted" : row.reading.change > 0 ? "gain" : "loss"
+        : "muted",
+    }));
+    return { readLine, rankRows, barMax, barlessCount };
+  }, [legendItems, rangeId, visibleChartSeries]);
+  /* "지금 N줄" strip: latest value + window percentile for the first four
+   * visible series, in selection order. Same label formula as windowSummary,
+   * same plotted values, RankBars on the shared 0–100 percentile scale. */
+  const nowSummary = useMemo(() => {
+    const legendById = new Map(legendItems.map((item) => [item.selection.id, item]));
+    const rows: WindowSummaryRow[] = visibleChartSeries.map((series) => {
+      const legend = legendById.get(series.id);
+      const definition = legend?.definition ?? seriesById(series.id);
+      const label = definition?.shortLabel ?? series.formulaLabel ?? (series.label.split("·")[0]?.trim() || series.id);
+      const latest = latestFinitePoint(series)?.value;
+      const percentile = windowPercentile(series);
+      const delta = seriesDelta(series)?.delta ?? null;
+      return {
+        key: series.id,
+        label,
+        value: percentile,
+        display: typeof latest === "number" && percentile !== null
+          ? `${verdictValue(series, latest)} · 백분위 ${percentile}`
+          : undefined,
+        tone: percentile === null || delta === null || Math.abs(delta) < 0.01
+          ? "muted"
+          : delta > 0 ? "gain" : "loss",
+      };
+    });
+    const shown = rows.slice(0, 4);
+    const extraCount = rows.length - shown.length;
+    const windowText = rangeWindowLabel(rangeId);
+    const readLine = rows.length === 0
+      ? `같은 ${windowText} 창에서 지금 값이 없습니다 — 표시 시리즈가 없습니다.`
+      : `지금 ${shown.map((row) => row.display ? `${row.label} ${row.display}` : `${row.label} —`).join(" · ")} · ${windowText} 창 백분위입니다.`;
+    return { readLine, rankRows: shown, extraCount, empty: rows.length === 0 };
+  }, [legendItems, rangeId, visibleChartSeries]);
+  const formulaLegendItems = useMemo(() => formulas.map((formula) => {
+    const series = chartSeriesById.get(formula.id);
+    return {
+      formula,
+      series,
+      color: series?.color ?? okabeItoPalette[(selected.length + formulas.indexOf(formula)) % okabeItoPalette.length],
+      latest: series ? latestFinitePoint(series)?.value ?? null : null,
+      change: series ? latestStepChange(series) : null,
+    };
+  }), [chartSeriesById, formulas, selected.length]);
+  const lensPreviewById = useMemo(() => new Map(MACRO_ANALYSIS_LENSES.map((lens) => {
+    const previewSeries = lens.state.selected
+      .map((item) => chartSeriesById.get(item.id))
+      .find((item) => item && sparklineSegments(item).length > 0);
+    const state: MacroSurfaceState = activeLoadState.status === "loading" || activeLoadState.status === "idle"
+      ? "loading"
+      : activeLoadState.status === "error"
+        ? "error"
+        : previewSeries
+          ? evidenceFreshness === "partial" || evidenceFreshness === "stale" ? "stale" : "ready"
+          : "empty";
+    return [lens.id, { series: previewSeries, state }] as const;
+  })), [activeLoadState.status, chartSeriesById, evidenceFreshness]);
+  /* Each analysis lens restores its own series, so a combination that loads none
+   * of them has nothing to preview: the strip shows one honest note instead of
+   * repeating an empty placeholder box in every card. */
+  const lensPreviewGap = MACRO_ANALYSIS_LENSES.every(
+    (lens) => (lensPreviewById.get(lens.id)?.state ?? "empty") === "empty",
+  );
+  const collectionState: MacroSurfaceState = !clientStateReady
+    ? "loading"
+    : collectionStorageMode === "session"
+      ? "stale"
+      : userPresets.length
+        ? "ready"
+        : "empty";
+  const tableRows = useMemo(() => buildMacroTableRows(visibleChartSeries), [visibleChartSeries]);
+  const tableHeaders = useMemo(
+    () => visibleChartSeries.map((series) => tableSeriesHeader(series, selected, rangeLabel(rangeId))),
+    [rangeId, selected, visibleChartSeries],
+  );
+  const tableHeaderSummary = tableHeaders.join(" · ") || "표시 시리즈 없음";
+  const tableColumns = useMemo<readonly CpDataTableColumn<MacroTableRow>[]>(() => [
+    { key: "date", header: "날짜", align: "left" },
+    ...visibleChartSeries.map((series, index) => ({
+      key: series.id,
+      header: tableHeaders[index] ?? series.label,
+      render: (row: MacroTableRow) => formatValue(row.values[series.id] ?? null),
+    })),
+  ], [tableHeaders, visibleChartSeries]);
+  const tableState: MacroSurfaceState = activeLoadState.status === "loading" || activeLoadState.status === "idle"
+    ? "loading"
+    : activeLoadState.status === "error"
+      ? "error"
+      : tableRows.length === 0
+        ? "empty"
+        : evidenceFreshness === "partial" || evidenceFreshness === "stale"
+          ? "stale"
+          : "ready";
 
   return (
     <div
@@ -1387,61 +2252,96 @@ export default function MacroChartClient({ initialMode = "macro" }: { initialMod
         <div className="cpw5-macro-hero__copy">
           <h1 className="cpw5-macro-title">{headerTitle}</h1>
           <p className="cpw5-hero__verdict cpw5-macro-verdict" data-macro-chart-verdict="true">
-            <span className={macroVerdict.tone}>{macroVerdict.lead}</span>
+            <span className="cpw5-macro-verdict__text" data-movement-tone={macroVerdict.tone}>{macroVerdict.lead}</span>
           </p>
-          <p className="cpw5-hero__sub">{macroVerdict.detail}</p>
-          <p className="cpw5-macro-description">{headerDescription}</p>
+          <details className="cpw5-macro-hero-more">
+            <summary>설명 보기</summary>
+            <p className="cpw5-hero__sub">{macroVerdict.detail}</p>
+            <p className="cpw5-macro-description">{headerDescription}</p>
+          </details>
         </div>
 
-        <section className="cpw5-macro-chart-card" aria-label="매크로 차트 히어로">
-          <div className="cpw5-macro-chart-toolbar">
-            <div className="cpw5-macro-chart-toolbar__copy">
-              <h2>시장 방향 차트</h2>
-              <p>{sourceSummary(selectedDefinitions)}</p>
-            </div>
-            <div className="cpw5-macro-chart-toolbar__actions" aria-label="차트 도구">
-              <button
-                type="button"
-                onClick={() => setRangeId(nextRangeId(rangeId, -1))}
-                disabled={!canZoomIn}
-                className="cpw5-macro-tool-button"
-                aria-label="차트 확대"
-                data-macro-chart-action="zoom-in"
-              >
-                +
-              </button>
-              <button
-                type="button"
-                onClick={() => setRangeId(nextRangeId(rangeId, 1))}
-                disabled={!canZoomOut}
-                className="cpw5-macro-tool-button"
-                aria-label="차트 축소"
-                data-macro-chart-action="zoom-out"
-              >
-                -
-              </button>
-              <button
-                type="button"
-                onClick={async () => setExportNotice((await downloadChartPng()) ? "PNG 저장됨" : "차트가 준비되지 않았습니다.")}
-                disabled={!ready || chartSeries.length === 0}
-                className="cpw5-macro-tool-button"
-                data-macro-chart-action="png"
-              >
-                PNG
-              </button>
-              <button
-                type="button"
-                onClick={() => {
-                  if (!ready) return;
-                  downloadCsv(chartSeries, selected);
-                  setExportNotice("전체 CSV 저장됨");
+        <Panel className="cpw5-macro-chart-card">
+          <div className="cpw5-macro-v2-topbar" data-macro-v2-topbar="true">
+            <div className="cpw5-macro-v2-search" data-macro-v2-typeahead="true">
+              <label className="sr-only" htmlFor="macro-v2-series-search">시리즈 검색</label>
+              <input
+                id="macro-v2-series-search"
+                value={queryInput}
+                onFocus={() => setSearchOpen(true)}
+                onBlur={() => window.setTimeout(() => setSearchOpen(false), 120)}
+                onChange={(event) => {
+                  setQueryInput(event.target.value);
+                  setSearchOpen(true);
                 }}
-                disabled={!ready || chartSeries.length === 0}
-                className="cpw5-macro-tool-button"
-                data-macro-chart-action="csv"
-              >
-                CSV
-              </button>
+                placeholder="시리즈 추가 · M2, 10Y, HY..."
+                className="cpw5-macro-v2-search__input"
+                autoComplete="off"
+              />
+              {searchOpen ? (
+                <div className="cpw5-macro-v2-typeahead" role="listbox" aria-label="인기 · 연관 시리즈">
+                  <span>인기 · 연관</span>
+                  {typeaheadCatalog.map((item) => {
+                    const active = selectedIds.has(item.id);
+                    return (
+                      <button key={item.id} type="button" role="option" aria-selected={active} onMouseDown={(event) => event.preventDefault()} onClick={() => { toggleSeries(item.id); setSearchOpen(false); }}>
+                        <b>{item.shortLabel}</b>
+                        <small>{MACRO_GROUP_LABELS[item.group]} · {unitLabel(item.unit)}</small>
+                        <strong>{active ? "선택됨" : "+ 추가"}</strong>
+                      </button>
+                    );
+                  })}
+                  {typeaheadCatalog.length === 0 ? <p>검색 결과가 없습니다.</p> : null}
+                </div>
+              ) : null}
+            </div>
+
+            <div className="cpw5-macro-v2-lenses" role="group" aria-label="분석 렌즈">
+              {MACRO_TOP_LENSES.map((lens) => (
+                <button
+                  key={lens.id}
+                  type="button"
+                  onClick={() => applyTopLens(lens)}
+                  aria-pressed={activeTopLensId === lens.id}
+                  disabled={"unavailable" in lens}
+                  title={"unavailable" in lens ? lens.unavailable : undefined}
+                  data-unavailable={"unavailable" in lens ? "true" : undefined}
+                >
+                  {lens.label}
+                </button>
+              ))}
+            </div>
+
+            <div className="cpw5-macro-v2-global" data-macro-v2-global-controls="true" aria-label="차트 전역 설정">
+              <button
+                type="button"
+                aria-pressed={showRecessionShading}
+                onClick={() => setShowRecessionShading((value) => !value)}
+                title={`${NBER_US_RECESSION_TABLE.source} · ${NBER_US_RECESSION_TABLE.asOf} 기준`}
+              >침체 음영</button>
+              <button type="button" disabled={!canUseLogScale} aria-pressed={logScale} onClick={() => setLogScale((value) => !value)} title={canUseLogScale ? undefined : "0 이하 값이 있어 로그 축을 표시하지 않습니다"}>로그</button>
+              <button type="button" aria-pressed={autoGroupAxes} onClick={() => setAutoGroupAxes((value) => !value)}>축 그룹 자동</button>
+            </div>
+
+            <div className="cpw5-macro-v2-actions">
+              <div className="cpw5-macro-v2-ranges" role="group" aria-label="기간 선택">
+                {MACRO_RANGES.map((range) => (
+                  <button key={range.id} type="button" aria-pressed={range.id === rangeId} onClick={() => setRangeId(range.id)}>{range.label}</button>
+                ))}
+              </div>
+              <div className="cpw5-macro-v2-export" role="group" aria-label="공유 및 내보내기">
+                <button type="button" onClick={copyShareLink}>링크</button>
+                <button type="button" onClick={async () => setExportNotice((await downloadChartPng()) ? "PNG 저장됨" : "차트가 준비되지 않았습니다.")} disabled={!ready || chartSeries.length === 0}>PNG</button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    if (!ready || visibleChartSeries.length === 0) return;
+                    downloadCsv(visibleChartSeries, selected, rangeId);
+                    setExportNotice(`${rangeLabel(rangeId)} 변환 CSV 저장됨`);
+                  }}
+                  disabled={!ready || visibleChartSeries.length === 0}
+                >CSV</button>
+              </div>
             </div>
           </div>
           {exportNotice ? (
@@ -1449,6 +2349,7 @@ export default function MacroChartClient({ initialMode = "macro" }: { initialMod
               {exportNotice}
             </p>
           ) : null}
+          {limitNotice ? <p className="cpw5-macro-export-note" role="status">{limitNotice}</p> : null}
 
           {activeLoadState.status === "error" ? (
             <div className="cpw5-macro-error" role="alert">
@@ -1458,83 +2359,364 @@ export default function MacroChartClient({ initialMode = "macro" }: { initialMod
                 다시 시도
               </button>
             </div>
-          ) : activeLoadState.status === "loading" ? (
-            <div className="cpw5-macro-chart-skeleton" aria-label="차트 데이터를 불러오는 중입니다">
-              <span className="sr-only">차트 데이터를 불러오는 중입니다.</span>
-              <i />
-              <i />
-              <i />
-              <i />
-            </div>
+          ) : activeLoadState.status === "loading" || activeLoadState.status === "idle" ? (
+            <DelayedMacroChartSkeleton />
           ) : activeLoadState.status === "ready" && chartSeries.length ? (
-            <MarketChartFrame
-              ariaLabel="매크로 시계열 비교 차트"
-              series={chartSeries}
-              ranges={MACRO_RANGES}
-              defaultRangeId={DEFAULT_RANGE_ID}
-              rangeId={rangeId}
-              hiddenSeriesIds={visibleHiddenIds}
-              onRangeChange={setRangeId}
-              onHiddenSeriesChange={handleHiddenSeriesChange}
-              sortLabels
-              heightClassName="h-[22rem] sm:h-[26rem] lg:h-[30rem]"
-              yAxisTitle="기준값 / 지수"
-              y1AxisTitle={rightAxisTitle}
-              formatValue={formatValue}
-              footnote={sourceSummary(selectedDefinitions)}
-              bare
-            />
+            <div className="cpw5-macro-v2-stage">
+              <div className="cpw5-macro-v2-legend" data-macro-v2-legend-overlay="true" aria-label="차트 범례와 시리즈 편집">
+                {legendItems.map(({ selection, definition, series, color, unit, latest, change }) => definition ? (
+                  <div key={selection.id} className="cpw5-macro-v2-legend__item">
+                    <button
+                      type="button"
+                      className="cpw5-macro-v2-legend__chip"
+                      aria-expanded={editingSeriesId === selection.id}
+                      onClick={() => setEditingSeriesId((current) => current === selection.id ? null : selection.id)}
+                    >
+                      <i aria-hidden style={{ backgroundColor: color }} />
+                      <span><b>{definition.shortLabel}</b><small>{unit}</small></span>
+                      <span><strong>{formatValue(latest)}</strong><small className={change === null ? undefined : change >= 0 ? "positive" : "negative"}>{change === null ? "—" : `${change >= 0 ? "+" : ""}${formatValue(change)}`}</small></span>
+                      {series ? (
+                        <span className="cpw5-macro-v2-legend__spark" data-macro-v2-legend-sparkline="ready">
+                          <LensSparkline series={series} state="ready" showRecessionShading={showRecessionShading} />
+                        </span>
+                      ) : null}
+                    </button>
+                    {editingSeriesId === selection.id ? (
+                      <div className="cpw5-macro-v2-editor" data-macro-v2-series-editor="true" role="dialog" aria-label={`${definition.shortLabel} 편집`}>
+                        <div className="cpw5-macro-v2-editor__head">
+                          <span><i aria-hidden style={{ backgroundColor: color }} /><b>{definition.shortLabel}</b></span>
+                          <button type="button" onClick={() => setEditingSeriesId(null)} aria-label="편집 닫기">×</button>
+                        </div>
+                        <fieldset>
+                          <legend>변환</legend>
+                          <div className="cpw5-macro-v2-segments">
+                            {Object.entries(MACRO_TRANSFORM_LABELS).map(([value, label]) => (
+                              <button key={value} type="button" aria-pressed={(selection.transform ?? definition.defaultTransform ?? "raw") === value} onClick={() => setTransform(selection.id, value as MacroValueTransform)}>{label}</button>
+                            ))}
+                          </div>
+                        </fieldset>
+                        <fieldset>
+                          <legend>빈도</legend>
+                          <div className="cpw5-macro-v2-segments">
+                            {(["daily", "weekly", "monthly"] as const).map((frequency) => (
+                              <button key={frequency} type="button" disabled={!frequencyAvailable(definition, frequency)} aria-pressed={(selection.frequency ?? definition.frequency) === frequency} onClick={() => setFrequency(selection.id, frequency)}>{MACRO_FREQUENCY_LABELS[frequency]}</button>
+                            ))}
+                            {definition.frequency === "quarterly" ? <button type="button" aria-pressed={selection.frequency === "quarterly"} onClick={() => setFrequency(selection.id, "quarterly")}>분기</button> : null}
+                          </div>
+                          <div className="cpw5-macro-v2-aggregation" aria-label="집계">
+                            <span>집계</span>
+                            {(["average", "sum", "end"] as const).map((aggregation) => (
+                              <button key={aggregation} type="button" aria-pressed={(selection.aggregation ?? "average") === aggregation} onClick={() => setAggregation(selection.id, aggregation)}>{MACRO_AGGREGATION_LABELS[aggregation]}</button>
+                            ))}
+                          </div>
+                        </fieldset>
+                        <fieldset>
+                          <legend>축</legend>
+                          <div className="cpw5-macro-v2-segments">
+                            {([['auto', '자동 그룹'], ['left', '왼쪽'], ['right', '오른쪽']] as const).map(([axis, label]) => (
+                              <button key={axis} type="button" aria-pressed={(axisById[selection.id] ?? "auto") === axis} onClick={() => setAxis(selection.id, axis)}>{label}</button>
+                            ))}
+                          </div>
+                        </fieldset>
+                        <fieldset>
+                          <legend>색</legend>
+                          <div className="cpw5-macro-v2-colors">
+                            {MACRO_COLOR_OPTIONS.map((option) => (
+                              <button key={option} type="button" aria-label={`색 ${option}`} aria-pressed={color === option} onClick={() => setSeriesColor(selection.id, option)} style={{ backgroundColor: option }} />
+                            ))}
+                          </div>
+                        </fieldset>
+                        <button type="button" className="cpw5-macro-v2-remove" onClick={() => { toggleSeries(selection.id); setEditingSeriesId(null); }}>제거</button>
+                        {!series ? <p>이 시리즈는 현재 관측값을 불러오지 못했습니다.</p> : null}
+                      </div>
+                    ) : null}
+                  </div>
+                ) : null)}
+                {formulaLegendItems.map(({ formula, series, color, latest, change }) => (
+                  <div key={formula.id} className="cpw5-macro-v2-legend__item" data-macro-v2-derived-legend={formula.operator}>
+                    <div className="cpw5-macro-v2-legend__chip">
+                      <i aria-hidden style={{ backgroundColor: color }} />
+                      <span>
+                        <b>{formulaLabel(formula)}</b>
+                        <small>{series?.unitLabel ?? "합성값"} · {series?.yAxisId === "y1" ? "오른쪽 축" : "왼쪽 축"}</small>
+                      </span>
+                      <span>
+                        <strong>{formatValue(latest)}</strong>
+                        <small className={change === null ? undefined : change >= 0 ? "positive" : "negative"}>{change === null ? "—" : `${change >= 0 ? "+" : ""}${formatValue(change)}`}</small>
+                      </span>
+                    </div>
+                  </div>
+                ))}
+                <button
+                  type="button"
+                  className="cpw5-macro-v2-legend__chip cpw5-macro-v2-legend__formula"
+                  onClick={openFormulaBuilder}
+                  data-macro-v2-formula-jump="true"
+                >+ 수식</button>
+              </div>
+              <div className="cpw5-macro-chart-rows" data-macro-chart-row-count={chartRows.length}>
+              {chartRows.map((row, rowIndex) => (
+                <div key={row.id} data-macro-chart-unit-group={row.id}>
+                  {showRecessionShading ? (
+                    <span className="sr-only" data-macro-v2-recession-overlay="hero">
+                      {NBER_US_RECESSION_TABLE.source} 침체 음영
+                    </span>
+                  ) : null}
+                  <MarketChartFrame
+                    ariaLabel={`매크로 시계열 비교 차트 ${rowIndex + 1}`}
+                    series={row.series}
+                    ranges={MACRO_RANGES}
+                    defaultRangeId={DEFAULT_RANGE_ID}
+                    rangeId={rangeId}
+                    showRangeControls={false}
+                    showLegend={false}
+                    togglableSeries={false}
+                    hiddenSeriesIds={visibleHiddenIds}
+                    onRangeChange={setRangeId}
+                    onHiddenSeriesChange={(nextHiddenIds) => {
+                      const rowIds = new Set(row.series.map((item) => item.id));
+                      setHiddenIds((previous) => [
+                        ...previous.filter((id) => !rowIds.has(id)),
+                        ...nextHiddenIds,
+                      ].filter((id, index, all) => all.indexOf(id) === index && chartSeriesIds.has(id)));
+                    }}
+                    sortLabels
+                    spanGaps={false}
+                    xScaleMode="time"
+                    dateBands={showRecessionShading ? NBER_RECESSION_DATE_BANDS : undefined}
+                    seriesAreRangeFiltered
+                    heightClassName="cpw5-macro-v2-plot"
+                    yAxisTitle={row.yAxisTitle}
+                    y1AxisTitle={row.y1AxisTitle ?? rightAxisTitle}
+                    logScale={logScale}
+                    formatValue={formatValue}
+                    footnote={sourceSummary(selectedDefinitions)}
+                    bare
+                  />
+                  {row.series.map((item) => {
+                    const range = finiteRange(item);
+                    return range ? (
+                      <output
+                        key={item.id}
+                        className="sr-only"
+                        data-macro-chart-series-range={item.id}
+                        data-unit-group={item.unitGroup}
+                        data-axis={item.yAxisId ?? "y"}
+                        data-min={range.min}
+                        data-max={range.max}
+                        data-first={item.points.find((point) => typeof point.value === "number")?.value}
+                      >{`${item.id}: ${range.min}..${range.max}`}</output>
+                    ) : null;
+                  })}
+                </div>
+              ))}
+              <div className="cpw5-macro-series-evidence" aria-label="시리즈별 데이터 근거">
+                {activeLoadState.loaded.map((item) => (
+                  <span key={item.definition.id} data-series-load-state={item.error ? "failed" : "ready"}>
+                    {item.definition.shortLabel} · {sourceDisplayLabel(item.definition)} · {item.error ? "불러오기 실패" : item.transformedPoints.at(-1)?.date ?? "관측 없음"}
+                  </span>
+                ))}
+              </div>
+              </div>
+            </div>
           ) : (
-            <div className="cpw5-macro-empty">비교할 시리즈를 선택하세요.</div>
+            <EmptyState
+              reason="비교할 시리즈가 없습니다"
+              nextRefresh="카탈로그에서 시리즈를 선택하면 차트가 표시됩니다"
+            />
           )}
-        </section>
+          <EvidenceRail
+            freshness={evidenceFreshness}
+            source={`${[...new Set(healthyLoadedSeries.map((item) => sourceDisplayLabel(item.definition)))].join(" · ") || "데이터 확인 중"}${showRecessionShading ? ` · ${NBER_US_RECESSION_TABLE.source}` : ""}`}
+            asOf={showRecessionShading ? NBER_US_RECESSION_TABLE.asOf : latestVisibleDate ?? "—"}
+            coverage={`카탈로그 ${healthyLoadedSeries.length}/${MACRO_CATALOG_SERIES_COUNT}${showRecessionShading ? ` · 침체 ${NBER_US_RECESSION_TABLE.periods.length}구간` : ""}`}
+            next={failedLoadedSeries.length ? `${failedLoadedSeries.map((item) => item.definition.shortLabel).join(", ")} 재시도` : undefined}
+            onRetry={activeLoadState.status === "error" || failedLoadedSeries.length ? () => setLoadRetryKey((value) => value + 1) : undefined}
+          />
+        </Panel>
+
+        {windowSummary.readLine ? (
+          <section
+            className="cpw5-macro-window-summary"
+            aria-label={`${rangeWindowLabel(rangeId)} 구간 표시 시리즈 성과`}
+            data-macro-chart-window-summary="true"
+          >
+            <p className="cpw5-macro-window-summary__read" data-macro-chart-window-read="true">{windowSummary.readLine}</p>
+            <RankBars
+              rows={windowSummary.rankRows}
+              max={windowSummary.barMax}
+              ariaLabel={`${rangeWindowLabel(rangeId)} 창 구간 성과 순위`}
+            />
+            {windowSummary.barlessCount > 0 ? (
+              <p className="cpw5-macro-window-summary__note">
+                막대는 막대가 있는 계열의 최대 변화 폭 기준 · %·스프레드 계열 {windowSummary.barlessCount}개는 값만 표시합니다.
+              </p>
+            ) : null}
+          </section>
+        ) : null}
+
+        {activeLoadState.status === "ready" && nowSummary.readLine ? (
+          <section
+            className="cpw5-macro-window-summary"
+            aria-label={`${rangeWindowLabel(rangeId)} 창 지금 값 백분위`}
+            data-macro-chart-now="true"
+          >
+            <p className="cpw5-macro-window-summary__read" data-macro-chart-now-read="true">{nowSummary.readLine}</p>
+            {nowSummary.empty ? null : (
+              <RankBars
+                rows={nowSummary.rankRows}
+                max={100}
+                ariaLabel={`${rangeWindowLabel(rangeId)} 창 지금 값 백분위 순위`}
+              />
+            )}
+            {nowSummary.extraCount > 0 ? (
+              <p className="cpw5-macro-window-summary__note">
+                외 {nowSummary.extraCount}개 시리즈는 차트에서 확인하세요.
+              </p>
+            ) : null}
+          </section>
+        ) : null}
 
         <div className="cpw5-tile-row cpw5-macro-metrics" aria-label="매크로 분석 요약">
           {analysisCards.map((card) => (
-            <div key={card.label} className="cpw5-tile">
-              <p className="cpw5-tile__label">{card.label}</p>
-              <p className="cpw5-tile__value">{card.value}</p>
-              <p className="cpw5-tile__sub">{card.detail}</p>
-            </div>
+            <article key={card.label} className="cpw5-tile cpw5-macro-evidence-tile" data-macro-v2-tile-evidence="analysis">
+              <div className="cpw5-macro-evidence-tile__body">
+                <p className="cpw5-tile__label">{card.label}</p>
+                <p className="cpw5-tile__value">{card.value}</p>
+                <p className="cpw5-tile__sub">{card.detail}</p>
+              </div>
+            </article>
           ))}
         </div>
       </section>
 
-      <section className="cpw5-macro-lens-section" aria-label="분석 렌즈">
+      <section className="cpw5-macro-lens-section" aria-label="같이 보기" data-macro-v2-lens-collection="true">
         <div className="cpw5-macro-section-head">
           <div>
-            <h2>분석 렌즈</h2>
-            <p>한 번 누르면 차트 상태가 통째로 바뀝니다.</p>
+            <h2>같이 보기</h2>
+            <p>저장된 차트 조합을 미리 보고 위 차트로 불러옵니다.</p>
           </div>
-          <span>{MACRO_ANALYSIS_LENSES.length}개</span>
+          <button type="button" className="cpw5-macro-section-action" onClick={saveUserPreset} data-macro-v2-collection-save="hero">
+            + 현재 차트 저장
+          </button>
         </div>
+        {lensPreviewGap ? (
+          <p className="cpw5-macro-lens-note" data-macro-v2-lens-preview-note="empty">
+            지금 조합에서는 미리보기가 없습니다 — 렌즈를 불러오면 표시됩니다.
+          </p>
+        ) : null}
         <div className="cpw5-macro-lens-row">
-          {MACRO_ANALYSIS_LENSES.map((lens) => (
-            <button
-              key={lens.id}
-              type="button"
-              onClick={() => applyAnalysisLens(lens)}
-              className="cpw5-macro-lens-card"
-              data-macro-chart-lens={lens.id}
-            >
-              <strong>{lens.label}</strong>
-              <span>{lens.detail}</span>
-            </button>
-          ))}
+          {MACRO_ANALYSIS_LENSES.map((lens) => {
+            const preview = lensPreviewById.get(lens.id);
+            return (
+              <article
+                key={lens.id}
+                className="cpw5-macro-lens-card cpw5-macro-evidence-tile"
+                data-macro-v2-tile-evidence="lens"
+                data-macro-v2-lens-preview-state={preview?.state ?? "empty"}
+              >
+                <button
+                  type="button"
+                  onClick={() => applyAnalysisLens(lens)}
+                  className="cpw5-macro-lens-card__action"
+                  data-macro-chart-lens={lens.id}
+                >
+                  <strong>{lens.label}</strong>
+                  {preview?.series || preview?.state === "loading" ? (
+                    <LensSparkline
+                      series={preview?.series}
+                      state={preview?.state ?? "empty"}
+                      showRecessionShading={showRecessionShading}
+                    />
+                  ) : null}
+                  <span>{lens.detail}</span>
+                </button>
+              </article>
+            );
+          })}
         </div>
       </section>
+
+      <details
+        className="cpw5-macro-table-panel"
+        data-macro-v2-table-drawer="true"
+        data-macro-v2-table-state={tableState}
+        onToggle={(event) => setTableOpen(event.currentTarget.open)}
+      >
+        <summary>
+          <span className="cpw5-macro-table-panel__summary">
+            <span>표 보기</span>
+            <b>{`변환 후 값 · ${tableHeaderSummary}`}</b>
+          </span>
+          <span className="cpw5-macro-table-panel__meta">
+            {tableRows.length}개 관측일
+            <i aria-hidden>⌄</i>
+          </span>
+        </summary>
+        {tableOpen ? (
+          <div className="cpw5-macro-table-panel__body">
+            {tableState === "loading" ? (
+              <DelayedMacroTableSkeleton />
+            ) : tableState === "error" ? (
+              <EmptyState
+                reason="표 데이터를 불러오지 못했습니다"
+                nextRefresh="차트 데이터와 같은 소스를 다시 불러옵니다"
+                actionLabel="다시 시도"
+                onAction={() => setLoadRetryKey((value) => value + 1)}
+              />
+            ) : tableState === "empty" ? (
+              <EmptyState
+                reason="표시할 변환 후 값이 없습니다"
+                nextRefresh="시리즈를 선택하면 플롯된 관측값이 날짜별로 표시됩니다"
+              />
+            ) : (
+              <>
+                <div className="cpw5-macro-table-panel__tools">
+                  <span>{rangeWindowLabel(rangeId)} · 차트와 동일한 변환 후 값</span>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      if (!ready || visibleChartSeries.length === 0) return;
+                      downloadCsv(visibleChartSeries, selected, rangeId);
+                      setExportNotice(`${rangeLabel(rangeId)} 변환 CSV 저장됨`);
+                    }}
+                    disabled={!ready || visibleChartSeries.length === 0}
+                  >
+                    CSV로 내보내기
+                  </button>
+                </div>
+                <CpDataTable
+                  columns={tableColumns}
+                  rows={tableRows}
+                  getRowKey={(row) => row.date}
+                  density="compact"
+                  caption={`플롯된 변환 후 값 · ${rangeWindowLabel(rangeId)}`}
+                />
+              </>
+            )}
+            <EvidenceRail
+              freshness={tableState === "ready" ? "fresh" : tableState === "stale" ? "partial" : tableState === "loading" ? "pending" : tableState === "error" ? "error" : "stale"}
+              source="현재 차트 표시값"
+              asOf={latestVisibleDate ?? "—"}
+              coverage={`${tableRows.length}개 관측일 · ${visibleChartSeries.length}개 시리즈`}
+              next={tableState === "empty" ? "시리즈 선택 필요" : undefined}
+              onRetry={tableState === "error" ? () => setLoadRetryKey((value) => value + 1) : undefined}
+            />
+          </div>
+        ) : null}
+      </details>
 
       <section className="cpw5-macro-insight-grid" aria-label="매크로 인사이트">
         <article className="cpw5-macro-insight-card">
           <span>{activeMacroContext.label}</span>
           <h2>{activeMacroContext.detail}</h2>
         </article>
-        {activeMacroContext.insightBullets.slice(0, 2).map((bullet) => (
-          <article key={bullet} className="cpw5-macro-insight-card">
-            <span>읽는 법</span>
-            <p>{bullet}</p>
-          </article>
-        ))}
+        <article className="cpw5-macro-insight-card">
+          <span>읽는 법</span>
+          {activeMacroContext.insightBullets.slice(0, 2).map((bullet) => (
+            <p key={bullet}>{bullet}</p>
+          ))}
+        </article>
       </section>
 
       <details
@@ -1584,16 +2766,17 @@ export default function MacroChartClient({ initialMode = "macro" }: { initialMod
             </div>
             <div className="cpw5-macro-chip-grid">
               {MARKET_COMPARE_LENSES.map((lens) => (
-                <button
-                  key={lens.id}
-                  type="button"
-                  onClick={() => applyMarketCompareLens(lens)}
-                  className="cpw5-macro-compare-card"
-                  data-macro-chart-market-lens={lens.id}
-                >
-                  <strong>{lens.label}</strong>
-                  <span>{lens.detail}</span>
-                </button>
+                <article key={lens.id} className="cpw5-macro-compare-card cpw5-macro-evidence-tile" data-macro-v2-tile-evidence="compare">
+                  <button
+                    type="button"
+                    onClick={() => applyMarketCompareLens(lens)}
+                    className="cpw5-macro-compare-card__action"
+                    data-macro-chart-market-lens={lens.id}
+                  >
+                    <strong>{lens.label}</strong>
+                    <span>{lens.detail}</span>
+                  </button>
+                </article>
               ))}
             </div>
           </section>
@@ -1653,7 +2836,7 @@ export default function MacroChartClient({ initialMode = "macro" }: { initialMod
                 {limitNotice ??
                   (activeLoadState.status === "loading"
                     ? "선택한 시리즈 데이터를 불러오는 중입니다."
-                    : `최대 ${MAX_SELECTED_SERIES}개까지 비교할 수 있습니다.`)}
+                    : `최대 ${MAX_SELECTED_SERIES}개까지 비교합니다.`)}
               </div>
               <div className="cpw5-macro-picker-list">
                 {filteredCatalog.map((item) => (
@@ -1665,17 +2848,22 @@ export default function MacroChartClient({ initialMode = "macro" }: { initialMod
                   />
                 ))}
                 {filteredCatalog.length === 0 ? (
-                  <p className="cpw5-macro-empty-small">검색 결과가 없습니다.</p>
+                  <EmptyState reason="검색 결과가 없습니다" nextRefresh="검색어를 바꾸면 다른 시리즈가 표시됩니다" />
                 ) : null}
               </div>
             </div>
           </section>
 
-          <section className="cpw5-macro-editor-block">
+          <section
+            ref={formulaBuilderRef}
+            className="cpw5-macro-editor-block"
+            aria-label="합성 시리즈 빌더"
+            tabIndex={-1}
+          >
             <div className="cpw5-macro-section-head">
               <div>
                 <h2>합성 시리즈</h2>
-                <p>현재 변환값 기준으로 차이·비율을 계산합니다.</p>
+                <p>현재 변환값을 a와 b로 두고 a − b, a / b, a × k를 계산합니다.</p>
               </div>
               <span>{formulas.length}/{MAX_FORMULA_SERIES}</span>
             </div>
@@ -1690,7 +2878,7 @@ export default function MacroChartClient({ initialMode = "macro" }: { initialMod
               >
                 {selected.map((item) => (
                   <option key={item.id} value={item.id}>
-                    {seriesById(item.id)?.shortLabel ?? item.id}
+                    a · {seriesById(item.id)?.shortLabel ?? item.id}
                   </option>
                 ))}
               </select>
@@ -1702,29 +2890,42 @@ export default function MacroChartClient({ initialMode = "macro" }: { initialMod
                 aria-label="합성 계산식"
                 data-macro-chart-formula-control="operator"
               >
-                <option value="spread">{MACRO_FORMULA_LABELS.spread}</option>
+                <option value="subtract">{MACRO_FORMULA_LABELS.subtract}</option>
                 <option value="ratio">{MACRO_FORMULA_LABELS.ratio}</option>
+                <option value="scale">{MACRO_FORMULA_LABELS.scale}</option>
               </select>
-              <select
-                value={currentFormulaRightId}
-                onChange={(event) => setFormulaRightId(event.target.value)}
-                disabled={selected.length < 2}
-                className="cpw5-macro-select"
-                aria-label="합성 오른쪽 시리즈"
-                data-macro-chart-formula-control="right"
-              >
-                {selected
-                  .filter((item) => item.id !== currentFormulaLeftId)
-                  .map((item) => (
-                    <option key={item.id} value={item.id}>
-                      {seriesById(item.id)?.shortLabel ?? item.id}
-                    </option>
-                  ))}
-              </select>
+              {formulaOperator === "scale" ? (
+                <input
+                  type="number"
+                  value={formulaScalar}
+                  step="any"
+                  onChange={(event) => setFormulaScalar(event.currentTarget.value)}
+                  className="cpw5-macro-input"
+                  aria-label="합성 배수 k"
+                  data-macro-chart-formula-control="scalar"
+                />
+              ) : (
+                <select
+                  value={currentFormulaRightId}
+                  onChange={(event) => setFormulaRightId(event.target.value)}
+                  disabled={selected.length < 2}
+                  className="cpw5-macro-select"
+                  aria-label="합성 오른쪽 시리즈"
+                  data-macro-chart-formula-control="right"
+                >
+                  {selected
+                    .filter((item) => item.id !== currentFormulaLeftId)
+                    .map((item) => (
+                      <option key={item.id} value={item.id}>
+                        b · {seriesById(item.id)?.shortLabel ?? item.id}
+                      </option>
+                    ))}
+                </select>
+              )}
               <button
                 type="button"
                 onClick={addFormula}
-                disabled={selected.length < 2 || formulas.length >= MAX_FORMULA_SERIES}
+                disabled={(formulaOperator === "scale" ? selected.length < 1 : selected.length < 2) || formulas.length >= MAX_FORMULA_SERIES}
                 className="cpw5-macro-primary-button"
                 data-macro-chart-formula-control="add"
               >
@@ -1742,7 +2943,7 @@ export default function MacroChartClient({ initialMode = "macro" }: { initialMod
                       {formulaLabel(formula)}
                     </span>
                     <b>
-                      {MACRO_FORMULA_LABELS[formula.operator]}
+                      {MACRO_FORMULA_LABELS[formula.operator]} · {chartSeriesById.get(formula.id)?.unitLabel ?? "합성값"}
                     </b>
                     <button
                       type="button"
@@ -1759,17 +2960,21 @@ export default function MacroChartClient({ initialMode = "macro" }: { initialMod
             </div>
           </section>
 
-          <section className="cpw5-macro-editor-block">
+          <section
+            className="cpw5-macro-editor-block cpw5-macro-collection-editor"
+            data-macro-chart-collections="true"
+            data-macro-v2-collection-state={collectionState}
+          >
             <div className="cpw5-macro-section-head">
               <div>
-                <h2>내 프리셋</h2>
-                <p>선택·기간·숨김·축을 브라우저에 저장합니다.</p>
+                <h2>내 컬렉션</h2>
+                <p>현재 차트의 선택·변환·기간·숨김·축·합성식을 저장합니다.</p>
               </div>
               <span>{userPresets.length}/8</span>
             </div>
             <div className="cpw5-macro-inline-form">
               <label className="sr-only" htmlFor="macro-user-preset-name">
-                프리셋 이름
+                컬렉션 이름
               </label>
               <input
                 id="macro-user-preset-name"
@@ -1783,35 +2988,56 @@ export default function MacroChartClient({ initialMode = "macro" }: { initialMod
                 onClick={saveUserPreset}
                 className="cpw5-macro-primary-button"
               >
-                저장
+                현재 차트 저장
               </button>
             </div>
             <div className="cpw5-macro-status" role="status">
-              {presetNotice ?? "현재 선택·기간·숨김·축을 저장합니다."}
+              {presetNotice ?? (collectionStorageMode === "session"
+                ? "브라우저 저장소가 없어 이 세션에서만 유지합니다."
+                : "저장한 차트는 이 브라우저에서 다시 불러올 수 있습니다.")}
             </div>
             <div className="cpw5-macro-formula-list">
               {userPresets.length ? (
-                userPresets.map((preset) => (
-                  <div key={preset.id} className="cpw5-macro-selected-row">
-                    <button
-                      type="button"
-                      onClick={() => applyUserPreset(preset)}
-                      title={preset.name}
-                    >
+                userPresets.map((preset) => renamingPresetId === preset.id ? (
+                  <div key={preset.id} className="cpw5-macro-selected-row cpw5-macro-collection-row" data-collection-editing="true">
+                    <input
+                      value={renamePresetDraft}
+                      onChange={(event) => setRenamePresetDraft(event.currentTarget.value)}
+                      onKeyDown={(event) => {
+                        if (event.key === "Enter") renameUserPreset(preset.id);
+                        if (event.key === "Escape") {
+                          setRenamingPresetId(null);
+                          setRenamePresetDraft("");
+                        }
+                      }}
+                      maxLength={32}
+                      className="cpw5-macro-input"
+                      aria-label={`${preset.name} 새 이름`}
+                      autoFocus
+                    />
+                    <button type="button" onClick={() => renameUserPreset(preset.id)} data-macro-v2-collection-action="rename">
+                      확인
+                    </button>
+                    <button type="button" onClick={() => { setRenamingPresetId(null); setRenamePresetDraft(""); }}>
+                      취소
+                    </button>
+                  </div>
+                ) : (
+                  <div key={preset.id} className="cpw5-macro-selected-row cpw5-macro-collection-row">
+                    <button type="button" onClick={() => applyUserPreset(preset)} title={preset.name}>
                       <span>{preset.name}</span>
                       <b>{preset.selected.length}개 · {preset.rangeId}</b>
                     </button>
-                    <button
-                      type="button"
-                      onClick={() => deleteUserPreset(preset.id)}
-                      aria-label={`${preset.name} 삭제`}
-                    >
+                    <button type="button" onClick={() => startRenameUserPreset(preset)} data-macro-v2-collection-action="rename" aria-label={`${preset.name} 이름 변경`}>
+                      이름 변경
+                    </button>
+                    <button type="button" onClick={() => deleteUserPreset(preset.id)} aria-label={`${preset.name} 삭제`}>
                       삭제
                     </button>
                   </div>
                 ))
               ) : (
-                <p className="cpw5-macro-empty-small">저장한 프리셋이 없습니다.</p>
+                <p className="cpw5-macro-empty-small">저장한 차트가 없습니다.</p>
               )}
             </div>
           </section>
@@ -1907,7 +3133,7 @@ export default function MacroChartClient({ initialMode = "macro" }: { initialMod
             </TransitionLink>
             <TransitionLink href={activeMacroContext.etfHref} data-macro-chart-context-link="etf">
               <strong>ETF 센터</strong>
-              <span>{activeMacroContext.shortLabel} 국면을 ETF 자산군으로 봅니다.</span>
+              <span>{activeMacroContext.shortLabel}에 맞는 ETF 자산군입니다.</span>
             </TransitionLink>
             <TransitionLink href={activeMacroContext.stockHref} data-macro-chart-context-link="stock">
               <strong>{activeMacroContext.stockSymbol}</strong>
@@ -1934,7 +3160,7 @@ export default function MacroChartClient({ initialMode = "macro" }: { initialMod
           formulas.length ? `${formulas.length}개 합성 시리즈` : null,
           hasStooqSelection ? "시장 심볼은 외부 데이터 경로를 경유합니다" : null,
           `카탈로그 ${MACRO_CATALOG_CURATED_AT} · ${MACRO_CATALOG_SERIES_COUNT}개 시리즈`,
-          "전체 CSV는 선택한 시리즈의 전체 로딩 범위 기준",
+          "CSV는 선택 기간·변환 후 실제 표시값 기준",
           "URL로 선택값·기간·숨김·축 상태 공유 가능",
         ]}
       >
@@ -1946,6 +3172,14 @@ export default function MacroChartClient({ initialMode = "macro" }: { initialMod
         <TransitionLink href={activeMacroContext.etfHref}>ETF로 보기</TransitionLink>
         <TransitionLink href={activeMacroContext.stockHref}>{activeMacroContext.stockSymbol} 상세</TransitionLink>
         <span>투자 조언 아님 · 데이터 기준 {formatAsOf(latestVisibleDate) ?? MACRO_CATALOG_CURATED_AT}</span>
+      </div>
+      <div data-macro-chart-sources>
+        <EvidenceRail
+          freshness={evidenceFreshness}
+          source="현재 차트"
+          asOf={latestVisibleDate ?? "—"}
+          coverage={`분석 ${analysisCards.length}종 · 렌즈 ${MACRO_ANALYSIS_LENSES.length}종 · 시장 비교 ${MARKET_COMPARE_LENSES.length}종 · 표 ${tableRows.length}개 관측일`}
+        />
       </div>
     </div>
   );

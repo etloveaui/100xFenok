@@ -4,27 +4,18 @@ import https from "node:https";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 
-import {
-  attemptResult,
-  atomicWrite,
-  classifyHttpResponse,
-  defaultAttemptId,
-  evaluateEndpointAssertions,
-  returnedTuple,
-  threwTuple,
-  transportError,
-  worstRequestResult,
-  writeAttemptShard,
-} from "./lib/data-supply-attempt-shard.mjs";
+import { atomicWrite } from "./lib/atomic-file.mjs";
+import { attemptResult, classifyHttpResponse, evaluateEndpointAssertions, returnedTuple, threwTuple, transportError, worstRequestResult } from "./lib/provider-fetch-result.mjs";
 import {
   LaneLkgStore,
   PROMOTION_CONTRACT_PROVIDER_OBSERVATION_V2,
   allNaturalRequestsFailed,
   buildProviderObservationV2,
   classifyLkgFailure,
-  isNaturalScheduleRun,
+  isEligibleRecoveryRun,
   systemicLkgFailureReason,
 } from "./lib/data-supply-lkg-store.mjs";
+import { boundedDiagnosticDetail, diagnosticSuffix } from "./lib/diagnostic-detail.mjs";
 
 const __filename = fileURLToPath(import.meta.url);
 const REPO_ROOT = path.resolve(path.dirname(__filename), "..");
@@ -42,6 +33,11 @@ export const DEFILLAMA_PERSISTENCE_POLICY = Object.freeze({
   max_series_days: DEFILLAMA_MAX_SERIES_DAYS,
   eviction: "oldest_source_date_first",
 });
+
+// DefiLlama opts into recovery promotion for structured first-attempt
+// workflow_dispatch runs only; every other LaneLkgStore caller keeps the
+// natural-schedule-only default.
+const ALLOW_BOUND_WORKFLOW_DISPATCH_RECOVERY = true;
 
 const MAX_RETRIES = 2;
 const BACKOFFS_MS = Object.freeze([1000, 2000, 4000]);
@@ -84,7 +80,10 @@ async function evaluateEndpoint({ endpoint, request, sleep, controlledFailureEnd
       }
     } catch (error) {
       const kind = transportError(error) ? "transport" : "unexpected";
-      last = attemptResult(kind === "transport" ? "transport_error" : "unexpected_error", threwTuple(kind));
+      last = {
+        ...attemptResult(kind === "transport" ? "transport_error" : "unexpected_error", threwTuple(kind)),
+        failure_detail: boundedDiagnosticDetail(error),
+      };
     }
     if (last.status === "ready" || retry === MAX_RETRIES) return last;
   }
@@ -193,7 +192,7 @@ function validPersistenceEnvelope(document) {
     && prunedDays === availableDays - retainedDays;
 }
 
-function stablecoinsSourceAsOf(document) {
+export function stablecoinsSourceAsOf(document) {
   const dates = Array.isArray(document?.series)
     ? document.series.map((row) => row?.date).filter(validSourceDate)
     : [];
@@ -216,11 +215,8 @@ function validStablecoinsDocument(document) {
 export async function runDefillama({
   repoRoot = REPO_ROOT,
   canonicalPath = path.join(REPO_ROOT, "data", "macro", "stablecoins.json"),
-  publicPath = path.join(REPO_ROOT, "100xfenok-next", "public", "data", "macro", "stablecoins.json"),
-  attemptShardPath = path.join(REPO_ROOT, "data", "admin", "data-supply-state", "detection-attempts", `${DEFILLAMA_LANE_ID}.json`),
   request = requestBytes,
   observedAt = new Date().toISOString(),
-  attemptId = defaultAttemptId("defillama-stablecoins", observedAt),
   runId = process.env.GITHUB_RUN_ID || "local",
   runAttempt = Number(process.env.GITHUB_RUN_ATTEMPT || 1),
   eventName = process.env.GITHUB_EVENT_NAME || "local",
@@ -229,7 +225,11 @@ export async function runDefillama({
 } = {}) {
   const injectedEndpoint = validateControlledFailureEndpoint(controlledFailureEndpoint.trim(), eventName);
   const run = { runId: String(runId), runAttempt: Number(runAttempt), eventName, observedAt };
-  const lkgStore = new LaneLkgStore({ repoRoot, laneId: DEFILLAMA_LANE_ID });
+  const lkgStore = new LaneLkgStore({
+    repoRoot,
+    laneId: DEFILLAMA_LANE_ID,
+    allowBoundWorkflowDispatchRecovery: ALLOW_BOUND_WORKFLOW_DISPATCH_RECOVERY,
+  });
   const lkgArtifacts = [{
     key: "stablecoins",
     canonicalPath,
@@ -247,13 +247,7 @@ export async function runDefillama({
     }));
   }
   const result = aggregateReadyResponses(requestResults);
-  const attempt = writeAttemptShard({
-    laneId: DEFILLAMA_LANE_ID,
-    attemptShardPath,
-    observedAt,
-    attemptId,
-    result,
-  });
+  const attempt = (result).attempt;
 
   if (result.status !== "ready") {
     const systemic = allNaturalRequestsFailed(
@@ -263,12 +257,16 @@ export async function runDefillama({
     const reason = systemicLkgFailureReason([result.reason, ...requestResults.map((row) => row.reason)])
       ?? (injectedEndpoint && !systemic ? "controlled_failure" : result.reason);
     const failure = lkgStore.recordFailure({ artifacts: lkgArtifacts, run, reason });
+    const failureDetail = reason === "controlled_failure"
+      ? null
+      : result.failure_detail ?? requestResults.find((row) => row.failure_detail)?.failure_detail ?? null;
     return {
       ok: false,
       reason,
       updated: false,
       attempt,
       retrySet: failure.retrySet,
+      ...(failureDetail ? { failure_detail: failureDetail } : {}),
       ...classifyLkgFailure({ reason, hasCompleteLkg: failure.hasCompleteLkg, systemic }),
     };
   }
@@ -308,7 +306,7 @@ export async function runDefillama({
     }),
   };
   const state = lkgStore.stateSnapshot();
-  if (state.items.stablecoins?.retry === true && !isNaturalScheduleRun(run)) {
+  if (state.items.stablecoins?.retry === true && !isEligibleRecoveryRun(run, ALLOW_BOUND_WORKFLOW_DISPATCH_RECOVERY)) {
     return {
       ok: false,
       reason: "recovery_requires_schedule",
@@ -340,7 +338,8 @@ export async function runDefillama({
   }
 
   atomicWrite(canonicalPath, serialized);
-  atomicWrite(publicPath, serialized);
+  // Producer writes canonical/admin only. The 100xfenok-next/public mirror is
+  // fallback materialization owned by sync-public-data / the Update Manifest.
   const success = lkgStore.recordSuccess({ artifacts: promotable, run });
   const recovered = success.state.items.stablecoins?.recovered_at === observedAt;
   return { ok: true, reason: "ok", updated: true, attempt, recovered, exitCode: 0 };
@@ -350,7 +349,7 @@ async function main() {
   const result = await runDefillama();
   if (!result.ok) {
     const prefix = result.degraded ? "[degraded]" : "[corrupt]";
-    const message = `${prefix} DefiLlama stablecoins ${result.reason}; retry set: ${(result.retrySet || []).join(", ") || "none"}`;
+    const message = `${prefix} DefiLlama stablecoins ${result.reason}; retry set: ${(result.retrySet || []).join(", ") || "none"}${diagnosticSuffix(result.failure_detail)}`;
     if (result.degraded) console.log(message);
     else console.error(message);
     process.exitCode = result.exitCode ?? 2;

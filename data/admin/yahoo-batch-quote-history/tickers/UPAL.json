@@ -77,66 +77,104 @@
       "run_id": "29544227703",
       "schedule": "20 23 * * 1-5",
       "shard": "1/5"
+    },
+    {
+      "attempts_used": 1,
+      "event_name": "schedule",
+      "failures": [],
+      "latency_ms": 498,
+      "natural": true,
+      "observed_at": "2026-08-04T23:07:26Z",
+      "outcome": "fresh",
+      "run_attempt": 1,
+      "run_id": "30958820437",
+      "schedule": "0 22 * * 2",
+      "shard": "2/6"
+    },
+    {
+      "attempts_used": 1,
+      "event_name": "schedule",
+      "failures": [],
+      "latency_ms": 614,
+      "natural": true,
+      "observed_at": "2026-08-07T03:14:39Z",
+      "outcome": "fresh",
+      "run_attempt": 1,
+      "run_id": "31143656628",
+      "schedule": "7 0 * * 0-5",
+      "shard": "60/72"
+    },
+    {
+      "attempts_used": 1,
+      "event_name": "workflow_dispatch",
+      "failures": [],
+      "latency_ms": 432,
+      "natural": false,
+      "observed_at": "2026-09-28T06:30:00Z",
+      "outcome": "fresh",
+      "run_attempt": 1,
+      "run_id": "36367836615",
+      "schedule": "",
+      "shard": ""
     }
   ],
   "current": {
-    "fetched_at": "2026-07-17T00:24:17Z",
-    "history_as_of": "2026-07-16",
+    "fetched_at": "2026-09-28T06:37:58Z",
+    "history_as_of": "2026-09-25",
     "path": "data/yf/finance/UPAL.json",
-    "payload_sha256": "21ca4190398066b74ac3c3e3c7051fe64722598b76a2334326aad8d8089de3ff",
-    "quote_as_of": "2026-07-16T17:21:20Z",
-    "source_as_of": "2026-07-16"
+    "payload_sha256": "1d304e5eeb539543acabe71f0fdac9c61a7e5f1a0a176d8aa0ab412e67727e10",
+    "quote_as_of": "2026-09-25T19:59:16Z",
+    "source_as_of": "2026-09-25"
   },
   "discovered_from": [
-    "market_facts",
     "stockanalysis_etf"
   ],
   "last_attempt": {
     "attempts_used": 1,
-    "event_name": "schedule",
+    "event_name": "workflow_dispatch",
     "failures": [],
-    "latency_ms": 426,
-    "natural": true,
-    "observed_at": "2026-07-17T00:21:09Z",
+    "latency_ms": 432,
+    "natural": false,
+    "observed_at": "2026-09-28T06:30:00Z",
     "outcome": "fresh",
     "run_attempt": 1,
-    "run_id": "29544227703",
-    "schedule": "20 23 * * 1-5",
-    "shard": "1/5"
+    "run_id": "36367836615",
+    "schedule": "",
+    "shard": ""
   },
   "lkg": {
-    "fetched_at": "2026-06-18T16:17:55Z",
-    "history_as_of": "2026-06-18",
+    "fetched_at": "2026-08-07T03:17:40Z",
+    "history_as_of": "2026-08-06",
     "path": "data/admin/yahoo-batch-quote-history/lkg/UPAL.json",
-    "payload_sha256": "db461eaa9d8db2059d5bbf0c400c35efd161f8a0e3d089264bdd85241b0f127f",
-    "quote_as_of": null,
-    "source_as_of": "2026-06-18"
+    "payload_sha256": "4f536eb47e47ecddce1bf9a58c7f7eaab39d3e494501144e4be0a87d8b085a96",
+    "quote_as_of": "2026-08-05T18:49:33Z",
+    "source_as_of": "2026-08-05T18:49:33Z"
   },
   "promotion_contract": "provider_observation/v2",
   "provider_observation": {
-    "event_name": "schedule",
-    "history_as_of": "2026-07-16",
-    "observed_at": "2026-07-17T00:21:09Z",
-    "payload_sha256": "139a02d089b8ab7764b5f86a712a1b0676ecacba9dad94c08356d99bfddf6f40",
-    "quote_as_of": "2026-07-16T17:21:20Z",
+    "event_name": "workflow_dispatch",
+    "history_as_of": "2026-09-25",
+    "observed_at": "2026-09-28T06:30:00Z",
+    "payload_sha256": "4d0b7ccc0061d9b253d34a879a382c66472d65c82748c4ec1a66d603cf0df436",
+    "quote_as_of": "2026-09-25T19:59:16Z",
     "run_attempt": 1,
-    "run_id": "29544227703",
+    "run_id": "36367836615",
     "schema_version": "provider_observation/v2",
-    "source_as_of": "2026-07-16"
+    "source_as_of": "2026-09-25"
   },
   "resolution_state": "fresh_primary",
   "retry": false,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "stale": {
-    "age_business_days": 15,
-    "classified_at": "2026-07-13T04:33:56Z",
-    "classified_run_id": "29224221077",
+    "age_business_days": 7,
+    "classified_at": "2026-08-14T00:10:47Z",
+    "classified_run_id": "31755913658",
     "expected_resolution": "next_natural_yahoo_run",
     "max_business_days": 6,
-    "message": "UPAL holds LKG because Yahoo source date 2026-06-18 is 15 business days old, beyond the 6-day bound; it will retry on the next natural Yahoo run.",
+    "message": "UPAL holds LKG because Yahoo source date 2026-08-05T18:49:33Z is 7 business days old, beyond the 6-day bound; it will retry on the next natural Yahoo run.",
     "reason": "source_age_exceeds_lane_bound",
-    "source_as_of": "2026-06-18"
+    "source_as_of": "2026-08-05T18:49:33Z"
   },
   "ticker": "UPAL",
-  "updated_at": "2026-07-17T00:21:09Z"
+  "updated_at": "2026-09-28T06:30:00Z"
 }

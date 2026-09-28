@@ -12,6 +12,7 @@ import {
   classifyProductSurfaceV2,
   deriveProductSurfaceStampEvidence,
   nextProductSurfaceLineageV2,
+  validateProductSurfaceCoverageV2Artifact,
 } from "./lib/product-surface-stamp-v2.mjs";
 import { projectPublicKpi } from "./lib/kpi-runtime-projection.mjs";
 
@@ -137,6 +138,26 @@ console.log("# product surface stamp taxonomy v2 fixtures");
   const maxGap = Math.max(...occurrences.slice(1).map((value, i) => (value - occurrences[i]) / 3600000));
   assert.equal(maxGap, 47.5); assert.equal(PRODUCT_SURFACE_COLLECTION_MAX_AGE_HOURS, 50); assert.ok(maxGap < PRODUCT_SURFACE_COLLECTION_MAX_AGE_HOURS);
   ok("15 cron-policy pin proves the declared surface schedule remains within 50h");
+}
+
+{
+  const stamp = evidence([date("source", "2026-07-15"), dateless("events")]);
+  const artifact = {
+    schema_version: "product-surface-coverage/v2",
+    source_stamp_version: 2,
+    generated_at: NOW,
+    surfaces: REQUIRED_SURFACE_IDS.map((id) => ({
+      id,
+      source_as_of: "2026-07-15",
+      source_as_of_reason: null,
+      stamp_evidence: stamp,
+    })),
+  };
+  assert.deepEqual(validateProductSurfaceCoverageV2Artifact(artifact), []);
+  const changed = structuredClone(artifact);
+  changed.surfaces[0].source_as_of = "2026-07-14";
+  assert.ok(validateProductSurfaceCoverageV2Artifact(changed).some((message) => message.includes("source_as_of must equal")));
+  ok("16 v2 artifact validation re-derives the true source-date floor");
 }
 
 console.log(`# ${passed} fixtures passed`);

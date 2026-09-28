@@ -110,16 +110,16 @@ export default function FenokSignalHelpPopover({
       <div className="mb-2 flex items-center justify-between gap-2">
         <strong
           id={titleId}
-          className="text-xs font-black text-[var(--c-ink)]"
+          className="text-[12px] font-black text-[var(--c-ink)]"
         >
           {titleLabel}
         </strong>
-        <span className="text-[10px] font-bold text-[var(--c-ink-3)]">
+        <span className="text-[12px] font-bold text-[var(--c-ink-3)]">
           {scoreValue ?? "—"}
           {headerDirection ? ` · ${headerDirection}` : null}
         </span>
       </div>
-      <p className="mb-2 text-[11px] font-semibold leading-snug text-[var(--c-ink-2)]">
+      <p className="mb-2 text-[12px] font-semibold leading-snug text-[var(--c-ink-2)]">
         {interpretation}
       </p>
       <div className="mb-2 space-y-1">
@@ -132,7 +132,7 @@ export default function FenokSignalHelpPopover({
             <div
               key={band.label}
               className={cx(
-                "flex items-center justify-between rounded px-1.5 py-1 text-[10px] font-bold",
+                "flex items-center justify-between rounded px-1.5 py-1 text-[12px] font-bold",
                 toneClass(band.tone),
                 active && "ring-1 ring-[var(--c-line)]",
               )}
@@ -145,7 +145,7 @@ export default function FenokSignalHelpPopover({
           );
         })}
       </div>
-      <p className="text-[9px] font-bold text-[var(--c-ink-3)]">
+      <p className="text-[12px] font-bold text-[var(--c-ink-3)]">
         Fenok 파생 신호 · 매수 권유 아님
       </p>
     </div>
@@ -160,7 +160,7 @@ export default function FenokSignalHelpPopover({
         aria-expanded={isOpen}
         aria-controls={popoverId}
         onClick={toggle}
-        className="inline-flex size-6 items-center justify-center rounded-full border border-[var(--c-line)] bg-[var(--c-panel)] text-xs font-black leading-none text-[var(--c-ink-3)] shadow-sm transition hover:border-[var(--brand-interactive)] hover:text-[var(--brand-interactive)] focus:outline-none focus:ring-2 focus:ring-[var(--brand-interactive)]/40"
+        className="inline-flex size-6 items-center justify-center rounded-full border border-[var(--c-line)] bg-[var(--c-panel)] text-[12px] font-black leading-none text-[var(--c-ink-3)] shadow-sm transition hover:border-[var(--brand-interactive)] hover:text-[var(--brand-interactive)] focus:outline-none focus:ring-2 focus:ring-[var(--brand-interactive)]/40"
       >
         ?
       </button>

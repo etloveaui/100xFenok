@@ -4,8 +4,7 @@ import { Fragment, useCallback, useState, type ReactNode } from "react";
 import { v2cx } from "@/components/dashboard/v2/types";
 import Sparkline from "./Sparkline";
 import PickChip from "./PickChip";
-import { FEATURED_ARTICLE } from "./mockData";
-import type { ScoutChapter } from "./types";
+import type { Article, ScoutChapter } from "./types";
 
 const ANCHOR_RE = /(\[\[anchor:\d+\]\])/g;
 
@@ -40,8 +39,7 @@ function renderParagraph(text: string, onAnchor: (id: number) => void): ReactNod
   });
 }
 
-export default function ArticleView({ onBack }: { onBack: () => void }) {
-  const article = FEATURED_ARTICLE;
+export default function ArticleView({ article, onBack }: { article: Article; onBack: () => void }) {
   const [activeAnchor, setActiveAnchor] = useState<number | null>(null);
 
   const handleAnchor = useCallback((id: number) => {
@@ -94,7 +92,10 @@ export default function ArticleView({ onBack }: { onBack: () => void }) {
           </ol>
         </aside>
         <div className="as-prose">
-          {article.chapters.map((chapter) => (
+          {article.chapters.length === 0 ? (
+            <p className="as-empty">이 호의 본문은 아직 준비되지 않았습니다. 아카이브로 돌아가 다른 리포트를 확인해 주세요.</p>
+          ) : (
+          article.chapters.map((chapter) => (
             <article key={chapter.id} id={chapter.id} className="as-chapter">
               <span className="kicker">{chapter.kicker}</span>
               <h2>{chapter.title}</h2>
@@ -102,7 +103,8 @@ export default function ArticleView({ onBack }: { onBack: () => void }) {
                 <p key={idx}>{renderParagraph(para, handleAnchor)}</p>
               ))}
             </article>
-          ))}
+          ))
+          )}
           <p className="as-disclaimer">
             본 리포트는 투자 참고용입니다. 매수/매도 권유가 아니며, 포지셔닝은 본인 판단으로 진행하세요.
           </p>

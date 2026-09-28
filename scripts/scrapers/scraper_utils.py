@@ -18,6 +18,7 @@ Reference: docs/planning/slickcharts-data-pipeline.md
 from __future__ import annotations
 
 import argparse
+import hashlib
 import json
 import math
 import os
@@ -72,8 +73,10 @@ def _returned_attempt_tuple(
     decode: str = "not_attempted",
     payload: str = "not_available",
     assertions: Optional[List[Dict[str, Any]]] = None,
+    provider_date: Optional[str] = None,
+    response_sha256: Optional[str] = None,
 ) -> Dict[str, Any]:
-    return {
+    row = {
         "execution": "returned",
         "exception_kind": None,
         "http_status": status,
@@ -83,6 +86,10 @@ def _returned_attempt_tuple(
         "payload": payload,
         "assertions": assertions or [],
     }
+    if provider_date is not None or response_sha256 is not None:
+        row["provider_date"] = provider_date
+        row["response_sha256"] = response_sha256
+    return row
 
 
 def _threw_attempt_tuple(exception_kind: str) -> Dict[str, Any]:
@@ -131,17 +138,86 @@ def _provider_throttled_attempt_tuple(status: int) -> Dict[str, Any]:
     )
 
 
-def _html_attempt_tuple(status: int, html: str) -> Dict[str, Any]:
+# CSS selector for the SlickCharts yield value heading. The page carries no
+# static data table (SvelteKit-hydrated headings), so the yield scrapers and
+# their attempt-event assertion share this selector: the assertion validates
+# exactly the heading the parser reads, never a wider element set.
+YIELD_VALUE_SELECTOR = "h1 + h2"
+
+
+def extract_yield_percent(text: str, *, exact: bool) -> Optional[float]:
+    """Extract an unsigned dividend-yield percent, fail-closed.
+
+    Returns the value only when the percent is unsigned (a leading `-`/`+`
+    never silently flips sign) and lies within a plausible 0-30% band;
+    otherwise None. `exact=True` requires the whole text to be the value
+    (value headings); `exact=False` searches meta-style sentences.
+    """
+    cleaned = text.strip()
+    if exact:
+        match = re.fullmatch(r"(\d+(?:\.\d+)?)\s*%", cleaned)
+    else:
+        match = re.search(r"(?<![-+\d.])(\d+(?:\.\d+)?)\s*%", cleaned)
+    if not match:
+        return None
+    value = float(match.group(1))
+    if not 0.0 <= value <= 30.0:
+        return None
+    return value
+
+
+def _html_attempt_tuple(
+    status: int,
+    html: str,
+    *,
+    provider_date: Optional[str] = None,
+    content_assertion: Optional[tuple] = None,
+) -> Dict[str, Any]:
+    response_sha256 = hashlib.sha256(html.encode("utf-8")).hexdigest()
+    # Request shape for telemetry: the telemetry lane contract accepts one
+    # assertion-id set per page shape, never a global set. The shape is
+    # derived from the assertion path taken here, so it can never disagree
+    # with the emitted assertion id.
+    page_shape = "yield" if content_assertion is not None else "table"
     if not html.strip():
-        return _returned_attempt_tuple(status, decode="ok", payload="empty")
-    soup = BeautifulSoup(html, "html.parser")
-    has_rows = any(row.find("td") is not None for row in soup.select("table tr"))
-    return _returned_attempt_tuple(
+        row = _returned_attempt_tuple(
+            status,
+            decode="ok",
+            payload="empty",
+            provider_date=provider_date,
+            response_sha256=response_sha256,
+        )
+        row["page_shape"] = page_shape
+        return row
+    if content_assertion is not None:
+        # Non-table pages (e.g. SvelteKit-hydrated yield pages) assert on the
+        # content the scraper actually parses: (id, css selector, pattern or
+        # validator). A validator callable receives the matched text and must
+        # return a truthy value; use it to share the exact parse rule so the
+        # assertion can never accept what the parser rejects.
+        assertion_id, selector, pattern = content_assertion
+        matched_text = " ".join(
+            element.get_text(" ", strip=True)
+            for element in BeautifulSoup(html, "html.parser").select(selector)
+        )
+        if callable(pattern):
+            passed = bool(pattern(matched_text))
+        else:
+            passed = bool(re.search(pattern, matched_text))
+        assertions = [{"id": assertion_id, "passed": passed}]
+    else:
+        has_table_rows = bool(BeautifulSoup(html, "html.parser").select("table tr"))
+        assertions = [{"id": "table_rows", "passed": has_table_rows}]
+    row = _returned_attempt_tuple(
         status,
         decode="ok",
         payload="non_empty",
-        assertions=[{"id": "table_rows", "passed": has_rows}],
+        assertions=assertions,
+        provider_date=provider_date,
+        response_sha256=response_sha256,
     )
+    row["page_shape"] = page_shape
+    return row
 
 
 def decode_response_html(response: Response) -> str:
@@ -257,7 +333,11 @@ def fetch_html_playwright(
             if is_cloudflare_challenge(status, response_headers, html) or (challenge_detector and challenge_detector(html)):
                 raise ProviderThrottledError(url, status, attempt)
 
-            _emit_attempt_tuple(_html_attempt_tuple(status, html))
+            _emit_attempt_tuple(_html_attempt_tuple(
+                status,
+                html,
+                provider_date=response_headers.get("date"),
+            ))
             return html
         except ProviderThrottledError as exc:
             last_error = exc
@@ -305,6 +385,7 @@ def fetch_html(
     max_retries: int = MAX_RETRIES,
     rate_limit: float = RATE_LIMIT_SECONDS,
     timeout: int = REQUEST_TIMEOUT,
+    content_assertion: Optional[tuple] = None,
 ) -> str:
     """
     Fetch HTML content with retries and polite rate limiting.
@@ -316,6 +397,11 @@ def fetch_html(
         max_retries: Maximum retry attempts (default: 3)
         rate_limit: Delay between requests in seconds (default: 1.5)
         timeout: Request timeout in seconds (default: 30)
+        content_assertion: Optional (id, css selector, pattern-or-validator)
+            tuple asserting on the parsed content instead of the default
+            `table tr` presence. For pages whose data is not a static table
+            (e.g. hydrated yield headings). A miss keeps the attempt
+            fail-closed upstream.
 
     Returns:
         HTML content as string
@@ -352,7 +438,12 @@ def fetch_html(
                     response=response,
                 )
             response.raise_for_status()
-            _emit_attempt_tuple(_html_attempt_tuple(response.status_code, html))
+            _emit_attempt_tuple(_html_attempt_tuple(
+                response.status_code,
+                html,
+                provider_date=response.headers.get("Date"),
+                content_assertion=content_assertion,
+            ))
             return html
         except requests.RequestException as exc:
             last_error = exc
@@ -705,6 +796,35 @@ def build_standard_payload(
         payload.update(extra_fields)
 
     return payload
+
+
+def preserve_updated(payload: Dict[str, Any], existing: Any) -> None:
+    """
+    Reuse the prior top-level updated when the semantic payload is unchanged.
+
+    The semantic payload is the full output object excluding only the
+    top-level "updated" key. The prior stamp must also be a parseable ISO date
+    or date-time accepted by the cloud publisher's source_as_of contract.
+    Mutates payload in place.
+    """
+    if not isinstance(payload, dict) or "updated" not in payload:
+        return
+    if not isinstance(existing, dict):
+        return
+    prior = existing.get("updated")
+    if not isinstance(prior, str):
+        return
+    candidate = prior.strip()
+    if not re.match(r"^\d{4}-\d{2}-\d{2}(?:$|[T ])", candidate):
+        return
+    try:
+        datetime.fromisoformat(candidate.replace("Z", "+00:00"))
+    except ValueError:
+        return
+    new_semantic = {key: value for key, value in payload.items() if key != "updated"}
+    old_semantic = {key: value for key, value in existing.items() if key != "updated"}
+    if new_semantic == old_semantic:
+        payload["updated"] = prior
 
 
 def write_output(

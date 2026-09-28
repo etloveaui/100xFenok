@@ -16,7 +16,7 @@ const jiti = createJiti(path.join(process.cwd(), "_admin-static-auth-test.js"), 
 });
 
 const { middleware } = jiti("./middleware.ts");
-const { ADMIN_SESSION_COOKIE, createAdminSessionToken } = jiti(
+const { ADMIN_SESSION_COOKIE, ADMIN_SESSION_DEFAULT_TTL_MS, createAdminSessionToken } = jiti(
   "./src/lib/server/admin-session.ts",
 );
 
@@ -78,28 +78,29 @@ function assertPasses(response, label) {
   );
 }
 
-const anonymousAdminScript = await middleware(
-  requestFor("/admin/data-lab/app/renderer.js"),
-);
-assertRedirectsToAdminGate(
-  anonymousAdminScript,
+const adminStaticPaths = [
+  "/admin/DEV.md",
   "/admin/data-lab/app/renderer.js",
-);
-
-const anonymousAdminImage = await middleware(
-  requestFor("/admin/design-lab/screenshots/figma-profile-avatar.jpg"),
-);
-assertRedirectsToAdminGate(
-  anonymousAdminImage,
   "/admin/design-lab/screenshots/figma-profile-avatar.jpg",
-);
+];
+const expiredToken = await createAdminSessionToken(Date.now() - ADMIN_SESSION_DEFAULT_TTL_MS - 1000);
+for (const cookie of [
+  "",
+  `${ADMIN_SESSION_COOKIE}=malformed`,
+  `${ADMIN_SESSION_COOKIE}=${expiredToken}`,
+]) {
+  for (const pathname of adminStaticPaths) {
+    const response = await middleware(requestFor(pathname, cookie));
+    assertRedirectsToAdminGate(response, pathname);
+  }
+}
 
 const token = await createAdminSessionToken();
 const authenticatedCookie = `${ADMIN_SESSION_COOKIE}=${token}`;
-const authenticatedAdminScript = await middleware(
-  requestFor("/admin/data-lab/app/renderer.js", authenticatedCookie),
-);
-assertPasses(authenticatedAdminScript, "authenticated admin static asset");
+for (const pathname of adminStaticPaths) {
+  const response = await middleware(requestFor(pathname, authenticatedCookie));
+  assertPasses(response, `authenticated admin static asset ${pathname}`);
+}
 
 const anonymousAdminHtmlEmbed = await middleware(
   requestFor("/admin/data-lab/index.html?embed=1"),
@@ -109,6 +110,13 @@ assertRedirectsToPath(
   "/admin/data-lab",
   "anonymous admin HTML embed",
 );
+for (const cookie of [
+  `${ADMIN_SESSION_COOKIE}=malformed`,
+  `${ADMIN_SESSION_COOKIE}=${expiredToken}`,
+]) {
+  const response = await middleware(requestFor("/admin/data-lab/index.html?embed=1", cookie));
+  assertRedirectsToPath(response, "/admin/data-lab", "invalid admin HTML embed session");
+}
 
 const authenticatedAdminHtmlEmbed = await middleware(
   requestFor("/admin/data-lab/index.html?embed=1", authenticatedCookie),

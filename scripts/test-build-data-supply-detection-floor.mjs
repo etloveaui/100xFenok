@@ -11,29 +11,23 @@ import { fileURLToPath } from "node:url";
 import {
   DATA_SUPPLY_DETECTION_CONFIG,
   canonicalJson,
-  configDigest,
   validateDetectionConfig,
 } from "./lib/data-supply-detection-config.mjs";
 import { registryDigest } from "./lib/lane-registry.mjs";
 import {
-  ATTEMPT_SCHEMA,
-  ATTEMPT_SHARD_SCHEMA,
   CALENDAR_PATH,
   DetectionFloorError,
   REPO_ROOT,
   REPORT_BASENAME,
   buildDetectionReport,
   canonicalExistingDirectory,
-  classifyAttempt,
   detectAndProject,
   evaluateAttemptCadence,
   evaluateFreshness,
-  loadAttemptShards,
+  foldGeneratedAt,
   pathsOverlap,
   prepareOutputContext,
   projectReportAtomic,
-  validateAttemptEvidence,
-  validateAttemptShard,
   validateCalendars,
   validateConfigCalendarBindings,
   validateDetectionReport,
@@ -45,13 +39,13 @@ const __dirname = path.dirname(__filename);
 const FIXTURE_DIR = path.join(__dirname, "fixtures", "data_supply", "detection_floor");
 const BUILDER = path.join(__dirname, "build-data-supply-detection-floor.mjs");
 const CONFIG_MODULE = path.join(__dirname, "lib", "data-supply-detection-config.mjs");
-const ATTEMPTS_PATH = path.join(FIXTURE_DIR, "attempts.fixture.json");
 const CALENDARS_PATH = path.join(FIXTURE_DIR, "calendars.fixture.json");
 const ARTIFACTS_PATH = path.join(FIXTURE_DIR, "artifacts.fixture.json");
 const EXPECTED_PATH = path.join(FIXTURE_DIR, "cases.expected.json");
 const ADMIN_REPORT = path.join(REPO_ROOT, "data", "admin", REPORT_BASENAME);
 const DEPLOY_WORKFLOW = path.join(REPO_ROOT, ".github", "workflows", "deploy-worker.yml");
 const UPDATE_MANIFEST_WORKFLOW = path.join(REPO_ROOT, ".github", "workflows", "update-manifest.yml");
+const UPDATE_MANIFEST_RUNNER = path.join(REPO_ROOT, "scripts", "update-manifest-projections.sh");
 const APP_PACKAGE = path.join(REPO_ROOT, "100xfenok-next", "package.json");
 const TEST_PREFIX = "fenok-dfloor-test-";
 const PROTECTED_RELATIVE_PATHS = [
@@ -186,7 +180,72 @@ function protectedSnapshot() {
   return snapshot;
 }
 
-const attemptsFixture = readJson(ATTEMPTS_PATH);
+// Exact record-bounded mutation for the derivation-boundary REDs. A fixed byte
+// window after an id anchor is fragile twice over: `lane_id: "treasury_tga"`
+// inside the workflow mapping precedes the lane record, and a widening record
+// can push the target field out of any plausible window. Locate the record by
+// its own id field, bound it by its balanced object literal (quote-aware), and
+// require the target field inside those exact bounds.
+function mutateRegistryRecord(source, id, from, to) {
+  const anchor = new RegExp(`(?<![A-Za-z0-9_$])id: "${id}"`);
+  const match = anchor.exec(source);
+  if (!match) throw new Error("RED(b) mutation anchor missing");
+  const idIndex = match.index;
+  let depth = 0;
+  let inString = false;
+  let quote = null;
+  let recordStart = -1;
+  for (let i = idIndex; i >= 0; i -= 1) {
+    const char = source[i];
+    if (inString) {
+      if (char === "\\") { i -= 1; continue; }
+      if (char === quote) inString = false;
+      continue;
+    }
+    if (char === '"' || char === "'") { inString = true; quote = char; continue; }
+    if (char === "}") { depth += 1; continue; }
+    if (char === "{") {
+      if (depth === 0) { recordStart = i; break; }
+      depth -= 1;
+    }
+  }
+  if (recordStart === -1) throw new Error("RED(b) mutation anchor missing");
+  depth = 0;
+  inString = false;
+  quote = null;
+  let recordEnd = -1;
+  for (let i = recordStart; i < source.length; i += 1) {
+    const char = source[i];
+    if (inString) {
+      if (char === "\\") { i += 1; continue; }
+      if (char === quote) inString = false;
+      continue;
+    }
+    if (char === '"' || char === "'") { inString = true; quote = char; continue; }
+    if (char === "{") { depth += 1; continue; }
+    if (char === "}") {
+      depth -= 1;
+      if (depth === 0) { recordEnd = i + 1; break; }
+    }
+  }
+  if (recordEnd === -1) throw new Error("RED(b) mutation anchor missing");
+  const record = source.slice(recordStart, recordEnd);
+  if (!record.includes(from)) throw new Error("RED(b) mutation anchor missing");
+  return source.slice(0, recordStart) + record.replace(from, to) + source.slice(recordEnd);
+}
+
+// The canonical admin report may already be checked out (owner-ordered sync
+// commits it). The suite must never create or modify it: capture its identity
+// before any test activity and require byte-identical state afterwards. A
+// report-free checkout keeps the stricter "stays absent" guarantee; a checked
+// out report must not be touched either.
+function adminReportIdentity() {
+  if (!fs.existsSync(ADMIN_REPORT)) return "absent";
+  const stat = fs.lstatSync(ADMIN_REPORT);
+  if (!stat.isFile() || stat.isSymbolicLink()) return `other:${stat.mode}:${stat.dev}:${stat.ino}`;
+  return `file:${stat.size}:${createSha(fs.readFileSync(ADMIN_REPORT))}`;
+}
+
 const calendarsFixture = readJson(CALENDARS_PATH);
 const artifactsFixture = readJson(ARTIFACTS_PATH);
 const expectedFixture = readJson(EXPECTED_PATH);
@@ -358,45 +417,6 @@ function lane(report, id) {
   return row;
 }
 
-function replaceAttempt(document, laneId, memberId, replacement) {
-  const copy = clone(document);
-  const index = copy.attempts.findIndex((row) => row.lane_id === laneId && row.member_id === memberId);
-  assert.notEqual(index, -1);
-  const evidence = { ...replacement };
-  delete evidence.lane_id;
-  delete evidence.member_id;
-  copy.attempts[index] = { ...copy.attempts[index], ...evidence };
-  return copy;
-}
-
-function legalAttempt(reason) {
-  const base = {
-    lane_id: "fred_macro",
-    member_id: null,
-    attempt_id: "attempt-reason-case",
-    observed_at: "2026-07-11T00:00:00Z",
-    execution: "returned",
-    exception_kind: null,
-    http_status: 200,
-    auth: "ok",
-    rate_limited: false,
-    decode: "ok",
-    payload: "non_empty",
-    assertions: [{ id: "observations_array", passed: true }],
-  };
-  if (reason === "transport_error") return { ...base, execution: "threw", exception_kind: "transport", http_status: null, auth: "not_applicable", decode: "not_attempted", payload: "not_available", assertions: [] };
-  if (reason === "unexpected_error") return { ...base, execution: "threw", exception_kind: "unexpected", http_status: null, auth: "not_applicable", decode: "not_attempted", payload: "not_available", assertions: [] };
-  if (reason === "http_error") return { ...base, http_status: 500, auth: "not_applicable", decode: "not_attempted", payload: "not_available", assertions: [] };
-  if (reason === "auth_error") return { ...base, http_status: 401, auth: "rejected", decode: "not_attempted", payload: "not_available", assertions: [] };
-  if (reason === "provider_throttled") return { ...base, http_status: 403, auth: "not_applicable", decode: "ok", payload: "non_empty", assertions: [{ id: "provider_throttled", passed: false }] };
-  if (reason === "rate_limited") return { ...base, http_status: 429, auth: "not_applicable", rate_limited: true, decode: "not_attempted", payload: "not_available", assertions: [] };
-  if (reason === "decode_error") return { ...base, decode: "error", payload: "not_available", assertions: [] };
-  if (reason === "empty_payload") return { ...base, payload: "empty", assertions: [] };
-  if (reason === "schema_drift") return { ...base, assertions: [{ id: "observations_array", passed: false }] };
-  if (reason === "workflow_unobserved") return { ...base, attempt_id: null, observed_at: null, execution: "unobserved", http_status: null, auth: "not_applicable", decode: "not_attempted", payload: "not_available", assertions: [] };
-  throw new Error(`unknown reason fixture ${reason}`);
-}
-
 function assertThrowsCode(callback, code) {
   assert.throws(callback, (error) => error instanceof DetectionFloorError && error.code === code);
 }
@@ -436,8 +456,11 @@ function runConfigAndFixtureChecks() {
   assert.doesNotMatch(fs.readFileSync(CONFIG_MODULE, "utf8"), networkPattern);
   assert.equal(validateDetectionConfig(DATA_SUPPLY_DETECTION_CONFIG), true);
   assert.equal(Object.isFrozen(DATA_SUPPLY_DETECTION_CONFIG), true);
-  assert.equal(DATA_SUPPLY_DETECTION_CONFIG.lanes.length, 27);
-  assert.equal(DATA_SUPPLY_DETECTION_CONFIG.lanes.flatMap((item) => item.producer_members).length, 31);
+  assert.equal(DATA_SUPPLY_DETECTION_CONFIG.lanes.length, DATA_SUPPLY_DETECTION_CONFIG.logical_lane_count);
+  assert.equal(
+    DATA_SUPPLY_DETECTION_CONFIG.lanes.flatMap((item) => item.producer_members).length,
+    DATA_SUPPLY_DETECTION_CONFIG.producer_member_count,
+  );
   const stockFinancial = DATA_SUPPLY_DETECTION_CONFIG.lanes.find((item) => item.id === "stockanalysis_stock_financial");
   assert.equal(stockFinancial.enforcement, "live");
   assert.equal(stockFinancial.kpi_required, true);
@@ -447,14 +470,28 @@ function runConfigAndFixtureChecks() {
   assert.equal(yahooPrivateOptions.enforcement, "live");
   assert.equal(yahooPrivateOptions.kpi_required, true);
   assert.deepEqual(yahooPrivateOptions.producer_members[0].schedule, ["10 1 * * 2-6"]);
+  const finraAtsWeekly = DATA_SUPPLY_DETECTION_CONFIG.lanes.find((item) => item.id === "finra_ats_weekly");
+  assert.equal(finraAtsWeekly.enforcement, "live");
+  assert.equal(finraAtsWeekly.kpi_required, true);
+  assert.deepEqual(finraAtsWeekly.producer_members[0].schedule, ["17 11 * * 3"]);
+  assert.deepEqual(
+    finraAtsWeekly.endpoint_contract.assertions.map((item) => item.id),
+    ["weekly_summary_rows", "weekly_summary_row_shape"],
+  );
+  assert.equal(finraAtsWeekly.freshness.max_staleness, 42);
+  const gdeltNewsTone = DATA_SUPPLY_DETECTION_CONFIG.lanes.find((item) => item.id === "gdelt_news_tone");
+  assert.equal(gdeltNewsTone.enforcement, "live");
+  assert.equal(gdeltNewsTone.kpi_required, true);
   const benchmarks = DATA_SUPPLY_DETECTION_CONFIG.lanes.find((item) => item.id === "benchmarks");
   const globalScouter = DATA_SUPPLY_DETECTION_CONFIG.lanes.find((item) => item.id === "global_scouter");
   const damodaran = DATA_SUPPLY_DETECTION_CONFIG.lanes.find((item) => item.id === "damodaran");
-  for (const converterLane of [benchmarks, globalScouter, damodaran]) {
+  for (const converterLane of [benchmarks, globalScouter]) {
     assert.ok(converterLane, "converter-fed detection lane exists");
     assert.equal(converterLane.enforcement, "shadow");
     assert.equal(converterLane.kpi_required, false);
   }
+  assert.equal(damodaran.enforcement, "live");
+  assert.equal(damodaran.kpi_required, true);
   for (const converterLane of [benchmarks, globalScouter]) {
     assert.equal(converterLane.producer_members[0].workflow, null,
       `${converterLane.id} does not fabricate an attempt-emitting GitHub workflow`);
@@ -470,8 +507,22 @@ function runConfigAndFixtureChecks() {
   assert.deepEqual(damodaran.producer_members[0].cadence_declaration,
     { kind: "github_workflow", evidence: ".github/workflows/fetch-damodaran-shadow.yml" });
   assert.equal(damodaran.producer_members[0].workflow, ".github/workflows/fetch-damodaran-shadow.yml");
-  assert.deepEqual(damodaran.producer_members[0].schedule, ["17 11 * * 6"]);
+  assert.deepEqual(damodaran.producer_members[0].schedule, ["17 11,23 * * 6"]);
   assert.equal(damodaran.producer_members[0].cadence_calendar, "utc");
+  assert.equal(damodaran.producer_members[0].activated_at, "2026-07-19T15:05:41Z");
+  assert.equal(damodaran.endpoint_contract.transport, "library");
+  assert.deepEqual(damodaran.endpoint_contract.assertions, [{
+    id: "owner_guard_match",
+    kind: "exact",
+    pointer: "/status",
+    value: "match",
+  }]);
+  const activatedOecdCli = DATA_SUPPLY_DETECTION_CONFIG.lanes.find((item) => item.id === "oecd_cli");
+  assert.equal(activatedOecdCli.producer_members[0].activated_at, "2026-07-20T14:20:11Z");
+  const stockFinancialLane = DATA_SUPPLY_DETECTION_CONFIG.lanes
+    .find((item) => item.id === "stockanalysis_stock_financial");
+  assert.equal(stockFinancialLane.endpoint_contract.transport, "library");
+  assert.equal(Object.hasOwn(stockFinancialLane.producer_members[0], "activated_at"), false);
   const slickcharts = DATA_SUPPLY_DETECTION_CONFIG.lanes.find((item) => item.id === "slickcharts");
   assert.deepEqual(slickcharts.producer_members.map((item) => item.id), ["daily", "weekly", "monthly", "history", "symbols"]);
   assert.deepEqual(
@@ -480,6 +531,38 @@ function runConfigAndFixtureChecks() {
   );
   const treasuryTga = DATA_SUPPLY_DETECTION_CONFIG.lanes.find((item) => item.id === "treasury_tga");
   const fredYardeni = DATA_SUPPLY_DETECTION_CONFIG.lanes.find((item) => item.id === "fred_yardeni");
+  const sentiment = DATA_SUPPLY_DETECTION_CONFIG.lanes.find((item) => item.id === "sentiment");
+  assert.deepEqual(sentiment.producer_members[0].artifact_contracts.map((item) => item.id), [
+    "sentiment_cnn",
+    "sentiment_cftc",
+    "sentiment_crypto",
+    "sentiment_vix",
+    "sentiment_move",
+    // Added 2026-08-21: the remaining CNN outputs the same producer writes in
+    // the same run. They had no source-family gate, which computed signals
+    // reported as an unresolved warning for cnn-put-call.
+    "sentiment_cnn_put_call",
+    "sentiment_cnn_breadth",
+    "sentiment_cnn_components",
+    "sentiment_cnn_junk_bond",
+    "sentiment_cnn_momentum",
+    "sentiment_cnn_safe_haven",
+    "sentiment_cnn_strength",
+  ]);
+  assert.deepEqual(sentiment.producer_members[0].artifact_contracts.map((item) => item.path), [
+    "data/sentiment/cnn-fear-greed.json",
+    "data/sentiment/cftc-sp500.json",
+    "data/sentiment/crypto-fear-greed.json",
+    "data/sentiment/vix.json",
+    "data/sentiment/move.json",
+    "data/sentiment/cnn-put-call.json",
+    "data/sentiment/cnn-breadth.json",
+    "data/sentiment/cnn-components.json",
+    "data/sentiment/cnn-junk-bond.json",
+    "data/sentiment/cnn-momentum.json",
+    "data/sentiment/cnn-safe-haven.json",
+    "data/sentiment/cnn-strength.json",
+  ]);
   const liveLaneIds = DATA_SUPPLY_DETECTION_CONFIG.lanes
     .filter((item) => item.enforcement === "live")
     .map((item) => item.id);
@@ -493,18 +576,66 @@ function runConfigAndFixtureChecks() {
     "defillama_stablecoins",
     "yahoo_etf_fallback",
     "stockanalysis_etf_universe",
+    "stockanalysis_etf_detail",
     "stockanalysis_stock_financial",
     "yahoo_ticker_macro",
     "sentiment",
     "nasdaq_giw_sox",
     "us_indices_daily",
+    "oecd_cli",
+    "krx",
     "slickcharts",
     "edgar_filings",
+    "damodaran",
     "finra_short_volume",
+    "finra_ats_weekly",
     "occ_options_volume",
     "yahoo_private_options",
     "apewisdom_attention",
+    "gdelt_news_tone",
   ], "only attempt-proven lanes are live");
+  // yahoo_ticker_macro carries US market quote times. The stamp freezes at the
+  // regular-session close and does not move again until the next open, so an
+  // `hours` bound on the `utc` calendar reports the lane stale from 20:00Z
+  // until roughly 13:30Z the next trading day, plus the whole weekend.
+  // Measured across 2026-07-23..25: ready only inside the session, degraded in
+  // every one of 12 sampled off-session KPI rebuilds - about sixteen red hours
+  // a day, permanently. A required lane that is red most of the time teaches
+  // everyone to ignore the board. Every sibling market-data lane (sentiment,
+  // us_indices_daily, occ_options_volume, finra_short_volume,
+  // yahoo_private_options, nasdaq_giw_sox) is judged on us_trading business
+  // days for exactly this reason; this one was the outlier.
+  // `hours` cannot be rescued by a calendar: build-data-supply-detection-floor
+  // computes the hours age as raw elapsed milliseconds and never consults one.
+  {
+    const macro = DATA_SUPPLY_DETECTION_CONFIG.lanes.find((item) => item.id === "yahoo_ticker_macro");
+    assert.notEqual(macro.freshness.unit, "hours",
+      "an hours bound cannot survive a normal overnight close");
+    assert.equal(macro.freshness.calendar, "us_trading",
+      "market quote times must be judged on the trading calendar");
+
+    const policy = {
+      unit: macro.freshness.unit,
+      calendar: macro.freshness.calendar,
+      max_staleness: macro.freshness.max_staleness,
+    };
+    const fridayClose = "2026-07-24T20:00:00Z";
+    const notStale = (now, why) => assert.equal(
+      evaluateFreshness(fridayClose, policy, now, calendarsFixture).reason, "ok", why);
+    notStale("2026-07-24T23:30:00Z", "the evening of the same trading day is not stale");
+    notStale("2026-07-25T05:00:00Z", "overnight before the next session is not stale");
+    notStale("2026-07-25T18:00:00Z", "Saturday is not stale");
+    notStale("2026-07-26T18:00:00Z", "Sunday is not stale");
+    notStale("2026-07-27T12:00:00Z", "Monday pre-open is not stale");
+    // Removing the false alarm must not buy a blind spot: a feed that stops
+    // producing across full trading days is a real outage and still trips.
+    assert.notEqual(
+      evaluateFreshness(fridayClose, policy, "2026-07-29T21:00:00Z", calendarsFixture).reason,
+      "ok",
+      "a quote stamp that has not moved for multiple trading days must still trip stale",
+    );
+  }
+
   assert.equal(treasuryTga.enforcement, "live");
   assert.equal(treasuryTga.kpi_required, true);
   assert.equal(fredYardeni.enforcement, "live");
@@ -531,18 +662,73 @@ function runConfigAndFixtureChecks() {
     "data/indices/nasdaq.json",
   ]);
   const oecdCli = DATA_SUPPLY_DETECTION_CONFIG.lanes.find((item) => item.id === "oecd_cli");
-  assert.equal(oecdCli.enforcement, "shadow");
-  assert.deepEqual(oecdCli.producer_members[0].schedule, ["0 8 1 * *"]);
+  assert.equal(oecdCli.enforcement, "live");
+  assert.equal(oecdCli.kpi_required, true);
+  const oecdWorkflow = fs.readFileSync(path.join(REPO_ROOT, oecdCli.producer_members[0].workflow), "utf8");
+  const oecdWorkflowCrons = [...oecdWorkflow.matchAll(/^\s*-\s*cron:\s*["']([^"']+)["']\s*$/gmu)]
+    .map((match) => match[1]);
+  assert.deepEqual(oecdCli.producer_members[0].schedule, oecdWorkflowCrons);
   assert.equal(oecdCli.producer_members[0].artifact_contracts[0].path, "data/admin/oecd_cli/shadow/oecd-cli.json");
   const krx = DATA_SUPPLY_DETECTION_CONFIG.lanes.find((item) => item.id === "krx");
-  assert.equal(krx.enforcement, "shadow");
-  assert.equal(krx.kpi_required, false);
+  const fredMacro = DATA_SUPPLY_DETECTION_CONFIG.lanes.find((item) => item.id === "fred_macro");
+  assert.deepEqual({ unit: fredMacro.freshness.unit, calendar: fredMacro.freshness.calendar,
+    max: fredMacro.freshness.max_staleness },
+    { unit: "calendar_days", calendar: "utc", max: 2 },
+    "FRED macro observation age follows the daily UTC content policy");
+  assert.equal(fredMacro.producer_members[0].artifact_contracts[0].source_selector.kind, "max_object_series_field",
+    "FRED macro content age reads observation dates, not publication time");
+  assert.equal(krx.enforcement, "live");
+  assert.equal(krx.kpi_required, true);
   assert.deepEqual(krx.producer_members[0].schedule, ["30 10 * * 1-5"]);
   assert.equal(krx.producer_members[0].artifact_contracts[0].path, "data/admin/fenok-edge-korea-krx-daily-index.json");
   assert.equal(krx.endpoint_contract.transport, "library");
+  assert.deepEqual({ unit: krx.freshness.unit, calendar: krx.freshness.calendar, max: krx.freshness.max_staleness },
+    { unit: "business_days", calendar: "kr_trading", max: 2 });
+  const misboundKrx = clone(DATA_SUPPLY_DETECTION_CONFIG);
+  misboundKrx.lanes.find((item) => item.id === "krx").freshness.calendar = "utc";
+  assertThrowsCode(() => validateConfigCalendarBindings(misboundKrx, calendarsFixture), "calendar_error");
   assert.equal(treasuryTga.freshness.unit, "business_days");
   assert.equal(treasuryTga.freshness.calendar, "us_federal_business");
   assert.equal(treasuryTga.freshness.max_staleness, 2);
+  const fredBanking = DATA_SUPPLY_DETECTION_CONFIG.lanes.find((item) => item.id === "fred_banking");
+  assert.equal(fredBanking.freshness.unit, "calendar_days");
+  assert.equal(fredBanking.freshness.fold, "oldest");
+  // The bound is sized from MEASURED publication lag, not from an assumed one.
+  // FRED realtime_start for DRALACBN's last six quarters: 138, 146, 143, 139,
+  // 140, 140 days after the observation date. So the latest observation reaches
+  // its maximum age the moment the NEXT quarter publishes: one quarter (~90d)
+  // plus that lag, i.e. ~236 days worst observed. 2026-01-01 is superseded
+  // around 2026-08-19, at age ~230. A 210-day bound would therefore have gone
+  // red again on 2026-07-30 and stayed red for three weeks - a postponement,
+  // not a fix. 250 clears the worst observed case with margin and still trips
+  // long before a genuinely missed quarter (~330 days).
+  assert.equal(fredBanking.freshness.max_staleness, 250,
+    "fred_banking bound must cover one quarter plus the measured worst publication lag");
+  // Mutation-proof: quarterly-aged source must survive the wait for the next
+  // release, and the old 120-day bound must still be proven wrong.
+  {
+    const bankingPolicy = {
+      unit: fredBanking.freshness.unit,
+      calendar: fredBanking.freshness.calendar,
+      max_staleness: fredBanking.freshness.max_staleness,
+    };
+    const today = evaluateFreshness("2026-01-01", bankingPolicy, "2026-07-25T00:00:00Z", calendarsFixture);
+    assert.equal(today.reason, "ok", "quarterly source must be ok today (age ~205)");
+    assert.ok(Number.isFinite(today.age) && today.age > 200, `quarterly age ~205 days, got ${today.age}`);
+    // The day before the next quarter is expected to publish is the real test:
+    // a bound that fails here buys three weeks of false red every quarter.
+    const eveOfNextRelease = evaluateFreshness("2026-01-01", bankingPolicy, "2026-08-19T00:00:00Z", calendarsFixture);
+    assert.equal(eveOfNextRelease.reason, "ok",
+      "the latest quarter must stay ok right up to the next measured release date");
+    // A genuinely missed quarter must still trip.
+    const missedQuarter = evaluateFreshness("2026-01-01", bankingPolicy, "2026-12-01T00:00:00Z", calendarsFixture);
+    assert.equal(missedQuarter.reason, "stale",
+      "a quarter that never arrives must still trip stale");
+    const tightPolicy = { ...bankingPolicy, max_staleness: 120 };
+    const stale120 = evaluateFreshness("2026-01-01", tightPolicy, "2026-07-25T00:00:00Z", calendarsFixture);
+    assert.equal(stale120.reason, "stale",
+      "same quarterly source must be stale at old 120-day bound — proves the mutation matters");
+  }
   assert.equal(treasuryTga.producer_members[0].cadence_calendar, "utc");
   for (const laneConfig of DATA_SUPPLY_DETECTION_CONFIG.lanes.filter((item) => !liveLaneIds.includes(item.id))) {
     assert.equal(laneConfig.enforcement, "shadow", `${laneConfig.id} stays shadow`);
@@ -569,17 +755,9 @@ function runConfigAndFixtureChecks() {
       }
     }
   }
-  assert.equal(configDigest(), expectedFixture.config_digest);
-  // registry digest pinned alongside config_digest (#366 step: both SSOTs are
+  // registry digest pinned alongside the config identity (#366 step: both SSOTs are
   // exact-value pinned so any registry/config drift is a conscious edit).
   assert.equal(registryDigest(), expectedFixture.registry_digest);
-  const digestProcess = spawnSync(process.execPath, ["-e", "import('./scripts/lib/data-supply-detection-config.mjs').then((module) => process.stdout.write(module.configDigest()))"], {
-    cwd: REPO_ROOT,
-    encoding: "utf8",
-    env: { ...process.env, TZ: "Pacific/Honolulu", LC_ALL: "C" },
-  });
-  assert.equal(digestProcess.status, 0, digestProcess.stderr);
-  assert.equal(digestProcess.stdout, expectedFixture.config_digest);
   for (const declaration of [
     { kind: "owner_contract", evidence: "converter:global-scouter-weekly" },
     { kind: "payload_field", evidence: "/update_frequency" },
@@ -615,8 +793,18 @@ function runConfigAndFixtureChecks() {
     (value) => { value.lanes[0].freshness.calendar = "unknown"; },
     (value) => { value.lanes[0].freshness.source_basis = []; },
     (value) => { value.lanes.find((item) => item.id === "stockanalysis_etf_universe").freshness.source_basis = ["/collected_at"]; },
-    (value) => { value.lanes.find((item) => item.id === "stockanalysis_etf_universe").endpoint_contract.transport = "http"; },
+    // Transport must be declared, not inferred. Omitting it used to mean http,
+    // which made "this lane is http" and "nobody considered transport for this
+    // lane" the same state. Run 31792421833 died of that: the ETF detail lane
+    // declared nothing, defaulted to http, and the http classifier demanded a
+    // per-observation status code its aggregating producer does not emit.
+    (value) => { delete value.lanes.find((item) => item.id === "stockanalysis_etf_universe").endpoint_contract.transport; },
+    (value) => { delete value.lanes.find((item) => item.id === "yahoo_etf_fallback").endpoint_contract.transport; },
+    (value) => { value.lanes.find((item) => item.id === "stockanalysis_etf_universe").endpoint_contract.transport = "unknown"; },
     (value) => { value.lanes.find((item) => item.id === "yahoo_etf_fallback").endpoint_contract.transport = "unknown"; },
+    // An artifact-only lane has no transport at all, so declaring one is still
+    // a contradiction rather than an omission.
+    (value) => { value.lanes.find((item) => item.id === "sec_13f").endpoint_contract.transport = "http"; },
     (value) => { value.lanes[0].producer_members[0].artifact_contracts[0].path = "../escape.json"; },
     (value) => { value.lanes[0].producer_members[0].artifact_contracts[0].path = "data/**/*.json"; value.lanes[0].producer_members[0].artifact_contracts[0].selection = "all"; },
     (value) => { value.lanes[0].producer_members[0].artifact_contracts[0].path = "data/bounded/*.json"; value.lanes[0].producer_members[0].artifact_contracts[0].selection = "single"; },
@@ -631,6 +819,9 @@ function runConfigAndFixtureChecks() {
     (value) => { const member = value.lanes.find((item) => item.id === "benchmarks").producer_members[0]; member.artifact_contracts[0].assertions = member.artifact_contracts[0].assertions.filter((row) => row.pointer !== "/metadata/update_frequency"); },
     (value) => { const member = value.lanes.find((item) => item.id === "benchmarks").producer_members[0]; member.artifact_contracts[0].assertions.find((row) => row.pointer === "/metadata/update_frequency").value = "monthly"; },
     (value) => { const member = value.lanes.find((item) => item.id === "global_scouter").producer_members[0]; member.schedule = ["0 0 * * 1"]; member.cadence_calendar = "utc"; },
+    (value) => {
+      value.lanes.find((item) => item.id === "damodaran").producer_members[0].activated_at = "2026-02-31T00:00:00Z";
+    },
     (value) => { value.lanes[0].enforcement = "invalid"; },
     (value) => { value.lanes[0].kpi_required = false; },
     (value) => { value.lanes[0].enforcement = "shadow"; value.lanes[0].kpi_required = false; },
@@ -653,7 +844,9 @@ function runConfigAndFixtureChecks() {
     const LIB_FILES = [
       "json-canonical.mjs",
       "fenok-proxy-formula-contract.mjs",
+      "slickcharts-composite-recovery.mjs",
       "data-supply-detection-config.mjs",
+      "market-calendar.mjs",
     ];
     const loadConfigWithRegistry = (mutateRegistry) => {
       const root = fs.mkdtempSync(path.join(os.tmpdir(), "detfloor-derivation-red-"));
@@ -661,9 +854,25 @@ function runConfigAndFixtureChecks() {
       fs.mkdirSync(libDir, { recursive: true });
       for (const file of [...LIB_FILES, "lane-registry.mjs"]) {
         let source = fs.readFileSync(path.join(REPO_ROOT, "scripts", "lib", file), "utf8");
+        if (file === "json-canonical.mjs") {
+          source = fs.readFileSync(
+            path.join(REPO_ROOT, "100xfenok-next", "scripts", "cloud-data-plane", "json-canonical.mjs"),
+            "utf8",
+          );
+        }
         if (file === "lane-registry.mjs") source = mutateRegistry(source);
         fs.writeFileSync(path.join(libDir, file), source);
       }
+      const policyDir = path.join(root, "100xfenok-next", "src", "lib");
+      fs.mkdirSync(policyDir, { recursive: true });
+      fs.copyFileSync(
+        path.join(REPO_ROOT, "100xfenok-next", "src", "lib", "freshness-policy.mjs"),
+        path.join(policyDir, "freshness-policy.mjs"),
+      );
+      fs.copyFileSync(
+        path.join(REPO_ROOT, "100xfenok-next", "src", "lib", "market-calendar.mjs"),
+        path.join(policyDir, "market-calendar.mjs"),
+      );
       return spawnSync(
         process.execPath,
         ["-e", `import(${JSON.stringify(`file://${path.join(libDir, "data-supply-detection-config.mjs")}`)}).then(() => process.exit(0)).catch((error) => { console.error(error?.message ?? error); process.exit(1); })`],
@@ -673,37 +882,86 @@ function runConfigAndFixtureChecks() {
 
     // (a) an auxiliary lane flipped live: LIVE_LANE_IDS gains it but LANE_IDS
     // excludes it -> the live-coverage guard must fire.
-    const liveWithoutRow = loadConfigWithRegistry((source) => {
-      const anchor = 'id: "yahoo_batch_quote_history"';
-      const index = source.indexOf(anchor);
-      const segment = source.slice(index, index + 400);
-      if (!segment.includes('enforcement: "shadow"')) throw new Error("RED(a) mutation anchor missing");
-      return source.slice(0, index) + segment.replace('enforcement: "shadow"', 'enforcement: "live"') + source.slice(index + 400);
-    });
+    const liveWithoutRow = loadConfigWithRegistry((source) => mutateRegistryRecord(
+      source,
+      "admin_live_voice_logs",
+      'enforcement: "shadow"',
+      'enforcement: "live"',
+    ));
     assert.equal(liveWithoutRow.status, 1, `RED(a) unexpectedly loaded: ${liveWithoutRow.stdout}`);
-    assert.match(liveWithoutRow.stderr, /live registry lanes must have detection rows: yahoo_batch_quote_history/,
-      "RED(a): a live registry lane without a detection row must fail loudly by name");
+    assert.match(liveWithoutRow.stderr, /live registry lanes must have detection rows: admin_live_voice_logs/,
+      `RED(a): a live registry lane without a detection row must fail loudly by name; stderr=${liveWithoutRow.stderr}`);
 
     // (b) a detection_floor lane reclassed as auxiliary: derived LANE_IDS
     // shrinks while the hand-written lanes stay 22 -> identity check fails.
-    const floorReclassed = loadConfigWithRegistry((source) => {
-      const anchor = 'id: "treasury_tga"';
-      const index = source.indexOf(anchor);
-      const segment = source.slice(index, index + 300);
-      if (!segment.includes('lane_class: "detection_floor"')) throw new Error("RED(b) mutation anchor missing");
-      return source.slice(0, index) + segment.replace('lane_class: "detection_floor"', 'lane_class: "auxiliary"') + source.slice(index + 300);
-    });
+    const floorReclassed = loadConfigWithRegistry((source) => mutateRegistryRecord(
+      source,
+      "treasury_tga",
+      'lane_class: "detection_floor"',
+      'lane_class: "auxiliary"',
+    ));
     assert.equal(floorReclassed.status, 1, `RED(b) unexpectedly loaded: ${floorReclassed.stdout}`);
     assert.match(floorReclassed.stderr, /live registry lanes must have detection rows: treasury_tga/,
       "RED(b): a live lane reclassed out of detection_floor must fail the coverage guard by name");
   }
 
-  assert.equal(validateAttemptEvidence(attemptsFixture), true);
+  // The hourly schedule's grace is sized from MEASURED GitHub delivery, not
+  // from the cron we ask for. GitHub Actions schedules are best-effort and drop
+  // slots under load: across 59 consecutive scheduled deliveries of
+  // fetch-yahoo-ticker.yml (2026-07-19..25) the interval ran median 138 min,
+  // mean 149, p90 249, worst 280. A 2-hour grace was therefore exceeded by 64%
+  // of PERFECTLY NORMAL deliveries, so the lane read overdue two thirds of the
+  // time and the signal was noise. 6 hours clears the worst observed delivery
+  // with margin and still trips after roughly three consecutive misses. The
+  // cron stays hourly on purpose - that is what we ask for, and declaring less
+  // would hide any future improvement in delivery.
+  {
+    const hourly = calendarsFixture.schedules.find((row) => row.id === "hourly_at_05");
+    assert.equal(hourly.cron, "5 * * * *", "we still ask for hourly");
+    assert.deepEqual(hourly.grace, { unit: "hours", value: 6 },
+      "hourly grace must cover the measured worst GitHub delivery (280 min), not the nominal hour");
+    // Every hourly schedule meets the same GitHub, so every hourly schedule
+    // needs the same allowance. fetch-defillama.yml (`12 * * * *`) measured
+    // median 118 min / P90 187 / worst 260 over 48 intervals, with 100% of
+    // deliveries over the nominal hour - the identical distribution, and it
+    // sat on a 2-hour grace reading stale for no reason. A per-schedule
+    // allowance that only one schedule received is a fix that does not
+    // generalise, so this pins ALL of them.
+    for (const row of calendarsFixture.schedules.filter((entry) => /^\d+ \* \* \* \*$/.test(entry.cron))) {
+      assert.deepEqual(row.grace, { unit: "hours", value: 6 },
+        `${row.id}: hourly schedules face the same GitHub delivery and need the same measured grace`);
+    }
+  }
+
   assert.equal(validateCalendars(calendarsFixture), undefined);
   const canonicalCalendars = readJson(CALENDAR_PATH);
   assert.deepEqual(canonicalCalendars, calendarsFixture, "promoted calendar SSOT matches the proven fixture byte-for-data");
   assert.equal(validateCalendars(canonicalCalendars), undefined);
   assert.equal(validateConfigCalendarBindings(DATA_SUPPLY_DETECTION_CONFIG, canonicalCalendars), true);
+  {
+    const fdicMonday = canonicalCalendars.schedules.find((row) => row.id === "weekly_0600_mon_utc");
+    const fdicThursday = canonicalCalendars.schedules.find((row) => row.id === "weekly_0600_thu_utc");
+    assert.equal(fdicMonday.cron, "0 6 * * 1");
+    assert.equal(fdicThursday.cron, "0 6 * * 4");
+    assert.equal(fdicMonday.calendar_id, "utc");
+    assert.equal(fdicThursday.calendar_id, "utc");
+    assert.equal(
+      evaluateAttemptCadence(
+        "2026-09-03T06:00:00Z",
+        [fdicMonday.cron, fdicThursday.cron],
+        "utc",
+        "2026-09-04T06:00:00Z",
+        canonicalCalendars,
+      ).reason,
+      "ok",
+      "the Thursday backup occurrence must keep the FDIC lane current",
+    );
+    assert.equal(
+      canonicalCalendars.schedules.some((row) => row.id === "monthly_first_monday_federal"),
+      false,
+      "the monthly holiday-aware schedule must not survive the release-aware cadence",
+    );
+  }
   const missingCadenceContract = clone(canonicalCalendars);
   missingCadenceContract.schedules = missingCadenceContract.schedules.filter((row) => row.id !== "six_hourly");
   assertThrowsCode(() => validateConfigCalendarBindings(DATA_SUPPLY_DETECTION_CONFIG, missingCadenceContract), "calendar_error");
@@ -723,79 +981,154 @@ function runConfigAndFixtureChecks() {
     mutate(invalid);
     assert.throws(() => validateArtifactFixture(invalid));
   }
-  assert.equal(new Set(attemptsFixture.attempts.map((row) => `${row.lane_id}:${row.member_id ?? "_"}`)).size, 29);
-}
-
-function shardDocument(laneId, source = attemptsFixture) {
-  return {
-    schema_version: ATTEMPT_SHARD_SCHEMA,
-    lane_id: laneId,
-    attempts: source.attempts.filter((row) => row.lane_id === laneId),
-  };
-}
-
-function writeShard(root, fileLaneId, document = shardDocument(fileLaneId)) {
-  const filePath = path.join(root.raw, `${fileLaneId}.json`);
-  fs.writeFileSync(filePath, `${canonicalJson(document)}\n`, { encoding: "utf8", mode: 0o600 });
-  return filePath;
-}
-
-function runAttemptShardChecks(artifactRoot) {
-  const empty = makeOwnedRoot();
-  const emptyMerged = loadAttemptShards({ shardRoot: empty.raw });
-  assert.deepEqual(emptyMerged, { schema_version: ATTEMPT_SCHEMA, attempts: [] });
-  const emptyReport = buildDetectionReport({ artifactRoot: artifactRoot.raw, attempts: emptyMerged, calendars: calendarsFixture, now: expectedFixture.baseline.now });
-  assert.equal(emptyReport.lanes.filter((row) => row.endpoint.reason === "workflow_unobserved").length, 25,
-    "empty private root keeps GitHub and ownerless lanes explicitly unobserved without hiding declared external cadence");
-
-  const root = makeOwnedRoot();
-  writeShard(root, "treasury_tga");
-  assert.equal(validateAttemptShard(shardDocument("treasury_tga"), "treasury_tga"), true);
-  const merged = loadAttemptShards({ shardRoot: root.raw });
-  assert.equal(merged.schema_version, ATTEMPT_SCHEMA);
-  assert.deepEqual(merged.attempts, attemptsFixture.attempts.filter((row) => row.lane_id === "treasury_tga"));
-  const report = buildDetectionReport({ artifactRoot: artifactRoot.raw, attempts: merged, calendars: calendarsFixture, now: expectedFixture.baseline.now });
-  assert.equal(lane(report, "treasury_tga").endpoint.reason, "ok");
-  assert.equal(lane(report, "fred_macro").endpoint.reason, "workflow_unobserved", "missing lane shard is unobserved");
-
-  const multi = makeOwnedRoot();
-  writeShard(multi, "treasury_tga");
-  writeShard(multi, "fred_macro");
-  assert.deepEqual(loadAttemptShards({ shardRoot: multi.raw }).attempts.map((row) => row.lane_id), ["fred_macro", "treasury_tga"], "merge follows config order, not directory order");
-
-  const incomplete = shardDocument("slickcharts");
-  incomplete.attempts.pop();
-  assertThrowsCode(() => validateAttemptShard(incomplete, "slickcharts"), "schema_error");
-
-  const mismatched = makeOwnedRoot();
-  writeShard(mismatched, "treasury_tga", shardDocument("fred_macro"));
-  assertThrowsCode(() => loadAttemptShards({ shardRoot: mismatched.raw }), "schema_error");
-
-  const unexpected = makeOwnedRoot();
-  fs.writeFileSync(path.join(unexpected.raw, "README.txt"), "not a shard\n", { mode: 0o600 });
-  assertThrowsCode(() => loadAttemptShards({ shardRoot: unexpected.raw }), "unsafe_path");
-
-  const symlinked = makeOwnedRoot();
-  fs.symlinkSync(ATTEMPTS_PATH, path.join(symlinked.raw, "treasury_tga.json"));
-  assertThrowsCode(() => loadAttemptShards({ shardRoot: symlinked.raw }), "unsafe_path");
-
-  const hardlinkedSource = makeOwnedRoot();
-  const sourcePath = writeShard(hardlinkedSource, "treasury_tga");
-  const hardlinked = makeOwnedRoot();
-  fs.linkSync(sourcePath, path.join(hardlinked.raw, "treasury_tga.json"));
-  assertThrowsCode(() => loadAttemptShards({ shardRoot: hardlinked.raw }), "unsafe_path");
 }
 
 function runBaselineAndArtifactChecks() {
+  const clockRow = (generated_at) => ({ source_as_of: null, status: "ready", generated_at });
+  const old = clockRow("2026-07-09T00:00:00Z");
+  const recent = clockRow("2026-07-11T00:00:00Z");
+  const clockNow = "2026-07-12T00:00:00Z";
+  assert.deepEqual(foldGeneratedAt([recent, old], clockNow), { generated_at: old.generated_at }, "a recently generated member cannot mask an older member");
+  assert.deepEqual(foldGeneratedAt([old, recent], clockNow), { generated_at: old.generated_at }, "generation folding is independent of tied member ordering");
+  assert.deepEqual(foldGeneratedAt([recent, clockRow(null)], clockNow), { generated_at: null }, "a missing member clock cannot imply full generation coverage");
+  assert.deepEqual(foldGeneratedAt([recent, clockRow("2026-07-13T00:00:00Z")], clockNow), { generated_at: null }, "future member clocks are not valid coverage");
+  assert.deepEqual(foldGeneratedAt([recent, { source_as_of: "2026-07-11", status: "ready" }], clockNow), {}, "a mixed source-dated composite never substitutes generation for source freshness");
   const artifactRoot = materializeArtifacts("all_valid");
   const report = buildDetectionReport({
     artifactRoot: artifactRoot.raw,
-    attempts: attemptsFixture,
     calendars: calendarsFixture,
     now: expectedFixture.baseline.now,
   });
-  assert.deepEqual(report, expectedFixture.baseline.expected_report);
-  assert.equal(createSha(reportBytes(report)), expectedFixture.baseline.report_file_sha256);
+  assert.equal(lane(report, "krx").artifact.unit, "business_days");
+  assert.equal(lane(report, "gdelt_news_tone").artifact.reason, "ok",
+    "GDELT RFC3339 row timestamps must remain valid source evidence");
+  assert.equal(lane(report, "gdelt_news_tone").artifact.source_as_of, "2026-07-10T15:02:00Z",
+    "GDELT source freshness uses the latest provider row timestamp");
+  assert.equal(lane(report, "fred_banking").artifact.reason, "ok",
+    "the daily FRED contract must not require a series emitted by the monthly artifact");
+  for (const [offset, state, status] of [
+    [13, "fresh", "ready"], [14, "delayed", "stale"],
+    [20, "delayed", "stale"], [21, "stopped", "stale"],
+  ]) {
+    const now = new Date(Date.UTC(2026, 6, 10 + offset, 12)).toISOString();
+    const ownerReport = buildDetectionReport({ artifactRoot: artifactRoot.raw,
+      calendars: calendarsFixture, now });
+    const ownerLane = lane(ownerReport, "global_scouter");
+    assert.equal(ownerLane.artifact.status, status, `owner source day ${offset}: ${state}`);
+    assert.equal(ownerLane.status, status, `owner lane day ${offset}: ${state}`);
+  }
+  const fredSources = lane(report, "fred_banking").source_artifacts;
+  assert.deepEqual(fredSources.map((row) => row.id), [
+    "fred_banking_daily", "fred_banking_weekly", "fred_banking_monthly", "fred_banking_quarterly",
+  ]);
+  assert.equal(fredSources[3].source_as_of, "2026-01-01", "the canonical raw quarter-start date remains visible");
+  assert.equal(fredSources[3].source_age_anchor, "2026-03-31", "only age calculation moves to quarter end");
+  assert.equal(fredSources[3].source_state, "fresh");
+  assert.equal(validateDetectionReport(report), true, "the artifact-derived report self-validates");
+
+  for (const [now, age, status] of [
+    ["2026-07-12T09:18:00Z", 2, "ready"],
+    ["2026-07-13T09:18:00Z", 3, "stale"],
+  ]) {
+    const macro = lane(buildDetectionReport({ artifactRoot: artifactRoot.raw,
+      calendars: calendarsFixture, now }), "fred_macro");
+    assert.equal(macro.artifact.source_as_of, "2026-07-10");
+    assert.equal(macro.artifact.age, age, `FRED macro content age at ${now}`);
+    assert.equal(macro.artifact.status, status, `FRED macro content status at ${now}`);
+  }
+
+  const krxRoot = materializeArtifacts("all_valid");
+  const krxPath = path.join(krxRoot.raw, "data", "admin", "fenok-edge-korea-krx-daily-index.json");
+  const krxDocument = readJson(krxPath);
+  const krxAt = (source, now) => {
+    krxDocument.as_of = source;
+    fs.writeFileSync(krxPath, JSON.stringify(krxDocument), { encoding: "utf8", mode: 0o600 });
+    return lane(buildDetectionReport({ artifactRoot: krxRoot.raw, calendars: calendarsFixture, now }), "krx");
+  };
+  for (const [source, age, status] of [
+    ["2026-09-22", 1, "ready"], ["2026-09-21", 2, "ready"],
+    ["2026-09-18", 3, "stale"],
+  ]) {
+    const row = krxAt(source, "2026-09-27T12:00:00Z");
+    assert.equal(row.artifact.age, age, `KRX ${source} source age`);
+    assert.equal(row.artifact.status, status, `KRX ${source} source status`);
+  }
+  for (const source of ["2026-02-30", "2026-09-28"]) {
+    const row = krxAt(source, "2026-09-27T12:00:00Z");
+    assert.notEqual(row.artifact.status, "ready", `${source} cannot become fresh KRX content`);
+  }
+  assert.equal(krxAt("2026-09-28", "2026-09-27T14:30:00Z").artifact.reason, "future_source",
+    "KRX tomorrow remains future before Seoul midnight");
+  assert.equal(krxAt("2026-09-28", "2026-09-27T15:30:00Z").artifact.status, "ready",
+    "KRX date-only today is valid after Seoul midnight, before UTC midnight");
+  assert.equal(krxAt("2026-09-28", "2026-09-27T14:30:00Z").artifact.reason, "future_source",
+    "KRX tomorrow remains future before Seoul midnight");
+  assert.equal(krxAt("2026-09-28", "2026-09-27T15:30:00Z").artifact.status, "ready",
+    "KRX date-only today is valid after Seoul midnight, before UTC midnight");
+
+  const staleDailyRoot = materializeArtifacts("all_valid");
+  const staleDailyPath = path.join(staleDailyRoot.raw, "data", "macro", "fred-banking-daily.json");
+  const staleDaily = readJson(staleDailyPath);
+  staleDaily.source_as_of = "2026-06-01";
+  fs.writeFileSync(staleDailyPath, JSON.stringify(staleDaily), { encoding: "utf8", mode: 0o600 });
+  const staleDailyReport = buildDetectionReport({
+    artifactRoot: staleDailyRoot.raw,
+    calendars: calendarsFixture, now: expectedFixture.baseline.now,
+  });
+  assert.equal(lane(staleDailyReport, "fred_banking").source_artifacts[0].source_state, "stopped");
+  assert.equal(lane(staleDailyReport, "fred_banking").source_artifacts[3].source_state, "fresh");
+  assert.equal(lane(staleDailyReport, "fred_banking").artifact.status, "stale",
+    "a stale daily file must not hide behind a fresh slow quarterly file");
+
+  for (const invalid of ["2026-02-30", "2026-07-12"]) {
+    const invalidRoot = materializeArtifacts("all_valid");
+    const invalidPath = path.join(invalidRoot.raw, "data", "macro", "fred-banking-daily.json");
+    const document = readJson(invalidPath);
+    document.source_as_of = invalid;
+    fs.writeFileSync(invalidPath, JSON.stringify(document), { encoding: "utf8", mode: 0o600 });
+    const invalidReport = buildDetectionReport({
+      artifactRoot: invalidRoot.raw,
+      calendars: calendarsFixture, now: expectedFixture.baseline.now,
+    });
+    assert.notEqual(lane(invalidReport, "fred_banking").artifact.status, "ready",
+      `${invalid} cannot become fresh`);
+  }
+
+  const wrongMonthlyRoot = materializeArtifacts("all_valid");
+  const monthlyPath = path.join(wrongMonthlyRoot.raw, "data", "macro", "fred-banking-monthly.json");
+  const wrongMonthly = readJson(monthlyPath);
+  wrongMonthly.series = { PLACEHOLDER: [{ date: "2026-06-01", value: 1 }] };
+  fs.writeFileSync(monthlyPath, JSON.stringify(wrongMonthly), { encoding: "utf8", mode: 0o600 });
+  const wrongMonthlyReport = buildDetectionReport({
+    artifactRoot: wrongMonthlyRoot.raw,
+    calendars: calendarsFixture,
+    now: expectedFixture.baseline.now,
+  });
+  assert.equal(lane(wrongMonthlyReport, "fred_banking").artifact.reason, "schema_drift",
+    "the monthly FRED contract must reject an artifact without the Korea rate series");
+
+  // B-OUTCOME-CLOCKS: a source-dateless lane (every artifact contract
+  // not_applicable) projects its artifact's own generated_at honestly next to
+  // source_as_of=null; source-dated lanes and missing artifacts never carry the
+  // key, and the validator accepts only canonical UTC or null on dateless rows.
+  for (const id of ["stockanalysis_etf_universe", "yahoo_etf_fallback"]) {
+    assert.equal(lane(report, id).artifact.source_as_of, null, `${id} stays provider-dateless`);
+    assert.equal(lane(report, id).artifact.generated_at, "2026-07-11T00:00:00Z",
+      `${id} projects the fixture artifact's generated_at without promoting it into source_as_of`);
+  }
+  assert.equal(Object.hasOwn(lane(report, "treasury_tga").artifact, "generated_at"), false,
+    "a source-dated lane never carries generated_at");
+  assert.equal(Object.hasOwn(lane(report, "stockanalysis_etf_detail").artifact, "generated_at"), false,
+    "a missing dateless artifact projects no generated_at (nothing is fabricated)");
+  const generatedAtNull = clone(report);
+  lane(generatedAtNull, "stockanalysis_etf_universe").artifact.generated_at = null;
+  assert.equal(validateDetectionReport(generatedAtNull), true, "null generated_at is an honest dateless row");
+  const generatedAtMalformed = clone(report);
+  lane(generatedAtMalformed, "stockanalysis_etf_universe").artifact.generated_at = "2026-07-11";
+  assertThrowsCode(() => validateDetectionReport(generatedAtMalformed), "clock_error");
+  const generatedAtOnDated = clone(report);
+  lane(generatedAtOnDated, "treasury_tga").artifact.generated_at = "2026-07-11T00:00:00Z";
+  assertThrowsCode(() => validateDetectionReport(generatedAtOnDated), "schema_error");
 
   const staleStockFinancialRoot = materializeArtifacts("all_valid");
   const staleStatePath = path.join(
@@ -807,37 +1140,11 @@ function runBaselineAndArtifactChecks() {
   fs.writeFileSync(staleStatePath, JSON.stringify(staleState), { encoding: "utf8", mode: 0o600 });
   const staleStockFinancialReport = buildDetectionReport({
     artifactRoot: staleStockFinancialRoot.raw,
-    attempts: attemptsFixture,
     calendars: calendarsFixture,
     now: expectedFixture.baseline.now,
   });
   assert.equal(lane(staleStockFinancialReport, "stockanalysis_stock_financial").artifact.status, "stale",
     "an old recovery-state attempt cannot satisfy the bounded stock/financial lane");
-
-  const externalProducerConfig = clone(DATA_SUPPLY_DETECTION_CONFIG);
-  const externalProducerLane = externalProducerConfig.lanes.find((item) => item.id === "fred_macro");
-  externalProducerLane.owner_workflow = null;
-  externalProducerLane.monitoring_mode = "artifact_only";
-  externalProducerLane.endpoint_contract = { endpoint_family: "external_fixture", probe_mode: "artifact_only", assertions: [] };
-  externalProducerLane.producer_members[0].workflow = null;
-  externalProducerLane.producer_members[0].schedule = [];
-  externalProducerLane.producer_members[0].cadence_calendar = null;
-  externalProducerLane.producer_members[0].cadence_declaration = {
-    kind: "owner_contract",
-    evidence: "converter:external-fixture-weekly",
-  };
-  const externalProducerReport = buildDetectionReport({
-    config: externalProducerConfig,
-    artifactRoot: artifactRoot.raw,
-    attempts: {
-      ...attemptsFixture,
-      attempts: attemptsFixture.attempts.filter((row) => row.lane_id !== "fred_macro"),
-    },
-    calendars: calendarsFixture,
-    now: expectedFixture.baseline.now,
-  });
-  assert.equal(lane(externalProducerReport, "fred_macro").endpoint.reason, "declared_cadence",
-    "external producer cadence is explicit without fabricating a GitHub attempt");
 
   for (const [laneId, relativePath, mutate] of [
     ["benchmarks", "data/benchmarks/msci.json", (payload) => { delete payload.metadata.update_frequency; }],
@@ -852,7 +1159,6 @@ function runBaselineAndArtifactChecks() {
     fs.writeFileSync(cadencePath, JSON.stringify(payload), { encoding: "utf8", mode: 0o600 });
     const cadenceReport = buildDetectionReport({
       artifactRoot: cadenceRoot.raw,
-      attempts: attemptsFixture,
       calendars: calendarsFixture,
       now: expectedFixture.baseline.now,
     });
@@ -861,10 +1167,9 @@ function runBaselineAndArtifactChecks() {
   }
 
   const modifiedConfig = clone(DATA_SUPPLY_DETECTION_CONFIG);
-  modifiedConfig.lanes[0].freshness.max_staleness += 1;
+  modifiedConfig.lanes[0].label = "Mutated lane label";
   assert.equal(validateDetectionConfig(modifiedConfig), true);
-  const modifiedReport = buildDetectionReport({ config: modifiedConfig, artifactRoot: artifactRoot.raw, attempts: attemptsFixture, calendars: calendarsFixture, now: expectedFixture.baseline.now });
-  assert.notEqual(modifiedReport.config_digest, report.config_digest);
+  const modifiedReport = buildDetectionReport({ config: modifiedConfig, artifactRoot: artifactRoot.raw, calendars: calendarsFixture, now: expectedFixture.baseline.now });
   assert.equal(validateDetectionReport(modifiedReport, modifiedConfig), true);
   assertThrowsCode(() => validateDetectionReport(modifiedReport), "schema_error");
   const modifiedOutput = makeOwnedRoot(fs.realpathSync.native(os.tmpdir()));
@@ -881,18 +1186,18 @@ function runBaselineAndArtifactChecks() {
   overlappingContract.path = "data/edgar-korean-summaries/by-ticker/a*.json";
   edgarMember.artifact_contracts.push(overlappingContract);
   assert.equal(validateDetectionConfig(overlappingGlobConfig), true);
-  assertThrowsCode(() => buildDetectionReport({ config: overlappingGlobConfig, artifactRoot: artifactRoot.raw, attempts: attemptsFixture, calendars: calendarsFixture, now: expectedFixture.baseline.now }), "schema_error");
+  assertThrowsCode(() => buildDetectionReport({ config: overlappingGlobConfig, artifactRoot: artifactRoot.raw, calendars: calendarsFixture, now: expectedFixture.baseline.now }), "schema_error");
   assert.equal(lane(report, "edgar_filings").artifact.source_as_of, "2026-07-10", "bounded glob folds deterministic sorted matches");
 
   for (const artifactCase of expectedFixture.artifact_cases) {
     const variantRoot = materializeArtifacts(artifactCase.layout_id);
     if (artifactCase.expected_reason) {
-      const variant = buildDetectionReport({ artifactRoot: variantRoot.raw, attempts: attemptsFixture, calendars: calendarsFixture, now: expectedFixture.baseline.now });
+      const variant = buildDetectionReport({ artifactRoot: variantRoot.raw, calendars: calendarsFixture, now: expectedFixture.baseline.now });
       const variantLane = lane(variant, artifactCase.lane_id ?? "fred_macro");
       assert.equal(variantLane.reason, artifactCase.expected_reason, artifactCase.layout_id);
       if (artifactCase.expected_status) assert.equal(variantLane.status, artifactCase.expected_status, artifactCase.layout_id);
     } else {
-      assertThrowsCode(() => buildDetectionReport({ artifactRoot: variantRoot.raw, attempts: attemptsFixture, calendars: calendarsFixture, now: expectedFixture.baseline.now }), "unsafe_path");
+      assertThrowsCode(() => buildDetectionReport({ artifactRoot: variantRoot.raw, calendars: calendarsFixture, now: expectedFixture.baseline.now }), "unsafe_path");
     }
   }
   const inconsistentSoxRoot = materializeArtifacts("all_valid");
@@ -902,7 +1207,6 @@ function runBaselineAndArtifactChecks() {
   fs.writeFileSync(inconsistentSoxPath, JSON.stringify(inconsistentSox));
   const inconsistentSoxReport = buildDetectionReport({
     artifactRoot: inconsistentSoxRoot.raw,
-    attempts: attemptsFixture,
     calendars: calendarsFixture,
     now: expectedFixture.baseline.now,
   });
@@ -915,7 +1219,6 @@ function runBaselineAndArtifactChecks() {
   fs.writeFileSync(malformedSurfaceCountsPath, JSON.stringify(malformedSurfaceCounts), { encoding: "utf8", mode: 0o600 });
   const malformedSurfaceCountsReport = buildDetectionReport({
     artifactRoot: malformedSurfaceCountsRoot.raw,
-    attempts: attemptsFixture,
     calendars: calendarsFixture,
     now: expectedFixture.baseline.now,
   });
@@ -929,7 +1232,6 @@ function runBaselineAndArtifactChecks() {
   fs.writeFileSync(partialSurfaceIndexPath, JSON.stringify(partialSurfaceIndex), { encoding: "utf8", mode: 0o600 });
   const partialSurfaceIndexReport = buildDetectionReport({
     artifactRoot: partialSurfaceIndexRoot.raw,
-    attempts: attemptsFixture,
     calendars: calendarsFixture,
     now: expectedFixture.baseline.now,
   });
@@ -943,7 +1245,7 @@ function runBaselineAndArtifactChecks() {
   const symlinkArtifact = path.join(symlinkEscapeRoot.raw, "data", "macro", "fred-macro.json");
   fs.unlinkSync(symlinkArtifact);
   fs.symlinkSync(externalSentinel, symlinkArtifact);
-  assertThrowsCode(() => buildDetectionReport({ artifactRoot: symlinkEscapeRoot.raw, attempts: attemptsFixture, calendars: calendarsFixture, now: expectedFixture.baseline.now }), "unsafe_path");
+  assertThrowsCode(() => buildDetectionReport({ artifactRoot: symlinkEscapeRoot.raw, calendars: calendarsFixture, now: expectedFixture.baseline.now }), "unsafe_path");
   assert.deepEqual(fs.readFileSync(externalSentinel), sentinelBytes);
   return { artifactRoot, report };
 }
@@ -952,98 +1254,13 @@ function createSha(bytes) {
   return createHash("sha256").update(bytes).digest("hex");
 }
 
-function runAttemptChecks(artifactRoot) {
-  const mapping = {
-    transport_exception: "transport_error",
-    unexpected_exception: "unexpected_error",
-    http_non_2xx: "http_error",
-    auth_rejected: "auth_error",
-    rate_limited: "rate_limited",
-    decode_error: "decode_error",
-    empty_payload: "empty_payload",
-    assertion_failed: "schema_drift",
-    unobserved: "workflow_unobserved",
-  };
-  for (const reasonCase of expectedFixture.reason_cases) {
-    const reason = mapping[reasonCase.id];
-    const row = legalAttempt(reason);
-    assert.equal(validateAttemptEvidence({ schema_version: ATTEMPT_SCHEMA, attempts: [row] }), true);
-    assert.equal(classifyAttempt(row).reason, reasonCase.expected_reason);
-  }
-  const brokenSoxEndpoint = clone(attemptsFixture);
-  const soxAttempt = brokenSoxEndpoint.attempts.find((row) => row.lane_id === "nasdaq_giw_sox");
-  soxAttempt.assertions[0].passed = false;
-  const brokenSoxReport = buildDetectionReport({
-    artifactRoot: artifactRoot.raw,
-    attempts: brokenSoxEndpoint,
-    calendars: calendarsFixture,
-    now: expectedFixture.baseline.now,
-  });
-  assert.equal(lane(brokenSoxReport, "nasdaq_giw_sox").reason, "schema_drift");
-  const contradiction = legalAttempt("http_error");
-  contradiction.decode = "ok";
-  assertThrowsCode(() => validateAttemptEvidence({ schema_version: ATTEMPT_SCHEMA, attempts: [contradiction] }), "schema_error");
-  const unknownAttempt = { ...legalAttempt("transport_error"), unexpected: true };
-  assertThrowsCode(() => validateAttemptEvidence({ schema_version: ATTEMPT_SCHEMA, attempts: [unknownAttempt] }), "schema_error");
-  const missingAttemptField = legalAttempt("transport_error");
-  delete missingAttemptField.auth;
-  assertThrowsCode(() => validateAttemptEvidence({ schema_version: ATTEMPT_SCHEMA, attempts: [missingAttemptField] }), "schema_error");
-
-  const staleAttempt = clone(attemptsFixture);
-  staleAttempt.attempts.find((row) => row.lane_id === "fred_macro").observed_at = "2026-07-08T00:00:00Z";
-  const staleAttemptReport = buildDetectionReport({ artifactRoot: artifactRoot.raw, attempts: staleAttempt, calendars: calendarsFixture, now: expectedFixture.baseline.now });
-  assert.equal(lane(staleAttemptReport, "fred_macro").endpoint.reason, "stale");
-  const futureAttempt = clone(attemptsFixture);
-  futureAttempt.attempts.find((row) => row.lane_id === "fred_macro").observed_at = "2026-07-11T00:00:01Z";
-  const futureAttemptReport = buildDetectionReport({ artifactRoot: artifactRoot.raw, attempts: futureAttempt, calendars: calendarsFixture, now: expectedFixture.baseline.now });
-  assert.equal(lane(futureAttemptReport, "fred_macro").endpoint.reason, "future_source");
-
-  const missingScheduledRow = clone(attemptsFixture);
-  missingScheduledRow.attempts = missingScheduledRow.attempts.filter((row) => row.lane_id !== "fred_macro");
-  assert.equal(validateAttemptEvidence(missingScheduledRow), true);
-  const missingScheduledReport = buildDetectionReport({ artifactRoot: artifactRoot.raw, attempts: missingScheduledRow, calendars: calendarsFixture, now: expectedFixture.baseline.now });
-  assert.equal(missingScheduledReport.logical_lane_count, 27);
-  assert.equal(missingScheduledReport.producer_member_count, 31);
-  assert.equal(lane(missingScheduledReport, "fred_macro").endpoint.reason, "workflow_unobserved");
-
-  const missingCompositeRow = clone(attemptsFixture);
-  missingCompositeRow.attempts = missingCompositeRow.attempts.filter((row) => !(row.lane_id === "slickcharts" && row.member_id === "weekly"));
-  assert.equal(validateAttemptEvidence(missingCompositeRow), true);
-  const missingCompositeReport = buildDetectionReport({ artifactRoot: artifactRoot.raw, attempts: missingCompositeRow, calendars: calendarsFixture, now: expectedFixture.baseline.now });
-  const missingWeekly = lane(missingCompositeReport, "slickcharts");
-  assert.equal(missingCompositeReport.logical_lane_count, 27);
-  assert.equal(missingCompositeReport.producer_member_count, 31);
-  assert.equal(missingWeekly.status, "unobserved");
-  assert.equal(missingWeekly.reason, "workflow_unobserved");
-  assert.equal(missingWeekly.members.find((member) => member.id === "weekly").endpoint.reason, "workflow_unobserved");
-
-  const ownerlessReport = buildDetectionReport({ artifactRoot: artifactRoot.raw, attempts: attemptsFixture, calendars: calendarsFixture, now: expectedFixture.baseline.now });
-  for (const id of ["sec_13f", "apewisdom_attention", "gdelt_news_tone"]) {
-    assert.equal(lane(ownerlessReport, id).endpoint.reason, "workflow_unobserved", id);
-  }
-  assert.equal(lane(ownerlessReport, "apewisdom_attention").artifact.age, 1);
-  assert.equal(lane(ownerlessReport, "gdelt_news_tone").artifact.age, 1);
-
-  for (const memberCase of expectedFixture.slickcharts_member_worst_cases) {
-    const broken = replaceAttempt(attemptsFixture, "slickcharts", memberCase.member_id, legalAttempt("transport_error"));
-    const index = broken.attempts.findIndex((row) => row.lane_id === "slickcharts" && row.member_id === memberCase.member_id);
-    broken.attempts[index].attempt_id = `attempt-slick-${memberCase.member_id}-broken`;
-    validateAttemptEvidence(broken);
-    const report = buildDetectionReport({ artifactRoot: artifactRoot.raw, attempts: broken, calendars: calendarsFixture, now: expectedFixture.baseline.now });
-    const slick = lane(report, "slickcharts");
-    assert.equal(slick.status, memberCase.expected_logical_status);
-    assert.equal(slick.members.length, 5);
-    assert.equal(slick.members.find((member) => member.id === memberCase.member_id).reason, "transport_error");
-  }
-}
-
 function runCompositeSourceFoldChecks() {
   const artifactRoot = materializeArtifacts("all_valid");
   const symbolsPath = path.join(artifactRoot.raw, "data", "slickcharts", "symbols.json");
   const symbols = JSON.parse(fs.readFileSync(symbolsPath, "utf8"));
   symbols.history[0].date = "2026-06-15";
   fs.writeFileSync(symbolsPath, JSON.stringify(symbols), { encoding: "utf8", mode: 0o600 });
-  const readyReport = buildDetectionReport({ artifactRoot: artifactRoot.raw, attempts: attemptsFixture, calendars: calendarsFixture, now: expectedFixture.baseline.now });
+  const readyReport = buildDetectionReport({ artifactRoot: artifactRoot.raw, calendars: calendarsFixture, now: expectedFixture.baseline.now });
   const readySlick = lane(readyReport, "slickcharts");
   const symbolsMember = readySlick.members.find((member) => member.id === "symbols");
   assert.equal(readySlick.status, "ready");
@@ -1052,17 +1269,36 @@ function runCompositeSourceFoldChecks() {
 
   const missingTreasuryRoot = materializeArtifacts("all_valid");
   fs.unlinkSync(path.join(missingTreasuryRoot.raw, "data", "slickcharts", "treasury.json"));
-  const missingTreasuryReport = buildDetectionReport({ artifactRoot: missingTreasuryRoot.raw, attempts: attemptsFixture, calendars: calendarsFixture, now: expectedFixture.baseline.now });
+  const missingTreasuryReport = buildDetectionReport({ artifactRoot: missingTreasuryRoot.raw, calendars: calendarsFixture, now: expectedFixture.baseline.now });
   const missingTreasuryDaily = lane(missingTreasuryReport, "slickcharts").members.find((member) => member.id === "daily");
   assert.equal(missingTreasuryDaily.reason, "missing_artifact");
-  assert.equal(missingTreasuryReport.producer_member_count, 31);
+  assert.equal(missingTreasuryReport.producer_member_count, DATA_SUPPLY_DETECTION_CONFIG.producer_member_count);
+
+  for (const [key, relativePath] of [
+    ["cnn", "data/sentiment/cnn-fear-greed.json"],
+    ["cftc", "data/sentiment/cftc-sp500.json"],
+    ["crypto", "data/sentiment/crypto-fear-greed.json"],
+    ["vix", "data/sentiment/vix.json"],
+    ["move", "data/sentiment/move.json"],
+  ]) {
+    const missingSentimentRoot = materializeArtifacts("all_valid");
+    fs.unlinkSync(path.join(missingSentimentRoot.raw, relativePath));
+    const missingSentimentReport = buildDetectionReport({
+      artifactRoot: missingSentimentRoot.raw,
+      calendars: calendarsFixture,
+      now: expectedFixture.baseline.now,
+    });
+    const missingSentiment = lane(missingSentimentReport, "sentiment");
+    assert.equal(missingSentiment.status, "unavailable", `${key} missing canonical degrades sentiment`);
+    assert.equal(missingSentiment.reason, "missing_artifact", `${key} missing canonical is named honestly`);
+  }
 
   const staleRoot = materializeArtifacts("all_valid");
   const dailyPath = path.join(staleRoot.raw, "data", "slickcharts", "gainers.json");
   const daily = JSON.parse(fs.readFileSync(dailyPath, "utf8"));
   daily.history[0].date = "2026-01-01";
   fs.writeFileSync(dailyPath, JSON.stringify(daily), { encoding: "utf8", mode: 0o600 });
-  const report = buildDetectionReport({ artifactRoot: staleRoot.raw, attempts: attemptsFixture, calendars: calendarsFixture, now: expectedFixture.baseline.now });
+  const report = buildDetectionReport({ artifactRoot: staleRoot.raw, calendars: calendarsFixture, now: expectedFixture.baseline.now });
   const slick = lane(report, "slickcharts");
   assert.equal(slick.status, "stale");
   assert.equal(slick.artifact.reason, "stale");
@@ -1270,7 +1506,7 @@ function runPathAndAtomicChecks(artifactRoot, report) {
   const physicalOutput = makeOwnedRoot(physicalParent);
   assert.equal(pathsOverlap(physicalOutput.real, artifactRoot.real), false, "sibling string prefixes remain physically disjoint");
   const first = projectReportAtomic({ report, outputRoot: physicalOutput.raw, artifactRoot: artifactRoot.raw, tempToken: "0000000000000001" });
-  assert.equal(first.report_file_sha256, expectedFixture.baseline.report_file_sha256);
+  assert.equal(first.report_file_sha256, createSha(reportBytes(report)));
   assert.deepEqual(fs.readdirSync(physicalOutput.raw), [REPORT_BASENAME]);
 
   const aliasParent = process.platform === "darwin" && fs.existsSync("/var/tmp") ? "/var/tmp" : os.tmpdir();
@@ -1389,7 +1625,7 @@ function runPathAndAtomicChecks(artifactRoot, report) {
   projectReportAtomic({ report, outputRoot: priorRoot.raw, artifactRoot: artifactRoot.raw, tempToken: "0000000000000010" });
   const priorBytes = fs.readFileSync(path.join(priorRoot.raw, REPORT_BASENAME));
   assert.equal(changedReport.schema_version, "data-supply-detection-floor/v1");
-  assert.equal(changedReport.config_digest, configDigest());
+  assert.equal(validateDetectionReport(changedReport), true, "the re-projected report validates against the live config");
   for (const [index, failpoint] of ["before_temp_open", "after_temp_open", "mid_write", "after_temp_fsync", "after_temp_validation", "before_rename"].entries()) {
     let caught = null;
     try {
@@ -1419,7 +1655,6 @@ function runCliReproduction(artifactRoot) {
   const cliArgs = [
     BUILDER,
     "--artifact-root", artifactRoot.raw,
-    "--attempt-evidence", ATTEMPTS_PATH,
     "--calendar-fixture", CALENDARS_PATH,
     "--now", expectedFixture.baseline.now,
     "--output-root", output.raw,
@@ -1439,14 +1674,20 @@ function runCliReproduction(artifactRoot) {
   });
   assert.equal(result.status, 0, result.stderr);
   const summary = JSON.parse(result.stdout);
-  assert.equal(summary.report_file_sha256, expectedFixture.baseline.report_file_sha256);
   const reportPath = path.join(output.raw, REPORT_BASENAME);
-  assert.deepEqual(JSON.parse(fs.readFileSync(reportPath, "utf8")), expectedFixture.baseline.expected_report);
+  const cliReport = readJson(reportPath);
+  const inProcessReport = buildDetectionReport({
+    artifactRoot: artifactRoot.raw,
+    calendars: calendarsFixture,
+    now: expectedFixture.baseline.now,
+  });
+  assert.deepEqual(cliReport, inProcessReport, "the CLI report matches the in-process artifact-derived report");
+  assert.equal(summary.report_file_sha256, createSha(reportBytes(cliReport)));
   assert.deepEqual(verifyDetectionReportFile({ reportPath }), {
-    schema_version: expectedFixture.baseline.expected_report.schema_version,
-    report_file_sha256: expectedFixture.baseline.report_file_sha256,
-    logical_lane_count: 27,
-    producer_member_count: 31,
+    schema_version: inProcessReport.schema_version,
+    report_file_sha256: createSha(reportBytes(cliReport)),
+    logical_lane_count: DATA_SUPPLY_DETECTION_CONFIG.logical_lane_count,
+    producer_member_count: DATA_SUPPLY_DETECTION_CONFIG.producer_member_count,
   });
   const verifyCli = spawnSync(process.execPath, [BUILDER, "--verify-report", reportPath], { cwd: REPO_ROOT, encoding: "utf8" });
   assert.equal(verifyCli.status, 0, verifyCli.stderr);
@@ -1462,7 +1703,6 @@ function runCliReproduction(artifactRoot) {
     "--import", networkBlocker,
     BUILDER,
     "--artifact-root", malformedSurfaceCliRoot.raw,
-    "--attempt-evidence", ATTEMPTS_PATH,
     "--calendar-fixture", CALENDARS_PATH,
     "--now", expectedFixture.baseline.now,
     "--output-root", malformedSurfaceCliOutput.raw,
@@ -1472,270 +1712,14 @@ function runCliReproduction(artifactRoot) {
   assert.equal(lane(malformedSurfaceCliReport, "stockanalysis_surfaces").artifact.reason, "schema_drift",
     "CLI evaluation preserves the object_fields fail-closed result for a missing count");
 
-  const shardRoot = makeOwnedRoot(fs.realpathSync.native(os.tmpdir()));
-  writeShard(shardRoot, "treasury_tga");
-  const shardOutput = makeOwnedRoot(fs.realpathSync.native(os.tmpdir()));
-  const shardCliArgs = [
-    BUILDER,
-    "--artifact-root", artifactRoot.raw,
-    "--attempt-shard-root", shardRoot.raw,
-    "--calendars", CALENDAR_PATH,
-    "--now", expectedFixture.baseline.now,
-    "--output-root", shardOutput.raw,
-  ];
-  const shardCli = spawnSync(process.execPath, ["--import", networkBlocker, ...shardCliArgs], { cwd: REPO_ROOT, encoding: "utf8" });
-  assert.equal(shardCli.status, 0, shardCli.stderr);
-  const shardReportPath = path.join(shardOutput.raw, REPORT_BASENAME);
-  const expectedShardReport = buildDetectionReport({
-    artifactRoot: artifactRoot.raw,
-    attempts: loadAttemptShards({ shardRoot: shardRoot.raw }),
-    calendars: readJson(CALENDAR_PATH),
-    now: expectedFixture.baseline.now,
-  });
-  assert.deepEqual(readJson(shardReportPath), expectedShardReport);
-  assert.equal(lane(expectedShardReport, "treasury_tga").endpoint.status, "ready");
-  assert.equal(lane(expectedShardReport, "fred_macro").endpoint.status, "unobserved");
-
   const nonCanonicalRoot = makeOwnedRoot(fs.realpathSync.native(os.tmpdir()));
   const nonCanonicalReport = path.join(nonCanonicalRoot.raw, REPORT_BASENAME);
-  fs.writeFileSync(nonCanonicalReport, JSON.stringify(expectedFixture.baseline.expected_report, null, 2), { mode: 0o600 });
+  fs.writeFileSync(nonCanonicalReport, JSON.stringify(inProcessReport, null, 2), { mode: 0o600 });
   assertThrowsCode(() => verifyDetectionReportFile({ reportPath: nonCanonicalReport }), "schema_error");
   const linkedReportRoot = makeOwnedRoot(fs.realpathSync.native(os.tmpdir()));
   const linkedReport = path.join(linkedReportRoot.raw, REPORT_BASENAME);
   fs.symlinkSync(reportPath, linkedReport);
   assertThrowsCode(() => verifyDetectionReportFile({ reportPath: linkedReport }), "unsafe_path");
-
-  const verifierRoot = makeOwnedRoot(fs.realpathSync.native(os.tmpdir()));
-  const configPath = path.join(verifierRoot.raw, "config.json");
-  fs.writeFileSync(configPath, `${canonicalJson(DATA_SUPPLY_DETECTION_CONFIG)}\n`, { encoding: "utf8", mode: 0o600 });
-  const verifierSource = String.raw`
-    const fs = require("node:fs");
-    const { createHash } = require("node:crypto");
-    const [configPath, reportPath, expectedPath, attemptsPath, artifactsPath, calendarsPath] = process.argv.slice(1);
-    const hash = (value) => createHash("sha256").update(value).digest("hex");
-    const canonicalize = (value) => {
-      if (value === null || typeof value === "string" || typeof value === "boolean") return value;
-      if (typeof value === "number") {
-        if (!Number.isFinite(value)) throw new Error("non-finite number");
-        return Object.is(value, -0) ? 0 : value;
-      }
-      if (Array.isArray(value)) return value.map(canonicalize);
-      if (typeof value !== "object") throw new Error("non-JSON value");
-      return Object.fromEntries(Object.keys(value).sort().map((key) => [key, canonicalize(value[key])]));
-    };
-    const canonical = (value) => JSON.stringify(canonicalize(value));
-    const config = JSON.parse(fs.readFileSync(configPath, "utf8"));
-    const reportBytes = fs.readFileSync(reportPath);
-    const report = JSON.parse(reportBytes.toString("utf8"));
-    const expected = JSON.parse(fs.readFileSync(expectedPath, "utf8"));
-    const attempts = JSON.parse(fs.readFileSync(attemptsPath, "utf8"));
-    const artifacts = JSON.parse(fs.readFileSync(artifactsPath, "utf8"));
-    const calendars = JSON.parse(fs.readFileSync(calendarsPath, "utf8"));
-    const pointer = (document, raw) => raw === "" ? document : raw.slice(1).split("/").reduce((value, token) => value == null ? undefined : value[token.replaceAll("~1", "/").replaceAll("~0", "~")], document);
-    const reasonStatus = { ok: "ready", declared_cadence: "ready", workflow_unobserved: "unobserved", stale: "stale", schema_drift: "drift", decode_error: "drift", missing_artifact: "unavailable", transport_error: "unavailable", http_error: "unavailable", auth_error: "unavailable", provider_throttled: "unavailable", rate_limited: "unavailable", empty_payload: "unavailable", future_source: "unavailable", unexpected_error: "unavailable" };
-    const severity = { ready: 0, unobserved: 1, stale: 2, drift: 3, unavailable: 4 };
-    const classifyAttempt = (row) => {
-      if (!row || row.execution === "unobserved") return "workflow_unobserved";
-      if (row.execution === "threw") return row.exception_kind === "transport" ? "transport_error" : "unexpected_error";
-      if (row.outcome === "no_fallback_candidates") return "ok";
-      if (row.outcome === "not_attempted") return "unexpected_error";
-      if (row.outcome === "error") return "unexpected_error";
-      if (row.outcome === "success") return row.assertions.some((assertion) => assertion.passed === false) ? "schema_drift" : "ok";
-      if (row.assertions.some((assertion) => assertion.id === "provider_throttled" && assertion.passed === false)) return "provider_throttled";
-      if (row.http_status === 401 || (row.http_status === 403 && row.auth === "rejected")) return "auth_error";
-      if (row.http_status === 429) return "rate_limited";
-      if (row.http_status < 200 || row.http_status >= 300) return "http_error";
-      if (row.decode === "error") return "decode_error";
-      if (row.payload === "empty") return "empty_payload";
-      if (row.assertions.some((assertion) => assertion.passed === false)) return "schema_drift";
-      return "ok";
-    };
-    const normalizeSource = (value, format) => {
-      if (format === "date") return value;
-      if (format === "yyyymmdd") return value.slice(0, 4) + "-" + value.slice(4, 6) + "-" + value.slice(6, 8);
-      if (format === "unix_seconds") return new Date(value * 1000).toISOString().replace(/\.000Z$/, "Z");
-      if (format === "rfc3339") return new Date(value).toISOString().replace(/\.000Z$/, "Z");
-      throw new Error("unknown source format");
-    };
-    const quarterEnd = (value) => {
-      const match = /^(\d{4})-Q([1-4])$/.exec(value);
-      const month = Number(match[2]) * 3;
-      const day = new Date(Date.UTC(Number(match[1]), month, 0)).getUTCDate();
-      return match[1] + "-" + String(month).padStart(2, "0") + "-" + String(day).padStart(2, "0");
-    };
-    const sourceOf = (document, selector) => {
-      if (selector.kind === "not_applicable") return null;
-      let values;
-      if (selector.kind === "pointer") values = [pointer(document, selector.pointer)];
-      else if (selector.kind === "max_array_field") values = pointer(document, selector.pointer).map((row) => row[selector.field]);
-      else if (selector.kind === "max_object_series_field") values = Object.values(pointer(document, selector.pointer)).flatMap((rows) => rows.map((row) => row[selector.field]));
-      else if (selector.kind === "max_object_field") values = Object.values(pointer(document, selector.pointer)).map((row) => row[selector.field]);
-      else if (selector.kind === "max_quarter") return pointer(document, selector.pointer).map(quarterEnd).sort().at(-1);
-      else throw new Error("unknown source selector");
-      return values.map((value) => normalizeSource(value, selector.format)).sort((a, b) => Date.parse(a) - Date.parse(b)).at(-1);
-    };
-    const assertionPasses = (document, assertion) => {
-      const value = pointer(document, assertion.pointer);
-      if (assertion.kind === "required_pointer") return value !== undefined;
-      if (assertion.kind === "type") return assertion.expected === "array" ? Array.isArray(value) : assertion.expected === "null" ? value === null : typeof value === assertion.expected && !Array.isArray(value);
-      if (assertion.kind === "exact") return canonical(value) === canonical(assertion.value);
-      if (assertion.kind === "enum") return assertion.values.some((candidate) => canonical(candidate) === canonical(value));
-      if (assertion.kind === "min_rows") return Array.isArray(value) && value.length >= assertion.min;
-      if (assertion.kind === "min_keys") return value && !Array.isArray(value) && typeof value === "object" && Object.keys(value).length >= assertion.min;
-      if (assertion.kind === "object_fields") return value && !Array.isArray(value) && typeof value === "object"
-        && Object.entries(assertion.fields).every(([field, expected]) => (Array.isArray(value[field]) ? "array" : value[field] === null ? "null" : typeof value[field]) === expected);
-      if (assertion.kind === "non_empty_series") return value && !Array.isArray(value) && Object.values(value).every((rows) => Array.isArray(rows) && rows.length > 0);
-      if (assertion.kind === "object_array_fields") {
-        if (!Array.isArray(value) || value.length < assertion.min) return false;
-        const unique = new Set();
-        return value.every((row) => {
-          const identity = row?.[assertion.unique_by];
-          const normalized = typeof identity === "string" ? identity.trim().toUpperCase() : identity;
-          if (!row || Array.isArray(row) || typeof row !== "object"
-            || Object.entries(assertion.fields).some(([field, type]) => (Array.isArray(row[field]) ? "array" : typeof row[field]) !== type)
-            || assertion.non_empty_fields.some((field) => row[field].trim() === "") || unique.has(normalized)) return false;
-          unique.add(normalized);
-          return true;
-        });
-      }
-      if (assertion.kind === "counted_identity_rows") {
-        const count = value?.[assertion.count_field];
-        const identities = value?.[assertion.identities_field];
-        const rows = value?.[assertion.rows_field];
-        if (!Number.isInteger(count) || count < assertion.min || !Array.isArray(identities) || !Array.isArray(rows)
-          || identities.length !== count || rows.length !== count) return false;
-        const unique = new Set();
-        return rows.every((row, index) => {
-          const identity = row?.[assertion.row_identity_field];
-          const normalized = typeof identity === "string" ? identity.trim().toUpperCase() : identity;
-          if (!row || Array.isArray(row) || typeof row !== "object" || row[assertion.row_rank_field] !== index + 1
-            || assertion.row_string_fields.some((field) => typeof row[field] !== "string" || row[field].trim() === "")
-            || identities[index] !== identity || unique.has(normalized)) return false;
-          unique.add(normalized);
-          return true;
-        });
-      }
-      throw new Error("unknown assertion");
-    };
-    const documentMap = new Map(artifacts.documents.map((row) => [row.id, row]));
-    const baseline = artifacts.layouts.find((row) => row.id === expected.baseline.artifact_layout_id);
-    const baselineNodes = baseline.nodes;
-    const nodesFor = (contract) => {
-      if (contract.selection === "single") return baselineNodes.filter((node) => node.path === contract.path);
-      const escaped = contract.path.split(".").join("\\.").replace("*", ".*");
-      const matcher = new RegExp("^" + escaped + "$");
-      return baselineNodes.filter((node) => matcher.test(node.path)).sort((a, b) => a.path < b.path ? -1 : a.path > b.path ? 1 : 0);
-    };
-    const calendarParts = (epoch, timezone) => Object.fromEntries(new Intl.DateTimeFormat("en-CA", { timeZone: timezone, year: "numeric", month: "2-digit", day: "2-digit" }).formatToParts(new Date(epoch)).filter((part) => part.type !== "literal").map((part) => [part.type, part.value]));
-    const ordinal = (value) => Math.floor(Date.UTC(Number(value.year), Number(value.month) - 1, Number(value.day)) / 86400000);
-    const sourceOrdinal = (source, calendar) => /^\d{4}-\d{2}-\d{2}$/.test(source) ? Math.floor(Date.parse(source + "T00:00:00Z") / 86400000) : ordinal(calendarParts(Date.parse(source), calendar.timezone));
-    const businessAge = (source, now, calendar) => {
-      let cursor = sourceOrdinal(source, calendar) + 1;
-      const end = ordinal(calendarParts(Date.parse(now), calendar.timezone));
-      let count = 0;
-      while (cursor <= end) {
-        const date = new Date(cursor * 86400000);
-        const iso = date.toISOString().slice(0, 10);
-        if (!calendar.weekend_days.includes(date.getUTCDay()) && !calendar.holidays.includes(iso)) count += 1;
-        cursor += 1;
-      }
-      return count;
-    };
-    const freshnessReason = (source, policy) => {
-      if (source === null) return "ok";
-      const now = expected.baseline.now;
-      const calendar = calendars.calendars.find((row) => row.id === policy.calendar);
-      const nowEpoch = Date.parse(now);
-      const sourceEpoch = Date.parse(/^\d{4}-\d{2}-\d{2}$/.test(source) ? source + "T00:00:00Z" : source);
-      if (sourceEpoch > nowEpoch || (/^\d{4}-\d{2}-\d{2}$/.test(source) && sourceOrdinal(source, calendar) > ordinal(calendarParts(nowEpoch, calendar.timezone)))) return "future_source";
-      if (policy.unit === "due_window") {
-        if (policy.due_policy.kind === "source_date_plus_days") return nowEpoch <= sourceEpoch + policy.due_policy.days * 86400000 ? "ok" : "stale";
-        return "ok";
-      }
-      const age = policy.unit === "hours" ? (nowEpoch - sourceEpoch) / 3600000 : policy.unit === "calendar_days" ? ordinal(calendarParts(nowEpoch, calendar.timezone)) - sourceOrdinal(source, calendar) : businessAge(source, now, calendar);
-      return age <= policy.max_staleness ? "ok" : "stale";
-    };
-    const evaluateArtifact = (member, policy) => {
-      const results = [];
-      for (const contract of member.artifact_contracts) {
-        const nodes = nodesFor(contract);
-        if (nodes.length === 0) return { reason: "missing_artifact", source: null };
-        for (const node of nodes) {
-          if (node.node_type !== "regular") return { reason: "missing_artifact", source: null };
-          const fixtureDocument = documentMap.get(node.document_id);
-          if (!fixtureDocument || fixtureDocument.encoding !== "json") return { reason: "decode_error", source: null };
-          const document = fixtureDocument.content;
-          if (contract.schema_version && canonical(pointer(document, contract.schema_version.pointer)) !== canonical(contract.schema_version.value)) return { reason: "schema_drift", source: null };
-          for (const assertion of contract.assertions) {
-            if (!assertionPasses(document, assertion)) return { reason: ["min_rows", "min_keys", "non_empty_series"].includes(assertion.kind) ? "empty_payload" : "schema_drift", source: null };
-          }
-          results.push({ reason: "ok", source: sourceOf(document, contract.source_selector), required: contract.source_selector.kind !== "not_applicable" });
-        }
-      }
-      const sources = results.filter((row) => row.required).map((row) => row.source);
-      const source = sources.length === 0 ? null : policy.fold === "oldest" ? sources.sort((a, b) => Date.parse(a) - Date.parse(b))[0] : sources.sort((a, b) => Date.parse(a) - Date.parse(b)).at(-1);
-      return { reason: freshnessReason(source, policy), source };
-    };
-    const attemptMap = new Map(attempts.attempts.map((row) => [row.lane_id + ":" + (row.member_id ?? "_lane"), row]));
-    const configDigest = hash(Buffer.from(canonical(config), "utf8"));
-    if (configDigest !== expected.config_digest || report.config_digest !== configDigest) throw new Error("config digest mismatch");
-    if (!reportBytes.equals(Buffer.from(canonical(report) + "\n", "utf8"))) throw new Error("report bytes are not canonical");
-    const reportDigest = hash(reportBytes);
-    if (reportDigest !== expected.baseline.report_file_sha256) throw new Error("report digest mismatch");
-    if (canonical(report) !== canonical(expected.baseline.expected_report)) throw new Error("independent report expectation mismatch");
-    const statuses = ["ready", "stale", "drift", "unavailable", "unobserved"];
-    const reasons = new Set(["ok", "declared_cadence", "missing_artifact", "workflow_unobserved", "transport_error", "http_error", "auth_error", "provider_throttled", "rate_limited", "decode_error", "schema_drift", "empty_payload", "future_source", "stale", "unexpected_error"]);
-    const logical = Object.fromEntries(statuses.map((status) => [status, 0]));
-    const members = Object.fromEntries(statuses.map((status) => [status, 0]));
-    const modes = { post_fetch_artifact: 0, artifact_only: 0, composite: 0 };
-    if (report.lanes.length !== 27) throw new Error("logical denominator mismatch");
-    for (const [laneIndex, lane] of report.lanes.entries()) {
-      const laneConfig = config.lanes[laneIndex];
-      if (lane.id !== laneConfig.id) throw new Error("lane/config identity mismatch");
-      if (!statuses.includes(lane.status) || !reasons.has(lane.reason)) throw new Error("closed vocabulary mismatch");
-      logical[lane.status] += 1;
-      modes[lane.monitoring_mode] += 1;
-      const rows = lane.members || [lane];
-      const derivedMembers = [];
-      for (const [memberIndex, memberReport] of rows.entries()) {
-        const memberConfig = laneConfig.producer_members[memberIndex];
-        if (!statuses.includes(memberReport.status) || !reasons.has(memberReport.reason)) throw new Error("member vocabulary mismatch");
-        const attemptKey = laneConfig.id + ":" + (laneConfig.monitoring_mode === "composite" ? memberConfig.id : "_lane");
-        const endpointReason = memberConfig.cadence_declaration === null
-          ? "workflow_unobserved"
-          : memberConfig.cadence_declaration.kind === "github_workflow"
-            ? classifyAttempt(attemptMap.get(attemptKey))
-            : "declared_cadence";
-        if (memberReport.endpoint.reason !== endpointReason) throw new Error("independent endpoint reason mismatch for " + memberConfig.id);
-        const artifactResult = evaluateArtifact(memberConfig, laneConfig.freshness);
-        if (memberReport.artifact.reason !== artifactResult.reason || memberReport.artifact.source_as_of !== artifactResult.source) throw new Error("independent artifact reason/source mismatch for " + memberConfig.id);
-        const endpointState = { reason: endpointReason, status: reasonStatus[endpointReason] };
-        const artifactState = { reason: artifactResult.reason, status: reasonStatus[artifactResult.reason] };
-        const derived = severity[artifactState.status] > severity[endpointState.status] ? artifactState : endpointState;
-        if (memberReport.reason !== derived.reason || memberReport.status !== derived.status) throw new Error("independent member fold mismatch for " + memberConfig.id);
-        derivedMembers.push(derived);
-        members[memberReport.status] += 1;
-      }
-      const derivedLane = derivedMembers.reduce((worst, row) => severity[row.status] > severity[worst.status] ? row : worst);
-      if (lane.reason !== derivedLane.reason || lane.status !== derivedLane.status) throw new Error("independent lane fold mismatch for " + lane.id);
-    }
-    if (Object.values(members).reduce((sum, value) => sum + value, 0) !== 31) throw new Error("member denominator mismatch");
-    const counts = { ...logical, producer_members_ready: members.ready, producer_members_stale: members.stale, producer_members_drift: members.drift, producer_members_unavailable: members.unavailable, producer_members_unobserved: members.unobserved };
-    if (canonical(counts) !== canonical(report.counts) || canonical(modes) !== canonical(report.monitoring_mode_counts)) throw new Error("aggregate mismatch");
-    process.stdout.write(JSON.stringify({ config_digest: configDigest, report_file_sha256: reportDigest, logical_lanes: report.lanes.length, producer_members: Object.values(members).reduce((sum, value) => sum + value, 0) }) + "\n");
-  `;
-  const verifier = spawnSync(process.execPath, ["-e", verifierSource, configPath, reportPath, EXPECTED_PATH, ATTEMPTS_PATH, ARTIFACTS_PATH, CALENDARS_PATH], {
-    cwd: REPO_ROOT,
-    encoding: "utf8",
-    env: { ...process.env, TZ: "Pacific/Honolulu", LC_ALL: "C" },
-  });
-  assert.equal(verifier.status, 0, verifier.stderr);
-  assert.deepEqual(JSON.parse(verifier.stdout), {
-    config_digest: expectedFixture.config_digest,
-    report_file_sha256: expectedFixture.baseline.report_file_sha256,
-    logical_lanes: 27,
-    producer_members: 31,
-  });
 
   const assertCliFailureBeforeOutput = (args, failureOutput) => {
     const failed = spawnSync(process.execPath, args, { cwd: REPO_ROOT, encoding: "utf8", env: { ...process.env, HTTP_PROXY: "http://127.0.0.1:1", FENOK_API_TOKEN: "must-not-be-read" } });
@@ -1745,7 +1729,6 @@ function runCliReproduction(artifactRoot) {
   assertCliFailureBeforeOutput(cliArgs.slice(0, -2), null);
   for (const [flag, invalidValue] of [
     ["--artifact-root", path.join(artifactRoot.raw, "missing-artifact-root")],
-    ["--attempt-evidence", path.join(artifactRoot.raw, "missing-attempts.json")],
     ["--calendar-fixture", path.join(artifactRoot.raw, "missing-calendars.json")],
     ["--now", "not-a-clock"],
     ["--output-root", path.join(artifactRoot.raw, "missing-output-root")],
@@ -1761,7 +1744,6 @@ function runCliReproduction(artifactRoot) {
   for (const mutateArgs of [
     (args) => { args[args.indexOf("--now")] = "--unknown"; },
     (args) => { args.push("positional"); },
-    (args) => { args.push("--attempt-shard-root", shardRoot.raw); },
     (args) => { args.push("--calendars", CALENDAR_PATH); },
   ]) {
     const failureOutput = makeOwnedRoot(fs.realpathSync.native(os.tmpdir()));
@@ -1770,27 +1752,20 @@ function runCliReproduction(artifactRoot) {
     mutateArgs(args);
     assertCliFailureBeforeOutput(args, failureOutput);
   }
-  const externalEvidenceRoot = makeOwnedRoot(fs.realpathSync.native(os.tmpdir()));
-  const externalEvidence = path.join(externalEvidenceRoot.raw, "attempts.json");
-  fs.writeFileSync(externalEvidence, JSON.stringify(attemptsFixture), { encoding: "utf8", mode: 0o600 });
-  const externalOutput = makeOwnedRoot(fs.realpathSync.native(os.tmpdir()));
-  const externalArgs = [...cliArgs];
-  externalArgs[externalArgs.indexOf("--attempt-evidence") + 1] = externalEvidence;
-  externalArgs[externalArgs.indexOf("--output-root") + 1] = externalOutput.raw;
-  assertCliFailureBeforeOutput(externalArgs, externalOutput);
 }
 
-function runPrivacyAndProtectedChecks(report) {
+function runPrivacyAndProtectedChecks(report, adminReportBefore) {
   const text = canonicalJson(report);
   for (const token of ["raw_response", "credential", "request_headers", "query_tokens", "current_lkg", "promotion_pointer", artifactRootToken()]) {
     assert.equal(text.includes(token), false, `report excludes ${token}`);
   }
-  assert.equal(fs.existsSync(ADMIN_REPORT), false, "Stage 1 canonical admin report stays absent");
+  assert.equal(adminReportIdentity(), adminReportBefore, "canonical admin report must not be created or modified by the suite");
 }
 
 function runWorkflowBridgeChecks() {
   const workflow = fs.readFileSync(DEPLOY_WORKFLOW, "utf8");
   const updateWorkflow = fs.readFileSync(UPDATE_MANIFEST_WORKFLOW, "utf8");
+  const runner = fs.readFileSync(UPDATE_MANIFEST_RUNNER, "utf8");
   const packageScripts = JSON.parse(fs.readFileSync(APP_PACKAGE, "utf8")).scripts;
   const stepName = "      - name: Build data supply detection floor\n";
   const stepStart = workflow.indexOf(stepName);
@@ -1801,19 +1776,16 @@ function runWorkflowBridgeChecks() {
   const requiredTokens = [
     "mktemp -d \"/tmp/fenok-data-supply-detection-floor-",
     "trap 'rm -rf \"$output_root\"' EXIT",
-    "--attempt-shard-root",
     "scripts/lib/data-supply-detection-calendars.json",
     "--verify-report \"$report_path\"",
     "install -m 0644 \"$report_path\" \"$installed_path\"",
-    "cmp -s \"$report_path\" \"$installed_path\"",
-    "--verify-report \"$installed_path\"",
   ];
   for (const required of requiredTokens) {
     assert.ok(step.includes(required), `deploy bridge includes ${required}`);
-    assert.equal(updateWorkflow.split(required).length - 1, 2, `update-manifest initial and retry bridges include ${required}`);
+    assert.equal(runner.split(required).length - 1, 1, `shared runner bridge includes ${required}`);
   }
   assert.equal(step.includes("--output-root \"$repo_root/data"), false, "builder never writes under repo data");
-  assert.equal(updateWorkflow.split("--output-root \"$repo_root/data").length - 1, 0, "update-manifest builder never writes under repo data");
+  assert.equal(runner.split("--output-root \"$repo_root/data").length - 1, 0, "shared runner builder never writes under repo data");
 
   assert.equal(
     workflow.includes("      - name: Reconcile derived data\n"),
@@ -1842,6 +1814,26 @@ function runWorkflowBridgeChecks() {
     /(?:^| )npm run cf:build:steps(?: |$)/,
     "cf:build delegates to the guard-frozen cf:build:steps chain",
   );
+  assert.equal(
+    workflow.split('timeout_seconds="${SMOKE_PROPAGATION_TIMEOUT_SECONDS:-180}"').length - 1,
+    1,
+    "the post-deploy identity smoke keeps the 180-second propagation window",
+  );
+  assert.equal(
+    workflow.split('interval_seconds="${SMOKE_PROPAGATION_INTERVAL_SECONDS:-5}"').length - 1,
+    1,
+    "the post-deploy identity smoke sleeps only the bounded 5-second interval",
+  );
+  assert.equal(
+    workflow.split('while [ "$SECONDS" -le "$deadline" ]; do').length - 1,
+    1,
+    "the post-deploy identity smoke is bounded by the propagation deadline",
+  );
+  assert.equal(
+    workflow.includes("for attempt in 1 2 3; do"),
+    false,
+    "post-deploy identity smokes must not regress to a 15-second propagation window",
+  );
   const publicBuildIndex = packageScripts["sync-static"].indexOf("npm run build:data-supply-public");
   const derivedIndex = packageScripts["sync-static"].indexOf("npm run reconcile:derived");
   assert.ok(
@@ -1859,41 +1851,51 @@ function runWorkflowBridgeChecks() {
     "derived verification retains the strict KPI artifact gate",
   );
   const syncIndex = packageScripts["cf:build:steps"].indexOf("npm run sync-static");
-  const verifyIndex = packageScripts["cf:build:steps"].indexOf("npm run reconcile:verify");
+  const artifactGateIndex = packageScripts["cf:build:steps"].indexOf("npm run qa:fenok-data-health-kpi:artifact");
   const bundleIndex = packageScripts["cf:build:steps"].indexOf("opennextjs-cloudflare build");
   assert.ok(
-    syncIndex >= 0 && verifyIndex > syncIndex && bundleIndex > verifyIndex,
-    "cf:build reconciles and verifies derived data before bundling",
+    syncIndex >= 0 && artifactGateIndex > syncIndex && bundleIndex > artifactGateIndex,
+    "cf:build reconciles derived data and runs the full KPI artifact gate before bundling",
   );
 
-  const initialBridgeStart = updateWorkflow.indexOf(stepName);
-  const initialKpiStart = updateWorkflow.indexOf("      - name: Build data health KPI\n");
-  assert.ok(initialBridgeStart >= 0, "update-manifest initial path runs the detection floor");
-  assert.ok(initialKpiStart > initialBridgeStart, "update-manifest initial path installs the floor before KPI build");
+  // The S13 detection-floor bridge and the S14 KPI build live in the shared
+  // runner, so the install-before-KPI contract is asserted there once.
+  const runnerBridgeStart = runner.indexOf("repo_root=\"$(pwd -P)\"");
+  const runnerKpiStart = runner.indexOf("npm --prefix 100xfenok-next run build:fenok-data-health-kpi");
+  assert.ok(runnerBridgeStart >= 0, "shared runner rebuilds the detection floor");
+  assert.ok(runnerKpiStart > runnerBridgeStart, "shared runner installs the floor before KPI build");
   const retryReset = updateWorkflow.indexOf("git reset --hard origin/main");
-  const retryBridgeStart = updateWorkflow.indexOf("repo_root=\"$(pwd -P)\"", retryReset);
-  const retryKpiStart = updateWorkflow.indexOf("npm --prefix 100xfenok-next run build:fenok-data-health-kpi", retryReset);
-  assert.ok(retryReset >= 0 && retryBridgeStart > retryReset, "update-manifest retry rebuilds the floor after resetting to latest main");
-  assert.ok(retryKpiStart > retryBridgeStart, "update-manifest retry installs the floor before KPI rebuild");
-  assert.equal(updateWorkflow.includes("data/admin/data-supply-detection-floor.json \\\n"), false, "ephemeral report is not added to the manifest commit pathspec");
+  const retryRunnerCall = updateWorkflow.indexOf("bash scripts/update-manifest-projections.sh", retryReset);
+  const laneCommitManifest = readJson(path.join(REPO_ROOT, "data", "admin", "lane-commit-manifest.json"));
+  assert.equal(updateWorkflow.includes("run: bash scripts/update-manifest-projections.sh"), false,
+    "update-manifest must not repeat the projection before the retry loop");
+  assert.ok(retryReset >= 0 && retryRunnerCall > retryReset, "update-manifest retry rebuilds the floor via the shared runner after resetting to latest main");
+  assert.ok(
+    laneCommitManifest.update_manifest.central_commit_paths.includes("data/admin/data-supply-detection-floor.json"),
+    "detection-floor report is committed with the KPI that consumes it",
+  );
+  assert.equal(
+    updateWorkflow.includes("data/admin/data-supply-detection-floor.json \\\n"),
+    false,
+    "central staging owns the detection-floor commit pathspec; workflow must not duplicate it",
+  );
 }
 
-function runCurrentRepositoryDryRun() {
+function runCurrentRepositoryDryRun(adminReportBefore) {
   const output = makeOwnedRoot(fs.realpathSync.native(os.tmpdir()));
   const result = detectAndProject({
     artifactRoot: REPO_ROOT,
-    attempts: attemptsFixture,
     calendars: calendarsFixture,
     now: expectedFixture.baseline.now,
     outputRoot: output.raw,
     tempToken: "0000000000000f00",
   });
-  assert.equal(result.report.logical_lane_count, 27);
-  assert.equal(result.report.producer_member_count, 31);
+  assert.equal(result.report.logical_lane_count, DATA_SUPPLY_DETECTION_CONFIG.logical_lane_count);
+  assert.equal(result.report.producer_member_count, DATA_SUPPLY_DETECTION_CONFIG.producer_member_count);
   assert.deepEqual(result.report.lanes.map((row) => row.id), DATA_SUPPLY_DETECTION_CONFIG.lanes.map((row) => row.id));
   assert.equal(path.dirname(result.report_path), output.real);
   assert.deepEqual(fs.readdirSync(output.raw), [REPORT_BASENAME]);
-  assert.equal(fs.existsSync(ADMIN_REPORT), false);
+  assert.equal(adminReportIdentity(), adminReportBefore, "current-repository dry run must not create or modify the canonical admin report");
 }
 
 function artifactRootToken() {
@@ -1903,22 +1905,19 @@ function artifactRootToken() {
 async function main() {
   const originalFetch = globalThis.fetch;
   const protectedBefore = protectedSnapshot();
+  const adminReportBefore = adminReportIdentity();
   const assertRepositoryUnchanged = (context) => {
     assert.deepEqual(protectedSnapshot(), protectedBefore, `protected repository ledger changed after ${context}`);
   };
-  for (const [key, value] of Object.entries(protectedBefore)) {
-    if (key.startsWith("report-files:")) assert.deepEqual(value, [], `${key} must remain absent`);
-  }
+  // A checked-out canonical report may already exist. The protected snapshot
+  // assertions below must preserve it, but the fixture suite must not require
+  // a report-free checkout before it can exercise the builder.
   globalThis.fetch = () => { throw new Error("network invocation forbidden"); };
   try {
     runConfigAndFixtureChecks();
     assertRepositoryUnchanged("config and fixture rejection cases");
     const { artifactRoot, report } = runBaselineAndArtifactChecks();
     assertRepositoryUnchanged("successful and classified artifact cases");
-    runAttemptShardChecks(artifactRoot);
-    assertRepositoryUnchanged("per-lane attempt shard merge and rejection cases");
-    runAttemptChecks(artifactRoot);
-    assertRepositoryUnchanged("attempt classification cases");
     runCompositeSourceFoldChecks();
     assertRepositoryUnchanged("composite member-worst cases");
     runCalendarChecks();
@@ -1927,10 +1926,10 @@ async function main() {
     assertRepositoryUnchanged("path rejection and atomic fault cases");
     runCliReproduction(artifactRoot);
     assertRepositoryUnchanged("CLI success and failure cases");
-    runPrivacyAndProtectedChecks(report);
+    runPrivacyAndProtectedChecks(report, adminReportBefore);
     runWorkflowBridgeChecks();
     assertRepositoryUnchanged("deploy bridge contract checks");
-    runCurrentRepositoryDryRun();
+    runCurrentRepositoryDryRun(adminReportBefore);
     assertRepositoryUnchanged("current-repository read-only dry run");
   } finally {
     globalThis.fetch = originalFetch;

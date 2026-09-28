@@ -1,6 +1,6 @@
 # Yardney Data
 
-> **Last Updated**: 2026-07-08
+> **Last Updated**: 2026-08-19
 > **Source**: Feno Yardeni model: official FRED WAAA/WBAA + 100x S&P 500 benchmark price/EPS; benchmark EPS/SPX is currently Bloomberg-sourced; 1990-2009 history preserved from verified seed
 > **Frequency**: Weekly
 > **Public Schema**: Market inputs plus derived valuation fields; raw bond-yield components are excluded from public payloads.
@@ -11,13 +11,13 @@
 
 | File | Records | Date Range | Description |
 |------|---------|------------|-------------|
-| `yardney_model.json` | 1,888 | 1990-02-02 ~ 2026-07-03 | Feno Yardeni Bond PER, S&P 500 fair value, premium/discount |
+| `yardney_model.json` | 1,894 | 1990-02-02 ~ 2026-08-14 | Feno Yardeni Bond PER, S&P 500 fair value, premium/discount |
 
 ## Latest Record
 
 | Date | SPX | Fair Value | Premium |
 |------|-----|------------|---------|
-| 2026-07-03 | 7,483.24 | 6,421.44 | +16.54% |
+| 2026-08-14 | 7,785.76 | 6,341.71 | +22.77% |
 
 ## Update Policy
 

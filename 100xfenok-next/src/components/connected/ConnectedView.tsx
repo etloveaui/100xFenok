@@ -12,6 +12,7 @@ import {
 } from "@/lib/connected/connected-loaders";
 import { stockConnectionFreshnessState, type StockConnectionFreshnessSource } from "@/lib/data-entity-graph/freshness";
 import { ROUTES } from "@/lib/routes";
+import { formatDateish } from "@/lib/format";
 import type {
   StockConnectionEntry,
   StockServiceEtfLink,
@@ -32,10 +33,6 @@ function isFiniteNumber(value: unknown): value is number {
   return typeof value === "number" && Number.isFinite(value);
 }
 
-function fmtDateish(value: unknown): string {
-  if (typeof value !== "string" || !value.trim()) return "—";
-  return value.trim();
-}
 
 function buildSingleStockEtfHref(links: StockServiceEtfLink[]): string | null {
   const tickers = links.map((link) => link.ticker).filter(Boolean);
@@ -157,7 +154,7 @@ export function ConnectedView({
       <section className="panel stock-section" data-connected-variant={variant}>
         <div className="panel-h"><h2>데이터 연결</h2></div>
         <div className="panel-b">
-          <p className="text-xs font-semibold text-slate-500">연결 인덱스를 확인하고 있습니다.</p>
+          <p className="text-[12px] font-semibold text-slate-500">연결 인덱스를 확인하고 있습니다.</p>
         </div>
       </section>
     );
@@ -173,7 +170,7 @@ export function ConnectedView({
     ?? singleStockEtfs.find((etf) => typeof etf.as_of?.etf_universe === "string")?.as_of?.etf_universe
     ?? null;
   const etfProvenanceDetails = [
-    etfAsOf ? `기준 ${fmtDateish(etfAsOf)}` : null,
+    etfAsOf ? `기준 ${formatDateish(etfAsOf)}` : null,
     singleStockEtfs.length ? `분류 신뢰도 high ${highConfidenceEtfs}/${singleStockEtfs.length}` : null,
   ];
   const connected = [
@@ -222,7 +219,7 @@ export function ConnectedView({
           ))}
         </div>
         {asOfRows.length > 0 ? (
-          <div className={compact ? "grid gap-1.5 text-[10px]" : "grid gap-1.5 text-xs"}>
+          <div className={compact ? "grid gap-1.5 text-[12px]" : "grid gap-1.5 text-[12px]"}>
             {asOfRows.map((row) => (
               <div key={row.label} className="flex flex-wrap items-center justify-between gap-2 font-semibold text-slate-500">
                 <span>{row.label}</span>
@@ -281,7 +278,7 @@ export function ConnectedView({
           </div>
         ) : null}
         {entry.confidence?.label ? (
-          <p className="text-[10px] font-semibold text-slate-500">
+          <p className="text-[12px] font-semibold text-slate-500">
             신호 신뢰도 {entry.confidence.label}
             {isFiniteNumber(entry.confidence.coverage_ratio) ? ` · 커버리지 ${(entry.confidence.coverage_ratio * 100).toFixed(0)}%` : ""}
           </p>

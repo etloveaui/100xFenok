@@ -1,0 +1,79 @@
+{
+ "schema_version": "feno_rim_icc_release_decision.v1",
+ "model": "bottom_up_GLS_ICC",
+ "status": "KEEP_INTERNAL_SHADOW",
+ "evidence": "SUPPORTED",
+ "evidence_class": "SUPPORTED_NOT_VALIDATED",
+ "north_star": "FENO_SUSTAINABLE_YOO_SUCCESSOR_RIM",
+ "legacy_fair_value_band": "RETIRED",
+ "new_fair_value_successor": "QUARANTINED_PENDING_RECONSTRUCTION",
+ "public_surface_before_owner_approval": "KEEP_QUARANTINED",
+ "owner_approval_required": true,
+
+ "gates": {
+  "G0": "PASS — the incumbent market-cap basis is already consistent; 1,618 of 1,638 cells identical to machine precision, all 20 differences the incumbent correctly restating shares across a split",
+  "G1": "INCREMENTAL_SURVIVES — ICC carries return information beyond B/P, size, momentum, FY1 yield and the forecast slope; coefficient 0.8198 at clustered t 7.482, VIF 2.1-3.1, but 40% below the R3 coefficient on the identical sample",
+  "G2": "PASS — permutation kills the spread at 5/5 origins for B/P and 4/5 for size; no leakage onto past returns; a shuffled-price placebo distribution centred at -0.14 with zero reps reaching the observed value",
+  "G3": "HORIZON_SPECIFIC — pooled positive at all three horizons and direction stable, but the 12-month clustered t is 1.634 against a frozen bound of 2. The 36-month t of 7.07 rests on windows overlapping two years each",
+  "G4": "DATA_INSUFFICIENT — REPLICATES was fixed unreachable before any result. 54.2% of the 36-month coefficient disappears when small-at-origin firms are removed, and removal bias is unobservable in this data"
+ },
+
+ "why_not_release_research_beta": [
+  "mandate §17 requires G3 stable/consistent; G3 returned HORIZON_SPECIFIC",
+  "mandate §11 forbids public numeric release on a FAIL or INSUFFICIENT G4; G4 returned DATA_INSUFFICIENT",
+  "each blocks release independently — this is not one marginal miss but two separate conditions"
+ ],
+
+ "why_not_retire_icc_lens": [
+  "G0 found no basis dependence",
+  "G1 found no collapse into the forecast strip, and identification is clean at VIF 2.1-3.1",
+  "G2 found no leakage and no placebo failure",
+  "direction is consistent at every horizon, every universe cut and both forecast paths",
+  "the failures are of precision and of data availability, not of the lens's direction"
+ ],
+
+ "what_keep_internal_shadow_means_here": {
+  "permitted": "continued internal computation, the G5 append-only shadow archive, and internal research use of ICC, ICC-minus-risk-free and their internal history",
+  "forbidden": "any public numeric surface, any published percentile, any price target, any republication of the retired heuristic band under a new name, and any feedback of a price-implied ICC into a same-date fair-value discount rate",
+  "public_surface_state": "unchanged all mission — sustainable-index-ranges public projection holds rows=[] and fair-values.json holds display_ready=false with all six index rows at status NULL"
+ },
+
+ "honest_magnitude_statement": {
+  "as_first_measured_R3_S4": 1.3679,
+  "after_forecast_strip_controls_G1": 0.819823,
+  "after_removing_small_at_origin_firms_G4_top200": 0.346457,
+  "reading": "Each stage of adversarial control removed roughly half of what remained. The direction survived every stage; the magnitude did not. And the one bias we could not measure — firms that left the index and are absent from the panel entirely — pushes in the same direction as the ones we could."
+ },
+
+ "yoo_successor_bridge": {
+  "forward_path": "PARTIAL",
+  "growth_payout": "BLOCKED",
+  "independent_ke": "BLOCKED",
+  "terminal": "PARTIAL",
+  "oos_interval": "BLOCKED",
+  "overall": "NOT_READY",
+  "detail": "YOO_SUCCESSOR_BRIDGE_STATUS.md",
+  "structural_note": "The GLS-ICC is solved from the current price. Using it as the discount rate in a same-date fair value reproduces the price from the price. A successor requires a cost of equity identified independently of the price being valued, and none exists in this repository."
+ },
+
+ "binding_constraint": "Five annual origins with overlapping 36-month windows, on a universe defined by August 2026 index membership. The constraint is the data, not the model. It improves with elapsed time and with point-in-time record keeping started now — which is what G5 and BACKLOG #380 are for.",
+
+ "process_record": {
+  "criteria_frozen_in_earlier_commits_than_results": true,
+  "criteria_versions_superseded_never_edited_in_place": ["g0-criteria v1/v2", "g2-criteria v1/v2", "g3-criteria v1/v2"],
+  "handler_criteria_defects_recorded_not_worked_around": [
+   "G0: 'as-reported shares_t' admitted a filing-dated share count, making the literal control wrong on 20 cells",
+   "G1: 'within-sector rank result' admitted four constructions with opposite signs",
+   "G2: '33.33 and 66.67 percentiles' named no percentile convention, so a deterministic statistic matched only to two significant figures",
+   "G3: the tercile aggregator was unnamed and this mission already contained two different precedents",
+   "G3: a 4-of-5 origin rule was written against a primary sample containing 4 origins"
+  ],
+  "worker_defects_found_by_handler": ["a contracted quantity omitted from a report", "a half-switched EP path mixing two forecast paths in one regression", "a null distribution compared against a different specification's coefficient"],
+  "worker_defects_found_by_worker_itself": ["a clustered-SE sandwich bug", "an integer RNG stream producing 99.7% spurious non-convergence", "a swapped high/low half in a test statistic", "a fixed-effect dummy placement producing NaN t", "an earnings-concept selection empty for some filers"],
+  "no_threshold_was_ever_changed_after_seeing_a_result": true,
+  "no_statistic_was_substituted_for_the_one_a_condition_named": "the 12-month Fama-MacBeth t of 2.173 would have cleared G3's bound; condition (b) named the pooled clustered t and was not reinterpreted"
+ },
+
+ "generated_at": "2026-08-08T02:05:00Z",
+ "adjudicated_by": "cc (Opus), handler and adjudicator"
+}

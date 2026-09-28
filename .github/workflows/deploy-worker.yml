@@ -7,19 +7,22 @@
 #   - daily schedule -> picks up bot-authored data refreshes into the bundle
 #   - workflow_dispatch -> manual deploy
 #
-# Cancellation safety (BACKLOG #361, incident 2026-07-16: cancelled run
+# Cancellation and storage safety (BACKLOG #361, incident 2026-07-16: cancelled run
 # 29502469123 uploaded its bundle and was superseded before its smokes ran —
 # the live Worker served an UNVERIFIED bundle for ~15h while CI recorded no
 # green):
-#   - build-verify is supersession-friendly (cancel-in-progress: true): a newer
-#     push cancels a stale build cheaply, before anything can ship.
-#   - deploy is cancellation-atomic (cancel-in-progress: false): once a run
-#     reaches upload, it always finishes its smokes. Newer runs queue, and a
-#     queued deploy skips itself BEFORE upload if a newer run is already active
-#     (scripts/check-deploy-supersession.mjs) — skipping never happens after
-#     an upload, so a deploy is never interrupted mid-flight.
-#   - every bundle carries data/admin/deploy-provenance.json declaring the run
-#     that shipped it; the deploy job asserts the CURRENT live bundle's
+#   - build and deploy stay in one non-canceling hosted job. This removes the
+#     650+ MiB Actions artifact boundary and preserves the exact built bytes
+#     through deployment and smoke checks without a second dependency install.
+#   - one run executes while only the newest pending run is retained. Every
+#     admitted candidate reaches
+#     the pre-upload live/source fence, where a stale or out-of-order
+#     candidate fails truthfully (check-deploy-source-fence.mjs). No
+#     pre-smoke green skip exists: an active skip gate was removed because
+#     under continuous data commits it starved deploys, and any pre-smoke
+#     skip signal can green-skip on an upload whose smokes later fail.
+#   - every bundle carries deploy-provenance.json declaring the run
+#     that shipped it; the same job asserts the CURRENT live bundle's
 #     provenance before (loud, non-blocking) and after (blocking) upload
 #     (scripts/check-live-deploy-provenance.mjs).
 name: Deploy Worker (Cloudflare)
@@ -37,62 +40,163 @@ on:
       - 'posts/**'
       - '!**/data/**'
       - '100xfenok-next/public/data/**'
+      - '!100xfenok-next/public/data/earnings-overview/**'
       - '.github/workflows/deploy-worker.yml'
   schedule:
     - cron: '30 3 * * *'  # 12:30 KST, after update-manifest data refresh
   workflow_dispatch:
+    inputs:
+      remediate_unprovenanced_live:
+        description: 'One-time owner authorization to replace a live bundle with no provenance stamp'
+        required: false
+        default: false
+        type: boolean
+  # Requeue path: a successful recovery-family completion must eventually cause
+  # a deploy even if every data push during the recovery window was gated. The
+  # recovery-gate job still skips when a SIBLING recovery remains nonterminal.
+  # NOTE: workflow_run.workflows matches the workflows' DISPLAY names (name:),
+  # not their file names.
+  workflow_run:
+    workflows: ["SlickCharts History"]
+    types: [completed]
 
 jobs:
-  build-verify:
+  recovery-gate:
     runs-on: ubuntu-latest
-    concurrency:
-      group: workers-100xfenok-main-build
-      cancel-in-progress: true
+    permissions:
+      contents: read
+      actions: read
+    outputs:
+      skip: ${{ steps.gate.outputs.skip }}
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+
+      - name: Recovery deploy gate (skip data-serving deploys while SlickCharts recovery is in flight)
+        id: gate
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          set -euo pipefail
+          guard="$(node scripts/check-recovery-deploy-gate.mjs \
+            --mode push \
+            --event-name "${{ github.event_name }}" \
+            --event-json "$GITHUB_EVENT_PATH" \
+            --recovery-workflows slickcharts-history.yml)"
+          case "$guard" in
+            skip)
+              echo "skip=true" >> "$GITHUB_OUTPUT"
+              echo "::notice::SlickCharts recovery-family workflow nonterminal and this push/workflow_run touches data-serving state; deploy deferred to the recovery-completion requeue or the daily schedule."
+              ;;
+            proceed-uncertain)
+              echo "skip=false" >> "$GITHUB_OUTPUT"
+              echo "::warning::Recovery deploy gate uncertain (provider query or payload unreadable); proceeding with strict KPI as the fail-close backstop."
+              ;;
+            proceed)
+              echo "skip=false" >> "$GITHUB_OUTPUT"
+              ;;
+            *)
+              echo "::error::Unexpected recovery deploy gate output: $guard"
+              exit 1
+              ;;
+          esac
+
+  build-deploy:
+    needs: [recovery-gate]
+    if: ${{ needs.recovery-gate.outputs.skip != 'true' }}
+    runs-on: ubuntu-latest
+    environment: production
+    timeout-minutes: 80
+    concurrency:
+      group: workers-100xfenok-main-deploy
+      cancel-in-progress: false
+    env:
+      QA_ADMIN_SMOKE_AVAILABLE: ${{ (secrets.QA_ADMIN_PASSWORD != '' || secrets.QA_ADMIN_SESSION_COOKIE != '') && 'true' || 'false' }}
+      FENOK_VERIFY_TOKEN: ${{ secrets.FENOK_VERIFY_TOKEN }}
+    steps:
+      # filter: blob:none — the post-deploy source fence runs
+      # `merge-base --is-ancestor`, so the commit graph must stay complete and a
+      # shallow clone would break it. A partial clone keeps every commit and skips
+      # the blob history, which is what makes the pack 5.18 GiB and the checkout
+      # ~5 minutes. Blobs for the checked-out tree are still fetched on demand.
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          filter: blob:none
 
       - name: Setup Node
         uses: actions/setup-node@v4
         with:
           node-version: 22
+          cache: npm
+          cache-dependency-path: 100xfenok-next/package-lock.json
+
+      - name: Restore Next build cache
+        uses: actions/cache@v4
+        with:
+          path: |
+            100xfenok-next/.next/cache
+            100xfenok-next/.open-next/cache
+          key: next-build-${{ hashFiles('100xfenok-next/package-lock.json') }}-${{ github.sha }}
+          restore-keys: |
+            next-build-${{ hashFiles('100xfenok-next/package-lock.json') }}-
+            next-build-
 
       - name: Install dependencies
         working-directory: 100xfenok-next
         run: npm ci
+
+      - name: Verify admin static asset source boundary
+        run: |
+          set -euo pipefail
+          node scripts/test-cloud-data-plane-routing-authority.mjs
+          node scripts/test-admin-image-source-guard.mjs
+
+      - name: Verify admin static middleware gate
+        working-directory: 100xfenok-next
+        run: |
+          set -euo pipefail
+          node scripts/test-admin-static-auth-guard.mjs
+          node scripts/test-deploy-smoke-retry.mjs
+
+      # Fail source-policy defects before data projection and the OpenNext
+      # bundle. cf:build deliberately checks again after sync-static because
+      # generated output can introduce a new violation.
+      - name: Verify source token policy
+        working-directory: 100xfenok-next
+        run: npm run qa:tokens
 
       - name: Build data supply detection floor
         run: |
           set -euo pipefail
 
           repo_root="$(pwd -P)"
-          shard_root="$repo_root/data/admin/data-supply-state/detection-attempts"
           output_root="$(mktemp -d "/tmp/fenok-data-supply-detection-floor-${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}-XXXXXX")"
           report_path="$output_root/data-supply-detection-floor.json"
           installed_path="$repo_root/data/admin/data-supply-detection-floor.json"
           trap 'rm -rf "$output_root"' EXIT
 
-          mkdir -p "$shard_root"
           chmod 0700 "$output_root"
           now="$(node -e 'process.stdout.write(new Date().toISOString())')"
 
           node scripts/build-data-supply-detection-floor.mjs \
             --artifact-root "$repo_root" \
-            --attempt-shard-root "$shard_root" \
             --calendars "$repo_root/scripts/lib/data-supply-detection-calendars.json" \
             --now "$now" \
             --output-root "$output_root"
           node scripts/build-data-supply-detection-floor.mjs --verify-report "$report_path"
 
           install -m 0644 "$report_path" "$installed_path"
-          cmp -s "$report_path" "$installed_path"
-          node scripts/build-data-supply-detection-floor.mjs --verify-report "$installed_path"
 
       # cf:build rebuilds derived data from the freshly installed detection
       # floor, then verifies the KPI artifact before the OpenNext bundler.
       - name: Build (OpenNext Cloudflare)
         working-directory: 100xfenok-next
         run: npm run cf:build
+        env:
+          FENOK_REMOTE_HEAVY_NESTED_EXECUTION: "1"
+          FENOK_REMOTE_HEAVY_EXPECTED_REVISION: ${{ github.sha }}
 
       - name: Verify Worker bundle budget
         working-directory: 100xfenok-next
@@ -104,105 +208,6 @@ jobs:
       - name: Stamp deploy provenance
         run: node scripts/write-deploy-provenance.mjs --assets-dir 100xfenok-next/.open-next/assets
 
-      - name: Upload built bundle
-        uses: actions/upload-artifact@v4
-        with:
-          name: open-next-bundle-${{ github.run_id }}
-          path: 100xfenok-next/.open-next
-          include-hidden-files: true
-          overwrite: true
-          retention-days: 1
-          if-no-files-found: error
-
-  # Repo-source unit gates. These read only committed sources and fixtures
-  # (temp data roots + injected clock), never the built bundle or regenerated
-  # derived data, so they are correct to run concurrently with build-verify.
-  # Splitting them out also runs the KPI fixture suite ONCE per deploy instead
-  # of once per chain call site.
-  unit-gates:
-    runs-on: ubuntu-latest
-    concurrency:
-      group: workers-100xfenok-main-unit-gates
-      cancel-in-progress: true
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-
-      - name: Setup Node
-        uses: actions/setup-node@v4
-        with:
-          node-version: 22
-
-      - name: Install dependencies
-        working-directory: 100xfenok-next
-        run: npm ci
-
-      - name: Verify data health KPI fixtures
-        working-directory: 100xfenok-next
-        run: npm run qa:fenok-data-health-kpi:fixtures
-
-      - name: Verify pipeline alarm guards
-        working-directory: 100xfenok-next
-        run: npm run qa:alarm-state
-
-      - name: Verify posts and admin not-found guards
-        working-directory: 100xfenok-next
-        run: npm run qa:route-not-found-guards
-
-      - name: Run admin live bridge guards
-        working-directory: 100xfenok-next
-        run: npm run test:live-bridge
-
-      - name: Verify EDGAR summary evidence guards
-        working-directory: 100xfenok-next
-        run: npm run qa:edgar-summaries
-
-      - name: Verify product data-state rendering contract
-        working-directory: 100xfenok-next
-        run: npm run qa:data-state
-
-      - name: Verify IB V2 calculator parity (no drift vs V1)
-        working-directory: 100xfenok-next
-        run: npm run qa:ib-parity
-
-      - name: Verify IB V2 live-data input quirks
-        working-directory: 100xfenok-next
-        run: npm run qa:ib-live-data
-
-      - name: Verify public SEO surface
-        working-directory: 100xfenok-next
-        run: npm run qa:seo-surface
-
-  deploy:
-    needs: [build-verify, unit-gates]
-    runs-on: ubuntu-latest
-    environment: production
-    timeout-minutes: 35
-    concurrency:
-      group: workers-100xfenok-main-deploy
-      cancel-in-progress: false
-    env:
-      QA_ADMIN_SMOKE_AVAILABLE: ${{ (secrets.QA_ADMIN_PASSWORD != '' || secrets.QA_ADMIN_SESSION_COOKIE != '') && 'true' || 'false' }}
-      GITHUB_WORKFLOW_FILE_NAME: deploy-worker.yml
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-
-      - name: Setup Node
-        uses: actions/setup-node@v4
-        with:
-          node-version: 22
-
-      - name: Install dependencies
-        working-directory: 100xfenok-next
-        run: npm ci
-
-      - name: Download built bundle
-        uses: actions/download-artifact@v4
-        with:
-          name: open-next-bundle-${{ github.run_id }}
-          path: 100xfenok-next/.open-next
-
       - name: Resolve expected bundle identity
         working-directory: 100xfenok-next
         run: |
@@ -210,7 +215,7 @@ jobs:
           expected_build_id_path=".open-next/assets/BUILD_ID"
           expected_kpi_path=".open-next/assets/data/admin/fenok-data-health-kpi.json"
           if [ ! -s "$expected_build_id_path" ] || [ ! -f "$expected_kpi_path" ]; then
-            echo "::error::Cannot establish deploy identity from the downloaded artifact."
+            echo "::error::Cannot establish deploy identity from the current hosted build."
             exit 1
           fi
           {
@@ -218,13 +223,37 @@ jobs:
             echo "EXPECTED_KPI_SHA256=$(sha256sum "$expected_kpi_path" | awk '{print $1}')"
           } >> "$GITHUB_ENV"
 
-      - name: Skip deploy if superseded by a newer run
+      - name: Re-check recovery gate (check-then-start race)
+        # A recovery may have become nonterminal after the recovery-gate job
+        # ran. DEPLOY_DEFERRED=true makes every downstream step skip without
+        # new cancellation logic. The gate is fail-open on provider
+        # uncertainty (warning), matching the job gate.
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: node scripts/check-deploy-supersession.mjs
+        run: |
+          set -euo pipefail
+          guard="$(node scripts/check-recovery-deploy-gate.mjs \
+            --mode push \
+            --event-name "${{ github.event_name }}" \
+            --event-json "$GITHUB_EVENT_PATH" \
+            --recovery-workflows slickcharts-history.yml)"
+          case "$guard" in
+            skip)
+              echo "DEPLOY_DEFERRED=true" >> "$GITHUB_ENV"
+              echo "::notice::Recovery became nonterminal after the gate job; deploy deferred to the recovery-completion requeue or the daily schedule."
+              ;;
+            proceed-uncertain)
+              echo "::warning::Recovery re-check uncertain; proceeding with strict KPI as the fail-close backstop."
+              ;;
+            proceed) ;;
+            *)
+              echo "::error::Unexpected recovery deploy gate output: $guard"
+              exit 1
+              ;;
+          esac
 
       - name: Verify Cloudflare token presence
-        if: ${{ env.SUPERSEDED != 'true' }}
+        if: ${{ env.DEPLOY_DEFERRED != 'true' }}
         env:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
         run: |
@@ -234,13 +263,32 @@ jobs:
           fi
 
       - name: Check live deploy provenance (pre-deploy)
-        if: ${{ env.SUPERSEDED != 'true' }}
+        if: ${{ env.DEPLOY_DEFERRED != 'true' }}
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: node scripts/check-live-deploy-provenance.mjs --pre
 
+      - name: Provision optional Telegram notification and verify token secrets to Worker
+        # The secrets context is not available in step-level if; the shell guard below skips when absent.
+        if: ${{ env.DEPLOY_DEFERRED != 'true' }}
+        working-directory: 100xfenok-next
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
+          FENOK_VERIFY_TOKEN: ${{ secrets.FENOK_VERIFY_TOKEN }}
+        run: |
+          set -euo pipefail
+          if [ -n "${TELEGRAM_BOT_TOKEN:-}" ] && [ -n "${TELEGRAM_CHAT_ID:-}" ]; then
+            printf '%s' "$TELEGRAM_BOT_TOKEN" | npx wrangler secret put TELEGRAM_BOT_TOKEN
+            printf '%s' "$TELEGRAM_CHAT_ID" | npx wrangler secret put TELEGRAM_CHAT_ID
+          fi
+          if [ -n "${FENOK_VERIFY_TOKEN:-}" ]; then
+            printf '%s' "$FENOK_VERIFY_TOKEN" | npx wrangler secret put FENOK_VERIFY_TOKEN
+          fi
+
       - name: Deploy to Cloudflare Workers
-        if: ${{ env.SUPERSEDED != 'true' }}
+        if: ${{ env.DEPLOY_DEFERRED != 'true' }}
         working-directory: 100xfenok-next
         run: |
           set -euo pipefail
@@ -263,11 +311,14 @@ jobs:
           predeploy_kpi_sha256="unavailable"
           predeploy_kpi_path="$RUNNER_TEMP/predeploy-fenok-data-health-kpi.json"
           cache_bust="predeploy-${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}-${GITHUB_SHA}"
+          verify_header="$(node ../scripts/lib/live-request-headers.mjs --print)"
           if predeploy_build_id="$(curl -fsS --retry 3 --retry-all-errors --retry-delay 2 \
             -H 'Cache-Control: no-cache, no-store' -H 'Pragma: no-cache' \
+            -H "x-fenok-verify: $verify_header" \
             "$base_url/BUILD_ID?cb=$cache_bust" | tr -d '\r\n')" \
             && curl -fsS --retry 3 --retry-all-errors --retry-delay 2 \
               -H 'Cache-Control: no-cache, no-store' -H 'Pragma: no-cache' \
+              -H "x-fenok-verify: $verify_header" \
               "$base_url/data/admin/fenok-data-health-kpi.json?cb=$cache_bust" \
               -o "$predeploy_kpi_path"; then
             predeploy_kpi_sha256="$(sha256sum "$predeploy_kpi_path" | awk '{print $1}')"
@@ -280,10 +331,118 @@ jobs:
             exit 1
           fi
 
+          # Re-read main and live provenance at the last safe point before
+          # upload. Main may advance during a build; the candidate may still
+          # publish only when it is on main and is not older than what is live.
+          # HTTP 404 is nonfatal only when BOTH recognized provenance surfaces
+          # are absent and /BUILD_ID is live; every other fetch failure is fatal.
+          fetch_http_status() {
+            local url="$1"
+            local output_path="$2"
+            local status
+            rm -f "$output_path"
+            if ! status="$(curl -sS --retry 3 --retry-all-errors --retry-delay 2 \
+              -H 'Cache-Control: no-cache, no-store' -H 'Pragma: no-cache' \
+              -H "x-fenok-verify: $verify_header" \
+              --output "$output_path" --write-out '%{http_code}' "$url")"; then
+              printf '%s' "transport"
+              return 0
+            fi
+            printf '%s' "$status"
+          }
+
+          source_fence_cache_bust="source-fence-${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}-$(date +%s)"
+          live_build_id_path="$RUNNER_TEMP/live-BUILD_ID-source-fence"
+          live_build_id_status="$(fetch_http_status \
+            "$base_url/BUILD_ID?cb=$source_fence_cache_bust" "$live_build_id_path")"
+          if [ "$live_build_id_status" != "200" ]; then
+            echo "::error::Live BUILD_ID fetch failed before the source fence: HTTP $live_build_id_status"
+            exit 1
+          fi
+          live_build_id="$(tr -d '\r\n' < "$live_build_id_path")"
+          if [ -z "$live_build_id" ]; then
+            echo "::error::Live BUILD_ID is empty; remediation state cannot be established."
+            exit 1
+          fi
+          if [ "$live_build_id" = "$expected_build_id" ]; then
+            echo "::error::The new build reused the currently live BUILD_ID; deployment identity would be ambiguous."
+            exit 1
+          fi
+
+          live_provenance_path="$RUNNER_TEMP/live-deploy-provenance-source-fence.json"
+          live_provenance_fresh_path="$RUNNER_TEMP/live-deploy-provenance-source-fence-fresh.json"
+          live_provenance_legacy_path="$RUNNER_TEMP/live-deploy-provenance-source-fence-legacy.json"
+          live_provenance_surface="fresh-no-store"
+          live_provenance_state="present"
+          fresh_provenance_status="$(fetch_http_status \
+            "$base_url/deploy-provenance.json?cb=$source_fence_cache_bust" \
+            "$live_provenance_fresh_path")"
+          case "$fresh_provenance_status" in
+            200)
+              live_provenance_path="$live_provenance_fresh_path"
+              ;;
+            404)
+              # Transition/rollback compatibility: bundles deployed before the
+              # no-store cutover expose the same stamp under the cached data path.
+              live_provenance_surface="legacy-cached-fallback"
+              legacy_provenance_status="$(fetch_http_status \
+                "$base_url/data/admin/deploy-provenance.json?cb=$source_fence_cache_bust" \
+                "$live_provenance_legacy_path")"
+              case "$legacy_provenance_status" in
+                200)
+                  live_provenance_path="$live_provenance_legacy_path"
+                  ;;
+                404)
+                  live_provenance_state="legacy-unprovenanced"
+                  live_provenance_surface="legacy-unprovenanced-404"
+                  live_provenance_path="$RUNNER_TEMP/live-deploy-provenance-source-fence-absent.json"
+                  rm -f "$live_provenance_path"
+                  ;;
+                transport|*)
+                  echo "::error::Legacy deploy provenance surface fetch failed: HTTP $legacy_provenance_status"
+                  exit 1
+                  ;;
+              esac
+              ;;
+            transport|*)
+              echo "::error::Fresh deploy provenance surface fetch failed: HTTP $fresh_provenance_status"
+              exit 1
+              ;;
+          esac
+          echo "::notice::Deploy source fence provenance surface: $live_provenance_surface"
+
+          source_fence_mode="strict"
+          if [ "$DEPLOY_EVENT_NAME" = "workflow_dispatch" ] \
+            && [ "$DEPLOY_REMEDIATION_INPUT" = "true" ] \
+            && [ "$live_provenance_state" = "legacy-unprovenanced" ]; then
+            source_fence_mode="remediate-unprovenanced-live"
+            echo "::warning::ONE-TIME owner remediation authorized for exact legacy live state: both provenance surfaces returned HTTP 404 with live BUILD_ID=$live_build_id"
+          fi
+          echo "::notice::Deploy source fence mode: $source_fence_mode"
+          git fetch --no-tags origin +refs/heads/main:refs/remotes/origin/main
+          current_main_sha="$(git rev-parse --verify refs/remotes/origin/main)"
+          node ../scripts/check-deploy-source-fence.mjs \
+            --provenance ".open-next/assets/deploy-provenance.json" \
+            --expected-build-id "$expected_build_id" \
+            --live-provenance "$live_provenance_path" \
+            --live-build-id "$live_build_id" \
+            --mode "$source_fence_mode" \
+            --current-main "$current_main_sha"
+
           deploy_log="$RUNNER_TEMP/wrangler-deploy.log"
           wrangler_output="$RUNNER_TEMP/wrangler-output.jsonl"
           rm -f "$wrangler_output"
-          WRANGLER_OUTPUT_FILE_PATH="$wrangler_output" npx wrangler deploy 2>&1 | tee "$deploy_log"
+          # Bundle the optional teacher credential with this exact guarded code
+          # deployment. Wrangler preserves all other existing Worker secrets.
+          coach_secret_args=()
+          if [ -n "${GROQ_API_KEY:-}" ]; then
+            coach_secrets_file="$(mktemp "$RUNNER_TEMP/winddown-coach-secrets.XXXXXX")"
+            export WINDDOWN_DEPLOY_SECRETS_FILE="$coach_secrets_file"
+            trap 'rm -f "$coach_secrets_file"' EXIT
+            node -e 'require("node:fs").writeFileSync(process.env.WINDDOWN_DEPLOY_SECRETS_FILE, JSON.stringify({ GROQ_API_KEY: process.env.GROQ_API_KEY }), { mode: 0o600 })'
+            coach_secret_args=(--secrets-file "$coach_secrets_file")
+          fi
+          WRANGLER_OUTPUT_FILE_PATH="$wrangler_output" npx wrangler deploy "${coach_secret_args[@]}" 2>&1 | tee "$deploy_log"
           if [ ! -s "$wrangler_output" ]; then
             echo "::error::Wrangler deploy produced no structured output."
             exit 1
@@ -312,9 +471,13 @@ jobs:
           echo "::notice::Deployed artifact identity: wrangler_version_id=$deploy_version_id build_id=$expected_build_id kpi_sha256=$expected_kpi_sha256"
         env:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          GROQ_API_KEY: ${{ secrets.GROQ_API_KEY }}
+          DEPLOY_EVENT_NAME: ${{ github.event_name }}
+          DEPLOY_REMEDIATION_INPUT: ${{ inputs.remediate_unprovenanced_live || false }}
 
       - name: Smoke data health KPI
-        if: ${{ env.SUPERSEDED != 'true' }}
+        if: ${{ env.DEPLOY_DEFERRED != 'true' }}
+        working-directory: 100xfenok-next
         run: |
           set -euo pipefail
 
@@ -339,15 +502,18 @@ jobs:
           matched=false
           observed_build_id="unavailable"
           observed_kpi_sha256="unavailable"
+          verify_header="$(node ../scripts/lib/live-request-headers.mjs --print)"
           while [ "$SECONDS" -le "$deadline" ]; do
             attempt=$((attempt + 1))
             cache_bust="postdeploy-${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}-${attempt}-${GITHUB_SHA}"
             rm -f "$live_build_id_path" "$live_kpi_path"
             if curl -fsS --connect-timeout 5 --max-time 15 \
               -H 'Cache-Control: no-cache, no-store' -H 'Pragma: no-cache' \
+              -H "x-fenok-verify: $verify_header" \
               "$base_url/BUILD_ID?cb=$cache_bust" -o "$live_build_id_path" \
               && curl -fsS --connect-timeout 5 --max-time 15 \
                 -H 'Cache-Control: no-cache, no-store' -H 'Pragma: no-cache' \
+                -H "x-fenok-verify: $verify_header" \
                 "$base_url/data/admin/fenok-data-health-kpi.json?cb=$cache_bust" \
                 -o "$live_kpi_path"; then
               observed_build_id="$(tr -d '\r\n' < "$live_build_id_path")"
@@ -374,89 +540,30 @@ jobs:
           fi
 
           echo "::notice::DEPLOYMENT IDENTITY MATCH: wrangler_version_id=$DEPLOY_VERSION_ID expected_build_id=$EXPECTED_BUILD_ID live_build_id=$observed_build_id expected_kpi_sha256=$EXPECTED_KPI_SHA256 live_kpi_sha256=$observed_kpi_sha256 attempts=$attempt"
-          node -e 'const fs=require("fs"); const p=JSON.parse(fs.readFileSync(0,"utf8")); const okSchema = p.schema_version === "fenok-data-health-kpi/v1" || p.schema_version === "fenok-data-health-kpi/v2"; const topStatusOk = p.status === "ready" || p.status === "degraded"; const integrity = p.deployment_integrity || {}; if (!okSchema || !topStatusOk || (p.schema_version === "fenok-data-health-kpi/v2" && integrity.status !== "ready")) { console.error(JSON.stringify({schema_version:p.schema_version,status:p.status,deployment_integrity:integrity.status,integrity_blockers:integrity.blocker_count})); process.exit(1); } if (p.schema_version === "fenok-data-health-kpi/v2") { const r = p.runtime || {}; const cadenceOk = r.verdict === "ready" || r.verdict === "degraded"; if (!r.built_at || !cadenceOk || r.fresh !== true || r.hard_age_ok !== true) { console.error("KPI v2 producer freshness (strict, Phase B): " + JSON.stringify({built_at:r.built_at, verdict:r.verdict, slot_status:r.slot_status, fresh:r.fresh, hard_age_ok:r.hard_age_ok, missed_slot_count:r.missed_slot_count, recovered_missed_slot_count:r.recovered_missed_slot_count, unrecovered_missed_slot_count:r.unrecovered_missed_slot_count})); process.exit(1); } if (p.status === "degraded") console.warn("::warning:: KPI v2 degraded lanes: " + p.status_message); if (r.verdict === "degraded") console.warn("::warning:: KPI v2 recovered cadence miss: " + r.status_message); console.log(JSON.stringify({ok:true, schema:p.schema_version, status:p.status, status_message:p.status_message, deployment_integrity:integrity.status, degraded_lanes:(p.lanes||[]).filter(l=>l.status==="degraded").map(l=>({id:l.id,message:l.status_message})), built_at:r.built_at, verdict:r.verdict, slot_status:r.slot_status, runtime_status_message:r.status_message, fresh:r.fresh, hard_age_ok:r.hard_age_ok, missed_slot_count:r.missed_slot_count, recovered_missed_slot_count:r.recovered_missed_slot_count, unrecovered_missed_slot_count:r.unrecovered_missed_slot_count}, null, 2)); } else { console.log(JSON.stringify({ok:true, generated_at:p.generated_at, status:p.status, lanes:p.totals?.lanes}, null, 2)); }' < "$live_kpi_path"
+          node -e 'const fs=require("fs"); const p=JSON.parse(fs.readFileSync(0,"utf8")); const okSchema = ["fenok-data-health-kpi/v3","fenok-data-health-kpi/v4"].includes(p.schema_version); const validTimestamp = typeof p.generated_at === "string" && Number.isFinite(Date.parse(p.generated_at)); const validSets = Array.isArray(p.sets) && p.sets.every(s => s && typeof s.set === "string" && (s.served_path === null || typeof s.served_path === "string") && (s.newest_source_date === null || /^\d{4}-\d{2}-\d{2}$/.test(s.newest_source_date)) && (s.max_age === null || typeof s.max_age === "string") && ["fresh","delayed","stopped","unknown"].includes(s.status) && (!Object.hasOwn(s,"serving_lkg") || typeof s.serving_lkg === "boolean")); if (!okSchema || !validTimestamp || !validSets) { console.error(JSON.stringify({schema_version:p.schema_version,generated_at:p.generated_at,sets:Array.isArray(p.sets)})); process.exit(1); } const counts = Object.fromEntries(["fresh","delayed","stopped","unknown"].map(status => [status,p.sets.filter(s => s.status === status).length])); console.log(JSON.stringify({ok:true,schema:p.schema_version,generated_at:p.generated_at,sets:p.sets.length,status_counts:counts},null,2));' < "$live_kpi_path"
 
-          node scripts/check-live-deploy-provenance.mjs --post
+          node ../scripts/check-live-deploy-provenance.mjs --post
 
-      - name: Smoke StockAnalysis routes
-        if: ${{ env.SUPERSEDED != 'true' }}
+      - name: Smoke SEC 13F private boundary
+        if: ${{ env.DEPLOY_DEFERRED != 'true' }}
+        run: node scripts/test-sec13f-live-privacy.mjs --base-url https://100xfenok.etloveaui.workers.dev
+
+      - name: Smoke anonymous admin static boundary
+        if: ${{ env.DEPLOY_DEFERRED != 'true' }}
         working-directory: 100xfenok-next
-        run: |
-          set -euo pipefail
-          observed_build_id="unavailable"
-          for attempt in 1 2 3; do
-            if observed_build_id="$(curl -fsS --connect-timeout 5 --max-time 15 \
-              -H 'Cache-Control: no-cache, no-store' -H 'Pragma: no-cache' \
-              "$QA_BASE_URL/BUILD_ID?cb=stockanalysis-${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}-${attempt}-${GITHUB_SHA}" \
-              | tr -d '\r\n')" && [ "$observed_build_id" = "$EXPECTED_BUILD_ID" ]; then
-              break
-            fi
-            echo "::warning::StockAnalysis smoke rejected bundle identity on attempt $attempt: expected_build_id=$EXPECTED_BUILD_ID observed_build_id=$observed_build_id"
-            [ "$attempt" -eq 3 ] || sleep 5
-          done
-          if [ "$observed_build_id" != "$EXPECTED_BUILD_ID" ]; then
-            echo "::error::StockAnalysis smoke cannot prove it is reading this deploy: wrangler_version_id=$DEPLOY_VERSION_ID expected_build_id=$EXPECTED_BUILD_ID observed_build_id=$observed_build_id"
-            exit 1
-          fi
-          echo "::notice::StockAnalysis smoke bundle match: wrangler_version_id=$DEPLOY_VERSION_ID build_id=$observed_build_id"
-          npm run qa:stockanalysis
         env:
-          QA_BASE_URL: https://100xfenok.etloveaui.workers.dev
-          QA_STOCKANALYSIS_RETRIES: 3
-          QA_STOCKANALYSIS_RETRY_DELAY_MS: 10000
-
-      - name: Smoke route iframe public contract
-        if: ${{ env.SUPERSEDED != 'true' }}
-        working-directory: 100xfenok-next
-        run: |
-          set -euo pipefail
-          observed_build_id="unavailable"
-          for attempt in 1 2 3; do
-            if observed_build_id="$(curl -fsS --connect-timeout 5 --max-time 15 \
-              -H 'Cache-Control: no-cache, no-store' -H 'Pragma: no-cache' \
-              "$QA_BASE_URL/BUILD_ID?cb=iframe-public-${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}-${attempt}-${GITHUB_SHA}" \
-              | tr -d '\r\n')" && [ "$observed_build_id" = "$EXPECTED_BUILD_ID" ]; then
-              break
-            fi
-            echo "::warning::Public iframe smoke rejected bundle identity on attempt $attempt: expected_build_id=$EXPECTED_BUILD_ID observed_build_id=$observed_build_id"
-            [ "$attempt" -eq 3 ] || sleep 5
-          done
-          if [ "$observed_build_id" != "$EXPECTED_BUILD_ID" ]; then
-            echo "::error::Public iframe smoke cannot prove it is reading this deploy: wrangler_version_id=$DEPLOY_VERSION_ID expected_build_id=$EXPECTED_BUILD_ID observed_build_id=$observed_build_id"
-            exit 1
-          fi
-          echo "::notice::Public iframe smoke bundle match: wrangler_version_id=$DEPLOY_VERSION_ID build_id=$observed_build_id"
-          npm run qa:route-iframe-contract
-        env:
-          QA_BASE_URL: https://100xfenok.etloveaui.workers.dev
           QA_ROUTE_IFRAME_ALLOW_REMOTE: "1"
-          QA_ROUTE_IFRAME_SCOPE: public
+        run: node scripts/check-route-iframe-contract.mjs --base-url https://100xfenok.etloveaui.workers.dev --scope admin-static
 
-      - name: Smoke route iframe admin contract
-        if: ${{ env.QA_ADMIN_SMOKE_AVAILABLE == 'true' && env.SUPERSEDED != 'true' }}
+      # B-346: production admin login had only source-contract coverage. This
+      # logs in with the QA credential and opens every admin iframe route. A
+      # failure means the live admin login or an admin route is broken, or the
+      # stored QA password no longer matches production.
+      - name: Smoke admin login and admin routes
+        if: ${{ env.DEPLOY_DEFERRED != 'true' && env.QA_ADMIN_SMOKE_AVAILABLE == 'true' }}
         working-directory: 100xfenok-next
-        run: |
-          set -euo pipefail
-          observed_build_id="unavailable"
-          for attempt in 1 2 3; do
-            if observed_build_id="$(curl -fsS --connect-timeout 5 --max-time 15 \
-              -H 'Cache-Control: no-cache, no-store' -H 'Pragma: no-cache' \
-              "$QA_BASE_URL/BUILD_ID?cb=iframe-admin-${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}-${attempt}-${GITHUB_SHA}" \
-              | tr -d '\r\n')" && [ "$observed_build_id" = "$EXPECTED_BUILD_ID" ]; then
-              break
-            fi
-            echo "::warning::Admin iframe smoke rejected bundle identity on attempt $attempt: expected_build_id=$EXPECTED_BUILD_ID observed_build_id=$observed_build_id"
-            [ "$attempt" -eq 3 ] || sleep 5
-          done
-          if [ "$observed_build_id" != "$EXPECTED_BUILD_ID" ]; then
-            echo "::error::Admin iframe smoke cannot prove it is reading this deploy: wrangler_version_id=$DEPLOY_VERSION_ID expected_build_id=$EXPECTED_BUILD_ID observed_build_id=$observed_build_id"
-            exit 1
-          fi
-          echo "::notice::Admin iframe smoke bundle match: wrangler_version_id=$DEPLOY_VERSION_ID build_id=$observed_build_id"
-          npm run qa:route-iframe-contract
         env:
-          QA_BASE_URL: https://100xfenok.etloveaui.workers.dev
-          QA_ROUTE_IFRAME_ALLOW_REMOTE: "1"
-          QA_ROUTE_IFRAME_SCOPE: admin
           QA_ADMIN_PASSWORD: ${{ secrets.QA_ADMIN_PASSWORD }}
           QA_ADMIN_SESSION_COOKIE: ${{ secrets.QA_ADMIN_SESSION_COOKIE }}
+          QA_ROUTE_IFRAME_ALLOW_REMOTE: "1"
+        run: node scripts/check-route-iframe-contract.mjs --base-url https://100xfenok.etloveaui.workers.dev --scope admin

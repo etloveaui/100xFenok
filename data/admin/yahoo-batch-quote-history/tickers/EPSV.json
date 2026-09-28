@@ -1,0 +1,115 @@
+{
+  "attempts": [
+    {
+      "attempts_used": 1,
+      "event_name": "schedule",
+      "failures": [],
+      "latency_ms": 1023,
+      "natural": true,
+      "observed_at": "2026-07-23T23:19:22Z",
+      "outcome": "fresh",
+      "run_attempt": 1,
+      "run_id": "30051682457",
+      "schedule": "0 22 * * 4",
+      "shard": "4/6"
+    },
+    {
+      "attempts_used": 1,
+      "event_name": "schedule",
+      "failures": [],
+      "latency_ms": 783,
+      "natural": true,
+      "observed_at": "2026-08-06T12:16:00Z",
+      "outcome": "fresh",
+      "run_attempt": 1,
+      "run_id": "31100540842",
+      "schedule": "7 10 * * 0-5",
+      "shard": "53/72"
+    },
+    {
+      "attempts_used": 1,
+      "event_name": "schedule",
+      "failures": [],
+      "latency_ms": 586,
+      "natural": true,
+      "observed_at": "2026-08-09T08:59:39Z",
+      "outcome": "fresh",
+      "run_attempt": 1,
+      "run_id": "31304762930",
+      "schedule": "7 8 * * 0-5",
+      "shard": "4/72"
+    },
+    {
+      "attempts_used": 1,
+      "event_name": "workflow_dispatch",
+      "failures": [],
+      "latency_ms": 461,
+      "natural": false,
+      "observed_at": "2026-09-28T03:11:20Z",
+      "outcome": "fresh",
+      "run_attempt": 1,
+      "run_id": "36367829153",
+      "schedule": "",
+      "shard": ""
+    }
+  ],
+  "current": {
+    "fetched_at": "2026-09-28T03:23:18Z",
+    "history_as_of": "2026-09-25",
+    "path": "data/yf/finance/EPSV.json",
+    "payload_sha256": "b3e0916fd3134b2f47847e30a7f870a39a0c3623cf4de7097daabc95a1a1557d",
+    "quote_as_of": "2026-09-25T19:59:51Z",
+    "source_as_of": "2026-09-25"
+  },
+  "discovered_from": [
+    "stockanalysis_etf"
+  ],
+  "last_attempt": {
+    "attempts_used": 1,
+    "event_name": "workflow_dispatch",
+    "failures": [],
+    "latency_ms": 461,
+    "natural": false,
+    "observed_at": "2026-09-28T03:11:20Z",
+    "outcome": "fresh",
+    "run_attempt": 1,
+    "run_id": "36367829153",
+    "schedule": "",
+    "shard": ""
+  },
+  "lkg": {
+    "fetched_at": "2026-08-09T09:01:46Z",
+    "history_as_of": "2026-08-07",
+    "path": "data/admin/yahoo-batch-quote-history/lkg/EPSV.json",
+    "payload_sha256": "b68e1d7f9cc57ad831d50dd1b503972dc372ed6f82f08db352e6096fda2ffca5",
+    "quote_as_of": "2026-08-07T15:53:20Z",
+    "source_as_of": "2026-08-07"
+  },
+  "promotion_contract": "provider_observation/v2",
+  "provider_observation": {
+    "event_name": "workflow_dispatch",
+    "history_as_of": "2026-09-25",
+    "observed_at": "2026-09-28T03:11:20Z",
+    "payload_sha256": "c07a1adc2a7fa5bb44ba36824ab2674c908dc02c93eefee20b77c86c43eb3f15",
+    "quote_as_of": "2026-09-25T19:59:51Z",
+    "run_attempt": 1,
+    "run_id": "36367829153",
+    "schema_version": "provider_observation/v2",
+    "source_as_of": "2026-09-25"
+  },
+  "resolution_state": "fresh_primary",
+  "retry": false,
+  "schema_version": "yahoo-batch-quote-history-state/v1",
+  "stale": {
+    "age_business_days": 8,
+    "classified_at": "2026-08-19T23:42:29Z",
+    "classified_run_id": "32314261503",
+    "expected_resolution": "next_natural_yahoo_run",
+    "max_business_days": 6,
+    "message": "EPSV holds LKG because Yahoo source date 2026-08-07 is 8 business days old, beyond the 6-day bound; it will retry on the next natural Yahoo run.",
+    "reason": "source_age_exceeds_lane_bound",
+    "source_as_of": "2026-08-07"
+  },
+  "ticker": "EPSV",
+  "updated_at": "2026-09-28T03:11:20Z"
+}

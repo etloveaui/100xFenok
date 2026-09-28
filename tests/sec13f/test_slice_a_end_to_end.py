@@ -42,7 +42,7 @@ class SliceAEndToEndTest(unittest.TestCase):
             summary_metadata_extra=self.fixture_input["summary_metadata_extra"],
         )
 
-    def test_full_sixty_investor_seventy_three_payload_oracle_parity(self) -> None:
+    def test_full_sixty_three_investor_seventy_six_payload_oracle_parity(self) -> None:
         rebuilt_input = build_fixture_input()
         self.assertEqual(rebuilt_input, self.fixture_input)
         first = rebuilt_input["investors_data"][sorted(rebuilt_input["investors_data"])[0]]["filings"][0]
@@ -50,6 +50,30 @@ class SliceAEndToEndTest(unittest.TestCase):
             (first["aum_total"], first["reported_holdings_count"], first["filtered_out_count"], first["holdings_count"]),
             (2_001_000, 2, 1, 1),
         )
+        ackman = rebuilt_input["investors_data"]["ackman"]
+        self.assertEqual(
+            (ackman["cik"], ackman["cik_from"], ackman["cik_history"]),
+            (
+                "0002026053",
+                "2025-Q3",
+                [{"cik": "0001336528", "through": "2025-Q2"}],
+            ),
+        )
+        ackman_by_quarter = {filing["quarter"]: filing for filing in ackman["filings"]}
+        for quarter, expected_cik in (
+            ("2025-Q2", "0001336528"),
+            ("2025-Q3", "0002026053"),
+            ("2025-Q4", "0002026053"),
+            ("2026-Q1", "0002026053"),
+        ):
+            filing = ackman_by_quarter[quarter]
+            self.assertEqual(filing["source_cik"], expected_cik)
+            self.assertTrue(
+                all(
+                    accession.startswith(f"{expected_cik}-")
+                    for accession in filing["accession_numbers"]
+                )
+            )
         with tempfile.TemporaryDirectory() as temporary_root:
             output_root = Path(temporary_root)
             manifest = self._generate(rebuilt_input["investors_data"], output_root)
@@ -62,17 +86,31 @@ class SliceAEndToEndTest(unittest.TestCase):
                 public_tree_after=tree_digest(ROOT / "100xfenok-next" / "public" / "data" / "sec-13f"),
                 platform_commit="fixture-test",
             )
+            generated_ackman = json.loads(
+                (output_root / "investors" / "ackman.json").read_text(encoding="utf-8")
+            )["investor"]
 
         self.assertEqual(report["result"], "pass")
-        self.assertEqual((report["investors_expected"], report["investors_compared"]), (60, 60))
-        self.assertEqual((report["outputs_expected"], report["outputs_compared"]), (73, 73))
-        self.assertEqual(report["normalized_match_count"], 73)
+        self.assertEqual((report["investors_expected"], report["investors_compared"]), (63, 63))
+        self.assertEqual((report["outputs_expected"], report["outputs_compared"]), (76, 76))
+        self.assertEqual(report["normalized_match_count"], 76)
         self.assertEqual(report["field_mismatches"], [])
-        self.assertEqual(len(report["accessions_compared"]), 480)
+        self.assertEqual(len(report["accessions_compared"]), 504)
         self.assertEqual(len(report["fixture_cases_passed"]), 6)
         self.assertEqual(len(report["fixture_cases_blocked"]), 3)
         self.assertEqual(report["canonical_tree_before"], report["canonical_tree_after"])
         self.assertEqual(report["public_tree_before"], report["public_tree_after"])
+        generated_by_quarter = {
+            filing["quarter"]: filing for filing in generated_ackman["filings"]
+        }
+        self.assertEqual(
+            (
+                generated_ackman["cik"],
+                generated_by_quarter["2025-Q2"]["source_cik"],
+                generated_by_quarter["2025-Q3"]["source_cik"],
+            ),
+            ("0002026053", "0001336528", "0002026053"),
+        )
 
     def test_holding_value_and_accession_mutations_are_field_addressable_red(self) -> None:
         first = sorted(self.fixture_input["investors_data"])[0]

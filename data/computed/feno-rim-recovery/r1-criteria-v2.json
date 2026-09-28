@@ -1,0 +1,78 @@
+{
+  "schema_version": "feno_rim_recovery_r1_criteria.v2",
+  "phase": "R1",
+  "supersedes": "r1-criteria-v1.1.json (sha 901a5991d081b2b7392f052435a68c59ce7f6267160fcdc23b8cd9c975b19d67) - full re-freeze before any result, absorbing red-team review fh-20260807-036 ISSUES 1-7 plus the R0-CORRECTED unit lesson",
+  "title": "Li-Mohanram (2014) mechanical earnings forecasts on a unit-consistent free EDGAR PIT panel, FY1-FY3 validation",
+  "authority": "Owner directive 2026-08-07 sections 5-6, 14. DEC-291. Public surface stays KEEP_QUARANTINED.",
+  "literature_anchor": "Unchanged from v1: Li-Mohanram 2014 RAST, local pdf/txt in data/edgar/literature/, equations (2),(3),(7), section 3.2, Appendix A.",
+
+  "unit_basis_precommitted": {
+    "single_share_basis": "ALL per-share quantities - dependent included - are divided by year-t shares outstanding, exactly as Appendix A defines ((ib-spi)_{t+tau} / cshot with cshot = year-t shares). The dependent is never divided by year-(t+tau) shares (red-team ISSUE 2 second manifestation).",
+    "share_basis_consistency": "Year-t shares come from EDGAR facts (dei EntityCommonStockSharesOutstanding union us-gaap CommonStockSharesOutstanding, earliest-filed-per-period, filed <= the June-30 origin) selected as the latest usable period at the origin. A firm-year with no usable share fact at origin is excluded from the pool.",
+    "price_basis_consistency": "Error scaling uses origin-date-basis price: Yahoo v8 chart closes are split-adjusted to today, so origin-basis close = today-basis close / product(splits dated after the origin date), with the splits map fetched per symbol via chart events=splits over the full available range (bounded 1990-01-01..today). This mirrors the R0-CORRECTED F rule on the price leg (red-team point 5: the unit-consistency assertion must cover the Yahoo series).",
+    "unit_consistency_assertions_gate": [
+      "Price continuity: for at least AAPL (2020-08-31, 4:1) and NVDA (2021-07-20, 4:1; 2024-06-10, 10:1), the fetched split-adjusted close series shows no jump exceeding 3% across the split date AND the fetched splits map contains the expected entries",
+      "Per-share continuity: for at least one firm with a split between fiscal years t and t+tau inside the evaluation window, the basis-aligned dependent eps_{t+tau} (year-t shares) must not jump by the split factor relative to eps_t - i.e., alignment divides by the factor; assert the ratio of raw per-(t+tau)-share to per-(t)-share earnings equals the split factor within 3% on that cell",
+      "Coverage floor: price-covered share of the universe >= 0.95, else hard-fail the run (red-team ISSUE 3: the failure mode is all-symbol, not per-symbol)"
+    ]
+  },
+
+  "models_frozen": {
+    "RW": "eps_forecast(t+tau) = eps_t. Baseline 1.",
+    "EP": "eps(t+tau) = b0 + b1*NegE_t + b2*eps_t + b3*(NegE_t*eps_t) + e. Baseline 2.",
+    "RI": "eps(t+tau) = c0 + c1*NegE_t + c2*eps_t + c3*(NegE_t*eps_t) + c4*bps_t + c5*tacc_t + e. Primary.",
+    "expected_signs": "RI: c2>0, c4>0, c3<0, c5<0. Reported, not enforced.",
+    "hvz_note": "Not implemented (directive names RW+EP). Declared.",
+    "estimation": "Pooled OLS per tau in {1,2,3}, 10-year trailing pool, firm-year rows with all regressors available; forecast requires non-missing regressors at t; missing TACC -> 0 flagged (paper).",
+    "pool_definition": "ISSUE 4 resolved: for origin June-30 of year Y and horizon tau, the estimation pool is the set of firm-year pairs (t, t+tau) where BOTH the base fiscal year t and the dependent fiscal year t+tau have annual facts FILED <= June-30 of Y (the origin - never the evaluation cutoff), and the base period_end lies between April 1 of Y-10 and March 31 of Y (the paper's 10-year trailing window in its own FYE convention, section 3.2 / line 454). Self-enforcing rule: any fact with filed > origin enters nothing in estimation. The live forecast at the origin uses base year t* = the firm's latest fiscal year usable at origin (FYE guard applied) with regressors at t*; its realized dependent (t*+tau) is fetched under the evaluation cutoff 2026-08-07 and is an outcome, not an estimation input.",
+    "fye_rule": "Unchanged from v1 (paper line 454 restatement, cleared by red team).",
+    "winsorization": "All continuous variables winsorized at 1/99 within each fiscal year from the estimation pool (paper). ISSUE 6 resolved: forecast rows at fiscal year t outside the pool's year range take the boundaries of the most recent pool year (declared rule; boundaries never use data filed after the origin)."
+  },
+
+  "variable_definitions_edgar_mapping": {
+    "earnings_E": "Unchanged from v1.1: primary IncomeLossFromContinuingOperationsNetOfTaxAttributableToReportingEntity, fallback NetIncomeLoss, recorded per firm-year. Declared deviation: SPI not separable on EDGAR.",
+    "spi_deviation_handling": "ISSUE 5 resolved by advance declaration: the gate is measured on a construction that includes special items (the paper footnote covers among-model rank order, not RI-vs-RW). Mitigation pre-committed: report the gate on (i) full sample, (ii) loss-firm subsample, (iii) large-unusual-items-excluded subsample, where unusual = RestructuringCharges + GoodwillImpairmentLoss + AssetImpairmentLoss (any present) exceeding 1% of total assets. RW's structural exposure to SPI (forecast = E_t carried at full weight) is stated in the artifact.",
+    "book_B": "StockholdersEquity - PreferredStockValue (preferred missing -> 0), / year-t shares.",
+    "shares": "Per unit_basis_precommitted.",
+    "tacc": "ISSUE 7 + red-team telescoping verified by both parties: dWC + dNCO + dFIN collapses to TACC_t = [ (A - CHE - L + IVST - PSTK)_t - (A - CHE - L + IVST - PSTK)_{t-1} ] / shares_t. Tags: Assets, CashAndCashEquivalentsAtCarryingValue, Liabilities, ShortTermInvestments (fallback MarketableSecuritiesCurrent, missing -> 0), PreferredStockValue (missing -> 0). IVAO and all debt tags drop out - no proxy needed, no DLTT fallback.",
+    "fact_selection": "Annual facts only: form in {10-K, 10-K/A}, fp=FY; PIT: filed <= as-of, earliest filed per period (e2 rule, red-team cleared).",
+    "NegE": "indicator E_t < 0"
+  },
+
+  "universe_precommitted": "Unchanged from v1.1: slickcharts S&P500 (2026-08-02, 503) union rim-dow 30; symbol->CIK via company_tickers.json with dot-to-dash normalization and the AEP fallback; survivorship bound stated; minimum pool 300 firm-years; all industries; SIC from SEC submissions metadata (fetch stage 2 already run).",
+  "sample_precommitted": "Unchanged from v1.1: origins June 30 of 2019-2023; tau 1..3; origin 2023 tau=3 evaluated on available actuals only; no imputation; evaluation actuals cutoff 2026-08-07.",
+
+  "price_source": {
+    "source": "Yahoo v8 chart API per r1-criteria-v1.1 (repo precedent), fetched with events=splits so the same fetch yields closes and the splits map used for origin-basis conversion. Stooq remains unusable (PoW challenge) - not retried.",
+    "scaling": "Forecast error = actual - forecast (per year-t shares), scaled by origin-basis close (last close on/before June 30 of origin year, 10-trading-day tolerance). Missing price -> symbol excluded from price-scaled metrics and counted; coverage floor 0.95 hard-fails the run."
+  },
+
+  "validation_design": {
+    "metrics_per_tau": ["mean signed bias (price-scaled)", "MAE (price-scaled)", "median AE (price-scaled)", "count", "loss-firm share"],
+    "buckets": ["loss firms", "size terciles by total assets (declared proxy)", "10 SIC groups"],
+    "subsamples": ["full", "loss-only", "large-unusual-excluded (per spi_deviation_handling)"],
+    "comparisons": "RI vs RW, RI vs EP, EP vs RW on every metric/bucket/subsample",
+    "necessary_and_sufficient_declared": {
+      "necessary_to_proceed_to_R2": "RI price-scaled MAE < RW price-scaled MAE at BOTH tau=1 and tau=2 on the FULL sample",
+      "sufficient_to_proceed_to_R2": "the necessary condition alone",
+      "model_selection_for_R2_input": "whichever of RI/EP has lower average price-scaled MAE across tau=1..3 (full sample) is primary for R2; the other is sensitivity",
+      "no_veto_legs": "No additional leg can veto the gate; subsample and bucket results are diagnostics and must be reported in full regardless of direction (red-team fh-023/fh-036 asks)",
+      "if_ri_fails_rw": "Stop; do not embed these forecasts in R2; report cause. Recovery proceeds to the data decision (C) or retirement (D) on that evidence (directive section 5.3)."
+    },
+    "coefficient_diagnostics": "Per-tau pooled coefficients with OLS se and expected-sign comparison; inversions reported, not gated."
+  },
+
+  "prohibitions": [
+    "No universe, window, metric, scaling, basis rule or source change after results are observed.",
+    "No paid data, account creation, login (directive sections 3, 8).",
+    "No Oracle data in the deployable path.",
+    "No public number republication; quarantine untouched.",
+    "Criteria and receipt commit in a separate earlier commit than any result."
+  ],
+
+  "planned_result_paths": [
+    "data/computed/feno-rim-recovery/r1-edgar-panel.json",
+    "data/computed/feno-rim-recovery/RIM_MECHANICAL_FORECAST_VALIDATION.json"
+  ],
+  "planned_spec_doc": "data/computed/feno-rim-recovery/RIM_MECHANICAL_FORECAST_SPEC.md (deliverable 12.2, written from this criteria after the run)"
+}

@@ -12,53 +12,154 @@
       "run_id": "29224221077",
       "schedule": "",
       "shard": ""
+    },
+    {
+      "attempts_used": 1,
+      "event_name": "schedule",
+      "failures": [],
+      "latency_ms": 799,
+      "natural": true,
+      "observed_at": "2026-07-22T23:45:22Z",
+      "outcome": "fresh",
+      "run_attempt": 1,
+      "run_id": "29965324287",
+      "schedule": "0 22 * * 3",
+      "shard": "3/6"
+    },
+    {
+      "attempts_used": 1,
+      "event_name": "schedule",
+      "failures": [],
+      "latency_ms": 372,
+      "natural": true,
+      "observed_at": "2026-08-06T06:42:20Z",
+      "outcome": "fresh",
+      "run_attempt": 1,
+      "run_id": "31078091927",
+      "schedule": "7 4 * * 0-5",
+      "shard": "50/72"
+    },
+    {
+      "attempts_used": 1,
+      "event_name": "schedule",
+      "failures": [],
+      "latency_ms": 1120,
+      "natural": true,
+      "observed_at": "2026-08-09T05:15:44Z",
+      "outcome": "fresh",
+      "run_attempt": 1,
+      "run_id": "31296241377",
+      "schedule": "7 4 * * 0-5",
+      "shard": "2/72"
+    },
+    {
+      "attempts_used": 1,
+      "event_name": "schedule",
+      "failures": [],
+      "latency_ms": 408,
+      "natural": true,
+      "observed_at": "2026-08-12T15:08:24Z",
+      "outcome": "fresh",
+      "run_attempt": 1,
+      "run_id": "31610461024",
+      "schedule": "7 14 * * 0-5",
+      "shard": "43/72"
+    },
+    {
+      "attempts_used": 1,
+      "event_name": "workflow_dispatch",
+      "failures": [],
+      "latency_ms": 413,
+      "natural": false,
+      "observed_at": "2026-09-28T01:17:59Z",
+      "outcome": "fresh",
+      "run_attempt": 1,
+      "run_id": "36365270594",
+      "schedule": "",
+      "shard": ""
+    },
+    {
+      "attempts_used": 1,
+      "error": "recovery_not_advanced_by_provider",
+      "event_name": "workflow_dispatch",
+      "failures": [],
+      "latency_ms": 763,
+      "natural": false,
+      "observed_at": "2026-09-28T07:38:17Z",
+      "outcome": "failed",
+      "run_attempt": 1,
+      "run_id": "36369581504",
+      "schedule": "",
+      "shard": ""
     }
   ],
   "current": {
-    "fetched_at": "2026-06-30T23:55:17Z",
-    "history_as_of": "2026-06-30",
+    "fetched_at": "2026-09-28T01:36:23Z",
+    "history_as_of": "2026-09-25",
     "path": "data/admin/yahoo-batch-quote-history/lkg/CJUN.json",
-    "payload_sha256": "c8175ed524d4bfe27c659606b86e7ad0e65c8cb02004d26433cbf2d70bc40ee3",
-    "quote_as_of": null,
-    "source_as_of": "2026-06-30"
+    "payload_sha256": "53967b33aa1c8f6435fee5af47dccf131dc2bca4b02a3ef12b1f1a7e757df547",
+    "quote_as_of": "2026-09-01T17:21:56Z",
+    "source_as_of": "2026-09-01T17:21:56Z"
   },
   "discovered_from": [
     "stockanalysis_etf"
   ],
   "last_attempt": {
-    "attempts_used": 0,
+    "attempts_used": 1,
+    "error": "recovery_not_advanced_by_provider",
     "event_name": "workflow_dispatch",
     "failures": [],
-    "latency_ms": 0,
+    "latency_ms": 763,
     "natural": false,
-    "observed_at": "2026-07-13T04:33:56Z",
-    "outcome": "skipped_fresh",
+    "observed_at": "2026-09-28T07:38:17Z",
+    "outcome": "failed",
     "run_attempt": 1,
-    "run_id": "29224221077",
+    "run_id": "36369581504",
     "schedule": "",
     "shard": ""
   },
+  "latest_promotion_deferral": {
+    "event_name": "workflow_dispatch",
+    "observed_at": "2026-09-28T07:38:17Z",
+    "provider_history_as_of": "2026-09-25",
+    "provider_quote_as_of": "2026-09-01T17:21:56Z",
+    "reason": "recovery_not_advanced_by_provider",
+    "run_attempt": 1,
+    "run_id": "36369581504"
+  },
   "lkg": {
-    "fetched_at": "2026-06-30T23:55:17Z",
-    "history_as_of": "2026-06-30",
+    "fetched_at": "2026-09-28T01:36:23Z",
+    "history_as_of": "2026-09-25",
     "path": "data/admin/yahoo-batch-quote-history/lkg/CJUN.json",
-    "payload_sha256": "c8175ed524d4bfe27c659606b86e7ad0e65c8cb02004d26433cbf2d70bc40ee3",
-    "quote_as_of": null,
-    "source_as_of": "2026-06-30"
+    "payload_sha256": "53967b33aa1c8f6435fee5af47dccf131dc2bca4b02a3ef12b1f1a7e757df547",
+    "quote_as_of": "2026-09-01T17:21:56Z",
+    "source_as_of": "2026-09-01T17:21:56Z"
+  },
+  "promotion_contract": "provider_observation/v2",
+  "provider_observation": {
+    "event_name": "workflow_dispatch",
+    "history_as_of": "2026-09-25",
+    "observed_at": "2026-09-28T01:17:59Z",
+    "payload_sha256": "515e224cb625630696ada604d2e6b3569653e02a1e0d72162af6cf131360cefe",
+    "quote_as_of": "2026-09-01T17:21:56Z",
+    "run_attempt": 1,
+    "run_id": "36365270594",
+    "schema_version": "provider_observation/v2",
+    "source_as_of": "2026-09-01T17:21:56Z"
   },
   "resolution_state": "lkg_primary",
   "retry": true,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "stale": {
-    "age_business_days": 8,
-    "classified_at": "2026-07-13T04:33:56Z",
-    "classified_run_id": "29224221077",
+    "age_business_days": 18,
+    "classified_at": "2026-09-28T03:11:20Z",
+    "classified_run_id": "36367829153",
     "expected_resolution": "next_natural_yahoo_run",
     "max_business_days": 6,
-    "message": "CJUN holds LKG because Yahoo source date 2026-06-30 is 8 business days old, beyond the 6-day bound; it will retry on the next natural Yahoo run.",
+    "message": "CJUN holds LKG because Yahoo source date 2026-09-01T17:21:56Z is 18 business days old, beyond the 6-day bound; it will retry on the next natural Yahoo run.",
     "reason": "source_age_exceeds_lane_bound",
-    "source_as_of": "2026-06-30"
+    "source_as_of": "2026-09-01T17:21:56Z"
   },
   "ticker": "CJUN",
-  "updated_at": "2026-07-13T04:33:56Z"
+  "updated_at": "2026-09-28T07:38:17Z"
 }

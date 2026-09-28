@@ -25,65 +25,91 @@
       "run_id": "29875696340",
       "schedule": "0 22 * * 2",
       "shard": "2/6"
+    },
+    {
+      "attempts_used": 1,
+      "event_name": "schedule",
+      "failures": [],
+      "latency_ms": 501,
+      "natural": true,
+      "observed_at": "2026-08-07T09:14:45Z",
+      "outcome": "fresh",
+      "run_attempt": 1,
+      "run_id": "31164940276",
+      "schedule": "7 8 * * 0-5",
+      "shard": "64/72"
+    },
+    {
+      "attempts_used": 1,
+      "event_name": "workflow_dispatch",
+      "failures": [],
+      "latency_ms": 416,
+      "natural": false,
+      "observed_at": "2026-09-28T01:17:59Z",
+      "outcome": "fresh",
+      "run_attempt": 1,
+      "run_id": "36365270594",
+      "schedule": "",
+      "shard": ""
     }
   ],
   "current": {
-    "fetched_at": "2026-07-21T23:05:30Z",
-    "history_as_of": "2026-07-21",
+    "fetched_at": "2026-09-28T01:31:09Z",
+    "history_as_of": "2026-09-25",
     "path": "data/yf/finance/BRRR.json",
-    "payload_sha256": "6a9f5b65a802a5ac76fccf98f105bb103e27408a5c54f2728c3dc23cdc49d6b8",
-    "quote_as_of": "2026-07-21T20:00:01Z",
-    "source_as_of": "2026-07-21"
+    "payload_sha256": "5e1db2e9230dad02efbc94c6d6343bdf8259aa452c4020cc0430dd06cb7f8ba5",
+    "quote_as_of": "2026-09-25T20:00:00Z",
+    "source_as_of": "2026-09-25"
   },
   "discovered_from": [
     "stockanalysis_etf"
   ],
   "last_attempt": {
     "attempts_used": 1,
-    "event_name": "schedule",
+    "event_name": "workflow_dispatch",
     "failures": [],
-    "latency_ms": 1218,
-    "natural": true,
-    "observed_at": "2026-07-21T23:04:26Z",
+    "latency_ms": 416,
+    "natural": false,
+    "observed_at": "2026-09-28T01:17:59Z",
     "outcome": "fresh",
     "run_attempt": 1,
-    "run_id": "29875696340",
-    "schedule": "0 22 * * 2",
-    "shard": "2/6"
+    "run_id": "36365270594",
+    "schedule": "",
+    "shard": ""
   },
   "lkg": {
-    "fetched_at": "2026-06-29T23:09:13Z",
-    "history_as_of": "2026-06-29",
+    "fetched_at": "2026-08-07T09:16:15Z",
+    "history_as_of": "2026-08-06",
     "path": "data/admin/yahoo-batch-quote-history/lkg/BRRR.json",
-    "payload_sha256": "78ca5d5e9d8ac9cefc22e1e3723cd1128bb3382893a8d00cae80b2dfe4810c22",
-    "quote_as_of": null,
-    "source_as_of": "2026-06-29"
+    "payload_sha256": "af927f1073b00726de874d6430c1bcc35c960b72d4e04399c3d3093ee14e6994",
+    "quote_as_of": "2026-08-06T20:00:00Z",
+    "source_as_of": "2026-08-06"
   },
   "promotion_contract": "provider_observation/v2",
   "provider_observation": {
-    "event_name": "schedule",
-    "history_as_of": "2026-07-21",
-    "observed_at": "2026-07-21T23:04:26Z",
-    "payload_sha256": "4e1d741418765af37e42c2a8fb4c71834997743a2286976965464ce5fa064810",
-    "quote_as_of": "2026-07-21T20:00:01Z",
+    "event_name": "workflow_dispatch",
+    "history_as_of": "2026-09-25",
+    "observed_at": "2026-09-28T01:17:59Z",
+    "payload_sha256": "1cdaab99eb1630e402bec743824cc76fa31d3cc94e2b29a3d70f25d92dd73802",
+    "quote_as_of": "2026-09-25T20:00:00Z",
     "run_attempt": 1,
-    "run_id": "29875696340",
+    "run_id": "36365270594",
     "schema_version": "provider_observation/v2",
-    "source_as_of": "2026-07-21"
+    "source_as_of": "2026-09-25"
   },
   "resolution_state": "fresh_primary",
   "retry": false,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "stale": {
     "age_business_days": 9,
-    "classified_at": "2026-07-13T04:33:56Z",
-    "classified_run_id": "29224221077",
+    "classified_at": "2026-08-19T23:42:29Z",
+    "classified_run_id": "32314261503",
     "expected_resolution": "next_natural_yahoo_run",
     "max_business_days": 6,
-    "message": "BRRR holds LKG because Yahoo source date 2026-06-29 is 9 business days old, beyond the 6-day bound; it will retry on the next natural Yahoo run.",
+    "message": "BRRR holds LKG because Yahoo source date 2026-08-06 is 9 business days old, beyond the 6-day bound; it will retry on the next natural Yahoo run.",
     "reason": "source_age_exceeds_lane_bound",
-    "source_as_of": "2026-06-29"
+    "source_as_of": "2026-08-06"
   },
   "ticker": "BRRR",
-  "updated_at": "2026-07-21T23:04:26Z"
+  "updated_at": "2026-09-28T01:17:59Z"
 }

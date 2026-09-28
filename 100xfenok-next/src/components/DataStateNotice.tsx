@@ -51,21 +51,36 @@ export default function DataStateNotice({
   state,
   className,
   showAsOf = true,
+  actionLabel,
+  onAction,
 }: {
   state: DataState;
   className?: string;
   showAsOf?: boolean;
+  actionLabel?: string;
+  onAction?: () => void;
 }) {
   const asOf = showAsOf ? formatAsOf(state.asOf) : null;
   return (
     <div
       data-testid="data-state-notice"
       data-data-state={state.status}
-      className={cx("rounded-[1.25rem] border px-4 py-3 text-xs font-semibold leading-5", noticeToneClass(state.status), className)}
+      className={cx("rounded-[1.25rem] border px-4 py-3 text-[12px] font-semibold leading-5", noticeToneClass(state.status), className)}
     >
       <span className="font-black">{state.label}</span>
       <span className="ml-2">{state.detail}</span>
       {asOf ? <span className="ml-2 whitespace-nowrap font-black tabular-nums">기준 {asOf}</span> : null}
+      {actionLabel && onAction ? (
+        <div className="mt-2">
+          <button
+            type="button"
+            onClick={onAction}
+            className="inline-flex min-h-9 items-center rounded-full border border-current px-3 text-[11px] font-black text-brand-interactive transition hover:bg-brand-interactive/5 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-interactive"
+          >
+            {actionLabel}
+          </button>
+        </div>
+      ) : null}
     </div>
   );
 }

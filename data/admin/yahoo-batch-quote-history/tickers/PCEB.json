@@ -51,66 +51,104 @@
       "run_id": "29544227703",
       "schedule": "20 23 * * 1-5",
       "shard": "4/5"
+    },
+    {
+      "attempts_used": 1,
+      "event_name": "schedule",
+      "failures": [],
+      "latency_ms": 457,
+      "natural": true,
+      "observed_at": "2026-08-04T23:07:26Z",
+      "outcome": "fresh",
+      "run_attempt": 1,
+      "run_id": "30958820437",
+      "schedule": "0 22 * * 2",
+      "shard": "2/6"
+    },
+    {
+      "attempts_used": 1,
+      "event_name": "schedule",
+      "failures": [],
+      "latency_ms": 715,
+      "natural": true,
+      "observed_at": "2026-08-10T22:52:08Z",
+      "outcome": "fresh",
+      "run_attempt": 1,
+      "run_id": "31439945275",
+      "schedule": "7 22 * * 0-5",
+      "shard": "23/72"
+    },
+    {
+      "attempts_used": 1,
+      "event_name": "workflow_dispatch",
+      "failures": [],
+      "latency_ms": 450,
+      "natural": false,
+      "observed_at": "2026-09-28T05:23:15Z",
+      "outcome": "fresh",
+      "run_attempt": 1,
+      "run_id": "36367832955",
+      "schedule": "",
+      "shard": ""
     }
   ],
   "current": {
-    "fetched_at": "2026-07-17T00:26:58Z",
-    "history_as_of": "2026-07-16",
+    "fetched_at": "2026-09-28T05:41:17Z",
+    "history_as_of": "2026-09-25",
     "path": "data/yf/finance/PCEB.json",
-    "payload_sha256": "2757078346653d0aec9290e8c1e290eb1ce40b9adf0bb3d7a6e4211eb5357d96",
-    "quote_as_of": "2026-07-16T14:23:11Z",
-    "source_as_of": "2026-07-16"
+    "payload_sha256": "7e3e496fb588a113f553d27360aaf4bf810263108f1c5e02b1cf50fcaf25e948",
+    "quote_as_of": "2026-09-25T14:01:04Z",
+    "source_as_of": "2026-09-25"
   },
   "discovered_from": [
-    "market_facts",
     "stockanalysis_etf"
   ],
   "last_attempt": {
-    "attempts_used": 0,
-    "event_name": "schedule",
+    "attempts_used": 1,
+    "event_name": "workflow_dispatch",
     "failures": [],
-    "latency_ms": 0,
-    "natural": true,
-    "observed_at": "2026-07-17T00:31:14Z",
-    "outcome": "skipped_fresh",
+    "latency_ms": 450,
+    "natural": false,
+    "observed_at": "2026-09-28T05:23:15Z",
+    "outcome": "fresh",
     "run_attempt": 1,
-    "run_id": "29544227703",
-    "schedule": "20 23 * * 1-5",
-    "shard": "4/5"
+    "run_id": "36367832955",
+    "schedule": "",
+    "shard": ""
   },
   "lkg": {
-    "fetched_at": "2026-06-18T19:27:59Z",
-    "history_as_of": "2026-06-18",
+    "fetched_at": "2026-08-10T22:55:42Z",
+    "history_as_of": "2026-08-10",
     "path": "data/admin/yahoo-batch-quote-history/lkg/PCEB.json",
-    "payload_sha256": "4b815c33d0430c4d6ac78207f1e580d2fc710d53ebdce6943d52bb9b5583b092",
-    "quote_as_of": null,
-    "source_as_of": "2026-06-18"
+    "payload_sha256": "43853a45dbd2c25a631b7a32dcd4263c9d6496c251f9f4c1552dd5e328d53eb8",
+    "quote_as_of": "2026-08-10T19:32:09Z",
+    "source_as_of": "2026-08-10"
   },
   "promotion_contract": "provider_observation/v2",
   "provider_observation": {
-    "event_name": "schedule",
-    "history_as_of": "2026-07-16",
-    "observed_at": "2026-07-17T00:24:27Z",
-    "payload_sha256": "b6a70d368f232dc49918fdc0c3236ad35b8df1490d0a3a80bfe26f631c2bcc98",
-    "quote_as_of": "2026-07-16T14:23:11Z",
+    "event_name": "workflow_dispatch",
+    "history_as_of": "2026-09-25",
+    "observed_at": "2026-09-28T05:23:15Z",
+    "payload_sha256": "d10f1169f978d2c22d38d5cc4f278c7a4d7e63735021728aded4ef0e2c87df0a",
+    "quote_as_of": "2026-09-25T14:01:04Z",
     "run_attempt": 1,
-    "run_id": "29544227703",
+    "run_id": "36367832955",
     "schema_version": "provider_observation/v2",
-    "source_as_of": "2026-07-16"
+    "source_as_of": "2026-09-25"
   },
   "resolution_state": "fresh_primary",
   "retry": false,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "stale": {
-    "age_business_days": 15,
-    "classified_at": "2026-07-13T04:33:56Z",
-    "classified_run_id": "29224221077",
+    "age_business_days": 7,
+    "classified_at": "2026-08-19T23:42:29Z",
+    "classified_run_id": "32314261503",
     "expected_resolution": "next_natural_yahoo_run",
     "max_business_days": 6,
-    "message": "PCEB holds LKG because Yahoo source date 2026-06-18 is 15 business days old, beyond the 6-day bound; it will retry on the next natural Yahoo run.",
+    "message": "PCEB holds LKG because Yahoo source date 2026-08-10 is 7 business days old, beyond the 6-day bound; it will retry on the next natural Yahoo run.",
     "reason": "source_age_exceeds_lane_bound",
-    "source_as_of": "2026-06-18"
+    "source_as_of": "2026-08-10"
   },
   "ticker": "PCEB",
-  "updated_at": "2026-07-17T00:31:14Z"
+  "updated_at": "2026-09-28T05:23:15Z"
 }

@@ -1,0 +1,114 @@
+name: Data Plane Serving Probe
+
+# Six-hour proof that every enrolled data-plane asset is served from a published
+# generation with a fresh source date. Born 2026-08-03: the enrolled URL
+# silently served the deploy-time bundled copy (valid 200, stale bytes, no
+# generation header) and only a manual probe noticed. Fallback is a designed
+# degradation; an UNOBSERVED fallback is silent staleness. This probe is the
+# observer, and it gates removing any git data copy (plan Slice 4).
+
+on:
+  schedule:
+    # Full fleet sweep: publication already verifies byte parity for every
+    # object. A six-hour serving check preserves bounded incident detection
+    # without re-reading the immutable fleet 24 times per day.
+    - cron: '41 */6 * * *'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  issues: write
+
+concurrency:
+  group: data-plane-serving-probe
+  cancel-in-progress: false
+
+jobs:
+  probe:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout probe scripts
+        uses: actions/checkout@v4
+        with:
+          sparse-checkout: |
+            scripts/ops
+            scripts/lib
+            100xfenok-next/scripts/cloud-data-plane
+            100xfenok-next/src/lib
+          sparse-checkout-cone-mode: true
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Probe enrolled assets
+        id: probe
+        continue-on-error: true
+        env:
+          PROBE_REPORT_PATH: probe-report.md
+          FENOK_VERIFY_TOKEN: ${{ secrets.FENOK_VERIFY_TOKEN }}
+        run: node scripts/ops/probe-data-plane-serving.mjs
+
+      - name: Open or update probe issue
+        if: steps.probe.outcome == 'failure'
+        env:
+          GH_TOKEN: ${{ github.token }}
+          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+        run: |
+          title="100xFenok data-plane serving probe alarm"
+          # Keep the full report in the run log, but persist only failing rows
+          # and their reasons. Repeating every OK row made one issue exceed a
+          # megabyte without adding evidence.
+          # A crashed probe writes no report at all. Letting awk die on the
+          # missing file turned 15 consecutive module-load crashes into silence
+          # and left this issue stale from 2026-08-16. A probe that could not
+          # run is itself the alert.
+          if [ ! -s probe-report.md ]; then
+            {
+              printf '%s\n\n' '[alert] The data-plane serving probe could not produce a report.'
+              printf '%s\n' 'The probe step failed before writing probe-report.md, so no asset was actually'
+              printf '%s\n' 'checked. Read the "Probe enrolled assets" step log: this is a probe fault,'
+              printf '%s\n' 'not an all-clear.'
+              printf '\n%s\n' "Observed by: $RUN_URL"
+            } > probe-issue.md
+          else
+            awk '
+              /^- FAIL / { emit=1; print; next }
+              /^- / { emit=0 }
+              emit && /^  - / { print }
+            ' probe-report.md > probe-failures.md
+            test -s probe-failures.md
+            {
+              printf '%s\n\n' '[alert] An enrolled data-plane asset is not healthy on the live Worker.'
+              cat probe-failures.md
+              printf '\n%s\n' "Observed by: $RUN_URL"
+            } > probe-issue.md
+          fi
+          existing="$(gh issue list --state open --search "$title in:title" --json number --jq '.[0].number // empty')"
+          if [ -n "$existing" ]; then
+            gh issue edit "$existing" --body-file probe-issue.md
+          else
+            gh issue create --title "$title" --body-file probe-issue.md
+          fi
+
+      # Bounded lifecycle: recovery closes the incident issue so the next
+      # incident starts a clean timeline (the pipeline alarm's eternal
+      # comment-sink issue is the counterexample this avoids).
+      - name: Close probe issue on recovery
+        if: steps.probe.outcome == 'success'
+        env:
+          GH_TOKEN: ${{ github.token }}
+          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+        run: |
+          title="100xFenok data-plane serving probe alarm"
+          existing="$(gh issue list --state open --search "$title in:title" --json number --jq '.[0].number // empty')"
+          [ -n "$existing" ] || exit 0
+          gh issue comment "$existing" --body "[all-clear] Every enrolled asset is served from a published generation with a fresh source date. Observed by: $RUN_URL"
+          gh issue close "$existing" --reason completed
+
+      # The run's conclusion is probe-machinery health, not incident state: an
+      # unhealthy asset is reported through the OPS issue above, and this run
+      # stays green as long as incident or recovery reporting succeeded. Red is
+      # reserved for a genuine issue comment/create/close API failure. No
+      # incident-conditioned exit 1 exists.

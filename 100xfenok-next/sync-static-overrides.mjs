@@ -9,7 +9,14 @@ const isMain = process.argv[1]
 const PRIVATE_DATA_SUPPLY_PUBLIC_ROOTS = Object.freeze([
   "public/data/admin/data-supply-state",
   "public/data/yf/etf-details",
+  // B-380 is a private, change-only Yahoo estimate history record. It has no
+  // product reader or public lane; remove the whole generated tree so future
+  // date shards cannot leak through blanket canonical synchronization.
+  "public/data/yf/estimates-archive",
   "public/data/yf/migration-evidence",
+  // Dated Russell factsheet captures, including the source PDFs. Evidence for
+  // the RIM research record, never a product surface.
+  "public/data/computed/fenok-rim/russell2000-history",
 ]);
 
 const STALE_PRIVATE_PUBLIC_FILE = "public/data/admin/data-supply-detection-floor.json";
@@ -71,6 +78,90 @@ function removeGeneratedPublicMirror(relativePath) {
   if (!fs.existsSync(filePath)) return;
   fs.unlinkSync(filePath);
   console.log(`[sync-static-overrides] removed private-only public mirror ${relativePath}`);
+}
+
+// Some private families share a public top-level directory with an approved
+// receipt or summary. A blanket canonical walk can therefore recreate ignored
+// working-tree caches beneath that directory even though Git never tracks
+// them. Remove every public child except the explicitly approved boundary so
+// the cleanup is fail-closed for newly appearing cache/log/bytecode files too.
+export function removePublicTreeExcept(
+  relativeRoot,
+  keepRelativePaths,
+  { baseDir = rootDir, logger = console.log } = {},
+) {
+  const rootPath = path.join(baseDir, relativeRoot);
+  if (!fs.existsSync(rootPath)) return { filesRemoved: 0, directoriesRemoved: 0 };
+
+  const keep = new Set(keepRelativePaths);
+  const files = [];
+  const directories = [];
+  const visit = (directory, prefix) => {
+    for (const entry of fs.readdirSync(directory, { withFileTypes: true })) {
+      const absolute = path.join(directory, entry.name);
+      const relative = prefix ? `${prefix}/${entry.name}` : entry.name;
+      if (entry.isDirectory()) {
+        directories.push(absolute);
+        visit(absolute, relative);
+      } else {
+        files.push({ absolute, relative });
+      }
+    }
+  };
+  visit(rootPath, "");
+
+  let filesRemoved = 0;
+  for (const file of files) {
+    if (keep.has(file.relative)) continue;
+    fs.unlinkSync(file.absolute);
+    filesRemoved += 1;
+    logger(`[sync-static-overrides] removed private-only public mirror ${path.join(relativeRoot, file.relative)}`);
+  }
+
+  let directoriesRemoved = 0;
+  for (const directory of directories.sort((left, right) => right.length - left.length)) {
+    if (fs.readdirSync(directory).length !== 0) continue;
+    fs.rmdirSync(directory);
+    directoriesRemoved += 1;
+  }
+  return { filesRemoved, directoriesRemoved };
+}
+
+const EDGAR_PUBLIC_RECEIPTS = Object.freeze([
+  "r1-panel/dei-refetch-receipt.json",
+  "r1-panel/duration-refetch-receipt.json",
+  "r1-panel/price-fetch-receipt.json",
+  "r1-panel/primary-e-fetch-receipt.json",
+  "r1-panel/sic-fetch-receipt.json",
+  "r2-panel/dividend-fetch-receipt.json",
+  "r3-panel/r3-dividend-fetch-receipt.json",
+  "r3-panel/r3-price-fetch-receipt.json",
+]);
+
+export function removePrivateEdgarPublicTree(options = {}) {
+  return removePublicTreeExcept("public/data/edgar", EDGAR_PUBLIC_RECEIPTS, options);
+}
+
+export function removePrivateFactsetPublicTree(options = {}) {
+  return removePublicTreeExcept("public/data/factset-earnings-insight", ["archives/receipt.json"], options);
+}
+
+// Third-party research inputs. These are read under research use and are not ours to
+// republish: the Li-Mohanram paper text and PDF, and the Ken French factor archives.
+// The mirror guard already refuses .csv and .txt in the public tree, which catches the
+// parsed factor files and the paper text -- but not the PDF or the zips, so the whole
+// tree is removed rather than the files the guard happens to name.
+const PRIVATE_RESEARCH_PUBLIC_TREES = [
+  "public/data/edgar/literature",
+  "public/data/kf-french",
+];
+function removePrivateResearchPublicTrees() {
+  for (const relativePath of PRIVATE_RESEARCH_PUBLIC_TREES) {
+    const dirPath = path.join(rootDir, relativePath);
+    if (!fs.existsSync(dirPath)) continue;
+    fs.rmSync(dirPath, { recursive: true, force: true });
+    console.log(`[sync-static-overrides] removed private research tree ${relativePath}`);
+  }
 }
 
 function lstatIfPresent(filePath) {
@@ -460,11 +551,158 @@ function compactFenokEdgePublicMirror() {
   console.log(`[sync-static-overrides] compacted ${relativePath}`);
 }
 
+// Four control-plane bridge/index mirrors reach the served surface carrying the
+// filesystem paths of their private raw artifacts. The payloads never ship —
+// _private/ is gitignored and untracked — but the path structure does, and the
+// public mirror guard has been failing on exactly these four for as long as
+// nothing ran it.
+//
+// These are redacted rather than removed. The canonical data/** copies must keep
+// the fields, because the edge coverage-index builder reads them to open the
+// private manifests, and every other field these four publish stays intact; only
+// the served projection loses the private paths. A key is dropped when its name
+// is a private-artifact reference or when its string value points inside
+// _private/, so a null-valued reference cannot survive as a bare key either.
+const PRIVATE_ARTIFACT_PATH_MIRRORS = Object.freeze([
+  "public/data/admin/fenok-flow-backfill-index.json",
+  "public/data/admin/krx/lkg/bridge.json",
+  "public/data/admin/taiwan-data-bridge-index.json",
+  "public/data/computed/taiwan-data-bridge-index.json",
+]);
+const PRIVATE_ARTIFACT_KEYS = Object.freeze([
+  "private_artifacts",
+  "private_manifest_file",
+  "private_raw_base_dir",
+  "private_storage_ref",
+]);
+
+// A value that IS a private path is a reference and its key is dropped. A value
+// that merely MENTIONS the private tree is prose — one of these files documents
+// the boundary in a sentence, so the sentence asserting the privacy rule is what
+// trips the privacy guard. Redact the token in place there and the statement
+// keeps its meaning without publishing the structure.
+const PRIVATE_PATH_TOKEN = /_private\/[A-Za-z0-9._/<>-]*/g;
+const BARE_PRIVATE_PATH = /^[A-Za-z0-9._/-]*_private\/[A-Za-z0-9._/<>-]*$/;
+
+function stripPrivateArtifactPaths(value) {
+  if (typeof value === "string") {
+    return value.includes("_private/") ? value.replace(PRIVATE_PATH_TOKEN, "<private-raw-tree>") : value;
+  }
+  if (Array.isArray(value)) return value.map(stripPrivateArtifactPaths);
+  if (value === null || typeof value !== "object") return value;
+  const out = {};
+  for (const [key, entry] of Object.entries(value)) {
+    if (PRIVATE_ARTIFACT_KEYS.includes(key)) continue;
+    if (typeof entry === "string" && BARE_PRIVATE_PATH.test(entry.trim())) continue;
+    const cleaned = stripPrivateArtifactPaths(entry);
+    // A container whose only contents were private paths is dropped rather than
+    // published as an empty object, which would read as "nothing was here".
+    if (cleaned !== null && typeof cleaned === "object" && !Array.isArray(cleaned)
+      && Object.keys(cleaned).length === 0 && Object.keys(entry).length > 0) continue;
+    out[key] = cleaned;
+  }
+  return out;
+}
+
+// rootDir is injectable because sync-static is no longer the only caller: the
+// public-data producer regenerates these same four mirrors and must redact the
+// tree it just wrote, wherever that tree is. Defaulting to the module rootDir
+// keeps the sync-static step byte-identical.
+export function redactPrivateArtifactPathMirrors({
+  mirrors = PRIVATE_ARTIFACT_PATH_MIRRORS,
+  rootDir: baseDir = rootDir,
+  logger = console.log,
+} = {}) {
+  const resolvedRoot = path.resolve(baseDir);
+  const redacted = [];
+  for (const relativePath of mirrors) {
+    const filePath = path.join(resolvedRoot, relativePath);
+    if (!fs.existsSync(filePath)) continue;
+    const original = fs.readFileSync(filePath, "utf8");
+    if (!original.includes("_private/") && !PRIVATE_ARTIFACT_KEYS.some((key) => original.includes(`"${key}"`))) continue;
+    writeJsonAtomic(filePath, stripPrivateArtifactPaths(JSON.parse(original)));
+    redacted.push(relativePath);
+    logger(`[sync-static-overrides] redacted private artifact paths from ${relativePath}`);
+  }
+  return redacted;
+}
+
 // Guard so importing this module (fixture tests) does not run the whole override
 // pipeline against the importer's cwd. Executed only when run as the sync-static step.
 if (isMain) {
 removePrivateDataSupplyPublicTrees();
+redactPrivateArtifactPathMirrors();
+removePrivateResearchPublicTrees();
+removePrivateEdgarPublicTree();
+removePrivateFactsetPublicTree();
+// The FENO RIM research records. They carry every operand, the frozen
+// calibration constants, the fitted discount equation, and the source notes that
+// name where each constant came from. Only the redacted projection built by
+// build-fenok-rim-sustainable-public-projection.mjs, plus the two artifacts
+// deliberately committed under public/, are publishable. These five were
+// reaching the deployed site through the blanket computed/ copy, and no surface
+// reads any of them.
+for (const relativePath of [
+  "public/data/computed/fenok-rim/sustainable-index-ranges.json",
+  "public/data/computed/fenok-rim/identification-receipt.json",
+  "public/data/computed/fenok-rim/input-diagnostics.json",
+  "public/data/computed/fenok-rim/index-residual-roe-diagnostic.json",
+  "public/data/computed/fenok-rim/membership-sensitivity-2026.json",
+  "public/data/computed/fenok-rim/russell2000-official-fundamentals.json",
+]) {
+  removeGeneratedPublicMirror(relativePath);
+}
+// FactSet's public boundary retains only the provenance receipt. The fetch and
+// probe files are canonical control-plane artifacts and must not reach a served
+// surface or be reintroduced by the blanket canonical-data sync.
+for (const relativePath of [
+  "public/data/factset-earnings-insight/fetch-parent.py",
+  "public/data/factset-earnings-insight/fetch.py",
+  "public/data/factset-earnings-insight/parse.py",
+  "public/data/factset-earnings-insight/probe-log.jsonl",
+  "public/data/factset-earnings-insight/zacks-render-test.py",
+]) {
+  removeGeneratedPublicMirror(relativePath);
+}
 removeGeneratedPublicMirror("public/data/computed/fenok_signals.json");
+// EDGAR public boundary retains provenance receipts only. The SEC bootstrap and
+// RIM-DOW companyfacts caches are canonical recovery/research inputs, not a
+// served surface, and must be removed after blanket canonical synchronization.
+for (const relativePath of [
+  "public/data/edgar/company_tickers.json",
+  "public/data/edgar/rim-dow/AAPL.json",
+  "public/data/edgar/rim-dow/AMGN.json",
+  "public/data/edgar/rim-dow/AMZN.json",
+  "public/data/edgar/rim-dow/AXP.json",
+  "public/data/edgar/rim-dow/BA.json",
+  "public/data/edgar/rim-dow/CAT.json",
+  "public/data/edgar/rim-dow/CRM.json",
+  "public/data/edgar/rim-dow/CSCO.json",
+  "public/data/edgar/rim-dow/CVX.json",
+  "public/data/edgar/rim-dow/DIS.json",
+  "public/data/edgar/rim-dow/GOOGL.json",
+  "public/data/edgar/rim-dow/GS.json",
+  "public/data/edgar/rim-dow/HD.json",
+  "public/data/edgar/rim-dow/HON.json",
+  "public/data/edgar/rim-dow/IBM.json",
+  "public/data/edgar/rim-dow/JNJ.json",
+  "public/data/edgar/rim-dow/JPM.json",
+  "public/data/edgar/rim-dow/KO.json",
+  "public/data/edgar/rim-dow/MCD.json",
+  "public/data/edgar/rim-dow/MMM.json",
+  "public/data/edgar/rim-dow/MRK.json",
+  "public/data/edgar/rim-dow/MSFT.json",
+  "public/data/edgar/rim-dow/NKE.json",
+  "public/data/edgar/rim-dow/NVDA.json",
+  "public/data/edgar/rim-dow/PG.json",
+  "public/data/edgar/rim-dow/SHW.json",
+  "public/data/edgar/rim-dow/TRV.json",
+  "public/data/edgar/rim-dow/UNH.json",
+  "public/data/edgar/rim-dow/V.json",
+  "public/data/edgar/rim-dow/WMT.json",
+]) {
+  removeGeneratedPublicMirror(relativePath);
+}
 removeGeneratedPublicMirror("public/data/computed/fenok_etf_signals.json");
 removeGeneratedPublicMirror("public/data/computed/etf_action_index.json");
 removeGeneratedPublicMirror("public/data/admin/fenok-s1-stock-promotion-gate-plan.json");

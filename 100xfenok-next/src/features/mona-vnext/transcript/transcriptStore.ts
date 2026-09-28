@@ -35,6 +35,20 @@ export function createMonaVnextTranscriptState(conversationId: string): MonaVnex
   };
 }
 
+export function discardPendingMonaVnextTranscript(
+  state: MonaVnextTranscriptState,
+): MonaVnextTranscriptState {
+  return {
+    ...state,
+    current: {
+      userText: "",
+      modelText: "",
+      interrupted: false,
+      startedAtIso: null,
+    },
+  };
+}
+
 function shouldJoinWithSpace(previous: string, incoming: string, mode: TranscriptMergeMode) {
   if (!previous || !incoming) return false;
   if (/[\s([{"'“‘-]$/.test(previous)) return false;

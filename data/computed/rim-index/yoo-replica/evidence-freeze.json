@@ -1,0 +1,174 @@
+{
+  "criteria_version": "yoo_rim_replica_2018.v1 / evidence-freeze.v1",
+  "namespace": "yoo_rim_replica_2018.v1",
+  "frozen_at": "2026-08-09T00:00:00Z",
+  "frozen_by": "handler (Claude Opus), sole adjudicator",
+  "contract": "_tmp/YOO_RIM_OPUS_DEEPSEEK_EXECUTION_PROMPT_20260809.md",
+  "repo_head_at_freeze": "2c52bfa929",
+
+  "assertion": "This file is written and frozen BEFORE any equation candidate is scored against any matrix. The fixture corpus (E2) was still being transcribed when it was written, so no candidate ranking could have influenced the gates, the candidate list, or the train/holdout split.",
+
+  "e0_result": {
+    "status": "YOO_PATENT_EXACT_EQUATION = VERIFIED",
+    "changed_from_prior_reset": "The prior reset recorded NOT_VERIFIED because the equation image would not render or download. That retrieval path succeeded this session on the first attempt; the failure was environmental, not a property of the source.",
+    "recovered_equation_as_printed": "Value = BPS_{t-1} + [ (F.ROE_t - r_e) x BPS_{t-1} ] / (r_e - g)",
+    "printed_legend_verbatim": {
+      "F.ROE_t": "t년도 ROE",
+      "r_e": "자본시장 요구수익률",
+      "g": "영구성장률",
+      "BPS_t": "t년도 BPS"
+    },
+    "algebraic_collapse": "V = BPS_{t-1} * (F.ROE_t - g) / (r_e - g), the closed-form justified price-to-book identity",
+    "structural_consequences_read_directly_off_the_equation": [
+      "single stage — no explicit multi-year residual-income path appears in 수학식 1",
+      "no payout or retention term appears anywhere in the equation",
+      "the same r_e serves as both the residual-income hurdle and the perpetuity discount",
+      "g is a perpetual growth rate and is a required operand, not an optional one"
+    ],
+    "sources": [
+      {
+        "what": "equation image 수학식 1",
+        "url": "https://patentimages.storage.googleapis.com/ac/53/55/fa3d99ca8b8c9c/pat00001.png",
+        "http_status": 200,
+        "bytes": 59027,
+        "dimensions": "601x601 PNG",
+        "sha256": "dede6a08ca8797f796e9eebf0b3231e97031beb2334ae2ba9c0571a0a5b080c9"
+      },
+      {
+        "what": "full patent publication PDF, 10 pages",
+        "url": "https://patentimages.storage.googleapis.com/c2/46/1d/40e7fdf7b370b6/KR20180048140A.pdf",
+        "http_status": 200,
+        "bytes": 7938953,
+        "sha256": "69f99f751a14b514c172b03556f4d1c6f83e0cdab680637d11a0709c759b65d1"
+      }
+    ],
+    "supporting_patent_text_verbatim": {
+      "[0036]": "잔존가치모델(Residual Income Model) 관리부(121)는 요구수익률을 초과하는 미래의 ROE가 기업가치를 상승시키는 요인으로 가정할 수 있다. ... KOSPI 적정가치를 아래의 수학식1을 이용하여 산출할 수 있다. 여기서 R.O.E 전망은 Bloomberg사가 제공하는 시장 컨센서스 값을 사용할 수 있다.",
+      "[0063]": "S&P500의 Risk Premium 시나리오(6%, 5.5%, 5%)와 장기(Long Term) ROE 가정(14.5%, 15%, 15.5%)으로 추정한 3 X 3의 S&P500 적정가치의 평균값을 이용하여 S&P500의 상승여력을 추정한다.",
+      "[0074]": "컨센서스가 존재하지 않는 2018년부터 2023년까지 KOSPI의 R.O.E 전망을 도 11c에서와 같이 가정하였다. Risk Premium 시나리오 (7.5%, 7.0%, 6.5%)와 장기 ROE 가정 (8.5%, 9.0%, 9.5%)으로 추정한 3 X 3의 KOSPI 적정가치의 평균값과 6월 30일 KOSPI 종가 대비 상승여력으로..."
+    },
+    "what_e0_did_not_settle": [
+      "whether the printed 'Risk Premium' axis IS r_e or is added to a government bond rate — the patent labels the scenario axis Risk Premium but the equation symbol is 요구수익률",
+      "the numeric value or rule for g — the patent names 영구성장률 as an operand but the reviewed text does not print its value",
+      "whether the 2018 published reports used 수학식 1 unchanged, or an evolved multi-year form. [0074] describes a 2018-2023 assumed ROE path and figures 11a/11b split a consensus portion from a post-consensus portion, which is not visibly reconcilable with a strictly single-stage equation. The 2018 report matrices must settle this, not the patent text.",
+      "patent drawings: figure images beyond 수학식 1 returned HTTP 403 at the same storage path. E0 is bounded to one pass and is closed; no further OCR routes will be attempted."
+    ],
+    "bounded_probe_disclosed_for_honesty": "Before writing this freeze I ran one feasibility probe on the NASDAQ 2018 matrix quoted in the evidence audit to check whether the single-stage form is even arithmetically admissible. Under the audit's stated orientation it implies g of about 14.4-14.7 percent and is not self-consistent between adjacent cell pairs; transposed it implies about 8.5 percent. This probe chose no parameter, admitted no candidate and set no gate. It is recorded because it happened before the freeze, and because it is why the fixture schema demands the printed axis orientation be read off the page rather than assumed."
+  },
+
+  "source_hashes": {
+    "patent_equation_png": "dede6a08ca8797f796e9eebf0b3231e97031beb2334ae2ba9c0571a0a5b080c9",
+    "patent_pdf": "69f99f751a14b514c172b03556f4d1c6f83e0cdab680637d11a0709c759b65d1",
+    "kiwoom_2018_04_pdf": "PENDING — recorded by E2 on download",
+    "kiwoom_2018_07_pdf": "PENDING — recorded by E2 on download"
+  },
+
+  "eligible_matrix_sources": [
+    { "url": "https://bbn.kiwoom.com/bbs/jsp/upload/newres/CorpAnal/201804/1523229937191.pdf", "report_date": "2018-04-09", "expected_asset_types": ["stock", "etf_or_basket"] },
+    { "url": "https://bbn.kiwoom.com/bbs/jsp/upload/newres/CorpAnal/201807/1531866623208.pdf", "report_date": "2018-07-18", "expected_asset_types": ["index"] }
+  ],
+
+  "fixture_roles": {
+    "rule": "The split is declared here by a deterministic rule that cannot depend on any scoring outcome, because no candidate has been scored at freeze time.",
+    "holdout": [
+      {
+        "id": "NASDAQ_2020",
+        "selector": "the NASDAQ 2020 forecast-year 3x3 from the 2018-07-18 report",
+        "why_this_one": "it is the furthest-out forecast year in the index report, so it is the matrix least entangled with any prior project analysis, and its ROE centre differs most from the other two — a candidate that transfers to it has transferred across a real change in operands, not a rounding step"
+      },
+      {
+        "id": "ALPHABETICALLY_LAST_APRIL_STOCK",
+        "selector": "among the complete 3x3 stock matrices transcribed from the 2018-04-09 report, the one whose asset name sorts last alphabetically",
+        "conditional": "included in holdout only if E2 returns at least 8 complete matrices, so that TRAIN retains at least 5",
+        "why_this_rule": "alphabetical order is independent of fit quality, so the choice cannot be steered by results"
+      }
+    ],
+    "train": "every other complete matrix returned by E2",
+    "hard_rule": "No holdout matrix may be passed to any parameter-identification or family-selection routine. A parameter that does not transfer to holdout is evidence against the candidate, never an invitation to refit."
+  },
+
+  "candidate_families": [
+    {
+      "id": "A_patent_exact_single_stage",
+      "provenance": "YOO_PRIMARY_VERIFIED — 수학식 1, recovered this session",
+      "form": "V = BPS0 * (F.ROE - g) / (r_e - g)",
+      "free_parameters": ["g", "BPS0 per asset if not printed", "r_e semantics — see sub-variants"],
+      "sub_variants": [
+        { "id": "A1", "r_e_rule": "r_e = printed Risk Premium axis value" },
+        { "id": "A2", "r_e_rule": "r_e = contemporaneous government bond yield + printed Risk Premium axis value" }
+      ],
+      "note": "A1 and A2 are semantic readings of the same printed equation, not added free constants."
+    },
+    {
+      "id": "B_patent_short_form_internal_claim",
+      "provenance": "REFUTED as the patent equation by E0; retained only as a candidate for what the 2018 reports might have used",
+      "form": "V = BPS * (ROE - Rf) / RP",
+      "status_note": "E0 shows this is NOT 수학식 1. It may not be described as the patent equation in any output."
+    },
+    { "id": "C_one_rate_standard_rim", "form": "Ke = f(Rf, RP); RI_t = (ROE_t - Ke) * B_{t-1}; V = B0 + PV(RI path) + PV(continuing RI)" },
+    { "id": "D_finite_horizon_ri_no_terminal", "form": "explicit-period residual income only, no continuing value" },
+    { "id": "E_finite_or_20y_excess_income_path", "form": "long finite excess-income path, horizon as a discrete candidate not a fitted knob" },
+    { "id": "F_continuing_ri_perpetuity_family", "form": "continuing residual income with source-grounded growth" },
+    { "id": "G_justified_pb_closed_form", "form": "closed-form residual-return / justified P/B", "note": "algebraically identical to A; scored jointly and reported as one family if they coincide" },
+    { "id": "H_late_family_two_rate_competitor", "form": "Ke_gap = Rf + RP; separate discount rate; N-year residual income", "note": "the old 0.076 + 0.560*Rf relation may NOT be assumed for 2018; any separate discount must be identified from 2018 evidence and must transfer to holdout" }
+  ],
+
+  "roles_the_receipt_must_answer": ["RP_ROLE", "REQUIRED_RETURN_ROLE", "DISCOUNT_ROLE", "BOOK_ROLE", "PAYOUT_ROLE", "TERMINAL_ROLE"],
+
+  "error_gates": {
+    "independent_complete_matrices_min": 5,
+    "distinct_report_dates_min": 2,
+    "distinct_asset_types_min": 2,
+    "true_formal_holdout_min": 1,
+    "median_absolute_cell_error_max": 0.010,
+    "maximum_absolute_cell_error_max": 0.025,
+    "monotonicity_roe": "higher ROE must not decrease value",
+    "monotonicity_rp": "higher Risk Premium must not increase value",
+    "report_specific_scaler": "forbidden",
+    "current_price_objective": "forbidden",
+    "attribution": "These are FENO engineering gates. They are not attributed to Yoo and make no claim about Yoo's own validation policy."
+  },
+
+  "prohibited_calibration_targets": [
+    "current SPX price", "current NDX price", "current QQQ price",
+    "desired owner outcome", "Wall Street target price", "old FENO fair-value output",
+    "reverse-implied LTROE", "reverse-implied ERP", "reverse-implied fade horizon",
+    "SPX uses FY3 ROE because it closes today's gap",
+    "NDX uses a ~700bp haircut because it closes today's gap",
+    "NDX market price proves a ~15-year ROE fade",
+    "5y or 10y median ROE because it produces a plausible current value"
+  ],
+
+  "prohibited_fitting_mechanics": [
+    "one multiplier per report",
+    "one B0 per matrix, except as a disclosed diagnostic whose B0 is later sourced independently",
+    "one RP centre per report inferred from target cells when the RP is printed",
+    "terminal growth tuned to minimise cell error, unless g is itself the identified quantity and then transfers to a disjoint holdout",
+    "fade duration per asset"
+  ],
+
+  "terminal_states": {
+    "allowed": ["YOO_METHOD_VERIFIED", "YOO_METHOD_STRONGLY_RECONSTRUCTED", "YOO_METHOD_NOT_IDENTIFIED"],
+    "forbidden": ["MORE_RESEARCH_NEEDED", "RESEARCH_ONLY", "INCONCLUSIVE", "NEEDS_MORE_WORK"],
+    "verified_requires": "exact primary equation and operand semantics directly recovered AND historical reproduction passes the gates. E0 has now recovered the equation, so VERIFIED becomes reachable if and only if reproduction also passes — recovery alone does not grant it.",
+    "if_not_identified": "stop the Yoo valuation branch, emit no current Yoo fair value, record the two best competing candidates and the exact evidence that would distinguish them"
+  },
+
+  "family_firewall": {
+    "yoo_rim_replica_2018.v1": "this file",
+    "yoo_rim_late_reconstruction.v1": "2025-2026 Yoo/Yuanta-era panels — separate, non-blocking, must not be blended backward into 2018 fixtures",
+    "feno_rim_modern_extension.v1": "Damodaran fade, ROE persistence, reverse-implied diagnostics, terminal sensitivity — none of it is evidence of Yoo's equation"
+  },
+
+  "not_inherited_as_yoo_truth": [
+    "rim_valuation_range_v1 terminal band",
+    "10-year conservative fade",
+    "2.5% optimistic perpetual growth",
+    "the old no-middle-case policy",
+    "Damodaran ERP as Yoo Risk Premium",
+    "10-year median ROE as Yoo LTROE",
+    "old 12m per-index conversion shares",
+    "old fitted LTROE bridge",
+    "old publication/promotion flags"
+  ]
+}

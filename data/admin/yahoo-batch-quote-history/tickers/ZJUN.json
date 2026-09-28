@@ -12,53 +12,117 @@
       "run_id": "29224221077",
       "schedule": "",
       "shard": ""
+    },
+    {
+      "attempts_used": 1,
+      "event_name": "schedule",
+      "failures": [],
+      "latency_ms": 506,
+      "natural": true,
+      "observed_at": "2026-08-02T22:59:12Z",
+      "outcome": "fresh",
+      "run_attempt": 1,
+      "run_id": "30771231562",
+      "schedule": "0 22 * * 0",
+      "shard": "0/6"
+    },
+    {
+      "attempts_used": 1,
+      "event_name": "schedule",
+      "failures": [],
+      "latency_ms": 537,
+      "natural": true,
+      "observed_at": "2026-08-11T07:21:44Z",
+      "outcome": "fresh",
+      "run_attempt": 1,
+      "run_id": "31468517777",
+      "schedule": "7 6 * * 0-5",
+      "shard": "27/72"
+    },
+    {
+      "attempts_used": 0,
+      "event_name": "schedule",
+      "failures": [],
+      "latency_ms": 0,
+      "natural": true,
+      "observed_at": "2026-08-11T09:13:07Z",
+      "outcome": "skipped_fresh",
+      "run_attempt": 1,
+      "run_id": "31476569032",
+      "schedule": "7 8 * * 0-5",
+      "shard": "28/72"
+    },
+    {
+      "attempts_used": 1,
+      "event_name": "workflow_dispatch",
+      "failures": [],
+      "latency_ms": 449,
+      "natural": false,
+      "observed_at": "2026-09-28T06:30:00Z",
+      "outcome": "fresh",
+      "run_attempt": 1,
+      "run_id": "36367836615",
+      "schedule": "",
+      "shard": ""
     }
   ],
   "current": {
-    "fetched_at": "2026-06-30T00:23:24Z",
-    "history_as_of": "2026-06-29",
-    "path": "data/admin/yahoo-batch-quote-history/lkg/ZJUN.json",
-    "payload_sha256": "dab5d6d5e9f518cde0b4d25028abadaf11bc591005503a68bdd5cf0a96296a67",
-    "quote_as_of": null,
-    "source_as_of": "2026-06-29"
+    "fetched_at": "2026-09-28T06:49:49Z",
+    "history_as_of": "2026-09-25",
+    "path": "data/yf/finance/ZJUN.json",
+    "payload_sha256": "a734d775a014858f1769a803422cd30f6e23dbc9ad709a5c800b91d96989f30d",
+    "quote_as_of": "2026-09-25T19:59:32Z",
+    "source_as_of": "2026-09-25"
   },
   "discovered_from": [
     "stockanalysis_etf"
   ],
   "last_attempt": {
-    "attempts_used": 0,
+    "attempts_used": 1,
     "event_name": "workflow_dispatch",
     "failures": [],
-    "latency_ms": 0,
+    "latency_ms": 449,
     "natural": false,
-    "observed_at": "2026-07-13T04:33:56Z",
-    "outcome": "skipped_fresh",
+    "observed_at": "2026-09-28T06:30:00Z",
+    "outcome": "fresh",
     "run_attempt": 1,
-    "run_id": "29224221077",
+    "run_id": "36367836615",
     "schedule": "",
     "shard": ""
   },
   "lkg": {
-    "fetched_at": "2026-06-30T00:23:24Z",
-    "history_as_of": "2026-06-29",
+    "fetched_at": "2026-08-11T07:22:56Z",
+    "history_as_of": "2026-08-10",
     "path": "data/admin/yahoo-batch-quote-history/lkg/ZJUN.json",
-    "payload_sha256": "dab5d6d5e9f518cde0b4d25028abadaf11bc591005503a68bdd5cf0a96296a67",
-    "quote_as_of": null,
-    "source_as_of": "2026-06-29"
+    "payload_sha256": "591021ef4e54b8522fddaa166ea4f9d56b6b527b9de54743bdaaca336f1731f0",
+    "quote_as_of": "2026-08-10T19:55:07Z",
+    "source_as_of": "2026-08-10"
   },
-  "resolution_state": "lkg_primary",
-  "retry": true,
+  "promotion_contract": "provider_observation/v2",
+  "provider_observation": {
+    "event_name": "workflow_dispatch",
+    "history_as_of": "2026-09-25",
+    "observed_at": "2026-09-28T06:30:00Z",
+    "payload_sha256": "ff90cbb02557ce4bc2128acd180a2f03792d99275339fa2cf5d0a5e42f791460",
+    "quote_as_of": "2026-09-25T19:59:32Z",
+    "run_attempt": 1,
+    "run_id": "36367836615",
+    "schema_version": "provider_observation/v2",
+    "source_as_of": "2026-09-25"
+  },
+  "resolution_state": "fresh_primary",
+  "retry": false,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "stale": {
-    "age_business_days": 9,
-    "classified_at": "2026-07-13T04:33:56Z",
-    "classified_run_id": "29224221077",
+    "age_business_days": 7,
+    "classified_at": "2026-08-19T23:42:29Z",
+    "classified_run_id": "32314261503",
     "expected_resolution": "next_natural_yahoo_run",
     "max_business_days": 6,
-    "message": "ZJUN holds LKG because Yahoo source date 2026-06-29 is 9 business days old, beyond the 6-day bound; it will retry on the next natural Yahoo run.",
+    "message": "ZJUN holds LKG because Yahoo source date 2026-08-10 is 7 business days old, beyond the 6-day bound; it will retry on the next natural Yahoo run.",
     "reason": "source_age_exceeds_lane_bound",
-    "source_as_of": "2026-06-29"
+    "source_as_of": "2026-08-10"
   },
   "ticker": "ZJUN",
-  "updated_at": "2026-07-13T04:33:56Z"
+  "updated_at": "2026-09-28T06:30:00Z"
 }

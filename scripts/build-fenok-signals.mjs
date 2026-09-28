@@ -6,6 +6,7 @@ import {
   NATIVE_SIGNAL_FORMULA_VERSION,
   OCC_OPTIONS_FORMULA_VERSION,
   assertProxyFormulaVersion,
+  buildLongTermConvictionScore,
   buildShortTermConvictionComposite,
 } from "./lib/fenok-proxy-formula-contract.mjs";
 
@@ -964,19 +965,10 @@ function buildConvictionComposite(signals) {
   return { convictionScore, convictionCall: "mixed" };
 }
 
-function buildLongTermConvictionScore(signals) {
-  const downsidePressure = signals?.upside_downside?.downside_score_0_100;
-  const presentScores = [
-    signals?.profitability?.score_0_100,
-    signals?.growth?.score_0_100,
-    signals?.upside_downside?.upside_score_0_100,
-    finite(downsidePressure) ? 100 - downsidePressure : null,
-    signals?.durability_profitability?.score_0_100,
-  ].filter(finite);
-  return presentScores.length > 0
-    ? round(presentScores.reduce((sum, score) => sum + score, 0) / presentScores.length, 2)
-    : null;
-}
+// buildLongTermConvictionScore now comes from the contract lib
+// (fenok-proxy-formula-contract.mjs): the five-axis mean is the stated
+// long-term aggregation, documented and contract-tested there.
+
 
 function convictionCallFromScore(score) {
   if (score !== null && score >= 70) return "concentrated";
@@ -1014,6 +1006,8 @@ function buildFenokSignalsSummary(fenokSignals) {
     "shortTermCommonBasisCall",
     "shortTermInputCount",
     "shortTermBasisCode",
+    "shortTermComparableScore",
+    "shortTermComparableCall",
     "durabilityProfitabilityScore",
     "durabilityProfitabilityCoverage",
     "upsidePotentialScore",
@@ -1040,6 +1034,8 @@ function buildFenokSignalsSummary(fenokSignals) {
       shortTermCommonBasisScore: "Mean of the same three current axes (technical flow, volume/liquidity trend, and relative strength) when all are present. This is a composition disclosure, not a cross-market-comparable score.",
       shortTermInputCount: "Actual number of inputs used by shortTermConvictionScore; null when the required common three-input basis is unavailable.",
       shortTermBasisCode: "common_3_v1 for three common inputs; us_enriched_v1 when one or two US-only enrichment inputs are also present.",
+      shortTermComparableScore: "Reserved cross-market score; null until the normalized common-axis producer contract is implemented, calibrated, and verified.",
+      shortTermComparableCall: "Reserved comparable call; null whenever the normalized cross-market score is unavailable.",
       volumeLiquidityTrendScore: "Local OHLCV volume/liquidity trend proxy, not true order flow.",
       shortTermRelativeStrengthScore: "Local 20d/60d relative-strength proxy versus SPY, not a forecast.",
       netOptionsProxyScore: "OCC listed-options volume skew proxy derived from underlying-level call/put quantities; not real options flow, not OPRA, and not buyer/seller direction.",
@@ -1087,6 +1083,8 @@ function buildFenokSignalsSummary(fenokSignals) {
         shortTermConviction.common_basis_call,
         shortTermConviction.input_count,
         shortTermConviction.basis_code,
+        shortTermConviction.comparable_score_0_100,
+        shortTermConviction.comparable_call,
         row.signals.durability_profitability?.score_0_100 ?? null,
         row.signals.durability_profitability?.coverage_ratio ?? null,
         row.signals.upside_downside?.upside_score_0_100 ?? null,
@@ -1187,6 +1185,8 @@ function buildFenokSignals(stockActionIndex) {
         conviction_call: shortTermConviction.shortTermConvictionCall,
         input_count: shortTermConviction.shortTermInputCount,
         basis_code: shortTermConviction.shortTermBasisCode,
+        comparable_score_0_100: shortTermConviction.shortTermComparableScore,
+        comparable_call: shortTermConviction.shortTermComparableCall,
       },
       signals,
     };

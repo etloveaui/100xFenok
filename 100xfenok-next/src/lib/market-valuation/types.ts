@@ -201,6 +201,23 @@ export interface MarketAnnualReturn {
   returnPct: number;
 }
 
+export interface MarketFeedReadiness {
+  /** Benchmark index bands (us.json sections). Drives dataReady/failed. */
+  valuation: boolean;
+  /** Computed liquidity/risk signals (signals.json). */
+  computed: boolean;
+  /** Macro growth pulses (activity surveys). */
+  macro: boolean;
+  /** Market sentiment pulses (VIX / Fear&Greed / AAII / MOVE / PutCall). */
+  sentiment: boolean;
+  /** Damodaran ERP insight. */
+  erp: boolean;
+  /** Market structure model pulses (observation dates unavailable). */
+  structure: boolean;
+  /** Bond/rate pulses (economic indicators). */
+  bond: boolean;
+}
+
 export interface MarketValuationResult {
   indices: MarketIndexValuation[];
   dataSources: ValuationDataSource[];
@@ -213,11 +230,20 @@ export interface MarketValuationResult {
   structurePulses: MarketStructurePulse[];
   erpInsight: MarketErpInsight | null;
   bondPulses: MarketBondPulse[];
+  /** Latest observation date present in both daily S&P 500 and rates inputs. */
+  sharedDailyObservationDate: string | null;
   sp500AnnualReturns: MarketAnnualReturn[];
   benchmarkSections: number | null;
   damodaranUsErp: number | null;
   dataReady: boolean;
   failed: boolean;
+  /**
+   * Per-feed availability derived from the same payloads as the pulse lists.
+   * dataReady/failed still reflect benchmark indices only; consumers that blend
+   * feeds (e.g. /regime) must derive partial/stale/error from this instead of
+   * assuming a full fresh read.
+   */
+  feedReady: MarketFeedReadiness;
   /** us.json metadata.version (source date), or null. */
   sourceDate: string | null;
 }

@@ -25,65 +25,91 @@
       "run_id": "29785605821",
       "schedule": "0 22 * * 1",
       "shard": "1/6"
+    },
+    {
+      "attempts_used": 1,
+      "event_name": "schedule",
+      "failures": [],
+      "latency_ms": 571,
+      "natural": true,
+      "observed_at": "2026-08-09T18:54:49Z",
+      "outcome": "fresh",
+      "run_attempt": 1,
+      "run_id": "31330182297",
+      "schedule": "7 18 * * 0-5",
+      "shard": "9/72"
+    },
+    {
+      "attempts_used": 1,
+      "event_name": "workflow_dispatch",
+      "failures": [],
+      "latency_ms": 437,
+      "natural": false,
+      "observed_at": "2026-09-28T01:17:59Z",
+      "outcome": "fresh",
+      "run_attempt": 1,
+      "run_id": "36365270594",
+      "schedule": "",
+      "shard": ""
     }
   ],
   "current": {
-    "fetched_at": "2026-07-20T23:04:02Z",
-    "history_as_of": "2026-07-20",
+    "fetched_at": "2026-09-28T01:25:21Z",
+    "history_as_of": "2026-09-25",
     "path": "data/yf/finance/AVNV.json",
-    "payload_sha256": "f1158fb6f8c85641642590c1a02a9784194fe839e817c630ad4a15f251d193ab",
-    "quote_as_of": "2026-07-20T19:52:10Z",
-    "source_as_of": "2026-07-20"
+    "payload_sha256": "269878519fff8e26ea536bdb0df823d0afb14b037da8e9ec80361b00d3afa5f3",
+    "quote_as_of": "2026-09-25T18:57:29Z",
+    "source_as_of": "2026-09-25"
   },
   "discovered_from": [
     "stockanalysis_etf"
   ],
   "last_attempt": {
     "attempts_used": 1,
-    "event_name": "schedule",
+    "event_name": "workflow_dispatch",
     "failures": [],
-    "latency_ms": 799,
-    "natural": true,
-    "observed_at": "2026-07-20T23:03:20Z",
+    "latency_ms": 437,
+    "natural": false,
+    "observed_at": "2026-09-28T01:17:59Z",
     "outcome": "fresh",
     "run_attempt": 1,
-    "run_id": "29785605821",
-    "schedule": "0 22 * * 1",
-    "shard": "1/6"
+    "run_id": "36365270594",
+    "schedule": "",
+    "shard": ""
   },
   "lkg": {
-    "fetched_at": "2026-06-29T23:07:08Z",
-    "history_as_of": "2026-06-29",
+    "fetched_at": "2026-08-09T18:56:36Z",
+    "history_as_of": "2026-08-07",
     "path": "data/admin/yahoo-batch-quote-history/lkg/AVNV.json",
-    "payload_sha256": "6bf946061c69919d9b11b8810f6b2a44223de7405ca3d970b5340bfde8d2eeb6",
-    "quote_as_of": null,
-    "source_as_of": "2026-06-29"
+    "payload_sha256": "1279778bebcc0f6ab2bbaf09768ea456e76ff7d3c92e4a7ec7064b84fc7d0d9b",
+    "quote_as_of": "2026-08-07T16:23:18Z",
+    "source_as_of": "2026-08-07"
   },
   "promotion_contract": "provider_observation/v2",
   "provider_observation": {
-    "event_name": "schedule",
-    "history_as_of": "2026-07-20",
-    "observed_at": "2026-07-20T23:03:20Z",
-    "payload_sha256": "21082b81b277c86f190bf78047d8eceaf35c27e40bd10e94df04e397935803bd",
-    "quote_as_of": "2026-07-20T19:52:10Z",
+    "event_name": "workflow_dispatch",
+    "history_as_of": "2026-09-25",
+    "observed_at": "2026-09-28T01:17:59Z",
+    "payload_sha256": "d642cc6725505d07e60479953625c80491623e3ebd014579265623ff4df7b9eb",
+    "quote_as_of": "2026-09-25T18:57:29Z",
     "run_attempt": 1,
-    "run_id": "29785605821",
+    "run_id": "36365270594",
     "schema_version": "provider_observation/v2",
-    "source_as_of": "2026-07-20"
+    "source_as_of": "2026-09-25"
   },
   "resolution_state": "fresh_primary",
   "retry": false,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "stale": {
-    "age_business_days": 9,
-    "classified_at": "2026-07-13T04:33:56Z",
-    "classified_run_id": "29224221077",
+    "age_business_days": 8,
+    "classified_at": "2026-08-19T23:42:29Z",
+    "classified_run_id": "32314261503",
     "expected_resolution": "next_natural_yahoo_run",
     "max_business_days": 6,
-    "message": "AVNV holds LKG because Yahoo source date 2026-06-29 is 9 business days old, beyond the 6-day bound; it will retry on the next natural Yahoo run.",
+    "message": "AVNV holds LKG because Yahoo source date 2026-08-07 is 8 business days old, beyond the 6-day bound; it will retry on the next natural Yahoo run.",
     "reason": "source_age_exceeds_lane_bound",
-    "source_as_of": "2026-06-29"
+    "source_as_of": "2026-08-07"
   },
   "ticker": "AVNV",
-  "updated_at": "2026-07-20T23:03:20Z"
+  "updated_at": "2026-09-28T01:17:59Z"
 }

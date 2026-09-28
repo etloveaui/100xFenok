@@ -13,7 +13,8 @@ from pathlib import Path
 BASE_URL = "https://stockanalysis.com"
 USER_AGENT = "Mozilla/5.0 feno-stockanalysis-financials-probe/1.0"
 STATEMENT_PATHS = {
-    "income": "financials",
+    # /financials/ is the overview page and returns no income-statement rows.
+    "income": "financials/income-statement",
     "balance_sheet": "financials/balance-sheet",
     "cash_flow": "financials/cash-flow-statement",
     "ratios": "financials/ratios",

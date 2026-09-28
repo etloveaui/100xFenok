@@ -1,0 +1,89 @@
+{
+  "attempts": [
+    {
+      "attempts_used": 1,
+      "event_name": "schedule",
+      "failures": [],
+      "latency_ms": 825,
+      "natural": true,
+      "observed_at": "2026-07-23T23:19:22Z",
+      "outcome": "fresh",
+      "run_attempt": 1,
+      "run_id": "30051682457",
+      "schedule": "0 22 * * 4",
+      "shard": "4/6"
+    },
+    {
+      "attempts_used": 1,
+      "event_name": "schedule",
+      "failures": [],
+      "latency_ms": 685,
+      "natural": true,
+      "observed_at": "2026-08-06T12:16:00Z",
+      "outcome": "fresh",
+      "run_attempt": 1,
+      "run_id": "31100540842",
+      "schedule": "7 10 * * 0-5",
+      "shard": "53/72"
+    }
+  ],
+  "current": {
+    "fetched_at": "2026-08-06T12:16:20Z",
+    "history_as_of": "2026-08-05",
+    "path": "data/admin/yahoo-batch-quote-history/lkg/EAOM.json",
+    "payload_sha256": "5de5bad727a2eb656ec4d52b796b628575544adfddce88ac2c3233e830b8c8d3",
+    "quote_as_of": "2026-08-05T19:17:10Z",
+    "source_as_of": "2026-08-05"
+  },
+  "discovered_from": [
+    "stockanalysis_etf"
+  ],
+  "last_attempt": {
+    "attempts_used": 1,
+    "event_name": "schedule",
+    "failures": [],
+    "latency_ms": 685,
+    "natural": true,
+    "observed_at": "2026-08-06T12:16:00Z",
+    "outcome": "fresh",
+    "run_attempt": 1,
+    "run_id": "31100540842",
+    "schedule": "7 10 * * 0-5",
+    "shard": "53/72"
+  },
+  "lkg": {
+    "fetched_at": "2026-08-06T12:16:20Z",
+    "history_as_of": "2026-08-05",
+    "path": "data/admin/yahoo-batch-quote-history/lkg/EAOM.json",
+    "payload_sha256": "5de5bad727a2eb656ec4d52b796b628575544adfddce88ac2c3233e830b8c8d3",
+    "quote_as_of": "2026-08-05T19:17:10Z",
+    "source_as_of": "2026-08-05"
+  },
+  "promotion_contract": "provider_observation/v2",
+  "provider_observation": {
+    "event_name": "schedule",
+    "history_as_of": "2026-08-05",
+    "observed_at": "2026-08-06T12:16:00Z",
+    "payload_sha256": "3d35c45104f42312f6ea66cde76371494169866c41a9a5c30c558b6e9d747d1d",
+    "quote_as_of": "2026-08-05T19:17:10Z",
+    "run_attempt": 1,
+    "run_id": "31100540842",
+    "schema_version": "provider_observation/v2",
+    "source_as_of": "2026-08-05"
+  },
+  "resolution_state": "lkg_primary",
+  "retry": true,
+  "schema_version": "yahoo-batch-quote-history-state/v1",
+  "stale": {
+    "age_business_days": 7,
+    "classified_at": "2026-08-14T00:10:47Z",
+    "classified_run_id": "31755913658",
+    "expected_resolution": "next_natural_yahoo_run",
+    "max_business_days": 6,
+    "message": "EAOM holds LKG because Yahoo source date 2026-08-05 is 7 business days old, beyond the 6-day bound; it will retry on the next natural Yahoo run.",
+    "reason": "source_age_exceeds_lane_bound",
+    "source_as_of": "2026-08-05"
+  },
+  "ticker": "EAOM",
+  "updated_at": "2026-08-14T00:10:47Z"
+}

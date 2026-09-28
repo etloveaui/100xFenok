@@ -102,7 +102,7 @@ class SliceAGeneratorTest(unittest.TestCase):
         self.runs = build_runs(self.registry)
         self.investor_data = prepare_investor_data(self.registry, self.runs)
 
-    def test_exact_sixty_investors_and_seventy_three_addressable_outputs(self) -> None:
+    def test_exact_sixty_three_investors_and_seventy_six_addressable_outputs(self) -> None:
         with tempfile.TemporaryDirectory() as temporary_root:
             output_root = Path(temporary_root)
             manifest = generate_base_outputs(
@@ -120,9 +120,9 @@ class SliceAGeneratorTest(unittest.TestCase):
                 entry["path"].removeprefix("data/sec-13f/")
                 for entry in frozen_manifest["entries"]
             }
-            self.assertEqual(len(self.runs), 60)
-            self.assertEqual(manifest["investor_count"], 60)
-            self.assertEqual(manifest["output_count"], 73)
+            self.assertEqual(len(self.runs), 63)
+            self.assertEqual(manifest["investor_count"], 63)
+            self.assertEqual(manifest["output_count"], 76)
             self.assertEqual(set(manifest["outputs"]), paths)
             self.assertEqual(paths, frozen_paths)
             self.assertEqual({entry["path"] for entry in manifest["entries"]}, paths)

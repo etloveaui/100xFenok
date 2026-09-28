@@ -32,6 +32,20 @@ export function applyMacroTransform(
       .map((point, index) => {
         if (index === 0) return null;
         const prev = points[index - 1]?.value;
+        if (!isFiniteValue(prev)) return null;
+        return {
+          date: point.date,
+          value: point.value - prev,
+        };
+      })
+      .filter((point): point is MacroRawPoint => point !== null);
+  }
+
+  if (transform === "pctChange") {
+    return points
+      .map((point, index) => {
+        if (index === 0) return null;
+        const prev = points[index - 1]?.value;
         if (!isFiniteValue(prev) || prev === 0) return null;
         return {
           date: point.date,
@@ -57,6 +71,7 @@ export function applyMacroTransform(
 export function transformUnitLabel(transform: MacroValueTransform, unitLabel: string): string {
   if (transform === "rebase100") return "100 기준";
   if (transform === "yoy") return "YoY %";
-  if (transform === "change") return "전기 대비 %";
+  if (transform === "pctChange") return "% 변화";
+  if (transform === "change") return "변화";
   return unitLabel;
 }

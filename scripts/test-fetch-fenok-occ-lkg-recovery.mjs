@@ -19,10 +19,6 @@ import {
   validOccFreshnessMarker,
   validOccOutputDocument,
 } from "./fetch-fenok-occ-options-volume.mjs";
-import {
-  projectRecoveryRecoveredSet,
-  projectRecoveryRetrySet,
-} from "./build-fenok-data-health-kpi.mjs";
 import { DATA_SUPPLY_DETECTION_CONFIG } from "./lib/data-supply-detection-config.mjs";
 import { LaneLkgStore } from "./lib/data-supply-lkg-store.mjs";
 
@@ -208,11 +204,11 @@ const failureEndpoints = [classifyOccEndpointResponse({ statusCode: 500, body: "
     run: naturalRun("holiday-run", "2026-07-03T12:00:00.000Z"),
   });
   assert.equal(holiday.kind, "not_newer");
-  const holidayState = readJson(indexPath(root));
+  const holidayState = new LaneLkgStore({ repoRoot: root, laneId: OCC_LANE_ID }).stateSnapshot();
   assert.deepEqual(holidayState.retry_set, []);
   assert.equal(holidayState.items[OCC_LKG_KEY].resolution_state, "fresh_primary");
   assert.equal(occFreshnessMarkerSourceAsOf(readJson(markerPath(root))), "2026-07-02");
-  assert.deepEqual(projectRecoveryRecoveredSet(holidayState, OCC_LANE_ID), []);
+  assert.equal(holidayState.items[OCC_LKG_KEY].recovered_from_run_id, undefined);
 
   const nextTradingDocument = outputDocument("2026-07-06", "next-trading-run");
   const nextTrading = applyOccLkgStore({
@@ -226,9 +222,9 @@ const failureEndpoints = [classifyOccEndpointResponse({ statusCode: 500, body: "
   });
   assert.equal(nextTrading.kind, "success");
   assert.equal(nextTrading.recovered, false);
-  const nextTradingState = readJson(indexPath(root));
+  const nextTradingState = new LaneLkgStore({ repoRoot: root, laneId: OCC_LANE_ID }).stateSnapshot();
   assert.deepEqual(nextTradingState.retry_set, []);
-  assert.deepEqual(projectRecoveryRecoveredSet(nextTradingState, OCC_LANE_ID), []);
+  assert.equal(nextTradingState.items[OCC_LKG_KEY].recovered_from_run_id, undefined);
 }
 
 // Owner-approved dispatch chaos uses the real OCC failure branch: the current
@@ -299,7 +295,6 @@ const failureEndpoints = [classifyOccEndpointResponse({ statusCode: 500, body: "
   });
   const markerBefore = fs.readFileSync(markerPath(root));
   const canonicalBefore = fs.readFileSync(canonicalPath(root));
-  const attemptShardPath = path.join(root, "attempts", `${OCC_LANE_ID}.json`);
   const cacheDir = path.join(root, "cache");
   let requests = 0;
   const injected = await build(parseArgs([
@@ -312,7 +307,6 @@ const failureEndpoints = [classifyOccEndpointResponse({ statusCode: 500, body: "
       throw new Error("controlled OCC failure must not call the provider");
     },
     cacheDir,
-    attemptShardPath,
     observedAt: "2026-07-17T12:00:00.000Z",
     attemptId: "occ-controlled-build-attempt",
     lkgRepoRoot: root,
@@ -333,7 +327,6 @@ const failureEndpoints = [classifyOccEndpointResponse({ statusCode: 500, body: "
   assert.equal(fs.existsSync(cacheDir), false, "controlled failure cannot create an OCC raw cache");
   assert.deepEqual(fs.readFileSync(markerPath(root)), markerBefore);
   assert.deepEqual(fs.readFileSync(canonicalPath(root)), canonicalBefore);
-  const attemptBeforeTail = fs.readFileSync(attemptShardPath);
   const stateBeforeTail = fs.readFileSync(indexPath(root));
   const state = JSON.parse(stateBeforeTail);
   assert.equal(state.items[OCC_LKG_KEY].latest_failure.run_id, "controlled-build-run");
@@ -350,7 +343,6 @@ const failureEndpoints = [classifyOccEndpointResponse({ statusCode: 500, body: "
       throw new Error("empty controlled OCC tail must not call the provider");
     },
     cacheDir,
-    attemptShardPath,
     observedAt: "2026-07-17T12:05:00.000Z",
     attemptId: "occ-controlled-empty-tail",
     lkgRepoRoot: root,
@@ -363,8 +355,6 @@ const failureEndpoints = [classifyOccEndpointResponse({ statusCode: 500, body: "
   assert.equal(emptyTail.status, "incomplete_coverage");
   assert.equal(emptyTail.injection_applied, false);
   assert.equal(requests, 0);
-  assert.deepEqual(fs.readFileSync(attemptShardPath), attemptBeforeTail,
-    "empty tail cannot overwrite the injected attempt evidence");
   assert.deepEqual(fs.readFileSync(indexPath(root)), stateBeforeTail,
     "empty tail cannot overwrite the injected recovery state");
 }
@@ -398,10 +388,19 @@ const failureEndpoints = [classifyOccEndpointResponse({ statusCode: 500, body: "
     candidateDocument: staleDocument,
     dates: ["20260703", "20260702", "20260701"],
     currentAttempt: staleDocument.current_attempt,
-    endpointResults: failureEndpoints,
+    endpointResults: [{
+      status: "ready",
+      reason: "ok",
+      expectedUnavailable: false,
+    }],
     run: naturalRun("stale-run", "2026-07-03T12:00:00.000Z"),
   });
   assert.equal(stale.kind, "failure");
+  assert.equal(
+    stale.reason,
+    "source_date_unavailable",
+    "a stale walkback must not record a successful endpoint reason as the LKG failure reason",
+  );
   assert.deepEqual(stale.retrySet, [OCC_LKG_KEY]);
 }
 
@@ -444,11 +443,10 @@ const failureEndpoints = [classifyOccEndpointResponse({ statusCode: 500, body: "
   assert.deepEqual(failed.retrySet, [OCC_LKG_KEY]);
   assert.deepEqual(readJson(lkgPath(root)), seedMarker, "only the public-safe freshness marker is retained; raw CSV rows are never stored");
 
-  const retryState = readJson(indexPath(root));
-  const retrySet = projectRecoveryRetrySet(retryState, OCC_LANE_ID);
-  assert.equal(retrySet.length, 1);
-  assert.equal(retrySet[0].key, OCC_LKG_KEY);
-  assert.equal(retrySet[0].failure_run_id, "chaos-run");
+  const retryState = new LaneLkgStore({ repoRoot: root, laneId: OCC_LANE_ID }).stateSnapshot();
+  assert.deepEqual(retryState.retry_set, [OCC_LKG_KEY]);
+  assert.equal(retryState.items[OCC_LKG_KEY].retry, true);
+  assert.equal(retryState.items[OCC_LKG_KEY].latest_failure.run_id, "chaos-run");
 
   const recoveredDocument = outputDocument("2026-07-16", "manual-run");
   const dispatchRecovery = applyOccLkgStore({
@@ -490,14 +488,13 @@ const failureEndpoints = [classifyOccEndpointResponse({ statusCode: 500, body: "
   assert.equal(naturalRecovery.recovered, true);
   assert.equal(occFreshnessMarkerSourceAsOf(readJson(markerPath(root))), "2026-07-16");
 
-  const recoveredState = readJson(indexPath(root));
+  const recoveredState = new LaneLkgStore({ repoRoot: root, laneId: OCC_LANE_ID }).stateSnapshot();
   assert.deepEqual(recoveredState.retry_set, []);
-  const recoveredSet = projectRecoveryRecoveredSet(recoveredState, OCC_LANE_ID);
-  assert.equal(recoveredSet.length, 1);
-  assert.equal(recoveredSet[0].recovered_from_run_id, "chaos-run");
-  assert.equal(recoveredSet[0].recovery_event_name, "schedule");
-  assert.equal(recoveredSet[0].lkg_source_as_of, "2026-07-14");
-  assert.equal(recoveredSet[0].source_as_of, "2026-07-16");
+  const recoveredItem = recoveredState.items[OCC_LKG_KEY];
+  assert.equal(recoveredItem.recovered_from_run_id, "chaos-run");
+  assert.equal(recoveredItem.recovery_event_name, "schedule");
+  assert.equal(recoveredItem.lkg.source_as_of, "2026-07-14");
+  assert.equal(recoveredItem.current.source_as_of, "2026-07-16");
 }
 
 // Corrupted provider proof is rejected before promotion.

@@ -2,18 +2,31 @@ name: Fetch Damodaran Data
 
 on:
   schedule:
-    # UTC Saturday 11:17 = KST Saturday 20:17, after the Yardeni weekly slot.
-    - cron: '17 11 * * 6'
+    # UTC Saturday 11:17/23:17 = KST Saturday 20:17 primary / Sunday 08:17 backup.
+    - cron: '17 11,23 * * 6'
   workflow_dispatch:
+    inputs:
+      controlled_failure:
+        description: 'Dispatch-only Damodaran LKG chaos injection'
+        required: false
+        type: boolean
+        default: false
+      owner_approved_recovery:
+        description: 'Explicit owner approval to publish the six Damodaran payloads from a manual dispatch recovery. Only set true when the owner approved this specific publication/recovery transaction; never enable for routine dispatch runs.'
+        required: false
+        type: boolean
+        default: false
 
 permissions:
+  actions: read
   contents: write
 
 env:
   DAMODARAN_SHADOW_REPORT: data/admin/damodaran/owner-guard.json
+  PYTHONDONTWRITEBYTECODE: '1'
 
 concurrency:
-  group: fenok-data-writer-${{ github.ref }}
+  group: fenok-data-writer-refs/heads/main
   cancel-in-progress: false
   queue: max
 
@@ -25,29 +38,57 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
         with:
-          fetch-depth: 0
+          fetch-depth: 1
+          filter: blob:none
+          sparse-checkout: |
+            scripts
+            .github/workflows
+            100xfenok-next/scripts
+            100xfenok-next/src/lib
+            data/admin/damodaran
+            data/damodaran
 
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
           node-version: '22'
 
+      - name: Decide Damodaran primary or backup execution
+        id: backup_gate
+        continue-on-error: true
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GITHUB_EVENT_SCHEDULE: ${{ github.event.schedule || '' }}
+        run: node scripts/guard-damodaran-backup.mjs
+
       - name: Setup Python
+        if: ${{ steps.backup_gate.outcome != 'success' || steps.backup_gate.outputs.action == 'run' }}
         uses: actions/setup-python@v5
         with:
           python-version: '3.12'
 
       - name: Test owner guard and workflow contract
+        if: ${{ steps.backup_gate.outcome != 'success' || steps.backup_gate.outputs.action == 'run' }}
         run: node scripts/test-fetch-damodaran-shadow.mjs
 
       - name: Install converter dependencies
+        if: ${{ steps.backup_gate.outcome != 'success' || steps.backup_gate.outputs.action == 'run' }}
         run: python -m pip install -r scripts/lib/damodaran_shadow_converter/requirements.txt
 
+      - name: Test ERP source-date canonicalization
+        if: ${{ steps.backup_gate.outcome != 'success' || steps.backup_gate.outputs.action == 'run' }}
+        run: python scripts/lib/damodaran_shadow_converter/test_erp_source_date.py
+
       - name: Fetch and guard Damodaran payloads
+        id: fetch
+        if: ${{ steps.backup_gate.outcome != 'success' || steps.backup_gate.outputs.action == 'run' }}
+        env:
+          INPUT_CONTROLLED_FAILURE: ${{ github.event.inputs.controlled_failure || 'false' }}
+          INPUT_OWNER_APPROVED_RECOVERY: ${{ github.event.inputs.owner_approved_recovery || 'false' }}
         run: node scripts/fetch-damodaran-shadow.mjs
 
       - name: Preserve Damodaran guard report
-        if: ${{ always() }}
+        if: ${{ always() && (steps.backup_gate.outcome != 'success' || steps.backup_gate.outputs.action == 'run') }}
         uses: actions/upload-artifact@v4
         with:
           name: damodaran-owner-guard-${{ github.run_id }}-${{ github.run_attempt }}
@@ -55,25 +96,31 @@ jobs:
           if-no-files-found: ignore
           retention-days: 14
 
-      - name: Mirror and verify Damodaran public data
-        run: |
-          set -euo pipefail
-          for file in industries.json historical_erp.json credit_ratings.json erp.json industry_metrics.json industry_metrics_regions.json; do
-            rsync -a --checksum "data/damodaran/$file" "100xfenok-next/public/data/damodaran/$file"
-            cmp -s "data/damodaran/$file" "100xfenok-next/public/data/damodaran/$file"
-          done
-
       - name: Commit guarded Damodaran data
+        if: ${{ always() }}
+        env:
+          FETCH_OUTCOME: ${{ steps.fetch.outcome }}
+          BACKUP_ACTION: ${{ steps.backup_gate.outputs.action }}
         shell: bash
         run: |
           set -euo pipefail
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
+          RECOVERY_EXIT=0
+          if [[ "$BACKUP_ACTION" == "skip" ]]; then RECOVERY_EXIT=0
+          elif [[ "$FETCH_OUTCOME" != "success" ]]; then RECOVERY_EXIT=2
+          fi
           scripts/stage-lane-manifest.sh \
             --workflow .github/workflows/fetch-damodaran-shadow.yml \
-            --stage required_on_success
+            --stage always_if_exists
+          if [[ "$FETCH_OUTCOME" == "success" ]]; then
+            scripts/stage-lane-manifest.sh \
+              --workflow .github/workflows/fetch-damodaran-shadow.yml \
+              --stage required_on_success
+          fi
           if git diff --staged --quiet; then
             echo "No Damodaran data change to publish"
+            exit "$RECOVERY_EXIT"
           else
             git commit -m "chore: update Damodaran data"
             PUBLISHED=false
@@ -98,4 +145,15 @@ jobs:
             if [[ "$PUBLISHED" != "true" ]]; then
               exit 1
             fi
+            exit "$RECOVERY_EXIT"
           fi
+      - name: Publish damodaran generation to the cloud data plane
+        id: publish_cloud_generation
+        if: ${{ steps.fetch.outcome == 'success' }}
+        continue-on-error: true
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: aeeb5ea3affe55a2219d08ea02dad9e1
+          DATA_PLANE_ENDPOINT: https://100xfenok.etloveaui.workers.dev/internal/cloud-data-plane
+          DATA_PLANE_WRITE_KEY: ${{ secrets.DATA_PLANE_WRITE_KEY }}
+        run: node scripts/publish-cloud-data-generation.mjs --family=damodaran --tolerate-gate-block --json

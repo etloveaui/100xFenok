@@ -59,7 +59,7 @@
       "calendar_id": "utc",
       "grace": {
         "unit": "hours",
-        "value": 2
+        "value": 6
       }
     },
     {
@@ -68,7 +68,7 @@
       "calendar_id": "utc",
       "grace": {
         "unit": "hours",
-        "value": 2
+        "value": 6
       }
     },
     {
@@ -108,8 +108,8 @@
       }
     },
     {
-      "id": "weekly_1117_sat_utc",
-      "cron": "17 11 * * 6",
+      "id": "weekly_1117_2317_sat_utc",
+      "cron": "17 11,23 * * 6",
       "calendar_id": "utc",
       "grace": {
         "unit": "calendar_days",
@@ -117,12 +117,30 @@
       }
     },
     {
-      "id": "monthly_first_monday_federal",
-      "cron": "0 6 1-7 * 1",
-      "calendar_id": "us_federal_business",
+      "id": "weekly_1117_wed_utc",
+      "cron": "17 11 * * 3",
+      "calendar_id": "utc",
       "grace": {
         "unit": "calendar_days",
-        "value": 7
+        "value": 2
+      }
+    },
+    {
+      "id": "weekly_0600_mon_utc",
+      "cron": "0 6 * * 1",
+      "calendar_id": "utc",
+      "grace": {
+        "unit": "calendar_days",
+        "value": 2
+      }
+    },
+    {
+      "id": "weekly_0600_thu_utc",
+      "cron": "0 6 * * 4",
+      "calendar_id": "utc",
+      "grace": {
+        "unit": "calendar_days",
+        "value": 2
       }
     },
     {
@@ -132,6 +150,24 @@
       "grace": {
         "unit": "business_days",
         "value": 1
+      }
+    },
+    {
+      "id": "weekday_2320_utc",
+      "cron": "20 23 * * 1-5",
+      "calendar_id": "utc",
+      "grace": {
+        "unit": "hours",
+        "value": 24
+      }
+    },
+    {
+      "id": "yahoo_batch_etf_0000_utc",
+      "cron": "7 0 * * 0-5",
+      "calendar_id": "utc",
+      "grace": {
+        "unit": "hours",
+        "value": 4
       }
     },
     {
@@ -155,6 +191,15 @@
     {
       "id": "monthly_0800_utc",
       "cron": "0 8 1 * *",
+      "calendar_id": "utc",
+      "grace": {
+        "unit": "calendar_days",
+        "value": 7
+      }
+    },
+    {
+      "id": "monthly_0800_8_utc",
+      "cron": "0 8 8 * *",
       "calendar_id": "utc",
       "grace": {
         "unit": "calendar_days",
@@ -222,15 +267,6 @@
       "grace": {
         "unit": "business_days",
         "value": 1
-      }
-    },
-    {
-      "id": "weekday_2250_utc",
-      "cron": "50 22 * * 1-5",
-      "calendar_id": "utc",
-      "grace": {
-        "unit": "hours",
-        "value": 24
       }
     },
     {
@@ -390,10 +426,18 @@
       "expected": "ready"
     },
     {
+      "id": "schedule_hourly_measured_worst_delivery",
+      "kind": "schedule",
+      "schedule_id": "hourly_at_05",
+      "now": "2026-07-11T03:50:00Z",
+      "observed_at": "2026-07-10T23:06:00Z",
+      "expected": "ready"
+    },
+    {
       "id": "schedule_hourly_stale",
       "kind": "schedule",
       "schedule_id": "hourly_at_05",
-      "now": "2026-07-11T03:06:00Z",
+      "now": "2026-07-11T07:06:00Z",
       "observed_at": "2026-07-10T23:06:00Z",
       "expected": "stale"
     },

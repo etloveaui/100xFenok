@@ -1,0 +1,617 @@
+"use client";
+
+import { useMemo, useState } from "react";
+import TransitionLink from "@/components/TransitionLink";
+import { Button, EmptyState, EvidenceRail, Panel, PanelHeader, Pill, Skeleton } from "@/components/ui";
+import type { EvidenceRailFreshness, EvidenceStage } from "@/components/ui/EvidenceRail";
+import PerBandBar from "@/components/screener/PerBandBar";
+import { formatSignedPercentDecimal } from "@/lib/dashboard/formatters";
+import { ROUTES } from "@/lib/routes";
+import { normalizeBandTuple } from "@/lib/screener/bands";
+import {
+  getQuestionCard,
+  matchQuestionCard,
+  SCREENER_QUESTION_CARDS,
+  type QuestionCardDef,
+  type QuestionCardId,
+} from "@/lib/screener/question-cards";
+import { formatScreenerSourceDateLabel } from "@/lib/screener/source-dates";
+import { freshnessAgeOverride, freshnessVerdict } from "@/lib/freshness-policy.mjs";
+import type { ScreenerStock } from "@/lib/screener/types";
+import type { HoldingChangeSummary } from "@/lib/superinvestors/types";
+
+const DISCOVER_SOURCE = "Global Scouter · Fenok Signals · SEC 13F";
+const STOCKS_ANALYZER_URL = "/data/global-scouter/core/stocks_analyzer.json";
+const RESULT_LIMIT = 8;
+const COMPARE_LIMIT = 4;
+
+function openStocksAnalyzerEvidence() {
+  window.open(STOCKS_ANALYZER_URL, "_blank", "noopener");
+}
+
+export interface ScreenerDiscoverProps {
+  stocks: ScreenerStock[];
+  dataReady: boolean;
+  failed: boolean;
+  sourceDate: string | null;
+  marketFactsDate: string | null;
+  activeCardId: QuestionCardId;
+  onSelectCard: (id: QuestionCardId) => void;
+  onShowConditions: (card: QuestionCardDef) => void;
+  onOpenAnalyze: () => void;
+  onRetry: () => void;
+  compareTickers: string[];
+  onToggleCompare: (ticker: string) => void;
+  onClearCompare: () => void;
+  holdingChanges?: Record<string, HoldingChangeSummary>;
+  returnTo?: string | null;
+  onBeforeNavigate?: () => void;
+}
+
+function cx(...parts: Array<string | false | undefined>) {
+  return parts.filter(Boolean).join(" ");
+}
+
+function finiteNumber(value: number | null | undefined): value is number {
+  return typeof value === "number" && Number.isFinite(value);
+}
+
+function fmtScore(value: number | null | undefined): string {
+  return finiteNumber(value) ? String(Math.round(value)) : "—";
+}
+
+function fmtPrice(value: number | null | undefined): string {
+  if (!finiteNumber(value)) return "—";
+  return `$${value.toLocaleString("en-US", { maximumFractionDigits: 2 })}`;
+}
+
+function fmtYield(value: number | null | undefined): string {
+  if (!finiteNumber(value)) return "—";
+  return `${(value * 100).toFixed(2)}%`;
+}
+
+function fmtSignedFrac(value: number | null | undefined): string {
+  if (!finiteNumber(value)) return "—";
+  return formatSignedPercentDecimal(value, 1);
+}
+
+function fmtWeightDelta(value: number | null | undefined): string {
+  if (!finiteNumber(value)) return "—";
+  return `${value > 0 ? "+" : ""}${(value * 100).toFixed(2)}%p`;
+}
+
+function fmtCount(value: number | null): string {
+  return `${value === null ? "—" : value.toLocaleString("ko-KR")}개`;
+}
+
+function hasBand(stock: ScreenerStock): boolean {
+  return normalizeBandTuple(stock.perBandCurrent, stock.perBandMin, stock.perBandMax) !== null;
+}
+
+function stockByTicker(stocks: ScreenerStock[], ticker: string): ScreenerStock | null {
+  return stocks.find((stock) => stock.ticker === ticker) ?? null;
+}
+
+function resultsFreshness(results: ScreenerStock[], dataReady: boolean, failed: boolean, sourceDate: string | null): { freshness: EvidenceRailFreshness; stateLabel?: string } {
+  if (failed) return { freshness: "error" };
+  if (!dataReady) return { freshness: "pending" };
+  const age = freshnessAgeOverride(freshnessVerdict(sourceDate, "global_scouter"));
+  if (age?.freshness === "error") return { freshness: "error", stateLabel: age.label ?? undefined };
+  if (age?.freshness === "stale") return { freshness: "stale", stateLabel: age.label ?? undefined };
+  const partial = results.some(
+    (stock) => !hasBand(stock) || !finiteNumber(stock.fenokShortTermScore) || !finiteNumber(stock.guruHolders),
+  );
+  return { freshness: partial ? "partial" : "fresh" };
+}
+
+function coverageText(results: ScreenerStock[]): string {
+  const total = results.length;
+  const band = results.filter(hasBand).length;
+  const short = results.filter((stock) => finiteNumber(stock.fenokShortTermScore)).length;
+  const holders = results.filter((stock) => finiteNumber(stock.guruHolders) && stock.guruHolders > 0).length;
+  const evidenceOnly = results.filter((stock) => stock.guruHolders === 0).length;
+  return `밴드 ${band}/${total} · 단기 ${short}/${total} · 보유 ${holders}/${total}${evidenceOnly > 0 ? ` · 13F 근거 연결 ${evidenceOnly}` : ""}`;
+}
+
+function MomentumSpark({ stock }: { stock: ScreenerStock }) {
+  const points = useMemo(() => {
+    const values = [stock.momentum1m, stock.momentum3m, stock.momentum6m, stock.momentum12m].filter(finiteNumber);
+    if (values.length < 2) return null;
+    const min = Math.min(...values);
+    const max = Math.max(...values);
+    const span = max - min || 1;
+    return values.map((value, index) => ({
+      x: (index / (values.length - 1)) * 100,
+      y: 46 - ((value - min) / span) * 40,
+    }));
+  }, [stock.momentum1m, stock.momentum3m, stock.momentum6m, stock.momentum12m]);
+  if (!points) return <span className="text-[12px] text-[var(--c-ink-3)]">모멘텀 미집계</span>;
+  return (
+    <svg viewBox="0 0 100 52" preserveAspectRatio="none" className="mt-2 h-[52px] w-full" role="img" aria-label="모멘텀 추이 1M·3M·6M·12M">
+      {[13, 26, 39].map((y) => (
+        <line key={y} x1="0" x2="100" y1={y} y2={y} style={{ stroke: "var(--c-line-2)" }} strokeWidth="1" />
+      ))}
+      <polyline
+        fill="none"
+        strokeWidth="1.5"
+        style={{ stroke: "var(--c-brand)" }}
+        points={points.map((point) => `${point.x},${point.y}`).join(" ")}
+      />
+    </svg>
+  );
+}
+
+function ActionButtons({
+  stock,
+  compareTickers,
+  onToggleCompare,
+  returnTo,
+  onBeforeNavigate,
+}: {
+  stock: ScreenerStock;
+  compareTickers: string[];
+  onToggleCompare: (ticker: string) => void;
+  returnTo?: string | null;
+  onBeforeNavigate?: () => void;
+}) {
+  const selected = compareTickers.includes(stock.ticker);
+  const full = !selected && compareTickers.length >= COMPARE_LIMIT;
+  return (
+    <div className="ml-auto flex shrink-0 gap-1.5" onClick={(event) => event.stopPropagation()}>
+      <button
+        type="button"
+        onClick={() => onToggleCompare(stock.ticker)}
+        disabled={full}
+        aria-pressed={selected}
+        title={selected ? "비교에서 제외" : full ? `비교는 최대 ${COMPARE_LIMIT}개` : "비교에 추가"}
+        className={cx(
+          "inline-flex h-9 items-center rounded-md border px-2 text-[12px] font-semibold transition focus-visible:outline focus-visible:outline-2 focus-visible:outline-brand-interactive max-md:min-h-11",
+          selected
+            ? "border-[var(--c-brand)] bg-[var(--c-brand)] text-white"
+            : "border-[var(--c-line)] bg-[var(--c-panel)] text-[var(--c-ink-2)] hover:border-[var(--c-brand)] hover:text-[var(--c-brand)]",
+          full && "cursor-not-allowed opacity-40 hover:border-[var(--c-line)] hover:text-[var(--c-ink-2)]",
+        )}
+      >
+        비교
+      </button>
+      <TransitionLink
+        href={ROUTES.portfolioTicker(stock.ticker)}
+        title="관심 종목에 추가"
+        className="inline-flex h-9 items-center rounded-md border border-[var(--c-line)] bg-[var(--c-panel)] px-2 text-[12px] font-semibold text-[var(--c-ink-2)] transition hover:border-[var(--c-brand)] hover:text-[var(--c-brand)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-brand-interactive max-md:min-h-11"
+      >
+        관심
+      </TransitionLink>
+      <TransitionLink
+        href={ROUTES.stock(stock.ticker, returnTo)}
+        onClick={onBeforeNavigate}
+        title="종목 상세로 열기"
+        className="inline-flex h-9 items-center rounded-md bg-[var(--c-brand)] px-2 text-[12px] font-semibold text-white transition focus-visible:outline focus-visible:outline-2 focus-visible:outline-brand-interactive max-md:min-h-11"
+      >
+        열기
+      </TransitionLink>
+    </div>
+  );
+}
+
+export default function ScreenerDiscover({
+  stocks,
+  dataReady,
+  failed,
+  sourceDate,
+  marketFactsDate,
+  activeCardId,
+  onSelectCard,
+  onShowConditions,
+  onOpenAnalyze,
+  onRetry,
+  compareTickers,
+  onToggleCompare,
+  onClearCompare,
+  holdingChanges,
+  returnTo,
+  onBeforeNavigate,
+}: ScreenerDiscoverProps) {
+  const card = getQuestionCard(activeCardId);
+  const [selectedTicker, setSelectedTicker] = useState<string | null>(null);
+  const asOfLabel = formatScreenerSourceDateLabel(sourceDate, marketFactsDate, { pending: !dataReady });
+
+  // Fetch error keeps last-known-good rows: card counts compute from the LKG
+  // rows and each card is marked stale, instead of null -> dashes.
+  const cardStats = useMemo(() => {
+    if (!dataReady) return null;
+    return new Map<QuestionCardId, { count: number; samples: string[] }>(
+      SCREENER_QUESTION_CARDS.map((item) => {
+        const matched = matchQuestionCard(stocks, item);
+        return [item.id, { count: matched.length, samples: matched.slice(0, 3).map((stock) => stock.ticker) }];
+      }),
+    );
+  }, [stocks, dataReady]);
+
+  const results = useMemo(() => {
+    if (!dataReady) return [];
+    // Fetch error keeps last-known-good rows: the rail flips to error with
+    // retry while results stay on screen (same five-state rule as analyze).
+    return matchQuestionCard(stocks, card);
+  }, [stocks, card, dataReady]);
+  const shown = results.slice(0, RESULT_LIMIT);
+  const selected = (selectedTicker ? stockByTicker(stocks, selectedTicker) : null) ?? shown[0] ?? null;
+  const selectedChange = selected
+    ? holdingChanges?.[selected.ticker.toUpperCase()] ?? holdingChanges?.[selected.ticker] ?? null
+    : null;
+  const selectedHeldCount = selectedChange?.held_count ?? selected?.guruHolders ?? null;
+  const compareStocks = compareTickers.map((ticker) => stockByTicker(stocks, ticker)).filter((stock): stock is ScreenerStock => stock !== null);
+  const discoverRail = resultsFreshness(shown, dataReady, failed, sourceDate ?? null);
+  const freshness = discoverRail.freshness;
+  const freshnessStateLabel = discoverRail.stateLabel;
+  // Evidence drawer stages, mirroring other pages: only feeds that actually
+  // loaded (수집). Failed feeds are omitted rather than forged.
+  const discoverStages = useMemo<EvidenceStage[] | undefined>(() => {
+    if (!dataReady) return undefined;
+    const stages: EvidenceStage[] = [
+      { stage: "수집", detail: "Global Scouter 종목 집계", at: sourceDate, tone: sourceDate ? "ok" : "muted" },
+    ];
+    if (marketFactsDate) {
+      stages.push({ stage: "원천", detail: "시장 팩트 시세", at: marketFactsDate, tone: "ok" });
+    }
+    return stages;
+  }, [dataReady, sourceDate, marketFactsDate]);
+
+  if (failed && stocks.length === 0) {
+    return (
+      <Panel>
+        <PanelHeader eyebrow="발견" title="질문 카드" />
+        <div className="flex flex-col items-start gap-2 px-4 py-6" data-discover-error="true">
+          <p className="text-[13px] font-semibold text-[var(--c-ink)]">스크리너 데이터를 불러오지 못했습니다</p>
+          <p className="text-[12px] text-[var(--c-ink-3)]">잠시 후 다시 시도하거나 분석 모드에서 확인해 주세요.</p>
+          <Button variant="primary" onClick={onRetry}>
+            다시 시도
+          </Button>
+        </div>
+        <EvidenceRail freshness="error" source={DISCOVER_SOURCE} asOf={asOfLabel} coverage="불러오기 실패" onRetry={onRetry} onEvidence={openStocksAnalyzerEvidence} />
+      </Panel>
+    );
+  }
+
+  return (
+    <div className="flex flex-col gap-4" data-discover="true">
+      <section aria-label="Fenok 질문 카드">
+        {!dataReady ? (
+          <Panel>
+            <Skeleton />
+          </Panel>
+        ) : (
+          <div className="grid grid-cols-1 gap-2.5 sm:grid-cols-2 xl:grid-cols-5" data-discover-cards="true">
+            {SCREENER_QUESTION_CARDS.map((item) => {
+              const stats = cardStats?.get(item.id);
+              const active = item.id === card.id;
+              return (
+                <button
+                  key={item.id}
+                  type="button"
+                  onClick={() => onSelectCard(item.id)}
+                  aria-pressed={active}
+                  data-discover-card={item.id}
+                  className={cx(
+                    "flex min-h-11 flex-col items-start gap-2 rounded-lg border bg-[var(--c-panel)] p-3 text-left transition focus-visible:outline focus-visible:outline-2 focus-visible:outline-brand-interactive",
+                    active
+                      ? "border-[var(--c-brand)] shadow-[inset_2px_0_0_var(--c-brand)]"
+                      : "border-[var(--c-line)] hover:border-[var(--c-brand)]",
+                  )}
+                >
+                  <span className="flex w-full items-center gap-2">
+                    <span
+                      className={cx(
+                        "inline-flex h-5 w-5 shrink-0 items-center justify-center rounded-full text-[10.5px] font-bold",
+                        active ? "bg-[var(--c-brand)] text-white" : "bg-[var(--c-surface-2)] text-[var(--c-ink-3)]",
+                      )}
+                    >
+                      {item.index}
+                    </span>
+                    <span className={cx("ml-auto text-[12px] font-bold tabular-nums", active ? "text-[var(--c-brand)]" : "text-[var(--c-ink-3)]")}>
+                      {stats ? fmtCount(stats.count) : "—"}
+                    </span>
+                  </span>
+                  <span className="text-[12.5px] font-semibold leading-snug text-[var(--c-ink)]">{item.title}</span>
+                  {stats && stats.samples.length > 0 ? (
+                    <span className="flex flex-wrap gap-1">
+                      {stats.samples.map((ticker) => (
+                        <span
+                          key={ticker}
+                          className="inline-flex h-5 items-center rounded-full border border-[var(--c-line)] bg-[var(--c-panel)] px-2 font-mono text-[11px] font-medium text-[var(--c-ink-2)]"
+                        >
+                          {ticker}
+                        </span>
+                      ))}
+                    </span>
+                  ) : null}
+                  <span className="text-[12px] text-[var(--c-ink-3)]">마지막 갱신 {asOfLabel}{failed ? " · 이전 값" : ""}</span>
+                  <span className="text-[12px] leading-snug text-[var(--c-ink-3)]">{item.basis}</span>
+                </button>
+              );
+            })}
+          </div>
+        )}
+      </section>
+
+      <div className="flex flex-col items-start gap-4 lg:flex-row">
+        <div className="w-full min-w-0 flex-1">
+          <Panel>
+            <PanelHeader
+              eyebrow={`Q${card.index} 결과`}
+              title={`${card.title} · 상위 ${shown.length}`}
+              right={
+                <button
+                  type="button"
+                  onClick={() => onShowConditions(card)}
+                  className="inline-flex min-h-11 items-center gap-1 text-[12px] font-semibold text-[var(--c-ink-3)] transition hover:text-[var(--c-brand)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-brand-interactive"
+                  data-discover-show-conditions="true"
+                >
+                  조건 보기
+                  <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+                    <path d="M6 9l6 6 6-6" />
+                  </svg>
+                </button>
+              }
+            />
+            <div className="flex flex-wrap items-center gap-1.5 border-b border-[var(--c-line-2)] px-4 py-2.5" aria-label="적용된 조건">
+              {card.chips.map((chip, index) => (
+                <span key={chip} className="flex items-center gap-1.5">
+                  {index > 0 ? <span className="text-[12px] font-semibold text-[var(--c-brand)]">AND</span> : null}
+                  <span className="inline-flex h-[26px] items-center rounded-full border border-[var(--c-line)] bg-[var(--c-panel)] px-2.5 text-[12px] text-[var(--c-ink-2)]">
+                    {chip}
+                  </span>
+                </span>
+              ))}
+            </div>
+            {!dataReady ? (
+              <Skeleton />
+            ) : shown.length === 0 ? (
+              <EmptyState
+                reason="조건에 맞는 종목이 없습니다"
+                nextRefresh="다음 갱신 후 재확인"
+                actionLabel="조건 보기"
+                onAction={() => onShowConditions(card)}
+              />
+            ) : (
+              <ol data-discover-results="true">
+                {shown.map((stock, index) => (
+                  <li
+                    key={stock.ticker}
+                    role="button"
+                    tabIndex={0}
+                    aria-label={`${index + 1}위 ${stock.ticker} 선택`}
+                    onClick={() => setSelectedTicker(stock.ticker)}
+                    onKeyDown={(event) => {
+                      if (event.key === "Enter" || event.key === " ") {
+                        event.preventDefault();
+                        setSelectedTicker(stock.ticker);
+                      }
+                    }}
+                    className={cx(
+                      "flex cursor-pointer flex-col gap-2 border-t border-[var(--c-line-2)] px-4 py-3 first:border-t-0 focus-visible:outline focus-visible:outline-2 focus-visible:outline-brand-interactive",
+                      selected?.ticker === stock.ticker && "bg-[var(--c-surface-2)] shadow-[inset_2px_0_0_var(--c-brand)]",
+                    )}
+                  >
+                    <span className="flex min-w-0 items-center gap-2.5">
+                      <span className="inline-flex h-[22px] w-[22px] shrink-0 items-center justify-center rounded-md bg-[var(--c-surface-2)] text-[12px] font-bold text-[var(--c-ink-2)]">
+                        {index + 1}
+                      </span>
+                      <span className="min-w-[116px]">
+                        <span className="block font-mono text-[13px] font-bold text-[var(--c-ink)]">{stock.ticker}</span>
+                        <span className="block truncate text-[12px] text-[var(--c-ink-3)]">{stock.name}</span>
+                      </span>
+                      <span className="hidden min-w-11 flex-col items-end gap-px sm:flex">
+                        <span className="text-[12px] font-semibold tabular-nums text-[var(--c-ink)]">{fmtPrice(stock.price)}</span>
+                        <span className="text-[9.5px] text-[var(--c-ink-3)]">현재가</span>
+                      </span>
+                      <span className="hidden min-w-11 flex-col items-end gap-px sm:flex">
+                        <span className="text-[12px] font-semibold tabular-nums text-[var(--c-ink-2)]">{fmtScore(stock.fenokShortTermScore)}</span>
+                        <span className="text-[9.5px] text-[var(--c-ink-3)]">단기</span>
+                      </span>
+                      <span className="hidden min-w-11 flex-col items-end gap-px sm:flex">
+                        <span className="text-[12px] font-semibold tabular-nums text-[var(--c-ink-2)]">{fmtScore(stock.fenokLongTermScore)}</span>
+                        <span className="text-[9.5px] text-[var(--c-ink-3)]">장기</span>
+                      </span>
+                      <span className="hidden w-24 shrink-0 md:block" title="PER 밴드 위치">
+                        <PerBandBar current={stock.perBandCurrent} min={stock.perBandMin} avg={stock.perBandAvg} max={stock.perBandMax} />
+                      </span>
+                      <ActionButtons stock={stock} compareTickers={compareTickers} onToggleCompare={onToggleCompare} returnTo={returnTo} onBeforeNavigate={onBeforeNavigate} />
+                    </span>
+                    <span className="block text-[11.5px] leading-snug text-[var(--c-ink-2)]">{card.why(stock)}</span>
+                    <span className="flex items-center gap-2.5">
+                      <Pill tone="neutral">
+                        신뢰 {stock.confidenceLabel ?? "—"} · 커버리지{" "}
+                        {finiteNumber(stock.fenokSignalCoverageRatio) ? `${Math.round(stock.fenokSignalCoverageRatio * 100)}%` : "—"}
+                      </Pill>
+                    </span>
+                  </li>
+                ))}
+              </ol>
+            )}
+            <EvidenceRail
+              freshness={freshness}
+              stateLabel={freshnessStateLabel}
+              source={DISCOVER_SOURCE}
+              asOf={asOfLabel}
+              coverage={dataReady ? `${coverageText(shown)} · 상위 ${shown.length}/${results.length} 표시` : "불러오는 중"}
+              stages={discoverStages}
+              onEvidence={openStocksAnalyzerEvidence}
+              onRetry={failed ? onRetry : undefined}
+              lkgAsOf={failed ? asOfLabel : undefined}
+            />
+          </Panel>
+        </div>
+
+        <aside className="w-full shrink-0 lg:w-[360px]" aria-label="선택된 종목">
+          {selected ? (
+            <Panel>
+              <PanelHeader
+                title={selected.ticker}
+                right={<span className="text-[12px] text-[var(--c-ink-3)]">선택된 카드</span>}
+              />
+              <div className="px-4 pt-3">
+                <span className="text-[22px] font-bold tabular-nums text-[var(--c-ink)]">{fmtPrice(selected.price)}</span>
+                <MomentumSpark stock={selected} />
+              </div>
+              <div className="mt-3 border-t border-[var(--c-line-2)] px-4 py-3">
+                <p className="mb-2 text-[12px] font-bold uppercase tracking-[0.04em] text-[var(--c-ink-3)]">Fenok Edge 드라이버</p>
+                <div className="mb-2 flex items-end gap-4">
+                  <span>
+                    <span className="block text-[18px] font-bold tabular-nums text-[var(--c-ink)]">{fmtScore(selected.fenokShortTermScore)}</span>
+                    <span className="block text-[12px] text-[var(--c-ink-3)]">단기</span>
+                  </span>
+                  <span>
+                    <span className="block text-[18px] font-bold tabular-nums text-[var(--c-ink)]">{fmtScore(selected.fenokLongTermScore)}</span>
+                    <span className="block text-[12px] text-[var(--c-ink-3)]">장기</span>
+                  </span>
+                </div>
+                <p className="text-[11.5px] leading-snug text-[var(--c-ink-2)]">{card.why(selected)}</p>
+              </div>
+              <div className="border-t border-[var(--c-line-2)] px-4 py-3">
+                <p className="mb-2 text-[12px] font-bold uppercase tracking-[0.04em] text-[var(--c-ink-3)]">13F 보유 최신</p>
+                <p className="text-[12px] font-semibold tabular-nums text-[var(--c-ink)]">
+                  {finiteNumber(selectedHeldCount) && selectedHeldCount > 0 ? "보유" : "13F 근거 연결"} {finiteNumber(selectedHeldCount) ? selectedHeldCount.toLocaleString("ko-KR") : "—"}곳
+                </p>
+                {selectedChange ? (
+                  <div className="mt-2 grid grid-cols-2 gap-x-4 gap-y-1 text-[12px] leading-snug text-[var(--c-ink-3)]">
+                    <span>신규 {selectedChange.new_count.toLocaleString("ko-KR")}곳</span>
+                    <span>비중확대 {selectedChange.increased_count.toLocaleString("ko-KR")}곳</span>
+                    <span>비중축소 {selectedChange.decreased_count.toLocaleString("ko-KR")}곳</span>
+                    <span>청산 {selectedChange.sold_count.toLocaleString("ko-KR")}곳</span>
+                    <span>평균 비중 변화 {fmtWeightDelta(selectedChange.mean_weight_delta)}</span>
+                    <span>비교 가능 {selectedChange.comparable_count.toLocaleString("ko-KR")}명</span>
+                  </div>
+                ) : (
+                  <p className="mt-1 text-[12px] leading-snug text-[var(--c-ink-3)]">분기 변화 집계 미제공 — 보유 수는 공개 13F 집계 기준</p>
+                )}
+                {selectedChange ? (
+                  <p className="mt-2 text-[12px] leading-snug text-[var(--c-ink-3)]">
+                    {selectedChange.current_quarter} ↔ {selectedChange.previous_quarter} 공개 보유 목록 비교 · 신규·청산은 직전 분기 공개 보유 목록과 비교한 결과입니다. 공시 반영은 분기말 이후 최대 45일 지연될 수 있습니다.
+                  </p>
+                ) : null}
+              </div>
+              <EvidenceRail
+                freshness={freshness}
+                stateLabel={freshnessStateLabel}
+                source={DISCOVER_SOURCE}
+                asOf={asOfLabel}
+                coverage={`${selected.ticker} 단일 종목`}
+                stages={discoverStages}
+                onEvidence={openStocksAnalyzerEvidence}
+                onRetry={failed ? onRetry : undefined}
+                lkgAsOf={failed ? asOfLabel : undefined}
+              />
+            </Panel>
+          ) : (
+            <Panel>
+              <EmptyState reason={dataReady ? "카드를 선택하면 종목이 표시됩니다" : "불러오는 중"} />
+            </Panel>
+          )}
+        </aside>
+      </div>
+
+      {compareStocks.length > 0 ? (
+        <Panel>
+          <PanelHeader
+            title={`비교 ${compareStocks.length}/${COMPARE_LIMIT}`}
+            right={
+              <button
+                type="button"
+                onClick={onClearCompare}
+                className="inline-flex min-h-11 items-center text-[12px] font-semibold text-[var(--c-ink-3)] transition hover:text-[var(--c-brand)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-brand-interactive"
+              >
+                선택 해제
+              </button>
+            }
+          />
+          <div className="flex flex-wrap gap-1.5 px-4 pt-3" data-discover-compare-tray="true">
+            {compareStocks.map((stock) => (
+              <span
+                key={stock.ticker}
+                className="inline-flex min-h-[26px] items-center gap-1.5 rounded-full border border-[var(--c-line)] bg-[var(--c-panel)] py-0 pl-2.5 pr-1 text-[12px] text-[var(--c-ink-2)]"
+              >
+                <span className="font-mono font-semibold">{stock.ticker}</span>
+                <button
+                  type="button"
+                  onClick={() => onToggleCompare(stock.ticker)}
+                  aria-label={`${stock.ticker} 비교에서 제외`}
+                  className="inline-flex h-9 w-9 items-center justify-center rounded-full bg-[var(--c-surface-2)] text-[14px] text-[var(--c-ink-3)] transition focus-visible:outline focus-visible:outline-2 focus-visible:outline-brand-interactive max-md:h-11 max-md:w-11"
+                >
+                  ×
+                </button>
+              </span>
+            ))}
+          </div>
+          <div className="overflow-x-auto px-4 py-3">
+            <table className="w-full min-w-[520px] border-collapse text-[12px]">
+              <thead>
+                <tr className="border-b border-[var(--c-line)]">
+                  <th className="h-9 px-2 text-left font-semibold text-[var(--c-ink-3)]">지표</th>
+                  {compareStocks.map((stock) => (
+                    <th key={stock.ticker} className="h-9 px-2 text-right font-mono font-bold text-[var(--c-ink)]">
+                      {stock.ticker}
+                    </th>
+                  ))}
+                </tr>
+              </thead>
+              <tbody className="tabular-nums">
+                {[
+                  { label: "단기", get: (stock: ScreenerStock) => fmtScore(stock.fenokShortTermScore) },
+                  { label: "장기", get: (stock: ScreenerStock) => fmtScore(stock.fenokLongTermScore) },
+                  { label: "현재가", get: (stock: ScreenerStock) => fmtPrice(stock.price) },
+                  { label: "보유", get: (stock: ScreenerStock) => (finiteNumber(stock.guruHolders) ? String(stock.guruHolders) : "—") },
+                  { label: "배당", get: (stock: ScreenerStock) => fmtYield(stock.dividendYield) },
+                  { label: "12M", get: (stock: ScreenerStock) => fmtSignedFrac(stock.return12m) },
+                ].map((row) => (
+                  <tr key={row.label} className="border-t border-[var(--c-line-2)]">
+                    <th className="h-11 px-2 text-left font-semibold text-[var(--c-ink-3)]">{row.label}</th>
+                    {compareStocks.map((stock) => (
+                      <td key={stock.ticker} className="h-11 px-2 text-right text-[var(--c-ink)]">
+                        {row.get(stock)}
+                      </td>
+                    ))}
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+          <EvidenceRail
+            freshness={freshness}
+            stateLabel={freshnessStateLabel}
+            source={DISCOVER_SOURCE}
+            asOf={asOfLabel}
+            coverage={`비교 ${compareStocks.length}/${COMPARE_LIMIT}`}
+            stages={discoverStages}
+            onEvidence={openStocksAnalyzerEvidence}
+          />
+        </Panel>
+      ) : null}
+
+      <Panel>
+        <PanelHeader
+          eyebrow="두 번째 모드 미리보기"
+          title="분석 — 워크벤치"
+          right={
+            <Button variant="secondary" onClick={onOpenAnalyze} className="max-md:min-h-11">
+              분석 모드 열기 →
+            </Button>
+          }
+        />
+        <div className="px-4 py-3">
+          <p className="text-[12px] leading-snug text-[var(--c-ink-2)]">
+            발견 카드는 저장된 스크린입니다 — 조건 보기로 분석 모드에서 이어서 편집합니다.
+          </p>
+        </div>
+        <EvidenceRail
+          freshness={freshness}
+          stateLabel={freshnessStateLabel}
+          source={DISCOVER_SOURCE}
+          asOf={asOfLabel}
+          coverage={`발견 카드 ${SCREENER_QUESTION_CARDS.length}종`}
+          stages={discoverStages}
+          onEvidence={openStocksAnalyzerEvidence}
+        />
+      </Panel>
+    </div>
+  );
+}

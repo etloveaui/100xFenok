@@ -34,6 +34,11 @@ REPO_ROOT = Path(__file__).resolve().parents[2]
 DATA_DIR = REPO_ROOT / "data" / "slickcharts"
 MEMBERSHIP_FILE = DATA_DIR / "membership-changes.json"
 UNIVERSE_FILE = DATA_DIR / "universe.json"
+COMPOSITE_INDEX_FILE = (
+    REPO_ROOT / "data" / "admin" / "slickcharts-composite-recovery" / "index.json"
+)
+COMPOSITE_SCHEMA = "slickcharts-composite-lkg-index/v1"
+COMPOSITE_LANE_ID = "slickcharts"
 
 # Index file paths
 INDEX_FILES = {
@@ -41,6 +46,38 @@ INDEX_FILES = {
     "nasdaq100": DATA_DIR / "nasdaq100.json",
     "dowjones": DATA_DIR / "dowjones.json",
 }
+
+
+def load_composite_generation() -> Dict[str, Any]:
+    """Return the recovery generation used by update-manifest derivations."""
+    if not COMPOSITE_INDEX_FILE.exists():
+        return {
+            "generation_id": None,
+            "composite_state": "unavailable",
+            "verified": False,
+        }
+
+    try:
+        index = json.loads(COMPOSITE_INDEX_FILE.read_text(encoding="utf-8"))
+    except json.JSONDecodeError as error:
+        raise RuntimeError(f"Malformed SlickCharts composite index: {error}") from error
+
+    generation_id = index.get("active_composite", {}).get("generation_id")
+    if (
+        index.get("schema_version") != COMPOSITE_SCHEMA
+        or index.get("lane_id") != COMPOSITE_LANE_ID
+        or not isinstance(generation_id, str)
+        or len(generation_id) != 64
+        or any(char not in "0123456789abcdef" for char in generation_id)
+    ):
+        raise RuntimeError("Invalid SlickCharts composite generation contract")
+
+    composite_state = index.get("composite_state")
+    return {
+        "generation_id": generation_id,
+        "composite_state": composite_state,
+        "verified": composite_state == "ready",
+    }
 
 
 def load_index_tickers(index_name: str) -> Set[str]:
@@ -188,6 +225,7 @@ def check_membership_changes(verbose: bool = True) -> Dict[str, Any]:
         history["changes"] = all_changes + existing_changes
 
     history["updated"] = timestamp
+    history["source_composite_generation"] = load_composite_generation()
 
     return history
 
@@ -242,6 +280,7 @@ def generate_universe() -> Dict[str, Any]:
         "uniqueCount": len(universe),
         "indexCounts": index_counts,
         "stocks": universe,
+        "source_composite_generation": load_composite_generation(),
     }
 
 

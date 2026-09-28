@@ -1,7 +1,11 @@
 {
   "$schema": "node_modules/wrangler/config-schema.json",
   "name": "100xfenok",
-  "main": ".open-next/worker.js",
+  "main": "worker.ts",
+  // Apply the same final minification in budget dry-runs and production uploads.
+  // Preserve function/class names used by runtime bindings and diagnostics.
+  "minify": true,
+  "keep_names": true,
   "compatibility_date": "2026-05-16",
   "compatibility_flags": [
     "nodejs_compat",
@@ -10,7 +14,35 @@
   "assets": {
     "directory": ".open-next/assets",
     "binding": "ASSETS",
-    "html_handling": "none"
+    "html_handling": "none",
+    // These patterns are derived from the generated public enrollment
+    // authority, with the isolated private Griffin deny route and the
+    // admin asset tree (admin-session gated by middleware, not the data
+    // plane) retained explicitly. The `*` is a
+    // deep glob. Every unhealthy data-plane outcome still falls back to
+    // this same asset directory.
+    "run_worker_first": [
+      "/data/computed/*",
+      "/data/damodaran/*",
+      "/data/earnings-overview/*",
+      "/data/edgar-korean-summaries/*",
+      "/data/global-scouter/*",
+      "/data/indices/*",
+      "/data/macro/*",
+      "/data/sentiment/*",
+      "/data/slickcharts/*",
+      "/data/yardney/*",
+      "/data/sec-13f/investors/griffin.json",
+      "/admin/*"
+    ]
+  },
+  "observability": {
+    "enabled": true,
+    "logs": {
+      "enabled": true,
+      "invocation_logs": true,
+      "persist": true
+    }
   },
   "kv_namespaces": [
     {
@@ -19,6 +51,62 @@
       "preview_id": "67dd8748c45d4cce9770f1bf761ecaa4"
     }
   ],
+  "r2_buckets": [
+    {
+      "binding": "DATA_PLANE_BUCKET",
+      "bucket_name": "fenok-data-plane"
+    }
+  ],
+  "durable_objects": {
+    "bindings": [
+      {
+        "name": "WINDDOWN_REVIEW_COORDINATOR",
+        "class_name": "WindDownReviewCoordinator"
+      },
+      {
+        "name": "CLOUD_DATA_PLANE_COORDINATOR",
+        "class_name": "CloudDataPlaneCoordinator"
+      },
+      {
+        "name": "USER_STORE",
+        "class_name": "UserStore"
+      },
+      {
+        "name": "USER_REGISTRY",
+        "class_name": "UserRegistry"
+      }
+    ]
+  },
+  "migrations": [
+    {
+      "tag": "v1-winddown-review-coordinator",
+      "new_sqlite_classes": [
+        "WindDownReviewCoordinator"
+      ]
+    },
+    {
+      "tag": "v2-cloud-data-plane-coordinator",
+      "new_sqlite_classes": [
+        "CloudDataPlaneCoordinator"
+      ]
+    },
+    {
+      "tag": "v3-user-store",
+      "new_sqlite_classes": [
+        "UserStore"
+      ]
+    },
+    {
+      "tag": "v4-user-registry",
+      "new_sqlite_classes": [
+        "UserRegistry"
+      ]
+    }
+  ],
+  "vars": {
+    "CLOSED_SITE": "intro",
+    "GOOGLE_CLIENT_ID": "1047143661358-ppe3u3k58dcbi59usbkmd0fggbi5dkpd.apps.googleusercontent.com"
+  },
   "analytics_engine_datasets": [
     {
       "binding": "DATA_SUPPLY_ANALYTICS",

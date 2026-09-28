@@ -34,13 +34,21 @@ function defaultFormatValue(value: number | null): string {
   }).format(value);
 }
 
-function toFiniteNumber(value: string | number): number | null {
+function toFiniteNumber(value: string | number | null | undefined): number | null {
+  if (value == null) return null;
   const next = typeof value === "number" ? value : Number(value);
   return Number.isFinite(next) ? next : null;
 }
 
 function pointMap(series: MarketChartSeries): Map<string, MarketChartPoint> {
   return new Map(series.points.map((point) => [point.label, point]));
+}
+
+function compareLabels(a: string, b: string): number {
+  const aDate = Date.parse(a);
+  const bDate = Date.parse(b);
+  if (Number.isFinite(aDate) && Number.isFinite(bDate)) return aDate - bDate;
+  return a.localeCompare(b);
 }
 
 function buildLabels(series: readonly MarketChartSeries[], sortLabels: boolean): string[] {
@@ -53,7 +61,48 @@ function buildLabels(series: readonly MarketChartSeries[], sortLabels: boolean):
       labels.push(point.label);
     }
   }
-  return sortLabels ? labels.sort((a, b) => a.localeCompare(b)) : labels;
+  return sortLabels ? labels.sort(compareLabels) : labels;
+}
+
+/**
+ * Nearest-observation index for a shared cursor date. Charts on this route mix
+ * year labels (Damodaran ERP) with daily labels (Yardeni), so an exact match is
+ * tried first, then the same-year counterpart, then the smallest date distance.
+ * A shared cursor must land on an observation the sibling actually has; when
+ * nothing matches, -1 means "draw nothing" rather than a plausible guess.
+ */
+function resolveCursorIndex(labels: readonly string[], cursorLabel: string): number {
+  const exact = labels.indexOf(cursorLabel);
+  if (exact >= 0) return exact;
+
+  const isYear = /^\d{4}$/.test(cursorLabel);
+  const isDay = /^\d{4}-\d{2}-\d{2}/.test(cursorLabel);
+  if (isDay) {
+    const yearIndex = labels.findIndex((label) => label === cursorLabel.slice(0, 4));
+    if (yearIndex >= 0) return yearIndex;
+  }
+  if (isYear) {
+    let lastInYear = -1;
+    labels.forEach((label, index) => {
+      if (label.slice(0, 4) === cursorLabel) lastInYear = index;
+    });
+    if (lastInYear >= 0) return lastInYear;
+  }
+
+  const cursorMs = Date.parse(cursorLabel);
+  if (!Number.isFinite(cursorMs)) return -1;
+  let best = -1;
+  let bestDelta = Number.POSITIVE_INFINITY;
+  labels.forEach((label, index) => {
+    const labelMs = Date.parse(label);
+    if (!Number.isFinite(labelMs)) return;
+    const delta = Math.abs(labelMs - cursorMs);
+    if (delta < bestDelta) {
+      bestDelta = delta;
+      best = index;
+    }
+  });
+  return best;
 }
 
 function backgroundColors(
@@ -89,27 +138,33 @@ function buildData(
   series: readonly MarketChartSeries[],
   labels: readonly string[],
   theme: MarketChartTheme,
-): ChartData<MarketChartType, Array<number | null>, string> {
+  spanGaps: boolean,
+  xScaleMode: "category" | "time",
+): ChartData<MarketChartType> {
   return {
-    labels: [...labels],
+    labels: xScaleMode === "category" ? [...labels] : undefined,
     datasets: series.map((item, index) => {
       const color = theme.seriesColor(item, index);
       const negativeColor = theme.negativeColor(item);
       const pointsByLabel = pointMap(item);
       const values = labels.map((label) => pointsByLabel.get(label)?.value ?? null);
+      const timeValues = item.points.map((point) => point.value);
+      const timePoints = item.points.map((point) => ({ x: Date.parse(point.label), y: point.value }));
+      const colorValues = xScaleMode === "time" ? timeValues : values;
       const isLine = (item.chartType ?? type) === "line";
       return {
         type: item.chartType ?? type,
         label: item.label,
-        data: values,
-        borderColor: isLine ? color : backgroundColors(values, color, negativeColor),
-        backgroundColor: backgroundColors(values, color, negativeColor),
-        borderWidth: isLine ? 2 : 0,
+        data: xScaleMode === "time" ? timePoints : values,
+        borderColor: isLine ? color : backgroundColors(colorValues, color, negativeColor),
+        backgroundColor: backgroundColors(colorValues, color, negativeColor),
+        borderWidth: isLine ? (item.lineRole === "primary" ? 2.5 : item.lineRole === "secondary" ? 1.5 : 2) : 0,
+        borderDash: isLine && item.lineRole === "secondary" ? [6, 4] : undefined,
         pointRadius: isLine ? 0 : undefined,
         pointHitRadius: isLine ? 10 : undefined,
         tension: isLine ? 0.24 : undefined,
         fill: false,
-        spanGaps: true,
+        spanGaps,
         hidden: item.hidden,
         yAxisID: item.yAxisId ?? "y",
       };
@@ -129,6 +184,8 @@ function buildOptions({
   suggestedMax,
   yAxisTitle,
   y1AxisTitle,
+  logScale,
+  xScaleMode,
   theme,
 }: Required<Pick<MarketChartEngineProps, "ariaLabel" | "showLegend">> &
   Pick<
@@ -139,6 +196,8 @@ function buildOptions({
     | "suggestedMax"
     | "yAxisTitle"
     | "y1AxisTitle"
+    | "logScale"
+    | "xScaleMode"
   > & {
     labels: readonly string[];
     onMouseHover?: () => void;
@@ -146,12 +205,14 @@ function buildOptions({
     theme: MarketChartTheme;
   }): ChartOptions<MarketChartType> {
   const valueFormatter = formatValue ?? defaultFormatValue;
-  const axisTitleFont = { size: 10, weight: "bold" as const };
+  const uiFontFamily = "Pretendard, Noto Sans KR, system-ui, sans-serif";
+  const axisTitleFont = { family: uiFontFamily, size: 10, weight: "bold" as const };
   return {
     responsive: true,
     maintainAspectRatio: false,
+    animation: false,
     interaction: {
-      mode: "index",
+      mode: xScaleMode === "time" ? "x" : "index",
       intersect: false,
     },
     onHover: (_event: ChartEvent, activeElements: ActiveElement[]) => {
@@ -162,7 +223,9 @@ function buildOptions({
         onHoverPoint(null);
         return;
       }
-      const label = labels[active.index];
+      const label = xScaleMode === "time"
+        ? series[active.datasetIndex]?.points[active.index]?.label
+        : labels[active.index];
       onHoverPoint(label ? buildHoverPoint(label, active.index, series) : null);
     },
     plugins: {
@@ -173,7 +236,7 @@ function buildOptions({
           boxWidth: 10,
           boxHeight: 10,
           color: theme.token("ink2"),
-          font: { size: 11, weight: "bold" },
+          font: { family: uiFontFamily, size: 11, weight: "bold" },
           usePointStyle: true,
         },
       },
@@ -183,16 +246,16 @@ function buildOptions({
         borderWidth: 1,
         bodyColor: theme.token("ink"),
         titleColor: theme.token("ink"),
-        titleFont: { size: 11, weight: "bold" },
-        bodyFont: { size: 11, weight: "bold" },
-        mode: "index",
+        titleFont: { family: uiFontFamily, size: 11, weight: "bold" },
+        bodyFont: { family: uiFontFamily, size: 11, weight: "bold" },
+        mode: xScaleMode === "time" ? "x" : "index",
         intersect: false,
         callbacks: {
           title(items: TooltipItem<MarketChartType>[]) {
             return items[0]?.label ?? ariaLabel;
           },
           label(item: TooltipItem<MarketChartType>) {
-            const raw = typeof item.raw === "number" ? item.raw : null;
+            const raw = toFiniteNumber(item.parsed.y);
             const label = item.dataset.label ? `${item.dataset.label}: ` : "";
             return `${label}${valueFormatter(raw)}`;
           },
@@ -200,17 +263,32 @@ function buildOptions({
       },
     },
     scales: {
-      x: {
-        grid: { display: false },
-        ticks: {
-          color: theme.token("ink3"),
-          font: { size: 10, weight: "bold" },
-          maxRotation: 0,
-          autoSkip: true,
-          autoSkipPadding: 16,
-        },
-      },
+      x: xScaleMode === "time"
+        ? {
+            type: "time",
+            grid: { display: false },
+            time: { tooltipFormat: "day" },
+            ticks: {
+              color: theme.token("ink3"),
+              font: { family: uiFontFamily, size: 10, weight: "bold" },
+              maxRotation: 0,
+              autoSkip: true,
+              autoSkipPadding: 16,
+            },
+          }
+        : {
+            type: "category",
+            grid: { display: false },
+            ticks: {
+              color: theme.token("ink3"),
+              font: { family: uiFontFamily, size: 10, weight: "bold" },
+              maxRotation: 0,
+              autoSkip: true,
+              autoSkipPadding: 16,
+            },
+          },
       y: {
+        type: logScale ? "logarithmic" : "linear",
         suggestedMin,
         suggestedMax,
         grid: { color: theme.token("line2") },
@@ -219,13 +297,14 @@ function buildOptions({
           : undefined,
         ticks: {
           color: theme.token("ink3"),
-          font: { size: 10, weight: "bold" },
+          font: { family: uiFontFamily, size: 10, weight: "bold" },
           callback(value) {
             return valueFormatter(toFiniteNumber(value));
           },
         },
       },
       y1: {
+        type: logScale ? "logarithmic" : "linear",
         display: series.some((item) => item.yAxisId === "y1"),
         position: "right",
         grid: { drawOnChartArea: false },
@@ -234,7 +313,7 @@ function buildOptions({
           : undefined,
         ticks: {
           color: theme.token("ink3"),
-          font: { size: 10, weight: "bold" },
+          font: { family: uiFontFamily, size: 10, weight: "bold" },
           callback(value) {
             return valueFormatter(toFiniteNumber(value));
           },
@@ -253,12 +332,17 @@ export function MarketChartEngineClient({
   emptyLabel = "차트 데이터 없음",
   showLegend = true,
   sortLabels = false,
+  spanGaps = false,
   suggestedMin,
   suggestedMax,
   formatValue,
   onHoverPoint,
   yAxisTitle,
   y1AxisTitle,
+  logScale = false,
+  xScaleMode = "category",
+  dateBands = [],
+  cursorLabel = null,
 }: MarketChartEngineProps) {
   const theme = useMarketChartTheme();
   const [keyboardIndex, setKeyboardIndex] = useState<number | null>(null);
@@ -270,9 +354,15 @@ export function MarketChartEngineClient({
     () => buildLabels(visibleSeries, sortLabels),
     [visibleSeries, sortLabels],
   );
+  // Time-scale charts carry no category labels, so the shared cursor resolves
+  // against the union of the visible series' own dates.
+  const cursorLabels = useMemo(
+    () => (xScaleMode === "time" ? buildLabels(visibleSeries, true) : labels),
+    [labels, visibleSeries, xScaleMode],
+  );
   const data = useMemo(
-    () => buildData(type, visibleSeries, labels, theme),
-    [type, visibleSeries, labels, theme],
+    () => buildData(type, visibleSeries, labels, theme, spanGaps, xScaleMode),
+    [type, visibleSeries, labels, theme, spanGaps, xScaleMode],
   );
   const resetKeyboardHover = useMemo(
     () =>
@@ -297,6 +387,8 @@ export function MarketChartEngineClient({
         suggestedMax,
         yAxisTitle,
         y1AxisTitle,
+        logScale,
+        xScaleMode,
         theme,
       }),
     [
@@ -311,31 +403,85 @@ export function MarketChartEngineClient({
       suggestedMax,
       yAxisTitle,
       y1AxisTitle,
+      logScale,
+      xScaleMode,
       theme,
     ],
+  );
+  const dateBandPlugin = useMemo<Plugin<MarketChartType>>(
+    () => ({
+      id: "market-chart-date-bands",
+      beforeDatasetsDraw(chart) {
+        if (xScaleMode !== "time" || dateBands.length === 0) return;
+        const xScale = chart.scales.x;
+        const { left, right, top, bottom } = chart.chartArea;
+        const ctx = chart.ctx;
+        ctx.save();
+        ctx.beginPath();
+        ctx.rect(left, top, right - left, bottom - top);
+        ctx.clip();
+        ctx.fillStyle = theme.token("band");
+        ctx.globalAlpha = 0.55;
+        for (const band of dateBands) {
+          const start = Date.parse(band.start);
+          const end = Date.parse(band.end);
+          if (!Number.isFinite(start) || !Number.isFinite(end) || end <= start) continue;
+          const startPixel = xScale.getPixelForValue(start);
+          const endPixel = xScale.getPixelForValue(end);
+          if (!Number.isFinite(startPixel) || !Number.isFinite(endPixel)) continue;
+          const bandLeft = Math.max(left, Math.min(startPixel, endPixel));
+          const bandRight = Math.min(right, Math.max(startPixel, endPixel));
+          if (bandRight <= bandLeft) continue;
+          ctx.fillRect(bandLeft, top, bandRight - bandLeft, bottom - top);
+        }
+        ctx.restore();
+      },
+    }),
+    [dateBands, theme, xScaleMode],
   );
   const crosshairPlugin = useMemo<Plugin<MarketChartType>>(
     () => ({
       id: "market-chart-crosshair",
       afterDraw(chart) {
+        const { bottom, top, left, right } = chart.chartArea;
         const active = chart.tooltip?.getActiveElements?.() ?? [];
         const first = active[0];
-        if (!first) return;
-        const { bottom, top } = chart.chartArea;
-        const x = first.element.x;
         const ctx = chart.ctx;
+        if (first) {
+          const x = first.element.x;
+          ctx.save();
+          ctx.beginPath();
+          ctx.setLineDash([4, 4]);
+          ctx.lineWidth = 1;
+          ctx.strokeStyle = theme.token("ink4");
+          ctx.moveTo(x, top);
+          ctx.lineTo(x, bottom);
+          ctx.stroke();
+          ctx.restore();
+          return;
+        }
+        // Linked cursor: no local hover, so stand on the shared date the
+        // sibling chart broadcast (brand dash keeps it distinct from hover).
+        if (!cursorLabel) return;
+        const index = resolveCursorIndex(cursorLabels, cursorLabel);
+        const label = index >= 0 ? cursorLabels[index] : undefined;
+        if (label === undefined) return;
+        const xScale = chart.scales.x;
+        if (!xScale) return;
+        const pixel = xScale.getPixelForValue(xScaleMode === "time" ? Date.parse(label) : index);
+        if (!Number.isFinite(pixel) || pixel < left || pixel > right) return;
         ctx.save();
         ctx.beginPath();
-        ctx.setLineDash([4, 4]);
+        ctx.setLineDash([2, 3]);
         ctx.lineWidth = 1;
-        ctx.strokeStyle = theme.token("ink4");
-        ctx.moveTo(x, top);
-        ctx.lineTo(x, bottom);
+        ctx.strokeStyle = theme.token("brand");
+        ctx.moveTo(pixel, top);
+        ctx.lineTo(pixel, bottom);
         ctx.stroke();
         ctx.restore();
       },
     }),
-    [theme],
+    [cursorLabel, cursorLabels, theme, xScaleMode],
   );
 
   useEffect(() => {
@@ -394,10 +540,11 @@ export function MarketChartEngineClient({
     return (
       <div
         className={cx(
-          "grid min-h-48 place-items-center rounded-xl border border-dashed border-[var(--c-line)] bg-[var(--c-surface-2)] text-xs font-bold text-[var(--c-ink-2)]",
+          "grid min-h-48 place-items-center rounded-xl border border-dashed border-[var(--c-line)] bg-[var(--c-surface-2)] text-[12px] font-bold text-[var(--c-ink-2)]",
           heightClassName,
           className,
         )}
+        data-market-chart-date-bands={dateBands.length || undefined}
       >
         {emptyLabel}
       </div>
@@ -411,13 +558,14 @@ export function MarketChartEngineClient({
         heightClassName,
         className,
       )}
+      data-market-chart-date-bands={dateBands.length || undefined}
       aria-label={`${ariaLabel}. 방향키, Home, End 키로 시점을 이동할 수 있습니다.`}
       onBlur={() => selectKeyboardIndex(null)}
       onKeyDown={handleKeyDown}
       role="group"
       tabIndex={onHoverPoint ? 0 : undefined}
     >
-      <Chart type={type} data={data} options={options} plugins={[crosshairPlugin]} aria-label={ariaLabel} role="img" />
+      <Chart type={type} data={data} options={options} plugins={[dateBandPlugin, crosshairPlugin]} aria-label={ariaLabel} role="img" />
     </div>
   );
 }

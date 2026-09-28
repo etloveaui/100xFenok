@@ -1,34 +1,50 @@
 "use client";
 
-import { useEffect, useState, type ReactNode } from "react";
+import {
+  createContext,
+  useContext,
+  useEffect,
+  useLayoutEffect,
+  useMemo,
+  useRef,
+  useState,
+  useSyncExternalStore,
+  type ReactNode,
+} from "react";
+import { usePathname } from "next/navigation";
 import BrandLogo from "@/components/BrandLogo";
-import ConnectedView from "@/components/connected/ConnectedView";
 import TransitionLink from "@/components/TransitionLink";
 import TickerTypeahead from "@/components/TickerTypeahead";
 import AppShellFreshnessPill from "@/components/shell/AppShellFreshnessPill";
-import {
-  getStockConnection,
-  getStockServices,
-  loadStockConnectionIndex,
-  loadStockServicesIndex,
-  type StockConnectionEntry,
-  type StockServicesEntry,
-} from "@/lib/data-entity-graph/stock-index";
+import UserAuthPill from "@/components/shell/UserAuthPill";
+import AdoptStorePrompt from "@/components/personal/AdoptStorePrompt";
+import { useUserHeartbeat } from "@/lib/auth/clientAuth";
+import { fetchJsonOrNull } from "@/lib/client/data-fetch";
 import {
   CHART_NAV_LABEL,
   CHART_ROUTE,
   EXPLORE_NAV_LABEL,
   EXPLORE_ROUTE,
-  WORKBENCH_NAV_LABEL,
 } from "@/lib/product-nav";
 import { ROUTES } from "@/lib/routes";
 import type { DataState } from "@/lib/data-state";
+import { useModal } from "@/hooks/useModal";
+import { NavItemPending, useNavigationPending } from "@/components/shell/navigation-progress";
+import { normalizeShellPathname, resolveShellRoute } from "@/components/shell/shell-routes";
+import { openCommandPalette } from "@/components/ui/CommandPalette";
 
 /**
  * Product shell (v3 design handoff): desktop = left rail + global top bar +
  * ticker strip; mobile = app header + bottom tab bar (PWA standalone-safe).
- * V1 Navbar/Footer are hidden via body.fnk-shell-on (globals.css) while a
- * shell page is mounted. CSS: src/styles/app-shell.css (.fnk-shell scope).
+ * CSS: src/styles/app-shell.css (.fnk-shell scope).
+ *
+ * The chrome is persistent: `AppShellFrame` (root layout) draws it once and
+ * keeps it mounted across client navigations, so the rail, tab bar, search
+ * box, ticker tape and signed-in state never blink or refetch between pages.
+ * Pages keep rendering `<AppShell active title backHref freshness>` — inside
+ * the frame that call only registers the page's chrome state (title, back
+ * link, freshness pill) and returns the page content. Outside a frame (a route
+ * missing from shell-routes.ts) AppShell draws the chrome itself as before.
  */
 
 export type ShellPage =
@@ -42,22 +58,31 @@ export type ShellPage =
   | "superinvestors"
   | "portfolio"
   | "chart"
+  | "research"
   | "dailyWrap"
   | "posts"
   | "alphaScout"
   | "stockAnalyzer"
   | "ib"
-  | "vr";
+  | "vr"
+  | "changes"
+  | "events";
 
-type NavGroupName = "분석" | "도구" | "더보기";
+/**
+ * The rail is grouped by the job a visit is for, not by page type:
+ * 오늘 = what happened, 시장 = understand the market, 발견 = find names,
+ * 내 투자 = my holdings, 도구 = calculators and reading. URLs are unchanged.
+ */
+type NavGroupName = "오늘" | "시장" | "발견" | "내 투자" | "도구";
 type NavItem = { id: ShellPage; group: NavGroupName; label: string; href: string; icon: ReactNode };
 type MobileTabId = ShellPage | "more";
 type NavGroup = { label: NavGroupName; items: NavItem[] };
 
+/** Nav items in their order inside each group; groups render in NAV_GROUP_ORDER. */
 const NAV: NavItem[] = [
   {
     id: "explore",
-    group: "분석",
+    group: "오늘",
     label: EXPLORE_NAV_LABEL,
     href: EXPLORE_ROUTE,
     icon: (
@@ -69,9 +94,21 @@ const NAV: NavItem[] = [
     ),
   },
   {
+    id: "changes",
+    group: "오늘",
+    label: "무엇이 바뀌었나",
+    href: ROUTES.changes,
+    icon: (
+      <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round">
+        <path d="M4 7h10.5M11.5 4l3 3-3 3" />
+        <path d="M16 13H5.5M8.5 10l-3 3 3 3" />
+      </svg>
+    ),
+  },
+  {
     id: "market",
-    group: "분석",
-    label: "시장",
+    group: "시장",
+    label: "밸류에이션",
     href: ROUTES.market,
     icon: (
       <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="1.7">
@@ -82,8 +119,8 @@ const NAV: NavItem[] = [
   },
   {
     id: "regime",
-    group: "분석",
-    label: "국면",
+    group: "시장",
+    label: "시황",
     href: ROUTES.regime,
     icon: (
       <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="1.7">
@@ -94,8 +131,21 @@ const NAV: NavItem[] = [
     ),
   },
   {
+    id: "events",
+    group: "시장",
+    label: "이벤트",
+    href: ROUTES.marketEvents,
+    icon: (
+      <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round">
+        <rect x="3" y="4.5" width="14" height="12.5" rx="2" />
+        <path d="M3 8.5h14M7 3v3M13 3v3" />
+        <path d="M6.5 12h2M11.5 12h2" />
+      </svg>
+    ),
+  },
+  {
     id: "sectors",
-    group: "분석",
+    group: "시장",
     label: "섹터",
     href: ROUTES.sectors,
     icon: (
@@ -108,21 +158,21 @@ const NAV: NavItem[] = [
     ),
   },
   {
-    id: "etfs",
-    group: "분석",
-    label: "ETF",
-    href: ROUTES.etfs,
+    id: "chart",
+    group: "시장",
+    label: CHART_NAV_LABEL,
+    href: CHART_ROUTE,
     icon: (
-      <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinejoin="round">
-        <path d="M10 2.8l7 3.8-7 3.8-7-3.8 7-3.8z" />
-        <path d="M3 10l7 3.8 7-3.8" strokeLinecap="round" />
-        <path d="M3 13.4l7 3.8 7-3.8" strokeLinecap="round" />
+      <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="1.7">
+        <rect x="3" y="3.5" width="14" height="13" rx="2" />
+        <path d="M6 12l2.4-3 2.2 2 3.4-4.2" strokeLinecap="round" strokeLinejoin="round" />
+        <path d="M6 15h8" strokeLinecap="round" />
       </svg>
     ),
   },
   {
     id: "screener",
-    group: "분석",
+    group: "발견",
     label: "스크리너",
     href: ROUTES.screener,
     icon: (
@@ -134,8 +184,21 @@ const NAV: NavItem[] = [
     ),
   },
   {
+    id: "etfs",
+    group: "발견",
+    label: "ETF",
+    href: ROUTES.etfs,
+    icon: (
+      <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinejoin="round">
+        <path d="M10 2.8l7 3.8-7 3.8-7-3.8 7-3.8z" />
+        <path d="M3 10l7 3.8 7-3.8" strokeLinecap="round" />
+        <path d="M3 13.4l7 3.8 7-3.8" strokeLinecap="round" />
+      </svg>
+    ),
+  },
+  {
     id: "superinvestors",
-    group: "분석",
+    group: "발견",
     label: "투자자",
     href: ROUTES.superinvestors,
     icon: (
@@ -148,7 +211,7 @@ const NAV: NavItem[] = [
   },
   {
     id: "portfolio",
-    group: "분석",
+    group: "내 투자",
     label: "포트폴리오",
     href: ROUTES.portfolio,
     icon: (
@@ -156,19 +219,6 @@ const NAV: NavItem[] = [
         <rect x="2.5" y="6" width="15" height="10.5" rx="2" />
         <path d="M7 6V4.6c0-.9.6-1.6 1.5-1.6h3c.9 0 1.5.7 1.5 1.6V6" strokeLinecap="round" />
         <path d="M2.5 10.5h15" />
-      </svg>
-    ),
-  },
-  {
-    id: "chart",
-    group: "분석",
-    label: CHART_NAV_LABEL,
-    href: CHART_ROUTE,
-    icon: (
-      <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="1.7">
-        <rect x="3" y="3.5" width="14" height="13" rx="2" />
-        <path d="M6 12l2.4-3 2.2 2 3.4-4.2" strokeLinecap="round" strokeLinejoin="round" />
-        <path d="M6 15h8" strokeLinecap="round" />
       </svg>
     ),
   },
@@ -197,63 +247,15 @@ const NAV: NavItem[] = [
     ),
   },
   {
-    id: "workbench",
-    group: "더보기",
-    label: WORKBENCH_NAV_LABEL,
-    href: ROUTES.workbench,
+    id: "research",
+    group: "도구",
+    label: "리서치",
+    href: ROUTES.research,
     icon: (
-      <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="1.7">
-        <circle cx="10" cy="10" r="7.5" />
-        <path d="M13.2 6.8l-2 4.4-4.4 2 2-4.4z" strokeLinejoin="round" />
-      </svg>
-    ),
-  },
-  {
-    id: "dailyWrap",
-    group: "더보기",
-    label: "Daily Wrap",
-    href: ROUTES.dailyWrap,
-    icon: (
-      <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="1.7">
-        <rect x="3" y="3.5" width="14" height="13" rx="2" />
-        <path d="M6 7h8M6 10h5M6 13h7" strokeLinecap="round" />
-      </svg>
-    ),
-  },
-  {
-    id: "posts",
-    group: "더보기",
-    label: "아카이브",
-    href: ROUTES.posts,
-    icon: (
-      <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="1.7">
-        <path d="M5 3.5h7l3 3v10H5z" strokeLinejoin="round" />
-        <path d="M12 3.5v4h4M7.5 10.5h5M7.5 13.5h4" strokeLinecap="round" />
-      </svg>
-    ),
-  },
-  {
-    id: "alphaScout",
-    group: "더보기",
-    label: "Alpha Scout (미리보기)",
-    href: ROUTES.alphaScout,
-    icon: (
-      <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="1.7">
-        <circle cx="8.5" cy="8.5" r="4.8" />
-        <path d="M12 12l4 4M14.5 4.5l.7 1.4 1.5.2-1.1 1.1.3 1.5-1.4-.7-1.4.7.3-1.5-1.1-1.1 1.5-.2z" strokeLinejoin="round" />
-      </svg>
-    ),
-  },
-  {
-    id: "stockAnalyzer",
-    group: "더보기",
-    label: "종목분석 (레거시)",
-    href: ROUTES.stockAnalyzer,
-    icon: (
-      <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="1.7">
-        <rect x="3" y="3.5" width="14" height="13" rx="2" />
-        <path d="M6.2 12.8l2.3-2.7 2 1.8 3.3-4.2" strokeLinecap="round" strokeLinejoin="round" />
-        <path d="M6 15h8" strokeLinecap="round" />
+      <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round">
+        <path d="M5 3.5h7.5L15.5 6.5v10h-10.5z" />
+        <path d="M12 3.5v3.5h3.5" />
+        <path d="M7.5 10.5h5M7.5 13.5h5" />
       </svg>
     ),
   },
@@ -273,26 +275,48 @@ const MORE_TAB: Omit<NavItem, "id" | "group"> & { id: "more" } = {
 };
 
 const PRIMARY_TAB_IDS: MobileTabId[] = ["explore", "market", "screener", "portfolio", "more"];
+/** Mobile tab labels where the tab names an area rather than its first page. */
+const TAB_LABELS: Partial<Record<ShellPage, string>> = { market: "시장" };
+/** Every nav page except the primary tabs, in nav order. */
 const MORE_TAB_IDS: ShellPage[] = [
-  "chart",
-  "workbench",
-  "ib",
-  "vr",
-  "dailyWrap",
-  "posts",
-  "alphaScout",
-  "stockAnalyzer",
+  "changes",
   "regime",
+  "events",
   "sectors",
+  "chart",
   "etfs",
   "superinvestors",
+  "ib",
+  "vr",
+  "research",
 ];
+/**
+ * Which bottom tab lights up for a page. A market page (시황, 이벤트, 섹터, 차트)
+ * lights 시장, the same area its in-page 밸류에이션·시황·이벤트·섹터 pills name,
+ * and 무엇이 바뀌었나 lights 홈; everything else without a tab of its own lights 더보기.
+ */
+const TAB_FOR_PAGE: Partial<Record<ShellPage, MobileTabId>> = {
+  explore: "explore",
+  changes: "explore",
+  market: "market",
+  regime: "market",
+  events: "market",
+  sectors: "market",
+  chart: "market",
+  screener: "screener",
+  portfolio: "portfolio",
+};
 
-const NAV_GROUP_ORDER: NavGroupName[] = ["분석", "도구", "더보기"];
+const NAV_GROUP_ORDER: NavGroupName[] = ["오늘", "시장", "발견", "내 투자", "도구"];
 
 const NAV_GROUPS: NavGroup[] = NAV_GROUP_ORDER.map((label) => ({
   label,
   items: NAV.filter((item) => item.group === label),
+})).filter((group) => group.items.length > 0);
+
+const MORE_NAV_GROUPS: NavGroup[] = NAV_GROUPS.map((group) => ({
+  label: group.label,
+  items: group.items.filter((item) => MORE_TAB_IDS.includes(item.id)),
 })).filter((group) => group.items.length > 0);
 
 function navById(id: ShellPage): NavItem {
@@ -305,33 +329,29 @@ interface TapeItem {
   pct: number;
 }
 
-let tapeCache: TapeItem[] | null = null;
-let tapePending: Promise<TapeItem[]> | null = null;
-// indices YTD from the already-cached benchmarks file — no extra API surface
+type TapeBenchDoc = { momentum?: Record<string, { ytd?: number } | undefined> };
+
+// indices YTD from the already-cached benchmarks file — no extra API surface.
+// Through the shared layer: a failure is never cached, so an empty tape
+// retries (the shell calls again on the next route change) instead of
+// sticking for the whole visit.
 function loadTape(): Promise<TapeItem[]> {
-  if (tapeCache) return Promise.resolve(tapeCache);
-  if (tapePending) return tapePending;
-  tapePending = fetch("/data/benchmarks/summaries.json")
-    .then((r) => (r.ok ? r.json() : null))
-    .catch(() => null)
-    .then((bench) => {
-      const items: TapeItem[] = [];
-      const labels: Array<[string, string]> = [
-        ["sp500", "S&P 500"],
-        ["nasdaq100", "나스닥 100"],
-        ["russell2000", "러셀 2000"],
-        ["kospi", "코스피"],
-        ["nikkei", "니케이"],
-        ["emerging", "신흥국"],
-      ];
-      for (const [key, label] of labels) {
-        const v = bench?.momentum?.[key]?.ytd;
-        if (typeof v === "number") items.push({ label, price: null, pct: v * 100 });
-      }
-      tapeCache = items;
-      return items;
-    });
-  return tapePending;
+  return fetchJsonOrNull<TapeBenchDoc>("/data/benchmarks/summaries.json").then((bench) => {
+    const items: TapeItem[] = [];
+    const labels: Array<[string, string]> = [
+      ["sp500", "S&P 500"],
+      ["nasdaq100", "나스닥 100"],
+      ["russell2000", "러셀 2000"],
+      ["kospi", "코스피"],
+      ["nikkei", "니케이"],
+      ["emerging", "신흥국"],
+    ];
+    for (const [key, label] of labels) {
+      const v = bench?.momentum?.[key]?.ytd;
+      if (typeof v === "number") items.push({ label, price: null, pct: v * 100 });
+    }
+    return items;
+  });
 }
 
 function marketStatusKST(): { dot: string; text: string } {
@@ -354,6 +374,15 @@ function marketStatusKST(): { dot: string; text: string } {
   return { dot: "var(--c-neutral)", text: "장 마감" };
 }
 
+function subscribeNever(): () => void {
+  return () => {};
+}
+
+/** Server and first paint say ⌘K; other platforms switch to Ctrl K after hydration. */
+function macShortcutLabel(): string {
+  return /Mac|iPhone|iPad/.test(navigator.platform) ? "⌘K" : "Ctrl K";
+}
+
 function SearchIcon() {
   return (
     <svg viewBox="0 0 20 20" fill="none">
@@ -363,144 +392,120 @@ function SearchIcon() {
   );
 }
 
-function BellIcon() {
-  return (
-    <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="1.7">
-      <path d="M6 8a4 4 0 018 0c0 3 1 4.2 1.6 4.8H4.4C5 12.2 6 11 6 8z" strokeLinejoin="round" />
-      <path d="M8.4 15.5a1.7 1.7 0 003.2 0" strokeLinecap="round" />
-    </svg>
-  );
-}
-
-function TypeaheadPreviewDrawer({
-  ticker,
-  onClose,
-}: {
-  ticker: string;
-  onClose: () => void;
-}) {
-  const [entry, setEntry] = useState<StockConnectionEntry | null | undefined>(undefined);
-  const [services, setServices] = useState<StockServicesEntry | null>(null);
-
+// The tape is one shared load: both strips read the same rows, and AppShell
+// renders no strip at all once the load settles empty, so the reserved band
+// height never outlives its content. Until the first result the space stays
+// reserved, which keeps the common case free of layout shift.
+function useTape(pathname: string): { items: TapeItem[]; settled: boolean } {
+  const [tape, setTape] = useState<{ items: TapeItem[]; settled: boolean }>({ items: [], settled: false });
+  const loadedRef = useRef(false);
   useEffect(() => {
+    // A loaded tape stays; a settled-empty tape retries on the next route
+    // change. The shared layer never caches failures, so the retry is real.
+    if (loadedRef.current) return;
     let cancelled = false;
-    const controller = new AbortController();
-    Promise.all([
-      loadStockConnectionIndex(controller.signal),
-      loadStockServicesIndex(controller.signal),
-    ]).then(([stockIndex, servicesIndex]) => {
+    const settle = (items: TapeItem[]) => {
       if (cancelled) return;
-      setEntry(getStockConnection(stockIndex, ticker));
-      setServices(getStockServices(servicesIndex, ticker));
-    }).catch(() => {
-      if (cancelled) return;
-      setEntry(null);
-      setServices(null);
-    });
-    return () => {
-      cancelled = true;
-      controller.abort();
+      if (items.length > 0) loadedRef.current = true;
+      setTape({ items, settled: true });
     };
-  }, [ticker]);
-
-  useEffect(() => {
-    const onKeyDown = (event: KeyboardEvent) => {
-      if (event.key === "Escape") onClose();
-    };
-    window.addEventListener("keydown", onKeyDown);
-    return () => window.removeEventListener("keydown", onKeyDown);
-  }, [onClose]);
-
-  return (
-    <aside
-      className="typeahead-preview"
-      data-testid="typeahead-preview"
-      role="dialog"
-      aria-label={`${ticker} 연결 미리보기`}
-    >
-      <div className="typeahead-preview__head">
-        <div className="typeahead-preview__title">
-          <span>연결 미리보기</span>
-          <strong>{ticker}</strong>
-        </div>
-        <button type="button" className="typeahead-preview__close" onClick={onClose} aria-label="미리보기 닫기">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-            <path d="M18 6L6 18M6 6l12 12" />
-          </svg>
-        </button>
-      </div>
-      <div className="typeahead-preview__body">
-        {entry === null ? (
-          <div className="typeahead-preview__empty">
-            <strong>{ticker}</strong>
-            <span>연결 인덱스에는 아직 잡히지 않은 종목입니다.</span>
-          </div>
-        ) : (
-          <ConnectedView ticker={ticker} entry={entry} services={services} variant="drawer" compact />
-        )}
-      </div>
-      <div className="typeahead-preview__actions">
-        <button type="button" onClick={onClose} className="typeahead-preview__secondary">닫기</button>
-        <TransitionLink href={ROUTES.stock(ticker)} onClick={onClose} className="typeahead-preview__primary">
-          전체 보기
-        </TransitionLink>
-      </div>
-    </aside>
-  );
-}
-
-function Tape() {
-  const [items, setItems] = useState<TapeItem[]>([]);
-  useEffect(() => {
-    let cancelled = false;
-    loadTape().then((t) => {
-      if (!cancelled) setItems(t);
-    });
+    loadTape().then(settle).catch(() => settle([]));
     return () => {
       cancelled = true;
     };
-  }, []);
-  if (items.length === 0) return null;
+  }, [pathname]);
+  return tape;
+}
+
+function Tape({ items }: { items: TapeItem[] }) {
   const fmt = (v: number) => `${v >= 0 ? "+" : ""}${v.toFixed(1)}%`;
   const seq = [...items, ...items];
+  // The period label sits outside the moving track: as the first track item
+  // it scrolled away within seconds and left bare "+66.9%" figures behind.
   return (
-    <div className="ticker-track">
-      <span className="tk-item"><span className="p">YTD</span></span>
-      {seq.map((it, i) => (
-        <span key={`${it.label}-${i}`} className="tk-item">
-          <span className="s">{it.label}</span>
-          {it.price ? <span className="p num">{it.price}</span> : null}
-          <span className={`num ${it.pct >= 0 ? "up" : "down"}`}>{fmt(it.pct)}</span>
-        </span>
-      ))}
-    </div>
+    <>
+      <span className="tk-label">연초 대비</span>
+      <div className="ticker-track">
+        {seq.map((it, i) => (
+          <span key={`${it.label}-${i}`} className="tk-item">
+            <span className="s">{it.label}</span>
+            {it.price ? <span className="p num">{it.price}</span> : null}
+            <span className={`num ${it.pct >= 0 ? "up" : "down"}`}>{fmt(it.pct)}</span>
+          </span>
+        ))}
+      </div>
+    </>
   );
 }
 
-export default function AppShell({
-  active,
-  title,
-  backHref,
-  freshness,
-  children,
-}: {
+type AppShellMeta = {
   active?: ShellPage;
   title: string;
   backHref?: string;
+  backLabel?: string;
   freshness?: DataState | null;
+};
+
+type ShellRegistration = { pathname: string; meta: AppShellMeta };
+
+type ShellFrameApi = {
+  register: (registration: ShellRegistration) => void;
+  unregister: (registration: ShellRegistration) => void;
+};
+
+const ShellFrameContext = createContext<ShellFrameApi | null>(null);
+
+function sameFreshness(a: DataState | null | undefined, b: DataState | null | undefined): boolean {
+  if (a === b) return true;
+  if (!a || !b) return false;
+  return JSON.stringify(a) === JSON.stringify(b);
+}
+
+function sameRegistration(a: ShellRegistration, b: ShellRegistration): boolean {
+  return (
+    a.pathname === b.pathname &&
+    a.meta.active === b.meta.active &&
+    a.meta.title === b.meta.title &&
+    a.meta.backHref === b.meta.backHref &&
+    a.meta.backLabel === b.meta.backLabel &&
+    sameFreshness(a.meta.freshness, b.meta.freshness)
+  );
+}
+
+function ShellChrome({
+  meta,
+  pathname,
+  children,
+}: {
+  meta: AppShellMeta;
+  pathname: string;
   children: ReactNode;
 }) {
+  const { active, title, backHref, backLabel = "뒤로", freshness } = meta;
+  useUserHeartbeat();
+  const navPending = useNavigationPending();
   const [searching, setSearching] = useState(false);
-  const [moreOpen, setMoreOpen] = useState(false);
-  const [typeaheadPreviewTicker, setTypeaheadPreviewTicker] = useState<string | null>(null);
+  const [showScrollTop, setShowScrollTop] = useState(false);
   const [status, setStatus] = useState<{ dot: string; text: string }>(() => marketStatusKST());
-  const navActive = active && NAV.some((item) => item.id === active) ? active : "explore";
+  const moreModal = useModal("mobile-more");
+  const moreOpen = moreModal.isOpen;
+  const moreCloseRef = useRef<HTMLButtonElement>(null);
+  const navActive: ShellPage | null = active && NAV.some((item) => item.id === active) ? active : null;
+  const activeTab: MobileTabId | null = navActive ? TAB_FOR_PAGE[navActive] ?? "more" : null;
+  const paletteShortcut = useSyncExternalStore(subscribeNever, macShortcutLabel, () => "⌘K");
+  const tape = useTape(pathname);
+  const tickerVisible = tape.items.length > 0;
+  // Only a settled empty tape releases the reserved band height.
+  const tickerOff = tape.settled && !tickerVisible;
 
-  const handleTypeaheadStockPreview = (ticker: string) => {
-    setTypeaheadPreviewTicker(ticker);
+  // The chrome outlives the page, so transient chrome UI (mobile search, More
+  // sheet, stock preview) must close when the route changes underneath it.
+  const [routePath, setRoutePath] = useState(pathname);
+  if (routePath !== pathname) {
+    setRoutePath(pathname);
     setSearching(false);
-    setMoreOpen(false);
-  };
+    if (moreModal.isOpen) moreModal.close();
+  }
 
   useEffect(() => {
     document.body.classList.add("fnk-shell-on");
@@ -512,16 +517,39 @@ export default function AppShell({
   }, []);
 
   useEffect(() => {
-    if (!moreOpen) return undefined;
-    const onKeyDown = (event: KeyboardEvent) => {
-      if (event.key === "Escape") setMoreOpen(false);
+    document.body.classList.toggle("fnk-shell-ticker-off", tickerOff);
+    return () => {
+      document.body.classList.remove("fnk-shell-ticker-off");
     };
-    window.addEventListener("keydown", onKeyDown);
-    return () => window.removeEventListener("keydown", onKeyDown);
+  }, [tickerOff]);
+
+  useEffect(() => {
+    if (!moreOpen) return;
+    moreCloseRef.current?.focus();
   }, [moreOpen]);
 
+  useEffect(() => {
+    const update = () => {
+      const next = window.scrollY > 480;
+      setShowScrollTop((current) => (current === next ? current : next));
+    };
+    update();
+    window.addEventListener("scroll", update, { passive: true });
+    return () => window.removeEventListener("scroll", update);
+  }, []);
+
+  const openMore = () => {
+    moreModal.open();
+  };
+
+  const scrollToTop = () => {
+    const behavior = window.matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth";
+    window.scrollTo({ top: 0, left: 0, behavior });
+  };
+
   return (
-    <>
+    <div className="fnk-shell" data-shell-frame="">
+      <div className="nav-progress" aria-hidden="true" data-active={navPending ? "" : undefined} />
       {/* desktop left rail */}
       <aside className="rail">
         <TransitionLink href={ROUTES.home} className="rail-logo" aria-label="100x Fenok 홈">
@@ -530,18 +558,24 @@ export default function AppShell({
             100x <b>Fenok</b>
           </span>
         </TransitionLink>
-        <nav className="rail-nav">
-          {NAV_GROUPS.map((group) => (
-            <div key={group.label} className="rail-group">
-              <div className="rail-sect">{group.label}</div>
+        <nav className="rail-nav" aria-label="사이트 메뉴">
+          {NAV_GROUPS.map((group, groupIndex) => (
+            <section key={group.label} className="rail-group" aria-labelledby={`rail-group-${groupIndex}`}>
+              <h2 id={`rail-group-${groupIndex}`} className="rail-sect">{group.label}</h2>
               {group.items.map((n) => {
                 return (
-                  <TransitionLink key={n.id} href={n.href} className={`rail-item ${n.id === navActive ? "on" : ""}`}>
+                  <TransitionLink
+                    key={n.id}
+                    href={n.href}
+                    className={`rail-item ${n.id === navActive ? "on" : ""}`}
+                    aria-current={n.id === navActive ? "page" : undefined}
+                  >
                     {n.icon} {n.label}
+                    <NavItemPending />
                   </TransitionLink>
                 );
               })}
-            </div>
+            </section>
           ))}
         </nav>
       </aside>
@@ -551,11 +585,19 @@ export default function AppShell({
         <div className="gsearch">
           <SearchIcon />
           <TickerTypeahead
-            placeholder="종목명, 티커 검색 — 연결 미리보기"
+            placeholder="종목명, 티커 검색"
             className="min-w-0 flex-1 bg-transparent text-[15px] outline-none"
             formClass="flex w-full items-center"
-            onStockSelect={handleTypeaheadStockPreview}
           />
+          <button
+            type="button"
+            className="kbd"
+            onClick={openCommandPalette}
+            aria-label={`화면·종목 빠른 이동 열기 (${paletteShortcut})`}
+            title="화면·종목 빠른 이동 · / 키로도 열립니다"
+          >
+            {paletteShortcut}
+          </button>
         </div>
         <div className="spacer" />
         <div className="topbar-actions">
@@ -565,22 +607,22 @@ export default function AppShell({
             </span>
           ) : null}
           <AppShellFreshnessPill state={freshness} />
-          <button className="ic-btn" aria-label="알림">
-            <BellIcon />
-          </button>
+          <UserAuthPill />
         </div>
       </header>
 
-      {/* ticker strip */}
-      <div className="ticker" aria-hidden="true">
-        <Tape />
-      </div>
+      {/* ticker strip — no rows, no band, no reserved height */}
+      {tickerVisible ? (
+        <div className="ticker" aria-hidden="true">
+          <Tape items={tape.items} />
+        </div>
+      ) : null}
 
       {/* mobile app header */}
       <header className={`appbar ${searching ? "searching" : ""}`}>
         <div className="appbar-main">
           {backHref ? (
-            <TransitionLink href={backHref} className="back" aria-label="뒤로">
+            <TransitionLink href={backHref} className="back" aria-label={backLabel}>
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                 <path d="M15 18l-6-6 6-6" />
               </svg>
@@ -597,42 +639,44 @@ export default function AppShell({
             </span>
           ) : null}
           <AppShellFreshnessPill state={freshness} />
+          <UserAuthPill />
           <span className="grow" />
-          <button className="ic-btn" aria-label="검색" onClick={() => setSearching((v) => !v)}>
+          <button
+            className="ic-btn"
+            aria-label={searching ? "검색 닫기" : "검색 열기"}
+            aria-expanded={searching}
+            aria-controls="mobile-search"
+            onClick={() => setSearching((v) => !v)}
+          >
             <SearchIcon />
           </button>
         </div>
-        <div className="msearch">
+        <div id="mobile-search" className="msearch">
           <div className="gs2">
             <SearchIcon />
             <TickerTypeahead
               placeholder="종목명, 티커 검색"
+              focusOnOpen={searching}
               className="min-w-0 flex-1 bg-transparent text-[15px] outline-none"
               formClass="flex w-full items-center"
-              onStockSelect={handleTypeaheadStockPreview}
             />
           </div>
         </div>
-        <div className="mticker" aria-hidden="true">
-          <Tape />
-        </div>
+        {tickerVisible ? (
+          <div className="mticker" aria-hidden="true">
+            <Tape items={tape.items} />
+          </div>
+        ) : null}
       </header>
 
-      <div className="content">{children}</div>
-      {typeaheadPreviewTicker ? (
-        <TypeaheadPreviewDrawer
-          key={typeaheadPreviewTicker}
-          ticker={typeaheadPreviewTicker}
-          onClose={() => setTypeaheadPreviewTicker(null)}
-        />
-      ) : null}
+      <div className="content" aria-busy={navPending || undefined}>{children}</div>
 
       {/* mobile bottom tab bar */}
-      <nav className="tabbar">
+      <nav className="tabbar" aria-label="주요 메뉴">
         {PRIMARY_TAB_IDS.map((id) => {
           const n = id === "more" ? MORE_TAB : navById(id);
           if (id === "more") {
-            const moreActive = moreOpen || MORE_TAB_IDS.includes(navActive as ShellPage);
+            const moreActive = moreOpen || activeTab === "more";
             return (
               <button
                 key={id}
@@ -640,7 +684,7 @@ export default function AppShell({
                 aria-expanded={moreOpen}
                 aria-controls="mobile-more-sheet"
                 aria-haspopup="dialog"
-                onClick={() => setMoreOpen((v) => !v)}
+                onClick={() => (moreOpen ? moreModal.close() : openMore())}
                 className={`tab ${moreActive ? "on" : ""}`}
               >
                 {n.icon} {n.label}
@@ -651,46 +695,131 @@ export default function AppShell({
             <TransitionLink
               key={id}
               href={n.href}
-              className={`tab ${id === navActive ? "on" : ""}`}
-              aria-current={id === navActive ? "page" : undefined}
+              className={`tab ${id === activeTab ? "on" : ""}`}
+              aria-current={id === navActive ? "page" : id === activeTab ? "true" : undefined}
             >
-              {n.icon} {n.label}
+              {n.icon} {TAB_LABELS[id as ShellPage] ?? n.label}
+              <NavItemPending />
             </TransitionLink>
           );
         })}
       </nav>
+      <button
+        type="button"
+        className="scroll-top"
+        aria-label="페이지 맨 위로 이동"
+        onClick={scrollToTop}
+        hidden={!showScrollTop}
+      >
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+          <path d="M6 14l6-6 6 6" />
+          <path d="M12 8v10" />
+        </svg>
+      </button>
       {moreOpen ? (
-        <div id="mobile-more-sheet" className="mobile-more-sheet" role="dialog" aria-modal="true" aria-label="더보기 메뉴">
-          <div className="mobile-more-backdrop" onClick={() => setMoreOpen(false)} aria-hidden="true" />
-          <div className="mobile-more-panel">
+        <div id="mobile-more-sheet" className="mobile-more-sheet">
+          <div className="mobile-more-backdrop" onClick={moreModal.close} aria-hidden="true" />
+          <div
+            className="mobile-more-panel"
+            {...moreModal.modalProps}
+            aria-labelledby="mobile-more-title"
+          >
             <div className="mobile-more-header">
-              <span>더보기</span>
-              <button type="button" onClick={() => setMoreOpen(false)} className="mobile-more-close" aria-label="닫기">
+              <span id="mobile-more-title">더보기</span>
+              <button ref={moreCloseRef} type="button" onClick={moreModal.close} className="mobile-more-close" aria-label="닫기">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                   <path d="M18 6L6 18M6 6l12 12" />
                 </svg>
               </button>
             </div>
             <nav className="mobile-more-list" aria-label="추가 메뉴">
-              {MORE_TAB_IDS.map((id) => {
-                const n = navById(id);
-                return (
-                  <TransitionLink
-                    key={id}
-                    href={n.href}
-                    className={`mobile-more-item ${id === navActive ? "on" : ""}`}
-                    onClick={() => setMoreOpen(false)}
-                    aria-current={id === navActive ? "page" : undefined}
-                  >
-                    <span className="mobile-more-icon">{n.icon}</span>
-                    <span className="mobile-more-label">{n.label}</span>
-                  </TransitionLink>
-                );
-              })}
+              {MORE_NAV_GROUPS.map((group, groupIndex) => (
+                <section key={group.label} className="mobile-more-group" aria-labelledby={`mobile-more-group-${groupIndex}`}>
+                  <h2 id={`mobile-more-group-${groupIndex}`} className="mobile-more-group-title">{group.label}</h2>
+                  <div className="mobile-more-group-items">
+                    {group.items.map((n) => (
+                      <TransitionLink
+                        key={n.id}
+                        href={n.href}
+                        className={`mobile-more-item ${n.id === navActive ? "on" : ""}`}
+                        onClick={moreModal.close}
+                        aria-current={n.id === navActive ? "page" : undefined}
+                      >
+                        <span className="mobile-more-icon">{n.icon}</span>
+                        <span className="mobile-more-label">{n.label}</span>
+                      </TransitionLink>
+                    ))}
+                  </div>
+                </section>
+              ))}
             </nav>
           </div>
         </div>
       ) : null}
-    </>
+      <AdoptStorePrompt />
+    </div>
+  );
+}
+
+/**
+ * Root-layout host for the persistent chrome. Shell routes (shell-routes.ts)
+ * get the chrome immediately — on the server render and on the loading state
+ * of a client navigation — using the route table's defaults; the page's own
+ * `<AppShell>` props take over as soon as it mounts. Other routes (admin,
+ * winddown, intro, /ib, …) render untouched.
+ */
+export function AppShellFrame({ children }: { children: ReactNode }) {
+  const pathname = normalizeShellPathname(usePathname());
+  const routeMeta = resolveShellRoute(pathname);
+  const [registration, setRegistration] = useState<ShellRegistration | null>(null);
+  const api = useMemo<ShellFrameApi>(
+    () => ({
+      register: (next) => setRegistration((prev) => (prev && sameRegistration(prev, next) ? prev : next)),
+      unregister: (gone) => setRegistration((prev) => (prev && sameRegistration(prev, gone) ? null : prev)),
+    }),
+    [],
+  );
+
+  if (!routeMeta) return <>{children}</>;
+  const meta = registration && registration.pathname === pathname ? registration.meta : routeMeta;
+  return (
+    <ShellFrameContext.Provider value={api}>
+      <ShellChrome meta={meta} pathname={pathname}>
+        {children}
+      </ShellChrome>
+    </ShellFrameContext.Provider>
+  );
+}
+
+export default function AppShell({
+  active,
+  title,
+  backHref,
+  backLabel = "뒤로",
+  freshness,
+  children,
+}: {
+  active?: ShellPage;
+  title: string;
+  backHref?: string;
+  backLabel?: string;
+  freshness?: DataState | null;
+  children: ReactNode;
+}) {
+  const frame = useContext(ShellFrameContext);
+  const pathname = normalizeShellPathname(usePathname());
+
+  useLayoutEffect(() => {
+    if (!frame) return;
+    const registration: ShellRegistration = { pathname, meta: { active, title, backHref, backLabel, freshness } };
+    frame.register(registration);
+    return () => frame.unregister(registration);
+  }, [frame, pathname, active, title, backHref, backLabel, freshness]);
+
+  if (frame) return <>{children}</>;
+  return (
+    <ShellChrome meta={{ active, title, backHref, backLabel, freshness }} pathname={pathname}>
+      {children}
+    </ShellChrome>
   );
 }
