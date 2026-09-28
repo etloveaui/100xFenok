@@ -8,15 +8,26 @@ import { fileURLToPath } from "node:url";
 import { LANE_REGISTRY } from "./lib/lane-registry.mjs";
 import {
   DETECTION_CALENDARS,
+  publicServedPath,
   readDetectionFloorRows,
   summarizeDataSetFreshness,
 } from "./lib/fenok-data-health-freshness.mjs";
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const KPI_REL = path.join("admin", "fenok-data-health-kpi.json");
-const SCHEMA_VERSION = "fenok-data-health-kpi/v3";
+const CURRENT_SCHEMA_VERSION = "fenok-data-health-kpi/v4";
+const LEGACY_SCHEMA_VERSION = "fenok-data-health-kpi/v3";
+const SUPPORTED_SCHEMA_VERSIONS = new Set([LEGACY_SCHEMA_VERSION, CURRENT_SCHEMA_VERSION]);
 const BASE_SET_KEYS = ["set", "served_path", "newest_source_date", "max_age", "status"];
-const ALLOWED_STATUS = new Set(["fresh", "delayed", "stopped"]);
+const OPTIONAL_SET_KEYS = [
+  "date_basis",
+  "oldest_source_date",
+  "oldest_source_member",
+  "fresh_members",
+  "total_members",
+  "serving_lkg",
+];
+const ALLOWED_STATUS = new Set(["fresh", "delayed", "stopped", "unknown"]);
 
 function object(value) {
   return value !== null && typeof value === "object" && !Array.isArray(value);
@@ -35,25 +46,17 @@ function dataSetLanes(registry = LANE_REGISTRY) {
   return registry.lanes.filter((lane) => lane.lane_class === "detection_floor");
 }
 
-function publicServedPath(lane) {
-  const roots = lane.roots ?? {};
-  const approved = lane.privacy_class === "private"
-    ? lane.public_canonical_outputs ?? []
-    : lane.privacy_class === "public_safe_aggregate"
-      ? (roots.public_mirror ?? []).map((item) => item.replace(/^100xfenok-next\/public\//, ""))
-      : roots.canonical_outputs ?? [];
-  return approved.find((item) => typeof item === "string"
-    && item.startsWith("data/") && !item.split("/").includes("..")) ?? null;
-}
-
 function readJson(filePath) {
   return JSON.parse(fs.readFileSync(filePath, "utf8"));
 }
 
-function validateDocument(document, label, expectedLanes, floorRows, calendars) {
+function validateDocument(document, label, expectedLanes, floorRows, calendars, dataRoot, freshnessCache) {
   const errors = [];
   if (!object(document)) return [`${label} must be a JSON object`];
-  if (document.schema_version !== SCHEMA_VERSION) errors.push(`${label}.schema_version must be ${SCHEMA_VERSION}`);
+  if (!SUPPORTED_SCHEMA_VERSIONS.has(document.schema_version)) {
+    errors.push(`${label}.schema_version must be ${CURRENT_SCHEMA_VERSION} or ${LEGACY_SCHEMA_VERSION}`);
+  }
+  const isLegacy = document.schema_version === LEGACY_SCHEMA_VERSION;
   const generatedAtValid = typeof document.generated_at === "string" && Number.isFinite(Date.parse(document.generated_at));
   if (!generatedAtValid) {
     errors.push(`${label}.generated_at must be a valid timestamp`);
@@ -75,23 +78,85 @@ function validateDocument(document, label, expectedLanes, floorRows, calendars) 
     }
     seen.add(row.set);
     const lane = byId.get(row.set);
-    const hasLkg = Object.hasOwn(row, "serving_lkg");
-    const expectedKeys = hasLkg ? [...BASE_SET_KEYS, "serving_lkg"] : BASE_SET_KEYS;
-    if (JSON.stringify(Object.keys(row).sort()) !== JSON.stringify(expectedKeys.sort())) {
-      errors.push(`${context} has unexpected fields`);
+    const cacheKey = `${lane.id}\u0000${document.generated_at}`;
+    let expected = freshnessCache.get(cacheKey);
+    if (!expected) {
+      expected = summarizeDataSetFreshness(
+        lane,
+        floorRows.get(lane.id),
+        document.generated_at,
+        calendars,
+        dataRoot,
+      );
+      freshnessCache.set(cacheKey, expected);
     }
-    if (row.served_path !== publicServedPath(lane)) errors.push(`${context}.served_path is not the registry-approved public path`);
+    const hasLkg = Object.hasOwn(row, "serving_lkg");
+    const rowKeys = Object.keys(row);
+    for (const key of BASE_SET_KEYS) {
+      if (!Object.hasOwn(row, key)) errors.push(`${context} is missing ${key}`);
+    }
+    const unexpectedKeys = rowKeys.filter((key) => !BASE_SET_KEYS.includes(key) && !OPTIONAL_SET_KEYS.includes(key));
+    if (unexpectedKeys.length > 0) errors.push(`${context} has unexpected fields`);
+    if (row.served_path !== null && typeof row.served_path !== "string") {
+      errors.push(`${context}.served_path must be a string or null`);
+    }
+    const approvedPath = publicServedPath(lane);
+    if (row.served_path !== approvedPath && !(isLegacy && row.served_path === null)) {
+      errors.push(`${context}.served_path is not the registry-approved public path`);
+    }
     if (row.newest_source_date !== null && !validDate(row.newest_source_date)) {
       errors.push(`${context}.newest_source_date must be a calendar date or null`);
     }
-    if (!ALLOWED_STATUS.has(row.status)) errors.push(`${context}.status must be fresh, delayed, or stopped`);
-    if (generatedAtValid) {
-      const expected = summarizeDataSetFreshness(lane, floorRows.get(lane.id), document.generated_at, calendars);
+    if (row.max_age !== null && (typeof row.max_age !== "string" || row.max_age.length === 0)) {
+      errors.push(`${context}.max_age must be a nonempty string or null`);
+    }
+    if (!ALLOWED_STATUS.has(row.status)) errors.push(`${context}.status must be fresh, delayed, stopped, or unknown`);
+    if (generatedAtValid && !isLegacy) {
       if (row.newest_source_date !== expected.newest_source_date) {
-        errors.push(`${context}.newest_source_date does not match detection-floor source evidence`);
+        errors.push(`${context}.newest_source_date does not match source-date evidence`);
       }
       if (row.max_age !== expected.max_age) errors.push(`${context}.max_age does not match freshness-policy`);
       if (row.status !== expected.status) errors.push(`${context}.status does not match source age and freshness-policy`);
+    }
+    if (generatedAtValid) {
+      if (Object.hasOwn(row, "date_basis") && row.date_basis !== expected.date_basis) {
+        errors.push(`${context}.date_basis does not match source-date evidence`);
+      }
+      if (Object.hasOwn(row, "oldest_source_date") && row.oldest_source_date !== expected.oldest_source_date) {
+        errors.push(`${context}.oldest_source_date does not match source-date evidence`);
+      }
+      if (Object.hasOwn(row, "oldest_source_member") && row.oldest_source_member !== expected.oldest_source_member) {
+        errors.push(`${context}.oldest_source_member does not match source-date evidence`);
+      }
+      if (Object.hasOwn(row, "fresh_members") && row.fresh_members !== expected.fresh_members) {
+        errors.push(`${context}.fresh_members does not match member freshness`);
+      }
+      if (Object.hasOwn(row, "total_members") && row.total_members !== expected.total_members) {
+        errors.push(`${context}.total_members does not match member count`);
+      }
+    }
+    if (Object.hasOwn(row, "date_basis") && !["collected", "mixed"].includes(row.date_basis)) {
+      errors.push(`${context}.date_basis must be collected or mixed when present`);
+    }
+    if (Object.hasOwn(row, "oldest_source_date")
+      && row.oldest_source_date !== null && !validDate(row.oldest_source_date)) {
+      errors.push(`${context}.oldest_source_date must be a calendar date or null`);
+    }
+    if (Object.hasOwn(row, "oldest_source_member")
+      && row.oldest_source_member !== null && typeof row.oldest_source_member !== "string") {
+      errors.push(`${context}.oldest_source_member must be a string or null`);
+    }
+    if (Object.hasOwn(row, "fresh_members")
+      && (!Number.isInteger(row.fresh_members) || row.fresh_members < 0)) {
+      errors.push(`${context}.fresh_members must be a nonnegative integer`);
+    }
+    if (Object.hasOwn(row, "total_members")
+      && (!Number.isInteger(row.total_members) || row.total_members < 1)) {
+      errors.push(`${context}.total_members must be a positive integer`);
+    }
+    if (Object.hasOwn(row, "fresh_members") && Object.hasOwn(row, "total_members")
+      && row.fresh_members > row.total_members) {
+      errors.push(`${context}.fresh_members cannot exceed total_members`);
     }
     if (hasLkg && typeof row.serving_lkg !== "boolean") errors.push(`${context}.serving_lkg must be a boolean when present`);
   }
@@ -108,9 +173,10 @@ export function validateKpiDocuments(rootDoc, publicDoc, {
 } = {}) {
   const lanes = dataSetLanes(registry);
   const floorRows = readDetectionFloorRows(dataRoot);
+  const freshnessCache = new Map();
   const errors = [
-    ...validateDocument(rootDoc, "private KPI", lanes, floorRows, calendars),
-    ...validateDocument(publicDoc, "public KPI", lanes, floorRows, calendars),
+    ...validateDocument(rootDoc, "private KPI", lanes, floorRows, calendars, dataRoot, freshnessCache),
+    ...validateDocument(publicDoc, "public KPI", lanes, floorRows, calendars, dataRoot, freshnessCache),
   ];
   if (JSON.stringify(rootDoc) !== JSON.stringify(publicDoc)) {
     errors.push("public KPI must match the public-safe canonical KPI document");

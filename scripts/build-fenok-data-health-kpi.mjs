@@ -6,12 +6,13 @@ import { fileURLToPath } from "node:url";
 import { LANE_REGISTRY } from "./lib/lane-registry.mjs";
 import {
   DETECTION_CALENDARS,
+  publicServedPath,
   readDetectionFloorRows,
   summarizeDataSetFreshness,
 } from "./lib/fenok-data-health-freshness.mjs";
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
-const SCHEMA_VERSION = "fenok-data-health-kpi/v3";
+const SCHEMA_VERSION = "fenok-data-health-kpi/v4";
 const KPI_REL_PATH = "admin/fenok-data-health-kpi.json";
 export const COMMITTED_KPI_PATH = path.join(ROOT, "data", KPI_REL_PATH);
 export const PUBLIC_KPI_PATH = path.join(ROOT, "100xfenok-next", "public", "data", KPI_REL_PATH);
@@ -47,18 +48,6 @@ function dataPath(dataRoot, repoRelativePath) {
   return path.join(dataRoot, relativePath);
 }
 
-function servedPath(lane) {
-  const roots = lane.roots ?? {};
-  const approved = lane.privacy_class === "private"
-    ? lane.public_canonical_outputs ?? []
-    : lane.privacy_class === "public_safe_aggregate"
-      ? (roots.public_mirror ?? []).map((item) => item.replace(/^100xfenok-next\/public\//, ""))
-      : roots.canonical_outputs ?? [];
-  const candidate = approved.find((item) => typeof item === "string"
-    && item.startsWith("data/") && !item.split("/").includes(".."));
-  return candidate ?? null;
-}
-
 function servingLkg(lane, dataRoot) {
   const storePath = dataPath(dataRoot, lane.recovery_store);
   if (!storePath) return null;
@@ -77,14 +66,21 @@ function servingLkg(lane, dataRoot) {
 }
 
 function buildSet(lane, floor, dataRoot, nowIso) {
-  const freshness = summarizeDataSetFreshness(lane, floor, nowIso, DETECTION_CALENDARS);
+  const freshness = summarizeDataSetFreshness(lane, floor, nowIso, DETECTION_CALENDARS, dataRoot);
   const row = {
     set: lane.id,
-    served_path: servedPath(lane),
+    served_path: publicServedPath(lane),
     newest_source_date: freshness.newest_source_date,
     max_age: freshness.max_age,
     status: freshness.status,
   };
+  if (freshness.date_basis && freshness.date_basis !== "source") row.date_basis = freshness.date_basis;
+  if (Number.isInteger(freshness.fresh_members) && Number.isInteger(freshness.total_members)) {
+    row.oldest_source_date = freshness.oldest_source_date;
+    row.oldest_source_member = freshness.oldest_source_member;
+    row.fresh_members = freshness.fresh_members;
+    row.total_members = freshness.total_members;
+  }
   const lkg = servingLkg(lane, dataRoot);
   if (lkg !== null) row.serving_lkg = lkg;
   return row;

@@ -4952,6 +4952,7 @@ def etf_candidate_symbol_sources() -> dict[str, set[str]]:
 def etf_detail_file_summary() -> dict:
     detail_dir = OUT_DIR / "etfs"
     symbols = []
+    source_members = []
     stockanalysis_symbols = []
     yahoo_fallback_symbols = []
     invalid_symbols = []
@@ -4959,6 +4960,7 @@ def etf_detail_file_summary() -> dict:
     if not detail_dir.exists():
         return {
             "symbols": symbols,
+            "source_members": source_members,
             "stockanalysis_symbols": stockanalysis_symbols,
             "yahoo_fallback_symbols": yahoo_fallback_symbols,
             "invalid_symbols": invalid_symbols,
@@ -4971,8 +4973,14 @@ def etf_detail_file_summary() -> dict:
         payload = read_json(path)
         symbols.append(ticker)
         if not isinstance(payload, dict):
+            source_members.append({"id": ticker, "source_as_of": None, "fetched_at": None})
             invalid_symbols.append(ticker)
             continue
+        source_members.append({
+            "id": ticker,
+            "source_as_of": payload.get("source_as_of"),
+            "fetched_at": payload.get("fetched_at"),
+        })
         if (
             payload.get("source") == "yahoo_finance"
             or payload.get("source_provider") == "yahoo_finance"
@@ -4986,9 +4994,42 @@ def etf_detail_file_summary() -> dict:
 
     return {
         "symbols": symbols,
+        "source_members": source_members,
         "stockanalysis_symbols": stockanalysis_symbols,
         "yahoo_fallback_symbols": yahoo_fallback_symbols,
         "invalid_symbols": invalid_symbols,
+    }
+
+
+def etf_detail_source_date_summary(source_members: list[dict]) -> dict:
+    buckets: dict[tuple[str | None, str | None], int] = {}
+    dated_members: list[tuple[str, str]] = []
+    for member in source_members:
+        source_date = collection_date(member.get("source_as_of"))
+        if source_date:
+            date, basis = source_date, "source"
+        else:
+            collected_date = collection_date(member.get("fetched_at"))
+            date, basis = (collected_date, "collected") if collected_date else (None, None)
+        key = (date, basis)
+        buckets[key] = buckets.get(key, 0) + 1
+        if date and isinstance(member.get("id"), str):
+            dated_members.append((date, member["id"]))
+
+    dated_members.sort()
+    dates = [date for date, _ in dated_members]
+    return {
+        "total_members": len(source_members),
+        "newest_source_date": dates[-1] if dates else None,
+        "oldest_source_date": dates[0] if dates else None,
+        "oldest_source_member": dated_members[0][1] if dated_members else None,
+        "source_date_histogram": [
+            {"date": date, "basis": basis, "count": count}
+            for (date, basis), count in sorted(
+                buckets.items(),
+                key=lambda item: (item[0][0] or "", item[0][1] or ""),
+            )
+        ],
     }
 
 
@@ -4997,6 +5038,19 @@ def build_etf_detail_coverage() -> dict:
     detail_summary = etf_detail_file_summary()
     candidate_symbols = sorted(symbol_sources)
     detail_symbols = sorted(set(detail_summary["symbols"]))
+    source_members_by_symbol = {
+        row["id"]: row
+        for row in detail_summary.get("source_members") or []
+        if isinstance(row, dict) and isinstance(row.get("id"), str)
+    }
+    source_members = [
+        source_members_by_symbol.get(symbol, {
+            "id": symbol,
+            "source_as_of": None,
+            "fetched_at": None,
+        })
+        for symbol in candidate_symbols
+    ]
     detail_set = set(detail_symbols)
     candidate_set = set(candidate_symbols)
     covered = sorted(candidate_set & detail_set)
@@ -5059,6 +5113,7 @@ def build_etf_detail_coverage() -> dict:
         "source": "stockanalysis",
         "asset_type": "etf_detail_coverage",
         "generated_at": now_iso(),
+        "source_date_summary": etf_detail_source_date_summary(source_members),
         "status": "pass" if not missing and not invalid_detail else "warn",
         "policy": {
             "candidate_universe": "union(etf_universe, etf_screener, new_etfs)",

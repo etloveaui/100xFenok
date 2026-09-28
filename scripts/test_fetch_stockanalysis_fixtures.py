@@ -4838,11 +4838,17 @@ module.main()
                     encoding="utf-8",
                 )
                 (out_dir / "etfs" / "AAA.json").write_text(
-                    json.dumps({"source": "stockanalysis", "asset_type": "etf"}),
+                    json.dumps({
+                        "source": "stockanalysis", "asset_type": "etf",
+                        "source_as_of": "2026-09-26", "fetched_at": "2026-09-27T01:00:00Z",
+                    }),
                     encoding="utf-8",
                 )
                 (out_dir / "etfs" / "CCC.json").write_text(
-                    json.dumps({"source": "yahoo_finance", "detail_status": "yf_fallback"}),
+                    json.dumps({
+                        "source": "yahoo_finance", "detail_status": "yf_fallback",
+                        "source_as_of": None, "fetched_at": "2026-09-27T02:00:00Z",
+                    }),
                     encoding="utf-8",
                 )
 
@@ -4863,6 +4869,17 @@ module.main()
         self.assertEqual(coverage["missing_reason_samples"]["external_quote_type_mismatch"], ["DDD"])
         self.assertEqual(coverage["missing_reason_samples"]["untracked"], ["BBB"])
         self.assertEqual(coverage["missing_tickers"], ["BBB", "DDD"])
+        self.assertEqual(coverage["source_date_summary"], {
+            "total_members": 4,
+            "newest_source_date": "2026-09-27",
+            "oldest_source_date": "2026-09-26",
+            "oldest_source_member": "AAA",
+            "source_date_histogram": [
+                {"date": None, "basis": None, "count": 2},
+                {"date": "2026-09-26", "basis": "source", "count": 1},
+                {"date": "2026-09-27", "basis": "collected", "count": 1},
+            ],
+        })
 
     def test_incremental_etf_backfill_prioritizes_unattempted_missing_before_prior_failures(self) -> None:
         original_out_dir = self.fetcher.OUT_DIR
