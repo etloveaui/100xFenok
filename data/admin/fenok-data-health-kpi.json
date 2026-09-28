@@ -1,6 +1,6 @@
 {
-  "schema_version": "fenok-data-health-kpi/v3",
-  "generated_at": "2026-09-28T08:59:06.403Z",
+  "schema_version": "fenok-data-health-kpi/v4",
+  "generated_at": "2026-09-28T10:21:42.940Z",
   "sets": [
     {
       "set": "fred_macro",
@@ -16,11 +16,15 @@
       "newest_source_date": "2026-09-24",
       "max_age": "3d",
       "status": "fresh",
+      "oldest_source_date": "2026-01-01",
+      "oldest_source_member": "fred_banking_quarterly",
+      "fresh_members": 4,
+      "total_members": 4,
       "serving_lkg": false
     },
     {
       "set": "fred_yardeni",
-      "served_path": null,
+      "served_path": "data/yardney/yardney_model.json",
       "newest_source_date": "2026-09-18",
       "max_age": "13d",
       "status": "fresh",
@@ -53,7 +57,7 @@
     {
       "set": "yahoo_etf_fallback",
       "served_path": "data/yf/finance",
-      "newest_source_date": null,
+      "newest_source_date": "2026-07-27",
       "max_age": "2d",
       "status": "stopped",
       "serving_lkg": false
@@ -61,52 +65,67 @@
     {
       "set": "stockanalysis_etf_universe",
       "served_path": "data/stockanalysis/etf_universe.json",
-      "newest_source_date": null,
+      "newest_source_date": "2026-09-21",
       "max_age": "11d",
-      "status": "stopped"
+      "status": "fresh",
+      "date_basis": "collected"
     },
     {
       "set": "stockanalysis_etf_detail",
       "served_path": "data/stockanalysis/etfs",
       "newest_source_date": null,
       "max_age": "2d",
-      "status": "stopped"
+      "status": "unknown"
     },
     {
       "set": "stockanalysis_stock_financial",
       "served_path": "data/stockanalysis/stocks",
       "newest_source_date": "2026-09-27",
       "max_age": "2d",
-      "status": "fresh"
+      "status": "fresh",
+      "date_basis": "collected"
     },
     {
       "set": "stockanalysis_surfaces",
       "served_path": "data/stockanalysis/surfaces",
-      "newest_source_date": null,
+      "newest_source_date": "2026-09-26",
       "max_age": "2d",
-      "status": "stopped"
+      "status": "fresh",
+      "date_basis": "collected",
+      "oldest_source_date": "2026-09-26",
+      "oldest_source_member": "actions_recent",
+      "fresh_members": 25,
+      "total_members": 25
     },
     {
       "set": "yahoo_ticker_macro",
       "served_path": "data/macro/yahoo-ticker.json",
-      "newest_source_date": null,
-      "max_age": null,
-      "status": "stopped"
+      "newest_source_date": "2026-09-25",
+      "max_age": "2d",
+      "status": "fresh",
+      "oldest_source_date": "2026-09-25",
+      "oldest_source_member": "SOXL",
+      "fresh_members": 2,
+      "total_members": 2
     },
     {
       "set": "sentiment",
       "served_path": "data/sentiment/README.md",
       "newest_source_date": "2026-09-26",
       "max_age": "2d",
-      "status": "fresh",
+      "status": "stopped",
+      "oldest_source_date": "2026-09-22",
+      "oldest_source_member": "cftc",
+      "fresh_members": 1,
+      "total_members": 5,
       "serving_lkg": false
     },
     {
       "set": "nasdaq_giw_sox",
-      "served_path": null,
+      "served_path": "data/indices/nasdaq-giw-sox-constituents.json",
       "newest_source_date": "2026-09-25",
       "max_age": "2d",
-      "status": "delayed",
+      "status": "fresh",
       "serving_lkg": false
     },
     {
@@ -114,7 +133,11 @@
       "served_path": "data/indices/sp500.json",
       "newest_source_date": "2026-09-25",
       "max_age": "2d",
-      "status": "delayed"
+      "status": "fresh",
+      "oldest_source_date": "2026-09-25",
+      "oldest_source_member": "nasdaq",
+      "fresh_members": 4,
+      "total_members": 4
     },
     {
       "set": "oecd_cli",
@@ -137,11 +160,16 @@
       "served_path": "data/slickcharts/gainers.json",
       "newest_source_date": "2026-09-27",
       "max_age": "2d",
-      "status": "fresh"
+      "status": "delayed",
+      "date_basis": "mixed",
+      "oldest_source_date": "2026-09-04",
+      "oldest_source_member": "monthly",
+      "fresh_members": 4,
+      "total_members": 5
     },
     {
       "set": "edgar_filings",
-      "served_path": null,
+      "served_path": "data/edgar-korean-summaries",
       "newest_source_date": "2026-09-03",
       "max_age": "11d",
       "status": "stopped",
@@ -166,7 +194,11 @@
       "served_path": "data/benchmarks/us.json",
       "newest_source_date": "2026-09-25",
       "max_age": "13d",
-      "status": "fresh"
+      "status": "fresh",
+      "oldest_source_date": "2026-09-25",
+      "oldest_source_member": "developed",
+      "fresh_members": 6,
+      "total_members": 6
     },
     {
       "set": "global_scouter",
@@ -185,10 +217,10 @@
     },
     {
       "set": "finra_short_volume",
-      "served_path": null,
+      "served_path": "data/computed/fenok_flow_proxies.json",
       "newest_source_date": "2026-09-25",
       "max_age": "2d",
-      "status": "delayed",
+      "status": "fresh",
       "serving_lkg": false
     },
     {
@@ -201,15 +233,15 @@
     },
     {
       "set": "occ_options_volume",
-      "served_path": null,
+      "served_path": "data/computed/fenok_occ_options_availability.json",
       "newest_source_date": "2026-09-25",
       "max_age": "2d",
-      "status": "delayed",
+      "status": "fresh",
       "serving_lkg": false
     },
     {
       "set": "yahoo_private_options",
-      "served_path": null,
+      "served_path": "data/computed/fenok_yahoo_private_options_availability.json",
       "newest_source_date": "2026-09-26",
       "max_age": "2d",
       "status": "fresh",
@@ -217,7 +249,7 @@
     },
     {
       "set": "apewisdom_attention",
-      "served_path": null,
+      "served_path": "data/computed/fenok_social_attention_proxy.json",
       "newest_source_date": "2026-09-27",
       "max_age": "2d",
       "status": "fresh",
@@ -225,7 +257,7 @@
     },
     {
       "set": "gdelt_news_tone",
-      "served_path": null,
+      "served_path": "data/computed/fenok_news_tone_proxy.json",
       "newest_source_date": "2026-09-28",
       "max_age": "2d",
       "status": "fresh",
@@ -233,10 +265,14 @@
     },
     {
       "set": "yahoo_batch_quote_history",
-      "served_path": null,
-      "newest_source_date": "2026-09-28",
-      "max_age": "2d",
-      "status": "fresh"
+      "served_path": "data/yf/finance",
+      "newest_source_date": "2026-09-25",
+      "max_age": "6bd",
+      "status": "fresh",
+      "oldest_source_date": "2026-04-10",
+      "oldest_source_member": "ZCBE",
+      "fresh_members": 6714,
+      "total_members": 6861
     }
   ]
 }
