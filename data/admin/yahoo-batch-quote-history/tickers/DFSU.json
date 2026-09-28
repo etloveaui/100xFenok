@@ -38,31 +38,44 @@
       "run_id": "31575211549",
       "schedule": "7 6 * * 0-5",
       "shard": "39/72"
+    },
+    {
+      "attempts_used": 1,
+      "event_name": "workflow_dispatch",
+      "failures": [],
+      "latency_ms": 488,
+      "natural": false,
+      "observed_at": "2026-09-28T03:11:20Z",
+      "outcome": "fresh",
+      "run_attempt": 1,
+      "run_id": "36367829153",
+      "schedule": "",
+      "shard": ""
     }
   ],
   "current": {
-    "fetched_at": "2026-08-12T08:01:44Z",
-    "history_as_of": "2026-08-11",
-    "path": "data/admin/yahoo-batch-quote-history/lkg/DFSU.json",
-    "payload_sha256": "24d9e6a75c027c33b8ce77a9a2d07a4bd473cf511183bfe924ce50d402bf7d31",
-    "quote_as_of": "2026-08-11T19:59:31Z",
-    "source_as_of": "2026-08-11"
+    "fetched_at": "2026-09-28T03:16:29Z",
+    "history_as_of": "2026-09-25",
+    "path": "data/yf/finance/DFSU.json",
+    "payload_sha256": "ba16273a28dea7977be183ec1f2be55d5e424706e44ebc206811e0c0ee566f3c",
+    "quote_as_of": "2026-09-25T19:59:51Z",
+    "source_as_of": "2026-09-25"
   },
   "discovered_from": [
     "stockanalysis_etf"
   ],
   "last_attempt": {
     "attempts_used": 1,
-    "event_name": "schedule",
+    "event_name": "workflow_dispatch",
     "failures": [],
-    "latency_ms": 623,
-    "natural": true,
-    "observed_at": "2026-08-12T07:59:44Z",
+    "latency_ms": 488,
+    "natural": false,
+    "observed_at": "2026-09-28T03:11:20Z",
     "outcome": "fresh",
     "run_attempt": 1,
-    "run_id": "31575211549",
-    "schedule": "7 6 * * 0-5",
-    "shard": "39/72"
+    "run_id": "36367829153",
+    "schedule": "",
+    "shard": ""
   },
   "lkg": {
     "fetched_at": "2026-08-12T08:01:44Z",
@@ -74,18 +87,18 @@
   },
   "promotion_contract": "provider_observation/v2",
   "provider_observation": {
-    "event_name": "schedule",
-    "history_as_of": "2026-08-11",
-    "observed_at": "2026-08-12T07:59:44Z",
-    "payload_sha256": "725562cc2b2fffdf8352f0529c9d28fbeca6f5ecb92d595b4f3fa59896625c33",
-    "quote_as_of": "2026-08-11T19:59:31Z",
+    "event_name": "workflow_dispatch",
+    "history_as_of": "2026-09-25",
+    "observed_at": "2026-09-28T03:11:20Z",
+    "payload_sha256": "6bb2420e54baf25a7c56c3ed9784e381bf0146c3dcbe7b76c2653cd8bbd7677f",
+    "quote_as_of": "2026-09-25T19:59:51Z",
     "run_attempt": 1,
-    "run_id": "31575211549",
+    "run_id": "36367829153",
     "schema_version": "provider_observation/v2",
-    "source_as_of": "2026-08-11"
+    "source_as_of": "2026-09-25"
   },
-  "resolution_state": "lkg_primary",
-  "retry": true,
+  "resolution_state": "fresh_primary",
+  "retry": false,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "stale": {
     "age_business_days": 7,
@@ -98,5 +111,5 @@
     "source_as_of": "2026-08-11"
   },
   "ticker": "DFSU",
-  "updated_at": "2026-08-20T14:20:12Z"
+  "updated_at": "2026-09-28T03:11:20Z"
 }

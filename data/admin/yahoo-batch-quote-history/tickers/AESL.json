@@ -17,12 +17,13 @@
   "current": {
     "fetched_at": "2026-09-28T01:20:11Z",
     "history_as_of": "2026-09-25",
-    "path": "data/yf/finance/AESL.json",
+    "path": "data/admin/yahoo-batch-quote-history/lkg/AESL.json",
     "payload_sha256": "9a43354fc9b1724ca6b46d3d4b5b8e0457dcae184356d7a48faefbadf6b07141",
     "quote_as_of": "2026-09-15T15:01:50Z",
     "source_as_of": "2026-09-15T15:01:50Z"
   },
   "discovered_from": [
+    "market_facts",
     "stockanalysis_etf"
   ],
   "last_attempt": {
@@ -38,6 +39,14 @@
     "schedule": "",
     "shard": ""
   },
+  "lkg": {
+    "fetched_at": "2026-09-28T01:20:11Z",
+    "history_as_of": "2026-09-25",
+    "path": "data/admin/yahoo-batch-quote-history/lkg/AESL.json",
+    "payload_sha256": "9a43354fc9b1724ca6b46d3d4b5b8e0457dcae184356d7a48faefbadf6b07141",
+    "quote_as_of": "2026-09-15T15:01:50Z",
+    "source_as_of": "2026-09-15T15:01:50Z"
+  },
   "promotion_contract": "provider_observation/v2",
   "provider_observation": {
     "event_name": "workflow_dispatch",
@@ -50,9 +59,19 @@
     "schema_version": "provider_observation/v2",
     "source_as_of": "2026-09-15T15:01:50Z"
   },
-  "resolution_state": "fresh_primary",
-  "retry": false,
+  "resolution_state": "lkg_primary",
+  "retry": true,
   "schema_version": "yahoo-batch-quote-history-state/v1",
+  "stale": {
+    "age_business_days": 9,
+    "classified_at": "2026-09-28T03:11:20Z",
+    "classified_run_id": "36367829153",
+    "expected_resolution": "next_natural_yahoo_run",
+    "max_business_days": 6,
+    "message": "AESL holds LKG because Yahoo source date 2026-09-15T15:01:50Z is 9 business days old, beyond the 6-day bound; it will retry on the next natural Yahoo run.",
+    "reason": "source_age_exceeds_lane_bound",
+    "source_as_of": "2026-09-15T15:01:50Z"
+  },
   "ticker": "AESL",
-  "updated_at": "2026-09-28T01:17:59Z"
+  "updated_at": "2026-09-28T03:11:20Z"
 }

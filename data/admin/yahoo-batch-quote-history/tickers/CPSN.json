@@ -58,40 +58,46 @@
       "run_id": "31648785047",
       "schedule": "7 22 * * 0-5",
       "shard": "47/72"
+    },
+    {
+      "attempts_used": 1,
+      "event_name": "workflow_dispatch",
+      "failures": [],
+      "latency_ms": 460,
+      "natural": false,
+      "observed_at": "2026-09-28T03:11:20Z",
+      "outcome": "fresh",
+      "run_attempt": 1,
+      "run_id": "36367829153",
+      "schedule": "",
+      "shard": ""
     }
   ],
   "current": {
-    "fetched_at": "2026-08-05T23:16:31Z",
-    "history_as_of": "2026-08-05",
-    "path": "data/admin/yahoo-batch-quote-history/lkg/CPSN.json",
-    "payload_sha256": "6da1e7813aedc799acb3a539c8f81e40d9a9d9467c119cf433362c6d92f801df",
-    "quote_as_of": "2026-08-05T18:01:24Z",
-    "source_as_of": "2026-08-05"
+    "fetched_at": "2026-09-28T03:12:07Z",
+    "history_as_of": "2026-09-25",
+    "path": "data/yf/finance/CPSN.json",
+    "payload_sha256": "b131f0b1b454d85671a94e513e75961be11653f8a343df38a01b32e22ea0bfc8",
+    "quote_as_of": "2026-09-25T18:26:25Z",
+    "source_as_of": "2026-09-25"
   },
   "discovered_from": [
     "stockanalysis_etf"
   ],
   "last_attempt": {
     "attempts_used": 1,
-    "error": "ValueError: quote_as_of is unavailable for CPSN despite available history",
-    "event_name": "schedule",
-    "failures": [
-      {
-        "attempt": 1,
-        "error": "YFRateLimitError: Too Many Requests. Rate limited. Try after a while.",
-        "source": "provider_safe_call"
-      }
-    ],
+    "event_name": "workflow_dispatch",
+    "failures": [],
     "latency_ms": 460,
-    "natural": true,
-    "observed_at": "2026-08-12T22:55:30Z",
-    "outcome": "failed",
+    "natural": false,
+    "observed_at": "2026-09-28T03:11:20Z",
+    "outcome": "fresh",
     "run_attempt": 1,
-    "run_id": "31648785047",
-    "schedule": "7 22 * * 0-5",
-    "shard": "47/72"
+    "run_id": "36367829153",
+    "schedule": "",
+    "shard": ""
   },
-  "latest_failure": {
+  "last_recovered_failure": {
     "attempts_used": 1,
     "data_loss": false,
     "deferred_acquisition": false,
@@ -119,18 +125,23 @@
   },
   "promotion_contract": "provider_observation/v2",
   "provider_observation": {
-    "event_name": "schedule",
-    "history_as_of": "2026-08-05",
-    "observed_at": "2026-08-05T23:14:16Z",
-    "payload_sha256": "e9190ffebe6faa4dfd5059fee8b7ce5783446e43175a0676bc6e6053d5e8a777",
-    "quote_as_of": "2026-08-05T18:01:24Z",
+    "event_name": "workflow_dispatch",
+    "history_as_of": "2026-09-25",
+    "observed_at": "2026-09-28T03:11:20Z",
+    "payload_sha256": "0b18d06f75b19e329d852a4d77881fa6e508c3d14d2b99fbfabc1c62a83f1321",
+    "quote_as_of": "2026-09-25T18:26:25Z",
     "run_attempt": 1,
-    "run_id": "31055557073",
+    "run_id": "36367829153",
     "schema_version": "provider_observation/v2",
-    "source_as_of": "2026-08-05"
+    "source_as_of": "2026-09-25"
   },
-  "resolution_state": "lkg_primary",
-  "retry": true,
+  "recovered_at": "2026-09-28T03:11:20Z",
+  "recovered_from_run_id": "31648785047",
+  "recovery_event_name": "workflow_dispatch",
+  "recovery_run_attempt": 1,
+  "recovery_run_id": "36367829153",
+  "resolution_state": "fresh_primary",
+  "retry": false,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "stale": {
     "age_business_days": 10,
@@ -143,5 +154,5 @@
     "source_as_of": "2026-06-26"
   },
   "ticker": "CPSN",
-  "updated_at": "2026-08-12T22:55:30Z"
+  "updated_at": "2026-09-28T03:11:20Z"
 }

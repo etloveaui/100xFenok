@@ -131,62 +131,44 @@
       "run_id": "31562660637",
       "schedule": "7 2 * * 0-5",
       "shard": "37/72"
+    },
+    {
+      "attempts_used": 1,
+      "event_name": "workflow_dispatch",
+      "failures": [],
+      "latency_ms": 539,
+      "natural": false,
+      "observed_at": "2026-09-28T03:11:20Z",
+      "outcome": "fresh",
+      "run_attempt": 1,
+      "run_id": "36367829153",
+      "schedule": "",
+      "shard": ""
     }
   ],
   "current": {
-    "fetched_at": "2026-08-12T04:19:25Z",
-    "history_as_of": "2026-08-11",
-    "path": "data/admin/yahoo-batch-quote-history/lkg/FFLC.json",
-    "payload_sha256": "d007709972b0745d705285904a7fbc5fe888df9997b1523feb4436682948deb0",
-    "quote_as_of": "2026-08-11T19:59:45Z",
-    "source_as_of": "2026-08-11"
+    "fetched_at": "2026-09-28T03:28:25Z",
+    "history_as_of": "2026-09-25",
+    "path": "data/yf/finance/FFLC.json",
+    "payload_sha256": "ceed260e58017fd1defa7e62aa7833a5098303345251502a716df5bd755aa02d",
+    "quote_as_of": "2026-09-25T19:59:47Z",
+    "source_as_of": "2026-09-25"
   },
   "discovered_from": [
     "stockanalysis_etf"
   ],
   "last_attempt": {
     "attempts_used": 1,
-    "event_name": "schedule",
-    "failures": [
-      {
-        "attempt": 1,
-        "error": "YFDataException: FFLC: No Fund data found.",
-        "source": "provider_safe_call"
-      },
-      {
-        "attempt": 1,
-        "error": "YFDataException: FFLC: No Fund data found.",
-        "source": "provider_safe_call"
-      },
-      {
-        "attempt": 1,
-        "error": "YFDataException: FFLC: No Fund data found.",
-        "source": "provider_safe_call"
-      },
-      {
-        "attempt": 1,
-        "error": "YFDataException: FFLC: No Fund data found.",
-        "source": "provider_safe_call"
-      },
-      {
-        "attempt": 1,
-        "error": "YFDataException: FFLC: No Fund data found.",
-        "source": "provider_safe_call"
-      },
-      {
-        "attempt": 1,
-        "error": "YFDataException: FFLC: No Fund data found.",
-        "source": "provider_safe_call"
-      }
-    ],
-    "latency_ms": 627,
-    "natural": true,
-    "observed_at": "2026-08-12T04:17:21Z",
+    "event_name": "workflow_dispatch",
+    "failures": [],
+    "latency_ms": 539,
+    "natural": false,
+    "observed_at": "2026-09-28T03:11:20Z",
     "outcome": "fresh",
     "run_attempt": 1,
-    "run_id": "31562660637",
-    "schedule": "7 2 * * 0-5",
-    "shard": "37/72"
+    "run_id": "36367829153",
+    "schedule": "",
+    "shard": ""
   },
   "lkg": {
     "fetched_at": "2026-08-12T04:19:25Z",
@@ -198,18 +180,18 @@
   },
   "promotion_contract": "provider_observation/v2",
   "provider_observation": {
-    "event_name": "schedule",
-    "history_as_of": "2026-08-11",
-    "observed_at": "2026-08-12T04:17:21Z",
-    "payload_sha256": "aed8a4620a702685c2c843f88e387bf0d5801a98fcfab497c275b8275f0b4c5e",
-    "quote_as_of": "2026-08-11T19:59:45Z",
+    "event_name": "workflow_dispatch",
+    "history_as_of": "2026-09-25",
+    "observed_at": "2026-09-28T03:11:20Z",
+    "payload_sha256": "112fdf81bc89a79ef10be1f40ec8ba8f71777922c10912aa732b34dab4a46b4e",
+    "quote_as_of": "2026-09-25T19:59:47Z",
     "run_attempt": 1,
-    "run_id": "31562660637",
+    "run_id": "36367829153",
     "schema_version": "provider_observation/v2",
-    "source_as_of": "2026-08-11"
+    "source_as_of": "2026-09-25"
   },
-  "resolution_state": "lkg_primary",
-  "retry": true,
+  "resolution_state": "fresh_primary",
+  "retry": false,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "stale": {
     "age_business_days": 7,
@@ -222,5 +204,5 @@
     "source_as_of": "2026-08-11"
   },
   "ticker": "FFLC",
-  "updated_at": "2026-08-20T14:20:12Z"
+  "updated_at": "2026-09-28T03:11:20Z"
 }

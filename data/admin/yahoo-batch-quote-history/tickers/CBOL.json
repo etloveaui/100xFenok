@@ -56,7 +56,7 @@
   "current": {
     "fetched_at": "2026-09-28T01:34:10Z",
     "history_as_of": "2026-09-25",
-    "path": "data/yf/finance/CBOL.json",
+    "path": "data/admin/yahoo-batch-quote-history/lkg/CBOL.json",
     "payload_sha256": "465540e6786dfeff8d8ce5a037da4fceea2cbeff42c2a41f89d31b00c4b10876",
     "quote_as_of": "2026-09-17T16:31:25Z",
     "source_as_of": "2026-09-17T16:31:25Z"
@@ -78,12 +78,12 @@
     "shard": ""
   },
   "lkg": {
-    "fetched_at": "2026-08-10T04:07:43Z",
-    "history_as_of": "2026-08-07",
+    "fetched_at": "2026-09-28T01:34:10Z",
+    "history_as_of": "2026-09-25",
     "path": "data/admin/yahoo-batch-quote-history/lkg/CBOL.json",
-    "payload_sha256": "350ebec48c35b0bd48771a61a481fc1628534f5b02698305ca8e72092453b679",
-    "quote_as_of": "2026-08-07T15:13:24Z",
-    "source_as_of": "2026-08-07"
+    "payload_sha256": "465540e6786dfeff8d8ce5a037da4fceea2cbeff42c2a41f89d31b00c4b10876",
+    "quote_as_of": "2026-09-17T16:31:25Z",
+    "source_as_of": "2026-09-17T16:31:25Z"
   },
   "promotion_contract": "provider_observation/v2",
   "provider_observation": {
@@ -97,19 +97,19 @@
     "schema_version": "provider_observation/v2",
     "source_as_of": "2026-09-17T16:31:25Z"
   },
-  "resolution_state": "fresh_primary",
-  "retry": false,
+  "resolution_state": "lkg_primary",
+  "retry": true,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "stale": {
-    "age_business_days": 8,
-    "classified_at": "2026-08-19T23:42:29Z",
-    "classified_run_id": "32314261503",
+    "age_business_days": 7,
+    "classified_at": "2026-09-28T03:11:20Z",
+    "classified_run_id": "36367829153",
     "expected_resolution": "next_natural_yahoo_run",
     "max_business_days": 6,
-    "message": "CBOL holds LKG because Yahoo source date 2026-08-07 is 8 business days old, beyond the 6-day bound; it will retry on the next natural Yahoo run.",
+    "message": "CBOL holds LKG because Yahoo source date 2026-09-17T16:31:25Z is 7 business days old, beyond the 6-day bound; it will retry on the next natural Yahoo run.",
     "reason": "source_age_exceeds_lane_bound",
-    "source_as_of": "2026-08-07"
+    "source_as_of": "2026-09-17T16:31:25Z"
   },
   "ticker": "CBOL",
-  "updated_at": "2026-09-28T01:17:59Z"
+  "updated_at": "2026-09-28T03:11:20Z"
 }

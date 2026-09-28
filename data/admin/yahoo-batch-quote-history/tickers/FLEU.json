@@ -12,31 +12,44 @@
       "run_id": "31158308843",
       "schedule": "7 6 * * 0-5",
       "shard": "63/72"
+    },
+    {
+      "attempts_used": 1,
+      "event_name": "workflow_dispatch",
+      "failures": [],
+      "latency_ms": 579,
+      "natural": false,
+      "observed_at": "2026-09-28T03:11:20Z",
+      "outcome": "fresh",
+      "run_attempt": 1,
+      "run_id": "36367829153",
+      "schedule": "",
+      "shard": ""
     }
   ],
   "current": {
-    "fetched_at": "2026-08-07T07:40:24Z",
-    "history_as_of": "2026-08-06",
-    "path": "data/admin/yahoo-batch-quote-history/lkg/FLEU.json",
-    "payload_sha256": "953b9549c2ff55a98ab957051300e326fc57f44282e654dc8dfe2c0ea8d5fa28",
-    "quote_as_of": "2026-08-06T18:24:36Z",
-    "source_as_of": "2026-08-06"
+    "fetched_at": "2026-09-28T03:29:55Z",
+    "history_as_of": "2026-09-25",
+    "path": "data/yf/finance/FLEU.json",
+    "payload_sha256": "c86d8b6625de7f48ca0b8bb596d71efbb6739adb6124bf33c0bcd630ea1f553b",
+    "quote_as_of": "2026-09-25T19:59:50Z",
+    "source_as_of": "2026-09-25"
   },
   "discovered_from": [
     "stockanalysis_etf"
   ],
   "last_attempt": {
     "attempts_used": 1,
-    "event_name": "schedule",
+    "event_name": "workflow_dispatch",
     "failures": [],
-    "latency_ms": 1212,
-    "natural": true,
-    "observed_at": "2026-08-07T07:38:03Z",
+    "latency_ms": 579,
+    "natural": false,
+    "observed_at": "2026-09-28T03:11:20Z",
     "outcome": "fresh",
     "run_attempt": 1,
-    "run_id": "31158308843",
-    "schedule": "7 6 * * 0-5",
-    "shard": "63/72"
+    "run_id": "36367829153",
+    "schedule": "",
+    "shard": ""
   },
   "lkg": {
     "fetched_at": "2026-08-07T07:40:24Z",
@@ -48,18 +61,18 @@
   },
   "promotion_contract": "provider_observation/v2",
   "provider_observation": {
-    "event_name": "schedule",
-    "history_as_of": "2026-08-06",
-    "observed_at": "2026-08-07T07:38:03Z",
-    "payload_sha256": "0b9eb42b5fd4e4a86c1c4b29237eb96a341b89ad430bc214999691825ef3b6ba",
-    "quote_as_of": "2026-08-06T18:24:36Z",
+    "event_name": "workflow_dispatch",
+    "history_as_of": "2026-09-25",
+    "observed_at": "2026-09-28T03:11:20Z",
+    "payload_sha256": "1dc1b00305c11729c3d38fa1d91d12ba08060ff0e9b14891ba922ad233a97d61",
+    "quote_as_of": "2026-09-25T19:59:50Z",
     "run_attempt": 1,
-    "run_id": "31158308843",
+    "run_id": "36367829153",
     "schema_version": "provider_observation/v2",
-    "source_as_of": "2026-08-06"
+    "source_as_of": "2026-09-25"
   },
-  "resolution_state": "lkg_primary",
-  "retry": true,
+  "resolution_state": "fresh_primary",
+  "retry": false,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "stale": {
     "age_business_days": 9,
@@ -72,5 +85,5 @@
     "source_as_of": "2026-08-06"
   },
   "ticker": "FLEU",
-  "updated_at": "2026-08-19T23:42:29Z"
+  "updated_at": "2026-09-28T03:11:20Z"
 }

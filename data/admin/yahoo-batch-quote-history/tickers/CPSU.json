@@ -38,31 +38,44 @@
       "run_id": "31309259913",
       "schedule": "7 10 * * 0-5",
       "shard": "5/72"
+    },
+    {
+      "attempts_used": 1,
+      "event_name": "workflow_dispatch",
+      "failures": [],
+      "latency_ms": 448,
+      "natural": false,
+      "observed_at": "2026-09-28T03:11:20Z",
+      "outcome": "fresh",
+      "run_attempt": 1,
+      "run_id": "36367829153",
+      "schedule": "",
+      "shard": ""
     }
   ],
   "current": {
-    "fetched_at": "2026-08-09T10:53:56Z",
-    "history_as_of": "2026-08-07",
-    "path": "data/admin/yahoo-batch-quote-history/lkg/CPSU.json",
-    "payload_sha256": "32b8952946d30f756afdc651c0681156a981be2c6026c7fd559f7b07c60b94a8",
-    "quote_as_of": "2026-08-07T19:10:07Z",
-    "source_as_of": "2026-08-07"
+    "fetched_at": "2026-09-28T03:12:14Z",
+    "history_as_of": "2026-09-25",
+    "path": "data/yf/finance/CPSU.json",
+    "payload_sha256": "91013726c6bbe5c49ca6daa8db44d1b38f62850fe3c634c17453b0d98ce7bc80",
+    "quote_as_of": "2026-09-25T16:47:29Z",
+    "source_as_of": "2026-09-25"
   },
   "discovered_from": [
     "stockanalysis_etf"
   ],
   "last_attempt": {
     "attempts_used": 1,
-    "event_name": "schedule",
+    "event_name": "workflow_dispatch",
     "failures": [],
-    "latency_ms": 1231,
-    "natural": true,
-    "observed_at": "2026-08-09T10:51:07Z",
+    "latency_ms": 448,
+    "natural": false,
+    "observed_at": "2026-09-28T03:11:20Z",
     "outcome": "fresh",
     "run_attempt": 1,
-    "run_id": "31309259913",
-    "schedule": "7 10 * * 0-5",
-    "shard": "5/72"
+    "run_id": "36367829153",
+    "schedule": "",
+    "shard": ""
   },
   "lkg": {
     "fetched_at": "2026-08-09T10:53:56Z",
@@ -74,18 +87,18 @@
   },
   "promotion_contract": "provider_observation/v2",
   "provider_observation": {
-    "event_name": "schedule",
-    "history_as_of": "2026-08-07",
-    "observed_at": "2026-08-09T10:51:07Z",
-    "payload_sha256": "632592e69f63b8c925c160de557c6e9fd2742b0a2918c5976ecb14a4fc00e1ec",
-    "quote_as_of": "2026-08-07T19:10:07Z",
+    "event_name": "workflow_dispatch",
+    "history_as_of": "2026-09-25",
+    "observed_at": "2026-09-28T03:11:20Z",
+    "payload_sha256": "053ec39fcbf35c1fe7c90a5da7f42e88c094b95a891c91e6bed889d423b65240",
+    "quote_as_of": "2026-09-25T16:47:29Z",
     "run_attempt": 1,
-    "run_id": "31309259913",
+    "run_id": "36367829153",
     "schema_version": "provider_observation/v2",
-    "source_as_of": "2026-08-07"
+    "source_as_of": "2026-09-25"
   },
-  "resolution_state": "lkg_primary",
-  "retry": true,
+  "resolution_state": "fresh_primary",
+  "retry": false,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "stale": {
     "age_business_days": 8,
@@ -98,5 +111,5 @@
     "source_as_of": "2026-08-07"
   },
   "ticker": "CPSU",
-  "updated_at": "2026-08-19T23:42:29Z"
+  "updated_at": "2026-09-28T03:11:20Z"
 }
