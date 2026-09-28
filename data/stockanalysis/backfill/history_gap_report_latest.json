@@ -1,14 +1,14 @@
 {
   "schema_version": "stockanalysis-history-gap-report/v1",
-  "generated_at": "2026-09-28T01:40:47.685Z",
-  "classification_as_of": "2026-09-28T01:40:24.773Z",
+  "generated_at": "2026-09-28T02:08:59.172Z",
+  "classification_as_of": "2026-09-28T02:08:44.888Z",
   "report_profile": {
     "key": "daily_1y",
     "required_history_periods": [
       "daily_1y"
     ],
-    "generated_at": "2026-09-28T01:40:47.685Z",
-    "classification_as_of": "2026-09-28T01:40:24.773Z"
+    "generated_at": "2026-09-28T02:08:59.172Z",
+    "classification_as_of": "2026-09-28T02:08:44.888Z"
   },
   "required_history_periods": [
     "daily_1y"
@@ -614,26 +614,27 @@
     "detail_files_scanned": 5605,
     "complete": 4168,
     "missing": 1437,
-    "fetchable": 345,
-    "inception_limited": 1008,
+    "fetchable": 344,
+    "inception_limited": 1009,
     "terminal_limited": 84,
     "classification_projection": {
       "row_count": 5605,
-      "sha256": "eb5a08216a3cb2aa41548929f2957dcedd27ae944a3a4a9c887b1d7a4209effe",
+      "sha256": "c2b241d7ad94353e054ea25021c8884ce4c1b2ab76c6015d988d93fb219586c1",
       "reason_counts": {
         "complete": 4168,
         "full_span_sparse_history": 1,
         "inception_limited_declared": 1008,
+        "inception_limited_observation_derived": 1,
         "provider_recent_failure": 59,
         "provider_rejected_non_etf": 6,
         "provider_truncated_suspected": 1,
         "source_unavailable_recent_failure": 19,
-        "unconfirmed_short_history": 343
+        "unconfirmed_short_history": 342
       }
     },
     "fetchable_breakdown": {
       "counts": {
-        "stockanalysis_short_rows": 345
+        "stockanalysis_short_rows": 344
       },
       "samples": {
         "stockanalysis_short_rows": [
@@ -641,12 +642,12 @@
           "ADIU",
           "AMUN",
           "AMYY",
-          "AMZO",
           "ANEL",
           "APDB",
           "APHG",
           "APLX",
-          "APLZ"
+          "APLZ",
+          "APPC"
         ]
       }
     },
@@ -730,11 +731,11 @@
             "latest_observation_age_days": null,
             "latest_observation_age_business_days": null,
             "daily_1y_evidence_pass": false,
-            "yf_crosscheck_rows": 95,
+            "yf_crosscheck_rows": 129,
             "yf_crosscheck_earliest": "2026-03-24",
-            "yf_crosscheck_latest": "2026-08-07",
-            "yf_crosscheck_density": 0.959596,
-            "classification_as_of": "2026-09-28T01:40:24.773Z"
+            "yf_crosscheck_latest": "2026-09-25",
+            "yf_crosscheck_density": 0.962687,
+            "classification_as_of": "2026-09-28T02:08:44.888Z"
           }
         },
         {
@@ -774,11 +775,11 @@
             "latest_observation_age_days": null,
             "latest_observation_age_business_days": null,
             "daily_1y_evidence_pass": false,
-            "yf_crosscheck_rows": 34,
+            "yf_crosscheck_rows": 71,
             "yf_crosscheck_earliest": "2026-06-16",
-            "yf_crosscheck_latest": "2026-08-04",
-            "yf_crosscheck_density": 0.944444,
-            "classification_as_of": "2026-09-28T01:40:24.773Z"
+            "yf_crosscheck_latest": "2026-09-25",
+            "yf_crosscheck_density": 0.959459,
+            "classification_as_of": "2026-09-28T02:08:44.888Z"
           }
         },
         {
@@ -818,11 +819,11 @@
             "latest_observation_age_days": 66,
             "latest_observation_age_business_days": 46,
             "daily_1y_evidence_pass": false,
-            "yf_crosscheck_rows": 199,
+            "yf_crosscheck_rows": 234,
             "yf_crosscheck_earliest": "2025-10-21",
-            "yf_crosscheck_latest": "2026-08-06",
-            "yf_crosscheck_density": 0.956731,
-            "classification_as_of": "2026-09-28T01:40:24.773Z"
+            "yf_crosscheck_latest": "2026-09-25",
+            "yf_crosscheck_density": 0.959016,
+            "classification_as_of": "2026-09-28T02:08:44.888Z"
           }
         },
         {
@@ -862,55 +863,11 @@
             "latest_observation_age_days": 102,
             "latest_observation_age_business_days": 72,
             "daily_1y_evidence_pass": false,
-            "yf_crosscheck_rows": 223,
+            "yf_crosscheck_rows": 259,
             "yf_crosscheck_earliest": "2025-09-16",
-            "yf_crosscheck_latest": "2026-08-05",
-            "yf_crosscheck_density": 0.961207,
-            "classification_as_of": "2026-09-28T01:40:24.773Z"
-          }
-        },
-        {
-          "ticker": "AMZO",
-          "actual_rows": 126,
-          "fetchable_missing": [
-            "daily_1y"
-          ],
-          "inception_limited_missing": [],
-          "inception_date": null,
-          "daily_1y_gap_source": "stockanalysis_short_rows",
-          "source_provider": "stockanalysis",
-          "detail_status": "stockanalysis_partial",
-          "classification_reason": "unconfirmed_short_history",
-          "payload_fetched_at": "2026-09-24T14:10:09Z",
-          "daily_1y_classification": {
-            "classification_reason": "unconfirmed_short_history",
-            "declared_inception_date": null,
-            "declared_inception_source": null,
-            "declared_inception_source_field": null,
-            "declared_inception_valid": false,
-            "declared_inception_invalid_future": false,
-            "effective_start_date": null,
-            "effective_start_source": null,
-            "provider_truncation_suspected": false,
-            "cross_provider_start_confirmed": false,
-            "stable_observation_confirmed": false,
-            "stable_observation_pinned_start": null,
-            "daily_1y_row_count": 126,
-            "daily_1y_valid_unique_date_count": 126,
-            "daily_1y_earliest_observation": "2026-03-25",
-            "daily_1y_latest_observation": "2026-09-23",
-            "daily_1y_span_days": 182,
-            "daily_1y_expected_trading_days": 131,
-            "daily_1y_density": 0.961832,
-            "daily_1y_max_internal_gap_days": 4,
-            "latest_observation_age_days": 5,
-            "latest_observation_age_business_days": 3,
-            "daily_1y_evidence_pass": true,
-            "yf_crosscheck_rows": 98,
-            "yf_crosscheck_earliest": "2026-03-24",
-            "yf_crosscheck_latest": "2026-08-12",
-            "yf_crosscheck_density": 0.960784,
-            "classification_as_of": "2026-09-28T01:40:24.773Z"
+            "yf_crosscheck_latest": "2026-09-25",
+            "yf_crosscheck_density": 0.962825,
+            "classification_as_of": "2026-09-28T02:08:44.888Z"
           }
         },
         {
@@ -950,11 +907,11 @@
             "latest_observation_age_days": 102,
             "latest_observation_age_business_days": 72,
             "daily_1y_evidence_pass": false,
-            "yf_crosscheck_rows": 232,
-            "yf_crosscheck_earliest": "2025-09-04",
-            "yf_crosscheck_latest": "2026-08-06",
-            "yf_crosscheck_density": 0.962656,
-            "classification_as_of": "2026-09-28T01:40:24.773Z"
+            "yf_crosscheck_rows": 260,
+            "yf_crosscheck_earliest": "2025-09-15",
+            "yf_crosscheck_latest": "2026-09-25",
+            "yf_crosscheck_density": 0.962963,
+            "classification_as_of": "2026-09-28T02:08:44.888Z"
           }
         },
         {
@@ -994,11 +951,11 @@
             "latest_observation_age_days": null,
             "latest_observation_age_business_days": null,
             "daily_1y_evidence_pass": false,
-            "yf_crosscheck_rows": 65,
+            "yf_crosscheck_rows": 99,
             "yf_crosscheck_earliest": "2026-05-06",
-            "yf_crosscheck_latest": "2026-08-07",
-            "yf_crosscheck_density": 0.955882,
-            "classification_as_of": "2026-09-28T01:40:24.773Z"
+            "yf_crosscheck_latest": "2026-09-25",
+            "yf_crosscheck_density": 0.961165,
+            "classification_as_of": "2026-09-28T02:08:44.888Z"
           }
         },
         {
@@ -1038,11 +995,11 @@
             "latest_observation_age_days": null,
             "latest_observation_age_business_days": null,
             "daily_1y_evidence_pass": false,
-            "yf_crosscheck_rows": 37,
+            "yf_crosscheck_rows": 71,
             "yf_crosscheck_earliest": "2026-06-16",
-            "yf_crosscheck_latest": "2026-08-07",
-            "yf_crosscheck_density": 0.948718,
-            "classification_as_of": "2026-09-28T01:40:24.773Z"
+            "yf_crosscheck_latest": "2026-09-25",
+            "yf_crosscheck_density": 0.959459,
+            "classification_as_of": "2026-09-28T02:08:44.888Z"
           }
         },
         {
@@ -1082,11 +1039,11 @@
             "latest_observation_age_days": 102,
             "latest_observation_age_business_days": 72,
             "daily_1y_evidence_pass": false,
-            "yf_crosscheck_rows": 228,
-            "yf_crosscheck_earliest": "2025-09-09",
-            "yf_crosscheck_latest": "2026-08-05",
-            "yf_crosscheck_density": 0.962025,
-            "classification_as_of": "2026-09-28T01:40:24.773Z"
+            "yf_crosscheck_rows": 260,
+            "yf_crosscheck_earliest": "2025-09-15",
+            "yf_crosscheck_latest": "2026-09-25",
+            "yf_crosscheck_density": 0.962963,
+            "classification_as_of": "2026-09-28T02:08:44.888Z"
           }
         },
         {
@@ -1126,11 +1083,55 @@
             "latest_observation_age_days": null,
             "latest_observation_age_business_days": null,
             "daily_1y_evidence_pass": false,
-            "yf_crosscheck_rows": 137,
+            "yf_crosscheck_rows": 171,
             "yf_crosscheck_earliest": "2026-01-22",
-            "yf_crosscheck_latest": "2026-08-07",
-            "yf_crosscheck_density": 0.964789,
-            "classification_as_of": "2026-09-28T01:40:24.773Z"
+            "yf_crosscheck_latest": "2026-09-25",
+            "yf_crosscheck_density": 0.966102,
+            "classification_as_of": "2026-09-28T02:08:44.888Z"
+          }
+        },
+        {
+          "ticker": "APPC",
+          "actual_rows": 14,
+          "fetchable_missing": [
+            "daily_1y"
+          ],
+          "inception_limited_missing": [],
+          "inception_date": null,
+          "daily_1y_gap_source": "stockanalysis_short_rows",
+          "source_provider": "stockanalysis",
+          "detail_status": "stockanalysis_partial",
+          "classification_reason": "unconfirmed_short_history",
+          "payload_fetched_at": "2026-07-19T05:55:07Z",
+          "daily_1y_classification": {
+            "classification_reason": "unconfirmed_short_history",
+            "declared_inception_date": null,
+            "declared_inception_source": null,
+            "declared_inception_source_field": null,
+            "declared_inception_valid": false,
+            "declared_inception_invalid_future": false,
+            "effective_start_date": null,
+            "effective_start_source": null,
+            "provider_truncation_suspected": false,
+            "cross_provider_start_confirmed": false,
+            "stable_observation_confirmed": false,
+            "stable_observation_pinned_start": null,
+            "daily_1y_row_count": 14,
+            "daily_1y_valid_unique_date_count": 14,
+            "daily_1y_earliest_observation": "2026-06-29",
+            "daily_1y_latest_observation": "2026-07-17",
+            "daily_1y_span_days": 18,
+            "daily_1y_expected_trading_days": 15,
+            "daily_1y_density": 0.933333,
+            "daily_1y_max_internal_gap_days": 4,
+            "latest_observation_age_days": 73,
+            "latest_observation_age_business_days": 51,
+            "daily_1y_evidence_pass": false,
+            "yf_crosscheck_rows": 64,
+            "yf_crosscheck_earliest": "2026-06-26",
+            "yf_crosscheck_latest": "2026-09-25",
+            "yf_crosscheck_density": 0.969697,
+            "classification_as_of": "2026-09-28T02:08:44.888Z"
           }
         }
       ],
@@ -1171,11 +1172,11 @@
             "latest_observation_age_days": 73,
             "latest_observation_age_business_days": 51,
             "daily_1y_evidence_pass": false,
-            "yf_crosscheck_rows": 165,
+            "yf_crosscheck_rows": 198,
             "yf_crosscheck_earliest": "2025-12-11",
-            "yf_crosscheck_latest": "2026-08-10",
-            "yf_crosscheck_density": 0.953757,
-            "classification_as_of": "2026-09-28T01:40:24.773Z"
+            "yf_crosscheck_latest": "2026-09-25",
+            "yf_crosscheck_density": 0.956522,
+            "classification_as_of": "2026-09-28T02:08:44.888Z"
           }
         },
         {
@@ -1214,11 +1215,11 @@
             "latest_observation_age_days": 83,
             "latest_observation_age_business_days": 59,
             "daily_1y_evidence_pass": false,
-            "yf_crosscheck_rows": 46,
+            "yf_crosscheck_rows": 80,
             "yf_crosscheck_earliest": "2026-06-03",
-            "yf_crosscheck_latest": "2026-08-07",
-            "yf_crosscheck_density": 0.958333,
-            "classification_as_of": "2026-09-28T01:40:24.773Z"
+            "yf_crosscheck_latest": "2026-09-25",
+            "yf_crosscheck_density": 0.963855,
+            "classification_as_of": "2026-09-28T02:08:44.888Z"
           }
         },
         {
@@ -1257,11 +1258,11 @@
             "latest_observation_age_days": 83,
             "latest_observation_age_business_days": 59,
             "daily_1y_evidence_pass": false,
-            "yf_crosscheck_rows": 31,
+            "yf_crosscheck_rows": 67,
             "yf_crosscheck_earliest": "2026-06-23",
-            "yf_crosscheck_latest": "2026-08-05",
-            "yf_crosscheck_density": 0.96875,
-            "classification_as_of": "2026-09-28T01:40:24.773Z"
+            "yf_crosscheck_latest": "2026-09-25",
+            "yf_crosscheck_density": 0.971014,
+            "classification_as_of": "2026-09-28T02:08:44.888Z"
           }
         },
         {
@@ -1300,11 +1301,11 @@
             "latest_observation_age_days": 73,
             "latest_observation_age_business_days": 51,
             "daily_1y_evidence_pass": false,
-            "yf_crosscheck_rows": 162,
+            "yf_crosscheck_rows": 197,
             "yf_crosscheck_earliest": "2025-12-12",
-            "yf_crosscheck_latest": "2026-08-06",
-            "yf_crosscheck_density": 0.952941,
-            "classification_as_of": "2026-09-28T01:40:24.773Z"
+            "yf_crosscheck_latest": "2026-09-25",
+            "yf_crosscheck_density": 0.956311,
+            "classification_as_of": "2026-09-28T02:08:44.888Z"
           }
         },
         {
@@ -1343,11 +1344,11 @@
             "latest_observation_age_days": 73,
             "latest_observation_age_business_days": 51,
             "daily_1y_evidence_pass": false,
-            "yf_crosscheck_rows": 60,
+            "yf_crosscheck_rows": 95,
             "yf_crosscheck_earliest": "2026-05-12",
-            "yf_crosscheck_latest": "2026-08-06",
-            "yf_crosscheck_density": 0.952381,
-            "classification_as_of": "2026-09-28T01:40:24.773Z"
+            "yf_crosscheck_latest": "2026-09-25",
+            "yf_crosscheck_density": 0.959596,
+            "classification_as_of": "2026-09-28T02:08:44.888Z"
           }
         },
         {
@@ -1386,11 +1387,11 @@
             "latest_observation_age_days": 68,
             "latest_observation_age_business_days": 48,
             "daily_1y_evidence_pass": false,
-            "yf_crosscheck_rows": 17,
+            "yf_crosscheck_rows": 52,
             "yf_crosscheck_earliest": "2026-07-15",
-            "yf_crosscheck_latest": "2026-08-06",
-            "yf_crosscheck_density": 1,
-            "classification_as_of": "2026-09-28T01:40:24.773Z"
+            "yf_crosscheck_latest": "2026-09-25",
+            "yf_crosscheck_density": 0.981132,
+            "classification_as_of": "2026-09-28T02:08:44.888Z"
           }
         },
         {
@@ -1429,11 +1430,11 @@
             "latest_observation_age_days": 69,
             "latest_observation_age_business_days": 49,
             "daily_1y_evidence_pass": false,
-            "yf_crosscheck_rows": 26,
+            "yf_crosscheck_rows": 58,
             "yf_crosscheck_earliest": "2026-07-07",
-            "yf_crosscheck_latest": "2026-08-11",
-            "yf_crosscheck_density": 1,
-            "classification_as_of": "2026-09-28T01:40:24.773Z"
+            "yf_crosscheck_latest": "2026-09-25",
+            "yf_crosscheck_density": 0.983051,
+            "classification_as_of": "2026-09-28T02:08:44.888Z"
           }
         },
         {
@@ -1472,11 +1473,11 @@
             "latest_observation_age_days": 73,
             "latest_observation_age_business_days": 51,
             "daily_1y_evidence_pass": false,
-            "yf_crosscheck_rows": 97,
+            "yf_crosscheck_rows": 132,
             "yf_crosscheck_earliest": "2026-03-19",
-            "yf_crosscheck_latest": "2026-08-06",
-            "yf_crosscheck_density": 0.960396,
-            "classification_as_of": "2026-09-28T01:40:24.773Z"
+            "yf_crosscheck_latest": "2026-09-25",
+            "yf_crosscheck_density": 0.963504,
+            "classification_as_of": "2026-09-28T02:08:44.888Z"
           }
         },
         {
@@ -1515,11 +1516,11 @@
             "latest_observation_age_days": 66,
             "latest_observation_age_business_days": 46,
             "daily_1y_evidence_pass": false,
-            "yf_crosscheck_rows": 13,
+            "yf_crosscheck_rows": 46,
             "yf_crosscheck_earliest": "2026-07-23",
-            "yf_crosscheck_latest": "2026-08-10",
-            "yf_crosscheck_density": 1,
-            "classification_as_of": "2026-09-28T01:40:24.773Z"
+            "yf_crosscheck_latest": "2026-09-25",
+            "yf_crosscheck_density": 0.978723,
+            "classification_as_of": "2026-09-28T02:08:44.888Z"
           }
         },
         {
@@ -1562,7 +1563,7 @@
             "yf_crosscheck_earliest": null,
             "yf_crosscheck_latest": null,
             "yf_crosscheck_density": 0,
-            "classification_as_of": "2026-09-28T01:40:24.773Z"
+            "classification_as_of": "2026-09-28T02:08:44.888Z"
           }
         }
       ],
@@ -1612,7 +1613,7 @@
             "yf_crosscheck_earliest": "2025-09-26",
             "yf_crosscheck_latest": "2026-09-25",
             "yf_crosscheck_density": 0.961686,
-            "classification_as_of": "2026-09-28T01:40:24.773Z"
+            "classification_as_of": "2026-09-28T02:08:44.888Z"
           }
         },
         {
@@ -1660,7 +1661,7 @@
             "yf_crosscheck_earliest": "2025-09-26",
             "yf_crosscheck_latest": "2026-09-25",
             "yf_crosscheck_density": 0.961686,
-            "classification_as_of": "2026-09-28T01:40:24.773Z"
+            "classification_as_of": "2026-09-28T02:08:44.888Z"
           }
         },
         {
@@ -1708,7 +1709,7 @@
             "yf_crosscheck_earliest": "2025-09-24",
             "yf_crosscheck_latest": "2026-09-24",
             "yf_crosscheck_density": 0.958015,
-            "classification_as_of": "2026-09-28T01:40:24.773Z"
+            "classification_as_of": "2026-09-28T02:08:44.888Z"
           }
         },
         {
@@ -1756,7 +1757,7 @@
             "yf_crosscheck_earliest": "2025-09-24",
             "yf_crosscheck_latest": "2026-09-24",
             "yf_crosscheck_density": 0.958015,
-            "classification_as_of": "2026-09-28T01:40:24.773Z"
+            "classification_as_of": "2026-09-28T02:08:44.888Z"
           }
         },
         {
@@ -1804,7 +1805,7 @@
             "yf_crosscheck_earliest": "2025-09-24",
             "yf_crosscheck_latest": "2026-09-24",
             "yf_crosscheck_density": 0.958015,
-            "classification_as_of": "2026-09-28T01:40:24.773Z"
+            "classification_as_of": "2026-09-28T02:08:44.888Z"
           }
         },
         {
@@ -1852,7 +1853,7 @@
             "yf_crosscheck_earliest": "2025-09-24",
             "yf_crosscheck_latest": "2026-09-24",
             "yf_crosscheck_density": 0.958015,
-            "classification_as_of": "2026-09-28T01:40:24.773Z"
+            "classification_as_of": "2026-09-28T02:08:44.888Z"
           }
         },
         {
@@ -1896,11 +1897,11 @@
             "latest_observation_age_days": null,
             "latest_observation_age_business_days": null,
             "daily_1y_evidence_pass": false,
-            "yf_crosscheck_rows": 251,
+            "yf_crosscheck_rows": 253,
             "yf_crosscheck_earliest": "2025-09-24",
-            "yf_crosscheck_latest": "2026-09-24",
-            "yf_crosscheck_density": 0.958015,
-            "classification_as_of": "2026-09-28T01:40:24.773Z"
+            "yf_crosscheck_latest": "2026-09-25",
+            "yf_crosscheck_density": 0.961977,
+            "classification_as_of": "2026-09-28T02:08:44.888Z"
           }
         },
         {
@@ -1944,11 +1945,11 @@
             "latest_observation_age_days": null,
             "latest_observation_age_business_days": null,
             "daily_1y_evidence_pass": false,
-            "yf_crosscheck_rows": 251,
+            "yf_crosscheck_rows": 253,
             "yf_crosscheck_earliest": "2025-09-24",
-            "yf_crosscheck_latest": "2026-09-24",
-            "yf_crosscheck_density": 0.958015,
-            "classification_as_of": "2026-09-28T01:40:24.773Z"
+            "yf_crosscheck_latest": "2026-09-25",
+            "yf_crosscheck_density": 0.961977,
+            "classification_as_of": "2026-09-28T02:08:44.888Z"
           }
         },
         {
@@ -1992,11 +1993,11 @@
             "latest_observation_age_days": null,
             "latest_observation_age_business_days": null,
             "daily_1y_evidence_pass": false,
-            "yf_crosscheck_rows": 251,
+            "yf_crosscheck_rows": 253,
             "yf_crosscheck_earliest": "2025-09-24",
-            "yf_crosscheck_latest": "2026-09-24",
-            "yf_crosscheck_density": 0.958015,
-            "classification_as_of": "2026-09-28T01:40:24.773Z"
+            "yf_crosscheck_latest": "2026-09-25",
+            "yf_crosscheck_density": 0.961977,
+            "classification_as_of": "2026-09-28T02:08:44.888Z"
           }
         },
         {
@@ -2040,11 +2041,11 @@
             "latest_observation_age_days": null,
             "latest_observation_age_business_days": null,
             "daily_1y_evidence_pass": false,
-            "yf_crosscheck_rows": 251,
+            "yf_crosscheck_rows": 253,
             "yf_crosscheck_earliest": "2025-09-24",
-            "yf_crosscheck_latest": "2026-09-24",
-            "yf_crosscheck_density": 0.958015,
-            "classification_as_of": "2026-09-28T01:40:24.773Z"
+            "yf_crosscheck_latest": "2026-09-25",
+            "yf_crosscheck_density": 0.961977,
+            "classification_as_of": "2026-09-28T02:08:44.888Z"
           }
         }
       ],
@@ -2503,11 +2504,11 @@
             "latest_observation_age_days": 66,
             "latest_observation_age_business_days": 46,
             "daily_1y_evidence_pass": false,
-            "yf_crosscheck_rows": 199,
+            "yf_crosscheck_rows": 234,
             "yf_crosscheck_earliest": "2025-10-21",
-            "yf_crosscheck_latest": "2026-08-06",
-            "yf_crosscheck_density": 0.956731,
-            "classification_as_of": "2026-09-28T01:40:24.773Z"
+            "yf_crosscheck_latest": "2026-09-25",
+            "yf_crosscheck_density": 0.959016,
+            "classification_as_of": "2026-09-28T02:08:44.888Z"
           },
           "detail_source_kind": "stockanalysis_primary",
           "primary_present": true,
@@ -2577,11 +2578,11 @@
             "latest_observation_age_days": 82,
             "latest_observation_age_business_days": 58,
             "daily_1y_evidence_pass": false,
-            "yf_crosscheck_rows": 216,
+            "yf_crosscheck_rows": 252,
             "yf_crosscheck_earliest": "2025-09-25",
-            "yf_crosscheck_latest": "2026-08-05",
-            "yf_crosscheck_density": 0.96,
-            "classification_as_of": "2026-09-28T01:40:24.773Z"
+            "yf_crosscheck_latest": "2026-09-25",
+            "yf_crosscheck_density": 0.961832,
+            "classification_as_of": "2026-09-28T02:08:44.888Z"
           },
           "detail_source_kind": "r2_active_selection",
           "primary_present": false,
@@ -2625,11 +2626,11 @@
             "latest_observation_age_days": 62,
             "latest_observation_age_business_days": 44,
             "daily_1y_evidence_pass": false,
-            "yf_crosscheck_rows": 201,
+            "yf_crosscheck_rows": 235,
             "yf_crosscheck_earliest": "2025-10-20",
-            "yf_crosscheck_latest": "2026-08-07",
-            "yf_crosscheck_density": 0.957143,
-            "classification_as_of": "2026-09-28T01:40:24.773Z"
+            "yf_crosscheck_latest": "2026-09-25",
+            "yf_crosscheck_density": 0.959184,
+            "classification_as_of": "2026-09-28T02:08:44.888Z"
           },
           "detail_source_kind": "stockanalysis_primary",
           "primary_present": true,
@@ -2712,11 +2713,11 @@
             "latest_observation_age_days": 102,
             "latest_observation_age_business_days": 72,
             "daily_1y_evidence_pass": false,
-            "yf_crosscheck_rows": 219,
+            "yf_crosscheck_rows": 253,
             "yf_crosscheck_earliest": "2025-09-24",
-            "yf_crosscheck_latest": "2026-08-07",
-            "yf_crosscheck_density": 0.960526,
-            "classification_as_of": "2026-09-28T01:40:24.773Z"
+            "yf_crosscheck_latest": "2026-09-25",
+            "yf_crosscheck_density": 0.961977,
+            "classification_as_of": "2026-09-28T02:08:44.888Z"
           },
           "detail_source_kind": "stockanalysis_primary",
           "primary_present": true,
@@ -2760,11 +2761,11 @@
             "latest_observation_age_days": 102,
             "latest_observation_age_business_days": 72,
             "daily_1y_evidence_pass": false,
-            "yf_crosscheck_rows": 224,
+            "yf_crosscheck_rows": 260,
             "yf_crosscheck_earliest": "2025-09-15",
-            "yf_crosscheck_latest": "2026-08-05",
-            "yf_crosscheck_density": 0.961373,
-            "classification_as_of": "2026-09-28T01:40:24.773Z"
+            "yf_crosscheck_latest": "2026-09-25",
+            "yf_crosscheck_density": 0.962963,
+            "classification_as_of": "2026-09-28T02:08:44.888Z"
           },
           "detail_source_kind": "stockanalysis_primary",
           "primary_present": true,
@@ -2808,11 +2809,11 @@
             "latest_observation_age_days": 102,
             "latest_observation_age_business_days": 72,
             "daily_1y_evidence_pass": false,
-            "yf_crosscheck_rows": 228,
+            "yf_crosscheck_rows": 260,
             "yf_crosscheck_earliest": "2025-09-15",
-            "yf_crosscheck_latest": "2026-08-11",
-            "yf_crosscheck_density": 0.962025,
-            "classification_as_of": "2026-09-28T01:40:24.773Z"
+            "yf_crosscheck_latest": "2026-09-25",
+            "yf_crosscheck_density": 0.962963,
+            "classification_as_of": "2026-09-28T02:08:44.888Z"
           },
           "detail_source_kind": "stockanalysis_primary",
           "primary_present": true,
@@ -2869,11 +2870,11 @@
             "latest_observation_age_days": 61,
             "latest_observation_age_business_days": 43,
             "daily_1y_evidence_pass": false,
-            "yf_crosscheck_rows": 49,
+            "yf_crosscheck_rows": 82,
             "yf_crosscheck_earliest": "2026-06-01",
-            "yf_crosscheck_latest": "2026-08-10",
-            "yf_crosscheck_density": 0.960784,
-            "classification_as_of": "2026-09-28T01:40:24.773Z"
+            "yf_crosscheck_latest": "2026-09-25",
+            "yf_crosscheck_density": 0.964706,
+            "classification_as_of": "2026-09-28T02:08:44.888Z"
           },
           "detail_source_kind": "stockanalysis_primary",
           "primary_present": true,
@@ -2917,11 +2918,11 @@
             "latest_observation_age_days": null,
             "latest_observation_age_business_days": null,
             "daily_1y_evidence_pass": false,
-            "yf_crosscheck_rows": 11,
+            "yf_crosscheck_rows": 44,
             "yf_crosscheck_earliest": "2026-07-24",
-            "yf_crosscheck_latest": "2026-08-10",
-            "yf_crosscheck_density": 0.916667,
-            "classification_as_of": "2026-09-28T01:40:24.773Z"
+            "yf_crosscheck_latest": "2026-09-25",
+            "yf_crosscheck_density": 0.956522,
+            "classification_as_of": "2026-09-28T02:08:44.888Z"
           },
           "detail_source_kind": "stockanalysis_primary",
           "primary_present": true,
@@ -2965,11 +2966,11 @@
             "latest_observation_age_days": 75,
             "latest_observation_age_business_days": 53,
             "daily_1y_evidence_pass": false,
-            "yf_crosscheck_rows": 46,
+            "yf_crosscheck_rows": 82,
             "yf_crosscheck_earliest": "2026-06-01",
-            "yf_crosscheck_latest": "2026-08-05",
-            "yf_crosscheck_density": 0.958333,
-            "classification_as_of": "2026-09-28T01:40:24.773Z"
+            "yf_crosscheck_latest": "2026-09-25",
+            "yf_crosscheck_density": 0.964706,
+            "classification_as_of": "2026-09-28T02:08:44.888Z"
           },
           "detail_source_kind": "stockanalysis_primary",
           "primary_present": true,
@@ -3013,11 +3014,11 @@
             "latest_observation_age_days": 61,
             "latest_observation_age_business_days": 43,
             "daily_1y_evidence_pass": false,
-            "yf_crosscheck_rows": 9,
+            "yf_crosscheck_rows": 43,
             "yf_crosscheck_earliest": "2026-07-28",
-            "yf_crosscheck_latest": "2026-08-07",
-            "yf_crosscheck_density": 1,
-            "classification_as_of": "2026-09-28T01:40:24.773Z"
+            "yf_crosscheck_latest": "2026-09-25",
+            "yf_crosscheck_density": 0.977273,
+            "classification_as_of": "2026-09-28T02:08:44.888Z"
           },
           "detail_source_kind": "stockanalysis_primary",
           "primary_present": true,
@@ -3061,11 +3062,11 @@
             "latest_observation_age_days": null,
             "latest_observation_age_business_days": null,
             "daily_1y_evidence_pass": false,
-            "yf_crosscheck_rows": 12,
+            "yf_crosscheck_rows": 44,
             "yf_crosscheck_earliest": "2026-07-24",
-            "yf_crosscheck_latest": "2026-08-11",
-            "yf_crosscheck_density": 0.923077,
-            "classification_as_of": "2026-09-28T01:40:24.773Z"
+            "yf_crosscheck_latest": "2026-09-25",
+            "yf_crosscheck_density": 0.956522,
+            "classification_as_of": "2026-09-28T02:08:44.888Z"
           },
           "detail_source_kind": "stockanalysis_primary",
           "primary_present": true,
@@ -3122,11 +3123,11 @@
             "latest_observation_age_days": null,
             "latest_observation_age_business_days": null,
             "daily_1y_evidence_pass": false,
-            "yf_crosscheck_rows": 10,
+            "yf_crosscheck_rows": 44,
             "yf_crosscheck_earliest": "2026-07-27",
-            "yf_crosscheck_latest": "2026-08-07",
-            "yf_crosscheck_density": 1,
-            "classification_as_of": "2026-09-28T01:40:24.773Z"
+            "yf_crosscheck_latest": "2026-09-25",
+            "yf_crosscheck_density": 0.977778,
+            "classification_as_of": "2026-09-28T02:08:44.888Z"
           },
           "detail_source_kind": "stockanalysis_primary",
           "primary_present": true,
@@ -3183,11 +3184,11 @@
             "latest_observation_age_days": 102,
             "latest_observation_age_business_days": 72,
             "daily_1y_evidence_pass": false,
-            "yf_crosscheck_rows": 227,
+            "yf_crosscheck_rows": 258,
             "yf_crosscheck_earliest": "2025-09-17",
-            "yf_crosscheck_latest": "2026-08-12",
-            "yf_crosscheck_density": 0.961864,
-            "classification_as_of": "2026-09-28T01:40:24.773Z"
+            "yf_crosscheck_latest": "2026-09-25",
+            "yf_crosscheck_density": 0.962687,
+            "classification_as_of": "2026-09-28T02:08:44.888Z"
           },
           "detail_source_kind": "stockanalysis_primary",
           "primary_present": true,
@@ -3270,11 +3271,11 @@
             "latest_observation_age_days": 102,
             "latest_observation_age_business_days": 72,
             "daily_1y_evidence_pass": false,
-            "yf_crosscheck_rows": 226,
+            "yf_crosscheck_rows": 258,
             "yf_crosscheck_earliest": "2025-09-17",
-            "yf_crosscheck_latest": "2026-08-11",
-            "yf_crosscheck_density": 0.961702,
-            "classification_as_of": "2026-09-28T01:40:24.773Z"
+            "yf_crosscheck_latest": "2026-09-25",
+            "yf_crosscheck_density": 0.962687,
+            "classification_as_of": "2026-09-28T02:08:44.888Z"
           },
           "detail_source_kind": "stockanalysis_primary",
           "primary_present": true,
@@ -3344,11 +3345,11 @@
             "latest_observation_age_days": 102,
             "latest_observation_age_business_days": 72,
             "daily_1y_evidence_pass": false,
-            "yf_crosscheck_rows": 219,
+            "yf_crosscheck_rows": 253,
             "yf_crosscheck_earliest": "2025-09-24",
-            "yf_crosscheck_latest": "2026-08-07",
-            "yf_crosscheck_density": 0.960526,
-            "classification_as_of": "2026-09-28T01:40:24.773Z"
+            "yf_crosscheck_latest": "2026-09-25",
+            "yf_crosscheck_density": 0.961977,
+            "classification_as_of": "2026-09-28T02:08:44.888Z"
           },
           "detail_source_kind": "stockanalysis_primary",
           "primary_present": true,
@@ -3405,11 +3406,11 @@
             "latest_observation_age_days": 66,
             "latest_observation_age_business_days": 46,
             "daily_1y_evidence_pass": false,
-            "yf_crosscheck_rows": 68,
+            "yf_crosscheck_rows": 102,
             "yf_crosscheck_earliest": "2026-05-01",
-            "yf_crosscheck_latest": "2026-08-07",
-            "yf_crosscheck_density": 0.957746,
-            "classification_as_of": "2026-09-28T01:40:24.773Z"
+            "yf_crosscheck_latest": "2026-09-25",
+            "yf_crosscheck_density": 0.962264,
+            "classification_as_of": "2026-09-28T02:08:44.888Z"
           },
           "detail_source_kind": "stockanalysis_primary",
           "primary_present": true,
@@ -3496,7 +3497,7 @@
             "yf_crosscheck_earliest": "2026-03-16",
             "yf_crosscheck_latest": "2026-08-12",
             "yf_crosscheck_density": 0.953704,
-            "classification_as_of": "2026-09-28T01:40:24.773Z"
+            "classification_as_of": "2026-09-28T02:08:44.888Z"
           },
           "detail_source_kind": "stockanalysis_primary",
           "primary_present": true,
@@ -3583,7 +3584,7 @@
             "yf_crosscheck_earliest": "2026-05-01",
             "yf_crosscheck_latest": "2026-08-07",
             "yf_crosscheck_density": 0.957746,
-            "classification_as_of": "2026-09-28T01:40:24.773Z"
+            "classification_as_of": "2026-09-28T02:08:44.888Z"
           },
           "detail_source_kind": "stockanalysis_primary",
           "primary_present": true,
@@ -3631,7 +3632,7 @@
             "yf_crosscheck_earliest": "2026-05-01",
             "yf_crosscheck_latest": "2026-08-07",
             "yf_crosscheck_density": 0.957746,
-            "classification_as_of": "2026-09-28T01:40:24.773Z"
+            "classification_as_of": "2026-09-28T02:08:44.888Z"
           },
           "detail_source_kind": "stockanalysis_primary",
           "primary_present": true,
@@ -3718,7 +3719,7 @@
             "yf_crosscheck_earliest": "2025-09-16",
             "yf_crosscheck_latest": "2026-08-06",
             "yf_crosscheck_density": 0.961373,
-            "classification_as_of": "2026-09-28T01:40:24.773Z"
+            "classification_as_of": "2026-09-28T02:08:44.888Z"
           },
           "detail_source_kind": "stockanalysis_primary",
           "primary_present": true,
@@ -3792,7 +3793,7 @@
             "yf_crosscheck_earliest": "2025-09-16",
             "yf_crosscheck_latest": "2026-08-07",
             "yf_crosscheck_density": 0.961538,
-            "classification_as_of": "2026-09-28T01:40:24.773Z"
+            "classification_as_of": "2026-09-28T02:08:44.888Z"
           },
           "detail_source_kind": "stockanalysis_primary",
           "primary_present": true,
@@ -3840,7 +3841,7 @@
             "yf_crosscheck_earliest": "2026-05-06",
             "yf_crosscheck_latest": "2026-08-07",
             "yf_crosscheck_density": 0.955882,
-            "classification_as_of": "2026-09-28T01:40:24.773Z"
+            "classification_as_of": "2026-09-28T02:08:44.888Z"
           },
           "detail_source_kind": "stockanalysis_primary",
           "primary_present": true,
@@ -3888,7 +3889,7 @@
             "yf_crosscheck_earliest": "2025-09-24",
             "yf_crosscheck_latest": "2026-08-05",
             "yf_crosscheck_density": 0.960177,
-            "classification_as_of": "2026-09-28T01:40:24.773Z"
+            "classification_as_of": "2026-09-28T02:08:44.888Z"
           },
           "detail_source_kind": "stockanalysis_primary",
           "primary_present": true,
@@ -3936,7 +3937,7 @@
             "yf_crosscheck_earliest": "2026-02-18",
             "yf_crosscheck_latest": "2026-08-07",
             "yf_crosscheck_density": 0.96748,
-            "classification_as_of": "2026-09-28T01:40:24.773Z"
+            "classification_as_of": "2026-09-28T02:08:44.888Z"
           },
           "detail_source_kind": "stockanalysis_primary",
           "primary_present": true,
@@ -3984,7 +3985,7 @@
             "yf_crosscheck_earliest": "2026-02-18",
             "yf_crosscheck_latest": "2026-08-06",
             "yf_crosscheck_density": 0.967213,
-            "classification_as_of": "2026-09-28T01:40:24.773Z"
+            "classification_as_of": "2026-09-28T02:08:44.888Z"
           },
           "detail_source_kind": "stockanalysis_primary",
           "primary_present": true,
@@ -4032,7 +4033,7 @@
             "yf_crosscheck_earliest": "2025-08-07",
             "yf_crosscheck_latest": "2026-08-07",
             "yf_crosscheck_density": 0.961832,
-            "classification_as_of": "2026-09-28T01:40:24.773Z"
+            "classification_as_of": "2026-09-28T02:08:44.888Z"
           },
           "detail_source_kind": "stockanalysis_primary",
           "primary_present": true,
@@ -4080,7 +4081,7 @@
             "yf_crosscheck_earliest": "2026-05-20",
             "yf_crosscheck_latest": "2026-08-11",
             "yf_crosscheck_density": 0.95,
-            "classification_as_of": "2026-09-28T01:40:24.773Z"
+            "classification_as_of": "2026-09-28T02:08:44.888Z"
           },
           "detail_source_kind": "stockanalysis_primary",
           "primary_present": true,
@@ -4180,7 +4181,7 @@
             "yf_crosscheck_earliest": "2026-06-18",
             "yf_crosscheck_latest": "2026-08-11",
             "yf_crosscheck_density": 0.948718,
-            "classification_as_of": "2026-09-28T01:40:24.773Z"
+            "classification_as_of": "2026-09-28T02:08:44.888Z"
           },
           "detail_source_kind": "stockanalysis_primary",
           "primary_present": true,
@@ -4241,7 +4242,7 @@
             "yf_crosscheck_earliest": "2026-06-18",
             "yf_crosscheck_latest": "2026-08-07",
             "yf_crosscheck_density": 0.945946,
-            "classification_as_of": "2026-09-28T01:40:24.773Z"
+            "classification_as_of": "2026-09-28T02:08:44.888Z"
           },
           "detail_source_kind": "stockanalysis_primary",
           "primary_present": true,
@@ -4367,7 +4368,7 @@
             "yf_crosscheck_earliest": "2026-06-09",
             "yf_crosscheck_latest": "2026-08-07",
             "yf_crosscheck_density": 0.954545,
-            "classification_as_of": "2026-09-28T01:40:24.773Z"
+            "classification_as_of": "2026-09-28T02:08:44.888Z"
           },
           "detail_source_kind": "stockanalysis_primary",
           "primary_present": true,
@@ -4415,7 +4416,7 @@
             "yf_crosscheck_earliest": "2025-09-24",
             "yf_crosscheck_latest": "2026-08-04",
             "yf_crosscheck_density": 0.96,
-            "classification_as_of": "2026-09-28T01:40:24.773Z"
+            "classification_as_of": "2026-09-28T02:08:44.888Z"
           },
           "detail_source_kind": "stockanalysis_primary",
           "primary_present": true,
@@ -4476,7 +4477,7 @@
             "yf_crosscheck_earliest": "2025-09-09",
             "yf_crosscheck_latest": "2026-08-06",
             "yf_crosscheck_density": 0.962185,
-            "classification_as_of": "2026-09-28T01:40:24.773Z"
+            "classification_as_of": "2026-09-28T02:08:44.888Z"
           },
           "detail_source_kind": "stockanalysis_primary",
           "primary_present": true,
@@ -4537,7 +4538,7 @@
             "yf_crosscheck_earliest": "2025-09-24",
             "yf_crosscheck_latest": "2026-08-10",
             "yf_crosscheck_density": 0.960699,
-            "classification_as_of": "2026-09-28T01:40:24.773Z"
+            "classification_as_of": "2026-09-28T02:08:44.888Z"
           },
           "detail_source_kind": "stockanalysis_primary",
           "primary_present": true,
@@ -4650,7 +4651,7 @@
             "yf_crosscheck_earliest": "2025-09-23",
             "yf_crosscheck_latest": "2026-08-07",
             "yf_crosscheck_density": 0.960699,
-            "classification_as_of": "2026-09-28T01:40:24.773Z"
+            "classification_as_of": "2026-09-28T02:08:44.888Z"
           },
           "detail_source_kind": "stockanalysis_primary",
           "primary_present": true,
@@ -4763,7 +4764,7 @@
             "yf_crosscheck_earliest": "2026-07-22",
             "yf_crosscheck_latest": "2026-08-05",
             "yf_crosscheck_density": 1,
-            "classification_as_of": "2026-09-28T01:40:24.773Z"
+            "classification_as_of": "2026-09-28T02:08:44.888Z"
           },
           "detail_source_kind": "stockanalysis_primary",
           "primary_present": true,
@@ -4811,7 +4812,7 @@
             "yf_crosscheck_earliest": "2026-07-22",
             "yf_crosscheck_latest": "2026-08-07",
             "yf_crosscheck_density": 1,
-            "classification_as_of": "2026-09-28T01:40:24.773Z"
+            "classification_as_of": "2026-09-28T02:08:44.888Z"
           },
           "detail_source_kind": "stockanalysis_primary",
           "primary_present": true,
@@ -4911,7 +4912,7 @@
             "yf_crosscheck_earliest": "2025-09-23",
             "yf_crosscheck_latest": "2026-08-07",
             "yf_crosscheck_density": 0.960699,
-            "classification_as_of": "2026-09-28T01:40:24.773Z"
+            "classification_as_of": "2026-09-28T02:08:44.888Z"
           },
           "detail_source_kind": "stockanalysis_primary",
           "primary_present": true,
@@ -4972,7 +4973,7 @@
             "yf_crosscheck_earliest": "2026-03-26",
             "yf_crosscheck_latest": "2026-08-07",
             "yf_crosscheck_density": 0.958763,
-            "classification_as_of": "2026-09-28T01:40:24.773Z"
+            "classification_as_of": "2026-09-28T02:08:44.888Z"
           },
           "detail_source_kind": "stockanalysis_primary",
           "primary_present": true,
@@ -5020,7 +5021,7 @@
             "yf_crosscheck_earliest": "2026-03-26",
             "yf_crosscheck_latest": "2026-08-06",
             "yf_crosscheck_density": 0.958333,
-            "classification_as_of": "2026-09-28T01:40:24.773Z"
+            "classification_as_of": "2026-09-28T02:08:44.888Z"
           },
           "detail_source_kind": "stockanalysis_primary",
           "primary_present": true,
@@ -5068,7 +5069,7 @@
             "yf_crosscheck_earliest": "2026-03-26",
             "yf_crosscheck_latest": "2026-08-05",
             "yf_crosscheck_density": 0.957895,
-            "classification_as_of": "2026-09-28T01:40:24.773Z"
+            "classification_as_of": "2026-09-28T02:08:44.888Z"
           },
           "detail_source_kind": "stockanalysis_primary",
           "primary_present": true,
@@ -5116,7 +5117,7 @@
             "yf_crosscheck_earliest": "2025-09-10",
             "yf_crosscheck_latest": "2026-08-11",
             "yf_crosscheck_density": 0.9625,
-            "classification_as_of": "2026-09-28T01:40:24.773Z"
+            "classification_as_of": "2026-09-28T02:08:44.888Z"
           },
           "detail_source_kind": "stockanalysis_primary",
           "primary_present": true,
@@ -5177,7 +5178,7 @@
             "yf_crosscheck_earliest": "2025-09-18",
             "yf_crosscheck_latest": "2026-08-06",
             "yf_crosscheck_density": 0.961039,
-            "classification_as_of": "2026-09-28T01:40:24.773Z"
+            "classification_as_of": "2026-09-28T02:08:44.888Z"
           },
           "detail_source_kind": "stockanalysis_primary",
           "primary_present": true,
@@ -5342,7 +5343,7 @@
             "yf_crosscheck_earliest": "2026-02-04",
             "yf_crosscheck_latest": "2026-08-06",
             "yf_crosscheck_density": 0.962121,
-            "classification_as_of": "2026-09-28T01:40:24.773Z"
+            "classification_as_of": "2026-09-28T02:08:44.888Z"
           },
           "detail_source_kind": "stockanalysis_primary",
           "primary_present": true,
@@ -5416,7 +5417,7 @@
             "yf_crosscheck_earliest": "2025-09-24",
             "yf_crosscheck_latest": "2026-08-07",
             "yf_crosscheck_density": 0.960526,
-            "classification_as_of": "2026-09-28T01:40:24.773Z"
+            "classification_as_of": "2026-09-28T02:08:44.888Z"
           },
           "detail_source_kind": "stockanalysis_primary",
           "primary_present": true,
@@ -5516,7 +5517,7 @@
             "yf_crosscheck_earliest": "2026-05-01",
             "yf_crosscheck_latest": "2026-08-12",
             "yf_crosscheck_density": 0.959459,
-            "classification_as_of": "2026-09-28T01:40:24.773Z"
+            "classification_as_of": "2026-09-28T02:08:44.888Z"
           },
           "detail_source_kind": "stockanalysis_primary",
           "primary_present": true,
@@ -5564,7 +5565,7 @@
             "yf_crosscheck_earliest": "2026-05-01",
             "yf_crosscheck_latest": "2026-08-10",
             "yf_crosscheck_density": 0.958333,
-            "classification_as_of": "2026-09-28T01:40:24.773Z"
+            "classification_as_of": "2026-09-28T02:08:44.888Z"
           },
           "detail_source_kind": "stockanalysis_primary",
           "primary_present": true,
@@ -5625,7 +5626,7 @@
             "yf_crosscheck_earliest": "2026-06-12",
             "yf_crosscheck_latest": "2026-08-12",
             "yf_crosscheck_density": 0.931818,
-            "classification_as_of": "2026-09-28T01:40:24.773Z"
+            "classification_as_of": "2026-09-28T02:08:44.888Z"
           },
           "detail_source_kind": "stockanalysis_primary",
           "primary_present": true,
@@ -5686,7 +5687,7 @@
             "yf_crosscheck_earliest": "2025-09-10",
             "yf_crosscheck_latest": "2026-08-11",
             "yf_crosscheck_density": 0.9625,
-            "classification_as_of": "2026-09-28T01:40:24.773Z"
+            "classification_as_of": "2026-09-28T02:08:44.888Z"
           },
           "detail_source_kind": "stockanalysis_primary",
           "primary_present": true,
@@ -5734,7 +5735,7 @@
             "yf_crosscheck_earliest": "2026-05-01",
             "yf_crosscheck_latest": "2026-08-10",
             "yf_crosscheck_density": 0.958333,
-            "classification_as_of": "2026-09-28T01:40:24.773Z"
+            "classification_as_of": "2026-09-28T02:08:44.888Z"
           },
           "detail_source_kind": "stockanalysis_primary",
           "primary_present": true,
@@ -5808,7 +5809,7 @@
             "yf_crosscheck_earliest": "2025-09-18",
             "yf_crosscheck_latest": "2026-08-05",
             "yf_crosscheck_density": 0.96087,
-            "classification_as_of": "2026-09-28T01:40:24.773Z"
+            "classification_as_of": "2026-09-28T02:08:44.888Z"
           },
           "detail_source_kind": "stockanalysis_primary",
           "primary_present": true,
@@ -5856,7 +5857,7 @@
             "yf_crosscheck_earliest": "2025-09-17",
             "yf_crosscheck_latest": "2026-08-05",
             "yf_crosscheck_density": 0.961039,
-            "classification_as_of": "2026-09-28T01:40:24.773Z"
+            "classification_as_of": "2026-09-28T02:08:44.888Z"
           },
           "detail_source_kind": "stockanalysis_primary",
           "primary_present": true,
@@ -5917,7 +5918,7 @@
             "yf_crosscheck_earliest": "2026-05-01",
             "yf_crosscheck_latest": "2026-08-12",
             "yf_crosscheck_density": 0.959459,
-            "classification_as_of": "2026-09-28T01:40:24.773Z"
+            "classification_as_of": "2026-09-28T02:08:44.888Z"
           },
           "detail_source_kind": "stockanalysis_primary",
           "primary_present": true,
@@ -5965,7 +5966,7 @@
             "yf_crosscheck_earliest": "2025-09-24",
             "yf_crosscheck_latest": "2026-08-10",
             "yf_crosscheck_density": 0.960699,
-            "classification_as_of": "2026-09-28T01:40:24.773Z"
+            "classification_as_of": "2026-09-28T02:08:44.888Z"
           },
           "detail_source_kind": "r2_active_selection",
           "primary_present": false,
@@ -6013,7 +6014,7 @@
             "yf_crosscheck_earliest": "2026-05-01",
             "yf_crosscheck_latest": "2026-08-10",
             "yf_crosscheck_density": 0.958333,
-            "classification_as_of": "2026-09-28T01:40:24.773Z"
+            "classification_as_of": "2026-09-28T02:08:44.888Z"
           },
           "detail_source_kind": "stockanalysis_primary",
           "primary_present": true,
@@ -6113,7 +6114,7 @@
             "yf_crosscheck_earliest": "2026-06-08",
             "yf_crosscheck_latest": "2026-08-07",
             "yf_crosscheck_density": 0.955556,
-            "classification_as_of": "2026-09-28T01:40:24.773Z"
+            "classification_as_of": "2026-09-28T02:08:44.888Z"
           },
           "detail_source_kind": "stockanalysis_primary",
           "primary_present": true,
@@ -6161,7 +6162,7 @@
             "yf_crosscheck_earliest": "2026-07-28",
             "yf_crosscheck_latest": "2026-08-05",
             "yf_crosscheck_density": 1,
-            "classification_as_of": "2026-09-28T01:40:24.773Z"
+            "classification_as_of": "2026-09-28T02:08:44.888Z"
           },
           "detail_source_kind": "stockanalysis_primary",
           "primary_present": true,
@@ -6287,7 +6288,7 @@
             "yf_crosscheck_earliest": "2025-09-17",
             "yf_crosscheck_latest": "2026-08-05",
             "yf_crosscheck_density": 0.961039,
-            "classification_as_of": "2026-09-28T01:40:24.773Z"
+            "classification_as_of": "2026-09-28T02:08:44.888Z"
           },
           "detail_source_kind": "stockanalysis_primary",
           "primary_present": true,
@@ -6335,7 +6336,7 @@
             "yf_crosscheck_earliest": "2025-09-17",
             "yf_crosscheck_latest": "2026-08-07",
             "yf_crosscheck_density": 0.961373,
-            "classification_as_of": "2026-09-28T01:40:24.773Z"
+            "classification_as_of": "2026-09-28T02:08:44.888Z"
           },
           "detail_source_kind": "stockanalysis_primary",
           "primary_present": true,
@@ -6396,7 +6397,7 @@
             "yf_crosscheck_earliest": "2025-09-24",
             "yf_crosscheck_latest": "2026-08-11",
             "yf_crosscheck_density": 0.96087,
-            "classification_as_of": "2026-09-28T01:40:24.773Z"
+            "classification_as_of": "2026-09-28T02:08:44.888Z"
           },
           "detail_source_kind": "stockanalysis_primary",
           "primary_present": true,
@@ -6444,7 +6445,7 @@
             "yf_crosscheck_earliest": "2025-09-17",
             "yf_crosscheck_latest": "2026-08-11",
             "yf_crosscheck_density": 0.961702,
-            "classification_as_of": "2026-09-28T01:40:24.773Z"
+            "classification_as_of": "2026-09-28T02:08:44.888Z"
           },
           "detail_source_kind": "stockanalysis_primary",
           "primary_present": true,
@@ -6518,7 +6519,7 @@
             "yf_crosscheck_earliest": "2025-09-24",
             "yf_crosscheck_latest": "2026-08-07",
             "yf_crosscheck_density": 0.960526,
-            "classification_as_of": "2026-09-28T01:40:24.773Z"
+            "classification_as_of": "2026-09-28T02:08:44.888Z"
           },
           "detail_source_kind": "stockanalysis_primary",
           "primary_present": true,
@@ -6592,7 +6593,7 @@
             "yf_crosscheck_earliest": "2025-09-24",
             "yf_crosscheck_latest": "2026-08-10",
             "yf_crosscheck_density": 0.960699,
-            "classification_as_of": "2026-09-28T01:40:24.773Z"
+            "classification_as_of": "2026-09-28T02:08:44.888Z"
           },
           "detail_source_kind": "stockanalysis_primary",
           "primary_present": true,
@@ -6705,7 +6706,7 @@
             "yf_crosscheck_earliest": "2025-09-23",
             "yf_crosscheck_latest": "2026-08-07",
             "yf_crosscheck_density": 0.960699,
-            "classification_as_of": "2026-09-28T01:40:24.773Z"
+            "classification_as_of": "2026-09-28T02:08:44.888Z"
           },
           "detail_source_kind": "stockanalysis_primary",
           "primary_present": true,
@@ -6818,7 +6819,7 @@
             "yf_crosscheck_earliest": "2025-09-10",
             "yf_crosscheck_latest": "2026-08-05",
             "yf_crosscheck_density": 0.961864,
-            "classification_as_of": "2026-09-28T01:40:24.773Z"
+            "classification_as_of": "2026-09-28T02:08:44.888Z"
           },
           "detail_source_kind": "stockanalysis_primary",
           "primary_present": true,
@@ -6892,7 +6893,7 @@
             "yf_crosscheck_earliest": "2025-09-18",
             "yf_crosscheck_latest": "2026-08-07",
             "yf_crosscheck_density": 0.961207,
-            "classification_as_of": "2026-09-28T01:40:24.773Z"
+            "classification_as_of": "2026-09-28T02:08:44.888Z"
           },
           "detail_source_kind": "stockanalysis_primary",
           "primary_present": true,
@@ -6953,7 +6954,7 @@
             "yf_crosscheck_earliest": null,
             "yf_crosscheck_latest": null,
             "yf_crosscheck_density": 0,
-            "classification_as_of": "2026-09-28T01:40:24.773Z"
+            "classification_as_of": "2026-09-28T02:08:44.888Z"
           },
           "detail_source_kind": "stockanalysis_primary",
           "primary_present": true,
@@ -7027,7 +7028,7 @@
             "yf_crosscheck_earliest": "2026-02-12",
             "yf_crosscheck_latest": "2026-08-05",
             "yf_crosscheck_density": 0.96,
-            "classification_as_of": "2026-09-28T01:40:24.773Z"
+            "classification_as_of": "2026-09-28T02:08:44.888Z"
           },
           "detail_source_kind": "stockanalysis_primary",
           "primary_present": true,
@@ -7075,7 +7076,7 @@
             "yf_crosscheck_earliest": "2026-02-11",
             "yf_crosscheck_latest": "2026-08-11",
             "yf_crosscheck_density": 0.961538,
-            "classification_as_of": "2026-09-28T01:40:24.773Z"
+            "classification_as_of": "2026-09-28T02:08:44.888Z"
           },
           "detail_source_kind": "stockanalysis_primary",
           "primary_present": true,
@@ -7123,7 +7124,7 @@
             "yf_crosscheck_earliest": null,
             "yf_crosscheck_latest": null,
             "yf_crosscheck_density": 0,
-            "classification_as_of": "2026-09-28T01:40:24.773Z"
+            "classification_as_of": "2026-09-28T02:08:44.888Z"
           },
           "detail_source_kind": "stockanalysis_primary",
           "primary_present": true,
@@ -7171,7 +7172,7 @@
             "yf_crosscheck_earliest": "2026-02-11",
             "yf_crosscheck_latest": "2026-08-05",
             "yf_crosscheck_density": 0.960317,
-            "classification_as_of": "2026-09-28T01:40:24.773Z"
+            "classification_as_of": "2026-09-28T02:08:44.888Z"
           },
           "detail_source_kind": "stockanalysis_primary",
           "primary_present": true,
@@ -7219,7 +7220,7 @@
             "yf_crosscheck_earliest": "2026-02-12",
             "yf_crosscheck_latest": "2026-08-11",
             "yf_crosscheck_density": 0.96124,
-            "classification_as_of": "2026-09-28T01:40:24.773Z"
+            "classification_as_of": "2026-09-28T02:08:44.888Z"
           },
           "detail_source_kind": "stockanalysis_primary",
           "primary_present": true,
@@ -7267,7 +7268,7 @@
             "yf_crosscheck_earliest": "2025-09-09",
             "yf_crosscheck_latest": "2026-08-11",
             "yf_crosscheck_density": 0.962656,
-            "classification_as_of": "2026-09-28T01:40:24.773Z"
+            "classification_as_of": "2026-09-28T02:08:44.888Z"
           },
           "detail_source_kind": "stockanalysis_primary",
           "primary_present": true,
@@ -7315,7 +7316,7 @@
             "yf_crosscheck_earliest": "2026-03-16",
             "yf_crosscheck_latest": "2026-08-10",
             "yf_crosscheck_density": 0.962264,
-            "classification_as_of": "2026-09-28T01:40:24.773Z"
+            "classification_as_of": "2026-09-28T02:08:44.888Z"
           },
           "detail_source_kind": "stockanalysis_primary",
           "primary_present": true,
@@ -7389,7 +7390,7 @@
             "yf_crosscheck_earliest": "2026-06-24",
             "yf_crosscheck_latest": "2026-08-11",
             "yf_crosscheck_density": 0.971429,
-            "classification_as_of": "2026-09-28T01:40:24.773Z"
+            "classification_as_of": "2026-09-28T02:08:44.888Z"
           },
           "detail_source_kind": "stockanalysis_primary",
           "primary_present": true,
@@ -7515,7 +7516,7 @@
             "yf_crosscheck_earliest": null,
             "yf_crosscheck_latest": null,
             "yf_crosscheck_density": 0,
-            "classification_as_of": "2026-09-28T01:40:24.773Z"
+            "classification_as_of": "2026-09-28T02:08:44.888Z"
           },
           "detail_source_kind": "stockanalysis_primary",
           "primary_present": true,
@@ -7576,7 +7577,7 @@
             "yf_crosscheck_earliest": "2026-06-12",
             "yf_crosscheck_latest": "2026-08-10",
             "yf_crosscheck_density": 0.952381,
-            "classification_as_of": "2026-09-28T01:40:24.773Z"
+            "classification_as_of": "2026-09-28T02:08:44.888Z"
           },
           "detail_source_kind": "stockanalysis_primary",
           "primary_present": true,
@@ -7624,7 +7625,7 @@
             "yf_crosscheck_earliest": "2025-11-06",
             "yf_crosscheck_latest": "2026-08-10",
             "yf_crosscheck_density": 0.954545,
-            "classification_as_of": "2026-09-28T01:40:24.773Z"
+            "classification_as_of": "2026-09-28T02:08:44.888Z"
           },
           "detail_source_kind": "stockanalysis_primary",
           "primary_present": true,
@@ -7672,7 +7673,7 @@
             "yf_crosscheck_earliest": "2025-09-10",
             "yf_crosscheck_latest": "2026-08-11",
             "yf_crosscheck_density": 0.9625,
-            "classification_as_of": "2026-09-28T01:40:24.773Z"
+            "classification_as_of": "2026-09-28T02:08:44.888Z"
           },
           "detail_source_kind": "stockanalysis_primary",
           "primary_present": true,
@@ -7746,7 +7747,7 @@
             "yf_crosscheck_earliest": "2026-04-01",
             "yf_crosscheck_latest": "2026-08-11",
             "yf_crosscheck_density": 0.957895,
-            "classification_as_of": "2026-09-28T01:40:24.773Z"
+            "classification_as_of": "2026-09-28T02:08:44.888Z"
           },
           "detail_source_kind": "stockanalysis_primary",
           "primary_present": true,
@@ -7885,7 +7886,7 @@
             "yf_crosscheck_earliest": null,
             "yf_crosscheck_latest": null,
             "yf_crosscheck_density": 0,
-            "classification_as_of": "2026-09-28T01:40:24.773Z"
+            "classification_as_of": "2026-09-28T02:08:44.888Z"
           },
           "detail_source_kind": "stockanalysis_primary",
           "primary_present": true,
@@ -7933,7 +7934,7 @@
             "yf_crosscheck_earliest": null,
             "yf_crosscheck_latest": null,
             "yf_crosscheck_density": 0,
-            "classification_as_of": "2026-09-28T01:40:24.773Z"
+            "classification_as_of": "2026-09-28T02:08:44.888Z"
           },
           "detail_source_kind": "stockanalysis_primary",
           "primary_present": true,
@@ -7994,7 +7995,7 @@
             "yf_crosscheck_earliest": "2025-09-04",
             "yf_crosscheck_latest": "2026-08-07",
             "yf_crosscheck_density": 0.96281,
-            "classification_as_of": "2026-09-28T01:40:24.773Z"
+            "classification_as_of": "2026-09-28T02:08:44.888Z"
           },
           "detail_source_kind": "stockanalysis_primary",
           "primary_present": true,
@@ -8042,7 +8043,7 @@
             "yf_crosscheck_earliest": "2025-09-03",
             "yf_crosscheck_latest": "2026-08-07",
             "yf_crosscheck_density": 0.962963,
-            "classification_as_of": "2026-09-28T01:40:24.773Z"
+            "classification_as_of": "2026-09-28T02:08:44.888Z"
           },
           "detail_source_kind": "stockanalysis_primary",
           "primary_present": true,
@@ -8194,7 +8195,7 @@
             "yf_crosscheck_earliest": null,
             "yf_crosscheck_latest": null,
             "yf_crosscheck_density": 0,
-            "classification_as_of": "2026-09-28T01:40:24.773Z"
+            "classification_as_of": "2026-09-28T02:08:44.888Z"
           },
           "detail_source_kind": "stockanalysis_primary",
           "primary_present": true,
@@ -8242,7 +8243,7 @@
             "yf_crosscheck_earliest": "2025-09-12",
             "yf_crosscheck_latest": "2026-08-07",
             "yf_crosscheck_density": 0.961864,
-            "classification_as_of": "2026-09-28T01:40:24.773Z"
+            "classification_as_of": "2026-09-28T02:08:44.888Z"
           },
           "detail_source_kind": "stockanalysis_primary",
           "primary_present": true,
@@ -8290,7 +8291,7 @@
             "yf_crosscheck_earliest": "2026-05-21",
             "yf_crosscheck_latest": "2026-08-11",
             "yf_crosscheck_density": 0.949153,
-            "classification_as_of": "2026-09-28T01:40:24.773Z"
+            "classification_as_of": "2026-09-28T02:08:44.888Z"
           },
           "detail_source_kind": "stockanalysis_primary",
           "primary_present": true,
@@ -8338,7 +8339,7 @@
             "yf_crosscheck_earliest": "2025-09-12",
             "yf_crosscheck_latest": "2026-08-07",
             "yf_crosscheck_density": 0.961864,
-            "classification_as_of": "2026-09-28T01:40:24.773Z"
+            "classification_as_of": "2026-09-28T02:08:44.888Z"
           },
           "detail_source_kind": "stockanalysis_primary",
           "primary_present": true,
@@ -8399,7 +8400,7 @@
             "yf_crosscheck_earliest": "2025-12-11",
             "yf_crosscheck_latest": "2026-08-04",
             "yf_crosscheck_density": 0.952663,
-            "classification_as_of": "2026-09-28T01:40:24.773Z"
+            "classification_as_of": "2026-09-28T02:08:44.888Z"
           },
           "detail_source_kind": "stockanalysis_primary",
           "primary_present": true,
@@ -8473,7 +8474,7 @@
             "yf_crosscheck_earliest": "2025-07-30",
             "yf_crosscheck_latest": "2026-08-07",
             "yf_crosscheck_density": 0.962687,
-            "classification_as_of": "2026-09-28T01:40:24.773Z"
+            "classification_as_of": "2026-09-28T02:08:44.888Z"
           },
           "detail_source_kind": "stockanalysis_primary",
           "primary_present": true,
@@ -8677,7 +8678,7 @@
             "yf_crosscheck_earliest": "2025-08-07",
             "yf_crosscheck_latest": "2026-08-07",
             "yf_crosscheck_density": 0.961832,
-            "classification_as_of": "2026-09-28T01:40:24.773Z"
+            "classification_as_of": "2026-09-28T02:08:44.888Z"
           },
           "detail_source_kind": "stockanalysis_primary",
           "primary_present": true,
@@ -8855,11 +8856,11 @@
               "latest_observation_age_days": 73,
               "latest_observation_age_business_days": 51,
               "daily_1y_evidence_pass": false,
-              "yf_crosscheck_rows": 165,
+              "yf_crosscheck_rows": 198,
               "yf_crosscheck_earliest": "2025-12-11",
-              "yf_crosscheck_latest": "2026-08-10",
-              "yf_crosscheck_density": 0.953757,
-              "classification_as_of": "2026-09-28T01:40:24.773Z"
+              "yf_crosscheck_latest": "2026-09-25",
+              "yf_crosscheck_density": 0.956522,
+              "classification_as_of": "2026-09-28T02:08:44.888Z"
             },
             "detail_source_kind": "stockanalysis_primary",
             "primary_present": true,
@@ -8902,11 +8903,11 @@
               "latest_observation_age_days": 83,
               "latest_observation_age_business_days": 59,
               "daily_1y_evidence_pass": false,
-              "yf_crosscheck_rows": 46,
+              "yf_crosscheck_rows": 80,
               "yf_crosscheck_earliest": "2026-06-03",
-              "yf_crosscheck_latest": "2026-08-07",
-              "yf_crosscheck_density": 0.958333,
-              "classification_as_of": "2026-09-28T01:40:24.773Z"
+              "yf_crosscheck_latest": "2026-09-25",
+              "yf_crosscheck_density": 0.963855,
+              "classification_as_of": "2026-09-28T02:08:44.888Z"
             },
             "detail_source_kind": "stockanalysis_primary",
             "primary_present": true,
@@ -8949,11 +8950,11 @@
               "latest_observation_age_days": 83,
               "latest_observation_age_business_days": 59,
               "daily_1y_evidence_pass": false,
-              "yf_crosscheck_rows": 31,
+              "yf_crosscheck_rows": 67,
               "yf_crosscheck_earliest": "2026-06-23",
-              "yf_crosscheck_latest": "2026-08-05",
-              "yf_crosscheck_density": 0.96875,
-              "classification_as_of": "2026-09-28T01:40:24.773Z"
+              "yf_crosscheck_latest": "2026-09-25",
+              "yf_crosscheck_density": 0.971014,
+              "classification_as_of": "2026-09-28T02:08:44.888Z"
             },
             "detail_source_kind": "stockanalysis_primary",
             "primary_present": true,
@@ -8996,11 +8997,11 @@
               "latest_observation_age_days": 73,
               "latest_observation_age_business_days": 51,
               "daily_1y_evidence_pass": false,
-              "yf_crosscheck_rows": 162,
+              "yf_crosscheck_rows": 197,
               "yf_crosscheck_earliest": "2025-12-12",
-              "yf_crosscheck_latest": "2026-08-06",
-              "yf_crosscheck_density": 0.952941,
-              "classification_as_of": "2026-09-28T01:40:24.773Z"
+              "yf_crosscheck_latest": "2026-09-25",
+              "yf_crosscheck_density": 0.956311,
+              "classification_as_of": "2026-09-28T02:08:44.888Z"
             },
             "detail_source_kind": "stockanalysis_primary",
             "primary_present": true,
@@ -9043,11 +9044,11 @@
               "latest_observation_age_days": 73,
               "latest_observation_age_business_days": 51,
               "daily_1y_evidence_pass": false,
-              "yf_crosscheck_rows": 97,
+              "yf_crosscheck_rows": 132,
               "yf_crosscheck_earliest": "2026-03-19",
-              "yf_crosscheck_latest": "2026-08-06",
-              "yf_crosscheck_density": 0.960396,
-              "classification_as_of": "2026-09-28T01:40:24.773Z"
+              "yf_crosscheck_latest": "2026-09-25",
+              "yf_crosscheck_density": 0.963504,
+              "classification_as_of": "2026-09-28T02:08:44.888Z"
             },
             "detail_source_kind": "stockanalysis_primary",
             "primary_present": true,
@@ -9090,11 +9091,11 @@
               "latest_observation_age_days": 66,
               "latest_observation_age_business_days": 46,
               "daily_1y_evidence_pass": false,
-              "yf_crosscheck_rows": 13,
+              "yf_crosscheck_rows": 46,
               "yf_crosscheck_earliest": "2026-07-23",
-              "yf_crosscheck_latest": "2026-08-10",
-              "yf_crosscheck_density": 1,
-              "classification_as_of": "2026-09-28T01:40:24.773Z"
+              "yf_crosscheck_latest": "2026-09-25",
+              "yf_crosscheck_density": 0.978723,
+              "classification_as_of": "2026-09-28T02:08:44.888Z"
             },
             "detail_source_kind": "stockanalysis_primary",
             "primary_present": true,
@@ -9137,11 +9138,11 @@
               "latest_observation_age_days": 73,
               "latest_observation_age_business_days": 51,
               "daily_1y_evidence_pass": false,
-              "yf_crosscheck_rows": 91,
+              "yf_crosscheck_rows": 123,
               "yf_crosscheck_earliest": "2026-04-01",
-              "yf_crosscheck_latest": "2026-08-11",
-              "yf_crosscheck_density": 0.957895,
-              "classification_as_of": "2026-09-28T01:40:24.773Z"
+              "yf_crosscheck_latest": "2026-09-25",
+              "yf_crosscheck_density": 0.960938,
+              "classification_as_of": "2026-09-28T02:08:44.888Z"
             },
             "detail_source_kind": "stockanalysis_primary",
             "primary_present": true,
@@ -9184,11 +9185,11 @@
               "latest_observation_age_days": 73,
               "latest_observation_age_business_days": 51,
               "daily_1y_evidence_pass": false,
-              "yf_crosscheck_rows": 176,
+              "yf_crosscheck_rows": 210,
               "yf_crosscheck_earliest": "2025-11-24",
-              "yf_crosscheck_latest": "2026-08-07",
-              "yf_crosscheck_density": 0.951351,
-              "classification_as_of": "2026-09-28T01:40:24.773Z"
+              "yf_crosscheck_latest": "2026-09-25",
+              "yf_crosscheck_density": 0.954545,
+              "classification_as_of": "2026-09-28T02:08:44.888Z"
             },
             "detail_source_kind": "stockanalysis_primary",
             "primary_present": true,
@@ -9231,11 +9232,11 @@
               "latest_observation_age_days": 82,
               "latest_observation_age_business_days": 58,
               "daily_1y_evidence_pass": false,
-              "yf_crosscheck_rows": 47,
+              "yf_crosscheck_rows": 80,
               "yf_crosscheck_earliest": "2026-06-03",
-              "yf_crosscheck_latest": "2026-08-10",
-              "yf_crosscheck_density": 0.959184,
-              "classification_as_of": "2026-09-28T01:40:24.773Z"
+              "yf_crosscheck_latest": "2026-09-25",
+              "yf_crosscheck_density": 0.963855,
+              "classification_as_of": "2026-09-28T02:08:44.888Z"
             },
             "detail_source_kind": "stockanalysis_primary",
             "primary_present": true,
@@ -9278,11 +9279,11 @@
               "latest_observation_age_days": 73,
               "latest_observation_age_business_days": 51,
               "daily_1y_evidence_pass": false,
-              "yf_crosscheck_rows": 205,
+              "yf_crosscheck_rows": 237,
               "yf_crosscheck_earliest": "2025-10-16",
-              "yf_crosscheck_latest": "2026-08-11",
-              "yf_crosscheck_density": 0.957944,
-              "classification_as_of": "2026-09-28T01:40:24.773Z"
+              "yf_crosscheck_latest": "2026-09-25",
+              "yf_crosscheck_density": 0.959514,
+              "classification_as_of": "2026-09-28T02:08:44.888Z"
             },
             "detail_source_kind": "stockanalysis_primary",
             "primary_present": true,
@@ -9384,7 +9385,7 @@
               "yf_crosscheck_earliest": "2025-09-24",
               "yf_crosscheck_latest": "2026-09-24",
               "yf_crosscheck_density": 0.958015,
-              "classification_as_of": "2026-09-28T01:40:24.773Z"
+              "classification_as_of": "2026-09-28T02:08:44.888Z"
             },
             "detail_source_kind": "stockanalysis_primary",
             "primary_present": true,
@@ -9468,7 +9469,7 @@
               "yf_crosscheck_earliest": "2025-09-25",
               "yf_crosscheck_latest": "2026-09-24",
               "yf_crosscheck_density": 0.957854,
-              "classification_as_of": "2026-09-28T01:40:24.773Z"
+              "classification_as_of": "2026-09-28T02:08:44.888Z"
             },
             "detail_source_kind": "stockanalysis_primary",
             "primary_present": true,
@@ -9536,7 +9537,7 @@
               "yf_crosscheck_earliest": "2025-09-24",
               "yf_crosscheck_latest": "2026-09-24",
               "yf_crosscheck_density": 0.958015,
-              "classification_as_of": "2026-09-28T01:40:24.773Z"
+              "classification_as_of": "2026-09-28T02:08:44.888Z"
             },
             "detail_source_kind": "stockanalysis_primary",
             "primary_present": true,
@@ -9588,7 +9589,7 @@
               "yf_crosscheck_earliest": "2025-09-24",
               "yf_crosscheck_latest": "2026-09-24",
               "yf_crosscheck_density": 0.961832,
-              "classification_as_of": "2026-09-28T01:40:24.773Z"
+              "classification_as_of": "2026-09-28T02:08:44.888Z"
             },
             "detail_source_kind": "stockanalysis_primary",
             "primary_present": true,
@@ -9687,10 +9688,10 @@
     }
   },
   "market_facts_return_3y": {
-    "etf": 2940,
-    "stockanalysis_history": 672,
-    "etf_coverage_pct": 52.6,
-    "etf_denominator": 5589,
+    "etf": 2942,
+    "stockanalysis_history": 657,
+    "etf_coverage_pct": 52.31,
+    "etf_denominator": 5624,
     "stockanalysis_universe_denominator": 5642
   },
   "recommended_dispatch": {
