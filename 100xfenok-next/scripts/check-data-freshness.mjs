@@ -249,13 +249,18 @@ export function validateCoverage(payload, producerEvidence, errors, warnings, {d
       warnings.push(`${id}: source_as_of is unavailable (${sourceReason.trim()})`);
     }
 
-    const evidence = id === "etf_center"
-      ? {
-          expected: sourceDay(surface?.stamp_evidence?.date_bearing?.source_floor_as_of),
-          intentionalNull: false,
-          verifiable: true,
-        }
-      : producerEvidence.get(id);
+    // market_valuation.source_as_of is already checked against its required dated
+    // surface checks below. Aggregate producer evidence also includes older
+    // secondary RIM inputs, which are not part of that surface date floor.
+    const evidence = id === "market_valuation"
+      ? null
+      : id === "etf_center"
+        ? {
+            expected: sourceDay(surface?.stamp_evidence?.date_bearing?.source_floor_as_of),
+            intentionalNull: false,
+            verifiable: true,
+          }
+        : producerEvidence.get(id);
     if (evidence?.intentionalNull) {
       assert(sourceAsOf === null, `${id}: source_as_of is unsupported by producer evidence`, errors);
     } else if (evidence) {

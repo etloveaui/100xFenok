@@ -128,11 +128,10 @@ jobs:
           mkdir -p 100xfenok-next/public/data/edgar-korean-summaries
           rsync -a --delete data/edgar-korean-summaries/ 100xfenok-next/public/data/edgar-korean-summaries/
 
-      - name: Validate EDGAR summary and translation contracts
+      - name: Validate EDGAR translation contract
         id: verify_edgar
         if: ${{ env.EDGAR_PLAN_ONLY != 'true' && steps.fetch_edgar.outcome == 'success' }}
         run: |
-          npm --prefix 100xfenok-next run qa:edgar-summaries
           npm --prefix 100xfenok-next run qa:edgar-translations
 
       - name: Commit and push

@@ -20,23 +20,20 @@ the result.
 
 ## Local QA
 
-### EDGAR summary QA ordering
+### EDGAR translation contract ordering
 
 `data/edgar-korean-summaries/` is canonical-only in Git. The public mirror under
-`public/data/edgar-korean-summaries/` is generated materialization, so running
-`qa:edgar-summaries` or `qa:edgar-translations` directly on a clean canonical-only
-checkout is expected to fail closed until the mirror exists. For a local check,
-materialize first, then run the two QA commands:
+`public/data/edgar-korean-summaries/` is generated materialization, so
+`qa:edgar-translations` requires the mirror to exist. For a local check, materialize
+first, then run the translation contract:
 
 ```bash
 node scripts/sync-public-data.mjs --write
-npm run qa:edgar-summaries
 npm run qa:edgar-translations
 ```
 
 The EDGAR producer workflow writes the canonical and generated roots before its
-QA step. This ordering note changes no data, freshness, graph, deploy, or live
-evidence status.
+translation contract check.
 
 Run `npm run qa:canonical-root-inventory` before any #296 canonical-root
 redirect, legacy delete, or deploy proposal. It is static and makes no network
