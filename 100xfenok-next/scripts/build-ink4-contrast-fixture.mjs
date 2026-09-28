@@ -166,6 +166,21 @@ const RETIRED_INK4_SITES = {
     "screener-density fh-463: signal-cell second line (actionReasons ink-3 span) removed for one-line density; line no longer carries an ink token",
 };
 
+// Curated render-target re-pins for a source change that preserves the audited
+// UI role while replacing the original line. The generator writes the new
+// hash-derived site id into the fixture; subsequent regenerations then use
+// that canonical id directly.
+const REPINNED_INK4_TARGETS = {
+  "src/app/admin/data-lab/LaneBoard.tsx#f49f4f3212b3#1": {
+    target_hash: "acf70ea4dc885c9220279f8b8c96372e55beb541eee4b11a5f78cb9b2adff068",
+    // S1 replaced the recent-attempt detail with the newest source date.
+  },
+  "src/app/admin/data-lab/LaneBoard.tsx#e3c67ac0dfac#1": {
+    target_hash: "50817ab58f54052bf9dec3bb6f36dac4c9397ac4422426651ce6122c8e63f9ec",
+    // S1 replaced the attempt placeholder with the optional LKG state.
+  },
+};
+
 export function emitInk4ContrastFixture({ outputPath = INK4_CONTRAST_FIXTURE_PATH } = {}) {
   const baseline = JSON.parse(fs.readFileSync(INK4_CONTRAST_FIXTURE_PATH, "utf8"));
 
@@ -196,7 +211,9 @@ export function emitInk4ContrastFixture({ outputPath = INK4_CONTRAST_FIXTURE_PAT
   const sites = [];
   for (const site of roster.values()) {
     if (Object.hasOwn(RETIRED_INK4_SITES, site.id)) continue;
-    const actual = getTargets(site.path).get(site.target_hash) ?? 0;
+    const repinned = REPINNED_INK4_TARGETS[site.id];
+    const targetHash = repinned?.target_hash ?? site.target_hash;
+    const actual = getTargets(site.path).get(targetHash) ?? 0;
     if (actual === 0) {
       throw new Error(
         `ink4 fixture drift: ${site.id} render-target line vanished from ${site.path}`,
@@ -219,6 +236,8 @@ export function emitInk4ContrastFixture({ outputPath = INK4_CONTRAST_FIXTURE_PAT
     }
     sites.push({
       ...site,
+      id: repinned ? `${site.path}#${targetHash.slice(0, 12)}#1` : site.id,
+      target_hash: targetHash,
       occurrence: actual,
       background,
       background_evidence: { path: evidencePath, target_hash: evidenceHash, occurrence: evidence.count, surface: background },
