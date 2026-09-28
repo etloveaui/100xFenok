@@ -3,7 +3,10 @@
 
 from __future__ import annotations
 
-from datetime import datetime, timezone
+from datetime import date, datetime, timedelta, timezone
+import math
+import re
+from urllib.parse import urlsplit
 import hashlib
 import json
 from pathlib import Path
@@ -384,6 +387,147 @@ class YahooBatchStateStore:
             "artifact_generated_at": payload["generated_at"],
             "tickers": tickers,
         }
+
+    def load_issuer_lifecycle(self, artifact_path: Path, observed_at: str) -> dict:
+        """Validate issuer notices before any acquisition writes; never infer lifecycle from Yahoo failure."""
+        path = Path(artifact_path)
+        try:
+            raw = path.read_bytes()
+            payload = json.loads(raw)
+        except (OSError, json.JSONDecodeError) as exc:
+            raise ValueError("issuer lifecycle policy is unreadable") from exc
+        observed_ms = _iso_ms(observed_at)
+        if observed_ms is None:
+            raise ValueError("issuer lifecycle observation time is invalid")
+        observed_date = datetime.fromtimestamp(observed_ms / 1000, timezone.utc).date()
+        if (not isinstance(payload, dict) or payload.get("schema_version") != "yahoo-issuer-lifecycle/v1"
+                or not isinstance(payload.get("events"), list)):
+            raise ValueError("issuer lifecycle policy contract is invalid")
+
+        def policy_date(value):
+            try:
+                parsed = date.fromisoformat(value)
+            except (TypeError, ValueError) as exc:
+                raise ValueError("issuer lifecycle date is invalid") from exc
+            if parsed.isoformat() != value or parsed > observed_date:
+                raise ValueError("issuer lifecycle date is noncanonical or future")
+            return parsed
+
+        def symbol(value):
+            return isinstance(value, str) and re.fullmatch(r"[A-Z0-9][A-Z0-9.\-]{0,11}", value) is not None
+
+        def positive(value):
+            return isinstance(value, (int, float)) and not isinstance(value, bool) and math.isfinite(value) and value > 0
+
+        inactive = {}
+        for row in payload["events"]:
+            if not isinstance(row, dict) or not symbol(row.get("symbol")) or row["symbol"] in inactive:
+                raise ValueError("issuer lifecycle symbol is invalid or conflicting")
+            event = row.get("event")
+            if event not in {"issuer_announced_redemption", "issuer_completed_acquisition", "ticker_rename"}:
+                raise ValueError("issuer lifecycle event is unsupported")
+            if event != "ticker_rename" and any(row.get(key) is not None for key in
+                    ("announced_month", "after_market_close_date", "eligibility_after", "eligibility_basis")):
+                raise ValueError("issuer lifecycle completed event has conflicting eligibility metadata")
+            if event == "ticker_rename" and row.get("announced_month") is not None:
+                month = row["announced_month"]
+                if not isinstance(month, str) or not re.fullmatch(r"[0-9]{4}-[0-9]{2}", month):
+                    raise ValueError("issuer lifecycle announced month is invalid")
+                try:
+                    first = date.fromisoformat(month + "-01")
+                    after_month = date(first.year + (first.month == 12), first.month % 12 + 1, 1).isoformat()
+                except ValueError as exc:
+                    raise ValueError("issuer lifecycle announced month is invalid") from exc
+                if (row.get("effective_date") is not None or row.get("after_market_close_date") is not None
+                        or row.get("eligibility_basis") != "after_announced_month"
+                        or row.get("eligibility_after") != after_month):
+                    raise ValueError("issuer lifecycle month-only notice cannot invent an effective day")
+                policy_date(after_month)
+            elif event == "ticker_rename" and row.get("after_market_close_date") is not None:
+                after_close = (policy_date(row["after_market_close_date"]) + timedelta(days=1)).isoformat()
+                if (row.get("effective_date") is not None or row.get("announced_month") is not None
+                        or row.get("eligibility_basis") != "after_market_close"
+                        or row.get("eligibility_after") != after_close):
+                    raise ValueError("issuer lifecycle after-close notice requires the derived next-day boundary")
+                policy_date(after_close)
+            else:
+                if any(row.get(key) is not None for key in ("eligibility_after", "eligibility_basis")):
+                    raise ValueError("issuer lifecycle exact-date notice has conflicting eligibility metadata")
+                policy_date(row.get("effective_date"))
+            if not isinstance(row.get("issuer"), str) or not row["issuer"].strip():
+                raise ValueError("issuer lifecycle issuer is missing")
+            domain = row.get("primary_source_domain")
+            urls = row.get("source_urls")
+            if (not isinstance(domain, str) or not re.fullmatch(r"[a-z0-9]+(?:[.\-][a-z0-9]+)*\.[a-z]{2,}", domain)
+                    or domain.endswith((".local", ".internal", ".test", ".invalid", ".example"))
+                    or not isinstance(urls, list) or not urls):
+                raise ValueError("issuer lifecycle primary evidence is missing")
+            for url in urls:
+                try:
+                    parsed = urlsplit(url) if isinstance(url, str) else None
+                    valid_url = (parsed and url == url.strip() and not re.search(r"\s", url)
+                                 and parsed.scheme == "https" and parsed.hostname
+                                 and (parsed.hostname == domain or parsed.hostname.endswith("." + domain))
+                                 and parsed.username is None and parsed.password is None and parsed.port is None
+                                 and parsed.path not in {"", "/"})
+                except ValueError:
+                    valid_url = False
+                if not valid_url:
+                    raise ValueError("issuer lifecycle source must be a public issuer HTTPS URL")
+            for key in ("notice_date", "source_published_date", "settlement_amount_notice_date", "last_trading_date_expected", "settlement_date_expected"):
+                if row.get(key) is not None:
+                    policy_date(row[key])
+            target = row.get("alias_target")
+            if event == "ticker_rename":
+                if not symbol(target) or target == row["symbol"]:
+                    raise ValueError("issuer lifecycle alias target is invalid")
+            elif target is not None:
+                raise ValueError("issuer lifecycle completed event cannot name an alias")
+            if event == "issuer_announced_redemption" and row.get("payment_status") != "not_verified":
+                raise ValueError("issuer lifecycle redemption must not claim payment completion")
+            inactive[row["symbol"]] = dict(row)
+
+        # Alias chains/cycles and inactive successors are not a current live identity.
+        for row in inactive.values():
+            target = row.get("alias_target")
+            if target in inactive:
+                raise ValueError("issuer lifecycle alias conflict or cycle")
+        for row in inactive.values():
+            if row["event"] != "ticker_rename":
+                continue
+            target = row["alias_target"]
+            target_path = self.finance_dir / f"{target}.json"
+            try:
+                target_bytes = target_path.read_bytes()
+                target_payload = json.loads(target_bytes)
+            except (OSError, json.JSONDecodeError) as exc:
+                raise ValueError("issuer lifecycle successor payload is unavailable") from exc
+            if not _valid_canonical_payload(target_payload, target):
+                raise ValueError("issuer lifecycle successor payload is invalid")
+            source = _payload_source_fields(target_payload)
+            data = target_payload["data"]
+            info = data.get("info") if isinstance(data.get("info"), dict) else {}
+            history = data.get("history_1y") if isinstance(data.get("history_1y"), list) else []
+            price = info.get("regularMarketPrice") if info.get("regularMarketPrice") is not None else info.get("currentPrice")
+            actual_bars = any(isinstance(bar, dict) and str(bar.get("date") or "")[:10] == source["history_as_of"]
+                              and positive(bar.get("Close")) for bar in history)
+            if (info.get("symbol") != target or not positive(price) or not actual_bars
+                    or source["quote_as_of"] is None or source["history_as_of"] is None
+                    or _iso_ms(target_payload["fetched_at"]) > observed_ms
+                    or _iso_ms(source["history_as_of"]) > observed_ms
+                    or source["source_as_of"][:10] < (row.get("eligibility_after") or row["effective_date"])):
+                raise ValueError("issuer lifecycle successor lacks an actual current quote and bars")
+            row.update({"alias_target_payload_sha256": _sha256(target_bytes),
+                        "alias_target_source_as_of": source["source_as_of"]})
+        # Quote/bar presence establishes the successor identity. Its source age
+        # stays under the successor's normal eligible-lane freshness gate; an aged
+        # payload must never reactivate the old ticker or prevent its own refresh.
+        try:
+            artifact_label = path.relative_to(self.root.parents[1]).as_posix()
+        except ValueError:
+            artifact_label = path.name
+        return {"artifact_path": artifact_label, "artifact_sha256": _sha256(raw),
+                "evaluated_at": observed_at, "inactive": inactive}
 
     def transition_terminal_tickers(self, active_universe: set[str], terminal_evidence: dict, run: dict) -> int:
         if not isinstance(terminal_evidence, dict) or not isinstance(terminal_evidence.get("tickers"), dict):
@@ -995,11 +1139,16 @@ class YahooBatchStateStore:
         self._remove_pending_after_state(ticker)
         return state
 
-    def rebuild_index(self, active_universe: set[str], run: dict, batch_failure: str | None = None) -> dict:
+    def rebuild_index(self, active_universe: set[str], run: dict, batch_failure: str | None = None,
+                      *, issuer_lifecycle: dict | None = None) -> dict:
         active = set(active_universe)
+        lifecycle_rows = (issuer_lifecycle or {}).get("inactive") or {}
+        lifecycle_inactive = active & set(lifecycle_rows)
         active_universe_scope = str(run.get("active_universe_scope") or "").strip() or None
         counts = {
             "active": len(active),
+            "eligible": len(active - lifecycle_inactive),
+            "lifecycle_inactive": len(lifecycle_inactive),
             "untracked": 0,
             "pending_acquisition": 0,
             "fresh": 0,
@@ -1027,7 +1176,7 @@ class YahooBatchStateStore:
         run_id = str(run.get("run_id") or "local")
 
         inventory_items = self._load_active_universe()["items"]
-        for ticker in sorted(active):
+        for ticker in sorted(active - lifecycle_inactive):
             state = _read_json(self._state_path(ticker))
             if not state:
                 pending_item = inventory_items.get(ticker)
@@ -1175,6 +1324,17 @@ class YahooBatchStateStore:
             "lane_id": "yahoo_batch_quote_history",
             "active_universe_scope": active_universe_scope,
             "counts": counts,
+            "catalogue_symbols": sorted(active),
+            "lifecycle_inactive_symbols": sorted(lifecycle_inactive),
+            "issuer_lifecycle_details": [lifecycle_rows[ticker] for ticker in sorted(lifecycle_inactive)],
+            "issuer_lifecycle_policy": ({"path": issuer_lifecycle.get("artifact_path"),
+                                         "sha256": issuer_lifecycle.get("artifact_sha256"),
+                                         "evaluated_at": issuer_lifecycle.get("evaluated_at"),
+                                         "active_universe_scope": active_universe_scope,
+                                         "run_id": run_id,
+                                         "run_attempt": int(run.get("run_attempt") or 1),
+                                         "event_name": str(run.get("event_name") or "local")}
+                                        if issuer_lifecycle is not None else None),
             "oldest_source_as_of": oldest[0],
             "oldest_source_ticker": oldest[1],
             "retry_symbols": retry_symbols,
@@ -1225,6 +1385,7 @@ class YahooBatchStateStore:
                 f"Yahoo quote/history: fresh={counts['fresh']}, lkg={counts['lkg']}, "
                 f"pending_history={counts['pending_history']}, unavailable={counts['unavailable']}, "
                 f"pending_acquisition={counts['pending_acquisition']}, terminal={counts['terminal']}, "
+                f"catalogue={counts['active']}, eligible={counts['eligible']}, lifecycle_inactive={counts['lifecycle_inactive']}, "
                 f"retry={counts['retry']}, failed={counts['failed']}, source_stale={counts['stale']}. "
                 "Pending history is a normal new-listing state and self-resolves on a natural Yahoo run."
             ),

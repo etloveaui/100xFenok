@@ -82,6 +82,7 @@ DASHBOARD_CONSTANTS = ROOT / "100xfenok-next" / "src" / "lib" / "dashboard" / "c
 PORTFOLIO_TS = ROOT / "100xfenok-next" / "src" / "lib" / "portfolio.ts"
 OUT_DIR = ROOT / "data" / "yf" / "finance"
 YAHOO_BATCH_STATE_ROOT = ROOT / "data" / "admin" / "yahoo-batch-quote-history"
+ISSUER_LIFECYCLE_POLICY = YAHOO_BATCH_STATE_ROOT / "issuer-lifecycle.json"
 S1_STOCK_PROMOTION_DRY_RUN = ROOT / "data" / "admin" / "fenok-s1-stock-public-promotion-dry-run.json"
 DATA_SUPPLY_STATE_ROOT = ROOT / "data" / "admin" / "data-supply-state" / "v1"
 DATA_SUPPLY_PROVIDER_TRUTH_ROOT = ROOT
@@ -2056,6 +2057,8 @@ def main():
                 if args.scheduled_weekday is not None
                 else 0
             )
+        if args.run_attempt < 1:
+            raise ValueError("run attempt must be positive")
         retries = validate_retry_count(args.retries)
         explicit_tickers = validate_explicit_tickers(args.tickers.split(","))
         if args.retry_limit is not None and args.retry_limit < 0:
@@ -2153,22 +2156,31 @@ def main():
         "active_universe_scope": "core_etf" if args.core_daily_basket else "all_sources" if state_store else "selection",
         "observed_at": _observed_now(),
     }
+    # Validate the whole input and qualify successors before any writes, including
+    # non-stateful and explicit acquisition. Keep the full catalogue for reporting.
+    eligibility_store = state_store or YahooBatchStateStore(YAHOO_BATCH_STATE_ROOT, OUT_DIR)
+    issuer_lifecycle = eligibility_store.load_issuer_lifecycle(
+        ISSUER_LIFECYCLE_POLICY, run_context["observed_at"],
+    )
+    lifecycle_inactive = set(issuer_lifecycle["inactive"])
+    eligible_universe = active_universe - lifecycle_inactive
+    tickers = [ticker for ticker in tickers if ticker not in lifecycle_inactive]
     terminal_evidence = state_store.load_terminal_evidence(S1_STOCK_PROMOTION_DRY_RUN) if state_store else None
     terminal_tickers = set((terminal_evidence or {}).get("tickers") or {})
     if state_store and not args.plan_only:
-        freshness = yahoo_source_freshness(existing_yahoo_source_dates(active_universe), run_context["observed_at"])
+        freshness = yahoo_source_freshness(existing_yahoo_source_dates(eligible_universe), run_context["observed_at"])
         state_store.bootstrap_existing(
-            active_universe,
+            eligible_universe,
             universe_sources,
             run_context,
             exclude_tickers=bootstrap_exclusions(tickers, untracked_only=args.untracked_only),
             source_age_business_days=freshness["ages"],
             max_source_business_days=freshness["max_source_business_days"],
         )
-        state_store.transition_terminal_tickers(active_universe, terminal_evidence, run_context)
-        state_store.reconcile_active_universe(active_universe, universe_sources, run_context)
+        state_store.transition_terminal_tickers(eligible_universe, terminal_evidence, run_context)
+        state_store.reconcile_active_universe(eligible_universe, universe_sources, run_context)
     retry_queue = (
-        state_store.retry_tickers_ordered(active_universe, terminal_tickers)
+        state_store.retry_tickers_ordered(eligible_universe, terminal_tickers)
         if state_store and args.natural_run
         else []
     )
@@ -2190,7 +2202,7 @@ def main():
         untracked_regular = filter_pending_acquisition_candidates(
             regular_tickers,
             state_store,
-            active_universe,
+            eligible_universe,
             prospective=args.plan_only,
         )
         tickers = select_campaign_or_rotation_plan(
@@ -2260,6 +2272,7 @@ def main():
                 active_universe,
                 run_context,
                 batch_failure=batch_failure,
+                issuer_lifecycle=issuer_lifecycle,
             )
             finalized["done"] = True
             return finalized["index"]
@@ -2269,6 +2282,12 @@ def main():
             signal.signal(signal.SIGTERM, lambda _signum, _frame: (finalize_state(True), sys.exit(143)))
 
     if not tickers:
+        if candidate_count and not selected_universe and lifecycle_inactive:
+            write_empty_summary(args.profile, args, candidate_count, "issuer_lifecycle_inactive")
+            if finalize_state:
+                finalize_state(False)
+            print(f"[summary] no live acquisition candidates; catalogue candidates={candidate_count}")
+            return
         if args.history_gaps_only:
             write_empty_summary(args.profile, args, candidate_count, "no_history_gaps")
             if finalize_state:
