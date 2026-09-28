@@ -1,23 +1,9 @@
 {
   "schema_version": "alarm-state/v1",
-  "generated_at": "2026-09-28T11:41:24.651Z",
+  "generated_at": "2026-09-28T13:36:16.805Z",
   "status": "open",
   "open_incident_count": 5,
   "open_incidents": [
-    {
-      "workflow": "fetch-fdic.yml",
-      "label": "Fetch FDIC Tier1 Data",
-      "streak": 0,
-      "failure_streak_threshold": 2,
-      "first_failing_run_id": null,
-      "first_failing_run_url": null,
-      "alarm_reasons": [
-        "plane_freshness_unavailable"
-      ],
-      "lane_outcome_lanes": [],
-      "lost_schedule_slot_count": 0,
-      "cadence_status": "not_due"
-    },
     {
       "workflow": "global-writer-queue-observer.yml",
       "label": "Global Writer Queue Observability",
@@ -28,9 +14,7 @@
       "alarm_reasons": [
         "missed_schedule_window"
       ],
-      "lane_outcome_lanes": [],
-      "lost_schedule_slot_count": 0,
-      "cadence_status": "no_declaration"
+      "lost_schedule_slot_count": 0
     },
     {
       "workflow": "retention-restore.yml",
@@ -42,23 +26,19 @@
       "alarm_reasons": [
         "missed_schedule_window"
       ],
-      "lane_outcome_lanes": [],
-      "lost_schedule_slot_count": 0,
-      "cadence_status": "no_declaration"
+      "lost_schedule_slot_count": 0
     },
     {
       "workflow": "validate-workflows.yml",
       "label": "Validate GitHub Workflows",
-      "streak": 7,
+      "streak": 5,
       "failure_streak_threshold": 2,
-      "first_failing_run_id": 36384576674,
-      "first_failing_run_url": "https://github.com/etloveaui/100xFenok/actions/runs/36384576674",
+      "first_failing_run_id": 36424469518,
+      "first_failing_run_url": "https://github.com/etloveaui/100xFenok/actions/runs/36424469518",
       "alarm_reasons": [
         "failure_streak"
       ],
-      "lane_outcome_lanes": [],
-      "lost_schedule_slot_count": 0,
-      "cadence_status": "no_declaration"
+      "lost_schedule_slot_count": 0
     },
     {
       "workflow": "worker-request-budget-alarm.yml",
@@ -70,31 +50,21 @@
       "alarm_reasons": [
         "missed_schedule_window"
       ],
-      "lane_outcome_lanes": [],
-      "lost_schedule_slot_count": 0,
-      "cadence_status": "no_declaration"
+      "lost_schedule_slot_count": 0
+    },
+    {
+      "workflow": "data-health-kpi",
+      "label": "Data stopped advancing",
+      "alarm_reasons": [
+        "data_stopped_two_generations"
+      ],
+      "stopped_sets": [
+        "stockanalysis_etf_detail"
+      ],
+      "latest_generated_at": "2026-09-28T12:40:36.912Z",
+      "previous_generated_at": "2026-09-28T11:46:58.917Z"
     }
   ],
-  "lane_outcome_notified": {
-    "finra_short_volume": "2026-09-25",
-    "occ_options_volume": "2026-09-25",
-    "krx": "2026-09-27",
-    "edgar_filings": "2026-09-27",
-    "gdelt_news_tone": "2026-09-28",
-    "finra_ats_weekly": "2026-09-27",
-    "oecd_cli": "2026-09-27",
-    "treasury_tga": "2026-09-25",
-    "slickcharts": "2026-09-27",
-    "apewisdom_attention": "2026-09-26",
-    "sentiment": "2026-09-05",
-    "us_indices_daily": "2026-09-25",
-    "nasdaq_giw_sox": "2026-09-05",
-    "stockanalysis_etf_universe": "2026-09-27",
-    "stockanalysis_etf_detail": "2026-09-27",
-    "fred_macro": "2026-09-27",
-    "fred_yardeni": "2026-09-22",
-    "yahoo_private_options": "2026-09-22"
-  },
   "watched_workflows": [
     {
       "file": "build-stocks-analyzer.yml",
@@ -103,9 +73,7 @@
         "schedule"
       ],
       "event": "schedule",
-      "failure_streak_threshold": 2,
-      "cadence_status": "no_declaration",
-      "cadence_evidence": []
+      "failure_streak_threshold": 2
     },
     {
       "file": "check-sec13f-live-parity.yml",
@@ -114,9 +82,7 @@
         "schedule"
       ],
       "event": "schedule",
-      "failure_streak_threshold": 2,
-      "cadence_status": "no_declaration",
-      "cadence_evidence": []
+      "failure_streak_threshold": 2
     },
     {
       "file": "data-plane-serving-probe.yml",
@@ -125,9 +91,7 @@
         "schedule"
       ],
       "event": "schedule",
-      "failure_streak_threshold": 2,
-      "cadence_status": "no_declaration",
-      "cadence_evidence": []
+      "failure_streak_threshold": 2
     },
     {
       "file": "deploy-worker.yml",
@@ -138,9 +102,7 @@
         "workflow_run"
       ],
       "event": null,
-      "failure_streak_threshold": 2,
-      "cadence_status": "no_declaration",
-      "cadence_evidence": []
+      "failure_streak_threshold": 2
     },
     {
       "file": "fenok-edge-daily.yml",
@@ -149,9 +111,7 @@
         "schedule"
       ],
       "event": "schedule",
-      "failure_streak_threshold": 2,
-      "cadence_status": "not_due",
-      "cadence_evidence": []
+      "failure_streak_threshold": 2
     },
     {
       "file": "fenok-edge-krx-daily.yml",
@@ -160,9 +120,7 @@
         "schedule"
       ],
       "event": "schedule",
-      "failure_streak_threshold": 2,
-      "cadence_status": "not_due",
-      "cadence_evidence": []
+      "failure_streak_threshold": 2
     },
     {
       "file": "fetch-damodaran-shadow.yml",
@@ -171,9 +129,7 @@
         "schedule"
       ],
       "event": "schedule",
-      "failure_streak_threshold": 2,
-      "cadence_status": "not_due",
-      "cadence_evidence": []
+      "failure_streak_threshold": 2
     },
     {
       "file": "fetch-defillama.yml",
@@ -182,9 +138,7 @@
         "schedule"
       ],
       "event": "schedule",
-      "failure_streak_threshold": 2,
-      "cadence_status": "not_due",
-      "cadence_evidence": []
+      "failure_streak_threshold": 2
     },
     {
       "file": "fetch-edgar-filings.yml",
@@ -193,20 +147,7 @@
         "schedule"
       ],
       "event": "schedule",
-      "failure_streak_threshold": 1,
-      "cadence_status": "not_due",
-      "cadence_evidence": []
-    },
-    {
-      "file": "fetch-fdic.yml",
-      "label": "Fetch FDIC Tier1 Data",
-      "events": [
-        "schedule"
-      ],
-      "event": "schedule",
-      "failure_streak_threshold": 2,
-      "cadence_status": "not_due",
-      "cadence_evidence": []
+      "failure_streak_threshold": 1
     },
     {
       "file": "fetch-fenok-apewisdom.yml",
@@ -215,9 +156,7 @@
         "schedule"
       ],
       "event": "schedule",
-      "failure_streak_threshold": 2,
-      "cadence_status": "not_due",
-      "cadence_evidence": []
+      "failure_streak_threshold": 2
     },
     {
       "file": "fetch-fenok-news-tone.yml",
@@ -226,9 +165,7 @@
         "schedule"
       ],
       "event": "schedule",
-      "failure_streak_threshold": 2,
-      "cadence_status": "not_due",
-      "cadence_evidence": []
+      "failure_streak_threshold": 2
     },
     {
       "file": "fetch-fenok-private-options.yml",
@@ -237,9 +174,7 @@
         "schedule"
       ],
       "event": "schedule",
-      "failure_streak_threshold": 2,
-      "cadence_status": "not_due",
-      "cadence_evidence": []
+      "failure_streak_threshold": 2
     },
     {
       "file": "fetch-finra-ats-weekly.yml",
@@ -248,9 +183,7 @@
         "schedule"
       ],
       "event": "schedule",
-      "failure_streak_threshold": 1,
-      "cadence_status": "not_due",
-      "cadence_evidence": []
+      "failure_streak_threshold": 1
     },
     {
       "file": "fetch-fred-banking.yml",
@@ -259,9 +192,7 @@
         "schedule"
       ],
       "event": "schedule",
-      "failure_streak_threshold": 2,
-      "cadence_status": "not_due",
-      "cadence_evidence": []
+      "failure_streak_threshold": 2
     },
     {
       "file": "fetch-fred-macro.yml",
@@ -270,9 +201,7 @@
         "schedule"
       ],
       "event": "schedule",
-      "failure_streak_threshold": 2,
-      "cadence_status": "not_due",
-      "cadence_evidence": []
+      "failure_streak_threshold": 2
     },
     {
       "file": "fetch-fred-yardeni.yml",
@@ -281,9 +210,7 @@
         "schedule"
       ],
       "event": "schedule",
-      "failure_streak_threshold": 1,
-      "cadence_status": "not_due",
-      "cadence_evidence": []
+      "failure_streak_threshold": 1
     },
     {
       "file": "fetch-nasdaq-giw-sox.yml",
@@ -292,9 +219,7 @@
         "schedule"
       ],
       "event": "schedule",
-      "failure_streak_threshold": 2,
-      "cadence_status": "not_due",
-      "cadence_evidence": []
+      "failure_streak_threshold": 2
     },
     {
       "file": "fetch-oecd-cli.yml",
@@ -303,9 +228,7 @@
         "schedule"
       ],
       "event": "schedule",
-      "failure_streak_threshold": 1,
-      "cadence_status": "not_due",
-      "cadence_evidence": []
+      "failure_streak_threshold": 1
     },
     {
       "file": "fetch-sentiment.yml",
@@ -314,9 +237,7 @@
         "schedule"
       ],
       "event": "schedule",
-      "failure_streak_threshold": 2,
-      "cadence_status": "not_due",
-      "cadence_evidence": []
+      "failure_streak_threshold": 2
     },
     {
       "file": "fetch-stockanalysis.yml",
@@ -325,11 +246,7 @@
         "schedule"
       ],
       "event": "schedule",
-      "failure_streak_threshold": 2,
-      "cadence_status": "not_due",
-      "cadence_evidence": [],
-      "data_freshness_state": "healthy",
-      "data_freshness_age_hours_at_generation": 57
+      "failure_streak_threshold": 2
     },
     {
       "file": "fetch-treasury-tga.yml",
@@ -338,9 +255,7 @@
         "schedule"
       ],
       "event": "schedule",
-      "failure_streak_threshold": 2,
-      "cadence_status": "not_due",
-      "cadence_evidence": []
+      "failure_streak_threshold": 2
     },
     {
       "file": "fetch-us-indices-daily.yml",
@@ -349,9 +264,7 @@
         "schedule"
       ],
       "event": "schedule",
-      "failure_streak_threshold": 2,
-      "cadence_status": "not_due",
-      "cadence_evidence": []
+      "failure_streak_threshold": 2
     },
     {
       "file": "fetch-yahoo-ticker.yml",
@@ -360,9 +273,7 @@
         "schedule"
       ],
       "event": "schedule",
-      "failure_streak_threshold": 2,
-      "cadence_status": "not_due",
-      "cadence_evidence": []
+      "failure_streak_threshold": 2
     },
     {
       "file": "fetch-yf-finance.yml",
@@ -371,9 +282,7 @@
         "schedule"
       ],
       "event": "schedule",
-      "failure_streak_threshold": 2,
-      "cadence_status": "not_due",
-      "cadence_evidence": []
+      "failure_streak_threshold": 2
     },
     {
       "file": "global-writer-queue-observer.yml",
@@ -382,9 +291,7 @@
         "schedule"
       ],
       "event": "schedule",
-      "failure_streak_threshold": 2,
-      "cadence_status": "no_declaration",
-      "cadence_evidence": []
+      "failure_streak_threshold": 2
     },
     {
       "file": "pins-autosync.yml",
@@ -393,9 +300,7 @@
         "schedule"
       ],
       "event": "schedule",
-      "failure_streak_threshold": 2,
-      "cadence_status": "no_declaration",
-      "cadence_evidence": []
+      "failure_streak_threshold": 2
     },
     {
       "file": "retention-restore.yml",
@@ -404,9 +309,7 @@
         "schedule"
       ],
       "event": "schedule",
-      "failure_streak_threshold": 2,
-      "cadence_status": "no_declaration",
-      "cadence_evidence": []
+      "failure_streak_threshold": 2
     },
     {
       "file": "retention-sweep.yml",
@@ -415,9 +318,7 @@
         "schedule"
       ],
       "event": "schedule",
-      "failure_streak_threshold": 2,
-      "cadence_status": "no_declaration",
-      "cadence_evidence": []
+      "failure_streak_threshold": 2
     },
     {
       "file": "slickcharts-daily.yml",
@@ -426,9 +327,7 @@
         "schedule"
       ],
       "event": "schedule",
-      "failure_streak_threshold": 2,
-      "cadence_status": "not_due",
-      "cadence_evidence": []
+      "failure_streak_threshold": 2
     },
     {
       "file": "slickcharts-history.yml",
@@ -437,9 +336,7 @@
         "schedule"
       ],
       "event": "schedule",
-      "failure_streak_threshold": 1,
-      "cadence_status": "not_due",
-      "cadence_evidence": []
+      "failure_streak_threshold": 1
     },
     {
       "file": "slickcharts-monthly.yml",
@@ -448,9 +345,7 @@
         "schedule"
       ],
       "event": "schedule",
-      "failure_streak_threshold": 1,
-      "cadence_status": "not_due",
-      "cadence_evidence": []
+      "failure_streak_threshold": 1
     },
     {
       "file": "slickcharts-symbols.yml",
@@ -459,9 +354,7 @@
         "schedule"
       ],
       "event": "schedule",
-      "failure_streak_threshold": 1,
-      "cadence_status": "not_due",
-      "cadence_evidence": []
+      "failure_streak_threshold": 1
     },
     {
       "file": "slickcharts-weekly.yml",
@@ -470,9 +363,7 @@
         "schedule"
       ],
       "event": "schedule",
-      "failure_streak_threshold": 1,
-      "cadence_status": "not_due",
-      "cadence_evidence": []
+      "failure_streak_threshold": 1
     },
     {
       "file": "update-manifest.yml",
@@ -482,9 +373,7 @@
         "schedule"
       ],
       "event": null,
-      "failure_streak_threshold": 2,
-      "cadence_status": "no_declaration",
-      "cadence_evidence": []
+      "failure_streak_threshold": 2
     },
     {
       "file": "validate-workflows.yml",
@@ -493,9 +382,7 @@
         "push"
       ],
       "event": "push",
-      "failure_streak_threshold": 2,
-      "cadence_status": "no_declaration",
-      "cadence_evidence": []
+      "failure_streak_threshold": 2
     },
     {
       "file": "worker-request-budget-alarm.yml",
@@ -504,18 +391,9 @@
         "schedule"
       ],
       "event": "schedule",
-      "failure_streak_threshold": 2,
-      "cadence_status": "no_declaration",
-      "cadence_evidence": []
+      "failure_streak_threshold": 2
     }
   ],
-  "cadence_state_counts": {
-    "not_due": 26,
-    "overdue": 0,
-    "recovered": 0,
-    "no_declaration": 11,
-    "unknown": 0
-  },
   "excluded_workflows": [
     {
       "file": "pipeline-failure-alarm.yml",
@@ -527,16 +405,16 @@
   "queue_evicted_run_count": 0,
   "queue_evicted_workflows": [],
   "last_firing": {
-    "run_id": "36416715090",
-    "run_url": "https://github.com/etloveaui/100xFenok/actions/runs/36416715090",
-    "observed_at": "2026-09-28T11:41:24.651Z",
+    "run_id": "36429318344",
+    "run_url": "https://github.com/etloveaui/100xFenok/actions/runs/36429318344",
+    "observed_at": "2026-09-28T13:36:16.805Z",
     "event": "workflow_run",
     "workflows": [
-      "fetch-fdic.yml",
       "global-writer-queue-observer.yml",
       "retention-restore.yml",
       "validate-workflows.yml",
-      "worker-request-budget-alarm.yml"
+      "worker-request-budget-alarm.yml",
+      "data-health-kpi"
     ],
     "title": "100xFenok pipeline job failure alarm"
   },
