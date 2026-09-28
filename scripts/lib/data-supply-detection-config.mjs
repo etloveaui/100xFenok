@@ -1,4 +1,3 @@
-import { createHash } from "node:crypto";
 import {
   FLOW_PROXY_FORMULA_VERSION,
   OCC_OPTIONS_FORMULA_VERSION,
@@ -7,43 +6,45 @@ import { canonicalJson } from "./json-canonical.mjs";
 import { LANE_REGISTRY, registryLaneById } from "./lane-registry.mjs";
 import { FAMILY_POLICY, FRESHNESS_CLASSES, resolveSourcePolicy } from "../../100xfenok-next/src/lib/freshness-policy.mjs";
 
-function ownerWeeklyFreshLimit(laneId) {
-  const policy = FAMILY_POLICY[laneId];
+// Freshness day limits are never restated as local constants: each lane
+// resolves its family policy from the shared DEC-417 policy module and the
+// fresh limit is the policy's own cycle + releaseLag + grace.
+function policyFreshLimitDays(laneId, policy, label, expectations = {}) {
   const cadence = FRESHNESS_CLASSES[policy?.cadence];
-  if (policy?.supplier !== "owner" || policy.cadence !== "weekly" || policy.calendar !== "calendar"
+  if (!cadence
+    || (expectations.supplier !== undefined && policy.supplier !== expectations.supplier)
+    || (expectations.cadence !== undefined && policy.cadence !== expectations.cadence)
+    || (expectations.calendar !== undefined && policy.calendar !== expectations.calendar)
+    || (expectations.releaseLagDays !== undefined && policy.releaseLagDays !== expectations.releaseLagDays)
     || !Number.isInteger(policy.releaseLagDays) || policy.releaseLagDays < 0
-    || !Number.isInteger(cadence?.cycleDays) || cadence.cycleDays < 1
-    || !Number.isInteger(cadence?.graceDays) || cadence.graceDays < 0) {
-    throw new Error(`${laneId}: owner weekly source-age policy is missing or invalid`);
+    || !Number.isInteger(cadence.cycleDays) || cadence.cycleDays < 1
+    || !Number.isInteger(cadence.graceDays) || cadence.graceDays < 0) {
+    throw new Error(`${laneId}: ${label} source-age policy is missing or invalid`);
   }
   return cadence.cycleDays + policy.releaseLagDays + cadence.graceDays;
+}
+
+function ownerWeeklyFreshLimit(laneId) {
+  return policyFreshLimitDays(laneId, FAMILY_POLICY[laneId], "owner weekly", {
+    supplier: "owner", cadence: "weekly", calendar: "calendar",
+  });
 }
 
 function krxFreshLimit() {
-  const policy = FAMILY_POLICY.krx;
-  const cadence = FRESHNESS_CLASSES[policy?.cadence];
-  if (policy?.cadence !== "daily" || policy.calendar !== "kr_trading"
-    || policy.supplier !== "automated" || !Number.isInteger(policy.releaseLagDays)
-    || !Number.isInteger(cadence?.cycleDays) || !Number.isInteger(cadence?.graceDays)) {
-    throw new Error("krx: trading-day source-age policy is missing or invalid");
-  }
-  return cadence.cycleDays + policy.releaseLagDays + cadence.graceDays;
+  return policyFreshLimitDays("krx", FAMILY_POLICY.krx, "trading-day", {
+    supplier: "automated", cadence: "daily", calendar: "kr_trading",
+  });
 }
 
 function fredMacroFreshLimit() {
-  const policy = resolveSourcePolicy({ laneId: "fred_macro", cadence: "daily", calendar: "utc" });
-  const cadence = FRESHNESS_CLASSES[policy?.cadence];
-  if (policy?.cadence !== "daily" || policy.calendar !== "calendar"
-    || policy.supplier !== "automated" || policy.releaseLagDays !== 0
-    || !Number.isInteger(cadence?.cycleDays) || !Number.isInteger(cadence?.graceDays)) {
-    throw new Error("fred_macro: daily UTC source-age policy is missing or invalid");
-  }
-  return cadence.cycleDays + policy.releaseLagDays + cadence.graceDays;
+  return policyFreshLimitDays("fred_macro", resolveSourcePolicy({ laneId: "fred_macro", cadence: "daily", calendar: "utc" }), "daily UTC", {
+    supplier: "automated", cadence: "daily", calendar: "calendar", releaseLagDays: 0,
+  });
 }
 
 // LANE_IDS derives from the lane registry — the SSOT for lane existence
-// (#366 derivation). Values stay exact-value pinned by cases.expected.json's
-// config_digest, so drift is a conscious edit (DEC-266).
+// (#366 derivation). Values stay exact-value pinned by the expected-case
+// fixture, so drift is a conscious edit (DEC-266).
 const LANE_IDS = Object.freeze(
   LANE_REGISTRY.lanes
     .filter((lane) => lane.lane_class === "detection_floor")
@@ -52,8 +53,8 @@ const LANE_IDS = Object.freeze(
 
 // LIVE_LANE_IDS derives from the lane registry — the SSOT for lane existence
 // and enforcement (#366 derivation, hand list removed). The VALUES are still
-// exact-value pinned by cases.expected.json's config_digest, so any
-// registry/config drift fails loudly as a conscious edit (DEC-266).
+// exact-value pinned by the expected-case fixture, so any registry/config
+// drift fails loudly as a conscious edit (DEC-266).
 const LIVE_LANE_IDS = Object.freeze(
   LANE_REGISTRY.lanes
     .filter((lane) => lane.enforcement === "live")
@@ -1275,9 +1276,8 @@ const config = {
       // the ETF slot never saw one and raised unrecovered_overdue.
       //
       // These keys must stay identical to the workflow's own `on.schedule`,
-      // or the detection observer cannot attribute a missed slot; see
-      // test-fetch-cron-attempt-coverage.mjs, which derives them from the
-      // workflow file rather than trusting this list.
+      // or the detection observer cannot attribute a missed slot; the
+      // workflow file is the SSOT and this list mirrors it exactly.
       monitoringMode: "composite",
       members: [
         member("stock", ".github/workflows/fetch-yf-finance.yml", ["20 23 * * 1-5"], [
@@ -1762,8 +1762,3 @@ function deepFreeze(value) {
 validateDetectionConfig(config);
 
 export const DATA_SUPPLY_DETECTION_CONFIG = deepFreeze(config);
-
-export function configDigest() {
-  validateDetectionConfig(DATA_SUPPLY_DETECTION_CONFIG);
-  return createHash("sha256").update(canonicalJson(DATA_SUPPLY_DETECTION_CONFIG), "utf8").digest("hex");
-}

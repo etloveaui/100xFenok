@@ -22,7 +22,6 @@ export const REPO_ROOT = path.resolve(__dirname, "..");
 export const FIXTURE_ROOT = path.join(REPO_ROOT, "scripts", "fixtures", "data_supply", "detection_floor");
 export const CALENDAR_PATH = path.join(REPO_ROOT, "scripts", "lib", "data-supply-detection-calendars.json");
 export const EXPECTED_FIXTURE_PATH = path.join(FIXTURE_ROOT, "cases.expected.json");
-export const ATTEMPTS_FIXTURE_PATH = path.join(FIXTURE_ROOT, "attempts.fixture.json");
 export const ARTIFACTS_FIXTURE_PATH = path.join(FIXTURE_ROOT, "artifacts.fixture.json");
 export const CALENDARS_FIXTURE_PATH = path.join(FIXTURE_ROOT, "calendars.fixture.json");
 export const COMMITTED_REPORT_PATH = path.join(REPO_ROOT, "data", "admin", "data-supply-detection-floor.json");
@@ -159,11 +158,6 @@ function exactKeys(value, expected, context, optional = []) {
 
 function sha256(bytes) {
   return createHash("sha256").update(bytes).digest("hex");
-}
-
-function digestConfig(config) {
-  validateDetectionConfig(config);
-  return sha256(Buffer.from(canonicalJson(config), "utf8"));
 }
 
 function strictUtc(value, context, { allowDate = false } = {}) {
@@ -1437,10 +1431,6 @@ export function classifyAttempt(row) {
   return reasonResult("ok", { observed_at: row.observed_at });
 }
 
-function attemptMap(document) {
-  return new Map(document.attempts.map((row) => [`${row.lane_id}:${row.member_id ?? "_lane"}`, row]));
-}
-
 const SHARED_SOURCE_LANES = new Set([
   "benchmarks", "global_scouter", "fred_yardeni", "fred_macro",
   "fred_banking", "treasury_tga", "finra_ats_weekly", "krx",
@@ -1460,18 +1450,11 @@ function sharedSourceResult(source, lane, now, calendars, artifactId = undefined
   return { verdict, policy, result: reasonResult(reason, { source_as_of: source, age: verdict.ageDays, unit: lane.freshness.unit }) };
 }
 
-function evaluateMember(lane, member, attemptsByKey, artifactRootInfo, claimedPaths, now, calendars, fsModule = fs) {
-  const attemptKey = `${lane.id}:${lane.monitoring_mode === "composite" ? member.id : "_lane"}`;
-  const row = attemptsByKey.get(attemptKey) ?? null;
-  const cadenceKind = member.cadence_declaration?.kind ?? null;
-  const endpoint = cadenceKind === "github_workflow"
-    ? worstResult([
-      classifyAttempt(row),
-      evaluateAttemptCadence(row?.observed_at ?? null, member.schedule, member.cadence_calendar, now, calendars),
-    ])
-    : cadenceKind === "owner_contract" || cadenceKind === "payload_field"
-      ? reasonResult("declared_cadence", { observed_at: null })
-      : reasonResult("workflow_unobserved", { observed_at: null });
+// A member row is derived from the lane artifact checks only: schema-valid
+// artifact, a real non-future source_as_of, and content age via the freshness
+// policy. Attempt/workflow observation is intentionally absent here; it moves
+// to the workflow-run failure-streak path.
+function evaluateMember(lane, member, artifactRootInfo, claimedPaths, now, calendars, fsModule = fs) {
   const evaluatedContracts = member.artifact_contracts.map((contract) => ({
     contract, results: evaluateArtifactContract(contract, artifactRootInfo, claimedPaths, fsModule),
   }));
@@ -1480,17 +1463,6 @@ function evaluateMember(lane, member, attemptsByKey, artifactRootInfo, claimedPa
   const sourceAsOf = foldSourceTimes(artifacts, lane.freshness);
   const hasSourceContract = artifacts.some((artifact) => artifact.source_required !== false);
   const generatedAtProjection = hasSourceContract ? {} : foldGeneratedAt(artifacts, now);
-  const providerDatelessAttemptContract = (
-    artifactWorst.status === "ready"
-    && !hasSourceContract
-    && lane.freshness.observation_basis === "attempt_observed_at"
-    && lane.freshness.source_basis.length === 0
-    && member.cadence_declaration?.kind === "github_workflow"
-    && lane.id === "stockanalysis_etf_universe"
-  );
-  // StockAnalysis ETF membership has no provider source date. Preserve
-  // source_as_of=null and use the successful scheduled attempt as its only
-  // freshness authority. A collection clock is never promoted into source time.
   const sourceArtifacts = lane.id === "fred_banking" ? evaluatedContracts.map(({ contract, results }) => {
     const result = worstResult(results);
     const source = result.source_as_of ?? null;
@@ -1512,24 +1484,14 @@ function evaluateMember(lane, member, attemptsByKey, artifactRootInfo, claimedPa
       : SHARED_SOURCE_LANES.has(lane.id)
         ? sharedSourceResult(sourceAsOf, lane, now, calendars).result
         : evaluateFreshness(sourceAsOf, lane.freshness, now, calendars)
-    : providerDatelessAttemptContract
-      ? {
-          status: endpoint.status,
-          reason: endpoint.reason,
-          source_as_of: null,
-          age: null,
-          unit: lane.freshness.unit,
-        }
-      : artifactWorst.status === "ready"
-        ? reasonResult("ok", { source_as_of: null, age: null, unit: lane.freshness.unit })
-        : { ...artifactWorst, source_as_of: sourceAsOf, age: null, unit: lane.freshness.unit };
+    : artifactWorst.status === "ready"
+      ? reasonResult("ok", { source_as_of: null, age: null, unit: lane.freshness.unit })
+      : { ...artifactWorst, source_as_of: sourceAsOf, age: null, unit: lane.freshness.unit };
   const artifact = worstResult([artifactWorst, freshness]);
-  const combined = worstResult([endpoint, artifact]);
   return {
     id: member.id,
-    status: combined.status,
-    reason: combined.reason,
-    endpoint: { status: endpoint.status, reason: endpoint.reason, observed_at: endpoint.observed_at ?? null },
+    status: artifact.status,
+    reason: artifact.reason,
     artifact: {
       status: artifact.status,
       reason: artifact.reason,
@@ -1554,29 +1516,25 @@ function increment(counts, status) {
 export function buildDetectionReport({
   config = DATA_SUPPLY_DETECTION_CONFIG,
   artifactRoot,
-  attempts,
   now,
   calendars,
   fsModule = fs,
 }) {
   validateDetectionConfig(config);
-  validateAttemptEvidence(attempts, config);
   validateConfigCalendarBindings(config, calendars);
   strictUtc(now, "now");
   const artifactRootInfo = canonicalExistingDirectory(artifactRoot, { fsModule });
-  const byAttempt = attemptMap(attempts);
   const claimedArtifactPaths = new Set();
   const logicalCounts = zeroCounts();
   const memberCounts = zeroCounts();
   const monitoringModeCounts = { post_fetch_artifact: 0, artifact_only: 0, composite: 0 };
   const lanes = config.lanes.map((lane) => {
     monitoringModeCounts[lane.monitoring_mode] += 1;
-    const members = lane.producer_members.map((member) => evaluateMember(lane, member, byAttempt, artifactRootInfo, claimedArtifactPaths, now, calendars, fsModule));
+    const members = lane.producer_members.map((member) => evaluateMember(lane, member, artifactRootInfo, claimedArtifactPaths, now, calendars, fsModule));
     members.forEach((member) => increment(memberCounts, member.status));
     const laneWorst = worstResult(members);
     increment(logicalCounts, laneWorst.status);
     const firstMember = members[0];
-    const endpointWorst = worstResult(members.map((member) => member.endpoint));
     const artifactWorst = lane.freshness.fold === "member_worst"
       ? worstMemberArtifact(members)
       : worstResult(members.map((member) => member.artifact));
@@ -1594,7 +1552,6 @@ export function buildDetectionReport({
       monitoring_mode: lane.monitoring_mode,
       status: laneWorst.status,
       reason: laneWorst.reason,
-      endpoint: lane.monitoring_mode === "composite" ? endpointWorst : firstMember.endpoint,
       artifact: {
         status: artifactWorst.status,
         reason: artifactWorst.reason,
@@ -1624,7 +1581,6 @@ export function buildDetectionReport({
   const report = {
     schema_version: REPORT_SCHEMA,
     generated_at: now,
-    config_digest: digestConfig(config),
     logical_lane_count: config.logical_lane_count,
     producer_member_count: config.producer_member_count,
     counts,
@@ -1640,21 +1596,6 @@ function validateStatusReason(row, context, { allowUnavailableSchemaDrift = fals
   const compatible = REASON_STATUS[row.reason] === row.status
     || (allowUnavailableSchemaDrift && row.status === "unavailable" && row.reason === "schema_drift");
   if (!compatible) fail("schema_error", `${context} status/reason is contradictory`);
-}
-
-function validateEndpointReport(row, context) {
-  exactKeys(row, ["status", "reason", "observed_at"], context);
-  validateStatusReason(row, context);
-  if (row.observed_at === null) {
-    if (!new Set(["workflow_unobserved", "declared_cadence"]).has(row.reason)) {
-      fail("schema_error", `${context}.observed_at is missing`);
-    }
-  } else {
-    strictUtc(row.observed_at, `${context}.observed_at`);
-    if (new Set(["workflow_unobserved", "declared_cadence"]).has(row.reason)) {
-      fail("schema_error", `${context}.observed_at contradicts cadence provenance`);
-    }
-  }
 }
 
 function validateArtifactReport(row, context, freshnessPolicy) {
@@ -1681,14 +1622,13 @@ export function validateDetectionReport(report, config = DATA_SUPPLY_DETECTION_C
   exactKeys(report, [
     "schema_version",
     "generated_at",
-    "config_digest",
     "logical_lane_count",
     "producer_member_count",
     "counts",
     "monitoring_mode_counts",
     "lanes",
   ], "report");
-  if (report.schema_version !== REPORT_SCHEMA || report.config_digest !== digestConfig(config)) fail("schema_error", "report schema/config digest is invalid");
+  if (report.schema_version !== REPORT_SCHEMA) fail("schema_error", "report schema version is invalid");
   strictUtc(report.generated_at, "report.generated_at");
   if (report.logical_lane_count !== config.logical_lane_count
     || report.producer_member_count !== config.producer_member_count
@@ -1716,15 +1656,14 @@ export function validateDetectionReport(report, config = DATA_SUPPLY_DETECTION_C
     const laneConfig = config.lanes[index];
     const composite = laneConfig.monitoring_mode === "composite";
     exactKeys(row, composite
-      ? ["id", "label", "enforcement", "kpi_required", "monitoring_mode", "status", "reason", "endpoint", "artifact", "affected_surface_ids", "members"]
-      : ["id", "label", "enforcement", "kpi_required", "monitoring_mode", "status", "reason", "endpoint", "artifact", "affected_surface_ids", ...(row.id === "fred_banking" ? ["source_artifacts"] : [])], `report.lanes[${index}]`);
+      ? ["id", "label", "enforcement", "kpi_required", "monitoring_mode", "status", "reason", "artifact", "affected_surface_ids", "members"]
+      : ["id", "label", "enforcement", "kpi_required", "monitoring_mode", "status", "reason", "artifact", "affected_surface_ids", ...(row.id === "fred_banking" ? ["source_artifacts"] : [])], `report.lanes[${index}]`);
     if (row.id !== laneConfig.id || row.label !== laneConfig.label || row.monitoring_mode !== laneConfig.monitoring_mode
       || row.enforcement !== laneConfig.enforcement || row.kpi_required !== laneConfig.kpi_required
       || canonicalJson(row.affected_surface_ids) !== canonicalJson(laneConfig.affected_surface_ids)) {
       fail("schema_error", `report.lanes[${index}] does not match config identity`);
     }
     validateStatusReason(row, `report.lanes[${index}]`, { allowUnavailableSchemaDrift: true });
-    validateEndpointReport(row.endpoint, `report.lanes[${index}].endpoint`);
     validateArtifactReport(row.artifact, `report.lanes[${index}].artifact`, laneConfig.freshness);
     if (row.id === "fred_banking") {
       const contracts = laneConfig.producer_members[0].artifact_contracts;
@@ -1746,17 +1685,16 @@ export function validateDetectionReport(report, config = DATA_SUPPLY_DETECTION_C
     modeCounts[row.monitoring_mode] += 1;
     increment(logicalCounts, row.status);
 
-    const componentRows = [row.endpoint, row.artifact];
+    const componentRows = [row.artifact];
     if (composite) {
       if (!Array.isArray(row.members) || row.members.length !== laneConfig.producer_members.length) fail("schema_error", `${row.id}.members denominator is invalid`);
       row.members.forEach((memberRow, memberIndex) => {
-        exactKeys(memberRow, ["id", "status", "reason", "endpoint", "artifact"], `${row.id}.members[${memberIndex}]`);
+        exactKeys(memberRow, ["id", "status", "reason", "artifact"], `${row.id}.members[${memberIndex}]`);
         if (memberRow.id !== laneConfig.producer_members[memberIndex].id) fail("schema_error", `${row.id}.members[${memberIndex}] identity is invalid`);
         validateStatusReason(memberRow, `${row.id}.members[${memberIndex}]`, { allowUnavailableSchemaDrift: true });
-        validateEndpointReport(memberRow.endpoint, `${row.id}.members[${memberIndex}].endpoint`);
         validateArtifactReport(memberRow.artifact, `${row.id}.members[${memberIndex}].artifact`, laneConfig.freshness);
-        if (memberRow.status !== worstStatus([memberRow.endpoint, memberRow.artifact])) fail("schema_error", `${row.id}.${memberRow.id} status does not match components`);
-        if (![memberRow.endpoint, memberRow.artifact].some((part) => part.status === memberRow.status && part.reason === memberRow.reason)) {
+        if (memberRow.status !== worstStatus([memberRow.artifact])) fail("schema_error", `${row.id}.${memberRow.id} status does not match components`);
+        if (![memberRow.artifact].some((part) => part.status === memberRow.status && part.reason === memberRow.reason)) {
           fail("schema_error", `${row.id}.${memberRow.id} reason does not match its worst component`);
         }
         increment(memberCounts, memberRow.status);
@@ -1873,7 +1811,7 @@ export function projectReportAtomic({
     }
     if (!tempBytes.equals(bytes) || sha256(tempBytes) !== reportFileSha256) fail("atomic_write_error", "temp readback mismatch");
     const parsed = JSON.parse(tempBytes.toString("utf8"));
-    if (parsed.schema_version !== REPORT_SCHEMA || parsed.config_digest !== report.config_digest) fail("atomic_write_error", "temp schema/digest mismatch");
+    if (parsed.schema_version !== REPORT_SCHEMA) fail("atomic_write_error", "temp schema mismatch");
     invokeFailpoint(failpoint, "after_temp_validation", { context, tempPath });
     validateRootBoundary(context, rootFd, "temp_live", tempName, fsModule);
     invokeFailpoint(failpoint, "before_rename", { context, tempPath });
@@ -1920,7 +1858,6 @@ export function projectReportAtomic({
 export function detectAndProject({
   config = DATA_SUPPLY_DETECTION_CONFIG,
   artifactRoot,
-  attempts,
   now,
   calendars,
   outputRoot,
@@ -1928,7 +1865,7 @@ export function detectAndProject({
   failpoint = null,
   tempToken,
 }) {
-  const report = buildDetectionReport({ config, artifactRoot, attempts, now, calendars, fsModule: fsAdapter });
+  const report = buildDetectionReport({ config, artifactRoot, now, calendars, fsModule: fsAdapter });
   const projection = projectReportAtomic({ report, outputRoot, artifactRoot, config, fsModule: fsAdapter, failpoint, tempToken });
   return { report, ...projection };
 }
@@ -1957,36 +1894,41 @@ function materializeExpectedFixtureArtifacts(artifactsFixture) {
 
 export function buildDetectionExpectedFixture({
   expectedFixture,
-  attempts,
   artifactsFixture,
   calendars,
   config = DATA_SUPPLY_DETECTION_CONFIG,
 } = {}) {
   const artifactRoot = materializeExpectedFixtureArtifacts(artifactsFixture);
   try {
-    const projected = JSON.parse(JSON.stringify(expectedFixture));
     const report = buildDetectionReport({
       config,
       artifactRoot,
-      attempts,
       calendars,
-      now: projected.baseline.now,
+      now: expectedFixture.baseline.now,
     });
-    const memberIds = config.lanes.flatMap((lane) => lane.producer_members.map((member) => member.id));
-    projected.config_digest = digestConfig(config);
-    projected.registry_digest = registryDigest();
-    projected.logical_lane_count = config.logical_lane_count;
-    projected.producer_member_count = config.producer_member_count;
-    projected.config_digest_input.ordered_lane_ids = config.lanes.map((lane) => lane.id);
-    projected.config_digest_input.ordered_member_ids = memberIds;
-    projected.slickcharts_member_ids = config.lanes
-      .find((lane) => lane.id === "slickcharts")
-      .producer_members.map((member) => member.id);
-    projected.baseline.attempt_fixture_schema = attempts.schema_version;
-    projected.baseline.calendar_fixture_schema = calendars.schema_version;
-    projected.baseline.expected_report = report;
-    projected.baseline.report_file_sha256 = sha256(Buffer.from(`${canonicalJson(report)}\n`, "utf8"));
-    return projected;
+    // The emitter owns the fixture shape: retired pins (the config self-digest
+    // and attempt-evidence schema) are omitted rather than carried forward.
+    return {
+      schema_version: expectedFixture.schema_version,
+      privacy_exclusions: expectedFixture.privacy_exclusions,
+      artifact_cases: expectedFixture.artifact_cases,
+      reason_cases: expectedFixture.reason_cases,
+      registry_digest: registryDigest(),
+      logical_lane_count: config.logical_lane_count,
+      producer_member_count: config.producer_member_count,
+      baseline: {
+        id: expectedFixture.baseline.id,
+        artifact_layout_id: expectedFixture.baseline.artifact_layout_id,
+        now: expectedFixture.baseline.now,
+        calendar_fixture_schema: calendars.schema_version,
+        expected_report: report,
+        report_file_sha256: sha256(Buffer.from(`${canonicalJson(report)}\n`, "utf8")),
+      },
+      slickcharts_member_ids: config.lanes
+        .find((lane) => lane.id === "slickcharts")
+        .producer_members.map((member) => member.id),
+      slickcharts_member_worst_cases: expectedFixture.slickcharts_member_worst_cases,
+    };
   } finally {
     fs.rmSync(artifactRoot, { recursive: true, force: true });
   }
@@ -1995,13 +1937,11 @@ export function buildDetectionExpectedFixture({
 export function emitDetectionExpectedFixture({
   sourcePath = EXPECTED_FIXTURE_PATH,
   outputPath = sourcePath,
-  attemptsPath = ATTEMPTS_FIXTURE_PATH,
   artifactsPath = ARTIFACTS_FIXTURE_PATH,
   calendarsPath = CALENDARS_FIXTURE_PATH,
 } = {}) {
   const projected = buildDetectionExpectedFixture({
     expectedFixture: JSON.parse(fs.readFileSync(sourcePath, "utf8")),
-    attempts: JSON.parse(fs.readFileSync(attemptsPath, "utf8")),
     artifactsFixture: JSON.parse(fs.readFileSync(artifactsPath, "utf8")),
     calendars: JSON.parse(fs.readFileSync(calendarsPath, "utf8")),
   });
@@ -2012,7 +1952,6 @@ export function emitDetectionExpectedFixture({
 
 export function buildPinnedDetectionReport(report, config = DATA_SUPPLY_DETECTION_CONFIG) {
   const projected = JSON.parse(JSON.stringify(report));
-  projected.config_digest = digestConfig(config);
   projected.logical_lane_count = config.logical_lane_count;
   projected.producer_member_count = config.producer_member_count;
   validateDetectionReport(projected, config);
@@ -2114,9 +2053,10 @@ function main() {
   const args = parsed.values;
   const artifactRoot = canonicalExistingDirectory(args["--artifact-root"]);
   const fixtureRoot = canonicalExistingDirectory(FIXTURE_ROOT);
-  const attempts = args["--attempt-shard-root"]
-    ? loadAttemptShards({ shardRoot: args["--attempt-shard-root"] })
-    : readJsonStrict(args["--attempt-evidence"], [fixtureRoot, artifactRoot]);
+  // --attempt-evidence/--attempt-shard-root remain accepted (and exactly one is
+  // still required) so the frozen workflow bridge keeps running, but the floor
+  // no longer reads or validates attempt evidence: the report is derived from
+  // lane artifacts and the freshness policy alone.
   const calendars = args["--calendars"]
     ? readJsonStrict(args["--calendars"], [canonicalExistingDirectory(path.dirname(CALENDAR_PATH))])
     : readJsonStrict(args["--calendar-fixture"], [fixtureRoot, artifactRoot]);
@@ -2125,7 +2065,6 @@ function main() {
   }
   const result = detectAndProject({
     artifactRoot: artifactRoot.real,
-    attempts,
     now: args["--now"],
     calendars,
     outputRoot: args["--output-root"],
