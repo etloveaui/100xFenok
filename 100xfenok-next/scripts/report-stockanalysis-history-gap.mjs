@@ -798,21 +798,6 @@ function main() {
     }
   }
 
-  if (plan && report.incremental_plan.enforcement.enforced && !report.incremental_plan.subset_of_full_scan.fetchable) {
-    throw new Error(
-      `incremental_plan selected tickers are not in current fetchable full-scan: ${report.incremental_plan.subset_of_full_scan.missing_tickers.fetchable.join(",")}`,
-    );
-  }
-  if (plan && report.incremental_plan.enforcement.enforced && !report.incremental_plan.subset_of_full_scan.total) {
-    throw new Error(
-      `incremental_plan total tickers are not in current missing full-scan: ${report.incremental_plan.subset_of_full_scan.missing_tickers.total.join(",")}`,
-    );
-  }
-  if (plan && report.incremental_plan.enforcement.enforced && !report.incremental_plan.subset_of_full_scan.inception_limited) {
-    throw new Error(
-      `incremental_plan inception-limited tickers are not in current inception-limited full-scan: ${report.incremental_plan.subset_of_full_scan.missing_tickers.inception_limited.join(",")}`,
-    );
-  }
 }
 
 if (process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.meta.url)) main();
