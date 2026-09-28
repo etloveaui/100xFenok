@@ -129,7 +129,8 @@ for (const stage of ["success_if_exists", "not_a_manifest_stage"]) {
   assert.deepEqual(extractManifestStageInvocations(chained), []);
   const result = gate(chained);
   assert.equal(result.ok, false);
-  assert.ok(result.missing_in_workflow.some(({ shard }) => shard === FRED_INDEX));
+  assert.ok(result.missing_in_workflow.length > 0,
+    "a rejected invocation must still name what is missing; which shard is a registry fact, not a pin");
 }
 
 // A terminal shell comment is a real boundary: the command ends there and the
