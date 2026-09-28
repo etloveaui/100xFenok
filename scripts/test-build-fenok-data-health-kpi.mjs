@@ -168,16 +168,35 @@ try {
   }
   writeJson(dataRoot, "stockanalysis/coverage/etf_detail.json", {
     source_date_summary: {
-      total_members: 4,
+      total_members: 5,
       newest_source_date: "2026-09-27",
-      oldest_source_date: "2026-09-26",
-      oldest_source_member: "BBB",
+      oldest_source_date: "2026-09-15",
+      oldest_source_member: "OLD",
       source_date_histogram: [
         { date: null, basis: null, count: 2 },
         { date: "2026-09-26", basis: "source", count: 1 },
         { date: "2026-09-27", basis: "collected", count: 1 },
+        // Ten days old: outside the daily window, inside the monthly rotation.
+        { date: "2026-09-18", basis: "source", count: 1 },
       ],
     },
+  });
+  writeJson(dataRoot, "admin/sentiment/index.json", {
+    items: {
+      // Nine days old: outside the daily window, inside the weekly CFTC release.
+      cftc: { resolution_state: "fresh_primary", current: { source_as_of: "2026-09-19T21:00:00Z" } },
+      cnn: { resolution_state: "fresh_primary", current: { source_as_of: "2026-09-27T21:00:00Z" } },
+      vix: { resolution_state: "fresh_primary", current: { source_as_of: "2026-09-27T21:00:00Z" } },
+      move: { resolution_state: "fresh_primary", current: { source_as_of: "2026-09-27T21:00:00Z" } },
+      crypto: { resolution_state: "fresh_primary", current: { source_as_of: "2026-09-27T21:00:00Z" } },
+    },
+  });
+  writeJson(dataRoot, "edgar-korean-summaries/index.json", {
+    schemaVersion: "1",
+    updated: "2026-09-28",
+    generatedAt: "2026-09-28T05:58:57.876Z",
+    tickers: [],
+    byTicker: {},
   });
   writeJson(dataRoot, "admin/slickcharts-composite-recovery/index.json", {
     members: Object.fromEntries(["daily", "weekly", "monthly", "history", "symbols"].map((id) => [id, {
@@ -223,7 +242,7 @@ try {
   const missingEvidenceId = LANE_REGISTRY.lanes.find((lane) => (
     lane.lane_class === "detection_floor"
     && !["fred_macro", "treasury_tga", "fred_banking", ...marketIds,
-      "stockanalysis_stock_financial", "slickcharts",
+      "stockanalysis_stock_financial", "slickcharts", "sentiment", "edgar_filings",
       "yahoo_etf_fallback", "stockanalysis_etf_universe", "stockanalysis_etf_detail",
       "stockanalysis_surfaces", "yahoo_ticker_macro", "yahoo_batch_quote_history"].includes(lane.id)
   ))?.id;
@@ -266,8 +285,7 @@ try {
       `${id} uses US trading days for Friday-to-Monday age`);
   }
   const fallback = rootDoc.sets.find((set) => set.set === "yahoo_etf_fallback");
-  assert.equal(fallback.newest_source_date, "2026-07-27");
-  assert.equal(fallback.status, "stopped", "an old source date must be visible instead of a null stopped row");
+  assert.equal(fallback, undefined, "an on-demand fallback store is not a scheduled health set");
   const collectedUniverse = rootDoc.sets.find((set) => set.set === "stockanalysis_etf_universe");
   assert.equal(collectedUniverse.newest_source_date, "2026-09-21");
   assert.equal(collectedUniverse.date_basis, "collected");
@@ -278,14 +296,26 @@ try {
   assert.equal(slickcharts.total_members, 5, "composite member count remains explicit");
   assert.equal(slickcharts.newest_source_date, "2026-09-27");
   assert.equal(slickcharts.date_basis, "mixed", "promoted run times fill missing member dates as collected");
+  assert.equal(slickcharts.fresh_members, 5, "each SlickCharts member is judged on its own cadence");
+  assert.equal(slickcharts.status, "fresh", "weekly and monthly members are not held to the daily window");
+  const sentiment = rootDoc.sets.find((set) => set.set === "sentiment");
+  assert.equal(sentiment.total_members, 5);
+  assert.equal(sentiment.fresh_members, 5, "the weekly CFTC member is not held to the daily window");
+  assert.equal(sentiment.status, "fresh");
+  assert.equal(sentiment.oldest_source_member, "cftc");
+  const edgar = rootDoc.sets.find((set) => set.set === "edgar_filings");
+  assert.equal(edgar.newest_source_date, "2026-09-28", "the weekly collection clock, not the newest filing date");
+  assert.equal(edgar.date_basis, "collected");
+  assert.equal(edgar.status, "fresh", "a weekly collection inside the weekly window is fresh");
   const etfDetails = rootDoc.sets.find((set) => set.set === "stockanalysis_etf_detail");
   assert.equal(etfDetails.newest_source_date, "2026-09-27");
-  assert.equal(etfDetails.oldest_source_date, "2026-09-26");
-  assert.equal(etfDetails.oldest_source_member, "BBB");
+  assert.equal(etfDetails.oldest_source_date, "2026-09-18");
+  assert.equal(etfDetails.oldest_source_member, "OLD");
   assert.equal(etfDetails.date_basis, "mixed", "member dates distinguish provider stamps from fetched-at fallbacks");
-  assert.equal(etfDetails.fresh_members, 2);
-  assert.equal(etfDetails.total_members, 4, "undated expected members remain in the denominator");
+  assert.equal(etfDetails.fresh_members, 3, "a ten-day-old detail is inside the monthly rotation");
+  assert.equal(etfDetails.total_members, 5, "undated expected members remain in the denominator");
   assert.equal(etfDetails.status, "stopped", "unknown ETF members are not counted as fresh");
+  assert.equal(etfDetails.max_age, "45d", "ETF details follow the monthly rotation, not a daily window");
   const surfaces = rootDoc.sets.find((set) => set.set === "stockanalysis_surfaces");
   assert.equal(surfaces.newest_source_date, "2026-09-26");
   assert.equal(surfaces.oldest_source_date, "2026-09-26");

@@ -35,6 +35,32 @@ const PUBLIC_SERVED_PATHS = Object.freeze({
   gdelt_news_tone: "data/computed/fenok_news_tone_proxy.json",
 });
 
+// A verdict follows the window the product actually refreshes on, not a lane's
+// nominal producer cadence. These stay here rather than in FAMILY_POLICY because
+// the lane-registry drift guard requires the two to agree, and the registry
+// records the producer, not the refresh window.
+const LANE_CADENCE = Object.freeze({
+  // ETF details rotate on the fetch-stockanalysis stale-retry window
+  // (existing_etf_detail_age, 720h) and are not produced daily.
+  stockanalysis_etf_detail: "monthly",
+});
+// Members of one lane published on different cadences are judged on their own.
+const MEMBER_CADENCE = Object.freeze({
+  // CFTC positioning publishes weekly; the other sentiment members are daily.
+  sentiment: Object.freeze({ cftc: "weekly" }),
+  // SlickCharts member ids are their own cadences, matching the crons declared
+  // in data-supply-detection-config.mjs.
+  slickcharts: Object.freeze({ weekly: "weekly", monthly: "monthly", history: "monthly", symbols: "weekly" }),
+});
+
+// Data sets that are not scheduled producers and have no cadence to judge.
+export const HEALTH_SET_EXCLUSIONS = new Set([
+  // An on-demand Yahoo ETF fallback store, read only when a detail refresh needs
+  // it. A scheduled verdict would read "stopped" for a store nobody is waiting on;
+  // its effect is already visible through the ETF detail set.
+  "yahoo_etf_fallback",
+]);
+
 function validCalendarDate(value) {
   if (typeof value !== "string" || !/^\d{4}-\d{2}-\d{2}$/.test(value)) return false;
   const [year, month, day] = value.split("-").map(Number);
@@ -58,21 +84,39 @@ function policyLimit(policy) {
   return cadence ? cadence.cycleDays + (policy.releaseLagDays ?? 0) + cadence.graceDays : null;
 }
 
+function laneCadence(lane) {
+  const override = LANE_CADENCE[lane.id];
+  if (FRESHNESS_CLASSES[override]) return override;
+  return FRESHNESS_CLASSES[lane.cadence?.kind] ? lane.cadence.kind : "daily";
+}
+
+function syntheticPolicy(lane, cadence) {
+  return {
+    cadence,
+    releaseLagDays: 0,
+    supplier: "automated",
+    calendar: US_TRADING_LANES.has(lane.id) ? "us_trading" : "calendar",
+  };
+}
+
 function policyForPath(lane, output) {
-  const cadence = FRESHNESS_CLASSES[lane.cadence?.kind] ? lane.cadence.kind : "daily";
   return resolveSourcePolicy({
     laneId: lane.id,
-    cadence,
+    cadence: laneCadence(lane),
     path: `/${output}`,
     ...(US_TRADING_LANES.has(lane.id) ? { calendar: "us_trading" } : {}),
   });
 }
 
+function policyForMember(lane, member, fallback) {
+  const override = MEMBER_CADENCE[lane.id]?.[member?.id];
+  return FRESHNESS_CLASSES[override] ? syntheticPolicy(lane, override) : fallback;
+}
+
 function widestPolicy(lane, policies) {
   const usable = policies.filter(Boolean);
   if (usable.length === 0) {
-    const cadence = FRESHNESS_CLASSES[lane.cadence?.kind] ? lane.cadence.kind : "daily";
-    return resolveSourcePolicy({ laneId: lane.id, cadence });
+    return resolveSourcePolicy({ laneId: lane.id, cadence: laneCadence(lane) });
   }
   return usable.reduce((widest, policy) => (
     (policyLimit(policy) ?? -1) > (policyLimit(widest) ?? -1) ? policy : widest
@@ -290,6 +334,21 @@ function sourceMembersForLane(lane, floorRow, dataRoot) {
     });
     return { members, totalMembers: outputs.length };
   }
+  if (lane.id === "edgar_filings") {
+    // The floor artifact carries the newest filing date, which is the provider's
+    // content, not the collection. The lane is weekly, so the weekly collection
+    // clock is the honest basis for the verdict.
+    const document = readOptionalJson(dataRoot, "edgar-korean-summaries/index.json");
+    if (!document) return null;
+    const collected = datedOrCollected(
+      document,
+      [],
+      ["updated", "generatedAt"],
+      lane.id,
+      "edgar-korean-summaries/index.json",
+    );
+    return { members: [collected], totalMembers: 1 };
+  }
   if (lane.id === "sentiment") {
     const document = readOptionalJson(dataRoot, "admin/sentiment/index.json");
     const items = document?.items && typeof document.items === "object" && !Array.isArray(document.items)
@@ -341,7 +400,11 @@ function memberSummary(lane, evidence, nowIso, calendars) {
   const outputs = lane.roots?.canonical_outputs ?? [];
   const policies = outputs.map((output) => policyForPath(lane, output));
   const policy = widestPolicy(lane, policies);
-  const memberPolicies = evidence.members.map((member) => member.path ? policyForPath(lane, member.path) : policy);
+  const memberPolicies = evidence.members.map((member) => policyForMember(
+    lane,
+    member,
+    member.path ? policyForPath(lane, member.path) : policy,
+  ));
   const members = evidence.members.map((member, index) => {
     let verdict;
     if (Number.isInteger(evidence.yahooBusinessDays)) {
