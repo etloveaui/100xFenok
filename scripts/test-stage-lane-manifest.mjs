@@ -375,7 +375,7 @@ assertTrackedFileFromGlobBelowIgnoredParentStillStages();
   const success = run(fixture.root, "success_if_exists", [], SLICKCHARTS_HISTORY_WORKFLOW);
   const successCount = fixture.materialized.success.length;
   assert.equal(success.status, 0, `${success.stderr}\n${success.stdout}`);
-  assert.match(success.stdout, new RegExp(`declared=${successCount} stage_selected=${successCount} staged_index_total=${successCount}`));
+  assert.match(success.stdout, new RegExp(`declared=${"${successCount}"} stage_selected=${"${successCount}"} staged_index_total=${"${alwaysCount + successCount}"}`));
   assert.deepEqual(cached(fixture.root), [...fixture.materialized.always, ...fixture.materialized.success].sort());
 }
 
@@ -390,7 +390,7 @@ assertTrackedFileFromGlobBelowIgnoredParentStillStages();
   const success = run(fixture.root, "success_if_exists", [], SLICKCHARTS_MONTHLY_WORKFLOW);
   const successCount = fixture.materialized.success.length;
   assert.equal(success.status, 0, `${success.stderr}\n${success.stdout}`);
-  assert.match(success.stdout, new RegExp(`declared=${successCount} stage_selected=${successCount} staged_index_total=${successCount}`));
+  assert.match(success.stdout, new RegExp(`declared=${"${successCount}"} stage_selected=${"${successCount}"} staged_index_total=${"${alwaysCount + successCount}"}`));
   assert.deepEqual(cached(fixture.root), [...fixture.materialized.always, ...fixture.materialized.success].sort());
 }
 
@@ -405,7 +405,7 @@ assertTrackedFileFromGlobBelowIgnoredParentStillStages();
   const success = run(fixture.root, "success_if_exists", [], SLICKCHARTS_WEEKLY_WORKFLOW);
   const successCount = fixture.materialized.success.length;
   assert.equal(success.status, 0, `${success.stderr}\n${success.stdout}`);
-  assert.match(success.stdout, new RegExp(`declared=${successCount} stage_selected=${successCount} staged_index_total=${successCount}`));
+  assert.match(success.stdout, new RegExp(`declared=${"${successCount}"} stage_selected=${"${successCount}"} staged_index_total=${"${alwaysCount + successCount}"}`));
   assert.deepEqual(cached(fixture.root), [...fixture.materialized.always, ...fixture.materialized.success].sort());
 }
 
@@ -422,7 +422,7 @@ assertTrackedFileFromGlobBelowIgnoredParentStillStages();
   const success = run(fixture.root, "success_if_exists", [], SLICKCHARTS_DAILY_WORKFLOW);
   const successCount = fixture.materialized.success.length;
   assert.equal(success.status, 0, `${success.stderr}\n${success.stdout}`);
-  assert.match(success.stdout, new RegExp(`declared=${successCount} stage_selected=${successCount} staged_index_total=${successCount}`));
+  assert.match(success.stdout, new RegExp(`declared=${"${successCount}"} stage_selected=${"${successCount}"} staged_index_total=${"${alwaysCount + successCount}"}`));
   assert.deepEqual(cached(fixture.root), [...fixture.materialized.always, ...fixture.materialized.success].sort());
 }
 
