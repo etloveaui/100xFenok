@@ -52,7 +52,15 @@ jobs:
           GITHUB_TOKEN: ${{ github.token }}
           GITHUB_REPOSITORY: ${{ github.repository }}
           PIPELINE_JOB_HEALTH_RESULT: pipeline-job-health-result.json
-        run: node scripts/ops/check-pipeline-job-health.mjs
+        run: |
+          set +e
+          node scripts/ops/check-pipeline-job-health.mjs
+          pipeline_status=$?
+          node scripts/ops/check-a1-lane-health.mjs
+          a1_status=$?
+          if [ "$pipeline_status" -ne 0 ] || [ "$a1_status" -ne 0 ]; then
+            exit 2
+          fi
 
       - name: Emit alarm state
         id: alarm_state
