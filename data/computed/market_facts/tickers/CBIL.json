@@ -2,10 +2,10 @@
   "schema_version": "market-facts/v1",
   "ticker": "CBIL",
   "asset_type": "etf",
-  "generated_at": "2026-09-21T01:42:22Z",
-  "source_as_of": null,
+  "generated_at": "2026-09-28T04:28:25Z",
+  "source_as_of": "2026-09-25",
   "source_as_of_scope": "selected_price_fact",
-  "source_as_of_reason": "selected price fact has no provider source date",
+  "source_as_of_reason": null,
   "identity": {
     "name": "CBIL",
     "exchange": null,
@@ -16,11 +16,174 @@
     "category": null
   },
   "facts": {
+    "price": {
+      "value": 24.8198,
+      "source": "stockanalysis.quote",
+      "as_of": "2026-09-25",
+      "fetched_at": "2026-09-28T03:55:41Z",
+      "confidence": "observed",
+      "policy": [
+        "yf",
+        "yf.fast_info",
+        "stockanalysis.quote",
+        "yf.stockanalysis_fallback.quote",
+        "slickcharts"
+      ],
+      "candidates": [
+        {
+          "value": 24.8198,
+          "source": "stockanalysis.quote",
+          "as_of": "2026-09-25",
+          "fetched_at": "2026-09-28T03:55:41Z",
+          "confidence": "observed"
+        }
+      ],
+      "candidate_count": 1
+    },
+    "previous_close": {
+      "value": 24.8,
+      "source": "stockanalysis.quote",
+      "as_of": "2026-09-25",
+      "fetched_at": "2026-09-28T03:55:41Z",
+      "confidence": "observed",
+      "policy": [
+        "yf",
+        "stockanalysis.quote",
+        "yf.stockanalysis_fallback.quote"
+      ],
+      "candidates": [
+        {
+          "value": 24.8,
+          "source": "stockanalysis.quote",
+          "as_of": "2026-09-25",
+          "fetched_at": "2026-09-28T03:55:41Z",
+          "confidence": "observed"
+        }
+      ],
+      "candidate_count": 1
+    },
+    "change": {
+      "value": 0.02,
+      "source": "stockanalysis.quote",
+      "as_of": "2026-09-25",
+      "fetched_at": "2026-09-28T03:55:41Z",
+      "confidence": "observed",
+      "policy": [
+        "stockanalysis.quote",
+        "yf",
+        "yf.derived",
+        "yf.stockanalysis_fallback.quote"
+      ],
+      "candidates": [
+        {
+          "value": 0.02,
+          "source": "stockanalysis.quote",
+          "as_of": "2026-09-25",
+          "fetched_at": "2026-09-28T03:55:41Z",
+          "confidence": "observed"
+        }
+      ],
+      "candidate_count": 1
+    },
+    "change_pct": {
+      "value": 0.08,
+      "source": "stockanalysis.quote",
+      "as_of": "2026-09-25",
+      "fetched_at": "2026-09-28T03:55:41Z",
+      "confidence": "observed",
+      "policy": [
+        "stockanalysis.quote",
+        "yf",
+        "yf.derived",
+        "yf.stockanalysis_fallback.quote"
+      ],
+      "candidates": [
+        {
+          "value": 0.08,
+          "source": "stockanalysis.quote",
+          "as_of": "2026-09-25",
+          "fetched_at": "2026-09-28T03:55:41Z",
+          "confidence": "observed"
+        }
+      ],
+      "candidate_count": 1
+    },
+    "total_assets": {
+      "value": 5210000.0,
+      "source": "stockanalysis.overview",
+      "as_of": "2026-09-25",
+      "fetched_at": "2026-09-28T03:55:41Z",
+      "confidence": "observed",
+      "policy": [
+        "yf",
+        "stockanalysis.overview",
+        "yf.stockanalysis_fallback.overview"
+      ],
+      "candidates": [
+        {
+          "value": 5210000.0,
+          "source": "stockanalysis.overview",
+          "as_of": "2026-09-25",
+          "fetched_at": "2026-09-28T03:55:41Z",
+          "confidence": "observed"
+        }
+      ],
+      "candidate_count": 1
+    },
+    "dividend_yield": {
+      "value": 1.79,
+      "source": "stockanalysis.overview",
+      "as_of": "2026-09-25",
+      "fetched_at": "2026-09-28T03:55:41Z",
+      "confidence": "observed",
+      "unit": "percent_points",
+      "policy": [
+        "yf",
+        "stockanalysis.overview",
+        "yf.stockanalysis_fallback.overview",
+        "slickcharts"
+      ],
+      "candidates": [
+        {
+          "value": 1.79,
+          "source": "stockanalysis.overview",
+          "as_of": "2026-09-25",
+          "fetched_at": "2026-09-28T03:55:41Z",
+          "confidence": "observed",
+          "unit": "percent_points"
+        }
+      ],
+      "candidate_count": 1
+    },
+    "expense_ratio": {
+      "value": 0.05,
+      "source": "stockanalysis.overview",
+      "as_of": "2026-09-25",
+      "fetched_at": "2026-09-28T03:55:41Z",
+      "confidence": "observed",
+      "unit": "percent_points",
+      "policy": [
+        "yf",
+        "stockanalysis.overview",
+        "yf.stockanalysis_fallback.overview"
+      ],
+      "candidates": [
+        {
+          "value": 0.05,
+          "source": "stockanalysis.overview",
+          "as_of": "2026-09-25",
+          "fetched_at": "2026-09-28T03:55:41Z",
+          "confidence": "observed",
+          "unit": "percent_points"
+        }
+      ],
+      "candidate_count": 1
+    },
     "return_1m": {
-      "value": 0.2816,
-      "source": "stockanalysis.etf_universe.performance",
-      "as_of": null,
-      "fetched_at": "2026-09-21T01:14:16Z",
+      "value": 0.2407,
+      "source": "stockanalysis.detail.performance",
+      "as_of": "2026-09-25",
+      "fetched_at": "2026-09-28T03:55:41Z",
       "confidence": "observed",
       "unit": "percent_points",
       "policy": [
@@ -31,7 +194,15 @@
       ],
       "candidates": [
         {
-          "value": 0.2816,
+          "value": 0.2407,
+          "source": "stockanalysis.detail.performance",
+          "as_of": "2026-09-25",
+          "fetched_at": "2026-09-28T03:55:41Z",
+          "confidence": "observed",
+          "unit": "percent_points"
+        },
+        {
+          "value": 0.2407,
           "source": "stockanalysis.etf_universe.performance",
           "as_of": null,
           "fetched_at": "2026-09-21T01:14:16Z",
@@ -39,37 +210,389 @@
           "unit": "percent_points"
         }
       ],
+      "candidate_count": 2
+    },
+    "return_3m": {
+      "value": 0.8041613202868441,
+      "source": "stockanalysis.detail.history",
+      "as_of": "2026-09-25",
+      "fetched_at": "2026-09-28T03:55:41Z",
+      "confidence": "derived",
+      "unit": "percent_points",
+      "policy": [
+        "yf.history_1y",
+        "stockanalysis.detail.history"
+      ],
+      "candidates": [
+        {
+          "value": 0.8041613202868441,
+          "source": "stockanalysis.detail.history",
+          "as_of": "2026-09-25",
+          "fetched_at": "2026-09-28T03:55:41Z",
+          "confidence": "derived",
+          "unit": "percent_points"
+        }
+      ],
       "candidate_count": 1
     }
   },
   "etf": {
-    "holdings_count": null,
-    "holdings_updated": null,
-    "top_holdings": [],
+    "holdings_count": 23,
+    "holdings_updated": "Sep 24, 2026",
+    "top_holdings": [
+      {
+        "rank": 1,
+        "symbol": "B.0 01.21.27",
+        "name": "United States Treasury Bills 0%",
+        "weight_pct": 8.39,
+        "shares": 443000,
+        "raw": {
+          "no": 1,
+          "n": "United States Treasury Bills 0%",
+          "s": "B.0 01.21.27",
+          "as": "8.39%",
+          "sh": "443,000"
+        }
+      },
+      {
+        "rank": 2,
+        "symbol": "B.0 02.18.27",
+        "name": "United States Treasury Bills 0%",
+        "weight_pct": 8.17,
+        "shares": 433000,
+        "raw": {
+          "no": 2,
+          "n": "United States Treasury Bills 0%",
+          "s": "B.0 02.18.27",
+          "as": "8.17%",
+          "sh": "433,000"
+        }
+      },
+      {
+        "rank": 3,
+        "symbol": "B.0 01.07.27",
+        "name": "United States Treasury Bills 0%",
+        "weight_pct": 5.29,
+        "shares": 279000,
+        "raw": {
+          "no": 3,
+          "n": "United States Treasury Bills 0%",
+          "s": "B.0 01.07.27",
+          "as": "5.29%",
+          "sh": "279,000"
+        }
+      },
+      {
+        "rank": 4,
+        "symbol": "B.0 01.14.27",
+        "name": "United States Treasury Bills 0%",
+        "weight_pct": 5.29,
+        "shares": 279000,
+        "raw": {
+          "no": 4,
+          "n": "United States Treasury Bills 0%",
+          "s": "B.0 01.14.27",
+          "as": "5.29%",
+          "sh": "279,000"
+        }
+      },
+      {
+        "rank": 5,
+        "symbol": "B.0 01.28.27",
+        "name": "United States Treasury Bills 0%",
+        "weight_pct": 5.28,
+        "shares": 279000,
+        "raw": {
+          "no": 5,
+          "n": "United States Treasury Bills 0%",
+          "s": "B.0 01.28.27",
+          "as": "5.28%",
+          "sh": "279,000"
+        }
+      },
+      {
+        "rank": 6,
+        "symbol": "B.0 02.25.27",
+        "name": "United States Treasury Bills 0%",
+        "weight_pct": 5.24,
+        "shares": 278000,
+        "raw": {
+          "no": 6,
+          "n": "United States Treasury Bills 0%",
+          "s": "B.0 02.25.27",
+          "as": "5.24%",
+          "sh": "278,000"
+        }
+      },
+      {
+        "rank": 7,
+        "symbol": "B.0 02.11.27",
+        "name": "United States Treasury Bills 0%",
+        "weight_pct": 5.23,
+        "shares": 277000,
+        "raw": {
+          "no": 7,
+          "n": "United States Treasury Bills 0%",
+          "s": "B.0 02.11.27",
+          "as": "5.23%",
+          "sh": "277,000"
+        }
+      },
+      {
+        "rank": 8,
+        "symbol": "B.0 12.03.26",
+        "name": "United States Treasury Bills 0%",
+        "weight_pct": 5.18,
+        "shares": 272000,
+        "raw": {
+          "no": 8,
+          "n": "United States Treasury Bills 0%",
+          "s": "B.0 12.03.26",
+          "as": "5.18%",
+          "sh": "272,000"
+        }
+      },
+      {
+        "rank": 9,
+        "symbol": "B.0 12.10.26",
+        "name": "United States Treasury Bills 0%",
+        "weight_pct": 5.18,
+        "shares": 272000,
+        "raw": {
+          "no": 9,
+          "n": "United States Treasury Bills 0%",
+          "s": "B.0 12.10.26",
+          "as": "5.18%",
+          "sh": "272,000"
+        }
+      },
+      {
+        "rank": 10,
+        "symbol": "B.0 12.17.26",
+        "name": "United States Treasury Bills 0%",
+        "weight_pct": 5.17,
+        "shares": 272000,
+        "raw": {
+          "no": 10,
+          "n": "United States Treasury Bills 0%",
+          "s": "B.0 12.17.26",
+          "as": "5.17%",
+          "sh": "272,000"
+        }
+      },
+      {
+        "rank": 11,
+        "symbol": "B.0 02.04.27",
+        "name": "United States Treasury Bills 0%",
+        "weight_pct": 5.05,
+        "shares": 267000,
+        "raw": {
+          "no": 11,
+          "n": "United States Treasury Bills 0%",
+          "s": "B.0 02.04.27",
+          "as": "5.05%",
+          "sh": "267,000"
+        }
+      },
+      {
+        "rank": 12,
+        "symbol": "B.0 12.15.26",
+        "name": "United States Treasury Bills 0%",
+        "weight_pct": 4.45,
+        "shares": 234000,
+        "raw": {
+          "no": 12,
+          "n": "United States Treasury Bills 0%",
+          "s": "B.0 12.15.26",
+          "as": "4.45%",
+          "sh": "234,000"
+        }
+      },
+      {
+        "rank": 13,
+        "symbol": "B.0 12.08.26",
+        "name": "United States Treasury Bills 0%",
+        "weight_pct": 4.44,
+        "shares": 233000,
+        "raw": {
+          "no": 13,
+          "n": "United States Treasury Bills 0%",
+          "s": "B.0 12.08.26",
+          "as": "4.44%",
+          "sh": "233,000"
+        }
+      },
+      {
+        "rank": 14,
+        "symbol": "B.0 12.01.26",
+        "name": "United States Treasury Bills 0%",
+        "weight_pct": 4.36,
+        "shares": 229000,
+        "raw": {
+          "no": 14,
+          "n": "United States Treasury Bills 0%",
+          "s": "B.0 12.01.26",
+          "as": "4.36%",
+          "sh": "229,000"
+        }
+      },
+      {
+        "rank": 15,
+        "symbol": "B.0 12.22.26",
+        "name": "United States Treasury Bills 0%",
+        "weight_pct": 3.57,
+        "shares": 188000,
+        "raw": {
+          "no": 15,
+          "n": "United States Treasury Bills 0%",
+          "s": "B.0 12.22.26",
+          "as": "3.57%",
+          "sh": "188,000"
+        }
+      },
+      {
+        "rank": 16,
+        "symbol": "B.0 07.08.27",
+        "name": "United States Treasury Bills 0%",
+        "weight_pct": 3.41,
+        "shares": 184000,
+        "raw": {
+          "no": 16,
+          "n": "United States Treasury Bills 0%",
+          "s": "B.0 07.08.27",
+          "as": "3.41%",
+          "sh": "184,000"
+        }
+      },
+      {
+        "rank": 17,
+        "symbol": "B.0 08.05.27",
+        "name": "United States Treasury Bills 0%",
+        "weight_pct": 3.38,
+        "shares": 183000,
+        "raw": {
+          "no": 17,
+          "n": "United States Treasury Bills 0%",
+          "s": "B.0 08.05.27",
+          "as": "3.38%",
+          "sh": "183,000"
+        }
+      },
+      {
+        "rank": 18,
+        "symbol": "B.0 05.13.27",
+        "name": "United States Treasury Bills 0%",
+        "weight_pct": 3.31,
+        "shares": 177000,
+        "raw": {
+          "no": 18,
+          "n": "United States Treasury Bills 0%",
+          "s": "B.0 05.13.27",
+          "as": "3.31%",
+          "sh": "177,000"
+        }
+      },
+      {
+        "rank": 19,
+        "symbol": "B.0 06.10.27",
+        "name": "United States Treasury Bills 0%",
+        "weight_pct": 3.28,
+        "shares": 176000,
+        "raw": {
+          "no": 19,
+          "n": "United States Treasury Bills 0%",
+          "s": "B.0 06.10.27",
+          "as": "3.28%",
+          "sh": "176,000"
+        }
+      },
+      {
+        "rank": 20,
+        "symbol": "B.0 03.18.27",
+        "name": "United States Treasury Bills 0%",
+        "weight_pct": 3.18,
+        "shares": 169000,
+        "raw": {
+          "no": 20,
+          "n": "United States Treasury Bills 0%",
+          "s": "B.0 03.18.27",
+          "as": "3.18%",
+          "sh": "169,000"
+        }
+      },
+      {
+        "rank": 21,
+        "symbol": "B.0 04.15.27",
+        "name": "United States Treasury Bills 0%",
+        "weight_pct": 2.92,
+        "shares": 156000,
+        "raw": {
+          "no": 21,
+          "n": "United States Treasury Bills 0%",
+          "s": "B.0 04.15.27",
+          "as": "2.92%",
+          "sh": "156,000"
+        }
+      },
+      {
+        "rank": 22,
+        "symbol": "!MUTF/FGXXX",
+        "name": "First American Government Obligs X",
+        "weight_pct": 0.24,
+        "shares": 12650,
+        "raw": {
+          "no": 22,
+          "n": "First American Government Obligs X",
+          "s": "!mutf/FGXXX",
+          "as": "0.24%",
+          "sh": "12,650"
+        }
+      },
+      {
+        "rank": 23,
+        "name": "OTHER ASSETS AND LIABILITIES",
+        "weight_pct": -0.0,
+        "shares": 155,
+        "raw": {
+          "no": 23,
+          "n": "OTHER ASSETS AND LIABILITIES",
+          "as": "-0.00%",
+          "sh": "155"
+        }
+      }
+    ],
     "asset_allocation": null,
     "sectors": null,
     "countries": null,
-    "classification": null,
+    "classification": {
+      "is_leveraged": false,
+      "leverage_factor": null,
+      "is_inverse": false,
+      "is_single_stock": false,
+      "underlying": null,
+      "source": "stockanalysis.overview.description",
+      "confidence": "high"
+    },
     "yahoo_funds_data_available": false
   },
   "financials": null,
   "sources": {
     "yf": false,
-    "stockanalysis": false,
+    "stockanalysis": true,
     "stockanalysis_yf_fallback": false,
     "stockanalysis_etf_catalog": true,
     "slickcharts": false
   },
   "source_files": {
     "yf": null,
-    "stockanalysis": null,
+    "stockanalysis": "computed/data-supply/etf-detail/payloads/CBIL.json",
     "stockanalysis_yf_fallback": null,
     "stockanalysis_etf_catalog": "stockanalysis/etf_universe.json",
     "slickcharts": null
   },
   "resolver": {
     "version": "market-facts-resolver/v1",
-    "detail_authority": "data_supply:unavailable",
+    "detail_authority": "data_supply:fresh_primary",
     "field_source_policy": {
       "price": [
         "yf",

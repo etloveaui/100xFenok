@@ -2,7 +2,7 @@
   "schema_version": "market-facts/v1",
   "ticker": "BEC",
   "asset_type": "etf",
-  "generated_at": "2026-09-20T13:11:55Z",
+  "generated_at": "2026-09-28T04:28:25Z",
   "source_as_of": "2026-07-08",
   "source_as_of_scope": "selected_price_fact",
   "source_as_of_reason": null,
@@ -148,6 +148,31 @@
           "source": "yf.stockanalysis_fallback.overview",
           "as_of": "2026-07-08",
           "fetched_at": "2026-07-08T22:43:32Z",
+          "confidence": "observed",
+          "unit": "percent_points"
+        }
+      ],
+      "candidate_count": 1
+    },
+    "return_1m": {
+      "value": 87.899,
+      "source": "stockanalysis.etf_universe.performance",
+      "as_of": null,
+      "fetched_at": "2026-09-21T01:14:16Z",
+      "confidence": "observed",
+      "unit": "percent_points",
+      "policy": [
+        "yf.history_1y",
+        "stockanalysis.detail.performance",
+        "stockanalysis.etf_screener.performance",
+        "stockanalysis.etf_universe.performance"
+      ],
+      "candidates": [
+        {
+          "value": 87.899,
+          "source": "stockanalysis.etf_universe.performance",
+          "as_of": null,
+          "fetched_at": "2026-09-21T01:14:16Z",
           "confidence": "observed",
           "unit": "percent_points"
         }
