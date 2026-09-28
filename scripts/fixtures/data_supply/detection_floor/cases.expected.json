@@ -1,4 +1,19 @@
 {
+  "schema_version": "data-supply-detection-expected/v1",
+  "privacy_exclusions": [
+    "raw_response_bodies",
+    "credentials",
+    "request_headers",
+    "query_tokens",
+    "private_artifact_paths",
+    "ticker_lists",
+    "per_entity_rows",
+    "observation_history",
+    "current_lkg_maps",
+    "recovery_counters",
+    "promotion_pointers",
+    "state_transitions"
+  ],
   "artifact_cases": [
     {
       "expected_reason": "missing_artifact",
@@ -67,27 +82,68 @@
       "layout_id": "special_artifact"
     }
   ],
+  "reason_cases": [
+    {
+      "expected_reason": "transport_error",
+      "id": "transport_exception"
+    },
+    {
+      "expected_reason": "unexpected_error",
+      "id": "unexpected_exception"
+    },
+    {
+      "expected_reason": "http_error",
+      "id": "http_non_2xx"
+    },
+    {
+      "expected_reason": "auth_error",
+      "id": "auth_rejected"
+    },
+    {
+      "expected_reason": "rate_limited",
+      "id": "rate_limited"
+    },
+    {
+      "expected_reason": "decode_error",
+      "id": "decode_error"
+    },
+    {
+      "expected_reason": "empty_payload",
+      "id": "empty_payload"
+    },
+    {
+      "expected_reason": "schema_drift",
+      "id": "assertion_failed"
+    },
+    {
+      "expected_reason": "workflow_unobserved",
+      "id": "unobserved"
+    }
+  ],
+  "registry_digest": "f3b27c9be75813318eb63c5414909b757cd21e8912f53a3d70670624370407c5",
+  "logical_lane_count": 31,
+  "producer_member_count": 36,
   "baseline": {
+    "id": "all_valid_at_fixed_now",
     "artifact_layout_id": "all_valid",
-    "attempt_fixture_schema": "data-supply-detection-attempts/v1",
+    "now": "2026-07-11T00:00:00Z",
     "calendar_fixture_schema": "data-supply-detection-calendars/v1",
     "expected_report": {
       "schema_version": "data-supply-detection-floor/v1",
       "generated_at": "2026-07-11T00:00:00Z",
-      "config_digest": "03cadcb0b3ff11746d4221c21f4da6434f266bf506a6d74c2586eb7cebba9881",
       "logical_lane_count": 31,
       "producer_member_count": 36,
       "counts": {
-        "ready": 26,
+        "ready": 29,
         "stale": 0,
         "drift": 0,
         "unavailable": 2,
-        "unobserved": 3,
-        "producer_members_ready": 31,
+        "unobserved": 0,
+        "producer_members_ready": 34,
         "producer_members_stale": 0,
         "producer_members_drift": 0,
         "producer_members_unavailable": 2,
-        "producer_members_unobserved": 3
+        "producer_members_unobserved": 0
       },
       "monitoring_mode_counts": {
         "post_fetch_artifact": 25,
@@ -103,11 +159,6 @@
           "monitoring_mode": "post_fetch_artifact",
           "status": "ready",
           "reason": "ok",
-          "endpoint": {
-            "status": "ready",
-            "reason": "ok",
-            "observed_at": "2026-07-11T00:00:00Z"
-          },
           "artifact": {
             "status": "ready",
             "reason": "ok",
@@ -127,11 +178,6 @@
           "monitoring_mode": "post_fetch_artifact",
           "status": "ready",
           "reason": "ok",
-          "endpoint": {
-            "status": "ready",
-            "reason": "ok",
-            "observed_at": "2026-07-11T00:00:00Z"
-          },
           "artifact": {
             "status": "ready",
             "reason": "ok",
@@ -194,11 +240,6 @@
           "monitoring_mode": "post_fetch_artifact",
           "status": "ready",
           "reason": "ok",
-          "endpoint": {
-            "status": "ready",
-            "reason": "ok",
-            "observed_at": "2026-07-11T00:00:00Z"
-          },
           "artifact": {
             "status": "ready",
             "reason": "ok",
@@ -218,11 +259,6 @@
           "monitoring_mode": "post_fetch_artifact",
           "status": "ready",
           "reason": "ok",
-          "endpoint": {
-            "status": "ready",
-            "reason": "ok",
-            "observed_at": "2026-07-11T00:00:00Z"
-          },
           "artifact": {
             "status": "ready",
             "reason": "ok",
@@ -242,11 +278,6 @@
           "monitoring_mode": "post_fetch_artifact",
           "status": "ready",
           "reason": "ok",
-          "endpoint": {
-            "status": "ready",
-            "reason": "ok",
-            "observed_at": "2026-07-11T00:00:00Z"
-          },
           "artifact": {
             "status": "ready",
             "reason": "ok",
@@ -266,11 +297,6 @@
           "monitoring_mode": "post_fetch_artifact",
           "status": "ready",
           "reason": "ok",
-          "endpoint": {
-            "status": "ready",
-            "reason": "ok",
-            "observed_at": "2026-07-11T00:00:00Z"
-          },
           "artifact": {
             "status": "ready",
             "reason": "ok",
@@ -290,11 +316,6 @@
           "monitoring_mode": "post_fetch_artifact",
           "status": "ready",
           "reason": "ok",
-          "endpoint": {
-            "status": "ready",
-            "reason": "ok",
-            "observed_at": "2026-07-11T00:00:00Z"
-          },
           "artifact": {
             "status": "ready",
             "reason": "ok",
@@ -315,11 +336,6 @@
           "monitoring_mode": "post_fetch_artifact",
           "status": "ready",
           "reason": "ok",
-          "endpoint": {
-            "status": "ready",
-            "reason": "ok",
-            "observed_at": "2026-07-11T00:00:00Z"
-          },
           "artifact": {
             "status": "ready",
             "reason": "ok",
@@ -340,11 +356,6 @@
           "monitoring_mode": "post_fetch_artifact",
           "status": "unavailable",
           "reason": "missing_artifact",
-          "endpoint": {
-            "status": "unobserved",
-            "reason": "workflow_unobserved",
-            "observed_at": null
-          },
           "artifact": {
             "status": "unavailable",
             "reason": "missing_artifact",
@@ -364,11 +375,6 @@
           "monitoring_mode": "post_fetch_artifact",
           "status": "ready",
           "reason": "ok",
-          "endpoint": {
-            "status": "ready",
-            "reason": "ok",
-            "observed_at": "2026-07-11T00:00:00Z"
-          },
           "artifact": {
             "status": "ready",
             "reason": "ok",
@@ -388,11 +394,6 @@
           "monitoring_mode": "post_fetch_artifact",
           "status": "ready",
           "reason": "ok",
-          "endpoint": {
-            "status": "ready",
-            "reason": "ok",
-            "observed_at": "2026-07-11T00:00:00Z"
-          },
           "artifact": {
             "status": "ready",
             "reason": "ok",
@@ -413,11 +414,6 @@
           "monitoring_mode": "post_fetch_artifact",
           "status": "ready",
           "reason": "ok",
-          "endpoint": {
-            "status": "ready",
-            "reason": "ok",
-            "observed_at": "2026-07-11T00:00:00Z"
-          },
           "artifact": {
             "status": "ready",
             "reason": "ok",
@@ -437,11 +433,6 @@
           "monitoring_mode": "post_fetch_artifact",
           "status": "ready",
           "reason": "ok",
-          "endpoint": {
-            "status": "ready",
-            "reason": "ok",
-            "observed_at": "2026-07-11T00:00:00Z"
-          },
           "artifact": {
             "status": "ready",
             "reason": "ok",
@@ -461,11 +452,6 @@
           "monitoring_mode": "post_fetch_artifact",
           "status": "ready",
           "reason": "ok",
-          "endpoint": {
-            "status": "ready",
-            "reason": "ok",
-            "observed_at": "2026-07-11T00:00:00Z"
-          },
           "artifact": {
             "status": "ready",
             "reason": "ok",
@@ -485,11 +471,6 @@
           "monitoring_mode": "post_fetch_artifact",
           "status": "ready",
           "reason": "ok",
-          "endpoint": {
-            "status": "ready",
-            "reason": "ok",
-            "observed_at": "2026-07-11T00:00:00Z"
-          },
           "artifact": {
             "status": "ready",
             "reason": "ok",
@@ -510,11 +491,6 @@
           "monitoring_mode": "post_fetch_artifact",
           "status": "ready",
           "reason": "ok",
-          "endpoint": {
-            "status": "ready",
-            "reason": "ok",
-            "observed_at": "2026-07-11T00:00:00Z"
-          },
           "artifact": {
             "status": "ready",
             "reason": "ok",
@@ -534,11 +510,6 @@
           "monitoring_mode": "post_fetch_artifact",
           "status": "ready",
           "reason": "ok",
-          "endpoint": {
-            "status": "ready",
-            "reason": "ok",
-            "observed_at": "2026-07-11T00:00:00Z"
-          },
           "artifact": {
             "status": "ready",
             "reason": "ok",
@@ -558,11 +529,6 @@
           "monitoring_mode": "composite",
           "status": "ready",
           "reason": "ok",
-          "endpoint": {
-            "status": "ready",
-            "reason": "ok",
-            "observed_at": "2026-07-11T00:00:00Z"
-          },
           "artifact": {
             "status": "ready",
             "reason": "ok",
@@ -579,11 +545,6 @@
               "id": "daily",
               "status": "ready",
               "reason": "ok",
-              "endpoint": {
-                "status": "ready",
-                "reason": "ok",
-                "observed_at": "2026-07-11T00:00:00Z"
-              },
               "artifact": {
                 "status": "ready",
                 "reason": "ok",
@@ -596,11 +557,6 @@
               "id": "weekly",
               "status": "ready",
               "reason": "ok",
-              "endpoint": {
-                "status": "ready",
-                "reason": "ok",
-                "observed_at": "2026-07-11T00:00:00Z"
-              },
               "artifact": {
                 "status": "ready",
                 "reason": "ok",
@@ -614,11 +570,6 @@
               "id": "monthly",
               "status": "ready",
               "reason": "ok",
-              "endpoint": {
-                "status": "ready",
-                "reason": "ok",
-                "observed_at": "2026-07-11T00:00:00Z"
-              },
               "artifact": {
                 "status": "ready",
                 "reason": "ok",
@@ -632,11 +583,6 @@
               "id": "history",
               "status": "ready",
               "reason": "ok",
-              "endpoint": {
-                "status": "ready",
-                "reason": "ok",
-                "observed_at": "2026-07-11T00:00:00Z"
-              },
               "artifact": {
                 "status": "ready",
                 "reason": "ok",
@@ -650,11 +596,6 @@
               "id": "symbols",
               "status": "ready",
               "reason": "ok",
-              "endpoint": {
-                "status": "ready",
-                "reason": "ok",
-                "observed_at": "2026-07-11T00:00:00Z"
-              },
               "artifact": {
                 "status": "ready",
                 "reason": "ok",
@@ -673,11 +614,6 @@
           "monitoring_mode": "post_fetch_artifact",
           "status": "ready",
           "reason": "ok",
-          "endpoint": {
-            "status": "ready",
-            "reason": "ok",
-            "observed_at": "2026-07-11T00:00:00Z"
-          },
           "artifact": {
             "status": "ready",
             "reason": "ok",
@@ -695,13 +631,8 @@
           "enforcement": "shadow",
           "kpi_required": false,
           "monitoring_mode": "artifact_only",
-          "status": "unobserved",
-          "reason": "workflow_unobserved",
-          "endpoint": {
-            "status": "unobserved",
-            "reason": "workflow_unobserved",
-            "observed_at": null
-          },
+          "status": "ready",
+          "reason": "ok",
           "artifact": {
             "status": "ready",
             "reason": "ok",
@@ -720,12 +651,7 @@
           "kpi_required": false,
           "monitoring_mode": "artifact_only",
           "status": "ready",
-          "reason": "declared_cadence",
-          "endpoint": {
-            "status": "ready",
-            "reason": "declared_cadence",
-            "observed_at": null
-          },
+          "reason": "ok",
           "artifact": {
             "status": "ready",
             "reason": "ok",
@@ -744,12 +670,7 @@
           "kpi_required": false,
           "monitoring_mode": "artifact_only",
           "status": "ready",
-          "reason": "declared_cadence",
-          "endpoint": {
-            "status": "ready",
-            "reason": "declared_cadence",
-            "observed_at": null
-          },
+          "reason": "ok",
           "artifact": {
             "status": "ready",
             "reason": "ok",
@@ -770,12 +691,7 @@
           "kpi_required": false,
           "monitoring_mode": "artifact_only",
           "status": "ready",
-          "reason": "declared_cadence",
-          "endpoint": {
-            "status": "ready",
-            "reason": "declared_cadence",
-            "observed_at": null
-          },
+          "reason": "ok",
           "artifact": {
             "status": "ready",
             "reason": "ok",
@@ -797,11 +713,6 @@
           "monitoring_mode": "post_fetch_artifact",
           "status": "ready",
           "reason": "ok",
-          "endpoint": {
-            "status": "ready",
-            "reason": "ok",
-            "observed_at": "2026-07-11T00:00:00Z"
-          },
           "artifact": {
             "status": "ready",
             "reason": "ok",
@@ -823,11 +734,6 @@
           "monitoring_mode": "post_fetch_artifact",
           "status": "ready",
           "reason": "ok",
-          "endpoint": {
-            "status": "ready",
-            "reason": "ok",
-            "observed_at": "2026-07-11T00:00:00Z"
-          },
           "artifact": {
             "status": "ready",
             "reason": "ok",
@@ -847,11 +753,6 @@
           "monitoring_mode": "post_fetch_artifact",
           "status": "unavailable",
           "reason": "missing_artifact",
-          "endpoint": {
-            "status": "unobserved",
-            "reason": "workflow_unobserved",
-            "observed_at": null
-          },
           "artifact": {
             "status": "unavailable",
             "reason": "missing_artifact",
@@ -871,11 +772,6 @@
           "monitoring_mode": "post_fetch_artifact",
           "status": "ready",
           "reason": "ok",
-          "endpoint": {
-            "status": "ready",
-            "reason": "ok",
-            "observed_at": "2026-07-11T00:00:00Z"
-          },
           "artifact": {
             "status": "ready",
             "reason": "ok",
@@ -895,11 +791,6 @@
           "monitoring_mode": "post_fetch_artifact",
           "status": "ready",
           "reason": "ok",
-          "endpoint": {
-            "status": "ready",
-            "reason": "ok",
-            "observed_at": "2026-07-11T00:00:00Z"
-          },
           "artifact": {
             "status": "ready",
             "reason": "ok",
@@ -917,13 +808,8 @@
           "enforcement": "live",
           "kpi_required": true,
           "monitoring_mode": "post_fetch_artifact",
-          "status": "unobserved",
-          "reason": "workflow_unobserved",
-          "endpoint": {
-            "status": "unobserved",
-            "reason": "workflow_unobserved",
-            "observed_at": null
-          },
+          "status": "ready",
+          "reason": "ok",
           "artifact": {
             "status": "ready",
             "reason": "ok",
@@ -941,13 +827,8 @@
           "enforcement": "live",
           "kpi_required": true,
           "monitoring_mode": "post_fetch_artifact",
-          "status": "unobserved",
-          "reason": "workflow_unobserved",
-          "endpoint": {
-            "status": "unobserved",
-            "reason": "workflow_unobserved",
-            "observed_at": null
-          },
+          "status": "ready",
+          "reason": "ok",
           "artifact": {
             "status": "ready",
             "reason": "ok",
@@ -967,11 +848,6 @@
           "monitoring_mode": "composite",
           "status": "ready",
           "reason": "ok",
-          "endpoint": {
-            "status": "ready",
-            "reason": "ok",
-            "observed_at": "2026-07-11T00:00:00Z"
-          },
           "artifact": {
             "status": "ready",
             "reason": "ok",
@@ -987,11 +863,6 @@
               "id": "stock",
               "status": "ready",
               "reason": "ok",
-              "endpoint": {
-                "status": "ready",
-                "reason": "ok",
-                "observed_at": "2026-07-11T00:00:00Z"
-              },
               "artifact": {
                 "status": "ready",
                 "reason": "ok",
@@ -1004,11 +875,6 @@
               "id": "etf",
               "status": "ready",
               "reason": "ok",
-              "endpoint": {
-                "status": "ready",
-                "reason": "ok",
-                "observed_at": "2026-07-11T00:00:00Z"
-              },
               "artifact": {
                 "status": "ready",
                 "reason": "ok",
@@ -1021,144 +887,8 @@
         }
       ]
     },
-    "id": "all_valid_at_fixed_now",
-    "now": "2026-07-11T00:00:00Z",
-    "report_file_sha256": "19db6a9725bd242b0b57144d001f3a9a7f81bedab25b820ee6f0a73ba46690ee"
+    "report_file_sha256": "98adbfb86a7188203a518143c7c5350e2efeead414a3e33eadd7c9ec10ae5f32"
   },
-  "config_digest": "03cadcb0b3ff11746d4221c21f4da6434f266bf506a6d74c2586eb7cebba9881",
-  "config_digest_input": {
-    "canonicalization": "recursive-sorted-object-keys-preserved-array-order-utf8",
-    "enforcement": "shadow",
-    "export": "DATA_SUPPLY_DETECTION_CONFIG",
-    "ordered_lane_ids": [
-      "fred_macro",
-      "fred_banking",
-      "fred_yardeni",
-      "fdic_tier1",
-      "treasury_tga",
-      "defillama_stablecoins",
-      "yahoo_etf_fallback",
-      "stockanalysis_etf_universe",
-      "stockanalysis_etf_detail",
-      "stockanalysis_stock_financial",
-      "stockanalysis_surfaces",
-      "yahoo_ticker_macro",
-      "sentiment",
-      "nasdaq_giw_sox",
-      "us_indices_daily",
-      "oecd_cli",
-      "krx",
-      "slickcharts",
-      "edgar_filings",
-      "sec_13f",
-      "sentiment_aaii",
-      "benchmarks",
-      "global_scouter",
-      "damodaran",
-      "finra_short_volume",
-      "finra_ats_weekly",
-      "occ_options_volume",
-      "yahoo_private_options",
-      "apewisdom_attention",
-      "gdelt_news_tone",
-      "yahoo_batch_quote_history"
-    ],
-    "ordered_member_ids": [
-      "fred_macro",
-      "fred_banking",
-      "fred_yardeni",
-      "fdic_tier1",
-      "treasury_tga",
-      "defillama_stablecoins",
-      "yahoo_etf_fallback",
-      "stockanalysis_etf_universe",
-      "stockanalysis_etf_detail",
-      "stockanalysis_stock_financial",
-      "stockanalysis_surfaces",
-      "yahoo_ticker_macro",
-      "sentiment",
-      "nasdaq_giw_sox",
-      "us_indices_daily",
-      "oecd_cli",
-      "krx",
-      "daily",
-      "weekly",
-      "monthly",
-      "history",
-      "symbols",
-      "edgar_filings",
-      "sec_13f",
-      "sentiment_aaii",
-      "benchmarks",
-      "global_scouter",
-      "damodaran",
-      "finra_short_volume",
-      "finra_ats_weekly",
-      "occ_options_volume",
-      "yahoo_private_options",
-      "apewisdom_attention",
-      "gdelt_news_tone",
-      "stock",
-      "etf"
-    ],
-    "schema_version": "data-supply-detection-config/v1"
-  },
-  "logical_lane_count": 31,
-  "privacy_exclusions": [
-    "raw_response_bodies",
-    "credentials",
-    "request_headers",
-    "query_tokens",
-    "private_artifact_paths",
-    "ticker_lists",
-    "per_entity_rows",
-    "observation_history",
-    "current_lkg_maps",
-    "recovery_counters",
-    "promotion_pointers",
-    "state_transitions"
-  ],
-  "producer_member_count": 36,
-  "reason_cases": [
-    {
-      "expected_reason": "transport_error",
-      "id": "transport_exception"
-    },
-    {
-      "expected_reason": "unexpected_error",
-      "id": "unexpected_exception"
-    },
-    {
-      "expected_reason": "http_error",
-      "id": "http_non_2xx"
-    },
-    {
-      "expected_reason": "auth_error",
-      "id": "auth_rejected"
-    },
-    {
-      "expected_reason": "rate_limited",
-      "id": "rate_limited"
-    },
-    {
-      "expected_reason": "decode_error",
-      "id": "decode_error"
-    },
-    {
-      "expected_reason": "empty_payload",
-      "id": "empty_payload"
-    },
-    {
-      "expected_reason": "schema_drift",
-      "id": "assertion_failed"
-    },
-    {
-      "expected_reason": "workflow_unobserved",
-      "id": "unobserved"
-    }
-  ],
-  "registry_digest": "f3b27c9be75813318eb63c5414909b757cd21e8912f53a3d70670624370407c5",
-  "schema_version": "data-supply-detection-expected/v1",
   "slickcharts_member_ids": [
     "daily",
     "weekly",
