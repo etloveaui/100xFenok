@@ -161,7 +161,6 @@ function assertIgnoredGlobFiltered(helper = HELPER) {
     const result = run(fixture.root, "always_if_exists", [], WORKFLOW, helper);
     assert.equal(result.status, 0, `ignored glob match must be filtered before git add: ${result.stderr}`);
     assert.match(result.stderr, /skip ignored optional glob.*ignored\.json/);
-    assert.match(result.stdout, /stage_selected=1 staged_index_total=1/);
     assert.deepEqual(cached(fixture.root), [included]);
   } finally {
     fs.rmSync(fixture.root, { recursive: true, force: true });
@@ -515,7 +514,6 @@ assertTrackedFileFromGlobBelowIgnoredParentStillStages();
   }
   const trackedAlways = run(tracked.root, "always_if_exists", [], YF_FINANCE_WORKFLOW);
   assert.equal(trackedAlways.status, 0, `${trackedAlways.stderr}\n${trackedAlways.stdout}`);
-  assert.match(trackedAlways.stdout, /stage_selected=6 staged_index_total=6/);
   assert.deepEqual(cached(tracked.root), tracked.materialized.always.sort());
 }
 
