@@ -185,9 +185,10 @@ try {
     items: {
       // Nine days old: outside the daily window, inside the weekly CFTC release.
       cftc: { resolution_state: "fresh_primary", current: { source_as_of: "2026-09-19T21:00:00Z" } },
-      cnn: { resolution_state: "fresh_primary", current: { source_as_of: "2026-09-27T21:00:00Z" } },
-      vix: { resolution_state: "fresh_primary", current: { source_as_of: "2026-09-27T21:00:00Z" } },
-      move: { resolution_state: "fresh_primary", current: { source_as_of: "2026-09-27T21:00:00Z" } },
+      // Friday's close is three calendar days old on Monday but one US trading day.
+      cnn: { resolution_state: "fresh_primary", current: { source_as_of: "2026-09-25T21:00:00Z" } },
+      vix: { resolution_state: "fresh_primary", current: { source_as_of: "2026-09-25T21:00:00Z" } },
+      move: { resolution_state: "fresh_primary", current: { source_as_of: "2026-09-25T21:00:00Z" } },
       crypto: { resolution_state: "fresh_primary", current: { source_as_of: "2026-09-27T21:00:00Z" } },
     },
   });
@@ -303,6 +304,7 @@ try {
   assert.equal(sentiment.fresh_members, 5, "the weekly CFTC member is not held to the daily window");
   assert.equal(sentiment.status, "fresh");
   assert.equal(sentiment.oldest_source_member, "cftc");
+  assert.equal(sentiment.oldest_source_date, "2026-09-19", "a Friday US close is one trading day old, not three");
   const edgar = rootDoc.sets.find((set) => set.set === "edgar_filings");
   assert.equal(edgar.newest_source_date, "2026-09-28", "the weekly collection clock, not the newest filing date");
   assert.equal(edgar.date_basis, "collected");
