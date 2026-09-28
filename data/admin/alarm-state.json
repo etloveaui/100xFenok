@@ -1,8 +1,8 @@
 {
   "schema_version": "alarm-state/v1",
-  "generated_at": "2026-09-28T07:44:34.118Z",
+  "generated_at": "2026-09-28T08:14:31.670Z",
   "status": "open",
-  "open_incident_count": 3,
+  "open_incident_count": 6,
   "open_incidents": [
     {
       "workflow": "fetch-fdic.yml",
@@ -33,14 +33,56 @@
       "cadence_status": "overdue"
     },
     {
+      "workflow": "global-writer-queue-observer.yml",
+      "label": "Global Writer Queue Observability",
+      "streak": 0,
+      "failure_streak_threshold": 2,
+      "first_failing_run_id": null,
+      "first_failing_run_url": null,
+      "alarm_reasons": [
+        "missed_schedule_window"
+      ],
+      "lane_outcome_lanes": [],
+      "lost_schedule_slot_count": 0,
+      "cadence_status": "no_declaration"
+    },
+    {
+      "workflow": "retention-restore.yml",
+      "label": "R2 Retention Restore Watchdog",
+      "streak": 0,
+      "failure_streak_threshold": 2,
+      "first_failing_run_id": null,
+      "first_failing_run_url": null,
+      "alarm_reasons": [
+        "missed_schedule_window"
+      ],
+      "lane_outcome_lanes": [],
+      "lost_schedule_slot_count": 0,
+      "cadence_status": "no_declaration"
+    },
+    {
       "workflow": "validate-workflows.yml",
       "label": "Validate GitHub Workflows",
-      "streak": 3,
+      "streak": 4,
       "failure_streak_threshold": 2,
       "first_failing_run_id": 36384576674,
       "first_failing_run_url": "https://github.com/etloveaui/100xFenok/actions/runs/36384576674",
       "alarm_reasons": [
         "failure_streak"
+      ],
+      "lane_outcome_lanes": [],
+      "lost_schedule_slot_count": 0,
+      "cadence_status": "no_declaration"
+    },
+    {
+      "workflow": "worker-request-budget-alarm.yml",
+      "label": "Worker Request Budget Alarm",
+      "streak": 0,
+      "failure_streak_threshold": 2,
+      "first_failing_run_id": null,
+      "first_failing_run_url": null,
+      "alarm_reasons": [
+        "missed_schedule_window"
       ],
       "lane_outcome_lanes": [],
       "lost_schedule_slot_count": 0,
@@ -301,7 +343,7 @@
       "cadence_status": "not_due",
       "cadence_evidence": [],
       "data_freshness_state": "healthy",
-      "data_freshness_age_hours_at_generation": 53
+      "data_freshness_age_hours_at_generation": 54
     },
     {
       "file": "fetch-treasury-tga.yml",
@@ -501,14 +543,17 @@
   "queue_evicted_run_count": 0,
   "queue_evicted_workflows": [],
   "last_firing": {
-    "run_id": "36392732044",
-    "run_url": "https://github.com/etloveaui/100xFenok/actions/runs/36392732044",
-    "observed_at": "2026-09-28T07:44:34.118Z",
+    "run_id": "36395818540",
+    "run_url": "https://github.com/etloveaui/100xFenok/actions/runs/36395818540",
+    "observed_at": "2026-09-28T08:14:31.670Z",
     "event": "workflow_run",
     "workflows": [
       "fetch-fdic.yml",
       "fetch-yf-finance.yml",
-      "validate-workflows.yml"
+      "global-writer-queue-observer.yml",
+      "retention-restore.yml",
+      "validate-workflows.yml",
+      "worker-request-budget-alarm.yml"
     ],
     "title": "100xFenok pipeline job failure alarm"
   },
