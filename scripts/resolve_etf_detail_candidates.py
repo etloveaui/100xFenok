@@ -24,6 +24,7 @@ from data_supply_state import (
 
 DOMAIN = "etf_detail"
 DEFAULT_STATE_ROOT = Path("data/admin/data-supply-state/v1")
+DEFAULT_PROVIDER_TRUTH_ROOT = Path(__file__).resolve().parents[1]
 PENDING_ARTIFACT_PATH = re.compile(
     r"^data/admin/data-supply-state/v1/providers/[^/]+/etf_detail/pending/"
     r"(?P<entity>[A-Z0-9][A-Z0-9._-]*)\.json$"
@@ -317,6 +318,7 @@ def resolve_entities(
 def main() -> None:
     parser = argparse.ArgumentParser()
     parser.add_argument("--state-root", default=DEFAULT_STATE_ROOT.as_posix())
+    parser.add_argument("--provider-truth-root", default=str(DEFAULT_PROVIDER_TRUTH_ROOT))
     parser.add_argument("--artifact-manifest", required=True)
     parser.add_argument("--decided-at", default=None)
     args = parser.parse_args()
@@ -331,7 +333,11 @@ def main() -> None:
             )
         )
         return
-    store = DataSupplyStateStore(args.state_root, defer_maintenance=True)
+    store = DataSupplyStateStore(
+        args.state_root,
+        provider_truth_root=args.provider_truth_root,
+        defer_maintenance=True,
+    )
     # Deferred-maintenance contract: reconcile before and after the entity loop,
     # then prune exactly once after a fully successful run.
     store.recover_domain(DOMAIN)

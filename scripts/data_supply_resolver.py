@@ -4,10 +4,13 @@
 from __future__ import annotations
 
 import datetime as dt
+import hashlib
+import json
 from pathlib import Path
 from typing import Any, Mapping
 
 from data_supply_policy import DomainPolicy, get_domain_policy
+from stockanalysis_recovery_state import etf_manual_acquisition_allowed
 from data_supply_state import (
     DataSupplyStateStore,
     SchemaError,
@@ -105,6 +108,36 @@ class DataSupplyResolver:
         self.reconcile_pending_on_noop = reconcile_pending_on_noop
         self._committed_transaction_id: str | None = None
 
+    def _manual_etf_run(self, row: Mapping[str, Any], decided: dt.datetime, floor: str) -> str | None:
+        proof = row.get("etf_acquisition")
+        truth_root = self.store.provider_truth_root
+        if (
+            row.get("domain") != "etf_detail" or row.get("provider") != PRIMARY_PROVIDER
+            or row.get("observation_origin") != "rebuild" or row.get("collection_origin") != "manual"
+            or not isinstance(proof, dict) or truth_root is None
+            or row.get("provider_path") != f"data/stockanalysis/etfs/{row['entity']}.json"
+        ):
+            return None
+        try:
+            raw = (self.store.root / _provider_object_path(row)).read_bytes()
+            canonical = (truth_root / row["provider_path"]).read_bytes()
+            payload = json.loads(raw)
+            if not isinstance(payload, dict):
+                return None
+            if (
+                hashlib.sha256(raw).hexdigest() != row["payload_sha256"] or raw != canonical
+                or payload.get("source_as_of") != row["source_as_of"]
+                or payload.get("fetched_at") != row["observed_at"]
+                or _timestamp(row["source_as_of"]) < _timestamp(floor)
+                or _timestamp(row["observed_at"]) > decided
+                or _timestamp(proof["completed_at"]) > decided
+                or not etf_manual_acquisition_allowed({**proof, "etf_acquisition": proof}, row["entity"], payload)
+            ):
+                return None
+        except (OSError, ValueError, KeyError, TypeError, SchemaError):
+            return None
+        return str(proof["run_id"])
+
     def _commit_prepared(self, domain: str, transaction_id: str) -> dict[str, Any]:
         active = self.store.commit_prepared(domain, transaction_id)
         self._committed_transaction_id = transaction_id
@@ -175,6 +208,10 @@ class DataSupplyResolver:
         )
         recovery_count = prior_recovery["consecutive_green"]
         last_primary_event_id = prior_recovery.get("last_primary_event_id")
+        manual_run_ids = list(prior_recovery.get("manual_run_ids", []))
+        manual_green_count = prior_recovery.get("manual_green_count", 0)
+        next_manual_green_count = 0
+        next_primary_source = prior_recovery.get("last_primary_source_as_of")
         selected: dict[str, Any] | None = None
         transition: str
         reason_code: str
@@ -219,6 +256,8 @@ class DataSupplyResolver:
                 "consecutive_green": 0,
                 "last_transition": "providers_to_lkg",
             }
+            if manual_run_ids:
+                next_recovery[entity]["manual_run_ids"] = manual_run_ids
             transaction_id = self.store.prepare_transition(
                 domain=domain,
                 entity=entity,
@@ -291,20 +330,40 @@ class DataSupplyResolver:
                     transition = "legacy_lkg_to_primary"
                     reason_code = "legacy_lkg_primary_advanced"
                 else:
+                    proof = primary.get("etf_acquisition")
                     is_new_natural = (
                         primary.get("observation_origin") == "natural"
                         and primary["event_id"] != last_primary_event_id
+                        and (domain != "etf_detail" or proof is None or (
+                            isinstance(proof, dict) and type(proof.get("run_attempt")) is int
+                            and proof["run_attempt"] == 1 and proof.get("event_name") == "schedule"
+                            and proof.get("remote") is True
+                        ))
                     )
-                    next_recovery_count = recovery_count + 1 if is_new_natural else recovery_count
-                    next_primary_event_id = primary["event_id"] if is_new_natural else last_primary_event_id
+                    floor = prior["source_as_of"]
+                    if next_primary_source is not None and _timestamp(next_primary_source) > _timestamp(floor):
+                        floor = next_primary_source
+                    manual_run_id = self._manual_etf_run(primary, decided, floor) if domain == "etf_detail" else None
+                    is_new_manual = manual_run_id is not None and manual_run_id not in manual_run_ids
+                    is_new_recovery = is_new_natural or is_new_manual
+                    next_recovery_count = recovery_count + 1 if is_new_recovery else recovery_count
+                    next_primary_event_id = primary["event_id"] if is_new_recovery else last_primary_event_id
+                    next_manual_green_count = manual_green_count + int(is_new_manual)
+                    if is_new_manual:
+                        manual_run_ids.append(manual_run_id)
+                    if is_new_recovery:
+                        next_primary_source = primary["source_as_of"]
                     if next_recovery_count >= policy.recovery_green_required:
                         selected = self._selection(primary, decided_at=decided_at, primary=True)
                         transition = "fallback_to_primary"
-                        reason_code = "primary_recovered_three_natural"
+                        reason_code = (
+                            "primary_recovered_three_acquisitions" if next_manual_green_count
+                            else "primary_recovered_three_natural"
+                        )
                     else:
                         selected = prior
-                        transition = "primary_recovery_observation" if is_new_natural else "primary_recovery_ignored"
-                        reason_code = "primary_recovery_pending" if is_new_natural else "non_natural_recovery_ignored"
+                        transition = "primary_recovery_observation" if is_new_recovery else "primary_recovery_ignored"
+                        reason_code = "primary_recovery_pending" if is_new_recovery else "non_natural_recovery_ignored"
             elif fallback_fresh:
                 selected = self._selection(fallback, decided_at=decided_at, primary=False)
                 transition = "fallback_refresh" if selected != prior else "fallback_hold"
@@ -381,6 +440,11 @@ class DataSupplyResolver:
         }
         if next_primary_event_id is not None:
             recovery_record["last_primary_event_id"] = next_primary_event_id
+        if domain == "etf_detail" and manual_run_ids:
+            recovery_record["manual_run_ids"] = manual_run_ids
+            recovery_record["manual_green_count"] = next_manual_green_count
+        if domain == "etf_detail" and next_primary_source is not None:
+            recovery_record["last_primary_source_as_of"] = next_primary_source
         next_recovery[entity] = recovery_record
 
         selected_event_id = selected.get("candidate_event_id") if changed else None

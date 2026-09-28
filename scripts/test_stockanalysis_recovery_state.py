@@ -142,6 +142,49 @@ class StockAnalysisRecoveryStateTest(unittest.TestCase):
             "observed_at": "2026-07-15T08:00:00Z",
         }
 
+    def test_bound_remote_manual_etf_can_recover_but_other_kinds_keep_natural_gate(self):
+        retained = etf_payload("VYMI", "2026-07-14T00:00:00Z")
+        path = self.data_root / "etfs" / "VYMI.json"
+        write_json(path, retained)
+        self.store.record_failure("etf", "VYMI", "HTTP 503", self.run_context("failure"))
+        payload = {**retained, "source_as_of": "2026-07-15T00:00:00Z",
+                   "raw": {"quote": {"td": "2026-07-15"}},
+                   "normalized": {"overview": {"aum": 1}, "holdings": [{"ticker": "AAPL", "weight": 1}]}}
+        raw = write_json(path, payload)
+        run = {**self.run_context("901"), "observed_at": payload["fetched_at"]}
+        run["etf_acquisition"] = {"run_id": "901", "run_attempt": 1, "event_name": "workflow_dispatch",
+                                  "remote": True, "fresh_fetch": True,
+                                  "started_at": payload["fetched_at"], "completed_at": payload["fetched_at"],
+                                  "fetched_at": payload["fetched_at"], "source_as_of": payload["source_as_of"],
+                                  "payload_sha256": hashlib.sha256(raw).hexdigest()}
+        state = self.store.record_success("etf", "VYMI", payload, run)
+        self.assertFalse(state["retry"])
+        self.assertEqual(state["recovery_event_name"], "workflow_dispatch")
+        self.assertFalse(state["last_attempt"]["natural"])
+        stock = stock_payload("AAPL", "2026-07-14T00:00:00Z")
+        write_json(self.data_root / "stocks" / "AAPL.json", stock)
+        self.store.record_failure("stock", "AAPL", "HTTP 503", self.run_context("failure"))
+        with self.assertRaisesRegex(ValueError, "natural schedule"):
+            self.store.record_success("stock", "AAPL", stock, run)
+
+    def test_unadvanced_manual_etf_keeps_lkg_and_records_honest_deferral(self):
+        payload = {**etf_payload("VYMI", "2026-07-15T00:00:00Z"),
+                   "raw": {"quote": {"td": "2026-07-15"}},
+                   "normalized": {"overview": {"aum": 1}, "holdings": [{"ticker": "AAPL", "weight": 1}]}}
+        path = self.data_root / "etfs" / "VYMI.json"
+        raw = write_json(path, payload)
+        self.store.record_failure("etf", "VYMI", "HTTP 503", self.run_context("failure"))
+        run = {**self.run_context("902"), "observed_at": payload["fetched_at"]}
+        run["etf_acquisition"] = {"run_id": "902", "run_attempt": 1, "event_name": "workflow_dispatch",
+                                  "remote": True, "fresh_fetch": True,
+                                  "started_at": payload["fetched_at"], "completed_at": payload["fetched_at"],
+                                  "fetched_at": payload["fetched_at"], "source_as_of": payload["source_as_of"],
+                                  "payload_sha256": hashlib.sha256(raw).hexdigest()}
+        state = self.store.record_promotion_deferred("etf", "VYMI", payload, run)
+        self.assertTrue(state["retry"])
+        self.assertEqual(path.read_bytes(), raw)
+        self.assertEqual(state["last_attempt"]["event_name"], "workflow_dispatch")
+
     def seed_lane(self) -> dict[tuple[str, str], bytes]:
         return {
             ("stock", "AAPL"): write_json(

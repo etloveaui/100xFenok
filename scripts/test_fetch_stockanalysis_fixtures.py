@@ -14,6 +14,7 @@ import subprocess
 import sys
 import tempfile
 import unittest
+from unittest.mock import patch
 import urllib.error
 from argparse import Namespace
 
@@ -61,6 +62,112 @@ class StockanalysisFetcherFixtureTest(unittest.TestCase):
     @classmethod
     def setUpClass(cls) -> None:
         cls.fetcher = load_fetcher_module()
+
+    def test_remote_etf_binding_requires_matching_first_attempt_and_complete_fresh_payload(self):
+        stamp = "2026-07-15T23:00:00Z"
+        payload = {"schema_version": "stockanalysis/v1", "source": "stockanalysis", "asset_type": "etf",
+                   "ticker": "VYMI", "source_as_of": "2026-07-15T00:00:00Z", "fetched_at": stamp,
+                   "normalized": {"overview": {"aum": 1}, "holdings": [{"ticker": "AAPL", "weight": 1}]},
+                   "raw": {"quote": {"td": "2026-07-15"}}}
+        run = {"run_id": "901", "run_attempt": 1, "event_name": "workflow_dispatch", "observed_at": stamp}
+        environment = {"GITHUB_ACTIONS": "true", "GITHUB_RUN_ID": "901", "GITHUB_RUN_ATTEMPT": "1",
+                       "GITHUB_EVENT_NAME": "workflow_dispatch"}
+        with patch.dict(os.environ, environment, clear=True):
+            proof = self.fetcher.bind_etf_remote_acquisition("VYMI", payload, run, stamp, stamp)
+            self.assertEqual(proof["run_id"], "901")
+            self.assertEqual(proof["payload_sha256"], hashlib.sha256(
+                (json.dumps(payload, ensure_ascii=False, indent=2) + "\n").encode()).hexdigest())
+            for change in ({"run_id": "local"}, {"run_id": "902"}, {"run_attempt": 2}):
+                with self.subTest(run=change):
+                    self.assertIsNone(self.fetcher.bind_etf_remote_acquisition("VYMI", payload, {**run, **change}, stamp, stamp))
+            for change in ({"detail_status": "stockanalysis_partial"}, {"noFetch": True},
+                           {"fetched_at": "2026-07-14T23:00:00Z"}, {"source_as_of": "2026-07-16T00:00:00Z"}):
+                with self.subTest(payload=change):
+                    self.assertIsNone(self.fetcher.bind_etf_remote_acquisition("VYMI", {**payload, **change}, run, stamp, stamp))
+        with patch.dict(os.environ, {}, clear=True):
+            self.assertIsNone(self.fetcher.bind_etf_remote_acquisition("VYMI", payload, run, stamp, stamp))
+
+    def test_scheduled_etf_retry_fairly_includes_selected_fallback_debt_with_primary_canonical(self):
+        class Store:
+            @staticmethod
+            def retry_entities(kind):
+                return {"AAA"} if kind == "etf" else set()
+
+        selected = {"current": {"SLON": {"provider": "yahoo_finance"}, "PRIMARY": {"provider": "stockanalysis"}},
+                    "recovery": {"SLON": {"consecutive_green": 1}}}
+        latest = {"AAA": {"observed_at": "2026-07-15T23:00:00Z"},
+                  "SLON": {"observed_at": "2026-07-14T23:00:00Z"}}
+        result = self.fetcher.select_natural_recovery_targets(
+            Store(), {"etf"}, [], [], stock_limit=0, selected_etf_state=selected, primary_observations=latest)
+        self.assertEqual(result[2], ["SLON"])
+        latest["SLON"]["observed_at"] = "2026-07-16T23:00:00Z"
+        result = self.fetcher.select_natural_recovery_targets(
+            Store(), {"etf"}, [], [], stock_limit=0, selected_etf_state=selected, primary_observations=latest)
+        self.assertEqual(result[2], ["AAA"])
+        result = self.fetcher.select_natural_recovery_targets(
+            Store(), {"stock"}, [], [], stock_limit=0, selected_etf_state=selected, primary_observations=latest)
+        self.assertEqual(result[2], [])
+
+    def test_live_manual_etf_result_carries_bound_observation_and_recovers_producer_only(self):
+        stamp = "2026-07-15T23:00:00Z"
+        payload = {"schema_version": "stockanalysis/v1", "source": "stockanalysis", "asset_type": "etf",
+                   "ticker": "VYMI", "source_as_of": "2026-07-15T00:00:00Z", "fetched_at": stamp,
+                   "normalized": {"overview": {"aum": 1}, "holdings": [{"ticker": "AAPL", "weight": 1}]},
+                   "raw": {"quote": {"td": "2026-07-15"}}}
+        environment = {"GITHUB_ACTIONS": "true", "GITHUB_RUN_ID": "901", "GITHUB_RUN_ATTEMPT": "1",
+                       "GITHUB_EVENT_NAME": "workflow_dispatch"}
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            out = root / "data/stockanalysis"
+            state_root = root / "data/admin/data-supply-state/v1"
+            canonical = out / "etfs/VYMI.json"
+            self.fetcher.write_json(canonical, {**payload, "source_as_of": "2026-07-14T00:00:00Z"})
+            store = self.fetcher.StockAnalysisRecoveryStateStore(root / "data/admin/stockanalysis-recovery", root)
+            store.record_failure("etf", "VYMI", "HTTP 503", {"run_id": "failure", "run_attempt": 1,
+                                 "event_name": "workflow_dispatch", "observed_at": stamp})
+            with patch.dict(os.environ, environment, clear=True), \
+                 patch.object(self.fetcher, "OUT_DIR", out), \
+                 patch.object(self.fetcher, "STORAGE_ROOT", root), \
+                 patch.object(self.fetcher, "DATA_SUPPLY_STATE_ROOT", state_root), \
+                 patch.object(self.fetcher, "fetch_etf", return_value=payload), \
+                 patch.object(self.fetcher, "now_iso", return_value=stamp):
+                result = self.fetcher.run_one("etf", "VYMI", 1, False, collection_origin="manual",
+                    recovery_store=store, recovery_run={"run_id": "901", "run_attempt": 1,
+                    "event_name": "workflow_dispatch", "natural": False, "observed_at": stamp})
+            self.assertEqual(result["status"], "ok")
+            self.assertEqual(json.loads(canonical.read_text())["source_as_of"], "2026-07-15T00:00:00Z")
+            rows = [json.loads(line) for path in (state_root / "history/observations").glob("*.jsonl")
+                    for line in path.read_text().splitlines()]
+            self.assertEqual(len(rows), 1)
+            self.assertEqual(rows[0]["observation_origin"], "rebuild")
+            self.assertEqual(rows[0]["collection_origin"], "manual")
+            self.assertEqual(rows[0]["etf_acquisition"]["run_id"], "901")
+            self.assertEqual(rows[0]["payload_sha256"], hashlib.sha256(canonical.read_bytes()).hexdigest())
+            producer = json.loads((store.root / "states/etf/VYMI.json").read_text())
+            self.assertFalse(producer["retry"])
+            self.assertFalse(producer["last_attempt"]["natural"])
+
+    def test_etf_live_fetch_does_not_overwrite_newer_canonical_or_future_provider_date(self):
+        stamp = "2026-07-15T23:00:00Z"
+        payload = {"schema_version": "stockanalysis/v1", "source": "stockanalysis", "asset_type": "etf",
+                   "ticker": "VYMI", "source_as_of": "2026-07-15T00:00:00Z", "fetched_at": stamp,
+                   "normalized": {"overview": {"aum": 1}, "holdings": [{"ticker": "AAPL", "weight": 1}]},
+                   "raw": {"quote": {"td": "2026-07-15"}}}
+        with tempfile.TemporaryDirectory() as tmp:
+            out = Path(tmp) / "data/stockanalysis"
+            canonical = out / "etfs/VYMI.json"
+            self.fetcher.write_json(canonical, {**payload, "source_as_of": "2026-07-16T00:00:00Z"})
+            before = canonical.read_bytes()
+            with patch.object(self.fetcher, "OUT_DIR", out), \
+                 patch.object(self.fetcher, "STORAGE_ROOT", Path(tmp)), \
+                 patch.object(self.fetcher, "DATA_SUPPLY_STATE_ROOT", Path(tmp) / "data/admin/data-supply-state/v1"), \
+                 patch.object(self.fetcher, "now_iso", return_value=stamp):
+                for candidate in (payload, {**payload, "source_as_of": "2026-07-16T00:00:00Z",
+                                          "raw": {"quote": {"td": "2026-07-16"}}}):
+                    with patch.object(self.fetcher, "fetch_etf", return_value=candidate):
+                        result = self.fetcher.run_one("etf", "VYMI", 1, False, collection_origin="manual")
+                    self.assertEqual(result["status"], "error")
+                    self.assertEqual(canonical.read_bytes(), before)
 
     def test_public_etf_detail_mirror_is_retired(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
@@ -3111,6 +3218,7 @@ module.main()
             ["AAPL", "MSFT"],
             [],
             stock_limit=3,
+            selected_etf_state={}, primary_observations={},
         )
         self.assertEqual(stocks, ["AAPL", "MSFT", "AMD"])
         self.assertEqual(financials, {"AAPL"})
@@ -3124,6 +3232,7 @@ module.main()
             [],
             ["market_gainers"],
             stock_limit=3,
+            selected_etf_state={}, primary_observations={},
         )
         self.assertEqual(stocks, [])
         self.assertEqual(financials, set())

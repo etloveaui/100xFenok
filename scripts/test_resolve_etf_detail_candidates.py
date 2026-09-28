@@ -3,9 +3,11 @@
 from __future__ import annotations
 
 import io
+import hashlib
 import json
 from pathlib import Path
 import sys
+import subprocess
 import tempfile
 import threading
 import unittest
@@ -26,6 +28,7 @@ from data_supply_state import (
     deterministic_event_id,
 )
 import resolve_etf_detail_candidates
+import stockanalysis_artifact
 from resolve_etf_detail_candidates import (
     artifact_entities,
     latest_recorded_observations,
@@ -132,6 +135,89 @@ class ResolveEtfDetailCandidatesTest(unittest.TestCase):
 
     def tearDown(self) -> None:
         self.tmp.cleanup()
+
+    def manual_artifact_cli_sequence(self, *, wrong_truth_root=False):
+        repo = self.root / "checkout"
+        repo.mkdir()
+        state_root = repo / "data/admin/data-supply-state/v1"
+        state = DataSupplyStateStore(state_root, provider_truth_root=repo)
+        fallback, raw = observation(provider="yahoo_finance", entity="VYMI", valid=True,
+                                    source_as_of="2026-07-14T00:00:00Z", observed_at="2026-07-15T22:00:00Z")
+        state.store_provider_object(observation=fallback, payload=raw)
+        state.record_observation(fallback)
+        resolve_entities(state, entities=["VYMI"], decided_at="2026-07-15T22:01:00Z")
+        policy = repo / "data/admin/lane-commit-manifest.json"
+        policy.write_text(json.dumps({"schema_version": "lane-commit-manifest/v1", "workflows": {
+            stockanalysis_artifact.DEFAULT_WORKFLOW: {"exclude": [], "stages": {"always_if_exists": [
+                {"kind": "directory", "path": "data/stockanalysis"},
+                {"kind": "directory", "path": "data/admin/data-supply-state"}]}}}}))
+
+        def git(*args):
+            return subprocess.check_output(["git", *args], cwd=repo, text=True).strip()
+
+        git("init", "-q")
+
+        def save_fixture():
+            git("add", "--", "data")
+            git("-c", "user.name=ETF Fixture", "-c", "user.email=etf@example.test",
+                "-c", "core.hooksPath=/dev/null", "commit", "-qm", "fixture")
+            return git("rev-parse", "HEAD")
+
+        base = save_fixture()
+        outcomes = []
+        for count, run_id in enumerate(("901", "902", "903"), 1):
+            stamp = f"2026-07-15T23:0{count}:00Z"
+            candidate = self.root / f"candidate-{run_id}"
+            artifact = self.root / f"artifact-{run_id}"
+            stockanalysis_artifact.seed_candidate(repo, candidate)
+            acquired = {"schema_version": "stockanalysis/v1", "source": "stockanalysis", "asset_type": "etf",
+                        "ticker": "VYMI", "source_as_of": "2026-07-15T00:00:00Z", "fetched_at": stamp,
+                        "normalized": {"overview": {"aum": 1}, "holdings": [{"ticker": "AAPL", "weight": 1}]},
+                        "raw": {"quote": {"td": "2026-07-15"}}}
+            payload = (json.dumps(acquired, ensure_ascii=False, indent=2) + "\n").encode()
+            path = candidate / "data/stockanalysis/etfs/VYMI.json"
+            path.parent.mkdir(parents=True, exist_ok=True)
+            path.write_bytes(payload)
+            row, _ = observation(provider="stockanalysis", entity="VYMI", valid=True,
+                                 source_as_of=acquired["source_as_of"], observed_at=stamp)
+            row.update({"payload_sha256": hashlib.sha256(payload).hexdigest(), "observation_origin": "rebuild",
+                        "collection_origin": "manual", "etf_acquisition": {
+                            "run_id": run_id, "run_attempt": 1, "event_name": "workflow_dispatch",
+                            "remote": True, "fresh_fetch": True, "started_at": stamp, "completed_at": stamp,
+                            "source_as_of": acquired["source_as_of"], "fetched_at": stamp,
+                            "payload_sha256": hashlib.sha256(payload).hexdigest()}})
+            row["event_id"] = deterministic_event_id("observation", row)
+            candidate_store = DataSupplyStateStore(candidate / "data/admin/data-supply-state/v1",
+                                                   provider_truth_root=candidate, defer_maintenance=True)
+            candidate_store.store_provider_object(observation=row, payload=payload)
+            candidate_store.record_observation(row)
+            stockanalysis_artifact.pack_artifact(repo_root=repo, candidate_root=candidate, artifact_root=artifact,
+                workflow=stockanalysis_artifact.DEFAULT_WORKFLOW, base_sha=base, run_id=run_id,
+                run_number=count, run_attempt=1, artifact_name=f"stockanalysis-{run_id}-1")
+            result = stockanalysis_artifact.apply_artifact(repo_root=repo, artifact_root=artifact,
+                workflow=stockanalysis_artifact.DEFAULT_WORKFLOW, run_id=run_id, run_number=count,
+                run_attempt=1, artifact_name=f"stockanalysis-{run_id}-1", artifact_digest="a" * 64)
+            self.assertEqual(result["status"], "applied")
+            truth = self.root / "wrong-checkout" if wrong_truth_root else repo
+            truth.mkdir(exist_ok=True)
+            argv = ["resolve_etf_detail_candidates.py", "--state-root", str(state_root),
+                    "--provider-truth-root", str(truth), "--artifact-manifest", str(artifact / "manifest.json"),
+                    "--decided-at", "2026-07-15T23:59:00Z"]
+            with mock.patch.object(sys, "argv", argv), mock.patch("sys.stdout", new_callable=io.StringIO) as stdout:
+                main()
+            printed = json.loads(stdout.getvalue())
+            active = state.read_active_domain("etf_detail")
+            outcomes.append((printed["results"][0]["provider"], active["recovery"]["VYMI"]["consecutive_green"]))
+            base = save_fixture()
+        return outcomes
+
+    def test_real_artifact_apply_and_cli_recover_after_three_independent_manual_acquisitions(self):
+        self.assertEqual(self.manual_artifact_cli_sequence(),
+                         [("yahoo_finance", 1), ("yahoo_finance", 2), ("stockanalysis", 3)])
+
+    def test_real_artifact_cli_rejects_wrong_provider_truth_root(self):
+        self.assertEqual(self.manual_artifact_cli_sequence(wrong_truth_root=True),
+                         [("yahoo_finance", 0), ("yahoo_finance", 0), ("yahoo_finance", 0)])
 
     def publish_pair(
         self,

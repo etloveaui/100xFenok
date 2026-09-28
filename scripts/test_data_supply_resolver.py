@@ -1,4 +1,6 @@
 import tempfile
+import hashlib
+import json
 import sys
 import unittest
 from pathlib import Path
@@ -89,6 +91,109 @@ class DataSupplyResolverTests(unittest.TestCase):
             observations=observations,
             decided_at=decided_at,
         )
+
+    def manual_etf(self, run_id, minute, *, payload_changes=None, proof_changes=None):
+        stamp = f"2026-07-15T23:{minute:02d}:00Z"
+        payload = {
+            "schema_version": "stockanalysis/v1", "source": "stockanalysis",
+            "asset_type": "etf", "ticker": "VYMI",
+            "source_as_of": "2026-07-15T00:00:00Z", "fetched_at": stamp,
+            "normalized": {"overview": {"aum": 1}, "holdings": [{"ticker": "AAPL", "weight": 1}]},
+            "raw": {"quote": {"td": "2026-07-15"}},
+        }
+        payload.update(payload_changes or {})
+        raw = (json.dumps(payload, ensure_ascii=False, indent=2) + "\n").encode()
+        row, _ = observation(provider="stockanalysis", suffix=f"manual-{run_id}-{minute}",
+                             source_as_of=payload["source_as_of"], observed_at=stamp, origin="rebuild")
+        row.update({"provider_path": "data/stockanalysis/etfs/VYMI.json",
+                    "payload_sha256": hashlib.sha256(raw).hexdigest(), "collection_origin": "manual"})
+        proof = {"run_id": str(run_id), "run_attempt": 1, "event_name": "workflow_dispatch",
+                 "remote": True, "fresh_fetch": True, "started_at": stamp, "completed_at": stamp,
+                 "source_as_of": payload["source_as_of"], "fetched_at": stamp,
+                 "payload_sha256": row["payload_sha256"]}
+        proof.update(proof_changes or {})
+        row["etf_acquisition"] = proof
+        row["event_id"] = deterministic_event_id("observation", row)
+        self.store.provider_truth_root = self.root / "truth"
+        canonical = self.store.provider_truth_root / row["provider_path"]
+        canonical.parent.mkdir(parents=True, exist_ok=True)
+        canonical.write_bytes(raw)
+        self.store.store_provider_object(observation=row, payload=raw)
+        self.store.record_observation(row)
+        return row
+
+    def seed_manual_fallback(self):
+        fallback = self.publish(provider="yahoo_finance", suffix="manual-seed",
+                                source_as_of="2026-07-14T00:00:00Z", observed_at="2026-07-15T22:00:00Z")
+        self.resolver.resolve(domain="etf_detail", entity="VYMI", observations=[fallback],
+                              decided_at="2026-07-15T22:01:00Z")
+        return fallback
+
+    def resolve_manual(self, row, fallback):
+        return self.resolver.resolve(domain="etf_detail", entity="VYMI", observations=[row, fallback],
+                                     decided_at="2026-07-15T23:59:00Z")
+
+    def test_three_bound_manual_acquisitions_recover_without_natural_credit(self):
+        fallback = self.seed_manual_fallback()
+        for count, run_id in enumerate(("901", "902", "903"), 1):
+            row = self.manual_etf(run_id, count)
+            active = self.resolve_manual(row, fallback)
+            self.assertEqual(active["recovery"]["VYMI"]["consecutive_green"], count)
+            self.assertEqual(active["current"]["VYMI"]["provider"], "stockanalysis" if count == 3 else "yahoo_finance")
+            self.assertEqual(row["observation_origin"], "rebuild")
+        self.assertEqual(active["decision"]["reason_code"], "primary_recovered_three_acquisitions")
+
+    def test_manual_run_replay_cannot_earn_another_observation(self):
+        fallback = self.seed_manual_fallback()
+        self.resolve_manual(self.manual_etf("901", 1), fallback)
+        active = self.resolve_manual(self.manual_etf("901", 2), fallback)
+        self.assertEqual(active["recovery"]["VYMI"]["consecutive_green"], 1)
+
+    def test_manual_acquisition_rejects_unbound_partial_old_future_or_foreign_evidence(self):
+        cases = [
+            ({}, {"run_id": "local"}), ({}, {"run_attempt": 2}),
+            ({}, {"remote": False}), ({}, {"fresh_fetch": False}),
+            ({}, {"noFetch": True}), ({}, {"event_name": "repository_dispatch"}),
+            ({}, {"payload_sha256": "0" * 64}), ({}, {"completed_at": "2026-07-16T00:00:00Z"}),
+            ({"detail_status": "stockanalysis_partial"}, {}),
+            ({"source_as_of": "2026-07-13T00:00:00Z", "raw": {"quote": {"td": "2026-07-13"}}}, {}),
+            ({"raw": {"quote": {"td": "2026-07-14"}}}, {}),
+            ({"source_provider": "yahoo_finance"}, {}),
+        ]
+        for payload_changes, proof_changes in cases:
+            with self.subTest(payload=payload_changes, proof=proof_changes):
+                fallback = self.seed_manual_fallback()
+                row = self.manual_etf("901", 1, payload_changes=payload_changes, proof_changes=proof_changes)
+                active = self.resolve_manual(row, fallback)
+                self.assertEqual(active["recovery"]["VYMI"]["consecutive_green"], 0)
+        row = self.manual_etf("901", 2)
+        row.pop("etf_acquisition")
+        row["event_id"] = deterministic_event_id("observation", row)
+        self.assertEqual(self.resolve_manual(row, fallback)["recovery"]["VYMI"]["consecutive_green"], 0)
+        row = self.manual_etf("902", 3)
+        (self.store.provider_truth_root / row["provider_path"]).write_text('{"ticker":"FOREIGN"}')
+        self.assertEqual(self.resolve_manual(row, fallback)["recovery"]["VYMI"]["consecutive_green"], 0)
+
+    def test_primary_failure_resets_manual_sequence_and_preserves_run_replay_barrier(self):
+        fallback = self.seed_manual_fallback()
+        self.resolve_manual(self.manual_etf("901", 1), fallback)
+        self.resolve_manual(self.manual_etf("902", 2), fallback)
+        failed = self.publish(provider="stockanalysis", suffix="manual-failure", status="invalid",
+                              source_as_of="2026-07-15T00:00:00Z", observed_at="2026-07-15T23:03:00Z")
+        active = self.resolve_manual(failed, fallback)
+        self.assertEqual(active["recovery"]["VYMI"]["consecutive_green"], 0)
+        active = self.resolve_manual(self.manual_etf("901", 4), fallback)
+        self.assertEqual(active["recovery"]["VYMI"]["consecutive_green"], 0)
+        active = self.resolve_manual(self.manual_etf("903", 5), fallback)
+        self.assertEqual(active["recovery"]["VYMI"]["consecutive_green"], 1)
+
+    def test_bound_schedule_rerun_cannot_earn_recovery_credit(self):
+        fallback = self.seed_manual_fallback()
+        row = self.manual_etf("901", 1, proof_changes={"event_name": "schedule", "run_attempt": 2})
+        row["observation_origin"] = "natural"
+        row["event_id"] = deterministic_event_id("observation", row)
+        active = self.resolve_manual(row, fallback)
+        self.assertEqual(active["recovery"]["VYMI"]["consecutive_green"], 0)
 
     def test_primary_has_domain_atomic_authority_over_fallback(self):
         primary = self.publish(
