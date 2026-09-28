@@ -344,23 +344,12 @@ scripts/publish-slickcharts-attempt.sh \
   const clean = weeklyGate(realWeekly);
   assert.equal(clean.ok, true, JSON.stringify(clean));
 
-  const wrongMember = realWeekly.replace(/\n            weekly \\\n/, "\n            daily \\\n");
-  const wrongMemberResult = weeklyGate(wrongMember);
-  assert.equal(wrongMemberResult.ok, false);
-  assert.ok(
-    wrongMemberResult.missing_in_workflow.some(
-      ({ shard }) => shard === WEEKLY_STATE,
-    ),
-    "wrong member must lose the manifest-driven publish-outcome coverage",
-  );
-
-  const reordered = realWeekly.replace(
-    "--manifest-workflow .github/workflows/slickcharts-weekly.yml \\\n            --manifest-always always_if_exists \\",
-    "--manifest-always always_if_exists \\\n            --manifest-workflow .github/workflows/slickcharts-weekly.yml \\",
-  );
-  const reorderedResult = weeklyGate(reordered);
-  assert.equal(reorderedResult.ok, false);
-  assert.ok(reorderedResult.missing_in_workflow.length > 0, "reordered flags must lose manifest-driven coverage");
+  // S3 removed the weekly lane's last manifest-staged shard, so this lane no
+  // longer stages anything the helper can observe: a wrong member and a
+  // reordered flag are both undetectable here, and asserting they fail would
+  // be pinning a shard that no longer exists. The clean case above still
+  // proves the real workflow passes; the helper's fail-closed behaviour is
+  // covered by the focused cases earlier in this file.
 }
 
 // Every primary owner must carry every admin shard its lanes declare. This is
