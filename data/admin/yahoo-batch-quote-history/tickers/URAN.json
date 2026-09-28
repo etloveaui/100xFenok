@@ -12,31 +12,44 @@
       "run_id": "31334785949",
       "schedule": "7 20 * * 0-5",
       "shard": "10/72"
+    },
+    {
+      "attempts_used": 1,
+      "event_name": "workflow_dispatch",
+      "failures": [],
+      "latency_ms": 437,
+      "natural": false,
+      "observed_at": "2026-09-28T06:30:00Z",
+      "outcome": "fresh",
+      "run_attempt": 1,
+      "run_id": "36367836615",
+      "schedule": "",
+      "shard": ""
     }
   ],
   "current": {
-    "fetched_at": "2026-08-09T20:44:49Z",
-    "history_as_of": "2026-08-07",
-    "path": "data/admin/yahoo-batch-quote-history/lkg/URAN.json",
-    "payload_sha256": "345a57ba2e7112357466786ada48ca55286758034bb312b5580bdb0d4e12ee88",
-    "quote_as_of": "2026-08-07T19:59:59Z",
-    "source_as_of": "2026-08-07"
+    "fetched_at": "2026-09-28T06:38:14Z",
+    "history_as_of": "2026-09-25",
+    "path": "data/yf/finance/URAN.json",
+    "payload_sha256": "4c236817f7e987627283ce9ad44fe75343420ec6c434c99abf218a798449efd3",
+    "quote_as_of": "2026-09-25T16:31:49Z",
+    "source_as_of": "2026-09-25"
   },
   "discovered_from": [
     "stockanalysis_etf"
   ],
   "last_attempt": {
     "attempts_used": 1,
-    "event_name": "schedule",
+    "event_name": "workflow_dispatch",
     "failures": [],
-    "latency_ms": 769,
-    "natural": true,
-    "observed_at": "2026-08-09T20:40:44Z",
+    "latency_ms": 437,
+    "natural": false,
+    "observed_at": "2026-09-28T06:30:00Z",
     "outcome": "fresh",
     "run_attempt": 1,
-    "run_id": "31334785949",
-    "schedule": "7 20 * * 0-5",
-    "shard": "10/72"
+    "run_id": "36367836615",
+    "schedule": "",
+    "shard": ""
   },
   "lkg": {
     "fetched_at": "2026-08-09T20:44:49Z",
@@ -48,18 +61,18 @@
   },
   "promotion_contract": "provider_observation/v2",
   "provider_observation": {
-    "event_name": "schedule",
-    "history_as_of": "2026-08-07",
-    "observed_at": "2026-08-09T20:40:44Z",
-    "payload_sha256": "dda958be3294c9d337b2d29212366b5a6b494d399c7b6689626393c2f9967fb2",
-    "quote_as_of": "2026-08-07T19:59:59Z",
+    "event_name": "workflow_dispatch",
+    "history_as_of": "2026-09-25",
+    "observed_at": "2026-09-28T06:30:00Z",
+    "payload_sha256": "584b898ad3eee3e6f4f16aeb0522098ddcb9acb53a754240905b042735d69daf",
+    "quote_as_of": "2026-09-25T16:31:49Z",
     "run_attempt": 1,
-    "run_id": "31334785949",
+    "run_id": "36367836615",
     "schema_version": "provider_observation/v2",
-    "source_as_of": "2026-08-07"
+    "source_as_of": "2026-09-25"
   },
-  "resolution_state": "lkg_primary",
-  "retry": true,
+  "resolution_state": "fresh_primary",
+  "retry": false,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "stale": {
     "age_business_days": 8,
@@ -72,5 +85,5 @@
     "source_as_of": "2026-08-07"
   },
   "ticker": "URAN",
-  "updated_at": "2026-08-19T23:42:29Z"
+  "updated_at": "2026-09-28T06:30:00Z"
 }

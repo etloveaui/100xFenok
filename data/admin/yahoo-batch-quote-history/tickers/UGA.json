@@ -12,31 +12,44 @@
       "run_id": "31293276520",
       "schedule": "7 2 * * 0-5",
       "shard": "1/72"
+    },
+    {
+      "attempts_used": 1,
+      "event_name": "workflow_dispatch",
+      "failures": [],
+      "latency_ms": 465,
+      "natural": false,
+      "observed_at": "2026-09-28T06:30:00Z",
+      "outcome": "fresh",
+      "run_attempt": 1,
+      "run_id": "36367836615",
+      "schedule": "",
+      "shard": ""
     }
   ],
   "current": {
-    "fetched_at": "2026-08-09T03:56:05Z",
-    "history_as_of": "2026-08-07",
-    "path": "data/admin/yahoo-batch-quote-history/lkg/UGA.json",
-    "payload_sha256": "dd44f6964aabc5c54265ea9d09e3716ca7baa42ea1265f9a0eee8c060041867d",
-    "quote_as_of": "2026-08-07T19:56:33Z",
-    "source_as_of": "2026-08-07"
+    "fetched_at": "2026-09-28T06:37:15Z",
+    "history_as_of": "2026-09-25",
+    "path": "data/yf/finance/UGA.json",
+    "payload_sha256": "7f3b632d46691b37920accd38ba0dfa29d1d7ac4cb83fb5a79cd4bdfef1582ee",
+    "quote_as_of": "2026-09-25T20:00:00Z",
+    "source_as_of": "2026-09-25"
   },
   "discovered_from": [
     "stockanalysis_etf"
   ],
   "last_attempt": {
     "attempts_used": 1,
-    "event_name": "schedule",
+    "event_name": "workflow_dispatch",
     "failures": [],
-    "latency_ms": 869,
-    "natural": true,
-    "observed_at": "2026-08-09T03:52:19Z",
+    "latency_ms": 465,
+    "natural": false,
+    "observed_at": "2026-09-28T06:30:00Z",
     "outcome": "fresh",
     "run_attempt": 1,
-    "run_id": "31293276520",
-    "schedule": "7 2 * * 0-5",
-    "shard": "1/72"
+    "run_id": "36367836615",
+    "schedule": "",
+    "shard": ""
   },
   "lkg": {
     "fetched_at": "2026-08-09T03:56:05Z",
@@ -48,18 +61,18 @@
   },
   "promotion_contract": "provider_observation/v2",
   "provider_observation": {
-    "event_name": "schedule",
-    "history_as_of": "2026-08-07",
-    "observed_at": "2026-08-09T03:52:19Z",
-    "payload_sha256": "fefa7ee2b6c9ed09e81495662b642775f396f0eaad6da7039e8adb3ca3ae1b59",
-    "quote_as_of": "2026-08-07T19:56:33Z",
+    "event_name": "workflow_dispatch",
+    "history_as_of": "2026-09-25",
+    "observed_at": "2026-09-28T06:30:00Z",
+    "payload_sha256": "9ce086374793177e460e62870251156a7e1e979f739abb169a944a2fca9e3cbb",
+    "quote_as_of": "2026-09-25T20:00:00Z",
     "run_attempt": 1,
-    "run_id": "31293276520",
+    "run_id": "36367836615",
     "schema_version": "provider_observation/v2",
-    "source_as_of": "2026-08-07"
+    "source_as_of": "2026-09-25"
   },
-  "resolution_state": "lkg_primary",
-  "retry": true,
+  "resolution_state": "fresh_primary",
+  "retry": false,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "stale": {
     "age_business_days": 8,
@@ -72,5 +85,5 @@
     "source_as_of": "2026-08-07"
   },
   "ticker": "UGA",
-  "updated_at": "2026-08-19T23:42:29Z"
+  "updated_at": "2026-09-28T06:30:00Z"
 }

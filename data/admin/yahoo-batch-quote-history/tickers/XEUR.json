@@ -5,20 +5,6 @@
       "error": "recovery_not_advanced_by_provider",
       "event_name": "schedule",
       "failures": [],
-      "latency_ms": 793,
-      "natural": true,
-      "observed_at": "2026-08-10T19:09:16Z",
-      "outcome": "failed",
-      "run_attempt": 1,
-      "run_id": "31422533403",
-      "schedule": "7 18 * * 0-5",
-      "shard": "21/72"
-    },
-    {
-      "attempts_used": 1,
-      "error": "recovery_not_advanced_by_provider",
-      "event_name": "schedule",
-      "failures": [],
       "latency_ms": 774,
       "natural": true,
       "observed_at": "2026-08-10T22:52:08Z",
@@ -199,40 +185,46 @@
       "run_id": "31648785047",
       "schedule": "7 22 * * 0-5",
       "shard": "47/72"
+    },
+    {
+      "attempts_used": 1,
+      "event_name": "workflow_dispatch",
+      "failures": [],
+      "latency_ms": 420,
+      "natural": false,
+      "observed_at": "2026-09-28T06:30:00Z",
+      "outcome": "fresh",
+      "run_attempt": 1,
+      "run_id": "36367836615",
+      "schedule": "",
+      "shard": ""
     }
   ],
   "current": {
-    "fetched_at": "2026-08-12T04:18:49Z",
-    "history_as_of": "2026-08-11",
-    "path": "data/admin/yahoo-batch-quote-history/lkg/XEUR.json",
-    "payload_sha256": "f1e0a89a4c0acbf2369e81757b4080ef10f9413be6e2baed965e29e15a5f06be",
-    "quote_as_of": "2026-06-09T17:45:38Z",
-    "source_as_of": "2026-06-09T17:45:38Z"
+    "fetched_at": "2026-09-28T06:45:23Z",
+    "history_as_of": "2026-09-25",
+    "path": "data/yf/finance/XEUR.json",
+    "payload_sha256": "a73766fd32a369fc62740ea2480df82443368ba4f5215888e06823249b4bd5d7",
+    "quote_as_of": "2026-09-23T19:29:19Z",
+    "source_as_of": "2026-09-23T19:29:19Z"
   },
   "discovered_from": [
     "stockanalysis_etf"
   ],
   "last_attempt": {
     "attempts_used": 1,
-    "error": "ValueError: quote_as_of is unavailable for XEUR despite available history",
-    "event_name": "schedule",
-    "failures": [
-      {
-        "attempt": 1,
-        "error": "YFRateLimitError: Too Many Requests. Rate limited. Try after a while.",
-        "source": "provider_safe_call"
-      }
-    ],
-    "latency_ms": 472,
-    "natural": true,
-    "observed_at": "2026-08-12T22:55:30Z",
-    "outcome": "failed",
+    "event_name": "workflow_dispatch",
+    "failures": [],
+    "latency_ms": 420,
+    "natural": false,
+    "observed_at": "2026-09-28T06:30:00Z",
+    "outcome": "fresh",
     "run_attempt": 1,
-    "run_id": "31648785047",
-    "schedule": "7 22 * * 0-5",
-    "shard": "47/72"
+    "run_id": "36367836615",
+    "schedule": "",
+    "shard": ""
   },
-  "latest_failure": {
+  "last_recovered_failure": {
     "attempts_used": 1,
     "data_loss": false,
     "deferred_acquisition": false,
@@ -260,18 +252,23 @@
   },
   "promotion_contract": "provider_observation/v2",
   "provider_observation": {
-    "event_name": "schedule",
-    "history_as_of": "2026-08-11",
-    "observed_at": "2026-08-12T04:17:21Z",
-    "payload_sha256": "a5f09d3c13479f397591c167915bae69da9491f9192369abecf365ce4ae88774",
-    "quote_as_of": "2026-06-09T17:45:38Z",
+    "event_name": "workflow_dispatch",
+    "history_as_of": "2026-09-25",
+    "observed_at": "2026-09-28T06:30:00Z",
+    "payload_sha256": "f956059cbffce3962c7c9644cdd85fa7ed84281c5ff12bfda19db93e35e0218e",
+    "quote_as_of": "2026-09-23T19:29:19Z",
     "run_attempt": 1,
-    "run_id": "31562660637",
+    "run_id": "36367836615",
     "schema_version": "provider_observation/v2",
-    "source_as_of": "2026-06-09T17:45:38Z"
+    "source_as_of": "2026-09-23T19:29:19Z"
   },
-  "resolution_state": "lkg_primary",
-  "retry": true,
+  "recovered_at": "2026-09-28T06:30:00Z",
+  "recovered_from_run_id": "31648785047",
+  "recovery_event_name": "workflow_dispatch",
+  "recovery_run_attempt": 1,
+  "recovery_run_id": "36367836615",
+  "resolution_state": "fresh_primary",
+  "retry": false,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "stale": {
     "age_business_days": 44,
@@ -284,5 +281,5 @@
     "source_as_of": "2026-06-09T17:45:38Z"
   },
   "ticker": "XEUR",
-  "updated_at": "2026-08-12T22:55:30Z"
+  "updated_at": "2026-09-28T06:30:00Z"
 }

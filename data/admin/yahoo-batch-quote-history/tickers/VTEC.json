@@ -12,31 +12,44 @@
       "run_id": "31143656628",
       "schedule": "7 0 * * 0-5",
       "shard": "60/72"
+    },
+    {
+      "attempts_used": 1,
+      "event_name": "workflow_dispatch",
+      "failures": [],
+      "latency_ms": 517,
+      "natural": false,
+      "observed_at": "2026-09-28T06:30:00Z",
+      "outcome": "fresh",
+      "run_attempt": 1,
+      "run_id": "36367836615",
+      "schedule": "",
+      "shard": ""
     }
   ],
   "current": {
-    "fetched_at": "2026-08-07T03:17:50Z",
-    "history_as_of": "2026-08-06",
-    "path": "data/admin/yahoo-batch-quote-history/lkg/VTEC.json",
-    "payload_sha256": "a868078d9155273fd28940f4aaec8e5231cbbd539a9508aec8e8a2c597452438",
-    "quote_as_of": "2026-08-06T19:59:54Z",
-    "source_as_of": "2026-08-06"
+    "fetched_at": "2026-09-28T06:42:21Z",
+    "history_as_of": "2026-09-25",
+    "path": "data/yf/finance/VTEC.json",
+    "payload_sha256": "a6ff56679d387dd598553d4030a9e366cf9fb237620c5451c88998bb45f75e6f",
+    "quote_as_of": "2026-09-25T20:00:00Z",
+    "source_as_of": "2026-09-25"
   },
   "discovered_from": [
     "stockanalysis_etf"
   ],
   "last_attempt": {
     "attempts_used": 1,
-    "event_name": "schedule",
+    "event_name": "workflow_dispatch",
     "failures": [],
-    "latency_ms": 527,
-    "natural": true,
-    "observed_at": "2026-08-07T03:14:39Z",
+    "latency_ms": 517,
+    "natural": false,
+    "observed_at": "2026-09-28T06:30:00Z",
     "outcome": "fresh",
     "run_attempt": 1,
-    "run_id": "31143656628",
-    "schedule": "7 0 * * 0-5",
-    "shard": "60/72"
+    "run_id": "36367836615",
+    "schedule": "",
+    "shard": ""
   },
   "lkg": {
     "fetched_at": "2026-08-07T03:17:50Z",
@@ -48,18 +61,18 @@
   },
   "promotion_contract": "provider_observation/v2",
   "provider_observation": {
-    "event_name": "schedule",
-    "history_as_of": "2026-08-06",
-    "observed_at": "2026-08-07T03:14:39Z",
-    "payload_sha256": "5c66e125d9c2696958474fc05f8a26df2f6f81a846c1610ea91c40c2cc7700ab",
-    "quote_as_of": "2026-08-06T19:59:54Z",
+    "event_name": "workflow_dispatch",
+    "history_as_of": "2026-09-25",
+    "observed_at": "2026-09-28T06:30:00Z",
+    "payload_sha256": "52b87b4bb5599960772ccbcb746a144d48a690d034c04ccb91323294660e339c",
+    "quote_as_of": "2026-09-25T20:00:00Z",
     "run_attempt": 1,
-    "run_id": "31143656628",
+    "run_id": "36367836615",
     "schema_version": "provider_observation/v2",
-    "source_as_of": "2026-08-06"
+    "source_as_of": "2026-09-25"
   },
-  "resolution_state": "lkg_primary",
-  "retry": true,
+  "resolution_state": "fresh_primary",
+  "retry": false,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "stale": {
     "age_business_days": 9,
@@ -72,5 +85,5 @@
     "source_as_of": "2026-08-06"
   },
   "ticker": "VTEC",
-  "updated_at": "2026-08-19T23:42:29Z"
+  "updated_at": "2026-09-28T06:30:00Z"
 }

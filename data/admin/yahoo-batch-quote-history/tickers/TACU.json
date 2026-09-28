@@ -12,31 +12,44 @@
       "run_id": "31200268852",
       "schedule": "7 16 * * 0-5",
       "shard": "68/72"
+    },
+    {
+      "attempts_used": 1,
+      "event_name": "workflow_dispatch",
+      "failures": [],
+      "latency_ms": 427,
+      "natural": false,
+      "observed_at": "2026-09-28T06:30:00Z",
+      "outcome": "fresh",
+      "run_attempt": 1,
+      "run_id": "36367836615",
+      "schedule": "",
+      "shard": ""
     }
   ],
   "current": {
-    "fetched_at": "2026-08-07T17:05:14Z",
-    "history_as_of": "2026-08-07",
-    "path": "data/admin/yahoo-batch-quote-history/lkg/TACU.json",
-    "payload_sha256": "a7d3d2fce3da41db3785cb4a3dc93e1683ca1ba5dbbd8ff561ce4878e805999a",
-    "quote_as_of": "2026-08-07T16:03:32Z",
-    "source_as_of": "2026-08-07"
+    "fetched_at": "2026-09-28T06:30:30Z",
+    "history_as_of": "2026-09-25",
+    "path": "data/yf/finance/TACU.json",
+    "payload_sha256": "629ab381f3fbeef91401c72450df1d075165a869d1b06e53856bb450c513d304",
+    "quote_as_of": "2026-09-25T18:27:55Z",
+    "source_as_of": "2026-09-25"
   },
   "discovered_from": [
     "stockanalysis_etf"
   ],
   "last_attempt": {
     "attempts_used": 1,
-    "event_name": "schedule",
+    "event_name": "workflow_dispatch",
     "failures": [],
-    "latency_ms": 604,
-    "natural": true,
-    "observed_at": "2026-08-07T17:02:12Z",
+    "latency_ms": 427,
+    "natural": false,
+    "observed_at": "2026-09-28T06:30:00Z",
     "outcome": "fresh",
     "run_attempt": 1,
-    "run_id": "31200268852",
-    "schedule": "7 16 * * 0-5",
-    "shard": "68/72"
+    "run_id": "36367836615",
+    "schedule": "",
+    "shard": ""
   },
   "lkg": {
     "fetched_at": "2026-08-07T17:05:14Z",
@@ -48,18 +61,18 @@
   },
   "promotion_contract": "provider_observation/v2",
   "provider_observation": {
-    "event_name": "schedule",
-    "history_as_of": "2026-08-07",
-    "observed_at": "2026-08-07T17:02:12Z",
-    "payload_sha256": "2c2e480e654c5735d836ab262ac15b0cfaaf99988ccf8f06d1b0472a6a713c12",
-    "quote_as_of": "2026-08-07T16:03:32Z",
+    "event_name": "workflow_dispatch",
+    "history_as_of": "2026-09-25",
+    "observed_at": "2026-09-28T06:30:00Z",
+    "payload_sha256": "edb34c943fb54da5d045a619144749504b4457108ed0eca7c902963cf222c3fc",
+    "quote_as_of": "2026-09-25T18:27:55Z",
     "run_attempt": 1,
-    "run_id": "31200268852",
+    "run_id": "36367836615",
     "schema_version": "provider_observation/v2",
-    "source_as_of": "2026-08-07"
+    "source_as_of": "2026-09-25"
   },
-  "resolution_state": "lkg_primary",
-  "retry": true,
+  "resolution_state": "fresh_primary",
+  "retry": false,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "stale": {
     "age_business_days": 8,
@@ -72,5 +85,5 @@
     "source_as_of": "2026-08-07"
   },
   "ticker": "TACU",
-  "updated_at": "2026-08-19T23:42:29Z"
+  "updated_at": "2026-09-28T06:30:00Z"
 }

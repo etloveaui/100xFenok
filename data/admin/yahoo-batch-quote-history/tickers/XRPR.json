@@ -144,62 +144,44 @@
       "run_id": "31562660637",
       "schedule": "7 2 * * 0-5",
       "shard": "37/72"
+    },
+    {
+      "attempts_used": 1,
+      "event_name": "workflow_dispatch",
+      "failures": [],
+      "latency_ms": 424,
+      "natural": false,
+      "observed_at": "2026-09-28T06:30:00Z",
+      "outcome": "fresh",
+      "run_attempt": 1,
+      "run_id": "36367836615",
+      "schedule": "",
+      "shard": ""
     }
   ],
   "current": {
-    "fetched_at": "2026-08-12T04:20:46Z",
-    "history_as_of": "2026-08-11",
-    "path": "data/admin/yahoo-batch-quote-history/lkg/XRPR.json",
-    "payload_sha256": "81713285a4c392c804baade48d4597713d7c349b1083bd94a57412437725f00f",
-    "quote_as_of": "2026-08-11T19:59:45Z",
-    "source_as_of": "2026-08-11"
+    "fetched_at": "2026-09-28T06:47:28Z",
+    "history_as_of": "2026-09-25",
+    "path": "data/yf/finance/XRPR.json",
+    "payload_sha256": "83c07b2661bdd93cc7feea9f0b494229b5e0051dbd326ec40745353500d7b818",
+    "quote_as_of": "2026-09-25T19:59:11Z",
+    "source_as_of": "2026-09-25"
   },
   "discovered_from": [
     "stockanalysis_etf"
   ],
   "last_attempt": {
     "attempts_used": 1,
-    "event_name": "schedule",
-    "failures": [
-      {
-        "attempt": 1,
-        "error": "YFDataException: XRPR: No Fund data found.",
-        "source": "provider_safe_call"
-      },
-      {
-        "attempt": 1,
-        "error": "YFDataException: XRPR: No Fund data found.",
-        "source": "provider_safe_call"
-      },
-      {
-        "attempt": 1,
-        "error": "YFDataException: XRPR: No Fund data found.",
-        "source": "provider_safe_call"
-      },
-      {
-        "attempt": 1,
-        "error": "YFDataException: XRPR: No Fund data found.",
-        "source": "provider_safe_call"
-      },
-      {
-        "attempt": 1,
-        "error": "YFDataException: XRPR: No Fund data found.",
-        "source": "provider_safe_call"
-      },
-      {
-        "attempt": 1,
-        "error": "YFDataException: XRPR: No Fund data found.",
-        "source": "provider_safe_call"
-      }
-    ],
-    "latency_ms": 525,
-    "natural": true,
-    "observed_at": "2026-08-12T04:17:21Z",
+    "event_name": "workflow_dispatch",
+    "failures": [],
+    "latency_ms": 424,
+    "natural": false,
+    "observed_at": "2026-09-28T06:30:00Z",
     "outcome": "fresh",
     "run_attempt": 1,
-    "run_id": "31562660637",
-    "schedule": "7 2 * * 0-5",
-    "shard": "37/72"
+    "run_id": "36367836615",
+    "schedule": "",
+    "shard": ""
   },
   "lkg": {
     "fetched_at": "2026-08-12T04:20:46Z",
@@ -211,18 +193,18 @@
   },
   "promotion_contract": "provider_observation/v2",
   "provider_observation": {
-    "event_name": "schedule",
-    "history_as_of": "2026-08-11",
-    "observed_at": "2026-08-12T04:17:21Z",
-    "payload_sha256": "27c9bfe9cc8906d0494f382a1c5388f5638ed29e732437c9903314d6094ef1bf",
-    "quote_as_of": "2026-08-11T19:59:45Z",
+    "event_name": "workflow_dispatch",
+    "history_as_of": "2026-09-25",
+    "observed_at": "2026-09-28T06:30:00Z",
+    "payload_sha256": "f33647cd2c8775d366057461e2c48a28db47475f551777b955480f3baa51bc80",
+    "quote_as_of": "2026-09-25T19:59:11Z",
     "run_attempt": 1,
-    "run_id": "31562660637",
+    "run_id": "36367836615",
     "schema_version": "provider_observation/v2",
-    "source_as_of": "2026-08-11"
+    "source_as_of": "2026-09-25"
   },
-  "resolution_state": "lkg_primary",
-  "retry": true,
+  "resolution_state": "fresh_primary",
+  "retry": false,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "stale": {
     "age_business_days": 7,
@@ -235,5 +217,5 @@
     "source_as_of": "2026-08-11"
   },
   "ticker": "XRPR",
-  "updated_at": "2026-08-20T14:20:12Z"
+  "updated_at": "2026-09-28T06:30:00Z"
 }

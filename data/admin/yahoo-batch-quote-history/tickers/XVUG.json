@@ -2,19 +2,6 @@
   "attempts": [
     {
       "attempts_used": 1,
-      "event_name": "schedule",
-      "failures": [],
-      "latency_ms": 494,
-      "natural": true,
-      "observed_at": "2026-08-29T04:12:42Z",
-      "outcome": "fresh",
-      "run_attempt": 1,
-      "run_id": "33233193884",
-      "schedule": "20 23 * * 1-5",
-      "shard": "0/5"
-    },
-    {
-      "attempts_used": 1,
       "error": "recovery_not_advanced_by_provider",
       "event_name": "schedule",
       "failures": [],
@@ -194,6 +181,26 @@
       "run_id": "36082706783",
       "schedule": "20 23 * * 1-5",
       "shard": "0/5"
+    },
+    {
+      "attempts_used": 1,
+      "error": "foreign_writer_conflict",
+      "event_name": "workflow_dispatch",
+      "failures": [
+        {
+          "attempt": 1,
+          "error": "AttributeError: 'Index' object has no attribute 'date'",
+          "source": "provider_safe_call"
+        }
+      ],
+      "latency_ms": 466,
+      "natural": false,
+      "observed_at": "2026-09-28T06:30:00Z",
+      "outcome": "failed",
+      "run_attempt": 1,
+      "run_id": "36367836615",
+      "schedule": "",
+      "shard": ""
     }
   ],
   "current": {
@@ -209,17 +216,23 @@
   ],
   "last_attempt": {
     "attempts_used": 1,
-    "error": "recovery_not_advanced_by_provider",
-    "event_name": "schedule",
-    "failures": [],
-    "latency_ms": 412,
-    "natural": true,
-    "observed_at": "2026-09-25T01:37:44Z",
+    "error": "foreign_writer_conflict",
+    "event_name": "workflow_dispatch",
+    "failures": [
+      {
+        "attempt": 1,
+        "error": "AttributeError: 'Index' object has no attribute 'date'",
+        "source": "provider_safe_call"
+      }
+    ],
+    "latency_ms": 466,
+    "natural": false,
+    "observed_at": "2026-09-28T06:30:00Z",
     "outcome": "failed",
     "run_attempt": 1,
-    "run_id": "36082706783",
-    "schedule": "20 23 * * 1-5",
-    "shard": "0/5"
+    "run_id": "36367836615",
+    "schedule": "",
+    "shard": ""
   },
   "last_recovered_failure": {
     "attempts_used": 2,
@@ -264,13 +277,13 @@
     "run_id": "29544227703"
   },
   "latest_promotion_deferral": {
-    "event_name": "schedule",
-    "observed_at": "2026-09-25T01:37:44Z",
-    "provider_history_as_of": "2026-08-27",
+    "event_name": "workflow_dispatch",
+    "observed_at": "2026-09-28T06:30:00Z",
+    "provider_history_as_of": "2026-08-20",
     "provider_quote_as_of": "2026-08-20T19:22:34Z",
-    "reason": "recovery_not_advanced_by_provider",
+    "reason": "foreign_writer_conflict",
     "run_attempt": 1,
-    "run_id": "36082706783"
+    "run_id": "36367836615"
   },
   "lkg": {
     "fetched_at": "2026-08-29T04:17:40Z",
@@ -311,5 +324,5 @@
     "source_as_of": "2026-08-20T19:22:34Z"
   },
   "ticker": "XVUG",
-  "updated_at": "2026-09-25T01:37:44Z"
+  "updated_at": "2026-09-28T06:30:00Z"
 }

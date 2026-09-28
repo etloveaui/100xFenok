@@ -110,40 +110,46 @@
       "run_id": "31648785047",
       "schedule": "7 22 * * 0-5",
       "shard": "47/72"
+    },
+    {
+      "attempts_used": 1,
+      "event_name": "workflow_dispatch",
+      "failures": [],
+      "latency_ms": 478,
+      "natural": false,
+      "observed_at": "2026-09-28T06:30:00Z",
+      "outcome": "fresh",
+      "run_attempt": 1,
+      "run_id": "36367836615",
+      "schedule": "",
+      "shard": ""
     }
   ],
   "current": {
-    "fetched_at": "2026-08-05T23:18:18Z",
-    "history_as_of": "2026-08-05",
-    "path": "data/admin/yahoo-batch-quote-history/lkg/UJUL.json",
-    "payload_sha256": "44cf3e587e470f715f35a7810784623acb3864645974e07103d24bc27a6472c7",
-    "quote_as_of": "2026-08-05T19:42:59Z",
-    "source_as_of": "2026-08-05"
+    "fetched_at": "2026-09-28T06:37:26Z",
+    "history_as_of": "2026-09-25",
+    "path": "data/yf/finance/UJUL.json",
+    "payload_sha256": "53469ca6e556b91d674586e2b7145fbe667e89f0f9686c51fcd8a6d929e716e5",
+    "quote_as_of": "2026-09-25T19:43:11Z",
+    "source_as_of": "2026-09-25"
   },
   "discovered_from": [
     "stockanalysis_etf"
   ],
   "last_attempt": {
     "attempts_used": 1,
-    "error": "ValueError: quote_as_of is unavailable for UJUL despite available history",
-    "event_name": "schedule",
-    "failures": [
-      {
-        "attempt": 1,
-        "error": "YFRateLimitError: Too Many Requests. Rate limited. Try after a while.",
-        "source": "provider_safe_call"
-      }
-    ],
-    "latency_ms": 538,
-    "natural": true,
-    "observed_at": "2026-08-12T22:55:30Z",
-    "outcome": "failed",
+    "event_name": "workflow_dispatch",
+    "failures": [],
+    "latency_ms": 478,
+    "natural": false,
+    "observed_at": "2026-09-28T06:30:00Z",
+    "outcome": "fresh",
     "run_attempt": 1,
-    "run_id": "31648785047",
-    "schedule": "7 22 * * 0-5",
-    "shard": "47/72"
+    "run_id": "36367836615",
+    "schedule": "",
+    "shard": ""
   },
-  "latest_failure": {
+  "last_recovered_failure": {
     "attempts_used": 1,
     "data_loss": false,
     "deferred_acquisition": false,
@@ -171,18 +177,23 @@
   },
   "promotion_contract": "provider_observation/v2",
   "provider_observation": {
-    "event_name": "schedule",
-    "history_as_of": "2026-08-05",
-    "observed_at": "2026-08-05T23:14:16Z",
-    "payload_sha256": "7ebf7871d5e61a043d1594f563170c75b1acc06afdfbdf2695be8bbb6cea3a65",
-    "quote_as_of": "2026-08-05T19:42:59Z",
+    "event_name": "workflow_dispatch",
+    "history_as_of": "2026-09-25",
+    "observed_at": "2026-09-28T06:30:00Z",
+    "payload_sha256": "a1a76ed12c1ea641c679749dd6d164d6fa5eb6a3dabe6f169c9d1928ebb3938a",
+    "quote_as_of": "2026-09-25T19:43:11Z",
     "run_attempt": 1,
-    "run_id": "31055557073",
+    "run_id": "36367836615",
     "schema_version": "provider_observation/v2",
-    "source_as_of": "2026-08-05"
+    "source_as_of": "2026-09-25"
   },
-  "resolution_state": "lkg_primary",
-  "retry": true,
+  "recovered_at": "2026-09-28T06:30:00Z",
+  "recovered_from_run_id": "31648785047",
+  "recovery_event_name": "workflow_dispatch",
+  "recovery_run_attempt": 1,
+  "recovery_run_id": "36367836615",
+  "resolution_state": "fresh_primary",
+  "retry": false,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "stale": {
     "age_business_days": 15,
@@ -195,5 +206,5 @@
     "source_as_of": "2026-06-18"
   },
   "ticker": "UJUL",
-  "updated_at": "2026-08-12T22:55:30Z"
+  "updated_at": "2026-09-28T06:30:00Z"
 }

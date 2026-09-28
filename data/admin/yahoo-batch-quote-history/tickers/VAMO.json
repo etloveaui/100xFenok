@@ -12,31 +12,44 @@
       "run_id": "31456720047",
       "schedule": "7 2 * * 0-5",
       "shard": "25/72"
+    },
+    {
+      "attempts_used": 1,
+      "event_name": "workflow_dispatch",
+      "failures": [],
+      "latency_ms": 513,
+      "natural": false,
+      "observed_at": "2026-09-28T06:30:00Z",
+      "outcome": "fresh",
+      "run_attempt": 1,
+      "run_id": "36367836615",
+      "schedule": "",
+      "shard": ""
     }
   ],
   "current": {
-    "fetched_at": "2026-08-11T04:02:24Z",
-    "history_as_of": "2026-08-10",
-    "path": "data/admin/yahoo-batch-quote-history/lkg/VAMO.json",
-    "payload_sha256": "0bbfd2160b62c033ce26b8e798f398f565da194f1de1fc66b7c80e497f3ed78d",
-    "quote_as_of": "2026-08-10T15:13:40Z",
-    "source_as_of": "2026-08-10"
+    "fetched_at": "2026-09-28T06:39:54Z",
+    "history_as_of": "2026-09-25",
+    "path": "data/yf/finance/VAMO.json",
+    "payload_sha256": "28943cc00acaaf9784a7d5c69846cf5c23cb5dba39338584823134063f444e99",
+    "quote_as_of": "2026-09-25T19:51:44Z",
+    "source_as_of": "2026-09-25"
   },
   "discovered_from": [
     "stockanalysis_etf"
   ],
   "last_attempt": {
     "attempts_used": 1,
-    "event_name": "schedule",
+    "event_name": "workflow_dispatch",
     "failures": [],
-    "latency_ms": 666,
-    "natural": true,
-    "observed_at": "2026-08-11T03:59:23Z",
+    "latency_ms": 513,
+    "natural": false,
+    "observed_at": "2026-09-28T06:30:00Z",
     "outcome": "fresh",
     "run_attempt": 1,
-    "run_id": "31456720047",
-    "schedule": "7 2 * * 0-5",
-    "shard": "25/72"
+    "run_id": "36367836615",
+    "schedule": "",
+    "shard": ""
   },
   "lkg": {
     "fetched_at": "2026-08-11T04:02:24Z",
@@ -48,18 +61,18 @@
   },
   "promotion_contract": "provider_observation/v2",
   "provider_observation": {
-    "event_name": "schedule",
-    "history_as_of": "2026-08-10",
-    "observed_at": "2026-08-11T03:59:23Z",
-    "payload_sha256": "195e08dbf951679a4a17567db1b3fd00ae8355038b461f006b7b52d1f9f1de34",
-    "quote_as_of": "2026-08-10T15:13:40Z",
+    "event_name": "workflow_dispatch",
+    "history_as_of": "2026-09-25",
+    "observed_at": "2026-09-28T06:30:00Z",
+    "payload_sha256": "20cee721d940b64a7dfcbd273ddae24ce1ba4ab268b711e1e3d39db3b1a63fff",
+    "quote_as_of": "2026-09-25T19:51:44Z",
     "run_attempt": 1,
-    "run_id": "31456720047",
+    "run_id": "36367836615",
     "schema_version": "provider_observation/v2",
-    "source_as_of": "2026-08-10"
+    "source_as_of": "2026-09-25"
   },
-  "resolution_state": "lkg_primary",
-  "retry": true,
+  "resolution_state": "fresh_primary",
+  "retry": false,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "stale": {
     "age_business_days": 7,
@@ -72,5 +85,5 @@
     "source_as_of": "2026-08-10"
   },
   "ticker": "VAMO",
-  "updated_at": "2026-08-19T23:42:29Z"
+  "updated_at": "2026-09-28T06:30:00Z"
 }

@@ -103,31 +103,44 @@
       "run_id": "31143656628",
       "schedule": "7 0 * * 0-5",
       "shard": "60/72"
+    },
+    {
+      "attempts_used": 1,
+      "event_name": "workflow_dispatch",
+      "failures": [],
+      "latency_ms": 429,
+      "natural": false,
+      "observed_at": "2026-09-28T06:30:00Z",
+      "outcome": "fresh",
+      "run_attempt": 1,
+      "run_id": "36367836615",
+      "schedule": "",
+      "shard": ""
     }
   ],
   "current": {
-    "fetched_at": "2026-08-07T03:17:53Z",
-    "history_as_of": "2026-08-06",
-    "path": "data/admin/yahoo-batch-quote-history/lkg/XBOX.json",
-    "payload_sha256": "d234796c93f2eb22a95ad27e4c1e5a1269453e48b852ee3ae660cea0a06b4c9b",
-    "quote_as_of": "2026-08-06T20:00:00Z",
-    "source_as_of": "2026-08-06"
+    "fetched_at": "2026-09-28T06:44:56Z",
+    "history_as_of": "2026-09-25",
+    "path": "data/yf/finance/XBOX.json",
+    "payload_sha256": "03a3a2cbbfc05a9b860f5b9a95535d7bbbecd68ae06ff3f0b145cefa1954a349",
+    "quote_as_of": "2026-09-25T20:00:00Z",
+    "source_as_of": "2026-09-25"
   },
   "discovered_from": [
     "stockanalysis_etf"
   ],
   "last_attempt": {
     "attempts_used": 1,
-    "event_name": "schedule",
+    "event_name": "workflow_dispatch",
     "failures": [],
-    "latency_ms": 548,
-    "natural": true,
-    "observed_at": "2026-08-07T03:14:39Z",
+    "latency_ms": 429,
+    "natural": false,
+    "observed_at": "2026-09-28T06:30:00Z",
     "outcome": "fresh",
     "run_attempt": 1,
-    "run_id": "31143656628",
-    "schedule": "7 0 * * 0-5",
-    "shard": "60/72"
+    "run_id": "36367836615",
+    "schedule": "",
+    "shard": ""
   },
   "lkg": {
     "fetched_at": "2026-08-07T03:17:53Z",
@@ -139,18 +152,18 @@
   },
   "promotion_contract": "provider_observation/v2",
   "provider_observation": {
-    "event_name": "schedule",
-    "history_as_of": "2026-08-06",
-    "observed_at": "2026-08-07T03:14:39Z",
-    "payload_sha256": "8c1ccba2607de32d01b1efe0cf5e1558c1c81631251aafc0c2e7c227b5565101",
-    "quote_as_of": "2026-08-06T20:00:00Z",
+    "event_name": "workflow_dispatch",
+    "history_as_of": "2026-09-25",
+    "observed_at": "2026-09-28T06:30:00Z",
+    "payload_sha256": "2a02881a43fd36ea9486b193095e634bb74292073d8fad1d336c176ce1375da0",
+    "quote_as_of": "2026-09-25T20:00:00Z",
     "run_attempt": 1,
-    "run_id": "31143656628",
+    "run_id": "36367836615",
     "schema_version": "provider_observation/v2",
-    "source_as_of": "2026-08-06"
+    "source_as_of": "2026-09-25"
   },
-  "resolution_state": "lkg_primary",
-  "retry": true,
+  "resolution_state": "fresh_primary",
+  "retry": false,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "stale": {
     "age_business_days": 9,
@@ -163,5 +176,5 @@
     "source_as_of": "2026-08-06"
   },
   "ticker": "XBOX",
-  "updated_at": "2026-08-19T23:42:29Z"
+  "updated_at": "2026-09-28T06:30:00Z"
 }

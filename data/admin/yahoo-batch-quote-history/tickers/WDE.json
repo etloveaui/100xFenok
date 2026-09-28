@@ -5,20 +5,6 @@
       "error": "recovery_not_advanced_by_provider",
       "event_name": "schedule",
       "failures": [],
-      "latency_ms": 1105,
-      "natural": true,
-      "observed_at": "2026-08-10T19:09:16Z",
-      "outcome": "failed",
-      "run_attempt": 1,
-      "run_id": "31422533403",
-      "schedule": "7 18 * * 0-5",
-      "shard": "21/72"
-    },
-    {
-      "attempts_used": 1,
-      "error": "recovery_not_advanced_by_provider",
-      "event_name": "schedule",
-      "failures": [],
       "latency_ms": 832,
       "natural": true,
       "observed_at": "2026-08-10T22:52:08Z",
@@ -199,40 +185,46 @@
       "run_id": "31648785047",
       "schedule": "7 22 * * 0-5",
       "shard": "47/72"
+    },
+    {
+      "attempts_used": 1,
+      "event_name": "workflow_dispatch",
+      "failures": [],
+      "latency_ms": 475,
+      "natural": false,
+      "observed_at": "2026-09-28T06:30:00Z",
+      "outcome": "fresh",
+      "run_attempt": 1,
+      "run_id": "36367836615",
+      "schedule": "",
+      "shard": ""
     }
   ],
   "current": {
-    "fetched_at": "2026-08-12T04:18:46Z",
-    "history_as_of": "2026-08-11",
-    "path": "data/admin/yahoo-batch-quote-history/lkg/WDE.json",
-    "payload_sha256": "c64d0fd98f7989e9b3bf44da1e91ce424ef4bef7fa1510c98abfc6eecef06bd8",
-    "quote_as_of": "2026-05-21T14:19:45Z",
-    "source_as_of": "2026-05-21T14:19:45Z"
+    "fetched_at": "2026-09-28T06:43:14Z",
+    "history_as_of": "2026-09-25",
+    "path": "data/yf/finance/WDE.json",
+    "payload_sha256": "932835846381c3df41070c8097bd341ed2cdef27cb87f36698ac655ddf0ee276",
+    "quote_as_of": "2026-09-25T14:25:21Z",
+    "source_as_of": "2026-09-25"
   },
   "discovered_from": [
     "stockanalysis_etf"
   ],
   "last_attempt": {
     "attempts_used": 1,
-    "error": "ValueError: quote_as_of is unavailable for WDE despite available history",
-    "event_name": "schedule",
-    "failures": [
-      {
-        "attempt": 1,
-        "error": "YFRateLimitError: Too Many Requests. Rate limited. Try after a while.",
-        "source": "provider_safe_call"
-      }
-    ],
-    "latency_ms": 422,
-    "natural": true,
-    "observed_at": "2026-08-12T22:55:30Z",
-    "outcome": "failed",
+    "event_name": "workflow_dispatch",
+    "failures": [],
+    "latency_ms": 475,
+    "natural": false,
+    "observed_at": "2026-09-28T06:30:00Z",
+    "outcome": "fresh",
     "run_attempt": 1,
-    "run_id": "31648785047",
-    "schedule": "7 22 * * 0-5",
-    "shard": "47/72"
+    "run_id": "36367836615",
+    "schedule": "",
+    "shard": ""
   },
-  "latest_failure": {
+  "last_recovered_failure": {
     "attempts_used": 1,
     "data_loss": false,
     "deferred_acquisition": false,
@@ -260,18 +252,23 @@
   },
   "promotion_contract": "provider_observation/v2",
   "provider_observation": {
-    "event_name": "schedule",
-    "history_as_of": "2026-08-11",
-    "observed_at": "2026-08-12T04:17:21Z",
-    "payload_sha256": "13d6da4dd45dac0ab4a141bd8a637e9c6fb4484d2b03a7c064a2c29ee1042a23",
-    "quote_as_of": "2026-05-21T14:19:45Z",
+    "event_name": "workflow_dispatch",
+    "history_as_of": "2026-09-25",
+    "observed_at": "2026-09-28T06:30:00Z",
+    "payload_sha256": "e659ebdbd0cc533213476f72d54339f7ecd8cee67620920bc105d13b52285543",
+    "quote_as_of": "2026-09-25T14:25:21Z",
     "run_attempt": 1,
-    "run_id": "31562660637",
+    "run_id": "36367836615",
     "schema_version": "provider_observation/v2",
-    "source_as_of": "2026-05-21T14:19:45Z"
+    "source_as_of": "2026-09-25"
   },
-  "resolution_state": "lkg_primary",
-  "retry": true,
+  "recovered_at": "2026-09-28T06:30:00Z",
+  "recovered_from_run_id": "31648785047",
+  "recovery_event_name": "workflow_dispatch",
+  "recovery_run_attempt": 1,
+  "recovery_run_id": "36367836615",
+  "resolution_state": "fresh_primary",
+  "retry": false,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "stale": {
     "age_business_days": 56,
@@ -284,5 +281,5 @@
     "source_as_of": "2026-05-21T14:19:45Z"
   },
   "ticker": "WDE",
-  "updated_at": "2026-08-12T22:55:30Z"
+  "updated_at": "2026-09-28T06:30:00Z"
 }

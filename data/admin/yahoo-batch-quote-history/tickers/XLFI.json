@@ -25,31 +25,44 @@
       "run_id": "31111230701",
       "schedule": "7 12 * * 0-5",
       "shard": "54/72"
+    },
+    {
+      "attempts_used": 1,
+      "event_name": "workflow_dispatch",
+      "failures": [],
+      "latency_ms": 442,
+      "natural": false,
+      "observed_at": "2026-09-28T06:30:00Z",
+      "outcome": "fresh",
+      "run_attempt": 1,
+      "run_id": "36367836615",
+      "schedule": "",
+      "shard": ""
     }
   ],
   "current": {
-    "fetched_at": "2026-08-06T14:36:40Z",
-    "history_as_of": "2026-08-06",
-    "path": "data/admin/yahoo-batch-quote-history/lkg/XLFI.json",
-    "payload_sha256": "399e82db80feba4f20e1893c38253cd94e5ab0bfc2b8bf2284093e5a8dc094a4",
-    "quote_as_of": "2026-08-06T14:36:31Z",
-    "source_as_of": "2026-08-06"
+    "fetched_at": "2026-09-28T06:46:06Z",
+    "history_as_of": "2026-09-25",
+    "path": "data/yf/finance/XLFI.json",
+    "payload_sha256": "a051b3d57f78e19684c6ca98a454109c413e7086d9291bec359d5333fcae47c6",
+    "quote_as_of": "2026-09-25T19:59:46Z",
+    "source_as_of": "2026-09-25"
   },
   "discovered_from": [
     "stockanalysis_etf"
   ],
   "last_attempt": {
     "attempts_used": 1,
-    "event_name": "schedule",
+    "event_name": "workflow_dispatch",
     "failures": [],
-    "latency_ms": 884,
-    "natural": true,
-    "observed_at": "2026-08-06T14:33:02Z",
+    "latency_ms": 442,
+    "natural": false,
+    "observed_at": "2026-09-28T06:30:00Z",
     "outcome": "fresh",
     "run_attempt": 1,
-    "run_id": "31111230701",
-    "schedule": "7 12 * * 0-5",
-    "shard": "54/72"
+    "run_id": "36367836615",
+    "schedule": "",
+    "shard": ""
   },
   "lkg": {
     "fetched_at": "2026-08-06T14:36:40Z",
@@ -61,18 +74,18 @@
   },
   "promotion_contract": "provider_observation/v2",
   "provider_observation": {
-    "event_name": "schedule",
-    "history_as_of": "2026-08-06",
-    "observed_at": "2026-08-06T14:33:02Z",
-    "payload_sha256": "2008f582c05e1a2dbdd5f6d1fba88c4f641f4231ed7bede10da874d997af747a",
-    "quote_as_of": "2026-08-06T14:36:31Z",
+    "event_name": "workflow_dispatch",
+    "history_as_of": "2026-09-25",
+    "observed_at": "2026-09-28T06:30:00Z",
+    "payload_sha256": "180bdb2ffd622db62c9fadf35804ced9ed6968f6166d8fcebd0cad25368ee75d",
+    "quote_as_of": "2026-09-25T19:59:46Z",
     "run_attempt": 1,
-    "run_id": "31111230701",
+    "run_id": "36367836615",
     "schema_version": "provider_observation/v2",
-    "source_as_of": "2026-08-06"
+    "source_as_of": "2026-09-25"
   },
-  "resolution_state": "lkg_primary",
-  "retry": true,
+  "resolution_state": "fresh_primary",
+  "retry": false,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "stale": {
     "age_business_days": 9,
@@ -85,5 +98,5 @@
     "source_as_of": "2026-08-06"
   },
   "ticker": "XLFI",
-  "updated_at": "2026-08-19T23:42:29Z"
+  "updated_at": "2026-09-28T06:30:00Z"
 }

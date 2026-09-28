@@ -101,62 +101,44 @@
       "run_id": "31290251671",
       "schedule": "7 0 * * 0-5",
       "shard": "0/72"
+    },
+    {
+      "attempts_used": 1,
+      "event_name": "workflow_dispatch",
+      "failures": [],
+      "latency_ms": 457,
+      "natural": false,
+      "observed_at": "2026-09-28T06:30:00Z",
+      "outcome": "fresh",
+      "run_attempt": 1,
+      "run_id": "36367836615",
+      "schedule": "",
+      "shard": ""
     }
   ],
   "current": {
-    "fetched_at": "2026-08-09T02:27:13Z",
-    "history_as_of": "2026-08-07",
-    "path": "data/admin/yahoo-batch-quote-history/lkg/VOXP.json",
-    "payload_sha256": "91b623d74514dcf266ae852f69ec64edbdade2301bb7bde7b1ccef38e10f37a8",
-    "quote_as_of": "2026-08-04T15:40:26Z",
-    "source_as_of": "2026-08-04T15:40:26Z"
+    "fetched_at": "2026-09-28T06:41:53Z",
+    "history_as_of": "2026-09-25",
+    "path": "data/yf/finance/VOXP.json",
+    "payload_sha256": "c9222e4d9fff84c6cb471e6567d034a1f18084b9b603cafd4c3a224352a39da4",
+    "quote_as_of": "2026-09-25T19:46:55Z",
+    "source_as_of": "2026-09-25"
   },
   "discovered_from": [
     "stockanalysis_etf"
   ],
   "last_attempt": {
     "attempts_used": 1,
-    "event_name": "schedule",
-    "failures": [
-      {
-        "attempt": 1,
-        "error": "YFDataException: VOXP: No Fund data found.",
-        "source": "provider_safe_call"
-      },
-      {
-        "attempt": 1,
-        "error": "YFDataException: VOXP: No Fund data found.",
-        "source": "provider_safe_call"
-      },
-      {
-        "attempt": 1,
-        "error": "YFDataException: VOXP: No Fund data found.",
-        "source": "provider_safe_call"
-      },
-      {
-        "attempt": 1,
-        "error": "YFDataException: VOXP: No Fund data found.",
-        "source": "provider_safe_call"
-      },
-      {
-        "attempt": 1,
-        "error": "YFDataException: VOXP: No Fund data found.",
-        "source": "provider_safe_call"
-      },
-      {
-        "attempt": 1,
-        "error": "YFDataException: VOXP: No Fund data found.",
-        "source": "provider_safe_call"
-      }
-    ],
-    "latency_ms": 1350,
-    "natural": true,
-    "observed_at": "2026-08-09T02:25:42Z",
+    "event_name": "workflow_dispatch",
+    "failures": [],
+    "latency_ms": 457,
+    "natural": false,
+    "observed_at": "2026-09-28T06:30:00Z",
     "outcome": "fresh",
     "run_attempt": 1,
-    "run_id": "31290251671",
-    "schedule": "7 0 * * 0-5",
-    "shard": "0/72"
+    "run_id": "36367836615",
+    "schedule": "",
+    "shard": ""
   },
   "lkg": {
     "fetched_at": "2026-08-09T02:27:13Z",
@@ -168,18 +150,18 @@
   },
   "promotion_contract": "provider_observation/v2",
   "provider_observation": {
-    "event_name": "schedule",
-    "history_as_of": "2026-08-07",
-    "observed_at": "2026-08-09T02:25:42Z",
-    "payload_sha256": "8a05f4b01eb8858b2c2010eb5186f9c208217bccbc94d556c97da1f7b018f242",
-    "quote_as_of": "2026-08-04T15:40:26Z",
+    "event_name": "workflow_dispatch",
+    "history_as_of": "2026-09-25",
+    "observed_at": "2026-09-28T06:30:00Z",
+    "payload_sha256": "6226b5e4d4209e97dc9b8520e8f9aee0761a3ffad941861df953c88008d1a518",
+    "quote_as_of": "2026-09-25T19:46:55Z",
     "run_attempt": 1,
-    "run_id": "31290251671",
+    "run_id": "36367836615",
     "schema_version": "provider_observation/v2",
-    "source_as_of": "2026-08-04T15:40:26Z"
+    "source_as_of": "2026-09-25"
   },
-  "resolution_state": "lkg_primary",
-  "retry": true,
+  "resolution_state": "fresh_primary",
+  "retry": false,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "stale": {
     "age_business_days": 7,
@@ -192,5 +174,5 @@
     "source_as_of": "2026-08-04T15:40:26Z"
   },
   "ticker": "VOXP",
-  "updated_at": "2026-08-13T00:06:17Z"
+  "updated_at": "2026-09-28T06:30:00Z"
 }

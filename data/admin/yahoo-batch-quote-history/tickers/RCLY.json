@@ -198,7 +198,7 @@
   "current": {
     "fetched_at": "2026-09-28T06:09:43Z",
     "history_as_of": "2026-09-25",
-    "path": "data/yf/finance/RCLY.json",
+    "path": "data/admin/yahoo-batch-quote-history/lkg/RCLY.json",
     "payload_sha256": "45684fbae44714cae15874bc2afee506e6584cabe78b72cdcbcb7ace2e32ec68",
     "quote_as_of": "2026-09-10T13:52:21Z",
     "source_as_of": "2026-09-10T13:52:21Z"
@@ -220,12 +220,12 @@
     "shard": ""
   },
   "lkg": {
-    "fetched_at": "2026-08-12T04:18:36Z",
-    "history_as_of": "2026-08-11",
+    "fetched_at": "2026-09-28T06:09:43Z",
+    "history_as_of": "2026-09-25",
     "path": "data/admin/yahoo-batch-quote-history/lkg/RCLY.json",
-    "payload_sha256": "b698eefb06fd88a33375d7155b708ed1f3bbc5a7cca447a31da98c43dc934da7",
-    "quote_as_of": "2026-05-04T14:23:04Z",
-    "source_as_of": "2026-05-04T14:23:04Z"
+    "payload_sha256": "45684fbae44714cae15874bc2afee506e6584cabe78b72cdcbcb7ace2e32ec68",
+    "quote_as_of": "2026-09-10T13:52:21Z",
+    "source_as_of": "2026-09-10T13:52:21Z"
   },
   "promotion_contract": "provider_observation/v2",
   "provider_observation": {
@@ -239,19 +239,19 @@
     "schema_version": "provider_observation/v2",
     "source_as_of": "2026-09-10T13:52:21Z"
   },
-  "resolution_state": "fresh_primary",
-  "retry": false,
+  "resolution_state": "lkg_primary",
+  "retry": true,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "stale": {
-    "age_business_days": 69,
-    "classified_at": "2026-08-12T05:45:23Z",
-    "classified_run_id": "31567478446",
+    "age_business_days": 12,
+    "classified_at": "2026-09-28T06:30:00Z",
+    "classified_run_id": "36367836615",
     "expected_resolution": "next_natural_yahoo_run",
     "max_business_days": 6,
-    "message": "RCLY holds LKG because Yahoo source date 2026-05-04T14:23:04Z is 69 business days old, beyond the 6-day bound; it will retry on the next natural Yahoo run.",
+    "message": "RCLY holds LKG because Yahoo source date 2026-09-10T13:52:21Z is 12 business days old, beyond the 6-day bound; it will retry on the next natural Yahoo run.",
     "reason": "source_age_exceeds_lane_bound",
-    "source_as_of": "2026-05-04T14:23:04Z"
+    "source_as_of": "2026-09-10T13:52:21Z"
   },
   "ticker": "RCLY",
-  "updated_at": "2026-09-28T06:02:24Z"
+  "updated_at": "2026-09-28T06:30:00Z"
 }

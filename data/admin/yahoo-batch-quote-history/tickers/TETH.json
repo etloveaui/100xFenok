@@ -145,62 +145,44 @@
       "run_id": "31422533403",
       "schedule": "7 18 * * 0-5",
       "shard": "21/72"
+    },
+    {
+      "attempts_used": 1,
+      "event_name": "workflow_dispatch",
+      "failures": [],
+      "latency_ms": 495,
+      "natural": false,
+      "observed_at": "2026-09-28T06:30:00Z",
+      "outcome": "fresh",
+      "run_attempt": 1,
+      "run_id": "36367836615",
+      "schedule": "",
+      "shard": ""
     }
   ],
   "current": {
-    "fetched_at": "2026-08-10T19:13:51Z",
-    "history_as_of": "2026-08-10",
-    "path": "data/admin/yahoo-batch-quote-history/lkg/TETH.json",
-    "payload_sha256": "3066851229ba6a621720add3f9a7c303f1c562855ee09f5565bcd22aa8f9af4c",
-    "quote_as_of": "2026-08-10T19:09:01Z",
-    "source_as_of": "2026-08-10"
+    "fetched_at": "2026-09-28T06:32:05Z",
+    "history_as_of": "2026-09-25",
+    "path": "data/yf/finance/TETH.json",
+    "payload_sha256": "05ed6915aa6c77566244d7d69a12be8e0fa2c9fdef494d2e265e7483b39e22d1",
+    "quote_as_of": "2026-09-25T20:00:00Z",
+    "source_as_of": "2026-09-25"
   },
   "discovered_from": [
     "stockanalysis_etf"
   ],
   "last_attempt": {
     "attempts_used": 1,
-    "event_name": "schedule",
-    "failures": [
-      {
-        "attempt": 1,
-        "error": "YFDataException: TETH: No Fund data found.",
-        "source": "provider_safe_call"
-      },
-      {
-        "attempt": 1,
-        "error": "YFDataException: TETH: No Fund data found.",
-        "source": "provider_safe_call"
-      },
-      {
-        "attempt": 1,
-        "error": "YFDataException: TETH: No Fund data found.",
-        "source": "provider_safe_call"
-      },
-      {
-        "attempt": 1,
-        "error": "YFDataException: TETH: No Fund data found.",
-        "source": "provider_safe_call"
-      },
-      {
-        "attempt": 1,
-        "error": "YFDataException: TETH: No Fund data found.",
-        "source": "provider_safe_call"
-      },
-      {
-        "attempt": 1,
-        "error": "YFDataException: TETH: No Fund data found.",
-        "source": "provider_safe_call"
-      }
-    ],
-    "latency_ms": 961,
-    "natural": true,
-    "observed_at": "2026-08-10T19:09:16Z",
+    "event_name": "workflow_dispatch",
+    "failures": [],
+    "latency_ms": 495,
+    "natural": false,
+    "observed_at": "2026-09-28T06:30:00Z",
     "outcome": "fresh",
     "run_attempt": 1,
-    "run_id": "31422533403",
-    "schedule": "7 18 * * 0-5",
-    "shard": "21/72"
+    "run_id": "36367836615",
+    "schedule": "",
+    "shard": ""
   },
   "lkg": {
     "fetched_at": "2026-08-10T19:13:51Z",
@@ -212,18 +194,18 @@
   },
   "promotion_contract": "provider_observation/v2",
   "provider_observation": {
-    "event_name": "schedule",
-    "history_as_of": "2026-08-10",
-    "observed_at": "2026-08-10T19:09:16Z",
-    "payload_sha256": "f1826ea484a6cd01c289c4a063272506c86275ff8600ef45c032f8f0de4cb6c1",
-    "quote_as_of": "2026-08-10T19:09:01Z",
+    "event_name": "workflow_dispatch",
+    "history_as_of": "2026-09-25",
+    "observed_at": "2026-09-28T06:30:00Z",
+    "payload_sha256": "3ce247f73487d2e921a9f26e6875fb5c5db88dbc2986aa19c134871589a5423c",
+    "quote_as_of": "2026-09-25T20:00:00Z",
     "run_attempt": 1,
-    "run_id": "31422533403",
+    "run_id": "36367836615",
     "schema_version": "provider_observation/v2",
-    "source_as_of": "2026-08-10"
+    "source_as_of": "2026-09-25"
   },
-  "resolution_state": "lkg_primary",
-  "retry": true,
+  "resolution_state": "fresh_primary",
+  "retry": false,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "stale": {
     "age_business_days": 7,
@@ -236,5 +218,5 @@
     "source_as_of": "2026-08-10"
   },
   "ticker": "TETH",
-  "updated_at": "2026-08-19T23:42:29Z"
+  "updated_at": "2026-09-28T06:30:00Z"
 }

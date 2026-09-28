@@ -12,31 +12,44 @@
       "run_id": "31319162316",
       "schedule": "7 14 * * 0-5",
       "shard": "7/72"
+    },
+    {
+      "attempts_used": 1,
+      "event_name": "workflow_dispatch",
+      "failures": [],
+      "latency_ms": 500,
+      "natural": false,
+      "observed_at": "2026-09-28T06:30:00Z",
+      "outcome": "fresh",
+      "run_attempt": 1,
+      "run_id": "36367836615",
+      "schedule": "",
+      "shard": ""
     }
   ],
   "current": {
-    "fetched_at": "2026-08-09T14:48:52Z",
-    "history_as_of": "2026-08-07",
-    "path": "data/admin/yahoo-batch-quote-history/lkg/VMAX.json",
-    "payload_sha256": "a435ffb30df5aafca1b49d51935409a56f6bdc8f70507295569894bd53dc4a30",
-    "quote_as_of": "2026-08-05T19:45:44Z",
-    "source_as_of": "2026-08-05T19:45:44Z"
+    "fetched_at": "2026-09-28T06:41:27Z",
+    "history_as_of": "2026-09-25",
+    "path": "data/yf/finance/VMAX.json",
+    "payload_sha256": "b8170f500d942825c08cb33a48e1997585e80eca4ac626f13e0f970c82792a39",
+    "quote_as_of": "2026-09-24T16:52:55Z",
+    "source_as_of": "2026-09-24T16:52:55Z"
   },
   "discovered_from": [
     "stockanalysis_etf"
   ],
   "last_attempt": {
     "attempts_used": 1,
-    "event_name": "schedule",
+    "event_name": "workflow_dispatch",
     "failures": [],
-    "latency_ms": 673,
-    "natural": true,
-    "observed_at": "2026-08-09T14:44:24Z",
+    "latency_ms": 500,
+    "natural": false,
+    "observed_at": "2026-09-28T06:30:00Z",
     "outcome": "fresh",
     "run_attempt": 1,
-    "run_id": "31319162316",
-    "schedule": "7 14 * * 0-5",
-    "shard": "7/72"
+    "run_id": "36367836615",
+    "schedule": "",
+    "shard": ""
   },
   "lkg": {
     "fetched_at": "2026-08-09T14:48:52Z",
@@ -48,18 +61,18 @@
   },
   "promotion_contract": "provider_observation/v2",
   "provider_observation": {
-    "event_name": "schedule",
-    "history_as_of": "2026-08-07",
-    "observed_at": "2026-08-09T14:44:24Z",
-    "payload_sha256": "be4ea387c6a5cdb4782d8ecf1e94b28b253104154399cac1d3f592444bb91e6e",
-    "quote_as_of": "2026-08-05T19:45:44Z",
+    "event_name": "workflow_dispatch",
+    "history_as_of": "2026-09-25",
+    "observed_at": "2026-09-28T06:30:00Z",
+    "payload_sha256": "336bdfd58b1aace8d08788a3d7965b5c56e1b1bb6a25b6fc1ba9c8940dbda0fd",
+    "quote_as_of": "2026-09-24T16:52:55Z",
     "run_attempt": 1,
-    "run_id": "31319162316",
+    "run_id": "36367836615",
     "schema_version": "provider_observation/v2",
-    "source_as_of": "2026-08-05T19:45:44Z"
+    "source_as_of": "2026-09-24T16:52:55Z"
   },
-  "resolution_state": "lkg_primary",
-  "retry": true,
+  "resolution_state": "fresh_primary",
+  "retry": false,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "stale": {
     "age_business_days": 7,
@@ -72,5 +85,5 @@
     "source_as_of": "2026-08-05T19:45:44Z"
   },
   "ticker": "VMAX",
-  "updated_at": "2026-08-14T00:10:47Z"
+  "updated_at": "2026-09-28T06:30:00Z"
 }

@@ -52,6 +52,25 @@
       "run_id": "31620820614",
       "schedule": "7 16 * * 0-5",
       "shard": "44/72"
+    },
+    {
+      "attempts_used": 1,
+      "error": "chart quote equal-clock price conflict",
+      "event_name": "workflow_dispatch",
+      "failures": [
+        {
+          "attempt": 1,
+          "error": "chart quote equal-clock price conflict"
+        }
+      ],
+      "latency_ms": 0,
+      "natural": false,
+      "observed_at": "2026-09-28T06:30:00Z",
+      "outcome": "failed",
+      "run_attempt": 1,
+      "run_id": "36367836615",
+      "schedule": "",
+      "shard": ""
     }
   ],
   "current": {
@@ -67,16 +86,39 @@
   ],
   "last_attempt": {
     "attempts_used": 1,
-    "event_name": "schedule",
-    "failures": [],
-    "latency_ms": 492,
-    "natural": true,
-    "observed_at": "2026-08-12T17:16:04Z",
-    "outcome": "fresh",
+    "error": "chart quote equal-clock price conflict",
+    "event_name": "workflow_dispatch",
+    "failures": [
+      {
+        "attempt": 1,
+        "error": "chart quote equal-clock price conflict"
+      }
+    ],
+    "latency_ms": 0,
+    "natural": false,
+    "observed_at": "2026-09-28T06:30:00Z",
+    "outcome": "failed",
     "run_attempt": 1,
-    "run_id": "31620820614",
-    "schedule": "7 16 * * 0-5",
-    "shard": "44/72"
+    "run_id": "36367836615",
+    "schedule": "",
+    "shard": ""
+  },
+  "latest_failure": {
+    "attempts_used": 1,
+    "data_loss": false,
+    "deferred_acquisition": false,
+    "error": "chart quote equal-clock price conflict",
+    "failure_kind": "unexpected",
+    "failures": [
+      {
+        "attempt": 1,
+        "error": "chart quote equal-clock price conflict"
+      }
+    ],
+    "lkg_status": "retained",
+    "observed_at": "2026-09-28T06:30:00Z",
+    "run_attempt": 1,
+    "run_id": "36367836615"
   },
   "lkg": {
     "fetched_at": "2026-08-12T17:16:45Z",
@@ -112,5 +154,5 @@
     "source_as_of": "2026-08-12"
   },
   "ticker": "TEMD",
-  "updated_at": "2026-08-21T23:43:33Z"
+  "updated_at": "2026-09-28T06:30:00Z"
 }
