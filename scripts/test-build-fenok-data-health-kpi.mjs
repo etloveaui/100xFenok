@@ -121,7 +121,10 @@ try {
   const badTga = structuredClone(rootDoc);
   badTga.sets.find((set) => set.set === "treasury_tga").status = "stopped";
   const rejected = validateKpiDocuments(badTga, publicDoc, { dataRoot: path.join(root, "data") });
-  assert.ok(rejected.errors.some((error) => error.includes("treasury_tga") && error.includes("freshness-policy")));
+  assert.ok(
+    rejected.errors.some((error) => error.includes("status does not match source age and freshness-policy")),
+    "the checker rejects a declared TGA status that disagrees with source freshness",
+  );
   assert.ok(Array.isArray(publicDoc.sets));
   assert.equal(JSON.stringify(publicDoc).includes("data/admin/fred_macro"), false);
   console.log("K1/K3 KPI fixtures passed");
