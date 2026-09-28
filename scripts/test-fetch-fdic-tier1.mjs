@@ -26,8 +26,8 @@ const QUARTERS = ["20251231", "20260331"];
 
 {
   const workflow = fs.readFileSync(path.join(REPO_ROOT, ".github", "workflows", "fetch-fdic.yml"), "utf8");
-  assert.doesNotMatch(workflow, /^  schedule:\s*$/m);
-  assert.match(workflow, /^  workflow_dispatch:\s*$/m);
+  assert.match(workflow, /cron:\s*['"]0 6 \* \* 1['"]/);
+  assert.match(workflow, /cron:\s*['"]0 6 \* \* 4['"]/);
   assert.doesNotMatch(workflow, /0 6 1-7 \* 1/);
   assert.doesNotMatch(workflow, /guard-fdic-first-monday\.mjs|steps\.schedule_gate\.outputs\.eligible/);
   assert.match(workflow, /owner_approved_recovery:/);

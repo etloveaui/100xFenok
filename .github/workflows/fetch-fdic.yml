@@ -3,6 +3,9 @@
 name: Fetch FDIC Tier1 Data
 
 on:
+  schedule:
+    - cron: '0 6 * * 1'
+    - cron: '0 6 * * 4'
   workflow_dispatch:
     inputs:
       persistence_migration_only:
