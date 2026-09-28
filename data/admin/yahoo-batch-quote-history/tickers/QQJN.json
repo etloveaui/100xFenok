@@ -108,31 +108,44 @@
       "run_id": "31422533403",
       "schedule": "7 18 * * 0-5",
       "shard": "21/72"
+    },
+    {
+      "attempts_used": 1,
+      "event_name": "workflow_dispatch",
+      "failures": [],
+      "latency_ms": 421,
+      "natural": false,
+      "observed_at": "2026-09-28T06:02:24Z",
+      "outcome": "fresh",
+      "run_attempt": 1,
+      "run_id": "36367834787",
+      "schedule": "",
+      "shard": ""
     }
   ],
   "current": {
-    "fetched_at": "2026-08-10T19:10:42Z",
-    "history_as_of": "2026-08-10",
-    "path": "data/admin/yahoo-batch-quote-history/lkg/QQJN.json",
-    "payload_sha256": "a192b8f339aa1b844f02c39418f2e401aa69cb737fdee12ad26d76b0411621d2",
-    "quote_as_of": "2026-08-10T13:46:07Z",
-    "source_as_of": "2026-08-10"
+    "fetched_at": "2026-09-28T06:07:59Z",
+    "history_as_of": "2026-09-25",
+    "path": "data/yf/finance/QQJN.json",
+    "payload_sha256": "b9e6ff50e273b61adb77583eaad45aa6c7ef94e97457ab473e56d5f2047a2540",
+    "quote_as_of": "2026-09-25T14:03:03Z",
+    "source_as_of": "2026-09-25"
   },
   "discovered_from": [
     "stockanalysis_etf"
   ],
   "last_attempt": {
     "attempts_used": 1,
-    "event_name": "schedule",
+    "event_name": "workflow_dispatch",
     "failures": [],
-    "latency_ms": 766,
-    "natural": true,
-    "observed_at": "2026-08-10T19:09:16Z",
+    "latency_ms": 421,
+    "natural": false,
+    "observed_at": "2026-09-28T06:02:24Z",
     "outcome": "fresh",
     "run_attempt": 1,
-    "run_id": "31422533403",
-    "schedule": "7 18 * * 0-5",
-    "shard": "21/72"
+    "run_id": "36367834787",
+    "schedule": "",
+    "shard": ""
   },
   "last_recovered_failure": {
     "attempts_used": 1,
@@ -156,23 +169,23 @@
   },
   "promotion_contract": "provider_observation/v2",
   "provider_observation": {
-    "event_name": "schedule",
-    "history_as_of": "2026-08-10",
-    "observed_at": "2026-08-10T19:09:16Z",
-    "payload_sha256": "66df2861cdf11716f06e3e93fce3a1badf54eb388786087034e4f25a2c4768a2",
-    "quote_as_of": "2026-08-10T13:46:07Z",
+    "event_name": "workflow_dispatch",
+    "history_as_of": "2026-09-25",
+    "observed_at": "2026-09-28T06:02:24Z",
+    "payload_sha256": "77dc52aabffeeec988deba122729fcb8cc424d6703a21262bd24c89a8a0571be",
+    "quote_as_of": "2026-09-25T14:03:03Z",
     "run_attempt": 1,
-    "run_id": "31422533403",
+    "run_id": "36367834787",
     "schema_version": "provider_observation/v2",
-    "source_as_of": "2026-08-10"
+    "source_as_of": "2026-09-25"
   },
   "recovered_at": "2026-08-10T19:09:16Z",
   "recovered_from_run_id": "31324627429",
   "recovery_event_name": "schedule",
   "recovery_run_attempt": 1,
   "recovery_run_id": "31422533403",
-  "resolution_state": "lkg_primary",
-  "retry": true,
+  "resolution_state": "fresh_primary",
+  "retry": false,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "stale": {
     "age_business_days": 7,
@@ -185,5 +198,5 @@
     "source_as_of": "2026-08-10"
   },
   "ticker": "QQJN",
-  "updated_at": "2026-08-19T23:42:29Z"
+  "updated_at": "2026-09-28T06:02:24Z"
 }

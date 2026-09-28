@@ -224,6 +224,30 @@
       "run_id": "31648785047",
       "schedule": "7 22 * * 0-5",
       "shard": "47/72"
+    },
+    {
+      "attempts_used": 1,
+      "error": "empty payload",
+      "event_name": "workflow_dispatch",
+      "failures": [
+        {
+          "attempt": 1,
+          "error": "KeyError=[redacted]",
+          "source": "provider_safe_call"
+        },
+        {
+          "attempt": 1,
+          "error": "empty payload"
+        }
+      ],
+      "latency_ms": 0,
+      "natural": false,
+      "observed_at": "2026-09-28T06:02:24Z",
+      "outcome": "failed",
+      "run_attempt": 1,
+      "run_id": "36367834787",
+      "schedule": "",
+      "shard": ""
     }
   ],
   "current": {
@@ -239,51 +263,49 @@
   ],
   "last_attempt": {
     "attempts_used": 1,
-    "error": "ValueError: quote_as_of is unavailable for SMAP despite available history",
-    "event_name": "schedule",
+    "error": "empty payload",
+    "event_name": "workflow_dispatch",
     "failures": [
       {
         "attempt": 1,
-        "error": "YFRateLimitError: Too Many Requests. Rate limited. Try after a while.",
+        "error": "KeyError=[redacted]",
         "source": "provider_safe_call"
       },
       {
         "attempt": 1,
-        "error": "YFRateLimitError: Too Many Requests. Rate limited. Try after a while.",
-        "source": "provider_safe_call"
+        "error": "empty payload"
       }
     ],
-    "latency_ms": 566,
-    "natural": true,
-    "observed_at": "2026-08-12T22:55:30Z",
+    "latency_ms": 0,
+    "natural": false,
+    "observed_at": "2026-09-28T06:02:24Z",
     "outcome": "failed",
     "run_attempt": 1,
-    "run_id": "31648785047",
-    "schedule": "7 22 * * 0-5",
-    "shard": "47/72"
+    "run_id": "36367834787",
+    "schedule": "",
+    "shard": ""
   },
   "latest_failure": {
     "attempts_used": 1,
     "data_loss": false,
     "deferred_acquisition": false,
-    "error": "ValueError: quote_as_of is unavailable for SMAP despite available history",
-    "failure_kind": "systemic_rate_limit",
+    "error": "empty payload",
+    "failure_kind": "transient_provider_miss",
     "failures": [
       {
         "attempt": 1,
-        "error": "YFRateLimitError: Too Many Requests. Rate limited. Try after a while.",
+        "error": "KeyError=[redacted]",
         "source": "provider_safe_call"
       },
       {
         "attempt": 1,
-        "error": "YFRateLimitError: Too Many Requests. Rate limited. Try after a while.",
-        "source": "provider_safe_call"
+        "error": "empty payload"
       }
     ],
     "lkg_status": "retained",
-    "observed_at": "2026-08-12T22:55:30Z",
+    "observed_at": "2026-09-28T06:02:24Z",
     "run_attempt": 1,
-    "run_id": "31648785047"
+    "run_id": "36367834787"
   },
   "lkg": {
     "fetched_at": "2026-08-11T15:12:25Z",
@@ -319,5 +341,5 @@
     "source_as_of": "2026-05-28T16:58:09Z"
   },
   "ticker": "SMAP",
-  "updated_at": "2026-08-12T22:55:30Z"
+  "updated_at": "2026-09-28T06:02:24Z"
 }
