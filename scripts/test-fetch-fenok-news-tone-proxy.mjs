@@ -16,6 +16,7 @@ import {
   cueCounts,
   decodeLegacyTocGzip,
   GDELT_HISTORY_PERSISTENCE_POLICY,
+  loadArticles,
   main,
   matchLegacyTocTickers,
   MAX_GDELT_HISTORY_SOURCE_DATES,
@@ -39,6 +40,8 @@ assert.equal(queryForTicker("NVDA", "NVIDIA CORP"), '"NVIDIA"');
 assert.deepEqual(cueCounts("Analyst upgrades company after strong profit growth"), { positive: 3, negative: 0 });
 assert.deepEqual(cueCounts("Company falls after weak warning and lawsuit"), { positive: 0, negative: 4 });
 assert.equal(articleSeenAt("20260628T123456Z"), "2026-06-28T12:34:56.000Z");
+assert.equal(articleSeenAt("20260230T123456Z"), null, "provider calendar dates must not roll into March");
+assert.equal(articleSeenAt("2026-02-30T12:34:56.000Z"), null);
 
 {
   assert.deepEqual(
@@ -428,12 +431,15 @@ for (const firstFailure of [
   });
   assert.equal(outcome.ok, true);
   assert.equal(outcome.reason, "ok");
-  assert.equal(outcome.result.status, "ready");
-  assert.equal(outcome.result.attempt.http_status, 200);
+  assert.equal(outcome.result.status, "unavailable");
+  assert.equal(outcome.result.attempt.http_status, 429);
   assert.equal(outcome.result.attempt.retry_reason, "rate_limited",
     "the ready fallback shard must preserve the initiating DOC API rate limit");
   assert.equal(outcome.result.attempt.retry_count, 2);
   assert.equal(outcome.result.attempt.retry_wait_ms, 19500);
+  assert.equal(outcome.snapshot.acquisition.primary.reason, "rate_limited");
+  assert.deepEqual(outcome.snapshot.acquisition.primary.attempt, outcome.result.attempt);
+  assert.equal(outcome.snapshot.acquisition.fallback.source_family, "GDELT Web Legacy NGrams TOC");
   assert.deepEqual(calls, ["fallback"]);
 }
 
@@ -481,6 +487,251 @@ for (const firstFailure of [
   assert.equal(outcome.reason, "rate_limited",
     "an incomplete TOC basket must preserve the initiating DOC API rate-limit failure");
   assert.equal(outcome.result.status, "unavailable");
+}
+
+// Provider fallback may recover data without rewriting the failed DOC request.
+// This catches both the schema-drift admission gap and fabricated DOC success.
+for (const [reason, probe] of [
+  ["schema_drift", () => ({ result: attemptResult("schema_drift", returnedTuple({
+    httpStatus: 200, decode: "ok", payload: "non_empty",
+    assertions: [{ id: "articles_array", passed: false }],
+  }), { provider_diagnostic: "must not enter derived provenance" }) })],
+  ["http_error", () => ({ result: attemptResult("http_error", returnedTuple({ httpStatus: 503 })) })],
+  ["transport_error", transportProbe],
+]) {
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), "fetch-gdelt-news-tone-provider-fallback-"));
+  const outcome = await runNewsTone({
+    repoRoot: root,
+    args: { noWrite: false, noFetch: false, maxRecords: 25, retries: 2 },
+    observedAt: "2026-09-28T01:00:00.000Z",
+    runId: "36341396597", runAttempt: 1, eventName: "workflow_dispatch",
+    attemptId: `gdelt-${reason}-fallback`,
+    observeAttemptFn: async () => probe(),
+    fallbackFn: async () => ({ snapshot: buildLegacyTocSnapshot({
+      records: ["DoorDash", "UnitedHealth", "PayPal", "Reddit", "Coinbase", "Micron", "Palantir", "NVIDIA"]
+        .map((company, index) => ({
+          date: "2026-09-28T00:16:00.000Z", lang: "en",
+          title: `${company} reports strong growth`, url: `https://example.test/recovery/${index}`,
+        })),
+      generatedAt: "2026-09-28T01:00:00.000Z",
+    }) }),
+    buildFn: async () => { throw new Error("failed DOC must not build a primary snapshot"); },
+  });
+  assert.equal(outcome.ok, true, `${reason} can use a fully valid provider TOC basket`);
+  assert.equal(outcome.result.reason, reason, "fallback cannot erase the original DOC verdict");
+  assert.equal(outcome.snapshot.acquisition.primary.reason, reason);
+  assert.deepEqual(outcome.snapshot.acquisition.primary.attempt, outcome.result.attempt);
+  assert.equal(Object.hasOwn(outcome.snapshot.acquisition.primary, "document"), false);
+  assert.equal(outcome.snapshot.acquisition.fallback.source_family, "GDELT Web Legacy NGrams TOC");
+  assert.equal(outcome.snapshot.acquisition.fallback.source_as_of, "2026-09-28T00:16:00.000Z");
+  assert(outcome.snapshot.rows.every((row) => row.source_families.includes("GDELT Web Legacy NGrams TOC")));
+  const shard = JSON.parse(fs.readFileSync(path.join(
+    root, "data", "admin", "data-supply-state", "detection-attempts", `${LANE_ID}.json`,
+  ), "utf8"));
+  assert.deepEqual(shard.attempts[0].assertions, [{ id: "articles_array", passed: false }]);
+  assert.equal(classifyAttempt(shard.attempts[0]).status, reason === "schema_drift" ? "drift" : "unavailable");
+  assert.equal(shard.attempts[0].event_name, "workflow_dispatch", "manual recovery is never schedule evidence");
+  assert.equal(shard.attempts[0].run_id, "36341396597");
+  assert.equal(shard.attempts[0].run_attempt, 1);
+}
+
+for (const fallbackKind of ["incomplete", "throws", "future", "invalid_date"]) {
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), "fetch-gdelt-news-tone-failed-fallback-"));
+  await runLkgCase(root, toneSnapshot({ latestSourceAsOf: "2026-09-27T00:16:00.000Z" }), {
+    observedAt: "2026-09-27T01:00:00.000Z",
+  });
+  const canonicalPath = path.join(root, "data", "computed", "fenok_news_tone_proxy.json");
+  const before = fs.readFileSync(canonicalPath, "utf8");
+  const outcome = await runNewsTone({
+    repoRoot: root,
+    args: { noWrite: false, noFetch: false, maxRecords: 25, retries: 2 },
+    observedAt: "2026-09-28T01:00:00.000Z",
+    runId: "36341396597", runAttempt: 1, eventName: "workflow_dispatch",
+    attemptId: `gdelt-failed-fallback-${fallbackKind}`,
+    observeAttemptFn: async () => observeAttempt({
+      maxRecords: 25, retries: 0, controlledFailure: false,
+      rawGetFn: async () => rawResponse(200, { wrong_articles: [] }),
+    }),
+    fallbackFn: async () => {
+      if (fallbackKind === "throws") throw new Error("TOC unavailable");
+      if (fallbackKind === "future" || fallbackKind === "invalid_date") {
+        return { snapshot: toneSnapshot({ latestSourceAsOf: fallbackKind === "future"
+          ? "2026-09-28T02:00:00.000Z" : "2026-02-30T00:16:00.000Z" }) };
+      }
+      return { snapshot: buildSnapshotDocument({
+        rows: [toneSnapshot({ latestSourceAsOf: "2026-09-28T00:16:00.000Z" }).rows.at(-1)],
+        generatedAt: "2026-09-28T01:00:00.000Z",
+      }) };
+    },
+  });
+  assert.equal(outcome.reason, "schema_drift", "failed TOC fallback retains the primary schema failure");
+  assert.equal(outcome.degraded, true);
+  assert.equal(outcome.retained, true);
+  assert.deepEqual(outcome.retrySet, ["news_tone_proxy"]);
+  assert.equal(fs.readFileSync(canonicalPath, "utf8"), before);
+  const state = JSON.parse(fs.readFileSync(path.join(root, "data", "admin", LANE_ID, "index.json"), "utf8"));
+  assert.equal(state.items.news_tone_proxy.latest_failure.reason, "schema_drift");
+}
+
+for (const [probe, args, controlledFailure] of [
+  [transportProbe, { noFetch: false }, true],
+  [transportProbe, { noFetch: true }, false],
+  [() => ({ result: attemptResult("unexpected_error", threwTuple("unexpected")) }), { noFetch: false }, false],
+  [() => ({ result: attemptResult("auth_error", returnedTuple({ httpStatus: 403, auth: "rejected" })) }), { noFetch: false }, false],
+]) {
+  let fallbackCalls = 0;
+  const outcome = await runNewsTone({
+    repoRoot: fs.mkdtempSync(path.join(os.tmpdir(), "fetch-gdelt-news-tone-fallback-excluded-")),
+    args: { noWrite: true, maxRecords: 25, retries: 2, ...args },
+    observedAt: "2026-09-28T01:00:00.000Z", controlledFailure,
+    observeAttemptFn: async () => probe(),
+    fallbackFn: async () => { fallbackCalls += 1; throw new Error("excluded fallback invoked"); },
+  });
+  assert.equal(outcome.ok, false);
+  assert.equal(fallbackCalls, 0, "controlled, cached, unexpected, or auth failures cannot invoke TOC recovery");
+}
+
+// Bound manual recovery must advance genuine provider data and retain lineage.
+// Synthetic identifiers, local events, reruns, and unchanged provider clocks fail closed.
+for (const [runId, eventName, runAttempt, advances, expectedReason] of [
+  ["36341396597", "workflow_dispatch", 1, true, "ok"],
+  ["gdelt-manual-recovery", "workflow_dispatch", 1, true, "recovery_requires_schedule"],
+  ["0", "workflow_dispatch", 1, true, "recovery_requires_schedule"],
+  ["36341396597", "local", 1, true, "recovery_requires_schedule"],
+  ["36341396597", "workflow_dispatch", 2, true, "recovery_requires_schedule"],
+  ["36341396597", "workflow_dispatch", 1, false, "recovery_not_advanced_by_provider"],
+]) {
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), "fetch-gdelt-news-tone-bound-recovery-"));
+  const baseline = toneSnapshot({ latestSourceAsOf: "2026-09-27T00:16:00.000Z" });
+  await runLkgCase(root, baseline, { runId: "seed", observedAt: "2026-09-27T01:00:00.000Z" });
+  await runLkgCase(root, baseline, {
+    runId: "36341396596", probe: rateLimitedProbe, observedAt: "2026-09-27T02:00:00.000Z",
+  });
+  const canonicalPath = path.join(root, "data", "computed", "fenok_news_tone_proxy.json");
+  const before = fs.readFileSync(canonicalPath, "utf8");
+  const outcome = await runNewsTone({
+    repoRoot: root,
+    args: { noWrite: false, noFetch: false, maxRecords: 25, retries: 2 },
+    observedAt: "2026-09-28T01:00:00.000Z", runId, eventName, runAttempt,
+    attemptId: `gdelt-bound-${runAttempt}-${advances ? "advance" : "same"}`,
+    observeAttemptFn: async () => observeAttempt({
+      maxRecords: 25, retries: 0, controlledFailure: false,
+      rawGetFn: async () => rawResponse(200, { wrong_articles: [] }),
+    }),
+    fallbackFn: async () => ({ snapshot: toneSnapshot({
+      latestSourceAsOf: advances ? "2026-09-28T00:16:00.000Z" : "2026-09-27T00:16:00.000Z",
+    }) }),
+  });
+  assert.equal(outcome.reason, expectedReason);
+  const state = JSON.parse(fs.readFileSync(path.join(root, "data", "admin", LANE_ID, "index.json"), "utf8"));
+  if (expectedReason === "ok") {
+    assert.equal(outcome.ok, true);
+    assert.equal(outcome.recovered, true);
+    assert.deepEqual(state.retry_set, []);
+    assert.equal(state.items.news_tone_proxy.recovered_from_run_id, "36341396596");
+    assert.equal(state.items.news_tone_proxy.recovery_event_name, "workflow_dispatch");
+    assert.equal(state.items.news_tone_proxy.provider_observation.source_as_of, "2026-09-28T00:16:00.000Z");
+  } else {
+    assert.equal(outcome.degraded, true);
+    assert.deepEqual(state.retry_set, ["news_tone_proxy"]);
+    assert.equal(fs.readFileSync(canonicalPath, "utf8"), before);
+  }
+}
+
+{
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), "fetch-gdelt-news-tone-fresh-cache-"));
+  fs.writeFileSync(path.join(root, "DASH.json"), JSON.stringify({
+    articles: [{ title: "DoorDash cached growth", seendate: "20260927T001600Z" }],
+  }));
+  const loaded = await loadArticles({
+    ticker: "DASH", company: "DoorDash", maxRecords: 25, noFetch: false,
+    retries: 0, retryBackoffMs: 1, privateRootPath: root, forceFresh: true,
+    fetchJsonFn: async () => ({ articles: [{ title: "DoorDash new growth", seendate: "20260928T001600Z" }] }),
+  });
+  assert.equal(loaded.cache_hit, false, "manual recovery must bypass retained DOC cache");
+  assert.equal(loaded.payload.articles[0].seendate, "20260928T001600Z");
+}
+
+{
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), "fetch-gdelt-news-tone-manual-fresh-"));
+  let forcedFresh = null;
+  const outcome = await runNewsTone({
+    repoRoot: root, args: { noWrite: true, noFetch: false, maxRecords: 25 },
+    observedAt: "2026-09-28T01:00:00.000Z",
+    runId: "36341396597", eventName: "workflow_dispatch", runAttempt: 1,
+    observeAttemptFn: async () => readyProbe(),
+    buildFn: async (_args, options) => {
+      forcedFresh = options.forceFresh;
+      return toneSnapshot({ latestSourceAsOf: "2026-09-28T00:16:00.000Z" });
+    },
+  });
+  assert.equal(outcome.ok, true);
+  assert.equal(forcedFresh, true, "bound manual DOC collection must require a fresh fetch");
+}
+
+for (const seendate of ["20260230T001600Z", "20260928T020000Z"]) {
+  await assert.rejects(() => loadArticles({
+    ticker: "DASH", company: "DoorDash", maxRecords: 25, noFetch: false,
+    privateRootPath: fs.mkdtempSync(path.join(os.tmpdir(), "fetch-gdelt-news-tone-invalid-article-")),
+    forceFresh: true, observedAt: "2026-09-28T01:00:00.000Z",
+    fetchJsonFn: async () => ({ articles: [
+      { title: "DoorDash growth", seendate: "20260928T001600Z" },
+      { title: "DoorDash warning", seendate },
+    ] }),
+  }), /provider article timestamp/, "a valid sibling article cannot hide an invalid or future provider clock");
+}
+
+for (const invalidSource of ["2026-09-28T02:00:00.000Z", "2026-02-30T00:16:00.000Z"]) {
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), "fetch-gdelt-news-tone-invalid-clock-"));
+  const baseline = toneSnapshot({ latestSourceAsOf: "2026-09-27T00:16:00.000Z" });
+  await runLkgCase(root, baseline, { observedAt: "2026-09-27T01:00:00.000Z" });
+  const canonicalPath = path.join(root, "data", "computed", "fenok_news_tone_proxy.json");
+  const before = fs.readFileSync(canonicalPath, "utf8");
+  const outcome = await runNewsTone({
+    repoRoot: root, args: { noWrite: false, noFetch: false, maxRecords: 25 },
+    observedAt: "2026-09-28T01:00:00.000Z",
+    runId: "36341396597", eventName: "workflow_dispatch", runAttempt: 1,
+    observeAttemptFn: async () => readyProbe(),
+    buildFn: async () => toneSnapshot({ latestSourceAsOf: invalidSource }),
+  });
+  assert.equal(outcome.ok, false, "future or invalid provider clocks must never promote");
+  assert.equal(fs.readFileSync(canonicalPath, "utf8"), before);
+}
+
+{
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), "fetch-gdelt-news-tone-canonical-newer-"));
+  const day1 = toneSnapshot({ latestSourceAsOf: "2026-09-25T00:16:00.000Z" });
+  await runLkgCase(root, day1, { observedAt: "2026-09-25T01:00:00.000Z" });
+  await runLkgCase(root, day1, { probe: rateLimitedProbe, observedAt: "2026-09-25T02:00:00.000Z" });
+  const canonicalPath = path.join(root, "data", "computed", "fenok_news_tone_proxy.json");
+  fs.writeFileSync(canonicalPath, JSON.stringify(toneSnapshot({ latestSourceAsOf: "2026-09-27T00:16:00.000Z" })));
+  const historyPath = path.join(root, "data", "computed", "fenok_news_tone_proxy_history.json");
+  const lkgPath = path.join(root, "data", "admin", LANE_ID, "lkg", "news_tone_proxy.json");
+  const before = [canonicalPath, historyPath, lkgPath].map((file) => fs.readFileSync(file, "utf8"));
+  const outcome = await runNewsTone({
+    repoRoot: root, args: { noWrite: false, noFetch: false, maxRecords: 25 },
+    observedAt: "2026-09-28T01:00:00.000Z",
+    runId: "36341396597", eventName: "workflow_dispatch", runAttempt: 1,
+    observeAttemptFn: async () => readyProbe(),
+    buildFn: async () => toneSnapshot({ latestSourceAsOf: "2026-09-26T00:16:00.000Z" }),
+  });
+  assert.equal(outcome.reason, "foreign_writer_conflict", "advancing the LKG cannot regress a newer canonical");
+  assert.deepEqual([canonicalPath, historyPath, lkgPath].map((file) => fs.readFileSync(file, "utf8")), before);
+}
+
+{
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), "fetch-gdelt-news-tone-manual-cache-only-"));
+  const baseline = toneSnapshot({ latestSourceAsOf: "2026-09-27T00:16:00.000Z" });
+  await runLkgCase(root, baseline, { observedAt: "2026-09-27T01:00:00.000Z" });
+  await runLkgCase(root, baseline, { probe: rateLimitedProbe, observedAt: "2026-09-27T02:00:00.000Z" });
+  const outcome = await runNewsTone({
+    repoRoot: root, args: { noWrite: false, noFetch: true, maxRecords: 25 },
+    observedAt: "2026-09-28T01:00:00.000Z",
+    runId: "36341396597", eventName: "workflow_dispatch", runAttempt: 1,
+    observeAttemptFn: async () => readyProbe(),
+    buildFn: async () => toneSnapshot({ latestSourceAsOf: "2026-09-28T00:16:00.000Z" }),
+  });
+  assert.equal(outcome.reason, "recovery_requires_schedule", "cache-only mode cannot admit a manual recovery");
 }
 
 // --- Bounded LKG / promotion / retention (Class-B) ---------------------------

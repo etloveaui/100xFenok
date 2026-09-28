@@ -18,7 +18,7 @@ import {
   PROMOTION_CONTRACT_PROVIDER_OBSERVATION_V2,
   buildProviderObservationV2,
   classifyLkgFailure,
-  isNaturalScheduleRun,
+  isEligibleRecoveryRun,
 } from "./lib/data-supply-lkg-store.mjs";
 import {
   activeKrxUniverseCodes,
@@ -273,14 +273,18 @@ function isWeekdayBasDd(basDd) {
   return day !== 0 && day !== 6;
 }
 
-function latestKstWeekday(now = new Date()) {
+function seoulCivilDate(now = new Date()) {
   const fmt = new Intl.DateTimeFormat("en-CA", {
     timeZone: "Asia/Seoul",
     year: "numeric",
     month: "2-digit",
     day: "2-digit",
   });
-  let cursor = fmt.format(now).replaceAll("-", "");
+  return fmt.format(now);
+}
+
+function latestKstWeekday(now = new Date()) {
+  let cursor = seoulCivilDate(now).replaceAll("-", "");
   while (!isWeekdayBasDd(cursor)) cursor = addDaysBasDd(cursor, -1);
   return cursor;
 }
@@ -1704,9 +1708,10 @@ export function applyKrxLkgContract({
   publicIndexCloses = null,
   publicKosdaqMarketCap = null,
   run,
+  freshProviderObservation = false,
   failureReason = null,
   controlledFailure = false,
-  store = new LaneLkgStore({ repoRoot, laneId: KRX_LANE_ID }),
+  store = new LaneLkgStore({ repoRoot, laneId: KRX_LANE_ID, allowBoundWorkflowDispatchRecovery: true }),
   io = fs,
 }) {
   if (controlledFailure && run?.eventName !== "workflow_dispatch") {
@@ -1754,7 +1759,7 @@ export function applyKrxLkgContract({
   };
 
   const before = store.stateSnapshot().items[KRX_LKG_KEY];
-  if (before?.retry === true && !isNaturalScheduleRun(run)) {
+  if (before?.retry === true && !isEligibleRecoveryRun(run, true)) {
     return {
       kind: "recovery_requires_schedule",
       ok: false,
@@ -1767,10 +1772,26 @@ export function applyKrxLkgContract({
       exit_code: 0,
     };
   }
-  // A clean lane still needs a monotonic provider-date guard. The shared LKG
-  // evaluator checks advancement only while recovering from retained failure;
-  // without this check, a manual historical dispatch could roll all current
-  // canonical outputs back while the bounded history correctly ignored it.
+  if (before?.retry === true && run.eventName === "workflow_dispatch") {
+    const reason = freshProviderObservation !== true
+      ? "manual_recovery_requires_fresh_fetch"
+      : bridgeDocument.as_of > seoulCivilDate(new Date(run.observedAt)) ? "provider_source_future" : null;
+    if (reason) {
+      return {
+        kind: "not_promotable",
+        ok: false,
+        updated: false,
+        attempt_outcome: "failure",
+        reason,
+        retry_set: store.stateSnapshot().retry_set,
+        degraded: true,
+        corrupt: false,
+        exit_code: 0,
+      };
+    }
+  }
+  // Canonical and durable provider dates establish the floor during recovery
+  // too: retained LKG may predate an independently advanced canonical file.
   let currentBridge = null;
   try {
     currentBridge = readOptionalJson(bridgeIndexPath);
@@ -1779,27 +1800,25 @@ export function applyKrxLkgContract({
     // floor. The existing schema/LKG contract decides whether a healthy
     // candidate may heal it.
   }
-  if (before?.retry !== true) {
-    const monotonicSourceFloor = [
-      validKrxBridge(currentBridge) ? krxBridgeSourceAsOf(currentBridge) : null,
-      before?.current?.source_as_of,
-      before?.lkg?.source_as_of,
-      before?.provider_observation?.source_as_of,
-    ].filter(validIsoDate).sort().at(-1) ?? null;
-    if (monotonicSourceFloor !== null
-      && Date.parse(bridgeDocument.as_of) < Date.parse(monotonicSourceFloor)) {
-      return {
-        kind: "not_promotable",
-        ok: false,
-        updated: false,
-        attempt_outcome: "failure",
-        reason: "provider_source_regression",
-        retry_set: store.stateSnapshot().retry_set,
-        degraded: false,
-        corrupt: false,
-        exit_code: 0,
-      };
-    }
+  const monotonicSourceFloor = [
+    validKrxBridge(currentBridge) ? krxBridgeSourceAsOf(currentBridge) : null,
+    before?.current?.source_as_of,
+    before?.lkg?.source_as_of,
+    before?.provider_observation?.source_as_of,
+  ].filter(validIsoDate).sort().at(-1) ?? null;
+  if (monotonicSourceFloor !== null
+    && Date.parse(bridgeDocument.as_of) < Date.parse(monotonicSourceFloor)) {
+    return {
+      kind: "not_promotable",
+      ok: false,
+      updated: false,
+      attempt_outcome: "failure",
+      reason: "provider_source_regression",
+      retry_set: store.stateSnapshot().retry_set,
+      degraded: before?.retry === true,
+      corrupt: false,
+      exit_code: 0,
+    };
   }
   const [decision] = store.evaluatePromotionCandidates([candidate], run);
   if (!decision.eligible) {
@@ -1891,6 +1910,7 @@ async function run(argv = process.argv.slice(2), dependencies = {}) {
   const manifest = buildManifest(config, startedAt);
   const groupManifests = buildGroupManifests(config, startedAt);
   const tasks = buildTasks(config.dates);
+  let freshFetchCount = 0;
 
   console.log(`Starting ${MARKET} KRX daily fetch: ${tasks.length} calls, output=${repoRel(config.outputRoot)}`);
 
@@ -1920,6 +1940,7 @@ async function run(argv = process.argv.slice(2), dependencies = {}) {
     } else {
       try {
         result = await fetchJson(task.endpoint, task.basDd, authKey, config.timeoutMs);
+        if (["success", "empty"].includes(result.status)) freshFetchCount += 1;
       } catch (error) {
         result = {
           data: { error: shortErrorMessage(error) },
@@ -2009,6 +2030,7 @@ async function run(argv = process.argv.slice(2), dependencies = {}) {
           publicIndexCloses,
           publicKosdaqMarketCap,
           run: recoveryRun,
+          freshProviderObservation: tasks.length > 0 && freshFetchCount === tasks.length,
         });
       } catch {
         recovery = applyKrxLkgContract({

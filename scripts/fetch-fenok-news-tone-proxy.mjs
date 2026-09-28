@@ -14,17 +14,20 @@ import { fileURLToPath } from "node:url";
 
 import {
   attemptResult,
+  buildAttemptRow,
+  buildSingleLaneShard,
   classifyEndpointResponse,
   defaultAttemptId,
   returnedTuple,
   threwTuple,
   transportError,
-  writeAttemptShard,
+  writeJsonAtomic,
 } from "./lib/data-supply-attempt-shard.mjs";
 import {
   LaneLkgStore,
   PROMOTION_CONTRACT_PROVIDER_OBSERVATION_V2,
   buildProviderObservationV2,
+  hasStructuredGithubRunBinding,
 } from "./lib/data-supply-lkg-store.mjs";
 import { DATA_SUPPLY_DETECTION_CONFIG } from "./lib/data-supply-detection-config.mjs";
 
@@ -544,11 +547,25 @@ function cachePathForTicker(ticker, privateRootPath = privateRoot) {
   return path.join(privateRootPath, `${ticker}.json`);
 }
 
-async function loadArticles({ ticker, company, maxRecords, noFetch, retries, retryBackoffMs, privateRootPath = privateRoot }) {
+function validArticleDates(articles, observedAt) {
+  return Array.isArray(articles) && articles.every((article) => {
+    const seenAt = articleSeenAt(article?.seendate);
+    return seenAt !== null && (observedAt === null
+      || (validRfc3339Utc(observedAt) && Date.parse(seenAt) <= Date.parse(observedAt)));
+  });
+}
+
+async function loadArticles({
+  ticker, company, maxRecords, noFetch, retries, retryBackoffMs,
+  privateRootPath = privateRoot, forceFresh = false, fetchJsonFn = fetchJsonWithRetry,
+  observedAt = null,
+}) {
   fs.mkdirSync(privateRootPath, { recursive: true });
   const cachePath = cachePathForTicker(ticker, privateRootPath);
-  if (fs.existsSync(cachePath)) {
-    return { cache_hit: true, payload: JSON.parse(fs.readFileSync(cachePath, "utf8")) };
+  if (!forceFresh && fs.existsSync(cachePath)) {
+    const payload = JSON.parse(fs.readFileSync(cachePath, "utf8"));
+    if (!validArticleDates(payload.articles, observedAt)) throw new Error("invalid provider article timestamp");
+    return { cache_hit: true, payload };
   }
   if (noFetch) {
     return {
@@ -574,7 +591,8 @@ async function loadArticles({ ticker, company, maxRecords, noFetch, retries, ret
   url.searchParams.set("format", "json");
   url.searchParams.set("sort", "HybridRel");
 
-  const json = await fetchJsonWithRetry(url.toString(), { retries, retryBackoffMs });
+  const json = await fetchJsonFn(url.toString(), { retries, retryBackoffMs });
+  if (!validArticleDates(json?.articles, observedAt)) throw new Error("invalid provider article timestamp");
   const payload = {
     schema_version: "fenok-private-gdelt-news/v0.1",
     ticker,
@@ -603,8 +621,7 @@ function articleSeenAt(value) {
   const normalized = compact
     ? `${compact[1]}-${compact[2]}-${compact[3]}T${compact[4]}:${compact[5]}:${compact[6]}Z`
     : text;
-  const parsed = new Date(normalized);
-  return Number.isFinite(parsed.getTime()) ? parsed.toISOString() : null;
+  return validRfc3339Utc(normalized) ? new Date(normalized).toISOString() : null;
 }
 
 function latestArticleSeenAt(articles) {
@@ -656,7 +673,9 @@ function computeTone({ ticker, company, payload }) {
   };
 }
 
-async function build(args, { dataRootPath = dataRoot, privateRootPath = privateRoot } = {}) {
+async function build(args, {
+  dataRootPath = dataRoot, privateRootPath = privateRoot, forceFresh = false, observedAt = isoNow(),
+} = {}) {
   const fenokIndex = findFenokRowIndex(dataRootPath);
   const tickers = loadTickerUniverse(args, fenokIndex);
   const rows = [];
@@ -673,6 +692,8 @@ async function build(args, { dataRootPath = dataRoot, privateRootPath = privateR
         retries: args.retries,
         retryBackoffMs: args.retryBackoffMs,
         privateRootPath,
+        forceFresh,
+        observedAt,
       });
       rows.push(computeTone({ ticker, company, payload: loaded.payload }));
       if (!loaded.cache_hit && !args.noFetch && args.sleepMs > 0) await sleep(args.sleepMs);
@@ -862,7 +883,10 @@ function mergeHistory(snapshot, { dataRootPath = dataRoot, history = null } = {}
 // LKG recovery needs the same latest provider article clock used by the registry
 // selector (max rows[].as_of), never generated_at or that aggregate floor.
 function validRfc3339Utc(value) {
-  return typeof value === "string" && value.endsWith("Z") && Number.isFinite(Date.parse(value));
+  if (typeof value !== "string") return false;
+  const match = value.match(/^(\d{4}-\d{2}-\d{2})T(\d{2}:\d{2}:\d{2})(?:\.(\d{1,3}))?Z$/);
+  if (!match || !validSourceDate(match[1]) || !Number.isFinite(Date.parse(value))) return false;
+  return new Date(value).toISOString() === `${match[1]}T${match[2]}.${(match[3] ?? "").padEnd(3, "0")}Z`;
 }
 
 function validSourceDate(value) {
@@ -930,8 +954,14 @@ function validToneSnapshot(snapshot) {
     && latestRowSourceAsOf(snapshot) !== null;
 }
 
-function withSnapshotReadinessAssertion(result, snapshot, reason = "schema_drift") {
-  if (result.status !== "ready" || validToneSnapshot(snapshot)) return result;
+function validToneSnapshotAt(snapshot, observedAt) {
+  return validToneSnapshot(snapshot) && validRfc3339Utc(observedAt)
+    && snapshot.rows.every((row) => Date.parse(row.as_of) <= Date.parse(observedAt));
+}
+
+function withSnapshotReadinessAssertion(result, snapshot, reason = "schema_drift", observedAt = null) {
+  if (result.status !== "ready" || (observedAt === null
+    ? validToneSnapshot(snapshot) : validToneSnapshotAt(snapshot, observedAt))) return result;
   const hasArticlesAssertion = result.attempt.assertions.some((assertion) => assertion.id === "articles_array");
   return attemptResult(reason, {
     ...result.attempt,
@@ -1038,7 +1068,11 @@ export async function runNewsTone({
 } = {}) {
   const write = args.noWrite !== true;
   const run = runContext({ runId, runAttempt, eventName, observedAt });
-  const store = new LaneLkgStore({ repoRoot: repoRootPath, laneId: LANE_ID });
+  const boundManualFetch = hasStructuredGithubRunBinding(run) && args.noFetch !== true;
+  const store = new LaneLkgStore({
+    repoRoot: repoRootPath, laneId: LANE_ID,
+    allowBoundWorkflowDispatchRecovery: args.noFetch !== true,
+  });
   const observed = await observeAttemptFn({
     maxRecords: args.maxRecords,
     controlledFailure,
@@ -1047,7 +1081,12 @@ export async function runNewsTone({
   });
   let result = withEndpointAssertions(observed.result);
   const writeResult = () => {
-    if (write) writeAttemptShard({ laneId: LANE_ID, attemptShardPath, observedAt, attemptId, result });
+    if (!write) return;
+    const row = buildAttemptRow({
+      laneId: LANE_ID, memberId: null, tuple: result.attempt,
+      observedAt, attemptId, eventName: run.eventName, runId: run.runId, runAttempt: run.runAttempt,
+    });
+    writeJsonAtomic(attemptShardPath, buildSingleLaneShard({ laneId: LANE_ID, row }));
   };
 
   // `reason` is the stable vocabulary the LKG store and the detection floor
@@ -1099,9 +1138,10 @@ export async function runNewsTone({
   };
 
   let built = null;
+  let usingFallback = false;
   const primaryRetryCount = Number(result.attempt.retry_count ?? 0);
-  if (result.reason === "rate_limited"
-    && primaryRetryCount >= 1
+  if (["rate_limited", "schema_drift", "http_error", "transport_error"].includes(result.reason)
+    && (result.reason !== "rate_limited" || primaryRetryCount >= 1)
     && controlledFailure !== true
     && args.noFetch === false) {
     try {
@@ -1111,27 +1151,32 @@ export async function runNewsTone({
         observedAt,
       });
       const fallbackSnapshot = fallbackBuilt?.snapshot ?? fallbackBuilt;
-      if (validToneSnapshot(fallbackSnapshot)) {
-        built = fallbackBuilt;
-        const readyFallback = attemptResult("ok", returnedTuple({
-          httpStatus: 200,
-          decode: "ok",
-          payload: "non_empty",
-          assertions: [{ id: "articles_array", passed: true }],
-        }));
-        result = withRetryEvidence(
-          readyFallback,
-          primaryRetryCount,
-          Number(result.attempt.retry_wait_ms ?? 0),
-        );
+      if (validToneSnapshotAt(fallbackSnapshot, observedAt)) {
+        // The shard remains the actual DOC response. TOC-derived supply has
+        // separate provenance and cannot claim the DOC articles assertion passed.
+        built = {
+          ...fallbackBuilt,
+          snapshot: {
+            ...fallbackSnapshot,
+            acquisition: {
+              primary: { reason: result.reason, attempt: structuredClone(result.attempt) },
+              fallback: {
+                source_family: LEGACY_TOC_SOURCE_FAMILY,
+                source_as_of: snapshotSourceAsOf(fallbackSnapshot),
+                observed_at: observedAt,
+              },
+            },
+          },
+        };
+        usingFallback = true;
       }
     } catch {
-      // The DOC API 429 remains the authoritative failure when the bounded
+      // The original DOC failure remains authoritative when the bounded
       // provider-owned fallback cannot produce a complete reference basket.
     }
   }
 
-  if (result.status !== "ready") {
+  if (result.status !== "ready" && !usingFallback) {
     writeResult();
     return retainFailure(result.reason);
   }
@@ -1150,6 +1195,8 @@ export async function runNewsTone({
       built = await buildFn(args, {
         dataRootPath: path.join(repoRootPath, "data"),
         privateRootPath: path.join(repoRootPath, "_private", "admin", "fenok-flow", "gdelt_news"),
+        forceFresh: boundManualFetch,
+        observedAt,
       });
     } catch (err) {
       result = withSnapshotReadinessAssertion(result, null, "unexpected_error");
@@ -1158,9 +1205,10 @@ export async function runNewsTone({
     }
   }
   const snapshot = built?.snapshot ?? built;
-  result = withSnapshotReadinessAssertion(result, snapshot);
+  const snapshotFailureReason = validToneSnapshot(snapshot) ? "future_source" : "schema_drift";
+  result = withSnapshotReadinessAssertion(result, snapshot, snapshotFailureReason, observedAt);
   writeResult();
-  if (result.status !== "ready") return retainFailure(result.reason);
+  if (result.status !== "ready" && !usingFallback) return retainFailure(result.reason);
 
   let candidate;
   try {
@@ -1172,9 +1220,15 @@ export async function runNewsTone({
     return { ok: true, reason: "ok", degraded: false, exitCode: 0, retrySet: [], snapshot, result };
   }
   const decisions = store.evaluatePromotionCandidates([candidate], run);
-  const decision = decisions[0];
+  const canonical = readJson(OUTPUT_FILE, null, path.join(repoRootPath, "data"));
+  const canonicalIsNewer = validToneSnapshot(canonical)
+    && Date.parse(snapshotSourceAsOf(canonical)) > Date.parse(candidate.sourceAsOf);
+  const decision = canonicalIsNewer
+    ? { ...decisions[0], eligible: false, reason: "foreign_writer_conflict" }
+    : decisions[0];
   if (!decision.eligible) {
-    if (["foreign_writer_conflict", "recovery_not_advanced_by_provider"].includes(decision.reason)) {
+    if (["foreign_writer_conflict", "recovery_not_advanced_by_provider"].includes(decision.reason)
+      && store.stateSnapshot().retry_set.includes(LKG_ARTIFACT_KEY)) {
       store.recordPromotionDeferral({ artifacts: [candidate], run, reason: decision.reason });
     }
     return {
@@ -1225,6 +1279,7 @@ export async function main({
     wrote: !args.noWrite,
     source_as_of: snapshotSourceAsOf(snapshot),
     source_families: [...new Set(snapshot.rows.flatMap((row) => row.source_families ?? []))].sort(),
+    ...(snapshot.acquisition ? { acquisition: snapshot.acquisition } : {}),
     coverage: snapshot.coverage,
     rows: snapshot.rows.map((row) => ({
       ticker: row.ticker,
@@ -1260,6 +1315,7 @@ export {
   GDELT_HISTORY_PERSISTENCE_POLICY,
   MAX_GDELT_HISTORY_SOURCE_DATES,
   latestArticleSeenAt,
+  loadArticles,
   mergeHistory,
   matchLegacyTocTickers,
   observeAttempt,

@@ -832,6 +832,95 @@ function readOptionalJson(filePath) {
   fs.rmSync(root, { recursive: true, force: true });
 }
 
+// Bound first-attempt manual recovery requires a fresh observation, a source
+// date no later than the Seoul civil day, and newer provider data.
+{
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), "fenok-krx-bound-dispatch-recovery-"));
+  const paths = recoveryPaths(root);
+  assert.equal(applyReady(root, "2026-07-14", "seed-run").kind, "success");
+  const targets = [paths.bridgeIndexPath, paths.publicBridgeHistoryPath, paths.publicIndexClosesPath, paths.publicKosdaqMarketCapPath];
+  const before = targets.map((target) => fs.readFileSync(target));
+  applyKrxLkgContract({
+    ...paths,
+    run: recoveryRun("chaos-run", "2026-07-15T10:31:01.000Z", "workflow_dispatch"),
+    controlledFailure: true,
+  });
+  const statePath = path.join(root, "data/admin", KRX_LANE_ID, "index.json");
+  const stateBefore = fs.readFileSync(statePath);
+  for (const extra of [
+    {},
+    { freshProviderObservation: false },
+    { freshProviderObservation: true, run: recoveryRun("36358063091", "2026-07-15T14:59:59.000Z", "workflow_dispatch") },
+  ]) {
+    const rejected = applyReady(root, "2026-07-16", "36358063091", "workflow_dispatch", 1, extra);
+    assert.equal(rejected.reason, extra.freshProviderObservation === true
+      ? "provider_source_future" : "manual_recovery_requires_fresh_fetch");
+    targets.forEach((target, index) => assert.deepEqual(fs.readFileSync(target), before[index]));
+    assert.deepEqual(fs.readFileSync(statePath), stateBefore);
+  }
+  for (const [asOf, eventName, runAttempt, reason] of [
+    ["2026-07-16", "workflow_dispatch", 2, "recovery_requires_schedule"],
+    ["2026-07-16", "local", 1, "recovery_requires_schedule"],
+    ["2026-07-14", "workflow_dispatch", 1, "recovery_not_advanced_by_provider"],
+  ]) {
+    const rejected = applyReady(root, asOf, "36358063091", eventName, runAttempt, { freshProviderObservation: true });
+    assert.equal(rejected.reason, reason);
+    targets.forEach((target, index) => assert.deepEqual(fs.readFileSync(target), before[index]));
+  }
+  // Midnight in Seoul admits July 16 even though the UTC date is July 15.
+  const recovered = applyReady(root, "2026-07-16", "36358063091", "workflow_dispatch", 1, {
+    freshProviderObservation: true,
+    run: recoveryRun("36358063091", "2026-07-15T15:00:00.000Z", "workflow_dispatch"),
+  });
+  assert.equal(recovered.kind, "success");
+  assert.equal(recovered.recovered, true);
+  assert.equal(readJson(paths.bridgeIndexPath).as_of, "2026-07-16");
+  assert.equal(readJson(paths.publicBridgeHistoryPath).latest_source_date, "2026-07-16");
+  assert.equal(readJson(paths.publicIndexClosesPath).as_of, "2026-07-16");
+  assert.equal(readJson(paths.publicKosdaqMarketCapPath).as_of, "2026-07-16");
+  targets.forEach((target, index) => assert.notDeepEqual(fs.readFileSync(target), before[index]));
+  const state = readJson(path.join(root, "data/admin", KRX_LANE_ID, "index.json"));
+  assert.deepEqual(state.retry_set, []);
+  assert.equal(state.items[KRX_LKG_KEY].recovered_from_run_id, "chaos-run");
+  assert.equal(state.items[KRX_LKG_KEY].recovery_run_id, "36358063091");
+  assert.equal(state.items[KRX_LKG_KEY].recovery_run_attempt, 1);
+  assert.equal(state.items[KRX_LKG_KEY].recovery_event_name, "workflow_dispatch");
+  fs.rmSync(root, { recursive: true, force: true });
+}
+
+// Recovery cannot overwrite an independently newer canonical date: retained
+// LKG D1, canonical D3, and a fresh bound manual candidate D2 remain unchanged.
+{
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), "fenok-krx-recovery-source-floor-"));
+  const paths = recoveryPaths(root);
+  assert.equal(applyReady(root, "2026-07-14", "seed-run").kind, "success");
+  applyKrxLkgContract({
+    ...paths,
+    run: recoveryRun("chaos-run", "2026-07-15T10:31:01.000Z", "workflow_dispatch"),
+    controlledFailure: true,
+  });
+  const bridgeDocument = recoveryBridge("2026-07-16", "independent-writer");
+  const publicIndexCloses = recoveryIndex(bridgeDocument.as_of);
+  const publicKosdaqMarketCap = recoveryKosdaq(bridgeDocument.as_of);
+  const targets = [paths.bridgeIndexPath, paths.publicBridgeHistoryPath, paths.publicIndexClosesPath, paths.publicKosdaqMarketCapPath];
+  const documents = [bridgeDocument, mergeKrxBridgeHistory({
+    bridgeDocument, publicIndexCloses, publicKosdaqMarketCap,
+    previousHistory: readJson(paths.publicBridgeHistoryPath),
+  }), publicIndexCloses, publicKosdaqMarketCap];
+  targets.forEach((target, index) => fs.writeFileSync(target, `${JSON.stringify(documents[index], null, 2)}\n`));
+  const statePath = path.join(root, "data/admin", KRX_LANE_ID, "index.json");
+  const state = readJson(statePath);
+  assert.equal(state.items[KRX_LKG_KEY].lkg.source_as_of, "2026-07-14");
+  const protectedPaths = [...targets, statePath, path.join(root, state.items[KRX_LKG_KEY].lkg.path)];
+  const before = protectedPaths.map((target) => fs.readFileSync(target));
+  const rejected = applyReady(root, "2026-07-15", "36358063091", "workflow_dispatch", 1, { freshProviderObservation: true });
+  assert.equal(rejected.reason, "provider_source_regression");
+  assert.equal(rejected.updated, false);
+  assert.equal(rejected.degraded, true);
+  protectedPaths.forEach((target, index) => assert.deepEqual(fs.readFileSync(target), before[index]));
+  fs.rmSync(root, { recursive: true, force: true });
+}
+
 // A partial tracked-output write is rolled back before the failure state is
 // recorded. None of the four tracked bytes may advance independently.
 {
@@ -1022,6 +1111,73 @@ function trackedKrxOutputs(paths) {
     paths.publicIndexClosesPath,
     paths.publicKosdaqMarketCapPath,
   ];
+}
+
+// The real runner must derive the fresh-observation fact from fetching. A
+// validated cache captured by a rejected local run cannot recover manually.
+{
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), "fenok-krx-fresh-manual-run-"));
+  const paths = recoveryPaths(root);
+  assert.equal(applyReady(root, "2026-07-14", "seed-run").kind, "success");
+  applyKrxLkgContract({
+    ...paths,
+    run: recoveryRun("chaos-run", "2026-07-15T10:31:01.000Z", "workflow_dispatch"),
+    controlledFailure: true,
+  });
+  const statePath = path.join(root, "data/admin", KRX_LANE_ID, "index.json");
+  const protectedPaths = [...trackedKrxOutputs(paths), statePath, path.join(root, readJson(statePath).items[KRX_LKG_KEY].lkg.path)];
+  const before = protectedPaths.map((target) => fs.readFileSync(target));
+  const outputRoot = path.join(root, "_private/admin/fenok-edge-korea/daily/manual");
+  const provider = stubKrxProvider((url) => {
+    const parsed = new URL(url);
+    const apiId = parsed.pathname.split("/").at(-1);
+    const basDd = parsed.searchParams.get("basDd");
+    const rows = parsed.pathname.includes("/idx/")
+      ? [{ BAS_DD: basDd, IDX_CLSS: "KOSPI", IDX_NM: "코스피", CLSPRC_IDX: "2500" }]
+      : Array.from({ length: 10 }, (_, index) => ({
+        BAS_DD: basDd, ISU_CD: String(100000 + index), ISU_NM: "sample",
+        MKT_NM: apiId.startsWith("ksq_") ? "KOSDAQ" : "KOSPI", MKTCAP: "1000",
+        BND_EXP_TP_NM: "10", GOVBND_ISU_TP_NM: "지표", CLSPRC_YD: "4.241",
+      }));
+    return new Response(JSON.stringify({ OutBlock_1: rows }), { status: 200 });
+  });
+  const previousKey = process.env.KRX_OPEN_API_AUTH_KEY;
+  process.env.KRX_OPEN_API_AUTH_KEY = "test-only-key";
+  try {
+    const args = [
+      "--end-date", "20260716", "--run-id", "36358063091", "--output-root", outputRoot,
+      "--bridge-index", paths.bridgeIndexPath, "--public-bridge-history", paths.publicBridgeHistoryPath,
+      "--public-index-closes", paths.publicIndexClosesPath, "--public-kosdaq-market-cap", paths.publicKosdaqMarketCapPath,
+      "--concurrency", "1", "--sleep-ms", "0",
+    ];
+    const context = { lkgRepoRoot: root, runId: "36358063091", runAttempt: 1, observedAt: "2026-07-16T10:31:01.000Z" };
+    const local = await run(args, { ...context, eventName: "local" });
+    assert.deepEqual(local.validation_errors, []);
+    assert.equal(local.recovery.reason, "recovery_requires_schedule");
+    assert.equal(provider.calls.length, 31);
+    const cached = await run([...args, "--no-fetch"], { ...context, eventName: "workflow_dispatch" });
+    assert.deepEqual(cached.validation_errors, []);
+    assert.equal(cached.summary.success_files, 31);
+    assert.equal(cached.recovery.reason, "manual_recovery_requires_fresh_fetch");
+    assert.equal(cached.recovery.updated, false);
+    assert.equal(provider.calls.length, 31, "cache-only recovery must not call the provider");
+    protectedPaths.forEach((target, index) => assert.deepEqual(fs.readFileSync(target), before[index]));
+    const fresh = await run(args, { ...context, eventName: "workflow_dispatch" });
+    assert.deepEqual(fresh.validation_errors, []);
+    assert.equal(provider.calls.length, 62);
+    assert.equal(fresh.recovery.kind, "success");
+    assert.equal(fresh.recovery.recovered, true);
+    trackedKrxOutputs(paths).forEach((target, index) => {
+      assert.equal(readJson(target).as_of ?? readJson(target).latest_source_date, "2026-07-16");
+      assert.notDeepEqual(fs.readFileSync(target), before[index]);
+    });
+    assert.equal(readJson(statePath).items[KRX_LKG_KEY].recovery_event_name, "workflow_dispatch");
+  } finally {
+    provider.restore();
+    if (previousKey === undefined) delete process.env.KRX_OPEN_API_AUTH_KEY;
+    else process.env.KRX_OPEN_API_AUTH_KEY = previousKey;
+    fs.rmSync(root, { recursive: true, force: true });
+  }
 }
 
 // B-KRX-ACCESS-FAILURE (a): every KRX request is rejected with HTTP 401/403
