@@ -3799,7 +3799,7 @@ class YahooChartQuoteTest(unittest.TestCase):
         self.assertEqual(info["marketCap"], 123)
         self.assertEqual(result["data"]["income_statement"], data["income_statement"])
         self.assertEqual(result["data"]["history_1y"], data["history_1y"])
-        self.assertEqual(result["data"]["quote_observation"]["previous_close"], None)
+        self.assertNotIn("previous_close", result["data"]["quote_observation"])
         self.assertEqual(calls, [{"period": "1y", "interval": "1d", "auto_adjust": True}, "metadata"])
 
     def test_enrolled_chart_pair_collector_merge_writer_readback_retains_new_unadjusted_dependents(self):
