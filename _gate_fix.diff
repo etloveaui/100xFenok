@@ -1,0 +1,192 @@
+diff --git a/100xfenok-next/scripts/check-fenok-etf-signal-gate.mjs b/100xfenok-next/scripts/check-fenok-etf-signal-gate.mjs
+index f51e1faa40..6c0eb8016d 100644
+--- a/100xfenok-next/scripts/check-fenok-etf-signal-gate.mjs
++++ b/100xfenok-next/scripts/check-fenok-etf-signal-gate.mjs
+@@ -420,13 +420,34 @@ export function runEtfSignalGateChecks(options = {}) {
+   const publicMirrorExists = publicSummaryArtifact.exists;
+   const publicFullLeak = fileExists(root, PUBLIC_ETF_SIGNALS_REL);
+   const publicMirrorMatches = Boolean(etfSummary && publicSummary && sameJson(etfSummary, publicSummary));
+-  const apiRouteReady = fileContains(root, "100xfenok-next/src/app/api/data/fenok-etf-signals/[ticker]/route.ts", [
+-    "fenok_etf_signals_summary.json",
++  // fh-288: old-needle-in-route checks went stale when the route was refactored
++  // to delegate (a164bed67c). The proof must follow the delegation chain: the
++  // real route entry imports AND invokes both helpers, the helper keeps its
++  // four semantics, and the loader actually reads the summary file. A missing
++  // route or a disconnected helper must still fail.
++  const API_ROUTE_REL = "100xfenok-next/src/app/api/data/fenok-etf-signals/[ticker]/route.ts";
++  const SIGNAL_ROUTE_HELPER_REL = "100xfenok-next/src/lib/server/fenok-etf-signal-route.ts";
++  const DATA_LOADER_REL = "100xfenok-next/src/lib/server/data-loader.ts";
++  const routeText = fileExists(root, API_ROUTE_REL)
++    ? fs.readFileSync(path.join(root, API_ROUTE_REL), "utf8")
++    : null;
++  const routeExists = routeText !== null;
++  const routeDelegates = Boolean(routeText
++    && routeText.includes('from "@/lib/server/fenok-etf-signal-route"')
++    && routeText.includes('from "@/lib/server/data-loader"')
++    && routeText.includes("buildEtfSignalRouteResponse(")
++    && routeText.includes("getFenokEtfSignalsSummary("));
++  const helperSemantics = fileContains(root, SIGNAL_ROUTE_HELPER_REL, [
+     "fields?: string[]",
+     "normalizeEtfSignalRow",
+     "Array.isArray(rawRow)",
+     "FENOK_ETF_SIGNAL_NOT_FOUND",
+   ]);
++  const summaryLoaderLinkage = fileContains(root, DATA_LOADER_REL, [
++    "getFenokEtfSignalsSummary",
++    "fenok_etf_signals_summary.json",
++  ]);
++  const apiRouteReady = routeExists && routeDelegates && helperSemantics && summaryLoaderLinkage;
+   const detailUiReady = fileContains(root, "100xfenok-next/src/app/etfs/[ticker]/EtfDetailClient.tsx", [
+     "/api/data/fenok-etf-signals/",
+     "Fenok Edge ETF 시그널",
+@@ -479,10 +500,18 @@ export function runEtfSignalGateChecks(options = {}) {
+       public_mirror_matches_internal_summary: publicMirrorMatches,
+       api_route_ready: apiRouteReady,
+       detail_ui_card_ready: detailUiReady,
++      route_proof: {
++        route_exists: routeExists,
++        route_delegates: routeDelegates,
++        helper_semantics: helperSemantics,
++        summary_loader_linkage: summaryLoaderLinkage,
++      },
+       files: {
+         public_summary: "100xfenok-next/public/data/computed/fenok_etf_signals_summary.json",
+         api_route: "100xfenok-next/src/app/api/data/fenok-etf-signals/[ticker]/route.ts",
+         detail_ui: "100xfenok-next/src/app/etfs/[ticker]/EtfDetailClient.tsx",
++        signal_route_helper: "100xfenok-next/src/lib/server/fenok-etf-signal-route.ts",
++        summary_loader: "100xfenok-next/src/lib/server/data-loader.ts",
+       },
+     },
+   };
+diff --git a/scripts/test-etf-readiness-gate.mjs b/scripts/test-etf-readiness-gate.mjs
+index 5ab86490e9..52f26f9b62 100644
+--- a/scripts/test-etf-readiness-gate.mjs
++++ b/scripts/test-etf-readiness-gate.mjs
+@@ -1,8 +1,12 @@
+ #!/usr/bin/env node
+ 
+ import assert from "node:assert/strict";
++import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from "node:fs";
++import { tmpdir } from "node:os";
++import { dirname, join } from "node:path";
+ 
+ import { buildEtfScoringLaneReadiness } from "./lib/etf-readiness-gate.mjs";
++import { runEtfSignalGateChecks } from "../100xfenok-next/scripts/check-fenok-etf-signal-gate.mjs";
+ 
+ const greenScoredLane = {
+   signalGeneratedAt: "2026-07-26T14:23:44.115Z",
+@@ -122,3 +126,114 @@ assert.equal(qaBlocked.gatedReady, false);
+ assert.deepEqual(qaBlocked.gatedBlockers, ["qa_fenok_etf_signal_gate"]);
+ 
+ console.log("test-etf-readiness-gate: ok");
++
++// ---------------------------------------------------------------------------
++// API route delegation proof (fh-288/fh-292): runEtfSignalGateChecks must
++// require the real route entry to import AND invoke both delegation helpers,
++// plus the helper's four semantics and the summary-loader linkage. A missing
++// route, a disconnected helper, or a deleted loader proof must still fail.
++// ---------------------------------------------------------------------------
++
++const ROUTE_REL = "100xfenok-next/src/app/api/data/fenok-etf-signals/[ticker]/route.ts";
++const HELPER_REL = "100xfenok-next/src/lib/server/fenok-etf-signal-route.ts";
++const LOADER_REL = "100xfenok-next/src/lib/server/data-loader.ts";
++const UI_REL = "100xfenok-next/src/app/etfs/[ticker]/EtfDetailClient.tsx";
++const SUMMARY_REL = "data/computed/fenok_etf_signals_summary.json";
++const PUBLIC_SUMMARY_REL = "100xfenok-next/public/data/computed/fenok_etf_signals_summary.json";
++
++const GOOD_ROUTE = [
++  'import { buildEtfSignalRouteResponse } from "@/lib/server/fenok-etf-signal-route";',
++  'import { getFenokEtfSignalsSummary } from "@/lib/server/data-loader";',
++  "export async function GET() { return buildEtfSignalRouteResponse(await getFenokEtfSignalsSummary(), \"SPY\"); }",
++].join("\n");
++const GOOD_HELPER = [
++  "fields?: string[]",
++  "function normalizeEtfSignalRow() { return Array.isArray(rawRow); }",
++  "FENOK_ETF_SIGNAL_NOT_FOUND",
++  "export function buildEtfSignalRouteResponse() {}",
++].join("\n");
++const GOOD_LOADER =
++  'export async function getFenokEtfSignalsSummary() { return readDataAsset("/data/computed/fenok_etf_signals_summary.json"); }';
++const GOOD_UI = [
++  "/api/data/fenok-etf-signals/",
++  "Fenok Edge ETF 시그널",
++  "ETF_SIGNAL_SCORE_FIELDS",
++].join("\n");
++
++function makeFixture(mutate) {
++  const root = mkdtempSync(join(tmpdir(), "etf-gate-fx-"));
++  const files = {
++    [ROUTE_REL]: GOOD_ROUTE,
++    [HELPER_REL]: GOOD_HELPER,
++    [LOADER_REL]: GOOD_LOADER,
++    [UI_REL]: GOOD_UI,
++    [SUMMARY_REL]: '{"rows":[]}',
++    [PUBLIC_SUMMARY_REL]: '{"rows":[]}',
++  };
++  if (mutate) mutate(files);
++  for (const [rel, body] of Object.entries(files)) {
++    if (body === null) continue;
++    const abs = join(root, rel);
++    mkdirSync(dirname(abs), { recursive: true });
++    writeFileSync(abs, body);
++  }
++  return root;
++}
++
++const fixtureRoots = [];
++function fixture(mutate) {
++  const root = makeFixture(mutate);
++  fixtureRoots.push(root);
++  return runEtfSignalGateChecks({ repoRoot: root }).public_surface_proof;
++}
++
++// Positive: current delegated layout — first the real comparison worktree.
++const currentProof = runEtfSignalGateChecks().public_surface_proof;
++assert.equal(currentProof.route_proof?.route_exists, true, "current route entry must exist");
++assert.equal(currentProof.route_proof?.route_delegates, true, "current route must import+invoke both helpers");
++assert.equal(currentProof.route_proof?.helper_semantics, true, "current helper must carry the four semantics");
++assert.equal(currentProof.route_proof?.summary_loader_linkage, true, "current loader must link the summary file");
++assert.equal(currentProof.api_route_ready, true, "current delegated layout must satisfy api_route_ready");
++assert.equal(currentProof.ready, true, "current delegated layout must prove the public surface");
++console.log("route proof (current delegated layout): ok");
++
++// Positive: self-contained fixture with the same layout.
++const fixtureOk = fixture();
++assert.equal(fixtureOk.api_route_ready, true);
++assert.equal(fixtureOk.ready, true);
++
++// Negative 1: missing route entry.
++const missingRoute = fixture((files) => { files[ROUTE_REL] = null; });
++assert.equal(missingRoute.route_proof?.route_exists, false);
++assert.equal(missingRoute.api_route_ready, false);
++assert.equal(missingRoute.ready, false, "missing route must not prove the surface");
++
++// Negative 2: route exists but is disconnected from the helpers.
++const disconnected = fixture((files) => {
++  files[ROUTE_REL] = "export async function GET() { return null; }";
++});
++assert.equal(disconnected.route_proof?.route_exists, true);
++assert.equal(disconnected.route_proof?.route_delegates, false, "route without import+invoke is disconnected");
++assert.equal(disconnected.api_route_ready, false);
++assert.equal(disconnected.ready, false, "disconnected delegation must not prove the surface");
++
++// Negative 3: helper missing one of the four semantics.
++const missingHelperSemantic = fixture((files) => {
++  files[HELPER_REL] = GOOD_HELPER.replace("FENOK_ETF_SIGNAL_NOT_FOUND", "SOMETHING_ELSE");
++});
++assert.equal(missingHelperSemantic.route_proof?.route_delegates, true);
++assert.equal(missingHelperSemantic.route_proof?.helper_semantics, false);
++assert.equal(missingHelperSemantic.api_route_ready, false);
++assert.equal(missingHelperSemantic.ready, false, "missing helper semantic must not prove the surface");
++
++// Negative 4: loader without the actual summary-file linkage.
++const missingLoader = fixture((files) => {
++  files[LOADER_REL] = "export async function getFenokEtfSignalsSummary() { return null; }";
++});
++assert.equal(missingLoader.route_proof?.route_delegates, true);
++assert.equal(missingLoader.route_proof?.summary_loader_linkage, false);
++assert.equal(missingLoader.api_route_ready, false);
++assert.equal(missingLoader.ready, false, "missing summary loader proof must not prove the surface");
++
++for (const root of fixtureRoots) rmSync(root, { recursive: true, force: true });
++console.log("route proof (delegation regression cases): ok");

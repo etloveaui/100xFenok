@@ -1176,9 +1176,6 @@
         icon: '⚡',
         category: 'buy',
         conditions: [{ indicator: 'vix', operator: '>=', value: 40, label: 'VIX ≥ 40' }],
-        winRate: '~100%',
-        avgReturn: '+35%',
-        sampleSize: '20년+',
         priority: 5
       },
       {
@@ -1187,9 +1184,6 @@
         icon: '👥',
         category: 'buy',
         conditions: [{ indicator: 'aaii_bearish', operator: '>=', value: 60, label: 'Bearish ≥ 60%' }],
-        winRate: '100%',
-        avgReturn: '+27%',
-        sampleSize: '1987~',
         priority: 5
       },
       {
@@ -1198,9 +1192,6 @@
         icon: '😰',
         category: 'buy',
         conditions: [{ indicator: 'cnn_fg', operator: '<=', value: 10, label: 'F&G ≤ 10' }],
-        winRate: '~90%',
-        avgReturn: '+20%',
-        sampleSize: '2011~',
         priority: 4
       },
       {
@@ -1213,9 +1204,6 @@
           { indicator: 'cnn_fg', operator: '<=', value: 25, label: 'CNN ≤ 25' },
           { indicator: 'cftc_net', operator: '<', value: -150000, label: 'CFTC < -150K' }
         ],
-        winRate: '~85%',
-        avgReturn: '+25%',
-        sampleSize: '2011~',
         priority: 4
       },
       {
@@ -1227,9 +1215,6 @@
           { indicator: 'vix', operator: '>=', value: 30, label: 'VIX ≥ 30' },
           { indicator: 'cnn_fg', operator: '<=', value: 25, label: 'CNN ≤ 25' }
         ],
-        winRate: '84%',
-        avgReturn: '+20%',
-        sampleSize: '2011~',
         priority: 4
       },
       {
@@ -1238,9 +1223,6 @@
         icon: '📉',
         category: 'buy',
         conditions: [{ indicator: 'aaii_spread', operator: '<=', value: -30, label: 'Spread ≤ -30' }],
-        winRate: '79.5%',
-        avgReturn: '+12.6%',
-        sampleSize: '1987~',
         priority: 3
       },
       {
@@ -1249,10 +1231,6 @@
         icon: '⚖️',
         category: 'buy',
         conditions: [{ indicator: 'putcall_ratio', operator: '>=', value: 1.2, label: 'P/C ≥ 1.2' }],
-        winRate: '68%',
-        avgReturn: '+5%',
-        sampleSize: '10년+',
-        source: 'Billingsley & Chance 1988',
         priority: 3
       },
       {
@@ -1265,8 +1243,6 @@
           { indicator: 'cnn_fg', operator: '>=', value: 75, label: 'CNN ≥ 75' },
           { indicator: 'cftc_net', operator: '>', value: 150000, label: 'CFTC > 150K' }
         ],
-        correctionProb: '~70%',
-        sampleSize: '2011~',
         priority: 4
       },
       {
@@ -1278,8 +1254,6 @@
           { indicator: 'vix', operator: '<', value: 15, label: 'VIX < 15' },
           { indicator: 'cnn_fg', operator: '>=', value: 75, label: 'CNN ≥ 75' }
         ],
-        correctionProb: '~71%',
-        sampleSize: '2011~',
         priority: 3
       },
       {
@@ -1288,9 +1262,6 @@
         icon: '⚠️',
         category: 'warn',
         conditions: [{ indicator: 'putcall_ratio', operator: '<', value: 0.6, label: 'P/C < 0.6' }],
-        correctionProb: '68%',
-        sampleSize: '10년+',
-        source: 'Billingsley & Chance 1988',
         priority: 3
       }
     ];
@@ -1523,9 +1494,6 @@
           </span>`;
         }).join('');
 
-        const statValue = isBuy ? signal.winRate : signal.correctionProb;
-        const statClass = isBuy ? 'win' : 'warn';
-
         html += `
           <div class="combo-card ${status} ${signal.category}" data-signal="${signal.id}">
             <div class="card-header">
@@ -1534,14 +1502,7 @@
               <span class="card-badge ${status}">${status.toUpperCase()}</span>
             </div>
             <div class="card-conditions">${conditionsHtml}</div>
-            <div class="card-stats">
-              <div class="stat">
-                <span class="stat-label">${isBuy ? '승률' : '조정'}:</span>
-                <span class="stat-value ${statClass}">${statValue}</span>
-              </div>
-              ${signal.avgReturn ? `<div class="stat"><span class="stat-label">평균:</span><span class="stat-value">${signal.avgReturn}</span></div>` : ''}
-              ${signal.sampleSize ? `<div class="stat"><span class="stat-label">표본:</span><span class="stat-value" style="color:#64748b;">${signal.sampleSize}</span></div>` : ''}
-            </div>
+            <div class="card-stats"><span class="stat-label">현재 관측 조건만 표시</span></div>
           </div>
         `;
       });

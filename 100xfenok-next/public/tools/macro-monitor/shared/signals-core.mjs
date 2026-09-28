@@ -168,9 +168,6 @@ export const COMBO_SIGNALS = Object.freeze([
     name: 'VIX Panic Buy',
     category: 'buy',
     conditions: [{ indicator: 'vix', operator: '>=', value: 40, label: 'VIX >= 40' }],
-    winRate: '~100%',
-    avgReturn: '+35%',
-    sampleSize: '20y+',
     priority: 5
   },
   {
@@ -178,9 +175,6 @@ export const COMBO_SIGNALS = Object.freeze([
     name: 'AAII Extreme Bear',
     category: 'buy',
     conditions: [{ indicator: 'aaii_bearish', operator: '>=', value: 60, label: 'Bearish >= 60%' }],
-    winRate: '100%',
-    avgReturn: '+27%',
-    sampleSize: '1987+',
     priority: 5
   },
   {
@@ -188,9 +182,6 @@ export const COMBO_SIGNALS = Object.freeze([
     name: 'CNN Extreme Fear',
     category: 'buy',
     conditions: [{ indicator: 'cnn_fg', operator: '<=', value: 10, label: 'F&G <= 10' }],
-    winRate: '~90%',
-    avgReturn: '+20%',
-    sampleSize: '2011+',
     priority: 4
   },
   {
@@ -202,9 +193,6 @@ export const COMBO_SIGNALS = Object.freeze([
       { indicator: 'cnn_fg', operator: '<=', value: 25, label: 'CNN <= 25' },
       { indicator: 'cftc_net', operator: '<', value: -150000, label: 'CFTC < -150K' }
     ],
-    winRate: '~85%',
-    avgReturn: '+25%',
-    sampleSize: '2011+',
     priority: 4
   },
   {
@@ -215,9 +203,6 @@ export const COMBO_SIGNALS = Object.freeze([
       { indicator: 'vix', operator: '>=', value: 30, label: 'VIX >= 30' },
       { indicator: 'cnn_fg', operator: '<=', value: 25, label: 'CNN <= 25' }
     ],
-    winRate: '84%',
-    avgReturn: '+20%',
-    sampleSize: '2011+',
     priority: 4
   },
   {
@@ -225,9 +210,6 @@ export const COMBO_SIGNALS = Object.freeze([
     name: 'AAII Spread Panic',
     category: 'buy',
     conditions: [{ indicator: 'aaii_spread', operator: '<=', value: -30, label: 'Spread <= -30' }],
-    winRate: '79.5%',
-    avgReturn: '+12.6%',
-    sampleSize: '1987+',
     priority: 3
   },
   {
@@ -235,10 +217,6 @@ export const COMBO_SIGNALS = Object.freeze([
     name: 'Put/Call Extreme',
     category: 'buy',
     conditions: [{ indicator: 'putcall_ratio', operator: '>=', value: 1.2, label: 'P/C >= 1.2' }],
-    winRate: '68%',
-    avgReturn: '+5%',
-    sampleSize: '10y+',
-    source: 'Billingsley & Chance 1988',
     priority: 3
   },
   {
@@ -250,8 +228,6 @@ export const COMBO_SIGNALS = Object.freeze([
       { indicator: 'cnn_fg', operator: '>=', value: 75, label: 'CNN >= 75' },
       { indicator: 'cftc_net', operator: '>', value: 150000, label: 'CFTC > 150K' }
     ],
-    correctionProb: '~70%',
-    sampleSize: '2011+',
     priority: 4
   },
   {
@@ -262,8 +238,6 @@ export const COMBO_SIGNALS = Object.freeze([
       { indicator: 'vix', operator: '<', value: 15, label: 'VIX < 15' },
       { indicator: 'cnn_fg', operator: '>=', value: 75, label: 'CNN >= 75' }
     ],
-    correctionProb: '~71%',
-    sampleSize: '2011+',
     priority: 3
   },
   {
@@ -271,9 +245,6 @@ export const COMBO_SIGNALS = Object.freeze([
     name: 'Put/Call Low',
     category: 'warn',
     conditions: [{ indicator: 'putcall_ratio', operator: '<', value: 0.6, label: 'P/C < 0.6' }],
-    correctionProb: '68%',
-    sampleSize: '10y+',
-    source: 'Billingsley & Chance 1988',
     priority: 3
   }
 ]);
@@ -319,12 +290,18 @@ export function latestDate(...seriesList) {
   return dates[dates.length - 1] ?? null;
 }
 
-export function calculateYoY(series, periods = 52) {
+export function calculateYoY(series) {
   if (!Array.isArray(series) || series.length < 2) return null;
-  const latest = getLatestValue(series);
-  const yearAgoIdx = Math.max(0, series.length - periods);
-  const yearAgo = series[yearAgoIdx]?.val;
-  if (!latest || !yearAgo || yearAgo === 0) return null;
+  const latestPoint = getLatestPoint(series);
+  if (latestPoint?.val == null) return null;
+  const latest = Number(latestPoint?.val);
+  const match = String(latestPoint?.date ?? "").match(/^(\d{4})-(\d{2})-(\d{2})$/);
+  if (!match || !Number.isFinite(latest)) return null;
+  const targetDate = `${Number(match[1]) - 1}-${match[2]}-${match[3]}`;
+  const yearAgoRaw = series.find((point) => point?.date === targetDate)?.val;
+  if (yearAgoRaw == null) return null;
+  const yearAgo = Number(yearAgoRaw);
+  if (!Number.isFinite(yearAgo) || yearAgo === 0) return null;
   return ((latest - yearAgo) / yearAgo) * 100;
 }
 
@@ -391,6 +368,7 @@ export function getReservesGdpStatus(ratioPercent) {
 }
 
 export function getM2Status(yoyPercent) {
+  if (!Number.isFinite(yoyPercent)) return 'unavailable';
   if (yoyPercent >= THRESHOLDS.M2_YOY.POSITIVE) return 'rising';
   if (yoyPercent >= THRESHOLDS.M2_YOY.NEUTRAL) return 'stable';
   return 'falling';
@@ -411,8 +389,9 @@ export function getScM2Status(ratioPercent) {
 export function getLiquidityFlowStatus(netLiquidityDeltaB, m2YoYPct) {
   const expanding = THRESHOLDS.OVERALL.EXPANDING;
   const contracting = THRESHOLDS.OVERALL.CONTRACTING;
-  if (netLiquidityDeltaB > expanding.netLiq && m2YoYPct >= expanding.m2YoY) return 'rising';
-  if (netLiquidityDeltaB < contracting.netLiq || m2YoYPct < contracting.m2YoY) return 'falling';
+  const hasM2YoY = Number.isFinite(m2YoYPct);
+  if (netLiquidityDeltaB > expanding.netLiq && hasM2YoY && m2YoYPct >= expanding.m2YoY) return 'rising';
+  if (netLiquidityDeltaB < contracting.netLiq || (hasM2YoY && m2YoYPct < contracting.m2YoY)) return 'falling';
   return 'stable';
 }
 
@@ -548,7 +527,7 @@ export function computeLiquidityFlowSnapshot({ m2, fedBs, tga, rrp, stablecoin }
   const tgaB = toFiniteNumber(getLatestValue(tga)) / 1000;
   const rrpB = toFiniteNumber(getLatestValue(rrp));
   const netLiquidity = walclB - tgaB - rrpB;
-  const m2YoY = toFiniteNumber(calculateYoY(m2));
+  const m2YoY = calculateYoY(m2);
   const stablecoinMcap = toFiniteNumber(stablecoin?.current ?? getLatestValue(stablecoin?.series)) / 1e9;
   const scM2Ratio = latestM2 > 0 ? (stablecoinMcap / latestM2) * 100 : 0;
   const weeklyNetFlow = calculateWeeklyNetLiquidityDelta(fedBs, tga, rrp, now);
@@ -558,7 +537,7 @@ export function computeLiquidityFlowSnapshot({ m2, fedBs, tga, rrp, stablecoin }
     status,
     overallStatus: status,
     overallLabel: status === 'rising' ? 'RISING' : status === 'falling' ? 'FALLING' : 'STABLE',
-    m2YoY: round(m2YoY, 2),
+    m2YoY: m2YoY == null ? null : round(m2YoY, 2),
     m2Total: latestM2,
     netLiquidity: round(netLiquidity, 1),
     netLiquidityDelta: weeklyNetFlow,
@@ -570,12 +549,12 @@ export function computeLiquidityFlowSnapshot({ m2, fedBs, tga, rrp, stablecoin }
     rrp: round(rrpB, 1),
     netFlow: weeklyNetFlow,
     components: {
-      m2_yoy: { value: round(m2YoY, 2), unit: '%', status: getM2Status(m2YoY) },
+      m2_yoy: { value: m2YoY == null ? null : round(m2YoY, 2), unit: '%', status: getM2Status(m2YoY) },
       net_liquidity_wow: { value: weeklyNetFlow, unit: 'B USD', status: getNetLiquidityDeltaStatus(weeklyNetFlow) },
       stablecoin_m2_ratio: { value: round(scM2Ratio, 2), unit: '%', status: getScM2Status(scM2Ratio) }
     },
     metrics: {
-      m2_yoy_pct: round(m2YoY, 2),
+      m2_yoy_pct: m2YoY == null ? null : round(m2YoY, 2),
       m2_total_b: round(latestM2, 1),
       net_liquidity_b: round(netLiquidity, 1),
       weekly_net_flow_b: weeklyNetFlow,
@@ -677,11 +656,7 @@ export function computeSentimentSignalSnapshot(currentValues, combos = COMBO_SIG
       priority: signal.priority,
       status: result.status,
       conditions: result.conditions,
-      winRate: signal.winRate,
-      avgReturn: signal.avgReturn,
-      correctionProb: signal.correctionProb,
-      sampleSize: signal.sampleSize,
-      source: signal.source
+      observed_conditions_only: true
     };
   });
 
