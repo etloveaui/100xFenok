@@ -541,11 +541,10 @@ assertTrackedFileFromGlobBelowIgnoredParentStillStages();
   assert.equal(always.status, 0, `${always.stderr}\n${always.stdout}`);
   // 4 -> 5 on 2026-08-14: yahoo_batch_quote_history declared an attempt shard
   // that no stage owned, so it had never been committed once; registry
-  // derivation now supplies it.
-  // 5 -> 6 on 2026-08-24: the same gap, same lane, this time the publish-outcome
-  // shard. 38af5b1b94 added it to commit_shards only, and workflow_policies is
-  // what staging actually reads.
-  assert.match(always.stdout, /stage_selected=6 staged_index_total=6/);
+  // derivation now supplies it. 5 -> 6 on 2026-08-24 for the publish-outcome
+  // shard. S3 removed both evidence shards, so this is back where it started;
+  // the count is derived so the next one cannot redden the gate.
+  assert.match(always.stdout, new RegExp(`stage_selected=${alwaysCount} staged_index_total=${alwaysCount}`));
   assert.deepEqual(cached(fixture.root), fixture.materialized.always.sort());
   assert.equal(
     cached(fixture.root).includes("data/yf/finance/_summary.json"),
