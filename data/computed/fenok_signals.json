@@ -1,10 +1,10 @@
 {
   "schema_version": 1,
-  "generated_at": "2026-09-28T03:04:26.167Z",
+  "generated_at": "2026-09-28T03:33:08.593Z",
   "source_file": "computed/stock_action_index.json",
   "source_date": "2026-09-25",
   "source_date_reason": null,
-  "source_generated_at": "2026-09-28T03:04:23.170Z",
+  "source_generated_at": "2026-09-28T03:33:07.002Z",
   "source_score_contract": "action-score-v0.3.1",
   "formula_version": "fenok-native-signals-v0.2.4-null-comparable",
   "contract_doc": "docs/planning/CONTRACT_fenok_native_signals_v0_2_phase_a_20260628.md",
@@ -49,9 +49,9 @@
       "durability_profitability": 1041,
       "volume_liquidity_trend": 1184,
       "short_term_relative_strength": 1184,
-      "net_options_proxy": 690,
-      "off_exchange_activity_proxy": 689,
-      "short_pressure_proxy": 689
+      "net_options_proxy": 691,
+      "off_exchange_activity_proxy": 690,
+      "short_pressure_proxy": 690
     },
     "confidence_counts": {
       "high": 910,
@@ -311140,8 +311140,8 @@
             "direction": "unavailable",
             "off_exchange_share": null,
             "finra_total_volume": null,
-            "consolidated_volume": 2537422,
-            "consolidated_volume_date": "2026-09-23",
+            "consolidated_volume": 1950393,
+            "consolidated_volume_date": "2026-09-25",
             "caveat": "FINRA reported off-exchange bucket proxy versus local consolidated volume; not true ATS-only dark-pool prints and not directional intent."
           }
         },
@@ -330593,8 +330593,8 @@
             "direction": "unavailable",
             "off_exchange_share": null,
             "finra_total_volume": null,
-            "consolidated_volume": 2683422,
-            "consolidated_volume_date": "2026-09-23",
+            "consolidated_volume": 2267017,
+            "consolidated_volume_date": "2026-09-25",
             "caveat": "FINRA reported off-exchange bucket proxy versus local consolidated volume; not true ATS-only dark-pool prints and not directional intent."
           }
         },
@@ -343776,8 +343776,8 @@
             "direction": "unavailable",
             "off_exchange_share": null,
             "finra_total_volume": null,
-            "consolidated_volume": 75546,
-            "consolidated_volume_date": "2026-09-23",
+            "consolidated_volume": 78189,
+            "consolidated_volume_date": "2026-09-25",
             "caveat": "FINRA reported off-exchange bucket proxy versus local consolidated volume; not true ATS-only dark-pool prints and not directional intent."
           }
         },
@@ -357451,8 +357451,8 @@
             "direction": "unavailable",
             "off_exchange_share": null,
             "finra_total_volume": null,
-            "consolidated_volume": 262,
-            "consolidated_volume_date": "2026-09-23",
+            "consolidated_volume": 100,
+            "consolidated_volume_date": "2026-09-25",
             "caveat": "FINRA reported off-exchange bucket proxy versus local consolidated volume; not true ATS-only dark-pool prints and not directional intent."
           }
         },
@@ -435530,7 +435530,7 @@
           }
         },
         "off_exchange_activity_proxy": {
-          "score_0_100": 38.8,
+          "score_0_100": 40.42,
           "direction": "normal_activity",
           "coverage_ratio": 1,
           "confidence": "high",
@@ -435538,12 +435538,12 @@
           "caveat": "FINRA reported off-exchange bucket proxy versus local consolidated volume; not true ATS-only dark-pool prints and not directional intent.",
           "source_date": "20260925",
           "components": {
-            "score_0_100": 38.8,
+            "score_0_100": 40.42,
             "direction": "normal_activity",
-            "off_exchange_share": 0.405212,
+            "off_exchange_share": 0.411679,
             "finra_total_volume": 5630738.5529,
-            "consolidated_volume": 13895800,
-            "consolidated_volume_date": "2026-09-23",
+            "consolidated_volume": 13677500,
+            "consolidated_volume_date": "2026-09-25",
             "caveat": "FINRA reported off-exchange bucket proxy versus local consolidated volume; not true ATS-only dark-pool prints and not directional intent."
           }
         },
@@ -445322,7 +445322,9 @@
         "slickcharts/stocks-returns.json",
         "stockanalysis/financials/*.json",
         "yf/finance/{TICKER}.json",
-        "yf/finance/SPY.json"
+        "yf/finance/SPY.json",
+        "computed/fenok_flow_proxies.json",
+        "computed/fenok_occ_options_volume.json"
       ],
       "stock_action_context": {
         "action_score": 25.26,
@@ -445334,10 +445336,10 @@
       "short_term_composite": {
         "common_basis_score_0_100": 82.67,
         "common_basis_call": "concentrated",
-        "conviction_score_0_100": 82.67,
-        "conviction_call": "concentrated",
-        "input_count": 3,
-        "basis_code": "common_3_v1",
+        "conviction_score_0_100": 68.46,
+        "conviction_call": "mixed",
+        "input_count": 5,
+        "basis_code": "us_enriched_v1",
         "comparable_score_0_100": null,
         "comparable_call": null
       },
@@ -445632,32 +445634,82 @@
           }
         },
         "net_options_proxy": {
-          "score_0_100": null,
-          "direction": "unavailable",
-          "coverage_ratio": 0,
-          "confidence": "low",
-          "basis": "occ_listed_options_volume_missing",
-          "caveat": "Options activity proxy requires an OCC listed-options volume row; no raw OCC CSV is public."
+          "score_0_100": 54.49,
+          "direction": "balanced_volume_proxy",
+          "coverage_ratio": 0.65,
+          "confidence": "high",
+          "basis": "computed_occ_listed_options_volume_skew_proxy",
+          "caveat": "OCC listed-options volume skew proxy only; not real options flow, OPRA, greeks, premium, sweeps, blocks, or buyer/seller direction.",
+          "source_date": "20260925",
+          "components": {
+            "call_volume": {
+              "value": 285776,
+              "score": null,
+              "peer_group": "occ",
+              "peer_count": 109
+            },
+            "put_volume": {
+              "value": 209688,
+              "score": null,
+              "peer_group": "occ",
+              "peer_count": 109
+            },
+            "total_volume": {
+              "value": 495464,
+              "score": null,
+              "peer_group": "occ",
+              "peer_count": 109
+            },
+            "call_share": {
+              "value": 0.5768,
+              "score": 75.59,
+              "peer_group": "rule",
+              "peer_count": null
+            },
+            "put_call_volume_ratio": {
+              "value": 0.7338,
+              "score": 23.38,
+              "peer_group": "rule",
+              "peer_count": null
+            }
+          }
         },
         "off_exchange_activity_proxy": {
-          "score_0_100": null,
-          "direction": "unavailable",
-          "coverage_ratio": 0,
-          "confidence": "low",
+          "score_0_100": 61.64,
+          "direction": "elevated_activity",
+          "coverage_ratio": 1,
+          "confidence": "high",
           "basis": "computed_fenok_flow_proxies_off_exchange_activity_proxy",
-          "caveat": "Off-exchange activity proxy uses FINRA reported off-exchange volume share; it is not ATS-only dark-pool flow.",
-          "source_date": null,
-          "components": null
+          "caveat": "FINRA reported off-exchange bucket proxy versus local consolidated volume; not true ATS-only dark-pool prints and not directional intent.",
+          "source_date": "20260925",
+          "components": {
+            "score_0_100": 61.64,
+            "direction": "elevated_activity",
+            "off_exchange_share": 0.496566,
+            "finra_total_volume": 8607617.0301,
+            "consolidated_volume": 17334300,
+            "consolidated_volume_date": "2026-09-25",
+            "caveat": "FINRA reported off-exchange bucket proxy versus local consolidated volume; not true ATS-only dark-pool prints and not directional intent."
+          }
         },
         "short_pressure_proxy": {
-          "score_0_100": null,
-          "direction": "unavailable",
-          "coverage_ratio": 0,
-          "confidence": "low",
+          "score_0_100": 60.19,
+          "direction": "watch",
+          "coverage_ratio": 1,
+          "confidence": "high",
           "basis": "computed_fenok_flow_proxies_short_pressure_proxy",
-          "caveat": "Short-volume pressure proxy uses FINRA reported short-sale volume share; it is not short interest.",
-          "source_date": null,
-          "components": null
+          "caveat": "FINRA reported short-sale volume share; not short interest, borrow fee, utilization, or buy/sell direction.",
+          "source_date": "20260925",
+          "components": {
+            "score_0_100": 60.19,
+            "direction": "watch",
+            "short_volume_ratio": 0.574908,
+            "short_exempt_ratio": 0.000865,
+            "short_volume": 4948585.8677,
+            "short_exempt_volume": 7445,
+            "total_volume": 8607617.0301,
+            "caveat": "FINRA reported short-sale volume share; not short interest, borrow fee, utilization, or buy/sell direction."
+          }
         }
       }
     },
