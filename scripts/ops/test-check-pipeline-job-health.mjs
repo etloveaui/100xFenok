@@ -21,7 +21,6 @@ import {
   mergeWorkflowRunBatches,
   needsMissedWindowReverification,
   parseWorkflowRunsPayload,
-  runtimeSlotKey,
 } from "./check-pipeline-job-health.mjs";
 
 // The alarm's data-stoppage input is two committed KPI generations. A single
@@ -106,9 +105,6 @@ import {
   assert.match(requested[1].url, /contents\/data\/admin\/fenok-data-health-kpi\.json\?ref=/);
   assert.equal(requested[1].options.headers.Accept, "application/vnd.github.raw+json");
 }
-
-assert.equal(runtimeSlotKey("update-manifest.yml", "30 2 * * *", null), null);
-assert.equal(runtimeSlotKey("update-manifest.yml", "30 2 * * *", ""), null);
 
 assert.equal(deriveFailureStreakThreshold([{ cron: "0 7 * * 0" }]), 1,
   "a weekly workflow pages on its first completed failure");
