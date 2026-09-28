@@ -280,7 +280,7 @@ try {
   assert.equal(slickcharts.date_basis, "mixed", "promoted run times fill missing member dates as collected");
   const etfDetails = rootDoc.sets.find((set) => set.set === "stockanalysis_etf_detail");
   assert.equal(etfDetails.newest_source_date, "2026-09-27");
-  assert.equal(etfDetails.oldest_source_date, "2026-09-25");
+  assert.equal(etfDetails.oldest_source_date, "2026-09-26");
   assert.equal(etfDetails.oldest_source_member, "BBB");
   assert.equal(etfDetails.date_basis, "mixed", "member dates distinguish provider stamps from fetched-at fallbacks");
   assert.equal(etfDetails.fresh_members, 2);
