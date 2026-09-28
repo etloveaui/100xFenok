@@ -585,14 +585,12 @@ assertTrackedFileFromGlobBelowIgnoredParentStillStages();
   const always = run(fixture.root, "always_if_exists", [], EDGE_WORKFLOW);
   const alwaysCount = fixture.materialized.always.length;
   assert.equal(always.status, 0, `${always.stderr}\n${always.stdout}`);
-  const alwaysCount = fixture.materialized.always.length;
   assert.match(always.stdout, new RegExp(`stage_selected=${alwaysCount} staged_index_total=${alwaysCount}`));
   assert.deepEqual(cached(fixture.root), fixture.materialized.always.sort());
 
   const success = run(fixture.root, "success_verify_not_plan_if_exists", [], EDGE_WORKFLOW);
   const successCount = fixture.materialized.success.length;
   assert.equal(success.status, 0, success.stderr);
-  const successCount = fixture.materialized.success.length;
   assert.match(success.stdout, new RegExp(`stage_selected=${successCount} staged_index_total=${alwaysCount + successCount}`));
   assert.deepEqual(cached(fixture.root), [...fixture.materialized.always, ...fixture.materialized.success].sort());
 }
@@ -604,14 +602,12 @@ assertTrackedFileFromGlobBelowIgnoredParentStillStages();
   const always = run(fixture.root, "always_if_exists", [], SENTIMENT_WORKFLOW);
   const alwaysCount = fixture.materialized.always.length;
   assert.equal(always.status, 0, `${always.stderr}\n${always.stdout}`);
-  const alwaysCount = fixture.materialized.always.length;
   assert.match(always.stdout, new RegExp(`stage_selected=${alwaysCount} staged_index_total=${alwaysCount}`));
   assert.deepEqual(cached(fixture.root), fixture.materialized.always.sort());
 
   const success = run(fixture.root, "success_if_exists", [], SENTIMENT_WORKFLOW);
   const successCount = fixture.materialized.success.length;
   assert.equal(success.status, 0, success.stderr);
-  const successCount = fixture.materialized.success.length;
   assert.match(success.stdout, new RegExp(`stage_selected=${successCount} staged_index_total=${alwaysCount + successCount}`));
   assert.deepEqual(cached(fixture.root), [...fixture.materialized.always, ...fixture.materialized.success].sort());
 }
