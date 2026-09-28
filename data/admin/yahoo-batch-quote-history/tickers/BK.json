@@ -26,39 +26,6 @@
       ],
       "latency_ms": 0,
       "natural": true,
-      "observed_at": "2026-09-08T01:15:39Z",
-      "outcome": "failed",
-      "run_attempt": 1,
-      "run_id": "34175958781",
-      "schedule": "20 23 * * 1-5",
-      "shard": "0/5"
-    },
-    {
-      "attempts_used": 2,
-      "error": "empty payload",
-      "event_name": "schedule",
-      "failures": [
-        {
-          "attempt": 1,
-          "error": "KeyError=[redacted]",
-          "source": "provider_safe_call"
-        },
-        {
-          "attempt": 1,
-          "error": "empty payload"
-        },
-        {
-          "attempt": 2,
-          "error": "KeyError=[redacted]",
-          "source": "provider_safe_call"
-        },
-        {
-          "attempt": 2,
-          "error": "empty payload"
-        }
-      ],
-      "latency_ms": 0,
-      "natural": true,
       "observed_at": "2026-09-10T01:10:13Z",
       "outcome": "failed",
       "run_attempt": 1,
@@ -452,6 +419,39 @@
       "run_id": "36365270594",
       "schedule": "",
       "shard": ""
+    },
+    {
+      "attempts_used": 2,
+      "error": "empty payload",
+      "event_name": "workflow_dispatch",
+      "failures": [
+        {
+          "attempt": 1,
+          "error": "KeyError=[redacted]",
+          "source": "provider_safe_call"
+        },
+        {
+          "attempt": 1,
+          "error": "empty payload"
+        },
+        {
+          "attempt": 2,
+          "error": "KeyError=[redacted]",
+          "source": "provider_safe_call"
+        },
+        {
+          "attempt": 2,
+          "error": "empty payload"
+        }
+      ],
+      "latency_ms": 0,
+      "natural": false,
+      "observed_at": "2026-09-28T07:38:17Z",
+      "outcome": "failed",
+      "run_attempt": 1,
+      "run_id": "36369581504",
+      "schedule": "",
+      "shard": ""
     }
   ],
   "current": {
@@ -466,7 +466,7 @@
     "market_facts"
   ],
   "last_attempt": {
-    "attempts_used": 1,
+    "attempts_used": 2,
     "error": "empty payload",
     "event_name": "workflow_dispatch",
     "failures": [
@@ -478,19 +478,28 @@
       {
         "attempt": 1,
         "error": "empty payload"
+      },
+      {
+        "attempt": 2,
+        "error": "KeyError=[redacted]",
+        "source": "provider_safe_call"
+      },
+      {
+        "attempt": 2,
+        "error": "empty payload"
       }
     ],
     "latency_ms": 0,
     "natural": false,
-    "observed_at": "2026-09-28T01:17:59Z",
+    "observed_at": "2026-09-28T07:38:17Z",
     "outcome": "failed",
     "run_attempt": 1,
-    "run_id": "36365270594",
+    "run_id": "36369581504",
     "schedule": "",
     "shard": ""
   },
   "latest_failure": {
-    "attempts_used": 1,
+    "attempts_used": 2,
     "data_loss": false,
     "deferred_acquisition": false,
     "error": "empty payload",
@@ -504,12 +513,21 @@
       {
         "attempt": 1,
         "error": "empty payload"
+      },
+      {
+        "attempt": 2,
+        "error": "KeyError=[redacted]",
+        "source": "provider_safe_call"
+      },
+      {
+        "attempt": 2,
+        "error": "empty payload"
       }
     ],
     "lkg_status": "retained",
-    "observed_at": "2026-09-28T01:17:59Z",
+    "observed_at": "2026-09-28T07:38:17Z",
     "run_attempt": 1,
-    "run_id": "36365270594"
+    "run_id": "36369581504"
   },
   "lkg": {
     "fetched_at": "2026-07-09T02:48:55Z",
@@ -533,5 +551,5 @@
     "source_as_of": "2026-07-02"
   },
   "ticker": "BK",
-  "updated_at": "2026-09-28T01:17:59Z"
+  "updated_at": "2026-09-28T07:38:17Z"
 }

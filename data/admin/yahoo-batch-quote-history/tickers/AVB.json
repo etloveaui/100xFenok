@@ -5,20 +5,6 @@
       "error": "ValueError: quote_as_of is unavailable for AVB despite available history",
       "event_name": "schedule",
       "failures": [],
-      "latency_ms": 799,
-      "natural": true,
-      "observed_at": "2026-09-09T01:18:24Z",
-      "outcome": "failed",
-      "run_attempt": 1,
-      "run_id": "34298546032",
-      "schedule": "20 23 * * 1-5",
-      "shard": "0/5"
-    },
-    {
-      "attempts_used": 1,
-      "error": "ValueError: quote_as_of is unavailable for AVB despite available history",
-      "event_name": "schedule",
-      "failures": [],
       "latency_ms": 558,
       "natural": true,
       "observed_at": "2026-09-12T01:13:27Z",
@@ -195,6 +181,20 @@
       "run_id": "36365270594",
       "schedule": "",
       "shard": ""
+    },
+    {
+      "attempts_used": 1,
+      "error": "foreign_writer_conflict",
+      "event_name": "workflow_dispatch",
+      "failures": [],
+      "latency_ms": 687,
+      "natural": false,
+      "observed_at": "2026-09-28T07:38:17Z",
+      "outcome": "failed",
+      "run_attempt": 1,
+      "run_id": "36369581504",
+      "schedule": "",
+      "shard": ""
     }
   ],
   "current": {
@@ -210,15 +210,15 @@
   ],
   "last_attempt": {
     "attempts_used": 1,
-    "error": "ValueError: quote_as_of is unavailable for AVB despite available history",
+    "error": "foreign_writer_conflict",
     "event_name": "workflow_dispatch",
     "failures": [],
-    "latency_ms": 515,
+    "latency_ms": 687,
     "natural": false,
-    "observed_at": "2026-09-28T01:17:59Z",
+    "observed_at": "2026-09-28T07:38:17Z",
     "outcome": "failed",
     "run_attempt": 1,
-    "run_id": "36365270594",
+    "run_id": "36369581504",
     "schedule": "",
     "shard": ""
   },
@@ -233,6 +233,15 @@
     "observed_at": "2026-09-28T01:17:59Z",
     "run_attempt": 1,
     "run_id": "36365270594"
+  },
+  "latest_promotion_deferral": {
+    "event_name": "workflow_dispatch",
+    "observed_at": "2026-09-28T07:38:17Z",
+    "provider_history_as_of": "2026-08-17",
+    "provider_quote_as_of": "2026-08-14T20:00:03Z",
+    "reason": "foreign_writer_conflict",
+    "run_attempt": 1,
+    "run_id": "36369581504"
   },
   "lkg": {
     "fetched_at": "2026-08-24T23:51:49Z",
@@ -268,5 +277,5 @@
     "source_as_of": "2026-08-14T20:00:03Z"
   },
   "ticker": "AVB",
-  "updated_at": "2026-09-28T01:17:59Z"
+  "updated_at": "2026-09-28T07:38:17Z"
 }

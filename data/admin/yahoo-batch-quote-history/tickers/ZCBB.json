@@ -203,7 +203,7 @@
   "current": {
     "fetched_at": "2026-09-28T06:49:27Z",
     "history_as_of": "2026-09-25",
-    "path": "data/yf/finance/ZCBB.json",
+    "path": "data/admin/yahoo-batch-quote-history/lkg/ZCBB.json",
     "payload_sha256": "b43f1f1e2f7c535f923e30c9ad88eb6298e72741052c6bdd5805ded6367f868a",
     "quote_as_of": "2026-06-09T13:34:35Z",
     "source_as_of": "2026-06-09T13:34:35Z"
@@ -243,10 +243,10 @@
     "run_id": "31648785047"
   },
   "lkg": {
-    "fetched_at": "2026-08-12T09:23:57Z",
-    "history_as_of": "2026-08-11",
+    "fetched_at": "2026-09-28T06:49:27Z",
+    "history_as_of": "2026-09-25",
     "path": "data/admin/yahoo-batch-quote-history/lkg/ZCBB.json",
-    "payload_sha256": "210c0b772b80ba8fe8618de7679d1afda48131be1dd65b22530b915017d33495",
+    "payload_sha256": "b43f1f1e2f7c535f923e30c9ad88eb6298e72741052c6bdd5805ded6367f868a",
     "quote_as_of": "2026-06-09T13:34:35Z",
     "source_as_of": "2026-06-09T13:34:35Z"
   },
@@ -267,19 +267,19 @@
   "recovery_event_name": "workflow_dispatch",
   "recovery_run_attempt": 1,
   "recovery_run_id": "36367836615",
-  "resolution_state": "fresh_primary",
-  "retry": false,
+  "resolution_state": "lkg_primary",
+  "retry": true,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "stale": {
-    "age_business_days": 44,
-    "classified_at": "2026-08-12T11:11:11Z",
-    "classified_run_id": "31590557839",
+    "age_business_days": 76,
+    "classified_at": "2026-09-28T07:38:17Z",
+    "classified_run_id": "36369581504",
     "expected_resolution": "next_natural_yahoo_run",
     "max_business_days": 6,
-    "message": "ZCBB holds LKG because Yahoo source date 2026-06-09T13:34:35Z is 44 business days old, beyond the 6-day bound; it will retry on the next natural Yahoo run.",
+    "message": "ZCBB holds LKG because Yahoo source date 2026-06-09T13:34:35Z is 76 business days old, beyond the 6-day bound; it will retry on the next natural Yahoo run.",
     "reason": "source_age_exceeds_lane_bound",
     "source_as_of": "2026-06-09T13:34:35Z"
   },
   "ticker": "ZCBB",
-  "updated_at": "2026-09-28T06:30:00Z"
+  "updated_at": "2026-09-28T07:38:17Z"
 }

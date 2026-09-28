@@ -51,6 +51,29 @@
       "run_id": "36365270594",
       "schedule": "",
       "shard": ""
+    },
+    {
+      "attempts_used": 2,
+      "error": "chart quote equal-clock price conflict",
+      "event_name": "workflow_dispatch",
+      "failures": [
+        {
+          "attempt": 1,
+          "error": "chart quote equal-clock price conflict"
+        },
+        {
+          "attempt": 2,
+          "error": "chart quote equal-clock price conflict"
+        }
+      ],
+      "latency_ms": 0,
+      "natural": false,
+      "observed_at": "2026-09-28T07:38:17Z",
+      "outcome": "failed",
+      "run_attempt": 1,
+      "run_id": "36369581504",
+      "schedule": "",
+      "shard": ""
     }
   ],
   "current": {
@@ -65,17 +88,48 @@
     "stockanalysis_etf"
   ],
   "last_attempt": {
-    "attempts_used": 1,
+    "attempts_used": 2,
+    "error": "chart quote equal-clock price conflict",
     "event_name": "workflow_dispatch",
-    "failures": [],
-    "latency_ms": 537,
+    "failures": [
+      {
+        "attempt": 1,
+        "error": "chart quote equal-clock price conflict"
+      },
+      {
+        "attempt": 2,
+        "error": "chart quote equal-clock price conflict"
+      }
+    ],
+    "latency_ms": 0,
     "natural": false,
-    "observed_at": "2026-09-28T01:17:59Z",
-    "outcome": "fresh",
+    "observed_at": "2026-09-28T07:38:17Z",
+    "outcome": "failed",
     "run_attempt": 1,
-    "run_id": "36365270594",
+    "run_id": "36369581504",
     "schedule": "",
     "shard": ""
+  },
+  "latest_failure": {
+    "attempts_used": 2,
+    "data_loss": false,
+    "deferred_acquisition": false,
+    "error": "chart quote equal-clock price conflict",
+    "failure_kind": "unexpected",
+    "failures": [
+      {
+        "attempt": 1,
+        "error": "chart quote equal-clock price conflict"
+      },
+      {
+        "attempt": 2,
+        "error": "chart quote equal-clock price conflict"
+      }
+    ],
+    "lkg_status": "retained",
+    "observed_at": "2026-09-28T07:38:17Z",
+    "run_attempt": 1,
+    "run_id": "36369581504"
   },
   "lkg": {
     "fetched_at": "2026-09-28T01:27:20Z",
@@ -111,5 +165,5 @@
     "source_as_of": "2026-08-05T13:43:16Z"
   },
   "ticker": "BCKT",
-  "updated_at": "2026-09-28T03:11:20Z"
+  "updated_at": "2026-09-28T07:38:17Z"
 }

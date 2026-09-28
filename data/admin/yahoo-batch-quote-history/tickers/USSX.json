@@ -17,7 +17,7 @@
   "current": {
     "fetched_at": "2026-09-28T06:39:11Z",
     "history_as_of": "2026-09-25",
-    "path": "data/yf/finance/USSX.json",
+    "path": "data/admin/yahoo-batch-quote-history/lkg/USSX.json",
     "payload_sha256": "9b2be3e47d29afdf31ee18fe6a8a1ecddcbb9dac39ea9da41b0ac51ef42c5cd5",
     "quote_as_of": "2026-09-15T17:04:37Z",
     "source_as_of": "2026-09-15T17:04:37Z"
@@ -38,6 +38,14 @@
     "schedule": "",
     "shard": ""
   },
+  "lkg": {
+    "fetched_at": "2026-09-28T06:39:11Z",
+    "history_as_of": "2026-09-25",
+    "path": "data/admin/yahoo-batch-quote-history/lkg/USSX.json",
+    "payload_sha256": "9b2be3e47d29afdf31ee18fe6a8a1ecddcbb9dac39ea9da41b0ac51ef42c5cd5",
+    "quote_as_of": "2026-09-15T17:04:37Z",
+    "source_as_of": "2026-09-15T17:04:37Z"
+  },
   "promotion_contract": "provider_observation/v2",
   "provider_observation": {
     "event_name": "workflow_dispatch",
@@ -50,9 +58,19 @@
     "schema_version": "provider_observation/v2",
     "source_as_of": "2026-09-15T17:04:37Z"
   },
-  "resolution_state": "fresh_primary",
-  "retry": false,
+  "resolution_state": "lkg_primary",
+  "retry": true,
   "schema_version": "yahoo-batch-quote-history-state/v1",
+  "stale": {
+    "age_business_days": 9,
+    "classified_at": "2026-09-28T07:38:17Z",
+    "classified_run_id": "36369581504",
+    "expected_resolution": "next_natural_yahoo_run",
+    "max_business_days": 6,
+    "message": "USSX holds LKG because Yahoo source date 2026-09-15T17:04:37Z is 9 business days old, beyond the 6-day bound; it will retry on the next natural Yahoo run.",
+    "reason": "source_age_exceeds_lane_bound",
+    "source_as_of": "2026-09-15T17:04:37Z"
+  },
   "ticker": "USSX",
-  "updated_at": "2026-09-28T06:30:00Z"
+  "updated_at": "2026-09-28T07:38:17Z"
 }
