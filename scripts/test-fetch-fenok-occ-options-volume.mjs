@@ -212,7 +212,6 @@ const futureDateResult = await build(parseArgs([
     return { statusCode: 200, body: dateNotAvailableBody };
   },
   cacheDir: path.join(futureDateRoot, "cache"),
-  attemptShardPath: path.join(futureDateRoot, "attempt.json"),
   observedAt: "2026-07-26T12:30:00Z",
   attemptId: "occ-date-not-available-25-test",
 });
@@ -233,7 +232,6 @@ const noRecordResult = await build(parseArgs([
 ]), {
   request: async () => ({ statusCode: 200, body: "No record(s) found" }),
   cacheDir: path.join(noRecordRoot, "cache"),
-  attemptShardPath: path.join(noRecordRoot, "attempt.json"),
   observedAt: "2026-07-26T12:31:00Z",
   attemptId: "occ-no-record-control-test",
 });
@@ -251,7 +249,6 @@ const hardFailureResult = await build(parseArgs([
 ]), {
   request: async () => ({ statusCode: 500, body: "provider failure" }),
   cacheDir: path.join(hardFailureRoot, "cache"),
-  attemptShardPath: path.join(hardFailureRoot, "attempt.json"),
   observedAt: "2026-07-26T12:32:00Z",
   attemptId: "occ-hard-failure-control-test",
 });
@@ -278,7 +275,6 @@ const mixedDateResult = await build(parseArgs([
     };
   },
   cacheDir: path.join(mixedDateRoot, "cache"),
-  attemptShardPath: path.join(mixedDateRoot, "attempt.json"),
   observedAt: "2026-07-26T12:33:00Z",
   attemptId: "occ-mixed-date-test",
 });
@@ -291,87 +287,6 @@ assert(
   mixedDateResult.reference_rows.some((row) => row.ticker === "NVDA"),
   "the loaded ticker must remain accepted in a mixed date",
 );
-
-{
-  const root = fs.mkdtempSync(path.join(os.tmpdir(), "occ-emitter-ready-"));
-  const attemptShardPath = path.join(root, "occ_options_volume.json");
-  const options = {
-    cacheDir: path.join(root, "cache-ready"),
-    attemptShardPath,
-    observedAt: "2026-07-15T03:30:00Z",
-    attemptId: "occ-options-volume-test-run-1",
-    request: async (url) => ({
-      statusCode: 200,
-      body: new URL(url).searchParams.get("porc") === "C" ? callCsv : putCsv,
-    }),
-  };
-  const result = await build(parseArgs([
-    "--tickers", "NVDA",
-    "--date", "20260626",
-    "--max-walkback-days", "0",
-    "--max-requests", "2",
-    "--sleep-ms", "0",
-    "--no-write",
-  ]), options);
-  assert.equal(result.no_usable_rows, undefined);
-  let shard = JSON.parse(fs.readFileSync(attemptShardPath, "utf8"));
-  assert.deepEqual(shard.attempts[0].assertions, [{ id: "csv_rows", passed: true }]);
-
-  await build(parseArgs([
-    "--tickers", "NVDA",
-    "--date", "20260626",
-    "--max-walkback-days", "0",
-    "--max-requests", "2",
-    "--sleep-ms", "0",
-    "--no-write",
-  ]), {
-    ...options,
-    cacheDir: path.join(root, "cache-rate-limited"),
-    observedAt: "2026-07-15T03:31:00Z",
-    request: async () => ({ statusCode: 429, body: "rate limited" }),
-  });
-  shard = JSON.parse(fs.readFileSync(attemptShardPath, "utf8"));
-  assert.equal(shard.attempts[0].http_status, 429, "same-run later batch failure is retained");
-}
-
-{
-  const root = fs.mkdtempSync(path.join(os.tmpdir(), "occ-emitter-empty-tail-"));
-  const attemptShardPath = path.join(root, "occ_options_volume.json");
-  const options = {
-    cacheDir: path.join(root, "cache"),
-    attemptShardPath,
-    observedAt: "2026-07-15T03:40:00Z",
-    attemptId: "occ-options-volume-test-empty-tail",
-    request: async (url) => ({
-      statusCode: 200,
-      body: new URL(url).searchParams.get("porc") === "C" ? callCsv : putCsv,
-    }),
-  };
-  await build(parseArgs([
-    "--tickers", "NVDA",
-    "--date", "20260626",
-    "--max-walkback-days", "0",
-    "--max-requests", "2",
-    "--sleep-ms", "0",
-    "--no-write",
-  ]), options);
-  await build(parseArgs([
-    "--all-eligible",
-    "--batch-size", "1",
-    "--batch-index", "999999",
-    "--date", "20260626",
-    "--max-walkback-days", "0",
-    "--no-fetch",
-    "--no-write",
-  ]), {
-    ...options,
-    observedAt: "2026-07-15T03:41:00Z",
-    request: async () => { throw new Error("empty tail must not request"); },
-  });
-  const shard = JSON.parse(fs.readFileSync(attemptShardPath, "utf8"));
-  assert.equal(shard.attempts[0].attempt_id, options.attemptId);
-  assert.equal(shard.attempts[0].payload, "non_empty", "empty tail cannot erase observed same-run evidence");
-}
 
 assert.deepEqual(
   candidateDates({ requestedDate: "20260628", maxWalkbackDays: 4 }),
@@ -541,7 +456,6 @@ assert.deepEqual(
       };
     },
     cacheDir: path.join(root, "cache"),
-    attemptShardPath: path.join(root, "attempt.json"),
     observedAt: "2026-07-24T12:30:00Z",
     attemptId: "occ-missing-day-integration",
     runId: "history-hole-run",
@@ -766,7 +680,6 @@ await assert.rejects(
   ]), {
     ...incompatibleInjectionOptions,
     cacheDir: path.join(root, "cache"),
-    attemptShardPath: path.join(root, "attempts", "occ_options_volume.json"),
     lkgRepoRoot: root,
     lkgMarkerPath: path.join(root, "marker.json"),
     request: async () => {
@@ -1060,7 +973,6 @@ const noFetchNoWrite = await build(parseArgs([
   "--no-write",
 ]), {
   cacheDir: path.join(noFetchAttemptRoot, "cache"),
-  attemptShardPath: path.join(noFetchAttemptRoot, "occ_options_volume.json"),
   observedAt: "2026-07-15T04:00:00Z",
   attemptId: "occ-options-volume-no-fetch-test",
 });

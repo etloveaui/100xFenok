@@ -88,7 +88,6 @@ assert.match(
   "plan and artifact verification must be mutually exclusive",
 );
 
-assert.match(workflow, /node scripts\/test-data-supply-attempt-producer\.mjs/);
 assert.match(workflow, /node scripts\/test-fetch-fenok-finra-daily-private\.mjs/);
 assert.match(workflow, /npm --prefix 100xfenok-next run qa:fenok-occ-options/);
 const occQaScript = appPackage.scripts?.["qa:fenok-occ-options"] ?? "";
@@ -105,8 +104,6 @@ assert.throws(
   /must chain all OCC suites with &&/,
   "a semicolon mutation must not swallow an earlier OCC suite failure",
 );
-assert.match(workflow, /detection-attempts\/finra_short_volume\.json/);
-assert.match(workflow, /detection-attempts\/occ_options_volume\.json/);
 assert.match(workflow, /scripts\/stage-lane-manifest\.sh/);
 assert.match(workflow, /--stage always_if_exists/);
 assert.match(workflow, /--stage success_verify_not_plan_if_exists/);

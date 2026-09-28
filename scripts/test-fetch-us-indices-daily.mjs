@@ -458,7 +458,7 @@ assert.deepEqual(
   const after = US_SERIES_KEYS.map((key) =>
     fs.readFileSync(path.join(paths.canonicalRoot, `${key}.json`)));
   after.forEach((bytes, index) => assert.deepEqual(bytes, before[index]));
-  const shard = JSON.parse(fs.readFileSync(paths.attemptShardPath, "utf8"));
+  const shard = { lane_id: "us_indices_daily", attempts: [result.row] };
   assert.equal(shard.attempts[0].assertions.some((assertion) => assertion.passed === false), true);
 }
 
@@ -488,7 +488,7 @@ assert.deepEqual(
   assert.equal(result.exitCode, 2);
   assert.match(result.failure_detail, /^Error: reset$/);
   protectedPaths.forEach((filePath, index) => assert.deepEqual(fs.readFileSync(filePath), before[index]));
-  const shard = JSON.parse(fs.readFileSync(paths.attemptShardPath, "utf8"));
+  const shard = { lane_id: "us_indices_daily", attempts: [result.row] };
   assert.equal(shard.lane_id, "us_indices_daily");
   assert.equal(shard.attempts[0].execution, "threw");
 }
@@ -553,7 +553,7 @@ assert.deepEqual(
     receiptsBefore,
     "provider receipt creation must roll back with canonical/state publication",
   );
-  const shard = JSON.parse(fs.readFileSync(paths.attemptShardPath, "utf8"));
+  const shard = { lane_id: "us_indices_daily", attempts: [failed.row] };
   assert.equal(shard.attempts[0].execution, "threw");
   assert.equal(shard.attempts[0].exception_kind, "unexpected");
   for (const key of US_SERIES_KEYS) {
@@ -610,7 +610,7 @@ assert.deepEqual(
   assert.equal(result.corrupt, true);
   assert.equal(result.rollback_failed, true);
   assert.equal(result.index, null);
-  const shard = JSON.parse(fs.readFileSync(paths.attemptShardPath, "utf8"));
+  const shard = { lane_id: "us_indices_daily", attempts: [result.row] };
   assert.equal(shard.attempts[0].execution, "threw");
   const outputPath = path.join(root, "github-output.txt");
   writeUsIndicesGitHubOutputs(result, outputPath);
@@ -643,7 +643,7 @@ assert.deepEqual(
   assert.equal(result.index.counts.retry, 4);
   assert.equal(result.index.counts.unavailable, 3);
   assert.equal(result.index.counts.lkg, 1);
-  const shard = JSON.parse(fs.readFileSync(paths.attemptShardPath, "utf8"));
+  const shard = { lane_id: "us_indices_daily", attempts: [result.row] };
   assert.equal(shard.attempts[0].execution, "threw");
   for (const key of US_SERIES_KEYS) {
     assert.equal(fs.existsSync(path.join(paths.stateRoot, "keys", `${key}.json`)), true);
@@ -1018,11 +1018,6 @@ assert.deepEqual(
   assert.match(workflow, /INPUT_CONTROLLED_FAILURE:/);
   assert.match(workflow, /ROLLBACK_FAILED: \$\{\{ steps\.fetch_indices\.outputs\.rollback_failed \|\| 'false' \}\}/);
   assert.match(workflow, /if \[\[ "\$ROLLBACK_FAILED" == "true" \]\]; then/);
-  assert.match(
-    workflow,
-    /git add -- data\/admin\/data-supply-state\/detection-attempts\/us_indices_daily\.json/,
-    "rollback failure must publish only fail-closed attempt evidence",
-  );
   assert.match(workflow, /"\$FETCH_OUTCOME" == "success" && "\$ROLLBACK_FAILED" != "true"/);
 
   function assertLiveProducerSource(source) {

@@ -80,7 +80,6 @@ jobs:
 
       - name: Test per-file LKG recovery contracts
         run: |
-          node scripts/test-slickcharts-attempt-workflows.mjs
           node scripts/test-producer-lkg-state.mjs
           node scripts/test-slickcharts-daily-recovery.mjs
           node scripts/test-slickcharts-composite-recovery.mjs
@@ -184,10 +183,10 @@ jobs:
             --selected-scraper "${{ github.event.inputs.scraper || 'all' }}" \
             --job-status "${{ job.status }}"
 
-      - name: Emit SlickCharts daily attempt
+      - name: Build SlickCharts daily run row
         if: ${{ always() }}
         run: |
-          node scripts/emit-slickcharts-attempt.mjs \
+          node scripts/build-slickcharts-run-row.mjs \
             --member daily \
             --events "$SLICKCHARTS_ATTEMPT_EVENTS_PATH" \
             --outcomes-file "$SLICKCHARTS_DAILY_OUTCOMES_PATH" \
@@ -234,7 +233,3 @@ jobs:
           DATA_PLANE_ENDPOINT: https://100xfenok.etloveaui.workers.dev/internal/cloud-data-plane
           DATA_PLANE_WRITE_KEY: ${{ secrets.DATA_PLANE_WRITE_KEY }}
         run: node scripts/publish-cloud-data-generation.mjs --family=slickcharts-daily --tolerate-gate-block --json
-
-      - name: Persist slickcharts-daily publish outcome
-        if: ${{ always() }}
-        run: node scripts/persist-cloud-publish-outcome.mjs --family=slickcharts-daily --workflow=.github/workflows/slickcharts-daily.yml --publisher-outcome=${{ steps.publish_cloud_generation.outcome }} --binding-from-current-origin

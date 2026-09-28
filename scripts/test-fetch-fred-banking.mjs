@@ -7,7 +7,6 @@ import path from "node:path";
 import { fileURLToPath } from "node:url";
 
 import { DATA_SUPPLY_DETECTION_CONFIG } from "./lib/data-supply-detection-config.mjs";
-import { validateAttemptEvidence, validateAttemptShard } from "./build-data-supply-detection-floor.mjs";
 import {
   deriveTrailingIndexDividendYield,
 } from "./lib/index-dividend-yield.mjs";
@@ -68,13 +67,10 @@ function requestedDays(url) {
   return (Date.parse(`${end}T00:00:00Z`) - Date.parse(`${start}T00:00:00Z`)) / DAY_MS;
 }
 
-function assertValidShard(shard) {
-  assert.equal(validateAttemptShard(shard, shard.lane_id), true);
-  assert.equal(validateAttemptEvidence({
-    schema_version: "data-supply-detection-attempts/v1",
-    attempts: shard.attempts,
-  }), true);
+function shardFor(result) {
+  return { attempts: [result.attempt] };
 }
+
 
 {
   assert.deepEqual(FRED_BANKING_GROUPS.map((group) => group.id), ["daily", "weekly", "monthly", "quarterly"]);
@@ -245,12 +241,9 @@ function assertValidShard(shard) {
     assert.equal(fs.existsSync(publicPathFor(root, group.id)), false, "a successful run must not create the public mirror file");
     assert.equal(readJson(paths.canonicalPaths[group.id]).type, group.id);
   }
-  const shard = readJson(paths.attemptShardPath);
-  assertValidShard(shard);
-  assert.equal(shard.lane_id, "fred_banking");
-  assert.equal(shard.attempts.length, 1, "four cadence artifacts still emit one lane attempt");
+  const shard = shardFor(result);
+  assert.equal(shard.attempts.length, 1, "four cadence artifacts fold to one in-memory lane attempt");
   const row = shard.attempts[0];
-  assert.equal(row.member_id, null);
   assert.equal(row.http_status, 200);
   assert.equal(row.auth, "ok");
   assert.deepEqual(expectedAssertionIds("fred_banking"), ["observations_array"]);
@@ -283,8 +276,7 @@ function assertValidShard(shard) {
   assert.equal(result.ok, false);
   assert.equal(result.reason, "rate_limited", "unavailable must outrank drift");
   assert.equal(result.exitCode, 2, "systemic failure with invalid canonical artifacts is fatal");
-  const shard = readJson(paths.attemptShardPath);
-  assertValidShard(shard);
+  const shard = shardFor(result);
   const row = shard.attempts[0];
   assert.equal(row.http_status, 429);
   assert.equal(row.rate_limited, true);
@@ -514,8 +506,7 @@ function assertValidShard(shard) {
   assert.match(failed.failure_detail, /token=\[redacted\]/, "diagnostic detail must redact secrets");
   assert.doesNotMatch(failed.failure_detail, new RegExp(secret), "diagnostic detail must not leak a secret");
   assert(failed.failure_detail.length <= 320, "diagnostic detail must stay bounded");
-  const shard = readJson(paths.attemptShardPath);
-  assertValidShard(shard);
+  const shard = shardFor(failed);
   assert.equal(Object.hasOwn(shard.attempts[0], "failure_detail"), false, "attempt shard schema must remain unchanged");
 }
 
@@ -554,8 +545,7 @@ function assertValidShard(shard) {
   });
   assert.equal(failed.reason, "unexpected_error", "missing credentials retain the stable reason enum");
   assert.equal(failed.failure_detail, "FRED API key is unavailable", "generic missing-key failure needs a safe cause");
-  const shard = readJson(paths.attemptShardPath);
-  assertValidShard(shard);
+  const shard = shardFor(failed);
   assert.equal(Object.hasOwn(shard.attempts[0], "failure_detail"), false, "attempt shard schema must remain unchanged");
 }
 

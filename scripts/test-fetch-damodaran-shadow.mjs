@@ -377,8 +377,6 @@ function activeRetryFixture(prefix) {
     `${JSON.stringify(result.report, null, 2)}\n`,
     "attempt evidence must not change owner-guard serialization",
   );
-  const shard = JSON.parse(fs.readFileSync(fixtureRun.attemptShardPath, "utf8"));
-  assert.equal(validateAttemptShard(shard, "damodaran"), true);
   assert.deepStrictEqual(
     JSON.parse(fs.readFileSync(path.join(fixtureRun.root, "data", "admin", "damodaran", "index.json"), "utf8")).retry_set,
     [],
@@ -520,15 +518,6 @@ function activeRetryFixture(prefix) {
   fs.mkdirSync(path.dirname(malformedCurrentPath), { recursive: true });
   fs.writeFileSync(malformedCurrentPath, "malformed canonical\n");
   assert.throws(fixtureRun.run, /owner guard exploded/);
-  const shard = JSON.parse(fs.readFileSync(fixtureRun.attemptShardPath, "utf8"));
-  assert.equal(validateAttemptShard(shard, "damodaran"), true);
-  assert.equal(shard.attempts[0].execution, "threw");
-  assert.equal(shard.attempts[0].failure_entity, "damodaran_owner_guard");
-  assert.deepEqual(classifyAttempt(shard.attempts[0]), {
-    status: "unavailable",
-    reason: "unexpected_error",
-    observed_at: "2026-07-27T01:02:03Z",
-  });
   const state = JSON.parse(fs.readFileSync(
     path.join(fixtureRun.root, "data", "admin", "damodaran", "index.json"),
     "utf8",
@@ -694,7 +683,7 @@ function activeRetryFixture(prefix) {
     runAttempt: 1,
     eventName: "schedule",
   });
-  const shard = JSON.parse(fs.readFileSync(attemptShardPath, "utf8"));
+  const shard = { schema_version: "data-supply-detection-attempt-shard/v2", lane_id: "damodaran", attempts: [row] };
   assert.equal(validateAttemptShard(shard, "damodaran"), true);
   assert.equal(row.outcome, "primary_succeeded_skip");
   assert.equal(row.candidates, 0);
@@ -856,26 +845,12 @@ function activeRetryFixture(prefix) {
   // not lane-owned — public_mirror is empty; sync coverage is guaranteed by the
   // standing coverage gate (check-public-mirror-coverage.mjs).
   assert.deepStrictEqual(lane.roots.public_mirror, []);
-  assert.equal(
-    lane.roots.detection_attempt,
-    "data/admin/data-supply-state/detection-attempts/damodaran.json",
-  );
-  assert.equal(lane.commit_shards.includes(lane.roots.detection_attempt), true);
+  assert.equal(lane.roots.detection_attempt, null);
 
   const manifest = buildLaneCommitManifest(LANE_REGISTRY);
   const policy = manifest.workflows[".github/workflows/fetch-damodaran-shadow.yml"];
   assert.deepStrictEqual(policy.lanes, ["damodaran"]);
   assert.deepStrictEqual(policy.stages.always_if_exists, [
-    {
-      path: "data/admin/data-supply-state/detection-attempts/damodaran.json",
-      kind: "file",
-      required: false,
-    },
-    {
-      path: "data/admin/data-supply-state/publish-outcomes/damodaran.json",
-      kind: "file",
-      required: false,
-    },
     { path: "data/admin/damodaran/index.json", kind: "file", required: false },
     { path: "data/admin/damodaran/current/damodaran.json", kind: "file", required: false },
     { path: "data/admin/damodaran/lkg/damodaran.json", kind: "file", required: false },

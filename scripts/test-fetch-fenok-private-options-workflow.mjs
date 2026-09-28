@@ -28,11 +28,6 @@ assert.match(workflow, /FETCH_OUTCOME.*success[\s\S]*--stage success_if_exists/)
 assert.deepEqual(stages, {
   always_if_exists: [
     {
-      kind: "file",
-      path: "data/admin/data-supply-state/detection-attempts/yahoo_private_options.json",
-      required: false,
-    },
-    {
       kind: "directory",
       path: "data/admin/yahoo_private_options",
       required: false,

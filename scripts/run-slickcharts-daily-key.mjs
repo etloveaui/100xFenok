@@ -4,7 +4,7 @@ import fs from "node:fs";
 import path from "node:path";
 import { spawnSync } from "node:child_process";
 
-import { tupleStatus } from "./lib/data-supply-attempt-shard.mjs";
+import { tupleStatus } from "./lib/provider-fetch-result.mjs";
 import { validateControlledFailureFiles } from "./slickcharts-daily-recovery.mjs";
 
 function arg(argv, name, fallback = null) {

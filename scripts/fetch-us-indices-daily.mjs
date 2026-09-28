@@ -6,16 +6,8 @@ import https from "node:https";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 
-import {
-  buildAttemptRow,
-  buildSingleLaneShard,
-  foldWorstTuples,
-  returnedTuple,
-  threwTuple,
-  transportError,
-  tupleStatus,
-  writeJsonAtomic,
-} from "./lib/data-supply-attempt-shard.mjs";
+import { foldWorstTuples, returnedTuple, threwTuple, transportError, tupleStatus } from "./lib/provider-fetch-result.mjs";
+import { buildAttemptRow } from "./lib/provider-fetch-result.mjs";
 import { boundedDiagnosticDetail } from "./lib/diagnostic-detail.mjs";
 import { ProducerLkgStateStore } from "./lib/producer-lkg-state.mjs";
 import {
@@ -33,7 +25,6 @@ const SERIES = Object.freeze([
   { key: "sox", symbol: "^SOX", encoded: "%5ESOX" },
 ]);
 const ENDPOINT = "https://query1.finance.yahoo.com/v8/finance/chart";
-const ATTEMPT_SHARD_RELATIVE_PATH = "data/admin/data-supply-state/detection-attempts/us_indices_daily.json";
 export const US_INDICES_MAX_SERIES_DATES = 15_000;
 export const US_INDICES_PERSISTENCE_POLICY = Object.freeze({
   schema_version: "us-indices-bounded-persistence/v1",
@@ -343,7 +334,6 @@ export async function runUsIndicesDaily({
   canonicalRoot = path.join(REPO_ROOT, "data", "indices"),
   stateRoot = path.join(REPO_ROOT, "data", "admin", "us-indices-daily"),
   persistencePath = path.join(stateRoot, "persistence.json"),
-  attemptShardPath = path.join(REPO_ROOT, ATTEMPT_SHARD_RELATIVE_PATH),
   request = requestBytes,
   observedAt = new Date().toISOString(),
   attemptId = `gh-${process.env.GITHUB_RUN_ID ?? Date.now()}-${process.env.GITHUB_RUN_ATTEMPT ?? 1}-us-indices`,
@@ -414,7 +404,6 @@ export async function runUsIndicesDaily({
       attemptId,
       observedAt,
     });
-    writeJsonAtomic(attemptShardPath, buildSingleLaneShard({ laneId: LANE_ID, row: failedRow }));
     const failureDetail = boundedDiagnosticDetail(error);
     if (rollbackFailed) {
       return {
@@ -466,7 +455,6 @@ export async function runUsIndicesDaily({
 
   if (results.some((result) => result.rows === null)) {
     const row = buildAttemptRow({ laneId: LANE_ID, memberId: null, tuple: worst, attemptId, observedAt });
-    writeJsonAtomic(attemptShardPath, buildSingleLaneShard({ laneId: LANE_ID, row }));
     for (const result of results.filter((entry) => entry.rows === null)) {
       const key = `${result.descriptor.key}.json`;
       const canonicalPath = path.join(canonicalRoot, key);
@@ -549,7 +537,6 @@ export async function runUsIndicesDaily({
     });
     const failedWorst = foldWorstTuples([worst, revisionFailure]);
     const row = buildAttemptRow({ laneId: LANE_ID, memberId: null, tuple: failedWorst, attemptId, observedAt });
-    writeJsonAtomic(attemptShardPath, buildSingleLaneShard({ laneId: LANE_ID, row }));
     for (const revision of outOfTolerance) {
       const key = `${revision.series}.json`;
       const canonicalPath = path.join(canonicalRoot, key);
@@ -581,7 +568,6 @@ export async function runUsIndicesDaily({
       return recordPipelineFailure(new Error(`${rejected.key}: live candidate rejected: ${rejected.reason}`));
     }
     const row = buildAttemptRow({ laneId: LANE_ID, memberId: null, tuple: worst, attemptId, observedAt });
-    writeJsonAtomic(attemptShardPath, buildSingleLaneShard({ laneId: LANE_ID, row }));
     const blockedByKeys = rejectedCandidates.map(({ candidate }) => candidate.key);
     const atomicCandidates = candidates.map(({ candidate }) => candidate.accepted
       ? {
@@ -620,7 +606,6 @@ export async function runUsIndicesDaily({
   }
 
   const row = buildAttemptRow({ laneId: LANE_ID, memberId: null, tuple: worst, attemptId, observedAt });
-  writeJsonAtomic(attemptShardPath, buildSingleLaneShard({ laneId: LANE_ID, row }));
   const persistence = {
     schema_version: "us-indices-persistence-state/v1",
     lane_id: LANE_ID,

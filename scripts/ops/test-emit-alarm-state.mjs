@@ -14,7 +14,6 @@ import {
   alarmStateUnchanged,
   alarmStateResolved,
   incidentIdentitiesChanged,
-  laneNotificationsDue,
   writeAlarmStateMirrors,
   writeWorkflowOutputs,
   ALARM_STATE_SCHEMA,
@@ -145,6 +144,8 @@ assert.equal(firing.last_firing.run_url, "https://github.com/etloveaui/100xFenok
 assert.deepEqual(firing.last_firing.workflows, ["update-manifest.yml"]);
 assert.equal(firing.last_resolved_at, null, "not resolved while open");
 assert.equal(firing.watched_workflows.length, 3);
+assert.ok(!("lane_outcome_notified" in firing), "the alarm state does not carry a publish-outcome notification ledger");
+assert.ok(!("cadence_state_counts" in firing), "attempt-history cadence is not projected into alarm state");
 assert.equal(
   firing.watched_workflows.find((row) => row.file === "validate-workflows.yml")?.event,
   "push",
@@ -155,28 +156,92 @@ assert.deepEqual(
   ["push"],
   "the public alarm state must expose every counted automatic event",
 );
-// The alarm document is the runtime-readable carrier for D3 freshness, so the
-// projection of those two fields is asserted rather than assumed.
-{
-  const etfRow = okRow("fetch-stockanalysis.yml", "Fetch StockAnalysis Data");
-  etfRow.plane_publish_outcome = {
-    family: "stockanalysis-etf-detail",
-    freshness: { state: "delayed", source_age_hours: 13.4 },
-  };
-  const projected = buildAlarmState({
-    health: { ...firingHealth, workflows: [...firingHealth.workflows, etfRow] },
-    env: ENV,
-    now: NOW,
-  }).watched_workflows.find((row) => row.file === "fetch-stockanalysis.yml");
-  assert.deepEqual(
-    [projected.data_freshness_state, projected.data_freshness_age_hours_at_generation],
-    ["delayed", 13],
-    "the StockAnalysis row must project the derived freshness state and coarse age",
-  );
-}
-
 assert.deepEqual(firing.excluded_workflows, firingHealth.excluded,
   "declared workflow exclusions and their reasons must remain visible in alarm state");
+
+// KPI stoppage is one incident keyed by the sets stopped in both generations.
+{
+  const kpiHealth = {
+    status: "alarm",
+    workflows: quietHealth.workflows,
+    data_health_kpi: {
+      status: "alarm",
+      stopped_sets: ["sentiment", "edgar_filings", "sentiment"],
+      latest_generated_at: "2026-09-28T11:34:19Z",
+      previous_generated_at: "2026-09-28T10:21:42Z",
+    },
+  };
+  const kpiOpen = buildAlarmState({ health: kpiHealth, prior: null, env: ENV, now: NOW });
+  assert.equal(kpiOpen.status, "open");
+  assert.equal(kpiOpen.open_incident_count, 1, "KPI stoppage pages as one alarm incident");
+  assert.deepEqual(kpiOpen.open_incidents[0], {
+    workflow: "data-health-kpi",
+    label: "Data stopped advancing",
+    alarm_reasons: ["data_stopped_two_generations"],
+    stopped_sets: ["edgar_filings", "sentiment"],
+    latest_generated_at: "2026-09-28T11:34:19Z",
+    previous_generated_at: "2026-09-28T10:21:42Z",
+  });
+  assert.deepEqual(kpiOpen.last_firing.workflows, ["data-health-kpi"]);
+  assert.equal(incidentIdentitiesChanged(null, kpiOpen), true);
+
+  const changedSets = buildAlarmState({
+    health: {
+      ...kpiHealth,
+      data_health_kpi: { ...kpiHealth.data_health_kpi, stopped_sets: ["sentiment"] },
+    },
+    prior: kpiOpen,
+    env: ENV,
+    now: new Date("2026-07-19T12:30:00Z"),
+  });
+  assert.equal(incidentIdentitiesChanged(kpiOpen, changedSets), true,
+    "a changed stopped-set identity must update the same OPS issue");
+  assert.ok(!alarmStateUnchanged(kpiOpen, changedSets));
+}
+
+// Unknown KPI history is never promoted to healthy and cannot announce an
+// all-clear for the previous incident.
+{
+  const kpiOpen = buildAlarmState({
+    health: {
+      status: "alarm",
+      workflows: [],
+      data_health_kpi: { status: "alarm", stopped_sets: ["sentiment"] },
+    },
+    prior: null,
+    env: ENV,
+    now: NOW,
+  });
+  const unreadable = buildAlarmState({
+    health: {
+      status: "ok",
+      workflows: [],
+      data_health_kpi: { status: "unknown", reason: "kpi_history_unavailable", stopped_sets: [] },
+    },
+    prior: kpiOpen,
+    env: ENV,
+    now: new Date("2026-07-19T13:00:00Z"),
+  });
+  assert.equal(unreadable.status, "unknown", "unknown KPI history overrides a stale overall ok");
+  assert.deepEqual(unreadable.unknown_workflows, [{ workflow: "data-health-kpi", status: "unknown" }]);
+  assert.equal(unreadable.last_resolved_at, null, "unknown history cannot stamp a resolution");
+  assert.equal(alarmStateResolved(kpiOpen, unreadable), false, "unknown history cannot announce all-clear");
+  assert.ok(!JSON.stringify(unreadable).includes("kpi_history_unavailable"),
+    "private reader diagnostics do not enter the public alarm state");
+
+  const recovered = buildAlarmState({
+    health: {
+      status: "ok",
+      workflows: [],
+      data_health_kpi: { status: "ok", stopped_sets: [] },
+    },
+    prior: unreadable,
+    env: ENV,
+    now: new Date("2026-07-19T14:00:00Z"),
+  });
+  assert.equal(recovered.status, "clear", "healthy KPI generations resolve the stoppage incident");
+  assert.equal(alarmStateResolved(unreadable, recovered), true);
+}
 
 // fh-538 two-hop proof: the real health evaluator calibrates a monthly workflow
 // to one completed failure, and the emitted public state preserves that decision
@@ -276,60 +341,6 @@ assert.deepEqual(
   "API degradation must preserve the declared counted-event policy in public alarm state",
 );
 
-// Defect 2 two-hop public projection: cadence is supplied by the health
-// producer, and an unrecovered overdue slot pages after its declared grace. The public
-// shape keeps only the honest suspected_skip/attempt_gap words, never its cron
-// or private evidence paths.
-{
-  const cadenceHealth = {
-    status: "alarm",
-    workflows: [
-      { ...okRow("not-due.yml", "Not Due"), cadence_status: "not_due" },
-      {
-        ...okRow("overdue.yml", "Overdue"),
-        status: "alarm",
-        alarming: true,
-        alarm_reasons: ["unrecovered_overdue"],
-        cadence_status: "overdue",
-        cadence_evidence: ["suspected_skip"],
-      },
-      { ...okRow("recovered.yml", "Recovered"), cadence_status: "recovered", cadence_evidence: ["attempt_gap"] },
-      { ...okRow("no-declaration.yml", "No Declaration"), cadence_status: "no_declaration" },
-      { ...okRow("unknown.yml", "Unknown"), cadence_status: "unknown" },
-    ],
-  };
-  const cadenceState = buildAlarmState({ health: cadenceHealth, prior: null, env: ENV, now: NOW });
-  assert.equal(cadenceState.status, "open", "unrecovered overdue after declared grace must page");
-  assert.equal(cadenceState.open_incident_count, 1);
-  assert.deepEqual(cadenceState.open_incidents[0].alarm_reasons, ["unrecovered_overdue"]);
-  assert.deepEqual(cadenceState.cadence_state_counts, {
-    not_due: 1,
-    overdue: 1,
-    recovered: 1,
-    no_declaration: 1,
-    unknown: 1,
-  });
-  assert.deepEqual(
-    cadenceState.watched_workflows.map((row) => [row.file, row.cadence_status, row.cadence_evidence]),
-    [
-      ["not-due.yml", "not_due", []],
-      ["overdue.yml", "overdue", ["suspected_skip"]],
-      ["recovered.yml", "recovered", ["attempt_gap"]],
-      ["no-declaration.yml", "no_declaration", []],
-      ["unknown.yml", "unknown", []],
-    ],
-    "all five cadence outcomes must survive health -> alarm-state projection",
-  );
-
-  const outputRoot = fs.mkdtempSync(path.join(os.tmpdir(), "alarm-state-cadence-mirrors-"));
-  const outPath = path.join(outputRoot, "data", "admin", "alarm-state.json");
-  const publicOutPath = path.join(outputRoot, "public", "data", "admin", "alarm-state.json");
-  const expectedBytes = writeAlarmStateMirrors({ state: cadenceState, outPath, publicOutPath });
-  assert.equal(fs.readFileSync(outPath, "utf8"), expectedBytes);
-  assert.equal(fs.readFileSync(publicOutPath, "utf8"), expectedBytes,
-    "health -> alarm state must write byte-identical admin and public mirrors");
-}
-
 // --- Privacy: the serialized state must not leak repo paths/roots/secrets ---
 const FORBIDDEN = ["_private/", "data/admin", ".github/", "100xfenok-next", "public/data", "recovery_store", "GITHUB_TOKEN", "ghp_", "secret"];
 for (const state of [firing, resolved, unknown]) {
@@ -425,8 +436,6 @@ for (const state of [firing, resolved, unknown]) {
   counterChurn.open_incidents[0].first_failing_run_id = 424242;
   counterChurn.open_incidents[0].first_failing_run_url = "https://gh/run/424242";
   counterChurn.watched_workflows[0].failure_streak_threshold = 1;
-  counterChurn.watched_workflows[0].cadence_status = "overdue";
-  counterChurn.watched_workflows[0].data_freshness_age_hours_at_generation = 99;
   assert.equal(incidentIdentitiesChanged(openNow, counterChurn), false,
     "counter, age, URL, and watch-policy churn must not notify");
   assert.equal(alarmStateUnchanged(openNow, counterChurn), false,
@@ -503,155 +512,6 @@ for (const state of [firing, resolved, unknown]) {
   } finally {
     fs.rmSync(unwritableOutput, { recursive: true, force: true });
   }
-}
-
-// DEC-407 item 2: lane+day one-report-a-day. An unchanged overdue lane
-// notifies once per day: same-day re-reports compare equal (comment
-// suppressed), the next day the lane is due again (comment fires). No new
-// workflow: the ledger lives in the persisted lane_outcome_notified map.
-{
-  assert.deepEqual(
-    laneNotificationsDue({ notified: { fred_macro: "2026-07-19" }, lanes: ["fred_macro"], day: "2026-07-19" }),
-    [],
-    "a lane notified today must not notify again today",
-  );
-  assert.deepEqual(
-    laneNotificationsDue({ notified: { fred_macro: "2026-07-19" }, lanes: ["fred_macro"], day: "2026-07-20" }),
-    ["fred_macro"],
-    "a lane notified yesterday is due again today",
-  );
-  assert.deepEqual(
-    laneNotificationsDue({ notified: {}, lanes: ["fred_macro"], day: "2026-07-19" }),
-    ["fred_macro"],
-    "a never-notified lane is due",
-  );
-  assert.deepEqual(
-    laneNotificationsDue({ notified: {}, lanes: ["fred_macro"], day: null }),
-    [],
-    "an unreadable day fails silent instead of paging every run",
-  );
-
-  const laneRow = (file, label, lane) => ({
-    ...alarmingRow(file, label),
-    status: "alarm",
-    alarming: true,
-    alarm_reasons: ["lane_outcome_overdue"],
-    lane_outcome: [{
-      lane_id: lane,
-      conditions: ["lane_outcome_overdue"],
-      decision: "failed",
-      generation_id: "gen-1",
-      observed_at: "2026-07-19T10:00:00Z",
-      source_as_of: "2026-07-18",
-      cadence_hours: 24,
-      threshold_hours: 36,
-      age_hours: 48,
-      last_advance: "2026-07-17",
-      families: ["treasury-tga"],
-      watchdog_evaluated_at: "2026-07-19T11:00:00Z",
-    }],
-  });
-  const laneHealth = {
-    status: "alarm",
-    workflows: [laneRow("fetch-treasury-tga.yml", "Treasury TGA", "treasury_tga"), okRow("deploy-worker.yml", "Deploy Worker")],
-  };
-  const laneOpen = buildAlarmState({ health: laneHealth, prior: null, env: ENV, now: NOW });
-  assert.deepEqual(laneOpen.open_incidents[0].lane_outcome_lanes, ["treasury_tga"]);
-  assert.deepEqual(laneOpen.lane_outcome_notified, { treasury_tga: "2026-07-19" });
-  const laneJson = JSON.stringify(laneOpen);
-  for (const marker of [".github/", "data/admin", "gen-1"]) {
-    assert.ok(!laneJson.includes(marker), `lane state leaked forbidden marker: ${marker}`);
-  }
-
-  // Same-day re-report: nothing due, no new comment.
-  const laneRepeat = buildAlarmState({
-    health: laneHealth,
-    prior: laneOpen,
-    env: { ...ENV, GITHUB_RUN_ID: "999999" },
-    now: new Date("2026-07-19T18:00:00Z"),
-  });
-  assert.equal(incidentIdentitiesChanged(laneOpen, laneRepeat), false,
-    "an unchanged lane must not notify twice in one day");
-  assert.ok(alarmStateUnchanged(laneOpen, laneRepeat),
-    "a same-day lane re-report must not rewrite the persisted state");
-
-  // Next day: the same unchanged lane is due again.
-  const laneNextDay = buildAlarmState({
-    health: laneHealth,
-    prior: laneRepeat,
-    env: { ...ENV, GITHUB_RUN_ID: "999999" },
-    now: new Date("2026-07-20T12:00:00Z"),
-  });
-  assert.equal(incidentIdentitiesChanged(laneRepeat, laneNextDay), true,
-    "an unchanged lane must notify again the next day");
-  assert.deepEqual(laneNextDay.lane_outcome_notified, { treasury_tga: "2026-07-20" });
-  assert.ok(!alarmStateUnchanged(laneRepeat, laneNextDay),
-    "the day rollover must persist the new notification stamp");
-
-  // The ledger carries prior lanes forward instead of resetting them.
-  const carried = buildAlarmState({
-    health: quietHealth,
-    prior: laneNextDay,
-    env: ENV,
-    now: new Date("2026-07-20T13:00:00Z"),
-  });
-  assert.deepEqual(carried.lane_outcome_notified, { treasury_tga: "2026-07-20" });
-}
-
-{
-  // P2 (fh-429): condition churn on an already-reported lane must not
-  // re-comment the same day. The lane notified at noon as overdue; by evening
-  // it is overdue+streak, but nothing new needs saying until tomorrow.
-  const churnRow = (reasons) => ({
-    ...alarmingRow("fetch-treasury-tga.yml", "Treasury TGA"),
-    status: "alarm",
-    alarming: true,
-    alarm_reasons: reasons,
-    lane_outcome: [{
-      lane_id: "treasury_tga",
-      conditions: reasons,
-      decision: "failed",
-      generation_id: "gen-1",
-      observed_at: "2026-07-19T10:00:00Z",
-      source_as_of: "2026-07-18",
-      cadence_hours: 24,
-      threshold_hours: 36,
-      age_hours: 48,
-      last_advance: "2026-07-17",
-      families: ["treasury-tga"],
-      watchdog_evaluated_at: "2026-07-19T11:00:00Z",
-    }],
-  });
-  const churnHealthA = { status: "alarm", workflows: [churnRow(["lane_outcome_overdue"])] };
-  const churnHealthB = {
-    status: "alarm",
-    workflows: [churnRow(["lane_outcome_overdue", "lane_outcome_non_promotion_streak"])],
-  };
-  const churnA = buildAlarmState({ health: churnHealthA, prior: null, env: ENV, now: NOW });
-  const churnB = buildAlarmState({
-    health: churnHealthB,
-    prior: churnA,
-    env: { ...ENV, GITHUB_RUN_ID: "999999" },
-    now: new Date("2026-07-19T18:00:00Z"),
-  });
-  assert.equal(incidentIdentitiesChanged(churnA, churnB), false,
-    "lane condition churn on an already-notified lane must stay silent the same day");
-  // Control: a genuinely new lane the same day still notifies.
-  const newLaneHealth = {
-    status: "alarm",
-    workflows: [
-      churnRow(["lane_outcome_overdue"]),
-      { ...churnRow(["lane_outcome_overdue"]), lane_outcome: [{ ...churnRow(["lane_outcome_overdue"]).lane_outcome[0], lane_id: "krx" }] },
-    ],
-  };
-  const newLane = buildAlarmState({
-    health: newLaneHealth,
-    prior: churnA,
-    env: { ...ENV, GITHUB_RUN_ID: "999999" },
-    now: new Date("2026-07-19T18:00:00Z"),
-  });
-  assert.equal(incidentIdentitiesChanged(churnA, newLane), true,
-    "a new lane the same day must still notify");
 }
 
 console.log(JSON.stringify({ ok: true, suite: "emit-alarm-state contract" }, null, 2));

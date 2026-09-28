@@ -201,10 +201,10 @@ jobs:
           echo "::error::Controlled SlickCharts symbols composite failure"
           exit 1
 
-      - name: Emit SlickCharts symbols attempt
+      - name: Build SlickCharts symbols run row
         if: ${{ always() }}
         run: |
-          node scripts/emit-slickcharts-attempt.mjs \
+          node scripts/build-slickcharts-run-row.mjs \
             --member symbols \
             --events-root artifacts \
             --outcome "${{ needs.scrape-batch.result }}" \
@@ -242,7 +242,7 @@ jobs:
 
       # The merge job consumes these telemetry artifacts before the canonical
       # commit. Remove only the four exact downloaded directories so the
-      # single-family publish-outcome helper sees no unrelated dirty paths.
+      # publisher starts from the committed source.
       - name: Remove consumed symbol attempt artifacts
         if: ${{ always() }}
         run: |
@@ -274,9 +274,6 @@ jobs:
           FENOK_VERIFY_TOKEN: ${{ secrets.FENOK_VERIFY_TOKEN }}
         run: node scripts/ops/check-cloud-family-acceptance.mjs --family=slickcharts-symbols
 
-      - name: Persist slickcharts-symbols publish outcome
-        if: ${{ always() }}
-        run: node scripts/persist-cloud-publish-outcome.mjs --family=slickcharts-symbols --workflow=.github/workflows/slickcharts-symbols.yml --publisher-outcome=${{ steps.publish_cloud_generation.outcome }} --binding-from-current-origin
 
   # Single symbol scraping for testing
   scrape-single:
@@ -320,10 +317,10 @@ jobs:
             --symbol ${{ github.event.inputs.symbol }} \
             --pretty
 
-      - name: Emit SlickCharts symbols attempt
+      - name: Build SlickCharts symbols run row
         if: ${{ always() }}
         run: |
-          node scripts/emit-slickcharts-attempt.mjs \
+          node scripts/build-slickcharts-run-row.mjs \
             --member symbols \
             --events "$SLICKCHARTS_ATTEMPT_EVENTS_PATH" \
             --outcome "${{ job.status }}" \

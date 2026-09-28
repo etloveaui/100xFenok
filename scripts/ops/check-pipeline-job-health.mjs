@@ -2,24 +2,9 @@ import fs from "node:fs";
 import path from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
 
-import { DATA_SUPPLY_DETECTION_CONFIG } from "../lib/data-supply-detection-config.mjs";
-import { TRACKED_CRONS } from "../lib/kpi-contract-constants.mjs";
-import { classifyRuntimeSlots } from "../lib/kpi-runtime-slots.mjs";
-import { LANE_REGISTRY, PLANE_PUBLISH_OUTCOME_BINDINGS } from "../lib/lane-registry.mjs";
-import { buildFetchCronAttemptCoverage, loadAttemptShards } from "../build-data-supply-detection-floor.mjs";
-import { DETECTION_CALENDARS } from "../lib/fenok-data-health-freshness.mjs";
-import { buildLaneOutcomeWatchdog } from "./lane-outcome-watchdog.mjs";
-// The single place a family is registered; import is side-effect free.
-import { FAMILIES } from "../publish-cloud-data-generation.mjs";
-import {
-  PUBLISH_OUTCOME_SHARD_SCHEMAS_READABLE,
-  normalizePublishOutcomeRecord,
-  validatePublishOutcomeShard,
-} from "../lib/publish-outcome-shard.mjs";
-
-export { PLANE_PUBLISH_OUTCOME_BINDINGS };
-
 const GITHUB_API = "https://api.github.com";
+const DATA_HEALTH_KPI_PATH = "data/admin/fenok-data-health-kpi.json";
+const VALID_KPI_STATUSES = new Set(["fresh", "delayed", "stopped"]);
 const RUNS_PER_PAGE = 15;
 const FAST_CADENCE_FAILURE_STREAK_THRESHOLD = 2;
 const SLOW_CADENCE_FAILURE_STREAK_THRESHOLD = 1;
@@ -30,191 +15,6 @@ const ALERT_EXIT = 2;
 
 const REPO_ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..", "..");
 const WORKFLOWS_DIR = path.join(REPO_ROOT, ".github", "workflows");
-const DETECTION_CALENDARS_PATH = path.join(REPO_ROOT, "scripts", "lib", "data-supply-detection-calendars.json");
-const DETECTION_FLOOR_PATH = path.join(REPO_ROOT, "data", "admin", "data-supply-detection-floor.json");
-const ATTEMPT_SHARD_ROOT = path.join(REPO_ROOT, "data", "admin", "data-supply-state", "detection-attempts");
-export const PUBLISH_OUTCOME_ROOT = path.join(REPO_ROOT, "data", "admin", "data-supply-state", "publish-outcomes");
-export const CADENCE_STATES = Object.freeze(["not_due", "overdue", "recovered", "no_declaration", "unknown"]);
-export const PLANE_PUBLISH_ALARM_REASONS = Object.freeze({
-  gate_blocked: "plane_publish_gate_blocked",
-  failed: "plane_publish_failed",
-  // B-391. A publish-capable family that has never recorded an outcome produces
-  // no projection row at all, so it reached the alarm not as a red but as
-  // nothing. Absence now alarms - for the families measured as genuine
-  // incidents, never for one that has had no opportunity.
-  outcome_unrecorded: "plane_outcome_unrecorded",
-});
-// The two admissible classifications. A family with no recorded outcome is
-// either broken or has not had its turn, and that difference is DECLARED as a
-// field rather than inferred from how the reason happens to be worded - keying
-// an alarm off a regex over prose is the same defect as pinning an error string.
-export const PLANE_OUTCOME_UNRECORDED_CLASSIFICATIONS = Object.freeze([
-  "incident",
-  "awaiting_opportunity",
-]);
-const PLANE_PUBLISH_SUCCESS_RESULTS = new Set(["published", "resumed"]);
-
-// D3 static-LKG aging, owner-selected 2026-08-18: option A with a maximum-age
-// ceiling. healthy -> delayed on the first non-success -> unavailable at either
-// two consecutive non-successes or an age ceiling breach -> recovered on the
-// next success, which clears automatically.
-//
-// The two triggers are not redundant and neither one subsumes the other. A
-// MISSED cycle writes no record at all, so the consecutive counter can only see
-// cycles that ran and FAILED; a cycle that never fired is visible only as age.
-// The ceiling is therefore the trigger that actually implements "two missed
-// cycles" for true misses, and 60 hours spans roughly two weekday cycles plus
-// the Saturday gap in this family's schedule.
-export const PLANE_FRESHNESS_STATES = Object.freeze(["healthy", "delayed", "unavailable"]);
-export const PLANE_FRESHNESS_ALARM_REASONS = Object.freeze({
-  delayed: "plane_freshness_delayed",
-  unavailable: "plane_freshness_unavailable",
-});
-export const PLANE_FRESHNESS_MAX_AGE_HOURS = 60;
-// How a family's freshness is judged. "age" is the scheduled-producer default;
-// "source_change" belongs to a family that publishes only when its source moves.
-export const PLANE_FRESHNESS_MODE_AGE = "age";
-export const PLANE_FRESHNESS_MODE_SOURCE_CHANGE = "source_change";
-export const PLANE_FRESHNESS_MISSED_CYCLE_LIMIT = 2;
-
-/**
- * Derive the D3 freshness state for one family from its own outcome records.
- * Pure and total: an empty or unreadable history yields a null state rather
- * than a guess, so a family with no evidence never manufactures an alarm.
- */
-export function deriveFamilyFreshness({
-  records = [],
-  now = new Date(),
-  maxAgeHours = PLANE_FRESHNESS_MAX_AGE_HOURS,
-  missedCycleLimit = PLANE_FRESHNESS_MISSED_CYCLE_LIMIT,
-  mode = PLANE_FRESHNESS_MODE_AGE,
-  canonicalSourceAsOf = null,
-} = {}) {
-  if (!Array.isArray(records) || records.length === 0) return null;
-  const sourceChangeMode = mode === PLANE_FRESHNESS_MODE_SOURCE_CHANGE;
-  const ordered = [...records].sort((left, right) => Date.parse(left.observed_at) - Date.parse(right.observed_at));
-  let lastSuccessAt = null;
-  let lastSuccessSourceAsOf = null;
-  let consecutiveNonSuccess = 0;
-  for (const record of ordered) {
-    if (PLANE_PUBLISH_SUCCESS_RESULTS.has(record.result)) {
-      lastSuccessAt = record.observed_at;
-      lastSuccessSourceAsOf = record.source_as_of ?? null;
-      consecutiveNonSuccess = 0;
-    } else {
-      consecutiveNonSuccess += 1;
-    }
-  }
-  const nowMs = now instanceof Date ? now.getTime() : Date.parse(now);
-  const successMs = lastSuccessAt === null ? Number.NaN : Date.parse(lastSuccessAt);
-  const sourceAgeHours = Number.isFinite(successMs) && Number.isFinite(nowMs)
-    ? Math.max(0, (nowMs - successMs) / 3_600_000)
-    : null;
-  // A source-change family has no cadence to be late against, so the ceiling is
-  // never applied to it.
-  const ageBreached = !sourceChangeMode && sourceAgeHours !== null && sourceAgeHours > maxAgeHours;
-  const unpublishedSourceChange = sourceChangeMode
-    && typeof canonicalSourceAsOf === "string"
-    && typeof lastSuccessSourceAsOf === "string"
-    ? canonicalSourceAsOf !== lastSuccessSourceAsOf
-    : null;
-  // A clock this mode cannot compare is unavailable, never healthy: an
-  // unanswered question is not a clean bill of health. Either side may be the
-  // missing one - the published clock is nullable by schema.
-  const sourceClockUnknown = sourceChangeMode && unpublishedSourceChange === null;
-  // No success on record at all is an unavailable, not a healthy: there is
-  // nothing to serve honestly and nothing to date the staleness from.
-  const missBreached = lastSuccessAt === null || consecutiveNonSuccess >= missedCycleLimit;
-  // An unpublished change is pending work, not a missing surface: the published
-  // generation still serves and is still honest, so it is "delayed".
-  const state = missBreached || ageBreached || sourceClockUnknown
-    ? "unavailable"
-    : (consecutiveNonSuccess > 0 || unpublishedSourceChange === true ? "delayed" : "healthy");
-  return {
-    state,
-    last_success_at: lastSuccessAt,
-    consecutive_non_success: consecutiveNonSuccess,
-    source_age_hours: sourceAgeHours === null ? null : Math.round(sourceAgeHours * 100) / 100,
-    // Null in source-change mode: an inapplicable ceiling must not read as one
-    // that merely has not been reached yet.
-    max_age_hours: sourceChangeMode ? null : maxAgeHours,
-    freshness_mode: sourceChangeMode ? PLANE_FRESHNESS_MODE_SOURCE_CHANGE : PLANE_FRESHNESS_MODE_AGE,
-    published_source_as_of: lastSuccessSourceAsOf,
-    canonical_source_as_of: sourceChangeMode ? canonicalSourceAsOf : null,
-    unpublished_source_change: unpublishedSourceChange,
-    missed_cycle_limit: missedCycleLimit,
-    // Which trigger fired is reported rather than inferred, because the operator
-    // response to "the producer failed twice" differs from "nothing has run".
-    triggered_by: state === "healthy"
-      ? []
-      : [
-        ...(missBreached ? ["consecutive_non_success"] : []),
-        ...(ageBreached ? ["source_age_hours"] : []),
-        ...(unpublishedSourceChange === true ? ["unpublished_source_change"] : []),
-        ...(sourceClockUnknown ? ["source_clock_unknown"] : []),
-      ],
-    // A success that follows a non-success run is the recovery edge. It clears
-    // the warning by construction: the counter is already back to zero above.
-    recovered: consecutiveNonSuccess === 0
-      && ordered.length > 1
-      && !PLANE_PUBLISH_SUCCESS_RESULTS.has(ordered[ordered.length - 2].result),
-  };
-}
-
-// Every exception is a declared policy entry, not an invisible parser escape.
-// Validation below fails closed if an exclusion stops being scheduled or if an
-// inclusion becomes scheduled (and therefore no longer needs special policy).
-// A scheduled workflow with no data-supply cadence declaration is invisible when
-// it STOPS: the alarm records its failures but has no expectation to compare an
-// absence against. Six of these are the platform's own detectors and
-// publishers, which is why the 2026-08-20 incidents were all "the check was
-// dead" rather than "the data was wrong". Listing them here does not make their
-// silence alarm - that would change what the alarm asserts for eight workflows
-// at once - but it makes the gap a recorded decision instead of a default, and
-// a new scheduled workflow can no longer inherit invisibility by omission.
-export const CADENCE_DECLARATION_EXEMPTIONS = Object.freeze({
-  "pipeline-failure-alarm.yml":
-    "self-monitoring would create a recursive alarm loop; its own liveness is evidenced by check-alarm-liveness counting the slots its own cron has passed since its most recent run of any event, hosted in the hourly budget alarm. Two earlier claims here were measured false on 2026-08-21 and are corrected: its generated_at stamp does NOT advance every run, and the host is not independent of it - both share the GitHub scheduler, which dropped every hourly slot fleet-wide for about two hours that morning",
-  "data-plane-serving-probe.yml":
-    "detector, not a data-supply lane; it publishes no member so the lane-shaped declaration does not fit. Absence is currently unobserved - see BACKLOG B-387",
-  "check-sec13f-live-parity.yml":
-    "detector, not a data-supply lane; absence is currently unobserved - see BACKLOG B-387",
-  "global-writer-queue-observer.yml":
-    "observer, not a data-supply lane; measured 2026-08-21 to have missed two consecutive hourly slots with no report - see BACKLOG B-387",
-  "worker-request-budget-alarm.yml":
-    "alarm, not a data-supply lane; measured 2026-08-21 to have missed two consecutive hourly slots with no report - see BACKLOG B-387",
-  "update-manifest.yml":
-    "shared projection publisher rather than a source lane; it owns no acquisition cadence of its own and is driven by the producers that do",
-  "deploy-worker.yml":
-    "deployment rather than acquisition; it has no source clock to be overdue against",
-  "build-stocks-analyzer.yml":
-    "derived-index builder rather than a source lane; its inputs carry the acquisition cadences and it follows them",
-  "pins-autosync.yml":
-    "maintenance autosync for the generated projection pins, not a data-supply lane; it owns no acquisition clock and its absence is bounded by the next qa:pins failure on a CI push",
-  "retention-restore.yml":
-    "operational recovery watchdog that reconciles the retention journal every fifteen minutes, not an acquisition lane or data publisher; declaration coverage does not establish missed-schedule liveness for this watchdog",
-  "retention-sweep.yml":
-    "bounded owner-controlled weekly retention campaign, not an acquisition lane or data publisher; journal and schedule state deliberately make most timer slots no-ops, and this exemption does not establish missed-schedule liveness",
-});
-
-// A publish-capable family whose cloud-plane outcome has never been recorded is
-// invisible on the freshness axis, not merely red: derivePublishOutcomeProjection
-// skips any binding with no latest record, so no row reaches the alarm at all.
-// That is why fred-yardeni served source 2026-08-07 for eleven days while
-// appearing only as a failure_streak, and why slickcharts-symbols carries no
-// freshness row despite a 168h cadence.
-//
-// Measured 2026-08-21: 24 bindings, 19 shards, 5 unrecorded. They are NOT one
-// fault - the naive reading, that every unrecorded family is broken, is wrong
-// and would have paged three lanes that simply have not had an opportunity yet.
-// Each reason below is measured, and the split is the point.
-//
-// As with CADENCE_DECLARATION_EXEMPTIONS, listing them here does not make their
-// absence alarm; that would change what the alarm asserts for five families at
-// once and needs the opportunity test that distinguishes the two halves. It
-// removes the silent default so the set cannot grow by omission. Registered as
-// BACKLOG B-391.
-export const PLANE_OUTCOME_UNRECORDED_REASONS = Object.freeze({});
 
 // The alarm used to fail open. Any GitHub API failure marked that workflow
 // "unknown", unknowns are not alarms, and the final exit was
@@ -428,7 +228,14 @@ export function deriveWorkflowWatchPolicy({
       if (events.length === 0) {
         throw new Error(`${file}: watched workflow has no countable automatic event`);
       }
-      return { file, label, events, crons: crons ?? [] };
+      const declaredCrons = crons ?? [];
+      return {
+        file,
+        label,
+        events,
+        crons: declaredCrons,
+        failure_streak_threshold: deriveFailureStreakThreshold(declaredCrons),
+      };
     })
     .sort((a, b) => a.file.localeCompare(b.file));
   const excluded = Object.entries(scheduledExclusions)
@@ -440,444 +247,6 @@ export function deriveWorkflowWatchPolicy({
     excluded,
     scheduled_count: rows.filter((row) => row.scheduled).length,
   };
-}
-
-function readJsonOrNull(filePath) {
-  try {
-    return JSON.parse(fs.readFileSync(filePath, "utf8"));
-  } catch {
-    return null;
-  }
-}
-
-function publishOutcomeRecords(shard) {
-  if (!shard || typeof shard !== "object" || Array.isArray(shard)) return null;
-  // Only schemas the writer has actually produced are readable. An unknown or
-  // missing schema_version must yield no projection: the alarm must never
-  // reason about shapes the writer does not produce (no invented alarms).
-  // The readable set deliberately includes the pre-binding schema — narrowing
-  // it to the newest version alone would silently stop projecting every family
-  // that has not republished since the bump, and a blind alarm looks exactly
-  // like a healthy one.
-  if (!PUBLISH_OUTCOME_SHARD_SCHEMAS_READABLE.includes(shard.schema_version)) return null;
-  if (Array.isArray(shard.records)) return shard.records.map(normalizePublishOutcomeRecord);
-  return null;
-}
-
-/**
- * Read the newest valid outcome from one per-family shard. A missing or
- * malformed shard returns null so the existing workflow alarm stays the sole
- * source of truth for that evaluation.
- */
-export function latestPublishOutcomeFromShard(shard, family) {
-  if (typeof family !== "string" || family.length === 0) return null;
-  const records = publishOutcomeRecords(shard);
-  if (!records || records.length === 0) return null;
-  try {
-    validatePublishOutcomeShard(shard, family);
-  } catch {
-    return null;
-  }
-  return records.reduce((latest, record) => {
-    if (!latest) return record;
-    const latestAt = Date.parse(latest.observed_at);
-    const recordAt = Date.parse(record.observed_at);
-    return recordAt >= latestAt ? record : latest;
-  }, null);
-}
-
-function shardForFamily(shards, family) {
-  if (shards instanceof Map) return shards.get(family) ?? null;
-  return shards && typeof shards === "object" ? shards[family] ?? null : null;
-}
-
-/**
- * Join family-named outcome shards to the workflow files that own their
- * publication. The returned Map is intentionally pure/testable and contains
- * only valid latest records.
- */
-/** Declared freshness mode; unknown or malformed falls back to "age" so a
- * ceiling is never silently disabled. */
-export function freshnessModeForFamily(family, families = FAMILIES) {
-  const declared = families?.[family]?.freshness?.mode;
-  return declared === PLANE_FRESHNESS_MODE_SOURCE_CHANGE
-    ? PLANE_FRESHNESS_MODE_SOURCE_CHANGE
-    : PLANE_FRESHNESS_MODE_AGE;
-}
-
-/** Current source clock for a source-change family, from the file and key its
- * registry entry already declares. Null when unreadable - an unknown clock
- * stays unknown and the derivation turns that into unavailable. */
-export function readCanonicalSourceAsOf(family, { families = FAMILIES, repoRoot = REPO_ROOT } = {}) {
-  if (freshnessModeForFamily(family, families) !== PLANE_FRESHNESS_MODE_SOURCE_CHANGE) return null;
-  const entry = families?.[family];
-  const clock = entry?.source_as_of;
-  if (!entry?.root || typeof clock?.file !== "string" || typeof clock?.key !== "string") return null;
-  const document = readJsonOrNull(path.join(repoRoot, entry.root, clock.file));
-  const value = document?.[clock.key];
-  return typeof value === "string" && value.length > 0 ? value : null;
-}
-
-export function derivePublishOutcomeProjection({
-  shards = {},
-  bindings = PLANE_PUBLISH_OUTCOME_BINDINGS,
-  now = new Date(),
-  sourceClocks = {},
-  families = FAMILIES,
-} = {}) {
-  const projection = new Map();
-  for (const [family, binding] of Object.entries(bindings ?? {})) {
-    const shard = shardForFamily(shards, family);
-    const latest = latestPublishOutcomeFromShard(shard, family);
-    if (!latest || !binding || typeof binding.workflow !== "string") continue;
-    // The latest record answers "what happened last"; the D3 state needs the
-    // run of records behind it, so freshness is derived from the same validated
-    // shard rather than from a second source that could disagree with it.
-    let records = [];
-    try {
-      validatePublishOutcomeShard(shard, family);
-      records = publishOutcomeRecords(shard) ?? [];
-    } catch {
-      records = [];
-    }
-    const ceilingHours = planeCeilingForFamily(family);
-    projection.set(path.basename(binding.workflow), {
-      ...latest,
-      family,
-      lane_id: binding.lane_id,
-      workflow: binding.workflow,
-      freshness: deriveFamilyFreshness({
-        records,
-        now,
-        // B-386: judged against this producer's own cadence plus its declared
-        // grace, not one flat number calibrated for a single weekday family.
-        // A family with no schedule resolves null and keeps the age axis
-        // unapplied; PLANE_CEILING_UNSCHEDULED_REASONS records which and why.
-        ...(ceilingHours === null ? {} : { maxAgeHours: ceilingHours }),
-        mode: freshnessModeForFamily(family, families),
-        canonicalSourceAsOf: sourceClocks?.[family] ?? null,
-      }),
-    });
-  }
-  return projection;
-}
-
-export function readPublishOutcomeShards({
-  root = PUBLISH_OUTCOME_ROOT,
-  bindings = PLANE_PUBLISH_OUTCOME_BINDINGS,
-} = {}) {
-  const shards = {};
-  const sourceClocks = {};
-  for (const family of Object.keys(bindings ?? {})) {
-    shards[family] = readJsonOrNull(path.join(root, `${family}.json`));
-    // I/O stays at the edge; the derivation stays pure over what it is handed.
-    sourceClocks[family] = readCanonicalSourceAsOf(family);
-  }
-  return { shards, sourceClocks };
-}
-
-export function readPublishOutcomeProjection({
-  root = PUBLISH_OUTCOME_ROOT,
-  bindings = PLANE_PUBLISH_OUTCOME_BINDINGS,
-} = {}) {
-  const { shards, sourceClocks } = readPublishOutcomeShards({ root, bindings });
-  return derivePublishOutcomeProjection({ shards, bindings, sourceClocks });
-}
-
-function projectedOutcomeForWorkflow(projection, workflowFile) {
-  if (projection instanceof Map) return projection.get(workflowFile) ?? null;
-  return projection && typeof projection === "object" ? projection[workflowFile] ?? null : null;
-}
-
-/**
- * Add the latest plane publication assertion to the existing workflow alarm
- * result. A successful publish removes only the two additive plane reasons;
- * all canonical failure, schedule, and cadence reasons remain untouched.
- */
-// B-391: which workflow files carry a family whose absence is a real incident.
-// Derived from the bindings and the classification field, never from a list of
-// file names, so adding a binding cannot quietly opt out of it.
-export function unrecordedIncidentWorkflowFiles({
-  bindings = PLANE_PUBLISH_OUTCOME_BINDINGS,
-  reasons = PLANE_OUTCOME_UNRECORDED_REASONS,
-} = {}) {
-  const files = new Map();
-  for (const [family, binding] of Object.entries(bindings ?? {})) {
-    if (reasons?.[family]?.classification !== "incident") continue;
-    if (typeof binding?.workflow !== "string") continue;
-    const file = path.basename(binding.workflow);
-    if (!files.has(file)) files.set(file, []);
-    files.get(file).push(family);
-  }
-  return files;
-}
-
-export function attachPublishOutcomeAlarms(workflows, projection, {
-  unrecordedIncidents = unrecordedIncidentWorkflowFiles(),
-} = {}) {
-  if (!Array.isArray(workflows)) return workflows;
-  return workflows.map((workflow) => {
-    const outcome = projectedOutcomeForWorkflow(projection, workflow?.file);
-    // Absence, not a result. The runtime condition is the MISSING row, not the
-    // static list: a family that starts recording stops alarming here on its
-    // own, and the coverage contract separately forces its reason to be removed.
-    const unrecordedFamilies = outcome ? [] : (unrecordedIncidents.get(workflow?.file) ?? []);
-    const alarmReasons = Array.isArray(workflow?.alarm_reasons)
-      ? [...new Set(workflow.alarm_reasons)]
-      : [];
-    const planeReasons = new Set(Object.values(PLANE_PUBLISH_ALARM_REASONS));
-    if (outcome?.result === "gate_blocked") {
-      alarmReasons.splice(0, alarmReasons.length, ...alarmReasons.filter((reason) => reason !== PLANE_PUBLISH_ALARM_REASONS.failed));
-      if (!alarmReasons.includes(PLANE_PUBLISH_ALARM_REASONS.gate_blocked)) {
-        alarmReasons.push(PLANE_PUBLISH_ALARM_REASONS.gate_blocked);
-      }
-    } else if (outcome?.result === "failed") {
-      alarmReasons.splice(0, alarmReasons.length, ...alarmReasons.filter((reason) => reason !== PLANE_PUBLISH_ALARM_REASONS.gate_blocked));
-      if (!alarmReasons.includes(PLANE_PUBLISH_ALARM_REASONS.failed)) {
-        alarmReasons.push(PLANE_PUBLISH_ALARM_REASONS.failed);
-      }
-    } else if (PLANE_PUBLISH_SUCCESS_RESULTS.has(outcome?.result)) {
-      alarmReasons.splice(0, alarmReasons.length, ...alarmReasons.filter((reason) => !planeReasons.has(reason)));
-    }
-    // D3 freshness raises on its own axis. A publish can succeed while the data
-    // it published is already past the ceiling, and a run of non-successes is a
-    // different operator story from the single latest result, so these reasons
-    // are added beside the result reasons rather than replacing them. A healthy
-    // freshness state clears only its own two reasons.
-    const freshnessReasons = new Set(Object.values(PLANE_FRESHNESS_ALARM_REASONS));
-    const freshnessState = outcome?.freshness?.state ?? null;
-    if (freshnessState === "unavailable" || freshnessState === "delayed") {
-      const reason = freshnessState === "unavailable"
-        ? PLANE_FRESHNESS_ALARM_REASONS.unavailable
-        : PLANE_FRESHNESS_ALARM_REASONS.delayed;
-      alarmReasons.splice(0, alarmReasons.length, ...alarmReasons.filter((entry) => !freshnessReasons.has(entry)));
-      alarmReasons.push(reason);
-    } else if (freshnessState === "healthy") {
-      alarmReasons.splice(0, alarmReasons.length, ...alarmReasons.filter((entry) => !freshnessReasons.has(entry)));
-    }
-    if (unrecordedFamilies.length > 0
-      && !alarmReasons.includes(PLANE_PUBLISH_ALARM_REASONS.outcome_unrecorded)) {
-      alarmReasons.push(PLANE_PUBLISH_ALARM_REASONS.outcome_unrecorded);
-    }
-    const planeAlarm = outcome?.result === "gate_blocked" || outcome?.result === "failed"
-      || unrecordedFamilies.length > 0;
-    const freshnessAlarm = freshnessState === "unavailable" || freshnessState === "delayed";
-    const alarming = workflow?.alarming === true || planeAlarm || freshnessAlarm;
-    return {
-      ...workflow,
-      ...(outcome ? { plane_publish_outcome: outcome } : {}),
-      ...(unrecordedFamilies.length > 0
-        ? { plane_outcome_unrecorded_families: [...unrecordedFamilies].sort() }
-        : {}),
-      status: alarming ? "alarm" : workflow.status,
-      alarming,
-      alarm_reasons: alarmReasons,
-    };
-  });
-}
-
-function workflowFileFromDeclaration(workflow) {
-  return typeof workflow === "string" ? path.basename(workflow) : null;
-}
-
-// DEC-407 item 2: the alarm path rebuilds a per-lane source-age watchdog from
-// the detection-floor artifact and committed attempt shards, then joins its
-// verdict to the workflows that own each lane. No alert fields live in the KPI.
-//
-// Vocabulary note: the watchdog rows carry states current/overdue/unobservable
-// and the publish-outcome records carry results
-// published/resumed/gate_blocked/failed (measured census 431/139/6/3 on
-// 2026-09-04 — deferred/contract-blocked/cancelled/timeout strings do not
-// exist in the records). A cancelled, timed-out, or silently dropped producer
-// writes no record at all, so it surfaces as a watchdog overdue with no fresh
-// record; a producer that runs but cannot promote for two cycles straight
-// surfaces as consecutive gate_blocked/failed records. The two conditions below
-// read exactly those two shapes.
-export const LANE_OUTCOME_WATCHDOG_SCHEMA = "lane-outcome-watchdog/v1";
-export const LANE_OUTCOME_ALARM_REASONS = Object.freeze({
-  overdue: "lane_outcome_overdue",
-  nonPromotionStreak: "lane_outcome_non_promotion_streak",
-});
-// A lane that stops promoting for this many consecutive outcome records is a
-// non-promotion streak, mirroring PLANE_FRESHNESS_MISSED_CYCLE_LIMIT.
-export const LANE_OUTCOME_NON_PROMOTION_STREAK_LIMIT = 2;
-
-/**
- * Derive one alarm entry per overdue watchdog lane. Pure: the watchdog verdict,
- * the outcome shards, and the bindings in; lane entries out. A watchdog with a
- * foreign schema_version yields no entries (fail-open): the alarm must never
- * reason about a watchdog shape the KPI builder does not produce.
- *
- * A lane owns several families, but a lane pages once: the representative is
- * the family with the newest observed_at record, and run id is its
- * generation_id (records carry no GitHub run id). A lane with no records at
- * all reports decision "overdue" with a null run.
- */
-export function deriveLaneOutcomeAlarms({
-  watchdog = null,
-  shards = {},
-  bindings = PLANE_PUBLISH_OUTCOME_BINDINGS,
-  now = new Date(),
-} = {}) {
-  const watchdogByLane = new Map();
-  if (watchdog && typeof watchdog === "object"
-    && watchdog.schema_version === LANE_OUTCOME_WATCHDOG_SCHEMA
-    && Array.isArray(watchdog.rows)) {
-    for (const row of watchdog.rows) {
-      if (row && typeof row.lane_id === "string") watchdogByLane.set(row.lane_id, row);
-    }
-  }
-  // A foreign watchdog schema skips only the overdue axis (fail-open): the
-  // alarm must never reason about a watchdog shape the KPI builder does not
-  // produce, but the streak axis reads outcome records, not the watchdog.
-  const familiesByLane = new Map();
-  for (const [family, binding] of Object.entries(bindings ?? {})) {
-    if (typeof binding?.lane_id !== "string") continue;
-    if (!familiesByLane.has(binding.lane_id)) familiesByLane.set(binding.lane_id, []);
-    familiesByLane.get(binding.lane_id).push(family);
-  }
-  const alarms = [];
-  for (const laneId of new Set([...familiesByLane.keys(), ...watchdogByLane.keys()])) {
-    const row = watchdogByLane.get(laneId) ?? null;
-    const overdue = row?.state === "overdue";
-    const families = [...(familiesByLane.get(laneId) ?? [])].sort();
-    let representative = null;
-    let streak = false;
-    for (const family of families) {
-      const records = publishOutcomeRecords(shardForFamily(shards, family)) ?? [];
-      if (records.length === 0) continue;
-      const freshness = deriveFamilyFreshness({ records, now });
-      if ((freshness?.consecutive_non_success ?? 0) >= LANE_OUTCOME_NON_PROMOTION_STREAK_LIMIT) {
-        streak = true;
-      }
-      const latest = records.reduce((best, record) => {
-        if (!best) return record;
-        return Date.parse(record.observed_at) >= Date.parse(best.observed_at) ? record : best;
-      }, null);
-      if (latest && (!representative
-        || Date.parse(latest.observed_at) >= Date.parse(representative.observed_at))) {
-        representative = latest;
-      }
-    }
-    // Overdue and streak are independent axes: a lane still "current" on the
-    // watchdog clock but failing to promote twice straight pages on the
-    // streak alone, and an overdue lane with a fresh success pages on the
-    // overdue alone.
-    if (!overdue && !streak) continue;
-    alarms.push({
-      lane_id: laneId,
-      conditions: [
-        ...(overdue ? [LANE_OUTCOME_ALARM_REASONS.overdue] : []),
-        ...(streak ? [LANE_OUTCOME_ALARM_REASONS.nonPromotionStreak] : []),
-      ],
-      decision: representative?.result ?? "overdue",
-      generation_id: representative?.generation_id ?? null,
-      observed_at: representative?.observed_at ?? null,
-      source_as_of: representative?.source_as_of ?? null,
-      cadence_hours: row?.cadence_hours ?? null,
-      threshold_hours: row?.threshold_hours ?? null,
-      age_hours: row?.age_hours ?? null,
-      last_advance: row?.last_advance ?? null,
-      families,
-      watchdog_evaluated_at: watchdog?.evaluated_at ?? null,
-    });
-  }
-  return alarms;
-}
-
-/**
- * Workflow files that own a lane: every binding workflow for the lane's
- * families, plus the registry lane-owner workflow. A lane with neither (a
- * watchdog row the registry no longer names) falls back to the KPI publisher,
- * which owns the watchdog verdict's freshness — an overdue lane must always
- * reach a workflow row, never nowhere.
- */
-export const LANE_OUTCOME_DEFAULT_OWNER_WORKFLOW = "update-manifest.yml";
-
-export function laneOwnerFiles(laneId, {
-  bindings = PLANE_PUBLISH_OUTCOME_BINDINGS,
-  lanes = LANE_REGISTRY?.lanes ?? [],
-} = {}) {
-  const files = new Set();
-  for (const binding of Object.values(bindings ?? {})) {
-    if (binding?.lane_id === laneId && typeof binding?.workflow === "string") {
-      files.add(path.basename(binding.workflow));
-    }
-  }
-  const owner = (lanes ?? []).find((lane) => lane?.id === laneId)?.owner_workflow;
-  if (typeof owner === "string" && owner.length > 0) files.add(path.basename(owner));
-  if (files.size === 0) files.add(LANE_OUTCOME_DEFAULT_OWNER_WORKFLOW);
-  return [...files].sort();
-}
-
-/**
- * Attach lane-outcome alarm entries to the workflow rows that own the lane
- * (via the outcome bindings), beside the existing plane/freshness reasons.
- * Workflows owning no alarming lane are returned unchanged.
- */
-export function attachLaneOutcomeAlarms(workflows, laneAlarms, {
-  bindings = PLANE_PUBLISH_OUTCOME_BINDINGS,
-  lanes = LANE_REGISTRY?.lanes ?? [],
-} = {}) {
-  if (!Array.isArray(workflows) || !Array.isArray(laneAlarms) || laneAlarms.length === 0) return workflows;
-  const lanesByFile = new Map();
-  for (const entry of laneAlarms) {
-    if (!entry || typeof entry.lane_id !== "string") continue;
-    for (const file of laneOwnerFiles(entry.lane_id, { bindings, lanes })) {
-      if (!lanesByFile.has(file)) lanesByFile.set(file, []);
-      lanesByFile.get(file).push(entry);
-    }
-  }
-  return workflows.map((workflow) => {
-    const relevant = lanesByFile.get(workflow?.file) ?? [];
-    if (relevant.length === 0) return workflow;
-    const alarmReasons = Array.isArray(workflow?.alarm_reasons) ? [...workflow.alarm_reasons] : [];
-    for (const entry of relevant) {
-      for (const condition of entry.conditions ?? []) {
-        if (!alarmReasons.includes(condition)) alarmReasons.push(condition);
-      }
-    }
-    // Owner context rides on a per-workflow copy: the shared entry stays
-    // lane-shaped while the row names which owner run the operator opens.
-    // Records carry no GitHub run id, so the run is the owner's latest run
-    // URL from the workflow context — never presented as the record's own.
-    const detail = relevant.map((entry) => ({
-      ...entry,
-      owner_workflow: workflow.file,
-      owner_run_url: workflow.latestRunUrl ?? null,
-    }));
-    return {
-      ...workflow,
-      lane_outcome: detail,
-      status: "alarm",
-      alarming: true,
-      alarm_reasons: alarmReasons,
-    };
-  });
-}
-
-function declarationRows(config) {
-  const rows = [];
-  for (const lane of config?.lanes ?? []) {
-    for (const member of lane?.producer_members ?? []) {
-      if (member?.cadence_declaration?.kind !== "github_workflow" || !Array.isArray(member.schedule) || member.schedule.length === 0) continue;
-      const workflow = workflowFileFromDeclaration(member.workflow);
-      if (!workflow) throw new Error(`declared cadence member ${member.id ?? "unknown"} has no workflow file`);
-      for (const cron of member.schedule) {
-        if (typeof cron !== "string" || cron.trim() === "") {
-          throw new Error(`declared cadence member ${member.id ?? "unknown"} has an invalid cron`);
-        }
-        rows.push({
-          workflow,
-          workflow_path: member.workflow,
-          member_id: member.id ?? null,
-          cron,
-          calendar_id: member.cadence_calendar,
-        });
-      }
-    }
-  }
-  return rows;
 }
 
 function parseCronField(raw, min, max, context) {
@@ -933,189 +302,14 @@ function cronMatchesUtcDay(date, parsed) {
   return dayMatch || weekdayMatch;
 }
 
-// Families whose publication has no schedule to be late against. An age ceiling
-// is meaningless for them, so the age axis simply does not apply - the same
-// treatment source-change mode already gets. They are declared rather than
-// silently handed a number, because a silent default applied to every family is
-// exactly what B-386 exists to remove.
-export const PLANE_CEILING_UNSCHEDULED_REASONS = Object.freeze({
-  "computed-signals":
-    "driven by workflow_run from its contributing producers rather than by a schedule of its own, so it has no cadence to be late against; its contributors carry the clocks",
-  "global-scouter":
-    "the only family already judged by PLANE_FRESHNESS_MODE_SOURCE_CHANGE, which counts missed source changes instead of applying an age ceiling, so no ceiling is applied to it either way",
-});
-
-// family -> the crons its producer declares, and the grace declared for them.
-// Both come from existing authorities: the detection config owns the schedule
-// and the detection calendar owns the grace. Nothing is hand-copied here.
-function onBlockOf(yaml) {
-  const jobsAt = yaml.search(/^jobs:/m);
-  return yaml.slice(0, jobsAt >= 0 ? jobsAt : yaml.length);
-}
-
-function cronsDeclaredIn(yaml) {
-  return [...new Set([...onBlockOf(yaml).matchAll(/-\s*cron:\s*'([^']+)'/g)].map((m) => m[1]))];
-}
-
-// Crons of every workflow that `uses:` the given reusable workflow. Only the
-// callers' own schedules count; a caller that is itself reusable contributes
-// nothing rather than recursing, which keeps this a single hop.
-function callerCronsFor(workflow) {
-  const dir = path.join(REPO_ROOT, ".github/workflows");
-  const target = workflow.replace(/^\.github\/workflows\//, "");
-  let entries = [];
-  try { entries = fs.readdirSync(dir); } catch { return []; }
-  const crons = new Set();
-  for (const entry of entries) {
-    if (!entry.endsWith(".yml") && !entry.endsWith(".yaml")) continue;
-    if (entry === target) continue;
-    let yaml = null;
-    try { yaml = fs.readFileSync(path.join(dir, entry), "utf8"); } catch { continue; }
-    if (!yaml.includes(`uses: ./.github/workflows/${target}`)) continue;
-    for (const cron of cronsDeclaredIn(yaml)) crons.add(cron);
-  }
-  return [...crons];
-}
-
-export function resolveFamilyCadence(family, {
-  bindings = PLANE_PUBLISH_OUTCOME_BINDINGS,
-  config = DATA_SUPPLY_DETECTION_CONFIG,
-  calendars = null,
-} = {}) {
-  const workflow = bindings?.[family]?.workflow;
-  if (typeof workflow !== "string") return null;
-  const lanes = (config?.lanes ?? []).filter((lane) => lane?.owner_workflow === workflow);
-  let crons = [...new Set(lanes.flatMap((lane) => (
-    (lane.producer_members ?? []).flatMap((member) => member?.schedule ?? [])
-  )))].filter((cron) => typeof cron === "string" && cron.trim() !== "");
-  if (crons.length === 0) {
-    // The detection config declares no lane for this workflow - measured 2026-08-21,
-    // that is true of all five slickcharts publishers. A workflow is the authority
-    // for its own schedule, so read it there; the calendar still owns the grace.
-    const file = path.join(REPO_ROOT, workflow);
-    let yaml = null;
-    try { yaml = fs.readFileSync(file, "utf8"); } catch { return null; }
-    crons = cronsDeclaredIn(yaml);
-    if (crons.length === 0 && /^\s{2}workflow_call:/m.test(onBlockOf(yaml))) {
-      // A reusable workflow carries no schedule of its own; its caller does.
-      // earnings-overview is called as an independent job by the StockAnalysis
-      // schedule (2026-09-07), so reading only the bound file left a genuinely
-      // daily family with no age axis at all. Follow the call edge instead of
-      // declaring the family unscheduled, which would be the wrong answer.
-      crons = callerCronsFor(workflow);
-    }
-  }
-  if (crons.length === 0) return null;
-
-  const schedules = (calendars ?? readJsonOrNull(DETECTION_CALENDARS_PATH))?.schedules ?? [];
-  let graceHours = null;
-  for (const cron of crons) {
-    const match = schedules.find((entry) => entry?.cron === cron);
-    const grace = match?.grace;
-    if (!grace) continue;
-    // business_days is converted at 24h per day, not 72. The weekend a business
-    // day can span is already carried by maxCronGapHours, which returns 72 for a
-    // weekday-only cron; counting it twice would loosen every weekday lane.
-    const hours = grace.unit === "hours" ? grace.value
-      : grace.unit === "calendar_days" || grace.unit === "business_days" ? grace.value * 24
-      : null;
-    if (hours === null) continue;
-    graceHours = graceHours === null ? hours : Math.max(graceHours, hours);
-  }
-  if (graceHours === null) return null;
-  return { crons: crons.sort(), graceHours };
-}
-
-// The ceiling a family is judged against, or null when it has no schedule.
-// Returns null rather than throwing: one unresolvable family must not take the
-// whole alarm down with it, and the declared-reason contract keeps the null set
-// from growing silently.
-export function planeCeilingForFamily(family, options = {}) {
-  const cadence = resolveFamilyCadence(family, options);
-  if (cadence === null) return null;
-  try {
-    return planeFreshnessCeilingHours(cadence);
-  } catch {
-    return null;
-  }
-}
-
-const cronGapCache = new Map();
-
-// The longest wait a HEALTHY producer can have between two runs, walking the
-// same 400-year Gregorian cycle deriveFailureStreakThreshold uses so weekday-
-// only and day-of-month declarations are exact without a second period table.
-//
-// The worst case is the right one: a family is late against its longest healthy
-// interval, never its shortest. A weekday-only cron's longest wait is the
-// weekend, so "0 22 * * 1-5" is 72 hours and not 24.
-//
-// Throws rather than returning a default. A family whose cadence cannot be
-// resolved must fail closed - silently defaulting is exactly how a single flat
-// ceiling came to be applied to cadences spanning one hour to a month.
-export function maxCronGapHours(declarations) {
-  if (!Array.isArray(declarations) || declarations.length === 0) {
-    throw new Error("cadence gap requires at least one declared cron");
-  }
-  const crons = [...new Set(declarations.map((entry) => (
-    typeof entry === "string" ? entry : entry?.cron
-  )))].sort();
-  if (crons.some((cron) => typeof cron !== "string" || cron.trim() === "")) {
-    throw new Error("declared cadence has an invalid cron");
-  }
-  const cacheKey = crons.join("\u0000");
-  if (cronGapCache.has(cacheKey)) return cronGapCache.get(cacheKey);
-
-  const parsedCrons = crons.map(parseDeclaredCron);
-  let firstOccurrence = null;
-  let previousOccurrence = null;
-  let maxGapMs = 0;
-  for (let dayOffset = 0; dayOffset < GREGORIAN_CYCLE_DAYS; dayOffset += 1) {
-    const dayEpoch = GREGORIAN_CYCLE_START_MS + dayOffset * 86_400_000;
-    const date = new Date(dayEpoch);
-    const minuteOffsets = new Set();
-    for (const parsed of parsedCrons) {
-      if (!cronMatchesUtcDay(date, parsed)) continue;
-      for (const hour of parsed.hour) {
-        for (const minute of parsed.minute) minuteOffsets.add(hour * 60 + minute);
-      }
-    }
-    for (const minuteOffset of [...minuteOffsets].sort((a, b) => a - b)) {
-      const occurrence = dayEpoch + minuteOffset * 60_000;
-      if (firstOccurrence === null) firstOccurrence = occurrence;
-      else maxGapMs = Math.max(maxGapMs, occurrence - previousOccurrence);
-      previousOccurrence = occurrence;
-    }
-  }
-  if (firstOccurrence === null) throw new Error("declared cadence produces no occurrence in a Gregorian cycle");
-  // The wrap from the last occurrence of one cycle to the first of the next.
-  const cycleMs = GREGORIAN_CYCLE_DAYS * 86_400_000;
-  maxGapMs = Math.max(maxGapMs, (firstOccurrence + cycleMs) - previousOccurrence);
-  const hours = maxGapMs / 3_600_000;
-  cronGapCache.set(cacheKey, hours);
-  return hours;
-}
-
-// A family is stale when it has missed its own longest healthy interval plus
-// the grace already declared for it - the same rule the serving-probe axis was
-// corrected to on 2026-08-21. Both inputs are required; there is no default,
-// because a default is what this replaces.
-export function planeFreshnessCeilingHours({ crons, graceHours } = {}) {
-  if (!Number.isFinite(graceHours) || graceHours < 0) {
-    throw new Error("plane freshness ceiling requires a declared non-negative grace");
-  }
-  return maxCronGapHours(crons) + graceHours;
-}
-
+// Cache the cron-derived failure threshold by normalized schedule set.
 const failureThresholdCache = new Map();
 
 /**
- * Derive the paging threshold from the same producer cadence declarations used
- * by the overdue join. The 400-year Gregorian cycle makes the minimum combined
- * interval exact for five-field UTC cron without maintaining a second period
- * table. Any effective interval shorter than seven days keeps the two-failure
- * noise guard; weekly or slower declarations page on the first completed
- * failure. Workflows without a producer declaration conservatively retain 2.
+ * Derive the workflow failure threshold from its GitHub cron declarations. The
+ * 400-year Gregorian cycle makes the minimum combined interval exact for
+ * five-field UTC cron: schedules faster than weekly keep the two-failure noise
+ * guard, while weekly or slower schedules page on their first completed failure.
  */
 export function deriveFailureStreakThreshold(declarations) {
   if (!Array.isArray(declarations) || declarations.length === 0) {
@@ -1163,166 +357,6 @@ export function deriveFailureStreakThreshold(declarations) {
   return SLOW_CADENCE_FAILURE_STREAK_THRESHOLD;
 }
 
-/**
- * The detection calendar is the sole ordinary-producer grace authority.  This
- * deliberately has no numeric fallback: a declared GitHub schedule without one
- * exact grace contract is a configuration error, not an immediately-due slot.
- */
-export function assertDeclaredScheduleGraceContracts({
-  config = DATA_SUPPLY_DETECTION_CONFIG,
-  calendars,
-} = {}) {
-  if (!Array.isArray(calendars?.schedules)) throw new Error("declared schedule calendar contracts are unavailable");
-  const declarations = declarationRows(config);
-  for (const declaration of declarations) {
-    const matches = calendars.schedules.filter((schedule) => (
-      schedule?.cron === declaration.cron && schedule?.calendar_id === declaration.calendar_id
-    ));
-    const declarationId = `${declaration.workflow}:${declaration.cron}`;
-    if (matches.length !== 1) {
-      throw new Error(`declared schedule ${declarationId} must have exactly one grace contract`);
-    }
-    const schedule = matches[0];
-    if (!schedule?.grace || typeof schedule.grace !== "object" || Array.isArray(schedule.grace)) {
-      throw new Error(`schedule ${schedule?.id ?? declarationId} has no grace block`);
-    }
-    if (typeof schedule.grace.unit !== "string" || !Number.isFinite(schedule.grace.value) || schedule.grace.value <= 0) {
-      throw new Error(`schedule ${schedule.id ?? declarationId} has an invalid grace block`);
-    }
-  }
-  return declarations;
-}
-
-export function runtimeSlotKey(workflow, cron, expectedAt) {
-  if (typeof expectedAt !== "string" || expectedAt.length === 0) return null;
-  const expected = new Date(expectedAt);
-  if (!Number.isFinite(expected.getTime())) return null;
-  const stamp = expected.toISOString().replace(/:\d{2}\.\d{3}Z$/, "Z");
-  return `${workflow}:${cron}@${stamp}`;
-}
-
-function recoveredRuntimeSlotKeys(runtime) {
-  if (!runtime || typeof runtime !== "object") return new Set();
-  try {
-    return new Set(classifyRuntimeSlots(runtime).recovered_missed_slot_keys);
-  } catch {
-    return new Set();
-  }
-}
-
-function cadenceEvidenceFromRows(rows, recoveredSlots) {
-  const overdue = rows.filter((row) => row.state === "suspected_skip" || row.state === "attempt_gap");
-  if (overdue.length === 0) return { state: "not_due", evidence: [] };
-  const allRecovered = overdue.every((row) => {
-    const workflow = workflowFileFromDeclaration(row.workflow);
-    if (!workflow || !TRACKED_CRONS.some((tracked) => tracked.workflow_file === workflow && tracked.cron === row.cron)) return false;
-    const slotKey = runtimeSlotKey(workflow, row.cron, row.expected_at);
-    return slotKey !== null && recoveredSlots.has(slotKey);
-  });
-  const evidence = [...new Set(overdue.map((row) => row.state))].sort();
-  return allRecovered ? { state: "recovered", evidence } : { state: "overdue", evidence };
-}
-
-/**
- * Project the existing detection/KPI slot evidence onto every watched workflow.
- * An overdue slot is already beyond its declared grace window, so it is an
- * independent paging reason even when the latest completed run is green.
- */
-export function deriveWorkflowCadenceProjection({
-  watched,
-  coverage = null,
-  kpiRuntime = null,
-  config = DATA_SUPPLY_DETECTION_CONFIG,
-  calendars,
-} = {}) {
-  if (!Array.isArray(watched)) throw new Error("watched workflows must be an array");
-  const declarations = assertDeclaredScheduleGraceContracts({ config, calendars });
-  const byWorkflow = new Map();
-  for (const declaration of declarations) {
-    const rows = byWorkflow.get(declaration.workflow) ?? [];
-    rows.push(declaration);
-    byWorkflow.set(declaration.workflow, rows);
-  }
-
-  const coverageRows = Array.isArray(coverage?.rows) ? coverage.rows : null;
-  const coverageByBinding = new Map();
-  const preActivationBindings = new Set();
-  if (coverageRows) {
-    for (const row of coverageRows) {
-      const workflow = workflowFileFromDeclaration(row?.workflow);
-      if (!workflow || typeof row?.cron !== "string" || typeof row?.member_id !== "string") continue;
-      coverageByBinding.set(`${workflow}\u0000${row.cron}\u0000${row.member_id}`, row);
-    }
-    for (const row of Array.isArray(coverage?.pre_activation_members)
-      ? coverage.pre_activation_members
-      : []) {
-      const workflow = workflowFileFromDeclaration(row?.workflow);
-      if (!workflow || typeof row?.cron !== "string" || typeof row?.member_id !== "string") continue;
-      preActivationBindings.add(`${workflow}\u0000${row.cron}\u0000${row.member_id}`);
-    }
-  }
-  const recoveredSlots = recoveredRuntimeSlotKeys(kpiRuntime);
-  const state_counts = Object.fromEntries(CADENCE_STATES.map((state) => [state, 0]));
-  const workflows = watched.map((workflow) => {
-    const file = workflow?.file ?? null;
-    const declared = byWorkflow.get(file) ?? [];
-    const failure_streak_threshold = deriveFailureStreakThreshold(declared);
-    let state;
-    let evidence = [];
-    if (declared.length === 0) {
-      state = "no_declaration";
-    } else if (!coverageRows) {
-      state = "unknown";
-    } else {
-      const rows = [];
-      let hasUnknownBinding = false;
-      for (const entry of declared) {
-        const key = `${entry.workflow}\u0000${entry.cron}\u0000${entry.member_id}`;
-        const row = coverageByBinding.get(key);
-        if (row) rows.push(row);
-        else if (!preActivationBindings.has(key)) hasUnknownBinding = true;
-      }
-      if (hasUnknownBinding) {
-        state = "unknown";
-      } else if (rows.length === 0) {
-        state = "not_due";
-      } else {
-        ({ state, evidence } = cadenceEvidenceFromRows(rows, recoveredSlots));
-      }
-    }
-    state_counts[state] += 1;
-    return { file, state, evidence, failure_streak_threshold };
-  });
-  return { state_counts, workflows };
-}
-
-export function attachWorkflowCadence(workflows, cadenceProjection) {
-  const cadenceByFile = new Map((cadenceProjection?.workflows ?? []).map((row) => [row.file, row]));
-  return workflows.map((workflow) => {
-    const cadence = cadenceByFile.get(workflow.file) ?? {
-      state: "unknown",
-      evidence: [],
-      failure_streak_threshold: FAST_CADENCE_FAILURE_STREAK_THRESHOLD,
-    };
-    const alarmReasons = Array.isArray(workflow.alarm_reasons)
-      ? [...new Set(workflow.alarm_reasons)]
-      : [];
-    if (cadence.state === "overdue" && !alarmReasons.includes("unrecovered_overdue")) {
-      alarmReasons.push("unrecovered_overdue");
-    }
-    const alarming = workflow.alarming === true || cadence.state === "overdue";
-    return {
-      ...workflow,
-      status: alarming ? "alarm" : workflow.status,
-      alarming,
-      alarm_reasons: alarmReasons,
-      cadence_status: cadence.state,
-      cadence_evidence: cadence.evidence,
-      failure_streak_threshold: cadence.failure_streak_threshold,
-    };
-  });
-}
-
 function writeJson(path, payload) {
   if (!path) return;
   fs.writeFileSync(path, `${JSON.stringify(payload, null, 2)}\n`);
@@ -1336,6 +370,109 @@ function authHeaders(token) {
   };
   if (token) headers.Authorization = `Bearer ${token}`;
   return headers;
+}
+
+async function readApiJson(response, url) {
+  if (!response?.ok) {
+    throw new Error(`GitHub API request failed for ${url}: HTTP ${response?.status ?? "unknown"}`);
+  }
+  const text = await response.text();
+  let payload;
+  try {
+    payload = JSON.parse(text);
+  } catch {
+    throw new Error(`GitHub API returned invalid JSON for ${url}`);
+  }
+  if (payload && typeof payload === "object" && payload.encoding === "base64" && typeof payload.content === "string") {
+    const decoded = Buffer.from(payload.content.replace(/\s/g, ""), "base64").toString("utf8");
+    try {
+      return JSON.parse(decoded);
+    } catch {
+      throw new Error(`GitHub API returned invalid file JSON for ${url}`);
+    }
+  }
+  return payload;
+}
+
+function buildKpiHistoryCommitsUrl({ owner, repo, branch = "main" }) {
+  const segments = [owner, repo].map((segment) => encodeURIComponent(segment));
+  const query = new URLSearchParams({
+    path: DATA_HEALTH_KPI_PATH,
+    sha: branch,
+    per_page: "2",
+  });
+  return `${GITHUB_API}/repos/${segments[0]}/${segments[1]}/commits?${query}`;
+}
+
+function buildKpiGenerationContentUrl({ owner, repo, sha }) {
+  const segments = [owner, repo].map((segment) => encodeURIComponent(segment));
+  const file = DATA_HEALTH_KPI_PATH.split("/").map(encodeURIComponent).join("/");
+  const query = new URLSearchParams({ ref: sha });
+  return `${GITHUB_API}/repos/${segments[0]}/${segments[1]}/contents/${file}?${query}`;
+}
+
+function kpiGenerationStatuses(generation) {
+  if (!generation || typeof generation !== "object" || Array.isArray(generation)
+    || typeof generation.generated_at !== "string"
+    || !Number.isFinite(Date.parse(generation.generated_at))
+    || !Array.isArray(generation.sets) || generation.sets.length === 0) return null;
+  const statuses = new Map();
+  for (const row of generation.sets) {
+    if (!row || typeof row.set !== "string" || row.set.trim() === ""
+      || !VALID_KPI_STATUSES.has(row.status) || statuses.has(row.set)) return null;
+    statuses.set(row.set, row.status);
+  }
+  return statuses;
+}
+
+/** Compare the two newest committed KPI generations; unreadable history is unknown, never clear. */
+export function classifyKpiGenerationStoppage(generations) {
+  if (!Array.isArray(generations) || generations.length !== 2) {
+    return { status: "unknown", reason: "two_kpi_generations_unavailable", stopped_sets: [] };
+  }
+  const [latest, previous] = generations;
+  const latestStatuses = kpiGenerationStatuses(latest);
+  const previousStatuses = kpiGenerationStatuses(previous);
+  const latestTime = Date.parse(latest?.generated_at ?? "");
+  const previousTime = Date.parse(previous?.generated_at ?? "");
+  if (!latestStatuses || !previousStatuses || latestTime <= previousTime) {
+    return { status: "unknown", reason: "kpi_generation_history_invalid", stopped_sets: [] };
+  }
+  const stopped_sets = [...latestStatuses]
+    .filter(([set, status]) => status === "stopped" && previousStatuses.get(set) === "stopped")
+    .map(([set]) => set)
+    .sort();
+  return {
+    status: stopped_sets.length > 0 ? "alarm" : "ok",
+    stopped_sets,
+    latest_generated_at: latest.generated_at,
+    previous_generated_at: previous.generated_at,
+  };
+}
+
+/** Load exactly the latest two committed versions of the slim KPI from GitHub. */
+export async function fetchKpiGenerationSnapshots({ token, owner, repo, branch = "main", fetchFn = fetch } = {}) {
+  if (typeof owner !== "string" || owner === "" || typeof repo !== "string" || repo === "") {
+    throw new Error("KPI history requires an owner and repository");
+  }
+  const commitsUrl = buildKpiHistoryCommitsUrl({ owner, repo, branch });
+  const commits = await readApiJson(
+    await fetchFn(commitsUrl, { headers: authHeaders(token) }),
+    commitsUrl,
+  );
+  const shas = Array.isArray(commits)
+    ? commits.slice(0, 2).map((row) => row?.sha).filter((sha) => typeof sha === "string" && /^[0-9a-f]{40}$/i.test(sha))
+    : [];
+  if (shas.length !== 2 || shas[0] === shas[1]) {
+    throw new Error("GitHub returned fewer than two committed KPI generations");
+  }
+  return Promise.all(shas.map(async (sha) => {
+    const url = buildKpiGenerationContentUrl({ owner, repo, sha });
+    const response = await fetchFn(url, {
+      headers: { ...authHeaders(token), Accept: "application/vnd.github.raw+json" },
+    });
+    return readApiJson(response, url);
+  }));
 }
 
 // Conclusions that count as a pipeline failure. `startup_failure` is GitHub's
@@ -1409,9 +546,7 @@ export function isQueueEvictedRun(jobs) {
 //
 // Scope is deliberately the detectors. A workflow that follows its producers
 // rather than owning a clock - Update Manifest, Deploy Worker,
-// build-stocks-analyzer - has no schedule of its own to be late against, which
-// is exactly why those three are recorded in CADENCE_DECLARATION_EXEMPTIONS as
-// having no cadence declaration.
+// build-stocks-analyzer - has no schedule of its own to be late against.
 export const MISSED_WINDOW_WORKFLOWS = new Set([
   "data-plane-serving-probe.yml",
   "check-sec13f-live-parity.yml",
@@ -1423,8 +558,8 @@ export const MISSED_WINDOW_WORKFLOWS = new Set([
 // The restore watchdog is bounded to ten minutes and runs every fifteen. Only
 // an actually running scheduled job, younger than that timeout, is extra
 // liveness evidence; a queued run can wait indefinitely because job timeouts do
-// not include queue time. Other detector behavior and cadence exemptions remain
-// unchanged.
+// not include queue time. This supplements the existing GitHub run-history
+// check for a missing scheduled slot.
 export const MISSED_WINDOW_ACTIVE_RUN_WORKFLOWS = new Set([
   "retention-restore.yml",
 ]);
@@ -1682,11 +817,20 @@ export function buildIssueBody(alarms) {
   const lines = [
     "[alert] Pipeline health incidents detected.",
     "",
-    "A watched workflow lost a scheduled slot, remained overdue after its documented grace,",
-    "or reached its cadence-calibrated failure threshold.",
+    "A watched workflow failed or missed its scheduled slots in GitHub run history,",
+    "or a data set remained stopped in two committed health KPI generations.",
     "",
   ];
   for (const alarm of alarms) {
+    if (Array.isArray(alarm.kpi_stopped_sets)) {
+      lines.push("## Data stopped advancing");
+      lines.push("- KPI status: stopped in two consecutive generations");
+      lines.push(`- Data sets: ${alarm.kpi_stopped_sets.join(", ")}`);
+      lines.push(`- Latest KPI generation: ${alarm.latest_generated_at ?? "unknown"}`);
+      lines.push(`- Previous KPI generation: ${alarm.previous_generated_at ?? "unknown"}`);
+      lines.push("");
+      continue;
+    }
     lines.push(`## ${alarm.label} (\`${alarm.file}\`)`);
     const reasons = Array.isArray(alarm.alarm_reasons) ? alarm.alarm_reasons : [];
     lines.push(`- Alarm reasons: ${reasons.join(", ") || "unknown"}`);
@@ -1702,47 +846,6 @@ export function buildIssueBody(alarms) {
         + ` (${alarm.missed_schedule_window_hours ?? "unknown"}h ago)`);
       lines.push("- This detector did not merely fail, it did not run. Check whether its schedule"
         + " is still being served, then whether the workflow is disabled.");
-    }
-    if (reasons.includes("unrecovered_overdue")) {
-      lines.push("- Declared cadence remains overdue after its documented grace.");
-    }
-    if (reasons.includes(PLANE_PUBLISH_ALARM_REASONS.gate_blocked)) {
-      lines.push("- Plane publication was blocked by the cost gate.");
-    }
-    if (reasons.includes(PLANE_PUBLISH_ALARM_REASONS.failed)) {
-      lines.push("- Plane publication failed after the workflow completed.");
-    }
-    // A reason the reader has to decode is not an alarm, it is a puzzle. These
-    // two carry the numbers the operator needs to act: how old the data is, how
-    // many cycles have gone by, and which of the two independent triggers fired.
-    const freshness = alarm.plane_publish_outcome?.freshness ?? null;
-    if (freshness && reasons.some((reason) => Object.values(PLANE_FRESHNESS_ALARM_REASONS).includes(reason))) {
-      lines.push(
-        freshness.state === "unavailable"
-          ? "- Data freshness is UNAVAILABLE: the served surface must not present this family's values as current."
-          : "- Data freshness is DELAYED: the last-known-good value is still served, and the next cycle is expected to clear it.",
-      );
-      lines.push(`- Last successful publication: ${freshness.last_success_at ?? "none on record"}`);
-      lines.push(
-        `- Source age: ${freshness.source_age_hours === null ? "unknown" : `${freshness.source_age_hours}h`}`
-          + ` against a ${freshness.max_age_hours}h ceiling`,
-      );
-      lines.push(`- Consecutive non-success cycles: ${freshness.consecutive_non_success} of ${freshness.missed_cycle_limit}`);
-      if (freshness.triggered_by.length > 0) {
-        lines.push(`- Triggered by: ${freshness.triggered_by.join(", ")}`);
-      }
-    }
-    // A lane pages once no matter how many families it owns, so the body names
-    // the lane, the representative decision, and the evidence to act on. The
-    // run is the publish-outcome generation id — records carry no GitHub run
-    // id, so it is labeled generation, with the owning workflow's latest run
-    // URL beside it from the workflow context.
-    for (const lane of Array.isArray(alarm.lane_outcome) ? alarm.lane_outcome : []) {
-      lines.push(`- Lane outcome: ${lane.lane_id} decision=${lane.decision}`
-        + ` generation=${lane.generation_id ?? "unknown"}`
-        + ` source_as_of=${lane.source_as_of ?? "unknown"}`
-        + ` cadence=${lane.cadence_hours ?? "?"}h`
-        + ` owner_run=${lane.owner_run_url ?? "unknown"}`);
     }
     if (reasons.includes("failure_streak")) {
       lines.push(`- Consecutive failures: ${alarm.streak}`);
@@ -1868,45 +971,29 @@ export async function main() {
   const [owner, repo] = repository.split("/");
   const checkedAtUtc = new Date().toISOString().replace(/\.\d{3}Z$/, "Z");
   const policy = deriveWorkflowWatchPolicy();
-  const calendars = readJsonOrNull(DETECTION_CALENDARS_PATH);
-  const detectionFloor = readJsonOrNull(DETECTION_FLOOR_PATH);
-  let attempts = null;
-  let fetchCronCoverage = null;
-  let outcomeWatchdog = null;
-  try {
-    attempts = loadAttemptShards({ shardRoot: ATTEMPT_SHARD_ROOT });
-    fetchCronCoverage = buildFetchCronAttemptCoverage({
-      attempts,
-      calendars: calendars ?? DETECTION_CALENDARS,
-      nowValue: checkedAtUtc,
-    });
-  } catch {
-    // Missing or invalid attempt shards make cadence evidence unknown, never an invented alarm.
+  let dataHealthKpi;
+  if (!owner || !repo) {
+    dataHealthKpi = {
+      status: "unknown",
+      reason: "repository_unset",
+      stopped_sets: [],
+    };
+  } else {
+    try {
+      dataHealthKpi = classifyKpiGenerationStoppage(await fetchKpiGenerationSnapshots({
+        token,
+        owner,
+        repo,
+        branch,
+      }));
+    } catch {
+      dataHealthKpi = {
+        status: "unknown",
+        reason: "kpi_history_unavailable",
+        stopped_sets: [],
+      };
+    }
   }
-  const publishOutcomeProjection = readPublishOutcomeProjection();
-  const { shards: publishOutcomeShards } = readPublishOutcomeShards();
-  try {
-    outcomeWatchdog = buildLaneOutcomeWatchdog({
-      detectionFloor,
-      attempts,
-      publication: publishOutcomeProjection,
-      nowIso: checkedAtUtc,
-      calendars: calendars ?? DETECTION_CALENDARS,
-    });
-  } catch {
-    // The publish streak axis below remains independent if source-clock evidence is unavailable.
-  }
-  const laneOutcomeAlarms = deriveLaneOutcomeAlarms({
-    watchdog: outcomeWatchdog,
-    shards: publishOutcomeShards,
-    now: new Date(checkedAtUtc),
-  });
-  const cadenceProjection = deriveWorkflowCadenceProjection({
-    watched: policy.watched,
-    coverage: fetchCronCoverage,
-    calendars,
-  });
-  const calibratedWatched = attachWorkflowCadence(policy.watched, cadenceProjection);
 
   const base = {
     checkedAtUtc,
@@ -1918,7 +1005,7 @@ export async function main() {
       .map((workflow) => ({ file: workflow.file, events: workflow.events })),
     excluded: policy.excluded,
     scheduled_count: policy.scheduled_count,
-    cadence_state_counts: cadenceProjection.state_counts,
+    data_health_kpi: dataHealthKpi,
   };
 
   if (!owner || !repo) {
@@ -1926,22 +1013,14 @@ export async function main() {
       ...base,
       status: "unknown",
       message: "GITHUB_REPOSITORY is not set (expected owner/repo).",
-      lane_outcome_alarms: laneOutcomeAlarms,
-      workflows: attachLaneOutcomeAlarms(attachPublishOutcomeAlarms(
-        attachWorkflowCadence(
-          policy.watched.map((workflow) => ({
-            file: workflow.file,
-            label: workflow.label,
-            events: workflow.events,
-            status: "unknown",
-            message: "GitHub workflow runs were not evaluated because GITHUB_REPOSITORY is not set.",
-          })),
-          cadenceProjection,
-        ),
-        publishOutcomeProjection,
-        ),
-        laneOutcomeAlarms,
-      ),
+      workflows: policy.watched.map((workflow) => ({
+        file: workflow.file,
+        label: workflow.label,
+        events: workflow.events,
+        failure_streak_threshold: workflow.failure_streak_threshold,
+        status: "unknown",
+        message: "GitHub workflow runs were not evaluated because GITHUB_REPOSITORY is not set.",
+      })),
     };
     writeJson(resultPath, result);
     // Deliberately exit 0. This path is reached only when GITHUB_REPOSITORY is
@@ -1954,7 +1033,7 @@ export async function main() {
   }
 
   const workflows = [];
-  for (const workflow of calibratedWatched) {
+  for (const workflow of policy.watched) {
     try {
       const batches = [];
       // workflow_dispatch is fetched even when it is not a counted event:
@@ -2025,16 +1104,21 @@ export async function main() {
     }
   }
 
-  const classifiedWorkflows = attachLaneOutcomeAlarms(
-    attachPublishOutcomeAlarms(
-      attachWorkflowCadence(workflows, cadenceProjection),
-      publishOutcomeProjection,
-    ),
-    laneOutcomeAlarms,
-  );
-  const alarms = classifiedWorkflows.filter((w) => w.status === "alarm");
+  const classifiedWorkflows = workflows;
+  const workflowAlarms = classifiedWorkflows.filter((w) => w.status === "alarm");
+  const kpiAlarm = dataHealthKpi.status === "alarm"
+    ? {
+        label: "Data stopped advancing",
+        kpi_stopped_sets: dataHealthKpi.stopped_sets,
+        latest_generated_at: dataHealthKpi.latest_generated_at,
+        previous_generated_at: dataHealthKpi.previous_generated_at,
+      }
+    : null;
+  const alarms = [...workflowAlarms, ...(kpiAlarm ? [kpiAlarm] : [])];
   const unknowns = classifiedWorkflows.filter((w) => w.status === "unknown");
-  const status = alarms.length > 0 ? "alarm" : unknowns.length > 0 ? "unknown" : "ok";
+  const status = alarms.length > 0
+    ? "alarm"
+    : unknowns.length > 0 || dataHealthKpi.status === "unknown" ? "unknown" : "ok";
 
   const blindness = classifyAlarmBlindness({
     watched: classifiedWorkflows.length,
@@ -2045,7 +1129,6 @@ export async function main() {
     status: blindness.blind ? "blind" : status,
     blind: blindness.blind,
     blind_reason: blindness.reason,
-    lane_outcome_alarms: laneOutcomeAlarms,
     workflows: classifiedWorkflows,
   };
   if (alarms.length > 0) {

@@ -13,7 +13,7 @@ const ALLOW_BOUND_WORKFLOW_DISPATCH_RECOVERY = true;
 // hasStructuredGithubRunBinding, isEligibleRecoveryRun). A static import of
 // that module is impossible here: lane-registry.mjs:699 reads
 // SLICKCHARTS_MEMBER_PATHS at module-evaluation time inside the
-// data-supply-lkg-store import graph (data-supply-attempt-shard.mjs ->
+// data-supply-lkg-store import graph (atomic-file.mjs ->
 // data-supply-detection-config.mjs -> lane-registry.mjs -> this module),
 // so the edge would TDZ-crash every entry point. Keep this mirror
 // byte-identical in behavior to the shared predicate.

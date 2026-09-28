@@ -25,10 +25,10 @@ import {
   planeCeilingForFamily,
   resolveFamilyCadence,
 } from "./check-pipeline-job-health.mjs";
-import { PLANE_PUBLISH_OUTCOME_BINDINGS } from "../lib/lane-registry.mjs";
+import { PLANE_PUBLISH_FAMILY_BINDINGS } from "../lib/lane-registry.mjs";
 
 // --- Every bound family resolves to a ceiling or a declared reason ----------
-const bound = Object.keys(PLANE_PUBLISH_OUTCOME_BINDINGS).sort();
+const bound = Object.keys(PLANE_PUBLISH_FAMILY_BINDINGS).sort();
 assert.ok(bound.length >= 20, `only ${bound.length} bindings seen; the walk is not resolving them`);
 
 const resolved = [];

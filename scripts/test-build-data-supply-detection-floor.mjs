@@ -1651,15 +1651,10 @@ function runPathAndAtomicChecks(artifactRoot, report) {
 }
 
 function runCliReproduction(artifactRoot) {
-  // The CLI keeps accepting exactly one attempt source for workflow-bridge
-  // compatibility, but the floor must not read it: every CLI case below passes
-  // an EMPTY shard root and still produces the full artifact-derived report.
-  const emptyShardRoot = makeOwnedRoot(fs.realpathSync.native(os.tmpdir()));
   const output = makeOwnedRoot(fs.realpathSync.native(os.tmpdir()));
   const cliArgs = [
     BUILDER,
     "--artifact-root", artifactRoot.raw,
-    "--attempt-shard-root", emptyShardRoot.raw,
     "--calendar-fixture", CALENDARS_PATH,
     "--now", expectedFixture.baseline.now,
     "--output-root", output.raw,
@@ -1708,7 +1703,6 @@ function runCliReproduction(artifactRoot) {
     "--import", networkBlocker,
     BUILDER,
     "--artifact-root", malformedSurfaceCliRoot.raw,
-    "--attempt-shard-root", emptyShardRoot.raw,
     "--calendar-fixture", CALENDARS_PATH,
     "--now", expectedFixture.baseline.now,
     "--output-root", malformedSurfaceCliOutput.raw,
@@ -1750,7 +1744,6 @@ function runCliReproduction(artifactRoot) {
   for (const mutateArgs of [
     (args) => { args[args.indexOf("--now")] = "--unknown"; },
     (args) => { args.push("positional"); },
-    (args) => { args.push("--attempt-shard-root", emptyShardRoot.raw); },
     (args) => { args.push("--calendars", CALENDAR_PATH); },
   ]) {
     const failureOutput = makeOwnedRoot(fs.realpathSync.native(os.tmpdir()));
@@ -1783,7 +1776,6 @@ function runWorkflowBridgeChecks() {
   const requiredTokens = [
     "mktemp -d \"/tmp/fenok-data-supply-detection-floor-",
     "trap 'rm -rf \"$output_root\"' EXIT",
-    "--attempt-shard-root",
     "scripts/lib/data-supply-detection-calendars.json",
     "--verify-report \"$report_path\"",
     "install -m 0644 \"$report_path\" \"$installed_path\"",

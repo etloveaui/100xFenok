@@ -45,7 +45,6 @@ import {
   gateBlocksPublication,
   gateVerdict,
 } from "../publish-cloud-data-generation.mjs";
-import { GATE_VERDICTS } from "../lib/publish-outcome-shard.mjs";
 
 const REPO_ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..", "..");
 const read = (p) => fs.readFileSync(path.join(REPO_ROOT, p), "utf8");
@@ -173,7 +172,7 @@ assert.equal(
   "the ledger must record that the gate could not measure, not that it refused",
 );
 assert.ok(
-  GATE_VERDICTS.includes("unverified"),
+  gateVerdict({ code: 3 }) === "unverified",
   "the shard schema must accept the verdict the publisher now writes, or every record fails validation",
 );
 

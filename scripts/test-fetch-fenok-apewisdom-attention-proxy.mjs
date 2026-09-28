@@ -6,7 +6,6 @@ import path from "node:path";
 import { fileURLToPath } from "node:url";
 
 import { DATA_SUPPLY_DETECTION_CONFIG } from "./lib/data-supply-detection-config.mjs";
-import { validateAttemptEvidence, validateAttemptShard } from "./build-data-supply-detection-floor.mjs";
 import {
   APEWISDOM_HISTORY_PERSISTENCE_POLICY,
   MAX_APEWISDOM_HISTORY_SOURCE_DATES,
@@ -197,8 +196,6 @@ function expectedAssertionIds(laneId) {
   assert.ok(naturalFailure.failure_detail.length <= 320, "diagnostic detail stays bounded");
   assert.equal(naturalFailure.failure_detail.includes("secret-token"), false, "diagnostic detail redacts bearer credentials");
   assert.equal(naturalFailure.failure_detail.includes("token=private"), false, "diagnostic detail redacts URL query values");
-  const naturalFailureShard = readJson(naturalFailurePaths.attemptShardPath);
-  assert.equal(Object.hasOwn(naturalFailureShard.attempts[0], "failure_detail"), false, "attempt shard schema remains unchanged");
 
   const missingDateRoot = fs.mkdtempSync(path.join(os.tmpdir(), "apewisdom-source-date-missing-"));
   const missingDate = await runApeWisdomAttention({
@@ -298,8 +295,7 @@ function expectedAssertionIds(laneId) {
   assert.equal(baselineSnapshot.source.source_as_of, "2026-07-24T13:17:00.000Z");
   assert.equal(baselineSnapshot.source.source_date, "20260724");
   assert.match(baselineSnapshot.source.provider_observation_payload_sha256, /^[0-9a-f]{64}$/);
-  const successShard = readJson(paths.attemptShardPath);
-  assert.deepEqual(successShard.attempts[0].assertions.map((assertion) => assertion.id), expectedAssertionIds(LANE_ID),
+  assert.deepEqual(initial.attempt.assertions.map((assertion) => assertion.id), expectedAssertionIds(LANE_ID),
     "successful endpoint observations retain the registry assertion ids");
 
   const failed = await runApeWisdomAttention({
@@ -324,11 +320,8 @@ function expectedAssertionIds(laneId) {
   const lkgPath = path.join(root, "data", "admin", LANE_ID, "lkg", "social_attention_proxy.json");
   assert.equal(fs.existsSync(lkgPath), true);
   assert.equal(readJson(statePath).items.social_attention_proxy.resolution_state, "lkg_primary");
-  const failureShard = readJson(paths.attemptShardPath);
-  assert.equal(validateAttemptShard(failureShard, LANE_ID), true);
-  assert.equal(validateAttemptEvidence({ schema_version: "data-supply-detection-attempts/v1", attempts: failureShard.attempts }), true);
   assert.deepEqual(
-    failureShard.attempts[0].assertions,
+    failed.attempt.assertions,
     expectedAssertionIds(LANE_ID).map((id) => ({ id, passed: false })),
     "transport failures retain the endpoint-contract assertion ids with failed verdicts",
   );

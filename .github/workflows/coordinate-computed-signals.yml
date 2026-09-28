@@ -6,15 +6,13 @@
 # the LATEST origin/main (never the triggering source SHA), runs the computed
 # signals exporter only, publishes the one-asset computed-signals plane
 # generation, restores the generated canonical/public signal files to HEAD in
-# ephemeral checkout, and persists only the authorized publish-outcome shard.
+# ephemeral checkout.
 #
 # No Deploy Worker and no signals Git commit: the git copies of
 # data/computed/signals.json + the public mirror stay owned by the scheduled
 # Update Manifest reconciliation; this lane only publishes the plane generation
-# and commits its outcome evidence. The outcome shard lives under
-# data/admin/data-supply-state/** which is excluded from Update Manifest push
-# triggers, and this workflow listens only to the six source workflows, so
-# persistence cannot recursively restart Update Manifest or this coordinator.
+# without a Git commit. This workflow listens only to the six source
+# workflows, so it cannot recursively restart itself.
 
 name: Coordinate Computed Signals
 
@@ -69,7 +67,6 @@ jobs:
             data/sentiment
             data/computed
             100xfenok-next/public/data/computed
-            data/admin/data-supply-state/publish-outcomes
             data/admin/lane-commit-manifest.json
 
       - name: Start from latest main
@@ -101,9 +98,7 @@ jobs:
       - name: Restore generated signal files to HEAD
         # The publisher owns the plane generation; the git copies belong to
         # scheduled Update Manifest reconciliation. Clean both canonical and
-        # public mirror files BEFORE persistence so the outcome commit can
-        # carry only the authorized outcome shard (the persistence helper
-        # refuses any other dirty path). Restore, rather than delete: both files
+        # public mirror files after publication. Restore, rather than delete: both files
         # are tracked and must remain present at their checked-out HEAD bytes.
         if: ${{ always() }}
         run: |
@@ -111,7 +106,3 @@ jobs:
           git restore --source=HEAD --worktree -- \
             data/computed/signals.json \
             100xfenok-next/public/data/computed/signals.json
-
-      - name: Persist computed-signals publish outcome
-        if: ${{ always() }}
-        run: node scripts/persist-cloud-publish-outcome.mjs --family=computed-signals --workflow=.github/workflows/coordinate-computed-signals.yml --publisher-outcome=${{ steps.publish_cloud_generation.outcome }}

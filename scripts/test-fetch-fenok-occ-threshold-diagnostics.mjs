@@ -150,7 +150,6 @@ try {
   ]), {
     request: async () => ({ statusCode: 503, body: privateBody }),
     cacheDir: path.join(integrationRoot, "failed-cache"),
-    attemptShardPath: path.join(integrationRoot, "failed-attempt.json"),
     observedAt: "2026-07-22T00:30:00Z",
     attemptId: "occ-threshold-failed-test",
   }));
@@ -183,7 +182,6 @@ try {
       throw new Error("cached malformed fixture must not call the provider");
     },
     cacheDir: path.join(integrationRoot, "cached-malformed"),
-    attemptShardPath: path.join(integrationRoot, "cached-malformed-attempt.json"),
     observedAt: "2026-07-22T00:31:00Z",
     attemptId: "occ-threshold-cached-malformed-test",
   }));
@@ -207,7 +205,6 @@ try {
   ]), {
     request: async () => ({ statusCode: 200, body: readyCsv }),
     cacheDir: path.join(integrationRoot, "clean-cache"),
-    attemptShardPath: path.join(integrationRoot, "clean-attempt.json"),
     observedAt: "2026-07-22T08:30:00Z",
     attemptId: "occ-threshold-clean-test",
   }));

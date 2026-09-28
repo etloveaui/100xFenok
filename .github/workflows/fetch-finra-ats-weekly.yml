@@ -41,8 +41,6 @@ jobs:
             .github/workflows
             100xfenok-next/scripts
             100xfenok-next/src/lib
-            data/admin/data-supply-state/detection-attempts
-            data/admin/data-supply-state/publish-outcomes
             data/admin/finra-ats
             data/computed
 
@@ -130,7 +128,3 @@ jobs:
           DATA_PLANE_ENDPOINT: https://100xfenok.etloveaui.workers.dev/internal/cloud-data-plane
           DATA_PLANE_WRITE_KEY: ${{ secrets.DATA_PLANE_WRITE_KEY }}
         run: node scripts/publish-cloud-data-generation.mjs --family=finra-ats-weekly --tolerate-gate-block --json
-
-      - name: Persist FINRA ATS weekly publish outcome
-        if: ${{ always() }}
-        run: node scripts/persist-cloud-publish-outcome.mjs --family=finra-ats-weekly --workflow=.github/workflows/fetch-finra-ats-weekly.yml --publisher-outcome=${{ steps.publish_cloud_generation.outcome }} --binding-from-current-origin

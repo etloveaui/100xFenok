@@ -4,17 +4,8 @@ import https from "node:https";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 
-import {
-  attemptResult,
-  atomicWrite,
-  classifyEndpointResponse,
-  defaultAttemptId,
-  returnedTuple,
-  threwTuple,
-  transportError,
-  worstRequestResult,
-  writeAttemptShard,
-} from "./lib/data-supply-attempt-shard.mjs";
+import { atomicWrite } from "./lib/atomic-file.mjs";
+import { attemptResult, classifyEndpointResponse, defaultAttemptId, returnedTuple, threwTuple, transportError, worstRequestResult } from "./lib/provider-fetch-result.mjs";
 import {
   LaneLkgStore,
   PROMOTION_CONTRACT_PROVIDER_OBSERVATION_V2,
@@ -215,7 +206,6 @@ function defaultCanonicalPaths() {
 export async function runFredBanking({
   repoRoot = REPO_ROOT,
   canonicalPaths = defaultCanonicalPaths(),
-  attemptShardPath = path.join(REPO_ROOT, "data", "admin", "data-supply-state", "detection-attempts", "fred_banking.json"),
   type = "all",
   apiKey = process.env.FRED_API_KEY,
   request = requestBytes,
@@ -257,13 +247,7 @@ export async function runFredBanking({
   }
 
   const worst = worstRequestResult(requestResults);
-  const attempt = writeAttemptShard({
-    laneId: "fred_banking",
-    attemptShardPath,
-    observedAt,
-    attemptId,
-    result: worst,
-  });
+  const attempt = (worst).attempt;
   if (worst.status !== "ready") {
     const systemicOutage = allNaturalRequestsFailed(requestResults, (row) => row.seriesId === injectedKey);
     const failureReason = systemicLkgFailureReason([worst.reason, ...requestResults.map((row) => row.reason)])
@@ -404,7 +388,7 @@ async function main() {
     process.exitCode = result.exitCode ?? 2;
     return;
   }
-  console.log(`Saved FRED banking ${result.groups.join(", ")} artifacts and one current-attempt shard${result.recovered ? "; recovered from LKG" : ""}`);
+  console.log(`Saved FRED banking ${result.groups.join(", ")} artifacts${result.recovered ? "; recovered from LKG" : ""}`);
 }
 
 if (process.argv[1] && path.resolve(process.argv[1]) === __filename) {

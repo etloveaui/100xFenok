@@ -81,26 +81,6 @@ for (const forbidden of ["git add", "git commit", "git push", "git pull", "gh wo
     `acquire-yf-finance must not contain "${forbidden}"`);
 }
 
-// The standard attempt shard step runs under the exact always/non-plan
-// condition inside the acquire job, after the batch and before downstream
-// refresh work.
-{
-  const emitStep = extractStepSpan(acquireJob, "Emit Yahoo batch detection attempt");
-  assert.match(
-    emitStep,
-    /if: \$\{\{ always\(\) && env\.YF_PLAN_ONLY != 'true' \}\}/,
-    "the attempt shard step must run under the exact always/non-plan condition",
-  );
-  assert.match(
-    emitStep,
-    /node scripts\/emit-yahoo-batch-quote-history-attempt\.mjs/,
-    "the attempt shard step must call the standard emitter",
-  );
-  const refreshStep = extractStepSpan(acquireJob, "Refresh owned Yahoo quarter-close source");
-  assert.ok(acquireJob.indexOf(refreshStep) > acquireJob.indexOf(emitStep),
-    "the standard attempt shard must be emitted after the batch and before downstream refresh work");
-}
-
 // The non-plan persist step must carry, in order, the exact always/non-plan
 // condition, this workflow's manifest staging invocation, the
 // always_if_exists stage, a real git add, and the finance summary restore
@@ -132,9 +112,8 @@ for (const forbidden of ["git add", "git commit", "git push", "git pull", "gh wo
 assert.doesNotMatch(publishJob, /publish-cloud-data-generation\.mjs/,
   "Yahoo cloud upload must not occupy the global Git writer job");
 const cloudJob = extractJobSpan(workflowText, "publish-yf-cloud");
-const outcomeJob = extractJobSpan(workflowText, "persist-yf-cloud-outcome");
 assert.doesNotMatch(cloudJob, /fenok-data-writer-refs\/heads\/main/);
-for (const forbidden of ["git add", "git commit", "git push", "persist-cloud-publish-outcome.mjs"]) {
+for (const forbidden of ["git add", "git commit", "git push"]) {
   assert.ok(!cloudJob.includes(forbidden), `cloud-only job must not contain ${forbidden}`);
 }
 assert.match(cloudJob, /publish-cloud-data-generation\.mjs/);
@@ -155,20 +134,12 @@ assert.equal(
   1,
   "the source job must dispatch one shared projection rebuild per run",
 );
-assert.match(outcomeJob, /fenok-data-writer-refs\/heads\/main/);
-assert.match(outcomeJob, /ref: \$\{\{ needs\.publish-yf-finance\.outputs\.pushed_sha \}\}/,
-  "outcome merge starts at the same snapshot as publication before rebasing onto main");
-assert.match(outcomeJob, /persist-cloud-publish-outcome\.mjs/);
-assert.doesNotMatch(outcomeJob, /publish-cloud-data-generation\.mjs/);
-assert.match(outcomeJob, /always\(\)/, "failed publication must still reach outcome persistence");
-
 const edgarText = fs.readFileSync(new URL("../.github/workflows/fetch-edgar-filings.yml", import.meta.url), "utf8");
 const edgarHeader = edgarText.split(/^jobs:/m)[0];
 assert.doesNotMatch(edgarHeader, /fenok-data-writer-refs\/heads\/main/,
   "EDGAR must not hold the global writer lock across its whole workflow");
 const edgarSource = extractJobSpan(edgarText, "fetch-edgar-filings");
 const edgarCloud = extractJobSpan(edgarText, "publish-edgar-cloud");
-const edgarOutcome = extractJobSpan(edgarText, "persist-edgar-cloud-outcome");
 assert.match(edgarSource, /fenok-data-writer-refs\/heads\/main/);
 assert.doesNotMatch(edgarSource, /publish-cloud-data-generation\.mjs/);
 assert.doesNotMatch(edgarCloud, /fenok-data-writer-refs\/heads\/main/);
@@ -177,16 +148,4 @@ assert.match(edgarCloud, /persist-credentials: false/);
 assert.match(edgarCloud, /outputs\.plan_only != 'true'/);
 assert.match(edgarCloud, /outputs\.verify_outcome == 'success'/);
 assert.match(edgarCloud, /publish-cloud-data-generation\.mjs/);
-assert.match(edgarOutcome, /fenok-data-writer-refs\/heads\/main/);
-assert.match(edgarOutcome, /ref: \$\{\{ needs\.fetch-edgar-filings\.outputs\.source_sha \}\}/);
-assert.match(edgarOutcome, /persist-cloud-publish-outcome\.mjs/);
-assert.doesNotMatch(edgarOutcome, /publish-cloud-data-generation\.mjs/);
-assert.match(edgarOutcome, /always\(\)/);
-for (const tail of [outcomeJob, edgarOutcome]) {
-  assert.doesNotMatch(tail, /result != 'cancelled'/,
-    "cancellation must not discard a fresh outcome artifact already emitted by the cloud job");
-  assert.match(tail, /result != 'skipped'/,
-    "a cloud job that never ran must not start an outcome writer");
-}
-
 console.log("test-fetch-yf-finance-workflow: ok");

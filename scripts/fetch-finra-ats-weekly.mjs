@@ -10,14 +10,8 @@ import fs from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 
-import {
-  atomicWrite,
-  attemptResult,
-  defaultAttemptId,
-  returnedTuple,
-  threwTuple,
-  writeAttemptShard,
-} from "./lib/data-supply-attempt-shard.mjs";
+import { atomicWrite } from "./lib/atomic-file.mjs";
+import { attemptResult, defaultAttemptId, returnedTuple, threwTuple } from "./lib/provider-fetch-result.mjs";
 import { boundedDiagnosticDetail } from "./lib/diagnostic-detail.mjs";
 import {
   LaneLkgStore,
@@ -838,11 +832,9 @@ export async function run({
   referenceDate = new Date(),
   tokenEndpoint = TOKEN_ENDPOINT,
   weeklySummaryEndpoint = WEEKLY_SUMMARY_ENDPOINT,
-  attemptWriter = writeAttemptShard,
 } = {}) {
   const resolvedRoot = path.resolve(repoRoot);
   const markerPath = markerPathFor(resolvedRoot);
-  const attemptShardPath = path.join(resolvedRoot, "data", "admin", "data-supply-state", "detection-attempts", "finra_ats.json");
   const runContext = { runId: String(runId), runAttempt: Number(runAttempt), eventName, observedAt };
   const store = atsLkgStore(resolvedRoot);
   const artifact = lkgArtifact(markerPath);
@@ -978,8 +970,6 @@ export async function run({
       };
     }
     return response;
-  } finally {
-    attemptWriter({ laneId: FINRA_ATS_LANE_ID, attemptShardPath, observedAt, attemptId, result: attempt });
   }
 }
 

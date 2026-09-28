@@ -8,12 +8,6 @@ import { fileURLToPath } from "node:url";
 
 import { DATA_SUPPLY_DETECTION_CONFIG } from "./lib/data-supply-detection-config.mjs";
 import {
-  ATTEMPT_SCHEMA,
-  ATTEMPT_SHARD_SCHEMA,
-  validateAttemptEvidence,
-  validateAttemptShard,
-} from "./build-data-supply-detection-floor.mjs";
-import {
   FRED_MACRO_SERIES,
   runFredMacro,
 } from "./fetch-fred-macro.mjs";
@@ -52,14 +46,6 @@ function readJson(filePath) {
   return JSON.parse(fs.readFileSync(filePath, "utf8"));
 }
 
-function assertValidShard(shard) {
-  assert.equal(validateAttemptShard(shard, shard.lane_id), true);
-  assert.equal(validateAttemptEvidence({
-    schema_version: ATTEMPT_SCHEMA,
-    attempts: shard.attempts,
-  }), true);
-}
-
 async function runCase(request) {
   const root = fs.mkdtempSync(path.join(os.tmpdir(), "fetch-fred-macro-test-"));
   const paths = makePaths(root);
@@ -71,7 +57,8 @@ async function runCase(request) {
     attemptId: ATTEMPT_ID,
     sleep: async () => {},
   });
-  return { paths, result, shard: readJson(paths.attemptShardPath) };
+  assert.equal(fs.existsSync(paths.attemptShardPath), false);
+  return { paths, result, shard: { attempts: [result.attempt] } };
 }
 
 {
@@ -89,15 +76,7 @@ async function runCase(request) {
   );
   const output = readJson(paths.canonicalPath);
   assert.deepEqual(Object.keys(output.series), FRED_MACRO_SERIES.map((row) => row.id));
-  assert.equal(shard.schema_version, ATTEMPT_SHARD_SCHEMA);
-  assert.equal(shard.lane_id, "fred_macro");
-  assert.equal(shard.attempts.length, 1);
-  assertValidShard(shard);
   const row = shard.attempts[0];
-  assert.equal(row.lane_id, "fred_macro");
-  assert.equal(row.member_id, null);
-  assert.equal(row.attempt_id, ATTEMPT_ID);
-  assert.equal(row.observed_at, OBSERVED_AT);
   assert.equal(row.execution, "returned");
   assert.equal(row.http_status, 200);
   assert.equal(row.auth, "ok");
@@ -138,8 +117,7 @@ async function runCase(request) {
   assert.equal(result.corrupt, true);
   assert.equal(fs.readFileSync(paths.canonicalPath, "utf8"), canonicalBefore);
   assert.equal(fs.readFileSync(paths.canonicalPath, "utf8"), canonicalBefore);
-  const shard = readJson(paths.attemptShardPath);
-  assertValidShard(shard);
+  const shard = { attempts: [result.attempt] };
   const row = shard.attempts[0];
   assert.equal(row.http_status, 429);
   assert.equal(row.rate_limited, true);
@@ -160,7 +138,7 @@ async function runCase(request) {
   });
   assert.equal(maskedSystemic.reason, "auth_error", "systemic failure cannot hide behind the first equal-severity HTTP failure");
   assert.equal(maskedSystemic.exitCode, 2);
-  assert.equal(readJson(paths.attemptShardPath).attempts[0].http_status, 500, "existing current-attempt fold remains unchanged");
+  assert.equal(maskedSystemic.attempt.http_status, 500, "current-attempt fold remains unchanged");
 
   const systemicOutage = await runFredMacro({
     ...paths,
@@ -294,7 +272,6 @@ for (const failure of [
     ? failure.responseValue
     : response(200, observations(seriesId)));
   assert.equal(result.reason, failure.expected.reason, failure.name);
-  assertValidShard(shard);
   const row = shard.attempts[0];
   assert.equal(row.auth, failure.expected.auth, failure.name);
   assert.equal(row.decode, failure.expected.decode, failure.name);
@@ -318,13 +295,8 @@ for (const failure of [
   assert.match(result.failure_detail, /token=\[redacted\]/, "diagnostic detail must redact secrets");
   assert.doesNotMatch(result.failure_detail, new RegExp(secret), "diagnostic detail must not leak a secret");
   assert(result.failure_detail.length <= 320, "diagnostic detail must stay bounded");
-  assertValidShard(shard);
   assert.equal(Object.hasOwn(shard.attempts[0], "failure_detail"), false, "attempt shard schema must remain unchanged");
   assert.deepEqual(shard.attempts[0], {
-    lane_id: "fred_macro",
-    member_id: null,
-    attempt_id: ATTEMPT_ID,
-    observed_at: OBSERVED_AT,
     execution: "threw",
     exception_kind: "transport",
     http_status: null,
@@ -369,8 +341,7 @@ for (const failure of [
   });
   assert.equal(failed.reason, "unexpected_error", "missing credentials retain the stable reason enum");
   assert.equal(failed.failure_detail, "FRED API key is unavailable", "generic missing-key failure needs a safe cause");
-  const shard = readJson(paths.attemptShardPath);
-  assertValidShard(shard);
+  const shard = { attempts: [failed.attempt] };
   assert.equal(Object.hasOwn(shard.attempts[0], "failure_detail"), false, "attempt shard schema must remain unchanged");
 }
 

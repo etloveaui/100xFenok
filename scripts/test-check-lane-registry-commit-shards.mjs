@@ -14,9 +14,8 @@ import {
 import { LANE_REGISTRY } from "./lib/lane-registry.mjs";
 
 const WORKFLOW = ".github/workflows/fetch-fred-macro.yml";
-const PUBLISH_OUTCOME = "data/admin/data-supply-state/publish-outcomes/fred-macro.json";
-const YAHOO_OUTCOME_ROOT = "data/admin/data-supply-state/publish-outcomes";
-const YAHOO_OUTCOME = `${YAHOO_OUTCOME_ROOT}/yahoo-finance.json`;
+const FRED_INDEX = "data/admin/fred_macro/index.json";
+const WEEKLY_STATE = "data/admin/slickcharts-composite-recovery";
 const REPO_ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const WEEKLY = ".github/workflows/slickcharts-weekly.yml";
 
@@ -49,21 +48,21 @@ scripts/stage-lane-manifest.sh \
   ]);
   const result = gate(exactInvocation);
   assert.equal(result.ok, true, JSON.stringify(result));
-  assert.equal(result.missing_in_workflow.some(({ shard }) => shard === PUBLISH_OUTCOME), false);
+  assert.equal(result.missing_in_workflow.some(({ shard }) => shard === FRED_INDEX), false);
 }
 
 // A helper call for another workflow must not borrow that workflow's policy.
 {
   const result = gate(exactInvocation.replace(WORKFLOW, ".github/workflows/fetch-fred-banking.yml"));
   assert.equal(result.ok, false);
-  assert.ok(result.missing_in_workflow.some(({ shard }) => shard === PUBLISH_OUTCOME));
+  assert.ok(result.missing_in_workflow.some(({ shard }) => shard === FRED_INDEX));
 }
 
 // A missing or unknown stage is not evidence of staging coverage.
 for (const stage of ["success_if_exists", "not_a_manifest_stage"]) {
   const result = gate(exactInvocation.replace("always_if_exists", stage));
   assert.equal(result.ok, false, `stage ${stage} must fail closed`);
-  assert.ok(result.missing_in_workflow.some(({ shard }) => shard === PUBLISH_OUTCOME));
+  assert.ok(result.missing_in_workflow.some(({ shard }) => shard === FRED_INDEX));
 }
 
 // A valid invocation cannot compensate for a missing registry policy.
@@ -76,7 +75,7 @@ for (const stage of ["success_if_exists", "not_a_manifest_stage"]) {
     registry: registryWithoutPolicy,
   });
   assert.equal(result.ok, false);
-  assert.ok(result.missing_in_workflow.some(({ shard }) => shard === PUBLISH_OUTCOME));
+  assert.ok(result.missing_in_workflow.some(({ shard }) => shard === FRED_INDEX));
 }
 
 // A malformed command is ignored rather than becoming a false-green proof.
@@ -85,15 +84,13 @@ for (const stage of ["success_if_exists", "not_a_manifest_stage"]) {
   assert.deepEqual(extractManifestStageInvocations(malformed), []);
   const result = gate(malformed);
   assert.equal(result.ok, false);
-  assert.ok(result.missing_in_workflow.some(({ shard }) => shard === PUBLISH_OUTCOME));
+  assert.ok(result.missing_in_workflow.some(({ shard }) => shard === FRED_INDEX));
 }
 
 // Existing literal paths remain a complete and independent allowlist.
 {
   const legacyPaths = [
-    "data/admin/data-supply-state/detection-attempts/fred_macro.json",
-    PUBLISH_OUTCOME,
-    "data/admin/fred_macro/index.json",
+    FRED_INDEX,
     "data/admin/fred_macro/lkg/fred_macro.json",
   ].join("\n");
   const result = gate(legacyPaths);
@@ -107,7 +104,7 @@ for (const stage of ["success_if_exists", "not_a_manifest_stage"]) {
   assert.deepEqual(extractManifestStageInvocations(mentionOnly), []);
   const result = gate(mentionOnly);
   assert.equal(result.ok, false);
-  assert.ok(result.missing_in_workflow.some(({ shard }) => shard === PUBLISH_OUTCOME));
+  assert.ok(result.missing_in_workflow.some(({ shard }) => shard === FRED_INDEX));
 }
 
 // A non-comment shell control operator after an otherwise valid invocation
@@ -122,17 +119,17 @@ for (const stage of ["success_if_exists", "not_a_manifest_stage"]) {
     );
     const result = gate(dangling);
     assert.equal(result.ok, false, `dangling ${operator} must fail closed`);
-    assert.ok(result.missing_in_workflow.some(({ shard }) => shard === PUBLISH_OUTCOME));
+    assert.ok(result.missing_in_workflow.some(({ shard }) => shard === FRED_INDEX));
   }
 }
 
 // A chained command after the helper is not a valid invocation either.
 {
-  const chained = `${exactInvocation.trim()} && git add data/admin/data-supply-state/detection-attempts/fred_macro.json`;
+  const chained = `${exactInvocation.trim()} && git add data/admin/fred_macro/index.json`;
   assert.deepEqual(extractManifestStageInvocations(chained), []);
   const result = gate(chained);
   assert.equal(result.ok, false);
-  assert.ok(result.missing_in_workflow.some(({ shard }) => shard === PUBLISH_OUTCOME));
+  assert.ok(result.missing_in_workflow.some(({ shard }) => shard === FRED_INDEX));
 }
 
 // A terminal shell comment is a real boundary: the command ends there and the
@@ -328,7 +325,7 @@ scripts/publish-slickcharts-attempt.sh \
     assert.deepEqual(extractManifestStageInvocations(text), [], `${extra} must not mint an invocation`);
     const result = gate(text);
     assert.equal(result.ok, false, `${extra} must fail closed`);
-    assert.ok(result.missing_in_workflow.some(({ shard }) => shard === PUBLISH_OUTCOME));
+    assert.ok(result.missing_in_workflow.some(({ shard }) => shard === FRED_INDEX));
   }
 }
 
@@ -351,7 +348,7 @@ scripts/publish-slickcharts-attempt.sh \
   assert.equal(wrongMemberResult.ok, false);
   assert.ok(
     wrongMemberResult.missing_in_workflow.some(
-      ({ shard }) => shard === "data/admin/data-supply-state/publish-outcomes/slickcharts-weekly.json",
+      ({ shard }) => shard === WEEKLY_STATE,
     ),
     "wrong member must lose the manifest-driven publish-outcome coverage",
   );
@@ -384,36 +381,3 @@ function assertOwnerFleet(registry, workflowOverrides = {}) {
   }
 }
 assertOwnerFleet(LANE_REGISTRY);
-
-const missingYahooOutcome = structuredClone(LANE_REGISTRY);
-const yahooWorkflow = ".github/workflows/fetch-yf-finance.yml";
-missingYahooOutcome.workflow_policies[yahooWorkflow].stages.always_if_exists =
-  missingYahooOutcome.workflow_policies[yahooWorkflow].stages.always_if_exists
-    .filter(({ path: pathValue }) => pathValue !== YAHOO_OUTCOME);
-assert.doesNotThrow(
-  () => assertOwnerFleet(missingYahooOutcome),
-  "the detached tail remains an alternate ownership proof when only the manifest entry is absent",
-);
-// This legacy whole-file gate accepts exact path literals and covering parent
-// directories, including the tail's sparse-checkout outcome directory. Remove
-// those plus the manifest policy in this negative; keep the separate publisher
-// contract responsible for proving that the owned shard is actually persisted.
-const yahooWithoutOutcomeProof = fs
-  .readFileSync(path.join(REPO_ROOT, yahooWorkflow), "utf8")
-  .replaceAll(YAHOO_OUTCOME, "")
-  .replaceAll(YAHOO_OUTCOME_ROOT, "");
-const yahooWithoutOutcomeAllowlist = extractWorkflowShardAllowlist(yahooWithoutOutcomeProof, { required: false });
-assert.equal(
-  yahooWithoutOutcomeAllowlist.some((pathValue) => (
-    pathValue === YAHOO_OUTCOME
-    || YAHOO_OUTCOME.startsWith(`${pathValue}/`)
-  )),
-  false,
-  `synthetic Yahoo negative must remove exact and parent allowlist proof: ${JSON.stringify(yahooWithoutOutcomeAllowlist)}`,
-);
-assert.throws(
-  () => assertOwnerFleet(missingYahooOutcome, { [yahooWorkflow]: yahooWithoutOutcomeProof }),
-  /yahoo-finance\.json/,
-);
-
-console.log("test-check-lane-registry-commit-shards: ok");

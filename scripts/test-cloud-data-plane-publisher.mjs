@@ -38,7 +38,6 @@ import {
   assertEffectiveManifestSemantics,
   assertPublishReceiptId,
   buildFamilyManifest,
-  canRecordPublishOutcome,
   chaosExpectedPointerSequence,
   chaosPointerStore,
   classifyResultLine,
@@ -52,7 +51,6 @@ import {
   generationSemanticFingerprint,
   listR2ObjectsDetailed,
   planActiveGenerationReuse,
-  recordPublishOutcome,
   resolveExpectedPointerSequence,
   assertPublicationAuthorization,
   familyDeclaresStrictGate,
@@ -66,21 +64,6 @@ import {
   toIsoDay,
   verifyGenerationParity,
 } from "./publish-cloud-data-generation.mjs";
-import {
-  appendPublishOutcome,
-  buildPublishOutcomeBinding,
-  buildPublishOutcomeRecord,
-  mergePublishOutcomeShards,
-  normalizePublishOutcomeRecord,
-  PUBLISH_OUTCOME_MAX_ID_LENGTH,
-  PUBLISH_OUTCOME_MAX_RECORDS,
-  PUBLISH_OUTCOME_MAX_SERIALIZED_BYTES,
-  PUBLISH_OUTCOME_RESULTS,
-  PUBLISH_OUTCOME_SHARD_SCHEMA,
-  publishOutcomeShardPath,
-  validatePublishOutcomeShard,
-} from "./lib/publish-outcome-shard.mjs";
-
 const REPO_ROOT = fileURLToPath(new URL("..", import.meta.url));
 const PUBLISH_SCRIPT = path.join(REPO_ROOT, "scripts", "publish-cloud-data-generation.mjs");
 // Retention now runs the prepared-receipt resume window, which is owner policy
@@ -3365,354 +3348,6 @@ function runCli(extraArgs, includeFamily = true, extraEnv = {}) {
   console.log("retention gate integration ok (declared Class A/B budget, delete 2x, injected gate used)");
 }
 
-// --- publish-outcome evidence shard via the real CLI (offline) --------------
-// The publisher appends one record per REAL publish outcome to
-// data/admin/data-supply-state/publish-outcomes/<family>.json; dry-run,
-// rollback and bucket-level retention write nothing. Each runCli invocation
-// redirects PUBLISH_OUTCOMES_ROOT to a fresh temp dir (see runCli).
-{
-  // dry-run: exit 0, typed summary, and NO shard is written.
-  const dry = await runCli(["--dry-run"]);
-  assert.equal(dry.code, 0, dry.stderr);
-  assert.equal(JSON.parse(dry.stdout.trim()).result, "dry_run");
-  await assert.rejects(
-    readFile(publishOutcomeShardPath(dry.outcomesRoot, "oecd-cli"), "utf8"),
-    { code: "ENOENT" },
-  );
-
-  // gate_blocked with --tolerate-gate-block: exit 0, the summary carries the
-  // shard status, and exactly one gate_blocked record lands in the shard.
-  const tolerated = await runCli(["--tolerate-gate-block"]);
-  assert.equal(tolerated.code, 0, tolerated.stderr);
-  const toleratedSummary = JSON.parse(tolerated.stdout.trim());
-  assert.equal(toleratedSummary.result, "gate_blocked");
-  assert.deepEqual(toleratedSummary.outcome_shard, { ok: true });
-  const toleratedPath = publishOutcomeShardPath(tolerated.outcomesRoot, "oecd-cli");
-  const toleratedShard = JSON.parse(await readFile(toleratedPath, "utf8"));
-  assert.equal(toleratedShard.schema_version, PUBLISH_OUTCOME_SHARD_SCHEMA);
-  assert.equal(toleratedShard.family, "oecd-cli");
-  assert.equal(toleratedShard.records.length, 1);
-  const toleratedRecord = toleratedShard.records[0];
-  assert.equal(toleratedRecord.result, "gate_blocked");
-  assert.equal(toleratedRecord.family, "oecd-cli");
-  assert.match(toleratedRecord.generation_id, /^oecd-cli-[0-9a-f]{16}$/);
-  assert.equal(toleratedRecord.receipt_id, null);
-  assert.equal(toleratedRecord.pointer_before, null);
-  assert.equal(toleratedRecord.pointer_after, null);
-  assert.equal(toleratedRecord.gate_before, "blocked");
-  assert.equal(toleratedRecord.gate_after, null);
-  assert.match(toleratedRecord.observed_at, /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z$/);
-  assert.match(toleratedRecord.source_as_of, /^\d{4}-\d{2}-\d{2}$/);
-  validatePublishOutcomeShard(toleratedShard, "oecd-cli");
-
-  // strict gate block: exit 3 AND the failed outcome is still recorded, so
-  // the alarm side can see it even though the lane run itself failed.
-  const refused = await runCli([]);
-  assert.equal(refused.code, 3);
-  const refusedShard = JSON.parse(await readFile(publishOutcomeShardPath(refused.outcomesRoot, "oecd-cli"), "utf8"));
-  assert.equal(refusedShard.records.length, 1);
-  assert.equal(refusedShard.records[0].result, "gate_blocked");
-  assert.equal(refusedShard.records[0].gate_before, "blocked");
-
-  // rollback is not a publish outcome: no family shard is created.
-  const rollback = await runCli(["--rollback", "--tolerate-gate-block"]);
-  assert.equal(rollback.code, 0, rollback.stderr);
-  assert.equal(JSON.parse(rollback.stdout.trim()).result, "gate_blocked");
-  await assert.rejects(
-    readFile(publishOutcomeShardPath(rollback.outcomesRoot, "oecd-cli"), "utf8"),
-    { code: "ENOENT" },
-  );
-
-  // retention is bucket-level (no family): it must not create a family shard.
-  const retention = await runCli(["--retention", "--tolerate-gate-block"], false);
-  assert.equal(retention.code, 0, retention.stderr);
-  await assert.rejects(
-    readFile(publishOutcomeShardPath(retention.outcomesRoot, "oecd-cli"), "utf8"),
-    { code: "ENOENT" },
-  );
-
-  // Chaos-drill modes are never publish outcomes: a chaos run that hits the
-  // gate must not write a shard on ANY path — tolerated (exit 0, summary
-  // emitted) or strict (exit 3) alike.
-  const chaosTolerated = await runCli(["--chaos=stale-sequence", "--tolerate-gate-block"]);
-  assert.equal(chaosTolerated.code, 0, chaosTolerated.stderr);
-  assert.equal(JSON.parse(chaosTolerated.stdout.trim()).result, "gate_blocked");
-  await assert.rejects(
-    readFile(publishOutcomeShardPath(chaosTolerated.outcomesRoot, "oecd-cli"), "utf8"),
-    { code: "ENOENT" },
-  );
-  const chaosStrict = await runCli(["--chaos=stale-sequence"]);
-  assert.equal(chaosStrict.code, 3);
-  assert.equal(chaosStrict.stdout.trim(), "");
-  await assert.rejects(
-    readFile(publishOutcomeShardPath(chaosStrict.outcomesRoot, "oecd-cli"), "utf8"),
-    { code: "ENOENT" },
-  );
-  console.log("publish-outcome shard via CLI ok (dry-run/rollback/retention/chaos no-write; gate_blocked tolerate/strict recorded for real publishes)");
-}
-
-// --- publish-outcome record writer (unit: success/failure/resume coverage) --
-{
-  assert.deepEqual([...PUBLISH_OUTCOME_RESULTS], ["published", "resumed", "gate_blocked", "failed"]);
-
-  // The no-write decision is a pure function: only real publish runs record.
-  // Both chaos-drill modes are excluded on every path — gate-blocked and
-  // thrown-failure paths share this same guard.
-  assert.equal(canRecordPublishOutcome({ dryRun: false, rollback: false, chaos: null }), true);
-  assert.equal(canRecordPublishOutcome({ dryRun: true, rollback: false, chaos: null }), false);
-  assert.equal(canRecordPublishOutcome({ dryRun: false, rollback: true, chaos: null }), false);
-  assert.equal(canRecordPublishOutcome({ dryRun: false, rollback: false, chaos: "stale-sequence" }), false);
-  assert.equal(canRecordPublishOutcome({ dryRun: false, rollback: false, chaos: "abort-after-prepare" }), false);
-  assert.equal(canRecordPublishOutcome({ dryRun: true, rollback: true, chaos: "stale-sequence" }), false);
-
-  const root = mkdtempSync(path.join(os.tmpdir(), "publish-outcome-unit-"));
-
-  // A successful publish records published with the full run context.
-  const successState = {
-    generationId: "oecd-cli-0123456789abcdef",
-    receiptId: "publish-0-0123456789abcdef0123456789abcdef",
-    pointerBefore: 0,
-    pointerAfter: 1,
-    gateBefore: "ok",
-    gateAfter: "ok",
-    sourceAsOf: "2026-08-09",
-  };
-  const recorded = await recordPublishOutcome({
-    family: "oecd-cli",
-    result: "published",
-    state: successState,
-    outcomesRoot: root,
-  });
-  assert.equal(recorded.ok, true);
-  const shardPath = publishOutcomeShardPath(root, "oecd-cli");
-  const shard = JSON.parse(await readFile(shardPath, "utf8"));
-  validatePublishOutcomeShard(shard, "oecd-cli");
-  assert.equal(shard.records.length, 1);
-  assert.deepEqual(shard.records[0], buildPublishOutcomeRecord({
-    family: "oecd-cli",
-    result: "published",
-    ...successState,
-    observedAt: shard.records[0].observed_at,
-  }));
-
-  // A failed attempt records failed with whatever context exists (nulls).
-  const failed = await recordPublishOutcome({ family: "oecd-cli", result: "failed", state: {}, outcomesRoot: root });
-  assert.equal(failed.ok, true);
-  const merged = JSON.parse(await readFile(shardPath, "utf8"));
-  assert.equal(merged.records.length, 2);
-  assert.equal(merged.records[0].result, "published");
-  assert.equal(merged.records[1].result, "failed");
-  assert.equal(merged.records[1].generation_id, null);
-  assert.equal(merged.records[1].receipt_id, null);
-  assert.equal(merged.records[1].pointer_before, null);
-  assert.equal(merged.records[1].gate_before, null);
-  assert.equal(merged.records[1].source_as_of, null);
-  assert.ok(merged.records[1].observed_at >= merged.records[0].observed_at);
-
-  // resumed (idempotent republish) is a publish outcome too.
-  const resumed = await recordPublishOutcome({
-    family: "oecd-cli",
-    result: "resumed",
-    state: { ...successState, pointerAfter: 1 },
-    outcomesRoot: root,
-  });
-  assert.equal(resumed.ok, true);
-  const resumedShard = JSON.parse(await readFile(shardPath, "utf8"));
-  assert.equal(resumedShard.records.at(-1).result, "resumed");
-
-  // A failing shard write is non-blocking: {ok:false}, never throws.
-  const blockedRoot = mkdtempSync(path.join(os.tmpdir(), "publish-outcome-blocked-"));
-  const rootAsFile = path.join(blockedRoot, "shard-root");
-  await writeFile(rootAsFile, "not a directory");
-  const blocked = await recordPublishOutcome({
-    family: "oecd-cli",
-    result: "failed",
-    state: {},
-    outcomesRoot: rootAsFile,
-  });
-  assert.equal(blocked.ok, false);
-  assert.ok(blocked.error instanceof Error);
-
-  // Record validation: bad family/result/observed_at/pointer/gate are
-  // rejected loudly rather than silently persisted.
-  assert.throws(() => buildPublishOutcomeRecord({ family: "Bad Family", result: "published" }), /invalid publish-outcome family/);
-  assert.throws(() => buildPublishOutcomeRecord({ family: "oecd-cli", result: "bogus" }), /invalid publish-outcome result/);
-  assert.throws(() => buildPublishOutcomeRecord({ family: "oecd-cli", result: "failed", observedAt: "not-a-date" }), /observed_at/);
-  assert.throws(() => buildPublishOutcomeRecord({ family: "oecd-cli", result: "published", pointerBefore: -1 }), /pointer_before/);
-  assert.throws(() => buildPublishOutcomeRecord({ family: "oecd-cli", result: "published", gateBefore: "maybe" }), /gate_before/);
-
-  // Merging refuses a corrupt or mismatched existing shard (evidence is
-  // never overwritten) — the publisher turns this into {ok:false}.
-  const corruptPath = publishOutcomeShardPath(root, "fred-macro");
-  await writeFile(corruptPath, "{not json");
-  await assert.rejects(
-    appendPublishOutcome({ outcomesRoot: root, family: "fred-macro", record: buildPublishOutcomeRecord({ family: "fred-macro", result: "failed" }) }),
-    SyntaxError,
-  );
-  const wrongFamilyPath = publishOutcomeShardPath(root, "sentiment");
-  await writeFile(wrongFamilyPath, JSON.stringify({
-    schema_version: PUBLISH_OUTCOME_SHARD_SCHEMA,
-    family: "oecd-cli",
-    records: [],
-  }));
-  await assert.rejects(
-    appendPublishOutcome({ outcomesRoot: root, family: "sentiment", record: buildPublishOutcomeRecord({ family: "sentiment", result: "failed" }) }),
-    /does not match/,
-  );
-  console.log("publish-outcome recorder ok (no-write decision; published/failed/resumed records; merge append; non-blocking write failure; validation)");
-}
-
-// --- publish-outcome bounded retention and merge semantics -----------------
-{
-  const root = await mkdtemp(path.join(os.tmpdir(), "publish-outcome-retention-"));
-  const family = "oecd-cli";
-  const base = Date.parse("2026-08-10T00:00:00.000Z");
-  const recordAt = (index, observedAt = new Date(base + index * 1000).toISOString()) => (
-    buildPublishOutcomeRecord({
-      family,
-      result: index % 2 === 0 ? "published" : "failed",
-      generationId: `generation-${String(index).padStart(3, "0")}`,
-      receiptId: `receipt-${String(index).padStart(3, "0")}`,
-      observedAt,
-    })
-  );
-
-  for (let index = 0; index <= PUBLISH_OUTCOME_MAX_RECORDS; index += 1) {
-    await appendPublishOutcome({ outcomesRoot: root, family, record: recordAt(index) });
-  }
-  const cappedPath = publishOutcomeShardPath(root, family);
-  const capped = JSON.parse(await readFile(cappedPath, "utf8"));
-  assert.equal(capped.records.length, PUBLISH_OUTCOME_MAX_RECORDS, "101st append must retain exactly the latest 100");
-  assert.equal(capped.records[0].generation_id, "generation-001");
-  assert.equal(capped.records.at(-1).generation_id, "generation-100");
-
-  const beforeOldAppend = structuredClone(capped);
-  await appendPublishOutcome({
-    outcomesRoot: root,
-    family,
-    record: recordAt(999, "2020-01-01T00:00:00.000Z"),
-  });
-  const afterOldAppend = JSON.parse(await readFile(cappedPath, "utf8"));
-  assert.deepEqual(afterOldAppend, beforeOldAppend, "an out-of-order old append must not evict newer retained evidence");
-
-  const tieRoot = await mkdtemp(path.join(os.tmpdir(), "publish-outcome-ties-"));
-  const tiedAt = "2026-08-10T12:00:00.000Z";
-  for (let index = 0; index <= PUBLISH_OUTCOME_MAX_RECORDS; index += 1) {
-    await appendPublishOutcome({ outcomesRoot: tieRoot, family, record: recordAt(index, tiedAt) });
-  }
-  const tied = JSON.parse(await readFile(publishOutcomeShardPath(tieRoot, family), "utf8"));
-  assert.equal(tied.records[0].generation_id, "generation-001", "equal timestamps use append order as the tie-breaker");
-  assert.equal(tied.records.at(-1).generation_id, "generation-100");
-  assert.deepEqual(
-    mergePublishOutcomeShards({ family, shards: [tied, tied] }),
-    tied,
-    "merging the same bounded snapshot is idempotent",
-  );
-
-  assert.throws(
-    () => buildPublishOutcomeRecord({ family, result: "failed", generationId: "g".repeat(PUBLISH_OUTCOME_MAX_ID_LENGTH + 1) }),
-    /generation_id/,
-  );
-  assert.throws(
-    () => buildPublishOutcomeRecord({ family, result: "failed", receiptId: "r".repeat(PUBLISH_OUTCOME_MAX_ID_LENGTH + 1) }),
-    /receipt_id/,
-  );
-  const extraField = buildPublishOutcomeRecord({ family, result: "failed" });
-  extraField.detail = "unbounded";
-  assert.throws(
-    () => validatePublishOutcomeShard({ schema_version: PUBLISH_OUTCOME_SHARD_SCHEMA, family, records: [extraField] }, family),
-    /keys must be exactly/,
-  );
-  const oversized = {
-    schema_version: PUBLISH_OUTCOME_SHARD_SCHEMA,
-    family,
-    records: Array.from({ length: PUBLISH_OUTCOME_MAX_RECORDS }, (_, index) => buildPublishOutcomeRecord({
-      family,
-      result: "failed",
-      generationId: `${index}`.padEnd(PUBLISH_OUTCOME_MAX_ID_LENGTH, "g"),
-      receiptId: `${index}`.padEnd(PUBLISH_OUTCOME_MAX_ID_LENGTH, "r"),
-      observedAt: new Date(base + index * 1000).toISOString(),
-    })),
-  };
-  assert.ok(Buffer.byteLength(`${JSON.stringify(oversized, null, 2)}\n`) > PUBLISH_OUTCOME_MAX_SERIALIZED_BYTES);
-  assert.throws(() => validatePublishOutcomeShard(oversized, family), /serialized bytes/);
-  const sizeRoot = await mkdtemp(path.join(os.tmpdir(), "publish-outcome-size-cap-"));
-  for (const record of oversized.records) {
-    await appendPublishOutcome({ outcomesRoot: sizeRoot, family, record });
-  }
-  const sizeBoundedBytes = await readFile(publishOutcomeShardPath(sizeRoot, family));
-  const sizeBounded = JSON.parse(sizeBoundedBytes.toString("utf8"));
-  validatePublishOutcomeShard(sizeBounded, family);
-  assert.ok(sizeBoundedBytes.byteLength <= PUBLISH_OUTCOME_MAX_SERIALIZED_BYTES);
-  assert.equal(sizeBounded.records.at(-1).generation_id, oversized.records.at(-1).generation_id);
-  // --- joined-cycle binding: shape, v1 migration and transition identity ----
-  // The binding is the only record field assembled by two different jobs, so
-  // its real failure modes are shape drift and transition duplication rather
-  // than ordinary field validation.
-  const boundRecord = buildPublishOutcomeRecord({
-    family,
-    result: "published",
-    generationId: "bound-generation",
-    observedAt: new Date(base).toISOString(),
-    binding: buildPublishOutcomeBinding({
-      gitCommit: "abc123def4567890abc123def4567890abc123de",
-      artifactDigest: "sha256:artifact",
-      scopeSourceSha256: "f".repeat(64),
-      scopeFileCount: 5605,
-      scopeBytes: 1_028_485_988,
-      originReadback: "confirmed",
-    }),
-  });
-  assert.equal(boundRecord.binding.origin_readback, "confirmed");
-  assert.equal(boundRecord.binding.scope_file_count, 5605);
-  // An all-null tuple says nothing an absent tuple does not, so it collapses
-  // rather than spending bytes in every record of every family.
-  assert.equal(buildPublishOutcomeBinding(), null);
-  assert.equal(buildPublishOutcomeRecord({ family, result: "failed" }).binding, null);
-  // Unknown binding keys and out-of-vocabulary verdicts fail closed, exactly
-  // as unknown record keys already do.
-  assert.throws(
-    () => validatePublishOutcomeShard({
-      schema_version: PUBLISH_OUTCOME_SHARD_SCHEMA,
-      family,
-      records: [{ ...boundRecord, binding: { ...boundRecord.binding, stray: 1 } }],
-    }, family),
-    /binding keys must be exactly/,
-  );
-  assert.throws(() => buildPublishOutcomeBinding({ originReadback: "maybe" }), /origin_readback/);
-  assert.throws(() => buildPublishOutcomeBinding({ scopeFileCount: -1 }), /scope_file_count/);
-  // A shard written before the binding existed stays readable. Rejecting it
-  // would not fail loudly — it would quietly strand every family that has not
-  // republished since the bump.
-  const legacyRecord = { ...boundRecord };
-  delete legacyRecord.binding;
-  const legacyShard = { schema_version: "plane-publish-outcome-shard/v1", family, records: [legacyRecord] };
-  validatePublishOutcomeShard(legacyShard, family);
-  assert.equal(normalizePublishOutcomeRecord(legacyRecord).binding, null);
-  assert.equal(normalizePublishOutcomeRecord(boundRecord), boundRecord);
-  // The same outcome arriving as an upstream v1 record and a local v2 record
-  // is ONE record. Comparing raw shapes would duplicate the whole history on
-  // the first merge after the bump.
-  const mergedTransition = mergePublishOutcomeShards({
-    family,
-    shards: [
-      legacyShard,
-      {
-        schema_version: PUBLISH_OUTCOME_SHARD_SCHEMA,
-        family,
-        records: [normalizePublishOutcomeRecord(legacyRecord)],
-      },
-    ],
-  });
-  assert.equal(mergedTransition.schema_version, PUBLISH_OUTCOME_SHARD_SCHEMA);
-  assert.equal(mergedTransition.records.length, 1);
-  assert.equal(mergedTransition.records[0].binding, null);
-  await rm(root, { recursive: true, force: true });
-  await rm(tieRoot, { recursive: true, force: true });
-  await rm(sizeRoot, { recursive: true, force: true });
-  console.log("publish-outcome retention ok (100 latest, old/tie ordering, idempotent merge, field/size ceilings, v1->v2 binding migration)");
-}
-
 // --- injected CLI integration: published/resumed/failed and JSON stderr ----
 {
   const okGate = async () => ({ code: 0, stdout: "", stderr: "" });
@@ -3773,100 +3408,11 @@ function runCli(extraArgs, includeFamily = true, extraEnv = {}) {
   assert.equal(resumedSummary.result, "resumed");
   assert.equal(resumedSummary.gate_after_basis, "covered_by_preflight_plan");
   assert.equal(normalGateCalls, 1, "resumed publication must perform one full cost measurement");
-  const successShard = JSON.parse(await readFile(publishOutcomeShardPath(successRoot, "oecd-cli"), "utf8"));
-  assert.deepEqual(successShard.records.map((record) => record.result), ["published", "resumed"]);
-  assert.deepEqual(successShard.records.map((record) => [record.gate_before, record.gate_after]), [
-    ["ok", "ok"],
-    ["ok", "ok"],
-  ]);
-
-  // --- binding legs come from the INJECTED env, never the ambient process ---
-  // An in-process caller passes its own env precisely so the run is reproducible.
-  // Reading process.env instead would let a record silently inherit whatever the
-  // surrounding process carried, and a binding leg that is wrong is worse than
-  // one that is honestly null.
-  const ambientRoot = await mkdtemp(path.join(os.tmpdir(), "publish-cli-ambient-env-"));
-  const savedAmbient = {
-    commit: process.env.PUBLISH_BINDING_GIT_COMMIT,
-    digest: process.env.PUBLISH_BINDING_ARTIFACT_DIGEST,
-  };
-  process.env.PUBLISH_BINDING_GIT_COMMIT = "d".repeat(40);
-  process.env.PUBLISH_BINDING_ARTIFACT_DIGEST = "sha256:ambient";
-  try {
-    const ambient = await invoke({ outcomesRoot: ambientRoot, createPublishPlaneImpl: memoryFactory });
-    assert.equal(ambient.exitCode, 0);
-    const ambientBinding = JSON.parse(
-      await readFile(publishOutcomeShardPath(ambientRoot, "oecd-cli"), "utf8"),
-    ).records.at(-1).binding;
-    // The identity legs stay null because the injected env carried none, while
-    // the scope legs still bind from the tree that was actually published.
-    // That split is the proof: an ambient read would have filled the first two.
-    assert.equal(ambientBinding.git_commit, null);
-    assert.equal(ambientBinding.artifact_digest, null);
-    assert.ok(ambientBinding.scope_file_count > 0);
-  } finally {
-    for (const [name, value] of [
-      ["PUBLISH_BINDING_GIT_COMMIT", savedAmbient.commit],
-      ["PUBLISH_BINDING_ARTIFACT_DIGEST", savedAmbient.digest],
-    ]) {
-      if (value === undefined) delete process.env[name];
-      else process.env[name] = value;
-    }
-  }
-  await rm(ambientRoot, { recursive: true, force: true });
-
-  const boundRoot = await mkdtemp(path.join(os.tmpdir(), "publish-cli-bound-env-"));
-  const bound = await invoke({
-    outcomesRoot: boundRoot,
-    env: {
-      ...liveEnv,
-      PUBLISH_BINDING_GIT_COMMIT: "e".repeat(40),
-      PUBLISH_BINDING_ARTIFACT_DIGEST: "sha256:injected",
-    },
-    createPublishPlaneImpl: memoryFactory,
-  });
-  assert.equal(bound.exitCode, 0);
-  const boundBinding = JSON.parse(
-    await readFile(publishOutcomeShardPath(boundRoot, "oecd-cli"), "utf8"),
-  ).records.at(-1).binding;
-  assert.equal(boundBinding.git_commit, "e".repeat(40));
-  assert.equal(boundBinding.artifact_digest, "sha256:injected");
-  assert.equal(typeof boundBinding.scope_source_sha256, "string");
-  assert.ok(boundBinding.scope_file_count > 0);
-  assert.ok(boundBinding.scope_bytes > 0);
-  // The readback leg is the persist step's to fill; the publisher must not
-  // claim a readback it never performed.
-  assert.equal(boundBinding.origin_readback, null);
-  await rm(boundRoot, { recursive: true, force: true });
-
-  // Identity is bound BEFORE admission, so a FAILED outcome still records
-  // WHICH artifact it refused. Binding only on the success path would leave
-  // exactly the outcomes worth investigating unattributable. (This particular
-  // failure path does reach a manifest, so its scope legs are also present;
-  // the claim under test is that the identity leg survives a non-success
-  // result, not that the scope leg is absent.)
-  const refusedRoot = await mkdtemp(path.join(os.tmpdir(), "publish-cli-refused-bind-"));
-  const refused = await invoke({
-    outcomesRoot: refusedRoot,
-    env: { PUBLISH_BINDING_ARTIFACT_DIGEST: "sha256:refused" },
-    createPublishPlaneImpl: memoryFactory,
-  });
-  assert.equal(refused.exitCode, 2);
-  const refusedRecord = JSON.parse(
-    await readFile(publishOutcomeShardPath(refusedRoot, "oecd-cli"), "utf8"),
-  ).records.at(-1);
-  assert.equal(refusedRecord.result, "failed");
-  assert.equal(refusedRecord.binding.artifact_digest, "sha256:refused");
-  assert.equal(refusedRecord.binding.git_commit, null);
-  await rm(refusedRoot, { recursive: true, force: true });
-
   const missingRoot = await mkdtemp(path.join(os.tmpdir(), "publish-cli-missing-env-"));
   const missing = await invoke({ outcomesRoot: missingRoot, env: {}, createPublishPlaneImpl: memoryFactory });
   assert.equal(missing.exitCode, 2);
   assert.equal(missing.stdout.length, 0);
   assert.match(missing.stderr.join("\n"), /missing env/);
-  const missingShard = JSON.parse(await readFile(publishOutcomeShardPath(missingRoot, "oecd-cli"), "utf8"));
-  assert.equal(missingShard.records.at(-1).result, "failed");
 
   const remoteRoot = await mkdtemp(path.join(os.tmpdir(), "publish-cli-remote-failure-"));
   const remoteFailure = await invoke({
@@ -3879,60 +3425,11 @@ function runCli(extraArgs, includeFamily = true, extraEnv = {}) {
   assert.equal(remoteFailure.exitCode, 1);
   assert.equal(remoteFailure.stdout.length, 0);
   assert.match(remoteFailure.stderr.join("\n"), /injected remote failure/);
-  const remoteShard = JSON.parse(await readFile(publishOutcomeShardPath(remoteRoot, "oecd-cli"), "utf8"));
-  assert.equal(remoteShard.records.at(-1).result, "failed");
 
-  const blockedParent = await mkdtemp(path.join(os.tmpdir(), "publish-cli-evidence-failure-"));
-  const blockedRoot = path.join(blockedParent, "not-a-directory");
-  await writeFile(blockedRoot, "file blocks shard directory");
-  const strictGate = await invoke({
-    outcomesRoot: blockedRoot,
-    gate: async () => ({ code: 2, stdout: "", stderr: "gate unavailable" }),
-    createPublishPlaneImpl: memoryFactory,
-  });
-  assert.equal(strictGate.exitCode, 3);
-  assert.equal(strictGate.stdout.length, 0);
-  assert.match(strictGate.stderr.join("\n"), /publish-outcome shard write failed/);
-  const toleratedGate = await invoke({
-    outcomesRoot: blockedRoot,
-    gate: async () => ({ code: 2, stdout: "", stderr: "gate unavailable" }),
-    createPublishPlaneImpl: memoryFactory,
-    extraArgs: ["--tolerate-gate-block"],
-  });
-  assert.equal(toleratedGate.exitCode, 0);
-  assert.equal(toleratedGate.stdout.length, 1);
-  assert.equal(JSON.parse(toleratedGate.stdout[0]).result, "gate_blocked");
-  assert.equal(JSON.parse(toleratedGate.stdout[0]).outcome_shard.ok, false);
-  assert.match(toleratedGate.stderr.join("\n"), /publish-outcome shard write failed/);
-  const failedEvidence = await invoke({ outcomesRoot: blockedRoot, env: {}, createPublishPlaneImpl: memoryFactory });
-  assert.equal(failedEvidence.exitCode, 2);
-  assert.equal(failedEvidence.stdout.length, 0);
-  assert.match(failedEvidence.stderr.join("\n"), /publish-outcome shard write failed/);
-  const thrownEvidence = await invoke({
-    outcomesRoot: blockedRoot,
-    createPublishPlaneImpl: () => ({
-      plane: { pointerStore: { get: async () => { throw new Error("injected remote failure"); } } },
-      objectsWritten: () => 0,
-    }),
-  });
-  assert.equal(thrownEvidence.exitCode, 1);
-  assert.equal(thrownEvidence.stdout.length, 0);
-  assert.match(thrownEvidence.stderr.join("\n"), /publish-outcome shard write failed/);
-  assert.doesNotMatch(thrownEvidence.stderr.join("\n"), /test-token|test-write-key/);
-  const publishedEvidence = await invoke({
-    outcomesRoot: blockedRoot,
-    createPublishPlaneImpl: () => ({ plane: createMemoryCloudDataPlane(), objectsWritten: () => 0 }),
-  });
-  assert.equal(publishedEvidence.exitCode, 0, "evidence failure must not turn a successful publish into failure");
-  assert.equal(publishedEvidence.stdout.length, 1);
-  assert.equal(JSON.parse(publishedEvidence.stdout[0]).result, "published");
-  assert.equal(JSON.parse(publishedEvidence.stdout[0]).outcome_shard.ok, false);
-  assert.match(publishedEvidence.stderr.join("\n"), /publish-outcome shard write failed/);
   await rm(successRoot, { recursive: true, force: true });
   await rm(missingRoot, { recursive: true, force: true });
   await rm(remoteRoot, { recursive: true, force: true });
-  await rm(blockedParent, { recursive: true, force: true });
-  console.log("publisher injected CLI ok (published/resumed/missing-env/remote-failure + JSON stderr evidence failure)");
+  console.log("publisher injected CLI ok (published/resumed/missing-env/remote-failure)");
 }
 
 // --- result vocabulary: known outcomes are healthy, anything else is a bug ---
@@ -3981,7 +3478,7 @@ function runCli(extraArgs, includeFamily = true, extraEnv = {}) {
   // A publisher family nobody owns: publishable but its outcome would never land.
   assert.throws(
     () => assertPublicationAuthorization({ families: { alpha: {}, orphan: {} }, bindings }),
-    /publisher families with no registry publish-outcome owner: orphan/,
+    /publisher families with no registry owner: orphan/,
   );
   // A registry owner the publisher cannot serve: declared publication that is
   // structurally impossible, which is just as wrong and used to be invisible.
@@ -3990,7 +3487,7 @@ function runCli(extraArgs, includeFamily = true, extraEnv = {}) {
       families: { alpha: {} },
       bindings: { ...bindings, ghost: { lane_id: "ghost", workflow: ".github/workflows/g.yml" } },
     }),
-    /registry publish-outcome owners with no publisher family: ghost/,
+    /registry owners with no publisher family: ghost/,
   );
   assert.deepEqual(assertPublicationAuthorization({ families: { alpha: {} }, bindings }), { authorized: 1 });
   console.log("publication admission ok (set-equal both directions, refuses before gate and before any write)");
@@ -4195,8 +3692,6 @@ function runCli(extraArgs, includeFamily = true, extraEnv = {}) {
   assert.equal(calls[0].planBytes, 0);
   assert.equal(calls[1].planBytes, 2 * planGenerationObjectWrites(built.manifest).bytes);
   assert.equal(writes, 0, "second strict gate rejection must precede every PUT");
-  const blocked = JSON.parse(await readFile(publishOutcomeShardPath(outcomesRoot, "stockanalysis-etf-detail"), "utf8"));
-  assert.equal(blocked.records.at(-1).result, "gate_blocked");
   calls.length = 0;
   assert.equal(await invoke(false), 0);
   assert.equal(calls.length, 2);

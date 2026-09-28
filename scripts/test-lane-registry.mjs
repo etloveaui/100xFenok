@@ -15,7 +15,7 @@ import { fileURLToPath } from "node:url";
 import {
   LANE_REGISTRY,
   LANE_REGISTRY_SCHEMA,
-  PLANE_PUBLISH_OUTCOME_BINDINGS,
+  PLANE_PUBLISH_FAMILY_BINDINGS,
   PLANE_PUBLISHER_EXCEPTIONS,
   declaredAdminRoots,
   declaredExceptionPaths,
@@ -131,30 +131,11 @@ function clone(value) {
       const lane = draft.lanes.find((row) => row.commit_shards.length > 1);
       lane.commit_shards.push(lane.commit_shards[0]);
     }],
-    // Completeness, both directions. Until 2026-08-14 a policy was checked only
-    // for lanes it DID list — nothing asserted that a workflow lists every lane
-    // the registry says it owns, or that it can commit those lanes' evidence.
-    // Both gaps were real in the shipped registry: fetch-stockanalysis.yml
-    // omitted stockanalysis_etf_detail from its lane list while hand-patching
-    // that lane's shard into its specs after run 31794068491 failed to pack it,
-    // and fetch-yf-finance.yml owned yahoo_batch_quote_history without owning
-    // the attempt shard the lane declares, so that shard has never been
-    // committed once.
+    // Owner workflows must list every lane they own.
     ["workflow policy omits a lane it owns", (draft) => {
       const lane = draft.lanes.find((row) => row.owner_workflow);
       const policyValue = draft.workflow_policies[lane.owner_workflow];
       policyValue.lanes = policyValue.lanes.filter((id) => id !== lane.id);
-    }],
-    ["workflow policy cannot commit an owned lane's attempt shard", (draft) => {
-      const prefix = "data/admin/data-supply-state/detection-attempts/";
-      const lane = draft.lanes.find((row) => row.owner_workflow
-        && row.commit_shards.some((shard) => shard.startsWith(prefix)));
-      const shard = lane.commit_shards.find((entry) => entry.startsWith(prefix));
-      const policyValue = draft.workflow_policies[lane.owner_workflow];
-      for (const stage of Object.keys(policyValue.stages)) {
-        policyValue.stages[stage] = policyValue.stages[stage]
-          .filter((spec) => spec.path !== shard && !shard.startsWith(`${spec.path}/`));
-      }
     }],
   ];
   for (const [label, mutate] of cases) {
@@ -237,13 +218,7 @@ function clone(value) {
         `owner workflow missing on disk: ${lane.owner_workflow}`,
       );
     }
-    if (lane.roots.detection_attempt !== null) {
-      assert.equal(
-        lane.roots.detection_attempt.startsWith("data/admin/data-supply-state/detection-attempts/"),
-        true,
-        `detection attempt shard must live under the shared root: ${lane.id}`,
-      );
-    }
+    assert.equal(lane.roots.detection_attempt, null, `${lane.id} must not declare persistent attempt evidence`);
   }
   // shared stores declare every claimant
   const roots = declaredAdminRoots();
@@ -252,7 +227,7 @@ function clone(value) {
     ["stockanalysis_etf_detail", "stockanalysis_etf_universe", "stockanalysis_stock_financial", "stockanalysis_surfaces"].sort(),
     "the StockAnalysis recovery store must list every claimant lane",
   );
-  // P0 ownership: the stockanalysis-etf-detail publish-outcome family belongs
+  // P0 ownership: the stockanalysis-etf-detail publish family belongs
   // to the natural StockAnalysis workflow (the acquisition workflow that runs
   // the publish and persistence jobs), with exactly one owner and no retired
   // shadow caller claim.
@@ -265,11 +240,7 @@ function clone(value) {
     const etfDetail = registryLaneById("stockanalysis_etf_detail");
     assert.equal(etfDetail.caller_workflows, undefined,
       "the retired shadow publisher must no longer claim the stockanalysis-etf-detail outcome shard");
-    assert.ok(
-      etfDetail.commit_shards.includes("data/admin/data-supply-state/publish-outcomes/stockanalysis-etf-detail.json"),
-      "the natural StockAnalysis lane must own the publish-outcome shard",
-    );
-    const binding = PLANE_PUBLISH_OUTCOME_BINDINGS["stockanalysis-etf-detail"];
+    const binding = PLANE_PUBLISH_FAMILY_BINDINGS["stockanalysis-etf-detail"];
     assert.ok(binding, "the stockanalysis-etf-detail family must stay bound");
     assert.equal(binding.workflow, ".github/workflows/fetch-stockanalysis.yml",
       "the natural StockAnalysis workflow must own the stockanalysis-etf-detail publish outcome");
@@ -278,50 +249,23 @@ function clone(value) {
     assert.notEqual(binding.workflow, ".github/workflows/stockanalysis-etf-shadow-publish.yml",
       "the retired shadow workflow must not own the publish outcome");
   }
-  // Global Scouter is caller-only: the external owner keeps acquisition and
-  // consumer/public-mirror ownership, while the manual shadow caller may
-  // publish and persist exactly one outcome shard.
+  // Global Scouter remains a caller-only publisher with no Git commit output.
   {
     const globalScouter = registryLaneById("global_scouter");
     const globalWorkflow = ".github/workflows/global-scouter-shadow-publish.yml";
-    assert.equal(globalScouter.owner_workflow, null,
-      "Global Scouter must retain external acquisition ownership");
-    assert.equal(globalScouter.enforcement, "shadow",
-      "Global Scouter must remain shadow until separately promoted");
+    assert.equal(globalScouter.owner_workflow, null);
+    assert.equal(globalScouter.enforcement, "shadow");
     assert.deepEqual(globalScouter.caller_workflows?.[globalWorkflow], {
-      commit_shards: ["data/admin/data-supply-state/publish-outcomes/global-scouter.json"],
-      script_sources: [
-        "scripts/publish-cloud-data-generation.mjs",
-        "scripts/persist-cloud-publish-outcome.mjs",
-      ],
-    }, "Global Scouter caller claim must bind only the outcome shard and writer helpers");
-    const globalBinding = PLANE_PUBLISH_OUTCOME_BINDINGS["global-scouter"];
-    assert.deepEqual(globalBinding, {
+      commit_shards: [],
+      script_sources: ["scripts/publish-cloud-data-generation.mjs"],
+    });
+    assert.deepEqual(PLANE_PUBLISH_FAMILY_BINDINGS["global-scouter"], {
       lane_id: "global_scouter",
       workflow: globalWorkflow,
-    }, "Global Scouter outcome must bind to its caller, not an acquisition workflow");
-    assert.deepEqual(LANE_REGISTRY.workflow_policies[globalWorkflow], {
-      lanes: ["global_scouter"],
-      stages: {
-        always_if_exists: [
-          { kind: "file", path: "data/admin/data-supply-state/publish-outcomes/global-scouter.json", required: false },
-        ],
-        success_if_exists: [],
-        success_verify_not_plan_if_exists: [],
-        required_on_success: [],
-      },
-      exclude: [],
-    }, "Global Scouter caller policy must stage the outcome shard only");
-    assert.deepEqual(PLANE_PUBLISHER_EXCEPTIONS["global-scouter"], {
-      workflow: globalWorkflow,
-      non_blocking_publisher: false,
-      detached_persistence: true,
-      reason: "manual caller-only shadow publication for the owner-run Global Scouter bundle; acquisition and public consumer ownership remain external to this workflow, while only the separate persistence job may commit its outcome evidence",
-      canonical_commit: "external_authority",
-      canonical_commit_reason: "the owner-run Global Scouter export and its existing Git/public mirror remain the canonical authority; this caller performs no canonical Git write in the publish job and the persistence job commits only the outcome shard",
-      strict_gate: true,
-      strict_gate_reason: "PUBLISH-SHADOW is an explicit manual request: --tolerate-gate-block would turn an unknown or over-threshold cost verdict into exit 0 while publishing nothing, so the caller must go red and still upload and persist its outcome shard",
-    }, "Global Scouter exception must declare detached external-authority strict semantics");
+    });
+    const policy = LANE_REGISTRY.workflow_policies[globalWorkflow];
+    for (const stage of Object.values(policy.stages)) assert.deepEqual(stage, []);
+    assert.equal(PLANE_PUBLISHER_EXCEPTIONS["global-scouter"].strict_gate, true);
   }
   assert.deepEqual(
     [...(roots.get("data/admin/yahoo_etf_fallback") ?? [])],
@@ -355,11 +299,6 @@ function clone(value) {
     assert.deepEqual(byClass, { detection_floor: 31, auxiliary: 4 }, "lane_class partition drifted");
     assert.equal(registryLaneById("yahoo_batch_quote_history").lane_class, "detection_floor",
       "yahoo_batch_quote_history is a standard detection-floor producer");
-    assert.equal(
-      registryLaneById("yahoo_batch_quote_history").roots.detection_attempt,
-      "data/admin/data-supply-state/detection-attempts/yahoo_batch_quote_history.json",
-      "Yahoo batch attempt evidence uses the standard detection shard root",
-    );
     for (const id of ["benchmarks", "global_scouter"]) {
       const converterLane = registryLaneById(id);
       assert.ok(converterLane, `${id} converter lane is registered`);
@@ -428,13 +367,11 @@ function clone(value) {
         public_mirror_allowed: false,
         roots: {
           admin_store: "data/admin/finra-ats",
-          detection_attempt: "data/admin/data-supply-state/detection-attempts/finra_ats.json",
+          detection_attempt: null,
           canonical_outputs: ["data/admin/finra-ats/current/weekly-summary.json"],
           public_mirror: [],
         },
     commit_shards: [
-      "data/admin/data-supply-state/detection-attempts/finra_ats.json",
-      "data/admin/data-supply-state/publish-outcomes/finra-ats-weekly.json",
       "data/admin/finra-ats/index.json",
       "data/admin/finra-ats/current/weekly-summary.json",
       "data/admin/finra-ats/lkg/weekly-summary.json",
@@ -505,8 +442,6 @@ function clone(value) {
     ]);
     assert.deepEqual(indices.roots.public_mirror, []);
     assert.deepEqual(indices.commit_shards, [
-      "data/admin/data-supply-state/detection-attempts/us_indices_daily.json",
-      "data/admin/data-supply-state/publish-outcomes/us-indices-daily.json",
       "data/admin/us-indices-daily",
       "data/indices/sp500.json",
       "data/indices/nasdaq.json",
@@ -538,7 +473,6 @@ function clone(value) {
     assert.deepEqual(oecd.roots.public_mirror, []);
     const krx = registryLaneById("krx");
     assert.equal(krx.enforcement, "live", "KRX is live after natural run 30270187601 committed valid attempt evidence");
-    assert.equal(krx.roots.detection_attempt, "data/admin/data-supply-state/detection-attempts/krx.json");
     assert.deepEqual(krx.roots.canonical_outputs, [
       "data/admin/fenok-edge-korea-krx-daily-index.json",
       "data/computed/fenok-edge-korea-krx-bridge-history.json",

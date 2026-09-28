@@ -2,7 +2,7 @@ import { createHash } from "node:crypto";
 import fs from "node:fs";
 import path from "node:path";
 
-import { classifyAttempt, validateAttemptShard, validateDetectionReport } from "../build-data-supply-detection-floor.mjs";
+import { validateDetectionReport } from "../build-data-supply-detection-floor.mjs";
 import { validToneSnapshot } from "../fetch-fenok-news-tone-proxy.mjs";
 import { canonicalJson } from "./json-canonical.mjs";
 import { hasStructuredGithubRunBinding } from "./data-supply-lkg-store.mjs";
@@ -51,9 +51,6 @@ export function inspectGdeltSelectedSource({
     const canonical = readProofFile(dataRoot, "computed/fenok_news_tone_proxy.json");
     const snapshot = canonical.document;
     const state = readProofFile(dataRoot, "admin/gdelt_news_tone/index.json").document;
-    const shard = readProofFile(dataRoot, "admin/data-supply-state/detection-attempts/gdelt_news_tone.json").document;
-    validateAttemptShard(shard, LANE_ID);
-    const attempt = shard.attempts[0];
     const item = state?.items?.news_tone_proxy;
     const observation = item?.provider_observation;
     const primary = snapshot?.acquisition?.primary;
@@ -104,25 +101,18 @@ export function inspectGdeltSelectedSource({
     };
     const providerBytes = Buffer.from(`${JSON.stringify(providerDocument, null, 2)}\n`);
     if (observation.payload_sha256 !== sha256(providerBytes)
-      || attempt.run_id !== observation.run_id || attempt.run_attempt !== observation.run_attempt
-      || !["schedule", "workflow_dispatch"].includes(attempt.event_name)
-      || utcStamp(attempt.observed_at) !== observedAt
       || fallback?.source_family !== SOURCE_FAMILY
       || utcStamp(fallback.source_as_of) !== providerSource || utcStamp(fallback.observed_at) !== observedAt
       || utcStamp(row.endpoint.observed_at) !== observedAt
       || !utcStamp(report.generated_at) || Date.parse(report.generated_at) < Date.parse(observedAt)
       || Date.parse(report.generated_at) > now) return unavailable;
 
-    const { lane_id, member_id, attempt_id, observed_at, event_name, run_id, run_attempt, ...tuple } = attempt;
-    const classified = classifyAttempt(attempt);
-    // The DOC API also returns a typed throttle advisory with HTTP 200. Its
-    // explicit rate-limit flag preserves the initiating acquisition reason.
-    const primaryReason = attempt.rate_limited === true ? "rate_limited" : classified.reason;
+    const tuple = primary?.attempt;
+    const primaryReason = primary?.reason;
     if (!["rate_limited", "schema_drift", "http_error", "transport_error"].includes(primaryReason)
-      || (primaryReason === "rate_limited" && !(attempt.retry_count >= 1))
-      || primary?.reason !== primaryReason || canonicalJson(primary.attempt) !== canonicalJson(tuple)
-      || row.endpoint.reason !== classified.reason || row.endpoint.status !== classified.status
-      || row.reason !== classified.reason || row.status !== classified.status) return unavailable;
+      || (primaryReason === "rate_limited" && !(tuple?.retry_count >= 1))
+      || row.endpoint.reason !== primaryReason
+      || row.reason !== primaryReason || row.status !== row.endpoint.status) return unavailable;
     return {
       ready: true, source_family: SOURCE_FAMILY, source_as_of: providerSource,
       observed_at: observedAt, primary_reason: primaryReason,

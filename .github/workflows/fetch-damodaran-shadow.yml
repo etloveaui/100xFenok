@@ -45,8 +45,6 @@ jobs:
             .github/workflows
             100xfenok-next/scripts
             100xfenok-next/src/lib
-            data/admin/data-supply-state/detection-attempts
-            data/admin/data-supply-state/publish-outcomes
             data/admin/damodaran
             data/damodaran
 
@@ -159,7 +157,3 @@ jobs:
           DATA_PLANE_ENDPOINT: https://100xfenok.etloveaui.workers.dev/internal/cloud-data-plane
           DATA_PLANE_WRITE_KEY: ${{ secrets.DATA_PLANE_WRITE_KEY }}
         run: node scripts/publish-cloud-data-generation.mjs --family=damodaran --tolerate-gate-block --json
-
-      - name: Persist damodaran publish outcome
-        if: ${{ always() && (steps.backup_gate.outcome != 'success' || steps.backup_gate.outputs.action == 'run') }}
-        run: node scripts/persist-cloud-publish-outcome.mjs --family=damodaran --workflow=.github/workflows/fetch-damodaran-shadow.yml --publisher-outcome=${{ steps.publish_cloud_generation.outcome }} --binding-from-current-origin

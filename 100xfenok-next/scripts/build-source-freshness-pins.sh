@@ -9,11 +9,8 @@ node --input-type=module -e 'import { emitDetectionExpectedFixture } from "../sc
 
 floor_output="$(mktemp -d /tmp/fenok-source-freshness-floor-XXXXXX)"
 trap 'rm -rf "$floor_output"' EXIT
-shard_root="$repo_root/data/admin/data-supply-state/detection-attempts"
-mkdir -p "$shard_root"
 node ../scripts/build-data-supply-detection-floor.mjs \
   --artifact-root "$repo_root" \
-  --attempt-shard-root "$shard_root" \
   --calendars "$repo_root/scripts/lib/data-supply-detection-calendars.json" \
   --now "$(node -e 'process.stdout.write(new Date().toISOString())')" \
   --output-root "$floor_output"

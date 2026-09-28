@@ -13,15 +13,8 @@ import https from "node:https";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 
-import {
-  atomicWrite,
-  attemptResult,
-  classifyEndpointResponse,
-  defaultAttemptId,
-  threwTuple,
-  transportError,
-  writeAttemptShard,
-} from "./lib/data-supply-attempt-shard.mjs";
+import { atomicWrite } from "./lib/atomic-file.mjs";
+import { attemptResult, classifyEndpointResponse, defaultAttemptId, threwTuple, transportError } from "./lib/provider-fetch-result.mjs";
 import { DATA_SUPPLY_DETECTION_CONFIG } from "./lib/data-supply-detection-config.mjs";
 import {
   LaneLkgStore,
@@ -38,9 +31,6 @@ const dataRoot = path.join(repoRoot, "data");
 const privateRoot = path.join(repoRoot, "_private", "admin", "fenok-flow", "apewisdom");
 
 const LANE_ID = "apewisdom_attention";
-const ATTEMPT_SHARD_PATH = path.join(
-  repoRoot, "data", "admin", "data-supply-state", "detection-attempts", `${LANE_ID}.json`,
-);
 
 const DEFAULT_FILTER = "all-stocks";
 const SCHEMA_VERSION = "fenok-social-attention-proxy/v0.1";
@@ -638,7 +628,6 @@ export async function runApeWisdomAttention({
   privateRoot: runnerPrivateRoot = privateRoot,
   canonicalPath = path.join(runnerDataRoot, OUTPUT_FILE),
   historyPath = path.join(runnerDataRoot, HISTORY_FILE),
-  attemptShardPath = path.join(runnerRepoRoot, "data", "admin", "data-supply-state", "detection-attempts", `${LANE_ID}.json`),
   filter = DEFAULT_FILTER,
   maxPages = 10,
   tickers = "",
@@ -667,13 +656,7 @@ export async function runApeWisdomAttention({
   // Always observe and persist the current endpoint-contract result first. The
   // LKG store is deliberately separate from this attempt evidence.
   const observation = await observeAttempt({ filter, controlledFailure: controlled, request });
-  const attempt = noWrite ? null : writeAttemptShard({
-    laneId: LANE_ID,
-    attemptShardPath,
-    observedAt,
-    attemptId,
-    result: observation.result,
-  });
+  const attempt = noWrite ? null : observation.result.attempt;
   const recordFailure = (reason) => {
     if (noWrite) {
       return { hasCompleteLkg: lkgStore.validRetainedLkg(LKG_KEY, artifact.validateDocument, artifact.sourceAsOf), retrySet: lkgStore.stateSnapshot().retry_set };

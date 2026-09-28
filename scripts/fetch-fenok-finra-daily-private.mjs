@@ -12,18 +12,8 @@ import { createHash } from "node:crypto";
 import fs from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
-import {
-  attemptResult,
-  atomicWrite,
-  classifyEndpointResponse,
-  defaultAttemptId,
-  returnedTuple,
-  threwTuple,
-  transportError,
-  unobservedTuple,
-  worstRequestResult,
-  writeAttemptShard,
-} from "./lib/data-supply-attempt-shard.mjs";
+import { atomicWrite } from "./lib/atomic-file.mjs";
+import { attemptResult, classifyEndpointResponse, defaultAttemptId, returnedTuple, threwTuple, transportError, unobservedTuple, worstRequestResult } from "./lib/provider-fetch-result.mjs";
 import {
   LaneLkgStore,
   PROMOTION_CONTRACT_PROVIDER_OBSERVATION_V2,
@@ -596,8 +586,7 @@ function finraLkgArtifactDescriptor(markerPath) {
 }
 
 // Additive LKG recovery wrapper around the existing per-date collection. It never
-// mutates the detection attempt shard (that stays owned by writeAttemptShard) and
-// never rewrites a per-date payload; it only maintains the store's freshness marker,
+// rewrites a per-date payload; it only maintains the store's freshness marker,
 // LKG copy, and recovery index under data/admin/finra_short_volume/.
 function applyFinraLkgStore({
   repoRoot: storeRepoRoot,
@@ -849,7 +838,6 @@ async function collectRegshoDailyDate({ yyyymmdd, inputFile, noFetch, noWrite, g
 
 async function run(argv = process.argv.slice(2), {
   request = fetchResponse,
-  attemptShardPath = path.join(repoRoot, "data/admin/data-supply-state/detection-attempts/finra_short_volume.json"),
   observedAt = new Date().toISOString(),
   attemptId = stableAttemptId("finra-short-volume", observedAt),
   lkgRepoRoot = repoRoot,
@@ -904,8 +892,8 @@ async function run(argv = process.argv.slice(2), {
   try {
     if (controlledFinraFailure) {
       // Do not touch the provider or private cache. The synthetic unavailable
-      // observation is still published to the attempt shard, while the flag
-      // below makes the real LKG store record the explicit controlled reason.
+      // observation is retained in memory, while the flag below makes the
+      // real LKG store record the explicit controlled reason.
       endpointResults.push(attemptResult("transport_error", threwTuple("transport")));
     } else {
       for (const yyyymmdd of dates) {
@@ -1023,13 +1011,6 @@ async function run(argv = process.argv.slice(2), {
     outputs: results.map(({ payload, outputAbs, rawTextAbs, ...result }) => result),
     };
   } finally {
-    writeAttemptShard({
-      laneId: "finra_short_volume",
-      attemptShardPath,
-      observedAt,
-      attemptId,
-      result: reduceFinraEndpointResults(endpointResults),
-    });
   }
 }
 

@@ -3,17 +3,12 @@
 import fs from "node:fs";
 import { pathToFileURL } from "node:url";
 
-import {
-  buildAttemptRow,
-  buildSingleLaneShard,
-  libraryTuple,
-  writeJsonAtomic,
-} from "./lib/data-supply-attempt-shard.mjs";
+import { libraryTuple } from "./lib/provider-fetch-result.mjs";
+import { buildAttemptRow } from "./lib/provider-fetch-result.mjs";
 
 export const DAMODARAN_COMBINED_CRON = "17 11,23 * * 6";
 
 const WORKFLOW_FILE = "fetch-damodaran-shadow.yml";
-const ATTEMPT_SHARD_PATH = "data/admin/data-supply-state/detection-attempts/damodaran.json";
 const BACKUP_THRESHOLD_HOURS = 18;
 
 function saturdayCycleStart(createdAt) {
@@ -134,7 +129,6 @@ export async function fetchScheduledRuns({
 }
 
 export function emitBackupSkipAttempt({
-  attemptShardPath = ATTEMPT_SHARD_PATH,
   observedAt = new Date().toISOString(),
   runId,
   runAttempt = 1,
@@ -160,7 +154,6 @@ export function emitBackupSkipAttempt({
     runId,
     runAttempt: normalizedRunAttempt,
   });
-  writeJsonAtomic(attemptShardPath, buildSingleLaneShard({ laneId: "damodaran", row }));
   return row;
 }
 
@@ -184,7 +177,6 @@ export async function runDamodaranBackupGate({ env = process.env } = {}) {
   });
   if (decision.action === "skip") {
     emitBackupSkipAttempt({
-      attemptShardPath: env.DAMODARAN_ATTEMPT_SHARD || ATTEMPT_SHARD_PATH,
       observedAt: new Date().toISOString(),
       runId: env.GITHUB_RUN_ID,
       runAttempt: env.GITHUB_RUN_ATTEMPT || 1,

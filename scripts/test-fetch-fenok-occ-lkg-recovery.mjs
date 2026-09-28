@@ -295,7 +295,6 @@ const failureEndpoints = [classifyOccEndpointResponse({ statusCode: 500, body: "
   });
   const markerBefore = fs.readFileSync(markerPath(root));
   const canonicalBefore = fs.readFileSync(canonicalPath(root));
-  const attemptShardPath = path.join(root, "attempts", `${OCC_LANE_ID}.json`);
   const cacheDir = path.join(root, "cache");
   let requests = 0;
   const injected = await build(parseArgs([
@@ -308,7 +307,6 @@ const failureEndpoints = [classifyOccEndpointResponse({ statusCode: 500, body: "
       throw new Error("controlled OCC failure must not call the provider");
     },
     cacheDir,
-    attemptShardPath,
     observedAt: "2026-07-17T12:00:00.000Z",
     attemptId: "occ-controlled-build-attempt",
     lkgRepoRoot: root,
@@ -329,7 +327,6 @@ const failureEndpoints = [classifyOccEndpointResponse({ statusCode: 500, body: "
   assert.equal(fs.existsSync(cacheDir), false, "controlled failure cannot create an OCC raw cache");
   assert.deepEqual(fs.readFileSync(markerPath(root)), markerBefore);
   assert.deepEqual(fs.readFileSync(canonicalPath(root)), canonicalBefore);
-  const attemptBeforeTail = fs.readFileSync(attemptShardPath);
   const stateBeforeTail = fs.readFileSync(indexPath(root));
   const state = JSON.parse(stateBeforeTail);
   assert.equal(state.items[OCC_LKG_KEY].latest_failure.run_id, "controlled-build-run");
@@ -346,7 +343,6 @@ const failureEndpoints = [classifyOccEndpointResponse({ statusCode: 500, body: "
       throw new Error("empty controlled OCC tail must not call the provider");
     },
     cacheDir,
-    attemptShardPath,
     observedAt: "2026-07-17T12:05:00.000Z",
     attemptId: "occ-controlled-empty-tail",
     lkgRepoRoot: root,
@@ -359,8 +355,6 @@ const failureEndpoints = [classifyOccEndpointResponse({ statusCode: 500, body: "
   assert.equal(emptyTail.status, "incomplete_coverage");
   assert.equal(emptyTail.injection_applied, false);
   assert.equal(requests, 0);
-  assert.deepEqual(fs.readFileSync(attemptShardPath), attemptBeforeTail,
-    "empty tail cannot overwrite the injected attempt evidence");
   assert.deepEqual(fs.readFileSync(indexPath(root)), stateBeforeTail,
     "empty tail cannot overwrite the injected recovery state");
 }

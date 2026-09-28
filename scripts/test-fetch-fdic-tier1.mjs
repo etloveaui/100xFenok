@@ -7,7 +7,6 @@ import path from "node:path";
 import { fileURLToPath } from "node:url";
 
 import { DATA_SUPPLY_DETECTION_CONFIG } from "./lib/data-supply-detection-config.mjs";
-import { validateAttemptEvidence, validateAttemptShard } from "./build-data-supply-detection-floor.mjs";
 import {
   FDIC_PERSISTENCE_POLICY,
   MAX_QUARTERS,
@@ -33,10 +32,6 @@ const QUARTERS = ["20251231", "20260331"];
   assert.doesNotMatch(workflow, /guard-fdic-first-monday\.mjs|steps\.schedule_gate\.outputs\.eligible/);
   assert.match(workflow, /owner_approved_recovery:/);
   assert.match(workflow, /INPUT_OWNER_APPROVED_RECOVERY:/);
-  assert.match(
-    workflow,
-    /if: \$\{\{ always\(\) && steps\.publish_cloud_generation\.outcome != 'skipped' \}\}/,
-  );
   const lane = DATA_SUPPLY_DETECTION_CONFIG.lanes.find((row) => row.id === "fdic_tier1");
   assert.deepEqual(lane.producer_members[0].schedule, ["0 6 * * 1", "0 6 * * 4"]);
   assert.equal(lane.producer_members[0].cadence_calendar, "utc");
@@ -67,13 +62,10 @@ function readJson(filePath) {
   return JSON.parse(fs.readFileSync(filePath, "utf8"));
 }
 
-function assertValidShard(shard) {
-  assert.equal(validateAttemptShard(shard, shard.lane_id), true);
-  assert.equal(validateAttemptEvidence({
-    schema_version: "data-supply-detection-attempts/v1",
-    attempts: shard.attempts,
-  }), true);
+function shardFor(result) {
+  return { attempts: [result.attempt] };
 }
+
 
 {
   assert.equal(latestClosedQuarter(new Date("2026-06-30T23:59:59.999Z")), "20260331");
@@ -262,7 +254,7 @@ function assertValidShard(shard) {
   const output = readJson(paths.canonicalPath);
   assert.equal(output.data.at(-1).date, "2026-03-31");
   assert.equal(output.persistence_state.available_quarters, QUARTERS.length);
-  assertValidShard(readJson(paths.attemptShardPath));
+  assert.equal(result.attempt.http_status, 200);
 }
 
 {
@@ -367,11 +359,8 @@ function assertValidShard(shard) {
     retained_quarters: QUARTERS.length,
     pruned_quarters: 0,
   });
-  const shard = readJson(paths.attemptShardPath);
-  assertValidShard(shard);
+  const shard = shardFor(result);
   const row = shard.attempts[0];
-  assert.equal(row.lane_id, "fdic_tier1");
-  assert.equal(row.member_id, null);
   assert.equal(row.http_status, 200);
   assert.deepEqual(expectedAssertionIds("fdic_tier1"), ["bank_data_array"]);
   assert.deepEqual(row.assertions.map((assertion) => assertion.id), expectedAssertionIds("fdic_tier1"));
@@ -398,8 +387,7 @@ function assertValidShard(shard) {
   assert.equal(result.reason, "http_error");
   assert.equal(result.exitCode, 2, "a transient failure without a valid canonical LKG is fatal");
   assert.equal(fs.readFileSync(paths.canonicalPath, "utf8"), lkg);
-  const shard = readJson(paths.attemptShardPath);
-  assertValidShard(shard);
+  const shard = shardFor(result);
   assert.equal(shard.attempts[0].http_status, 500);
 }
 
@@ -602,8 +590,7 @@ function assertValidShard(shard) {
   assert.match(failed.failure_detail, /token=\[redacted\]/, "diagnostic detail must redact secrets");
   assert.doesNotMatch(failed.failure_detail, new RegExp(secret), "diagnostic detail must not leak a secret");
   assert(failed.failure_detail.length <= 320, "diagnostic detail must stay bounded");
-  const shard = readJson(paths.attemptShardPath);
-  assertValidShard(shard);
+  const shard = shardFor(failed);
   assert.equal(Object.hasOwn(shard.attempts[0], "failure_detail"), false, "attempt shard schema must remain unchanged");
 }
 

@@ -41,8 +41,6 @@ jobs:
             .github/workflows
             100xfenok-next/scripts
             100xfenok-next/src/lib
-            data/admin/data-supply-state/detection-attempts
-            data/admin/data-supply-state/publish-outcomes
             data/admin/us-indices-daily
             data/indices
 
@@ -64,7 +62,7 @@ jobs:
           INPUT_CONTROLLED_FAILURE: ${{ github.event.inputs.controlled_failure || '' }}
         run: node scripts/fetch-us-indices-daily.mjs
 
-      - name: Commit live data and attempt evidence
+      - name: Commit live data and recovery state
         if: ${{ always() }}
         env:
           GH_TOKEN: ${{ github.token }}
@@ -79,11 +77,7 @@ jobs:
           if [[ "$FETCH_OUTCOME" != "success" ]]; then
             RECOVERY_EXIT=2
           fi
-          if [[ "$ROLLBACK_FAILED" == "true" ]]; then
-            # A failed restore makes the recovery directory unpublishable.
-            # Persist only the fail-closed attempt evidence.
-            git add -- data/admin/data-supply-state/detection-attempts/us_indices_daily.json
-          else
+          if [[ "$ROLLBACK_FAILED" != "true" ]]; then
             scripts/stage-lane-manifest.sh \
               --workflow .github/workflows/fetch-us-indices-daily.yml \
               --stage always_if_exists
@@ -94,7 +88,7 @@ jobs:
               --stage success_if_exists
           fi
           if git diff --staged --quiet; then
-            echo "No US indices live data or attempt evidence to publish"
+            echo "No US indices live data to publish"
             exit "$RECOVERY_EXIT"
           fi
           git commit -m "data: refresh US indices canonical"
@@ -125,7 +119,3 @@ jobs:
           DATA_PLANE_ENDPOINT: https://100xfenok.etloveaui.workers.dev/internal/cloud-data-plane
           DATA_PLANE_WRITE_KEY: ${{ secrets.DATA_PLANE_WRITE_KEY }}
         run: node scripts/publish-cloud-data-generation.mjs --family=us-indices-daily --tolerate-gate-block --json
-
-      - name: Persist US indices publish outcome
-        if: ${{ always() }}
-        run: node scripts/persist-cloud-publish-outcome.mjs --family=us-indices-daily --workflow=.github/workflows/fetch-us-indices-daily.yml --publisher-outcome=${{ steps.publish_cloud_generation.outcome }}

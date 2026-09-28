@@ -4,7 +4,7 @@
 // derived from workflow commands, then enriched with the enclosing job's
 // effective permissions and concurrency scope. Known helper-backed writers are
 // included because their push lives outside the workflow YAML:
-// persist-cloud-publish-outcome.mjs and publish-slickcharts-attempt.sh.
+// publish-slickcharts-attempt.sh.
 
 import assert from "node:assert/strict";
 import fs from "node:fs";
@@ -19,7 +19,6 @@ const WRITER_PATTERNS = Object.freeze([
   { kind: "direct_git_add", pattern: /\bgit\s+add\b/ },
   { kind: "direct_git_commit", pattern: /\bgit\s+commit\b/ },
   { kind: "direct_git_push", pattern: /\bgit\s+push\b/ },
-  { kind: "persist_cloud_publish_outcome", pattern: /persist-cloud-publish-outcome\.mjs\s+--family=/ },
   { kind: "publish_slickcharts_attempt", pattern: /publish-slickcharts-attempt\.sh\b/ },
 ]);
 

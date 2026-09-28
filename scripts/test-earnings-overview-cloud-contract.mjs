@@ -16,7 +16,7 @@ import {
 } from "./publish-cloud-data-generation.mjs";
 import {
   LANE_REGISTRY,
-  PLANE_PUBLISH_OUTCOME_BINDINGS,
+  PLANE_PUBLISH_FAMILY_BINDINGS,
 } from "./lib/lane-registry.mjs";
 import { PLANE_ENROLLMENT_EXACT } from "../100xfenok-next/scripts/cloud-data-plane/cloud-data-plane-enrollment.generated.mjs";
 import { derivePublicPlaneEnrollment } from "./lib/plane-enrollment-derivation.mjs";
@@ -25,8 +25,6 @@ const FAMILY = "earnings-overview";
 const WORKFLOW = ".github/workflows/refresh-earnings-overview.yml";
 const CALLER_WORKFLOW = ".github/workflows/fetch-stockanalysis.yml";
 const TICKERS = ["AAPL", "AMZN", "MSFT", "META"];
-const OUTCOME_SHARD = "data/admin/data-supply-state/publish-outcomes/earnings-overview.json";
-const DETECTION_SHARD = "data/admin/data-supply-state/detection-attempts/earnings_overview.json";
 const CANONICAL_ROOT = "data/earnings-overview";
 const MANIFEST_PREFIX = "public/data/earnings-overview";
 const MAX_TOTAL_BYTES = 200_000;
@@ -210,9 +208,9 @@ function validDocument(ticker, newestEnd, olderEnd, updatedAt = "2026-09-06T12:0
 // publish-outcome shard; the workflow policy must carry those declarations.
 {
   const lane = LANE_REGISTRY.lanes.find((candidate) => (
-    candidate.commit_shards.includes(OUTCOME_SHARD)
+    candidate.id === "earnings_overview"
   ));
-  assert.ok(lane, `${FAMILY} publish-outcome shard must have a registry owner`);
+  assert.ok(lane, `${FAMILY} must have a registry owner`);
   assert.equal(lane.owner_workflow, WORKFLOW);
   assert.deepEqual(lane.provider_refs, [
     { provider_id: "sec_edgar", role: "source", members: null },
@@ -224,7 +222,7 @@ function validDocument(ticker, newestEnd, olderEnd, updatedAt = "2026-09-06T12:0
   assert.ok(lane.commit_shards.includes("data/admin/earnings_overview"));
   assert.ok(lane.script_sources?.includes("scripts/build-earnings-overview.py"));
 
-  assert.deepEqual(PLANE_PUBLISH_OUTCOME_BINDINGS[FAMILY], {
+  assert.deepEqual(PLANE_PUBLISH_FAMILY_BINDINGS[FAMILY], {
     lane_id: lane.id,
     workflow: WORKFLOW,
   });
@@ -232,10 +230,6 @@ function validDocument(ticker, newestEnd, olderEnd, updatedAt = "2026-09-06T12:0
   const workflowPolicy = LANE_REGISTRY.workflow_policies[WORKFLOW];
   assert.ok(workflowPolicy, `${WORKFLOW} must have a registry policy`);
   assert.ok(workflowPolicy.lanes.includes(lane.id));
-  assert.ok(
-    workflowPolicy.stages.always_if_exists.some((spec) => spec.path === OUTCOME_SHARD),
-    "outcome evidence must be staged on every run",
-  );
   assert.ok(
     workflowPolicy.stages.always_if_exists.some((spec) => spec.path === "data/admin/earnings_overview"),
     "real refresh outcome evidence must be staged on every run",
@@ -285,7 +279,6 @@ function validDocument(ticker, newestEnd, olderEnd, updatedAt = "2026-09-06T12:0
   assert.match(reusable, /build-earnings-overview\.py\s+--refresh/u);
   assert.match(reusable, /--output-dir\s+data\/earnings-overview/u);
   assert.match(reusable, /publish-cloud-data-generation\.mjs\s+--family=earnings-overview/u);
-  assert.match(reusable, /persist-cloud-publish-outcome\.mjs[\s\S]*--family=earnings-overview/u);
   assert.match(reusable, /fenok-data-writer-refs\/heads\/main/u);
   assert.match(reusable, /git fetch origin main/u);
   assert.match(reusable, /\[skip ci\]/u);

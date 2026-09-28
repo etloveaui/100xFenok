@@ -228,18 +228,6 @@ jobs:
           echo "KRX fetch failed for ${BASE_END} and ${WALKBACK_DAYS} walkback day(s)"
           exit "$WORST_EXIT_CODE"
 
-      - name: Emit KRX detection attempt
-        if: ${{ always() && env.FENOK_KRX_PLAN_ONLY != 'true' }}
-        env:
-          KRX_FETCH_OUTCOME: ${{ steps.krx_fetch.outputs.attempt_outcome || steps.krx_fetch.outcome }}
-        run: |
-          node scripts/emit-fenok-krx-attempt.mjs \
-            --outcome "$KRX_FETCH_OUTCOME" \
-            --bridge-index data/admin/fenok-edge-korea-krx-daily-index.json \
-            --attempt-shard data/admin/data-supply-state/detection-attempts/krx.json \
-            --attempt-id "gh-${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}" \
-            --observed-at "$(date -u +%Y-%m-%dT%H:%M:%S.000Z)"
-
       - name: Commit and push KRX source evidence
         if: ${{ always() && env.FENOK_KRX_PLAN_ONLY != 'true' }}
         env:

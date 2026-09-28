@@ -19,7 +19,7 @@ import {
   retainLatestDistinctSourceDates,
   runSentiment,
 } from "./fetch-sentiment.mjs";
-import { evaluateEndpointAssertions, returnedTuple } from "./lib/data-supply-attempt-shard.mjs";
+import { evaluateEndpointAssertions, returnedTuple } from "./lib/provider-fetch-result.mjs";
 import { checkWorkflowCommitShardsAgainstRegistry } from "./check-lane-registry-commit-shards.mjs";
 
 const REPO_ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
@@ -181,7 +181,7 @@ async function runCase(root, {
   const result = await runCase(root);
   assert.equal(result.ok, true);
   assert.equal(result.exitCode, 0);
-  const shard = readJson(makePaths(root).attemptShardPath);
+  const shard = { schema_version: "data-supply-detection-attempt-shard/v2", lane_id: "sentiment", attempts: [result.row] };
   assert.equal(validateAttemptShard(shard, "sentiment"), true);
   assert.deepEqual(shard.attempts[0].assertions, [{ id: "series_array", passed: true }]);
   const state = readJson(path.join(root, "data", "admin", "sentiment", "index.json"));
@@ -522,7 +522,7 @@ async function runCase(root, {
     },
   });
   assert.equal(result.ok, false);
-  assert.equal(readJson(makePaths(root).attemptShardPath).attempts[0].execution, "threw");
+  assert.equal(result.row.execution, "threw");
 }
 
 {
@@ -543,16 +543,6 @@ async function runCase(root, {
   assert.match(workflow, /- name: Commit sentiment data\n\s+if: \$\{\{ always\(\) \}\}/);
   assert.deepEqual(stages, {
     always_if_exists: [
-      {
-        kind: "file",
-        path: "data/admin/data-supply-state/detection-attempts/sentiment.json",
-        required: false,
-      },
-      {
-        kind: "file",
-        path: "data/admin/data-supply-state/publish-outcomes/sentiment.json",
-        required: false,
-      },
       { kind: "file", path: "data/admin/sentiment/index.json", required: false },
       { kind: "glob", path: "data/admin/sentiment/current/*.json", required: false },
       { kind: "glob", path: "data/admin/sentiment/lkg/*.json", required: false },

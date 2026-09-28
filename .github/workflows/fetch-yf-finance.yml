@@ -366,10 +366,6 @@ jobs:
             python3 scripts/fetch-yf-finance.py $ARGS --sleep "${INPUT_SLEEP:-0.8}" --ticker-timeout "${INPUT_TICKER_TIMEOUT:-90}" --retries "${INPUT_RETRIES:-2}"
           fi
 
-      - name: Emit Yahoo batch detection attempt
-        if: ${{ always() && env.YF_PLAN_ONLY != 'true' }}
-        run: node scripts/emit-yahoo-batch-quote-history-attempt.mjs
-
       # Quarter-close calls a ~1,400-ticker universe of its own. Running it
       # after every ETF slot is what produced the repeated YFRateLimitError in
       # run 30711922590, after the fetch itself had completed cleanly. It
@@ -406,7 +402,6 @@ jobs:
             data/yf/quarter_closes.json \
             data/admin/yahoo-batch-quote-history \
             data/yf/estimates-archive \
-            data/admin/data-supply-state/detection-attempts/yahoo_batch_quote_history.json \
             > "$ART/candidate-paths.z"
           : > "$ART/candidate-present.z"
           : > "$ART/candidate-deleted.txt"
@@ -483,13 +478,13 @@ jobs:
     needs: acquire-yf-finance
     # Runs even when acquisition failed, because the pre-split persist step ran
     # under always(): a failed fetch still persists its partial candidates and
-    # its attempt evidence. It is skipped only when the run was plan-only, was
+    # its recovery state. It is skipped only when the run was plan-only, was
     # cancelled, or produced no candidate at all.
     if: ${{ always() && needs.acquire-yf-finance.result != 'cancelled' && needs.acquire-yf-finance.outputs.plan_only != 'true' && needs.acquire-yf-finance.outputs.artifact_ready == 'true' }}
     runs-on: ubuntu-latest
     # The serialized critical section is apply, stage, commit, push and
-    # readback. Cloud publication and outcome persistence are separate jobs so
-    # their provider I/O cannot hold the global writer queue.
+    # readback. Cloud publication is a separate job so provider I/O cannot
+    # hold the global writer queue.
     timeout-minutes: 75
     env:
       YF_PLAN_ONLY: ${{ needs.acquire-yf-finance.outputs.plan_only }}
@@ -581,17 +576,17 @@ jobs:
             cat "$ART/candidate-noncanonical.txt" >&2
             exit 1
           fi
-          if grep -vE '^(data/yf/finance/|data/yf/estimates-archive/|data/admin/yahoo-batch-quote-history/|data/yf/quarter_closes\.json$|data/admin/data-supply-state/detection-attempts/yahoo_batch_quote_history\.json$)' "$ART/candidate-entries.txt" > "$ART/candidate-outside.txt"; then
+          if grep -vE '^(data/yf/finance/|data/yf/estimates-archive/|data/admin/yahoo-batch-quote-history/|data/yf/quarter_closes\.json$)' "$ART/candidate-entries.txt" > "$ART/candidate-outside.txt"; then
             echo "::error::artifact contains paths outside the Yahoo candidate allowlist" >&2
             cat "$ART/candidate-outside.txt" >&2
             exit 1
           fi
-          if grep -vE '^(data/yf/finance/|data/yf/estimates-archive/|data/admin/yahoo-batch-quote-history/|data/yf/quarter_closes\.json$|data/admin/data-supply-state/detection-attempts/yahoo_batch_quote_history\.json$)' "$ART/candidate-deleted.txt" > "$ART/deleted-outside.txt"; then
+          if grep -vE '^(data/yf/finance/|data/yf/estimates-archive/|data/admin/yahoo-batch-quote-history/|data/yf/quarter_closes\.json$)' "$ART/candidate-deleted.txt" > "$ART/deleted-outside.txt"; then
             echo "::error::artifact deletion list contains paths outside the Yahoo candidate allowlist" >&2
             cat "$ART/deleted-outside.txt" >&2
             exit 1
           fi
-          if grep -vE '^(data/yf/finance/|data/yf/estimates-archive/|data/admin/yahoo-batch-quote-history/|data/yf/quarter_closes\.json$|data/admin/data-supply-state/detection-attempts/yahoo_batch_quote_history\.json$)' "$ART/candidate-digest-paths.txt" > "$ART/digest-outside.txt"; then
+          if grep -vE '^(data/yf/finance/|data/yf/estimates-archive/|data/admin/yahoo-batch-quote-history/|data/yf/quarter_closes\.json$)' "$ART/candidate-digest-paths.txt" > "$ART/digest-outside.txt"; then
             echo "::error::artifact digest list contains paths outside the Yahoo candidate allowlist" >&2
             cat "$ART/digest-outside.txt" >&2
             exit 1
@@ -719,7 +714,7 @@ jobs:
           echo "origin_readback=confirmed" >> "$GITHUB_OUTPUT"
 
       # Keep the dispatch after source commit/readback. The explicit recovery
-      # branch preserves failed-attempt evidence when an earlier step failed,
+      # branch preserves failed-fetch recovery when an earlier step failed,
       # while the success branch covers ordinary and no-change runs.
       - name: Dispatch shared projection rebuild
         if: ${{ always() && env.YF_PLAN_ONLY != 'true' && (success() || ((needs.acquire-yf-finance.outputs.fetch_outcome == 'failure' || needs.acquire-yf-finance.outputs.quarter_closes_outcome == 'failure') && steps.persist_yahoo_state.outcome == 'success' && steps.persist_yahoo_state.outputs.persisted == 'true' && steps.readback.outputs.confirmed == 'true')) }}
@@ -745,9 +740,6 @@ jobs:
       group: yf-finance-cloud-${{ github.ref }}
       cancel-in-progress: false
       queue: max
-    outputs:
-      publisher_outcome: ${{ steps.publish_cloud_generation.outcome }}
-      outcome_shard_sha256: ${{ steps.prepare_outcome_shard.outputs.sha256 }}
     steps:
       - uses: actions/checkout@v4
         with:
@@ -764,9 +756,6 @@ jobs:
           [ "$ACTUAL_SHA" = "$EXPECTED_SHA" ] \
             || { echo "::error::Yahoo cloud checkout is not the pushed source commit" >&2; exit 1; }
 
-      - name: Remove any pre-existing Yahoo finance outcome shard
-        run: rm -f data/admin/data-supply-state/publish-outcomes/yahoo-finance.json
-
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
@@ -782,115 +771,3 @@ jobs:
           PUBLISH_BINDING_GIT_COMMIT: ${{ needs.publish-yf-finance.outputs.pushed_sha }}
           PUBLISH_BINDING_ARTIFACT_DIGEST: ${{ needs.publish-yf-finance.outputs.artifact_digest }}
         run: node scripts/publish-cloud-data-generation.mjs --family=yahoo-finance --tolerate-gate-block --json
-
-      - name: Prepare Yahoo finance outcome shard
-        id: prepare_outcome_shard
-        if: ${{ always() }}
-        run: |
-          set -euo pipefail
-          SHARD=data/admin/data-supply-state/publish-outcomes/yahoo-finance.json
-          [ -s "$SHARD" ] \
-            || { echo "::error::Yahoo finance publisher produced no outcome shard" >&2; exit 1; }
-          node --input-type=module - "$SHARD" <<'NODE'
-          import fs from "node:fs";
-          import { validatePublishOutcomeShard } from "./scripts/lib/publish-outcome-shard.mjs";
-          const [shardPath] = process.argv.slice(2);
-          const shard = JSON.parse(fs.readFileSync(shardPath, "utf8"));
-          validatePublishOutcomeShard(shard, "yahoo-finance");
-          if (shard.records.length === 0) throw new Error("Yahoo finance outcome shard has no records");
-          NODE
-          echo "sha256=$(sha256sum "$SHARD" | awk '{print $1}')" >> "$GITHUB_OUTPUT"
-
-      - name: Upload Yahoo finance outcome shard
-        id: upload_outcome_shard
-        if: ${{ always() }}
-        uses: actions/upload-artifact@v4
-        with:
-          name: yahoo-finance-outcome-${{ github.run_id }}-${{ github.run_attempt }}
-          path: data/admin/data-supply-state/publish-outcomes/yahoo-finance.json
-          if-no-files-found: error
-          retention-days: 1
-
-  # The outcome shard is the only cloud output that crosses into the global
-  # writer section. A missing or mismatched artifact fails closed; the checkout
-  # must never supply an older shard from main as a fallback.
-  persist-yf-cloud-outcome:
-    needs:
-      - publish-yf-finance
-      - publish-yf-cloud
-    if: >-
-      always() &&
-      needs.publish-yf-cloud.result != 'skipped'
-    runs-on: ubuntu-latest
-    timeout-minutes: 20
-    permissions:
-      contents: write
-      actions: read
-    concurrency:
-      group: fenok-data-writer-refs/heads/main
-      cancel-in-progress: false
-      queue: max
-    steps:
-      - uses: actions/checkout@v4
-        with:
-          ref: ${{ needs.publish-yf-finance.outputs.pushed_sha }}
-          fetch-depth: 1
-          filter: blob:none
-          sparse-checkout: |
-            scripts
-            .github/workflows
-            100xfenok-next/scripts
-            100xfenok-next/src/lib
-            data/admin/data-supply-state/publish-outcomes
-
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: '22'
-
-      - name: Remove any checkout copy of Yahoo finance outcome
-        run: rm -f data/admin/data-supply-state/publish-outcomes/yahoo-finance.json
-
-      - name: Download Yahoo finance outcome shard
-        uses: actions/download-artifact@v4
-        with:
-          name: yahoo-finance-outcome-${{ github.run_id }}-${{ github.run_attempt }}
-          path: ${{ runner.temp }}/yahoo-finance-outcome
-
-      - name: Validate Yahoo finance outcome artifact
-        env:
-          EXPECTED_SHA256: ${{ needs.publish-yf-cloud.outputs.outcome_shard_sha256 }}
-        run: |
-          set -euo pipefail
-          ART="$RUNNER_TEMP/yahoo-finance-outcome"
-          SHARD="$ART/yahoo-finance.json"
-          [ -s "$SHARD" ] \
-            || { echo "::error::Yahoo finance outcome shard is missing or empty" >&2; exit 1; }
-          [[ "$EXPECTED_SHA256" =~ ^[0-9a-f]{64}$ ]] \
-            || { echo "::error::Yahoo finance outcome shard digest is invalid" >&2; exit 1; }
-          ACTUAL_SHA256="$(sha256sum "$SHARD" | awk '{print $1}')"
-          [ "$ACTUAL_SHA256" = "$EXPECTED_SHA256" ] \
-            || { echo "::error::Yahoo finance outcome shard digest mismatch" >&2; exit 1; }
-          node --input-type=module - "$SHARD" <<'NODE'
-          import fs from "node:fs";
-          import { validatePublishOutcomeShard } from "./scripts/lib/publish-outcome-shard.mjs";
-          const [shardPath] = process.argv.slice(2);
-          const shard = JSON.parse(fs.readFileSync(shardPath, "utf8"));
-          validatePublishOutcomeShard(shard, "yahoo-finance");
-          if (shard.records.length === 0) throw new Error("Yahoo finance outcome shard has no records");
-          NODE
-          cp "$SHARD" data/admin/data-supply-state/publish-outcomes/yahoo-finance.json
-
-      - name: Persist Yahoo finance shadow outcome
-        if: ${{ always() && needs.publish-yf-cloud.result != 'skipped' }}
-        env:
-          BINDING_GIT_COMMIT: ${{ needs.publish-yf-finance.outputs.pushed_sha }}
-          BINDING_ORIGIN_READBACK: ${{ needs.publish-yf-finance.outputs.origin_readback }}
-        run: >-
-          node scripts/persist-cloud-publish-outcome.mjs
-          --family=yahoo-finance
-          --workflow=.github/workflows/fetch-yf-finance.yml
-          --publisher-outcome=${{ needs.publish-yf-cloud.outputs.publisher_outcome }}
-          --binding-git-commit="$BINDING_GIT_COMMIT"
-          --binding-origin-readback="$BINDING_ORIGIN_READBACK"
-          --branch=main

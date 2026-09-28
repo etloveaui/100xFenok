@@ -4,25 +4,14 @@ import https from "node:https";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 
-import {
-  attemptResult,
-  atomicWrite,
-  classifyHttpResponse,
-  defaultAttemptId,
-  evaluateEndpointAssertions,
-  returnedTuple,
-  threwTuple,
-  transportError,
-  worstRequestResult,
-  writeAttemptShard,
-} from "./lib/data-supply-attempt-shard.mjs";
+import { atomicWrite } from "./lib/atomic-file.mjs";
+import { attemptResult, classifyHttpResponse, evaluateEndpointAssertions, returnedTuple, threwTuple, transportError, worstRequestResult } from "./lib/provider-fetch-result.mjs";
 import {
   LaneLkgStore,
   PROMOTION_CONTRACT_PROVIDER_OBSERVATION_V2,
   allNaturalRequestsFailed,
   buildProviderObservationV2,
   classifyLkgFailure,
-  hasStructuredGithubRunBinding,
   isEligibleRecoveryRun,
   systemicLkgFailureReason,
 } from "./lib/data-supply-lkg-store.mjs";
@@ -226,10 +215,8 @@ function validStablecoinsDocument(document) {
 export async function runDefillama({
   repoRoot = REPO_ROOT,
   canonicalPath = path.join(REPO_ROOT, "data", "macro", "stablecoins.json"),
-  attemptShardPath = path.join(REPO_ROOT, "data", "admin", "data-supply-state", "detection-attempts", `${DEFILLAMA_LANE_ID}.json`),
   request = requestBytes,
   observedAt = new Date().toISOString(),
-  attemptId,
   runId = process.env.GITHUB_RUN_ID || "local",
   runAttempt = Number(process.env.GITHUB_RUN_ATTEMPT || 1),
   eventName = process.env.GITHUB_EVENT_NAME || "local",
@@ -238,11 +225,6 @@ export async function runDefillama({
 } = {}) {
   const injectedEndpoint = validateControlledFailureEndpoint(controlledFailureEndpoint.trim(), eventName);
   const run = { runId: String(runId), runAttempt: Number(runAttempt), eventName, observedAt };
-  const resolvedAttemptId = attemptId ?? (
-    hasStructuredGithubRunBinding(run)
-      ? `defillama-stablecoins-run-${run.runId}-attempt-${run.runAttempt}`
-      : defaultAttemptId("defillama-stablecoins", observedAt)
-  );
   const lkgStore = new LaneLkgStore({
     repoRoot,
     laneId: DEFILLAMA_LANE_ID,
@@ -265,13 +247,7 @@ export async function runDefillama({
     }));
   }
   const result = aggregateReadyResponses(requestResults);
-  const attempt = writeAttemptShard({
-    laneId: DEFILLAMA_LANE_ID,
-    attemptShardPath,
-    observedAt,
-    attemptId: resolvedAttemptId,
-    result,
-  });
+  const attempt = (result).attempt;
 
   if (result.status !== "ready") {
     const systemic = allNaturalRequestsFailed(

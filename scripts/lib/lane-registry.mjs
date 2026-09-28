@@ -113,11 +113,6 @@ function record({
   };
 }
 
-const ATTEMPT_ROOT = "data/admin/data-supply-state/detection-attempts";
-const attemptShard = (laneId) => `${ATTEMPT_ROOT}/${laneId}.json`;
-const PUBLISH_OUTCOME_ROOT = "data/admin/data-supply-state/publish-outcomes";
-const publishOutcomeShard = (family) => `${PUBLISH_OUTCOME_ROOT}/${family}.json`;
-
 // One authority for the six acquisition lanes that feed the computed-signals
 // coordinator. The manifest builder derives their Update Manifest exclusions
 // from the lane records below, while workflow contract tests derive owner file,
@@ -132,12 +127,6 @@ export const COMPUTED_SIGNALS_SOURCE_LANE_IDS = Object.freeze([
   "fdic_tier1",
   "sentiment",
 ]);
-
-// PLANE_PUBLISH_OUTCOME_BINDINGS used to live here as a hand-written table of
-// 22 entries. It is now DERIVED from actual publish-outcome shard ownership and
-// exported after workflow_policies is assembled; see derivePlanePublishOutcomeBindings
-// below. The hand-written form was a second place to register a family, and a
-// family registered in the publisher but missing here was silently unauthorized.
 
 const providers = [
   { id: "fred", label: "FRED", class: "external_data" },
@@ -169,8 +158,6 @@ const providers = [
   { id: "cloudflare_kv", label: "Cloudflare KV", class: "platform_storage" },
 ];
 
-// --- Lane records (verified against origin/main, 2026-07-18) -----------------
-
 const lanes = [
   record({
     id: "fred_macro",
@@ -184,12 +171,10 @@ const lanes = [
     enforcement: "live",
     privacy_class: "public_mirror",
     admin_store: "data/admin/fred_macro",
-    detection_attempt: attemptShard("fred_macro"),
+    detection_attempt: null,
     canonical_outputs: ["data/macro/fred-macro.json"],
     public_mirror: [],
     commit_shards: [
-      attemptShard("fred_macro"),
-      publishOutcomeShard("fred-macro"),
       "data/admin/fred_macro/index.json",
       "data/admin/fred_macro/lkg/fred_macro.json",
       "data/macro/fred-macro.json",
@@ -209,7 +194,7 @@ const lanes = [
     enforcement: "live",
     privacy_class: "public_mirror",
     admin_store: "data/admin/fred_banking",
-    detection_attempt: attemptShard("fred_banking"),
+    detection_attempt: null,
     canonical_outputs: [
       "data/macro/fred-banking-daily.json",
       "data/macro/fred-banking-weekly.json",
@@ -218,8 +203,6 @@ const lanes = [
     ],
     public_mirror: [],
     commit_shards: [
-      attemptShard("fred_banking"),
-      publishOutcomeShard("fred-banking"),
       "data/admin/fred_banking/index.json",
       "data/admin/fred_banking/lkg/daily.json",
       "data/admin/fred_banking/lkg/weekly.json",
@@ -245,7 +228,7 @@ const lanes = [
     enforcement: "live",
     privacy_class: "private",
     admin_store: "data/admin/fred_yardeni",
-    detection_attempt: attemptShard("fred_yardeni"),
+    detection_attempt: null,
     canonical_outputs: ["data/yardney/yardney_model.json"],
     // Private lane, public-safe aggregate served and plane-enrolled: the
     // bundled git mirror is the worker's ASSETS fallback. The declaration
@@ -254,8 +237,6 @@ const lanes = [
     // stages canonical only, full sync remains the updater.
     public_mirror: ["100xfenok-next/public/data/yardney/yardney_model.json"],
     commit_shards: [
-      attemptShard("fred_yardeni"),
-      publishOutcomeShard("fred-yardeni"),
       "data/admin/fred_yardeni/index.json",
       "data/admin/fred_yardeni/current/yardney_model.json",
       "data/admin/fred_yardeni/lkg/yardney_model.json",
@@ -276,12 +257,10 @@ const lanes = [
     enforcement: "live",
     privacy_class: "public_mirror",
     admin_store: "data/admin/fdic_tier1",
-    detection_attempt: attemptShard("fdic_tier1"),
+    detection_attempt: null,
     canonical_outputs: ["data/macro/fdic-tier1.json"],
     public_mirror: [],
     commit_shards: [
-      attemptShard("fdic_tier1"),
-      publishOutcomeShard("fdic-tier1"),
       "data/admin/fdic_tier1/index.json",
       "data/admin/fdic_tier1/lkg/fdic_tier1.json",
       "data/macro/fdic-tier1.json",
@@ -301,12 +280,10 @@ const lanes = [
     enforcement: "live",
     privacy_class: "public_mirror",
     admin_store: "data/admin/treasury_tga",
-    detection_attempt: attemptShard("treasury_tga"),
+    detection_attempt: null,
     canonical_outputs: ["data/macro/tga.json"],
     public_mirror: [],
     commit_shards: [
-      attemptShard("treasury_tga"),
-      publishOutcomeShard("treasury-tga"),
       "data/admin/treasury_tga/index.json",
       "data/admin/treasury_tga/lkg/tga.json",
       "data/macro/tga.json",
@@ -326,12 +303,10 @@ const lanes = [
     enforcement: "live",
     privacy_class: "public_mirror",
     admin_store: "data/admin/defillama_stablecoins",
-    detection_attempt: attemptShard("defillama_stablecoins"),
+    detection_attempt: null,
     canonical_outputs: ["data/macro/stablecoins.json"],
     public_mirror: [],
     commit_shards: [
-      attemptShard("defillama_stablecoins"),
-      publishOutcomeShard("defillama-stablecoins"),
       "data/admin/defillama_stablecoins/index.json",
       "data/admin/defillama_stablecoins/lkg/stablecoins.json",
       "data/macro/stablecoins.json",
@@ -352,11 +327,10 @@ const lanes = [
     privacy_class: "private",
     public_mirror_allowed: false,
     admin_store: "data/admin/yahoo_etf_fallback",
-    detection_attempt: attemptShard("yahoo_etf_fallback"),
+    detection_attempt: null,
     canonical_outputs: ["data/yf/etf-details", "data/yf/finance"],
     public_mirror: [],
     commit_shards: [
-      attemptShard("yahoo_etf_fallback"),
       "data/admin/yahoo_etf_fallback",
       "data/yf/etf-details",
       "data/yf/finance",
@@ -382,11 +356,10 @@ const lanes = [
     enforcement: "live",
     privacy_class: "public_mirror",
     admin_store: "data/admin/stockanalysis-recovery",
-    detection_attempt: attemptShard("stockanalysis_etf_universe"),
+    detection_attempt: null,
     canonical_outputs: ["data/stockanalysis/etf_universe.json"],
     public_mirror: [],
     commit_shards: [
-      attemptShard("stockanalysis_etf_universe"),
       "data/stockanalysis",
       "data/admin/stockanalysis-recovery",
     ],
@@ -408,7 +381,7 @@ const lanes = [
     enforcement: "live",
     privacy_class: "public_mirror",
     admin_store: "data/admin/stockanalysis-recovery",
-    detection_attempt: attemptShard("stockanalysis_etf_detail"),
+    detection_attempt: null,
     // The 5,605 raw per-ticker payloads are this lane's canonical acquisition
     // output. The public tree is a shard projection built by sync-public-data,
     // not a mirror of these paths, so the shards are a derived projection rather
@@ -416,23 +389,15 @@ const lanes = [
     canonical_outputs: ["data/stockanalysis/etfs"],
     public_mirror: [],
     commit_shards: [
-      attemptShard("stockanalysis_etf_detail"),
       "data/stockanalysis",
       "data/admin/stockanalysis-recovery",
-      publishOutcomeShard("stockanalysis-etf-detail"),
     ],
     recovery_store: "data/admin/stockanalysis-recovery/index.json",
     kpi_recovery_shape: "direct",
     declared_exception: "shares the StockAnalysis recovery store with stockanalysis_etf_universe, stockanalysis_stock_financial and stockanalysis_surfaces; promoted live after natural schedule run 31852235035 committed the complete ETF-detail attempt shard with fence-confirmed origin readback; separated from the universe lane because the universe index and the per-ticker detail payloads are distinct acquisition units with distinct failure modes",
     script_sources: [
       "scripts/fetch-stockanalysis.py",
-      "scripts/emit-stockanalysis-attempt.mjs",
     ],
-    // The natural workflow owns the publish-outcome family: the plane
-    // publication and its separate always() persistence job both run inside
-    // fetch-stockanalysis.yml. Declaring the shard HERE (lane commit_shards)
-    // is what authorizes the family and points the derived binding at the
-    // owning workflow, with exactly one owner and no dedicated caller claim.
   }),
   record({
     id: "stockanalysis_stock_financial",
@@ -446,11 +411,10 @@ const lanes = [
     enforcement: "live",
     privacy_class: "public_mirror",
     admin_store: "data/admin/stockanalysis-recovery",
-    detection_attempt: attemptShard("stockanalysis_stock_financial"),
+    detection_attempt: null,
     canonical_outputs: ["data/stockanalysis/stocks", "data/stockanalysis/financials"],
     public_mirror: ["100xfenok-next/public/data/stockanalysis/stocks", "100xfenok-next/public/data/stockanalysis/financials"],
     commit_shards: [
-      attemptShard("stockanalysis_stock_financial"),
       "data/stockanalysis",
       "data/admin/stockanalysis-recovery",
     ],
@@ -459,7 +423,6 @@ const lanes = [
     declared_exception: "shares the multi-kind StockAnalysis recovery store; promoted live after natural schedule run 29873027563 committed the complete 8-pair attempt shard",
     script_sources: [
       "scripts/fetch-stockanalysis.py",
-      "scripts/emit-stockanalysis-attempt.mjs",
     ],
   }),
   record({
@@ -487,18 +450,16 @@ const lanes = [
     canonical_outputs: ["data/earnings-overview"],
     public_mirror: ["100xfenok-next/public/data/earnings-overview"],
     commit_shards: [
-      publishOutcomeShard("earnings-overview"),
       "data/admin/earnings_overview",
       "data/earnings-overview",
       "100xfenok-next/public/data/earnings-overview",
     ],
     recovery_store: null,
     declared_exception:
-      "bounded four-document producer retains each last valid document in the canonical set; no separate admin LKG index exists yet, so the admin refresh summary and publish outcome are the durable control-plane evidence; detection-floor enrollment remains shadow",
+      "bounded four-document producer retains each last valid document in the canonical set; no separate admin LKG index exists yet, so the admin refresh summary is the durable control-plane evidence; detection-floor enrollment remains shadow",
     script_sources: [
       "scripts/build-earnings-overview.py",
       "scripts/publish-cloud-data-generation.mjs",
-      "scripts/persist-cloud-publish-outcome.mjs",
     ],
     caller_workflows: {
       ".github/workflows/fetch-stockanalysis.yml": {
@@ -519,11 +480,10 @@ const lanes = [
     enforcement: "shadow",
     privacy_class: "public_mirror",
     admin_store: "data/admin/stockanalysis-recovery",
-    detection_attempt: attemptShard("stockanalysis_surfaces"),
+    detection_attempt: null,
     canonical_outputs: ["data/stockanalysis/surfaces"],
     public_mirror: [],
     commit_shards: [
-      attemptShard("stockanalysis_surfaces"),
       "data/stockanalysis",
       "data/admin/stockanalysis-recovery",
     ],
@@ -546,7 +506,7 @@ const lanes = [
     enforcement: "live",
     privacy_class: "public_mirror",
     admin_store: "data/admin/yahoo-hourly-ticker",
-    detection_attempt: attemptShard("yahoo_ticker_macro"),
+    detection_attempt: null,
     canonical_outputs: ["data/macro/yahoo-ticker.json"],
     // Mirror ownership moved to the merge boundary (sync-public-data full
     // walk + update-manifest materialize) once the plane serving enrollment
@@ -557,8 +517,6 @@ const lanes = [
     // fallback copy as removable, contradicting the worker-read fallback.
     public_mirror: ["100xfenok-next/public/data/macro/yahoo-ticker.json"],
     commit_shards: [
-      attemptShard("yahoo_ticker_macro"),
-      publishOutcomeShard("yahoo-ticker-macro"),
       "data/admin/yahoo-hourly-ticker",
       "data/macro/yahoo-ticker.json",
     ],
@@ -584,7 +542,7 @@ const lanes = [
     enforcement: "live",
     privacy_class: "public_mirror",
     admin_store: "data/admin/sentiment",
-    detection_attempt: attemptShard("sentiment"),
+    detection_attempt: null,
     canonical_outputs: [
       "data/sentiment/README.md",
       "data/sentiment/cftc-sp500.json",
@@ -603,8 +561,6 @@ const lanes = [
     ],
     public_mirror: ["100xfenok-next/public/data/sentiment"],
     commit_shards: [
-      attemptShard("sentiment"),
-      publishOutcomeShard("sentiment"),
       "data/admin/sentiment/index.json",
       "data/admin/sentiment/current",
       "data/admin/sentiment/lkg",
@@ -626,12 +582,10 @@ const lanes = [
     enforcement: "live",
     privacy_class: "private",
     admin_store: "data/admin/nasdaq_giw_sox",
-    detection_attempt: attemptShard("nasdaq_giw_sox"),
+    detection_attempt: null,
     canonical_outputs: ["data/indices/nasdaq-giw-sox-constituents.json"],
     public_mirror: ["100xfenok-next/public/data/indices/nasdaq-giw-sox-constituents.json"],
     commit_shards: [
-      attemptShard("nasdaq_giw_sox"),
-      publishOutcomeShard("nasdaq-giw-sox"),
       "data/admin/nasdaq_giw_sox/index.json",
       "data/admin/nasdaq_giw_sox/lkg/constituents.json",
       "data/admin/nasdaq_giw_sox/history/constituents.json",
@@ -652,7 +606,7 @@ const lanes = [
     enforcement: "live",
     privacy_class: "public_mirror",
     admin_store: "data/admin/us-indices-daily",
-    detection_attempt: attemptShard("us_indices_daily"),
+    detection_attempt: null,
     canonical_outputs: [
       "data/indices/sp500.json",
       "data/indices/nasdaq.json",
@@ -661,8 +615,6 @@ const lanes = [
     ],
     public_mirror: [],
     commit_shards: [
-      attemptShard("us_indices_daily"),
-      publishOutcomeShard("us-indices-daily"),
       "data/admin/us-indices-daily",
       "data/indices/sp500.json",
       "data/indices/nasdaq.json",
@@ -693,12 +645,10 @@ const lanes = [
     enforcement: "live",
     privacy_class: "private",
     admin_store: "data/admin/oecd_cli",
-    detection_attempt: attemptShard("oecd_cli"),
+    detection_attempt: null,
     canonical_outputs: ["data/admin/oecd_cli/shadow/oecd-cli.json"],
     public_mirror: [],
     commit_shards: [
-      attemptShard("oecd_cli"),
-      publishOutcomeShard("oecd-cli"),
       "data/admin/oecd_cli/index.json",
       "data/admin/oecd_cli/lkg/oecd_cli.json",
       "data/admin/oecd_cli/shadow/oecd-cli.json",
@@ -723,7 +673,7 @@ const lanes = [
     enforcement: "live",
     privacy_class: "public_safe_aggregate",
     admin_store: "data/admin/krx",
-    detection_attempt: attemptShard("krx"),
+    detection_attempt: null,
     canonical_outputs: [
       "data/admin/fenok-edge-korea-krx-daily-index.json",
       "data/computed/fenok-edge-korea-krx-bridge-history.json",
@@ -735,7 +685,6 @@ const lanes = [
       "100xfenok-next/public/data/computed/fenok-edge-korea-krx-bridge-history.json",
     ],
     commit_shards: [
-      attemptShard("krx"),
       "data/admin/krx/index.json",
       "data/admin/krx/lkg/bridge.json",
       "data/admin/fenok-edge-korea-krx-daily-index.json",
@@ -745,7 +694,7 @@ const lanes = [
     ],
     recovery_store: "data/admin/krx/index.json",
     kpi_recovery_shape: "general",
-    script_sources: ["scripts/fetch-fenok-krx-daily-private.mjs", "scripts/emit-fenok-krx-attempt.mjs"],
+    script_sources: ["scripts/fetch-fenok-krx-daily-private.mjs"],
   }),
   record({
     id: "slickcharts",
@@ -759,12 +708,10 @@ const lanes = [
     enforcement: "live",
     privacy_class: "public_mirror",
     admin_store: "data/admin/slickcharts-composite-recovery",
-    detection_attempt: attemptShard("slickcharts"),
+    detection_attempt: null,
     canonical_outputs: Object.values(SLICKCHARTS_MEMBER_PATHS).flat().map((spec) => spec.path),
     public_mirror: ["100xfenok-next/public/data/slickcharts"],
     commit_shards: [
-      attemptShard("slickcharts"),
-      publishOutcomeShard("slickcharts-daily"),
       "data/admin/slickcharts-daily-delivery",
       "data/admin/slickcharts-composite-recovery",
       ...SLICKCHARTS_MEMBER_PATHS.daily.map((spec) => spec.path),
@@ -775,15 +722,12 @@ const lanes = [
     // Script-side publisher: the commit allowlist lives in the publish script,
     // not the workflow YAML. slickcharts-daily is the primary owner and commits
     // the full admin store; the other four members share the same lane and
-    // commit only their merged attempt-shard row via the same script.
     script_sources: ["scripts/publish-slickcharts-attempt.sh"],
     caller_workflows: Object.fromEntries(
       ["weekly", "monthly", "history", "symbols"].map((member) => [
         `.github/workflows/slickcharts-${member}.yml`,
         {
           commit_shards: [
-            "data/admin/data-supply-state/detection-attempts/slickcharts.json",
-            publishOutcomeShard(`slickcharts-${member}`),
             "data/admin/slickcharts-composite-recovery",
           ],
           script_sources: ["scripts/publish-slickcharts-attempt.sh"],
@@ -803,15 +747,13 @@ const lanes = [
     enforcement: "live",
     privacy_class: "private",
     admin_store: "data/admin/edgar_filings",
-    detection_attempt: attemptShard("edgar_filings"),
+    detection_attempt: null,
     canonical_outputs: [
       "data/edgar",
       "data/edgar-korean-summaries",
     ],
     public_mirror: ["100xfenok-next/public/data/edgar-korean-summaries"],
     commit_shards: [
-      attemptShard("edgar_filings"),
-      publishOutcomeShard("edgar-korean-summaries"),
       "data/admin/edgar_filings/index.json",
       "data/admin/edgar_filings/current/edgar_filings.json",
       "data/admin/edgar_filings/lkg/edgar_filings.json",
@@ -1029,11 +971,8 @@ const lanes = [
     // are declared here so manifest parity covers the actual writer helpers.
     caller_workflows: {
       ".github/workflows/global-scouter-shadow-publish.yml": {
-        commit_shards: [publishOutcomeShard("global-scouter")],
-        script_sources: [
-          "scripts/publish-cloud-data-generation.mjs",
-          "scripts/persist-cloud-publish-outcome.mjs",
-        ],
+        commit_shards: [],
+        script_sources: ["scripts/publish-cloud-data-generation.mjs"],
       },
     },
   }),
@@ -1062,7 +1001,7 @@ const lanes = [
     enforcement: "live",
     privacy_class: "public_mirror",
     admin_store: "data/admin/damodaran",
-    detection_attempt: attemptShard("damodaran"),
+    detection_attempt: null,
     canonical_outputs: [
       "data/damodaran/industries.json",
       "data/damodaran/historical_erp.json",
@@ -1073,8 +1012,6 @@ const lanes = [
     ],
     public_mirror: [],
     commit_shards: [
-      attemptShard("damodaran"),
-      publishOutcomeShard("damodaran"),
       "data/admin/damodaran/owner-guard.json",
       "data/admin/damodaran/index.json",
       "data/admin/damodaran/current/damodaran.json",
@@ -1103,12 +1040,10 @@ const lanes = [
     enforcement: "live",
     privacy_class: "private",
     admin_store: "data/admin/finra_short_volume",
-    detection_attempt: attemptShard("finra_short_volume"),
+    detection_attempt: null,
     canonical_outputs: ["data/admin/finra_short_volume/current/regsho_daily.json"],
     public_mirror: [],
     commit_shards: [
-      attemptShard("finra_short_volume"),
-      publishOutcomeShard("finra-short-volume"),
       "data/admin/finra_short_volume/index.json",
       "data/admin/finra_short_volume/current/regsho_daily.json",
       "data/admin/finra_short_volume/lkg/regsho_daily.json",
@@ -1130,12 +1065,10 @@ const lanes = [
     privacy_class: "private",
     public_mirror_allowed: false,
     admin_store: "data/admin/finra-ats",
-    detection_attempt: attemptShard("finra_ats"),
+    detection_attempt: null,
     canonical_outputs: ["data/admin/finra-ats/current/weekly-summary.json"],
     public_mirror: [],
     commit_shards: [
-      attemptShard("finra_ats"),
-      publishOutcomeShard("finra-ats-weekly"),
       "data/admin/finra-ats/index.json",
       "data/admin/finra-ats/current/weekly-summary.json",
       "data/admin/finra-ats/lkg/weekly-summary.json",
@@ -1157,7 +1090,7 @@ const lanes = [
     enforcement: "live",
     privacy_class: "private",
     admin_store: "data/admin/occ_options_volume",
-    detection_attempt: attemptShard("occ_options_volume"),
+    detection_attempt: null,
     canonical_outputs: [
       "data/computed/fenok_occ_options_volume.json",
       "data/computed/fenok_occ_options_volume_history.json",
@@ -1165,7 +1098,6 @@ const lanes = [
     ],
     public_mirror: ["100xfenok-next/public/data/computed/fenok_occ_options_availability.json"],
     commit_shards: [
-      attemptShard("occ_options_volume"),
       "data/admin/occ_options_volume/index.json",
       "data/admin/occ_options_volume/current/occ_options_volume.json",
       "data/admin/occ_options_volume/lkg/occ_options_volume.json",
@@ -1185,7 +1117,7 @@ const lanes = [
     enforcement: "live",
     privacy_class: "private",
     admin_store: "data/admin/yahoo_private_options",
-    detection_attempt: attemptShard("yahoo_private_options"),
+    detection_attempt: null,
     canonical_outputs: ["data/computed/fenok_yahoo_private_options_availability.json"],
     // The producer writes the public-safe availability marker to the mirror
     // (public_safe=true, raw_payload_included=false); the declaration keeps
@@ -1194,7 +1126,6 @@ const lanes = [
     // is acquisition-derived, so no FAMILIES/publish binding exists.
     public_mirror: ["100xfenok-next/public/data/computed/fenok_yahoo_private_options_availability.json"],
     commit_shards: [
-      attemptShard("yahoo_private_options"),
       "data/admin/yahoo_private_options",
       "data/computed/fenok_yahoo_private_options_availability.json",
     ],
@@ -1219,14 +1150,13 @@ const lanes = [
     enforcement: "live",
     privacy_class: "private",
     admin_store: "data/admin/apewisdom_attention",
-    detection_attempt: attemptShard("apewisdom_attention"),
+    detection_attempt: null,
     canonical_outputs: [
       "data/computed/fenok_social_attention_proxy.json",
       "data/computed/fenok_social_attention_proxy_history.json",
     ],
     public_mirror: [],
     commit_shards: [
-      attemptShard("apewisdom_attention"),
       "data/admin/apewisdom_attention/index.json",
       "data/admin/apewisdom_attention/lkg/social_attention_proxy.json",
       "data/computed/fenok_social_attention_proxy.json",
@@ -1250,15 +1180,13 @@ const lanes = [
     enforcement: "live",
     privacy_class: "private",
     admin_store: "data/admin/gdelt_news_tone",
-    detection_attempt: attemptShard("gdelt_news_tone"),
+    detection_attempt: null,
     canonical_outputs: [
       "data/computed/fenok_news_tone_proxy.json",
       "data/computed/fenok_news_tone_proxy_history.json",
     ],
     public_mirror: [],
     commit_shards: [
-      attemptShard("gdelt_news_tone"),
-      publishOutcomeShard("gdelt-news-tone"),
       "data/admin/gdelt_news_tone/index.json",
       "data/admin/gdelt_news_tone/lkg/news_tone_proxy.json",
       "data/computed/fenok_news_tone_proxy.json",
@@ -1282,19 +1210,16 @@ const lanes = [
     enforcement: "shadow",
     privacy_class: "public_mirror",
     admin_store: "data/admin/yahoo-batch-quote-history",
-    detection_attempt: attemptShard("yahoo_batch_quote_history"),
+    detection_attempt: null,
     canonical_outputs: [],
     public_mirror: [],
     commit_shards: [
-      attemptShard("yahoo_batch_quote_history"),
       "data/admin/yahoo-batch-quote-history",
-      publishOutcomeShard("yahoo-finance"),
     ],
     recovery_store: "data/admin/yahoo-batch-quote-history/index.json",
     kpi_recovery_shape: "direct",
     script_sources: [
       "scripts/fetch-yf-finance.py",
-      "scripts/emit-yahoo-batch-quote-history-attempt.mjs",
     ],
   }),
 ];
@@ -1311,7 +1236,7 @@ const declared_exceptions = [
   {
     path: "data/admin/data-supply-state",
     kind: "root",
-    reason: "shared detection-floor state root (attempt shards + provider-observation objects); not a lane store",
+    reason: "shared detection-floor state root (provider-observation objects); not a lane store",
     owner: "detection-floor",
   },
   {
@@ -1446,7 +1371,7 @@ const workflow_classes = {
   },
   ".github/workflows/coordinate-computed-signals.yml": {
     class: "platform_publisher",
-    reason: "one-asset computed-signals coordinator: workflow_run-driven rebuild + plane publish; commits only the computed-signals publish-outcome shard, never signal files, and never dispatches Update Manifest or Deploy Worker",
+    reason: "one-asset computed-signals coordinator: workflow_run-driven rebuild and plane publish without a Git write or downstream dispatch",
     owner: "platform",
   },
   ".github/workflows/pins-autosync.yml": {
@@ -1488,25 +1413,10 @@ function defaultWorkflowPolicy(laneIds) {
   };
 }
 
-// Derive a workflow's lane attribution and its lanes' attempt-shard specs from
-// the registry, then layer the workflow's hand-written extras on top. The hand
-// list was the drift source: a lane could be registry-owned by a workflow and
-// missing from that workflow's own `lanes`, and a lane's attempt shard could go
-// unstaged while the lane declared it. Both were real on 2026-08-14. Path
-// policy beyond attempt evidence stays hand-written, because only the author
-// knows which product trees a workflow may write.
+// Add workflow-specific stage policy to the lanes owned by this workflow.
 function lanePolicy(workflowRel, stages, exclude = []) {
   const owned = lanes.filter((laneValue) => laneValue.owner_workflow === workflowRel);
-  const declared = stages.always_if_exists ?? [];
-  const derivedShards = [...new Set(owned.flatMap((laneValue) => (laneValue.commit_shards ?? [])
-    .filter((shard) => shard.startsWith(`${ATTEMPT_ROOT}/`))))]
-    .filter((shard) => !declared.some((spec) => spec.path === shard || shard.startsWith(`${spec.path}/`)))
-    .sort()
-    .map((shard) => commitSpec(shard, "file"));
-  return policy(owned.map((laneValue) => laneValue.id), {
-    ...stages,
-    always_if_exists: [...declared, ...derivedShards],
-  }, exclude);
+  return policy(owned.map((laneValue) => laneValue.id), stages, exclude);
 }
 
 function policy(lanesForWorkflow, stages, exclude = []) {
@@ -1585,8 +1495,6 @@ workflow_policies[".github/workflows/fetch-fenok-private-options.yml"].stages.su
 Object.assign(workflow_policies, {
   ".github/workflows/slickcharts-weekly.yml": policy(["slickcharts"], {
     always_if_exists: [
-      commitSpec("data/admin/data-supply-state/detection-attempts/slickcharts.json", "file"),
-      commitSpec(publishOutcomeShard("slickcharts-weekly"), "file"),
       commitSpec("data/admin/slickcharts-composite-recovery", "directory"),
     ],
     success_if_exists: [
@@ -1598,8 +1506,6 @@ Object.assign(workflow_policies, {
   }),
   ".github/workflows/slickcharts-symbols.yml": policy(["slickcharts"], {
     always_if_exists: [
-      commitSpec("data/admin/data-supply-state/detection-attempts/slickcharts.json", "file"),
-      commitSpec(publishOutcomeShard("slickcharts-symbols"), "file"),
       commitSpec("data/admin/slickcharts-composite-recovery", "directory"),
     ],
     success_if_exists: [
@@ -1609,8 +1515,6 @@ Object.assign(workflow_policies, {
   }),
   ".github/workflows/slickcharts-history.yml": policy(["slickcharts"], {
     always_if_exists: [
-      commitSpec("data/admin/data-supply-state/detection-attempts/slickcharts.json", "file"),
-      commitSpec(publishOutcomeShard("slickcharts-history"), "file"),
       commitSpec("data/admin/slickcharts-composite-recovery", "directory"),
     ],
     success_if_exists: [
@@ -1623,8 +1527,6 @@ Object.assign(workflow_policies, {
   }),
   ".github/workflows/slickcharts-monthly.yml": policy(["slickcharts"], {
     always_if_exists: [
-      commitSpec("data/admin/data-supply-state/detection-attempts/slickcharts.json", "file"),
-      commitSpec(publishOutcomeShard("slickcharts-monthly"), "file"),
       commitSpec("data/admin/slickcharts-composite-recovery", "directory"),
     ],
     success_if_exists: [
@@ -1660,8 +1562,6 @@ Object.assign(workflow_policies, {
 // pathspecs or explicit restore exclusions.
 workflow_policies[".github/workflows/fetch-defillama.yml"] = lanePolicy(".github/workflows/fetch-defillama.yml", {
   always_if_exists: [
-    commitSpec("data/admin/data-supply-state/detection-attempts/defillama_stablecoins.json", "file"),
-    commitSpec(publishOutcomeShard("defillama-stablecoins"), "file"),
     commitSpec("data/admin/defillama_stablecoins/index.json", "file"),
     commitSpec("data/admin/defillama_stablecoins/lkg/stablecoins.json", "file"),
   ],
@@ -1671,7 +1571,6 @@ workflow_policies[".github/workflows/fetch-defillama.yml"] = lanePolicy(".github
 });
 workflow_policies[".github/workflows/fetch-fenok-apewisdom.yml"] = lanePolicy(".github/workflows/fetch-fenok-apewisdom.yml", {
   always_if_exists: [
-    commitSpec("data/admin/data-supply-state/detection-attempts/apewisdom_attention.json", "file"),
     commitSpec("data/admin/apewisdom_attention/index.json", "file"),
     commitSpec("data/admin/apewisdom_attention/lkg/social_attention_proxy.json", "file"),
   ],
@@ -1682,8 +1581,6 @@ workflow_policies[".github/workflows/fetch-fenok-apewisdom.yml"] = lanePolicy(".
 });
 workflow_policies[".github/workflows/fetch-fenok-news-tone.yml"] = lanePolicy(".github/workflows/fetch-fenok-news-tone.yml", {
   always_if_exists: [
-    commitSpec("data/admin/data-supply-state/detection-attempts/gdelt_news_tone.json", "file"),
-    commitSpec(publishOutcomeShard("gdelt-news-tone"), "file"),
     commitSpec("data/admin/gdelt_news_tone/index.json", "file"),
     commitSpec("data/admin/gdelt_news_tone/lkg/news_tone_proxy.json", "file"),
   ],
@@ -1694,8 +1591,6 @@ workflow_policies[".github/workflows/fetch-fenok-news-tone.yml"] = lanePolicy(".
 });
 workflow_policies[".github/workflows/fetch-sentiment.yml"] = lanePolicy(".github/workflows/fetch-sentiment.yml", {
   always_if_exists: [
-    commitSpec("data/admin/data-supply-state/detection-attempts/sentiment.json", "file"),
-    commitSpec(publishOutcomeShard("sentiment"), "file"),
     commitSpec("data/admin/sentiment/index.json", "file"),
     commitSpec("data/admin/sentiment/current/*.json", "glob"),
     commitSpec("data/admin/sentiment/lkg/*.json", "glob"),
@@ -1707,8 +1602,6 @@ workflow_policies[".github/workflows/fetch-sentiment.yml"] = lanePolicy(".github
 });
 workflow_policies[".github/workflows/fetch-us-indices-daily.yml"] = lanePolicy(".github/workflows/fetch-us-indices-daily.yml", {
   always_if_exists: [
-    commitSpec("data/admin/data-supply-state/detection-attempts/us_indices_daily.json", "file"),
-    commitSpec(publishOutcomeShard("us-indices-daily"), "file"),
     commitSpec("data/admin/us-indices-daily", "directory"),
   ],
   success_if_exists: [
@@ -1720,8 +1613,6 @@ workflow_policies[".github/workflows/fetch-us-indices-daily.yml"] = lanePolicy("
 });
 workflow_policies[".github/workflows/fetch-oecd-cli.yml"] = lanePolicy(".github/workflows/fetch-oecd-cli.yml", {
   always_if_exists: [
-    commitSpec("data/admin/data-supply-state/detection-attempts/oecd_cli.json", "file"),
-    commitSpec(publishOutcomeShard("oecd-cli"), "file"),
     commitSpec("data/admin/oecd_cli/index.json", "file"),
     commitSpec("data/admin/oecd_cli/lkg/oecd_cli.json", "file"),
   ],
@@ -1744,8 +1635,6 @@ workflow_policies[".github/workflows/fenok-edge-daily.yml"] = lanePolicy(".githu
 });
 workflow_policies[".github/workflows/fetch-finra-ats-weekly.yml"] = lanePolicy(".github/workflows/fetch-finra-ats-weekly.yml", {
   always_if_exists: [
-    commitSpec("data/admin/data-supply-state/detection-attempts/finra_ats.json", "file"),
-    commitSpec(publishOutcomeShard("finra-ats-weekly"), "file"),
     commitSpec("data/admin/finra-ats/index.json", "file"),
     commitSpec("data/admin/finra-ats/lkg/weekly-summary.json", "file"),
   ],
@@ -1760,7 +1649,6 @@ workflow_policies[".github/workflows/fetch-yf-finance.yml"] = lanePolicy(".githu
     commitSpec("data/yf/quarter_closes.json", "file", true),
     commitSpec("data/admin/yahoo-batch-quote-history", "directory", true),
     commitSpec("data/yf/estimates-archive", "directory", true),
-    commitSpec(publishOutcomeShard("yahoo-finance"), "file"),
   ],
 }, [
   commitSpec("data/yf/finance/_summary.json", "file"),
@@ -1773,18 +1661,8 @@ workflow_policies[".github/workflows/fetch-stockanalysis.yml"] = lanePolicy(".gi
     commitSpec("data/admin/data-supply-state/v1", "directory", true),
     commitSpec("data/admin/stockanalysis-recovery", "directory", true),
     commitSpec("data/admin/yahoo_etf_fallback", "directory", false),
-    // The five attempt shards this workflow carries are no longer listed here.
-    // They are derived from the registry by lanePolicy, because hand-listing
-    // them is what let run 31794068491 emit a shard correctly and then fail to
-    // pack it: the lane was added to the registry, the detection config and the
-    // producer, and missed here. Being a shadow lane governs whether evidence
-    // may be counted as ready, never whether it may be carried.
     commitSpec("data/yf/finance", "dynamic_set"),
     commitSpec("100xfenok-next/public/data", "directory", false),
-    // Owned publish-outcome shard for the natural plane publish job. The
-    // separate persistence job validates this exact optional-file stage before
-    // committing anything (persist-cloud-publish-outcome.mjs).
-    commitSpec(publishOutcomeShard("stockanalysis-etf-detail"), "file", false),
   ],
 }, [
   commitSpec("data/stockanalysis/backfill/history_gap_report_latest.json", "file"),
@@ -1792,7 +1670,6 @@ workflow_policies[".github/workflows/fetch-stockanalysis.yml"] = lanePolicy(".gi
 ]);
 workflow_policies[".github/workflows/refresh-earnings-overview.yml"] = lanePolicy(".github/workflows/refresh-earnings-overview.yml", {
   always_if_exists: [
-    commitSpec(publishOutcomeShard("earnings-overview"), "file"),
     commitSpec("data/admin/earnings_overview", "directory"),
   ],
   success_if_exists: [
@@ -1804,12 +1681,10 @@ workflow_policies[".github/workflows/global-scouter-shadow-publish.yml"] = polic
   // This caller stages evidence only. The owner-run canonical/public bundle
   // remains outside the caller's Git staging boundary.
   always_if_exists: [
-    commitSpec(publishOutcomeShard("global-scouter"), "file", false),
   ],
 });
 workflow_policies[".github/workflows/fenok-edge-krx-daily.yml"] = lanePolicy(".github/workflows/fenok-edge-krx-daily.yml", {
   always_if_exists: [
-    commitSpec("data/admin/data-supply-state/detection-attempts/krx.json", "file"),
     commitSpec("data/admin/krx/index.json", "file"),
     commitSpec("data/admin/krx/lkg/bridge.json", "file"),
   ],
@@ -1825,8 +1700,6 @@ workflow_policies[".github/workflows/fenok-edge-krx-daily.yml"] = lanePolicy(".g
 });
 workflow_policies[".github/workflows/fetch-damodaran-shadow.yml"] = lanePolicy(".github/workflows/fetch-damodaran-shadow.yml", {
   always_if_exists: [
-    commitSpec(attemptShard("damodaran"), "file", false),
-    commitSpec(publishOutcomeShard("damodaran"), "file", false),
     commitSpec("data/admin/damodaran/index.json", "file", false),
     commitSpec("data/admin/damodaran/current/damodaran.json", "file", false),
     commitSpec("data/admin/damodaran/lkg/damodaran.json", "file", false),
@@ -1894,223 +1767,47 @@ workflow_policies[".github/workflows/pins-autosync.yml"] = policy([], {
 workflow_policies[".github/workflows/update-manifest.yml"] = policy([], {
   always_if_exists: [],
 });
-// The computed-signals coordinator is a platform publisher with exactly one
-// owned commit path: the per-family publish-outcome shard. The exporter's
-// canonical/public signal files are deliberately NOT staged here — Update
-// Manifest reconciliation owns the git copies; the coordinator only publishes
-// them to the cloud data plane and cleans them from its ephemeral checkout.
+// The computed-signals coordinator publishes to the plane without a Git write.
 workflow_policies[".github/workflows/coordinate-computed-signals.yml"] = policy([], {
-  always_if_exists: [
-    commitSpec(publishOutcomeShard("computed-signals"), "file"),
-  ],
+  always_if_exists: [],
 });
 
-// --- Derived plane publish-outcome bindings ---------------------------------
-// Family names stay hyphenated while lane ids stay underscored, so the two
-// namespaces still need a mapping. What changed is where the mapping comes
-// from: it is now READ from who actually owns each publish-outcome shard,
-// rather than restated by hand. A hand-written table is a second place to
-// register a family, and a family present in the publisher but absent here was
-// silently unauthorized rather than rejected.
-//
-// Three sources, in precedence order, each fail-closed on conflict:
-//   1. a lane's own commit_shards          -> that lane, its owner workflow
-//   2. a lane's caller_workflows shards    -> that lane, the calling workflow
-//      (SlickCharts: one composite lane, five member workflows)
-//   3. a lane-less platform_publisher workflow policy stage
-//      (computed-signals is the only such case and must stay the only one)
-// A lane-less platform publisher has no lane record to read an id from. That
-// mapping is declared, not inferred: hyphen normalization happened to be right
-// for computed-signals and would be silently wrong for the next one.
-export const PLATFORM_PUBLISHER_LANE_IDS = Object.freeze({
-  ".github/workflows/coordinate-computed-signals.yml": "computed_signals",
-});
-
-// Where a publisher's canonical Git write lives relative to its publish step.
-// The default is the strictest reading and stays the default: publication must
-// immediately follow the job's own canonical Commit step. The two other modes
-// are narrow and must each be justified per family.
-//   immediately_preceding — default; the step before publish is named Commit
-//   earlier_same_job      — the job does commit canonically, but a reviewed
-//                           step runs between that commit and publication
-//   external_authority    — the publish job performs no canonical Git write at
-//                           all, because another workflow owns that tree
-export const PLANE_CANONICAL_COMMIT_MODES = Object.freeze([
-  "immediately_preceding",
-  "earlier_same_job",
-  // Added 2026-08-21 for B-393 rather than reusing external_authority, which
-  // would have passed while stating something false. external_authority means
-  // no job in THIS workflow performs the canonical write; here one does, and
-  // the publish job's `needs` edge is what orders it. Reusing the wrong mode
-  // would also have stayed green if that edge were ever deleted, which is the
-  // failure the mode exists to catch.
-  "earlier_sibling_job",
-  "external_authority",
-]);
-
-// Declared deviations from the canonical publisher-step contract. Tests read
-// this instead of hardcoding family names, so an exception is a reviewed
-// registry statement with a reason rather than an invisible skip. Persistence
-// is mandatory in every case; only its shape, the publisher's blocking
-// semantics and the location of the canonical commit may differ.
+// Strict-gate families must fail when a publish is blocked or unsuccessful.
 export const PLANE_PUBLISHER_EXCEPTIONS = Object.freeze({
-  "earnings-overview": Object.freeze({
-    workflow: ".github/workflows/refresh-earnings-overview.yml",
-    non_blocking_publisher: false,
-    detached_persistence: true,
-    canonical_commit: "earlier_sibling_job",
-    canonical_commit_reason: "the refresh job commits the validated documents and static fallback before its dependent publish job starts; only refresh and outcome persistence acquire the shared Git writer lock",
-    strict_gate: true,
-    strict_gate_reason: "the scheduled refresh must fail when no cloud generation is published; a blocked or failed publish still uploads and persists its outcome so retained values do not conceal an unsuccessful refresh",
-    reason: "publication and evidence persistence use separate jobs to avoid holding the Git writer lock during cloud I/O, while the publisher remains blocking and persistence runs after unsuccessful publication",
-  }),
-  damodaran: Object.freeze({
-    workflow: ".github/workflows/fetch-damodaran-shadow.yml",
-    non_blocking_publisher: true,
-    detached_persistence: false,
-    conditional_persistence: true,
-    reason: "DEC-280 keeps the Damodaran cloud publisher non-blocking so Git stays authoritative when the plane is unavailable; persistence still begins at always() for every attempted publish, while a backup occurrence proven satisfied by the primary skips both the publisher and a fabricated plane outcome",
-  }),
-  "yahoo-finance": Object.freeze({
-    workflow: ".github/workflows/fetch-yf-finance.yml",
-    non_blocking_publisher: false,
-    detached_persistence: true,
-    conditional_persistence: true,
-    canonical_commit: "earlier_sibling_job",
-    canonical_commit_reason: "the canonical write is 'Commit and push fetched Yahoo source data' in the publish-yf-finance job, and the publish-yf-cloud job declares needs: publish-yf-finance, so the source revision is ordered by the job graph",
-    reason:
-      "the shadow publisher checks out the confirmed source commit without the shared writer lock, then uploads one outcome shard for a short persistence tail; a failed or blocked publication still reaches that tail, while an unconfirmed source readback skips publication and creates no fabricated outcome",
-  }),
-  "edgar-korean-summaries": Object.freeze({
-    workflow: ".github/workflows/fetch-edgar-filings.yml",
-    non_blocking_publisher: false,
-    detached_persistence: true,
-    canonical_commit: "earlier_sibling_job",
-    canonical_commit_reason: "the canonical write is 'Commit and push' in the fetch-edgar-filings job, and the publish-edgar-cloud job declares needs: fetch-edgar-filings, so the exact source revision is ordered by the job graph",
-    reason: "the EDGAR cloud publisher checks out the source revision after fetch, summary validation and origin readback; only source Git and outcome persistence take the shared writer lock, and a failed publication still carries its outcome shard to persistence",
-  }),
-  "fdic-tier1": Object.freeze({
-    workflow: ".github/workflows/fetch-fdic.yml",
-    non_blocking_publisher: false,
-    detached_persistence: false,
-    conditional_persistence: true,
-    reason: "FDIC persistence runs under always() for every Monday/Thursday occurrence; an attempted cloud publish is recorded, while a no-change or provider-wait probe skips the publisher and therefore creates no new plane outcome",
-  }),
-  "slickcharts-history": Object.freeze({
-    workflow: ".github/workflows/slickcharts-history.yml",
-    non_blocking_publisher: false,
-    detached_persistence: true,
-    reason: "composite finalize and artifact cleanup run between publish and persistence, so the persistence step is not the immediately following step",
-  }),
-  "slickcharts-symbols": Object.freeze({
-    workflow: ".github/workflows/slickcharts-symbols.yml",
-    non_blocking_publisher: false,
-    detached_persistence: true,
-    reason: "DEC-319 current-run-bound cloud acceptance check runs between publish and persistence; it is deliberately non-blocking and must stay visible, so persistence is not the immediately following step",
-    canonical_commit: "earlier_same_job",
-    canonical_commit_reason: "the job does perform its canonical write in 'Commit and push changes'; only 'Remove consumed symbol attempt artifacts' runs between that commit and publication, so the canonical commit is still this job's own and merely not adjacent",
-  }),
-  "slickcharts-weekly": Object.freeze({
-    workflow: ".github/workflows/slickcharts-weekly.yml",
-    non_blocking_publisher: false,
-    detached_persistence: true,
-    reason: "DEC-340 mirrored the symbols acceptance check onto the weekly member, so the same non-blocking check sits between publish and persistence",
-  }),
-  "yahoo-ticker-macro": Object.freeze({
-    workflow: ".github/workflows/fetch-yahoo-ticker.yml",
-    non_blocking_publisher: false,
-    detached_persistence: true,
-    reason: "B-393: the workflow was deliberately restructured into fetch-yahoo-ticker, publish and persist jobs so that only persistence takes the global Git writer lock, which the registry already had vocabulary for. It was never given this entry, so the contract sliced the step after publication - the outcome-shard upload - and asserted the persist command against it. The contract was working correctly: it detected an undeclared structural change",
-    canonical_commit: "earlier_sibling_job",
-    canonical_commit_reason: "the canonical write is 'Commit and push' in the fetch-yahoo-ticker job, and the publish job declares needs: fetch-yahoo-ticker, so ordering is guaranteed by the job graph rather than by step adjacency. This is not external_authority: this workflow does own its canonical commit",
-  }),
-  "stockanalysis-etf-detail": Object.freeze({
-    workflow: ".github/workflows/fetch-stockanalysis.yml",
-    non_blocking_publisher: false,
-    detached_persistence: true,
-    reason: "natural publication splits publish and persistence into separate jobs so only the persistence job takes the global Git writer lock; the publisher itself must still fail the job",
-    canonical_commit: "external_authority",
-    canonical_commit_reason: "the publish job performs no canonical Git write itself: acquisition and the raw ETF Git commit live in the sibling fetch-stockanalysis publisher, while the detached persistence job commits only publish evidence",
-    strict_gate: true,
-    strict_gate_reason: "natural shadow publication of the largest payload in the estate: --tolerate-gate-block turns an unknown or over-threshold cost verdict into exit 0, so a scheduled run would report green while having published nothing. The gate-block outcome shard is still written and persisted; only the exit code changes, and the run must be red",
-  }),
-  "global-scouter": Object.freeze({
-    workflow: ".github/workflows/global-scouter-shadow-publish.yml",
-    non_blocking_publisher: false,
-    detached_persistence: true,
-    reason: "manual caller-only shadow publication for the owner-run Global Scouter bundle; acquisition and public consumer ownership remain external to this workflow, while only the separate persistence job may commit its outcome evidence",
-    canonical_commit: "external_authority",
-    canonical_commit_reason: "the owner-run Global Scouter export and its existing Git/public mirror remain the canonical authority; this caller performs no canonical Git write in the publish job and the persistence job commits only the outcome shard",
-    strict_gate: true,
-    strict_gate_reason: "PUBLISH-SHADOW is an explicit manual request: --tolerate-gate-block would turn an unknown or over-threshold cost verdict into exit 0 while publishing nothing, so the caller must go red and still upload and persist its outcome shard",
-  }),
+  "earnings-overview": Object.freeze({ strict_gate: true }),
+  "stockanalysis-etf-detail": Object.freeze({ strict_gate: true }),
+  "global-scouter": Object.freeze({ strict_gate: true }),
 });
 
-const PUBLISH_OUTCOME_SHARD_RE = new RegExp(`^${PUBLISH_OUTCOME_ROOT}/([a-z0-9][a-z0-9-]*)\\.json$`);
-
-function publishOutcomeFamily(shardPath) {
-  const match = PUBLISH_OUTCOME_SHARD_RE.exec(shardPath);
-  return match ? match[1] : null;
-}
-
-function derivePlanePublishOutcomeBindings() {
-  const derived = {};
-  const claim = (family, laneId, workflow, source) => {
-    const existing = derived[family];
-    if (existing && (existing.lane_id !== laneId || existing.workflow !== workflow)) {
-      throw new Error(
-        `lane-registry: publish-outcome family ${family} is claimed twice — `
-        + `${existing.lane_id}@${existing.workflow} (${existing.source}) vs ${laneId}@${workflow} (${source})`,
-      );
-    }
-    derived[family] = { lane_id: laneId, workflow, source };
-  };
-
-  for (const laneValue of lanes) {
-    for (const shard of laneValue.commit_shards ?? []) {
-      const family = publishOutcomeFamily(shard);
-      if (!family) continue;
-      if (!laneValue.owner_workflow) {
-        throw new Error(`lane-registry: lane ${laneValue.id} owns publish-outcome ${family} without an owner workflow`);
-      }
-      claim(family, laneValue.id, laneValue.owner_workflow, "lane_commit_shards");
-    }
-    for (const [callerWorkflow, callerSpec] of Object.entries(laneValue.caller_workflows ?? {})) {
-      for (const shard of callerSpec.commit_shards ?? []) {
-        const family = publishOutcomeFamily(shard);
-        if (!family) continue;
-        claim(family, laneValue.id, callerWorkflow, "caller_commit_shards");
-      }
-    }
-  }
-
-  for (const [workflowRel, classification] of Object.entries(workflow_classes)) {
-    if (classification.class !== "platform_publisher") continue;
-    const stages = workflow_policies[workflowRel]?.stages ?? {};
-    for (const stageKey of COMMIT_STAGE_KEYS) {
-      for (const spec of stages[stageKey] ?? []) {
-        const family = publishOutcomeFamily(spec.path);
-        if (!family) continue;
-        const declaredLaneId = PLATFORM_PUBLISHER_LANE_IDS[workflowRel];
-        if (!declaredLaneId) {
-          throw new Error(
-            `lane-registry: platform_publisher ${workflowRel} owns publish-outcome ${family} `
-            + "with no PLATFORM_PUBLISHER_LANE_IDS declaration",
-          );
-        }
-        claim(family, declaredLaneId, workflowRel, "platform_publisher_policy");
-      }
-    }
-  }
-
-  return Object.fromEntries(
-    Object.entries(derived)
-      .sort(([a], [b]) => (a < b ? -1 : a > b ? 1 : 0))
-      .map(([family, value]) => [family, Object.freeze({ lane_id: value.lane_id, workflow: value.workflow })]),
-  );
-}
-
-export const PLANE_PUBLISH_OUTCOME_BINDINGS = Object.freeze(derivePlanePublishOutcomeBindings());
+// Family-to-workflow attribution used for publish admission and workflow health.
+export const PLANE_PUBLISH_FAMILY_BINDINGS = Object.freeze({
+  "computed-signals": Object.freeze({ lane_id: "computed_signals", workflow: ".github/workflows/coordinate-computed-signals.yml" }),
+  "damodaran": Object.freeze({ lane_id: "damodaran", workflow: ".github/workflows/fetch-damodaran-shadow.yml" }),
+  "defillama-stablecoins": Object.freeze({ lane_id: "defillama_stablecoins", workflow: ".github/workflows/fetch-defillama.yml" }),
+  "earnings-overview": Object.freeze({ lane_id: "earnings_overview", workflow: ".github/workflows/refresh-earnings-overview.yml" }),
+  "edgar-korean-summaries": Object.freeze({ lane_id: "edgar_filings", workflow: ".github/workflows/fetch-edgar-filings.yml" }),
+  "fdic-tier1": Object.freeze({ lane_id: "fdic_tier1", workflow: ".github/workflows/fetch-fdic.yml" }),
+  "finra-ats-weekly": Object.freeze({ lane_id: "finra_ats_weekly", workflow: ".github/workflows/fetch-finra-ats-weekly.yml" }),
+  "finra-short-volume": Object.freeze({ lane_id: "finra_short_volume", workflow: ".github/workflows/fenok-edge-daily.yml" }),
+  "fred-banking": Object.freeze({ lane_id: "fred_banking", workflow: ".github/workflows/fetch-fred-banking.yml" }),
+  "fred-macro": Object.freeze({ lane_id: "fred_macro", workflow: ".github/workflows/fetch-fred-macro.yml" }),
+  "fred-yardeni": Object.freeze({ lane_id: "fred_yardeni", workflow: ".github/workflows/fetch-fred-yardeni.yml" }),
+  "gdelt-news-tone": Object.freeze({ lane_id: "gdelt_news_tone", workflow: ".github/workflows/fetch-fenok-news-tone.yml" }),
+  "global-scouter": Object.freeze({ lane_id: "global_scouter", workflow: ".github/workflows/global-scouter-shadow-publish.yml" }),
+  "nasdaq-giw-sox": Object.freeze({ lane_id: "nasdaq_giw_sox", workflow: ".github/workflows/fetch-nasdaq-giw-sox.yml" }),
+  "oecd-cli": Object.freeze({ lane_id: "oecd_cli", workflow: ".github/workflows/fetch-oecd-cli.yml" }),
+  "sentiment": Object.freeze({ lane_id: "sentiment", workflow: ".github/workflows/fetch-sentiment.yml" }),
+  "slickcharts-daily": Object.freeze({ lane_id: "slickcharts", workflow: ".github/workflows/slickcharts-daily.yml" }),
+  "slickcharts-history": Object.freeze({ lane_id: "slickcharts", workflow: ".github/workflows/slickcharts-history.yml" }),
+  "slickcharts-monthly": Object.freeze({ lane_id: "slickcharts", workflow: ".github/workflows/slickcharts-monthly.yml" }),
+  "slickcharts-symbols": Object.freeze({ lane_id: "slickcharts", workflow: ".github/workflows/slickcharts-symbols.yml" }),
+  "slickcharts-weekly": Object.freeze({ lane_id: "slickcharts", workflow: ".github/workflows/slickcharts-weekly.yml" }),
+  "stockanalysis-etf-detail": Object.freeze({ lane_id: "stockanalysis_etf_detail", workflow: ".github/workflows/fetch-stockanalysis.yml" }),
+  "treasury-tga": Object.freeze({ lane_id: "treasury_tga", workflow: ".github/workflows/fetch-treasury-tga.yml" }),
+  "us-indices-daily": Object.freeze({ lane_id: "us_indices_daily", workflow: ".github/workflows/fetch-us-indices-daily.yml" }),
+  "yahoo-finance": Object.freeze({ lane_id: "yahoo_batch_quote_history", workflow: ".github/workflows/fetch-yf-finance.yml" }),
+  "yahoo-ticker-macro": Object.freeze({ lane_id: "yahoo_ticker_macro", workflow: ".github/workflows/fetch-yahoo-ticker.yml" }),
+});
 
 // --- Validation (fail-closed, mirrors the detection config's loader) ---------
 
@@ -2207,23 +1904,6 @@ function validateWorkflowPolicy(policyValue, workflowRel, registry) {
     validateCommitSpec(entry, `${context}.exclude`);
     if (seenExclusions.has(entry.path)) fail(`${context}.exclude duplicates ${entry.path}`);
     seenExclusions.add(entry.path);
-  }
-  // A workflow that owns a lane must be able to commit that lane's attempt
-  // evidence. Run 31794068491 emitted a shard correctly and then failed to pack
-  // it because this policy did not own the path, and yahoo_batch_quote_history
-  // has never committed its declared shard once for the same reason. Being a
-  // shadow lane governs whether evidence may be COUNTED, never whether it may
-  // be CARRIED.
-  const stagedPaths = COMMIT_STAGE_KEYS.flatMap((stage) => policyValue.stages[stage].map((spec) => spec.path));
-  const excludedPaths = new Set(policyValue.exclude.map((spec) => spec.path));
-  for (const laneValue of ownedLanes) {
-    for (const shard of laneValue.commit_shards ?? []) {
-      if (!shard.startsWith(`${ATTEMPT_ROOT}/`)) continue;
-      const carried = stagedPaths.some((staged) => staged === shard || shard.startsWith(`${staged}/`));
-      if (!carried || excludedPaths.has(shard)) {
-        fail(`${context} cannot commit ${shard}, the attempt evidence of ${laneValue.id}`);
-      }
-    }
   }
 }
 

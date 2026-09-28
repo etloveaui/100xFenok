@@ -8,7 +8,7 @@ import { fileURLToPath } from "node:url";
 
 import {
   LANE_REGISTRY,
-  PLANE_PUBLISH_OUTCOME_BINDINGS,
+  PLANE_PUBLISH_FAMILY_BINDINGS,
   registryDigest,
   validateLaneRegistry,
 } from "./lib/lane-registry.mjs";
@@ -32,53 +32,33 @@ assert.equal(manifest.registry_schema, LANE_REGISTRY.schema_version);
 assert.equal(manifest.registry_digest, registryDigest());
 assert.equal(validateLaneCommitManifest(manifest, { registry: LANE_REGISTRY }), true);
 
-for (const [family, binding] of Object.entries(PLANE_PUBLISH_OUTCOME_BINDINGS)) {
-  const workflow = manifest.workflows[binding.workflow];
-  assert.ok(workflow, `${family} publish outcome owner workflow must be declared`);
-  assert.ok(
-    workflow.stages.always_if_exists.some(
-      (entry) => entry.path === `data/admin/data-supply-state/publish-outcomes/${family}.json`,
-    ),
-    `${family} publish outcome shard must be staged by ${binding.workflow}`,
-  );
+for (const [family, binding] of Object.entries(PLANE_PUBLISH_FAMILY_BINDINGS)) {
+  assert.ok(manifest.workflows[binding.workflow], `${family} publish owner workflow must be declared`);
 }
 
 // P0 ownership: the ETF detail publish-outcome family is bound to the natural
 // StockAnalysis workflow that runs the publish/persist jobs; the retired
 // shadow publisher has no remaining claim.
-const etfDetailBinding = PLANE_PUBLISH_OUTCOME_BINDINGS["stockanalysis-etf-detail"];
+const etfDetailBinding = PLANE_PUBLISH_FAMILY_BINDINGS["stockanalysis-etf-detail"];
 assert.equal(etfDetailBinding.workflow, ".github/workflows/fetch-stockanalysis.yml",
-  "the natural StockAnalysis workflow must own the ETF detail publish outcome");
+  "the natural StockAnalysis workflow must own the ETF detail publisher");
 assert.notEqual(etfDetailBinding.workflow, ".github/workflows/stockanalysis-etf-shadow-publish.yml",
-  "the retired shadow publisher must not own the ETF detail publish outcome");
+  "the retired shadow publisher must not own the ETF detail publisher");
 
-// Global Scouter is a caller-only shadow publisher. Its generated policy may
-// stage the outcome evidence and nothing from the owner-run canonical/public
-// bundle.
-const globalScouterBinding = PLANE_PUBLISH_OUTCOME_BINDINGS["global-scouter"];
+// Global Scouter remains a caller-only shadow publisher with no Git output.
+const globalScouterBinding = PLANE_PUBLISH_FAMILY_BINDINGS["global-scouter"];
 assert.deepEqual(globalScouterBinding, {
   lane_id: "global_scouter",
   workflow: ".github/workflows/global-scouter-shadow-publish.yml",
 });
 const globalScouter = manifest.workflows[globalScouterBinding.workflow];
 assert.deepEqual(globalScouter.lanes, ["global_scouter"]);
-assert.deepEqual(globalScouter.stages.always_if_exists, [
-  {
-    kind: "file",
-    path: "data/admin/data-supply-state/publish-outcomes/global-scouter.json",
-    required: false,
-  },
-]);
-assert.deepEqual(globalScouter.stages.success_if_exists, []);
-assert.deepEqual(globalScouter.stages.success_verify_not_plan_if_exists, []);
-assert.deepEqual(globalScouter.stages.required_on_success, []);
+for (const stage of Object.values(globalScouter.stages)) assert.deepEqual(stage, []);
 assert.deepEqual(globalScouter.exclude, []);
 
 const defillama = manifest.workflows[".github/workflows/fetch-defillama.yml"];
 assert.deepEqual(defillama.lanes, ["defillama_stablecoins"]);
 assert.deepEqual(defillama.stages.always_if_exists.map((entry) => entry.path), [
-  "data/admin/data-supply-state/detection-attempts/defillama_stablecoins.json",
-  "data/admin/data-supply-state/publish-outcomes/defillama-stablecoins.json",
   "data/admin/defillama_stablecoins/index.json",
   "data/admin/defillama_stablecoins/lkg/stablecoins.json",
 ]);
@@ -91,16 +71,6 @@ assert.deepEqual(defillama.exclude, []);
 const yahooTicker = manifest.workflows[".github/workflows/fetch-yahoo-ticker.yml"];
 assert.deepEqual(yahooTicker.lanes, ["yahoo_ticker_macro"]);
 assert.deepEqual(yahooTicker.stages.always_if_exists, [
-  {
-    kind: "file",
-    path: "data/admin/data-supply-state/detection-attempts/yahoo_ticker_macro.json",
-    required: false,
-  },
-  {
-    kind: "file",
-    path: "data/admin/data-supply-state/publish-outcomes/yahoo-ticker-macro.json",
-    required: false,
-  },
   {
     kind: "directory",
     path: "data/admin/yahoo-hourly-ticker",
@@ -115,8 +85,6 @@ assert.deepEqual(yahooTicker.exclude, []);
 const treasuryTga = manifest.workflows[".github/workflows/fetch-treasury-tga.yml"];
 assert.deepEqual(treasuryTga.lanes, ["treasury_tga"]);
 assert.deepEqual(treasuryTga.stages.always_if_exists.map((entry) => entry.path), [
-  "data/admin/data-supply-state/detection-attempts/treasury_tga.json",
-  "data/admin/data-supply-state/publish-outcomes/treasury-tga.json",
   "data/admin/treasury_tga/index.json",
   "data/admin/treasury_tga/lkg/tga.json",
 ]);
@@ -128,8 +96,6 @@ assert.deepEqual(treasuryTga.exclude, []);
 const fredMacro = manifest.workflows[".github/workflows/fetch-fred-macro.yml"];
 assert.deepEqual(fredMacro.lanes, ["fred_macro"]);
 assert.deepEqual(fredMacro.stages.always_if_exists.map((entry) => entry.path), [
-  "data/admin/data-supply-state/detection-attempts/fred_macro.json",
-  "data/admin/data-supply-state/publish-outcomes/fred-macro.json",
   "data/admin/fred_macro/index.json",
   "data/admin/fred_macro/lkg/fred_macro.json",
 ]);
@@ -141,8 +107,6 @@ assert.deepEqual(fredMacro.exclude, []);
 const fredBanking = manifest.workflows[".github/workflows/fetch-fred-banking.yml"];
 assert.deepEqual(fredBanking.lanes, ["fred_banking"]);
 assert.deepEqual(fredBanking.stages.always_if_exists.map((entry) => entry.path), [
-  "data/admin/data-supply-state/detection-attempts/fred_banking.json",
-  "data/admin/data-supply-state/publish-outcomes/fred-banking.json",
   "data/admin/fred_banking/index.json",
   "data/admin/fred_banking/lkg/daily.json",
   "data/admin/fred_banking/lkg/weekly.json",
@@ -160,8 +124,6 @@ assert.deepEqual(fredBanking.exclude, []);
 const nasdaqGiwSox = manifest.workflows[".github/workflows/fetch-nasdaq-giw-sox.yml"];
 assert.deepEqual(nasdaqGiwSox.lanes, ["nasdaq_giw_sox"]);
 assert.deepEqual(nasdaqGiwSox.stages.always_if_exists.map((entry) => entry.path), [
-  "data/admin/data-supply-state/detection-attempts/nasdaq_giw_sox.json",
-  "data/admin/data-supply-state/publish-outcomes/nasdaq-giw-sox.json",
   "data/admin/nasdaq_giw_sox/index.json",
   "data/admin/nasdaq_giw_sox/lkg/constituents.json",
   "data/admin/nasdaq_giw_sox/history/constituents.json",
@@ -174,11 +136,6 @@ assert.deepEqual(nasdaqGiwSox.exclude, []);
 const privateOptions = manifest.workflows[".github/workflows/fetch-fenok-private-options.yml"];
 assert.deepEqual(privateOptions.lanes, ["yahoo_private_options"]);
 assert.deepEqual(privateOptions.stages.always_if_exists, [
-  {
-    kind: "file",
-    path: "data/admin/data-supply-state/detection-attempts/yahoo_private_options.json",
-    required: false,
-  },
   {
     kind: "directory",
     path: "data/admin/yahoo_private_options",
@@ -197,16 +154,6 @@ assert.deepEqual(privateOptions.exclude, []);
 const sentiment = manifest.workflows[".github/workflows/fetch-sentiment.yml"];
 assert.deepEqual(sentiment.lanes, ["sentiment"]);
 assert.deepEqual(sentiment.stages.always_if_exists, [
-  {
-    kind: "file",
-    path: "data/admin/data-supply-state/detection-attempts/sentiment.json",
-    required: false,
-  },
-  {
-    kind: "file",
-    path: "data/admin/data-supply-state/publish-outcomes/sentiment.json",
-    required: false,
-  },
   {
     kind: "file",
     path: "data/admin/sentiment/index.json",
@@ -228,8 +175,6 @@ assert.deepEqual(sentiment.exclude, []);
 const usIndicesDaily = manifest.workflows[".github/workflows/fetch-us-indices-daily.yml"];
 assert.deepEqual(usIndicesDaily.lanes, ["us_indices_daily"]);
 assert.deepEqual(usIndicesDaily.stages.always_if_exists, [
-  { kind: "file", path: "data/admin/data-supply-state/detection-attempts/us_indices_daily.json", required: false },
-  { kind: "file", path: "data/admin/data-supply-state/publish-outcomes/us-indices-daily.json", required: false },
   { kind: "directory", path: "data/admin/us-indices-daily", required: false },
 ]);
 assert.deepEqual(usIndicesDaily.stages.success_if_exists, [
@@ -249,13 +194,10 @@ assert.equal(
 const fenokEdgeDaily = manifest.workflows[".github/workflows/fenok-edge-daily.yml"];
 assert.deepEqual(fenokEdgeDaily.lanes, ["finra_short_volume", "occ_options_volume"]);
 assert.deepEqual(fenokEdgeDaily.stages.always_if_exists, [
-  { kind: "file", path: "data/admin/data-supply-state/detection-attempts/finra_short_volume.json", required: false },
-  { kind: "file", path: "data/admin/data-supply-state/publish-outcomes/finra-short-volume.json", required: false },
   { kind: "file", path: "data/admin/finra_short_volume/index.json", required: false },
   { kind: "file", path: "data/admin/finra_short_volume/current/regsho_daily.json", required: false },
   { kind: "file", path: "data/admin/finra_short_volume/lkg/regsho_daily.json", required: false },
   { kind: "file", path: "data/admin/finra_short_volume/history/regsho_daily.json", required: false },
-  { kind: "file", path: "data/admin/data-supply-state/detection-attempts/occ_options_volume.json", required: false },
   { kind: "file", path: "data/admin/occ_options_volume/index.json", required: false },
   { kind: "file", path: "data/admin/occ_options_volume/current/occ_options_volume.json", required: false },
   { kind: "file", path: "data/admin/occ_options_volume/lkg/occ_options_volume.json", required: false },
@@ -271,25 +213,11 @@ assert.deepEqual(fenokEdgeDaily.exclude, []);
 
 const yfFinance = manifest.workflows[".github/workflows/fetch-yf-finance.yml"];
 assert.deepEqual(yfFinance.lanes, ["yahoo_batch_quote_history"]);
-// The attempt shard is a conscious 2026-08-14 addition, not drift. This lane
-// declared the shard in its commit_shards and its workflow emitted it, but no
-// stage owned the path, so it had never once been committed: 26 of the 27
-// declared attempt shards existed on disk and this was the missing one. The
-// expectation below pinned that gap in place. Derivation from the registry now
-// supplies it, and the registry's own completeness check refuses a workflow
-// that cannot carry an owned lane's evidence.
 assert.deepEqual(yfFinance.stages.always_if_exists, [
   { kind: "directory", path: "data/yf/finance", required: true },
   { kind: "file", path: "data/yf/quarter_closes.json", required: true },
   { kind: "directory", path: "data/admin/yahoo-batch-quote-history", required: true },
   { kind: "directory", path: "data/yf/estimates-archive", required: true },
-  // The publish-outcome shard is a conscious 2026-08-24 addition. It repeats the
-  // 2026-08-14 attempt-shard gap on this same lane: the shard was declared in
-  // commit_shards but no stage owned the path, so the plane binding above could
-  // never have been satisfied. Peer lanes all carry it in their policy; this one
-  // did not.
-  { kind: "file", path: "data/admin/data-supply-state/publish-outcomes/yahoo-finance.json", required: false },
-  { kind: "file", path: "data/admin/data-supply-state/detection-attempts/yahoo_batch_quote_history.json", required: false },
 ]);
 assert.deepEqual(yfFinance.stages.success_if_exists, []);
 assert.deepEqual(yfFinance.exclude, [
@@ -319,12 +247,6 @@ assert.deepEqual(stockanalysis.stages.always_if_exists, [
   { kind: "directory", path: "data/admin/yahoo_etf_fallback", required: false },
   { kind: "dynamic_set", path: "data/yf/finance", required: false },
   { kind: "directory", path: "100xfenok-next/public/data", required: false },
-  { kind: "file", path: "data/admin/data-supply-state/publish-outcomes/stockanalysis-etf-detail.json", required: false },
-  { kind: "file", path: "data/admin/data-supply-state/detection-attempts/stockanalysis_etf_detail.json", required: false },
-  { kind: "file", path: "data/admin/data-supply-state/detection-attempts/stockanalysis_etf_universe.json", required: false },
-  { kind: "file", path: "data/admin/data-supply-state/detection-attempts/stockanalysis_stock_financial.json", required: false },
-  { kind: "file", path: "data/admin/data-supply-state/detection-attempts/stockanalysis_surfaces.json", required: false },
-  { kind: "file", path: "data/admin/data-supply-state/detection-attempts/yahoo_etf_fallback.json", required: false },
 ]);
 assert.deepEqual(stockanalysis.stages.success_if_exists, []);
 assert.deepEqual(stockanalysis.exclude, [
@@ -335,8 +257,6 @@ assert.deepEqual(stockanalysis.exclude, [
 const fredYardeni = manifest.workflows[".github/workflows/fetch-fred-yardeni.yml"];
 assert.deepEqual(fredYardeni.lanes, ["fred_yardeni"]);
 assert.deepEqual(fredYardeni.stages.always_if_exists, [
-  { kind: "file", path: "data/admin/data-supply-state/detection-attempts/fred_yardeni.json", required: false },
-  { kind: "file", path: "data/admin/data-supply-state/publish-outcomes/fred-yardeni.json", required: false },
   { kind: "file", path: "data/admin/fred_yardeni/index.json", required: false },
   { kind: "file", path: "data/admin/fred_yardeni/current/yardney_model.json", required: false },
   { kind: "file", path: "data/admin/fred_yardeni/lkg/yardney_model.json", required: false },
@@ -349,8 +269,6 @@ assert.deepEqual(fredYardeni.exclude, []);
 const edgarFilings = manifest.workflows[".github/workflows/fetch-edgar-filings.yml"];
 assert.deepEqual(edgarFilings.lanes, ["edgar_filings"]);
 assert.deepEqual(edgarFilings.stages.always_if_exists, [
-  { kind: "file", path: "data/admin/data-supply-state/detection-attempts/edgar_filings.json", required: false },
-  { kind: "file", path: "data/admin/data-supply-state/publish-outcomes/edgar-korean-summaries.json", required: false },
   { kind: "file", path: "data/admin/edgar_filings/index.json", required: false },
   { kind: "file", path: "data/admin/edgar_filings/current/edgar_filings.json", required: false },
   { kind: "file", path: "data/admin/edgar_filings/lkg/edgar_filings.json", required: false },
@@ -365,8 +283,6 @@ assert.deepEqual(edgarFilings.exclude, []);
 const fdicTier1 = manifest.workflows[".github/workflows/fetch-fdic.yml"];
 assert.deepEqual(fdicTier1.lanes, ["fdic_tier1"]);
 assert.deepEqual(fdicTier1.stages.always_if_exists, [
-  { kind: "file", path: "data/admin/data-supply-state/detection-attempts/fdic_tier1.json", required: false },
-  { kind: "file", path: "data/admin/data-supply-state/publish-outcomes/fdic-tier1.json", required: false },
   { kind: "file", path: "data/admin/fdic_tier1/index.json", required: false },
   { kind: "file", path: "data/admin/fdic_tier1/lkg/fdic_tier1.json", required: false },
 ]);
@@ -378,8 +294,6 @@ assert.deepEqual(fdicTier1.exclude, []);
 const slickchartsDaily = manifest.workflows[".github/workflows/slickcharts-daily.yml"];
 assert.deepEqual(slickchartsDaily.lanes, ["slickcharts"]);
 assert.deepEqual(slickchartsDaily.stages.always_if_exists, [
-  { kind: "file", path: "data/admin/data-supply-state/detection-attempts/slickcharts.json", required: false },
-  { kind: "file", path: "data/admin/data-supply-state/publish-outcomes/slickcharts-daily.json", required: false },
   { kind: "directory", path: "data/admin/slickcharts-daily-delivery", required: false },
   { kind: "directory", path: "data/admin/slickcharts-composite-recovery", required: false },
 ]);
@@ -395,8 +309,6 @@ assert.deepEqual(slickchartsDaily.exclude, []);
 const slickchartsWeekly = manifest.workflows[".github/workflows/slickcharts-weekly.yml"];
 assert.deepEqual(slickchartsWeekly.lanes, ["slickcharts"]);
 assert.deepEqual(slickchartsWeekly.stages.always_if_exists, [
-  { kind: "file", path: "data/admin/data-supply-state/detection-attempts/slickcharts.json", required: false },
-  { kind: "file", path: "data/admin/data-supply-state/publish-outcomes/slickcharts-weekly.json", required: false },
   { kind: "directory", path: "data/admin/slickcharts-composite-recovery", required: false },
 ]);
 assert.deepEqual(slickchartsWeekly.stages.success_if_exists, [
@@ -410,8 +322,6 @@ assert.deepEqual(slickchartsWeekly.exclude, []);
 const slickchartsSymbols = manifest.workflows[".github/workflows/slickcharts-symbols.yml"];
 assert.deepEqual(slickchartsSymbols.lanes, ["slickcharts"]);
 assert.deepEqual(slickchartsSymbols.stages.always_if_exists, [
-  { kind: "file", path: "data/admin/data-supply-state/detection-attempts/slickcharts.json", required: false },
-  { kind: "file", path: "data/admin/data-supply-state/publish-outcomes/slickcharts-symbols.json", required: false },
   { kind: "directory", path: "data/admin/slickcharts-composite-recovery", required: false },
 ]);
 assert.deepEqual(slickchartsSymbols.stages.success_if_exists, [
@@ -422,8 +332,6 @@ assert.deepEqual(slickchartsSymbols.exclude, []);
 const slickchartsMonthly = manifest.workflows[".github/workflows/slickcharts-monthly.yml"];
 assert.deepEqual(slickchartsMonthly.lanes, ["slickcharts"]);
 assert.deepEqual(slickchartsMonthly.stages.always_if_exists, [
-  { kind: "file", path: "data/admin/data-supply-state/detection-attempts/slickcharts.json", required: false },
-  { kind: "file", path: "data/admin/data-supply-state/publish-outcomes/slickcharts-monthly.json", required: false },
   { kind: "directory", path: "data/admin/slickcharts-composite-recovery", required: false },
 ]);
 assert.deepEqual(slickchartsMonthly.stages.success_if_exists, [
@@ -455,8 +363,6 @@ assert.deepEqual(slickchartsMonthly.exclude, []);
 const slickchartsHistory = manifest.workflows[".github/workflows/slickcharts-history.yml"];
 assert.deepEqual(slickchartsHistory.lanes, ["slickcharts"]);
 assert.deepEqual(slickchartsHistory.stages.always_if_exists, [
-  { kind: "file", path: "data/admin/data-supply-state/detection-attempts/slickcharts.json", required: false },
-  { kind: "file", path: "data/admin/data-supply-state/publish-outcomes/slickcharts-history.json", required: false },
   { kind: "directory", path: "data/admin/slickcharts-composite-recovery", required: false },
 ]);
 assert.deepEqual(slickchartsHistory.stages.success_if_exists, [
@@ -504,11 +410,6 @@ assert.deepEqual(pipelineFailureAlarm.exclude, []);
 const coordinator = manifest.workflows[".github/workflows/coordinate-computed-signals.yml"];
 assert.deepEqual(coordinator.lanes, []);
 assert.deepEqual(coordinator.stages.always_if_exists, [
-  {
-    kind: "file",
-    path: "data/admin/data-supply-state/publish-outcomes/computed-signals.json",
-    required: false,
-  },
 ]);
 assert.deepEqual(coordinator.stages.success_if_exists, []);
 assert.deepEqual(coordinator.stages.success_verify_not_plan_if_exists, []);

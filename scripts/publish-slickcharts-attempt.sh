@@ -35,7 +35,6 @@ elif [[ "${1:-}" == --manifest-* ]]; then
   exit 2
 fi
 
-shard_path="data/admin/data-supply-state/detection-attempts/slickcharts.json"
 daily_state_root="data/admin/slickcharts-daily-delivery"
 composite_state_root="data/admin/slickcharts-composite-recovery"
 composite_index="$composite_state_root/index.json"
@@ -106,13 +105,6 @@ if [[ ! -f "$row_path" ]]; then
   exit 1
 fi
 
-merge_saved_row() {
-  node scripts/emit-slickcharts-attempt.mjs \
-    --member "$member" \
-    --row-in "$row_path" \
-    --shard "$shard_path"
-}
-
 merge_saved_composite() {
   [[ -n "$composite_saved_index" ]] || return 0
   node scripts/slickcharts-composite-recovery.mjs merge-member \
@@ -132,7 +124,6 @@ stage_owned_paths() {
   if [[ $# -gt 0 && "$publish_data" == "true" ]]; then
     git add -- "$@"
   fi
-  git add -- "$shard_path"
   if [[ "$composite_stage" == "true" && -d "$composite_state_root" ]]; then
     git add -- "$composite_state_root"
   fi
@@ -153,7 +144,6 @@ stage_manifest_paths() {
   fi
 }
 
-merge_saved_row
 stage_manifest_paths
 verify_live_composite
 stage_owned_paths "$@"
@@ -169,24 +159,18 @@ for attempt in $(seq 1 5); do
     mapfile -t conflicts < <(git diff --name-only --diff-filter=U)
     conflict_ok=true
     for conflict in "${conflicts[@]}"; do
-      if [[ "$conflict" != "$shard_path" && "$conflict" != "$composite_index" ]]; then
+      if [[ "$conflict" != "$composite_index" ]]; then
         conflict_ok=false
       fi
     done
     if [[ ${#conflicts[@]} -eq 0 || "$conflict_ok" != "true" ]]; then
-      echo "rebase conflict outside owned shard; refusing recovery" >&2
+      echo "rebase conflict outside owned composite state; refusing recovery" >&2
       printf '%s\n' "${conflicts[@]}" >&2
       git rebase --abort >/dev/null 2>&1 || true
       exit 1
     fi
 
-    # During rebase, --ours is the latest upstream main. Reapply only this
-    # workflow's saved member row so another member can never be clobbered.
-    if printf '%s\n' "${conflicts[@]}" | grep -Fxq "$shard_path"; then
-      git checkout --ours -- "$shard_path"
-      merge_saved_row
-      git add -- "$shard_path"
-    fi
+    # During rebase, --ours is the latest upstream main.
     if printf '%s\n' "${conflicts[@]}" | grep -Fxq "$composite_index"; then
       git checkout --ours -- "$composite_index"
       merge_saved_composite
@@ -195,12 +179,9 @@ for attempt in $(seq 1 5); do
     GIT_EDITOR=true git rebase --continue
   fi
 
-  # A clean textual merge can still retain a stale whole-document snapshot.
-  # Canonicalize once more against the rebased shard before every push.
-  merge_saved_row
+  # Reapply the saved composite state after every push race.
   merge_saved_composite
   verify_live_composite
-  git add -- "$shard_path"
   if [[ -n "$composite_saved_index" ]]; then git add -- "$composite_index"; fi
   if ! git diff --staged --quiet; then
     if [[ $(git rev-list --count origin/main..HEAD) -gt 0 ]]; then
@@ -216,7 +197,7 @@ for attempt in $(seq 1 5); do
     fi
     exit "$recovery_exit"
   fi
-  echo "git push race on attempt ${attempt}; retrying with saved ${member} row"
+  echo "git push race on attempt ${attempt}; retrying with saved ${member} state"
   sleep 3
 done
 

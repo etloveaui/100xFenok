@@ -5,12 +5,10 @@ import fs from "node:fs";
 import os from "node:os";
 import path from "node:path";
 
-import { validateAttemptShard } from "./build-data-supply-detection-floor.mjs";
-import { runSlickchartsAttempt } from "./emit-slickcharts-attempt.mjs";
+import { buildSlickchartsRunRow } from "./build-slickcharts-run-row.mjs";
 import { DATA_SUPPLY_DETECTION_CONFIG } from "./lib/data-supply-detection-config.mjs";
 
 const root = fs.mkdtempSync(path.join(os.tmpdir(), "slickcharts-monthly-telemetry-test-"));
-const shardPath = path.join(root, "slickcharts.json");
 
 function eventPath(name, rows) {
   const filePath = path.join(root, `${name}.jsonl`);
@@ -53,28 +51,26 @@ function pageEvent(pageShape, assertionId, passed = true) {
     ...Array.from({ length: 18 }, () => pageEvent("table", "table_rows")),
     ...Array.from({ length: 3 }, () => pageEvent("yield", "yield_value")),
   ];
-  const result = runSlickchartsAttempt({
+  const result = buildSlickchartsRunRow({
     memberId: "monthly",
     eventPaths: [eventPath("monthly", events)],
     producerOutcomes: Array.from({ length: 21 }, () => "success"),
-    shardPath,
     rowPath: path.join(root, "monthly-row.json"),
     observedAt: "2026-09-04T01:08:46Z",
     attemptId: "gh-300-1-monthly",
   });
   assert.equal(result.row.execution, "returned");
   assert.deepEqual(result.row.assertions, [{ id: "table_rows", passed: true }]);
-  assert.equal(validateAttemptShard(result.shard, "slickcharts"), true);
+  assert.equal(JSON.parse(fs.readFileSync(path.join(root, "monthly-row.json"), "utf8")).execution, "returned");
 }
 
 // A yield-shaped event carrying table_rows is invalid: the set must match
 // the event's own shape, never any global set.
 {
-  const result = runSlickchartsAttempt({
+  const result = buildSlickchartsRunRow({
     memberId: "monthly",
     eventPaths: [eventPath("monthly-crossed", [pageEvent("yield", "table_rows")])],
     producerOutcomes: ["success"],
-    shardPath: path.join(root, "crossed-shard.json"),
     rowPath: path.join(root, "crossed-row.json"),
     observedAt: "2026-09-04T02:08:46Z",
     attemptId: "gh-301-1-monthly",
@@ -85,11 +81,10 @@ function pageEvent(pageShape, assertionId, passed = true) {
 
 // Unknown shapes fail closed.
 {
-  const result = runSlickchartsAttempt({
+  const result = buildSlickchartsRunRow({
     memberId: "monthly",
     eventPaths: [eventPath("monthly-unknown", [pageEvent("chart", "table_rows")])],
     producerOutcomes: ["success"],
-    shardPath: path.join(root, "unknown-shard.json"),
     rowPath: path.join(root, "unknown-row.json"),
     observedAt: "2026-09-04T03:08:46Z",
     attemptId: "gh-302-1-monthly",
@@ -101,7 +96,7 @@ function pageEvent(pageShape, assertionId, passed = true) {
 // An unknown shape with an empty-payload failure tuple still fails closed:
 // the empty-assertion path must not bypass shape membership.
 {
-  const result = runSlickchartsAttempt({
+  const result = buildSlickchartsRunRow({
     memberId: "monthly",
     eventPaths: [eventPath("monthly-unknown-empty", [{
       execution: "returned",
@@ -117,7 +112,6 @@ function pageEvent(pageShape, assertionId, passed = true) {
       response_sha256: "0".repeat(64),
     }])],
     producerOutcomes: ["success"],
-    shardPath: path.join(root, "unknown-empty-shard.json"),
     rowPath: path.join(root, "unknown-empty-row.json"),
     observedAt: "2026-09-04T05:08:46Z",
     attemptId: "gh-304-1-monthly",
@@ -129,7 +123,7 @@ function pageEvent(pageShape, assertionId, passed = true) {
 // An unknown shape with a provider-throttled tuple still fails closed:
 // the throttled bypass must not skip shape membership.
 {
-  const result = runSlickchartsAttempt({
+  const result = buildSlickchartsRunRow({
     memberId: "monthly",
     eventPaths: [eventPath("monthly-unknown-throttled", [{
       execution: "returned",
@@ -145,7 +139,6 @@ function pageEvent(pageShape, assertionId, passed = true) {
       response_sha256: "0".repeat(64),
     }])],
     producerOutcomes: ["success"],
-    shardPath: path.join(root, "unknown-throttled-shard.json"),
     rowPath: path.join(root, "unknown-throttled-row.json"),
     observedAt: "2026-09-04T06:08:46Z",
     attemptId: "gh-305-1-monthly",
@@ -157,11 +150,10 @@ function pageEvent(pageShape, assertionId, passed = true) {
 // Shapeless legacy table events keep validating (backward compatibility).
 {
   const { page_shape: _dropped, ...legacy } = pageEvent("table", "table_rows");
-  const result = runSlickchartsAttempt({
+  const result = buildSlickchartsRunRow({
     memberId: "monthly",
     eventPaths: [eventPath("monthly-legacy", [legacy])],
     producerOutcomes: ["success"],
-    shardPath: path.join(root, "legacy-shard.json"),
     rowPath: path.join(root, "legacy-row.json"),
     observedAt: "2026-09-04T04:08:46Z",
     attemptId: "gh-303-1-monthly",

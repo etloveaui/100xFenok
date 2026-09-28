@@ -85,13 +85,11 @@ jobs:
         with:
           node-version: '22'
 
-      - name: Verify FINRA and OCC attempt emitter contracts
+      - name: Verify FINRA and OCC producer contracts
         run: |
-          node scripts/test-data-supply-attempt-producer.mjs
           node scripts/test-fetch-fenok-finra-daily-private.mjs
           node scripts/test-fetch-fenok-finra-lkg-recovery.mjs
           npm --prefix 100xfenok-next run qa:fenok-occ-options
-          node scripts/test-fenok-edge-daily-attempt-workflow.mjs
 
       - name: Resolve bounded window
         id: window
@@ -239,13 +237,9 @@ jobs:
           scripts/stage-lane-manifest.sh \
             --workflow .github/workflows/fenok-edge-daily.yml \
             --stage always_if_exists
-          # Public-safe detection attempt shards and LKG recovery state are committed
-          # on every run so retry/recovery accounting survives across CI runs. FINRA
-          # and OCC store freshness markers bound to their source payloads. Neither
-          # recovery tree carries private raw rows.
+          # LKG recovery state is committed on every run so retry/recovery
+          # accounting survives across CI runs. Neither tree carries private raw rows.
           for SHARD in \
-            data/admin/data-supply-state/detection-attempts/finra_short_volume.json \
-            data/admin/data-supply-state/detection-attempts/occ_options_volume.json \
             data/admin/finra_short_volume/index.json \
             data/admin/finra_short_volume/current/regsho_daily.json \
             data/admin/finra_short_volume/lkg/regsho_daily.json \
@@ -305,9 +299,6 @@ jobs:
           DATA_PLANE_WRITE_KEY: ${{ secrets.DATA_PLANE_WRITE_KEY }}
         run: node scripts/publish-cloud-data-generation.mjs --family=finra-short-volume --tolerate-gate-block --json
 
-      - name: Persist FINRA short volume publish outcome
-        if: ${{ always() }}
-        run: node scripts/persist-cloud-publish-outcome.mjs --family=finra-short-volume --workflow=.github/workflows/fenok-edge-daily.yml --publisher-outcome=${{ steps.publish_cloud_generation.outcome }}
 
       - name: Dispatch manifest reconciliation
         if: ${{ env.FENOK_EDGE_PLAN_ONLY != 'true' }}

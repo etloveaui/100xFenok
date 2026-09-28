@@ -6,13 +6,8 @@ import path from "node:path";
 import { spawnSync } from "node:child_process";
 import { fileURLToPath } from "node:url";
 
-import {
-  attemptResult,
-  atomicWrite,
-  defaultAttemptId,
-  libraryTuple,
-  writeAttemptShard,
-} from "./lib/data-supply-attempt-shard.mjs";
+import { atomicWrite } from "./lib/atomic-file.mjs";
+import { attemptResult, defaultAttemptId, libraryTuple } from "./lib/provider-fetch-result.mjs";
 import { boundedDiagnosticDetail } from "./lib/diagnostic-detail.mjs";
 import {
   LaneLkgStore,
@@ -178,7 +173,6 @@ export function runYahooPrivateOptions({
   repoRoot = REPO_ROOT,
   canonicalPath = path.join(repoRoot, "data", "computed", "fenok_yahoo_private_options_availability.json"),
   publicMirrorPath = path.join(repoRoot, "100xfenok-next", "public", "data", "computed", "fenok_yahoo_private_options_availability.json"),
-  attemptShardPath = path.join(repoRoot, "data", "admin", "data-supply-state", "detection-attempts", `${LANE_ID}.json`),
   outputDir = path.join(os.tmpdir(), "yf-options"),
   summaryPath = path.join(os.tmpdir(), "yf-options-summary.json"),
   observedAt = new Date().toISOString(),
@@ -229,7 +223,7 @@ export function runYahooPrivateOptions({
       payload: complete ? "non_empty" : "not_available",
       assertions: complete ? [{ id: "scheduled_allowlist_complete", passed: true }] : [],
     }), summary);
-  const attempt = writeAttemptShard({ laneId: LANE_ID, attemptShardPath, observedAt, attemptId, result });
+  const attempt = (result).attempt;
   if (!complete) {
     const reason = controlledKey !== null ? "controlled_failure" : summaryValid ? "empty_payload" : "schema_drift";
     const stateReason = controlledKey !== null ? "controlled_failure" : summaryValid ? "provider_failure" : reason;

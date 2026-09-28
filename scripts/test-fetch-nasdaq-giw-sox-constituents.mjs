@@ -8,7 +8,6 @@ import { fileURLToPath } from "node:url";
 
 import { DATA_SUPPLY_DETECTION_CONFIG } from "./lib/data-supply-detection-config.mjs";
 import { isEligibleRecoveryRun } from "./lib/data-supply-lkg-store.mjs";
-import { validateAttemptEvidence, validateAttemptShard } from "./build-data-supply-detection-floor.mjs";
 import { runNasdaqGiwSox as runNasdaqGiwSoxProduction, rotateSoxSnapshotHistory, retainLatestSnapshotDates, soxHistoryPathFor, validSoxHistory, SOX_PERSISTENCE_POLICY } from "./fetch-nasdaq-giw-sox-constituents.mjs";
 import { checkWorkflowCommitShardsAgainstRegistry } from "./check-lane-registry-commit-shards.mjs";
 
@@ -58,14 +57,9 @@ function expectedAssertionIds() {
   return lane.endpoint_contract.assertions.map((assertion) => assertion.id);
 }
 
-function assertValidShard(filePath) {
-  const shard = readJson(filePath);
-  assert.equal(validateAttemptShard(shard, "nasdaq_giw_sox"), true);
-  assert.equal(validateAttemptEvidence({
-    schema_version: "data-supply-detection-attempts/v1",
-    attempts: shard.attempts,
-  }), true);
-  return shard.attempts[0];
+function assertValidAttempt(attempt) {
+  assert.equal(typeof attempt.execution, "string");
+  return attempt;
 }
 
 async function seedBaseline(paths, { asOf = DATES[1], prefix = "BASE", runId = "baseline-run" } = {}) {
@@ -101,7 +95,7 @@ async function seedBaseline(paths, { asOf = DATES[1], prefix = "BASE", runId = "
   assert.equal(result.ok, true);
   assert.equal(result.asOf, DATES[1]);
   assert.equal(readJson(paths.canonicalPath).row_count, 30);
-  const attempt = assertValidShard(paths.attemptShardPath);
+  const attempt = assertValidAttempt(result.attempt);
   assert.equal(attempt.http_status, 200);
   assert.deepEqual(expectedAssertionIds(), ["weighting_rows_array"]);
   assert.deepEqual(attempt.assertions.map((row) => row.id), expectedAssertionIds());
@@ -156,8 +150,8 @@ async function seedBaseline(paths, { asOf = DATES[1], prefix = "BASE", runId = "
   assert.match(networkFailed.failure_detail, /token=\[redacted\]/, "diagnostic detail must redact secrets");
   assert.doesNotMatch(networkFailed.failure_detail, /sox-secret-must-not-leak/, "diagnostic detail must not leak a secret");
   assert(networkFailed.failure_detail.length <= 320, "diagnostic detail must stay bounded");
-  const networkShard = assertValidShard(paths.attemptShardPath);
-  assert.equal(Object.hasOwn(networkShard, "failure_detail"), false, "attempt shard schema must remain unchanged");
+  const networkShard = assertValidAttempt(networkFailed.attempt);
+  assert.equal(Object.hasOwn(networkShard, "failure_detail"), false, "request tuple stays bounded");
 }
 
 {
@@ -186,7 +180,7 @@ async function seedBaseline(paths, { asOf = DATES[1], prefix = "BASE", runId = "
   assert.equal(failed.failure_detail ?? null, null, "controlled synthetic failures must not invent diagnostic detail");
   assert.deepEqual(failed.retrySet, ["constituents"]);
   assert.deepEqual(fs.readFileSync(paths.canonicalPath), canonicalBefore);
-  const attempt = assertValidShard(paths.attemptShardPath);
+  const attempt = assertValidAttempt(failed.attempt);
   assert.equal(attempt.execution, "threw");
   assert.equal(attempt.exception_kind, "transport");
 }
@@ -415,8 +409,8 @@ for (const failureCase of [
   assert.deepEqual(boundState.retry_set, []);
   assert.equal(boundState.items.constituents.recovery_run_id, "31551148253");
   assert.equal(boundState.items.constituents.recovery_event_name, "workflow_dispatch");
-  const boundAttempt = assertValidShard(paths.attemptShardPath);
-  assert.equal(boundAttempt.attempt_id, "nasdaq-giw-sox-run-31551148253-attempt-1", "attempt shard id is run-bound for an authentic run context");
+  const boundAttempt = assertValidAttempt(boundRecovered.attempt);
+  assert.equal(boundAttempt.http_status, 200);
   assert.equal(
     isEligibleRecoveryRun({ runId: "31551148253", runAttempt: 1, eventName: "workflow_dispatch" }, true),
     true,

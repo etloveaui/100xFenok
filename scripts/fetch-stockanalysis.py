@@ -85,7 +85,7 @@ class CandidateOutputs:
     __slots__ = (
         "root", "stockanalysis", "stockanalysis_public", "yf_finance",
         "yf_finance_public", "yf_etf_details", "data_supply_state",
-        "detection_attempts", "recovery_state", "yahoo_etf_recovery_state",
+        "recovery_state", "yahoo_etf_recovery_state",
     )
 
     def __init__(
@@ -97,7 +97,6 @@ class CandidateOutputs:
         yf_finance_public: Path,
         yf_etf_details: Path,
         data_supply_state: Path,
-        detection_attempts: Path,
         recovery_state: Path,
         yahoo_etf_recovery_state: Path,
     ) -> None:
@@ -108,7 +107,6 @@ class CandidateOutputs:
         self.yf_finance_public = yf_finance_public
         self.yf_etf_details = yf_etf_details
         self.data_supply_state = data_supply_state
-        self.detection_attempts = detection_attempts
         self.recovery_state = recovery_state
         self.yahoo_etf_recovery_state = yahoo_etf_recovery_state
 
@@ -123,7 +121,6 @@ class CandidateOutputs:
             yf_finance_public=resolved / "100xfenok-next/public/data/yf/finance",
             yf_etf_details=resolved / "data/yf/etf-details",
             data_supply_state=resolved / "data/admin/data-supply-state/v1",
-            detection_attempts=resolved / "data/admin/data-supply-state/detection-attempts",
             recovery_state=resolved / "data/admin/stockanalysis-recovery",
             yahoo_etf_recovery_state=resolved / "data/admin/yahoo_etf_fallback",
         )
@@ -136,7 +133,6 @@ class CandidateOutputs:
             self.yf_finance_public,
             self.yf_etf_details,
             self.data_supply_state,
-            self.detection_attempts,
             self.recovery_state,
             self.yahoo_etf_recovery_state,
         )
@@ -152,7 +148,6 @@ YF_PUBLIC_DIR = CANDIDATE_OUTPUTS.yf_finance_public
 YF_ETF_DETAIL_OUT_DIR = CANDIDATE_OUTPUTS.yf_etf_details
 DATA_SUPPLY_STATE_ROOT = CANDIDATE_OUTPUTS.data_supply_state
 STOCKANALYSIS_RECOVERY_ROOT = CANDIDATE_OUTPUTS.recovery_state
-STOCKANALYSIS_ATTEMPT_EMITTER = SCRIPT_DIR / "emit-stockanalysis-attempt.mjs"
 YAHOO_ETF_FALLBACK_RECOVERY_ADAPTER = SCRIPT_DIR / "yahoo-etf-fallback-recovery.mjs"
 SCHEMA_VERSION = "stockanalysis/v1"
 BASE_URL = "https://stockanalysis.com"
@@ -211,317 +206,7 @@ def data_supply_store(*, provider_truth_root: Path) -> DataSupplyStateStore:
     )
 
 
-class StockAnalysisAttemptTracker:
-    def __init__(self) -> None:
-        self.active = False
-        self.yahoo_enabled = False
-        self.run_id = "local"
-        self.run_attempt = 1
-        # A provider-dateless universe must not let a manual dispatch impersonate
-        # the scheduled freshness observation. The default keeps direct tracker
-        # fixture tests backwards-compatible; production configures the exact
-        # natural Sunday slot explicitly.
-        self.universe_detection_enabled = True
-        self.yahoo_candidates = 0
-        self.yahoo_observations: list[dict] = []
-        self.yahoo_producer_failure: dict | None = None
-        self.universe_started = False
-        self.universe_observations: list[dict] = []
-        self.stock_financial_started = False
-        self.stock_financial_expected = 0
-        self.stock_financial_results: list[dict] = []
-        self.surfaces_started = False
-        self.surface_observations: list[dict] = []
-        # ETF detail was writing 5,605 canonical payloads with no attempt record of
-        # its own, so no lane owned it and the data-plane inventory could not
-        # account for the largest group in the estate.
-        self.etf_detail_started = False
-        self.etf_detail_expected = 0
-        self.etf_detail_results: list[dict] = []
 
-    def configure(
-        self,
-        *,
-        active: bool,
-        yahoo_enabled: bool,
-        run_id: str,
-        run_attempt: int,
-        universe_detection_enabled: bool = True,
-    ) -> None:
-        self.active = active
-        self.yahoo_enabled = yahoo_enabled
-        self.run_id = str(run_id)
-        self.run_attempt = int(run_attempt)
-        self.universe_detection_enabled = bool(universe_detection_enabled)
-
-    def record_yahoo_candidate(self) -> None:
-        if self.active:
-            self.yahoo_candidates += 1
-
-    def record_yahoo_success(self, document: dict, *, retry_count: int, latency_ms: float) -> None:
-        if self.active:
-            self.yahoo_observations.append({
-                "execution": "returned",
-                "retry_count": retry_count,
-                "latency_ms": latency_ms,
-                "outcome": "success",
-                "document": document,
-            })
-
-    def record_yahoo_error(
-        self,
-        *,
-        entity: str,
-        exception_kind: str,
-        retry_count: int,
-        latency_ms: float,
-        error: object = None,
-    ) -> None:
-        # `exception_kind` is the stable vocabulary the detection floor reads and
-        # must not absorb free text. The identity of what actually threw travels
-        # beside it: run 30189547294 recorded threw/unexpected for 23 candidates
-        # with rate_limited=false and left no cause anywhere, so the lane could
-        # not be explained at all.
-        if self.active:
-            observation = {
-                "entity": str(entity).strip().upper(),
-                "execution": "threw",
-                "exception_kind": exception_kind,
-                "retry_count": retry_count,
-                "latency_ms": latency_ms,
-                "outcome": "error",
-            }
-            detail = bounded_diagnostic_detail(error) if error is not None else None
-            if detail:
-                observation["failure_detail"] = detail
-            self.yahoo_observations.append(observation)
-
-    def record_yahoo_returned_error(self, *, retry_count: int, latency_ms: float) -> None:
-        if self.active:
-            self.yahoo_observations.append({
-                "execution": "returned",
-                "exception_kind": None,
-                "retry_count": retry_count,
-                "latency_ms": latency_ms,
-                "outcome": "error",
-            })
-
-    def record_yahoo_producer_failure(self, exception_kind: str) -> None:
-        if self.active and self.yahoo_candidates == 0 and not self.yahoo_observations:
-            self.yahoo_producer_failure = {
-                "execution": "threw",
-                "exception_kind": exception_kind,
-            }
-
-    def start_universe(self) -> None:
-        if self.active and self.universe_detection_enabled:
-            self.universe_started = True
-
-    def record_universe_http(self, status_code: int, rows: list[dict] | None = None) -> None:
-        if self.active and self.universe_started:
-            self.universe_observations.append({
-                "status_code": int(status_code),
-                "document": {"rows": rows or []},
-            })
-
-    def record_universe_error(self, exception_kind: str) -> None:
-        if self.active and self.universe_started:
-            self.universe_observations.append({
-                "execution": "threw",
-                "exception_kind": exception_kind,
-            })
-
-    def start_surfaces(self) -> None:
-        if self.active:
-            self.surfaces_started = True
-
-    def start_stock_financial(self, expected_count: int) -> None:
-        if self.active:
-            self.stock_financial_started = True
-            self.stock_financial_expected = int(expected_count)
-
-    def record_stock_financial(self, result: dict) -> None:
-        if self.active and self.stock_financial_started:
-            self.stock_financial_results.append(result)
-
-    def start_etf_detail(self, expected_count: int) -> None:
-        # A stocks-only natural run has no ETF acquisition to observe. Do not
-        # turn that intentional omission into a synthetic failed ETF attempt:
-        # once the lane is live, that row would overwrite the last successful
-        # ETF run and falsely degrade the lane.
-        if self.active and int(expected_count) > 0:
-            self.etf_detail_started = True
-            self.etf_detail_expected = int(expected_count)
-
-    def record_etf_detail(self, result: dict) -> None:
-        if self.active and self.etf_detail_started:
-            self.etf_detail_results.append(result)
-
-    def record_surface_http(self, status_code: int, result: dict) -> None:
-        if self.active:
-            self.surface_observations.append({
-                "status_code": int(status_code),
-                "document": {"results": [result]},
-            })
-
-    def record_surface_error(self, exception_kind: str) -> None:
-        if self.active:
-            self.surface_observations.append({
-                "execution": "threw",
-                "exception_kind": exception_kind,
-            })
-
-    def _emit(self, lane_id: str, envelope: dict, prefix: str) -> None:
-        attempt_id = f"stockanalysis-{prefix}-{self.run_id}-{self.run_attempt}".lower()
-        subprocess.run(
-            [
-                "node",
-                str(STOCKANALYSIS_ATTEMPT_EMITTER),
-                "--lane",
-                lane_id,
-                "--attempt-id",
-                attempt_id,
-                "--observed-at",
-                now_iso(),
-                "--shard-root",
-                str(DATA_SUPPLY_STATE_ROOT.parent / "detection-attempts"),
-            ],
-            input=json.dumps(envelope, separators=(",", ":")),
-            text=True,
-            check=True,
-        )
-
-    def emit(self) -> None:
-        if not self.active:
-            return
-        yahoo_envelope = {
-            "transport": "library",
-            "candidate_count": self.yahoo_candidates,
-            "fallback_enabled": self.yahoo_enabled,
-            "observations": self.yahoo_observations,
-        }
-        if self.yahoo_producer_failure is not None:
-            yahoo_envelope["producer_failure"] = self.yahoo_producer_failure
-        self._emit(
-            "yahoo_etf_fallback",
-            yahoo_envelope,
-            "yahoo",
-        )
-        if self.universe_started:
-            if not self.universe_observations:
-                self.record_universe_error("unexpected")
-            self._emit(
-                "stockanalysis_etf_universe",
-                {"transport": "http", "observations": self.universe_observations},
-                "universe",
-            )
-        if self.etf_detail_started:
-            detail_ok = [
-                result for result in self.etf_detail_results
-                if result.get("error") is None and result.get("path")
-            ]
-            requested = self.etf_detail_expected
-            failed = max(requested - len(detail_ok), 0)
-            complete = (
-                requested > 0
-                and len(self.etf_detail_results) == requested
-                and failed == 0
-            )
-            self._emit(
-                "stockanalysis_etf_detail",
-                {
-                    "transport": "library",
-                    "candidate_count": 1,
-                    "observations": [{
-                        "execution": "returned",
-                        # Explicitly null, not absent. A returned library error must
-                        # carry exception_kind as null; omitting the key reads as
-                        # undefined and the emitter refuses the whole envelope. Every
-                        # run so far had failed=0 so this branch never fired, and it
-                        # would have killed the first run that lost a single ETF.
-                        "exception_kind": None,
-                        "retry_count": 0,
-                        "latency_ms": sum(float(result.get("latency_ms") or 0) for result in self.etf_detail_results),
-                        "outcome": "success" if complete else "error",
-                        "document": {
-                            "requested": requested,
-                            "written": len(detail_ok),
-                            "failed": failed,
-                        },
-                    }],
-                },
-                "etf_detail",
-            )
-        if self.stock_financial_started:
-            stock_ok = [
-                result for result in self.stock_financial_results
-                if result.get("error") is None and result.get("path")
-            ]
-            financial_ok = [
-                result for result in self.stock_financial_results
-                if result.get("error") is None and result.get("financials_path")
-            ]
-            pairs = [
-                {
-                    "ticker": result["ticker"],
-                    "stock_path": f"data/stockanalysis/{result['path']}",
-                    "financial_path": f"data/stockanalysis/{result['financials_path']}",
-                }
-                for result in self.stock_financial_results
-                if result.get("error") is None and result.get("path") and result.get("financials_path")
-            ]
-            requested = self.stock_financial_expected
-            failed = max(requested - len(pairs), 0)
-            complete = (
-                requested == 8
-                and len(self.stock_financial_results) == requested
-                and len(stock_ok) == requested
-                and len(financial_ok) == requested
-                and failed == 0
-            )
-            self._emit(
-                "stockanalysis_stock_financial",
-                {
-                    "transport": "library",
-                    "candidate_count": 1,
-                    "observations": [{
-                        "execution": "returned",
-                        # Same omission the ETF detail lane carried: a returned
-                        # library error must state exception_kind as null, and an
-                        # absent key reads as undefined. This lane's error branch
-                        # has therefore never been able to emit. Found on
-                        # 2026-08-14 by replacing its parity-gate exemption with a
-                        # real producer sample, which is the whole reason the
-                        # verifier refused to accept named exemptions as coverage.
-                        "exception_kind": None,
-                        "retry_count": 0,
-                        "latency_ms": sum(float(result.get("latency_ms") or 0) for result in self.stock_financial_results),
-                        "outcome": "success" if complete else "error",
-                        "document": {
-                            "counts": {
-                                "requested": requested,
-                                "stock_ok": len(stock_ok),
-                                "financial_ok": len(financial_ok),
-                                "failed": failed,
-                            },
-                            "tickers": [pair["ticker"] for pair in pairs],
-                            "pairs": pairs,
-                        },
-                    }],
-                },
-                "stock-financial",
-            )
-        if self.surfaces_started:
-            if not self.surface_observations:
-                self.record_surface_error("unexpected")
-            self._emit(
-                "stockanalysis_surfaces",
-                {"transport": "http", "observations": self.surface_observations},
-                "surfaces",
-            )
-
-
-ATTEMPT_TRACKER = StockAnalysisAttemptTracker()
 DEFAULT_INCREMENTAL_ETF_LIMIT = 120
 DEFAULT_INCREMENTAL_ETF_MAX_AGE_HOURS = 720
 DEFAULT_INCREMENTAL_ETF_COOLDOWN_DAYS = 7
@@ -1540,51 +1225,6 @@ def parse_symbols(value: str) -> list[str]:
             out.append(symbol)
             seen.add(symbol)
     return out
-
-
-def should_emit_stock_financial_detection(args: argparse.Namespace, stocks: list[str]) -> bool:
-    return bool(
-        args.require_stock_financial_pair
-        and args.natural_run
-        and args.event_name == "schedule"
-        and args.event_schedule == STOCK_FINANCIAL_DETECTION_SCHEDULE
-        and tuple(stocks) == STOCK_FINANCIAL_DETECTION_TICKERS
-    )
-
-
-def should_emit_stockanalysis_etf_universe_detection(args: argparse.Namespace) -> bool:
-    """Only the exact natural weekly producer run satisfies universe freshness.
-
-    StockAnalysis publishes membership without a provider observation date. The
-    detection floor therefore uses the successful attempt timestamp, but only a
-    scheduled run can prove that cadence; manual dispatches may refresh the
-    payload while leaving the natural-attempt shard unchanged.
-    """
-
-    return bool(
-        getattr(args, "discover_etf_universe", False)
-        and getattr(args, "natural_run", False)
-        and getattr(args, "event_name", None) == "schedule"
-        and getattr(args, "event_schedule", None) == STOCKANALYSIS_ETF_UNIVERSE_DETECTION_SCHEDULE
-    )
-
-
-def should_emit_stockanalysis_etf_detail_detection(
-    args: argparse.Namespace,
-    etfs: list[str],
-) -> bool:
-    """Only the natural ETF schedules may produce live detail evidence.
-
-    Manual ETF fetches can refresh canonical payloads, but they must not create
-    an attempt row that impersonates the scheduled freshness observation.
-    """
-
-    return bool(
-        etfs
-        and getattr(args, "natural_run", False)
-        and getattr(args, "event_name", None) == "schedule"
-        and getattr(args, "event_schedule", None) in STOCKANALYSIS_ETF_DETAIL_DETECTION_SCHEDULES
-    )
 
 
 def parse_history_periods(value: str) -> tuple[str, ...]:
@@ -2847,7 +2487,6 @@ def fetch_surfaces(
 ) -> dict:
     results = []
     controlled_failure_surfaces = controlled_failure_surfaces or set()
-    ATTEMPT_TRACKER.start_surfaces()
     for idx, name in enumerate(surface_names, 1):
         definition = SURFACE_DEFINITIONS[name]
         start = time.perf_counter()
@@ -2880,7 +2519,6 @@ def fetch_surfaces(
                 "latency_ms": round((time.perf_counter() - start) * 1000),
                 "error": None,
             }
-            ATTEMPT_TRACKER.record_surface_http(response_status, result)
         except urllib.error.HTTPError as exc:
             if recovery_store is not None and recovery_run is not None:
                 recovery_store.record_failure(
@@ -2902,7 +2540,6 @@ def fetch_surfaces(
                 "latency_ms": round((time.perf_counter() - start) * 1000),
                 "error": f"{type(exc).__name__}: {exc}",
             }
-            ATTEMPT_TRACKER.record_surface_http(exc.code, result)
         except Exception as exc:
             if recovery_store is not None and recovery_run is not None:
                 recovery_store.record_failure(
@@ -2924,9 +2561,6 @@ def fetch_surfaces(
                 "latency_ms": round((time.perf_counter() - start) * 1000),
                 "error": f"{type(exc).__name__}: {exc}",
             }
-            ATTEMPT_TRACKER.record_surface_error(
-                "transport" if isinstance(exc, (urllib.error.URLError, TimeoutError, OSError)) else "unexpected"
-            )
 
         results.append(result)
         status = "OK" if result["error"] is None else f"FAIL {result['error'][:240]}"
@@ -2979,7 +2613,6 @@ def fetch_etf_universe(max_pages: int, timeout: int, sleep: float) -> dict:
     warnings = []
     path = "/etf/"
     next_path = None
-    ATTEMPT_TRACKER.start_universe()
 
     for page_idx in range(1, max_pages + 1):
         page = 1
@@ -2988,20 +2621,8 @@ def fetch_etf_universe(max_pages: int, timeout: int, sleep: float) -> dict:
             page = int(match.group(1))
 
         start = time.perf_counter()
-        try:
-            html, status_code = fetch_text_response(path, timeout)
-        except urllib.error.HTTPError as exc:
-            ATTEMPT_TRACKER.record_universe_http(exc.code)
-            raise
-        except (urllib.error.URLError, TimeoutError, OSError):
-            ATTEMPT_TRACKER.record_universe_error("transport")
-            raise
-        try:
-            rows = parse_etf_universe_page(html, page)
-        except Exception:
-            ATTEMPT_TRACKER.record_universe_http(status_code, [])
-            raise
-        ATTEMPT_TRACKER.record_universe_http(status_code, rows)
+        html, status_code = fetch_text_response(path, timeout)
+        rows = parse_etf_universe_page(html, page)
         next_path = next_etf_page_path(html)
         if not rows:
             raise RuntimeError(f"No ETF rows parsed from {path}")
@@ -3027,7 +2648,6 @@ def fetch_etf_universe(max_pages: int, timeout: int, sleep: float) -> dict:
         time.sleep(sleep)
 
     if next_path:
-        ATTEMPT_TRACKER.record_universe_error("unexpected")
         raise RuntimeError(
             f"ETF universe pagination exceeded max_pages={max_pages}; "
             "refusing to publish a truncated discovery"
@@ -3088,7 +2708,6 @@ def fetch_etf_universe_with_recovery(
             recovery_store.record_success("universe", entity, payload, recovery_run)
         return payload
     except Exception as exc:
-        ATTEMPT_TRACKER.record_universe_error("unexpected")
         if not isinstance(exc, (
             urllib.error.URLError,
             TimeoutError,
@@ -6068,9 +5687,6 @@ def fetch_yahoo_etf_fallback(
     minimum_source_as_of: str | None = None,
     require_resolver_fresh: bool = False,
 ) -> dict:
-    retry_count = 0
-    library_latency_ms = 0
-    returned_error_recorded = False
     publication_snapshots = None
     started_at = now_iso()
     try:
@@ -6090,17 +5706,7 @@ def fetch_yahoo_etf_fallback(
             backoffs=(),
             include_evidence=True,
         )
-        retry_count = max(0, int((evidence or {}).get("attempts_used") or 1) - 1)
-        library_latency_ms = max(
-            0,
-            float((evidence or {}).get("latency_ms") or _latency_ms or 0),
-        )
         if error is not None or data is None:
-            ATTEMPT_TRACKER.record_yahoo_returned_error(
-                retry_count=retry_count,
-                latency_ms=library_latency_ms,
-            )
-            returned_error_recorded = True
             raise RuntimeError(error or "Yahoo fallback returned no data")
         if selected_refresh and (any((evidence or {}).get(key) is True for key in ("noFetch", "cached", "cache_hit"))
                                  or data.get("noFetch") is True):
@@ -6140,27 +5746,10 @@ def fetch_yahoo_etf_fallback(
             collection_origin=collection_origin,
             acquisition=acquisition,
         )
-        ATTEMPT_TRACKER.record_yahoo_success(
-            data,
-            retry_count=retry_count,
-            latency_ms=library_latency_ms,
-        )
         return etf_payload
     except Exception as exc:
         if publication_snapshots is not None:
             restore_yahoo_etf_fallback_pair(publication_snapshots)
-        if not returned_error_recorded:
-            ATTEMPT_TRACKER.record_yahoo_error(
-                entity=ticker,
-                exception_kind=(
-                    "transport"
-                    if isinstance(exc, (urllib.error.URLError, TimeoutError, OSError))
-                    else "unexpected"
-                ),
-                retry_count=retry_count,
-                latency_ms=library_latency_ms,
-                error=exc,
-            )
         if isinstance(exc, ValueError):
             record_etf_detail_failure_observation(
                 provider="yahoo_finance",
@@ -6362,7 +5951,6 @@ def run_yahoo_etf_fallback_controlled_failure(
     recovery_run: dict,
 ) -> dict:
     start = time.perf_counter()
-    ATTEMPT_TRACKER.record_yahoo_candidate()
     result = invoke_yahoo_etf_fallback_adapter(
         "record_controlled_failure",
         ticker=ticker,
@@ -6370,13 +5958,6 @@ def run_yahoo_etf_fallback_controlled_failure(
     )
     controlled_error = RuntimeError(
         f"controlled failure injection for yahoo_etf_fallback:{ticker}"
-    )
-    ATTEMPT_TRACKER.record_yahoo_error(
-        entity=ticker,
-        exception_kind="unexpected",
-        retry_count=0,
-        latency_ms=0,
-        error=controlled_error,
     )
     return {
         "ticker": ticker,
@@ -6412,10 +5993,6 @@ def collect_yahoo_etf_fallback_recovery_candidate(ticker: str) -> dict:
         float((evidence or {}).get("latency_ms") or latency_ms or 0),
     )
     if error is not None or data is None:
-        ATTEMPT_TRACKER.record_yahoo_returned_error(
-            retry_count=retry_count,
-            latency_ms=library_latency_ms,
-        )
         raise RuntimeError(error or "Yahoo fallback returned no data")
     if any((evidence or {}).get(key) is True for key in ("noFetch", "cached", "cache_hit")) or data.get("noFetch") is True:
         raise RuntimeError("Yahoo ETF recovery requires fresh provider data")
@@ -6444,7 +6021,6 @@ def run_yahoo_etf_fallback_recovery(
 ) -> dict:
     start = time.perf_counter()
     started_at = now_iso()
-    ATTEMPT_TRACKER.record_yahoo_candidate()
     try:
         if is_natural_schedule_run(recovery_run) and (
             os.environ.get("GITHUB_ACTIONS") != "true" or os.environ.get("GITHUB_EVENT_NAME") != "schedule"
@@ -6463,25 +6039,9 @@ def run_yahoo_etf_fallback_recovery(
             provider_bytes=collected["provider_bytes"],
             mirror_public=mirror_public,
         )
-    except Exception as exc:
-        ATTEMPT_TRACKER.record_yahoo_error(
-            entity=ticker,
-            exception_kind=(
-                "transport"
-                if isinstance(exc, (urllib.error.URLError, TimeoutError, OSError))
-                else "unexpected"
-            ),
-            retry_count=0,
-            latency_ms=round((time.perf_counter() - start) * 1000),
-            error=exc,
-        )
+    except Exception:
         raise
 
-    ATTEMPT_TRACKER.record_yahoo_success(
-        collected["data"],
-        retry_count=collected["retry_count"],
-        latency_ms=collected["latency_ms"],
-    )
     if decision.get("kind") == "success" and decision.get("updated") is True:
         canonical_path = YF_ETF_DETAIL_OUT_DIR / f"{ticker}.json"
         canonical_bytes = canonical_path.read_bytes()
@@ -6687,7 +6247,6 @@ def run_one(
                 stockanalysis_error = f"{type(exc).__name__}: {exc}"
                 failure_signature = getattr(exc, "failure_signature", None)
                 provider_gap = is_expected_missing_error(stockanalysis_error)
-                ATTEMPT_TRACKER.record_yahoo_candidate()
                 failure_reason = (
                     "fetch_failed"
                     if isinstance(exc, ControlledETFDetailFailure)
@@ -6959,7 +6518,6 @@ def run_one(
                     )
                 if yf_fallback and payload.get("detail_status") == "stockanalysis_partial":
                     selected = data_supply_store(provider_truth_root=STORAGE_ROOT).read_active_domain("etf_detail")["current"].get(ticker)
-                    ATTEMPT_TRACKER.record_yahoo_candidate()
                     try:
                         fallback_options = {"collection_origin": collection_origin, "selected_refresh": True}
                         if protected_complete or selected is None or selected["provider"] == "stockanalysis":
@@ -7463,15 +7021,6 @@ def _main() -> None:
             args.fetch_financials,
         )
     )
-    ATTEMPT_TRACKER.configure(
-        active=not args.plan_only and not args.coverage_only and not (
-            classify_catalogs_requested and no_other_work
-        ),
-        yahoo_enabled=args.yf_etf_fallback,
-        run_id=args.run_id,
-        run_attempt=args.run_attempt,
-        universe_detection_enabled=should_emit_stockanalysis_etf_universe_detection(args),
-    )
     if controlled_failure_yahoo_etfs:
         controlled_ticker = next(iter(controlled_failure_yahoo_etfs))
         result = run_yahoo_etf_fallback_controlled_failure(
@@ -7484,9 +7033,6 @@ def _main() -> None:
             flush=True,
         )
         return
-    stock_financial_detection_active = should_emit_stock_financial_detection(args, stocks)
-    if stock_financial_detection_active:
-        ATTEMPT_TRACKER.start_stock_financial(len(stocks))
     if args.endpoint_canary:
         try:
             canary = run_endpoint_canary(args.timeout)
@@ -7497,15 +7043,9 @@ def _main() -> None:
                 f"blocked={canary['counts']['blocked']} status={canary['status']}",
                 flush=True,
             )
-        except Exception as exc:
-            ATTEMPT_TRACKER.record_yahoo_producer_failure(
-                "transport"
-                if isinstance(exc, (urllib.error.URLError, TimeoutError, OSError))
-                else "unexpected"
-            )
+        except Exception:
             raise
         if canary["status"] != "ready":
-            ATTEMPT_TRACKER.record_yahoo_producer_failure("unexpected")
             raise SystemExit(3)
     required_history_periods = (
         parse_history_periods(args.required_history_periods)
@@ -7722,8 +7262,6 @@ def _main() -> None:
     # ETF detail writes 5,605 canonical payloads. Until this attempt record
     # existed, no lane owned that output and the data-plane inventory could not
     # account for the largest group in the estate.
-    if should_emit_stockanalysis_etf_detail_detection(args, etfs):
-        ATTEMPT_TRACKER.start_etf_detail(len(etfs))
     for kind, symbols in (("etf", etfs), ("stock", stocks)):
         for idx, ticker in enumerate(symbols, 1):
             if kind == "etf" and ticker in yahoo_retry_etfs:
@@ -7764,10 +7302,6 @@ def _main() -> None:
                     ),
                 )
             results.append(result)
-            if kind == "etf":
-                ATTEMPT_TRACKER.record_etf_detail(result)
-            if kind == "stock" and stock_financial_detection_active:
-                ATTEMPT_TRACKER.record_stock_financial(result)
             status = "OK" if result["error"] is None else f"FAIL {result['error'][:240]}"
             if result["error"] is None and result.get("provider") == "yahoo_finance":
                 status = "YF_FALLBACK"
@@ -7992,11 +7526,7 @@ def _main() -> None:
 
 
 def main() -> None:
-    ATTEMPT_TRACKER.__init__()
-    try:
-        _main()
-    finally:
-        ATTEMPT_TRACKER.emit()
+    _main()
 
 
 if __name__ == "__main__":

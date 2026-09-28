@@ -1972,7 +1972,7 @@ export function emitPinnedDetectionReport({
 
 function parseArgs(argv) {
   if (argv.length === 2 && argv[0] === "--verify-report") return { mode: "verify", reportPath: argv[1] };
-  const allowed = new Set(["--artifact-root", "--attempt-evidence", "--attempt-shard-root", "--calendar-fixture", "--calendars", "--now", "--output-root"]);
+  const allowed = new Set(["--artifact-root", "--calendar-fixture", "--calendars", "--now", "--output-root"]);
   const values = {};
   for (let index = 0; index < argv.length; index += 2) {
     const flag = argv[index];
@@ -1981,10 +1981,9 @@ function parseArgs(argv) {
     values[flag] = value;
   }
   const required = ["--artifact-root", "--now", "--output-root"];
-  const attemptInputs = ["--attempt-evidence", "--attempt-shard-root"].filter((flag) => values[flag] != null);
   const calendarInputs = ["--calendar-fixture", "--calendars"].filter((flag) => values[flag] != null);
-  if (argv.length % 2 !== 0 || required.some((flag) => values[flag] == null) || attemptInputs.length !== 1 || calendarInputs.length !== 1) {
-    fail("cli_error", "build requires artifact/now/output and exactly one attempt source plus one calendar source");
+  if (argv.length % 2 !== 0 || required.some((flag) => values[flag] == null) || calendarInputs.length !== 1) {
+    fail("cli_error", "build requires artifact/now/output and exactly one calendar source");
   }
   return { mode: "build", values };
 }
@@ -2055,10 +2054,6 @@ function main() {
   const args = parsed.values;
   const artifactRoot = canonicalExistingDirectory(args["--artifact-root"]);
   const fixtureRoot = canonicalExistingDirectory(FIXTURE_ROOT);
-  // --attempt-evidence/--attempt-shard-root remain accepted (and exactly one is
-  // still required) so the frozen workflow bridge keeps running, but the floor
-  // no longer reads or validates attempt evidence: the report is derived from
-  // lane artifacts and the freshness policy alone.
   const calendars = args["--calendars"]
     ? readJsonStrict(args["--calendars"], [canonicalExistingDirectory(path.dirname(CALENDAR_PATH))])
     : readJsonStrict(args["--calendar-fixture"], [fixtureRoot, artifactRoot]);

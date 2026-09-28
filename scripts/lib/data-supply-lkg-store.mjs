@@ -2,7 +2,7 @@ import { createHash } from "node:crypto";
 import fs from "node:fs";
 import path from "node:path";
 
-import { atomicWrite, writeJsonAtomic } from "./data-supply-attempt-shard.mjs";
+import { atomicWrite, writeJsonAtomic } from "./atomic-file.mjs";
 
 export const LKG_STATE_SCHEMA = "data-supply-lkg-state/v1";
 export const PROMOTION_CONTRACT_LEGACY_SOURCE_MARKER_V1 = "legacy_source_marker/v1";

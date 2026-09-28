@@ -142,15 +142,13 @@ assert.equal(manifest.collections.length, 1);
     attemptId: "finra-short-volume-test-1",
   });
   assert.equal(result.row_count, 2);
-  const shard = JSON.parse(fs.readFileSync(attemptShardPath, "utf8"));
-  assert.equal(shard.lane_id, "finra_short_volume");
-  assert.deepEqual(shard.attempts[0].assertions, [{ id: "regsho_rows", passed: true }]);
+  assert.equal(fs.existsSync(attemptShardPath), false, "no persistent attempt record is written");
 }
 
 {
   // A natural request exception must retain its stable reason while exposing a
   // bounded, secret-safe detail beside the thrown run result only. The attempt
-  // shard remains schema-stable and continues to carry only the tuple.
+  // diagnostics remain secret-safe on the thrown result.
   const tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), "fenok-finra-diagnostic-"));
   const attemptShardPath = path.join(tmpDir, "finra_short_volume.json");
   const secret = "finra-secret-must-not-leak";
@@ -180,8 +178,7 @@ assert.equal(manifest.collections.length, 1);
       return true;
     },
   );
-  const shard = JSON.parse(fs.readFileSync(attemptShardPath, "utf8"));
-  assert.equal(Object.hasOwn(shard.attempts[0], "failure_detail"), false, "attempt shard schema must remain unchanged");
+  assert.equal(fs.existsSync(attemptShardPath), false, "no persistent attempt record is written");
 }
 
 {
@@ -198,8 +195,7 @@ assert.equal(manifest.collections.length, 1);
   });
   assert.equal(summary.controlled_failure, true);
   assert.equal(summary.failure_detail ?? null, null, "controlled synthetic failures must not invent diagnostic detail");
-  const shard = JSON.parse(fs.readFileSync(attemptShardPath, "utf8"));
-  assert.equal(Object.hasOwn(shard.attempts[0], "failure_detail"), false, "attempt shard schema must remain unchanged");
+  assert.equal(fs.existsSync(attemptShardPath), false, "no persistent attempt record is written");
 }
 
 {
@@ -296,9 +292,7 @@ assert.equal(manifest.collections.length, 1);
     observedAt: "2026-07-15T03:05:00Z",
     attemptId: "finra-short-volume-test-missing",
   }), /all files missing/);
-  const shard = JSON.parse(fs.readFileSync(attemptShardPath, "utf8"));
-  assert.equal(shard.attempts[0].http_status, 403);
-  assert.equal(shard.attempts[0].auth, "not_applicable", "FINRA not-published 403 is not mislabeled as auth rejection");
+  assert.equal(fs.existsSync(attemptShardPath), false, "no persistent attempt record is written");
 }
 
 {

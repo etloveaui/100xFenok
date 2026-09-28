@@ -40,8 +40,6 @@ jobs:
           sparse-checkout: |
             scripts
             .github/workflows
-            data/admin/data-supply-state/detection-attempts
-            data/admin/data-supply-state/publish-outcomes
             data/admin/fred_yardeni
             data/benchmarks
             data/yardney
@@ -82,9 +80,9 @@ jobs:
           set -euo pipefail
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
-          # Public-safe detection attempt shard AND the Yardeni LKG recovery state
-          # (freshness marker + retained LKG copy + recovery index) are committed on
-          # every run so retry/recovery accounting survives across CI runs. These
+          # The Yardeni LKG recovery state (freshness marker, retained LKG copy,
+          # and recovery index) is committed on every run so retry/recovery
+          # accounting survives across CI runs. These
           # carry no FRED bond-yield components.
           scripts/stage-lane-manifest.sh \
             --workflow .github/workflows/fetch-fred-yardeni.yml \
@@ -127,7 +125,3 @@ jobs:
           DATA_PLANE_ENDPOINT: https://100xfenok.etloveaui.workers.dev/internal/cloud-data-plane
           DATA_PLANE_WRITE_KEY: ${{ secrets.DATA_PLANE_WRITE_KEY }}
         run: node scripts/publish-cloud-data-generation.mjs --family=fred-yardeni --tolerate-gate-block --json
-
-      - name: Persist fred-yardeni publish outcome
-        if: ${{ always() }}
-        run: node scripts/persist-cloud-publish-outcome.mjs --family=fred-yardeni --workflow=.github/workflows/fetch-fred-yardeni.yml --publisher-outcome=${{ steps.publish_cloud_generation.outcome }}

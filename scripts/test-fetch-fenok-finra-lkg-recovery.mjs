@@ -64,7 +64,6 @@ function sampleFor(compactDate) {
       requests += 1;
       return { statusCode: 200, body: sampleFor("20260715") };
     },
-    attemptShardPath: path.join(root, "attempts", `${FINRA_LANE_ID}.json`),
     observedAt: "2026-07-15T04:00:00Z",
     attemptId: "finra-controlled-failure-attempt",
     lkgRepoRoot: root,

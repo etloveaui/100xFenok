@@ -9,12 +9,7 @@ import { spawnSync } from "node:child_process";
 import { fileURLToPath, pathToFileURL } from "node:url";
 
 import { boundedDiagnosticDetail } from "./lib/diagnostic-detail.mjs";
-import {
-  attemptResult,
-  defaultAttemptId,
-  libraryTuple,
-  writeAttemptShard,
-} from "./lib/data-supply-attempt-shard.mjs";
+import { attemptResult, defaultAttemptId, libraryTuple } from "./lib/provider-fetch-result.mjs";
 import {
   LaneLkgStore,
   PROMOTION_CONTRACT_PROVIDER_OBSERVATION_V2,
@@ -24,8 +19,6 @@ import {
 } from "./lib/data-supply-lkg-store.mjs";
 
 export const SCHEMA_VERSION = "damodaran-owner-guard/v1";
-export const ATTEMPT_SHARD_RELATIVE_PATH =
-  "data/admin/data-supply-state/detection-attempts/damodaran.json";
 export const FILE_NAMES = Object.freeze([
   "industries.json",
   "historical_erp.json",
@@ -64,7 +57,6 @@ const REPO_ROOT = path.resolve(SCRIPT_DIR, "..");
 export const REPORT_RELATIVE_PATH = process.env.DAMODARAN_SHADOW_REPORT
   ?? "data/admin/damodaran/owner-guard.json";
 const REPORT_PATH = path.join(REPO_ROOT, REPORT_RELATIVE_PATH);
-const ATTEMPT_SHARD_PATH = path.join(REPO_ROOT, ATTEMPT_SHARD_RELATIVE_PATH);
 const PRODUCER_PATH = path.join(
   SCRIPT_DIR,
   "lib",
@@ -577,7 +569,6 @@ function thrownResult(error, latencyMs) {
 export function runDamodaranShadow({
   repoRoot = REPO_ROOT,
   reportPath = path.join(repoRoot, REPORT_RELATIVE_PATH),
-  attemptShardPath = path.join(repoRoot, ATTEMPT_SHARD_RELATIVE_PATH),
   canonicalRoot = path.join(repoRoot, "data", "damodaran"),
   currentBundlePath = path.join(repoRoot, "data", "admin", "damodaran", "current", "damodaran.json"),
   historyPath = path.join(repoRoot, "data", "admin", "damodaran", "history.json"),
@@ -689,13 +680,6 @@ export function runDamodaranShadow({
     }
   } catch (error) {
     const latencyMs = Math.max(0, Math.round(now() - startedAt));
-    writeAttemptShard({
-      laneId: "damodaran",
-      attemptShardPath,
-      observedAt,
-      attemptId,
-      result: thrownResult(error, latencyMs),
-    });
     bootstrapCurrentBundle(canonicalRoot, currentBundlePath);
     store.recordFailure({
       artifacts: [artifact],
@@ -861,13 +845,7 @@ export function runDamodaranShadow({
 
   atomicWriteJson(reportPath, report);
   const latencyMs = Math.max(0, Math.round(now() - startedAt));
-  const row = writeAttemptShard({
-    laneId: "damodaran",
-    attemptShardPath,
-    observedAt,
-    attemptId,
-    result: resultForReport(report, producerResult, latencyMs),
-  });
+  const row = resultForReport(report, producerResult, latencyMs).attempt;
   return {
     exitCode: recoveryResult?.exitCode ?? (report.status === "match" ? 0 : 2),
     report,

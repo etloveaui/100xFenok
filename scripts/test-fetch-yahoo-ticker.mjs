@@ -86,7 +86,8 @@ async function runCase(request, { seed = false, ...options } = {}) {
     eventName: "workflow_dispatch",
     ...options,
   });
-  const shard = JSON.parse(fs.readFileSync(paths.attemptShardPath, "utf8"));
+  const shard = { attempts: [result.row] };
+  assert.equal(fs.existsSync(paths.attemptShardPath), false);
   assert.equal(validateAttemptShard(shard, "yahoo_ticker_macro"), true);
   assert.equal(shard.attempts[0].member_id, null);
   return { root, result, shard, paths };
@@ -653,8 +654,6 @@ for (const mutate of [
       ["success_verify_not_plan", stages.success_verify_not_plan_if_exists.length],
     ],
     [
-      ["always", "file", "data/admin/data-supply-state/detection-attempts/yahoo_ticker_macro.json", false],
-      ["always", "file", "data/admin/data-supply-state/publish-outcomes/yahoo-ticker-macro.json", false],
       ["always", "directory", "data/admin/yahoo-hourly-ticker", false],
       ["success", "file", "data/macro/yahoo-ticker.json", true],
       ["required_on_success", 0],

@@ -242,19 +242,12 @@ class StockAnalysisWorkflowContractTest(unittest.TestCase):
 
     def test_natural_etf_plane_publish_reuses_artifact_outside_git_lock(self) -> None:
         plane = re.search(
-            r"  publish-stockanalysis-etf-plane:\n(?P<body>.*?)(?=\n  persist-stockanalysis-etf-plane:)",
-            self.text,
-            flags=re.DOTALL,
-        )
-        persist = re.search(
-            r"  persist-stockanalysis-etf-plane:\n(?P<body>.*)\Z",
+            r"  publish-stockanalysis-etf-plane:\n(?P<body>.*?)(?=\n  dispatch-stockanalysis-projection:)",
             self.text,
             flags=re.DOTALL,
         )
         self.assertIsNotNone(plane)
-        self.assertIsNotNone(persist)
         plane_body = plane.group("body")
-        persist_body = persist.group("body")
         for expected in (
             "github.event_name == 'schedule'",
             "github.event.schedule == '50 23 * * 1-5'",
@@ -264,10 +257,8 @@ class StockAnalysisWorkflowContractTest(unittest.TestCase):
             "needs.acquire-stockanalysis.outputs.artifact_digest",
             "scripts/stockanalysis_artifact.py apply",
             'if [ "$APPLY_STATUS" != "applied" ]; then',
-            'rm -f "$OUTCOME_SHARD"',
             "group: stockanalysis-etf-detail-publish",
             "node scripts/publish-cloud-data-generation.mjs --family=stockanalysis-etf-detail --json",
-            "stockanalysis-etf-detail-outcome-${{ github.run_id }}-${{ github.run_attempt }}",
             "github.event_name == 'workflow_dispatch' && inputs.core_basket_refresh == 'true'",
             "inputs.stocks_only != 'true' && inputs.history_gap_plan != 'true'",
             "inputs.controlled_failure_tickers == '' && inputs.controlled_failure_surfaces == ''",
@@ -276,10 +267,6 @@ class StockAnalysisWorkflowContractTest(unittest.TestCase):
         self.assertNotIn("fenok-data-writer-refs/heads/main", plane_body)
         self.assertNotIn("git commit", plane_body)
         self.assertNotIn("git push", plane_body)
-        self.assertGreaterEqual(plane_body.count('rm -f "$OUTCOME_SHARD"'), 2)
-        self.assertIn("group: fenok-data-writer-refs/heads/main", persist_body)
-        self.assertIn("scripts/persist-cloud-publish-outcome.mjs", persist_body)
-        self.assertIn("--workflow=.github/workflows/fetch-stockanalysis.yml", persist_body)
 
     def test_candidate_artifact_is_context_bound_and_immutable(self) -> None:
         for expected in (
@@ -426,8 +413,8 @@ class StockAnalysisWorkflowContractTest(unittest.TestCase):
         self.assertIn('echo "stale apply reason: $APPLY_REASON" >&2', stale)
         self.assertIn('GITHUB_STEP_SUMMARY', stale)
         self.assertIn("exit 75", stale)
-        self.assertIn("scripts/stockanalysis_artifact.py verify-attempt", publish)
-        verify_start = publish.index("python3 scripts/stockanalysis_artifact.py verify-attempt")
+        self.assertIn("scripts/stockanalysis_artifact.py verify-readback", publish)
+        verify_start = publish.index("python3 scripts/stockanalysis_artifact.py verify-readback")
         verify_end = publish.index('})"; then', verify_start)
         verify = publish[verify_start:verify_end]
         self.assertIn('--artifact-root "$ARTIFACT_ROOT"', verify)
@@ -437,12 +424,8 @@ class StockAnalysisWorkflowContractTest(unittest.TestCase):
         self.assertIn('echo "status=$ACCEPTED_STATUS" >> "$GITHUB_OUTPUT"', publish)
         self.assertIn('fence_reason=main_readback_infrastructure', publish)
         self.assertIn('fence_reason=main_readback_mismatch', publish)
-        # Attempt verification proves the attempt's shards are present; it does
-        # not prove current origin carries THIS artifact. Confirmation may only
-        # be emitted after the published commit is shown reachable from current
-        # main AND that commit's own artifact-digest trailer equals the
-        # acquisition digest, so that "confirmed" is an identity claim rather
-        # than a coincidence of two independent successes.
+        # Readback checks exact packed files on current main. Confirmation also
+        # requires commit reachability and the acquisition digest trailer.
         self.assertIn('fence_reason=main_readback_identity', publish)
         self.assertIn("sed -n 's/^StockAnalysis-Artifact-Digest: //p'", publish)
         self.assertIn('[ "$COMMIT_ARTIFACT_DIGEST" != "$ARTIFACT_DIGEST" ]', publish)
@@ -460,7 +443,7 @@ class StockAnalysisWorkflowContractTest(unittest.TestCase):
     def test_publish_reuses_validation_only_for_identical_covered_inputs(self) -> None:
         publish = self.text.split("  publish-stockanalysis:\n", 1)[1]
         reachability = "for backoff in 15 30 60; do"
-        verify_start = publish.index("python3 scripts/stockanalysis_artifact.py verify-attempt")
+        verify_start = publish.index("python3 scripts/stockanalysis_artifact.py verify-readback")
         self.assertIn('VALIDATED_INPUT_FINGERPRINT=""', publish)
         self.assertIn('VALIDATION_INPUT_FINGERPRINT="$(' , publish)
         for covered in (
@@ -489,7 +472,6 @@ class StockAnalysisWorkflowContractTest(unittest.TestCase):
             "python3 scripts/test_stockanalysis_recovery_state.py",
             "node scripts/test-yahoo-etf-fallback-recovery.mjs",
             "node scripts/test-stockanalysis-lane-parity.mjs",
-            "node scripts/test-stockanalysis-attempt-emitter.mjs",
             "python3 -m unittest scripts/test_stockanalysis_surface_contract.py",
             "python3 -m unittest scripts/test_stockanalysis_workflow_contract.py",
             "python3 -m unittest scripts/test_resolve_etf_detail_candidates.py",
@@ -534,10 +516,10 @@ class StockAnalysisWorkflowContractTest(unittest.TestCase):
             publish.index(unknown),
             publish.index('fence_reason=main_readback_identity'),
         )
-        # All three proofs gate the confirmation, in order: attempt, then remote
+        # All three proofs gate the confirmation, in order: file readback, then remote
         # reachability, then trailer equality.
         self.assertLess(
-            publish.index("scripts/stockanalysis_artifact.py verify-attempt"),
+            publish.index("scripts/stockanalysis_artifact.py verify-readback"),
             publish.index(reachability),
         )
         self.assertLess(
@@ -550,14 +532,14 @@ class StockAnalysisWorkflowContractTest(unittest.TestCase):
         )
         self.assertLess(
             publish.index("git push origin HEAD:main"),
-            publish.index("scripts/stockanalysis_artifact.py verify-attempt"),
+            publish.index("scripts/stockanalysis_artifact.py verify-readback"),
         )
         push = publish.index("git push origin HEAD:main")
         checkout = publish.index("git checkout -f -B main origin/main", push)
-        self.assertLess(checkout, publish.index("scripts/stockanalysis_artifact.py verify-attempt"))
+        self.assertLess(checkout, publish.index("scripts/stockanalysis_artifact.py verify-readback"))
         success_status = publish.index('echo "status=$ACCEPTED_STATUS" >> "$GITHUB_OUTPUT"', verify_start)
         self.assertLess(
-            publish.index("scripts/stockanalysis_artifact.py verify-attempt"),
+            publish.index("scripts/stockanalysis_artifact.py verify-readback"),
             success_status,
         )
 

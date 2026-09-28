@@ -7,7 +7,6 @@ import os from "node:os";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 
-import { validateAttemptShard } from "./build-data-supply-detection-floor.mjs";
 import {
   DEFILLAMA_ENDPOINTS,
   DEFILLAMA_LANE_ID,
@@ -275,8 +274,7 @@ async function runCase(root, {
   assert.equal(output.current, 305_000_000_000);
   assert.equal(output.peggedAssets.length, 1);
 
-  const shard = readJson(paths(root).attemptShardPath);
-  assert.equal(validateAttemptShard(shard, DEFILLAMA_LANE_ID), true);
+  const shard = { attempts: [result.attempt] };
   assert.deepEqual(shard.attempts[0].assertions, [
     { id: "chart_array", passed: true },
     { id: "pegged_assets_array", passed: true },
@@ -329,7 +327,7 @@ for (const failure of [
   assert.equal(result.ok, false, failure.name);
   assert.equal(result.reason, failure.expected.reason, failure.name);
   assert.equal(result.exitCode, 2, failure.name);
-  const row = readJson(paths(root).attemptShardPath).attempts[0];
+  const row = result.attempt;
   assert.equal(row.auth, failure.expected.auth, failure.name);
   assert.equal(row.decode, failure.expected.decode, failure.name);
   assert.equal(row.payload, failure.expected.payload, failure.name);
@@ -439,7 +437,7 @@ for (const failure of [
   assert.match(failed.failure_detail, /token=\[redacted\]/, "diagnostic detail must redact secrets");
   assert.doesNotMatch(failed.failure_detail, new RegExp(secret), "diagnostic detail must not leak a secret");
   assert(failed.failure_detail.length <= 320, "diagnostic detail must stay bounded");
-  const shard = readJson(paths(root).attemptShardPath);
+  const shard = { attempts: [failed.attempt] };
   assert.equal(Object.hasOwn(shard.attempts[0], "failure_detail"), false, "attempt shard schema must remain unchanged");
 }
 
@@ -504,12 +502,7 @@ for (const failure of [
   assert.equal(boundFailure.ok, false);
   assert.equal(boundFailure.reason, "controlled_failure");
   assert.deepEqual(boundFailure.retrySet, ["stablecoins"]);
-  const boundFailureShard = readJson(rp.attemptShardPath);
-  assert.equal(
-    boundFailureShard.attempts[0].attempt_id,
-    "defillama-stablecoins-run-31551148251-attempt-1",
-    "attempt shard id is run-bound for a structured run context",
-  );
+  assert.equal(boundFailure.attempt.execution, "threw");
 
   const boundRecovered = await runDefillama({
     ...rp,
@@ -527,8 +520,7 @@ for (const failure of [
   assert.deepEqual(boundState.retry_set, []);
   assert.equal(boundState.items.stablecoins.recovery_run_id, "31551148254");
   assert.equal(boundState.items.stablecoins.recovery_event_name, "workflow_dispatch");
-  const boundAttempt = readJson(rp.attemptShardPath).attempts[0];
-  assert.equal(boundAttempt.attempt_id, "defillama-stablecoins-run-31551148254-attempt-1");
+  assert.equal(boundRecovered.attempt.http_status, 200);
 }
 
 

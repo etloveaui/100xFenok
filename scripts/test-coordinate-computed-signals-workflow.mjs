@@ -5,17 +5,16 @@
 // Proves, statically against the committed workflows and the canonical lane
 // commit manifest:
 //   1. the six source workflows never dispatch update-manifest.yml per run and
-//      keep their family publisher + outcome persistence steps;
+//      keep their family publisher steps;
 //   2. coordinate-computed-signals.yml listens to exactly those six workflow
 //      names, is fail-closed to successful main completions, serializes
 //      overlapping completions, resets to latest origin/main, and executes
-//      export -> publish -> cleanup -> persist in that exact order with no
+//      export -> publish -> cleanup in that exact order with no
 //      Deploy Worker dispatch and no signals Git commit surface;
 //   3. the generated Update Manifest push contract excludes exactly the six
 //      owned canonical/admin source paths while schedule/manual/unrelated
 //      data triggers remain;
-//   4. the computed-signals publish-outcome shard is authorized by the lane
-//      manifest and excluded from every recursive trigger path.
+//   4. the coordinator has no Git commit stage or recursive trigger path.
 
 import assert from "node:assert/strict";
 import fs from "node:fs";
@@ -29,7 +28,7 @@ import {
 import {
   COMPUTED_SIGNALS_SOURCE_LANE_IDS,
   LANE_REGISTRY,
-  PLANE_PUBLISH_OUTCOME_BINDINGS,
+  PLANE_PUBLISH_FAMILY_BINDINGS,
 } from "./lib/lane-registry.mjs";
 import { canonicalJson } from "./lib/json-canonical.mjs";
 
@@ -38,7 +37,6 @@ const workflowsDir = path.join(repoRoot, ".github", "workflows");
 const manifestPath = path.join(repoRoot, "data", "admin", "lane-commit-manifest.json");
 const COORDINATOR = ".github/workflows/coordinate-computed-signals.yml";
 const DISPATCH_CALL = "gh workflow run update-manifest.yml";
-const OUTCOME_SHARD = "data/admin/data-supply-state/publish-outcomes/computed-signals.json";
 const GLOBAL_WRITER_GROUP = "fenok-data-writer-refs/heads/main";
 
 function countOccurrences(source, needle) {
@@ -73,7 +71,7 @@ function workflowDisplayName(source, file) {
 const SOURCE_WORKFLOWS = COMPUTED_SIGNALS_SOURCE_LANE_IDS.map((laneId) => {
   const lane = LANE_REGISTRY.lanes.find((candidate) => candidate.id === laneId);
   assert.ok(lane?.owner_workflow, `computed-signals source lane must have an owner: ${laneId}`);
-  const bindings = Object.entries(PLANE_PUBLISH_OUTCOME_BINDINGS)
+  const bindings = Object.entries(PLANE_PUBLISH_FAMILY_BINDINGS)
     .filter(([, binding]) => binding.lane_id === laneId && binding.workflow === lane.owner_workflow);
   assert.equal(bindings.length, 1, `computed-signals source lane must have exactly one matching plane family: ${laneId}`);
   const [family] = bindings[0];
@@ -82,7 +80,7 @@ const SOURCE_WORKFLOWS = COMPUTED_SIGNALS_SOURCE_LANE_IDS.map((laneId) => {
   return { lane, laneId, workflow: lane.owner_workflow, file, family, name: workflowDisplayName(source, file), source };
 });
 
-// --- 1) Six source workflows: dispatch removed, publisher/persist kept --------
+// --- 1) Six source workflows: dispatch removed, publisher kept ---------------
 assert.equal(SOURCE_WORKFLOWS.length, 6, "computed-signals must retain exactly six source lanes");
 for (const { file, family, source } of SOURCE_WORKFLOWS) {
   assertMinimalWriterPermissions(source, file);
@@ -104,11 +102,7 @@ for (const { file, family, source } of SOURCE_WORKFLOWS) {
     1,
     `${file} must keep exactly one ${family} plane publisher`,
   );
-  assert.equal(
-    countOccurrences(source, `persist-cloud-publish-outcome.mjs --family=${family}`),
-    1,
-    `${file} must keep exactly one ${family} outcome persistence step`,
-  );
+
 }
 
 // --- 2) Coordinator structure -------------------------------------------------
@@ -143,19 +137,6 @@ for (const { file, family, source } of SOURCE_WORKFLOWS) {
     "exporter shared signals-core dependency must resolve on disk",
   );
 
-  // Persistence dependency must be present in the sparse checkout. The
-  // persistence helper always reads the lane manifest, so the coordinator
-  // must materialize the exact manifest path next to the outcome shard or
-  // persistence cannot start. Prove both the checked-out path and the helper
-  // that reads it, not only a hand-written workflow string.
-  assert.match(sparseBlock, /^            data\/admin\/lane-commit-manifest\.json$/m,
-    "coordinator sparse checkout must include the lane commit manifest");
-  const persistSource = fs.readFileSync(path.join(repoRoot, "scripts", "persist-cloud-publish-outcome.mjs"), "utf8");
-  assert.ok(
-    persistSource.includes('"data/admin/lane-commit-manifest.json"'),
-    "outcome persistence must read the lane commit manifest at the checked-out path",
-  );
-
   // Latest-main reset precedes the exporter.
   const resetFetch = source.indexOf("git fetch --depth=1 origin +main:refs/remotes/origin/main");
   const resetCheckout = source.indexOf("git checkout -B main origin/main");
@@ -163,7 +144,7 @@ for (const { file, family, source } of SOURCE_WORKFLOWS) {
   assert.ok(resetFetch >= 0 && resetCheckout >= 0, "coordinator must reset to the latest origin/main");
   assert.ok(resetFetch < exportIndex && resetCheckout < exportIndex, "latest-main reset must precede the exporter");
 
-  // Exact build/publish/cleanup/persist order.
+  // Exact build/publish/cleanup order.
   const publishCommand = "node scripts/publish-cloud-data-generation.mjs --family=computed-signals --tolerate-gate-block --json";
   const publishIndex = source.indexOf(publishCommand);
   assert.equal(countOccurrences(source, publishCommand), 1, "coordinator must publish computed-signals exactly once");
@@ -175,20 +156,11 @@ for (const { file, family, source } of SOURCE_WORKFLOWS) {
   const cleanupIndex = source.indexOf("git restore --source=HEAD --worktree --");
   const cleanupCanonicalIndex = source.indexOf("data/computed/signals.json", cleanupIndex);
   const cleanupPublicIndex = source.indexOf("100xfenok-next/public/data/computed/signals.json", cleanupIndex);
-  const persistIndex = source.indexOf("persist-cloud-publish-outcome.mjs --family=computed-signals --workflow=.github/workflows/coordinate-computed-signals.yml");
   assert.ok(cleanupIndex >= 0 && cleanupCanonicalIndex >= 0 && cleanupPublicIndex >= 0,
     "coordinator must restore both tracked signal files to HEAD");
-  assert.ok(publishIndex < cleanupIndex && cleanupIndex < persistIndex, "cleanup must run after publish and before persistence");
+  assert.ok(publishIndex < cleanupIndex, "cleanup must run after publish");
   assert.doesNotMatch(source, /rm\s+(?:-[^\s]+\s+)*[^\n]*signals\.json/,
     "coordinator must not delete tracked signal files during cleanup");
-  assert.equal(
-    countOccurrences(source, "persist-cloud-publish-outcome.mjs --family=computed-signals --workflow=.github/workflows/coordinate-computed-signals.yml --publisher-outcome=${{ steps.publish_cloud_generation.outcome }}"),
-    1,
-    "coordinator must persist the computed-signals outcome with the exact publisher-outcome binding",
-  );
-  const persistStep = source.slice(source.lastIndexOf("\n      - name:", persistIndex));
-  assert.ok(persistStep.includes("if: ${{ always() }}"), "outcome persistence must run unconditionally");
-
   // No Deploy Worker and no signals Git commit.
   assert.equal(countOccurrences(source, "gh workflow run"), 0, "coordinator must not dispatch any workflow");
   assert.ok(!source.includes("deploy-worker.yml"), "coordinator must not dispatch Deploy Worker");
@@ -201,7 +173,7 @@ for (const { file, family, source } of SOURCE_WORKFLOWS) {
 }
 
 // All seven computed-signals workflows share Update Manifest's exact global
-// writer queue. This eliminates source/outcome/UM Git races by construction;
+// writer queue. This eliminates source/UM Git races by construction;
 // queue max retains every completion and cancel false preserves in-flight work.
 {
   const updateManifestSource = readWorkflow("update-manifest.yml");
@@ -244,7 +216,7 @@ function pathIncluded(triggerPaths, candidate) {
   const triggerPaths = manifest.update_manifest.trigger_paths;
   assert.ok(triggerPaths.includes("data/**"), "broad data trigger must remain for unrelated lanes");
   assert.ok(triggerPaths.includes("!data/computed/**"), "generic computed data must stay excluded");
-  assert.ok(triggerPaths.includes("!data/admin/data-supply-state/**"), "outcome evidence root must stay excluded");
+  assert.ok(triggerPaths.includes("!data/admin/data-supply-state/**"), "admin state root must stay excluded");
 
   const exactExclusions = [
     ...SOURCE_WORKFLOWS.flatMap(({ lane }) => lane.roots.canonical_outputs.map((output) => {
@@ -275,25 +247,22 @@ function pathIncluded(triggerPaths, candidate) {
     assert.equal(pathIncluded(triggerPaths, owned), false, `${owned} must not implicitly trigger Update Manifest`);
   }
 
-  // Unrelated data and the outcome shard.
+  // Unrelated data remains an Update Manifest trigger.
   assert.equal(pathIncluded(triggerPaths, "data/indices/sp500.json"), true, "unrelated data push must still trigger");
   assert.equal(pathIncluded(triggerPaths, "data/macro/yahoo-ticker.json"), true, "non-excluded macro push must still trigger");
-  assert.equal(pathIncluded(triggerPaths, OUTCOME_SHARD), false, "computed-signals outcome shard must never trigger UM");
 }
 
-// --- 4) Lane manifest / outcome authorization + recursion exclusion ----------
+// --- 4) Coordinator metadata and recursion exclusion -------------------------
 {
   const manifest = JSON.parse(fs.readFileSync(manifestPath, "utf8"));
-  const binding = PLANE_PUBLISH_OUTCOME_BINDINGS["computed-signals"];
+  const binding = PLANE_PUBLISH_FAMILY_BINDINGS["computed-signals"];
   assert.ok(binding, "computed-signals must be a bound plane publish family");
-  assert.equal(binding.workflow, COORDINATOR, "computed-signals outcome must be owned by the coordinator");
+  assert.equal(binding.workflow, COORDINATOR, "computed-signals publish is owned by the coordinator");
 
   const entry = manifest.workflows[COORDINATOR];
   assert.ok(entry, "coordinator workflow must be declared in the lane-commit manifest");
   assert.deepEqual(entry.lanes, [], "coordinator owns no acquisition lane");
-  assert.deepEqual(entry.stages.always_if_exists, [
-    { kind: "file", path: OUTCOME_SHARD, required: false },
-  ], "coordinator must own exactly the optional outcome shard");
+  assert.deepEqual(entry.stages.always_if_exists, [], "coordinator owns no Git commit outputs");
   assert.deepEqual(entry.stages.success_if_exists, [], "coordinator must never stage canonical signal files");
   assert.deepEqual(entry.stages.success_verify_not_plan_if_exists, [], "coordinator must never verify-stage signal files");
   assert.deepEqual(entry.stages.required_on_success, [], "coordinator must never require signal files");
@@ -302,16 +271,10 @@ function pathIncluded(triggerPaths, candidate) {
   const declaredClass = LANE_REGISTRY.workflow_classes[COORDINATOR];
   assert.equal(declaredClass?.class, "platform_publisher", "coordinator must be a declared platform publisher");
 
-  // Recursion exclusion: the coordinator never reacts to Update Manifest, and
-  // the outcome shard is not part of UM's central commit set either.
+  // Recursion exclusion: the coordinator never reacts to Update Manifest.
   const source = readWorkflow("coordinate-computed-signals.yml");
   const namesBlock = source.slice(source.indexOf("workflow_run:"), source.indexOf("types:"));
   assert.equal(namesBlock.includes("Update Manifest"), false, "coordinator must not listen to Update Manifest");
-  assert.equal(
-    manifest.update_manifest.central_commit_paths.includes(OUTCOME_SHARD),
-    false,
-    "outcome shard must not be a central Update Manifest commit path",
-  );
   assert.equal(
     manifest.update_manifest.central_commit_paths.includes("data/computed/signals.json"),
     true,
@@ -324,4 +287,4 @@ function pathIncluded(triggerPaths, candidate) {
   );
 }
 
-console.log("coordinate-computed-signals: coordinator, triggers, and outcome authorization ok");
+console.log("coordinate-computed-signals: coordinator and triggers ok");

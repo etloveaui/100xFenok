@@ -117,7 +117,7 @@ verify_etf_overlay_pointer_current() {
 }
 
 # Binds the verified external generation to the existing checked-out
-# authorities (persisted plane outcome shard + data-supply active state) and
+# authorities (data-supply active state) and
 # verifies the overlay tree shape. Uses only existing metadata; no payloads are
 # re-fetched and the cloud is never mutated.
 verify_etf_overlay_binding() {
@@ -172,23 +172,6 @@ if receipt.get("asset_count") != len(entries):
 actual_total_bytes = sum(entry.stat().st_size for entry in entries)
 if receipt.get("total_bytes") != actual_total_bytes:
     fail(f"receipt total_bytes does not match the overlay tree: {receipt.get('total_bytes')!r} vs {actual_total_bytes}")
-
-shard_path = repo_root / "data/admin/data-supply-state/publish-outcomes/stockanalysis-etf-detail.json"
-try:
-    shard = json.loads(shard_path.read_text(encoding="utf-8"))
-except Exception as error:
-    fail(f"persisted plane outcome is unreadable on checked-out main: {error}")
-records = shard.get("records") if isinstance(shard, dict) else None
-if not isinstance(records, list) or not records:
-    fail("persisted plane outcome has no records on checked-out main")
-latest = records[-1]
-if latest.get("generation_id") != receipt["generation_id"]:
-    fail(
-        "cloud generation drifted: overlay receipt generation differs from the "
-        f"persisted outcome ({latest.get('generation_id')!r} vs {receipt['generation_id']!r})"
-    )
-if latest.get("result") not in ("published", "resumed"):
-    fail(f"persisted plane outcome is not a successful generation ({latest.get('result')!r})")
 
 sys.path.insert(0, str(repo_root / "scripts"))
 from data_supply_state import DataSupplyStateStore  # existing read authority
@@ -392,19 +375,16 @@ node scripts/generate-product-surface-coverage.mjs
   set -euo pipefail
 
   repo_root="$(pwd -P)"
-  shard_root="$repo_root/data/admin/data-supply-state/detection-attempts"
   output_root="$(mktemp -d "/tmp/fenok-data-supply-detection-floor-${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}-XXXXXX")"
   report_path="$output_root/data-supply-detection-floor.json"
   installed_path="$repo_root/data/admin/data-supply-detection-floor.json"
   trap 'rm -rf "$output_root"' EXIT
 
-  mkdir -p "$shard_root"
   chmod 0700 "$output_root"
   now="$(node -e 'process.stdout.write(new Date().toISOString())')"
 
   node scripts/build-data-supply-detection-floor.mjs \
     --artifact-root "$repo_root" \
-    --attempt-shard-root "$shard_root" \
     --calendars "$repo_root/scripts/lib/data-supply-detection-calendars.json" \
     --now "$now" \
     --output-root "$output_root"

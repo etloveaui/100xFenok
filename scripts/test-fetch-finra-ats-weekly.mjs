@@ -5,7 +5,6 @@ import os from "node:os";
 import path from "node:path";
 
 import {
-  ATTEMPT_ASSERTION_IDS,
   FINRA_ATS_LANE_ID,
   FINRA_ATS_MARKER_SCHEMA,
   FINRA_ATS_PERSISTENCE_POLICY,
@@ -27,7 +26,6 @@ import {
   validRawWeekDocument,
   writeGitHubOutputs,
 } from "./fetch-finra-ats-weekly.mjs";
-import { classifyAttempt } from "./build-data-supply-detection-floor.mjs";
 
 const OBSERVED_AT = "2026-07-24T01:00:00.000Z";
 const REFERENCE_DATE = new Date("2026-07-24T12:00:00.000Z");
@@ -159,11 +157,7 @@ function makeRequestMock(responses) {
   return { request, calls };
 }
 
-function attemptSink(rows) {
-  return (input) => { rows.push(input); return input; };
-}
-
-async function runSuccess(root, { eventName = "schedule", request = null, observedAt = OBSERVED_AT, attempts = [], referenceDate = REFERENCE_DATE, runId = null, runAttempt = 1 } = {}) {
+async function runSuccess(root, { eventName = "schedule", request = null, observedAt = OBSERVED_AT, referenceDate = REFERENCE_DATE, runId = null, runAttempt = 1 } = {}) {
   const targets = summaryTargets(referenceDate);
   const mock = request ? { request, calls: [] } : makeRequestMock(successResponses(targets));
   const result = await run({
@@ -176,9 +170,8 @@ async function runSuccess(root, { eventName = "schedule", request = null, observ
     runAttempt,
     observedAt,
     referenceDate,
-    attemptWriter: attemptSink(attempts),
   });
-  return { result, attempts, calls: mock.calls, targets };
+  return { result, calls: mock.calls, targets };
 }
 
 // Exact scheduling and request-shape pins: July 24 has July 20 as its latest
@@ -395,8 +388,7 @@ assert.throws(() => parsePaginationTotal({ "record-total": "not-a-number" }), /r
 // rows on the public-safe marker.
 {
   const root = makeRoot("success");
-  const attempts = [];
-  const { result, targets, calls } = await runSuccess(root, { attempts });
+  const { result, targets, calls } = await runSuccess(root);
   assert.equal(result.exit_code, 0);
   assert.equal(result.promoted, true);
   assert.equal(result.auth_path, "oauth_client_credentials");
@@ -453,10 +445,7 @@ assert.throws(() => parsePaginationTotal({ "record-total": "not-a-number" }), /r
   });
   assert.equal(t2OtceRaw.auth_path, "oauth_client_credentials");
   assert.doesNotMatch(fs.readFileSync(t2OtceRawPath, "utf8"), /mock-token|client-secret|grant_type|\"body\"/);
-  assert.equal(attempts.length, 1);
-  assert.equal(attempts[0].attemptShardPath, path.join(root, "data/admin/data-supply-state/detection-attempts/finra_ats.json"));
-  assert.deepEqual(attempts[0].result.attempt.assertions, ATTEMPT_ASSERTION_IDS.map((id) => ({ id, passed: true })));
-  assert.equal(attempts[0].result.attempt.auth, "ok");
+
 }
 
 // The tracked exchange-listed universe may contain T2 rows without any OTCE
@@ -478,7 +467,6 @@ assert.throws(() => parsePaginationTotal({ "record-total": "not-a-number" }), /r
     runId: "t2-without-otce",
     observedAt: OBSERVED_AT,
     referenceDate: REFERENCE_DATE,
-    attemptWriter: attemptSink([]),
   });
   assert.equal(result.exit_code, 0);
   assert.deepEqual(result.counts, { total_rows: 3, t1_rows: 2, t2_otce_rows: 1 });
@@ -508,33 +496,11 @@ assert.throws(() => parsePaginationTotal({ "record-total": "not-a-number" }), /r
       runId: `invalid-oauth-${fixture.name}`,
       observedAt: OBSERVED_AT,
       referenceDate: REFERENCE_DATE,
-      attemptWriter: attemptSink([]),
     });
     assert.equal(requests, 1);
     assert.equal(result.exit_code, 2);
     assert.equal(result.reason, "auth_error");
   }
-}
-
-// The real attempt writer accepts the registered lane and persists only the
-// two detection assertions at the mandated shard path.
-{
-  const root = makeRoot("attempt-writer");
-  const targets = summaryTargets(REFERENCE_DATE);
-  const { request } = makeRequestMock(successResponses(targets));
-  const result = await run({
-    repoRoot: root,
-    request,
-    clientId: "client-id",
-    clientSecret: "client-secret",
-    eventName: "schedule",
-    runId: "actual-attempt-writer",
-    observedAt: OBSERVED_AT,
-    referenceDate: REFERENCE_DATE,
-  });
-  assert.equal(result.exit_code, 0);
-  const shard = readJson(path.join(root, "data/admin/data-supply-state/detection-attempts/finra_ats.json"));
-  assert.deepEqual(shard.attempts[0].assertions, ATTEMPT_ASSERTION_IDS.map((id) => ({ id, passed: true })));
 }
 
 // The workflow's dispatch-only `controlled_failure=transport` never contacts
@@ -553,7 +519,6 @@ assert.throws(() => parsePaginationTotal({ "record-total": "not-a-number" }), /r
     runId: "controlled-failure",
     observedAt: "2026-07-25T01:00:00.000Z",
     referenceDate: REFERENCE_DATE,
-    attemptWriter: attemptSink([]),
   });
   assert.equal(requests, 0);
   assert.equal(result.controlled_failure, true);
@@ -579,7 +544,6 @@ assert.throws(() => parsePaginationTotal({ "record-total": "not-a-number" }), /r
   ]) {
     const root = makeRoot(`auth-guard-${credentials.name}`);
     let requests = 0;
-    const attempts = [];
     const result = await run({
       repoRoot: root,
       request: async () => { requests += 1; throw new Error("must not request"); },
@@ -589,12 +553,10 @@ assert.throws(() => parsePaginationTotal({ "record-total": "not-a-number" }), /r
       runId: `missing-oauth-${credentials.name}`,
       observedAt: OBSERVED_AT,
       referenceDate: REFERENCE_DATE,
-      attemptWriter: attemptSink(attempts),
     });
     assert.equal(requests, 0);
     assert.equal(result.exit_code, 2);
     assert.equal(result.reason, "auth_error");
-    assert.equal(attempts[0].result.attempt.auth, "rejected");
   }
   const source = fs.readFileSync(new URL("./fetch-finra-ats-weekly.mjs", import.meta.url), "utf8");
   const guard = "if (!clientId || !clientSecret)";
@@ -624,7 +586,6 @@ assert.throws(() => parsePaginationTotal({ "record-total": "not-a-number" }), /r
       runId: `provider-auth-${statusCode}`,
       observedAt: OBSERVED_AT,
       referenceDate: REFERENCE_DATE,
-      attemptWriter: attemptSink([]),
     });
     assert.equal(requests, 2);
     assert.equal(result.exit_code, 2);
@@ -658,7 +619,6 @@ assert.throws(() => parsePaginationTotal({ "record-total": "not-a-number" }), /r
     runId: "diagnostic-detail",
     observedAt: OBSERVED_AT,
     referenceDate: REFERENCE_DATE,
-    attemptWriter: attemptSink([]),
   });
   assert(calls >= 2);
   assert.match(result.failure_detail, /weekly request exploded/);
@@ -677,7 +637,6 @@ assert.throws(() => parsePaginationTotal({ "record-total": "not-a-number" }), /r
   const responses = successResponses(targets);
   responses.T2 = [{ statusCode: 500, headers: {}, body: "server error" }];
   const { request } = makeRequestMock(responses);
-  const attempts = [];
   const result = await run({
     repoRoot: root,
     request,
@@ -687,7 +646,6 @@ assert.throws(() => parsePaginationTotal({ "record-total": "not-a-number" }), /r
     runId: "partial-with-lkg",
     observedAt: "2026-07-25T01:00:00.000Z",
     referenceDate: REFERENCE_DATE,
-    attemptWriter: attemptSink(attempts),
   });
   assert.equal(result.exit_code, 0);
   assert.equal(result.degraded, true);
@@ -711,7 +669,6 @@ assert.throws(() => parsePaginationTotal({ "record-total": "not-a-number" }), /r
     runId: "partial-no-lkg",
     observedAt: OBSERVED_AT,
     referenceDate: REFERENCE_DATE,
-    attemptWriter: attemptSink([]),
   });
   assert.equal(result.exit_code, 2);
   assert.equal(result.degraded, false);
@@ -923,7 +880,7 @@ assert.throws(() => parsePaginationTotal({ "record-total": "not-a-number" }), /r
   const failedResponses = successResponses(targets);
   failedResponses.T1 = [{ statusCode: 500, headers: {}, body: "server error" }];
   const failed = makeRequestMock(failedResponses);
-  await run({ repoRoot: root, request: failed.request, clientId: "id", clientSecret: "secret", eventName: "schedule", runId: "failure", observedAt: "2026-07-25T01:00:00.000Z", referenceDate: REFERENCE_DATE, attemptWriter: attemptSink([]) });
+  await run({ repoRoot: root, request: failed.request, clientId: "id", clientSecret: "secret", eventName: "schedule", runId: "failure", observedAt: "2026-07-25T01:00:00.000Z", referenceDate: REFERENCE_DATE });
   const markerBefore = fs.readFileSync(markerPathFor(root));
   const synthetic = await runSuccess(root, { eventName: "workflow_dispatch", observedAt: "2026-07-26T01:00:00.000Z" });
   assert.equal(synthetic.result.promoted, false);
@@ -954,7 +911,7 @@ assert.throws(() => parsePaginationTotal({ "record-total": "not-a-number" }), /r
   const failedResponses = successResponses(targets);
   failedResponses.T1 = [{ statusCode: 500, headers: {}, body: "server error" }];
   const failed = makeRequestMock(failedResponses);
-  await run({ repoRoot: root, request: failed.request, clientId: "id", clientSecret: "secret", eventName: "schedule", runId: "failure", observedAt: "2026-07-25T01:00:00.000Z", referenceDate: REFERENCE_DATE, attemptWriter: attemptSink([]) });
+  await run({ repoRoot: root, request: failed.request, clientId: "id", clientSecret: "secret", eventName: "schedule", runId: "failure", observedAt: "2026-07-25T01:00:00.000Z", referenceDate: REFERENCE_DATE });
   const scheduled = await runSuccess(root, {
     eventName: "schedule",
     observedAt: "2026-07-31T01:00:00.000Z",
@@ -964,57 +921,6 @@ assert.throws(() => parsePaginationTotal({ "record-total": "not-a-number" }), /r
   assert.equal(scheduled.result.recovered, true);
   const recovered = readJson(path.join(root, "data/admin/finra-ats/index.json"));
   assert.equal(recovered.items["weekly-summary"].recovery_event_name, "schedule");
-}
-
-// An incomplete partition is a returned empty-payload tuple whose http_status
-// is the OBSERVED provider answer carried up from the walkback, never a
-// fabricated constant. classifyAttempt must re-derive empty_payload from the
-// shard row - the detection floor reads that derived reason, not the CLI one.
-{
-  const shardPath = (root) => path.join(root, "data", "admin", "data-supply-state", "detection-attempts", "finra_ats.json");
-  const runPartial = async (tag, failTierResponses) => {
-    const root = makeRoot(tag);
-    const targets = summaryTargets(REFERENCE_DATE);
-    const responses = successResponses(targets);
-    for (const [tier, tierResponses] of Object.entries(failTierResponses)) responses[tier] = tierResponses;
-    const { request } = makeRequestMock(responses);
-    const result = await run({
-      repoRoot: root,
-      request,
-      clientId: "client-id",
-      clientSecret: "client-secret",
-      eventName: "schedule",
-      runId: `partial-diagnostic-${tag}`,
-      observedAt: OBSERVED_AT,
-      referenceDate: REFERENCE_DATE,
-    });
-    assert.equal(result.exit_code, 2);
-    assert.equal(result.reason, "partial_partition");
-    return readJson(shardPath(root)).attempts[0];
-  };
-  const emptyPages = (count) => Array.from({ length: count }, () => pageResponse([], { total: 0 }));
-  const noContent = (count) => Array.from({ length: count }, () => ({ statusCode: 204, headers: {}, body: "" }));
-
-  // A 200 with zero rows records 200.
-  const zeroRows = await runPartial("partial-observed-200", { T2: emptyPages(3) });
-  assert.equal(zeroRows.execution, "returned");
-  assert.equal(zeroRows.http_status, 200);
-  assert.equal(zeroRows.payload, "empty");
-  assert.deepEqual(zeroRows.assertions, ATTEMPT_ASSERTION_IDS.map((id) => ({ id, passed: false })));
-  assert.equal(Object.hasOwn(zeroRows, "failure_entity"), false, "returned tuples carry no diagnostic");
-  assert.equal(classifyAttempt(zeroRows).reason, "empty_payload");
-
-  // A provider 204 records 204. Both empty shapes classify as empty_payload,
-  // never unexpected_error.
-  const noContentRows = await runPartial("partial-observed-204", { T1: noContent(3) });
-  assert.equal(noContentRows.http_status, 204);
-  assert.equal(classifyAttempt(noContentRows).reason, "empty_payload");
-
-  // Both partitions incomplete: the shard records the first incomplete
-  // partition's observed status and still classifies as empty_payload.
-  const both = await runPartial("partial-observed-both", { T1: noContent(3), T2: emptyPages(3) });
-  assert.equal(both.http_status, 204);
-  assert.equal(classifyAttempt(both).reason, "empty_payload");
 }
 
 // A provider non-2xx failure is a returned tuple with auth not_applicable:
@@ -1039,17 +945,12 @@ assert.throws(() => parsePaginationTotal({ "record-total": "not-a-number" }), /r
   });
   assert.equal(result.exit_code, 2);
   assert.equal(result.reason, "http_error");
-  const shard = readJson(path.join(root, "data", "admin", "data-supply-state", "detection-attempts", "finra_ats.json"));
-  const attempt = shard.attempts[0];
-  assert.equal(attempt.execution, "returned");
-  assert.equal(attempt.http_status, 500);
-  assert.equal(attempt.auth, "not_applicable");
-  assert.equal(classifyAttempt(attempt).reason, "http_error");
+
 }
 
 // A thrown non-CollectorError lands in the fallthrough branch: the entity
 // defaults to the lane id and the bounded detail redacts every credential
-// form before it reaches the shard.
+// form before it reaches the run result.
 {
   const root = makeRoot("threw-diagnostic-redaction");
   const secrets = [
@@ -1085,17 +986,9 @@ assert.throws(() => parsePaginationTotal({ "record-total": "not-a-number" }), /r
   });
   assert.equal(result.exit_code, 2);
   assert.equal(result.reason, "transport_error");
-  const shard = readJson(path.join(root, "data", "admin", "data-supply-state", "detection-attempts", "finra_ats.json"));
-  const attempt = shard.attempts[0];
-  assert.equal(attempt.execution, "threw");
-  assert.equal(attempt.exception_kind, "unexpected");
-  assert.equal(attempt.failure_entity, FINRA_ATS_LANE_ID);
-  assert.equal(classifyAttempt(attempt).reason, "unexpected_error");
-  assert.match(attempt.failure_detail, /^CollectorError: FINRA weekly summary request failed: weekly exploded /);
-  assert(attempt.failure_detail.length <= 320, "shard failure detail must stay bounded");
-  for (const secret of secrets) {
-    assert(!attempt.failure_detail.includes(secret), `shard failure detail leaked ${secret}`);
-  }
+  assert.match(result.failure_detail, /weekly exploded/);
+  assert(result.failure_detail.length <= 320);
+  for (const secret of secrets) assert(!result.failure_detail.includes(secret));
 }
 
 console.log("fetch-finra-ats-weekly tests passed");

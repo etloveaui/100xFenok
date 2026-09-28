@@ -41,19 +41,9 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
-import {
-  atomicWrite,
-  buildAttemptRow,
-  buildSingleLaneShard,
-  classifyHttpResponse,
-  evaluateEndpointAssertions,
-  foldWorstTuples,
-  returnedTuple,
-  threwTuple,
-  transportError,
-  tupleStatus,
-  writeJsonAtomic,
-} from './lib/data-supply-attempt-shard.mjs';
+import { atomicWrite, writeJsonAtomic } from "./lib/atomic-file.mjs";
+import { classifyHttpResponse, evaluateEndpointAssertions, foldWorstTuples, returnedTuple, threwTuple, transportError, tupleStatus } from "./lib/provider-fetch-result.mjs";
+import { buildAttemptRow } from "./lib/provider-fetch-result.mjs";
 import {
   LaneLkgStore,
   PROMOTION_CONTRACT_PROVIDER_OBSERVATION_V2,
@@ -787,7 +777,6 @@ export async function runSentiment({
   repoRoot = REPO_ROOT,
   outputDir = path.join(repoRoot, 'data', 'sentiment'),
   sources = defaultSources(),
-  attemptShardPath = path.join(repoRoot, 'data', 'admin', 'data-supply-state', 'detection-attempts', 'sentiment.json'),
   observedAt = new Date().toISOString(),
   attemptId = `gh-${process.env.GITHUB_RUN_ID ?? Date.now()}-${process.env.GITHUB_RUN_ATTEMPT ?? 1}-sentiment`,
   runId = process.env.GITHUB_RUN_ID || 'local',
@@ -958,8 +947,6 @@ export async function runSentiment({
     };
   }
   const row = buildAttemptRow({ laneId: 'sentiment', memberId: null, observedAt, attemptId, tuple });
-  const shard = buildSingleLaneShard({ laneId: 'sentiment', row });
-  writeJsonAtomic(attemptShardPath, shard);
 
   const naturalTracked = trackedSources.filter((source) => source.key !== injectedSource);
   const naturalFailures = failedTracked.filter((failure) => failure.requestFailed).map((failure) => failure.source.key);
@@ -980,7 +967,6 @@ export async function runSentiment({
     okCount,
     failCount,
     row,
-    shard,
     retrySet,
     recoveredSources,
     sourceOutcomes,

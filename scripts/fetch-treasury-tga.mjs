@@ -6,7 +6,6 @@ import https from "node:https";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 
-import { ATTEMPT_SHARD_SCHEMA } from "./build-data-supply-detection-floor.mjs";
 import { boundedDiagnosticDetail, diagnosticSuffix } from "./lib/diagnostic-detail.mjs";
 import {
   LaneLkgStore,
@@ -22,7 +21,6 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 const REPO_ROOT = path.resolve(__dirname, "..");
 
-export { ATTEMPT_SHARD_SCHEMA };
 export const ACCOUNT_TYPES = Object.freeze([
   "Federal Reserve Account",
   "Treasury General Account (TGA)",
@@ -254,14 +252,6 @@ function attemptRow(worst, observedAt, attemptId) {
   };
 }
 
-function attemptShard(row) {
-  return {
-    schema_version: ATTEMPT_SHARD_SCHEMA,
-    lane_id: "treasury_tga",
-    attempts: [row],
-  };
-}
-
 function atomicWrite(filePath, bytes) {
   const directory = path.dirname(filePath);
   fs.mkdirSync(directory, { recursive: true });
@@ -287,10 +277,6 @@ function atomicWrite(filePath, bytes) {
     try { fs.unlinkSync(temporary); } catch {}
     throw error;
   }
-}
-
-function writeJsonAtomic(filePath, document) {
-  atomicWrite(filePath, `${JSON.stringify(document, null, 2)}\n`);
 }
 
 function buildOutput(documents, observedAt) {
@@ -441,7 +427,6 @@ function controlledFailureKey(value, eventName) {
 export async function runTreasuryTga({
   repoRoot = REPO_ROOT,
   canonicalPath = path.join(repoRoot, "data", "macro", "tga.json"),
-  attemptShardPath = path.join(repoRoot, "data", "admin", "data-supply-state", "detection-attempts", "treasury_tga.json"),
   request = requestBytes,
   observedAt = new Date().toISOString(),
   attemptId = `tga-${new Date().toISOString().replace(/[^0-9a-z]/gi, "").toLowerCase()}-${randomBytes(4).toString("hex")}`,
@@ -491,7 +476,6 @@ export async function runTreasuryTga({
   }
 
   const row = attemptRow(worst, observedAt, attemptId);
-  writeJsonAtomic(attemptShardPath, attemptShard(row));
   if (worst.status !== "ready") {
     const systemicOutage = allNaturalRequestsFailed(requestResults, (requestResult) => requestResult.controlled === true);
     const nonTransientHttp = requestResults.some((requestResult) => (

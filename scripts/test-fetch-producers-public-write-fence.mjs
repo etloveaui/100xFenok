@@ -19,7 +19,7 @@ const PRODUCERS = Object.freeze([
   // fred-macro joined the batch on 2026-08-21. Its direct public write was
   // never staged by its lane or its manifest, and the public mirror contract
   // asserts that no lane stages the mirror, so the file stayed dirty after
-  // every run and persist-cloud-publish-outcome refused for ten consecutive
+  // every run and cloud publication was refused for ten consecutive
   // runs. sync-public-data.mjs already produces the mirror at build time.
   "scripts/fetch-fred-macro.mjs",
   // The tracked FDIC twin is already retired; the producer must leave its

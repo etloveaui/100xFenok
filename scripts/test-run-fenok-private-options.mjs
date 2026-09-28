@@ -75,7 +75,6 @@ function tempRoot(tag) {
       fs.readFileSync(path.join(root, "data/computed/fenok_yahoo_private_options_availability.json")),
     );
     assert.equal(fs.existsSync(path.join(root, "data/admin/yahoo_private_options/index.json")), true);
-    assert.equal(fs.existsSync(path.join(root, "data/admin/data-supply-state/detection-attempts/yahoo_private_options.json")), true);
   } finally {
     fs.rmSync(root, { recursive: true, force: true });
   }

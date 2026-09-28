@@ -4,45 +4,19 @@ import fs from "node:fs";
 import os from "node:os";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
-import { buildFetchCronAttemptCoverage, loadAttemptShards } from "../build-data-supply-detection-floor.mjs";
-import {
-  buildPublishOutcomeRecord,
-  PUBLISH_OUTCOME_SHARD_SCHEMA,
-} from "../lib/publish-outcome-shard.mjs";
-import { LANE_REGISTRY } from "../lib/lane-registry.mjs";
-import { DETECTION_CALENDARS } from "../lib/fenok-data-health-freshness.mjs";
-import { buildLaneOutcomeWatchdog } from "./lane-outcome-watchdog.mjs";
 import {
   NON_SCHEDULED_WORKFLOW_INCLUSIONS,
   SCHEDULED_WORKFLOW_EXCLUSIONS,
-  CADENCE_STATES,
-  PLANE_FRESHNESS_ALARM_REASONS,
-  PLANE_FRESHNESS_MAX_AGE_HOURS,
-  PLANE_FRESHNESS_MODE_AGE,
-  PLANE_FRESHNESS_MODE_SOURCE_CHANGE,
-  freshnessModeForFamily,
-  PLANE_PUBLISH_ALARM_REASONS,
-  PLANE_PUBLISH_OUTCOME_BINDINGS,
-  assertDeclaredScheduleGraceContracts,
-  attachLaneOutcomeAlarms,
-  attachPublishOutcomeAlarms,
-  attachWorkflowCadence,
   buildIssueBody,
   buildWorkflowRunsUrl,
   computeFailureStreak,
   deriveFailureStreakThreshold,
-  deriveFamilyFreshness,
-  deriveLaneOutcomeAlarms,
-  derivePublishOutcomeProjection,
-  deriveWorkflowCadenceProjection,
   deriveWorkflowWatchPolicy,
-  laneOwnerFiles,
-  LANE_OUTCOME_ALARM_REASONS,
-  LANE_OUTCOME_DEFAULT_OWNER_WORKFLOW,
-  LANE_OUTCOME_WATCHDOG_SCHEMA,
   QUEUE_EVICTION_INSPECTION_LIMIT,
   annotateQueueEvictions,
+  classifyKpiGenerationStoppage,
   evaluateWorkflow,
+  fetchKpiGenerationSnapshots,
   isQueueEvictedRun,
   mergeWorkflowRunBatches,
   needsMissedWindowReverification,
@@ -50,48 +24,100 @@ import {
   runtimeSlotKey,
 } from "./check-pipeline-job-health.mjs";
 
-// The data-health KPI is a slim source-age view. The alarm path independently
-// rebuilds its schedule and outcome clocks from detection-attempt shards and
-// the detection-floor artifact facts.
+// The alarm's data-stoppage input is two committed KPI generations. A single
+// stopped generation is not yet a K3 incident; unreadable history is unknown,
+// never a healthy result that can clear an open issue.
 {
-  const repoRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "../..");
-  const attemptDocument = loadAttemptShards({
-    shardRoot: path.join(repoRoot, "data", "admin", "data-supply-state", "detection-attempts"),
+  const generation = (generated_at, rows) => ({
+    generated_at,
+    sets: Object.entries(rows).map(([set, status]) => ({ set, status })),
   });
-  const edgarAttempt = attemptDocument.attempts.find((row) => row.lane_id === "edgar_filings");
-  assert.ok(edgarAttempt?.observed_at, "the committed EDGAR attempt shard provides an operational observation");
-  const coverage = buildFetchCronAttemptCoverage({
-    attempts: attemptDocument,
-    calendars: DETECTION_CALENDARS,
-    nowValue: edgarAttempt.observed_at,
+  const current = generation("2026-09-28T11:34:19.757Z", {
+    fred_macro: "fresh",
+    stockanalysis_etf_detail: "stopped",
+    sentiment: "stopped",
+  });
+  const previous = generation("2026-09-28T10:21:42.000Z", {
+    fred_macro: "fresh",
+    stockanalysis_etf_detail: "stopped",
+    sentiment: "delayed",
+  });
+  assert.deepEqual(classifyKpiGenerationStoppage([current, previous]), {
+    status: "alarm",
+    stopped_sets: ["stockanalysis_etf_detail"],
+    latest_generated_at: current.generated_at,
+    previous_generated_at: previous.generated_at,
   });
   assert.equal(
-    coverage.rows.find((row) => row.lane_id === "edgar_filings")?.observed_at,
-    edgarAttempt.observed_at,
-    "alarm coverage reads the attempt shard without a removed endpoint field",
+    classifyKpiGenerationStoppage([
+      generation("2026-09-28T11:34:19Z", { stockanalysis_etf_detail: "stopped" }),
+      generation("2026-09-28T10:21:42Z", { stockanalysis_etf_detail: "fresh" }),
+    ]).status,
+    "ok",
+    "the set pages only when it is stopped in both latest generations",
   );
+  const oneStopped = classifyKpiGenerationStoppage([
+    generation("2026-09-28T11:34:19Z", { stockanalysis_etf_detail: "stopped" }),
+    generation("2026-09-28T10:21:42Z", { stockanalysis_etf_detail: "delayed" }),
+  ]);
+  assert.equal(oneStopped.status, "ok", "one stopped generation does not page");
+  assert.deepEqual(oneStopped.stopped_sets, []);
+  assert.equal(classifyKpiGenerationStoppage([current]).status, "unknown", "one snapshot cannot clear or page");
+  assert.equal(classifyKpiGenerationStoppage([previous, current]).status, "unknown", "out-of-order generations stay unknown");
+  assert.equal(classifyKpiGenerationStoppage([
+    generation("2026-09-28T11:34:19Z", { stockanalysis_etf_detail: "stopped" }),
+    generation("2026-09-28T10:21:42Z", {}),
+  ]).status, "unknown", "malformed generations stay unknown");
 
-  const watchdog = buildLaneOutcomeWatchdog({
-    detectionFloor: {
-      generated_at: "2026-09-28T03:00:00Z",
-      lanes: [{
-        id: "fred_macro",
-        status: "ready",
-        reason: "ok",
-        artifact: { source_as_of: "2026-09-27", generated_at: null },
-      }],
+  const kpiBody = buildIssueBody([{
+    label: "Data stopped advancing",
+    kpi_stopped_sets: ["stockanalysis_etf_detail"],
+    latest_generated_at: current.generated_at,
+    previous_generated_at: previous.generated_at,
+  }]);
+  assert.match(kpiBody, /stockanalysis_etf_detail/);
+  assert.match(kpiBody, /two committed health KPI generations/);
+  assert.match(kpiBody, /2026-09-28T11:34:19\.757Z/);
+
+  const requested = [];
+  const snapshots = await fetchKpiGenerationSnapshots({
+    token: "test-token",
+    owner: "owner",
+    repo: "repo",
+    branch: "main",
+    fetchFn: async (url, options) => {
+      requested.push({ url: String(url), options });
+      if (requested.length === 1) {
+        return new Response(JSON.stringify([{ sha: "a".repeat(40) }, { sha: "b".repeat(40) }]), {
+          status: 200,
+          headers: { "content-type": "application/json" },
+        });
+      }
+      return new Response(JSON.stringify(requested.length === 2 ? current : previous), {
+        status: 200,
+        headers: { "content-type": "application/json" },
+      });
     },
-    attempts: attemptDocument,
-    publication: null,
-    nowIso: "2026-09-28T03:00:00Z",
-    calendars: DETECTION_CALENDARS,
   });
-  assert.equal(watchdog.schema_version, LANE_OUTCOME_WATCHDOG_SCHEMA);
-  assert.equal(watchdog.rows.find((row) => row.lane_id === "fred_macro")?.state, "current");
+  assert.deepEqual(snapshots, [current, previous], "the API snapshots remain newest-first");
+  assert.match(requested[0].url, /commits\?.*path=data%2Fadmin%2Ffenok-data-health-kpi\.json.*per_page=2/);
+  assert.match(requested[0].url, /sha=main/);
+  assert.equal(requested[0].options.headers.Authorization, "Bearer test-token");
+  assert.match(requested[1].url, /contents\/data\/admin\/fenok-data-health-kpi\.json\?ref=/);
+  assert.equal(requested[1].options.headers.Accept, "application/vnd.github.raw+json");
 }
 
 assert.equal(runtimeSlotKey("update-manifest.yml", "30 2 * * *", null), null);
 assert.equal(runtimeSlotKey("update-manifest.yml", "30 2 * * *", ""), null);
+
+assert.equal(deriveFailureStreakThreshold([{ cron: "0 7 * * 0" }]), 1,
+  "a weekly workflow pages on its first completed failure");
+assert.equal(deriveFailureStreakThreshold([{ cron: "0 6 * * *" }]), 2,
+  "a faster-than-weekly workflow keeps the two-failure guard");
+assert.equal(deriveFailureStreakThreshold([
+  { cron: "0 7 * * 0" },
+  { cron: "0 6 * * *" },
+]), 2, "a workflow with both weekly and daily schedules uses its faster cadence");
 
 // Runs are most-recent-first, matching the GitHub API `workflow_runs` ordering.
 const F = (id) => ({ id, conclusion: "failure", html_url: `https://gh/run/${id}`, run_started_at: `t${id}` });
@@ -105,395 +131,6 @@ const R = (id, event, createdAt) => ({ id, event, conclusion: "success", created
 function writeWorkflow(root, file, source) {
   fs.mkdirSync(root, { recursive: true });
   fs.writeFileSync(path.join(root, file), source);
-}
-
-// The registry binding map is authoritative; alarm QA validates each binding
-// against the same registry workflow policy instead of maintaining a second
-// 20+ row copy that can omit a new publisher. Lane-owned publishers must name
-// a real lane. A lane-less publisher must be explicitly declared as a platform
-// publisher (the computed-signals coordinator case).
-// 24 -> 25 on 2026-08-24: the yahoo-finance shadow family declared at 38af5b1b94.
-// 25 -> 26 on 2026-09-07: the earnings-overview family, declared with the
-// 2026-09-06 release but never counted here, which left this contract red.
-assert.equal(Object.keys(PLANE_PUBLISH_OUTCOME_BINDINGS).length, 26);
-for (const [family, binding] of Object.entries(PLANE_PUBLISH_OUTCOME_BINDINGS)) {
-  assert.ok(LANE_REGISTRY.workflow_policies[binding.workflow], `${family} workflow policy must be declared`);
-  assert.ok(
-    LANE_REGISTRY.workflow_policies[binding.workflow].stages.always_if_exists.some(
-      (spec) => spec.path === `data/admin/data-supply-state/publish-outcomes/${family}.json`,
-    ),
-    `${family} workflow must authorize its exact outcome shard`,
-  );
-  const lane = LANE_REGISTRY.lanes.find((candidate) => candidate.id === binding.lane_id);
-  if (lane) continue;
-  assert.equal(
-    LANE_REGISTRY.workflow_classes[binding.workflow]?.class,
-    "platform_publisher",
-    `${family} binding without a lane must be an explicit platform publisher`,
-  );
-}
-assert.deepEqual(PLANE_PUBLISH_OUTCOME_BINDINGS["computed-signals"], {
-  lane_id: "computed_signals",
-  workflow: ".github/workflows/coordinate-computed-signals.yml",
-});
-assert.deepEqual(PLANE_PUBLISH_OUTCOME_BINDINGS["global-scouter"], {
-  lane_id: "global_scouter",
-  workflow: ".github/workflows/global-scouter-shadow-publish.yml",
-});
-const globalScouterWorkflow = fs.readFileSync(
-  path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..", "..", ".github/workflows/global-scouter-shadow-publish.yml"),
-  "utf8",
-);
-assert.match(
-  globalScouterWorkflow,
-  /node scripts\/publish-cloud-data-generation\.mjs --family=global-scouter --json/,
-  "Global Scouter caller must use the strict publisher command",
-);
-assert.match(
-  globalScouterWorkflow,
-  /node scripts\/persist-cloud-publish-outcome\.mjs\s+--family=global-scouter\s+--workflow=\.github\/workflows\/global-scouter-shadow-publish\.yml\s+--publisher-outcome=/,
-  "Global Scouter caller must persist its exact outcome binding",
-);
-
-const outcomeShard = (family, records) => ({
-  schema_version: PUBLISH_OUTCOME_SHARD_SCHEMA,
-  family,
-  records,
-});
-const outcomeRecord = (family, result, observedAt) => buildPublishOutcomeRecord({
-  family,
-  result,
-  observedAt,
-});
-// Freshness is time-dependent by definition, so every outcome fixture below
-// pins the clock. Left to wall time these contracts would pass today and fail
-// tomorrow for a reason unrelated to the code under test — the fixtures' own
-// records would simply age past the ceiling.
-const FIXTURE_NOW = new Date("2026-08-10T03:00:00Z");
-
-{
-  const projection = derivePublishOutcomeProjection({
-    now: FIXTURE_NOW,
-    shards: {
-      "fred-macro": outcomeShard("fred-macro", [
-        outcomeRecord("fred-macro", "gate_blocked", "2026-08-10T01:00:00Z"),
-      ]),
-    },
-  });
-  const [gated] = attachPublishOutcomeAlarms([
-    { file: "fetch-fred-macro.yml", status: "ok", alarming: false, alarm_reasons: [] },
-  ], projection);
-  assert.equal(gated.status, "alarm", "latest gate_blocked outcome must page");
-  assert.equal(gated.alarming, true);
-  // Two axes, both true and neither hiding the other: the latest result is a
-  // gate refusal, AND this family has no successful publish on record at all,
-  // which is an unavailable rather than a healthy — there is nothing to serve
-  // honestly and nothing to date staleness from.
-  assert.deepEqual(gated.alarm_reasons, [
-    PLANE_PUBLISH_ALARM_REASONS.gate_blocked,
-    PLANE_FRESHNESS_ALARM_REASONS.unavailable,
-  ]);
-  assert.equal(gated.plane_publish_outcome.result, "gate_blocked");
-  assert.equal(gated.plane_publish_outcome.freshness.state, "unavailable");
-  assert.equal(gated.plane_publish_outcome.freshness.last_success_at, null);
-}
-
-{
-  for (const failureResult of ["gate_blocked", "failed"]) {
-    const projection = derivePublishOutcomeProjection({
-      now: FIXTURE_NOW,
-      shards: {
-        "fred-macro": outcomeShard("fred-macro", [
-          outcomeRecord("fred-macro", failureResult, "2026-08-10T01:00:00Z"),
-          outcomeRecord("fred-macro", "published", "2026-08-10T02:00:00Z"),
-        ]),
-      },
-    });
-    const [published] = attachPublishOutcomeAlarms([
-      {
-        file: "fetch-fred-macro.yml",
-        status: "alarm",
-        alarming: true,
-        alarm_reasons: ["failure_streak", PLANE_PUBLISH_ALARM_REASONS[failureResult]],
-      },
-    ], projection);
-    assert.equal(published.plane_publish_outcome.result, "published");
-    assert.equal(published.status, "alarm", "published must not clear canonical failure alarms");
-    assert.deepEqual(published.alarm_reasons, ["failure_streak"], `${failureResult} must clear only its plane reason`);
-  }
-}
-
-{
-  const projection = derivePublishOutcomeProjection({
-    now: FIXTURE_NOW,
-    shards: {
-      "fred-macro": outcomeShard("fred-macro", [
-        outcomeRecord("fred-macro", "gate_blocked", "2026-08-10T01:00:00Z"),
-        outcomeRecord("fred-macro", "resumed", "2026-08-10T02:00:00Z"),
-      ]),
-    },
-  });
-  const [resumed] = attachPublishOutcomeAlarms([
-    {
-      file: "fetch-fred-macro.yml",
-      status: "alarm",
-      alarming: true,
-      alarm_reasons: ["failure_streak", PLANE_PUBLISH_ALARM_REASONS.gate_blocked],
-    },
-  ], projection);
-  assert.equal(resumed.plane_publish_outcome.result, "resumed");
-  assert.equal(resumed.status, "alarm", "resumed must not clear canonical failure alarms");
-  assert.deepEqual(resumed.alarm_reasons, ["failure_streak"], "resumed clears only plane reasons");
-}
-
-{
-  for (const successResult of ["published", "resumed"]) {
-    const projection = derivePublishOutcomeProjection({
-    now: FIXTURE_NOW,
-      shards: {
-        "fred-macro": outcomeShard("fred-macro", [
-          outcomeRecord("fred-macro", "gate_blocked", "2026-08-10T01:00:00Z"),
-          outcomeRecord("fred-macro", successResult, "2026-08-10T02:00:00Z"),
-        ]),
-      },
-    });
-    const [cleared] = attachPublishOutcomeAlarms([{
-      file: "fetch-fred-macro.yml",
-      status: "ok",
-      alarming: false,
-      alarm_reasons: [PLANE_PUBLISH_ALARM_REASONS.gate_blocked],
-    }], projection);
-    assert.equal(cleared.status, "ok", `${successResult} must close a plane-only alarm`);
-    assert.equal(cleared.alarming, false);
-    assert.deepEqual(cleared.alarm_reasons, []);
-  }
-}
-
-{
-  const outOfOrder = derivePublishOutcomeProjection({
-    now: FIXTURE_NOW,
-    shards: {
-      "fred-macro": outcomeShard("fred-macro", [
-        outcomeRecord("fred-macro", "published", "2026-08-10T03:00:00Z"),
-        outcomeRecord("fred-macro", "failed", "2026-08-10T01:00:00Z"),
-      ]),
-    },
-  });
-  assert.equal(outOfOrder.get("fetch-fred-macro.yml").result, "published", "older array tail must not beat newer evidence");
-
-  const equalTimestamp = derivePublishOutcomeProjection({
-    now: FIXTURE_NOW,
-    shards: {
-      "fred-macro": outcomeShard("fred-macro", [
-        outcomeRecord("fred-macro", "failed", "2026-08-10T03:00:00Z"),
-        outcomeRecord("fred-macro", "published", "2026-08-10T03:00:00Z"),
-      ]),
-    },
-  });
-  assert.equal(equalTimestamp.get("fetch-fred-macro.yml").result, "published", "equal timestamps use later append order");
-}
-
-{
-  const projection = derivePublishOutcomeProjection({
-    now: FIXTURE_NOW,
-    shards: {
-      "fred-macro": outcomeShard("fred-macro", [
-        outcomeRecord("fred-macro", "gate_blocked", "2026-08-10T01:00:00Z"),
-      ]),
-      sentiment: outcomeShard("sentiment", [
-        outcomeRecord("sentiment", "published", "2026-08-10T02:00:00Z"),
-      ]),
-    },
-  });
-  const classified = attachPublishOutcomeAlarms([
-    { file: "fetch-fred-macro.yml", status: "ok", alarming: false, alarm_reasons: [] },
-    { file: "fetch-sentiment.yml", status: "ok", alarming: false, alarm_reasons: [] },
-  ], projection);
-  assert.equal(classified[0].status, "alarm");
-  assert.equal(classified[0].plane_publish_outcome.family, "fred-macro");
-  assert.equal(classified[1].status, "ok");
-  assert.equal(classified[1].plane_publish_outcome.family, "sentiment");
-  assert.deepEqual(classified[1].alarm_reasons, [], "one family alarm must not contaminate another workflow");
-}
-
-{
-  const projection = derivePublishOutcomeProjection({
-    now: FIXTURE_NOW,
-    shards: {
-      sentiment: outcomeShard("sentiment", [
-        outcomeRecord("sentiment", "failed", "2026-08-10T03:00:00Z"),
-      ]),
-    },
-  });
-  const [failed] = attachPublishOutcomeAlarms([
-    { file: "fetch-sentiment.yml", status: "ok", alarming: false, alarm_reasons: [] },
-  ], projection);
-  assert.equal(failed.status, "alarm");
-  // Both axes again: the latest result failed, and with no success anywhere in
-  // the history this family has nothing fresh to serve either.
-  assert.deepEqual(failed.alarm_reasons, [
-    PLANE_PUBLISH_ALARM_REASONS.failed,
-    PLANE_FRESHNESS_ALARM_REASONS.unavailable,
-  ]);
-  assert.equal(failed.plane_publish_outcome.freshness.state, "unavailable");
-}
-
-// D3 static-LKG aging, owner-selected: option A with a 60-hour ceiling. The
-// four transitions are pinned here rather than trusted, because the two
-// triggers are independent and a state machine that only ever gets exercised in
-// production is a state machine nobody has read.
-{
-  const at = (hours) => new Date(Date.parse("2026-08-10T00:00:00Z") + hours * 3_600_000).toISOString();
-  const freshnessOf = (records, nowHours) => deriveFamilyFreshness({
-    records: records.map(([hours, result]) => outcomeRecord("sentiment", result, at(hours))),
-    now: new Date(Date.parse(at(nowHours))),
-  });
-
-  const healthy = freshnessOf([[0, "published"], [5, "published"]], 10);
-  assert.equal(healthy.state, "healthy");
-  assert.equal(healthy.consecutive_non_success, 0);
-  assert.equal(healthy.last_success_at, at(5), "last-success timestamp must be reported, not implied");
-
-  // One failed cycle is delayed, not unavailable: the LKG is still served and
-  // the operator is told, which is the whole point of the middle state.
-  const delayed = freshnessOf([[0, "published"], [5, "failed"]], 10);
-  assert.equal(delayed.state, "delayed");
-  assert.equal(delayed.consecutive_non_success, 1);
-  assert.deepEqual(delayed.triggered_by, []);
-
-  const byCount = freshnessOf([[0, "published"], [5, "failed"], [6, "failed"]], 10);
-  assert.equal(byCount.state, "unavailable");
-  assert.deepEqual(byCount.triggered_by, ["consecutive_non_success"]);
-
-  // A cycle that never fired writes no record at all, so the counter cannot see
-  // it. Age is the trigger that catches a true miss, and these two must stay
-  // independent for that reason.
-  const byAge = freshnessOf([[0, "published"]], 61);
-  assert.equal(byAge.state, "unavailable");
-  assert.deepEqual(byAge.triggered_by, ["source_age_hours"]);
-  assert.equal(byAge.consecutive_non_success, 0);
-  assert.ok(byAge.source_age_hours > PLANE_FRESHNESS_MAX_AGE_HOURS);
-  assert.equal(freshnessOf([[0, "published"]], 60).state, "healthy", "the ceiling is exclusive, not off by one");
-
-  // Recovery clears automatically: the next success resets the counter and is
-  // reported as a recovery edge rather than as an indistinguishable healthy.
-  const recovered = freshnessOf([[0, "published"], [5, "failed"], [6, "published"]], 10);
-  assert.equal(recovered.state, "healthy");
-  assert.equal(recovered.recovered, true);
-  assert.equal(recovered.consecutive_non_success, 0);
-  assert.equal(freshnessOf([[0, "published"], [5, "published"]], 10).recovered, false);
-
-  assert.equal(deriveFamilyFreshness({ records: [] }), null, "no history must not manufacture a state");
-}
-
-// A source-change family is judged by whether its export is PUBLISHED, not by
-// how long ago that happened. The ETF-sized ceiling would have reported a
-// permanent unavailable on a family that was perfectly current.
-{
-  const at = (hours) => new Date(Date.parse("2026-08-10T00:00:00Z") + hours * 3_600_000).toISOString();
-  const published = (sourceAsOf, hours = 0) => buildPublishOutcomeRecord({
-    family: "global-scouter",
-    result: "published",
-    observedAt: at(hours),
-    sourceAsOf,
-  });
-  const sourceChangeOf = ({ publishedAsOf, canonical, nowHours }) => deriveFamilyFreshness({
-    records: [published(publishedAsOf)],
-    now: new Date(Date.parse(at(nowHours))),
-    mode: PLANE_FRESHNESS_MODE_SOURCE_CHANGE,
-    canonicalSourceAsOf: canonical,
-  });
-
-  // Far past the age ceiling and still healthy: nothing changed, so nothing is late.
-  const aged = sourceChangeOf({ publishedAsOf: "2026-08-14", canonical: "2026-08-14", nowHours: 500 });
-  assert.equal(aged.state, "healthy");
-  assert.ok(aged.source_age_hours > PLANE_FRESHNESS_MAX_AGE_HOURS, "the fixture must actually outlive the ceiling");
-  assert.deepEqual(aged.triggered_by, []);
-  assert.equal(aged.max_age_hours, null, "an inapplicable ceiling must not be reported as a number");
-  assert.equal(aged.unpublished_source_change, false);
-
-  // A moved export is delayed, not unavailable: the published generation is still
-  // serving and still honest, there is simply newer source sitting behind it.
-  const pending = sourceChangeOf({ publishedAsOf: "2026-08-14", canonical: "2026-08-18", nowHours: 1 });
-  assert.equal(pending.state, "delayed");
-  assert.deepEqual(pending.triggered_by, ["unpublished_source_change"]);
-  assert.equal(pending.published_source_as_of, "2026-08-14");
-  assert.equal(pending.canonical_source_as_of, "2026-08-18");
-
-  // An unreadable clock is unavailable, never healthy: answering an unanswered
-  // question "current" would be the one unsafe guess.
-  const unknown = sourceChangeOf({ publishedAsOf: "2026-08-14", canonical: null, nowHours: 500 });
-  assert.equal(unknown.unpublished_source_change, null);
-  assert.equal(unknown.state, "unavailable");
-  assert.deepEqual(unknown.triggered_by, ["source_clock_unknown"]);
-
-  // The published side is nullable by schema, so it trips the same guard.
-  const unpublishedClock = deriveFamilyFreshness({
-    records: [buildPublishOutcomeRecord({ family: "global-scouter", result: "published", observedAt: at(0) })],
-    now: new Date(Date.parse(at(1))),
-    mode: PLANE_FRESHNESS_MODE_SOURCE_CHANGE,
-    canonicalSourceAsOf: "2026-08-14",
-  });
-  assert.equal(unpublishedClock.state, "unavailable");
-  assert.deepEqual(unpublishedClock.triggered_by, ["source_clock_unknown"]);
-
-  // Only the AGE trigger is withdrawn. A producer that fails twice is still
-  // unavailable, because that is a broken producer rather than a quiet source.
-  const failedTwice = deriveFamilyFreshness({
-    records: [
-      published("2026-08-14"),
-      buildPublishOutcomeRecord({ family: "global-scouter", result: "failed", observedAt: at(1) }),
-      buildPublishOutcomeRecord({ family: "global-scouter", result: "failed", observedAt: at(2) }),
-    ],
-    now: new Date(Date.parse(at(3))),
-    mode: PLANE_FRESHNESS_MODE_SOURCE_CHANGE,
-    canonicalSourceAsOf: "2026-08-14",
-  });
-  assert.equal(failedTwice.state, "unavailable");
-  assert.deepEqual(failedTwice.triggered_by, ["consecutive_non_success"]);
-
-  // The publisher registry decides which families are source-change, so there is
-  // no second table here to drift from it.
-  assert.equal(freshnessModeForFamily("global-scouter"), PLANE_FRESHNESS_MODE_SOURCE_CHANGE);
-  assert.equal(freshnessModeForFamily("stockanalysis-etf-detail"), PLANE_FRESHNESS_MODE_AGE);
-  assert.equal(freshnessModeForFamily("no-such-family"), PLANE_FRESHNESS_MODE_AGE, "an unknown family keeps its ceiling");
-}
-
-{
-  const malformed = derivePublishOutcomeProjection({
-    now: FIXTURE_NOW,
-    shards: {
-      "fred-macro": outcomeShard("fred-macro", [
-        { family: "fred-macro", result: "gate_blocked" },
-      ]),
-    },
-  });
-  const [unchanged] = attachPublishOutcomeAlarms([
-    { file: "fetch-fred-macro.yml", status: "ok", alarming: false, alarm_reasons: [] },
-  ], malformed);
-  assert.equal(unchanged.status, "ok", "malformed shard must not invent an alarm");
-  assert.deepEqual(unchanged.alarm_reasons, []);
-}
-
-{
-  // A shard carrying any other schema_version (or a legacy shape) is not a
-  // publish-outcome shard: no projection, no invented alarm.
-  const wrongSchema = derivePublishOutcomeProjection({
-    now: FIXTURE_NOW,
-    shards: {
-      "fred-macro": {
-        schema_version: "data-supply-publish-outcome-shard/v1",
-        family: "fred-macro",
-        records: [outcomeRecord("fred-macro", "gate_blocked", "2026-08-10T01:00:00Z")],
-      },
-    },
-  });
-  assert.equal(wrongSchema.size, 0, "wrong schema_version must yield no projection");
-  const [unchanged] = attachPublishOutcomeAlarms([
-    { file: "fetch-fred-macro.yml", status: "ok", alarming: false, alarm_reasons: [] },
-  ], wrongSchema);
-  assert.equal(unchanged.status, "ok", "wrong schema_version must not invent an alarm");
-  assert.deepEqual(unchanged.alarm_reasons, []);
 }
 
 // Runs from pull requests must not enter the production streak for the
@@ -645,188 +282,6 @@ const FIXTURE_NOW = new Date("2026-08-10T03:00:00Z");
   );
 }
 
-// Defect 2: every cadence outcome is explicit.  This fixture deliberately
-// joins member-level coverage (not workflow-level guesses), preserves the
-// suspected_skip/attempt_gap evidence words, and proves recovered uses only
-// canonical KPI runtime recovery for a tracked workflow/cron pair.
-{
-  const config = {
-    lanes: [{
-      producer_members: [
-        { id: "not_due_member", workflow: ".github/workflows/not-due.yml", schedule: ["0 1 * * *"], cadence_calendar: "utc", cadence_declaration: { kind: "github_workflow" } },
-        { id: "overdue_member", workflow: ".github/workflows/overdue.yml", schedule: ["0 2 * * *"], cadence_calendar: "utc", cadence_declaration: { kind: "github_workflow" } },
-        { id: "recovered_member", workflow: ".github/workflows/update-manifest.yml", schedule: ["30 2 * * *"], cadence_calendar: "utc", cadence_declaration: { kind: "github_workflow" } },
-        { id: "unknown_member", workflow: ".github/workflows/unknown.yml", schedule: ["0 3 * * *"], cadence_calendar: "utc", cadence_declaration: { kind: "github_workflow" } },
-      ],
-    }],
-  };
-  const calendars = {
-    schedules: [
-      { id: "not_due_contract", cron: "0 1 * * *", calendar_id: "utc", grace: { unit: "hours", value: 1 } },
-      { id: "overdue_contract", cron: "0 2 * * *", calendar_id: "utc", grace: { unit: "hours", value: 1 } },
-      { id: "update_manifest_0230", cron: "30 2 * * *", calendar_id: "utc", grace: { unit: "hours", value: 1 } },
-      { id: "unknown_contract", cron: "0 3 * * *", calendar_id: "utc", grace: { unit: "hours", value: 1 } },
-    ],
-  };
-  const recoveredSlot = "update-manifest.yml:30 2 * * *@2026-07-21T02:30Z";
-  const recoverySlot = "update-manifest.yml:30 2 * * *@2026-07-22T02:30Z";
-  const projection = deriveWorkflowCadenceProjection({
-    watched: [
-      { file: "not-due.yml" },
-      { file: "overdue.yml" },
-      { file: "update-manifest.yml" },
-      { file: "no-declaration.yml" },
-      { file: "unknown.yml" },
-    ],
-    coverage: {
-      rows: [
-        { workflow: ".github/workflows/not-due.yml", member_id: "not_due_member", cron: "0 1 * * *", state: "observed", expected_at: "2026-07-22T01:00:00.000Z" },
-        { workflow: ".github/workflows/overdue.yml", member_id: "overdue_member", cron: "0 2 * * *", state: "suspected_skip", expected_at: "2026-07-22T02:00:00.000Z" },
-        { workflow: ".github/workflows/update-manifest.yml", member_id: "recovered_member", cron: "30 2 * * *", state: "attempt_gap", expected_at: "2026-07-21T02:30:00.000Z" },
-      ],
-      pre_activation_members: [
-        {
-          lane_id: "unknown_lane",
-          member_id: "unknown_member",
-          workflow: ".github/workflows/unknown.yml",
-          cron: "0 3 * * *",
-          activated_at: "2026-07-23T00:00:00Z",
-          first_eligible_at: "2026-07-24T03:00:00.000Z",
-        },
-      ],
-    },
-    kpiRuntime: {
-      slots: { missed_slot_keys: [recoveredSlot], satisfied_slot_keys: [recoverySlot] },
-      successful_snapshot_history: [{
-        slot_key: recoverySlot,
-        built_at: "2026-07-22T03:00:00.000Z",
-        workflow: "Update Manifest",
-        status: "ready",
-        run_attempt: 1,
-      }],
-    },
-    config,
-    calendars,
-  });
-  assert.deepEqual(projection.state_counts, {
-    not_due: 2,
-    overdue: 1,
-    recovered: 1,
-    no_declaration: 1,
-    unknown: 0,
-  });
-  assert.deepEqual(
-    projection.workflows.map((row) => [row.file, row.state, row.evidence]),
-    [
-      ["not-due.yml", "not_due", []],
-      ["overdue.yml", "overdue", ["suspected_skip"]],
-      ["update-manifest.yml", "recovered", ["attempt_gap"]],
-      ["no-declaration.yml", "no_declaration", []],
-      ["unknown.yml", "not_due", []],
-    ],
-  );
-  const joined = attachWorkflowCadence([{ file: "overdue.yml", label: "Overdue", status: "ok" }], projection);
-  assert.equal(joined[0].status, "alarm", "unrecovered overdue after declared grace must page");
-  assert.equal(joined[0].alarming, true);
-  assert.deepEqual(joined[0].alarm_reasons, ["unrecovered_overdue"]);
-  assert.equal(joined[0].cadence_status, "overdue");
-
-  // Mutation proof: neither absent grace nor an ambiguous/missing schedule may
-  // silently fall back to zero, KPI's 360 minutes, or no_declaration.
-  const missingGrace = structuredClone(calendars);
-  delete missingGrace.schedules.find((row) => row.id === "overdue_contract").grace;
-  assert.throws(
-    () => assertDeclaredScheduleGraceContracts({ config, calendars: missingGrace }),
-    /schedule overdue_contract has no grace block/,
-  );
-  const missingContract = structuredClone(calendars);
-  missingContract.schedules = missingContract.schedules.filter((row) => row.id !== "overdue_contract");
-  assert.throws(
-    () => assertDeclaredScheduleGraceContracts({ config, calendars: missingContract }),
-    /declared schedule overdue\.yml:0 2 \* \* \* must have exactly one grace contract/,
-  );
-}
-
-// fh-538: paging sensitivity comes from the existing cadence declaration, not
-// a second workflow-name table. A monthly declaration pages on its first
-// completed failure; daily/hourly declarations retain the two-failure noise
-// guard. Slot drift remains the separate overdue join proved above.
-{
-  const calendars = {
-    schedules: [
-      { id: "monthly", cron: "0 9 1 * *", calendar_id: "utc", grace: { unit: "hours", value: 1 } },
-      { id: "weekly", cron: "0 7 * * 0", calendar_id: "utc", grace: { unit: "hours", value: 1 } },
-      { id: "daily", cron: "0 6 * * *", calendar_id: "utc", grace: { unit: "hours", value: 1 } },
-      { id: "hourly", cron: "23 * * * *", calendar_id: "utc", grace: { unit: "hours", value: 1 } },
-    ],
-  };
-  const member = (id, file, cron) => ({
-    id,
-    workflow: `.github/workflows/${file}`,
-    schedule: [cron],
-    cadence_calendar: "utc",
-    cadence_declaration: { kind: "github_workflow" },
-  });
-  const config = {
-    lanes: [{ producer_members: [
-      member("monthly_member", "monthly.yml", "0 9 1 * *"),
-      member("daily_member", "daily.yml", "0 6 * * *"),
-      member("hourly_member", "hourly.yml", "23 * * * *"),
-    ] }],
-  };
-  const watched = [
-    { file: "monthly.yml", label: "Monthly" },
-    { file: "daily.yml", label: "Daily" },
-    { file: "hourly.yml", label: "Hourly" },
-  ];
-  const projection = deriveWorkflowCadenceProjection({ watched, config, calendars });
-  assert.deepEqual(
-    projection.workflows.map((row) => [row.file, row.failure_streak_threshold]),
-    [["monthly.yml", 1], ["daily.yml", 2], ["hourly.yml", 2]],
-    "the same declared cron rows must calibrate monthly=1 and daily/hourly=2",
-  );
-
-  const calibrated = attachWorkflowCadence(watched, projection);
-  const [monthly, daily, hourly] = calibrated.map((workflow) => evaluateWorkflow(workflow, [F(1), S(0)]));
-  assert.equal(monthly.status, "alarm", "one monthly completed failure must page");
-  assert.equal(daily.status, "ok", "one daily completed failure must not page");
-  assert.equal(hourly.status, "ok", "one hourly completed failure must not page");
-  assert.equal(hourly.failure_streak_threshold, 2,
-    "hourly stays at 2, not 3: completed failures are evidence and slot drift is the overdue join");
-
-  // Bidirectional mutation: cadence alone flips the decision in both directions.
-  const monthlyToDaily = structuredClone(config);
-  monthlyToDaily.lanes[0].producer_members[0].schedule = ["0 6 * * *"];
-  const mutatedMonthly = deriveWorkflowCadenceProjection({ watched, config: monthlyToDaily, calendars });
-  const monthlyAfterMutation = evaluateWorkflow(
-    attachWorkflowCadence(watched, mutatedMonthly)[0],
-    [F(1), S(0)],
-  );
-  assert.equal(monthlyAfterMutation.failure_streak_threshold, 2);
-  assert.equal(monthlyAfterMutation.status, "ok", "monthly -> daily must remove the one-failure page");
-
-  const dailyToMonthly = structuredClone(config);
-  dailyToMonthly.lanes[0].producer_members[1].schedule = ["0 9 1 * *"];
-  const mutatedDaily = deriveWorkflowCadenceProjection({ watched, config: dailyToMonthly, calendars });
-  const dailyAfterMutation = evaluateWorkflow(
-    attachWorkflowCadence(watched, mutatedDaily)[1],
-    [F(1), S(0)],
-  );
-  assert.equal(dailyAfterMutation.failure_streak_threshold, 1);
-  assert.equal(dailyAfterMutation.status, "alarm", "daily -> monthly must add the one-failure page");
-
-  assert.equal(
-    deriveFailureStreakThreshold([{ cron: "0 7 * * 0" }]),
-    1,
-    "the exact weekly boundary must page on the first completed failure",
-  );
-  assert.equal(
-    deriveFailureStreakThreshold([{ cron: "0 7 * * 0" }, { cron: "0 6 * * *" }]),
-    2,
-    "a weekly+daily workflow uses its combined effective cadence and keeps the two-failure guard",
-  );
-}
-
 // Real-repository contract: at least 31 scheduled workflows are discovered. The
 // alarm itself is the sole declared exclusion, while the non-scheduled workflow
 // syntax gate is an explicit inclusion. The serving probe is watched, not
@@ -891,17 +346,10 @@ const FIXTURE_NOW = new Date("2026-08-10T03:00:00Z");
     ["schedule"],
     "the probe contributes its scheduled cadence only; manual dispatch stays excluded",
   );
-  const calendars = JSON.parse(fs.readFileSync(path.join(repoRoot, "scripts", "lib", "data-supply-detection-calendars.json"), "utf8"));
-  const initialCadence = deriveWorkflowCadenceProjection({
-    watched: policy.watched,
-    coverage: { rows: [] },
-    calendars,
-  });
-  assert.deepEqual(Object.keys(initialCadence.state_counts), CADENCE_STATES, "first-evaluation dry run must expose all five states");
   assert.equal(
-    Object.values(initialCadence.state_counts).reduce((sum, count) => sum + count, 0),
-    policy.watched.length,
-    "the first 31-workflow evaluation must classify every watched workflow exactly once",
+    policy.watched.find((row) => row.file === "slickcharts-weekly.yml")?.failure_streak_threshold,
+    1,
+    "the weekly workflow must retain its run-history paging threshold",
   );
 }
 
@@ -1317,49 +765,11 @@ const ranJobs = jobsOf({ name: "fetch", conclusion: "failure", steps: [{ name: "
   assert.equal(
     result.watched.length,
     deriveWorkflowWatchPolicy().watched.length,
-    "the first cadence dry run covers every current watched workflow",
+    "the offline result covers every current watched workflow",
   );
-  assert.equal(result.workflows.length, result.watched.length, "the first cadence dry run emits one classified row per watched workflow");
-  assert.deepEqual(Object.keys(result.cadence_state_counts), CADENCE_STATES);
-  assert.equal(
-    Object.values(result.cadence_state_counts).reduce((sum, count) => sum + count, 0),
-    result.watched.length,
-    "the five-state count must reconcile to the complete watch inventory",
-  );
-  // CORRECTED 2026-08-21 (B-394). This used to require the checked-in fixture to
-  // contain at least one overdue row, which made the contract depend on the
-  // fleet being broken: it passed only while some real family was overdue, and
-  // failed the moment the last one was fixed. fetch-yf-finance was that family,
-  // and giving its ETF cron an observation moved it to not_due - the fix landing
-  // is what turned this red.
-  //
-  // What the assertion was for is kept and is exercised deterministically at the
-  // attachWorkflowCadence check above, on a constructed overdue projection. What
-  // remains here is the invariant that does not need an incident to exist: any
-  // overdue row present in the live projection must page, and the state must be
-  // one the projection can actually produce.
-  const overdueRows = result.workflows.filter((row) => row.cadence_status === "overdue");
-  assert.ok(
-    overdueRows.every((row) => row.status === "alarm"
-      && row.alarm_reasons.includes("unrecovered_overdue")),
-    "an unrecovered slot beyond declared grace must remain a paging incident",
-  );
-  assert.ok(
-    result.workflows.every((row) => CADENCE_STATES.includes(row.cadence_status)),
-    "every live row must carry a declared cadence state",
-  );
-  // A live row must never be "unknown" without the coverage artifact being
-  // absent outright. An unknown here means the KPI's coverage rows no longer key
-  // to the declared bindings - which is exactly what a member-id change does
-  // before the detection report and KPI are rebuilt, and it silently removes a
-  // workflow from cadence watch rather than alarming.
-  const unknownRows = result.workflows.filter((row) => row.cadence_status === "unknown");
-  assert.deepEqual(
-    unknownRows.map((row) => row.file),
-    [],
-    "a workflow whose declared bindings do not resolve in the KPI coverage drops out of cadence "
-      + "watch silently; rebuild data/admin/data-supply-detection-floor.json and the KPI artifact",
-  );
+  assert.equal(result.workflows.length, result.watched.length, "the offline result emits one row per watched workflow");
+  assert.equal(result.data_health_kpi.status, "unknown", "missing repository cannot make KPI history look healthy");
+  assert.ok(result.workflows.every((workflow) => workflow.status === "unknown"));
 }
 
 // Workflow YAML sanity: mirror the budget-alarm shape and honor #357 (no runner
@@ -1443,253 +853,6 @@ const ranJobs = jobsOf({ name: "fetch", conclusion: "failure", steps: [{ name: "
     "healthy workflow_run completions remain quiet: issue preparation and issue update are alarm-only, and the run concludes green when reporting succeeded",
   );
   assert.doesNotMatch(workflow, /\$\{\{\s*runner\./, "must not reference the runner context in expressions (#357)");
-}
-
-// DEC-407 item 2: the KPI outcome_watchdog joins the existing alarm channel.
-// A lane pages once no matter how many families it owns; the representative is
-// the newest record and the run id is its generation_id (records carry no
-// GitHub run id). Small local bindings keep these contracts independent of the
-// registry's family count.
-{
-  const laneBindings = {
-    "fred-macro": { lane_id: "fred_macro", workflow: ".github/workflows/fetch-fred-macro.yml" },
-    "fred-macro-aux": { lane_id: "fred_macro", workflow: ".github/workflows/fetch-fred-macro.yml" },
-    sentiment: { lane_id: "sentiment", workflow: ".github/workflows/fetch-news-tone.yml" },
-  };
-  const watchdogRow = (lane_id, state, extra = {}) => ({
-    lane_id,
-    cadence_kind: "daily",
-    cadence_hours: 24,
-    threshold_hours: 36,
-    last_advance: "2026-08-09",
-    age_hours: state === "overdue" ? 48 : 12,
-    state,
-    ...extra,
-  });
-  const laneWatchdog = (rows) => ({
-    schema_version: LANE_OUTCOME_WATCHDOG_SCHEMA,
-    evaluated_at: "2026-08-10T02:30:00Z",
-    basis: "canonical_file_source_as_of",
-    threshold_multiplier: 1.5,
-    status: rows.some((row) => row.state === "overdue") ? "overdue" : "ready",
-    counts: { monitored: rows.length, current: 0, overdue: 0, unobservable: 0 },
-    rows,
-  });
-  const laneRecord = (family, result, observedAt, generationId = null) => buildPublishOutcomeRecord({
-    family,
-    result,
-    generationId,
-    observedAt,
-    sourceAsOf: "2026-08-09",
-  });
-
-  // Fail-open on a foreign watchdog shape: the alarm must never reason about a
-  // schema the KPI builder does not produce.
-  assert.deepEqual(
-    deriveLaneOutcomeAlarms({ watchdog: { schema_version: "v9", rows: [] }, shards: {}, bindings: laneBindings, now: FIXTURE_NOW }),
-    [],
-    "a foreign watchdog schema must yield no lane alarms",
-  );
-  assert.deepEqual(
-    deriveLaneOutcomeAlarms({ watchdog: null, shards: {}, bindings: laneBindings, now: FIXTURE_NOW }),
-    [],
-    "a missing watchdog must yield no lane alarms",
-  );
-
-  // Non-overdue rows never page, whatever the shards say.
-  assert.deepEqual(
-    deriveLaneOutcomeAlarms({
-      watchdog: laneWatchdog([watchdogRow("fred_macro", "current"), watchdogRow("sentiment", "unobservable")]),
-      shards: {},
-      bindings: laneBindings,
-      now: FIXTURE_NOW,
-    }),
-    [],
-    "current/unobservable watchdog rows must not alarm",
-  );
-
-  // Overdue + two consecutive non-successes: both conditions, representative is
-  // the newest record, run id is its generation_id.
-  const streakShards = {
-    "fred-macro": outcomeShard("fred-macro", [
-      laneRecord("fred-macro", "published", "2026-08-10T00:00:00Z", "gen-old"),
-      laneRecord("fred-macro", "failed", "2026-08-10T01:00:00Z", "gen-mid"),
-      laneRecord("fred-macro", "gate_blocked", "2026-08-10T02:00:00Z", "gen-latest"),
-    ]),
-  };
-  const [streak] = deriveLaneOutcomeAlarms({
-    watchdog: laneWatchdog([watchdogRow("fred_macro", "overdue")]),
-    shards: streakShards,
-    bindings: laneBindings,
-    now: FIXTURE_NOW,
-  });
-  assert.deepEqual(
-    streak.conditions,
-    [LANE_OUTCOME_ALARM_REASONS.overdue, LANE_OUTCOME_ALARM_REASONS.nonPromotionStreak],
-    "overdue with two consecutive non-successes must carry both conditions",
-  );
-  assert.equal(streak.decision, "gate_blocked");
-  assert.equal(streak.generation_id, "gen-latest");
-  assert.equal(streak.observed_at, "2026-08-10T02:00:00Z");
-  assert.equal(streak.source_as_of, "2026-08-09");
-  assert.equal(streak.cadence_hours, 24);
-  assert.deepEqual(streak.families, ["fred-macro", "fred-macro-aux"]);
-
-  // Overdue alone (fresh success on record): the overdue condition only.
-  const [fresh] = deriveLaneOutcomeAlarms({
-    watchdog: laneWatchdog([watchdogRow("fred_macro", "overdue")]),
-    shards: {
-      "fred-macro": outcomeShard("fred-macro", [
-        laneRecord("fred-macro", "published", "2026-08-10T02:00:00Z", "gen-ok"),
-      ]),
-    },
-    bindings: laneBindings,
-    now: FIXTURE_NOW,
-  });
-  assert.deepEqual(fresh.conditions, [LANE_OUTCOME_ALARM_REASONS.overdue]);
-  assert.equal(fresh.decision, "published");
-
-  // Overdue with no records at all (cancelled/dropped producer writes
-  // nothing): decision "overdue", null run — still pages.
-  const [absent] = deriveLaneOutcomeAlarms({
-    watchdog: laneWatchdog([watchdogRow("sentiment", "overdue", { last_advance: null, age_hours: null })]),
-    shards: {},
-    bindings: laneBindings,
-    now: FIXTURE_NOW,
-  });
-  assert.deepEqual(absent.conditions, [LANE_OUTCOME_ALARM_REASONS.overdue]);
-  assert.equal(absent.decision, "overdue");
-  assert.equal(absent.generation_id, null);
-
-  // ETF detail uses declared delivery slots, so a null numeric threshold is
-  // deliberate; an expired slot still takes the existing overdue alarm path.
-  const detailBindings = { "stockanalysis-etf-detail": {
-    lane_id: "stockanalysis_etf_detail", workflow: ".github/workflows/fetch-stockanalysis.yml",
-  } };
-  const [detailOverdue] = deriveLaneOutcomeAlarms({
-    watchdog: laneWatchdog([watchdogRow("stockanalysis_etf_detail", "overdue", {
-      threshold_hours: null, last_advance: "2026-08-06T02:28:00Z", age_hours: 96.03,
-      schedule_contract: { calendar: "utc", schedules: [
-        { id: "weekday_2350_utc", cron: "50 23 * * 1-5", grace: { unit: "hours", value: 24 } },
-        { id: "weekly_2320_sun_utc", cron: "20 23 * * 0", grace: { unit: "calendar_days", value: 2 } },
-      ] },
-    })]),
-    shards: {}, bindings: detailBindings, now: FIXTURE_NOW,
-  });
-  assert.deepEqual(detailOverdue.conditions, [LANE_OUTCOME_ALARM_REASONS.overdue]);
-  assert.equal(detailOverdue.threshold_hours, null);
-  const [detailAttached] = attachLaneOutcomeAlarms(
-    [{ file: "fetch-stockanalysis.yml", status: "ok", alarming: false, alarm_reasons: [] }],
-    [detailOverdue], { bindings: detailBindings },
-  );
-  assert.equal(detailAttached.status, "alarm");
-  assert.deepEqual(detailAttached.alarm_reasons, [LANE_OUTCOME_ALARM_REASONS.overdue]);
-
-  // One lane, two families: the newest record across families represents.
-  const [collapsed] = deriveLaneOutcomeAlarms({
-    watchdog: laneWatchdog([watchdogRow("fred_macro", "overdue")]),
-    shards: {
-      "fred-macro": outcomeShard("fred-macro", [
-        laneRecord("fred-macro", "failed", "2026-08-10T01:00:00Z", "gen-a"),
-      ]),
-      "fred-macro-aux": outcomeShard("fred-macro-aux", [
-        laneRecord("fred-macro-aux", "gate_blocked", "2026-08-10T02:00:00Z", "gen-b"),
-      ]),
-    },
-    bindings: laneBindings,
-    now: FIXTURE_NOW,
-  });
-  assert.equal(collapsed.decision, "gate_blocked");
-  assert.equal(collapsed.generation_id, "gen-b");
-
-  // Attach: the owning workflow alarms with both the reasons and the detail;
-  // a workflow owning no alarming lane passes through untouched.
-  const attached = attachLaneOutcomeAlarms(
-    [
-      { file: "fetch-fred-macro.yml", status: "ok", alarming: false, alarm_reasons: [], latestRunUrl: "https://gh/run/777" },
-      { file: "deploy-worker.yml", status: "ok", alarming: false, alarm_reasons: [] },
-    ],
-    [streak],
-    { bindings: laneBindings },
-  );
-  assert.equal(attached[0].status, "alarm");
-  assert.equal(attached[0].alarming, true);
-  assert.deepEqual(attached[0].alarm_reasons, [
-    LANE_OUTCOME_ALARM_REASONS.overdue,
-    LANE_OUTCOME_ALARM_REASONS.nonPromotionStreak,
-  ]);
-  assert.equal(attached[0].lane_outcome.length, 1);
-  assert.equal(attached[0].lane_outcome[0].lane_id, "fred_macro");
-  // Owner context rides on the per-workflow copy from the workflow context —
-  // the generation id stays labeled generation, never a GitHub run id.
-  assert.equal(attached[0].lane_outcome[0].owner_workflow, "fetch-fred-macro.yml");
-  assert.equal(attached[0].lane_outcome[0].owner_run_url, "https://gh/run/777");
-  assert.equal(attached[1].status, "ok");
-  assert.equal(attached[1].lane_outcome, undefined);
-  const passthrough = [{ file: "fetch-fred-macro.yml", status: "ok" }];
-  assert.equal(attachLaneOutcomeAlarms(passthrough, [], { bindings: laneBindings }), passthrough);
-
-  // Body: one lane line carrying lane, decision, generation, as-of, cadence,
-  // and the owner run from the workflow context.
-  const body = buildIssueBody(attached.filter((row) => row.status === "alarm"));
-  assert.match(body, /Lane outcome: fred_macro decision=gate_blocked generation=gen-latest source_as_of=2026-08-09 cadence=24h owner_run=https:\/\/gh\/run\/777/);
-
-  // P1 (fh-429): overdue and streak are independent. A lane still "current"
-  // on the watchdog clock but failing to promote twice straight pages on the
-  // streak alone.
-  const [currentStreak] = deriveLaneOutcomeAlarms({
-    watchdog: laneWatchdog([watchdogRow("sentiment", "current")]),
-    shards: {
-      sentiment: outcomeShard("sentiment", [
-        laneRecord("sentiment", "published", "2026-08-10T00:00:00Z", "gen-s0"),
-        laneRecord("sentiment", "failed", "2026-08-10T01:00:00Z", "gen-s1"),
-        laneRecord("sentiment", "failed", "2026-08-10T02:00:00Z", "gen-s2"),
-      ]),
-    },
-    bindings: laneBindings,
-    now: FIXTURE_NOW,
-  });
-  assert.deepEqual(currentStreak.conditions, [LANE_OUTCOME_ALARM_REASONS.nonPromotionStreak]);
-  assert.equal(currentStreak.decision, "failed");
-  assert.equal(currentStreak.generation_id, "gen-s2");
-
-  // P1 (fh-429): every watchdog lane routes somewhere. krx is overdue but has
-  // no publish-outcome binding, so it routes via its registry lane-owner
-  // workflow; a lane named nowhere falls back to the KPI publisher.
-  const ownerLanes = [{ id: "krx", owner_workflow: ".github/workflows/fenok-edge-krx-daily.yml" }];
-  assert.deepEqual(
-    laneOwnerFiles("krx", { bindings: laneBindings, lanes: ownerLanes }),
-    ["fenok-edge-krx-daily.yml"],
-  );
-  assert.deepEqual(
-    laneOwnerFiles("fred_macro", { bindings: laneBindings, lanes: ownerLanes }),
-    ["fetch-fred-macro.yml"],
-  );
-  assert.deepEqual(
-    laneOwnerFiles("ghost_lane", { bindings: {}, lanes: [] }),
-    [LANE_OUTCOME_DEFAULT_OWNER_WORKFLOW],
-  );
-  const [unbound] = deriveLaneOutcomeAlarms({
-    watchdog: laneWatchdog([watchdogRow("krx", "overdue")]),
-    shards: {},
-    bindings: laneBindings,
-    now: FIXTURE_NOW,
-  });
-  assert.equal(unbound.lane_id, "krx");
-  assert.deepEqual(unbound.families, []);
-  assert.equal(unbound.decision, "overdue");
-  const unboundAttached = attachLaneOutcomeAlarms(
-    [
-      { file: "fenok-edge-krx-daily.yml", status: "ok", alarming: false, alarm_reasons: [] },
-      { file: "deploy-worker.yml", status: "ok", alarming: false, alarm_reasons: [] },
-    ],
-    [unbound],
-    { bindings: laneBindings, lanes: ownerLanes },
-  );
-  assert.equal(unboundAttached[0].status, "alarm");
-  assert.deepEqual(unboundAttached[0].alarm_reasons, [LANE_OUTCOME_ALARM_REASONS.overdue]);
-  assert.equal(unboundAttached[0].lane_outcome[0].owner_run_url, null);
-  assert.equal(unboundAttached[1].status, "ok");
 }
 
 // fh-258 adjudication boundary: only a row that actually carries a

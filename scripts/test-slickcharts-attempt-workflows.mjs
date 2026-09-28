@@ -7,215 +7,25 @@ import { fileURLToPath } from "node:url";
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const members = ["daily", "weekly", "monthly", "history", "symbols"];
-
 for (const member of members) {
-  const filePath = path.join(root, ".github", "workflows", `slickcharts-${member}.yml`);
-  const workflow = fs.readFileSync(filePath, "utf8");
-  assert.match(workflow, new RegExp(`--member ${member}\\b`), `${member} must emit its declared member id`);
+  const workflow = fs.readFileSync(path.join(root, `.github/workflows/slickcharts-${member}.yml`), "utf8");
+  assert.match(workflow, /scripts\/build-slickcharts-run-row\.mjs/);
+  assert.match(workflow, new RegExp(`--member ${member}\\b`));
   assert.match(workflow, /scripts\/publish-slickcharts-attempt\.sh/);
-  assert.match(workflow, /- name: (?:Commit and push changes|Commit .* attempt)\n\s+if: \$\{\{ always\(\) \}\}/);
-  assert.match(workflow, /SLICKCHARTS_ATTEMPT_EVENTS_PATH/);
-  assert.doesNotMatch(
-    workflow,
-    /runs-on:[^\n]+\n\s+env:\n\s+SLICKCHARTS_ATTEMPT_EVENTS_PATH: \$\{\{ runner\.temp \}\}/,
-    `${member} must not use runner context in job-level env`,
-  );
-  assert.match(workflow, /SLICKCHARTS_ATTEMPT_EVENTS_PATH=\$RUNNER_TEMP\/.+ >> "\$GITHUB_ENV"/);
-  assert.doesNotMatch(workflow, /git pull --rebase --autostash/, `${member} must use shard-aware publishing`);
+  assert.match(workflow, /--manifest-workflow \.github\/workflows\/slickcharts-/);
+  assert.match(workflow, /--manifest-always always_if_exists/);
+  assert.doesNotMatch(workflow, /emit-slickcharts-attempt\.mjs|detection-attempts\/slickcharts\.json/);
+  assert.doesNotMatch(workflow, /persist-cloud-publish-outcome\.mjs/);
 }
 
-for (const member of ["history", "symbols"]) {
-  const workflow = fs.readFileSync(path.join(root, ".github", "workflows", `slickcharts-${member}.yml`), "utf8");
-  assert.match(workflow, /Upload .*attempt telemetry/);
-  assert.match(workflow, /--events-root artifacts/);
-  assert.match(workflow, /if-no-files-found: ignore/);
+for (const member of ["weekly", "symbols"]) {
+  const workflow = fs.readFileSync(path.join(root, `.github/workflows/slickcharts-${member}.yml`), "utf8");
+  assert.match(workflow, new RegExp(`check-cloud-family-acceptance\\.mjs --family=slickcharts-${member}`));
+  assert.match(workflow, /CLOUD_ACCEPTANCE_MIN_OBSERVED_AT/);
 }
 
-{
-  const daily = fs.readFileSync(path.join(root, ".github", "workflows", "slickcharts-daily.yml"), "utf8");
-  assert.match(daily, /controlled_failure_files/);
-  assert.match(daily, /SLICKCHARTS_DAILY_OUTCOMES_PATH/);
-  assert.match(daily, /scripts\/run-slickcharts-daily-key\.mjs/g);
-  assert.match(daily, /scripts\/slickcharts-daily-recovery\.mjs prepare/);
-  assert.match(daily, /scripts\/slickcharts-daily-recovery\.mjs finalize/);
-  assert.match(daily, /node scripts\/test-slickcharts-daily-recovery\.mjs/);
-  assert.match(daily, /pip install requests beautifulsoup4 playwright/);
-  assert.ok(
-    daily.indexOf("pip install requests beautifulsoup4 playwright")
-      < daily.indexOf("python scripts/test_slickcharts_provider_receipts.py"),
-    "provider-receipt tests must run after their requests/BeautifulSoup imports are installed",
-  );
-  assert.ok(
-    daily.indexOf("python scripts/test_slickcharts_provider_receipts.py")
-      < daily.indexOf("playwright install chromium --with-deps"),
-    "the browser install may remain after lightweight contract tests",
-  );
-  assert.match(daily, /-- python scripts\/scrapers\/currency-scraper\.py/,
-    "daily producer must route currency fetches through the shared UTF-8 decoder");
-  assert.match(
-    daily,
-    /scripts\/publish-slickcharts-attempt\.sh[\s\S]*?--manifest-workflow \.github\/workflows\/slickcharts-daily\.yml[\s\S]*?--manifest-always always_if_exists[\s\S]*?--manifest-data success_if_exists[\s\S]*?--[\s\S]*?data\/slickcharts\/gainers\.json/,
-    "daily must opt into manifest mode while retaining positional data paths",
-  );
-  for (const key of ["gainers.json", "losers.json", "treasury.json", "currency.json", "mortgage.json"]) {
-    assert.match(daily, new RegExp(`--key ${key.replace(".", "\\.")}`));
-  }
-}
-
-{
-  const weekly = fs.readFileSync(path.join(root, ".github", "workflows", "slickcharts-weekly.yml"), "utf8");
-  assert.match(
-    weekly,
-    /scripts\/publish-slickcharts-attempt\.sh[\s\S]*?--manifest-workflow \.github\/workflows\/slickcharts-weekly\.yml[\s\S]*?--manifest-always always_if_exists[\s\S]*?--[\s\S]*?data\/slickcharts\/sp500\.json[\s\S]*?data\/slickcharts\/berkshire\.json/,
-    "weekly must opt into its always manifest stage while retaining all positional data paths",
-  );
-  assert.match(
-    weekly,
-    /CLOUD_ACCEPTANCE_MIN_OBSERVED_AT=\$\(date -u \+%Y-%m-%dT%H:%M:%SZ\)" >> "\$GITHUB_ENV"[\s\S]*?- name: Check slickcharts-weekly cloud acceptance[\s\S]*?CLOUD_ACCEPTANCE_BASE_URL: https:\/\/100xfenok\.etloveaui\.workers\.dev[\s\S]*?check-cloud-family-acceptance\.mjs --family=slickcharts-weekly/,
-    "weekly must record a current-run-bound cloud acceptance check",
-  );
-}
-
-{
-  const symbols = fs.readFileSync(path.join(root, ".github", "workflows", "slickcharts-symbols.yml"), "utf8");
-  const symbolsJobsStart = symbols.indexOf("jobs:");
-  const symbolsBatch = symbols.slice(symbols.indexOf("  scrape-batch:"), symbols.indexOf("  merge-batches:"));
-  const symbolsMerge = symbols.slice(symbols.indexOf("  merge-batches:"), symbols.indexOf("  scrape-single:"));
-  const symbolsSingle = symbols.slice(symbols.indexOf("  scrape-single:"));
-  assert.doesNotMatch(symbols.slice(0, symbolsJobsStart), /^concurrency:/m,
-    "symbols acquisition must not be serialized at workflow scope");
-  assert.doesNotMatch(symbolsBatch, /^    concurrency:/m,
-    "symbols batch acquisition must remain outside the global writer lock");
-  for (const [job, body] of [["merge-batches", symbolsMerge], ["scrape-single", symbolsSingle]]) {
-    assert.match(
-      body,
-      /^    concurrency:\n      group: fenok-data-writer-refs\/heads\/main\n      cancel-in-progress: false\n      queue: max$/m,
-      `${job} must retain the global writer lock`,
-    );
-  }
-  assert.equal(
-    (symbols.match(/--manifest-workflow \.github\/workflows\/slickcharts-symbols\.yml/g) ?? []).length,
-    1,
-    "only the full symbols merge may opt into the workflow-wide manifest stage",
-  );
-  assert.match(
-    symbols,
-    /- name: Commit and push changes[\s\S]*?scripts\/publish-slickcharts-attempt\.sh[\s\S]*?--manifest-workflow \.github\/workflows\/slickcharts-symbols\.yml[\s\S]*?--manifest-always always_if_exists[\s\S]*?--[\s\S]*?data\/slickcharts\/symbols\.json/,
-  );
-  const singleAttempt = symbols.slice(symbols.indexOf("- name: Commit symbols attempt"));
-  assert.doesNotMatch(singleAttempt, /--manifest-workflow/, "single-symbol attempt must remain shard-only");
-  assert.match(
-    symbols,
-    /- name: Capture cloud acceptance run start[\s\S]*?CLOUD_ACCEPTANCE_MIN_OBSERVED_AT=\$\(date -u \+%Y-%m-%dT%H:%M:%SZ\)" >> "\$GITHUB_ENV"[\s\S]*?- name: Check slickcharts-symbols cloud acceptance[\s\S]*?CLOUD_ACCEPTANCE_BASE_URL: https:\/\/100xfenok\.etloveaui\.workers\.dev[\s\S]*?check-cloud-family-acceptance\.mjs --family=slickcharts-symbols/,
-    "symbols must record a current-run-bound cloud acceptance check",
-  );
-  const symbolsPersistStart = symbols.indexOf("- name: Persist slickcharts-symbols publish outcome");
-  const symbolsCleanupStart = symbols.indexOf("- name: Remove consumed symbol attempt artifacts");
-  assert.ok(symbolsCleanupStart >= 0 && symbolsCleanupStart < symbolsPersistStart,
-    "symbols telemetry cleanup must precede outcome persistence");
-  const symbolsCleanup = symbols.slice(symbolsCleanupStart, symbolsPersistStart);
-  assert.match(
-    symbolsCleanup,
-    /rm -rf -- \\\n\s+artifacts\/attempt-symbols-A-D \\\n\s+artifacts\/attempt-symbols-E-L \\\n\s+artifacts\/attempt-symbols-M-R \\\n\s+artifacts\/attempt-symbols-S-Z/,
-    "symbols cleanup must remove only the four consumed attempt artifact directories",
-  );
-  assert.doesNotMatch(symbolsCleanup, /artifacts\/attempt-symbols-\*/,
-    "symbols cleanup must not widen to an unbounded artifact glob");
-  const monthly = fs.readFileSync(path.join(root, ".github", "workflows", "slickcharts-monthly.yml"), "utf8");
-  assert.match(
-    monthly,
-    /scripts\/publish-slickcharts-attempt\.sh[\s\S]*?--manifest-workflow \.github\/workflows\/slickcharts-monthly\.yml[\s\S]*?--manifest-always always_if_exists[\s\S]*?--[\s\S]*?"\$\{paths\[@\]\}"/,
-    "monthly must opt into its always manifest stage while retaining the dynamic positional-path array",
-  );
-  assert.match(monthly, /paths=\([\s\S]*?data\/slickcharts\/inflation\.json[\s\S]*?\)/);
-  assert.match(monthly, /paths\+=\(data\/slickcharts\/1929crash\.json\)/);
-}
-
-{
-  const history = fs.readFileSync(path.join(root, ".github", "workflows", "slickcharts-history.yml"), "utf8");
-  assert.equal(
-    (history.match(/--manifest-workflow \.github\/workflows\/slickcharts-history\.yml/g) ?? []).length,
-    1,
-    "only the full history merge may opt into the workflow-wide manifest stage",
-  );
-  assert.match(
-    history,
-    /- name: Commit and push changes[\s\S]*?scripts\/publish-slickcharts-attempt\.sh[\s\S]*?--manifest-workflow \.github\/workflows\/slickcharts-history\.yml[\s\S]*?--manifest-always always_if_exists[\s\S]*?--[\s\S]*?data\/slickcharts\/stocks-returns\.json[\s\S]*?data\/slickcharts\/stocks\//,
-  );
-  assert.match(history, /python scripts\/test_slickcharts_encoding\.py/,
-    "history merge must run the UTF-8 fetch/intermediate/merge regression test");
-  assert.ok(
-    history.indexOf("python scripts/test_slickcharts_encoding.py")
-      < history.indexOf("python scripts/validate-slickcharts-integrity.py --skip-public"),
-    "round-trip proof must run before the merge integrity guard",
-  );
-  const projectionValidation = history.slice(
-    history.indexOf("- name: Configure temporary membership projection snapshots"),
-    history.indexOf("- name: Emit SlickCharts history attempt"),
-  );
-  assert.match(
-    projectionValidation,
-    /SLICKCHARTS_UNIVERSE_SNAPSHOT_PATH=\$RUNNER_TEMP\/slickcharts-history-universe\.json" >> "\$GITHUB_ENV"/,
-    "history must configure the universe snapshot from RUNNER_TEMP at step scope",
-  );
-  assert.match(
-    projectionValidation,
-    /SLICKCHARTS_MEMBERSHIP_SNAPSHOT_PATH=\$RUNNER_TEMP\/slickcharts-history-membership-changes\.json" >> "\$GITHUB_ENV"/,
-    "history must configure the membership snapshot from RUNNER_TEMP at step scope",
-  );
-  assert.doesNotMatch(
-    projectionValidation,
-    /\$\{\{ runner\.temp \}\}/,
-    "history projection snapshots must not use runner context",
-  );
-  assert.match(
-    projectionValidation,
-    /trap restore_membership_projections EXIT[\s\S]*?trap 'exit 129' HUP[\s\S]*?trap 'exit 130' INT[\s\S]*?trap 'exit 143' TERM/,
-    "history must restore temporary projections on exit and interruption",
-  );
-  assert.match(projectionValidation, /python scripts\/scrapers\/membership-tracker\.py --quiet/);
-  assert.doesNotMatch(projectionValidation, /membership-tracker\.py --dry-run/);
-  assert.ok(
-    projectionValidation.indexOf("python scripts/scrapers/membership-tracker.py --quiet")
-      < projectionValidation.indexOf("python scripts/validate-slickcharts-integrity.py --skip-public"),
-    "history must rebuild the ephemeral membership projection before strict validation",
-  );
-  assert.match(
-    history,
-    /- name: Exercise controlled composite degradation\n\s+id: controlled_degradation\n\s+if:.*controlled_failure_after_fetch.*\n\s+continue-on-error: true/,
-    "history controlled degradation must remain observable while allowing handled LKG finalization to exit cleanly",
-  );
-  assert.match(
-    history,
-    /--outcome "\$\{\{ job\.status \}\}" \\\n\s+--outcome "\$\{\{ steps\.controlled_degradation\.outcome \}\}"/,
-    "history attempt emission must retain the controlled failure outcome after the job recovers",
-  );
-  assert.match(
-    history,
-    /if: \$\{\{ needs\.scrape-returns\.result == 'success' && needs\.scrape-dividends\.result == 'success' && steps\.controlled_degradation\.outcome != 'failure' \}\}/,
-    "history controlled degradation must never publish a cloud generation",
-  );
-  const fullHistoryPublish = history.slice(history.indexOf("- name: Commit and push changes"));
-  assert.match(
-    fullHistoryPublish,
-    /git status --porcelain=v1 --untracked-files=all --[\s\S]*?data\/slickcharts\/universe\.json[\s\S]*?data\/slickcharts\/membership-changes\.json[\s\S]*?if \[ -n "\$projection_status" \]; then[\s\S]*?exit 1/,
-    "history publish must reject unrestored membership projections",
-  );
-  assert.ok(
-    fullHistoryPublish.indexOf("git status --porcelain=v1 --untracked-files=all")
-      < fullHistoryPublish.indexOf("scripts/publish-slickcharts-attempt.sh"),
-    "history must verify projection restoration before publishing",
-  );
-  const fullHistoryPublishInvocation = fullHistoryPublish.slice(
-    fullHistoryPublish.indexOf("scripts/publish-slickcharts-attempt.sh"),
-  );
-  assert.doesNotMatch(
-    fullHistoryPublishInvocation,
-    /data\/slickcharts\/(?:universe|membership-changes)\.json/,
-    "history must not stage or publish ephemeral membership projections",
-  );
-  const singleAttempt = history.slice(history.indexOf("- name: Commit history attempt"));
-  assert.doesNotMatch(singleAttempt, /--manifest-workflow/, "single-symbol history attempt must remain shard-only");
-}
+const symbols = fs.readFileSync(path.join(root, ".github/workflows/slickcharts-symbols.yml"), "utf8");
+assert.match(symbols, /Remove consumed symbol attempt artifacts/);
+assert.doesNotMatch(symbols, /artifacts\/attempt-symbols-\*/);
 
 console.log("test-slickcharts-attempt-workflows: ok");

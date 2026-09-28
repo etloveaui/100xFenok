@@ -27,7 +27,7 @@ import {
   validToneSnapshot,
 } from "./fetch-fenok-news-tone-proxy.mjs";
 import { classifyAttempt } from "./build-data-supply-detection-floor.mjs";
-import { attemptResult, returnedTuple, threwTuple } from "./lib/data-supply-attempt-shard.mjs";
+import { attemptResult, returnedTuple, threwTuple } from "./lib/provider-fetch-result.mjs";
 import { checkWorkflowCommitShardsAgainstRegistry } from "./check-lane-registry-commit-shards.mjs";
 
 const REPO_ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
@@ -525,14 +525,7 @@ for (const [reason, probe] of [
   assert.equal(outcome.snapshot.acquisition.fallback.source_family, "GDELT Web Legacy NGrams TOC");
   assert.equal(outcome.snapshot.acquisition.fallback.source_as_of, "2026-09-28T00:16:00.000Z");
   assert(outcome.snapshot.rows.every((row) => row.source_families.includes("GDELT Web Legacy NGrams TOC")));
-  const shard = JSON.parse(fs.readFileSync(path.join(
-    root, "data", "admin", "data-supply-state", "detection-attempts", `${LANE_ID}.json`,
-  ), "utf8"));
-  assert.deepEqual(shard.attempts[0].assertions, [{ id: "articles_array", passed: false }]);
-  assert.equal(classifyAttempt(shard.attempts[0]).status, reason === "schema_drift" ? "drift" : "unavailable");
-  assert.equal(shard.attempts[0].event_name, "workflow_dispatch", "manual recovery is never schedule evidence");
-  assert.equal(shard.attempts[0].run_id, "36341396597");
-  assert.equal(shard.attempts[0].run_attempt, 1);
+  assert.deepEqual(outcome.result.attempt.assertions, [{ id: "articles_array", passed: false }]);
 }
 
 for (const fallbackKind of ["incomplete", "throws", "future", "invalid_date"]) {
@@ -753,12 +746,7 @@ for (const invalidSource of ["2026-09-28T02:00:00.000Z", "2026-02-30T00:16:00.00
   assert.deepEqual(failed.retrySet, ["news_tone_proxy"]);
   assert.equal(fs.readFileSync(canonicalPath, "utf8"), beforeFailure, "provider failure must retain yesterday's canonical tone");
 
-  const failureShard = JSON.parse(fs.readFileSync(
-    path.join(root, "data", "admin", "data-supply-state", "detection-attempts", "gdelt_news_tone.json"),
-    "utf8",
-  ));
-  assert.deepEqual(failureShard.attempts[0].assertions, [{ id: "articles_array", passed: false }],
-    "rate-limited LKG attempts preserve endpoint-contract assertion ids with a failed verdict");
+  assert.deepEqual(failed.result.attempt.assertions, [{ id: "articles_array", passed: false }]);
 
   const statePath = path.join(root, "data", "admin", "gdelt_news_tone", "index.json");
   const lkgPath = path.join(root, "data", "admin", "gdelt_news_tone", "lkg", "news_tone_proxy.json");
@@ -799,12 +787,7 @@ for (const invalidSource of ["2026-09-28T02:00:00.000Z", "2026-02-30T00:16:00.00
   assert.equal(recoveredState.items.news_tone_proxy.recovery_event_name, "schedule");
   assert.equal(recoveredState.items.news_tone_proxy.provider_observation.source_as_of, "2026-07-24T12:00:00.000Z");
 
-  const successShard = JSON.parse(fs.readFileSync(
-    path.join(root, "data", "admin", "data-supply-state", "detection-attempts", "gdelt_news_tone.json"),
-    "utf8",
-  ));
-  assert.deepEqual(successShard.attempts[0].assertions, [{ id: "articles_array", passed: true }],
-    "LKG state changes must preserve endpoint-contract assertion ids in attempt shards");
+  assert.deepEqual(recovered.result.attempt.assertions, [{ id: "articles_array", passed: true }]);
 }
 
 {
@@ -897,12 +880,7 @@ for (const invalidSource of ["2026-09-28T02:00:00.000Z", "2026-02-30T00:16:00.00
   assert.equal(failed.degraded, false);
   assert.equal(failed.corrupt, true);
   assert.equal(failed.exitCode, 2, "a failed run without a complete exact-basket LKG must fail closed");
-  const shard = JSON.parse(fs.readFileSync(
-    path.join(root, "data", "admin", "data-supply-state", "detection-attempts", "gdelt_news_tone.json"),
-    "utf8",
-  ));
-  assert.deepEqual(shard.attempts[0].assertions, [{ id: "articles_array", passed: false }],
-    "controlled transport failures retain endpoint-contract assertion ids with failed verdicts");
+  assert.deepEqual(failed.result.attempt.assertions, [{ id: "articles_array", passed: false }]);
 }
 
 {
@@ -1168,12 +1146,7 @@ const toneRow = (ticker, asOf, articleCount = 1) => ({
     observedAt: complete.generated_at,
   });
   assert.equal(seeded.ok, true, "8/8 reference coverage remains promotable");
-  const shardPath = path.join(
-    root, "data", "admin", "data-supply-state", "detection-attempts", "gdelt_news_tone.json",
-  );
-  const completeShard = JSON.parse(fs.readFileSync(shardPath, "utf8"));
-  assert.equal(classifyAttempt(completeShard.attempts[0]).status, "ready",
-    "the detection floor keeps complete reference coverage ready");
+  assert.deepEqual(seeded.result.attempt.assertions, [{ id: "articles_array", passed: true }]);
   const canonicalPath = path.join(root, "data", "computed", "fenok_news_tone_proxy.json");
   const beforePartial = fs.readFileSync(canonicalPath, "utf8");
 
@@ -1193,11 +1166,7 @@ const toneRow = (ticker, asOf, articleCount = 1) => ({
   assert.equal(rejected.degraded, true);
   assert.equal(fs.readFileSync(canonicalPath, "utf8"), beforePartial,
     "3/8 collection must retain the prior complete canonical");
-  const shard = JSON.parse(fs.readFileSync(shardPath, "utf8"));
-  assert.deepEqual(shard.attempts[0].assertions, [{ id: "articles_array", passed: false }],
-    "the attempt floor must not report ready when reference coverage is partial");
-  assert.equal(classifyAttempt(shard.attempts[0]).status, "drift",
-    "the detection floor must reject partial reference coverage");
+  assert.deepEqual(rejected.result.attempt.assertions, [{ id: "articles_array", passed: false }]);
 }
 
 // --- Thrown-builder failures must carry the error identity out ---------------

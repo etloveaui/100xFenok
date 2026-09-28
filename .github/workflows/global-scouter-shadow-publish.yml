@@ -3,17 +3,12 @@
 # nothing else: no acquisition, no Worker enrolment, no public-surface
 # cutover. The existing Git/public mirror remains authoritative until a
 # separate promotion decision.
-#
-# Two jobs on purpose. Publication is long and does not need the global Git
-# writer lock; only the persistence job takes it, so a slow shadow publish
-# cannot hold the queue for every other lane.
 
 name: Global Scouter Shadow Publish
 
 on:
   # Source-change driven, deliberately NOT scheduled: the export is owner-run, so
-  # the push that moves the canonical tree IS the event. Persistence writes only
-  # the publish-outcome shard, outside this path, so it cannot retrigger itself.
+  # the push that moves the canonical tree IS the event.
   push:
     branches:
       - main
@@ -45,8 +40,6 @@ jobs:
       group: global-scouter-shadow-publish
       cancel-in-progress: false
       queue: max
-    outputs:
-      publisher_outcome: ${{ steps.publish_cloud_generation.outcome }}
     steps:
       # Only a manual run needs the typed confirmation; a push is confirmed by
       # the commit that moved the tree.
@@ -81,8 +74,7 @@ jobs:
           node-version: '22'
 
       # Strict by design: no --tolerate-gate-block. An explicitly requested
-      # shadow run that publishes nothing must be red, while its outcome shard
-      # remains uploaded and persisted below.
+      # shadow run that publishes nothing must be red.
       - name: Publish global-scouter generation to the cloud data plane
         id: publish_cloud_generation
         env:
@@ -92,126 +84,3 @@ jobs:
           DATA_PLANE_WRITE_KEY: ${{ secrets.DATA_PLANE_WRITE_KEY }}
           PUBLISH_BINDING_GIT_COMMIT: ${{ steps.source_identity.outputs.git_commit }}
         run: node scripts/publish-cloud-data-generation.mjs --family=global-scouter --json
-
-      # always(): a failed publish still produces an outcome shard, and losing
-      # that evidence is the failure mode this upload exists to prevent.
-      - name: Upload global-scouter outcome shard
-        if: ${{ always() }}
-        uses: actions/upload-artifact@v4
-        with:
-          name: global-scouter-outcome-${{ github.run_id }}-${{ github.run_attempt }}
-          path: data/admin/data-supply-state/publish-outcomes/global-scouter.json
-          if-no-files-found: error
-          retention-days: 1
-
-  persist:
-    needs: publish
-    if: ${{ always() && needs.publish.result != 'cancelled' }}
-    runs-on: ubuntu-latest
-    timeout-minutes: 20
-    permissions:
-      contents: write
-    # The only holder of the global Git writer lock in this workflow.
-    concurrency:
-      group: fenok-data-writer-refs/heads/main
-      cancel-in-progress: false
-      queue: max
-    steps:
-      - uses: actions/checkout@v4
-        with:
-          fetch-depth: 1
-
-      - name: Start from latest main
-        run: |
-          git fetch --depth=1 origin +main:refs/remotes/origin/main
-          git checkout -B main origin/main
-
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: '22'
-
-      - name: Download global-scouter outcome shard
-        uses: actions/download-artifact@v4
-        with:
-          name: global-scouter-outcome-${{ github.run_id }}-${{ github.run_attempt }}
-          path: data/admin/data-supply-state/publish-outcomes
-
-      - name: Assert the outcome shard arrived
-        run: |
-          set -euo pipefail
-          shard=data/admin/data-supply-state/publish-outcomes/global-scouter.json
-          if [ ! -s "$shard" ]; then
-            echo "::error::outcome shard $shard is missing or empty; evidence would be lost" >&2
-            exit 1
-          fi
-
-      # The publisher already recorded the exact checkout commit in the shard.
-      # Read that evidence back, then ask the complete remote graph whether the
-      # commit is still on main. A shallow local ancestry test cannot answer
-      # that reliably after concurrent writers advance the branch.
-      - name: Confirm published checkout from current origin
-        id: origin_readback
-        env:
-          GH_TOKEN: ${{ github.token }}
-        run: |
-          set -euo pipefail
-          shard=data/admin/data-supply-state/publish-outcomes/global-scouter.json
-          BINDING_GIT_COMMIT="$(
-            node --input-type=module - "$shard" <<'NODE'
-          import fs from "node:fs";
-          const shard = JSON.parse(fs.readFileSync(process.argv[2], "utf8"));
-          const commit = shard.records?.at(-1)?.binding?.git_commit ?? "";
-          if (!/^[0-9a-f]{40}$/u.test(commit)) {
-            throw new Error("latest Global Scouter outcome has no exact git binding");
-          }
-          process.stdout.write(commit);
-          NODE
-          )"
-          ORIGIN_READBACK=not_confirmed
-          for compare_attempt in 1 2 3; do
-            COMPARE_STATUS="$(
-              gh api "repos/$GITHUB_REPOSITORY/compare/$BINDING_GIT_COMMIT...main" --jq '.status' 2>/dev/null
-            )" || COMPARE_STATUS=""
-            case "$COMPARE_STATUS" in
-              identical|ahead)
-                ORIGIN_READBACK=confirmed
-                break
-                ;;
-              behind|diverged)
-                break
-                ;;
-              *)
-                if [ "$compare_attempt" -lt 3 ]; then sleep $((compare_attempt * 2)); fi
-                ;;
-            esac
-          done
-          echo "git_commit=$BINDING_GIT_COMMIT" >> "$GITHUB_OUTPUT"
-          echo "origin_readback=$ORIGIN_READBACK" >> "$GITHUB_OUTPUT"
-
-      # Mandatory. A helper failure fails this job: an unlanded outcome is not
-      # an outcome, per DEC-305.
-      - name: Persist global-scouter publish outcome
-        if: ${{ always() }}
-        env:
-          BINDING_GIT_COMMIT: ${{ steps.origin_readback.outputs.git_commit }}
-          BINDING_ORIGIN_READBACK: ${{ steps.origin_readback.outputs.origin_readback }}
-        run: >-
-          node scripts/persist-cloud-publish-outcome.mjs
-          --family=global-scouter
-          --workflow=.github/workflows/global-scouter-shadow-publish.yml
-          --publisher-outcome=${{ needs.publish.outputs.publisher_outcome }}
-          --binding-git-commit="$BINDING_GIT_COMMIT"
-          --binding-origin-readback="$BINDING_ORIGIN_READBACK"
-
-      # Persist attempted-and-unconfirmed evidence first, then fail closed. A
-      # green workflow must mean the generation is bound to current origin.
-      - name: Enforce confirmed Global Scouter origin binding
-        if: ${{ always() }}
-        env:
-          BINDING_ORIGIN_READBACK: ${{ steps.origin_readback.outputs.origin_readback }}
-        run: |
-          if [ "$BINDING_ORIGIN_READBACK" != "confirmed" ]; then
-            echo "::error::Global Scouter origin readback was not confirmed" >&2
-            exit 75
-          fi

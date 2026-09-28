@@ -47,7 +47,6 @@ assert.deepEqual(
   },
   {
     manifest_stages: [
-      ["always", "file", "data/admin/data-supply-state/detection-attempts/krx.json", false],
       ["always", "file", "data/admin/krx/index.json", false],
       ["always", "file", "data/admin/krx/lkg/bridge.json", false],
       ["success", "file", "data/admin/fenok-edge-korea-krx-daily-index.json", true],
@@ -69,7 +68,6 @@ assert.match(workflowText, /INPUT_CONTROLLED_FAILURE/);
 assert.match(workflowText, /--controlled-failure/);
 assert.match(workflowText, /--stage always_if_exists/);
 assert.match(workflowText, /--stage success_if_exists/);
-assert.match(workflowText, /emit-fenok-krx-attempt\.mjs/);
 assert.match(workflowText, /steps\.krx_fetch\.outputs\.attempt_outcome \|\| steps\.krx_fetch\.outcome/,
   "degraded LKG retention must emit failure evidence even when the fetch step exits zero");
 assert.match(workflowText, /CANDIDATE_OUTCOME.*success.*CANDIDATE_UPDATED.*true/,
@@ -78,7 +76,6 @@ assert.match(workflowText, /CANDIDATE_UPDATED.*true.*CANDIDATE_EXIT_CODE.*-eq 0.
   "walkback success must require both producer recovery and process exit codes to be zero");
 assert.match(workflowText, /if \[ "\$KRX_FETCH_OUTCOME" = "success" \]; then/,
   "canonical/computed outputs must only be staged after a promotable success");
-assert.match(workflowText, /detection-attempts\/krx\.json/);
 assert.match(workflowText, /if: \$\{\{ always\(\)/,
   "KRX failure attempts must still reach the emitter and commit path");
 assert.doesNotMatch(workflowText, /git add -A/);

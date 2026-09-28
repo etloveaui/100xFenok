@@ -5,17 +5,8 @@ import https from "node:https";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 
-import {
-  attemptResult,
-  atomicWrite,
-  classifyEndpointResponse,
-  defaultAttemptId,
-  returnedTuple,
-  threwTuple,
-  transportError,
-  worstRequestResult,
-  writeAttemptShard,
-} from "./lib/data-supply-attempt-shard.mjs";
+import { atomicWrite } from "./lib/atomic-file.mjs";
+import { attemptResult, classifyEndpointResponse, defaultAttemptId, returnedTuple, threwTuple, transportError, worstRequestResult } from "./lib/provider-fetch-result.mjs";
 import {
   LaneLkgStore,
   PROMOTION_CONTRACT_PROVIDER_OBSERVATION_V2,
@@ -328,7 +319,6 @@ function controlledFailureQuarter(controlledFailureKey, eventName, quarters) {
 export async function runFdicTier1({
   repoRoot = REPO_ROOT,
   canonicalPath = path.join(REPO_ROOT, "data", "macro", "fdic-tier1.json"),
-  attemptShardPath = path.join(REPO_ROOT, "data", "admin", "data-supply-state", "detection-attempts", "fdic_tier1.json"),
   quarters = generateQuarters(),
   probeQuarter = null,
   request = requestBytes,
@@ -392,13 +382,7 @@ export async function runFdicTier1({
       controlledFailureQuarter: null,
     });
     if (currentProbeQuarter === latestRetainedQuarter && currentProbe.status === "ready") {
-      const attempt = writeAttemptShard({
-        laneId: "fdic_tier1",
-        attemptShardPath,
-        observedAt,
-        attemptId,
-        result: currentProbe,
-      });
+      const attempt = (currentProbe).attempt;
       return {
         ok: true,
         reason: "already_current",
@@ -413,13 +397,7 @@ export async function runFdicTier1({
       if (currentProbe.status === "ready") {
         prefetchedProbeResult = currentProbe;
       } else {
-        const attempt = writeAttemptShard({
-          laneId: "fdic_tier1",
-          attemptShardPath,
-          observedAt,
-          attemptId,
-          result: currentProbe,
-        });
+        const attempt = (currentProbe).attempt;
         const providerWaiting = currentProbe.reason === "empty_payload";
         return {
           ok: providerWaiting,
@@ -449,13 +427,7 @@ export async function runFdicTier1({
   }
   const baselineWorst = worstRequestResult(requestResults);
   if (baselineWorst.status !== "ready") {
-    const attempt = writeAttemptShard({
-      laneId: "fdic_tier1",
-      attemptShardPath,
-      observedAt,
-      attemptId,
-      result: baselineWorst,
-    });
+    const attempt = (baselineWorst).attempt;
     const systemicOutage = allNaturalRequestsFailed(requestResults, (row) => row.quarter === injectedQuarter);
     const failureReason = systemicLkgFailureReason([baselineWorst.reason, ...requestResults.map((row) => row.reason)])
       ?? (injectedQuarter && !systemicOutage ? "controlled_failure" : baselineWorst.reason);
@@ -504,13 +476,7 @@ export async function runFdicTier1({
   const acceptedResults = acceptedProbeResult === null
     ? requestResults
     : [...requestResults, acceptedProbeResult];
-  const attempt = writeAttemptShard({
-    laneId: "fdic_tier1",
-    attemptShardPath,
-    observedAt,
-    attemptId,
-    result: worstRequestResult(acceptedResults),
-  });
+  const attempt = (worstRequestResult(acceptedResults)).attempt;
   const availableQuarters = acceptedProbeResult === null ? quarters : [...quarters, probeQuarter];
   const finalRetention = retainLatestQuarters(availableQuarters);
   const rowByQuarter = new Map(acceptedResults.map((row) => [row.quarter, row.row]));

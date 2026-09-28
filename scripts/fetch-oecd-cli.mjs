@@ -5,18 +5,8 @@ import https from "node:https";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 
-import {
-  buildAttemptRow,
-  buildSingleLaneShard,
-  returnedTuple,
-  threwTuple,
-  transportError,
-  writeJsonAtomic,
-} from "./lib/data-supply-attempt-shard.mjs";
-import {
-  ATTEMPT_SHARD_SCHEMA,
-  validateAttemptShard,
-} from "./build-data-supply-detection-floor.mjs";
+import { returnedTuple, threwTuple, transportError } from "./lib/provider-fetch-result.mjs";
+import { buildAttemptRow } from "./lib/provider-fetch-result.mjs";
 import { boundedDiagnosticDetail } from "./lib/diagnostic-detail.mjs";
 import {
   LaneLkgStore,
@@ -29,7 +19,6 @@ import {
 const SCRIPT_DIR = path.dirname(fileURLToPath(import.meta.url));
 const REPO_ROOT = path.resolve(SCRIPT_DIR, "..");
 const LANE_ID = "oecd_cli";
-const ATTEMPT_SHARD_RELATIVE_PATH = "data/admin/data-supply-state/detection-attempts/oecd_cli.json";
 export const OECD_MAX_MONTHS_PER_SERIES = 240;
 export const OECD_PERSISTENCE_POLICY = Object.freeze({
   schema_version: "oecd-cli-bounded-persistence/v1",
@@ -322,42 +311,10 @@ function restoreFiles(snapshot) {
   }
 }
 
-export const OECD_MAX_ATTEMPT_HISTORY = 24;
-
-export function recordOecdAttempt({
-  attemptShardPath,
-  row,
-  maxAttempts = OECD_MAX_ATTEMPT_HISTORY,
-}) {
-  let existingAttempts = [];
-  if (fs.existsSync(attemptShardPath)) {
-    try {
-      const existing = JSON.parse(fs.readFileSync(attemptShardPath, "utf8"));
-      if (Array.isArray(existing?.attempts)) {
-        existingAttempts = existing.attempts.filter((item) => item && typeof item === "object" && item.attempt_id !== row.attempt_id);
-      }
-    } catch {
-      existingAttempts = [];
-    }
-  }
-  const attempts = [row, ...existingAttempts]
-    .sort((a, b) => Date.parse(b.observed_at) - Date.parse(a.observed_at))
-    .slice(0, maxAttempts);
-  const shard = {
-    schema_version: ATTEMPT_SHARD_SCHEMA,
-    lane_id: LANE_ID,
-    attempts,
-  };
-  validateAttemptShard(shard, LANE_ID);
-  writeJsonAtomic(attemptShardPath, shard);
-  return shard;
-}
-
 export async function runOecdCliShadow({
   repoRoot = REPO_ROOT,
   shadowPath = path.join(REPO_ROOT, "data/admin/oecd_cli/shadow/oecd-cli.json"),
   parityReportPath = path.join(REPO_ROOT, "data/admin/oecd_cli/parity-report.json"),
-  attemptShardPath = path.join(REPO_ROOT, ATTEMPT_SHARD_RELATIVE_PATH),
   canonicalPath = path.join(REPO_ROOT, "data/macro/activity-surveys.json"),
   request = requestBytes,
   observedAt = new Date().toISOString(),
@@ -366,7 +323,6 @@ export async function runOecdCliShadow({
   runAttempt = Number(process.env.GITHUB_RUN_ATTEMPT || 1),
   eventName = process.env.GITHUB_EVENT_NAME || "local",
   controlledFailure = process.env.INPUT_CONTROLLED_FAILURE === "true",
-  maxAttemptHistory = OECD_MAX_ATTEMPT_HISTORY,
   lkgStoreFactory = ({ repoRoot: storeRoot, laneId }) => new LaneLkgStore({
     repoRoot: storeRoot,
     laneId,
@@ -405,7 +361,6 @@ export async function runOecdCliShadow({
     runId: String(runId),
     runAttempt: Number(runAttempt),
   });
-  recordOecdAttempt({ attemptShardPath, row, maxAttempts: maxAttemptHistory });
   const run = { runId: String(runId), runAttempt: Number(runAttempt), eventName, observedAt };
   const store = lkgStoreFactory({ repoRoot, laneId: LANE_ID });
   const artifact = {
@@ -425,8 +380,7 @@ export async function runOecdCliShadow({
       runId: String(runId),
       runAttempt: Number(runAttempt),
     });
-    recordOecdAttempt({ attemptShardPath, row, maxAttempts: maxAttemptHistory });
-    store.recordFailure({
+      store.recordFailure({
       artifacts: [artifact],
       run,
       reason: "unexpected_error",

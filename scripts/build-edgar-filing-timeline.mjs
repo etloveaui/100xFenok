@@ -22,17 +22,8 @@ import {
   requireKeys,
   requireObject,
 } from "./lib/guarded-json.mjs";
-import {
-  attemptResult,
-  atomicWrite,
-  classifyEndpointResponse,
-  classifyHttpResponse,
-  defaultAttemptId,
-  threwTuple,
-  transportError,
-  worstRequestResult,
-  writeAttemptShard,
-} from "./lib/data-supply-attempt-shard.mjs";
+import { atomicWrite } from "./lib/atomic-file.mjs";
+import { attemptResult, classifyEndpointResponse, classifyHttpResponse, defaultAttemptId, threwTuple, transportError, worstRequestResult } from "./lib/provider-fetch-result.mjs";
 import {
   LaneLkgStore,
   PROMOTION_CONTRACT_PROVIDER_OBSERVATION_V2,
@@ -87,7 +78,6 @@ const DEFAULT_PATHS = Object.freeze({
   edgarCachePath: path.join(ROOT, "data/edgar/company_tickers.json"),
   summaryRoot: path.join(ROOT, "data/edgar-korean-summaries"),
   publicSummaryRoot: path.join(ROOT, "100xfenok-next/public/data/edgar-korean-summaries"),
-  attemptShardPath: path.join(ROOT, "data/admin/data-supply-state/detection-attempts/edgar_filings.json"),
 });
 const SEC_COMPANY_TICKERS_URL = "https://www.sec.gov/files/company_tickers.json";
 const SEC_SUBMISSIONS_BASE_URL = "https://data.sec.gov/submissions";
@@ -945,8 +935,8 @@ function edgarMarkerSourceAsOf(doc) {
   return validEdgarFreshnessMarker(doc) ? doc.source_as_of : null;
 }
 
-// Additive LKG recovery wrapper around the weekly poll. It never mutates the
-// detection attempt shard and never rewrites manifests; it only maintains the
+// Additive LKG recovery wrapper around the weekly poll. It never rewrites
+// manifests; it only maintains the
 // store's freshness marker, LKG copy, and recovery index under
 // data/admin/edgar_filings/, finalized ONCE after the whole ticker loop.
 // Outcome semantics (poll_only):
@@ -1278,13 +1268,6 @@ export async function runEdgarFilingTimeline({
       : bootstrapResult && bootstrapResult.status !== "ready"
         ? bootstrapResult
         : noSubmissionRequestResult();
-    writeAttemptShard({
-      laneId: "edgar_filings",
-      attemptShardPath: paths.attemptShardPath,
-      observedAt,
-      attemptId,
-      result: telemetry,
-    });
   }
   if (fatalError) throw fatalError;
   const telemetry = requestResults.length > 0

@@ -328,7 +328,7 @@ assertTrackedFileFromGlobBelowIgnoredParentStillStages();
   const fixture = makeFixture({ workflow: SLICKCHARTS_SYMBOLS_WORKFLOW });
   const always = run(fixture.root, "always_if_exists", [], SLICKCHARTS_SYMBOLS_WORKFLOW);
   assert.equal(always.status, 0, `${always.stderr}\n${always.stdout}`);
-  assert.match(always.stdout, /declared=3 stage_selected=3 staged_index_total=3/);
+  assert.match(always.stdout, /declared=2 stage_selected=2 staged_index_total=2/);
   assert.deepEqual(cached(fixture.root), fixture.materialized.always.sort());
 }
 
@@ -367,7 +367,7 @@ assertTrackedFileFromGlobBelowIgnoredParentStillStages();
   const fixture = makeFixture({ workflow: SLICKCHARTS_HISTORY_WORKFLOW });
   const always = run(fixture.root, "always_if_exists", [], SLICKCHARTS_HISTORY_WORKFLOW);
   assert.equal(always.status, 0, `${always.stderr}\n${always.stdout}`);
-  assert.match(always.stdout, /declared=3 stage_selected=3 staged_index_total=3/);
+  assert.match(always.stdout, /declared=2 stage_selected=2 staged_index_total=2/);
   assert.deepEqual(cached(fixture.root), fixture.materialized.always.sort());
   const success = run(fixture.root, "success_if_exists", [], SLICKCHARTS_HISTORY_WORKFLOW);
   assert.equal(success.status, 0, `${success.stderr}\n${success.stdout}`);
@@ -380,7 +380,7 @@ assertTrackedFileFromGlobBelowIgnoredParentStillStages();
   const fixture = makeFixture({ workflow: SLICKCHARTS_MONTHLY_WORKFLOW });
   const always = run(fixture.root, "always_if_exists", [], SLICKCHARTS_MONTHLY_WORKFLOW);
   assert.equal(always.status, 0, `${always.stderr}\n${always.stdout}`);
-  assert.match(always.stdout, /declared=3 stage_selected=3 staged_index_total=3/);
+  assert.match(always.stdout, /declared=2 stage_selected=2 staged_index_total=2/);
   assert.deepEqual(cached(fixture.root), fixture.materialized.always.sort());
   const success = run(fixture.root, "success_if_exists", [], SLICKCHARTS_MONTHLY_WORKFLOW);
   assert.equal(success.status, 0, `${success.stderr}\n${success.stdout}`);
@@ -393,11 +393,11 @@ assertTrackedFileFromGlobBelowIgnoredParentStillStages();
   const fixture = makeFixture({ workflow: SLICKCHARTS_WEEKLY_WORKFLOW });
   const always = run(fixture.root, "always_if_exists", [], SLICKCHARTS_WEEKLY_WORKFLOW);
   assert.equal(always.status, 0, `${always.stderr}\n${always.stdout}`);
-  assert.match(always.stdout, /declared=3 stage_selected=3 staged_index_total=3/);
+  assert.match(always.stdout, /declared=2 stage_selected=2 staged_index_total=2/);
   assert.deepEqual(cached(fixture.root), fixture.materialized.always.sort());
   const success = run(fixture.root, "success_if_exists", [], SLICKCHARTS_WEEKLY_WORKFLOW);
   assert.equal(success.status, 0, `${success.stderr}\n${success.stdout}`);
-  assert.match(success.stdout, /declared=4 stage_selected=4 staged_index_total=7/);
+  assert.match(success.stdout, /declared=4 stage_selected=4 staged_index_total=6/);
   assert.deepEqual(cached(fixture.root), [...fixture.materialized.always, ...fixture.materialized.success].sort());
 }
 
@@ -590,25 +590,23 @@ assertTrackedFileFromGlobBelowIgnoredParentStillStages();
   assert.deepEqual(cached(fixture.root), [...fixture.materialized.always, ...fixture.materialized.success].sort());
 }
 
-// KRX always publishes its attempt shard plus recovery state; successful
+// KRX always publishes recovery state; successful
 // fetches additionally publish the admin bridge, bounded bridge history, and
 // the two aggregate slices.
 {
   const fixture = makeFixture({ workflow: KRX_WORKFLOW });
   const always = run(fixture.root, "always_if_exists", [], KRX_WORKFLOW);
   assert.equal(always.status, 0, `${always.stderr}\n${always.stdout}`);
-  assert.match(always.stdout, /declared=3 stage_selected=3 staged_index_total=3/);
+  assert.match(always.stdout, /declared=2 stage_selected=2 staged_index_total=2/);
   assert.deepEqual(cached(fixture.root), [
-    "data/admin/data-supply-state/detection-attempts/krx.json",
     "data/admin/krx/index.json",
     "data/admin/krx/lkg/bridge.json",
   ]);
 
   const success = run(fixture.root, "success_if_exists", [], KRX_WORKFLOW);
   assert.equal(success.status, 0, `${success.stderr}\n${success.stdout}`);
-  assert.match(success.stdout, /declared=4 stage_selected=4 staged_index_total=7/);
+  assert.match(success.stdout, /declared=4 stage_selected=4 staged_index_total=6/);
   assert.deepEqual(cached(fixture.root), [
-    "data/admin/data-supply-state/detection-attempts/krx.json",
     "data/admin/fenok-edge-korea-krx-daily-index.json",
     "data/admin/krx/index.json",
     "data/admin/krx/lkg/bridge.json",
@@ -624,7 +622,6 @@ assertTrackedFileFromGlobBelowIgnoredParentStillStages();
   const failed = run(missing.root, "success_if_exists", [], KRX_WORKFLOW);
   assert.notEqual(failed.status, 0, "required Slice 2 aggregate must fail closed when absent");
   assert.deepEqual(cached(missing.root), [
-    "data/admin/data-supply-state/detection-attempts/krx.json",
     "data/admin/krx/index.json",
     "data/admin/krx/lkg/bridge.json",
   ], "required-path failure must happen before any success-stage mutation");

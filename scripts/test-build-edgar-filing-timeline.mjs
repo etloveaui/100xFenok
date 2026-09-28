@@ -16,7 +16,6 @@ import {
   runEdgarFilingTimeline,
   writeJsonBundleTransaction,
 } from "./build-edgar-filing-timeline.mjs";
-import { validateAttemptShard } from "./build-data-supply-detection-floor.mjs";
 import { DATA_SUPPLY_DETECTION_CONFIG } from "./lib/data-supply-detection-config.mjs";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
@@ -108,11 +107,6 @@ assert.deepEqual(edgar.endpoint_contract.assertions, [{
       : response(200, submissions()),
   });
   assert.equal(result.ok, true);
-  const shard = JSON.parse(fs.readFileSync(paths.attemptShardPath, "utf8"));
-  assert.equal(validateAttemptShard(shard, "edgar_filings"), true);
-  assert.equal(shard.lane_id, "edgar_filings");
-  assert.equal(shard.attempts[0].attempt_id, ATTEMPT_ID);
-  assert.deepEqual(shard.attempts[0].assertions, [{ id: "recent_form_array", passed: true }]);
   assert.equal(JSON.parse(fs.readFileSync(path.join(paths.summaryRoot, "index.json"), "utf8")).tickers.includes("NVDA"), true);
   assert.deepEqual(
     fs.readFileSync(path.join(paths.summaryRoot, "by-ticker/nvda.json")),
@@ -378,7 +372,7 @@ assert.deepEqual(edgar.endpoint_contract.assertions, [{
       : response(200, submissions()),
   });
   assert.equal(result.ok, true);
-  assert.equal(fs.existsSync(paths.attemptShardPath), true, "plan-only still emits attempt evidence");
+  assert.equal(fs.existsSync(paths.attemptShardPath), false, "plan-only writes no attempt evidence");
   assert.equal(fs.existsSync(paths.edgarCachePath), false);
   assert.equal(fs.existsSync(path.join(paths.summaryRoot, "index.json")), false);
 }
@@ -435,8 +429,6 @@ assert.deepEqual(edgar.endpoint_contract.assertions, [{
   assert.equal(result.ok, true, "one valid ticker keeps publishable producer output");
   assert.equal(result.telemetry_reason, "rate_limited");
   assert.equal(fs.existsSync(path.join(paths.summaryRoot, "by-ticker/nvda.json")), true);
-  const shard = JSON.parse(fs.readFileSync(paths.attemptShardPath, "utf8"));
-  assert.equal(shard.attempts[0].http_status, 429, "shard retains the partial failure");
 }
 
 {
@@ -451,13 +443,10 @@ assert.deepEqual(edgar.endpoint_contract.assertions, [{
   });
   assert.equal(result.ok, false);
   assert.equal(result.reason, "unexpected_error");
-  const shard = JSON.parse(fs.readFileSync(paths.attemptShardPath, "utf8"));
-  assert.equal(validateAttemptShard(shard, "edgar_filings"), true);
-  assert.equal(shard.attempts[0].execution, "threw");
 }
 
 // A naturally thrown SEC request retains a bounded, sanitized detail on the
-// returned failure object; the detection attempt shard remains schema-stable.
+// returned failure object.
 {
   const root = fs.mkdtempSync(path.join(os.tmpdir(), "edgar-emitter-diagnostic-"));
   const paths = pathsFor(root);
@@ -479,8 +468,6 @@ assert.deepEqual(edgar.endpoint_contract.assertions, [{
   assert.ok(result.failure_detail.length <= 320, "diagnostic detail stays bounded");
   assert.equal(result.failure_detail.includes("secret-token"), false, "diagnostic detail redacts bearer credentials");
   assert.equal(result.failure_detail.includes("token=private"), false, "diagnostic detail redacts URL query values");
-  const shard = JSON.parse(fs.readFileSync(paths.attemptShardPath, "utf8"));
-  assert.equal(Object.hasOwn(shard.attempts[0], "failure_detail"), false, "attempt shard schema remains unchanged");
 }
 
 // A resolved bootstrap with no matching ticker still reports the generic
@@ -513,9 +500,6 @@ assert.deepEqual(edgar.endpoint_contract.assertions, [{
     attemptId: "edgar-filings-test-guard",
     request: async () => { throw new Error("request must not run"); },
   }));
-  const shard = JSON.parse(fs.readFileSync(paths.attemptShardPath, "utf8"));
-  assert.equal(validateAttemptShard(shard, "edgar_filings"), true);
-  assert.equal(shard.attempts[0].exception_kind, "unexpected");
 }
 
 {
@@ -533,9 +517,6 @@ assert.deepEqual(edgar.endpoint_contract.assertions, [{
       ? response(200, companyTickers())
       : response(200, submissions()),
   }));
-  const shard = JSON.parse(fs.readFileSync(paths.attemptShardPath, "utf8"));
-  assert.equal(validateAttemptShard(shard, "edgar_filings"), true);
-  assert.equal(shard.attempts[0].assertions[0].passed, true);
 }
 
 // Publication stages every private/public file before replacing any canonical
@@ -788,15 +769,9 @@ assert.deepEqual(edgar.endpoint_contract.assertions, [{
   });
   assert.equal(result.ok, false);
   assert.equal(result.reason, "schema_drift");
-  const shard = JSON.parse(fs.readFileSync(paths.attemptShardPath, "utf8"));
-  assert.deepEqual(shard.attempts[0].assertions, [{ id: "recent_form_array", passed: false }]);
 }
 
 {
-  // The attempt shard is staged through the generated lane manifest, not by a
-  // literal path in this workflow, so its coverage lives in the registry gate
-  // inside test-build-edgar-lkg-recovery.mjs. Asserting the path text here only
-  // broke on that refactor.
   const workflow = fs.readFileSync(path.join(REPO_ROOT, ".github/workflows/fetch-edgar-filings.yml"), "utf8");
   assert.match(workflow, /node scripts\/test-build-edgar-filing-timeline\.mjs/);
   assert.match(workflow, /node scripts\/test-build-edgar-lkg-recovery\.mjs/);

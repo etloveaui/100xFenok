@@ -5,17 +5,8 @@ import https from "node:https";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 
-import {
-  attemptResult,
-  atomicWrite,
-  classifyEndpointResponse,
-  defaultAttemptId,
-  returnedTuple,
-  threwTuple,
-  transportError,
-  worstRequestResult,
-  writeAttemptShard,
-} from "./lib/data-supply-attempt-shard.mjs";
+import { atomicWrite } from "./lib/atomic-file.mjs";
+import { attemptResult, classifyEndpointResponse, defaultAttemptId, returnedTuple, threwTuple, transportError, worstRequestResult } from "./lib/provider-fetch-result.mjs";
 import {
   LaneLkgStore,
   PROMOTION_CONTRACT_PROVIDER_OBSERVATION_V2,
@@ -152,7 +143,6 @@ function validateControlledFailureKey(controlledFailureKey, eventName) {
 export async function runFredMacro({
   repoRoot = REPO_ROOT,
   canonicalPath = path.join(REPO_ROOT, "data", "macro", "fred-macro.json"),
-  attemptShardPath = path.join(REPO_ROOT, "data", "admin", "data-supply-state", "detection-attempts", "fred_macro.json"),
   apiKey = process.env.FRED_API_KEY,
   request = requestBytes,
   observedAt = new Date().toISOString(),
@@ -187,13 +177,7 @@ export async function runFredMacro({
   }
 
   const worst = worstRequestResult(requestResults);
-  const attempt = writeAttemptShard({
-    laneId: "fred_macro",
-    attemptShardPath,
-    observedAt,
-    attemptId,
-    result: worst,
-  });
+  const attempt = (worst).attempt;
   if (worst.status !== "ready") {
     const systemicOutage = allNaturalRequestsFailed(
       requestResults,
@@ -271,7 +255,7 @@ export async function runFredMacro({
   // Canonical only. The public mirror is produced by sync-public-data.mjs during
   // sync-static, and the mirror contract requires that no lane stage it. Writing
   // it here left an unstaged file dirty after every run, which is what
-  // persist-cloud-publish-outcome refused for ten consecutive runs.
+  // cloud publication was refused for ten consecutive runs.
   atomicWrite(canonicalPath, serialized);
   const success = lkgStore.recordSuccess({ artifacts: promotable, run });
   const recovered = success.state.items.fred_macro?.recovered_at === observedAt;

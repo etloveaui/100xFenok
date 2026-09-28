@@ -79,8 +79,6 @@ jobs:
             .github/workflows
             100xfenok-next/scripts
             100xfenok-next/src/lib
-            data/admin/data-supply-state/detection-attempts
-            data/admin/data-supply-state/publish-outcomes
             data/admin/edgar_filings
             data/edgar
             data/edgar-korean-summaries
@@ -95,9 +93,8 @@ jobs:
         with:
           node-version: 22
 
-      - name: Verify EDGAR attempt emitter contract
+      - name: Verify EDGAR producer and recovery contracts
         run: |
-          node scripts/test-data-supply-attempt-producer.mjs
           node scripts/test-build-edgar-filing-timeline.mjs
           node scripts/test-build-edgar-lkg-recovery.mjs
 
@@ -148,9 +145,9 @@ jobs:
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
-          # Public-safe detection attempt shard AND the EDGAR LKG recovery state
-          # (freshness marker + retained LKG copy + recovery index) are committed
-          # on every run so retry/recovery accounting survives across CI runs.
+          # The EDGAR LKG recovery state (freshness marker, retained LKG copy,
+          # and recovery index) is committed on every run so retry/recovery
+          # accounting survives across CI runs.
           # The recovery tree carries no filing payloads.
           # The generated manifest owns optional admin-state staging.
           scripts/stage-lane-manifest.sh \
@@ -226,9 +223,6 @@ jobs:
       group: edgar-korean-summaries-cloud-${{ github.ref }}
       cancel-in-progress: false
       queue: max
-    outputs:
-      publisher_outcome: ${{ steps.publish_cloud_generation.outcome }}
-      outcome_shard_sha256: ${{ steps.prepare_outcome_shard.outputs.sha256 }}
     steps:
       - uses: actions/checkout@v4
         with:
@@ -241,7 +235,6 @@ jobs:
             .github/workflows
             100xfenok-next/scripts
             100xfenok-next/src/lib
-            data/admin/data-supply-state/publish-outcomes
             data/edgar
             data/edgar-korean-summaries
 
@@ -253,9 +246,6 @@ jobs:
           ACTUAL_SHA="$(git rev-parse HEAD)"
           [ "$ACTUAL_SHA" = "$EXPECTED_SHA" ] \
             || { echo "::error::EDGAR cloud checkout is not the confirmed source commit" >&2; exit 1; }
-
-      - name: Remove any pre-existing EDGAR outcome shard
-        run: rm -f data/admin/data-supply-state/publish-outcomes/edgar-korean-summaries.json
 
       - name: Setup Node
         uses: actions/setup-node@v4
@@ -271,117 +261,3 @@ jobs:
           DATA_PLANE_WRITE_KEY: ${{ secrets.DATA_PLANE_WRITE_KEY }}
           PUBLISH_BINDING_GIT_COMMIT: ${{ needs.fetch-edgar-filings.outputs.source_sha }}
         run: node scripts/publish-cloud-data-generation.mjs --family=edgar-korean-summaries --tolerate-gate-block --json
-
-      - name: Prepare EDGAR outcome shard
-        id: prepare_outcome_shard
-        if: ${{ always() }}
-        run: |
-          set -euo pipefail
-          SHARD=data/admin/data-supply-state/publish-outcomes/edgar-korean-summaries.json
-          [ -s "$SHARD" ] \
-            || { echo "::error::EDGAR publisher produced no outcome shard" >&2; exit 1; }
-          node --input-type=module - "$SHARD" <<'NODE'
-          import fs from "node:fs";
-          import { validatePublishOutcomeShard } from "./scripts/lib/publish-outcome-shard.mjs";
-          const [shardPath] = process.argv.slice(2);
-          const shard = JSON.parse(fs.readFileSync(shardPath, "utf8"));
-          validatePublishOutcomeShard(shard, "edgar-korean-summaries");
-          if (shard.records.length === 0) throw new Error("EDGAR outcome shard has no records");
-          NODE
-          echo "sha256=$(sha256sum "$SHARD" | awk '{print $1}')" >> "$GITHUB_OUTPUT"
-
-      - name: Upload EDGAR outcome shard
-        id: upload_outcome_shard
-        if: ${{ always() }}
-        uses: actions/upload-artifact@v4
-        with:
-          name: edgar-korean-summaries-outcome-${{ github.run_id }}-${{ github.run_attempt }}
-          path: data/admin/data-supply-state/publish-outcomes/edgar-korean-summaries.json
-          if-no-files-found: error
-          retention-days: 1
-
-  # The global writer lock is held only while this job merges and persists the
-  # one owned outcome shard. A checkout copy can never substitute for a missing
-  # or stale artifact from the cloud job.
-  persist-edgar-cloud-outcome:
-    needs:
-      - fetch-edgar-filings
-      - publish-edgar-cloud
-    if: >-
-      always() &&
-      needs.publish-edgar-cloud.result != 'skipped'
-    runs-on: ubuntu-latest
-    timeout-minutes: 20
-    permissions:
-      contents: write
-      actions: read
-    concurrency:
-      group: fenok-data-writer-refs/heads/main
-      cancel-in-progress: false
-      queue: max
-    steps:
-      - uses: actions/checkout@v4
-        with:
-          ref: ${{ needs.fetch-edgar-filings.outputs.source_sha }}
-          fetch-depth: 1
-          filter: blob:none
-          sparse-checkout: |
-            scripts
-            .github/workflows
-            100xfenok-next/scripts
-            100xfenok-next/src/lib
-            data/admin/data-supply-state/publish-outcomes
-
-      - name: Setup Node
-        uses: actions/setup-node@v4
-        with:
-          node-version: 22
-
-      - name: Remove any checkout copy of EDGAR outcome
-        run: rm -f data/admin/data-supply-state/publish-outcomes/edgar-korean-summaries.json
-
-      - name: Download EDGAR outcome shard
-        uses: actions/download-artifact@v4
-        with:
-          name: edgar-korean-summaries-outcome-${{ github.run_id }}-${{ github.run_attempt }}
-          path: ${{ runner.temp }}/edgar-korean-summaries-outcome
-          github-token: ${{ github.token }}
-          run-id: ${{ github.run_id }}
-
-      - name: Validate EDGAR outcome artifact
-        env:
-          EXPECTED_SHA256: ${{ needs.publish-edgar-cloud.outputs.outcome_shard_sha256 }}
-        run: |
-          set -euo pipefail
-          ART="$RUNNER_TEMP/edgar-korean-summaries-outcome"
-          SHARD="$ART/edgar-korean-summaries.json"
-          [ -s "$SHARD" ] \
-            || { echo "::error::EDGAR outcome shard is missing or empty" >&2; exit 1; }
-          [[ "$EXPECTED_SHA256" =~ ^[0-9a-f]{64}$ ]] \
-            || { echo "::error::EDGAR outcome shard digest is invalid" >&2; exit 1; }
-          ACTUAL_SHA256="$(sha256sum "$SHARD" | awk '{print $1}')"
-          [ "$ACTUAL_SHA256" = "$EXPECTED_SHA256" ] \
-            || { echo "::error::EDGAR outcome shard digest mismatch" >&2; exit 1; }
-          node --input-type=module - "$SHARD" <<'NODE'
-          import fs from "node:fs";
-          import { validatePublishOutcomeShard } from "./scripts/lib/publish-outcome-shard.mjs";
-          const [shardPath] = process.argv.slice(2);
-          const shard = JSON.parse(fs.readFileSync(shardPath, "utf8"));
-          validatePublishOutcomeShard(shard, "edgar-korean-summaries");
-          if (shard.records.length === 0) throw new Error("EDGAR outcome shard has no records");
-          NODE
-          cp "$SHARD" data/admin/data-supply-state/publish-outcomes/edgar-korean-summaries.json
-
-      - name: Persist edgar-korean-summaries publish outcome
-        if: ${{ always() }}
-        env:
-          BINDING_GIT_COMMIT: ${{ needs.fetch-edgar-filings.outputs.source_sha }}
-          BINDING_ORIGIN_READBACK: ${{ needs.fetch-edgar-filings.outputs.origin_readback }}
-        run: >-
-          node scripts/persist-cloud-publish-outcome.mjs
-          --family=edgar-korean-summaries
-          --workflow=.github/workflows/fetch-edgar-filings.yml
-          --publisher-outcome=${{ needs.publish-edgar-cloud.outputs.publisher_outcome }}
-          --binding-git-commit="$BINDING_GIT_COMMIT"
-          --binding-origin-readback="$BINDING_ORIGIN_READBACK"
-          --branch=main

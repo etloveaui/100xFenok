@@ -15,17 +15,6 @@
 //      these assets are private).
 //   5. One JSON summary line on stdout.
 //
-// Publish-outcome evidence (2026-08-10 contract): after every REAL per-family
-// publish outcome the script appends one record to
-// data/admin/data-supply-state/publish-outcomes/<family>.json — published,
-// resumed, gate_blocked and failed runs alike. Dry-run, retention
-// (bucket-level, no family) and the deliberate rollback/chaos-drill modes
-// write nothing. The shard write is atomic and non-blocking: a shard write
-// failure is logged and surfaced as outcome_shard in the summary, but never
-// changes the publish's exit code, summary line or result vocabulary.
-// PUBLISH_OUTCOMES_ROOT overrides the evidence root (tests redirect to a
-// temp dir).
-//
 // Idempotent republish: generation_id derives from a SEMANTIC fingerprint of
 // source_sha plus the sorted persisted asset metadata (path, sha256, bytes,
 // content_type, source_as_of, privacy_class), so unchanged content AND
@@ -136,7 +125,7 @@ import {
 } from "./lib/cloud-data-plane-generation.mjs";
 export { planActiveGenerationReuse };
 import { buildCandidateScope } from "./lib/cloud-data-plane-candidate-scope.mjs";
-import { PLANE_PUBLISH_OUTCOME_BINDINGS, PLANE_PUBLISHER_EXCEPTIONS } from "./lib/lane-registry.mjs";
+import { PLANE_PUBLISH_FAMILY_BINDINGS, PLANE_PUBLISHER_EXCEPTIONS } from "./lib/lane-registry.mjs";
 import { classifyPreparedReceipts } from "./lib/cloud-data-plane-prepared-receipt-lifecycle.mjs";
 import {
   BACKOFF_BASE_MS,
@@ -149,12 +138,6 @@ import {
 import { createCloudflareCloudDataPlane } from "./lib/cloud-data-plane-cloudflare-adapter.mjs";
 import { createR2RestBucket } from "./lib/cloud-data-plane-r2-rest.mjs";
 import { createRemoteCoordinatorNamespace } from "./lib/cloud-data-plane-remote-coordinator.mjs";
-import {
-  appendPublishOutcome,
-  buildPublishOutcomeBinding,
-  buildPublishOutcomeRecord,
-} from "./lib/publish-outcome-shard.mjs";
-
 const REPO_ROOT = fileURLToPath(new URL("..", import.meta.url));
 const GATE_SCRIPT = path.join(REPO_ROOT, "scripts", "check-r2-free-tier-usage.mjs");
 // Bound on one gate-child run. The job timeout stays untouched; this only stops
@@ -165,19 +148,6 @@ const GATE_TIMEOUT_MS = (() => {
 })();
 const R2_BUCKET = "fenok-data-plane";
 const DEFAULT_ACCOUNT_ID = "aeeb5ea3affe55a2219d08ea02dad9e1";
-
-// Publish-outcome evidence root (2026-08-10 contract): every real per-family
-// publish outcome appends a record to
-// data/admin/data-supply-state/publish-outcomes/<family>.json.
-// PUBLISH_OUTCOMES_ROOT overrides the root (tests redirect to a temp dir);
-// the production default is the repo state dir.
-const DEFAULT_PUBLISH_OUTCOMES_ROOT = path.join(
-  REPO_ROOT,
-  "data",
-  "admin",
-  "data-supply-state",
-  "publish-outcomes",
-);
 
 // Family descriptor table. Fields:
 //   root             filesystem location of the source file(s), repo-relative
@@ -2474,55 +2444,6 @@ export function gateVerdict(gate) {
   return "blocked";
 }
 
-// --- publish-outcome evidence (writer side of the 2026-08-10 contract) ------
-//
-// Non-blocking per-family outcome recorder: appends one record to
-// data/admin/data-supply-state/publish-outcomes/<family>.json for every REAL
-// publish outcome (published, resumed, gate_blocked, failed). Dry-run,
-// retention (bucket-level, no family) and rollback/chaos-drill modes are not
-// publish outcomes and never call this. The write is atomic and additive; a
-// shard write failure is logged and returned as {ok:false} WITHOUT changing
-// canonical publish behavior (exit code, summary line or result vocabulary).
-// `state` carries the run context gathered so far: {generationId, receiptId,
-// pointerBefore, pointerAfter, gateBefore, gateAfter, sourceAsOf}.
-// The no-write decision is a pure function so the contract is unit-testable:
-// only REAL per-family publish runs (no dry-run, no rollback, no chaos drill)
-// may record, on every path — gate-blocked, thrown failure or completed
-// publish alike.
-export function canRecordPublishOutcome({ dryRun, rollback, chaos } = {}) {
-  return !dryRun && !rollback && !chaos;
-}
-
-export async function recordPublishOutcome({
-  family,
-  result,
-  state = {},
-  outcomesRoot = process.env.PUBLISH_OUTCOMES_ROOT
-    ? path.resolve(process.env.PUBLISH_OUTCOMES_ROOT)
-    : DEFAULT_PUBLISH_OUTCOMES_ROOT,
-  log = () => {},
-}) {
-  try {
-    const record = buildPublishOutcomeRecord({
-      family,
-      result,
-      generationId: state.generationId ?? null,
-      receiptId: state.receiptId ?? null,
-      pointerBefore: state.pointerBefore ?? null,
-      pointerAfter: state.pointerAfter ?? null,
-      gateBefore: state.gateBefore ?? null,
-      gateAfter: state.gateAfter ?? null,
-      sourceAsOf: state.sourceAsOf ?? null,
-      binding: state.binding ?? null,
-    });
-    const outcome = await appendPublishOutcome({ outcomesRoot, family, record });
-    return { ok: true, count: outcome.count, shardPath: outcome.shardPath, record };
-  } catch (error) {
-    log(`publish-outcome shard write failed for ${family}: ${error.code ?? "ERROR"}: ${error.message}`);
-    return { ok: false, error };
-  }
-}
-
 // --- retention REST helpers ---------------------------------------------------
 // createR2RestBucket (byte-locked lib) maps list() to keys only and has no
 // delete; retention needs key+size+upload-time and DeleteObject, so these two
@@ -2711,7 +2632,7 @@ export function gateBlocksPublication({ gateCode, strictGate }) {
 // mismatch directions without driving a publish.
 export function assertPublicationAuthorization({
   families = FAMILIES,
-  bindings = PLANE_PUBLISH_OUTCOME_BINDINGS,
+  bindings = PLANE_PUBLISH_FAMILY_BINDINGS,
 } = {}) {
   const declared = new Set(Object.keys(families));
   const eligible = new Set(Object.keys(bindings));
@@ -2720,10 +2641,10 @@ export function assertPublicationAuthorization({
   if (unauthorized.length > 0 || unpublishable.length > 0) {
     const parts = [];
     if (unauthorized.length > 0) {
-      parts.push(`publisher families with no registry publish-outcome owner: ${unauthorized.join(", ")}`);
+      parts.push(`publisher families with no registry owner: ${unauthorized.join(", ")}`);
     }
     if (unpublishable.length > 0) {
-      parts.push(`registry publish-outcome owners with no publisher family: ${unpublishable.join(", ")}`);
+      parts.push(`registry owners with no publisher family: ${unpublishable.join(", ")}`);
     }
     fail("FAMILY_NOT_AUTHORIZED", `publication authorization mismatch — ${parts.join("; ")}`);
   }
@@ -2985,9 +2906,6 @@ export async function runPublisherCli({
   runCostGateImpl = runCostGate,
   createPublishPlaneImpl = createDefaultPublishPlane,
   buildFamilyManifestImpl = buildFamilyManifest,
-  outcomesRoot = env.PUBLISH_OUTCOMES_ROOT
-    ? path.resolve(env.PUBLISH_OUTCOMES_ROOT)
-    : DEFAULT_PUBLISH_OUTCOMES_ROOT,
 } = {}) {
   const args = parseArgs(argv);
   // Publication admission is NOT called here. It gates publication and dry-run
@@ -2995,8 +2913,7 @@ export async function runPublisherCli({
   // their chance to return. Gating every mode would have made recovery depend
   // on an unrelated registry mismatch, which is the opposite of what a rollback
   // path is for. The failure it does prevent is a family that exists only in
-  // FAMILIES: the publisher would publish it and no lane would own, stage or
-  // land its outcome.
+  // FAMILIES: the publisher would publish a family with no registry owner.
   const log = (...parts) => {
     if (!args.json) stderr(...parts);
   };
@@ -3024,57 +2941,6 @@ export async function runPublisherCli({
       + ` (known: ${Object.keys(FAMILIES).join(", ")})`);
     return 2;
   }
-
-  // Publish-outcome evidence (2026-08-10 contract): every REAL publish
-  // outcome — published, resumed, gate_blocked, failed — appends one record
-  // to data/admin/data-supply-state/publish-outcomes/<family>.json. Dry-run
-  // writes no shard; rollback and the known chaos-drill outcomes are not
-  // publish outcomes and write nothing. The shard write is non-blocking: a
-  // failure is logged and reported (outcome_shard in the summary) but never
-  // changes the publish's exit code, summary line or result vocabulary.
-  const outcomeState = {
-    family: args.family,
-    generationId: null,
-    receiptId: null,
-    pointerBefore: null,
-    pointerAfter: null,
-    gateBefore: null,
-    gateAfter: null,
-    sourceAsOf: null,
-    // Joined-cycle tuple. The publisher can only see the legs that exist at
-    // write time: the Git commit and acquisition artifact it was handed, and
-    // the content identity of the tree it is publishing. origin_readback is
-    // deliberately left null here and completed by the persist step, which is
-    // the step that actually reads current origin.
-    binding: null,
-  };
-  // The two identity legs are read from the INJECTED env and bound BEFORE
-  // admission, so an outcome that never reaches a manifest — a gate refusal,
-  // an admission mismatch, a thrown failure — still records WHICH artifact it
-  // refused. Binding only on the success path would leave exactly the outcomes
-  // worth investigating unattributable.
-  const bindingIdentity = {
-    gitCommit: env.PUBLISH_BINDING_GIT_COMMIT || null,
-    artifactDigest: env.PUBLISH_BINDING_ARTIFACT_DIGEST || null,
-  };
-  outcomeState.binding = buildPublishOutcomeBinding(bindingIdentity);
-  const recordOutcome = (result) => recordPublishOutcome({
-    family: args.family,
-    result,
-    state: outcomeState,
-    outcomesRoot,
-    // Evidence persistence failures are operationally material even in JSON
-    // mode. Keep stdout machine-clean and put the bounded diagnostic on stderr.
-    log: evidenceLog,
-  });
-  // Dry-run, rollback and the deliberate chaos-drill modes never record
-  // (dry-run writes no shard; rollback is not a publish; chaos outcomes are
-  // injected drills, not real publishes — including their gate-blocked and
-  // thrown-failure paths). Retention already returned above.
-  const canRecordOutcome = canRecordPublishOutcome(args);
-  const shardSummary = (outcome) => outcome.ok
-    ? { ok: true }
-    : { ok: false, error: outcome.error?.message ?? String(outcome.error) };
 
   try {
     // 0. Rollback stands alone and runs FIRST. It is pointer-authority-only: it
@@ -3169,24 +3035,6 @@ export async function runPublisherCli({
       absRoot: path.join(REPO_ROOT, family.root),
       relRoot: family.manifest_prefix ?? family.root,
     });
-    outcomeState.generationId = manifest.generation_id;
-    outcomeState.sourceAsOf = sourceAsOf.value;
-    // Bind the tree being published to the Git commit and acquisition artifact
-    // it came from. Both identities are supplied by the caller because only
-    // the caller knows them: inside this job the checkout has been reset to
-    // origin/main, so the ambient run commit is not the published tree's
-    // commit. Absent env leaves the leg null rather than guessing.
-    //
-    // Enrich the pre-admission identity with the scope of the tree actually
-    // being published. The identity legs are carried forward unchanged rather
-    // than re-read, so the tuple cannot describe one artifact before admission
-    // and a different one after it.
-    outcomeState.binding = buildPublishOutcomeBinding({
-      ...bindingIdentity,
-      scopeSourceSha256: manifest.source_sha,
-      scopeFileCount: summary.asset_count,
-      scopeBytes: summary.total_bytes,
-    });
     const uniqueAssetKeys = new Set(manifest.assets.map((asset) => asset.object_key)).size;
     const plan = {
       assets: summary.asset_count,
@@ -3253,8 +3101,7 @@ export async function runPublisherCli({
       planBytes: gatePlan.bytes,
       env,
     });
-    outcomeState.gateBefore = gateVerdict(gateBefore);
-    evidenceLog(`cost gate done: family=${args.family} verdict=${outcomeState.gateBefore} elapsed_ms=${Date.now() - gateBeforeStartedAt}`);
+    evidenceLog(`cost gate done: family=${args.family} verdict=${gateVerdict(gateBefore)} elapsed_ms=${Date.now() - gateBeforeStartedAt}`);
     if (!args.json && gateBefore.stdout.trim()) {
       stderr(gateBefore.stdout.trim());
     }
@@ -3272,7 +3119,6 @@ export async function runPublisherCli({
     const gateBlocked = gateBlocksPublication({ gateCode: gateBefore.code, strictGate });
     if (gateBlocked) {
       if (gateBefore.stderr.trim()) stderr(gateBefore.stderr.trim());
-      const outcomeShard = canRecordOutcome ? await recordOutcome("gate_blocked") : null;
       if (args.tolerateGateBlock && !strictGate) {
         emit({
           result: "gate_blocked",
@@ -3280,7 +3126,6 @@ export async function runPublisherCli({
           generation_id: manifest.generation_id,
           gate_exit: gateBefore.code,
           ...plan,
-          ...(outcomeShard ? { outcome_shard: shardSummary(outcomeShard) } : {}),
         });
         return 0;
       }
@@ -3303,9 +3148,6 @@ export async function runPublisherCli({
       ["DATA_PLANE_WRITE_KEY", writeKey],
     ].filter(([, value]) => !value).map(([name]) => name);
     if (missing.length) {
-      // Record the failed outcome before the direct exit so the alarm side
-      // still sees it (the lane could not publish).
-      if (canRecordOutcome) await recordOutcome("failed");
       stderr(`publish-cloud-data-generation: missing env ${missing.join(", ")} — no write attempted`);
       return 2;
     }
@@ -3320,7 +3162,6 @@ export async function runPublisherCli({
     const { plane } = publishPlane;
     const livePointer = await plane.pointerStore.get();
     const pointerSequenceBefore = livePointer?.sequence ?? 0;
-    outcomeState.pointerBefore = pointerSequenceBefore;
     const resolved = await resolveExpectedPointerSequence({
       pointer: livePointer,
       manifest,
@@ -3339,7 +3180,6 @@ export async function runPublisherCli({
       normalizeFallbackSourceAsOf: sourceAsOf.origin === "created_at-fallback",
     });
     const effectiveAsOf = effectiveSourceAsOf(resolved.manifest);
-    outcomeState.sourceAsOf = effectiveAsOf;
     let objectWritePlan = null;
     if (incrementalWriteBudget) {
       const reusableObjects = await planActiveGenerationReuse({
@@ -3356,10 +3196,8 @@ export async function runPublisherCli({
         planBytes: plannedBytes,
         env,
       });
-      outcomeState.gateBefore = gateVerdict(gateBefore);
-      if (gateBlocksPublication({ gateCode: gateBefore.code, strictGate })) {
+        if (gateBlocksPublication({ gateCode: gateBefore.code, strictGate })) {
         if (gateBefore.stderr.trim()) stderr(gateBefore.stderr.trim());
-        if (canRecordOutcome) await recordOutcome("gate_blocked");
         stderr(`publish-cloud-data-generation: incremental storage plan blocked (exit ${gateBefore.code}); no write attempted`);
         return 3;
       }
@@ -3463,8 +3301,6 @@ export async function runPublisherCli({
       expectedPointerSequence: expectedForPublish,
       receipt: published.receipt,
     });
-    outcomeState.receiptId = published.receipt.receipt_id;
-    outcomeState.pointerAfter = published.pointer.sequence;
     log(`${resolved.resume ? "resumed" : "published"} generation ${manifest.generation_id}:`
       + ` pointer ${pointerSequenceBefore} -> ${published.pointer.sequence},`
       + ` receipt ${published.receipt.receipt_id} (${published.receipt.state})`);
@@ -3507,8 +3343,6 @@ export async function runPublisherCli({
     // write repeated 30+ control-plane calls without changing the safety
     // decision. Carry that projected post-write verdict forward; rollback and
     // chaos paths retain their independent measurements above.
-    outcomeState.gateAfter = outcomeState.gateBefore;
-    const outcomeShard = await recordOutcome(resolved.resume ? "resumed" : "published");
     emit({
       result: resolved.resume ? "resumed" : "published",
       generation_id: manifest.generation_id,
@@ -3532,16 +3366,11 @@ export async function runPublisherCli({
       parity_reused_assets: verificationStats.reused_assets,
       parity_reused_objects: verificationStats.reused_objects,
       gate_before: gateVerdict(gateBefore),
-      gate_after: outcomeState.gateAfter,
+      gate_after: gateVerdict(gateBefore),
       gate_after_basis: "covered_by_preflight_plan",
-      outcome_shard: shardSummary(outcomeShard),
     });
     return 0;
   } catch (error) {
-    // Every failed REAL publish outcome is recorded when the family is known
-    // (dry-run and rollback excluded); the canonical failure path (rethrow,
-    // stderr line, exit 1) is unchanged.
-    if (canRecordOutcome) await recordOutcome("failed");
     stderr(`publish-cloud-data-generation: ${error.code ?? "ERROR"}: ${error.message}`);
     return 1;
   }

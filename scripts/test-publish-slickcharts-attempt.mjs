@@ -10,11 +10,9 @@ import { fileURLToPath } from "node:url";
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const script = fs.readFileSync(path.join(root, "scripts", "publish-slickcharts-attempt.sh"), "utf8");
 
-assert.match(script, /data\/admin\/data-supply-state\/detection-attempts\/slickcharts\.json/);
 assert.match(script, /git diff --name-only --diff-filter=U/);
-assert.match(script, /git checkout --ours -- "\$shard_path"/);
-assert.match(script, /--row-in "\$row_path"/);
-assert.ok((script.match(/merge_saved_row/g) ?? []).length >= 4, "the saved row must be reapplied before commit and push");
+assert.doesNotMatch(script, /detection-attempts|merge_saved_row|\$shard_path/);
+assert.match(script, /saved SlickCharts row is missing/);
 assert.doesNotMatch(script, /git add (?:-A|--all)/);
 assert.match(script, /git push origin HEAD:main/);
 assert.match(script, /SLICKCHARTS_RECOVERY_STATUS_PATH/);
@@ -44,20 +42,13 @@ assert.match(
 );
 
 // Missing composite status must fail closed without committing a newly written
-// composite index. The attempt shard may still be published for observability.
+// composite index.
 const sandbox = fs.mkdtempSync(path.join(os.tmpdir(), "slickcharts-publisher-"));
 const repository = path.join(sandbox, "repo");
 const origin = path.join(sandbox, "origin.git");
 fs.mkdirSync(path.join(repository, "scripts"), { recursive: true });
 fs.copyFileSync(path.join(root, "scripts", "publish-slickcharts-attempt.sh"), path.join(repository, "scripts", "publish-slickcharts-attempt.sh"));
 fs.chmodSync(path.join(repository, "scripts", "publish-slickcharts-attempt.sh"), 0o755);
-fs.writeFileSync(path.join(repository, "scripts", "emit-slickcharts-attempt.mjs"), `#!/usr/bin/env node
-import fs from "node:fs";
-import path from "node:path";
-const shard = process.argv[process.argv.indexOf("--shard") + 1];
-fs.mkdirSync(path.dirname(shard), { recursive: true });
-fs.writeFileSync(shard, "{\\"attempt\\":true}\\n");
-`);
 fs.mkdirSync(path.join(repository, "data/admin/slickcharts-composite-recovery"), { recursive: true });
 fs.mkdirSync(path.join(repository, "rows"), { recursive: true });
 fs.writeFileSync(path.join(repository, "data/admin/slickcharts-composite-recovery/index.json"), "{\"baseline\":true}\n");

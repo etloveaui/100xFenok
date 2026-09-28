@@ -12,17 +12,7 @@ import path from "node:path";
 import zlib from "node:zlib";
 import { fileURLToPath } from "node:url";
 
-import {
-  attemptResult,
-  buildAttemptRow,
-  buildSingleLaneShard,
-  classifyEndpointResponse,
-  defaultAttemptId,
-  returnedTuple,
-  threwTuple,
-  transportError,
-  writeJsonAtomic,
-} from "./lib/data-supply-attempt-shard.mjs";
+import { attemptResult, classifyEndpointResponse, defaultAttemptId, returnedTuple, threwTuple, transportError } from "./lib/provider-fetch-result.mjs";
 import {
   LaneLkgStore,
   PROMOTION_CONTRACT_PROVIDER_OBSERVATION_V2,
@@ -37,9 +27,6 @@ const dataRoot = path.join(repoRoot, "data");
 const privateRoot = path.join(repoRoot, "_private", "admin", "fenok-flow", "gdelt_news");
 
 const LANE_ID = "gdelt_news_tone";
-const ATTEMPT_SHARD_PATH = path.join(
-  repoRoot, "data", "admin", "data-supply-state", "detection-attempts", `${LANE_ID}.json`,
-);
 
 const FORMULA_VERSION = "fenok-news-tone-proxy-v0.1-gdelt-headlines";
 const OUTPUT_FILE = "computed/fenok_news_tone_proxy.json";
@@ -1060,7 +1047,6 @@ export async function runNewsTone({
   eventName = process.env.GITHUB_EVENT_NAME || "local",
   attemptId = defaultAttemptId("gdelt-news-tone", observedAt),
   controlledFailure = (process.env.INPUT_CONTROLLED_FAILURE || "").trim() === "transport",
-  attemptShardPath = path.join(repoRootPath, "data", "admin", "data-supply-state", "detection-attempts", `${LANE_ID}.json`),
   observeAttemptFn = observeAttempt,
   fallbackFn = buildWebLegacyFallback,
   buildFn = build,
@@ -1080,14 +1066,6 @@ export async function runNewsTone({
     retryBackoffMs: args.retryBackoffMs,
   });
   let result = withEndpointAssertions(observed.result);
-  const writeResult = () => {
-    if (!write) return;
-    const row = buildAttemptRow({
-      laneId: LANE_ID, memberId: null, tuple: result.attempt,
-      observedAt, attemptId, eventName: run.eventName, runId: run.runId, runAttempt: run.runAttempt,
-    });
-    writeJsonAtomic(attemptShardPath, buildSingleLaneShard({ laneId: LANE_ID, row }));
-  };
 
   // `reason` is the stable vocabulary the LKG store and the detection floor
   // consume, so it must not absorb free text. The identity of whatever actually
@@ -1177,7 +1155,6 @@ export async function runNewsTone({
   }
 
   if (result.status !== "ready" && !usingFallback) {
-    writeResult();
     return retainFailure(result.reason);
   }
 
@@ -1200,14 +1177,12 @@ export async function runNewsTone({
       });
     } catch (err) {
       result = withSnapshotReadinessAssertion(result, null, "unexpected_error");
-      writeResult();
       return retainFailure("unexpected_error", err);
     }
   }
   const snapshot = built?.snapshot ?? built;
   const snapshotFailureReason = validToneSnapshot(snapshot) ? "future_source" : "schema_drift";
   result = withSnapshotReadinessAssertion(result, snapshot, snapshotFailureReason, observedAt);
-  writeResult();
   if (result.status !== "ready" && !usingFallback) return retainFailure(result.reason);
 
   let candidate;

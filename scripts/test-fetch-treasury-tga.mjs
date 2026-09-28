@@ -8,13 +8,12 @@ import { fileURLToPath } from "node:url";
 
 import {
   ACCOUNT_TYPES,
-  ATTEMPT_SHARD_SCHEMA,
   MAX_SERIES_DAYS,
   TGA_PERSISTENCE_POLICY,
   retainLatestTgaSeriesDays,
   runTreasuryTga,
 } from "./fetch-treasury-tga.mjs";
-import { validateAttemptEvidence } from "./build-data-supply-detection-floor.mjs";
+import { ATTEMPT_SHARD_SCHEMA, validateAttemptEvidence } from "./build-data-supply-detection-floor.mjs";
 import { checkWorkflowCommitShardsAgainstRegistry } from "./check-lane-registry-commit-shards.mjs";
 
 const OBSERVED_AT = "2026-07-14T12:34:56.000Z";
@@ -85,7 +84,8 @@ async function runCase(request, options = {}) {
     eventName: options.eventName ?? "schedule",
     controlledFailureKey: options.controlledFailureKey ?? "",
   });
-  return { root, paths, result, shard: readJson(paths.attemptShardPath) };
+  assert.equal(fs.existsSync(paths.attemptShardPath), false);
+  return { root, paths, result, shard: { schema_version: ATTEMPT_SHARD_SCHEMA, lane_id: "treasury_tga", attempts: [result.attempt] } };
 }
 
 function assertShardShape(shard) {
@@ -445,7 +445,7 @@ async function seededFailure({
   assert.equal(concurrentNaturalFailure.result.reason, "http_error", "chaos must not hide a concurrent natural failure");
   assert.equal(concurrentNaturalFailure.result.degraded, true);
   assert.equal(readJson(concurrentNaturalFailure.paths.statePath).items.tga.latest_failure.reason, "http_error");
-  const concurrentAttempt = assertShardShape(readJson(concurrentNaturalFailure.paths.attemptShardPath));
+  const concurrentAttempt = assertShardShape({ schema_version: ATTEMPT_SHARD_SCHEMA, lane_id: "treasury_tga", attempts: [concurrentNaturalFailure.result.attempt] });
   assert.equal(concurrentAttempt.execution, "returned");
   assert.equal(concurrentAttempt.http_status, 503, "attempt evidence must name the natural failure, not injected transport");
 
@@ -458,7 +458,7 @@ async function seededFailure({
   assert.equal(controlledWithNaturalOutage.result.corrupt, true);
   assert.equal(controlledWithNaturalOutage.result.exitCode, 2);
   assert.equal(readJson(controlledWithNaturalOutage.paths.statePath).items.tga.latest_failure.reason, "http_error");
-  assert.equal(assertShardShape(readJson(controlledWithNaturalOutage.paths.attemptShardPath)).http_status, 503);
+  assert.equal(assertShardShape({ schema_version: ATTEMPT_SHARD_SCHEMA, lane_id: "treasury_tga", attempts: [controlledWithNaturalOutage.result.attempt] }).http_status, 503);
 
   for (const failingResponse of [
     response(401, { error: "auth" }),
@@ -491,7 +491,7 @@ async function seededFailure({
   });
   assert.equal(malformed.result.reason, "schema_drift");
   assert.equal(malformed.result.exitCode, 2);
-  assertShardShape(readJson(malformed.paths.attemptShardPath));
+  assertShardShape({ schema_version: ATTEMPT_SHARD_SCHEMA, lane_id: "treasury_tga", attempts: [malformed.result.attempt] });
 
   const future = await seededFailure({
     request: async (_url, accountType) => response(200, {
@@ -500,7 +500,7 @@ async function seededFailure({
   });
   assert.equal(future.result.reason, "future_source");
   assert.equal(future.result.exitCode, 2);
-  assertShardShape(readJson(future.paths.attemptShardPath));
+  assertShardShape({ schema_version: ATTEMPT_SHARD_SCHEMA, lane_id: "treasury_tga", attempts: [future.result.attempt] });
 }
 
 {

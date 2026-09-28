@@ -9,18 +9,8 @@ import fs from "node:fs";
 import https from "node:https";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
-import {
-  attemptResult,
-  atomicWrite,
-  classifyEndpointResponse,
-  defaultAttemptId,
-  returnedTuple,
-  threwTuple,
-  transportError,
-  unobservedTuple,
-  worstRequestResult,
-  writeMergedAttemptShard,
-} from "./lib/data-supply-attempt-shard.mjs";
+import { atomicWrite } from "./lib/atomic-file.mjs";
+import { attemptResult, classifyEndpointResponse, defaultAttemptId, returnedTuple, threwTuple, transportError, unobservedTuple, worstRequestResult } from "./lib/provider-fetch-result.mjs";
 import {
   LaneLkgStore,
   PROMOTION_CONTRACT_PROVIDER_OBSERVATION_V2,
@@ -1908,7 +1898,6 @@ function controlledOccCollectionCoverage({ args, universe, selectedTickers, disp
 async function build(args, {
   request = fetchResponse,
   cacheDir = OCC_CACHE_DIR,
-  attemptShardPath = path.join(repoRoot, "data/admin/data-supply-state/detection-attempts/occ_options_volume.json"),
   observedAt = new Date().toISOString(),
   attemptId = stableAttemptId("occ-options-volume", observedAt),
   lkgRepoRoot = repoRoot,
@@ -2006,13 +1995,6 @@ async function build(args, {
       endpointResults: [controlledResult],
       run,
       controlledFailure: true,
-    });
-    writeMergedAttemptShard({
-      laneId: OCC_LANE_ID,
-      attemptShardPath,
-      observedAt,
-      attemptId,
-      result: controlledResult,
     });
     if (lkgRecovery?.corrupt) {
       throw new Error(`OCC controlled failure requires a valid retained marker/LKG seed: ${lkgRecovery.reason}`);
@@ -2371,13 +2353,6 @@ async function build(args, {
     }
     throw new Error(`No OCC option volume rows available in requested window: ${JSON.stringify(dateAttempts)}`);
   } finally {
-    writeMergedAttemptShard({
-      laneId: "occ_options_volume",
-      attemptShardPath,
-      observedAt,
-      attemptId,
-      result: reduceOccEndpointResults(endpointResults),
-    });
   }
 }
 

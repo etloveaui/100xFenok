@@ -120,10 +120,8 @@ jobs:
           repo_root="$(git rev-parse --show-toplevel)"
           floor_output="$(mktemp -d /tmp/investor-detection-floor-XXXXXX)"
           trap 'rm -rf "$floor_output"' EXIT
-          mkdir -p "$repo_root/data/admin/data-supply-state/detection-attempts"
           node ../scripts/build-data-supply-detection-floor.mjs \
             --artifact-root "$repo_root" \
-            --attempt-shard-root "$repo_root/data/admin/data-supply-state/detection-attempts" \
             --calendars "$repo_root/scripts/lib/data-supply-detection-calendars.json" \
             --now "$(node -e 'process.stdout.write(new Date().toISOString())')" \
             --output-root "$floor_output"

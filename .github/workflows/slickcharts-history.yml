@@ -390,10 +390,10 @@ jobs:
           echo "::error::Controlled SlickCharts history composite failure"
           exit 1
 
-      - name: Emit SlickCharts history attempt
+      - name: Build SlickCharts history run row
         if: ${{ always() }}
         run: |
-          node scripts/emit-slickcharts-attempt.mjs \
+          node scripts/build-slickcharts-run-row.mjs \
             --member history \
             --events-root artifacts \
             --outcome "${{ needs.scrape-returns.result }}" \
@@ -461,9 +461,6 @@ jobs:
           rm -rf artifacts/attempt-returns-*
           rm -rf artifacts/attempt-dividends-*
 
-      - name: Persist slickcharts-history publish outcome
-        if: ${{ always() }}
-        run: node scripts/persist-cloud-publish-outcome.mjs --family=slickcharts-history --workflow=.github/workflows/slickcharts-history.yml --publisher-outcome=${{ steps.publish_cloud_generation.outcome }} --binding-from-current-origin
 
   # Single symbol scraping for testing
   scrape-single:
@@ -515,10 +512,10 @@ jobs:
             --symbol ${{ github.event.inputs.symbol }} \
             --pretty
 
-      - name: Emit SlickCharts history attempt
+      - name: Build SlickCharts history run row
         if: ${{ always() }}
         run: |
-          node scripts/emit-slickcharts-attempt.mjs \
+          node scripts/build-slickcharts-run-row.mjs \
             --member history \
             --events "$SLICKCHARTS_ATTEMPT_EVENTS_PATH" \
             --outcome "${{ job.status }}" \

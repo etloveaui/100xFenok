@@ -5,16 +5,8 @@ import fs from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 
-import {
-  buildAttemptRow,
-  buildSingleLaneShard,
-  classifyEndpointResponse,
-  foldWorstTuples,
-  threwTuple,
-  transportError,
-  tupleStatus,
-  writeJsonAtomic,
-} from "./lib/data-supply-attempt-shard.mjs";
+import { classifyEndpointResponse, foldWorstTuples, threwTuple, transportError, tupleStatus } from "./lib/provider-fetch-result.mjs";
+import { buildAttemptRow } from "./lib/provider-fetch-result.mjs";
 import { ProducerLkgStateStore, assessRecoveryExit } from "./lib/producer-lkg-state.mjs";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
@@ -294,7 +286,6 @@ async function evaluateTicker({ symbol, request, sleep, maxRetries }) {
 
 export async function runYahooTicker({
   canonicalPath = path.join(REPO_ROOT, "data", "macro", "yahoo-ticker.json"),
-  attemptShardPath = path.join(REPO_ROOT, "data", "admin", "data-supply-state", "detection-attempts", "yahoo_ticker_macro.json"),
   stateRoot = path.join(REPO_ROOT, "data", "admin", "yahoo-hourly-ticker"),
   request = requestBytes,
   sleep = sleepMs,
@@ -325,8 +316,6 @@ export async function runYahooTicker({
 
   const tuple = foldWorstTuples(results.map((result) => result.tuple));
   const row = buildAttemptRow({ laneId: "yahoo_ticker_macro", memberId: null, observedAt, attemptId, tuple });
-  const shard = buildSingleLaneShard({ laneId: "yahoo_ticker_macro", row });
-  writeJsonAtomic(attemptShardPath, shard);
 
   const store = stateStore(stateRoot);
   const prior = readCanonical(canonicalPath);
@@ -456,7 +445,6 @@ export async function runYahooTicker({
     exitCode,
     reason: tupleStatus(tuple),
     row,
-    shard,
     errors,
     degradedKeys: degradedKeys.map((key) => key.replace(/\.json$/u, "")),
     reasons: [

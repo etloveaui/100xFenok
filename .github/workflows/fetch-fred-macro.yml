@@ -1,4 +1,4 @@
-# Macro FRED data collection with current-attempt evidence.
+# Macro FRED data collection with LKG recovery state.
 # Outputs: data/macro/fred-macro.json + public mirror + one lane shard.
 
 name: Fetch FRED Macro Data
@@ -42,8 +42,6 @@ jobs:
             .github/workflows
             100xfenok-next/scripts
             100xfenok-next/src/lib
-            data/admin/data-supply-state/detection-attempts
-            data/admin/data-supply-state/publish-outcomes
             data/admin/fred_macro
             data/macro
 
@@ -55,7 +53,7 @@ jobs:
       - name: Test FRED macro producer contracts
         run: node scripts/test-fetch-fred-macro.mjs
 
-      - name: Fetch macro FRED data and persist attempt evidence
+      - name: Fetch macro FRED data
         id: fetch_macro
         env:
           INPUT_CONTROLLED_FAILURE_KEY: ${{ github.event.inputs.controlled_failure_key || '' }}
@@ -120,7 +118,3 @@ jobs:
           DATA_PLANE_ENDPOINT: https://100xfenok.etloveaui.workers.dev/internal/cloud-data-plane
           DATA_PLANE_WRITE_KEY: ${{ secrets.DATA_PLANE_WRITE_KEY }}
         run: node scripts/publish-cloud-data-generation.mjs --family=fred-macro --tolerate-gate-block --json
-
-      - name: Persist FRED macro publish outcome
-        if: ${{ always() }}
-        run: node scripts/persist-cloud-publish-outcome.mjs --family=fred-macro --workflow=.github/workflows/fetch-fred-macro.yml --publisher-outcome=${{ steps.publish_cloud_generation.outcome }}

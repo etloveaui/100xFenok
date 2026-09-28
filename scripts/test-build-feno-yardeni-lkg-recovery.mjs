@@ -105,7 +105,6 @@ function runPaths(root) {
     publicMirrorPath: path.join(root, "public", "data", "yardney", "yardney_model.json"),
     privateOutputPath: path.join(root, "private", "yardney_model_full.json"),
     privateFredCachePath: path.join(root, "private", "fred_yardeni_yields.json"),
-    attemptShardPath: path.join(root, "data", "admin", "data-supply-state", "detection-attempts", "fred_yardeni.json"),
   };
 }
 function indexPath(root) {

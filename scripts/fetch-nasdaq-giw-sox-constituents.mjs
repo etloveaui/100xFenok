@@ -4,22 +4,13 @@ import path from "node:path";
 import { createHash } from "node:crypto";
 import { fileURLToPath } from "node:url";
 
-import {
-  attemptResult,
-  atomicWrite,
-  classifyEndpointResponse,
-  defaultAttemptId,
-  threwTuple,
-  transportError,
-  worstRequestResult,
-  writeAttemptShard,
-} from "./lib/data-supply-attempt-shard.mjs";
+import { atomicWrite } from "./lib/atomic-file.mjs";
+import { attemptResult, classifyEndpointResponse, threwTuple, transportError, worstRequestResult } from "./lib/provider-fetch-result.mjs";
 import {
   LaneLkgStore,
   PROMOTION_CONTRACT_PROVIDER_OBSERVATION_V2,
   buildProviderObservationV2,
   classifyLkgFailure,
-  hasStructuredGithubRunBinding,
   isEligibleRecoveryRun,
   systemicLkgFailureReason,
 } from "./lib/data-supply-lkg-store.mjs";
@@ -330,11 +321,9 @@ function controlledFailure(controlledFailureKey, eventName) {
 export async function runNasdaqGiwSox({
   repoRoot = REPO_ROOT,
   canonicalPath = path.join(REPO_ROOT, "data", DEFAULT_OUTPUT),
-  attemptShardPath = path.join(REPO_ROOT, "data", "admin", "data-supply-state", "detection-attempts", `${LANE_ID}.json`),
   dates = candidateDates(null, 10),
   request = requestWeightingData,
   observedAt = new Date().toISOString(),
-  attemptId,
   runId = process.env.GITHUB_RUN_ID || "local",
   runAttempt = Number(process.env.GITHUB_RUN_ATTEMPT || 1),
   eventName = process.env.GITHUB_EVENT_NAME || "local",
@@ -346,11 +335,6 @@ export async function runNasdaqGiwSox({
   }
   const controlled = controlledFailure(controlledFailureKey, eventName);
   const run = { runId: String(runId), runAttempt: Number(runAttempt), eventName, observedAt };
-  const resolvedAttemptId = attemptId ?? (
-    hasStructuredGithubRunBinding(run)
-      ? `nasdaq-giw-sox-run-${run.runId}-attempt-${run.runAttempt}`
-      : defaultAttemptId("nasdaq-giw-sox", observedAt)
-  );
   // SOX opts into recovery promotion for authentic first-attempt
   // workflow_dispatch runs only; every other LaneLkgStore caller keeps the
   // natural-schedule-only default.
@@ -376,7 +360,7 @@ export async function runNasdaqGiwSox({
     }
   }
   const folded = selected ?? worstRequestResult(requestResults);
-  const attempt = write ? writeAttemptShard({ laneId: LANE_ID, attemptShardPath, observedAt, attemptId: resolvedAttemptId, result: folded }) : null;
+  const attempt = write ? (folded).attempt : null;
 
   if (selected === null) {
     const failureReason = systemicLkgFailureReason(requestResults.map((row) => row.reason))

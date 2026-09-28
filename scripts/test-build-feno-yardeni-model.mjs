@@ -6,7 +6,6 @@ import path from "node:path";
 import { fileURLToPath } from "node:url";
 
 import { DATA_SUPPLY_DETECTION_CONFIG } from "./lib/data-supply-detection-config.mjs";
-import { validateAttemptEvidence, validateAttemptShard } from "./build-data-supply-detection-floor.mjs";
 import {
   buildFenoYardeniPayload,
   parseFredObservations,
@@ -178,16 +177,7 @@ function makeRunPaths(root) {
   });
   assert.equal(result.ok, true);
   assert.deepEqual(fs.readFileSync(paths.publicOutputPath), fs.readFileSync(paths.publicMirrorPath));
-  const shard = JSON.parse(fs.readFileSync(paths.attemptShardPath, "utf8"));
-  assert.equal(validateAttemptShard(shard, "fred_yardeni"), true);
-  assert.equal(validateAttemptEvidence({
-    schema_version: "data-supply-detection-attempts/v1",
-    attempts: shard.attempts,
-  }), true);
-  assert.equal(shard.lane_id, "fred_yardeni");
-  assert.equal(shard.attempts.length, 1);
-  const row = shard.attempts[0];
-  assert.equal(row.member_id, null);
+  const row = result.attempt;
   assert.equal(row.http_status, 200);
   assert.equal(row.auth, "ok");
   assert.deepEqual(expectedAssertionIds("fred_yardeni"), ["observations_array"]);
@@ -219,19 +209,13 @@ function makeRunPaths(root) {
   assert.equal(result.reason, "rate_limited");
   assert.equal(fs.readFileSync(paths.publicOutputPath, "utf8"), lkg);
   assert.equal(fs.readFileSync(paths.publicMirrorPath, "utf8"), lkg);
-  const shard = JSON.parse(fs.readFileSync(paths.attemptShardPath, "utf8"));
-  assert.equal(validateAttemptShard(shard, "fred_yardeni"), true);
-  assert.equal(validateAttemptEvidence({
-    schema_version: "data-supply-detection-attempts/v1",
-    attempts: shard.attempts,
-  }), true);
-  const row = shard.attempts[0];
+  const row = result.attempt;
   assert.equal(row.http_status, 429);
   assert.equal(row.rate_limited, true);
 }
 
 // Natural request/build failures preserve a bounded, sanitized explanation on
-// the runner result only. Detection attempt shards keep their fixed schema.
+// the runner result only.
 {
   const root = fs.mkdtempSync(path.join(os.tmpdir(), "fetch-fred-yardeni-diagnostic-test-"));
   const paths = makeRunPaths(root);
@@ -252,8 +236,7 @@ function makeRunPaths(root) {
   assert.ok(result.failure_detail.length <= 320, "diagnostic detail stays bounded");
   assert.equal(result.failure_detail.includes("secret-token"), false, "diagnostic detail redacts bearer credentials");
   assert.equal(result.failure_detail.includes("api_key=private"), false, "diagnostic detail redacts URL query values");
-  const shard = JSON.parse(fs.readFileSync(paths.attemptShardPath, "utf8"));
-  assert.equal(Object.hasOwn(shard.attempts[0], "failure_detail"), false, "attempt shard schema remains unchanged");
+  assert.equal(Object.hasOwn(result.attempt, "failure_detail"), false, "request tuple stays bounded");
 
   const buildResult = await runFenoYardeni({
     ...paths,
@@ -288,21 +271,11 @@ function makeRunPaths(root) {
 
 {
   const workflow = fs.readFileSync(path.join(REPO_ROOT, ".github", "workflows", "fetch-fred-yardeni.yml"), "utf8");
-  // The 2026-08-27 "deduplicate Yardeni staging" refactor (199f672298) moved
-  // this workflow's shard paths out of the YAML hand list and into the
-  // generated lane-commit-manifest.json (scripts/lib/lane-registry.mjs +
-  // stage-lane-manifest.sh), matching the same migration already applied to
-  // the other producer workflows (e.g. fetch-treasury-tga.yml, DEC-305/306).
-  // The workflow body no longer contains the literal shard path, so the
-  // contract check reads the generated manifest instead of grepping the YAML.
   const manifest = JSON.parse(fs.readFileSync(
     path.join(REPO_ROOT, "data", "admin", "lane-commit-manifest.json"),
     "utf8",
   ));
   const workflowLanes = manifest.workflows[".github/workflows/fetch-fred-yardeni.yml"];
-  const attemptSpec = workflowLanes?.stages?.always_if_exists
-    ?.find((spec) => spec.path === "data/admin/data-supply-state/detection-attempts/fred_yardeni.json");
-  assert.ok(attemptSpec, "fred_yardeni lane must declare its detection-attempt shard in always_if_exists");
   const canonicalSpec = workflowLanes?.stages?.success_if_exists
     ?.find((spec) => spec.path === "data/yardney/yardney_model.json");
   assert.equal(

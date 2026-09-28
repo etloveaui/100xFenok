@@ -127,10 +127,10 @@ jobs:
           echo "::error::Controlled SlickCharts weekly composite failure"
           exit 1
 
-      - name: Emit SlickCharts weekly attempt
+      - name: Build SlickCharts weekly run row
         if: ${{ always() }}
         run: |
-          node scripts/emit-slickcharts-attempt.mjs \
+          node scripts/build-slickcharts-run-row.mjs \
             --member weekly \
             --events "$SLICKCHARTS_ATTEMPT_EVENTS_PATH" \
             --outcome "${{ job.status }}" \
@@ -186,7 +186,3 @@ jobs:
           CLOUD_ACCEPTANCE_BASE_URL: https://100xfenok.etloveaui.workers.dev
           FENOK_VERIFY_TOKEN: ${{ secrets.FENOK_VERIFY_TOKEN }}
         run: node scripts/ops/check-cloud-family-acceptance.mjs --family=slickcharts-weekly
-
-      - name: Persist slickcharts-weekly publish outcome
-        if: ${{ always() }}
-        run: node scripts/persist-cloud-publish-outcome.mjs --family=slickcharts-weekly --workflow=.github/workflows/slickcharts-weekly.yml --publisher-outcome=${{ steps.publish_cloud_generation.outcome }} --binding-from-current-origin

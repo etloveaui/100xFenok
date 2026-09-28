@@ -20,7 +20,6 @@ on:
       - 'scripts/ops/test-emit-alarm-state.mjs'
       - 'scripts/ops/check-alarm-liveness.mjs'
       - 'scripts/ops/test-alarm-liveness.mjs'
-      - 'scripts/ops/test-plane-outcome-recording-coverage.mjs'
       - 'scripts/ops/test-workflow-credential-wiring.mjs'
       - 'scripts/ops/test-alarm-blindness.mjs'
       - 'scripts/ops/test-cost-gate-rate-limit.mjs'
@@ -31,15 +30,11 @@ on:
       - 'scripts/ops/test-producer-push-triggers.mjs'
       - 'scripts/ops/test-plane-ceiling-matches-cadence.mjs'
       - 'scripts/ops/test-plane-ceiling-wiring.mjs'
-      - 'scripts/test-persist-cloud-publish-outcome.mjs'
       - 'scripts/update-manifest-projections.sh'
       - 'scripts/publish-cloud-data-generation.mjs'
       - 'scripts/ops/carry-alarm-resolution.mjs'
-      - 'scripts/emit-yahoo-batch-quote-history-attempt.mjs'
-      - 'scripts/persist-cloud-publish-outcome.mjs'
       - 'scripts/lib/cloudflare-rate-limit.mjs'
       - 'scripts/check-r2-free-tier-usage.mjs'
-      - 'data/admin/data-supply-state/publish-outcomes/**'
       - 'scripts/check-lane-commit-manifest-inventory.mjs'
       - 'scripts/check-lane-registry-commit-shards.mjs'
       - 'scripts/test-check-lane-registry-commit-shards.mjs'
@@ -121,8 +116,6 @@ on:
       - '100xfenok-next/public/data/admin/lane-registry-projection.json'
       - '100xfenok-next/public/data/admin/fenok-data-health-kpi.json'
       - '100xfenok-next/scripts/cloud-data-plane/cloud-data-plane-enrollment.generated.mjs'
-      - 'scripts/persist-cloud-publish-outcome.mjs'
-      - 'scripts/lib/publish-outcome-shard.mjs'
       - 'scripts/test-sync-update-manifest-trigger-paths.mjs'
       - 'scripts/check-public-mirror-coverage.mjs'
       - '100xfenok-next/scripts/sync-public-data.mjs'
@@ -143,7 +136,6 @@ on:
       - 'scripts/ops/test-emit-alarm-state.mjs'
       - 'scripts/ops/check-alarm-liveness.mjs'
       - 'scripts/ops/test-alarm-liveness.mjs'
-      - 'scripts/ops/test-plane-outcome-recording-coverage.mjs'
       - 'scripts/ops/test-workflow-credential-wiring.mjs'
       - 'scripts/ops/test-alarm-blindness.mjs'
       - 'scripts/ops/test-cost-gate-rate-limit.mjs'
@@ -154,15 +146,11 @@ on:
       - 'scripts/ops/test-producer-push-triggers.mjs'
       - 'scripts/ops/test-plane-ceiling-matches-cadence.mjs'
       - 'scripts/ops/test-plane-ceiling-wiring.mjs'
-      - 'scripts/test-persist-cloud-publish-outcome.mjs'
       - 'scripts/update-manifest-projections.sh'
       - 'scripts/publish-cloud-data-generation.mjs'
       - 'scripts/ops/carry-alarm-resolution.mjs'
-      - 'scripts/emit-yahoo-batch-quote-history-attempt.mjs'
-      - 'scripts/persist-cloud-publish-outcome.mjs'
       - 'scripts/lib/cloudflare-rate-limit.mjs'
       - 'scripts/check-r2-free-tier-usage.mjs'
-      - 'data/admin/data-supply-state/publish-outcomes/**'
       - 'scripts/check-lane-commit-manifest-inventory.mjs'
       - 'scripts/check-lane-registry-commit-shards.mjs'
       - 'scripts/test-check-lane-registry-commit-shards.mjs'
@@ -244,8 +232,6 @@ on:
       - '100xfenok-next/public/data/admin/lane-registry-projection.json'
       - '100xfenok-next/public/data/admin/fenok-data-health-kpi.json'
       - '100xfenok-next/scripts/cloud-data-plane/cloud-data-plane-enrollment.generated.mjs'
-      - 'scripts/persist-cloud-publish-outcome.mjs'
-      - 'scripts/lib/publish-outcome-shard.mjs'
       - 'scripts/test-sync-update-manifest-trigger-paths.mjs'
       - 'scripts/check-public-mirror-coverage.mjs'
       - '100xfenok-next/scripts/sync-public-data.mjs'
@@ -273,7 +259,6 @@ jobs:
           node scripts/ops/test-cadence-declaration-coverage.mjs
           node scripts/ops/test-missed-schedule-window.mjs
           node scripts/ops/test-alarm-liveness.mjs
-          node scripts/ops/test-plane-outcome-recording-coverage.mjs
           node scripts/ops/test-workflow-credential-wiring.mjs
           node scripts/ops/test-alarm-blindness.mjs
           node scripts/ops/test-cost-gate-rate-limit.mjs
@@ -284,7 +269,6 @@ jobs:
           node scripts/ops/test-producer-push-triggers.mjs
           node scripts/ops/test-plane-ceiling-matches-cadence.mjs
           node scripts/ops/test-plane-ceiling-wiring.mjs
-          node scripts/test-emit-yahoo-batch-quote-history-attempt.mjs
           node scripts/test-sentiment-artifact-contract-coverage.mjs
           node scripts/test-out-of-band-producer-lanes.mjs
 

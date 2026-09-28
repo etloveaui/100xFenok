@@ -41,7 +41,6 @@ function pathsFor(root) {
     edgarCachePath: path.join(root, "data/edgar/company_tickers.json"),
     summaryRoot: path.join(root, "data/edgar-korean-summaries"),
     publicSummaryRoot: path.join(root, "100xfenok-next/public/data/edgar-korean-summaries"),
-    attemptShardPath: path.join(root, "data/admin/data-supply-state/detection-attempts/edgar_filings.json"),
   };
 }
 

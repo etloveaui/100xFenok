@@ -5,18 +5,8 @@ import https from "node:https";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 
-import {
-  attemptResult,
-  atomicWrite,
-  classifyEndpointResponse,
-  defaultAttemptId,
-  returnedTuple,
-  threwTuple,
-  transportError,
-  worstRequestResult,
-  writeAttemptShard,
-  writeJsonAtomic,
-} from "./lib/data-supply-attempt-shard.mjs";
+import { atomicWrite, writeJsonAtomic } from "./lib/atomic-file.mjs";
+import { attemptResult, classifyEndpointResponse, defaultAttemptId, returnedTuple, threwTuple, transportError, worstRequestResult } from "./lib/provider-fetch-result.mjs";
 import {
   LaneLkgStore,
   PROMOTION_CONTRACT_PROVIDER_OBSERVATION_V2,
@@ -38,7 +28,6 @@ const DEFAULT_PUBLIC_OUT = path.join(dataRoot, "yardney", "yardney_model.json");
 const DEFAULT_PUBLIC_MIRROR = path.join(publicDataRoot, "yardney", "yardney_model.json");
 const DEFAULT_PRIVATE_OUT = path.join(privateRoot, "yardney_model_full.json");
 const DEFAULT_PRIVATE_FRED_CACHE = path.join(privateRoot, "fred_yardeni_yields.json");
-const DEFAULT_ATTEMPT_SHARD = path.join(dataRoot, "admin", "data-supply-state", "detection-attempts", "fred_yardeni.json");
 
 // Last-known-good recovery lane. The lane's canonical public artifact
 // (data/yardney/yardney_model.json) is public-safe, so the store protects a
@@ -514,8 +503,7 @@ function yardeniMarkerSourceAsOf(doc) {
   return validYardeniFreshnessMarker(doc) ? doc.source_as_of : null;
 }
 
-// Additive LKG recovery wrapper around the weekly fetch+build. It never mutates
-// the detection attempt shard (that stays owned by writeAttemptShard) and never
+// Additive LKG recovery wrapper around the weekly fetch+build. It never
 // rewrites the model payloads; it only maintains the store's freshness marker,
 // LKG copy, and recovery index under data/admin/fred_yardeni/.
 function applyYardeniLkgStore({ repoRoot: storeRepoRoot, markerPath, worst, built, run }) {
@@ -610,7 +598,6 @@ export async function runFenoYardeni({
   publicMirrorPath = DEFAULT_PUBLIC_MIRROR,
   privateOutputPath = DEFAULT_PRIVATE_OUT,
   privateFredCachePath = DEFAULT_PRIVATE_FRED_CACHE,
-  attemptShardPath = DEFAULT_ATTEMPT_SHARD,
   apiKey = process.env.FRED_API_KEY,
   request = requestBytes,
   observedAt = new Date().toISOString(),
@@ -666,19 +653,13 @@ export async function runFenoYardeni({
     }
   }
 
-  const attempt = writeAttemptShard({
-    laneId: "fred_yardeni",
-    attemptShardPath,
-    observedAt,
-    attemptId,
-    result: worst,
-  });
+  const attempt = (worst).attempt;
 
   // Additive LKG recovery: engage only for the automatic weekly refresh
   // (--fetch without --no-write/--check). Offline --fred-file builds, --check
   // verification, and every caller that does not pass an explicit lkgRepoRoot
   // never touch the shared recovery state. This keeps every existing test
-  // unaffected. Detection attempt shard emission above is untouched.
+  // unaffected.
   const storeMode = lkgRepoRoot !== null && !noWrite && !check;
   const storeRun = {
     runId: String(runId),

@@ -560,7 +560,6 @@ jobs:
               python3 scripts/test_stockanalysis_recovery_state.py
               node scripts/test-yahoo-etf-fallback-recovery.mjs
               node scripts/test-stockanalysis-lane-parity.mjs
-              node scripts/test-stockanalysis-attempt-emitter.mjs
               STOCKANALYSIS_SOURCE_SURFACE_DIR="data/stockanalysis/surfaces" \
                 STOCKANALYSIS_PROJECTION_ORACLE_DIR="$PROJECTION_ORACLE" \
                 python3 -m unittest scripts/test_stockanalysis_surface_contract.py
@@ -645,17 +644,15 @@ jobs:
                 exit 75
               fi
               if ! READBACK_JSON="$({
-                python3 scripts/stockanalysis_artifact.py verify-attempt \
+                python3 scripts/stockanalysis_artifact.py verify-readback \
                   --repo-root . \
-                  --artifact-root "$ARTIFACT_ROOT" \
-                  --run-id "${{ github.run_id }}" \
-                  --run-attempt "${{ github.run_attempt }}"
+                  --artifact-root "$ARTIFACT_ROOT"
               })"; then
                 echo "status=$ACCEPTED_STATUS" >> "$GITHUB_OUTPUT"
                 echo "confirmation=not_confirmed" >> "$GITHUB_OUTPUT"
                 echo "fence_reason=main_readback_mismatch" >> "$GITHUB_OUTPUT"
                 echo "commit=$PUBLISHED_COMMIT" >> "$GITHUB_OUTPUT"
-                echo "post-publish main readback did not confirm the candidate's current attempt shards" >&2
+                echo "post-publish main readback did not confirm the candidate" >&2
                 {
                   echo "### StockAnalysis publish fence"
                   echo "- status: $ACCEPTED_STATUS"
@@ -664,14 +661,11 @@ jobs:
                 } >> "${GITHUB_STEP_SUMMARY:-/dev/null}"
                 exit 75
               fi
-              # Identity proof. The attempt verification above proves that the
-              # attempt's shards are present; it does NOT prove that current
-              # origin carries THIS artifact, because attempt rows and artifact
-              # identity are different claims. Two checks close that gap:
-              # the published commit must still be reachable from current main,
-              # and that immutable commit's own artifact-digest trailer must
+              # Identity proof. The readback above verifies the packed candidate
+              # bytes in this checkout. The published commit must also remain
+              # reachable from current main, and its artifact-digest trailer must
               # equal the acquisition digest. Together they bind current origin
-              # to this exact publication rather than to a coincidence.
+              # to this exact publication.
               #
               # Reachability is proven against the REMOTE, not against local
               # history. A local ancestry test answers from whatever slice of
@@ -774,8 +768,6 @@ jobs:
       group: stockanalysis-etf-detail-publish
       cancel-in-progress: false
       queue: max
-    outputs:
-      publisher_outcome: ${{ steps.publish_cloud_generation.outcome }}
     steps:
       - uses: actions/checkout@v4
         with:
@@ -803,10 +795,8 @@ jobs:
           ARTIFACT_NAME: ${{ needs.acquire-stockanalysis.outputs.artifact_name }}
         run: |
           set -euo pipefail
-          OUTCOME_SHARD="data/admin/data-supply-state/publish-outcomes/stockanalysis-etf-detail.json"
           git fetch origin main
           git checkout -f -B main origin/main
-          rm -f "$OUTCOME_SHARD"
           ARTIFACT_ROOT="$RUNNER_TEMP/stockanalysis-artifact"
           APPLY_JSON="$(
             python3 scripts/stockanalysis_artifact.py apply \
@@ -823,7 +813,6 @@ jobs:
             echo "::error::ETF plane publication requires an applied immutable candidate; got $APPLY_STATUS" >&2
             exit 75
           fi
-          rm -f "$OUTCOME_SHARD"
 
       - name: Publish guarded stockanalysis-etf-detail generation
         id: publish_cloud_generation
@@ -832,113 +821,27 @@ jobs:
           CLOUDFLARE_ACCOUNT_ID: aeeb5ea3affe55a2219d08ea02dad9e1
           DATA_PLANE_ENDPOINT: https://100xfenok.etloveaui.workers.dev/internal/cloud-data-plane
           DATA_PLANE_WRITE_KEY: ${{ secrets.DATA_PLANE_WRITE_KEY }}
-          # Acquisition leg of the joined-cycle tuple. The Git commit leg is
-          # deliberately absent here: this job does not depend on the Git
-          # publisher, so it cannot see that commit without serializing the two
-          # jobs. The persist step, which does see both, completes it.
+          # Bind publication to the immutable acquisition artifact; this job
+          # runs independently of the Git publisher.
           PUBLISH_BINDING_ARTIFACT_DIGEST: ${{ needs.acquire-stockanalysis.outputs.artifact_digest }}
         run: node scripts/publish-cloud-data-generation.mjs --family=stockanalysis-etf-detail --json
 
-      - name: Upload stockanalysis-etf-detail outcome shard
-        if: ${{ always() }}
-        uses: actions/upload-artifact@v4
-        with:
-          name: stockanalysis-etf-detail-outcome-${{ github.run_id }}-${{ github.run_attempt }}
-          path: data/admin/data-supply-state/publish-outcomes/stockanalysis-etf-detail.json
-          if-no-files-found: error
-          retention-days: 1
-
-  persist-stockanalysis-etf-plane:
-    # publish-stockanalysis is a dependency for evidence, not for ordering: it
-    # owns the Git publication commit and the post-push origin readback, and
-    # this is the only job that sees both those and the Cloud outcome. The
-    # admission condition below is unchanged and still keyed on the plane job
-    # alone, so a Git-publisher failure does not suppress outcome persistence.
-    needs:
-      - publish-stockanalysis
-      - publish-stockanalysis-etf-plane
-    if: >-
-      always() &&
-      needs.publish-stockanalysis-etf-plane.result != 'skipped' &&
-      needs.publish-stockanalysis-etf-plane.result != 'cancelled'
-    runs-on: ubuntu-latest
-    timeout-minutes: 20
-    permissions:
-      contents: write
-    concurrency:
-      group: fenok-data-writer-refs/heads/main
-      cancel-in-progress: false
-      queue: max
-    steps:
-      - uses: actions/checkout@v4
-        with:
-          fetch-depth: 1
-
-      - name: Start from latest main
-        run: |
-          git fetch --depth=1 origin +main:refs/remotes/origin/main
-          git checkout -B main origin/main
-
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: '22'
-
-      - name: Download stockanalysis-etf-detail outcome shard
-        uses: actions/download-artifact@v4
-        with:
-          name: stockanalysis-etf-detail-outcome-${{ github.run_id }}-${{ github.run_attempt }}
-          path: data/admin/data-supply-state/publish-outcomes
-
-      - name: Assert the outcome shard arrived
-        run: |
-          set -euo pipefail
-          shard=data/admin/data-supply-state/publish-outcomes/stockanalysis-etf-detail.json
-          test -s "$shard"
-
-      - name: Persist stockanalysis-etf-detail publish outcome
-        env:
-          # Git legs of the joined-cycle tuple, carried through the environment
-          # rather than interpolated into the command line. Empty means the Git
-          # publisher produced no such value, which the helper reads as "not
-          # attempted" and leaves null.
-          BINDING_GIT_COMMIT: ${{ needs.publish-stockanalysis.outputs.published_commit }}
-          BINDING_ORIGIN_READBACK: ${{ needs.publish-stockanalysis.outputs.readback_confirmation }}
-        run: >-
-          node scripts/persist-cloud-publish-outcome.mjs
-          --family=stockanalysis-etf-detail
-          --workflow=.github/workflows/fetch-stockanalysis.yml
-          --publisher-outcome=${{ needs.publish-stockanalysis-etf-plane.outputs.publisher_outcome }}
-          --binding-git-commit="$BINDING_GIT_COMMIT"
-          --binding-origin-readback="$BINDING_ORIGIN_READBACK"
-
-  # Aggregate projection dispatch: shared projection rebuild fires only when
-  # the scheduled or explicit core-basket recovery generation was BOTH published and
-  # persisted, and the Git publisher also committed the same acquisition's
-  # canonical source-lane state. The projection remains Git/static-owned while
-  # DEC-381 holds storage authority; a successful plane publish is evidence,
-  # not permission to materialize R2 into the projection. Non-ETF scheduled
-  # runs and source-only manual runs keep the same canonical path. Recovery
-  # keeps workflow_dispatch lineage and never claims a natural-cycle attempt.
-  # This job stages no git commit and must never carry the shared-writer group.
+  # Rebuild the shared projection after Git publication and the required cloud
+  # publication both succeed. Source-only runs keep their canonical path.
+  # This job stages no Git commit and holds no shared writer lock.
   dispatch-stockanalysis-projection:
     needs:
       - publish-stockanalysis
       - publish-stockanalysis-etf-plane
-      - persist-stockanalysis-etf-plane
     if: >-
       always() &&
       needs.publish-stockanalysis.result == 'success' &&
       (
-        (
-          needs.publish-stockanalysis-etf-plane.result == 'success' &&
-          needs.persist-stockanalysis-etf-plane.result == 'success'
-        ) ||
+        needs.publish-stockanalysis-etf-plane.result == 'success' ||
         (
           (github.event_name != 'schedule' ||
             (github.event.schedule != '50 23 * * 1-5' && github.event.schedule != '20 23 * * 0')) &&
-          needs.publish-stockanalysis-etf-plane.result == 'skipped' &&
-          needs.persist-stockanalysis-etf-plane.result == 'skipped'
+          needs.publish-stockanalysis-etf-plane.result == 'skipped'
         )
       )
     runs-on: ubuntu-latest
@@ -957,8 +860,7 @@ jobs:
 
   # The daily stock overview schedule also starts the SEC earnings refresh, but
   # this job has no dependency on acquire-stockanalysis or its provider result.
-  # The reusable workflow owns its own writer lock, cloud publication and
-  # publish-outcome persistence.
+  # The reusable workflow owns its own writer lock and cloud publication.
   refresh-earnings-overview:
     if: >-
       github.event_name == 'schedule' &&

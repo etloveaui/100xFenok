@@ -292,10 +292,10 @@ jobs:
           echo "::error::Controlled SlickCharts monthly composite failure"
           exit 1
 
-      - name: Emit SlickCharts monthly attempt
+      - name: Build SlickCharts monthly run row
         if: ${{ always() }}
         run: |
-          node scripts/emit-slickcharts-attempt.mjs \
+          node scripts/build-slickcharts-run-row.mjs \
             --member monthly \
             --events "$SLICKCHARTS_ATTEMPT_EVENTS_PATH" \
             --outcome "${{ job.status }}" \
@@ -363,7 +363,3 @@ jobs:
           DATA_PLANE_ENDPOINT: https://100xfenok.etloveaui.workers.dev/internal/cloud-data-plane
           DATA_PLANE_WRITE_KEY: ${{ secrets.DATA_PLANE_WRITE_KEY }}
         run: node scripts/publish-cloud-data-generation.mjs --family=slickcharts-monthly --tolerate-gate-block --json
-
-      - name: Persist slickcharts-monthly publish outcome
-        if: ${{ always() }}
-        run: node scripts/persist-cloud-publish-outcome.mjs --family=slickcharts-monthly --workflow=.github/workflows/slickcharts-monthly.yml --publisher-outcome=${{ steps.publish_cloud_generation.outcome }} --binding-from-current-origin
