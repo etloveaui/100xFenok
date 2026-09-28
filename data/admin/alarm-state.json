@@ -1,6 +1,6 @@
 {
   "schema_version": "alarm-state/v1",
-  "generated_at": "2026-09-28T00:53:39.349Z",
+  "generated_at": "2026-09-28T01:47:23.790Z",
   "status": "open",
   "open_incident_count": 3,
   "open_incidents": [
@@ -35,14 +35,14 @@
       "cadence_status": "not_due"
     },
     {
-      "workflow": "retention-restore.yml",
-      "label": "R2 Retention Restore Watchdog",
-      "streak": 0,
+      "workflow": "validate-workflows.yml",
+      "label": "Validate GitHub Workflows",
+      "streak": 2,
       "failure_streak_threshold": 2,
-      "first_failing_run_id": null,
-      "first_failing_run_url": null,
+      "first_failing_run_id": 36338213484,
+      "first_failing_run_url": "https://github.com/etloveaui/100xFenok/actions/runs/36338213484",
       "alarm_reasons": [
-        "missed_schedule_window"
+        "failure_streak"
       ],
       "lane_outcome_lanes": [],
       "lost_schedule_slot_count": 0,
@@ -303,7 +303,7 @@
       "cadence_status": "not_due",
       "cadence_evidence": [],
       "data_freshness_state": "healthy",
-      "data_freshness_age_hours_at_generation": 46
+      "data_freshness_age_hours_at_generation": 47
     },
     {
       "file": "fetch-treasury-tga.yml",
@@ -501,14 +501,14 @@
   "queue_evicted_run_count": 0,
   "queue_evicted_workflows": [],
   "last_firing": {
-    "run_id": "36363694481",
-    "run_url": "https://github.com/etloveaui/100xFenok/actions/runs/36363694481",
-    "observed_at": "2026-09-28T00:53:39.349Z",
-    "event": "schedule",
+    "run_id": "36367115742",
+    "run_url": "https://github.com/etloveaui/100xFenok/actions/runs/36367115742",
+    "observed_at": "2026-09-28T01:47:23.790Z",
+    "event": "workflow_run",
     "workflows": [
       "fetch-fdic.yml",
       "fetch-fenok-news-tone.yml",
-      "retention-restore.yml"
+      "validate-workflows.yml"
     ],
     "title": "100xFenok pipeline job failure alarm"
   },
