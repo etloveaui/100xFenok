@@ -1677,9 +1677,11 @@ workflow_policies[".github/workflows/refresh-earnings-overview.yml"] = lanePolic
     commitSpec("100xfenok-next/public/data/earnings-overview", "directory", true),
   ],
 });
-workflow_policies[".github/workflows/global-scouter-shadow-publish.yml"] = policy(["global_scouter"], {
-  // This caller stages evidence only. The owner-run canonical/public bundle
-  // remains outside the caller's Git staging boundary.
+workflow_policies[".github/workflows/global-scouter-shadow-publish.yml"] = policy([], {
+  // This caller used to stage publish-outcome evidence only; S3 removed that
+  // shard, so it now stages nothing. The owner-run canonical/public bundle
+  // was always outside its Git staging boundary, and `lanes` in a commit
+  // manifest means "shards of this lane I stage", which is none.
   always_if_exists: [
   ],
 });
@@ -1768,6 +1770,8 @@ workflow_policies[".github/workflows/update-manifest.yml"] = policy([], {
   always_if_exists: [],
 });
 // The computed-signals coordinator publishes to the plane without a Git write.
+// It owns no lane and stages nothing, which is what the empty `lanes` list
+// declares; build-lane-commit-manifest accepts that shape.
 workflow_policies[".github/workflows/coordinate-computed-signals.yml"] = policy([], {
   always_if_exists: [],
 });

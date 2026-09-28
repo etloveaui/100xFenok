@@ -675,7 +675,10 @@ function validateManifestWorkflow(entry, workflowRel, registry) {
   if (!entry.stages || typeof entry.stages !== "object" || Array.isArray(entry.stages)) fail(`workflow ${workflowRel}.stages must be an object`);
   if (JSON.stringify(Object.keys(entry.stages).sort()) !== JSON.stringify([...COMMIT_STAGE_KEYS].sort())) fail(`workflow ${workflowRel}.stages keys are invalid`);
   const stageEntryCount = COMMIT_STAGE_KEYS.reduce((count, stage) => count + (Array.isArray(entry.stages[stage]) ? entry.stages[stage].length : 0), 0);
-  if (stageEntryCount === 0) fail(`workflow ${workflowRel} has no declared staging entries`);
+  // A workflow that owns no lane has no shard to stage; declaring it with an
+  // empty `lanes` list is how it says so. Owning lanes with no staging entries
+  // is still a fail, because that lane's shards would be lost silently.
+  if (stageEntryCount === 0 && entry.lanes.length > 0) fail(`workflow ${workflowRel} has no declared staging entries`);
   for (const stage of COMMIT_STAGE_KEYS) {
     if (!Array.isArray(entry.stages[stage])) fail(`workflow ${workflowRel}.stages.${stage} must be an array`);
     const seen = new Set();

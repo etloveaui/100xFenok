@@ -9,9 +9,9 @@
 # publishes at most one conflict-free [skip ci] commit, bounding the stale
 # window to a single slot.
 #
-# It is a maintenance writer, not a data-supply lane (recorded in
-# CADENCE_DECLARATION_EXEMPTIONS), and it shares the global writer queue so
-# an autosync commit cannot advance main underneath an acquisition commit.
+# It is a maintenance writer, not a data-supply lane, and it shares the
+# global writer queue so an autosync commit cannot advance main underneath
+# an acquisition commit.
 #
 # Staging is manifest-driven (scripts/stage-lane-manifest.sh success_if_exists):
 # this workflow names no committed path itself, so public-mirror ownership stays
