@@ -1,9 +1,9 @@
 {
-  "schema_version": "lane-registry-projection/v1",
-  "generated_at": "2026-07-22T23:32:35.723Z",
-  "source_schema_version": "lane-registry/v2",
-  "purpose": "Admin-safe lane metadata projection for the owner data dashboard. Metadata only — no store roots, attempt/recovery paths, or repo directory structure.",
-  "lane_count": 31,
+  "schema_version": "lane-registry-projection/v2",
+  "generated_at": "2026-09-28T18:08:11.496Z",
+  "source_schema_version": "lane-registry/v3",
+  "purpose": "Admin-safe lane metadata and derived control-room projection for the owner data dashboard. No store roots, attempt/recovery paths, run identities, or repository directory structure.",
+  "lane_count": 35,
   "lanes": [
     {
       "id": "fred_macro",
@@ -11,7 +11,7 @@
       "store_kind": "payload",
       "cadence": {
         "kind": "daily",
-        "provider": "fred"
+        "provider": "FRED"
       },
       "enforcement": "live",
       "privacy_class": "public_mirror",
@@ -23,7 +23,7 @@
       "store_kind": "payload",
       "cadence": {
         "kind": "mixed",
-        "provider": "fred (daily/weekly/monthly/quarterly series)"
+        "provider": "FRED"
       },
       "enforcement": "live",
       "privacy_class": "public_mirror",
@@ -35,7 +35,7 @@
       "store_kind": "marker",
       "cadence": {
         "kind": "weekly",
-        "provider": "fred weekly (Friday observations)"
+        "provider": "FRED"
       },
       "enforcement": "live",
       "privacy_class": "private",
@@ -47,7 +47,7 @@
       "store_kind": "payload",
       "cadence": {
         "kind": "quarterly",
-        "provider": "fdic (first-Monday cron)"
+        "provider": "FDIC"
       },
       "enforcement": "live",
       "privacy_class": "public_mirror",
@@ -59,7 +59,7 @@
       "store_kind": "payload",
       "cadence": {
         "kind": "daily",
-        "provider": "fiscaldata.treasury.gov"
+        "provider": "Treasury FiscalData"
       },
       "enforcement": "live",
       "privacy_class": "public_mirror",
@@ -71,7 +71,7 @@
       "store_kind": "payload",
       "cadence": {
         "kind": "daily",
-        "provider": "defillama"
+        "provider": "DefiLlama"
       },
       "enforcement": "live",
       "privacy_class": "public_mirror",
@@ -79,14 +79,14 @@
     },
     {
       "id": "yahoo_etf_fallback",
-      "label": "Yahoo ETF fallback candidate",
+      "label": "Yahoo ETF fallback",
       "store_kind": "payload",
       "cadence": {
         "kind": "daily",
-        "provider": "yahoo/stockanalysis (shared workflow)"
+        "provider": "Yahoo Finance"
       },
       "enforcement": "live",
-      "privacy_class": "public_mirror",
+      "privacy_class": "private",
       "owner_workflow": "fetch-stockanalysis.yml"
     },
     {
@@ -94,8 +94,20 @@
       "label": "StockAnalysis ETF universe",
       "store_kind": "payload",
       "cadence": {
+        "kind": "weekly",
+        "provider": "StockAnalysis"
+      },
+      "enforcement": "live",
+      "privacy_class": "public_mirror",
+      "owner_workflow": "fetch-stockanalysis.yml"
+    },
+    {
+      "id": "stockanalysis_etf_detail",
+      "label": "StockAnalysis per-ticker ETF detail",
+      "store_kind": "payload",
+      "cadence": {
         "kind": "daily",
-        "provider": "stockanalysis (shared workflow)"
+        "provider": "StockAnalysis"
       },
       "enforcement": "live",
       "privacy_class": "public_mirror",
@@ -107,11 +119,23 @@
       "store_kind": "payload",
       "cadence": {
         "kind": "daily",
-        "provider": "stockanalysis (bounded 8-pair shared workflow schedule)"
+        "provider": "StockAnalysis"
       },
       "enforcement": "live",
       "privacy_class": "public_mirror",
       "owner_workflow": "fetch-stockanalysis.yml"
+    },
+    {
+      "id": "earnings_overview",
+      "label": "SEC quarterly earnings overview",
+      "store_kind": "payload",
+      "cadence": {
+        "kind": "daily",
+        "provider": "SEC EDGAR"
+      },
+      "enforcement": "shadow",
+      "privacy_class": "public_mirror",
+      "owner_workflow": "refresh-earnings-overview.yml"
     },
     {
       "id": "stockanalysis_surfaces",
@@ -119,7 +143,7 @@
       "store_kind": "payload",
       "cadence": {
         "kind": "daily",
-        "provider": "stockanalysis (shared workflow surface schedules)"
+        "provider": "StockAnalysis"
       },
       "enforcement": "shadow",
       "privacy_class": "public_mirror",
@@ -131,11 +155,52 @@
       "store_kind": "payload",
       "cadence": {
         "kind": "hourly",
-        "provider": "yahoo (TQQQ/SOXL keys)"
+        "provider": "Yahoo Finance + Fenok ticker API"
       },
       "enforcement": "live",
       "privacy_class": "public_mirror",
-      "owner_workflow": "fetch-yahoo-ticker.yml"
+      "owner_workflow": "fetch-yahoo-ticker.yml",
+      "control_room_state": {
+        "schedule": {
+          "workflow": "fetch-yahoo-ticker.yml",
+          "cron": "5 * * * *",
+          "calendar_id": "utc",
+          "grace": {
+            "unit": "hours",
+            "value": 6
+          },
+          "latest_expected_slot": "2026-09-28T18:05:00.000Z",
+          "next_expected_slot": "2026-09-28T19:05:00.000Z",
+          "status": "unobserved"
+        },
+        "latest_attempt": {
+          "observed_at": null,
+          "outcome": "unobserved",
+          "failure_class": null
+        },
+        "source": {
+          "source_date": "2026-09-25T20:00:00.000Z",
+          "source_date_reason": "yahoo_hourly_ticker.current.source_as_of.oldest",
+          "evidence_status": "observed",
+          "sla": null
+        },
+        "recovery": {
+          "state": "unavailable",
+          "retry_count": null,
+          "recovered_at": null,
+          "lkg_source_date": null
+        },
+        "incident": {
+          "status": "unknown",
+          "workflow": "fetch-yahoo-ticker.yml",
+          "class": null
+        },
+        "queue": {
+          "evidence_status": "unavailable",
+          "wait_ms": null,
+          "depth": null
+        }
+      }
     },
     {
       "id": "sentiment",
@@ -143,11 +208,52 @@
       "store_kind": "payload",
       "cadence": {
         "kind": "daily",
-        "provider": "multi-source sentiment"
+        "provider": "CNN Fear & Greed + Fenok CNN proxy + CFTC + Yahoo Finance + Alternative.me"
       },
       "enforcement": "live",
       "privacy_class": "public_mirror",
-      "owner_workflow": "fetch-sentiment.yml"
+      "owner_workflow": "fetch-sentiment.yml",
+      "control_room_state": {
+        "schedule": {
+          "workflow": "fetch-sentiment.yml",
+          "cron": "0 22 * * 1-5",
+          "calendar_id": "us_trading",
+          "grace": {
+            "unit": "business_days",
+            "value": 1
+          },
+          "latest_expected_slot": "2026-09-25T22:00:00.000Z",
+          "next_expected_slot": "2026-09-28T22:00:00.000Z",
+          "status": "unobserved"
+        },
+        "latest_attempt": {
+          "observed_at": null,
+          "outcome": "unobserved",
+          "failure_class": null
+        },
+        "source": {
+          "source_date": "2026-09-22",
+          "source_date_reason": "sentiment_index.items.current.source_as_of.oldest",
+          "evidence_status": "observed",
+          "sla": null
+        },
+        "recovery": {
+          "state": "unavailable",
+          "retry_count": null,
+          "recovered_at": null,
+          "lkg_source_date": null
+        },
+        "incident": {
+          "status": "unknown",
+          "workflow": "fetch-sentiment.yml",
+          "class": null
+        },
+        "queue": {
+          "evidence_status": "unavailable",
+          "wait_ms": null,
+          "depth": null
+        }
+      }
     },
     {
       "id": "nasdaq_giw_sox",
@@ -155,7 +261,7 @@
       "store_kind": "payload",
       "cadence": {
         "kind": "daily",
-        "provider": "nasdaq GIW (us_trading_days)"
+        "provider": "Nasdaq Indexes"
       },
       "enforcement": "live",
       "privacy_class": "private",
@@ -163,11 +269,11 @@
     },
     {
       "id": "us_indices_daily",
-      "label": "US index daily close (S&P 500 / NASDAQ)",
+      "label": "US index daily close (S&P 500 / NASDAQ Composite / Nasdaq 100 / SOX)",
       "store_kind": "payload",
       "cadence": {
         "kind": "daily",
-        "provider": "yahoo chart v8 (^GSPC/^IXIC, us_trading_days)"
+        "provider": "Yahoo Finance"
       },
       "enforcement": "live",
       "privacy_class": "public_mirror",
@@ -179,9 +285,9 @@
       "store_kind": "payload",
       "cadence": {
         "kind": "monthly",
-        "provider": "OECD SDMX DF_CLI"
+        "provider": "OECD"
       },
-      "enforcement": "shadow",
+      "enforcement": "live",
       "privacy_class": "private",
       "owner_workflow": "fetch-oecd-cli.yml"
     },
@@ -191,9 +297,9 @@
       "store_kind": "payload",
       "cadence": {
         "kind": "daily",
-        "provider": "KRX Open API (Korea trading days)"
+        "provider": "KRX"
       },
-      "enforcement": "shadow",
+      "enforcement": "live",
       "privacy_class": "public_safe_aggregate",
       "owner_workflow": "fenok-edge-krx-daily.yml"
     },
@@ -203,7 +309,7 @@
       "store_kind": "payload",
       "cadence": {
         "kind": "daily",
-        "provider": "slickcharts (us_trading_days)"
+        "provider": "Slickcharts"
       },
       "enforcement": "live",
       "privacy_class": "public_mirror",
@@ -215,7 +321,7 @@
       "store_kind": "marker",
       "cadence": {
         "kind": "weekly",
-        "provider": "sec edgar (Monday 00:40Z poll)"
+        "provider": "SEC EDGAR"
       },
       "enforcement": "live",
       "privacy_class": "private",
@@ -227,7 +333,7 @@
       "store_kind": "artifact_only",
       "cadence": {
         "kind": "quarterly",
-        "provider": "sec 13f"
+        "provider": "SEC EDGAR"
       },
       "enforcement": "shadow",
       "privacy_class": "public_mirror",
@@ -239,11 +345,49 @@
       "store_kind": "artifact_only",
       "cadence": {
         "kind": "unknown",
-        "provider": null
+        "provider": "Local Mac bridge"
       },
       "enforcement": "shadow",
       "privacy_class": "private",
-      "owner_workflow": null
+      "owner_workflow": null,
+      "control_room_state": {
+        "schedule": {
+          "workflow": null,
+          "cron": null,
+          "calendar_id": null,
+          "grace": null,
+          "latest_expected_slot": null,
+          "next_expected_slot": null,
+          "status": "unobserved"
+        },
+        "latest_attempt": {
+          "observed_at": null,
+          "outcome": "unobserved",
+          "failure_class": null
+        },
+        "source": {
+          "source_date": null,
+          "source_date_reason": "not_instrumented: local runtime has no committed public-safe source stamp",
+          "evidence_status": "not_instrumented",
+          "sla": null
+        },
+        "recovery": {
+          "state": "unavailable",
+          "retry_count": null,
+          "recovered_at": null,
+          "lkg_source_date": null
+        },
+        "incident": {
+          "status": "unknown",
+          "workflow": null,
+          "class": null
+        },
+        "queue": {
+          "evidence_status": "unavailable",
+          "wait_ms": null,
+          "depth": null
+        }
+      }
     },
     {
       "id": "mona_production_study_state",
@@ -251,11 +395,49 @@
       "store_kind": "artifact_only",
       "cadence": {
         "kind": "unknown",
-        "provider": null
+        "provider": "Mona Life SSOT + Local Mac bridge"
       },
       "enforcement": "shadow",
       "privacy_class": "private",
-      "owner_workflow": null
+      "owner_workflow": null,
+      "control_room_state": {
+        "schedule": {
+          "workflow": null,
+          "cron": null,
+          "calendar_id": null,
+          "grace": null,
+          "latest_expected_slot": null,
+          "next_expected_slot": null,
+          "status": "unobserved"
+        },
+        "latest_attempt": {
+          "observed_at": null,
+          "outcome": "unobserved",
+          "failure_class": null
+        },
+        "source": {
+          "source_date": null,
+          "source_date_reason": "not_instrumented: owner SSOT runtime has no committed public-safe source stamp",
+          "evidence_status": "not_instrumented",
+          "sla": null
+        },
+        "recovery": {
+          "state": "unavailable",
+          "retry_count": null,
+          "recovered_at": null,
+          "lkg_source_date": null
+        },
+        "incident": {
+          "status": "unknown",
+          "workflow": null,
+          "class": null
+        },
+        "queue": {
+          "evidence_status": "unavailable",
+          "wait_ms": null,
+          "depth": null
+        }
+      }
     },
     {
       "id": "mona_vnext_kv",
@@ -263,10 +445,60 @@
       "store_kind": "artifact_only",
       "cadence": {
         "kind": "unknown",
-        "provider": null
+        "provider": "Cloudflare KV"
       },
       "enforcement": "shadow",
       "privacy_class": "private",
+      "owner_workflow": null,
+      "control_room_state": {
+        "schedule": {
+          "workflow": null,
+          "cron": null,
+          "calendar_id": null,
+          "grace": null,
+          "latest_expected_slot": null,
+          "next_expected_slot": null,
+          "status": "unobserved"
+        },
+        "latest_attempt": {
+          "observed_at": null,
+          "outcome": "unobserved",
+          "failure_class": null
+        },
+        "source": {
+          "source_date": null,
+          "source_date_reason": "not_instrumented: KV runtime has no committed public-safe source stamp",
+          "evidence_status": "not_instrumented",
+          "sla": null
+        },
+        "recovery": {
+          "state": "unavailable",
+          "retry_count": null,
+          "recovered_at": null,
+          "lkg_source_date": null
+        },
+        "incident": {
+          "status": "unknown",
+          "workflow": null,
+          "class": null
+        },
+        "queue": {
+          "evidence_status": "unavailable",
+          "wait_ms": null,
+          "depth": null
+        }
+      }
+    },
+    {
+      "id": "sentiment_aaii",
+      "label": "AAII investor sentiment survey (owner-run Apps Script)",
+      "store_kind": "artifact_only",
+      "cadence": {
+        "kind": "weekly",
+        "provider": "AAII Investor Sentiment Survey"
+      },
+      "enforcement": "shadow",
+      "privacy_class": "public_mirror",
       "owner_workflow": null
     },
     {
@@ -275,7 +507,7 @@
       "store_kind": "artifact_only",
       "cadence": {
         "kind": "weekly",
-        "provider": "owner-run fenok-benchmarks converter"
+        "provider": "Bloomberg Terminal"
       },
       "enforcement": "shadow",
       "privacy_class": "public_mirror",
@@ -287,21 +519,59 @@
       "store_kind": "artifact_only",
       "cadence": {
         "kind": "weekly",
-        "provider": "owner-run global-scouter converter"
+        "provider": "Global Scouter"
       },
       "enforcement": "shadow",
       "privacy_class": "public_mirror",
-      "owner_workflow": null
+      "owner_workflow": null,
+      "control_room_state": {
+        "schedule": {
+          "workflow": null,
+          "cron": null,
+          "calendar_id": null,
+          "grace": null,
+          "latest_expected_slot": null,
+          "next_expected_slot": null,
+          "status": "unobserved"
+        },
+        "latest_attempt": {
+          "observed_at": null,
+          "outcome": "unobserved",
+          "failure_class": null
+        },
+        "source": {
+          "source_date": "2026-09-25",
+          "source_date_reason": "global_scouter_metadata.source_date",
+          "evidence_status": "observed",
+          "sla": null
+        },
+        "recovery": {
+          "state": "unavailable",
+          "retry_count": null,
+          "recovered_at": null,
+          "lkg_source_date": null
+        },
+        "incident": {
+          "status": "unknown",
+          "workflow": null,
+          "class": null
+        },
+        "queue": {
+          "evidence_status": "unavailable",
+          "wait_ms": null,
+          "depth": null
+        }
+      }
     },
     {
       "id": "damodaran",
       "label": "Damodaran valuation data",
       "store_kind": "payload",
       "cadence": {
-        "kind": "weekly",
-        "provider": "NYU Stern Damodaran owner guard"
+        "kind": "annual",
+        "provider": "NYU Stern Damodaran"
       },
-      "enforcement": "shadow",
+      "enforcement": "live",
       "privacy_class": "public_mirror",
       "owner_workflow": "fetch-damodaran-shadow.yml"
     },
@@ -311,11 +581,23 @@
       "store_kind": "marker",
       "cadence": {
         "kind": "daily",
-        "provider": "finra (us_trading_days)"
+        "provider": "FINRA"
       },
       "enforcement": "live",
       "privacy_class": "private",
       "owner_workflow": "fenok-edge-daily.yml"
+    },
+    {
+      "id": "finra_ats_weekly",
+      "label": "FINRA delayed ATS/OTC weekly summary",
+      "store_kind": "payload",
+      "cadence": {
+        "kind": "weekly",
+        "provider": "FINRA"
+      },
+      "enforcement": "live",
+      "privacy_class": "private",
+      "owner_workflow": "fetch-finra-ats-weekly.yml"
     },
     {
       "id": "occ_options_volume",
@@ -323,7 +605,7 @@
       "store_kind": "marker",
       "cadence": {
         "kind": "daily",
-        "provider": "occ (us_trading_days)"
+        "provider": "OCC"
       },
       "enforcement": "live",
       "privacy_class": "private",
@@ -335,7 +617,7 @@
       "store_kind": "marker",
       "cadence": {
         "kind": "daily",
-        "provider": "yahoo finance targeted options (us_trading_days)"
+        "provider": "Yahoo Finance"
       },
       "enforcement": "live",
       "privacy_class": "private",
@@ -347,7 +629,7 @@
       "store_kind": "marker",
       "cadence": {
         "kind": "daily",
-        "provider": "apewisdom"
+        "provider": "ApeWisdom"
       },
       "enforcement": "live",
       "privacy_class": "private",
@@ -359,9 +641,9 @@
       "store_kind": "marker",
       "cadence": {
         "kind": "daily",
-        "provider": "gdelt"
+        "provider": "GDELT"
       },
-      "enforcement": "shadow",
+      "enforcement": "live",
       "privacy_class": "private",
       "owner_workflow": "fetch-fenok-news-tone.yml"
     },
@@ -371,7 +653,7 @@
       "store_kind": "payload",
       "cadence": {
         "kind": "daily",
-        "provider": "yahoo"
+        "provider": "Yahoo Finance"
       },
       "enforcement": "shadow",
       "privacy_class": "public_mirror",

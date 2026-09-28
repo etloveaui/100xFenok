@@ -7,6 +7,7 @@ import { sectorLabelKo } from "@/lib/design/sectorMap";
 import type { CanonicalSector } from "@/lib/design/sectorMap";
 import { formatSignedPercent } from "@/lib/format";
 import { makeDataState } from "@/lib/data-state";
+import { fetchJsonOrNull } from "@/lib/client/data-fetch";
 import { ROUTES } from "@/lib/routes";
 
 /**
@@ -40,15 +41,11 @@ export default function ExploreDashboard() {
 
   useEffect(() => {
     let cancelled = false;
-    fetch("/data/benchmarks/summaries.json")
-      .then((r) => (r.ok ? r.json() : null))
-      .then((j) => {
-        if (!cancelled && j?.momentum) setMomentum(j.momentum as MomentumMap);
-        if (!cancelled) setLoaded(true);
-      })
-      .catch(() => {
-        if (!cancelled) setLoaded(true);
-      });
+    // Shared layer: one request per URL per page load; a failure is not cached.
+    fetchJsonOrNull<{ momentum?: MomentumMap }>("/data/benchmarks/summaries.json").then((j) => {
+      if (!cancelled && j?.momentum) setMomentum(j.momentum as MomentumMap);
+      if (!cancelled) setLoaded(true);
+    });
     return () => {
       cancelled = true;
     };

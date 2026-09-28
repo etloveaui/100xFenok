@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { cookies } from "next/headers";
 import AppShell from "@/components/shell/AppShell";
+import ShellChromeOff from "@/components/shell/ShellChromeOff";
 import RouteEmbedFrame from "@/components/RouteEmbedFrame";
 import TransitionLink from "@/components/TransitionLink";
 import { ROUTES } from "@/lib/routes";
@@ -32,10 +33,10 @@ export default async function StockAnalyzerPage({ searchParams }: PageProps) {
   );
 
   // v1 backdoor: bare legacy embed, no v5 shell (HARD: V1 reachable byte-intact).
-  if (version === "v1") return frame;
+  if (version === "v1") return <ShellChromeOff>{frame}</ShellChromeOff>;
 
   return (
-    <div className="fnk-shell" data-stock-analyzer-surface="true">
+    <div data-stock-analyzer-surface="true">
       <AppShell active="stockAnalyzer" title="종목분석" backHref={ROUTES.home}>
         <div className="space-y-[var(--s4)]" data-stock-analyzer-route-owner="legacy-iframe">
           <section className="panel" data-stock-analyzer-boundary="true">
@@ -47,7 +48,7 @@ export default async function StockAnalyzerPage({ searchParams }: PageProps) {
                   현재 기본 경로는 레거시 HTML iframe입니다. 네이티브 대시보드는 별도 미리보기 경로로 유지해 전환
                   범위를 분리합니다.
                 </p>
-                <div className="mt-3 flex flex-wrap gap-2 text-[11px] font-black uppercase tracking-[0.08em]">
+                <div className="mt-3 flex flex-wrap gap-2 text-[12px] font-black uppercase tracking-[0.08em]">
                   <span
                     className="rounded-full border border-slate-200 bg-slate-50 px-3 py-1 text-slate-600"
                     data-stock-analyzer-boundary-chip="legacy-iframe"

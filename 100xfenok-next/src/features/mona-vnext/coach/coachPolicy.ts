@@ -18,6 +18,8 @@ export type MonaVnextExpressionBankMetadata = {
   selectedCount: number;
   seed: string;
   strategy: string;
+  reviewPriorityCount?: number;
+  deferredExcludedCount?: number;
   materialQuarantine?: Array<{ expressionId: string; reasons: string[] }>;
   materialWarnings?: Array<{ expressionId: string; reasons: string[] }>;
 };

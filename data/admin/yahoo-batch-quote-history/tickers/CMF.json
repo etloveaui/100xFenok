@@ -1,0 +1,115 @@
+{
+  "attempts": [
+    {
+      "attempts_used": 1,
+      "event_name": "workflow_dispatch",
+      "failures": [],
+      "latency_ms": 752,
+      "natural": true,
+      "observed_at": "2026-08-01T18:35:05Z",
+      "outcome": "fresh",
+      "run_attempt": 1,
+      "run_id": "30711924670",
+      "schedule": "",
+      "shard": "3/6"
+    },
+    {
+      "attempts_used": 1,
+      "event_name": "schedule",
+      "failures": [],
+      "latency_ms": 756,
+      "natural": true,
+      "observed_at": "2026-08-11T03:59:23Z",
+      "outcome": "fresh",
+      "run_attempt": 1,
+      "run_id": "31456720047",
+      "schedule": "7 2 * * 0-5",
+      "shard": "25/72"
+    },
+    {
+      "attempts_used": 0,
+      "event_name": "schedule",
+      "failures": [],
+      "latency_ms": 0,
+      "natural": true,
+      "observed_at": "2026-08-11T07:21:44Z",
+      "outcome": "skipped_fresh",
+      "run_attempt": 1,
+      "run_id": "31468517777",
+      "schedule": "7 6 * * 0-5",
+      "shard": "27/72"
+    },
+    {
+      "attempts_used": 1,
+      "event_name": "workflow_dispatch",
+      "failures": [],
+      "latency_ms": 483,
+      "natural": false,
+      "observed_at": "2026-09-28T01:17:59Z",
+      "outcome": "fresh",
+      "run_attempt": 1,
+      "run_id": "36365270594",
+      "schedule": "",
+      "shard": ""
+    }
+  ],
+  "current": {
+    "fetched_at": "2026-09-28T01:36:56Z",
+    "history_as_of": "2026-09-25",
+    "path": "data/yf/finance/CMF.json",
+    "payload_sha256": "aae6d78e23440eb5939e6025ffa20a940d065fa518955459df2533eae7376a6b",
+    "quote_as_of": "2026-09-25T19:59:56Z",
+    "source_as_of": "2026-09-25"
+  },
+  "discovered_from": [
+    "stockanalysis_etf"
+  ],
+  "last_attempt": {
+    "attempts_used": 1,
+    "event_name": "workflow_dispatch",
+    "failures": [],
+    "latency_ms": 483,
+    "natural": false,
+    "observed_at": "2026-09-28T01:17:59Z",
+    "outcome": "fresh",
+    "run_attempt": 1,
+    "run_id": "36365270594",
+    "schedule": "",
+    "shard": ""
+  },
+  "lkg": {
+    "fetched_at": "2026-08-11T04:00:46Z",
+    "history_as_of": "2026-08-10",
+    "path": "data/admin/yahoo-batch-quote-history/lkg/CMF.json",
+    "payload_sha256": "814c421b8a78bae08468c13608656d20910856c61ee82c888c9dbb9031b4897f",
+    "quote_as_of": "2026-08-10T20:00:00Z",
+    "source_as_of": "2026-08-10"
+  },
+  "promotion_contract": "provider_observation/v2",
+  "provider_observation": {
+    "event_name": "workflow_dispatch",
+    "history_as_of": "2026-09-25",
+    "observed_at": "2026-09-28T01:17:59Z",
+    "payload_sha256": "4b59b486c9892439edb1e20a243936fde737440bd7a62a20bd28572c53604ad9",
+    "quote_as_of": "2026-09-25T19:59:56Z",
+    "run_attempt": 1,
+    "run_id": "36365270594",
+    "schema_version": "provider_observation/v2",
+    "source_as_of": "2026-09-25"
+  },
+  "resolution_state": "fresh_primary",
+  "retry": false,
+  "schema_version": "yahoo-batch-quote-history-state/v1",
+  "stale": {
+    "age_business_days": 7,
+    "classified_at": "2026-08-19T23:42:29Z",
+    "classified_run_id": "32314261503",
+    "expected_resolution": "next_natural_yahoo_run",
+    "max_business_days": 6,
+    "message": "CMF holds LKG because Yahoo source date 2026-08-10 is 7 business days old, beyond the 6-day bound; it will retry on the next natural Yahoo run.",
+    "reason": "source_age_exceeds_lane_bound",
+    "source_as_of": "2026-08-10"
+  },
+  "ticker": "CMF",
+  "updated_at": "2026-09-28T01:17:59Z"
+}

@@ -13,12 +13,12 @@ export default function TariffBanner() {
             <span className="text-[10px] font-bold uppercase tracking-wider bg-red-100 text-red-700 px-2 py-0.5 rounded-full animate-pulse">
               주요 분석
             </span>
-            <span className="text-[10px] text-slate-600 font-mono">2026.02.21</span>
+            <span className="text-[12px] text-slate-600 font-mono">2026.02.21</span>
           </div>
           <p className="text-sm font-bold text-slate-800 line-clamp-2">
             IEEPA 관세 위헌 판결 — 종합 분석
           </p>
-          <p className="text-xs text-slate-600 line-clamp-2">
+          <p className="text-[12px] text-slate-600 line-clamp-2">
             대법원 6-3 위헌 · 트럼프 122조 10% 즉시 서명 · 국가별 관세 영향 · 포트폴리오 함의
           </p>
         </div>

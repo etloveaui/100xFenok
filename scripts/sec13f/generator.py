@@ -15,7 +15,7 @@ from input_adapter import InputAdapterError, validate_prepared_investor_data
 
 
 VERSION = "3.3.3"
-EXPECTED_OUTPUT_COUNT = 73
+EXPECTED_OUTPUT_COUNT = 76
 ANALYTIC_NAMES = (
     "buying_pressure.json",
     "consensus.json",
@@ -496,7 +496,7 @@ def generate_base_outputs(
     generated_at: str,
     summary_metadata_extra: dict[str, Any] | None = None,
 ) -> dict:
-    """Generate the exact 73-file base and return a digest-addressable manifest."""
+    """Generate the exact 76-file base and return a digest-addressable manifest."""
 
     generated_at = _text(generated_at, label="generated_at")
     output_root = _validate_output_root(Path(output_root))
@@ -522,7 +522,7 @@ def generate_base_outputs(
 
     expected_paths = _expected_paths(investors)
     if sorted(payloads) != expected_paths or len(payloads) != EXPECTED_OUTPUT_COUNT:
-        raise GeneratorError("generator did not produce the exact 73-output boundary")
+        raise GeneratorError("generator did not produce the exact 76-output boundary")
 
     existing_json = {
         path.relative_to(output_root).as_posix()

@@ -10,6 +10,8 @@ import { SCREENER_SORT_KEYS, type ScreenerSortKey, type SortDir } from "./types"
 export type ActionFilter =
   | ""
   | "guru_held"
+  | "guru_new"
+  | "guru_increased"
   | "smart_money"
   | "value_momentum"
   | "index_core"
@@ -33,8 +35,11 @@ export type ColumnPreset =
   | "fenokPicks";
 
 export const PRESET_KEYS: Record<ColumnPreset, ScreenerSortKey[]> = {
-  basic: ["ticker", "actionScore", "name", "sector", "country", "price", "marketCap", "per", "pbr", "dividendYield", "return12m"],
-  action: ["ticker", "actionScore", "fenokEdgeScore", "name", "sector", "guruHolders", "perBandCurrent", "return12m", "ret1y", "dividendYield", "marketCap", "durabilityProfitabilityScore"],
+  // Koyfin-density default: 7 visible columns; the rest via the column menu.
+  // The conviction column id stays valid for saved sorts and shared URLs —
+  // it is only hidden from every default preset (표 A, owner mandate 2026-09-16).
+  basic: ["ticker", "fenokShortTermScore", "fenokLongTermScore", "sector", "marketCap", "per", "upsidePotentialScore"],
+  action: ["ticker", "actionScore", "fenokShortTermScore", "fenokLongTermScore", "name", "sector", "guruHolders", "perBandCurrent", "return12m", "ret1y", "dividendYield", "marketCap", "durabilityProfitabilityScore"],
   connected: ["ticker", "connectionCount", "actionScore", "name", "sector", "guruHolders", "marketCap", "perBandCurrent", "forwardPeFy1", "return12m"],
   value: ["ticker", "name", "sector", "per", "peForward", "forwardPeFy1", "pbr", "peg", "roe", "opm", "perBandCurrent", "rank"],
   estimate: [
@@ -73,12 +78,12 @@ export const PRESET_KEYS: Record<ColumnPreset, ScreenerSortKey[]> = {
     "ticker",
     "name",
     "sector",
-    "fenokConvictionScore",
     "profitabilityScore",
     "durabilityProfitabilityScore",
     "growthScore",
     "technicalFlowScore",
-    "fenokEdgeScore",
+    "fenokShortTermScore",
+    "fenokLongTermScore",
     "upsidePotentialScore",
     "downsidePressureScore",
     "marketCap",
@@ -100,7 +105,7 @@ export const PRESET_LABEL: Record<ColumnPreset, string> = {
 
 export const MOBILE_PRESET_KEYS: Record<ColumnPreset, ScreenerSortKey[]> = {
   basic: ["marketCap", "per", "pbr", "dividendYield", "return12m", "roe", "opm", "eps"],
-  action: ["actionScore", "fenokEdgeScore", "marketCap", "guruHolders", "perBandCurrent", "return12m", "ret1y", "dividendYield", "connectionCount", "durabilityProfitabilityScore"],
+  action: ["actionScore", "fenokShortTermScore", "fenokLongTermScore", "marketCap", "guruHolders", "perBandCurrent", "return12m", "ret1y", "dividendYield", "connectionCount", "durabilityProfitabilityScore"],
   connected: ["connectionCount", "guruHolders", "forwardPeFy1", "return12m", "marketCap", "perBandCurrent", "dividendYield", "ret1y"],
   value: ["per", "peForward", "forwardPeFy1", "pbr", "roe", "opm", "perBandCurrent", "rank"],
   estimate: [
@@ -129,7 +134,7 @@ export const MOBILE_PRESET_KEYS: Record<ColumnPreset, ScreenerSortKey[]> = {
   momentum: ["growthRate", "momentum1m", "momentum3m", "momentum6m", "momentum12m", "return12m", "ret1y", "rank"],
   dividend: ["dividendYield", "dividendTtm", "ret1y", "ret3y", "ret5y", "per", "pbr", "marketCap"],
   guru: ["guruHolders", "per", "peForward", "perBandCurrent", "roe", "marketCap", "return12m", "connectionCount"],
-  fenokPicks: ["fenokConvictionScore", "profitabilityScore", "durabilityProfitabilityScore", "growthScore", "technicalFlowScore", "fenokEdgeScore", "upsidePotentialScore", "downsidePressureScore", "marketCap", "per"],
+  fenokPicks: ["profitabilityScore", "durabilityProfitabilityScore", "growthScore", "technicalFlowScore", "fenokShortTermScore", "fenokLongTermScore", "upsidePotentialScore", "downsidePressureScore", "marketCap", "per"],
 };
 
 export function coerceColumnPreset(value: string | null | undefined): ColumnPreset | null {
@@ -139,6 +144,8 @@ export function coerceColumnPreset(value: string | null | undefined): ColumnPres
 export function coerceActionFilter(value: string | null | undefined): ActionFilter {
   if (
     value === "guru_held" ||
+    value === "guru_new" ||
+    value === "guru_increased" ||
     value === "smart_money" ||
     value === "value_momentum" ||
     value === "index_core" ||
@@ -220,8 +227,12 @@ export interface ScreenerFilterState {
   epsGrowthMin: string;
   dividendYieldMin: string;
   dividendYieldMax: string;
+  /** Workbench minimum for the durability profitability score (Q5 saved screen). */
+  durabilityMin: string;
   roeFy1Min: string;
+  /** 2023–2025 cumulative calendar return; legacy key retained for saved URLs. */
   ret3yMin: string;
+  /** 2021–2025 cumulative calendar return; legacy key retained for saved URLs. */
   ret5yMin: string;
   marketCapMin: string;
   marketCapMax: string;
@@ -234,7 +245,9 @@ export interface ScreenerFilterState {
   profitableOnly: boolean;
   bandFilter: "" | "cheap" | "fair" | "rich";
   actionFilter: ActionFilter;
+  /** State field retained for saved presets; URL serialization uses shortEdgeMin. */
   fenokEdgeMin: FenokEdgeFilter;
+  /** State field retained for saved presets; URL serialization uses longEdgeMin. */
   convictionMin: ConvictionFilter;
   connectionFilter: ConnectionFilter;
   sortKey: ScreenerSortKey;
@@ -254,6 +267,7 @@ export function defaultScreenerFilterState(): ScreenerFilterState {
     epsGrowthMin: "",
     dividendYieldMin: "",
     dividendYieldMax: "",
+    durabilityMin: "",
     roeFy1Min: "",
     ret3yMin: "",
     ret5yMin: "",
@@ -290,6 +304,7 @@ export function parseScreenerFilterState(params: Record<string, string | string[
     epsGrowthMin: parseNumberParam(params.epsMin) || defaults.epsGrowthMin,
     dividendYieldMin: parseNumberParam(params.divMin) || defaults.dividendYieldMin,
     dividendYieldMax: parseNumberParam(params.divMax) || defaults.dividendYieldMax,
+    durabilityMin: parseNumberParam(params.durMin) || defaults.durabilityMin,
     roeFy1Min: parseNumberParam(params.roeFy1Min) || defaults.roeFy1Min,
     ret3yMin: parseNumberParam(params.ret3yMin) || defaults.ret3yMin,
     ret5yMin: parseNumberParam(params.ret5yMin) || defaults.ret5yMin,
@@ -304,8 +319,8 @@ export function parseScreenerFilterState(params: Record<string, string | string[
     profitableOnly: parseBoolParam(params.profitable),
     bandFilter: parseBand(firstParam(params.band)),
     actionFilter: coerceActionFilter(firstParam(params.action)),
-    fenokEdgeMin: coerceFenokEdgeFilter(firstParam(params.fenokEdgeMin)),
-    convictionMin: coerceConvictionFilter(firstParam(params.convictionMin ?? params.convMin)),
+    fenokEdgeMin: coerceFenokEdgeFilter(firstParam(params.shortEdgeMin ?? params.fenokEdgeMin)),
+    convictionMin: coerceConvictionFilter(firstParam(params.longEdgeMin ?? params.convictionMin ?? params.convMin)),
     connectionFilter: coerceConnectionFilter(firstParam(params.connection)),
     sortKey: parseSortKey(firstParam(params.sort)),
     sortDir: firstParam(params.dir) === "asc" ? "asc" : "desc",
@@ -325,6 +340,7 @@ const URL_KEYS = [
   "epsMin",
   "divMin",
   "divMax",
+  "durMin",
   "roeFy1Min",
   "ret3yMin",
   "ret5yMin",
@@ -339,8 +355,11 @@ const URL_KEYS = [
   "profitable",
   "band",
   "action",
+  "shortEdgeMin",
+  "longEdgeMin",
   "fenokEdgeMin",
   "convictionMin",
+  "convMin",
   "connection",
   "sort",
   "dir",
@@ -369,6 +388,7 @@ export function serializeScreenerFilterState(state: ScreenerFilterState, preferT
   setIfPresent(params, "epsMin", state.epsGrowthMin);
   setIfPresent(params, "divMin", state.dividendYieldMin);
   setIfPresent(params, "divMax", state.dividendYieldMax);
+  setIfPresent(params, "durMin", state.durabilityMin);
   setIfPresent(params, "roeFy1Min", state.roeFy1Min);
   setIfPresent(params, "ret3yMin", state.ret3yMin);
   setIfPresent(params, "ret5yMin", state.ret5yMin);
@@ -383,8 +403,8 @@ export function serializeScreenerFilterState(state: ScreenerFilterState, preferT
   setIfPresent(params, "profitable", state.profitableOnly ? "1" : "");
   setIfPresent(params, "band", state.bandFilter);
   setIfPresent(params, "action", state.actionFilter);
-  setIfPresent(params, "fenokEdgeMin", state.fenokEdgeMin);
-  setIfPresent(params, "convictionMin", state.convictionMin);
+  setIfPresent(params, "shortEdgeMin", state.fenokEdgeMin);
+  setIfPresent(params, "longEdgeMin", state.convictionMin);
   setIfPresent(params, "connection", state.connectionFilter);
   const isDefaultSort = state.sortKey === "marketCap" && state.sortDir === "desc";
   setIfPresent(params, "sort", isDefaultSort ? "" : state.sortKey);

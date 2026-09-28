@@ -1,0 +1,37 @@
+{
+  "schema_version": "feno_rim_recovery_r0_criteria.v3",
+  "phase": "R0-CORRECTED",
+  "title": "Re-run of X2/R0 on a unit-consistent market cap after the share-basis STOP finding",
+  "authority": "Owner directive 2026-08-07. DEC-291. Red-team finding fh-20260807-036 ISSUE 1 (STOP, future-information leak via mixed share bases), handler-verified from the panel itself before this freeze: AAPL shares 4,275,634,000 -> 17,001,802,000 between origins 2020-09-18 and 2020-12-18 (ratio 3.98 = the 2020-08-31 4:1 split) while the price series is continuous across that split; data/yf/finance/AAPL.json data.splits carries {2020-08-31: 4}. Public surface stays KEEP_QUARANTINED.",
+  "status_of_prior_runs": "R0 v1 and v2 verdicts are VOID - not superseded by an inference choice, but because every valuation ratio they consumed (B/P, V/P via mcap) mixed a split-adjusted-to-today price basis with an as-reported-at-origin share basis. 274/848 member-origin cells affected (red-team count, to be re-verified). X2's published ICs and DEC-290's factual premise ('RIM does rank returns; B/P ranks better') are equally affected. Returns (tr) are unaffected - they use the price series only. Stated before this run's results are known.",
+  "handler": "km (Kimi Code)",
+  "independent_red_team": "cc (Claude Code) - offered and accepted: independent end-to-end re-derivation of the corrected panel and statistics in parallel; handler and red team compare after both finish, neither reads the other's corrected artifact first.",
+
+  "correction_rule_precommitted": {
+    "diagnosis": "mc_panel = price_today_basis * shares_as_reported_at_share_fact_period_end. For any split dated after the share fact's period end, mc is understated by exactly the cumulative split factor; the factor is post-origin information, which ranks firms that later split (i.e. rose) as cheapest - a look-ahead leak.",
+    "correction": "For each member-origin cell: F = product of split ratios in data/yf/finance/{SYM}.json data.splits whose split date is STRICTLY AFTER the period_end of the EDGAR share fact used for that cell. shares_corrected = shares_panel * F. mc_corrected = price * shares_corrected. B/P and V/P recomputed on mc_corrected. Nothing else changes: V construction, returns, member filters, origin sets stay verbatim X2.",
+    "share_fact_period_end_recovery": "The e2 basket panel does not store the period_end of the share fact it used. It is re-derived per member-origin with the same PIT rule the panel builder applied (facts filed <= origin, earliest filed per period) from data/edgar/rim-dow/{SYM}.json CommonStockSharesOutstanding, matching the panel's shares value; if a symbol's cache cannot reproduce the panel shares value for a cell, that cell is dropped from the corrected run and counted (no approximation).",
+    "edge_cases": "Origin after a split with a pre-split share fact (AAPL 2020-09-18): F still includes that split because split date > share fact period_end - the economically correct share count at the origin date is the fact times known split events. Splits dated before the share fact period_end are excluded. Spinoff-related adjustments are not in data.splits and are NOT corrected; affected symbols (red team lists HON IBM MMM MRK at factors 1.05-1.20) are disclosed as residual uncorrected cells in the artifact.",
+    "unit_consistency_assertions_gate": [
+      "After correction, AAPL mc at origin 2015-03-27 must lie within 5% of price*shares recomputed independently (red team's external value ~718B; recorded value was 183.3B)",
+      "NVDA 2021-03-19 mc within 5% of ~319B (recorded 8.0B)",
+      "No-split control symbols (JPM 2015-03-27 ~224B, KO ~178B, MMM ~89B) unchanged within 1%",
+      "For every corrected cell, F equals the closed-form product of dated splits - no manual overrides"
+    ]
+  },
+
+  "statistics_contract": "Identical to r0-criteria-v2 (commit c94a4ffb01): reproduction gate ordinal+cardinal, ESS-adjusted CI + NW lag 11 primary with ESS clamp >=3 and <=T diagnostic, block battery sensitivity with independent-block counts and block-12-on-T=18 degeneracy note, partial-correlation R0-B primary, combined mean-S R0-D test, disagreement rule, instrument-free 12-phase binomials, survivorship bound. The ONLY input change is mc_corrected in the B/P and V/P ratios.",
+  "verdict_mapping": "Identical to r0-criteria-v2 (POSITIVE/NEGATIVE written in full, ZERO declared unreachable with minimum detectable effect, INCONCLUSIVE otherwise, disagreement rule). Applied to the corrected series. The artifact must also restate: which prior conclusions survive (none of the ratio-based ones) and what the corrected evidence says in both directions.",
+
+  "prohibitions": [
+    "No change to V construction, returns, filters, sets, seeds, lags, bands or mapping.",
+    "No post-result choice of correction scope (spinoff cells stay uncorrected and disclosed).",
+    "No overwriting prior artifacts; corrected results go to *_CORRECTED files.",
+    "No public number republication; quarantine untouched."
+  ],
+
+  "planned_result_paths": [
+    "data/computed/feno-rim-recovery/r0-firm-panel-CORRECTED.json",
+    "data/computed/feno-rim-recovery/R0_ADJUDICATION_CORRECTED.json"
+  ]
+}

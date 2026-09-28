@@ -1,9 +1,6 @@
 // Single source of truth for the ETF history-gap report's recommended_dispatch.status
-// vocabulary. The generator (report-stockanalysis-history-gap.mjs) EMITS these values; the
-// audit checker (check-stockanalysis-market-audit.mjs) MATCHES against them. Keeping the
-// enum in one leaf module (zero imports) prevents the owner_gated/scheduled_backfill_active
-// drift that dead-lettered the daily_1y-continuity carve-out. Any status in the report that
-// is not in this set is treated as a hard error so vocabulary drift becomes loud.
+// vocabulary. The report generator emits these values for the Data Lab and readiness
+// consumers; this leaf module keeps the status names aligned with those consumers.
 export const DISPATCH_STATUS = Object.freeze({
   MANUAL_DISPATCH_RECOMMENDED: "manual_dispatch_recommended",
   SCHEDULED_BACKFILL_ACTIVE: "scheduled_backfill_active",
@@ -22,8 +19,8 @@ function scheduledDaily1yDispatch() {
   return {
     status: DISPATCH_STATUS.SCHEDULED_BACKFILL_ACTIVE,
     workflow: "fetch-stockanalysis.yml",
-    schedule: "50 22 * * 1-5",
-    schedule_kst: "Tue-Sat 07:50",
+    schedule: "50 23 * * 1-5",
+    schedule_kst: "Tue-Sat 08:50",
     inputs: { ...DAILY_1Y_INPUTS, incremental_etf_limit: "120" },
     note: "The weekday scheduled lane drains ETF daily 1Y required-history gaps at 120 per run. Manual reruns remain owner-gated and this diagnostic lane is not the ETF service gate.",
   };
@@ -46,6 +43,13 @@ function buildExplicitDaily1yDispatchPlan(tickers, shardSize = 100) {
       ticker_count: shardTickers.length,
       inputs: {
         ...DAILY_1Y_INPUTS,
+        // The explicit list IS the shard's work, so the incremental selector
+        // must stand down. fetch-stockanalysis.py rejects the dispatch when
+        // `len(etfs) + incremental_etf_limit > MAX_MANUAL_ETF_SHARD`; carrying
+        // the default limit alongside a full shard made every recommended
+        // dispatch exceed the cap and exit 1, which is why this plan had never
+        // once been run despite being recommended for weeks.
+        incremental_etf_limit: "0",
         etfs: shardTickers.join(","),
       },
     });

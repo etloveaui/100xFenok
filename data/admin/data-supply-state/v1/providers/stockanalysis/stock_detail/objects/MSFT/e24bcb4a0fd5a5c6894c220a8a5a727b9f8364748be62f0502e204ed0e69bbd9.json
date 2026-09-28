@@ -1,0 +1,2413 @@
+{
+  "schema_version": "stockanalysis/v1",
+  "source": "stockanalysis",
+  "asset_type": "stock",
+  "ticker": "MSFT",
+  "source_as_of": "2026-08-13T20:00:00Z",
+  "fetched_at": "2026-08-13T22:09:27Z",
+  "endpoints": {
+    "overview": "/stocks/msft/__data.json",
+    "history": "/api/symbol/s/MSFT/history?range=1Y&period=Monthly",
+    "quote": "/api/quotes/s/MSFT"
+  },
+  "normalized": {
+    "overview": {
+      "marketCap": "3.69T",
+      "revenue": "331.84B",
+      "revenue_type": "ttm",
+      "netIncome": "133.75B",
+      "sharesOut": "7.43B",
+      "eps": "17.95",
+      "peRatio": "27.43",
+      "forwardPE": "24.98",
+      "dividend": "$3.64 (0.73%)",
+      "beta": "1.10",
+      "analysts": "Strong Buy",
+      "target": "567.20 (+14.15%)",
+      "earningsDate": "Jul 29, 2026"
+    },
+    "quote": {
+      "p": 496.88,
+      "pd": 496.88,
+      "c": 4.45,
+      "cp": 0.9,
+      "cl": 492.43,
+      "cdr": 1,
+      "o": 493.27,
+      "h": 501.34,
+      "l": 493.01,
+      "v": 22978520,
+      "ts": 1786651200000,
+      "u": "Aug 13, 2026, 4:00 PM EDT",
+      "td": "2026-08-13",
+      "h52": 553.72,
+      "l52": 349.2,
+      "ex": "NASDAQ",
+      "ms": "closed",
+      "fms": "post",
+      "e": true,
+      "ep": 495.88,
+      "epd": 495.88,
+      "ec": -1,
+      "ecp": -0.2,
+      "eu": "Aug 13, 2026, 6:02 PM EDT",
+      "es": "After-hours",
+      "ets": 1786658579728.3047,
+      "etd": "2026-08-13",
+      "epv": null,
+      "days": 0,
+      "exp": 1786658971341,
+      "symbol": "MSFT",
+      "uid": "MSFT"
+    },
+    "history": [
+      {
+        "t": "2026-08-03",
+        "o": 476.125,
+        "h": 513.73,
+        "l": 475,
+        "c": 496.88,
+        "a": 496.88,
+        "v": 312889052,
+        "ch": 6.92
+      },
+      {
+        "t": "2026-07-01",
+        "o": 380.825,
+        "h": 466.84,
+        "l": 373.35,
+        "c": 464.72,
+        "a": 464.72,
+        "v": 798277230,
+        "ch": 24.58
+      },
+      {
+        "t": "2026-06-01",
+        "o": 464.84,
+        "h": 466.32,
+        "l": 349.2,
+        "c": 373.02,
+        "a": 373.02,
+        "v": 1018052145,
+        "ch": -17.15
+      },
+      {
+        "t": "2026-05-01",
+        "o": 412.8,
+        "h": 450.33,
+        "l": 400.88,
+        "c": 450.24,
+        "a": 450.24,
+        "v": 698954934,
+        "ch": 10.65
+      },
+      {
+        "t": "2026-04-01",
+        "o": 373.49,
+        "h": 433.7,
+        "l": 364.15,
+        "c": 407.78,
+        "a": 406.898701,
+        "v": 716519026,
+        "ch": 10.16
+      },
+      {
+        "t": "2026-03-02",
+        "o": 392.855,
+        "h": 413.05,
+        "l": 356.28,
+        "c": 370.17,
+        "a": 369.369984,
+        "v": 745288132,
+        "ch": -5.75
+      },
+      {
+        "t": "2026-02-02",
+        "o": 430.235,
+        "h": 430.736,
+        "l": 381.71,
+        "c": 392.74,
+        "a": 391.891206,
+        "v": 800257151,
+        "ch": -8.52
+      },
+      {
+        "t": "2026-01-02",
+        "o": 484.385,
+        "h": 489.7,
+        "l": 421.02,
+        "c": 430.29,
+        "a": 428.38228,
+        "v": 684062568,
+        "ch": -11.03
+      },
+      {
+        "t": "2025-12-01",
+        "o": 488.435,
+        "h": 493.5,
+        "l": 470.88,
+        "c": 483.62,
+        "a": 481.475838,
+        "v": 496558381,
+        "ch": -1.71
+      },
+      {
+        "t": "2025-11-03",
+        "o": 519.805,
+        "h": 524.96,
+        "l": 464.89,
+        "c": 492.01,
+        "a": 489.82864,
+        "v": 479480836,
+        "ch": -4.8
+      },
+      {
+        "t": "2025-10-01",
+        "o": 514.8,
+        "h": 553.72,
+        "l": 506,
+        "c": 517.81,
+        "a": 514.55121,
+        "v": 468447068,
+        "ch": -0.03
+      }
+    ],
+    "financials": {
+      "path": "financials/MSFT.json",
+      "fetched_at": "2026-08-13T22:09:27Z",
+      "role": "financial statement cross-check candidate; not valuation SSOT",
+      "summary": {
+        "annual": {
+          "income": {
+            "field_count": 28,
+            "period_count": 6,
+            "period": "annual"
+          },
+          "balance_sheet": {
+            "field_count": 36,
+            "period_count": 6,
+            "period": "annual"
+          },
+          "cash_flow": {
+            "field_count": 35,
+            "period_count": 6,
+            "period": "annual"
+          },
+          "ratios": {
+            "field_count": 35,
+            "period_count": 6,
+            "period": "annual"
+          }
+        },
+        "quarterly": {
+          "income": {
+            "field_count": 28,
+            "period_count": 20,
+            "period": "quarterly"
+          },
+          "balance_sheet": {
+            "field_count": 36,
+            "period_count": 20,
+            "period": "quarterly"
+          },
+          "cash_flow": {
+            "field_count": 35,
+            "period_count": 20,
+            "period": "quarterly"
+          },
+          "ratios": {
+            "field_count": 35,
+            "period_count": 20,
+            "period": "quarterly"
+          }
+        }
+      }
+    }
+  },
+  "financials_path": "financials/MSFT.json",
+  "raw": {
+    "overview": {
+      "trust": {
+        "sources": [
+          {
+            "name": "S&P Global Market Intelligence",
+            "short": "S&P Global",
+            "url": "https://www.spglobal.com/market-intelligence/en"
+          },
+          {
+            "name": "CBOE",
+            "short": "CBOE",
+            "url": "https://www.cboe.com/"
+          },
+          {
+            "name": "Nasdaq UTP",
+            "short": "Nasdaq UTP",
+            "url": "https://www.utpplan.com/overview",
+            "noUtm": true
+          }
+        ],
+        "topic": "overview",
+        "ticker": "MSFT",
+        "lastChecked": 1786658797686,
+        "summary": {
+          "text": "Fundamental and historical data is provided by S&P Global Market Intelligence. Real-time stock price data is provided by CBOE and 15-minute delayed consolidated tape pricing data is provided by Nasdaq UTP."
+        }
+      },
+      "marketCap": "3.69T",
+      "marketCapGrowth": -4.86793524799072,
+      "revenue": "331.84B",
+      "revenue_type": "ttm",
+      "revenueGrowth": 17.789,
+      "netIncome": "133.75B",
+      "netIncomeGrowth": 31.343,
+      "sharesOut": "7.43B",
+      "eps": "17.95",
+      "epsGrowth": 31.598,
+      "peRatio": "27.43",
+      "forwardPE": "24.98",
+      "dividend": "$3.64 (0.73%)",
+      "exDividendDate": "Aug 20, 2026",
+      "beta": "1.10",
+      "analysts": "Strong Buy",
+      "target": "567.20 (+14.15%)",
+      "earningsDate": "Jul 29, 2026",
+      "description": "Microsoft Corporation, a technology company, develops and supports a portfolio of technology solutions for individuals and businesses worldwide. It operates through three segments: Productivity and Business Processes, Intelligent Cloud, and More Personal Computing. The Productivity and Business Processes segment offers Microsoft 365 Commercial, Enterprise Mobility + Security, Power BI, Exchange, SharePoint, Microsoft Teams, Microsoft 365 Security and Compliance, Microsoft 365 Copilot, and Windows Commercial on-premises and Office licensed on-pr...",
+      "infoTable": [
+        {
+          "t": "Industry",
+          "v": "Software - Infrastructure",
+          "u": "stocks/industry/software-infrastructure"
+        },
+        {
+          "t": "Sector",
+          "v": "Technology",
+          "u": "stocks/sector/technology"
+        },
+        {
+          "t": "IPO Date",
+          "v": "Mar 13, 1986"
+        },
+        {
+          "t": "Employees",
+          "v": "223,000",
+          "u": "stocks/msft/employees"
+        },
+        {
+          "t": "Stock Exchange",
+          "v": "NASDAQ"
+        },
+        {
+          "t": "Ticker Symbol",
+          "v": "MSFT"
+        },
+        {
+          "t": "Website",
+          "v": "https://www.microsoft.com",
+          "eu": "https://www.microsoft.com"
+        }
+      ],
+      "financialIntro": "In fiscal year 2026, Microsoft's revenue was $331.84 billion, an increase of 17.79% compared to the previous year's $281.72 billion. Earnings were $133.75 billion, an increase of 31.34%.",
+      "financialChart": [
+        {
+          "year": "2022",
+          "revenue": 198270000000,
+          "earnings": 72738000000,
+          "revenueGrowth": 17.956,
+          "earningsGrowth": 18.715
+        },
+        {
+          "year": "2023",
+          "revenue": 211915000000,
+          "earnings": 72361000000,
+          "revenueGrowth": 6.882000000000001,
+          "earningsGrowth": -0.518
+        },
+        {
+          "year": "2024",
+          "revenue": 245122000000,
+          "earnings": 88136000000,
+          "revenueGrowth": 15.67,
+          "earningsGrowth": 21.8
+        },
+        {
+          "year": "2025",
+          "revenue": 281724000000,
+          "earnings": 101832000000,
+          "revenueGrowth": 14.932,
+          "earningsGrowth": 15.54
+        },
+        {
+          "year": "2026",
+          "revenue": 331839000000,
+          "earnings": 133749000000,
+          "revenueGrowth": 17.788999999999998,
+          "earningsGrowth": 31.343
+        }
+      ],
+      "analystIntro": "According to 56 analysts, the average rating for MSFT stock is \"Strong Buy.\" The 12-month stock price target is $567.2, which is an increase of 14.15% from the latest price.",
+      "analystTarget": {
+        "target": "$567.2",
+        "change": "14.15%",
+        "changeWord": "upside"
+      },
+      "analystChart": {
+        "strongBuy": 39,
+        "buy": 14,
+        "hold": 3,
+        "sell": 0,
+        "strongSell": 0
+      },
+      "news": {
+        "exp": "1786660472412",
+        "data": [
+          {
+            "url": "https://www.tipranks.com/news/microsoft-stock-nasdaqmsft-notches-up-as-the-windows-surface-phone-emerges",
+            "img": "https://blog.tipranks.com/wp-content/uploads/2026/08/microsoft-shutterstock_2825217429-750x406.jpg",
+            "title": "Microsoft Stock (NASDAQ:MSFT) Notches Up as the Windows Surface Phone Emerges",
+            "text": "A long, long time ago, way back in about 2013 or so, tech giant Microsoft ($MSFT) was considering getting in on the smartphone market. It was considering using the Microsoft…",
+            "source": "TipRanks",
+            "type": "Article",
+            "tickers": [
+              "$QCOM"
+            ],
+            "time": "2026-08-13T17:34:36.000Z",
+            "ago": "4 hours ago"
+          },
+          {
+            "url": "https://techcrunch.com/2026/08/13/microsoft-kills-off-unsuccessful-ai-features-while-merging-its-separate-copilot-apps/",
+            "img": "https://cdn.snapi.dev/images/v1/v/p/5/micros32-3600330-3869264.jpg",
+            "title": "Microsoft kills off unsuccessful AI features while merging its separate Copilot apps",
+            "text": "Two years ago, Microsoft described AI as a “generational shift” in technology that it wanted to lead. Today, the company is merging its Copilot-branded consumer and business apps, and ditching a numbe...",
+            "source": "TechCrunch",
+            "type": "Article",
+            "tickers": null,
+            "time": "Aug 13, 2026, 11:30 AM EDT",
+            "ago": "6 hours ago"
+          },
+          {
+            "url": "https://www.tipranks.com/news/its-crystal-clear-says-top-analyst-about-microsoft-stock",
+            "img": "https://blog.tipranks.com/wp-content/uploads/2026/08/MSFT-Samik-Chatterjee-750x406.jpg",
+            "title": "‘It’s Crystal Clear,’ Says Top JPMorgan Analyst About Microsoft Stock",
+            "text": "Microsoft (NASDAQ:MSFT) has left its June low far behind, with the stock gaining about 41% since bottoming out. Investors have returned as Microsoft provides mounting evidence that its costly AI…",
+            "source": "TipRanks",
+            "type": "Article",
+            "tickers": null,
+            "time": "2026-08-13T15:10:03.000Z",
+            "ago": "6 hours ago"
+          },
+          {
+            "url": "https://www.tipranks.com/news/iren-stock-jumps-as-9-7b-microsoft-deal-hits-first-milestone",
+            "img": "https://blog.tipranks.com/wp-content/uploads/2026/08/shutterstock_2807520279-1-750x406.jpg",
+            "title": "IREN Stock Soars 10% as $9.7B Microsoft Deal Hits First Milestone, Wins Nvidia Cloud Recognition",
+            "text": "Shares of Australian AI cloud firm IREN Limited ($IREN) rose 10% on Thursday morning to over $48 per share, adding to a roughly 10% gain from the previous day. This…",
+            "source": "TipRanks",
+            "type": "Article",
+            "tickers": [
+              "$IREN",
+              "$NVDA"
+            ],
+            "time": "2026-08-13T13:33:11.000Z",
+            "ago": "8 hours ago"
+          },
+          {
+            "url": "https://www.geekwire.com/2026/microsoft-starts-merging-its-copilot-consumer-and-business-apps-in-advance-of-super-app-rollout/",
+            "img": "https://cdn.snapi.dev/images/v1/m/w/c/micros10-3608237-3868754.jpg",
+            "title": "Microsoft starts merging its Copilot consumer and business apps in advance of ‘Super App' rollout",
+            "text": "Microsoft is combining its consumer and business Copilot apps into a single app, in a gradual transition starting this week.",
+            "source": "GeekWire",
+            "type": "Article",
+            "tickers": null,
+            "time": "Aug 13, 2026, 9:30 AM EDT",
+            "ago": "8 hours ago"
+          },
+          {
+            "url": "https://www.tipranks.com/news/microsoft-msft-winds-down-business-in-china-but-ai-boom-keeps-it-tethered",
+            "img": "https://blog.tipranks.com/wp-content/uploads/2026/08/shutterstock_2737708301-1-750x406.jpg",
+            "title": "Microsoft (MSFT) Winds Down Business in China, but AI Demand Keeps It Tethered",
+            "text": "Global tech giant Microsoft ($MSFT) is scaling back its presence in China as rising geopolitical tensions, local competition, and U.S. tech bans weigh on its business. However, the software firm…",
+            "source": "TipRanks",
+            "type": "Article",
+            "tickers": [
+              "$GOOGL"
+            ],
+            "time": "2026-08-13T13:16:35.000Z",
+            "ago": "8 hours ago"
+          },
+          {
+            "url": "https://www.reuters.com/world/china/microsoft-retreats-china-ai-boom-helps-it-keep-window-open-2026-08-13/",
+            "img": "https://cdn.snapi.dev/images/v1/f/k/j/micros12-3606041-3868018.jpg",
+            "title": "Microsoft retreats in China, but AI boom helps it keep a window open",
+            "text": "Microsoft once regarded the idea of quitting China as unthinkable.",
+            "source": "Reuters",
+            "type": "Article",
+            "tickers": null,
+            "time": "Aug 13, 2026, 6:03 AM EDT",
+            "ago": "12 hours ago"
+          },
+          {
+            "url": "https://invezz.com/news/2026/08/12/why-is-microsoft-stock-falling-2-today/",
+            "img": "https://cdn.snapi.dev/images/v1/v/i/y/micros30-3600575-3866836.jpg",
+            "title": "Why is Microsoft stock falling 2% today?",
+            "text": "Microsoft Corp. shares MSFT fell 2% in Wednesday morning trading as investors weighed fresh speculation about the company's in-house Maia AI chips against its rapidly rising infrastructure spending. W...",
+            "source": "Invezz",
+            "type": "Article",
+            "tickers": null,
+            "time": "Aug 12, 2026, 3:13 PM EDT",
+            "ago": "1 day ago"
+          },
+          {
+            "url": "https://www.tipranks.com/news/30-productivity-increase-at-manulife-does-little-for-microsoft-stock-nasdaqmsft",
+            "img": "https://blog.tipranks.com/wp-content/uploads/2026/08/microsoft-shutterstock_2825288337-750x406.jpg",
+            "title": "30% Productivity Increase at Manulife Does Little for Microsoft Stock (NASDAQ:MSFT)",
+            "text": "When tech giant Microsoft ($MSFT) revealed that it was stepping up its partnership with Manulife Financial ($MFC), it probably should have been better news than it was. Manulife has been…",
+            "source": "TipRanks",
+            "type": "Article",
+            "tickers": [
+              "$MFC"
+            ],
+            "time": "2026-08-12T17:33:51.000Z",
+            "ago": "1 day ago"
+          },
+          {
+            "url": "https://techcrunch.com/2026/08/12/after-microsoft-threatened-legal-action-a-security-researcher-publishes-a-new-windows-zero-day-bug/",
+            "img": "https://cdn.snapi.dev/images/v1/s/8/l/micros7-3607380-3866159.jpg",
+            "title": "After Microsoft threatened legal action, a security researcher publishes a new Windows zero-day bug",
+            "text": "A security researcher has published details of a new vulnerability in the latest versions of Windows that allows hackers to gain system-wide access to the user's device and data, despite facing a lega...",
+            "source": "TechCrunch",
+            "type": "Article",
+            "tickers": null,
+            "time": "Aug 12, 2026, 11:18 AM EDT",
+            "ago": "1 day ago"
+          },
+          {
+            "url": "https://www.businesswire.com/news/home/20260812028467/en/Sionic-Launches-Instant-Bank-Pay-in-U.S.-Through-Microsoft-Marketplace/",
+            "img": "https://cdn.snapi.dev/images/v1/y/i/x/press9-3865501.jpg",
+            "title": "Sionic Launches Instant Bank Pay in U.S. Through Microsoft Marketplace",
+            "text": "ATLANTA--(BUSINESS WIRE)--Sionic, a leader in real-time, bank-to-bank payments at the point of sale, today announced the availability launch of its Instant Bank Pay service alongside Fraud Detection S...",
+            "source": "Business Wire",
+            "type": "Article",
+            "tickers": null,
+            "time": "Aug 12, 2026, 8:30 AM EDT",
+            "ago": "1 day ago"
+          },
+          {
+            "url": "https://www.barrons.com/articles/palantir-software-stocks-chip-81e21d89",
+            "img": "https://cdn.snapi.dev/images/v1/k/w/h/pl5-2730201-3865449.jpg",
+            "title": "Palantir and These Software Stocks Slide in Seesaw With Chip Giants",
+            "text": "Software and chip stocks tend to move in different directions—and that's it's all tied to AI.",
+            "source": "Barrons",
+            "type": "Article",
+            "tickers": [
+              "$PLTR",
+              "$CRM",
+              "$NOW",
+              "$WDAY"
+            ],
+            "time": "Aug 12, 2026, 8:29 AM EDT",
+            "ago": "1 day ago"
+          },
+          {
+            "url": "https://www.investopedia.com/tech-stocks-have-stumbled-other-sectors-have-risen-has-that-made-the-market-stronger-12057290",
+            "img": "https://cdn.snapi.dev/images/v1/p/l/v/catalog-mail10-3863623.jpg",
+            "title": "Tech Stocks Have Stumbled. Other Sectors Have Risen.",
+            "text": "The bull market that began in late 2022 has in recent months appeared to have run its course. Experts say that may be the opposite of what was happening.",
+            "source": "Investopedia",
+            "type": "Article",
+            "tickers": [
+              "$AMZN",
+              "$GOOG",
+              "$GOOGL",
+              "$META"
+            ],
+            "time": "Aug 11, 2026, 2:46 PM EDT",
+            "ago": "2 days ago"
+          },
+          {
+            "url": "https://www.etftrends.com/equity-etf-content-hub/value-strikes-back-inside-2026s-great-rotation/",
+            "img": "https://cdn.snapi.dev/images/v1/b/g/e/computer-electronic12-3863379.jpg",
+            "title": "Value Strikes Back: Inside 2026's Great Rotation",
+            "text": "The mantra carrying the markets higher for years has been to leave it to mega-cap tech titans and AI leaders to drive the bulk of market gains, leaving cap-weighted indexes historically top-heavy. But...",
+            "source": "ETF Trends",
+            "type": "Article",
+            "tickers": [
+              "$AAPL",
+              "$AMZN",
+              "#AVLV",
+              "#CGDV",
+              "#DFIV",
+              "$MU",
+              "#SCHD"
+            ],
+            "time": "Aug 11, 2026, 1:02 PM EDT",
+            "ago": "2 days ago"
+          },
+          {
+            "url": "tfsEfbWV9dY",
+            "img": "https://cdn.snapi.dev/images/v1/y/h/d/micros18-3604087-3861248.jpg",
+            "title": "From Coding to Finance: Microsoft's AI Agent Push",
+            "text": "Microsoft says AI agents are already fundamentally changing how its software engineers work — and sales, finance and other knowledge workers are next. Charles Lamanna, Microsoft EVP of Copilot, Agents...",
+            "source": "Bloomberg Technology",
+            "type": "Video",
+            "tickers": null,
+            "time": "Aug 10, 2026, 3:36 PM EDT",
+            "ago": "3 days ago"
+          },
+          {
+            "url": "https://www.marketwatch.com/story/microsofts-stock-is-charging-back-heres-the-case-for-it-to-rally-another-30-1fe261cd",
+            "img": "https://cdn.snapi.dev/images/v1/g/w/q/micros28-3601324-3861200.jpg",
+            "title": "Microsoft's stock is charging back. Here's the case for it to rally another 30%.",
+            "text": "Microsoft is staging an artificial-intelligence comeback that could power the stock to new highs, some on Wall Street believe.",
+            "source": "Market Watch",
+            "type": "Article",
+            "tickers": null,
+            "time": "Aug 10, 2026, 3:18 PM EDT",
+            "ago": "3 days ago"
+          },
+          {
+            "url": "https://invezz.com/news/2026/08/10/why-is-microsoft-stock-climbing-today/",
+            "img": "https://cdn.snapi.dev/images/v1/q/a/e/micros15-3605412-3861008.jpg",
+            "title": "Why is Microsoft stock climbing today?",
+            "text": "Microsoft MSFT shares rose 1.7% on Monday after a report said the software giant is preparing to unveil its next-generation Maia 300 artificial intelligence chip this fall, marking another step in its...",
+            "source": "Invezz",
+            "type": "Article",
+            "tickers": null,
+            "time": "Aug 10, 2026, 1:53 PM EDT",
+            "ago": "3 days ago"
+          },
+          {
+            "url": "https://www.marketwatch.com/story/the-stocks-of-these-toll-takers-could-be-the-ai-booms-next-big-winners-ae1081f1",
+            "img": "https://cdn.snapi.dev/images/v1/j/k/l/data9-3661966-3860300.jpg",
+            "title": "The stocks of these ‘toll takers' could be the AI boom's next big winners",
+            "text": "The next boom could be in stocks of companies collecting recurring revenue from AI workloads.",
+            "source": "Market Watch",
+            "type": "Article",
+            "tickers": [
+              "$AAPL",
+              "$AMD",
+              "$AMZN",
+              "$GOOG",
+              "$GOOGL",
+              "$META",
+              "$MU"
+            ],
+            "time": "Aug 10, 2026, 10:28 AM EDT",
+            "ago": "3 days ago"
+          },
+          {
+            "url": "https://www.forbes.com/sites/greatspeculations/2026/08/10/microsoft-stock-facing-margin-pressures/",
+            "img": "https://cdn.snapi.dev/images/v1/b/e/u/microsoft-stock-facing-margin--3860203.jpg",
+            "title": "Microsoft Stock Facing Margin Pressures",
+            "text": "This article was written by Doug Nathman, with research by his team at Trefis.",
+            "source": "Forbes",
+            "type": "Article",
+            "tickers": null,
+            "time": "Aug 10, 2026, 10:09 AM EDT",
+            "ago": "3 days ago"
+          },
+          {
+            "url": "https://www.reuters.com/business/microsoft-plans-unveil-its-new-maia-300-ai-chip-this-fall-information-reports-2026-08-10/",
+            "img": "https://cdn.snapi.dev/images/v1/e/k/z/micros15-3605412-3860044.jpg",
+            "title": "Microsoft plans to unveil its new Maia 300 AI chip this fall, The Information reports",
+            "text": "Microsoft is ​planning to ‌publicly unveil its ​new ​Maia 300 chip ⁠this ​fall, potentially ​as soon as next ​month, ​The Information reported ‌on ⁠Monday, citing people with ​direct ​knowledge ⁠of th...",
+            "source": "Reuters",
+            "type": "Article",
+            "tickers": null,
+            "time": "Aug 10, 2026, 9:09 AM EDT",
+            "ago": "3 days ago"
+          },
+          {
+            "url": "https://www.marketwatch.com/story/these-analysts-say-elon-musks-ambitious-ai-plans-for-spacex-should-be-taken-seriously-thanks-to-microsoft-2c9aa472",
+            "img": "https://cdn.snapi.dev/images/v1/d/n/v/data22-3572088-3859433.jpg",
+            "title": "These analysts say Elon Musk's ambitious AI plans for SpaceX should be taken seriously, thanks to Microsoft",
+            "text": "If Elon Musk can expand its compute capacity swiftly, Microsoft could be perfectly positioned to monetize this “one-in-a-generation opportunity”",
+            "source": "Market Watch",
+            "type": "Article",
+            "tickers": [
+              "$SPCX"
+            ],
+            "time": "Aug 10, 2026, 5:26 AM EDT",
+            "ago": "3 days ago"
+          },
+          {
+            "url": "https://invezz.com/news/2026/08/07/michael-burry-exits-microsoft-oracle-stocks-why-is-he-still-shorting-palantir/",
+            "img": "https://cdn.snapi.dev/images/v1/g/e/3/software44-3855668.jpg",
+            "title": "Michael Burry exits Microsoft, Oracle stocks: why is he still shorting Palantir?",
+            "text": "Michael Burry has exited his bullish Microsoft trade and closed his remaining bearish Oracle position, but one prominent artificial-intelligence wager is still alive: Palantir stock. That decision loo...",
+            "source": "Invezz",
+            "type": "Article",
+            "tickers": [
+              "$ORCL",
+              "$PLTR"
+            ],
+            "time": "Aug 7, 2026, 3:03 AM EDT",
+            "ago": "6 days ago"
+          },
+          {
+            "url": "https://www.etftrends.com/future-etfs-content-hub/no-amzn-msft-aapl-no-problem-tech-etf-gtek-up-45-ytd/",
+            "img": "https://cdn.snapi.dev/images/v1/o/p/r/computer-electronic29-3853717.jpg",
+            "title": "No AMZN, MSFT, AAPL? No Problem: Tech ETF GTEK Up 45% YTD",
+            "text": "The tech stocks landscape is a complicated one right now. Investors have so many options, with technology equities delivering for portfolios year in and year out.",
+            "source": "ETF Trends",
+            "type": "Article",
+            "tickers": [
+              "$AAPL",
+              "$AMZN",
+              "#GTEK"
+            ],
+            "time": "Aug 6, 2026, 1:32 PM EDT",
+            "ago": "7 days ago"
+          },
+          {
+            "url": "https://www.geekwire.com/2026/microsoft-2-5-how-evp-charles-lamanna-is-helping-turn-microsoft-into-the-copilot-company/",
+            "img": "https://cdn.snapi.dev/images/v1/o/w/g/micros8-3607270-3853104.jpg",
+            "title": "Microsoft 2.5: How EVP Charles Lamanna is helping turn Microsoft into the ‘Copilot company'",
+            "text": "Charles Lamanna, who leads Microsoft's Copilot, agents, and platform work, is helping build the coming Copilot Super App — a single front door meant to unify the company's sprawling AI products.",
+            "source": "GeekWire",
+            "type": "Article",
+            "tickers": null,
+            "time": "Aug 6, 2026, 10:41 AM EDT",
+            "ago": "7 days ago"
+          },
+          {
+            "url": "https://www.prnewswire.com/news-releases/suewallst-reminds-shareholders-of-a-lead-plaintiff-deadline-of-august-11-2026-in-microsoft-corporation-lawsuit---msft-302844867.html",
+            "img": "https://cdn.snapi.dev/images/v1/r/g/t/press13-3852744.jpg",
+            "title": "SueWallSt Reminds Shareholders of a Lead Plaintiff Deadline of August 11, 2026 in Microsoft Corporation Lawsuit - MSFT",
+            "text": "Important Information Regarding Section 20(a) Individual Liability Claims Against Four Microsoft Executives Who Allegedly Signed Off on Misleading AI Statements NEW YORK, Aug. 6, 2026 /PRNewswire/ -- ...",
+            "source": "PRNewsWire",
+            "type": "Article",
+            "tickers": null,
+            "time": "Aug 6, 2026, 10:09 AM EDT",
+            "ago": "7 days ago"
+          }
+        ]
+      },
+      "chart": {
+        "expiration": 1786662564473,
+        "data": [
+          {
+            "c": 495.86,
+            "o": 493.52,
+            "t": 1786613400
+          },
+          {
+            "c": 495.45,
+            "t": 1786613460
+          },
+          {
+            "c": 494.96,
+            "t": 1786613520
+          },
+          {
+            "c": 496.65,
+            "t": 1786613580
+          },
+          {
+            "c": 497.08,
+            "t": 1786613640
+          },
+          {
+            "c": 497.59,
+            "t": 1786613700
+          },
+          {
+            "c": 497.98,
+            "t": 1786613760
+          },
+          {
+            "c": 496.71,
+            "t": 1786613820
+          },
+          {
+            "c": 497.55,
+            "t": 1786613880
+          },
+          {
+            "c": 498.03,
+            "t": 1786613940
+          },
+          {
+            "c": 497.63,
+            "t": 1786614000
+          },
+          {
+            "c": 497.82,
+            "t": 1786614060
+          },
+          {
+            "c": 497.17,
+            "t": 1786614120
+          },
+          {
+            "c": 498.18,
+            "t": 1786614180
+          },
+          {
+            "c": 497.88,
+            "t": 1786614240
+          },
+          {
+            "c": 498.66,
+            "t": 1786614300
+          },
+          {
+            "c": 498.44,
+            "t": 1786614360
+          },
+          {
+            "c": 498.96,
+            "t": 1786614420
+          },
+          {
+            "c": 499.1,
+            "t": 1786614480
+          },
+          {
+            "c": 499.63,
+            "t": 1786614540
+          },
+          {
+            "c": 499.41,
+            "t": 1786614600
+          },
+          {
+            "c": 499.37,
+            "t": 1786614660
+          },
+          {
+            "c": 499.4,
+            "t": 1786614720
+          },
+          {
+            "c": 499.43,
+            "t": 1786614780
+          },
+          {
+            "c": 499.48,
+            "t": 1786614840
+          },
+          {
+            "c": 499.2,
+            "t": 1786614900
+          },
+          {
+            "c": 499.25,
+            "t": 1786614960
+          },
+          {
+            "c": 499.01,
+            "t": 1786615020
+          },
+          {
+            "c": 498.86,
+            "t": 1786615080
+          },
+          {
+            "c": 498.66,
+            "t": 1786615140
+          },
+          {
+            "c": 498.93,
+            "t": 1786615200
+          },
+          {
+            "c": 498.86,
+            "t": 1786615260
+          },
+          {
+            "c": 498.72,
+            "t": 1786615320
+          },
+          {
+            "c": 498.96,
+            "t": 1786615380
+          },
+          {
+            "c": 499.16,
+            "t": 1786615440
+          },
+          {
+            "c": 499.2,
+            "t": 1786615500
+          },
+          {
+            "c": 499.8,
+            "t": 1786615560
+          },
+          {
+            "c": 499.6,
+            "t": 1786615620
+          },
+          {
+            "c": 499.93,
+            "t": 1786615680
+          },
+          {
+            "c": 499.78,
+            "t": 1786615740
+          },
+          {
+            "c": 499.81,
+            "t": 1786615800
+          },
+          {
+            "c": 500.82,
+            "t": 1786615860
+          },
+          {
+            "c": 500.81,
+            "t": 1786615920
+          },
+          {
+            "c": 500.81,
+            "t": 1786615980
+          },
+          {
+            "c": 500.19,
+            "t": 1786616040
+          },
+          {
+            "c": 499.97,
+            "t": 1786616100
+          },
+          {
+            "c": 499.85,
+            "t": 1786616160
+          },
+          {
+            "c": 500.41,
+            "t": 1786616220
+          },
+          {
+            "c": 500.69,
+            "t": 1786616280
+          },
+          {
+            "c": 501.07,
+            "t": 1786616340
+          },
+          {
+            "c": 500.48,
+            "t": 1786616400
+          },
+          {
+            "c": 500.2,
+            "t": 1786616460
+          },
+          {
+            "c": 500,
+            "t": 1786616520
+          },
+          {
+            "c": 499.79,
+            "t": 1786616580
+          },
+          {
+            "c": 499.83,
+            "t": 1786616640
+          },
+          {
+            "c": 499.37,
+            "t": 1786616700
+          },
+          {
+            "c": 499.63,
+            "t": 1786616760
+          },
+          {
+            "c": 499.19,
+            "t": 1786616820
+          },
+          {
+            "c": 498.6,
+            "t": 1786616880
+          },
+          {
+            "c": 498.57,
+            "t": 1786616940
+          },
+          {
+            "c": 498.64,
+            "t": 1786617000
+          },
+          {
+            "c": 498.96,
+            "t": 1786617060
+          },
+          {
+            "c": 498.78,
+            "t": 1786617120
+          },
+          {
+            "c": 498.95,
+            "t": 1786617180
+          },
+          {
+            "c": 499.2,
+            "t": 1786617240
+          },
+          {
+            "c": 499.23,
+            "t": 1786617300
+          },
+          {
+            "c": 498.81,
+            "t": 1786617360
+          },
+          {
+            "c": 498.71,
+            "t": 1786617420
+          },
+          {
+            "c": 498.41,
+            "t": 1786617480
+          },
+          {
+            "c": 498.69,
+            "t": 1786617540
+          },
+          {
+            "c": 497.81,
+            "t": 1786617600
+          },
+          {
+            "c": 497.78,
+            "t": 1786617660
+          },
+          {
+            "c": 498.2,
+            "t": 1786617720
+          },
+          {
+            "c": 498.18,
+            "t": 1786617780
+          },
+          {
+            "c": 497.97,
+            "t": 1786617840
+          },
+          {
+            "c": 497.6,
+            "t": 1786617900
+          },
+          {
+            "c": 497.46,
+            "t": 1786617960
+          },
+          {
+            "c": 497.21,
+            "t": 1786618020
+          },
+          {
+            "c": 497.15,
+            "t": 1786618080
+          },
+          {
+            "c": 497.31,
+            "t": 1786618140
+          },
+          {
+            "c": 497.26,
+            "t": 1786618200
+          },
+          {
+            "c": 497.71,
+            "t": 1786618260
+          },
+          {
+            "c": 497.49,
+            "t": 1786618320
+          },
+          {
+            "c": 497.6,
+            "t": 1786618380
+          },
+          {
+            "c": 497.72,
+            "t": 1786618440
+          },
+          {
+            "c": 497.88,
+            "t": 1786618500
+          },
+          {
+            "c": 497.78,
+            "t": 1786618560
+          },
+          {
+            "c": 497.81,
+            "t": 1786618620
+          },
+          {
+            "c": 497.7,
+            "t": 1786618680
+          },
+          {
+            "c": 497.5,
+            "t": 1786618740
+          },
+          {
+            "c": 497.71,
+            "t": 1786618800
+          },
+          {
+            "c": 497.23,
+            "t": 1786618860
+          },
+          {
+            "c": 496.79,
+            "t": 1786618920
+          },
+          {
+            "c": 496.86,
+            "t": 1786618980
+          },
+          {
+            "c": 496.97,
+            "t": 1786619040
+          },
+          {
+            "c": 496.88,
+            "t": 1786619100
+          },
+          {
+            "c": 496.78,
+            "t": 1786619160
+          },
+          {
+            "c": 496.32,
+            "t": 1786619220
+          },
+          {
+            "c": 496.34,
+            "t": 1786619280
+          },
+          {
+            "c": 496.69,
+            "t": 1786619340
+          },
+          {
+            "c": 495.79,
+            "t": 1786619400
+          },
+          {
+            "c": 495.84,
+            "t": 1786619460
+          },
+          {
+            "c": 495.84,
+            "t": 1786619520
+          },
+          {
+            "c": 495.5,
+            "t": 1786619580
+          },
+          {
+            "c": 495.86,
+            "t": 1786619640
+          },
+          {
+            "c": 495.91,
+            "t": 1786619700
+          },
+          {
+            "c": 495.87,
+            "t": 1786619760
+          },
+          {
+            "c": 495.79,
+            "t": 1786619820
+          },
+          {
+            "c": 495.7,
+            "t": 1786619880
+          },
+          {
+            "c": 495.89,
+            "t": 1786619940
+          },
+          {
+            "c": 495.82,
+            "t": 1786620000
+          },
+          {
+            "c": 495.5,
+            "t": 1786620060
+          },
+          {
+            "c": 494.62,
+            "t": 1786620120
+          },
+          {
+            "c": 494.67,
+            "t": 1786620180
+          },
+          {
+            "c": 494.32,
+            "t": 1786620240
+          },
+          {
+            "c": 494.26,
+            "t": 1786620300
+          },
+          {
+            "c": 494.11,
+            "t": 1786620360
+          },
+          {
+            "c": 494.04,
+            "t": 1786620420
+          },
+          {
+            "c": 493.66,
+            "t": 1786620480
+          },
+          {
+            "c": 493.89,
+            "t": 1786620540
+          },
+          {
+            "c": 494.19,
+            "t": 1786620600
+          },
+          {
+            "c": 494.28,
+            "t": 1786620660
+          },
+          {
+            "c": 494.31,
+            "t": 1786620720
+          },
+          {
+            "c": 494.41,
+            "t": 1786620780
+          },
+          {
+            "c": 494.8,
+            "t": 1786620840
+          },
+          {
+            "c": 494.85,
+            "t": 1786620900
+          },
+          {
+            "c": 495.16,
+            "t": 1786620960
+          },
+          {
+            "c": 495.33,
+            "t": 1786621020
+          },
+          {
+            "c": 495.19,
+            "t": 1786621080
+          },
+          {
+            "c": 495.39,
+            "t": 1786621140
+          },
+          {
+            "c": 495.24,
+            "t": 1786621200
+          },
+          {
+            "c": 495.45,
+            "t": 1786621260
+          },
+          {
+            "c": 495.34,
+            "t": 1786621320
+          },
+          {
+            "c": 495.59,
+            "t": 1786621380
+          },
+          {
+            "c": 495.47,
+            "t": 1786621440
+          },
+          {
+            "c": 495.54,
+            "t": 1786621500
+          },
+          {
+            "c": 495.66,
+            "t": 1786621560
+          },
+          {
+            "c": 495.47,
+            "t": 1786621620
+          },
+          {
+            "c": 495.56,
+            "t": 1786621680
+          },
+          {
+            "c": 495.38,
+            "t": 1786621740
+          },
+          {
+            "c": 495.39,
+            "t": 1786621800
+          },
+          {
+            "c": 495.22,
+            "t": 1786621860
+          },
+          {
+            "c": 495.38,
+            "t": 1786621920
+          },
+          {
+            "c": 495.22,
+            "t": 1786621980
+          },
+          {
+            "c": 495.1,
+            "t": 1786622040
+          },
+          {
+            "c": 495.25,
+            "t": 1786622100
+          },
+          {
+            "c": 495.08,
+            "t": 1786622160
+          },
+          {
+            "c": 494.66,
+            "t": 1786622220
+          },
+          {
+            "c": 494.78,
+            "t": 1786622280
+          },
+          {
+            "c": 494.86,
+            "t": 1786622340
+          },
+          {
+            "c": 494.8,
+            "t": 1786622400
+          },
+          {
+            "c": 494.44,
+            "t": 1786622460
+          },
+          {
+            "c": 494.67,
+            "t": 1786622520
+          },
+          {
+            "c": 494.8,
+            "t": 1786622580
+          },
+          {
+            "c": 494.67,
+            "t": 1786622640
+          },
+          {
+            "c": 494.83,
+            "t": 1786622700
+          },
+          {
+            "c": 494.88,
+            "t": 1786622760
+          },
+          {
+            "c": 494.34,
+            "t": 1786622820
+          },
+          {
+            "c": 494.3,
+            "t": 1786622880
+          },
+          {
+            "c": 494.32,
+            "t": 1786622940
+          },
+          {
+            "c": 494.38,
+            "t": 1786623000
+          },
+          {
+            "c": 494.36,
+            "t": 1786623060
+          },
+          {
+            "c": 494.42,
+            "t": 1786623120
+          },
+          {
+            "c": 494.31,
+            "t": 1786623180
+          },
+          {
+            "c": 494.5,
+            "t": 1786623240
+          },
+          {
+            "c": 494.1,
+            "t": 1786623300
+          },
+          {
+            "c": 494.26,
+            "t": 1786623360
+          },
+          {
+            "c": 494.17,
+            "t": 1786623420
+          },
+          {
+            "c": 494.1,
+            "t": 1786623480
+          },
+          {
+            "c": 494.2,
+            "t": 1786623540
+          },
+          {
+            "c": 494.26,
+            "t": 1786623600
+          },
+          {
+            "c": 493.88,
+            "t": 1786623660
+          },
+          {
+            "c": 494,
+            "t": 1786623720
+          },
+          {
+            "c": 494.04,
+            "t": 1786623780
+          },
+          {
+            "c": 494.25,
+            "t": 1786623840
+          },
+          {
+            "c": 494.5,
+            "t": 1786623900
+          },
+          {
+            "c": 494.61,
+            "t": 1786623960
+          },
+          {
+            "c": 494.73,
+            "t": 1786624020
+          },
+          {
+            "c": 494.41,
+            "t": 1786624080
+          },
+          {
+            "c": 494.66,
+            "t": 1786624140
+          },
+          {
+            "c": 494.82,
+            "t": 1786624200
+          },
+          {
+            "c": 494.84,
+            "t": 1786624260
+          },
+          {
+            "c": 494.76,
+            "t": 1786624320
+          },
+          {
+            "c": 494.75,
+            "t": 1786624380
+          },
+          {
+            "c": 494.86,
+            "t": 1786624440
+          },
+          {
+            "c": 494.78,
+            "t": 1786624500
+          },
+          {
+            "c": 494.47,
+            "t": 1786624560
+          },
+          {
+            "c": 494.5,
+            "t": 1786624620
+          },
+          {
+            "c": 494.5,
+            "t": 1786624680
+          },
+          {
+            "c": 494.44,
+            "t": 1786624740
+          },
+          {
+            "c": 494.45,
+            "t": 1786624800
+          },
+          {
+            "c": 494.28,
+            "t": 1786624860
+          },
+          {
+            "c": 494.12,
+            "t": 1786624920
+          },
+          {
+            "c": 494.16,
+            "t": 1786624980
+          },
+          {
+            "c": 494.35,
+            "t": 1786625040
+          },
+          {
+            "c": 494.29,
+            "t": 1786625100
+          },
+          {
+            "c": 494.35,
+            "t": 1786625160
+          },
+          {
+            "c": 494.44,
+            "t": 1786625220
+          },
+          {
+            "c": 494.55,
+            "t": 1786625280
+          },
+          {
+            "c": 494.48,
+            "t": 1786625340
+          },
+          {
+            "c": 494.68,
+            "t": 1786625400
+          },
+          {
+            "c": 494.64,
+            "t": 1786625460
+          },
+          {
+            "c": 494.9,
+            "t": 1786625520
+          },
+          {
+            "c": 494.69,
+            "t": 1786625580
+          },
+          {
+            "c": 494.75,
+            "t": 1786625640
+          },
+          {
+            "c": 494.66,
+            "t": 1786625700
+          },
+          {
+            "c": 494.33,
+            "t": 1786625760
+          },
+          {
+            "c": 494.32,
+            "t": 1786625820
+          },
+          {
+            "c": 494.45,
+            "t": 1786625880
+          },
+          {
+            "c": 494.35,
+            "t": 1786625940
+          },
+          {
+            "c": 494.43,
+            "t": 1786626000
+          },
+          {
+            "c": 494.41,
+            "t": 1786626060
+          },
+          {
+            "c": 494.41,
+            "t": 1786626120
+          },
+          {
+            "c": 494.63,
+            "t": 1786626180
+          },
+          {
+            "c": 494.47,
+            "t": 1786626240
+          },
+          {
+            "c": 494.68,
+            "t": 1786626300
+          },
+          {
+            "c": 494.76,
+            "t": 1786626360
+          },
+          {
+            "c": 494.7,
+            "t": 1786626420
+          },
+          {
+            "c": 494.77,
+            "t": 1786626480
+          },
+          {
+            "c": 494.67,
+            "t": 1786626540
+          },
+          {
+            "c": 494.64,
+            "t": 1786626600
+          },
+          {
+            "c": 494.69,
+            "t": 1786626660
+          },
+          {
+            "c": 494.59,
+            "t": 1786626720
+          },
+          {
+            "c": 494.62,
+            "t": 1786626780
+          },
+          {
+            "c": 494.63,
+            "t": 1786626840
+          },
+          {
+            "c": 494.61,
+            "t": 1786626900
+          },
+          {
+            "c": 494.47,
+            "t": 1786626960
+          },
+          {
+            "c": 494.37,
+            "t": 1786627020
+          },
+          {
+            "c": 494.45,
+            "t": 1786627080
+          },
+          {
+            "c": 494.44,
+            "t": 1786627140
+          },
+          {
+            "c": 494.51,
+            "t": 1786627200
+          },
+          {
+            "c": 494.63,
+            "t": 1786627260
+          },
+          {
+            "c": 494.55,
+            "t": 1786627320
+          },
+          {
+            "c": 494.2,
+            "t": 1786627380
+          },
+          {
+            "c": 494.26,
+            "t": 1786627440
+          },
+          {
+            "c": 494.3,
+            "t": 1786627500
+          },
+          {
+            "c": 494.2,
+            "t": 1786627560
+          },
+          {
+            "c": 494.33,
+            "t": 1786627620
+          },
+          {
+            "c": 494.39,
+            "t": 1786627680
+          },
+          {
+            "c": 494.5,
+            "t": 1786627740
+          },
+          {
+            "c": 494.44,
+            "t": 1786627800
+          },
+          {
+            "c": 494.39,
+            "t": 1786627860
+          },
+          {
+            "c": 494.21,
+            "t": 1786627920
+          },
+          {
+            "c": 493.84,
+            "t": 1786627980
+          },
+          {
+            "c": 493.87,
+            "t": 1786628040
+          },
+          {
+            "c": 493.85,
+            "t": 1786628100
+          },
+          {
+            "c": 493.73,
+            "t": 1786628160
+          },
+          {
+            "c": 493.83,
+            "t": 1786628220
+          },
+          {
+            "c": 493.54,
+            "t": 1786628280
+          },
+          {
+            "c": 493.74,
+            "t": 1786628340
+          },
+          {
+            "c": 493.69,
+            "t": 1786628400
+          },
+          {
+            "c": 493.49,
+            "t": 1786628460
+          },
+          {
+            "c": 493.56,
+            "t": 1786628520
+          },
+          {
+            "c": 493.71,
+            "t": 1786628580
+          },
+          {
+            "c": 493.72,
+            "t": 1786628640
+          },
+          {
+            "c": 493.82,
+            "t": 1786628700
+          },
+          {
+            "c": 493.77,
+            "t": 1786628760
+          },
+          {
+            "c": 494,
+            "t": 1786628820
+          },
+          {
+            "c": 494.28,
+            "t": 1786628880
+          },
+          {
+            "c": 494.17,
+            "t": 1786628940
+          },
+          {
+            "c": 494.29,
+            "t": 1786629000
+          },
+          {
+            "c": 494.38,
+            "t": 1786629060
+          },
+          {
+            "c": 494.51,
+            "t": 1786629120
+          },
+          {
+            "c": 494.47,
+            "t": 1786629180
+          },
+          {
+            "c": 494.36,
+            "t": 1786629240
+          },
+          {
+            "c": 494.38,
+            "t": 1786629300
+          },
+          {
+            "c": 494.09,
+            "t": 1786629360
+          },
+          {
+            "c": 494.37,
+            "t": 1786629420
+          },
+          {
+            "c": 494.33,
+            "t": 1786629480
+          },
+          {
+            "c": 494.12,
+            "t": 1786629540
+          },
+          {
+            "c": 494.3,
+            "t": 1786629600
+          },
+          {
+            "c": 493.97,
+            "t": 1786629660
+          },
+          {
+            "c": 494.13,
+            "t": 1786629720
+          },
+          {
+            "c": 493.97,
+            "t": 1786629780
+          },
+          {
+            "c": 493.91,
+            "t": 1786629840
+          },
+          {
+            "c": 494.04,
+            "t": 1786629900
+          },
+          {
+            "c": 494.04,
+            "t": 1786629960
+          },
+          {
+            "c": 494.14,
+            "t": 1786630020
+          },
+          {
+            "c": 494.12,
+            "t": 1786630080
+          },
+          {
+            "c": 493.98,
+            "t": 1786630140
+          },
+          {
+            "c": 494.13,
+            "t": 1786630200
+          },
+          {
+            "c": 494.11,
+            "t": 1786630260
+          },
+          {
+            "c": 494.12,
+            "t": 1786630320
+          },
+          {
+            "c": 494.06,
+            "t": 1786630380
+          },
+          {
+            "c": 494.4,
+            "t": 1786630440
+          },
+          {
+            "c": 494.29,
+            "t": 1786630500
+          },
+          {
+            "c": 494.06,
+            "t": 1786630560
+          },
+          {
+            "c": 494,
+            "t": 1786630620
+          },
+          {
+            "c": 493.83,
+            "t": 1786630680
+          },
+          {
+            "c": 493.85,
+            "t": 1786630740
+          },
+          {
+            "c": 493.88,
+            "t": 1786630800
+          },
+          {
+            "c": 493.61,
+            "t": 1786630860
+          },
+          {
+            "c": 493.7,
+            "t": 1786630920
+          },
+          {
+            "c": 493.56,
+            "t": 1786630980
+          },
+          {
+            "c": 493.28,
+            "t": 1786631040
+          },
+          {
+            "c": 493.37,
+            "t": 1786631100
+          },
+          {
+            "c": 493.27,
+            "t": 1786631160
+          },
+          {
+            "c": 493.22,
+            "t": 1786631220
+          },
+          {
+            "c": 493.07,
+            "t": 1786631280
+          },
+          {
+            "c": 493.14,
+            "t": 1786631340
+          },
+          {
+            "c": 493.49,
+            "t": 1786631400
+          },
+          {
+            "c": 493.53,
+            "t": 1786631460
+          },
+          {
+            "c": 493.74,
+            "t": 1786631520
+          },
+          {
+            "c": 494.87,
+            "t": 1786631580
+          },
+          {
+            "c": 495,
+            "t": 1786631640
+          },
+          {
+            "c": 495.44,
+            "t": 1786631700
+          },
+          {
+            "c": 495.58,
+            "t": 1786631760
+          },
+          {
+            "c": 496.02,
+            "t": 1786631820
+          },
+          {
+            "c": 496.34,
+            "t": 1786631880
+          },
+          {
+            "c": 496.65,
+            "t": 1786631940
+          },
+          {
+            "c": 496.64,
+            "t": 1786632000
+          },
+          {
+            "c": 497.19,
+            "t": 1786632060
+          },
+          {
+            "c": 496.83,
+            "t": 1786632120
+          },
+          {
+            "c": 496.75,
+            "t": 1786632180
+          },
+          {
+            "c": 496.88,
+            "t": 1786632240
+          },
+          {
+            "c": 496.32,
+            "t": 1786632300
+          },
+          {
+            "c": 495.99,
+            "t": 1786632360
+          },
+          {
+            "c": 495.82,
+            "t": 1786632420
+          },
+          {
+            "c": 495.46,
+            "t": 1786632480
+          },
+          {
+            "c": 496.16,
+            "t": 1786632540
+          },
+          {
+            "c": 496.07,
+            "t": 1786632600
+          },
+          {
+            "c": 496.03,
+            "t": 1786632660
+          },
+          {
+            "c": 495.77,
+            "t": 1786632720
+          },
+          {
+            "c": 496.04,
+            "t": 1786632780
+          },
+          {
+            "c": 496.18,
+            "t": 1786632840
+          },
+          {
+            "c": 496.09,
+            "t": 1786632900
+          },
+          {
+            "c": 496.52,
+            "t": 1786632960
+          },
+          {
+            "c": 496.61,
+            "t": 1786633020
+          },
+          {
+            "c": 496.72,
+            "t": 1786633080
+          },
+          {
+            "c": 496.93,
+            "t": 1786633140
+          },
+          {
+            "c": 496.75,
+            "t": 1786633200
+          },
+          {
+            "c": 496.75,
+            "t": 1786633260
+          },
+          {
+            "c": 496.35,
+            "t": 1786633320
+          },
+          {
+            "c": 496.7,
+            "t": 1786633380
+          },
+          {
+            "c": 496.97,
+            "t": 1786633440
+          },
+          {
+            "c": 496.72,
+            "t": 1786633500
+          },
+          {
+            "c": 496.87,
+            "t": 1786633560
+          },
+          {
+            "c": 496.93,
+            "t": 1786633620
+          },
+          {
+            "c": 496.98,
+            "t": 1786633680
+          },
+          {
+            "c": 497.09,
+            "t": 1786633740
+          },
+          {
+            "c": 496.87,
+            "t": 1786633800
+          },
+          {
+            "c": 497.17,
+            "t": 1786633860
+          },
+          {
+            "c": 497.54,
+            "t": 1786633920
+          },
+          {
+            "c": 497.15,
+            "t": 1786633980
+          },
+          {
+            "c": 497.39,
+            "t": 1786634040
+          },
+          {
+            "c": 497.17,
+            "t": 1786634100
+          },
+          {
+            "c": 497.04,
+            "t": 1786634160
+          },
+          {
+            "c": 496.55,
+            "t": 1786634220
+          },
+          {
+            "c": 495.99,
+            "t": 1786634280
+          },
+          {
+            "c": 495.81,
+            "t": 1786634340
+          },
+          {
+            "c": 496.28,
+            "t": 1786634400
+          },
+          {
+            "c": 496.35,
+            "t": 1786634460
+          },
+          {
+            "c": 496.83,
+            "t": 1786634520
+          },
+          {
+            "c": 496.79,
+            "t": 1786634580
+          },
+          {
+            "c": 497.46,
+            "t": 1786634640
+          },
+          {
+            "c": 497.72,
+            "t": 1786634700
+          },
+          {
+            "c": 497.5,
+            "t": 1786634760
+          },
+          {
+            "c": 497.32,
+            "t": 1786634820
+          },
+          {
+            "c": 497.37,
+            "t": 1786634880
+          },
+          {
+            "c": 497.16,
+            "t": 1786634940
+          },
+          {
+            "c": 497.56,
+            "t": 1786635000
+          },
+          {
+            "c": 497.8,
+            "t": 1786635060
+          },
+          {
+            "c": 497.94,
+            "t": 1786635120
+          },
+          {
+            "c": 497.91,
+            "t": 1786635180
+          },
+          {
+            "c": 498.09,
+            "t": 1786635240
+          },
+          {
+            "c": 497.78,
+            "t": 1786635300
+          },
+          {
+            "c": 497.78,
+            "t": 1786635360
+          },
+          {
+            "c": 498.13,
+            "t": 1786635420
+          },
+          {
+            "c": 497.93,
+            "t": 1786635480
+          },
+          {
+            "c": 498.19,
+            "t": 1786635540
+          },
+          {
+            "c": 498.14,
+            "t": 1786635600
+          },
+          {
+            "c": 497.92,
+            "t": 1786635660
+          },
+          {
+            "c": 498.28,
+            "t": 1786635720
+          },
+          {
+            "c": 498.34,
+            "t": 1786635780
+          },
+          {
+            "c": 498.54,
+            "t": 1786635840
+          },
+          {
+            "c": 497.88,
+            "t": 1786635900
+          },
+          {
+            "c": 497.88,
+            "t": 1786635960
+          },
+          {
+            "c": 497.65,
+            "t": 1786636020
+          },
+          {
+            "c": 497.64,
+            "t": 1786636080
+          },
+          {
+            "c": 497.63,
+            "t": 1786636140
+          },
+          {
+            "c": 497.13,
+            "t": 1786636200
+          },
+          {
+            "c": 497.1,
+            "t": 1786636260
+          },
+          {
+            "c": 497.18,
+            "t": 1786636320
+          },
+          {
+            "c": 496.8,
+            "t": 1786636380
+          },
+          {
+            "c": 496.54,
+            "t": 1786636440
+          },
+          {
+            "c": 496.19,
+            "t": 1786636500
+          },
+          {
+            "c": 496.26,
+            "t": 1786636560
+          },
+          {
+            "c": 496.52,
+            "t": 1786636620
+          },
+          {
+            "c": 496.7,
+            "t": 1786636680
+          },
+          {
+            "c": 496.81,
+            "t": 1786636740
+          },
+          {
+            "c": 496.88,
+            "t": 1786636800
+          }
+        ]
+      },
+      "changes": {
+        "price1w": 499.86,
+        "price1m": 385.1,
+        "price3m": 407.77,
+        "price6m": 401.84,
+        "priceYTD": 483.62,
+        "price1y": 529.24,
+        "price5y": 289.81,
+        "priceMAX": 0.0972
+      },
+      "source": "polygon"
+    },
+    "history": [
+      {
+        "t": "2026-08-03",
+        "o": 476.125,
+        "h": 513.73,
+        "l": 475,
+        "c": 496.88,
+        "a": 496.88,
+        "v": 312889052,
+        "ch": 6.92
+      },
+      {
+        "t": "2026-07-01",
+        "o": 380.825,
+        "h": 466.84,
+        "l": 373.35,
+        "c": 464.72,
+        "a": 464.72,
+        "v": 798277230,
+        "ch": 24.58
+      },
+      {
+        "t": "2026-06-01",
+        "o": 464.84,
+        "h": 466.32,
+        "l": 349.2,
+        "c": 373.02,
+        "a": 373.02,
+        "v": 1018052145,
+        "ch": -17.15
+      },
+      {
+        "t": "2026-05-01",
+        "o": 412.8,
+        "h": 450.33,
+        "l": 400.88,
+        "c": 450.24,
+        "a": 450.24,
+        "v": 698954934,
+        "ch": 10.65
+      },
+      {
+        "t": "2026-04-01",
+        "o": 373.49,
+        "h": 433.7,
+        "l": 364.15,
+        "c": 407.78,
+        "a": 406.898701,
+        "v": 716519026,
+        "ch": 10.16
+      },
+      {
+        "t": "2026-03-02",
+        "o": 392.855,
+        "h": 413.05,
+        "l": 356.28,
+        "c": 370.17,
+        "a": 369.369984,
+        "v": 745288132,
+        "ch": -5.75
+      },
+      {
+        "t": "2026-02-02",
+        "o": 430.235,
+        "h": 430.736,
+        "l": 381.71,
+        "c": 392.74,
+        "a": 391.891206,
+        "v": 800257151,
+        "ch": -8.52
+      },
+      {
+        "t": "2026-01-02",
+        "o": 484.385,
+        "h": 489.7,
+        "l": 421.02,
+        "c": 430.29,
+        "a": 428.38228,
+        "v": 684062568,
+        "ch": -11.03
+      },
+      {
+        "t": "2025-12-01",
+        "o": 488.435,
+        "h": 493.5,
+        "l": 470.88,
+        "c": 483.62,
+        "a": 481.475838,
+        "v": 496558381,
+        "ch": -1.71
+      },
+      {
+        "t": "2025-11-03",
+        "o": 519.805,
+        "h": 524.96,
+        "l": 464.89,
+        "c": 492.01,
+        "a": 489.82864,
+        "v": 479480836,
+        "ch": -4.8
+      },
+      {
+        "t": "2025-10-01",
+        "o": 514.8,
+        "h": 553.72,
+        "l": 506,
+        "c": 517.81,
+        "a": 514.55121,
+        "v": 468447068,
+        "ch": -0.03
+      }
+    ],
+    "quote": {
+      "p": 496.88,
+      "pd": 496.88,
+      "c": 4.45,
+      "cp": 0.9,
+      "cl": 492.43,
+      "cdr": 1,
+      "o": 493.27,
+      "h": 501.34,
+      "l": 493.01,
+      "v": 22978520,
+      "ts": 1786651200000,
+      "u": "Aug 13, 2026, 4:00 PM EDT",
+      "td": "2026-08-13",
+      "h52": 553.72,
+      "l52": 349.2,
+      "ex": "NASDAQ",
+      "ms": "closed",
+      "fms": "post",
+      "e": true,
+      "ep": 495.88,
+      "epd": 495.88,
+      "ec": -1,
+      "ecp": -0.2,
+      "eu": "Aug 13, 2026, 6:02 PM EDT",
+      "es": "After-hours",
+      "ets": 1786658579728.3047,
+      "etd": "2026-08-13",
+      "epv": null,
+      "days": 0,
+      "exp": 1786658971341,
+      "symbol": "MSFT",
+      "uid": "MSFT"
+    }
+  }
+}

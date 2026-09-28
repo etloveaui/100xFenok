@@ -22,7 +22,7 @@ export default function PersonalHubPage() {
   return (
     <main className="container mx-auto px-4 py-5">
       <section className="rounded-2xl border border-indigo-200 bg-gradient-to-r from-indigo-900 via-purple-900 to-indigo-800 p-5 text-white shadow-[0_26px_55px_-38px_rgba(49,46,129,0.92)]">
-        <p className="text-xs font-semibold uppercase tracking-[0.16em] text-white/75">Private Space</p>
+        <p className="text-[12px] font-semibold uppercase tracking-[0.16em] text-white/75">Private Space</p>
         <h1 className="mt-2 text-3xl font-black tracking-tight">Personal Hub</h1>
         <p className="mt-3 max-w-2xl text-sm text-white/85">
           여행, 메모 등 개인 콘텐츠를 관리합니다.

@@ -1,0 +1,1085 @@
+/* /sectors route — light-system layout namespace (slice 7b + S2).
+ * Layout only: head, rotation hero/strip, flow rows, ETF table, valuation
+ * bands, smart-money grid, accordions, action row. Panel chrome, type scale,
+ * colors, and states come from src/components/ui.
+ * Token-pure: only var(--fnk-*) / var(--font-*) references, no raw colors,
+ * no shadows, no gradients. Accent var(--fnk-brand-interactive) appears only
+ * on the active period tab text, linked-row left accent, and the CTA primary
+ * action (shared Button). Flow bars use the dc semantic gain/loss fills. */
+
+.sec {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  padding: 20px 24px 32px;
+  background: var(--fnk-neutral-50);
+  font-size: 13px;
+  line-height: 1.45;
+}
+
+.sec-head {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.sec-title-block {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  min-width: 0;
+  max-width: 900px;
+}
+
+.sec-eyebrow-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.sec-eyebrow {
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--fnk-neutral-500);
+}
+
+.sec-title {
+  margin: 0;
+  font-size: 20px;
+  font-weight: 600;
+  line-height: 1.45;
+  color: var(--fnk-neutral-900);
+  max-width: 900px;
+  min-height: 2lh;
+  text-wrap: pretty;
+}
+
+/* While loading only (aria-busy is set at SectorsClient.tsx:760; the read
+ * sentence then replaces two skeleton lines and grew ~56px at 1440/768). */
+.sec-title[aria-busy="true"] {
+  min-height: 4lh;
+}
+
+/* The read sentence varies with the snapshot. Keep its tablet-sized footprint
+ * after loading too, so the tabs and panels do not move when a longer read or
+ * an extra source-status pill arrives. Phones keep their separate sizing. */
+@media (min-width: 641px) and (max-width: 1279px) {
+  /* The loaded headline fills the first row. Give navigation its own row
+   * during loading too, instead of letting flex-wrap add 44px + 12px later. */
+  .sec-head {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .sec-title-block {
+    max-width: none;
+  }
+
+  .sec-title {
+    min-height: 4lh;
+  }
+}
+
+.sec-title-skeleton {
+  display: block;
+  height: 0.8em;
+  margin: 0.33em 0 0.32em;
+  border-radius: 6px;
+  background: linear-gradient(90deg, var(--fnk-neutral-100), var(--fnk-neutral-200), var(--fnk-neutral-100));
+  background-size: 200% 100%;
+  animation: sec-title-shimmer 1.4s ease-in-out infinite;
+}
+
+.sec-title-skeleton--short {
+  width: 62%;
+}
+
+@keyframes sec-title-shimmer {
+  from { background-position: 100% 0; }
+  to { background-position: -100% 0; }
+}
+
+@media (max-width: 640px) {
+  .sec-title {
+    font-size: 17px;
+    min-height: 3lh;
+  }
+  .sec-title[aria-busy="true"] {
+    /* The measurement at 320 grew +49px (~2 lines) while loading. */
+    min-height: 5lh;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .sec-title-skeleton { animation: none; }
+}
+
+.sec-meta-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.sec-tabs {
+  display: flex;
+  gap: 4px;
+}
+
+.sec-head-note {
+  font-size: 12px;
+  color: var(--fnk-neutral-500);
+  white-space: nowrap;
+}
+
+.sec-up {
+  color: var(--fnk-color-gain);
+  font-weight: 600;
+}
+
+.sec-down {
+  color: var(--fnk-color-loss);
+  font-weight: 600;
+}
+
+.sec-mute {
+  color: var(--fnk-neutral-500);
+  font-weight: 600;
+}
+
+.sec-strong {
+  font-weight: 600;
+}
+
+.sec-abs {
+  font-size: 12px;
+  color: var(--fnk-neutral-500);
+}
+
+.sec-ticker {
+  font-family: var(--font-jetbrains-mono), "SF Mono", Menlo, monospace;
+  font-weight: 500;
+  color: var(--fnk-neutral-500);
+  font-size: 12px;
+}
+
+.sec-ticker-strong {
+  color: var(--fnk-neutral-900);
+  font-size: 12px;
+}
+
+/* Sector Flow: period tabs ride in the panel header right slot. */
+
+.sec-period-toggle {
+  display: flex;
+  gap: 2px;
+  background: var(--fnk-neutral-100);
+  padding: 2px;
+  border-radius: 6px;
+}
+
+.sec-flow-head {
+  display: grid;
+  grid-template-columns: 150px minmax(0, 1fr) 100px;
+  align-items: center;
+  gap: 12px;
+  height: 26px;
+  padding: 0 16px;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--fnk-neutral-500);
+}
+
+.sec-flow-head-num {
+  text-align: right;
+}
+
+/* Full-row link rows: hover and keyboard focus share the 2px left accent;
+ * outline is dropped in favor of the accent, no shadows. */
+
+.sec-flow-row {
+  display: grid;
+  grid-template-columns: 150px minmax(0, 1fr) 100px;
+  align-items: center;
+  gap: 12px;
+  min-height: 44px;
+  padding: 5px 16px 5px 14px;
+  border-top: 1px solid var(--fnk-neutral-100);
+  border-left: 2px solid transparent;
+  text-decoration: none;
+  transition: background-color 150ms ease, border-color 150ms ease;
+}
+
+.sec-flow-row:hover {
+  background: var(--fnk-neutral-50);
+  border-left-color: var(--fnk-brand-interactive);
+}
+
+.sec-flow-row:focus-visible {
+  background: var(--fnk-neutral-50);
+  border-left-color: var(--fnk-brand-interactive);
+  outline: none;
+}
+
+.sec-flow-name {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: var(--fnk-neutral-700);
+  font-size: 12px;
+}
+
+.sec-flow-row:hover .sec-flow-name {
+  color: var(--fnk-brand-interactive);
+}
+
+.sec-flow-bar {
+  height: 8px;
+  min-width: 0;
+}
+
+/* Semantic bar fills follow the row side (dc gain/loss); the shared Bar
+ * default blue is kept for neutral states elsewhere. The child selector
+ * outranks the Bar fill utility without touching shared ui. */
+
+.sec-bar-up > i {
+  background: var(--fnk-color-gain);
+}
+
+.sec-bar-down > i {
+  background: var(--fnk-color-loss);
+}
+
+.sec-flow-values {
+  display: flex;
+  flex-direction: column;
+  line-height: 1.25;
+  text-align: right;
+  font-size: 12px;
+}
+
+/* ETF Compare: wide screens scroll the table horizontally so all eight
+ * columns stay reachable; below 760px the card list replaces the table (media
+ * query further down). Both are always rendered — CSS toggles visibility. */
+
+.sec-etf-scroll {
+  overflow-x: auto;
+  max-width: 100%;
+}
+
+.sec-etf-table {
+  width: 100%;
+  min-width: 640px;
+  border-collapse: collapse;
+  font-size: 12px;
+}
+
+.sec-etf-table thead th {
+  height: 26px;
+  padding: 0 16px;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--fnk-neutral-500);
+  text-align: right;
+  white-space: nowrap;
+}
+
+.sec-etf-table thead th.sec-etf-th-name {
+  text-align: left;
+}
+
+.sec-etf-row {
+  border-top: 1px solid var(--fnk-neutral-100);
+  transition: background-color 150ms ease;
+}
+
+.sec-etf-row:hover {
+  background: var(--fnk-neutral-50);
+}
+
+.sec-etf-row:focus-visible {
+  background: var(--fnk-neutral-50);
+  outline: none;
+}
+
+/* Collapsing table borders ignore tr border-left, so the 2px keyboard/hover
+ * accent lives on the row's first cell (same transparent-reserve idiom as
+ * .sec-flow-row, no box-shadow). */
+.sec-etf-row:hover > .sec-etf-name,
+.sec-etf-row:focus-visible > .sec-etf-name,
+.sec-etf-row:focus-within > .sec-etf-name {
+  border-left-color: var(--fnk-brand-interactive);
+}
+
+.sec-etf-table td {
+  padding: 0 16px;
+  height: 44px;
+  text-align: right;
+  color: var(--fnk-neutral-700);
+  white-space: nowrap;
+}
+
+.sec-etf-name {
+  text-align: left;
+  padding: 0 16px;
+  height: 44px;
+  font-weight: 400;
+  white-space: nowrap;
+  border-left: 2px solid transparent;
+}
+
+.sec-etf-sector {
+  font-family: inherit;
+  font-size: 12px;
+  font-weight: 400;
+  color: var(--fnk-neutral-500);
+  margin-left: 8px;
+}
+
+/* ETF Compare cards: phone layout for the same rows, hidden until the 760px
+ * media query below swaps it in for the table. */
+
+.sec-etf-mobile-list {
+  display: none;
+}
+
+.sec-etf-card {
+  padding: 12px 16px;
+  border-top: 1px solid var(--fnk-neutral-100);
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.sec-etf-card__head {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  min-width: 0;
+}
+
+.sec-etf-card__head .sec-etf-sector {
+  margin-left: 0;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.sec-etf-card__stats {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+  margin: 0;
+}
+
+/* The neutral value colour sits on the wrapper, so the sec-up / sec-down tone
+ * classes on a dd still win over inheritance. */
+.sec-etf-card__stats div {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+  color: var(--fnk-neutral-700);
+}
+
+.sec-etf-card__stats dt {
+  font-size: 12px;
+  color: var(--fnk-neutral-500);
+}
+
+.sec-etf-card__stats dd {
+  margin: 0;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+/* Smart money grid: two columns on desktop, one on narrow screens. */
+
+.sec-smart-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.sec-smart-cell {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  min-width: 0;
+  padding: 10px 16px;
+  border-top: 1px solid var(--fnk-neutral-100);
+}
+
+.sec-smart-cell:nth-child(odd) {
+  border-right: 1px solid var(--fnk-neutral-100);
+}
+
+.sec-smart-top,
+.sec-smart-bottom {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  min-width: 0;
+}
+
+.sec-smart-name {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: var(--fnk-neutral-700);
+  font-size: 12px;
+}
+
+.sec-smart-delta,
+.sec-smart-avg {
+  font-size: 12px;
+  color: var(--fnk-neutral-500);
+  white-space: nowrap;
+}
+
+.sec-smart-holdings {
+  display: flex;
+  gap: 4px;
+  min-width: 0;
+}
+
+.sec-smart-more {
+  margin-top: 12px;
+  text-align: right;
+  padding: 0 16px 12px;
+}
+
+.sec-more-link {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--fnk-brand-interactive);
+  text-decoration: none;
+}
+
+.sec-more-link:hover,
+.sec-more-link:focus-visible {
+  text-decoration: underline;
+  outline: none;
+}
+
+/* CTA note (shared by the action rail) */
+
+.sec-cta-note {
+  font-size: 12px;
+  color: var(--fnk-neutral-500);
+}
+
+@media (max-width: 760px) {
+  .sec {
+    padding: 12px 12px 28px;
+  }
+
+  .sec-flow-head,
+  .sec-flow-row {
+    grid-template-columns: 110px minmax(0, 1fr) 84px;
+    gap: 8px;
+  }
+
+  .sec-smart-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .sec-smart-cell:nth-child(odd) {
+    border-right: 0;
+  }
+
+  /* Phone: the ETF compare table gives way to the card list. */
+  .sec-etf-scroll {
+    display: none;
+  }
+
+  .sec-etf-mobile-list {
+    display: flex;
+    flex-direction: column;
+  }
+
+  .sec-period-btn {
+    min-height: 44px;
+  }
+}
+
+/* Summary strip (study P1+P2): a 0-centered 1D distribution of the sectors on
+ * the same %p-vs-S&P relative momentum the rotation map plots, with the four
+ * counts beside it on desktop and restacked under it on phones. Dot fill
+ * follows the map's convention (relative >= 0 is the route's gain side). Only
+ * a sector without a measured value leaves the domain, so this strip stays the
+ * mobile summary where the map and the rank panel are hidden. */
+
+.sec-spread {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(300px, 420px);
+  gap: 16px;
+  padding: 12px 16px 14px;
+}
+
+.sec-spread-main {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 0;
+}
+
+.sec-spread-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 8px;
+  min-width: 0;
+}
+
+.sec-spread-side {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--fnk-neutral-600);
+}
+
+.sec-spread-measure {
+  font-size: 12px;
+  color: var(--fnk-neutral-600);
+  text-align: center;
+}
+
+/* The %p axis: one hairline for the scale, one for the 0 = S&P 500 split that
+ * every dot's fill is read against. */
+.sec-spread-track {
+  position: relative;
+  height: 34px;
+}
+
+.sec-spread-axis {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 50%;
+  height: 1px;
+  background: var(--fnk-neutral-200);
+}
+
+.sec-spread-zero {
+  position: absolute;
+  top: 2px;
+  bottom: 2px;
+  width: 1px;
+  background: var(--fnk-neutral-300);
+}
+
+/* One dot per sector, centred on the axis row: x is the only encoding, so
+ * overlapping sectors stay overlapped rather than nudged to invented values. */
+.sec-spread-dot {
+  position: absolute;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  border-radius: 50%;
+}
+
+.sec-spread-dot-up {
+  background: var(--fnk-color-gain);
+}
+
+.sec-spread-dot-down {
+  background: var(--fnk-color-loss);
+}
+
+.sec-spread-scale {
+  position: relative;
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 8px;
+  font-size: 12px;
+  color: var(--fnk-neutral-600);
+}
+
+.sec-spread-zero-label {
+  position: absolute;
+  top: 0;
+  transform: translateX(-50%);
+}
+
+.sec-spread-count {
+  margin: 4px 0 0;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--fnk-neutral-900);
+}
+
+.sec-spread-read {
+  margin: 0;
+  font-size: 12px;
+  color: var(--fnk-neutral-700);
+}
+
+/* The loading/empty line replaces both columns instead of leaving the stats
+ * column blank. */
+.sec-spread-pending {
+  grid-column: 1 / -1;
+}
+
+.sec-spread-note {
+  margin: 0;
+  font-size: 12px;
+  color: var(--fnk-neutral-600);
+}
+
+.sec-spread-stats {
+  display: flex;
+  align-items: flex-start;
+  min-width: 0;
+}
+
+/* The kit StatStrip rows share the right column evenly; its own last-child
+ * border rule stays untouched on desktop. The %p readings ('+650.0%p' class)
+ * overrun an even split, so the 최강/최약 cells take a wider share and the
+ * value scales with the strip itself instead of the viewport. */
+.sec-stat-strip {
+  width: 100%;
+  container-type: inline-size;
+}
+
+.sec-stat-strip > .sec-stat {
+  flex: 1 1 0;
+  min-width: 0;
+  padding-inline: 12px;
+}
+
+.sec-stat-strip > .sec-stat:nth-child(2),
+.sec-stat-strip > .sec-stat:nth-child(3) {
+  flex: 1.5 1 0;
+}
+
+.sec-stat-strip > .sec-stat > span.tabular-nums {
+  font-size: clamp(14px, 4.2cqw, 19px);
+  white-space: nowrap;
+}
+
+@media (max-width: 760px) {
+  /* Phone: the strip keeps the full width as the route's summary and the four
+   * counts restack two-by-two under it, so the strip stays legible at 390px
+   * without horizontal overflow. */
+  .sec-spread {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .sec-stat-strip {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  /* Replace the kit's single-row dividers with the 2x2 ones: inline ends only
+   * on the left cell of each row, a rule above the second row. */
+  .sec-stat-strip > .sec-stat {
+    border-inline-start: 0;
+    border-inline-end: 0;
+  }
+
+  .sec-stat-strip > .sec-stat:nth-child(odd) {
+    border-inline-end: 1px solid var(--fnk-neutral-200);
+  }
+
+  .sec-stat-strip > .sec-stat:nth-child(n + 3) {
+    border-top: 1px solid var(--fnk-neutral-200);
+  }
+}
+
+/* Rotation map hero (slice S2): segmented window, SVG 2x2 map on desktop,
+ * ranked list on narrow screens, bandless row outside the map. */
+
+.sec-rotation-toggle {
+  display: flex;
+  gap: 2px;
+  background: var(--fnk-neutral-100);
+  padding: 2px;
+  border-radius: 6px;
+  width: fit-content;
+  margin: 12px 16px 4px;
+}
+
+/* Active rotation window reads as a filled accent tab (local override of the
+ * shared tab variant; Button.tsx stays untouched). */
+.sec-rotation-toggle .sec-period-btn[data-active="true"] {
+  background: var(--fnk-brand-interactive);
+  border-color: var(--fnk-brand-interactive);
+  color: var(--fnk-color-white);
+}
+
+.sec-rotation-map {
+  display: block;
+  padding: 8px 16px 0;
+  /* Kill SVG letterboxing: the 1200x400 viewBox rendered at ~1062px content
+   * width with fixed height=400 left ~23px empty bands top AND bottom
+   * (preserveAspectRatio meet). height:auto keeps the 3:1 aspect exactly and
+   * both audit gaps (609..655 h=47, 984..1027 h=44) collapse to ~24px rhythm. */
+  height: auto;
+}
+
+.sec-rotation-list {
+  display: none;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.sec-rotation-row {
+  display: grid;
+  grid-template-columns: 28px minmax(0, 1fr) auto auto;
+  align-items: center;
+  gap: 10px;
+  min-height: 44px;
+  padding: 4px 16px;
+  border-top: 1px solid var(--fnk-neutral-100);
+  font-size: 12px;
+}
+
+.sec-rotation-rank {
+  color: var(--fnk-neutral-500);
+  font-weight: 600;
+}
+
+.sec-rotation-name {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: var(--fnk-neutral-700);
+}
+
+.sec-rotation-quad {
+  font-size: 12px;
+  color: var(--fnk-neutral-500);
+  white-space: nowrap;
+}
+
+.sec-rotation-bandless {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+  padding: 12px 16px;
+  border-top: 1px solid var(--fnk-neutral-100);
+  font-size: 12px;
+}
+
+.sec-rotation-bandless-label {
+  font-weight: 600;
+  color: var(--fnk-neutral-500);
+}
+
+.sec-rotation-bandless-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 44px;
+  padding: 0 12px;
+  border: 1px solid var(--fnk-neutral-200);
+  border-radius: 999px;
+  font-size: 12px;
+}
+
+.sec-rotation-bandless-note {
+  color: var(--fnk-neutral-500);
+}
+
+.sec-rotation-legend {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 18px;
+  padding: 10px 16px;
+  border-top: 1px solid var(--fnk-neutral-100);
+  font-size: 12px;
+  color: var(--fnk-neutral-500);
+}
+
+.sec-rotation-legend b {
+  color: var(--fnk-neutral-700);
+  font-weight: 600;
+}
+
+@media (max-width: 760px) {
+  .sec-rotation-map {
+    display: none;
+  }
+
+  .sec-rotation-list {
+    display: block;
+  }
+}
+
+/* Layer-2 accordions (slice S2): collapsed bars are full-width 44px buttons;
+ * the open section renders the existing panel unchanged. A collapsed section
+ * keeps a compact one-line EvidenceRail below the bar, so the closed state
+ * still carries source · 기준 · 커버리지. */
+
+.sec-acc-wrap {
+  background: var(--fnk-color-white);
+  border: 1px solid var(--fnk-neutral-200);
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.sec-acc-wrap .sec-acc-closed {
+  border: none;
+  border-radius: 0;
+}
+
+.sec-acc-closed {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  min-height: 44px;
+  padding: 6px 16px;
+  background: var(--fnk-color-white);
+  border: 1px solid var(--fnk-neutral-200);
+  border-radius: 8px;
+  cursor: pointer;
+  text-align: left;
+  transition: background-color 150ms ease;
+}
+
+.sec-acc-closed:hover {
+  background: var(--fnk-neutral-50);
+}
+
+.sec-acc-closed:focus-visible {
+  outline: 2px solid var(--fnk-brand-interactive);
+  outline-offset: 1px;
+}
+
+.sec-acc-chev {
+  width: 14px;
+  height: 14px;
+  flex-shrink: 0;
+  color: var(--fnk-neutral-500);
+}
+
+.sec-acc-titles {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  min-width: 0;
+}
+
+.sec-acc-title {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--fnk-neutral-900);
+}
+
+.sec-acc-closed .sec-head-note {
+  margin-left: auto;
+  text-align: right;
+}
+
+/* Rank strip: one compact table, hidden on narrow screens per the artboard. */
+
+.sec-rank-scroll {
+  overflow-x: auto;
+  max-width: 100%;
+}
+
+.sec-rank-table {
+  width: 100%;
+  min-width: 720px;
+  border-collapse: collapse;
+  font-size: 12px;
+}
+
+.sec-rank-table thead th {
+  height: 26px;
+  padding: 0 12px;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--fnk-neutral-500);
+  text-align: right;
+  white-space: nowrap;
+}
+
+.sec-rank-table thead th.sec-rank-th-name {
+  text-align: left;
+  padding-left: 16px;
+}
+
+.sec-rank-row {
+  border-top: 1px solid var(--fnk-neutral-100);
+}
+
+.sec-rank-row:hover {
+  background: var(--fnk-neutral-50);
+}
+
+.sec-rank-table td {
+  padding: 0 12px;
+  height: 44px;
+  text-align: right;
+  color: var(--fnk-neutral-700);
+  white-space: nowrap;
+}
+
+.sec-rank-name {
+  text-align: left;
+  padding: 0 12px 0 16px;
+  height: 44px;
+  font-weight: 400;
+  white-space: nowrap;
+  color: var(--fnk-neutral-700);
+}
+
+/* Rank movement vs the adjacent window: neutral by design — only the rank
+   number carries the gain/loss colour. */
+.sec-rank-move {
+  margin-left: 6px;
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--fnk-neutral-500);
+}
+
+/* Valuation bands: sector / Fwd P/E / band bar / percentile. */
+
+.sec-band-head {
+  display: grid;
+  grid-template-columns: minmax(0, 1.4fr) 90px minmax(0, 2fr) 70px;
+  align-items: center;
+  gap: 12px;
+  height: 26px;
+  padding: 0 16px;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--fnk-neutral-500);
+}
+
+.sec-band-head-num {
+  text-align: right;
+}
+
+.sec-band-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1.4fr) 90px minmax(0, 2fr) 70px;
+  align-items: center;
+  gap: 12px;
+  min-height: 44px;
+  padding: 5px 16px;
+  border-top: 1px solid var(--fnk-neutral-100);
+  font-size: 12px;
+}
+
+.sec-band-row:hover {
+  background: var(--fnk-neutral-50);
+}
+
+.sec-band-name {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: var(--fnk-neutral-700);
+}
+
+.sec-band-pe {
+  text-align: right;
+  color: var(--fnk-neutral-700);
+}
+
+.sec-band-missing {
+  font-size: 12px;
+  color: var(--fnk-neutral-500);
+}
+
+.sec-band-pct {
+  text-align: right;
+  color: var(--fnk-neutral-500);
+}
+
+/* Action row: two buttons plus a plain connection rail (no freshness). */
+
+.sec-action-buttons {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  padding: 14px 16px;
+}
+
+.sec-action-buttons button {
+  min-height: 44px;
+}
+
+.sec-action-rail {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  min-height: 30px;
+  padding: 4px 16px 10px;
+  font-size: 12px;
+  color: var(--fnk-neutral-500);
+}
+
+.sec-action-rail b {
+  color: var(--fnk-neutral-700);
+  font-weight: 600;
+}
+
+.sec-action-rail .sec-cta-note {
+  margin-left: auto;
+}
+
+@media (max-width: 760px) {
+  /* Partial strip must not leave an empty Panel + rail on mobile: hide the
+   * whole rank panel, not only its table body. */
+  .sec-rank-panel {
+    display: none;
+  }
+
+  .sec-band-head,
+  .sec-band-row {
+    grid-template-columns: minmax(0, 1fr) 72px minmax(0, 1.2fr) 52px;
+    gap: 8px;
+  }
+}
+
+/* Narrow tracks pack the same x-encoded spread dots into ~300px: cap the dot
+ * diameter by track share and stagger three rows so every sector stays
+ * visible (x remains the only value encoding; the row offset carries no
+ * meaning). */
+@media (max-width: 767px) {
+  .sec-spread-track {
+    height: 48px;
+  }
+
+  .sec-spread-dot[data-spread-row="0"] {
+    top: calc(50% - 9px);
+  }
+
+  .sec-spread-dot[data-spread-row="2"] {
+    top: calc(50% + 9px);
+  }
+}
+
+/* Phone-width compare header: keep the panel title on its own line (rather
+ * than truncating "섹터 ETF 비교" against the 접기 control) and drop the
+ * secondary coverage note. */
+@media (max-width: 640px) {
+  [data-sectors-etf-compare] > div:first-child {
+    height: auto;
+    min-height: 44px;
+    flex-wrap: wrap;
+    row-gap: 2px;
+    padding-top: 6px;
+    padding-bottom: 6px;
+  }
+
+  [data-sectors-etf-compare] .sec-head-note {
+    display: none;
+  }
+}

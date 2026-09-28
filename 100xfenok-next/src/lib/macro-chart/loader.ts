@@ -12,8 +12,11 @@ import {
 import { applyMacroTransform, transformUnitLabel } from "./transforms";
 import type {
   MacroRawPoint,
+  MacroAggregation,
+  MacroOutputFrequency,
   MacroSeriesAccessor,
   MacroSeriesDefinition,
+  MacroSeriesViewOptions,
   MacroSeriesUnitKind,
   MacroValueTransform,
 } from "./types";
@@ -25,8 +28,15 @@ export { parseStooqDailyCsv, toStooqSymbol } from "./stooq";
 export interface LoadedMacroSeries {
   definition: MacroSeriesDefinition;
   transform: MacroValueTransform;
+  outputFrequency: MacroOutputFrequency;
+  aggregation: MacroAggregation;
   rawPoints: MacroRawPoint[];
   transformedPoints: MacroRawPoint[];
+  error?: string;
+}
+
+export interface MacroChartWindow {
+  months?: number;
 }
 
 function asRecord(value: unknown): JsonRecord {
@@ -44,6 +54,76 @@ function asNumber(value: unknown): number | null {
 
 function sourceKind(definition: MacroSeriesDefinition) {
   return definition.sourceKind ?? "local-json";
+}
+
+function dateValue(date: string): number {
+  const value = Date.parse(date);
+  return Number.isFinite(value) ? value : Number.NEGATIVE_INFINITY;
+}
+
+function monthsBefore(date: string, months: number): number {
+  const parsed = new Date(date);
+  if (!Number.isFinite(parsed.valueOf())) return Number.NEGATIVE_INFINITY;
+  const targetMonth = parsed.getUTCMonth() - months;
+  const targetYear = parsed.getUTCFullYear() + Math.floor(targetMonth / 12);
+  const normalizedMonth = ((targetMonth % 12) + 12) % 12;
+  const lastDay = new Date(Date.UTC(targetYear, normalizedMonth + 1, 0)).getUTCDate();
+  return Date.UTC(targetYear, normalizedMonth, Math.min(parsed.getUTCDate(), lastDay));
+}
+
+function cutoffPoints(points: readonly MacroRawPoint[], anchor: string | null, window: MacroChartWindow): MacroRawPoint[] {
+  if (!anchor || window.months == null) return [...points];
+  const cutoff = monthsBefore(anchor, window.months);
+  return points.filter((point) => dateValue(point.date) >= cutoff);
+}
+
+const FREQUENCY_RANK: Record<MacroOutputFrequency, number> = {
+  daily: 0,
+  weekly: 1,
+  monthly: 2,
+  quarterly: 3,
+};
+
+function isoWeekStart(iso: string): string {
+  const date = new Date(`${iso.slice(0, 10)}T00:00:00Z`);
+  if (!Number.isFinite(date.valueOf())) return iso;
+  const day = date.getUTCDay() || 7;
+  date.setUTCDate(date.getUTCDate() - day + 1);
+  return date.toISOString().slice(0, 10);
+}
+
+function bucketKey(date: string, frequency: MacroOutputFrequency): string {
+  if (frequency === "daily") return date;
+  if (frequency === "weekly") return isoWeekStart(date);
+  if (frequency === "monthly") return date.slice(0, 7);
+  const month = Number(date.slice(5, 7));
+  const quarter = Number.isFinite(month) && month > 0 ? Math.ceil(month / 3) : 1;
+  return `${date.slice(0, 4)}-Q${quarter}`;
+}
+
+export function aggregateMacroPoints(
+  points: readonly MacroRawPoint[],
+  sourceFrequency: MacroOutputFrequency,
+  outputFrequency: MacroOutputFrequency,
+  aggregation: MacroAggregation,
+): MacroRawPoint[] {
+  if (FREQUENCY_RANK[outputFrequency] <= FREQUENCY_RANK[sourceFrequency]) return [...points];
+  const buckets = new Map<string, MacroRawPoint[]>();
+  for (const point of points) {
+    const key = bucketKey(point.date, outputFrequency);
+    const bucket = buckets.get(key) ?? [];
+    bucket.push(point);
+    buckets.set(key, bucket);
+  }
+  return [...buckets.values()].map((bucket) => {
+    const last = bucket.at(-1)!;
+    if (aggregation === "end") return { ...last };
+    const total = bucket.reduce((sum, point) => sum + point.value, 0);
+    return {
+      date: last.date,
+      value: aggregation === "sum" ? total : total / bucket.length,
+    };
+  });
 }
 
 function browserStorage(): Storage | null {
@@ -159,25 +239,57 @@ function extractPoints(payload: unknown, accessor: MacroSeriesAccessor): MacroRa
 export async function loadMacroSeries(
   definitions: readonly MacroSeriesDefinition[],
   transforms: ReadonlyMap<string, MacroValueTransform>,
+  window: MacroChartWindow = {},
+  viewOptions: ReadonlyMap<string, MacroSeriesViewOptions> = new Map(),
 ): Promise<LoadedMacroSeries[]> {
   const payloads = new Map<string, unknown>();
+  const payloadErrors = new Map<string, string>();
   await Promise.all(
     [...new Set(definitions.filter((definition) => sourceKind(definition) === "local-json").map((definition) => definition.sourcePath))].map(async (sourcePath) => {
-      const response = await fetch(sourcePath, { cache: "force-cache" });
-      if (!response.ok) throw new Error(`${sourcePath} ${response.status}`);
-      payloads.set(sourcePath, await response.json());
+      try {
+        const response = await fetch(sourcePath, { cache: "force-cache" });
+        if (!response.ok) throw new Error(`${sourcePath} ${response.status}`);
+        payloads.set(sourcePath, await response.json());
+      } catch (error) {
+        payloadErrors.set(sourcePath, error instanceof Error ? error.message : String(error));
+      }
     }),
   );
 
-  return Promise.all(definitions.map(async (definition) => {
-    const rawPoints =
-      sourceKind(definition) === "stooq"
+  const extracted: Array<{ definition: MacroSeriesDefinition; rawPoints: MacroRawPoint[]; error?: string }> = await Promise.all(definitions.map(async (definition) => {
+    try {
+      const sourceError = payloadErrors.get(definition.sourcePath);
+      if (sourceError) throw new Error(sourceError);
+      const rawPoints = sourceKind(definition) === "stooq"
         ? await loadStooqRawPoints(definition)
         : extractPoints(payloads.get(definition.sourcePath), definition.accessor);
-    const transform = transforms.get(definition.id) ?? definition.defaultTransform ?? "raw";
-    const transformedPoints = downsampleMacroPoints(applyMacroTransform(rawPoints, transform, definition));
-    return { definition, transform, rawPoints, transformedPoints };
+      if (!rawPoints.length) throw new Error("no finite observations");
+      return { definition, rawPoints };
+    } catch (error) {
+      return {
+        definition,
+        rawPoints: [] as MacroRawPoint[],
+        error: error instanceof Error ? error.message : String(error),
+      };
+    }
   }));
+  const anchor = extracted
+    .flatMap((item) => item.rawPoints)
+    .reduce<string | null>((latest, point) => latest === null || dateValue(point.date) > dateValue(latest) ? point.date : latest, null);
+
+  return extracted.map(({ definition, rawPoints, error }) => {
+    const transform = transforms.get(definition.id) ?? definition.defaultTransform ?? "raw";
+    const options = viewOptions.get(definition.id);
+    const outputFrequency = options?.frequency ?? definition.frequency;
+    const aggregation = options?.aggregation ?? "average";
+    const windowPoints = cutoffPoints(rawPoints, anchor, window);
+    const aggregatedPoints = aggregateMacroPoints(windowPoints, definition.frequency, outputFrequency, aggregation);
+    const transformDefinition = outputFrequency === definition.frequency
+      ? definition
+      : { ...definition, frequency: outputFrequency };
+    const transformedPoints = downsampleMacroPoints(applyMacroTransform(aggregatedPoints, transform, transformDefinition));
+    return { definition, transform, outputFrequency, aggregation, rawPoints: windowPoints, transformedPoints, error };
+  });
 }
 
 export function unitLabel(unit: MacroSeriesUnitKind): string {
@@ -191,26 +303,82 @@ export function unitLabel(unit: MacroSeriesUnitKind): string {
   return "index";
 }
 
-export function buildMarketSeries(items: readonly LoadedMacroSeries[]): MarketChartSeries[] {
-  const labels = buildAlignedLabels(items.map((item) => item.transformedPoints));
-  const hasMixedRawUnits = new Set(
-    items
-      .filter((item) => item.transform === "raw")
-      .map((item) => unitLabel(item.definition.unit)),
-  ).size > 1;
+type BuildMarketSeriesOptions = {
+  alignDates?: boolean;
+  preserveCadenceGaps?: boolean;
+};
 
-  return items.map((item) => {
+const EXPECTED_CADENCE_MS: Record<MacroOutputFrequency, number> = {
+  daily: 86_400_000,
+  weekly: 7 * 86_400_000,
+  monthly: 31 * 86_400_000,
+  quarterly: 92 * 86_400_000,
+};
+
+const GAP_THRESHOLD_MULTIPLIER: Record<MacroOutputFrequency, number> = {
+  daily: 5,
+  weekly: 1.8,
+  monthly: 1.6,
+  quarterly: 1.6,
+};
+
+function marketPointsWithCadenceGaps(item: LoadedMacroSeries): MarketChartSeries["points"] {
+  const points: Array<{ label: string; value: number | null }> = [];
+  const expected = EXPECTED_CADENCE_MS[item.outputFrequency];
+  const threshold = expected * GAP_THRESHOLD_MULTIPLIER[item.outputFrequency];
+  item.transformedPoints.forEach((point, index) => {
+    const previous = item.transformedPoints[index - 1];
+    const previousTime = previous ? Date.parse(previous.date) : Number.NaN;
+    const currentTime = Date.parse(point.date);
+    if (Number.isFinite(previousTime) && Number.isFinite(currentTime) && currentTime - previousTime > threshold) {
+      points.push({ label: new Date(previousTime + expected).toISOString().slice(0, 10), value: null });
+    }
+    points.push({ label: point.date, value: point.value });
+  });
+  return points;
+}
+
+export function buildMarketSeries(
+  items: readonly LoadedMacroSeries[],
+  options: BuildMarketSeriesOptions = {},
+): MarketChartSeries[] {
+  const healthy = items.filter((item) => !item.error && item.transformedPoints.length > 0);
+  const labels = buildAlignedLabels(healthy.map((item) => item.transformedPoints));
+  const unitGroups = [...new Set(healthy.map((item) => transformedUnitGroup(item)))];
+  const alignDates = options.alignDates ?? true;
+
+  return healthy.map((item, index) => {
     const transformedUnit = transformUnitLabel(item.transform, unitLabel(item.definition.unit));
-    const yAxisId =
-      item.transform === "raw" && hasMixedRawUnits && (item.definition.unit === "percent" || item.definition.unit === "spread")
-        ? "y1"
-        : "y";
+    const unitGroup = transformedUnitGroup(item);
     return {
       id: item.definition.id,
       label: `${item.definition.shortLabel} · ${transformedUnit}`,
-      colorToken: item.definition.colorToken,
-      yAxisId,
-      points: alignMacroPoints(item.transformedPoints, labels),
+      paletteIndex: index,
+      lineRole: index === 0 ? "primary" : "secondary",
+      unitGroup,
+      yAxisId: unitGroups.indexOf(unitGroup) === 1 ? "y1" : "y",
+      points: alignDates
+        ? alignMacroPoints(item.transformedPoints, labels)
+        : options.preserveCadenceGaps
+          ? marketPointsWithCadenceGaps(item)
+          : item.transformedPoints.map((point) => ({ label: point.date, value: point.value })),
     };
   });
+}
+
+export function transformedUnitGroup(item: Pick<LoadedMacroSeries, "definition" | "transform">): string {
+  if (item.transform === "rebase100") return "level";
+  if (item.transform === "yoy" || item.transform === "pctChange") return "percent";
+  if (item.transform === "change") return unitLabel(item.definition.unit);
+  if (item.definition.unit === "index" || item.definition.unit === "score") return "level";
+  if (item.definition.unit === "percent" || item.definition.unit === "spread") return "percent";
+  return unitLabel(item.definition.unit);
+}
+
+export function transformedUnitGroupLabel(group: string): string {
+  if (group === "level") return "지수 / 기준값";
+  if (group === "percent") return "% / 스프레드 / YoY";
+  if (group === "ratio") return "비율";
+  if (group === "derived") return "합성값";
+  return group;
 }

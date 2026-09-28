@@ -145,7 +145,7 @@ class SliceAPipelineTest(unittest.TestCase):
                         )
                     self.assertEqual(raised.exception.reason, case["expected"]["reason"])
 
-    def test_exact_60_registry_coverage_and_acquired_accession_lineage(self) -> None:
+    def test_exact_63_registry_coverage_and_acquired_accession_lineage(self) -> None:
         fake = FakeSec()
         case = self.cases["restatement_then_addition"]
         expected_accessions: dict[str, list[str]] = {}
@@ -159,7 +159,7 @@ class SliceAPipelineTest(unittest.TestCase):
             unit_resolver=unit_resolver,
         )
 
-        self.assertEqual(len(runs), 60)
+        self.assertEqual(len(runs), 63)
         self.assertEqual(list(runs), list(self.registry["investors"]))
         self.assertEqual(set(runs), set(self.registry["investors"]))
         for investor_id, run in runs.items():

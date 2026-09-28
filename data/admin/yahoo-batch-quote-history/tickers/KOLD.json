@@ -51,54 +51,104 @@
       "run_id": "29460793523",
       "schedule": "20 23 * * 1-5",
       "shard": "0/5"
+    },
+    {
+      "attempts_used": 1,
+      "event_name": "schedule",
+      "failures": [],
+      "latency_ms": 690,
+      "natural": true,
+      "observed_at": "2026-08-05T14:29:49Z",
+      "outcome": "fresh",
+      "run_attempt": 1,
+      "run_id": "31015333400",
+      "schedule": "7 12 * * 0-5",
+      "shard": "42/72"
+    },
+    {
+      "attempts_used": 1,
+      "event_name": "schedule",
+      "failures": [],
+      "latency_ms": 903,
+      "natural": true,
+      "observed_at": "2026-08-12T13:41:31Z",
+      "outcome": "fresh",
+      "run_attempt": 1,
+      "run_id": "31602424796",
+      "schedule": "7 12 * * 0-5",
+      "shard": "42/72"
+    },
+    {
+      "attempts_used": 1,
+      "event_name": "workflow_dispatch",
+      "failures": [],
+      "latency_ms": 474,
+      "natural": false,
+      "observed_at": "2026-09-28T05:23:15Z",
+      "outcome": "fresh",
+      "run_attempt": 1,
+      "run_id": "36367832955",
+      "schedule": "",
+      "shard": ""
     }
   ],
   "current": {
-    "fetched_at": "2026-07-16T00:17:44Z",
-    "history_as_of": "2026-07-15",
+    "fetched_at": "2026-09-28T05:26:10Z",
+    "history_as_of": "2026-09-25",
     "path": "data/yf/finance/KOLD.json",
-    "payload_sha256": "6695629fa23684480b4bcb8bd10113a40395ae0b1da44bcb6f1315616ab37739",
-    "quote_as_of": "2026-07-15T20:00:00Z",
-    "source_as_of": "2026-07-15"
+    "payload_sha256": "24c9e28e4ff68abc3830fdca1c7bf844c1234953872d87f94297329eeedcbf05",
+    "quote_as_of": "2026-09-25T20:00:00Z",
+    "source_as_of": "2026-09-25"
   },
   "discovered_from": [
-    "market_facts",
     "stockanalysis_etf"
   ],
   "last_attempt": {
     "attempts_used": 1,
-    "event_name": "schedule",
+    "event_name": "workflow_dispatch",
     "failures": [],
-    "latency_ms": 678,
-    "natural": true,
-    "observed_at": "2026-07-16T00:13:37Z",
+    "latency_ms": 474,
+    "natural": false,
+    "observed_at": "2026-09-28T05:23:15Z",
     "outcome": "fresh",
     "run_attempt": 1,
-    "run_id": "29460793523",
-    "schedule": "20 23 * * 1-5",
-    "shard": "0/5"
+    "run_id": "36367832955",
+    "schedule": "",
+    "shard": ""
   },
   "lkg": {
-    "fetched_at": "2026-06-18T15:41:30Z",
-    "history_as_of": "2026-06-18",
+    "fetched_at": "2026-08-12T13:44:18Z",
+    "history_as_of": "2026-08-12",
     "path": "data/admin/yahoo-batch-quote-history/lkg/KOLD.json",
-    "payload_sha256": "1e5205b518672a12c660b75a4675f335316200dd9dccf296bec881b7c2edddf8",
-    "quote_as_of": null,
-    "source_as_of": "2026-06-18"
+    "payload_sha256": "eaf7bca9ed102ae5293fab87e17bfb92110d5b70a9e38d789146d11fec307289",
+    "quote_as_of": "2026-08-12T13:44:16Z",
+    "source_as_of": "2026-08-12"
+  },
+  "promotion_contract": "provider_observation/v2",
+  "provider_observation": {
+    "event_name": "workflow_dispatch",
+    "history_as_of": "2026-09-25",
+    "observed_at": "2026-09-28T05:23:15Z",
+    "payload_sha256": "0c3567a3ae8db6ed6e2e4f4fcdf55b2b5e5c4b0ebbe544775913ccd15a23afa6",
+    "quote_as_of": "2026-09-25T20:00:00Z",
+    "run_attempt": 1,
+    "run_id": "36367832955",
+    "schema_version": "provider_observation/v2",
+    "source_as_of": "2026-09-25"
   },
   "resolution_state": "fresh_primary",
   "retry": false,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "stale": {
-    "age_business_days": 15,
-    "classified_at": "2026-07-13T04:33:56Z",
-    "classified_run_id": "29224221077",
+    "age_business_days": 7,
+    "classified_at": "2026-08-21T23:43:33Z",
+    "classified_run_id": "32537807621",
     "expected_resolution": "next_natural_yahoo_run",
     "max_business_days": 6,
-    "message": "KOLD holds LKG because Yahoo source date 2026-06-18 is 15 business days old, beyond the 6-day bound; it will retry on the next natural Yahoo run.",
+    "message": "KOLD holds LKG because Yahoo source date 2026-08-12 is 7 business days old, beyond the 6-day bound; it will retry on the next natural Yahoo run.",
     "reason": "source_age_exceeds_lane_bound",
-    "source_as_of": "2026-06-18"
+    "source_as_of": "2026-08-12"
   },
   "ticker": "KOLD",
-  "updated_at": "2026-07-16T00:13:37Z"
+  "updated_at": "2026-09-28T05:23:15Z"
 }

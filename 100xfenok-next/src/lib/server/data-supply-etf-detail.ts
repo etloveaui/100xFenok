@@ -4,8 +4,12 @@ import {
   getDataSupplyEtfEnrollmentDocument,
   getDataSupplyEtfIndexDocument,
   getDataSupplyEtfPayloadDocument,
-  getStockanalysisAssetDocument,
+  getStockanalysisEtfPlaneDocument,
+  getAlarmStateDocument,
+  getStockanalysisEtfShardDocument,
   type PublicJsonDocument,
+  type StockanalysisEtfPlaneDocumentResult,
+  type StockanalysisEtfShardDocumentResult,
 } from "./data-loader";
 
 export type { PublicJsonDocument } from "./data-loader";
@@ -41,6 +45,112 @@ export interface EtfDataSupplyMetadata {
   reason_code: string | null;
   recovery_transition: "unavailable" | null;
   projection_digest: string;
+  // Set only when active and delayed; absent otherwise, so the dormant shape
+  // is unchanged.
+  publication_freshness?: "delayed";
+}
+
+// Internal comparison evidence only; the public route always serves the shard document.
+export type EtfPlaneShadowParity = "match" | "mismatch" | "unavailable";
+
+// ETF authority boundary.
+//
+// The committed static shard is canonical and LKG, and is the only document
+// this resolver ever serves. The private Cloud generation is read solely to
+// compare against it, and never becomes a served payload. That has always been
+// true structurally; naming it gives the decision one site, so a later cutover
+// is a single reviewed change behind its own gate rather than an edit spread
+// across the return paths.
+//
+// Deliberately not a generic reader: one mode, one family, no registry.
+export type EtfAuthorityMode = "static_primary_cloud_shadow";
+
+export const ETF_AUTHORITY_MODE: EtfAuthorityMode = "static_primary_cloud_shadow";
+
+// D3 owner-approved option A applies the publication-cycle state and 60-hour
+// ceiling only to enrolled ETFs on the authority-transition surface. Direct
+// unenrolled static shards remain outside P3; authority selection is unchanged.
+export const ETF_STALE_REFUSAL_MAX_AGE_HOURS = 60;
+
+export function etfStaleRefusalActive(): boolean {
+  return true;
+}
+
+// Freshness from the alarm document, whose per-family fields derive from the
+// private publish-outcome shard — the only thing advancing solely on this
+// family's successful publish. Neither field is safe alone: the elapsed hours
+// freeze at write time, so pairing them with the document's own generated_at is
+// what makes a stale alarm push age UP rather than down.
+export const ETF_FRESHNESS_WORKFLOW_FILE = "fetch-stockanalysis.yml";
+
+export type EtfFreshnessVerdict = "serve" | "serve_stale_lkg" | "unavailable";
+
+export function reconstructEtfFreshness(
+  alarmState: unknown,
+  now: Date,
+): { state: string | null; ageHours: number | null } {
+  const document = asRecord(alarmState);
+  const watched = Array.isArray(document?.watched_workflows) ? document.watched_workflows : [];
+  const entry = watched
+    .map((row) => asRecord(row))
+    .find((row) => row?.file === ETF_FRESHNESS_WORKFLOW_FILE) ?? null;
+  const state = typeof entry?.data_freshness_state === "string"
+    ? entry.data_freshness_state as string
+    : null;
+  const atGeneration = entry?.data_freshness_age_hours_at_generation;
+  const generatedAt = typeof document?.generated_at === "string"
+    ? Date.parse(document.generated_at as string)
+    : Number.NaN;
+  const sinceGeneration = ((now instanceof Date ? now.getTime() : Number.NaN) - generatedAt) / 3_600_000;
+  const ageHours = typeof atGeneration === "number" ? atGeneration + sinceGeneration : Number.NaN;
+  // A negative value sails under the ceiling and a NaN slips past it, since
+  // NaN > ceiling is false. A future-stamped document is untrustworthy, so it is
+  // rejected rather than clamped. Every term must be finite and non-negative.
+  const usable = Number.isFinite(ageHours) && (atGeneration as number) >= 0 && sinceGeneration >= 0;
+  return { state, ageHours: usable ? ageHours : null };
+}
+
+export function evaluateEtfStaleRefusal({
+  state,
+  ageHours,
+  active = etfStaleRefusalActive(),
+  maxAgeHours = ETF_STALE_REFUSAL_MAX_AGE_HOURS,
+}: {
+  state: string | null;
+  ageHours: number | null;
+  active?: boolean;
+  maxAgeHours?: number;
+}): { verdict: EtfFreshnessVerdict; ageHours: number | null; active: boolean } {
+  if (!active) return { verdict: "serve", ageHours, active };
+  // Unreadable state is unavailable, not healthy: a policy that defaults to
+  // "fine" when it cannot see is not a policy.
+  // The evaluator does not trust its own input either.
+  if (state === null || ageHours === null || !Number.isFinite(ageHours) || ageHours < 0) {
+    return { verdict: "unavailable", ageHours, active };
+  }
+  if (state === "unavailable" || ageHours > maxAgeHours) return { verdict: "unavailable", ageHours, active };
+  if (state === "delayed") return { verdict: "serve_stale_lkg", ageHours, active };
+  if (state === "healthy") return { verdict: "serve", ageHours, active };
+  return { verdict: "unavailable", ageHours, active };
+}
+
+// Receives both candidates so the choice is visible at the point it is made.
+// The switch is exhaustive: adding a mode without deciding what it serves is a
+// compile error, not a silent fallthrough to the Cloud document.
+export function selectServedEtfDocument(
+  mode: EtfAuthorityMode,
+  staticShard: PublicJsonDocument,
+  cloudShadow: PublicJsonDocument | null,
+): PublicJsonDocument {
+  switch (mode) {
+    case "static_primary_cloud_shadow":
+      void cloudShadow;
+      return staticShard;
+    default: {
+      const unhandled: never = mode;
+      throw new Error(`unhandled ETF authority mode: ${String(unhandled)}`);
+    }
+  }
 }
 
 export type EtfDetailResolution =
@@ -51,8 +161,14 @@ export type EtfDetailResolution =
       projectionDigest: string;
       stateObservedAt: string;
     }
-  | { kind: "direct"; payload: JsonRecord; projectionDigest: string }
+  | {
+      kind: "shard";
+      document: PublicJsonDocument;
+      projectionDigest: string;
+      planeShadowParity: EtfPlaneShadowParity;
+    }
   | { kind: "not_found"; projectionDigest: string }
+  | { kind: "shard_unavailable"; reason: string; projectionDigest: string | null }
   | {
       kind: "error";
       code: "DATA_SUPPLY_GUARD_UNAVAILABLE" | "DATA_SUPPLY_INDEX_UNAVAILABLE";
@@ -63,7 +179,11 @@ export interface EtfDetailResolverDependencies {
   readEnrollment: () => Promise<PublicJsonDocument | null>;
   readIndex: () => Promise<PublicJsonDocument | null>;
   readProjectionPayload: (ticker: string) => Promise<PublicJsonDocument | null>;
-  readDirectPayload: (ticker: string) => Promise<PublicJsonDocument | null>;
+  readPlanePayload: (ticker: string) => Promise<StockanalysisEtfPlaneDocumentResult>;
+  readShardPayload: (ticker: string) => Promise<StockanalysisEtfShardDocumentResult>;
+  readAlarmState: () => Promise<PublicJsonDocument | null>;
+  // Injectable only to isolate the focused refusal branches in contracts.
+  staleRefusalActive: () => boolean;
   now: () => Date;
 }
 
@@ -71,7 +191,10 @@ const DEFAULT_DEPENDENCIES: EtfDetailResolverDependencies = {
   readEnrollment: getDataSupplyEtfEnrollmentDocument,
   readIndex: getDataSupplyEtfIndexDocument,
   readProjectionPayload: getDataSupplyEtfPayloadDocument,
-  readDirectPayload: (ticker) => getStockanalysisAssetDocument("etfs", ticker),
+  readPlanePayload: getStockanalysisEtfPlaneDocument,
+  readShardPayload: getStockanalysisEtfShardDocument,
+  readAlarmState: getAlarmStateDocument,
+  staleRefusalActive: () => etfStaleRefusalActive(),
   now: () => new Date(),
 };
 
@@ -325,18 +448,23 @@ function parseEntry(ticker: string, value: unknown, digest: string, now: Date) {
   };
 }
 
-function isStrictDirectEtfPayload(payload: JsonRecord, ticker: string): boolean {
+function isStrictShardEtfPayload(payload: JsonRecord, ticker: string): boolean {
   const primary = DATA_SUPPLY_ETF_DETAIL_POLICY.providers[0];
-  if (
+  return !(
     payload.schema_version !== primary.schema
     || (payload.source !== primary.name && payload.source_provider !== primary.name)
     || payload.asset_type !== "etf"
     || payload.ticker !== ticker
     || "data_supply" in payload
     || payload.detail_status === "yf_fallback"
-  ) return false;
-  const text = stableJson(payload).toLowerCase();
-  return !text.includes("yahoo") && !text.includes("yf_fallback");
+  );
+}
+
+function matchesUtf8Bytes(bytes: ArrayBuffer, raw: string): boolean {
+  const expected = new TextEncoder().encode(raw);
+  const actual = new Uint8Array(bytes);
+  return actual.byteLength === expected.byteLength
+    && actual.every((value, index) => value === expected[index]);
 }
 
 export function mergeEtfDataSupply(payload: JsonRecord, dataSupply: EtfDataSupplyMetadata): JsonRecord {
@@ -347,14 +475,7 @@ export function mergeEtfDataSupply(payload: JsonRecord, dataSupply: EtfDataSuppl
 export function buildUnavailableEtfRepresentation(
   ticker: string,
   dataSupply: EtfDataSupplyMetadata,
-  independentSummary: JsonRecord | null,
 ) {
-  if (independentSummary) {
-    return {
-      kind: "summary",
-      body: mergeEtfDataSupply(independentSummary, dataSupply),
-    } as const;
-  }
   return {
     kind: "typed_unavailable",
     body: {
@@ -378,17 +499,59 @@ export async function resolveDataSupplyEtfDetail(
   }
 
   const enrolled = guard.tickers.has(ticker);
-  const resolveDirect = async (): Promise<EtfDetailResolution> => {
-    const direct = await dependencies.readDirectPayload(ticker);
-    if (!direct) return { kind: "not_found", projectionDigest: guard.indexSha };
-    return isStrictDirectEtfPayload(direct.value, ticker)
-      ? { kind: "direct", payload: direct.value, projectionDigest: guard.indexSha }
-      : { kind: "error", code: "DATA_SUPPLY_INDEX_UNAVAILABLE", projectionDigest: guard.indexSha };
+  const resolveShard = async (): Promise<EtfDetailResolution> => {
+    const shard = await dependencies.readShardPayload(ticker);
+    if (shard.kind === "shard_integrity_unavailable") {
+      return {
+        kind: "shard_unavailable",
+        reason: shard.reason,
+        projectionDigest: shard.manifestSha256,
+      };
+    }
+    if (shard.kind === "ticker_not_found") {
+      return { kind: "not_found", projectionDigest: shard.manifestSha256 };
+    }
+    if (!isStrictShardEtfPayload(shard.document.value, ticker)) {
+      return {
+        kind: "shard_unavailable",
+        reason: "invalid_shard_payload",
+        projectionDigest: shard.manifestSha256,
+      };
+    }
+
+    const plane = await dependencies.readPlanePayload(ticker).catch(() => ({
+      kind: "unavailable" as const,
+      reason: "plane_shadow_exception",
+    }));
+    if (plane.kind !== "ok") {
+      return {
+        kind: "shard",
+        document: selectServedEtfDocument(ETF_AUTHORITY_MODE, shard.document, null),
+        projectionDigest: shard.manifestSha256,
+        planeShadowParity: "unavailable",
+      };
+    }
+    if (!isStrictShardEtfPayload(plane.document.value, ticker)) {
+      return {
+        kind: "shard",
+        document: selectServedEtfDocument(ETF_AUTHORITY_MODE, shard.document, plane.document),
+        projectionDigest: shard.manifestSha256,
+        planeShadowParity: "mismatch",
+      };
+    }
+    return {
+      kind: "shard",
+      document: selectServedEtfDocument(ETF_AUTHORITY_MODE, shard.document, plane.document),
+      projectionDigest: shard.manifestSha256,
+      planeShadowParity: matchesUtf8Bytes(plane.document.bytes, shard.document.raw)
+        ? "match"
+        : "mismatch",
+    };
   };
   const indexDocument = await dependencies.readIndex();
   if (!indexDocument) {
     if (enrolled) return { kind: "error", code: "DATA_SUPPLY_INDEX_UNAVAILABLE", projectionDigest: guard.indexSha };
-    return resolveDirect();
+    return resolveShard();
   }
 
   const parsedIndex = await parseIndex(indexDocument, guard, dependencies.now());
@@ -397,11 +560,11 @@ export async function resolveDataSupplyEtfDetail(
   }
   if (parsedIndex.kind === "invalid") {
     if (enrolled) return { kind: "error", code: "DATA_SUPPLY_INDEX_UNAVAILABLE", projectionDigest: guard.indexSha };
-    return resolveDirect();
+    return resolveShard();
   }
   const entries = parsedIndex.entries;
   if (!enrolled) {
-    return resolveDirect();
+    return resolveShard();
   }
 
   const parsed = parseEntry(ticker, entries[ticker], guard.indexSha, dependencies.now());
@@ -414,14 +577,39 @@ export async function resolveDataSupplyEtfDetail(
       stateObservedAt: parsedIndex.generatedAt,
     };
   }
+  // The read sits inside the enrollment guard. Missing, invalid, stale, or
+  // absent alarm state intentionally fails closed through the existing typed-
+  // unavailable response and telemetry path.
+  let publicationFreshness: "delayed" | null = null;
+  if (dependencies.staleRefusalActive()) {
+    const alarmDocument = await dependencies.readAlarmState();
+    const signal = reconstructEtfFreshness(alarmDocument?.value ?? null, dependencies.now());
+    const verdict = evaluateEtfStaleRefusal({ ...signal, active: true }).verdict;
+    if (verdict === "unavailable") {
+      return {
+        kind: "unavailable",
+        dataSupply: parsed.metadata,
+        projectionDigest: guard.indexSha,
+        stateObservedAt: parsedIndex.generatedAt,
+      };
+    }
+    if (verdict === "serve_stale_lkg") publicationFreshness = "delayed";
+  }
 
   const payloadDocument = await dependencies.readProjectionPayload(ticker);
+  const selectedProvider = parsed.metadata.provider_role === "primary"
+    ? DATA_SUPPLY_ETF_DETAIL_POLICY.providers[0]
+    : DATA_SUPPLY_ETF_DETAIL_POLICY.providers[1];
   if (
     !payloadDocument
     || await sha256Text(payloadDocument.raw) !== parsed.entry.payload_sha256
     || payloadDocument.value.ticker !== ticker
     || payloadDocument.value.asset_type !== "etf"
-    || payloadDocument.value.schema_version !== DATA_SUPPLY_ETF_DETAIL_POLICY.providers[1].schema
+    || payloadDocument.value.schema_version !== selectedProvider.schema
+    || (
+      payloadDocument.value.source !== selectedProvider.name
+      && payloadDocument.value.source_provider !== selectedProvider.name
+    )
     || payloadDocument.value.source_as_of !== parsed.metadata.source_as_of
     || "data_supply" in payloadDocument.value
   ) return { kind: "error", code: "DATA_SUPPLY_INDEX_UNAVAILABLE", projectionDigest: guard.indexSha };
@@ -429,7 +617,9 @@ export async function resolveDataSupplyEtfDetail(
   return {
     kind: "selected",
     payload: payloadDocument.value,
-    dataSupply: parsed.metadata,
+    dataSupply: publicationFreshness === null
+      ? parsed.metadata
+      : { ...parsed.metadata, publication_freshness: publicationFreshness },
     projectionDigest: guard.indexSha,
   };
 }

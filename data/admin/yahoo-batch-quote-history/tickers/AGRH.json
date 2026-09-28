@@ -12,15 +12,41 @@
       "run_id": "29707016827",
       "schedule": "0 22 * * 0",
       "shard": "0/6"
+    },
+    {
+      "attempts_used": 1,
+      "event_name": "schedule",
+      "failures": [],
+      "latency_ms": 589,
+      "natural": true,
+      "observed_at": "2026-08-05T10:46:42Z",
+      "outcome": "fresh",
+      "run_attempt": 1,
+      "run_id": "30998672232",
+      "schedule": "7 8 * * 0-5",
+      "shard": "40/72"
+    },
+    {
+      "attempts_used": 1,
+      "event_name": "schedule",
+      "failures": [],
+      "latency_ms": 1023,
+      "natural": true,
+      "observed_at": "2026-08-11T13:36:55Z",
+      "outcome": "fresh",
+      "run_attempt": 1,
+      "run_id": "31496919771",
+      "schedule": "7 12 * * 0-5",
+      "shard": "30/72"
     }
   ],
   "current": {
-    "fetched_at": "2026-07-19T23:02:08Z",
-    "history_as_of": "2026-07-17",
+    "fetched_at": "2026-08-11T13:38:27Z",
+    "history_as_of": "2026-08-10",
     "path": "data/yf/finance/AGRH.json",
-    "payload_sha256": "b03d56f9c87e859f30a4eb31fa4cb5c33807c17e8380b95d4e218cc1ba2d0909",
-    "quote_as_of": "2026-07-17T17:03:02Z",
-    "source_as_of": "2026-07-17"
+    "payload_sha256": "7d1d9f42f88f20f1e82a54440920f1d38c357771cf2fcc5b118ba6d0dbef76a7",
+    "quote_as_of": "2026-08-10T14:21:13Z",
+    "source_as_of": "2026-08-10"
   },
   "discovered_from": [
     "stockanalysis_etf"
@@ -29,30 +55,48 @@
     "attempts_used": 1,
     "event_name": "schedule",
     "failures": [],
-    "latency_ms": 1361,
+    "latency_ms": 1023,
     "natural": true,
-    "observed_at": "2026-07-19T22:59:54Z",
+    "observed_at": "2026-08-11T13:36:55Z",
     "outcome": "fresh",
     "run_attempt": 1,
-    "run_id": "29707016827",
-    "schedule": "0 22 * * 0",
-    "shard": "0/6"
+    "run_id": "31496919771",
+    "schedule": "7 12 * * 0-5",
+    "shard": "30/72"
+  },
+  "lkg": {
+    "fetched_at": "2026-07-19T23:02:08Z",
+    "history_as_of": "2026-07-17",
+    "path": "data/admin/yahoo-batch-quote-history/lkg/AGRH.json",
+    "payload_sha256": "b03d56f9c87e859f30a4eb31fa4cb5c33807c17e8380b95d4e218cc1ba2d0909",
+    "quote_as_of": "2026-07-17T17:03:02Z",
+    "source_as_of": "2026-07-17"
   },
   "promotion_contract": "provider_observation/v2",
   "provider_observation": {
     "event_name": "schedule",
-    "history_as_of": "2026-07-17",
-    "observed_at": "2026-07-19T22:59:54Z",
-    "payload_sha256": "0246f6b561648f8484e5f4fb195e5a7cb30e49f06667db11c9428e0da5569c3a",
-    "quote_as_of": "2026-07-17T17:03:02Z",
+    "history_as_of": "2026-08-10",
+    "observed_at": "2026-08-11T13:36:55Z",
+    "payload_sha256": "e83b7cdf084d6b7d8b2879ba9204c0de1892b7e6deeec8fa822895389ba851be",
+    "quote_as_of": "2026-08-10T14:21:13Z",
     "run_attempt": 1,
-    "run_id": "29707016827",
+    "run_id": "31496919771",
     "schema_version": "provider_observation/v2",
-    "source_as_of": "2026-07-17"
+    "source_as_of": "2026-08-10"
   },
   "resolution_state": "fresh_primary",
   "retry": false,
   "schema_version": "yahoo-batch-quote-history-state/v1",
+  "stale": {
+    "age_business_days": 7,
+    "classified_at": "2026-07-28T00:14:11Z",
+    "classified_run_id": "30316637722",
+    "expected_resolution": "next_natural_yahoo_run",
+    "max_business_days": 6,
+    "message": "AGRH holds LKG because Yahoo source date 2026-07-17 is 7 business days old, beyond the 6-day bound; it will retry on the next natural Yahoo run.",
+    "reason": "source_age_exceeds_lane_bound",
+    "source_as_of": "2026-07-17"
+  },
   "ticker": "AGRH",
-  "updated_at": "2026-07-19T22:59:54Z"
+  "updated_at": "2026-08-11T13:36:55Z"
 }

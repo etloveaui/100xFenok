@@ -25,65 +25,104 @@
       "run_id": "29785605821",
       "schedule": "0 22 * * 1",
       "shard": "1/6"
+    },
+    {
+      "attempts_used": 1,
+      "event_name": "schedule",
+      "failures": [],
+      "latency_ms": 579,
+      "natural": true,
+      "observed_at": "2026-08-05T14:29:49Z",
+      "outcome": "fresh",
+      "run_attempt": 1,
+      "run_id": "31015333400",
+      "schedule": "7 12 * * 0-5",
+      "shard": "42/72"
+    },
+    {
+      "attempts_used": 1,
+      "event_name": "schedule",
+      "failures": [],
+      "latency_ms": 771,
+      "natural": true,
+      "observed_at": "2026-08-12T13:41:31Z",
+      "outcome": "fresh",
+      "run_attempt": 1,
+      "run_id": "31602424796",
+      "schedule": "7 12 * * 0-5",
+      "shard": "42/72"
+    },
+    {
+      "attempts_used": 1,
+      "event_name": "workflow_dispatch",
+      "failures": [],
+      "latency_ms": 452,
+      "natural": false,
+      "observed_at": "2026-09-28T01:17:59Z",
+      "outcome": "fresh",
+      "run_attempt": 1,
+      "run_id": "36365270594",
+      "schedule": "",
+      "shard": ""
     }
   ],
   "current": {
-    "fetched_at": "2026-07-20T23:04:22Z",
-    "history_as_of": "2026-07-20",
+    "fetched_at": "2026-09-28T01:27:08Z",
+    "history_as_of": "2026-09-25",
     "path": "data/yf/finance/BCCC.json",
-    "payload_sha256": "bfb99f7cb2236e3035e7eeaed9c9d3bdcd711c0f992cbdd232131e80cb67c622",
-    "quote_as_of": "2026-07-20T20:00:01Z",
-    "source_as_of": "2026-07-20"
+    "payload_sha256": "99f144934a14b5ee316d3dd9848602743c931d504bbdd04aaedb2a4d2fbd5aaa",
+    "quote_as_of": "2026-09-25T19:53:00Z",
+    "source_as_of": "2026-09-25"
   },
   "discovered_from": [
     "stockanalysis_etf"
   ],
   "last_attempt": {
     "attempts_used": 1,
-    "event_name": "schedule",
+    "event_name": "workflow_dispatch",
     "failures": [],
-    "latency_ms": 899,
-    "natural": true,
-    "observed_at": "2026-07-20T23:03:20Z",
+    "latency_ms": 452,
+    "natural": false,
+    "observed_at": "2026-09-28T01:17:59Z",
     "outcome": "fresh",
     "run_attempt": 1,
-    "run_id": "29785605821",
-    "schedule": "0 22 * * 1",
-    "shard": "1/6"
+    "run_id": "36365270594",
+    "schedule": "",
+    "shard": ""
   },
   "lkg": {
-    "fetched_at": "2026-06-29T23:07:32Z",
-    "history_as_of": "2026-06-29",
+    "fetched_at": "2026-08-12T13:43:16Z",
+    "history_as_of": "2026-08-10",
     "path": "data/admin/yahoo-batch-quote-history/lkg/BCCC.json",
-    "payload_sha256": "84bd26596c1f9b77989bdf0476d2ce378e3549ff6b48a56a09db9e3118160845",
-    "quote_as_of": null,
-    "source_as_of": "2026-06-29"
+    "payload_sha256": "4c4004a0c5dcc644addf47952c5407d3ece2326c7cdb1ce9af7912f440de37d6",
+    "quote_as_of": "2026-08-11T19:59:45Z",
+    "source_as_of": "2026-08-10"
   },
   "promotion_contract": "provider_observation/v2",
   "provider_observation": {
-    "event_name": "schedule",
-    "history_as_of": "2026-07-20",
-    "observed_at": "2026-07-20T23:03:20Z",
-    "payload_sha256": "c11671e628f5b66d559353f70494a7ec8b9362f92212384f9c47d6bfaf644fa7",
-    "quote_as_of": "2026-07-20T20:00:01Z",
+    "event_name": "workflow_dispatch",
+    "history_as_of": "2026-09-25",
+    "observed_at": "2026-09-28T01:17:59Z",
+    "payload_sha256": "d63cec5cf0e8dbbec2bc307e0a351e0bfa7180cd300d36d68ba2de7abdacca0c",
+    "quote_as_of": "2026-09-25T19:53:00Z",
     "run_attempt": 1,
-    "run_id": "29785605821",
+    "run_id": "36365270594",
     "schema_version": "provider_observation/v2",
-    "source_as_of": "2026-07-20"
+    "source_as_of": "2026-09-25"
   },
   "resolution_state": "fresh_primary",
   "retry": false,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "stale": {
-    "age_business_days": 9,
-    "classified_at": "2026-07-13T04:33:56Z",
-    "classified_run_id": "29224221077",
+    "age_business_days": 7,
+    "classified_at": "2026-08-19T23:42:29Z",
+    "classified_run_id": "32314261503",
     "expected_resolution": "next_natural_yahoo_run",
     "max_business_days": 6,
-    "message": "BCCC holds LKG because Yahoo source date 2026-06-29 is 9 business days old, beyond the 6-day bound; it will retry on the next natural Yahoo run.",
+    "message": "BCCC holds LKG because Yahoo source date 2026-08-10 is 7 business days old, beyond the 6-day bound; it will retry on the next natural Yahoo run.",
     "reason": "source_age_exceeds_lane_bound",
-    "source_as_of": "2026-06-29"
+    "source_as_of": "2026-08-10"
   },
   "ticker": "BCCC",
-  "updated_at": "2026-07-20T23:03:20Z"
+  "updated_at": "2026-09-28T01:17:59Z"
 }

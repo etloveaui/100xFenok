@@ -1,0 +1,102 @@
+{
+  "attempts": [
+    {
+      "attempts_used": 1,
+      "event_name": "schedule",
+      "failures": [],
+      "latency_ms": 488,
+      "natural": true,
+      "observed_at": "2026-07-24T23:12:06Z",
+      "outcome": "fresh",
+      "run_attempt": 1,
+      "run_id": "30132647097",
+      "schedule": "0 22 * * 5",
+      "shard": "5/6"
+    },
+    {
+      "attempts_used": 1,
+      "event_name": "schedule",
+      "failures": [],
+      "latency_ms": 810,
+      "natural": true,
+      "observed_at": "2026-08-07T00:12:01Z",
+      "outcome": "fresh",
+      "run_attempt": 1,
+      "run_id": "31133672903",
+      "schedule": "7 18 * * 0-5",
+      "shard": "69/72"
+    },
+    {
+      "attempts_used": 1,
+      "event_name": "schedule",
+      "failures": [],
+      "latency_ms": 1228,
+      "natural": true,
+      "observed_at": "2026-08-10T22:52:08Z",
+      "outcome": "fresh",
+      "run_attempt": 1,
+      "run_id": "31439945275",
+      "schedule": "7 22 * * 0-5",
+      "shard": "23/72"
+    }
+  ],
+  "current": {
+    "fetched_at": "2026-08-10T22:54:05Z",
+    "history_as_of": "2026-08-10",
+    "path": "data/admin/yahoo-batch-quote-history/lkg/BCHI.json",
+    "payload_sha256": "6b3b976bc17dd6e0f29e05a75cc6cd275f2001b2909480f4d8633a2059eb7032",
+    "quote_as_of": "2026-08-10T18:54:14Z",
+    "source_as_of": "2026-08-10"
+  },
+  "discovered_from": [
+    "stockanalysis_etf"
+  ],
+  "last_attempt": {
+    "attempts_used": 1,
+    "event_name": "schedule",
+    "failures": [],
+    "latency_ms": 1228,
+    "natural": true,
+    "observed_at": "2026-08-10T22:52:08Z",
+    "outcome": "fresh",
+    "run_attempt": 1,
+    "run_id": "31439945275",
+    "schedule": "7 22 * * 0-5",
+    "shard": "23/72"
+  },
+  "lkg": {
+    "fetched_at": "2026-08-10T22:54:05Z",
+    "history_as_of": "2026-08-10",
+    "path": "data/admin/yahoo-batch-quote-history/lkg/BCHI.json",
+    "payload_sha256": "6b3b976bc17dd6e0f29e05a75cc6cd275f2001b2909480f4d8633a2059eb7032",
+    "quote_as_of": "2026-08-10T18:54:14Z",
+    "source_as_of": "2026-08-10"
+  },
+  "promotion_contract": "provider_observation/v2",
+  "provider_observation": {
+    "event_name": "schedule",
+    "history_as_of": "2026-08-10",
+    "observed_at": "2026-08-10T22:52:08Z",
+    "payload_sha256": "6d513788717eb2bb35ddc9c72142ffeb9d1346bf4aff3fdf933fe0049300936a",
+    "quote_as_of": "2026-08-10T18:54:14Z",
+    "run_attempt": 1,
+    "run_id": "31439945275",
+    "schema_version": "provider_observation/v2",
+    "source_as_of": "2026-08-10"
+  },
+  "resolution_state": "lkg_primary",
+  "retry": true,
+  "schema_version": "yahoo-batch-quote-history-state/v1",
+  "stale": {
+    "age_business_days": 7,
+    "classified_at": "2026-08-19T23:42:29Z",
+    "classified_run_id": "32314261503",
+    "expected_resolution": "next_natural_yahoo_run",
+    "max_business_days": 6,
+    "message": "BCHI holds LKG because Yahoo source date 2026-08-10 is 7 business days old, beyond the 6-day bound; it will retry on the next natural Yahoo run.",
+    "reason": "source_age_exceeds_lane_bound",
+    "source_as_of": "2026-08-10"
+  },
+  "ticker": "BCHI",
+  "updated_at": "2026-08-19T23:42:29Z"
+}

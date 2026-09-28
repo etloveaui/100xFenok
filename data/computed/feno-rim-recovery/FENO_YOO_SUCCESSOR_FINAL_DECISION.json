@@ -1,0 +1,42 @@
+{
+ "schema_version": "feno_yoo_successor_final_decision.v1",
+ "north_star": "FENO_SUSTAINABLE_YOO_SUCCESSOR_RIM",
+ "independent_ke": "RANGE_ONLY",
+ "pit_membership": "RECONSTRUCTED",
+ "payout_growth": "FAILED",
+ "spx_successor": "INCONCLUSIVE",
+ "gls_icc": "KEEP_INTERNAL_SHADOW",
+ "public_surface": "KEEP_QUARANTINED",
+ "next_expansion": "NONE",
+ "owner_approval_required": true,
+
+ "one_line": "The model can now be built; whether it carries information cannot be determined from what this data supports.",
+
+ "blockers": {
+  "independent_ke": {"status": "RANGE_ONLY", "detail": "FENO_RIM_INDEPENDENT_KE_CONTRACT.md", "note": "circularity removed — no same-date price in any input; median Ke band 4.05-5.17pp, so every downstream number is an interval"},
+  "pit_membership": {"status": "RECONSTRUCTED", "detail": "SP500_PIT_MEMBERSHIP_LEDGER_2019_2025.json", "note": "seven origins, zero unresolved, departed firms recovered"},
+  "payout_growth": {"status": "FAILED", "detail": "FENO_RIM_SUSTAINABLE_PAYOUT_CONTRACT.md", "note": "three attempts, each adding a required term; admitted coverage 39.6-63.1% originally, 23.5-52.8% on corrected share counts"},
+  "spx_successor": {"status": "INCONCLUSIVE", "detail": "FENO_YOO_SUCCESSOR_FINAL_REPORT.md", "note": "12m incremental t 0.26-0.97 against a bound of 2; permutation 0 of 5; RI and EP paths disagree in sign at 24 and 36 months"}
+ },
+
+ "why_inconclusive_is_not_negative": "Five origins, 71-121 eligible firms per cross-section, 23-33% of index weight. A test this weak would fail to detect an effect that exists. The question was not answered; it was not answered negatively.",
+
+ "prototype_scope_held": "S&P 500 only. No expansion to NDX, CCMP, SOX, KOSPI or RUT while SPX is INCONCLUSIVE.",
+
+ "process": {
+  "criteria_frozen_before_every_result": true,
+  "no_threshold_moved_after_any_result": true,
+  "criteria_versions_superseded_never_edited": ["b2b v1/v2/v3", "g0 v1/v2", "g2 v1/v2", "g3 v1/v2"],
+  "verdict_not_revised_on_improved_measurement": "B2-B stood on the instrument used to reach it; the correction happened to move the numbers down, so the verdict became more secure",
+  "statistics_defects_found_and_fixed": ["permutation did not permute — all p exactly 1.0; fixed, only the permutation rerun", "share counts carried unit errors up to 648 trillion; sanity guard added"]
+ },
+
+ "what_would_change_it": [
+  "elapsed time with records kept — the G5 shadow archive and BACKLOG #380 are the only honest ways to grow the origin count",
+  "a payout rule not gated on clean-surplus admission, which currently excludes three quarters of index weight",
+  "third-year forecast coverage at the 2024 and 2025 origins, which collapse structurally"
+ ],
+
+ "generated_at": "2026-08-08T05:10:00Z",
+ "adjudicated_by": "cc (Opus), handler and adjudicator"
+}

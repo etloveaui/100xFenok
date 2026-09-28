@@ -21,7 +21,16 @@ export type MacroSeriesUnitKind =
 
 export type MacroSeriesFrequency = "daily" | "weekly" | "monthly" | "quarterly";
 
-export type MacroValueTransform = "raw" | "rebase100" | "yoy" | "change";
+export type MacroValueTransform = "raw" | "change" | "pctChange" | "yoy" | "rebase100";
+
+export type MacroOutputFrequency = "daily" | "weekly" | "monthly" | "quarterly";
+
+export type MacroAggregation = "average" | "sum" | "end";
+
+export interface MacroSeriesViewOptions {
+  frequency?: MacroOutputFrequency;
+  aggregation?: MacroAggregation;
+}
 
 export type MacroSeriesSourceKind = "local-json" | "stooq";
 

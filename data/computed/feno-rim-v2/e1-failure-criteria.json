@@ -1,0 +1,68 @@
+{
+  "schema_version": "feno_rim_v2_e1_failure_criteria.v1",
+  "frozen_pre_result": true,
+  "freeze_policy": "failure criteria frozen from the owner ruling alone; no E1 model output computed or consumed at freeze time",
+  "owner_ruling": {
+    "ref": "owner ruling 2026-08-06, second pass (feno-handoff fh-20260806-123-cc-1f98a6d2)",
+    "verbatim": "The result does NOT reject RIM as such. What it rejects is the COMBINATION of top-down index-book B1 with a STATIC 36-month price-band coverage test. Today's intrinsic value is not a fixed 36-month price target, so comparing today's band against the level 36 months later was measuring the wrong thing. Primary evaluation changes to: origin V/P (or valuation gap) -> subsequent 36-month ANNUALISED total return. Scored by: decile calibration, Spearman rank correlation, directional agreement, improvement over the same-origin historical P/B baseline, and rate/regime stability. Static interval coverage is DEMOTED to a diagnostic - keep emitting it, stop treating it as the verdict. This is a time-unit alignment fix, not a fit-to-result change. Do not add a multiple-expansion term."
+  },
+  "failure_criteria": {
+    "scope": "top-down index-book B1 (Family B, b2_admitted=false, erp_band at origin, hull midpoint as V)",
+    "four_us_indices": [
+      "sp500",
+      "nasdaq100",
+      "nasdaq_composite",
+      "philadelphia_semi"
+    ],
+    "realized": {
+      "label": "subsequent 36-month annualised total return",
+      "cumulative": "dividend_adjusted_return_36m from the harness origins (price return + point-in-time trailing distribution yield accrued over the horizon)",
+      "annualised": "(1 + cumulative)^(1/3) - 1",
+      "fallback": "origins labelled bias_unadjusted (dividend_series_absent) fall back to annualised price_return_36m and are flagged; price return alone understates"
+    },
+    "model": {
+      "label": "origin V/P (valuation gap)",
+      "value": "computeFamilyB value_hull midpoint at the origin as-of (b2_admitted=false, erp_band wired point-in-time per origin)",
+      "ratio": "V/P = hull_mid / origin price"
+    },
+    "baseline": {
+      "label": "same-origin historical P/B baseline",
+      "value": "trailing-10y price-per-book distribution (P25/P50/P75) x origin book at the same origin as-of (naiveBaselineBand, pure panel math, no engine)",
+      "ratio": "baseline V/P = P50 x book / origin price",
+      "identical_origins": "baseline is scored on the IDENTICAL origin set as the model (same as-ofs, same realized returns)"
+    },
+    "fail_rank_relationship": {
+      "owner_rule": "rank relationship <= 0 in 3 or more of the four US indices",
+      "operational": "per-index Spearman rho between origin V/P (hull midpoint / price) and the realized 36m annualised total return; rho <= 0 in >= 3 of the four US indices triggers this criterion",
+      "fail_when": "rho <= 0 in >= 3 of 4 US indices"
+    },
+    "fail_worse_than_baseline": {
+      "owner_rule": "worse than the baseline",
+      "operational": "on IDENTICAL origins, per-index model rho (V/P vs return) is compared with the same-origin historical P/B baseline rho (baseline V/P vs return); model rho < baseline rho in >= 3 of the four US indices triggers this criterion (a tie is not a beat)",
+      "fail_when": "model rho < baseline rho in >= 3 of 4 US indices"
+    },
+    "fail_no_regime_stability": {
+      "owner_rule": "no regime stability",
+      "operational": "the feasibility receipt's regime buckets (high_rate / low_rate / crisis_2008_09 / crisis_2020_03) with origin-date semantics and the receipt's per-index risk-free quantiles; per (index, bucket) cell with >= 5 origins on the four US indices, compute Spearman rho (V/P vs return); rho <= 0 in >= half of the evaluable cells triggers this criterion; fewer than 2 evaluable cells => insufficient_data, which is neither pass nor fail",
+      "fail_when": "rho <= 0 in >= half of the evaluable (index, bucket) cells (cells with >= 5 origins)",
+      "min_cells": 2
+    },
+    "verdict": {
+      "rule": "top-down B1 terminates if ANY of the three criteria fails",
+      "outcomes": {
+        "pass": "B1_SURVIVES_E1",
+        "fail": "TOP_DOWN_B1_TERMINATES",
+        "insufficient": "E1_INSUFFICIENT_DATA"
+      }
+    },
+    "demoted": {
+      "field": "static 36-month interval coverage",
+      "status": "DEMOTED to a diagnostic field; still emitted, never the verdict",
+      "reason": "today's intrinsic value is not a fixed 36-month price target; the static-band comparison measured the wrong thing (owner ruling)"
+    },
+    "frozen_pre_result": true,
+    "freeze_mechanism": "criteria emitted as data by e1-criteria.mjs before any E1 result exists, consumed by e1-research-scoring.mjs which fails closed if the criteria file is missing or its sha mismatches"
+  },
+  "generated_at": "2026-08-06T07:06:23.622Z",
+  "criteria_sha256": "61780dd5bd04da708988540350fb4868ba0c881b0dba706cd74f93df2725eb72"
+}

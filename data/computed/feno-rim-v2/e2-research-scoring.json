@@ -1,0 +1,1584 @@
+{
+  "schema_version": "feno_rim_v2_e2_research_scoring.v1",
+  "phase": "E2",
+  "directive_ref": "feno-handoff fh-20260806-134-cc-932a5122 (owner approved)",
+  "research_only": true,
+  "promotion": null,
+  "frozen_criteria": {
+    "artifact": "data/computed/feno-rim-v2/e2-success-criteria.json",
+    "criteria_sha256": "1ae72a1649ba1d8889cc192e3e57abe4794fe73f52e6be180ed0ee342b2008f4",
+    "frozen_pre_result": true
+  },
+  "basket": {
+    "name": "Dow Jones Industrial Average (current constituents, fixed list)",
+    "source": "data/slickcharts/dowjones.json (updated 2026-08-01, count 30)",
+    "symbols": [
+      "GS",
+      "CAT",
+      "MSFT",
+      "UNH",
+      "AMGN",
+      "TRV",
+      "V",
+      "GOOGL",
+      "JPM",
+      "SHW",
+      "AXP",
+      "HD",
+      "AAPL",
+      "AMZN",
+      "MCD",
+      "JNJ",
+      "HON",
+      "IBM",
+      "BA",
+      "NVDA",
+      "CVX",
+      "CRM",
+      "MMM",
+      "PG",
+      "MRK",
+      "CSCO",
+      "WMT",
+      "DIS",
+      "KO",
+      "NKE"
+    ],
+    "fixed_list": true,
+    "survivorship_caveat": "a fixed constituent list carries survivorship bias; all three methods share the identical basket, so the bias is common to all three and the comparison stays fair — but the basket is not a clean index and the caveat bounds what E2 can conclude"
+  },
+  "scoring_method": "three methods on ONE fixed basket, same origins as E1 (the 34 sp500 walk-forward as-ofs), same 36m annualised dividend-adjusted total return, same metrics (Spearman rho + moving-block CI, decile calibration, directional rate, regime cells); V/P = intrinsic value midpoint / basket cap",
+  "origins_scored": 34,
+  "origin_gaps": [],
+  "per_origin_rows": [
+    {
+      "as_of": "2015-03-27",
+      "n_ok_members": 27,
+      "members_dropped": [
+        {
+          "symbol": "V",
+          "reason": "no_row_at_origin"
+        },
+        {
+          "symbol": "GOOGL",
+          "reason": "no_row_at_origin"
+        },
+        {
+          "symbol": "DIS",
+          "reason": "no_row_at_origin"
+        }
+      ],
+      "vp_top_down": 1.075678,
+      "vp_bottom_up": 1.578128,
+      "vp_baseline": 0.799621,
+      "return_annualised": 0.108324,
+      "cap_return": 0.273767,
+      "dividend_yield": 0.08768,
+      "total_return_36m": 0.361447,
+      "baseline_truncated": true
+    },
+    {
+      "as_of": "2015-06-26",
+      "n_ok_members": 27,
+      "members_dropped": [
+        {
+          "symbol": "V",
+          "reason": "no_row_at_origin"
+        },
+        {
+          "symbol": "GOOGL",
+          "reason": "no_row_at_origin"
+        },
+        {
+          "symbol": "DIS",
+          "reason": "no_row_at_origin"
+        }
+      ],
+      "vp_top_down": 1.002121,
+      "vp_bottom_up": 1.368341,
+      "vp_baseline": 0.809618,
+      "return_annualised": 0.129397,
+      "cap_return": 0.351013,
+      "dividend_yield": 0.089574,
+      "total_return_36m": 0.440587,
+      "baseline_truncated": true
+    },
+    {
+      "as_of": "2015-09-25",
+      "n_ok_members": 27,
+      "members_dropped": [
+        {
+          "symbol": "V",
+          "reason": "no_row_at_origin"
+        },
+        {
+          "symbol": "GOOGL",
+          "reason": "no_row_at_origin"
+        },
+        {
+          "symbol": "DIS",
+          "reason": "no_row_at_origin"
+        }
+      ],
+      "vp_top_down": 1.136938,
+      "vp_bottom_up": 1.413079,
+      "vp_baseline": 0.891351,
+      "return_annualised": 0.200011,
+      "cap_return": 0.628379,
+      "dividend_yield": 0.099669,
+      "total_return_36m": 0.728048,
+      "baseline_truncated": true
+    },
+    {
+      "as_of": "2015-12-25",
+      "n_ok_members": 27,
+      "members_dropped": [
+        {
+          "symbol": "V",
+          "reason": "no_row_at_origin"
+        },
+        {
+          "symbol": "GOOGL",
+          "reason": "no_row_at_origin"
+        },
+        {
+          "symbol": "DIS",
+          "reason": "no_row_at_origin"
+        }
+      ],
+      "vp_top_down": 1.089195,
+      "vp_bottom_up": 1.177707,
+      "vp_baseline": 0.83755,
+      "return_annualised": 0.119324,
+      "cap_return": 0.306856,
+      "dividend_yield": 0.095532,
+      "total_return_36m": 0.402387,
+      "baseline_truncated": true
+    },
+    {
+      "as_of": "2016-03-25",
+      "n_ok_members": 27,
+      "members_dropped": [
+        {
+          "symbol": "V",
+          "reason": "no_row_at_origin"
+        },
+        {
+          "symbol": "GOOGL",
+          "reason": "growth_w5_missing(g10=n,g15=n)"
+        },
+        {
+          "symbol": "DIS",
+          "reason": "no_row_at_origin"
+        }
+      ],
+      "vp_top_down": 1.110244,
+      "vp_bottom_up": 1.098022,
+      "vp_baseline": 0.908706,
+      "return_annualised": 0.154597,
+      "cap_return": 0.444351,
+      "dividend_yield": 0.094836,
+      "total_return_36m": 0.539186,
+      "baseline_truncated": true
+    },
+    {
+      "as_of": "2016-06-24",
+      "n_ok_members": 27,
+      "members_dropped": [
+        {
+          "symbol": "V",
+          "reason": "no_row_at_origin"
+        },
+        {
+          "symbol": "GOOGL",
+          "reason": "growth_w5_missing(g10=n,g15=n)"
+        },
+        {
+          "symbol": "DIS",
+          "reason": "no_row_at_origin"
+        }
+      ],
+      "vp_top_down": 1.13165,
+      "vp_bottom_up": 1.03484,
+      "vp_baseline": 0.919537,
+      "return_annualised": 0.180682,
+      "cap_return": 0.549262,
+      "dividend_yield": 0.096623,
+      "total_return_36m": 0.645884,
+      "baseline_truncated": true
+    },
+    {
+      "as_of": "2016-09-23",
+      "n_ok_members": 27,
+      "members_dropped": [
+        {
+          "symbol": "V",
+          "reason": "no_row_at_origin"
+        },
+        {
+          "symbol": "GOOGL",
+          "reason": "growth_w5_missing(g10=n,g15=n)"
+        },
+        {
+          "symbol": "DIS",
+          "reason": "no_row_at_origin"
+        }
+      ],
+      "vp_top_down": 1.043886,
+      "vp_bottom_up": 0.911834,
+      "vp_baseline": 0.894594,
+      "return_annualised": 0.185716,
+      "cap_return": 0.572539,
+      "dividend_yield": 0.094486,
+      "total_return_36m": 0.667025,
+      "baseline_truncated": true
+    },
+    {
+      "as_of": "2016-12-23",
+      "n_ok_members": 25,
+      "members_dropped": [
+        {
+          "symbol": "V",
+          "reason": "no_row_at_origin"
+        },
+        {
+          "symbol": "GOOGL",
+          "reason": "growth_w5_missing(g10=n,g15=n)"
+        },
+        {
+          "symbol": "MCD",
+          "reason": "growth_w5_missing(g10=n,g15=n)"
+        },
+        {
+          "symbol": "DIS",
+          "reason": "no_row_at_origin"
+        },
+        {
+          "symbol": "NKE",
+          "reason": "no_row_at_origin"
+        }
+      ],
+      "vp_top_down": 0.894879,
+      "vp_bottom_up": 0.756135,
+      "vp_baseline": 0.863667,
+      "return_annualised": 0.193311,
+      "cap_return": 0.61085,
+      "dividend_yield": 0.088412,
+      "total_return_36m": 0.699262,
+      "baseline_truncated": true
+    },
+    {
+      "as_of": "2017-03-24",
+      "n_ok_members": 25,
+      "members_dropped": [
+        {
+          "symbol": "V",
+          "reason": "no_row_at_origin"
+        },
+        {
+          "symbol": "GOOGL",
+          "reason": "growth_w5_missing(g10=n,g15=n)"
+        },
+        {
+          "symbol": "MCD",
+          "reason": "growth_w5_missing(g10=n,g15=n)"
+        },
+        {
+          "symbol": "DIS",
+          "reason": "no_row_at_origin"
+        },
+        {
+          "symbol": "NKE",
+          "reason": "no_row_at_origin"
+        }
+      ],
+      "vp_top_down": 0.850245,
+      "vp_bottom_up": 0.705011,
+      "vp_baseline": 0.815569,
+      "return_annualised": 0.064266,
+      "cap_return": 0.120304,
+      "dividend_yield": 0.085149,
+      "total_return_36m": 0.205453,
+      "baseline_truncated": true
+    },
+    {
+      "as_of": "2017-06-23",
+      "n_ok_members": 25,
+      "members_dropped": [
+        {
+          "symbol": "V",
+          "reason": "no_row_at_origin"
+        },
+        {
+          "symbol": "GOOGL",
+          "reason": "growth_w5_missing(g10=n,g15=n)"
+        },
+        {
+          "symbol": "MCD",
+          "reason": "growth_w5_missing(g10=n,g15=n)"
+        },
+        {
+          "symbol": "DIS",
+          "reason": "no_row_at_origin"
+        },
+        {
+          "symbol": "NKE",
+          "reason": "no_row_at_origin"
+        }
+      ],
+      "vp_top_down": 0.846575,
+      "vp_bottom_up": 0.667595,
+      "vp_baseline": 0.817313,
+      "return_annualised": 0.155704,
+      "cap_return": 0.459091,
+      "dividend_yield": 0.084528,
+      "total_return_36m": 0.543618,
+      "baseline_truncated": true
+    },
+    {
+      "as_of": "2017-09-22",
+      "n_ok_members": 24,
+      "members_dropped": [
+        {
+          "symbol": "V",
+          "reason": "no_row_at_origin"
+        },
+        {
+          "symbol": "GOOGL",
+          "reason": "growth_w5_missing(g10=n,g15=n)"
+        },
+        {
+          "symbol": "MCD",
+          "reason": "growth_w5_missing(g10=n,g15=n)"
+        },
+        {
+          "symbol": "BA",
+          "reason": "growth_w5_missing(g10=n,g15=n)"
+        },
+        {
+          "symbol": "DIS",
+          "reason": "no_row_at_origin"
+        },
+        {
+          "symbol": "NKE",
+          "reason": "no_row_at_origin"
+        }
+      ],
+      "vp_top_down": 0.799918,
+      "vp_bottom_up": 0.624714,
+      "vp_baseline": 0.794708,
+      "return_annualised": 0.160396,
+      "cap_return": 0.48348,
+      "dividend_yield": 0.079017,
+      "total_return_36m": 0.562497,
+      "baseline_truncated": true
+    },
+    {
+      "as_of": "2017-12-22",
+      "n_ok_members": 25,
+      "members_dropped": [
+        {
+          "symbol": "V",
+          "reason": "no_row_at_origin"
+        },
+        {
+          "symbol": "GOOGL",
+          "reason": "growth_w5_missing(g10=n,g15=n)"
+        },
+        {
+          "symbol": "MCD",
+          "reason": "growth_w5_missing(g10=n,g15=n)"
+        },
+        {
+          "symbol": "DIS",
+          "reason": "no_row_at_origin"
+        },
+        {
+          "symbol": "NKE",
+          "reason": "no_row_at_origin"
+        }
+      ],
+      "vp_top_down": 0.726886,
+      "vp_bottom_up": 0.564501,
+      "vp_baseline": 0.75281,
+      "return_annualised": 0.244512,
+      "cap_return": 0.851379,
+      "dividend_yield": 0.076134,
+      "total_return_36m": 0.927513,
+      "baseline_truncated": true
+    },
+    {
+      "as_of": "2018-03-23",
+      "n_ok_members": 25,
+      "members_dropped": [
+        {
+          "symbol": "V",
+          "reason": "no_row_at_origin"
+        },
+        {
+          "symbol": "GOOGL",
+          "reason": "growth_w5_missing(g10=n,g15=n)"
+        },
+        {
+          "symbol": "MCD",
+          "reason": "growth_w5_missing(g10=n,g15=n)"
+        },
+        {
+          "symbol": "DIS",
+          "reason": "no_row_at_origin"
+        },
+        {
+          "symbol": "NKE",
+          "reason": "no_row_at_origin"
+        }
+      ],
+      "vp_top_down": 0.673062,
+      "vp_bottom_up": 0.518445,
+      "vp_baseline": 0.709175,
+      "return_annualised": 0.249154,
+      "cap_return": 0.873606,
+      "dividend_yield": 0.075555,
+      "total_return_36m": 0.949161,
+      "baseline_truncated": true
+    },
+    {
+      "as_of": "2018-06-22",
+      "n_ok_members": 25,
+      "members_dropped": [
+        {
+          "symbol": "V",
+          "reason": "no_row_at_origin"
+        },
+        {
+          "symbol": "GOOGL",
+          "reason": "growth_w5_missing(g10=n,g15=n)"
+        },
+        {
+          "symbol": "MCD",
+          "reason": "growth_w5_missing(g10=n,g15=n)"
+        },
+        {
+          "symbol": "DIS",
+          "reason": "no_row_at_origin"
+        },
+        {
+          "symbol": "NKE",
+          "reason": "no_row_at_origin"
+        }
+      ],
+      "vp_top_down": 0.652401,
+      "vp_bottom_up": 0.484221,
+      "vp_baseline": 0.708605,
+      "return_annualised": 0.271376,
+      "cap_return": 0.979189,
+      "dividend_yield": 0.07586,
+      "total_return_36m": 1.055049,
+      "baseline_truncated": true
+    },
+    {
+      "as_of": "2018-09-21",
+      "n_ok_members": 24,
+      "members_dropped": [
+        {
+          "symbol": "V",
+          "reason": "no_row_at_origin"
+        },
+        {
+          "symbol": "GOOGL",
+          "reason": "growth_w5_missing(g10=n,g15=n)"
+        },
+        {
+          "symbol": "MCD",
+          "reason": "growth_w5_missing(g10=n,g15=n)"
+        },
+        {
+          "symbol": "BA",
+          "reason": "growth_w5_missing(g10=n,g15=n)"
+        },
+        {
+          "symbol": "DIS",
+          "reason": "no_row_at_origin"
+        },
+        {
+          "symbol": "NKE",
+          "reason": "no_row_at_origin"
+        }
+      ],
+      "vp_top_down": 0.581896,
+      "vp_bottom_up": 0.440399,
+      "vp_baseline": 0.662425,
+      "return_annualised": 0.277169,
+      "cap_return": 1.012878,
+      "dividend_yield": 0.07039,
+      "total_return_36m": 1.083268,
+      "baseline_truncated": true
+    },
+    {
+      "as_of": "2018-12-21",
+      "n_ok_members": 24,
+      "members_dropped": [
+        {
+          "symbol": "V",
+          "reason": "no_row_at_origin"
+        },
+        {
+          "symbol": "GOOGL",
+          "reason": "growth_w5_missing(g10=n,g15=n)"
+        },
+        {
+          "symbol": "MCD",
+          "reason": "growth_w5_missing(g10=n,g15=n)"
+        },
+        {
+          "symbol": "BA",
+          "reason": "growth_w5_missing(g10=n,g15=n)"
+        },
+        {
+          "symbol": "DIS",
+          "reason": "no_row_at_origin"
+        },
+        {
+          "symbol": "NKE",
+          "reason": "no_row_at_origin"
+        }
+      ],
+      "vp_top_down": 0.653666,
+      "vp_bottom_up": 0.483392,
+      "vp_baseline": 0.724821,
+      "return_annualised": 0.33891,
+      "cap_return": 1.323561,
+      "dividend_yield": 0.076678,
+      "total_return_36m": 1.400239,
+      "baseline_truncated": true
+    },
+    {
+      "as_of": "2019-03-22",
+      "n_ok_members": 25,
+      "members_dropped": [
+        {
+          "symbol": "V",
+          "reason": "no_row_at_origin"
+        },
+        {
+          "symbol": "GOOGL",
+          "reason": "growth_w5_missing(g10=n,g15=n)"
+        },
+        {
+          "symbol": "MCD",
+          "reason": "growth_w5_missing(g10=n,g15=n)"
+        },
+        {
+          "symbol": "DIS",
+          "reason": "no_row_at_origin"
+        },
+        {
+          "symbol": "NKE",
+          "reason": "no_row_at_origin"
+        }
+      ],
+      "vp_top_down": 0.631928,
+      "vp_bottom_up": 0.471992,
+      "vp_baseline": 0.691927,
+      "return_annualised": 0.295224,
+      "cap_return": 1.099153,
+      "dividend_yield": 0.073723,
+      "total_return_36m": 1.172876,
+      "baseline_truncated": true
+    },
+    {
+      "as_of": "2019-06-21",
+      "n_ok_members": 24,
+      "members_dropped": [
+        {
+          "symbol": "V",
+          "reason": "no_row_at_origin"
+        },
+        {
+          "symbol": "GOOGL",
+          "reason": "growth_w5_missing(g10=n,g15=n)"
+        },
+        {
+          "symbol": "HD",
+          "reason": "growth_w5_missing(g10=n,g15=n)"
+        },
+        {
+          "symbol": "MCD",
+          "reason": "growth_w5_missing(g10=n,g15=n)"
+        },
+        {
+          "symbol": "DIS",
+          "reason": "no_row_at_origin"
+        },
+        {
+          "symbol": "NKE",
+          "reason": "no_row_at_origin"
+        }
+      ],
+      "vp_top_down": 2.364007,
+      "vp_bottom_up": 0.480631,
+      "vp_baseline": 0.670671,
+      "return_annualised": 0.207317,
+      "cap_return": 0.692316,
+      "dividend_yield": 0.067486,
+      "total_return_36m": 0.759802,
+      "baseline_truncated": true
+    },
+    {
+      "as_of": "2019-09-20",
+      "n_ok_members": 23,
+      "members_dropped": [
+        {
+          "symbol": "V",
+          "reason": "no_row_at_origin"
+        },
+        {
+          "symbol": "GOOGL",
+          "reason": "growth_w5_missing(g10=n,g15=n)"
+        },
+        {
+          "symbol": "HD",
+          "reason": "growth_w5_missing(g10=n,g15=n)"
+        },
+        {
+          "symbol": "MCD",
+          "reason": "growth_w5_missing(g10=n,g15=n)"
+        },
+        {
+          "symbol": "BA",
+          "reason": "growth_w5_missing(g10=n,g15=n)"
+        },
+        {
+          "symbol": "DIS",
+          "reason": "growth_w5_missing(g10=n,g15=n)"
+        },
+        {
+          "symbol": "NKE",
+          "reason": "no_row_at_origin"
+        }
+      ],
+      "vp_top_down": 0.834027,
+      "vp_bottom_up": 0.582268,
+      "vp_baseline": 0.668546,
+      "return_annualised": 0.292328,
+      "cap_return": 1.096035,
+      "dividend_yield": 0.062296,
+      "total_return_36m": 1.158331,
+      "baseline_truncated": true
+    },
+    {
+      "as_of": "2019-12-20",
+      "n_ok_members": 23,
+      "members_dropped": [
+        {
+          "symbol": "V",
+          "reason": "no_row_at_origin"
+        },
+        {
+          "symbol": "GOOGL",
+          "reason": "growth_w5_missing(g10=n,g15=n)"
+        },
+        {
+          "symbol": "HD",
+          "reason": "growth_w5_missing(g10=n,g15=n)"
+        },
+        {
+          "symbol": "MCD",
+          "reason": "growth_w5_missing(g10=n,g15=n)"
+        },
+        {
+          "symbol": "BA",
+          "reason": "growth_w5_missing(g10=n,g15=n)"
+        },
+        {
+          "symbol": "DIS",
+          "reason": "growth_w5_missing(g10=n,g15=n)"
+        },
+        {
+          "symbol": "NKE",
+          "reason": "no_row_at_origin"
+        }
+      ],
+      "vp_top_down": 0.717685,
+      "vp_bottom_up": 0.555435,
+      "vp_baseline": 0.646374,
+      "return_annualised": 0.250425,
+      "cap_return": 0.895514,
+      "dividend_yield": 0.059605,
+      "total_return_36m": 0.955119,
+      "baseline_truncated": true
+    },
+    {
+      "as_of": "2020-03-20",
+      "n_ok_members": 23,
+      "members_dropped": [
+        {
+          "symbol": "V",
+          "reason": "no_row_at_origin"
+        },
+        {
+          "symbol": "GOOGL",
+          "reason": "growth_w5_missing(g10=n,g15=n)"
+        },
+        {
+          "symbol": "HD",
+          "reason": "growth_w5_missing(g10=n,g15=n)"
+        },
+        {
+          "symbol": "MCD",
+          "reason": "growth_w5_missing(g10=n,g15=n)"
+        },
+        {
+          "symbol": "BA",
+          "reason": "growth_w5_missing(g10=n,g15=n)"
+        },
+        {
+          "symbol": "DIS",
+          "reason": "growth_w5_missing(g10=n,g15=n)"
+        },
+        {
+          "symbol": "NKE",
+          "reason": "no_row_at_origin"
+        }
+      ],
+      "vp_top_down": 0.908852,
+      "vp_bottom_up": 0.913837,
+      "vp_baseline": 0.743444,
+      "return_annualised": 0.326739,
+      "cap_return": 1.267074,
+      "dividend_yield": 0.068302,
+      "total_return_36m": 1.335375,
+      "baseline_truncated": true
+    },
+    {
+      "as_of": "2020-06-19",
+      "n_ok_members": 23,
+      "members_dropped": [
+        {
+          "symbol": "V",
+          "reason": "no_row_at_origin"
+        },
+        {
+          "symbol": "GOOGL",
+          "reason": "growth_w5_missing(g10=n,g15=n)"
+        },
+        {
+          "symbol": "HD",
+          "reason": "growth_w5_missing(g10=n,g15=n)"
+        },
+        {
+          "symbol": "MCD",
+          "reason": "growth_w5_missing(g10=n,g15=n)"
+        },
+        {
+          "symbol": "BA",
+          "reason": "growth_w5_missing(g10=n,g15=n)"
+        },
+        {
+          "symbol": "DIS",
+          "reason": "growth_w5_missing(g10=n,g15=n)"
+        },
+        {
+          "symbol": "NKE",
+          "reason": "no_row_at_origin"
+        }
+      ],
+      "vp_top_down": 0.907682,
+      "vp_bottom_up": 0.939969,
+      "vp_baseline": 0.680864,
+      "return_annualised": 0.345811,
+      "cap_return": 1.374814,
+      "dividend_yield": 0.062728,
+      "total_return_36m": 1.437542,
+      "baseline_truncated": true
+    },
+    {
+      "as_of": "2020-09-18",
+      "n_ok_members": 23,
+      "members_dropped": [
+        {
+          "symbol": "V",
+          "reason": "no_row_at_origin"
+        },
+        {
+          "symbol": "GOOGL",
+          "reason": "growth_w5_missing(g10=n,g15=n)"
+        },
+        {
+          "symbol": "HD",
+          "reason": "growth_w5_missing(g10=n,g15=n)"
+        },
+        {
+          "symbol": "MCD",
+          "reason": "growth_w5_missing(g10=n,g15=n)"
+        },
+        {
+          "symbol": "BA",
+          "reason": "growth_w5_missing(g10=n,g15=n)"
+        },
+        {
+          "symbol": "DIS",
+          "reason": "growth_w5_missing(g10=n,g15=n)"
+        },
+        {
+          "symbol": "NKE",
+          "reason": "no_row_at_origin"
+        }
+      ],
+      "vp_top_down": 0.851784,
+      "vp_bottom_up": 0.868166,
+      "vp_baseline": 0.637289,
+      "return_annualised": 0.308721,
+      "cap_return": 1.183505,
+      "dividend_yield": 0.058009,
+      "total_return_36m": 1.241514,
+      "baseline_truncated": true
+    },
+    {
+      "as_of": "2020-12-18",
+      "n_ok_members": 25,
+      "members_dropped": [
+        {
+          "symbol": "V",
+          "reason": "no_row_at_origin"
+        },
+        {
+          "symbol": "MCD",
+          "reason": "growth_w5_missing(g10=n,g15=n)"
+        },
+        {
+          "symbol": "BA",
+          "reason": "growth_w5_missing(g10=n,g15=n)"
+        },
+        {
+          "symbol": "DIS",
+          "reason": "growth_w5_missing(g10=n,g15=n)"
+        },
+        {
+          "symbol": "NKE",
+          "reason": "no_row_at_origin"
+        }
+      ],
+      "vp_top_down": 0.632357,
+      "vp_bottom_up": 0.775768,
+      "vp_baseline": 0.499076,
+      "return_annualised": 0.216106,
+      "cap_return": 0.746831,
+      "dividend_yield": 0.051684,
+      "total_return_36m": 0.798516,
+      "baseline_truncated": true
+    },
+    {
+      "as_of": "2021-03-19",
+      "n_ok_members": 25,
+      "members_dropped": [
+        {
+          "symbol": "V",
+          "reason": "no_row_at_origin"
+        },
+        {
+          "symbol": "MCD",
+          "reason": "growth_w5_missing(g10=n,g15=n)"
+        },
+        {
+          "symbol": "BA",
+          "reason": "growth_w5_missing(g10=n,g15=n)"
+        },
+        {
+          "symbol": "DIS",
+          "reason": "growth_w5_missing(g10=n,g15=n)"
+        },
+        {
+          "symbol": "NKE",
+          "reason": "no_row_at_origin"
+        }
+      ],
+      "vp_top_down": 0.588685,
+      "vp_bottom_up": 0.778953,
+      "vp_baseline": 0.488436,
+      "return_annualised": 0.221662,
+      "cap_return": 0.773319,
+      "dividend_yield": 0.04996,
+      "total_return_36m": 0.82328,
+      "baseline_truncated": true
+    },
+    {
+      "as_of": "2021-06-18",
+      "n_ok_members": 25,
+      "members_dropped": [
+        {
+          "symbol": "V",
+          "reason": "no_row_at_origin"
+        },
+        {
+          "symbol": "MCD",
+          "reason": "growth_w5_missing(g10=n,g15=n)"
+        },
+        {
+          "symbol": "BA",
+          "reason": "growth_w5_missing(g10=n,g15=n)"
+        },
+        {
+          "symbol": "DIS",
+          "reason": "growth_w5_missing(g10=n,g15=n)"
+        },
+        {
+          "symbol": "NKE",
+          "reason": "no_row_at_origin"
+        }
+      ],
+      "vp_top_down": 0.590533,
+      "vp_bottom_up": 0.876232,
+      "vp_baseline": 0.474325,
+      "return_annualised": 0.229622,
+      "cap_return": 0.811925,
+      "dividend_yield": 0.047229,
+      "total_return_36m": 0.859154,
+      "baseline_truncated": true
+    },
+    {
+      "as_of": "2021-09-17",
+      "n_ok_members": 25,
+      "members_dropped": [
+        {
+          "symbol": "V",
+          "reason": "no_row_at_origin"
+        },
+        {
+          "symbol": "MCD",
+          "reason": "growth_w5_missing(g10=n,g15=n)"
+        },
+        {
+          "symbol": "BA",
+          "reason": "growth_w5_missing(g10=n,g15=n)"
+        },
+        {
+          "symbol": "DIS",
+          "reason": "growth_w5_missing(g10=n,g15=n)"
+        },
+        {
+          "symbol": "NKE",
+          "reason": "no_row_at_origin"
+        }
+      ],
+      "vp_top_down": 0.584366,
+      "vp_bottom_up": 0.866569,
+      "vp_baseline": 0.463225,
+      "return_annualised": 0.265842,
+      "cap_return": 0.983768,
+      "dividend_yield": 0.044559,
+      "total_return_36m": 1.028327,
+      "baseline_truncated": true
+    },
+    {
+      "as_of": "2021-12-17",
+      "n_ok_members": 25,
+      "members_dropped": [
+        {
+          "symbol": "V",
+          "reason": "no_row_at_origin"
+        },
+        {
+          "symbol": "MCD",
+          "reason": "growth_w5_missing(g10=n,g15=n)"
+        },
+        {
+          "symbol": "BA",
+          "reason": "growth_w5_missing(g10=n,g15=n)"
+        },
+        {
+          "symbol": "DIS",
+          "reason": "growth_w5_missing(g10=n,g15=n)"
+        },
+        {
+          "symbol": "NKE",
+          "reason": "no_row_at_origin"
+        }
+      ],
+      "vp_top_down": 0.544642,
+      "vp_bottom_up": 0.824103,
+      "vp_baseline": 0.434095,
+      "return_annualised": 0.264224,
+      "cap_return": 0.979546,
+      "dividend_yield": 0.041014,
+      "total_return_36m": 1.02056,
+      "baseline_truncated": true
+    },
+    {
+      "as_of": "2022-03-18",
+      "n_ok_members": 25,
+      "members_dropped": [
+        {
+          "symbol": "V",
+          "reason": "no_row_at_origin"
+        },
+        {
+          "symbol": "MCD",
+          "reason": "growth_w5_missing(g10=n,g15=n)"
+        },
+        {
+          "symbol": "BA",
+          "reason": "growth_w5_missing(g10=n,g15=n)"
+        },
+        {
+          "symbol": "DIS",
+          "reason": "growth_w5_missing(g10=n,g15=n)"
+        },
+        {
+          "symbol": "NKE",
+          "reason": "no_row_at_origin"
+        }
+      ],
+      "vp_top_down": 0.62912,
+      "vp_bottom_up": 1.019814,
+      "vp_baseline": 0.523944,
+      "return_annualised": 0.273146,
+      "cap_return": 1.016544,
+      "dividend_yield": 0.047097,
+      "total_return_36m": 1.063642,
+      "baseline_truncated": true
+    },
+    {
+      "as_of": "2022-06-17",
+      "n_ok_members": 24,
+      "members_dropped": [
+        {
+          "symbol": "V",
+          "reason": "no_row_at_origin"
+        },
+        {
+          "symbol": "HD",
+          "reason": "growth_w5_missing(g10=n,g15=n)"
+        },
+        {
+          "symbol": "MCD",
+          "reason": "growth_w5_missing(g10=n,g15=n)"
+        },
+        {
+          "symbol": "BA",
+          "reason": "growth_w5_missing(g10=n,g15=n)"
+        },
+        {
+          "symbol": "DIS",
+          "reason": "growth_w5_missing(g10=n,g15=n)"
+        },
+        {
+          "symbol": "NKE",
+          "reason": "no_row_at_origin"
+        }
+      ],
+      "vp_top_down": 0.576308,
+      "vp_bottom_up": 0.805603,
+      "vp_baseline": 0.57724,
+      "return_annualised": 0.332512,
+      "cap_return": 1.317397,
+      "dividend_yield": 0.048596,
+      "total_return_36m": 1.365993,
+      "baseline_truncated": true
+    },
+    {
+      "as_of": "2022-09-16",
+      "n_ok_members": 25,
+      "members_dropped": [
+        {
+          "symbol": "V",
+          "reason": "no_row_at_origin"
+        },
+        {
+          "symbol": "MCD",
+          "reason": "growth_w5_missing(g10=n,g15=n)"
+        },
+        {
+          "symbol": "BA",
+          "reason": "growth_w5_missing(g10=n,g15=n)"
+        },
+        {
+          "symbol": "DIS",
+          "reason": "growth_w5_missing(g10=n,g15=n)"
+        },
+        {
+          "symbol": "NKE",
+          "reason": "no_row_at_origin"
+        }
+      ],
+      "vp_top_down": 0.417289,
+      "vp_bottom_up": 0.535205,
+      "vp_baseline": 0.438127,
+      "return_annualised": 0.261266,
+      "cap_return": 0.966669,
+      "dividend_yield": 0.039742,
+      "total_return_36m": 1.006411,
+      "baseline_truncated": true
+    },
+    {
+      "as_of": "2022-12-16",
+      "n_ok_members": 25,
+      "members_dropped": [
+        {
+          "symbol": "V",
+          "reason": "no_row_at_origin"
+        },
+        {
+          "symbol": "MCD",
+          "reason": "growth_w5_missing(g10=n,g15=n)"
+        },
+        {
+          "symbol": "BA",
+          "reason": "growth_w5_missing(g10=n,g15=n)"
+        },
+        {
+          "symbol": "DIS",
+          "reason": "growth_w5_missing(g10=n,g15=n)"
+        },
+        {
+          "symbol": "NKE",
+          "reason": "no_row_at_origin"
+        }
+      ],
+      "vp_top_down": 0.461672,
+      "vp_bottom_up": 0.562596,
+      "vp_baseline": 0.503391,
+      "return_annualised": 0.321858,
+      "cap_return": 1.265649,
+      "dividend_yield": 0.044044,
+      "total_return_36m": 1.309694,
+      "baseline_truncated": true
+    },
+    {
+      "as_of": "2023-03-17",
+      "n_ok_members": 25,
+      "members_dropped": [
+        {
+          "symbol": "V",
+          "reason": "no_row_at_origin"
+        },
+        {
+          "symbol": "MCD",
+          "reason": "growth_w5_missing(g10=n,g15=n)"
+        },
+        {
+          "symbol": "BA",
+          "reason": "growth_w5_missing(g10=n,g15=n)"
+        },
+        {
+          "symbol": "DIS",
+          "reason": "growth_w5_missing(g10=n,g15=n)"
+        },
+        {
+          "symbol": "NKE",
+          "reason": "no_row_at_origin"
+        }
+      ],
+      "vp_top_down": 0.506098,
+      "vp_bottom_up": 0.641416,
+      "vp_baseline": 0.547036,
+      "return_annualised": 0.30829,
+      "cap_return": 1.193702,
+      "dividend_yield": 0.045596,
+      "total_return_36m": 1.239298,
+      "baseline_truncated": true
+    },
+    {
+      "as_of": "2023-06-16",
+      "n_ok_members": 25,
+      "members_dropped": [
+        {
+          "symbol": "V",
+          "reason": "no_row_at_origin"
+        },
+        {
+          "symbol": "MCD",
+          "reason": "growth_w5_missing(g10=n,g15=n)"
+        },
+        {
+          "symbol": "BA",
+          "reason": "growth_w5_missing(g10=n,g15=n)"
+        },
+        {
+          "symbol": "DIS",
+          "reason": "growth_w5_missing(g10=n,g15=n)"
+        },
+        {
+          "symbol": "NKE",
+          "reason": "no_row_at_origin"
+        }
+      ],
+      "vp_top_down": 0.451417,
+      "vp_bottom_up": 0.5524,
+      "vp_baseline": 0.486158,
+      "return_annualised": 0.278624,
+      "cap_return": 1.051564,
+      "dividend_yield": 0.038834,
+      "total_return_36m": 1.090398,
+      "baseline_truncated": true
+    }
+  ],
+  "comparison": {
+    "identical_origins_bu_vs_baseline": 34,
+    "identical_origins_td_vs_baseline": 34,
+    "top_down": {
+      "label": "top-down on the basket",
+      "n": 34,
+      "spearman_rho": -0.540413,
+      "spearman_ci": {
+        "mean": -0.264433,
+        "ci_lower": -0.715991,
+        "ci_upper": 0.309816,
+        "ci_level": 0.95,
+        "n": 34,
+        "block_size_quarters": 12,
+        "reps": 2000,
+        "seed": 539363334,
+        "method": "moving_block_bootstrap_36m_on_origin_pairs"
+      },
+      "directional_rate": 0.235294,
+      "decile_calibration": [
+        {
+          "decile": 1,
+          "n": 4,
+          "vp_min": 0.417289,
+          "vp_max": 0.506098,
+          "mean_annualised_return_36m": 0.29251
+        },
+        {
+          "decile": 2,
+          "n": 3,
+          "vp_min": 0.544642,
+          "vp_max": 0.581896,
+          "mean_annualised_return_36m": 0.291302
+        },
+        {
+          "decile": 3,
+          "n": 4,
+          "vp_min": 0.584366,
+          "vp_max": 0.62912,
+          "mean_annualised_return_36m": 0.247568
+        },
+        {
+          "decile": 4,
+          "n": 3,
+          "vp_min": 0.631928,
+          "vp_max": 0.652401,
+          "mean_annualised_return_36m": 0.260902
+        },
+        {
+          "decile": 5,
+          "n": 3,
+          "vp_min": 0.653666,
+          "vp_max": 0.717685,
+          "mean_annualised_return_36m": 0.279496
+        },
+        {
+          "decile": 6,
+          "n": 4,
+          "vp_min": 0.726886,
+          "vp_max": 0.846575,
+          "mean_annualised_return_36m": 0.213235
+        },
+        {
+          "decile": 7,
+          "n": 3,
+          "vp_min": 0.850245,
+          "vp_max": 0.894879,
+          "mean_annualised_return_36m": 0.188766
+        },
+        {
+          "decile": 8,
+          "n": 4,
+          "vp_min": 0.907682,
+          "vp_max": 1.043886,
+          "mean_annualised_return_36m": 0.246916
+        },
+        {
+          "decile": 9,
+          "n": 3,
+          "vp_min": 1.075678,
+          "vp_max": 1.110244,
+          "mean_annualised_return_36m": 0.127415
+        },
+        {
+          "decile": 10,
+          "n": 3,
+          "vp_min": 1.13165,
+          "vp_max": 2.364007,
+          "mean_annualised_return_36m": 0.196003
+        }
+      ],
+      "spearman_rho_identical_origins": -0.540413
+    },
+    "bottom_up": {
+      "label": "bottom-up on the basket (market-cap weighted aggregation)",
+      "n": 34,
+      "spearman_rho": -0.377846,
+      "spearman_ci": {
+        "mean": -0.138205,
+        "ci_lower": -0.771534,
+        "ci_upper": 0.443796,
+        "ci_level": 0.95,
+        "n": 34,
+        "block_size_quarters": 12,
+        "reps": 2000,
+        "seed": 539363334,
+        "method": "moving_block_bootstrap_36m_on_origin_pairs"
+      },
+      "directional_rate": 0.205882,
+      "decile_calibration": [
+        {
+          "decile": 1,
+          "n": 4,
+          "vp_min": 0.440399,
+          "vp_max": 0.483392,
+          "mean_annualised_return_36m": 0.279655
+        },
+        {
+          "decile": 2,
+          "n": 3,
+          "vp_min": 0.484221,
+          "vp_max": 0.535205,
+          "mean_annualised_return_36m": 0.260599
+        },
+        {
+          "decile": 3,
+          "n": 4,
+          "vp_min": 0.5524,
+          "vp_max": 0.564501,
+          "mean_annualised_return_36m": 0.273855
+        },
+        {
+          "decile": 4,
+          "n": 3,
+          "vp_min": 0.582268,
+          "vp_max": 0.641416,
+          "mean_annualised_return_36m": 0.253671
+        },
+        {
+          "decile": 5,
+          "n": 3,
+          "vp_min": 0.667595,
+          "vp_max": 0.756135,
+          "mean_annualised_return_36m": 0.13776
+        },
+        {
+          "decile": 6,
+          "n": 4,
+          "vp_min": 0.775768,
+          "vp_max": 0.824103,
+          "mean_annualised_return_36m": 0.258626
+        },
+        {
+          "decile": 7,
+          "n": 3,
+          "vp_min": 0.866569,
+          "vp_max": 0.876232,
+          "mean_annualised_return_36m": 0.268062
+        },
+        {
+          "decile": 8,
+          "n": 4,
+          "vp_min": 0.911834,
+          "vp_max": 1.019814,
+          "mean_annualised_return_36m": 0.282853
+        },
+        {
+          "decile": 9,
+          "n": 3,
+          "vp_min": 1.03484,
+          "vp_max": 1.177707,
+          "mean_annualised_return_36m": 0.151534
+        },
+        {
+          "decile": 10,
+          "n": 3,
+          "vp_min": 1.368341,
+          "vp_max": 1.578128,
+          "mean_annualised_return_36m": 0.145911
+        }
+      ],
+      "spearman_rho_identical_origins": -0.377846
+    },
+    "baseline": {
+      "label": "basket's own historical P/B multiple",
+      "n": 34,
+      "spearman_rho": -0.555386,
+      "spearman_ci": {
+        "mean": -0.289709,
+        "ci_lower": -0.739491,
+        "ci_upper": 0.583615,
+        "ci_level": 0.95,
+        "n": 34,
+        "block_size_quarters": 12,
+        "reps": 2000,
+        "seed": 539363334,
+        "method": "moving_block_bootstrap_36m_on_origin_pairs"
+      },
+      "directional_rate": 0,
+      "decile_calibration": [
+        {
+          "decile": 1,
+          "n": 4,
+          "vp_min": 0.434095,
+          "vp_max": 0.474325,
+          "mean_annualised_return_36m": 0.255239
+        },
+        {
+          "decile": 2,
+          "n": 3,
+          "vp_min": 0.486158,
+          "vp_max": 0.499076,
+          "mean_annualised_return_36m": 0.238797
+        },
+        {
+          "decile": 3,
+          "n": 4,
+          "vp_min": 0.503391,
+          "vp_max": 0.57724,
+          "mean_annualised_return_36m": 0.308952
+        },
+        {
+          "decile": 4,
+          "n": 3,
+          "vp_min": 0.637289,
+          "vp_max": 0.662425,
+          "mean_annualised_return_36m": 0.278772
+        },
+        {
+          "decile": 5,
+          "n": 3,
+          "vp_min": 0.668546,
+          "vp_max": 0.680864,
+          "mean_annualised_return_36m": 0.281819
+        },
+        {
+          "decile": 6,
+          "n": 4,
+          "vp_min": 0.691927,
+          "vp_max": 0.724821,
+          "mean_annualised_return_36m": 0.288666
+        },
+        {
+          "decile": 7,
+          "n": 3,
+          "vp_min": 0.743444,
+          "vp_max": 0.794708,
+          "mean_annualised_return_36m": 0.243882
+        },
+        {
+          "decile": 8,
+          "n": 4,
+          "vp_min": 0.799621,
+          "vp_max": 0.817313,
+          "mean_annualised_return_36m": 0.114423
+        },
+        {
+          "decile": 9,
+          "n": 3,
+          "vp_min": 0.83755,
+          "vp_max": 0.891351,
+          "mean_annualised_return_36m": 0.170882
+        },
+        {
+          "decile": 10,
+          "n": 3,
+          "vp_min": 0.894594,
+          "vp_max": 0.919537,
+          "mean_annualised_return_36m": 0.173665
+        }
+      ],
+      "spearman_rho_identical_origins": -0.555386
+    },
+    "bottom_up_beats_baseline_on_rank": true,
+    "top_down_beats_baseline_on_rank": true
+  },
+  "regime_cells": {
+    "bottom_up": [
+      {
+        "bucket": "high_rate",
+        "n": 0,
+        "evaluable": false,
+        "spearman_rho": null
+      },
+      {
+        "bucket": "low_rate",
+        "n": 25,
+        "evaluable": true,
+        "spearman_rho": -0.28
+      },
+      {
+        "bucket": "crisis_2008_09",
+        "n": 0,
+        "evaluable": false,
+        "spearman_rho": null
+      },
+      {
+        "bucket": "crisis_2020_03",
+        "n": 1,
+        "evaluable": false,
+        "spearman_rho": null
+      }
+    ],
+    "baseline": [
+      {
+        "bucket": "high_rate",
+        "n": 0,
+        "evaluable": false,
+        "spearman_rho": null
+      },
+      {
+        "bucket": "low_rate",
+        "n": 25,
+        "evaluable": true,
+        "spearman_rho": -0.635385
+      },
+      {
+        "bucket": "crisis_2008_09",
+        "n": 0,
+        "evaluable": false,
+        "spearman_rho": null
+      },
+      {
+        "bucket": "crisis_2020_03",
+        "n": 1,
+        "evaluable": false,
+        "spearman_rho": null
+      }
+    ],
+    "top_down": [
+      {
+        "bucket": "high_rate",
+        "n": 0,
+        "evaluable": false,
+        "spearman_rho": null
+      },
+      {
+        "bucket": "low_rate",
+        "n": 25,
+        "evaluable": true,
+        "spearman_rho": -0.456923
+      },
+      {
+        "bucket": "crisis_2008_09",
+        "n": 0,
+        "evaluable": false,
+        "spearman_rho": null
+      },
+      {
+        "bucket": "crisis_2020_03",
+        "n": 1,
+        "evaluable": false,
+        "spearman_rho": null
+      }
+    ]
+  },
+  "verdict": {
+    "verdict": "BOTTOM_UP_PASSES",
+    "rule": "bottom-up passes only if it beats the basket's own P/B baseline on rank correlation across the origins",
+    "criteria_sha256": "1ae72a1649ba1d8889cc192e3e57abe4794fe73f52e6be180ed0ee342b2008f4",
+    "pass_condition_met": true,
+    "pass_rule": "bottom-up passes only if it beats the basket's own P/B baseline on rank correlation across the origins",
+    "pass_operational": "on the IDENTICAL origin set, Spearman rho(bottom-up V/P, 36m annualised dividend-adjusted TR) > Spearman rho(basket P/B baseline V/P, same series); strictly greater — a tie is not a pass"
+  },
+  "data_gaps": [
+    "baseline truncated windows: 34/34 origins (XBRL-era book limits the trailing-10y window; naiveBaselineBand flags truncated)"
+  ],
+  "generated_at": "2026-08-06T07:40:17.373Z",
+  "scoring_sha256": "23b425fdf1381dc60b2b7399c70b8628ef865d002d84ed4c0d85c084bda3a336"
+}

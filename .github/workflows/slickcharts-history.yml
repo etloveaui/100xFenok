@@ -48,21 +48,22 @@ on:
         description: 'Single symbol (only if batch=single)'
         required: false
         type: string
+      controlled_failure_after_fetch:
+        description: 'Dispatch-only composite recovery exercise after a complete merge'
+        required: false
+        default: false
+        type: boolean
 
 permissions:
   contents: write
   actions: write
-
-concurrency:
-  group: fenok-data-writer-refs/heads/main
-  cancel-in-progress: false
-  queue: max
 
 jobs:
   # Run membership tracker first
   membership:
     if: ${{ github.event.inputs.batch != 'single' || github.event.inputs.scraper == 'membership' || github.event_name == 'schedule' }}
     runs-on: ubuntu-latest
+    timeout-minutes: 120
 
     steps:
       - name: Checkout repository
@@ -102,6 +103,7 @@ jobs:
     if: ${{ (github.event.inputs.scraper == 'all' || github.event.inputs.scraper == 'returns' || github.event_name == 'schedule') && github.event.inputs.batch != 'single' }}
     needs: membership
     runs-on: ubuntu-latest
+    timeout-minutes: 120
     strategy:
       fail-fast: false
       matrix:
@@ -157,6 +159,7 @@ jobs:
     if: ${{ (github.event.inputs.scraper == 'all' || github.event.inputs.scraper == 'dividends' || github.event_name == 'schedule') && github.event.inputs.batch != 'single' }}
     needs: membership
     runs-on: ubuntu-latest
+    timeout-minutes: 120
     strategy:
       fail-fast: false
       matrix:
@@ -209,8 +212,13 @@ jobs:
 
   # Merge all batch files
   merge-history:
+    concurrency:
+      group: fenok-data-writer-refs/heads/main
+      cancel-in-progress: false
+      queue: max
     needs: [scrape-returns, scrape-dividends]
     runs-on: ubuntu-latest
+    timeout-minutes: 120
     if: >-
       ${{ always()
           && (github.event.inputs.batch == 'ALL' || github.event_name == 'schedule')
@@ -238,6 +246,17 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: '22'
+
+      - name: Configure composite recovery paths
+        run: |
+          echo "SLICKCHARTS_COMPOSITE_SNAPSHOT_DIR=$RUNNER_TEMP/slickcharts-composite-history-baseline" >> "$GITHUB_ENV"
+          echo "SLICKCHARTS_COMPOSITE_STATUS_PATH=$RUNNER_TEMP/slickcharts-composite-history-status.json" >> "$GITHUB_ENV"
+
+      - name: Prepare composite member baseline
+        run: |
+          node scripts/slickcharts-composite-recovery.mjs prepare \
+            --member history \
+            --snapshot "$SLICKCHARTS_COMPOSITE_SNAPSHOT_DIR"
 
       - name: Verify lane-registry commit-shard contract
         run: node scripts/test-slickcharts-commit-shards.mjs
@@ -320,27 +339,96 @@ jobs:
             --split-dividends data/slickcharts/ \
             --retention-days 365
 
+      - name: Configure temporary membership projection snapshots
+        run: |
+          echo "SLICKCHARTS_UNIVERSE_SNAPSHOT_PATH=$RUNNER_TEMP/slickcharts-history-universe.json" >> "$GITHUB_ENV"
+          echo "SLICKCHARTS_MEMBERSHIP_SNAPSHOT_PATH=$RUNNER_TEMP/slickcharts-history-membership-changes.json" >> "$GITHUB_ENV"
+
       - name: Validate SlickCharts integrity
         run: |
-          python scripts/scrapers/membership-tracker.py --dry-run --quiet
+          set -euo pipefail
+
+          universe_path=data/slickcharts/universe.json
+          membership_path=data/slickcharts/membership-changes.json
+
+          test -f "$universe_path"
+          test -f "$membership_path"
+          cp -p -- "$universe_path" "$SLICKCHARTS_UNIVERSE_SNAPSHOT_PATH"
+          cp -p -- "$membership_path" "$SLICKCHARTS_MEMBERSHIP_SNAPSHOT_PATH"
+
+          restore_membership_projections() {
+            local original_status=$?
+            local restore_failed=0
+
+            trap - EXIT HUP INT TERM
+            cp -p -- "$SLICKCHARTS_UNIVERSE_SNAPSHOT_PATH" "$universe_path" \
+              || restore_failed=1
+            cp -p -- "$SLICKCHARTS_MEMBERSHIP_SNAPSHOT_PATH" "$membership_path" \
+              || restore_failed=1
+
+            if [ "$restore_failed" -ne 0 ]; then
+              echo "::error::Failed to restore temporary SlickCharts membership projections" >&2
+              original_status=1
+            fi
+
+            exit "$original_status"
+          }
+
+          trap restore_membership_projections EXIT
+          trap 'exit 129' HUP
+          trap 'exit 130' INT
+          trap 'exit 143' TERM
+
+          python scripts/scrapers/membership-tracker.py --quiet
           python scripts/validate-slickcharts-integrity.py --skip-public
 
-      - name: Emit SlickCharts history attempt
+      - name: Exercise controlled composite degradation
+        id: controlled_degradation
+        if: ${{ github.event_name == 'workflow_dispatch' && inputs.controlled_failure_after_fetch }}
+        continue-on-error: true
+        run: |
+          echo "::error::Controlled SlickCharts history composite failure"
+          exit 1
+
+      - name: Build SlickCharts history run row
         if: ${{ always() }}
         run: |
-          node scripts/emit-slickcharts-attempt.mjs \
+          node scripts/build-slickcharts-run-row.mjs \
             --member history \
             --events-root artifacts \
             --outcome "${{ needs.scrape-returns.result }}" \
             --outcome "${{ needs.scrape-dividends.result }}" \
             --outcome "${{ job.status }}" \
+            --outcome "${{ steps.controlled_degradation.outcome }}" \
             --row "$RUNNER_TEMP/slickcharts-history-row.json"
+
+      - name: Finalize SlickCharts composite recovery
+        if: ${{ always() }}
+        run: |
+          node scripts/slickcharts-composite-recovery.mjs finalize \
+            --member history \
+            --snapshot "$SLICKCHARTS_COMPOSITE_SNAPSHOT_DIR" \
+            --row "$RUNNER_TEMP/slickcharts-history-row.json" \
+            --receipts artifacts \
+            --status "$SLICKCHARTS_COMPOSITE_STATUS_PATH" \
+            --full-run "${{ (github.event_name == 'schedule' || (github.event.inputs.batch == 'ALL' && github.event.inputs.scraper == 'all')) && 'true' || 'false' }}"
 
       - name: Commit and push changes
         if: ${{ always() }}
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
+          projection_status="$(
+            git status --porcelain=v1 --untracked-files=all -- \
+              data/slickcharts/universe.json \
+              data/slickcharts/membership-changes.json
+          )"
+          if [ -n "$projection_status" ]; then
+            echo "::error::Temporary SlickCharts membership projections were not restored" >&2
+            printf '%s\n' "$projection_status" >&2
+            exit 1
+          fi
+
           git config user.name "GitHub Actions"
           git config user.email "actions@github.com"
           scripts/publish-slickcharts-attempt.sh \
@@ -349,6 +437,7 @@ jobs:
             "chore: update SlickCharts stock history $(date -u +%Y-%m-%d)" \
             --manifest-workflow .github/workflows/slickcharts-history.yml \
             --manifest-always always_if_exists \
+            --manifest-data success_if_exists \
             -- \
             data/slickcharts/stocks-returns.json \
             data/slickcharts/stocks-dividends.json \
@@ -356,10 +445,32 @@ jobs:
             data/slickcharts/stocks-dividends-historical.json \
             data/slickcharts/stocks/
 
+      - name: Publish slickcharts-history generation to the cloud data plane
+        id: publish_cloud_generation
+        if: ${{ needs.scrape-returns.result == 'success' && needs.scrape-dividends.result == 'success' && steps.controlled_degradation.outcome != 'failure' }}
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: aeeb5ea3affe55a2219d08ea02dad9e1
+          DATA_PLANE_ENDPOINT: https://100xfenok.etloveaui.workers.dev/internal/cloud-data-plane
+          DATA_PLANE_WRITE_KEY: ${{ secrets.DATA_PLANE_WRITE_KEY }}
+        run: node scripts/publish-cloud-data-generation.mjs --family=slickcharts-history --tolerate-gate-block --json
+
+      - name: Clean up downloaded attempt artifacts
+        if: ${{ always() }}
+        run: |
+          rm -rf artifacts/attempt-returns-*
+          rm -rf artifacts/attempt-dividends-*
+
+
   # Single symbol scraping for testing
   scrape-single:
+    concurrency:
+      group: fenok-data-writer-refs/heads/main
+      cancel-in-progress: false
+      queue: max
     if: ${{ github.event.inputs.batch == 'single' && github.event.inputs.symbol != '' }}
     runs-on: ubuntu-latest
+    timeout-minutes: 120
 
     steps:
       - name: Configure single-symbol attempt telemetry path
@@ -401,10 +512,10 @@ jobs:
             --symbol ${{ github.event.inputs.symbol }} \
             --pretty
 
-      - name: Emit SlickCharts history attempt
+      - name: Build SlickCharts history run row
         if: ${{ always() }}
         run: |
-          node scripts/emit-slickcharts-attempt.mjs \
+          node scripts/build-slickcharts-run-row.mjs \
             --member history \
             --events "$SLICKCHARTS_ATTEMPT_EVENTS_PATH" \
             --outcome "${{ job.status }}" \

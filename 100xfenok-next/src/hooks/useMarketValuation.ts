@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import {
   loadMarketStructureModel,
   marketStructurePulsesFromModel,
@@ -26,6 +26,7 @@ import type {
   ValuationBand,
 } from "@/lib/market-valuation/types";
 import { daysUntilKstDate, todayKST } from "@/lib/market-valuation/freshness";
+import { fetchJsonOrNull } from "@/lib/client/data-fetch";
 
 const FETCH_TIMEOUT_MS = 4000;
 
@@ -199,17 +200,7 @@ interface RawEconomicIndicators {
 }
 
 async function fetchJson<T>(url: string, timeoutMs = FETCH_TIMEOUT_MS): Promise<T | null> {
-  const controller = new AbortController();
-  const timeoutId = window.setTimeout(() => controller.abort(), timeoutMs);
-  try {
-    const response = await fetch(url, { signal: controller.signal });
-    if (!response.ok) return null;
-    return (await response.json()) as T;
-  } catch {
-    return null;
-  } finally {
-    window.clearTimeout(timeoutId);
-  }
+  return fetchJsonOrNull<T>(url, { timeoutMs });
 }
 
 function finite(value: unknown): value is number {
@@ -250,11 +241,21 @@ const EMPTY: MarketValuationResult = {
   structurePulses: [],
   erpInsight: null,
   bondPulses: [],
+  sharedDailyObservationDate: null,
   sp500AnnualReturns: [],
   benchmarkSections: null,
   damodaranUsErp: null,
   dataReady: false,
   failed: false,
+  feedReady: {
+    valuation: false,
+    computed: false,
+    macro: false,
+    sentiment: false,
+    erp: false,
+    structure: false,
+    bond: false,
+  },
   sourceDate: null,
 };
 
@@ -543,7 +544,7 @@ function percentile(series: number[], current: number | null): number | null {
 }
 
 function erpRegime(percentileRank: number | null): { label: string; tone: MarketTone } {
-  if (percentileRank === null) return { label: "레짐 미정", tone: "slate" };
+  if (percentileRank === null) return { label: "판단 보류", tone: "slate" };
   if (percentileRank >= 80) return { label: "요구수익률 높음", tone: "emerald" };
   if (percentileRank >= 60) return { label: "보상 정상권 상단", tone: "slate" };
   if (percentileRank >= 40) return { label: "역사 중립", tone: "slate" };
@@ -585,6 +586,25 @@ function sortedEconomicRecords(economic: RawEconomicIndicators | null): RawEcono
   return (Array.isArray(economic?.records) ? economic!.records! : [])
     .filter((record) => typeof record.date === "string")
     .sort((a, b) => String(a.date).localeCompare(String(b.date)));
+}
+
+function latestSharedDailyObservationDate(
+  sp500: RawIndexPoint[] | null,
+  economic: RawEconomicIndicators | null,
+): string | null {
+  const rateDates = new Set(
+    sortedEconomicRecords(economic)
+      .filter((record) =>
+        [record.hys_us, record.t10y, record.t2y, record.t10y_2y_spread, record.bei_10y, record.tips_10y]
+          .some(finite),
+      )
+      .map((record) => record.date as string),
+  );
+  return (Array.isArray(sp500) ? sp500 : [])
+    .filter((point) => typeof point.date === "string" && finite(point.value) && rateDates.has(point.date))
+    .map((point) => point.date as string)
+    .sort()
+    .at(-1) ?? null;
 }
 
 function economicValue(record: RawEconomicRecord | undefined, key: keyof RawEconomicRecord): number | null {
@@ -884,12 +904,18 @@ function buildIndexTrends(sp500: RawIndexPoint[] | null, nasdaq: RawIndexPoint[]
   ].filter((trend): trend is MarketIndexTrend => trend !== null);
 }
 
-export function useMarketValuation(): MarketValuationResult {
+export function useMarketValuation(): MarketValuationResult & { refetch: () => void } {
   const [result, setResult] = useState<MarketValuationResult>(EMPTY);
-  const isMountedRef = useRef(true);
+  const [attempt, setAttempt] = useState(0);
+  // Attempt token in the effect deps: a refetch re-runs this instance's loader
+  // while the per-run cancellation flag (the previous run's cleanup fires
+  // first) keeps both an unmount and a superseded retry from writing over
+  // newer state. The last result stays visible until the new one lands, so
+  // panels keep their LKG content through the retry.
+  const refetch = useCallback(() => setAttempt((value) => value + 1), []);
 
   useEffect(() => {
-    isMountedRef.current = true;
+    let cancelled = false;
 
     void (async () => {
       const [
@@ -941,7 +967,7 @@ export function useMarketValuation(): MarketValuationResult {
         fetchJson<RawEconomicIndicators>("/data/global-scouter/indicators/economic.json"),
         loadMarketStructureModel(),
       ]);
-      if (!isMountedRef.current) return;
+      if (cancelled) return;
 
       if (!raw?.sections) {
         setResult({ ...EMPTY, failed: true });
@@ -987,31 +1013,48 @@ export function useMarketValuation(): MarketValuationResult {
         sourceFromManifest("slickcharts", "SlickCharts", "지수 집중도·drawdown·연간 수익률", manifest),
       ].filter((source): source is ValuationDataSource => source !== null);
 
+      const macroPulses = buildMacroPulses(activity);
+      const signalPulses = buildSignalPulses(signals);
+      const sentimentPulses = buildSentimentPulses({ vix, fearGreed, aaii, move, putCall });
+      const structurePulses = marketStructurePulsesFromModel(marketStructureModel, { sp500Holdings, nasdaqHoldings, sp500Drawdown, sp500Returns, nasdaqReturns });
+      const erpInsight = buildErpInsight(damodaran, historicalErp);
+      const bondPulses = buildBondPulses(economic);
+
       setResult({
         indices,
         dataSources,
-        macroPulses: buildMacroPulses(activity),
+        macroPulses,
         macroDepths: buildMacroDepths(activity),
-        signalPulses: buildSignalPulses(signals),
-        sentimentPulses: buildSentimentPulses({ vix, fearGreed, aaii, move, putCall }),
+        signalPulses,
+        sentimentPulses,
         eventRisks: buildEventRisks(calendar, prevValues),
         indexTrends: buildIndexTrends(sp500Index, nasdaqIndex),
-        structurePulses: marketStructurePulsesFromModel(marketStructureModel, { sp500Holdings, nasdaqHoldings, sp500Drawdown, sp500Returns, nasdaqReturns }),
-        erpInsight: buildErpInsight(damodaran, historicalErp),
-        bondPulses: buildBondPulses(economic),
+        structurePulses,
+        erpInsight,
+        bondPulses,
+        sharedDailyObservationDate: latestSharedDailyObservationDate(sp500Index, economic),
         sp500AnnualReturns: buildAnnualReturns(sp500Returns),
         benchmarkSections: summaries?.metadata?.source_summary_sections ?? null,
         damodaranUsErp: finite(damodaran?.us_erp) ? damodaran!.us_erp! : null,
         dataReady: indices.length > 0,
         failed: indices.length === 0,
+        feedReady: {
+          valuation: indices.length > 0,
+          computed: signalPulses.length > 0,
+          macro: macroPulses.length > 0,
+          sentiment: sentimentPulses.length > 0,
+          erp: erpInsight !== null,
+          structure: structurePulses.length > 0,
+          bond: bondPulses.length > 0,
+        },
         sourceDate: raw.metadata?.version ?? null,
       });
     })();
 
     return () => {
-      isMountedRef.current = false;
+      cancelled = true;
     };
-  }, []);
+  }, [attempt]);
 
-  return result;
+  return { ...result, refetch };
 }

@@ -7,9 +7,16 @@ import argparse
 from datetime import datetime, timezone
 import json
 from pathlib import Path
+import sys
 import time
 from typing import Callable
 
+
+SCRIPT_DIR = Path(__file__).resolve().parent
+if str(SCRIPT_DIR) not in sys.path:
+    sys.path.insert(0, str(SCRIPT_DIR))
+
+from lib.diagnostic_detail import bounded_diagnostic_detail
 
 ROOT = Path(__file__).resolve().parent.parent
 OUT_DIR = ROOT / "_private" / "admin" / "fenok-flow" / "yf_options"
@@ -193,8 +200,9 @@ def collect_options(
             print(f"[{index}/{len(tickers)}] {ticker} OK expiries={len(options)}", flush=True)
         except Exception as exc:  # noqa: BLE001 - bounded collector reports all members.
             reason = _safe_reason(exc)
-            results.append({"ticker": ticker, "status": "failed", "reason": reason})
-            print(f"[{index}/{len(tickers)}] {ticker} FAIL {reason}", flush=True)
+            diagnostic = bounded_diagnostic_detail(exc)
+            results.append({"ticker": ticker, "status": "failed", "reason": reason, "diagnostic": diagnostic})
+            print(f"[{index}/{len(tickers)}] {ticker} FAIL {reason}: {diagnostic}", flush=True)
         if sleep_seconds > 0 and index < len(tickers):
             time.sleep(sleep_seconds)
 

@@ -1,4 +1,5 @@
 import type { Profile } from "../mockData";
+import * as personalStore from "@/lib/personal/personalStore";
 
 const PROFILE_STORAGE_KEY = "ib_profiles";
 const DAILY_STORAGE_KEY = "ib_daily_data";
@@ -109,6 +110,9 @@ export function readIbV1Profiles(): IbV1ProfileReadResult {
     };
   }
 
+  // Trigger background sync if logged in
+  personalStore.triggerBackgroundSync("ib").catch(() => {});
+
   const store = safeJsonParse<IbV1ProfileStore>(window.localStorage.getItem(PROFILE_STORAGE_KEY));
   if (!store || !store.profiles || typeof store.profiles !== "object") {
     return {
@@ -135,6 +139,19 @@ export function readIbV1Profiles(): IbV1ProfileReadResult {
   };
 }
 
+export function writeIbV1Profiles(store: IbV1ProfileStore): void {
+  if (!canUseLocalStorage()) return;
+  try {
+    window.localStorage.setItem(PROFILE_STORAGE_KEY, JSON.stringify(store));
+    const fullDoc = personalStore.packIbStoreFromLocal();
+    if (fullDoc) {
+      personalStore.write("ib", fullDoc);
+    }
+  } catch {
+    // Storage full or private mode
+  }
+}
+
 export function readIbDailyData(profileId: string, symbol: string): IbV1DailyData | null {
   if (!canUseLocalStorage()) return null;
 
@@ -153,6 +170,28 @@ export function readIbDailyData(profileId: string, symbol: string): IbV1DailyDat
     date: typeof raw.date === "string" ? raw.date : undefined,
     timestamp: typeof raw.timestamp === "string" ? raw.timestamp : undefined,
   };
+}
+
+export function writeIbDailyData(profileId: string, symbol: string, data: IbV1DailyData): void {
+  if (!canUseLocalStorage()) return;
+  const safeProfileId = String(profileId || "").trim();
+  const safeSymbol = sanitizeSymbol(symbol);
+  if (!safeProfileId || !safeSymbol) return;
+
+  const key = `${DAILY_STORAGE_KEY}_${safeProfileId}_${safeSymbol}`;
+  try {
+    window.localStorage.setItem(key, JSON.stringify(data));
+    const fullDoc = personalStore.packIbStoreFromLocal();
+    if (fullDoc) {
+      personalStore.write("ib", fullDoc);
+    }
+  } catch {
+    // Storage full or private mode
+  }
+}
+
+export function subscribeIbStore(onChange: () => void): () => void {
+  return personalStore.subscribe("ib", onChange);
 }
 
 export function toIbV2Profile(profile: IbV1Profile): Profile {

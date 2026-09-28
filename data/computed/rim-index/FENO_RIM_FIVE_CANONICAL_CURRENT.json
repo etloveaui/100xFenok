@@ -1,0 +1,314 @@
+{
+  "schema_version": "feno_rim_five_canonical_current.v1",
+  "criteria": "data/computed/rim-index/feno-index-rim-five-canonical-criteria.json",
+  "generated_at": "2026-08-10T15:27:26.778Z",
+  "exact_yoo": false,
+  "yoo_status": "NOT_IDENTIFIED",
+  "public_surface": {
+    "status": "QUARANTINED",
+    "rule": "the five-index canonical line is quarantined from public promotion until a separate owner approval; rows never set display_ready"
+  },
+  "primary_scalar": "fair_value_upside",
+  "horizon": "same_as_of",
+  "rows": [
+    {
+      "asset": "SPX",
+      "identity": {
+        "id": "SPX",
+        "name": "S&P 500"
+      },
+      "market": "US",
+      "status": "READY",
+      "as_of": "2026-08-07",
+      "spot": 7757.6401,
+      "book_value": 1315.9472,
+      "eps_path": [
+        386.143,
+        454.2705,
+        533.8161
+      ],
+      "payout": 0.209804,
+      "ke": 0.0972,
+      "g": 0.0404,
+      "ltroe": 0.22,
+      "benchmark_as_of": "2026-08-07",
+      "fair_value": 5987.533448237127,
+      "fair_value_as_of": "2026-08-07",
+      "fair_value_upside": -0.22817591805565618,
+      "direct_provenance": null,
+      "blockers": {
+        "direct_input": [],
+        "freshness": [],
+        "identity": []
+      },
+      "gates": {
+        "pole_margin": true,
+        "terminal_share": true,
+        "stable_retention": true,
+        "finite": true,
+        "monotonic": true
+      },
+      "source_clock": {
+        "price_as_of": "2026-08-07",
+        "benchmark_as_of": "2026-08-07",
+        "payout_availability": "2026-08-07",
+        "forecast_availability": "2026-08-07",
+        "rf_as_of": "2026-08-06",
+        "erp_as_of": "2026-04-01"
+      }
+    },
+    {
+      "asset": "CCMP",
+      "identity": {
+        "id": "CCMP",
+        "name": "Nasdaq Composite"
+      },
+      "market": "US",
+      "status": "NULL",
+      "as_of": "2026-08-07",
+      "spot": 26690.6152,
+      "book_value": 3341.4644,
+      "eps_path": [],
+      "payout": null,
+      "ke": 0.0972,
+      "g": null,
+      "ltroe": 0.212,
+      "benchmark_as_of": "2026-08-07",
+      "fair_value": null,
+      "fair_value_as_of": null,
+      "fair_value_upside": null,
+      "direct_provenance": null,
+      "blockers": {
+        "direct_input": [
+          "CCMP: payout_ratio source_tier blocked_missing_source is not an allowed direct exact-index tier",
+          "CCMP: forecast_grid_v1 coverage.index_diagnostics source_tier (missing) is not an allowed direct exact-index tier",
+          "CCMP: payout_ratio missing/non-finite",
+          "CCMP: forecast_grid_v1 FY1-3 earnings_proxy missing/non-finite"
+        ],
+        "freshness": [
+          "CCMP: payout availability metadata missing"
+        ],
+        "identity": []
+      },
+      "gates": null,
+      "source_clock": {
+        "price_as_of": "2026-08-07",
+        "benchmark_as_of": "2026-08-07",
+        "payout_availability": null,
+        "forecast_availability": "2026-08-07",
+        "rf_as_of": "2026-08-06",
+        "erp_as_of": "2026-04-01"
+      }
+    },
+    {
+      "asset": "NDX",
+      "identity": {
+        "id": "NDX",
+        "name": "Nasdaq-100"
+      },
+      "market": "US",
+      "status": "READY",
+      "as_of": "2026-08-07",
+      "spot": 29722.3008,
+      "book_value": 3199.4898,
+      "eps_path": [
+        1338.0879,
+        1620.2581,
+        2083.2568
+      ],
+      "payout": 0.097272,
+      "ke": 0.0972,
+      "g": 0.0404,
+      "ltroe": 0.3082,
+      "benchmark_as_of": "2026-08-07",
+      "fair_value": 28068.87391577012,
+      "fair_value_as_of": "2026-08-07",
+      "fair_value_upside": -0.055629168662133965,
+      "direct_provenance": null,
+      "blockers": {
+        "direct_input": [],
+        "freshness": [],
+        "identity": []
+      },
+      "gates": {
+        "pole_margin": true,
+        "terminal_share": true,
+        "stable_retention": true,
+        "finite": true,
+        "monotonic": true
+      },
+      "source_clock": {
+        "price_as_of": "2026-08-07",
+        "benchmark_as_of": "2026-08-07",
+        "payout_availability": "2026-08-07",
+        "forecast_availability": "2026-08-07",
+        "rf_as_of": "2026-08-06",
+        "erp_as_of": "2026-04-01"
+      }
+    },
+    {
+      "asset": "SOX",
+      "identity": {
+        "id": "SOX",
+        "name": "Philadelphia Semiconductor Index"
+      },
+      "market": "US",
+      "status": "NULL",
+      "as_of": "2026-08-07",
+      "spot": 12356.79,
+      "book_value": 1086.1775,
+      "eps_path": [
+        567.1223,
+        801.33,
+        1009.6044
+      ],
+      "payout": 0.112627,
+      "ke": 0.0972,
+      "g": null,
+      "ltroe": 0.2877,
+      "benchmark_as_of": "2026-08-07",
+      "fair_value": null,
+      "fair_value_as_of": null,
+      "fair_value_upside": null,
+      "direct_provenance": null,
+      "blockers": {
+        "direct_input": [],
+        "freshness": [
+          "SOX: PIT — payout availability 2026-08-10 is after price as-of 2026-08-07",
+          "SOX: PIT — forecast availability 2026-08-10 is after price as-of 2026-08-07"
+        ],
+        "identity": []
+      },
+      "gates": null,
+      "source_clock": {
+        "price_as_of": "2026-08-07",
+        "benchmark_as_of": "2026-08-07",
+        "payout_availability": "2026-08-10",
+        "forecast_availability": "2026-08-10",
+        "rf_as_of": "2026-08-06",
+        "erp_as_of": "2026-04-01"
+      }
+    },
+    {
+      "asset": "KOSPI",
+      "identity": {
+        "id": "KOSPI",
+        "name": "KOSPI"
+      },
+      "market": "KR",
+      "status": "READY",
+      "as_of": "2026-08-07",
+      "spot": 6258.77,
+      "book_value": 3498.474,
+      "eps_path": [
+        1229.0814,
+        1681.8449,
+        1869.4347
+      ],
+      "payout": 0.06527801132942394,
+      "ke": 0.0969477,
+      "g": 0.0404,
+      "ltroe": 0.1014,
+      "benchmark_as_of": "2026-08-07",
+      "fair_value": 6767.718833880547,
+      "fair_value_as_of": "2026-08-07",
+      "fair_value_upside": 0.08131770841244323,
+      "direct_provenance": {
+        "source_tier": "direct_official_derived",
+        "pointer_path": "computed/fenok-rim/kospi-dart-payout/current.json",
+        "selected_artifact": "data/computed/fenok-rim/kospi-dart-payout/fy2025.json",
+        "selected_artifact_sha256": "856a37dc64198c007b647d394235a0a27a0b66ed3e9df9fa9ec62723a4e81f75",
+        "selected_fy": 2025,
+        "first_knowable_at": "2026-08-06T00:00:00Z",
+        "availability_as_of": "2026-08-07",
+        "payout_ratio": 0.06527801132942394,
+        "covered_weight_ratio": 0.8542205585514179,
+        "source_clocks": {
+          "pointer_first_knowable_at": "2026-08-06",
+          "bridge_as_of": "2026-08-07",
+          "benchmark_as_of": "2026-08-02",
+          "availability_as_of": "2026-08-07",
+          "all_used_inputs_at_or_before": "2026-08-07"
+        }
+      },
+      "blockers": {
+        "direct_input": [],
+        "freshness": [],
+        "identity": []
+      },
+      "gates": {
+        "pole_margin": true,
+        "terminal_share": true,
+        "stable_retention": true,
+        "finite": true,
+        "monotonic": true
+      },
+      "source_clock": {
+        "price_as_of": "2026-08-07",
+        "benchmark_as_of": "2026-08-07",
+        "payout_availability": "2026-08-07",
+        "forecast_availability": "2026-08-07",
+        "rf_as_of": "2026-08-07",
+        "erp_as_of": "2026-04-01"
+      }
+    }
+  ],
+  "order_diagnostic": {
+    "desired_order": [
+      "SPX",
+      "CCMP",
+      "NDX",
+      "SOX",
+      "KOSPI"
+    ],
+    "desired_order_met": false,
+    "violations": [],
+    "non_finite_rows": [
+      "CCMP",
+      "SOX"
+    ],
+    "values_shifted": false
+  },
+  "source_clocks": {
+    "SPX": {
+      "price_as_of": "2026-08-07",
+      "benchmark_as_of": "2026-08-07",
+      "payout_availability": "2026-08-07",
+      "forecast_availability": "2026-08-07",
+      "rf_as_of": "2026-08-06",
+      "erp_as_of": "2026-04-01"
+    },
+    "CCMP": {
+      "price_as_of": "2026-08-07",
+      "benchmark_as_of": "2026-08-07",
+      "payout_availability": null,
+      "forecast_availability": "2026-08-07",
+      "rf_as_of": "2026-08-06",
+      "erp_as_of": "2026-04-01"
+    },
+    "NDX": {
+      "price_as_of": "2026-08-07",
+      "benchmark_as_of": "2026-08-07",
+      "payout_availability": "2026-08-07",
+      "forecast_availability": "2026-08-07",
+      "rf_as_of": "2026-08-06",
+      "erp_as_of": "2026-04-01"
+    },
+    "SOX": {
+      "price_as_of": "2026-08-07",
+      "benchmark_as_of": "2026-08-07",
+      "payout_availability": "2026-08-10",
+      "forecast_availability": "2026-08-10",
+      "rf_as_of": "2026-08-06",
+      "erp_as_of": "2026-04-01"
+    },
+    "KOSPI": {
+      "price_as_of": "2026-08-07",
+      "benchmark_as_of": "2026-08-07",
+      "payout_availability": "2026-08-07",
+      "forecast_availability": "2026-08-07",
+      "rf_as_of": "2026-08-07",
+      "erp_as_of": "2026-04-01"
+    }
+  }
+}

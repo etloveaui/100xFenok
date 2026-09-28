@@ -1,4 +1,4 @@
-import HomeCanvasPlusClient from "./HomeCanvasPlusClient";
+import { HomeShell } from "./HomeCanvasPlusClient";
 
 /**
  * Home route. Server component shell that renders the CANVAS+ home (v6).
@@ -7,5 +7,5 @@ import HomeCanvasPlusClient from "./HomeCanvasPlusClient";
 export const dynamic = "force-dynamic";
 
 export default async function Home() {
-  return <HomeCanvasPlusClient />;
+  return <HomeShell />;
 }

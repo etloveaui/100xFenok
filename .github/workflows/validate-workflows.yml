@@ -11,30 +11,226 @@ on:
     paths:
       - '.github/workflows/**'
       - 'scripts/ops/fixtures/workflow-actionlint/**'
+      - 'scripts/ops/fixtures/workflow-concurrency/**'
       - 'scripts/ops/validate-workflow-actionlint.sh'
       - 'scripts/ops/validate-workflow-yaml.rb'
       - 'scripts/ops/check-pipeline-job-health.mjs'
       - 'scripts/ops/emit-alarm-state.mjs'
       - 'scripts/ops/test-check-pipeline-job-health.mjs'
       - 'scripts/ops/test-emit-alarm-state.mjs'
+      - 'scripts/ops/check-alarm-liveness.mjs'
+      - 'scripts/ops/test-alarm-liveness.mjs'
+      - 'scripts/ops/test-workflow-credential-wiring.mjs'
+      - 'scripts/ops/test-alarm-blindness.mjs'
+      - 'scripts/ops/test-cost-gate-rate-limit.mjs'
+      - 'scripts/ops/test-alarm-resolution-carry.mjs'
+      - 'scripts/ops/test-family-publish-exclusions.mjs'
+      - 'scripts/ops/test-producer-push-triggers.mjs'
+      - 'scripts/update-manifest-projections.sh'
+      - 'scripts/publish-cloud-data-generation.mjs'
+      - 'scripts/ops/carry-alarm-resolution.mjs'
+      - 'scripts/lib/cloudflare-rate-limit.mjs'
+      - 'scripts/check-r2-free-tier-usage.mjs'
+      - 'scripts/check-lane-commit-manifest-inventory.mjs'
+      - 'scripts/check-lane-registry-commit-shards.mjs'
+      - 'scripts/test-check-lane-registry-commit-shards.mjs'
+      - 'scripts/ops/check-global-writer-queue.mjs'
+      - 'scripts/ops/test-check-global-writer-queue.mjs'
+      - 'scripts/fetch-sentiment.mjs'
+      - 'scripts/fetch-fred-banking.mjs'
+      - 'scripts/fetch-treasury-tga.mjs'
+      - 'scripts/fetch-yahoo-ticker.mjs'
+      - 'scripts/test-fetch-producers-public-write-fence.mjs'
+      - 'scripts/test-build-producers-public-write-fence.mjs'
+      - 'scripts/test-build-stocks-analyzer-manifest.mjs'
+      - 'scripts/test-sec13f-source-route.mjs'
+      - 'scripts/ops/check-sec13f-live-parity.mjs'
+      - 'scripts/ops/test-check-sec13f-live-parity.mjs'
+      - 'scripts/test-sec13f-live-privacy.mjs'
+      - 'scripts/build-stocks-analyzer.mjs'
+      - 'scripts/build-13f-enrichment-backfill.mjs'
+      - 'scripts/build-13f-integrity-indexes.mjs'
+      - 'scripts/build-13f-trades.mjs'
+      - 'scripts/build-13f-portfolio-views.mjs'
+      - 'scripts/build-13f-factor-radar-v2.mjs'
+      - 'scripts/build-sec13f-bridge-index.mjs'
+      - 'scripts/test-sec13f-bridge-index.mjs'
+      - 'scripts/test-sec13f-retention-web-contract.mjs'
+      - 'scripts/test-update-manifest-materializations.mjs'
+      - 'data/computed/sec13f_bridge_index.json'
+      - 'scripts/build-guru-holders-index.mjs'
+      - 'scripts/build-revision-movers.mjs'
+      - 'scripts/build-industry-benchmarks.mjs'
+      - 'scripts/build-calendar-prev.mjs'
+      - 'scripts/materialize-update-manifest-routes.mjs'
+      - 'scripts/stage-update-manifest-central.mjs'
+      - 'scripts/test-update-manifest-central-staging.mjs'
+      - 'scripts/test-lane-commit-manifest-parity.mjs'
+      - 'scripts/test-build-data-supply-detection-floor.mjs'
+      - 'scripts/fixtures/data_supply/detection_floor/**'
+      - 'scripts/fetch-nasdaq-giw-sox-constituents.mjs'
+      - 'scripts/test-fetch-nasdaq-giw-sox-constituents.mjs'
+      - 'scripts/build-market-facts.py'
+      - 'scripts/test_build_market_facts.py'
+      - 'scripts/fetch-stockanalysis.py'
+      - 'scripts/test_fetch_stockanalysis_fixtures.py'
+      - 'scripts/export-computed-signals.mjs'
+      - 'scripts/test-export-computed-signals.mjs'
+      - 'scripts/test-coordinate-computed-signals-workflow.mjs'
       - 'scripts/stage-lane-manifest.sh'
       - 'scripts/test-pipeline-failure-alarm-manifest.mjs'
+      - 'scripts/test-global-writer-queue-manifest.mjs'
       - 'scripts/test-stage-lane-manifest.mjs'
+      - 'scripts/test-update-manifest-*.mjs'
+      - 'scripts/update-manifest-projections.sh'
+      - 'scripts/materialize-site-metadata.mjs'
+      - 'scripts/test-materialize-site-metadata.mjs'
+      - 'scripts/test-site-metadata-canonical-only.mjs'
+      - 'scripts/test-manifest-halves-agree.mjs'
+      - 'data/manifest.json'
+      - '100xfenok-next/public/data/manifest.json'
+      - '100x/data/metadata/**'
+      - 'alpha-scout/data/metadata/**'
+      - 'data/metadata/**'
+      - '100xfenok-next/public/data/metadata/**'
+      - 'scripts/lib/lane-registry.mjs'
+      - 'scripts/regen-pins.mjs'
+      - 'scripts/build-lane-commit-manifest.mjs'
+      - 'scripts/build-lane-registry-projection.mjs'
+      - 'scripts/build-cloud-data-plane-enrollment.mjs'
+      - 'scripts/build-fenok-data-health-kpi.mjs'
+      - 'scripts/lib/cloud-data-plane-candidate-scope.mjs'
+      - 'scripts/fixtures/lane-registry/**'
+      - 'scripts/fixtures/derived-asset-registry/**'
+      - 'scripts/fixtures/data_supply/policy_registry/**'
+      - 'scripts/fixtures/cloud-data-plane/**'
+      - 'scripts/fixtures/update-manifest/**'
+      - 'data/admin/lane-commit-manifest.json'
+      - 'data/admin/lane-registry-projection.json'
+      - 'data/admin/data-supply-detection-floor.json'
+      - 'data/admin/fenok-data-health-kpi.json'
+      - '100xfenok-next/public/data/admin/lane-registry-projection.json'
+      - '100xfenok-next/public/data/admin/fenok-data-health-kpi.json'
+      - '100xfenok-next/scripts/cloud-data-plane/cloud-data-plane-enrollment.generated.mjs'
+      - 'scripts/test-sync-update-manifest-trigger-paths.mjs'
+      - 'scripts/check-public-mirror-coverage.mjs'
+      - '100xfenok-next/scripts/sync-public-data.mjs'
+      - '100xfenok-next/scripts/test-sync-public-data.mjs'
       - '100xfenok-next/package.json'
+      - '100xfenok-next/scripts/load-guard.sh'
+      - '100xfenok-next/scripts/test-load-guard-remote-dispatch.mjs'
   pull_request:
     paths:
       - '.github/workflows/**'
       - 'scripts/ops/fixtures/workflow-actionlint/**'
+      - 'scripts/ops/fixtures/workflow-concurrency/**'
       - 'scripts/ops/validate-workflow-actionlint.sh'
       - 'scripts/ops/validate-workflow-yaml.rb'
       - 'scripts/ops/check-pipeline-job-health.mjs'
       - 'scripts/ops/emit-alarm-state.mjs'
       - 'scripts/ops/test-check-pipeline-job-health.mjs'
       - 'scripts/ops/test-emit-alarm-state.mjs'
+      - 'scripts/ops/check-alarm-liveness.mjs'
+      - 'scripts/ops/test-alarm-liveness.mjs'
+      - 'scripts/ops/test-workflow-credential-wiring.mjs'
+      - 'scripts/ops/test-alarm-blindness.mjs'
+      - 'scripts/ops/test-cost-gate-rate-limit.mjs'
+      - 'scripts/ops/test-alarm-resolution-carry.mjs'
+      - 'scripts/ops/test-family-publish-exclusions.mjs'
+      - 'scripts/ops/test-producer-push-triggers.mjs'
+      - 'scripts/update-manifest-projections.sh'
+      - 'scripts/publish-cloud-data-generation.mjs'
+      - 'scripts/ops/carry-alarm-resolution.mjs'
+      - 'scripts/lib/cloudflare-rate-limit.mjs'
+      - 'scripts/check-r2-free-tier-usage.mjs'
+      - 'scripts/check-lane-commit-manifest-inventory.mjs'
+      - 'scripts/check-lane-registry-commit-shards.mjs'
+      - 'scripts/test-check-lane-registry-commit-shards.mjs'
+      - 'scripts/ops/check-global-writer-queue.mjs'
+      - 'scripts/ops/test-check-global-writer-queue.mjs'
+      - 'scripts/fetch-sentiment.mjs'
+      - 'scripts/fetch-fred-banking.mjs'
+      - 'scripts/fetch-treasury-tga.mjs'
+      - 'scripts/fetch-yahoo-ticker.mjs'
+      - 'scripts/test-fetch-producers-public-write-fence.mjs'
+      - 'scripts/test-build-producers-public-write-fence.mjs'
+      - 'scripts/test-build-stocks-analyzer-manifest.mjs'
+      - 'scripts/test-sec13f-source-route.mjs'
+      - 'scripts/ops/check-sec13f-live-parity.mjs'
+      - 'scripts/ops/test-check-sec13f-live-parity.mjs'
+      - 'scripts/test-sec13f-live-privacy.mjs'
+      - 'scripts/build-stocks-analyzer.mjs'
+      - 'scripts/build-13f-enrichment-backfill.mjs'
+      - 'scripts/build-13f-integrity-indexes.mjs'
+      - 'scripts/build-13f-trades.mjs'
+      - 'scripts/build-13f-portfolio-views.mjs'
+      - 'scripts/build-13f-factor-radar-v2.mjs'
+      - 'scripts/build-sec13f-bridge-index.mjs'
+      - 'scripts/test-sec13f-bridge-index.mjs'
+      - 'scripts/test-sec13f-retention-web-contract.mjs'
+      - 'scripts/test-update-manifest-materializations.mjs'
+      - 'data/computed/sec13f_bridge_index.json'
+      - 'scripts/build-guru-holders-index.mjs'
+      - 'scripts/build-revision-movers.mjs'
+      - 'scripts/build-industry-benchmarks.mjs'
+      - 'scripts/build-calendar-prev.mjs'
+      - 'scripts/materialize-update-manifest-routes.mjs'
+      - 'scripts/stage-update-manifest-central.mjs'
+      - 'scripts/test-update-manifest-central-staging.mjs'
+      - 'scripts/test-lane-commit-manifest-parity.mjs'
+      - 'scripts/test-build-data-supply-detection-floor.mjs'
+      - 'scripts/fixtures/data_supply/detection_floor/**'
+      - 'scripts/fetch-nasdaq-giw-sox-constituents.mjs'
+      - 'scripts/test-fetch-nasdaq-giw-sox-constituents.mjs'
+      - 'scripts/build-market-facts.py'
+      - 'scripts/test_build_market_facts.py'
+      - 'scripts/fetch-stockanalysis.py'
+      - 'scripts/test_fetch_stockanalysis_fixtures.py'
+      - 'scripts/export-computed-signals.mjs'
+      - 'scripts/test-export-computed-signals.mjs'
+      - 'scripts/test-coordinate-computed-signals-workflow.mjs'
       - 'scripts/stage-lane-manifest.sh'
       - 'scripts/test-pipeline-failure-alarm-manifest.mjs'
+      - 'scripts/test-global-writer-queue-manifest.mjs'
       - 'scripts/test-stage-lane-manifest.mjs'
+      - 'scripts/test-update-manifest-*.mjs'
+      - 'scripts/update-manifest-projections.sh'
+      - 'scripts/materialize-site-metadata.mjs'
+      - 'scripts/test-materialize-site-metadata.mjs'
+      - 'scripts/test-site-metadata-canonical-only.mjs'
+      - 'scripts/test-manifest-halves-agree.mjs'
+      - 'data/manifest.json'
+      - '100xfenok-next/public/data/manifest.json'
+      - '100x/data/metadata/**'
+      - 'alpha-scout/data/metadata/**'
+      - 'data/metadata/**'
+      - '100xfenok-next/public/data/metadata/**'
+      - 'scripts/lib/lane-registry.mjs'
+      - 'scripts/regen-pins.mjs'
+      - 'scripts/build-lane-commit-manifest.mjs'
+      - 'scripts/build-lane-registry-projection.mjs'
+      - 'scripts/build-cloud-data-plane-enrollment.mjs'
+      - 'scripts/build-fenok-data-health-kpi.mjs'
+      - 'scripts/lib/cloud-data-plane-candidate-scope.mjs'
+      - 'scripts/fixtures/lane-registry/**'
+      - 'scripts/fixtures/derived-asset-registry/**'
+      - 'scripts/fixtures/data_supply/policy_registry/**'
+      - 'scripts/fixtures/cloud-data-plane/**'
+      - 'scripts/fixtures/update-manifest/**'
+      - 'data/admin/lane-commit-manifest.json'
+      - 'data/admin/lane-registry-projection.json'
+      - 'data/admin/data-supply-detection-floor.json'
+      - 'data/admin/fenok-data-health-kpi.json'
+      - '100xfenok-next/public/data/admin/lane-registry-projection.json'
+      - '100xfenok-next/public/data/admin/fenok-data-health-kpi.json'
+      - '100xfenok-next/scripts/cloud-data-plane/cloud-data-plane-enrollment.generated.mjs'
+      - 'scripts/test-sync-update-manifest-trigger-paths.mjs'
+      - 'scripts/check-public-mirror-coverage.mjs'
+      - '100xfenok-next/scripts/sync-public-data.mjs'
+      - '100xfenok-next/scripts/test-sync-public-data.mjs'
       - '100xfenok-next/package.json'
+      - '100xfenok-next/scripts/load-guard.sh'
+      - '100xfenok-next/scripts/test-load-guard-remote-dispatch.mjs'
   workflow_dispatch:
 
 permissions:
@@ -48,13 +244,85 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Parse workflow YAML
-        run: ruby scripts/ops/validate-workflow-yaml.rb
+        run: |
+          ruby scripts/ops/validate-workflow-yaml.rb
+          node scripts/test-sparse-checkout-import-coverage.mjs
+          node scripts/ops/test-probe-limits-match-cadence.mjs
+          node scripts/ops/test-missed-schedule-window.mjs
+          node scripts/ops/test-alarm-liveness.mjs
+          node scripts/ops/test-workflow-credential-wiring.mjs
+          node scripts/ops/test-alarm-blindness.mjs
+          node scripts/ops/test-cost-gate-rate-limit.mjs
+          node scripts/ops/test-alarm-resolution-carry.mjs
+          node scripts/ops/test-family-publish-exclusions.mjs
+          node scripts/ops/test-producer-push-triggers.mjs
+          node scripts/test-sentiment-artifact-contract-coverage.mjs
+          node scripts/test-out-of-band-producer-lanes.mjs
+
+      - name: Validate remote heavy guard contract
+        run: node 100xfenok-next/scripts/test-load-guard-remote-dispatch.mjs
+
+      # Prove unknown keys, invalid queue enums, and max+cancel incompatibility
+      # all fail while GitHub's supported queue modes pass.
+      - name: Prove the concurrency-schema guard
+        run: |
+          set -euo pipefail
+          fixture_dir="scripts/ops/fixtures/workflow-concurrency"
+          for invalid in \
+            invalid-unknown-concurrency-key.yml \
+            invalid-queue-value.yml \
+            invalid-max-cancel.yml; do
+            if ruby scripts/ops/validate-workflow-yaml.rb "$fixture_dir/$invalid" >/dev/null 2>&1; then
+              echo "FAIL regression fixture unexpectedly passed: $invalid" >&2
+              exit 1
+            fi
+          done
+          ruby scripts/ops/validate-workflow-yaml.rb "$fixture_dir/valid-concurrency.yml"
+          echo "PASS concurrency-schema guard enforces GitHub's queue contract"
 
       - name: Validate lane manifest staging
-        run: npm --prefix 100xfenok-next run qa:lane-manifest-staging
+        run: |
+          npm --prefix 100xfenok-next run qa:lane-manifest-staging
+          node scripts/test-check-lane-registry-commit-shards.mjs
+
+      - name: Validate manifest halves agree (self-consistency gate)
+        run: |
+          node scripts/test-manifest-halves-agree.mjs
+
+      - name: Validate public-mirror coverage (frozen-mirror gate)
+        run: |
+          node scripts/test-materialize-site-metadata.mjs
+          node scripts/test-site-metadata-canonical-only.mjs
+          node scripts/check-public-mirror-coverage.mjs
+
+      - name: Validate producer public-write fence (canonical-only batch)
+        run: |
+          node scripts/test-fetch-producers-public-write-fence.mjs
+          node scripts/test-build-producers-public-write-fence.mjs
+          node scripts/test-build-stocks-analyzer-manifest.mjs
+          node scripts/test-fetch-nasdaq-giw-sox-constituents.mjs
+          python3 -m unittest scripts/test_build_market_facts.py
+          python3 -m unittest scripts.test_fetch_stockanalysis_fixtures.StockanalysisFetcherFixtureTest.test_default_cli_writes_canonical_only_never_public_mirror
 
       - name: Validate alarm workflow contracts
         run: npm --prefix 100xfenok-next run qa:alarm-state
+
+      - name: Validate Update Manifest policy
+        run: |
+          npm --prefix 100xfenok-next run qa:pins
+          node scripts/test-update-manifest-runner.mjs
+          node scripts/test-update-manifest-workflow.mjs
+          node scripts/test-update-manifest-central-staging.mjs
+          node scripts/test-sec13f-retention-web-contract.mjs
+          node scripts/test-update-manifest-rebuild-policy.mjs
+          node scripts/test-update-manifest-dispatch-decoupling.mjs
+          node scripts/test-sync-update-manifest-trigger-paths.mjs
+          python3 -m unittest scripts/test_update_manifest_derived_description.py
+
+      - name: Validate computed-signals coordinator and exporter contracts
+        run: |
+          node scripts/test-export-computed-signals.mjs
+          node scripts/test-coordinate-computed-signals-workflow.mjs
 
       - name: Install pinned actionlint
         env:

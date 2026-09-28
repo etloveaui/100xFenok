@@ -1,0 +1,846 @@
+/* /etfs route — light-system layout namespace (slice 7a).
+ * Layout only: grids, rows, tabs, pills, and list chrome. Panel chrome, type
+ * scale, colors, and states come from src/components/ui. No gradients. The
+ * .etf-bar-warn fill is the dc-specified leverage color exception. */
+
+.etf {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  padding: 20px 24px 32px;
+  background: var(--fnk-neutral-50);
+  font-size: 13px;
+  line-height: 1.45;
+}
+
+.etf-eyebrow {
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--fnk-neutral-500);
+}
+
+.etf-strong {
+  color: var(--fnk-neutral-900);
+}
+
+.etf-up {
+  color: var(--fnk-color-gain);
+  font-weight: 600;
+}
+
+.etf-down {
+  color: var(--fnk-color-loss);
+  font-weight: 600;
+}
+
+/* Hero head (plain header, not a panel) */
+
+.etf-hero-top {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+/* B3-5: the clock pill never wraps or shrinks — at 375px the H1 squeezed it
+   into 4 lines. It keeps one line; the row wraps it below the title instead. */
+.etf-hero-clock {
+  flex-shrink: 0;
+  white-space: nowrap;
+}
+
+@media (max-width: 760px) {
+  .etf-hero-top {
+    flex-wrap: wrap;
+  }
+}
+
+.etf-hero-title-block {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  min-width: 0;
+}
+
+.etf-hero-eyebrow-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.etf-title {
+  margin: 0;
+  font-size: 20px;
+  font-weight: 600;
+  color: var(--fnk-neutral-900);
+  max-width: 900px;
+}
+
+.etf-sub {
+  font-size: 12px;
+  color: var(--fnk-neutral-500);
+  max-width: 820px;
+}
+
+.etf-hero-loading {
+  font-size: 13px;
+  color: var(--fnk-neutral-500);
+}
+
+/* EtfTextSkeleton: the outer span paints one shimmer bar per wrapped line of
+   the hidden template copy inside it. */
+.etf-text-skeleton-ink {
+  visibility: hidden;
+}
+
+.etf-text-skeleton {
+  border-radius: 6px;
+  background: linear-gradient(90deg, var(--fnk-neutral-100), var(--fnk-neutral-200), var(--fnk-neutral-100));
+  background-size: 200% 100%;
+  -webkit-box-decoration-break: clone;
+  box-decoration-break: clone;
+  animation: etf-text-shimmer 1.4s ease-in-out infinite;
+}
+
+@keyframes etf-text-shimmer {
+  from { background-position: 100% 0; }
+  to { background-position: -100% 0; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .etf-text-skeleton { animation: none; }
+}
+
+.etf-retry {
+  background: none;
+  border: 0;
+  padding: 0;
+  cursor: pointer;
+  font-weight: 600;
+  color: var(--fnk-brand-interactive);
+}
+
+/* Panel header slots */
+
+.etf-head-note {
+  font-size: 12px;
+  color: var(--fnk-neutral-500);
+  white-space: nowrap;
+}
+
+.etf-tabs {
+  display: flex;
+  gap: 2px;
+  background: var(--fnk-neutral-100);
+  padding: 2px;
+  border-radius: 6px;
+}
+
+.etf-tab {
+  height: 30px;
+  padding: 0 12px;
+  display: inline-flex;
+  align-items: center;
+  border-radius: 6px;
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--fnk-neutral-600);
+  text-decoration: none;
+  transition: background-color 150ms ease, color 150ms ease;
+}
+
+.etf-tab[data-active="true"] {
+  background: var(--fnk-color-card);
+  color: var(--fnk-brand-interactive);
+  font-weight: 600;
+}
+
+.etf-seg-pills {
+  display: flex;
+  gap: 6px;
+  overflow-x: auto;
+  max-width: 100%;
+}
+
+.etf-seg-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  height: 20px;
+  padding: 0 8px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 600;
+  border: 1px solid var(--fnk-neutral-200);
+  color: var(--fnk-neutral-600);
+  background: var(--fnk-color-card);
+  white-space: nowrap;
+  cursor: pointer;
+  transition: border-color 150ms ease, color 150ms ease, background-color 150ms ease;
+}
+
+.etf-seg-pill[data-active="true"] {
+  border-color: var(--fnk-brand-interactive);
+  color: var(--fnk-brand-interactive);
+}
+
+/* Universe panel */
+
+.etf-uni-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 7fr) minmax(0, 5fr);
+}
+
+.etf-uni-cell {
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  min-width: 0;
+}
+
+.etf-uni-cell + .etf-uni-cell {
+  border-left: 1px solid var(--fnk-neutral-100);
+}
+
+.etf-uni-label-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 8px;
+}
+
+.etf-uni-label {
+  font-size: 12px;
+  color: var(--fnk-neutral-700);
+}
+
+.etf-uni-pct {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--fnk-neutral-900);
+}
+
+.etf-uni-summary {
+  font-size: 12px;
+  color: var(--fnk-neutral-500);
+}
+
+.etf-bar-warn i {
+  background: var(--fnk-color-warn);
+}
+
+/* B2 (B6 §4): share bars are neutral ink — only the leverage warn above keeps
+ * chromatic emphasis (dc-specified exception). */
+.etf-bar-ink i {
+  background: var(--c-neutral);
+}
+
+@media (max-width: 760px) {
+  .etf-uni-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .etf-uni-cell + .etf-uni-cell {
+    border-left: 0;
+    border-top: 1px solid var(--fnk-neutral-100);
+  }
+}
+
+/* Today panel */
+
+.etf-today-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.etf-today-stat {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 14px 16px;
+  border-right: 1px solid var(--fnk-neutral-100);
+  min-width: 0;
+}
+
+.etf-today-stat:last-child {
+  border-right: 0;
+}
+
+.etf-today-label {
+  font-size: 12px;
+  color: var(--fnk-neutral-500);
+}
+
+.etf-today-big {
+  font-size: 22px;
+  font-weight: 600;
+  color: var(--fnk-neutral-900);
+}
+
+.etf-today-unit {
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--fnk-neutral-500);
+  margin-left: 2px;
+}
+
+.etf-today-list {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  margin-top: 2px;
+}
+
+.etf-today-row {
+  display: flex;
+  justify-content: space-between;
+  font-size: 12px;
+  text-decoration: none;
+  border-radius: 4px;
+  transition: background-color 150ms ease;
+}
+
+.etf-today-row:hover {
+  background: var(--fnk-neutral-50);
+}
+
+/* Phone: each 오늘 row is a link to that ETF and drew 17px tall. 28px rows
+   clear the 24px target minimum (WCAG 2.2 AA 2.5.8) with the 3px list gap. */
+@media (max-width: 767px) {
+  .etf-today-row {
+    min-height: 28px;
+    align-items: center;
+  }
+}
+
+.etf-today-row:focus-visible,
+.etf-tool-row:focus-visible,
+.etf-table-ticker:focus-visible,
+.etf-mobile-title:focus-visible {
+  background: var(--fnk-neutral-50);
+  box-shadow: inset 2px 0 0 var(--fnk-brand-interactive);
+  outline: none;
+}
+
+.etf-sort-btn:focus-visible,
+.etf-pager-btn:focus-visible,
+.etf-sort-field select:focus-visible,
+.etf-page-size select:focus-visible {
+  outline: 2px solid var(--fnk-brand-interactive);
+  outline-offset: 2px;
+}
+
+.etf-ticker {
+  font-family: var(--font-jetbrains-mono), "SF Mono", Menlo, monospace;
+  font-weight: 500;
+  color: var(--fnk-neutral-900);
+}
+
+.etf-today-value {
+  color: var(--fnk-neutral-500);
+}
+
+.etf-today-empty {
+  font-size: 12px;
+  color: var(--fnk-neutral-500);
+}
+
+.etf-today-asof {
+  font-size: 12px;
+  color: var(--fnk-neutral-500);
+}
+
+@media (max-width: 760px) {
+  .etf-today-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .etf-today-stat {
+    border-right: 0;
+    border-top: 1px solid var(--fnk-neutral-100);
+  }
+
+  .etf-today-stat:first-child {
+    border-top: 0;
+  }
+}
+
+/* List panel */
+
+.etf-list-toolbar {
+  padding: 12px 16px 0;
+}
+
+.etf-search {
+  width: 100%;
+  height: 32px;
+  padding: 0 10px;
+  border: 1px solid var(--fnk-neutral-200);
+  border-radius: 6px;
+  font-size: 13px;
+  color: var(--fnk-neutral-900);
+  background: var(--fnk-color-card);
+}
+
+/* Sort select mirrors the desktop column headers on the mobile card list. */
+.etf-sort-field {
+  display: none;
+}
+
+.etf-sort-field select,
+.etf-page-size select {
+  height: 28px;
+  border: 1px solid var(--fnk-neutral-200);
+  border-radius: 6px;
+  font-size: 12px;
+  color: var(--fnk-neutral-900);
+  background: var(--fnk-color-card);
+}
+
+.etf-sort-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 0;
+  border: 0;
+  background: none;
+  font: inherit;
+  color: inherit;
+  cursor: pointer;
+  transition: color 150ms ease;
+}
+
+.etf-sort-btn[data-active="true"] {
+  color: var(--fnk-brand-interactive);
+}
+
+.etf-sort-arrow {
+  font-size: 12px;
+}
+
+.etf-filter-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 12px;
+  padding: 12px 16px;
+}
+
+.etf-filter-field {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  font-size: 12px;
+  color: var(--fnk-neutral-600);
+}
+
+.etf-filter-field select {
+  height: 32px;
+  border: 1px solid var(--fnk-neutral-200);
+  border-radius: 6px;
+  font-size: 12px;
+  color: var(--fnk-neutral-900);
+  background: var(--fnk-color-card);
+}
+
+@media (max-width: 760px) {
+  .etf-filter-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+.etf-badges {
+  display: inline-flex;
+  flex-wrap: wrap;
+  gap: 4px;
+}
+
+.etf-badge {
+  display: inline-flex;
+  align-items: center;
+  height: 20px;
+  padding: 0 8px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 600;
+  border: 1px solid var(--fnk-neutral-200);
+  color: var(--fnk-neutral-600);
+  background: var(--fnk-color-card);
+  white-space: nowrap;
+}
+
+.etf-table-desktop {
+  overflow-x: auto;
+}
+
+.etf-table-ticker {
+  display: flex;
+  flex-direction: column;
+  text-decoration: none;
+}
+
+.etf-table-ticker strong {
+  font-family: var(--font-jetbrains-mono), "SF Mono", Menlo, monospace;
+  font-weight: 500;
+  color: var(--fnk-neutral-900);
+}
+
+.etf-table-ticker span {
+  font-size: 12px;
+  color: var(--fnk-neutral-500);
+}
+
+.etf-mobile-list {
+  display: none;
+}
+
+@media (max-width: 760px) {
+  .etf-table-desktop {
+    display: none;
+  }
+
+  .etf-mobile-list {
+    display: flex;
+    flex-direction: column;
+  }
+}
+
+.etf-mobile-card {
+  padding: 12px 16px;
+  border-top: 1px solid var(--fnk-neutral-100);
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.etf-mobile-card__head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.etf-mobile-title {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  text-decoration: none;
+  min-width: 0;
+}
+
+.etf-mobile-title strong {
+  font-family: var(--font-jetbrains-mono), "SF Mono", Menlo, monospace;
+  font-weight: 500;
+  color: var(--fnk-neutral-900);
+}
+
+.etf-mobile-title span {
+  font-size: 12px;
+  color: var(--fnk-neutral-500);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.etf-mobile-category {
+  font-size: 12px;
+  color: var(--fnk-neutral-500);
+  white-space: nowrap;
+}
+
+.etf-mobile-badges {
+  display: flex;
+}
+
+.etf-mobile-stats {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px;
+  margin: 0;
+}
+
+.etf-mobile-stats div {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.etf-mobile-stats dt {
+  font-size: 12px;
+  color: var(--fnk-neutral-500);
+}
+
+.etf-mobile-stats dd {
+  margin: 0;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--fnk-neutral-900);
+  font-variant-numeric: tabular-nums;
+}
+
+/* Pager strip: min-height keeps the shared 44px tap-target floor on mobile. */
+.etf-load-more {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: 8px 12px;
+  width: 100%;
+  min-height: 34px;
+  padding: 8px 16px;
+  border-top: 1px solid var(--fnk-neutral-100);
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.etf-pager-status {
+  margin: 0;
+  font-weight: 500;
+  color: var(--fnk-neutral-500);
+}
+
+.etf-pager {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+}
+
+.etf-pager-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 32px;
+  height: 28px;
+  padding: 0 8px;
+  border: 1px solid var(--fnk-neutral-200);
+  border-radius: 6px;
+  background: var(--fnk-color-card);
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--fnk-neutral-600);
+  cursor: pointer;
+  transition: border-color 150ms ease, color 150ms ease;
+}
+
+.etf-pager-btn[data-active="true"] {
+  border-color: var(--fnk-brand-interactive);
+  color: var(--fnk-brand-interactive);
+}
+
+.etf-pager-btn:disabled {
+  color: var(--fnk-neutral-300);
+  cursor: default;
+}
+
+.etf-pager-gap {
+  color: var(--fnk-neutral-500);
+}
+
+.etf-page-size {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-weight: 500;
+  color: var(--fnk-neutral-600);
+}
+
+/* Tools panel */
+
+.etf-tools-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.etf-tool-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  min-height: 34px;
+  padding: 8px 16px;
+  border-top: 1px solid var(--fnk-neutral-100);
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--fnk-neutral-700);
+  text-decoration: none;
+  transition: background-color 150ms ease;
+}
+
+.etf-tool-row:nth-child(-n + 3) {
+  border-top: 0;
+}
+
+.etf-tool-row:hover {
+  background: var(--fnk-neutral-50);
+}
+
+.etf-tool-tag {
+  font-size: 12px;
+  color: var(--fnk-neutral-500);
+  white-space: nowrap;
+}
+
+@media (max-width: 760px) {
+  .etf-tools-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .etf-tool-row:nth-child(-n + 3) {
+    border-top: 1px solid var(--fnk-neutral-100);
+  }
+
+  .etf-tool-row:first-child {
+    border-top: 0;
+  }
+}
+
+.etf-disclaimer {
+  display: flex;
+  justify-content: flex-end;
+  font-size: 12px;
+  color: var(--fnk-neutral-500);
+  margin: 0;
+  padding: 4px 4px 0;
+}
+
+/* slice 9 mobile-390: 44px tap targets. */
+@media (max-width: 760px) {
+  .etf-search {
+    height: 44px;
+  }
+
+  .etf-filter-field select {
+    height: 44px;
+  }
+
+  .etf-sort-field {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    margin-top: 8px;
+    font-size: 12px;
+    color: var(--fnk-neutral-600);
+  }
+
+  .etf-sort-field select {
+    height: 44px;
+  }
+
+  .etf-load-more {
+    min-height: 44px;
+  }
+
+  .etf-pager-btn {
+    min-width: 44px;
+    height: 44px;
+  }
+
+  .etf-page-size select {
+    height: 44px;
+  }
+
+  .etf-mobile-title {
+    min-height: 44px;
+    align-items: center;
+  }
+
+  .etf-tool-row {
+    min-height: 44px;
+  }
+
+  .etf-tab {
+    height: 44px;
+  }
+
+  .etf-seg-pill {
+    height: 44px;
+  }
+}
+
+/* Touch tablets keep the desktop table/card composition while enlarging
+ * controls to a comfortable hit area. Fine-pointer desktop remains compact. */
+@media (pointer: coarse) and (min-width: 761px), (any-pointer: coarse) and (min-width: 761px) {
+  .etf-tab {
+    min-height: 44px;
+  }
+
+  .etf-search,
+  .etf-filter-field select {
+    height: 44px;
+  }
+
+  .etf-seg-pills {
+    gap: 8px;
+    flex-wrap: wrap;
+    overflow-x: visible;
+  }
+
+  .etf-seg-pill {
+    height: 44px;
+    padding-inline: 12px;
+  }
+
+  .etf-load-more {
+    min-height: 44px;
+  }
+
+  .etf-pager-btn {
+    min-width: 44px;
+    height: 44px;
+  }
+
+  .etf-page-size select {
+    height: 44px;
+  }
+
+  .etf-table-ticker {
+    min-height: 44px;
+    justify-content: center;
+  }
+
+  .etf-tool-row {
+    min-height: 44px;
+    padding-block: 12px;
+  }
+}
+
+/* Summary strip — visual layer over the hero numbers: 4 stat cells plus the
+ * full 5-bucket asset-class band. Tokens only, no gradients. */
+.etf-sum {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  container-type: inline-size;
+}
+
+/* Four count cells do not fit one row on a phone ("5,666개" and "100개" ran
+ * into each other and the fourth cell was clipped). Below 34rem of the
+ * strip's own width the cells fold into a 2x2 grid with hairline dividers. */
+@container (max-width: 34rem) {
+  .etf-sum [data-etfs-summary-cells] {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .etf-sum [data-etfs-summary-cells] > * {
+    border-width: 0;
+    box-shadow: 1px 0 0 var(--fnk-neutral-200), 0 1px 0 var(--fnk-neutral-200);
+  }
+}
+
+.etf-sum-note {
+  margin: 0;
+  font-size: 12px;
+  color: var(--fnk-neutral-500);
+}
+
+.etf-sum-legend {
+  margin: 0;
+  font-size: 12px;
+  color: var(--fnk-neutral-500);
+}

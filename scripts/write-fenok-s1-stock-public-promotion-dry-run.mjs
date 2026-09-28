@@ -12,6 +12,7 @@ import { spawnSync } from "node:child_process";
 import { fileURLToPath } from "node:url";
 import { buildAudit } from "./audit-fenok-stock-promotion-candidates.mjs";
 import { marketScopeFromMarket, normalizeTicker, num } from "./stock-action-score-core.mjs";
+import { resolveDividendYieldFraction } from "./lib/dividend-yield-unit.mjs";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const REPO_ROOT = path.resolve(__dirname, "..");
@@ -119,10 +120,16 @@ function percentPointToRatio(value) {
   return numeric === null ? null : numeric / 100;
 }
 
-function dividendYieldToRatio(value) {
-  const numeric = num(value);
-  if (numeric === null) return null;
-  return numeric >= 0.5 && numeric <= 100 ? numeric / 100 : numeric;
+// Was a magnitude heuristic: `numeric >= 0.5 && numeric <= 100 ? n/100 : n`.
+// Magnitude cannot decide. A percent-encoded 0.4% yield is 0.4, falls under the
+// 0.5 threshold, is left untouched, and is then read as 40% -- so the rule
+// mis-scaled exactly the low-yield rows it looked safest on. Measured instead.
+function dividendYieldToRatio(value, row = null) {
+  return resolveDividendYieldFraction({
+    dividendYield: value,
+    price: row?.price,
+    dividendHistory: row?.dividendHistory,
+  }).value;
 }
 
 function marketCountryFromScope(marketScope, identity = {}) {
@@ -159,7 +166,10 @@ function stockActionRowFromPromotionRow(row) {
     marketCap: factValue(detail, "market_cap"),
     per: factValue(detail, "trailing_pe"),
     peForward: factValue(detail, "forward_pe"),
-    dividendYield: dividendYieldToRatio(factValue(detail, "dividend_yield")),
+    dividendYield: dividendYieldToRatio(factValue(detail, "dividend_yield"), {
+      price: factValue(detail, "price"),
+      dividendHistory: detail?.dividendHistory ?? null,
+    }),
     return12m: percentPointToRatio(factValue(detail, "return_1y")),
     ret1y: null,
     ret3y: null,

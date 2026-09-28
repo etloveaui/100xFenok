@@ -19,7 +19,7 @@ from pathlib import Path
 from typing import Any, Callable
 
 from bank_refresh import append_jsonl, distillate_dir, list_transcript_sources, load_coverage, read_jsonl, write_coverage
-from chains import _resolve_model_id, call_gemini_flash_lite, make_gpt_adapter, strip_code_fence
+from chains import DISTILL_TASK, call_task_with_backoff, strip_code_fence
 from distill_engine import write_text_atomic
 from enrich import LLM_SLEEP_LADDER_S, default_transcript_dir, utc_iso
 from worker import default_root
@@ -67,22 +67,7 @@ def build_teach_prompt(video_id: str, transcript: str) -> str:
 
 def call_teach_chain(video_id: str, transcript: str) -> str:
     prompt = build_teach_prompt(video_id, transcript)
-    errors: list[str] = []
-    for name, adapter in [
-        (_resolve_model_id("gemini-3.1-flash-lite", "gemini-3.1-flash-lite"), call_gemini_flash_lite),
-        (_resolve_model_id("gpt-5.4-mini", "gpt-5.4-mini"), make_gpt_adapter(_resolve_model_id("gpt-5.4-mini", "gpt-5.4-mini"))),
-    ]:
-        for sleep_s in (0.0, *LLM_SLEEP_LADDER_S):
-            if sleep_s:
-                time.sleep(sleep_s)
-            try:
-                return adapter(TEACH_SYSTEM, prompt)
-            except Exception as exc:  # noqa: BLE001 - free-chain fallback ladder
-                message = str(exc)
-                errors.append(f"{name}: {message}")
-                if "429" not in message and "rate" not in message.lower():
-                    break
-    raise RuntimeError(" | ".join(errors) or f"{video_id}: teaching chain exhausted")
+    return call_task_with_backoff(DISTILL_TASK, TEACH_SYSTEM, prompt, LLM_SLEEP_LADDER_S)
 
 
 def build_cluster_prompt(section: str, items: list[dict[str, Any]], merge: bool = False) -> str:
@@ -124,22 +109,7 @@ def build_cluster_prompt(section: str, items: list[dict[str, Any]], merge: bool 
 
 def call_cluster_chain(section: str, items: list[dict[str, Any]], merge: bool = False) -> str:
     prompt = build_cluster_prompt(section, items, merge=merge)
-    errors: list[str] = []
-    for name, adapter in [
-        (_resolve_model_id("gemini-3.1-flash-lite", "gemini-3.1-flash-lite"), call_gemini_flash_lite),
-        (_resolve_model_id("gpt-5.4-mini", "gpt-5.4-mini"), make_gpt_adapter(_resolve_model_id("gpt-5.4-mini", "gpt-5.4-mini"))),
-    ]:
-        for sleep_s in (0.0, *LLM_SLEEP_LADDER_S):
-            if sleep_s:
-                time.sleep(sleep_s)
-            try:
-                return adapter(TEACH_SYSTEM, prompt)
-            except Exception as exc:  # noqa: BLE001 - free-chain fallback ladder
-                message = str(exc)
-                errors.append(f"{name}: {message}")
-                if "429" not in message and "rate" not in message.lower():
-                    break
-    raise RuntimeError(" | ".join(errors) or f"{section}: clustering chain exhausted")
+    return call_task_with_backoff(DISTILL_TASK, TEACH_SYSTEM, prompt, LLM_SLEEP_LADDER_S)
 
 
 def _clean_observation(value: Any) -> str | None:

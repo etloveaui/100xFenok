@@ -6,9 +6,10 @@ Two modes sharing one extraction core:
 
 Zero-maintenance design: processed video ids live in _bank_state.json next to the
 bank; every entry passes a schema/2-gate filter and en-dedupe before append.
-LLM extraction rides the existing free chain adapters (gemini flash-lite first,
-gpt-5.4-mini fallback); videos without transcripts fall back to Gemini video
-analysis (does not touch YouTube transcript endpoints, so it survives IP blocks).
+LLM extraction goes through the FENO LLM task door (registry task
+chains.DISTILL_TASK; CCH owns the model chain). Videos without transcripts fall
+back to video analysis through chains.DISTILL_VIDEO_TASK (does not touch YouTube
+transcript endpoints, so it survives IP blocks).
 """
 from __future__ import annotations
 
@@ -21,7 +22,7 @@ from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any, Callable, Iterator
 
-from chains import _ensure_aa_path, _resolve_model_id, call_gemini_flash_lite, make_gpt_adapter, strip_code_fence
+from chains import DISTILL_TASK, DISTILL_VIDEO_TASK, call_task, call_task_with_backoff, strip_code_fence
 from distill_engine import read_json, write_json_atomic
 from enrich import LLM_SLEEP_LADDER_S, add_entry_enrichment, backup_expression_bank, default_transcript_dir, read_transcript_text, utc_iso
 from gates import apply_source_verification
@@ -30,6 +31,11 @@ from worker import default_root
 CHANNEL_VIDEOS_URL = "https://www.youtube.com/channel/UCGDA1e6qQSAH0R9hoip9VrA/videos"
 ALLOWED_THEMES = {"work", "family-friends", "selftalk-emotion", "out-shopping-dining", "work-advanced", "free"}
 EXCLUDE_TITLE = re.compile(r"멤버십|members only", re.IGNORECASE)
+# fh-403: members-only access detection. Primary signal is the flat-listing
+# availability field; the fallback is the yt-dlp access error, checked before
+# any Gemini video call when the listing did not report availability.
+MEMBERS_ONLY_ERROR_RE = re.compile(r"members[- ]only|join this channel", re.IGNORECASE)
+MEMBERS_ONLY_AVAILABILITY = "subscriber_only"
 TRANSCRIPT_SLEEP_S = 12.0
 MAX_ENTRIES_PER_VIDEO = 8
 BANK_CAP = 1200
@@ -42,6 +48,8 @@ THEME_TARGETS = {
     "work-advanced": 80,
 }
 DONE_STATUSES = {"extracted", "zero-yield"}
+# feno_llm accepts only a concrete video/<subtype> MIME type for a video URI.
+VIDEO_MIME_TYPE = "video/mp4"
 
 EXTRACT_SYSTEM = "너는 영어회화 강의에서 학습 표현을 추출하는 분석기다. 출력은 JSON 배열 하나만."
 
@@ -71,48 +79,25 @@ TranscriptProvider = Callable[[str, str], str]
 
 def extract_from_transcript(text: str) -> str:
     prompt = f"다음 한국어 영어회화 강의 자막에서 학습 표현을 추출해라.\n\n{EXTRACT_RULES}\n\n[자막]\n{text[:12000]}"
-    try:
-        return call_gemini_flash_lite(EXTRACT_SYSTEM, prompt)
-    except Exception:
-        return make_gpt_adapter(_resolve_model_id("gpt-5.4-mini", "gpt-5.4-mini"))(EXTRACT_SYSTEM, prompt)
+    return call_task(DISTILL_TASK, EXTRACT_SYSTEM, prompt)
 
 
 def extract_from_video(video_id: str) -> str:
-    """Gemini watches the video directly — fallback when transcripts are unavailable."""
-    _ensure_aa_path()
-    from _gemini_api import call_gemini
-
-    payload = {
-        "contents": [{"parts": [
-            {"fileData": {"mimeType": "video/*", "fileUri": f"https://www.youtube.com/watch?v={video_id}"}},
-            {"text": f"이 한국어 영어회화 강의에서 학습 표현을 추출해라.\n\n{EXTRACT_RULES}"},
-        ]}],
-        "generationConfig": {"responseMimeType": "application/json"},
-    }
-    result = call_gemini(_resolve_model_id("gemini-3.1-flash-lite", "gemini-3.1-flash-lite"), payload)
-    if not result.success or not result.text.strip():
-        raise RuntimeError(f"gemini video: {result.error or 'empty'}")
-    return result.text
+    """The model watches the video directly — fallback when transcripts are unavailable."""
+    prompt = f"이 한국어 영어회화 강의에서 학습 표현을 추출해라.\n\n{EXTRACT_RULES}"
+    return call_task(
+        DISTILL_VIDEO_TASK,
+        None,
+        prompt,
+        response_format="json",
+        video_url=f"https://www.youtube.com/watch?v={video_id}",
+        video_mime_type=VIDEO_MIME_TYPE,
+    )
 
 
 def extract_enriched_from_transcript(text: str) -> str:
     prompt = f"다음 한국어 영어회화 강의 자막에서 학습 표현을 풀증류해라.\n\n{EXTRACT_ENRICHED_RULES}\n\n[자막]\n{text[:16000]}"
-    errors: list[str] = []
-    for name, adapter in [
-        (_resolve_model_id("gemini-3.1-flash-lite", "gemini-3.1-flash-lite"), call_gemini_flash_lite),
-        (_resolve_model_id("gpt-5.4-mini", "gpt-5.4-mini"), make_gpt_adapter(_resolve_model_id("gpt-5.4-mini", "gpt-5.4-mini"))),
-    ]:
-        for sleep_s in (0.0, *LLM_SLEEP_LADDER_S):
-            if sleep_s:
-                time.sleep(sleep_s)
-            try:
-                return adapter(EXTRACT_SYSTEM, prompt)
-            except Exception as exc:  # noqa: BLE001 - free-chain fallback ladder
-                message = str(exc)
-                errors.append(f"{name}: {message}")
-                if "429" not in message and "rate" not in message.lower():
-                    break
-    raise RuntimeError(" | ".join(errors) or "enriched extraction chain exhausted")
+    return call_task_with_backoff(DISTILL_TASK, EXTRACT_SYSTEM, prompt, LLM_SLEEP_LADDER_S)
 
 
 def normalize_en(value: str) -> str:
@@ -198,20 +183,55 @@ def fetch_transcript_text(video_id: str) -> str:
     return " ".join(snippet.text for snippet in transcript.snippets)
 
 
-def list_new_channel_videos(limit: int) -> list[tuple[str, str]]:
+def list_new_channel_videos(limit: int) -> list[tuple[str, str, str]]:
+    """Returns (video_id, title, availability); availability is '' when yt-dlp omits it."""
     out = subprocess.run(
         ["yt-dlp", "--flat-playlist", "--playlist-items", f"1:{limit}",
-         "--print", "%(id)s|%(title)s", CHANNEL_VIDEOS_URL],
+         "--print", "%(id)s|%(availability)s|%(title)s", CHANNEL_VIDEOS_URL],
         capture_output=True, text=True, timeout=120,
     )
     videos = []
     for line in out.stdout.splitlines():
-        if "|" not in line:
+        if line.count("|") < 2:
             continue
-        vid, title = line.split("|", 1)
+        vid, avail, title = line.split("|", 2)
+        avail = avail.strip()
+        if avail in ("NA", "None", "none"):
+            avail = ""
         if not EXCLUDE_TITLE.search(title):
-            videos.append((vid.strip(), title.strip()))
+            videos.append((vid.strip(), title.strip(), avail))
     return videos
+
+
+def skipped_path(root: Path) -> Path:
+    return root / "_bank_skipped.json"
+
+
+def load_skipped(root: Path) -> dict[str, Any]:
+    data = read_json(skipped_path(root), {})
+    verdicts = data.get("skipped") if isinstance(data, dict) else None
+    return verdicts if isinstance(verdicts, dict) else {}
+
+
+def record_members_only(root: Path, video_id: str, detected_by: str) -> None:
+    """Persist a members_only verdict so the video is never retried each run."""
+    verdicts = load_skipped(root)
+    verdicts[video_id] = {"reason": "members_only", "detected_by": detected_by, "at": utc_iso()}
+    write_json_atomic(skipped_path(root), {"updatedAt": utc_iso(), "skipped": verdicts})
+
+
+def members_only_access_error(video_id: str) -> bool:
+    """Fallback detection: the yt-dlp access error for members-only content."""
+    try:
+        out = subprocess.run(
+            ["yt-dlp", "--simulate", "--no-warnings", f"https://www.youtube.com/watch?v={video_id}"],
+            capture_output=True, text=True, timeout=60,
+        )
+    except Exception:
+        return False
+    return out.returncode != 0 and bool(
+        MEMBERS_ONLY_ERROR_RE.search((out.stderr or "") + (out.stdout or ""))
+    )
 
 
 def load_state(root: Path) -> dict[str, Any]:
@@ -412,8 +432,15 @@ def run(
     dry_run: bool,
     enrich: bool = False,
     write_staging: bool = False,
+    availability: dict[str, str] | None = None,
 ) -> dict[str, Any]:
-    """sources: list of (video_id, transcript_text_or_None)."""
+    """sources: list of (video_id, transcript_text_or_None).
+
+    availability maps video_id -> yt-dlp flat-listing availability (channel-new
+    only). Members-only videos are recorded as skipped — neither failed nor
+    added — before any Gemini video call, and the verdict persists so they are
+    never retried (fh-403).
+    """
     bank_path = root / "expression-bank.json"
     bank = read_json(bank_path, {})
     entries = bank.get("entries", []) if isinstance(bank, dict) else []
@@ -421,12 +448,22 @@ def run(
     processed: list[str] = list(state.get("processed", []))
     seen_ids = set(processed) | {e.get("source_id") for e in entries if isinstance(e, dict)}
     seen_en = {normalize_en(str(e.get("en", ""))) for e in entries if isinstance(e, dict)}
+    persisted_skips = load_skipped(root)
 
-    added, scanned, failed, enrichment_rejected = [], 0, 0, 0
+    added, scanned, failed, enrichment_rejected, skipped = [], 0, 0, 0, 0
+    new_skips: dict[str, str] = {}
     for video_id, transcript in sources:
         if video_id in seen_ids:
             continue
         scanned += 1
+        if video_id in persisted_skips:
+            skipped += 1
+            continue
+        avail = (availability or {}).get(video_id, "")
+        if avail == MEMBERS_ONLY_AVAILABILITY:
+            new_skips[video_id] = "availability"
+            skipped += 1
+            continue
         try:
             if transcript is None:
                 try:
@@ -434,6 +471,13 @@ def run(
                     time.sleep(TRANSCRIPT_SLEEP_S)
                 except Exception:
                     transcript = ""
+            if not transcript.strip() and use_video_fallback and availability is not None and not avail:
+                # Listing context with unknown availability: read the yt-dlp
+                # members-only access error BEFORE any Gemini video call.
+                if members_only_access_error(video_id):
+                    new_skips[video_id] = "access_error"
+                    skipped += 1
+                    continue
             raw = (extract_enriched_from_transcript(transcript) if enrich else extract_from_transcript(transcript)) if transcript.strip() else (
                 extract_from_video(video_id) if use_video_fallback else ""
             )
@@ -446,7 +490,10 @@ def run(
             failed += 1
             print(f"[bank-refresh] {video_id} failed: {exc}", flush=True)
 
-    report = {"scanned": scanned, "added": len(added), "failed": failed, "enrichment_rejected": enrichment_rejected, "bank_total": len(entries) + len(added)}
+    for video_id, detected_by in new_skips.items():
+        record_members_only(root, video_id, detected_by)
+
+    report = {"scanned": scanned, "added": len(added), "failed": failed, "skipped": skipped, "enrichment_rejected": enrichment_rejected, "bank_total": len(entries) + len(added)}
     if dry_run or not added:
         return report | {"dry_run": dry_run}
 
@@ -502,16 +549,27 @@ def main(argv: list[str] | None = None) -> int:
         parser.error("--enrich writes require --write-staging or --dry-run")
 
     sources: list[tuple[str, str | None]] = []
+    availability: dict[str, str] | None = None
     limit = args.limit if args.limit is not None else 30
     if args.from_transcripts:
         for f in sorted(args.from_transcripts.glob("*.txt"))[: limit or None]:
             sources.append((f.stem, f.read_text(encoding="utf-8")))
     elif args.channel_new:
-        sources = [(vid, None) for vid, _title in list_new_channel_videos(limit)]
+        listing = list_new_channel_videos(limit)
+        sources = [(vid, None) for vid, _title, _avail in listing]
+        availability = {vid: avail for vid, _title, avail in listing}
     else:
         parser.error("choose --from-transcripts DIR or --channel-new")
 
-    report = run(args.root.resolve(), sources, not args.no_video_fallback, args.dry_run, enrich=args.enrich, write_staging=args.write_staging)
+    report = run(
+        args.root.resolve(),
+        sources,
+        not args.no_video_fallback,
+        args.dry_run,
+        enrich=args.enrich,
+        write_staging=args.write_staging,
+        availability=availability,
+    )
     print(json.dumps(report, ensure_ascii=False))
     return 0
 

@@ -9,6 +9,9 @@ on:
 permissions:
   contents: read
   issues: write
+  # Liveness asks GitHub whether the alarm ran, rather than trusting a stamp
+  # the alarm only advances when the incident changes.
+  actions: read
 
 concurrency:
   group: worker-request-budget-alarm
@@ -27,6 +30,60 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: 22
+
+      # Who observes the observer. The pipeline alarm excludes itself from its
+      # own watch list to avoid recursion, so if it stops running nothing says
+      # so and every other detector's silence goes with it. Hosted here because
+      # this workflow is hourly, independent of the alarm, and already owns an
+      # issue-reporting path.
+      #
+      # This first read the generated_at stamp the alarm persists, on the stated
+      # premise that every run writes it. Measured, that was false: the emitter
+      # writes the prior document back unchanged when no significant key moved,
+      # so 51 of 299 gaps (17.1%) exceeded the old 3h ceiling and the worst ran
+      # 23.8h while the alarm succeeded 21 times inside it. It now counts the
+      # alarm's own missed scheduled slots instead - the same rule the alarm
+      # applies to the detectors it watches.
+      #
+      # Limitation, stated rather than hidden: if BOTH hourly schedules are
+      # dropped at once, as happened on 2026-08-21, this is silent too.
+      - name: Check pipeline alarm liveness
+        id: alarm_liveness
+        continue-on-error: true
+        env:
+          # Required. GITHUB_TOKEN is not a default runner variable, and without
+          # it the check cannot read the alarm's run history, returns
+          # "unreadable", and exits 1 - which would fire the surfacing step below
+          # with a message that is false. Asserted by
+          # scripts/ops/test-workflow-credential-wiring.mjs.
+          GITHUB_TOKEN: ${{ github.token }}
+        run: node scripts/ops/check-alarm-liveness.mjs
+
+      # A tolerated check whose failure reaches nothing is the exact shape that
+      # hid the SEC 13F smoke for four days, so this one surfaces itself.
+      #
+      # Stale and unreadable are surfaced separately on purpose. Collapsing them
+      # is the same defect this program keeps finding - one signal covering two
+      # fault classes - and here the wrong half would assert the alarm is dead
+      # when in fact this check could not measure it. Exit 2 is stale, exit 1 is
+      # unreadable; the step outcome alone cannot tell them apart, so the state
+      # is re-read from the JSON the check printed.
+      - name: Surface a stale or unmeasurable pipeline alarm
+        if: steps.alarm_liveness.outcome == 'failure'
+        run: |
+          set -euo pipefail
+          state="$(node scripts/ops/check-alarm-liveness.mjs 2>/dev/null | tail -1 || true)"
+          case "$state" in
+            *'"status":"stale"'*)
+              echo "::error::the pipeline alarm has not run recently; every other detector's silence is currently invisible: ${state}" >&2
+              ;;
+            *)
+              echo "::error::pipeline alarm liveness could not be measured, which is a fault in this check rather than evidence about the alarm: ${state:-no output}" >&2
+              ;;
+          esac
+          exit 1
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
 
       - name: Check Worker request budget
         id: budget
@@ -63,10 +120,6 @@ jobs:
           else
             gh issue create --title "$title" --body-file worker-request-budget-issue.md
           fi
-
-      - name: Fail on alarm
-        if: steps.budget.outcome == 'failure'
-        run: exit 1
 
   data-supply-analytics:
     if: github.event_name == 'workflow_dispatch' || github.event.schedule == '17 2,14 * * *'
@@ -116,6 +169,8 @@ jobs:
             gh issue create --title "$title" --body-file data-supply-analytics-issue.md
           fi
 
-      - name: Fail on telemetry alarm
-        if: steps.telemetry.outcome == 'failure'
-        run: exit 1
+      # The run's conclusion is alarm-machinery health, not incident state: an
+      # exceeded budget is reported through the OPS issues above, and this run
+      # stays green as long as that reporting succeeded. Red is reserved for a
+      # genuine issue preparation/API failure — the open-or-update steps are NOT
+      # continue-on-error. No deliberate exit 1 here.

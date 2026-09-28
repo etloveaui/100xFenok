@@ -1,0 +1,102 @@
+{
+  "attempts": [
+    {
+      "attempts_used": 1,
+      "event_name": "workflow_dispatch",
+      "failures": [],
+      "latency_ms": 719,
+      "natural": true,
+      "observed_at": "2026-08-01T18:21:41Z",
+      "outcome": "fresh",
+      "run_attempt": 1,
+      "run_id": "30711922590",
+      "schedule": "",
+      "shard": "1/6"
+    },
+    {
+      "attempts_used": 1,
+      "event_name": "schedule",
+      "failures": [],
+      "latency_ms": 641,
+      "natural": true,
+      "observed_at": "2026-08-07T15:04:20Z",
+      "outcome": "fresh",
+      "run_attempt": 1,
+      "run_id": "31190633378",
+      "schedule": "7 14 * * 0-5",
+      "shard": "67/72"
+    },
+    {
+      "attempts_used": 1,
+      "event_name": "workflow_dispatch",
+      "failures": [],
+      "latency_ms": 591,
+      "natural": false,
+      "observed_at": "2026-09-28T03:11:20Z",
+      "outcome": "fresh",
+      "run_attempt": 1,
+      "run_id": "36367829153",
+      "schedule": "",
+      "shard": ""
+    }
+  ],
+  "current": {
+    "fetched_at": "2026-09-28T03:26:50Z",
+    "history_as_of": "2026-09-25",
+    "path": "data/yf/finance/FDAT.json",
+    "payload_sha256": "673087831028bbb18729f12553dae7df4e17c14a87fcc3a677e5d7aec0857b76",
+    "quote_as_of": "2026-09-25T19:24:53Z",
+    "source_as_of": "2026-09-25"
+  },
+  "discovered_from": [
+    "stockanalysis_etf"
+  ],
+  "last_attempt": {
+    "attempts_used": 1,
+    "event_name": "workflow_dispatch",
+    "failures": [],
+    "latency_ms": 591,
+    "natural": false,
+    "observed_at": "2026-09-28T03:11:20Z",
+    "outcome": "fresh",
+    "run_attempt": 1,
+    "run_id": "36367829153",
+    "schedule": "",
+    "shard": ""
+  },
+  "lkg": {
+    "fetched_at": "2026-08-07T15:06:07Z",
+    "history_as_of": "2026-08-07",
+    "path": "data/admin/yahoo-batch-quote-history/lkg/FDAT.json",
+    "payload_sha256": "33879d49a93089aa04755f7306dfc001a3d4268a2e46eff6510417f0b19b73a6",
+    "quote_as_of": "2026-08-07T14:15:02Z",
+    "source_as_of": "2026-08-07"
+  },
+  "promotion_contract": "provider_observation/v2",
+  "provider_observation": {
+    "event_name": "workflow_dispatch",
+    "history_as_of": "2026-09-25",
+    "observed_at": "2026-09-28T03:11:20Z",
+    "payload_sha256": "4bc2f8875efcf301dfdde22f2a026e3afd0009fd8962d6cac350604ea4a0cd36",
+    "quote_as_of": "2026-09-25T19:24:53Z",
+    "run_attempt": 1,
+    "run_id": "36367829153",
+    "schema_version": "provider_observation/v2",
+    "source_as_of": "2026-09-25"
+  },
+  "resolution_state": "fresh_primary",
+  "retry": false,
+  "schema_version": "yahoo-batch-quote-history-state/v1",
+  "stale": {
+    "age_business_days": 8,
+    "classified_at": "2026-08-19T23:42:29Z",
+    "classified_run_id": "32314261503",
+    "expected_resolution": "next_natural_yahoo_run",
+    "max_business_days": 6,
+    "message": "FDAT holds LKG because Yahoo source date 2026-08-07 is 8 business days old, beyond the 6-day bound; it will retry on the next natural Yahoo run.",
+    "reason": "source_age_exceeds_lane_bound",
+    "source_as_of": "2026-08-07"
+  },
+  "ticker": "FDAT",
+  "updated_at": "2026-09-28T03:11:20Z"
+}

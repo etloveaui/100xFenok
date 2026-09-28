@@ -4,7 +4,7 @@ import { macroContextFromParam } from "@/lib/macro-chart/context";
 import { ROUTES } from "@/lib/routes";
 import { normalizeForEntityKey } from "@/lib/ticker";
 import { parseScreenerFilterState } from "@/lib/screener/filter-url";
-import ScreenerClient from "./ScreenerClient";
+import ScreenerClientLoader from "./ScreenerClientLoader";
 
 interface Props {
   searchParams?: Promise<Record<string, string | string[] | undefined>>;
@@ -25,19 +25,20 @@ export default async function ScreenerPage({ searchParams }: Props) {
   const initialSector = firstParam(params.sector).trim();
   const initialMacroContextId = macroContextFromParam(firstParam(params.macro))?.id;
   const initialFilters = parseScreenerFilterState(params);
+  // Table-first landing: ?mode=discover opts back into discovery.
+  const initialMode = firstParam(params.mode) === "discover" ? "discover" : "analyze";
   return (
-    <div className="fnk-shell">
-      <AppShell active="screener" title="스크리너" backHref={ROUTES.home}>
-        <ScreenerClient
-          initialSearch={initialSearch}
-          initialSector={initialSector}
-          initialMacroContextId={initialMacroContextId}
-          initialPreset={firstParam(params.preset)}
-          initialActionFilter={firstParam(params.action)}
-          initialConnectionFilter={firstParam(params.connection)}
-          initialFilters={initialFilters}
-        />
-      </AppShell>
-    </div>
+    <AppShell active="screener" title="스크리너" backHref={ROUTES.home}>
+      <ScreenerClientLoader
+        initialSearch={initialSearch}
+        initialSector={initialSector}
+        initialMacroContextId={initialMacroContextId}
+        initialPreset={firstParam(params.preset)}
+        initialActionFilter={firstParam(params.action)}
+        initialConnectionFilter={firstParam(params.connection)}
+        initialFilters={initialFilters}
+        initialMode={initialMode}
+      />
+    </AppShell>
   );
 }

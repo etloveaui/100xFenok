@@ -10,11 +10,11 @@ const TAIWAN_SCOPE_RE = /taiwan/i;
 const TAIWAN_SUFFIX_TICKER_RE = /\.(TW|TWO)$/i;
 const TAIWAN_SUFFIX_NORMALIZED_RE = /-(TW|TWO)$/i;
 
-// Explicit Taiwan = rows whose upstream market/market_scope already identifies
-// Taiwan. Suffix-only rows that carry a wrong upstream market tag (e.g. a .TW
-// ticker still tagged US_CLASS) are intentionally NOT promoted here — they are
-// surfaced as anomalies until the upstream market tag is corrected, so the
-// Taiwan scoring bucket never silently grows on a misclassified row.
+// Explicit Taiwan = rows whose normalized upstream market/market_scope identifies
+// Taiwan. Suffix-only rows that still carry a wrong upstream market tag (e.g. a
+// .TW ticker tagged US_CLASS) are intentionally NOT promoted here — they are
+// surfaced as anomalies until the market classifier is corrected, so the Taiwan
+// scoring bucket never silently grows on a misclassified row.
 export function isExplicitTaiwanRow(row) {
   return TAIWAN_MARKET_RE.test(String(row?.market ?? ""))
     || TAIWAN_SCOPE_RE.test(String(row?.market_scope ?? ""));
@@ -25,8 +25,8 @@ export function selectExplicitTaiwanRows(rows) {
 }
 
 // True when a row carries a Taiwan ticker suffix (.TW/.TWO, or normalized
-// -TW/-TWO). This is the authoritative-but-unused Taiwan signal that the
-// upstream market tag should have honored.
+// -TW/-TWO). This is the independent anomaly signal used to catch rows that
+// the upstream market classifier failed to honor.
 export function hasTaiwanTickerSuffix(row) {
   return TAIWAN_SUFFIX_TICKER_RE.test(String(row?.ticker ?? ""))
     || TAIWAN_SUFFIX_NORMALIZED_RE.test(String(row?.ticker_normalized ?? ""));

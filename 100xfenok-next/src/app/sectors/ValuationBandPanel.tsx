@@ -1,0 +1,91 @@
+"use client";
+
+import { Bar, Button, Panel, PanelHeader } from "@/components/ui";
+import { freshnessVerdict } from "@/lib/freshness-policy.mjs";
+import type { SectorRow } from "@/lib/sectors/types";
+
+function finiteNumber(value: unknown): value is number {
+  return typeof value === "number" && Number.isFinite(value);
+}
+
+export default function ValuationBandPanel({
+  rows,
+  loading,
+  ready,
+  failed,
+  stale,
+  clock,
+  onRetry,
+  onCollapse,
+}: {
+  rows: SectorRow[];
+  loading: boolean;
+  ready: boolean;
+  failed: boolean;
+  stale: boolean;
+  clock: string | null;
+  onRetry: () => void;
+  onCollapse: () => void;
+}) {
+  const empty = !loading && (!ready || rows.length === 0);
+  const clockVerdict = freshnessVerdict(clock, "benchmarks");
+  const clockStale = clockVerdict.state === "delayed" || clockVerdict.state === "stopped";
+
+  return (
+    <Panel
+      loading={loading}
+      empty={empty}
+      emptyReason={failed || !ready ? "밸류에이션 밴드 자료를 불러오지 못했습니다" : "표시할 밴드 자료가 없습니다"}
+      emptyNextRefresh="다음 분기 갱신"
+      emptyActionLabel={failed || !ready ? "다시 시도" : undefined}
+      onEmptyAction={failed || !ready ? onRetry : undefined}
+      stale={stale || clockStale}
+      asOf={clock ?? undefined}
+      onRetry={stale || clockStale ? onRetry : undefined}
+    >
+      {ready && rows.length > 0 && (
+        <div data-sectors-valuation-bands="true">
+          <PanelHeader
+            eyebrow="Valuation"
+            title="밸류에이션 밴드"
+            right={(
+              <>
+                <span className="sec-head-note">Fwd P/E 5년 밴드</span>
+                <Button type="button" data-sectors-collapse="valuation" onClick={onCollapse}>접기</Button>
+              </>
+            )}
+          />
+          <div className="sec-band-head" aria-hidden="true">
+            <span>섹터</span>
+            <span className="sec-band-head-num">Fwd P/E</span>
+            <span>밴드 위치</span>
+            <span className="sec-band-head-num">백분위</span>
+          </div>
+          {rows.map((row) => {
+            const band = row.valuation?.peBand ?? null;
+            const pe = row.valuation?.pe ?? null;
+            const percentile = band && finiteNumber(band.percentile) ? Math.max(0, Math.min(100, band.percentile * 100)) : null;
+            return (
+              <div key={row.key} className="sec-band-row" data-sectors-band-row={row.etf}>
+                <span className="sec-band-name">
+                  {row.name} <span className="sec-ticker">{row.etf}</span>
+                </span>
+                <span className="sec-band-pe tabular-nums">{finiteNumber(pe) ? `${pe.toFixed(1)}배` : "—"}</span>
+                {percentile !== null ? (
+                  <Bar
+                    value={percentile}
+                    className={percentile >= 50 ? "sec-bar-down" : "sec-bar-up"}
+                    aria-label={`${row.name} 밴드 위치 ${Math.round(percentile)}`}
+                  />
+                ) : (
+                  <span className="sec-band-missing">밴드 -</span>
+                )}
+                <span className="sec-band-pct tabular-nums">{percentile !== null ? Math.round(percentile) : "—"}</span>
+              </div>
+            );
+          })}
+        </div>
+      )}
+    </Panel>
+  );
+}

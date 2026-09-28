@@ -1,0 +1,43 @@
+{
+ "criteria_version": "yoo_rim_replica_2018.v1 / evidence-freeze.v7",
+ "frozen_at": "2026-08-09T09:30:00Z",
+ "frozen_by": "handler (Claude Opus), sole adjudicator",
+ "nature": "RECORD-INTEGRITY CORRECTION ONLY. No verdict, gate, threshold, number or piece of evidence moves. Raised by an independent Luna critic through cx.",
+ "supersedes": {
+  "path": "evidence-freeze-v6.json",
+  "sha256": "4895e6ccd3dfb946442ec14c6d045c366cbb7d1e37f49208c92e7b219502f64f",
+  "status": "preserved unedited"
+ },
+ "correction_1_governing_criteria_was_inaccurate": {
+  "what_it_said": "evidence-freeze.json v1 through evidence-freeze-v5.json, each with its own receipt",
+  "why_wrong": "two errors. It stopped at v5 when v6 exists, and 'each with its own receipt' is false for v1 — v1 carries no paired receipt file; its assertion is embedded inside the criteria document itself.",
+  "corrected_statement": "v1 carries an EMBEDDED receipt inside its own document. v2 through v7 each carry a PAIRED receipt file named <criteria>-receipt.json.",
+  "verified": "evidence-freeze-receipt.json does not exist on disk, confirming the embedded form for v1"
+ },
+ "correction_2_prefix_hashes_in_immutable_freezes": {
+  "finding": "evidence-freeze-v5.json and evidence-freeze-v6.json each store a 24-character PREFIX in supersedes.sha256, not a full SHA-256",
+  "v5_stores": "154b8d7fdc3bb6c806c885ab (24 chars) — a prefix of the v4 hash",
+  "v6_stores": "4fab9343436aca59315f551b (24 chars) — a prefix of the v5 hash",
+  "why_not_fixed_in_place": "v5 and v6 are immutable and receipted. Editing them to lengthen a field would break the very discipline the receipts exist to enforce, and the receipts' own hashes would no longer match. The defect is recorded here instead.",
+  "authoritative_full_hashes": {
+   "v1": "3db757c087688600f4d2ceba2b715785440866df9c8ad76f937ca7d8a3252aa9",
+   "v2": "aa4b24ee5e0eeaffbb5e012706265e4315d9f6bbe94eb3d1ce265a5c981dd896",
+   "v3": "812c4615e8bed2f4ad05bea342e85b662c4059ecce5a0571ff1baa08ced8a57e",
+   "v4": "154b8d7fdc3bb6c806c885ab99d5bf092e0eb0d419677f03d782b672ddbd6a46",
+   "v5": "4fab9343436aca59315f551b9d20ee73fa46ae65f561e3ec497d0705b7196884",
+   "v6": "4895e6ccd3dfb946442ec14c6d045c366cbb7d1e37f49208c92e7b219502f64f"
+  },
+  "rule_going_forward": "every hash recorded anywhere in this namespace is a full 64-character SHA-256. The correction chain in equation-identification.json is the authoritative index and the focused test refuses anything shorter."
+ },
+ "correction_3_test_hardening": {
+  "requested_by": "the Luna critic, through cx",
+  "changes": [
+   "the namespace file list is now an exact allowlist derived from the correction chain plus its receipts plus a fixed set of evidence files, so a stray or renamed JSON cannot appear unnoticed",
+   "the current-value check is no longer five literal price strings; it walks every JSON recursively and rejects any key naming a current, fair, target or base value for SPX, NDX or QQQ, and any numeric leaf in the index-level range under such a key",
+   "explicit assertions that the v6 gate outcomes stay as scored: G_B_SOURCED FAIL, G_C_GLOBAL cannot clear, G_N_UNIQUE not cleared",
+   "an assertion that this v7 record itself stays present and accurate"
+  ]
+ },
+ "verdict": "YOO_METHOD_NOT_IDENTIFIED — unchanged. Branch B closed.",
+ "immutable": true
+}

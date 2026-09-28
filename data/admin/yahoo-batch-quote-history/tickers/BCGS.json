@@ -12,47 +12,104 @@
       "run_id": "29875696340",
       "schedule": "0 22 * * 2",
       "shard": "2/6"
+    },
+    {
+      "attempts_used": 1,
+      "event_name": "schedule",
+      "failures": [],
+      "latency_ms": 551,
+      "natural": true,
+      "observed_at": "2026-08-05T21:19:22Z",
+      "outcome": "fresh",
+      "run_attempt": 1,
+      "run_id": "31047972318",
+      "schedule": "7 20 * * 0-5",
+      "shard": "46/72"
+    },
+    {
+      "attempts_used": 1,
+      "event_name": "schedule",
+      "failures": [],
+      "latency_ms": 448,
+      "natural": true,
+      "observed_at": "2026-08-12T05:45:23Z",
+      "outcome": "fresh",
+      "run_attempt": 1,
+      "run_id": "31567478446",
+      "schedule": "7 4 * * 0-5",
+      "shard": "38/72"
+    },
+    {
+      "attempts_used": 1,
+      "event_name": "workflow_dispatch",
+      "failures": [],
+      "latency_ms": 471,
+      "natural": false,
+      "observed_at": "2026-09-28T01:17:59Z",
+      "outcome": "fresh",
+      "run_attempt": 1,
+      "run_id": "36365270594",
+      "schedule": "",
+      "shard": ""
     }
   ],
   "current": {
-    "fetched_at": "2026-07-21T23:08:27Z",
-    "history_as_of": "2026-07-20",
+    "fetched_at": "2026-09-28T01:27:16Z",
+    "history_as_of": "2026-09-25",
     "path": "data/yf/finance/BCGS.json",
-    "payload_sha256": "5754fec2115448af54063ef9ba07e14aa600462607b1e18d00b375fefa163244",
-    "quote_as_of": "2026-07-17T16:20:32Z",
-    "source_as_of": "2026-07-17T16:20:32Z"
+    "payload_sha256": "acfd4f885433a27e31cbdf8ce607fd4d9b8a037b2da736d83fd623800ba0e5d4",
+    "quote_as_of": "2026-09-23T15:37:08Z",
+    "source_as_of": "2026-09-23T15:37:08Z"
   },
   "discovered_from": [
     "stockanalysis_etf"
   ],
   "last_attempt": {
     "attempts_used": 1,
-    "event_name": "schedule",
+    "event_name": "workflow_dispatch",
     "failures": [],
-    "latency_ms": 1067,
-    "natural": true,
-    "observed_at": "2026-07-21T23:04:26Z",
+    "latency_ms": 471,
+    "natural": false,
+    "observed_at": "2026-09-28T01:17:59Z",
     "outcome": "fresh",
     "run_attempt": 1,
-    "run_id": "29875696340",
-    "schedule": "0 22 * * 2",
-    "shard": "2/6"
+    "run_id": "36365270594",
+    "schedule": "",
+    "shard": ""
+  },
+  "lkg": {
+    "fetched_at": "2026-08-12T05:47:01Z",
+    "history_as_of": "2026-08-11",
+    "path": "data/admin/yahoo-batch-quote-history/lkg/BCGS.json",
+    "payload_sha256": "eeb50707abcfebc62795fd8306e97394c3259fdc8e586f02d2b67286b0d3476d",
+    "quote_as_of": "2026-08-11T20:00:00Z",
+    "source_as_of": "2026-08-11"
   },
   "promotion_contract": "provider_observation/v2",
   "provider_observation": {
-    "event_name": "schedule",
-    "history_as_of": "2026-07-20",
-    "observed_at": "2026-07-21T23:04:26Z",
-    "payload_sha256": "c8db4e74de43008f44366146b63580ee5921a544cc8b0dffcd42c7160e0bfd98",
-    "quote_as_of": "2026-07-17T16:20:32Z",
+    "event_name": "workflow_dispatch",
+    "history_as_of": "2026-09-25",
+    "observed_at": "2026-09-28T01:17:59Z",
+    "payload_sha256": "f4e5aeb341e88087f7e591bbb716d50b4254067a29e2e6ddda8cac52c66ced9f",
+    "quote_as_of": "2026-09-23T15:37:08Z",
     "run_attempt": 1,
-    "run_id": "29875696340",
+    "run_id": "36365270594",
     "schema_version": "provider_observation/v2",
-    "source_as_of": "2026-07-17T16:20:32Z"
+    "source_as_of": "2026-09-23T15:37:08Z"
   },
   "resolution_state": "fresh_primary",
   "retry": false,
   "schema_version": "yahoo-batch-quote-history-state/v1",
+  "stale": {
+    "age_business_days": 7,
+    "classified_at": "2026-08-20T14:20:12Z",
+    "classified_run_id": "32379322022",
+    "expected_resolution": "next_natural_yahoo_run",
+    "max_business_days": 6,
+    "message": "BCGS holds LKG because Yahoo source date 2026-08-11 is 7 business days old, beyond the 6-day bound; it will retry on the next natural Yahoo run.",
+    "reason": "source_age_exceeds_lane_bound",
+    "source_as_of": "2026-08-11"
+  },
   "ticker": "BCGS",
-  "updated_at": "2026-07-21T23:04:26Z"
+  "updated_at": "2026-09-28T01:17:59Z"
 }

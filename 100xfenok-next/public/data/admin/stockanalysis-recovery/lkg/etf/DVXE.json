@@ -1,0 +1,287 @@
+{
+  "schema_version": "stockanalysis/v1",
+  "source": "stockanalysis",
+  "asset_type": "etf",
+  "ticker": "DVXE",
+  "source_as_of": "2026-07-15T00:00:00Z",
+  "fetched_at": "2026-07-18T18:41:24Z",
+  "endpoints": {
+    "holdings": "/etf/dvxe/holdings/__data.json",
+    "overview": "/etf/dvxe/__data.json",
+    "quote": null,
+    "history_periods": {}
+  },
+  "endpoint_contracts": {
+    "overview": {
+      "format": "svelte_devalue",
+      "decoder": "svelte_devalue_node/v1",
+      "contract": "etf_detail_overview/v1"
+    },
+    "holdings": {
+      "format": "svelte_devalue",
+      "decoder": "svelte_devalue_node/v1",
+      "contract": "etf_detail_holdings/v1"
+    },
+    "quote": {
+      "format": "rest_json",
+      "contract": "stockanalysis_quote/v1"
+    },
+    "history_periods": {
+      "format": "rest_json",
+      "contract": "stockanalysis_history/v1"
+    }
+  },
+  "normalized": {
+    "holdings": [
+      {
+        "name": "Trs Energy Select Sector Spdr /Long/",
+        "weight_pct": 79.04,
+        "shares": 7904,
+        "raw": {
+          "n": "Trs Energy Select Sector Spdr /Long/",
+          "as": "79.04%",
+          "sh": "7,904"
+        }
+      },
+      {
+        "symbol": "#XLE",
+        "name": "State Street Energy Select Sector SPDR ETF",
+        "weight_pct": 43.98,
+        "shares": 4398,
+        "raw": {
+          "n": "State Street Energy Select Sector SPDR ETF",
+          "s": "#XLE",
+          "as": "43.98%",
+          "sh": "4,398"
+        }
+      },
+      {
+        "name": "Us Dollars",
+        "weight_pct": 43.09,
+        "shares": 243428,
+        "raw": {
+          "n": "Us Dollars",
+          "as": "43.09%",
+          "sh": "243,428"
+        }
+      },
+      {
+        "name": "Trs Energy Select Sector Spdr /Short/",
+        "weight_pct": -66.11,
+        "shares": 373517,
+        "raw": {
+          "n": "Trs Energy Select Sector Spdr /Short/",
+          "as": "-66.11%",
+          "sh": "373,517"
+        }
+      }
+    ],
+    "asset_allocation": null,
+    "sectors": null,
+    "countries": null,
+    "holding_count": 4,
+    "holdings_updated": "Jul 15, 2026",
+    "classification": {
+      "is_leveraged": false,
+      "leverage_factor": null,
+      "is_inverse": false,
+      "is_single_stock": false,
+      "underlying": null,
+      "source": "stockanalysis.overview.description",
+      "confidence": "high"
+    },
+    "overview": {
+      "aum": "$564.84K",
+      "expenseRatio": "0.89%",
+      "sharesOut": "15,000",
+      "inception": "Jul 22, 2025",
+      "etf_website": "https://www.websinv.com/product_page/DVXE/"
+    },
+    "performance": {
+      "tr1m": 7.309,
+      "trYTD": 44.83,
+      "tr1y": null,
+      "cagr5y": null,
+      "cagr10y": null,
+      "cagrMAX": null
+    },
+    "quote": null,
+    "history": null,
+    "history_periods": {}
+  },
+  "raw": {
+    "overview": {
+      "trust": {
+        "sources": [
+          {
+            "name": "S&P Global Market Intelligence",
+            "short": "S&P Global",
+            "url": "https://www.spglobal.com/market-intelligence/en"
+          },
+          {
+            "name": "CBOE",
+            "short": "CBOE",
+            "url": "https://www.cboe.com/"
+          },
+          {
+            "name": "Nasdaq UTP",
+            "short": "Nasdaq UTP",
+            "url": "https://www.utpplan.com/overview",
+            "noUtm": true
+          },
+          {
+            "name": "Finnhub",
+            "short": "Finnhub",
+            "url": "https://finnhub.io/"
+          }
+        ],
+        "topic": "overview",
+        "ticker": "DVXE",
+        "lastChecked": 1784380997200,
+        "summary": {
+          "text": "Historical data is provided by S&P Global Market Intelligence. Real-time stock price data is provided by CBOE and 15-minute delayed consolidated tape pricing data is provided by Nasdaq UTP. Several fund data points are also provided by Finnhub."
+        }
+      },
+      "type": "etf",
+      "aum": "$564.84K",
+      "nav": null,
+      "expenseRatio": "0.89%",
+      "peRatio": null,
+      "sharesOut": "15,000",
+      "dps": null,
+      "dividendYield": null,
+      "payoutRatio": null,
+      "exDivDate": null,
+      "ch1y": null,
+      "payoutFrequency": "n/a",
+      "beta": null,
+      "holdings": 4,
+      "inception": "Jul 22, 2025",
+      "chart": {
+        "expiration": null,
+        "data": null
+      },
+      "description": "The WEBs Energy XLE Defined Volatility ETF (DVXE) is an exchange-traded fund that is based on the Syntax Defined Volatility XLE index. The fund tracks an index that adjusts exposure, between 0-200% via swaps, to the US large-cap Energy sector based on recent market volatility. The investment objective is to reduce volatility to a distinct target level and pursue better risk-adjusted sector returns DVXE was launched on Jul 22, 2025 and is issued by WEBs.",
+      "infoTable": [
+        [
+          "Asset Class",
+          "Equity"
+        ],
+        [
+          "Category",
+          "Equity Energy"
+        ],
+        [
+          "Region",
+          "North America"
+        ],
+        [
+          "Stock Exchange",
+          "NASDAQ"
+        ],
+        [
+          "Ticker Symbol",
+          "DVXE"
+        ],
+        [
+          "Provider",
+          "WEBs"
+        ],
+        [
+          "Index Tracked",
+          "Syntax Defined Volatility XLE Index"
+        ]
+      ],
+      "etf_website": "https://www.websinv.com/product_page/DVXE/",
+      "provider_page": null,
+      "holdingsTable": {
+        "count": 4,
+        "updated": "Jul 15, 2026",
+        "top10": 100,
+        "holdings": [
+          {
+            "n": "Trs Energy Select Sector Spdr /Long/",
+            "as": "79.04%",
+            "sh": "7,904"
+          },
+          {
+            "n": "State Street Energy Select Sector SPDR ETF",
+            "s": "#XLE",
+            "as": "43.98%",
+            "sh": "4,398"
+          },
+          {
+            "n": "Us Dollars",
+            "as": "43.09%",
+            "sh": "243,428"
+          },
+          {
+            "n": "Trs Energy Select Sector Spdr /Short/",
+            "as": "-66.11%",
+            "sh": "373,517"
+          }
+        ]
+      },
+      "dividendTable": null,
+      "news": {
+        "exp": "1784325724760",
+        "data": [
+          {
+            "url": "https://www.globenewswire.com/news-release/2025/07/23/3120166/0/en/WEBs-Investments-Expands-Defined-Volatility-ETF-Suite-with-Launch-of-11-Sector-Funds.html",
+            "img": "https://cdn.snapi.dev/images/v1/b/a/x/press1-3192805.jpg",
+            "title": "WEBs Investments Expands Defined Volatility℠ ETF Suite with Launch of 11 Sector Funds",
+            "text": "PARK CITY, Utah, July 23, 2025 (GLOBE NEWSWIRE) -- WEBs Investments Inc. (WEBs) , an innovator in volatility-managed investment solutions, in partnership with Westwood Holdings Group, Inc. (NYSE: WHG)...",
+            "source": "GlobeNewsWire",
+            "type": "Article",
+            "tickers": [
+              "#DVIN",
+              "#DVRE",
+              "#DVUT",
+              "#DVXB",
+              "#DVXC",
+              "#DVXF",
+              "#DVXK"
+            ],
+            "time": "Jul 23, 2025, 8:00 AM EDT",
+            "ago": "1 year ago"
+          }
+        ]
+      },
+      "config": {
+        "no1d": true
+      },
+      "changes": {
+        "price1w": 36.493,
+        "price1m": 36.077,
+        "price3m": 37.54,
+        "price6m": 29.144,
+        "priceYTD": 26.731,
+        "price1y": null,
+        "price5y": null,
+        "priceMAX": 25.583
+      },
+      "performance": {
+        "tr1m": 7.309,
+        "trYTD": 44.83,
+        "tr1y": null,
+        "cagr5y": null,
+        "cagr10y": null,
+        "cagrMAX": null
+      }
+    },
+    "holdings": {},
+    "quote": null,
+    "history": null,
+    "history_periods": {}
+  },
+  "detail_status": "stockanalysis_partial",
+  "partial_reason_codes": [
+    "holdings_unavailable",
+    "holdings_surface_omits_holdings",
+    "holdings_count_unavailable",
+    "holdings_date_unavailable",
+    "holdings_countries_unavailable",
+    "history_deferred_initial_reconcile",
+    "quote_deferred_initial_reconcile"
+  ]
+}

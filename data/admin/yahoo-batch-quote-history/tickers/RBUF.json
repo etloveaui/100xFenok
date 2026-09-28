@@ -12,53 +12,118 @@
       "run_id": "29224221077",
       "schedule": "",
       "shard": ""
+    },
+    {
+      "attempts_used": 1,
+      "error": "recovery_requires_schedule",
+      "event_name": "workflow_dispatch",
+      "failures": [],
+      "latency_ms": 706,
+      "natural": true,
+      "observed_at": "2026-08-01T18:28:23Z",
+      "outcome": "failed",
+      "run_attempt": 1,
+      "run_id": "30711923637",
+      "schedule": "",
+      "shard": "2/6"
+    },
+    {
+      "attempts_used": 1,
+      "event_name": "schedule",
+      "failures": [],
+      "latency_ms": 419,
+      "natural": true,
+      "observed_at": "2026-08-07T19:09:09Z",
+      "outcome": "fresh",
+      "run_attempt": 1,
+      "run_id": "31210066712",
+      "schedule": "7 18 * * 0-5",
+      "shard": "69/72"
+    },
+    {
+      "attempts_used": 1,
+      "event_name": "schedule",
+      "failures": [],
+      "latency_ms": 1067,
+      "natural": true,
+      "observed_at": "2026-08-12T19:14:55Z",
+      "outcome": "fresh",
+      "run_attempt": 1,
+      "run_id": "31631524598",
+      "schedule": "7 18 * * 0-5",
+      "shard": "45/72"
+    },
+    {
+      "attempts_used": 1,
+      "event_name": "workflow_dispatch",
+      "failures": [],
+      "latency_ms": 488,
+      "natural": false,
+      "observed_at": "2026-09-28T06:02:24Z",
+      "outcome": "fresh",
+      "run_attempt": 1,
+      "run_id": "36367834787",
+      "schedule": "",
+      "shard": ""
     }
   ],
   "current": {
-    "fetched_at": "2026-06-30T00:34:30Z",
-    "history_as_of": "2026-06-29",
-    "path": "data/admin/yahoo-batch-quote-history/lkg/RBUF.json",
-    "payload_sha256": "96ff588fa49aad7523f070d4230f3a9e06dfa72f24bb324da2c991d8a1bbecd0",
-    "quote_as_of": null,
-    "source_as_of": "2026-06-29"
+    "fetched_at": "2026-09-28T06:09:37Z",
+    "history_as_of": "2026-09-25",
+    "path": "data/yf/finance/RBUF.json",
+    "payload_sha256": "4dd238e29656513a26edaeab8e1e8deb314cbb8d80894d3d08dbd8a84d0a8b81",
+    "quote_as_of": "2026-09-25T19:58:36Z",
+    "source_as_of": "2026-09-25"
   },
   "discovered_from": [
     "stockanalysis_etf"
   ],
   "last_attempt": {
-    "attempts_used": 0,
+    "attempts_used": 1,
     "event_name": "workflow_dispatch",
     "failures": [],
-    "latency_ms": 0,
+    "latency_ms": 488,
     "natural": false,
-    "observed_at": "2026-07-13T04:33:56Z",
-    "outcome": "skipped_fresh",
+    "observed_at": "2026-09-28T06:02:24Z",
+    "outcome": "fresh",
     "run_attempt": 1,
-    "run_id": "29224221077",
+    "run_id": "36367834787",
     "schedule": "",
     "shard": ""
   },
   "lkg": {
-    "fetched_at": "2026-06-30T00:34:30Z",
-    "history_as_of": "2026-06-29",
+    "fetched_at": "2026-08-12T19:19:12Z",
+    "history_as_of": "2026-08-12",
     "path": "data/admin/yahoo-batch-quote-history/lkg/RBUF.json",
-    "payload_sha256": "96ff588fa49aad7523f070d4230f3a9e06dfa72f24bb324da2c991d8a1bbecd0",
-    "quote_as_of": null,
-    "source_as_of": "2026-06-29"
+    "payload_sha256": "ea905eb1a2037260bfd467593a543cba09487e8ea9105574f79b190569f58397",
+    "quote_as_of": "2026-08-12T19:00:32Z",
+    "source_as_of": "2026-08-12"
   },
-  "resolution_state": "lkg_primary",
-  "retry": true,
+  "promotion_contract": "provider_observation/v2",
+  "provider_observation": {
+    "event_name": "workflow_dispatch",
+    "history_as_of": "2026-09-25",
+    "observed_at": "2026-09-28T06:02:24Z",
+    "payload_sha256": "a87ba5451e2bda94d50ac0459c85b4fa305cf1985db8497950e3e7e5fd10f675",
+    "quote_as_of": "2026-09-25T19:58:36Z",
+    "run_attempt": 1,
+    "run_id": "36367834787",
+    "schema_version": "provider_observation/v2",
+    "source_as_of": "2026-09-25"
+  },
+  "resolution_state": "fresh_primary",
+  "retry": false,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "stale": {
-    "age_business_days": 9,
-    "classified_at": "2026-07-13T04:33:56Z",
-    "classified_run_id": "29224221077",
+    "age_business_days": 7,
+    "classified_at": "2026-08-21T23:43:33Z",
+    "classified_run_id": "32537807621",
     "expected_resolution": "next_natural_yahoo_run",
     "max_business_days": 6,
-    "message": "RBUF holds LKG because Yahoo source date 2026-06-29 is 9 business days old, beyond the 6-day bound; it will retry on the next natural Yahoo run.",
+    "message": "RBUF holds LKG because Yahoo source date 2026-08-12 is 7 business days old, beyond the 6-day bound; it will retry on the next natural Yahoo run.",
     "reason": "source_age_exceeds_lane_bound",
-    "source_as_of": "2026-06-29"
+    "source_as_of": "2026-08-12"
   },
   "ticker": "RBUF",
-  "updated_at": "2026-07-13T04:33:56Z"
+  "updated_at": "2026-09-28T06:02:24Z"
 }

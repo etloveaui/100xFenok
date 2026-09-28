@@ -12,47 +12,128 @@
       "run_id": "29785605821",
       "schedule": "0 22 * * 1",
       "shard": "1/6"
+    },
+    {
+      "attempts_used": 1,
+      "event_name": "schedule",
+      "failures": [],
+      "latency_ms": 525,
+      "natural": true,
+      "observed_at": "2026-08-05T16:06:31Z",
+      "outcome": "fresh",
+      "run_attempt": 1,
+      "run_id": "31023479262",
+      "schedule": "7 14 * * 0-5",
+      "shard": "43/72"
+    },
+    {
+      "attempts_used": 1,
+      "event_name": "schedule",
+      "failures": [],
+      "latency_ms": 540,
+      "natural": true,
+      "observed_at": "2026-08-11T15:09:25Z",
+      "outcome": "fresh",
+      "run_attempt": 1,
+      "run_id": "31505333713",
+      "schedule": "7 14 * * 0-5",
+      "shard": "31/72"
+    },
+    {
+      "attempts_used": 1,
+      "event_name": "workflow_dispatch",
+      "failures": [],
+      "latency_ms": 471,
+      "natural": false,
+      "observed_at": "2026-09-28T01:17:59Z",
+      "outcome": "fresh",
+      "run_attempt": 1,
+      "run_id": "36365270594",
+      "schedule": "",
+      "shard": ""
+    },
+    {
+      "attempts_used": 1,
+      "error": "recovery_not_advanced_by_provider",
+      "event_name": "workflow_dispatch",
+      "failures": [],
+      "latency_ms": 1176,
+      "natural": false,
+      "observed_at": "2026-09-28T07:38:17Z",
+      "outcome": "failed",
+      "run_attempt": 1,
+      "run_id": "36369581504",
+      "schedule": "",
+      "shard": ""
     }
   ],
   "current": {
-    "fetched_at": "2026-07-20T23:05:06Z",
-    "history_as_of": "2026-07-17",
-    "path": "data/yf/finance/CLUB.json",
-    "payload_sha256": "57b7e817aa3b33aa72031a429f5f1b45d67b3c56c7d545cf5469644988066b7a",
-    "quote_as_of": "2026-07-17T18:22:49Z",
-    "source_as_of": "2026-07-17"
+    "fetched_at": "2026-09-28T01:36:47Z",
+    "history_as_of": "2026-09-25",
+    "path": "data/admin/yahoo-batch-quote-history/lkg/CLUB.json",
+    "payload_sha256": "60df46e8262bb9b5f08af9b90e1859d4b5e381bb04b3455bf813a404a52ec8d2",
+    "quote_as_of": "2026-09-09T15:25:10Z",
+    "source_as_of": "2026-09-09T15:25:10Z"
   },
   "discovered_from": [
     "stockanalysis_etf"
   ],
   "last_attempt": {
     "attempts_used": 1,
-    "event_name": "schedule",
+    "error": "recovery_not_advanced_by_provider",
+    "event_name": "workflow_dispatch",
     "failures": [],
-    "latency_ms": 933,
-    "natural": true,
-    "observed_at": "2026-07-20T23:03:20Z",
-    "outcome": "fresh",
+    "latency_ms": 1176,
+    "natural": false,
+    "observed_at": "2026-09-28T07:38:17Z",
+    "outcome": "failed",
     "run_attempt": 1,
-    "run_id": "29785605821",
-    "schedule": "0 22 * * 1",
-    "shard": "1/6"
+    "run_id": "36369581504",
+    "schedule": "",
+    "shard": ""
+  },
+  "latest_promotion_deferral": {
+    "event_name": "workflow_dispatch",
+    "observed_at": "2026-09-28T07:38:17Z",
+    "provider_history_as_of": "2026-09-25",
+    "provider_quote_as_of": "2026-09-09T15:25:10Z",
+    "reason": "recovery_not_advanced_by_provider",
+    "run_attempt": 1,
+    "run_id": "36369581504"
+  },
+  "lkg": {
+    "fetched_at": "2026-09-28T01:36:47Z",
+    "history_as_of": "2026-09-25",
+    "path": "data/admin/yahoo-batch-quote-history/lkg/CLUB.json",
+    "payload_sha256": "60df46e8262bb9b5f08af9b90e1859d4b5e381bb04b3455bf813a404a52ec8d2",
+    "quote_as_of": "2026-09-09T15:25:10Z",
+    "source_as_of": "2026-09-09T15:25:10Z"
   },
   "promotion_contract": "provider_observation/v2",
   "provider_observation": {
-    "event_name": "schedule",
-    "history_as_of": "2026-07-17",
-    "observed_at": "2026-07-20T23:03:20Z",
-    "payload_sha256": "836ff1d8b67e32dee7940e280eef4875524c644fa9996723fda502b7d695154f",
-    "quote_as_of": "2026-07-17T18:22:49Z",
+    "event_name": "workflow_dispatch",
+    "history_as_of": "2026-09-25",
+    "observed_at": "2026-09-28T01:17:59Z",
+    "payload_sha256": "c69811286b6675ab7305a70c901bd8f2464f9405adc89fd3142487047aafcd80",
+    "quote_as_of": "2026-09-09T15:25:10Z",
     "run_attempt": 1,
-    "run_id": "29785605821",
+    "run_id": "36365270594",
     "schema_version": "provider_observation/v2",
-    "source_as_of": "2026-07-17"
+    "source_as_of": "2026-09-09T15:25:10Z"
   },
-  "resolution_state": "fresh_primary",
-  "retry": false,
+  "resolution_state": "lkg_primary",
+  "retry": true,
   "schema_version": "yahoo-batch-quote-history-state/v1",
+  "stale": {
+    "age_business_days": 13,
+    "classified_at": "2026-09-28T03:11:20Z",
+    "classified_run_id": "36367829153",
+    "expected_resolution": "next_natural_yahoo_run",
+    "max_business_days": 6,
+    "message": "CLUB holds LKG because Yahoo source date 2026-09-09T15:25:10Z is 13 business days old, beyond the 6-day bound; it will retry on the next natural Yahoo run.",
+    "reason": "source_age_exceeds_lane_bound",
+    "source_as_of": "2026-09-09T15:25:10Z"
+  },
   "ticker": "CLUB",
-  "updated_at": "2026-07-20T23:03:20Z"
+  "updated_at": "2026-09-28T07:38:17Z"
 }

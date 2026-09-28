@@ -27,7 +27,7 @@ except ImportError:  # pragma: no cover - direct-script import path
     from parser import Sec13FParseError, parse_cover_xml, parse_filing_component
 
 
-EXPECTED_INVESTOR_COUNT = 60
+EXPECTED_INVESTOR_COUNT = 63
 
 
 class PipelineError(RuntimeError):
@@ -274,6 +274,7 @@ def build_investor_run(
         filings.append(
             {
                 "quarter": _quarter(report_date),
+                "source_cik": cik,
                 "report_date": report_date,
                 "filing_date": max(filing_date_by_accession[accession] for accession in active),
                 "accession_number": "+".join(active),

@@ -1,0 +1,42 @@
+# R2 retention restore watchdog (fh-598 correction #6).
+#
+# The independent restore path for a sweep runner that died (SIGKILL, outage, cancel):
+# every 15 minutes this reads the durable journal issue and — only when the advisory
+# lease is not live — restores exactly the recorded originally-active publisher states,
+# confirms them against fresh state, and keeps anything unconfirmed in the journal.
+#
+# It performs no deletion, touches no Cloudflare credential and needs no secret beyond
+# the repository token. It exists because a crashed sweep cannot restore itself; if the
+# parent rejects a second workflow, the smallest alternative decision is an equivalent
+# scheduled host for `retention-window.mjs restore` (or accepting delayed manual restore).
+name: R2 Retention Restore Watchdog
+
+on:
+  schedule:
+    - cron: '4,19,34,49 * * * *'
+  workflow_dispatch:
+
+permissions:
+  actions: write
+  contents: read
+  issues: write
+
+concurrency:
+  group: retention-restore
+  cancel-in-progress: false
+
+jobs:
+  restore:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Restore journaled states (no-op unless needed)
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: node scripts/ops/retention-window.mjs restore --repo="${{ github.repository }}"

@@ -14,7 +14,7 @@
 
 import fs from "node:fs";
 import path from "node:path";
-import { createHash } from "node:crypto";
+import { createHash, randomUUID } from "node:crypto";
 import { fileURLToPath } from "node:url";
 import {
   loadJsonGuarded,
@@ -22,17 +22,8 @@ import {
   requireKeys,
   requireObject,
 } from "./lib/guarded-json.mjs";
-import {
-  attemptResult,
-  atomicWrite,
-  classifyEndpointResponse,
-  classifyHttpResponse,
-  defaultAttemptId,
-  threwTuple,
-  transportError,
-  worstRequestResult,
-  writeAttemptShard,
-} from "./lib/data-supply-attempt-shard.mjs";
+import { atomicWrite } from "./lib/atomic-file.mjs";
+import { attemptResult, classifyEndpointResponse, classifyHttpResponse, defaultAttemptId, threwTuple, transportError, worstRequestResult } from "./lib/provider-fetch-result.mjs";
 import {
   LaneLkgStore,
   PROMOTION_CONTRACT_PROVIDER_OBSERVATION_V2,
@@ -40,6 +31,7 @@ import {
   classifyLkgFailure,
   isNaturalScheduleRun,
 } from "./lib/data-supply-lkg-store.mjs";
+import { boundedDiagnosticDetail, diagnosticSuffix } from "./lib/diagnostic-detail.mjs";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const ROOT = path.resolve(__dirname, "..");
@@ -86,11 +78,16 @@ const DEFAULT_PATHS = Object.freeze({
   edgarCachePath: path.join(ROOT, "data/edgar/company_tickers.json"),
   summaryRoot: path.join(ROOT, "data/edgar-korean-summaries"),
   publicSummaryRoot: path.join(ROOT, "100xfenok-next/public/data/edgar-korean-summaries"),
-  attemptShardPath: path.join(ROOT, "data/admin/data-supply-state/detection-attempts/edgar_filings.json"),
 });
 const SEC_COMPANY_TICKERS_URL = "https://www.sec.gov/files/company_tickers.json";
 const SEC_SUBMISSIONS_BASE_URL = "https://data.sec.gov/submissions";
 const DEFAULT_FORMS = ["10-K", "10-Q", "8-K", "20-F", "40-F", "6-K"];
+const FOREIGN_FORM_SECTION_REQUESTS = Object.freeze({
+  "6-K": Object.freeze(["foreign_report"]),
+  "20-F": Object.freeze(["item_3d", "item_5"]),
+  "40-F": Object.freeze(["risk_factors", "mda"]),
+});
+const FOREIGN_FORMS = new Set(Object.keys(FOREIGN_FORM_SECTION_REQUESTS));
 const DEFAULT_LIMIT = 50;
 const DEFAULT_FILINGS_PER_TICKER = 12;
 const DEFAULT_SLEEP_SECONDS = 0.6;
@@ -155,7 +152,7 @@ Options:
   --limit 50               max universe tickers for phase-1 default
   --full-universe          ignore --limit and scan the full stock universe
   --filings-per-ticker 12  max newly discovered pending filings per ticker
-  --forms 10-K,10-Q,8-K    SEC forms to include
+  --forms 10-K,10-Q,8-K,20-F,40-F,6-K    SEC forms to include
   --sleep 0.6              seconds between SEC requests
   --plan-only              skip data artifacts but still publish attempt telemetry
 `);
@@ -170,8 +167,93 @@ function cik10(value) {
   return text.padStart(10, "0");
 }
 
+function strictCik10(value) {
+  const text = String(value ?? "").trim();
+  if (!/^\d{1,10}$/.test(text)) return null;
+  return text.padStart(10, "0");
+}
+
 function cikNoLeadingZeros(value) {
-  return String(Number.parseInt(String(value ?? "").replace(/\D/g, ""), 10));
+  const digits = String(value ?? "").trim();
+  if (!/^\d+$/.test(digits)) return null;
+  if (!digits) return null;
+  const parsed = Number.parseInt(digits, 10);
+  return Number.isSafeInteger(parsed) ? String(parsed) : null;
+}
+
+function isForeignForm(form) {
+  return FOREIGN_FORMS.has(String(form ?? "").trim().toUpperCase());
+}
+
+function accessionDigits(value) {
+  const accession = String(value ?? "").trim();
+  if (!/^\d{10}-\d{2}-\d{6}$/.test(accession)) return null;
+  return accession.replace(/-/g, "");
+}
+
+function secArchiveIdentity(sourceUrl) {
+  try {
+    const parsed = new URL(String(sourceUrl ?? ""));
+    if (parsed.protocol !== "https:" || parsed.hostname !== "www.sec.gov") return null;
+    const match = /^\/Archives\/edgar\/data\/(\d+)\/(\d{18})(?:\/|$)/i.exec(parsed.pathname);
+    if (!match) return null;
+    return {
+      cik: strictCik10(match[1]),
+      accession: match[2],
+    };
+  } catch {
+    return null;
+  }
+}
+
+function validateForeignFilingIdentity(row, label = "EDGAR foreign filing", expectedTicker = null, expectedCik = null) {
+  const ticker = normalizeTicker(row?.ticker);
+ const form = String(row?.form ?? "").trim().toUpperCase();
+ const cik = strictCik10(row?.cik);
+  const accession = String(row?.accession ?? "").trim();
+  const accessionId = accessionDigits(accession);
+  const sourceUrl = String(row?.sourceUrl ?? "").trim();
+  const sourceIdentity = secArchiveIdentity(sourceUrl);
+  const normalizedExpectedTicker = expectedTicker === null || expectedTicker === undefined ? null : normalizeTicker(expectedTicker);
+  const normalizedExpectedCik = expectedCik === null || expectedCik === undefined ? null : strictCik10(expectedCik);
+ if (!ticker || !form || !cik || cik === "0000000000" || !accessionId || !sourceIdentity) {
+    throw new Error(`${label}: foreign filing identity is incomplete`);
+ }
+  if (!isForeignForm(form)) throw new Error(`${label}: unsupported foreign form ${form}`);
+ if (normalizedExpectedTicker === null || !normalizedExpectedTicker || ticker !== normalizedExpectedTicker) {
+   throw new Error("foreign filing ticker is not bound to expected ticker: " + label);
+ }
+ if (normalizedExpectedCik === null || !normalizedExpectedCik || cik !== normalizedExpectedCik) {
+   throw new Error("foreign filing CIK is not bound to expected CIK: " + label);
+ }
+  if (sourceIdentity.cik !== cik || sourceIdentity.accession !== accessionId) {
+    throw new Error(`${label}: source URL is not bound to CIK ${cik} and accession ${accession}`);
+  }
+  return Object.freeze({ ticker, form, cik, accession, sourceUrl });
+}
+
+function filingIdentityKey(row) {
+  return [
+    normalizeTicker(row?.ticker),
+    String(row?.form ?? "").trim().toUpperCase(),
+    String(row?.accession ?? "").trim(),
+    strictCik10(row?.cik),
+  ].join("|");
+}
+
+function foreignFilingIdentityKey(row) {
+  return isForeignForm(row?.form) ? filingIdentityKey(row) : null;
+}
+
+function assertFilingIdentityCompatibility(first, second, label) {
+  const firstForeign = isForeignForm(first?.form);
+  const secondForeign = isForeignForm(second?.form);
+  if (firstForeign !== secondForeign) {
+    throw new Error("domestic/foreign filing identity conflict: " + label);
+  }
+  if (firstForeign && foreignFilingIdentityKey(first) !== foreignFilingIdentityKey(second)) {
+    throw new Error("conflicting foreign filing identity: " + label);
+  }
 }
 
 function sleep(ms) {
@@ -185,6 +267,291 @@ function ensureDir(filePath) {
 function writeJson(filePath, payload) {
   ensureDir(filePath);
   fs.writeFileSync(filePath, `${JSON.stringify(payload, null, 2)}\n`);
+}
+
+const EDGAR_PUBLICATION_JOURNAL_SCHEMA = "edgar-publication-transaction/v1";
+
+function publicationJournalPath(paths) {
+  return path.join(
+    path.dirname(paths.summaryRoot),
+    ".edgar-korean-summaries-publication-transaction.json",
+  );
+}
+
+function removeFiles(fileSystem, filePaths) {
+  const errors = [];
+  for (const filePath of filePaths) {
+    if (!filePath) continue;
+    try {
+      fileSystem.rmSync(filePath, { force: true });
+    } catch (error) {
+      errors.push(new Error(`${filePath}: ${error.message}`, { cause: error }));
+    }
+  }
+  return errors;
+}
+
+function writeTransactionJournal(fileSystem, journalPath, journal) {
+  fileSystem.mkdirSync(path.dirname(journalPath), { recursive: true });
+  const temporary = `${journalPath}.${journal.transaction_id}.${journal.phase}.tmp`;
+  const staleErrors = removeFiles(fileSystem, [temporary]);
+  if (staleErrors.length > 0) {
+    throw new AggregateError(staleErrors, "stale EDGAR publication journal temp cleanup failed");
+  }
+  try {
+    fileSystem.writeFileSync(temporary, `${JSON.stringify(journal, null, 2)}\n`, { flag: "wx" });
+    fileSystem.renameSync(temporary, journalPath);
+  } catch (error) {
+    const cleanupErrors = removeFiles(fileSystem, [temporary]);
+    if (cleanupErrors.length > 0) {
+      throw new AggregateError(
+        [error, ...cleanupErrors],
+        "EDGAR publication journal write and cleanup failed",
+      );
+    }
+    throw error;
+  }
+}
+
+function prospectiveRealPath(fileSystem, filePath) {
+  let ancestor = path.resolve(filePath);
+  const missing = [];
+  while (!fileSystem.existsSync(ancestor)) {
+    const parent = path.dirname(ancestor);
+    if (parent === ancestor) throw new Error(`no existing ancestor for path: ${filePath}`);
+    missing.unshift(path.basename(ancestor));
+    ancestor = parent;
+  }
+  return path.resolve(fileSystem.realpathSync(ancestor), ...missing);
+}
+
+function pathWithinRoots(fileSystem, filePath, allowedRoots) {
+  const resolved = prospectiveRealPath(fileSystem, filePath);
+  return allowedRoots.some((root) => {
+    const relative = path.relative(prospectiveRealPath(fileSystem, root), resolved);
+    return relative === "" || (!relative.startsWith(`..${path.sep}`) && !path.isAbsolute(relative));
+  });
+}
+
+function loadTransactionJournal(fileSystem, journalPath, allowedRoots) {
+  let journal;
+  try {
+    journal = JSON.parse(fileSystem.readFileSync(journalPath, "utf8"));
+  } catch (error) {
+    throw new Error(`EDGAR publication journal is unreadable: ${error.message}`, { cause: error });
+  }
+  const validRoots = Array.isArray(allowedRoots) && allowedRoots.length > 0;
+  const journalTargets = new Set();
+  const validEntries = validRoots && Array.isArray(journal?.entries) && journal.entries.every((entry) => {
+    if (
+      typeof entry?.file_path !== "string"
+      || typeof entry?.temp_path !== "string"
+      || (entry.backup_path !== null && typeof entry.backup_path !== "string")
+      || !path.isAbsolute(entry.file_path)
+      || !path.isAbsolute(entry.temp_path)
+      || (entry.backup_path !== null && !path.isAbsolute(entry.backup_path))
+      || !pathWithinRoots(fileSystem, entry.file_path, allowedRoots)
+      || journalTargets.has(path.resolve(entry.file_path))
+      || path.dirname(path.resolve(entry.temp_path)) !== path.dirname(path.resolve(entry.file_path))
+      || !path.basename(entry.temp_path).startsWith(
+        `.${path.basename(entry.file_path)}.${journal.transaction_id}.`,
+      )
+      || !entry.temp_path.endsWith(".tmp")
+    ) return false;
+    journalTargets.add(path.resolve(entry.file_path));
+    return entry.backup_path === null || entry.backup_path === `${entry.temp_path}.backup`;
+  });
+  if (
+    journal?.schema_version !== EDGAR_PUBLICATION_JOURNAL_SCHEMA
+    || !["staging", "prepared", "committed", "rolled_back"].includes(journal.phase)
+    || !/^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(
+      journal.transaction_id ?? "",
+    )
+    || !validRoots
+    || !validEntries
+  ) {
+    throw new Error("EDGAR publication journal contract is invalid");
+  }
+  return journal;
+}
+
+function cleanupTransaction(fileSystem, journalPath, journal) {
+  const artifactPaths = journal.entries.flatMap((entry) => [
+    entry.temp_path,
+    entry.backup_path,
+    `${entry.temp_path}.restore`,
+  ]);
+  artifactPaths.push(
+    `${journalPath}.${journal.transaction_id}.tmp`,
+    ...["staging", "prepared", "committed", "rolled_back"].map(
+      (phase) => `${journalPath}.${journal.transaction_id}.${phase}.tmp`,
+    ),
+  );
+  const artifactErrors = removeFiles(fileSystem, artifactPaths);
+  if (artifactErrors.length > 0) {
+    throw new AggregateError(artifactErrors, "EDGAR publication transaction cleanup failed");
+  }
+  const journalErrors = removeFiles(fileSystem, [journalPath]);
+  if (journalErrors.length > 0) {
+    throw new AggregateError(journalErrors, "EDGAR publication journal cleanup failed");
+  }
+}
+
+function recoverJsonBundleTransaction(journalPath, {
+  fileSystem = fs,
+  allowedRoots,
+} = {}) {
+  if (
+    !Array.isArray(allowedRoots)
+    || allowedRoots.length === 0
+    || !path.isAbsolute(journalPath)
+    || !pathWithinRoots(
+      fileSystem,
+      journalPath,
+      [path.dirname(path.resolve(allowedRoots[0]))],
+    )
+  ) {
+    throw new Error("EDGAR publication journal path or allowed roots are invalid");
+  }
+  if (!fileSystem.existsSync(journalPath)) return { recovered: false, phase: null };
+  const journal = loadTransactionJournal(fileSystem, journalPath, allowedRoots);
+  if (["staging", "committed", "rolled_back"].includes(journal.phase)) {
+    cleanupTransaction(fileSystem, journalPath, journal);
+    return { recovered: true, phase: journal.phase };
+  }
+
+  const rollbackErrors = [];
+  for (const entry of [...journal.entries].reverse()) {
+    const restorePath = `${entry.temp_path}.restore`;
+    try {
+      if (entry.backup_path === null) {
+        fileSystem.rmSync(entry.file_path, { force: true });
+      } else {
+        if (!fileSystem.existsSync(entry.backup_path)) {
+          throw new Error(`missing EDGAR publication backup: ${entry.backup_path}`);
+        }
+        fileSystem.writeFileSync(
+          restorePath,
+          fileSystem.readFileSync(entry.backup_path),
+          { flag: "wx" },
+        );
+        fileSystem.renameSync(restorePath, entry.file_path);
+      }
+    } catch (error) {
+      rollbackErrors.push(new Error(`${entry.file_path}: ${error.message}`, { cause: error }));
+    } finally {
+      rollbackErrors.push(...removeFiles(fileSystem, [restorePath]));
+    }
+  }
+  if (rollbackErrors.length > 0) {
+    throw new AggregateError(
+      rollbackErrors,
+      "EDGAR publication rollback is incomplete; journal retained for the next run",
+    );
+  }
+  const rolledBack = { ...journal, phase: "rolled_back" };
+  writeTransactionJournal(fileSystem, journalPath, rolledBack);
+  cleanupTransaction(fileSystem, journalPath, rolledBack);
+  return { recovered: true, phase: "rolled_back" };
+}
+
+function writeJsonBundleTransaction(entries, {
+  fileSystem = fs,
+  journalPath,
+  allowedRoots,
+} = {}) {
+  if (!journalPath) throw new Error("EDGAR publication transaction requires a journal path");
+  if (!Array.isArray(allowedRoots) || allowedRoots.length === 0) {
+    throw new Error("EDGAR publication transaction requires allowed roots");
+  }
+  recoverJsonBundleTransaction(journalPath, { fileSystem, allowedRoots });
+  const seen = new Set();
+  const transactionId = randomUUID();
+  const staged = [];
+  let journalWritten = false;
+
+  for (const [index, entry] of entries.entries()) {
+    const resolvedTarget = path.resolve(entry.filePath);
+    if (
+      !path.isAbsolute(entry.filePath)
+      || !pathWithinRoots(fileSystem, resolvedTarget, allowedRoots)
+    ) {
+      throw new Error(`EDGAR publication target is outside the allowed roots: ${entry.filePath}`);
+    }
+    if (seen.has(resolvedTarget)) {
+      throw new Error(`duplicate EDGAR publication target: ${entry.filePath}`);
+    }
+    seen.add(resolvedTarget);
+    const tempPath = path.join(
+      path.dirname(resolvedTarget),
+      `.${path.basename(resolvedTarget)}.${transactionId}.${index}.tmp`,
+    );
+    const backupPath = fileSystem.existsSync(resolvedTarget)
+      ? `${tempPath}.backup`
+      : null;
+    staged.push({ ...entry, filePath: resolvedTarget, tempPath, backupPath });
+  }
+
+  let journal = {
+    schema_version: EDGAR_PUBLICATION_JOURNAL_SCHEMA,
+    transaction_id: transactionId,
+    phase: "staging",
+    entries: staged.map((entry) => ({
+      file_path: entry.filePath,
+      temp_path: entry.tempPath,
+      backup_path: entry.backupPath,
+    })),
+  };
+  try {
+    writeTransactionJournal(fileSystem, journalPath, journal);
+    journalWritten = true;
+    for (const entry of staged) {
+      fileSystem.mkdirSync(path.dirname(entry.filePath), { recursive: true });
+      if (entry.backupPath) {
+        fileSystem.writeFileSync(
+          entry.backupPath,
+          fileSystem.readFileSync(entry.filePath),
+          { flag: "wx" },
+        );
+      }
+      fileSystem.writeFileSync(
+        entry.tempPath,
+        `${JSON.stringify(entry.payload, null, 2)}\n`,
+        { flag: "wx" },
+      );
+    }
+    journal = { ...journal, phase: "prepared" };
+    writeTransactionJournal(fileSystem, journalPath, journal);
+    for (const entry of staged) {
+      fileSystem.renameSync(entry.tempPath, entry.filePath);
+    }
+    const committed = { ...journal, phase: "committed" };
+    writeTransactionJournal(fileSystem, journalPath, committed);
+    cleanupTransaction(fileSystem, journalPath, committed);
+  } catch (transactionError) {
+    if (!journalWritten) {
+      const cleanupErrors = removeFiles(
+        fileSystem,
+        staged.flatMap((entry) => [entry.tempPath, entry.backupPath]),
+      );
+      if (cleanupErrors.length > 0) {
+        throw new AggregateError(
+          [transactionError, ...cleanupErrors],
+          "EDGAR publication transaction setup and cleanup failed",
+        );
+      }
+      throw transactionError;
+    }
+    try {
+      recoverJsonBundleTransaction(journalPath, { fileSystem, allowedRoots });
+    } catch (rollbackError) {
+      throw new AggregateError(
+        [transactionError, rollbackError],
+        "EDGAR publication transaction failed; recovery journal retained",
+      );
+    }
+    throw transactionError;
+  }
 }
 
 function readExistingJson(filePath, fallback, guardFn) {
@@ -299,8 +666,10 @@ function filingRowsFromSubmissions({ ticker, companyName, cik, submissions, form
     const filingDate = String(recent.filingDate?.[index] ?? "");
     if (!accession || !primaryDocument || !filingDate) continue;
     const archiveAccession = accession.replace(/-/g, "");
-    const sourceUrl = `https://www.sec.gov/Archives/edgar/data/${cikNoLeadingZeros(cik)}/${archiveAccession}/${primaryDocument}`;
-    rows.push({
+    const archiveCik = cikNoLeadingZeros(cik);
+    if (!archiveCik || !/^\d+$/.test(archiveAccession)) continue;
+    const sourceUrl = `https://www.sec.gov/Archives/edgar/data/${archiveCik}/${archiveAccession}/${primaryDocument}`;
+    const row = {
       ticker,
       companyName,
       cik,
@@ -315,7 +684,12 @@ function filingRowsFromSubmissions({ ticker, companyName, cik, submissions, form
       primaryDocUrl: sourceUrl,
       summaryStatus: "pending",
       translationStatus: "not_available",
-    });
+    };
+    if (isForeignForm(form)) {
+      validateForeignFilingIdentity(row, `${ticker}/${form}/${accession}`, ticker, cik);
+      row.sectionsRequested = [...FOREIGN_FORM_SECTION_REQUESTS[form]];
+    }
+    rows.push(row);
     if (rows.length >= limit) break;
   }
   return rows;
@@ -345,7 +719,13 @@ function isReadySummaryRow(row) {
 
 function assertValidFilingDate(value) {
   const text = String(value ?? "");
-  if (!/^\d{4}-\d{2}-\d{2}$/.test(text) || !Number.isFinite(Date.parse(text))) {
+  const match = /^(\d{4})-(\d{2})-(\d{2})$/.exec(text);
+  const parsed = match ? new Date(`${text}T00:00:00Z`) : null;
+  if (
+    !parsed
+    || !Number.isFinite(parsed.getTime())
+    || parsed.toISOString().slice(0, 10) !== text
+  ) {
     throw new Error(`invalid EDGAR persistence filingDate: ${value}`);
   }
   return text;
@@ -377,16 +757,69 @@ function retainLatestFilingDates(filings, policy = EDGAR_PERSISTENCE_POLICY) {
   };
 }
 
+// Upgrade every already-published ticker manifest through the same bounded
+// persistence contract used for newly fetched tickers. This lets the normal
+// limited universe poll migrate the entire canonical tree without pretending
+// that unqueried tickers were freshly acquired. Existing provenance/status
+// fields remain untouched; malformed dates fail the whole publication closed.
+function applyPersistenceToExistingManifest(manifest) {
+  const capped = retainLatestFilingDates(manifest?.filings);
+  const previousTotalPruned = Number(manifest?.persistence_state?.total_pruned_filings);
+  const prunedThisMigration = capped.stats.pruned;
+  return {
+    ...manifest,
+    persistence_policy: EDGAR_PERSISTENCE_POLICY,
+    persistence_state: {
+      distinct_filing_dates: capped.stats.distinct_filing_dates,
+      filings_before: capped.stats.filings_before,
+      filings_retained: capped.stats.filings_retained,
+      pruned_this_merge: prunedThisMigration,
+      total_pruned_filings: (Number.isFinite(previousTotalPruned) ? previousTotalPruned : 0)
+        + prunedThisMigration,
+    },
+    filings: capped.rows,
+  };
+}
+
 function mergeFilings({ ticker, companyName, cik, existingManifest, discoveredRows, updated }) {
   const byAccession = new Map();
   const existingRows = Array.isArray(existingManifest?.filings) ? existingManifest.filings : [];
+  const hasForeignRows = [...existingRows, ...(Array.isArray(discoveredRows) ? discoveredRows : [])]
+    .some((row) => isForeignForm(row?.form));
+  if (hasForeignRows) {
+    const discoveryCik = strictCik10(cik);
+    const manifestCik = existingManifest?.cik === undefined || existingManifest?.cik === null
+      ? discoveryCik
+      : strictCik10(existingManifest.cik);
+    if (!discoveryCik || !manifestCik || discoveryCik !== manifestCik) {
+      throw new Error("foreign manifest/discovery CIK conflict: " + ticker);
+    }
+  }
 
   for (const row of discoveredRows) {
+    const previousRow = row?.accession ? byAccession.get(row.accession) : null;
+    if (previousRow) assertFilingIdentityCompatibility(previousRow, row, ticker + "/" + row.accession);
+    if (isForeignForm(row?.form)) {
+      validateForeignFilingIdentity(row, `${ticker}/${row.form}/${row.accession}`, ticker, cik);
+      const previous = byAccession.get(row.accession);
+      if (previous && foreignFilingIdentityKey(previous) !== foreignFilingIdentityKey(row)) {
+        throw new Error(`${ticker}/${row.accession}: conflicting foreign filing identity`);
+      }
+    }
     if (row?.accession) byAccession.set(row.accession, row);
   }
 
   for (const row of existingRows) {
     if (!row?.accession) continue;
+    const discoveredRow = byAccession.get(row.accession);
+    if (discoveredRow) assertFilingIdentityCompatibility(discoveredRow, row, ticker + "/" + row.accession);
+    if (isForeignForm(row?.form)) {
+      validateForeignFilingIdentity(row, `${ticker}/${row.form}/${row.accession}`, ticker, cik);
+      const discovered = byAccession.get(row.accession);
+      if (discovered && foreignFilingIdentityKey(discovered) !== foreignFilingIdentityKey(row)) {
+        throw new Error(`${ticker}/${row.accession}: existing foreign filing identity conflicts with SEC discovery`);
+      }
+    }
     const existingReady = isReadySummaryRow(row);
     if (existingReady) {
       byAccession.set(row.accession, row);
@@ -502,8 +935,8 @@ function edgarMarkerSourceAsOf(doc) {
   return validEdgarFreshnessMarker(doc) ? doc.source_as_of : null;
 }
 
-// Additive LKG recovery wrapper around the weekly poll. It never mutates the
-// detection attempt shard and never rewrites manifests; it only maintains the
+// Additive LKG recovery wrapper around the weekly poll. It never rewrites
+// manifests; it only maintains the
 // store's freshness marker, LKG copy, and recovery index under
 // data/admin/edgar_filings/, finalized ONCE after the whole ticker loop.
 // Outcome semantics (poll_only):
@@ -592,19 +1025,21 @@ function applyEdgarLkgStore({ repoRoot: storeRepoRoot, markerPath, manifests, st
   return { kind: "success", updated: true, recovered, sourceAsOf };
 }
 
-function writeManifestMirror(paths, ticker, manifest) {
+function manifestMirrorEntries(paths, ticker, manifest) {
   const fileName = `${ticker.toLowerCase()}.json`;
-  writeJson(path.join(paths.summaryRoot, "by-ticker", fileName), manifest);
-  writeJson(path.join(paths.publicSummaryRoot, "by-ticker", fileName), manifest);
+  return [
+    { filePath: path.join(paths.summaryRoot, "by-ticker", fileName), payload: manifest },
+    { filePath: path.join(paths.publicSummaryRoot, "by-ticker", fileName), payload: manifest },
+  ];
 }
 
-function writeIndex(paths, { manifests, updated, generatedAt }) {
+function buildIndex({ manifests, updated, generatedAt }) {
   const tickers = [...manifests.keys()].sort();
   const byTicker = {};
   for (const ticker of tickers) {
     byTicker[ticker] = `/data/edgar-korean-summaries/by-ticker/${ticker.toLowerCase()}.json`;
   }
-  const payload = {
+  return {
     schemaVersion: 1,
     artifactType: "edgar_korean_summary_index",
     updated,
@@ -612,16 +1047,44 @@ function writeIndex(paths, { manifests, updated, generatedAt }) {
     tickers,
     byTicker,
   };
-  writeJson(path.join(paths.summaryRoot, "index.json"), payload);
-  writeJson(path.join(paths.publicSummaryRoot, "index.json"), payload);
+}
+
+function writePublicationBundle(paths, {
+  manifests,
+  updated,
+  generatedAt,
+}) {
+  const entries = [];
+  for (const [ticker, manifest] of manifests) {
+    entries.push(...manifestMirrorEntries(paths, ticker, manifest));
+  }
+  const index = buildIndex({ manifests, updated, generatedAt });
+  entries.push(
+    { filePath: path.join(paths.summaryRoot, "index.json"), payload: index },
+    { filePath: path.join(paths.publicSummaryRoot, "index.json"), payload: index },
+  );
+  writeJsonBundleTransaction(entries, {
+    journalPath: publicationJournalPath(paths),
+    allowedRoots: [paths.summaryRoot, paths.publicSummaryRoot],
+  });
 }
 
 function thrownResult(error) {
   const exceptionKind = transportError(error) ? "transport" : "unexpected";
-  return attemptResult(
-    exceptionKind === "transport" ? "transport_error" : "unexpected_error",
-    threwTuple(exceptionKind),
-  );
+  return {
+    ...attemptResult(
+      exceptionKind === "transport" ? "transport_error" : "unexpected_error",
+      threwTuple(exceptionKind),
+    ),
+    failure_detail: boundedDiagnosticDetail(error),
+  };
+}
+
+function noSubmissionRequestResult() {
+  return {
+    ...attemptResult("unexpected_error", threwTuple("unexpected")),
+    failure_detail: boundedDiagnosticDetail(new Error("no EDGAR submission endpoints were requested")),
+  };
 }
 
 export async function runEdgarFilingTimeline({
@@ -648,6 +1111,9 @@ export async function runEdgarFilingTimeline({
 
   try {
     args = parseArgs(argv);
+    recoverJsonBundleTransaction(publicationJournalPath(paths), {
+      allowedRoots: [paths.summaryRoot, paths.publicSummaryRoot],
+    });
     // Additive LKG recovery: engage only for the automatic weekly universe poll
     // (no --tickers override, no --full-universe, no --plan-only). Manual subset
     // polls, backfills, plan-only runs, and every caller without an explicit
@@ -690,22 +1156,28 @@ export async function runEdgarFilingTimeline({
           run: storeRun,
         });
         if (lkgOutcome.corrupt) {
-          throw new Error(`SEC company ticker bootstrap failed: ${bootstrapResult.reason}; EDGAR LKG failure is corrupt: ${lkgOutcome.reason}`);
+          throw new Error(`SEC company ticker bootstrap failed: ${bootstrapResult.reason}${diagnosticSuffix(bootstrapResult.failure_detail)}; EDGAR LKG failure is corrupt: ${lkgOutcome.reason}`);
         }
         return {
           ok: false,
           reason: bootstrapResult.reason,
+          failure_detail: bootstrapResult.failure_detail ?? null,
           telemetry_status: bootstrapResult.status,
           telemetry_reason: bootstrapResult.reason,
           stats,
           lkg: lkgOutcome,
         };
       }
-      throw new Error(`SEC company ticker bootstrap failed: ${bootstrapResult.reason}`);
+      throw new Error(`SEC company ticker bootstrap failed: ${bootstrapResult.reason}${diagnosticSuffix(bootstrapResult.failure_detail)}`);
     }
     const cikMap = buildCikMap(company.rows);
     const existingManifests = loadExistingManifests(paths);
-    const nextManifests = new Map(existingManifests);
+    const nextManifests = new Map(
+      [...existingManifests.entries()].map(([ticker, manifest]) => [
+        ticker,
+        applyPersistenceToExistingManifest(manifest),
+      ]),
+    );
 
     if (!args.planOnly) writeJson(paths.edgarCachePath, company.cache);
 
@@ -732,7 +1204,7 @@ export async function runEdgarFilingTimeline({
       requestResults.push(endpointResult);
       if (endpointResult.status !== "ready") {
         stats.errors += 1;
-        console.warn(`  ${ticker}: SEC submissions ${endpointResult.reason}`);
+        console.warn(`  ${ticker}: SEC submissions ${endpointResult.reason}${diagnosticSuffix(endpointResult.failure_detail)}`);
       } else {
         const submissions = endpointResult.document;
         stats.fetched += 1;
@@ -746,7 +1218,7 @@ export async function runEdgarFilingTimeline({
           limit: args.filingsPerTicker,
         });
         stats.filings += discoveredRows.length;
-        const existingManifest = existingManifests.get(ticker);
+        const existingManifest = nextManifests.get(ticker);
         const readyBefore = (existingManifest?.filings ?? []).filter(isReadySummaryRow).length;
         const manifest = mergeFilings({
           ticker,
@@ -759,20 +1231,23 @@ export async function runEdgarFilingTimeline({
         const readyAfter = manifest.filings.filter(isReadySummaryRow).length;
         stats.readyPreserved += Math.min(readyBefore, readyAfter);
         nextManifests.set(ticker, manifest);
-        if (!args.planOnly && manifest.filings.length > 0) writeManifestMirror(paths, ticker, manifest);
         console.log(`  ${ticker}: filings=${manifest.filings.length} ready=${readyAfter} cik=${cikRow.cik}`);
       }
       if (args.sleep > 0) await sleepFn(args.sleep * 1000);
     }
 
     if (!args.planOnly && stats.fetched > 0) {
-      writeIndex(paths, { manifests: nextManifests, updated, generatedAt: observedAt });
+      writePublicationBundle(paths, {
+        manifests: nextManifests,
+        updated,
+        generatedAt: observedAt,
+      });
     }
 
     if (manageLkg) {
       const telemetry = requestResults.length > 0
         ? worstRequestResult(requestResults)
-        : attemptResult("unexpected_error", threwTuple("unexpected"));
+        : noSubmissionRequestResult();
       lkgOutcome = applyEdgarLkgStore({
         repoRoot: lkgRepoRoot,
         markerPath: storeMarkerPath,
@@ -782,7 +1257,7 @@ export async function runEdgarFilingTimeline({
         run: storeRun,
       });
       if (lkgOutcome.corrupt) {
-        throw new Error(`EDGAR LKG failure is corrupt: ${lkgOutcome.reason}`);
+        throw new Error(`EDGAR LKG failure is corrupt${diagnosticSuffix(telemetry.failure_detail)}: ${lkgOutcome.reason}`);
       }
     }
   } catch (error) {
@@ -792,21 +1267,14 @@ export async function runEdgarFilingTimeline({
       ? worstRequestResult(requestResults)
       : bootstrapResult && bootstrapResult.status !== "ready"
         ? bootstrapResult
-        : attemptResult("unexpected_error", threwTuple("unexpected"));
-    writeAttemptShard({
-      laneId: "edgar_filings",
-      attemptShardPath: paths.attemptShardPath,
-      observedAt,
-      attemptId,
-      result: telemetry,
-    });
+        : noSubmissionRequestResult();
   }
   if (fatalError) throw fatalError;
   const telemetry = requestResults.length > 0
     ? worstRequestResult(requestResults)
     : bootstrapResult && bootstrapResult.status !== "ready"
       ? bootstrapResult
-      : attemptResult("unexpected_error", threwTuple("unexpected"));
+      : noSubmissionRequestResult();
   console.log(
     `edgar_filing_timeline: resolved=${stats.resolved} unresolved=${stats.unresolved} fetched=${stats.fetched} filings=${stats.filings} ready_preserved=${stats.readyPreserved} errors=${stats.errors}`,
   );
@@ -814,6 +1282,7 @@ export async function runEdgarFilingTimeline({
   return {
     ok: produced,
     reason: produced ? "ok" : telemetry.reason === "ok" ? "unexpected_error" : telemetry.reason,
+    failure_detail: produced ? null : telemetry.failure_detail ?? null,
     telemetry_status: telemetry.status,
     telemetry_reason: telemetry.reason,
     stats,
@@ -833,7 +1302,11 @@ if (process.argv[1] === fileURLToPath(import.meta.url)) {
     // DEC-264: a degraded lane (valid LKG retained, retry parked, KPI-named)
     // exits 0 so the workflow commits the honest retry state; only true
     // corruption (no provable LKG, or a systemic break) exits non-zero.
-    if (!result.ok) process.exitCode = result.lkg?.exitCode ?? 2;
+    if (!result.ok) {
+      const prefix = result.lkg?.degraded ? "[degraded]" : "[corrupt]";
+      console.warn(`${prefix} EDGAR filings ${result.reason}${diagnosticSuffix(result.failure_detail)}`);
+      process.exitCode = result.lkg?.exitCode ?? 2;
+    }
   }).catch((error) => {
     console.error(error instanceof Error ? error.stack || error.message : error);
     process.exitCode = 1;
@@ -841,14 +1314,23 @@ if (process.argv[1] === fileURLToPath(import.meta.url)) {
 }
 
 export {
+  applyPersistenceToExistingManifest,
   applyEdgarLkgStore,
   buildEdgarFreshnessMarker,
   edgarMarkerPathFor,
   edgarMarkerSourceAsOf,
+  filingRowsFromSubmissions,
+  FOREIGN_FORM_SECTION_REQUESTS,
+  isForeignForm,
   maxFilingDateAcrossManifests,
   mergeFilings,
   retainLatestFilingDates,
+  secArchiveIdentity,
+  validateForeignFilingIdentity,
   validEdgarFreshnessMarker,
+  recoverJsonBundleTransaction,
+  writeJsonBundleTransaction,
+  EDGAR_PUBLICATION_JOURNAL_SCHEMA,
   EDGAR_FRESHNESS_MARKER_SCHEMA,
   EDGAR_LANE_ID,
   EDGAR_LKG_KEY,

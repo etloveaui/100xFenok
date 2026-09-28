@@ -25,65 +25,91 @@
       "run_id": "29707016827",
       "schedule": "0 22 * * 0",
       "shard": "0/6"
+    },
+    {
+      "attempts_used": 1,
+      "event_name": "schedule",
+      "failures": [],
+      "latency_ms": 560,
+      "natural": true,
+      "observed_at": "2026-08-07T05:49:05Z",
+      "outcome": "fresh",
+      "run_attempt": 1,
+      "run_id": "31151738848",
+      "schedule": "7 4 * * 0-5",
+      "shard": "62/72"
+    },
+    {
+      "attempts_used": 1,
+      "event_name": "workflow_dispatch",
+      "failures": [],
+      "latency_ms": 473,
+      "natural": false,
+      "observed_at": "2026-09-28T01:17:59Z",
+      "outcome": "fresh",
+      "run_attempt": 1,
+      "run_id": "36365270594",
+      "schedule": "",
+      "shard": ""
     }
   ],
   "current": {
-    "fetched_at": "2026-07-19T23:01:26Z",
-    "history_as_of": "2026-07-17",
+    "fetched_at": "2026-09-28T01:23:05Z",
+    "history_as_of": "2026-09-25",
     "path": "data/yf/finance/APRH.json",
-    "payload_sha256": "9d2acbf660b29a18f3209dfe97d553e8bab6b30b652d472811a3a79afcd2f848",
-    "quote_as_of": "2026-07-17T16:21:24Z",
-    "source_as_of": "2026-07-17"
+    "payload_sha256": "3b9afccf0b7c4be78e757b734bf83b9835553b16adfc1b6d7149cd6323db1c2c",
+    "quote_as_of": "2026-09-25T16:54:45Z",
+    "source_as_of": "2026-09-25"
   },
   "discovered_from": [
     "stockanalysis_etf"
   ],
   "last_attempt": {
     "attempts_used": 1,
-    "event_name": "schedule",
+    "event_name": "workflow_dispatch",
     "failures": [],
-    "latency_ms": 1242,
-    "natural": true,
-    "observed_at": "2026-07-19T22:59:54Z",
+    "latency_ms": 473,
+    "natural": false,
+    "observed_at": "2026-09-28T01:17:59Z",
     "outcome": "fresh",
     "run_attempt": 1,
-    "run_id": "29707016827",
-    "schedule": "0 22 * * 0",
-    "shard": "0/6"
+    "run_id": "36365270594",
+    "schedule": "",
+    "shard": ""
   },
   "lkg": {
-    "fetched_at": "2026-06-29T23:06:26Z",
-    "history_as_of": "2026-06-29",
+    "fetched_at": "2026-08-07T05:50:29Z",
+    "history_as_of": "2026-08-06",
     "path": "data/admin/yahoo-batch-quote-history/lkg/APRH.json",
-    "payload_sha256": "7218f63a60177697926d784ae1fbb2be6e853ba42f4d24230cbcb68b117116c1",
-    "quote_as_of": null,
-    "source_as_of": "2026-06-29"
+    "payload_sha256": "73785eda9ee0acc239760089a228274f64d20fa51738a7f737c3f85ea2bf6be2",
+    "quote_as_of": "2026-08-06T16:29:35Z",
+    "source_as_of": "2026-08-06"
   },
   "promotion_contract": "provider_observation/v2",
   "provider_observation": {
-    "event_name": "schedule",
-    "history_as_of": "2026-07-17",
-    "observed_at": "2026-07-19T22:59:54Z",
-    "payload_sha256": "773e684f4be4f913665de06040228aaaadcae23982c84713e109684b4eaf85c8",
-    "quote_as_of": "2026-07-17T16:21:24Z",
+    "event_name": "workflow_dispatch",
+    "history_as_of": "2026-09-25",
+    "observed_at": "2026-09-28T01:17:59Z",
+    "payload_sha256": "fecba87bc4a72c0d25322cd3e3d168c7878db87e9cfa0ff4cd295e681dda5135",
+    "quote_as_of": "2026-09-25T16:54:45Z",
     "run_attempt": 1,
-    "run_id": "29707016827",
+    "run_id": "36365270594",
     "schema_version": "provider_observation/v2",
-    "source_as_of": "2026-07-17"
+    "source_as_of": "2026-09-25"
   },
   "resolution_state": "fresh_primary",
   "retry": false,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "stale": {
     "age_business_days": 9,
-    "classified_at": "2026-07-13T04:33:56Z",
-    "classified_run_id": "29224221077",
+    "classified_at": "2026-08-19T23:42:29Z",
+    "classified_run_id": "32314261503",
     "expected_resolution": "next_natural_yahoo_run",
     "max_business_days": 6,
-    "message": "APRH holds LKG because Yahoo source date 2026-06-29 is 9 business days old, beyond the 6-day bound; it will retry on the next natural Yahoo run.",
+    "message": "APRH holds LKG because Yahoo source date 2026-08-06 is 9 business days old, beyond the 6-day bound; it will retry on the next natural Yahoo run.",
     "reason": "source_age_exceeds_lane_bound",
-    "source_as_of": "2026-06-29"
+    "source_as_of": "2026-08-06"
   },
   "ticker": "APRH",
-  "updated_at": "2026-07-19T22:59:54Z"
+  "updated_at": "2026-09-28T01:17:59Z"
 }

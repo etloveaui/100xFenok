@@ -79,11 +79,11 @@ def _validate_candidate_manifest(
     if (
         manifest.get("schema_version") != "sec13f-base-generation/v1"
         or manifest.get("logical_root") != "."
-        or manifest.get("investor_count") != 60
+        or manifest.get("investor_count") != 63
         or manifest.get("output_count") != EXPECTED_BASE_OUTPUT_COUNT
         or not isinstance(entries, list)
     ):
-        raise FixtureOracleError("candidate manifest requires exactly 73 entries")
+        raise FixtureOracleError("candidate manifest requires exactly 76 entries")
     if manifest.get("generator_sha256") != sha256_file(ROOT / "scripts" / "sec13f" / "generator.py"):
         raise FixtureOracleError("candidate manifest generator digest mismatch")
     if manifest.get("investor_data_digest") != expected_investor_data_digest:
@@ -230,7 +230,7 @@ def build_fixture_oracle_report(
         "investors_compared": len(registry["investors"]) - len(missing_investors),
         "investors_missing": missing_investors,
         "investors_extra": extra_investors,
-        "outputs_expected": summary.get("expected_files", 73),
+        "outputs_expected": summary.get("expected_files", 76),
         "outputs_compared": summary.get("compared_files", 0),
         "outputs_missing": missing,
         "outputs_extra": extra,

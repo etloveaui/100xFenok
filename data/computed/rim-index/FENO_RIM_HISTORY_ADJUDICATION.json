@@ -1,0 +1,56 @@
+{
+  "schema_version": "feno_rim_history_adjudication.v1",
+  "phase": "P1 adjudication — handler, sole adjudicator",
+  "adjudicates": "data/computed/rim-index/FENO_RIM_HISTORY_RECOVERY_LEDGER.json",
+  "adjudicated_at": "2026-08-08T14:15:00Z",
+  "why_this_file_exists": "The worker closed P1 with two items it declined to decide and referred to me: the Damodaran ctryprem as-of dates, and its own contradiction of my ERP inventory. Both are decided here. Neither changes the outcome, and that is stated rather than buried.",
+
+  "finding_1_repo_lane_is_structurally_closed_not_merely_empty": {
+    "handler_method": "read-only GitHub API against the origin repository; no clone, no unshallow, no repo-shape mutation",
+    "why_the_api_was_needed": "The local nested checkout is a SHALLOW clone. git rev-parse --is-shallow-repository returns true and .git/shallow exists dated 2026-08-05. Local history is truncated at 4,503 commits with the oldest at 2026-06-29, and that oldest commit presents all 37,168 files as a single addition. It is the shallow boundary, not the repository root. Any first-appearance date read from the local checkout alone is therefore an artifact of clone depth.",
+    "handler_error_corrected": "My first pass read first-appearance dates from the shallow checkout and got 2026-06-29 for every path. The worker's dates were the correct ones. The API confirms the worker, not me.",
+    "upstream_facts": {
+      "repository_created_at": "2025-06-28T05:36:37Z",
+      "first_appearance": {
+        "data/benchmarks/us.json": "2025-12-13T16:44:24Z (2cbe4da126)",
+        "data/damodaran/erp.json": "2025-12-16T13:58:22Z (b59bba5bef)",
+        "data/slickcharts/sp500-yield.json": "2026-01-10T02:04:50Z (8ffe22e0e1)",
+        "data/slickcharts/nasdaq100-yield.json": "2026-01-10T02:04:50Z (8ffe22e0e1)",
+        "data/computed/stock_action_index.json": "2026-06-12T09:40:33Z (2ca4f46953)"
+      }
+    },
+    "adjudication": "The historical QA window runs 2019-06-30 to 2025-06-30. The repository itself did not exist until 2025-06-28, two days before the last origin, and the two files carrying the legs that matter — the FY1/FY2/FY3 consensus path and the index yield observations behind both payout routes — did not appear until 2026-06-12 and 2026-01-10, twelve and six months after the last origin. So for every origin in the window there is no repo-committed vintage of the consensus path or of either payout route, and there cannot be one. This is stronger than 'searched and not found': the repo lane is structurally closed, and no additional searching of it can change that.",
+    "benchmarks_file_is_retrospective_not_point_in_time": "At its first appearance data/benchmarks/us.json already carried 861 rows spanning 2010-01-01 to 2026-06-26. A dated row inside a file first published in December 2025 is a backfilled series, not a vintage that was knowable at the row's date. Its historical rows are RETROSPECTIVE_ONLY and can never be MODEL_EQUIVALENT."
+  },
+
+  "finding_2_ctryprem_date_ambiguity_resolved": {
+    "the_open_question": "The worker extracted US ERP from ctryprem17 through ctryprem24 but declined to classify them, because xlrd datemode 0 and datemode 1 disagree by about four years on the same cell, and because the file-name year appeared not to line up with the internal date.",
+    "handler_resolution": "The datemode=1 reading is correct, and the file-name year is not the data date. Damodaran's convention is that ctrypremYY is the January YY+1 update: the file named for a year carries the update published at the start of the following year. The internal dates under datemode=1 say exactly that — ctryprem19 reads 2020-01-01, ctryprem20 reads 2021-01-01, and so on through ctryprem24 reading 2025-01-01. Six files whose internal dates form an unbroken annual chain, each exactly one year after its own file-name year, is not a coincidence and is not a parse artifact. Under datemode=0 the same cell reads 2015-12-31 for ctryprem19, which fits neither the name nor the chain.",
+    "the_worker_s_apparent_mismatch_explained": "The worker flagged ctryprem21 showing 4.24% as suspicious because that value matches a reading it associated with 2017. Under the resolved convention ctryprem21 is the January 2022 vintage, and 4.24% is its January 2022 value. The mismatch was in the assumed naming, not in the data.",
+    "resulting_classification": "The ctryprem country-premium archive is the same source class as the live erp.json, carries per-file sha256 receipts fetched 2026-08-06, and now has verifiable as-of dates. The ERP leg alone is therefore recoverable at annual granularity back to at least January 2018.",
+    "why_it_still_does_not_produce_a_single_model_equivalent_origin": "An origin is MODEL_EQUIVALENT only when every input the live model consumes is available at that origin in the live source semantics. A recoverable ERP leg is one input out of the set. The FY2/FY3 consensus path and both payout routes remain structurally unavailable for every origin in the window, per finding 1. One recovered leg out of three cannot make an origin whole, so MODEL_EQUIVALENT stays 0 for both indices.",
+    "what_this_is_worth_anyway": "It is worth recording rather than discarding. The ERP archive is a genuine, receipted, date-verified vintage estate in the live source class, and it removes ERP from the list of things that would have to be solved if the other two legs ever became recoverable."
+  },
+
+  "finding_3_provider_lane": {
+    "worker_result_accepted": "ctrypremApr20.xlsx returns HTTP 200 and verifies as the 2020-04-01 update with US ERP 6.01%; ctrypremApr19 and ctrypremApr21 through Apr25 return 404; histimpl.xlsx returns 200 but is the implied-premium series, a different source class from the country-premium file the live model reads.",
+    "adjudication": "The provider lane can supply ERP and nothing else. Damodaran publishes no index-level FY2/FY3 consensus earnings path and no index payout series, so no provider archive exists that could close the two missing legs. Rung C is exhausted for the legs that matter."
+  },
+
+  "classification_summary_after_adjudication": {
+    "MODEL_EQUIVALENT_origins": { "SPX": 0, "NDX": 0 },
+    "threshold_for_historical_qa": 5,
+    "historical_qa_runs": false,
+    "ERP_leg": "MODEL_EQUIVALENT-grade source class with verified annual as-of dates from January 2018, insufficient alone",
+    "FY2_FY3_consensus_leg": "structurally unavailable before 2026-06-12",
+    "payout_legs": "structurally unavailable before 2026-01-10",
+    "benchmark_rows": "RETROSPECTIVE_ONLY"
+  },
+
+  "consequence_for_the_final_verdict": "historical_validation_status = NOT_AVAILABLE_PRE_ARCHIVE. The contract's RETIRE condition that depends on authentic historical evidence requires at least five MODEL_EQUIVALENT origins for both indices; with zero, that condition cannot fire and cannot be claimed as passed either. The product is not historically validated, and the record says so in those words.",
+
+  "what_was_not_done_and_why": {
+    "did_not_unshallow_or_clone": "The 2026-08-03 incident rule makes repo-shape mutation and load-heavy reproduction owner-gated. The read-only origin API answered the same question at no load cost, so no approval was needed and none was sought.",
+    "did_not_search_further_after_closure": "The contract permits one bounded recovery pass. It is closed."
+  }
+}

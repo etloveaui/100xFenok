@@ -77,66 +77,104 @@
       "run_id": "29622560422",
       "schedule": "20 23 * * 1-5",
       "shard": "0/5"
+    },
+    {
+      "attempts_used": 1,
+      "event_name": "schedule",
+      "failures": [],
+      "latency_ms": 608,
+      "natural": true,
+      "observed_at": "2026-08-04T23:07:26Z",
+      "outcome": "fresh",
+      "run_attempt": 1,
+      "run_id": "30958820437",
+      "schedule": "0 22 * * 2",
+      "shard": "2/6"
+    },
+    {
+      "attempts_used": 1,
+      "event_name": "schedule",
+      "failures": [],
+      "latency_ms": 454,
+      "natural": true,
+      "observed_at": "2026-08-12T05:45:23Z",
+      "outcome": "fresh",
+      "run_attempt": 1,
+      "run_id": "31567478446",
+      "schedule": "7 4 * * 0-5",
+      "shard": "38/72"
+    },
+    {
+      "attempts_used": 1,
+      "event_name": "workflow_dispatch",
+      "failures": [],
+      "latency_ms": 466,
+      "natural": false,
+      "observed_at": "2026-09-28T06:30:00Z",
+      "outcome": "fresh",
+      "run_attempt": 1,
+      "run_id": "36367836615",
+      "schedule": "",
+      "shard": ""
     }
   ],
   "current": {
-    "fetched_at": "2026-07-18T00:41:40Z",
-    "history_as_of": "2026-07-17",
+    "fetched_at": "2026-09-28T06:32:06Z",
+    "history_as_of": "2026-09-25",
     "path": "data/yf/finance/TEUP.json",
-    "payload_sha256": "2e6e0efa8be64a89b1e1b111d4385e70df9d3d03f8900c570a98ab84e4cc8897",
-    "quote_as_of": "2026-07-17T19:42:27Z",
-    "source_as_of": "2026-07-17"
+    "payload_sha256": "5b743d8786a6fba0358058015e53256ddc5b45df4f1ffdbf81e669857f1257ad",
+    "quote_as_of": "2026-09-25T19:58:42Z",
+    "source_as_of": "2026-09-25"
   },
   "discovered_from": [
-    "market_facts",
     "stockanalysis_etf"
   ],
   "last_attempt": {
     "attempts_used": 1,
-    "event_name": "schedule",
+    "event_name": "workflow_dispatch",
     "failures": [],
-    "latency_ms": 567,
-    "natural": true,
-    "observed_at": "2026-07-18T00:37:10Z",
+    "latency_ms": 466,
+    "natural": false,
+    "observed_at": "2026-09-28T06:30:00Z",
     "outcome": "fresh",
     "run_attempt": 1,
-    "run_id": "29622560422",
-    "schedule": "20 23 * * 1-5",
-    "shard": "0/5"
+    "run_id": "36367836615",
+    "schedule": "",
+    "shard": ""
   },
   "lkg": {
-    "fetched_at": "2026-06-18T16:06:21Z",
-    "history_as_of": "2026-06-18",
+    "fetched_at": "2026-08-12T05:48:27Z",
+    "history_as_of": "2026-08-11",
     "path": "data/admin/yahoo-batch-quote-history/lkg/TEUP.json",
-    "payload_sha256": "15f88228c620f0ad338528ae10b0697fa60d34d2b7c39a6c3eb66aae790f712e",
-    "quote_as_of": null,
-    "source_as_of": "2026-06-18"
+    "payload_sha256": "630a2541164dc64122a1abbcef16a68499ef66971aaf50b9dc5d60f959b4e1cf",
+    "quote_as_of": "2026-08-11T19:59:46Z",
+    "source_as_of": "2026-08-11"
   },
   "promotion_contract": "provider_observation/v2",
   "provider_observation": {
-    "event_name": "schedule",
-    "history_as_of": "2026-07-17",
-    "observed_at": "2026-07-18T00:37:10Z",
-    "payload_sha256": "fa7145f81936d0b2c8001375d9f14bb3c4519dc1b9d28b4f0e11608d3a22034b",
-    "quote_as_of": "2026-07-17T19:42:27Z",
+    "event_name": "workflow_dispatch",
+    "history_as_of": "2026-09-25",
+    "observed_at": "2026-09-28T06:30:00Z",
+    "payload_sha256": "e3b33698e34c06d31c933d767dac14bfe600ff436d08141d97f13bb6c8425894",
+    "quote_as_of": "2026-09-25T19:58:42Z",
     "run_attempt": 1,
-    "run_id": "29622560422",
+    "run_id": "36367836615",
     "schema_version": "provider_observation/v2",
-    "source_as_of": "2026-07-17"
+    "source_as_of": "2026-09-25"
   },
   "resolution_state": "fresh_primary",
   "retry": false,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "stale": {
-    "age_business_days": 15,
-    "classified_at": "2026-07-13T04:33:56Z",
-    "classified_run_id": "29224221077",
+    "age_business_days": 7,
+    "classified_at": "2026-08-20T14:20:12Z",
+    "classified_run_id": "32379322022",
     "expected_resolution": "next_natural_yahoo_run",
     "max_business_days": 6,
-    "message": "TEUP holds LKG because Yahoo source date 2026-06-18 is 15 business days old, beyond the 6-day bound; it will retry on the next natural Yahoo run.",
+    "message": "TEUP holds LKG because Yahoo source date 2026-08-11 is 7 business days old, beyond the 6-day bound; it will retry on the next natural Yahoo run.",
     "reason": "source_age_exceeds_lane_bound",
-    "source_as_of": "2026-06-18"
+    "source_as_of": "2026-08-11"
   },
   "ticker": "TEUP",
-  "updated_at": "2026-07-18T00:37:10Z"
+  "updated_at": "2026-09-28T06:30:00Z"
 }

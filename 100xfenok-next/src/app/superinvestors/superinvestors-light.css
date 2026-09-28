@@ -1,0 +1,1777 @@
+/* /superinvestors route — light-system layout namespace (slice 7b screen 2/2).
+ * Layout only: head, holders/trade rows, overlap rows, rail grid, CTA. Panel
+ * chrome, type scale, colors, and states come from src/components/ui.
+ * Token-pure: only var(--fnk-*) / var(--font-*) references, no raw colors,
+ * no shadows, no gradients. Accent var(--fnk-brand-interactive) appears only
+ * on the active sort tab text, the expanded holder name, and holder-row
+ * focus/hover accent. Tickers use var(--font-jetbrains-mono). */
+
+.sup {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  padding: 20px 24px 32px;
+  background: var(--fnk-neutral-50);
+  font-size: 13px;
+  line-height: 1.45;
+}
+
+.sup-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.sup-title-block {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  min-width: 0;
+  max-width: 900px;
+}
+
+.sup-eyebrow-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.sup-eyebrow {
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--fnk-neutral-500);
+}
+
+.sup-title {
+  margin: 0;
+  font-size: 20px;
+  font-weight: 600;
+  color: var(--fnk-neutral-900);
+  max-width: 900px;
+}
+
+.sup-meta-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+@media (max-width: 430px) {
+  /* A second status-pill row arrives with the feed; keep its 26px slot. */
+  .sup-meta-row {
+    min-height: max(44px, calc(2.5rem + 8px));
+  }
+}
+
+.sup-head-note {
+  font-size: 12px;
+  color: var(--fnk-neutral-500);
+  white-space: nowrap;
+}
+
+/* Main grid: Holders (wide) + right rail (Overlap, Graph). */
+
+.sup-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 8fr) minmax(0, 4fr);
+  gap: 16px;
+  align-items: start;
+}
+
+.sup-rail {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  min-width: 0;
+}
+
+/* Holders sort tabs ride in the panel header right slot. */
+
+.sup-sort-toggle {
+  display: flex;
+  gap: 2px;
+  background: var(--fnk-neutral-100);
+  padding: 2px;
+  border-radius: 6px;
+}
+
+/* Holders table: one table for desktop and mobile; the scroll container keeps
+ * all five columns reachable on narrow screens without growing the page. */
+
+.sup-hold-scroll {
+  overflow-x: auto;
+  max-width: 100%;
+}
+
+.sup-hold-table {
+  width: 100%;
+  min-width: 640px;
+  border-collapse: collapse;
+  font-size: 12px;
+}
+
+.sup-hold-table thead th {
+  height: 28px;
+  padding: 0 16px;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--fnk-neutral-500);
+  text-align: right;
+  white-space: nowrap;
+}
+
+.sup-hold-table thead th.sup-th-name {
+  text-align: left;
+}
+
+.sup-hold-row {
+  border-top: 1px solid var(--fnk-neutral-100);
+  transition: background-color 150ms ease;
+}
+
+.sup-hold-row:hover {
+  background: var(--fnk-neutral-50);
+}
+
+.sup-hold-table td {
+  padding: 0 16px;
+  height: 44px;
+  text-align: right;
+  color: var(--fnk-neutral-700);
+  white-space: nowrap;
+}
+
+.sup-holder-name-cell {
+  text-align: left;
+  padding: 0 16px;
+  height: 44px;
+}
+
+.sup-holder-name {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 1px;
+  min-width: 0;
+  max-width: 220px;
+  padding: 4px 0 4px 6px;
+  margin-left: -6px;
+  border-left: 2px solid transparent;
+  background: none;
+  border-top: 0;
+  border-right: 0;
+  border-bottom: 0;
+  cursor: pointer;
+  text-align: left;
+  transition: border-color 150ms ease;
+}
+
+.sup-holder-name:hover {
+  border-left-color: var(--fnk-brand-interactive);
+}
+
+.sup-holder-name:focus-visible {
+  border-left-color: var(--fnk-brand-interactive);
+  outline: none;
+}
+
+.sup-holder-name[aria-expanded="true"] {
+  border-left-color: var(--fnk-brand-interactive);
+}
+
+.sup-holder-name-text {
+  color: var(--fnk-neutral-900);
+  font-size: 12px;
+  font-weight: 500;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  max-width: 100%;
+}
+
+.sup-holder-name:hover .sup-holder-name-text,
+.sup-holder-name:focus-visible .sup-holder-name-text {
+  color: var(--fnk-brand-interactive);
+}
+
+.sup-holder-sub {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  color: var(--fnk-neutral-500);
+}
+
+.sup-stale-badge {
+  display: inline-flex;
+  align-items: center;
+  height: 20px;
+  padding: 0 8px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 600;
+  border: 1px solid var(--fnk-neutral-200);
+  color: var(--fnk-neutral-500);
+}
+
+.sup-top {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 8px;
+}
+
+.sup-mono {
+  font-family: var(--font-jetbrains-mono), "SF Mono", Menlo, monospace;
+  font-weight: 500;
+  color: var(--fnk-neutral-900);
+}
+
+.sup-ticker-strong {
+  font-size: 12px;
+}
+
+.sup-mute {
+  color: var(--fnk-neutral-500);
+  font-weight: 400;
+}
+
+.sup-detail-row td {
+  text-align: left;
+  white-space: normal;
+  padding: 0 16px 12px;
+  background: var(--fnk-neutral-50);
+}
+
+.sup-detail-note {
+  margin: 0;
+  padding: 10px 0 2px;
+  font-size: 12px;
+  color: var(--fnk-neutral-500);
+}
+
+.sup-detail-facts {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px;
+  margin: 10px 0 0;
+  padding: 0;
+}
+
+.sup-detail-facts > div {
+  min-width: 0;
+}
+
+.sup-detail-facts dt {
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--fnk-neutral-500);
+}
+
+.sup-detail-facts dd {
+  margin: 2px 0 0;
+  font-size: 12px;
+  color: var(--fnk-neutral-900);
+}
+
+.sup-detail-tops {
+  list-style: none;
+  margin: 10px 0 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.sup-detail-tops li {
+  display: flex;
+  align-items: baseline;
+  gap: 12px;
+  padding: 5px 0;
+  border-top: 1px solid var(--fnk-neutral-100);
+  font-size: 12px;
+  color: var(--fnk-neutral-700);
+}
+
+/* Overlap rows reuse the shared Row primitive; only the cell type treatment
+ * lives here. The shared Row already owns hover/focus states. */
+
+.sup-rail .sup-olap-row {
+  grid-template-columns: minmax(0, 1fr) max-content max-content;
+  column-gap: 12px;
+}
+
+.sup-olap-holders {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 8px;
+  min-width: 0;
+  color: var(--fnk-neutral-700);
+  font-size: 12px;
+  white-space: nowrap;
+}
+
+.sup-olap-holders b {
+  font-weight: 600;
+  color: var(--fnk-neutral-900);
+}
+
+.sup-olap-score {
+  text-align: right;
+  color: var(--fnk-neutral-700);
+  font-size: 12px;
+}
+
+/* CTA row */
+
+.sup-cta {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  flex-wrap: wrap;
+  padding: 4px 4px 0;
+}
+
+.sup-cta-note {
+  font-size: 12px;
+  color: var(--fnk-neutral-500);
+}
+
+/* Holdings and trade rankings share one semantic row presentation at every
+ * width. Wide screens retain a conventional table; phones use the same rows
+ * as two-column labelled grids so every field stays inside the route bounds. */
+
+.sup-responsive-scroll {
+  max-width: 100%;
+  overflow-x: auto;
+  overscroll-behavior-x: contain;
+}
+
+.sup-responsive-scroll--holdings {
+  max-height: 440px;
+  overflow-y: auto;
+}
+
+.sup-responsive-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 12px;
+}
+
+.sup-responsive-table--holdings {
+  min-width: 760px;
+}
+
+.sup-responsive-table--trades {
+  min-width: 720px;
+}
+
+.sup-responsive-table thead th {
+  position: sticky;
+  top: 0;
+  z-index: 1;
+  height: 36px;
+  padding: 0 8px;
+  background: var(--fnk-color-card);
+  color: var(--fnk-neutral-500);
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-align: right;
+  white-space: nowrap;
+}
+
+.sup-responsive-row {
+  border-top: 1px solid var(--fnk-neutral-100);
+  transition: background-color 150ms ease;
+}
+
+.sup-responsive-row:hover {
+  background: var(--fnk-neutral-50);
+}
+
+.sup-responsive-table td {
+  height: 44px;
+  min-width: 0;
+  padding: 0 8px;
+  color: var(--fnk-neutral-700);
+  text-align: right;
+  white-space: nowrap;
+}
+
+.sup-responsive-table td:first-child,
+.sup-responsive-table th:first-child,
+.sup-responsive-table td:nth-child(2),
+.sup-responsive-table th:nth-child(2) {
+  text-align: left;
+}
+
+.sup-responsive-table--holdings td:nth-child(4),
+.sup-responsive-table--holdings th:nth-child(4) {
+  text-align: center;
+}
+
+.sup-responsive-table--trades td:nth-child(3),
+.sup-responsive-table--trades th:nth-child(3),
+.sup-responsive-table--trades td:nth-child(6),
+.sup-responsive-table--trades th:nth-child(6) {
+  text-align: left;
+}
+
+.sup-responsive-name {
+  display: block;
+  max-width: 220px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.sup-responsive-sub,
+.sup-responsive-code {
+  display: block;
+  max-width: 220px;
+  overflow: hidden;
+  color: var(--fnk-neutral-500);
+  font-size: 12px;
+  line-height: 1.25;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.sup-responsive-code {
+  color: var(--fnk-brand-interactive);
+  font-weight: 700;
+}
+
+.sup-responsive-sector {
+  display: inline-flex;
+  max-width: 150px;
+  align-items: center;
+  gap: 4px;
+  overflow: hidden;
+  border: 1px solid var(--fnk-neutral-200);
+  border-radius: 999px;
+  padding: 2px 6px;
+  font-size: 12px;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.sup-responsive-link {
+  display: inline-flex;
+  min-height: 44px;
+  width: 100%;
+  min-width: 0;
+  max-width: 100%;
+  flex-direction: column;
+  justify-content: center;
+  border: 1px solid var(--fnk-neutral-200);
+  border-radius: 8px;
+  background: var(--fnk-color-card);
+  padding: 4px 8px;
+  transition: border-color 150ms ease, color 150ms ease;
+}
+
+.sup-responsive-link:hover,
+.sup-responsive-link:focus-visible {
+  border-color: var(--fnk-brand-interactive);
+  color: var(--fnk-brand-interactive);
+}
+
+.sup-responsive-link > .truncate {
+  min-width: 0;
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.sup-trades-panel {
+  min-width: 0;
+  overflow: hidden;
+  border: 1px solid var(--fnk-neutral-200);
+  border-radius: 10px;
+  background: var(--fnk-color-card);
+}
+
+.sup-trades-grid {
+  display: grid;
+  gap: 16px;
+}
+
+@media (min-width: 1536px) {
+  .sup-trades-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+.sup-trades-title {
+  display: flex;
+  min-height: 44px;
+  align-items: center;
+  margin: 0;
+  border-bottom: 1px solid var(--fnk-neutral-200);
+  padding: 0 16px;
+  color: var(--fnk-neutral-900);
+  font-size: 14px;
+  font-weight: 700;
+}
+
+.sup-trades-toggle {
+  display: inline-flex;
+  min-height: 44px;
+  width: calc(100% - 24px);
+  align-items: center;
+  justify-content: center;
+  margin: 12px;
+  border: 1px solid var(--fnk-neutral-200);
+  border-radius: 999px;
+  background: var(--fnk-color-card);
+  padding: 0 12px;
+  color: var(--fnk-neutral-700);
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  transition: border-color 150ms ease, color 150ms ease;
+}
+
+.sup-trades-toggle:hover,
+.sup-trades-toggle:focus-visible {
+  border-color: var(--fnk-brand-interactive);
+  color: var(--fnk-brand-interactive);
+}
+
+@media (max-width: 1024px) {
+  .sup-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+/* Intermediate tablets have enough room for a readable list. Let the
+ * supporting overlap/network rail follow it at the same content width. */
+@media (min-width: 761px) and (max-width: 1199px) {
+  .sup-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .sup-rail {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    align-items: start;
+  }
+}
+
+@media (max-width: 760px) {
+  .sup {
+    padding: 12px 12px 28px;
+  }
+
+  .sup-sort-btn {
+    min-height: 44px;
+  }
+
+  /* Keep one data map and turn its five fields into labelled cards. This
+   * removes the hidden horizontal-only table on phones while preserving the
+   * row's click and keyboard behavior. */
+  .sup-hold-scroll {
+    overflow-x: visible;
+  }
+
+  .fnk-shell .sup-hold-scroll.scroll-hint-x {
+    overflow-x: visible;
+    box-shadow: none;
+  }
+
+  .fnk-shell .sup-hold-scroll.scroll-hint-x::after {
+    display: none;
+  }
+
+  .sup-hold-table {
+    display: block;
+    min-width: 0;
+  }
+
+  .sup-hold-table thead {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0 0 0 0);
+    clip-path: inset(50%);
+    white-space: nowrap;
+  }
+
+  .sup-hold-table tbody {
+    display: grid;
+    gap: 8px;
+  }
+
+  .sup-hold-table tr.sup-hold-row {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 0;
+    min-height: 0;
+    padding: 6px 10px;
+    border: 1px solid var(--fnk-neutral-200);
+    border-radius: 8px;
+    background: var(--fnk-color-card);
+  }
+
+  .sup-hold-table th,
+  .sup-hold-table td {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    justify-content: center;
+    min-width: 0;
+    min-height: 52px;
+    height: auto;
+    padding: 7px 4px;
+    text-align: right;
+    white-space: normal;
+  }
+
+  .sup-hold-table th::before,
+  .sup-hold-table td::before {
+    content: attr(data-label);
+    align-self: stretch;
+    margin-bottom: 3px;
+    color: var(--fnk-neutral-500);
+    font-size: 12px;
+    font-weight: 600;
+    line-height: 1.2;
+    text-align: right;
+  }
+
+  .sup-hold-table .sup-holder-name-cell {
+    grid-column: 1 / -1;
+    align-items: flex-start;
+    min-height: 52px;
+    padding-inline: 4px;
+    text-align: left;
+  }
+
+  .sup-hold-table .sup-holder-name-cell::before {
+    align-self: flex-start;
+    text-align: left;
+  }
+
+  .sup-holder-name {
+    width: 100%;
+    max-width: none;
+    min-height: 0;
+    padding: 0;
+    margin: 0;
+    border-left: 0;
+    align-items: flex-start;
+    justify-content: flex-start;
+  }
+
+  .sup-holder-name-text {
+    max-width: 100%;
+    white-space: normal;
+    line-height: 1.3;
+  }
+
+  .sup-holder-sub {
+    flex-wrap: wrap;
+  }
+
+  .sup-hold-table td[data-label="최대 비중"] {
+    align-items: flex-end;
+  }
+
+  .sup-hold-table .sup-top {
+    flex-wrap: wrap;
+    justify-content: flex-end;
+    gap: 4px 7px;
+  }
+
+  .sup-hold-row:hover {
+    background: var(--fnk-color-card);
+  }
+
+  .sup-hold-row:focus-visible {
+    outline: 2px solid var(--fnk-brand-interactive);
+    outline-offset: 2px;
+  }
+
+  .sup-detail-facts {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+/* The investor profile presents identity and filing context as a compact
+ * evidence strip. Panels below retain their existing content and states while
+ * losing the nested oversized card treatment. */
+.sup-guru-layout {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.sup-guru-back {
+  border-color: var(--fnk-neutral-200);
+  background: var(--fnk-color-card);
+  color: var(--fnk-neutral-700);
+}
+
+.sup-guru-back:hover {
+  border-color: var(--fnk-brand-interactive);
+  color: var(--fnk-brand-interactive);
+}
+
+.sup-guru-profile {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.sup-guru-identity {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.sup-guru-disclosures {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1.2fr) minmax(0, 1fr);
+  gap: 8px;
+}
+
+.sup-guru-disclosure {
+  min-width: 0;
+  padding: 9px 11px;
+  border-left: 3px solid var(--fnk-neutral-300);
+  border-radius: 6px;
+  background: var(--fnk-color-card);
+}
+
+.sup-guru-disclosure-quarter {
+  border-left-color: var(--fnk-color-warn);
+  background: var(--fnk-color-warn-soft);
+}
+
+.sup-guru-disclosure-lag {
+  border-left-color: var(--fnk-color-info);
+  background: var(--fnk-color-info-soft);
+}
+
+.sup-guru-disclosure-label {
+  margin: 0;
+  color: var(--fnk-neutral-500);
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  line-height: 1.2;
+  text-transform: uppercase;
+}
+
+.sup-guru-disclosure-value {
+  margin: 4px 0 0;
+  color: var(--fnk-neutral-900);
+  font-size: 14px;
+  font-weight: 800;
+  line-height: 1.2;
+}
+
+.sup-guru-disclosure-note,
+.sup-guru-accession {
+  margin: 4px 0 0;
+  color: var(--fnk-neutral-500);
+  font-size: 12px;
+  font-weight: 600;
+  line-height: 1.3;
+}
+
+.sup-guru-sec-link {
+  min-height: 32px;
+  align-items: center;
+  color: var(--fnk-brand-interactive);
+}
+
+.sup-guru-sec-link:hover {
+  color: var(--fnk-brand-interactive-2);
+}
+
+.sup-guru-stat-strip {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  border-top: 1px solid var(--fnk-neutral-200);
+  border-bottom: 1px solid var(--fnk-neutral-200);
+}
+
+.sup-guru-stat-strip > div {
+  min-width: 0;
+  padding: 10px 12px;
+}
+
+.sup-guru-stat-strip > div + div {
+  border-left: 1px solid var(--fnk-neutral-100);
+}
+
+.sup-guru-stat-strip p {
+  margin: 0;
+  overflow: hidden;
+  color: var(--fnk-neutral-500);
+  font-size: 12px;
+  font-weight: 700;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.sup-guru-stat-strip strong {
+  display: block;
+  margin-top: 4px;
+  overflow: hidden;
+  color: var(--fnk-neutral-900);
+  font-size: 18px;
+  font-weight: 800;
+  line-height: 1.2;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.sup-guru-stat-skeleton {
+  width: 75%;
+  height: 22px;
+  margin-top: 4px;
+  border-radius: 4px;
+  background: var(--fnk-neutral-200);
+}
+
+@media (max-width: 760px) {
+  .sup-guru-disclosures {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    grid-template-areas:
+      "quarter lag"
+      "filing filing";
+  }
+
+  .sup-guru-disclosure-quarter { grid-area: quarter; }
+  .sup-guru-disclosure-filing {
+    grid-area: filing;
+    grid-column: 1 / -1;
+  }
+  .sup-guru-disclosure-lag { grid-area: lag; }
+
+  .sup-responsive-table {
+    display: block;
+    min-width: 0;
+  }
+
+  .sup-responsive-table thead {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0 0 0 0);
+    clip-path: inset(50%);
+    white-space: nowrap;
+  }
+
+  .sup-responsive-table tbody {
+    display: grid;
+    gap: 8px;
+  }
+
+  .sup-responsive-table tr.sup-responsive-row {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 0;
+    min-height: 0;
+    border: 1px solid var(--fnk-neutral-200);
+    border-radius: 8px;
+    background: var(--fnk-color-card);
+    padding: 6px 8px;
+  }
+
+  .sup-responsive-table td {
+    display: flex;
+    min-height: 52px;
+    height: auto;
+    flex-direction: column;
+    align-items: flex-end;
+    justify-content: center;
+    padding: 7px 4px;
+    text-align: right;
+    white-space: normal;
+  }
+
+  .sup-responsive-table td::before {
+    content: attr(data-label);
+    align-self: stretch;
+    margin-bottom: 3px;
+    color: var(--fnk-neutral-500);
+    font-size: 12px;
+    font-weight: 600;
+    line-height: 1.2;
+    text-align: right;
+  }
+
+  .sup-responsive-table td:first-child,
+  .sup-responsive-table td:nth-child(2) {
+    text-align: left;
+  }
+
+  .sup-responsive-table--holdings td:nth-child(4),
+  .sup-responsive-table--trades td:nth-child(3),
+  .sup-responsive-table--trades td:nth-child(6) {
+    text-align: right;
+  }
+
+  .sup-responsive-table td:first-child::before,
+  .sup-responsive-table td:nth-child(2)::before {
+    text-align: left;
+  }
+
+  .sup-responsive-table td:nth-child(2) {
+    align-items: flex-start;
+  }
+
+  .sup-responsive-table .sup-responsive-name,
+  .sup-responsive-table .sup-responsive-sub,
+  .sup-responsive-table .sup-responsive-code {
+    max-width: 100%;
+  }
+
+  .sup-responsive-sector {
+    max-width: 100%;
+  }
+
+  .sup-responsive-link {
+    width: 100%;
+    min-height: 44px;
+  }
+
+  .sup-guru-stat-strip {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .sup-guru-stat-strip > div:nth-child(odd) {
+    border-left: 0;
+  }
+
+  .sup-guru-stat-strip > div:nth-child(n + 3) {
+    border-top: 1px solid var(--fnk-neutral-100);
+  }
+
+  .sup-guru-stat-strip > div:nth-child(even) {
+    border-left: 1px solid var(--fnk-neutral-100);
+  }
+}
+
+/* SEC and Back remain reachable at the same physical size on phones and
+ * coarse tablets. */
+@media (pointer: coarse), (any-pointer: coarse) {
+  .sup-guru-back,
+  .sup-guru-sec-link {
+    min-height: 44px;
+    display: inline-flex;
+    align-items: center;
+  }
+}
+
+/* Graph Network panel: canvas + selected/common side rail. Token-pure
+ * (var(--fnk-*) / var(--font-*) only, no raw colors, no gradients).
+ * Investor cards carry the Okabe-Ito blue class, ticker nodes the
+ * brand accent only when selected. */
+
+.grn-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 8fr) minmax(0, 4fr);
+  gap: 16px;
+  align-items: start;
+}
+
+.grn-side {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  min-width: 0;
+}
+
+.grn-canvas {
+  width: 100%;
+  height: auto;
+  display: block;
+}
+
+.grn-node {
+  cursor: pointer;
+}
+
+.grn-node:focus-visible {
+  outline: 2px solid var(--fnk-brand-interactive);
+  outline-offset: 3px;
+}
+
+.grn-inv-card {
+  fill: var(--fnk-color-card);
+  stroke: var(--fnk-neutral-200);
+}
+
+.grn-inv-unprofiled {
+  stroke-dasharray: 4 3;
+}
+
+.grn-inv-label {
+  font-size: 12px;
+  font-weight: 600;
+  fill: var(--fnk-neutral-900);
+}
+
+.grn-inv-sub {
+  font-size: 12px;
+  fill: var(--fnk-neutral-500);
+}
+
+.grn-stale-dot {
+  fill: var(--fnk-color-warn);
+}
+
+.grn-tick-circle {
+  fill: var(--fnk-color-card);
+  stroke: var(--fnk-neutral-900);
+  stroke-width: 1.5;
+}
+
+.grn-tick-selected {
+  fill: var(--fnk-brand-interactive);
+  stroke: var(--fnk-brand-interactive);
+}
+
+.grn-tick-label {
+  font-size: 12px;
+  font-weight: 600;
+  fill: var(--fnk-neutral-900);
+  font-family: var(--font-jetbrains-mono), "SF Mono", Menlo, monospace;
+}
+
+.grn-tick-sub {
+  font-size: 12px;
+  fill: var(--fnk-neutral-500);
+}
+
+.grn-tick-label-selected,
+.grn-tick-sub.grn-tick-label-selected {
+  fill: var(--fnk-color-card);
+}
+
+.grn-cap {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+  margin: 0;
+  padding: 8px 16px;
+  font-size: 12px;
+  color: var(--fnk-neutral-500);
+}
+
+.grn-cap-note {
+  flex-shrink: 0;
+}
+
+.grn-head-meta {
+  font-size: 12px;
+  color: var(--fnk-neutral-500);
+  white-space: nowrap;
+}
+
+.grn-kv-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.grn-kv {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  min-height: 34px;
+  padding: 0 16px;
+  border-top: 1px solid var(--fnk-neutral-100);
+}
+
+.grn-kv-list > li:first-child > .grn-kv,
+.grn-kv-list > .grn-kv:first-child {
+  border-top: 0;
+}
+
+.grn-kv-action {
+  width: 100%;
+  background: none;
+  border-left: 0;
+  border-right: 0;
+  border-bottom: 0;
+  cursor: pointer;
+  text-align: left;
+  font: inherit;
+  color: inherit;
+}
+
+.grn-kv-action[aria-pressed="true"] .grn-ticker {
+  color: var(--fnk-brand-interactive);
+}
+
+.grn-kv-name {
+  color: var(--fnk-neutral-500);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.grn-kv-num {
+  font-weight: 600;
+  color: var(--fnk-neutral-900);
+  flex-shrink: 0;
+}
+
+.grn-kv-sub {
+  color: var(--fnk-neutral-500);
+  margin-left: 8px;
+  font-size: 12px;
+}
+
+.grn-ticker {
+  color: var(--fnk-neutral-900);
+  font-family: var(--font-jetbrains-mono), "SF Mono", Menlo, monospace;
+}
+
+.grn-side-empty {
+  margin: 0;
+  padding: 12px 16px;
+  font-size: 12px;
+  color: var(--fnk-neutral-500);
+}
+
+.grn-hint {
+  margin: 0;
+  padding: 0 4px;
+  font-size: 12px;
+  color: var(--fnk-neutral-500);
+}
+
+.grn-side-note {
+  margin: 0;
+  padding: 8px 16px 12px;
+  font-size: 12px;
+  color: var(--fnk-neutral-500);
+}
+
+/* Full-width graph section below the Holders grid (InvestorGraph artboard). */
+
+.sup-graph-full {
+  margin-top: 16px;
+}
+
+/* Compact right-rail teaser (Superinvestors artboard): preview + CTA. */
+
+.grn-teaser-cta {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--fnk-brand-interactive);
+  white-space: nowrap;
+}
+
+/* Phone: 그래프 보기 drew 17px tall; 24px is the target minimum (WCAG 2.2 AA 2.5.8). */
+@media (max-width: 767px) {
+  .grn-teaser-cta {
+    display: inline-flex;
+    align-items: center;
+    min-height: 24px;
+  }
+}
+
+.grn-teaser-top {
+  margin: 0;
+  padding: 4px 16px 0;
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.grn-teaser-pairs {
+  margin: 8px 0 0;
+}
+
+.grn-teaser-cap {
+  margin: 0;
+  padding: 8px 16px;
+  font-size: 12px;
+  color: var(--fnk-neutral-500);
+}
+
+.grn-teaser-retry {
+  background: none;
+  border: 0;
+  padding: 0;
+  margin-left: 8px;
+  font: inherit;
+  font-weight: 600;
+  color: var(--fnk-brand-interactive);
+  cursor: pointer;
+}
+
+@media (max-width: 900px) {
+  .grn-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+/* V3 signal tab: doors become tabs (signal default), hero signal feed. */
+
+.sup-tabs {
+  overflow-x: auto;
+  max-width: 100%;
+  background: var(--fnk-neutral-100);
+  border-radius: 8px;
+  padding: 2px;
+}
+
+.sup-tablist {
+  display: flex;
+  gap: 2px;
+  min-width: max-content;
+}
+
+.sup-tab {
+  height: 36px;
+  padding: 0 16px;
+  display: inline-flex;
+  align-items: center;
+  border: 0;
+  border-radius: 6px;
+  background: transparent;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--fnk-neutral-500);
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.sup-tab.on {
+  background: var(--fnk-brand-interactive);
+  color: var(--fnk-color-white);
+}
+
+.sup-tab:focus-visible {
+  outline: 2px solid var(--fnk-brand-interactive);
+  outline-offset: 2px;
+}
+
+/* Follow filter above the hero: top-conviction roster vs whole cohort. */
+
+.sup-follow-row {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin-bottom: 12px;
+}
+
+.sup-follow-label {
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  color: var(--fnk-neutral-500);
+}
+
+.sup-follow-toggle {
+  display: flex;
+  gap: 2px;
+  background: var(--fnk-neutral-100);
+  padding: 2px;
+  border-radius: 8px;
+}
+
+.sup-follow-btn {
+  min-height: 32px;
+  padding: 0 12px;
+  display: inline-flex;
+  align-items: center;
+  border: 0;
+  border-radius: 6px;
+  background: transparent;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--fnk-neutral-500);
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.sup-follow-btn.on {
+  background: var(--fnk-brand-interactive);
+  color: var(--fnk-color-white);
+}
+
+/* Hero: three ranked lists + who-holds cell. */
+
+.sup-signal-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 12px;
+  align-items: start;
+}
+
+.sup-signal-teaser {
+  margin-top: 16px;
+}
+
+.sup-srow {
+  border-top: 1px solid var(--fnk-neutral-100);
+  border-left: 0;
+  border-right: 0;
+  border-bottom: 0;
+  padding: 10px 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  min-height: 44px;
+  justify-content: center;
+  width: 100%;
+  background: none;
+  font: inherit;
+  color: inherit;
+  text-align: left;
+  cursor: pointer;
+  transition: background-color 150ms ease;
+}
+
+.sup-srow:hover {
+  background: var(--fnk-neutral-50);
+}
+
+.sup-srow:focus-visible {
+  outline: 2px solid var(--fnk-brand-interactive);
+  outline-offset: -2px;
+}
+
+.sup-unfiltered {
+  padding: 10px 12px;
+  font-size: 12px;
+  margin: 0;
+}
+
+.sup-srow-top {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.sup-srow-ticker {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--fnk-neutral-900);
+}
+
+.sup-srow-count {
+  margin-left: auto;
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--fnk-neutral-900);
+}
+
+.sup-srow-who {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  min-height: 24px;
+}
+
+.sup-srow-names {
+  font-size: 12px;
+  color: var(--fnk-neutral-500);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.sup-srow-change {
+  font-size: 12px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.sup-avatars {
+  display: inline-flex;
+  align-items: center;
+  flex-shrink: 0;
+}
+
+.sup-av {
+  width: 22px;
+  height: 22px;
+  border-radius: 999px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 12px;
+  font-weight: 700;
+  margin-left: -6px;
+  border: 1.5px solid var(--fnk-color-white);
+}
+
+.sup-av:first-child {
+  margin-left: 0;
+}
+
+.sup-av-more {
+  background: var(--fnk-neutral-100);
+  color: var(--fnk-neutral-500);
+  border: 1.5px solid var(--fnk-color-white);
+  font-size: 12px;
+}
+
+.sup-av-unknown {
+  background: transparent;
+  border: 1.5px dashed var(--fnk-neutral-200);
+  color: var(--fnk-neutral-500);
+  margin-left: 0;
+}
+
+.sup-band-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 12px;
+  flex-wrap: wrap;
+}
+
+.sup-epills {
+  display: inline-flex;
+  gap: 4px;
+  margin-left: auto;
+}
+
+.sup-epill {
+  display: inline-flex;
+  align-items: center;
+  height: 16px;
+  padding: 0 5px;
+  border-radius: 4px;
+  font-size: 12px;
+  font-weight: 700;
+  background: var(--fnk-neutral-100);
+  color: var(--fnk-neutral-500);
+  white-space: nowrap;
+}
+
+.sup-up {
+  color: var(--fnk-color-gain);
+}
+
+.sup-dn {
+  color: var(--fnk-color-loss);
+}
+
+/* Who-holds search cell + stocks tab. */
+
+.sup-whoholds-search {
+  padding: 10px 14px 6px;
+}
+
+.sup-whoholds-input {
+  width: 100%;
+  height: 44px;
+  padding: 0 10px;
+  border: 1px solid var(--fnk-neutral-200);
+  border-radius: 6px;
+  font-size: 12px;
+  color: var(--fnk-neutral-900);
+  background: var(--fnk-color-white);
+}
+
+.sup-whoholds-suggest {
+  display: flex;
+  gap: 4px;
+  flex-wrap: wrap;
+  margin-top: 6px;
+}
+
+.sup-whoholds-chip {
+  min-height: 32px;
+  padding: 0 10px;
+  border: 1px solid var(--fnk-neutral-200);
+  border-radius: 999px;
+  background: var(--fnk-color-white);
+  font-size: 12px;
+  color: var(--fnk-brand-interactive);
+  cursor: pointer;
+}
+
+.sup-whoholds-head {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  padding: 4px 14px 6px;
+}
+
+.sup-whoholds-ticker {
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--fnk-neutral-900);
+}
+
+.sup-whoholds-facts {
+  margin: 0;
+  padding: 0 14px 12px;
+  display: flex;
+  flex-direction: column;
+}
+
+.sup-whoholds-facts > div {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  min-height: 44px;
+  font-size: 12px;
+  border-top: 1px solid var(--fnk-neutral-100);
+}
+
+.sup-whoholds-facts > div:first-child {
+  border-top: 0;
+}
+
+.sup-whoholds-facts dt {
+  color: var(--fnk-neutral-500);
+}
+
+.sup-whoholds-facts dd {
+  margin: 0;
+  font-weight: 600;
+  color: var(--fnk-neutral-900);
+}
+
+.sup-whoholds-list {
+  list-style: none;
+  margin: 0;
+  padding: 0 14px 12px;
+}
+
+.sup-whoholds-list li {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 44px;
+  font-size: 12px;
+  border-top: 1px solid var(--fnk-neutral-100);
+}
+
+.sup-whoholds-name {
+  min-width: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.sup-whoholds-list li .tabular-nums {
+  margin-left: auto;
+  white-space: nowrap;
+}
+
+.sup-whoholds-list li .sup-mute {
+  margin-left: 0;
+}
+
+.sup-grand {
+  padding: 4px 14px 12px;
+}
+
+.sup-grand-note {
+  font-size: 12px;
+  color: var(--fnk-neutral-500);
+  margin: 0 0 6px;
+}
+
+.sup-grand-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 12px;
+}
+
+.sup-grand-table th,
+.sup-grand-table td {
+  text-align: right;
+  padding: 0 4px;
+  height: 44px;
+  border-top: 1px solid var(--fnk-neutral-100);
+  white-space: nowrap;
+}
+
+.sup-grand-table thead th {
+  border-top: 0;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--fnk-neutral-500);
+}
+
+.sup-grand-table th:first-child,
+.sup-grand-table td:first-child {
+  text-align: left;
+  padding-left: 0;
+}
+
+.sup-grand-ticker {
+  background: none;
+  border: 0;
+  padding: 0;
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--fnk-brand-interactive);
+  cursor: pointer;
+  min-height: 44px;
+}
+
+/* The ticker buttons are 44px tall but only as wide as the ticker (18px for
+   ATI); the whole 44px square is now the target, text still left-aligned. */
+.sup-grand-ticker {
+  min-width: 44px;
+  text-align: left;
+}
+
+/* Graph tab mobile replacement: ranked list instead of the canvas. */
+
+.sup-graph-ranklist {
+  display: none;
+}
+
+/* B7 narrow-desktop: 4-col hero clips near 1100px — 2x2 from 1199px down. */
+@media (max-width: 1199px) {
+  .sup-signal-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 760px) {
+  .sup-signal-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .sup-tab {
+    min-height: 44px;
+  }
+
+  .sup-follow-btn {
+    min-height: 44px;
+  }
+
+  .sup-follow-row {
+    justify-content: flex-start;
+  }
+
+  .sup-graph-full .grn-canvas {
+    display: none;
+  }
+
+  .sup-graph-ranklist {
+    display: block;
+    background: var(--fnk-color-white);
+    border: 1px solid var(--fnk-neutral-200);
+    border-radius: 8px;
+    overflow: hidden;
+    margin-top: 12px;
+  }
+}
+
+@media (max-width: 600px) {
+  /* Six primary tabs remain visible without horizontal scrolling on phones. */
+  .fnk-shell .sup-tabs.scroll-hint-x {
+    overflow-x: visible;
+    box-shadow: none;
+  }
+
+  .fnk-shell .sup-tabs.scroll-hint-x::after {
+    display: none;
+  }
+
+  .sup-tablist {
+    width: 100%;
+    min-width: 0;
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  .sup-tab {
+    width: 100%;
+    min-height: 44px;
+    justify-content: center;
+    padding-inline: 8px;
+  }
+}
+
+/* Touch tablets use measured 44px controls for navigation and key detail
+ * actions. Fine-pointer desktop keeps the compact tabs. */
+@media (pointer: coarse) and (min-width: 761px), (any-pointer: coarse) and (min-width: 761px) {
+  .sup-tab,
+  .sup-guru-back,
+  .sup-guru-sec-link,
+  .sup-responsive-table a,
+  .sup-responsive-link {
+    min-height: 44px;
+  }
+
+  .sup-tab,
+  .sup-guru-back,
+  .sup-guru-sec-link,
+  .sup-responsive-table a,
+  .sup-responsive-link {
+    display: inline-flex;
+    align-items: center;
+  }
+
+  .sup-sort-toggle {
+    gap: 6px;
+    flex-wrap: wrap;
+  }
+
+  .sup-sort-btn {
+    min-height: 44px;
+  }
+}
+
+/* Summary strip — visual layer over the hero numbers: top-4 style-group
+ * cells plus the top-4 overlap band. Tokens only, no gradients. */
+.sup-sum {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.sup-sum-note {
+  margin: 0;
+  font-size: 12px;
+  color: var(--fnk-neutral-500);
+}
+
+.sup-sum-legend {
+  margin: 0;
+  font-size: 12px;
+  color: var(--fnk-neutral-500);
+}
+
+@media (max-width: 600px) {
+  /* Four ticker/count pairs wrap to two lines at phone widths. Reserve the
+   * same text-height for the loading status and the ready legend. */
+  .sup-sum-legend {
+    min-height: 2lh;
+  }
+}

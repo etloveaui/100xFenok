@@ -70,6 +70,11 @@ export async function loadErpHistoryModel(nowIso?: string): Promise<ErpHistoryMo
   const sp500Doc = await loadSummary<Sp500Point[]>("indices/sp500.json");
   const sp500Annual = yearEndSp500(Array.isArray(sp500Doc) ? sp500Doc : []);
 
+  // Empty years must not report ready: a year map with no usable ERP/T-bond
+  // points is a failed load, not a ready chart (the panel reports ready from
+  // any non-null model).
+  if (erpFcfe.length === 0 && erpDdm.length === 0 && tbond.length === 0) return null;
+
   const available = Object.keys(doc.years).length;
   return {
     erpFcfe: sortSeriesByDate(erpFcfe),

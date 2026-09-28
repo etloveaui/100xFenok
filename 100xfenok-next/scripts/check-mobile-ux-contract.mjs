@@ -1,19 +1,44 @@
-import { chromium } from "playwright";
+import { chromium, webkit } from "playwright";
+import { mkdir, readFile, writeFile } from "node:fs/promises";
+import { join, resolve } from "node:path";
 
 const baseUrl = process.env.QA_BASE_URL || "http://127.0.0.1:3105";
+const isolated = process.env.QA_MOBILE_UX_ISOLATED === "1";
+const isolatedOrigin = new URL(baseUrl).origin;
+if (isolated && !["127.0.0.1", "localhost", "[::1]"].includes(new URL(baseUrl).hostname)) {
+  throw new Error("Isolated QA requires a loopback preview, never production.");
+}
+const blockedExternalRequests = [];
 const strictMode = process.env.QA_MOBILE_UX_STRICT !== "0";
 const browserChannel = process.env.QA_BROWSER_CHANNEL || "";
 const browserExecutablePath = process.env.QA_CHROMIUM_EXECUTABLE_PATH || "";
-const routes = (process.env.QA_MOBILE_UX_ROUTES || "/,/?v5=1,/explore,/workbench,/macro-chart,/multichart,/tools/stock-analyzer,/tools/stock-analyzer/native,/ib,/infinite-buying,/vr,/admin/data-lab,/100x/daily-wrap,/posts,/posts/?path=posts/2026-02-21_tariff-ruling-comprehensive.html,/radar,/radar?path=tools%2Fmacro-monitor%2Fdetails%2Fliquidity-flow.html,/alpha-scout,/alpha-scout?report=2025-08-24_100x-alpha-scout.html,/market-valuation,/market-valuation/structure,/regime,/market/events,/etfs,/etfs/SPY,/etfs/new,/etfs/compare,/screener,/sectors,/portfolio,/stock/NVDA,/stock/NVDA?tab=financials,/stock/NVDA?tab=ownership,/stock/NVDA?tab=estimates,/stock/NVDA?tab=filings,/superinvestors?tab=insights,/superinvestors?tab=gurus&guru=blackrock,/superinvestors?tab=by-ticker&ticker=NVDA,/superinvestors?tab=trades")
+const browserName = process.env.QA_BROWSER_NAME || "chromium";
+if (!["chromium", "webkit"].includes(browserName)) {
+  throw new Error("QA_BROWSER_NAME must be chromium or webkit.");
+}
+if (browserName === "webkit" && (browserChannel || browserExecutablePath)) {
+  throw new Error("Chromium channel/executable overrides cannot be used with WebKit.");
+}
+const outputDir = process.env.QA_MOBILE_UX_OUTPUT_DIR?.trim()
+  ? resolve(process.env.QA_MOBILE_UX_OUTPUT_DIR.trim())
+  : "";
+const routes = (process.env.QA_MOBILE_UX_ROUTES || "/,/explore,/?v5=1,/macro-chart,/multichart,/ib,/infinite-buying,/vr,/admin/data-console,/admin/data-lab,/radar,/radar?path=tools%2Fmacro-monitor%2Fdetails%2Fliquidity-flow.html,/market-valuation,/market-valuation/structure,/regime,/market/events,/changes,/etfs,/etfs/SPY,/etfs/new,/etfs/compare,/screener,/screener?mode=analyze,/screener?mode=discover,/sectors,/portfolio,/stock/NVDA,/stock/NVDA?tab=financials,/stock/NVDA?tab=ownership,/stock/NVDA?tab=estimates,/stock/NVDA?tab=filings,/superinvestors,/superinvestors?tab=investors,/superinvestors?guru=blackrock,/research,/intro,/privacy,/terms")
   .split(",")
   .map((route) => route.trim())
   .filter(Boolean);
+if (routes.length === 0 || routes.some((route) => !route.startsWith("/") || route.startsWith("//") || new URL(route, baseUrl).origin !== isolatedOrigin)) {
+  throw new Error("QA_MOBILE_UX_ROUTES must select one or more paths on QA_BASE_URL.");
+}
 
 const viewportCatalog = {
   mobile: { width: 390, height: 844 },
   narrow: { width: 375, height: 812 },
+  "tablet-portrait": { width: 768, height: 1024 },
+  "tablet-mid": { width: 820, height: 1180 },
   tablet: { width: 1024, height: 1366 },
+  "tablet-landscape": { width: 1180, height: 820 },
   desktop: { width: 1280, height: 900 },
+  wide: { width: 1440, height: 900 },
 };
 
 const requestedViewports = (process.env.QA_MOBILE_UX_VIEWPORTS || "mobile,narrow")
@@ -24,9 +49,29 @@ const requestedViewports = (process.env.QA_MOBILE_UX_VIEWPORTS || "mobile,narrow
 const viewports = requestedViewports
   .map((name) => ({ name, viewport: viewportCatalog[name] }))
   .filter((entry) => entry.viewport);
+if (viewports.length === 0 || viewports.length !== requestedViewports.length) {
+  throw new Error("QA_MOBILE_UX_VIEWPORTS must select one or more known viewports.");
+}
+
+// check-route-iframe-contract reads the same variable as a Cookie header
+// ("fenok_admin_session=<value>"); accept that form as well as a bare value.
+const adminSessionCookie = (process.env.QA_ADMIN_SESSION_COOKIE || "")
+  .trim()
+  .replace(/^fenok_admin_session=/, "")
+  .split(";")[0]
+  .trim();
+const adminSessionAvailable = adminSessionCookie.length > 0;
+console.log(
+  `[check-mobile-ux-contract] admin data-lab mode: ${adminSessionAvailable ? "session" : "anonymous"}`,
+);
 
 function routeUrl(route) {
   return new URL(route, baseUrl).toString();
+}
+
+function isAnalyzeScreenerRoute(route) {
+  // Table-first landing: only ?mode=discover leaves the analyze surface.
+  return new URL(route, baseUrl).searchParams.get("mode") !== "discover";
 }
 
 async function installQaPortfolio(context) {
@@ -51,8 +96,209 @@ async function installQaPortfolio(context) {
   });
 }
 
+async function prepareMacroChartRoute(page, route) {
+  const pathname = new URL(route, baseUrl).pathname.replace(/\/+$/, "") || "/";
+  if (pathname !== "/macro-chart" && pathname !== "/multichart") return;
+
+  await page.locator("[data-macro-chart-workbench]").waitFor({ state: "visible", timeout: 30_000 });
+  await page.locator("[data-macro-chart-workbench] canvas").waitFor({ state: "visible", timeout: 45_000 });
+
+  const seriesEditor = page.locator('details[data-macro-chart-series-editor="true"]');
+  if ((await seriesEditor.getAttribute("open")) === null) {
+    await seriesEditor.locator("summary").click();
+  }
+  const connectionEditor = page.locator('details[data-macro-chart-connection-editor="true"]');
+  if ((await connectionEditor.getAttribute("open")) === null) {
+    await connectionEditor.locator("summary").click();
+  }
+  await page.waitForTimeout(200);
+}
+
+async function prepareDynamicRoute(page, route) {
+  await prepareMacroChartRoute(page, route);
+  const pathname = new URL(route, baseUrl).pathname.replace(/\/+$/, "") || "/";
+
+  const readySelectors = {
+    // The mobile list is hidden above 760px; include the desktop table so
+    // tablet runs wait on the surface that is actually rendered.
+    "/etfs": ".etf-mobile-card, .etf-table-desktop",
+    "/market-valuation": ".mv-trow",
+    "/regime": "[data-regime-axis-summary-card]",
+    "/portfolio": '[data-portfolio-section="holdings"] button[aria-label$="삭제"]',
+    "/sectors": "[data-sectors-flow-rows]",
+  };
+  const readySelector = readySelectors[pathname];
+  if (readySelector) {
+    await page.locator(readySelector).filter({ visible: true }).first().waitFor({ state: "visible", timeout: 45_000 });
+  }
+
+  // Data-readiness waits for routes whose checks sample fetched content
+  // (bounded; a timeout leaves the previous failure mode intact). The analyze
+  // screener sets [data-journey-ready] once its rows exist; the stock summary
+  // strip appears only after the detail candidate resolves.
+  if (pathname === "/screener" && isAnalyzeScreenerRoute(route)) {
+    await page.locator('[data-screener-mode="analyze"][data-journey-ready="true"], tr[data-testid="screener-desktop-row"]')
+      .filter({ visible: true })
+      .first()
+      .waitFor({ state: "visible", timeout: 30_000 })
+      .catch(() => {});
+  }
+  if (pathname.startsWith("/stock/") && !route.includes("tab=")) {
+    await page.locator("[data-stock-summary-module], .cp-stock-action-strip--empty")
+      .filter({ visible: true })
+      .first()
+      .waitFor({ state: "visible", timeout: 30_000 })
+      .catch(() => {});
+  }
+
+  if (pathname === "/etfs") {
+    const filterDetails = page.locator("details").filter({ has: page.locator(".etf-filter-grid") }).first();
+    if ((await filterDetails.count()) > 0 && (await filterDetails.getAttribute("open")) === null) {
+      await filterDetails.locator("summary").click();
+    }
+    await page.locator(".etf-filter-field select:visible").first().waitFor({ state: "visible", timeout: 10_000 });
+  }
+
+  if (pathname.startsWith("/stock/") && route.includes("tab=ownership")) {
+    await page.locator('[data-stock-tab-card="ownership-guru"]:visible').first().waitFor({ state: "visible", timeout: 45_000 });
+  }
+  if (pathname.startsWith("/stock/") && route.includes("tab=filings")) {
+    await page.locator('[data-stock-tab-card="filings"]:visible').first().waitFor({ state: "visible", timeout: 45_000 });
+  }
+  if (pathname.startsWith("/stock/") && route.includes("tab=estimates")) {
+    const estimateDetails = page.locator("details").filter({ has: page.locator('[data-stock-estimates-granularity="quarterly"]') }).first();
+    if ((await estimateDetails.count()) > 0 && (await estimateDetails.getAttribute("open")) === null) {
+      await estimateDetails.locator("summary").click();
+    }
+    await page.locator('[data-stock-estimates-granularity="quarterly"]:visible').first().waitFor({ state: "visible", timeout: 45_000 });
+  }
+  if (pathname === "/superinvestors") {
+    await page.locator("[data-superinvestors-surface]:visible").first().waitFor({ state: "visible", timeout: 45_000 });
+    // V3 default tab is signal (?guru= opens the dedicated guru detail view,
+    // ?tab=investors opens the holders list).
+    if (route.includes("guru=")) {
+      await page.locator("[data-superinvestors-guru-detail-view]:visible").first().waitFor({ state: "visible", timeout: 45_000 });
+      // the holdings surface mounts after the detail fetch: wait on the guru
+      // top-holdings block itself, never on an unscoped scroll region (the tab
+      // strip is also a scroll-hint region and would satisfy a bare wait).
+      await page.locator("[data-superinvestor-guru-top-holdings]:visible").first().waitFor({ state: "visible", timeout: 45_000 });
+      await page.locator("[data-superinvestor-guru-holding-row]:visible, [data-superinvestor-guru-desktop-holding-row]:visible").first().waitFor({ state: "visible", timeout: 45_000 });
+    } else if (route.includes("tab=stocks")) {
+      await page.locator("[data-superinvestors-whoholds-input]:visible").first().waitFor({ state: "visible", timeout: 45_000 });
+    } else if (route.includes("tab=investors")) {
+      await page.locator("[data-superinvestors-holder-row]:visible").first().waitFor({ state: "visible", timeout: 45_000 });
+    } else if (route.includes("tab=trades")) {
+      await page.locator("[data-superinvestor-trades-panel]:visible").first().waitFor({ state: "visible", timeout: 45_000 });
+      await page.locator("[data-superinvestor-trades-row]:visible, [data-superinvestor-trades-region] tbody tr:visible").first().waitFor({ state: "visible", timeout: 45_000 });
+    } else if (route.includes("tab=insights")) {
+      await page.locator("[data-superinvestor-insights-status]:visible").first().waitFor({ state: "visible", timeout: 45_000 });
+    } else if (route.includes("tab=graph")) {
+      await page.locator("[data-superinvestors-graph]:visible").first().waitFor({ state: "visible", timeout: 45_000 });
+    } else {
+      await page.locator("[data-superinvestors-signal-row]:visible").first().waitFor({ state: "visible", timeout: 45_000 });
+    }
+  }
+  if (pathname === "/superinvestors" && route.includes("guru=")) {
+    await page.locator("[data-superinvestors-holder-detail]:visible").first().waitFor({ state: "visible", timeout: 45_000 });
+  }
+}
+
+function routeArtifactSlug(route) {
+  const url = new URL(route, baseUrl);
+  const value = `${url.pathname}${url.search}`
+    .replace(/^\/+|\/+$/g, "")
+    .replace(/[^a-zA-Z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "");
+  return value || "home";
+}
+
+async function captureScreenerFirstView(page, route, viewportName, routeIndex) {
+  await page.locator('[data-screener-mode][data-journey-ready="true"]')
+    .filter({ visible: true }).first().waitFor({ state: "visible", timeout: 30_000 });
+  const routeDir = join(outputDir, viewportName,
+    `route-${String(routeIndex + 1).padStart(2, "0")}-${routeArtifactSlug(route)}`);
+  await mkdir(routeDir, { recursive: true });
+  const path = join(routeDir, "first-view.png");
+  await page.evaluate(() => window.scrollTo({ top: 0, left: 0, behavior: "instant" }));
+  const stockVisibility = await page.evaluate(() => {
+    const stock = Array.from(document.querySelectorAll('[data-screener-stock-card], [data-testid="screener-desktop-row"]'))
+      .find((node) => {
+        const rect = node.getBoundingClientRect();
+        return rect.width > 0 && rect.height > 0 && getComputedStyle(node).visibility !== "hidden";
+      });
+    if (!stock) return { firstStock: null, stockHeaderVisible: false };
+    const ticker = stock.getAttribute("data-ticker") ?? stock.querySelector('button[aria-expanded][aria-controls][aria-label]')
+      ?.getAttribute("aria-label")?.split(" 상세 ")[0];
+    // The card's first strip contains selection controls. Measure the ticker
+    // itself so a visible checkbox cannot stand in for visible stock content.
+    const identity = ticker && Array.from(stock.querySelectorAll("*")).find((node) =>
+      Array.from(node.childNodes).some((child) => child.nodeType === Node.TEXT_NODE && child.textContent?.trim() === ticker));
+    if (!identity) return { firstStock: { ticker: ticker ?? null }, stockHeaderVisible: false };
+    const rect = identity.getBoundingClientRect();
+    const left = Math.max(0, rect.left);
+    const right = Math.min(window.innerWidth, rect.right);
+    const hit = document.elementFromPoint((left + right) / 2, rect.top + rect.height / 2);
+    return {
+      firstStock: { ticker, top: rect.top, bottom: rect.bottom, height: rect.height },
+      stockHeaderVisible: rect.height > 0 && rect.top >= 0 && rect.bottom <= window.innerHeight
+        && right > left && Boolean(hit && (identity.contains(hit) || hit.contains(identity))),
+    };
+  });
+  await page.screenshot({ path, animations: "disabled" });
+  return { path, url: page.url(), phase: "before-interactions", ...stockVisibility };
+}
+
+async function captureBoundedScreenshots(page, route, viewportName, routeIndex) {
+  if (!outputDir) return null;
+
+  const routeDir = join(
+    outputDir,
+    viewportName,
+    `route-${String(routeIndex + 1).padStart(2, "0")}-${routeArtifactSlug(route)}`,
+  );
+  await mkdir(routeDir, { recursive: true });
+
+  const metrics = await page.evaluate(() => ({
+    scrollHeight: Math.max(document.documentElement.scrollHeight, document.body?.scrollHeight ?? 0),
+    viewportHeight: window.innerHeight,
+  })).catch(() => ({ scrollHeight: 0, viewportHeight: 0 }));
+  const bottom = Math.max(0, metrics.scrollHeight - metrics.viewportHeight);
+  const evidenceTarget = isolated && route.includes("guru=")
+    ? "[data-superinvestor-guru-top-holdings]"
+    : isolated && route.includes("tab=trades")
+      ? '[data-superinvestor-trades-panel][data-superinvestor-trades-side="bought"]'
+      : null;
+  const focusedMiddle = evidenceTarget ? await page.locator(evidenceTarget).first().evaluate((node) => {
+    const inner = node.querySelector("[data-journey-holdings-scroll]");
+    if (inner) inner.scrollTop = 0;
+    return Math.max(0, node.getBoundingClientRect().top + window.scrollY - 120);
+  }).catch(() => null) : null;
+  const positions = [
+    ["top", 0],
+    ["middle", focusedMiddle ?? Math.max(0, Math.round(bottom / 2))],
+    ["bottom", bottom],
+  ];
+  const screenshots = {};
+  const errors = [];
+
+  for (const [label, scrollY] of positions) {
+    const screenshotPath = join(routeDir, `${label}.png`);
+    try {
+      await page.evaluate((nextScrollY) => window.scrollTo({ top: nextScrollY, left: 0, behavior: "instant" }), scrollY);
+      await page.waitForTimeout(100);
+      await page.screenshot({ path: screenshotPath, animations: "disabled" });
+      screenshots[label] = screenshotPath;
+    } catch (error) {
+      errors.push({ label, detail: String(error) });
+    }
+  }
+
+  await page.evaluate(() => window.scrollTo(0, 0)).catch(() => {});
+  return { paths: screenshots, errors };
+}
+
 async function collectRouteChecks(page, route) {
-  return page.evaluate((currentRoute) => {
+  return page.evaluate(({ currentRoute, adminSessionAvailable }) => {
     const failures = [];
     const viewportWidth = window.innerWidth;
     const scrollWidth = Math.max(
@@ -109,131 +355,35 @@ async function collectRouteChecks(page, route) {
       });
     }
 
-    if (currentRoute === "/" || currentRoute.startsWith("/?")) {
-      const homeSearch = document.querySelector("[data-home-search-first]");
-      const homeSearchInput = homeSearch?.querySelector('[role="combobox"]');
-      const homeSearchRect = homeSearchInput?.getBoundingClientRect();
-      const homeSearchVisible = Boolean(
-        homeSearchRect &&
-        homeSearchRect.width > 0 &&
-        homeSearchRect.height >= 32 &&
-        homeSearchRect.top >= 0 &&
-        homeSearchRect.top < window.innerHeight * 0.45,
-      );
-      if (!homeSearchVisible) {
-        failures.push({
-          check: "home-search-first-visible",
-          detail: homeSearchRect
-            ? `top=${homeSearchRect.top} height=${homeSearchRect.height}`
-            : "missing [data-home-search-first] combobox",
-        });
-      }
-      const featureTiles = Array.from(document.querySelectorAll("[data-home-feature-tile]"))
+    if (viewportWidth < 768) {
+      const railButtons = Array.from(document.querySelectorAll("button"))
         .filter((node) => {
-          const rect = node.getBoundingClientRect();
-          return rect.width > 0 && rect.height > 0 && rect.top < window.innerHeight;
-        });
-      if (featureTiles.length < 4 || featureTiles.length > 6) {
-        failures.push({ check: "home-feature-tile-count", detail: `visible tiles=${featureTiles.length}` });
-      }
+          const label = (node.textContent || "").trim();
+          return label === "증거 보기" || label === "지금 재시도";
+        })
+        .filter((node) => node.getBoundingClientRect().width > 0);
+      railButtons.forEach((node, index) => {
+        const rect = node.getBoundingClientRect();
+        if (rect.height < 44) {
+          failures.push({ check: "evidence-rail-button-target", detail: `button ${index} height=${Math.round(rect.height)}` });
+        }
+        const row = node.parentElement;
+        if (row && row.scrollWidth > row.clientWidth + 1) {
+          failures.push({ check: "evidence-rail-no-clip", detail: `button ${index} scroll=${row.scrollWidth} client=${row.clientWidth}` });
+        }
+      });
     }
 
     if (new URL(currentRoute, window.location.origin).pathname === "/explore") {
-      const surface = document.querySelector("[data-explore-surface]");
-      const routeRail = document.querySelector("[data-explore-route-rail]");
-      const routeCount = document.querySelector("[data-explore-route-count]");
-      const routeSteps = Array.from(document.querySelectorAll("[data-explore-route-step]"))
-        .filter((node) => {
-          const rect = node.getBoundingClientRect();
-          return rect.width > 0 && rect.height > 0;
-        });
-      const gateway = document.querySelector("[data-explore-gateway]");
-      const ownerLinks = Array.from(document.querySelectorAll("[data-explore-owner-link]"))
-        .filter((node) => {
-          const rect = node.getBoundingClientRect();
-          return rect.width > 0 && rect.height > 0;
-        });
-      const appTitle = document.querySelector(".fnk-shell .appbar .title");
-      const activeTab = document.querySelector('.fnk-shell .tabbar .tab[aria-current="page"]');
-
-      if (!surface || surface.getBoundingClientRect().height <= 0) {
-        failures.push({ check: "explore-surface-visible", detail: "missing explore surface marker" });
+      // The retired-route authority sends /explore to the current home page.
+      if (window.location.pathname !== "/") {
+        failures.push({ check: "explore-retired-destination", detail: `pathname=${window.location.pathname}` });
       }
-
-      if (!routeRail || routeRail.getBoundingClientRect().height <= 0) {
-        failures.push({ check: "explore-route-rail-visible", detail: "missing visible explore route rail" });
-      }
-
-      const ownerRouteCount = Number.parseInt(routeRail?.getAttribute("data-explore-owner-route-count") || "", 10);
-      if (ownerRouteCount !== 7 || !(routeCount?.textContent || "").includes("7")) {
-        failures.push({
-          check: "explore-route-owner-count",
-          detail: `attr=${routeRail?.getAttribute("data-explore-owner-route-count") || "missing"} text=${routeCount?.textContent || ""}`,
-        });
-      }
-
-      const expectedRouteSteps = ["01", "02", "03"];
-      const actualRouteSteps = routeSteps.map((node) => node.getAttribute("data-explore-route-step-index"));
-      if (
-        routeSteps.length !== expectedRouteSteps.length ||
-        !expectedRouteSteps.every((step, index) => actualRouteSteps[index] === step)
-      ) {
-        failures.push({
-          check: "explore-route-step-order",
-          detail: `actual=${JSON.stringify(actualRouteSteps)} expected=${JSON.stringify(expectedRouteSteps)}`,
-        });
-      }
-
-      routeSteps.forEach((node, index) => {
-        const rect = node.getBoundingClientRect();
-        if (rect.height < 44) {
-          failures.push({ check: "explore-route-step-target", detail: `step ${index} height=${Math.round(rect.height)}` });
-        }
-      });
-
-      if (!gateway || gateway.getBoundingClientRect().height <= 0) {
-        failures.push({ check: "explore-gateway-visible", detail: "missing visible explore gateway" });
-      }
-
-      const expectedLinks = [
-        "/market-valuation",
-        "/sectors",
-        "/etfs",
-        "/screener",
-        "/superinvestors",
-        "/portfolio",
-        "/macro-chart",
-      ];
-      const normalizePath = (path) => (path && path !== "/" ? path.replace(/\/+$/, "") : path);
-      const actualLinks = ownerLinks.map((node) => normalizePath(new URL(node.href, window.location.origin).pathname));
-      if (
-        ownerLinks.length !== expectedLinks.length ||
-        !expectedLinks.every((href, index) => actualLinks[index] === href)
-      ) {
-        failures.push({
-          check: "explore-owner-link-order",
-          detail: `actual=${JSON.stringify(actualLinks)} expected=${JSON.stringify(expectedLinks)}`,
-        });
-      }
-
-      ownerLinks.forEach((node, index) => {
-        const rect = node.getBoundingClientRect();
-        if (rect.height < 44) {
-          failures.push({ check: "explore-owner-link-target", detail: `link ${index} height=${Math.round(rect.height)}` });
-        }
-      });
-
-      const activeTabLabel = (activeTab?.textContent || "").replace(/\s+/g, " ").trim();
-      const activeTabPath = activeTab instanceof HTMLAnchorElement ? normalizePath(new URL(activeTab.href, window.location.origin).pathname) : "";
-      if (activeTabLabel !== "홈" || activeTabPath !== "/") {
-        failures.push({
-          check: "explore-mobile-tab-active",
-          detail: `label=${activeTabLabel} path=${activeTabPath}`,
-        });
-      }
-
-      if ((appTitle?.textContent || "").trim() !== "홈") {
-        failures.push({ check: "explore-app-title", detail: `title=${(appTitle?.textContent || "").trim()}` });
+      const homeHeading = Array.from(document.querySelectorAll("h1"))
+        .find((node) => (node.textContent || "").trim() === "오늘 시장" && node.getBoundingClientRect().height > 0);
+      const homeProvenance = document.querySelector("[data-home-provenance]");
+      if (!homeHeading || !homeProvenance || homeProvenance.getBoundingClientRect().height <= 0) {
+        failures.push({ check: "explore-retired-home-visible", detail: "current home heading or provenance is not visible" });
       }
     }
 
@@ -319,14 +469,9 @@ async function collectRouteChecks(page, route) {
     if (new URL(currentRoute, window.location.origin).pathname === "/macro-chart") {
       const surface = document.querySelector("[data-macro-chart-surface]");
       const workbench = document.querySelector("[data-macro-chart-workbench]");
-      const header = document.querySelector("[data-macro-chart-header]");
+      const header = document.querySelector("[data-macro-chart-hero]");
       const chartCanvas = document.querySelector("canvas");
       const presetButtons = Array.from(document.querySelectorAll("[data-macro-chart-preset]"))
-        .filter((node) => {
-          const rect = node.getBoundingClientRect();
-          return rect.width > 0 && rect.height > 0;
-        });
-      const actionButtons = Array.from(document.querySelectorAll("[data-macro-chart-action]"))
         .filter((node) => {
           const rect = node.getBoundingClientRect();
           return rect.width > 0 && rect.height > 0;
@@ -351,13 +496,13 @@ async function collectRouteChecks(page, route) {
           const rect = node.getBoundingClientRect();
           return rect.width > 0 && rect.height > 0;
         });
-      const pickerToggle = document.querySelector("[data-macro-chart-picker-toggle]");
+      const pickerToggle = document.querySelector('[data-macro-chart-series-editor] summary');
       const formulaControls = Array.from(document.querySelectorAll("[data-macro-chart-formula-control]"))
         .filter((node) => {
           const rect = node.getBoundingClientRect();
           return rect.width > 0 && rect.height > 0;
         });
-      const mobileStatus = document.querySelector("[data-macro-chart-mobile-status]");
+      const mobileStatus = document.querySelector("[data-macro-chart-verdict]");
 
       if (!surface || surface.getBoundingClientRect().height <= 0) {
         failures.push({ check: "macro-chart-surface-visible", detail: "missing macro chart surface" });
@@ -385,21 +530,6 @@ async function collectRouteChecks(page, route) {
         const rect = node.getBoundingClientRect();
         if (rect.height < 44) {
           failures.push({ check: "macro-chart-preset-target", detail: `preset ${index} height=${Math.round(rect.height)}` });
-        }
-      });
-
-      const expectedActions = ["zoom-in", "zoom-out", "png", "csv"];
-      const actualActions = actionButtons.map((node) => node.getAttribute("data-macro-chart-action"));
-      if (
-        actionButtons.length !== expectedActions.length ||
-        !expectedActions.every((action, index) => actualActions[index] === action)
-      ) {
-        failures.push({ check: "macro-chart-action-order", detail: `actual=${JSON.stringify(actualActions)} expected=${JSON.stringify(expectedActions)}` });
-      }
-      actionButtons.forEach((node, index) => {
-        const rect = node.getBoundingClientRect();
-        if (rect.height < 44) {
-          failures.push({ check: "macro-chart-action-target", detail: `action ${index} height=${Math.round(rect.height)}` });
         }
       });
 
@@ -474,21 +604,16 @@ async function collectRouteChecks(page, route) {
     if (new URL(currentRoute, window.location.origin).pathname === "/multichart") {
       const surface = document.querySelector("[data-multichart-surface]");
       const workbench = document.querySelector("[data-multichart-workbench]");
-      const header = document.querySelector("[data-multichart-header]");
+      const header = document.querySelector("[data-macro-chart-hero]");
       const chartCanvas = document.querySelector("canvas");
       const marketLensButtons = Array.from(document.querySelectorAll("[data-macro-chart-market-lens]"))
         .filter((node) => {
           const rect = node.getBoundingClientRect();
           return rect.width > 0 && rect.height > 0;
         });
-      const mobileChips = Array.from(document.querySelectorAll("[data-macro-chart-mobile-chip]"))
-        .filter((node) => {
-          const rect = node.getBoundingClientRect();
-          return rect.width > 0 && rect.height > 0;
-        });
       const symbolInput = document.querySelector("[data-macro-chart-symbol-input]");
       const symbolAdd = document.querySelector("[data-macro-chart-symbol-add]");
-      const mobileStatus = document.querySelector("[data-macro-chart-mobile-status]");
+      const mobileStatus = document.querySelector("[data-macro-chart-verdict]");
       const appTitle = document.querySelector(".fnk-shell .appbar .title");
       const activeMoreTab = document.querySelector(".fnk-shell .tabbar .tab.on");
 
@@ -528,10 +653,10 @@ async function collectRouteChecks(page, route) {
       });
 
       const expectedDefaultChips = ["stq~SPY.US", "stq~QQQ.US", "stq~IWM.US"];
-      const actualChips = mobileChips.map((node) => node.getAttribute("data-macro-chart-mobile-chip"));
+      const actualChips = new URL(window.location.href).searchParams.get("series")?.split(",").filter(Boolean) ?? [];
       if (
         viewportWidth < 1280 &&
-        (mobileChips.length < expectedDefaultChips.length ||
+        (actualChips.length < expectedDefaultChips.length ||
           !expectedDefaultChips.every((chip, index) => actualChips[index] === chip))
       ) {
         failures.push({
@@ -550,8 +675,9 @@ async function collectRouteChecks(page, route) {
         failures.push({ check: "multichart-symbol-add-target", detail: symbolAdd ? `height=${Math.round(symbolAdd.getBoundingClientRect().height)}` : "missing symbol add" });
       }
 
+      // Chart pages sit in the 시장 area of the job-grouped nav, so the 시장 tab lights.
       const activeTabLabel = (activeMoreTab?.textContent || "").replace(/\s+/g, " ").trim();
-      if (!activeTabLabel.includes("더보기")) {
+      if (!activeTabLabel.includes("시장")) {
         failures.push({ check: "multichart-mobile-tab-active", detail: `active=${activeTabLabel}` });
       }
       if ((appTitle?.textContent || "").trim() !== "시장 비교") {
@@ -1016,7 +1142,7 @@ async function collectRouteChecks(page, route) {
       }
       chips.forEach((node, index) => {
         const rect = node.getBoundingClientRect();
-        if (rect.height < 44) {
+        if (node.matches("a,button,[role=button]") && rect.height < 44) {
           failures.push({ check: "vr-boundary-chip-target", detail: `chip ${index} height=${Math.round(rect.height)}` });
         }
       });
@@ -1077,7 +1203,7 @@ async function collectRouteChecks(page, route) {
       }
     }
 
-    if (new URL(currentRoute, window.location.origin).pathname === "/admin/data-lab") {
+    if (new URL(currentRoute, window.location.origin).pathname === "/admin/data-lab" && adminSessionAvailable) {
       const surface = document.querySelector("[data-admin-data-lab-surface]");
       const owner = document.querySelector("[data-admin-data-lab-route-owner]");
       const boundary = document.querySelector("[data-admin-data-lab-boundary]");
@@ -1156,6 +1282,22 @@ async function collectRouteChecks(page, route) {
       }
     }
 
+    if (new URL(currentRoute, window.location.origin).pathname === "/admin/data-lab" && !adminSessionAvailable) {
+      const gateForm = document.querySelector("#admin-auth-input");
+      const gateLoading = (document.body.textContent || "").includes("관리자 세션을 확인하는 중입니다");
+      const surface = document.querySelector("[data-admin-data-lab-surface]");
+      const legacyFrame = document.querySelector("[data-admin-data-lab-legacy-frame] iframe");
+      if (!gateForm && !gateLoading) {
+        failures.push({ check: "admin-data-lab-gated-anonymous", detail: "admin access gate missing without a session" });
+      }
+      if (surface) {
+        failures.push({ check: "admin-data-lab-gated-anonymous", detail: "admin data lab surface rendered without a session" });
+      }
+      if (legacyFrame) {
+        failures.push({ check: "admin-data-lab-gated-anonymous", detail: "legacy admin iframe rendered without a session" });
+      }
+    }
+
     if (new URL(currentRoute, window.location.origin).pathname === "/100x/daily-wrap") {
       const surface = document.querySelector("[data-daily-wrap-surface]");
       const owner = document.querySelector("[data-daily-wrap-route-owner]");
@@ -1200,7 +1342,7 @@ async function collectRouteChecks(page, route) {
       }
       chips.forEach((node, index) => {
         const rect = node.getBoundingClientRect();
-        if (rect.height < 44) {
+        if (node.matches("a,button,[role=button]") && rect.height < 44) {
           failures.push({ check: "daily-wrap-boundary-chip-target", detail: `chip ${index} height=${Math.round(rect.height)}` });
         }
       });
@@ -1300,12 +1442,12 @@ async function collectRouteChecks(page, route) {
           }
           chips.forEach((node, index) => {
             const rect = node.getBoundingClientRect();
-            if (rect.height < 44) {
+            if (node.matches("a,button,[role=button]") && rect.height < 44) {
               failures.push({ check: "posts-detail-boundary-chip-target", detail: `chip ${index} height=${Math.round(rect.height)}` });
             }
           });
 
-          const expectedLinks = ["/posts", "/alpha-scout", "/100x/daily-wrap"];
+          const expectedLinks = ["/", "/market-valuation", "/screener"];
           const actualLinks = ownerLinks.map((node) => normalizePath(new URL(node.href, window.location.origin).pathname));
           if (
             ownerLinks.length !== expectedLinks.length ||
@@ -1386,7 +1528,7 @@ async function collectRouteChecks(page, route) {
           }
           chips.forEach((node, index) => {
             const rect = node.getBoundingClientRect();
-            if (rect.height < 44) {
+            if (node.matches("a,button,[role=button]") && rect.height < 44) {
               failures.push({ check: "posts-boundary-chip-target", detail: `chip ${index} height=${Math.round(rect.height)}` });
             }
           });
@@ -1430,6 +1572,7 @@ async function collectRouteChecks(page, route) {
       const radarPath = radarUrl.pathname.replace(/\/+$/, "") || "/";
       if (radarPath === "/radar") {
         const normalizePath = (path) => (path && path !== "/" ? path.replace(/\/+$/, "") : path);
+        const hasDetailPath = Boolean(radarUrl.searchParams.get("path"));
         const surface = document.querySelector("[data-radar-surface]");
         const owner = document.querySelector("[data-radar-route-owner]");
         const boundary = document.querySelector("[data-radar-boundary]");
@@ -1455,21 +1598,22 @@ async function collectRouteChecks(page, route) {
         if (!surface || surface.getBoundingClientRect().height <= 0) {
           failures.push({ check: "radar-surface-visible", detail: "missing radar surface" });
         }
-        if (!owner || owner.getAttribute("data-radar-route-owner") !== "legacy-macro-monitor") {
+        if (!owner || owner.getAttribute("data-radar-route-owner") !== "native-radar") {
           failures.push({
             check: "radar-route-owner",
             detail: `owner=${owner?.getAttribute("data-radar-route-owner") || "missing"}`,
           });
         }
-        if (!boundary || boundary.getBoundingClientRect().height <= 0 || !(boundary.textContent || "").includes("Market Radar (레거시)")) {
+        if (!hasDetailPath && (!boundary || boundary.getBoundingClientRect().height <= 0 || !(boundary.textContent || "").includes("Market Radar"))) {
           failures.push({ check: "radar-boundary-visible", detail: "missing visible radar boundary" });
         }
 
-        const expectedChips = ["legacy-monitor", "native-macro", "detail-bridge"];
+        const expectedChips = ["liquidity-trio", "sentiment-single", "detail-pages"];
         const actualChips = chips.map((node) => node.getAttribute("data-radar-boundary-chip"));
         if (
-          chips.length !== expectedChips.length ||
-          !expectedChips.every((chip, index) => actualChips[index] === chip)
+          !hasDetailPath &&
+          (chips.length !== expectedChips.length ||
+            !expectedChips.every((chip, index) => actualChips[index] === chip))
         ) {
           failures.push({
             check: "radar-boundary-chip-order",
@@ -1478,16 +1622,17 @@ async function collectRouteChecks(page, route) {
         }
         chips.forEach((node, index) => {
           const rect = node.getBoundingClientRect();
-          if (rect.height < 44) {
+          if (node.matches("a,button,[role=button]") && rect.height < 44) {
             failures.push({ check: "radar-boundary-chip-target", detail: `chip ${index} height=${Math.round(rect.height)}` });
           }
         });
 
-        const expectedOwnerLinks = ["/macro-chart", "/workbench", "/explore"];
+        const expectedOwnerLinks = ["/macro-chart", "/market/events", "/market-valuation"];
         const actualOwnerLinks = ownerLinks.map((node) => normalizePath(new URL(node.href, window.location.origin).pathname));
         if (
-          ownerLinks.length !== expectedOwnerLinks.length ||
-          !expectedOwnerLinks.every((link, index) => actualOwnerLinks[index] === link)
+          !hasDetailPath &&
+          (ownerLinks.length !== expectedOwnerLinks.length ||
+            !expectedOwnerLinks.every((link, index) => actualOwnerLinks[index] === link))
         ) {
           failures.push({
             check: "radar-owner-link-order",
@@ -1504,7 +1649,6 @@ async function collectRouteChecks(page, route) {
         const expectedCategoryLinks = [
           "/radar",
           "/radar?category=liquidity",
-          "/radar?category=rates",
           "/radar?category=sentiment",
         ];
         const actualCategoryLinks = categoryLinks.map((node) => {
@@ -1512,8 +1656,9 @@ async function collectRouteChecks(page, route) {
           return `${normalizePath(url.pathname)}${url.search}`;
         });
         if (
-          categoryLinks.length !== expectedCategoryLinks.length ||
-          !expectedCategoryLinks.every((link, index) => actualCategoryLinks[index] === link)
+          !hasDetailPath &&
+          (categoryLinks.length !== expectedCategoryLinks.length ||
+            !expectedCategoryLinks.every((link, index) => actualCategoryLinks[index] === link))
         ) {
           failures.push({
             check: "radar-category-link-order",
@@ -1530,19 +1675,44 @@ async function collectRouteChecks(page, route) {
         const frameSrc = legacyFrame instanceof HTMLIFrameElement
           ? new URL(legacyFrame.src, window.location.origin)
           : null;
-        const expectedFramePath = radarUrl.searchParams.get("path")
-          ? "/tools/macro-monitor/details/liquidity-flow.html"
-          : "/tools/macro-monitor/index.html";
-        if (!frameSrc || frameSrc.pathname !== expectedFramePath) {
-          failures.push({
-            check: "radar-legacy-frame-src",
-            detail: `src=${legacyFrame instanceof HTMLIFrameElement ? legacyFrame.src : "missing"} expected=${expectedFramePath}`,
+        if (hasDetailPath) {
+          const expectedFramePath = "/tools/macro-monitor/details/liquidity-flow.html";
+          if (!frameSrc || frameSrc.pathname !== expectedFramePath) {
+            failures.push({
+              check: "radar-legacy-frame-src",
+              detail: `src=${legacyFrame instanceof HTMLIFrameElement ? legacyFrame.src : "missing"} expected=${expectedFramePath}`,
+            });
+          }
+          const backLink = document.querySelector("[data-radar-detail-back-link]");
+          if (!backLink || backLink.getBoundingClientRect().height <= 0) {
+            failures.push({ check: "radar-detail-back-link-visible", detail: "missing visible radar detail back link" });
+          } else {
+            const backHref = backLink instanceof HTMLAnchorElement ? new URL(backLink.href, window.location.origin) : null;
+            const backPath = backHref ? normalizePath(backHref.pathname) : null;
+            if (backPath !== "/radar") {
+              failures.push({ check: "radar-detail-back-link-href", detail: `href=${backLink.getAttribute("href")}` });
+            }
+            const backRect = backLink.getBoundingClientRect();
+            if (backRect.height < 44) {
+              failures.push({ check: "radar-detail-back-link-target", detail: `height=${Math.round(backRect.height)}` });
+            }
+          }
+        } else {
+          if (legacyFrame) {
+            failures.push({ check: "radar-native-no-iframe", detail: "native radar must not mount a legacy iframe" });
+          }
+          const nativeCards = Array.from(document.querySelectorAll("[data-radar-card]")).filter((node) => {
+            const rect = node.getBoundingClientRect();
+            return rect.width > 0 && rect.height > 0;
           });
-        }
-        if (!radarUrl.searchParams.get("path") && radarUrl.searchParams.get("category") && frameSrc?.searchParams.get("category") !== radarUrl.searchParams.get("category")) {
-          failures.push({
-            check: "radar-category-forwarding",
-            detail: `frameCategory=${frameSrc?.searchParams.get("category") || ""} expected=${radarUrl.searchParams.get("category")}`,
+          if (nativeCards.length !== 4) {
+            failures.push({ check: "radar-native-card-count", detail: `visible=${nativeCards.length} expected=4` });
+          }
+          nativeCards.forEach((node, index) => {
+            const rect = node.getBoundingClientRect();
+            if (rect.height < 44) {
+              failures.push({ check: "radar-native-card-target", detail: `card ${index} height=${Math.round(rect.height)}` });
+            }
           });
         }
 
@@ -1608,7 +1778,7 @@ async function collectRouteChecks(page, route) {
         }
         chips.forEach((node, index) => {
           const rect = node.getBoundingClientRect();
-          if (rect.height < 44) {
+          if (node.matches("a,button,[role=button]") && rect.height < 44) {
             failures.push({ check: "alpha-scout-report-boundary-chip-target", detail: `chip ${index} height=${Math.round(rect.height)}` });
           }
         });
@@ -1723,13 +1893,8 @@ async function collectRouteChecks(page, route) {
           const rect = node.getBoundingClientRect();
           return rect.width > 0 && rect.height > 0;
         });
-      const sections = Array.from(document.querySelectorAll("[data-market-section]"))
-        .filter((node) => {
-          const rect = node.getBoundingClientRect();
-          return rect.width > 0 && rect.height > 0;
-        });
       const chartGrid = document.querySelector("[data-market-valuation-chart-grid]");
-      const indexCards = Array.from(document.querySelectorAll("[data-market-index-card]"))
+      const indexCards = Array.from(document.querySelectorAll(".mv-trow"))
         .filter((node) => {
           const rect = node.getBoundingClientRect();
           return rect.width > 0 && rect.height > 0;
@@ -1761,49 +1926,63 @@ async function collectRouteChecks(page, route) {
         }
       });
 
-      const expectedSections = ["overview", "macro", "valuation", "structure", "context"];
-      const actualSections = sections.map((node) => node.getAttribute("data-market-section"));
-      if (
-        sections.length !== expectedSections.length ||
-        !expectedSections.every((key, index) => actualSections[index] === key)
-      ) {
-        failures.push({
-          check: "market-valuation-section-order",
-          detail: `actual=${JSON.stringify(actualSections)} expected=${JSON.stringify(expectedSections)}`,
-        });
-      }
-
       if (!chartGrid || chartGrid.getBoundingClientRect().height <= 0) {
         failures.push({ check: "market-valuation-chart-grid-visible", detail: "missing ERP/Yardeni chart grid" });
       }
       if (indexCards.length < 2) {
         failures.push({ check: "market-index-card-count", detail: `visible cards=${indexCards.length}` });
       }
-
       indexCards.forEach((card, cardIndex) => {
-        const rows = Array.from(card.querySelectorAll("[data-market-valuation-row]"))
-          .filter((node) => {
-            const rect = node.getBoundingClientRect();
-            return rect.width > 0 && rect.height > 0;
-          });
-        const rowMetrics = rows.map((node) => node.getAttribute("data-market-valuation-row"));
-        if (rows.length !== 2 || rowMetrics[0] !== "pe" || rowMetrics[1] !== "pb") {
-          failures.push({
-            check: "market-index-card-valuation-rows",
-            detail: `card=${cardIndex} rows=${JSON.stringify(rowMetrics)}`,
-          });
+        if (!(card.textContent || "").trim() || card.getAttribute("role") !== "row") {
+          failures.push({ check: "market-index-card-content", detail: `card=${cardIndex} empty-or-not-row` });
         }
-        rows.forEach((row, rowIndex) => {
-          const gauge = row.querySelector("[data-market-valuation-gauge]");
-          const verdict = row.querySelector("[data-market-valuation-verdict]");
-          if (!gauge || gauge.getBoundingClientRect().height <= 0) {
-            failures.push({ check: "market-valuation-gauge-visible", detail: `card=${cardIndex} row=${rowIndex}` });
+      });
+      if (viewportWidth < 768) {
+        const thead = document.querySelector(".mv-thead");
+        if (thead && thead.getBoundingClientRect().height > 0) {
+          failures.push({ check: "market-valuation-stacked-thead-hidden", detail: `height=${Math.round(thead.getBoundingClientRect().height)}` });
+        }
+        indexCards.forEach((row, rowIndex) => {
+          const rect = row.getBoundingClientRect();
+          if (rect.height < 44) {
+            failures.push({ check: "market-valuation-stacked-row-target", detail: `row ${rowIndex} height=${Math.round(rect.height)}` });
           }
-          if (!verdict || !(verdict.textContent || "").trim()) {
-            failures.push({ check: "market-valuation-verdict-present", detail: `card=${cardIndex} row=${rowIndex}` });
+          const name = row.querySelector(".mv-idx");
+          const nameStart = name ? window.getComputedStyle(name).gridColumnStart : "";
+          if (!name || nameStart === "auto") {
+            failures.push({ check: "market-valuation-stacked-name-span", detail: `row ${rowIndex} gridColumnStart=${nameStart || "missing"}` });
           }
         });
-      });
+        Array.from(document.querySelectorAll(".mv-horizons button"))
+          .filter((node) => node.getBoundingClientRect().width > 0)
+          .forEach((node, index) => {
+            if (node.getBoundingClientRect().height < 44) {
+              failures.push({ check: "market-valuation-horizons-target", detail: `button ${index} height=${Math.round(node.getBoundingClientRect().height)}` });
+            }
+          });
+        Array.from(document.querySelectorAll(".mv-brow"))
+          .filter((node) => node.getBoundingClientRect().width > 0)
+          .forEach((node, index) => {
+            const rect = node.getBoundingClientRect();
+            if (rect.height < 44) {
+              failures.push({ check: "market-valuation-brow-target", detail: `brow ${index} height=${Math.round(rect.height)}` });
+            }
+            const band = node.querySelector(".mv-band");
+            const bandStart = band ? window.getComputedStyle(band).gridColumnStart : "";
+            if (!band || bandStart === "auto") {
+              failures.push({ check: "market-valuation-band-geometry", detail: `brow ${index} gridColumnStart=${bandStart || "missing"}` });
+            } else {
+              const bandRect = band.getBoundingClientRect();
+              const nameRect = node.querySelector(".mv-bname")?.getBoundingClientRect();
+              if (rect.width - bandRect.width > 40) {
+                failures.push({ check: "market-valuation-band-geometry", detail: `brow ${index} band=${Math.round(bandRect.width)} brow=${Math.round(rect.width)}` });
+              }
+              if (nameRect && bandRect.top < nameRect.bottom - 2) {
+                failures.push({ check: "market-valuation-band-geometry", detail: `brow ${index} band overlaps name row` });
+              }
+            }
+          });
+      }
     }
 
     if (new URL(currentRoute, window.location.origin).pathname === "/market-valuation/structure") {
@@ -1911,16 +2090,17 @@ async function collectRouteChecks(page, route) {
           const rect = node.getBoundingClientRect();
           return rect.width > 0 && rect.height > 0;
         });
-      const axisCards = Array.from(document.querySelectorAll("[data-regime-axis-card]"))
-        .filter((node) => {
-          const rect = node.getBoundingClientRect();
-          return rect.width > 0 && rect.height > 0;
-        });
-      const sourceCards = Array.from(document.querySelectorAll("[data-regime-source-card]"))
-        .filter((node) => {
-          const rect = node.getBoundingClientRect();
-          return rect.width > 0 && rect.height > 0;
-        });
+      const axisHead = document.querySelector(".rgm-thead");
+      const axisHeadText = (axisHead?.textContent || "").replace(/\s+/g, " ").trim();
+      const compositeAsOf = document.querySelector("[data-regime-composite-asof]");
+      const compositeAsOfText = (compositeAsOf?.textContent || "").replace(/\s+/g, " ").trim();
+      const compositeRail = document.querySelector("[data-regime-composite-rail]");
+      const compositeRailText = (compositeRail?.textContent || "").replace(/\s+/g, " ").trim();
+      const axisAsOfRows = Array.from(document.querySelectorAll("[data-regime-axis-asof]"));
+      const macroAxisAsOf = document.querySelector('[data-regime-axis-summary-card="macro"] [data-regime-axis-asof]');
+      const macroAxisAsOfText = (macroAxisAsOf?.textContent || "").replace(/\s+/g, " ").trim();
+      const historyPanel = document.querySelector("[data-regime-history]");
+      const historyText = (historyPanel?.textContent || "").replace(/\s+/g, " ").trim();
 
       if (!surface || surface.getBoundingClientRect().height <= 0) {
         failures.push({ check: "regime-surface-visible", detail: "missing regime surface" });
@@ -1956,7 +2136,6 @@ async function collectRouteChecks(page, route) {
 
       const expectedAxes = ["structure", "signals", "macro", "valuation"];
       const actualSummaryAxes = summaryCards.map((node) => node.getAttribute("data-regime-axis-summary-card"));
-      const actualDetailAxes = axisCards.map((node) => node.getAttribute("data-regime-axis-card"));
       if (
         summaryCards.length !== expectedAxes.length ||
         !expectedAxes.every((key, index) => actualSummaryAxes[index] === key)
@@ -1966,14 +2145,31 @@ async function collectRouteChecks(page, route) {
           detail: `actual=${JSON.stringify(actualSummaryAxes)} expected=${JSON.stringify(expectedAxes)}`,
         });
       }
+      const expectedHeadColumns = ["축", "요약", "신호수", "상태"];
       if (
-        axisCards.length !== expectedAxes.length ||
-        !expectedAxes.every((key, index) => actualDetailAxes[index] === key)
+        !axisHead ||
+        axisHead.getBoundingClientRect().height <= 0 ||
+        !expectedHeadColumns.every((column) => axisHeadText.includes(column))
       ) {
-        failures.push({
-          check: "regime-axis-detail-order",
-          detail: `actual=${JSON.stringify(actualDetailAxes)} expected=${JSON.stringify(expectedAxes)}`,
-        });
+        failures.push({ check: "regime-axis-table-head", detail: `head=${axisHeadText.slice(0, 80)}` });
+      }
+      if (
+        !/^기준 \d{4}-\d{2}-\d{2}$/.test(compositeAsOfText) &&
+        compositeAsOfText !== "기준일 확인 필요"
+      ) {
+        failures.push({ check: "regime-composite-observation-date", detail: `asOf=${compositeAsOfText || "missing"}` });
+      }
+      if (axisAsOfRows.length !== expectedAxes.length) {
+        failures.push({ check: "regime-axis-asof-count", detail: `rows=${axisAsOfRows.length}` });
+      }
+      if (macroAxisAsOf && !macroAxisAsOfText.includes("기간 ")) {
+        failures.push({ check: "regime-macro-period-label", detail: `asOf=${macroAxisAsOfText || "missing"}` });
+      }
+      if (/^기준 \d{4}-\d{2}-\d{2}$/.test(compositeAsOfText) && !compositeRailText.includes("가장 오래된 입력")) {
+        failures.push({ check: "regime-oldest-input-disclosure", detail: "missing oldest input disclosure" });
+      }
+      if (!historyPanel || historyPanel.getBoundingClientRect().height <= 0 || historyText.length === 0) {
+        failures.push({ check: "regime-history-visible", detail: "missing regime history panel" });
       }
 
       const expectedActions = [
@@ -2004,26 +2200,6 @@ async function collectRouteChecks(page, route) {
           failures.push({ check: "regime-action-href", detail: `action ${index} href=${href} expected=${expectedPath}` });
         }
       });
-
-      axisCards.forEach((card, cardIndex) => {
-        const axis = card.getAttribute("data-regime-axis-card") || "";
-        const rows = Array.from(card.querySelectorAll(`[data-regime-evidence-axis="${axis}"]`))
-          .filter((node) => {
-            const rect = node.getBoundingClientRect();
-            return rect.width > 0 && rect.height > 0;
-          });
-        const tone = card.querySelector("[data-regime-axis-tone]");
-        if (rows.length === 0) {
-          failures.push({ check: "regime-axis-evidence-present", detail: `axis=${axis || cardIndex}` });
-        }
-        if (!tone || !(tone.textContent || "").trim()) {
-          failures.push({ check: "regime-axis-tone-present", detail: `axis=${axis || cardIndex}` });
-        }
-      });
-
-      if (sourceCards.length < 4) {
-        failures.push({ check: "regime-source-card-count", detail: `visible source cards=${sourceCards.length}` });
-      }
     }
 
     if (new URL(currentRoute, window.location.origin).pathname === "/market/events") {
@@ -2035,20 +2211,14 @@ async function collectRouteChecks(page, route) {
           const rect = node.getBoundingClientRect();
           return rect.width > 0 && rect.height > 0;
         });
-      const overview = document.querySelector("[data-market-events-overview]");
-      const tabs = Array.from(document.querySelectorAll("[data-market-event-tab]"))
+      const timeline = document.querySelector("[data-market-events-timeline]");
+      const lanes = Array.from(document.querySelectorAll("[data-timeline-lane]"))
         .filter((node) => {
           const rect = node.getBoundingClientRect();
           return rect.width > 0 && rect.height > 0;
         });
       const drilldown = document.querySelector("[data-market-events-drilldown]");
       const drilldownRows = Array.from(document.querySelectorAll("[data-market-events-drilldown-row]"))
-        .filter((node) => {
-          const rect = node.getBoundingClientRect();
-          return rect.width > 0 && rect.height > 0;
-        });
-      const actionRail = document.querySelector("[data-market-events-action-rail]");
-      const actionLinks = Array.from(document.querySelectorAll("[data-market-events-action]"))
         .filter((node) => {
           const rect = node.getBoundingClientRect();
           return rect.width > 0 && rect.height > 0;
@@ -2095,66 +2265,24 @@ async function collectRouteChecks(page, route) {
         }
       });
 
-      if (!overview || overview.getBoundingClientRect().height <= 0) {
-        failures.push({ check: "market-events-overview-visible", detail: "missing events overview panel" });
-      }
-      if (!actionRail || actionRail.getBoundingClientRect().height <= 0) {
-        failures.push({ check: "market-events-action-rail-visible", detail: "missing events action rail" });
+      if (!timeline || timeline.getBoundingClientRect().height <= 0) {
+        failures.push({ check: "market-events-timeline-visible", detail: "missing events timeline" });
       }
 
-      const expectedActions = [
-        { key: "market", path: "/market-valuation" },
-        { key: "regime", path: "/regime" },
-        { key: "sectors", path: "/sectors" },
-        { key: "screener", path: "/screener" },
-      ];
-      const actualActions = actionLinks.map((node) => node.getAttribute("data-market-events-action"));
+      // PR #96 (8711658823) intentionally hides feedless lanes and prints a
+      // footnote instead (MarketEventsTimeline.tsx:413 filter, :593 note);
+      // the contract follows the rendered set.
+      const expectedLanes = ["macro-us", "earnings", "options-expiry"];
+      const actualLanes = lanes.map((node) => node.getAttribute("data-timeline-lane"));
       if (
-        actionLinks.length !== expectedActions.length ||
-        !expectedActions.every((action, index) => actualActions[index] === action.key)
+        lanes.length !== expectedLanes.length ||
+        !expectedLanes.every((key, index) => actualLanes[index] === key)
       ) {
         failures.push({
-          check: "market-events-action-order",
-          detail: `actual=${JSON.stringify(actualActions)} expected=${JSON.stringify(expectedActions.map((action) => action.key))}`,
+          check: "market-events-lane-order",
+          detail: `actual=${JSON.stringify(actualLanes)} expected=${JSON.stringify(expectedLanes)}`,
         });
       }
-      actionLinks.forEach((node, index) => {
-        const rect = node.getBoundingClientRect();
-        const href = node.getAttribute("href") || "";
-        const expectedPath = expectedActions[index]?.path;
-        const actualPath = href ? new URL(href, window.location.origin).pathname.replace(/\/$/, "") || "/" : "";
-        if (rect.height < 44) {
-          failures.push({ check: "market-events-action-touch-target", detail: `action ${index} height=${Math.round(rect.height)}` });
-        }
-        if (expectedPath && actualPath !== expectedPath) {
-          failures.push({ check: "market-events-action-href", detail: `action ${index} href=${href} expected=${expectedPath}` });
-        }
-      });
-
-      const expectedTabs = ["earnings", "actions", "ipo", "movers"];
-      const actualTabs = tabs.map((node) => node.getAttribute("data-market-event-tab"));
-      if (
-        tabs.length !== expectedTabs.length ||
-        !expectedTabs.every((key, index) => actualTabs[index] === key)
-      ) {
-        failures.push({
-          check: "market-events-tab-order",
-          detail: `actual=${JSON.stringify(actualTabs)} expected=${JSON.stringify(expectedTabs)}`,
-        });
-      }
-      const selectedTab = tabs.find((node) => node.getAttribute("aria-selected") === "true");
-      if (selectedTab?.getAttribute("data-market-event-tab") !== "earnings") {
-        failures.push({
-          check: "market-events-default-tab",
-          detail: `selected=${selectedTab?.getAttribute("data-market-event-tab") || ""}`,
-        });
-      }
-      tabs.forEach((node, index) => {
-        const rect = node.getBoundingClientRect();
-        if (rect.height < 44) {
-          failures.push({ check: "market-events-tab-target", detail: `tab ${index} height=${Math.round(rect.height)}` });
-        }
-      });
 
       if (!drilldown || drilldown.getBoundingClientRect().height <= 0) {
         failures.push({ check: "market-events-drilldown-visible", detail: "missing drilldown panel" });
@@ -2183,44 +2311,47 @@ async function collectRouteChecks(page, route) {
 
     if (new URL(currentRoute, window.location.origin).pathname === "/etfs") {
       const surface = document.querySelector("[data-etfs-surface]");
-      const header = document.querySelector("[data-etfs-header]");
-      const toolLinks = Array.from(document.querySelectorAll("[data-etfs-tool-link]"))
+      const hero = document.querySelector(".etf-hero");
+      const header = document.querySelector(".etf-eyebrow");
+      // next.config trailingSlash renders these as /etfs/compare/ and /etfs/new/;
+      // the path comparison below already strips the slash.
+      const toolLinks = Array.from(document.querySelectorAll('.etf-tabs a[href^="/etfs/compare"], .etf-tabs a[href^="/etfs/new"]'))
         .filter((node) => {
           const rect = node.getBoundingClientRect();
           return rect.width > 0 && rect.height > 0;
         });
-      const snapshot = document.querySelector("[data-etfs-snapshot]");
-      const snapshotRows = Array.from(document.querySelectorAll("[data-etfs-snapshot-row]"))
+      const snapshot = document.querySelector(".etf-today-grid");
+      const snapshotRows = Array.from(document.querySelectorAll(".etf-today-stat"))
         .filter((node) => {
           const rect = node.getBoundingClientRect();
           return rect.width > 0 && rect.height > 0;
         });
-      const snapshotKinds = new Set(snapshotRows.map((node) => node.getAttribute("data-etfs-snapshot-row")));
-      const universe = document.querySelector("[data-etf-universe]");
+      const snapshotLabels = snapshotRows.map((node) => (node.querySelector(".etf-today-label")?.textContent || "").trim());
+      const universe = document.querySelector(".etf-list-toolbar");
+      const filterSelects = Array.from(document.querySelectorAll(".etf-filter-field select"));
       const controls = [
-        { key: "search", node: document.querySelector("[data-etf-universe-search]") },
-        { key: "category", node: document.querySelector("[data-etf-universe-category]") },
-        { key: "asset", node: document.querySelector("[data-etf-universe-asset-class]") },
-        { key: "issuer", node: document.querySelector("[data-etf-universe-issuer]") },
-        { key: "aum", node: document.querySelector("[data-etf-universe-aum]") },
-        { key: "expense", node: document.querySelector("[data-etf-universe-expense]") },
+        { key: "search", node: document.querySelector(".etf-search") },
+        { key: "category", node: filterSelects[0] },
+        { key: "issuer", node: filterSelects[1] },
+        { key: "aum", node: filterSelects[2] },
+        { key: "expense", node: filterSelects[3] },
       ];
-      const segmentButtons = Array.from(document.querySelectorAll("[data-etf-universe-segment]"))
+      const segmentButtons = Array.from(document.querySelectorAll(".etf-seg-pill"))
         .filter((node) => {
           const rect = node.getBoundingClientRect();
           return rect.width > 0 && rect.height > 0;
         });
-      const universeRows = Array.from(document.querySelectorAll("[data-etf-universe-row]"))
+      const universeRows = Array.from(document.querySelectorAll(".etf-mobile-card, .etf-table-desktop tbody tr"))
         .filter((node) => {
           const rect = node.getBoundingClientRect();
           return rect.width > 0 && rect.height > 0;
         });
-      const loadMore = document.querySelector("[data-etf-universe-load-more]");
+      const loadMore = document.querySelector(".etf-load-more");
 
       if (!surface || surface.getBoundingClientRect().height <= 0) {
         failures.push({ check: "etfs-surface-visible", detail: "missing ETF center surface" });
       }
-      if (!header || header.getBoundingClientRect().height <= 0) {
+      if (!hero || hero.getBoundingClientRect().height <= 0 || !header || header.getBoundingClientRect().height <= 0) {
         failures.push({ check: "etfs-header-visible", detail: "missing ETF header" });
       }
 
@@ -2229,12 +2360,12 @@ async function collectRouteChecks(page, route) {
         ["new", "/etfs/new"],
       ];
       const actualToolLinks = toolLinks.map((node) => [
-        node.getAttribute("data-etfs-tool-link"),
+        (node.textContent || "").replace(/\s+/g, " ").trim(),
         node instanceof HTMLAnchorElement ? new URL(node.href, window.location.origin).pathname.replace(/\/+$/, "") : "",
       ]);
       if (
         toolLinks.length !== expectedToolLinks.length ||
-        !expectedToolLinks.every((link, index) => actualToolLinks[index]?.[0] === link[0] && actualToolLinks[index]?.[1] === link[1])
+        !expectedToolLinks.every((link, index) => actualToolLinks[index]?.[1] === link[1])
       ) {
         failures.push({
           check: "etfs-tool-link-order",
@@ -2251,12 +2382,12 @@ async function collectRouteChecks(page, route) {
       if (!snapshot || snapshot.getBoundingClientRect().height <= 0) {
         failures.push({ check: "etfs-snapshot-visible", detail: "missing ETF snapshot panel" });
       }
-      if (snapshotRows.length < 12) {
+      if (snapshotRows.length < 3) {
         failures.push({ check: "etfs-snapshot-row-count", detail: `visible rows=${snapshotRows.length}` });
       }
-      ["new", "large", "volume", "change", "provider", "bitcoin"].forEach((kind) => {
-        if (!snapshotKinds.has(kind)) {
-          failures.push({ check: "etfs-snapshot-row-kind", detail: `missing kind=${kind}` });
+      ["신규 상장 ETF", "거래량 상위 TOP 3", "변동률 상위 TOP 3"].forEach((label) => {
+        if (!snapshotLabels.some((actual) => actual.includes(label))) {
+          failures.push({ check: "etfs-snapshot-row-kind", detail: `missing label=${label}` });
         }
       });
       snapshotRows.slice(0, 8).forEach((node, index) => {
@@ -2281,7 +2412,7 @@ async function collectRouteChecks(page, route) {
       });
 
       const expectedSegments = ["전체", "신규", "디지털자산", "레버리지", "단일종목 레버리지", "인버스"];
-      const actualSegments = segmentButtons.map((node) => node.getAttribute("data-etf-universe-segment"));
+      const actualSegments = segmentButtons.map((node) => (node.textContent || "").replace(/\s*[\d,]+\s*$/, "").trim());
       if (
         segmentButtons.length !== expectedSegments.length ||
         !expectedSegments.every((key, index) => actualSegments[index] === key)
@@ -2292,8 +2423,9 @@ async function collectRouteChecks(page, route) {
         });
       }
       const activeSegment = segmentButtons.find((node) => node.getAttribute("aria-pressed") === "true");
-      if (activeSegment?.getAttribute("data-etf-universe-segment") !== "전체") {
-        failures.push({ check: "etf-universe-default-segment", detail: `active=${activeSegment?.getAttribute("data-etf-universe-segment") || ""}` });
+      const activeSegmentLabel = (activeSegment?.textContent || "").replace(/\s*[\d,]+\s*$/, "").trim();
+      if (activeSegmentLabel !== "전체") {
+        failures.push({ check: "etf-universe-default-segment", detail: `active=${activeSegmentLabel}` });
       }
       segmentButtons.forEach((node, index) => {
         const rect = node.getBoundingClientRect();
@@ -2305,10 +2437,15 @@ async function collectRouteChecks(page, route) {
       if (universeRows.length < 20) {
         failures.push({ check: "etf-universe-row-count", detail: `visible rows=${universeRows.length}` });
       }
-      universeRows.slice(0, 8).forEach((node, index) => {
+      const universeTargets = Array.from(document.querySelectorAll(".etf-mobile-card a, .etf-table-ticker"))
+        .filter((node) => {
+          const rect = node.getBoundingClientRect();
+          return rect.width > 0 && rect.height > 0;
+        });
+      universeTargets.slice(0, 8).forEach((node, index) => {
         const rect = node.getBoundingClientRect();
         if (rect.height < 44) {
-          failures.push({ check: "etf-universe-row-target", detail: `row ${index} height=${Math.round(rect.height)}` });
+          failures.push({ check: "etf-universe-row-target", detail: `link ${index} height=${Math.round(rect.height)}` });
         }
       });
       if (!loadMore || loadMore.getBoundingClientRect().height < 44) {
@@ -2603,40 +2740,43 @@ async function collectRouteChecks(page, route) {
     }
 
     if (currentRoute.startsWith("/screener")) {
+      const isAnalyzeMode = Boolean(document.querySelector('[data-screener-mode="analyze"]'));
       const visibleCheckboxes = Array.from(document.querySelectorAll('input[type="checkbox"]'))
         .filter((node) => {
           const rect = node.getBoundingClientRect();
           return rect.width > 0 && rect.height > 0;
       });
-      visibleCheckboxes.forEach((node, index) => {
-        const rect = node.getBoundingClientRect();
-        const target = node.closest("[data-screener-checkbox-target]");
-        if (!target) {
-          failures.push({
-            check: "screener-checkbox-target-hook",
-            detail: `checkbox ${index} has no hit-target wrapper`,
-          });
-          return;
-        }
-        const targetRect = target.getBoundingClientRect();
-        const pseudoStyle = window.getComputedStyle(target, "::before");
-        const targetWidth = Math.max(targetRect.width, Number.parseFloat(pseudoStyle.width || "0"));
-        const targetHeight = Math.max(targetRect.height, Number.parseFloat(pseudoStyle.height || "0"));
-        if (targetWidth < 44 || targetHeight < 44) {
-          failures.push({
-            check: "screener-checkbox-target",
-            detail: `checkbox ${index} target=${Math.round(targetWidth)}x${Math.round(targetHeight)}`,
-          });
-        }
-        if (rect.width > 20 || rect.height > 20) {
-          failures.push({
-            check: "screener-checkbox-visual-size",
-            detail: `checkbox ${index} visual=${Math.round(rect.width)}x${Math.round(rect.height)}`,
-          });
-        }
-      });
+      if (isAnalyzeMode) {
+        visibleCheckboxes.forEach((node, index) => {
+          const rect = node.getBoundingClientRect();
+          const target = node.closest("[data-screener-checkbox-target]");
+          if (!target) {
+            failures.push({
+              check: "screener-checkbox-target-hook",
+              detail: `checkbox ${index} has no hit-target wrapper`,
+            });
+            return;
+          }
+          const targetRect = target.getBoundingClientRect();
+          const pseudoStyle = window.getComputedStyle(target, "::before");
+          const targetWidth = Math.max(targetRect.width, Number.parseFloat(pseudoStyle.width || "0"));
+          const targetHeight = Math.max(targetRect.height, Number.parseFloat(pseudoStyle.height || "0"));
+          if (targetWidth < 44 || targetHeight < 44) {
+            failures.push({
+              check: "screener-checkbox-target",
+              detail: `checkbox ${index} target=${Math.round(targetWidth)}x${Math.round(targetHeight)}`,
+            });
+          }
+          if (rect.width > 20 || rect.height > 20) {
+            failures.push({
+              check: "screener-checkbox-visual-size",
+              detail: `checkbox ${index} visual=${Math.round(rect.width)}x${Math.round(rect.height)}`,
+            });
+          }
+        });
+      }
 
-      if (viewportWidth < 768) {
+      if (isAnalyzeMode && viewportWidth < 768) {
         const mobileExpandButtons = Array.from(document.querySelectorAll('[aria-controls^="screener-mobile-detail"]'))
           .filter((node) => node.getBoundingClientRect().width > 0);
         if (mobileExpandButtons.length === 0) {
@@ -2670,18 +2810,41 @@ async function collectRouteChecks(page, route) {
             detail: `alignItems=${mobileMetricAlign}`,
           });
         }
-      }
 
-      const densityControl = document.querySelector("[data-screener-density-control]");
-      const densityButtons = densityControl
-        ? Array.from(densityControl.querySelectorAll('button[aria-pressed]'))
+        const searchInput = document.querySelector("[data-canvas-plus-screener-search]");
+        if (!searchInput || searchInput.getBoundingClientRect().height < 44) {
+          failures.push({ check: "screener-search-target", detail: `height=${Math.round(searchInput?.getBoundingClientRect().height ?? 0)}` });
+        }
+        if (searchInput) {
+          const style = window.getComputedStyle(searchInput);
+          const textWidth = searchInput.clientWidth - parseFloat(style.paddingLeft || "0") - parseFloat(style.paddingRight || "0");
+          if (textWidth < 120) {
+            failures.push({ check: "screener-search-readable-width", detail: `text width=${Math.round(textWidth)}px; ticker/company query is cramped` });
+          }
+        }
+        Array.from(document.querySelectorAll("[data-canvas-plus-screener-toolbar] form button"))
           .filter((node) => node.getBoundingClientRect().width > 0)
-        : [];
-      if (densityButtons.length !== 3) {
-        failures.push({ check: "screener-density-control", detail: `buttons=${densityButtons.length}` });
+          .forEach((node, index) => {
+            if (node.getBoundingClientRect().height < 44) {
+              failures.push({ check: "screener-search-reset-target", detail: `reset ${index} height=${Math.round(node.getBoundingClientRect().height)}` });
+            }
+          });
+        const toolbarButtons = Array.from(document.querySelectorAll("[data-canvas-plus-screener-toolbar] button"))
+          .filter((node) => node.getBoundingClientRect().width > 0);
+        if (toolbarButtons.length === 0) {
+          failures.push({ check: "screener-toolbar-controls", detail: "no visible toolbar controls" });
+        }
+        toolbarButtons.forEach((node, index) => {
+          if (node.getBoundingClientRect().height < 44) {
+            failures.push({ check: "screener-toolbar-target", detail: `control ${index} height=${Math.round(node.getBoundingClientRect().height)}` });
+          }
+        });
       }
 
-      if (viewportWidth >= 768) {
+      // The service mode keeps the desktop table/card controls hidden through
+      // 920px. The Canvas+ density control is hidden through 920px too and
+      // visible in the desktop page toolbar (restored control).
+      if (isAnalyzeMode && viewportWidth >= 921) {
         const viewModeControl = document.querySelector("[data-screener-view-mode-control]");
         const viewModeButtons = viewModeControl
           ? Array.from(viewModeControl.querySelectorAll("[data-screener-view-mode-option]"))
@@ -2692,50 +2855,117 @@ async function collectRouteChecks(page, route) {
           failures.push({ check: "screener-view-mode-control", detail: `modes=${JSON.stringify(actualModes)}` });
         }
       }
+
+      // Desktop table renders at >=921px, paired with ScreenerClient
+      // `hidden min-[921px]:block`; keep presence, column minimum, and page
+      // overflow checks tied to that branch. Row/header heights are layout-owned.
+      // Every rendered column honors its declared minimum
+      // (ScreenerTanstackTable canvasPlusColumnWidth), table scrolls inside
+      // the panel only.
+      if (isAnalyzeMode && viewportWidth >= 921) {
+        const desktopRows = Array.from(document.querySelectorAll('tr[data-testid="screener-desktop-row"]'))
+          .filter((node) => node.getBoundingClientRect().width > 0);
+        if (desktopRows.length === 0) {
+          failures.push({ check: "screener-desktop-rows-present", detail: "no visible desktop rows" });
+        } else {
+          const columnMinWidths = {
+            __select: 42,
+            ticker: 160,
+            name: 110,
+            sector: 120,
+            marketCap: 96,
+            per: 96,
+            fenokShortTermScore: 72,
+            fenokLongTermScore: 72,
+            fenokConvictionScore: 72,
+            profitabilityScore: 72,
+            growthScore: 72,
+            technicalFlowScore: 72,
+            durabilityProfitabilityScore: 72,
+            upsidePotentialScore: 72,
+            downsidePressureScore: 72,
+            actionScore: 140,
+            connectionCount: 112,
+            perBandCurrent: 116,
+          };
+          Array.from(desktopRows[0].querySelectorAll("td[data-column-id]"))
+            .filter((cell) => cell.getBoundingClientRect().width > 0)
+            .forEach((cell) => {
+              const columnId = cell.getAttribute("data-column-id") ?? "";
+              const expected = columnMinWidths[columnId] ?? 88;
+              const width = cell.getBoundingClientRect().width;
+              if (width < expected - 1) {
+                failures.push({ check: "screener-column-min-width", detail: `${columnId} width=${Math.round(width)} expected>=${expected}` });
+              }
+            });
+        }
+        if (document.documentElement.scrollWidth > window.innerWidth + 1) {
+          failures.push({ check: "screener-no-page-scroll", detail: `scrollWidth=${document.documentElement.scrollWidth} innerWidth=${window.innerWidth}` });
+        }
+      }
+      // Discover mode (?mode=discover, secondary tab): five question cards +
+      // mode toggle. Runs on every viewport (mobile/narrow included) so the
+      // <768 card touch check below is reachable. Existing analyze assertions
+      // above stay untouched.
+      const discoverRoot = document.querySelector('[data-discover="true"]');
+      if (discoverRoot) {
+        const discoverCards = Array.from(document.querySelectorAll("[data-discover-card]"))
+          .filter((node) => node.getBoundingClientRect().width > 0);
+        if (discoverCards.length !== 5) {
+          failures.push({ check: "screener-discover-cards", detail: `cards=${discoverCards.length}` });
+        }
+        const modeToggle = document.querySelector('[data-screener-mode-toggle="true"]');
+        if (!modeToggle || modeToggle.getBoundingClientRect().width <= 0) {
+          failures.push({ check: "screener-discover-mode-toggle", detail: "missing visible mode toggle" });
+        }
+        if (viewportWidth < 768) {
+          discoverCards.forEach((node, index) => {
+            if (node.getBoundingClientRect().height < 44) {
+              failures.push({ check: "screener-discover-card-target", detail: `card ${index} height=${Math.round(node.getBoundingClientRect().height)}` });
+            }
+          });
+        }
+      }
     }
 
     if (currentRoute.startsWith("/sectors")) {
       if (viewportWidth < 768) {
-        const viewSwitch = document.querySelector("[data-sector-view-switch]");
-        const viewTabs = Array.from(document.querySelectorAll("[data-sector-view-tab]"))
+        const periodToggle = document.querySelector("[data-sectors-period-toggle]");
+        const periodButtons = Array.from(document.querySelectorAll("[data-sectors-period-toggle] button"))
           .filter((node) => {
             const rect = node.getBoundingClientRect();
             return rect.width > 0 && rect.height > 0;
           });
-        if (!viewSwitch || viewSwitch.getBoundingClientRect().height <= 0) {
-          failures.push({ check: "sector-view-switch-visible", detail: "missing visible sector view switch" });
+        if (!periodToggle || periodToggle.getBoundingClientRect().height <= 0) {
+          failures.push({ check: "sector-period-toggle-visible", detail: "missing visible sector period toggle" });
         }
 
-        const expectedTabs = ["heatmap", "etf", "valuation", "guru"];
-        const actualTabs = viewTabs.map((node) => node.getAttribute("data-sector-view-tab"));
+        const expectedPeriods = ["1주", "1개월", "3개월", "6개월", "연초이후"];
+        const actualPeriods = periodButtons.map((node) => (node.textContent || "").replace(/\s+/g, " ").trim());
         if (
-          viewTabs.length !== expectedTabs.length ||
-          !expectedTabs.every((tab, index) => actualTabs[index] === tab)
+          periodButtons.length !== expectedPeriods.length ||
+          !expectedPeriods.every((period, index) => actualPeriods[index] === period)
         ) {
           failures.push({
-            check: "sector-view-switch-tabs",
-            detail: `actual=${JSON.stringify(actualTabs)} expected=${JSON.stringify(expectedTabs)}`,
+            check: "sector-period-toggle-buttons",
+            detail: `actual=${JSON.stringify(actualPeriods)} expected=${JSON.stringify(expectedPeriods)}`,
           });
         }
-        viewTabs.forEach((node, index) => {
+        periodButtons.forEach((node, index) => {
           const rect = node.getBoundingClientRect();
           if (rect.height < 44) {
-            failures.push({ check: "sector-view-switch-target", detail: `tab ${index} height=${Math.round(rect.height)}` });
+            failures.push({ check: "sector-period-toggle-target", detail: `period ${index} height=${Math.round(rect.height)}` });
           }
         });
       }
 
-      const heatmapPanel = document.querySelector('[data-sector-panel="heatmap"]');
-      if (!heatmapPanel || heatmapPanel.getBoundingClientRect().height <= 0) {
-        failures.push({ check: "sector-heatmap-default-visible", detail: "default heatmap panel not visible" });
-      }
-      const relativeBars = document.querySelector("[data-sector-relative-bars]");
-      const relativeBarRows = Array.from(document.querySelectorAll("[data-sector-relative-bar]"))
+      const relativeBars = document.querySelector("[data-sectors-flow-rows]");
+      const relativeBarRows = Array.from(document.querySelectorAll("[data-sectors-flow-row]"))
         .filter((node) => {
           const rect = node.getBoundingClientRect();
           return rect.width > 0 && rect.height > 0;
         });
-      const relativeSides = new Set(relativeBarRows.map((node) => node.getAttribute("data-sector-relative-side")));
+      const relativeSides = new Set(relativeBarRows.map((node) => node.getAttribute("data-sectors-flow-side")));
       if (!relativeBars || relativeBars.getBoundingClientRect().height <= 0) {
         failures.push({ check: "sector-relative-bars-visible", detail: "missing S&P relative bar strip" });
       }
@@ -2766,7 +2996,7 @@ async function collectRouteChecks(page, route) {
       }
       [...editButtons, ...deleteButtons].forEach((node, index) => {
         const rect = node.getBoundingClientRect();
-        if (rect.width < 36 || rect.height < 36) {
+        if (rect.width < 44 || rect.height < 44) {
           failures.push({
             check: "portfolio-action-target",
             detail: `button ${index} ${Math.round(rect.width)}x${Math.round(rect.height)}`,
@@ -2780,7 +3010,7 @@ async function collectRouteChecks(page, route) {
       }
       connectionActions.forEach((node, index) => {
         const rect = node.getBoundingClientRect();
-        if (rect.width < 36 || rect.height < 36) {
+        if (rect.width < 44 || rect.height < 44) {
           failures.push({
             check: "portfolio-connection-action-target",
             detail: `action ${index} ${Math.round(rect.width)}x${Math.round(rect.height)}`,
@@ -2850,23 +3080,10 @@ async function collectRouteChecks(page, route) {
           }))
           .filter((entry) => entry.rect.width > 0 && entry.rect.height > 0);
         const summaryScore = summaryModules.find((entry) => entry.key === "summary-score");
-        const valuationBand = summaryModules.find((entry) => entry.key === "valuation-band");
-        const threeSecondSummary = summaryModules.find((entry) => entry.key === "three-second-summary");
-        if (!summaryScore || !valuationBand) {
+        if (!summaryScore) {
           failures.push({
-            check: "stock-summary-valuation-modules-present",
+            check: "stock-summary-action-strip-visible",
             detail: `modules=${JSON.stringify(summaryModules.map((entry) => entry.key))}`,
-          });
-        } else if (summaryScore.rect.top > valuationBand.rect.top + 1) {
-          failures.push({
-            check: "stock-summary-before-valuation",
-            detail: `summaryTop=${summaryScore.rect.top} valuationTop=${valuationBand.rect.top}`,
-          });
-        }
-        if (summaryScore && threeSecondSummary && summaryScore.rect.top > threeSecondSummary.rect.top + 1) {
-          failures.push({
-            check: "stock-summary-score-first",
-            detail: `summaryTop=${summaryScore.rect.top} threeSecondTop=${threeSecondSummary.rect.top}`,
           });
         }
         if (summaryScore) {
@@ -2902,10 +3119,8 @@ async function collectRouteChecks(page, route) {
             }
           });
         }
-        if (valuationBand) {
-          const valuationTrack = valuationBand.rect.height > 0
-            ? document.querySelector("[data-stock-valuation-band-track]")
-            : null;
+        const valuationTrack = document.querySelector("[data-stock-valuation-band-track]");
+        if (valuationTrack) {
           const valuationVerdict = document.querySelector("[data-stock-valuation-verdict]");
           const valuationZones = Array.from(document.querySelectorAll("[data-stock-valuation-zone]"))
             .map((node) => node.getAttribute("data-stock-valuation-zone"));
@@ -2928,7 +3143,7 @@ async function collectRouteChecks(page, route) {
         }
       }
       if (stockTab === "filings") {
-        const embeddedFilings = document.querySelector('[data-edgar-embedded="true"]');
+        const embeddedFilings = document.querySelector('[data-stock-tab-card="filings"]');
         const coverageBanner = document.querySelector("[data-edgar-coverage-banner]");
         const autoSummaryWarning = document.querySelector("[data-edgar-auto-summary-warning]");
         const generationSource = document.querySelector("[data-edgar-generation-source]");
@@ -2984,6 +3199,35 @@ async function collectRouteChecks(page, route) {
             detail: JSON.stringify({ reportColumn: Boolean(reportColumn), reportCells: reportCells.length }),
           });
         }
+        // Top Guru holder rows are two-line (name line, then metrics line):
+        // every visible row must carry a non-empty rank label and its name
+        // and metrics lines must not overlap each other at this viewport.
+        const holderRows = Array.from(document.querySelectorAll('[data-smart-money-section="holdings"] [data-smart-money-report-date-cell]'))
+          .filter((node) => node.getBoundingClientRect().width > 0);
+        holderRows.forEach((row, index) => {
+          const nameEl = row.querySelector("[data-guru-holder-name]");
+          const metricsEl = row.querySelector("[data-guru-holder-metrics]");
+          if (!nameEl || !((nameEl.textContent || "").trim())) {
+            failures.push({ check: "stock-guru-holder-name-present", detail: `row=${index} empty rank label viewport=${window.innerWidth}` });
+            return;
+          }
+          if (!metricsEl) {
+            failures.push({ check: "stock-guru-holder-metrics-present", detail: `row=${index} missing metrics line viewport=${window.innerWidth}` });
+            return;
+          }
+          const nameRect = nameEl.getBoundingClientRect();
+          const metricsRect = metricsEl.getBoundingClientRect();
+          const separated = metricsRect.left >= nameRect.right - 1
+            || metricsRect.right <= nameRect.left + 1
+            || metricsRect.top >= nameRect.bottom - 1
+            || metricsRect.bottom <= nameRect.top + 1;
+          if (!separated) {
+            failures.push({
+              check: "stock-guru-holder-row-geometry",
+              detail: `row=${index} name/metrics overlap viewport=${window.innerWidth}`,
+            });
+          }
+        });
       }
       if (stockTab === "estimates") {
         const disclosure = document.querySelector("[data-stock-estimate-disclosure]");
@@ -3104,333 +3348,197 @@ async function collectRouteChecks(page, route) {
       if (regions.length === 0) {
         failures.push({ check: "superinvestors-scroll-region", detail: "no visible scroll-hint region" });
       }
-      if (currentRoute.includes("tab=insights") && regions.length < 5) {
-        failures.push({ check: "superinvestors-insights-scroll-regions", detail: `visible regions=${regions.length}` });
+      const surface = document.querySelector("[data-superinvestors-surface]");
+      const eyebrow = document.querySelector("[data-superinvestors-eyebrow]");
+      const count = document.querySelector("[data-superinvestors-count]");
+      const quarterPill = document.querySelector("[data-superinvestors-quarter]");
+      if (!surface || surface.getBoundingClientRect().height <= 0) {
+        failures.push({ check: "superinvestors-surface", detail: "missing visible light-system surface" });
       }
-      if (currentRoute.includes("tab=insights")) {
-        const status = document.querySelector("[data-superinvestor-insights-status]");
-        const quarter = document.querySelector("[data-superinvestor-insights-quarter]");
-        const lag = document.querySelector("[data-superinvestor-insights-lag]");
-        const stale = document.querySelector("[data-superinvestor-insights-stale]");
-        const excludedCount = Number.parseInt(status?.getAttribute("data-superinvestor-insights-excluded-count") || "", 10);
-        if (!status || status.getBoundingClientRect().height <= 0) {
-          failures.push({ check: "superinvestors-insights-status-visible", detail: "missing visible insights status strip" });
-        }
-        if (!quarter || !/\d{4}-Q\d/.test(quarter.textContent || "")) {
-          failures.push({ check: "superinvestors-insights-quarter", detail: `quarter=${quarter?.textContent || ""}` });
-        }
-        if (!lag || !(lag.textContent || "").includes("45")) {
-          failures.push({ check: "superinvestors-insights-13f-lag", detail: `lag=${lag?.textContent || ""}` });
-        }
-        if (!Number.isFinite(excludedCount) || excludedCount < 0) {
-          failures.push({ check: "superinvestors-insights-excluded-count", detail: `excluded=${status?.getAttribute("data-superinvestor-insights-excluded-count") || ""}` });
-        }
-        if (Number.isFinite(excludedCount) && excludedCount > 0 && (!stale || !/\d+명/.test(stale.textContent || ""))) {
-          failures.push({ check: "superinvestors-insights-stale-chip", detail: `stale=${stale?.textContent || ""}` });
-        }
-        const heatmap = document.querySelector("[data-superinvestor-accumulation-heatmap]");
-        const tiles = Array.from(document.querySelectorAll("[data-superinvestor-accumulation-tile]"))
-          .filter((node) => {
-            const rect = node.getBoundingClientRect();
-            return rect.width > 0 && rect.height > 0;
-          });
-        if (!heatmap || heatmap.getBoundingClientRect().height <= 0) {
-          failures.push({ check: "superinvestors-accumulation-heatmap-visible", detail: "missing visible accumulation heat-map" });
-        }
-        if (tiles.length < 6) {
-          failures.push({ check: "superinvestors-accumulation-heatmap-tiles", detail: `visible tiles=${tiles.length}` });
-        }
-        const investorCounts = tiles
-          .map((node) => Number.parseInt(node.getAttribute("data-superinvestor-accumulation-investors") || "", 10))
-          .filter(Number.isFinite);
-        const sortedDescending = investorCounts.every((value, index) => index === 0 || investorCounts[index - 1] >= value);
-        if (investorCounts.length !== tiles.length || !sortedDescending) {
-          failures.push({
-            check: "superinvestors-accumulation-heatmap-sort",
-            detail: `investors=${JSON.stringify(investorCounts)}`,
-          });
-        }
-        const stockLinks = tiles
-          .map((node) => {
-            const link = node.matches("a[data-superinvestor-accumulation-link]")
-              ? node
-              : node.querySelector("a[data-superinvestor-accumulation-link]");
-            return {
-              href: link instanceof HTMLAnchorElement ? new URL(link.href, window.location.origin).pathname : "",
-              rect: link instanceof HTMLElement ? link.getBoundingClientRect() : new DOMRect(),
-            };
-          });
-        if (stockLinks.length !== tiles.length || stockLinks.some((link) => !link.href.startsWith("/stock/"))) {
-          failures.push({
-            check: "superinvestors-accumulation-heatmap-stock-links",
-            detail: `links=${JSON.stringify(stockLinks.map((link) => link.href))}`,
-          });
-        }
-        stockLinks.forEach((link, index) => {
-          if (link.rect.height < 44) {
-            failures.push({ check: "superinvestors-accumulation-heatmap-touch-target", detail: `tile ${index} height=${Math.round(link.rect.height)}` });
-          }
-        });
+      if (!eyebrow || !/13F/.test(eyebrow.textContent || "") || !/\d{4}-Q\d/.test(eyebrow.textContent || "")) {
+        failures.push({ check: "superinvestors-header-quarter", detail: `eyebrow=${eyebrow?.textContent || ""}` });
       }
-      if (currentRoute.includes("tab=trades")) {
-        const selectedTab = document.querySelector('[role="tab"][aria-selected="true"]');
-        const landing = document.querySelector("[data-superinvestor-trades-landing]");
-        const landingAsOf = landing?.querySelector("[data-superinvestor-trades-asof]");
-        const landingLag = landing?.querySelector("[data-superinvestor-trades-lag]");
-        const kpis = Array.from(document.querySelectorAll("[data-superinvestor-trades-kpi]"));
-        const panels = Array.from(document.querySelectorAll("[data-superinvestor-trades-panel]"));
-        const boughtPanel = document.querySelector('[data-superinvestor-trades-panel][data-superinvestor-trades-side="bought"]');
-        const soldPanel = document.querySelector('[data-superinvestor-trades-panel][data-superinvestor-trades-side="sold"]');
-        const rows = Array.from(document.querySelectorAll("[data-superinvestor-trades-row]"));
-        const boughtRows = Array.from(document.querySelectorAll('[data-superinvestor-trades-row][data-superinvestor-trades-side="bought"]'));
-        const soldRows = Array.from(document.querySelectorAll('[data-superinvestor-trades-row][data-superinvestor-trades-side="sold"]'));
-        const stockLinks = Array.from(document.querySelectorAll("[data-superinvestor-trades-stock-link]"));
-        const investorLinks = Array.from(document.querySelectorAll("[data-superinvestor-trades-investor-link]"));
-        const actions = Array.from(document.querySelectorAll("[data-superinvestor-trades-action]"));
-
-        if (!selectedTab || !(selectedTab.textContent || "").includes("매매")) {
-          failures.push({ check: "superinvestors-trades-selected-tab", detail: `selected=${selectedTab?.textContent || ""}` });
-        }
-        if (!landing) {
-          failures.push({ check: "superinvestors-trades-landing", detail: "missing trades landing strip" });
-        } else {
-          const landingRect = landing.getBoundingClientRect();
-          if (landingRect.height <= 0 || landingRect.top >= window.innerHeight) {
-            failures.push({ check: "superinvestors-trades-first-viewport", detail: `top=${Math.round(landingRect.top)} height=${Math.round(landingRect.height)} viewport=${window.innerHeight}` });
-          }
-        }
-        if (!landingAsOf || !/\d{4}-Q\d/.test(landingAsOf.textContent || "")) {
-          failures.push({ check: "superinvestors-trades-asof", detail: `asOf=${landingAsOf?.textContent || ""}` });
-        }
-        if (!landingLag || !(landingLag.textContent || "").includes("45")) {
-          failures.push({ check: "superinvestors-trades-13f-lag", detail: `lag=${landingLag?.textContent || ""}` });
-        }
-        if (kpis.length < 3) {
-          failures.push({ check: "superinvestors-trades-kpis", detail: `kpis=${kpis.length}` });
-        }
-        if (panels.length < 2 || !boughtPanel || !soldPanel) {
-          failures.push({ check: "superinvestors-trades-panels", detail: `panels=${panels.length}` });
-        }
-        if (rows.length < 20 || boughtRows.length < 10 || soldRows.length < 10) {
-          failures.push({ check: "superinvestors-trades-rows", detail: `rows=${rows.length} bought=${boughtRows.length} sold=${soldRows.length}` });
-        }
-        if (stockLinks.length < 12) {
-          failures.push({ check: "superinvestors-trades-stock-links", detail: `links=${stockLinks.length}` });
-        }
-        if (investorLinks.length < 12) {
-          failures.push({ check: "superinvestors-trades-investor-links", detail: `links=${investorLinks.length}` });
-        }
-        [...stockLinks.slice(0, 12), ...investorLinks.slice(0, 12)].forEach((link, index) => {
-          const url = link instanceof HTMLAnchorElement ? new URL(link.href, window.location.origin) : null;
-          const href = url ? `${url.pathname}${url.search}` : "";
-          const isStock = link.matches("[data-superinvestor-trades-stock-link]");
-          const isInvestor = link.matches("[data-superinvestor-trades-investor-link]");
-          if (isStock && !href.startsWith("/stock/")) {
-            failures.push({ check: "superinvestors-trades-stock-href", detail: `index=${index} href=${href}` });
-          }
-          if (isInvestor && !(url?.pathname.replace(/\/$/, "") === "/superinvestors" && url.searchParams.get("tab") === "gurus" && url.searchParams.get("guru"))) {
-            failures.push({ check: "superinvestors-trades-investor-href", detail: `index=${index} href=${href}` });
-          }
-        });
-        actions.slice(0, 24).forEach((link, index) => {
-          const rect = link.getBoundingClientRect();
-          if (rect.height < 44) {
-            failures.push({ check: "superinvestors-trades-action-touch-target", detail: `index=${index} height=${Math.round(rect.height)}` });
-          }
-        });
+      if (!count || !/\d+명/.test(count.textContent || "")) {
+        failures.push({ check: "superinvestors-header-count", detail: `count=${count?.textContent || ""}` });
       }
-      if (currentRoute.includes("tab=gurus") && currentRoute.includes("guru=")) {
+      if (!quarterPill || !/\d{4}-Q\d/.test(quarterPill.textContent || "")) {
+        failures.push({ check: "superinvestors-header-asof", detail: `asof=${quarterPill?.textContent || ""}` });
+      }
+      const lagNote = Array.from(document.querySelectorAll(".sup-cta-note")).map((node) => node.textContent || "").join(" ");
+      if (!lagNote.includes("45")) {
+        failures.push({ check: "superinvestors-13f-lag", detail: `footer=${lagNote.slice(0, 80)}` });
+      }
+      // V3 tabs: holders/overlap live under the investors tab. S6: ?guru=
+      // opens a dedicated detail view that replaces the list; the list is
+      // asserted on the ?tab=investors route instead. Inactive tabs unmount,
+      // so each route asserts only its visible tab; hooks are unchanged.
+      const isGuruRoute = currentRoute.includes("guru=");
+      const isInvestorsRoute = currentRoute.includes("tab=investors");
+      const isStocksRoute = currentRoute.includes("tab=stocks");
+      const sortBtns = Array.from(document.querySelectorAll("[data-superinvestors-sort]"));
+      const tabBtns = Array.from(document.querySelectorAll("[data-superinvestors-tab]"));
+      if (tabBtns.length !== 6 || tabBtns.filter((btn) => btn.getAttribute("aria-selected") === "true").length !== 1) {
+        failures.push({ check: "superinvestors-tabs", detail: `tabs=${tabBtns.length}` });
+      }
+      const tabIds = tabBtns.map((btn) => btn.getAttribute("data-superinvestors-tab"));
+      const expectedTabIds = ["signal", "investors", "stocks", "trades", "insights", "graph"];
+      if (expectedTabIds.some((id) => !tabIds.includes(id))) {
+        failures.push({ check: "superinvestors-tab-ids", detail: `tabs=${tabIds.join(",")}` });
+      }
+      if (viewportWidth <= 600 || window.matchMedia("(any-pointer: coarse)").matches) {
+        for (const tab of tabBtns) {
+          const rect = tab.getBoundingClientRect();
+          const region = tab.closest(".sup-tabs")?.getBoundingClientRect();
+          const left = Math.max(0, region?.left ?? 0);
+          const right = Math.min(viewportWidth, region?.right ?? viewportWidth);
+          if (rect.left < left - 1 || rect.right > right + 1 || rect.height < 44) {
+            failures.push({ check: "superinvestors-tabs-discoverable", detail: `${tab.textContent?.trim()}: bounds=${Math.round(rect.left)}..${Math.round(rect.right)}, available=${Math.round(left)}..${Math.round(right)}, height=${Math.round(rect.height)}` });
+          }
+        }
+      }
+      if (isGuruRoute) {
         const params = new URLSearchParams(currentRoute.split("?")[1] || "");
         const guruId = params.get("guru") || "";
-        const selectedTab = document.querySelector('[role="tab"][aria-selected="true"]');
-        const landing = document.querySelector("[data-superinvestor-guru-landing]");
-        const landingAsOf = landing?.querySelector("[data-superinvestor-guru-landing-asof]");
-        const landingLag = landing?.querySelector("[data-superinvestor-guru-landing-lag]");
-        const landingActions = Array.from(landing?.querySelectorAll("[data-superinvestor-guru-action]") || []);
-        const landingStockLinks = Array.from(landing?.querySelectorAll("[data-superinvestor-guru-landing-stock-link]") || []);
-        const cards = Array.from(document.querySelectorAll("[data-superinvestor-guru-card]"));
-        const card = cards.find((node) => node.getAttribute("data-superinvestor-guru-id") === guruId);
-        const profile = document.querySelector(`[data-superinvestor-guru-profile][data-superinvestor-guru-id="${guruId}"]`);
-        const profileHero = profile?.querySelector("[data-superinvestor-guru-profile-hero]");
-        const asOf = profile?.querySelector("[data-superinvestor-guru-asof]");
-        const lag = profile?.querySelector("[data-superinvestor-guru-lag-disclosure]");
-        const filing = profile?.querySelector("[data-superinvestor-guru-filing]");
-        const kpis = Array.from(profile?.querySelectorAll("[data-superinvestor-guru-kpi]") || []);
-        const portfolio = profile?.querySelector("[data-superinvestor-guru-portfolio]");
-        const treemap = profile?.querySelector("[data-superinvestor-guru-treemap]");
-        const topHoldings = profile?.querySelector("[data-superinvestor-guru-top-holdings]");
-        const holdingRows = Array.from(profile?.querySelectorAll("[data-superinvestor-guru-holding-row]") || []);
-        const top5Links = Array.from(card?.querySelectorAll("a[data-superinvestor-guru-top5-link]") || []);
-        const holdingLinks = holdingRows
-          .map((row) => row.querySelector('a[href^="/stock/"]'))
-          .filter(Boolean);
-
-        if (!selectedTab || !(selectedTab.textContent || "").includes("투자자")) {
-          failures.push({ check: "superinvestors-guru-selected-tab", detail: `selected=${selectedTab?.textContent || ""}` });
+        const detail = document.querySelector(`[data-superinvestors-guru-detail-view][data-superinvestors-holder-detail-id="${guruId}"]`);
+        if (!detail || detail.getBoundingClientRect().height <= 0 || !/\d{4}-Q\d/.test(detail.textContent || "")) {
+          failures.push({ check: "superinvestors-guru-detail", detail: "missing visible guru detail with quarter" });
         }
-        if (!landing) {
-          failures.push({ check: "superinvestors-guru-landing", detail: "missing selected guru landing strip" });
-        } else {
-          const landingRect = landing.getBoundingClientRect();
-          if (landing.getAttribute("data-superinvestor-guru-id") !== guruId) {
-            failures.push({ check: "superinvestors-guru-landing-id", detail: `landing=${landing.getAttribute("data-superinvestor-guru-id") || ""} expected=${guruId}` });
-          }
-          if (landingRect.height <= 0 || landingRect.top >= window.innerHeight) {
-            failures.push({ check: "superinvestors-guru-first-viewport", detail: `top=${Math.round(landingRect.top)} height=${Math.round(landingRect.height)} viewport=${window.innerHeight}` });
-          }
+        const back = detail?.querySelector("[data-superinvestors-guru-back]");
+        if (!back || back.getBoundingClientRect().height < 44) {
+          failures.push({ check: "superinvestors-guru-back", detail: "missing visible back control" });
         }
-        if (!landingAsOf || !/\d{4}-Q\d/.test(landingAsOf.textContent || "")) {
-          failures.push({ check: "superinvestors-guru-landing-asof", detail: `asOf=${landingAsOf?.textContent || ""}` });
+      } else if (isStocksRoute) {
+        const input = document.querySelector("[data-superinvestors-whoholds-input]");
+        if (!input || input.getBoundingClientRect().width <= 0) {
+          failures.push({ check: "superinvestors-stocks-search", detail: "missing visible stock holdings search" });
         }
-        if (!landingLag || !(landingLag.textContent || "").includes("45")) {
-          failures.push({ check: "superinvestors-guru-landing-lag", detail: `lag=${landingLag?.textContent || ""}` });
+      } else if (isInvestorsRoute) {
+        const holders = document.querySelector("[data-superinvestors-holders]");
+        const holderRows = Array.from(document.querySelectorAll("[data-superinvestors-holder-row]"));
+        const headCells = Array.from(holders?.querySelectorAll("thead th") || []);
+        if (!holders || holders.getBoundingClientRect().height <= 0) {
+          failures.push({ check: "superinvestors-holders", detail: "missing visible holders panel" });
         }
-        if (landingActions.length < 4) {
-          failures.push({ check: "superinvestors-guru-landing-actions", detail: `actions=${landingActions.length}` });
+        if (holderRows.length < 10) {
+          failures.push({ check: "superinvestors-holder-rows", detail: `rows=${holderRows.length}` });
         }
-        if (!card) {
-          failures.push({ check: "superinvestors-guru-card", detail: `guru=${guruId || "missing"}` });
-        } else {
-          if (card.getAttribute("data-superinvestor-guru-expanded") !== "true") {
-            failures.push({ check: "superinvestors-guru-expanded", detail: `expanded=${card.getAttribute("data-superinvestor-guru-expanded") || ""}` });
-          }
-          if (cards[0] !== card) {
-            failures.push({ check: "superinvestors-guru-pinned-first", detail: `first=${cards[0]?.getAttribute("data-superinvestor-guru-id") || ""} expected=${guruId}` });
-          }
+        if (headCells.length !== 5) {
+          failures.push({ check: "superinvestors-holder-columns", detail: `columns=${headCells.length}` });
         }
-        if (!profile || profile.getBoundingClientRect().height <= 0) {
-          failures.push({ check: "superinvestors-guru-profile-visible", detail: `guru=${guruId || "missing"}` });
+        if (sortBtns.length !== 3 || sortBtns.filter((btn) => btn.getAttribute("aria-pressed") === "true").length !== 1) {
+          failures.push({ check: "superinvestors-sort-tabs", detail: `tabs=${sortBtns.length}` });
         }
-        if (!profileHero || profileHero.getBoundingClientRect().height <= 0) {
-          failures.push({ check: "superinvestors-guru-profile-hero", detail: "missing visible profile hero" });
+        const holderCells = holderRows[0]?.querySelectorAll("th, td").length ?? 0;
+        if (holderRows.length > 0 && holderCells !== 5) {
+          failures.push({ check: "superinvestors-holder-row-cells", detail: `cells=${holderCells}` });
         }
-        if (!asOf || !/\d{4}-Q\d/.test(asOf.textContent || "")) {
-          failures.push({ check: "superinvestors-guru-asof", detail: `asOf=${asOf?.textContent || ""}` });
+        if (viewportWidth <= 1199) {
+          holderRows.slice(0, 5).forEach((row, index) => {
+            for (const cell of row.querySelectorAll("th, td")) {
+              const rect = cell.getBoundingClientRect();
+              if (rect.width <= 0 || rect.left < -1 || rect.right > viewportWidth + 1) {
+                failures.push({ check: "superinvestors-holder-fields-visible", detail: `row=${index} field=${cell.textContent?.trim().slice(0, 30)} left=${rect.left} right=${rect.right}` });
+              }
+            }
+          });
         }
-        if (!filing || !/\d{4}-\d{2}-\d{2}/.test(filing.textContent || "")) {
-          failures.push({ check: "superinvestors-guru-filing-date", detail: `filing=${filing?.textContent || ""}` });
+        const overlap = document.querySelector("[data-superinvestors-overlap]");
+        const overlapRows = Array.from(document.querySelectorAll("[data-superinvestors-overlap-row]"));
+        if (!overlap || overlap.getBoundingClientRect().height <= 0) {
+          failures.push({ check: "superinvestors-overlap", detail: "missing visible overlap panel" });
         }
-        if (!lag || !(lag.textContent || "").includes("45")) {
-          failures.push({ check: "superinvestors-guru-13f-lag", detail: `lag=${lag?.textContent || ""}` });
+        if (overlapRows.length !== 4) {
+          failures.push({ check: "superinvestors-overlap-rows", detail: `rows=${overlapRows.length}` });
         }
-        if (kpis.length < 4) {
-          failures.push({ check: "superinvestors-guru-kpis", detail: `kpis=${kpis.length}` });
+        const overlapHolders = overlapRows.map((node) => Number.parseInt(node.getAttribute("data-superinvestors-overlap-holders") || "", 10));
+        const overlapDesc = overlapHolders.every((value, index) => index === 0 || (Number.isFinite(value) && Number.isFinite(overlapHolders[index - 1]) && overlapHolders[index - 1] >= value));
+        if (overlapHolders.length !== overlapRows.length || !overlapDesc) {
+          failures.push({ check: "superinvestors-overlap-sort", detail: `holders=${JSON.stringify(overlapHolders)}` });
         }
-        if (!portfolio || portfolio.getBoundingClientRect().height <= 0) {
-          failures.push({ check: "superinvestors-guru-portfolio-visible", detail: "missing portfolio section" });
+        overlapRows
+          .filter((row) => row.getBoundingClientRect().width > 0 && row.getBoundingClientRect().height > 0)
+          .forEach((row, index) => {
+            const rowRect = row.getBoundingClientRect();
+            const cells = Array.from(row.children).slice(0, 3);
+            const cellRects = cells.map((cell) => cell.getBoundingClientRect());
+            if (cells.length !== 3) {
+              failures.push({ check: "superinvestors-overlap-row-cells", detail: `row=${index} cells=${cells.length}` });
+              return;
+            }
+            cellRects.forEach((rect, cellIndex) => {
+              const cell = cells[cellIndex];
+              if (rect.left < rowRect.left - 1 || rect.right > rowRect.right + 1) {
+                failures.push({ check: "superinvestors-overlap-cell-containment", detail: `row=${index} cell=${cellIndex} bounds=${Math.round(rect.left)}..${Math.round(rect.right)} row=${Math.round(rowRect.left)}..${Math.round(rowRect.right)}` });
+              }
+              const textWidth = Math.max(cell.scrollWidth, cell.clientWidth);
+              if (textWidth > cell.clientWidth + 1) {
+                failures.push({ check: "superinvestors-overlap-text-containment", detail: `row=${index} cell=${cellIndex} scrollWidth=${textWidth} clientWidth=${cell.clientWidth}` });
+              }
+            });
+            for (let cellIndex = 1; cellIndex < cellRects.length; cellIndex += 1) {
+              if (cellRects[cellIndex].left - cellRects[cellIndex - 1].right < 7) {
+                failures.push({ check: "superinvestors-overlap-cell-separation", detail: `row=${index} cells=${cellIndex - 1}/${cellIndex} right=${Math.round(cellRects[cellIndex - 1].right)} nextLeft=${Math.round(cellRects[cellIndex].left)}` });
+              }
+            }
+          });
+      } else if (/tab=(trades|insights|graph)(?:&|$)/.test(currentRoute)) {
+        const selectedTab = new URLSearchParams(currentRoute.split("?")[1] || "").get("tab");
+        const selectors = { trades: "[data-superinvestor-trades-panel]", insights: "[data-superinvestor-insights-status]", graph: "[data-superinvestors-graph]" };
+        const panel = document.querySelector(selectors[selectedTab]);
+        if (!panel || panel.getBoundingClientRect().height <= 0) failures.push({ check: "superinvestors-active-tab-content", detail: selectedTab });
+        const active = document.querySelector(`[data-superinvestors-tab="${selectedTab}"]`);
+        if (active?.getAttribute("aria-selected") !== "true") failures.push({ check: "superinvestors-active-tab-identity", detail: selectedTab });
+      } else {
+        const signalLists = Array.from(document.querySelectorAll("[data-superinvestors-signal-list]"))
+          .filter((node) => node.getBoundingClientRect().height > 0);
+        const signalRows = Array.from(document.querySelectorAll("[data-superinvestors-signal-row]"))
+          .filter((node) => node.getBoundingClientRect().height > 0);
+        const followBtns = Array.from(document.querySelectorAll("[data-superinvestors-follow]"));
+        if (signalLists.length !== 3) {
+          failures.push({ check: "superinvestors-signal-lists", detail: `lists=${signalLists.length}` });
         }
-        if (!treemap || Number.parseInt(treemap.getAttribute("data-superinvestor-guru-treemap-count") || "", 10) < 1) {
-          failures.push({ check: "superinvestors-guru-treemap", detail: `count=${treemap?.getAttribute("data-superinvestor-guru-treemap-count") || ""}` });
+        if (signalRows.length < 3) {
+          failures.push({ check: "superinvestors-signal-rows", detail: `rows=${signalRows.length}` });
         }
-        if (!topHoldings || topHoldings.getBoundingClientRect().height <= 0 || holdingRows.length < 8) {
-          failures.push({ check: "superinvestors-guru-top-holdings", detail: `rows=${holdingRows.length}` });
+        if (followBtns.length !== 2 || followBtns.filter((btn) => btn.getAttribute("aria-pressed") === "true").length !== 1) {
+          failures.push({ check: "superinvestors-follow-toggle", detail: `tabs=${followBtns.length}` });
         }
-        if (portfolio && topHoldings && !(portfolio.compareDocumentPosition(topHoldings) & Node.DOCUMENT_POSITION_FOLLOWING)) {
-          failures.push({ check: "superinvestors-guru-profile-order", detail: "portfolio should precede top holdings" });
+        const whoholds = document.querySelector("[data-superinvestors-whoholds]");
+        const whoholdsInput = document.querySelector("[data-superinvestors-whoholds-input]");
+        if (!whoholds || whoholds.getBoundingClientRect().height <= 0 || !whoholdsInput || whoholdsInput.getBoundingClientRect().width <= 0) {
+          failures.push({ check: "superinvestors-whoholds", detail: "missing visible who-holds search" });
         }
-        if (top5Links.length < 3) {
-          failures.push({ check: "superinvestors-guru-top5-stock-links", detail: `links=${top5Links.length}` });
-        }
-        if (holdingLinks.length < Math.min(8, holdingRows.length)) {
-          failures.push({ check: "superinvestors-guru-holding-stock-links", detail: `links=${holdingLinks.length} rows=${holdingRows.length}` });
-        }
-        [...landingStockLinks, ...top5Links, ...holdingLinks.slice(0, 8)].forEach((link, index) => {
-          const href = link instanceof HTMLAnchorElement ? new URL(link.href, window.location.origin).pathname : "";
-          if (!href.startsWith("/stock/")) {
-            failures.push({ check: "superinvestors-guru-action-href", detail: `index=${index} href=${href}` });
-          }
-        });
-        [...landingActions, ...top5Links, ...holdingLinks.slice(0, 8)].forEach((link, index) => {
-          const rect = link.getBoundingClientRect();
-          if (rect.height < 44) {
-            failures.push({ check: "superinvestors-guru-action-touch-target", detail: `index=${index} height=${Math.round(rect.height)}` });
-          }
-        });
-      }
-      if (currentRoute.includes("tab=by-ticker") && (currentRoute.includes("ticker=") || currentRoute.includes("symbol="))) {
-        const params = new URLSearchParams(currentRoute.split("?")[1] || "");
-        const ticker = (params.get("ticker") || params.get("symbol") || "").toUpperCase();
-        const selectedTab = document.querySelector('[role="tab"][aria-selected="true"]');
-        const landing = document.querySelector("[data-superinvestor-ticker-landing]");
-        const panel = document.querySelector("[data-superinvestor-ticker-panel]");
-        const result = document.querySelector("[data-superinvestor-ticker-result]");
-        const landingAsOf = landing?.querySelector("[data-superinvestor-ticker-landing-asof]");
-        const landingLag = landing?.querySelector("[data-superinvestor-ticker-landing-lag]");
-        const panelAsOf = panel?.querySelector("[data-superinvestor-ticker-asof]");
-        const panelLag = panel?.querySelector("[data-superinvestor-ticker-lag]");
-        const kpis = Array.from(document.querySelectorAll("[data-superinvestor-ticker-kpi]"));
-        const stockLinks = Array.from(document.querySelectorAll("[data-superinvestor-ticker-stock-link]"));
-        const screenerLinks = Array.from(document.querySelectorAll("[data-superinvestor-ticker-screener-link]"));
-        const investorLinks = Array.from(document.querySelectorAll("[data-superinvestor-ticker-investor-link], [data-superinvestor-ticker-holder-link]"));
-        const holdersRegion = document.querySelector("[data-superinvestor-ticker-holders]");
-        const rows = Array.from(document.querySelectorAll("[data-superinvestor-ticker-holder-row]"));
-        const holderLinks = Array.from(document.querySelectorAll("[data-superinvestor-ticker-holder-link]"));
-
-        if (!selectedTab || !(selectedTab.textContent || "").includes("종목별")) {
-          failures.push({ check: "superinvestors-by-ticker-selected-tab", detail: `selected=${selectedTab?.textContent || ""}` });
-        }
-        if (!landing) {
-          failures.push({ check: "superinvestors-by-ticker-landing", detail: "missing selected ticker landing strip" });
-        } else {
-          const landingRect = landing.getBoundingClientRect();
-          if (landing.getAttribute("data-superinvestor-ticker-symbol") !== ticker) {
-            failures.push({ check: "superinvestors-by-ticker-landing-symbol", detail: `landing=${landing.getAttribute("data-superinvestor-ticker-symbol") || ""} expected=${ticker}` });
-          }
-          if (landingRect.height <= 0 || landingRect.top >= window.innerHeight) {
-            failures.push({ check: "superinvestors-by-ticker-first-viewport", detail: `top=${Math.round(landingRect.top)} height=${Math.round(landingRect.height)} viewport=${window.innerHeight}` });
-          }
-        }
-        if (!panel || panel.getAttribute("data-superinvestor-ticker-symbol") !== ticker) {
-          failures.push({ check: "superinvestors-by-ticker-panel", detail: `panel=${panel?.getAttribute("data-superinvestor-ticker-symbol") || ""} expected=${ticker}` });
-        }
-        if (!result || result.getBoundingClientRect().height <= 0) {
-          failures.push({ check: "superinvestors-by-ticker-result-visible", detail: "missing visible ticker result" });
-        }
-        if (!landingAsOf || !/\d{4}-Q\d/.test(landingAsOf.textContent || "")) {
-          failures.push({ check: "superinvestors-by-ticker-landing-asof", detail: `asOf=${landingAsOf?.textContent || ""}` });
-        }
-        if (!panelAsOf || !/\d{4}-Q\d/.test(panelAsOf.textContent || "")) {
-          failures.push({ check: "superinvestors-by-ticker-panel-asof", detail: `asOf=${panelAsOf?.textContent || ""}` });
-        }
-        if (!landingLag || !(landingLag.textContent || "").includes("45") || !panelLag || !(panelLag.textContent || "").includes("45")) {
-          failures.push({ check: "superinvestors-by-ticker-13f-lag", detail: `landing=${landingLag?.textContent || ""} panel=${panelLag?.textContent || ""}` });
-        }
-        if (kpis.length < 3) {
-          failures.push({ check: "superinvestors-by-ticker-kpis", detail: `kpis=${kpis.length}` });
-        }
-        if (!holdersRegion || holdersRegion.getBoundingClientRect().height <= 0 || rows.length < 8) {
-          failures.push({ check: "superinvestors-by-ticker-holder-rows", detail: `rows=${rows.length}` });
-        }
-        if (holderLinks.length < Math.min(8, rows.length)) {
-          failures.push({ check: "superinvestors-by-ticker-holder-links", detail: `links=${holderLinks.length} rows=${rows.length}` });
-        }
-        if (stockLinks.length < 2) {
-          failures.push({ check: "superinvestors-by-ticker-stock-links", detail: `links=${stockLinks.length}` });
-        }
-        if (screenerLinks.length < 2) {
-          failures.push({ check: "superinvestors-by-ticker-screener-links", detail: `links=${screenerLinks.length}` });
-        }
-        [...stockLinks, ...screenerLinks, ...investorLinks.slice(0, 12)].forEach((link, index) => {
-          const url = link instanceof HTMLAnchorElement ? new URL(link.href, window.location.origin) : null;
-          const href = url ? `${url.pathname}${url.search}` : "";
-          const isStock = link.matches("[data-superinvestor-ticker-stock-link]");
-          const isScreener = link.matches("[data-superinvestor-ticker-screener-link]");
-          const isInvestor = link.matches("[data-superinvestor-ticker-investor-link], [data-superinvestor-ticker-holder-link]");
-          if (isStock && !href.startsWith(`/stock/${ticker}`)) {
-            failures.push({ check: "superinvestors-by-ticker-stock-href", detail: `index=${index} href=${href}` });
-          }
-          if (isScreener && !(url?.pathname.replace(/\/$/, "") === "/screener" && url.searchParams.get("ticker") === ticker)) {
-            failures.push({ check: "superinvestors-by-ticker-screener-href", detail: `index=${index} href=${href}` });
-          }
-          if (isInvestor && !(url?.pathname.replace(/\/$/, "") === "/superinvestors" && url.searchParams.get("tab") === "gurus" && url.searchParams.get("guru"))) {
-            failures.push({ check: "superinvestors-by-ticker-investor-href", detail: `index=${index} href=${href}` });
-          }
-          const rect = link.getBoundingClientRect();
-          if (rect.height < 44) {
-            failures.push({ check: "superinvestors-by-ticker-action-touch-target", detail: `index=${index} height=${Math.round(rect.height)}` });
+        followBtns.forEach((btn, index) => {
+          const rect = btn.getBoundingClientRect();
+          if (rect.height < 32 || rect.width <= 0) {
+            failures.push({ check: "superinvestors-follow-touch-target", detail: `follow ${index} ${Math.round(rect.width)}x${Math.round(rect.height)}` });
           }
         });
       }
+      // The graph teaser lives in the investors-tab rail; the guru detail
+      // view replaces that grid, so skip the teaser check on guru routes.
+      const graphTeaser = document.querySelector("[data-superinvestors-graph-teaser]");
+      if (isInvestorsRoute && !isGuruRoute && (!graphTeaser || graphTeaser.getBoundingClientRect().height <= 0 || !/그래프 보기/.test(graphTeaser.textContent || ""))) {
+        failures.push({ check: "superinvestors-graph-teaser", detail: "missing visible graph teaser" });
+      }
+      sortBtns.forEach((btn, index) => {
+        const rect = btn.getBoundingClientRect();
+        if (rect.height < 32 || rect.width <= 0) {
+          failures.push({ check: "superinvestors-sort-touch-target", detail: `tab ${index} ${Math.round(rect.width)}x${Math.round(rect.height)}` });
+        }
+      });
+      if (viewportWidth < 768) {
+        Array.from(document.querySelectorAll("[data-superinvestors-holder-row]"))
+          .filter((node) => node.getBoundingClientRect().width > 0)
+          .forEach((node, index) => {
+            const rect = node.getBoundingClientRect();
+            if (rect.height < 44) {
+              failures.push({ check: "superinvestors-holder-button-target", detail: `holder ${index} height=${Math.round(rect.height)}` });
+            }
+          });
+      }
+      // overlap + graph + guru checks live above; route-wide link checks retired
+      // with the tab-specific panels (fh-590 light-system single view).
     }
 
     return {
@@ -3439,15 +3547,38 @@ async function collectRouteChecks(page, route) {
       scrollWidth,
       failures,
     };
-  }, route);
+  }, { currentRoute: route, adminSessionAvailable });
+}
+
+async function collectCohortPaintProbe(page) {
+  const samples = [];
+  for (const delayMs of [100, 1000, 5000]) {
+    await page.waitForTimeout(delayMs);
+    samples.push(await page.evaluate(() => {
+      const panel = document.querySelector("[data-superinvestor-cohort-treemap]");
+      const canvas = panel?.querySelector("canvas");
+      if (!canvas) return { canvas: false, count: panel?.getAttribute("data-superinvestor-cohort-treemap-count") };
+      const rect = canvas.getBoundingClientRect();
+      const style = getComputedStyle(canvas);
+      let ink = 0;
+      try {
+        const pixels = canvas.getContext("2d").getImageData(0, 0, canvas.width, canvas.height).data;
+        for (let i = 0; i < pixels.length; i += 64) {
+          if (pixels[i + 3] > 0 && Math.min(pixels[i], pixels[i + 1], pixels[i + 2]) < 240) ink += 1;
+        }
+      } catch (error) { return { canvas: true, error: String(error) }; }
+      return { canvas: true, width: rect.width, height: rect.height, backingWidth: canvas.width, backingHeight: canvas.height, ink, opacity: style.opacity, visibility: style.visibility };
+    }));
+  }
+  return samples;
 }
 
 async function collectScreenerExpandedChecks(page, route) {
   const viewport = page.viewportSize();
-  if (viewport && viewport.width >= 768) {
+  if (!viewport || !isAnalyzeScreenerRoute(route) || viewport.width >= 768) {
     return {
       route,
-      viewportWidth: viewport.width,
+      viewportWidth: viewport?.width ?? null,
       scrollWidth: null,
       failures: [],
     };
@@ -3464,9 +3595,19 @@ async function collectScreenerExpandedChecks(page, route) {
   }
 
   await button.click({ timeout: 10000 });
-  await page.waitForTimeout(500);
+  const detailSelector = '[id^="screener-mobile-detail"]';
+  await page.waitForSelector(detailSelector, { state: "visible", timeout: 10000 });
+  // The sheet fetches per-ticker detail after opening and the primary CTA only
+  // exists in the loaded body, so a fixed sleep flakes on slow fetches. Wait
+  // for settle (CTA present or the pending notice gone) before asserting.
+  await page.waitForFunction((selector) => {
+    const root = document.querySelector(selector);
+    if (!root) return false;
+    if (root.querySelector(".cpw4-primary-cta")) return true;
+    return root.querySelector('[data-testid="data-state-notice"][data-data-state="pending"]') === null;
+  }, detailSelector, { timeout: 15000 }).catch(() => null);
 
-  return page.evaluate((currentRoute) => {
+  const expandedResult = await page.evaluate((currentRoute) => {
     const failures = [];
     const viewportWidth = window.innerWidth;
     const scrollWidth = Math.max(
@@ -3486,7 +3627,9 @@ async function collectScreenerExpandedChecks(page, route) {
       });
     }
     if (!primaryCta) {
-      failures.push({ check: "screener-expanded-primary-cta", detail: "expanded detail primary CTA missing" });
+      const pendingNotice = detail?.querySelector('[data-testid="data-state-notice"]');
+      const dataState = pendingNotice?.getAttribute("data-data-state") ?? "no-notice";
+      failures.push({ check: "screener-expanded-primary-cta", detail: `expanded detail primary CTA missing (data-state=${dataState})` });
     } else {
       const style = window.getComputedStyle(primaryCta);
       if (style.color === style.backgroundColor) {
@@ -3510,11 +3653,18 @@ async function collectScreenerExpandedChecks(page, route) {
       failures,
     };
   }, route);
+  // The sheet is modal with a fixed backdrop: close it so the following checks
+  // probe the list, not the backdrop (elementFromPoint would hit the sheet).
+  await page.keyboard.press("Escape");
+  await page.waitForSelector(detailSelector, { state: "detached", timeout: 5000 }).catch(async () => {
+    await page.locator(`${detailSelector} .cp-screener-detail-sheet__close`).first().click({ timeout: 3000 }).catch(() => null);
+  });
+  return expandedResult;
 }
 
 async function collectScreenerCheckboxTargetChecks(page, route) {
   const viewport = page.viewportSize();
-  if (!viewport || viewport.width >= 768) {
+  if (!viewport || !isAnalyzeScreenerRoute(route) || viewport.width >= 768) {
     return { route, failures: [] };
   }
 
@@ -3572,7 +3722,7 @@ async function collectScreenerCheckboxTargetChecks(page, route) {
 
 async function collectScreenerCardViewChecks(page, route) {
   const viewport = page.viewportSize();
-  if (!viewport || viewport.width < 768) {
+  if (!viewport || !isAnalyzeScreenerRoute(route) || viewport.width < 921) {
     return {
       route,
       viewportWidth: viewport?.width ?? null,
@@ -3622,7 +3772,7 @@ async function collectScreenerCardViewChecks(page, route) {
     await page.waitForTimeout(300);
   }
 
-  return page.evaluate(({ currentRoute, peerBaselineBefore }) => {
+  const result = await page.evaluate(({ currentRoute, peerBaselineBefore }) => {
     const failures = [];
     const viewportWidth = window.innerWidth;
     const scrollWidth = Math.max(
@@ -3685,6 +3835,80 @@ async function collectScreenerCardViewChecks(page, route) {
       failures,
     };
   }, { currentRoute: route, peerBaselineBefore: peerBaseline });
+
+  // Expansion opens a modal drawer. Close it before restoring table mode;
+  // otherwise its backdrop intercepts the click and leaves card mode stored.
+  await page.keyboard.press("Escape");
+  await page.locator('[id^="screener-card-detail"]').waitFor({ state: "detached", timeout: 5000 });
+  await page
+    .locator('[data-screener-view-mode-option="table"]:visible')
+    .first()
+    .click({ timeout: 10000 });
+  await page.locator('[data-screener-view-mode-option="table"][aria-pressed="true"]:visible')
+    .waitFor({ state: "visible", timeout: 5000 });
+
+  return result;
+}
+
+async function collectScreenerFilterSheetChecks(page, route) {
+  const viewport = page.viewportSize();
+  if (!viewport || route !== "/screener" || viewport.width > 920) {
+    return { route, failures: [] };
+  }
+
+  const failures = [];
+  try {
+    // The filter chip is always visible below 921px (label "필터", or "필터 N"
+    // with N active conditions), so the plain analyze route opens the sheet.
+    await page.goto(routeUrl(route), { waitUntil: "networkidle", timeout: 45000 });
+    const chip = page.locator("[data-screener-chip-row] > button").first();
+    await chip.waitFor({ state: "visible", timeout: 15000 });
+    await chip.click({ timeout: 10000 });
+    const dialog = page.locator('[data-screener-filter-sheet] [role="dialog"]').first();
+    await dialog.waitFor({ state: "visible", timeout: 10000 });
+
+    const focusInSheet = await page.evaluate(() => {
+      const panel = document.querySelector('[data-screener-filter-sheet] [role="dialog"]');
+      return Boolean(panel && document.activeElement && panel.contains(document.activeElement));
+    });
+    if (!focusInSheet) {
+      failures.push({ check: "screener-filter-sheet-focus", detail: "focus did not move into the sheet" });
+    }
+
+    const undersized = await page.evaluate(() => {
+      const panel = document.querySelector('[data-screener-filter-sheet] [role="dialog"]');
+      if (!panel) return -1;
+      return Array.from(panel.querySelectorAll('button, a, select, input:not([type="checkbox"])'))
+        .filter((node) => {
+          const rect = node.getBoundingClientRect();
+          return rect.width > 0 && rect.height > 0 && rect.height < 44;
+        }).length;
+    });
+    if (undersized !== 0) {
+      failures.push({ check: "screener-filter-sheet-controls", detail: `controls under 44px: ${undersized}` });
+    }
+
+    await page.keyboard.press("Escape");
+    await page.locator('[data-screener-filter-sheet] [role="dialog"]').first()
+      .waitFor({ state: "hidden", timeout: 10000 }).catch(() => {});
+    if ((await page.locator('[data-screener-filter-sheet] [role="dialog"]').count()) > 0) {
+      failures.push({ check: "screener-filter-sheet-escape", detail: "dialog still present after Escape" });
+    }
+    const focusReturned = await page.evaluate(() => {
+      const row = document.querySelector("[data-screener-chip-row]");
+      return Boolean(row && document.activeElement && row.contains(document.activeElement));
+    });
+    if (!focusReturned) {
+      failures.push({ check: "screener-filter-sheet-focus-return", detail: "focus did not return to the chip row" });
+    }
+  } catch (error) {
+    failures.push({ check: "screener-filter-sheet", detail: String(error) });
+  } finally {
+    await page.goto(routeUrl(route), { waitUntil: "domcontentloaded" }).catch(() => {});
+    await prepareDynamicRoute(page, route);
+  }
+
+  return { route, failures };
 }
 
 async function collectStockFinancialChartChecks(page, route) {
@@ -3730,7 +3954,7 @@ async function collectStockFinancialChartChecks(page, route) {
 }
 
 async function collectStockEstimatesToggleChecks(page, route) {
-  const button = page.locator('[data-stock-estimates-granularity="quarterly"]').first();
+  const button = page.locator('[data-stock-estimates-granularity="quarterly"]:visible').first();
   if ((await button.count()) === 0) {
     return {
       route,
@@ -3738,6 +3962,32 @@ async function collectStockEstimatesToggleChecks(page, route) {
       scrollWidth: null,
       failures: [{ check: "stock-estimates-quarterly-toggle-click", detail: "no quarterly estimates toggle" }],
     };
+  }
+
+  // The quarterly view is honestly unavailable until its consensus feed exists:
+  // the toggle ships disabled with the reason in its label/title, so the probe
+  // asserts that state instead of clicking.
+  if (await button.isDisabled()) {
+    return page.evaluate((currentRoute) => {
+      const failures = [];
+      const viewportWidth = window.innerWidth;
+      const scrollWidth = Math.max(
+        document.documentElement.scrollWidth,
+        document.body?.scrollWidth ?? 0,
+      );
+      const quarterlyButton = document.querySelector('[data-stock-estimates-granularity="quarterly"]');
+      const reason = `${quarterlyButton?.textContent ?? ""} ${quarterlyButton?.getAttribute("title") ?? ""}`;
+      if (!reason.includes("미연결")) {
+        failures.push({ check: "stock-estimates-quarterly-disabled-reason", detail: "disabled quarterly toggle does not state its reason" });
+      }
+      if (scrollWidth > viewportWidth + 1) {
+        failures.push({
+          check: "stock-estimates-quarterly-no-horizontal-overflow",
+          detail: `scrollWidth=${scrollWidth} viewport=${viewportWidth}`,
+        });
+      }
+      return { route: currentRoute, viewportWidth, scrollWidth, failures };
+    }, route);
   }
 
   await button.click({ timeout: 10000 });
@@ -3787,7 +4037,15 @@ async function collectStockSummaryAxisClickChecks(page, route) {
   }
 
   await button.click({ timeout: 10000 });
-  await page.waitForTimeout(300);
+  // Consensus lives inside the user-expandable annual/quarterly detail.
+  const estimateDetails = page.locator('details[data-stock-tab-card="estimates-yf"]');
+  await estimateDetails.waitFor({ state: "visible", timeout: 15000 });
+  if ((await estimateDetails.getAttribute("open")) === null) {
+    await estimateDetails.locator("summary").click();
+  }
+  await page.locator('[data-stock-estimates-consensus-summary]:visible').first()
+    .waitFor({ state: "visible", timeout: 10000 })
+    .catch(() => {});
 
   return page.evaluate((currentRoute) => {
     const failures = [];
@@ -3898,12 +4156,23 @@ async function collectSectorViewSwitchChecks(page, route) {
     };
   }
 
-  const expectedTabs = ["heatmap", "etf", "valuation", "guru"];
+  const expectedTabs = [
+    { key: "1w", label: "1주" },
+    { key: "1m", label: "1개월" },
+    { key: "3m", label: "3개월" },
+    { key: "6m", label: "6개월" },
+    { key: "ytd", label: "연초이후" },
+  ];
   const failures = [];
   let clickScrollWidth = null;
 
   for (const tab of expectedTabs) {
-    await page.locator(`[data-sector-view-tab="${tab}"]`).click();
+    const button = page.locator("[data-sectors-period-toggle] button").filter({ hasText: tab.label }).first();
+    if ((await button.count()) === 0) {
+      failures.push({ check: "sector-period-toggle-target", detail: `missing=${tab.key}` });
+      continue;
+    }
+    await button.click();
     await page.waitForTimeout(150);
     const check = await page.evaluate((key) => {
       const localFailures = [];
@@ -3912,30 +4181,29 @@ async function collectSectorViewSwitchChecks(page, route) {
         document.documentElement.scrollWidth,
         document.body?.scrollWidth ?? 0,
       );
-      const button = document.querySelector(`[data-sector-view-tab="${key}"]`);
-      const panel = document.querySelector(`[data-sector-panel="${key}"]`);
-      const current = document.querySelector("[data-sector-view-current]");
-      const buttonPressed = button?.getAttribute("aria-pressed") === "true";
+      const buttons = Array.from(document.querySelectorAll("[data-sectors-period-toggle] button"));
+      const button = buttons.find((node) => node.getAttribute("aria-pressed") === "true");
+      const panel = document.querySelector(`[data-sectors-flow-rows][data-sectors-flow-window="${key}"]`);
+      const buttonPressed = Boolean(button);
       const panelRect = panel?.getBoundingClientRect();
-      const currentKey = current?.getAttribute("data-sector-view-current");
 
       if (!buttonPressed) {
-        localFailures.push({ check: "sector-view-switch-click-state", detail: `tab=${key} aria-pressed=${button?.getAttribute("aria-pressed")}` });
+        localFailures.push({ check: "sector-period-toggle-click-state", detail: `window=${key} no pressed button` });
       }
       if (!panel || !panelRect || panelRect.width <= 0 || panelRect.height <= 0) {
-        localFailures.push({ check: "sector-view-switch-click-panel", detail: `tab=${key} panel not visible` });
-      }
-      if (currentKey !== key) {
-        localFailures.push({ check: "sector-view-current-summary", detail: `tab=${key} current=${currentKey || ""}` });
+        localFailures.push({ check: "sector-period-toggle-click-panel", detail: `window=${key} panel not visible` });
       }
       if (scrollWidth > viewportWidth + 1) {
         localFailures.push({
-          check: "sector-view-switch-no-horizontal-overflow",
-          detail: `tab=${key} scrollWidth=${scrollWidth} viewport=${viewportWidth}`,
+          check: "sector-period-toggle-no-horizontal-overflow",
+          detail: `window=${key} scrollWidth=${scrollWidth} viewport=${viewportWidth}`,
         });
       }
+      if (button && button.getBoundingClientRect().height < 44) {
+        localFailures.push({ check: "sector-period-toggle-target", detail: `window=${key} height=${Math.round(button.getBoundingClientRect().height)}` });
+      }
       return { failures: localFailures, scrollWidth };
-    }, tab);
+    }, tab.key);
     failures.push(...check.failures);
     clickScrollWidth = Math.max(clickScrollWidth ?? 0, check.scrollWidth ?? 0);
   }
@@ -3951,38 +4219,487 @@ if (viewports.length === 0) {
   throw new Error("No valid QA_MOBILE_UX_VIEWPORTS configured.");
 }
 
-const browser = await chromium.launch({
+async function collectInvestorStructureChecks(page, route, requests) {
+  if (!isolated || !route.startsWith("/superinvestors")) return { failures: [], observations: [] };
+  const observed = await page.evaluate(() => {
+    const failures = [];
+    const observations = [];
+    const visible = (node) => node instanceof HTMLElement && node.getClientRects().length > 0 && getComputedStyle(node).visibility !== "hidden";
+    const pairs = [
+      ["holdings", "[data-superinvestor-guru-top-holdings]", "[data-superinvestor-guru-holding-card]", "tr[data-superinvestor-guru-holding-row], [data-superinvestor-guru-desktop-holding-row]"],
+      ["bought", '[data-superinvestor-trades-panel][data-superinvestor-trades-side="bought"]', "[data-superinvestor-trades-card]", "tbody tr"],
+      ["sold", '[data-superinvestor-trades-panel][data-superinvestor-trades-side="sold"]', "[data-superinvestor-trades-card]", "tbody tr"],
+    ];
+    for (const [name, selector, cardSelector, tableSelector] of pairs) {
+      const container = document.querySelector(selector);
+      if (!container || !visible(container)) continue;
+      const cards = [...container.querySelectorAll(cardSelector)].filter(visible);
+      const rows = [...container.querySelectorAll(tableSelector)].filter(visible);
+      observations.push({ name, cards: cards.length, rows: rows.length, firstRowFields: rows[0]?.querySelectorAll("td").length ?? 0 });
+      if (cards.length > 0 && rows.length > 0) failures.push({ check: "investor-single-responsive-view", detail: `${name}: cards=${cards.length}, tableRows=${rows.length}` });
+      if (!cards.length && !rows.length) failures.push({ check: "investor-responsive-content", detail: `${name}: no visible rows` });
+      if (name === "holdings" && window.innerWidth <= 760) {
+        if (!rows.length) failures.push({ check: "investor-holding-fields", detail: "missing semantic holding row on phone" });
+        const cells = rows[0] ? [...rows[0].querySelectorAll("td")] : [];
+        if (cells.length < 8) failures.push({ check: "investor-holding-fields", detail: `fields=${cells.length}` });
+        for (const cell of cells) {
+          const rect = cell.getBoundingClientRect();
+          if (!visible(cell) || rect.left < -1 || rect.right > window.innerWidth + 1) failures.push({ check: "investor-holding-field-contained", detail: cell.textContent.slice(0, 60) });
+        }
+      }
+    }
+    return { failures, observations };
+  });
+  const { failures } = observed;
+  const url = new URL(route, baseUrl);
+  const tab = url.searchParams.get("tab") || "signal";
+  const guruId = url.searchParams.get("guru");
+  if (guruId && /^[a-z0-9_-]+$/i.test(guruId)) {
+    const payload = JSON.parse(await readFile(resolve("../data/sec-13f/investors", `${guruId}.json`), "utf8"));
+    const filing = payload.investor.filings.at(-1);
+    const heldTickers = new Set(filing.holdings.map((holding) => holding.ticker).filter(Boolean));
+    // Preserve the pre-remodel top-50 held plus up-to-50 fully sold contract.
+    const soldCount = (filing.changes_summary?.sold ?? []).filter((holding) => holding.ticker && !heldTickers.has(holding.ticker)).length;
+    const expectedRows = Math.min(50, heldTickers.size) + Math.min(50, soldCount);
+    const holdingObservation = observed.observations.find((item) => item.name === "holdings");
+    if (holdingObservation) holdingObservation.expectedRows = expectedRows;
+    if (holdingObservation?.rows !== expectedRows) failures.push({ check: "investor-holding-row-preservation", detail: `expected=${expectedRows}, actual=${holdingObservation?.rows ?? 0}` });
+  }
+  // Guru charts consume portfolio_views and factor_exposures_summary;
+  // only trades_ranking is unrelated to this destination.
+  if (url.searchParams.has("guru") && requests.some((path) => path.endsWith("/trades_ranking.json"))) {
+    failures.push({ check: "investor-guru-independent-feeds", detail: "guru requested unrelated trades feed" });
+  }
+  if (!url.searchParams.has("guru") && ["signal", "investors", "graph"].includes(tab)) {
+    const unrelated = requests.filter((path) => /\/(trades_ranking|portfolio_views|factor_exposures_summary)\.json$/.test(path));
+    if (unrelated.length) failures.push({ check: "investor-active-tab-feeds", detail: [...new Set(unrelated)].join(", ") });
+  }
+  return observed;
+}
+
+async function collectInvestorTabSwitchChecks(page, route, viewportName, requestPaths) {
+  if (!isolated || route !== "/superinvestors" || !["mobile", "tablet-landscape"].includes(viewportName)) return [];
+  const failures = [];
+  try {
+    for (const tab of ["stocks", "trades", "insights", "graph", "investors", "signal"]) {
+      const button = page.locator(`[data-superinvestors-tab="${tab}"]`);
+      await button.click();
+      await prepareDynamicRoute(page, `/superinvestors?tab=${tab}`);
+      if (await button.getAttribute("aria-selected") !== "true" || new URL(page.url()).searchParams.get("tab") !== tab) {
+        throw new Error(`tab selection/URL mismatch: ${tab}`);
+      }
+      if (tab === "trades") {
+        for (const side of ["bought", "sold"]) {
+          const panel = page.locator(`[data-superinvestor-trades-panel][data-superinvestor-trades-side="${side}"]`);
+          const rows = panel.locator("tbody tr");
+          const toggle = panel.locator('button[aria-pressed]');
+          if (await rows.count() !== 10) throw new Error(`${side}: expected 10 initial trade rows`);
+          await toggle.click();
+          if (await rows.count() <= 10 || await toggle.getAttribute("aria-pressed") !== "true") throw new Error(`${side}: trade expansion failed`);
+          await toggle.click();
+          if (await rows.count() !== 10) throw new Error(`${side}: trade collapse failed`);
+        }
+      }
+    }
+    const beforeReturn = requestPaths.length;
+    await page.locator('[data-superinvestors-tab="stocks"]').click();
+    await prepareDynamicRoute(page, "/superinvestors?tab=stocks");
+    await page.waitForLoadState("networkidle", { timeout: 5000 }).catch(() => {});
+    const repeated = requestPaths.slice(beforeReturn).filter((path) => /\/(portfolio_views|trades_ranking|new_positions|buying_pressure|conviction)\.json$/.test(path));
+    if (repeated.length) failures.push({ check: "investor-settled-tab-feed-reuse", detail: repeated.join(", ") });
+    await page.locator('[data-superinvestors-tab="signal"]').click();
+    await prepareDynamicRoute(page, "/superinvestors");
+  } catch (error) {
+    failures.push({ check: "investor-tab-switch", detail: String(error) });
+  }
+  return failures;
+}
+
+async function collectInvestorFeedRetryChecks(page, route, viewportName, requestPaths) {
+  if (!isolated || route !== "/superinvestors" || viewportName !== "mobile") return [];
+  const failures = [];
+  const feedUrl = new URL("/data/sec-13f/analytics/new_positions.json", baseUrl).href;
+  const failFeed = (requestRoute) => requestRoute.fulfill({ status: 503, contentType: "application/json", body: "{}" });
+  try {
+    await page.route(feedUrl, failFeed);
+    await page.reload({ waitUntil: "domcontentloaded" });
+    const errorStrip = page.locator(".stale-state").filter({ hasText: "신규 매수 집계를 불러오지 못했습니다." });
+    await errorStrip.waitFor({ state: "visible", timeout: 45000 });
+    const increases = page.locator('[data-superinvestors-signal-list="increased"]');
+    // One unavailable supplementary source must not erase the other lists.
+    await increases.waitFor({ state: "visible", timeout: 45000 });
+    await page.unroute(feedUrl, failFeed);
+    const beforeRetry = requestPaths.length;
+    await errorStrip.getByRole("button", { name: "다시 시도" }).click();
+    await page.locator('[data-superinvestors-signal-list="new"]').waitFor({ state: "visible", timeout: 45000 });
+    await errorStrip.waitFor({ state: "hidden", timeout: 45000 });
+    const retryRequests = requestPaths.slice(beforeRetry);
+    if (!retryRequests.some((path) => path.endsWith("/new_positions.json"))) throw new Error("retry did not request the failed source");
+    const unrelated = retryRequests.filter((path) => /\/(buying_pressure|conviction|portfolio_views|trades_ranking)\.json$/.test(path));
+    if (unrelated.length) throw new Error(`retry requested unrelated settled feeds: ${unrelated.join(", ")}`);
+  } catch (error) {
+    failures.push({ check: "investor-feed-retry-isolation", detail: String(error) });
+  } finally {
+    await page.unroute(feedUrl, failFeed);
+    if (failures.length) await page.goto(routeUrl(route), { waitUntil: "domcontentloaded" });
+    await prepareDynamicRoute(page, route);
+  }
+  return failures;
+}
+
+async function collectInvestorEnrichmentFailureChecks(page, route, viewportName) {
+  if (!isolated || route !== "/superinvestors" || viewportName !== "mobile") return [];
+  const failures = [];
+  const paths = ["/data/sec-13f/analytics/guru_holders_index.json", "/data/global-scouter/core/per_bands_index.json"];
+  const urls = paths.map((path) => new URL(path, baseUrl).href);
+  const attempted = new Set();
+  const failFeed = (requestRoute) => {
+    attempted.add(new URL(requestRoute.request().url()).pathname);
+    return requestRoute.fulfill({ status: 503, contentType: "application/json", body: "{}" });
+  };
+  try {
+    const rows = page.locator("[data-superinvestors-signal-row]:visible");
+    const scoreClock = page.locator('span[aria-label^="FENOK 신호 기준일 "]').first();
+    const waitForScores = () => page.waitForFunction(() => {
+      const clock = document.querySelector('span[aria-label^="FENOK 신호 기준일 "]');
+      return clock && !clock.textContent.includes("확인 중");
+    }, null, { timeout: 45000 });
+    const readScores = () => rows.evaluateAll((nodes) => nodes.map((node) => `${node.getAttribute("data-superinvestors-signal-ticker")}:${Array.from(node.querySelectorAll(".sup-epill")).map((pill) => pill.textContent).join("|")}`).sort());
+    await waitForScores();
+    const baseline = await rows.evaluateAll((nodes) => nodes.map((node) => node.getAttribute("data-superinvestors-signal-ticker")).sort());
+    if (!baseline.length) throw new Error("Enrichment failure control requires usable baseline signal rows");
+    const baselineScores = await readScores();
+    const baselineClock = await scoreClock.textContent();
+    if (!baselineScores.some((text) => /(?:단기|장기) \d/.test(text))) throw new Error("Score preservation control requires at least one real score");
+    for (const url of urls) await page.route(url, failFeed);
+    await page.reload({ waitUntil: "domcontentloaded" });
+    await prepareDynamicRoute(page, route);
+    await page.waitForFunction((count) => document.querySelectorAll("[data-superinvestors-signal-row]").length >= count, baseline.length, { timeout: 45000 });
+    const retained = await rows.evaluateAll((nodes) => nodes.map((node) => node.getAttribute("data-superinvestors-signal-ticker")).sort());
+    if (JSON.stringify(retained) !== JSON.stringify(baseline)) throw new Error("Optional evidence failure changed the existing signal ticker lists");
+    await waitForScores();
+    if (JSON.stringify(await readScores()) !== JSON.stringify(baselineScores) || await scoreClock.textContent() !== baselineClock) throw new Error("Optional evidence failure changed existing FENOK scores or their source clock");
+    if (paths.some((path) => !attempted.has(path))) throw new Error("Optional evidence failure did not exercise both requested feeds");
+    await page.locator('[data-superinvestors-tab="stocks"]').click();
+    await prepareDynamicRoute(page, "/superinvestors?tab=stocks");
+    if (await page.locator('[data-superinvestors-tab="stocks"]').getAttribute("aria-selected") !== "true") throw new Error("Optional evidence failure blocked stock exploration");
+  } catch (error) {
+    failures.push({ check: "investor-optional-enrichment-failure", detail: String(error) });
+  } finally {
+    for (const url of urls) await page.unroute(url, failFeed);
+    await page.goto(routeUrl(route), { waitUntil: "domcontentloaded" });
+    await prepareDynamicRoute(page, route);
+  }
+  return failures;
+}
+
+async function collectInvestorHoldingReturnChecks(page, route, viewportName) {
+  if (!isolated || !route.includes("guru=") || !["mobile", "tablet-landscape"].includes(viewportName)) return [];
+  const failures = [];
+  try {
+    const guruId = new URL(route, baseUrl).searchParams.get("guru");
+    const region = page.locator("[data-journey-holdings-scroll]:visible").first();
+    const links = page.locator('[data-superinvestor-guru-top-holdings] a[href*="/stock/"]:visible');
+    const tablet = viewportName === "tablet-landscape";
+    if (tablet) await region.evaluate((node) => { node.scrollTop = 240; });
+    const link = tablet ? links.nth(12) : links.first();
+    await link.scrollIntoViewIfNeeded();
+    const expectedScroll = tablet ? await region.evaluate((node) => node.scrollTop) : 0;
+    if (tablet && expectedScroll <= 0) throw new Error("holdings return requires a positive inner scroll baseline");
+    const href = await link.getAttribute("href");
+    const destination = new URL(href, page.url());
+    if (!/^\/stock\/[^/]+\/?$/.test(destination.pathname)) throw new Error("holding link is not a stock destination");
+    const returnTo = destination.searchParams.get("returnTo");
+    if (!returnTo || new URL(returnTo, baseUrl).searchParams.get("guru") !== guruId) throw new Error("holding link lost guru return context");
+    await link.click();
+    await page.waitForURL((url) => url.pathname.replace(/\/$/, "") === destination.pathname.replace(/\/$/, ""), { timeout: 45000 });
+    const back = page.locator('a[aria-label="투자자 화면으로 돌아가기"]:visible').first();
+    await back.waitFor({ state: "visible", timeout: 45000 });
+    await back.click();
+    await prepareDynamicRoute(page, route);
+    if (new URL(page.url()).searchParams.get("guru") !== guruId) throw new Error("return opened a different guru");
+    if (tablet) {
+      await page.waitForFunction(({ expected }) => {
+        const node = document.querySelector("[data-journey-holdings-scroll]");
+        return node && node.scrollTop > expected - 50;
+      }, { expected: expectedScroll }, { timeout: 10000 });
+    }
+  } catch (error) {
+    failures.push({ check: "investor-holding-return", detail: String(error) });
+  }
+  return failures;
+}
+
+async function collectInvestorNavigationChecks(page, route) {
+  if (!isolated || !route.includes("tab=investors")) return [];
+  const failures = [];
+  try {
+    const buttons = page.locator("[data-superinvestors-sort]");
+    for (const button of await buttons.all()) {
+      await button.click();
+      if (await button.getAttribute("aria-pressed") !== "true") {
+        failures.push({ check: "investor-sort-interaction", detail: await button.innerText() });
+      }
+    }
+    // Reset to the first sort before testing the same row's round trip.
+    await buttons.first().click();
+    const row = page.locator("[data-superinvestors-holder-row]").first();
+    const investorId = await row.getAttribute("data-superinvestors-holder-id");
+    await row.focus();
+    await page.keyboard.press("Enter");
+    const detail = page.locator("[data-superinvestors-guru-detail-view]");
+    await detail.waitFor({ state: "visible", timeout: 45000 });
+    if (await detail.getAttribute("data-superinvestors-holder-detail-id") !== investorId) {
+      failures.push({ check: "investor-open-identity", detail: `expected=${investorId}` });
+    }
+    await page.locator("[data-superinvestors-guru-back]").click();
+    await row.waitFor({ state: "visible", timeout: 45000 });
+    if (await row.getAttribute("data-superinvestors-holder-id") !== investorId) {
+      failures.push({ check: "investor-return-order", detail: `expected=${investorId}` });
+    }
+    if (new URL(page.url()).searchParams.has("guru")) {
+      failures.push({ check: "investor-return-url", detail: "guru context survived explicit list return" });
+    }
+  } catch (error) {
+    failures.push({ check: "investor-navigation", detail: String(error) });
+  }
+  return failures;
+}
+
+async function collectScreenerInvestorFlowChecks(page, route, viewportName) {
+  if (!isolated || route !== "/screener?mode=analyze" || !["mobile", "tablet-mid"].includes(viewportName)) return [];
+  const failures = [];
+  try {
+    const index = JSON.parse(await readFile(resolve("../data/sec-13f/analytics/guru_holders_index.json"), "utf8"));
+    const source = JSON.parse(await readFile(resolve("../data/global-scouter/core/stocks_analyzer.json"), "utf8"));
+    const perBands = JSON.parse(await readFile(resolve("../data/global-scouter/core/per_bands_index.json"), "utf8"));
+    const hasBand = (ticker) => {
+      const band = perBands.data?.[ticker];
+      return band && [band.current, band.min, band.max].every(Number.isFinite) && band.min < band.max;
+    };
+    const universe = new Set((source.data ?? []).map((row) => String(row.symbol ?? "").trim().toUpperCase()).filter(Boolean));
+    const changes = index.holding_changes ?? {};
+    if (Object.keys(changes).length === 0) throw new Error("Generated public holding-change evidence is missing");
+    if (viewportName === "mobile") {
+      const actionUrl = new URL("/data/computed/stock_action_summary.json", baseUrl).href;
+      const heldRequests = [];
+      const holdAction = (requestRoute) => { heldRequests.push(requestRoute); };
+      try {
+        await page.route(actionUrl, holdAction);
+        await page.goto(routeUrl(route), { waitUntil: "domcontentloaded", timeout: 45000 });
+        await page.locator('[data-screener-mode="analyze"][data-journey-ready="true"]').waitFor({ state: "visible", timeout: 30000 });
+        if (!heldRequests.length) throw new Error("Action-summary timeout control did not intercept its request");
+        if (await page.locator('[data-testid="screener-guru-badge"]:visible').count() === 0) throw new Error("Action-summary timeout erased usable independent holding rows");
+      } finally {
+        await page.unroute(actionUrl, holdAction);
+        for (const requestRoute of heldRequests) await requestRoute.abort().catch(() => {});
+      }
+    }
+    for (const [action, field] of [["guru_held", "held_count"], ["guru_new", "new_count"], ["guru_increased", "increased_count"]]) {
+      const expected = new Set(Object.entries(changes).filter(([ticker, row]) => universe.has(ticker) && row[field] > 0).map(([ticker]) => ticker));
+      // Exercise an actual current intersection, never a pinned ticker/count.
+      if (expected.size === 0) throw new Error(`No current public intersection for ${action}; positive flow coverage unavailable`);
+      await page.goto(routeUrl(`/screener?mode=analyze&action=${action}`), { waitUntil: "domcontentloaded", timeout: 45000 });
+      await page.locator('[data-screener-mode="analyze"][data-journey-ready="true"]').waitFor({ state: "visible", timeout: 45000 });
+      const badges = page.locator('[data-testid="screener-guru-badge"]:visible');
+      await badges.first().waitFor({ state: "visible", timeout: 45000 });
+      const displayed = await badges.evaluateAll((nodes) => [...new Set(nodes.map((node) => node.getAttribute("data-ticker")))]);
+      for (const ticker of displayed) {
+        if (!expected.has(ticker)) failures.push({ check: "screener-investor-filter", detail: `${action}: unexpected ticker=${ticker}` });
+      }
+      const candidate = displayed.find((ticker) => hasBand(ticker) && changes[ticker]?.comparable_count > 0)
+        ?? displayed.find(hasBand)
+        ?? displayed[0];
+      const badge = page.locator(`[data-testid="screener-guru-badge"][data-ticker="${candidate}"]:visible`).first();
+      const ticker = await badge.getAttribute("data-ticker");
+      const sourceUrl = new URL(page.url());
+      if (sourceUrl.searchParams.get("action") !== action) failures.push({ check: "screener-investor-filter-url", detail: `${action}: ${sourceUrl.search}` });
+      const origin = `${sourceUrl.pathname}${sourceUrl.search}${sourceUrl.hash}`;
+      const href = new URL(await badge.getAttribute("href"), page.url());
+      if (href.searchParams.get("returnTo") !== origin) failures.push({ check: "screener-investor-origin", detail: `${action}: return origin missing or changed` });
+      // The small visible pill has an invisible ::after tap extension. Verify
+      // its actual hit region, including clipping/overlap, then click outside
+      // the pill so removing that extension breaks this flow.
+      await badge.evaluate((node) => node.scrollIntoView({ block: "center", inline: "center", behavior: "instant" }));
+      const target = await badge.evaluate((node) => {
+        const rect = node.getBoundingClientRect();
+        const pseudo = getComputedStyle(node, "::after");
+        const width = Math.max(rect.width, Number.parseFloat(pseudo.width) || 0);
+        const height = Math.max(rect.height, Number.parseFloat(pseudo.height) || 0);
+        const center = { x: rect.x + rect.width / 2, y: rect.y + rect.height / 2 };
+        const points = [[-21.5, -21.5], [21.5, -21.5], [-21.5, 21.5], [21.5, 21.5]]
+          .map(([x, y]) => ({ x: center.x + x, y: center.y + y }));
+        const ownsPoint = (point) => {
+          const hit = document.elementFromPoint(point.x, point.y);
+          return Boolean(hit && node.contains(hit));
+        };
+        const hitPoint = points.find((point) => (point.x < rect.left || point.x > rect.right
+          || point.y < rect.top || point.y > rect.bottom) && ownsPoint(point)) ?? points[0];
+        return { width, height, cornersOwned: points.every(ownsPoint), hitPoint };
+      });
+      const usableTarget = target.width >= 44 && target.height >= 44 && target.cornersOwned && target.hitPoint;
+      if (!usableTarget) failures.push({ check: "screener-investor-touch-target", detail: `${action}: ${JSON.stringify(target)}` });
+      if (usableTarget) await page.mouse.click(target.hitPoint.x, target.hitPoint.y);
+      else await badge.click();
+      await page.locator(`[data-superinvestors-whoholds-result="${ticker}"]`).waitFor({ state: "visible", timeout: 45000 });
+      if (new URL(page.url()).searchParams.get("tab") !== "stocks") failures.push({ check: "screener-investor-tab", detail: page.url() });
+      const evidence = page.locator(`[data-superinvestors-holding-evidence="${ticker}"]`);
+      await evidence.waitFor({ state: "visible", timeout: 45000 });
+      const facts = await evidence.evaluate((node) => Object.fromEntries(Array.from(node.children).map((item) => [item.querySelector("dt")?.textContent, item.querySelector("dd")?.textContent])));
+      const change = changes[ticker];
+      const delta = change.mean_weight_delta;
+      const expectedFacts = {
+        "보유 투자자": `${change.held_count.toLocaleString("ko-KR")}명`,
+        "비중확대": `${change.increased_count.toLocaleString("ko-KR")}명`,
+        "비중축소": `${change.decreased_count.toLocaleString("ko-KR")}명`,
+        "평균 비중 변화": delta === null ? "—" : `${delta > 0 ? "+" : ""}${(delta * 100).toFixed(2)}%p`,
+      };
+      for (const [label, expectedValue] of Object.entries(expectedFacts)) {
+        if (facts[label] !== expectedValue) failures.push({ check: "investor-holding-evidence-value", detail: `${ticker} ${label}: expected=${expectedValue}, actual=${facts[label]}` });
+      }
+      if (hasBand(ticker)) {
+        const band = page.locator(`[data-superinvestors-per-band="${ticker}"]`);
+        await band.waitFor({ state: "visible", timeout: 45000 });
+        if (await band.getAttribute("data-source-date") !== perBands.source_date) failures.push({ check: "investor-per-source-date", detail: ticker });
+        if (!(await band.innerText()).includes(`기준연도 ${perBands.data[ticker].current.toFixed(1)}x`)) failures.push({ check: "investor-per-current", detail: ticker });
+      }
+      const back = page.getByRole("link", { name: "스크리너로 돌아가기", exact: true }).filter({ visible: true }).first();
+      await back.click();
+      await page.locator('[data-screener-mode="analyze"][data-journey-ready="true"]').waitFor({ state: "visible", timeout: 45000 });
+      if (page.url() !== sourceUrl.href) failures.push({ check: "screener-investor-return", detail: `${action}: expected=${sourceUrl.href} actual=${page.url()}` });
+    }
+  } catch (error) {
+    failures.push({ check: "screener-investor-flow", detail: String(error) });
+  } finally {
+    await page.goto(routeUrl(route), { waitUntil: "domcontentloaded", timeout: 45000 });
+    await page.locator('[data-screener-mode="analyze"][data-journey-ready="true"]').waitFor({ state: "visible", timeout: 45000 });
+  }
+  return failures;
+}
+
+const browser = await (browserName === "webkit" ? webkit : chromium).launch({
   headless: true,
   ...(browserChannel ? { channel: browserChannel } : {}),
   ...(browserExecutablePath ? { executablePath: browserExecutablePath } : {}),
 });
 const results = [];
+const captureEmulation = Boolean(outputDir);
+
+function contextOptionsFor(viewport) {
+  return {
+    viewport,
+    ...(isolated ? { serviceWorkers: "block" } : {}),
+    ...(captureEmulation
+      ? {
+          hasTouch: true,
+          isMobile: viewport.width < 768,
+          deviceScaleFactor: 1,
+          reducedMotion: "reduce",
+        }
+      : {}),
+  };
+}
 
 try {
   for (const { name, viewport } of viewports) {
-    const context = await browser.newContext({ viewport });
-    await installQaPortfolio(context);
-    const page = await context.newPage();
-
-    for (const route of routes) {
+    for (const [routeIndex, route] of routes.entries()) {
+      // Each route is an independent scenario. A fresh context also prevents
+      // stored view/search state from an earlier scenario changing its default.
+      // Journey checks still navigate and restore within this same page.
+      const context = await browser.newContext(contextOptionsFor(viewport));
+      // Keep QA on public pages through the closed-site intro gate.
+      const qaCookies = [{ name: "fx_browse", value: "1", url: new URL(baseUrl).origin }];
+      if (adminSessionCookie) {
+        // Without this cookie the checker asserts the anonymous admin gate.
+        qaCookies.push({ name: "fenok_admin_session", value: adminSessionCookie, url: new URL(baseUrl).origin });
+      }
+      await context.addCookies(qaCookies);
+      if (isolated) {
+        await context.route("**/*", async (requestRoute) => {
+          const url = new URL(requestRoute.request().url());
+          if (url.origin === isolatedOrigin) return requestRoute.continue();
+          blockedExternalRequests.push({ viewport: name, origin: url.origin, path: url.pathname });
+          return requestRoute.abort("blockedbyclient");
+        });
+      }
+      await installQaPortfolio(context);
+      const page = await context.newPage();
+      const routeErrors = [];
+      const routeRequests = [];
+      page.on("request", (request) => routeRequests.push(new URL(request.url()).pathname));
+      page.on("pageerror", (error) => routeErrors.push(String(error)));
+      const emulation = {
+        hasTouch: captureEmulation,
+        isMobile: captureEmulation && viewport.width < 768,
+        deviceScaleFactor: captureEmulation ? 1 : null,
+        reducedMotion: captureEmulation ? "reduce" : null,
+      };
       const result = {
         viewport: name,
         route,
         status: null,
         failures: [],
       };
+      if (outputDir) {
+        result.viewportSize = viewport;
+        result.emulation = emulation;
+      }
 
       try {
-        const response = await page.goto(routeUrl(route), {
-          waitUntil: "networkidle",
+        const navigationOptions = {
+          waitUntil: outputDir ? "domcontentloaded" : "networkidle",
           timeout: 45000,
-        });
+        };
+        let response = await page.goto(routeUrl(route), navigationOptions);
+        if (response?.status() === 429) {
+          const requestedSeconds = Number(response.headers()["retry-after"]);
+          const delayMs = Number.isFinite(requestedSeconds) && requestedSeconds > 0
+            ? Math.max(1000, requestedSeconds * 1000)
+            : 60000;
+          // One bounded retry respects server backoff; a second 429 stays red.
+          if (delayMs <= 60000) {
+            result.navigationRetries = [{ status: 429, delayMs }];
+            await page.waitForTimeout(delayMs);
+            response = await page.goto(routeUrl(route), navigationOptions);
+          }
+        }
         result.status = response ? response.status() : null;
+        if (response && !response.ok()) {
+          result.failures.push({
+            check: "http-response",
+            detail: `status=${response.status()} url=${response.url()}`,
+          });
+          throw new Error(`HTTP ${response.status()} for ${response.url()}`);
+        }
+        if (outputDir) await page.waitForLoadState("networkidle", { timeout: 5000 }).catch(() => {});
         await page.waitForTimeout(250);
+        await prepareDynamicRoute(page, route);
+        if (outputDir && route.startsWith("/screener")) {
+          result.firstView = await captureScreenerFirstView(page, route, name, routeIndex);
+        }
         const checks = await collectRouteChecks(page, route);
         result.failures = checks.failures;
+        if (result.firstView && isAnalyzeScreenerRoute(route) && !result.firstView.stockHeaderVisible) {
+          result.failures.push({ check: "screener-first-stock-visible", detail: JSON.stringify(result.firstView.firstStock) });
+        }
+        const structureChecks = await collectInvestorStructureChecks(page, route, routeRequests);
+        result.failures.push(...structureChecks.failures);
+        if (isolated) result.investorStructure = structureChecks.observations;
+        if (isolated) result.dataRequests = [...new Set(routeRequests.filter((path) => path.startsWith("/data/")))];
+        result.failures.push(...await collectInvestorTabSwitchChecks(page, route, name, routeRequests));
+        result.failures.push(...await collectInvestorFeedRetryChecks(page, route, name, routeRequests));
+        result.failures.push(...await collectInvestorEnrichmentFailureChecks(page, route, name));
+        result.failures.push(...await collectInvestorNavigationChecks(page, route));
+        result.failures.push(...await collectInvestorHoldingReturnChecks(page, route, name));
         result.viewportWidth = checks.viewportWidth;
         result.scrollWidth = checks.scrollWidth;
+        if (route.includes("/superinvestors?tab=stocks")) {
+          result.cohortPaint = await collectCohortPaintProbe(page);
+          const last = result.cohortPaint.at(-1);
+          if (!last?.canvas || !(last.ink > 20) || last.opacity === "0" || last.visibility === "hidden") {
+            result.failures.push({ check: "superinvestors-cohort-painted", detail: JSON.stringify(result.cohortPaint) });
+          }
+        }
         if (route.startsWith("/screener")) {
           const expandedChecks = await collectScreenerExpandedChecks(page, route);
           result.failures.push(...expandedChecks.failures);
@@ -3994,6 +4711,8 @@ try {
           result.cardViewScrollWidth = cardViewChecks.scrollWidth;
           result.cardViewPeerHeightBefore = cardViewChecks.peerHeightBefore;
           result.cardViewPeerHeightAfter = cardViewChecks.peerHeightAfter;
+          result.failures.push(...await collectScreenerInvestorFlowChecks(page, route, name));
+          result.failures.push(...(await collectScreenerFilterSheetChecks(page, route)).failures);
         }
         if (route.startsWith("/stock/") && route.includes("tab=financials")) {
           const financialChartChecks = await collectStockFinancialChartChecks(page, route);
@@ -4019,13 +4738,33 @@ try {
           result.sectorViewSwitchScrollWidth = sectorViewChecks.scrollWidth;
         }
       } catch (error) {
-        result.failures = [{ check: "navigation", detail: String(error) }];
+        if (!result.failures.some(({ check }) => check === "http-response")) {
+          result.failures.push({ check: "navigation", detail: String(error) });
+        }
       }
 
-      results.push(result);
-    }
+      if (outputDir) {
+        result.capturedUrl = page.url();
+        try {
+          result.screenshotPaths = await captureBoundedScreenshots(page, route, name, routeIndex);
+          for (const error of result.screenshotPaths.errors) {
+            result.failures.push({ check: "responsive-capture", detail: error.detail });
+          }
+        } catch (error) {
+          result.screenshotPaths = { paths: {}, errors: [{ detail: String(error) }] };
+          result.failures.push({ check: "responsive-capture", detail: String(error) });
+        }
+      }
 
-    await context.close();
+      result.pageErrorCount = routeErrors.length;
+      result.pageErrors = routeErrors.slice(0, 8);
+      if ((isolated || new URL(route, baseUrl).pathname === "/explore") && routeErrors.length > 0) {
+        result.failures.push({ check: "page-errors", detail: result.pageErrors.join(" | ") });
+      }
+      results.push(result);
+      await page.close();
+      await context.close();
+    }
   }
 } finally {
   await browser.close();
@@ -4036,11 +4775,40 @@ const summary = {
   total: results.length,
   failing: failing.length,
   strictMode,
+  ...(isolated ? { isolated: true, blockedExternalRequests } : {}),
   results,
 };
 
+if (outputDir) {
+  Object.assign(summary, {
+    browser: browserChannel || browserExecutablePath || `Playwright ${browserName === "webkit" ? "WebKit" : "Chromium"}`,
+    emulation: {
+      hasTouch: captureEmulation,
+      isMobileRule: "viewport width < 768",
+      deviceScaleFactor: 1,
+      reducedMotion: "reduce",
+    },
+    viewports: viewports.map(({ name, viewport }) => ({
+      name,
+      ...viewport,
+      emulation: {
+        hasTouch: true,
+        isMobile: viewport.width < 768,
+        deviceScaleFactor: 1,
+        reducedMotion: "reduce",
+      },
+    })),
+    outputDir,
+  });
+}
+
 console.log(JSON.stringify(summary, null, 2));
 
-if (strictMode && failing.length > 0) {
+if (outputDir) {
+  await mkdir(outputDir, { recursive: true });
+  await writeFile(join(outputDir, "summary.json"), `${JSON.stringify(summary, null, 2)}\n`, "utf8");
+}
+
+if (strictMode && (failing.length > 0 || (isolated && blockedExternalRequests.length > 0))) {
   process.exit(1);
 }

@@ -10,7 +10,13 @@ import { fileURLToPath } from "node:url";
 import {
   EXCLUDED_PUBLIC_DATA_FILES,
   EXCLUDED_PUBLIC_DATA_ROOTS,
+  PUBLIC_SAFE_AGGREGATE_FILE_OUTPUTS,
+  RESTRICTED_DERIVED_PUBLIC_DATA_ROOTS,
+  RESTRICTED_DERIVED_PUBLIC_DATA_FILES,
+  deriveRestrictedDerivedPublicDataRoots,
+  deriveRestrictedDerivedPublicDataFiles,
   syncPublicData,
+  syncStockanalysisEtfShardProjection,
 } from "./sync-public-data.mjs";
 import { inspectCloudflareAssetBudget } from "./check-cloudflare-asset-budget.mjs";
 import {
@@ -20,6 +26,17 @@ import {
   marketFactsShardFileName,
   marketFactsShardUrl,
 } from "../src/lib/market-facts-shard.mjs";
+import {
+  STOCKANALYSIS_ETF_SHARD_COUNT,
+  STOCKANALYSIS_ETF_SHARD_MAX_BYTES,
+  sha256Text,
+  stockanalysisEtfManifestSha256,
+  stockanalysisEtfPayloadDocumentFromShard,
+  stockanalysisEtfPayloadFromShard,
+  stockanalysisEtfShardFileName,
+  stockanalysisEtfShardId,
+} from "../src/lib/stockanalysis-etf-shard.mjs";
+import { checkPublicMirror } from "./check-fenok-public-mirror-guard.mjs";
 import { checkSyncExclusionsAgainstRegistry } from "../../scripts/check-lane-registry-sync.mjs";
 import { LANE_REGISTRY } from "../../scripts/lib/lane-registry.mjs";
 import {
@@ -27,11 +44,13 @@ import {
   deriveExcludedPublicDataRoots,
   deriveForbiddenPrivateDataSupplyRoots,
 } from "../../scripts/lib/lane-routing.mjs";
+import { derivedPrivateFileOutputs } from "../../scripts/lib/derived-asset-registry.mjs";
 import { FORBIDDEN_PRIVATE_DATA_SUPPLY_ROOTS } from "./check-fenok-public-mirror-guard.mjs";
+import { PRIVATE_DATA_SUPPLY_ROOTS } from "../../scripts/build-phase2-closeout-indexes.mjs";
 
-// Lane-routing ⇄ hand-list parity gate (#366 item 4, shadow step): the hand
-// lists stay authoritative, but any divergence between them and the registry
-// derivation fails loudly here — before any consumer flips in later slices.
+// Lane-routing parity gate (#366 item 4): directory roots AND exact-file
+// exclusions are registry-derived in the sync consumer (one fail-closed
+// SSOT); mirror-guard roots retain exact parity checks.
 // Equality is TRUE SET equality (both sides deduped, then compared order-free).
 {
   const setEqual = (a, b) => JSON.stringify([...new Set(a)].sort()) === JSON.stringify([...new Set(b)].sort());
@@ -42,7 +61,9 @@ import { FORBIDDEN_PRIVATE_DATA_SUPPLY_ROOTS } from "./check-fenok-public-mirror
   // registry-parameter honored end to end (sol fh-155 B2): an injected
   // registry with NO declared exceptions must derive accordingly.
   const derivedRoots = deriveExcludedPublicDataRoots();
-  const derivedFiles = deriveExcludedPublicDataFiles();
+  const derivedLaneFiles = deriveExcludedPublicDataFiles();
+  const derivedAssetFiles = deriveRestrictedDerivedPublicDataFiles();
+  const derivedFiles = [...new Set([...derivedLaneFiles, ...derivedAssetFiles])].sort();
   const derivedGuardRoots = deriveForbiddenPrivateDataSupplyRoots();
   const withoutExceptions = { ...LANE_REGISTRY, declared_exceptions: [] };
   assert.equal(deriveExcludedPublicDataRoots(withoutExceptions).includes("admin/data-supply-state"), false,
@@ -50,11 +71,80 @@ import { FORBIDDEN_PRIVATE_DATA_SUPPLY_ROOTS } from "./check-fenok-public-mirror
   assert.equal(deriveForbiddenPrivateDataSupplyRoots(withoutExceptions).includes("yf/migration-evidence"), false,
     "deriveForbiddenPrivateDataSupplyRoots must honor the injected registry's declared_exceptions");
   assert.equal(setEqual(derivedRoots, EXCLUDED_PUBLIC_DATA_ROOTS), true,
-    `registry-derived sync roots diverge from the hand list: derived=${JSON.stringify(derivedRoots)} hand=${JSON.stringify(EXCLUDED_PUBLIC_DATA_ROOTS)}`);
+    `registry-derived sync roots diverge from the consumer exclusion set: derived=${JSON.stringify(derivedRoots)} consumer=${JSON.stringify(EXCLUDED_PUBLIC_DATA_ROOTS)}`);
   assert.equal(setEqual(derivedFiles, EXCLUDED_PUBLIC_DATA_FILES), true,
-    `registry-derived sync files diverge from the hand list: derived=${JSON.stringify(derivedFiles)} hand=${JSON.stringify(EXCLUDED_PUBLIC_DATA_FILES)}`);
+    `registry-derived sync files diverge from the consumer exclusion set: lane=${JSON.stringify(derivedLaneFiles)} asset=${JSON.stringify(derivedAssetFiles)} consumer=${JSON.stringify(EXCLUDED_PUBLIC_DATA_FILES)}`);
   assert.equal(setEqual(derivedGuardRoots, FORBIDDEN_PRIVATE_DATA_SUPPLY_ROOTS), true,
     `registry-derived guard roots diverge from the hand list: derived=${JSON.stringify(derivedGuardRoots)} hand=${JSON.stringify(FORBIDDEN_PRIVATE_DATA_SUPPLY_ROOTS)}`);
+  // Semantic invariant (no tautology): a canonical of a public/public_mirror
+  // plane lane or of a plane-enrolled lane (declared public_mirror) must never
+  // land in the exact-file deletion set — a temporarily empty public_mirror
+  // list (mirror ownership moved to the merge boundary) is not a privacy
+  // declaration, so tracked LKG mirror fallbacks stay copyable.
+  for (const lane of LANE_REGISTRY.lanes) {
+    const planeEnrolled = lane.privacy_class !== "private" || lane.roots.public_mirror.length > 0;
+    if (!planeEnrolled) continue;
+    for (const canonical of lane.roots.canonical_outputs) {
+      assert.equal(
+        derivedLaneFiles.includes(canonical.replace(/^data\//, "")),
+        false,
+        `public or plane-enrolled canonical must never derive into exact-file deletion: ${canonical} (lane ${lane.id})`,
+      );
+    }
+  }
+  for (const derived of [derivedRoots, derivedGuardRoots]) {
+    assert.equal(derived.includes("admin/yahoo-batch-quote-history"), true,
+      "the raw Yahoo batch quote/history admin store must stay withheld from the public mirror (Cloudflare asset-budget regression guard)");
+    assert.equal(derived.includes("yf/finance"), false,
+      "the shared public Yahoo finance namespace must not derive as private");
+    assert.equal(derived.includes("yf/etf-details"), true,
+      "the private Yahoo ETF detail namespace must remain withheld");
+  }
+  assert.deepEqual(
+    deriveRestrictedDerivedPublicDataRoots(),
+    [
+      {
+        assetId: "feno_rim_recovery_research",
+        relativeRoot: "computed/feno-rim-recovery",
+        allowedFiles: [],
+      },
+      {
+        assetId: "feno_rim_v2_research",
+        relativeRoot: "computed/feno-rim-v2",
+        allowedFiles: [],
+      },
+      {
+        assetId: "fenok_rim",
+        relativeRoot: "computed/fenok-rim",
+        allowedFiles: [
+          "computed/fenok-rim/fair-values.json",
+          "computed/fenok-rim/payout-history.json",
+          "computed/fenok-rim/sustainable-index-ranges.public.json",
+        ],
+      },
+      {
+        assetId: "rim_index",
+        relativeRoot: "computed/rim-index",
+        allowedFiles: ["computed/rim-index/inputs.json"],
+      },
+    ],
+    "derived directory allowlists must come from the derived-asset registry",
+  );
+  assert.deepEqual(
+    RESTRICTED_DERIVED_PUBLIC_DATA_ROOTS,
+    deriveRestrictedDerivedPublicDataRoots(),
+    "the active restricted-root policy must equal its registry derivation",
+  );
+  assert.deepEqual(
+    RESTRICTED_DERIVED_PUBLIC_DATA_FILES,
+    deriveRestrictedDerivedPublicDataFiles(),
+    "the active restricted-file policy must equal its derived-asset registry derivation",
+  );
+  assert.deepEqual(
+    RESTRICTED_DERIVED_PUBLIC_DATA_FILES,
+    derivedPrivateFileOutputs().map((relativePath) => relativePath.replace(/^data\//u, "")),
+    "every private single-file derived output must be withheld from the generic public walk",
+  );
 
   // materialize.py coverage: every derived private root must be covered by the
   // Python private-token lists (either path form) — the third consumer of the
@@ -69,41 +159,35 @@ import { FORBIDDEN_PRIVATE_DATA_SUPPLY_ROOTS } from "./check-fenok-public-mirror
     const covered = materializeSource.includes(bareForm) || (dataForm !== null && materializeSource.includes(dataForm));
     assert.equal(covered, true, `materialize_data_supply_public.py does not cover private root ${root} (#21 parity)`);
   }
+  assert.equal(
+    setEqual(
+      PRIVATE_DATA_SUPPLY_ROOTS,
+      derivedGuardRoots.map((root) => root.endsWith(".json") ? root : `${root}/`),
+    ),
+    true,
+    "data-usage manifest private roots must derive exactly from the lane registry",
+  );
 }
 
 const DETECTION_FLOOR_REPORT = "admin/data-supply-detection-floor.json";
-const EXPECTED_PRIVATE_ROOTS = Object.freeze([
-  "admin/apewisdom_attention",
-  "admin/data-supply-state",
-  "admin/finra_short_volume",
-  "admin/gdelt_news_tone",
-  "admin/occ_options_volume",
-  "admin/yahoo_private_options",
-  "admin/fred_yardeni",
-  "admin/edgar_filings",
-  "admin/nasdaq_giw_sox",
-  "admin/oecd_cli",
-  "yf/etf-details",
-  "yf/migration-evidence",
-]);
-
 const EXPECTED_PRIVATE_PROXY_FILES = Object.freeze([
   "computed/fenok_news_tone_proxy.json",
   "computed/fenok_news_tone_proxy_history.json",
   "computed/fenok_social_attention_proxy.json",
   "computed/fenok_social_attention_proxy_history.json",
 ]);
+const derivedPrivateExactFiles = Object.freeze(
+  derivedPrivateFileOutputs().map((filePath) => filePath.slice("data/".length)),
+);
+const EXPECTED_PRIVATE_EXACT_FILES = Object.freeze([
+  ...derivedPrivateExactFiles,
+  "admin/fenok-edge-proxy-coverage-review.json",
+  "sec-13f/investors/griffin.json",
+]);
 
-// Lane Registry ⇄ exclusion cross-check (BACKLOG #366 step 2): the hand list
-// stays authoritative, but omitting a private lane's store from it must be
-// impossible to miss (the 07-18 finra leak class). Also pin the local copy of
-// the list to the imported one so the two can never drift apart silently.
+// Lane Registry ⇄ exclusion cross-check (BACKLOG #366 step 2): roots derive
+// from the registry, and the gate still fails closed if a consumer drops one.
 {
-  assert.deepEqual(
-    [...EXPECTED_PRIVATE_ROOTS].sort(),
-    [...EXCLUDED_PUBLIC_DATA_ROOTS].sort(),
-    "EXPECTED_PRIVATE_ROOTS must mirror EXCLUDED_PUBLIC_DATA_ROOTS exactly",
-  );
   const gate = checkSyncExclusionsAgainstRegistry({ excludedRoots: EXCLUDED_PUBLIC_DATA_ROOTS });
   assert.equal(
     gate.ok,
@@ -113,6 +197,16 @@ const EXPECTED_PRIVATE_PROXY_FILES = Object.freeze([
       undeclared_exclusions: gate.undeclared_exclusions,
     })}`,
   );
+  assert.equal(EXCLUDED_PUBLIC_DATA_ROOTS.includes("admin/finra-ats"), true,
+    "FINRA ATS raw admin root must be registry-derived into the public-sync exclusion");
+  const missingFinra = checkSyncExclusionsAgainstRegistry({
+    excludedRoots: EXCLUDED_PUBLIC_DATA_ROOTS.filter((root) => root !== "admin/finra-ats"),
+  });
+  assert.deepEqual(
+    missingFinra.missing_exclusions,
+    [{ lane: "finra_ats_weekly", root: "admin/finra-ats" }],
+    "removing the FINRA ATS exclusion must fail with the exact lane/root pair",
+  );
 }
 
 // Root/file shape split (2026-07-19 deploy-crash class): sync-public-data's
@@ -121,8 +215,8 @@ const EXPECTED_PRIVATE_PROXY_FILES = Object.freeze([
 // first successful run commits the artifact, then every build crashes
 // ("excluded source root must be a directory" — the apewisdom
 // fenok_social_attention_proxy.json firing). File-shaped private canonicals
-// must therefore live in the FILES list, on both the hand lists and the
-// registry derivations.
+// must therefore live in the FILES list, on the registry derivation (and
+// therefore the consumer constant).
 {
   for (const [label, list] of [
     ["EXCLUDED_PUBLIC_DATA_ROOTS", EXCLUDED_PUBLIC_DATA_ROOTS],
@@ -139,6 +233,11 @@ const EXPECTED_PRIVATE_PROXY_FILES = Object.freeze([
       `private proxy file missing from EXCLUDED_PUBLIC_DATA_FILES: ${expectedFile}`,
     );
   }
+  assert.deepEqual(
+    RESTRICTED_DERIVED_PUBLIC_DATA_FILES,
+    derivedPrivateExactFiles,
+    "private derived single-file outputs must match the registry boundary",
+  );
 
   // Value-changing derivation case: a mirrorless private lane with one
   // file-shaped and one directory-shaped canonical must split across the two
@@ -160,6 +259,51 @@ const EXPECTED_PRIVATE_PROXY_FILES = Object.freeze([
   // canonicals stay in its forbidden list unchanged.
   assert.equal(deriveForbiddenPrivateDataSupplyRoots(probeRegistry).includes("computed/zz_shape_split_probe.json"), true,
     "mirror-guard derivation must keep forbidding file-shaped private canonicals");
+
+  // public_canonical_outputs stay copyable: a lane that explicitly names a
+  // file-shaped canonical as public must not derive it into the exact-file
+  // exclusion, so the boundary may still copy it.
+  const publicCanonicalProbe = JSON.parse(JSON.stringify(probe));
+  publicCanonicalProbe.id = "zz_public_canonical_probe";
+  publicCanonicalProbe.roots.canonical_outputs = [
+    "data/computed/zz_public_canonical_probe_private.json",
+    "data/computed/zz_public_canonical_probe_public.json",
+  ];
+  // public_canonical_outputs is a top-level lane field (record() shape), and
+  // the derivation reads it from there — the probe must mirror that shape.
+  publicCanonicalProbe.public_canonical_outputs = ["data/computed/zz_public_canonical_probe_public.json"];
+  const publicCanonicalRegistry = { ...LANE_REGISTRY, lanes: [...LANE_REGISTRY.lanes, publicCanonicalProbe] };
+  assert.equal(deriveExcludedPublicDataFiles(publicCanonicalRegistry).includes("computed/zz_public_canonical_probe_private.json"), true,
+    "unnamed file-shaped canonical must derive into the sync files list");
+  assert.equal(deriveExcludedPublicDataFiles(publicCanonicalRegistry).includes("computed/zz_public_canonical_probe_public.json"), false,
+    "explicit public_canonical_outputs must stay copyable (not derived into the sync files list)");
+  assert.equal(deriveExcludedPublicDataRoots(publicCanonicalRegistry).includes("computed/zz_public_canonical_probe_public.json"), false,
+    "explicit public_canonical_outputs must not derive into the sync roots list either");
+
+  // Plane-enrolled probe: declaring public_mirror (mirror ownership moved to
+  // the merge boundary) must keep the canonical out of the exact-file
+  // deletion, even for a private-class lane.
+  const planeEnrolledProbe = JSON.parse(JSON.stringify(probe));
+  planeEnrolledProbe.id = "zz_plane_enrolled_probe";
+  planeEnrolledProbe.roots.public_mirror = ["100xfenok-next/public/data/computed/zz_plane_enrolled_probe.json"];
+  const planeEnrolledRegistry = { ...LANE_REGISTRY, lanes: [...LANE_REGISTRY.lanes, planeEnrolledProbe] };
+  assert.equal(deriveExcludedPublicDataFiles(planeEnrolledRegistry).includes("computed/zz_shape_split_probe.json"), false,
+    "plane-enrolled canonical must not derive into the exact-file exclusion");
+  assert.equal(deriveExcludedPublicDataRoots(planeEnrolledRegistry).includes("computed/zz_shape_split_probe_store"), false,
+    "plane-enrolled canonical must not derive into the sync roots list either");
+
+  // Public-plane probe: a public_mirror-class lane with a temporarily empty
+  // public_mirror list must never derive into exact-file deletion — the
+  // privacy_class gate, not the mirror list, decides withholding.
+  const publicPlaneProbe = JSON.parse(JSON.stringify(probe));
+  publicPlaneProbe.id = "zz_public_plane_probe";
+  publicPlaneProbe.privacy_class = "public_mirror";
+  publicPlaneProbe.roots.public_mirror = [];
+  const publicPlaneRegistry = { ...LANE_REGISTRY, lanes: [...LANE_REGISTRY.lanes, publicPlaneProbe] };
+  assert.equal(deriveExcludedPublicDataFiles(publicPlaneRegistry).includes("computed/zz_shape_split_probe.json"), false,
+    "public_mirror-plane canonical must never derive into exact-file deletion merely because public_mirror is temporarily empty");
+  assert.equal(deriveExcludedPublicDataRoots(publicPlaneRegistry).includes("computed/zz_shape_split_probe_store"), false,
+    "public_mirror-plane canonical must never derive into the sync roots list either");
 }
 
 function realBaselineRootArg() {
@@ -241,7 +385,7 @@ function snapshotPaths(paths) {
 }
 
 function seedPrivateRoots(sourceRoot, destinationRoot) {
-  for (const relativeRoot of EXPECTED_PRIVATE_ROOTS) {
+  for (const relativeRoot of EXCLUDED_PUBLIC_DATA_ROOTS) {
     write(sourceRoot, `${relativeRoot}/private.json`, '{"secret":true}\n');
     write(destinationRoot, `${relativeRoot}/stale.json`, '{"stale":true}\n');
   }
@@ -249,7 +393,7 @@ function seedPrivateRoots(sourceRoot, destinationRoot) {
   // exercises the root/file split (2026-07-19 deploy-crash class): on the
   // source side they must be withheld as excluded exact files, and stale
   // destination copies must be removed as exact files.
-  for (const relativeFile of EXPECTED_PRIVATE_PROXY_FILES) {
+  for (const relativeFile of EXPECTED_PRIVATE_EXACT_FILES) {
     write(sourceRoot, relativeFile, '{"secret":true}\n');
     write(destinationRoot, relativeFile, '{"stale":true}\n');
   }
@@ -263,6 +407,237 @@ function makeSyncCase(parentRoot, label) {
   write(destinationRoot, "admin/safe-sibling.json", '{"sibling":true}\n');
   seedPrivateRoots(sourceRoot, destinationRoot);
   return { root, sourceRoot, destinationRoot };
+}
+
+function assertCatalogReadmeProjection(parentRoot) {
+  const sourceCatalogBody = "canonical README\n";
+  const publicCatalogBody = "public README\n";
+  const nestedCatalogBody = "nested README\n";
+  const payloadBody = '{"payload":true}\n';
+
+  // The canonical and public trees own different top-level catalogs. The
+  // source catalog is therefore excluded from the generic walk, while a
+  // nested README remains an ordinary payload under the existing contract.
+  const fixture = makeSyncCase(parentRoot, "catalog-readme");
+  write(fixture.sourceRoot, "README.md", sourceCatalogBody);
+  write(fixture.destinationRoot, "README.md", publicCatalogBody);
+  write(fixture.sourceRoot, "payload.json", payloadBody);
+  write(fixture.sourceRoot, "nested/README.md", nestedCatalogBody);
+  write(fixture.destinationRoot, "nested/README.md", '{"stale":true}\n');
+
+  const sourceBeforeDryRun = snapshotNode(fixture.sourceRoot);
+  const destinationBeforeDryRun = snapshotNode(fixture.destinationRoot);
+  const rehearsal = syncPublicData({
+    sourceRoot: fixture.sourceRoot,
+    destinationRoot: fixture.destinationRoot,
+    dryRun: true,
+    logger: () => {},
+  });
+  assert.equal(rehearsal.filesCopied, 3, "ordinary payloads and nested README files must remain copyable");
+  assert.deepEqual(snapshotNode(fixture.sourceRoot), sourceBeforeDryRun, "README dry-run must not mutate canonical data");
+  assert.deepEqual(snapshotNode(fixture.destinationRoot), destinationBeforeDryRun, "README dry-run must not mutate public data");
+  assert.equal(fs.readFileSync(path.join(fixture.destinationRoot, "README.md"), "utf8"), publicCatalogBody);
+  assert.equal(fs.existsSync(path.join(fixture.destinationRoot, "payload.json")), false);
+  assert.equal(fs.readFileSync(path.join(fixture.destinationRoot, "nested/README.md"), "utf8"), '{"stale":true}\n');
+
+  const result = syncPublicData({
+    sourceRoot: fixture.sourceRoot,
+    destinationRoot: fixture.destinationRoot,
+    logger: () => {},
+  });
+  assert.equal(result.filesCopied, 3);
+  assert.equal(fs.readFileSync(path.join(fixture.sourceRoot, "README.md"), "utf8"), sourceCatalogBody);
+  assert.equal(fs.readFileSync(path.join(fixture.destinationRoot, "README.md"), "utf8"), publicCatalogBody);
+  assert.equal(fs.readFileSync(path.join(fixture.destinationRoot, "payload.json"), "utf8"), payloadBody);
+  assert.equal(fs.readFileSync(path.join(fixture.destinationRoot, "nested/README.md"), "utf8"), nestedCatalogBody);
+
+  // A top-level README directory is a malformed source catalog. Planning must
+  // reject it before any destination removal or copy takes place.
+  const directoryFixture = makeSyncCase(parentRoot, "catalog-readme-directory");
+  write(directoryFixture.sourceRoot, "payload.json", payloadBody);
+  fs.mkdirSync(path.join(directoryFixture.sourceRoot, "README.md"));
+  write(directoryFixture.sourceRoot, "README.md/child.json", "{}\n");
+  const directorySourceBefore = snapshotNode(directoryFixture.sourceRoot);
+  const directoryDestinationBefore = snapshotNode(directoryFixture.destinationRoot);
+  assert.throws(
+    () => syncPublicData({
+      sourceRoot: directoryFixture.sourceRoot,
+      destinationRoot: directoryFixture.destinationRoot,
+      logger: () => {},
+    }),
+    /source catalog must be a regular file/i,
+  );
+  assert.deepEqual(snapshotNode(directoryFixture.sourceRoot), directorySourceBefore, "README directory rejection must preserve source");
+  assert.deepEqual(snapshotNode(directoryFixture.destinationRoot), directoryDestinationBefore, "README directory rejection must precede writes");
+
+  // A top-level README symlink is rejected by the source walk before the
+  // catalog-kind check and before any destination mutation.
+  const symlinkFixture = makeSyncCase(parentRoot, "catalog-readme-symlink");
+  write(symlinkFixture.sourceRoot, "payload.json", payloadBody);
+  const outsideCatalog = write(symlinkFixture.root, "outside-readme.md", "outside\n");
+  fs.symlinkSync(outsideCatalog, path.join(symlinkFixture.sourceRoot, "README.md"));
+  const symlinkSourceBefore = snapshotNode(symlinkFixture.sourceRoot);
+  const symlinkDestinationBefore = snapshotNode(symlinkFixture.destinationRoot);
+  assert.throws(
+    () => syncPublicData({
+      sourceRoot: symlinkFixture.sourceRoot,
+      destinationRoot: symlinkFixture.destinationRoot,
+      logger: () => {},
+    }),
+    /source public-data path is a symlink/i,
+  );
+  assert.deepEqual(snapshotNode(symlinkFixture.sourceRoot), symlinkSourceBefore, "README symlink rejection must preserve source");
+  assert.deepEqual(snapshotNode(symlinkFixture.destinationRoot), symlinkDestinationBefore, "README symlink rejection must precede writes");
+}
+
+function assertFenokRimRestrictedProjection(parentRoot) {
+  const root = fs.mkdtempSync(path.join(parentRoot, "fenok-rim-restricted-"));
+  const sourceRoot = path.join(root, "data");
+  const destinationRoot = path.join(root, "100xfenok-next", "public", "data");
+  const allowed = new Map([
+    ["computed/fenok-rim/fair-values.json", '{"public":"fair-values"}\n'],
+    ["computed/fenok-rim/payout-history.json", '{"public":"payout-history"}\n'],
+    ["computed/fenok-rim/sustainable-index-ranges.public.json", '{"public":"redacted-range"}\n'],
+  ]);
+  const privateFiles = [
+    "computed/fenok-rim/sustainable-index-ranges.json",
+    "computed/fenok-rim/identification-receipt.json",
+    "computed/fenok-rim/input-diagnostics.json",
+    "computed/fenok-rim/index-residual-roe-diagnostic.json",
+    "computed/fenok-rim/membership-sensitivity-2026.json",
+    "computed/fenok-rim/russell2000-official-fundamentals.json",
+    "computed/fenok-rim/new-secret.json",
+  ];
+  const privateRoot = "computed/fenok-rim/russell2000-history";
+  for (const [relativePath, body] of allowed) {
+    write(sourceRoot, relativePath, body);
+    write(destinationRoot, relativePath, '{"stale":true}\n');
+  }
+  for (const relativePath of privateFiles) {
+    write(sourceRoot, relativePath, '{"secret":true}\n');
+    write(destinationRoot, relativePath, '{"stale-secret":true}\n');
+  }
+  write(sourceRoot, `${privateRoot}/latest.json`, '{"secret":true}\n');
+  write(sourceRoot, `${privateRoot}/factsheet.pdf`, "%PDF-private\n");
+  write(destinationRoot, `${privateRoot}/latest.json`, '{"stale-secret":true}\n');
+  write(destinationRoot, `${privateRoot}/factsheet.pdf`, "%PDF-stale-private\n");
+
+  const sourceBefore = snapshotNode(sourceRoot);
+  const destinationBefore = snapshotNode(destinationRoot);
+  const rehearsal = syncPublicData({ sourceRoot, destinationRoot, dryRun: true, logger: () => {} });
+  assert.equal(rehearsal.filesCopied, 3, "only the three registry-allowlisted RIM files may copy");
+  assert.deepEqual([...rehearsal.restrictedSourceFilePaths].sort(), [...privateFiles].sort());
+  assert.deepEqual(rehearsal.restrictedSourceRootPaths, [privateRoot]);
+  assert.equal(rehearsal.removedRestrictedDestinationExactFiles, privateFiles.length);
+  assert.equal(rehearsal.removedRestrictedDestinationRoots, 1);
+  assert.deepEqual(
+    [...rehearsal.removedRestrictedDestinationPaths].sort(),
+    [...privateFiles, privateRoot].sort(),
+  );
+  assert.deepEqual(snapshotNode(sourceRoot), sourceBefore, "restricted dry-run must not mutate canonical data");
+  assert.deepEqual(snapshotNode(destinationRoot), destinationBefore, "restricted dry-run must not mutate public data");
+
+  const result = syncPublicData({ sourceRoot, destinationRoot, logger: () => {} });
+  assert.equal(result.filesCopied, 3);
+  for (const [relativePath, body] of allowed) {
+    assert.equal(fs.readFileSync(path.join(destinationRoot, relativePath), "utf8"), body);
+  }
+  for (const relativePath of [...privateFiles, privateRoot]) {
+    assert.equal(fs.existsSync(path.join(destinationRoot, relativePath)), false, `private RIM path survived: ${relativePath}`);
+  }
+  const firstWrite = snapshotNode(destinationRoot);
+  const rerun = syncPublicData({ sourceRoot, destinationRoot, logger: () => {} });
+  assert.equal(rerun.removedRestrictedDestinationExactFiles, 0);
+  assert.equal(rerun.removedRestrictedDestinationRoots, 0);
+  assert.deepEqual(snapshotNode(destinationRoot), firstWrite, "restricted sync must be byte-idempotent");
+
+  const outside = write(root, "outside.json", "outside\n");
+  fs.symlinkSync(outside, path.join(destinationRoot, "computed/fenok-rim/new-link.json"));
+  assert.throws(
+    () => syncPublicData({ sourceRoot, destinationRoot, logger: () => {} }),
+    /restricted derived tree contains a symlink/i,
+  );
+  fs.unlinkSync(path.join(destinationRoot, "computed/fenok-rim/new-link.json"));
+
+  const drifting = write(destinationRoot, privateFiles[0], '{"stale-secret":true}\n');
+  const publicBeforeDrift = new Map(
+    [...allowed.keys()].map((relativePath) => [relativePath, fs.readFileSync(path.join(destinationRoot, relativePath), "utf8")]),
+  );
+  assert.throws(
+    () => syncPublicData({
+      sourceRoot,
+      destinationRoot,
+      logger: () => {},
+      beforeMutation: () => fs.appendFileSync(drifting, " "),
+    }),
+    /identity drift/i,
+  );
+  for (const [relativePath, body] of publicBeforeDrift) {
+    assert.equal(fs.readFileSync(path.join(destinationRoot, relativePath), "utf8"), body);
+  }
+}
+
+async function assertRimIndexRestrictedProjection(parentRoot) {
+  const root = fs.mkdtempSync(path.join(parentRoot, "rim-index-restricted-"));
+  const sourceRoot = path.join(root, "data");
+  const destinationRoot = path.join(root, "100xfenok-next", "public", "data");
+  const allowedPath = "computed/rim-index/inputs.json";
+  const deniedPaths = [
+    "computed/rim-index/FENO_RIM_FIVE_CANONICAL_CURRENT.json",
+    "computed/rim-index/feno-index-rim-five-canonical-criteria.json",
+    "computed/rim-index/arbitrary-sibling.json",
+  ];
+
+  write(sourceRoot, allowedPath, '{"public":"inputs"}\n');
+  write(destinationRoot, allowedPath, '{"stale":"inputs"}\n');
+  for (const relativePath of deniedPaths) {
+    write(sourceRoot, relativePath, '{"private":true}\n');
+    write(destinationRoot, relativePath, '{"stale-private":true}\n');
+  }
+
+  const sourceBefore = snapshotNode(sourceRoot);
+  const destinationBefore = snapshotNode(destinationRoot);
+  const rehearsal = syncPublicData({ sourceRoot, destinationRoot, dryRun: true, logger: () => {} });
+  assert.equal(rehearsal.filesCopied, 1, "RIM index sync may copy only exact inputs.json");
+  assert.deepEqual([...rehearsal.restrictedSourceFilePaths].sort(), [...deniedPaths].sort());
+  assert.equal(rehearsal.restrictedSourceFiles, deniedPaths.length);
+  assert.equal(rehearsal.removedRestrictedDestinationExactFiles, deniedPaths.length);
+  assert.deepEqual(
+    [...rehearsal.removedRestrictedDestinationPaths].sort(),
+    [...deniedPaths].sort(),
+    "pre-existing RIM index siblings must be planned for removal",
+  );
+  assert.deepEqual(snapshotNode(sourceRoot), sourceBefore, "RIM index dry-run must not mutate canonical data");
+  assert.deepEqual(snapshotNode(destinationRoot), destinationBefore, "RIM index dry-run must not mutate public data");
+
+  const result = syncPublicData({ sourceRoot, destinationRoot, logger: () => {} });
+  assert.equal(result.filesCopied, 1);
+  assert.equal(fs.readFileSync(path.join(destinationRoot, allowedPath), "utf8"), '{"public":"inputs"}\n');
+  for (const relativePath of deniedPaths) {
+    assert.equal(
+      fs.existsSync(path.join(destinationRoot, relativePath)),
+      false,
+      `quarantined RIM index sibling survived public sync: ${relativePath}`,
+    );
+    assert.equal(fs.existsSync(path.join(sourceRoot, relativePath)), true, "sync must not delete canonical inputs");
+  }
+
+  const appRoot = path.dirname(path.dirname(destinationRoot));
+  const cleanGuard = await checkPublicMirror({ appRoot, repoRoot: root });
+  assert.equal(cleanGuard.ok, true, cleanGuard.violations.join("\n"));
+  for (const relativePath of deniedPaths) {
+    write(destinationRoot, relativePath, '{"leaked":true}\n');
+    const leakedGuard = await checkPublicMirror({ appRoot, repoRoot: root });
+    assert.equal(leakedGuard.ok, false, `mirror guard must reject pre-existing public leak: ${relativePath}`);
+    assert.equal(
+      leakedGuard.violations.some((violation) => (
+        violation === `public/data/${relativePath}: forbidden public file`
+      )),
+      true,
+      `mirror guard must identify the leaked RIM index sibling: ${relativePath}`,
+    );
+    fs.rmSync(path.join(destinationRoot, relativePath));
+  }
 }
 
 async function assertMarketFactsShardProjection(parentRoot) {
@@ -387,6 +762,195 @@ async function assertMarketFactsShardProjection(parentRoot) {
   syncPublicData({ sourceRoot: fixture.sourceRoot, destinationRoot: fixture.destinationRoot, logger: () => {} });
   assert.deepEqual(snapshotNode(fixture.destinationRoot), destinationAfter, "market-facts projection must be byte-idempotent");
   assert.deepEqual(snapshotNode(fixture.sourceRoot), sourceBefore, "canonical ticker files must remain byte-identical");
+}
+
+function stockanalysisEtfFixturePayload(ticker) {
+  return {
+    schema_version: "stockanalysis/v1",
+    source: "stockanalysis",
+    asset_type: "etf",
+    ticker,
+    source_as_of: "2026-07-28T20:00:00Z",
+    fetched_at: "2026-07-29T01:19:39Z",
+    overview: { name: `${ticker} ETF`, expense_ratio: 0.12 },
+  };
+}
+
+function assertStockanalysisEtfShardProjection(parentRoot) {
+  assert.equal(STOCKANALYSIS_ETF_SHARD_COUNT, 1024);
+  assert.equal(stockanalysisEtfShardFileName("SPY"), "509.json");
+  assert.equal(stockanalysisEtfShardFileName("brk.b"), "570.json");
+  assert.equal(stockanalysisEtfShardFileName("$bf-b"), "474.json");
+
+  const fixture = makeSyncCase(parentRoot, "stockanalysis-etf-shards");
+  const payloads = Object.fromEntries(["SPY", "BRK.B", "BF-B", "IEFA"].map((ticker) => [
+    ticker,
+    stockanalysisEtfFixturePayload(ticker),
+  ]));
+  for (const [ticker, payload] of Object.entries(payloads)) {
+    write(fixture.sourceRoot, `stockanalysis/etfs/${ticker}.json`, `${JSON.stringify(payload, null, 2)}\n`);
+  }
+  write(fixture.destinationRoot, "stockanalysis/etfs/SPY.json", '{"stale":true}\n');
+  write(fixture.destinationRoot, "stockanalysis/etfs/shards/stale.json", '{"stale":true}\n');
+  const sourceBefore = snapshotNode(fixture.sourceRoot);
+
+  const rehearsal = syncPublicData({
+    sourceRoot: fixture.sourceRoot,
+    destinationRoot: fixture.destinationRoot,
+    dryRun: true,
+    logger: () => {},
+  });
+  assert.equal(rehearsal.stockanalysisEtfTickerFiles, 4);
+  assert.equal(rehearsal.stockanalysisEtfShardFiles, STOCKANALYSIS_ETF_SHARD_COUNT);
+  assert.equal(rehearsal.stockanalysisEtfManifestFiles, 1);
+  assert.deepEqual(snapshotNode(fixture.sourceRoot), sourceBefore, "ETF sharding must not mutate canonical payloads");
+
+  const result = syncStockanalysisEtfShardProjection({
+    sourceRoot: fixture.sourceRoot,
+    destinationRoot: fixture.destinationRoot,
+    logger: () => {},
+  });
+  assert.equal(result.stockanalysisEtfTickerFiles, 4);
+  assert.equal(result.stockanalysisEtfShardFiles, STOCKANALYSIS_ETF_SHARD_COUNT);
+  assert.equal(result.stockanalysisEtfManifestFiles, 1);
+  assert.deepEqual(snapshotNode(fixture.sourceRoot), sourceBefore, "canonical ETF bytes must remain unchanged");
+  assert.equal(
+    fs.readdirSync(path.join(fixture.destinationRoot, "stockanalysis", "etfs"))
+      .filter((name) => name.endsWith(".json")).length,
+    0,
+    "shard-only ETF projection must emit no public top-level JSON files",
+  );
+
+  const shardRoot = path.join(fixture.destinationRoot, "stockanalysis", "etfs", "shards");
+  const manifest = JSON.parse(fs.readFileSync(path.join(shardRoot, "index.json"), "utf8"));
+  assert.equal(manifest.compatibility_mode, "shard-only");
+  assert.equal(manifest.payload_count, 4);
+  assert.equal(manifest.shards.length, STOCKANALYSIS_ETF_SHARD_COUNT);
+  assert.equal(
+    manifest.shards.every((entry) => entry.byte_length <= STOCKANALYSIS_ETF_SHARD_MAX_BYTES),
+    true,
+  );
+  assert.equal(fs.existsSync(path.join(shardRoot, "stale.json")), false);
+  for (const [ticker, payload] of Object.entries(payloads)) {
+    const selected = { entry: manifest.shards[stockanalysisEtfShardId(ticker)] };
+    assert.ok(selected, `${ticker} must resolve through the manifest`);
+    const shard = JSON.parse(fs.readFileSync(path.join(shardRoot, selected.entry.path), "utf8"));
+    const document = stockanalysisEtfPayloadDocumentFromShard(shard, ticker);
+    const expectedRaw = fs.readFileSync(path.join(fixture.sourceRoot, "stockanalysis", "etfs", `${ticker}.json`), "utf8");
+    assert.equal(document?.raw, expectedRaw, `${ticker} shard entry must retain the exact source bytes`);
+    assert.equal(sha256Text(document?.raw ?? ""), sha256Text(expectedRaw), `${ticker} shard entry must retain the source SHA-256`);
+    assert.deepEqual(document?.value, JSON.parse(expectedRaw), `${ticker} shard entry must parse the source bytes`);
+    assert.deepEqual(stockanalysisEtfPayloadFromShard(shard, ticker), payload, `${ticker} must retain every source field`);
+  }
+
+  const destinationAfter = snapshotNode(fixture.destinationRoot);
+  syncStockanalysisEtfShardProjection({ sourceRoot: fixture.sourceRoot, destinationRoot: fixture.destinationRoot, logger: () => {} });
+  assert.deepEqual(snapshotNode(fixture.destinationRoot), destinationAfter, "ETF shard projection must be byte-idempotent");
+  syncPublicData({ sourceRoot: fixture.sourceRoot, destinationRoot: fixture.destinationRoot, logger: () => {} });
+  assert.equal(
+    fs.readdirSync(path.join(fixture.destinationRoot, "stockanalysis", "etfs"))
+      .filter((name) => name.endsWith(".json")).length,
+    0,
+    "second full sync must not recreate direct ETF files",
+  );
+  const activeSnapshotRoot = path.join(shardRoot, "snapshots", manifest.snapshot_id);
+  write(activeSnapshotRoot, "unlisted.json", "{}\n");
+  assert.throws(
+    () => syncStockanalysisEtfShardProjection({
+      sourceRoot: fixture.sourceRoot,
+      destinationRoot: fixture.destinationRoot,
+      logger: () => {},
+    }),
+    /immutable snapshot contains an unlisted or unsafe node/,
+  );
+
+  const identityMismatch = makeSyncCase(parentRoot, "stockanalysis-etf-identity-mismatch");
+  write(
+    identityMismatch.sourceRoot,
+    "stockanalysis/etfs/SPY.json",
+    `${JSON.stringify(stockanalysisEtfFixturePayload("spy"), null, 2)}\n`,
+  );
+  assert.throws(
+    () => syncStockanalysisEtfShardProjection({
+      sourceRoot: identityMismatch.sourceRoot,
+      destinationRoot: identityMismatch.destinationRoot,
+      logger: () => {},
+    }),
+    /strict StockAnalysis ETF identity\/timestamp mismatch/,
+  );
+
+  const unsafeParent = makeSyncCase(parentRoot, "stockanalysis-etf-unsafe-parent");
+  write(
+    unsafeParent.sourceRoot,
+    "stockanalysis/etfs/SPY.json",
+    `${JSON.stringify(stockanalysisEtfFixturePayload("SPY"), null, 2)}\n`,
+  );
+  const outside = path.join(parentRoot, "stockanalysis-etf-unsafe-parent-outside");
+  fs.mkdirSync(outside, { recursive: true });
+  fs.symlinkSync(outside, path.join(unsafeParent.destinationRoot, "stockanalysis"));
+  assert.throws(
+    () => syncStockanalysisEtfShardProjection({
+      sourceRoot: unsafeParent.sourceRoot,
+      destinationRoot: unsafeParent.destinationRoot,
+      logger: () => {},
+    }),
+    /destination parent must be a real directory/,
+  );
+  assert.deepEqual(fs.readdirSync(outside), [], "standalone shard publication must not follow destination symlinks");
+}
+
+async function assertStockanalysisEtfShardPublicGuard(parentRoot) {
+  const fixture = makeSyncCase(parentRoot, "stockanalysis-etf-shard-guard");
+  const payload = stockanalysisEtfFixturePayload("SPY");
+  write(fixture.sourceRoot, "stockanalysis/etfs/SPY.json", `${JSON.stringify(payload, null, 2)}\n`);
+  syncPublicData({ sourceRoot: fixture.sourceRoot, destinationRoot: fixture.destinationRoot, logger: () => {} });
+  const appRoot = path.dirname(path.dirname(fixture.destinationRoot));
+  const valid = await checkPublicMirror({ appRoot, repoRoot: fixture.root });
+  assert.equal(valid.ok, true, valid.violations.join("\n"));
+
+  write(
+    fixture.destinationRoot,
+    "stockanalysis/etfs/SPY.json",
+    `${JSON.stringify(payload, null, 2)}\n`,
+  );
+  const mixedMode = await checkPublicMirror({ appRoot, repoRoot: fixture.root });
+  assert.equal(mixedMode.ok, false);
+  assert.equal(
+    mixedMode.violations.some((violation) => /shard-only projection must contain zero/.test(violation)),
+    true,
+  );
+  fs.rmSync(path.join(fixture.destinationRoot, "stockanalysis", "etfs", "SPY.json"));
+
+  const manifestPath = path.join(fixture.destinationRoot, "stockanalysis", "etfs", "shards", "index.json");
+  const manifest = JSON.parse(fs.readFileSync(manifestPath, "utf8"));
+  const provenanceMismatch = structuredClone(manifest);
+  provenanceMismatch.provenance.source_payload_sha256 = "0".repeat(64);
+  provenanceMismatch.manifest_sha256 = stockanalysisEtfManifestSha256(provenanceMismatch);
+  fs.writeFileSync(manifestPath, `${JSON.stringify(provenanceMismatch)}\n`);
+  const invalidProvenance = await checkPublicMirror({ appRoot, repoRoot: fixture.root });
+  assert.equal(invalidProvenance.ok, false);
+  assert.equal(
+    invalidProvenance.violations.some((violation) => /canonical provenance digest mismatch/.test(violation)),
+    true,
+  );
+  fs.writeFileSync(manifestPath, `${JSON.stringify(manifest)}\n`);
+
+  const firstShard = manifest.shards.find((entry) => entry.member_count > 0);
+  const shardPath = path.join(fixture.destinationRoot, "stockanalysis", "etfs", "shards", firstShard.path);
+  fs.appendFileSync(shardPath, " ");
+  const invalid = await checkPublicMirror({ appRoot, repoRoot: fixture.root });
+  assert.equal(invalid.ok, false);
+  assert.equal(invalid.violations.some((violation) => /hash\/byte-length mismatch/.test(violation)), true);
+
+  fs.rmSync(path.join(fixture.destinationRoot, "stockanalysis", "etfs", "shards"), { recursive: true });
+  const missing = await checkPublicMirror({ appRoot, repoRoot: fixture.root });
+  assert.equal(missing.ok, false);
+  assert.equal(missing.violations.some((violation) => /shard projection is missing while canonical ETF payloads exist/.test(violation)), true);
+
+  fs.mkdirSync(path.join(fixture.sourceRoot, "stockanalysis", "etfs", "empty-directory"));
+  const nestedCanonical = await checkPublicMirror({ appRoot, repoRoot: fixture.root });
+  assert.equal(nestedCanonical.ok, false);
+  assert.equal(nestedCanonical.violations.some((violation) => /canonical ETF root may contain only top-level JSON files/.test(violation)), true);
 }
 
 function marketFactsFixturePayload(ticker = "AAPL") {
@@ -537,7 +1101,7 @@ function assertWrongReportNodeFailsClosed(parentRoot, side, kind) {
   }
   const protectedPaths = [
     wrongNode.target,
-    ...EXPECTED_PRIVATE_ROOTS.map((relativeRoot) => path.join(fixture.destinationRoot, ...relativeRoot.split("/"))),
+    ...EXCLUDED_PUBLIC_DATA_ROOTS.map((relativeRoot) => path.join(fixture.destinationRoot, ...relativeRoot.split("/"))),
     path.join(fixture.destinationRoot, "admin", "safe-sibling.json"),
   ];
   const before = snapshotPaths(protectedPaths);
@@ -567,7 +1131,7 @@ function assertPrivateRootFailureLeavesReportAndRoots(parentRoot) {
   fs.symlinkSync(outside, unsafeRoot, "dir");
   const protectedPaths = [
     reportPath,
-    ...EXPECTED_PRIVATE_ROOTS.map((relativeRoot) => path.join(fixture.destinationRoot, ...relativeRoot.split("/"))),
+    ...EXCLUDED_PUBLIC_DATA_ROOTS.map((relativeRoot) => path.join(fixture.destinationRoot, ...relativeRoot.split("/"))),
   ];
   const before = snapshotPaths(protectedPaths);
   const error = captureSyncError({
@@ -587,7 +1151,7 @@ function assertIdentityDriftFailsBeforeMutation(parentRoot) {
   const outside = path.join(fixture.root, "drift-outside.json");
   fs.writeFileSync(outside, "outside-untouched\n");
   const protectedPaths = [
-    ...EXPECTED_PRIVATE_ROOTS.map((relativeRoot) => path.join(fixture.destinationRoot, ...relativeRoot.split("/"))),
+    ...EXCLUDED_PUBLIC_DATA_ROOTS.map((relativeRoot) => path.join(fixture.destinationRoot, ...relativeRoot.split("/"))),
     path.join(fixture.destinationRoot, "admin", "safe-sibling.json"),
   ];
   const before = snapshotPaths(protectedPaths);
@@ -625,25 +1189,63 @@ const fixtureRoot = fs.mkdtempSync(path.join(os.tmpdir(), "fenok-sync-public-dat
 try {
   assert.deepEqual(
     EXCLUDED_PUBLIC_DATA_ROOTS,
-    EXPECTED_PRIVATE_ROOTS,
-    "the excluded directory roots must remain exact",
+    deriveExcludedPublicDataRoots(),
+    "the excluded directory roots must remain exact registry derivations",
   );
   assert.deepEqual(
     EXCLUDED_PUBLIC_DATA_FILES,
-    [
-      DETECTION_FLOOR_REPORT,
-      "admin/damodaran-shadow-parity.json",
-      "admin/sec-13f-shadow-parity.json",
-      "admin/lane-commit-manifest.json",
-      ...EXPECTED_PRIVATE_PROXY_FILES,
-    ],
-    "the exact-file exclusion allowlist must include all private flat admin reports and file-shaped private proxies",
+    [...new Set([
+      ...deriveExcludedPublicDataFiles(),
+      ...deriveRestrictedDerivedPublicDataFiles(),
+    ])].sort(),
+    "the exact-file exclusion set must equal the lane plus derived-asset registry derivations",
   );
+  assert.equal(new Set(EXCLUDED_PUBLIC_DATA_FILES).size, EXCLUDED_PUBLIC_DATA_FILES.length,
+    "the exact-file exclusion set must not contain duplicates");
+  assert.deepEqual(
+    PUBLIC_SAFE_AGGREGATE_FILE_OUTPUTS,
+    ["computed/fenok_occ_options_availability.json"],
+    "only the lane-owned slim OCC projection may bypass the generic public mirror",
+  );
+  const expectedDerivedExactFiles = [
+    DETECTION_FLOOR_REPORT,
+    "admin/damodaran-shadow-parity.json",
+    "admin/sec-13f-shadow-parity.json",
+    "admin/lane-commit-manifest.json",
+    ...EXPECTED_PRIVATE_EXACT_FILES,
+    ...EXPECTED_PRIVATE_PROXY_FILES,
+  ];
+  for (const expectedFile of expectedDerivedExactFiles) {
+    assert.equal(
+      EXCLUDED_PUBLIC_DATA_FILES.includes(expectedFile),
+      true,
+      `derived exact-file exclusion missing: ${expectedFile}`,
+    );
+  }
+  for (const copyableFile of [
+    "macro/yahoo-ticker.json",
+    "macro/fred-macro.json",
+    "macro/fdic-tier1.json",
+    "indices/sp500.json",
+    "damodaran/industries.json",
+    "stockanalysis/etf_universe.json",
+    "stockanalysis/surfaces/index.json",
+    "computed/fenok_occ_options_availability.json",
+    "computed/market_facts/index.json",
+  ]) {
+    assert.equal(
+      EXCLUDED_PUBLIC_DATA_FILES.includes(copyableFile),
+      false,
+      `public-copyable file must not derive into the exact-file exclusion: ${copyableFile}`,
+    );
+  }
   const sourceRoot = path.join(fixtureRoot, "data");
   const destinationRoot = path.join(fixtureRoot, "100xfenok-next", "public", "data");
   write(sourceRoot, "safe/keep.json", '{"safe":true}\n');
   const krxSlice2Body = '{"schema_version":"fenok_krx_public_kosdaq_market_cap_aggregate.v1","aggregate_only":true}\n';
   write(sourceRoot, "computed/fenok-edge-korea-krx-kosdaq-market-cap-aggregate.json", krxSlice2Body);
+  const krxHistoryBody = '{"schema_version":"fenok_krx_public_bridge_history.v1","aggregate_only":true,"per_issuer_rows":false,"raw_public":false,"rows":[]}\n';
+  write(sourceRoot, "computed/fenok-edge-korea-krx-bridge-history.json", krxHistoryBody);
   const sourceReportPath = write(sourceRoot, DETECTION_FLOOR_REPORT, '{"schema_version":"data-supply-detection-floor/v1"}\n');
   write(sourceRoot, "yf/finance/AAA.json", '{"public":true}\n');
   seedPrivateRoots(sourceRoot, destinationRoot);
@@ -662,19 +1264,22 @@ try {
   assert.equal(rehearsal.dryRun, true);
   assert.equal(
     rehearsal.filesCopied,
-    3,
+    4,
     "public-safe files must copy while the canonical detection-floor report stays excluded",
   );
   // Exact-file exclusion set (order-insensitive contract; membership + count
   // are the pins, traversal order is not).
-  const expectedExcludedExactFiles = [DETECTION_FLOOR_REPORT, ...EXPECTED_PRIVATE_PROXY_FILES].sort();
-  assert.equal(rehearsal.excludedSourceFiles, 5);
-  assert.equal(rehearsal.removedDestinationExactFiles, 5);
+  const expectedExcludedExactFiles = [DETECTION_FLOOR_REPORT, ...EXPECTED_PRIVATE_EXACT_FILES].sort();
+  const expectedDirectExcludedRoots = EXCLUDED_PUBLIC_DATA_ROOTS.filter((root) =>
+    !RESTRICTED_DERIVED_PUBLIC_DATA_ROOTS.some((policy) => root.startsWith(`${policy.relativeRoot}/`))
+  );
+  assert.equal(rehearsal.excludedSourceFiles, 17);
+  assert.equal(rehearsal.removedDestinationExactFiles, 17);
   assert.deepEqual([...rehearsal.excludedSourceFilePaths].sort(), expectedExcludedExactFiles);
   assert.deepEqual([...rehearsal.removedDestinationExactFilePaths].sort(), expectedExcludedExactFiles);
-  assert.equal(rehearsal.excludedSourceRoots, 12);
-  assert.equal(rehearsal.removedDestinationRoots, 12);
-  assert.equal(rehearsal.removedDestinationFiles, 12);
+  assert.equal(rehearsal.excludedSourceRoots, expectedDirectExcludedRoots.length);
+  assert.equal(rehearsal.removedDestinationRoots, EXCLUDED_PUBLIC_DATA_ROOTS.length);
+  assert.equal(rehearsal.removedDestinationFiles, EXCLUDED_PUBLIC_DATA_ROOTS.length);
   assert.deepEqual(snapshotNode(sourceRoot), sourceBeforeDryRun, "dry-run must not mutate source bytes");
   assert.deepEqual(snapshotNode(destinationRoot), destinationBeforeDryRun, "dry-run must not mutate destination bytes");
   assert.equal(fs.existsSync(path.join(destinationRoot, "safe/keep.json")), false);
@@ -683,12 +1288,12 @@ try {
   assert.equal(fs.readFileSync(safeAdminSiblingPath, "utf8"), '{"sibling":true}\n');
 
   const result = syncPublicData({ sourceRoot, destinationRoot, logger: () => {} });
-  assert.equal(result.filesCopied, 3);
-  assert.equal(result.excludedSourceRoots, 12);
-  assert.equal(result.excludedSourceFiles, 5);
-  assert.equal(result.removedDestinationRoots, 12);
-  assert.equal(result.removedDestinationFiles, 12);
-  assert.equal(result.removedDestinationExactFiles, 5);
+  assert.equal(result.filesCopied, 4);
+  assert.equal(result.excludedSourceRoots, expectedDirectExcludedRoots.length);
+  assert.equal(result.excludedSourceFiles, 17);
+  assert.equal(result.removedDestinationRoots, EXCLUDED_PUBLIC_DATA_ROOTS.length);
+  assert.equal(result.removedDestinationFiles, EXCLUDED_PUBLIC_DATA_ROOTS.length);
+  assert.equal(result.removedDestinationExactFiles, 17);
   assert.deepEqual([...result.excludedSourceFilePaths].sort(), expectedExcludedExactFiles);
   assert.deepEqual([...result.removedDestinationExactFilePaths].sort(), expectedExcludedExactFiles);
   assert.equal(fs.readFileSync(path.join(destinationRoot, "safe/keep.json"), "utf8"), '{"safe":true}\n');
@@ -696,6 +1301,11 @@ try {
     fs.readFileSync(path.join(destinationRoot, "computed/fenok-edge-korea-krx-kosdaq-market-cap-aggregate.json"), "utf8"),
     krxSlice2Body,
     "Slice 2 canonical aggregate must be copied byte-identically to the public mirror",
+  );
+  assert.equal(
+    fs.readFileSync(path.join(destinationRoot, "computed/fenok-edge-korea-krx-bridge-history.json"), "utf8"),
+    krxHistoryBody,
+    "bounded KRX history must be copied byte-identically to the public mirror",
   );
   assert.equal(fs.readFileSync(path.join(destinationRoot, "yf/finance/AAA.json"), "utf8"), '{"public":true}\n');
   assert.equal(fs.existsSync(path.join(destinationRoot, "admin/data-supply-state")), false);
@@ -715,9 +1325,9 @@ try {
 
   const destinationBeforeRerun = snapshotNode(destinationRoot);
   const rerun = syncPublicData({ sourceRoot, destinationRoot, logger: () => {} });
-  assert.equal(rerun.filesCopied, 3);
-  assert.equal(rerun.excludedSourceRoots, 12);
-  assert.equal(rerun.excludedSourceFiles, 5);
+  assert.equal(rerun.filesCopied, 4);
+  assert.equal(rerun.excludedSourceRoots, expectedDirectExcludedRoots.length);
+  assert.equal(rerun.excludedSourceFiles, 17);
   assert.equal(rerun.removedDestinationRoots, 0);
   assert.equal(rerun.removedDestinationFiles, 0);
   assert.equal(rerun.removedDestinationExactFiles, 0);
@@ -759,41 +1369,99 @@ try {
   assertMissingCanonicalTickerSourceFailsClosed(fixtureRoot);
   assertOrphanedDestinationProjectionFailsClosed(fixtureRoot);
   assertMarketFactsSourceDriftFailsBeforeMutation(fixtureRoot);
+  assertCatalogReadmeProjection(fixtureRoot);
+  assertFenokRimRestrictedProjection(fixtureRoot);
+  await assertRimIndexRestrictedProjection(fixtureRoot);
   await assertMarketFactsShardProjection(fixtureRoot);
+  assertStockanalysisEtfShardProjection(fixtureRoot);
+  await assertStockanalysisEtfShardPublicGuard(fixtureRoot);
 
   const buildRoot = path.join(fixtureRoot, "100xfenok-next", ".open-next");
   const assetRoot = path.join(buildRoot, "assets");
+  const expectedPublicRoot = path.join(fixtureRoot, "100xfenok-next", "public");
   const reportPath = path.join(buildRoot, "asset-budget-report.json");
   write(assetRoot, "index.html", "ok");
   write(assetRoot, "data/computed/data-supply/etf-detail/enrollment.json", "{}\n");
   write(assetRoot, "data/computed/data-supply/etf-detail/index.json", '{"selected_count":1}\n');
   write(assetRoot, "data/computed/data-supply/etf-detail/payloads/AAA.json", "{}\n");
 
-  const budget = inspectCloudflareAssetBudget({ assetRoot, reportPath, limit: 5 });
+  assert.throws(
+    () => inspectCloudflareAssetBudget({ assetRoot, reportPath, limit: 5 }),
+    /StockAnalysis ETF shard projection is missing/,
+  );
+  const budgetCanonicalRoot = path.join(fixtureRoot, "budget-canonical");
+  fs.mkdirSync(budgetCanonicalRoot, { recursive: true });
+  write(
+    budgetCanonicalRoot,
+    "stockanalysis/etfs/SPY.json",
+    `${JSON.stringify(stockanalysisEtfFixturePayload("SPY"), null, 2)}\n`,
+  );
+  syncStockanalysisEtfShardProjection({
+    sourceRoot: budgetCanonicalRoot,
+    destinationRoot: path.join(assetRoot, "data"),
+    logger: () => {},
+  });
+  syncStockanalysisEtfShardProjection({
+    sourceRoot: budgetCanonicalRoot,
+    destinationRoot: path.join(expectedPublicRoot, "data"),
+    logger: () => {},
+  });
+  const budget = inspectCloudflareAssetBudget({ assetRoot, reportPath, expectedPublicRoot, limit: 1031 });
   assert.equal(budget.status, "pass");
-  assert.equal(budget.regular_file_count, 4);
-  assert.equal(budget.headroom, 1);
+  assert.equal(budget.regular_file_count, 1029);
+  assert.equal(budget.headroom, 2);
+  assert.equal(budget.warning_limit, 1030);
+  assert.equal(budget.warning_headroom, 1);
+  assert.equal(budget.safety_status, "pass");
   assert.deepEqual(budget.data_supply_projection, {
     enrollment_files: 1,
     index_files: 1,
     payload_files: 1,
     total_files: 3,
   });
-  assert.equal(JSON.parse(fs.readFileSync(reportPath, "utf8")).regular_file_count, 4);
+  assert.deepEqual(budget.stockanalysis_etf_shards, {
+    manifest_files: 1,
+    shard_files: STOCKANALYSIS_ETF_SHARD_COUNT,
+    total_files: STOCKANALYSIS_ETF_SHARD_COUNT + 1,
+    payload_count: 1,
+    snapshot_id: budget.stockanalysis_etf_shards.snapshot_id,
+    source_manifest_sha256: budget.stockanalysis_etf_shards.source_manifest_sha256,
+    legacy_fallback_files: 0,
+    largest_shard_bytes: budget.stockanalysis_etf_shards.largest_shard_bytes,
+    largest_shard_member_count: budget.stockanalysis_etf_shards.largest_shard_member_count,
+    largest_shard_path: budget.stockanalysis_etf_shards.largest_shard_path,
+  });
+  assert.equal(JSON.parse(fs.readFileSync(reportPath, "utf8")).regular_file_count, 1029);
   assert.equal(path.relative(assetRoot, reportPath).startsWith(".."), true);
 
+  write(assetRoot, "data/stockanalysis/etfs/SPY.json", "{\"stale\":true}\n");
   assert.throws(
-    () => inspectCloudflareAssetBudget({ assetRoot, reportPath, limit: 4 }),
+    () => inspectCloudflareAssetBudget({ assetRoot, reportPath, expectedPublicRoot, limit: 1031 }),
+    /shard-only projection requires zero direct/,
+  );
+  fs.rmSync(path.join(assetRoot, "data/stockanalysis/etfs/SPY.json"));
+  fs.appendFileSync(path.join(expectedPublicRoot, "data/stockanalysis/etfs/shards/index.json"), " ");
+  assert.throws(
+    () => inspectCloudflareAssetBudget({ assetRoot, reportPath, expectedPublicRoot, limit: 135 }),
+    /emitted shard manifest differs/,
+  );
+  fs.copyFileSync(
+    path.join(assetRoot, "data/stockanalysis/etfs/shards/index.json"),
+    path.join(expectedPublicRoot, "data/stockanalysis/etfs/shards/index.json"),
+  );
+
+  assert.throws(
+    () => inspectCloudflareAssetBudget({ assetRoot, reportPath, expectedPublicRoot, limit: 133 }),
     /asset limit/i,
   );
   assert.throws(
-    () => inspectCloudflareAssetBudget({ assetRoot, reportPath: path.join(assetRoot, "report.json"), limit: 5 }),
+    () => inspectCloudflareAssetBudget({ assetRoot, reportPath: path.join(assetRoot, "report.json"), expectedPublicRoot, limit: 135 }),
     /outside/i,
   );
 
   fs.symlinkSync(path.join(assetRoot, "index.html"), path.join(assetRoot, "linked.html"));
   assert.throws(
-    () => inspectCloudflareAssetBudget({ assetRoot, reportPath, limit: 10 }),
+    () => inspectCloudflareAssetBudget({ assetRoot, reportPath, expectedPublicRoot, limit: 135 }),
     /symlink/i,
   );
   fs.rmSync(path.join(assetRoot, "linked.html"));
@@ -801,9 +1469,50 @@ try {
     computed: [{ name: "same.json" }, { name: "same.json" }],
   }));
   assert.throws(
-    () => inspectCloudflareAssetBudget({ assetRoot, reportPath, limit: 10 }),
+    () => inspectCloudflareAssetBudget({ assetRoot, reportPath, expectedPublicRoot, limit: 135 }),
     /duplicate manifest path/i,
   );
+
+  // Regression test: reversed source creation order yields identical snapshot bytes & sha256
+  {
+    const fixture1 = makeSyncCase(fixtureRoot, "stockanalysis-etf-order-a");
+    const fixture2 = makeSyncCase(fixtureRoot, "stockanalysis-etf-order-b");
+    const spy = stockanalysisEtfFixturePayload("SPY");
+    const ivv = stockanalysisEtfFixturePayload("IVV");
+    const qqq = stockanalysisEtfFixturePayload("QQQ");
+
+    // Case A: SPY, IVV, QQQ
+    write(fixture1.sourceRoot, "stockanalysis/etfs/SPY.json", `${JSON.stringify(spy, null, 2)}\n`);
+    write(fixture1.sourceRoot, "stockanalysis/etfs/IVV.json", `${JSON.stringify(ivv, null, 2)}\n`);
+    write(fixture1.sourceRoot, "stockanalysis/etfs/QQQ.json", `${JSON.stringify(qqq, null, 2)}\n`);
+
+    // Case B: QQQ, IVV, SPY (reversed order)
+    write(fixture2.sourceRoot, "stockanalysis/etfs/QQQ.json", `${JSON.stringify(qqq, null, 2)}\n`);
+    write(fixture2.sourceRoot, "stockanalysis/etfs/IVV.json", `${JSON.stringify(ivv, null, 2)}\n`);
+    write(fixture2.sourceRoot, "stockanalysis/etfs/SPY.json", `${JSON.stringify(spy, null, 2)}\n`);
+
+    syncStockanalysisEtfShardProjection({ sourceRoot: fixture1.sourceRoot, destinationRoot: fixture1.destinationRoot, logger: () => {} });
+    syncStockanalysisEtfShardProjection({ sourceRoot: fixture2.sourceRoot, destinationRoot: fixture2.destinationRoot, logger: () => {} });
+
+    const manifestA = fs.readFileSync(path.join(fixture1.destinationRoot, "stockanalysis/etfs/shards/index.json"), "utf8");
+    const manifestB = fs.readFileSync(path.join(fixture2.destinationRoot, "stockanalysis/etfs/shards/index.json"), "utf8");
+    assert.equal(manifestA, manifestB, "manifest bytes must be byte-for-byte identical regardless of source creation order");
+
+    const parsedA = JSON.parse(manifestA);
+    const snapshotIdA = parsedA.snapshot_id;
+    const snapshotDirA = path.join(fixture1.destinationRoot, "stockanalysis/etfs/shards/snapshots", snapshotIdA);
+    const snapshotDirB = path.join(fixture2.destinationRoot, "stockanalysis/etfs/shards/snapshots", snapshotIdA);
+
+    const filesA = fs.readdirSync(snapshotDirA).sort();
+    const filesB = fs.readdirSync(snapshotDirB).sort();
+    assert.deepEqual(filesA, filesB, "snapshot directory contents must be identical");
+
+    for (const filename of filesA) {
+      const bytesA = fs.readFileSync(path.join(snapshotDirA, filename), "utf8");
+      const bytesB = fs.readFileSync(path.join(snapshotDirB, filename), "utf8");
+      assert.equal(bytesA, bytesB, `snapshot file ${filename} must be byte-for-byte identical regardless of source creation order`);
+    }
+  }
 
   console.log("test-sync-public-data: ok");
 } finally {

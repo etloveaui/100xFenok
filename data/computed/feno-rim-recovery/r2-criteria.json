@@ -1,0 +1,72 @@
+{
+  "schema_version": "feno_rim_recovery_r2_criteria.v1",
+  "phase": "R2",
+  "title": "Canonical RIM constructions on mechanical forecasts - R2-B GLS-ICC (primary), R2-A FL3-V/P (secondary)",
+  "status": "FROZEN",
+  "inherits": "R1 forecasts carried under the INDETERMINATE gate (R1_GATE_ADDENDUM_INDETERMINATE.md). Both RI and EP are parallel inputs; the rule below resolves their disagreement in advance (red-team fh-20260807-090 ask).",
+  "r2b_gls_icc": {
+    "goal": "Per-firm implied cost of equity r_e solving GLS eq.5/6 with mechanical FY1-FY3 forecasts, ROE fade to industry median, clean-surplus book roll-forward. Outputs firm_icc, firm_icc_minus_rf, firm_icc_percentile per (firm, origin).",
+    "forecast_input": {
+      "source": "R1 fitted mechanical models applied per firm at each origin, taus 1..3.",
+      "ri_vs_ep_rule_precommitted": "Compute ICC under BOTH the RI and the EP forecast paths (firm_icc_ri, firm_icc_ep). The primary reported ICC is the RI-path value (the canonical residual-income forecast). The EP-path ICC is reported beside it as sensitivity. If the two disagree on a downstream verdict, the artifact must show both and the disagreement is recorded, not silently resolved by whichever was computed first."
+    },
+    "book_roll_forward": "B_{t+i} = B_{t+i-1} + FEPS_{t+i}*(1-k), per-share, from current book B_t = most-relevant annual book / shares_basis (GLS:732-736).",
+    "payout_k": {
+      "rule": "k = trailing-twelve-month dividends-per-share at the origin / most-recent-fiscal-year EPS, clamped [0,1] (GLS:714-731).",
+      "negative_earnings": "If EPS <= 0: k = trailing-DPS / (0.06 * total-assets-per-share), clamped [0,1] (GLS:726-731).",
+      "non_payer": "If trailing dividends are zero: k = 0 (book rolls forward at full forecast earnings).",
+      "missing_dividends": "If the dividend fetch failed for a symbol (no data at all): excluded from ICC and counted. Declared deviation: trailing-TTM dividends at the origin proxy the most-recent-fiscal-year dividends (exact fiscal-year dividends not assembled).",
+      "basis_note": "Yahoo dividends are split-adjusted to today's basis, matching the today-basis per-share earnings/book (shares_basis). Trailing-TTM DPS at the origin and most-recent-fiscal-year EPS are therefore on the same basis."
+    },
+    "roe_fade": {
+      "explicit_years": "Years 1-3 use FROE_i = FEPS_i / B_{i-1} (GLS:580-590).",
+      "fade_years": "Years 4-12: FROE linearly interpolates from FROE_3 to the industry target ROE, reaching it exactly at year 12 (9 equal steps; GLS:526-541, verified GLS:2610).",
+      "target_roe": "Industry median of annual ROE (aggregate E / book) over the trailing 5 fiscal years ending before the origin, profitable-firm-years only (positive E), per industry (GLS:627-639).",
+      "industry_scheme": "SIC 2-digit major groups, a DECLARED DEVIATION from GLS's FF-48 (no SIC->FF48 crosswalk is available locally; SIC is the measured industry field). The deviation and its direction are stated in the artifact.",
+      "thin_industry_fallback": "If an industry has fewer than 3 profitable firm-years in the trailing window, the target falls back to the market-wide median ROE (declared)."
+    },
+    "terminal": "GLS eq.6 convention: TV = (FROE_T - r)*B_{T-1} / (r*(1+r)^(T-1)), T=12 (exponent T-1 per GLS:610-616; the LM (1+r)^T variant is NOT used).",
+    "solver": "Bisection on r in [0.001, 0.60], tolerance 1e-9 on price equality, max 200 iterations (validated: reproduces GLS worked example GM r=13.94%). Non-convergence -> firm excluded and counted; bracket endpoints NOT reported as ICC.",
+    "risk_free": "firm_icc_minus_rf = firm_icc - 10-year Treasury yield at the origin (repo data/macro/fred-banking-daily.json DGS10, last obs <= origin).",
+    "percentile": "firm_icc_percentile = cross-sectional percentile of firm_icc within the origin.",
+    "plausibility_guard_side_precommitted": "Guards apply to INPUTS only (base-year eps/book/dividend sanity), NOT to the solved ICC outcome. No outcome-side truncation (red-team fh-20260807-090: guarding the outcome is target-truncation). ICC values are reported as solved; implausible solved ICC (e.g. outside [0,0.60]) is a convergence artifact and counted, not silently dropped from the cross-section."
+  },
+  "r2a_fl3_vp": {
+    "status": "SECONDARY and under-specified - the industry-specific cost of equity has NO local anchor ([FL98-not-on-disk]: no local text describes an industry-level non-fitted discount rate; GLS/LM solve per-firm r; the trailing industry risk-premium estimator is unanchored). R2-A is implemented only if a defensible discount rate is pre-committed; otherwise it is deferred and the artifact says so.",
+    "construction_if_implemented": "GLS eq.5/6 mechanics with the explicit horizon cut at T=3 (no fade), forecast inputs mechanical, V/P = V_t / P_t (spec draft section B.1)."
+  },
+  "sample": {
+    "origins": "The five R1 origins, June 30 of 2019-2023.",
+    "universe": "R1 retained universe (447 symbols), further reduced by dividend availability and positive-book requirement (GLS needs non-negative book for the fade target; LM ICCGLS screen).",
+    "filters_precommitted": "price > $1 (FL98/BR stability filter), non-negative book, non-negative shares_basis, dividend data present. Exclusions counted per filter."
+  },
+  "aggregation": {
+    "rule": "Per origin report: cap-weighted mean, cap-weighted median, and trimmed-mean (5% each tail) of firm_icc and firm_icc_minus_rf, with the cap-weighted median pre-designated PRIMARY. Declared deviation: GLS itself uses equal-weighted means (GLS:1185-1199); the owner directive specifies cap-weighted - both the deviation and the equal-weighted values are reported for the record."
+  },
+  "verification_anchors": {
+    "solver": "Must reproduce GLS worked example GM: B0=17.01, FY1=6.75, FY2=7.73, FY3=8.29, k=0.196, target ROE=0.160 -> r=13.94% (already passing in r2-gls-solver.mjs self-test).",
+    "sanity": "Cross-sectional firm_icc should be predominantly positive and in a plausible band (~5-25%); the artifact reports the distribution, not a pass/fail."
+  },
+  "prohibitions": [
+    "No post-result choice of discount rate, fade window, industry scheme, or solver bracket.",
+    "No outcome-side truncation of solved ICC.",
+    "No analyst-data input (mechanical forecasts only; analyst PIT is R4's question).",
+    "No public number republication; quarantine untouched."
+  ],
+  "inputs_confirmed": {
+    "dividend_caches": 499,
+    "dividend_payers": 408,
+    "dividend_nonpayers": 91,
+    "dividend_events": 10562,
+    "dividend_fetch_failures": [
+      "SNDK",
+      "HONA",
+      "Q",
+      "FDXF"
+    ],
+    "sic_available": true,
+    "sic_scheme": "2-digit major groups (declared deviation from FF-48)",
+    "forecasts": "R1 RI and EP fitted models per (firm, origin, tau)",
+    "solver_validation": "reproduces GLS worked example GM r=13.94%"
+  }
+}

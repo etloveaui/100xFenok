@@ -2,6 +2,7 @@
 
 import { existsSync, mkdirSync, readdirSync, readFileSync, writeFileSync } from "node:fs";
 import path from "node:path";
+import { fileURLToPath } from "node:url";
 
 import { buildHistoryGapRecommendedDispatch } from "./stockanalysis-dispatch-status.mjs";
 import { canonicalHistoryStateAfterRun } from "./history-gap-profile.mjs";
@@ -11,6 +12,11 @@ import {
   daily1yClassificationProjection,
   daily1ySeriesEvidence,
 } from "../../scripts/lib/etf-daily1y-history-classifier.mjs";
+import {
+  pendingDaily1yTerminalSource,
+  RECENT_TERMINAL_MAX_AGE_HOURS,
+  timestampAgeHours,
+} from "../../scripts/lib/etf-daily1y-pending-policy.mjs";
 
 const ROOT = process.cwd();
 const SOURCE_DIR = path.resolve(ROOT, "..", "data", "stockanalysis");
@@ -59,7 +65,6 @@ const REPORT_PROFILE = {
   required_history_periods: REQUIRED_PERIODS.slice().sort(),
 };
 const ENFORCE_INCREMENTAL_PLAN = REQUIRED_PERIODS.join(",") === DEFAULT_REQUIRED_PERIODS.join(",");
-const RECENT_TERMINAL_MAX_AGE_HOURS = 48;
 
 function parseArgs(argv) {
   const flags = new Set();
@@ -171,6 +176,42 @@ function summarizeFetchableBreakdown(rows) {
   };
 }
 
+export function buildScoredDaily1yReport({
+  scoredEtfCount,
+  completeRows = [],
+  fetchableRows = [],
+  inceptionLimitedRows = [],
+  terminalLimitedRows = [],
+} = {}) {
+  const exactFetchableRows = [...fetchableRows]
+    .sort((left, right) => String(left?.ticker ?? "").localeCompare(String(right?.ticker ?? "")));
+  const classificationProjection = daily1yClassificationProjection({
+    complete: completeRows,
+    fetchable: exactFetchableRows,
+    inceptionLimited: inceptionLimitedRows,
+    terminalLimited: terminalLimitedRows,
+  });
+  return {
+    scored_etf_count: scoredEtfCount,
+    complete: completeRows.length,
+    missing: exactFetchableRows.length + inceptionLimitedRows.length + terminalLimitedRows.length,
+    fetchable: exactFetchableRows.length,
+    inception_limited: inceptionLimitedRows.length,
+    terminal_limited: terminalLimitedRows.length,
+    classification_projection: classificationProjection,
+    fetchable_classification_projection: daily1yClassificationProjection({ fetchable: exactFetchableRows }),
+    fetchable_breakdown: summarizeFetchableBreakdown(fetchableRows),
+    terminal_limited_breakdown: summarizeFetchableBreakdown(terminalLimitedRows),
+    fetchable_rows: exactFetchableRows,
+    samples: {
+      fetchable: fetchableRows.slice(0, 10),
+      inception_limited: inceptionLimitedRows.slice(0, 10),
+      terminal_limited: terminalLimitedRows.slice(0, 10),
+      complete: completeRows.slice(0, 5),
+    },
+  };
+}
+
 function historyPeriodRequiredYears(period) {
   const match = String(period).match(/_(\d+)y$/);
   return match ? Number(match[1]) : null;
@@ -221,45 +262,10 @@ function earliestHistoryDate(rows) {
   return earliest;
 }
 
-function parseTimestamp(value) {
-  if (typeof value === "string" && value.trim()) {
-    const parsed = Date.parse(value);
-    return Number.isFinite(parsed) ? new Date(parsed) : null;
-  }
-  if (typeof value === "number" && Number.isFinite(value)) {
-    const ms = value > 10_000_000_000 ? value : value * 1000;
-    const parsed = new Date(ms);
-    return Number.isFinite(parsed.valueOf()) ? parsed : null;
-  }
-  return null;
-}
-
-function ageHours(value, now = new Date()) {
-  const parsed = parseTimestamp(value);
-  if (!parsed) return null;
-  return Math.max(0, (now.valueOf() - parsed.valueOf()) / 36e5);
-}
-
-function hasRecentPendingFailure(entry, now = new Date()) {
-  const reason = String(entry?.failure_reason || "");
-  if (!reason) return false;
-  const lastAge = ageHours(entry?.last_attempt_utc, now);
-  if (lastAge != null && lastAge <= RECENT_TERMINAL_MAX_AGE_HOURS) return true;
-  const nextAttempt = parseTimestamp(entry?.next_attempt_after_utc);
-  return Boolean(nextAttempt && nextAttempt > now);
-}
-
 function terminalDaily1yGapSource(payload, pendingEntry = null, now = new Date()) {
-  const reason = String(pendingEntry?.failure_reason || "");
-  if (hasRecentPendingFailure(pendingEntry, now)) {
-    if (pendingEntry?.failure_class === "successful_short_history") {
-      return "successful_short_history_cooldown";
-    }
-    if (reason.includes("quoteType is not ETF/MUTUALFUND")) return "provider_rejected_non_etf";
-    if (reason.includes("HTTP Error 404")) return "source_unavailable_recent_failure";
-    return "provider_recent_failure";
-  }
-  const fetchedAge = ageHours(payload?.fetched_at, now);
+  const pendingSource = pendingDaily1yTerminalSource(pendingEntry, now);
+  if (pendingSource) return pendingSource;
+  const fetchedAge = timestampAgeHours(payload?.fetched_at, now);
   if (fetchedAge != null && fetchedAge <= RECENT_TERMINAL_MAX_AGE_HOURS) {
     if (isYahooFallbackDetail(payload)) return "yahoo_fallback_recent_short_rows";
     if (isPrimaryStockAnalysisDetail(payload)) return "stockanalysis_recent_short_rows";
@@ -679,11 +685,12 @@ function main() {
     inceptionLimited: daily1yInceptionLimitedRows,
     terminalLimited: daily1yTerminalLimitedRows,
   });
-  const scoredDaily1yClassification = daily1yClassificationProjection({
-    complete: scoredDaily1yCompleteRows,
-    fetchable: scoredDaily1yFetchableRows,
-    inceptionLimited: scoredDaily1yInceptionLimitedRows,
-    terminalLimited: scoredDaily1yTerminalLimitedRows,
+  const scoredDaily1yReport = buildScoredDaily1yReport({
+    scoredEtfCount: scoredEtfTickers.size,
+    completeRows: scoredDaily1yCompleteRows,
+    fetchableRows: scoredDaily1yFetchableRows,
+    inceptionLimitedRows: scoredDaily1yInceptionLimitedRows,
+    terminalLimitedRows: scoredDaily1yTerminalLimitedRows,
   });
 
   const report = {
@@ -731,23 +738,7 @@ function main() {
         terminal_limited: daily1yTerminalLimitedRows.slice(0, 10),
         complete: daily1yCompleteRows.slice(0, 5),
       },
-      scored_etfs: {
-        scored_etf_count: scoredEtfTickers.size,
-        complete: scoredDaily1yCompleteRows.length,
-        missing: scoredDaily1yFetchableRows.length + scoredDaily1yInceptionLimitedRows.length + scoredDaily1yTerminalLimitedRows.length,
-        fetchable: scoredDaily1yFetchableRows.length,
-        inception_limited: scoredDaily1yInceptionLimitedRows.length,
-        terminal_limited: scoredDaily1yTerminalLimitedRows.length,
-        classification_projection: scoredDaily1yClassification,
-        fetchable_breakdown: summarizeFetchableBreakdown(scoredDaily1yFetchableRows),
-        terminal_limited_breakdown: summarizeFetchableBreakdown(scoredDaily1yTerminalLimitedRows),
-        samples: {
-          fetchable: scoredDaily1yFetchableRows.slice(0, 10),
-          inception_limited: scoredDaily1yInceptionLimitedRows.slice(0, 10),
-          terminal_limited: scoredDaily1yTerminalLimitedRows.slice(0, 10),
-          complete: scoredDaily1yCompleteRows.slice(0, 5),
-        },
-      },
+      scored_etfs: scoredDaily1yReport,
       caveat: "Effective ETF detail daily 1Y continuity uses true StockAnalysis primary first, then the verified R2 active selection. Fetchable gaps are the immediate backfill queue; inception-limited and terminal provider/data-supply states are tracked but do not block by themselves.",
     },
     incremental_plan: plan
@@ -807,21 +798,6 @@ function main() {
     }
   }
 
-  if (plan && report.incremental_plan.enforcement.enforced && !report.incremental_plan.subset_of_full_scan.fetchable) {
-    throw new Error(
-      `incremental_plan selected tickers are not in current fetchable full-scan: ${report.incremental_plan.subset_of_full_scan.missing_tickers.fetchable.join(",")}`,
-    );
-  }
-  if (plan && report.incremental_plan.enforcement.enforced && !report.incremental_plan.subset_of_full_scan.total) {
-    throw new Error(
-      `incremental_plan total tickers are not in current missing full-scan: ${report.incremental_plan.subset_of_full_scan.missing_tickers.total.join(",")}`,
-    );
-  }
-  if (plan && report.incremental_plan.enforcement.enforced && !report.incremental_plan.subset_of_full_scan.inception_limited) {
-    throw new Error(
-      `incremental_plan inception-limited tickers are not in current inception-limited full-scan: ${report.incremental_plan.subset_of_full_scan.missing_tickers.inception_limited.join(",")}`,
-    );
-  }
 }
 
-main();
+if (process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.meta.url)) main();

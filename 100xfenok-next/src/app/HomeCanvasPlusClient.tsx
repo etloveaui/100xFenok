@@ -1,31 +1,30 @@
 "use client";
 
-import { useEffect, useMemo, useState, type CSSProperties } from "react";
+import { useEffect, useMemo, useState, useSyncExternalStore } from "react";
 import AppShell from "@/components/shell/AppShell";
-import TickerTypeahead from "@/components/TickerTypeahead";
 import TransitionLink from "@/components/TransitionLink";
-import CpBadge from "@/components/canvas-plus/CpBadge";
-import CpPriceChart from "@/components/canvas-plus/charts/CpPriceChart";
-import type { CpChartDatum } from "@/components/canvas-plus/charts/types";
+import { Bar } from "@/components/ui/Bar";
+import { EdgeMark } from "@/components/ui/EdgeMark";
+import { Panel } from "@/components/ui/Panel";
+import { PanelHeader } from "@/components/ui/PanelHeader";
+import { Pill } from "@/components/ui/Pill";
+import { Sparkline } from "@/components/ui/Sparkline";
+import { Tile } from "@/components/ui/Tile";
 import { useDashboardData } from "@/hooks/useDashboardData";
-import { clamp, formatSignedPercentDecimal, getRegimeClass, getRegimeLabel } from "@/lib/dashboard/formatters";
-import { DATA_STATE_LABELS } from "@/lib/data-state";
-import type { DashboardSnapshot, SectorSnapshot } from "@/lib/dashboard/types";
+import { MARKET_STRENGTH_NAME, marketStrength } from "@/lib/dashboard/market-strength";
+import { DATA_STATE_LABELS, oldestAsOf } from "@/lib/data-state";
+import { fetchJsonOrNull, fetchJsonShared } from "@/lib/client/data-fetch";
+import type { DashboardSnapshot, DashboardSourceId, SectorSnapshot } from "@/lib/dashboard/types";
+import { formatEps, formatEpsRevisionChange } from "@/lib/eps-revision";
+import { projectMaterialChanges, type MaterialChangeItem } from "@/lib/home/material-change";
+import { freshnessAgeOverride, freshnessVerdict } from "@/lib/freshness-policy.mjs";
+import { PERSONAL_DOC_KEYS, readPersonalFlags, type Flag } from "@/lib/personal/personal-state";
 import { EXPLORE_PRODUCT_TITLE } from "@/lib/product-nav";
 import { ROUTES } from "@/lib/routes";
+import WeekAheadStrip from "@/components/market/WeekAheadStrip";
 import type { TradesRankingData, TradesRankingRow } from "@/lib/superinvestors/types";
 
-type RegimeTone = "positive" | "negative" | "warning" | "neutral";
-type GatewayTone = "accent" | RegimeTone;
 type IndexSymbol = "SPY" | "QQQ" | "DIA";
-
-type RegimeSummary = {
-  label: string;
-  className: string;
-  confidence: number;
-  breadth: number;
-  tone: RegimeTone;
-};
 
 type IndexCardDefinition = {
   symbol: IndexSymbol;
@@ -38,8 +37,13 @@ type IndexCardViewModel = IndexCardDefinition & {
   changePercent: number | null;
   fetchedAt: string | null;
   marketState: string | null;
-  chartData: CpChartDatum[];
+  chartData: ChartPoint[];
   isLive: boolean;
+};
+
+type ChartPoint = {
+  time: string;
+  value: number;
 };
 
 type InvestorHighlight = {
@@ -48,32 +52,12 @@ type InvestorHighlight = {
   ticker: string;
   meta: string;
   signal: string;
-  tone: RegimeTone;
-};
-
-type RevisionMoverRow = {
-  ticker?: string;
-  name?: string | null;
-  change_1w?: number | null;
-  eps_fy1?: number | null;
-  as_of?: string | null;
 };
 
 type RevisionMoversData = {
   generated_at?: string;
-  up?: RevisionMoverRow[];
-  down?: RevisionMoverRow[];
-};
-
-type StockMoverHighlight = {
-  key: string;
-  label: string;
-  ticker: string;
-  name: string;
-  change: number;
-  tone: RegimeTone;
-  /** True for the placeholder row shown while movers are loading — routing must key off this, never off display text. */
-  isPlaceholder?: boolean;
+  up?: unknown;
+  down?: unknown;
 };
 
 type FinanceHistoryPoint = {
@@ -86,6 +70,27 @@ type FinanceHistoryResponse = {
   data?: {
     history_1y?: FinanceHistoryPoint[];
   };
+};
+
+type KospiIndexRow = {
+  date?: unknown;
+  close?: unknown;
+  change_pct?: unknown;
+  index_class?: unknown;
+  index_name?: unknown;
+};
+
+type KospiIndexFile = {
+  as_of?: unknown;
+  generated_at?: unknown;
+  indices?: KospiIndexRow[];
+};
+
+type KospiTileModel = {
+  price: number | null;
+  changePercent: number | null;
+  asOf: string | null;
+  series: number[];
 };
 
 const INDEX_CARDS = [
@@ -106,56 +111,89 @@ const INDEX_CARDS = [
   },
 ] satisfies readonly IndexCardDefinition[];
 
-const GATEWAY_TILES = [
-  {
-    label: "종목",
-    title: "종목 리포트",
-    value: "검색",
-    detail: "티커를 바로 열어 가격, 밸류에이션, 신호를 한 화면에서 확인합니다.",
-    href: ROUTES.stock("NVDA"),
-    tone: "accent",
-    icon: "⌕",
-  },
-  {
-    label: "스크리너",
-    title: "조건 검색",
-    value: "필터",
-    detail: "밸류, 성장, 퀄리티, 모멘텀 조건으로 후보 종목을 좁힙니다.",
-    href: ROUTES.screener,
-    tone: "positive",
-    icon: "▦",
-  },
-  {
-    label: "ETF",
-    title: "ETF 센터",
-    value: "비교",
-    detail: "ETF 분류, 테마, 보유 구조를 비교하며 시장 노출을 점검합니다.",
-    href: ROUTES.etfs,
-    tone: "neutral",
-    icon: "◌",
-  },
-  {
-    label: "포트폴리오",
-    title: "보유 점검",
-    value: "리뷰",
-    detail: "관심 종목과 보유 비중을 시장 흐름과 함께 다시 봅니다.",
-    href: ROUTES.portfolio,
-    tone: "warning",
-    icon: "◫",
-  },
-] satisfies ReadonlyArray<{
-  label: string;
-  title: string;
-  value: string;
-  detail: string;
-  href: string;
-  tone: GatewayTone;
-  icon: string;
-}>;
-
 function formatDatePart(value: string | null | undefined): string {
   if (!value) return "대기";
   return value.slice(0, 10);
+}
+
+// Home provenance vocabulary. Labels and dot colors follow the EvidenceRail
+// words the removed rails used, so the page reads the same as before.
+type HomeFreshness = "pending" | "delayed" | "partial" | "stale" | "fixed" | "fresh";
+
+type HomeProvenance = { freshness: HomeFreshness; asOf: string | null };
+
+// Worst first: a pending fetch outranks the warning states, a delayed lane
+// outranks a partially available one, and a fixed (non-live) feed sits below
+// both. The date is always the oldest among the panels.
+const HOME_PROVENANCE_WORST_FIRST: ReadonlyArray<HomeFreshness> = [
+  "pending",
+  "delayed",
+  "partial",
+  "stale",
+  "fixed",
+  "fresh",
+];
+
+const HOME_PROVENANCE_LABEL: Record<HomeFreshness, string> = {
+  pending: "확인 중",
+  delayed: "지연",
+  partial: "부분",
+  stale: "대기",
+  fixed: "고정",
+  fresh: "신선",
+};
+
+const HOME_PROVENANCE_DOT: Record<HomeFreshness, string> = {
+  pending: "var(--fnk-color-warn)",
+  delayed: "var(--fnk-color-warn)",
+  partial: "var(--fnk-color-warn)",
+  stale: "var(--fnk-color-warn)",
+  fixed: "var(--fnk-neutral-500)",
+  fresh: "var(--fnk-color-gain)",
+};
+
+const HOME_PROVENANCE_SOURCES = "Fenok Edge · Sector Flow · 개인 플래그 · 리비전 · 13F";
+
+function aggregateHomeProvenance(panels: ReadonlyArray<HomeProvenance>): HomeProvenance {
+  return {
+    freshness: HOME_PROVENANCE_WORST_FIRST.find(
+      (state) => panels.some((panel) => panel.freshness === state),
+    ) ?? "fresh",
+    asOf: oldestAsOf(panels.map((panel) => panel.asOf)),
+  };
+}
+
+const REVISION_REFRESH_WEEKDAY_KST = 5; // Friday: weekly US-Thursday batch lands Friday 08:00 KST
+const REVISION_REFRESH_HOUR_KST = 8;
+function parseFileTimeMs(value: string | null | undefined): number | null {
+  if (!value) return null;
+  const trimmed = value.trim();
+  if (/^\d{4}-\d{2}-\d{2}$/.test(trimmed)) {
+    const [y, m, d] = trimmed.split("-").map(Number);
+    return Date.UTC(y, m - 1, d, 12);
+  }
+  const ms = Date.parse(trimmed);
+  return Number.isFinite(ms) ? ms : null;
+}
+function lastRevisionRefreshMs(nowMs: number): number {
+  // most recent Friday 08:00 KST at or before nowMs (KST = UTC+9)
+  const kst = new Date(nowMs + 9 * 3600 * 1000);
+  const day = kst.getUTCDay();
+  const back = (day - REVISION_REFRESH_WEEKDAY_KST + 7) % 7;
+  const dayStartKstAsUtc = Date.UTC(kst.getUTCFullYear(), kst.getUTCMonth(), kst.getUTCDate()) - 9 * 3600 * 1000;
+  let refresh = dayStartKstAsUtc - back * 86400 * 1000 + REVISION_REFRESH_HOUR_KST * 3600 * 1000;
+  if (refresh > nowMs) refresh -= 7 * 86400 * 1000;
+  return refresh;
+}
+function nextRevisionRefreshMs(nowMs: number): number {
+  const last = lastRevisionRefreshMs(nowMs);
+  return last > nowMs ? last : last + 7 * 86400 * 1000;
+}
+function formatNextRefreshLabel(nowMs: number): string {
+  const kst = new Date(nextRevisionRefreshMs(nowMs) + 9 * 3600 * 1000);
+  const mm = String(kst.getUTCMonth() + 1).padStart(2, "0");
+  const dd = String(kst.getUTCDate()).padStart(2, "0");
+  return `${mm}-${dd} 08:00`;
 }
 
 function maxTimestamp(values: Array<string | null | undefined>): string | null {
@@ -165,23 +203,14 @@ function maxTimestamp(values: Array<string | null | undefined>): string | null {
     .at(-1) ?? null;
 }
 
-function dataStateLabel(dataReady: boolean): string {
-  return dataReady ? DATA_STATE_LABELS.ready : DATA_STATE_LABELS.pending;
-}
-
-function failedSourceLabel(failedCount: number): string {
-  return failedCount === 0 ? "없음" : `${failedCount}개`;
-}
-
-function sectorModeLabel(mode: "LIVE_1D" | "MIXED" | "BASE_1M"): string {
-  if (mode === "LIVE_1D") return "실시간 1일 기준";
-  if (mode === "MIXED") return "실시간+1개월 혼합";
-  return "1개월 기준";
-}
-
 function formatPriceValue(value: number | null | undefined): string {
   if (typeof value !== "number" || !Number.isFinite(value)) return "-";
   return `$${value.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+}
+
+function formatIndexPoints(value: number | null | undefined): string {
+  if (typeof value !== "number" || !Number.isFinite(value)) return "-";
+  return value.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 }
 
 function formatSignedPercentUnit(value: number | null | undefined, digits = 2): string {
@@ -190,9 +219,16 @@ function formatSignedPercentUnit(value: number | null | undefined, digits = 2): 
   return `${prefix}${Math.abs(value).toFixed(digits)}%`;
 }
 
-function formatRevisionMove(value: number | null | undefined): string {
-  if (typeof value !== "number" || !Number.isFinite(value)) return "-";
-  return formatSignedPercentUnit(value * 100, 1);
+/** Prior -> current FY+1 estimate when the feed carries the prior week, else the current one. */
+function revisionEpsText(item: MaterialChangeItem): string {
+  if (!item.eps) return "—";
+  const after = formatEps(item.eps.after, item.ticker);
+  return item.eps.before === null ? after : `${formatEps(item.eps.before, item.ticker)} → ${after}`;
+}
+
+function revisionChangeText(item: MaterialChangeItem): string {
+  if (item.source !== "revision" || typeof item.value !== "number") return item.detail;
+  return formatEpsRevisionChange(item.value, item.eps?.flip ?? null);
 }
 
 function formatMarketState(value: string | null): string {
@@ -208,11 +244,17 @@ function readFiniteNumber(value: unknown): number | null {
   return typeof value === "number" && Number.isFinite(value) ? value : null;
 }
 
-function historyToChartData(payload: FinanceHistoryResponse | null): CpChartDatum[] {
+function asDateString(value: unknown): string | null {
+  if (typeof value !== "string") return null;
+  const text = value.trim();
+  return text.length > 0 ? text.slice(0, 10) : null;
+}
+
+function historyToChartData(payload: FinanceHistoryResponse | null): ChartPoint[] {
   const rows = payload?.data?.history_1y;
   if (!Array.isArray(rows)) return [];
 
-  const chartData: CpChartDatum[] = [];
+  const chartData: ChartPoint[] = [];
   rows
     .filter((row): row is FinanceHistoryPoint & { date: string } => typeof row.date === "string")
     .slice(-21)
@@ -224,25 +266,23 @@ function historyToChartData(payload: FinanceHistoryResponse | null): CpChartDatu
 }
 
 async function fetchJson<T>(url: string): Promise<T | null> {
-  const response = await fetch(url);
-  if (!response.ok) return null;
-  return (await response.json()) as T;
+  return fetchJsonOrNull<T>(url);
 }
 
-async function loadIndexCardHistory(symbol: IndexSymbol): Promise<CpChartDatum[]> {
+async function loadIndexCardHistory(symbol: IndexSymbol): Promise<ChartPoint[]> {
   const history = await fetchJson<FinanceHistoryResponse>(`/data/yf/finance/${symbol}.json`).catch(() => null);
   return historyToChartData(history);
 }
 
-function useIndexCardHistories(): Partial<Record<IndexSymbol, CpChartDatum[]>> {
-  const [histories, setHistories] = useState<Partial<Record<IndexSymbol, CpChartDatum[]>>>({});
+function useIndexCardHistories(): Partial<Record<IndexSymbol, ChartPoint[]>> {
+  const [histories, setHistories] = useState<Partial<Record<IndexSymbol, ChartPoint[]>>>({});
 
   useEffect(() => {
     let cancelled = false;
     Promise.all(
       INDEX_CARDS.map(async (definition) => [definition.symbol, await loadIndexCardHistory(definition.symbol)] as const),
     ).then((entries) => {
-      if (!cancelled) setHistories(Object.fromEntries(entries) as Partial<Record<IndexSymbol, CpChartDatum[]>>);
+      if (!cancelled) setHistories(Object.fromEntries(entries) as Partial<Record<IndexSymbol, ChartPoint[]>>);
     });
     return () => {
       cancelled = true;
@@ -270,6 +310,42 @@ function useIndexCards(dashboard: DashboardSnapshot): IndexCardViewModel[] {
   }), [dashboard.quickIndices, histories]);
 }
 
+function useKospiTile(): { tile: KospiTileModel; loading: boolean } {
+  const [tile, setTile] = useState<KospiTileModel>({ price: null, changePercent: null, asOf: null, series: [] });
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    let cancelled = false;
+    fetchJson<KospiIndexFile>("/data/computed/fenok-edge-korea-krx-index-daily.json")
+      .then((payload) => {
+        if (cancelled) return;
+        const rows = Array.isArray(payload?.indices) ? payload.indices : [];
+        const composite = rows
+          .filter((row) => row.index_class === "KOSPI" && row.index_name === "코스피")
+          .filter((row) => typeof row.date === "string" && readFiniteNumber(row.close) !== null)
+          .sort((a, b) => String(a.date).localeCompare(String(b.date)));
+        const latest = composite.at(-1);
+        setTile({
+          price: readFiniteNumber(latest?.close),
+          changePercent: readFiniteNumber(latest?.change_pct),
+          asOf: asDateString(payload?.as_of) ?? asDateString(latest?.date),
+          series: composite.slice(-21).map((row) => readFiniteNumber(row.close)).filter((v): v is number => v !== null),
+        });
+      })
+      .catch(() => {
+        if (!cancelled) setTile({ price: null, changePercent: null, asOf: null, series: [] });
+      })
+      .finally(() => {
+        if (!cancelled) setLoading(false);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  return { tile, loading };
+}
+
 function buildInvestorHighlights(data: TradesRankingData | null): InvestorHighlight[] {
   if (!data) return [];
   const topBought: TradesRankingRow | undefined = data.bought[0];
@@ -286,7 +362,6 @@ function buildInvestorHighlights(data: TradesRankingData | null): InvestorHighli
       ticker: topBought.ticker,
       meta: `최대 ${topBought.top_investor.name}`,
       signal: `${topBought.investors_count}명 매수`,
-      tone: "positive",
     });
   }
   if (topSold) {
@@ -296,7 +371,6 @@ function buildInvestorHighlights(data: TradesRankingData | null): InvestorHighli
       ticker: topSold.ticker,
       meta: `최대 ${topSold.top_investor.name}`,
       signal: `${topSold.investors_count}명 매도`,
-      tone: "negative",
     });
   }
   if (topNew) {
@@ -306,165 +380,122 @@ function buildInvestorHighlights(data: TradesRankingData | null): InvestorHighli
       ticker: topNew.ticker,
       meta: topNew.sector,
       signal: `${topNew.new_count ?? 0}명 신규`,
-      tone: "warning",
     });
   }
   return highlights;
 }
 
-function buildStockMoverHighlights(data: RevisionMoversData | null): StockMoverHighlight[] {
-  if (!data) return [];
-  const up = (data.up ?? [])
-    .filter((row) => row.ticker && typeof row.change_1w === "number" && Number.isFinite(row.change_1w))
-    .sort((a, b) => (b.change_1w ?? 0) - (a.change_1w ?? 0))
-    .slice(0, 2)
-    .map((row) => ({
-      key: `up-${row.ticker}`,
-      label: "상향",
-      ticker: row.ticker ?? "",
-      name: row.name ?? "내년(FY+1) EPS 추정치",
-      change: row.change_1w ?? 0,
-      tone: "positive" as RegimeTone,
-    }));
-  const down = (data.down ?? [])
-    .filter((row) => row.ticker && typeof row.change_1w === "number" && Number.isFinite(row.change_1w))
-    .sort((a, b) => (a.change_1w ?? 0) - (b.change_1w ?? 0))
-    .slice(0, 2)
-    .map((row) => ({
-      key: `down-${row.ticker}`,
-      label: "하향",
-      ticker: row.ticker ?? "",
-      name: row.name ?? "내년(FY+1) EPS 추정치",
-      change: row.change_1w ?? 0,
-      tone: "negative" as RegimeTone,
-    }));
-  return [...up, ...down];
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === "object" && value !== null && !Array.isArray(value);
 }
 
-function useInvestorHighlights(): { highlights: InvestorHighlight[]; quarter: string; loading: boolean } {
-  const [data, setData] = useState<TradesRankingData | null>(null);
-  const [loading, setLoading] = useState(true);
+function isFiniteNumber(value: unknown): value is number {
+  return typeof value === "number" && Number.isFinite(value);
+}
+
+function isSafeTradesRankingRow(value: unknown): value is TradesRankingRow {
+  if (!isRecord(value) || !isRecord(value.top_investor)) return false;
+  return typeof value.ticker === "string"
+    && value.ticker.trim().length > 0
+    && typeof value.sector === "string"
+    && isFiniteNumber(value.amount)
+    && isFiniteNumber(value.investors_count)
+    && (value.new_count === undefined || isFiniteNumber(value.new_count))
+    && typeof value.top_investor.name === "string"
+    && value.top_investor.name.trim().length > 0;
+}
+
+function isValidTradesRankingData(value: unknown): value is TradesRankingData {
+  if (!isRecord(value) || !isRecord(value.metadata)) return false;
+  const quarter = value.metadata.quarter;
+  return typeof quarter === "string"
+    && /^\d{4}-Q[1-4]$/.test(quarter.trim())
+    && Array.isArray(value.bought)
+    && value.bought.every(isSafeTradesRankingRow)
+    && Array.isArray(value.sold)
+    && value.sold.every(isSafeTradesRankingRow);
+}
+
+type ReloadableJson<T> = {
+  data: T | null;
+  loading: boolean;
+  /** Wall-clock time the current answer arrived (null until the first one). */
+  fetchedAtMs: number | null;
+};
+
+/**
+ * One JSON source that re-fetches whenever `reloadKey` changes. Loading is
+ * derived (the settled answer belongs to an older key), so the effect never
+ * sets state synchronously; the previous answer stays visible during a retry.
+ */
+function useReloadableJson<T>(url: string, reloadKey: number): ReloadableJson<T> {
+  const [result, setResult] = useState<{ key: number; data: T | null; fetchedAtMs: number } | null>(null);
 
   useEffect(() => {
     let cancelled = false;
-    fetchJson<TradesRankingData>("/data/sec-13f/analytics/trades_ranking.json")
-      .then((payload) => {
-        if (!cancelled) setData(payload);
-      })
-      .catch(() => {
-        if (!cancelled) setData(null);
-      })
-      .finally(() => {
-        if (!cancelled) setLoading(false);
-      });
+    const settle = (data: T | null, fetchedAtMs: number) => {
+      if (!cancelled) setResult({ key: reloadKey, data, fetchedAtMs });
+    };
+    // receivedAt is the honest "arrived" clock for the freshness lane; a
+    // reloadKey bump is the retry button's fresh read, so it forces.
+    fetchJsonShared<T>(url, reloadKey === 0 ? undefined : { force: true }).then(
+      ({ data, receivedAt }) => settle(data, receivedAt),
+      () => settle(null, Date.now()),
+    );
     return () => {
       cancelled = true;
     };
-  }, []);
+  }, [url, reloadKey]);
 
   return {
-    highlights: buildInvestorHighlights(data),
-    quarter: data?.metadata?.quarter ?? "13F",
+    data: result?.data ?? null,
+    loading: result === null || result.key !== reloadKey,
+    fetchedAtMs: result?.fetchedAtMs ?? null,
+  };
+}
+
+function useInvestorHighlights(reloadKey: number): {
+  source: {
+    metadata: { quarter: string; generated_at?: string };
+    highlights: InvestorHighlight[];
+  } | null;
+  loading: boolean;
+} {
+  const { data, loading } = useReloadableJson<unknown>("/data/sec-13f/analytics/trades_ranking.json", reloadKey);
+
+  const source = useMemo(() => {
+    if (!isValidTradesRankingData(data)) return null;
+    const highlights = buildInvestorHighlights(data);
+    return {
+      metadata: {
+        quarter: data.metadata.quarter,
+        ...(typeof data.metadata.generated_at === "string" && data.metadata.generated_at.trim().length > 0
+          ? { generated_at: data.metadata.generated_at }
+          : {}),
+      },
+      highlights,
+    };
+  }, [data]);
+
+  return {
+    source,
     loading,
   };
 }
 
-function completeOldestMoverAsOf(rows: RevisionMoverRow[]): string | null {
-  if (rows.length === 0) return null;
-  const dates = rows.map((row) => (
-    typeof row.as_of === "string" && /^\d{4}-\d{2}-\d{2}/.test(row.as_of)
-      ? row.as_of.slice(0, 10)
-      : null
-  ));
-  if (dates.some((value) => value === null)) return null;
-  return [...dates].sort()[0] ?? null;
+function useStockMovers(reloadKey: number): ReloadableJson<RevisionMoversData> {
+  return useReloadableJson<RevisionMoversData>("/data/global-scouter/core/revision_movers.json", reloadKey);
 }
 
-function useStockMovers(): { movers: StockMoverHighlight[]; asOf: string | null; loading: boolean } {
-  const [data, setData] = useState<RevisionMoversData | null>(null);
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    let cancelled = false;
-    fetchJson<RevisionMoversData>("/data/global-scouter/core/revision_movers.json")
-      .then((payload) => {
-        if (!cancelled) setData(payload);
-      })
-      .catch(() => {
-        if (!cancelled) setData(null);
-      })
-      .finally(() => {
-        if (!cancelled) setLoading(false);
-      });
-    return () => {
-      cancelled = true;
-    };
-  }, []);
-
-  const sourceAsOf = completeOldestMoverAsOf([...(data?.up ?? []), ...(data?.down ?? [])]);
-
-  return {
-    movers: buildStockMoverHighlights(data),
-    asOf: sourceAsOf,
-    loading,
-  };
+function materialFlagLabel(flag: Flag): string {
+  if (flag === "WATCH") return "관심";
+  if (flag === "THESIS") return "테시스";
+  if (flag === "RISK") return "위험";
+  return "확인";
 }
 
-function CpMarketDashboardBand({
-  indexCards,
-  updatedAt,
-}: {
-  indexCards: IndexCardViewModel[];
-  updatedAt: string;
-}) {
-  return (
-    <section className="cp-market-band" aria-label="시장 데이터 대시보드">
-      <header className="cp-market-band__header">
-        <div>
-          <p className="cp-lab__eyebrow">오늘 브리프</p>
-          <h2>시장 데이터 대시보드</h2>
-        </div>
-        <span className="cp-market-band__meta">시세 수집 {updatedAt}</span>
-      </header>
-
-      <div className="cp-market-band__cards">
-        {indexCards.map((card) => {
-          const tone = card.isLive ? ((card.changePercent ?? 0) >= 0 ? "positive" : "negative") : "neutral";
-          return (
-            <article className="cp-index-card" data-tone={tone} key={card.symbol}>
-              <div className="cp-index-card__topline">
-                <div>
-                  <span className="cp-index-card__symbol">{card.label}</span>
-                  <p>{card.detail}</p>
-                </div>
-                <span className="cp-index-card__state">{card.isLive ? formatMarketState(card.marketState) : "추정치"}</span>
-              </div>
-              <div className="cp-index-card__quote">
-                <strong>{formatPriceValue(card.price)}</strong>
-                <span>{formatSignedPercentUnit(card.changePercent)}</span>
-              </div>
-              <CpPriceChart
-                kind="sparkline"
-                data={card.chartData}
-                title={`${card.label} 미니 차트`}
-                summary={`${card.label} ${formatSignedPercentUnit(card.changePercent)}`}
-                ariaLabel={`${card.label} 가격 흐름`}
-                range="1M"
-                height={92}
-                density="compact"
-                showGrid={false}
-                showCrosshair={false}
-                className="cp-index-card__chart"
-                emptyLabel="차트 데이터 대기"
-              />
-            </article>
-          );
-        })}
-      </div>
-    </section>
-  );
-}
-
+// Band edges mirror the sector heat Tiles (components/ui/Tile.tsx), expressed in
+// --ls-heatmap-* tokens so the breadth strip tracks the shell palette.
 function edgeStrengthLabel(score: number): string {
   if (score >= 75) return "강한 상승";
   if (score >= 62) return "상승 우위";
@@ -472,349 +503,483 @@ function edgeStrengthLabel(score: number): string {
   return "방어 구간";
 }
 
-function CpFenokEdgePanel({
-  regime,
-  dashboard,
-}: {
-  regime: RegimeSummary;
-  dashboard: DashboardSnapshot;
-}) {
-  const radius = 47;
-  const circumference = 2 * Math.PI * radius;
-  const gaugeOffset = circumference * (1 - regime.confidence / 100);
-  const forces = [
-    {
-      label: "투자 심리",
-      value: Math.round(dashboard.fearGreedScore),
-      detail: dashboard.fearGreedLabel,
-    },
-    {
-      label: "섹터 확산",
-      value: regime.breadth,
-      detail: `${dashboard.sectorUp}개 상승`,
-    },
-    {
-      label: "시장 스트레스",
-      value: Math.round(dashboard.stressScore * 100),
-      detail: dashboard.stressLabel,
-    },
-  ];
+const NO_PERSONAL_FLAGS: Record<string, Flag> = {};
+let personalFlagsCache: { raw: string | null; flags: Record<string, Flag> } | null = null;
 
-  return (
-    <section className="cp-edge-panel" aria-label="Fenok Edge 시각화">
-      <header className="cp-edge-panel__header">
-        <div>
-          <p className="cp-lab__eyebrow">Fenok Edge</p>
-          <h2>시장 체력 점수</h2>
-        </div>
-        <CpBadge tone={regime.tone}>{regime.label}</CpBadge>
-      </header>
-
-      <div className="cp-edge-panel__body">
-        <div className="cp-edge-gauge" data-tone={regime.tone}>
-          <svg viewBox="0 0 120 120" role="img" aria-label={`Fenok Edge ${regime.confidence}점`}>
-            <defs>
-              <linearGradient id="cp-edge-gauge-gradient" x1="0%" y1="20%" x2="100%" y2="80%">
-                <stop offset="0%" stopColor="var(--cp-chart-line-2)" />
-                <stop offset="46%" stopColor="var(--cp-accent)" />
-                <stop offset="100%" stopColor="var(--cp-positive)" />
-              </linearGradient>
-            </defs>
-            <circle className="cp-edge-gauge__track" cx="60" cy="60" r={radius} />
-            <circle
-              className="cp-edge-gauge__progress"
-              cx="60"
-              cy="60"
-              r={radius}
-              strokeDasharray={circumference}
-              strokeDashoffset={gaugeOffset}
-            />
-          </svg>
-          <div className="cp-edge-gauge__score">
-            <strong>{regime.confidence}</strong>
-            <span>{edgeStrengthLabel(regime.confidence)}</span>
-          </div>
-        </div>
-
-        <div className="cp-edge-forces">
-          {forces.map((force) => (
-            <div className="cp-edge-force" key={force.label}>
-              <div className="cp-edge-force__label">
-                <span>{force.label}</span>
-                <strong>{force.value}</strong>
-              </div>
-              <div className="cp-edge-force__track" aria-hidden="true">
-                <span style={{ width: `${clamp(force.value, 0, 100)}%` }} />
-              </div>
-              <p>{force.detail}</p>
-            </div>
-          ))}
-        </div>
-      </div>
-    </section>
-  );
+function noPersonalFlags(): Record<string, Flag> {
+  return NO_PERSONAL_FLAGS;
 }
 
-function heatTone(change: number): "positive" | "negative" | "neutral" {
-  if (change > 0.0005) return "positive";
-  if (change < -0.0005) return "negative";
-  return "neutral";
+/** Stable snapshot for useSyncExternalStore: re-parse only when the stored document changes. */
+function personalFlagsSnapshot(): Record<string, Flag> {
+  let raw: string | null = null;
+  try {
+    raw = window.localStorage.getItem(PERSONAL_DOC_KEYS.flags);
+  } catch {
+    raw = null;
+  }
+  if (personalFlagsCache?.raw !== raw) {
+    personalFlagsCache = { raw, flags: raw === null ? NO_PERSONAL_FLAGS : readPersonalFlags() };
+  }
+  return personalFlagsCache.flags;
 }
 
-function heatTileStyle(change: number): CSSProperties {
-  return {
-    "--cp-heat-intensity": clamp(Math.abs(change) * 18, 0.16, 1).toFixed(3),
-  } as CSSProperties;
-}
-
-function CpSectorHeatmap({
-  sectors,
-  mode,
-}: {
-  sectors: SectorSnapshot[];
-  mode: DashboardSnapshot["sectorMode"];
-}) {
-  const heatSectors = sectors
-    .slice()
-    .sort((a, b) => Math.abs(b.displayChange) - Math.abs(a.displayChange))
-    .slice(0, 11);
-
-  return (
-    <section className="cp-sector-heatmap" aria-label="섹터 히트맵">
-      <header className="cp-sector-heatmap__header">
-        <div>
-          <p className="cp-lab__eyebrow">Sector Flow</p>
-          <h2>섹터 히트맵</h2>
-        </div>
-        <span>{sectorModeLabel(mode)}</span>
-      </header>
-
-      <div className="cp-sector-heatmap__grid">
-        {heatSectors.map((sector) => (
-          <div
-            className="cp-sector-heatmap__tile"
-            data-tone={heatTone(sector.displayChange)}
-            key={sector.key}
-            style={heatTileStyle(sector.displayChange)}
-          >
-            <span>{sector.etf}</span>
-            <strong>{sector.name}</strong>
-            <em>{formatSignedPercentDecimal(sector.displayChange, 1)}</em>
-          </div>
-        ))}
-      </div>
-    </section>
-  );
-}
-
-function CpGatewayCard({ tile }: { tile: (typeof GATEWAY_TILES)[number] }) {
-  return (
-    <TransitionLink
-      href={tile.href}
-      className="cp-home-gateway-link"
-      data-home-feature-tile
-    >
-      <article className="cp-gateway-card" data-tone={tile.tone} data-cp-feature-tile>
-        <div className="cp-gateway-card__topline">
-          <span className="cp-gateway-card__icon" aria-hidden="true">{tile.icon}</span>
-          <span>{tile.label}</span>
-        </div>
-        <h2>{tile.title}</h2>
-        <strong>{tile.value}</strong>
-        <p>{tile.detail}</p>
-      </article>
-    </TransitionLink>
-  );
-}
-
-function CpHomeSliceTwo() {
-  const investor = useInvestorHighlights();
-  const stockMovers = useStockMovers();
-  const moverFallback: StockMoverHighlight[] = [{
-    key: "pending",
-    label: "대기",
-    ticker: DATA_STATE_LABELS.pending,
-    name: `실적추정 변화 데이터 ${DATA_STATE_LABELS.pending}`,
-    change: 0,
-    tone: "neutral",
-    isPlaceholder: true,
-  }];
-
-  return (
-    <section className="cp-home-slice-two" aria-label="홈 관찰 구역">
-      <div className="cp-watch-zone" data-canvas-plus-watch-zone>
-        <header className="cp-watch-zone__header">
-          <div>
-            <p className="cp-lab__eyebrow">관찰 구역</p>
-            <h2>오늘의 관찰대</h2>
-          </div>
-          <span>{stockMovers.loading ? DATA_STATE_LABELS.pending : stockMovers.asOf ? formatDatePart(stockMovers.asOf) : "기준일 미확인"}</span>
-        </header>
-
-        <div className="cp-watch-zone__indices">
-          {(stockMovers.movers.length > 0 ? stockMovers.movers : moverFallback).map((mover) => {
-            return (
-              <TransitionLink
-                href={mover.isPlaceholder ? ROUTES.explore : ROUTES.stock(mover.ticker)}
-                className="cp-watch-chip"
-                data-tone={mover.tone}
-                key={mover.key}
-              >
-                <span>실적추정 {mover.label}</span>
-                <strong>{mover.ticker}</strong>
-                <p>{mover.name}</p>
-                <em>{formatRevisionMove(mover.change)}</em>
-              </TransitionLink>
-            );
-          })}
-        </div>
-      </div>
-
-      <TransitionLink href={ROUTES.superinvestors} className="cp-investor-card" data-canvas-plus-investor-card>
-        <header className="cp-investor-card__header">
-          <div>
-            <p className="cp-lab__eyebrow">13F 신호</p>
-            <h2>투자자 하이라이트</h2>
-          </div>
-          <span>{investor.loading ? DATA_STATE_LABELS.pending : investor.quarter}</span>
-        </header>
-
-        <div className="cp-investor-card__stack">
-          {(investor.highlights.length > 0 ? investor.highlights : [{
-            key: "pending",
-            label: "13F 대기",
-            ticker: "대기",
-            meta: `투자자 매매 동향 ${DATA_STATE_LABELS.pending}`,
-            signal: "-",
-            tone: "neutral" as RegimeTone,
-          }]).map((item) => (
-            <div className="cp-investor-row" data-tone={item.tone} key={item.key}>
-              <span>{item.label}</span>
-              <strong>{item.ticker}</strong>
-              <p>{item.meta}</p>
-              <em>{item.signal}</em>
-            </div>
-          ))}
-        </div>
-      </TransitionLink>
-    </section>
-  );
-}
-
-function CpHomeHero({
-  regimeLabel,
-  regimeTone,
-  dataReady,
-  failedCount,
-  updatedAt,
-}: {
-  regimeLabel: string;
-  regimeTone: "positive" | "negative" | "warning" | "neutral";
-  dataReady: boolean;
-  failedCount: number;
-  updatedAt: string;
-}) {
-  return (
-    <section className="cp-hero-search cp-home-hero" data-canvas-plus-home-hero data-home-search-first>
-      <div className="cp-hero-search__copy">
-        <p className="cp-lab__eyebrow">100xFenok 홈</p>
-        <h1 className="cp-hero-search__title">오늘 시장의 기준점</h1>
-        <p className="cp-hero-search__summary">
-          검색에서 판독까지, 오늘의 후보를 한 화면에서 이어 봅니다.
-        </p>
-      </div>
-
-      <div className="cp-hero-search__form">
-        <span className="cp-hero-search__label">
-          티커, 투자자, 기업명
-        </span>
-        <TickerTypeahead
-          placeholder="NVDA, SPY, 워런 버핏..."
-          className="cp-hero-search__input"
-          formClass="cp-hero-search__control"
-          showButton
-          buttonLabel="열기"
-          buttonClass="cp-home-search-button"
-        />
-      </div>
-
-      <dl className="cp-hero-search__metrics" aria-label="홈 데이터 상태">
-        <div className="cp-hero-search__metric">
-          <dt>시장 판독</dt>
-          <dd><CpBadge tone={regimeTone}>{regimeLabel}</CpBadge></dd>
-        </div>
-        <div className="cp-hero-search__metric">
-          <dt>데이터 상태</dt>
-          <dd>{dataStateLabel(dataReady)}</dd>
-        </div>
-        <div className="cp-hero-search__metric">
-          <dt>확인 필요</dt>
-          <dd>{failedSourceLabel(failedCount)}</dd>
-        </div>
-        <div className="cp-hero-search__metric">
-          <dt>시세 수집</dt>
-          <dd>{updatedAt}</dd>
-        </div>
-      </dl>
-    </section>
-  );
+function subscribeToStorage(onChange: () => void): () => void {
+  window.addEventListener("storage", onChange);
+  return () => window.removeEventListener("storage", onChange);
 }
 
 export default function HomeCanvasPlusClient() {
   const { dashboard, dataReady, failedSources } = useDashboardData();
   const indexCards = useIndexCards(dashboard);
+  const { tile: kospi, loading: kospiLoading } = useKospiTile();
+  const [reloadKey, setReloadKey] = useState(0);
+  const investor = useInvestorHighlights(reloadKey);
+  const stockMovers = useStockMovers(reloadKey);
+  // Read after hydration (server snapshot is empty) and follow other tabs.
+  const personalFlags = useSyncExternalStore(subscribeToStorage, personalFlagsSnapshot, noPersonalFlags);
+
+  const projection = useMemo(
+    () => projectMaterialChanges(stockMovers.data, investor.source, personalFlags),
+    [investor.source, personalFlags, stockMovers.data],
+  );
+
   const indexUpdatedAt = useMemo(() => formatDatePart(maxTimestamp(indexCards.map((card) => card.fetchedAt))), [indexCards]);
-  const regime = useMemo(() => {
+  const dashboardSettled = dataReady || failedSources.length > 0;
+  const sectorTickerFailed = (etf: string): boolean =>
+    failedSources.includes(`ticker:${etf}` as DashboardSourceId);
+  const heatDelayed = dashboard.sectorRows.some((sector) => sectorTickerFailed(sector.etf));
+  const edgeDelayed = failedSources.includes("sentiment")
+    || failedSources.includes("dailyBanking")
+    || heatDelayed;
+  const regimeReady = dashboard.judgmentInputsReady;
+  const sectorDataReady = dashboard.sectorInputsReady;
+
+  const regime = useMemo(() => marketStrength(dashboard), [dashboard]);
+
+  const forces = useMemo(() => {
     const breadthTotal = Math.max(dashboard.sectorRows.length, 1);
     const breadthRatio = dashboard.sectorUp / breadthTotal;
-    const score = clamp(
-      (dashboard.fearGreedScore / 100) * 0.45 +
-        breadthRatio * 0.35 +
-        (1 - dashboard.stressScore) * 0.2,
-      0,
-      1,
-    );
-    const className = getRegimeClass(score);
+    const stressReliefScore = (1 - dashboard.stressScore) * 100;
+    const rawStressScore = Math.round(dashboard.stressScore * 100);
     return {
-      label: getRegimeLabel(score),
-      className,
-      confidence: Math.round(score * 100),
-      breadth: Math.round(breadthRatio * 100),
-      tone: className === "is-risk-on" ? "positive" : className === "is-risk-off" ? "negative" : "warning",
-    } satisfies RegimeSummary;
-  }, [dashboard]);
+      items: [
+        {
+          key: "sentiment",
+          label: "투자 심리",
+          value: Math.round(dashboard.fearGreedScore),
+          score: dashboard.fearGreedScore,
+          weight: 45,
+          contribution: dashboard.fearGreedScore * 0.45,
+          weightLabel: "가중 45%",
+          contributionLabel: `기여 ${(dashboard.fearGreedScore * 0.45).toFixed(1)}`,
+        },
+        {
+          key: "breadth",
+          label: "섹터 확산",
+          value: regime.breadth,
+          score: breadthRatio * 100,
+          weight: 35,
+          contribution: breadthRatio * 35,
+          weightLabel: "가중 35%",
+          contributionLabel: `기여 ${(breadthRatio * 35).toFixed(1)}`,
+        },
+        {
+          key: "stress",
+          label: "스트레스 완화",
+          value: Math.round(stressReliefScore),
+          score: stressReliefScore,
+          weight: 20,
+          contribution: stressReliefScore * 0.2,
+          weightLabel: "가중 20%",
+          contributionLabel: `기여 ${(stressReliefScore * 0.2).toFixed(1)}`,
+        },
+      ],
+      total: dashboard.fearGreedScore * 0.45 + breadthRatio * 35 + stressReliefScore * 0.2,
+      rawStressScore,
+      stressLabel: dashboard.stressLabel,
+    };
+  }, [dashboard, regime.breadth]);
+
+  const heatSectors = useMemo(() => dashboard.sectorRows
+    .slice()
+    .sort((a, b) => Math.abs(b.displayChange) - Math.abs(a.displayChange))
+    .slice(0, 11), [dashboard.sectorRows]);
+
+  const breadthSectors = dashboard.sectorRows.slice(0, 11);
+  const breadthReady = dashboardSettled && sectorDataReady && breadthSectors.length > 0;
+
+  const revisionEvidence = projection.sources.revision.evidence;
+  const superinvestorEvidence = projection.sources.superinvestor.evidence;
+  const revisionClock = revisionEvidence.asOf ?? revisionEvidence.generatedAt?.slice(0, 10) ?? "기준일 미확인";
+  const superinvestorClock = superinvestorEvidence.quarter ?? "분기 미확인";
+  const bothSourcesLoading = stockMovers.loading && investor.loading;
+  const oneSourceLoading = stockMovers.loading !== investor.loading;
+  const anySourceLoading = stockMovers.loading || investor.loading;
+  const sourceUnavailable = projection.sources.revision.status !== "available"
+    || projection.sources.superinvestor.status !== "available";
+  const revisionLegOk = projection.sources.revision.status === "available";
+  const superLegOk = projection.sources.superinvestor.status === "available";
+  const laneFresh = revisionLegOk && superLegOk;
+  const lanePartial = !laneFresh && (revisionLegOk || superLegOk);
+  const revisionFileMs = parseFileTimeMs(revisionEvidence.sourceAsOf ?? revisionEvidence.generatedAt ?? revisionEvidence.asOf);
+  // Schedule judgments use the moment the movers file arrived, not render time,
+  // so a re-render never flips the lane state on its own.
+  const scheduleNowMs = stockMovers.fetchedAtMs;
+  const revisionOverdue = !revisionLegOk
+    && scheduleNowMs !== null
+    && (revisionFileMs === null || revisionFileMs < lastRevisionRefreshMs(scheduleNowMs));
+  const laneDelayed = revisionOverdue;
+  const laneAwaiting = !laneFresh && !lanePartial && !laneDelayed;
+  const laneNext = laneAwaiting && scheduleNowMs !== null ? formatNextRefreshLabel(scheduleNowMs) : undefined;
+  // One page-level provenance line replaces the four per-panel rails and the
+  // Edge header chip: the worst panel state against the OLDEST panel date,
+  // because the page is only as fresh as its oldest feed.
+  // The revision age verdict may only make the lane worse: Home's vocabulary
+  // has no "error", so both delayed and stopped collapse to 지연 — with the
+  // revision leg available, the lane must not read fresh on an old source.
+  const revisionAgeWorse: HomeFreshness | null = revisionLegOk
+    && freshnessAgeOverride(freshnessVerdict(revisionEvidence.sourceAsOf, "global_scouter"))
+    ? "delayed"
+    : null;
+  const lanePanelFreshness: HomeFreshness = anySourceLoading
+    ? "pending"
+    : laneFresh
+      ? (revisionAgeWorse ?? "fresh")
+      : laneDelayed
+        ? "delayed"
+        : lanePartial
+          ? "partial"
+          : "stale";
+  const homeProvenance = aggregateHomeProvenance([
+    {
+      freshness: !dashboardSettled ? "pending" : edgeDelayed ? "delayed" : "fresh",
+      asOf: dashboard.tickerFetchedAt ?? null,
+    },
+    {
+      freshness: !dashboardSettled ? "pending" : heatDelayed ? "delayed" : dashboard.sectorMode === "LIVE_1D" ? "fresh" : "fixed",
+      asOf: dashboard.sectorMode === "LIVE_1D" ? dashboard.tickerFetchedAt ?? null : null,
+    },
+    {
+      freshness: lanePanelFreshness,
+      asOf: revisionEvidence.asOf ?? revisionEvidence.generatedAt ?? null,
+    },
+    {
+      freshness: lanePanelFreshness,
+      asOf: revisionEvidence.asOf ?? revisionEvidence.generatedAt ?? null,
+    },
+  ]);
+  const changedEmptyMessage = bothSourcesLoading
+    ? DATA_STATE_LABELS.pending
+    : oneSourceLoading
+      ? "남은 데이터 소스를 불러오는 중입니다."
+      : sourceUnavailable
+        ? "일부 데이터 소스를 불러오지 못해 확인이 필요합니다."
+        : "표시할 변경 사항이 없습니다.";
+  const attentionEmptyMessage = bothSourcesLoading
+    ? DATA_STATE_LABELS.pending
+    : oneSourceLoading
+      ? "남은 데이터 소스를 불러오는 중입니다."
+      : sourceUnavailable
+        ? "일부 데이터 소스를 불러오지 못해 확인이 필요합니다."
+        : "플래그가 있는 변경 사항이 없습니다.";
+  const attentionCountLabel = projection.attention.length > 0
+    ? `${projection.attention.length}`
+    : anySourceLoading
+      ? DATA_STATE_LABELS.pending
+      : sourceUnavailable
+        ? "확인 필요"
+        : "0";
+  const headerAttentionLabel = projection.attention.length > 0
+    ? `${projection.attention.length}건`
+    : anySourceLoading
+      ? DATA_STATE_LABELS.pending
+      : "0건";
+  const retrySources = () => setReloadKey((k) => k + 1);
 
   return (
-    <div className="fnk-shell cp-home-shell">
-      <AppShell active="explore" title={EXPLORE_PRODUCT_TITLE}>
-        <div className="canvas-plus" data-canvas-plus data-canvas-plus-home-production>
-          <div className="cp-lab cp-poc cp-home-production">
-            <CpHomeHero
-              regimeLabel={regime.label}
-              regimeTone={regime.tone}
-              dataReady={dataReady}
-              failedCount={failedSources.length}
-              updatedAt={formatDatePart(dashboard.tickerFetchedAt)}
-            />
-
-            <CpMarketDashboardBand
-              indexCards={indexCards}
-              updatedAt={indexUpdatedAt}
-            />
-
-            <section className="cp-home-visual-grid" aria-label="홈 시장 시각화">
-              <CpFenokEdgePanel regime={regime} dashboard={dashboard} />
-              <CpSectorHeatmap sectors={dashboard.sectorRows} mode={dashboard.sectorMode} />
-            </section>
-
-            <CpHomeSliceTwo />
-
-            <section className="cp-poc__feature-grid" aria-label="홈 주요 화면">
-              {GATEWAY_TILES.map((tile) => <CpGatewayCard key={tile.label} tile={tile} />)}
-            </section>
+    <div className="flex flex-col gap-3 md:gap-4">
+        <div className="flex flex-col gap-2">
+          <div className="flex items-baseline justify-between gap-3">
+            <div className="flex min-w-0 flex-wrap items-baseline gap-x-3 gap-y-1">
+              <h1 className="m-0 text-[18px] font-semibold text-[var(--c-ink)] md:text-[20px]">오늘 시장</h1>
+              <span className="text-[13px] text-[var(--c-ink-3)]">
+                {MARKET_STRENGTH_NAME} <b className="font-semibold text-[var(--c-ink-2)]">{regimeReady ? regime.label : "판단 대기"}</b>
+                {" · "}확인 필요 <b className="font-semibold text-[var(--c-warn-ink)]">{headerAttentionLabel}</b>
+                {failedSources.length > 0 && !anySourceLoading
+                  ? " · 일부 소스 미수신"
+                  : null}
+              </span>
+            </div>
+            <div className="flex shrink-0 items-center gap-2 max-md:hidden">
+              <Pill>시세 수집 {indexUpdatedAt}</Pill>
+              <TransitionLink
+                href={ROUTES.screener}
+                className="inline-flex h-8 items-center rounded-[6px] bg-[var(--c-brand)] px-3 text-[13px] font-semibold text-white"
+              >
+                종목 열기
+              </TransitionLink>
+            </div>
+          </div>
+          <div
+            className="flex flex-wrap items-center gap-x-3 gap-y-1 text-[12px] text-[var(--fnk-neutral-500)]"
+            data-home-provenance
+          >
+            <span className="inline-flex items-center gap-1.5">
+              <span
+                aria-hidden="true"
+                className="inline-block h-1.5 w-1.5 rounded-full"
+                style={{ background: HOME_PROVENANCE_DOT[homeProvenance.freshness] }}
+              />
+              <b className="font-semibold text-[var(--fnk-neutral-700)]">{HOME_PROVENANCE_LABEL[homeProvenance.freshness]}</b>
+            </span>
+            <span>
+              기준{" "}
+              <b className="font-semibold tabular-nums text-[var(--fnk-neutral-700)]">
+                {formatDatePart(homeProvenance.asOf)}
+              </b>
+            </span>
+            <span>
+              출처 <b className="font-semibold text-[var(--fnk-neutral-700)]">{HOME_PROVENANCE_SOURCES}</b>
+            </span>
           </div>
         </div>
-      </AppShell>
+
+        <WeekAheadStrip />
+
+        <section aria-label="주요 지수">
+          <div className="grid grid-cols-2 gap-[10px] md:grid-cols-4 md:gap-3">
+            {indexCards.map((card) => {
+              const positive = (card.changePercent ?? 0) >= 0;
+              return (
+                <Panel key={card.symbol} loading={!dashboardSettled} loadingMode="placeholder">
+                  <div className="flex flex-col gap-[6px] p-3 md:gap-[10px] md:p-[14px_16px]">
+                    <div className="flex items-center justify-between gap-2">
+                      <span className="font-mono text-[12px] text-[var(--c-ink)] md:text-[13px]">{card.label}</span>
+                      <span className="truncate text-[12px] text-[var(--c-ink-3)] md:text-[12px]">{card.detail} · {card.isLive ? formatMarketState(card.marketState) : "추정치"}</span>
+                    </div>
+                    <div className="flex flex-wrap items-baseline gap-x-2">
+                      <span className="tabular-nums text-[18px] font-semibold text-[var(--c-ink)] md:text-[22px]">{formatPriceValue(card.price)}</span>
+                      <span className={`tabular-nums text-[12px] font-semibold md:text-[13px] ${positive ? "text-[var(--c-up)]" : "text-[var(--c-down)]"}`}>
+                        {formatSignedPercentUnit(card.changePercent)}
+                      </span>
+                    </div>
+                    <Sparkline values={card.chartData.map((d) => d.value)} tone={positive ? "gain" : "loss"} height={36} ariaLabel={`${card.label} 가격 흐름`} className="h-[26px] md:h-9" />
+                  </div>
+                </Panel>
+              );
+            })}
+            <Panel loading={kospiLoading} loadingMode="placeholder">
+              <div className="flex flex-col gap-[6px] p-3 md:gap-[10px] md:p-[14px_16px]">
+                <div className="flex items-center justify-between gap-2">
+                  <span className="font-mono text-[12px] text-[var(--c-ink)] md:text-[13px]">KOSPI</span>
+                  <span className="truncate text-[12px] text-[var(--c-ink-3)] md:text-[12px]">코스피 · {kospi.asOf ? "마감" : "대기"}</span>
+                </div>
+                <div className="flex flex-wrap items-baseline gap-x-2">
+                  <span className="tabular-nums text-[18px] font-semibold text-[var(--c-ink)] md:text-[22px]">{formatIndexPoints(kospi.price)}</span>
+                  <span className={`tabular-nums text-[12px] font-semibold md:text-[13px] ${(kospi.changePercent ?? 0) >= 0 ? "text-[var(--c-up)]" : "text-[var(--c-down)]"}`}>
+                    {formatSignedPercentUnit(kospi.changePercent)}
+                  </span>
+                </div>
+                {kospi.series.length >= 2 ? (
+                  <Sparkline values={kospi.series} tone={(kospi.changePercent ?? 0) >= 0 ? "gain" : "loss"} height={36} ariaLabel="KOSPI 가격 흐름" className="h-[26px] md:h-9" />
+                ) : (
+                  <div className="flex h-[26px] items-center md:h-9" role="img" aria-label="KOSPI 가격 흐름 · 차트 데이터 대기">
+                    <span className="text-[12px] text-[var(--c-ink-4)]">차트 데이터 대기</span>
+                  </div>
+                )}
+              </div>
+            </Panel>
+          </div>
+        </section>
+
+        <div className="grid gap-3 md:grid-cols-[minmax(0,5fr)_minmax(0,7fr)] md:gap-4">
+          <Panel
+            loading={!dashboardSettled}
+            empty={!regimeReady}
+            emptyReason="필수 시장 입력을 확인한 뒤 시장 판단을 표시합니다."
+            stale={edgeDelayed}
+            asOf={formatDatePart(dashboard.tickerFetchedAt)}
+            onRetry={retrySources}
+          >
+            <PanelHeader
+              eyebrow="Fenok Edge"
+              title="시장 체력 점수"
+              right={<Pill tone={regimeReady && regime.confidence >= 62 ? "up" : regimeReady && regime.confidence < 45 ? "down" : "neutral"}>{regimeReady ? edgeStrengthLabel(regime.confidence) : "판단 대기"}</Pill>}
+            />
+            <div className="flex gap-4 p-[14px] md:gap-6 md:p-4">
+              <div className="flex min-w-[72px] flex-col justify-center md:min-w-24">
+                <EdgeMark score={regime.confidence} size={112} showValue />
+              </div>
+              <div className="flex flex-1 flex-col gap-[10px] pt-1 md:gap-[14px]">
+                {forces.items.map((force) => (
+                  <div key={force.key} className="flex flex-col gap-1.5">
+                    <div className="flex items-baseline justify-between text-[12px]">
+                      <span className="text-[var(--c-ink-2)]">
+                        {force.label} <span className="text-[var(--c-ink-4)] max-md:hidden">· {force.weightLabel}</span>
+                      </span>
+                      <span className="tabular-nums font-semibold text-[var(--c-ink)]">{force.value}</span>
+                    </div>
+                    <Bar value={force.score} aria-label={`${force.label} ${force.value}점`} />
+                  </div>
+                ))}
+                <div className="pt-0.5 text-[12px] text-[var(--c-ink-3)]">
+                  현재 스트레스 {forces.rawStressScore}점 · 낮을수록 유리
+                </div>
+                <TransitionLink
+                  href={ROUTES.regime}
+                  className="inline-flex min-h-11 items-center self-start text-[12px] font-semibold text-[var(--c-brand)] hover:underline md:min-h-6"
+                >
+                  17개 신호 종합 시황 보기 →
+                </TransitionLink>
+              </div>
+            </div>
+          </Panel>
+
+          <Panel
+            loading={!dashboardSettled}
+            empty={!sectorDataReady}
+            emptyReason="섹터별 실제 등락 입력을 확인한 뒤 히트맵을 표시합니다."
+            stale={heatDelayed}
+            asOf={formatDatePart(dashboard.tickerFetchedAt)}
+            onRetry={retrySources}
+          >
+            <PanelHeader
+              eyebrow="Sector Flow"
+              title="섹터 히트맵"
+              right={
+                <span className="text-[12px] text-[var(--c-ink-3)]">
+                  {breadthReady ? (
+                    <b className="font-semibold tabular-nums text-[var(--c-ink-2)]">상승 {dashboard.sectorUp} · 하락 {dashboard.sectorDown}</b>
+                  ) : null}
+                  {breadthReady ? " · " : null}
+                  {dashboard.sectorMode === "LIVE_1D" ? "1일 · 실시간" : dashboard.sectorMode === "MIXED" ? "1일·1개월 혼합" : "1개월 기준"}
+                </span>
+              }
+            />
+            <div className="grid grid-cols-3 gap-1.5 p-2.5 md:grid-cols-4 md:p-3">
+              {heatSectors.map((sector: SectorSnapshot, i: number) => (
+                <Tile
+                  key={sector.key}
+                  symbol={sector.etf}
+                  name={sector.name}
+                  value={formatSignedPercentUnit(sector.displayChange * 100, 1)}
+                  change={sector.displayChange * 100}
+                  className={`${i === 0 ? "col-span-1 md:col-span-2" : ""}${i >= 9 ? " max-md:hidden" : ""}`}
+                />
+              ))}
+            </div>
+          </Panel>
+        </div>
+
+        <div className="grid gap-3 md:grid-cols-[minmax(0,8fr)_minmax(0,4fr)] md:gap-4">
+          <Panel
+            loading={bothSourcesLoading}
+            empty={!anySourceLoading && projection.changed.length === 0}
+            emptyReason={changedEmptyMessage}
+            emptyNextRefresh={laneNext ? `다음 갱신 ${laneNext}` : "다음 데이터 수집 주기에 자동 갱신"}
+            emptyActionLabel="다시 불러오기"
+            onEmptyAction={retrySources}
+            stale={!anySourceLoading && laneDelayed && projection.changed.length > 0}
+            asOf={revisionClock}
+            onRetry={retrySources}
+          >
+            <PanelHeader
+              eyebrow="What Changed"
+              title="무엇이 바뀌었나"
+              right={<span className="whitespace-nowrap text-[12px] text-[var(--c-ink-3)]">리비전 {revisionClock} · 13F {superinvestorClock}</span>}
+            />
+            <div className="hidden grid-cols-[140px_1fr_140px_110px] items-center gap-2 border-b border-[var(--c-line)] px-4 text-[12px] font-semibold text-[var(--c-ink-3)] md:grid md:h-8">
+              <span>종목</span><span>변경</span><span className="text-right">FY+1 EPS 추정</span><span className="text-right">변화</span>
+            </div>
+            <div className="hidden md:block">
+              {projection.changed.map((item) => {
+                const isRevision = item.source === "revision";
+                const revisionUp = isRevision && item.kind === "up";
+                return (
+                  <TransitionLink
+                    key={item.id}
+                    href={ROUTES.stock(item.ticker)}
+                    className="grid grid-cols-[140px_1fr_140px_110px] items-center gap-2 border-t border-[var(--c-line)] px-4 text-[13px] transition-colors duration-150 first:border-t-0 hover:bg-[var(--c-surface-2)] focus-visible:bg-[var(--c-surface-2)] focus-visible:outline-none h-9"
+                  >
+                    <span className="flex min-w-0 items-baseline gap-2">
+                      <span className="shrink-0 font-mono text-[var(--c-ink)]">{item.ticker}</span>
+                      {item.title !== item.ticker && <span className="truncate text-[var(--c-ink-3)]">{item.title}</span>}
+                    </span>
+                    <span className="truncate text-[var(--c-ink-2)]">{item.label}</span>
+                    <span className="truncate text-right tabular-nums text-[var(--c-ink-2)]">{isRevision ? revisionEpsText(item) : "—"}</span>
+                    <span className={`text-right tabular-nums font-semibold ${isRevision ? (revisionUp ? "text-[var(--c-up)]" : "text-[var(--c-down)]") : "font-medium text-[var(--c-ink-2)]"}`}>
+                      {revisionChangeText(item)}
+                    </span>
+                  </TransitionLink>
+                );
+              })}
+            </div>
+            <div className="md:hidden">
+              {projection.changed.map((item) => {
+                const isRevision = item.source === "revision";
+                const revisionUp = isRevision && item.kind === "up";
+                return (
+                  <TransitionLink
+                    key={item.id}
+                    href={ROUTES.stock(item.ticker)}
+                    className="flex min-h-11 items-center justify-between gap-3 border-t border-[var(--c-line)] px-[14px] transition-colors duration-150 first:border-t-0 hover:bg-[var(--c-surface-2)] focus-visible:bg-[var(--c-surface-2)] focus-visible:outline-none"
+                  >
+                    <span className="flex min-w-0 items-baseline gap-2">
+                      <span className="shrink-0 font-mono text-[var(--c-ink)]">{item.ticker}</span>
+                      {item.title !== item.ticker && <span className="truncate text-[12px] text-[var(--c-ink-3)]">{item.title}</span>}
+                    </span>
+                    <span className={`shrink-0 tabular-nums text-[13px] font-semibold ${isRevision ? (revisionUp ? "text-[var(--c-up)]" : "text-[var(--c-down)]") : "font-medium text-[var(--c-ink-2)]"}`}>
+                      {revisionChangeText(item)}
+                    </span>
+                  </TransitionLink>
+                );
+              })}
+            </div>
+          </Panel>
+
+          <Panel
+            loading={bothSourcesLoading}
+            empty={!anySourceLoading && projection.attention.length === 0}
+            emptyReason={attentionEmptyMessage}
+            emptyNextRefresh={laneNext ? `다음 갱신 ${laneNext}` : "다음 데이터 수집 주기에 자동 갱신"}
+            emptyActionLabel="다시 불러오기"
+            onEmptyAction={retrySources}
+            stale={!anySourceLoading && laneDelayed && projection.attention.length > 0}
+            asOf={revisionClock}
+            onRetry={retrySources}
+          >
+            <PanelHeader
+              eyebrow="My Attention"
+              title="내가 확인할 항목"
+              right={<Pill tone={projection.attention.length > 0 ? "warn" : "neutral"}>{attentionCountLabel}</Pill>}
+            />
+            <div>
+              {projection.attention.map((item) => (
+                <TransitionLink
+                  key={item.id}
+                  href={ROUTES.stock(item.ticker)}
+                  className="flex min-h-10 items-center justify-between gap-3 border-t border-[var(--c-line)] px-4 transition-colors duration-150 first:border-t-0 hover:bg-[var(--c-surface-2)] focus-visible:bg-[var(--c-surface-2)] focus-visible:outline-none max-md:min-h-11 max-md:px-[14px]"
+                >
+                  <span className="flex min-w-0 items-baseline gap-2 text-[13px]">
+                    <span className="shrink-0 font-semibold text-[var(--c-warn-ink)]">{materialFlagLabel(item.flag)}</span>
+                    <span className="shrink-0 font-mono text-[var(--c-ink)]">{item.ticker}</span>
+                    <span className="truncate text-[var(--c-ink-2)]">{item.title}</span>
+                  </span>
+                  <span className="shrink-0 text-[12px] text-[var(--c-ink-4)]">확인</span>
+                </TransitionLink>
+              ))}
+            </div>
+          </Panel>
+        </div>
     </div>
+  );
+}
+
+export function HomeShell() {
+  return (
+    <AppShell active="explore" title={EXPLORE_PRODUCT_TITLE}>
+      <HomeCanvasPlusClient />
+    </AppShell>
   );
 }

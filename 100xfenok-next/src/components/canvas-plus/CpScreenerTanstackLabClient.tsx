@@ -2,7 +2,11 @@
 
 import dynamic from "next/dynamic";
 
+import { useDelayedLoading } from "@/components/ui";
+
 function CpScreenerTanstackLoading() {
+  const show = useDelayedLoading(true);
+  if (!show) return null;
   return (
     <div className="cp-screener-lab" data-canvas-plus-screener-tanstack-loading>
       <p className="cp-lab__eyebrow">CANVAS+ V3 SCREENER TANSTACK</p>

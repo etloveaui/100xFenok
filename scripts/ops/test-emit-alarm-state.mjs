@@ -12,7 +12,10 @@ import path from "node:path";
 import {
   buildAlarmState,
   alarmStateUnchanged,
+  alarmStateResolved,
+  incidentIdentitiesChanged,
   writeAlarmStateMirrors,
+  writeWorkflowOutputs,
   ALARM_STATE_SCHEMA,
 } from "./emit-alarm-state.mjs";
 import { evaluateWorkflow } from "./check-pipeline-job-health.mjs";
@@ -70,6 +73,63 @@ const quietHealth = {
   ],
 };
 
+// --- Queue eviction must reach the published state -------------------------
+// Lost scheduled slots page separately from producer failures. A non-scheduled
+// observer eviction remains visibility-only because it does not represent a
+// missed producer cadence.
+{
+  const withEvictions = {
+    status: "alarm",
+    workflows: [
+      {
+        ...okRow("fetch-fenok-news-tone.yml", "News Tone"),
+        status: "alarm",
+        alarming: true,
+        alarm_reasons: ["lost_schedule_slot"],
+        lost_schedule_slot_count: 1,
+        lost_schedule_slot_run_urls: ["https://gh/run/30107986538"],
+        queue_evicted_run_urls: ["https://gh/run/30107986538"],
+      },
+      { ...okRow("global-writer-queue-observability.yml", "Queue Observability"), queue_evicted_run_urls: ["https://gh/run/30108630740"] },
+      okRow("deploy-worker.yml", "Deploy Worker"),
+    ],
+  };
+  const state = buildAlarmState({ health: withEvictions, prior: null, env: ENV, now: NOW });
+  assert.equal(state.status, "open", "a lost scheduled slot must page");
+  assert.deepEqual(state.open_incidents[0].alarm_reasons, ["lost_schedule_slot"]);
+  assert.equal(state.open_incidents[0].lost_schedule_slot_count, 1);
+  assert.equal(state.queue_evicted_run_count, 2, "lost slots are counted, not dropped");
+  assert.deepEqual(
+    state.queue_evicted_workflows,
+    [
+      { workflow: "fetch-fenok-news-tone.yml", count: 1 },
+      { workflow: "global-writer-queue-observability.yml", count: 1 },
+    ],
+    "each losing workflow is named, sorted, without raw run evidence",
+  );
+  const quietSameBoard = {
+    status: "ok",
+    workflows: [
+      okRow("fetch-fenok-news-tone.yml", "News Tone"),
+      okRow("global-writer-queue-observability.yml", "Queue Observability"),
+      okRow("deploy-worker.yml", "Deploy Worker"),
+    ],
+  };
+  const quiet = buildAlarmState({ health: quietSameBoard, prior: null, env: ENV, now: NOW });
+  assert.equal(quiet.queue_evicted_run_count, 0);
+  assert.deepEqual(quiet.queue_evicted_workflows, [], "a clean board sprouts no eviction noise");
+  assert.equal(
+    alarmStateUnchanged(quiet, state),
+    false,
+    "clearing a lost scheduled slot must update the published state",
+  );
+  assert.equal(
+    alarmStateUnchanged(state, quiet),
+    false,
+    "clearing eviction evidence must also update the published state",
+  );
+}
+
 // --- RED-first: firing must open + record the incident ---
 const firing = buildAlarmState({ health: firingHealth, prior: null, env: ENV, now: NOW });
 assert.equal(firing.schema_version, ALARM_STATE_SCHEMA);
@@ -84,6 +144,8 @@ assert.equal(firing.last_firing.run_url, "https://github.com/etloveaui/100xFenok
 assert.deepEqual(firing.last_firing.workflows, ["update-manifest.yml"]);
 assert.equal(firing.last_resolved_at, null, "not resolved while open");
 assert.equal(firing.watched_workflows.length, 3);
+assert.ok(!("lane_outcome_notified" in firing), "the alarm state does not carry a publish-outcome notification ledger");
+assert.ok(!("cadence_state_counts" in firing), "attempt-history cadence is not projected into alarm state");
 assert.equal(
   firing.watched_workflows.find((row) => row.file === "validate-workflows.yml")?.event,
   "push",
@@ -96,6 +158,90 @@ assert.deepEqual(
 );
 assert.deepEqual(firing.excluded_workflows, firingHealth.excluded,
   "declared workflow exclusions and their reasons must remain visible in alarm state");
+
+// KPI stoppage is one incident keyed by the sets stopped in both generations.
+{
+  const kpiHealth = {
+    status: "alarm",
+    workflows: quietHealth.workflows,
+    data_health_kpi: {
+      status: "alarm",
+      stopped_sets: ["sentiment", "edgar_filings", "sentiment"],
+      latest_generated_at: "2026-09-28T11:34:19Z",
+      previous_generated_at: "2026-09-28T10:21:42Z",
+    },
+  };
+  const kpiOpen = buildAlarmState({ health: kpiHealth, prior: null, env: ENV, now: NOW });
+  assert.equal(kpiOpen.status, "open");
+  assert.equal(kpiOpen.open_incident_count, 1, "KPI stoppage pages as one alarm incident");
+  assert.deepEqual(kpiOpen.open_incidents[0], {
+    workflow: "data-health-kpi",
+    label: "Data stopped advancing",
+    alarm_reasons: ["data_stopped_two_generations"],
+    stopped_sets: ["edgar_filings", "sentiment"],
+    latest_generated_at: "2026-09-28T11:34:19Z",
+    previous_generated_at: "2026-09-28T10:21:42Z",
+  });
+  assert.deepEqual(kpiOpen.last_firing.workflows, ["data-health-kpi"]);
+  assert.equal(incidentIdentitiesChanged(null, kpiOpen), true);
+
+  const changedSets = buildAlarmState({
+    health: {
+      ...kpiHealth,
+      data_health_kpi: { ...kpiHealth.data_health_kpi, stopped_sets: ["sentiment"] },
+    },
+    prior: kpiOpen,
+    env: ENV,
+    now: new Date("2026-07-19T12:30:00Z"),
+  });
+  assert.equal(incidentIdentitiesChanged(kpiOpen, changedSets), true,
+    "a changed stopped-set identity must update the same OPS issue");
+  assert.ok(!alarmStateUnchanged(kpiOpen, changedSets));
+}
+
+// Unknown KPI history is never promoted to healthy and cannot announce an
+// all-clear for the previous incident.
+{
+  const kpiOpen = buildAlarmState({
+    health: {
+      status: "alarm",
+      workflows: [],
+      data_health_kpi: { status: "alarm", stopped_sets: ["sentiment"] },
+    },
+    prior: null,
+    env: ENV,
+    now: NOW,
+  });
+  const unreadable = buildAlarmState({
+    health: {
+      status: "ok",
+      workflows: [],
+      data_health_kpi: { status: "unknown", reason: "kpi_history_unavailable", stopped_sets: [] },
+    },
+    prior: kpiOpen,
+    env: ENV,
+    now: new Date("2026-07-19T13:00:00Z"),
+  });
+  assert.equal(unreadable.status, "unknown", "unknown KPI history overrides a stale overall ok");
+  assert.deepEqual(unreadable.unknown_workflows, [{ workflow: "data-health-kpi", status: "unknown" }]);
+  assert.equal(unreadable.last_resolved_at, null, "unknown history cannot stamp a resolution");
+  assert.equal(alarmStateResolved(kpiOpen, unreadable), false, "unknown history cannot announce all-clear");
+  assert.ok(!JSON.stringify(unreadable).includes("kpi_history_unavailable"),
+    "private reader diagnostics do not enter the public alarm state");
+
+  const recovered = buildAlarmState({
+    health: {
+      status: "ok",
+      workflows: [],
+      data_health_kpi: { status: "ok", stopped_sets: [] },
+    },
+    prior: unreadable,
+    env: ENV,
+    now: new Date("2026-07-19T14:00:00Z"),
+  });
+  assert.equal(recovered.status, "clear", "healthy KPI generations resolve the stoppage incident");
+  assert.equal(alarmStateResolved(unreadable, recovered), true);
+}
 
 // fh-538 two-hop proof: the real health evaluator calibrates a monthly workflow
 // to one completed failure, and the emitted public state preserves that decision
@@ -124,11 +270,50 @@ assert.equal(resolved.status, "clear", "quiet health resolves to clear");
 assert.equal(resolved.open_incident_count, 0, "no open incidents once clear");
 assert.equal(resolved.last_resolved_at, "2026-07-19T13:00:00.000Z", "transition open->clear stamps last_resolved_at");
 assert.ok(resolved.last_firing && resolved.last_firing.run_id === "123456", "last_firing history preserved across resolution");
+const unknownResolved = buildAlarmState({
+  health: quietHealth,
+  prior: unknownState(),
+  env: ENV,
+  now: new Date("2026-07-19T13:00:00Z"),
+});
+assert.equal(unknownResolved.last_resolved_at, "2026-07-19T13:00:00.000Z",
+  "unknown -> clear stamps last_resolved_at for the all-clear message");
 
 // --- Clear stays clear: last_resolved_at is not re-stamped every quiet run ---
 const stillClear = buildAlarmState({ health: quietHealth, prior: resolved, env: ENV, now: new Date("2026-07-19T14:00:00Z") });
 assert.equal(stillClear.status, "clear");
 assert.equal(stillClear.last_resolved_at, "2026-07-19T13:00:00.000Z", "clear->clear preserves the original resolution time");
+
+// --- Recovery must be ANNOUNCEABLE, not merely recorded ---
+// buildAlarmState already stamps last_resolved_at on open->clear, but the only
+// value main() publishes to the workflow is `incident_changed`. The OPS issue is
+// therefore written on failure and never told the incident ended, so a reader
+// cannot tell a live outage from a finished one. Expose the transition as a pure
+// predicate the way `alarmStateUnchanged` already is, so the notification channel
+// can gate an all-clear on it.
+{
+  const emitter = await import("./emit-alarm-state.mjs");
+  assert.equal(typeof emitter.alarmStateResolved, "function",
+    "the emitter must expose the open->clear transition as a pure predicate");
+  assert.equal(emitter.alarmStateResolved(firing, resolved), true,
+    "open -> clear is a resolution the workflow can announce");
+  assert.equal(emitter.alarmStateResolved(resolved, stillClear), false,
+    "clear -> clear must not re-announce an already-resolved incident");
+  assert.equal(emitter.alarmStateResolved(firing, firing), false,
+    "an unchanged open incident is not a resolution");
+  assert.equal(emitter.alarmStateResolved(null, resolved), false,
+    "a first-ever clear run has nothing to announce as resolved");
+  assert.equal(emitter.alarmStateResolved(firing, unknownState()), false,
+    "open -> unknown is not a resolution; unknown health is not clear");
+  assert.equal(emitter.alarmStateResolved(unknownState(), resolved), true,
+    "unknown -> clear must be announceable as an all-clear");
+  assert.equal(emitter.alarmStateResolved({ status: "blind" }, resolved), true,
+    "blind -> clear must be announceable as an all-clear");
+}
+
+function unknownState() {
+  return buildAlarmState({ health: { status: "unknown", workflows: [] }, prior: null, env: ENV, now: NOW });
+}
 
 // --- Unknown health is surfaced honestly (not silently clear) ---
 const unknown = buildAlarmState({ health: { status: "unknown", workflows: [] }, prior: null, env: ENV, now: NOW });
@@ -155,52 +340,6 @@ assert.deepEqual(
   ["push", "schedule"],
   "API degradation must preserve the declared counted-event policy in public alarm state",
 );
-
-// Defect 2 two-hop public projection: cadence is supplied by the health
-// producer, then emitted without allowing an overdue slot to page.  The public
-// shape keeps only the honest suspected_skip/attempt_gap words, never its cron
-// or private evidence paths.
-{
-  const cadenceHealth = {
-    status: "ok",
-    workflows: [
-      { ...okRow("not-due.yml", "Not Due"), cadence_status: "not_due" },
-      { ...okRow("overdue.yml", "Overdue"), cadence_status: "overdue", cadence_evidence: ["suspected_skip"] },
-      { ...okRow("recovered.yml", "Recovered"), cadence_status: "recovered", cadence_evidence: ["attempt_gap"] },
-      { ...okRow("no-declaration.yml", "No Declaration"), cadence_status: "no_declaration" },
-      { ...okRow("unknown.yml", "Unknown"), cadence_status: "unknown" },
-    ],
-  };
-  const cadenceState = buildAlarmState({ health: cadenceHealth, prior: null, env: ENV, now: NOW });
-  assert.equal(cadenceState.status, "clear", "an overdue slot must not change the completed-run paging decision");
-  assert.equal(cadenceState.open_incident_count, 0);
-  assert.deepEqual(cadenceState.cadence_state_counts, {
-    not_due: 1,
-    overdue: 1,
-    recovered: 1,
-    no_declaration: 1,
-    unknown: 1,
-  });
-  assert.deepEqual(
-    cadenceState.watched_workflows.map((row) => [row.file, row.cadence_status, row.cadence_evidence]),
-    [
-      ["not-due.yml", "not_due", []],
-      ["overdue.yml", "overdue", ["suspected_skip"]],
-      ["recovered.yml", "recovered", ["attempt_gap"]],
-      ["no-declaration.yml", "no_declaration", []],
-      ["unknown.yml", "unknown", []],
-    ],
-    "all five cadence outcomes must survive health -> alarm-state projection",
-  );
-
-  const outputRoot = fs.mkdtempSync(path.join(os.tmpdir(), "alarm-state-cadence-mirrors-"));
-  const outPath = path.join(outputRoot, "data", "admin", "alarm-state.json");
-  const publicOutPath = path.join(outputRoot, "public", "data", "admin", "alarm-state.json");
-  const expectedBytes = writeAlarmStateMirrors({ state: cadenceState, outPath, publicOutPath });
-  assert.equal(fs.readFileSync(outPath, "utf8"), expectedBytes);
-  assert.equal(fs.readFileSync(publicOutPath, "utf8"), expectedBytes,
-    "health -> alarm state must write byte-identical admin and public mirrors");
-}
 
 // --- Privacy: the serialized state must not leak repo paths/roots/secrets ---
 const FORBIDDEN = ["_private/", "data/admin", ".github/", "100xfenok-next", "public/data", "recovery_store", "GITHUB_TOKEN", "ghp_", "secret"];
@@ -230,6 +369,8 @@ for (const state of [firing, resolved, unknown]) {
     alarmStateUnchanged(openNow, repeat),
     "a re-report of an identical incident must be treated as unchanged",
   );
+  assert.equal(incidentIdentitiesChanged(openNow, repeat), false,
+    "a repeated incident must not notify");
 
   // --- transitions that MUST still be written ---
   const worse = buildAlarmState({
@@ -245,6 +386,8 @@ for (const state of [firing, resolved, unknown]) {
     now: NOW,
   });
   assert.ok(!alarmStateUnchanged(openNow, worse), "a growing streak must be written");
+  assert.equal(incidentIdentitiesChanged(openNow, worse), false,
+    "streak churn must not notify");
 
   const secondWorkflow = buildAlarmState({
     health: {
@@ -259,6 +402,10 @@ for (const state of [firing, resolved, unknown]) {
     now: NOW,
   });
   assert.ok(!alarmStateUnchanged(openNow, secondWorkflow), "a second alarming workflow must be written");
+  assert.equal(incidentIdentitiesChanged(openNow, secondWorkflow), true,
+    "adding a workflow incident must notify");
+  assert.equal(incidentIdentitiesChanged(secondWorkflow, openNow), true,
+    "removing a workflow incident must notify");
 
   const differentFirstFailure = buildAlarmState({
     health: {
@@ -273,9 +420,37 @@ for (const state of [firing, resolved, unknown]) {
     now: NOW,
   });
   assert.ok(!alarmStateUnchanged(openNow, differentFirstFailure), "a different first-failing run must be written");
+  assert.equal(incidentIdentitiesChanged(openNow, differentFirstFailure), false,
+    "run evidence churn must not notify");
 
   const resolved = buildAlarmState({ health: quietHealth, prior: openNow, env: ENV, now: new Date("2026-07-19T13:00:00Z") });
   assert.ok(!alarmStateUnchanged(openNow, resolved), "resolution must be written");
+  assert.equal(incidentIdentitiesChanged(openNow, resolved), false,
+    "a clear result must not set incident_changed");
+  assert.equal(alarmStateResolved(openNow, resolved), true,
+    "open -> clear remains announceable through incident_resolved");
+
+  const counterChurn = structuredClone(openNow);
+  counterChurn.open_incidents[0].streak += 1;
+  counterChurn.open_incidents[0].lost_schedule_slot_count += 2;
+  counterChurn.open_incidents[0].first_failing_run_id = 424242;
+  counterChurn.open_incidents[0].first_failing_run_url = "https://gh/run/424242";
+  counterChurn.watched_workflows[0].failure_streak_threshold = 1;
+  assert.equal(incidentIdentitiesChanged(openNow, counterChurn), false,
+    "counter, age, URL, and watch-policy churn must not notify");
+  assert.equal(alarmStateUnchanged(openNow, counterChurn), false,
+    "the same churn must still persist in the full alarm state");
+
+  const reasonAdded = structuredClone(openNow);
+  reasonAdded.open_incidents[0].alarm_reasons = ["failure_streak", "lost_schedule_slot"];
+  assert.equal(incidentIdentitiesChanged(openNow, reasonAdded), true,
+    "adding an incident reason must notify");
+  assert.equal(incidentIdentitiesChanged(reasonAdded, openNow), true,
+    "removing an incident reason must notify");
+  const reasonOrderOnly = structuredClone(openNow);
+  reasonOrderOnly.open_incidents[0].alarm_reasons = ["lost_schedule_slot", "failure_streak"];
+  assert.equal(incidentIdentitiesChanged(reasonAdded, reasonOrderOnly), false,
+    "reason ordering alone must not notify");
 
   const watchListChanged = buildAlarmState({
     health: { ...firingHealth, workflows: [...firingHealth.workflows, okRow("fenok-edge-daily.yml", "Fenok Edge Daily Data")] },
@@ -284,6 +459,8 @@ for (const state of [firing, resolved, unknown]) {
     now: NOW,
   });
   assert.ok(!alarmStateUnchanged(openNow, watchListChanged), "a change to the watched-workflow set must be written");
+  assert.equal(incidentIdentitiesChanged(openNow, watchListChanged), false,
+    "a watch-list-only change must not notify");
 
   const exclusionChanged = buildAlarmState({
     health: {
@@ -296,9 +473,45 @@ for (const state of [firing, resolved, unknown]) {
   });
   assert.ok(!alarmStateUnchanged(openNow, exclusionChanged),
     "a change to an explicit exclusion policy must be written");
+  assert.equal(incidentIdentitiesChanged(openNow, exclusionChanged), false,
+    "an exclusion-policy-only change must not notify");
 
   // A first-ever emission has no prior and must always be written.
   assert.ok(!alarmStateUnchanged(null, openNow), "a first emission must be written");
+  assert.equal(incidentIdentitiesChanged(null, openNow), true,
+    "the first open incident must notify");
+
+  assert.equal(incidentIdentitiesChanged(null, unknown), true,
+    "a first unknown result must surface operator blindness");
+  const unknownRepeat = structuredClone(unknown);
+  unknownRepeat.generated_at = "2026-07-19T12:30:00.000Z";
+  assert.equal(incidentIdentitiesChanged(unknown, unknownRepeat), false,
+    "unchanged blindness must not notify repeatedly");
+  assert.equal(incidentIdentitiesChanged(unknown, resolved), false,
+    "any clear result must remain silent on incident_changed");
+  assert.equal(incidentIdentitiesChanged(null, resolved), false,
+    "a first clear result must remain silent on incident_changed");
+  assert.equal(alarmStateResolved(unknown, resolved), true,
+    "unknown -> clear must use incident_resolved for the all-clear");
+}
+
+// GITHUB_OUTPUT is machinery, not best-effort persistence. An unwritable
+// target must escape the helper so the direct emitter process exits non-zero.
+{
+  const unwritableOutput = fs.mkdtempSync(path.join(os.tmpdir(), "alarm-state-output-failure-"));
+  try {
+    assert.throws(
+      () => writeWorkflowOutputs({
+        outputPath: unwritableOutput,
+        incidentChanged: "true",
+        incidentResolved: "true",
+      }),
+      (error) => error?.code === "EISDIR",
+      "GITHUB_OUTPUT write failure must throw instead of warning and returning green",
+    );
+  } finally {
+    fs.rmSync(unwritableOutput, { recursive: true, force: true });
+  }
 }
 
 console.log(JSON.stringify({ ok: true, suite: "emit-alarm-state contract" }, null, 2));

@@ -1,5 +1,8 @@
-/* W5 macro-chart redesign — route-local import from src/app/macro-chart/page.tsx.
-   Token-pure: use the CANVAS+ --cp-* tokens only; do not add raw color literals. */
+/* W5 macro-chart redesign — route-local import from src/app/macro-chart/page.tsx
+   (the same file serves /multichart through MacroChartClient's stock-compare mode).
+   Token-pure: no raw color literals. Canvas chrome keeps the --cp-* tokens; the
+   legend, editor, window-summary strip, legend sparkline and lens note rules use
+   the light-system --c-* / --fnk-* tokens. */
 
 .cpw5-macro-shell {
   display: grid;
@@ -24,13 +27,17 @@
   margin: 0;
   color: var(--cp-text-strong);
   font-size: 34px;
-  font-weight: 950;
+  font-weight: 900;
   line-height: 1.05;
   letter-spacing: 0;
 }
 
 .cpw5-macro-verdict {
   max-width: 980px;
+}
+
+.cpw5-macro-verdict__text {
+  color: var(--cp-text-strong);
 }
 
 .cpw5-macro-verdict .positive,
@@ -56,9 +63,86 @@
   margin: 0;
   max-width: 76ch;
   color: var(--cp-text-muted);
-  font-size: 13.5px;
-  font-weight: 650;
+  font-size: 14px;
+  font-weight: 700;
   line-height: 1.5;
+}
+
+/* Hero detail fold: verdict detail + route description collapse behind one
+ * summary line so the H1 + verdict strip stay a single screenful and the
+ * chart card starts within the first viewport on both routes. */
+.cpw5-macro-hero-more {
+  min-width: 0;
+}
+
+.cpw5-macro-hero-more > summary {
+  display: inline-block;
+  cursor: pointer;
+  color: var(--cp-accent-strong);
+  font-size: 12px;
+  font-weight: 900;
+}
+
+.cpw5-macro-hero-more > summary:focus-visible {
+  outline: 2px solid var(--cp-accent);
+  outline-offset: 2px;
+}
+
+/* Phone: the 설명 보기 toggle was a 17px-tall target; 4px above and below
+   brings it past 24px (WCAG 2.2 AA 2.5.8). */
+@media (max-width: 767px) {
+  .cpw5-macro-hero-more > summary {
+    padding-block: 4px;
+  }
+}
+
+.cpw5-macro-hero-more .cpw5-hero__sub,
+.cpw5-macro-hero-more .cpw5-macro-description {
+  margin-top: 8px;
+}
+
+/* Window-performance summary: the compact rank strip below the chart card on both
+ * /macro-chart and /multichart, so the plot enters the first screen. Bars
+ * scale to the largest visible window change; percent/spread-valued series and
+ * mixed-unit derived series print their value with no bar. Light-system tokens. */
+.cpw5-macro-window-summary {
+  display: grid;
+  gap: 8px;
+  min-width: 0;
+  padding: 12px 14px 14px;
+  border: 1px solid var(--c-line);
+  border-radius: var(--r-lg);
+  background: var(--c-panel);
+  box-shadow: var(--sh-sm);
+}
+
+.cpw5-macro-window-summary__read {
+  margin: 0;
+  color: var(--c-ink);
+  font-size: 13px;
+  font-weight: 800;
+  line-height: 1.5;
+}
+
+.cpw5-macro-window-summary__note {
+  margin: 0;
+  color: var(--c-ink-3);
+  font-size: 12px;
+  font-weight: 700;
+}
+
+/* /multichart header-stack calming: the compare workbench piles the shell rail,
+ * hero trust row, summary cards and accordion covers in one column, so every
+ * stacked separator stays a single 1px hairline and the summary card drops the
+ * shadow that reads as a doubled rule. Route scope only; shared kit untouched. */
+[data-multichart-surface="true"] .cpw5-macro-window-summary {
+  box-shadow: none;
+}
+
+[data-multichart-surface="true"] .cpw5-macro-accordion__body,
+[data-multichart-surface="true"] .cpw5-macro-series-evidence,
+[data-multichart-surface="true"] .cpw5-macro-table-panel__body {
+  border-top-width: 1px;
 }
 
 .cpw5-macro-chart-card {
@@ -69,6 +153,31 @@
   border: 1px solid var(--cp-border);
   border-radius: var(--cp-radius-lg);
   background: var(--cp-surface);
+}
+
+.cpw5-macro-chart-rows {
+  display: grid;
+  gap: 16px;
+  min-width: 0;
+}
+
+.cpw5-macro-chart-rows > [data-macro-chart-unit-group] {
+  min-width: 0;
+}
+
+.cpw5-macro-series-evidence {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px 12px;
+  padding: 8px 16px;
+  border-top: 1px solid var(--cp-border);
+  color: var(--cp-text-muted);
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.cpw5-macro-series-evidence [data-series-load-state="failed"] {
+  color: var(--cp-negative);
 }
 
 .cpw5-macro-chart-toolbar {
@@ -97,7 +206,7 @@
 .cpw5-macro-status {
   margin: 0;
   color: var(--cp-text-muted);
-  font-size: 11.5px;
+  font-size: 12px;
   font-weight: 700;
   line-height: 1.35;
 }
@@ -198,6 +307,22 @@
   background: linear-gradient(90deg, var(--cp-surface-strong), var(--cp-surface), var(--cp-surface-strong));
 }
 
+/* Reserve the loaded stage's floor so the chart slot does not grow when data
+   lands: 720px is .cpw5-macro-v2-stage's own min-height (this file:1293-1300),
+   the safe lower bound at every width above 520px. [hypothesis] for the actual
+   loaded height; the live sweep replaces it with the measured value. */
+.cpw5-macro-chart-skeleton {
+  min-height: 720px;
+}
+
+@media (max-width: 520px) {
+  .cpw5-macro-chart-skeleton {
+    /* Mobile drops the stage floor (this file:1432-1433; plot 360px); keep the
+       original 22rem so the low mobile numbers cannot regress. */
+    min-height: 22rem;
+  }
+}
+
 .cpw5-macro-empty,
 .cpw5-macro-error {
   display: grid;
@@ -205,7 +330,7 @@
   padding: 24px;
   color: var(--cp-text-muted);
   font-size: 13px;
-  font-weight: 850;
+  font-weight: 900;
   text-align: center;
 }
 
@@ -271,8 +396,19 @@
 .cpw5-macro-section-head span {
   margin: 4px 0 0;
   color: var(--cp-text-muted);
-  font-size: 11.5px;
-  font-weight: 750;
+  font-size: 12px;
+  font-weight: 800;
+}
+
+.cpw5-macro-section-action {
+  min-height: 44px;
+  padding: 0 12px;
+  border: 1px solid var(--cp-accent);
+  border-radius: var(--cp-radius-md);
+  color: var(--cp-accent-strong);
+  background: var(--cp-surface);
+  font-size: 12px;
+  font-weight: 900;
 }
 
 .cpw5-macro-lens-row {
@@ -302,6 +438,87 @@
 .cpw5-macro-lens-card {
   flex: 0 0 min(220px, 82vw);
   scroll-snap-align: start;
+  overflow: hidden;
+  padding: 0;
+}
+
+.cpw5-macro-lens-card__action {
+  width: 100%;
+  min-height: 88px;
+  padding: 12px 14px;
+  border: 0;
+  color: inherit;
+  background: transparent;
+  text-align: left;
+}
+
+/* One honest line replaces the repeated empty preview boxes when no lens has a
+ * loaded series to preview; every card keeps its own load button. */
+.cpw5-macro-lens-note {
+  margin: 10px 0 0;
+  color: var(--c-ink-3);
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.cpw5-macro-lens-card:focus-within,
+.cpw5-macro-compare-card:focus-within {
+  border-color: var(--cp-accent);
+  outline: 2px solid var(--cp-accent);
+  outline-offset: 2px;
+}
+
+.cpw5-macro-lens-sparkline {
+  display: block;
+  width: 100%;
+  height: 46px;
+  margin-top: 8px;
+  color: var(--cp-text-muted);
+}
+
+.cpw5-macro-lens-sparkline--loading {
+  border-radius: var(--cp-radius-sm);
+  background: var(--cp-surface-muted);
+}
+
+.cpw5-macro-lens-sparkline--empty {
+  display: grid;
+  place-items: center;
+  border: 1px dashed var(--cp-divider);
+  border-radius: var(--cp-radius-sm);
+  font-size: 12px;
+  font-weight: 700;
+  text-align: center;
+}
+
+.cpw5-macro-compare-card.cpw5-macro-evidence-tile {
+  overflow: hidden;
+  padding: 0;
+}
+
+.cpw5-macro-compare-card__action {
+  width: 100%;
+  min-height: 64px;
+  padding: 11px 12px;
+  border: 0;
+  color: inherit;
+  background: transparent;
+  text-align: left;
+}
+
+.cpw5-macro-evidence-tile {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+}
+
+.cpw5-macro-metrics .cpw5-macro-evidence-tile {
+  overflow: hidden;
+  padding: 0;
+}
+
+.cpw5-macro-evidence-tile__body {
+  flex: 1;
   padding: 12px 14px;
 }
 
@@ -319,20 +536,20 @@
   display: block;
   overflow: hidden;
   color: var(--cp-text-strong);
-  font-size: 12.5px;
+  font-size: 13px;
   font-weight: 900;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
 
-.cpw5-macro-lens-card span,
-.cpw5-macro-compare-card span,
+.cpw5-macro-lens-card__action > span,
+.cpw5-macro-compare-card__action > span,
 .cpw5-macro-connection-grid span {
   display: block;
   margin-top: 5px;
   color: var(--cp-text-muted);
-  font-size: 11.5px;
-  font-weight: 650;
+  font-size: 12px;
+  font-weight: 700;
   line-height: 1.45;
 }
 
@@ -342,6 +559,141 @@
   gap: 12px;
 }
 
+.cpw5-macro-table-panel {
+  min-width: 0;
+  overflow: hidden;
+  border: 1px solid var(--cp-border);
+  border-radius: var(--cp-radius-lg);
+  background: var(--cp-surface);
+}
+
+.cpw5-macro-table-panel > summary {
+  display: grid;
+  min-height: 58px;
+  cursor: pointer;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 14px;
+  padding: 8px 18px;
+  list-style: none;
+  transition: background 140ms ease;
+}
+
+.cpw5-macro-table-panel > summary::-webkit-details-marker {
+  display: none;
+}
+
+.cpw5-macro-table-panel > summary:hover {
+  background: var(--cp-surface-muted);
+}
+
+.cpw5-macro-table-panel > summary:focus-visible {
+  outline: 2px solid var(--cp-accent);
+  outline-offset: -2px;
+}
+
+.cpw5-macro-table-panel__summary {
+  display: grid;
+  gap: 3px;
+  min-width: 0;
+}
+
+.cpw5-macro-table-panel__summary > span {
+  color: var(--cp-text-strong);
+  font-size: 14px;
+  font-weight: 900;
+}
+
+.cpw5-macro-table-panel__summary > b {
+  overflow: hidden;
+  color: var(--cp-text-muted);
+  font-size: 12px;
+  font-weight: 700;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.cpw5-macro-table-panel__meta {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--cp-text-muted);
+  font-size: 12px;
+  font-weight: 800;
+}
+
+.cpw5-macro-table-panel__meta i {
+  display: inline-grid;
+  width: 24px;
+  height: 24px;
+  place-items: center;
+  border: 1px solid var(--cp-border);
+  border-radius: var(--cp-radius-sm);
+  font-style: normal;
+  transform: rotate(-90deg);
+  transition: transform 140ms ease;
+}
+
+.cpw5-macro-table-panel[open] .cpw5-macro-table-panel__meta i {
+  transform: rotate(0deg);
+}
+
+.cpw5-macro-table-panel__body {
+  display: grid;
+  gap: 10px;
+  min-width: 0;
+  padding: 12px 18px 18px;
+  border-top: 1px solid var(--cp-divider);
+}
+
+.cpw5-macro-table-panel__tools {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  color: var(--cp-text-muted);
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.cpw5-macro-table-panel__tools button {
+  min-height: 36px;
+  padding: 0 10px;
+  border: 1px solid var(--cp-border);
+  border-radius: var(--cp-radius-sm);
+  color: var(--cp-accent-strong);
+  background: var(--cp-surface);
+  font-size: 12px;
+  font-weight: 900;
+}
+
+.cpw5-macro-table-panel .cpw5-table-wrap {
+  max-height: min(62vh, 720px);
+}
+
+.cpw5-macro-table-panel .cpw5-table__caption {
+  padding: 10px;
+  color: var(--cp-text-muted);
+  font-size: 12px;
+  font-weight: 700;
+  text-align: left;
+}
+
+.cpw5-macro-table-skeleton {
+  display: grid;
+  gap: 8px;
+  min-height: 132px;
+  align-content: center;
+}
+
+.cpw5-macro-table-skeleton i {
+  display: block;
+  height: 28px;
+  border-radius: var(--cp-radius-sm);
+  background: var(--cp-surface-muted);
+}
+
 .cpw5-macro-insight-card {
   display: grid;
   gap: 8px;
@@ -349,7 +701,7 @@
 
 .cpw5-macro-insight-card span {
   color: var(--cp-accent-strong);
-  font-size: 11px;
+  font-size: 12px;
   font-weight: 900;
   letter-spacing: 0.08em;
 }
@@ -358,8 +710,8 @@
 .cpw5-macro-insight-card p {
   margin: 0;
   color: var(--cp-text-strong);
-  font-size: 13.5px;
-  font-weight: 750;
+  font-size: 14px;
+  font-weight: 800;
   line-height: 1.55;
 }
 
@@ -400,7 +752,7 @@
 
 .cpw5-macro-accordion__summary b {
   color: var(--cp-text-muted);
-  font-size: 11.5px;
+  font-size: 12px;
   font-weight: 800;
   font-variant-numeric: tabular-nums;
 }
@@ -470,7 +822,7 @@
   color: var(--cp-text);
   background: var(--cp-surface);
   font-size: 13px;
-  font-weight: 750;
+  font-weight: 800;
   outline: none;
 }
 
@@ -542,6 +894,40 @@
   gap: 8px;
 }
 
+.cpw5-macro-collection-editor {
+  scroll-margin-top: 24px;
+}
+
+.cpw5-macro-collection-row > button {
+  min-height: 36px;
+  padding: 0 10px;
+  border: 0;
+  border-radius: var(--cp-radius-sm);
+  color: var(--cp-text-muted);
+  background: var(--cp-surface-muted);
+  font-size: 12px;
+  font-weight: 800;
+}
+
+.cpw5-macro-collection-row > button:first-child {
+  padding: 4px 8px;
+  color: var(--cp-text-strong);
+  background: transparent;
+}
+
+.cpw5-macro-collection-row > button:focus-visible,
+.cpw5-macro-collection-row > input:focus-visible,
+.cpw5-macro-section-action:focus-visible,
+.cpw5-macro-table-panel__tools button:focus-visible {
+  outline: 2px solid var(--cp-accent);
+  outline-offset: 2px;
+}
+
+.cpw5-macro-collection-row[data-collection-editing="true"] > input {
+  min-width: min(220px, 100%);
+  flex: 1 1 220px;
+}
+
 .cpw5-macro-selected-row > span,
 .cpw5-macro-selected-row > button:first-child {
   min-width: 0;
@@ -549,14 +935,14 @@
   border: 0;
   color: var(--cp-text-strong);
   background: transparent;
-  font-size: 12.5px;
+  font-size: 13px;
   font-weight: 900;
   text-align: left;
 }
 
 .cpw5-macro-selected-row b {
   color: var(--cp-text-muted);
-  font-size: 11px;
+  font-size: 12px;
   font-weight: 800;
 }
 
@@ -567,7 +953,7 @@
   border-radius: var(--cp-radius-sm);
   color: var(--cp-text-muted);
   background: var(--cp-surface-muted);
-  font-size: 11.5px;
+  font-size: 12px;
   font-weight: 900;
 }
 
@@ -587,7 +973,7 @@
 .cpw5-macro-series-control__head span {
   overflow: hidden;
   color: var(--cp-text-strong);
-  font-size: 12.5px;
+  font-size: 13px;
   font-weight: 900;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -597,7 +983,7 @@
 .cpw5-macro-empty-small {
   margin: 0;
   color: var(--cp-text-muted);
-  font-size: 11px;
+  font-size: 12px;
   font-weight: 700;
   line-height: 1.4;
 }
@@ -654,9 +1040,12 @@
 
 .cpw5-macro-cta-row span {
   margin-left: auto;
+  min-width: 0;
+  overflow-wrap: anywhere;
   color: var(--cp-text-soft);
-  font-size: 11px;
+  font-size: 12px;
   font-weight: 700;
+  line-height: 1.5;
 }
 
 @media (max-width: 900px) {
@@ -716,6 +1105,10 @@
     grid-template-columns: repeat(4, minmax(0, 1fr));
   }
 
+  .cpw5-macro-chart-rows {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
   .cpw5-macro-tool-button {
     width: 100%;
     min-width: 0;
@@ -733,9 +1126,331 @@
     flex-direction: column;
   }
 
+  .cpw5-macro-lens-card {
+    flex-basis: min(280px, 86vw);
+  }
+
+  .cpw5-macro-table-panel > summary {
+    grid-template-columns: minmax(0, 1fr);
+    padding: 10px 12px;
+  }
+
+  .cpw5-macro-table-panel__meta {
+    justify-content: space-between;
+  }
+
+  .cpw5-macro-table-panel__body {
+    padding: 10px 12px 12px;
+  }
+
+  .cpw5-macro-table-panel__tools button,
+  .cpw5-macro-collection-row > button,
+  .cpw5-macro-section-action {
+    min-height: 44px;
+  }
+
   .cpw5-macro-inline-form .cpw5-macro-input,
   .cpw5-macro-primary-button,
   .cpw5-macro-secondary-button {
     width: 100%;
+  }
+}
+
+/* Macro Chart V2 — reading-first workbench. New rules use the Light System tokens. */
+.cpw5-macro-v2-topbar {
+  display: grid;
+  grid-template-columns: minmax(260px, 1.4fr) minmax(0, 2fr);
+  gap: 10px 16px;
+  align-items: center;
+  min-width: 0;
+  padding-bottom: 12px;
+  border-bottom: 1px solid var(--c-line);
+}
+
+.cpw5-macro-v2-search {
+  position: relative;
+  min-width: 0;
+}
+
+.cpw5-macro-v2-search__input {
+  width: 100%;
+  min-height: 44px;
+  padding: 0 14px;
+  border: 1px solid var(--c-line);
+  border-radius: var(--r-md);
+  color: var(--c-ink);
+  background: var(--c-panel);
+  font: inherit;
+  font-size: 13px;
+  font-weight: 700;
+  outline: none;
+}
+
+.cpw5-macro-v2-search__input:focus {
+  border-color: var(--c-brand);
+  box-shadow: 0 0 0 3px var(--c-brand-soft);
+}
+
+.cpw5-macro-v2-typeahead {
+  position: absolute;
+  z-index: 30;
+  top: calc(100% + 6px);
+  left: 0;
+  display: grid;
+  width: min(440px, calc(100vw - 48px));
+  max-height: 360px;
+  overflow-y: auto;
+  padding: 8px;
+  border: 1px solid var(--c-line);
+  border-radius: var(--r-md);
+  background: var(--c-panel);
+  box-shadow: var(--sh-lg);
+}
+
+.cpw5-macro-v2-typeahead > span,
+.cpw5-macro-v2-typeahead > p {
+  margin: 0;
+  padding: 6px 8px;
+  color: var(--c-ink-3);
+  font-size: 12px;
+  font-weight: 800;
+}
+
+.cpw5-macro-v2-typeahead button {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 2px 10px;
+  min-height: 50px;
+  padding: 8px;
+  border: 0;
+  border-radius: var(--r-sm);
+  color: var(--c-ink);
+  background: transparent;
+  text-align: left;
+}
+
+.cpw5-macro-v2-typeahead button:hover,
+.cpw5-macro-v2-typeahead button[aria-selected="true"] {
+  background: var(--c-brand-soft);
+}
+
+.cpw5-macro-v2-typeahead b,
+.cpw5-macro-v2-typeahead small { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.cpw5-macro-v2-typeahead b { font-size: 12px; }
+.cpw5-macro-v2-typeahead small { grid-column: 1; color: var(--c-ink-3); font-size: 12px; }
+.cpw5-macro-v2-typeahead strong { grid-column: 2; grid-row: 1 / span 2; align-self: center; color: var(--c-brand); font-size: 12px; }
+
+.cpw5-macro-v2-lenses,
+.cpw5-macro-v2-global,
+.cpw5-macro-v2-ranges,
+.cpw5-macro-v2-export,
+.cpw5-macro-v2-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+  min-width: 0;
+}
+
+.cpw5-macro-v2-lenses { justify-content: flex-end; }
+.cpw5-macro-v2-actions { grid-column: 1 / -1; justify-content: space-between; }
+.cpw5-macro-v2-global { grid-column: 1 / -1; }
+
+.cpw5-macro-v2-lenses button,
+.cpw5-macro-v2-global button,
+.cpw5-macro-v2-ranges button,
+.cpw5-macro-v2-export button,
+.cpw5-macro-v2-segments button,
+.cpw5-macro-v2-aggregation button {
+  min-height: 36px;
+  padding: 0 10px;
+  border: 1px solid var(--c-line);
+  border-radius: var(--r-pill);
+  color: var(--c-ink-2);
+  background: var(--c-panel);
+  font: inherit;
+  font-size: 12px;
+  font-weight: 800;
+}
+
+.cpw5-macro-v2-lenses button[aria-pressed="true"],
+.cpw5-macro-v2-global button[aria-pressed="true"],
+.cpw5-macro-v2-ranges button[aria-pressed="true"],
+.cpw5-macro-v2-segments button[aria-pressed="true"],
+.cpw5-macro-v2-aggregation button[aria-pressed="true"] {
+  border-color: var(--c-brand);
+  color: var(--fnk-color-white);
+  background: var(--c-brand);
+}
+
+.cpw5-macro-v2-lenses button[data-unavailable="true"],
+.cpw5-macro-v2-lenses button:disabled,
+.cpw5-macro-v2-global button:disabled { opacity: 0.52; }
+.cpw5-macro-v2-export { overflow: hidden; border: 1px solid var(--c-line); border-radius: var(--r-pill); }
+.cpw5-macro-v2-export button { border: 0; border-radius: 0; }
+.cpw5-macro-v2-export button + button { border-left: 1px solid var(--c-line); }
+
+.cpw5-macro-v2-stage {
+  position: relative;
+  min-width: 0;
+  min-height: 720px;
+  border: 1px solid var(--c-line);
+  border-radius: var(--r-lg);
+  background: var(--c-panel);
+}
+
+.cpw5-macro-v2-plot {
+  min-height: 720px;
+  height: 720px;
+}
+
+.cpw5-macro-v2-legend {
+  display: flex;
+  max-width: calc(100% - 24px);
+  flex-wrap: wrap;
+  gap: 6px;
+  padding: 12px 0 12px 12px;
+}
+
+.cpw5-macro-v2-legend__item { position: relative; }
+.cpw5-macro-v2-legend__chip {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 7px;
+  min-height: 48px;
+  max-width: 250px;
+  padding: 6px 9px;
+  border: 1px solid var(--c-line);
+  border-radius: var(--r-sm);
+  color: var(--c-ink);
+  background: var(--c-panel);
+  box-shadow: var(--sh-sm);
+  font: inherit;
+  text-align: left;
+}
+
+.cpw5-macro-v2-legend__chip > i,
+.cpw5-macro-v2-editor__head i {
+  display: block;
+  width: 9px;
+  height: 9px;
+  border-radius: 2px;
+}
+
+.cpw5-macro-v2-legend__chip > span { display: grid; min-width: 0; gap: 1px; }
+.cpw5-macro-v2-legend__chip b { overflow: hidden; font-size: 12px; text-overflow: ellipsis; white-space: nowrap; }
+.cpw5-macro-v2-legend__chip strong { font-size: 11px; font-variant-numeric: tabular-nums; }
+.cpw5-macro-v2-legend__chip small { color: var(--c-ink-3); font-size: 9px; font-weight: 700; }
+.cpw5-macro-v2-legend__chip small.positive { color: var(--c-up); }
+.cpw5-macro-v2-legend__chip small.negative { color: var(--c-down); }
+
+/* A legend chip draws the same series the plot draws, so it carries that series'
+ * own sparkline; the row spans the chip and keeps the phone chip compact. */
+.cpw5-macro-v2-legend__spark {
+  grid-column: 1 / -1;
+  min-width: 0;
+}
+
+.cpw5-macro-v2-legend__spark .cpw5-macro-lens-sparkline {
+  height: 24px;
+  margin-top: 4px;
+}
+.cpw5-macro-v2-legend__formula {
+  display: inline-flex;
+  min-width: 76px;
+  align-items: center;
+  justify-content: center;
+  color: var(--c-brand);
+  font-weight: 900;
+  text-align: center;
+}
+.cpw5-macro-v2-legend__formula:focus-visible {
+  outline: 2px solid var(--c-brand);
+  outline-offset: 2px;
+}
+.cpw5-macro-recession-band {
+  fill: var(--c-band);
+  opacity: 0.55;
+}
+
+.cpw5-macro-v2-editor {
+  position: absolute;
+  z-index: 40;
+  top: calc(100% + 6px);
+  left: 0;
+  display: grid;
+  width: min(390px, calc(100vw - 48px));
+  gap: 12px;
+  padding: 14px;
+  border: 1px solid var(--c-line);
+  border-radius: var(--r-md);
+  color: var(--c-ink);
+  background: var(--c-panel);
+  box-shadow: var(--sh-lg);
+}
+
+.cpw5-macro-v2-editor__head,
+.cpw5-macro-v2-editor__head span,
+.cpw5-macro-v2-segments,
+.cpw5-macro-v2-aggregation,
+.cpw5-macro-v2-colors {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+}
+
+.cpw5-macro-v2-editor__head { justify-content: space-between; }
+.cpw5-macro-v2-editor__head button { width: 36px; height: 36px; border: 0; border-radius: var(--r-sm); color: var(--c-ink-2); background: var(--c-surface-2); font-size: 18px; }
+.cpw5-macro-v2-editor fieldset { min-width: 0; margin: 0; padding: 0; border: 0; }
+.cpw5-macro-v2-editor legend { margin-bottom: 6px; color: var(--c-ink-3); font-size: 12px; font-weight: 800; }
+.cpw5-macro-v2-segments button:disabled { opacity: 0.42; }
+.cpw5-macro-v2-aggregation { margin-top: 7px; }
+.cpw5-macro-v2-aggregation > span { color: var(--c-ink-3); font-size: 12px; font-weight: 800; }
+.cpw5-macro-v2-colors button { width: 28px; height: 28px; border: 3px solid var(--c-panel); border-radius: var(--r-sm); box-shadow: 0 0 0 1px var(--c-line); }
+.cpw5-macro-v2-colors button[aria-pressed="true"] { box-shadow: 0 0 0 2px var(--c-brand); }
+.cpw5-macro-v2-remove { min-height: 40px; border: 1px solid var(--c-down); border-radius: var(--r-sm); color: var(--c-down); background: var(--c-panel); font: inherit; font-size: 12px; font-weight: 800; }
+.cpw5-macro-v2-editor > p { margin: 0; color: var(--c-down); font-size: 12px; font-weight: 700; }
+
+@media (max-width: 900px) {
+  .cpw5-macro-v2-topbar { grid-template-columns: minmax(0, 1fr); }
+  .cpw5-macro-v2-lenses,
+  .cpw5-macro-v2-global,
+  .cpw5-macro-v2-actions { grid-column: 1; justify-content: flex-start; }
+}
+
+@media (max-width: 520px) {
+  .cpw5-macro-v2-lenses,
+  .cpw5-macro-v2-ranges { flex-wrap: nowrap; overflow-x: auto; padding-bottom: 2px; }
+  .cpw5-macro-v2-lenses button,
+  .cpw5-macro-v2-global button,
+  .cpw5-macro-v2-ranges button,
+  .cpw5-macro-v2-export button,
+  .cpw5-macro-v2-segments button,
+  .cpw5-macro-v2-aggregation button { min-height: 44px; flex: 0 0 auto; }
+  .cpw5-macro-v2-stage { display: flex; min-height: 0; flex-direction: column; border: 0; }
+  .cpw5-macro-v2-plot { height: 360px; min-height: 360px; padding-top: 0; }
+  .cpw5-macro-v2-legend { position: static; order: 2; max-width: none; padding: 10px 0 0; }
+  .cpw5-macro-chart-rows { order: 1; }
+  .cpw5-macro-v2-legend__item { width: 100%; }
+  .cpw5-macro-v2-legend__chip { width: 100%; max-width: none; }
+  /* The window-performance rows keep a 44px touch row on phones. */
+  .cpw5-macro-window-summary [role="listitem"] { min-height: 44px; }
+  .cpw5-macro-v2-editor__head button { width: 44px; height: 44px; }
+  .cpw5-macro-v2-colors button { width: 44px; height: 44px; }
+  .cpw5-macro-v2-remove { min-height: 44px; }
+  .cpw5-macro-v2-editor {
+    position: fixed;
+    z-index: 90;
+    top: auto;
+    right: 0;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    max-height: min(78vh, 640px);
+    overflow-y: auto;
+    border-radius: var(--r-lg) var(--r-lg) 0 0;
+    padding: 18px 14px calc(18px + env(safe-area-inset-bottom));
   }
 }

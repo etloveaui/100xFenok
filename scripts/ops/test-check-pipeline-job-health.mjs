@@ -7,18 +7,113 @@ import { fileURLToPath } from "node:url";
 import {
   NON_SCHEDULED_WORKFLOW_INCLUSIONS,
   SCHEDULED_WORKFLOW_EXCLUSIONS,
-  CADENCE_STATES,
-  assertDeclaredScheduleGraceContracts,
-  attachWorkflowCadence,
+  buildIssueBody,
   buildWorkflowRunsUrl,
   computeFailureStreak,
   deriveFailureStreakThreshold,
-  deriveWorkflowCadenceProjection,
   deriveWorkflowWatchPolicy,
+  QUEUE_EVICTION_INSPECTION_LIMIT,
+  annotateQueueEvictions,
+  classifyKpiGenerationStoppage,
   evaluateWorkflow,
+  fetchKpiGenerationSnapshots,
+  isQueueEvictedRun,
   mergeWorkflowRunBatches,
+  needsMissedWindowReverification,
   parseWorkflowRunsPayload,
 } from "./check-pipeline-job-health.mjs";
+
+// The alarm's data-stoppage input is two committed KPI generations. A single
+// stopped generation is not yet a K3 incident; unreadable history is unknown,
+// never a healthy result that can clear an open issue.
+{
+  const generation = (generated_at, rows) => ({
+    generated_at,
+    sets: Object.entries(rows).map(([set, status]) => ({ set, status })),
+  });
+  const current = generation("2026-09-28T11:34:19.757Z", {
+    fred_macro: "fresh",
+    stockanalysis_etf_detail: "stopped",
+    sentiment: "stopped",
+  });
+  const previous = generation("2026-09-28T10:21:42.000Z", {
+    fred_macro: "fresh",
+    stockanalysis_etf_detail: "stopped",
+    sentiment: "delayed",
+  });
+  assert.deepEqual(classifyKpiGenerationStoppage([current, previous]), {
+    status: "alarm",
+    stopped_sets: ["stockanalysis_etf_detail"],
+    latest_generated_at: current.generated_at,
+    previous_generated_at: previous.generated_at,
+  });
+  assert.equal(
+    classifyKpiGenerationStoppage([
+      generation("2026-09-28T11:34:19Z", { stockanalysis_etf_detail: "stopped" }),
+      generation("2026-09-28T10:21:42Z", { stockanalysis_etf_detail: "fresh" }),
+    ]).status,
+    "ok",
+    "the set pages only when it is stopped in both latest generations",
+  );
+  const oneStopped = classifyKpiGenerationStoppage([
+    generation("2026-09-28T11:34:19Z", { stockanalysis_etf_detail: "stopped" }),
+    generation("2026-09-28T10:21:42Z", { stockanalysis_etf_detail: "delayed" }),
+  ]);
+  assert.equal(oneStopped.status, "ok", "one stopped generation does not page");
+  assert.deepEqual(oneStopped.stopped_sets, []);
+  assert.equal(classifyKpiGenerationStoppage([current]).status, "unknown", "one snapshot cannot clear or page");
+  assert.equal(classifyKpiGenerationStoppage([previous, current]).status, "unknown", "out-of-order generations stay unknown");
+  assert.equal(classifyKpiGenerationStoppage([
+    generation("2026-09-28T11:34:19Z", { stockanalysis_etf_detail: "stopped" }),
+    generation("2026-09-28T10:21:42Z", {}),
+  ]).status, "unknown", "malformed generations stay unknown");
+
+  const kpiBody = buildIssueBody([{
+    label: "Data stopped advancing",
+    kpi_stopped_sets: ["stockanalysis_etf_detail"],
+    latest_generated_at: current.generated_at,
+    previous_generated_at: previous.generated_at,
+  }]);
+  assert.match(kpiBody, /stockanalysis_etf_detail/);
+  assert.match(kpiBody, /two committed health KPI generations/);
+  assert.match(kpiBody, /2026-09-28T11:34:19\.757Z/);
+
+  const requested = [];
+  const snapshots = await fetchKpiGenerationSnapshots({
+    token: "test-token",
+    owner: "owner",
+    repo: "repo",
+    branch: "main",
+    fetchFn: async (url, options) => {
+      requested.push({ url: String(url), options });
+      if (requested.length === 1) {
+        return new Response(JSON.stringify([{ sha: "a".repeat(40) }, { sha: "b".repeat(40) }]), {
+          status: 200,
+          headers: { "content-type": "application/json" },
+        });
+      }
+      return new Response(JSON.stringify(requested.length === 2 ? current : previous), {
+        status: 200,
+        headers: { "content-type": "application/json" },
+      });
+    },
+  });
+  assert.deepEqual(snapshots, [current, previous], "the API snapshots remain newest-first");
+  assert.match(requested[0].url, /commits\?.*path=data%2Fadmin%2Ffenok-data-health-kpi\.json.*per_page=2/);
+  assert.match(requested[0].url, /sha=main/);
+  assert.equal(requested[0].options.headers.Authorization, "Bearer test-token");
+  assert.match(requested[1].url, /contents\/data\/admin\/fenok-data-health-kpi\.json\?ref=/);
+  assert.equal(requested[1].options.headers.Accept, "application/vnd.github.raw+json");
+}
+
+assert.equal(deriveFailureStreakThreshold([{ cron: "0 7 * * 0" }]), 1,
+  "a weekly workflow pages on its first completed failure");
+assert.equal(deriveFailureStreakThreshold([{ cron: "0 6 * * *" }]), 2,
+  "a faster-than-weekly workflow keeps the two-failure guard");
+assert.equal(deriveFailureStreakThreshold([
+  { cron: "0 7 * * 0" },
+  { cron: "0 6 * * *" },
+]), 2, "a workflow with both weekly and daily schedules uses its faster cadence");
 
 // Runs are most-recent-first, matching the GitHub API `workflow_runs` ordering.
 const F = (id) => ({ id, conclusion: "failure", html_url: `https://gh/run/${id}`, run_started_at: `t${id}` });
@@ -183,182 +278,13 @@ function writeWorkflow(root, file, source) {
   );
 }
 
-// Defect 2: every cadence outcome is explicit.  This fixture deliberately
-// joins member-level coverage (not workflow-level guesses), preserves the
-// suspected_skip/attempt_gap evidence words, and proves recovered uses only
-// canonical KPI runtime recovery for a tracked workflow/cron pair.
-{
-  const config = {
-    lanes: [{
-      producer_members: [
-        { id: "not_due_member", workflow: ".github/workflows/not-due.yml", schedule: ["0 1 * * *"], cadence_calendar: "utc", cadence_declaration: { kind: "github_workflow" } },
-        { id: "overdue_member", workflow: ".github/workflows/overdue.yml", schedule: ["0 2 * * *"], cadence_calendar: "utc", cadence_declaration: { kind: "github_workflow" } },
-        { id: "recovered_member", workflow: ".github/workflows/update-manifest.yml", schedule: ["30 2 * * *"], cadence_calendar: "utc", cadence_declaration: { kind: "github_workflow" } },
-        { id: "unknown_member", workflow: ".github/workflows/unknown.yml", schedule: ["0 3 * * *"], cadence_calendar: "utc", cadence_declaration: { kind: "github_workflow" } },
-      ],
-    }],
-  };
-  const calendars = {
-    schedules: [
-      { id: "not_due_contract", cron: "0 1 * * *", calendar_id: "utc", grace: { unit: "hours", value: 1 } },
-      { id: "overdue_contract", cron: "0 2 * * *", calendar_id: "utc", grace: { unit: "hours", value: 1 } },
-      { id: "update_manifest_0230", cron: "30 2 * * *", calendar_id: "utc", grace: { unit: "hours", value: 1 } },
-      { id: "unknown_contract", cron: "0 3 * * *", calendar_id: "utc", grace: { unit: "hours", value: 1 } },
-    ],
-  };
-  const recoveredSlot = "update-manifest.yml:30 2 * * *@2026-07-21T02:30Z";
-  const recoverySlot = "update-manifest.yml:30 2 * * *@2026-07-22T02:30Z";
-  const projection = deriveWorkflowCadenceProjection({
-    watched: [
-      { file: "not-due.yml" },
-      { file: "overdue.yml" },
-      { file: "update-manifest.yml" },
-      { file: "no-declaration.yml" },
-      { file: "unknown.yml" },
-    ],
-    coverage: {
-      rows: [
-        { workflow: ".github/workflows/not-due.yml", member_id: "not_due_member", cron: "0 1 * * *", state: "observed", expected_at: "2026-07-22T01:00:00.000Z" },
-        { workflow: ".github/workflows/overdue.yml", member_id: "overdue_member", cron: "0 2 * * *", state: "suspected_skip", expected_at: "2026-07-22T02:00:00.000Z" },
-        { workflow: ".github/workflows/update-manifest.yml", member_id: "recovered_member", cron: "30 2 * * *", state: "attempt_gap", expected_at: "2026-07-21T02:30:00.000Z" },
-      ],
-    },
-    kpiRuntime: {
-      slots: { missed_slot_keys: [recoveredSlot], satisfied_slot_keys: [recoverySlot] },
-      successful_snapshot_history: [{
-        slot_key: recoverySlot,
-        built_at: "2026-07-22T03:00:00.000Z",
-        workflow: "Update Manifest",
-        status: "ready",
-        run_attempt: 1,
-      }],
-    },
-    config,
-    calendars,
-  });
-  assert.deepEqual(projection.state_counts, {
-    not_due: 1,
-    overdue: 1,
-    recovered: 1,
-    no_declaration: 1,
-    unknown: 1,
-  });
-  assert.deepEqual(
-    projection.workflows.map((row) => [row.file, row.state, row.evidence]),
-    [
-      ["not-due.yml", "not_due", []],
-      ["overdue.yml", "overdue", ["suspected_skip"]],
-      ["update-manifest.yml", "recovered", ["attempt_gap"]],
-      ["no-declaration.yml", "no_declaration", []],
-      ["unknown.yml", "unknown", []],
-    ],
-  );
-  const joined = attachWorkflowCadence([{ file: "overdue.yml", label: "Overdue", status: "ok" }], projection);
-  assert.equal(joined[0].status, "ok", "overdue remains visible but cannot become a failure alarm");
-  assert.equal(joined[0].cadence_status, "overdue");
-
-  // Mutation proof: neither absent grace nor an ambiguous/missing schedule may
-  // silently fall back to zero, KPI's 360 minutes, or no_declaration.
-  const missingGrace = structuredClone(calendars);
-  delete missingGrace.schedules.find((row) => row.id === "overdue_contract").grace;
-  assert.throws(
-    () => assertDeclaredScheduleGraceContracts({ config, calendars: missingGrace }),
-    /schedule overdue_contract has no grace block/,
-  );
-  const missingContract = structuredClone(calendars);
-  missingContract.schedules = missingContract.schedules.filter((row) => row.id !== "overdue_contract");
-  assert.throws(
-    () => assertDeclaredScheduleGraceContracts({ config, calendars: missingContract }),
-    /declared schedule overdue\.yml:0 2 \* \* \* must have exactly one grace contract/,
-  );
-}
-
-// fh-538: paging sensitivity comes from the existing cadence declaration, not
-// a second workflow-name table. A monthly declaration pages on its first
-// completed failure; daily/hourly declarations retain the two-failure noise
-// guard. Slot drift remains the separate overdue join proved above.
-{
-  const calendars = {
-    schedules: [
-      { id: "monthly", cron: "0 9 1 * *", calendar_id: "utc", grace: { unit: "hours", value: 1 } },
-      { id: "weekly", cron: "0 7 * * 0", calendar_id: "utc", grace: { unit: "hours", value: 1 } },
-      { id: "daily", cron: "0 6 * * *", calendar_id: "utc", grace: { unit: "hours", value: 1 } },
-      { id: "hourly", cron: "23 * * * *", calendar_id: "utc", grace: { unit: "hours", value: 1 } },
-    ],
-  };
-  const member = (id, file, cron) => ({
-    id,
-    workflow: `.github/workflows/${file}`,
-    schedule: [cron],
-    cadence_calendar: "utc",
-    cadence_declaration: { kind: "github_workflow" },
-  });
-  const config = {
-    lanes: [{ producer_members: [
-      member("monthly_member", "monthly.yml", "0 9 1 * *"),
-      member("daily_member", "daily.yml", "0 6 * * *"),
-      member("hourly_member", "hourly.yml", "23 * * * *"),
-    ] }],
-  };
-  const watched = [
-    { file: "monthly.yml", label: "Monthly" },
-    { file: "daily.yml", label: "Daily" },
-    { file: "hourly.yml", label: "Hourly" },
-  ];
-  const projection = deriveWorkflowCadenceProjection({ watched, config, calendars });
-  assert.deepEqual(
-    projection.workflows.map((row) => [row.file, row.failure_streak_threshold]),
-    [["monthly.yml", 1], ["daily.yml", 2], ["hourly.yml", 2]],
-    "the same declared cron rows must calibrate monthly=1 and daily/hourly=2",
-  );
-
-  const calibrated = attachWorkflowCadence(watched, projection);
-  const [monthly, daily, hourly] = calibrated.map((workflow) => evaluateWorkflow(workflow, [F(1), S(0)]));
-  assert.equal(monthly.status, "alarm", "one monthly completed failure must page");
-  assert.equal(daily.status, "ok", "one daily completed failure must not page");
-  assert.equal(hourly.status, "ok", "one hourly completed failure must not page");
-  assert.equal(hourly.failure_streak_threshold, 2,
-    "hourly stays at 2, not 3: completed failures are evidence and slot drift is the overdue join");
-
-  // Bidirectional mutation: cadence alone flips the decision in both directions.
-  const monthlyToDaily = structuredClone(config);
-  monthlyToDaily.lanes[0].producer_members[0].schedule = ["0 6 * * *"];
-  const mutatedMonthly = deriveWorkflowCadenceProjection({ watched, config: monthlyToDaily, calendars });
-  const monthlyAfterMutation = evaluateWorkflow(
-    attachWorkflowCadence(watched, mutatedMonthly)[0],
-    [F(1), S(0)],
-  );
-  assert.equal(monthlyAfterMutation.failure_streak_threshold, 2);
-  assert.equal(monthlyAfterMutation.status, "ok", "monthly -> daily must remove the one-failure page");
-
-  const dailyToMonthly = structuredClone(config);
-  dailyToMonthly.lanes[0].producer_members[1].schedule = ["0 9 1 * *"];
-  const mutatedDaily = deriveWorkflowCadenceProjection({ watched, config: dailyToMonthly, calendars });
-  const dailyAfterMutation = evaluateWorkflow(
-    attachWorkflowCadence(watched, mutatedDaily)[1],
-    [F(1), S(0)],
-  );
-  assert.equal(dailyAfterMutation.failure_streak_threshold, 1);
-  assert.equal(dailyAfterMutation.status, "alarm", "daily -> monthly must add the one-failure page");
-
-  assert.equal(
-    deriveFailureStreakThreshold([{ cron: "0 7 * * 0" }]),
-    1,
-    "the exact weekly boundary must page on the first completed failure",
-  );
-  assert.equal(
-    deriveFailureStreakThreshold([{ cron: "0 7 * * 0" }, { cron: "0 6 * * *" }]),
-    2,
-    "a weekly+daily workflow uses its combined effective cadence and keeps the two-failure guard",
-  );
-}
-
 // Real-repository contract: at least 31 scheduled workflows are discovered. The
 // alarm itself is the sole declared exclusion, while the non-scheduled workflow
-// syntax gate is an explicit inclusion. Operational observer/alarm workflows
-// remain watched: their own repeated failure is also an outage worth paging.
-// The floor catches accidental parser shrinkage without making future scheduled
-// workflows wait for a hand-edited exact count.
+// syntax gate is an explicit inclusion. The serving probe is watched, not
+// excluded: its own run turns red only on machinery failure (issue/API), so a
+// genuine probe failure is an outage worth paging, and a stale exclusion would
+// hide it. The floor catches accidental parser shrinkage without making future
+// scheduled workflows wait for a hand-edited exact count.
 {
   const repoRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..", "..");
   const policy = deriveWorkflowWatchPolicy({
@@ -392,7 +318,7 @@ function writeWorkflow(root, file, source) {
   );
   assert.deepEqual(
     policy.watched.find((row) => row.file === "deploy-worker.yml")?.events,
-    ["push", "schedule"],
+    ["push", "schedule", "workflow_run"],
     "every declared automatic trigger must count while manual dispatch stays excluded",
   );
   assert.deepEqual(
@@ -402,6 +328,7 @@ function writeWorkflow(root, file, source) {
   );
   for (const file of [
     "build-stocks-analyzer.yml",
+    "data-plane-serving-probe.yml",
     "fetch-us-indices-daily.yml",
     "global-writer-queue-observer.yml",
     "update-manifest.yml",
@@ -410,17 +337,15 @@ function writeWorkflow(root, file, source) {
   ]) {
     assert.ok(policy.watched.some((row) => row.file === file), `${file} must be watched`);
   }
-  const calendars = JSON.parse(fs.readFileSync(path.join(repoRoot, "scripts", "lib", "data-supply-detection-calendars.json"), "utf8"));
-  const initialCadence = deriveWorkflowCadenceProjection({
-    watched: policy.watched,
-    coverage: { rows: [] },
-    calendars,
-  });
-  assert.deepEqual(Object.keys(initialCadence.state_counts), CADENCE_STATES, "first-evaluation dry run must expose all five states");
+  assert.deepEqual(
+    policy.watched.find((row) => row.file === "data-plane-serving-probe.yml")?.events,
+    ["schedule"],
+    "the probe contributes its scheduled cadence only; manual dispatch stays excluded",
+  );
   assert.equal(
-    Object.values(initialCadence.state_counts).reduce((sum, count) => sum + count, 0),
-    policy.watched.length,
-    "the first 31-workflow evaluation must classify every watched workflow exactly once",
+    policy.watched.find((row) => row.file === "slickcharts-weekly.yml")?.failure_streak_threshold,
+    1,
+    "the weekly workflow must retain its run-history paging threshold",
   );
 }
 
@@ -479,6 +404,260 @@ function writeWorkflow(root, file, source) {
   assert.deepEqual(runs.map((run) => run.id), [403, 402, 401, 400]);
   assert.equal(result.status, "alarm");
   assert.equal(result.firstFailingRunId, 402);
+}
+
+// --- Queue eviction is its own state, not a producer failure ----------------
+// A scheduled run cancelled before any job exists is a lost natural slot. It
+// must page without inflating the producer failure streak. Manual cancellations
+// remain outside the counted automatic event set.
+const jobsOf = (...jobs) => ({ jobs });
+const evictedJobs = jobsOf({ name: "fetch", conclusion: "cancelled", steps: [] });
+const ranJobs = jobsOf({ name: "fetch", conclusion: "failure", steps: [{ name: "Run", conclusion: "failure" }] });
+
+{
+  assert.equal(isQueueEvictedRun(evictedJobs.jobs), true, "cancelled job with zero steps never executed");
+  assert.equal(isQueueEvictedRun(ranJobs.jobs), false, "a job that ran steps is a real failure");
+  // The discriminator is ZERO STEPS, not the cancelled conclusion. Update
+  // Manifest runs 30151994315 and 30157494401 were both cancelled mid-flight
+  // with 26 steps each: real work, superseded. Reading those as evictions
+  // would launder genuine interruptions into "nothing happened".
+  assert.equal(
+    isQueueEvictedRun([{ conclusion: "cancelled", steps: new Array(26).fill({ name: "step" }) }]),
+    false,
+    "a cancelled job that entered steps ran; it was not evicted",
+  );
+  assert.equal(
+    isQueueEvictedRun([{ conclusion: "cancelled", steps: [{ name: "Set up job" }] }]),
+    false,
+    "even one entered step disproves eviction",
+  );
+  assert.equal(isQueueEvictedRun([]), false, "no job data proves nothing");
+  assert.equal(isQueueEvictedRun(null), false, "missing job data proves nothing");
+  assert.equal(
+    isQueueEvictedRun([{ conclusion: "cancelled", steps: [] }, { conclusion: "failure", steps: [{ name: "Run" }] }]),
+    false,
+    "one executed job means the run was not evicted",
+  );
+}
+
+{
+  // An evicted run must not inflate the streak: it says nothing about the producer.
+  const evicted = { ...F(2), queue_evicted: true };
+  const { streak, evictedRunUrls } = computeFailureStreak([evicted, F(1), S(0)]);
+  assert.equal(streak, 1, "an evicted run is not a producer failure");
+  assert.deepEqual(evictedRunUrls, ["https://gh/run/2"], "but it must be named, never silently dropped");
+}
+
+{
+  // Nor may it break a genuine streak the way a success does.
+  const { streak } = computeFailureStreak([F(3), { ...F(2), queue_evicted: true }, F(1)]);
+  assert.equal(streak, 2, "an evicted run between failures is transparent to the streak");
+}
+
+{
+  // The healthy path must not sprout eviction vocabulary.
+  const { evictedRunUrls } = computeFailureStreak([S(2), S(1)]);
+  assert.deepEqual(evictedRunUrls, []);
+}
+
+{
+  // evaluateWorkflow must carry the eviction out to the caller, not absorb it.
+  const result = evaluateWorkflow(
+    { file: "fetch-fenok-news-tone.yml", label: "News Tone", events: ["schedule"] },
+    [
+      { ...F(2), event: "schedule", queue_evicted: true },
+      { ...S(1), event: "schedule" },
+    ],
+  );
+  assert.equal(result.streak, 0, "eviction is not a producer failure");
+  assert.equal(result.status, "alarm", "a lost scheduled slot must page");
+  assert.deepEqual(result.alarm_reasons, ["lost_schedule_slot"]);
+  assert.deepEqual(result.queue_evicted_run_urls, ["https://gh/run/2"]);
+}
+
+{
+  const result = evaluateWorkflow(
+    { file: "fetch-oecd-cli.yml", label: "OECD", events: ["schedule"] },
+    [
+      { ...C(30694384064), event: "schedule", jobs_empty: true },
+      { ...S(30690000000), event: "schedule" },
+    ],
+  );
+  assert.equal(result.status, "alarm");
+  assert.equal(result.streak, 0);
+  assert.equal(result.lost_schedule_slot_count, 1);
+  assert.deepEqual(result.lost_schedule_slot_run_urls, ["https://gh/run/30694384064"]);
+  assert.deepEqual(result.alarm_reasons, ["lost_schedule_slot"]);
+}
+
+{
+  const result = evaluateWorkflow(
+    { file: "fetch-oecd-cli.yml", label: "OECD", events: ["schedule"] },
+    [
+      { ...C(10), event: "workflow_dispatch", jobs_empty: true },
+      { ...S(9), event: "schedule" },
+    ],
+  );
+  assert.equal(result.status, "ok", "normal manual cancellation must not become a lost scheduled slot");
+  assert.equal(result.lost_schedule_slot_count, 0);
+  assert.deepEqual(result.alarm_reasons, []);
+}
+
+{
+  // A lost scheduled slot is RESOLVED by any strictly newer successful run,
+  // including workflow_dispatch. The 2026-08-01 eviction storm left monthly
+  // lanes (OECD, slickcharts-monthly) paging hourly toward their NEXT natural
+  // slot on September 1 even after repeated dispatch successes refreshed the
+  // same data — recovery evidence the alarm never fetched.
+  const result = evaluateWorkflow(
+    { file: "fetch-oecd-cli.yml", label: "OECD", events: ["schedule"] },
+    [
+      { ...S(30700000010), event: "workflow_dispatch" },
+      { ...C(30700000001), event: "schedule", jobs_empty: true },
+      { ...S(30690000000), event: "schedule" },
+    ],
+  );
+  assert.equal(result.status, "ok", "a newer successful run resolves the lost slot");
+  assert.equal(result.lost_schedule_slot_count, 0);
+  assert.equal(result.resolved_lost_schedule_slot_count, 1);
+  assert.deepEqual(result.lost_schedule_slot_run_urls, []);
+  assert.deepEqual(result.alarm_reasons, []);
+}
+
+{
+  // A newer dispatch FAILURE is not recovery evidence; the slot still pages.
+  const result = evaluateWorkflow(
+    { file: "fetch-oecd-cli.yml", label: "OECD", events: ["schedule"] },
+    [
+      { ...F(30700000010), event: "workflow_dispatch" },
+      { ...C(30700000001), event: "schedule", jobs_empty: true },
+      { ...S(30690000000), event: "schedule" },
+    ],
+  );
+  assert.equal(result.status, "alarm");
+  assert.equal(result.lost_schedule_slot_count, 1);
+  assert.equal(result.resolved_lost_schedule_slot_count, 0);
+  assert.deepEqual(result.alarm_reasons, ["lost_schedule_slot"]);
+}
+
+{
+  // A jobs_empty run executed nothing, exactly like a queue eviction — it is
+  // contention evidence, not producer evidence, so it neither inflates nor
+  // breaks a streak (it still pages separately as a lost scheduled slot).
+  const { streak } = computeFailureStreak([F(3), { ...C(2), jobs_empty: true }, F(1)]);
+  assert.equal(streak, 2, "a never-executed run is transparent to the streak");
+}
+
+{
+  // A failure streak is recovered by a strictly newer successful run of any
+  // event. slickcharts-monthly live case: schedule failed 07-01, its 08-01
+  // slot was evicted, three dispatch successes then proved the producer end
+  // to end — yet the streak could only break on the NEXT monthly slot.
+  const result = evaluateWorkflow(
+    { file: "slickcharts-monthly.yml", label: "Monthly", events: ["schedule"] },
+    [
+      { ...S(30700000010), event: "workflow_dispatch" },
+      { ...F(30700000001), event: "schedule" },
+      { ...S(30690000000), event: "schedule" },
+    ],
+  );
+  assert.equal(result.status, "ok", "a newer success of any event recovers the streak");
+  assert.equal(result.failure_streak_recovered, true);
+  assert.deepEqual(result.alarm_reasons, []);
+}
+
+{
+  // A dispatch success OLDER than the newest failure recovers nothing.
+  const result = evaluateWorkflow(
+    { file: "slickcharts-monthly.yml", label: "Monthly", events: ["schedule"] },
+    [
+      { ...F(30700000020), event: "schedule" },
+      { ...S(30700000010), event: "workflow_dispatch" },
+      { ...F(30700000001), event: "schedule" },
+    ],
+  );
+  assert.equal(result.status, "alarm");
+  assert.ok(result.alarm_reasons.includes("failure_streak"));
+  assert.equal(result.failure_streak_recovered, false);
+}
+
+{
+  // Mixed ages: only slots older than the newest success resolve; a slot
+  // newer than every success keeps paging.
+  const result = evaluateWorkflow(
+    { file: "fetch-oecd-cli.yml", label: "OECD", events: ["schedule"] },
+    [
+      { ...C(30700000020), event: "schedule", jobs_empty: true },
+      { ...S(30700000010), event: "workflow_dispatch" },
+      { ...C(30700000001), event: "schedule", jobs_empty: true },
+    ],
+  );
+  assert.equal(result.status, "alarm");
+  assert.equal(result.lost_schedule_slot_count, 1);
+  assert.equal(result.resolved_lost_schedule_slot_count, 1);
+  assert.deepEqual(result.lost_schedule_slot_run_urls, ["https://gh/run/30700000020"]);
+}
+
+// --- The classifier must actually be wired to run data ----------------------
+{
+  const asked = [];
+  const runs = await annotateQueueEvictions({
+    runs: [F(3), F(2), S(1)],
+    fetchJobsFn: async (id) => {
+      asked.push(id);
+      return id === 3 ? evictedJobs.jobs : ranJobs.jobs;
+    },
+  });
+  assert.deepEqual(asked, [3, 2], "only the leading failure-class prefix is inspected");
+  assert.equal(runs[0].queue_evicted, true);
+  assert.equal(runs[1].queue_evicted, undefined, "a run that executed steps is left alone");
+  assert.equal(runs[2].queue_evicted, undefined, "the success past the prefix is never fetched");
+}
+
+{
+  const asked = [];
+  await annotateQueueEvictions({
+    runs: [S(9), F(8)],
+    fetchJobsFn: async (id) => { asked.push(id); return []; },
+  });
+  assert.deepEqual(asked, [], "a healthy latest run spends no API calls at all");
+}
+
+{
+  const asked = [];
+  const runs = await annotateQueueEvictions({
+    runs: [{ ...C(30694384064), event: "schedule" }, { ...S(1), event: "schedule" }],
+    fetchJobsFn: async (id) => { asked.push(id); return []; },
+  });
+  assert.deepEqual(asked, [30694384064], "a leading cancelled schedule must inspect job execution evidence");
+  assert.equal(runs[0].jobs_empty, true);
+  const result = evaluateWorkflow(
+    { file: "fetch-oecd-cli.yml", label: "OECD", events: ["schedule"] },
+    runs,
+  );
+  assert.equal(result.status, "alarm");
+  assert.equal(result.lost_schedule_slot_count, 1);
+}
+
+{
+  const asked = [];
+  await annotateQueueEvictions({
+    runs: [F(9), F(8), F(7), F(6), F(5), F(4), F(3)],
+    fetchJobsFn: async (id) => { asked.push(id); return []; },
+    limit: QUEUE_EVICTION_INSPECTION_LIMIT,
+  });
+  assert.equal(asked.length, QUEUE_EVICTION_INSPECTION_LIMIT,
+    "a long red history must not turn one health check into a rate-limit incident");
+}
+
+{
+  // Fail-open: a job lookup that throws leaves the run-list verdict untouched.
+  const runs = await annotateQueueEvictions({
+    runs: [F(4)],
+    fetchJobsFn: async () => { throw new Error("HTTP 502"); },
+  });
+  assert.equal(runs[0].queue_evicted, undefined);
+  assert.equal(computeFailureStreak(runs).streak, 1, "an unreadable run stays a failure");
 }
 
 // 2 consecutive failures -> alarm
@@ -579,16 +758,14 @@ function writeWorkflow(root, file, source) {
   const result = JSON.parse(fs.readFileSync(resultPath, "utf8"));
   assert.equal(result.status, "unknown", "missing repository reports unknown status");
   assert.ok(!("issueBody" in result), "unknown status must not produce an alarm issue body");
-  assert.equal(result.watched.length, 31, "the first cadence dry run covers the current 31 watched workflows");
-  assert.equal(result.workflows.length, result.watched.length, "the first cadence dry run emits one classified row per watched workflow");
-  assert.deepEqual(Object.keys(result.cadence_state_counts), CADENCE_STATES);
   assert.equal(
-    Object.values(result.cadence_state_counts).reduce((sum, count) => sum + count, 0),
     result.watched.length,
-    "the five-state count must reconcile to the complete watch inventory",
+    deriveWorkflowWatchPolicy().watched.length,
+    "the offline result covers every current watched workflow",
   );
-  assert.equal(result.workflows.some((row) => row.cadence_status === "overdue" && row.status === "alarm"), false,
-    "cadence overdue cannot manufacture a paging alarm during the first evaluation");
+  assert.equal(result.workflows.length, result.watched.length, "the offline result emits one row per watched workflow");
+  assert.equal(result.data_health_kpi.status, "unknown", "missing repository cannot make KPI history look healthy");
+  assert.ok(result.workflows.every((workflow) => workflow.status === "unknown"));
 }
 
 // Workflow YAML sanity: mirror the budget-alarm shape and honor #357 (no runner
@@ -668,10 +845,42 @@ function writeWorkflow(root, file, source) {
   assert.match(workflow, /steps\.pipeline\.outcome == 'failure'/);
   assert.equal(
     (workflow.match(/if: steps\.pipeline\.outcome == 'failure'/g) || []).length,
-    3,
-    "healthy workflow_run completions remain quiet: issue preparation, mutation, and final failure are alarm-only",
+    2,
+    "healthy workflow_run completions remain quiet: issue preparation and issue update are alarm-only, and the run concludes green when reporting succeeded",
   );
   assert.doesNotMatch(workflow, /\$\{\{\s*runner\./, "must not reference the runner context in expressions (#357)");
 }
+
+// fh-258 adjudication boundary: only a row that actually carries a
+// missed-window verdict triggers the widened re-read, and the runs URL keeps
+// its default page size while exposing the override the re-read uses.
+assert.equal(needsMissedWindowReverification({ missed_schedule_window_hours: 624.78 }), true);
+assert.equal(needsMissedWindowReverification({ missed_schedule_window_hours: null }), false);
+assert.equal(
+  needsMissedWindowReverification({
+    alarming: true,
+    alarm_reasons: ["failure_streak"],
+    missed_schedule_window_hours: null,
+  }),
+  false,
+  "failure-streak rows must not trigger the re-read",
+);
+assert.equal(needsMissedWindowReverification({}), false);
+assert.equal(needsMissedWindowReverification(null), false);
+assert.match(buildWorkflowRunsUrl({ owner: "o", repo: "r", file: "x.yml" }), /per_page=15/);
+assert.match(
+  buildWorkflowRunsUrl({ owner: "o", repo: "r", file: "x.yml" }),
+  /status=completed/,
+  "the completed-run query remains the default",
+);
+assert.match(
+  buildWorkflowRunsUrl({ owner: "o", repo: "r", file: "x.yml", event: "schedule", perPage: 100 }),
+  /per_page=100/,
+);
+assert.match(
+  buildWorkflowRunsUrl({ owner: "o", repo: "r", file: "x.yml", event: "schedule", status: "in_progress" }),
+  /status=in_progress.*event=schedule/,
+  "the restore liveness query can inspect active scheduled runs",
+);
 
 console.log("check-pipeline-job-health tests passed");

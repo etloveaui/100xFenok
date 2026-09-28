@@ -1,18 +1,10 @@
 "use client";
 
-import {
-  CpAccordion,
-  CpCTARow,
-  CpGaugeCard,
-  CpMeterRow,
-  CpSectionCard,
-  CpVerdictHero,
-  type CpTone,
-} from "@/components/canvas-plus/kit";
 import MarketSectionNav from "@/components/market/MarketSectionNav";
 import TransitionLink from "@/components/TransitionLink";
+import { DistributionBand, EvidenceRail, Panel, PanelHeader, Pill } from "@/components/ui";
 import { useMarketValuation } from "@/hooks/useMarketValuation";
-import { DATA_STATE_LABELS, formatAsOf } from "@/lib/data-state";
+import { DATA_STATE_LABELS, dateOnly, formatAsOf, isStaleAsOf } from "@/lib/data-state";
 import type {
   MarketBondPulse,
   MarketIndexValuation,
@@ -21,7 +13,6 @@ import type {
   MarketSignalPulse,
   MarketStructurePulse,
   MarketTone,
-  ValuationDataSource,
 } from "@/lib/market-valuation/types";
 import { ROUTES } from "@/lib/routes";
 
@@ -31,6 +22,7 @@ type Pulse = {
   valueLabel: string;
   detail: string;
   asOf: string | null;
+  period?: string | null;
   tone: MarketTone;
 };
 
@@ -40,7 +32,11 @@ type Axis = {
   summary: string;
   tone: MarketTone;
   pulses: Pulse[];
+  ready: boolean;
+  asOf: string | null;
 };
+
+type PillTone = "neutral" | "up" | "down" | "warn";
 
 type RegimeAction = {
   key: string;
@@ -52,29 +48,36 @@ type RegimeAction = {
 const REGIME_ACTIONS: RegimeAction[] = [
   {
     key: "events",
-    label: "이벤트",
-    detail: "이번 주 리스크 일정 확인",
+    label: "이벤트 확인",
+    detail: "이번 주 리스크 일정",
     href: ROUTES.marketEvents,
   },
   {
     key: "sectors",
-    label: "섹터",
-    detail: "국면과 맞는 업종 강도 확인",
+    label: "섹터 강도 확인",
+    detail: "시황과 맞는 업종 강도",
     href: ROUTES.sectors,
   },
   {
     key: "screener",
-    label: "스크리너",
-    detail: "조건에 맞는 종목 후보 압축",
+    label: "스크리너 압축",
+    detail: "조건에 맞는 종목 후보",
     href: ROUTES.screener,
   },
   {
     key: "portfolio",
-    label: "포트폴리오",
-    detail: "내 보유와 위험 노출 점검",
+    label: "포트폴리오 점검",
+    detail: "내 보유와 위험 노출점",
     href: ROUTES.portfolio,
   },
 ];
+
+const AXIS_SUMMARIES: Record<string, string> = {
+  structure: "고점 대비 위치와 상위 종목 집중도를 함께 봅니다.",
+  signals: "가공 신호가 안정, 주의, 경계 중 어디에 놓였는지 확인합니다.",
+  macro: "PMI와 금리·스프레드가 성장과 스트레스를 어떻게 가르는지 봅니다.",
+  valuation: "지수 멀티플 부담과 주식위험프리미엄 보상을 같이 봅니다.",
+};
 
 function toneRank(tone: MarketTone): number {
   if (tone === "rose") return 3;
@@ -94,20 +97,18 @@ function toneLabel(tone: MarketTone): string {
   return "중립";
 }
 
-/** Maps the route's 4-value MarketTone (rose/amber/emerald/slate) onto the kit's CpTone. */
-function carrierTone(tone: MarketTone): CpTone {
-  if (tone === "rose") return "negative";
-  if (tone === "amber") return "warning";
-  if (tone === "emerald") return "positive";
+function axisPillTone(tone: MarketTone): PillTone {
+  if (tone === "rose") return "down";
+  if (tone === "amber") return "warn";
+  if (tone === "emerald") return "up";
   return "neutral";
 }
 
-/** Discrete axis tone → a position on the 경계→양호 meter track (see brief-regime.md D). */
-function axisPercent(tone: MarketTone): number {
-  if (tone === "rose") return 15;
-  if (tone === "amber") return 40;
-  if (tone === "emerald") return 85;
-  return 55;
+function axisLabelClass(tone: MarketTone): string {
+  if (tone === "rose") return "rgm-down";
+  if (tone === "amber") return "rgm-warn";
+  if (tone === "emerald") return "rgm-up";
+  return "rgm-mute";
 }
 
 function formatNumber(value: number | null, digits = 1): string {
@@ -122,11 +123,73 @@ function formatRatePercent(value: number | null, digits = 2): string {
   return value === null ? "-" : `${(value * 100).toFixed(digits)}%`;
 }
 
-function completeOldestSourceDate(values: Array<string | null>): string | null {
-  if (values.length === 0 || values.some((value) => typeof value !== "string" || value.trim().length === 0)) {
-    return null;
-  }
-  return (values as string[]).sort().at(0) ?? null;
+function axisBarClass(tone: MarketTone): string {
+  if (tone === "rose") return "rgm-bar-down";
+  if (tone === "amber") return "rgm-bar-warn";
+  if (tone === "emerald") return "rgm-bar-up";
+  return "";
+}
+
+const ENGLISH_MONTHS: Record<string, number> = {
+  January: 1,
+  February: 2,
+  March: 3,
+  April: 4,
+  May: 5,
+  June: 6,
+  July: 7,
+  August: 8,
+  September: 9,
+  October: 10,
+  November: 11,
+  December: 12,
+};
+
+function canonicalObservationDate(value: string | null): string | null {
+  const isoDate = dateOnly(value);
+  if (isoDate) return isoDate;
+  const match = typeof value === "string" ? /^([A-Z][a-z]+) (\d{1,2}), (\d{4})$/.exec(value.trim()) : null;
+  if (!match) return null;
+  const month = ENGLISH_MONTHS[match[1]];
+  const day = Number(match[2]);
+  const year = Number(match[3]);
+  if (!month || day < 1 || day > 31) return null;
+  const candidate = new Date(Date.UTC(year, month - 1, day));
+  if (candidate.getUTCFullYear() !== year || candidate.getUTCMonth() !== month - 1 || candidate.getUTCDate() !== day) return null;
+  return `${year}-${String(month).padStart(2, "0")}-${String(day).padStart(2, "0")}`;
+}
+
+/** Oldest real observation/release date, used only for rail disclosure. */
+function oldestDatedSourceDate(values: Array<string | null>): string | null {
+  const dated = values.map(canonicalObservationDate).filter((value): value is string => value !== null);
+  if (dated.length === 0) return null;
+  return dated.sort().at(0) ?? null;
+}
+
+function latestDatedSourceDate(values: Array<string | null>): string | null {
+  const dated = values.map(canonicalObservationDate).filter((value): value is string => value !== null);
+  if (dated.length === 0) return null;
+  return dated.sort().at(-1) ?? null;
+}
+
+function formatPeriod(value: string | null | undefined): string | null {
+  if (typeof value !== "string" || value.trim().length === 0) return null;
+  const trimmed = value.trim();
+  const quarter = /^(\d{4})-?Q([1-4])$/i.exec(trimmed);
+  if (quarter) return `${quarter[1]}Q${quarter[2]}`;
+  return trimmed;
+}
+
+function axisAsOfLabel(axis: Axis): string {
+  const labels: string[] = [];
+  if (axis.asOf) labels.push(`기준 ${formatAsOf(axis.asOf) ?? axis.asOf}`);
+  const latestPeriod = axis.pulses
+    .map((pulse) => formatPeriod(pulse.period))
+    .filter((period): period is string => period !== null)
+    .sort()
+    .at(-1);
+  if (latestPeriod) labels.push(`기간 ${latestPeriod}`);
+  return labels.join(" · ") || "관측일 미제공";
 }
 
 function signalStatusLabel(item: MarketSignalPulse): string {
@@ -214,7 +277,10 @@ function toMacroPulse(item: MarketMacroPulse): Pulse {
     label: item.label,
     valueLabel: `${formatNumber(item.value)} ${item.unit}`.trim(),
     detail: readableDetail(item.detail),
-    asOf: item.releaseDate ?? item.period,
+    // A period is not an observation day. Keep it as a labelled period and
+    // reserve `asOf` for a real release/observation date.
+    asOf: item.releaseDate,
+    period: item.period,
     tone: item.tone,
   };
 }
@@ -262,149 +328,408 @@ function toneCounts(pulses: Pulse[]) {
   };
 }
 
-function buildHeadline(axes: Axis[]) {
-  const pulses = axes.flatMap((axis) => axis.pulses);
-  const { alert: alertCount, caution: cautionCount, friendly: friendlyCount } = toneCounts(pulses);
-  const topTone = strongestTone(pulses);
-
-  if (alertCount > 0) {
-    return {
-      label: "경계 신호 확인",
-      tone: topTone,
-      detail: `경계 ${alertCount}개, 주의 ${cautionCount}개를 먼저 확인해야 합니다.`,
-    };
-  }
-  if (cautionCount > friendlyCount) {
-    return {
-      label: "주의 우세",
-      tone: "amber" as MarketTone,
-      detail: `주의 ${cautionCount}개, 긍정 ${friendlyCount}개입니다. 방향성보다 리스크 점검이 먼저입니다.`,
-    };
-  }
-  if (friendlyCount > 0) {
-    return {
-      label: "긍정 신호 우세",
-      tone: "emerald" as MarketTone,
-      detail: `긍정 신호 ${friendlyCount}개가 확인됩니다. 단, 밸류에이션과 심리 과열 여부는 함께 봐야 합니다.`,
-    };
-  }
-  return {
-    label: "중립 혼합",
-    tone: "slate" as MarketTone,
-    detail: "강한 한쪽 신호보다 중립 신호가 많은 상태입니다.",
-  };
-}
-
 /**
- * Composite gauge position — a pure client-side transform of already-loaded tone counts
+ * Composite position — a pure client-side transform of already-loaded tone counts
  * (friendlyCount − cautionCount − alertCount×2, normalized to 0-100). No new data source;
- * see brief-regime.md section G/H — a true numeric regime score is not emitted by the hook.
+ * a true numeric regime score is not emitted by the hook. Returns null when there is
+ * nothing to read: callers gate bodies on null instead of rendering a neutral 50.
  */
 function gaugeReading(pulses: Pulse[]) {
   const { alert, caution, friendly } = toneCounts(pulses);
   const total = pulses.length;
   if (total === 0) {
-    return { percent: 50, tone: "neutral" as CpTone, position: "중립", alert, caution, friendly, total };
+    return null;
   }
   const raw = friendly - caution - alert * 2;
   const min = -2 * total;
   const max = total;
   const percent = ((raw - min) / (max - min)) * 100;
-  const tone: CpTone = alert > 0 ? "negative" : caution > friendly ? "warning" : friendly > 0 ? "positive" : "neutral";
   const position = percent < 20 ? "경계" : percent < 40 ? "주의" : percent < 60 ? "중립" : percent < 80 ? "양호" : "강한 양호";
-  return { percent, tone, position, alert, caution, friendly, total };
+  return { percent, position, alert, caution, friendly, total };
 }
 
-function readableSourceLabel(source: ValuationDataSource): string {
-  const labels: Record<string, string> = {
-    benchmarks: "지수 밴드",
-    yardney: "채권 PER 모델",
-    damodaran: "주식위험프리미엄",
-    macro: "경기 지표",
-    computed: "가공 신호",
-    sentiment: "투자심리",
-    indices: "지수 추세",
-    slickcharts: "시장 구조",
-  };
-  return labels[source.id] ?? source.label;
+function openEvidence(path: string) {
+  window.open(path, "_blank", "noopener");
 }
 
-function readableSourceUsage(source: ValuationDataSource): string {
-  const usage: Record<string, string> = {
-    computed: "유동성·스트레스·은행·투자심리 가공 신호",
-    sentiment: "VIX·공포탐욕·개인투자자 심리·채권 변동성·옵션 심리",
-    indices: "S&P 500·나스닥 추세와 고점 대비 위치",
-    slickcharts: "지수 집중도·고점 대비 위치·연간 수익률",
-  };
-  return usage[source.id] ?? source.usage;
+/* Composite gauge zones — the same 20/40/60/80 cuts `gaugeReading` labels and the
+ * CSS track below paints. */
+const GAUGE_TICKS = [20, 40, 60, 80];
+
+/**
+ * One axis's pulse tones as distribution segments. The live counts already exist
+ * client-side, so nothing new is fetched; 중립 is the remainder of the axis's own
+ * signals, and every tone is emitted (zeros included) so the band always accounts
+ * for the axis's whole signal count.
+ */
+function toneDistribution(pulses: Pulse[]) {
+  const { alert, caution, friendly } = toneCounts(pulses);
+  const neutral = pulses.length - alert - caution - friendly;
+  return [
+    { key: "양호", count: friendly, tone: "gain" as const },
+    { key: "주의", count: caution, tone: "warn" as const },
+    { key: "경계", count: alert, tone: "loss" as const },
+    { key: "중립", count: neutral, tone: "neutral" as const },
+  ];
 }
 
-function readableCadence(value: string | null): string {
-  if (!value) return "";
-  const labels: Record<string, string> = {
-    daily: "일간",
-    weekly: "주간",
-    monthly: "월간",
-    quarterly: "분기",
-    yearly: "연간",
-    "after source data refresh": "원천 갱신 후",
-    "daily/weekly": "일간/주간",
-    "daily/weekly/monthly/quarterly": "일간/주간/월간/분기",
-    "daily/weekly/monthly": "일간/주간/월간",
-    "yearly + ERP interim": "연간 + ERP 수시",
-  };
-  return labels[value] ?? "갱신 주기 미지정";
+/** The word one axis's composition reads as, for the calm half of the sentence. */
+function dominantWord(pulses: Pulse[]): string {
+  return toneLabel(strongestTone(pulses));
 }
 
-function readableSourceDate(source: ValuationDataSource): string {
-  if (source.updated) return `원천 기준 ${formatAsOf(source.updated)}`;
-  if (source.updatedReason) return "원천 기준일 미공개";
-  return "원천 기준일 확인 필요";
-}
+/**
+ * One-line read of the axis composition band, generated from the live counts.
+ * Axes that carry a 주의/경계 signal are named with their counts; calm axes are
+ * named without counts; an axis with no signals is stated as such instead of
+ * disappearing from the sentence.
+ */
+function compositionSentence(axes: Axis[]): string {
+  const tense = axes
+    .filter((axis) => axis.pulses.length > 0 && (axis.tone === "rose" || axis.tone === "amber"))
+    .sort((left, right) => toneRank(right.tone) - toneRank(left.tone));
+  const calm = axes.filter(
+    (axis) => axis.pulses.length > 0 && axis.tone !== "rose" && axis.tone !== "amber",
+  );
+  const silentCount = axes.filter((axis) => axis.pulses.length === 0).length;
 
-function EvidenceList({ items }: { items: Pulse[] }) {
-  if (items.length === 0) {
-    return <p className="cpw5-regime-evidence-row__detail">표시할 신호가 없습니다.</p>;
+  const tenseText = tense
+    .map((axis) => {
+      const { alert, caution } = toneCounts(axis.pulses);
+      const parts = [alert > 0 ? `경계 ${alert}개` : null, caution > 0 ? `주의 ${caution}개` : null];
+      return `${axis.title} 축에 ${parts.filter((part): part is string => part !== null).join(" · ")}`;
+    })
+    .join(", ");
+
+  const calmText =
+    calm.length === 0
+      ? ""
+      : `${tense.length > 0 ? "나머지 " : ""}${calm.map((axis) => axis.title).join("·")} 축은 ${[...new Set(calm.map((axis) => dominantWord(axis.pulses)))].join("·")}입니다`;
+
+  const silentText = silentCount === 0 ? "" : `신호가 없는 ${silentCount}개 축은 그대로 신호 없음입니다`;
+
+  if (tense.length === 0) {
+    const calmOnly = [calmText, silentText].filter((part) => part.length > 0).join(", ");
+    return calmOnly.length === 0 ? "" : `지금은 ${calmOnly}.`;
   }
+  return `지금은 ${[tenseText, calmText, silentText].filter((part) => part.length > 0).join(", ")}.`;
+}
+
+function headerSentence(
+  axes: Axis[],
+  gauge: ReturnType<typeof gaugeReading>,
+  loading: boolean,
+  failed: boolean,
+): string {
+  if (loading) return "시장 신호를 불러오는 중입니다.";
+  if (failed) return "시황 데이터를 불러오지 못했습니다.";
+  if (gauge === null) return "표시할 신호가 아직 없습니다. 다음 마감 후 다시 확인해 주세요.";
+  const hot = axes.filter((axis) => axis.pulses.length > 0 && (axis.tone === "rose" || axis.tone === "amber"));
+  if (hot.length === 0) {
+    return `긍정 신호 ${gauge.friendly}개 · ${gauge.position} — 과열 신호가 없습니다.`;
+  }
+  return `긍정 ${gauge.friendly} · 주의 ${gauge.caution} · 경계 ${gauge.alert} — 살펴볼 축: ${hot.map((axis) => axis.title).join("·")}.`;
+}
+
+function CompositePanel({
+  axes,
+  gauge,
+  loading,
+  failed,
+  ready,
+  partial,
+  stale,
+  asOf,
+  oldestInputAsOf,
+  onRefetch,
+}: {
+  axes: Axis[];
+  gauge: ReturnType<typeof gaugeReading>;
+  loading: boolean;
+  failed: boolean;
+  ready: boolean;
+  partial: boolean;
+  stale: boolean;
+  asOf: string | null;
+  oldestInputAsOf: string | null;
+  onRefetch: () => void;
+}) {
+  const score = gauge === null ? null : Math.round(gauge.percent);
+  const emptyActive = failed || (!loading && !ready);
   return (
-    <div className="cpw5-regime-evidence-list">
-      {items.map((item) => (
-        <div key={item.id} className="cpw5-regime-evidence-row" data-regime-evidence-row={item.id}>
-          <div className="cpw5-regime-evidence-row__main">
-            <p className="cpw5-regime-evidence-row__label">{item.label}</p>
-            <p className="cpw5-regime-evidence-row__detail">{item.detail}</p>
-            {item.asOf ? <p className="cpw5-regime-evidence-row__asof">기준 {formatAsOf(item.asOf)}</p> : null}
+    <Panel
+      loading={loading}
+      empty={emptyActive}
+      emptyReason={failed ? "시황 데이터를 불러오지 못했습니다" : "표시할 신호가 아직 없습니다"}
+      emptyNextRefresh="다음 마감 후 갱신"
+      emptyActionLabel="다시 시도"
+      onEmptyAction={onRefetch}
+    >
+      {ready && gauge !== null && score !== null && (
+        <div data-regime-headline>
+          <PanelHeader
+            eyebrow="Overview"
+            title="종합 신호"
+            right={
+              <Pill tone={asOf ? "neutral" : "warn"} data-regime-composite-asof>
+                {asOf ? `기준 ${formatAsOf(asOf)}` : "기준일 확인 필요"}
+              </Pill>
+            }
+          />
+          <div className="rgm-score">
+            <div className="rgm-score-num">
+              <span className="tabular-nums rgm-score-value">{score}</span>
+              <span className="rgm-score-unit">/ 100 · {gauge.position}</span>
+              <span className="rgm-score-counts tabular-nums">
+                긍정 {gauge.friendly} · 주의 {gauge.caution} · 경계 {gauge.alert}
+              </span>
+            </div>
+            {/* Composite gauge: the score's own 0-100 position over the zone cuts
+                gaugeReading labels (20/40/60/80). The track shows the zones, the
+                marker shows where this reading sits; both are tokens, no new scale. */}
+            <div
+              className="rgm-gauge"
+              role="img"
+              aria-label={`종합 ${score}/100 · ${gauge.position} · 구간 눈금 ${GAUGE_TICKS.join(" · ")}점`}
+            >
+              <div className="rgm-gauge-track">
+                <span
+                  className="rgm-gauge-marker"
+                  style={{ left: `clamp(0.5%, ${gauge.percent}%, 99.5%)` }}
+                />
+              </div>
+            </div>
+            <div className="rgm-meters">
+              {axes.map((axis) => {
+                const reading = gaugeReading(axis.pulses);
+                const counts = reading === null ? null : toneCounts(axis.pulses);
+                return (
+                  <div className="rgm-band-row" key={axis.id} data-regime-axis-band={axis.id}>
+                    <div className="rgm-band-top">
+                      <span className="rgm-band-label">{axis.title}</span>
+                      <span className={`rgm-band-word ${axisLabelClass(axis.tone)}`}>{toneLabel(axis.tone)}</span>
+                      <span className="rgm-band-count tabular-nums">
+                        {axis.pulses.length > 0 ? `${axis.pulses.length}개 신호` : "신호 없음"}
+                      </span>
+                    </div>
+                    {counts !== null && (
+                      <DistributionBand
+                        className="rgm-band"
+                        segments={toneDistribution(axis.pulses)}
+                        ariaLabel={`${axis.title} 신호 구성`}
+                      />
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+            {axes.some((axis) => axis.pulses.length > 0) && (
+              <p className="rgm-score-read" data-regime-composition-read>
+                {compositionSentence(axes)}
+              </p>
+            )}
           </div>
-          <span className="cpw5-regime-evidence-row__value" data-tone={carrierTone(item.tone)}>
-            {item.valueLabel}
-          </span>
         </div>
-      ))}
-    </div>
+      )}
+      <div data-regime-composite-rail>
+        <EvidenceRail
+          freshness={loading ? "pending" : failed || !ready ? "error" : partial ? "partial" : stale ? "stale" : "fresh"}
+          source="시황 엔진"
+          asOf={asOf ? (formatAsOf(asOf) ?? asOf) : "—"}
+          coverage={
+            gauge === null
+              ? "0개 신호"
+              : `${gauge.total}개 신호${oldestInputAsOf ? ` · 가장 오래된 입력 ${formatAsOf(oldestInputAsOf) ?? oldestInputAsOf}` : ""}`
+          }
+          onRetry={failed || stale || partial ? onRefetch : undefined}
+          onEvidence={ready && !failed ? () => openEvidence("/data/computed/signals.json") : undefined}
+        />
+      </div>
+    </Panel>
   );
 }
 
-function AxisAccordion({ axis }: { axis: Axis }) {
-  // CpAccordionProps intersects DetailsHTMLAttributes (native `title?: string` tooltip attr)
-  // with its own `title: ReactNode`, so the merged type only accepts `string`. Cast around the
-  // kit's own type collision rather than editing the read-only kit file.
-  const axisTitle = (
-    <span className="cpw5-regime-axis-title-row">
-      <span className="cpw5-regime-tone-pill" data-tone={carrierTone(axis.tone)} data-regime-axis-tone>
-        {toneLabel(axis.tone)}
-      </span>
-      {axis.title}
-    </span>
-  ) as unknown as string;
-
+function AxisTablePanel({
+  axes,
+  loading,
+  failed,
+  ready,
+  undatedStructure,
+  onRefetch,
+}: {
+  axes: Axis[];
+  loading: boolean;
+  failed: boolean;
+  ready: boolean;
+  undatedStructure: boolean;
+  onRefetch: () => void;
+}) {
   return (
-    <CpAccordion title={axisTitle} meta={`${axis.summary} · ${axis.pulses.length}개 신호`} data-regime-axis-card={axis.id}>
-      <EvidenceList items={axis.pulses} />
-    </CpAccordion>
+    <Panel
+      loading={loading}
+      empty={failed || (!loading && !ready)}
+      emptyReason={failed ? "축별 신호 요약을 불러오지 못했습니다" : "표시할 신호가 아직 없습니다"}
+      emptyNextRefresh="다음 마감 후 갱신"
+      emptyActionLabel="다시 시도"
+      onEmptyAction={onRefetch}
+    >
+      {ready && (
+        <>
+          <PanelHeader eyebrow="Axis Breakdown" title="축별 신호 요약" right={<Pill>4개 축</Pill>} />
+          <div role="table" aria-label="축별 신호 요약">
+            <div className="rgm-thead" role="row">
+              <span role="columnheader">축</span>
+              <span role="columnheader">요약</span>
+              <span role="columnheader">신호수</span>
+              <span role="columnheader">상태</span>
+            </div>
+            {axes.map((axis) => (
+              // Unavailable axes render the shared empty row, never a
+              // zero-signal row: "0개 · 신호 없음" would read as a genuine
+              // all-clear reading instead of a missing feed.
+              !axis.ready ? (
+                <div className="rgm-trow" role="row" key={axis.id} data-regime-axis-unavailable={axis.id}>
+                  <span className="rgm-axis" role="cell">
+                    <span>{axis.title}</span>
+                    <span className="rgm-axis-asof" data-regime-axis-asof>관측일 확인 필요</span>
+                  </span>
+                  <span className="rgm-sum" role="cell">피드를 받지 못했습니다 · 다음 마감 후 갱신</span>
+                  <span className="tabular-nums" role="cell">—</span>
+                  <span role="cell">
+                    <Pill tone="neutral">미수신</Pill>
+                  </span>
+                </div>
+              ) : (
+              <div className="rgm-trow" role="row" key={axis.id} data-regime-axis-summary-card={axis.id}>
+                <span className="rgm-axis" role="cell">
+                  <span>{axis.title}</span>
+                  <span className="rgm-axis-asof" data-regime-axis-asof title={axisAsOfLabel(axis)}>
+                    {axisAsOfLabel(axis)}
+                  </span>
+                </span>
+                <span className="rgm-sum" role="cell">{axis.summary}</span>
+                <span className="tabular-nums" role="cell">{axis.pulses.length}개</span>
+                <span role="cell">
+                  {axis.pulses.length > 0 ? (
+                    <Pill tone={axisPillTone(axis.tone)}>{toneLabel(axis.tone)}</Pill>
+                  ) : (
+                    <Pill tone="neutral">신호 없음</Pill>
+                  )}
+                </span>
+              </div>
+              )
+            ))}
+          </div>
+          {undatedStructure && (
+            <div className="rgm-floor-note" data-regime-floor-note>
+              시장 구조 신호는 관측일이 제공되지 않아 기준일 계산에서 제외됩니다.
+            </div>
+          )}
+        </>
+      )}
+    </Panel>
+  );
+}
+
+/** 주간 시황 기록 한 칸: 그 주의 기준일과 판정 톤(양호·주의·경계·중립). */
+type RegimeHistoryWeek = {
+  week: string;
+  tone: MarketTone;
+};
+
+/**
+ * 시황 기록 — 최근 12주.
+ *
+ * 이 패널은 지금 늘 빈 상태였다: 날짜별 시황 피드가 없고(생산자·산출물·스키마
+ * 없음) 그래서 채울 데이터 자체가 없다. archive가 빈 동안에는 카드와 빈 상태를
+ * 그리지 않고 한 줄로 접어 두고, 소스가 생겨 archive가 차면 같은
+ * data-regime-history 자리에서 12주 스트립으로 자동으로 펼쳐진다.
+ */
+function HistoryPanel({
+  archive,
+  onRefetch,
+}: {
+  archive: RegimeHistoryWeek[];
+  onRefetch: () => void;
+}) {
+  if (archive.length === 0) {
+    return (
+      <p className="rgm-history-note" data-regime-history>
+        시황 기록 — 최근 12주: 날짜별 데이터가 아직 없습니다.
+      </p>
+    );
+  }
+
+  const weeks = archive.slice(-12);
+  const latest = weeks[weeks.length - 1];
+  const latestStale = isStaleAsOf(latest.week);
+  return (
+    <Panel>
+      <div data-regime-history>
+        <PanelHeader eyebrow="History" title="시황 기록 — 최근 12주" right={<Pill>주간</Pill>} />
+        <div className="rgm-history">
+          <div
+            className="rgm-history-strip"
+            role="img"
+            aria-label={`최근 ${weeks.length}주: ${weeks.map((item) => `${dateOnly(item.week) ?? item.week} ${toneLabel(item.tone)}`).join(", ")}`}
+          >
+            {weeks.map((item) => (
+              <span
+                key={item.week}
+                className={`rgm-hweek ${axisBarClass(item.tone)}`}
+                data-current={item.week === latest.week ? "true" : undefined}
+              />
+            ))}
+          </div>
+          <div className="rgm-history-axis">
+            <span className="tabular-nums">{dateOnly(weeks[0].week) ?? weeks[0].week}</span>
+            <span>현재</span>
+          </div>
+          <div className="rgm-history-legend">
+            <span><i className="rgm-hkey rgm-bar-up" aria-hidden="true" />양호</span>
+            <span><i className="rgm-hkey rgm-bar-warn" aria-hidden="true" />주의</span>
+            <span><i className="rgm-hkey rgm-hkey-current" aria-hidden="true" />현재 주</span>
+          </div>
+        </div>
+        <EvidenceRail
+          freshness={latestStale ? "stale" : "fresh"}
+          source="시황 엔진 기록"
+          asOf={formatAsOf(latest.week) ?? latest.week}
+          coverage={`${weeks.length}/12주`}
+          onRetry={latestStale ? onRefetch : undefined}
+        />
+      </div>
+    </Panel>
+  );
+}
+
+function ActionsPanel() {
+  return (
+    <Panel>
+      <PanelHeader eyebrow="Next Actions" title="다음 확인" right={<Pill>4개</Pill>} />
+      <div data-regime-action-rail>
+        {REGIME_ACTIONS.map((action) => (
+          <TransitionLink
+            key={action.key}
+            href={action.href}
+            className="rgm-arow"
+            data-regime-action={action.key}
+          >
+            <span className="rgm-atext">
+              <span className="rgm-alabel">{action.label}</span>
+              <span className="rgm-adetail">{action.detail}</span>
+            </span>
+            <span className="rgm-abtn" aria-hidden="true">열기</span>
+          </TransitionLink>
+        ))}
+      </div>
+    </Panel>
   );
 }
 
 export default function RegimeClient() {
+  // 이 화면의 모든 섹션은 같은 피드 하나를 읽는다(useMarketValuation). 재시도는
+  // 그 피드만 다시 읽고 페이지를 새로 고치지 않는다 — 다른 화면·스크롤 상태 유지.
   const {
     indices,
     macroPulses,
@@ -413,10 +738,11 @@ export default function RegimeClient() {
     structurePulses,
     erpInsight,
     bondPulses,
-    dataSources,
+    sharedDailyObservationDate,
     dataReady,
     failed,
-    sourceDate,
+    feedReady,
+    refetch,
   } = useMarketValuation();
 
   const sp500 = indices.find((index) => index.id === "sp500");
@@ -432,184 +758,101 @@ export default function RegimeClient() {
       }
     : null;
 
+  const structurePulseList = structurePulses.slice(0, 4).map(toStructurePulse);
+  const signalPulseList = signalPulses.map(toSignalPulse);
+  const macroPulseList = [...macroPulses.slice(0, 3).map(toMacroPulse), ...bondPulses.slice(0, 2).map(toBondPulse)];
+  const valuationPulseList = [valuationPulse, erpPulse, ...sentimentPulses.slice(0, 2).map(toSentimentPulse)].filter((item): item is Pulse => item !== null);
+
   const axes: Axis[] = [
     {
       id: "structure",
       title: "시장 구조",
-      summary: "고점 대비 위치와 상위 종목 집중도를 함께 봅니다.",
-      pulses: structurePulses.slice(0, 4).map(toStructurePulse),
-      tone: strongestTone(structurePulses.slice(0, 4).map(toStructurePulse)),
+      summary: AXIS_SUMMARIES.structure,
+      pulses: structurePulseList,
+      tone: strongestTone(structurePulseList),
+      ready: feedReady.structure,
+      asOf: latestDatedSourceDate(structurePulseList.map((pulse) => pulse.asOf)),
     },
     {
       id: "signals",
       title: "유동성·리스크",
-      summary: "가공 신호가 안정, 주의, 경계 중 어디에 놓였는지 확인합니다.",
-      pulses: signalPulses.map(toSignalPulse),
-      tone: strongestTone(signalPulses.map(toSignalPulse)),
+      summary: AXIS_SUMMARIES.signals,
+      pulses: signalPulseList,
+      tone: strongestTone(signalPulseList),
+      ready: feedReady.computed,
+      asOf: latestDatedSourceDate(signalPulseList.map((pulse) => pulse.asOf)),
     },
     {
       id: "macro",
       title: "경기·금리",
-      summary: "PMI와 금리·스프레드가 성장과 스트레스를 어떻게 가리키는지 봅니다.",
-      pulses: [...macroPulses.slice(0, 3).map(toMacroPulse), ...bondPulses.slice(0, 2).map(toBondPulse)],
-      tone: strongestTone([...macroPulses.slice(0, 3).map(toMacroPulse), ...bondPulses.slice(0, 2).map(toBondPulse)]),
+      summary: AXIS_SUMMARIES.macro,
+      pulses: macroPulseList,
+      tone: strongestTone(macroPulseList),
+      // Per-axis completeness: ready is AND over child feeds, so a missing
+      // bond feed can never hide behind present macro pulses.
+      ready: feedReady.macro && feedReady.bond,
+      asOf: latestDatedSourceDate(macroPulseList.map((pulse) => pulse.asOf)),
     },
     {
       id: "valuation",
       title: "밸류에이션·보상",
-      summary: "지수 멀티플 부담과 주식위험프리미엄 보상을 같이 봅니다.",
-      pulses: [valuationPulse, erpPulse, ...sentimentPulses.slice(0, 2).map(toSentimentPulse)].filter((item): item is Pulse => item !== null),
-      tone: strongestTone([valuationPulse, erpPulse, ...sentimentPulses.slice(0, 2).map(toSentimentPulse)].filter((item): item is Pulse => item !== null)),
+      summary: AXIS_SUMMARIES.valuation,
+      pulses: valuationPulseList,
+      tone: strongestTone(valuationPulseList),
+      // Per-axis completeness: ready is AND over child feeds (index band,
+      // ERP insight, sentiment), never OR.
+      ready: feedReady.valuation && feedReady.erp && feedReady.sentiment,
+      asOf: latestDatedSourceDate(valuationPulseList.map((pulse) => pulse.asOf)),
     },
   ];
 
-  const headline = buildHeadline(axes);
   const allPulses = axes.flatMap((axis) => axis.pulses);
   const gauge = gaugeReading(allPulses);
-  const requiredSourceIds = ["benchmarks", "yardney", "damodaran", "macro", "computed", "sentiment", "indices", "slickcharts"];
-  const visibleSources = dataSources.filter((source) => requiredSourceIds.includes(source.id));
-  const sourceById = new Map(visibleSources.map((source) => [source.id, source]));
-  const completeSourceFloor = completeOldestSourceDate([
-    sourceDate,
-    ...allPulses.map((pulse) => pulse.asOf),
-    ...requiredSourceIds.map((id) => sourceById.get(id)?.updated ?? null),
-  ]);
+  const compositeAsOf = sharedDailyObservationDate;
+  // This disclosure is deliberately separate from the composite basis date.
+  // It includes only real observation/release dates: periods and manifest
+  // collection clocks never enter either calculation.
+  const oldestInputAsOf = oldestDatedSourceDate(allPulses.map((pulse) => pulse.asOf));
 
   const isLoading = !dataReady && !failed;
+  const ready = !isLoading && !failed && gauge !== null;
+  const partial = ready && (axes.some((axis) => !axis.ready) || compositeAsOf === null);
+  const stale = ready && !partial && isStaleAsOf(compositeAsOf);
+  const undatedStructure = axes[0].pulses.length > 0;
+  // 주간 시황 기록 소스가 아직 없다(생산자·산출물·스키마 없음). 소스가 생겨 이
+  // 배열이 채워지면 기록 패널이 자동으로 펼쳐진다.
+  const historyArchive: RegimeHistoryWeek[] = [];
+  // 하단 집계행이 물려받는 축별 요약 수. 히어로 rail은 종합 신호 수를 싣고,
+  // 이 행은 축별·다음확인 두 rail 분량을 한 줄로 합친다.
+  const readyAxes = axes.filter((axis) => axis.ready).length;
+  // The head verdict truncates to one line (§6): the full sentence stays on title.
+  const verdict = headerSentence(axes, gauge, isLoading, failed);
 
   return (
-    <div className="data-shell-page canvas-plus" data-regime-surface data-canvas-plus data-canvas-plus-regime>
-      <section className="panel data-shell-header">
-        <div className="data-shell-head-main">
-          <p className="data-shell-kicker">시장 국면</p>
-          <h1 className="data-shell-title">시장 국면</h1>
-          <p className="data-shell-desc">
-            이미 계산된 시장 구조, 유동성, 경기, 투자심리, 밸류에이션 신호를 한 화면에서 묶어 봅니다.
-          </p>
+    <div className="rgm" data-regime-surface>
+      <div className="rgm-head">
+        <div className="rgm-title-block">
+          <h1 className="rgm-title">시황</h1>
+          <span className="rgm-verdict" title={verdict}>{verdict}</span>
         </div>
-        <div className="data-shell-head-actions">
-          {completeSourceFloor ? (
-            <span className="data-shell-pill">
-              <span />
-              필수 입력 최저 기준일 {formatAsOf(completeSourceFloor)}
-            </span>
-          ) : null}
+        <div className="rgm-tabs">
           <MarketSectionNav active="regime" />
         </div>
-      </section>
+      </div>
 
-      {failed ? (
-        <div className="cpw5-empty" data-variant="skip-note" data-regime-failed>
-          시장 국면 데이터를 불러오지 못했습니다.
-        </div>
-      ) : null}
-
-      {isLoading ? (
-        <div className="cpw5-regime-skeleton" aria-busy="true" data-regime-loading>
-          <div className="cpw5-regime-skeleton__hero" />
-          <div className="cpw5-regime-skeleton__gauge" />
-          <div className="cpw5-regime-skeleton__row" />
-          <div className="cpw5-regime-skeleton__row" />
-          <div className="cpw5-regime-skeleton__row" />
-          <div className="cpw5-regime-skeleton__row" />
-        </div>
-      ) : null}
-
-      {dataReady ? (
-        <>
-          <CpVerdictHero
-            eyebrow="MARKET REGIME · 종합 판독"
-            verdict={headline.label}
-            sub={headline.detail}
-            trustChips={[
-              {
-                label: "필수 입력 최저 기준일",
-                value: formatAsOf(completeSourceFloor) ?? DATA_STATE_LABELS.unavailable,
-                tone: completeSourceFloor ? "neutral" : "warning",
-              },
-            ]}
-            data-regime-headline
-          />
-
-          <CpSectionCard title="국면 포지션" meta={`긍정 ${gauge.friendly} · 주의 ${gauge.caution} · 경계 ${gauge.alert}`}>
-            <div className="cpw5-regime-gauge-wrap">
-              <CpGaugeCard
-                value={gauge.percent}
-                displayValue={gauge.position}
-                unitLabel="시장 국면"
-                tone={gauge.tone}
-                sub={
-                  <>
-                    긍정 신호 <b>{gauge.friendly}개</b>, 주의 신호 <b>{gauge.caution}개</b>, 경계 신호 <b>{gauge.alert}개</b>를 종합한
-                    위치입니다.
-                  </>
-                }
-              />
-            </div>
-          </CpSectionCard>
-
-          <CpSectionCard variant="edge" eyebrow="AXIS · 4축 포지션" title="축별 신호 위치" meta={completeSourceFloor ? `기준 ${formatAsOf(completeSourceFloor)}` : undefined}>
-            {axes.map((axis) => (
-              <CpMeterRow
-                key={axis.id}
-                variant="axis"
-                label={axis.title}
-                value={toneLabel(axis.tone)}
-                percent={axisPercent(axis.tone)}
-                tone={carrierTone(axis.tone)}
-                toneWord={`${axis.pulses.length}개 신호`}
-                data-regime-axis-summary-card={axis.id}
-              />
-            ))}
-          </CpSectionCard>
-
-          <CpSectionCard title="오늘 확인 순서" meta="판독 후 바로 이어갈 작업">
-            <div className="cpw5-regime-action-rail" data-regime-action-rail>
-              {REGIME_ACTIONS.map((action, index) => (
-                <TransitionLink
-                  key={action.key}
-                  href={action.href}
-                  className="cpw5-regime-action-card"
-                  data-regime-action={action.key}
-                >
-                  <span className="cpw5-regime-action-card__num">{index + 1}</span>
-                  <span className="cpw5-regime-action-card__body">
-                    <span className="cpw5-regime-action-card__label">{action.label}</span>
-                    <span className="cpw5-regime-action-card__detail">{action.detail}</span>
-                  </span>
-                </TransitionLink>
-              ))}
-            </div>
-          </CpSectionCard>
-
-          <section className="grid gap-3" data-regime-axis-accordions>
-            {axes.map((axis) => (
-              <AxisAccordion key={axis.id} axis={axis} />
-            ))}
-          </section>
-
-          <CpAccordion title="데이터 신선도 보기" meta="직접 실시간 조회 없이 저장된 데이터만 사용" data-regime-source-accordion>
-            <div className="cpw5-regime-source-grid">
-              {visibleSources.map((source) => (
-                <div key={source.id} className="cpw5-regime-source-tile" data-regime-source-card={source.id}>
-                  <p className="cpw5-regime-source-tile__label">{readableSourceLabel(source)}</p>
-                  <p className="cpw5-regime-source-tile__usage">{readableSourceUsage(source)}</p>
-                  <p className="cpw5-regime-source-tile__meta">
-                    {readableSourceDate(source)}
-                    {source.cadence ? ` · ${readableCadence(source.cadence)}` : ""}
-                  </p>
-                </div>
-              ))}
-            </div>
-          </CpAccordion>
-
-          <CpCTARow
-            primary={{ label: "스크리너로 이어가기", href: ROUTES.screener }}
-            secondary={{ label: "포트폴리오 점검", href: ROUTES.portfolio }}
-            note="투자 조언 아님"
-          />
-        </>
-      ) : null}
+      <CompositePanel axes={axes} gauge={gauge} loading={isLoading} failed={failed} ready={ready} partial={partial} stale={stale} asOf={compositeAsOf} oldestInputAsOf={oldestInputAsOf} onRefetch={refetch} />
+      <AxisTablePanel axes={axes} loading={isLoading} failed={failed} ready={ready} undatedStructure={undatedStructure} onRefetch={refetch} />
+      <HistoryPanel archive={historyArchive} onRefetch={refetch} />
+      <ActionsPanel />
+      <div data-regime-sources>
+        <EvidenceRail
+          freshness={isLoading ? "pending" : failed || !ready ? "error" : partial ? "partial" : stale ? "stale" : "fresh"}
+          source="시황 엔진"
+          asOf={compositeAsOf ? (formatAsOf(compositeAsOf) ?? compositeAsOf) : "—"}
+          coverage={`축별 요약 ${readyAxes}/4 · 다음 확인 4곳`}
+          next="다음 마감 후 갱신"
+        />
+      </div>
     </div>
   );
 }

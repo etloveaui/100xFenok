@@ -1,9 +1,9 @@
 # Benchmarks Data
 
 > **Source**: Bloomberg Terminal (weekly update)
-> **Period**: 2010-01-01 ~ 2026-07-17 (15+ years, 864 S&P 500 data points)
+> **Period**: 2010-01-01 ~ 2026-09-25 (16+ years, 874 data points per index)
 > **Version**: 3.8.0
-> **Last Update**: 2026-07-21
+> **Last Update**: 2026-09-28
 
 ---
 
@@ -129,16 +129,15 @@ console.log(summaries.source_summaries.sp500.momentum.best_pe_ratio.ytd); // val
 
 | Version | Date | Changes |
 |---------|------|---------|
-| 3.8.0 | 2026-07-21 | Weekly update (2026-07-17 source): 32,019 records (+38), 2010-01-01 ~ 2026-07-17, 38 sections, 864 S&P 500 data points; DEC-275 floor preserved (source starts 2010-09-03); source_summaries remain 2,404 non-null + 66 null; ISO-week dup drops=0. |
-| 3.8.0 | 2026-07-13 | Weekly update (2026-07-10 source): 31,981 records (+38), 2010-01-01 ~ 2026-07-10, 38 sections, 863 S&P 500 data points; DEC-275 floor preserved (source starts 2010-08-27); source_summaries remain 2,404 non-null + 66 null; ISO-week dup drops=0. |
-| 3.8.0 | 2026-07-09 | Re-ran the 2026-07-03 source workbook from inbox; regenerated benchmark JSON metadata and re-verified DEC-275 history preservation at 31,943 records, 2010-01-01 ~ 2026-07-03, 38 sections, 862 S&P 500 data points; source_summaries remain 2,404 non-null + 66 null. |
-| 3.8.0 | 2026-07-06 | Weekly data update (2026-07-03 source): micro_sectors +1 section 과창판 (STAR50 Index, 311 rows from 2020-07-24); 31,943 records (+348), 2010-01-01 ~ 2026-07-03, 38 sections, 862 S&P 500 data points; DEC-275 floor preserved (source trimmed to 2010-08-20); source_summaries 2,404 non-null + 66 null; ISO-week dup drops=0. |
-| 3.8.0 | 2026-06-29 | Weekly data update (2026-06-26 source): 31,595 records (+37), 2010-01-01 ~ 2026-06-28, 37 sections, 861 S&P 500 data points; source_summaries 2,353 non-null + 52 null preserved; dup_section_weeks=0. |
-| 3.8.0 | 2026-06-22 | Weekly update (2026-06-19 source) + DEC-275 history-preservation merge: 31,558 records, 2010-01-01 ~ 2026-06-21, 37 sections, 860 S&P 500 data points. Restored the pre-window floor to 2010-01-01 (source had trimmed to 2010-08-06) via source-wins + floor-only + ISO-week grid guard; dup_section_weeks=0. |
-| 3.8.0 | 2026-06-15 | Weekly data update (2026-06-12 source): 31,521 records (+1,080), 2010-01-01 ~ 2026-06-14, 37 sections, 859 S&P 500 data points |
-| 3.8.0 | 2026-06-08 | Weekly data update (2026-06-05 source): 30,441 records (+1), 2010-07-23 ~ 2026-06-05, 37 sections, 829 S&P 500 data points |
-| 3.8.0 | 2026-06-05 | Weekly data update (2026-05-29 source): 30,440 records (+1), 2010-07-16 ~ 2026-05-29, 37 sections, 829 S&P 500 data points |
-| 3.8.0 | 2026-05-27 | Weekly data update (2026-05-22 source): 30,439 records (+1), 2010-07-09 ~ 2026-05-22, 37 sections, 829 data points per index |
+| 3.8.0 | 2026-09-28 | Weekly data update (2026-09-25 source): 32,399 records (+38), 2010-01-01 ~ 2026-09-25, 38 sections, 874 data points per index (kosdaq_150 873, hang_seng_tech 613, star50 323); source summaries 2,404 values + 66 nulls |
+| 3.8.0 | 2026-09-22 | Weekly data update (2026-09-18 source): 32,361 records (+38), 2010-01-01 ~ 2026-09-20, 38 sections, 873 data points per index (kosdaq_150 872, hang_seng_tech 612, star50 322); source summaries 2,404 values + 66 nulls |
+| 3.8.0 | 2026-09-14 | Weekly data update (2026-09-11 source): 32,323 records (+38), 2010-01-01 ~ 2026-09-13, 38 sections, 872 data points per index (kosdaq_150 871, hang_seng_tech 611, star50 321); source summaries 2,404 values + 66 nulls |
+| 3.8.0 | 2026-09-07 | Weekly data update (2026-09-04 source): 32,285 records (+38), 2010-01-01 ~ 2026-09-04, 38 sections, 871 data points per index (kosdaq_150 870, hang_seng_tech 610, star50 320); source summaries 2,404 values + 66 nulls |
+| 3.8.0 | 2026-09-02 | Weekly data update (2026-08-28 source): 32,247 records (+38), 2010-01-01 ~ 2026-08-28, 38 sections, 870 data points per index (kosdaq_150 869, hang_seng_tech 609, star50 319); source summaries 2,404 values + 66 nulls |
+| 3.8.0 | 2026-08-25 | Weekly data update (2026-08-21 source): 32,209 records (+38), 2010-01-01 ~ 2026-08-21, 38 sections, 869 data points per index (kosdaq_150 868, hang_seng_tech 608, star50 318); source summaries 2,403 values + 67 nulls |
+| 3.8.0 | 2026-08-19 | Weekly data update (2026-08-14 source): 32,171 records (+38), 2010-01-01 ~ 2026-08-14, 38 sections, 868 data points per index (kosdaq_150 867, hang_seng_tech 607, star50 317); source summaries 2,404 values + 66 nulls |
+| 3.8.0 | 2026-08-10 | Weekly data update (2026-08-07 source): 32,133 records (+38), 2010-01-01 ~ 2026-08-07, 38 sections, 867 data points per index (kosdaq_150 866, hang_seng_tech 606, star50 316); source summaries 2,404 values + 66 nulls |
+| 3.8.0 | 2026-08-03 | Weekly data update (2026-07-31 source): 32,095 records (+6), 2010-01-01 ~ 2026-08-02, 38 sections, 866 data points per index; source summaries 2,404 values + 66 nulls |
 | 3.8.0 | 2026-05-25 | Added backward-compatible `source_summaries` with 1W/1M/3M/6M/YTD and yearly changes for px_last, EPS, PER, PBR, and ROE; source coverage: 2,353 non-null values + 52 null placeholders |
 | 3.7.0 | 2026-05-21 | Weekly data update (2026-05-15 source): 30,438 records (+1), 2010-07-02 ~ 2026-05-15, 37 sections, 829 data points per index |
 | 3.7.0 | 2026-05-11 | Weekly data update (2026-05-08 source): 30,437 records (+1), 2010-06-25 ~ 2026-05-08, 37 sections, 829 data points per index |

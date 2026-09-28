@@ -1,0 +1,358 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src 'unsafe-inline'; script-src 'unsafe-inline'; img-src data:; font-src data:; connect-src 'none'; media-src data:; object-src 'none'; frame-src 'none'; worker-src 'none'; base-uri 'none'; form-action 'none'">
+<script type="application/json" id="artifact-state">{"artifact_type":"report","lane":"offline","family":"Signal Ledger","signature_move":"evidence-rail","generated_at":"2026-07-05 14:02:29","source_name":"valuation_card_mu.html"}</script>
+<title>시장이 산 것은 EPS 7.59달러가 피크가 아니라 새 중간값이라는 주장이다</title>
+<style>
+:root{
+  --surface:#fcfcfb; --card:#ffffff; --ink:#0b0b0b; --sub:#52514e; --muted:#8a8985;
+  --line:#e8e6e1; --line2:#f0efec;
+  --s-dcf:#2a78d6; --s-comp:#1baf7a; --s-cons:#eda100;
+  --st-good:#0ca30c; --st-warn:#fab219; --st-serious:#d64545;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:var(--surface);color:var(--ink);font-family:'Apple SD Gothic Neo','Pretendard','Noto Sans KR',sans-serif;line-height:1.78;font-size:15.5px;padding:34px 16px 70px}
+.wrap{max-width:820px;margin:0 auto}
+header{margin-bottom:26px;border-bottom:2px solid var(--ink);padding-bottom:22px}
+.kicker{font-size:12px;letter-spacing:.14em;color:var(--muted);text-transform:uppercase}
+h1{font-size:29px;line-height:1.35;margin:10px 0 14px;font-weight:800;letter-spacing:-0.01em}
+.badge{display:inline-flex;align-items:center;gap:6px;background:#fff7e0;border:1px solid var(--st-warn);color:#7a5800;font-weight:700;font-size:13px;padding:4px 12px;border-radius:20px}
+.keystrip{display:flex;flex-wrap:wrap;gap:18px;margin-top:16px;font-size:13.5px;color:var(--sub)}
+.keystrip b{color:var(--ink);font-variant-numeric:tabular-nums}
+.meta{color:var(--muted);font-size:12.5px;margin-top:12px}
+section{margin:30px 0}
+h2{font-size:18px;font-weight:800;margin-bottom:14px;padding-bottom:8px;border-bottom:1px solid var(--line)}
+h2 .no{color:var(--muted);font-weight:600;font-size:13px;margin-left:6px}
+p{margin:12px 0}
+.sub{color:var(--sub)}
+.small{font-size:12.5px;color:var(--muted)}
+strong{font-weight:800}
+.lede p{font-size:16px}
+figure{margin:18px 0 8px;background:var(--card);border:1px solid var(--line);border-radius:12px;padding:18px}
+figcaption{font-size:13px;color:var(--sub);margin-top:10px;line-height:1.6}
+svg{width:100%;height:auto;display:block}
+svg text{font-family:inherit}
+.tile-row{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px;margin:14px 0}
+.tile{border:1px solid var(--line);border-radius:10px;padding:12px 14px;background:var(--card)}
+.tile .lab{font-size:12px;color:var(--muted)}
+.tile .val{font-size:19px;font-weight:800;margin-top:2px;display:flex;align-items:center;gap:6px}
+.st{font-size:12px;font-weight:700;padding:1px 8px;border-radius:10px}
+.st.good{color:#0a6e0a;background:#e9f7e9;border:1px solid var(--st-good)}
+.st.warn{color:#7a5800;background:#fff7e0;border:1px solid var(--st-warn)}
+.st.flat{color:var(--sub);background:var(--line2);border:1px solid var(--line)}
+ul,ol{padding-left:22px;margin:10px 0}
+li{margin:8px 0}
+.qa{border-left:3px solid var(--s-dcf);padding:4px 0 4px 16px;margin:16px 0;background:var(--card);border-radius:0 8px 8px 0;padding-right:14px}
+.qa .q{font-weight:800;padding-top:8px}
+.qa p{padding-bottom:8px}
+.mathbox{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:16px 20px;margin:14px 0;font-variant-numeric:tabular-nums}
+.mathbox .row{display:flex;justify-content:space-between;gap:12px;padding:7px 0;border-bottom:1px dashed var(--line2);font-size:14.5px}
+.mathbox .row:last-child{border-bottom:none}
+.mathbox .row b{font-size:15px}
+.tone{display:grid;gap:10px;margin-top:8px}
+.tone .item{border:1px solid var(--line);border-radius:10px;padding:12px 15px;background:var(--card)}
+.tone .tag{font-size:11.5px;font-weight:800;padding:1px 8px;border-radius:10px;margin-right:6px}
+.tag.bull{color:#0a6e0a;background:#e9f7e9}
+.tag.bear{color:#8f2f2f;background:#fdecec}
+.tag.mix{color:#7a5800;background:#fff7e0}
+table{width:100%;border-collapse:collapse;font-size:13.5px;margin-top:10px;background:var(--card)}
+th,td{text-align:left;padding:8px 10px;border-bottom:1px solid var(--line2)}
+th{color:var(--muted);font-weight:700;font-size:12.5px}
+td.num,th.num{text-align:right;font-variant-numeric:tabular-nums}
+details summary{cursor:pointer;font-weight:700;color:var(--sub);margin:8px 0}
+*:focus-visible{outline:2px solid var(--s-dcf);outline-offset:2px}
+footer{margin-top:36px;color:var(--muted);font-size:12px;line-height:1.8;border-top:1px solid var(--line);padding-top:16px}
+@media (max-width:560px){ body{padding:20px 10px 46px} h1{font-size:23px} figure{padding:12px} }
+@media print{ body{background:#fff;padding:0} .wrap{max-width:100%} }
+@media (prefers-reduced-motion: reduce){ *{transition:none !important;animation:none !important} }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<section>
+<h2>먼저 봐야 할 것은 성장률이 아니라 진폭이다</h2>
+<figure>
+  <svg viewBox="0 0 720 260" role="img" aria-label="매출 8개년: 확정 실적과 컨센서스 추정"><text x="0" y="0" font-size="0">.</text>
+<text x="14.0" y="30.0" font-size="11" fill="#8a8985" font-weight="400" text-anchor="start" paint-order="stroke" stroke="#fcfcfb" stroke-width="3" stroke-linejoin="round">$B</text>
+<line x1="50.0" y1="210.0" x2="690.0" y2="210.0" stroke="#e8e6e1" stroke-width="2" />
+<rect x="78.4" y="95.5" width="71.1" height="114.5" rx="3" fill="#2a78d6" />
+<text x="114.0" y="89.5" font-size="11" fill="#0b0b0b" font-weight="700" text-anchor="middle" paint-order="stroke" stroke="#fcfcfb" stroke-width="3" stroke-linejoin="round">27.7</text>
+<text x="114.0" y="228.0" font-size="11" fill="#52514e" font-weight="400" text-anchor="middle" paint-order="stroke" stroke="#fcfcfb" stroke-width="3" stroke-linejoin="round">FY-4</text>
+<rect x="206.4" y="82.8" width="71.1" height="127.2" rx="3" fill="#2a78d6" />
+<text x="242.0" y="76.8" font-size="11" fill="#0b0b0b" font-weight="700" text-anchor="middle" paint-order="stroke" stroke="#fcfcfb" stroke-width="3" stroke-linejoin="round">30.8</text>
+<text x="242.0" y="228.0" font-size="11" fill="#52514e" font-weight="400" text-anchor="middle" paint-order="stroke" stroke="#fcfcfb" stroke-width="3" stroke-linejoin="round">FY-3</text>
+<rect x="334.4" y="145.8" width="71.1" height="64.2" rx="3" fill="#2a78d6" />
+<text x="370.0" y="139.8" font-size="11" fill="#0b0b0b" font-weight="700" text-anchor="middle" paint-order="stroke" stroke="#fcfcfb" stroke-width="3" stroke-linejoin="round">15.5</text>
+<text x="370.0" y="228.0" font-size="11" fill="#52514e" font-weight="400" text-anchor="middle" paint-order="stroke" stroke="#fcfcfb" stroke-width="3" stroke-linejoin="round">FY-2</text>
+<rect x="462.4" y="106.2" width="71.1" height="103.8" rx="3" fill="#2a78d6" />
+<text x="498.0" y="100.2" font-size="11" fill="#0b0b0b" font-weight="700" text-anchor="middle" paint-order="stroke" stroke="#fcfcfb" stroke-width="3" stroke-linejoin="round">25.1</text>
+<text x="498.0" y="228.0" font-size="11" fill="#52514e" font-weight="400" text-anchor="middle" paint-order="stroke" stroke="#fcfcfb" stroke-width="3" stroke-linejoin="round">FY-1</text>
+<rect x="590.4" y="55.5" width="71.1" height="154.5" rx="3" fill="#2a78d6" />
+<text x="626.0" y="49.5" font-size="11" fill="#0b0b0b" font-weight="700" text-anchor="middle" paint-order="stroke" stroke="#fcfcfb" stroke-width="3" stroke-linejoin="round">37.4</text>
+<text x="626.0" y="228.0" font-size="11" fill="#52514e" font-weight="400" text-anchor="middle" paint-order="stroke" stroke="#fcfcfb" stroke-width="3" stroke-linejoin="round">FY0</text>
+<rect x="480.0" y="16.0" width="12.0" height="12.0" rx="3" fill="#2a78d6" />
+<text x="498.0" y="26.0" font-size="10" fill="#52514e" font-weight="400" text-anchor="start" paint-order="stroke" stroke="#fcfcfb" stroke-width="3" stroke-linejoin="round">확정 실적</text>
+<rect x="570.0" y="16.0" width="12.0" height="12.0" rx="3" fill="#2a78d6" opacity="0.45" stroke="#2a78d6" stroke-dasharray="4 3" />
+<text x="588.0" y="26.0" font-size="10" fill="#52514e" font-weight="400" text-anchor="start" paint-order="stroke" stroke="#fcfcfb" stroke-width="3" stroke-linejoin="round">컨센서스 추정</text>
+</svg>
+  <figcaption><strong>-49%의 급감과 +237%의 급증이 한 화면에</strong> — 왼쪽 다섯 막대가 이 산업의 과거이고, 오른쪽 세 막대(투명)가 월가가 그리는 미래다.</figcaption>
+</figure>
+<details open>
+  <summary>재무 전표 전체 보기 (8개년)</summary>
+  <table><thead><tr>
+<th></th>
+<th class="num">FY-4</th>
+<th class="num">FY-3</th>
+<th class="num">FY-2</th>
+<th class="num">FY-1</th>
+<th class="num">FY0</th>
+<th class="num">FY+1e</th>
+<th class="num">FY+2e</th>
+<th class="num">FY+3e</th>
+</tr></thead><tbody>
+<tr>
+<td>매출 ($B)</td>
+<td class="num">27.7</td>
+<td class="num">30.8</td>
+<td class="num">15.5</td>
+<td class="num">25.1</td>
+<td class="num">37.4</td>
+</tr>
+<tr>
+<td>영업이익 ($B)</td>
+<td class="num">6.3</td>
+<td class="num">9.7</td>
+<td class="num">-5.8</td>
+<td class="num">1.3</td>
+<td class="num">9.8</td>
+</tr>
+<tr>
+<td>순이익 ($B)</td>
+<td class="num">5.9</td>
+<td class="num">8.7</td>
+<td class="num">-5.8</td>
+<td class="num">0.8</td>
+<td class="num">8.5</td>
+</tr>
+<tr>
+<td>EPS ($)</td>
+<td class="num">5.14</td>
+<td class="num">7.75</td>
+<td class="num">-5.34</td>
+<td class="num">0.70</td>
+<td class="num">7.59</td>
+</tr>
+<tr>
+<td>영업이익률 (%)</td>
+<td class="num">22.7</td>
+<td class="num">31.5</td>
+<td class="num">-37.0</td>
+<td class="num">5.2</td>
+<td class="num">26.1</td>
+</tr>
+<tr>
+<td>ROE (%)</td>
+<td class="num">14.0</td>
+<td class="num">18.5</td>
+<td class="num">-12.4</td>
+<td class="num">1.8</td>
+<td class="num">17.2</td>
+</tr>
+<tr>
+<td>잉여현금흐름 ($B)</td>
+<td class="num">2.4</td>
+<td class="num">3.1</td>
+<td class="num">-6.1</td>
+<td class="num">0.1</td>
+<td class="num">1.7</td>
+</tr>
+<tr>
+<td>설비투자 ($B)</td>
+<td class="num">10.0</td>
+<td class="num">12.1</td>
+<td class="num">7.7</td>
+<td class="num">8.4</td>
+<td class="num">15.9</td>
+</tr>
+<tr>
+<td>PER (배)</td>
+<td class="num">14.39</td>
+<td class="num">7.39</td>
+<td class="num">—</td>
+<td class="num">136.53</td>
+<td class="num">16.07</td>
+</tr>
+<tr>
+<td>PBR (배)</td>
+<td class="num">1.88</td>
+<td class="num">1.26</td>
+<td class="num">1.74</td>
+<td class="num">2.35</td>
+<td class="num">2.53</td>
+</tr>
+</tbody></table>
+  <p class="small">출처: 컨센서스 집계 · e = 추정. 확정 5개년과 추정 3개년의 단절적 스케일 차이에 유의.</p>
+</details>
+</section>
+<section>
+<h2>AI 메모리는 사이클을 없앤 것이 아니라 기준선을 올렸는가</h2>
+<p>2026-07-05 기준 확정 재무로 보면 MU는 메모리 칩의 가격, 출하량, 가동률이 함께 좋아질 때 이익이 급증하고, 공급이 수요를 앞서면 같은 고정비 구조가 손실을 키우는 기업이다. 이 회사의 핵심 질문은 인공지능 수요가 강한가가 아니다. 2025년 주당순이익 7.59달러와 자기자본이익률 17.2%를 일시적 업사이클이 아니라 새 정상 이익으로 둘 수 있는가가 질문이다. 왜냐하면 MU는 이미 2022년에 주당순이익 7.75달러와 자기자본이익률 18.5%를 냈지만, 바로 다음 해인 2023년에 매출 155.4억 달러, 순손실 58.3억 달러, 주당순손실 5.34달러, 자기자본이익률 -12.4%로 뒤집힌 전력이 있기 때문이다. 2025년 반등은 강했다. 매출은 2023년 155.4억 달러에서 2025년 373.8억 달러로 218.4억 달러 늘었고, 순이익은 -58.3억 달러에서 85.4억 달러로 143.7억 달러 개선됐으며, 주당순이익은 -5.34달러에서 7.59달러로 12.93달러 반전했다. 이 숫자는 인공지능 인프라 수요가 손익계산서에 실제로 도달했음을 보여준다. 그러나 같은 숫자는 MU가 선형 성장주가 아니라 이익 진폭이 큰 메모리 회사라는 점도 동시에 증명한다. 수요가 강할 때 증설 유인이 생기고, 그 공급이 뒤늦게 시장에 도착하면 가격과 마진을 다시 누르는 구조가 사라진 것이 아니기 때문이다. 현재 가격, 주식 수, 시가총액 자료는 이 입력값에 없으므로 이 보고서는 배수나 목표가를 산출하지 않는다. 대신 가격이 정당화되려면 무엇이 참이어야 하는지를 정상 이익으로 판정한다. 2025년 주당순이익 7.59달러를 중심에 두려면 다음 10-K에서도 매출 373.8억 달러 부근, 주당순이익 7.59달러 부근, 자기자본이익률 17.2% 부근이 유지돼야 한다. 반대로 2024년의 매출 251.1억 달러, 순이익 7.8억 달러, 주당순이익 0.70달러, 자기자본이익률 1.8%가 더 정상에 가깝다면 2025년 이익을 그대로 자본화하는 것은 사이클 고점의 이익을 영구화하는 셈이다. 따라서 판정은 강세가 아니라 판정 보류다. 2025년 회복은 인정하지만, 오너가 사야 할 것은 한 해의 보고이익이 아니라 그 이익이 자본을 얼마나 먹고도 반복되는지이기 때문이다.</p>
+</section>
+<section>
+<h2>네 개의 가격 중 어느 가격이 지금의 MU를 설명하는가</h2>
+<figure>
+  <svg viewBox="0 0 720 150" role="img" aria-label="MU 가치 스펙트럼"><text x="0" y="0" font-size="0">.</text>
+<line x1="60.0" y1="78.0" x2="680.0" y2="78.0" stroke="#e8e6e1" stroke-width="2" />
+<text x="60.0" y="118.0" font-size="11" fill="#8a8985" font-weight="400" text-anchor="middle" paint-order="stroke" stroke="#fcfcfb" stroke-width="3" stroke-linejoin="round">$30</text>
+<text x="230.3" y="118.0" font-size="11" fill="#8a8985" font-weight="400" text-anchor="middle" paint-order="stroke" stroke="#fcfcfb" stroke-width="3" stroke-linejoin="round">$100</text>
+<text x="385.8" y="118.0" font-size="11" fill="#8a8985" font-weight="400" text-anchor="middle" paint-order="stroke" stroke="#fcfcfb" stroke-width="3" stroke-linejoin="round">$300</text>
+<text x="556.1" y="118.0" font-size="11" fill="#8a8985" font-weight="400" text-anchor="middle" paint-order="stroke" stroke="#fcfcfb" stroke-width="3" stroke-linejoin="round">$1,000</text>
+<text x="680.0" y="118.0" font-size="11" fill="#8a8985" font-weight="400" text-anchor="middle" paint-order="stroke" stroke="#fcfcfb" stroke-width="3" stroke-linejoin="round">$2,400</text>
+<text x="680.0" y="136.0" font-size="10" fill="#8a8985" font-weight="400" text-anchor="end" paint-order="stroke" stroke="#fcfcfb" stroke-width="3" stroke-linejoin="round">로그 스케일 — 간격이 배수를 뜻함</text>
+<circle cx="82.4" cy="78" r="8" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2" />
+<text x="82.4" y="52.0" font-size="12" fill="#2a78d6" font-weight="700" text-anchor="middle" paint-order="stroke" stroke="#fcfcfb" stroke-width="3" stroke-linejoin="round">DCF $35</text>
+<line x1="412.0" y1="78.0" x2="667.7" y2="78.0" stroke="#eda100" stroke-width="3" opacity="0.35" />
+<circle cx="412.0" cy="78" r="6" fill="#eda100" stroke="#fcfcfb" stroke-width="2" />
+<circle cx="667.7" cy="78" r="6" fill="#eda100" stroke="#fcfcfb" stroke-width="2" />
+<text x="412.0" y="62.0" font-size="10" fill="#eda100" font-weight="400" text-anchor="middle" paint-order="stroke" stroke="#fcfcfb" stroke-width="3" stroke-linejoin="round">최저 $361</text>
+<text x="667.7" y="62.0" font-size="10" fill="#eda100" font-weight="400" text-anchor="middle" paint-order="stroke" stroke="#fcfcfb" stroke-width="3" stroke-linejoin="round">최고 $2200</text>
+<circle cx="612.2" cy="78" r="8" fill="#eda100" stroke="#fcfcfb" stroke-width="2" />
+<text x="612.2" y="104.0" font-size="12" fill="#eda100" font-weight="700" text-anchor="middle" paint-order="stroke" stroke="#fcfcfb" stroke-width="3" stroke-linejoin="round">컨센서스 $1486</text>
+<path d="M573.7 68 l8 10 l-8 10 l-8 -10 z" fill="#0b0b0b" />
+<text x="573.7" y="30.0" font-size="12" fill="#0b0b0b" font-weight="800" text-anchor="middle" paint-order="stroke" stroke="#fcfcfb" stroke-width="3" stroke-linejoin="round">현재가 $1132</text>
+</svg>
+  <figcaption>MU의 밸류에이션 스펙트럼은 2023년 적자보다 2025년 EPS 7.59달러가 얼마나 반복 가능한지에 따라 가격 해석이 갈린다는 점을 보여줘야 한다.</figcaption>
+</figure>
+</section>
+<section>
+<h2>오너의 계산</h2>
+<p>사이클 기업의 가치평가에서 정점 이익과 바닥 이익은 둘 다 거짓말을 한다. 오너의 질문은 하나다 — <strong>"호황과 불황을 한 바퀴 다 돌았을 때, 이 사업은 평균적으로 주당 얼마를 버는가."</strong></p>
+<div class="mathbox">
+<div class="row"><span>매출 회복 폭</span><b>2023년 155.4억 달러에서 2025년 373.8억 달러로 218.4억 달러 증가</b></div>
+<div class="row"><span>순이익 반전</span><b>2023년 -58.3억 달러에서 2025년 85.4억 달러로 143.7억 달러 개선</b></div>
+<div class="row"><span>주당 이익 진폭</span><b>2023년 -5.34달러에서 2025년 7.59달러로 12.93달러 반전</b></div>
+<div class="row"><span>자기자본 수익률 회복</span><b>2023년 -12.4%에서 2025년 17.2%로 29.6%포인트 개선</b></div>
+<div class="row"><span>오너 현금 전환 한계</span><b>자유현금흐름과 자본적지출 수치가 제공되지 않아 2025년 주당순이익 7.59달러를 오너 현금으로 그대로 볼 수 없음</b></div>
+</div>
+<p class="small">주의: 이 계산은 목표주가가 아니다. "이번엔 다르다"가 참이라면 정상화 프레임 자체가 무효가 되며, 그 경우 가치는 컨센서스 경로를 따라간다.</p>
+</section>
+<section>
+<h2>좋은 사이클, 나쁜 사이클, 새 기준선</h2>
+<figure>
+  <svg viewBox="0 0 720 80" role="img" aria-label="시나리오 가치 범위"><text x="0" y="0" font-size="0">.</text>
+<rect x="70.0" y="28.0" width="180.0" height="24.0" rx="4" fill="#fab219" />
+<text x="160.0" y="20.0" font-size="11" fill="#52514e" font-weight="700" text-anchor="middle" paint-order="stroke" stroke="#fcfcfb" stroke-width="3" stroke-linejoin="round">보수</text>
+<text x="160.0" y="45.0" font-size="12" fill="#0b0b0b" font-weight="800" text-anchor="middle" paint-order="stroke" stroke="#fcfcfb" stroke-width="3" stroke-linejoin="round">$30</text>
+<rect x="270.0" y="28.0" width="180.0" height="24.0" rx="4" fill="#1baf7a" />
+<text x="360.0" y="20.0" font-size="11" fill="#52514e" font-weight="700" text-anchor="middle" paint-order="stroke" stroke="#fcfcfb" stroke-width="3" stroke-linejoin="round">기준</text>
+<text x="360.0" y="45.0" font-size="12" fill="#0b0b0b" font-weight="800" text-anchor="middle" paint-order="stroke" stroke="#fcfcfb" stroke-width="3" stroke-linejoin="round">$35</text>
+<rect x="470.0" y="28.0" width="180.0" height="24.0" rx="4" fill="#0ca30c" />
+<text x="560.0" y="20.0" font-size="11" fill="#52514e" font-weight="700" text-anchor="middle" paint-order="stroke" stroke="#fcfcfb" stroke-width="3" stroke-linejoin="round">낙관</text>
+<text x="560.0" y="45.0" font-size="12" fill="#0b0b0b" font-weight="800" text-anchor="middle" paint-order="stroke" stroke="#fcfcfb" stroke-width="3" stroke-linejoin="round">$40</text>
+</svg>
+  <figcaption>MU의 시나리오 차트는 ROE 17.2%의 2025년 회복이 유지되는 경우와 2023년식 손실 사이클로 되돌아가는 경우의 간극을 드러내야 한다.</figcaption>
+</figure>
+</section>
+<section>
+<h2>정상 EPS를 7.59달러 아래 어디에 놓을 것인가</h2>
+<figure>
+  <table><thead><tr>
+<th>영구성장률 \ 할인율</th>
+<th class="num">11.06%</th>
+<th class="num">11.56%</th>
+<th class="num">12.06%</th>
+<th class="num">12.56%</th>
+<th class="num">13.06%</th>
+</tr></thead><tbody>
+<tr>
+<th>2.00%</th>
+<td class="num">$35.56</td>
+<td class="num">$33.38</td>
+<td class="num">$31.42</td>
+<td class="num">$29.64</td>
+<td class="num">$28.02</td>
+</tr>
+<tr>
+<th>2.50%</th>
+<td class="num">$37.80</td>
+<td class="num">$35.38</td>
+<td class="num">$33.21</td>
+<td class="num">$31.25</td>
+<td class="num">$29.49</td>
+</tr>
+<tr>
+<th>3.00%</th>
+<td class="num">$40.33</td>
+<td class="num">$37.61</td>
+<td class="num"><span style="background:#fff7e0;padding:2px 6px;border-radius:4px;font-weight:700">$35.20</span></td>
+<td class="num">$33.04</td>
+<td class="num">$31.09</td>
+</tr>
+<tr>
+<th>3.50%</th>
+<td class="num">$43.18</td>
+<td class="num">$40.12</td>
+<td class="num">$37.42</td>
+<td class="num">$35.02</td>
+<td class="num">$32.87</td>
+</tr>
+<tr>
+<th>4.00%</th>
+<td class="num">$46.44</td>
+<td class="num">$42.96</td>
+<td class="num">$39.92</td>
+<td class="num">$37.23</td>
+<td class="num">$34.84</td>
+</tr>
+</tbody></table>
+  <figcaption>기준 셀은 베이스 케이스(WACC 12.06%, 영구성장률 3.00%)를 강조한다. 현재가 $1,132.33와 비교하면 내재가치가 어디에 민감한지 보인다.</figcaption>
+</figure>
+</section>
+<div class="tile-row">
+<div class="tile">
+<div class="lab">피오트로스키 F-점수</div>
+<div class="val">8/9 <span class="st good">🟢 STRONG (8-9)</span></div>
+</div>
+<div class="tile">
+<div class="lab">종합 품질 등급</div>
+<div class="val">D (Below Average) · 42.2 <span class="st warn">이익의 원천이 실력 아닌 업황</span></div>
+</div>
+<div class="tile">
+<div class="lab">부도 위험 (알트만-Z)</div>
+<div class="val">안전 <span class="st good">재무 파산 신호 없음</span></div>
+</div>
+<div class="tile">
+<div class="lab">경제적 해자</div>
+<div class="val">없음 <span class="st flat">가격결정력이 구조 아닌 사이클 산</span></div>
+</div>
+</div>
+<div class="qa">
+  <div class="q">인공지능 수요가 강하면 MU는 더 이상 메모리 사이클 기업이 아니라는 말이 맞는가?</div>
+  <p class="sub">아니다. 인공지능 수요가 2025년 매출 373.8억 달러와 주당순이익 7.59달러 회복에 기여했다는 점은 인정해야 한다. 그러나 MU는 2022년에도 주당순이익 7.75달러와 자기자본이익률 18.5%를 낸 뒤 2023년에 매출 155.4억 달러, 주당순손실 5.34달러, 자기자본이익률 -12.4%로 무너졌다. 수요 강세는 업황 회복의 원인이지만, 공급이 뒤따라 붙을 때 가격과 마진이 눌리는 메모리 구조 자체를 제거하지는 않는다.</p>
+</div>
+<section>
+<h2>판정: 새 정상 이익인가, 좋은 업사이클인가</h2>
+<p>본 리포트의 판정은 <strong>2025년 주당순이익 7.59달러를 전부 새 정상 이익으로 사기에는 아직 이르다</strong>다. 판정은 모델이 제시하는 방향성이며, 반증 가능한 전제를 함께 확인해야 한다.</p>
+<ul>
+  <li><strong>강세 전환의 문: 2026년 연간 실적을 담은 다음 10-K에서 매출 373.8억 달러 이상, 주당순이익 7.59달러 이상, 자기자본이익률 17.2% 이상 중 두 가지 이상을 충족하면 2025년 실적을 피크가 아니라 새 기준선으로 올려 본다.</strong></li>
+  <li><strong>약세 전환의 문: 2026년 연간 실적을 담은 다음 10-K에서 매출이 251.1억 달러 이하로 내려가거나 주당순이익이 0.70달러 이하로 떨어지면 인공지능 수요가 전통적 메모리 사이클을 흡수한다는 주장을 기각한다.</strong></li>
+  <li><strong>논리 회복의 문: 2026년 연간 실적을 담은 다음 10-K에서 매출 307.6억 달러 이상, 주당순이익 5.14달러 이상, 자기자본이익률 14.0% 이상을 동시에 충족하면 2025년 전면 자본화는 유보하되 2021년 이상의 정상 이익 체력은 인정한다.</strong></li>
+</ul>
+<div class="qa">
+  <div class="q">채점 문장 — 다음 MU 리포트가 이 문장을 채점한다</div>
+  <p><strong>2026년 연간 실적을 반영한 다음 MU 커버리지 리포트에서 매출 373.8억 달러 이상과 주당순이익 7.59달러 이상을 동시에 충족했는지를 판정하며, 다음 리포트가 이 문장을 채점한다.</strong></p>
+  <p class="sub">적중 → 적중 → 2025년 주당순이익 7.59달러가 단순 피크가 아니라 인공지능 메모리 수요가 만든 새 정상 이익에 가까웠음을 확인하며, 판정은 조건부 강세로 올라간다. 빗나감 → 빗나감 → 2025년 회복은 좋은 업사이클의 이익으로 낮춰 읽고, 현재 가격이 7.59달러 주당순이익의 반복을 요구한다면 그 가정은 공격적이라고 본다.</p>
+</div>
+</section>
+
+<footer>
+  본 리포트는 정보 제공 목적이며 투자 권유가 아닙니다. 데이터는 feno-value v11.1, 컨센서스 집계, 13F 공시 및 자체 큐레이션 코퍼스를 기반으로 생성되었습니다. 13F는 분기 마감 45일 후 공시된 과거 데이터입니다.
+</footer>
+
+</div>
+</body>
+</html>

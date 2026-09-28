@@ -1,0 +1,88 @@
+{
+ "criteria_version": "yoo_rim_replica_2018.v1 / evidence-freeze.v3",
+ "namespace": "yoo_rim_replica_2018.v1",
+ "frozen_at": "2026-08-09T08:00:00Z",
+ "frozen_by": "handler (Claude Opus), sole adjudicator",
+ "supersedes": {
+  "path": "evidence-freeze-v2.json",
+  "sha256": "aa4b24ee5e0eeaffbb5e012706265e4315d9f6bbe94eb3d1ce265a5c981dd896",
+  "status": "preserved unedited",
+  "why": "cx found that the v2 retention was mathematically misderived, not merely a competing convention. v3 corrects it, downgrades its class, and widens the horizon set accordingly. v1 still governs the error gates, prohibited targets, candidate list and train/holdout split; the AGGREGATE_EQUITY_IS_NOT_BPS guard and the discriminator gates in v2 stand unchanged."
+ },
+ "correction_1_retention_was_misderived": {
+  "what_v2_said": "b = 0.8292, classed YOO_PRIMARY_VERIFIED for KOSPI 2016",
+  "the_error": "v2 divided book growth by the printed rate as if it were a return on BEGINNING equity. Figure 11b labels the row ROAE — return on AVERAGE equity. Under ROAE = NI/avg(B_{t-1},B_t) and dB = b*NI, the identity is b = 2g/[ROAE*(2+g)], not g/ROAE.",
+  "corrected_value": 0.801,
+  "verification": "2*0.070486/(0.085*2.070486) = 0.8010. Cross-checked against the direct retention ratio dB/NI, where NI for each year is reconstructed from the printed ROAE and average equity: 0.865, 0.801, 0.799, 0.801, 0.799, 0.801, 0.803, 0.800, median 0.8010. dB/NI IS the retention ratio directly; the average-equity convention enters only in reconstructing NI from the printed ROAE, not in the ratio itself.",
+  "found_by": "cx (Codex), independently; the handler reproduced the identity and confirms it",
+  "new_class": "FENO_MAPPING even for KOSPI 2016. The worksheet does not print a retention rate for the forecast path; every value is inferred through an accounting identity whose convention must be assumed."
+ },
+ "correction_2_competing_estimators_frozen": {
+  "rule": "these three are the admissible readings; no fourth may be introduced to improve a fit",
+  "estimators": [
+   {
+    "id": "E1_roae_identity",
+    "b": 0.801,
+    "basis": "b = 2g/[ROAE(2+g)] with g = 7.0486% median forecast equity growth and ROAE = 8.5%; equivalently the direct retention ratio dB/NI with NI reconstructed from the printed ROAE on average equity",
+    "status": "best supported — matches the direct average-equity dB/NI ratios"
+   },
+   {
+    "id": "E2_printed_payout",
+    "b": 0.8569,
+    "basis": "1 - printed Div.Payout 14.31% from Figure 11a",
+    "status": "admissible but the printed payout appears to belong to the current/consensus period and may not describe the flat post-consensus path"
+   },
+   {
+    "id": "E3_beginning_equity",
+    "b": 0.8292,
+    "basis": "g/ROE treating the printed rate as beginning-equity ROE",
+    "status": "REJECTED — inconsistent with the printed ROAE label. Retained only so the v2 error is legible."
+   }
+  ],
+  "admissible_range_for_scoring": [
+   0.8,
+   0.857
+  ]
+ },
+ "correction_3_horizon_set_widens": {
+  "what_v2_said": "N = {12, 13} after holdout, implied V/B0 spread 1.178x",
+  "corrected": {
+   "method": "scan b across the admissible range [0.800, 0.857] with the discount pinned to Rf, score every N on TRAIN, then apply the unchanged HOLDOUT",
+   "surviving_N": [
+    11,
+    12,
+    13
+   ],
+   "surviving_pairs": 117,
+   "implied_v_over_b0": [
+    5.3248,
+    7.4457
+   ],
+   "spread": "1.398x"
+  },
+  "reading": "the narrowing v2 claimed is real but smaller than stated. The admissible set is 117 (N,b) pairs across three horizons with a 1.398x spread in implied value, not two horizons at 1.178x. Compared with the pre-figure state of 7,769 triples at 1.695x, the figure recovery still helped materially — it did not resolve the question."
+ },
+ "state_after_correction": {
+  "verdict": "YOO_METHOD_NOT_IDENTIFIED — unchanged, and now on firmer ground",
+  "primary_verified_and_unaffected": [
+   "finite-horizon structure with no terminal row",
+   "hurdle = Rf + Risk Premium",
+   "discount = (1+Rf)^t, max relative error 0.22% against the printed row",
+   "flat forecast ROE path",
+   "worksheet horizon 8, which FAILS on the 2018 corpus at max 5.35%"
+  ],
+  "not_sourced": [
+   "retention b for any vintage — FENO_MAPPING with a 0.800 to 0.857 range",
+   "horizon N for 2018 — fitted, three values admissible",
+   "2018 book basis — unresolved, and still the whole of the open question"
+  ],
+  "level_test_unchanged": "zero (N,b) pairs reproduce the seven printed levels under the P/B adapter; best max error 62.6%"
+ },
+ "what_did_not_move": [
+  "the v1 error gates and prohibited-calibration list",
+  "the AGGREGATE_EQUITY_IS_NOT_BPS guard frozen in v2",
+  "the discriminator gates G_LEVEL, G_HORIZON, G_TRANSFER and their bound outcomes",
+  "the train/holdout split"
+ ],
+ "immutability": "immutable; any further correction is v4 with its own receipt. Nothing committed."
+}

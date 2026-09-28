@@ -11,20 +11,69 @@ import type {
   InvestorData,
   SuperInvestorsDataResult,
 } from "@/lib/superinvestors/types";
+import { resolveSec13fInvestorPayload } from "@/lib/superinvestors/investor-parts";
+import { DataFetchError, fetchJsonShared } from "@/lib/client/data-fetch";
 
-const FETCH_TIMEOUT_MS = 6000;
+// One retry remains bounded to 30 seconds, below the hosted QA route wait.
+// This includes connection queueing, download, and JSON parsing for by_ticker.
+export const SEC_13F_FETCH_TIMEOUT_MS = 15000;
 
-async function fetchJson<T>(url: string, timeoutMs = FETCH_TIMEOUT_MS): Promise<T | null> {
-  const controller = new AbortController();
-  const timeoutId = window.setTimeout(() => controller.abort(), timeoutMs);
+export type Fetch13FErrorKind = "status" | "timeout" | "parse";
+
+export class Fetch13FError extends Error {
+  readonly url: string;
+  readonly kind: Fetch13FErrorKind;
+  readonly status: number | null;
+
+  constructor(url: string, kind: Fetch13FErrorKind, status: number | null, message: string) {
+    super(message);
+    this.name = "Fetch13FError";
+    this.url = url;
+    this.kind = kind;
+    this.status = status;
+  }
+}
+
+function toFetch13FError(url: string, timeoutMs: number, error: unknown): Fetch13FError {
+  if (error instanceof Fetch13FError) return error;
+  if (error instanceof DataFetchError) {
+    if (error.kind === "http" || error.kind === "auth") {
+      return new Fetch13FError(url, "status", error.status, `13F fetch failed with status ${error.status}: ${url}`);
+    }
+    if (error.kind === "parse") {
+      return new Fetch13FError(url, "parse", error.status, `13F fetch returned invalid JSON: ${url}`);
+    }
+    if (error.kind === "timeout") {
+      return new Fetch13FError(url, "timeout", null, `13F fetch timed out after ${timeoutMs}ms: ${url}`);
+    }
+    return new Fetch13FError(url, "timeout", null, `13F fetch failed before response: ${url}`);
+  }
+  return new Fetch13FError(url, "timeout", null, `13F fetch failed before response: ${url}`);
+}
+
+async function request13FOnce<T>(url: string, timeoutMs: number): Promise<T> {
   try {
-    const response = await fetch(url, { signal: controller.signal });
-    if (!response.ok) return null;
-    return (await response.json()) as T;
-  } catch {
-    return null;
-  } finally {
-    window.clearTimeout(timeoutId);
+    // Transport moves through the shared layer; successes are cached per URL
+    // and failures are never cached, so the retry below is a real re-attempt.
+    return (await fetchJsonShared<T>(url, { timeoutMs })).data;
+  } catch (error) {
+    throw toFetch13FError(url, timeoutMs, error);
+  }
+}
+
+function isRetryable13FError(error: unknown): boolean {
+  if (!(error instanceof Fetch13FError)) return false;
+  if (error.kind === "timeout") return true;
+  if (error.kind === "parse") return false;
+  return error.status === 429 || (error.status !== null && error.status >= 500);
+}
+
+export async function fetch13FJson<T>(url: string, timeoutMs = SEC_13F_FETCH_TIMEOUT_MS): Promise<T> {
+  try {
+    return await request13FOnce<T>(url, timeoutMs);
+  } catch (error) {
+    if (!isRetryable13FError(error)) throw error;
+    return request13FOnce<T>(url, timeoutMs);
   }
 }
 
@@ -41,67 +90,150 @@ const EMPTY: SuperInvestorsDataResult = {
   excludedStale: [],
 };
 
-export function use13FData(): SuperInvestorsDataResult {
+export type Settled13F<T> = { data: T | null; failed: boolean };
+
+async function settle13F<T>(promise: Promise<T>): Promise<Settled13F<T>> {
+  try {
+    return { data: await promise, failed: false };
+  } catch {
+    return { data: null, failed: true };
+  }
+}
+
+type Settled13FSources = {
+  consensus: Settled13F<ConsensusData>;
+  summary: Settled13F<SummaryData>;
+  byTicker: Settled13F<ByTickerData>;
+  enhancedConsensus: Settled13F<EnhancedConsensusData>;
+  bySector: Settled13F<SectorHoldingsData>;
+  convictionEntries: Settled13F<ConvictionEntriesData>;
+};
+
+export function resolve13FLoad(sources: Settled13FSources): {
+  result: SuperInvestorsDataResult;
+  failedRequests: string[];
+} {
+  const consensus = !sources.consensus.failed && sources.consensus.data?.consensus
+    ? sources.consensus.data
+    : null;
+  const summary = !sources.summary.failed ? sources.summary.data : null;
+  const byTicker = !sources.byTicker.failed ? sources.byTicker.data : null;
+  const enhancedConsensus = !sources.enhancedConsensus.failed ? sources.enhancedConsensus.data : null;
+  const bySector = !sources.bySector.failed ? sources.bySector.data : null;
+  const convictionEntries = !sources.convictionEntries.failed ? sources.convictionEntries.data : null;
+
+  const failedRequests: string[] = [];
+  if (!consensus) failedRequests.push("consensus");
+  if (!summary) failedRequests.push("summary");
+  if (!byTicker) failedRequests.push("by_ticker");
+  if (!enhancedConsensus) failedRequests.push("enhanced_consensus");
+  if (!bySector) failedRequests.push("by_sector");
+  if (!convictionEntries) failedRequests.push("conviction_entries");
+
+  const dataReady = summary !== null || consensus !== null;
+  return {
+    result: {
+      consensus,
+      enhancedConsensus,
+      summary,
+      byTicker,
+      bySector,
+      convictionEntries,
+      dataReady,
+      failed: !dataReady,
+      quarter: consensus?.metadata?.quarter
+        ?? summary?.metadata?.source_quarter
+        ?? summary?.metadata?.latest_quarter
+        ?? null,
+      excludedStale: consensus?.metadata?.excluded_stale_investors ?? [],
+    },
+    failedRequests,
+  };
+}
+
+export interface SuperInvestorsDataState extends SuperInvestorsDataResult {
+  failedRequests: string[];
+  retrying: boolean;
+  retry: () => void;
+}
+
+export function use13FData(): SuperInvestorsDataState {
   const [result, setResult] = useState<SuperInvestorsDataResult>(EMPTY);
+  const [failedRequests, setFailedRequests] = useState<string[]>([]);
+  const [attempt, setAttempt] = useState(0);
+  const [retrying, setRetrying] = useState(false);
   const isMountedRef = useRef(true);
+
+  const retry = () => setAttempt((n) => n + 1);
 
   useEffect(() => {
     isMountedRef.current = true;
+    if (attempt > 0) {
+      // Retry keeps last-known-good rows (five-state rule): settled data stays
+      // on screen while the refetch is in flight.
+      setRetrying(true);
+    }
 
     void (async () => {
-      const [consensus, summary, byTicker, enhancedConsensus, bySector, convictionEntries] = await Promise.all([
-        fetchJson<ConsensusData>("/data/sec-13f/analytics/consensus.json"),
-        fetchJson<SummaryData>("/data/sec-13f/summary.json"),
-        fetchJson<ByTickerData>("/data/sec-13f/by_ticker.json"),
-        fetchJson<EnhancedConsensusData>("/data/sec-13f/analytics/enhanced_consensus.json"),
-        fetchJson<SectorHoldingsData>("/data/sec-13f/by_sector.json"),
-        fetchJson<ConvictionEntriesData>("/data/sec-13f/analytics/conviction_entries.json"),
+      const [consensusRes, summaryRes, byTickerRes, enhancedRes, bySectorRes, convictionRes] = await Promise.all([
+        settle13F(fetch13FJson<ConsensusData>("/data/sec-13f/analytics/consensus.json")),
+        settle13F(fetch13FJson<SummaryData>("/data/sec-13f/summary.json")),
+        settle13F(fetch13FJson<ByTickerData>("/data/sec-13f/by_ticker.json")),
+        settle13F(fetch13FJson<EnhancedConsensusData>("/data/sec-13f/analytics/enhanced_consensus.json")),
+        settle13F(fetch13FJson<SectorHoldingsData>("/data/sec-13f/by_sector.json")),
+        settle13F(fetch13FJson<ConvictionEntriesData>("/data/sec-13f/analytics/conviction_entries.json")),
       ]);
 
       if (!isMountedRef.current) return;
 
-      const anyFailed = !consensus && !summary && !byTicker;
-      const consensusFailed = !consensus?.consensus;
-
-      if (anyFailed || consensusFailed) {
-        setResult({ ...EMPTY, failed: true });
-        return;
-      }
-
-      setResult({
-        consensus,
-        enhancedConsensus,
-        summary,
-        byTicker,
-        bySector,
-        convictionEntries,
-        dataReady: true,
-        failed: false,
-        quarter: consensus?.metadata?.quarter ?? null,
-        excludedStale: consensus?.metadata?.excluded_stale_investors ?? [],
+      const load = resolve13FLoad({
+        consensus: consensusRes,
+        summary: summaryRes,
+        byTicker: byTickerRes,
+        enhancedConsensus: enhancedRes,
+        bySector: bySectorRes,
+        convictionEntries: convictionRes,
       });
+
+      // A fully failed retry keeps prior usable rows on screen. Initial loads
+      // still expose a fatal state when neither panel-driving feed arrived.
+      setResult((prev) => load.result.failed && prev.dataReady ? prev : load.result);
+      setFailedRequests(load.failedRequests);
+      setRetrying(false);
     })();
 
     return () => {
       isMountedRef.current = false;
     };
-  }, []);
+  }, [attempt]);
 
-  return result;
+  return { ...result, failedRequests, retrying, retry };
 }
 
 const INVESTOR_CACHE = new Map<string, InvestorData>();
 
+// The public route intentionally excludes this payload. Keep the UI contract
+// explicit so a policy 404 is not presented as a transient fetch failure.
+export const PRIVATE_INVESTOR_IDS = new Set(["griffin"]);
+
+type InvestorDetailStatus = "idle" | "loading" | "ready" | "private" | "error";
+
 export function useInvestorDetail(name: string | null) {
   const [data, setData] = useState<InvestorData | null>(null);
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(Boolean(name));
+  const [status, setStatus] = useState<InvestorDetailStatus>(name ? "loading" : "idle");
 
   useEffect(() => {
     if (!name) {
       setData(null);
       setLoading(false);
+      setStatus("idle");
       return;
     }
+
+    setData(null);
+    setLoading(true);
+    setStatus("loading");
 
     let cancelled = false;
     const run = async () => {
@@ -109,17 +241,37 @@ export function useInvestorDetail(name: string | null) {
       if (cached !== undefined) {
         setData(cached);
         setLoading(false);
+        setStatus("ready");
         return;
       }
 
       setLoading(true);
+      setStatus("loading");
+      const controller = new AbortController();
+      const timeoutId = window.setTimeout(() => controller.abort(), SEC_13F_FETCH_TIMEOUT_MS);
       try {
-        const r = await fetchJson<InvestorData>(`/data/sec-13f/investors/${name}.json`);
-        if (r) INVESTOR_CACHE.set(name, r);
-        if (!cancelled) setData(r);
+        const response = await fetch(`/data/sec-13f/investors/${name}.json`, { signal: controller.signal });
+        if (!response.ok) {
+          if (!cancelled) {
+            setData(null);
+            setStatus(response.status === 404 && PRIVATE_INVESTOR_IDS.has(name) ? "private" : "error");
+          }
+          return;
+        }
+        const payload = (await response.json()) as InvestorData;
+        const investor = (await resolveSec13fInvestorPayload(payload)) as InvestorData;
+        INVESTOR_CACHE.set(name, investor);
+        if (!cancelled) {
+          setData(investor);
+          setStatus("ready");
+        }
       } catch {
-        if (!cancelled) setData(null);
+        if (!cancelled) {
+          setData(null);
+          setStatus("error");
+        }
       } finally {
+        window.clearTimeout(timeoutId);
         if (!cancelled) setLoading(false);
       }
     };
@@ -130,5 +282,5 @@ export function useInvestorDetail(name: string | null) {
     };
   }, [name]);
 
-  return { data, loading };
+  return { data, loading, status };
 }

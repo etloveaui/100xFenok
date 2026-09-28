@@ -1,0 +1,96 @@
+{
+  "schema_version": "feno_index_rim_terminal_criteria.v1",
+  "phase": "T — terminal specification adjudication",
+  "frozen_before_any_result": true,
+  "handler": "cc (Opus). Owner directive 2026-08-08: E5 stopped; arithmetic passed but the economic specification is not thereby accepted.",
+  "authority": "owner message 2026-08-08 KST; FENO_RIM_FINAL_ARCHITECTURE_PLAN_20260808.md §5",
+
+  "what_is_frozen_elsewhere_and_does_not_move": {
+    "erp_grid": "0.0453 / 0.0503 / 0.0553",
+    "ltroe_grid": {"SPX": [0.21480, 0.21980, 0.22480], "NDX": [0.30310, 0.30810, 0.31310]},
+    "risk_free_rate": 0.0463,
+    "observed_inputs": "unchanged from feno-index-rim-v1-criteria-v2.json",
+    "explicit_period": "3 years, B_t = B_(t-1) + E_t × (1 − payout), RI_t = E_t − Ke × B_(t-1)",
+    "note": "Only the terminal changes. Every other input stays exactly as frozen, so any difference between specifications is attributable to the terminal alone."
+  },
+
+  "the_question": "Is the current canonical terminal too conservative to serve as a broad-index Base? A zero-growth residual-income perpetuity holds book at B3 forever, which is arithmetically identical to assuming the index pays out 100% of earnings from year 4 onward. That is internally consistent but it denies the index any reinvestment at a positive spread, and a broad equity index does reinvest.",
+
+  "specifications": {
+    "A_zero_growth": {
+      "formula": "CV3 = (LTROE − Ke) × B3 / Ke",
+      "implied_state": "book frozen at B3, payout 100% of earnings, ROE = LTROE forever",
+      "role": "BASELINE ONLY. Carried so the comparison has a floor, not as a candidate Base."
+    },
+    "B_stable_growth": {
+      "formula": "RI_4 = (LTROE − Ke) × B3 ;  CV3 = RI_4 / (Ke − g_stable)",
+      "g_stable_rule": "g_stable = risk_free_rate = 0.0463",
+      "g_stable_provenance": "Damodaran's stated cap: stable growth in a currency cannot exceed the risk-free rate in that currency, because the risk-free rate embeds long-run nominal growth expectations. The value is an observed input already inside this model, not a new number and not one chosen by looking at output.",
+      "consistency_requirement": "implied stable retention b = g_stable / LTROE must lie in [0,1] and the residual payout (1−b) must be reported. This is what ties g to reinvestment rather than letting growth appear from nowhere.",
+      "finiteness_requirement": "g_stable < Ke for every cell. With Ke from 0.0916 to 0.1016 and g_stable 0.0463 this holds by construction; it is asserted mechanically anyway.",
+      "why_not_the_current_payout": "Carrying the explicit-period retention into perpetuity is arithmetically impossible here. SPX retention is 79.3% at LTROE 21.98%, implying g = 17.4% against a Ke near 9.7%. Any specification that lets the observed retention persist forever produces a negative denominator, and that is the honest reason the stable state must use a lower retention, not a modelling preference."
+    },
+    "C_roe_fade": {
+      "formula": "ROE declines linearly from ROE_FY3 to LTROE over N years; book keeps rolling with the explicit-period payout; after the fade a zero-growth RI perpetuity at LTROE on the faded book",
+      "N": 10,
+      "N_provenance": "The 10-year window already present in the superseded valuation_range_v1 fade endpoint, and within the fade horizons used in the GLS literature. Not a new number and not tuned.",
+      "roe_fy3_definition": "ROE_FY3 = E3 / B2, computed from the frozen explicit-period operands",
+      "book_during_fade": "B_(t) = B_(t-1) + E_t × (1 − payout), with E_t = ROE_t × B_(t-1) and ROE_t on the linear fade path",
+      "direction_is_not_assumed": "If ROE_FY3 exceeds LTROE the fade is downward and C sits above A; if it is below, C sits below A. The specification does not presume which."
+    },
+    "D_yoo_exact": {
+      "status": "NOT_VERIFIED — not computed",
+      "condition_to_admit": "one common equation reproducing several public 3×3 matrices with no per-report fitted constant",
+      "why_it_stays_out": "E0 tested the only fixture held locally, the Murata 2019 grid, and refuted the linear-in-LTROE family that covers A and C's terminal structure: the grid's second LTROE step is 3.4% larger than its first at all three discount rates. One fixture can refute but cannot identify, and no second complete public matrix is held here. Admitting D would require acquiring another matrix first."
+    }
+  },
+
+  "outputs_required_per_specification": [
+    "full 3×3 for SPX and NDX",
+    "BEAR / BASE / BULL / grid mean",
+    "terminal value share of V0 at the Base cell",
+    "current-price implied LTROE at ERP base",
+    "current-price implied ERP at LTROE base",
+    "payout route A vs B valuation impact on Base and grid mean",
+    "monotonicity assertion on both axes"
+  ],
+
+  "interpretability_test_frozen_before_results": {
+    "purpose": "The owner asked whether a specification is economically interpretable. That must be decidable without looking at whether its answer is comfortable.",
+    "conditions_all_required": [
+      "every cell finite and the terminal denominator strictly positive",
+      "monotonic in both axes and BULL ≥ BASE ≥ BEAR",
+      "implied stable retention, where the specification has one, inside [0,1]",
+      "terminal value share of V0 at Base strictly below 0.90 — above that the three explicit years are decoration and the model is a terminal-value calculator wearing a residual-income label",
+      "current-price implied LTROE inside the frozen alarms, 0.60 for SPX and 0.80 for NDX",
+      "current-price implied ERP inside the frozen 0.00 to 0.12 band",
+      "the terminal's assumption stateable in one sentence the owner can accept or reject without reading code"
+    ],
+    "explicitly_not_a_condition": "Agreement with the current market price, with any Yoo published figure, or with the other specifications. A specification that says the index is cheap or expensive is not thereby right or wrong.",
+    "selection_rule_if_several_pass": "Prefer the specification whose assumption is weakest — the one that adds the least beyond what the frozen inputs already assert. Where B and C both pass, B adds a growth rate and C adds a fade path plus a horizon, so B is preferred as the smaller addition. A is never selected as Base; it is a floor.",
+    "if_none_pass": "FENO_INDEX_RIM_RETIRE. Close the fair-value product, keep GLS ICC and the RIM inputs as research, and create no RIM v5 or v6."
+  },
+
+  "prohibitions": [
+    "no calibration to the current market price",
+    "no calibration to any Yoo published output",
+    "no g_stable, fade horizon or terminal parameter chosen after seeing a valuation",
+    "no change to the ERP or LTROE grids, which stay frozen",
+    "no new model family",
+    "no editing of this file; supersede with -v2 and a new receipt"
+  ],
+
+  "deliverables": [
+    "data/computed/rim-index/FENO_RIM_TERMINAL_COMPARISON.json",
+    "data/computed/rim-index/FENO_RIM_TERMINAL_ADJUDICATION.md"
+  ],
+
+  "result_paths_blocked_until_this_file_is_committed": [
+    "data/computed/rim-index/FENO_RIM_TERMINAL_COMPARISON.json",
+    "data/computed/rim-index/FENO_RIM_TERMINAL_ADJUDICATION.md"
+  ],
+
+  "historical_qa": "E5 does not run until this adjudication closes. Owner directive.",
+
+  "frozen_at_utc": "2026-08-08T10:35:00Z"
+}

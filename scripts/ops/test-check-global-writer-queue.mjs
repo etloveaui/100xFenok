@@ -1,7 +1,5 @@
 import assert from "node:assert/strict";
-import { spawnSync } from "node:child_process";
 import fs from "node:fs";
-import os from "node:os";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import {
@@ -11,20 +9,32 @@ import {
   buildJobsApiUrl,
   fetchWorkflowRuns,
   main,
+  deriveWriterJobTargets,
 } from "./check-global-writer-queue.mjs";
 
 const HERE = path.dirname(fileURLToPath(import.meta.url));
 const fixturePath = (name) => path.join(HERE, "fixtures", "global-writer-queue", `${name}.json`);
 const readFixture = (name) => JSON.parse(fs.readFileSync(fixturePath(name), "utf8"));
+const splitTargets = deriveWriterJobTargets([
+  { workflow: ".github/workflows/split.yml", groupScope: "job", job: "save-source", needs: ["acquire"] },
+  { workflow: ".github/workflows/split.yml", groupScope: "job", job: "save-outcome", needs: ["save-source", "upload"] },
+  { workflow: ".github/workflows/root.yml", groupScope: "job", job: "source", needs: [] },
+]);
+assert.deepEqual(splitTargets["split.yml"].map((target) => target.job_name), ["save-source", "save-outcome"],
+  "one workflow may release the writer lock during cloud I/O and reacquire it for evidence");
+assert.deepEqual(splitTargets["split.yml"][1].eligibility_predecessors, ["save-source", "upload"],
+  "outcome queue eligibility waits for every dependency, including the cloud upload");
+assert.equal(splitTargets["root.yml"][0].job_name, "source", "root writer jobs remain observable");
 const policy = loadPolicy();
 const NOW = "2026-07-21T03:00:00Z";
 
 assert.equal(policy.version, 1, "queue policy is explicitly versioned");
 assert.equal(policy.metric, "global-writer candidate queued runs");
 assert.equal(policy.concurrency_group, "fenok-data-writer-refs/heads/main");
+assert.equal(policy.queue_mode, "max", "loss-intolerant writers use GitHub's deep pending queue");
 assert.equal(policy.canonical_branch, "main", "writer workflows are observed only on main");
 assert.equal(policy.default_observation_mode, "workflow_run", "other writers retain workflow-level observation");
-assert.ok(Array.isArray(policy.workflows) && policy.workflows.length > 10, "writer workflow list is explicit");
+assert.ok(Array.isArray(policy.workflows) && policy.workflows.length > 10, "writer workflow set is derived");
 assert.equal(new Set(policy.workflows).size, policy.workflows.length, "writer workflow list has no duplicates");
 assert.equal(policy.api.runs_per_page, 100, "API page size stays within the REST limit");
 assert.ok(policy.api.max_pages >= 1, "API query depth is bounded");
@@ -32,23 +42,18 @@ assert.ok(policy.thresholds.max_depth >= 0, "queue-depth threshold is configurab
 assert.ok(policy.thresholds.max_age_minutes >= 0, "queue-age threshold is configurable");
 assert.equal(policy.alert.output, "workflow-failure-and-json", "alert output is machine-readable and non-mutating");
 assert.equal(policy.alert.unknown_exit_code, 3, "unknown observation has a distinct nonzero exit");
-assert.deepEqual(policy.job_level_targets["fetch-stockanalysis.yml"], {
+assert.deepEqual(policy.job_level_targets["fetch-stockanalysis.yml"][0], {
   job_name: "publish-stockanalysis",
-  eligibility_predecessor: "acquire-stockanalysis",
+  eligibility_predecessors: ["acquire-stockanalysis"],
   parent_run_statuses: ["queued", "requested", "waiting", "pending", "in_progress"],
   candidate_statuses: ["queued", "waiting", "pending"],
 }, "StockAnalysis observes only its writer-owning publish job");
-
-const workflowsDir = path.resolve(HERE, "../../.github/workflows");
-const actualWriterWorkflows = fs
-  .readdirSync(workflowsDir)
-  .filter((file) => file.endsWith(".yml"))
-  .filter((file) => {
-    const body = fs.readFileSync(path.join(workflowsDir, file), "utf8");
-    return body.includes("group: fenok-data-writer-refs/heads/main") || body.includes("group: fenok-data-writer-${{ github.ref }}");
-  })
-  .sort();
-assert.deepEqual([...policy.workflows].sort(), actualWriterWorkflows, "policy list stays in parity with global-writer workflows");
+assert.deepEqual(policy.job_level_targets["pipeline-failure-alarm.yml"][0], {
+  job_name: "persist-alarm-state",
+  eligibility_predecessors: ["check"],
+  parent_run_statuses: ["queued", "requested", "waiting", "pending", "in_progress"],
+  candidate_statuses: ["queued", "waiting", "pending"],
+}, "the alarm observes only its dependent global-writer persistence job");
 
 const runs = readFixture("mixed");
 const evaluated = evaluateQueue(runs, { now: NOW, maxDepth: 2, maxAgeMinutes: 30 });
@@ -112,6 +117,47 @@ function fixtureFetch(fixture) {
     }
     throw new Error(`unexpected fixture URL: ${requestUrl}`);
   };
+}
+
+// A slow cloud stage is not writer contention. Once it completes, only the
+// time since the last dependency completed contributes to the tail's age.
+{
+  const fixture = {
+    workflow_runs: [{ id: 9901, head_branch: "main", status: "in_progress", created_at: "2026-07-21T02:00:00Z" }],
+    jobs_by_run: { 9901: [
+      { id: 1, name: "acquire", status: "completed", completed_at: "2026-07-21T02:05:00Z" },
+      { id: 2, name: "save-source", status: "completed", completed_at: "2026-07-21T02:06:00Z" },
+      { id: 3, name: "upload", status: "in_progress", completed_at: null },
+      { id: 4, name: "save-outcome", status: "queued", completed_at: null },
+    ] },
+  };
+  const splitPolicy = { ...policy, workflows: ["split.yml"], job_level_targets: splitTargets };
+  let calls = 0;
+  const transport = fixtureFetch(fixture);
+  const fetchImpl = async (url) => { if (url.includes("/jobs?")) calls += 1; return transport(url); };
+  let observed = await fetchWorkflowRuns({ policy: splitPolicy, owner: "octo", repo: "repo", fetchImpl });
+  assert.equal(evaluateQueue(observed, { now: NOW, maxDepth: 0, maxAgeMinutes: 0 }).candidateDepth, 0,
+    "a queued tail is not eligible while cloud I/O is running");
+  assert.equal(calls, 1, "multiple writer targets share one jobs API read per parent run");
+  fixture.jobs_by_run[9901][2] = { id: 3, name: "upload", status: "completed", completed_at: "2026-07-21T02:59:00Z" };
+  observed = await fetchWorkflowRuns({ policy: splitPolicy, owner: "octo", repo: "repo", fetchImpl: fixtureFetch(fixture) });
+  const afterUpload = evaluateQueue(observed, { now: NOW, maxDepth: 3, maxAgeMinutes: 30 });
+  assert.equal(afterUpload.candidateDepth, 1);
+  assert.equal(afterUpload.oldestCandidateAgeMinutes, 1, "53 minutes of cloud work are excluded from writer wait");
+}
+
+{
+  const observed = await fetchWorkflowRuns({
+    policy: { ...policy, workflows: ["root.yml"], job_level_targets: splitTargets },
+    owner: "octo", repo: "repo",
+    fetchImpl: fixtureFetch({
+      workflow_runs: [{ id: 9902, head_branch: "main", status: "in_progress", created_at: "2026-07-21T02:00:00Z", run_started_at: "2026-07-21T02:59:00Z" }],
+      jobs_by_run: { 9902: [{ id: 5, name: "source", status: "queued", completed_at: null }] },
+    }),
+  });
+  const queuedRoot = evaluateQueue(observed, { now: NOW, maxDepth: 3, maxAgeMinutes: 30 });
+  assert.equal(queuedRoot.candidateDepth, 1, "root source writes are still represented alongside detached tails");
+  assert.equal(queuedRoot.oldestCandidateAgeMinutes, 1, "root writer wait starts when its workflow run started");
 }
 
 const stockanalysisPolicy = {
@@ -242,28 +288,30 @@ const stockanalysisPolicy = {
   process.exitCode = 0;
 }
 
-// Malformed policy/threshold configuration is an unknown observation, not an
-// alarm and not an uncaught process failure. The checker still emits JSON.
+// Invalid threshold configuration is an unknown observation, not an alarm.
 {
-  const badPolicy = path.join(fs.mkdtempSync(path.join(os.tmpdir(), "queue-observer-")), "bad-policy.json");
-  fs.writeFileSync(badPolicy, "{\"version\": 99}\n");
-  const scriptPath = path.resolve(HERE, "check-global-writer-queue.mjs");
-  const run = spawnSync(process.execPath, [scriptPath], {
-    env: {
-      ...process.env,
-      GITHUB_REPOSITORY: "octo/repo",
-      QUEUE_OBSERVABILITY_POLICY: badPolicy,
+  const previousRepository = process.env.GITHUB_REPOSITORY;
+  const previousDepth = process.env.QUEUE_OBSERVABILITY_MAX_DEPTH;
+  process.env.GITHUB_REPOSITORY = "octo/repo";
+  process.env.QUEUE_OBSERVABILITY_MAX_DEPTH = "invalid";
+  const result = await main({
+    fetchImpl: async () => {
+      throw new Error("invalid threshold must fail before transport");
     },
-    encoding: "utf8",
   });
-  assert.equal(run.status, 3, "malformed policy must use the distinct unknown exit code");
-  const result = JSON.parse(run.stdout);
+  if (previousRepository === undefined) delete process.env.GITHUB_REPOSITORY;
+  else process.env.GITHUB_REPOSITORY = previousRepository;
+  if (previousDepth === undefined) delete process.env.QUEUE_OBSERVABILITY_MAX_DEPTH;
+  else process.env.QUEUE_OBSERVABILITY_MAX_DEPTH = previousDepth;
   assert.equal(result.status, "unknown");
   assert.match(result.message, /observation error/);
+  assert.equal(process.exitCode, 3, "invalid configuration uses the distinct unknown exit code");
+  process.exitCode = 0;
 }
 
 // Dedicated observer is read-only and cannot enter the data-writer group.
 {
+  const workflowsDir = path.resolve(HERE, "../../.github/workflows");
   const workflow = fs.readFileSync(path.join(workflowsDir, "global-writer-queue-observer.yml"), "utf8");
   assert.match(workflow, /actions:\s*read/);
   assert.match(workflow, /contents:\s*read/);

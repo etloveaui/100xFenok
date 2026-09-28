@@ -49,9 +49,9 @@ class ParityEstate:
         self.platform = root / "platform"
         self.fixtures = root / "fixtures"
         self.paths = ["summary.json", "by_ticker.json", "by_sector.json"]
-        self.paths.extend(f"investors/investor_{index:02d}.json" for index in range(60))
+        self.paths.extend(f"investors/investor_{index:02d}.json" for index in range(63))
         self.paths.extend(f"analytics/{name}" for name in ANALYTICS)
-        assert len(self.paths) == 73
+        assert len(self.paths) == 76
 
         for relative_path in self.paths:
             payload = {
@@ -93,7 +93,7 @@ class ParityEstate:
                                 "analytics/conviction.json",
                             ],
                             "json_path": "$.metadata.generated_at",
-                            "measured_occurrences": 62,
+                            "measured_occurrences": 65,
                         }
                     ]
                 }
@@ -111,7 +111,7 @@ class ParityEstate:
 
 
 class SliceAParityTest(unittest.TestCase):
-    def test_exact_73_outputs_normalize_only_the_declared_generated_at(self) -> None:
+    def test_exact_76_outputs_normalize_only_the_declared_generated_at(self) -> None:
         with tempfile.TemporaryDirectory() as temporary_root:
             estate = ParityEstate(Path(temporary_root))
             for relative_path in estate.paths:
@@ -126,19 +126,19 @@ class SliceAParityTest(unittest.TestCase):
             self.assertEqual(
                 report["summary"],
                 {
-                    "expected_files": 73,
-                    "compared_files": 73,
+                    "expected_files": 76,
+                    "compared_files": 76,
                     "byte_exact_files": 11,
-                    "normalized_equal_files": 73,
+                    "normalized_equal_files": 76,
                     "mismatched_files": 0,
                     "mismatch_count": 0,
                     "row_mismatch_count": 0,
                 },
             )
             self.assertEqual(report["boundary"], {"missing": {"cch": [], "platform": []}, "extra": {"cch": [], "platform": []}})
-            self.assertEqual(report["normalization"]["normalized_files"], 62)
-            self.assertEqual(report["normalization"]["cch_occurrences"], 62)
-            self.assertEqual(report["normalization"]["platform_occurrences"], 62)
+            self.assertEqual(report["normalization"]["normalized_files"], 65)
+            self.assertEqual(report["normalization"]["cch_occurrences"], 65)
+            self.assertEqual(report["normalization"]["platform_occurrences"], 65)
 
     def test_undeclared_timestamp_and_row_field_mismatches_are_addressable(self) -> None:
         with tempfile.TemporaryDirectory() as temporary_root:

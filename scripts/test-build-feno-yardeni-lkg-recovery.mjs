@@ -28,10 +28,6 @@ import {
   YARDENI_LANE_ID,
   YARDENI_LKG_KEY,
 } from "./build-feno-yardeni-model.mjs";
-import {
-  projectRecoveryRecoveredSet,
-  projectRecoveryRetrySet,
-} from "./build-fenok-data-health-kpi.mjs";
 import { DATA_SUPPLY_DETECTION_CONFIG } from "./lib/data-supply-detection-config.mjs";
 import { checkWorkflowCommitShardsAgainstRegistry } from "./check-lane-registry-commit-shards.mjs";
 import { LaneLkgStore } from "./lib/data-supply-lkg-store.mjs";
@@ -109,7 +105,6 @@ function runPaths(root) {
     publicMirrorPath: path.join(root, "public", "data", "yardney", "yardney_model.json"),
     privateOutputPath: path.join(root, "private", "yardney_model_full.json"),
     privateFredCachePath: path.join(root, "private", "fred_yardeni_yields.json"),
-    attemptShardPath: path.join(root, "data", "admin", "data-supply-state", "detection-attempts", "fred_yardeni.json"),
   };
 }
 function indexPath(root) {
@@ -218,12 +213,8 @@ async function runLane(root, { series, request, run, controlledFailureKey = "" }
     "retained LKG is sha256-bound to the on-disk lkg copy",
   );
 
-  // (g) the retry-state index round-trips through the KPI validator
-  const retrySet = projectRecoveryRetrySet(retained, YARDENI_LANE_ID);
-  assert.equal(retrySet.length, 1);
-  assert.equal(retrySet[0].key, YARDENI_LKG_KEY);
-  assert.equal(retrySet[0].resolution_state, "lkg_primary");
-  assert.equal(retrySet[0].failure_run_id, "transport-run");
+  // Retry provenance stays in the private LKG index; the slim KPI does not project it.
+  assert.deepEqual(retained.retry_set, [YARDENI_LKG_KEY]);
 
   // (d) a workflow_dispatch success cannot promote a recovery (natural gate)
   const dispatchAttempt = await runLane(root, { series: fredGen2, run: dispatchRun("manual-run", "2026-07-13T11:00:00Z") });
@@ -258,14 +249,7 @@ async function runLane(root, { series, request, run, controlledFailureKey = "" }
   assert.equal(item.recovery_event_name, "schedule");
   assert.equal(item.last_recovered_failure.reason, "transport_error");
 
-  // (g) the recovered-state index round-trips through the KPI validator
-  const recoveredSet = projectRecoveryRecoveredSet(finalState, YARDENI_LANE_ID);
-  assert.equal(recoveredSet.length, 1);
-  assert.equal(recoveredSet[0].key, YARDENI_LKG_KEY);
-  assert.equal(recoveredSet[0].recovered_from_run_id, "transport-run");
-  assert.equal(recoveredSet[0].recovery_event_name, "schedule");
-  assert.equal(recoveredSet[0].lkg_source_as_of, "2010-01-08");
-  assert.equal(recoveredSet[0].source_as_of, "2010-01-15");
+  assert.deepEqual(finalState.retry_set, []);
 }
 
 // --- (e) a systemic break is corruption, not degradation --------------------
@@ -383,6 +367,7 @@ async function runLane(root, { series, request, run, controlledFailureKey = "" }
   const chaos = await runLane(root, { series: fredGen1, run: dispatchRun("chaos-run", "2026-07-18T10:00:00Z"), controlledFailureKey: "yardney_model" });
   assert.equal(chaos.ok, false);
   assert.equal(chaos.reason, "transport_error", "injection rides the real transport-error path, never a synthetic side path");
+  assert.equal(chaos.failure_detail, null, "controlled synthetic failures carry no diagnostic detail");
   assert.equal(chaos.lkg.kind, "failure");
   assert.equal(chaos.lkg.degraded, true);
   assert.equal(chaos.lkg.exitCode, 0);
@@ -411,6 +396,13 @@ async function runLane(root, { series, request, run, controlledFailureKey = "" }
 // --- Lane Registry ⇄ commit-shard completeness gate (#366 step 4) -----------
 {
   const workflowText = fs.readFileSync(new URL("../.github/workflows/fetch-fred-yardeni.yml", import.meta.url), "utf8");
+  const manifest = JSON.parse(fs.readFileSync(
+    new URL("../data/admin/lane-commit-manifest.json", import.meta.url),
+    "utf8",
+  ));
+  const canonicalSpec = manifest.workflows[".github/workflows/fetch-fred-yardeni.yml"]
+    .stages.success_if_exists
+    .find((spec) => spec.path === "data/yardney/yardney_model.json");
   const gate = checkWorkflowCommitShardsAgainstRegistry({
     workflowText,
     workflowRel: ".github/workflows/fetch-fred-yardeni.yml",
@@ -420,12 +412,15 @@ async function runLane(root, { series, request, run, controlledFailureKey = "" }
   assert.deepEqual(gate.undeclared_in_workflow, [],
     `allowlist paths with no registry record: ${JSON.stringify(gate.undeclared_in_workflow)}`);
   assert.deepEqual(gate.lanes, ["fred_yardeni"], "the registry must attribute this lane to fetch-fred-yardeni.yml");
-  assert.match(workflowText, /scripts\/stage-lane-manifest\.sh/);
-  assert.match(workflowText, /--stage always_if_exists/);
   assert.match(
     workflowText,
-    /if \[\[ "\$FETCH_OUTCOME" == "success" \]\]; then[\s\S]*?scripts\/stage-lane-manifest\.sh[\s\S]*?--stage success_if_exists[\s\S]*?git add --/,
-    "canonical and public Yardeni outputs must be manifest-staged only on success, alongside the legacy hand list",
+    /scripts\/stage-lane-manifest\.sh[\s\S]*?--stage always_if_exists[\s\S]*?if \[\[ "\$FETCH_OUTCOME" == "success" \]\]; then[\s\S]*?scripts\/stage-lane-manifest\.sh[\s\S]*?--stage success_if_exists/,
+    "Yardeni outputs must use manifest staging, with canonical staging gated on success",
+  );
+  assert.equal(
+    canonicalSpec?.required,
+    true,
+    "successful Yardeni fetch must require the canonical payload",
   );
 }
 

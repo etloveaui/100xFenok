@@ -11,6 +11,7 @@ import stat
 import subprocess
 import tempfile
 import unittest
+from unittest import mock
 
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -110,9 +111,123 @@ class StockAnalysisArtifactTest(unittest.TestCase):
         self.assertEqual(manifest["paths"], ["data/stockanalysis/a.json"])
         result = self.apply()
         self.assertEqual(result["status"], "applied")
+        self.assertEqual(result["confirmation"], "pending")
         self.assertEqual((self.root / "data/stockanalysis/a.json").read_text(), '{"value":2}\n')
         run("git", "add", "--", "data/stockanalysis", cwd=self.root)
         self.helper.audit_staged_paths(self.root, self.artifact)
+
+    def test_source_growth_after_hash_fails_pack_with_path_and_sizes(self) -> None:
+        target = self.candidate / "data/stockanalysis/a.json"
+        target.write_text('{"value":2}\n')
+        original_sha256_file = self.helper.sha256_file
+        grew = False
+
+        def hash_then_grow(path: Path) -> str:
+            nonlocal grew
+            digest = original_sha256_file(path)
+            if path == target and not grew:
+                with path.open("ab") as handle:
+                    handle.write(b'{"late":1}\n')
+                grew = True
+            return digest
+
+        with mock.patch.object(self.helper, "sha256_file", side_effect=hash_then_grow):
+            with self.assertRaisesRegex(
+                ValueError,
+                (
+                    "artifact source changed after initial hash and before copy: "
+                    "data/stockanalysis/a.json; size_at_hash=12; size_before_copy=23"
+                ),
+            ):
+                self.pack()
+        self.assertFalse((self.artifact / "manifest.json").exists())
+
+    def test_hash_before_copy_mutant_recreates_self_inconsistent_artifact(self) -> None:
+        target = self.candidate / "data/stockanalysis/a.json"
+        target.write_text('{"value":2}\n')
+        original_sha256_file = self.helper.sha256_file
+        grew = False
+
+        def hash_then_grow(path: Path) -> str:
+            nonlocal grew
+            digest = original_sha256_file(path)
+            if path == target and not grew:
+                with path.open("ab") as handle:
+                    handle.write(b'{"late":1}\n')
+                grew = True
+            return digest
+
+        def unsafe_hash_before_copy(
+            *,
+            source: Path,
+            target: Path,
+            rel: str,
+            size_at_hash: int,
+            digest_at_hash: str,
+            mtime_ns_at_hash: int,
+            inode_at_hash: int,
+        ) -> tuple[int, str, int, int, int]:
+            del rel, size_at_hash, mtime_ns_at_hash, inode_at_hash
+            target.parent.mkdir(parents=True, exist_ok=True)
+            self.helper.shutil.copy2(source, target)
+            copied_source = source.stat()
+            return (
+                copied_source.st_size,
+                digest_at_hash,
+                copied_source.st_size,
+                copied_source.st_mtime_ns,
+                copied_source.st_ino,
+            )
+
+        with (
+            mock.patch.object(self.helper, "sha256_file", side_effect=hash_then_grow),
+            mock.patch.object(
+                self.helper,
+                "copy_file_consistently",
+                side_effect=unsafe_hash_before_copy,
+            ),
+        ):
+            manifest = self.pack()
+
+        row = manifest["files"][0]
+        packed = self.artifact / "files" / row["path"]
+        self.assertNotEqual(row["sha256"], original_sha256_file(packed))
+        with self.assertRaisesRegex(
+            ValueError,
+            "artifact hash or size mismatch: data/stockanalysis/a.json",
+        ):
+            self.apply()
+        print("mutation hash-before-copy: pack_succeeded=true manifest_matches_payload=false")
+
+    def test_source_growth_after_copy_fails_before_manifest(self) -> None:
+        target = self.candidate / "data/stockanalysis/a.json"
+        target.write_text('{"value":2}\n')
+        original_copy = self.helper.copy_file_consistently
+        grew = False
+
+        def copy_then_grow(**kwargs):
+            nonlocal grew
+            result = original_copy(**kwargs)
+            if kwargs["source"] == target and not grew:
+                with target.open("ab") as handle:
+                    handle.write(b'{"late":1}\n')
+                grew = True
+            return result
+
+        with mock.patch.object(
+            self.helper,
+            "copy_file_consistently",
+            side_effect=copy_then_grow,
+        ):
+            with self.assertRaisesRegex(
+                ValueError,
+                (
+                    "artifact source changed after copy and before manifest: "
+                    "data/stockanalysis/a.json; size_after_copy=12; "
+                    "size_before_manifest=23"
+                ),
+            ):
+                self.pack()
 
     def test_runtime_lock_files_are_not_artifact_payload(self) -> None:
         repo_lock = self.root / "data/admin/data-supply-state/v1/domains/stock_detail/.lock"
@@ -141,6 +256,49 @@ class StockAnalysisArtifactTest(unittest.TestCase):
         tampered["file_count"] += 1
         manifest_path.write_text(json.dumps(tampered))
         with self.assertRaisesRegex(ValueError, "runtime lock"):
+            self.apply()
+
+    def test_public_mirror_tree_is_ignored_by_construction_and_fails_closed_on_extraction(self) -> None:
+        public_dir = self.root / "100xfenok-next/public/data"
+        public_dir.mkdir(parents=True)
+        (public_dir / ".gitkeep").write_text("placeholder\n")
+        computed_dir = public_dir / "computed"
+        computed_dir.mkdir()
+        (computed_dir / "signals.json").write_text('{"mirror":true}\n')
+        manifest_path = self.root / "data/admin/lane-commit-manifest.json"
+        manifest = json.loads(manifest_path.read_text())
+        manifest["workflows"][WORKFLOW]["stages"]["always_if_exists"].append(
+            {"kind": "directory", "path": "100xfenok-next/public/data", "required": False}
+        )
+        manifest_path.write_text(json.dumps(manifest, indent=2) + "\n")
+        run(
+            "git", "add", "--",
+            "100xfenok-next/public/data", "data/admin/lane-commit-manifest.json",
+            cwd=self.root,
+        )
+        run("git", "commit", "-qm", "add public mirror tree", cwd=self.root)
+        self.base = run("git", "rev-parse", "HEAD", cwd=self.root)
+
+        self.helper.seed_candidate(self.root, self.candidate, WORKFLOW, replace=True)
+        (self.candidate / "data/stockanalysis/a.json").write_text('{"value":2}\n')
+        packed = self.pack()
+
+        self.assertEqual(packed["paths"], ["data/stockanalysis/a.json"])
+        self.assertFalse((self.candidate / "100xfenok-next/public").exists())
+        self.assertFalse((self.artifact / "files/100xfenok-next/public/data/.gitkeep").exists())
+        self.assertFalse((self.artifact / "files/100xfenok-next/public/data/computed/signals.json").exists())
+        self.assertEqual(self.apply()["status"], "applied")
+
+        artifact_manifest = json.loads((self.artifact / "manifest.json").read_text())
+        injected = "100xfenok-next/public/data/.gitkeep"
+        artifact_manifest["paths"].append(injected)
+        artifact_manifest["files"].append({"path": injected, "sha256": "0" * 64, "size": 0})
+        artifact_manifest["file_count"] += 1
+        (self.artifact / "manifest.json").write_text(json.dumps(artifact_manifest))
+        payload = self.artifact / "files" / injected
+        payload.parent.mkdir(parents=True)
+        payload.write_text("x")
+        with self.assertRaisesRegex(ValueError, "public path is forbidden"):
             self.apply()
 
     def test_stage_audit_rejects_same_path_with_different_staged_bytes(self) -> None:
@@ -192,7 +350,20 @@ class StockAnalysisArtifactTest(unittest.TestCase):
         before = target.read_bytes()
         result = self.apply()
         self.assertEqual(result["status"], "stale")
+        self.assertEqual(result["confirmation"], "not_confirmed")
         self.assertEqual(target.read_bytes(), before)
+
+    def test_post_publish_readback_matches_packed_candidate(self) -> None:
+        candidate_file = self.candidate / "data/stockanalysis/a.json"
+        candidate_file.write_text('{"value":2}\n')
+        self.pack()
+        self.assertEqual(self.apply()["status"], "applied")
+        result = self.helper.verify_artifact_readback(repo_root=self.root, artifact_root=self.artifact)
+        self.assertEqual(result["status"], "confirmed")
+        self.assertEqual(result["paths"], 1)
+        (self.root / "data/stockanalysis/a.json").write_text('{"value":3}\n')
+        with self.assertRaisesRegex(ValueError, "readback differs from packed candidate"):
+            self.helper.verify_artifact_readback(repo_root=self.root, artifact_root=self.artifact)
 
     def test_newer_publish_trailer_rejects_older_artifact_lane_wide(self) -> None:
         (self.candidate / "data/stockanalysis/a.json").write_text('{"value":2}\n')

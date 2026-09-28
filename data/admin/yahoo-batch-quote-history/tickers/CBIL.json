@@ -38,54 +38,117 @@
       "run_id": "29460793523",
       "schedule": "20 23 * * 1-5",
       "shard": "3/5"
+    },
+    {
+      "attempts_used": 1,
+      "event_name": "schedule",
+      "failures": [],
+      "latency_ms": 902,
+      "natural": true,
+      "observed_at": "2026-08-03T22:58:08Z",
+      "outcome": "fresh",
+      "run_attempt": 1,
+      "run_id": "30860500094",
+      "schedule": "0 22 * * 1",
+      "shard": "1/6"
+    },
+    {
+      "attempts_used": 1,
+      "event_name": "schedule",
+      "failures": [],
+      "latency_ms": 707,
+      "natural": true,
+      "observed_at": "2026-08-06T14:33:02Z",
+      "outcome": "fresh",
+      "run_attempt": 1,
+      "run_id": "31111230701",
+      "schedule": "7 12 * * 0-5",
+      "shard": "54/72"
+    },
+    {
+      "attempts_used": 1,
+      "event_name": "schedule",
+      "failures": [],
+      "latency_ms": 773,
+      "natural": true,
+      "observed_at": "2026-08-12T02:41:04Z",
+      "outcome": "fresh",
+      "run_attempt": 1,
+      "run_id": "31557511991",
+      "schedule": "7 0 * * 0-5",
+      "shard": "36/72"
+    },
+    {
+      "attempts_used": 1,
+      "event_name": "workflow_dispatch",
+      "failures": [],
+      "latency_ms": 451,
+      "natural": false,
+      "observed_at": "2026-09-28T01:17:59Z",
+      "outcome": "fresh",
+      "run_attempt": 1,
+      "run_id": "36365270594",
+      "schedule": "",
+      "shard": ""
     }
   ],
   "current": {
-    "fetched_at": "2026-07-16T00:32:22Z",
-    "history_as_of": "2026-07-15",
+    "fetched_at": "2026-09-28T01:34:05Z",
+    "history_as_of": "2026-09-25",
     "path": "data/yf/finance/CBIL.json",
-    "payload_sha256": "d169d2ca74f0cbc8a1325932bd7495f0e92796822812302df5cae08f6f5443cb",
-    "quote_as_of": "2026-07-15T15:40:34Z",
-    "source_as_of": "2026-07-15"
+    "payload_sha256": "d9846793c7fe293d2d3d7941b82da9644b785b8c2a15e0d6b97357b8d9a91512",
+    "quote_as_of": "2026-09-25T19:48:42Z",
+    "source_as_of": "2026-09-25"
   },
   "discovered_from": [
-    "market_facts",
     "stockanalysis_etf"
   ],
   "last_attempt": {
     "attempts_used": 1,
-    "event_name": "schedule",
+    "event_name": "workflow_dispatch",
     "failures": [],
-    "latency_ms": 688,
-    "natural": true,
-    "observed_at": "2026-07-16T00:30:04Z",
+    "latency_ms": 451,
+    "natural": false,
+    "observed_at": "2026-09-28T01:17:59Z",
     "outcome": "fresh",
     "run_attempt": 1,
-    "run_id": "29460793523",
-    "schedule": "20 23 * * 1-5",
-    "shard": "3/5"
+    "run_id": "36365270594",
+    "schedule": "",
+    "shard": ""
   },
   "lkg": {
-    "fetched_at": "2026-06-18T19:29:29Z",
-    "history_as_of": "2026-06-18",
+    "fetched_at": "2026-08-12T02:42:26Z",
+    "history_as_of": "2026-08-10",
     "path": "data/admin/yahoo-batch-quote-history/lkg/CBIL.json",
-    "payload_sha256": "95dbbae7f59abe6b09a875309d0175463a7768c046964b6d186dd8b2380836e9",
-    "quote_as_of": null,
-    "source_as_of": "2026-06-18"
+    "payload_sha256": "bb62b22acb1faf53d825ed4ffeed82e36836d734349d86c811938dbbea0a6339",
+    "quote_as_of": "2026-08-10T17:30:05Z",
+    "source_as_of": "2026-08-10"
+  },
+  "promotion_contract": "provider_observation/v2",
+  "provider_observation": {
+    "event_name": "workflow_dispatch",
+    "history_as_of": "2026-09-25",
+    "observed_at": "2026-09-28T01:17:59Z",
+    "payload_sha256": "bd0d3cac70a7764dbcf92a661138e37c98828e2fac689a43516ea7f7ffa03ca5",
+    "quote_as_of": "2026-09-25T19:48:42Z",
+    "run_attempt": 1,
+    "run_id": "36365270594",
+    "schema_version": "provider_observation/v2",
+    "source_as_of": "2026-09-25"
   },
   "resolution_state": "fresh_primary",
   "retry": false,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "stale": {
-    "age_business_days": 15,
-    "classified_at": "2026-07-13T04:33:56Z",
-    "classified_run_id": "29224221077",
+    "age_business_days": 7,
+    "classified_at": "2026-08-19T23:42:29Z",
+    "classified_run_id": "32314261503",
     "expected_resolution": "next_natural_yahoo_run",
     "max_business_days": 6,
-    "message": "CBIL holds LKG because Yahoo source date 2026-06-18 is 15 business days old, beyond the 6-day bound; it will retry on the next natural Yahoo run.",
+    "message": "CBIL holds LKG because Yahoo source date 2026-08-10 is 7 business days old, beyond the 6-day bound; it will retry on the next natural Yahoo run.",
     "reason": "source_age_exceeds_lane_bound",
-    "source_as_of": "2026-06-18"
+    "source_as_of": "2026-08-10"
   },
   "ticker": "CBIL",
-  "updated_at": "2026-07-16T00:30:04Z"
+  "updated_at": "2026-09-28T01:17:59Z"
 }

@@ -1,7 +1,7 @@
 {
   "folder": "sec-13f",
   "version": "3.4.0",
-  "updated": "2026-06-17",
+  "updated": "2026-09-25",
   "source": "SEC EDGAR 13F filings",
   "update_frequency": "quarterly (45 days after quarter end)",
   "maintainer": "SEC 13F Converter v3.4.0 (accumulate mode, full backfill default)",
@@ -9,8 +9,8 @@
     "summary.json": "Aggregated holdings summary",
     "by_sector.json": "Holdings by sector",
     "by_ticker.json": "Holdings by ticker",
-    "investors/": "60 individual investor files",
-    "analytics/": "Derived metrics (14 files: 10 converter outputs + 4 100x derived indexes)"
+    "investors/": "63 individual investor files",
+    "analytics/": "Derived metrics (15 files: 10 converter outputs + 4 100x derived indexes + 1 separate factor-exposure summary)"
   },
   "files": {
     "summary.json": {
@@ -30,6 +30,8 @@
             "price_at_filing": "number (0-1)",
             "return_since_filing": "number (0-1)"
           },
+          "source_generated_at": "ISO8601 datetime|null; upstream SEC converter generation time, preserved across local enrichment",
+          "source_quarter": "string|null; latest quarter emitted by the upstream SEC converter",
           "enrichment_source_mix": "object<string, number>",
           "enrichment_denominator": "raw_holdings|public_filtered_holdings",
           "enrichment_backfill": {
@@ -381,6 +383,21 @@
         }
       }
     },
+    "analytics/factor_exposures_summary.json": {
+      "description": "Derived factor-exposure summary for the current public 13F analytics surface",
+      "schema": {
+        "schema_version": "number",
+        "generated_at": "ISO8601 datetime",
+        "source_file": "string",
+        "formula_version": "string",
+        "public_surface_status": "string",
+        "raw_data_boundary": "string",
+        "coverage": "object",
+        "factor_sources": "object",
+        "fields": "string[]",
+        "rows": "object[]"
+      }
+    },
     "analytics/ticker_aliases.json": {
       "description": "Raw 13F company-name key normalization diagnostics for by_ticker and consensus rebuilds",
       "schema": {
@@ -448,15 +465,17 @@
   "investor_groups": {
     "value": [
       "buffett",
-      "marks",
-      "klarman",
-      "fidelity",
-      "greenblatt",
       "einhorn",
-      "pabrai",
+      "fidelity",
       "gayner",
-      "russo",
-      "miller"
+      "gmo",
+      "greenblatt",
+      "himalaya",
+      "klarman",
+      "marks",
+      "miller",
+      "pabrai",
+      "russo"
     ],
     "macro": [
       "druckenmiller",
@@ -485,17 +504,18 @@
       "two_sigma"
     ],
     "growth": [
-      "wood",
       "akre",
-      "polen",
-      "hhlr",
-      "sands",
-      "fundsmith",
-      "edgewood",
-      "wcm",
+      "atreides",
       "dorsey",
+      "dragoneer",
       "durable",
-      "dragoneer"
+      "edgewood",
+      "fundsmith",
+      "hhlr",
+      "polen",
+      "sands",
+      "wcm",
+      "wood"
     ],
     "activist": [
       "ackman",
@@ -528,6 +548,11 @@
     ]
   },
   "breaking_changes_history": [
+    {
+      "version": "3.4.0",
+      "date": "2026-08-15",
+      "change": "Q2 2026 SEC 13F refresh: 60 tracked investors, 31 quarters covered where filed, 79 JSON files including schema, and 15 analytics files. Current-quarter analytics use 56 non-stale investors; ackman, einhorn, scion, and vanguard remain stale-excluded."
+    },
     {
       "version": "3.4.0",
       "date": "2026-06-17",

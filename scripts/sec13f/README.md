@@ -6,16 +6,16 @@ or add a workflow.
 
 Frozen artifacts:
 
-- `config/investors.yaml`: exact 60-investor ID/CIK/name/group registry.
+- `config/investors.yaml`: exact 63-investor ID/CIK/name/group registry.
 - `tests/sec13f/fixtures/cch_source_manifest.json`: digest-pinned CCH runtime
   source and mutable mapping inputs.
 - `tests/sec13f/fixtures/cch_cache_manifest.json`: digest-only inventory of the
   local submissions/reference/tracker cache. Historical cover/information-table
   XML was not retained by CCH, so its raw-XML provenance remains `[not verified]`.
 - `tests/sec13f/fixtures/cch_output_manifest.json`: the actual local CCH
-  73-runtime-output byte baseline, including gitignored investor outputs.
-- `tests/sec13f/fixtures/base_output_manifest.json`: current 73-output base
-  boundary (3 indexes + 60 investors + 10 converter analytics).
+  76-runtime-output byte baseline, including gitignored investor outputs.
+- `tests/sec13f/fixtures/base_output_manifest.json`: current 76-output base
+  boundary (3 indexes + 63 investors + 10 converter analytics).
 - `tests/sec13f/fixtures/platform_derived_manifest.json`: the five platform
   derivatives kept outside the base boundary.
 - `tests/sec13f/fixtures/sec_filing_cases.json`: nine synthetic, sanitized SEC
@@ -43,7 +43,7 @@ artifact and its pin are reviewed and updated together.
 
 Slice A adds a bounded, injectable SEC client, recent/history-shard discovery,
 archive component retrieval, safe cover/information-table parsing, deterministic
-amendment composition, explicit value normalization, and exact 73-output parity.
+amendment composition, explicit value normalization, and exact 76-output parity.
 It does not own a workflow, lane registration, canonical/public generation, or
 publication.
 
@@ -68,10 +68,10 @@ An explicitly dispatched live sample must supply its compared accession numbers
 with repeated `--accession` arguments. No live request or shadow-report write is
 performed by the tests.
 
-The hermetic closure gate rebuilds four quarters for all 60 registry investors
+The hermetic closure gate rebuilds four quarters for all 63 registry investors
 through the in-memory SEC transport, proves the nine declared fixture outcomes,
-and compares the independently generated 73 payloads with a detached CCH oracle.
-The frozen input includes 480 parsed accessions and one below-threshold position
+and compares the independently generated 76 payloads with a detached CCH oracle.
+The frozen input includes 504 parsed accessions and one below-threshold position
 per investor to prove that pre-filter AUM and counts survive generation.
 
 Normal tests never import sibling CCH code. Oracle refresh is a manual operation
@@ -104,7 +104,7 @@ content never falls back to the network silently.
 
 `IncrementalLedger` publishes only to its private immutable run root. The
 transaction is acquisition/cache -> prepared input -> fresh staging output ->
-73-file manifest verification -> immutable run manifest -> one atomic
+76-file manifest verification -> immutable run manifest -> one atomic
 `state.json` swap containing both current and LKG. Attempts and failpoint
 candidates are separate from the active pointer, so failures and abandoned
 runs cannot advance completion. An identical verified source set is replayed
@@ -130,7 +130,7 @@ the digest-validated `RawCache`, and every CUSIP resolution and unit decision
 is supplied as a versioned input.
 
 The manifest is `sec13f-local-input/v1` and contains the exact registry digest,
-all 60 investors' filings, and one `dollars` or `thousands` decision for every
+all 63 investors' filings, and one `dollars` or `thousands` decision for every
 `(CIK, accession)`. The separate reference JSON maps each required CUSIP to a
 non-empty `ticker` and `sector`. Both input file bytes are recorded in the
 prepared artifact alongside the raw-cache source-set digest.
@@ -149,7 +149,7 @@ trees and the immutable raw-cache root are rejected. Requested output paths
 containing symlink components or parent traversal are rejected, as are existing
 non-regular outputs. Replacing an existing regular prepared artifact additionally
 requires `--overwrite`. This command prepares
-input only: it does not run the 60-investor backfill, generate the 73 payloads,
+input only: it does not run the 63-investor backfill, generate the 76 payloads,
 advance the ledger, or publish any data.
 
 ```bash

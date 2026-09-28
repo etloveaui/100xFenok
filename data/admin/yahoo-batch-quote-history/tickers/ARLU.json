@@ -25,65 +25,91 @@
       "run_id": "29785605821",
       "schedule": "0 22 * * 1",
       "shard": "1/6"
+    },
+    {
+      "attempts_used": 1,
+      "event_name": "schedule",
+      "failures": [],
+      "latency_ms": 548,
+      "natural": true,
+      "observed_at": "2026-08-11T07:21:44Z",
+      "outcome": "fresh",
+      "run_attempt": 1,
+      "run_id": "31468517777",
+      "schedule": "7 6 * * 0-5",
+      "shard": "27/72"
+    },
+    {
+      "attempts_used": 1,
+      "event_name": "workflow_dispatch",
+      "failures": [],
+      "latency_ms": 424,
+      "natural": false,
+      "observed_at": "2026-09-28T01:17:59Z",
+      "outcome": "fresh",
+      "run_attempt": 1,
+      "run_id": "36365270594",
+      "schedule": "",
+      "shard": ""
     }
   ],
   "current": {
-    "fetched_at": "2026-07-20T23:03:37Z",
-    "history_as_of": "2026-07-20",
+    "fetched_at": "2026-09-28T01:23:45Z",
+    "history_as_of": "2026-09-25",
     "path": "data/yf/finance/ARLU.json",
-    "payload_sha256": "b60c901dee53b863e228d318b328d8bf113bc149228507743e52a4f3d43292c1",
-    "quote_as_of": "2026-07-20T17:08:09Z",
-    "source_as_of": "2026-07-20"
+    "payload_sha256": "e265ec56747d179ad0a334320f9b1c700076fe937628362e6ab6e23c9b005aed",
+    "quote_as_of": "2026-09-25T15:55:13Z",
+    "source_as_of": "2026-09-25"
   },
   "discovered_from": [
     "stockanalysis_etf"
   ],
   "last_attempt": {
     "attempts_used": 1,
-    "event_name": "schedule",
+    "event_name": "workflow_dispatch",
     "failures": [],
-    "latency_ms": 930,
-    "natural": true,
-    "observed_at": "2026-07-20T23:03:20Z",
+    "latency_ms": 424,
+    "natural": false,
+    "observed_at": "2026-09-28T01:17:59Z",
     "outcome": "fresh",
     "run_attempt": 1,
-    "run_id": "29785605821",
-    "schedule": "0 22 * * 1",
-    "shard": "1/6"
+    "run_id": "36365270594",
+    "schedule": "",
+    "shard": ""
   },
   "lkg": {
-    "fetched_at": "2026-06-29T23:06:46Z",
-    "history_as_of": "2026-06-29",
+    "fetched_at": "2026-08-11T07:23:15Z",
+    "history_as_of": "2026-08-10",
     "path": "data/admin/yahoo-batch-quote-history/lkg/ARLU.json",
-    "payload_sha256": "aaff5e9fc2657f30f490d68a133a06351f9be1b38d41173683989f294d8651cf",
-    "quote_as_of": null,
-    "source_as_of": "2026-06-29"
+    "payload_sha256": "92d279ee7231666989424c30ce2c3d8fb8f4eeaeb32eaa77dc6ae73f70ce55a9",
+    "quote_as_of": "2026-08-10T19:39:13Z",
+    "source_as_of": "2026-08-10"
   },
   "promotion_contract": "provider_observation/v2",
   "provider_observation": {
-    "event_name": "schedule",
-    "history_as_of": "2026-07-20",
-    "observed_at": "2026-07-20T23:03:20Z",
-    "payload_sha256": "942d3d50a5e14b3b929847c4c41f889bc5aff97f63f07d5702dec6246b63c8c1",
-    "quote_as_of": "2026-07-20T17:08:09Z",
+    "event_name": "workflow_dispatch",
+    "history_as_of": "2026-09-25",
+    "observed_at": "2026-09-28T01:17:59Z",
+    "payload_sha256": "ed0b678282ef631b68fd4e615cfdfd584753ebc07afb54af46cc79666c07bbd1",
+    "quote_as_of": "2026-09-25T15:55:13Z",
     "run_attempt": 1,
-    "run_id": "29785605821",
+    "run_id": "36365270594",
     "schema_version": "provider_observation/v2",
-    "source_as_of": "2026-07-20"
+    "source_as_of": "2026-09-25"
   },
   "resolution_state": "fresh_primary",
   "retry": false,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "stale": {
-    "age_business_days": 9,
-    "classified_at": "2026-07-13T04:33:56Z",
-    "classified_run_id": "29224221077",
+    "age_business_days": 7,
+    "classified_at": "2026-08-19T23:42:29Z",
+    "classified_run_id": "32314261503",
     "expected_resolution": "next_natural_yahoo_run",
     "max_business_days": 6,
-    "message": "ARLU holds LKG because Yahoo source date 2026-06-29 is 9 business days old, beyond the 6-day bound; it will retry on the next natural Yahoo run.",
+    "message": "ARLU holds LKG because Yahoo source date 2026-08-10 is 7 business days old, beyond the 6-day bound; it will retry on the next natural Yahoo run.",
     "reason": "source_age_exceeds_lane_bound",
-    "source_as_of": "2026-06-29"
+    "source_as_of": "2026-08-10"
   },
   "ticker": "ARLU",
-  "updated_at": "2026-07-20T23:03:20Z"
+  "updated_at": "2026-09-28T01:17:59Z"
 }

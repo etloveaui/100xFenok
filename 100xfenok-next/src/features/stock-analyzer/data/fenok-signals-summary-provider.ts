@@ -45,6 +45,8 @@ export interface FenokSignalsSummaryRecord {
   shortTermCommonBasisCall?: "concentrated" | "mixed" | "diluted" | null;
   shortTermInputCount?: number | null;
   shortTermBasisCode?: string | null;
+  shortTermComparableScore?: number | null;
+  shortTermComparableCall?: "concentrated" | "mixed" | "diluted" | null;
   peerSimilarityScore?: number | null;
   sp500TrackingSimilarityScore?: number | null;
   volumeLiquidityTrendScore?: number | null;
@@ -160,6 +162,8 @@ export function normalizeFenokSignalsSummaryRecord(
     shortTermCommonBasisCall: convictionCallValue(row, fields, "shortTermCommonBasisCall"),
     shortTermInputCount: numberValue(row, fields, "shortTermInputCount"),
     shortTermBasisCode: stringValue(row, fields, "shortTermBasisCode"),
+    shortTermComparableScore: numberValue(row, fields, "shortTermComparableScore"),
+    shortTermComparableCall: convictionCallValue(row, fields, "shortTermComparableCall"),
     peerSimilarityScore: numberValue(row, fields, "peerSimilarityScore"),
     sp500TrackingSimilarityScore: numberValue(row, fields, "sp500TrackingSimilarityScore"),
     volumeLiquidityTrendScore: numberValue(row, fields, "volumeLiquidityTrendScore"),

@@ -4,17 +4,8 @@ import https from "node:https";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 
-import {
-  attemptResult,
-  atomicWrite,
-  classifyEndpointResponse,
-  defaultAttemptId,
-  returnedTuple,
-  threwTuple,
-  transportError,
-  worstRequestResult,
-  writeAttemptShard,
-} from "./lib/data-supply-attempt-shard.mjs";
+import { atomicWrite } from "./lib/atomic-file.mjs";
+import { attemptResult, classifyEndpointResponse, defaultAttemptId, returnedTuple, threwTuple, transportError, worstRequestResult } from "./lib/provider-fetch-result.mjs";
 import {
   LaneLkgStore,
   PROMOTION_CONTRACT_PROVIDER_OBSERVATION_V2,
@@ -24,10 +15,28 @@ import {
   isNaturalScheduleRun,
   systemicLkgFailureReason,
 } from "./lib/data-supply-lkg-store.mjs";
+import { boundedDiagnosticDetail, diagnosticSuffix } from "./lib/diagnostic-detail.mjs";
+import { INDEX_DIVIDEND_YIELD_DEFAULTS } from "./lib/index-dividend-yield.mjs";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 const REPO_ROOT = path.resolve(__dirname, "..");
+const FRED_NASDAQ_NON_TRADING_MARGIN_DAYS = 7;
+
+// The current Nasdaq yield uses t=max(observation<=asOf), then s=max(observation<=t-365),
+// and rejects t older than 10 days. Request 365 days for the exact anchor, 10 days
+// for the freshness lag, and one full calendar week for a weekend/holiday/non-trading gap:
+// 365 + 10 + 7 = 382 calendar days. This is derived from the calculation contract,
+// not from the size or values of any generated output.
+export const FRED_NASDAQ_REQUEST_WINDOW = Object.freeze({
+  lookbackDays: INDEX_DIVIDEND_YIELD_DEFAULTS.lookbackDays,
+  freshnessMarginDays: INDEX_DIVIDEND_YIELD_DEFAULTS.maxObservationAgeDays,
+  nonTradingMarginDays: FRED_NASDAQ_NON_TRADING_MARGIN_DAYS,
+  requestDays: INDEX_DIVIDEND_YIELD_DEFAULTS.lookbackDays
+    + INDEX_DIVIDEND_YIELD_DEFAULTS.maxObservationAgeDays
+    + FRED_NASDAQ_NON_TRADING_MARGIN_DAYS,
+});
+export const FRED_NASDAQ_REQUEST_DAYS = FRED_NASDAQ_REQUEST_WINDOW.requestDays;
 
 export const FRED_BANKING_GROUPS = Object.freeze([
   {
@@ -36,9 +45,8 @@ export const FRED_BANKING_GROUPS = Object.freeze([
     series: [
       { id: "DGS10", name: "10Y Treasury Yield" },
       { id: "BAMLH0A0HYM2", name: "HY Spread" },
-      // Transitional dual-write: keep Korea 10Y here until a natural run has
-      // committed the new monthly artifact, then remove it with the config flip.
-      { id: "IRLTLT01KRM156N", name: "Korea 10Y Government Bond Yield" },
+      { id: "NASDAQCOM", name: "Nasdaq Composite (Price Return)", requestDays: FRED_NASDAQ_REQUEST_DAYS },
+      { id: "NASDAQXCMP", name: "Nasdaq Composite Total Return", requestDays: FRED_NASDAQ_REQUEST_DAYS },
     ],
   },
   {
@@ -123,7 +131,7 @@ async function evaluateSeries({ request, apiKey, group, series, observedAt, slee
   if (series.id === controlledFailureKey) {
     return { ...attemptResult("transport_error", threwTuple("transport")), groupId: group.id, seriesId: series.id };
   }
-  const url = buildUrl(series.id, group.days, observedAt, apiKey);
+  const url = buildUrl(series.id, series.requestDays ?? group.days, observedAt, apiKey);
   let last = null;
   for (let retry = 0; retry <= MAX_RETRIES; retry += 1) {
     if (retry > 0) await sleep(BACKOFFS_MS[Math.min(retry - 1, BACKOFFS_MS.length - 1)]);
@@ -134,10 +142,13 @@ async function evaluateSeries({ request, apiKey, group, series, observedAt, slee
       });
     } catch (error) {
       const exceptionKind = transportError(error) ? "transport" : "unexpected";
-      last = attemptResult(
-        exceptionKind === "transport" ? "transport_error" : "unexpected_error",
-        threwTuple(exceptionKind),
-      );
+      last = {
+        ...attemptResult(
+          exceptionKind === "transport" ? "transport_error" : "unexpected_error",
+          threwTuple(exceptionKind),
+        ),
+        failure_detail: boundedDiagnosticDetail(error),
+      };
     }
     if (last.status === "ready") {
       const rows = usableObservations(last.document);
@@ -192,18 +203,9 @@ function defaultCanonicalPaths() {
   ]));
 }
 
-function defaultPublicPaths() {
-  return Object.fromEntries(FRED_BANKING_GROUPS.map((group) => [
-    group.id,
-    path.join(REPO_ROOT, "100xfenok-next", "public", "data", "macro", `fred-banking-${group.id}.json`),
-  ]));
-}
-
 export async function runFredBanking({
   repoRoot = REPO_ROOT,
   canonicalPaths = defaultCanonicalPaths(),
-  publicPaths = defaultPublicPaths(),
-  attemptShardPath = path.join(REPO_ROOT, "data", "admin", "data-supply-state", "detection-attempts", "fred_banking.json"),
   type = "all",
   apiKey = process.env.FRED_API_KEY,
   request = requestBytes,
@@ -231,7 +233,10 @@ export async function runFredBanking({
 
   let requestResults;
   if (!apiKey) {
-    requestResults = [attemptResult("unexpected_error", threwTuple("unexpected"))];
+    requestResults = [{
+      ...attemptResult("unexpected_error", threwTuple("unexpected")),
+      failure_detail: "FRED API key is unavailable",
+    }];
   } else {
     requestResults = [];
     const targets = selectedGroups.flatMap((group) => group.series.map((series) => ({ group, series })));
@@ -242,20 +247,25 @@ export async function runFredBanking({
   }
 
   const worst = worstRequestResult(requestResults);
-  const attempt = writeAttemptShard({
-    laneId: "fred_banking",
-    attemptShardPath,
-    observedAt,
-    attemptId,
-    result: worst,
-  });
+  const attempt = (worst).attempt;
   if (worst.status !== "ready") {
     const systemicOutage = allNaturalRequestsFailed(requestResults, (row) => row.seriesId === injectedKey);
     const failureReason = systemicLkgFailureReason([worst.reason, ...requestResults.map((row) => row.reason)])
       ?? (injectedKey && !systemicOutage ? "controlled_failure" : worst.reason);
     const failure = lkgStore.recordFailure({ artifacts: lkgArtifacts, run, reason: failureReason });
     const outcome = classifyLkgFailure({ reason: failureReason, hasCompleteLkg: failure.hasCompleteLkg, systemic: systemicOutage });
-    return { ok: false, reason: failureReason, updated: false, attempt, retrySet: failure.retrySet, ...outcome };
+    const failureDetail = failureReason === "controlled_failure"
+      ? null
+      : worst.failure_detail ?? requestResults.find((row) => row.failure_detail)?.failure_detail ?? null;
+    return {
+      ok: false,
+      reason: failureReason,
+      updated: false,
+      attempt,
+      retrySet: failure.retrySet,
+      ...(failureDetail ? { failure_detail: failureDetail } : {}),
+      ...outcome,
+    };
   }
 
   const outputs = {};
@@ -337,7 +347,6 @@ export async function runFredBanking({
   }
   for (const candidate of promotable) {
     atomicWrite(canonicalPaths[candidate.key], candidate.serialized);
-    atomicWrite(publicPaths[candidate.key], candidate.serialized);
   }
   const success = lkgStore.recordSuccess({ artifacts: promotable, run });
   const recovered = promotable.some((candidate) => success.state.items[candidate.key]?.recovered_at === observedAt);
@@ -373,13 +382,13 @@ async function main() {
   const result = await runFredBanking({ type: parseType(process.argv.slice(2)) });
   if (!result.ok) {
     const prefix = result.degraded ? "[degraded]" : "[corrupt]";
-    const message = `${prefix} FRED banking ${result.reason}; retry set: ${(result.retrySet || []).join(", ") || "none"}`;
+    const message = `${prefix} FRED banking ${result.reason}; retry set: ${(result.retrySet || []).join(", ") || "none"}${diagnosticSuffix(result.failure_detail)}`;
     if (result.degraded) console.log(message);
     else console.error(message);
     process.exitCode = result.exitCode ?? 2;
     return;
   }
-  console.log(`Saved FRED banking ${result.groups.join(", ")} artifacts and one current-attempt shard${result.recovered ? "; recovered from LKG" : ""}`);
+  console.log(`Saved FRED banking ${result.groups.join(", ")} artifacts${result.recovered ? "; recovered from LKG" : ""}`);
 }
 
 if (process.argv[1] && path.resolve(process.argv[1]) === __filename) {

@@ -19,7 +19,7 @@ const REPO_ROOT = path.resolve(__dirname, "..");
 const SOURCE_PLAN_REL = "data/admin/fenok-edge-etf-daily1y-fetchable-plan.json";
 const OUTPUT_REL = "_private/admin/fenok-etf-daily1y-dispatch-plan.json";
 const CONTRACT_DOC = "docs/planning/CONTRACT_fenok_etf_signals_v0_1_20260629.md";
-const FORMULA_VERSION = "fenok-etf-daily1y-dispatch-plan-v0.2";
+const FORMULA_VERSION = "fenok-etf-daily1y-dispatch-plan-v0.3";
 const SHARD_SIZE = 120;
 
 function parseArgs(argv) {
@@ -94,6 +94,10 @@ export function buildEtfDaily1yDispatchPlan({ sourcePlan = null, historyGapRepor
   if (plan.classification_as_of !== report.classification_as_of) {
     throw new Error("fetchable plan classification_as_of must match the history gap report");
   }
+  const managedEtfCount = plan.counts?.managed_etf_count;
+  if (!Number.isInteger(managedEtfCount) || managedEtfCount <= 0) {
+    throw new Error("fetchable plan counts.managed_etf_count must be a positive integer");
+  }
   const tickers = Array.isArray(plan.tickers)
     ? [...new Set(plan.tickers.map((ticker) => String(ticker).trim().toUpperCase()).filter(Boolean))].sort()
     : [];
@@ -104,7 +108,7 @@ export function buildEtfDaily1yDispatchPlan({ sourcePlan = null, historyGapRepor
   }));
 
   return {
-    schema_version: "fenok-etf-daily1y-dispatch-plan/v0.2",
+    schema_version: "fenok-etf-daily1y-dispatch-plan/v0.3",
     generated_at: generatedAt.toISOString(),
     source_file: SOURCE_PLAN_REL,
     source_generated_at: plan.generated_at ?? null,
@@ -117,7 +121,7 @@ export function buildEtfDaily1yDispatchPlan({ sourcePlan = null, historyGapRepor
     status: "pending_owner_approval",
     network: "none",
     service_gate: false,
-    claim_scope: "full_scored_etf_universe_diagnostic_backfill",
+    claim_scope: "auto_managed_core_daily_basket",
     workflow: "fetch-stockanalysis.yml",
     inputs: {
       history_gaps_only: "true",
@@ -125,6 +129,9 @@ export function buildEtfDaily1yDispatchPlan({ sourcePlan = null, historyGapRepor
       incremental_etf_limit: String(SHARD_SIZE),
     },
     counts: {
+      // Dispatch is core-scoped and must never infer its denominator from the
+      // full-scored compatibility field.
+      managed_etf_count: managedEtfCount,
       scored_etf_count: plan.counts?.scored_etf_count ?? null,
       complete: plan.counts?.complete ?? null,
       fetchable: tickers.length,
@@ -146,7 +153,7 @@ export function buildEtfDaily1yDispatchPlan({ sourcePlan = null, historyGapRepor
       first_batch: shards[0]?.tickers?.slice(0, 12) ?? [],
       source_fetchable: Array.isArray(plan.samples?.fetchable) ? plan.samples.fetchable : [],
     },
-    caveat: "External StockAnalysis backfill dispatch is owner-gated. This plan only selects exact full scored-ETF daily_1y diagnostic gaps, never flips daily/gated readiness, and must not be used as the ETF Core Daily Basket service gate.",
+    caveat: "External StockAnalysis backfill dispatch is owner-gated. This plan only selects exact auto-managed core daily basket daily_1y diagnostic gaps, never flips daily/gated readiness, and must not be used as the ETF Core Daily Basket service gate.",
   };
 }
 
@@ -174,6 +181,7 @@ export function validateEtfDaily1yDispatchPlan(payload, sourcePlan = null, histo
   }
   if (totalPlanned !== tickers.length) errors.push(`planned tickers ${totalPlanned} != source tickers ${tickers.length}`);
   if (payload?.counts?.fetchable !== tickers.length) errors.push(`counts.fetchable ${payload?.counts?.fetchable} != source tickers ${tickers.length}`);
+  if (payload?.counts?.managed_etf_count !== source.counts?.managed_etf_count) errors.push("managed_etf_count must match the source core denominator");
   if (payload?.counts?.shard_count !== shards.length) errors.push("counts.shard_count must equal shard length");
   for (const shard of shards) {
     if (!Array.isArray(shard.tickers)) errors.push(`shard ${shard.shard ?? "?"} missing tickers`);

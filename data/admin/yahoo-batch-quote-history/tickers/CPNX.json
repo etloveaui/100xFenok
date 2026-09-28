@@ -38,54 +38,104 @@
       "run_id": "29460793523",
       "schedule": "20 23 * * 1-5",
       "shard": "3/5"
+    },
+    {
+      "attempts_used": 1,
+      "event_name": "schedule",
+      "failures": [],
+      "latency_ms": 629,
+      "natural": true,
+      "observed_at": "2026-08-05T19:49:13Z",
+      "outcome": "fresh",
+      "run_attempt": 1,
+      "run_id": "31041046015",
+      "schedule": "7 18 * * 0-5",
+      "shard": "45/72"
+    },
+    {
+      "attempts_used": 1,
+      "event_name": "schedule",
+      "failures": [],
+      "latency_ms": 1097,
+      "natural": true,
+      "observed_at": "2026-08-12T19:14:55Z",
+      "outcome": "fresh",
+      "run_attempt": 1,
+      "run_id": "31631524598",
+      "schedule": "7 18 * * 0-5",
+      "shard": "45/72"
+    },
+    {
+      "attempts_used": 1,
+      "event_name": "workflow_dispatch",
+      "failures": [],
+      "latency_ms": 428,
+      "natural": false,
+      "observed_at": "2026-09-28T03:11:20Z",
+      "outcome": "fresh",
+      "run_attempt": 1,
+      "run_id": "36367829153",
+      "schedule": "",
+      "shard": ""
     }
   ],
   "current": {
-    "fetched_at": "2026-07-16T00:32:34Z",
-    "history_as_of": "2026-07-15",
+    "fetched_at": "2026-09-28T03:11:54Z",
+    "history_as_of": "2026-09-25",
     "path": "data/yf/finance/CPNX.json",
-    "payload_sha256": "c0f5b07e6339ff93b7617f6ae1baec89e5ce55dfac1837c3977c3dc8ac1a379e",
-    "quote_as_of": "2026-07-15T16:54:58Z",
-    "source_as_of": "2026-07-15"
+    "payload_sha256": "987ca269dbadea34889a0c5adc874f0fce034a402578992ec11da952f95f4f75",
+    "quote_as_of": "2026-09-25T18:26:36Z",
+    "source_as_of": "2026-09-25"
   },
   "discovered_from": [
-    "market_facts",
     "stockanalysis_etf"
   ],
   "last_attempt": {
     "attempts_used": 1,
-    "event_name": "schedule",
+    "event_name": "workflow_dispatch",
     "failures": [],
-    "latency_ms": 638,
-    "natural": true,
-    "observed_at": "2026-07-16T00:30:04Z",
+    "latency_ms": 428,
+    "natural": false,
+    "observed_at": "2026-09-28T03:11:20Z",
     "outcome": "fresh",
     "run_attempt": 1,
-    "run_id": "29460793523",
-    "schedule": "20 23 * * 1-5",
-    "shard": "3/5"
+    "run_id": "36367829153",
+    "schedule": "",
+    "shard": ""
   },
   "lkg": {
-    "fetched_at": "2026-06-18T11:53:12Z",
-    "history_as_of": "2026-06-17",
+    "fetched_at": "2026-08-12T19:17:26Z",
+    "history_as_of": "2026-08-12",
     "path": "data/admin/yahoo-batch-quote-history/lkg/CPNX.json",
-    "payload_sha256": "4336699a149f676677deb6fd3b7d4b030376cf7d802ec5bad112fcc19ffec23a",
-    "quote_as_of": null,
-    "source_as_of": "2026-06-17"
+    "payload_sha256": "76635dd3f6b046250f0bac2640f21c826fbb1246f01994ac9c1b284a189dc0de",
+    "quote_as_of": "2026-08-12T14:36:04Z",
+    "source_as_of": "2026-08-12"
+  },
+  "promotion_contract": "provider_observation/v2",
+  "provider_observation": {
+    "event_name": "workflow_dispatch",
+    "history_as_of": "2026-09-25",
+    "observed_at": "2026-09-28T03:11:20Z",
+    "payload_sha256": "930e62b158f33eac0f6ad76d8e9e0202deedc5020d49ba2630363276eafcd2a0",
+    "quote_as_of": "2026-09-25T18:26:36Z",
+    "run_attempt": 1,
+    "run_id": "36367829153",
+    "schema_version": "provider_observation/v2",
+    "source_as_of": "2026-09-25"
   },
   "resolution_state": "fresh_primary",
   "retry": false,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "stale": {
-    "age_business_days": 16,
-    "classified_at": "2026-07-13T04:33:56Z",
-    "classified_run_id": "29224221077",
+    "age_business_days": 7,
+    "classified_at": "2026-08-21T23:43:33Z",
+    "classified_run_id": "32537807621",
     "expected_resolution": "next_natural_yahoo_run",
     "max_business_days": 6,
-    "message": "CPNX holds LKG because Yahoo source date 2026-06-17 is 16 business days old, beyond the 6-day bound; it will retry on the next natural Yahoo run.",
+    "message": "CPNX holds LKG because Yahoo source date 2026-08-12 is 7 business days old, beyond the 6-day bound; it will retry on the next natural Yahoo run.",
     "reason": "source_age_exceeds_lane_bound",
-    "source_as_of": "2026-06-17"
+    "source_as_of": "2026-08-12"
   },
   "ticker": "CPNX",
-  "updated_at": "2026-07-16T00:30:04Z"
+  "updated_at": "2026-09-28T03:11:20Z"
 }

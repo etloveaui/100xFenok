@@ -38,54 +38,104 @@
       "run_id": "29378156187",
       "schedule": "20 23 * * 1-5",
       "shard": "0/5"
+    },
+    {
+      "attempts_used": 1,
+      "event_name": "schedule",
+      "failures": [],
+      "latency_ms": 1004,
+      "natural": true,
+      "observed_at": "2026-08-03T22:58:08Z",
+      "outcome": "fresh",
+      "run_attempt": 1,
+      "run_id": "30860500094",
+      "schedule": "0 22 * * 1",
+      "shard": "1/6"
+    },
+    {
+      "attempts_used": 1,
+      "event_name": "schedule",
+      "failures": [],
+      "latency_ms": 1120,
+      "natural": true,
+      "observed_at": "2026-08-09T10:51:07Z",
+      "outcome": "fresh",
+      "run_attempt": 1,
+      "run_id": "31309259913",
+      "schedule": "7 10 * * 0-5",
+      "shard": "5/72"
+    },
+    {
+      "attempts_used": 1,
+      "event_name": "workflow_dispatch",
+      "failures": [],
+      "latency_ms": 496,
+      "natural": false,
+      "observed_at": "2026-09-28T01:17:59Z",
+      "outcome": "fresh",
+      "run_attempt": 1,
+      "run_id": "36365270594",
+      "schedule": "",
+      "shard": ""
     }
   ],
   "current": {
-    "fetched_at": "2026-07-15T00:12:49Z",
-    "history_as_of": "2026-07-14",
+    "fetched_at": "2026-09-28T01:18:33Z",
+    "history_as_of": "2026-09-25",
     "path": "data/yf/finance/AAOX.json",
-    "payload_sha256": "1407df45b37a2dcb26167cfc6275d36b6c7403ed0ebdf30af9e57e63b85fee81",
-    "quote_as_of": "2026-07-14T20:00:01Z",
-    "source_as_of": "2026-07-14"
+    "payload_sha256": "f5767d19e68dfca0b2605b759fd134f4e29a8cac5c277939bf26cda8b93aa1aa",
+    "quote_as_of": "2026-09-25T20:00:01Z",
+    "source_as_of": "2026-09-25"
   },
   "discovered_from": [
-    "market_facts",
     "stockanalysis_etf"
   ],
   "last_attempt": {
     "attempts_used": 1,
-    "event_name": "schedule",
+    "event_name": "workflow_dispatch",
     "failures": [],
-    "latency_ms": 759,
-    "natural": true,
-    "observed_at": "2026-07-15T00:10:40Z",
+    "latency_ms": 496,
+    "natural": false,
+    "observed_at": "2026-09-28T01:17:59Z",
     "outcome": "fresh",
     "run_attempt": 1,
-    "run_id": "29378156187",
-    "schedule": "20 23 * * 1-5",
-    "shard": "0/5"
+    "run_id": "36365270594",
+    "schedule": "",
+    "shard": ""
   },
   "lkg": {
-    "fetched_at": "2026-06-18T17:16:47Z",
-    "history_as_of": "2026-06-18",
+    "fetched_at": "2026-08-09T10:53:28Z",
+    "history_as_of": "2026-08-07",
     "path": "data/admin/yahoo-batch-quote-history/lkg/AAOX.json",
-    "payload_sha256": "d586f3cf4594f51e6af77d04818a6a75b4376a99b6809b73f01f5836c889f9c2",
-    "quote_as_of": null,
-    "source_as_of": "2026-06-18"
+    "payload_sha256": "356134cf4353b8bf937c6ebe9571d3fc5db5fdcac0959fda160b8ddf15567720",
+    "quote_as_of": "2026-08-07T20:00:01Z",
+    "source_as_of": "2026-08-07"
+  },
+  "promotion_contract": "provider_observation/v2",
+  "provider_observation": {
+    "event_name": "workflow_dispatch",
+    "history_as_of": "2026-09-25",
+    "observed_at": "2026-09-28T01:17:59Z",
+    "payload_sha256": "925c1c89aa2d322b220e9e4a0b87705648f9d7cc3ab840b23844c41fa1c26f7c",
+    "quote_as_of": "2026-09-25T20:00:01Z",
+    "run_attempt": 1,
+    "run_id": "36365270594",
+    "schema_version": "provider_observation/v2",
+    "source_as_of": "2026-09-25"
   },
   "resolution_state": "fresh_primary",
   "retry": false,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "stale": {
-    "age_business_days": 15,
-    "classified_at": "2026-07-13T04:33:56Z",
-    "classified_run_id": "29224221077",
+    "age_business_days": 8,
+    "classified_at": "2026-08-19T23:42:29Z",
+    "classified_run_id": "32314261503",
     "expected_resolution": "next_natural_yahoo_run",
     "max_business_days": 6,
-    "message": "AAOX holds LKG because Yahoo source date 2026-06-18 is 15 business days old, beyond the 6-day bound; it will retry on the next natural Yahoo run.",
+    "message": "AAOX holds LKG because Yahoo source date 2026-08-07 is 8 business days old, beyond the 6-day bound; it will retry on the next natural Yahoo run.",
     "reason": "source_age_exceeds_lane_bound",
-    "source_as_of": "2026-06-18"
+    "source_as_of": "2026-08-07"
   },
   "ticker": "AAOX",
-  "updated_at": "2026-07-15T00:10:40Z"
+  "updated_at": "2026-09-28T01:17:59Z"
 }

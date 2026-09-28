@@ -1,10 +1,17 @@
 import fs from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
+
+import {
+  emptyDividendYieldUnitMix,
+  resolveDividendYieldFraction,
+  tallyDividendYieldUnit,
+} from "./lib/dividend-yield-unit.mjs";
 import {
   ACTION_SCORE_CONFIG,
   actionFrom,
   clamp,
+  detectSecondaryDepositaryRepresentations,
   finite,
   marketScopeFromMarket,
   normalizeTicker,
@@ -12,6 +19,7 @@ import {
   qualityFlags,
   round,
 } from "./stock-action-score-core.mjs";
+import { deriveForbiddenPrivateDataSupplyRoots } from "./lib/lane-routing.mjs";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const repoRoot = path.resolve(__dirname, "..");
@@ -78,11 +86,15 @@ const GENERATED_OUTPUTS = [
   "computed/stock_action_summary.json",
   "computed/market_structure_index.json",
 ];
-const PRIVATE_DATA_SUPPLY_ROOTS = [
-  "admin/data-supply-state/",
-  "yf/etf-details/",
-  "yf/migration-evidence/",
-];
+export const PRIVATE_DATA_SUPPLY_ROOTS = Object.freeze(
+  deriveForbiddenPrivateDataSupplyRoots().map((root) =>
+    root.endsWith(".json") ? root : `${root}/`
+  ),
+);
+
+export function isPrivateDataSupplyPath(file) {
+  return PRIVATE_DATA_SUPPLY_ROOTS.some((root) => file.startsWith(root));
+}
 
 const ESTIMATE_HORIZONS = ["fy1", "fy2", "fy3"];
 
@@ -333,6 +345,7 @@ function countryFromNormalizedMarket(market) {
   if (market === "KRX" || market === "KOSDAQ") return "KR";
   if (market === "HKEX") return "HK";
   if (market === "SSE" || market === "SZSE") return "CN";
+  if (market === "TW") return "TW";
   if (market === "US" || market === "US_CLASS") return "US";
   return null;
 }
@@ -652,6 +665,10 @@ function convictionMap(knownSymbols) {
 function buildStockActionIndex() {
   const stocksDoc = readJson("global-scouter/core/stocks_analyzer.json", {});
   const scouterRows = Array.isArray(stocksDoc?.data) ? stocksDoc.data : [];
+  const secondaryDepositaryRepresentations = detectSecondaryDepositaryRepresentations(
+    scouterRows,
+    stockDetail,
+  );
   const rows = [...scouterRows, ...marketFactStockRows(scouterRows)];
   const universe = readJson("slickcharts/universe.json", {});
   const universeMap = new Map(
@@ -676,10 +693,11 @@ function buildStockActionIndex() {
   const sectorSmartMoney = sectorSmartMoneyMap();
   const convictions = convictionMap(knownSymbols);
 
+  const dividendYieldUnitMix = emptyDividendYieldUnitMix();
   const actionRows = rows
     .map((stock) => {
       const symbol = String(stock.symbol ?? "").trim().toUpperCase();
-      const normalized = normalizeTicker(symbol);
+      const normalized = normalizeTicker(symbol, secondaryDepositaryRepresentations);
       const marketScope = marketScopeFromMarket(normalized.market);
       const canonicalSector = canonicalSectorFromScouter(stock.sector);
       const estimateSnapshot = stockEstimateSnapshot(symbol);
@@ -702,7 +720,28 @@ function buildStockActionIndex() {
       const extensionQualityFlags = stock.__marketFactExtension
         ? ["missing_global_scouter_core_row"]
         : [];
-      const action = actionFrom(stock, context);
+      // THE SINGLE UNIT BOUNDARY for dividendYield.
+      //
+      // This file is the only writer of computed/stock_action_index.json, and
+      // every consumer -- the action scorer below, both screener surfaces, the
+      // discovery ranking, the RIM payout route -- reads that artifact rather
+      // than the upstream sources. Resolving here fixes all of them at once.
+      //
+      // It must happen BEFORE actionFrom, not only on the emitted row: the
+      // scorer's income thresholds are fraction-shaped and its reason string is
+      // yield*100, which is how a percent-encoded 2.43 reached the live screener
+      // as a dividend of 243%.
+      const dividendYieldUnit = resolveDividendYieldFraction({
+        dividendYield: stock.dividendYield,
+        price: stock.price,
+        dividendHistory: context.dividendHistory,
+      });
+      tallyDividendYieldUnit(dividendYieldUnitMix, dividendYieldUnit.unit);
+      const scoredStock = dividendYieldUnit.value === stock.dividendYield
+        ? stock
+        : { ...stock, dividendYield: dividendYieldUnit.value };
+
+      const action = actionFrom(scoredStock, context);
       const quality_flags = Array.from(new Set([...qualityFlags(stock, context), ...action.scoreQualityFlags, ...extensionQualityFlags])).sort();
       delete action.scoreQualityFlags;
       return {
@@ -713,12 +752,14 @@ function buildStockActionIndex() {
         company: stock.companyName ?? symbol,
         sector: stock.sector ?? null,
         canonicalSector,
-        country: stock.country ?? null,
+        country: normalized.market === "TW"
+          ? countryFromNormalizedMarket(normalized.market)
+          : stock.country ?? null,
         price: num(stock.price),
         marketCap: num(stock.marketCap),
         per: num(stock.per),
         peForward: num(stock.peForward),
-        dividendYield: num(stock.dividendYield),
+        dividendYield: dividendYieldUnit.value,
         return12m: num(stock.return12m),
         ret1y: num(stock.ret1y),
         ret3y: num(stock.ret3y),
@@ -802,6 +843,11 @@ function buildStockActionIndex() {
     coverage: {
       source_stock_count: rows.length,
       indexed_stock_count: actionRows.length,
+      // Published, not averaged away: how many rows each dividend-yield reading
+      // resolved to. `unresolved` rows carry a null yield by design -- they had
+      // no measurable dividend and price, and a hundred-fold unit error is worse
+      // than a visible gap.
+      dividend_yield_unit_mix: dividendYieldUnitMix,
       universe_stock_count: universe?.uniqueCount ?? null,
       guru_ticker_count: guru?.metadata?.tickers ?? Object.keys(guru?.holders ?? {}).length,
       conviction_matched_count: convictions.map.size,
@@ -1216,7 +1262,6 @@ function buildMarketStructureIndex() {
 }
 
 function buildUsageManifest() {
-  const isPrivateDataSupplyPath = (file) => PRIVATE_DATA_SUPPLY_ROOTS.some((root) => file.startsWith(root));
   const rootFiles = collectJsonFiles(dataRoot).filter((file) => !isPrivateDataSupplyPath(file));
   const publicFiles = collectJsonFiles(publicDataRoot).filter((file) => !isPrivateDataSupplyPath(file));
   const rootSet = new Set(rootFiles);
@@ -1317,4 +1362,9 @@ function main() {
   }, null, 2));
 }
 
-main();
+if (
+  process.argv[1]
+  && path.resolve(process.argv[1]) === fileURLToPath(import.meta.url)
+) {
+  main();
+}

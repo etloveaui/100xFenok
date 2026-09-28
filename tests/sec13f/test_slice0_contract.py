@@ -43,10 +43,10 @@ class Slice0ContractTest(unittest.TestCase):
     def test_frozen_contract_is_complete_and_matches_current_baseline(self) -> None:
         load_and_validate_all(ROOT)
 
-    def test_registry_is_exactly_60_unique_ids_and_ciks(self) -> None:
+    def test_registry_is_exactly_63_unique_ids_and_ciks(self) -> None:
         registry = validate_registry(ROOT / "scripts" / "sec13f" / "config" / "investors.yaml")
-        self.assertEqual(len(registry["investors"]), 60)
-        self.assertEqual(len({row["cik"] for row in registry["investors"].values()}), 60)
+        self.assertEqual(len(registry["investors"]), 63)
+        self.assertEqual(len({row["cik"] for row in registry["investors"].values()}), 63)
 
     def test_fixture_mutations_remain_red_after_resealing(self) -> None:
         fixture = load_json(FIXTURES / "sec_filing_cases.json")
@@ -119,7 +119,7 @@ class Slice0ContractTest(unittest.TestCase):
                         "analytics/conviction.json",
                     ],
                     "json_path": "$.metadata.generated_at",
-                    "measured_occurrences": 62,
+                    "measured_occurrences": 65,
                 }
             ],
         )
@@ -207,19 +207,19 @@ class Slice0ContractTest(unittest.TestCase):
         cch_output = load_json(FIXTURES / "cch_output_manifest.json")
         cch_cache = load_json(FIXTURES / "cch_cache_manifest.json")
         comparison = load_json(FIXTURES / "cch_platform_baseline.json")
-        validate_detached_manifest(cch_output, expected_count=73, label="CCH output manifest")
-        validate_detached_manifest(cch_cache, expected_count=62, label="CCH cache manifest")
+        validate_detached_manifest(cch_output, expected_count=76, label="CCH output manifest")
+        validate_detached_manifest(cch_cache, expected_count=65, label="CCH cache manifest")
         validate_comparison_manifest(comparison, ROOT)
         self.assertEqual(
             comparison["summary"],
-            {"compared": 73, "byte_exact": 9, "byte_mismatch": 64},
+            {"compared": 76, "byte_exact": 9, "byte_mismatch": 67},
         )
-        self.assertEqual(cch_output["total_bytes"], 187_781_701)
+        self.assertEqual(cch_output["total_bytes"], 193_680_989)
         self.assertEqual(
             cch_output["sha256_lines_digest"],
-            "fd50926c704ed55735670e80ae42d83237d377ec6ca6a43ebe555b8404bf3f58",
+            "6b3cc072f69ca9a6b09259ea6ad8d33dd7b7fa318fb8edbde2ad2511fbad3562",
         )
-        self.assertEqual(cch_cache["total_bytes"], 12_228_754)
+        self.assertEqual(cch_cache["total_bytes"], 12_864_821)
         self.assertIn("not verified", cch_cache["note"])
 
 

@@ -1,0 +1,492 @@
+/* /regime route — light-system layout namespace (slice 7a).
+ * Layout only: head, score, meters, axis table, action rows. Panel chrome,
+ * type scale, colors, and states come from src/components/ui. No gradients.
+ * Accent var(--fnk-brand-interactive) appears only on bar fills (shared Bar), tab active state,
+ * and the action open buttons. */
+
+.rgm {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  padding: 20px 24px 32px;
+  background: var(--fnk-neutral-50);
+  font-size: 13px;
+  line-height: 1.45;
+}
+
+.rgm-head {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.rgm-title-block {
+  display: flex;
+  flex: 1 1 auto;
+  align-items: baseline;
+  gap: 12px;
+  min-width: 0;
+  flex-wrap: wrap;
+}
+
+.rgm-title {
+  margin: 0;
+  font-size: 20px;
+  font-weight: 600;
+  color: var(--fnk-neutral-900);
+}
+
+/* Zero basis and width: the sentence never decides where the head wraps.
+ * Its length used to - below ~760px the short loading line sat beside the
+ * title and the longer loaded verdict dropped under it, pushing the page
+ * down 31-41px when the data landed. It now always sits beside the title
+ * and truncates, loading or loaded. */
+.rgm-verdict {
+  flex: 1 1 0;
+  width: 0;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 13px;
+  color: var(--fnk-neutral-500);
+}
+
+.rgm-tabs {
+  display: flex;
+  gap: 4px;
+}
+
+/* Composite read */
+
+.rgm-score {
+  display: grid;
+  grid-template-columns: minmax(110px, auto) minmax(200px, 1fr) minmax(0, 1.6fr);
+  align-items: start;
+  gap: 16px 24px;
+  padding: 16px;
+}
+
+/* The grid is the mobile order too: score · gauge · bands · read. */
+
+.rgm-score-num {
+  display: flex;
+  flex-direction: column;
+}
+
+.rgm-score-value {
+  font-size: 44px;
+  font-weight: 600;
+  line-height: 1;
+  color: var(--fnk-neutral-900);
+}
+
+.rgm-score-unit {
+  font-size: 12px;
+  color: var(--fnk-neutral-500);
+  margin-top: 6px;
+}
+
+.rgm-score-counts {
+  font-size: 12px;
+  color: var(--fnk-neutral-500);
+  margin-top: 8px;
+}
+
+/* Composite gauge: the 20/40/60/80 cuts gaugeReading labels, as flat soft-token
+ * zones (hard stops, no gradient ramp), with the computed reading as the marker.
+ * The track runs the same way the score does — 0 is 경계 (loss), 100 is 강한 양호
+ * (gain) — so the tints match the words gaugeReading emits. 양호 and 강한 양호 share
+ * the gain tint, so the 80 cut adds no color stop of its own. */
+
+.rgm-gauge {
+  padding-top: 4px;
+}
+
+.rgm-gauge-track {
+  position: relative;
+  height: 10px;
+  border-radius: 4px;
+  background: linear-gradient(
+    90deg,
+    var(--fnk-color-loss-soft) 0%,
+    var(--fnk-color-loss-soft) 20%,
+    var(--fnk-color-warn-soft) 20%,
+    var(--fnk-color-warn-soft) 40%,
+    var(--fnk-neutral-100) 40%,
+    var(--fnk-neutral-100) 60%,
+    var(--fnk-color-gain-soft) 60%,
+    var(--fnk-color-gain-soft) 100%
+  );
+  box-shadow: inset 0 0 0 1px var(--fnk-neutral-200);
+}
+
+.rgm-gauge-marker {
+  position: absolute;
+  top: -3px;
+  width: 2px;
+  height: 16px;
+  border-radius: 1px;
+  background: var(--fnk-neutral-900);
+  transform: translateX(-1px);
+}
+
+.rgm-score-read {
+  grid-column: 1 / -1;
+  margin: 0;
+  font-size: 12px;
+  color: var(--fnk-neutral-500);
+}
+
+.rgm-meters {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding-top: 4px;
+  min-width: 0;
+}
+
+.rgm-band-row {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.rgm-band-top {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  font-size: 12px;
+}
+
+.rgm-band-label {
+  color: var(--fnk-neutral-700);
+  min-width: 0;
+}
+
+/* The right side keeps its distance from the tone word next to the axis name. */
+.rgm-band-word {
+  margin-right: auto;
+}
+
+.rgm-band-count {
+  color: var(--fnk-neutral-500);
+}
+
+/* The kit band paints its tick row at 0/20/40/60/80/100: a signal-count
+ * composition has no 0-100 axis, so that row is hidden here (aria-label keeps
+ * the counts). display:none takes the row and its own mt-1 with it, so the band
+ * root ends at the 10px track and needs no spacing compensation. */
+.rgm-band-row .rgm-band > div:last-child {
+  display: none;
+}
+
+.rgm-up {
+  color: var(--fnk-color-gain);
+  font-weight: 600;
+}
+
+.rgm-warn {
+  color: var(--fnk-color-warn-ink);
+  font-weight: 600;
+}
+
+.rgm-down {
+  color: var(--fnk-color-loss);
+  font-weight: 600;
+}
+
+.rgm-mute {
+  color: var(--fnk-neutral-500);
+  font-weight: 600;
+}
+
+/* Tone classes (also carried by the history strip week cells and legend keys). */
+
+.rgm-bar-up > i {
+  background: var(--fnk-color-gain);
+}
+
+.rgm-bar-warn > i {
+  background: var(--fnk-color-warn-ink);
+}
+
+.rgm-bar-down > i {
+  background: var(--fnk-color-loss);
+}
+
+/* Axis breakdown table */
+
+.rgm-thead,
+.rgm-trow {
+  display: grid;
+  grid-template-columns: 150px 1fr 90px 110px;
+  align-items: center;
+  gap: 12px;
+  padding: 0 16px;
+}
+
+.rgm-thead {
+  height: 30px;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--fnk-neutral-500);
+  border-bottom: 1px solid var(--fnk-neutral-100);
+}
+
+.rgm-trow {
+  min-height: 44px;
+  padding-top: 6px;
+  padding-bottom: 6px;
+  font-size: 13px;
+  border-top: 1px solid var(--fnk-neutral-100);
+  transition: background-color 150ms ease;
+}
+
+.rgm-trow:first-of-type {
+  border-top: 0;
+}
+
+.rgm-trow:hover {
+  background: var(--fnk-neutral-50);
+}
+
+.rgm-axis {
+  color: var(--fnk-neutral-900);
+  font-weight: 500;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.rgm-axis-asof {
+  display: block;
+  margin-top: 2px;
+  overflow: hidden;
+  color: var(--fnk-neutral-500);
+  font-size: 12px;
+  font-weight: 400;
+  text-overflow: ellipsis;
+}
+
+.rgm-sum {
+  color: var(--fnk-neutral-600);
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* Undated-feed disclosure under the axis table (structure carries no date). */
+
+.rgm-floor-note {
+  padding: 8px 16px 12px;
+  font-size: 12px;
+  color: var(--fnk-neutral-500);
+}
+
+/* 시황 기록 — 피드가 없는 동안은 한 줄, archive가 차면 12주 스트립.
+ * 접힌 줄은 공용 EmptyState 카드 대신 페이지 흐름에 한 줄로만 남는다. */
+
+.rgm-history-note {
+  padding: 0 4px;
+  font-size: 12px;
+  color: var(--fnk-neutral-500);
+}
+
+.rgm-history {
+  padding: 14px 16px 0;
+}
+
+.rgm-history-strip {
+  display: grid;
+  grid-template-columns: repeat(12, minmax(0, 1fr));
+  gap: 6px;
+}
+
+.rgm-hweek {
+  height: 20px;
+  border-radius: 4px;
+  background: var(--fnk-neutral-100);
+  border: 1px solid var(--fnk-neutral-200);
+}
+
+.rgm-hweek.rgm-bar-up {
+  background: var(--fnk-color-gain-soft);
+  border-color: var(--fnk-color-gain);
+}
+
+.rgm-hweek.rgm-bar-warn {
+  background: var(--fnk-color-warn-soft);
+  border-color: var(--fnk-color-warn);
+}
+
+.rgm-hweek.rgm-bar-down {
+  background: var(--fnk-color-loss-soft);
+  border-color: var(--fnk-color-loss);
+}
+
+.rgm-hweek[data-current] {
+  background: var(--fnk-color-gain);
+  border-color: var(--fnk-neutral-900);
+  box-shadow: 0 0 0 1px var(--fnk-neutral-900);
+}
+
+.rgm-history-axis {
+  display: flex;
+  justify-content: space-between;
+  padding-top: 8px;
+  font-size: 12px;
+  color: var(--fnk-neutral-500);
+}
+
+.rgm-history-legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16px;
+  padding: 10px 0 14px;
+  font-size: 12px;
+  color: var(--fnk-neutral-500);
+}
+
+.rgm-history-legend > span {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.rgm-hkey {
+  display: inline-block;
+  width: 8px;
+  height: 8px;
+  border-radius: 4px;
+  background: var(--fnk-neutral-100);
+  border: 1px solid var(--fnk-neutral-200);
+}
+
+.rgm-hkey.rgm-bar-up {
+  background: var(--fnk-color-gain-soft);
+  border-color: var(--fnk-color-gain);
+}
+
+.rgm-hkey.rgm-bar-warn {
+  background: var(--fnk-color-warn-soft);
+  border-color: var(--fnk-color-warn);
+}
+
+.rgm-hkey-current {
+  background: var(--fnk-color-gain);
+  border-color: var(--fnk-neutral-900);
+}
+
+/* Action panel rows: link rows with a secondary-button-styled opener.
+ * The opener is a span (not a nested <button>) because the row is a link.
+ * Left accent uses a 2px border; hover and keyboard focus share it. */
+
+.rgm-arow {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  align-items: center;
+  gap: 12px;
+  min-height: 44px;
+  padding: 6px 16px 6px 14px;
+  border-top: 1px solid var(--fnk-neutral-100);
+  border-left: 2px solid transparent;
+  font-size: 13px;
+  color: var(--fnk-neutral-700);
+  text-decoration: none;
+  transition: background-color 150ms ease, border-color 150ms ease;
+}
+
+.rgm-arow:first-of-type {
+  border-top: 0;
+}
+
+.rgm-arow:hover {
+  background: var(--fnk-neutral-50);
+  border-left-color: var(--fnk-brand-interactive);
+}
+
+.rgm-arow:focus-visible {
+  background: var(--fnk-neutral-50);
+  border-left-color: var(--fnk-brand-interactive);
+  outline: none;
+}
+
+.rgm-atext {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  min-width: 0;
+}
+
+.rgm-alabel {
+  font-weight: 500;
+  white-space: nowrap;
+}
+
+.rgm-adetail {
+  color: var(--fnk-neutral-500);
+  font-weight: 400;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.rgm-abtn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  height: 32px;
+  padding: 0 12px;
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--fnk-neutral-700);
+  background: var(--fnk-color-card);
+  border: 1px solid var(--fnk-neutral-200);
+}
+
+.rgm-arow:hover .rgm-abtn {
+  background: var(--fnk-neutral-50);
+}
+
+@media (max-width: 720px) {
+  /* The section tabs take their own row on narrow screens in every state. */
+  .rgm-tabs {
+    flex-basis: 100%;
+  }
+
+  .rgm-thead,
+  .rgm-trow {
+    grid-template-columns: 110px 1fr 64px 84px;
+    gap: 8px;
+  }
+
+  /* Mobile parity: the composite read is already single-column, so only the
+   * start padding comes off the bands to keep the summary compact. */
+  .rgm-score {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 14px;
+  }
+
+  .rgm-meters {
+    padding-top: 0;
+  }
+
+  /* The 10px observation-date line wraps on phones instead of clipping to
+   * "기준 2026-09-11 · 기..." (it inherits nowrap from .rgm-axis otherwise). */
+  .rgm-axis-asof {
+    white-space: normal;
+    overflow: visible;
+  }
+
+  /* slice 9 mobile-390: 44px tap targets. */
+  .rgm-abtn {
+    min-height: 44px;
+  }
+}

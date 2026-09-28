@@ -25,65 +25,91 @@
       "run_id": "29875696340",
       "schedule": "0 22 * * 2",
       "shard": "2/6"
+    },
+    {
+      "attempts_used": 1,
+      "event_name": "schedule",
+      "failures": [],
+      "latency_ms": 520,
+      "natural": true,
+      "observed_at": "2026-08-09T14:44:24Z",
+      "outcome": "fresh",
+      "run_attempt": 1,
+      "run_id": "31319162316",
+      "schedule": "7 14 * * 0-5",
+      "shard": "7/72"
+    },
+    {
+      "attempts_used": 1,
+      "event_name": "workflow_dispatch",
+      "failures": [],
+      "latency_ms": 513,
+      "natural": false,
+      "observed_at": "2026-09-28T01:17:59Z",
+      "outcome": "fresh",
+      "run_attempt": 1,
+      "run_id": "36365270594",
+      "schedule": "",
+      "shard": ""
     }
   ],
   "current": {
-    "fetched_at": "2026-07-21T23:05:01Z",
-    "history_as_of": "2026-07-21",
+    "fetched_at": "2026-09-28T01:29:47Z",
+    "history_as_of": "2026-09-25",
     "path": "data/yf/finance/BLST.json",
-    "payload_sha256": "ef79f2cba97db6ddecd9306dca0fe10783cb7e5add7f7fbb9b3767c3a0ddfb82",
-    "quote_as_of": "2026-07-21T19:26:53Z",
-    "source_as_of": "2026-07-21"
+    "payload_sha256": "7bc375a0517bcd6da1caebedfad86180a9d587234f0d4d99d6d498f18c148874",
+    "quote_as_of": "2026-09-25T19:23:24Z",
+    "source_as_of": "2026-09-25"
   },
   "discovered_from": [
     "stockanalysis_etf"
   ],
   "last_attempt": {
     "attempts_used": 1,
-    "event_name": "schedule",
+    "event_name": "workflow_dispatch",
     "failures": [],
-    "latency_ms": 1163,
-    "natural": true,
-    "observed_at": "2026-07-21T23:04:26Z",
+    "latency_ms": 513,
+    "natural": false,
+    "observed_at": "2026-09-28T01:17:59Z",
     "outcome": "fresh",
     "run_attempt": 1,
-    "run_id": "29875696340",
-    "schedule": "0 22 * * 2",
-    "shard": "2/6"
+    "run_id": "36365270594",
+    "schedule": "",
+    "shard": ""
   },
   "lkg": {
-    "fetched_at": "2026-06-29T23:08:35Z",
-    "history_as_of": "2026-06-29",
+    "fetched_at": "2026-08-09T14:46:20Z",
+    "history_as_of": "2026-08-07",
     "path": "data/admin/yahoo-batch-quote-history/lkg/BLST.json",
-    "payload_sha256": "15b66e8ccfda65e67c634f8b45de50feeefca05e20b0ba903b5b54e7ab94b50e",
-    "quote_as_of": null,
-    "source_as_of": "2026-06-29"
+    "payload_sha256": "15ceb9e0972feb0784c6b23506261a8de54436b17b3a36308488eccdf878b925",
+    "quote_as_of": "2026-08-07T19:35:00Z",
+    "source_as_of": "2026-08-07"
   },
   "promotion_contract": "provider_observation/v2",
   "provider_observation": {
-    "event_name": "schedule",
-    "history_as_of": "2026-07-21",
-    "observed_at": "2026-07-21T23:04:26Z",
-    "payload_sha256": "9217a509377080dbe4c0c753d01f469eb0eac232be8df3c50a02047d88c872a8",
-    "quote_as_of": "2026-07-21T19:26:53Z",
+    "event_name": "workflow_dispatch",
+    "history_as_of": "2026-09-25",
+    "observed_at": "2026-09-28T01:17:59Z",
+    "payload_sha256": "b83aa0356890369df205809bb48c92bb2ce3ad826672486180a70a6023c3d5dc",
+    "quote_as_of": "2026-09-25T19:23:24Z",
     "run_attempt": 1,
-    "run_id": "29875696340",
+    "run_id": "36365270594",
     "schema_version": "provider_observation/v2",
-    "source_as_of": "2026-07-21"
+    "source_as_of": "2026-09-25"
   },
   "resolution_state": "fresh_primary",
   "retry": false,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "stale": {
-    "age_business_days": 9,
-    "classified_at": "2026-07-13T04:33:56Z",
-    "classified_run_id": "29224221077",
+    "age_business_days": 8,
+    "classified_at": "2026-08-19T23:42:29Z",
+    "classified_run_id": "32314261503",
     "expected_resolution": "next_natural_yahoo_run",
     "max_business_days": 6,
-    "message": "BLST holds LKG because Yahoo source date 2026-06-29 is 9 business days old, beyond the 6-day bound; it will retry on the next natural Yahoo run.",
+    "message": "BLST holds LKG because Yahoo source date 2026-08-07 is 8 business days old, beyond the 6-day bound; it will retry on the next natural Yahoo run.",
     "reason": "source_age_exceeds_lane_bound",
-    "source_as_of": "2026-06-29"
+    "source_as_of": "2026-08-07"
   },
   "ticker": "BLST",
-  "updated_at": "2026-07-21T23:04:26Z"
+  "updated_at": "2026-09-28T01:17:59Z"
 }

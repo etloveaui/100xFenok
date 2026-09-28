@@ -1,21 +1,11 @@
-import { buildMonaVnextSystemPrompt } from "@/features/mona-vnext/coach/coachPrompt";
-import {
-  MONA_VNEXT_EXPRESSION_BANK,
-  getMonaVnextExpressionById,
-  type MonaVnextExpression,
-} from "@/features/mona-vnext/coach/coachPolicy";
 import {
   MONA_VNEXT_DEFAULT_GEMINI_MODEL,
-  MONA_VNEXT_GEMINI_MODELS,
   normalizeMonaVnextGeminiModel,
 } from "@/features/mona-vnext/live/modelOptions";
 import {
-  MONA_VNEXT_LIVE_DEFAULT_TEMPERATURE,
   MONA_VNEXT_LIVE_THINKING_LEVEL,
   normalizeMonaVnextLiveTemperature,
 } from "@/features/mona-vnext/live/generationOptions";
-import { MONA_VNEXT_NAMESPACE_POLICY } from "@/features/mona-vnext/memory/monaVnextNamespace";
-import { getMonaVnextPersistenceReadiness } from "@/features/mona-vnext/storage/objectStore";
 
 export const MONA_VNEXT_GEMINI_API_KEY_ENV = "GEMINI_API_KEY";
 export const MONA_VNEXT_GEMINI_MODEL = MONA_VNEXT_DEFAULT_GEMINI_MODEL;
@@ -60,55 +50,18 @@ export function normalizeMonaVnextVadPreset(value: unknown): MonaVnextVadPreset 
   return value === "balanced" ? "balanced" : "relaxed";
 }
 
-export function normalizeMonaVnextInterruptionMode(value: unknown): MonaVnextInterruptionMode {
-  return value === "barge-in" ? "barge-in" : "no-interrupt";
-}
-
-export async function buildMonaVnextReadiness() {
-  const hasKey = getMonaVnextGeminiApiKey() !== null;
-  const persistence = await getMonaVnextPersistenceReadiness();
-  const ready = hasKey && persistence.status === "READY";
-  return {
-    adapter: "gemini-live-ephemeral-vnext",
-    status: ready ? "READY" : "BLOCKED",
-    missingEnv: hasKey ? null : MONA_VNEXT_GEMINI_API_KEY_ENV,
-    missingBinding: hasKey ? persistence.missingBinding : null,
-    persistence,
-    model: MONA_VNEXT_GEMINI_MODEL,
-    supportedModels: MONA_VNEXT_GEMINI_MODELS,
-    generation: {
-      temperature: MONA_VNEXT_LIVE_DEFAULT_TEMPERATURE,
-      thinkingLevel: MONA_VNEXT_LIVE_THINKING_LEVEL,
-      responseModalities: ["AUDIO"],
-    },
-    websocketEndpoint: MONA_VNEXT_LIVE_WS_ENDPOINT,
-    tokenEndpoint: "server-only:v1alpha/auth_tokens",
-    namespace: MONA_VNEXT_NAMESPACE_POLICY,
-    requiredClient: {
-      secureContext: true,
-      microphone: true,
-      audioInput: "raw 16-bit PCM audio, 16kHz, little-endian",
-      audioOutput: "raw 16-bit PCM audio, 24kHz, little-endian",
-    },
-  };
-}
-
-export function buildMonaVnextLiveSetup(options: {
+export function buildMonaVnextAudioSetup(options: {
   model?: unknown;
   voiceName: MonaVnextVoiceName;
   vadPreset: MonaVnextVadPreset;
   lowVoice: boolean;
   interruptionMode: MonaVnextInterruptionMode;
-  englishVisible: boolean;
   temperature?: unknown;
-  activeExpressionId?: unknown;
-  expressionBank?: MonaVnextExpression[];
+  systemInstruction: string;
 }) {
   const vad = VAD_PRESETS[options.vadPreset];
   const model = normalizeMonaVnextGeminiModel(options.model);
   const temperature = normalizeMonaVnextLiveTemperature(options.temperature);
-  const expressionBank = options.expressionBank?.length ? options.expressionBank : MONA_VNEXT_EXPRESSION_BANK;
-  const activeExpression = getMonaVnextExpressionById(options.activeExpressionId, expressionBank);
   return {
     model: `models/${model}`,
     generationConfig: {
@@ -117,42 +70,22 @@ export function buildMonaVnextLiveSetup(options: {
       temperature,
       speechConfig: {
         voiceConfig: {
-          prebuiltVoiceConfig: {
-            voiceName: options.voiceName,
-          },
+          prebuiltVoiceConfig: { voiceName: options.voiceName },
         },
       },
     },
-    systemInstruction: {
-      parts: [
-        {
-          text: buildMonaVnextSystemPrompt({
-            lowVoice: options.lowVoice,
-            englishVisible: options.englishVisible,
-            activeExpression,
-            expressionBankSize: expressionBank.length,
-          }),
-        },
-      ],
-    },
+    systemInstruction: { parts: [{ text: options.systemInstruction }] },
     realtimeInputConfig: {
       activityHandling: options.interruptionMode === "no-interrupt"
         ? "NO_INTERRUPTION"
         : "START_OF_ACTIVITY_INTERRUPTS",
-      automaticActivityDetection: {
-        disabled: false,
-        ...vad,
-      },
+      automaticActivityDetection: { disabled: false, ...vad },
     },
     inputAudioTranscription: {
-      languageHints: {
-        languageCodes: ["ko-KR", "en-US"],
-      },
+      languageHints: { languageCodes: ["ko-KR", "en-US"] },
     },
     outputAudioTranscription: {
-      languageHints: {
-        languageCodes: ["ko-KR", "en-US"],
-      },
+      languageHints: { languageCodes: ["ko-KR", "en-US"] },
     },
     sessionResumption: {},
     contextWindowCompression: { slidingWindow: {} },

@@ -2,22 +2,26 @@
 
 import Link from "next/link";
 import { type ComponentProps } from "react";
+import { LinkPendingSignal } from "@/components/shell/navigation-progress";
 
 type TransitionLinkProps = ComponentProps<typeof Link>;
 
 /**
- * Thin wrapper over next/link.
+ * next/link plus navigation feedback.
  *
  * Previously this intercepted clicks and drove a `document.startViewTransition`
  * cross-fade, but the transition callback resolved synchronously right after
  * `router.push` — before the App-Router navigation had committed — so the View
  * Transition captured the *old* page as both its old and new snapshot and held
- * the previous home on screen for the duration of the fade. That produced the
- * "previous home flashes during navigation" defect. We now defer to standard
- * Next navigation + the route-level `loading.tsx` Suspense fallback, which has
- * no held-snapshot flash. (A correct VT would require resolving the callback on
- * the committed pathname change; left out until that is worth the complexity.)
+ * the previous home on screen for the duration of the fade. Navigation is plain
+ * next/link again; the only addition is `LinkPendingSignal`, which renders
+ * nothing and reports the link's pending state to the shell progress bar.
  */
-export default function TransitionLink(props: TransitionLinkProps) {
-  return <Link {...props} />;
+export default function TransitionLink({ children, ...props }: TransitionLinkProps) {
+  return (
+    <Link {...props}>
+      {children}
+      <LinkPendingSignal />
+    </Link>
+  );
 }

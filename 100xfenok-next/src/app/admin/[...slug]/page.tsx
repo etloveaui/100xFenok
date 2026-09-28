@@ -9,7 +9,7 @@ export const dynamic = "force-dynamic";
 
 export const metadata: Metadata = {
   title: "Admin Legacy Bridge",
-  description: "Legacy admin 페이지를 Next.js 라우트로 브릿지합니다.",
+  description: "레거시 admin 페이지를 Next.js 라우트로 연결합니다.",
 };
 
 interface AdminLegacyPageProps {

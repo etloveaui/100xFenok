@@ -8,13 +8,12 @@ import { fileURLToPath } from "node:url";
 
 import {
   ACCOUNT_TYPES,
-  ATTEMPT_SHARD_SCHEMA,
   MAX_SERIES_DAYS,
   TGA_PERSISTENCE_POLICY,
   retainLatestTgaSeriesDays,
   runTreasuryTga,
 } from "./fetch-treasury-tga.mjs";
-import { validateAttemptEvidence } from "./build-data-supply-detection-floor.mjs";
+import { ATTEMPT_SHARD_SCHEMA, validateAttemptEvidence } from "./build-data-supply-detection-floor.mjs";
 import { checkWorkflowCommitShardsAgainstRegistry } from "./check-lane-registry-commit-shards.mjs";
 
 const OBSERVED_AT = "2026-07-14T12:34:56.000Z";
@@ -57,11 +56,14 @@ function validDocument({ sourceDate = "2026-07-11", observedAt = OBSERVED_AT } =
 function makePaths(root) {
   return {
     canonicalPath: path.join(root, "data", "macro", "tga.json"),
-    publicPath: path.join(root, "100xfenok-next", "public", "data", "macro", "tga.json"),
     attemptShardPath: path.join(root, "data", "admin", "data-supply-state", "detection-attempts", "treasury_tga.json"),
     statePath: path.join(root, "data", "admin", "treasury_tga", "index.json"),
     lkgPath: path.join(root, "data", "admin", "treasury_tga", "lkg", "tga.json"),
   };
+}
+
+function publicPathFor(root) {
+  return path.join(root, "100xfenok-next", "public", "data", "macro", "tga.json");
 }
 
 function readJson(filePath) {
@@ -82,7 +84,8 @@ async function runCase(request, options = {}) {
     eventName: options.eventName ?? "schedule",
     controlledFailureKey: options.controlledFailureKey ?? "",
   });
-  return { root, paths, result, shard: readJson(paths.attemptShardPath) };
+  assert.equal(fs.existsSync(paths.attemptShardPath), false);
+  return { root, paths, result, shard: { schema_version: ATTEMPT_SHARD_SCHEMA, lane_id: "treasury_tga", attempts: [result.attempt] } };
 }
 
 function assertShardShape(shard) {
@@ -118,7 +121,7 @@ function assertShardShape(shard) {
 
 {
   let calls = 0;
-  const { paths, result, shard } = await runCase(async (_url, accountType) => {
+  const { root, paths, result, shard } = await runCase(async (_url, accountType) => {
     const index = ACCOUNT_TYPES.indexOf(accountType);
     calls += 1;
     return response(200, rowsFor(accountType, index));
@@ -127,7 +130,7 @@ function assertShardShape(shard) {
   assert.equal(result.ok, true);
   assert.equal(result.reason, "ok");
   assert.equal(result.updated, true);
-  assert.deepEqual(fs.readFileSync(paths.canonicalPath), fs.readFileSync(paths.publicPath));
+  assert.equal(fs.existsSync(publicPathFor(root)), false, "a successful run must not create the public mirror file");
   const output = readJson(paths.canonicalPath);
   assert.equal(output.source, "Treasury FiscalData");
   assert.equal(output.series.length, 1);
@@ -158,7 +161,7 @@ function assertShardShape(shard) {
 }
 
 async function assertFailureCase({ failingResponse, expected, failingIndex = 1 }) {
-  const { paths, result, shard } = await runCase(async (_url, accountType) => {
+  const { root, paths, result, shard } = await runCase(async (_url, accountType) => {
     const index = ACCOUNT_TYPES.indexOf(accountType);
     if (index === failingIndex) {
       if (failingResponse instanceof Error) throw failingResponse;
@@ -170,8 +173,12 @@ async function assertFailureCase({ failingResponse, expected, failingIndex = 1 }
   assert.equal(result.updated, false);
   assert.equal(result.reason, expected.reason);
   assert.equal(result.exitCode, 2);
+  if (expected.failureDetail) {
+    assert.match(result.failure_detail, expected.failureDetail);
+    assert(result.failure_detail.length <= 320, "Treasury failure detail must stay bounded");
+  }
   assert.equal(fs.existsSync(paths.canonicalPath), false);
-  assert.equal(fs.existsSync(paths.publicPath), false);
+  assert.equal(fs.existsSync(publicPathFor(root)), false);
   const row = assertShardShape(shard);
   for (const [key, value] of Object.entries(expected.row)) assert.deepEqual(row[key], value, key);
 }
@@ -226,6 +233,7 @@ await assertFailureCase({
   failingResponse: response(200, "{not-json"),
   expected: {
     reason: "decode_error",
+    failureDetail: /^SyntaxError:/,
     row: {
       execution: "returned",
       http_status: 200,
@@ -274,6 +282,7 @@ await assertFailureCase({
   failingResponse: Object.assign(new Error("socket reset"), { code: "ECONNRESET" }),
   expected: {
     reason: "transport_error",
+    failureDetail: /^Error: socket reset$/,
     row: {
       execution: "threw",
       exception_kind: "transport",
@@ -290,11 +299,12 @@ await assertFailureCase({
 {
   const root = fs.mkdtempSync(path.join(os.tmpdir(), "fetch-tga-lkg-test-"));
   const paths = makePaths(root);
+  const publicPath = publicPathFor(root);
   fs.mkdirSync(path.dirname(paths.canonicalPath), { recursive: true });
-  fs.mkdirSync(path.dirname(paths.publicPath), { recursive: true });
+  fs.mkdirSync(path.dirname(publicPath), { recursive: true });
   const lkg = `${JSON.stringify(validDocument(), null, 2)}\n`;
   fs.writeFileSync(paths.canonicalPath, lkg);
-  fs.writeFileSync(paths.publicPath, lkg);
+  fs.writeFileSync(publicPath, lkg);
   let controlledCalls = 0;
   const result = await runTreasuryTga({
     ...paths,
@@ -317,7 +327,7 @@ await assertFailureCase({
   assert.equal(result.exitCode, 0);
   assert.equal(controlledCalls, 2);
   assert.equal(fs.readFileSync(paths.canonicalPath, "utf8"), lkg);
-  assert.equal(fs.readFileSync(paths.publicPath, "utf8"), lkg);
+  assert.equal(fs.readFileSync(publicPath, "utf8"), lkg);
   assert.equal(fs.readFileSync(paths.lkgPath, "utf8"), lkg);
   const retainedState = readJson(paths.statePath);
   assert.deepEqual(retainedState.retry_set, ["tga"]);
@@ -394,11 +404,12 @@ async function seededFailure({
 }) {
   const root = fs.mkdtempSync(path.join(os.tmpdir(), "fetch-tga-seeded-failure-"));
   const paths = makePaths(root);
+  const publicPath = publicPathFor(root);
   fs.mkdirSync(path.dirname(paths.canonicalPath), { recursive: true });
-  fs.mkdirSync(path.dirname(paths.publicPath), { recursive: true });
+  fs.mkdirSync(path.dirname(publicPath), { recursive: true });
   const bytes = `${JSON.stringify(validDocument({ sourceDate }), null, 2)}\n`;
   fs.writeFileSync(paths.canonicalPath, bytes);
-  fs.writeFileSync(paths.publicPath, bytes);
+  fs.writeFileSync(publicPath, bytes);
   const result = await runTreasuryTga({
     ...paths,
     repoRoot: root,
@@ -434,7 +445,7 @@ async function seededFailure({
   assert.equal(concurrentNaturalFailure.result.reason, "http_error", "chaos must not hide a concurrent natural failure");
   assert.equal(concurrentNaturalFailure.result.degraded, true);
   assert.equal(readJson(concurrentNaturalFailure.paths.statePath).items.tga.latest_failure.reason, "http_error");
-  const concurrentAttempt = assertShardShape(readJson(concurrentNaturalFailure.paths.attemptShardPath));
+  const concurrentAttempt = assertShardShape({ schema_version: ATTEMPT_SHARD_SCHEMA, lane_id: "treasury_tga", attempts: [concurrentNaturalFailure.result.attempt] });
   assert.equal(concurrentAttempt.execution, "returned");
   assert.equal(concurrentAttempt.http_status, 503, "attempt evidence must name the natural failure, not injected transport");
 
@@ -447,7 +458,7 @@ async function seededFailure({
   assert.equal(controlledWithNaturalOutage.result.corrupt, true);
   assert.equal(controlledWithNaturalOutage.result.exitCode, 2);
   assert.equal(readJson(controlledWithNaturalOutage.paths.statePath).items.tga.latest_failure.reason, "http_error");
-  assert.equal(assertShardShape(readJson(controlledWithNaturalOutage.paths.attemptShardPath)).http_status, 503);
+  assert.equal(assertShardShape({ schema_version: ATTEMPT_SHARD_SCHEMA, lane_id: "treasury_tga", attempts: [controlledWithNaturalOutage.result.attempt] }).http_status, 503);
 
   for (const failingResponse of [
     response(401, { error: "auth" }),
@@ -480,7 +491,7 @@ async function seededFailure({
   });
   assert.equal(malformed.result.reason, "schema_drift");
   assert.equal(malformed.result.exitCode, 2);
-  assertShardShape(readJson(malformed.paths.attemptShardPath));
+  assertShardShape({ schema_version: ATTEMPT_SHARD_SCHEMA, lane_id: "treasury_tga", attempts: [malformed.result.attempt] });
 
   const future = await seededFailure({
     request: async (_url, accountType) => response(200, {
@@ -489,14 +500,15 @@ async function seededFailure({
   });
   assert.equal(future.result.reason, "future_source");
   assert.equal(future.result.exitCode, 2);
-  assertShardShape(readJson(future.paths.attemptShardPath));
+  assertShardShape({ schema_version: ATTEMPT_SHARD_SCHEMA, lane_id: "treasury_tga", attempts: [future.result.attempt] });
 }
 
 {
   const root = fs.mkdtempSync(path.join(os.tmpdir(), "fetch-tga-source-guard-"));
   const paths = makePaths(root);
+  const publicPath = publicPathFor(root);
   fs.mkdirSync(path.dirname(paths.canonicalPath), { recursive: true });
-  fs.mkdirSync(path.dirname(paths.publicPath), { recursive: true });
+  fs.mkdirSync(path.dirname(publicPath), { recursive: true });
   const currentBytes = `${JSON.stringify(validDocument({ sourceDate: "2026-07-11" }), null, 2)}\n`;
   await runTreasuryTga({
     ...paths,
@@ -511,7 +523,7 @@ async function seededFailure({
   // Reproduce origin/main after the producer code landed: state is already
   // fresh_primary for this source, while canonical/public bytes are legacy.
   fs.writeFileSync(paths.canonicalPath, currentBytes);
-  fs.writeFileSync(paths.publicPath, currentBytes);
+  fs.writeFileSync(publicPath, currentBytes);
   // Production-shaped migration: the natural workflow may observe the same
   // provider source date as the tracked legacy payload.  Same-source must not
   // short-circuit until the bounded-persistence envelope has been emitted.
@@ -530,7 +542,7 @@ async function seededFailure({
   const migrated = readJson(paths.canonicalPath);
   assert.deepEqual(migrated.persistence_policy, TGA_PERSISTENCE_POLICY);
   assert.equal(migrated.persistence_state.retained_series_days, 1);
-  assert.deepEqual(readJson(paths.publicPath), migrated);
+  assert.equal(fs.readFileSync(publicPath, "utf8"), currentBytes, "the boundary-owned mirror file must remain untouched by the producer");
   assert.equal(readJson(paths.statePath).items.tga.current.source_as_of, "2026-07-11");
   const migratedBytes = fs.readFileSync(paths.canonicalPath, "utf8");
 
@@ -679,13 +691,22 @@ await assert.rejects(
 
 {
   const workflow = fs.readFileSync(path.join(REPO_ROOT, ".github", "workflows", "fetch-treasury-tga.yml"), "utf8");
+  const manifest = JSON.parse(fs.readFileSync(
+    path.join(REPO_ROOT, "data", "admin", "lane-commit-manifest.json"),
+    "utf8",
+  ));
+  const canonicalSpec = manifest.workflows[".github/workflows/fetch-treasury-tga.yml"]
+    .stages.success_if_exists
+    .find((spec) => spec.path === "data/macro/tga.json");
   assert.match(workflow, /node scripts\/fetch-treasury-tga\.mjs/);
   assert.doesNotMatch(workflow, /node << ['"]?EOF/);
-  assert.match(workflow, /data\/admin\/data-supply-state\/detection-attempts\/treasury_tga\.json/);
   assert.match(workflow, /controlled_failure_key/);
   assert.match(workflow, /INPUT_CONTROLLED_FAILURE_KEY/);
-  assert.match(workflow, /data\/admin\/treasury_tga\/index\.json/);
-  assert.match(workflow, /data\/admin\/treasury_tga\/lkg\/tga\.json/);
+  assert.equal(
+    canonicalSpec?.required,
+    true,
+    "successful Treasury TGA fetch must require the canonical payload",
+  );
   assert.match(workflow, /scripts\/stage-lane-manifest\.sh/);
   assert.match(workflow, /--stage always_if_exists/);
   assert.match(workflow, /--stage success_if_exists/);

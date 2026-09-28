@@ -1,0 +1,122 @@
+{
+ "schema_version": "feno_rim_b1_criteria.v1",
+ "phase": "B1",
+ "gate": "independent cost of equity — a Ke that does not reproduce the price it is used to value",
+ "research_only": true,
+ "frozen_before_any_result": true,
+ "mandate_section": "3",
+ "handler": "cc (Opus) — adjudicator. worker: DeepSeek.",
+
+ "why_this_blocker_is_different": {
+  "statement": "G3's precision limit improves with elapsed time. G4's membership gap was closed today by reading official change records. This one does not yield to either, because it is not a data-volume problem — it is a circularity problem.",
+  "the_circularity": "GLS-ICC is the discount rate that makes the residual-income model reproduce the CURRENT price. Using it as the discount rate in a same-date fair value computes the price from the price. The output would look like a valuation and carry no information.",
+  "what_therefore_counts_as_success": "A Ke whose inputs are all knowable at the origin and none of which is derived from the same-date price of the asset being valued."
+ },
+
+ "core_contract": {
+  "formula": "Ke_i,t = Rf_t + Beta_industry(i),t * MRP_hist,t",
+  "Rf_t": {
+   "definition": "US 10-year Treasury constant maturity yield, the last observation on or before the origin date, divided by 100",
+   "source": "data/macro/fred-banking-daily.json series DGS10",
+   "already_available": true,
+   "pit_rule": "no observation dated after the origin may enter"
+  },
+  "Beta_industry": {
+   "definition": "Damodaran US industry levered beta, taken from the most recent annual archive whose publication date is on or before the origin date",
+   "selection_rule": "for origin t, choose the archive edition with the greatest publication date <= t. Never interpolate between editions, never average two editions, never use an edition published after t.",
+   "levered_not_unlevered": "the levered beta is used, because Ke is a cost of EQUITY and the target is a firm's equity holders",
+   "company_specific_regression_beta_is_forbidden": "explicitly per mandate section 3.2",
+   "acquisition_required": true,
+   "repo_state": "data/damodaran/industries.json holds 96 industries with levered/unlevered beta but is a SINGLE CURRENT SNAPSHOT. No dated archive exists in the repo."
+  },
+  "MRP_hist": {
+   "definition": "arithmetic mean of (annual S&P 500 total return minus annual 10-year Treasury bond return), computed over an expanding window from 1928 through the last full year ending strictly before the origin",
+   "primary": "arithmetic, stock minus bond",
+   "sensitivities_reported_without_threshold": ["geometric mean, stock minus bond", "arithmetic, stock minus Treasury bill", "the standard error envelope of the primary"],
+   "expanding_window_rule": "for a 2019-06-30 origin the window ends 2018; for 2025-06-30 it ends 2024. No year containing the origin may enter.",
+   "acquisition_required": true,
+   "repo_state": "data/damodaran/historical_erp.json holds 1960-2025 IMPLIED ERP (DDM and FCFE), which is a different quantity and belongs to the context lane, not here."
+  }
+ },
+
+ "industry_mapping": {
+  "why_it_is_frozen_here": "Every firm must be assigned to a Damodaran industry before any Ke is computed. Choosing or adjusting that mapping after seeing valuation output is output targeting, and it would be invisible in the result.",
+  "rule": "map each firm's 2-digit SIC from data/edgar/r1-panel/sic/{sym}.json to a Damodaran industry using a mapping table committed BEFORE any Ke is computed, in its own commit",
+  "unmappable_firms": "a SIC with no defensible Damodaran counterpart is recorded UNMAPPED and excluded from the core Ke, with its count and index weight disclosed. It is not assigned to a nearest-looking industry.",
+  "post_result_change_forbidden": true,
+  "the_mapping_table_is_a_deliverable": "FENO_RIM_SIC_TO_DAMODARAN_INDUSTRY_MAP.json, frozen in an earlier commit than any Ke history"
+ },
+
+ "uncertainty_is_the_output_not_a_footnote": {
+  "reason": "The historical equity premium carries a standard error of roughly 2 percentage points a year on a century of data. A Ke reported as a point estimate would hide the dominant source of error in the entire valuation.",
+  "requirement": "every Ke is emitted as a range with named endpoints, never a scalar",
+  "endpoint_construction": "Ke_low uses MRP_hist minus one standard error; Ke_high uses MRP_hist plus one standard error. Both endpoints carry the same Rf and Beta.",
+  "the_point_estimate_may_be_recorded_but_never_published_alone": true
+ },
+
+ "context_lane_strictly_separated": {
+  "formula": "Ke_implied_context = Rf_t + Beta_industry(i),t * ImpliedERP_t",
+  "source": "data/damodaran/historical_erp.json implied_erp_fcfe, already available",
+  "permitted_uses": ["comparison against the core Ke", "regime and context reading", "sanity check on the core"],
+  "forbidden_uses": [
+   "as the core discount rate for any successor fair value",
+   "as a replacement for a core band endpoint",
+   "as a tiebreak when the core range is inconvenient"
+  ],
+  "why": "the implied ERP is backed out of the same-date index price. It is exactly the circularity this gate exists to avoid, one level up."
+ },
+
+ "korea_lane": {
+  "formula": "Ke_KR = Rf_KR,t + Beta_industry(i),t * MatureMarketMRP_t + CRP_KR,t",
+  "CRP_source": "most recent archived sovereign-rating-based country risk premium published on or before the origin, from the country-premium archive already restored to the repo (25 editions)",
+  "cds_variant": "sensitivity only",
+  "forbidden": "any same-date KOSPI price-implied premium in the core",
+  "scope_note": "Korea is not part of the SPX prototype and is specified here only so the contract is complete. B3 prototypes S&P 500 alone."
+ },
+
+ "acquisition_scope": {
+  "note": "This mission's earlier gates forbade network acquisition. Mandate section 3.2 requires dated archives, so acquisition is now in scope for these two items only.",
+  "required": [
+   {"item": "Damodaran historical annual returns dataset (S&P 500 total return, 10-year Treasury bond return, Treasury bill return, 1928 onward)", "purpose": "MRP_hist"},
+   {"item": "Damodaran US industry beta archives, annual editions covering 2018 through 2025", "purpose": "Beta_industry at each origin"}
+  ],
+  "rules": [
+   "official Damodaran publication only; no third-party republication as the ledger source",
+   "raw bytes retained with sha256 and a fetch receipt carrying first_knowable_at",
+   "no paid subscription, no login, no credential — mandate section 15 applies",
+   "if an edition for a given year cannot be obtained, that year is recorded MISSING and the selection rule falls back to the most recent earlier edition, with the substitution disclosed per origin"
+  ]
+ },
+
+ "deliverables": [
+  "FENO_RIM_SIC_TO_DAMODARAN_INDUSTRY_MAP.json (frozen in its own earlier commit)",
+  "FENO_RIM_INDEPENDENT_KE_CONTRACT.md",
+  "FENO_RIM_KE_HISTORY.json — per firm, per origin: Rf, industry, beta, edition used, MRP point and standard error, Ke_low, Ke_point, Ke_high, and the provenance of every input",
+  "FENO_RIM_KE_CONTEXT_COMPARISON.json — core versus implied-context Ke, spread, sector distribution"
+ ],
+
+ "verdict_rules": {
+  "KE_CORE_IDENTIFIED": "all three components resolve at every origin from dated sources published on or before that origin, industry mapping covers at least 90% of index weight, and no component derives from a same-date price of a valued asset",
+  "KE_CORE_RANGE_ONLY": "the above holds but the MRP standard error is wide enough that the Ke range spans more than 3 percentage points at the median firm — proceed, and every downstream fair value is a range",
+  "KE_NOT_DEFENSIBLE": "an archive edition cannot be obtained for a majority of origins, OR the industry mapping cannot cover 90% of index weight, OR any component turns out to require a same-date price",
+  "range_only_does_not_block": "mandate section 3.6 is explicit — RANGE_ONLY proceeds to the successor RIM with range outputs rather than points"
+ },
+
+ "prohibitions": [
+  "no same-date price-implied quantity in the core Ke",
+  "no company-specific regression beta",
+  "no interpolation or averaging across archive editions",
+  "no industry-mapping change after any Ke or valuation is computed",
+  "no point-estimate Ke published without its range",
+  "no calibration of any component to a published Yoo figure",
+  "no paid acquisition, login, or credential",
+  "no publication or promotion; the public surface remains quarantined"
+ ],
+
+ "result_paths_blocked_until_this_file_is_committed": [
+  "data/computed/feno-rim-recovery/FENO_RIM_KE_HISTORY.json",
+  "data/computed/feno-rim-recovery/FENO_RIM_KE_CONTEXT_COMPARISON.json"
+ ],
+
+ "frozen_at_utc": "2026-08-08T02:40:00Z"
+}

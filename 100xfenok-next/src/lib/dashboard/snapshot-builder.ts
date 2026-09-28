@@ -238,7 +238,8 @@ export function buildDashboardSnapshot(payload: {
     const momentum = payload.summaries?.momentum?.[sector.key]?.['1m'];
     const oneMonth = safeNumber(momentum, sector.fallback);
     const ticker = payload.sectorTicker[sector.etf];
-    const dayChange = typeof ticker?.changePercent === 'number' && Number.isFinite(ticker.changePercent)
+    const dayChange = !freshness[`ticker:${sector.etf}`]?.isFallback
+      && typeof ticker?.changePercent === 'number' && Number.isFinite(ticker.changePercent)
       ? ticker.changePercent / 100
       : null;
     const displayHorizon: SectorSnapshot['displayHorizon'] = dayChange === null ? '1M' : '1D';
@@ -276,6 +277,18 @@ export function buildDashboardSnapshot(payload: {
     .filter((value): value is string => typeof value === 'string' && value.length > 0)
     .sort();
   const tickerFetchedAt = tickerFetchedAtCandidates.at(-1) ?? null;
+  const benchmarkInputsReady = !freshness.benchmarks.isFallback;
+  const sectorInputsReady = SECTOR_DEFINITIONS.every((sector) => {
+    const ticker = payload.sectorTicker[sector.etf];
+    const tickerChangeReady = !freshness[`ticker:${sector.etf}`]?.isFallback
+      && hasFiniteNumber(ticker?.changePercent);
+    const benchmarkMomentumReady = benchmarkInputsReady
+      && hasFiniteNumber(payload.summaries?.momentum?.[sector.key]?.['1m']);
+    return tickerChangeReady || benchmarkMomentumReady;
+  });
+  const judgmentInputsReady = !freshness.sentiment.isFallback
+    && !freshness.dailyBanking.isFallback
+    && sectorInputsReady;
 
   const quickIndices: QuickIndexSnapshot[] = QUICK_INDEX_DEFINITIONS.map((item, index): QuickIndexSnapshot => {
     const ticker = payload.indexTicker[item.symbol];
@@ -395,6 +408,8 @@ export function buildDashboardSnapshot(payload: {
   const stressLabel = stressTone === 'low' ? '낮음' : stressTone === 'medium' ? '주의' : '높음';
 
   return {
+    judgmentInputsReady,
+    sectorInputsReady,
     fearGreedScore,
     fearGreedLabel,
     freshness,

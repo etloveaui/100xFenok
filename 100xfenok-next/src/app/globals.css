@@ -1,9 +1,13 @@
 @import "tailwindcss";
-@source not "../../data";
+@import "./fonts/fonts.css";
+/* Tailwind v4 auto-scans the app root for class candidates. public/ holds the
+   legacy HTML pages (served standalone or in iframes, never styled by this
+   sheet) and ~14k data JSON files, which added tens of KB of unused utilities
+   to the render-blocking stylesheet and slowed every build. */
+@source not "../../public";
+@source not "../../../data";
 @import "../styles/overview-widgets.css";
 @import "../styles/heatmap.css";
-@import "../styles/footer.css";
-@import "../styles/navigation.css";
 @import "../styles/route-embed.css";
 @import "../styles/legacy-widgets.css";
 @import "../styles/design-v2.css";
@@ -13,7 +17,7 @@
 @import "../styles/theme-c.css";
 @import "../styles/app-shell.css";
 @import "../styles/canvas-plus.css";
-@import "../styles/cp-w4-stock.css";
+@import "../styles/light-system.css";
 @import "../styles/cp-w4-screener.css";
 @import "../styles/cp-w4-chart.css";
 @import "../styles/cp-w5-kit.css";
@@ -83,6 +87,15 @@
   --fnk-color-black: #000000;
   --fnk-fixed-slate-900: #0f172a;
   --fnk-fixed-slate-950: #020617;
+  --fnk-fixed-night-950: #07061a;
+  --fnk-fixed-night-900: #130f30;
+  --fnk-fixed-night-800: #241a49;
+  --fnk-fixed-night-ink: #f7f2ff;
+  --fnk-fixed-night-dim: #bcb0de;
+  --fnk-fixed-amber-300: #ffc98b;
+  --fnk-fixed-violet-300: #a796ff;
+  --fnk-fixed-mint-300: #7ce9c8;
+  --fnk-fixed-rose-300: #ff9fb2;
   --fnk-neutral-25: #f8fbff;
   --fnk-neutral-225: #dbe5f2;
   --fnk-neutral-925: #020617;
@@ -343,12 +356,34 @@
   --dur-slow: 320ms;
 
   /* Design V2 font aliases (used by design-v2.css) */
-  --font-display: var(--font-orbitron-face), system-ui, sans-serif;
-  --font-body: var(--font-noto-sans-kr), -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  /* Validated chart steps for the market-valuation figures. Chosen by running
+     the palette validator against each surface, not by eye: the shell's warn
+     token failed the lightness band (0.787) and contrast (1.95:1) as a
+     categorical mark, and the shell's gain/loss pair separates by only dE 3.8
+     under deuteranopia, so neither is used as a chart hue here. */
+  --c-chart-lens-1: #1B73D3;   /* categorical, dE 27.9 vs lens-2, contrast >= 3:1 */
+  --c-chart-lens-2: #c9821a;
+  --c-chart-ord-cheap: #12905d;
+  --c-chart-ord-cheap-soft: #6bbf9a;
+  --c-chart-ord-mid: #94a3b8;
+  --c-chart-ord-rich-soft: #ef8f8f;
+  --c-chart-ord-rich: #cf3b4c;
+  --font-display: var(--font-pretendard), "Apple SD Gothic Neo", "Malgun Gothic", system-ui, sans-serif;
+  --font-body: var(--font-pretendard), "Apple SD Gothic Neo", "Malgun Gothic", system-ui, sans-serif;
   --font-mono: var(--font-jetbrains-mono), ui-monospace, 'SF Mono', Menlo, monospace;
+  --font-sans: var(--font-pretendard), "Apple SD Gothic Neo", "Malgun Gothic", system-ui, sans-serif;
 }
 
 [data-theme="dark"] {
+  /* Chart steps for the dark surface: stepped into the dark lightness band
+     (0.48-0.67) rather than flipped from the light pair. dE 26.7. */
+  --c-chart-lens-1: #468de5;
+  --c-chart-lens-2: #ba7f14;
+  --c-chart-ord-cheap: #35b981;
+  --c-chart-ord-cheap-soft: #2b7f5c;
+  --c-chart-ord-mid: #7c8b9c;
+  --c-chart-ord-rich-soft: #a34450;
+  --c-chart-ord-rich: #ef6b78;
   /* W4 dark ramp: retained as an optional theme; light remains the default. */
   color-scheme: dark;
   --fnk-neutral-50: oklch(0.205 0 0);
@@ -678,13 +713,7 @@
   --spacing-s13: var(--s13);
   --spacing-s13-5: var(--s13-5);
   --spacing-s13-75: var(--s13-75);
-  --font-sans: var(--font-noto-sans-kr), Arial, Helvetica, sans-serif;
-  --font-orbitron: var(--font-orbitron-face), sans-serif;
-}
-
-/* Orbitron Font Class */
-.orbitron {
-  font-family: var(--font-orbitron);
+  --font-sans: var(--font-pretendard), "Apple SD Gothic Neo", "Malgun Gothic", system-ui, sans-serif;
 }
 
 /* Custom Brand Colors as Utilities */
@@ -765,7 +794,7 @@
   align-items: center;
   gap: 0.25rem;
   padding: 0.2rem 0.5rem;
-  border-radius: 9999px;
+  border-radius: 999px;
   font-size: 0.625rem;
   font-weight: 700;
 }
@@ -832,11 +861,15 @@
   overflow: hidden;
 }
 
-/* Body Reset */
+/* Body Reset — Light System: Pretendard Variable 13/1.45, tabular-nums for numbers */
 body {
   background: var(--background);
   color: var(--foreground);
   font-family: var(--font-sans);
+  font-size: 13px;
+  line-height: 1.45;
+  font-variant-numeric: tabular-nums;
+  -webkit-font-smoothing: antialiased;
   -webkit-tap-highlight-color: transparent;
 }
 
@@ -900,13 +933,6 @@ main {
    version, the product shell, or any immersive (chrome-less full-screen) route is
    active. Immersive routes opt in via [data-immersive-route] — currently winddown*
    and /ib (data-immersive-route="ib"). */
-body.design-v2 [data-v1-chrome],
-body.design-v3 [data-v1-chrome],
-body.design-v4 [data-v1-chrome],
-body.fnk-shell-on [data-v1-chrome],
-body:has([data-immersive-route]) [data-v1-chrome] { display: none !important; }
-body.fnk-shell-on .app-mobile-dock,
-body:has([data-immersive-route]) .app-mobile-dock { display: none !important; }
 body.design-v2 main,
 body.design-v3 main,
 body.design-v4 main,
@@ -914,6 +940,41 @@ body.fnk-shell-on main { padding-top: 0 !important; padding-bottom: 0 !important
 body:has([data-immersive-route]) #main-content {
   padding-top: 0 !important;
   padding-bottom: 0 !important;
+}
+/* The persistent shell is server-rendered as <main> > .fnk-shell, so the legacy
+   nav padding is dropped in CSS at first paint. The body.fnk-shell-on rule above
+   only applies after hydration, which shifted every shell page up by 64px. */
+#main-content:has(> .fnk-shell) {
+  padding-top: 0 !important;
+  padding-bottom: 0 !important;
+}
+
+/* Panel loadingMode="placeholder": the children already draw a placeholder
+   layout ("—" values), so loading only dims them and sweeps a shimmer across —
+   the panel keeps its exact size when data arrives. Both start after 120ms,
+   matching the skeleton delay, so fast loads never flash. */
+[data-panel-loading="placeholder"] {
+  position: relative;
+}
+[data-panel-loading="placeholder"] > * {
+  opacity: 0.55;
+  transition: opacity 0.2s ease 0.12s;
+}
+[data-panel-loading="placeholder"]::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: linear-gradient(100deg, transparent 20%, color-mix(in srgb, var(--fnk-color-white) 60%, transparent) 50%, transparent 80%);
+  background-size: 200% 100%;
+  animation: fnk-panel-shimmer 1.4s ease-in-out 0.12s infinite both;
+}
+@keyframes fnk-panel-shimmer {
+  from { background-position: 150% 0; }
+  to { background-position: -50% 0; }
+}
+@media (prefers-reduced-motion: reduce) {
+  [data-panel-loading="placeholder"]::after { animation: none; }
 }
 
 /* Line clamp utilities */
@@ -945,3 +1006,106 @@ body:has([data-immersive-route]) #main-content {
     }
   }
 }
+
+/* Keep compact-shell controls at the measured 44px touch target even though
+   the product root font intentionally makes Tailwind's rem units smaller. */
+@media (max-width: 767px) {
+  a.min-h-11,
+  button.min-h-11,
+  input.min-h-11,
+  select.min-h-11 {
+    min-height: 44px !important;
+  }
+
+  input.h-11,
+  select.h-11 {
+    height: 44px !important;
+    min-height: 44px !important;
+  }
+
+  [data-etfs-surface] .cpw5-cta-btn,
+  .cpw5-etfs-search,
+  .cpw5-etfs-filter-field select {
+    min-height: 44px !important;
+    height: 44px !important;
+  }
+}
+
+[data-superinvestor-page][data-superinvestor-selected-context="true"] {
+  display: flex;
+  flex-direction: column;
+}
+
+[data-superinvestor-page][data-superinvestor-selected-context="true"] > [data-superinvestor-selected-landing] {
+  order: 1;
+}
+
+[data-superinvestor-page][data-superinvestor-selected-context="true"] > [data-superinvestor-overview] {
+  order: 2;
+}
+
+[data-superinvestor-page][data-superinvestor-selected-context="true"] > [role="tablist"],
+[data-superinvestor-page][data-superinvestor-selected-context="true"] > [role="tabpanel"] {
+  order: 3;
+}
+
+/* ---------------------------------------------------------------------------
+ * /intro — Modern, interactive light-surface showcase.
+ * Tokens follow the 100x paper-and-ink design foundation.
+ * ------------------------------------------------------------------------- */
+.intro-root {
+  --intro-bg: #f8fafc;
+  --intro-surface: #ffffff;
+  --intro-brand: #2563eb;
+  --intro-brand-rgb: 37 99 235;
+  --intro-accent-2-rgb: 79 70 229;
+  --intro-up: #059669;
+  --intro-up-rgb: 5 150 105;
+  --intro-down: #dc2626;
+  --intro-down-rgb: 220 38 38;
+  --intro-ink-1: #0f172a;
+  --intro-ink-2: #334155;
+  --intro-ink-3: #64748b;
+  --intro-line: rgba(15, 23, 42, 0.08);
+  --intro-line-strong: rgba(15, 23, 42, 0.16);
+  --intro-fill-faint: rgba(15, 23, 42, 0.03);
+  --intro-fill-faintest: rgba(15, 23, 42, 0.015);
+  --intro-google-blue: #4285F4;
+  --intro-google-green: #34A853;
+  --intro-google-yellow: #FBBC05;
+  --intro-google-red: #EA4335;
+  background: var(--intro-bg);
+  color: var(--intro-ink-1);
+  font-family: var(--font-sans);
+}
+/* The intro is full-bleed: no shared nav padding, clean paper background behind overscroll. */
+main:has(> .intro-root),
+main:has(.intro-root) { padding-top: 0 !important; }
+body:has(.intro-root) { background: #f8fafc; }
+.intro-num { font-family: var(--font-mono); font-variant-numeric: tabular-nums; }
+
+.intro-grid {
+  background-image: radial-gradient(rgba(15, 23, 42, 0.07) 1px, transparent 1px);
+  background-size: 24px 24px;
+}
+
+@keyframes intro-pulse-dot {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.35; transform: scale(0.85); }
+}
+
+.intro-pulse-dot {
+  animation: intro-pulse-dot 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+@keyframes intro-badge-float {
+  0%, 100% { transform: translate(-50%, -50%); }
+  50% { transform: translate(-50%, calc(-50% - 5px)); }
+}
+
+.intro-badge-float {
+  animation: intro-badge-float 3.5s ease-in-out infinite;
+}
+
+.intro-flat-card:focus-visible { outline: 2px solid var(--intro-brand); outline-offset: 2px; }
+.intro-focus-ring { box-shadow: 0 0 0 1px rgb(var(--intro-brand-rgb) / .35), 0 0 20px rgb(var(--intro-brand-rgb) / .15); }

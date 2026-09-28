@@ -1,0 +1,29 @@
+{
+  "schema_version": "data-supply-detection-attempt-shard/v2",
+  "lane_id": "finra_ats_weekly",
+  "attempts": [
+    {
+      "lane_id": "finra_ats_weekly",
+      "member_id": null,
+      "attempt_id": "finra-ats-weekly-20260923t152808968z-39c13bfa",
+      "observed_at": "2026-09-23T15:28:08.968Z",
+      "execution": "returned",
+      "exception_kind": null,
+      "http_status": 200,
+      "auth": "ok",
+      "rate_limited": false,
+      "decode": "ok",
+      "payload": "non_empty",
+      "assertions": [
+        {
+          "id": "weekly_summary_rows",
+          "passed": true
+        },
+        {
+          "id": "weekly_summary_row_shape",
+          "passed": true
+        }
+      ]
+    }
+  ]
+}

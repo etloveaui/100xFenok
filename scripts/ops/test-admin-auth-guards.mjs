@@ -13,7 +13,8 @@ const adminAuthPath = path.join(appRoot, "src/lib/client/admin-auth.ts");
 const adminLoginThrottlePath = path.join(appRoot, "src/lib/server/admin-login-throttle.ts");
 const adminSessionPath = path.join(appRoot, "src/lib/server/admin-session.ts");
 const adminSessionRoutePath = path.join(appRoot, "src/app/api/admin/session/route.ts");
-const footerPath = path.join(appRoot, "src/components/Footer.tsx");
+const appShellPath = path.join(appRoot, "src/components/shell/AppShell.tsx");
+const adminSessionControlPath = path.join(appRoot, "src/components/AdminSessionControl.tsx");
 const middlewarePath = path.join(appRoot, "middleware.ts");
 const liveBenchPagePath = path.join(appRoot, "src/app/live-bench/page.tsx");
 const adminAuthWorkflowPath = path.join(root, ".github/workflows/admin-auth-guards.yml");
@@ -251,21 +252,27 @@ function extractCallTexts(source, callee) {
   return calls;
 }
 
-function assertFooterDoesNotAutoRefreshAdminSession() {
-  const footer = fs.readFileSync(footerPath, "utf8");
+function assertPublicShellDoesNotAutoRefreshAdminSession() {
+  const appShell = fs.readFileSync(appShellPath, "utf8");
+  const adminSessionControl = fs.readFileSync(adminSessionControlPath, "utf8");
 
-  assert(
-    !footer.includes("ADMIN_AUTH_CHANGE_EVENT") && !footer.includes("fenok:admin-auth-change"),
-    "Footer must not subscribe to admin auth change events",
-  );
+  for (const [name, content] of [
+    ["AppShell", appShell],
+    ["AdminSessionControl", adminSessionControl],
+  ]) {
+    assert(
+      !content.includes("ADMIN_AUTH_CHANGE_EVENT") && !content.includes("fenok:admin-auth-change"),
+      `${name} must not subscribe to admin auth change events`,
+    );
 
-  const effectCalls = extractCallTexts(footer, "useEffect");
-  const refreshingEffects = effectCalls.filter((call) => call.includes("refreshAdminAuthenticated"));
-  assert.equal(
-    refreshingEffects.length,
-    0,
-    "Footer useEffect must not call refreshAdminAuthenticated on mount/update",
-  );
+    const effectCalls = extractCallTexts(content, "useEffect");
+    const refreshingEffects = effectCalls.filter((call) => call.includes("refreshAdminAuthenticated"));
+    assert.equal(
+      refreshingEffects.length,
+      0,
+      `${name} useEffect must not call refreshAdminAuthenticated on mount/update`,
+    );
+  }
 }
 
 function assertAdminLiveIsNotPublicRewrite() {
@@ -489,12 +496,41 @@ function assertAdminRateLimitPolicy() {
   );
 }
 
+function assertAdminStaticAssetsRouteThroughWorker() {
+  // Cloudflare's asset layer serves any path matching a file under the
+  // assets directory directly, without invoking the Worker (and therefore
+  // without ever running this middleware), unless that path is enrolled in
+  // wrangler.jsonc's run_worker_first. Every admin static file must be
+  // enrolled there for the admin session gate below to run at all.
+  const wrangler = fs.readFileSync(wranglerConfigPath, "utf8");
+  const runWorkerFirstMatch = wrangler.match(/"run_worker_first"\s*:\s*\[([\s\S]*?)\]/u);
+  assert.ok(runWorkerFirstMatch, "wrangler run_worker_first array exists");
+  assert(
+    runWorkerFirstMatch[1].includes('"/admin/*"'),
+    "admin static files must be enrolled in run_worker_first so the asset layer cannot bypass the admin middleware gate",
+  );
+
+  const middleware = fs.readFileSync(middlewarePath, "utf8");
+  const matcherMatch = middleware.match(/matcher:\s*\[\s*"((?:\\.|[^"\\])*)"/u);
+  assert.ok(matcherMatch, "middleware config.matcher is a single string pattern");
+  const matcherRegex = new RegExp(`^${JSON.parse(`"${matcherMatch[1]}"`)}$`, "u");
+  for (const pathname of [
+    "/admin/DEV.md",
+    "/admin/data-lab/index.html",
+    "/admin/data-lab/app/renderer.js",
+    "/admin/design-lab/screenshots/figma-profile-avatar.jpg",
+  ]) {
+    assert.equal(matcherRegex.test(pathname), true, `middleware matcher must include ${pathname}`);
+  }
+}
+
 function assertAdminAuthWorkflowTracksServerFiles() {
   const workflow = fs.readFileSync(adminAuthWorkflowPath, "utf8");
   for (const requiredPath of [
     "100xfenok-next/src/app/api/admin/session/route.ts",
     "100xfenok-next/src/components/AdminAccessGate.tsx",
-    "100xfenok-next/src/components/footer/AdminAuthModal.tsx",
+    "100xfenok-next/src/components/AdminSessionControl.tsx",
+    "100xfenok-next/src/components/shell/AppShell.tsx",
     "100xfenok-next/scripts/test-admin-static-auth-guard.mjs",
     "100xfenok-next/src/lib/server/admin-login-throttle.ts",
     "100xfenok-next/src/lib/server/admin-session.ts",
@@ -509,13 +545,14 @@ function assertAdminAuthWorkflowTracksServerFiles() {
 
 assertAdminAuthChangeEvents();
 assertAdminVerifyLockout();
-assertFooterDoesNotAutoRefreshAdminSession();
+assertPublicShellDoesNotAutoRefreshAdminSession();
 assertAdminLiveIsNotPublicRewrite();
 assertProductionDefaultAdminAuthIsDisabled();
 await assertAdminSessionPolicy();
 assertAdminLoginThrottle();
 assertAdminSessionRouteUsesServerThrottle();
 assertAdminRateLimitPolicy();
+assertAdminStaticAssetsRouteThroughWorker();
 assertAdminAuthWorkflowTracksServerFiles();
 
 console.log("admin auth guards passed");

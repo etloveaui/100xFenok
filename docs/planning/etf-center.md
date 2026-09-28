@@ -108,7 +108,7 @@ Implementation pointers:
 | `data/stockanalysis/etf_universe.json` | Full ETF list: ticker, name, category, AUM | `fetch-stockanalysis.py --discover-etf-universe` |
 | `data/stockanalysis/surfaces/etf_screener.json` | Price, change, volume, holdings, assetClass | `fetch-stockanalysis.py --fetch-surfaces` |
 | `data/stockanalysis/surfaces/new_etfs.json` | Recently listed ETFs | `fetch-stockanalysis.py --fetch-surfaces` |
-| `data/computed/data-supply/etf-detail/enrollment.json` | Fixed 718-ticker R2 enrollment guard | `materialize_data_supply_public.py` |
+| `data/computed/data-supply/etf-detail/enrollment.json` | Monotonic R2 enrollment over authoritative resolver state; count and membership digest computed per generation | `materialize_data_supply_public.py` |
 | `data/computed/data-supply/etf-detail/index.json` | Public-safe committed resolution state and payload binding | `materialize_data_supply_public.py` |
 | `data/computed/data-supply/etf-detail/payloads/{TICKER}.json` | Exact immutable bytes for a selected enrolled ticker | `materialize_data_supply_public.py` |
 | `data/stockanalysis/etfs/{TICKER}.json` | Strict StockAnalysis detail for an unenrolled ticker only | `fetch-stockanalysis.py --incremental-etf-backfill` / `--universe-backfill` |
@@ -227,6 +227,37 @@ Full provider lists are not copied into the snapshot payload. `EtfSurfaceSnapsho
   - Every StockAnalysis refresh now writes the history-gap report after market
     audit generation, so Data Lab's preflight card follows generated data
     automatically.
+
+### 3.7 R2 publication checkpoint (2026-08-02)
+
+The authoritative ETF detail path is:
+
+```text
+active StockAnalysis/recovery state
+  -> materialize_data_supply_public.py --write-canonical
+  -> data/computed/data-supply/etf-detail/{enrollment,index,payloads}
+  -> sync-static / OpenNext assets
+  -> Worker ASSETS binding
+  -> /data/computed/data-supply/etf-detail/*
+```
+
+Direct Cloudflare proof at `2026-08-02T02:02:40Z` records `selected_count=512`,
+`unavailable_count=206`, `fresh_primary=3`, and `lkg_fallback=358`. `AAAU`,
+`ACVU`, and `CEW` are `fresh_primary` with `source_as_of=2026-07-31T20:00:00Z`;
+`BHYP` and `IBIM` remain explicitly unavailable. These counts are the pre-shard
+burn-down checkpoint. The next bounded StockAnalysis recovery selector is the
+second 100-member slice of the prior 361-member LKG cohort (`DRUP` through
+`KAUG`); Yahoo ETF fallback remains disabled for this lane.
+
+Run `30728739650` exercised that selector once. It returned 86 valid provider
+responses and 14 honest holdings-contract gaps, but the Yahoo-disabled manual
+path applied `--fail-on-error`, so no candidate or source commit was published.
+The pre-shard counts therefore remain authoritative; do not treat this failed
+run as a recovery or dispatch a duplicate until the publication behavior is
+explicitly scoped.
+
+A post-run direct read at `2026-08-02T02:16:18Z` preserved the same state counts,
+confirming no measured burn-down from this shard.
 
 ## 4. Filters & Display Fields
 

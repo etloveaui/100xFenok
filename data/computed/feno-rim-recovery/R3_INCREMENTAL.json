@@ -1,0 +1,297 @@
+{
+ "schema_version": "feno_rim_recovery_r3_incremental.v1",
+ "phase": "R3",
+ "research_only": true,
+ "criteria_sha256": "33f06ab1e888b8b7bc297516c7c6bba211e0e5bc28f8c6d9998d35d110d84ceb",
+ "diag": {
+  "rows_r2": 1638,
+  "dropped_no_return": 0,
+  "dropped_no_price": 0,
+  "kept": 1638,
+  "with_momentum": 1324
+ },
+ "results": {
+  "pooled": {
+   "S1": {
+    "beta": [
+     0.116081,
+     0.055535
+    ],
+    "se": [
+     0.014426,
+     0.021755
+    ],
+    "tstat": [
+     8.046569,
+     2.552773
+    ],
+    "pval": [
+     0,
+     0.010687
+    ],
+    "n": 1638,
+    "clusters": 5,
+    "vars": [
+     "const",
+     "bp"
+    ],
+    "rows": 1638
+   },
+   "S2": {
+    "beta": [
+     0.031162,
+     -0.013234,
+     1.362843
+    ],
+    "se": [
+     0.014498,
+     0.020444,
+     0.131142
+    ],
+    "tstat": [
+     2.149398,
+     -0.647364,
+     10.39211
+    ],
+    "pval": [
+     0.031603,
+     0.517396,
+     0
+    ],
+    "n": 1638,
+    "clusters": 5,
+    "vars": [
+     "const",
+     "bp",
+     "icc"
+    ],
+    "rows": 1638
+   },
+   "S3": {
+    "beta": [
+     0.561236,
+     -0.020444,
+     1.278702,
+     -0.021552
+    ],
+    "se": [
+     0.095746,
+     0.019123,
+     0.120915,
+     0.003874
+    ],
+    "tstat": [
+     5.86174,
+     -1.069087,
+     10.575215,
+     -5.563749
+    ],
+    "pval": [
+     0,
+     0.285031,
+     0,
+     0
+    ],
+    "n": 1638,
+    "clusters": 5,
+    "vars": [
+     "const",
+     "bp",
+     "icc",
+     "size"
+    ],
+    "rows": 1638
+   },
+   "S4": {
+    "beta": [
+     0.606459,
+     -0.015835,
+     1.367863,
+     -0.023349,
+     -0.01006
+    ],
+    "se": [
+     0.100027,
+     0.0256,
+     0.091255,
+     0.00385,
+     0.032427
+    ],
+    "tstat": [
+     6.06294,
+     -0.618539,
+     14.989454,
+     -6.065051,
+     -0.310236
+    ],
+    "pval": [
+     0,
+     0.53622,
+     0,
+     0,
+     0.756382
+    ],
+    "n": 1324,
+    "clusters": 4,
+    "vars": [
+     "const",
+     "bp",
+     "icc",
+     "size",
+     "mom"
+    ],
+    "rows": 1324
+   }
+  },
+  "fama_macbeth": {
+   "S1": {
+    "vars": [
+     "const",
+     "bp"
+    ],
+    "coefficients": {
+     "const": {
+      "mean": 0.121256,
+      "tstat": 17.250833,
+      "pval": 0,
+      "n": 5
+     },
+     "bp": {
+      "mean": 0.039804,
+      "tstat": 1.582498,
+      "pval": 0.113536,
+      "n": 5
+     }
+    },
+    "origins_used": 5
+   },
+   "S2": {
+    "vars": [
+     "const",
+     "bp",
+     "icc"
+    ],
+    "coefficients": {
+     "const": {
+      "mean": 0.045378,
+      "tstat": 5.391861,
+      "pval": 0,
+      "n": 5
+     },
+     "bp": {
+      "mean": -0.019411,
+      "tstat": -0.902514,
+      "pval": 0.366784,
+      "n": 5
+     },
+     "icc": {
+      "mean": 1.206748,
+      "tstat": 10.150753,
+      "pval": 0,
+      "n": 5
+     }
+    },
+    "origins_used": 5
+   },
+   "S3": {
+    "vars": [
+     "const",
+     "bp",
+     "icc",
+     "size"
+    ],
+    "coefficients": {
+     "const": {
+      "mean": 0.592317,
+      "tstat": 10.180987,
+      "pval": 0,
+      "n": 5
+     },
+     "bp": {
+      "mean": -0.026174,
+      "tstat": -1.226503,
+      "pval": 0.22001,
+      "n": 5
+     },
+     "icc": {
+      "mean": 1.121186,
+      "tstat": 9.806026,
+      "pval": 0,
+      "n": 5
+     },
+     "size": {
+      "mean": -0.022277,
+      "tstat": -9.435088,
+      "pval": 0,
+      "n": 5
+     }
+    },
+    "origins_used": 5
+   },
+   "S4": {
+    "vars": [
+     "const",
+     "bp",
+     "icc",
+     "size",
+     "mom"
+    ],
+    "coefficients": {
+     "const": {
+      "mean": 0.622822,
+      "tstat": 7.324839,
+      "pval": 0,
+      "n": 4
+     },
+     "bp": {
+      "mean": 0.005062,
+      "tstat": 0.143699,
+      "pval": 0.885738,
+      "n": 4
+     },
+     "icc": {
+      "mean": 1.167902,
+      "tstat": 23.988122,
+      "pval": 0,
+      "n": 4
+     },
+     "size": {
+      "mean": -0.023932,
+      "tstat": -6.777874,
+      "pval": 0,
+      "n": 4
+     },
+     "mom": {
+      "mean": 0.027451,
+      "tstat": 1.119035,
+      "pval": 0.263125,
+      "n": 4
+     }
+    },
+    "origins_used": 4
+   }
+  }
+ },
+ "verdict": {
+  "label": "icc_incremental_positive",
+  "icc_beta_S2": 1.362843,
+  "icc_beta_S3": 1.278702,
+  "pooled_t_S2": 10.39211,
+  "pooled_t_S3": 10.575215,
+  "fm_icc_S2": {
+   "mean": 1.206748,
+   "tstat": 10.150753,
+   "pval": 0,
+   "n": 5
+  },
+  "fm_icc_S3": {
+   "mean": 1.121186,
+   "tstat": 9.806026,
+   "pval": 0,
+   "n": 5
+  },
+  "s4_sign": 1,
+  "note": "pooled origin-FE with origin-cluster SEs is the higher-power read; FM across 5 origins is thin and reported transparently."
+ },
+ "generated_at": "2026-08-07T08:35:51.173Z"
+}

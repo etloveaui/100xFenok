@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /**
- * Focused unit test for the Taiwan universe classification + carry-over
+ * Focused unit test for the Taiwan/Japan universe classification + carry-over
  * denominator reconciliation used by build-fenok-edge-coverage-index.mjs.
  * First test coverage for that build script.
  */
@@ -12,6 +12,14 @@ import {
   selectExplicitTaiwanRows,
   selectTaiwanTickerAnomalies,
 } from "./lib/taiwan-universe.mjs";
+import {
+  hasJapanTickerSuffix,
+  isExplicitJapanRow,
+  selectExplicitJapanRows,
+  selectJapanTickerAnomalies,
+} from "./lib/japan-universe.mjs";
+import fs from "node:fs";
+import * as coverageBuilderModule from "./build-fenok-edge-coverage-index.mjs";
 
 let failures = 0;
 function assert(condition, message) {
@@ -78,6 +86,27 @@ assert(
   "explicit-Taiwan suffix row is not an anomaly",
 );
 
+// --- Japan suffix anomaly detection ---
+// Japan rows currently retain their upstream US_CLASS/us tag until a separate
+// classifier/denominator decision lands; the coverage index must surface them
+// rather than silently relabeling or counting them as plain-US FINRA rows.
+assert(isExplicitJapanRow({ market: "JP" }), "market=JP is explicit Japan");
+assert(isExplicitJapanRow({ market: "JPX" }), "market=JPX is explicit Japan");
+assert(isExplicitJapanRow({ market_scope: "japan" }), "market_scope=japan is explicit Japan");
+assert(!isExplicitJapanRow({ market: "US_CLASS", market_scope: "us" }), "US_CLASS/us is NOT explicit Japan");
+assert(hasJapanTickerSuffix({ ticker: "285A.T" }), ".T suffix recognized");
+assert(hasJapanTickerSuffix({ ticker_normalized: "285A-T" }), "normalized -T suffix recognized");
+const japanRows = [
+  { ticker: "285A.T", ticker_normalized: "285A-T", market: "US_CLASS", market_scope: "us", company: "Kioxia" },
+  { ticker: "7203.T", ticker_normalized: "7203-T", market: "JP", market_scope: "asia", company: "Toyota" },
+  { ticker: "AAPL", ticker_normalized: "AAPL", market: "US", market_scope: "us", company: "Apple" },
+];
+const explicitJapan = selectExplicitJapanRows(japanRows);
+const japanAnomalies = selectJapanTickerAnomalies(japanRows, explicitJapan);
+assert(explicitJapan.length === 1 && explicitJapan[0].ticker === "7203.T", "explicit JP row lands in the Japan bucket");
+assert(japanAnomalies.length === 1 && japanAnomalies[0].ticker === "285A.T", "US_CLASS Japan suffix is surfaced as an anomaly");
+assert(!japanAnomalies.some((row) => row.ticker === "7203.T"), "explicit JP suffix row is not an anomaly");
+
 // --- Carry-over denominator reconciliation (the 1173 vs 1177 fix) ---
 // A stale carried row (frozen denominator 1173) must be re-stamped to the
 // current active_scoring_universe.total that its label claims.
@@ -108,8 +137,150 @@ assert(fresh.denominator === 1177, "already-current denominator stays 1177");
 // Null-safe.
 assert(reconcileTaiwanCurrentUniverseDenominator(null, 1177, pct) === null, "null row is a no-op");
 
+// A validated v3 receipt can intentionally exclude a delisted source-universe
+// member. The gate must use the receipt's eligible denominator while retaining
+// the source denominator and exclusion count as honest aggregate disclosure.
+const krxEligibleContract = coverageBuilderModule.krxCoverageContract?.({
+  evidence: {
+    source: "bound_bridge_receipt",
+    covered_count: 336,
+    denominator: 336,
+    missing_count: 0,
+  },
+  sourceDenominator: 337,
+  receiptValidation: {
+    ok: true,
+    receipt: {
+      schema_version: "fenok_krx_issuer_daily_coverage_receipt/v3",
+      listing_status_filter: {
+        source_denominator: 337,
+        eligible_denominator: 336,
+        excluded_count: 1,
+      },
+    },
+  },
+});
+assert(
+  JSON.stringify(krxEligibleContract) === JSON.stringify({
+    covered_count: 336,
+    denominator: 336,
+    source_denominator: 337,
+    excluded_count: 1,
+    missing_count: 0,
+    coverage_ready: true,
+  }),
+  "validated KRX v3 exclusions use the eligible denominator and stay disclosed",
+);
+
+for (const [sourceDate, age, sourceState, sourceStatus] of [
+  ["2026-09-22", 1, "fresh", "ready"],
+  ["2026-09-21", 2, "fresh", "ready"],
+  ["2026-09-18", 3, "delayed", "stale"],
+]) {
+  const evidence = coverageBuilderModule.krxDailySourceEvidence({
+    sourceDate, coverageReady: true, now: "2026-09-27T12:00:00Z",
+  });
+  assert(evidence.age_days === age && evidence.source_state === sourceState
+    && evidence.source_status === sourceStatus && evidence.full_status === sourceStatus,
+  `KRX ${sourceDate} uses trading-day source status`);
+  assert(evidence.age_unit === "kr_trading_days" && evidence.max_age_days === 2,
+    "KRX age evidence declares the shared two-trading-day policy");
+}
+const holidayKrx = coverageBuilderModule.krxDailySourceEvidence({
+  sourceDate: "2026-09-23", coverageReady: true, now: "2026-09-27T12:00:00Z",
+});
+assert(holidayKrx.age_days === 0 && holidayKrx.full_status === "ready",
+  "Chuseok and the weekend do not age KRX content");
+const incompleteKrx = coverageBuilderModule.krxDailySourceEvidence({
+  sourceDate: "2026-09-22", coverageReady: false, now: "2026-09-27T12:00:00Z",
+});
+assert(incompleteKrx.source_status === "ready" && incompleteKrx.full_status === "blocked",
+  "fresh KRX content cannot promote incomplete issuer coverage");
+for (const sourceDate of ["2026-02-30", "2026-09-28"]) {
+  const unknown = coverageBuilderModule.krxDailySourceEvidence({
+    sourceDate, coverageReady: true, now: "2026-09-27T12:00:00Z",
+  });
+  assert(unknown.source_state === "unknown" && unknown.age_days === null && unknown.full_status === "stale",
+    `${sourceDate} cannot promote KRX readiness`);
+}
+
+const preservedTaiwanIndex = {
+  active_scoring_universe: { total: 100 },
+  source_availability: {
+    sources: [{ id: "taiwan_current_universe", denominator: 5 }],
+  },
+  source_availability_composites: {},
+};
+const priorTaiwanIndex = {
+  source_availability: {
+    sources: [{ id: "taiwan_current_universe", denominator: 3 }],
+  },
+};
+coverageBuilderModule.preservePriorPrivateBackedEvidence(
+  preservedTaiwanIndex,
+  priorTaiwanIndex,
+  { latestUsRunMissing: false, taiwanHistoricalMissing: true },
+  100,
+);
+assert(
+  preservedTaiwanIndex.source_availability.sources[0]?.denominator === 100,
+  "private-backed Taiwan evidence must reconcile with the explicit active scoring total",
+);
+
+// ETF exact-plan compatibility remains full-scored: the coverage index must
+// compare its full history-gap denominator to scored_etf_count, never to the
+// managed-core dispatch denominator.
+const coverageBuilder = fs.readFileSync(new URL("./build-fenok-edge-coverage-index.mjs", import.meta.url), "utf8");
+assert(
+  coverageBuilder.includes("validateKrxIssuerDailyCoverageReceipt"),
+  "coverage index validates the KRX bridge issuer-coverage receipt",
+);
+assert(
+  coverageBuilder.includes("selectKrxIssuerDailyCoverageEvidence"),
+  "coverage index selects raw proof or a bound receipt, never an unbound stale raw fallback",
+);
+assert(
+  !coverageBuilder.includes("krx_daily_smoke_5d/raw/core_stock_index/stk_bydd_trd/20260626.json"),
+  "coverage index does not derive current KRX coverage from the historical smoke raw fallback",
+);
+assert(
+  coverageBuilder.includes("const exactPlanScoredCount = Number(etfDaily1yExactPlan.counts?.scored_etf_count) || 0;"),
+  "coverage index reads the full-scored exact-plan compatibility denominator",
+);
+assert(
+  coverageBuilder.includes("Number(scoredDaily1yGap.scored_etf_count) === Number(etfDaily1yExactPlan.counts?.scored_etf_count)"),
+  "coverage index compares full-scored history-gap and exact-plan denominators",
+);
+assert(
+  !coverageBuilder.includes("Number(scoredDaily1yGap.scored_etf_count) === Number(etfDaily1yExactPlan.counts?.managed_etf_count)"),
+  "coverage index never compares the full-scored history gap to the managed-core denominator",
+);
+assert(
+  coverageBuilder.includes("exact_plan_count_equation_ok: etfDaily1yExactPlan.counts?.scored_equation_ok === true"),
+  "coverage output exports the full-scored exact-plan count equation",
+);
+assert(
+  !coverageBuilder.includes("exact_plan_count_equation_ok: etfDaily1yExactPlan.counts?.equation_ok === true"),
+  "coverage output never exports the managed-core equation as full-scored evidence",
+);
+for (const field of [
+  "scored_complete",
+  "scored_fetchable",
+  "scored_inception_limited",
+  "scored_terminal_limited",
+  "scored_equation_ok",
+]) {
+  assert(coverageBuilder.includes(`counts?.${field}`), `coverage index consumes full-scored ${field}`);
+}
+for (const field of ["complete", "fetchable", "inception_limited", "terminal_limited", "equation_ok"]) {
+  assert(
+    !coverageBuilder.includes(`etfDaily1yExactPlan.counts?.${field})`),
+    `coverage index never substitutes managed-core ${field} for full-scored evidence`,
+  );
+}
+
 if (failures > 0) {
   console.error(`\n${failures} assertion(s) failed`);
   process.exit(1);
 }
-console.log(JSON.stringify({ ok: true, suite: "build-fenok-edge-coverage-index taiwan classification + denominator" }, null, 2));
+console.log(JSON.stringify({ ok: true, suite: "build-fenok-edge-coverage-index taiwan+japan anomaly classification + denominator" }, null, 2));

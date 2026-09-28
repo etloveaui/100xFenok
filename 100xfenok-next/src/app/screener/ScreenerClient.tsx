@@ -1,7 +1,12 @@
 "use client";
 
-import { useCallback, useMemo, useState, useEffect } from "react";
+import { useCallback, useMemo, useState, useEffect, useRef } from "react";
+import { useRouter } from "next/navigation";
+import { useVirtualizer } from "@tanstack/react-virtual";
 import TransitionLink from "@/components/TransitionLink";
+import { bodyScrollY } from "@/lib/client/body-scroll-lock";
+import { EvidenceRail, Panel, Pill } from "@/components/ui";
+import type { EvidenceRailFreshness } from "@/components/ui/EvidenceRail";
 import DataStateNotice, { DataStateBadge } from "@/components/DataStateNotice";
 import MacroContextCard from "@/components/macro/MacroContextCard";
 import MarketQuickLinks from "@/components/market/MarketQuickLinks";
@@ -11,17 +16,30 @@ import type { ScreenerSortKey, SortDir, ScreenerStock } from "@/lib/screener/typ
 import { formatPercent, formatSignedPercentDecimal } from "@/lib/dashboard/formatters";
 import { bandPct, bandLabel, normalizeBandTuple, BAND_CHEAP, BAND_RICH } from "@/lib/screener/bands";
 import { formatDataDate, makeDataState } from "@/lib/data-state";
+import { freshnessVerdict, freshnessMessage } from "@/lib/freshness-policy.mjs";
+import {
+  MAX_JOURNEY_SCROLL_Y,
+  clearScreenerJourneySnapshot,
+  currentJourneyReturnTo,
+  readScreenerJourneySnapshot,
+  saveScreenerJourneySnapshot,
+  type ScreenerJourneySnapshot,
+} from "@/lib/journey-context";
 import { ROUTES } from "@/lib/routes";
 import { estimateCompletenessFromValues, estimateCompletenessTone, hasEstimateGap } from "@/lib/estimate-completeness";
 import { interpretStockMetrics } from "@/lib/screener/deterministicRules";
 import { shortTermCommonBasisCopy } from "@/lib/fenok-signals/conviction-basis-copy.mjs";
 import { commonBasisShortTermView, screenerSortValue } from "@/lib/screener/common-basis-short-term";
 import { formatScreenerSourceDateLabel } from "@/lib/screener/source-dates";
-import MetricHelp from "@/components/MetricHelp";
 import ScreenerDesktopTable from "./ScreenerDesktopTable";
+import ScreenerDetailSheet from "./ScreenerDetailSheet";
+import ScreenerFilterSheet from "./ScreenerFilterSheet";
+import ScreenerDiscover from "./ScreenerDiscover";
 import ScreenerTanstackTable from "./ScreenerTanstackTable";
-import StockDetailPanel from "./StockDetailPanel";
+import { SCREENER_QUESTION_CARDS, type QuestionCardDef, type QuestionCardId } from "@/lib/screener/question-cards";
 import { loadActionSummaryMap, type ActionSummaryRecord } from "@/features/stock-analyzer/data/action-summary-provider";
+import { holdingChangeFor, loadGuruHoldersIndex } from "@/lib/superinvestors/ticker-evidence";
+import type { GuruHoldersIndexData } from "@/lib/superinvestors/types";
 import type { MacroContextId } from "@/lib/macro-chart/context";
 import {
   updateScreenerUrl,
@@ -42,8 +60,10 @@ import {
   type ColumnPreset,
   type ScreenerFilterState,
 } from "@/lib/screener/filter-url";
+import { readScreenerView, writeScreenerView, readScreenerUniverses, writeScreenerUniverses } from "@/lib/personal/personal-state";
 
 const PAGE_SIZE = 50;
+const MOBILE_LIST_OVERSCAN = 10;
 type ScreenerDensity = "compact" | "standard" | "comfortable";
 type ScreenerViewMode = "table" | "card";
 
@@ -69,10 +89,13 @@ function completeSourceFloor(values: Array<string | null | undefined>): string |
   return (dates as string[]).sort().at(0) ?? null;
 }
 
+// Density tiers around the 44px body-row rail: the CSS body-row height
+// (--cp-active-row-height) and the TanStack virtualizer estimate both read
+// these, so the row the user sees is the row the virtualizer measured.
 const DENSITY_ROW_HEIGHT: Record<ScreenerDensity, number> = {
-  compact: 32,
-  standard: 40,
-  comfortable: 48,
+  compact: 36,
+  standard: 44,
+  comfortable: 52,
 };
 
 const DENSITY_TABLE_CLASS: Record<ScreenerDensity, {
@@ -84,7 +107,7 @@ const DENSITY_TABLE_CLASS: Record<ScreenerDensity, {
 }> = {
   compact: {
     scroller: "max-h-[720px]",
-    table: "text-xs",
+    table: "text-[12px]",
     headerCell: "px-2 py-1.5",
     bodyCell: "px-2 py-1.5",
     tickerCell: "min-h-9 px-1",
@@ -114,31 +137,19 @@ const COUNTRY_LABEL: Record<string, string> = {
   XX: "기타",
 };
 
-const ACTION_BUCKET_DISTRIBUTION_LABEL: Record<string, string> = {
-  guru_held: "기관·고수 보유",
-  smart_money: "기관/고수 주목",
-  value_momentum: "저평가+모멘텀",
-  index_core: "지수 핵심",
-  income: "배당 점검",
-  momentum: "모멘텀 리더",
-  watch: "관찰",
-  none: "신호 없음",
-};
-
-function actionBucketDistributionLabel(bucket: string): string {
-  return ACTION_BUCKET_DISTRIBUTION_LABEL[bucket] ?? bucket;
-}
-
 const COLUMNS: ReadonlyArray<{ key: ScreenerSortKey; label: string; align: "left" | "right" }> = [
   { key: "ticker", label: "티커", align: "left" },
   { key: "actionScore", label: "투자 신호", align: "left" },
-  { key: "fenokEdgeScore", label: "Fenok Edge", align: "right" },
+  // Integrated "Fenok Edge" score retired (owner mandate 2026-08-03): the
+  // table now shows the two axes side by side.
+  { key: "fenokShortTermScore", label: "단기", align: "right" },
+  { key: "fenokLongTermScore", label: "장기", align: "right" },
   { key: "name", label: "종목", align: "left" },
   { key: "sector", label: "섹터", align: "left" },
   { key: "country", label: "국가", align: "left" },
   { key: "price", label: "가격", align: "right" },
   { key: "marketCap", label: "시총", align: "right" },
-  { key: "per", label: "PER", align: "right" },
+  { key: "per", label: "선행 PER", align: "right" },
   { key: "pbr", label: "PBR", align: "right" },
   { key: "peg", label: "PEG", align: "right" },
   { key: "dividendYield", label: "배당", align: "right" },
@@ -154,13 +165,16 @@ const COLUMNS: ReadonlyArray<{ key: ScreenerSortKey; label: string; align: "left
   { key: "rank", label: "순위", align: "right" },
   { key: "guruHolders", label: "대가 보유", align: "right" },
   { key: "connectionCount", label: "연결", align: "left" },
-  { key: "fenokConvictionScore", label: "Fenok 컨빅션", align: "right" },
+  // Column id kept for saved sorts and shared URLs; the header shows the short
+  // label and the sort semantics (sorts by the Short value, Long shown
+  // separately) live in the column tooltip.
+  { key: "fenokConvictionScore", label: "컨빅션", align: "right" },
   { key: "profitabilityScore", label: "수익성", align: "right" },
   { key: "growthScore", label: "성장", align: "right" },
   { key: "technicalFlowScore", label: "기술/자금", align: "right" },
   { key: "durabilityProfitabilityScore", label: "내구 수익성", align: "right" },
-  { key: "upsidePotentialScore", label: "상방 잠재력", align: "right" },
-  { key: "downsidePressureScore", label: "하방 압력", align: "right" },
+  { key: "upsidePotentialScore", label: "상방", align: "right" },
+  { key: "downsidePressureScore", label: "하방", align: "right" },
   { key: "perBandCurrent", label: "PER 밴드", align: "left" },
   { key: "peForward", label: "예상 PER", align: "right" },
   { key: "epsForward", label: "예상 EPS", align: "right" },
@@ -186,15 +200,33 @@ const COLUMNS: ReadonlyArray<{ key: ScreenerSortKey; label: string; align: "left
   { key: "operatingMarginFy3", label: "3년차(FY+3) OPM", align: "right" },
   { key: "grossMarginFy3", label: "3년차(FY+3) GPM", align: "right" },
   { key: "dividendTtm", label: "Div TTM", align: "right" },
-  { key: "ret1y", label: "1Y", align: "right" },
-  { key: "ret3y", label: "3Y", align: "right" },
-  { key: "ret5y", label: "5Y", align: "right" },
+  { key: "ret1y", label: "2025년", align: "right" },
+  { key: "ret3y", label: "2023–2025 누적", align: "right" },
+  { key: "ret5y", label: "2021–2025 누적", align: "right" },
 ];
 
 const FISCAL_PERIOD_LABELS = ["내년(FY+1)", "2년차(FY+2)", "3년차(FY+3)"] as const;
-const FENOK_EDGE_PROXY_LABEL = "Fenok 파생 상방·하방 프록시";
+const FENOK_EDGE_PROXY_LABEL = "Fenok 파생 신호 · Short/Long 별도 점수";
 const FENOK_SIGNAL_DISCLOSURE = "Fenok 파생 신호 · 투자 조언이 아닙니다";
-const FENOK_CONVICTION_DISCLOSURE = "Fenok 4개 신호 같은 비중 요약 · 투자 조언이 아닙니다";
+const FENOK_HORIZON_FILTER_DISCLOSURE = "Long Edge와 Short Edge는 서로 다른 기간의 독립 진단입니다 · 투자 조언이 아닙니다";
+const FENOK_SHORT_EDGE_METHODOLOGY = "Short Edge · 20/60 trading-day 진단 프록시 · N/3–5 입력 · 장외거래는 참고축이며 평균에서 제외";
+const FENOK_LONG_EDGE_METHODOLOGY = "Long Edge · 5개 방향성 축 평균 · present N/5 · 동종군 유사도는 참고축";
+
+export function passesFenokEdgeFilters(
+  stock: Pick<ScreenerStock, "fenokShortTermScore" | "fenokLongTermScore">,
+  shortEdgeMinValue: number | null,
+  longEdgeMinValue: number | null,
+): boolean {
+  if (shortEdgeMinValue !== null) {
+    const short = typeof stock.fenokShortTermScore === "number" ? stock.fenokShortTermScore : null;
+    if (short === null || short < shortEdgeMinValue) return false;
+  }
+  if (longEdgeMinValue !== null) {
+    const long = typeof stock.fenokLongTermScore === "number" ? stock.fenokLongTermScore : null;
+    if (long === null || long < longEdgeMinValue) return false;
+  }
+  return true;
+}
 
 function cx(...parts: Array<string | false | undefined>) {
   return parts.filter(Boolean).join(" ");
@@ -264,7 +296,7 @@ function renderEstimateCell(
       className="inline-flex min-w-[58px] flex-col items-end gap-0.5 leading-none"
       title={`${FISCAL_PERIOD_LABELS[0]}~${FISCAL_PERIOD_LABELS[2]} 추정치 ${completeness.label}`}
     >
-      <span className={cx("orbitron tabular-nums", valueClass)}>{formatValue(value)}</span>
+      <span className={cx(" tabular-nums", valueClass)}>{formatValue(value)}</span>
       {showGap ? (
         <span className={cx("rounded-full px-1.5 py-[1px] text-[9px] font-black", estimateCompletenessTone(completeness))}>
           {completeness.label}
@@ -306,41 +338,39 @@ function formatAsOfLabel(value: string | null | undefined): string | null {
 }
 
 function actionTone(bucket: string | null | undefined, confidenceLabel?: string | null, lowEvidence = false): string {
-  if (lowEvidence || confidenceLabel === "low") return "border-slate-200 bg-slate-50 text-slate-700";
-  if (bucket === "smart_money") return "border-violet-200 bg-violet-50 text-violet-700";
-  if (bucket === "value_momentum") return "border-emerald-200 bg-emerald-50 text-emerald-700";
-  if (bucket === "index_core") return "border-sky-200 bg-sky-50 text-sky-700";
-  if (bucket === "income") return "border-amber-200 bg-amber-50 text-amber-700";
-  if (bucket === "momentum") return "border-rose-200 bg-rose-50 text-rose-700";
-  return "border-slate-200 bg-slate-50 text-slate-700";
+  if (lowEvidence || confidenceLabel === "low") return "border-slate-200 bg-white text-slate-700";
+  if (bucket === "smart_money") return "border-violet-200 bg-white text-violet-700";
+  if (bucket === "value_momentum") return "border-emerald-200 bg-white text-emerald-700";
+  if (bucket === "index_core") return "border-sky-200 bg-white text-sky-700";
+  if (bucket === "income") return "border-amber-200 bg-white text-amber-700";
+  if (bucket === "momentum") return "border-rose-200 bg-white text-rose-700";
+  return "border-slate-200 bg-white text-slate-700";
 }
 
-function fenokEdgeTone(score: number | null): string {
-  if (score === null) return "border-slate-200 bg-slate-50 text-slate-500";
-  if (score >= 70) return "border-emerald-200 bg-emerald-50 text-emerald-700";
-  if (score >= 60) return "border-cyan-200 bg-cyan-50 text-cyan-700";
-  if (score >= 50) return "border-amber-200 bg-amber-50 text-amber-700";
-  return "border-slate-200 bg-slate-50 text-slate-700";
-}
+// Score cells are neutral by design (표 B, owner mandate 2026-09-16): every
+// 0-100 score renders through ScoreCell (ink number + ink mini bar). Meaning
+// color lives only in gain/loss cells, so the score tone helpers are gone.
 
-function fenokEdgeDirectionLabel(direction: string | null | undefined): string {
-  if (direction === "upside_bias") return "상방";
-  if (direction === "downside_bias") return "하방";
-  if (direction === "balanced") return "중립";
-  return "방향 미정";
-}
-
-function fenokEdgeDirectionMark(direction: string | null | undefined): string {
-  if (direction === "upside_bias") return "▲";
-  if (direction === "downside_bias") return "▼";
-  if (direction === "balanced") return "•";
-  return "·";
-}
-
+// The integrated "Fenok Edge" single score is retired (owner mandate
+// 2026-08-03): it picked the first available of four candidates with no stated
+// aggregation. The two scores shown side by side are each an aggregation of an
+// existing hexagon axis set with a stated formula in
+// scripts/build-fenok-signals.mjs: 단기 = short-term conviction/common-basis
+// composite (technical flow, volume/liquidity trend, relative strength,
+// options-activity proxy, inverted short-volume); 장기 = mean of the five
+// long-term axes (profitability, growth, upside, inverted downside,
+// durability). No new constants here — the UI only reads the summary fields.
 function fenokEdgeTitle(stock: ScreenerStock): string {
+  const short = typeof stock.fenokShortTermScore === "number" && Number.isFinite(stock.fenokShortTermScore)
+    ? `단기 ${Math.round(stock.fenokShortTermScore)}`
+    : null;
+  const long = typeof stock.fenokLongTermScore === "number" && Number.isFinite(stock.fenokLongTermScore)
+    ? `장기 ${Math.round(stock.fenokLongTermScore)}`
+    : null;
   return [
     FENOK_EDGE_PROXY_LABEL,
-    fenokEdgeDirectionLabel(stock.fenokEdgeDirection),
+    short,
+    long,
     confidenceText(stock.fenokSignalConfidence),
     formatCoverageLabel(stock.fenokSignalCoverageRatio),
     formatAsOfLabel(stock.fenokSignalAsOf),
@@ -354,22 +384,6 @@ function signalDirectionLabel(direction: string | null | undefined): string {
   return "·";
 }
 
-function signalScoreTone(score: number | null): string {
-  if (score === null || score === undefined) return "border-slate-200 bg-slate-50 text-slate-500";
-  if (score >= 70) return "border-emerald-200 bg-emerald-50 text-emerald-700";
-  if (score >= 60) return "border-cyan-200 bg-cyan-50 text-cyan-700";
-  if (score >= 50) return "border-amber-200 bg-amber-50 text-amber-700";
-  return "border-slate-200 bg-slate-50 text-slate-500";
-}
-
-function downsideRiskTone(score: number | null): string {
-  if (score === null || score === undefined) return "border-slate-200 bg-slate-50 text-slate-500";
-  if (score >= 70) return "border-rose-200 bg-rose-50 text-rose-700";
-  if (score >= 60) return "border-amber-200 bg-amber-50 text-amber-700";
-  if (score >= 50) return "border-slate-200 bg-slate-50 text-slate-500";
-  return "border-emerald-200 bg-emerald-50 text-emerald-700";
-}
-
 function guruHoldersCount(stock: ScreenerStock): number | null {
   return typeof stock.guruHolders === "number" && Number.isFinite(stock.guruHolders) && stock.guruHolders > 0
     ? stock.guruHolders
@@ -380,18 +394,31 @@ function hasGuruHolders(stock: ScreenerStock): boolean {
   return guruHoldersCount(stock) !== null;
 }
 
-function GuruHolderBadge({ stock, compact = false }: { stock: ScreenerStock; compact?: boolean }) {
+function GuruHolderBadge({
+  stock,
+  compact = false,
+  returnTo,
+  onBeforeNavigate,
+}: {
+  stock: ScreenerStock;
+  compact?: boolean;
+  returnTo?: string | null;
+  onBeforeNavigate?: () => void;
+}) {
   const holders = guruHoldersCount(stock);
   if (holders === null) return null;
   return (
     <TransitionLink
-      href={ROUTES.superinvestorsByTicker(stock.ticker)}
+      href={ROUTES.superinvestorsByTicker(stock.ticker, returnTo)}
       data-testid="screener-guru-badge"
       data-ticker={stock.ticker}
       data-superinvestors-href={ROUTES.superinvestorsByTicker(stock.ticker)}
-      className="inline-flex shrink-0 items-center rounded-full border border-violet-200 bg-violet-50 px-1.5 py-0.5 text-[9px] font-black text-violet-700 transition hover:border-violet-400 hover:bg-violet-100"
-      title={`${stock.ticker} 기관·고수 보유 ${holders.toLocaleString("ko-KR")}명 — 클릭하면 /superinvestors 종목별 보유로 이동`}
-      onClick={(event) => event.stopPropagation()}
+      className="inline-flex shrink-0 items-center justify-center rounded-full border border-slate-200 bg-white px-2 py-px text-[9px] font-black text-slate-700"
+      title={`${stock.ticker} 13F 보유 투자자 ${holders.toLocaleString("ko-KR")}명 · 투자자 화면에서 상세 보기`}
+      onClick={(event) => {
+        onBeforeNavigate?.();
+        event.stopPropagation();
+      }}
     >
       {compact ? `고수 ${holders}` : `기관·고수 ${holders}`}
     </TransitionLink>
@@ -399,11 +426,11 @@ function GuruHolderBadge({ stock, compact = false }: { stock: ScreenerStock; com
 }
 
 const CONNECTION_BADGES = [
-  { key: "marketFacts", label: "시세", className: "border-sky-200 bg-sky-50 text-sky-700" },
-  { key: "filings", label: "공시", className: "border-emerald-200 bg-emerald-50 text-emerald-700" },
-  { key: "smartMoney", label: "13F", className: "border-violet-200 bg-violet-50 text-violet-700" },
-  { key: "indexMembership", label: "지수", className: "border-amber-200 bg-amber-50 text-amber-700" },
-  { key: "singleStockEtfs", label: "ETF", className: "border-cyan-200 bg-cyan-50 text-cyan-700" },
+  { key: "marketFacts", label: "시세", className: "border-sky-200 bg-white text-sky-700" },
+  { key: "filings", label: "공시", className: "border-emerald-200 bg-white text-emerald-700" },
+  { key: "smartMoney", label: "13F", className: "border-violet-200 bg-white text-violet-700" },
+  { key: "indexMembership", label: "지수", className: "border-amber-200 bg-white text-amber-700" },
+  { key: "singleStockEtfs", label: "ETF", className: "border-cyan-200 bg-white text-cyan-700" },
 ] as const;
 
 function connectionTitle(stock: ScreenerStock): string {
@@ -514,7 +541,7 @@ function ConnectionPills({ stock, compact = false }: { stock: ScreenerStock; com
   const active = CONNECTION_BADGES.filter((badge) => connection.flags[badge.key]);
   return (
     <span className="flex min-w-0 flex-wrap items-center gap-1" title={connectionTitle(stock)}>
-      <span className="orbitron rounded-full border border-slate-200 bg-white px-2 py-0.5 text-[10px] font-black tabular-nums text-slate-800">
+      <span className="rounded-full border border-slate-200 bg-white px-2 py-0.5 text-[10px] font-black tabular-nums text-slate-800">
         {connection.count}
       </span>
       {active.slice(0, compact ? 2 : 4).map((badge) => (
@@ -536,25 +563,65 @@ function getMomentumClass(value: number | null): string {
   return value >= 0 ? "text-[var(--c-up)]" : "text-[var(--c-down)]";
 }
 
+function ScoreMiniBar({ score }: { score: number | null }) {
+  const pct = score === null ? 0 : Math.max(0, Math.min(100, score));
+  return (
+    <span aria-hidden="true" className="h-[4px] w-10 overflow-hidden rounded-full bg-[var(--c-surface-2)]">
+      <i className="block h-full rounded-full bg-[var(--c-ink)]" style={{ width: `${pct}%` }} />
+    </span>
+  );
+}
+
+// One cell language for every 0-100 score column (표 A+B): number + mini bar,
+// single ink bar on a light neutral track (kit RankBars language, cell scale).
+// Meaning color lives only in gain/loss cells — score pills stay neutral.
+function ScoreCell({
+  score,
+  title,
+  ariaLabel,
+  prefix,
+}: {
+  score: number | null;
+  title: string;
+  ariaLabel: string;
+  prefix?: React.ReactNode;
+}) {
+  return (
+    <span className="inline-flex min-w-0 justify-end">
+      <span
+        className="inline-flex items-center gap-1.5 rounded-full border border-slate-200 bg-white px-2 py-[2px] text-[12px] font-black tabular-nums leading-[14px] text-slate-700"
+        title={title}
+        aria-label={ariaLabel}
+      >
+        {prefix}
+        {score ?? "—"}
+        <ScoreMiniBar score={score} />
+      </span>
+    </span>
+  );
+}
+
 function renderCell(
   stock: ScreenerStock,
   key: ScreenerSortKey,
   preset?: ColumnPreset,
   surface: "desktop" | "mobile" = "desktop",
+  returnTo?: string | null,
+  onBeforeNavigate?: () => void,
 ): React.ReactNode {
   switch (key) {
     case "ticker":
       return (
         <span className="flex min-w-0 flex-wrap items-center gap-1.5">
-          <span className="text-sm font-black text-[var(--c-ink)]">{stock.ticker}</span>
-          <GuruHolderBadge stock={stock} compact />
+          <span className="font-mono text-sm font-black text-[var(--c-ink)]">{stock.ticker}</span>
+          <GuruHolderBadge stock={stock} compact returnTo={returnTo} onBeforeNavigate={onBeforeNavigate} />
         </span>
       );
     case "name":
       return (
         <span className="block min-w-0 max-w-[180px]">
-          <span className="orbitron text-sm font-black text-[var(--c-ink)]">{stock.ticker}</span>
-          <span className="block truncate text-[11px] font-semibold text-[var(--c-ink-3)]" title={stock.name ?? undefined}>
+          <span className="font-mono text-sm font-black text-[var(--c-ink)]">{stock.ticker}</span>
+          <span className="block truncate text-[12px] font-semibold text-[var(--c-ink-3)]" title={stock.name ?? undefined}>
             {stock.name ?? "—"}
           </span>
         </span>
@@ -565,108 +632,72 @@ function renderCell(
       const detail = [confidence, lowEvidence ? "증거 부족" : null].filter(Boolean).join(" · ");
       const estimateSummary = preset === "estimate" ? interpretStockMetrics(stock).estimateSummary : null;
       const title = [...(stock.actionReasons ?? []), detail].filter(Boolean).join(" · ");
+      // Table density: one line (pill + confidence), no wrapped second line.
+      // The reason/estimate detail stays in the title tooltip.
       return (
-        <span className="flex min-w-0 max-w-[180px] flex-col items-start gap-1" title={[title, estimateSummary].filter(Boolean).join(" · ")}>
-          <span className={cx("max-w-full truncate rounded-full border px-2 py-0.5 text-[10px] font-black", actionTone(stock.actionBucket, stock.confidenceLabel, lowEvidence))}>
+        <span className="inline-flex min-w-0 max-w-full items-center gap-1" title={[title, estimateSummary].filter(Boolean).join(" · ")}>
+          <span className={cx("min-w-0 max-w-full truncate rounded-full border px-2 py-[2px] text-[10px] font-black", actionTone(stock.actionBucket, stock.confidenceLabel, lowEvidence))}>
             {stock.actionLabel ?? "관찰"} · {stock.actionScore != null ? Math.round(stock.actionScore) : "—"}
           </span>
-          <span className={cx("max-w-full truncate text-[10px] font-black", confidenceClass(stock.confidenceLabel, lowEvidence))}>
-            {detail}
+          <span className={cx("shrink-0 rounded-full border border-[var(--c-line)] px-1.5 py-px text-[9px] font-black whitespace-nowrap", confidenceClass(stock.confidenceLabel, lowEvidence))}>
+            {confidence}
           </span>
-          {estimateSummary ? (
-            <span className="max-w-full truncate text-[10px] font-semibold text-[var(--c-brand)]">{estimateSummary}</span>
-          ) : stock.actionReasons?.[0] ? (
-            <span className="max-w-full truncate text-[10px] font-semibold text-[var(--c-ink-3)]">{stock.actionReasons[0]}</span>
-          ) : null}
         </span>
       );
     }
-    case "fenokEdgeScore": {
-      const score = typeof stock.fenokEdgeScore === "number" && Number.isFinite(stock.fenokEdgeScore)
-        ? Math.round(stock.fenokEdgeScore)
-        : null;
+    case "fenokShortTermScore":
+    case "fenokLongTermScore": {
+      const isShortTerm = key === "fenokShortTermScore";
+      const raw = isShortTerm ? stock.fenokShortTermScore : stock.fenokLongTermScore;
+      const score = typeof raw === "number" && Number.isFinite(raw) ? Math.round(raw) : null;
       return (
-        <span className="inline-flex min-w-[64px] justify-end">
-          <span
-            className={cx("inline-flex items-center gap-1 rounded-full border px-2 py-0.5 text-[10px] font-black tabular-nums", fenokEdgeTone(score))}
-            title={fenokEdgeTitle(stock)}
-            aria-label={`Fenok 엣지 점수 ${fenokEdgeDirectionLabel(stock.fenokEdgeDirection)} ${score ?? "정보 없음"}`}
-          >
-            <span aria-hidden="true">{fenokEdgeDirectionMark(stock.fenokEdgeDirection)}</span>
-            {score ?? "—"}
-          </span>
-        </span>
+        <ScoreCell
+          score={score}
+          title={fenokEdgeTitle(stock)}
+          ariaLabel={`${isShortTerm ? "단기" : "장기"} 스코어 ${score ?? "정보 없음"}`}
+        />
       );
     }
+    // One headline number per cell: the six 9px per-axis mini-chips (수익·내구·
+    // 성장·기술·상방·하방) are gone from the row. That data is not lost — the
+    // expanded detail panel on the same row renders every axis with its band,
+    // direction and coverage, one click away.
+    // The conviction column is hidden from every default preset (표 A, owner
+    // mandate 2026-09-16): saved sorts and shared URLs still resolve through
+    // the sort mapping, and this case keeps rendering the unified cell language
+    // if the column is ever shown again.
     case "fenokConvictionScore": {
       const shortTerm = commonBasisShortTermView(stock);
-      const shortScore = shortTerm.score;
-      const longScore = typeof stock.fenokLongTermScore === "number" && Number.isFinite(stock.fenokLongTermScore)
-        ? Math.round(stock.fenokLongTermScore)
+      // The common-basis figure is a composition disclosure per the data
+      // contract; the headline short score is the directional conviction score.
+      const shortScore = typeof stock.fenokShortTermConvictionScore === "number"
+        && Number.isFinite(stock.fenokShortTermConvictionScore)
+        ? Math.round(stock.fenokShortTermConvictionScore)
         : null;
       const shortTermBasis = shortTermCommonBasisCopy(stock.fenokMarketScope, {
         sourceInputCount: shortTerm.sourceInputCount,
         basisCode: shortTerm.basisCode,
       });
-      const isPicks = preset === "fenokPicks";
       const isMobile = surface === "mobile";
       return (
         <span
           className={cx(
             "inline-flex flex-col items-end gap-1",
-            isMobile ? "min-w-0 max-w-full" : isPicks ? "min-w-[140px]" : "min-w-[80px]",
+            isMobile ? "min-w-0 max-w-full" : "min-w-0",
           )}
+          title={`${shortTermBasis.label} · ${shortTermBasis.comparisonNote}`}
         >
-          <span className="inline-flex flex-wrap justify-end gap-1">
+          <ScoreCell
+            score={shortScore}
+            title={`${shortTermBasis.detail} ${shortTermBasis.comparisonNote} 투자 조언이 아닙니다.`}
+            ariaLabel={`단기 컨빅션 ${shortScore ?? "정보 없음"} · ${shortTermBasis.label}`}
+          />
+          {isMobile ? (
             <span
-              className={cx("inline-flex items-center gap-0.5 rounded-full border px-1.5 py-[2px] text-[10px] font-black tabular-nums", signalScoreTone(shortScore))}
-              title={`${shortTermBasis.detail} ${shortTermBasis.comparisonNote} 투자 조언이 아닙니다.`}
-              aria-label={`단기 컨빅션 ${shortScore ?? "정보 없음"} · ${shortTermBasis.label}`}
+              className="max-w-full whitespace-normal break-words text-[12px] font-bold text-[var(--c-ink-3)]"
+              title={shortTermBasis.comparisonNote}
             >
-              <span aria-hidden="true">단기</span>
-              {shortScore ?? "—"}
-            </span>
-            <span
-              className={cx("inline-flex items-center gap-0.5 rounded-full border px-1.5 py-[2px] text-[10px] font-black tabular-nums", signalScoreTone(longScore))}
-              title="장기 Fenok 점수 · 투자 조언이 아닙니다"
-              aria-label={`장기 컨빅션 ${longScore ?? "정보 없음"}`}
-            >
-              <span aria-hidden="true">장기</span>
-              {longScore ?? "—"}
-            </span>
-          </span>
-          <span
-            className={cx(
-              "max-w-full text-[9px] font-bold text-[var(--c-ink-3)]",
-              isMobile ? "whitespace-normal break-words" : "whitespace-nowrap",
-            )}
-            title={shortTermBasis.comparisonNote}
-          >
-            {shortTermBasis.label}
-          </span>
-          {isPicks ? (
-            <span className="inline-flex flex-wrap justify-end gap-1">
-              {[
-                { label: "수익", score: stock.profitabilityScore, direction: stock.profitabilityDirection, tone: "signal" as const },
-                { label: "내구", score: stock.durabilityProfitabilityScore, direction: null, tone: "signal" as const },
-                { label: "성장", score: stock.growthScore, direction: stock.growthDirection, tone: "signal" as const },
-                { label: "기술", score: stock.technicalFlowScore, direction: stock.technicalFlowDirection, tone: "signal" as const },
-                { label: "상방", score: stock.upsidePotentialScore, direction: null, tone: "signal" as const },
-                { label: "하방", score: stock.downsidePressureScore, direction: null, tone: "risk" as const },
-              ].map((item) => {
-                const itemScore = typeof item.score === "number" && Number.isFinite(item.score) ? Math.round(item.score) : null;
-                return (
-                  <span
-                    key={item.label}
-                    className={cx("inline-flex items-center gap-0.5 rounded border px-1 py-[1px] text-[9px] font-black tabular-nums", item.tone === "risk" ? downsideRiskTone(itemScore) : signalScoreTone(itemScore))}
-                    title={`${item.label} ${signalDirectionLabel(item.direction)} · Fenok 파생 신호`}
-                    aria-label={`${item.label} ${itemScore ?? "정보 없음"}`}
-                  >
-                    <span aria-hidden="true">{item.label}</span>
-                    {itemScore ?? "—"}
-                  </span>
-                );
-              })}
+              {shortTermBasis.label}
             </span>
           ) : null}
         </span>
@@ -688,17 +719,17 @@ function renderCell(
       const titleSuffix = key === "durabilityProfitabilityScore"
         ? `${formatCoverageLabel(stock.durabilityProfitabilityCoverage)} · ${FENOK_SIGNAL_DISCLOSURE}`
         : FENOK_SIGNAL_DISCLOSURE;
+      // Null/unknown direction renders as "·" — omit the prefix so the cell
+      // shows the score only (matches the 하방 cell, which has no prefix).
+      const dirLabel = signalDirectionLabel(direction);
+      const dirPrefix = dirLabel === "·" ? null : dirLabel;
       return (
-        <span className="inline-flex min-w-[64px] justify-end">
-          <span
-            className={cx("inline-flex items-center gap-1 rounded-full border px-2 py-0.5 text-[10px] font-black tabular-nums", signalScoreTone(score))}
-            title={`${columnLabel(key)} ${signalDirectionLabel(direction)} · ${titleSuffix}`}
-            aria-label={`${columnLabel(key)} ${score ?? "정보 없음"}`}
-          >
-            <span aria-hidden="true">{signalDirectionLabel(direction)}</span>
-            {score ?? "—"}
-          </span>
-        </span>
+        <ScoreCell
+          score={score}
+          title={[columnLabel(key), dirPrefix, titleSuffix].filter(Boolean).join(" · ")}
+          ariaLabel={`${columnLabel(key)} ${score ?? "정보 없음"}`}
+          prefix={dirPrefix === null ? undefined : <span aria-hidden="true">{dirPrefix}</span>}
+        />
       );
     }
     case "downsidePressureScore": {
@@ -706,51 +737,47 @@ function renderCell(
         ? Math.round(stock.downsidePressureScore)
         : null;
       return (
-        <span className="inline-flex min-w-[64px] justify-end">
-          <span
-            className={cx("inline-flex items-center gap-1 rounded-full border px-2 py-0.5 text-[10px] font-black tabular-nums", downsideRiskTone(score))}
-            title={`${columnLabel(key)} · 하방 위험 축: 높을수록 위험 · ${FENOK_SIGNAL_DISCLOSURE}`}
-            aria-label={`${columnLabel(key)} ${score ?? "정보 없음"}`}
-          >
-            {score ?? "—"}
-          </span>
-        </span>
+        <ScoreCell
+          score={score}
+          title={`${columnLabel(key)} · 하방 위험 축: 높을수록 위험 · ${FENOK_SIGNAL_DISCLOSURE}`}
+          ariaLabel={`${columnLabel(key)} ${score ?? "정보 없음"}`}
+        />
       );
     }
     case "sector":
-      return <span className="text-xs font-bold text-slate-500">{stock.sector || "—"}</span>;
+      return <span className="text-[12px] font-bold leading-5 text-slate-500">{stock.sector || "—"}</span>;
     case "country":
-      return <span className="text-xs font-bold text-slate-500">{COUNTRY_LABEL[stock.country] ?? stock.country ?? "—"}</span>;
+      return <span className="text-[12px] font-bold text-slate-500">{COUNTRY_LABEL[stock.country] ?? stock.country ?? "—"}</span>;
     case "price":
-      return <span className="orbitron tabular-nums text-slate-900">{stock.price === null ? "—" : `$${stock.price.toFixed(2)}`}</span>;
+      return <span className="tabular-nums text-slate-900">{stock.price === null ? "—" : `$${stock.price.toFixed(2)}`}</span>;
     case "marketCap":
-      return <span className="orbitron tabular-nums text-slate-700">{fmtMarketCap(stock.marketCap)}</span>;
+      return <span className="tabular-nums text-slate-700">{fmtMarketCap(stock.marketCap)}</span>;
     case "per":
-      return <span className="orbitron tabular-nums text-slate-900">{fmtNum(stock.per, 1)}</span>;
+      return <span className="tabular-nums text-slate-900">{fmtNum(stock.per, 1)}</span>;
     case "pbr":
-      return <span className="orbitron tabular-nums text-slate-700">{fmtNum(stock.pbr, 2)}</span>;
+      return <span className="tabular-nums text-slate-700">{fmtNum(stock.pbr, 2)}</span>;
     case "peg":
-      return <span className="orbitron tabular-nums text-slate-700">{fmtNum(stock.peg, 2)}</span>;
+      return <span className="tabular-nums text-slate-700">{fmtNum(stock.peg, 2)}</span>;
     case "dividendYield":
-      return <span className="orbitron tabular-nums text-slate-600">{fmtYield(stock.dividendYield)}</span>;
+      return <span className="tabular-nums text-slate-600">{fmtYield(stock.dividendYield)}</span>;
     case "return12m":
-      return <span className={cx("orbitron font-black tabular-nums", getMomentumClass(stock.return12m))}>{fmtSignedPct(stock.return12m)}</span>;
+      return <span className={cx(" font-black tabular-nums", getMomentumClass(stock.return12m))}>{fmtSignedPct(stock.return12m)}</span>;
     case "roe":
-      return <span className="orbitron tabular-nums text-slate-900">{fmtRoe(stock.roe)}</span>;
+      return <span className="tabular-nums text-slate-900">{fmtRoe(stock.roe)}</span>;
     case "opm":
-      return <span className="orbitron tabular-nums text-slate-700">{fmtOpm(stock.opm)}</span>;
+      return <span className="tabular-nums text-slate-700">{fmtOpm(stock.opm)}</span>;
     case "eps":
-      return <span className="orbitron tabular-nums text-slate-900">{fmtEps(stock.eps)}</span>;
+      return <span className="tabular-nums text-slate-900">{fmtEps(stock.eps)}</span>;
     case "growthRate":
-      return <span className={cx("orbitron font-black tabular-nums", getMomentumClass(stock.growthRate))}>{fmtSignedPct(stock.growthRate)}</span>;
+      return <span className={cx(" font-black tabular-nums", getMomentumClass(stock.growthRate))}>{fmtSignedPct(stock.growthRate)}</span>;
     case "momentum1m":
-      return <span className={cx("orbitron font-black tabular-nums", getMomentumClass(stock.momentum1m))}>{fmtSignedPct(stock.momentum1m)}</span>;
+      return <span className={cx(" font-black tabular-nums", getMomentumClass(stock.momentum1m))}>{fmtSignedPct(stock.momentum1m)}</span>;
     case "momentum3m":
-      return <span className={cx("orbitron font-black tabular-nums", getMomentumClass(stock.momentum3m))}>{fmtSignedPct(stock.momentum3m)}</span>;
+      return <span className={cx(" font-black tabular-nums", getMomentumClass(stock.momentum3m))}>{fmtSignedPct(stock.momentum3m)}</span>;
     case "momentum6m":
-      return <span className={cx("orbitron font-black tabular-nums", getMomentumClass(stock.momentum6m))}>{fmtSignedPct(stock.momentum6m)}</span>;
+      return <span className={cx(" font-black tabular-nums", getMomentumClass(stock.momentum6m))}>{fmtSignedPct(stock.momentum6m)}</span>;
     case "momentum12m":
-      return <span className={cx("orbitron font-black tabular-nums", getMomentumClass(stock.momentum12m))}>{fmtSignedPct(stock.momentum12m)}</span>;
+      return <span className={cx(" font-black tabular-nums", getMomentumClass(stock.momentum12m))}>{fmtSignedPct(stock.momentum12m)}</span>;
     case "roeFy1":
     case "roeFy2":
     case "roeFy3":
@@ -765,20 +792,20 @@ function renderCell(
       return renderEstimateCell(stock, key, (value) => (value === null ? "—" : `${value.toFixed(1)}%`), "text-slate-700");
     case "guruHolders":
       return guruHoldersCount(stock) !== null ? (
-        <span className="orbitron tabular-nums font-bold text-violet-700">{guruHoldersCount(stock)}</span>
+        <span className="tabular-nums font-bold text-slate-700">{guruHoldersCount(stock)}</span>
       ) : (
         <span className="text-slate-300">—</span>
       );
     case "connectionCount":
       return <ConnectionPills stock={stock} />;
     case "rank":
-      return <span className="orbitron tabular-nums text-slate-600">{fmtRank(stock.rank)}</span>;
+      return <span className="tabular-nums text-slate-600">{fmtRank(stock.rank)}</span>;
     case "perBandCurrent":
       return <PerBandBar current={stock.perBandCurrent} min={stock.perBandMin} avg={stock.perBandAvg} max={stock.perBandMax} />;
     case "peForward":
-      return <span className="orbitron tabular-nums text-slate-900">{fmtNum(stock.peForward, 1)}</span>;
+      return <span className="tabular-nums text-slate-900">{fmtNum(stock.peForward, 1)}</span>;
     case "epsForward":
-      return <span className="orbitron tabular-nums text-slate-700">{fmtEps(stock.epsForward)}</span>;
+      return <span className="tabular-nums text-slate-700">{fmtEps(stock.epsForward)}</span>;
     case "forwardPeFy1":
     case "forwardPeFy2":
     case "forwardPeFy3":
@@ -795,13 +822,13 @@ function renderCell(
     case "epsGrowthFy3":
       return renderEstimateCell(stock, key, fmtSignedPctPoint, cx("font-black", getMomentumClass(stock[key] ?? null)));
     case "dividendTtm":
-      return <span className="orbitron tabular-nums text-slate-600">{stock.dividendTtm === null ? "—" : `$${stock.dividendTtm.toFixed(2)}`}</span>;
+      return <span className="tabular-nums text-slate-600">{stock.dividendTtm === null ? "—" : `$${stock.dividendTtm.toFixed(2)}`}</span>;
     case "ret1y":
-      return <span className={cx("orbitron font-black tabular-nums", getMomentumClass(stock.ret1y))}>{fmtSignedPct(stock.ret1y)}</span>;
+      return <span className={cx(" font-black tabular-nums", getMomentumClass(stock.ret1y))}>{fmtSignedPct(stock.ret1y)}</span>;
     case "ret3y":
-      return <span className={cx("orbitron font-black tabular-nums", getMomentumClass(stock.ret3y))}>{fmtSignedPct(stock.ret3y)}</span>;
+      return <span className={cx(" font-black tabular-nums", getMomentumClass(stock.ret3y))}>{fmtSignedPct(stock.ret3y)}</span>;
     case "ret5y":
-      return <span className={cx("orbitron font-black tabular-nums", getMomentumClass(stock.ret5y))}>{fmtSignedPct(stock.ret5y)}</span>;
+      return <span className={cx(" font-black tabular-nums", getMomentumClass(stock.ret5y))}>{fmtSignedPct(stock.ret5y)}</span>;
     default:
       return "—";
   }
@@ -820,7 +847,7 @@ function renderMobileCell(stock: ScreenerStock, key: ScreenerSortKey, preset?: C
       const pct = bandPct(safeCurrent, safeMin, safeMax);
       const label = bandLabel(pct);
       return (
-        <span className="orbitron font-black tabular-nums text-slate-800 text-[10px] truncate">
+        <span className="font-black tabular-nums text-slate-800 text-[12px] truncate">
           {safeCurrent.toFixed(1)}x ({label} {Math.round(pct * 100)}%)
         </span>
       );
@@ -902,7 +929,7 @@ function MobileEstimateTrendSections({ stock, compact = false }: { stock: Screen
     if (compact) return null;
     return (
       <div className="px-3 pb-3">
-        <div className="border-t border-[var(--c-line-2)] pt-3 text-xs font-bold text-[var(--c-ink-3)]">추정치 없음</div>
+        <div className="border-t border-[var(--c-line-2)] pt-3 text-[12px] font-bold text-[var(--c-ink-3)]">추정치 없음</div>
       </div>
     );
   }
@@ -918,8 +945,8 @@ function MobileEstimateTrendSections({ stock, compact = false }: { stock: Screen
       {sections.map((section) => (
         <div key={section.title} className={compact ? "rounded-xl border border-[var(--c-line-2)] bg-[var(--c-surface-2)] px-3 py-2" : "border-t border-[var(--c-line-2)] pt-3"}>
           <div className="mb-2 flex flex-col items-start gap-1.5 sm:flex-row sm:items-center sm:justify-between sm:gap-2">
-            <span className="text-[10px] font-black uppercase tracking-[0.08em] text-[var(--c-ink-2)]">{section.title}</span>
-            <span className="grid w-full grid-cols-2 gap-1 text-center text-[9px] font-black text-[var(--c-ink-2)] sm:w-auto sm:min-w-[132px] sm:grid-cols-3">
+            <span className="text-[12px] font-black uppercase tracking-[0.08em] text-[var(--c-ink-2)]">{section.title}</span>
+            <span className="grid w-full grid-cols-3 gap-1 text-center text-[12px] font-black text-[var(--c-ink-2)] sm:w-auto sm:min-w-[132px] sm:grid-cols-3">
               {ESTIMATE_PERIOD_LABELS.map((label) => <span key={`${section.title}-${label}`}>{label}</span>)}
             </span>
           </div>
@@ -929,7 +956,7 @@ function MobileEstimateTrendSections({ stock, compact = false }: { stock: Screen
               const showGap = hasEstimateGap(completeness);
               return (
                 <div key={`${section.title}-${row.label}`} className="grid grid-cols-1 gap-1.5 sm:grid-cols-[62px_minmax(0,1fr)] sm:items-center sm:gap-2">
-                  <span className="min-w-0 truncate text-[10px] font-black text-slate-500">
+                  <span className="min-w-0 truncate text-[12px] font-black text-slate-500">
                     {row.label}
                     {showGap ? (
                       <span className={cx("ml-1 rounded-full px-1 py-[1px] text-[8px]", estimateCompletenessTone(completeness))}>
@@ -937,13 +964,13 @@ function MobileEstimateTrendSections({ stock, compact = false }: { stock: Screen
                       </span>
                     ) : null}
                   </span>
-                  <span className="grid min-w-0 grid-cols-2 gap-1 sm:grid-cols-3">
+                  <span className="grid min-w-0 grid-cols-3 gap-1 sm:grid-cols-3">
                     {row.values.map((raw, index) => {
                       const value = normalizeTrendValue(raw);
                       return (
                         <span
                           key={`${section.title}-${row.label}-${ESTIMATE_PERIOD_LABELS[index]}`}
-                          className={cx("orbitron min-w-0 truncate text-right text-[11px] font-black tabular-nums", trendValueClass(value, row.tone))}
+                          className={cx(" min-w-0 truncate text-right text-[12px] font-black tabular-nums", trendValueClass(value, row.tone))}
                           title={`${row.label} ${ESTIMATE_PERIOD_LABELS[index]} ${row.formatValue(value)}`}
                         >
                           {row.formatValue(value)}
@@ -964,8 +991,8 @@ function MobileEstimateTrendSections({ stock, compact = false }: { stock: Screen
 function MobileMetric({ stock, metricKey, preset }: { stock: ScreenerStock; metricKey: ScreenerSortKey; preset?: ColumnPreset }) {
   return (
     <div className="min-w-0 rounded-xl border border-[var(--c-line-2)] bg-[var(--c-surface-2)] px-3 py-2">
-      <span className="block truncate text-[11px] font-black uppercase tracking-[0.06em] text-[var(--c-ink-2)]">
-        <MetricHelp label={columnLabel(metricKey)} metricKey={metricKey} align="right" />
+      <span className="block truncate text-[12px] font-black uppercase tracking-[0.06em] text-[var(--c-ink-2)]">
+        {columnLabel(metricKey)}
       </span>
       <span className="mt-1 block min-w-0 truncate text-right text-sm font-black text-[var(--c-ink)]">
         {renderMobileCell(stock, metricKey, preset)}
@@ -983,22 +1010,37 @@ function ScreenerEmptyState({
   canvasPlusPreview,
   hasFilters,
   onResetFilters,
+  nextRefresh,
 }: {
   canvasPlusPreview: boolean;
   hasFilters: boolean;
   onResetFilters: () => void;
+  nextRefresh?: string;
 }) {
+  const reason = hasFilters ? "현재 필터 조건에 맞는 종목이 없습니다." : "조건에 맞는 종목이 없습니다.";
+  const next = nextRefresh ?? "필터 변경 시 즉시 재검색";
   if (!canvasPlusPreview) {
     return (
-      <div className="col-span-full px-2 py-10 text-center text-sm font-semibold text-[var(--c-ink-3)]">
-        조건에 맞는 종목이 없습니다.
+      <div className="col-span-full flex flex-col items-center gap-2 px-2 py-10 text-center">
+        <p className="text-sm font-semibold text-[var(--c-ink-3)]">{reason}</p>
+        <p className="text-[12px] font-semibold text-[var(--c-ink-2)]">{next}</p>
+        {hasFilters ? (
+          <button
+            type="button"
+            onClick={onResetFilters}
+            className="mt-1 inline-flex min-h-9 items-center rounded-full border border-[var(--c-line)] bg-[var(--c-panel)] px-3 text-[11px] font-black text-[var(--c-brand)] transition hover:border-[var(--brand-interactive)]"
+          >
+            필터 완화
+          </button>
+        ) : null}
       </div>
     );
   }
 
   return (
     <div className="cp-screener-empty-state" data-canvas-plus-screener-empty-state="true">
-      <p>조건에 맞는 종목이 없습니다.</p>
+      <p>{reason}</p>
+      <span>{next}</span>
       {hasFilters ? (
         <button
           type="button"
@@ -1007,7 +1049,7 @@ function ScreenerEmptyState({
           data-variant="ghost"
           data-density="compact"
         >
-          필터 초기화
+          필터 완화
         </button>
       ) : null}
     </div>
@@ -1021,6 +1063,8 @@ function MobileStockCard({
   preset,
   selected,
   canvasPlusPreview,
+  returnTo,
+  onBeforeNavigate,
   onToggle,
   onSelectedChange,
 }: {
@@ -1030,6 +1074,8 @@ function MobileStockCard({
   preset: ColumnPreset;
   selected: boolean;
   canvasPlusPreview: boolean;
+  returnTo?: string | null;
+  onBeforeNavigate?: () => void;
   onToggle: () => void;
   onSelectedChange: () => void;
 }) {
@@ -1047,10 +1093,10 @@ function MobileStockCard({
     <article
       data-screener-stock-card
       data-canvas-plus-screener-card={canvasPlusPreview ? "mobile" : undefined}
-      className={canvasPlusPreview ? "cp-screener-stock-card cp-screener-stock-card--mobile" : "overflow-hidden rounded-2xl border border-[var(--c-line)] bg-[var(--c-panel)] shadow-[var(--sh-sm)]"}
+      className={canvasPlusPreview ? "cp-screener-stock-card cp-screener-stock-card--mobile focus-within:bg-[var(--c-surface-2)] focus-within:shadow-[inset_2px_0_0_var(--c-brand)]" : "overflow-hidden rounded-2xl border border-[var(--c-line)] bg-[var(--c-panel)] focus-within:bg-[var(--c-surface-2)] focus-within:shadow-[inset_2px_0_0_var(--c-brand)]"}
     >
       <div className="flex items-center justify-between gap-2 border-b border-[var(--c-line-2)] px-3 py-2">
-        <label data-screener-checkbox-target className="inline-flex min-h-11 items-center gap-2 rounded-md px-1 text-[11px] font-black text-[var(--c-ink-2)]">
+        <label data-screener-checkbox-target className="inline-flex min-h-11 items-center gap-2 rounded-md px-1 text-[12px] font-black text-[var(--c-ink-2)]">
           <input
             type="checkbox"
             checked={selected}
@@ -1059,7 +1105,7 @@ function MobileStockCard({
           />
           선택
         </label>
-        <span className="text-[10px] font-black uppercase tracking-[0.1em] text-[var(--c-ink-2)]">
+        <span className="flex items-center gap-2 text-[12px] font-black uppercase tracking-[0.1em] text-[var(--c-ink-2)]">
           {stock.connection?.singleStockEtfs?.length ? "ETF 연결" : "단일 종목"}
         </span>
       </div>
@@ -1079,16 +1125,16 @@ function MobileStockCard({
         </button>
         <div onClick={onToggle} className="min-w-0 flex-1 cursor-pointer">
           <span className="flex min-w-0 flex-wrap items-center gap-1.5">
-            <span className="text-base font-black text-slate-950">{stock.ticker}</span>
+            <span className="font-mono text-base font-black text-slate-950">{stock.ticker}</span>
             <span
               className={cx("max-w-full truncate rounded-full border px-2 py-0.5 text-[10px] font-black", actionTone(stock.actionBucket, stock.confidenceLabel, lowEvidence))}
               title={actionTitle}
             >
               {stock.actionLabel ?? "관찰"} · {stock.actionScore != null ? Math.round(stock.actionScore) : "—"}
             </span>
+            <GuruHolderBadge stock={stock} compact returnTo={returnTo} onBeforeNavigate={onBeforeNavigate} />
             {!canvasPlusPreview ? (
               <>
-                <GuruHolderBadge stock={stock} compact />
                 <span className="rounded-full bg-slate-100 px-2 py-0.5 text-[10px] font-black text-slate-700">
                   {COUNTRY_LABEL[stock.country] ?? stock.country ?? "—"}
                 </span>
@@ -1097,22 +1143,22 @@ function MobileStockCard({
             ) : null}
           </span>
           <span className="mt-1 block min-w-0 truncate text-sm font-bold text-slate-700" title={stock.name ?? undefined}>{stock.name}</span>
-          <span className="mt-0.5 block min-w-0 truncate text-[11px] font-bold text-[var(--c-ink-2)]">
+          <span className="mt-0.5 block min-w-0 truncate text-[12px] font-bold text-[var(--c-ink-2)]">
             {stock.sector || "섹터 미정"}
             {stock.actionReasons?.[0] ? ` · ${stock.actionReasons[0]}` : ""}
           </span>
           {estimateSummary ? (
-            <span className="mt-1 block min-w-0 truncate text-[11px] font-black text-[var(--c-brand)]">{estimateSummary}</span>
+            <span className="mt-1 block min-w-0 truncate text-[12px] font-black text-[var(--c-brand)]">{estimateSummary}</span>
           ) : null}
         </div>
         <div onClick={onToggle} className="shrink-0 cursor-pointer text-right">
-          <span className="orbitron block text-sm font-black tabular-nums text-slate-950">
+          <span className="block text-sm font-black tabular-nums text-slate-950">
             {stock.price === null ? "—" : `$${stock.price.toFixed(2)}`}
           </span>
-          <span className="orbitron mt-1 block text-[11px] font-black tabular-nums text-slate-500">
+          <span className="mt-1 block text-[12px] font-black tabular-nums text-slate-500">
             {fmtMarketCap(stock.marketCap)}
           </span>
-          <span className={cx("orbitron mt-1 block text-[11px] font-black tabular-nums", getMomentumClass(stock.return12m))}>
+          <span className={cx(" mt-1 block text-[12px] font-black tabular-nums", getMomentumClass(stock.return12m))}>
             {fmtSignedPct(stock.return12m)}
           </span>
         </div>
@@ -1142,20 +1188,6 @@ function MobileStockCard({
         </div>
       ) : null}
       {preset === "estimate" ? <MobileEstimateTrendSections stock={stock} compact /> : null}
-      {expanded ? (
-        <div id={detailId} className={canvasPlusPreview ? "cp-screener-detail-shell" : "border-t border-[var(--c-line-2)]"}>
-          {canvasPlusPreview ? (
-            <div className="cpw5-expanded-meta">
-              <GuruHolderBadge stock={stock} compact />
-              <span className="rounded-full bg-slate-100 px-2 py-0.5 text-[10px] font-black text-slate-700">
-                {COUNTRY_LABEL[stock.country] ?? stock.country ?? "—"}
-              </span>
-              {stock.connection ? <ConnectionPills stock={stock} compact /> : null}
-            </div>
-          ) : null}
-          <StockDetailPanel ticker={stock.ticker} stock={stock} canvasPlusPreview={canvasPlusPreview} />
-        </div>
-      ) : null}
     </article>
   );
 }
@@ -1167,6 +1199,8 @@ function DesktopStockCard({
   preset,
   selected,
   canvasPlusPreview,
+  returnTo,
+  onBeforeNavigate,
   onToggle,
   onSelectedChange,
 }: {
@@ -1176,6 +1210,8 @@ function DesktopStockCard({
   preset: ColumnPreset;
   selected: boolean;
   canvasPlusPreview: boolean;
+  returnTo?: string | null;
+  onBeforeNavigate?: () => void;
   onToggle: () => void;
   onSelectedChange: () => void;
 }) {
@@ -1189,10 +1225,10 @@ function DesktopStockCard({
       data-screener-stock-card
       data-screener-desktop-stock-card
       data-canvas-plus-screener-card={canvasPlusPreview ? "desktop" : undefined}
-      className={canvasPlusPreview ? "cp-screener-stock-card cp-screener-stock-card--desktop" : "overflow-hidden rounded-2xl border border-[var(--c-line)] bg-[var(--c-panel)] shadow-[var(--sh-sm)]"}
+      className={canvasPlusPreview ? "cp-screener-stock-card cp-screener-stock-card--desktop" : "overflow-hidden rounded-2xl border border-[var(--c-line)] bg-[var(--c-panel)]"}
     >
       <div className="flex items-center justify-between gap-3 border-b border-[var(--c-line-2)] px-4 py-3">
-        <label data-screener-checkbox-target className="inline-flex min-h-11 items-center gap-2 rounded-md px-1 text-[11px] font-black text-[var(--c-ink-2)]">
+        <label data-screener-checkbox-target className="inline-flex min-h-11 items-center gap-2 rounded-md px-1 text-[12px] font-black text-[var(--c-ink-2)]">
           <input
             type="checkbox"
             checked={selected}
@@ -1202,7 +1238,8 @@ function DesktopStockCard({
           선택
         </label>
         <TransitionLink
-          href={ROUTES.stock(stock.ticker)}
+          href={ROUTES.stock(stock.ticker, returnTo)}
+          onClick={onBeforeNavigate}
           className="inline-flex min-h-11 items-center rounded-full border border-[var(--c-line)] px-3 text-[11px] font-black uppercase tracking-[0.08em] text-[var(--c-ink-2)] transition hover:border-[var(--c-ink-4)] hover:text-[var(--c-ink)]"
         >
           상세
@@ -1221,8 +1258,8 @@ function DesktopStockCard({
         </button>
         <button type="button" onClick={onToggle} className="min-w-0 flex-1 text-left">
           <span className="flex min-w-0 flex-wrap items-center gap-1.5">
-            <span className="orbitron text-lg font-black text-slate-950">{stock.ticker}</span>
-            <GuruHolderBadge stock={stock} compact />
+            <span className="font-mono text-lg font-black text-slate-950">{stock.ticker}</span>
+            <GuruHolderBadge stock={stock} compact returnTo={returnTo} onBeforeNavigate={onBeforeNavigate} />
             <span className="rounded-full bg-slate-100 px-2 py-0.5 text-[10px] font-black text-slate-700">
               {COUNTRY_LABEL[stock.country] ?? stock.country ?? "—"}
             </span>
@@ -1234,19 +1271,19 @@ function DesktopStockCard({
             </span>
           </span>
           <span className="mt-1 block min-w-0 truncate text-sm font-bold text-slate-700" title={stock.name ?? undefined}>{stock.name}</span>
-          <span className="mt-0.5 block min-w-0 truncate text-[11px] font-bold text-[var(--c-ink-2)]">
+          <span className="mt-0.5 block min-w-0 truncate text-[12px] font-bold text-[var(--c-ink-2)]">
             {stock.sector || "섹터 미정"}
             {stock.connection ? " · 연결 데이터 있음" : ""}
           </span>
         </button>
         <button type="button" onClick={onToggle} className="shrink-0 text-right">
-          <span className="orbitron block text-base font-black tabular-nums text-slate-950">
+          <span className="block text-base font-black tabular-nums text-slate-950">
             {stock.price === null ? "—" : `$${stock.price.toFixed(2)}`}
           </span>
-          <span className="orbitron mt-1 block text-[11px] font-black tabular-nums text-slate-500">
+          <span className="mt-1 block text-[12px] font-black tabular-nums text-slate-500">
             {fmtMarketCap(stock.marketCap)}
           </span>
-          <span className={cx("orbitron mt-1 block text-[11px] font-black tabular-nums", getMomentumClass(stock.return12m))}>
+          <span className={cx(" mt-1 block text-[12px] font-black tabular-nums", getMomentumClass(stock.return12m))}>
             {fmtSignedPct(stock.return12m)}
           </span>
         </button>
@@ -1256,11 +1293,6 @@ function DesktopStockCard({
           <MobileMetric key={metricKey} stock={stock} metricKey={metricKey} preset={preset} />
         ))}
       </div>
-      {expanded ? (
-        <div id={detailId} className={canvasPlusPreview ? "cp-screener-detail-shell" : "border-t border-[var(--c-line-2)]"}>
-          <StockDetailPanel ticker={stock.ticker} stock={stock} canvasPlusPreview={canvasPlusPreview} />
-        </div>
-      ) : null}
     </article>
   );
 }
@@ -1273,6 +1305,7 @@ export default function ScreenerClient({
   initialActionFilter,
   initialConnectionFilter,
   initialFilters,
+  initialMode,
 }: {
   initialSearch?: string;
   initialSector?: string;
@@ -1281,6 +1314,7 @@ export default function ScreenerClient({
   initialActionFilter?: string;
   initialConnectionFilter?: string;
   initialFilters?: Partial<ScreenerFilterState>;
+  initialMode?: "discover" | "analyze";
 }) {
   const canvasPlusPreview = true;
   const initialFilterValues = initialFilters ?? defaultScreenerFilterState();
@@ -1294,23 +1328,29 @@ export default function ScreenerClient({
     connectionIndexReady,
     sectors,
     countries,
+    refetch: refetchScreenerData,
   } = useScreenerData();
   const screenerSourceDate = connectionIndexReady
     ? completeSourceFloor([sourceDate, connectionIndexDate])
     : sourceDate;
-  const [guruMap, setGuruMap] = useState<Record<string, number> | null>(null);
+  const [guruSettled, setGuruSettled] = useState(false);
+  const [actionSettled, setActionSettled] = useState(false);
+  const [guruIndex, setGuruIndex] = useState<GuruHoldersIndexData | null>(null);
   const [actionMap, setActionMap] = useState<Record<string, ActionSummaryRecord> | null>(null);
 
   useEffect(() => {
     let cancelled = false;
-    fetch("/data/sec-13f/analytics/guru_holders_index.json")
-      .then((r) => (r.ok ? r.json() : null))
-      .then((j) => {
-        if (!cancelled && j?.holders) setGuruMap(j.holders as Record<string, number>);
+    loadGuruHoldersIndex()
+      .then((index) => {
+        if (!cancelled && index) setGuruIndex(index);
       })
-      .catch(() => {});
+      .catch(() => {})
+      .finally(() => { if (!cancelled) setGuruSettled(true); });
     return () => { cancelled = true; };
   }, []);
+
+  const guruMap = guruIndex?.holders ?? null;
+  const holdingChanges = useMemo(() => guruIndex?.holding_changes ?? {}, [guruIndex]);
 
   useEffect(() => {
     let cancelled = false;
@@ -1321,17 +1361,28 @@ export default function ScreenerClient({
         for (const [symbol, row] of map) next[symbol] = row;
         setActionMap(next);
       })
-      .catch(() => {});
+      .catch(() => {})
+      .finally(() => { if (!cancelled) setActionSettled(true); });
     return () => { cancelled = true; };
   }, []);
 
   const stocks = useMemo(() => {
-    if (!guruMap && !actionMap) return rawStocks;
+    if (!guruMap && !actionMap && Object.keys(holdingChanges).length === 0) return rawStocks;
     return rawStocks.map((s) => {
       const action = actionMap?.[s.ticker];
+      const change = holdingChangeFor(guruIndex, s.ticker);
       return {
         ...s,
-        guruHolders: action?.guruHolders ?? guruMap?.[s.ticker] ?? null,
+        // A current holding_changes row is authoritative for the public
+        // cohort, even when the legacy holders map has no key after a
+        // conservative CUSIP resolution.
+        guruHolders: change?.held_count ?? action?.guruHolders ?? guruMap?.[s.ticker] ?? null,
+        guruNewCount: change?.new_count ?? null,
+        guruIncreasedCount: change?.increased_count ?? null,
+        guruDecreasedCount: change?.decreased_count ?? null,
+        guruMeanWeightDelta: change?.mean_weight_delta ?? null,
+        guruCurrentQuarter: change?.current_quarter ?? null,
+        guruPreviousQuarter: change?.previous_quarter ?? null,
         actionScore: action?.actionScore ?? null,
         confidenceLabel: action?.confidenceLabel ?? null,
         actionLabel: action?.actionLabel ?? null,
@@ -1366,7 +1417,7 @@ export default function ScreenerClient({
         roeFy3: action?.roeFy3 ?? null,
       };
     });
-  }, [rawStocks, guruMap, actionMap]);
+  }, [rawStocks, guruMap, guruIndex, holdingChanges, actionMap]);
 
   const [search, setSearch] = useState(initialSearch);
   const [selectedSectors, setSelectedSectors] = useState<string[]>(() => {
@@ -1383,6 +1434,7 @@ export default function ScreenerClient({
   const [epsGrowthMin, setEpsGrowthMin] = useState(() => initialFilterValues.epsGrowthMin ?? "");
   const [dividendYieldMin, setDividendYieldMin] = useState(() => initialFilterValues.dividendYieldMin ?? "");
   const [dividendYieldMax, setDividendYieldMax] = useState(() => initialFilterValues.dividendYieldMax ?? "");
+  const [durabilityMin, setDurabilityMin] = useState(() => initialFilterValues.durabilityMin ?? "");
   const [roeFy1Min, setRoeFy1Min] = useState(() => initialFilterValues.roeFy1Min ?? "");
   const [ret3yMin, setRet3yMin] = useState(() => initialFilterValues.ret3yMin ?? "");
   const [ret5yMin, setRet5yMin] = useState(() => initialFilterValues.ret5yMin ?? "");
@@ -1397,21 +1449,69 @@ export default function ScreenerClient({
   const [profitableOnly, setProfitableOnly] = useState(() => initialFilterValues.profitableOnly ?? false);
   const [bandFilter, setBandFilter] = useState<"" | "cheap" | "fair" | "rich">(() => initialFilterValues.bandFilter ?? "");
   const [actionFilter, setActionFilter] = useState<ActionFilter>(() => coerceActionFilter(initialActionFilter || initialFilterValues.actionFilter));
-  const [fenokEdgeMin, setFenokEdgeMin] = useState<FenokEdgeFilter>(() => coerceFenokEdgeFilter(initialFilterValues.fenokEdgeMin));
-  const [convictionMin, setConvictionMin] = useState<ConvictionFilter>(() => coerceConvictionFilter(initialFilterValues.convictionMin));
+  // Screener V3 discover/analyze modes (?mode=discover|analyze, default analyze).
+  const [screenerMode, setScreenerMode] = useState<"discover" | "analyze">(() => (initialMode === "discover" ? "discover" : "analyze"));
+  const [activeCardId, setActiveCardId] = useState<QuestionCardId>("smart-value");
+  const [compareTickers, setCompareTickers] = useState<string[]>([]);
+
+  function setModeParam(next: "discover" | "analyze") {
+    if (typeof window === "undefined") return;
+    const url = new URL(window.location.href);
+    url.searchParams.set("mode", next);
+    window.history.replaceState(null, "", url.toString());
+    setJourneyReturnTo(currentJourneyReturnTo());
+  }
+
+  function handleScreenerModeChange(next: "discover" | "analyze") {
+    setScreenerMode(next);
+    setModeParam(next);
+  }
+
+  function handleShowCardConditions(card: QuestionCardDef) {
+    applyFilterState({ ...defaultScreenerFilterState(), ...card.filters, sortKey: card.sortKey, sortDir: card.sortDir });
+    setScreenerMode("analyze");
+    // The filter-state URL-sync effect preserves the mode param (not in URL_KEYS).
+    setModeParam("analyze");
+  }
+
+  function handleToggleCompare(ticker: string) {
+    setCompareTickers((prev) => {
+      if (prev.includes(ticker)) return prev.filter((item) => item !== ticker);
+      if (prev.length >= 4) return prev;
+      return [...prev, ticker];
+    });
+  }
+  // The URL keys are retained for old deep links, but each key now maps to one
+  // explicit horizon. No legacy key may select the higher of Short and Long.
+  const [shortEdgeMin, setShortEdgeMin] = useState<FenokEdgeFilter>(() => coerceFenokEdgeFilter(initialFilterValues.fenokEdgeMin));
+  const [longEdgeMin, setLongEdgeMin] = useState<ConvictionFilter>(() => coerceConvictionFilter(initialFilterValues.convictionMin));
   const [connectionFilter, setConnectionFilter] = useState<ConnectionFilter>(() => coerceConnectionFilter(initialConnectionFilter || initialFilterValues.connectionFilter));
   const [sortKey, setSortKey] = useState<ScreenerSortKey>(() => initialFilterValues.sortKey ?? "marketCap");
   const [sortDir, setSortDir] = useState<SortDir>(() => initialFilterValues.sortDir ?? "desc");
   const [page, setPage] = useState(0);
-  const [expandedTicker, setExpandedTicker] = useState<string | null>(() => initialSearch || null);
+  const [expandedTicker, setExpandedTicker] = useState<string | null>(null);
+  // The detail sheet carries the id of the surface that opened it, so the
+  // pressed row keeps a valid aria-controls on mobile, card and table alike.
+  const [expandedDetailId, setExpandedDetailId] = useState<string | null>(null);
   const [selectedTickers, setSelectedTickers] = useState<ReadonlySet<string>>(() => new Set());
+  const [journeyReturnTo, setJourneyReturnTo] = useState<string | null>(null);
+  const journeySourceRef = useRef<string | null | undefined>(undefined);
+  const pendingJourneySnapshotRef = useRef<ScreenerJourneySnapshot | null | undefined>(undefined);
+  const journeyRestoredRef = useRef(false);
+  const [journeyHydrated, setJourneyHydrated] = useState(false);
+  const journeyUserInteractedRef = useRef(false);
+  useEffect(() => {
+    const cancel = () => { journeyUserInteractedRef.current = true; };
+    const events = ["wheel", "touchstart", "pointerdown", "keydown"] as const;
+    for (const event of events) window.addEventListener(event, cancel, { passive: true });
+    return () => { for (const event of events) window.removeEventListener(event, cancel); };
+  }, []);
   const [prevInitialSearch, setPrevInitialSearch] = useState(initialSearch);
   const [prevInitialSector, setPrevInitialSector] = useState(initialSector);
 
   if (prevInitialSearch !== initialSearch) {
     setPrevInitialSearch(initialSearch);
     setSearch(initialSearch);
-    setExpandedTicker(initialSearch || null);
   }
   if (prevInitialSector !== initialSector) {
     setPrevInitialSector(initialSector);
@@ -1421,13 +1521,27 @@ export default function ScreenerClient({
   const initialColumnPreset = coerceColumnPreset(initialPreset);
   const [preset, setPreset] = useState<ColumnPreset>(() => initialColumnPreset ?? initialFilterValues.preset ?? "basic");
   const [viewMode, setViewMode] = useState<ScreenerViewMode>("table");
-  const [density, setDensity] = useState<ScreenerDensity>("standard");
+  const [density, setDensity] = useState<ScreenerDensity>("compact");
   const [columnMenuOpen, setColumnMenuOpen] = useState(false);
+  const [filterSheetOpen, setFilterSheetOpen] = useState(false);
+  const [filterSheetSection, setFilterSheetSection] = useState<"filters" | "sort" | "presets">("filters");
+  const openFilterSheet = useCallback((section: "filters" | "sort" | "presets") => {
+    setFilterSheetSection(section);
+    setFilterSheetOpen(true);
+  }, []);
+
+  useEffect(() => {
+    const source = currentJourneyReturnTo();
+    if (source === journeySourceRef.current) return;
+    journeySourceRef.current = source;
+    setJourneyReturnTo(source);
+    pendingJourneySnapshotRef.current = readScreenerJourneySnapshot(source);
+  }, []);
 
   useEffect(() => {
     if (initialColumnPreset) return;
-    const saved = localStorage.getItem("screener-preset") as ColumnPreset | null;
-    if (!saved || !PRESET_KEYS[saved]) return;
+    const saved = readScreenerView().columnPreset;
+    if (!saved) return;
     const frame = window.requestAnimationFrame(() => {
       setPreset(saved);
       setSortKey((current) => {
@@ -1440,21 +1554,17 @@ export default function ScreenerClient({
   }, [initialColumnPreset]);
 
   useEffect(() => {
-    const saved = localStorage.getItem("screener-density");
-    if (saved === "compact" || saved === "standard" || saved === "comfortable") {
-      const frame = window.requestAnimationFrame(() => setDensity(saved));
-      return () => window.cancelAnimationFrame(frame);
-    }
-    return undefined;
+    const saved = readScreenerView().density;
+    if (!saved) return undefined;
+    const frame = window.requestAnimationFrame(() => setDensity(saved));
+    return () => window.cancelAnimationFrame(frame);
   }, []);
 
   useEffect(() => {
-    const saved = localStorage.getItem("screener-view-mode");
-    if (saved === "table" || saved === "card") {
-      const frame = window.requestAnimationFrame(() => setViewMode(saved));
-      return () => window.cancelAnimationFrame(frame);
-    }
-    return undefined;
+    const saved = readScreenerView().viewMode;
+    if (!saved) return undefined;
+    const frame = window.requestAnimationFrame(() => setViewMode(saved));
+    return () => window.cancelAnimationFrame(frame);
   }, []);
 
   // Ensure Fenok Picks always defaults to conviction desc when no explicit valid sort is set.
@@ -1476,7 +1586,7 @@ export default function ScreenerClient({
 
   function handlePresetChange(next: ColumnPreset) {
     setPreset(next);
-    localStorage.setItem("screener-preset", next);
+    writeScreenerView({ columnPreset: next });
     // Default sort for Fenok Picks is conviction desc; otherwise reset to a valid column
     if (next === "fenokPicks") {
       setSortKey("fenokConvictionScore");
@@ -1492,12 +1602,12 @@ export default function ScreenerClient({
 
   function handleDensityChange(next: ScreenerDensity) {
     setDensity(next);
-    localStorage.setItem("screener-density", next);
+    writeScreenerView({ density: next });
   }
 
   function handleViewModeChange(next: ScreenerViewMode) {
     setViewMode(next);
-    localStorage.setItem("screener-view-mode", next);
+    writeScreenerView({ viewMode: next });
   }
 
   // Sync filter state to URL for deep-link round-trips.
@@ -1514,6 +1624,7 @@ export default function ScreenerClient({
       epsGrowthMin,
       dividendYieldMin,
       dividendYieldMax,
+      durabilityMin,
       roeFy1Min,
       ret3yMin,
       ret5yMin,
@@ -1528,8 +1639,8 @@ export default function ScreenerClient({
       profitableOnly,
       bandFilter,
       actionFilter,
-      fenokEdgeMin,
-      convictionMin,
+      fenokEdgeMin: shortEdgeMin,
+      convictionMin: longEdgeMin,
       connectionFilter,
       sortKey,
       sortDir,
@@ -1538,6 +1649,7 @@ export default function ScreenerClient({
     if (next !== window.location.href) {
       window.history.replaceState(null, "", next);
     }
+    setJourneyReturnTo(currentJourneyReturnTo());
   }, [
     search,
     selectedSectors,
@@ -1549,6 +1661,7 @@ export default function ScreenerClient({
     epsGrowthMin,
     dividendYieldMin,
     dividendYieldMax,
+    durabilityMin,
     roeFy1Min,
     ret3yMin,
     ret5yMin,
@@ -1563,8 +1676,8 @@ export default function ScreenerClient({
     profitableOnly,
     bandFilter,
     actionFilter,
-    fenokEdgeMin,
-    convictionMin,
+    shortEdgeMin,
+    longEdgeMin,
     connectionFilter,
     sortKey,
     sortDir,
@@ -1580,6 +1693,7 @@ export default function ScreenerClient({
     const epsGrowthMinValue = parseFilterNumber(epsGrowthMin);
     const dividendYieldMinValue = parseFilterNumber(dividendYieldMin);
     const dividendYieldMaxValue = parseFilterNumber(dividendYieldMax);
+    const durabilityMinValue = parseFilterNumber(durabilityMin);
     const roeFy1MinValue = parseFilterNumber(roeFy1Min);
     const ret3yMinValue = parseFilterNumber(ret3yMin);
     const ret5yMinValue = parseFilterNumber(ret5yMin);
@@ -1591,8 +1705,8 @@ export default function ScreenerClient({
     const roeMinValue = parseFilterNumber(roeMin);
     const opmMinValue = parseFilterNumber(opmMin);
     const return12mMinValue = parseFilterNumber(return12mMin);
-    const fenokEdgeMinValue = parseFilterNumber(fenokEdgeMin);
-    const convictionMinValue = parseFilterNumber(convictionMin);
+    const shortEdgeMinValue = parseFilterNumber(shortEdgeMin);
+    const longEdgeMinValue = parseFilterNumber(longEdgeMin);
 
     return stocks.filter((stock) => {
       if (query && !stock.ticker.toLowerCase().includes(query) && !stock.name.toLowerCase().includes(query)) {
@@ -1602,12 +1716,18 @@ export default function ScreenerClient({
       if (selectedCountries.length > 0 && !selectedCountries.includes(stock.country)) return false;
       if (profitableOnly && (stock.per === null || stock.per <= 0)) return false;
       if (actionFilter === "guru_held") {
-        if (!hasGuruHolders(stock)) return false;
+        const currentChange = holdingChangeFor(guruIndex, stock.ticker);
+        if (Object.keys(holdingChanges).length > 0
+          ? !currentChange || currentChange.held_count <= 0
+          : !hasGuruHolders(stock)) return false;
+      } else if (actionFilter === "guru_new") {
+        if (stock.guruNewCount === null || stock.guruNewCount === undefined || stock.guruNewCount <= 0) return false;
+      } else if (actionFilter === "guru_increased") {
+        if (stock.guruIncreasedCount === null || stock.guruIncreasedCount === undefined || stock.guruIncreasedCount <= 0) return false;
       } else if (actionFilter && stock.actionBucket !== actionFilter) {
         return false;
       }
-      if (fenokEdgeMinValue !== null && (stock.fenokEdgeScore === null || stock.fenokEdgeScore === undefined || stock.fenokEdgeScore < fenokEdgeMinValue)) return false;
-      if (convictionMinValue !== null && (stock.fenokConvictionScore === null || stock.fenokConvictionScore === undefined || stock.fenokConvictionScore < convictionMinValue)) return false;
+      if (!passesFenokEdgeFilters(stock, shortEdgeMinValue, longEdgeMinValue)) return false;
       if (connectionFilter && !stock.connection?.flags[connectionFilter]) return false;
       if (perMinValue !== null && (stock.per === null || stock.per < perMinValue)) return false;
       if (perMaxValue !== null && (stock.per === null || stock.per <= 0 || stock.per > perMaxValue)) return false;
@@ -1616,6 +1736,7 @@ export default function ScreenerClient({
       if (epsGrowthMinValue !== null && ((stock.epsGrowthFy1 ?? null) === null || (stock.epsGrowthFy1 as number) < epsGrowthMinValue)) return false;
       if (dividendYieldMinValue !== null && (stock.dividendYield === null || (stock.dividendYield * 100) < dividendYieldMinValue)) return false;
       if (dividendYieldMaxValue !== null && (stock.dividendYield === null || (stock.dividendYield * 100) > dividendYieldMaxValue)) return false;
+      if (durabilityMinValue !== null && (stock.durabilityProfitabilityScore === null || stock.durabilityProfitabilityScore === undefined || stock.durabilityProfitabilityScore < durabilityMinValue)) return false;
       if (roeFy1MinValue !== null && ((stock.roeFy1 ?? null) === null || (stock.roeFy1 as number) < roeFy1MinValue)) return false;
       if (ret3yMinValue !== null && (stock.ret3y === null || (stock.ret3y * 100) < ret3yMinValue)) return false;
       if (ret5yMinValue !== null && (stock.ret5y === null || (stock.ret5y * 100) < ret5yMinValue)) return false;
@@ -1638,7 +1759,7 @@ export default function ScreenerClient({
       }
       return true;
     });
-  }, [stocks, search, selectedSectors, selectedCountries, perMin, perMax, forwardPerMax, revenueGrowthMin, epsGrowthMin, dividendYieldMin, dividendYieldMax, roeFy1Min, ret3yMin, ret5yMin, marketCapMin, marketCapMax, pbrMin, pbrMax, pegMax, roeMin, opmMin, return12mMin, profitableOnly, bandFilter, actionFilter, fenokEdgeMin, convictionMin, connectionFilter]);
+  }, [stocks, search, selectedSectors, selectedCountries, perMin, perMax, forwardPerMax, revenueGrowthMin, epsGrowthMin, dividendYieldMin, dividendYieldMax, durabilityMin, roeFy1Min, ret3yMin, ret5yMin, marketCapMin, marketCapMax, pbrMin, pbrMax, pegMax, roeMin, opmMin, return12mMin, profitableOnly, bandFilter, actionFilter, shortEdgeMin, longEdgeMin, connectionFilter]);
 
   const sorted = useMemo(() => {
     const dir = sortDir === "asc" ? 1 : -1;
@@ -1652,16 +1773,105 @@ export default function ScreenerClient({
     });
   }, [filtered, sortKey, sortDir]);
 
-  const stateKey = `${search}|${selectedSectors.join(",")}|${selectedCountries.join(",")}|${perMin}|${perMax}|${forwardPerMax}|${revenueGrowthMin}|${epsGrowthMin}|${dividendYieldMin}|${dividendYieldMax}|${roeFy1Min}|${ret3yMin}|${ret5yMin}|${marketCapMin}|${marketCapMax}|${pbrMin}|${pbrMax}|${pegMax}|${roeMin}|${opmMin}|${return12mMin}|${profitableOnly}|${bandFilter}|${actionFilter}|${fenokEdgeMin}|${convictionMin}|${connectionFilter}|${sortKey}|${sortDir}|${preset}`;
+  const [cursor, setCursor] = useState(0);
+  const [scrollSignal, setScrollSignal] = useState<{ index: number; nonce: number } | null>(null);
+  useEffect(() => {
+    const snapshot = pendingJourneySnapshotRef.current;
+    if (journeyRestoredRef.current || snapshot === undefined || !dataReady || !guruSettled || !actionSettled) return;
+    const source = journeySourceRef.current;
+    if (snapshot === null || journeyUserInteractedRef.current) {
+      if (source) clearScreenerJourneySnapshot(source);
+      pendingJourneySnapshotRef.current = null;
+      journeyRestoredRef.current = true;
+      setJourneyHydrated(true);
+      return;
+    }
+    const available = new Set(stocks.map((stock) => stock.ticker));
+    const selected = snapshot?.selectedTickers.filter((ticker) => available.has(ticker)) ?? [];
+    setSelectedTickers(new Set(selected));
+    setCompareTickers(snapshot.compareTickers?.filter((ticker) => available.has(ticker)) ?? []);
+    const card = SCREENER_QUESTION_CARDS.find((candidate) => candidate.id === snapshot.discoverCard);
+    if (card) setActiveCardId(card.id);
+    if (sorted.length > 0 && !journeyUserInteractedRef.current) {
+      const index = Math.min(snapshot.visibleIndex, sorted.length - 1);
+      setCursor(index);
+      setPage(Math.floor(index / PAGE_SIZE));
+      setScrollSignal({ index, nonce: 1 });
+    }
+    if (snapshot.scrollY === undefined) {
+      if (source) clearScreenerJourneySnapshot(source);
+      pendingJourneySnapshotRef.current = null;
+      journeyRestoredRef.current = true;
+      setJourneyHydrated(true);
+      return;
+    }
+    // Detail panels can extend the page after the core rows are ready.
+    // Wait for enough layout height; user input always cancels automatic movement.
+    const target = snapshot.scrollY;
+    let frame: number | null = null;
+    let finished = false;
+    let observer: ResizeObserver | null = null;
+    let timeout: number | undefined;
+    const inputEvents = ["wheel", "touchstart", "pointerdown", "keydown"] as const;
+    const cleanup = () => {
+      finished = true;
+      if (frame !== null) window.cancelAnimationFrame(frame);
+      frame = null;
+      window.clearTimeout(timeout);
+      observer?.disconnect();
+      for (const event of inputEvents) window.removeEventListener(event, cancel);
+    };
+    const finish = () => {
+      if (finished) return;
+      finished = true;
+      cleanup();
+      if (source) clearScreenerJourneySnapshot(source);
+      pendingJourneySnapshotRef.current = null;
+      journeyRestoredRef.current = true;
+      if (!journeyUserInteractedRef.current) {
+        saveScreenerJourneySnapshot(source, { ...snapshot, selectedTickers: selected, scrollY: Math.round(window.scrollY) });
+      }
+      setJourneyHydrated(true);
+    };
+    const cancel = () => {
+      journeyUserInteractedRef.current = true;
+      finish();
+    };
+    const restore = (deadline = false) => {
+      if (finished) return;
+      if (frame !== null) window.cancelAnimationFrame(frame);
+      frame = null;
+      if (journeyUserInteractedRef.current) { finish(); return; }
+      const maxScroll = Math.max(0, document.documentElement.scrollHeight - window.innerHeight);
+      if (maxScroll < target && !deadline) return;
+      window.scrollTo({ top: Math.min(target, maxScroll), behavior: "instant" });
+      finish();
+    };
+    const schedule = () => {
+      if (!finished && frame === null) frame = window.requestAnimationFrame(() => restore());
+    };
+    observer = new ResizeObserver(schedule);
+    observer.observe(document.body);
+    timeout = window.setTimeout(() => restore(true), 2_000);
+    for (const event of inputEvents) window.addEventListener(event, cancel, { passive: true });
+    schedule();
+    return cleanup;
+  }, [dataReady, guruSettled, actionSettled, sorted.length, stocks]);
+  const stateKey = `${search}|${selectedSectors.join(",")}|${selectedCountries.join(",")}|${perMin}|${perMax}|${forwardPerMax}|${revenueGrowthMin}|${epsGrowthMin}|${dividendYieldMin}|${dividendYieldMax}|${durabilityMin}|${roeFy1Min}|${ret3yMin}|${ret5yMin}|${marketCapMin}|${marketCapMax}|${pbrMin}|${pbrMax}|${pegMax}|${roeMin}|${opmMin}|${return12mMin}|${profitableOnly}|${bandFilter}|${actionFilter}|${shortEdgeMin}|${longEdgeMin}|${connectionFilter}|${sortKey}|${sortDir}|${preset}`;
   const [prevStateKey, setPrevStateKey] = useState(stateKey);
   if (prevStateKey !== stateKey) {
     setPrevStateKey(stateKey);
     if (page !== 0) setPage(0);
+    if (cursor !== 0) setCursor(0);
+    setScrollSignal((prev) => ({ index: 0, nonce: (prev?.nonce ?? 0) + 1 }));
   }
 
   const pageCount = Math.max(1, Math.ceil(sorted.length / PAGE_SIZE));
   const safePage = Math.min(page, pageCount - 1);
   const pageRows = sorted.slice(safePage * PAGE_SIZE, safePage * PAGE_SIZE + PAGE_SIZE);
+  const expandedStock = expandedTicker
+    ? sorted.find((stock) => stock.ticker === expandedTicker) ?? null
+    : null;
   const singleStockEtfCompareHref = useMemo(() => buildSingleStockEtfCompareHref(sorted), [sorted]);
   const selectedRows = useMemo(
     () => sorted.filter((stock) => selectedTickers.has(stock.ticker)),
@@ -1718,12 +1928,31 @@ export default function ScreenerClient({
         reason: "required connection source date is missing",
       });
     }
+    const ageVerdict = freshnessVerdict(screenerSourceDate ?? sourceDate, "global_scouter");
+    if (ageVerdict.state === "stopped") {
+      return makeDataState({
+        status: "error",
+        label: freshnessMessage(ageVerdict) ?? "자료 오래됨",
+        detail: "마지막 수집 값 기준으로 표시합니다.",
+        asOf: screenerSourceDate ?? sourceDate,
+        reason: "source-age",
+      });
+    }
+    if (ageVerdict.state === "delayed") {
+      return makeDataState({
+        status: "stale",
+        label: freshnessMessage(ageVerdict) ?? "자료 지연",
+        detail: "마지막 수집 값 기준으로 표시합니다.",
+        asOf: screenerSourceDate ?? sourceDate,
+        reason: "source-age",
+      });
+    }
     return makeDataState({
       status: "ready",
       label: "종목 데이터 준비됨",
       detail: connectionIndexReady
-        ? `${stocks.length.toLocaleString("ko-KR")}개 종목과 연결 인덱스를 표시할 수 있습니다.`
-        : `${stocks.length.toLocaleString("ko-KR")}개 종목을 표시할 수 있습니다. 연결 인덱스는 준비 전입니다.`,
+        ? `${stocks.length.toLocaleString("ko-KR")}개 종목과 연결 인덱스를 표시합니다.`
+        : `${stocks.length.toLocaleString("ko-KR")}개 종목을 표시합니다. 연결 인덱스는 준비 전입니다.`,
       asOf: screenerSourceDate,
     });
   }, [connectionIndexReady, dataReady, failed, screenerSourceDate, sourceDate, stocks]);
@@ -1763,14 +1992,152 @@ export default function ScreenerClient({
     });
   }, [pageRows]);
 
-  const onToggleExpandedTicker = useCallback((ticker: string) => {
+  // One owner for the selected row: the sheet opens for the ticker the user
+  // pressed, and remembers which surface id that row advertises.
+  const toggleExpandedDetail = useCallback((ticker: string, detailId: string) => {
+    setExpandedDetailId(detailId);
     setExpandedTicker((prev) => (prev === ticker ? null : ticker));
   }, []);
 
+  const onToggleExpandedTicker = useCallback((ticker: string) => {
+    toggleExpandedDetail(ticker, `screener-detail-${ticker}`);
+  }, [toggleExpandedDetail]);
+
+  // Stable identity: the sheet re-focuses and re-locks on effect re-runs only
+  // when the selected row or the opening surface actually changes.
+  const closeExpandedDetail = useCallback(() => {
+    setExpandedTicker(null);
+    setExpandedDetailId(null);
+  }, []);
+
+  const router = useRouter();
+  const safeCursor = sorted.length > 0 ? Math.min(cursor, sorted.length - 1) : 0;
+  const saveJourneyBeforeNavigate = useCallback(() => {
+    saveScreenerJourneySnapshot(currentJourneyReturnTo(), {
+      selectedTickers: [...selectedTickers],
+      visibleIndex: safeCursor,
+      compareTickers,
+      discoverCard: activeCardId,
+      scrollY: Math.round(Math.max(0, Math.min(bodyScrollY(), MAX_JOURNEY_SCROLL_Y))),
+    });
+  }, [safeCursor, selectedTickers, compareTickers, activeCardId]);
+  useEffect(() => {
+    // Global search can navigate without a row's onBeforeNavigate callback.
+    // Persist scrolling as well as selection changes, after the restoration frame.
+    if (!journeyHydrated) return;
+    let frame: number | null = null;
+    const persist = () => {
+      if (currentJourneyReturnTo() === journeyReturnTo) saveJourneyBeforeNavigate();
+    };
+    const schedule = () => {
+      if (frame !== null) return;
+      frame = window.requestAnimationFrame(() => {
+        frame = null;
+        persist();
+      });
+    };
+    schedule();
+    window.addEventListener("scroll", schedule, { passive: true });
+    window.addEventListener("pagehide", persist);
+    return () => {
+      if (frame !== null) window.cancelAnimationFrame(frame);
+      window.removeEventListener("scroll", schedule);
+      window.removeEventListener("pagehide", persist);
+    };
+  }, [journeyHydrated, journeyReturnTo, saveJourneyBeforeNavigate]);
   const renderGuruHolderBadge = useCallback(
-    (stock: ScreenerStock) => <GuruHolderBadge stock={stock} compact />,
-    [],
+    (stock: ScreenerStock) => (
+      <GuruHolderBadge
+        stock={stock}
+        compact
+        returnTo={journeyReturnTo}
+        onBeforeNavigate={saveJourneyBeforeNavigate}
+      />
+    ),
+    [journeyReturnTo, saveJourneyBeforeNavigate],
   );
+  const renderJourneyCell = useCallback(
+    (stock: ScreenerStock, key: ScreenerSortKey, preset?: ColumnPreset) =>
+      renderCell(stock, key, preset, "desktop", journeyReturnTo, saveJourneyBeforeNavigate),
+    [journeyReturnTo, saveJourneyBeforeNavigate],
+  );
+  const mobileListRef = useRef<HTMLDivElement | null>(null);
+  const mobileVirtualizer = useVirtualizer({
+    count: sorted.length,
+    getScrollElement: () => mobileListRef.current,
+    estimateSize: () => 260,
+    overscan: MOBILE_LIST_OVERSCAN,
+  });
+  const [showMobileSkeleton, setShowMobileSkeleton] = useState(false);
+  useEffect(() => {
+    if (dataReady) { setShowMobileSkeleton(false); return undefined; }
+    const timer = window.setTimeout(() => setShowMobileSkeleton(true), 120);
+    return () => window.clearTimeout(timer);
+  }, [dataReady]);
+
+  const handleVisibleStartIndex = useCallback((index: number) => {
+    const nextPage = Math.max(0, Math.floor(index / PAGE_SIZE));
+    setPage((prev) => (prev === nextPage ? prev : nextPage));
+    setCursor((prev) => {
+      if (sorted.length === 0) return 0;
+      const next = Math.max(0, Math.min(index, sorted.length - 1));
+      return prev === next ? prev : next;
+    });
+  }, [sorted.length]);
+
+  useEffect(() => {
+    if (!scrollSignal || sorted.length === 0) return;
+    const node = mobileListRef.current;
+    if (!node || node.clientHeight === 0) return;
+    mobileVirtualizer.scrollToIndex(Math.min(scrollSignal.index, sorted.length - 1), { align: "start" });
+  }, [mobileVirtualizer, scrollSignal, sorted.length]);
+
+  useEffect(() => {
+    const node = mobileListRef.current;
+    if (!node) return undefined;
+    const report = () => {
+      if (node.clientHeight === 0) return;
+      const items = mobileVirtualizer.getVirtualItems();
+      const firstFullyVisible = items.find((item) => item.start >= node.scrollTop)?.index
+        ?? (items.length > 0 ? items[items.length - 1].index : 0);
+      handleVisibleStartIndex(Math.max(0, Math.min(firstFullyVisible, sorted.length - 1)));
+    };
+    report();
+    node.addEventListener("scroll", report, { passive: true });
+    return () => node.removeEventListener("scroll", report);
+  }, [mobileVirtualizer, handleVisibleStartIndex, sorted.length]);
+
+  function goToPage(next: number) {
+    const clamped = Math.max(0, Math.min(pageCount - 1, next));
+    setPage(clamped);
+    setScrollSignal((prev) => ({ index: clamped * PAGE_SIZE, nonce: (prev?.nonce ?? 0) + 1 }));
+  }
+
+  function handleResultsKeyDown(event: React.KeyboardEvent<HTMLElement>) {
+    const target = event.target as HTMLElement | null;
+    if (typeof document !== "undefined" && document.documentElement.dataset.cpOpen === "1") return;
+    if (target && (target.tagName === "INPUT" || target.tagName === "TEXTAREA" || target.tagName === "SELECT" || target.isContentEditable)) return;
+    if (sorted.length === 0) return;
+    if (target && typeof target.closest === "function" && target.closest('summary, details, button, a, select, input, textarea, [contenteditable], [role="button"], [role="link"], [role="tab"], [role="menuitem"], [data-screener-pagination], [data-screener-view-mode-control], [data-screener-view-mode-option], [data-screener-density-control], [data-screener-density-option], [data-screener-preset], [data-screener-page], [data-screener-expand]')) return;
+    if (event.key === "j" || event.key === "k") {
+      event.preventDefault();
+      const next = event.key === "j" ? Math.min(sorted.length - 1, safeCursor + 1) : Math.max(0, safeCursor - 1);
+      setCursor(next);
+      setScrollSignal((prev) => ({ index: next, nonce: (prev?.nonce ?? 0) + 1 }));
+      mobileVirtualizer.scrollToIndex(next, { align: "auto" });
+    } else if (event.key === "w") {
+      event.preventDefault();
+      const stock = sorted[safeCursor];
+      if (stock) toggleSelectedTicker(stock.ticker);
+    } else if (event.key === "Enter") {
+      event.preventDefault();
+      const stock = sorted[safeCursor];
+      if (stock) {
+        saveJourneyBeforeNavigate();
+        router.push(ROUTES.stock(stock.ticker, journeyReturnTo));
+      }
+    }
+  }
 
   function selectFilteredRows() {
     setSelectedTickers(new Set(sorted.map((stock) => stock.ticker)));
@@ -1791,6 +2158,7 @@ export default function ScreenerClient({
     setEpsGrowthMin("");
     setDividendYieldMin("");
     setDividendYieldMax("");
+    setDurabilityMin("");
     setRoeFy1Min("");
     setRet3yMin("");
     setRet5yMin("");
@@ -1805,8 +2173,8 @@ export default function ScreenerClient({
     setProfitableOnly(false);
     setBandFilter("");
     setActionFilter("");
-    setFenokEdgeMin("");
-    setConvictionMin("");
+    setShortEdgeMin("");
+    setLongEdgeMin("");
     setConnectionFilter("");
     setSortKey("marketCap");
     setSortDir("desc");
@@ -1824,6 +2192,7 @@ export default function ScreenerClient({
       epsGrowthMin,
       dividendYieldMin,
       dividendYieldMax,
+      durabilityMin,
       roeFy1Min,
       ret3yMin,
       ret5yMin,
@@ -1838,8 +2207,8 @@ export default function ScreenerClient({
       profitableOnly,
       bandFilter,
       actionFilter,
-      fenokEdgeMin,
-      convictionMin,
+      fenokEdgeMin: shortEdgeMin,
+      convictionMin: longEdgeMin,
       connectionFilter,
       sortKey,
       sortDir,
@@ -1856,8 +2225,9 @@ export default function ScreenerClient({
     setForwardPerMax(next.forwardPerMax);
     setRevenueGrowthMin(next.revenueGrowthMin);
     setEpsGrowthMin(next.epsGrowthMin);
-    setDividendYieldMin(next.dividendYieldMin);
-    setDividendYieldMax(next.dividendYieldMax);
+    setDividendYieldMin(next.dividendYieldMin ?? "");
+    setDividendYieldMax(next.dividendYieldMax ?? "");
+    setDurabilityMin(next.durabilityMin ?? "");
     setRoeFy1Min(next.roeFy1Min);
     setRet3yMin(next.ret3yMin);
     setRet5yMin(next.ret5yMin);
@@ -1872,18 +2242,17 @@ export default function ScreenerClient({
     setProfitableOnly(next.profitableOnly);
     setBandFilter(next.bandFilter);
     setActionFilter(next.actionFilter);
-    setFenokEdgeMin(coerceFenokEdgeFilter(next.fenokEdgeMin));
-    setConvictionMin(coerceConvictionFilter(next.convictionMin));
+    setShortEdgeMin(coerceFenokEdgeFilter(next.fenokEdgeMin));
+    setLongEdgeMin(coerceConvictionFilter(next.convictionMin));
     setConnectionFilter(next.connectionFilter);
     setSortKey(next.sortKey);
     setSortDir(next.sortDir);
     setPreset(next.preset);
-    if (typeof window !== "undefined") {
-      localStorage.setItem("screener-preset", next.preset);
-    }
+    writeScreenerView({ columnPreset: next.preset });
   }
 
   const [savedPresets, setSavedPresets] = useState<{ name: string; state: ScreenerFilterState }[]>([]);
+  const [presetsHydrated, setPresetsHydrated] = useState(false);
   const [presetMenuOpen, setPresetMenuOpen] = useState(false);
   const [presetName, setPresetName] = useState("");
 
@@ -1891,15 +2260,13 @@ export default function ScreenerClient({
     if (typeof window === "undefined") return;
     let frame: number | null = null;
     try {
-      const raw = localStorage.getItem("screener-filter-presets");
-      if (!raw) return;
-      const parsed = JSON.parse(raw) as unknown;
-      if (Array.isArray(parsed)) {
-        const presets = parsed.filter((p): p is { name: string; state: ScreenerFilterState } => typeof p === "object" && p !== null && typeof (p as { name?: unknown }).name === "string" && typeof (p as { state?: unknown }).state === "object");
-        frame = window.requestAnimationFrame(() => setSavedPresets(presets));
-      }
+      const presets = readScreenerUniverses();
+      frame = window.requestAnimationFrame(() => {
+        setSavedPresets(presets);
+        setPresetsHydrated(true);
+      });
     } catch {
-      // ignore malformed localStorage
+      // ignore malformed storage (module also fails closed)
     }
     return () => {
       if (frame !== null) window.cancelAnimationFrame(frame);
@@ -1907,9 +2274,9 @@ export default function ScreenerClient({
   }, []);
 
   useEffect(() => {
-    if (typeof window === "undefined") return;
-    localStorage.setItem("screener-filter-presets", JSON.stringify(savedPresets));
-  }, [savedPresets]);
+    if (!presetsHydrated) return;
+    writeScreenerUniverses(savedPresets);
+  }, [presetsHydrated, savedPresets]);
 
   function handleSavePreset() {
     const name = presetName.trim();
@@ -1930,11 +2297,13 @@ export default function ScreenerClient({
     setSavedPresets((prev) => prev.filter((p) => p.name !== name));
   }
 
-  const hasFilters = Boolean(search || selectedSectors.length || selectedCountries.length || perMin || perMax || forwardPerMax || revenueGrowthMin || epsGrowthMin || dividendYieldMin || dividendYieldMax || roeFy1Min || ret3yMin || ret5yMin || marketCapMin || marketCapMax || pbrMin || pbrMax || pegMax || roeMin || opmMin || return12mMin || profitableOnly || bandFilter || actionFilter || fenokEdgeMin || convictionMin || connectionFilter);
+  const hasFilters = Boolean(search || selectedSectors.length || selectedCountries.length || perMin || perMax || forwardPerMax || revenueGrowthMin || epsGrowthMin || dividendYieldMin || dividendYieldMax || durabilityMin || roeFy1Min || ret3yMin || ret5yMin || marketCapMin || marketCapMax || pbrMin || pbrMax || pegMax || roeMin || opmMin || return12mMin || profitableOnly || bandFilter || actionFilter || shortEdgeMin || longEdgeMin || connectionFilter);
 
   const ACTION_FILTER_LABEL: Record<ActionFilter, string> = {
     "": "",
     guru_held: "기관·고수 보유",
+    guru_new: "기관·고수 신규",
+    guru_increased: "기관·고수 비중확대",
     smart_money: "기관/고수 주목",
     value_momentum: "저평가+모멘텀",
     index_core: "지수 핵심",
@@ -1992,6 +2361,7 @@ export default function ScreenerClient({
     { active: Boolean(pegMax), label: `PEG ≤ ${pegMax}`, clear: () => setPegMax("") },
     { active: Boolean(roeMin), label: `ROE ≥ ${roeMin}%`, clear: () => setRoeMin("") },
     { active: Boolean(opmMin), label: `OPM ≥ ${opmMin}%`, clear: () => setOpmMin("") },
+    { active: Boolean(durabilityMin), label: `내구 수익성 ≥${durabilityMin}`, clear: () => setDurabilityMin("") },
     { active: Boolean(return12mMin), label: `12M 수익률 ≥ ${return12mMin}%`, clear: () => setReturn12mMin("") },
     ...(dividendYieldMin || dividendYieldMax
       ? [
@@ -2006,22 +2376,22 @@ export default function ScreenerClient({
         ]
       : []),
     { active: Boolean(roeFy1Min), label: `${FISCAL_PERIOD_LABELS[0]} ROE ≥ ${roeFy1Min}%`, clear: () => setRoeFy1Min("") },
-    { active: Boolean(ret3yMin), label: `3Y 수익률 ≥ ${ret3yMin}%`, clear: () => setRet3yMin("") },
-    { active: Boolean(ret5yMin), label: `5Y 수익률 ≥ ${ret5yMin}%`, clear: () => setRet5yMin("") },
+    { active: Boolean(ret3yMin), label: `2023–2025 누적 ≥ ${ret3yMin}%`, clear: () => setRet3yMin("") },
+    { active: Boolean(ret5yMin), label: `2021–2025 누적 ≥ ${ret5yMin}%`, clear: () => setRet5yMin("") },
     { active: Boolean(revenueGrowthMin), label: `매출+1 ≥ ${revenueGrowthMin}%`, clear: () => setRevenueGrowthMin("") },
     { active: Boolean(epsGrowthMin), label: `EPS+1 ≥ ${epsGrowthMin}%`, clear: () => setEpsGrowthMin("") },
     { active: profitableOnly, label: "흑자만", clear: () => setProfitableOnly(false) },
     ...(bandFilter
-      ? [{ active: true, label: `밴드: ${bandFilter === "cheap" ? "저평가" : bandFilter === "fair" ? "적정" : "고평가"}`, clear: () => setBandFilter("") }]
+      ? [{ active: true, label: `밴드: ${bandFilter === "cheap" ? "하단" : bandFilter === "fair" ? "중간" : "상단"}`, clear: () => setBandFilter("") }]
       : []),
     ...(actionFilter
       ? [{ active: true, label: `신호: ${ACTION_FILTER_LABEL[actionFilter]}`, clear: () => setActionFilter("") }]
       : []),
-    ...(fenokEdgeMin
-      ? [{ active: true, label: `Fenok Edge ≥ ${fenokEdgeMin}`, clear: () => setFenokEdgeMin("") }]
+    ...(shortEdgeMin
+      ? [{ active: true, label: `Short Edge ≥ ${shortEdgeMin}`, clear: () => setShortEdgeMin("") }]
       : []),
-    ...(convictionMin
-      ? [{ active: true, label: `Fenok 컨빅션 ≥ ${convictionMin}`, clear: () => setConvictionMin("") }]
+    ...(longEdgeMin
+      ? [{ active: true, label: `Long Edge ≥ ${longEdgeMin}`, clear: () => setLongEdgeMin("") }]
       : []),
     ...(connectionFilter
       ? [{ active: true, label: `연결: ${CONNECTION_FILTER_LABEL[connectionFilter]}`, clear: () => setConnectionFilter("" as ConnectionFilter) }]
@@ -2040,486 +2410,14 @@ export default function ScreenerClient({
   const valueCount = Number(Boolean(perMin)) + Number(Boolean(perMax)) + Number(Boolean(forwardPerMax)) + Number(Boolean(pbrMin)) + Number(Boolean(pbrMax)) + Number(Boolean(pegMax)) + Number(Boolean(bandFilter)) + Number(profitableOnly);
   const growthCount =
     Number(Boolean(revenueGrowthMin)) + Number(Boolean(epsGrowthMin)) + Number(Boolean(dividendYieldMin)) + Number(Boolean(dividendYieldMax)) + Number(Boolean(return12mMin)) + Number(Boolean(ret3yMin)) + Number(Boolean(ret5yMin));
-  const qualityCount = Number(Boolean(roeMin)) + Number(Boolean(roeFy1Min)) + Number(Boolean(opmMin)) + Number(Boolean(actionFilter)) + Number(Boolean(fenokEdgeMin)) + Number(Boolean(convictionMin)) + Number(Boolean(connectionFilter));
+  const qualityCount = Number(Boolean(roeMin)) + Number(Boolean(roeFy1Min)) + Number(Boolean(opmMin)) + Number(Boolean(durabilityMin)) + Number(Boolean(actionFilter)) + Number(Boolean(shortEdgeMin)) + Number(Boolean(longEdgeMin)) + Number(Boolean(connectionFilter));
   const activeFilterCount = scaleCount + valueCount + growthCount + qualityCount;
-  const pricedCount = sorted.filter((stock) => stock.price !== null).length;
-  const missingPriceCount = Math.max(0, sorted.length - pricedCount);
-  const priceCoverageRatio = sorted.length > 0 ? Math.round((pricedCount / sorted.length) * 100) : 0;
-  const heroStats = useMemo(() => {
-    const withReturn = sorted.filter((stock) => typeof stock.return12m === "number");
-    const upCount = withReturn.filter((stock) => (stock.return12m as number) > 0).length;
-    const upRatio = withReturn.length > 0 ? Math.round((upCount / withReturn.length) * 100) : 0;
-    const edgeCount = sorted.filter((stock) => typeof stock.fenokEdgeScore === "number" && stock.fenokEdgeScore >= 70).length;
-    const edgeRatio = sorted.length > 0 ? Math.round((edgeCount / sorted.length) * 100) : 0;
-    const actionBucketCounts = sorted.reduce<Record<string, number>>((counts, stock) => {
-      const dominantActionBucket = stock.actionBucket?.trim() || "none";
-      counts[dominantActionBucket] = (counts[dominantActionBucket] ?? 0) + 1;
-      return counts;
-    }, {});
-    const actionBucketEntries = Object.entries(actionBucketCounts).sort(([bucketA, countA], [bucketB, countB]) => {
-      if (countA !== countB) return countB - countA;
-      return bucketA.localeCompare(bucketB);
-    });
-    const [dominantActionBucket = "none", dominantActionCount = 0] = actionBucketEntries[0] ?? [];
-    const dominantActionRatio = sorted.length > 0 ? Math.round((dominantActionCount / sorted.length) * 100) : 0;
-    const dominantActionLabel = actionBucketDistributionLabel(dominantActionBucket);
-    const actionBucketSummary = actionBucketEntries
-      .slice(0, 3)
-      .map(([bucket, count]) => `${actionBucketDistributionLabel(bucket)} ${count.toLocaleString("ko-KR")}개`)
-      .join(" · ");
-    return {
-      upRatio,
-      returnCount: withReturn.length,
-      edgeCount,
-      edgeRatio,
-      hasReturns: withReturn.length > 0,
-      actionBucketCounts,
-      dominantActionBucket,
-      dominantActionLabel,
-      dominantActionCount,
-      dominantActionRatio,
-      actionBucketSummary,
-    };
-  }, [sorted]);
-  const filterPreviewLabel = activeFilterChips.length > 0
-    ? activeFilterChips.slice(0, 5).map((chip) => chip.label).join(" · ")
-    : "종목 범위 · 가치 조건 · 성장·수익 · 품질·신호";
-  const sourceDateLabel = formatScreenerSourceDateLabel(sourceDate, marketFactsDate, {
-    pending: !dataReady && !connectionIndexReady,
-  });
-  const densityClass = DENSITY_TABLE_CLASS[density];
 
-  useEffect(() => {
-    if (typeof window === "undefined") return;
-    const frame = window.requestAnimationFrame(() => {
-      if (window.innerWidth >= 768) setScaleOpen(true);
-      if (!canvasPlusPreview) return;
-      if (scaleCount > 0) setScaleOpen(true);
-      if (valueCount > 0) setValueOpen(true);
-      if (growthCount > 0) setGrowthOpen(true);
-      if (qualityCount > 0) setQualityOpen(true);
-    });
-    return () => window.cancelAnimationFrame(frame);
-  }, [canvasPlusPreview, scaleCount, valueCount, growthCount, qualityCount]);
-
-  const signalPresets: { key: string; label: string; active: boolean; onToggle: () => void }[] = [
-    {
-      key: "cheap",
-      label: "저평가",
-      active: bandFilter === "cheap",
-      onToggle: () => setBandFilter((v) => (v === "cheap" ? "" : "cheap")),
-    },
-    {
-      key: "momentum",
-      label: "모멘텀 상승",
-      active: actionFilter === "momentum",
-      onToggle: () => setActionFilter((v) => (v === "momentum" ? "" : "momentum")),
-    },
-    {
-      key: "smart_money",
-      label: "고수 관심",
-      active: actionFilter === "smart_money",
-      onToggle: () => setActionFilter((v) => (v === "smart_money" ? "" : "smart_money")),
-    },
-    {
-      key: "income",
-      label: "배당 점검",
-      active: actionFilter === "income",
-      onToggle: () => setActionFilter((v) => (v === "income" ? "" : "income")),
-    },
-    {
-      key: "edge70",
-      label: "Fenok Edge 70+",
-      active: fenokEdgeMin === "70",
-      onToggle: () => setFenokEdgeMin((v) => (v === "70" ? "" : "70")),
-    },
-  ];
-
-  return (
-    <div
-      className="canvas-plus cp-screener-service"
-      data-canvas-plus-screener-service="true"
-    >
-      {canvasPlusPreview ? (
-        <section className="cpw4-hero" data-density="compact">
-          <div className="cpw4-hero__top">
-            <div className="cpw4-hero__copy">
-              <p className="cpw4-kicker">SCREENER</p>
-              <h1>종목 스크리너</h1>
-            </div>
-            <div className="cpw4-freshness" aria-label={`데이터 원천 ${sourceDateLabel}`}>
-              <span className="cpw4-freshness__dot" aria-hidden="true" />
-              {sourceDateLabel}
-            </div>
-          </div>
-
-          <div className="cpw4-nav-row">
-            <div className="cpw4-universe-tabs" role="tablist" aria-label="스크리너 범위">
-              <button type="button" className="cpw4-universe-tab" role="tab" aria-selected={true}>
-                <span>주식</span>
-                <strong>{stocks.length.toLocaleString("ko-KR")}</strong>
-              </button>
-              <TransitionLink href={ROUTES.etfs} className="cpw4-universe-tab" role="tab" aria-selected={false}>
-                ETF
-              </TransitionLink>
-              <div className="cpw4-preset-wrap">
-                <button
-                  type="button"
-                  className="cpw4-universe-tab"
-                  role="tab"
-                  aria-selected={false}
-                  aria-expanded={presetMenuOpen}
-                  aria-haspopup="menu"
-                  onClick={() => setPresetMenuOpen((v) => !v)}
-                >
-                  내 프리셋
-                </button>
-                {presetMenuOpen && (
-                  <div className="cp-screener-preset-menu cpw4-saved-preset-menu">
-                    <div className="cp-screener-preset-row">
-                      <input
-                        type="text"
-                        value={presetName}
-                        onChange={(event) => setPresetName(event.target.value)}
-                        onKeyDown={(event) => {
-                          if (event.key === "Enter") handleSavePreset();
-                        }}
-                        placeholder="프리셋 이름"
-                        className="cp-screener-preset-input"
-                      />
-                      <button
-                        type="button"
-                        onClick={handleSavePreset}
-                        disabled={!presetName.trim()}
-                        className="cp-button cp-screener-preset-save"
-                        data-variant="primary"
-                        data-density="compact"
-                      >
-                        저장
-                      </button>
-                    </div>
-                    {savedPresets.length > 0 ? (
-                      <div className="cp-screener-preset-list">
-                        {savedPresets.map((p) => (
-                          <div key={p.name} className="cp-screener-preset-item">
-                            <button
-                              type="button"
-                              onClick={() => handleLoadPreset(p.state)}
-                              className="cp-screener-preset-load"
-                              title={p.name}
-                            >
-                              {p.name}
-                            </button>
-                            <button
-                              type="button"
-                              onClick={() => handleDeletePreset(p.name)}
-                              className="cp-screener-preset-delete"
-                              aria-label={`${p.name} 삭제`}
-                            >
-                              ×
-                            </button>
-                          </div>
-                        ))}
-                      </div>
-                    ) : (
-                      <p className="cpw4-saved-preset-empty">저장된 프리셋이 없습니다.</p>
-                    )}
-                  </div>
-                )}
-              </div>
-            </div>
-
-            <form className="cpw4-search" onSubmit={(event) => event.preventDefault()}>
-              <label className="sr-only" htmlFor="cp-screener-search-input">
-                티커 또는 종목명 검색
-              </label>
-              <span className="cpw4-search__icon" aria-hidden="true" />
-              <input
-                id="cp-screener-search-input"
-                type="search"
-                value={search}
-                onChange={(event) => setSearch(event.target.value)}
-                placeholder="NVDA"
-                className="cpw4-search__input"
-                data-canvas-plus-screener-search="true"
-              />
-              {search.trim() ? (
-                <button type="button" className="cpw4-search__clear" onClick={() => setSearch("")}>
-                  초기화
-                </button>
-              ) : (
-                <span className="cpw4-search__hint">/</span>
-              )}
-            </form>
-          </div>
-        </section>
-      ) : (
-        <section className="panel data-shell-header">
-          <div className="data-shell-head-main">
-            <p className="data-shell-kicker">종목 스크리너</p>
-            <h1 className="data-shell-title">종목 스크리너</h1>
-            <p className="data-shell-desc">
-              글로벌 {stocks.length.toLocaleString()}개 종목을 PER·PBR·배당·수익률로 필터링하고 비교합니다.
-            </p>
-          </div>
-          <div className="data-shell-head-actions">
-            <DataStateBadge state={screenerDataState} />
-            <button
-              type="button"
-              onClick={() => downloadConnectionCsv(sorted)}
-              disabled={!connectionIndexReady || sorted.length === 0}
-              className="data-shell-link disabled:cursor-not-allowed disabled:border-slate-200 disabled:bg-slate-50 disabled:text-slate-600"
-            >
-              필터 CSV
-            </button>
-            {singleStockEtfCompareHref ? (
-              <TransitionLink href={singleStockEtfCompareHref} className="data-shell-link">
-                필터 ETF 비교
-              </TransitionLink>
-            ) : null}
-            <TransitionLink href={ROUTES.sectors} className="data-shell-link">
-              섹터
-            </TransitionLink>
-            <MarketQuickLinks />
-            <div className="relative">
-              <button
-                type="button"
-                onClick={() => setPresetMenuOpen((v) => !v)}
-                className="data-shell-link"
-                aria-expanded={presetMenuOpen}
-                aria-haspopup="menu"
-              >
-                필터 저장
-              </button>
-              {presetMenuOpen && (
-                <div className="absolute right-0 top-full z-50 mt-2 w-64 rounded-xl border border-slate-200 bg-white p-3 shadow-lg">
-                  <div className="flex gap-2">
-                    <input
-                      type="text"
-                      value={presetName}
-                      onChange={(event) => setPresetName(event.target.value)}
-                      onKeyDown={(event) => {
-                        if (event.key === "Enter") handleSavePreset();
-                      }}
-                      placeholder="프리셋 이름"
-                      className="min-h-9 flex-1 rounded-lg border border-slate-200 bg-white px-2 text-sm font-semibold text-slate-900 outline-none transition focus:border-brand-interactive"
-                    />
-                    <button
-                      type="button"
-                      onClick={handleSavePreset}
-                      disabled={!presetName.trim()}
-                      className="rounded-lg border border-brand-interactive bg-brand-interactive px-2 text-xs font-black text-white transition hover:opacity-90 disabled:cursor-not-allowed disabled:border-slate-200 disabled:bg-slate-200 disabled:text-slate-600"
-                    >
-                      저장
-                    </button>
-                  </div>
-                  {savedPresets.length > 0 && (
-                    <div className="mt-2 space-y-1">
-                      {savedPresets.map((p) => (
-                        <div key={p.name} className="flex items-center justify-between gap-2">
-                          <button
-                            type="button"
-                            onClick={() => handleLoadPreset(p.state)}
-                            className="min-h-8 flex-1 truncate rounded-lg px-2 text-left text-sm font-semibold text-slate-900 transition hover:bg-slate-100"
-                            title={p.name}
-                          >
-                            {p.name}
-                          </button>
-                          <button
-                            type="button"
-                            onClick={() => handleDeletePreset(p.name)}
-                            className="flex h-8 w-8 items-center justify-center rounded-lg text-sm font-bold text-slate-500 transition hover:bg-slate-100 hover:text-red-600"
-                            aria-label={`${p.name} 삭제`}
-                          >
-                            ×
-                          </button>
-                        </div>
-                      ))}
-                    </div>
-                  )}
-                </div>
-              )}
-            </div>
-          </div>
-        </section>
-      )}
-
-      {canvasPlusPreview ? (
-        <section className="cpw5-verdict" data-canvas-plus-screener-verdict="true">
-          <p className="cpw5-verdict__sentence">
-            현재 <strong>{sorted.length.toLocaleString("ko-KR")}</strong>개 중 가격 확인{" "}
-            <strong>{pricedCount.toLocaleString("ko-KR")}</strong>개
-            <span className="cpw5-verdict__muted">({priceCoverageRatio}%)</span>
-            {heroStats.hasReturns ? (
-              <>
-                {" "}— 이 중{" "}
-                <strong className={heroStats.upRatio >= 50 ? "text-[var(--c-up)]" : "text-[var(--c-down)]"}>
-                  {heroStats.upRatio}%
-                </strong>
-                가 12개월 상승,
-              </>
-            ) : null}{" "}
-            신호 분포는 <strong>{heroStats.dominantActionLabel}</strong>{" "}
-            <strong>{heroStats.dominantActionCount.toLocaleString("ko-KR")}</strong>개
-            <span className="cpw5-verdict__muted">({heroStats.dominantActionRatio}%)</span>가 가장 많고,
-            Fenok Edge 70+ 종목은 <strong className="text-[var(--c-warn)]">{heroStats.edgeCount.toLocaleString("ko-KR")}</strong>개입니다.
-          </p>
-          <div className="cpw5-tile-row">
-            <div className="cpw5-tile">
-              <span className="cpw5-tile__label">12개월 상승 비중</span>
-              <strong className="cpw5-tile__value">{heroStats.upRatio}%</strong>
-              <span className="cpw5-tile__sub">{heroStats.returnCount.toLocaleString("ko-KR")}개 수익률 기준</span>
-            </div>
-            <div className="cpw5-tile">
-              <span className="cpw5-tile__label">신호 분포 1위</span>
-              <strong className="cpw5-tile__value">{heroStats.dominantActionLabel}</strong>
-              <span className="cpw5-tile__sub">
-                {heroStats.dominantActionCount.toLocaleString("ko-KR")}개 · {heroStats.dominantActionRatio}%
-              </span>
-            </div>
-            <div className="cpw5-tile">
-              <span className="cpw5-tile__label">Fenok Edge 70+</span>
-              <strong className="cpw5-tile__value">{heroStats.edgeCount.toLocaleString("ko-KR")}</strong>
-              <span className="cpw5-tile__sub">
-                전체 중 {heroStats.edgeRatio}% · 가격 미확인 {missingPriceCount.toLocaleString("ko-KR")}개
-              </span>
-            </div>
-          </div>
-          <div className="cpw5-preset-row" role="group" aria-label="원클릭 신호 프리셋">
-            {signalPresets.map((preset) => (
-              <button
-                key={preset.key}
-                type="button"
-                className="cpw5-preset-chip"
-                data-active={preset.active ? "true" : "false"}
-                aria-pressed={preset.active}
-                onClick={preset.onToggle}
-              >
-                {preset.label}
-              </button>
-            ))}
-          </div>
-        </section>
-      ) : null}
-
-      {screenerDataState.status !== "ready" && !(canvasPlusPreview && screenerDataState.status === "partial") ? (
-        canvasPlusPreview ? (
-          <section className="cp-card cp-screener-data-state-card" data-canvas-plus-screener-data-state="true">
-            <DataStateNotice state={screenerDataState} />
-          </section>
-        ) : (
-          <DataStateNotice state={screenerDataState} />
-        )
-      ) : null}
-
-      {initialMacroContextId ? (
-        <MacroContextCard contextId={initialMacroContextId} surface="screener" />
-      ) : null}
-
-      <section
-        className={canvasPlusPreview
-          ? cx("cp-card cp-screener-selection-card cpw4-selection-card", selectedTickers.size === 0 && "cpw4-selection-card--empty")
-          : "rounded-[1.25rem] border border-slate-200 bg-white p-3 shadow-sm"}
-        data-canvas-plus-screener-selection-actions={canvasPlusPreview ? "true" : undefined}
-      >
-        <div className={canvasPlusPreview ? "cp-screener-selection-layout" : "flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between"}>
-          <div className={canvasPlusPreview ? "cp-screener-selection-copy" : "min-w-0"}>
-            <p className={canvasPlusPreview ? "cp-screener-section-label" : "text-[11px] font-black uppercase tracking-[0.1em] text-slate-500"}>선택 작업</p>
-            <p className={canvasPlusPreview ? "cp-screener-selection-summary" : "mt-1 text-sm font-bold text-slate-700"}>
-              현재 필터에서 {selectedRows.length.toLocaleString("ko-KR")}개 선택
-              {selectedRows.length > 0 ? ` · 연결 ETF ${selectedSingleStockEtfCount.toLocaleString("ko-KR")}개` : ""}
-            </p>
-          </div>
-          <div className={canvasPlusPreview ? "cp-screener-selection-actions" : "flex flex-wrap gap-2"}>
-            <button
-              type="button"
-              onClick={allPageSelected ? deselectPageRows : selectPageRows}
-              disabled={pageRows.length === 0}
-              className={canvasPlusPreview ? "cp-button cp-screener-action-button" : "min-h-9 rounded-md border border-[var(--c-line)] bg-[var(--c-surface-2)] px-3 text-xs font-black text-[var(--c-ink-2)] transition hover:border-[var(--brand-interactive)] hover:text-[var(--brand-interactive)] disabled:cursor-not-allowed disabled:bg-[var(--c-surface-2)] disabled:text-[var(--c-ink-2)]"}
-              data-variant={canvasPlusPreview ? "ghost" : undefined}
-              data-density={canvasPlusPreview ? "compact" : undefined}
-            >
-              {allPageSelected ? "페이지 해제" : "페이지 선택"}
-            </button>
-            <button
-              type="button"
-              onClick={selectFilteredRows}
-              disabled={sorted.length === 0}
-              className={canvasPlusPreview ? "cp-button cp-screener-action-button" : "min-h-9 rounded-md border border-[var(--c-line)] bg-[var(--c-surface-2)] px-3 text-xs font-black text-[var(--c-ink-2)] transition hover:border-[var(--brand-interactive)] hover:text-[var(--brand-interactive)] disabled:cursor-not-allowed disabled:bg-[var(--c-surface-2)] disabled:text-[var(--c-ink-2)]"}
-              data-variant={canvasPlusPreview ? "ghost" : undefined}
-              data-density={canvasPlusPreview ? "compact" : undefined}
-            >
-              필터 전체 선택
-            </button>
-            <button
-              type="button"
-              onClick={clearSelectedRows}
-              disabled={selectedTickers.size === 0}
-              className={canvasPlusPreview ? "cp-button cp-screener-action-button" : "min-h-9 rounded-md border border-[var(--c-line)] bg-[var(--c-panel)] px-3 text-xs font-black text-[var(--c-ink-2)] transition hover:border-[var(--brand-interactive)] hover:text-[var(--brand-interactive)] disabled:cursor-not-allowed disabled:bg-[var(--c-surface-2)] disabled:text-[var(--c-ink-2)]"}
-              data-variant={canvasPlusPreview ? "ghost" : undefined}
-              data-density={canvasPlusPreview ? "compact" : undefined}
-            >
-              선택 해제
-            </button>
-            <button
-              type="button"
-              onClick={() => downloadConnectionCsv(selectedRows)}
-              disabled={!connectionIndexReady || selectedRows.length === 0}
-              className={canvasPlusPreview ? "cp-button cp-screener-action-button" : "min-h-9 rounded-md bg-[var(--c-ink)] px-3 text-xs font-black text-[var(--c-panel)] transition hover:bg-[var(--brand-interactive)] disabled:cursor-not-allowed disabled:bg-[var(--c-surface-2)] disabled:text-[var(--c-ink-2)]"}
-              data-variant={canvasPlusPreview ? "primary" : undefined}
-              data-density={canvasPlusPreview ? "compact" : undefined}
-            >
-              선택 CSV
-            </button>
-            {selectedSingleStockEtfCompareHref ? (
-              <TransitionLink
-                href={selectedSingleStockEtfCompareHref}
-                className={canvasPlusPreview ? "cp-button cp-screener-action-button" : "inline-flex min-h-9 items-center rounded-md bg-[var(--c-ink)] px-3 text-xs font-black text-[var(--c-panel)] transition hover:bg-[var(--brand-interactive)]"}
-                data-variant={canvasPlusPreview ? "primary" : undefined}
-                data-density={canvasPlusPreview ? "compact" : undefined}
-              >
-                선택 ETF 비교
-              </TransitionLink>
-            ) : (
-              <span className={canvasPlusPreview ? "cp-screener-disabled-action" : "inline-flex min-h-9 items-center rounded-md border border-[var(--c-line)] bg-[var(--c-surface-2)] px-3 text-xs font-black text-[var(--c-ink-2)]"}>
-                선택 ETF 부족
-              </span>
-            )}
-          </div>
-        </div>
-      </section>
-
-      {/* Filter bar */}
-      {canvasPlusPreview ? (
-        <section className="cpw4-filter-shell" data-canvas-plus-screener-filter-deck="true">
-          <button
-            type="button"
-            className="cpw4-filter-summary"
-            aria-expanded={filterDeckOpen}
-            onClick={() => setFilterDeckOpen((v) => !v)}
-          >
-            <span className="cpw4-filter-summary__lead">
-              <span className="cpw4-filter-summary__chevron" aria-hidden="true">{filterDeckOpen ? "▲" : "▼"}</span>
-              <span className="cpw4-filter-summary__label">필터</span>
-              <span className="cpw4-filter-summary__preview">{filterPreviewLabel}</span>
-            </span>
-            <span className="cpw4-filter-summary__coverage">
-              <span className="cpw4-coverage-bar" aria-hidden="true">
-                <span style={{ width: `${priceCoverageRatio}%` }} />
-              </span>
-              <span>
-                {pricedCount.toLocaleString("ko-KR")}개 가격 확인 · {missingPriceCount.toLocaleString("ko-KR")}개 가격 없이 표시
-              </span>
-            </span>
-            <span className="cpw4-filter-summary__count">
-              {sorted.length.toLocaleString("ko-KR")}개 종목
-              {activeFilterCount > 0 ? <strong>{activeFilterCount}</strong> : null}
-            </span>
-          </button>
-
-          {filterDeckOpen ? (
-            <div className="cp-card cp-screener-filter-deck cpw4-filter-drawer">
-              <div className="cp-screener-filter-groups">
+  // fh-029: one shared element for the four filter groups — the desktop deck
+  // and the mobile sheet render the same controls from this JSX (no prop
+  // drilling of the filter fields).
+  const filterGroupControlsJsx = (
+    <>
             <div className="cp-screener-filter-group">
               <button
                 type="button"
@@ -2696,9 +2594,9 @@ export default function ScreenerClient({
                       className="cp-screener-control"
                     >
                       <option value="">전체 밴드</option>
-                      <option value="cheap">저평가 (하위 25%)</option>
-                      <option value="fair">적정 (중간 50%)</option>
-                      <option value="rich">고평가 (상위 25%)</option>
+                      <option value="cheap">하단 (하위 25%)</option>
+                      <option value="fair">중간 (중간 50%)</option>
+                      <option value="rich">상단 (상위 25%)</option>
                     </select>
                   </label>
                   <label data-screener-checkbox-target className="cp-screener-check">
@@ -2756,11 +2654,11 @@ export default function ScreenerClient({
                     <input type="number" inputMode="decimal" value={return12mMin} onChange={(event) => setReturn12mMin(event.target.value)} placeholder="예: 0" className="cp-screener-control" />
                   </label>
                   <label className="cp-screener-field">
-                    <span className="cp-screener-field__label">3Y 수익률 최소 (%)</span>
+                    <span className="cp-screener-field__label">2023–2025 누적 최소 (%)</span>
                     <input type="number" inputMode="decimal" value={ret3yMin} onChange={(event) => setRet3yMin(event.target.value)} placeholder="예: 20" className="cp-screener-control" />
                   </label>
                   <label className="cp-screener-field">
-                    <span className="cp-screener-field__label">5Y 수익률 최소 (%)</span>
+                    <span className="cp-screener-field__label">2021–2025 누적 최소 (%)</span>
                     <input type="number" inputMode="decimal" value={ret5yMin} onChange={(event) => setRet5yMin(event.target.value)} placeholder="예: 50" className="cp-screener-control" />
                   </label>
                 </div>
@@ -2801,10 +2699,16 @@ export default function ScreenerClient({
                     <input type="number" inputMode="decimal" value={opmMin} onChange={(event) => setOpmMin(event.target.value)} placeholder="예: 15" className="cp-screener-control" />
                   </label>
                   <label className="cp-screener-field">
+                    <span className="cp-screener-field__label">내구 수익성 최소</span>
+                    <input type="number" inputMode="decimal" value={durabilityMin} onChange={(event) => setDurabilityMin(event.target.value)} placeholder="예: 50" className="cp-screener-control" />
+                  </label>
+                  <label className="cp-screener-field">
                     <span className="cp-screener-field__label">투자 신호</span>
-                    <select value={actionFilter} onChange={(event) => setActionFilter(event.target.value as ActionFilter)} className="cp-screener-control">
+                    <select data-screener-action-filter value={actionFilter} onChange={(event) => setActionFilter(event.target.value as ActionFilter)} className="cp-screener-control">
                       <option value="">전체 신호</option>
                       <option value="guru_held">기관·고수 보유</option>
+                      <option value="guru_new">기관·고수 신규</option>
+                      <option value="guru_increased">기관·고수 비중확대</option>
                       <option value="smart_money">기관/고수 주목</option>
                       <option value="value_momentum">저평가+모멘텀</option>
                       <option value="index_core">지수 핵심</option>
@@ -2814,32 +2718,34 @@ export default function ScreenerClient({
                     </select>
                   </label>
                   <label className="cp-screener-field">
-                    <span className="cp-screener-field__label">Fenok Edge</span>
+                    <span className="cp-screener-field__label">Short Edge</span>
                     <select
-                      value={fenokEdgeMin}
-                      onChange={(event) => setFenokEdgeMin(event.target.value as FenokEdgeFilter)}
+                      value={shortEdgeMin}
+                      onChange={(event) => setShortEdgeMin(event.target.value as FenokEdgeFilter)}
                       className="cp-screener-control"
                       title={FENOK_EDGE_PROXY_LABEL}
                     >
-                      <option value="">전체 Edge</option>
+                      <option value="">전체 Short Edge</option>
                       <option value="70">70 이상</option>
                       <option value="60">60 이상</option>
                       <option value="50">50 이상</option>
                     </select>
+                    <small className="text-[12px] font-semibold leading-tight text-[var(--c-ink-3)]">{FENOK_SHORT_EDGE_METHODOLOGY}</small>
                   </label>
                   <label className="cp-screener-field">
-                    <span className="cp-screener-field__label">Fenok 컨빅션</span>
+                    <span className="cp-screener-field__label">Long Edge</span>
                     <select
-                      value={convictionMin}
-                      onChange={(event) => setConvictionMin(event.target.value as ConvictionFilter)}
+                      value={longEdgeMin}
+                      onChange={(event) => setLongEdgeMin(event.target.value as ConvictionFilter)}
                       className="cp-screener-control"
-                      title={FENOK_CONVICTION_DISCLOSURE}
+                      title={FENOK_HORIZON_FILTER_DISCLOSURE}
                     >
-                      <option value="">전체 컨빅션</option>
+                      <option value="">전체 Long Edge</option>
                       <option value="70">70 이상</option>
                       <option value="60">60 이상</option>
                       <option value="50">50 이상</option>
                     </select>
+                    <small className="text-[12px] font-semibold leading-tight text-[var(--c-ink-3)]">{FENOK_LONG_EDGE_METHODOLOGY}</small>
                   </label>
                   <label className="cp-screener-field">
                     <span className="cp-screener-field__label">연결 범위</span>
@@ -2859,24 +2765,615 @@ export default function ScreenerClient({
                 </div>
               ) : null}
             </div>
+    </>
+  );
+  const pricedCount = sorted.filter((stock) => stock.price !== null).length;
+  const missingPriceCount = Math.max(0, sorted.length - pricedCount);
+  const railFreshness: EvidenceRailFreshness = screenerDataState.status === "ready" ? "fresh"
+    : screenerDataState.status === "pending" ? "pending"
+    : screenerDataState.status === "error" ? "error"
+    : screenerDataState.status === "stale" ? "stale"
+    : screenerDataState.status === "partial" ? "partial"
+    : "fixed";
+  // The age verdict's own words ride the rail while it is stale/error, so no
+  // extra constant is needed here.
+  const retryScreenerData = useCallback(() => {
+    refetchScreenerData();
+  }, [refetchScreenerData]);
+  const screenerNoticeRetryable = screenerDataState.status === "pending" || screenerDataState.status === "error";
+  const priceCoverageRatio = sorted.length > 0 ? Math.round((pricedCount / sorted.length) * 100) : 0;
+  const sourceDateLabel = formatScreenerSourceDateLabel(sourceDate, marketFactsDate, {
+    pending: !dataReady && !connectionIndexReady,
+  });
+  const densityClass = DENSITY_TABLE_CLASS[density];
+
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const frame = window.requestAnimationFrame(() => {
+      if (!canvasPlusPreview) return;
+      if (scaleCount > 0) setScaleOpen(true);
+      if (valueCount > 0) setValueOpen(true);
+      if (growthCount > 0) setGrowthOpen(true);
+      if (qualityCount > 0) setQualityOpen(true);
+    });
+    return () => window.cancelAnimationFrame(frame);
+  }, [canvasPlusPreview, scaleCount, valueCount, growthCount, qualityCount]);
+
+  const modeToggle = (
+    <div className="flex flex-wrap items-center gap-3" data-screener-mode-toggle="true" role="group" aria-label="스크리너 모드">
+      <div className="inline-flex gap-0.5 rounded-lg bg-[var(--c-surface-2)] p-0.5">
+        {([
+          { id: "analyze", label: "분석" },
+          { id: "discover", label: "발견" },
+        ] as const).map((mode) => (
+          <button
+            key={mode.id}
+            type="button"
+            aria-pressed={screenerMode === mode.id}
+            onClick={() => handleScreenerModeChange(mode.id)}
+            className={screenerMode === mode.id
+              ? "inline-flex min-h-11 items-center rounded-md bg-[var(--c-brand)] px-4 text-[13px] font-semibold text-white transition focus-visible:outline focus-visible:outline-2 focus-visible:outline-brand-interactive"
+              : "inline-flex min-h-11 items-center rounded-md px-4 text-[13px] font-semibold text-[var(--c-ink-3)] transition hover:text-[var(--c-ink)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-brand-interactive"}
+          >
+            {mode.label}
+          </button>
+        ))}
+      </div>
+      <p className="whitespace-nowrap text-[12px] text-[var(--c-ink-3)] max-[920px]:hidden">분석: 표로 거르고 줄세우기 · 발견: 다섯 질문으로 시작</p>
+    </div>
+  );
+
+  if (screenerMode === "discover") {
+    return (
+      <div
+        className="canvas-plus cp-screener-service"
+        data-canvas-plus-screener-service="true"
+        data-screener-mode="discover"
+        data-journey-ready={journeyHydrated}
+      >
+        {modeToggle}
+        <div className="mt-3">
+          <ScreenerDiscover
+            key={activeCardId}
+            stocks={stocks}
+            dataReady={dataReady}
+            failed={failed}
+            sourceDate={screenerSourceDate}
+            marketFactsDate={marketFactsDate}
+            activeCardId={activeCardId}
+            onSelectCard={setActiveCardId}
+            onShowConditions={handleShowCardConditions}
+            onOpenAnalyze={() => handleScreenerModeChange("analyze")}
+            onRetry={retryScreenerData}
+            compareTickers={compareTickers}
+            onToggleCompare={handleToggleCompare}
+            onClearCompare={() => setCompareTickers([])}
+            holdingChanges={holdingChanges}
+            returnTo={journeyReturnTo}
+            onBeforeNavigate={saveJourneyBeforeNavigate}
+          />
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div
+      className="canvas-plus cp-screener-service"
+      data-canvas-plus-screener-service="true"
+      data-screener-mode="analyze"
+      data-journey-ready={journeyHydrated}
+    >
+      {modeToggle}
+      {canvasPlusPreview ? (
+        <section data-canvas-plus-screener-title="true">
+          {/* v3.1: title + coverage stat on one line; the full sentence stays a tooltip.
+              fh-029: below 921px the title row gives way to the mobile stack. */}
+          <div className="flex min-w-0 flex-wrap items-center gap-x-3 gap-y-1 max-[920px]:hidden">
+            <h1 className="shrink-0 text-[18px] font-semibold text-[var(--c-ink)]">종목 스크리너</h1>
+            <p
+              className="min-w-0 flex-1 truncate text-[12px] font-semibold text-[var(--c-ink-2)]"
+              title={`글로벌 ${stocks.length.toLocaleString("ko-KR")}개 종목 · 현재 ${sorted.length.toLocaleString("ko-KR")}개 중 가격 확인 ${pricedCount.toLocaleString("ko-KR")}개(${priceCoverageRatio}%)${missingPriceCount > 0 ? ` · 가격 미확인 ${missingPriceCount.toLocaleString("ko-KR")}개는 뒤로 정렬됩니다` : ""}`}
+            >
+              글로벌 {stocks.length.toLocaleString("ko-KR")}개 종목 · 현재 {sorted.length.toLocaleString("ko-KR")}개 중 가격 확인 {pricedCount.toLocaleString("ko-KR")}개({priceCoverageRatio}%)
+              {missingPriceCount > 0 ? ` · 가격 미확인 ${missingPriceCount.toLocaleString("ko-KR")}개는 뒤로 정렬됩니다` : null}
+            </p>
+            <Pill tone="neutral" aria-label={`데이터 원천 ${sourceDateLabel}`}>
+              {sourceDateLabel}
+            </Pill>
+          </div>
+
+          {/* v3.1: one compact toolbar row — scope, search, filter toggle, result
+              count, page status, column/view/density controls and provenance.
+              fh-029: below 921px this row becomes the mobile top stack:
+              full-width search → horizontally scrolling chip row → quiet
+              status line (결과 N + compact evidence chip). */}
+          <div
+            className="cp-screener-toolbar-row mt-2"
+            data-canvas-plus-screener-toolbar="true"
+            aria-label="스크리너 범위"
+          >
+            <Pill tone="neutral" className="max-[920px]:hidden">
+              주식 {stocks.length.toLocaleString("ko-KR")}
+            </Pill>
+            <TransitionLink href={ROUTES.etfs} className="inline-flex min-h-9 items-center rounded-full border border-[var(--c-line)] bg-[var(--c-panel)] px-3 text-[11px] font-black uppercase tracking-[0.1em] text-[var(--c-ink-2)] transition hover:border-[var(--brand-interactive)] hover:text-[var(--brand-interactive)] max-[920px]:hidden">
+              ETF
+            </TransitionLink>
+            <div className="cpw4-preset-wrap max-[920px]:hidden">
+              <button
+                type="button"
+                aria-expanded={presetMenuOpen}
+                aria-haspopup="menu"
+                onClick={() => setPresetMenuOpen((v) => !v)}
+                className="inline-flex min-h-9 items-center rounded-full border border-[var(--c-line)] bg-[var(--c-panel)] px-3 text-[11px] font-black uppercase tracking-[0.1em] text-[var(--c-ink-2)] transition hover:border-[var(--brand-interactive)] hover:text-[var(--brand-interactive)]"
+              >
+                내 프리셋
+              </button>
+              {presetMenuOpen && (
+                <div className="cp-screener-preset-menu cpw4-saved-preset-menu">
+                  <div className="cp-screener-preset-row">
+                    <input
+                      type="text"
+                      value={presetName}
+                      onChange={(event) => setPresetName(event.target.value)}
+                      onKeyDown={(event) => {
+                        if (event.key === "Enter") handleSavePreset();
+                      }}
+                      placeholder="프리셋 이름"
+                      className="cp-screener-preset-input"
+                    />
+                    <button
+                      type="button"
+                      onClick={handleSavePreset}
+                      disabled={!presetName.trim()}
+                      className="cp-button cp-screener-preset-save"
+                      data-variant="primary"
+                      data-density="compact"
+                    >
+                      저장
+                    </button>
+                  </div>
+                  {savedPresets.length > 0 ? (
+                    <div className="cp-screener-preset-list">
+                      {savedPresets.map((p) => (
+                        <div key={p.name} className="cp-screener-preset-item">
+                          <button
+                            type="button"
+                            onClick={() => handleLoadPreset(p.state)}
+                            className="cp-screener-preset-load"
+                            title={p.name}
+                          >
+                            {p.name}
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => handleDeletePreset(p.name)}
+                            className="cp-screener-preset-delete"
+                            aria-label={`${p.name} 삭제`}
+                          >
+                            ×
+                          </button>
+                        </div>
+                      ))}
+                    </div>
+                  ) : (
+                    <p className="cpw4-saved-preset-empty">저장된 프리셋이 없습니다.</p>
+                  )}
+                </div>
+              )}
+            </div>
+
+            <form className="cp-screener-search-form flex min-h-9 min-w-24 flex-1 items-center gap-2 md:max-w-72" onSubmit={(event) => event.preventDefault()}>
+              <label className="sr-only" htmlFor="cp-screener-search-input">
+                티커 또는 종목명 검색
+              </label>
+              <input
+                id="cp-screener-search-input"
+                type="search"
+                value={search}
+                onChange={(event) => setSearch(event.target.value)}
+                placeholder="NVDA"
+                className="min-h-9 min-w-0 flex-1 rounded-lg border border-[var(--c-line)] bg-[var(--c-panel)] px-3 text-sm font-semibold text-[var(--c-ink)] outline-none transition placeholder:text-[var(--c-ink-3)] focus:border-[var(--brand-interactive)]"
+                data-canvas-plus-screener-search="true"
+              />
+              {search.trim() ? (
+                <button
+                  type="button"
+                  onClick={() => setSearch("")}
+                  className="inline-flex min-h-9 shrink-0 items-center rounded-full border border-[var(--c-line)] bg-[var(--c-panel)] px-3 text-[11px] font-black uppercase tracking-[0.1em] text-[var(--c-ink-2)] transition hover:border-[var(--brand-interactive)] hover:text-[var(--brand-interactive)]"
+                >
+                  초기화
+                </button>
+              ) : (
+                <span aria-hidden="true" className="inline-flex min-h-9 w-9 shrink-0 items-center justify-center rounded-full border border-[var(--c-line)] text-[11px] font-black text-[var(--c-ink-3)]">/</span>
+              )}
+            </form>
+
+            {/* fh-029/fh-035: the mobile condition strip. The filter chip stays
+                visible at every count — label "필터", or "필터 N" with N active
+                conditions; sort and presets open the sheet at their section.
+                Hidden at >=921px by CSS. */}
+            <div className="cp-screener-chip-row" data-screener-chip-row="true">
+              <button
+                type="button"
+                className="cp-screener-chip"
+                onClick={() => openFilterSheet("filters")}
+                aria-haspopup="dialog"
+              >
+                {activeFilterCount > 0 ? `필터 ${activeFilterCount}` : "필터"}
+              </button>
+              {activeFilterChips.map((chip) => (
+                <span key={chip.label} className="cp-screener-chip cp-screener-chip--condition">
+                  {chip.label}
+                  <button
+                    type="button"
+                    className="cp-screener-chip__clear"
+                    onClick={chip.clear}
+                    aria-label={`${chip.label} 해제`}
+                  >
+                    ×
+                  </button>
+                </span>
+              ))}
+              <button
+                type="button"
+                className="cp-screener-chip"
+                onClick={() => openFilterSheet("sort")}
+                aria-haspopup="dialog"
+              >
+                정렬: {COLUMNS.find((column) => column.key === sortKey)?.label ?? sortKey} <span aria-hidden="true">▾</span>
+              </button>
+              <button
+                type="button"
+                className="cp-screener-chip"
+                onClick={() => openFilterSheet("presets")}
+                aria-haspopup="dialog"
+              >
+                내 프리셋
+              </button>
+            </div>
+
+            <button
+              type="button"
+              aria-expanded={filterDeckOpen}
+              onClick={() => setFilterDeckOpen((v) => !v)}
+              className="cp-screener-segment max-[920px]:hidden"
+              data-canvas-plus-active={String(filterDeckOpen)}
+              data-screener-filter-toggle="true"
+            >
+              필터
+              {activeFilterCount > 0 ? (
+                <span className="cp-screener-filter-count" data-active="true">{activeFilterCount}</span>
+              ) : null}
+              <span aria-hidden="true">{filterDeckOpen ? "▲" : "▼"}</span>
+            </button>
+
+            <span className="cp-screener-toolbar-stat max-[920px]:hidden" title={`결과 ${sorted.length.toLocaleString("ko-KR")}개`}>
+              결과 <b>{sorted.length.toLocaleString("ko-KR")}</b>개
+            </span>
+            <span className="cp-screener-toolbar-stat max-[920px]:hidden" data-screener-page-status="true">
+              {safePage + 1} / {pageCount} 페이지
+            </span>
+
+            <div className="relative max-[920px]:hidden">
+              <button
+                type="button"
+                aria-expanded={columnMenuOpen}
+                aria-haspopup="menu"
+                onClick={() => setColumnMenuOpen((v) => !v)}
+                className="inline-flex min-h-9 items-center gap-1 rounded-full border border-[var(--c-line)] bg-[var(--c-panel)] px-3 text-[11px] font-black uppercase tracking-[0.1em] text-[var(--c-ink-2)] transition hover:border-[var(--brand-interactive)] hover:text-[var(--brand-interactive)]"
+              >
+                컬럼 {PRESET_LABEL[preset]} <span aria-hidden="true">⌄</span>
+              </button>
+              {columnMenuOpen ? (
+                <div className="absolute right-0 top-full z-15 mt-2 grid min-w-44 gap-1 rounded-lg border border-[var(--c-line)] bg-[var(--c-panel)] p-1.5 shadow-lg" role="menu" aria-label="컬럼 preset">
+                  {(Object.keys(PRESET_KEYS) as ColumnPreset[]).map((p) => (
+                    <button
+                      key={p}
+                      type="button"
+                      role="menuitemradio"
+                      aria-checked={preset === p}
+                      onClick={() => {
+                        handlePresetChange(p);
+                        setColumnMenuOpen(false);
+                      }}
+                      data-canvas-plus-active={String(preset === p)}
+                      className="min-h-9 rounded-md px-2.5 text-left text-[12px] font-black text-[var(--c-ink-2)] transition hover:bg-[var(--c-surface-2)] hover:text-[var(--c-ink)]"
+                    >
+                      {PRESET_LABEL[p]}
+                    </button>
+                  ))}
+                </div>
+              ) : null}
+            </div>
+
+            <div data-screener-view-mode-control className="inline-flex items-center gap-1.5" aria-label="결과 표시 방식">
+              {VIEW_MODE_BUTTONS.map((item) => (
+                <button
+                  key={item}
+                  type="button"
+                  data-screener-view-mode-option={item}
+                  onClick={() => handleViewModeChange(item)}
+                  aria-label={VIEW_MODE_LABEL[item]}
+                  aria-pressed={viewMode === item}
+                  data-canvas-plus-active={String(viewMode === item)}
+                  className="inline-flex min-h-9 items-center rounded-full border border-[var(--c-line)] bg-[var(--c-panel)] px-3 text-[11px] font-black uppercase tracking-[0.1em] text-[var(--c-ink-2)] transition hover:border-[var(--brand-interactive)] hover:text-[var(--brand-interactive)]"
+                >
+                  {VIEW_MODE_LABEL[item]}
+                </button>
+              ))}
+            </div>
+
+            <div data-screener-density-control role="group" className="inline-flex items-center gap-1.5" aria-label="행 밀도">
+              {DENSITY_BUTTONS.map((item) => (
+                <button
+                  key={item}
+                  type="button"
+                  data-screener-density-option={item}
+                  data-canvas-plus-row-height={DENSITY_ROW_HEIGHT[item]}
+                  onClick={() => handleDensityChange(item)}
+                  aria-label={DENSITY_LABEL[item]}
+                  aria-pressed={density === item}
+                  data-canvas-plus-active={String(density === item)}
+                  className="inline-flex min-h-9 items-center rounded-full border border-[var(--c-line)] bg-[var(--c-panel)] px-3 text-[11px] font-black uppercase tracking-[0.1em] text-[var(--c-ink-3)] transition hover:border-[var(--c-ink-4)] hover:text-[var(--c-ink)]"
+                >
+                  {DENSITY_LABEL[item]}
+                </button>
+              ))}
+            </div>
+
+            <EvidenceRail
+              className="cp-screener-toolbar-provenance max-[920px]:hidden"
+              freshness={railFreshness}
+              stateLabel={screenerDataState.reason === "source-age" ? screenerDataState.label : undefined}
+              source="스크리너"
+              asOf={screenerSourceDate ?? "미제공"}
+              coverage={`가격 확인 ${pricedCount.toLocaleString("ko-KR")} / ${sorted.length.toLocaleString("ko-KR")}`}
+              onRetry={railFreshness === "fresh" ? undefined : retryScreenerData}
+              lkgAsOf={screenerSourceDate ?? undefined}
+              skeletonDelayMs={120}
+              onEvidence={() => window.open("/data/global-scouter/core/stocks_analyzer.json", "_blank", "noopener")}
+            />
+
+            {/* fh-029: mobile-only quiet status line — replaces the toolbar's
+                result count + full provenance rail below 921px. */}
+            <div className="cp-screener-status-line" data-screener-status-line="true">
+              <span className="cp-screener-toolbar-stat" title={`결과 ${sorted.length.toLocaleString("ko-KR")}개`}>
+                결과 <b>{sorted.length.toLocaleString("ko-KR")}</b>개
+              </span>
+              <EvidenceRail
+                variant="chip"
+                freshness={railFreshness}
+                stateLabel={screenerDataState.reason === "source-age" ? screenerDataState.label : undefined}
+                source="스크리너"
+                asOf={screenerSourceDate ?? "미제공"}
+                coverage={`가격 확인 ${pricedCount.toLocaleString("ko-KR")} / ${sorted.length.toLocaleString("ko-KR")}`}
+                onEvidence={() => window.open("/data/global-scouter/core/stocks_analyzer.json", "_blank", "noopener")}
+              />
+            </div>
+          </div>
+        </section>
+      ) : (
+        <section className="panel data-shell-header">
+          <div className="data-shell-head-main">
+            <p className="data-shell-kicker">종목 스크리너</p>
+            <h1 className="data-shell-title">종목 스크리너</h1>
+            <p className="data-shell-desc">
+              글로벌 {stocks.length.toLocaleString()}개 종목을 PER·PBR·배당·수익률로 필터링하고 비교합니다.
+            </p>
+          </div>
+          <div className="data-shell-head-actions">
+            <DataStateBadge state={screenerDataState} />
+            <button
+              type="button"
+              onClick={() => downloadConnectionCsv(sorted)}
+              disabled={!connectionIndexReady || sorted.length === 0}
+              className="data-shell-link disabled:cursor-not-allowed disabled:border-slate-200 disabled:bg-slate-50 disabled:text-slate-600"
+            >
+              필터 CSV
+            </button>
+            {singleStockEtfCompareHref ? (
+              <TransitionLink href={singleStockEtfCompareHref} className="data-shell-link">
+                필터 ETF 비교
+              </TransitionLink>
+            ) : null}
+            <TransitionLink href={ROUTES.sectors} className="data-shell-link">
+              섹터
+            </TransitionLink>
+            <MarketQuickLinks />
+            <div className="relative">
+              <button
+                type="button"
+                onClick={() => setPresetMenuOpen((v) => !v)}
+                className="data-shell-link"
+                aria-expanded={presetMenuOpen}
+                aria-haspopup="menu"
+              >
+                필터 저장
+              </button>
+              {presetMenuOpen && (
+                <div className="absolute right-0 top-full z-50 mt-2 w-64 rounded-xl border border-slate-200 bg-white p-3 shadow-lg">
+                  <div className="flex gap-2">
+                    <input
+                      type="text"
+                      value={presetName}
+                      onChange={(event) => setPresetName(event.target.value)}
+                      onKeyDown={(event) => {
+                        if (event.key === "Enter") handleSavePreset();
+                      }}
+                      placeholder="프리셋 이름"
+                      className="min-h-9 flex-1 rounded-lg border border-slate-200 bg-white px-2 text-sm font-semibold text-slate-900 outline-none transition focus:border-brand-interactive"
+                    />
+                    <button
+                      type="button"
+                      onClick={handleSavePreset}
+                      disabled={!presetName.trim()}
+                      className="rounded-lg border border-brand-interactive bg-brand-interactive px-2 text-[12px] font-black text-white transition hover:opacity-90 disabled:cursor-not-allowed disabled:border-slate-200 disabled:bg-slate-200 disabled:text-slate-600"
+                    >
+                      저장
+                    </button>
+                  </div>
+                  {savedPresets.length > 0 && (
+                    <div className="mt-2 space-y-1">
+                      {savedPresets.map((p) => (
+                        <div key={p.name} className="flex items-center justify-between gap-2">
+                          <button
+                            type="button"
+                            onClick={() => handleLoadPreset(p.state)}
+                            className="min-h-8 flex-1 truncate rounded-lg px-2 text-left text-sm font-semibold text-slate-900 transition hover:bg-slate-100"
+                            title={p.name}
+                          >
+                            {p.name}
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => handleDeletePreset(p.name)}
+                            className="flex h-8 w-8 items-center justify-center rounded-lg text-sm font-bold text-slate-500 transition hover:bg-slate-100 hover:text-red-600"
+                            aria-label={`${p.name} 삭제`}
+                          >
+                            ×
+                          </button>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              )}
+            </div>
+          </div>
+        </section>
+      )}
+
+      {screenerDataState.status !== "ready" && screenerDataState.status !== "pending" && !(canvasPlusPreview && screenerDataState.status === "partial") ? (
+        canvasPlusPreview ? (
+          <section className="cp-card cp-screener-data-state-card" data-canvas-plus-screener-data-state="true">
+            <DataStateNotice
+              state={screenerDataState}
+              actionLabel={screenerNoticeRetryable ? "다시 불러오기" : undefined}
+              onAction={screenerNoticeRetryable ? retryScreenerData : undefined}
+            />
+          </section>
+        ) : (
+          <DataStateNotice
+            state={screenerDataState}
+            actionLabel={screenerNoticeRetryable ? "다시 불러오기" : undefined}
+            onAction={screenerNoticeRetryable ? retryScreenerData : undefined}
+          />
+        )
+      ) : null}
+
+      {initialMacroContextId ? (
+        <MacroContextCard contextId={initialMacroContextId} surface="screener" />
+      ) : null}
+
+      <section
+        className={canvasPlusPreview
+          ? cx("cp-card cp-screener-selection-card cpw4-selection-card", selectedTickers.size === 0 && "cpw4-selection-card--empty")
+          : "rounded-[1.25rem] border border-slate-200 bg-white p-3 shadow-sm"}
+        data-canvas-plus-screener-selection-actions={canvasPlusPreview ? "true" : undefined}
+      >
+        <div className={canvasPlusPreview ? "cp-screener-selection-layout" : "flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between"}>
+          <div className={canvasPlusPreview ? "cp-screener-selection-copy" : "min-w-0"}>
+            {canvasPlusPreview ? (
+              <p className="cp-screener-selection-summary">
+                <span className="cp-screener-section-label">선택 작업</span>
+                {" · "}현재 필터에서 {selectedRows.length.toLocaleString("ko-KR")}개 선택
+                {selectedRows.length > 0 ? ` · 연결 ETF ${selectedSingleStockEtfCount.toLocaleString("ko-KR")}개` : ""}
+              </p>
+            ) : (
+              <>
+                <p className="text-[12px] font-black uppercase tracking-[0.1em] text-slate-500">선택 작업</p>
+                <p className="mt-1 text-sm font-bold text-slate-700">
+                  현재 필터에서 {selectedRows.length.toLocaleString("ko-KR")}개 선택
+                  {selectedRows.length > 0 ? ` · 연결 ETF ${selectedSingleStockEtfCount.toLocaleString("ko-KR")}개` : ""}
+                </p>
+              </>
+            )}
+          </div>
+          <div className={canvasPlusPreview ? "cp-screener-selection-actions" : "flex flex-wrap gap-2"}>
+            <button
+              type="button"
+              onClick={allPageSelected ? deselectPageRows : selectPageRows}
+              disabled={pageRows.length === 0}
+              className={canvasPlusPreview ? "cp-button cp-screener-action-button" : "min-h-9 rounded-md border border-[var(--c-line)] bg-[var(--c-surface-2)] px-3 text-[12px] font-black text-[var(--c-ink-2)] transition hover:border-[var(--brand-interactive)] hover:text-[var(--brand-interactive)] disabled:cursor-not-allowed disabled:bg-[var(--c-surface-2)] disabled:text-[var(--c-ink-2)]"}
+              data-variant={canvasPlusPreview ? "ghost" : undefined}
+              data-density={canvasPlusPreview ? "compact" : undefined}
+            >
+              {allPageSelected ? "페이지 해제" : "페이지 선택"}
+            </button>
+            <button
+              type="button"
+              onClick={selectFilteredRows}
+              disabled={sorted.length === 0}
+              className={canvasPlusPreview ? "cp-button cp-screener-action-button" : "min-h-9 rounded-md border border-[var(--c-line)] bg-[var(--c-surface-2)] px-3 text-[12px] font-black text-[var(--c-ink-2)] transition hover:border-[var(--brand-interactive)] hover:text-[var(--brand-interactive)] disabled:cursor-not-allowed disabled:bg-[var(--c-surface-2)] disabled:text-[var(--c-ink-2)]"}
+              data-variant={canvasPlusPreview ? "ghost" : undefined}
+              data-density={canvasPlusPreview ? "compact" : undefined}
+            >
+              필터 전체 선택
+            </button>
+            <button
+              type="button"
+              onClick={clearSelectedRows}
+              disabled={selectedTickers.size === 0}
+              className={canvasPlusPreview ? "cp-button cp-screener-action-button" : "min-h-9 rounded-md border border-[var(--c-line)] bg-[var(--c-panel)] px-3 text-[12px] font-black text-[var(--c-ink-2)] transition hover:border-[var(--brand-interactive)] hover:text-[var(--brand-interactive)] disabled:cursor-not-allowed disabled:bg-[var(--c-surface-2)] disabled:text-[var(--c-ink-2)]"}
+              data-variant={canvasPlusPreview ? "ghost" : undefined}
+              data-density={canvasPlusPreview ? "compact" : undefined}
+            >
+              선택 해제
+            </button>
+            <button
+              type="button"
+              onClick={() => downloadConnectionCsv(selectedRows)}
+              disabled={!connectionIndexReady || selectedRows.length === 0}
+              className={canvasPlusPreview ? "cp-button cp-screener-action-button" : "min-h-9 rounded-md bg-[var(--c-ink)] px-3 text-[12px] font-black text-[var(--c-panel)] transition hover:bg-[var(--brand-interactive)] disabled:cursor-not-allowed disabled:bg-[var(--c-surface-2)] disabled:text-[var(--c-ink-2)]"}
+              data-variant={canvasPlusPreview ? "primary" : undefined}
+              data-density={canvasPlusPreview ? "compact" : undefined}
+            >
+              선택 CSV
+            </button>
+            {selectedSingleStockEtfCompareHref ? (
+              <TransitionLink
+                href={selectedSingleStockEtfCompareHref}
+                className={canvasPlusPreview ? "cp-button cp-screener-action-button" : "inline-flex min-h-9 items-center rounded-md bg-[var(--c-ink)] px-3 text-[12px] font-black text-[var(--c-panel)] transition hover:bg-[var(--brand-interactive)]"}
+                data-variant={canvasPlusPreview ? "primary" : undefined}
+                data-density={canvasPlusPreview ? "compact" : undefined}
+              >
+                선택 ETF 비교
+              </TransitionLink>
+            ) : (
+              <span className={canvasPlusPreview ? "cp-screener-disabled-action" : "inline-flex min-h-9 items-center rounded-md border border-[var(--c-line)] bg-[var(--c-surface-2)] px-3 text-[12px] font-black text-[var(--c-ink-2)]"}>
+                선택 ETF 부족
+              </span>
+            )}
+          </div>
+        </div>
+      </section>
+
+      {/* Filter bar — the toggle lives in the toolbar row; the deck opens under it. */}
+      {canvasPlusPreview ? (filterDeckOpen || activeFilterChips.length > 0 ? (
+        <section data-canvas-plus-screener-filter-deck="true">
+          {filterDeckOpen ? (
+            <div className="cp-card cp-screener-filter-deck cpw4-filter-drawer">
+              <div className="cp-screener-filter-groups">
+            {filterGroupControlsJsx}
           </div>
 
           <div className="cp-screener-filter-footer">
             {activeFilterChips.length > 0 ? (
-              <div className="cp-screener-chip-row" data-canvas-plus-screener-active-chips="true">
+              <div className="flex flex-wrap items-center gap-2" data-canvas-plus-screener-active-chips="true">
                 {activeFilterChips.map((chip) => (
-                  <span key={chip.label} className="cp-screener-chip">
+                  <Pill key={chip.label} tone="neutral">
                     {chip.label}
-                    <button type="button" onClick={chip.clear} aria-label={`Clear ${chip.label}`}>
+                    <button type="button" onClick={chip.clear} aria-label={`Clear ${chip.label}`} className="ml-1 inline-flex items-center text-[var(--c-ink-3)] transition hover:text-[var(--c-ink)]">
                       ×
                     </button>
-                  </span>
+                  </Pill>
                 ))}
               </div>
             ) : null}
             <div className="cp-screener-filter-summary">
               <span>
-                <strong className="orbitron">{sorted.length.toLocaleString()}</strong>개 종목
+                <strong className="">{sorted.length.toLocaleString()}</strong>개 종목
               </span>
               {hasFilters ? (
                 <button type="button" onClick={resetFilters} className="cp-button cp-screener-reset-button" data-variant="ghost" data-density="compact">
@@ -2888,6 +3385,7 @@ export default function ScreenerClient({
             </div>
           ) : null}
         </section>
+        ) : null
       ) : (
       <section className="rounded-[1.5rem] border border-[var(--c-line)] bg-[var(--c-panel)] p-4 shadow-[var(--sh-sm)]">
         <div className="flex flex-col gap-3">
@@ -2912,7 +3410,7 @@ export default function ScreenerClient({
               <div className={cx("mt-3 grid gap-3 sm:grid-cols-2", canvasPlusPreview ? "lg:grid-cols-4" : "lg:grid-cols-5")}>
                 {!canvasPlusPreview ? (
                   <label className="flex flex-col gap-1">
-                    <span className="text-[11px] font-black uppercase tracking-[0.1em] text-[var(--c-ink-3)]">검색</span>
+                    <span className="text-[12px] font-black uppercase tracking-[0.1em] text-[var(--c-ink-3)]">검색</span>
                     <input
                       type="search"
                       value={search}
@@ -2923,7 +3421,7 @@ export default function ScreenerClient({
                   </label>
                 ) : null}
                 <label className="flex flex-col gap-1">
-                  <span className="text-[11px] font-black uppercase tracking-[0.1em] text-[var(--c-ink-3)]">섹터</span>
+                  <span className="text-[12px] font-black uppercase tracking-[0.1em] text-[var(--c-ink-3)]">섹터</span>
                   <select
                     value=""
                     onChange={(event) => {
@@ -2948,7 +3446,7 @@ export default function ScreenerClient({
                       {selectedSectors.map((item) => (
                         <span
                           key={item}
-                          className="inline-flex items-center gap-1 rounded-full border border-slate-200 bg-slate-50 px-2 py-1 text-xs font-semibold text-slate-900"
+                          className="inline-flex items-center gap-1 rounded-full border border-slate-200 bg-slate-50 px-2 py-1 text-[12px] font-semibold text-slate-900"
                         >
                           {item}
                           <button
@@ -2965,7 +3463,7 @@ export default function ScreenerClient({
                   )}
                 </label>
                 <label className="flex flex-col gap-1">
-                  <span className="text-[11px] font-black uppercase tracking-[0.1em] text-[var(--c-ink-3)]">국가</span>
+                  <span className="text-[12px] font-black uppercase tracking-[0.1em] text-[var(--c-ink-3)]">국가</span>
                   <select
                     value=""
                     onChange={(event) => {
@@ -2990,7 +3488,7 @@ export default function ScreenerClient({
                       {selectedCountries.map((code) => (
                         <span
                           key={code}
-                          className="inline-flex items-center gap-1 rounded-full border border-slate-200 bg-slate-50 px-2 py-1 text-xs font-semibold text-slate-900"
+                          className="inline-flex items-center gap-1 rounded-full border border-slate-200 bg-slate-50 px-2 py-1 text-[12px] font-semibold text-slate-900"
                         >
                           {COUNTRY_LABEL[code] ?? code}
                           <button
@@ -3007,7 +3505,7 @@ export default function ScreenerClient({
                   )}
                 </label>
                 <label className="flex flex-col gap-1">
-                  <span className="text-[11px] font-black uppercase tracking-[0.1em] text-[var(--c-ink-3)]">시총 최소($B)</span>
+                  <span className="text-[12px] font-black uppercase tracking-[0.1em] text-[var(--c-ink-3)]">시총 최소($B)</span>
                   <input
                     type="number"
                     inputMode="decimal"
@@ -3018,7 +3516,7 @@ export default function ScreenerClient({
                   />
                 </label>
                 <label className="flex flex-col gap-1">
-                  <span className="text-[11px] font-black uppercase tracking-[0.1em] text-[var(--c-ink-3)]">시총 최대($B)</span>
+                  <span className="text-[12px] font-black uppercase tracking-[0.1em] text-[var(--c-ink-3)]">시총 최대($B)</span>
                   <input
                     type="number"
                     inputMode="decimal"
@@ -3052,7 +3550,7 @@ export default function ScreenerClient({
             {valueOpen && (
               <div className="mt-3 grid gap-3 sm:grid-cols-2 lg:grid-cols-5">
                 <label className="flex flex-col gap-1">
-                  <span className="text-[11px] font-black uppercase tracking-[0.1em] text-[var(--c-ink-3)]">PER 최소</span>
+                  <span className="text-[12px] font-black uppercase tracking-[0.1em] text-[var(--c-ink-3)]">PER 최소</span>
                   <input
                     type="number"
                     inputMode="decimal"
@@ -3063,7 +3561,7 @@ export default function ScreenerClient({
                   />
                 </label>
                 <label className="flex flex-col gap-1">
-                  <span className="text-[11px] font-black uppercase tracking-[0.1em] text-[var(--c-ink-3)]">PER 최대</span>
+                  <span className="text-[12px] font-black uppercase tracking-[0.1em] text-[var(--c-ink-3)]">PER 최대</span>
                   <input
                     type="number"
                     inputMode="decimal"
@@ -3074,7 +3572,7 @@ export default function ScreenerClient({
                   />
                 </label>
                 <label className="flex flex-col gap-1">
-                  <span className="text-[11px] font-black uppercase tracking-[0.1em] text-[var(--c-ink-3)]">예상 PER 상한</span>
+                  <span className="text-[12px] font-black uppercase tracking-[0.1em] text-[var(--c-ink-3)]">예상 PER 상한</span>
                   <input
                     type="number"
                     inputMode="decimal"
@@ -3085,7 +3583,7 @@ export default function ScreenerClient({
                   />
                 </label>
                 <label className="flex flex-col gap-1">
-                  <span className="text-[11px] font-black uppercase tracking-[0.1em] text-[var(--c-ink-3)]">PBR 최소</span>
+                  <span className="text-[12px] font-black uppercase tracking-[0.1em] text-[var(--c-ink-3)]">PBR 최소</span>
                   <input
                     type="number"
                     inputMode="decimal"
@@ -3096,7 +3594,7 @@ export default function ScreenerClient({
                   />
                 </label>
                 <label className="flex flex-col gap-1">
-                  <span className="text-[11px] font-black uppercase tracking-[0.1em] text-[var(--c-ink-3)]">PBR 최대</span>
+                  <span className="text-[12px] font-black uppercase tracking-[0.1em] text-[var(--c-ink-3)]">PBR 최대</span>
                   <input
                     type="number"
                     inputMode="decimal"
@@ -3107,7 +3605,7 @@ export default function ScreenerClient({
                   />
                 </label>
                 <label className="flex flex-col gap-1">
-                  <span className="text-[11px] font-black uppercase tracking-[0.1em] text-[var(--c-ink-3)]">PEG 최대</span>
+                  <span className="text-[12px] font-black uppercase tracking-[0.1em] text-[var(--c-ink-3)]">PEG 최대</span>
                   <input
                     type="number"
                     inputMode="decimal"
@@ -3118,16 +3616,16 @@ export default function ScreenerClient({
                   />
                 </label>
                 <label className="flex flex-col gap-1">
-                  <span className="text-[11px] font-black uppercase tracking-[0.1em] text-[var(--c-ink-3)]">PER 밴드</span>
+                  <span className="text-[12px] font-black uppercase tracking-[0.1em] text-[var(--c-ink-3)]">PER 밴드</span>
                   <select
                     value={bandFilter}
                     onChange={(event) => setBandFilter(event.target.value as "" | "cheap" | "fair" | "rich")}
                     className="min-h-10 rounded-xl border border-slate-200 bg-white px-3 text-sm font-semibold text-slate-900 outline-none transition focus:border-brand-interactive"
                   >
                     <option value="">전체 밴드</option>
-                    <option value="cheap">저평가 (하위 25%)</option>
-                    <option value="fair">적정 (중간 50%)</option>
-                    <option value="rich">고평가 (상위 25%)</option>
+                    <option value="cheap">하단 (하위 25%)</option>
+                    <option value="fair">중간 (중간 50%)</option>
+                    <option value="rich">상단 (상위 25%)</option>
                   </select>
                 </label>
                 <label data-screener-checkbox-target className="inline-flex items-center gap-2 self-end text-sm font-bold text-[var(--c-ink-2)]">
@@ -3163,7 +3661,7 @@ export default function ScreenerClient({
             {growthOpen && (
               <div className="mt-3 grid gap-3 sm:grid-cols-2 lg:grid-cols-5">
                 <label className="flex flex-col gap-1">
-                  <span className="text-[11px] font-black uppercase tracking-[0.1em] text-[var(--c-ink-3)]">매출+1 최소</span>
+                  <span className="text-[12px] font-black uppercase tracking-[0.1em] text-[var(--c-ink-3)]">매출+1 최소</span>
                   <input
                     type="number"
                     inputMode="decimal"
@@ -3174,7 +3672,7 @@ export default function ScreenerClient({
                   />
                 </label>
                 <label className="flex flex-col gap-1">
-                  <span className="text-[11px] font-black uppercase tracking-[0.1em] text-[var(--c-ink-3)]">EPS+1 최소</span>
+                  <span className="text-[12px] font-black uppercase tracking-[0.1em] text-[var(--c-ink-3)]">EPS+1 최소</span>
                   <input
                     type="number"
                     inputMode="decimal"
@@ -3185,7 +3683,7 @@ export default function ScreenerClient({
                   />
                 </label>
                 <label className="flex flex-col gap-1">
-                  <span className="text-[11px] font-black uppercase tracking-[0.1em] text-[var(--c-ink-3)]">배당률 최소 (%)</span>
+                  <span className="text-[12px] font-black uppercase tracking-[0.1em] text-[var(--c-ink-3)]">배당률 최소 (%)</span>
                   <input
                     type="number"
                     inputMode="decimal"
@@ -3196,7 +3694,7 @@ export default function ScreenerClient({
                   />
                 </label>
                 <label className="flex flex-col gap-1">
-                  <span className="text-[11px] font-black uppercase tracking-[0.1em] text-[var(--c-ink-3)]">배당률 최대 (%)</span>
+                  <span className="text-[12px] font-black uppercase tracking-[0.1em] text-[var(--c-ink-3)]">배당률 최대 (%)</span>
                   <input
                     type="number"
                     inputMode="decimal"
@@ -3207,7 +3705,7 @@ export default function ScreenerClient({
                   />
                 </label>
                 <label className="flex flex-col gap-1">
-                  <span className="text-[11px] font-black uppercase tracking-[0.1em] text-[var(--c-ink-3)]">12M 수익률 최소 (%)</span>
+                  <span className="text-[12px] font-black uppercase tracking-[0.1em] text-[var(--c-ink-3)]">12M 수익률 최소 (%)</span>
                   <input
                     type="number"
                     inputMode="decimal"
@@ -3218,7 +3716,7 @@ export default function ScreenerClient({
                   />
                 </label>
                 <label className="flex flex-col gap-1">
-                  <span className="text-[11px] font-black uppercase tracking-[0.1em] text-[var(--c-ink-3)]">3Y 수익률 최소 (%)</span>
+                  <span className="text-[12px] font-black uppercase tracking-[0.1em] text-[var(--c-ink-3)]">2023–2025 누적 최소 (%)</span>
                   <input
                     type="number"
                     inputMode="decimal"
@@ -3229,7 +3727,7 @@ export default function ScreenerClient({
                   />
                 </label>
                 <label className="flex flex-col gap-1">
-                  <span className="text-[11px] font-black uppercase tracking-[0.1em] text-[var(--c-ink-3)]">5Y 수익률 최소 (%)</span>
+                  <span className="text-[12px] font-black uppercase tracking-[0.1em] text-[var(--c-ink-3)]">2021–2025 누적 최소 (%)</span>
                   <input
                     type="number"
                     inputMode="decimal"
@@ -3263,7 +3761,7 @@ export default function ScreenerClient({
             {qualityOpen && (
               <div className="mt-3 grid gap-3 sm:grid-cols-2 lg:grid-cols-5">
                 <label className="flex flex-col gap-1">
-                  <span className="text-[11px] font-black uppercase tracking-[0.1em] text-[var(--c-ink-3)]">ROE 최소 (%)</span>
+                  <span className="text-[12px] font-black uppercase tracking-[0.1em] text-[var(--c-ink-3)]">ROE 최소 (%)</span>
                   <input
                     type="number"
                     inputMode="decimal"
@@ -3274,7 +3772,7 @@ export default function ScreenerClient({
                   />
                 </label>
                 <label className="flex flex-col gap-1">
-                  <span className="text-[11px] font-black uppercase tracking-[0.1em] text-[var(--c-ink-3)]">내년(FY+1) ROE 최소 (%)</span>
+                  <span className="text-[12px] font-black uppercase tracking-[0.1em] text-[var(--c-ink-3)]">내년(FY+1) ROE 최소 (%)</span>
                   <input
                     type="number"
                     inputMode="decimal"
@@ -3285,7 +3783,7 @@ export default function ScreenerClient({
                   />
                 </label>
                 <label className="flex flex-col gap-1">
-                  <span className="text-[11px] font-black uppercase tracking-[0.1em] text-[var(--c-ink-3)]">OPM 최소 (%)</span>
+                  <span className="text-[12px] font-black uppercase tracking-[0.1em] text-[var(--c-ink-3)]">OPM 최소 (%)</span>
                   <input
                     type="number"
                     inputMode="decimal"
@@ -3296,14 +3794,28 @@ export default function ScreenerClient({
                   />
                 </label>
                 <label className="flex flex-col gap-1">
-                  <span className="text-[11px] font-black uppercase tracking-[0.1em] text-[var(--c-ink-3)]">투자 신호</span>
+                  <span className="text-[12px] font-black uppercase tracking-[0.1em] text-[var(--c-ink-3)]">내구 수익성 최소</span>
+                  <input
+                    type="number"
+                    inputMode="decimal"
+                    value={durabilityMin}
+                    onChange={(event) => setDurabilityMin(event.target.value)}
+                    placeholder="예: 50"
+                    className="min-h-10 rounded-xl border border-slate-200 bg-white px-3 text-sm font-semibold text-slate-900 outline-none transition focus:border-brand-interactive"
+                  />
+                </label>
+                <label className="flex flex-col gap-1">
+                  <span className="text-[12px] font-black uppercase tracking-[0.1em] text-[var(--c-ink-3)]">투자 신호</span>
                   <select
+                    data-screener-action-filter
                     value={actionFilter}
                     onChange={(event) => setActionFilter(event.target.value as ActionFilter)}
                     className="min-h-10 rounded-xl border border-slate-200 bg-white px-3 text-sm font-semibold text-slate-900 outline-none transition focus:border-brand-interactive"
                   >
                     <option value="">전체 신호</option>
                     <option value="guru_held">기관·고수 보유</option>
+                    <option value="guru_new">기관·고수 신규</option>
+                    <option value="guru_increased">기관·고수 비중확대</option>
                     <option value="smart_money">기관/고수 주목</option>
                     <option value="value_momentum">저평가+모멘텀</option>
                     <option value="index_core">지수 핵심</option>
@@ -3313,35 +3825,37 @@ export default function ScreenerClient({
                   </select>
                 </label>
                 <label className="flex flex-col gap-1">
-                  <span className="text-[11px] font-black uppercase tracking-[0.1em] text-[var(--c-ink-3)]">Fenok Edge</span>
+                  <span className="text-[12px] font-black uppercase tracking-[0.1em] text-[var(--c-ink-3)]">Short Edge</span>
                   <select
-                    value={fenokEdgeMin}
-                    onChange={(event) => setFenokEdgeMin(event.target.value as FenokEdgeFilter)}
+                    value={shortEdgeMin}
+                    onChange={(event) => setShortEdgeMin(event.target.value as FenokEdgeFilter)}
                     className="min-h-10 rounded-xl border border-slate-200 bg-white px-3 text-sm font-semibold text-slate-900 outline-none transition focus:border-brand-interactive"
                     title={FENOK_EDGE_PROXY_LABEL}
                   >
-                    <option value="">전체 Edge</option>
+                    <option value="">전체 Short Edge</option>
                     <option value="70">70 이상</option>
                     <option value="60">60 이상</option>
                     <option value="50">50 이상</option>
                   </select>
+                  <small className="text-[12px] font-semibold leading-tight text-[var(--c-ink-3)]">{FENOK_SHORT_EDGE_METHODOLOGY}</small>
                 </label>
                 <label className="flex flex-col gap-1">
-                  <span className="text-[11px] font-black uppercase tracking-[0.1em] text-[var(--c-ink-3)]">Fenok 컨빅션</span>
+                  <span className="text-[12px] font-black uppercase tracking-[0.1em] text-[var(--c-ink-3)]">Long Edge</span>
                   <select
-                    value={convictionMin}
-                    onChange={(event) => setConvictionMin(event.target.value as ConvictionFilter)}
+                    value={longEdgeMin}
+                    onChange={(event) => setLongEdgeMin(event.target.value as ConvictionFilter)}
                     className="min-h-10 rounded-xl border border-slate-200 bg-white px-3 text-sm font-semibold text-slate-900 outline-none transition focus:border-brand-interactive"
-                    title={FENOK_CONVICTION_DISCLOSURE}
+                    title={FENOK_HORIZON_FILTER_DISCLOSURE}
                   >
-                    <option value="">전체 컨빅션</option>
+                    <option value="">전체 Long Edge</option>
                     <option value="70">70 이상</option>
                     <option value="60">60 이상</option>
                     <option value="50">50 이상</option>
                   </select>
+                  <small className="text-[12px] font-semibold leading-tight text-[var(--c-ink-3)]">{FENOK_LONG_EDGE_METHODOLOGY}</small>
                 </label>
                 <label className="flex flex-col gap-1">
-                  <span className="text-[11px] font-black uppercase tracking-[0.1em] text-[var(--c-ink-3)]">연결 범위</span>
+                  <span className="text-[12px] font-black uppercase tracking-[0.1em] text-[var(--c-ink-3)]">연결 범위</span>
                   <select
                     value={connectionFilter}
                     onChange={(event) => setConnectionFilter(event.target.value as ConnectionFilter)}
@@ -3363,7 +3877,7 @@ export default function ScreenerClient({
           <div />
           <div className="flex items-center gap-3">
             <span className="text-sm font-bold text-[var(--c-ink-3)]">
-              <strong className="orbitron text-[var(--c-ink)]">{sorted.length.toLocaleString()}</strong>개 종목
+              <strong className="text-[var(--c-ink)]">{sorted.length.toLocaleString()}</strong>개 종목
             </span>
             {hasFilters ? (
               <button
@@ -3381,7 +3895,7 @@ export default function ScreenerClient({
             {activeFilterChips.map((chip) => (
               <span
                 key={chip.label}
-                className="inline-flex items-center gap-1 rounded-full border border-slate-200 bg-slate-50 px-2.5 py-1 text-xs font-semibold text-slate-900"
+                className="inline-flex items-center gap-1 rounded-full border border-slate-200 bg-slate-50 px-2.5 py-1 text-[12px] font-semibold text-slate-900"
               >
                 {chip.label}
                 <button
@@ -3406,7 +3920,7 @@ export default function ScreenerClient({
         data-canvas-plus-screener-toolbar={canvasPlusPreview ? "true" : undefined}
       >
         <div className={canvasPlusPreview ? "cp-screener-toolbar-section cp-screener-preset-toolbar" : "flex flex-wrap items-center gap-2"}>
-          <span className={canvasPlusPreview ? "cp-screener-section-label" : "text-[11px] font-black uppercase tracking-[0.1em] text-[var(--c-ink-3)]"}>컬럼</span>
+          <span className={canvasPlusPreview ? "cp-screener-section-label" : "text-[12px] font-black uppercase tracking-[0.1em] text-[var(--c-ink-3)]"}>컬럼</span>
           {(Object.keys(PRESET_KEYS) as ColumnPreset[]).map((p) => (
             <button
               key={p}
@@ -3429,7 +3943,7 @@ export default function ScreenerClient({
         </div>
         <div className={canvasPlusPreview ? "cp-screener-toolbar-controls" : "flex flex-wrap items-center gap-3"}>
           <div data-screener-view-mode-control className={canvasPlusPreview ? "cp-screener-toolbar-section cp-screener-view-toolbar" : "hidden flex-wrap items-center gap-2 md:flex"}>
-            <span className={canvasPlusPreview ? "cp-screener-section-label" : "text-[11px] font-black uppercase tracking-[0.1em] text-[var(--c-ink-3)]"}>표시</span>
+            <span className={canvasPlusPreview ? "cp-screener-section-label" : "text-[12px] font-black uppercase tracking-[0.1em] text-[var(--c-ink-3)]"}>표시</span>
             {VIEW_MODE_BUTTONS.map((item) => (
               <button
                 key={item}
@@ -3451,30 +3965,6 @@ export default function ScreenerClient({
               </button>
             ))}
           </div>
-          <div data-screener-density-control className={canvasPlusPreview ? "cp-screener-toolbar-section cp-screener-density-toolbar" : "flex flex-wrap items-center gap-2"}>
-            <span className={canvasPlusPreview ? "cp-screener-section-label" : "text-[11px] font-black uppercase tracking-[0.1em] text-[var(--c-ink-3)]"}>밀도</span>
-            {DENSITY_BUTTONS.map((item) => (
-              <button
-                key={item}
-                type="button"
-                data-screener-density-option={item}
-                data-canvas-plus-row-height={canvasPlusPreview ? DENSITY_ROW_HEIGHT[item] : undefined}
-                onClick={() => handleDensityChange(item)}
-                aria-pressed={density === item}
-                data-canvas-plus-active={canvasPlusPreview ? String(density === item) : undefined}
-                className={canvasPlusPreview
-                  ? "cp-screener-segment"
-                  : cx(
-                    "inline-flex min-h-11 items-center rounded-full px-3 text-[11px] font-black uppercase tracking-[0.1em] transition sm:min-h-7",
-                    density === item
-                      ? "border border-[var(--c-ink)] bg-[var(--c-ink)] text-white"
-                      : "border border-[var(--c-line)] bg-[var(--c-panel)] text-[var(--c-ink-3)] hover:border-[var(--c-ink-4)] hover:text-[var(--c-ink)]",
-                  )}
-              >
-                {DENSITY_LABEL[item]}
-              </button>
-            ))}
-          </div>
         </div>
       </div>
       ) : null}
@@ -3483,110 +3973,78 @@ export default function ScreenerClient({
       <section
         className={canvasPlusPreview
           ? cx("cp-card cp-screener-results-shell", !dataReady && "cp-screener-results-shell--muted")
-          : cx("rounded-[1.5rem] border border-[var(--c-line)] bg-[var(--c-panel)] p-2 shadow-[var(--sh-sm)] sm:p-3", !dataReady && "opacity-60")}
+          : cx("rounded-[1.5rem] border border-[var(--c-line)] bg-[var(--c-panel)] p-2 sm:p-3", !dataReady && "opacity-60")}
         data-canvas-plus-screener-results-shell={canvasPlusPreview ? "true" : undefined}
+        tabIndex={0}
+        role="region"
+        aria-label="스크리너 결과 (j/k 이동, w 선택, Enter 열기)"
+        onKeyDown={handleResultsKeyDown}
       >
-        {canvasPlusPreview ? (
-          <div className="cpw4-results-header">
-            <div className="cpw4-results-title">
-              <strong>결과 {sorted.length.toLocaleString("ko-KR")}개</strong>
-              <span>| {safePage + 1} / {pageCount} 페이지</span>
+        <div className={canvasPlusPreview ? "cp-screener-results-mobile min-[921px]:hidden" : "min-[921px]:hidden"}>
+          {!dataReady && showMobileSkeleton ? (
+            <div aria-hidden="true" className="space-y-2 p-3">
+              {Array.from({ length: 6 }, (_, skeletonIndex) => (
+                <div key={`screener-mobile-skeleton-${skeletonIndex}`} className="animate-pulse space-y-2 rounded-lg bg-[var(--c-surface-2)] p-3">
+                  <div className="h-3 w-24 rounded bg-[var(--c-line-2)]" />
+                  <div className="h-3 w-full rounded bg-[var(--c-line-2)]" />
+                  <div className="h-3 w-2/3 rounded bg-[var(--c-line-2)]" />
+                </div>
+              ))}
             </div>
-            <div className="cpw4-results-tools" data-canvas-plus-screener-toolbar="true">
-              <div className="cpw4-column-lens">
-                <button
-                  type="button"
-                  className="cpw4-column-chip"
-                  aria-expanded={columnMenuOpen}
-                  aria-haspopup="menu"
-                  onClick={() => setColumnMenuOpen((v) => !v)}
-                >
-                  컬럼 {PRESET_LABEL[preset]} <span aria-hidden="true">⌄</span>
-                </button>
-                {columnMenuOpen ? (
-                  <div className="cpw4-column-menu" role="menu" aria-label="컬럼 preset">
-                    {(Object.keys(PRESET_KEYS) as ColumnPreset[]).map((p) => (
-                      <button
-                        key={p}
-                        type="button"
-                        role="menuitemradio"
-                        aria-checked={preset === p}
-                        onClick={() => {
-                          handlePresetChange(p);
-                          setColumnMenuOpen(false);
-                        }}
-                        data-canvas-plus-active={String(preset === p)}
-                        className="cpw4-column-menu__item"
-                      >
-                        {PRESET_LABEL[p]}
-                      </button>
-                    ))}
-                  </div>
-                ) : null}
-              </div>
-
-              <div data-screener-view-mode-control className="cpw4-icon-toggle-group" aria-label="결과 표시 방식">
-                {VIEW_MODE_BUTTONS.map((item) => (
-                  <button
-                    key={item}
-                    type="button"
-                    data-screener-view-mode-option={item}
-                    onClick={() => handleViewModeChange(item)}
-                    aria-label={VIEW_MODE_LABEL[item]}
-                    aria-pressed={viewMode === item}
-                    data-canvas-plus-active={String(viewMode === item)}
-                    className="cpw4-icon-button"
-                  >
-                    <span className={item === "table" ? "cpw4-icon-table" : "cpw4-icon-card"} aria-hidden="true" />
-                  </button>
-                ))}
-              </div>
-
-              <div data-screener-density-control className="cpw4-density-group" aria-label="행 밀도">
-                {DENSITY_BUTTONS.map((item) => (
-                  <button
-                    key={item}
-                    type="button"
-                    data-screener-density-option={item}
-                    data-canvas-plus-row-height={DENSITY_ROW_HEIGHT[item]}
-                    onClick={() => handleDensityChange(item)}
-                    aria-label={DENSITY_LABEL[item]}
-                    aria-pressed={density === item}
-                    data-canvas-plus-active={String(density === item)}
-                    className="cpw4-density-button"
-                  >
-                    {item === "compact" ? "C" : item === "standard" ? "S" : "L"}
-                  </button>
-                ))}
+          ) : (
+          <Panel>
+            <div
+              ref={mobileListRef}
+              role="region"
+              aria-label="종목 목록"
+              className="overflow-auto"
+              style={{ maxHeight: "70vh" }}
+            >
+              <div style={{ height: `${mobileVirtualizer.getTotalSize()}px`, position: "relative" }}>
+                {mobileVirtualizer.getVirtualItems().map((virtualItem) => {
+                  const stock = sorted[virtualItem.index];
+                  if (!stock) return null;
+                  const expanded = expandedTicker === stock.ticker;
+                  const detailId = `screener-mobile-detail-${stock.ticker}`;
+                  return (
+                    <div
+                      key={stock.ticker}
+                      data-index={virtualItem.index}
+                      ref={mobileVirtualizer.measureElement}
+                      className={virtualItem.index === safeCursor ? "bg-[var(--c-surface-2)] shadow-[inset_2px_0_0_var(--c-brand)]" : undefined}
+                      style={{
+                        position: "absolute",
+                        top: 0,
+                        left: 0,
+                        width: "100%",
+                        transform: `translateY(${virtualItem.start}px)`,
+                      }}
+                    >
+                      <MobileStockCard
+                        stock={stock}
+                        expanded={expanded}
+                        detailId={detailId}
+                        preset={preset}
+                        selected={selectedTickers.has(stock.ticker)}
+                        canvasPlusPreview={canvasPlusPreview}
+                        returnTo={journeyReturnTo}
+                        onBeforeNavigate={saveJourneyBeforeNavigate}
+                        onToggle={() => toggleExpandedDetail(stock.ticker, detailId)}
+                        onSelectedChange={() => toggleSelectedTicker(stock.ticker)}
+                      />
+                    </div>
+                  );
+                })}
               </div>
             </div>
-          </div>
-        ) : null}
-
-        <div className={canvasPlusPreview ? "cp-screener-results-mobile space-y-3 md:hidden" : "space-y-3 md:hidden"}>
-          {pageRows.map((stock) => {
-            const expanded = expandedTicker === stock.ticker;
-            const detailId = `screener-mobile-detail-${stock.ticker}`;
-            return (
-              <MobileStockCard
-                key={stock.ticker}
-                stock={stock}
-                expanded={expanded}
-                detailId={detailId}
-                preset={preset}
-                selected={selectedTickers.has(stock.ticker)}
-                canvasPlusPreview={canvasPlusPreview}
-                onToggle={() => setExpandedTicker((prev) => (prev === stock.ticker ? null : stock.ticker))}
-                onSelectedChange={() => toggleSelectedTicker(stock.ticker)}
-              />
-            );
-          })}
-          {dataReady && pageRows.length === 0 ? (
-            <ScreenerEmptyState canvasPlusPreview={canvasPlusPreview} hasFilters={hasFilters} onResetFilters={resetFilters} />
+          </Panel>
+          )}
+          {dataReady && sorted.length === 0 ? (
+            <ScreenerEmptyState canvasPlusPreview={canvasPlusPreview} hasFilters={hasFilters} onResetFilters={resetFilters} nextRefresh={`필터 변경 시 즉시 재검색 · ${sourceDateLabel}`} />
           ) : null}
         </div>
 
-        <div className={canvasPlusPreview ? "cp-screener-results-body hidden md:block" : "hidden md:block"}>
+        <div className={canvasPlusPreview ? "cp-screener-results-body hidden min-[921px]:block" : "hidden min-[921px]:block"}>
           {viewMode === "card" ? (
             <div
               data-screener-card-grid
@@ -3605,13 +4063,15 @@ export default function ScreenerClient({
                     preset={preset}
                     selected={selectedTickers.has(stock.ticker)}
                     canvasPlusPreview={canvasPlusPreview}
-                    onToggle={() => setExpandedTicker((prev) => (prev === stock.ticker ? null : stock.ticker))}
+                    returnTo={journeyReturnTo}
+                    onBeforeNavigate={saveJourneyBeforeNavigate}
+                    onToggle={() => toggleExpandedDetail(stock.ticker, detailId)}
                     onSelectedChange={() => toggleSelectedTicker(stock.ticker)}
                   />
                 );
               })}
               {dataReady && pageRows.length === 0 ? (
-                <ScreenerEmptyState canvasPlusPreview={canvasPlusPreview} hasFilters={hasFilters} onResetFilters={resetFilters} />
+                <ScreenerEmptyState canvasPlusPreview={canvasPlusPreview} hasFilters={hasFilters} onResetFilters={resetFilters} nextRefresh={`필터 변경 시 즉시 재검색 · ${sourceDateLabel}`} />
               ) : null}
             </div>
           ) : (
@@ -3624,6 +4084,7 @@ export default function ScreenerClient({
               hasFilters={hasFilters}
               canvasPlusPreview={canvasPlusPreview}
               enabled={true}
+              emptyNextRefresh={`필터 변경 시 즉시 재검색 · ${sourceDateLabel}`}
               expandedTicker={expandedTicker}
               fallback={
                 <ScreenerDesktopTable
@@ -3643,7 +4104,9 @@ export default function ScreenerClient({
                   deselectPageRows={deselectPageRows}
                   onToggleExpandedTicker={onToggleExpandedTicker}
                   onResetFilters={resetFilters}
-                  renderCell={renderCell}
+                  returnTo={journeyReturnTo}
+                  onBeforeNavigate={saveJourneyBeforeNavigate}
+                  renderCell={renderJourneyCell}
                   renderGuruHolderBadge={renderGuruHolderBadge}
                   selectPageRows={selectPageRows}
                   toggleSelectedTicker={toggleSelectedTicker}
@@ -3651,14 +4114,20 @@ export default function ScreenerClient({
                 />
               }
               pageRows={pageRows}
+              rows={sorted}
+              scrollTarget={scrollSignal}
+              onVisibleStartIndex={handleVisibleStartIndex}
+              cursorTicker={sorted[safeCursor]?.ticker ?? null}
               preset={preset}
               selectedTickers={selectedTickers}
               onResetFilters={resetFilters}
+              returnTo={journeyReturnTo}
+              onBeforeNavigate={saveJourneyBeforeNavigate}
               sortDir={sortDir}
               sortKey={sortKey}
               deselectPageRows={deselectPageRows}
               onToggleExpandedTicker={onToggleExpandedTicker}
-              renderCell={renderCell}
+              renderCell={renderJourneyCell}
               renderGuruHolderBadge={renderGuruHolderBadge}
               selectPageRows={selectPageRows}
               toggleSelectedTicker={toggleSelectedTicker}
@@ -3672,24 +4141,28 @@ export default function ScreenerClient({
           <div className={canvasPlusPreview ? "cp-screener-pagination" : "mt-3 flex items-center justify-between gap-3 px-2"}>
             <button
               type="button"
-              onClick={() => setPage((value) => Math.max(0, value - 1))}
+              onClick={() => goToPage(safePage - 1)}
               disabled={safePage === 0}
               className={canvasPlusPreview ? "cp-button cp-screener-page-button" : "inline-flex min-h-9 items-center rounded-full border border-[var(--c-line)] bg-[var(--c-panel)] px-3 text-[11px] font-black uppercase tracking-[0.1em] text-[var(--c-ink-2)] transition enabled:hover:border-[var(--brand-interactive)] disabled:cursor-not-allowed disabled:bg-[var(--c-surface-2)]"}
               data-variant={canvasPlusPreview ? "ghost" : undefined}
               data-density={canvasPlusPreview ? "compact" : undefined}
+              data-screener-pagination
+              data-screener-page={safePage - 1}
             >
               이전
             </button>
-            <span className={canvasPlusPreview ? "cp-screener-page-status" : "orbitron text-xs font-bold tabular-nums text-[var(--c-ink-3)]"}>
+            <span className={canvasPlusPreview ? "cp-screener-page-status" : " text-[12px] font-bold tabular-nums text-[var(--c-ink-3)]"}>
               {safePage + 1} / {pageCount}
             </span>
             <button
               type="button"
-              onClick={() => setPage((value) => Math.min(pageCount - 1, value + 1))}
+              onClick={() => goToPage(safePage + 1)}
               disabled={safePage >= pageCount - 1}
               className={canvasPlusPreview ? "cp-button cp-screener-page-button" : "inline-flex min-h-9 items-center rounded-full border border-[var(--c-line)] bg-[var(--c-panel)] px-3 text-[11px] font-black uppercase tracking-[0.1em] text-[var(--c-ink-2)] transition enabled:hover:border-[var(--brand-interactive)] disabled:cursor-not-allowed disabled:bg-[var(--c-surface-2)]"}
               data-variant={canvasPlusPreview ? "ghost" : undefined}
               data-density={canvasPlusPreview ? "compact" : undefined}
+              data-screener-pagination
+              data-screener-page={safePage + 1}
             >
               다음
             </button>
@@ -3697,9 +4170,142 @@ export default function ScreenerClient({
         ) : null}
       </section>
 
-      <p className="px-1 text-[11px] text-[var(--c-ink-2)]">
-        데이터: 기업 실적 · 밸류에이션 · 가격/배당 히스토리 · 기관 공시 · 통합 스코어. 정렬 시 결측치는 항상 뒤로 정렬됩니다.
+      {/* fh-029: on mobile the toolbar instance is hidden, so the full
+          provenance rail lives below the list with the page controls. */}
+      <div className="min-[921px]:hidden">
+        <EvidenceRail
+          className="cp-screener-below-rail"
+          freshness={railFreshness}
+          stateLabel={screenerDataState.reason === "source-age" ? screenerDataState.label : undefined}
+          source="스크리너"
+          asOf={screenerSourceDate ?? "미제공"}
+          coverage={`가격 확인 ${pricedCount.toLocaleString("ko-KR")} / ${sorted.length.toLocaleString("ko-KR")}`}
+          onRetry={railFreshness === "fresh" ? undefined : retryScreenerData}
+          lkgAsOf={screenerSourceDate ?? undefined}
+          skeletonDelayMs={120}
+          onEvidence={() => window.open("/data/global-scouter/core/stocks_analyzer.json", "_blank", "noopener")}
+        />
+      </div>
+
+      <p className="px-1 text-[12px] text-[var(--c-ink-2)]">
+        데이터: 기업 실적 · 밸류에이션 · 가격/배당 히스토리 · 기관 공시 · Short/Long Edge 점수. 정렬 시 결측치는 항상 뒤로 정렬됩니다.
       </p>
+
+      {filterSheetOpen ? (
+        <ScreenerFilterSheet
+          section={filterSheetSection}
+          resultCount={sorted.length}
+          onReset={resetFilters}
+          onClose={() => setFilterSheetOpen(false)}
+        >
+          <div className="cp-screener-sheet-block" data-sheet-section="scope">
+            <div className="cp-screener-sheet-segment" role="group" aria-label="대상">
+              <span className="cp-screener-segment" data-canvas-plus-active="true">주식</span>
+              <TransitionLink href={ROUTES.etfs} className="cp-screener-segment" data-canvas-plus-active="false">
+                ETF
+              </TransitionLink>
+            </div>
+          </div>
+          <div className="cp-screener-sheet-block" data-sheet-section="sort">
+            <p className="cp-screener-section-label">정렬</p>
+            <div className="cp-screener-sheet-sort">
+              <label className="cp-screener-field">
+                <span className="cp-screener-field__label">기준</span>
+                <select
+                  value={sortKey}
+                  onChange={(event) => {
+                    const next = event.target.value as ScreenerSortKey;
+                    if (next !== sortKey) toggleSort(next);
+                  }}
+                  className="cp-screener-control"
+                >
+                  {COLUMNS.map((column) => (
+                    <option key={column.key} value={column.key}>{column.label}</option>
+                  ))}
+                  {COLUMNS.some((column) => column.key === sortKey) ? null : (
+                    <option value={sortKey}>{sortKey}</option>
+                  )}
+                </select>
+              </label>
+              <button
+                type="button"
+                className="cp-screener-segment"
+                onClick={() => toggleSort(sortKey)}
+                aria-label={`정렬 방향 ${sortDir === "asc" ? "오름차순" : "내림차순"}`}
+              >
+                {sortDir === "asc" ? "오름차순 ↑" : "내림차순 ↓"}
+              </button>
+            </div>
+          </div>
+          <div className="cp-screener-sheet-block" data-sheet-section="presets">
+            <p className="cp-screener-section-label">내 프리셋</p>
+            <div className="cp-screener-preset-row">
+              <input
+                type="text"
+                value={presetName}
+                onChange={(event) => setPresetName(event.target.value)}
+                onKeyDown={(event) => {
+                  if (event.key === "Enter") handleSavePreset();
+                }}
+                placeholder="프리셋 이름"
+                className="cp-screener-preset-input"
+              />
+              <button
+                type="button"
+                onClick={handleSavePreset}
+                disabled={!presetName.trim()}
+                className="cp-button cp-screener-preset-save"
+                data-variant="primary"
+                data-density="compact"
+              >
+                저장
+              </button>
+            </div>
+            {savedPresets.length > 0 ? (
+              <div className="cp-screener-preset-list">
+                {savedPresets.map((p) => (
+                  <div key={p.name} className="cp-screener-preset-item">
+                    <button
+                      type="button"
+                      onClick={() => handleLoadPreset(p.state)}
+                      className="cp-screener-preset-load"
+                      title={p.name}
+                    >
+                      {p.name}
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => handleDeletePreset(p.name)}
+                      className="cp-screener-preset-delete"
+                      aria-label={`${p.name} 삭제`}
+                    >
+                      ×
+                    </button>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <p className="cpw4-saved-preset-empty">저장된 프리셋이 없습니다.</p>
+            )}
+          </div>
+          <div className="cp-screener-sheet-block" data-sheet-section="filters">
+            <div className="cp-screener-filter-groups">
+              {filterGroupControlsJsx}
+            </div>
+          </div>
+        </ScreenerFilterSheet>
+      ) : null}
+
+      {expandedStock && expandedDetailId ? (
+        <ScreenerDetailSheet
+          stock={expandedStock}
+          detailId={expandedDetailId}
+          canvasPlusPreview={canvasPlusPreview}
+          returnTo={journeyReturnTo}
+          onBeforeNavigate={saveJourneyBeforeNavigate}
+          onClose={closeExpandedDetail}
+        />
+      ) : null}
     </div>
   );
 }

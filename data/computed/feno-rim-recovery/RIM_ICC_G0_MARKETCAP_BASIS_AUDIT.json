@@ -1,0 +1,123 @@
+{
+ "schema_version": "feno_rim_icc_g0_marketcap_basis_audit.v1",
+ "phase": "G0",
+ "research_only": true,
+ "criteria": {
+  "v1_file": "data/computed/feno-rim-recovery/g0-criteria.json",
+  "v2_file": "data/computed/feno-rim-recovery/g0-criteria-v2.json",
+  "v2_sha256": "a39f3d39696f247ba0c9527064f22d683433a37cbefd0493ebe0473aa49f2c40",
+  "frozen_in_earlier_commits": ["9dbe12dba3", "4c9034b1dc"],
+  "no_threshold_was_changed_after_any_result": true
+ },
+ "roles": {
+  "worker": "DeepSeek — steps A, B, C and the C6 aggregate table",
+  "handler": "cc (Opus) — independent re-derivation and adjudication",
+  "independence": "The handler re-implemented the committed r2-gls-icc.mjs selection rules (annual duration identification, sharesFacts, sharesFactor, the today-basis outlier filter, base-year FYE guard, sharesAt, originClose) in separate code, read no worker artifact as input, and reproduced the comparison from committed repo data alone."
+ },
+
+ "reproduction_of_the_incumbent_pipeline": {
+  "committed_rows": 1638,
+  "handler_rebuilt": 1638,
+  "failures": 0,
+  "max_relative_difference_vs_committed_price": 4.705e-8,
+  "max_relative_difference_vs_committed_mcap": 5.061e-16,
+  "reading": "The handler's independent rebuild reproduces the committed market caps to machine precision, so the comparison below is between two well-understood constructions rather than between one construction and an approximation of it."
+ },
+
+ "step_A_validation": {
+  "A1": "VOID — see g0-criteria-v2 amendment 1. It compared an as-traded reconstruction against a split-adjusted series and therefore measured the split factor. Its 39.0 pooled maximum relative error is not evidence about the reconstruction.",
+  "A2": "r1-panel closes vs data/yf/finance history_unadjusted: 39,690/39,690 dates exactly equal.",
+  "A3": "PRIMARY. As-traded reconstruction from the r1-panel fetch vs the r3-panel fetch: identical on 39,690 dates.",
+  "A4": "supporting. At each split date the reconstructed series drops by approximately the split ratio; residuals are the day's genuine move and spin-off-style ratios are not expected to match tightly. No threshold attached.",
+  "A5": "Three independent split maps (r1-panel, r3-panel, data/yf/finance) across all 368 R2 symbols: 190 in-window events, 0 disagreements."
+ },
+
+ "step_B": {
+  "cell_selection": "identical to R2_GLS_ICC.json",
+  "symmetric_difference": 0,
+  "coverage": "1638/1638 = 100%, above the 95% data-contract floor"
+ },
+
+ "step_C_basis_comparison": {
+  "cells_compared": 1638,
+  "identical_to_machine_precision": 1618,
+  "deviating": 20,
+  "deviating_share": 0.0122,
+  "category_1_split_between_shares_report_date_and_origin": 20,
+  "category_2_multi_share_class": 0,
+  "category_3_unexplained": 0,
+  "every_deviating_ratio_equals_the_split_factor_quotient_exactly": "20/20",
+  "deviating_cells": [
+   {"sym": "DD", "origin": 2019, "ratio": 1.423270, "shares_date": "2019-01-31", "close": "2019-06-28", "splits_between": [["2019-04-02", 1.487], ["2019-06-03", 0.4725]]},
+   {"sym": "FAST", "origin": 2019, "ratio": 0.500000, "shares_date": "2019-01-18", "close": "2019-06-28", "splits_between": [["2019-05-23", 2]]},
+   {"sym": "GE", "origin": 2019, "ratio": 0.961538, "shares_date": "2019-01-31", "close": "2019-06-28", "splits_between": [["2019-02-26", 1.04]]},
+   {"sym": "WRB", "origin": 2019, "ratio": 0.666667, "shares_date": "2019-02-19", "close": "2019-06-28", "splits_between": [["2019-04-03", 1.5]]},
+   {"sym": "ODFL", "origin": 2020, "ratio": 0.666667, "shares_date": "2020-02-24", "close": "2020-06-30", "splits_between": [["2020-03-25", 1.5]]},
+   {"sym": "RTX", "origin": 2020, "ratio": 0.629327, "shares_date": "2020-01-31", "close": "2020-06-30", "splits_between": [["2020-04-03", 1.589]]},
+   {"sym": "TT", "origin": 2020, "ratio": 0.775795, "shares_date": "2020-02-01", "close": "2020-06-30", "splits_between": [["2020-03-02", 1.289]]},
+   {"sym": "APH", "origin": 2021, "ratio": 0.500000, "shares_date": "2021-01-31", "close": "2021-06-30", "splits_between": [["2021-03-05", 2]]},
+   {"sym": "CSGP", "origin": 2021, "ratio": 0.100000, "shares_date": "2021-02-19", "close": "2021-06-30", "splits_between": [["2021-06-28", 10]]},
+   {"sym": "MRK", "origin": 2021, "ratio": 0.954198, "shares_date": "2021-01-31", "close": "2021-06-30", "splits_between": [["2021-06-03", 1.048]]},
+   {"sym": "SHW", "origin": 2021, "ratio": 0.333333, "shares_date": "2021-01-31", "close": "2021-06-30", "splits_between": [["2021-04-01", 3]]},
+   {"sym": "AMZN", "origin": 2022, "ratio": 0.050000, "shares_date": "2022-01-26", "close": "2022-06-30", "splits_between": [["2022-06-06", 20]]},
+   {"sym": "BDX", "origin": 2022, "ratio": 0.975610, "shares_date": "2021-10-31", "close": "2022-06-30", "splits_between": [["2022-04-01", 1.025]]},
+   {"sym": "DXCM", "origin": 2022, "ratio": 0.250000, "shares_date": "2022-02-07", "close": "2022-06-30", "splits_between": [["2022-06-13", 4]]},
+   {"sym": "FTNT", "origin": 2022, "ratio": 0.200000, "shares_date": "2022-02-18", "close": "2022-06-30", "splits_between": [["2022-06-23", 5]]},
+   {"sym": "WRB", "origin": 2022, "ratio": 0.666667, "shares_date": "2022-02-17", "close": "2022-06-30", "splits_between": [["2022-03-24", 1.5]]},
+   {"sym": "ZBH", "origin": 2022, "ratio": 0.970874, "shares_date": "2022-02-07", "close": "2022-06-30", "splits_between": [["2022-03-01", 1.03]]},
+   {"sym": "CPRT", "origin": 2023, "ratio": 0.500000, "shares_date": "2022-09-26", "close": "2023-06-30", "splits_between": [["2022-11-04", 2]]},
+   {"sym": "PANW", "origin": 2023, "ratio": 0.333333, "shares_date": "2022-08-22", "close": "2023-06-30", "splits_between": [["2022-09-14", 3]]},
+   {"sym": "TECH", "origin": 2023, "ratio": 0.250000, "shares_date": "2022-08-19", "close": "2023-06-30", "splits_between": [["2022-11-30", 4]]}
+  ]
+ },
+
+ "measured_pass_conditions": {
+  "C1_market_cap_rank_correlation": {
+   "threshold": ">= 0.99 at every origin",
+   "measured": {"2019": 0.9977735593, "2020": 0.9992603080, "2021": 0.9914582450, "2022": 0.9864542826, "2023": 0.9958308474},
+   "literal_result": "FAILS at 2022 (0.98645 < 0.99)",
+   "threshold_unchanged": true
+  },
+  "C2_icc_difference": {"threshold": "median <= 0.0025, p95 <= 0.0100", "measured": "exactly 0 at every cell", "basis": "structural — glsIcc consumes per-share quantities only; market cap is computed after the solve and never feeds it", "result": "PASSES"},
+  "C3_r3_fama_macbeth_coefficient": {"status": "NOT MEASURED — requires step D, which is blocked pending this adjudication"},
+  "C4_bidimensional_spread": {"threshold": "positive at 5/5 origins", "measured": "unchanged", "basis": "structural — the bi-dimensional leg sorts on B/P and ICC and spreads on realized return; no market cap enters", "result": "PASSES"},
+  "C5_per_origin_sign": {"status": "NOT MEASURED — requires step D"},
+  "C6_cap_weighted_index_aggregate": {
+   "threshold": "absolute difference <= 0.0025 at every origin",
+   "measured_absolute_difference": {"2019": 0.000120, "2020": 0.000111, "2021": 0.000079, "2022": 0.000735, "2023": 0.000034},
+   "worst_origin": {"year": 2022, "value": 0.000735, "as_basis_points": 7.35},
+   "handler_reproduction_of_the_committed_aggregate": {"2019": 1.39e-7, "2020": 3.59e-7, "2021": -3.56e-8, "2022": -4.49e-7, "2023": 2.10e-7, "note": "handler corrected-basis aggregate minus the committed diag value"},
+   "result": "PASSES with a factor of 3.4 of headroom at the worst origin"
+  }
+ },
+
+ "adjudication": {
+  "the_C1_failure_is_in_the_control_not_the_incumbent": true,
+  "finding": "Mandate section 7 defines the direct route as as-traded close_t x point-in-time as-reported shares_t. In the data, as-reported share counts are dated at the FILING, not at the origin. When a split falls between the filing date and the origin, multiplying a post-split price by a pre-split share count is itself a mixed-basis error — the exact error class G0 exists to remove.",
+  "worked_example": {
+   "cell": "AMZN 2022",
+   "shares_filed": "2022-01-26 (pre-split)",
+   "split": "2022-06-06, 20:1",
+   "origin_close": "2022-06-30 (post-split), 106.21",
+   "incumbent_market_cap_usd_bn": 1080.9,
+   "literal_direct_market_cap_usd_bn": 54.0,
+   "external_reality": "AMZN's market capitalization on 2022-06-30 was approximately 1.07 trillion USD",
+   "conclusion": "the incumbent is right and the literal direct route is 20x too small on this cell"
+  },
+  "algebraic_identity": "A time-aligned direct route must restate shares onto the origin's basis: shares_at_origin = shares_raw x product of splits between the filing date and the origin. Multiplying that by the as-traded close, which is the adjusted close x product of splits after the origin, yields adjusted_close x shares_raw x product of splits after the filing date — which is the incumbent construction exactly. Correctly specified, the two routes are identical, not merely close.",
+  "what_G0_actually_established": "The R2/R3 market-cap construction is already basis-consistent. The mixed-share-basis defect that overturned R0 (back-adjusted price against as-reported shares, up to 40x, 274 of 848 cells) is absent here: 1,618 of 1,638 cells are identical to machine precision, and all 20 differences are the incumbent correctly restating shares across a split that the literal control leaves unrestated.",
+  "verdict": "G0_PASS",
+  "verdict_qualification": "Recorded together with the literal C1 result, which failed at one origin. The threshold was not moved, the control's defect was not discovered by looking at whether it helped, and the identity above is checkable independently of any measurement. If the owner reads the literal contract as binding regardless of control validity, the alternative label is G0_INCONCLUSIVE and the remedy is to re-run C against the time-aligned direct route, whose outcome is determined in advance by the identity.",
+  "consequences_for_later_gates": "C3 and C5 remain unmeasured. Under the identity they are also determined — a time-aligned direct size control is the incumbent size control, so the R3 coefficients cannot move. Step D is therefore reduced to a confirmation run, not an open test."
+ },
+
+ "prohibitions_observed": [
+  "no threshold changed after any result",
+  "no output-targeted constant",
+  "no GLS, forecast, fade, terminal, payout, industry-target or solver change",
+  "no network acquisition",
+  "no publication or promotion; the public surface remains quarantined"
+ ],
+
+ "generated_at": "2026-08-07T14:58:00Z"
+}

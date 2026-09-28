@@ -1,0 +1,25 @@
+{
+ "schema_version": "feno_index_rim_e5_freeze_receipt.v1",
+ "phase": "E5.0",
+ "criteria_file": "data/computed/rim-index/feno-index-rim-e5-criteria.json",
+ "criteria_sha256": "37cea01740eb7c07f84ee0fb13c9758f908a2f6e700f742e4a12f38142c1b830",
+ "candidate": "B_STABLE_GROWTH_RI",
+ "starting_commit": "ab46a51077",
+ "candidate_implementation": "scripts/build-rim-index.mjs",
+ "candidate_implementation_sha256": "39a4f29057201b3c23f67ba256bcb4ab40d80ae91c02436cd19e4b0f8bbbbc44",
+ "origins": [
+  "2019-06-30",
+  "2020-06-30",
+  "2021-06-30",
+  "2022-06-30",
+  "2023-06-30",
+  "2024-06-30",
+  "2025-06-30"
+ ],
+ "metric_definitions": "per_origin_metrics and aggregate_metrics in the criteria file",
+ "verdict_rules": "ready_gates_all_required, research_only_conditions, retire_conditions in the criteria file",
+ "result_artifacts_state": "all seven E5/E6 result paths verified absent on disk immediately before this receipt was written",
+ "repo_head_at_freeze": "ab46a510778b31f019bf3107485b5a5118e2258b",
+ "frozen_at_utc": "2026-08-08T12:20:00Z",
+ "honest_disclosure": "PRE-RESULT with respect to historical outcomes only. No historical 12-month outcome was computed or read before this freeze. The 2026 output of candidate B was already known \u2014 SPX Base 6526, NDX Base 31452 \u2014 so this is not and is not claimed to be a pre-current freeze."
+}

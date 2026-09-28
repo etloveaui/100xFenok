@@ -1,33 +1,53 @@
-# FDIC Tier1 Capital Ratio collection with current-attempt evidence.
+# FDIC Tier1 Capital Ratio collection with LKG recovery state.
 
 name: Fetch FDIC Tier1 Data
 
 on:
   schedule:
-    - cron: '0 6 1-7 * 1'
+    - cron: '0 6 * * 1'
+    - cron: '0 6 * * 4'
   workflow_dispatch:
     inputs:
+      persistence_migration_only:
+        description: 'Metadata-only bounded-persistence migration; preserves data and recovery state'
+        required: false
+        default: false
+        type: boolean
       controlled_failure_key:
         description: 'Dispatch-only chaos key (latest or an owned quarter)'
         required: false
         default: ''
         type: string
+      owner_approved_recovery:
+        description: 'Explicit owner approval for one provider-advancing manual recovery; never grants natural-run credit'
+        required: false
+        default: false
+        type: boolean
 
 permissions:
   contents: write
-  actions: write
 
 concurrency:
-  group: fenok-data-writer-${{ github.ref }}
+  group: fenok-data-writer-refs/heads/main
   cancel-in-progress: false
   queue: max
 
 jobs:
   fetch-fdic:
     runs-on: ubuntu-latest
+    timeout-minutes: 90
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
+        with:
+          filter: blob:none
+          sparse-checkout: |
+            scripts
+            .github/workflows
+            100xfenok-next/scripts
+            100xfenok-next/src/lib
+            data/admin/fdic_tier1
+            data/macro
 
       - name: Setup Node.js
         uses: actions/setup-node@v4
@@ -37,14 +57,16 @@ jobs:
       - name: Test FDIC Tier1 producer contracts
         run: node scripts/test-fetch-fdic-tier1.mjs
 
-      - name: Fetch FDIC Tier1 data and persist attempt evidence
+      - name: Fetch FDIC Tier1 data
         id: fetch_fdic
         env:
+          INPUT_PERSISTENCE_MIGRATION_ONLY: ${{ github.event.inputs.persistence_migration_only || 'false' }}
           INPUT_CONTROLLED_FAILURE_KEY: ${{ github.event.inputs.controlled_failure_key || '' }}
+          INPUT_OWNER_APPROVED_RECOVERY: ${{ github.event.inputs.owner_approved_recovery || 'false' }}
         run: node scripts/fetch-fdic-tier1.mjs
 
       - name: Verify output
-        if: ${{ steps.fetch_fdic.outcome == 'success' }}
+        if: ${{ steps.fetch_fdic.outcome == 'success' && steps.fetch_fdic.outputs.updated == 'true' }}
         run: |
           head -20 data/macro/fdic-tier1.json
           echo "Total lines: $(wc -l < data/macro/fdic-tier1.json)"
@@ -58,26 +80,13 @@ jobs:
           set -euo pipefail
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
-          # Phase 1: consume the generated policy while retaining the legacy
-          # hand list as parity defense until this workflow's natural proof.
           scripts/stage-lane-manifest.sh \
             --workflow .github/workflows/fetch-fdic.yml \
             --stage always_if_exists
-          SHARD="data/admin/data-supply-state/detection-attempts/fdic_tier1.json"
-          if [[ -f "$SHARD" ]]; then
-            git add -- "$SHARD"
-          fi
-          if [[ -f data/admin/fdic_tier1/index.json ]]; then
-            git add -- data/admin/fdic_tier1/index.json
-          fi
-          if [[ -f data/admin/fdic_tier1/lkg/fdic_tier1.json ]]; then
-            git add -- data/admin/fdic_tier1/lkg/fdic_tier1.json
-          fi
           if [[ "$FETCH_OUTCOME" == "success" ]]; then
             scripts/stage-lane-manifest.sh \
               --workflow .github/workflows/fetch-fdic.yml \
               --stage success_if_exists
-            git add -- data/macro/fdic-tier1.json 100xfenok-next/public/data/macro/fdic-tier1.json
           fi
           if git diff --staged --quiet; then
             echo "No FDIC Tier1 changes to publish"
@@ -91,10 +100,22 @@ jobs:
               continue
             fi
             if git push; then
-              gh workflow run update-manifest.yml --ref main
+              # Decoupled: a successful completion of this workflow runs the
+              # coordinate-computed-signals workflow_run (serialized rebuild +
+              # plane publish); the scheduled update-manifest.yml remains the
+              # reconciliation fallback for shared projections.
               exit 0
             fi
             sleep 3
           done
           echo "git push failed after retrying concurrent main updates"
           exit 1
+      - name: Publish fdic-tier1 generation to the cloud data plane
+        id: publish_cloud_generation
+        if: ${{ steps.fetch_fdic.outcome == 'success' && steps.fetch_fdic.outputs.updated == 'true' }}
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: aeeb5ea3affe55a2219d08ea02dad9e1
+          DATA_PLANE_ENDPOINT: https://100xfenok.etloveaui.workers.dev/internal/cloud-data-plane
+          DATA_PLANE_WRITE_KEY: ${{ secrets.DATA_PLANE_WRITE_KEY }}
+        run: node scripts/publish-cloud-data-generation.mjs --family=fdic-tier1 --tolerate-gate-block --json

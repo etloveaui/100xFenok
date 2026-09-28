@@ -90,66 +90,104 @@
       "run_id": "29544227703",
       "schedule": "20 23 * * 1-5",
       "shard": "1/5"
+    },
+    {
+      "attempts_used": 1,
+      "event_name": "schedule",
+      "failures": [],
+      "latency_ms": 992,
+      "natural": true,
+      "observed_at": "2026-08-03T22:58:08Z",
+      "outcome": "fresh",
+      "run_attempt": 1,
+      "run_id": "30860500094",
+      "schedule": "0 22 * * 1",
+      "shard": "1/6"
+    },
+    {
+      "attempts_used": 1,
+      "event_name": "schedule",
+      "failures": [],
+      "latency_ms": 817,
+      "natural": true,
+      "observed_at": "2026-08-06T05:27:19Z",
+      "outcome": "fresh",
+      "run_attempt": 1,
+      "run_id": "31074084652",
+      "schedule": "7 2 * * 0-5",
+      "shard": "49/72"
+    },
+    {
+      "attempts_used": 1,
+      "event_name": "workflow_dispatch",
+      "failures": [],
+      "latency_ms": 460,
+      "natural": false,
+      "observed_at": "2026-09-28T06:02:24Z",
+      "outcome": "fresh",
+      "run_attempt": 1,
+      "run_id": "36367834787",
+      "schedule": "",
+      "shard": ""
     }
   ],
   "current": {
-    "fetched_at": "2026-07-17T00:20:39Z",
-    "history_as_of": "2026-07-16",
+    "fetched_at": "2026-09-28T06:21:31Z",
+    "history_as_of": "2026-09-25",
     "path": "data/yf/finance/STLU.json",
-    "payload_sha256": "bfb6d6a1e9ad976c38f8aa5e57826100a0cd56e18d2c2c27cead0170e8ae7cf4",
-    "quote_as_of": "2026-07-16T19:49:12Z",
-    "source_as_of": "2026-07-16"
+    "payload_sha256": "283d4c60820eee756d53936f9a88b70ff49d229f72c5b3fa2248d480c70fdf86",
+    "quote_as_of": "2026-09-25T20:00:00Z",
+    "source_as_of": "2026-09-25"
   },
   "discovered_from": [
-    "market_facts",
     "stockanalysis_etf"
   ],
   "last_attempt": {
-    "attempts_used": 0,
-    "event_name": "schedule",
+    "attempts_used": 1,
+    "event_name": "workflow_dispatch",
     "failures": [],
-    "latency_ms": 0,
-    "natural": true,
-    "observed_at": "2026-07-17T00:21:09Z",
-    "outcome": "skipped_fresh",
+    "latency_ms": 460,
+    "natural": false,
+    "observed_at": "2026-09-28T06:02:24Z",
+    "outcome": "fresh",
     "run_attempt": 1,
-    "run_id": "29544227703",
-    "schedule": "20 23 * * 1-5",
-    "shard": "1/5"
+    "run_id": "36367834787",
+    "schedule": "",
+    "shard": ""
   },
   "lkg": {
-    "fetched_at": "2026-06-18T16:05:32Z",
-    "history_as_of": "2026-06-18",
+    "fetched_at": "2026-08-06T05:30:00Z",
+    "history_as_of": "2026-08-05",
     "path": "data/admin/yahoo-batch-quote-history/lkg/STLU.json",
-    "payload_sha256": "aabb1c95b9ec794402cfead8a839dc42cccf82f9f92a608cc5fa852545288bc7",
-    "quote_as_of": null,
-    "source_as_of": "2026-06-18"
+    "payload_sha256": "18ffad74b8b89a08bfd9e822a9aa75ffcf0f1721e9c2e5ce5b2c3c4271dd33ab",
+    "quote_as_of": "2026-08-05T19:38:30Z",
+    "source_as_of": "2026-08-05"
   },
   "promotion_contract": "provider_observation/v2",
   "provider_observation": {
-    "event_name": "schedule",
-    "history_as_of": "2026-07-16",
-    "observed_at": "2026-07-17T00:15:36Z",
-    "payload_sha256": "a4aa9dfb6b9dd24510d2a32ee11c66e977b22f4e76475052456fa56a2b4992ff",
-    "quote_as_of": "2026-07-16T19:49:12Z",
+    "event_name": "workflow_dispatch",
+    "history_as_of": "2026-09-25",
+    "observed_at": "2026-09-28T06:02:24Z",
+    "payload_sha256": "d0ac8de4ab371ef05619caa5b24f35466b240c2d6aa50dbe850bdb5c4953744f",
+    "quote_as_of": "2026-09-25T20:00:00Z",
     "run_attempt": 1,
-    "run_id": "29544227703",
+    "run_id": "36367834787",
     "schema_version": "provider_observation/v2",
-    "source_as_of": "2026-07-16"
+    "source_as_of": "2026-09-25"
   },
   "resolution_state": "fresh_primary",
   "retry": false,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "stale": {
-    "age_business_days": 15,
-    "classified_at": "2026-07-13T04:33:56Z",
-    "classified_run_id": "29224221077",
+    "age_business_days": 7,
+    "classified_at": "2026-08-14T00:10:47Z",
+    "classified_run_id": "31755913658",
     "expected_resolution": "next_natural_yahoo_run",
     "max_business_days": 6,
-    "message": "STLU holds LKG because Yahoo source date 2026-06-18 is 15 business days old, beyond the 6-day bound; it will retry on the next natural Yahoo run.",
+    "message": "STLU holds LKG because Yahoo source date 2026-08-05 is 7 business days old, beyond the 6-day bound; it will retry on the next natural Yahoo run.",
     "reason": "source_age_exceeds_lane_bound",
-    "source_as_of": "2026-06-18"
+    "source_as_of": "2026-08-05"
   },
   "ticker": "STLU",
-  "updated_at": "2026-07-17T00:21:09Z"
+  "updated_at": "2026-09-28T06:02:24Z"
 }

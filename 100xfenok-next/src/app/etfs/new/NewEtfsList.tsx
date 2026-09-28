@@ -417,6 +417,17 @@ export default function NewEtfsList({
   }, [dateFilter, dateFilterAnchor, debouncedQuery, issuerFilter, rows, sort, typeFilter]);
   const dateFilterMissingAnchor = dateFilter !== "전체" && !dateFilterAnchor;
 
+  // Empty-search dead end fix (fh-380 item 2): toolbar survives above, and this
+  // reset restores the full list in one tap.
+  const resetFilters = useCallback(() => {
+    setQuery("");
+    setTypeFilter("전체");
+    setDateFilter("전체");
+    setIssuerFilter("전체");
+    setSort("date");
+    syncParams({ query: "", typeFilter: "전체", dateFilter: "전체", issuerFilter: "전체", sort: "date" });
+  }, [syncParams]);
+
   const typeOptions: Array<{ value: EtfTypeFilter; label: string; count: number }> = [
     { value: "전체", label: "전체", count: rows.length },
     { value: "레버리지", label: "레버리지", count: typeCounts.leveraged },
@@ -536,7 +547,7 @@ export default function NewEtfsList({
               </button>
             </div>
             {dateFilterMissingAnchor ? (
-              <p className="rounded-xl border border-amber-200 bg-amber-50 px-3 py-2 text-xs font-semibold text-amber-800">
+              <p className="rounded-xl border border-amber-200 bg-amber-50 px-3 py-2 text-[12px] font-semibold text-amber-800">
                 상장일 기준일이 없어 최근 기간 필터를 적용할 수 없습니다. 전체 기간으로 바꾸면 현재 수집된 목록을 볼 수 있습니다.
               </p>
             ) : null}
@@ -554,7 +565,7 @@ export default function NewEtfsList({
                       <span className="ticker-pill" aria-hidden="true">{row.s}</span>
                       {displayName}
                     </div>
-                    <div className="mt-0.5 truncate text-[11px] leading-snug text-[var(--c-ink-3)]" title={metaText}>
+                    <div className="mt-0.5 truncate text-[12px] leading-snug text-[var(--c-ink-3)]" title={metaText}>
                       {metaText}
                     </div>
                   </span>
@@ -575,9 +586,18 @@ export default function NewEtfsList({
               <div className="mv-row">
                 <span className="co">
                   <div className="n">조건에 맞는 신규 ETF 없음</div>
-                  <div className="tk">검색어와 필터를 조정해보세요</div>
+                  <div className="tk">검색어와 필터를 조정해 주세요</div>
                 </span>
-                <span className="pc num neutral">-</span>
+                <span className="flex min-w-[92px] flex-col items-end gap-1">
+                  <button
+                    type="button"
+                    data-etf-new-control="reset"
+                    onClick={resetFilters}
+                    className="min-h-11 rounded-full border border-[var(--c-line)] bg-white px-3 text-[11px] font-black text-[var(--c-brand)] transition hover:border-[var(--c-brand)]"
+                  >
+                    필터 초기화
+                  </button>
+                </span>
               </div>
             )}
           </div>
@@ -594,7 +614,7 @@ export default function NewEtfsList({
       {loaded && rows.length > 0 ? (
         <div className="panel-foot flex flex-wrap items-center justify-between gap-2">
           <span>표시 중 {filteredRows.length.toLocaleString("ko-KR")} / {countRows(state.snapshot).toLocaleString("ko-KR")}개 · 신규 ETF는 관찰 목록 기준</span>
-          <TransitionLink href={ROUTES.etfs} className="font-black text-[var(--c-brand)] hover:underline">
+          <TransitionLink href={ROUTES.etfs} className="inline-flex min-h-[24px] items-center font-black text-[var(--c-brand)] hover:underline">
             ETF 센터로 이동
           </TransitionLink>
         </div>

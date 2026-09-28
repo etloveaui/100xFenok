@@ -12,6 +12,7 @@ export type MarketChartColorToken =
   | "neutral"
   | "line"
   | "line2"
+  | "band"
   | "ink"
   | "ink2"
   | "ink3"
@@ -27,9 +28,19 @@ export interface MarketChartPoint {
   detail?: string;
 }
 
+export interface MarketChartDateBand {
+  start: string;
+  end: string;
+  label: string;
+}
+
 export interface MarketChartSeries {
   id: string;
   label: string;
+  /** Human-readable formula used by derived-series legends and CSV headers. */
+  formulaLabel?: string;
+  /** Display unit for a derived series after its formula is applied. */
+  unitLabel?: string;
   points: readonly MarketChartPoint[];
   color?: string;
   colorToken?: MarketChartColorToken;
@@ -38,6 +49,12 @@ export interface MarketChartSeries {
   hidden?: boolean;
   yAxisId?: "y" | "y1";
   chartType?: MarketChartType;
+  /** Stable palette slot for cross-row/chart color consistency. */
+  paletteIndex?: number;
+  /** Visual priority: primary is solid/heavier, secondary is dashed/lighter. */
+  lineRole?: "primary" | "secondary";
+  /** Comparable-domain key used by multi-row macro charts. */
+  unitGroup?: string;
 }
 
 export interface MarketChartHoverSeriesPoint {
@@ -62,6 +79,8 @@ export interface MarketChartEngineProps {
   emptyLabel?: string;
   showLegend?: boolean;
   sortLabels?: boolean;
+  /** Connect finite observations across union-axis labels absent from this series. */
+  spanGaps?: boolean;
   suggestedMin?: number;
   suggestedMax?: number;
   formatValue?: MarketChartValueFormatter;
@@ -70,4 +89,17 @@ export interface MarketChartEngineProps {
   yAxisTitle?: string;
   /** Right (y1) axis unit title for dual-axis charts, e.g. "Stablecoin ($B)". */
   y1AxisTitle?: string;
+  /** Use logarithmic y scales when every visible value is positive. */
+  logScale?: boolean;
+  /** Opt-in per-series ISO-date points on a Chart.js time scale. */
+  xScaleMode?: "category" | "time";
+  /** Optional ISO-date bands drawn behind time-series datasets. */
+  dateBands?: readonly MarketChartDateBand[];
+  /**
+   * Shared cursor date from a sibling chart (linked cursor). When this chart has
+   * no local hover, the crosshair is drawn at the label that best matches it —
+   * exact label, same year for coarser axes, otherwise the nearest date — so
+   * two charts with different cadences still land on the same observation.
+   */
+  cursorLabel?: string | null;
 }

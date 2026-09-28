@@ -32,6 +32,12 @@ function getLockState(): BodyScrollLockState | null {
   return window.__fenokBodyScrollLockState__;
 }
 
+/** The page position remains logical while a modal fixes the body at a negative top. */
+export function bodyScrollY(): number {
+  if (typeof window === "undefined") return 0;
+  return window.__fenokBodyScrollLockState__?.snapshot?.scrollY ?? window.scrollY;
+}
+
 export function lockBodyScroll(key: string): void {
   const state = getLockState();
   if (!state || !key) return;
@@ -81,7 +87,7 @@ export function unlockBodyScroll(key: string): void {
   body.style.left = snapshot.left;
   body.style.right = snapshot.right;
   body.style.width = snapshot.width;
-  window.scrollTo(0, snapshot.scrollY);
+  window.scrollTo({ top: snapshot.scrollY, behavior: "instant" });
 
   state.snapshot = null;
 }

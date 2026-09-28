@@ -1,0 +1,79 @@
+{
+  "schema_version": "feno_index_rim_v1_reverse_implied.v1",
+  "criteria": "feno-index-rim-v1-criteria.json 2f660ac003",
+  "note": "Solve current market price for implied LTROE at ERP_BASE and implied ERP at LTROE_BASE. Reverse-implied output never retunes Base (criteria §reverse_implied).",
+  "solver_bounds": {
+    "ltroe": [
+      0,
+      1.5
+    ],
+    "erp": [
+      -0.02,
+      0.3
+    ]
+  },
+  "alarm_flags": {
+    "SPX_implied_ltroe_above": 0.6,
+    "NDX_implied_ltroe_above": 0.8,
+    "implied_erp_below": 0,
+    "implied_erp_above": 0.12
+  },
+  "SPX": {
+    "implied_ltroe": {
+      "solved": true,
+      "value": 0.38423721164872404,
+      "bounds": [
+        0,
+        1.5
+      ],
+      "iterations": 35,
+      "converged": true,
+      "residual": 6.8573444877984e-7
+    },
+    "implied_erp": {
+      "solved": true,
+      "value": 0.014827212952077388,
+      "bounds": [
+        -0.02,
+        0.3
+      ],
+      "iterations": 33,
+      "converged": true,
+      "residual": 0.000005028853593103122
+    }
+  },
+  "NDX": {
+    "implied_ltroe": {
+      "solved": true,
+      "value": 0.4513099685573252,
+      "bounds": [
+        0,
+        1.5
+      ],
+      "iterations": 35,
+      "converged": true,
+      "residual": -0.0000021671512513421476
+    },
+    "implied_erp": {
+      "solved": true,
+      "value": 0.02456965956836938,
+      "bounds": [
+        -0.02,
+        0.3
+      ],
+      "iterations": 33,
+      "converged": true,
+      "residual": -0.000011917349183931947
+    }
+  },
+  "as_of_dates": {
+    "benchmark (price/EPS/PB/ROE)": "2026-07-31",
+    "risk_free_rate (DGS10)": "2026-08-05",
+    "erp (Damodaran US)": "2026-04-01",
+    "ltroe_window": "2016-08-05 .. 2026-07-31",
+    "oldest_input": "2026-04-01 (Damodaran ERP)"
+  },
+  "evidence_status": "RESEARCH_PREVIEW",
+  "forward_book_status": "UNRESOLVED (top-down index lane; bottom-up lane demoted to research)",
+  "public_surface": "PUBLIC_ROWS = [], PUBLIC_STATE = MODEL_REVALIDATION"
+}

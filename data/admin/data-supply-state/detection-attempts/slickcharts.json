@@ -1,12 +1,12 @@
 {
-  "schema_version": "data-supply-detection-attempt-shard/v1",
+  "schema_version": "data-supply-detection-attempt-shard/v2",
   "lane_id": "slickcharts",
   "attempts": [
     {
       "lane_id": "slickcharts",
       "member_id": "daily",
-      "attempt_id": "gh-29904461338-1-daily",
-      "observed_at": "2026-07-22T08:47:16.674Z",
+      "attempt_id": "gh-36423414951-1-daily",
+      "observed_at": "2026-09-28T12:47:01.023Z",
       "execution": "returned",
       "exception_kind": null,
       "http_status": 200,
@@ -19,13 +19,14 @@
           "id": "table_rows",
           "passed": true
         }
-      ]
+      ],
+      "page_shape": "table"
     },
     {
       "lane_id": "slickcharts",
       "member_id": "weekly",
-      "attempt_id": "gh-29681044880-1-weekly",
-      "observed_at": "2026-07-19T09:45:03.557Z",
+      "attempt_id": "gh-36320276302-1-weekly",
+      "observed_at": "2026-09-27T12:52:47.670Z",
       "execution": "returned",
       "exception_kind": null,
       "http_status": 200,
@@ -38,46 +39,14 @@
           "id": "table_rows",
           "passed": true
         }
-      ]
+      ],
+      "page_shape": "table"
     },
     {
       "lane_id": "slickcharts",
       "member_id": "monthly",
-      "attempt_id": "gh-29340897908-1-monthly",
-      "observed_at": "2026-07-14T15:05:57.460Z",
-      "execution": "returned",
-      "exception_kind": null,
-      "http_status": 200,
-      "auth": "not_applicable",
-      "rate_limited": false,
-      "decode": "ok",
-      "payload": "non_empty",
-      "assertions": [
-        {
-          "id": "table_rows",
-          "passed": false
-        }
-      ]
-    },
-    {
-      "lane_id": "slickcharts",
-      "member_id": "history",
-      "attempt_id": "gh-29683345905-1-history",
-      "observed_at": "2026-07-19T10:34:18.494Z",
-      "execution": "threw",
-      "exception_kind": "unexpected",
-      "http_status": null,
-      "auth": "not_applicable",
-      "rate_limited": false,
-      "decode": "not_attempted",
-      "payload": "not_available",
-      "assertions": []
-    },
-    {
-      "lane_id": "slickcharts",
-      "member_id": "symbols",
-      "attempt_id": "gh-29681639773-1-symbols",
-      "observed_at": "2026-07-19T09:54:15.136Z",
+      "attempt_id": "gh-33825898059-1-monthly",
+      "observed_at": "2026-09-04T02:31:07.278Z",
       "execution": "returned",
       "exception_kind": null,
       "http_status": 200,
@@ -90,7 +59,48 @@
           "id": "table_rows",
           "passed": true
         }
-      ]
+      ],
+      "page_shape": "table"
+    },
+    {
+      "lane_id": "slickcharts",
+      "member_id": "history",
+      "attempt_id": "gh-36357537099-1-history",
+      "observed_at": "2026-09-27T23:23:00.620Z",
+      "execution": "returned",
+      "exception_kind": null,
+      "http_status": 200,
+      "auth": "not_applicable",
+      "rate_limited": false,
+      "decode": "ok",
+      "payload": "non_empty",
+      "assertions": [
+        {
+          "id": "table_rows",
+          "passed": true
+        }
+      ],
+      "page_shape": "table"
+    },
+    {
+      "lane_id": "slickcharts",
+      "member_id": "symbols",
+      "attempt_id": "gh-36321678243-1-symbols",
+      "observed_at": "2026-09-27T13:22:06.284Z",
+      "execution": "returned",
+      "exception_kind": null,
+      "http_status": 200,
+      "auth": "not_applicable",
+      "rate_limited": false,
+      "decode": "ok",
+      "payload": "non_empty",
+      "assertions": [
+        {
+          "id": "table_rows",
+          "passed": true
+        }
+      ],
+      "page_shape": "table"
     }
   ]
 }

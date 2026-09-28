@@ -1,675 +1,81 @@
 "use client";
 
-import { useEffect, useState, type ReactNode } from "react";
-import TransitionLink from "@/components/TransitionLink";
-import { DataStateBadge } from "@/components/DataStateNotice";
+import { useEffect, useState } from "react";
 import MarketSectionNav from "@/components/market/MarketSectionNav";
-import MarketThermometer from "@/components/market/MarketThermometer";
 import { useMarketValuation } from "@/hooks/useMarketValuation";
+import {
+  useBenchmarkOrdinals,
+  type UseBenchmarkOrdinalsResult,
+} from "@/hooks/useBenchmarkOrdinals";
+import {
+  BENCHMARK_ORDINAL_GROUPS,
+  benchmarkHorizonReading,
+  type BenchmarkGroupId,
+  type BenchmarkHorizonReading,
+  type BenchmarkOrdinalHorizon,
+  type BenchmarkOrdinalRow,
+  type BenchmarkOrdinalsView,
+} from "@/lib/market-valuation/benchmarkOrdinals";
+import { DistributionBand, Panel, PanelHeader, Pill, RankBars, Stat } from "@/components/ui";
+import {
+  ErpHistoryPanel,
+  YardeniOverlayChartPanel,
+  type LedgerChartLoadStatus,
+} from "@/lib/market-valuation/charts/ledgerChartPanels";
+import { formatDecimal, formatSignedDecimal } from "@/lib/format";
+import { formatPercent } from "@/lib/dashboard/formatters";
+import {
+  freshnessDataState,
+  latestAsOf,
+  makeDataState,
+  oldestAsOf,
+  DATA_STATE_LABELS,
+  type DataState,
+} from "@/lib/data-state";
+import {
+  freshnessVerdict,
+  freshnessRailState,
+} from "@/lib/freshness-policy.mjs";
 import type {
-  MarketBondPulse,
-  MarketEventRisk,
   MarketIndexValuation,
-  MarketIndexTrend,
-  MarketMacroPulse,
-  MarketSentimentPulse,
-  MarketSignalPulse,
-  MarketStructurePulse,
-  MarketTone,
   ValuationBand,
 } from "@/lib/market-valuation/types";
-import {
-  AnnualReturnsChartPanel,
-  ErpHistoryPanel,
-  PmiActivityChartPanel,
-  YardeniOverlayChartPanel,
-} from "@/lib/market-valuation/charts/ledgerChartPanels";
-import {
-  formatDecimal,
-  formatInteger,
-  formatSignedDecimal,
-  formatSignedPercent,
-} from "@/lib/format";
-import { formatPercent } from "@/lib/dashboard/formatters";
-import { formatAsOf, latestAsOf } from "@/lib/market-valuation/freshness";
-import { formatAsOf as formatDataAsOf, freshnessDataState, DATA_STATE_LABELS, type DataState } from "@/lib/data-state";
-import { ROUTES } from "@/lib/routes";
 
-function cx(...parts: Array<string | false | undefined>) {
-  return parts.filter(Boolean).join(" ");
-}
-
-/** Map a history percentile to a rich/cheap verdict. */
-function valuationMeta(pct: number | null): { label: string; tone: string; dot: string } {
-  if (pct === null) return { label: "—", tone: "text-[var(--c-ink-3)]", dot: "bg-[var(--c-line)]" };
-  if (pct >= 80) return { label: "고평가", tone: "text-[var(--c-down)]", dot: "bg-[var(--c-down)]" };
-  if (pct >= 60) return { label: "다소 높음", tone: "text-[var(--c-warn)]", dot: "bg-[var(--c-warn)]" };
-  if (pct >= 40) return { label: "역사적 중립", tone: "text-[var(--c-ink-2)]", dot: "bg-[var(--c-line)]" };
-  if (pct >= 20) return { label: "다소 낮음", tone: "text-[var(--c-info)]", dot: "bg-[var(--c-info)]" };
-  return { label: "저평가", tone: "text-[var(--c-up)]", dot: "bg-[var(--c-up)]" };
-}
-
-function positionPct(value: number | null, min: number | null, max: number | null): number | null {
-  if (value === null || min === null || max === null || max === min) return null;
-  return Math.min(100, Math.max(0, Math.round(((value - min) / (max - min)) * 100)));
-}
-
-function toneClass(tone: MarketTone): string {
-  if (tone === "emerald") return "border-[var(--c-up)] bg-[var(--c-up-soft)] text-[var(--c-up)]";
-  if (tone === "amber") return "border-[var(--c-warn)] bg-[var(--c-warn-soft)] text-[var(--c-warn)]";
-  if (tone === "rose") return "border-[var(--c-down)] bg-[var(--c-down-soft)] text-[var(--c-down)]";
-  return "border-[var(--c-line)] bg-[var(--c-surface-2)] text-[var(--c-ink-2)]";
-}
-
-function toneDotClass(tone: MarketTone): string {
-  if (tone === "emerald") return "bg-[var(--c-up)]";
-  if (tone === "amber") return "bg-[var(--c-warn)]";
-  if (tone === "rose") return "bg-[var(--c-down)]";
-  return "bg-[var(--c-line)]";
-}
-
-function EmptyPanel({ label }: { label: string }) {
-  return <div className="px-[var(--panel-pad)] py-5 text-sm font-semibold text-[var(--c-ink-3)]">{label}</div>;
-}
-
-function AsOfBadge({ value, prefix = "기준" }: { value: string | null | undefined; prefix?: string }) {
-  return <DataStateBadge state={freshnessDataState({ asOf: value })} prefix={prefix} />;
-}
-
-function PanelShell({
-  title,
-  subtitle,
-  asOf,
-  asOfPrefix,
-  children,
-}: {
-  title: string;
-  subtitle: string;
-  asOf?: string | null;
-  asOfPrefix?: string;
-  children: ReactNode;
-}) {
-  return (
-    <section className="overflow-hidden rounded-[1.2rem] border border-[var(--c-line)] bg-[var(--c-panel)] shadow-[var(--sh-sm)]">
-      <header className="flex min-w-0 flex-wrap items-baseline justify-between gap-2 border-b border-[var(--c-line-2)] px-4 py-3">
-        <h2 className="min-w-0 text-sm font-black tracking-tight text-[var(--c-ink)]">{title}</h2>
-        {asOf ? (
-          <span className="flex min-w-0 flex-wrap items-center justify-end gap-2">
-            <span className="min-w-0 text-[11px] font-bold uppercase tracking-[0.08em] text-[var(--c-ink-3)]">{subtitle}</span>
-            <AsOfBadge value={asOf} prefix={asOfPrefix} />
-          </span>
-        ) : (
-          <span className="min-w-0 text-[11px] font-bold uppercase tracking-[0.08em] text-[var(--c-ink-3)]">{subtitle}</span>
-        )}
-      </header>
-      {children}
-    </section>
-  );
-}
-
-function MarketSection({
-  sectionKey,
-  index,
-  title,
-  summary,
-  children,
-  muted = false,
-}: {
-  sectionKey: string;
-  index: string;
-  title: string;
-  summary: string;
-  children: ReactNode;
-  muted?: boolean;
-}) {
-  return (
-    <section className="grid gap-3" data-market-section={sectionKey} data-loading={muted ? "true" : undefined}>
-      <header className="flex min-w-0 flex-wrap items-end justify-between gap-2 px-1">
-        <div className="min-w-0">
-          <p className="text-[11px] font-black uppercase tracking-[0.12em] text-[var(--c-brand)]">{index}</p>
-          <h2 className="mt-1 text-xl font-black text-[var(--c-ink)]">{title}</h2>
-        </div>
-        <p className="max-w-xl text-sm font-semibold leading-6 text-[var(--c-ink-3)]">{summary}</p>
-      </header>
-      {children}
-    </section>
-  );
-}
-
-function StructureDetailEntry() {
-  return (
-    <TransitionLink
-      href={ROUTES.marketStructure}
-      className="group flex min-w-0 flex-wrap items-center justify-between gap-3 rounded-[1.2rem] border border-[var(--c-line)] bg-[var(--c-panel)] px-4 py-3 shadow-[var(--sh-sm)] transition hover:border-brand-interactive hover:shadow-[var(--sh-sm)]"
-    >
-      <span className="min-w-0">
-        <span className="block text-[11px] font-black uppercase tracking-[0.12em] text-[var(--c-brand)]">시장 구조 상세</span>
-        <span className="mt-1 block text-base font-black text-[var(--c-ink)]">시장 구조 자세히 보기</span>
-        <span className="mt-1 block text-xs font-semibold leading-5 text-[var(--c-ink-3)]">집중도, 벤치마크 매트릭스, 유동성, 심리 하위 지표를 더 크게 확인합니다.</span>
-      </span>
-      <span className="shrink-0 rounded-full border border-[var(--c-brand)]/30 bg-[var(--c-panel)] px-3 py-2 text-xs font-black text-[var(--c-brand)] transition group-hover:bg-brand-interactive group-hover:text-white">
-        열기
-      </span>
-    </TransitionLink>
-  );
-}
-
-interface MarketStructureIndexDoc {
-  generated_at?: string;
-  concentration?: Array<{ id: string; label: string; top3Weight?: number | null; top10Weight?: number | null }>;
-  benchmarkMatrix?: {
-    generated?: string | null;
-    sourceAsOf?: string | null;
-    sourceAsOfReason?: string | null;
-    rows?: BenchmarkMatrixRow[];
-  };
-  creditRatings?: { sourceDate?: string | null; tableCount?: number; tables?: Array<{ id: string; rows?: number; medianSpread?: number | null }> };
-}
-
-interface BenchmarkMatrixRow {
-  id: string;
-  label: string;
-  sourceAsOf?: string | null;
-  price?: Record<string, number | null>;
-  eps?: Record<string, number | null>;
-  pe?: Record<string, number | null>;
-}
-
-let marketStructureIndexCache: MarketStructureIndexDoc | null = null;
-let marketStructureIndexPending: Promise<MarketStructureIndexDoc | null> | null = null;
-
-function loadMarketStructureIndex(): Promise<MarketStructureIndexDoc | null> {
-  if (marketStructureIndexCache) return Promise.resolve(marketStructureIndexCache);
-  if (marketStructureIndexPending) return marketStructureIndexPending;
-  marketStructureIndexPending = fetch("/data/computed/market_structure_index.json")
-    .then((r) => (r.ok ? r.json() : null))
-    .then((doc) => {
-      marketStructureIndexCache = doc;
-      return doc;
-    })
-    .catch(() => {
-      marketStructureIndexPending = null;
-      return null;
-    });
-  return marketStructureIndexPending;
-}
-
-interface RimIndexEntry {
-  public_status?: string;
-  blockers?: Array<{ code?: string; severity?: string }>;
-  observed?: {
-    price?: {
-      as_of?: string | null;
-    } | null;
-  } | null;
-}
-
-interface RimInputsDoc {
-  generated_at?: string;
-  indices?: Record<string, RimIndexEntry>;
-}
-
-let rimInputsCache: RimInputsDoc | null = null;
-let rimInputsPending: Promise<RimInputsDoc | null> | null = null;
-
-function loadRimInputs(): Promise<RimInputsDoc | null> {
-  if (rimInputsCache) return Promise.resolve(rimInputsCache);
-  if (rimInputsPending) return rimInputsPending;
-  rimInputsPending = fetch("/data/computed/rim-index/inputs.json")
-    .then((r) => (r.ok ? r.json() : null))
-    .then((doc) => {
-      rimInputsCache = doc;
-      return doc;
-    })
-    .catch(() => {
-      rimInputsPending = null;
-      return null;
-    });
-  return rimInputsPending;
-}
-
-// §H rule 2: no raw index ids leak to users; missing lookup renders an honest generic label.
-const RIM_INDEX_LABELS_KO: Record<string, string> = {
-  SPX: "S&P 500",
-  NDX: "나스닥 100",
-  KOSPI: "코스피",
-  SOX: "필라델피아 반도체",
-  CCMP: "나스닥 종합",
+const INDEX_KO: Record<string, string> = {
+  sp500: "S&P 500",
+  nasdaq100: "나스닥 100",
+  nasdaq_composite: "나스닥 종합",
+  russell2000: "러셀 2000",
 };
 
-// No public fair-value card exists anywhere: the payload is globally
-// output_scope=inputs_only_no_fair_value with policy.no_public_single_target=true
-// (public/data/computed/rim-index/inputs.json). Tiers describe input readiness only.
-type RimReadinessTier = "input_ready" | "input_only" | "pending";
+type ChartTabId = "erp" | "yardeni";
 
-interface RimReadinessMeta {
-  rank: number;
-  badge: string;
-  tone: MarketTone;
-  detail: (blockerCount: number) => string;
-}
+const CHART_TABS: ReadonlyArray<{ id: ChartTabId; label: string }> = [
+  { id: "erp", label: "Damodaran ERP" },
+  { id: "yardeni", label: "Yardeni 채권 대비 PER" },
+];
 
-const RIM_READINESS_META: Record<RimReadinessTier, RimReadinessMeta> = {
-  input_ready: {
-    rank: 0,
-    badge: "입력 준비",
-    tone: "amber",
-    detail: () => "입력 데이터와 예측 그리드가 준비되었습니다. 공개 적정가 카드는 제공하지 않습니다.",
-  },
-  input_only: {
-    rank: 1,
-    badge: "입력 전용",
-    tone: "slate",
-    detail: (blockerCount) =>
-      blockerCount > 0
-        ? `공개 적정가 카드 제공을 막는 항목이 ${blockerCount}건 남아 입력 데이터만 제공합니다.`
-        : "공개 적정가 카드는 제공하지 않고 입력 데이터만 제공합니다.",
-  },
-  pending: {
-    rank: 2,
-    // Per-index state label sourced from data-state.ts (§H-5): "확인 중".
-    badge: DATA_STATE_LABELS.pending,
-    tone: "slate",
-    detail: () => "준비 상태를 확인하고 있습니다.",
-  },
-};
+const PEER_ORDER = ["sp500", "nasdaq100", "nasdaq_composite", "russell2000"];
 
-function classifyRimReadiness(publicStatus: string | undefined, blockerCount: number): RimReadinessTier {
-  if (publicStatus === "blocked_or_input_only" || blockerCount > 0) return "input_only";
-  if (publicStatus === "ready_inputs_and_forecast_grid") return "input_ready";
-  return "pending";
-}
+const ALL_GROUPS = "all" as const;
 
-function rimPriceSourceClock(indices: RimInputsDoc["indices"]): { asOf: string | null; reason: string | null } {
-  const required = ["KOSPI", "SOX"] as const;
-  const dates = required.map((id) => {
-    const value = indices?.[id]?.observed?.price?.as_of;
-    return typeof value === "string" && /^\d{4}-\d{2}-\d{2}/.test(value) ? value.slice(0, 10) : null;
-  });
-  if (dates.some((value) => value === null)) {
-    return { asOf: null, reason: "KOSPI·SOX 관측 가격 기준일 미확인" };
-  }
-  return { asOf: [...dates].sort()[0] ?? null, reason: null };
-}
+type GroupFilter = BenchmarkGroupId | typeof ALL_GROUPS;
 
-function RimReadinessPanel() {
-  const [doc, setDoc] = useState<RimInputsDoc | null>(null);
-  const [loaded, setLoaded] = useState(false);
+const HORIZONS: ReadonlyArray<{ id: BenchmarkOrdinalHorizon; label: string }> = [
+  { id: "all", label: "전체" },
+  { id: "w5", label: "5년" },
+  { id: "w10", label: "10년" },
+];
 
-  useEffect(() => {
-    let cancelled = false;
-    loadRimInputs().then((next) => {
-      if (cancelled) return;
-      setDoc(next);
-      setLoaded(true);
-    });
-    return () => {
-      cancelled = true;
-    };
-  }, []);
+type PillTone = "neutral" | "up" | "down" | "warn";
 
-  const rows = Object.entries(doc?.indices ?? {})
-    .map(([id, entry]) => {
-      const safe = entry ?? {};
-      const blockerCount = Array.isArray(safe.blockers) ? safe.blockers.length : 0;
-      const meta = RIM_READINESS_META[classifyRimReadiness(safe.public_status, blockerCount)];
-      return {
-        id,
-        name: RIM_INDEX_LABELS_KO[id] ?? "지수",
-        meta,
-        detail: meta.detail(blockerCount),
-      };
-    })
-    .sort((a, b) => a.meta.rank - b.meta.rank || a.id.localeCompare(b.id));
-
-  // Fallback copy comes only from DATA_STATE_LABELS (§H-5): loading vs. unavailable are distinct.
-  const fallbackLabel = !loaded ? DATA_STATE_LABELS.pending : rows.length === 0 ? DATA_STATE_LABELS.unavailable : null;
-  const sourceClock = rimPriceSourceClock(doc?.indices);
-
-  return (
-    <PanelShell
-      title="잔여이익모델(RIM) 지수 준비 상태"
-      subtitle={sourceClock.reason ?? "지수별 입력 준비 현황"}
-      asOf={sourceClock.asOf}
-    >
-      {fallbackLabel ? (
-        <EmptyPanel label={fallbackLabel} />
-      ) : (
-        <div className="grid min-w-0 sm:grid-cols-2">
-          {rows.map((row) => (
-            <div
-              key={row.id}
-              className="min-w-0 border-t border-[var(--c-line-2)] px-[var(--panel-pad)] py-3 first:border-t-0 sm:[&:nth-child(-n+2)]:border-t-0"
-            >
-              <div className="flex min-w-0 items-start justify-between gap-2">
-                <p className="min-w-0 truncate text-sm font-black text-[var(--c-ink)]">{row.name}</p>
-                <span className={cx("shrink-0 rounded-full border px-2 py-1 text-[10px] font-black", toneClass(row.meta.tone))}>
-                  {row.meta.badge}
-                </span>
-              </div>
-              <p className="mt-2 min-w-0 break-words text-[11px] font-semibold leading-5 text-[var(--c-ink-3)]">{row.detail}</p>
-            </div>
-          ))}
-        </div>
-      )}
-    </PanelShell>
-  );
-}
-
-function MacroPulsePanel({ items, fallbackAsOf }: { items: MarketMacroPulse[]; fallbackAsOf?: string | null }) {
-  const panelAsOf = latestAsOf(items.flatMap((item) => [item.releaseDate, item.period])) ?? fallbackAsOf ?? null;
-  return (
-    <PanelShell title="경기 펄스" subtitle="PMI · ISM · OECD CLI" asOf={panelAsOf}>
-      {items.length === 0 ? (
-        <EmptyPanel label="경기 데이터 없음" />
-      ) : (
-        <div className="grid min-w-0 sm:grid-cols-2 xl:grid-cols-5">
-          {items.map((item) => (
-            <div key={item.id} className="min-w-0 border-t border-[var(--c-line-2)] px-[var(--panel-pad)] py-3 first:border-t-0 sm:[&:nth-child(-n+2)]:border-t-0 xl:border-t-0">
-              <div className="flex min-w-0 items-center gap-2">
-                <span className={cx("h-2 w-2 shrink-0 rounded-full", toneDotClass(item.tone))} />
-                <p className="min-w-0 truncate text-[11px] font-black uppercase tracking-[0.08em] text-[var(--c-ink-3)]">{item.label}</p>
-              </div>
-              <div className="mt-2 flex min-w-0 items-end gap-1">
-                <span className="orbitron min-w-0 text-2xl font-black tabular-nums text-[var(--c-ink)]">{formatDecimal(item.value, { digits: 1 })}</span>
-                <span className="pb-1 text-[10px] font-bold uppercase text-[var(--c-ink-3)]">{item.unit}</span>
-              </div>
-              <p className="mt-1 text-[11px] font-semibold text-[var(--c-ink-3)]">{formatAsOf(item.releaseDate ?? item.period) ?? "—"}</p>
-              <p className="mt-2 min-w-0 break-words text-[11px] font-semibold leading-5 text-[var(--c-ink-3)]">{item.detail}</p>
-            </div>
-          ))}
-        </div>
-      )}
-    </PanelShell>
-  );
-}
-
-function SignalPulsePanel({ items }: { items: MarketSignalPulse[] }) {
-  return (
-    <PanelShell title="유동성·리스크 신호" subtitle="종합 신호">
-      {items.length === 0 ? (
-        <EmptyPanel label="시장 신호 없음" />
-      ) : (
-        <div className="grid min-w-0 sm:grid-cols-2">
-          {items.map((item) => (
-            <div key={item.id} className="min-w-0 border-t border-slate-100 px-4 py-3 first:border-t-0 sm:[&:nth-child(-n+2)]:border-t-0">
-              <div className="flex min-w-0 items-start justify-between gap-2">
-                <div className="min-w-0">
-                  <p className="truncate text-[11px] font-black uppercase tracking-[0.08em] text-[var(--c-ink-3)]">{item.label}</p>
-                  <p className="mt-1 min-w-0 break-words text-xs font-semibold leading-5 text-[var(--c-ink-3)]">{item.detail}</p>
-                </div>
-                <span className={cx("shrink-0 rounded-full border px-2 py-1 text-[10px] font-black", toneClass(item.tone))}>{item.statusLabel}</span>
-              </div>
-              <p className="mt-2 text-[10px] font-bold uppercase tracking-[0.08em] text-[var(--c-ink-3)]">{item.asOf ?? "—"}</p>
-            </div>
-          ))}
-        </div>
-      )}
-    </PanelShell>
-  );
-}
-
-function BondPulsePanel({ items, fallbackAsOf }: { items: MarketBondPulse[]; fallbackAsOf?: string | null }) {
-  const panelAsOf = latestAsOf(items.map((item) => item.date)) ?? fallbackAsOf ?? null;
-  return (
-    <PanelShell title="채권 시그널" subtitle="HY · curve · BEI" asOf={panelAsOf}>
-      {items.length === 0 ? (
-        <EmptyPanel label="채권 신호 데이터 없음" />
-      ) : (
-        <div className="grid min-w-0 sm:grid-cols-2 xl:grid-cols-4">
-          {items.map((item) => (
-            <div key={item.id} className="min-w-0 border-t border-slate-100 px-4 py-3 first:border-t-0 sm:[&:nth-child(-n+2)]:border-t-0 xl:border-t-0">
-              <div className="flex min-w-0 items-center gap-2">
-                <span className={cx("h-2 w-2 shrink-0 rounded-full", toneDotClass(item.tone))} />
-                <p className="min-w-0 truncate text-[11px] font-black uppercase tracking-[0.08em] text-slate-500">{item.label}</p>
-              </div>
-              <p className="orbitron mt-2 text-2xl font-black tabular-nums text-slate-950">{item.valueLabel}</p>
-              <p className="mt-1 min-w-0 break-words text-[11px] font-semibold leading-5 text-slate-500">{item.detail}</p>
-              <div className="mt-2 flex min-w-0 flex-wrap items-center justify-between gap-2">
-                <span className="rounded-full border border-[var(--c-line)] bg-[var(--c-surface-2)] px-2 py-1 text-[10px] font-black text-[var(--c-ink-2)]">{item.changeLabel}</span>
-                <span className="text-[10px] font-bold uppercase tracking-[0.08em] text-[var(--c-ink-2)]">{formatAsOf(item.date) ?? "—"}</span>
-              </div>
-            </div>
-          ))}
-        </div>
-      )}
-    </PanelShell>
-  );
-}
-
-function SentimentPulsePanel({ items, fallbackAsOf }: { items: MarketSentimentPulse[]; fallbackAsOf?: string | null }) {
-  const panelAsOf = latestAsOf(items.map((item) => item.date)) ?? fallbackAsOf ?? null;
-  return (
-    <PanelShell title="센티먼트" subtitle="VIX · AAII · MOVE" asOf={panelAsOf}>
-      {items.length === 0 ? (
-        <EmptyPanel label="센티먼트 데이터 없음" />
-      ) : (
-        <div className="grid min-w-0 sm:grid-cols-2 lg:grid-cols-5">
-          {items.map((item) => (
-            <div key={item.id} className="min-w-0 border-t border-slate-100 px-4 py-3 first:border-t-0 sm:[&:nth-child(-n+2)]:border-t-0 lg:border-t-0">
-              <div className="flex min-w-0 items-center gap-2">
-                <span className={cx("h-2 w-2 shrink-0 rounded-full", toneDotClass(item.tone))} />
-                <p className="min-w-0 truncate text-[11px] font-black uppercase tracking-[0.08em] text-slate-500">{item.label}</p>
-              </div>
-              <p className="orbitron mt-2 text-2xl font-black tabular-nums text-slate-950">{item.valueLabel}</p>
-              <p className="mt-1 min-w-0 break-words text-[11px] font-semibold leading-5 text-slate-500">{item.detail}</p>
-              <p className="mt-2 text-[10px] font-bold uppercase tracking-[0.08em] text-[var(--c-ink-2)]">{formatAsOf(item.date) ?? "—"}</p>
-            </div>
-          ))}
-        </div>
-      )}
-    </PanelShell>
-  );
-}
-
-function MarketStructurePanel({ trends, structures }: { trends: MarketIndexTrend[]; structures: MarketStructurePulse[] }) {
-  const [doc, setDoc] = useState<MarketStructureIndexDoc | null>(null);
-
-  useEffect(() => {
-    let cancelled = false;
-    loadMarketStructureIndex().then((next) => {
-      if (!cancelled) setDoc(next);
-    });
-    return () => {
-      cancelled = true;
-    };
-  }, []);
-
-  const concentration = doc?.concentration?.slice(0, 2) ?? [];
-  const benchmarkRows = doc?.benchmarkMatrix?.rows?.slice(0, 3) ?? [];
-  const credit = doc?.creditRatings?.tables?.[0] ?? null;
-  const isEmpty = trends.length === 0 && structures.length === 0 && !doc;
-
-  return (
-    <PanelShell title="시장 구조" subtitle="지수·보유비중">
-      {isEmpty ? (
-        <EmptyPanel label="시장 구조 데이터 없음" />
-      ) : (
-        <>
-          {trends.length > 0 ? (
-            <div className="grid min-w-0 md:grid-cols-2">
-              {trends.map((trend) => (
-                <div key={trend.id} className="min-w-0 border-t border-slate-100 px-4 py-3 first:border-t-0 md:border-t-0">
-                  <div className="flex min-w-0 items-start justify-between gap-3">
-                    <div className="min-w-0">
-                      <p className="truncate text-[11px] font-black uppercase tracking-[0.08em] text-slate-500">{trend.label}</p>
-                      <p className="orbitron mt-1 text-2xl font-black tabular-nums text-slate-950">{formatInteger(trend.latestValue)}</p>
-                    </div>
-                    <span className="shrink-0 text-right text-[10px] font-bold uppercase tracking-[0.08em] text-[var(--c-ink-2)]">{trend.latestDate ?? "—"}</span>
-                  </div>
-                  <div className="mt-3 grid grid-cols-3 gap-2">
-                    <MomentumCell label="1Y" value={trend.oneYearReturn} />
-                    <MomentumCell label="5Y" value={trend.fiveYearReturn} />
-                    <MomentumCell label="DD" value={trend.drawdownFromHigh} />
-                  </div>
-                </div>
-              ))}
-            </div>
-          ) : null}
-          {structures.length > 0 ? (
-            <div className="grid min-w-0 border-t border-slate-100 sm:grid-cols-2 lg:grid-cols-3">
-              {structures.map((item) => (
-                <div key={item.id} className="min-w-0 border-t border-slate-100 px-4 py-3 first:border-t-0 sm:[&:nth-child(-n+2)]:border-t-0 lg:[&:nth-child(-n+3)]:border-t-0">
-                  <div className="flex min-w-0 items-start justify-between gap-2">
-                    <div className="min-w-0">
-                      <p className="truncate text-[11px] font-black uppercase tracking-[0.08em] text-slate-500">{item.label}</p>
-                      <p className="mt-1 min-w-0 break-words text-[11px] font-semibold leading-5 text-slate-500">{item.detail}</p>
-                    </div>
-                    <span className={cx("shrink-0 rounded-full border px-2 py-1 text-[10px] font-black tabular-nums", toneClass(item.tone))}>{item.valueLabel}</span>
-                  </div>
-                  <p className="mt-2 text-[10px] font-bold uppercase tracking-[0.08em] text-[var(--c-ink-2)]">{item.updated ?? "—"}</p>
-                </div>
-              ))}
-            </div>
-          ) : null}
-          {doc ? (
-            <div className="grid min-w-0 border-t border-slate-100 lg:grid-cols-4">
-              {concentration.map((item) => (
-                <div key={item.id} className="min-w-0 border-t border-slate-100 px-4 py-3 first:border-t-0 lg:border-t-0">
-                  <p className="truncate text-[11px] font-black uppercase tracking-[0.08em] text-slate-500">{item.label} 집중도</p>
-                  <p className="orbitron mt-2 text-2xl font-black tabular-nums text-slate-950">{formatDecimal(item.top10Weight ?? null, { digits: 1 })}%</p>
-                  <p className="mt-1 text-[11px] font-semibold text-slate-500">상위 3개 {formatDecimal(item.top3Weight ?? null, { digits: 1 })}%</p>
-                </div>
-              ))}
-              {credit ? (
-                <div className="min-w-0 border-t border-slate-100 px-4 py-3 first:border-t-0 lg:border-t-0">
-                  <p className="truncate text-[11px] font-black uppercase tracking-[0.08em] text-slate-500">신용 스프레드</p>
-                  <p className="orbitron mt-2 text-2xl font-black tabular-nums text-slate-950">{formatSignedPercent(credit.medianSpread ?? null, { digits: 2 })}</p>
-                  <p className="mt-1 text-[11px] font-semibold text-slate-500">{doc.creditRatings?.sourceDate ?? "—"} · 표 {doc.creditRatings?.tableCount ?? 0}개</p>
-                </div>
-              ) : null}
-              {benchmarkRows.length > 0 ? (
-                <div className="min-w-0 border-t border-slate-100 px-4 py-3 first:border-t-0 lg:border-t-0">
-                  <div className="flex min-w-0 flex-wrap items-baseline justify-between gap-2">
-                    <p className="truncate text-[11px] font-black uppercase tracking-[0.08em] text-slate-500">이익과 멀티플</p>
-                    <span
-                      className="text-right text-[10px] font-bold uppercase tracking-[0.08em] text-[var(--c-ink-2)]"
-                      title={doc.benchmarkMatrix?.sourceAsOf ? undefined : doc.benchmarkMatrix?.sourceAsOfReason ?? undefined}
-                    >
-                      {doc.benchmarkMatrix?.sourceAsOf ? `기준 ${doc.benchmarkMatrix.sourceAsOf}` : "기준일 미확인"}
-                      {doc.benchmarkMatrix?.generated ? ` · 생성 ${doc.benchmarkMatrix.generated.slice(0, 10)}` : ""}
-                    </span>
-                  </div>
-                  <div className="mt-2 grid min-w-0 gap-1">
-                    {benchmarkRows.map((row) => (
-                      <div key={row.id} className="flex min-w-0 items-center justify-between gap-2 border-t border-slate-100 py-1 first:border-t-0">
-                        <span className="min-w-0 truncate text-[11px] font-black text-slate-700">{row.label}</span>
-                        <span className="shrink-0 text-[10px] font-black tabular-nums text-slate-500">
-                          YTD {formatSignedPercent(row.price?.ytd ?? null, { digits: 1 })} · EPS {formatSignedPercent(row.eps?.ytd ?? null, { digits: 1 })}
-                        </span>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              ) : null}
-            </div>
-          ) : null}
-        </>
-      )}
-    </PanelShell>
-  );
-}
-
-function EventRiskPanel({ items, fallbackAsOf }: { items: MarketEventRisk[]; fallbackAsOf?: string | null }) {
-  const nextEvent = items[0];
-  const nextEventAsOf = nextEvent
-    ? `${nextEvent.dateKst}${nextEvent.timeKst && nextEvent.timeKst !== "—" ? ` ${nextEvent.timeKst}` : ""}`
-    : fallbackAsOf ?? null;
-  return (
-    <PanelShell title="이벤트 리스크" subtitle="미국 경제일정" asOf={nextEventAsOf} asOfPrefix="다음">
-      {items.length === 0 ? (
-        <EmptyPanel label="다가오는 주요 이벤트 없음" />
-      ) : (
-        <div className="grid min-w-0 lg:grid-cols-2">
-          {items.map((item) => {
-            const tone: MarketTone = item.importance === "H" ? "rose" : "amber";
-            return (
-              <div key={item.id} className="min-w-0 border-t border-slate-100 px-4 py-3 first:border-t-0 lg:[&:nth-child(-n+2)]:border-t-0">
-                <div className="flex min-w-0 items-start gap-3">
-                  <div className="shrink-0 text-right">
-                    <p className="text-[11px] font-black tabular-nums text-slate-950">{item.dateKst.slice(5)}</p>
-                    <p className="text-[10px] font-bold tabular-nums text-[var(--c-ink-2)]">{item.timeKst}</p>
-                  </div>
-                  <div className="min-w-0 flex-1">
-                    <div className="flex min-w-0 flex-wrap items-center gap-2">
-                      <span className={cx("rounded-full border px-2 py-0.5 text-[10px] font-black", toneClass(tone))}>{item.importance}</span>
-                      {item.isToday ? (
-                        <span className="rounded-full border border-[var(--c-down)] bg-[var(--c-down-soft)] px-2 py-0.5 text-[10px] font-black text-[var(--c-down)]">TODAY</span>
-                      ) : item.daysUntil !== null ? (
-                        <span className="rounded-full border border-[var(--c-line)] bg-[var(--c-surface-2)] px-2 py-0.5 text-[10px] font-black text-[var(--c-ink-3)]">D-{item.daysUntil}</span>
-                      ) : null}
-                      <span className="min-w-0 truncate text-[10px] font-bold uppercase tracking-[0.08em] text-[var(--c-ink-2)]">{item.category}</span>
-                    </div>
-                    <p className="mt-1 min-w-0 break-words text-sm font-bold leading-5 text-slate-800">{item.titleKo}</p>
-                    {item.titleEn ? <p className="mt-1 min-w-0 break-words text-[11px] font-semibold leading-5 text-[var(--c-ink-2)]">{item.titleEn}</p> : null}
-                    {item.previousValue ? (
-                      <p className="mt-2 inline-flex rounded-full border border-slate-200 bg-slate-50 px-2 py-1 text-[10px] font-black tabular-nums text-slate-600">
-                        직전 {item.previousValue} · {item.previousAsOf ?? item.previousSeries ?? "prev"}
-                      </p>
-                    ) : null}
-                  </div>
-                </div>
-              </div>
-            );
-          })}
-        </div>
-      )}
-    </PanelShell>
-  );
-}
-
-function MomentumCell({ label, value }: { label: string; value: number | null }) {
-  const positive = value !== null && value >= 0;
-  return (
-    <div className="rounded-xl border border-[var(--c-line)] bg-white/70 px-3 py-2">
-      <p className="text-[10px] font-black uppercase tracking-[0.08em] text-[var(--c-ink-3)]">{label}</p>
-      <p className={cx("orbitron mt-1 text-sm font-black tabular-nums", value === null ? "text-[var(--c-line-2)]" : positive ? "text-[var(--c-up)]" : "text-[var(--c-down)]")}>
-        {formatSignedPercent(value)}
-      </p>
-    </div>
-  );
-}
-
-function ValuationRow({ label, metric, band, digits }: { label: string; metric: string; band: ValuationBand; digits: number }) {
-  const meta = valuationMeta(band.percentile);
-  const curPos = positionPct(band.current, band.min, band.max);
-  const avgPos = positionPct(band.avg, band.min, band.max);
-  return (
-    <div className="rounded-[1rem] border border-[var(--c-line)] bg-white/70 px-3 py-3" data-market-valuation-row={metric}>
-      <div className="flex items-baseline justify-between">
-        <span className="text-[11px] font-black uppercase tracking-[0.1em] text-[var(--c-ink-3)]">{label}</span>
-        <span className="orbitron text-xl font-black text-[var(--c-ink)]">{formatDecimal(band.current, { digits })}</span>
-      </div>
-      <div className="mt-1 flex items-center justify-between text-[11px] font-bold">
-        <span className={cx("inline-flex items-center gap-1", meta.tone)} data-market-valuation-verdict>
-          <span className={cx("h-1.5 w-1.5 rounded-full", meta.dot)} />
-          {meta.label}
-          {band.percentile !== null ? <span className="text-[var(--c-ink-3)]">· 역사 {band.percentile}%</span> : null}
-        </span>
-        <span className="tabular-nums text-[var(--c-ink-3)]">
-          {formatDecimal(band.min, { digits })} ~ {formatDecimal(band.max, { digits })}
-        </span>
-      </div>
-      {/* 16-year band gauge: min ── avg ── max, with current marker */}
-      <div className="relative mt-2 h-2 rounded-full bg-gradient-to-r from-emerald-200 via-slate-200 to-rose-200" data-market-valuation-gauge>
-        {avgPos !== null ? (
-          <span className="absolute top-1/2 h-3 w-0.5 -translate-y-1/2 bg-[var(--c-line)]" style={{ left: `${avgPos}%` }} aria-hidden="true" />
-        ) : null}
-        {curPos !== null ? (
-          <span
-            className="absolute top-1/2 h-4 w-1.5 -translate-x-1/2 -translate-y-1/2 rounded-full border-2 border-[var(--c-panel)] bg-[var(--c-ink)] shadow"
-            style={{ left: `${curPos}%` }}
-            aria-hidden="true"
-          />
-        ) : null}
-      </div>
-      <div className="mt-1 flex justify-between text-[9px] font-bold uppercase tracking-wider text-[var(--c-ink-2)]">
-        <span>저평가</span>
-        <span>avg {formatDecimal(band.avg, { digits })}</span>
-        <span>고평가</span>
-      </div>
-    </div>
-  );
+function valuationMeta(pct: number | null): { label: string; pill: PillTone; num: string } {
+  if (pct === null) return { label: "확인 중", pill: "neutral", num: "text-[var(--fnk-neutral-500)]" };
+  if (pct >= 80) return { label: "고평가", pill: "down", num: "text-[var(--fnk-color-loss)]" };
+  if (pct >= 60) return { label: "다소 높음", pill: "warn", num: "text-[var(--fnk-color-warn-ink)]" };
+  if (pct >= 40) return { label: "역사적 중립", pill: "neutral", num: "text-[var(--fnk-neutral-900)]" };
+  if (pct >= 20) return { label: "다소 낮음", pill: "neutral", num: "text-[var(--fnk-neutral-900)]" };
+  return { label: "저평가", pill: "up", num: "text-[var(--fnk-color-gain)]" };
 }
 
 function averagePremiumPct(band: ValuationBand): number | null {
@@ -677,171 +83,809 @@ function averagePremiumPct(band: ValuationBand): number | null {
   return (band.current / band.avg - 1) * 100;
 }
 
-function buildVerdict(index: MarketIndexValuation | undefined): { headline: string; support: string; metaLabel: string; premium: number | null } {
-  if (!index) {
-    return {
-      headline: "S&P 500 밸류에이션 데이터를 불러오는 중입니다.",
-      support: "데이터가 준비되면 16년 밴드 기준의 현재 위치와 이익/멀티플 기여도를 함께 표시합니다.",
-      metaLabel: "대기",
-      premium: null,
-    };
+// Signed history-premium numerics follow the artboard: positive reads gain,
+// negative reads loss (the pre-fix mapping had them reversed).
+function signedClass(value: number | null): string {
+  if (value === null) return "text-[var(--fnk-neutral-900)]";
+  return value >= 0 ? "text-[var(--fnk-color-gain)]" : "text-[var(--fnk-color-loss)]";
+}
+
+function verdictSentence(sp500: MarketIndexValuation | undefined): string {
+  if (!sp500 || sp500.pe.current === null) return "밸류에이션 데이터를 불러오는 중입니다.";
+  const pct = sp500.pe.percentile;
+  const meta = valuationMeta(pct);
+  const pe = formatDecimal(sp500.pe.current, { digits: 1 });
+  const where = pct === null ? "역사 위치 확인 중" : `역사 백분위 ${pct}`;
+  return `${sp500.name} 선행 PER은 ${pe}배로 ${where} — ${meta.label} 구간입니다.`;
+}
+
+type ZoneTone = "gain" | "muted" | "neutral" | "warn" | "loss";
+
+type RankTone = "brand" | "gain" | "loss" | "muted";
+
+/* The five valuation zones in ascending percentile order. `minPct` is the same
+ * 20/40/60/80 edge valuationMeta labels and the .mv-band shading draws, and
+ * VALUATION_ZONE_TICKS prints those edges under the strip, so a segment's
+ * width, its tick mark and the word beside a board row cannot disagree. Each
+ * `label` is valuationMeta's word for that zone — it names the segment in the
+ * band's accessible summary. */
+const VALUATION_ZONES: ReadonlyArray<{
+  label: string;
+  minPct: number;
+  tone: ZoneTone;
+  phrase: string;
+  read: string;
+}> = [
+  { label: "저평가", minPct: 0, tone: "gain", phrase: "자기 역사 하위 20%", read: "지수 전반이 싼 쪽에 몰려 있습니다." },
+  { label: "다소 낮음", minPct: 20, tone: "muted", phrase: "자기 역사 하위 20~40%", read: "지수 전반이 다소 싼 쪽에 있습니다." },
+  { label: "역사적 중립", minPct: 40, tone: "neutral", phrase: "자기 역사 중간 구간", read: "지수 전반이 역사적 중립 범위에 있습니다." },
+  { label: "다소 높음", minPct: 60, tone: "warn", phrase: "자기 역사 상위 20~40%", read: "지수 전반이 다소 비싼 쪽에 있습니다." },
+  { label: "고평가", minPct: 80, tone: "loss", phrase: "자기 역사 상위 20%", read: "지수 전반이 비싼 쪽에 몰려 있습니다." },
+];
+
+const VALUATION_ZONE_TICKS = VALUATION_ZONES.slice(1).map((zone) => zone.minPct);
+
+function valuationZoneIndex(pct: number): number {
+  return VALUATION_ZONES.filter((zone) => pct >= zone.minPct).length - 1;
+}
+
+/* RankBars carries no warn tone: the two middle zones keep the brand bar and
+ * the extremes keep the page's own gain/loss reading. */
+const RANK_BAR_TONE: Record<PillTone, RankTone> = {
+  up: "gain",
+  down: "loss",
+  warn: "brand",
+  neutral: "brand",
+};
+
+type OrdinalReading = { row: BenchmarkOrdinalRow; index: number; reading: BenchmarkHorizonReading };
+
+type OrdinalBoard = {
+  allRows: BenchmarkOrdinalRow[];
+  readable: OrdinalReading[];
+  ranked: Array<OrdinalReading & { rank: number }>;
+};
+
+/* One reading of the ordinal board for the current horizon and group filter.
+ * The summary strip and the board panel both render this, so the compact claim
+ * that leads the page can never disagree with the rows below it. */
+function readOrdinalBoard(
+  view: BenchmarkOrdinalsView | null,
+  horizon: BenchmarkOrdinalHorizon,
+  group: GroupFilter,
+): OrdinalBoard {
+  const allRows = view && view.status === "ready" ? view.groups.flatMap((entry) => entry.rows) : [];
+  const readable = allRows
+    .map((row, index) => ({ row, index, reading: benchmarkHorizonReading(row, horizon) }))
+    .filter((item) => item.reading.percentile !== null);
+  const ranked = readable
+    .filter((item) => group === ALL_GROUPS || item.row.groupId === group)
+    .sort((a, b) => (b.reading.percentile ?? 0) - (a.reading.percentile ?? 0) || a.index - b.index)
+    .map((item, index) => ({ ...item, rank: index + 1 }));
+  return { allRows, readable, ranked };
+}
+
+/* A row without a percentile in the current window is excluded from every
+ * count — the strip reports what it can read and says so. */
+function countValuationZones(readings: ReadonlyArray<OrdinalReading>): number[] {
+  const counts = VALUATION_ZONES.map(() => 0);
+  for (const item of readings) {
+    const pct = item.reading.percentile;
+    if (pct === null) continue;
+    counts[valuationZoneIndex(pct)] += 1;
   }
+  return counts;
+}
 
-  const percentile = index.pe.percentile;
-  const meta = valuationMeta(percentile);
-  const premium = averagePremiumPct(index.pe);
-  const percentileText = percentile === null ? "위치 확인 중" : `16년 역사 ${percentile}%ile`;
-  const driverText = index.driver?.detail ?? "이익과 멀티플 기여도는 보조 지표로 확인 중입니다.";
-  const premiumText = premium === null ? "평균 대비 거리는 계산 중" : `평균 대비 ${formatSignedDecimal(premium)}%`;
+// One provenance line replaces the four per-panel evidence rails. Each panel
+// reports its own state derivation and date; the header shows the worst state
+// against the OLDEST date, because a page is only as fresh as its oldest feed.
+type ProvenanceFreshness = "fresh" | "stale" | "pending" | "error" | "partial";
 
+type PanelProvenance = { freshness: ProvenanceFreshness; asOf: string | null; label?: string | null };
+
+// Worst first: an error outranks any pending fetch, which outranks the two
+// warning states; stale outranks partial because this line's date is the age
+// claim. Labels and dot vocabulary follow the retired EvidenceRail row.
+const PROVENANCE_WORST_FIRST: ReadonlyArray<ProvenanceFreshness> = [
+  "error",
+  "pending",
+  "stale",
+  "partial",
+  "fresh",
+];
+
+const PROVENANCE_LABEL: Record<ProvenanceFreshness, string> = {
+  fresh: "신선",
+  stale: "대기",
+  pending: "확인 중",
+  error: "오류",
+  partial: "부분",
+};
+
+const PROVENANCE_SOURCES = "Bloomberg · Damodaran · Yardeni";
+
+function aggregateProvenance(panels: ReadonlyArray<PanelProvenance>): PanelProvenance {
+  const freshness = PROVENANCE_WORST_FIRST.find(
+    (state) => panels.some((panel) => panel.freshness === state),
+  ) ?? "fresh";
+  // The winning panel's own wording (the verdict's words) wins the header line.
+  const label = panels.find((panel) => panel.freshness === freshness)?.label ?? null;
   return {
-    headline: `${index.name} Fwd P/E는 ${percentileText} - ${meta.label} 구간입니다.`,
-    support: `${premiumText}. ${driverText}`,
-    metaLabel: meta.label,
-    premium,
+    freshness,
+    asOf: oldestAsOf(panels.map((panel) => panel.asOf)),
+    label,
   };
 }
 
-function HeroBandGauge({ index }: { index: MarketIndexValuation | undefined }) {
-  if (!index) return <EmptyPanel label="S&P 500 밴드 데이터 없음" />;
+/* The compact summary that leads the route: where the benchmark rows sit on the
+ * 0-100 valuation axis right now, and how the four indices rank inside it. Both
+ * halves read the state the panels below render (the shared board reading and
+ * useMarketValuation's indices), and the strip registers no provenance of its
+ * own — the four panels' states and dates already own the header line. */
+function ValuationSummaryPanel({
+  board,
+  horizon,
+  group,
+  indices,
+  loading,
+  failed,
+  onRefetch,
+}: {
+  board: UseBenchmarkOrdinalsResult;
+  horizon: BenchmarkOrdinalHorizon;
+  group: GroupFilter;
+  indices: MarketIndexValuation[];
+  loading: boolean;
+  failed: boolean;
+  onRefetch: () => void;
+}) {
+  const { state, view, refetch } = board;
+  const boardLoading = state === "pending";
+  const boardFailed = state === "refused" || state === "failed";
+  const { allRows, ranked } = readOrdinalBoard(view, horizon, group);
+  const scopeRows = allRows.filter((row) => group === ALL_GROUPS || row.groupId === group);
+  const counts = countValuationZones(ranked);
+  const counted = counts.reduce((sum, count) => sum + count, 0);
+  const largest = Math.max(...counts);
+  const dominant = VALUATION_ZONES[counts.indexOf(largest)];
+  const horizonLabel = HORIZONS.find((item) => item.id === horizon)?.label ?? "10년";
+  const refusedGroups = view && view.status === "ready"
+    ? view.groups.filter((entry) => entry.refusal).length
+    : 0;
+  // The sentence counts the board's universe and the line under it states how
+  // much of that universe carries a reading — the two claims stay separable.
+  const bandLine = counted > 0
+    ? `${scopeRows.length}종 중 ${largest}종이 ${dominant.phrase} 구간 — ${dominant.read}`
+    : null;
+  const coverage = `표시 ${counted}/전체 ${scopeRows.length}${refusedGroups > 0 ? ` · ${refusedGroups}개 그룹 제외` : ""}`;
+  const bandNote = boardLoading
+    ? "역사 위치 분포를 불러오는 중입니다"
+    : boardFailed && scopeRows.length === 0
+      ? "역사 위치 데이터를 읽지 못했습니다"
+      : counted === 0
+        ? "이 자산군에는 표시할 역사 위치 데이터가 없습니다"
+        : null;
 
-  const premium = averagePremiumPct(index.pe);
-  const erpText = index.driver?.label ?? "이익/멀티플 확인";
+  // Percentile is the only measure comparable across indices, so the bars run
+  // on the full 0-100 scale: scaling to the largest row would draw the top
+  // index as a full bar however cheap it is in its own history.
+  const peerRows = PEER_ORDER
+    .map((id) => indices.find((index) => index.id === id))
+    .filter((row): row is MarketIndexValuation => row !== undefined);
+  const peerRanked = [...peerRows].sort((a, b) => (b.pe.percentile ?? -1) - (a.pe.percentile ?? -1));
+  const rankRows = peerRanked.map((row) => ({
+    key: row.id,
+    label: INDEX_KO[row.id] ?? row.name,
+    value: row.pe.percentile,
+    display: row.pe.percentile === null ? undefined : `백분위 ${row.pe.percentile}`,
+    tone: RANK_BAR_TONE[valuationMeta(row.pe.percentile).pill],
+  }));
+  const rankablePeers = peerRanked.filter((row) => row.pe.percentile !== null);
+  const peerTop = rankablePeers[0];
+  const peerPe = peerTop === undefined || peerTop.pe.current === null
+    ? null
+    : `, 선행 P/E ${formatDecimal(peerTop.pe.current, { digits: 1 })}배`;
+  const peerLine = peerTop === undefined
+    ? null
+    : `${INDEX_KO[peerTop.id] ?? peerTop.name}이 ${rankablePeers.length}개 지수 중 가장 비쌉니다 — 역사 백분위 ${peerTop.pe.percentile}%${peerPe ?? ""}.`;
+  const peerNote = loading
+    ? "지수 밸류에이션을 불러오는 중입니다"
+    : failed
+      ? "지수 밸류에이션을 불러오지 못했습니다"
+      : peerRows.length === 0
+        ? "표시할 밸류에이션 데이터가 없습니다"
+        : rankablePeers.length === 0
+          ? "지수 역사 백분위 데이터가 없습니다"
+          : null;
+  const empty = !loading && !boardLoading && scopeRows.length === 0 && peerRows.length === 0;
+  const retry = () => {
+    if (boardFailed) refetch();
+    if (failed) onRefetch();
+  };
 
   return (
-    <div className="cpw5-mv-hero-visual">
-      <ValuationRow label="S&P 500 Fwd P/E" metric="sp500-pe" band={index.pe} digits={1} />
-      <div className="cpw5-mv-hero-metrics">
-        <span>
-          평균 대비 <strong>{premium === null ? "—" : `${formatSignedDecimal(premium)}%`}</strong>
-        </span>
-        <span>
-          ROE <strong>{index.roe === null ? "—" : formatPercent(index.roe * 100, 1)}</strong>
-        </span>
-        <span>
-          현재가 <strong>{index.price === null ? "—" : formatInteger(index.price)}</strong>
-        </span>
-        <span>
-          드라이버 <strong>{erpText}</strong>
-        </span>
+    // The board and index feeds settle independently. Keep the loaded panel's
+    // footprint through their intermediate states as well as initial loading.
+    <Panel
+      loading={loading && boardLoading}
+      className={!empty && !failed && !boardFailed ? "min-h-[345px] min-[721px]:min-h-[272px]" : undefined}
+      empty={empty}
+      emptyReason={failed || boardFailed ? "밸류에이션 요약을 불러오지 못했습니다" : "요약할 밸류에이션 데이터가 없습니다"}
+      emptyNextRefresh="다음 마감 후 갱신"
+      emptyActionLabel={failed || boardFailed ? "다시 시도" : undefined}
+      onEmptyAction={failed || boardFailed ? retry : undefined}
+    >
+      <PanelHeader
+        eyebrow="Valuation Summary"
+        title="한눈에 보는 밸류에이션"
+        right={<Pill>{horizonLabel} 기준</Pill>}
+      />
+      <div className="mv-sum" data-market-valuation-summary>
+        <div className="mv-sum-band">
+          {bandLine ? <p className="mv-sum-read">{bandLine}</p> : null}
+          {counted > 0 ? (
+            <DistributionBand
+              segments={VALUATION_ZONES.map((zone, index) => ({ key: zone.label, count: counts[index], tone: zone.tone }))}
+              ticks={VALUATION_ZONE_TICKS}
+              ariaLabel={`${horizonLabel} 기준 자산 역사 백분위 분포`}
+            />
+          ) : null}
+          {bandNote ? <p className="mv-sum-note">{bandNote}</p> : null}
+          {counted > 0 ? <p className="mv-sum-note">{coverage}</p> : null}
+        </div>
+        <div className="mv-sum-peers">
+          <div className="mv-sum-peer-read">
+            <p className="mv-sum-cap">지수 선행 P/E · 지수별 전체 역사 백분위</p>
+            {peerLine ? <p className="mv-sum-read">{peerLine}</p> : null}
+            {peerNote ? <p className="mv-sum-note">{peerNote}</p> : null}
+          </div>
+          <div className="mv-sum-bars">
+            {rankRows.length > 0 ? (
+              <RankBars rows={rankRows} max={100} ariaLabel="지수 선행 P/E 역사 백분위 순위" />
+            ) : null}
+          </div>
+        </div>
       </div>
-    </div>
+    </Panel>
   );
 }
 
-function MarketHero({
+function ValuationReadPanel({
   sp500,
+  loading,
+  failed,
   sourceDate,
-  erpValue,
+  onRefetch,
+  onProvenance,
 }: {
   sp500: MarketIndexValuation | undefined;
+  loading: boolean;
+  failed: boolean;
   sourceDate: string | null;
-  erpValue: number | null;
+  onRefetch: () => void;
+  onProvenance: (value: PanelProvenance) => void;
 }) {
-  const verdict = buildVerdict(sp500);
-  const erpLabel = erpValue === null ? "ERP 확인 중" : `미국 ERP ${formatPercent(erpValue * 100, 1)}`;
+  const pct = sp500?.pe.percentile ?? null;
+  const meta = valuationMeta(pct);
+  const premium = sp500 ? averagePremiumPct(sp500.pe) : null;
+  const empty = !loading && !sp500;
+  const sourceVerdict = freshnessVerdict(sourceDate, "benchmarks");
+  const sourceRail = freshnessRailState(sourceVerdict);
+  const stale = !loading && !failed && (sourceVerdict.state === "delayed" || sourceVerdict.state === "stopped");
+  const freshness: ProvenanceFreshness = loading ? "pending" : failed ? "error" : sourceRail?.freshness ?? "fresh";
+
+  useEffect(() => {
+    onProvenance({ freshness, asOf: sourceDate, label: sourceRail?.label ?? null });
+  }, [freshness, sourceDate, sourceRail?.label, onProvenance]);
 
   return (
-    <section className="cpw5-mv-hero" data-market-valuation-hero>
-      <div className="cpw5-mv-hero-copy">
-        <div className="cpw5-mv-eyebrow-row">
-          <p className="cpw5-mv-eyebrow">오늘의 밸류에이션 판정</p>
-          {sourceDate ? <DataStateBadge state={freshnessDataState({ asOf: sourceDate })} prefix="기준" /> : null}
-        </div>
-        <h2>{verdict.headline}</h2>
-        <p>{verdict.support}</p>
-        <div className="cpw5-mv-chip-row" aria-label="핵심 보조 지표">
-          <span>{verdict.metaLabel}</span>
-          <span>{erpLabel}</span>
-          <span>Yardeni 차트 아래 확인</span>
-        </div>
-        <div className="cpw5-mv-cta-row" aria-label="연결 화면">
-          <TransitionLink href={ROUTES.marketStructure}>구조 상세</TransitionLink>
-          <TransitionLink href={ROUTES.macroChartQuery("macro=activity&preset=activity&range=MAX")}>경기 차트</TransitionLink>
-          <TransitionLink href={`${ROUTES.screener}?macro=activity&preset=estimate&action=value_momentum`}>추정치 스크리너</TransitionLink>
-        </div>
+    // fh-CLS3: the children already render their "—" placeholder layout, so
+    // placeholder mode keeps the exact loaded box — the skeleton box was 195px
+    // and collapsed to ~120px at settle (recorded 768).
+    <Panel
+      loading={loading}
+      loadingMode="placeholder"
+      empty={empty}
+      emptyReason={failed ? "지수 밸류에이션을 불러오지 못했습니다" : "표시할 밸류에이션 데이터가 없습니다"}
+      emptyNextRefresh="다음 마감 후 갱신"
+      emptyActionLabel={failed ? "다시 시도" : undefined}
+      onEmptyAction={failed ? onRefetch : undefined}
+      stale={stale}
+      asOf={sourceDate ?? undefined}
+      onRetry={stale ? onRefetch : undefined}
+    >
+      <PanelHeader
+        eyebrow="Valuation Read"
+        title="오늘의 밸류에이션 판독"
+        right={
+          <Pill tone={meta.pill}>
+            {pct === null ? meta.label : `${meta.label} · 상위 ${100 - pct}%`}
+          </Pill>
+        }
+      />
+      <div className="mv-stats">
+        <Stat label="Fwd P/E" value={`${formatDecimal(sp500?.pe.current ?? null, { digits: 1 })}x`} />
+        <Stat label="P/B" value={`${formatDecimal(sp500?.pb.current ?? null, { digits: 2 })}x`} />
+        <Stat
+          label="ROE"
+          value={
+            <span className={sp500?.roe == null ? "text-[var(--fnk-neutral-900)]" : sp500.roe >= 0.15 ? "text-[var(--fnk-color-gain)]" : "text-[var(--fnk-neutral-900)]"}>
+              {sp500?.roe == null ? "—" : formatPercent(sp500.roe * 100, 1)}
+            </span>
+          }
+        />
+        <Stat
+          label="평균 대비"
+          value={
+            <span className={signedClass(premium)}>
+              {premium === null ? "—" : `${formatSignedDecimal(premium)}%`}
+            </span>
+          }
+        />
       </div>
-      <HeroBandGauge index={sp500} />
-    </section>
+    </Panel>
   );
 }
 
-// §H rule 2: vendor payload labels (typos like "Ressell 2000") must not leak; route through a label table.
-const SECONDARY_INDEX_LABELS_KO: Record<string, string> = {
-  nasdaq100: "나스닥 100",
-  nasdaq_composite: "나스닥 종합",
-  russell2000: "러셀 2000",
-};
+type PeerSortKey = "name" | "pe" | "pb" | "roe" | "percentile";
 
-function SecondaryIndexTable({ indices }: { indices: MarketIndexValuation[] }) {
-  const secondary = indices.filter((index) => index.id !== "sp500");
+type PeerSortDirection = "asc" | "desc";
 
-  if (secondary.length === 0) {
-    return <EmptyPanel label="보조 지수 데이터 없음" />;
+const PEER_COLUMNS: ReadonlyArray<{ key: PeerSortKey; label: string }> = [
+  { key: "name", label: "지수" },
+  { key: "pe", label: "Fwd P/E" },
+  { key: "pb", label: "P/B" },
+  { key: "roe", label: "ROE" },
+  { key: "percentile", label: "구간" },
+];
+
+function peerSortValue(row: MarketIndexValuation, key: PeerSortKey): string | number | null {
+  if (key === "name") return INDEX_KO[row.id] ?? row.name;
+  if (key === "pe") return row.pe.current;
+  if (key === "pb") return row.pb.current;
+  if (key === "roe") return row.roe;
+  return row.pe.percentile;
+}
+
+/**
+ * Numeric columns sort by value, the name column by Korean collation, and a
+ * missing value is always last (a blank cell must not win an ascending sort).
+ * Ties keep the incoming PEER_ORDER: Array.sort is stable.
+ */
+function comparePeerRows(
+  a: MarketIndexValuation,
+  b: MarketIndexValuation,
+  key: PeerSortKey,
+  direction: PeerSortDirection,
+): number {
+  const left = peerSortValue(a, key);
+  const right = peerSortValue(b, key);
+  const sign = direction === "asc" ? 1 : -1;
+  if (typeof left === "string" || typeof right === "string") {
+    return String(left ?? "").localeCompare(String(right ?? ""), "ko") * sign;
   }
+  if (left === null && right === null) return 0;
+  if (left === null) return 1;
+  if (right === null) return -1;
+  return (left - right) * sign;
+}
+
+function PeerComparePanel({
+  indices,
+  loading,
+  failed,
+  sourceDate,
+  onRefetch,
+  onProvenance,
+}: {
+  indices: MarketIndexValuation[];
+  loading: boolean;
+  failed: boolean;
+  sourceDate: string | null;
+  onRefetch: () => void;
+  onProvenance: (value: PanelProvenance) => void;
+}) {
+  const [sort, setSort] = useState<{ key: PeerSortKey; direction: PeerSortDirection } | null>(null);
+  const rows = PEER_ORDER.map((id) => indices.find((index) => index.id === id)).filter(
+    (row): row is MarketIndexValuation => row !== undefined,
+  );
+  // Default (no sort chosen) keeps the existing PEER_ORDER.
+  const sortedRows = sort === null
+    ? rows
+    : [...rows].sort((a, b) => comparePeerRows(a, b, sort.key, sort.direction));
+  const empty = !loading && rows.length === 0;
+  const sourceVerdict = freshnessVerdict(sourceDate, "benchmarks");
+  const sourceRail = freshnessRailState(sourceVerdict);
+  const stale = !loading && !failed && rows.length > 0 && (sourceVerdict.state === "delayed" || sourceVerdict.state === "stopped");
+  const freshness: ProvenanceFreshness = loading ? "pending" : failed ? "error" : sourceRail?.freshness ?? "fresh";
+
+  useEffect(() => {
+    onProvenance({ freshness, asOf: sourceDate, label: sourceRail?.label ?? null });
+  }, [freshness, sourceDate, sourceRail?.label, onProvenance]);
+
+  // First press on a column picks its most useful direction (numbers high to
+  // low, names A to Z); pressing the active column flips it.
+  const toggleSort = (key: PeerSortKey) => {
+    setSort((current) => {
+      if (!current || current.key !== key) {
+        return { key, direction: key === "name" ? "asc" : "desc" };
+      }
+      return { key, direction: current.direction === "asc" ? "desc" : "asc" };
+    });
+  };
 
   return (
-    <section className="cpw5-mv-secondary" data-market-valuation-secondary>
-      <header>
-        <p className="cpw5-mv-eyebrow">보조 지수 비교</p>
-        <h2>나머지 지수는 한 화면에서 압축 비교합니다.</h2>
-      </header>
-      <div className="cpw5-mv-index-table" role="table" aria-label="보조 지수 밸류에이션">
-        <div className="cpw5-mv-index-row cpw5-mv-index-head" role="row">
-          <span role="columnheader">지수</span>
-          <span role="columnheader">Fwd P/E</span>
-          <span role="columnheader">P/B</span>
-          <span role="columnheader">ROE</span>
-          <span role="columnheader">구간</span>
+    <Panel
+      loading={loading}
+      empty={empty}
+      emptyReason={failed ? "지수 비교 데이터를 불러오지 못했습니다" : "비교할 지수 데이터가 없습니다"}
+      emptyNextRefresh="다음 마감 후 갱신"
+      emptyActionLabel={failed ? "다시 시도" : undefined}
+      onEmptyAction={failed ? onRefetch : undefined}
+      stale={stale}
+      asOf={sourceDate ?? undefined}
+      onRetry={stale ? onRefetch : undefined}
+    >
+      <PanelHeader
+        eyebrow="Peer Compare"
+        title="지수별 비교"
+        right={<Pill>{rows.length}개 표시</Pill>}
+      />
+      {/* The stacked phone layout hides .mv-thead, so sorting gets a real
+          control there instead of a dead header. */}
+      <div className="mv-sorts" role="group" aria-label="정렬">
+        <span className="mv-sorts-label">정렬</span>
+        {PEER_COLUMNS.map((column) => {
+          const active = sort?.key === column.key;
+          return (
+            <button
+              key={column.key}
+              type="button"
+              aria-pressed={active}
+              onClick={() => toggleSort(column.key)}
+            >
+              {column.label}
+              {active ? <i className="mv-sort-hint" aria-hidden="true">{sort?.direction === "asc" ? "↑" : "↓"}</i> : null}
+            </button>
+          );
+        })}
+      </div>
+      <div role="table" aria-label="지수별 밸류에이션 비교">
+        <div className="mv-thead" role="row">
+          {PEER_COLUMNS.map((column) => {
+            const active = sort?.key === column.key;
+            return (
+              <span
+                key={column.key}
+                role="columnheader"
+                aria-sort={active ? (sort?.direction === "asc" ? "ascending" : "descending") : "none"}
+              >
+                <button type="button" className="mv-sort" onClick={() => toggleSort(column.key)}>
+                  {column.label}
+                  <i className="mv-sort-hint" data-active={active || undefined} aria-hidden="true">
+                    {active ? (sort?.direction === "asc" ? "↑" : "↓") : "↕"}
+                  </i>
+                </button>
+              </span>
+            );
+          })}
         </div>
-        {secondary.map((index) => {
+        {sortedRows.map((index) => {
           const meta = valuationMeta(index.pe.percentile);
           return (
-            <div key={index.id} className="cpw5-mv-index-row" role="row">
-              <span role="cell">
-                <strong>{SECONDARY_INDEX_LABELS_KO[index.id] ?? "지수"}</strong>
-                <small>{index.nameEn}</small>
+            <div className="mv-trow" role="row" tabIndex={0} key={index.id}>
+              <span className="mv-idx" role="cell">{INDEX_KO[index.id] ?? index.name}</span>
+              <span className="tabular-nums" role="cell">
+                {formatDecimal(index.pe.current, { digits: 1 })}x
               </span>
-              <span role="cell" className="tabular-nums">
-                {formatDecimal(index.pe.current, { digits: 1 })}
+              <span className="tabular-nums" role="cell">
+                {formatDecimal(index.pb.current, { digits: 2 })}x
               </span>
-              <span role="cell" className="tabular-nums">
-                {formatDecimal(index.pb.current, { digits: 2 })}
-              </span>
-              <span role="cell" className="tabular-nums">
+              <span className="tabular-nums" role="cell">
                 {index.roe === null ? "—" : formatPercent(index.roe * 100, 1)}
               </span>
-              <span role="cell">
-                <em>{meta.label}</em>
-                {index.pe.percentile !== null ? <small>{index.pe.percentile}%ile</small> : null}
+              <span className="mv-range" role="cell">
+                <Pill tone={meta.pill}>{meta.label}</Pill>
+                {index.pe.percentile === null ? (
+                  <span className="mv-band mv-band-mini" aria-hidden="true" />
+                ) : (
+                  <span
+                    className="mv-band mv-band-mini"
+                    role="progressbar"
+                    aria-valuenow={index.pe.percentile}
+                    aria-valuemin={0}
+                    aria-valuemax={100}
+                    aria-label={`${INDEX_KO[index.id] ?? index.name} 역사 백분위`}
+                  >
+                    <i style={{ left: `${index.pe.percentile}%` }} />
+                  </span>
+                )}
               </span>
             </div>
           );
         })}
       </div>
-    </section>
+    </Panel>
   );
 }
 
-function ContextAccordion({
-  title,
-  summary,
-  children,
+// Historical Position reads the six Bloomberg benchmark ordinals
+// (us/us_sectors/developed/emerging/msci/micro_sectors — every file carries
+// metadata.source "Bloomberg Terminal"), which is why the page provenance line
+// names Bloomberg alongside the Reference-panel feeds. Wiring the RIM
+// sustainable ranges + Yardeni model in here instead would replace the 38-asset
+// trailing-window reading with a different model; the panel reports its own
+// state and date upward instead (fh-669 P1b).
+//
+// The board's data and its horizon/group selection are owned by the page now:
+// the summary strip renders the same rows, so the two surfaces share one state.
+function HistoricalPositionPanel({
+  board,
+  horizon,
+  setHorizon,
+  group,
+  setGroup,
+  onProvenance,
 }: {
-  title: string;
-  summary: string;
-  children: ReactNode;
+  board: UseBenchmarkOrdinalsResult;
+  horizon: BenchmarkOrdinalHorizon;
+  setHorizon: (value: BenchmarkOrdinalHorizon) => void;
+  group: GroupFilter;
+  setGroup: (value: GroupFilter) => void;
+  onProvenance: (value: PanelProvenance) => void;
 }) {
+  const { state, view, refetch } = board;
+  const loading = state === "pending";
+  const transportFailed = state === "refused" || state === "failed";
+  const ready = state === "ready" && view?.status === "ready";
+
+  // The board is the working surface: every rankable row stays, highest
+  // percentile first, and equal percentiles keep the source order.
+  const { allRows, readable, ranked } = readOrdinalBoard(view, horizon, group);
+  const groupRefusals = view && view.status === "ready"
+    ? view.groups.filter((entry) => entry.refusal)
+    : [];
+  const horizonLabel = HORIZONS.find((item) => item.id === horizon)?.label ?? "10년";
+  const asOf = view && view.status === "ready" ? view.asOf : null;
+  // Loaded groups stay visible when siblings refuse (LKG): only a fully empty
+  // board becomes the empty state. A filter that matches nothing is a filtered
+  // view of live data, not an empty panel — it gets a note instead.
+  const empty = !loading && readable.length === 0;
+  const filteredEmpty = !loading && !empty && ranked.length === 0;
+  const partial = !loading && !empty && (!ready || groupRefusals.length > 0);
+  const boardVerdict = freshnessVerdict(asOf, "benchmarks");
+  const boardRail = freshnessRailState(boardVerdict);
+  const stale = !loading && !empty && !transportFailed && (boardVerdict.state === "delayed" || boardVerdict.state === "stopped");
+  const freshness: ProvenanceFreshness = loading
+    ? "pending"
+    : transportFailed && empty
+      ? "error"
+      : partial
+        ? "partial"
+        : boardRail?.freshness ?? "fresh";
+
+  useEffect(() => {
+    onProvenance({ freshness, asOf, label: boardRail?.label ?? null });
+  }, [freshness, asOf, boardRail?.label, onProvenance]);
+
   return (
-    <details className="cpw5-mv-accordion">
-      <summary>
-        <span>
-          <strong>{title}</strong>
-          <small>{summary}</small>
+    <Panel
+      loading={loading}
+      empty={empty}
+      emptyReason={transportFailed ? "역사 위치 데이터를 읽지 못했습니다" : "표시할 역사 위치 데이터가 없습니다"}
+      emptyNextRefresh="주간 갱신"
+      emptyActionLabel={transportFailed ? "다시 시도" : undefined}
+      onEmptyAction={transportFailed ? refetch : undefined}
+      stale={stale}
+      asOf={asOf ?? undefined}
+      onRetry={stale ? refetch : undefined}
+    >
+      <PanelHeader
+        eyebrow="Historical Position"
+        title={`${allRows.length > 0 ? allRows.length : 38}종 자산 — 역사 대비 위치`}
+        right={<Pill>{horizonLabel} 기준</Pill>}
+      />
+      <div className="mv-board-controls">
+        <div className="mv-horizons" role="group" aria-label="역사 구간">
+          {HORIZONS.map((item) => (
+            <button
+              key={item.id}
+              type="button"
+              aria-pressed={horizon === item.id}
+              onClick={() => setHorizon(item.id)}
+            >
+              {item.label}
+            </button>
+          ))}
+        </div>
+        <div className="mv-chips" role="group" aria-label="자산군 필터">
+          <button type="button" aria-pressed={group === ALL_GROUPS} onClick={() => setGroup(ALL_GROUPS)}>
+            전체
+          </button>
+          {BENCHMARK_ORDINAL_GROUPS.map((item) => (
+            <button
+              key={item.id}
+              type="button"
+              aria-pressed={group === item.id}
+              onClick={() => setGroup(item.id)}
+            >
+              {item.label}
+            </button>
+          ))}
+        </div>
+      </div>
+      <div className="mv-board-list">
+        {ranked.map(({ row, reading, rank }) => {
+          const pct = reading.percentile ?? 0;
+          const meta = valuationMeta(reading.percentile);
+          return (
+            <div className="mv-brow" tabIndex={0} key={row.id}>
+              <span className="mv-brank tabular-nums">{rank}</span>
+              <span className="mv-bname">{row.name}</span>
+              <div className="mv-band" role="progressbar" aria-valuenow={pct} aria-valuemin={0} aria-valuemax={100} aria-label={`${row.name} 역사 백분위`}>
+                <i style={{ left: `${pct}%` }} />
+              </div>
+              <span className="mv-bpct tabular-nums">{pct}%</span>
+              <span className={`mv-blabel ${meta.num}`}>{meta.label}</span>
+            </div>
+          );
+        })}
+      </div>
+      {filteredEmpty ? <p className="mv-note">이 자산군에는 표시할 역사 위치 데이터가 없습니다</p> : null}
+      {groupRefusals.length > 0 ? (
+        <p className="mv-note">
+          {groupRefusals.map((item) => item.label).join(" · ")}: 표시할 데이터가 없습니다
+        </p>
+      ) : null}
+    </Panel>
+  );
+}
+
+// The Reference panel waits for both embedded chart loaders: freshness derives
+// from the ERP + Yardeni outcomes, never from a fixed 2/2.
+function HistoricalReferencePanel({
+  erpSourceDate,
+  onProvenance,
+}: {
+  erpSourceDate: string | null;
+  onProvenance: (value: PanelProvenance) => void;
+}) {
+  const [erp, setErp] = useState<LedgerChartLoadStatus>({ state: "pending", asOf: null });
+  const [yardeni, setYardeni] = useState<LedgerChartLoadStatus>({ state: "pending", asOf: null });
+  const [chartTab, setChartTab] = useState<ChartTabId>("erp");
+  // One cursor date shared by both tabs: hovering the active chart sets it, the
+  // idle chart draws it, and switching tabs carries it across.
+  const [cursorDate, setCursorDate] = useState<string | null>(null);
+  // Refetch is local to this panel: bumping the attempt token remounts the two
+  // chart loaders (they own their fetches), and the statuses drop back to
+  // pending so the panel reads as loading again while they re-run.
+  const [attempt, setAttempt] = useState(0);
+  const refetch = () => {
+    setErp({ state: "pending", asOf: null });
+    setYardeni({ state: "pending", asOf: null });
+    setCursorDate(null);
+    setAttempt((value) => value + 1);
+  };
+  const pending = erp.state === "pending" || yardeni.state === "pending";
+  const readyCount = (erp.state === "ready" ? 1 : 0) + (yardeni.state === "ready" ? 1 : 0);
+  const bothFailed = erp.state === "failed" && yardeni.state === "failed";
+  const empty = !pending && bothFailed;
+  const partial = !pending && !bothFailed && readyCount < 2;
+  const asOf = latestAsOf([erp.asOf, yardeni.asOf, erpSourceDate]);
+  const erpVerdict = freshnessVerdict(erp.asOf, "damodaran");
+  const yardeniVerdict = freshnessVerdict(yardeni.asOf, "fred_yardeni");
+  const stale = !pending && !bothFailed && (
+    erpVerdict.state === "delayed" || erpVerdict.state === "stopped"
+    || yardeniVerdict.state === "delayed" || yardeniVerdict.state === "stopped"
+  );
+  const referenceRails = [freshnessRailState(erpVerdict), freshnessRailState(yardeniVerdict)];
+  const referenceRail = referenceRails.find((rail) => rail?.freshness === "error")
+    ?? referenceRails.find((rail) => rail?.freshness === "stale")
+    ?? null;
+  const freshness: ProvenanceFreshness = pending
+    ? "pending"
+    : bothFailed
+      ? "error"
+      : partial
+        ? "partial"
+        : referenceRail?.freshness ?? "fresh";
+
+  useEffect(() => {
+    // The page clock takes this panel's OLDEST internal date: two charts with
+    // different publication dates must not be summarized by the newer one.
+    onProvenance({ freshness, asOf: oldestAsOf([erp.asOf, yardeni.asOf, erpSourceDate]), label: referenceRail?.label ?? null });
+  }, [freshness, erp.asOf, yardeni.asOf, erpSourceDate, referenceRail?.label, onProvenance]);
+
+  return (
+    // Route-level five-state: the ERP/Yardeni charts load their own feeds, so
+    // the panel never delegates loading to Panel — Panel's delayed skeleton
+    // replaces children after 120ms, which would drop the live chart frames
+    // for a slow fetch. Children stay mounted; pending/partial surface in the
+    // page provenance line and the empty/error states on the Panel itself.
+    <Panel
+      loading={false}
+      empty={empty}
+      emptyReason="ERP · 채권 대비 PER 차트를 불러오지 못했습니다"
+      emptyActionLabel="다시 시도"
+      onEmptyAction={refetch}
+      stale={stale}
+      asOf={asOf ?? undefined}
+      onRetry={stale ? refetch : undefined}
+    >
+      <PanelHeader eyebrow="Historical Reference" title="ERP · 채권 대비 PER 추이" right={<Pill>20Y</Pill>} />
+      {/* Both charts stay mounted: the idle tab is hidden by CSS only, so
+          switching never remounts (and never refetches) a chart. */}
+      <div className="mv-chart-tabs" role="tablist" aria-label="역사 참조 차트">
+        {CHART_TABS.map((item) => {
+          const active = chartTab === item.id;
+          return (
+            <button
+              key={item.id}
+              id={`mv-chart-tab-${item.id}`}
+              type="button"
+              role="tab"
+              aria-selected={active}
+              aria-controls={`mv-chart-pane-${item.id}`}
+              tabIndex={active ? 0 : -1}
+              onClick={() => setChartTab(item.id)}
+              onKeyDown={(event) => {
+                const delta = event.key === "ArrowRight" || event.key === "ArrowDown"
+                  ? 1
+                  : event.key === "ArrowLeft" || event.key === "ArrowUp"
+                    ? -1
+                    : 0;
+                if (delta === 0) return;
+                event.preventDefault();
+                const index = CHART_TABS.findIndex((entry) => entry.id === chartTab);
+                const next = CHART_TABS[(index + delta + CHART_TABS.length) % CHART_TABS.length];
+                setChartTab(next.id);
+                window.requestAnimationFrame(() => document.getElementById(`mv-chart-tab-${next.id}`)?.focus());
+              }}
+            >
+              {item.label}
+            </button>
+          );
+        })}
+        <span className="mv-chart-cursor">
+          커서 <b className="tabular-nums">{cursorDate ?? "—"}</b>
         </span>
-      </summary>
-      <div className="cpw5-mv-accordion-body">{children}</div>
-    </details>
+      </div>
+      <div className="mv-chart-panes" data-market-valuation-chart-grid aria-busy={pending}>
+        <div
+          id="mv-chart-pane-erp"
+          role="tabpanel"
+          aria-labelledby="mv-chart-tab-erp"
+          className="mv-chart-pane"
+          data-active={chartTab === "erp" || undefined}
+        >
+          <p className="mv-chart-cap">Damodaran ERP vs 10년물</p>
+          <ErpHistoryPanel
+            key={`erp-${attempt}`}
+            bare
+            onStatus={setErp}
+            onCursor={setCursorDate}
+            cursorLabel={chartTab === "erp" ? null : cursorDate}
+          />
+        </div>
+        <div
+          id="mv-chart-pane-yardeni"
+          role="tabpanel"
+          aria-labelledby="mv-chart-tab-yardeni"
+          className="mv-chart-pane"
+          data-active={chartTab === "yardeni" || undefined}
+        >
+          <p className="mv-chart-cap">Yardeni 채권 대비 PER</p>
+          <YardeniOverlayChartPanel
+            key={`yardeni-${attempt}`}
+            bare
+            onStatus={setYardeni}
+            onCursor={setCursorDate}
+            cursorLabel={chartTab === "yardeni" ? null : cursorDate}
+          />
+        </div>
+      </div>
+    </Panel>
   );
 }
 
@@ -852,21 +896,38 @@ export default function MarketValuationClient({
 }) {
   const {
     indices,
-    macroPulses,
-    signalPulses,
-    sentimentPulses,
-    eventRisks,
-    indexTrends,
-    structurePulses,
-    bondPulses,
-    damodaranUsErp,
+    erpInsight,
     dataReady,
     failed,
     sourceDate,
+    refetch,
   } = useMarketValuation();
+  // The ordinal board is loaded and filtered here, not inside its panel: the
+  // summary strip leads the page from the same rows the board draws, so the two
+  // surfaces cannot disagree about the horizon or the asset-group filter.
+  const board = useBenchmarkOrdinals();
+  const [horizon, setHorizon] = useState<BenchmarkOrdinalHorizon>("w10");
+  const [group, setGroup] = useState<GroupFilter>(ALL_GROUPS);
+  // Per-panel provenance: the four states are reported by the panels' own
+  // derivations (never recomputed here), so the header line cannot drift from
+  // what each panel renders.
+  const [readProvenance, setReadProvenance] = useState<PanelProvenance>({ freshness: "pending", asOf: null });
+  const [peerProvenance, setPeerProvenance] = useState<PanelProvenance>({ freshness: "pending", asOf: null });
+  const [boardProvenance, setBoardProvenance] = useState<PanelProvenance>({ freshness: "pending", asOf: null });
+  const [referenceProvenance, setReferenceProvenance] = useState<PanelProvenance>({ freshness: "pending", asOf: null });
+
   useEffect(() => {
     if (!onFreshnessChange) return;
-    if (!dataReady && !failed) {
+    if (failed) {
+      onFreshnessChange(makeDataState({
+        status: "error",
+        label: DATA_STATE_LABELS.error,
+        detail: "지수 밸류에이션을 불러오지 못했습니다.",
+        asOf: sourceDate,
+      }));
+      return;
+    }
+    if (!dataReady) {
       onFreshnessChange(null);
       return;
     }
@@ -877,70 +938,76 @@ export default function MarketValuationClient({
       unavailableLabel: DATA_STATE_LABELS.unavailable,
     }));
   }, [dataReady, failed, onFreshnessChange, sourceDate]);
+
+  const loading = !dataReady && !failed;
   const sp500 = indices.find((index) => index.id === "sp500") ?? indices[0];
-  const headerVerdict = buildVerdict(sp500);
+  const provenance = aggregateProvenance([
+    readProvenance,
+    peerProvenance,
+    boardProvenance,
+    referenceProvenance,
+  ]);
 
   return (
-    <div className="data-shell-page canvas-plus cpw5-market-valuation" data-market-valuation-surface>
-      <section className="panel data-shell-header">
-        <div className="data-shell-head-main">
-          <p className="data-shell-kicker">시장 밸류에이션</p>
-          <h1 className="data-shell-title">시장 밸류에이션</h1>
-          <p className="data-shell-desc">
-            <strong>{headerVerdict.headline}</strong> {headerVerdict.support}
-          </p>
+    <div className="mv" data-market-valuation-surface>
+      <div className="mv-head">
+        <div>
+          <h1 className="mv-title">시장 밸류에이션</h1>
+          <span className="mv-verdict" data-loading={!sp500 || sp500.pe.current === null ? "true" : undefined}>{verdictSentence(sp500)}</span>
         </div>
-        <div className="data-shell-head-actions">
-          {sourceDate ? (
-            <span className="data-shell-pill ok">
-              <span />
-              {formatDataAsOf(sourceDate) ?? sourceDate}
-            </span>
-          ) : null}
+        <div className="mv-tabs">
           <MarketSectionNav active="valuation" />
         </div>
-      </section>
-
-      {failed ? (
-        <div className="rounded-[1.2rem] border border-[var(--c-line)] bg-[var(--c-surface-2)] px-4 py-3 text-sm font-semibold text-[var(--c-ink)]">
-          지수 밸류에이션 데이터를 불러오지 못했습니다.
-        </div>
-      ) : null}
-
-      <MarketHero sp500={sp500} sourceDate={sourceDate} erpValue={damodaranUsErp} />
-
-      <SecondaryIndexTable indices={indices} />
-
-      <RimReadinessPanel />
-
-      <MarketSection sectionKey="valuation" index="01 근거" title="이익과 멀티플이 만든 현재 위치" summary="S&P 500 판정의 배경을 시장 체온, ERP, Yardeni 모델로 확인합니다." muted={!dataReady}>
-        <MarketThermometer />
-        <SignalPulsePanel items={signalPulses} />
-        <div className="grid gap-4 xl:grid-cols-[1.05fr_0.95fr]" data-market-valuation-chart-grid>
-          <ErpHistoryPanel />
-          <YardeniOverlayChartPanel />
-        </div>
-      </MarketSection>
-
-      <div className="cpw5-mv-context-stack" data-market-valuation-context>
-        <ContextAccordion title="매크로" summary="PMI, 경기 펄스, 채권 신호는 판정 이후 확인합니다.">
-          <PmiActivityChartPanel />
-          <MacroPulsePanel items={macroPulses} fallbackAsOf={sourceDate} />
-          <BondPulsePanel items={bondPulses} fallbackAsOf={sourceDate} />
-        </ContextAccordion>
-        <ContextAccordion title="구조·심리" summary="시장 내부 구조와 센티먼트 압력을 접어서 봅니다.">
-          <MarketStructurePanel trends={indexTrends} structures={structurePulses} />
-          <StructureDetailEntry />
-          <SentimentPulsePanel items={sentimentPulses} fallbackAsOf={sourceDate} />
-        </ContextAccordion>
-        <ContextAccordion title="맥락" summary="연도별 수익률과 예정 이벤트로 현재 위치를 보정합니다.">
-          <AnnualReturnsChartPanel />
-          <EventRiskPanel items={eventRisks} fallbackAsOf={sourceDate} />
-        </ContextAccordion>
+        <p className="mv-prov" data-market-valuation-provenance>
+          <span className="mv-prov-state">
+            <i className="mv-prov-dot" data-state={provenance.freshness} aria-hidden="true" />
+            <b>{provenance.label ?? PROVENANCE_LABEL[provenance.freshness]}</b>
+          </span>
+          <span>기준 <b className="tabular-nums">{provenance.asOf ?? "—"}</b></span>
+          <span>출처 <b>{PROVENANCE_SOURCES}</b></span>
+        </p>
       </div>
 
-      <p className="px-1 text-[11px] text-[var(--c-ink-2)]">
-        역사 밴드 = 2010년 이후 주간 시계열의 최저·평균·최고 범위입니다. 백분위는 현재값의 역사적 위치이며, 높을수록 고평가 구간에 가깝습니다. 연초 이후 분해는 가격 변화가 EPS 개선에서 왔는지 평가배수 확장/축소에서 왔는지 보기 위한 보조 지표입니다.
+      <ValuationSummaryPanel
+        board={board}
+        horizon={horizon}
+        group={group}
+        indices={indices}
+        loading={loading}
+        failed={failed}
+        onRefetch={refetch}
+      />
+      <ValuationReadPanel
+        sp500={sp500}
+        loading={loading}
+        failed={failed}
+        sourceDate={sourceDate}
+        onRefetch={refetch}
+        onProvenance={setReadProvenance}
+      />
+      <PeerComparePanel
+        indices={indices}
+        loading={loading}
+        failed={failed}
+        sourceDate={sourceDate}
+        onRefetch={refetch}
+        onProvenance={setPeerProvenance}
+      />
+      <HistoricalPositionPanel
+        board={board}
+        horizon={horizon}
+        setHorizon={setHorizon}
+        group={group}
+        setGroup={setGroup}
+        onProvenance={setBoardProvenance}
+      />
+      <HistoricalReferencePanel
+        erpSourceDate={erpInsight?.sourceDate ?? null}
+        onProvenance={setReferenceProvenance}
+      />
+
+      <p className="mv-foot">
+        백분위는 현재값의 역사적 위치이며, 높을수록 고평가 구간에 가깝습니다.
       </p>
     </div>
   );

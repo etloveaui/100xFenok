@@ -1,0 +1,25 @@
+{
+  "schema_version": "feno_rim_final_commit_provenance.v1",
+  "purpose": "The canonical criteria, its freeze receipt and the result artifacts cite the commit hashes they were written under. Those hashes changed when the branch was rebased onto the hourly autopull's tip, which owns the tip fast-forward only. The criteria and the receipt are immutable and were not edited. This file records the mapping instead, and re-verifies that the property those hashes were cited for still holds.",
+  "recorded_at": "2026-08-08T14:24:00Z",
+  "why_the_rebase_happened": "The nested repository's hourly autopull committed 4e1c4225bb while this work was in progress. Project rule: the autopull owns the tip and advances it fast-forward only, so local work rebases onto it rather than forcing. Rebase used git pull --rebase --autostash; no force push, no history rewrite of anything already published.",
+
+  "hash_mapping": [
+    { "role": "criteria freeze", "cited_in_artifacts_as": "79717ab76f", "actual_after_rebase": "16c3c7634c", "subject": "freeze(rim-index): canonical SSOT criteria — one authority, frozen before any final result" },
+    { "role": "results", "cited_in_artifacts_as": "b40d7605bc", "actual_after_rebase": "786d04e877", "subject": "result(rim-index): current product recomputed from the canonical SSOT, all seven gates pass" },
+    { "role": "verdict and archives", "cited_in_artifacts_as": "58c61a7396", "actual_after_rebase": "99a71ad2f2", "subject": "result(rim-index): FENO_INDEX_RIM_READY — operational verdict, not historically validated" }
+  ],
+
+  "the_property_those_hashes_were_cited_for_still_holds": {
+    "claim": "the canonical criteria were committed before any final result existed",
+    "reverified_in_the_rebased_history": [
+      { "check": "the freeze commit contains only the two criteria files", "command": "git show --stat 16c3c7634c", "result": "2 files changed, 240 insertions — feno-index-rim-canonical-criteria.json and feno-index-rim-canonical-freeze-receipt.json" },
+      { "check": "no FENO_RIM_FINAL_* result file exists anywhere in the freeze commit's tree", "command": "git ls-tree -r --name-only 16c3c7634c -- data/computed/rim-index/ | grep -c FENO_RIM_FINAL", "result": "0" },
+      { "check": "the freeze commit is an ancestor of the results commit", "command": "git merge-base --is-ancestor 16c3c7634c 786d04e877", "result": "true" },
+      { "check": "the criteria file still hashes to the value its receipt asserts", "command": "shasum -a 256 feno-index-rim-canonical-criteria.json", "result": "9100ea6014ebfd01e53a8b3714be220780286285dc892d9372488cc490a7354d, equal to freeze receipt criteria_sha256" }
+    ],
+    "conclusion": "The ordering guarantee is a property of the tree contents and the ancestry, not of the particular hash strings. It survives the rebase and is independently checkable in the published history."
+  },
+
+  "immutability_respected": "feno-index-rim-canonical-criteria.json and feno-index-rim-canonical-freeze-receipt.json were not edited to chase the new hashes. Correcting an immutable frozen artifact in place would be exactly the discipline failure the freeze exists to prevent."
+}

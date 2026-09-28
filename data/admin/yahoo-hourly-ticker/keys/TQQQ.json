@@ -2,40 +2,61 @@
   "schema_version": "producer-lkg-key-state/v2",
   "lane_id": "yahoo_hourly_ticker",
   "key": "TQQQ.json",
-  "updated_at": "2026-07-22T22:26:31.861Z",
+  "updated_at": "2026-09-28T06:43:06.234Z",
   "resolution_state": "fresh_primary",
   "retry": false,
   "current": {
     "path": "data/macro/yahoo-ticker.json#/tickers/TQQQ",
-    "payload_sha256": "f862077c02d0a07c21f96a287494acba882ec50d2101e9998b5d92eb5f816962",
-    "source_as_of": "2026-07-22T20:00:00.000Z"
+    "payload_sha256": "c1e3a6a9f4a6700215c396ead6cefde53b498e23f380bc484e9665b6ce93fcf0",
+    "source_as_of": "2026-09-25T20:00:00.000Z"
   },
   "canonical_ref": "data/macro/yahoo-ticker.json#/tickers/TQQQ",
   "lkg": {
     "path": "data/admin/yahoo-hourly-ticker/lkg/TQQQ.json",
-    "payload_sha256": "f862077c02d0a07c21f96a287494acba882ec50d2101e9998b5d92eb5f816962",
-    "source_as_of": "2026-07-22T20:00:00.000Z"
+    "payload_sha256": "c1e3a6a9f4a6700215c396ead6cefde53b498e23f380bc484e9665b6ce93fcf0",
+    "source_as_of": "2026-09-25T20:00:00.000Z"
   },
   "latest_failure": null,
-  "recovered_from_run_id": "29417720099",
-  "recovery_run_id": "29421917838",
+  "recovered_from_run_id": "32567963043",
+  "recovery_run_id": "32741560825",
   "recovery_run_attempt": 1,
   "recovery_event_name": "schedule",
-  "recovered_at": "2026-07-15T14:04:52.506Z",
-  "last_run_id": "29962111079",
+  "recovered_at": "2026-08-24T14:54:20.066Z",
+  "last_run_id": "36387828434",
   "last_run_attempt": 1,
   "last_event_name": "schedule",
   "promotion_contract": "provider_observation/v2",
   "promotion_proof_required": true,
   "provider_observation": {
     "schema_version": "provider_observation/v2",
-    "payload_sha256": "f862077c02d0a07c21f96a287494acba882ec50d2101e9998b5d92eb5f816962",
-    "source_as_of": "2026-07-22T20:00:00.000Z",
-    "run_id": "29962111079",
+    "payload_sha256": "c1e3a6a9f4a6700215c396ead6cefde53b498e23f380bc484e9665b6ce93fcf0",
+    "candidate_payload_sha256": "c1e3a6a9f4a6700215c396ead6cefde53b498e23f380bc484e9665b6ce93fcf0",
+    "payload_ref": "data/admin/yahoo-hourly-ticker/provider-observations/c1e3a6a9f4a6700215c396ead6cefde53b498e23f380bc484e9665b6ce93fcf0.json",
+    "source_as_of": "2026-09-25T20:00:00.000Z",
+    "run_id": "36387828434",
     "run_attempt": 1,
     "event_name": "schedule",
-    "observed_at": "2026-07-22T22:26:31.861Z",
-    "recovered_from_run_id": "29417720099"
+    "observed_at": "2026-09-28T06:43:06.234Z",
+    "recovered_from_run_id": "32567963043"
   },
-  "recovery_provenance_contract": "legacy_source_marker/v1"
+  "recovery_observation": {
+    "schema_version": "provider_observation/v2",
+    "payload_sha256": "b02e39f427ef19f11c0a240f2bc3e00f4c15fb673cc205b75bdf6f565b68eeab",
+    "candidate_payload_sha256": "b02e39f427ef19f11c0a240f2bc3e00f4c15fb673cc205b75bdf6f565b68eeab",
+    "payload_ref": "data/admin/yahoo-hourly-ticker/provider-observations/b02e39f427ef19f11c0a240f2bc3e00f4c15fb673cc205b75bdf6f565b68eeab.json",
+    "source_as_of": "2026-08-24T14:54:18.000Z",
+    "run_id": "32741560825",
+    "run_attempt": 1,
+    "event_name": "schedule",
+    "observed_at": "2026-08-24T14:54:20.066Z",
+    "recovered_from_run_id": "32567963043"
+  },
+  "last_recovered_failure": {
+    "run_id": "32567963043",
+    "run_attempt": 1,
+    "event_name": "schedule",
+    "observed_at": "2026-08-22T10:34:45.704Z",
+    "failure_kind": "schema_drift",
+    "error": "schema_drift"
+  }
 }

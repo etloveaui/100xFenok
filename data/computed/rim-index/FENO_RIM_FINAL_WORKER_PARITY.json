@@ -1,0 +1,607 @@
+{
+ "schema_version": "feno_rim_final_worker_parity.v1",
+ "worker": "km (DeepSeek), independent Python implementation",
+ "criteria": "feno-index-rim-canonical-criteria.json (9100ea60...)",
+ "method_note": "Independent Python implementation reading only the canonical criteria and committed input sources. Did NOT import scripts/build-rim-index-final.mjs, did not read its output before computing.",
+ "commands_run": [
+  "python3 _tmp/handoff/phase-a/worker_parity_final.py (compute all quantities)",
+  "python3 comparison script (compare against committed FENO_RIM_FINAL_* artifacts; rerun after a self-verification pass)"
+ ],
+ "comparison": {
+  "scenarios": {
+   "SPX": {
+    "bear": 8.899584375143206e-07,
+    "base": 4.5189611373581196e-07,
+    "bull": 7.689498542088535e-07,
+    "grid_mean": 7.152471055565067e-09
+   },
+   "NDX": {
+    "bear": 3.182403662672062e-08,
+    "base": 1.9507492347451982e-07,
+    "bull": 1.4863408237570222e-07,
+    "grid_mean": 1.0753516095706504e-07
+   }
+  },
+  "full_3x3": {
+   "SPX": {
+    "worst": 8.899584375143206e-07,
+    "cells": {
+     "low_low": 6.519414021551471e-07,
+     "low_base": 4.209857995272058e-08,
+     "low_high": 7.689498542088535e-07,
+     "base_low": 6.998407896957363e-07,
+     "base_base": 4.5189611373581196e-07,
+     "base_high": 8.346742264023452e-08,
+     "high_low": 8.899584375143206e-07,
+     "high_base": 5.241501816199232e-07,
+     "high_high": 1.7735546938941394e-07
+    }
+   },
+   "NDX": {
+    "worst": 1.9507492347451982e-07,
+    "cells": {
+     "low_low": 1.0247432714341859e-07,
+     "low_base": 3.219910001126852e-08,
+     "low_high": 1.4863408237570222e-07,
+     "base_low": 1.9289648182571698e-08,
+     "base_base": 1.9507492347451982e-07,
+     "base_high": 5.682416199183131e-08,
+     "high_low": 3.182403662672062e-08,
+     "high_base": 1.4612351801254143e-07,
+     "high_high": 1.235829627081718e-07
+    }
+   }
+  },
+  "base_terminal_share_rel": {
+   "SPX": 5.772409985162965e-07,
+   "NDX": 4.4905705569789023e-07
+  },
+  "g_sensitivity": {
+   "SPX": {
+    "base_at_g_base": 1.4387581874443654e-07,
+    "base_at_g_low": 1.3448457072803356e-07,
+    "base_at_g_high": 1.5061393060372603e-07
+   },
+   "NDX": {
+    "base_at_g_base": 4.654559530685236e-08,
+    "base_at_g_low": 4.4472263610934005e-08,
+    "base_at_g_high": 4.7983076098242896e-08
+   }
+  },
+  "reverse_implied": {
+   "SPX": {
+    "ltroe": 1.4120298009676915e-07,
+    "erp": 1.704388598423358e-07
+   },
+   "NDX": {
+    "ltroe": 4.0789341511480834e-08,
+    "erp": 4.6503777078686445e-08
+   }
+  },
+  "payout_impact": {
+   "SPX": {
+    "base_shift": 0.00256061269887096,
+    "grid_mean_shift": 0.002560612197413974
+   },
+   "NDX": {
+    "base_shift": 8.223006905138346e-06,
+    "grid_mean_shift": 8.222914982948845e-06
+   }
+  },
+  "qqq": {
+   "bear": 6.852821683528651e-06,
+   "base": 1.8821780310230922e-06,
+   "bull": 2.612560206179141e-06,
+   "grid_mean": 4.9671517033864e-06
+  }
+ },
+ "quantities_exceeding_1e-6_relative": [
+  [
+   "SPX",
+   "stable_retention",
+   2.4901052105780912e-06
+  ],
+  [
+   "NDX",
+   "stable_retention",
+   1.9653503973692215e-06
+  ],
+  [
+   "SPX",
+   "payout_base_shift",
+   0.00256061269887096
+  ],
+  [
+   "SPX",
+   "payout_mean_shift",
+   0.002560612197413974
+  ],
+  [
+   "NDX",
+   "payout_base_shift",
+   8.223006905138346e-06
+  ],
+  [
+   "NDX",
+   "payout_mean_shift",
+   8.222914982948845e-06
+  ],
+  [
+   "QQQ",
+   "bear",
+   6.852821683528651e-06
+  ],
+  [
+   "QQQ",
+   "base",
+   1.8821780310230922e-06
+  ],
+  [
+   "QQQ",
+   "bull",
+   2.612560206179141e-06
+  ],
+  [
+   "QQQ",
+   "grid_mean",
+   4.9671517033864e-06
+  ]
+ ],
+ "explanation_of_1e6_excess": {
+  "stable_retention_SPX_NDX": "committed rounds stable_retention to 6 decimals (0.183803, 0.131126); worker keeps full precision (0.1838034577, 0.1311262577). rel diff ~2e-6 is rounding only.",
+  "payout_base_shift_SPX": "committed 3.4518e-05 vs worker 3.4430e-05 \u2014 rel 0.26% on a shift of 0.0034% magnitude. Absolute agreement ~9e-8; driven by sub-1e-4 index-point differences in the route-B base cell. Far below the 5% materiality threshold.",
+  "payout_grid_mean_shift_SPX": "same origin as base_shift; rel 0.26% on a 0.0035% shift.",
+  "payout_base_shift_NDX": "rel 8.2e-06 on a 0.907% shift \u2014 rounding at 6th decimal of route B payout.",
+  "QQQ_all_four": "committed uses QQQ current = 687.99 (2-decimal rounding of the 2026-07-31 close 687.989990234375); worker used the raw close. Scale differs by 3.45e-10, propagating to 1.9e-06..6.9e-06 relative. Recomputing with the rounded price reproduces the committed QQQ numbers exactly.",
+  "conclusion": "No arithmetic disagreement found. All 10 excess quantities are input-rounding artifacts; the worst genuine arithmetic difference on scenarios/cells/sensitivity/reverse-implied is 8.9e-07 (SPX bear), within the 1e-6 parity target."
+ },
+ "p1_ledger_counts": {
+  "MODEL_EQUIVALENT": {
+   "SPX": 0,
+   "NDX": 0,
+   "total": 0
+  },
+  "PROXY": {
+   "origins": 0,
+   "recovered_items": 1,
+   "detail": "ERP ctryprem17-24 archives exist locally (data/damodaran/archives/, receipted 2026-08-06) but as-of dates not verifiable \u2014 classified PROXY pending handler date adjudication; ERP ctrypremApr20.xlsx single file verified 2020-04-01 US 6.01%"
+  },
+  "RETROSPECTIVE_ONLY": {
+   "SPX": 7,
+   "NDX": 7
+  },
+  "at_least_5_model_equivalent_for_both": false,
+  "historical_qa_can_run": false,
+  "negative_result_verdict": "HISTORICAL_VINTAGE_NOT_RECOVERABLE (FY2/FY3 + payout); ERP country-premium archive EXISTS but date-verification open"
+ },
+ "worker_values": {
+  "SPX": {
+   "inputs": {
+    "px": 7489.72,
+    "eps": [
+     383.3257,
+     452.94689776854585,
+     537.4318856847196
+    ],
+    "payout_a": 0.2070154100450172,
+    "payout_b": 0.20711116421361783,
+    "b0": 1315.9252231358494,
+    "earnings_yield": 0.05118024438830824,
+    "g12": 0.1816241326071951,
+    "g23": 0.1865229419439478,
+    "div_a": 0.010595099278249821,
+    "n_a": 501,
+    "t_a": 503,
+    "n12": 398,
+    "t12": 503,
+    "n23": 402,
+    "t23": 503,
+    "key": "SPX"
+   },
+   "grid": {
+    "low_low": {
+     "ke": 0.0922,
+     "ltroe": 0.2148,
+     "value": 6452.075793621918,
+     "terminal_share": 0.6771973740379184,
+     "stable_retention": 0.18808193668528864
+    },
+    "low_base": {
+     "ke": 0.0922,
+     "ltroe": 0.2198,
+     "value": 6630.270279124952,
+     "terminal_share": 0.6858729853525045,
+     "stable_retention": 0.18380345768880801
+    },
+    "low_high": {
+     "ke": 0.0922,
+     "ltroe": 0.2248,
+     "value": 6808.464764627986,
+     "terminal_share": 0.6940944719420401,
+     "stable_retention": 0.1797153024911032
+    },
+    "base_low": {
+     "ke": 0.0972,
+     "ltroe": 0.2148,
+     "value": 5825.595923007496,
+     "terminal_share": 0.6471750465190864,
+     "stable_retention": 0.18808193668528864
+    },
+    "base_base": {
+     "ke": 0.0972,
+     "ltroe": 0.2198,
+     "value": 5985.892705000429,
+     "terminal_share": 0.6566233790297161,
+     "stable_retention": 0.18380345768880801
+    },
+    "base_high": {
+     "ke": 0.0972,
+     "ltroe": 0.2248,
+     "value": 6146.189486993361,
+     "terminal_share": 0.665578873726003,
+     "stable_retention": 0.1797153024911032
+    },
+    "high_low": {
+     "ke": 0.1022,
+     "ltroe": 0.2148,
+     "value": 5301.445281929841,
+     "terminal_share": 0.6173549633824795,
+     "stable_retention": 0.18808193668528864
+    },
+    "high_base": {
+     "ke": 0.1022,
+     "ltroe": 0.2198,
+     "value": 5446.7771450692735,
+     "terminal_share": 0.6275647653647438,
+     "stable_retention": 0.18380345768880801
+    },
+    "high_high": {
+     "ke": 0.1022,
+     "ltroe": 0.2248,
+     "value": 5592.109008208706,
+     "terminal_share": 0.637243887583009,
+     "stable_retention": 0.1797153024911032
+    }
+   },
+   "BEAR": 5301.445281929841,
+   "BASE": 5985.892705000429,
+   "BULL": 6808.464764627986,
+   "GRID_MEAN": 6020.980043064885,
+   "min_ke_minus_g": 0.051800000000000006,
+   "base_terminal_share": 0.6566233790297161,
+   "base_stable_retention": 0.18380345768880801,
+   "g_sensitivity": {
+    "base_g0": 5985.892705000429,
+    "base_g_low": 5397.497930379664,
+    "base_g_high": 6493.80724007068,
+    "rel_low": 0.0982969130284006,
+    "rel_high": 0.0848519277076174
+   },
+   "reverse_implied": {
+    "ltroe_at_erp_base": 0.2667075946665136,
+    "erp_at_ltroe_base": 0.03986595425754785
+   },
+   "payout_route_b": {
+    "grid": {
+     "low_low": {
+      "ke": 0.0922,
+      "ltroe": 0.2148,
+      "g": 0.0404,
+      "value": 6451.8453482818395,
+      "terminal_share": 0.6771845262391175,
+      "stable_retention": 0.18808193668528864
+     },
+     "low_base": {
+      "ke": 0.0922,
+      "ltroe": 0.2198,
+      "g": 0.0404,
+      "value": 6630.030088720026,
+      "terminal_share": 0.6858603226731903,
+      "stable_retention": 0.18380345768880801
+     },
+     "low_high": {
+      "ke": 0.0922,
+      "ltroe": 0.2248,
+      "g": 0.0404,
+      "value": 6808.21482915821,
+      "terminal_share": 0.6940819928569929,
+      "stable_retention": 0.1797153024911032
+     },
+     "base_low": {
+      "ke": 0.0972,
+      "ltroe": 0.2148,
+      "g": 0.0404,
+      "value": 5825.39859643687,
+      "terminal_share": 0.6471615748153231,
+      "stable_retention": 0.18808193668528864
+     },
+     "base_base": {
+      "ke": 0.0972,
+      "ltroe": 0.2198,
+      "g": 0.0404,
+      "value": 5985.686612151032,
+      "terminal_share": 0.6566100766673499,
+      "stable_retention": 0.18380345768880801
+     },
+     "base_high": {
+      "ke": 0.0972,
+      "ltroe": 0.2248,
+      "g": 0.0404,
+      "value": 6145.974627865193,
+      "terminal_share": 0.6655657415960134,
+      "stable_retention": 0.1797153024911032
+     },
+     "high_low": {
+      "ke": 0.1022,
+      "ltroe": 0.2148,
+      "g": 0.0404,
+      "value": 5301.275495399115,
+      "terminal_share": 0.6173409728427134,
+      "stable_retention": 0.18808193668528864
+     },
+     "high_base": {
+      "ke": 0.1022,
+      "ltroe": 0.2198,
+      "g": 0.0404,
+      "value": 5446.599410658304,
+      "terminal_share": 0.6275509229130174,
+      "stable_retention": 0.18380345768880801
+     },
+     "high_high": {
+      "ke": 0.1022,
+      "ltroe": 0.2248,
+      "g": 0.0404,
+      "value": 5591.923325917493,
+      "terminal_share": 0.6372301969234621,
+      "stable_retention": 0.1797153024911032
+     }
+    },
+    "BEAR": 5301.275495399115,
+    "BASE": 5985.686612151032,
+    "BULL": 6808.21482915821,
+    "GRID_MEAN": 6020.7720371764535,
+    "base_shift": 3.442976002965281e-05,
+    "grid_mean_shift": 3.45468490084988e-05
+   },
+   "g_base": 0.0404,
+   "g_low": 0.0304,
+   "g_high": 0.0469,
+   "rf": 0.0469
+  },
+  "NDX": {
+   "inputs": {
+    "px": 28274.2,
+    "eps": [
+     1324.6293,
+     1612.163970771195,
+     2229.7107358927383
+    ],
+    "payout_a": 0.097071099881803,
+    "payout_b": 0.1152629494153572,
+    "b0": 3199.48851998959,
+    "earnings_yield": 0.04684939980618373,
+    "g12": 0.21706802859577007,
+    "g23": 0.38305456288427875,
+    "div_a": 0.004547722767988583,
+    "n_a": 98,
+    "t_a": 103,
+    "n12": 91,
+    "t12": 103,
+    "n23": 94,
+    "t23": 103,
+    "key": "NDX"
+   },
+   "grid": {
+    "low_low": {
+     "ke": 0.0922,
+     "ltroe": 0.3031,
+     "value": 31027.16682051163,
+     "terminal_share": 0.7920778711155265,
+     "stable_retention": 0.13328934345100626
+    },
+    "low_base": {
+     "ke": 0.0922,
+     "ltroe": 0.3081,
+     "value": 31609.811017807435,
+     "terminal_share": 0.7959103717848814,
+     "stable_retention": 0.1311262577085362
+    },
+    "low_high": {
+     "ke": 0.0922,
+     "ltroe": 0.3131,
+     "value": 32192.455215103248,
+     "terminal_share": 0.799604145273522,
+     "stable_retention": 0.12903225806451613
+    },
+    "base_low": {
+     "ke": 0.0972,
+     "ltroe": 0.3031,
+     "value": 27948.52053911712,
+     "terminal_share": 0.7722563504881718,
+     "stable_retention": 0.13328934345100626
+    },
+    "base_base": {
+     "ke": 0.0972,
+     "ltroe": 0.3081,
+     "value": 28472.64444569998,
+     "terminal_share": 0.7764486513300981,
+     "stable_retention": 0.1311262577085362
+    },
+    "base_high": {
+     "ke": 0.0972,
+     "ltroe": 0.3131,
+     "value": 28996.768352282845,
+     "terminal_share": 0.7804893983803642,
+     "stable_retention": 0.12903225806451613
+    },
+    "high_low": {
+     "ke": 0.1022,
+     "ltroe": 0.3031,
+     "value": 25373.760807495466,
+     "terminal_share": 0.7524802359868314,
+     "stable_retention": 0.13328934345100626
+    },
+    "high_base": {
+     "ke": 0.1022,
+     "ltroe": 0.3081,
+     "value": 25848.95377713951,
+     "terminal_share": 0.7570305033872488,
+     "stable_retention": 0.1311262577085362
+    },
+    "high_high": {
+     "ke": 0.1022,
+     "ltroe": 0.3131,
+     "value": 26324.146746783554,
+     "terminal_share": 0.7614164915728844,
+     "stable_retention": 0.12903225806451613
+    }
+   },
+   "BEAR": 25373.760807495466,
+   "BASE": 28472.64444569998,
+   "BULL": 32192.455215103248,
+   "GRID_MEAN": 28643.803080215643,
+   "min_ke_minus_g": 0.051800000000000006,
+   "base_terminal_share": 0.7764486513300981,
+   "base_stable_retention": 0.1311262577085362,
+   "g_sensitivity": {
+    "base_g0": 28472.64444569998,
+    "base_g_low": 25163.13151461238,
+    "base_g_high": 31329.484435119935,
+    "rel_low": 0.11623482804342788,
+    "rel_high": 0.1003363068319214
+   },
+   "reverse_implied": {
+    "ltroe_at_erp_base": 0.30620689374336507,
+    "erp_at_ltroe_base": 0.05064936000853775
+   },
+   "payout_route_b": {
+    "grid": {
+     "low_low": {
+      "ke": 0.0922,
+      "ltroe": 0.3031,
+      "g": 0.0404,
+      "value": 30739.103296986243,
+      "terminal_share": 0.7899457982325112,
+      "stable_retention": 0.13328934345100626
+     },
+     "low_base": {
+      "ke": 0.0922,
+      "ltroe": 0.3081,
+      "g": 0.0404,
+      "value": 31314.784318581536,
+      "terminal_share": 0.7938073677785016,
+      "stable_retention": 0.1311262577085362
+     },
+     "low_high": {
+      "ke": 0.0922,
+      "ltroe": 0.3131,
+      "g": 0.0404,
+      "value": 31890.46534017683,
+      "terminal_share": 0.7975295205880171,
+      "stable_retention": 0.12903225806451613
+     },
+     "base_low": {
+      "ke": 0.0972,
+      "ltroe": 0.3031,
+      "g": 0.0404,
+      "value": 27696.45440873872,
+      "terminal_share": 0.7699714506905452,
+      "stable_retention": 0.13328934345100626
+     },
+     "base_base": {
+      "ke": 0.0972,
+      "ltroe": 0.3081,
+      "g": 0.0404,
+      "value": 28214.314515102997,
+      "terminal_share": 0.7741935135355754,
+      "stable_retention": 0.1311262577085362
+     },
+     "base_high": {
+      "ke": 0.0972,
+      "ltroe": 0.3131,
+      "g": 0.0404,
+      "value": 28732.174621467282,
+      "terminal_share": 0.778263381989279,
+      "stable_retention": 0.12903225806451613
+     },
+     "high_low": {
+      "ke": 0.1022,
+      "ltroe": 0.3031,
+      "g": 0.0404,
+      "value": 25151.68246730294,
+      "terminal_share": 0.7500520189523243,
+      "stable_retention": 0.13328934345100626
+     },
+     "high_base": {
+      "ke": 0.1022,
+      "ltroe": 0.3081,
+      "g": 0.0404,
+      "value": 25621.196409927343,
+      "terminal_share": 0.754632369539982,
+      "stable_retention": 0.1311262577085362
+     },
+     "high_high": {
+      "ke": 0.1022,
+      "ltroe": 0.3131,
+      "g": 0.0404,
+      "value": 26090.71035255174,
+      "terminal_share": 0.759047869233666,
+      "stable_retention": 0.12903225806451613
+     }
+    },
+    "BEAR": 25151.68246730294,
+    "BASE": 28214.314515102997,
+    "BULL": 31890.46534017683,
+    "GRID_MEAN": 28383.431747870625,
+    "base_shift": 0.009072916675851639,
+    "grid_mean_shift": 0.009089970756182786
+   },
+   "g_base": 0.0404,
+   "g_low": 0.0304,
+   "g_high": 0.0469,
+   "rf": 0.0469
+  },
+  "QQQ": {
+   "current": 687.989990234375,
+   "as_of": "2026-07-31",
+   "equivalent": {
+    "BEAR": 617.4142310006356,
+    "BASE": 692.8186959894166,
+    "BULL": 783.3320464967863,
+    "GRID_MEAN": 696.9834620053942
+   },
+   "formula": "QQQ_s = current_QQQ * (NDX_s / current_NDX)"
+  }
+ },
+ "committed_values": {
+  "SPX": {
+   "bear": 5301.45,
+   "base": 5985.89,
+   "bull": 6808.47,
+   "grid_mean": 6020.98,
+   "bear_delta_pct": -29.2,
+   "base_delta_pct": -20.1,
+   "bull_delta_pct": -9.1,
+   "grid_mean_delta_pct": -19.6
+  },
+  "NDX": {
+   "bear": 25373.76,
+   "base": 28472.65,
+   "bull": 32192.46,
+   "grid_mean": 28643.8,
+   "bear_delta_pct": -10.3,
+   "base_delta_pct": 0.7,
+   "bull_delta_pct": 13.9,
+   "grid_mean_delta_pct": 1.3
+  },
+  "QQQ": {
+   "bear": 617.41,
+   "base": 692.82,
+   "bull": 783.33,
+   "grid_mean": 696.98,
+   "base_delta_pct": 0.7,
+   "bull_delta_pct": 13.9,
+   "bear_delta_pct": -10.3
+  }
+ }
+}

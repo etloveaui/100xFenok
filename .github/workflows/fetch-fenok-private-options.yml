@@ -5,6 +5,12 @@ on:
     # Weekdays after the US close. The producer enforces this exact allowlist.
     - cron: '10 1 * * 2-6'
   workflow_dispatch:
+    inputs:
+      controlled_failure_key:
+        description: 'Owner-approved failure proof: target exactly one options key (availability)'
+        required: false
+        default: ''
+        type: string
 
 permissions:
   contents: write
@@ -24,6 +30,15 @@ jobs:
 
     steps:
       - uses: actions/checkout@v4
+        with:
+          filter: blob:none
+          sparse-checkout: |
+            scripts
+            .github/workflows
+            100xfenok-next/scripts
+            100xfenok-next/src/lib
+            data/admin/yahoo_private_options
+            data/computed
 
       - name: Start from latest main
         run: |
@@ -46,6 +61,8 @@ jobs:
 
       - name: Fetch private raw and build public-safe marker
         id: fetch
+        env:
+          INPUT_CONTROLLED_FAILURE_KEY: ${{ github.event.inputs.controlled_failure_key || '' }}
         run: |
           set -euo pipefail
           RAW_DIR="$RUNNER_TEMP/yf-options"
@@ -64,21 +81,14 @@ jobs:
           set -euo pipefail
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
-          ATTEMPT="data/admin/data-supply-state/detection-attempts/yahoo_private_options.json"
-          # Phase 1: consume the generated policy while retaining the legacy
-          # hand list as parity defense until this workflow's natural proof.
+          # The generated manifest owns private admin and public-safe marker staging.
           scripts/stage-lane-manifest.sh \
             --workflow .github/workflows/fetch-fenok-private-options.yml \
             --stage always_if_exists
-          if [[ -f "$ATTEMPT" ]]; then git add -- "$ATTEMPT"; fi
-          if [[ -d data/admin/yahoo_private_options ]]; then git add -- data/admin/yahoo_private_options; fi
           if [[ "$FETCH_OUTCOME" == "success" ]]; then
             scripts/stage-lane-manifest.sh \
               --workflow .github/workflows/fetch-fenok-private-options.yml \
               --stage success_if_exists
-            git add -- \
-              data/computed/fenok_yahoo_private_options_availability.json \
-              100xfenok-next/public/data/computed/fenok_yahoo_private_options_availability.json
           fi
           if git diff --staged --quiet; then
             echo "No safe Yahoo private options changes to publish"

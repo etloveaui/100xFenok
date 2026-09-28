@@ -24,7 +24,7 @@ from typing import Any, Dict, Optional
 import sys
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
-from config import URLS, OUTPUT_FILES
+from config import URLS, OUTPUT_FILES, resolve_erp_url
 from base.percent_parser import parse_percent
 
 # Set up logging
@@ -36,6 +36,64 @@ try:
     import openpyxl
 except ImportError:
     openpyxl = None
+
+
+# ---------------------------------------------------------------------------
+# Source-date canonicalization
+# ---------------------------------------------------------------------------
+# Damodaran republishes the country ERP workbook as ctryprem<Mon><YY>.xlsx,
+# and resolve_erp_url() returns the raw filename token (e.g. "Apr26") as the
+# source month. The downstream owner guard accepts provider dates only
+# ("January 2026", "April 1, 2026", or ISO), so the token is canonicalized
+# deterministically before it reaches metadata.source_date. Malformed tokens
+# raise instead of being silently converted into an invented date.
+
+_MONTH_TOKENS = {
+    "jan": "January",
+    "feb": "February",
+    "mar": "March",
+    "apr": "April",
+    "may": "May",
+    "jun": "June",
+    "jul": "July",
+    "aug": "August",
+    "sep": "September",
+    "oct": "October",
+    "nov": "November",
+    "dec": "December",
+}
+
+
+def canonicalize_source_date(token: str) -> str:
+    """Convert a Damodaran filename token like "Apr26" to "April 1, 2026".
+
+    Accepts any three-letter English month token (case-insensitive) followed
+    by a two-digit year. Two-digit years map deterministically to 20YY.
+    Returns the full month name with day 1, a form the owner guard accepts.
+
+    Raises:
+        ValueError: If the token is not a well-formed <Mon><YY> filename token.
+    """
+    if not isinstance(token, str):
+        raise ValueError(
+            f"invalid ERP source date token {token!r}: expected '<Mon><YY>', e.g. 'Apr26'"
+        )
+    raw = token.strip()
+    if len(raw) != 5:
+        raise ValueError(
+            f"invalid ERP source date token {token!r}: expected '<Mon><YY>', e.g. 'Apr26'"
+        )
+    month_token, year_token = raw[:3], raw[3:]
+    month = _MONTH_TOKENS.get(month_token.lower())
+    if month is None:
+        raise ValueError(
+            f"invalid ERP source date token {token!r}: unknown month {month_token!r}"
+        )
+    if not year_token.isdigit():
+        raise ValueError(
+            f"invalid ERP source date token {token!r}: year {year_token!r} is not numeric"
+        )
+    return f"{month} 1, {2000 + int(year_token)}"
 
 
 class ERPParser:
@@ -96,9 +154,16 @@ class ERPParser:
         Returns:
             Raw content bytes
         """
-        url = URLS.get("erp")
+        # Resolve the newest published ctryprem<Mon><YY>.xlsx rather than a
+        # pinned month, so the weekly lane cannot freeze on a stale workbook.
+        url, source_month, resolved = resolve_erp_url()
         if not url:
             raise ValueError("ERP URL not configured in config.py")
+        self.source_url = url
+        self.source_month = source_month
+        self.source_url_resolved = resolved
+        if not resolved:
+            logger.warning("ERP URL probe failed; falling back to the pinned month %s", source_month)
 
         logger.info(f"Downloading ERP data from {url}...")
         response = requests.get(url, timeout=timeout)
@@ -309,10 +374,17 @@ class ERPParser:
         result = {
             "metadata": {
                 "source": "Damodaran Online",
-                "url": URLS.get("erp", ""),
+                "url": getattr(self, "source_url", None) or URLS.get("erp", ""),
                 "schema_version": "2.0.0",
                 "generated_at": datetime.now().isoformat(),
-                "source_date": "April 1, 2026",
+                # Derived from the workbook actually downloaded, so a newer
+                # publication updates this without a code change. Filename
+                # tokens (e.g. "Apr26") are canonicalized to a provider date
+                # the owner guard accepts; malformed tokens raise instead.
+                "source_date": canonicalize_source_date(
+                    getattr(self, "source_month", None) or "Apr26"
+                ),
+                "source_url_resolved": getattr(self, "source_url_resolved", False),
                 "scope": "Country-level equity risk premiums",
                 "source_format": "Damodaran XLSX current data file",
                 "country_count": len(self.countries) if not us_only else 1,

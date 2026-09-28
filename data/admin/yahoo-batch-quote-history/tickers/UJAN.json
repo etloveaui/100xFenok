@@ -64,54 +64,91 @@
       "run_id": "29460793523",
       "schedule": "20 23 * * 1-5",
       "shard": "1/5"
+    },
+    {
+      "attempts_used": 1,
+      "event_name": "schedule",
+      "failures": [],
+      "latency_ms": 502,
+      "natural": true,
+      "observed_at": "2026-08-12T05:45:23Z",
+      "outcome": "fresh",
+      "run_attempt": 1,
+      "run_id": "31567478446",
+      "schedule": "7 4 * * 0-5",
+      "shard": "38/72"
+    },
+    {
+      "attempts_used": 1,
+      "event_name": "workflow_dispatch",
+      "failures": [],
+      "latency_ms": 440,
+      "natural": false,
+      "observed_at": "2026-09-28T06:30:00Z",
+      "outcome": "fresh",
+      "run_attempt": 1,
+      "run_id": "36367836615",
+      "schedule": "",
+      "shard": ""
     }
   ],
   "current": {
-    "fetched_at": "2026-07-16T00:24:24Z",
-    "history_as_of": "2026-07-15",
+    "fetched_at": "2026-09-28T06:37:23Z",
+    "history_as_of": "2026-09-25",
     "path": "data/yf/finance/UJAN.json",
-    "payload_sha256": "d7bb10e1959819e4212d405a470e80268194b7f8cfc211a5ec50975734f3bf7a",
-    "quote_as_of": "2026-07-15T19:42:19Z",
-    "source_as_of": "2026-07-15"
+    "payload_sha256": "9056c0e3b96030f238c411e85bb7bf923daf402b8011a22841b297302b5613cc",
+    "quote_as_of": "2026-09-25T19:43:11Z",
+    "source_as_of": "2026-09-25"
   },
   "discovered_from": [
-    "market_facts",
     "stockanalysis_etf"
   ],
   "last_attempt": {
     "attempts_used": 1,
-    "event_name": "schedule",
+    "event_name": "workflow_dispatch",
     "failures": [],
-    "latency_ms": 628,
-    "natural": true,
-    "observed_at": "2026-07-16T00:19:31Z",
+    "latency_ms": 440,
+    "natural": false,
+    "observed_at": "2026-09-28T06:30:00Z",
     "outcome": "fresh",
     "run_attempt": 1,
-    "run_id": "29460793523",
-    "schedule": "20 23 * * 1-5",
-    "shard": "1/5"
+    "run_id": "36367836615",
+    "schedule": "",
+    "shard": ""
   },
   "lkg": {
-    "fetched_at": "2026-06-18T16:17:38Z",
-    "history_as_of": "2026-06-18",
+    "fetched_at": "2026-08-12T05:48:33Z",
+    "history_as_of": "2026-08-11",
     "path": "data/admin/yahoo-batch-quote-history/lkg/UJAN.json",
-    "payload_sha256": "766e11348bf2e6cf7b3b10cc5c41fd609241b5717d217c85dac19b743e625e9b",
-    "quote_as_of": null,
-    "source_as_of": "2026-06-18"
+    "payload_sha256": "dca928d8930996de2ac5a473ee7bc4b70457cd23ccc0b7e74d950ba52a4c4b58",
+    "quote_as_of": "2026-08-11T19:59:52Z",
+    "source_as_of": "2026-08-11"
+  },
+  "promotion_contract": "provider_observation/v2",
+  "provider_observation": {
+    "event_name": "workflow_dispatch",
+    "history_as_of": "2026-09-25",
+    "observed_at": "2026-09-28T06:30:00Z",
+    "payload_sha256": "b60f4cd895d4251972ad3c87cd48131f3e733634b2e21fff27bc75b2a319069f",
+    "quote_as_of": "2026-09-25T19:43:11Z",
+    "run_attempt": 1,
+    "run_id": "36367836615",
+    "schema_version": "provider_observation/v2",
+    "source_as_of": "2026-09-25"
   },
   "resolution_state": "fresh_primary",
   "retry": false,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "stale": {
-    "age_business_days": 15,
-    "classified_at": "2026-07-13T04:33:56Z",
-    "classified_run_id": "29224221077",
+    "age_business_days": 7,
+    "classified_at": "2026-08-20T14:20:12Z",
+    "classified_run_id": "32379322022",
     "expected_resolution": "next_natural_yahoo_run",
     "max_business_days": 6,
-    "message": "UJAN holds LKG because Yahoo source date 2026-06-18 is 15 business days old, beyond the 6-day bound; it will retry on the next natural Yahoo run.",
+    "message": "UJAN holds LKG because Yahoo source date 2026-08-11 is 7 business days old, beyond the 6-day bound; it will retry on the next natural Yahoo run.",
     "reason": "source_age_exceeds_lane_bound",
-    "source_as_of": "2026-06-18"
+    "source_as_of": "2026-08-11"
   },
   "ticker": "UJAN",
-  "updated_at": "2026-07-16T00:19:31Z"
+  "updated_at": "2026-09-28T06:30:00Z"
 }

@@ -10,12 +10,16 @@ import { fileURLToPath } from "node:url";
 import { validateAttemptShard } from "./build-data-supply-detection-floor.mjs";
 import {
   buildSentimentDetectionDocument,
+  cryptoSourceStamp,
   SENTIMENT_LKG_SOURCE_FILES,
   SENTIMENT_LKG_SOURCE_KEYS,
+  SENTIMENT_MAX_DISTINCT_SOURCE_DATES,
+  SENTIMENT_PERSISTENCE_POLICY,
   recordSentimentAttemptTuple,
+  retainLatestDistinctSourceDates,
   runSentiment,
 } from "./fetch-sentiment.mjs";
-import { evaluateEndpointAssertions, returnedTuple } from "./lib/data-supply-attempt-shard.mjs";
+import { evaluateEndpointAssertions, returnedTuple } from "./lib/provider-fetch-result.mjs";
 import { checkWorkflowCommitShardsAgainstRegistry } from "./check-lane-registry-commit-shards.mjs";
 
 const REPO_ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
@@ -30,9 +34,72 @@ const READY_TUPLE = {
   assertions: [],
 };
 
-assert.deepEqual(SENTIMENT_LKG_SOURCE_KEYS, ["cnn", "cftc", "vix", "move"]);
+assert.deepEqual(SENTIMENT_LKG_SOURCE_KEYS, ["cnn", "cftc", "vix", "move", "crypto"]);
 assert.deepEqual(Object.keys(SENTIMENT_LKG_SOURCE_FILES), SENTIMENT_LKG_SOURCE_KEYS);
 assert.equal(SENTIMENT_LKG_SOURCE_FILES.cnn.length, 8);
+assert.deepEqual(cryptoSourceStamp("1784678400"), {
+  source_as_of: "2026-07-22",
+  source_as_of_reason: null,
+});
+assert.deepEqual(cryptoSourceStamp("not-a-timestamp"), {
+  source_as_of: null,
+  source_as_of_reason: "alternative.me data[0].timestamp is missing or invalid",
+});
+assert.deepEqual(cryptoSourceStamp(null), {
+  source_as_of: null,
+  source_as_of_reason: "alternative.me data[0].timestamp is missing or invalid",
+});
+assert.equal(SENTIMENT_MAX_DISTINCT_SOURCE_DATES, 10_000);
+assert.deepEqual(SENTIMENT_PERSISTENCE_POLICY, {
+  schema_version: "sentiment-bounded-persistence/v1",
+  basis: "distinct_source_date_per_file",
+  max_distinct_source_dates_per_file: 10_000,
+  eviction: "oldest_source_date_first",
+});
+
+{
+  const rows = Array.from({ length: SENTIMENT_MAX_DISTINCT_SOURCE_DATES + 1 }, (_, index) => ({
+    date: new Date(Date.UTC(2026, 0, index + 1)).toISOString().slice(0, 10),
+    value: index,
+  }));
+  const retained = retainLatestDistinctSourceDates(rows);
+  assert.equal(retained.rows.length, SENTIMENT_MAX_DISTINCT_SOURCE_DATES);
+  assert.equal(retained.rows[0].date, "2026-01-02");
+  assert.deepEqual(retained.persistence_state, {
+    available_distinct_source_dates: 10_001,
+    retained_distinct_source_dates: 10_000,
+    pruned_distinct_source_dates: 1,
+    retained_rows: 10_000,
+  });
+  assert.deepEqual(
+    retainLatestDistinctSourceDates(retained.rows),
+    {
+      rows: retained.rows,
+      persistence_state: {
+        available_distinct_source_dates: 10_000,
+        retained_distinct_source_dates: 10_000,
+        pruned_distinct_source_dates: 0,
+        retained_rows: 10_000,
+      },
+    },
+    "bounded persistence must be idempotent",
+  );
+  assert.throws(
+    () => retainLatestDistinctSourceDates([{ date: "fetch-day", value: 1 }]),
+    /valid source date/,
+  );
+  assert.throws(
+    () => retainLatestDistinctSourceDates([{ date: "2026-02-31", value: 1 }]),
+    /valid source date/,
+  );
+  assert.throws(
+    () => retainLatestDistinctSourceDates([
+      { date: "2026-01-01", value: 1 },
+      { date: "2026-01-01", value: 2 },
+    ]),
+    /unique source dates/,
+  );
+}
 
 function resultRow(file, date, value) {
   const array = [{ date, value }];
@@ -60,7 +127,7 @@ function resultRow(file, date, value) {
 }
 
 function sourceDescriptors(date, overrides = {}) {
-  const lkgSources = SENTIMENT_LKG_SOURCE_KEYS.map((key, sourceIndex) => ({
+  return SENTIMENT_LKG_SOURCE_KEYS.map((key, sourceIndex) => ({
     key,
     label: key.toUpperCase(),
     fileNames: SENTIMENT_LKG_SOURCE_FILES[key],
@@ -71,26 +138,12 @@ function sourceDescriptors(date, overrides = {}) {
       return SENTIMENT_LKG_SOURCE_FILES[key].map((file, fileIndex) => resultRow(file, date, sourceIndex * 10 + fileIndex));
     },
   }));
-  return [
-    ...lkgSources,
-    {
-      key: "crypto",
-      label: "CRYPTO",
-      fileNames: ["crypto-fear-greed.json"],
-      lkg: false,
-      run: async () => {
-        if (overrides.crypto) return overrides.crypto();
-        recordSentimentAttemptTuple(READY_TUPLE);
-        return [resultRow("crypto-fear-greed.json", date, 50)];
-      },
-    },
-  ];
 }
 
 function makePaths(root) {
   return {
     repoRoot: root,
-    outputDirs: [path.join(root, "data", "sentiment"), path.join(root, "public", "data", "sentiment")],
+    outputDir: path.join(root, "data", "sentiment"),
     attemptShardPath: path.join(root, "data", "admin", "data-supply-state", "detection-attempts", "sentiment.json"),
   };
 }
@@ -107,6 +160,7 @@ async function runCase(root, {
   runId = "baseline-run",
   runAttempt = 1,
   observedAt = "2026-07-14T22:00:00.000Z",
+  recordSuccessFn = undefined,
 } = {}) {
   return runSentiment({
     ...makePaths(root),
@@ -117,6 +171,7 @@ async function runCase(root, {
     runAttempt,
     observedAt,
     attemptId: `sentiment-${runId}`,
+    ...(recordSuccessFn ? { recordSuccessFn } : {}),
     quiet: true,
   });
 }
@@ -126,7 +181,7 @@ async function runCase(root, {
   const result = await runCase(root);
   assert.equal(result.ok, true);
   assert.equal(result.exitCode, 0);
-  const shard = readJson(makePaths(root).attemptShardPath);
+  const shard = { schema_version: "data-supply-detection-attempt-shard/v2", lane_id: "sentiment", attempts: [result.row] };
   assert.equal(validateAttemptShard(shard, "sentiment"), true);
   assert.deepEqual(shard.attempts[0].assertions, [{ id: "series_array", passed: true }]);
   const state = readJson(path.join(root, "data", "admin", "sentiment", "index.json"));
@@ -136,8 +191,32 @@ async function runCase(root, {
     assert.equal(state.items[key].resolution_state, "fresh_primary");
     assert.equal(state.items[key].retry, false);
     assert.equal(state.items[key].promotion_contract, "provider_observation/v2");
-    assert.equal(fs.existsSync(path.join(root, "data", "admin", "sentiment", "current", `${key}.json`)), true);
+    const bundle = readJson(path.join(root, "data", "admin", "sentiment", "current", `${key}.json`));
+    assert.equal(bundle.schema_version, "sentiment-source-bundle/v2");
+    assert.deepEqual(bundle.persistence_policy, SENTIMENT_PERSISTENCE_POLICY);
+    for (const [fileName, rows] of Object.entries(bundle.files)) {
+      const persistenceState = bundle.persistence_state.files[fileName];
+      assert.equal(persistenceState.retained_distinct_source_dates, new Set(rows.map((row) => row.date)).size);
+      assert.equal(persistenceState.retained_rows, rows.length);
+      assert(
+        persistenceState.retained_distinct_source_dates <= SENTIMENT_MAX_DISTINCT_SOURCE_DATES,
+        `${key}/${fileName} exceeded the persistence bound`,
+      );
+    }
   }
+  assert.deepEqual(
+    readJson(path.join(root, "data", "admin", "sentiment", "source-observations", "crypto.json")),
+    {
+      schema_version: "sentiment-source-observation/v1",
+      source_key: "crypto",
+      source_as_of: "2026-07-14",
+      source_as_of_reason: null,
+      observed_at: "2026-07-14T22:00:00.000Z",
+      run_id: "baseline-run",
+      run_attempt: 1,
+      event_name: "workflow_dispatch",
+    },
+  );
 }
 
 {
@@ -159,7 +238,7 @@ async function runCase(root, {
   assert.equal(failed.exitCode, 0);
   assert.deepEqual(failed.retrySet, ["vix"]);
   assert.equal(fs.readFileSync(canonicalVix, "utf8"), before);
-  assert.equal(fs.readFileSync(publicVix, "utf8"), before);
+  assert.equal(fs.existsSync(publicVix), false, "sentiment producer must not create the public mirror file");
 
   const statePath = path.join(root, "data", "admin", "sentiment", "index.json");
   const lkgPath = path.join(root, "data", "admin", "sentiment", "lkg", "vix.json");
@@ -209,6 +288,40 @@ async function runCase(root, {
 }
 
 {
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), "fetch-sentiment-state-write-rollback-"));
+  await runCase(root);
+  const paths = makePaths(root);
+  const canonicalVix = path.join(paths.outputDir, "vix.json");
+  const currentVix = path.join(root, "data", "admin", "sentiment", "current", "vix.json");
+  const before = Object.fromEntries([canonicalVix, currentVix].map((filePath) => [
+    filePath,
+    fs.readFileSync(filePath),
+  ]));
+
+  const failed = await runCase(root, {
+    date: "2026-07-15",
+    runId: "state-write-failure",
+    observedAt: "2026-07-15T22:00:00.000Z",
+    recordSuccessFn: ({ store, artifacts, run }) => {
+      const committed = store.recordSuccess({ artifacts, run });
+      if (artifacts[0].key === "vix") throw new Error("injected state write failure after commit");
+      return committed;
+    },
+  });
+  assert.equal(failed.ok, false);
+  assert.equal(failed.corrupt, true);
+  assert.equal(failed.exitCode, 2);
+  for (const [filePath, bytes] of Object.entries(before)) {
+    assert.deepEqual(fs.readFileSync(filePath), bytes, `${filePath} must roll back when recovery-state commit fails`);
+  }
+  const state = readJson(path.join(root, "data", "admin", "sentiment", "index.json"));
+  assert.equal(state.items.vix.resolution_state, "lkg_primary");
+  assert.equal(state.items.vix.current.source_as_of, "2026-07-14");
+  assert.equal(state.items.vix.lkg.source_as_of, "2026-07-14");
+  assert.equal(state.items.vix.latest_failure.run_id, "state-write-failure");
+}
+
+{
   const root = fs.mkdtempSync(path.join(os.tmpdir(), "fetch-sentiment-no-lkg-"));
   const failed = await runCase(root, {
     controlledFailureSource: "vix",
@@ -233,6 +346,7 @@ async function runCase(root, {
   const foreignRows = [...readJson(canonicalVix), { date: "2026-07-16", value: 99 }];
   const foreignBytes = `${JSON.stringify(foreignRows, null, 2)}\n`;
   fs.writeFileSync(canonicalVix, foreignBytes);
+  fs.mkdirSync(path.dirname(publicVix), { recursive: true });
   fs.writeFileSync(publicVix, foreignBytes);
 
   const conflict = await runCase(root, {
@@ -318,6 +432,61 @@ async function runCase(root, {
 }
 
 {
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), "fetch-sentiment-crypto-dateless-"));
+  await runCase(root);
+  const canonicalCrypto = path.join(root, "data", "sentiment", "crypto-fear-greed.json");
+  const before = fs.readFileSync(canonicalCrypto, "utf8");
+  const sourceAsOfReason = "alternative.me data[0].timestamp is missing or invalid";
+  const failed = await runCase(root, {
+    date: "2026-07-15",
+    runId: "crypto-invalid-timestamp",
+    observedAt: "2026-07-15T22:00:00.000Z",
+    overrides: {
+      crypto: async () => {
+        recordSentimentAttemptTuple({
+          ...READY_TUPLE,
+          assertions: [{ id: "series_array", passed: false }],
+        });
+        throw Object.assign(new Error(sourceAsOfReason), {
+          sourceAsOf: null,
+          sourceAsOfReason,
+        });
+      },
+    },
+  });
+  assert.equal(failed.reason, "schema_drift");
+  assert.equal(failed.corrupt, true);
+  assert.equal(fs.readFileSync(canonicalCrypto, "utf8"), before, "invalid provider time must not append a fetch-day row");
+  assert.deepEqual(
+    failed.sourceOutcomes.find((row) => row.key === "crypto"),
+    {
+      key: "crypto",
+      status: "failed",
+      reason: "schema_drift",
+      source_as_of: null,
+      source_as_of_reason: sourceAsOfReason,
+    },
+  );
+  const state = readJson(path.join(root, "data", "admin", "sentiment", "index.json"));
+  assert.equal(state.items.crypto.resolution_state, "lkg_primary");
+  assert.equal(state.items.crypto.retry, true);
+  assert.equal(fs.existsSync(path.join(root, "data", "admin", "sentiment", "lkg", "crypto.json")), true);
+  assert.deepEqual(
+    readJson(path.join(root, "data", "admin", "sentiment", "source-observations", "crypto.json")),
+    {
+      schema_version: "sentiment-source-observation/v1",
+      source_key: "crypto",
+      source_as_of: null,
+      source_as_of_reason: sourceAsOfReason,
+      observed_at: "2026-07-15T22:00:00.000Z",
+      run_id: "crypto-invalid-timestamp",
+      run_attempt: 1,
+      event_name: "workflow_dispatch",
+    },
+  );
+}
+
+{
   const root = fs.mkdtempSync(path.join(os.tmpdir(), "fetch-sentiment-multi-retry-"));
   await runCase(root);
   let latest;
@@ -353,21 +522,43 @@ async function runCase(root, {
     },
   });
   assert.equal(result.ok, false);
-  assert.equal(readJson(makePaths(root).attemptShardPath).attempts[0].execution, "threw");
+  assert.equal(result.row.execution, "threw");
 }
 
 {
   const workflow = fs.readFileSync(path.join(REPO_ROOT, ".github", "workflows", "fetch-sentiment.yml"), "utf8");
+  const manifest = JSON.parse(fs.readFileSync(
+    path.join(REPO_ROOT, "data", "admin", "lane-commit-manifest.json"),
+    "utf8",
+  ));
+  const stages = manifest.workflows[".github/workflows/fetch-sentiment.yml"].stages;
+  const manualGitAdds = [...workflow.matchAll(/^\s*git add -- (.+)$/gmu)]
+    .map((match) => match[1].trim());
   assert.match(workflow, /controlled_failure_source/);
   assert.match(workflow, /INPUT_CONTROLLED_FAILURE_SOURCE/);
-  assert.match(workflow, /data\/admin\/sentiment\/index\.json/);
-  assert.match(workflow, /data\/admin\/sentiment\/current\/\*\.json/);
-  assert.match(workflow, /data\/admin\/sentiment\/lkg\/\*\.json/);
   assert.match(workflow, /scripts\/stage-lane-manifest\.sh/);
   assert.match(workflow, /--stage always_if_exists/);
   assert.match(workflow, /--stage success_if_exists/);
   assert.match(workflow, /FETCH_OUTCOME.*success[\s\S]*--stage success_if_exists/);
   assert.match(workflow, /- name: Commit sentiment data\n\s+if: \$\{\{ always\(\) \}\}/);
+  assert.deepEqual(stages, {
+    always_if_exists: [
+      { kind: "file", path: "data/admin/sentiment/index.json", required: false },
+      { kind: "glob", path: "data/admin/sentiment/current/*.json", required: false },
+      { kind: "glob", path: "data/admin/sentiment/lkg/*.json", required: false },
+      {
+        kind: "file",
+        path: "data/admin/sentiment/source-observations/crypto.json",
+        required: false,
+      },
+    ],
+    required_on_success: [],
+    success_if_exists: [
+      { kind: "glob", path: "data/sentiment/*.json", required: true },
+    ],
+    success_verify_not_plan_if_exists: [],
+  });
+  assert.deepEqual(manualGitAdds, [], "sentiment staging must be manifest-owned");
   assert.doesNotMatch(workflow, /git add -A/);
 }
 

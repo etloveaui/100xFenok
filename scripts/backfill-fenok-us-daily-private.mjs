@@ -354,7 +354,6 @@ async function collectFinraDaily({ date, baseDir, noFetch }) {
       source_kind: load.source_kind,
       raw_text_file: rel(rawAbs),
       raw_public: false,
-      license_or_terms_note: "Private admin cache only; no public raw mirror.",
       caveat: "Daily short-volume transparency data; not short interest, not borrow availability, and not a complete directional flow signal.",
     };
     writeJson(summaryAbs, payload);
@@ -377,7 +376,6 @@ async function collectFinraDaily({ date, baseDir, noFetch }) {
       raw_text_file: rel(rawAbs),
       raw_public: false,
       failed_reason: err.message,
-      license_or_terms_note: "Private admin cache only; no public raw mirror.",
       error: err.message,
     };
   }
@@ -410,7 +408,6 @@ async function collectOccDate({ date, tickers, baseDir, noFetch, sleepMs }) {
           source_kind: load.source_kind,
           raw_csv_file: rel(rawAbs),
           raw_public: false,
-          license_or_terms_note: "Private admin cache only; no public raw mirror.",
           failed_reason: stats.header_ok ? null : `Unexpected OCC CSV header: ${stats.header ?? "missing"}`,
           error: stats.header_ok ? null : `Unexpected OCC CSV header: ${stats.header ?? "missing"}`,
         };
@@ -432,7 +429,6 @@ async function collectOccDate({ date, tickers, baseDir, noFetch, sleepMs }) {
           raw_csv_file: rel(rawAbs),
           raw_public: false,
           failed_reason: err.message,
-          license_or_terms_note: "Private admin cache only; no public raw mirror.",
           error: err.message,
         };
         bySide[side] = entry;
@@ -485,7 +481,6 @@ async function collectOccDate({ date, tickers, baseDir, noFetch, sleepMs }) {
     rows,
     attempts,
     raw_public: false,
-    license_or_terms_note: "Private admin cache only; no public raw mirror.",
     caveat: "OCC listed-options volume skew proxy only; not OPRA, premium, greeks, sweeps, blocks, or buyer/seller direction.",
   };
   writeJson(summaryAbs, summary);
@@ -512,7 +507,6 @@ function loadWeeklyReference() {
     row_count: rowCount,
     files,
     raw_public: false,
-    license_or_terms_note: "Existing private admin reference files only; no public raw mirror.",
     caveat: "Weekly FINRA summary is a slower reference/context source, not a daily scoring axis by itself.",
   };
 }
@@ -534,7 +528,6 @@ function loadSecReference() {
     fact_value_count: companyfacts?.fact_value_count ?? null,
     output_file: companyfacts?.output_file ?? null,
     raw_public: false,
-    license_or_terms_note: "Existing private admin reference file only; no daily raw backfill.",
     caveat: "SEC companyfacts is periodic fundamentals reference data; it should refresh on filings, not daily market cadence.",
   };
 }
@@ -621,7 +614,6 @@ function buildManifest({ args, dates, requestedDates, generatedAt, finraResults,
         endpoint_template: `${FINRA_REGSHO_ENDPOINT}/CNMSshvol{YYYYMMDD}.txt`,
         raw_dir: rel(path.join(baseDir, "finra", "regsho_daily")),
         raw_public: false,
-        license_or_terms_note: "Private admin cache only; no public raw mirror.",
         caveat: "Daily short-volume transparency data; not short interest, not borrow availability, and not a complete directional flow signal.",
       }),
       sourceRollup("occ_listed_options_volume", occResults, {
@@ -635,7 +627,6 @@ function buildManifest({ args, dates, requestedDates, generatedAt, finraResults,
         side_empty_count: occResults.reduce((sum, item) => sum + item.side_empty_count, 0),
         side_failed_count: occResults.reduce((sum, item) => sum + item.side_failed_count, 0),
         raw_public: false,
-        license_or_terms_note: "Private admin cache only; no public raw mirror.",
         caveat: "OCC listed-options volume skew proxy only; not OPRA, premium, greeks, sweeps, blocks, or buyer/seller direction.",
       }),
       weeklyReference,

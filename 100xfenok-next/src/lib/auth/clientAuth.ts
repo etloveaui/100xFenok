@@ -1,0 +1,340 @@
+// Client-side authentication helpers for Google GIS and session management.
+// Ported from Winddown (CONTRACT_winddown-auth) for 100xFenok.
+
+import { useEffect } from "react";
+import { ROUTES } from "@/lib/routes";
+
+const TOKEN_KEY = "100xfenok.authToken";
+const GIS_SRC = "https://accounts.google.com/gsi/client";
+export const DEFAULT_CLIENT_ID =
+  "1047143661358-ppe3u3k58dcbi59usbkmd0fggbi5dkpd.apps.googleusercontent.com";
+
+let inMemoryToken: string | undefined;
+// Callers that ask at the same moment share one /api/user/me round trip — the
+// desktop and mobile UserAuthPill instances mount together. Only the in-flight
+// request is shared; a settled answer is never reused, and auth changes drop it.
+let meInFlight: Promise<UserMeResponse> | null = null;
+
+export function loadAuthToken(): string {
+  if (inMemoryToken === undefined) {
+    inMemoryToken = readStoredToken();
+  }
+  return inMemoryToken;
+}
+
+function readStoredToken(): string {
+  if (typeof window === "undefined") return "";
+  try {
+    return window.localStorage.getItem(TOKEN_KEY)?.trim() ?? "";
+  } catch {
+    return "";
+  }
+}
+
+export function saveAuthToken(token: string): void {
+  inMemoryToken = token;
+  meInFlight = null;
+  if (typeof window === "undefined") return;
+  try {
+    window.localStorage.setItem(TOKEN_KEY, token);
+  } catch {
+    // Private mode or storage blocked
+  }
+}
+
+export function clearAuthToken(): void {
+  inMemoryToken = "";
+  meInFlight = null;
+  if (typeof window === "undefined") return;
+  try {
+    window.localStorage.removeItem(TOKEN_KEY);
+  } catch {
+    // Nothing to do
+  }
+}
+
+export function getGoogleClientId(): string {
+  return (
+    process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID?.trim() ||
+    DEFAULT_CLIENT_ID
+  );
+}
+
+interface GoogleCredentialResponse {
+  credential: string;
+}
+
+declare global {
+  interface Window {
+    google?: {
+      accounts: {
+        id: {
+          initialize(options: {
+            client_id: string;
+            callback: (response: GoogleCredentialResponse) => void;
+            auto_select?: boolean;
+          }): void;
+          renderButton(
+            parent: HTMLElement,
+            options: {
+              theme?: "outline" | "filled_blue" | "filled_black";
+              size?: "large" | "medium" | "small";
+              text?: "signin_with" | "signup_with" | "continue_with" | "signin";
+              shape?: "rectangular" | "pill" | "circle" | "square";
+              width?: number;
+              logo_alignment?: "left" | "center";
+            },
+          ): void;
+        };
+      };
+    };
+  }
+}
+
+let gisLoading: Promise<boolean> | undefined;
+
+export function loadGoogleScript(): Promise<boolean> {
+  if (typeof window === "undefined" || typeof document === "undefined") {
+    return Promise.resolve(false);
+  }
+  if (window.google?.accounts?.id) return Promise.resolve(true);
+  if (gisLoading) return gisLoading;
+
+  gisLoading = new Promise((resolve) => {
+    const existing = document.querySelector(`script[src="${GIS_SRC}"]`);
+    if (existing) {
+      existing.addEventListener("load", () => resolve(true), { once: true });
+      existing.addEventListener("error", () => resolve(false), { once: true });
+      return;
+    }
+    const script = document.createElement("script");
+    script.src = GIS_SRC;
+    script.async = true;
+    script.defer = true;
+    script.onload = () => resolve(true);
+    script.onerror = () => {
+      gisLoading = undefined;
+      resolve(false);
+    };
+    document.head.appendChild(script);
+  });
+  return gisLoading;
+}
+
+export function renderGoogleButton(
+  parent: HTMLElement,
+  clientId: string,
+  onCredential: (idToken: string) => void,
+): boolean {
+  const id = window.google?.accounts?.id;
+  if (!id || typeof id.renderButton !== "function") return false;
+  try {
+    id.initialize({
+      client_id: clientId,
+      callback: (response) => {
+        if (response.credential) {
+          onCredential(response.credential);
+        }
+      },
+    });
+    id.renderButton(parent, {
+      theme: "filled_black",
+      size: "large",
+      text: "continue_with",
+      shape: "pill",
+      width: 260,
+    });
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+export interface UserProfileClient {
+  sub: string;
+  email: string;
+  name?: string;
+  picture?: string;
+}
+
+export interface UserMeResponse {
+  ok: boolean;
+  user?: UserProfileClient;
+  settings?: Record<string, unknown>;
+  error?: string;
+}
+
+export interface AuthExchangeResponse {
+  ok: boolean;
+  token?: string;
+  expiresAt?: number;
+  user?: UserProfileClient;
+  error?: string;
+}
+
+export async function postAuthGoogle(
+  idToken: string,
+  deviceHint?: string,
+): Promise<AuthExchangeResponse> {
+  const response = await fetch("/api/auth/google", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ idToken, deviceHint }),
+  });
+  const data = (await response.json().catch(() => null)) as AuthExchangeResponse | null;
+  if (response.ok && data?.ok && data.token) {
+    saveAuthToken(data.token);
+  }
+  return data ?? { ok: false, error: "Network error" };
+}
+
+export async function postAuthLogout(): Promise<{ ok: boolean }> {
+  const token = loadAuthToken();
+  const headers: Record<string, string> = {};
+  if (token) {
+    headers.Authorization = `Bearer ${token}`;
+  }
+  try {
+    await fetch("/api/auth/logout", {
+      method: "POST",
+      headers,
+    });
+  } catch {
+    // Ignore network error on logout
+  }
+  clearAuthToken();
+  notifyAuthInvalid();
+  notifyUserChange(null);
+  return { ok: true };
+}
+
+let cachedUser: UserProfileClient | null = null;
+type AuthUserListener = (user: UserProfileClient | null) => void;
+const userListeners = new Set<AuthUserListener>();
+
+export function onAuthUserChange(listener: AuthUserListener): () => void {
+  userListeners.add(listener);
+  return () => {
+    userListeners.delete(listener);
+  };
+}
+
+export function notifyUserChange(user: UserProfileClient | null): void {
+  cachedUser = user;
+  userListeners.forEach((l) => l(user));
+}
+
+export function getCachedUser(): UserProfileClient | null {
+  return cachedUser;
+}
+
+export async function postUserPing(): Promise<boolean> {
+  const token = loadAuthToken();
+  const headers: Record<string, string> = {};
+  if (token) {
+    headers.Authorization = `Bearer ${token}`;
+  }
+  try {
+    const res = await fetch("/api/user/ping", {
+      method: "POST",
+      headers,
+    });
+    res.body?.cancel().catch(() => {});
+    if (res.status === 401 || res.status === 403) {
+      clearAuthToken();
+      notifyAuthInvalid();
+      notifyUserChange(null);
+      return false;
+    }
+    return res.ok;
+  } catch {
+    return false;
+  }
+}
+
+export function fetchMe(): Promise<UserMeResponse> {
+  if (meInFlight) return meInFlight;
+  const request = requestMe().finally(() => {
+    if (meInFlight === request) meInFlight = null;
+  });
+  meInFlight = request;
+  return request;
+}
+
+async function requestMe(): Promise<UserMeResponse> {
+  const token = loadAuthToken();
+  const headers: Record<string, string> = {};
+  if (token) {
+    headers.Authorization = `Bearer ${token}`;
+  }
+  const res = await fetch("/api/user/me", {
+    method: "GET",
+    headers,
+  });
+  if (res.status === 401 || res.status === 403) {
+    // Release the unread error body so the connection does not stay busy.
+    res.body?.cancel().catch(() => {});
+    clearAuthToken();
+    notifyAuthInvalid();
+    notifyUserChange(null);
+    return { ok: false, error: res.status === 403 ? "Forbidden" : "Unauthorized" };
+  }
+  const data = (await res.json().catch(() => null)) as UserMeResponse | null;
+  if (data?.ok && data.user) {
+    notifyUserChange(data.user);
+  }
+  return data ?? { ok: false, error: "Network error" };
+}
+
+type AuthInvalidListener = () => void;
+const invalidListeners = new Set<AuthInvalidListener>();
+
+export function onAuthInvalid(listener: AuthInvalidListener): () => void {
+  invalidListeners.add(listener);
+  return () => {
+    invalidListeners.delete(listener);
+  };
+}
+
+export function notifyAuthInvalid(): void {
+  invalidListeners.forEach((listener) => listener());
+}
+
+/**
+ * Client heartbeat: sends POST /api/user/ping every 60 s only while
+ * document.visibilityState === "visible", from the AppShell when logged in.
+ * No ping on /intro.
+ */
+export function useUserHeartbeat(): void {
+  useEffect(() => {
+    if (typeof window === "undefined" || typeof document === "undefined") return;
+    if (window.location.pathname.startsWith(ROUTES.intro)) return;
+
+    let timer: ReturnType<typeof setInterval> | null = null;
+
+    const ping = () => {
+      if (document.visibilityState !== "visible") return;
+      if (!loadAuthToken() && !cachedUser) return;
+      postUserPing().catch(() => {});
+    };
+
+    ping();
+
+    timer = setInterval(() => {
+      ping();
+    }, 60_000);
+
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === "visible") {
+        ping();
+      }
+    };
+
+    document.addEventListener("visibilitychange", handleVisibilityChange);
+
+    return () => {
+      if (timer) clearInterval(timer);
+      document.removeEventListener("visibilitychange", handleVisibilityChange);
+    };
+  }, []);
+}

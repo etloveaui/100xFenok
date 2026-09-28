@@ -23,6 +23,7 @@ import argparse
 import atexit
 from contextlib import contextmanager
 from contextvars import ContextVar
+from collections.abc import Mapping
 from datetime import datetime, timedelta, timezone
 import hashlib
 import json
@@ -35,13 +36,33 @@ import subprocess
 import sys
 import time
 from pathlib import Path
+from zoneinfo import ZoneInfo
 
 ROOT = Path(__file__).resolve().parent.parent
 SCRIPT_DIR = ROOT / "scripts"
 if str(SCRIPT_DIR) not in sys.path:
     sys.path.insert(0, str(SCRIPT_DIR))
 
+from lib.diagnostic_detail import bounded_diagnostic_detail
 from data_supply_state import DataSupplyStateStore
+from estimate_archive import EstimateArchive, default_archive_root
+
+# Point-in-time analyst-estimate archive (#380): non-blocking sibling write.
+_ESTIMATE_ARCHIVE = EstimateArchive(default_archive_root())
+# Per-run aggregate surfaced in the fetch summary (review P1-4).
+_ARCHIVE_RUN_COUNTS = {"appended": 0, "skipped": 0, "failures": 0}
+
+
+def _archive_for(ticker, payload):
+    """Archive the estimate block after the canonical write; never raises."""
+    outcome = _ESTIMATE_ARCHIVE.archive_if_changed(ticker, payload)
+    if outcome.get("appended"):
+        _ARCHIVE_RUN_COUNTS["appended"] += 1
+    elif outcome.get("failure"):
+        _ARCHIVE_RUN_COUNTS["failures"] += 1
+    else:
+        _ARCHIVE_RUN_COUNTS["skipped"] += 1
+    return outcome
 from data_supply_stock_detail import (
     StockDetailValidationError,
     is_enrolled_stock_detail,
@@ -56,12 +77,14 @@ STOCK_UNIVERSE_DIR = ROOT / "data" / "global-scouter" / "stocks" / "detail"
 ETF_INDEX = ROOT / "data" / "global-scouter" / "etfs" / "index.json"
 STOCKANALYSIS_ETF_UNIVERSE = ROOT / "data" / "stockanalysis" / "etf_universe.json"
 STOCKANALYSIS_ETF_SCREENER = ROOT / "data" / "stockanalysis" / "surfaces" / "etf_screener.json"
+ETF_CORE_DAILY_BASKET = ROOT / "data" / "admin" / "fenok-etf-core-daily-basket.json"
 MARKET_FACTS_INDEX = ROOT / "data" / "computed" / "market_facts" / "index.json"
 SOX_GIW_CONSTITUENTS = ROOT / "data" / "indices" / "nasdaq-giw-sox-constituents.json"
 DASHBOARD_CONSTANTS = ROOT / "100xfenok-next" / "src" / "lib" / "dashboard" / "constants.ts"
 PORTFOLIO_TS = ROOT / "100xfenok-next" / "src" / "lib" / "portfolio.ts"
 OUT_DIR = ROOT / "data" / "yf" / "finance"
 YAHOO_BATCH_STATE_ROOT = ROOT / "data" / "admin" / "yahoo-batch-quote-history"
+S1_STOCK_PROMOTION_DRY_RUN = ROOT / "data" / "admin" / "fenok-s1-stock-public-promotion-dry-run.json"
 DATA_SUPPLY_STATE_ROOT = ROOT / "data" / "admin" / "data-supply-state" / "v1"
 DATA_SUPPLY_PROVIDER_TRUTH_ROOT = ROOT
 
@@ -82,6 +105,15 @@ LEVERAGED_AND_FOCUS_ETFS = {
     "DDM", "QLD", "ROM", "SSO", "TNA", "UPRO", "USD", "UWM",
 }
 NON_YAHOO_ETF_LABELS = {"HSCEI", "KOSPI", "NASDAQ", "SHANGHAI", "TOPIX"}
+
+# The index trackers whose distribution yield is the payout operand of the RIM
+# residual-value engine. They are part of the scheduled ETF lane's bounded
+# union (core daily basket + configured major/focus sets), so the scheduled
+# lane keeps their yields fresh; a stale yield closes the corresponding index
+# row. They are pinned ahead of the shard page and are exempt from the daily
+# limit.
+RIM_TRACKER_ETFS = {"SPY", "QQQ", "ONEQ", "SOXX", "IWM", "EWY"}
+TRACKER_UNADJUSTED_SCHEMA_VERSION = "yahoo_finance_tracker_unadjusted.v1"
 
 ANNUAL_PERIODS = 4
 QUARTERLY_PERIODS = 5
@@ -105,6 +137,20 @@ class FetchTimeout(Exception):
 
 
 _SAFE_PROVIDER_FAILURES = ContextVar("safe_provider_failures", default=None)
+
+
+def bounded_failure_evidence(evidence: dict) -> dict:
+    """Copy attempt evidence with only safe diagnostic details at persistence boundaries."""
+    sanitized = dict(evidence)
+    sanitized["failures"] = [
+        {
+            **failure,
+            "error": bounded_diagnostic_detail(failure.get("error")),
+        }
+        for failure in (evidence.get("failures") or [])
+        if isinstance(failure, dict)
+    ]
+    return sanitized
 
 
 @contextmanager
@@ -412,6 +458,8 @@ def write_finance_payload(ticker, payload, *, record_stock_detail_state=True):
     payload_bytes = stable_json(payload, separators=(",", ":")).encode("utf-8")
     if not is_enrolled_stock_detail(ticker):
         _atomic_write_bytes(out_path, payload_bytes)
+        # Point-in-time estimate archive (#380): after the canonical write.
+        _archive_for(ticker, payload)
         return None
     observed_at = _observed_now()
     truth_root = DATA_SUPPLY_PROVIDER_TRUTH_ROOT
@@ -443,6 +491,8 @@ def write_finance_payload(ticker, payload, *, record_stock_detail_state=True):
             )
         raise
     _atomic_write_bytes(out_path, payload_bytes)
+    # Point-in-time estimate archive (#380): after the canonical write.
+    _archive_for(ticker, payload)
     verified = validate_stock_detail_candidate(
         provider="yahoo_finance",
         entity=ticker,
@@ -547,7 +597,7 @@ def record_finance_failure(ticker, error):
         provider_path=f"data/yf/finance/{ticker}.json",
         observed_at=observed_at,
         reason_code="fetch_failed",
-        failure_detail=error,
+        failure_detail=bounded_diagnostic_detail(error),
         origin="manual",
     )
 
@@ -770,16 +820,196 @@ def safe(fn, default=None):
     except Exception as exc:
         failures = _SAFE_PROVIDER_FAILURES.get()
         if failures is not None and len(failures) < 6:
-            failures.append(f"{type(exc).__name__}: {exc}"[:500])
+            failures.append(bounded_diagnostic_detail(exc))
         return default
+
+
+# Yahoo serves single-letter class-share suffixes in dash form (BRK.B -> BRK-B),
+# but single-letter EXCHANGE suffixes keep the dot. The shared stock-detail
+# alias helper cannot tell the two apart, so the fetch lane guards the known
+# single-letter exchange suffixes first. Tokyo (.T) matters today: TSE
+# new-format listing codes end in a letter (285A.T = KIOXIA HOLDINGS), and
+# mangling them to 285A-T makes Yahoo answer "Not Found" for every attempt.
+SINGLE_LETTER_EXCHANGE_SUFFIXES = frozenset({"T", "L", "F", "V"})
 
 
 def yahoo_symbol(ticker):
     """Class-share dot notation (BRK.B) -> Yahoo dash notation (BRK-B).
-    Exchange suffixes keep their dot: numeric heads (005930.KS, 7203.T)
-    and 2+ letter suffixes (BMW.DE, MC.PA) — verified working as-is in
-    the 2026-06-11 full batch; only single-letter class shares failed."""
-    return yahoo_provider_symbol(ticker)
+    Exchange suffixes keep their dot: numeric heads (005930.KS, 7203.T),
+    2+ letter suffixes (BMW.DE, MC.PA), and single-letter exchange suffixes
+    (.T Tokyo, .L London, .F Frankfurt, .V TSX Venture) — verified working
+    as-is in the 2026-06-11 full batch; only single-letter class shares
+    failed."""
+    head, separator, tail = ticker.rpartition(".")
+    if (
+        separator
+        and head
+        and tail.isalpha()
+        and len(tail) == 1
+        and tail not in SINGLE_LETTER_EXCHANGE_SUFFIXES
+    ):
+        return yahoo_provider_symbol(ticker)
+    return ticker
+
+
+_YAHOO_QUOTE_SOURCE_BOUND = None
+
+
+def _chart_quote_market(ticker):
+    if ticker.endswith((".KS", ".KQ")):
+        return "krx_market", "KRW", "Asia/Seoul"
+    head, separator, suffix = ticker.rpartition(".")
+    if not separator or (head.isalpha() and suffix.isalpha() and len(suffix) == 1
+                         and suffix not in SINGLE_LETTER_EXCHANGE_SUFFIXES):
+        return "us_market", "USD", "America/New_York"
+    return None
+
+
+def _quote_positive(value):
+    return isinstance(value, Number) and not isinstance(value, bool) and math.isfinite(value) and value > 0
+
+
+def _chart_quote_needed(ticker, data, now_iso):
+    info = data.get("info") if isinstance(data, dict) else None
+    market = _chart_quote_market(ticker)
+    # Never manufacture an identity after t.info failed or for an unsupported market.
+    if (not market or not isinstance(info, dict) or info.get("symbol") != yahoo_symbol(ticker)
+            or info.get("quoteType") not in {"EQUITY", "ETF"} or info.get("currency") != market[1]):
+        return False
+    raw_time = info.get("regularMarketTime")
+    quote = _parse_utc(raw_time) if _quote_positive(raw_time) else None
+    price = info.get("regularMarketPrice") if info.get("regularMarketPrice") is not None else info.get("currentPrice")
+    now = _parse_utc(now_iso)
+    if quote is not None and quote > now:
+        return False  # The existing future-clock rejection must remain visible.
+    if quote is None or not _quote_positive(price):
+        return True
+    # Reuse only a bound actually read from the existing contract in this process.
+    if isinstance(_YAHOO_QUOTE_SOURCE_BOUND, int) and (now.date() - quote.date()).days <= _YAHOO_QUOTE_SOURCE_BOUND:
+        return False
+    freshness = yahoo_source_freshness({ticker: _iso_utc(raw_time)}, now_iso)
+    age = freshness["ages"].get(ticker)
+    if not isinstance(age, int):
+        raise ValueError("chart quote eligibility calendar is unavailable")
+    return age > freshness["max_source_business_days"]
+
+
+def chart_quote_session_dates(ticker, quote_as_of):
+    market = _chart_quote_market(ticker)
+    if not market:
+        raise ValueError("chart quote market is unsupported")
+    session_date = _parse_utc(quote_as_of).astimezone(ZoneInfo(market[2])).date().isoformat()
+    script = r"""
+import {isBusinessDay, calendar_version} from './scripts/lib/market-calendar.mjs';
+let raw = ''; for await (const chunk of process.stdin) raw += chunk;
+const {date, market} = JSON.parse(raw);
+const year = calendar_version.match(/-(\d{4})$/)?.[1];
+if (!year || !date.startsWith(year + '-') || !isBusinessDay(date, market)) throw new Error('quote session is outside the verified calendar');
+let prior = date;
+do {prior = new Date(Date.parse(prior + 'T00:00:00Z') - 86400000).toISOString().slice(0, 10);}
+while (prior.startsWith(year + '-') && !isBusinessDay(prior, market));
+if (!prior.startsWith(year + '-')) throw new Error('previous session is outside the verified calendar');
+process.stdout.write(JSON.stringify([date, prior]));
+"""
+    result = subprocess.run(["node", "--input-type=module", "-e", script], cwd=ROOT,
+                            input=json.dumps({"date": session_date, "market": market[0]}),
+                            text=True, capture_output=True, check=False)
+    if result.returncode != 0:
+        raise ValueError("chart quote session calendar is unverified")
+    dates = json.loads(result.stdout)
+    if not isinstance(dates, list) or len(dates) != 2 or dates[0] != session_date:
+        raise ValueError("chart quote session calendar is malformed")
+    return tuple(dates)
+
+
+def _validated_chart_quote(ticker, data, metadata, observed_at):
+    info = data["info"]
+    market = _chart_quote_market(ticker)
+    if (metadata.get("symbol") != yahoo_symbol(ticker) or metadata.get("instrumentType") != info.get("quoteType")
+            or metadata.get("currency") != info.get("currency") or metadata.get("currency") != market[1]
+            or metadata.get("exchangeTimezoneName") != market[2]):
+        raise ValueError("chart quote identity/type/currency/timezone mismatch")
+    price = metadata.get("regularMarketPrice")
+    raw_time = metadata.get("regularMarketTime")
+    # Current yfinance may format this as a timezone-aware pandas Timestamp.
+    if isinstance(raw_time, datetime):
+        if raw_time.tzinfo is None or raw_time.utcoffset() is None:
+            raise ValueError("chart quote timestamp requires a timezone")
+        raw_time = raw_time.timestamp()
+    if not _quote_positive(price) or not _quote_positive(raw_time):
+        raise ValueError("chart quote requires a finite positive price and timestamp")
+    quote = _parse_utc(raw_time)
+    if quote is None:
+        raise ValueError("chart quote timestamp is invalid")
+    if quote > _parse_utc(observed_at):
+        raise ValueError("chart quote timestamp is in the future")
+    old_raw_time = info.get("regularMarketTime")
+    old_time = _parse_utc(old_raw_time) if _quote_positive(old_raw_time) else None
+    old_price = info.get("regularMarketPrice") if info.get("regularMarketPrice") is not None else info.get("currentPrice")
+    if old_time and quote < old_time:
+        raise ValueError("chart quote timestamp regression")
+    if old_time and quote == old_time:
+        if _quote_positive(old_price) and price != old_price:
+            raise ValueError("chart quote equal-clock price conflict")
+        if _quote_positive(old_price):
+            return None
+    quote_as_of = _iso_utc(raw_time)
+    session, previous_session = chart_quote_session_dates(ticker, quote_as_of)
+    return {"price": price, "regular_market_time": raw_time, "quote_as_of": quote_as_of,
+            "session": session, "previous_session": previous_session}
+
+
+def _chart_previous_close(rows, pair):
+    dates = []; closes = {}
+    for row in rows if isinstance(rows, list) else []:
+        date = row.get("date") if isinstance(row, dict) else None
+        parsed = _parse_utc(date)
+        if not isinstance(date, str) or len(date) != 10 or parsed is None or parsed.date().isoformat() != date or date in closes:
+            raise ValueError("chart quote previous-session series is malformed")
+        dates.append(date); closes[date] = row.get("Close")
+    if (not dates or dates != sorted(dates) or dates[-1] != pair["session"]
+            or not _quote_positive(closes.get(pair["session"]))
+            or not _quote_positive(closes.get(pair["previous_session"]))):
+        raise ValueError("chart quote previous-session unadjusted close is unverified")
+    return closes[pair["previous_session"]]
+
+
+def capture_chart_quote(ticker, data, ticker_client, *, yfinance_version=None):
+    if not _chart_quote_needed(ticker, data, _observed_now()):
+        return data
+    metadata = safe(lambda: ticker_client.get_history_metadata())
+    if not isinstance(metadata, Mapping):
+        raise ValueError("chart quote metadata is unavailable")
+    # Snapshot only these base keys. Enumerating the mapping can trigger lazy intraday requests.
+    keys = ("symbol", "instrumentType", "currency", "exchangeTimezoneName", "regularMarketPrice", "regularMarketTime")
+    snapshot = {key: metadata.get(key) for key in keys}
+    observed_at = _observed_now()
+    pair = _validated_chart_quote(ticker, data, snapshot, observed_at)
+    if pair is None:
+        return data
+    previous = None
+    query = {"period": "5d", "interval": "1d", "auto_adjust": False}
+    if is_enrolled_stock_detail(ticker):
+        # Main history is adjusted; only this bounded raw series can prove previous session close.
+        rows = safe(lambda: compact_history(ticker_client.history(**query)))
+        previous = _chart_previous_close(rows, pair)
+    info = dict(data["info"])
+    for key in ("currentPrice", "regularMarketPrice", "regularMarketTime", "previousClose", "regularMarketPreviousClose",
+                "regularMarketChange", "regularMarketChangePercent"):
+        info.pop(key, None)
+    info.update(currentPrice=pair["price"], regularMarketPrice=pair["price"], regularMarketTime=pair["regular_market_time"])
+    receipt = {"source": "yahoo_chart_metadata", "symbol": snapshot["symbol"], "quote_type": snapshot["instrumentType"],
+               "currency": snapshot["currency"], "exchange_timezone": snapshot["exchangeTimezoneName"],
+               "price": pair["price"], "quote_as_of": pair["quote_as_of"], "regular_market_time": pair["regular_market_time"],
+               "observed_at": observed_at, "yfinance_version": str(yfinance_version or "unknown")[:64],
+               "previous_close": None}
+    if previous is not None:
+        info.update(previousClose=previous, regularMarketPreviousClose=previous,
+                    regularMarketChange=pair["price"] - previous,
+                    regularMarketChangePercent=100 * (pair["price"] - previous) / previous)
+        receipt["previous_close"] = {"source": "yahoo_unadjusted_daily_history", "source_as_of": pair["previous_session"],
+                                     "quote_session": pair["session"], "price": previous, "query": query, "observed_at": _observed_now()}
+    return {**data, "info": info, "quote_observation": receipt}
 
 
 def fetch_ticker(ticker, profile="full", include_options=False, include_shares_full=False):
@@ -798,6 +1028,7 @@ def fetch_ticker(ticker, profile="full", include_options=False, include_shares_f
     if profile == "daily":
         data["fast_info"] = safe(lambda: clean_dict(dict(t.fast_info)))
         data["history_1y"] = safe(lambda: compact_history(t.history(period="1y", interval="1d", auto_adjust=True)))
+        data = capture_chart_quote(ticker, data, t, yfinance_version=getattr(yf, "__version__", None))
         return data, round((time.perf_counter() - start) * 1000)
 
     if fund_like or profile == "etf":
@@ -849,6 +1080,7 @@ def fetch_ticker(ticker, profile="full", include_options=False, include_shares_f
             data["sec_filings"] = safe(lambda: sec_filings_records(t.sec_filings))
             data["news"] = safe(lambda: news_records(t.news))
         data["history_1y"] = safe(lambda: compact_history(t.history(period="1y", interval="1d", auto_adjust=True)))
+        data = capture_chart_quote(ticker, data, t, yfinance_version=getattr(yf, "__version__", None))
 
     if include_options:
         data["options"] = safe(lambda: option_chain_records(t))
@@ -898,9 +1130,9 @@ def fetch_with_retry(
                 return result
             last_err = "empty payload"
         except FetchTimeout as e:
-            last_err = str(e)
+            last_err = bounded_diagnostic_detail(str(e))
         except Exception as e:
-            last_err = str(e)
+            last_err = bounded_diagnostic_detail(str(e))
         failures.extend(
             {"attempt": attempt + 1, "error": error, "source": "provider_safe_call"}
             for error in safe_failures
@@ -918,12 +1150,89 @@ def fetch_with_retry(
     return result
 
 
+def fetch_tracker_unadjusted(ticker, timeout_seconds=90):
+    """Full-history UNADJUSTED daily closes + FULL dividend history for one RIM
+    tracker (Phase 3B slice).
+
+    Additive lane: writes a SIBLING file data/yf/finance/{SYMBOL}.unadjusted.json
+    and never touches the canonical {SYMBOL}.json — history_1y, its 260 cap,
+    its auto_adjust=True semantics and DIVIDEND_ENTRIES=40 stay byte-identical
+    for the 18+ consumers. The sibling carries:
+      - history_unadjusted: full-history daily closes (auto_adjust=False, which
+        is split-adjusted per Yahoo — verified continuous across splits);
+      - dividends: the FULL dividend series from the same period=max response
+        (the canonical 40-entry cap is a storage cap, not a market fact; half
+        the US H2 origins were still scoring raw price return because of it).
+
+    Why unadjusted: the H2 dividend adjustment divides nominal dividend amounts
+    by a close at the origin; an auto-adjusted close is understated at older
+    origins by the cumulative distribution yield, which overstates the add-on,
+    one-sided, growing with origin age. Nominal over nominal removes it.
+
+    Point-in-time: rows are daily closes / dated dividends, each knowable at
+    its own date; the file's fetched_at is the collection receipt (SPEC v3.0
+    section 3 first-knowable semantics; the reader additionally enforces <=
+    origin and a 45-day freshness cap on prices)."""
+    import yfinance as yf
+    with ticker_timeout(timeout_seconds, ticker):
+        df = yf.Ticker(yahoo_symbol(ticker)).history(period="max", interval="1d", auto_adjust=False)
+    rows = []
+    dividends = {}
+    if df is not None and not getattr(df, "empty", True):
+        for idx, row in df.iterrows():
+            day = _iso(idx) if hasattr(idx, "strftime") else str(idx)
+            if not _parse_utc(day):
+                continue
+            close = clean_value(row.get("Close"))
+            if close is not None:
+                rows.append({"date": day, "Close": close})
+            dividend = clean_value(row.get("Dividends"))
+            if dividend is not None and dividend > 0:
+                dividends[day] = dividend
+    if not rows:
+        return None
+    payload = {
+        "schema_version": TRACKER_UNADJUSTED_SCHEMA_VERSION,
+        "ticker": ticker,
+        "fetched_at": _observed_now(),
+        "history_as_of": rows[-1]["date"],
+        "data": {
+            "history_unadjusted": rows,
+            "dividends": dividends or None,
+        },
+    }
+    _atomic_write_bytes(OUT_DIR / f"{ticker}.unadjusted.json", stable_json(payload, separators=(",", ":")).encode("utf-8"))
+    return payload
+
+
+def fetch_tracker_unadjusted_with_retry(ticker, retries=2, backoffs=(5, 20), timeout_seconds=90):
+    last_err = None
+    for attempt in range(retries + 1):
+        try:
+            payload = fetch_tracker_unadjusted(ticker, timeout_seconds=timeout_seconds)
+            if payload is not None:
+                return payload
+            last_err = RuntimeError("no unadjusted history returned")
+        except Exception as exc:  # noqa: BLE001 — provider lane reports, never aborts the batch
+            last_err = exc
+        if attempt < retries:
+            time.sleep(backoffs[min(attempt, len(backoffs) - 1)])
+    raise last_err if last_err else RuntimeError(f"no unadjusted history for {ticker}")
+
+
 def merge_existing_payload_data(existing_payload, fetched_data):
     existing_data = (existing_payload or {}).get("data")
     if not isinstance(existing_data, dict):
         return fetched_data
     merged = dict(existing_data)
     for key, value in (fetched_data or {}).items():
+        if key == "quote_observation":
+            # This receipt belongs to one observation; never nested-merge prior proof into it.
+            if value is None:
+                merged.pop(key, None)
+            else:
+                merged[key] = value
+            continue
         if value is None:
             continue
         if isinstance(value, dict) and isinstance(merged.get(key), dict):
@@ -932,6 +1241,12 @@ def merge_existing_payload_data(existing_payload, fetched_data):
             merged[key] = nested
         else:
             merged[key] = value
+    if "quote_observation" not in (fetched_data or {}):
+        merged.pop("quote_observation", None)
+    if "quote_observation" in existing_data or "quote_observation" in (fetched_data or {}):
+        # Chart selection clears unmatched quote dependents. Preserve those absences
+        # for every ticker, including the next normal info observation after a chart pair.
+        merged = bind_enrolled_quote_group_to_fresh_fetch(merged, fetched_data)
     return merged
 
 
@@ -1053,6 +1368,63 @@ def load_stockanalysis_etfs():
     return symbols
 
 
+def load_core_daily_basket():
+    """The core daily ETF basket SSOT: daily_refresh_universe.tickers."""
+    try:
+        payload = json.loads(ETF_CORE_DAILY_BASKET.read_text(encoding="utf-8"))
+    except (FileNotFoundError, json.JSONDecodeError) as error:
+        raise ValueError(f"core daily basket is unreadable: {error}") from error
+    if not isinstance(payload, dict):
+        raise ValueError("core daily basket must be an object")
+    universe = payload.get("daily_refresh_universe")
+    if not isinstance(universe, dict):
+        raise ValueError("core daily basket daily_refresh_universe must be an object")
+    tickers = universe.get("tickers")
+    if not isinstance(tickers, list):
+        raise ValueError("core daily basket tickers must be a list")
+    symbols = set()
+    invalid = []
+    for ticker in tickers:
+        symbol = str(ticker or "").strip().upper()
+        if not SYMBOL_RE.fullmatch(symbol):
+            invalid.append(ticker)
+            continue
+        symbols.add(symbol)
+    if invalid:
+        raise ValueError(f"core daily basket has invalid tickers: {invalid}")
+    if not symbols:
+        raise ValueError("core daily basket is empty")
+    declared_count = universe.get("count")
+    if not isinstance(declared_count, int) or isinstance(declared_count, bool):
+        raise ValueError("core daily basket count must be an integer")
+    if declared_count != len(symbols):
+        raise ValueError(
+            f"core daily basket count mismatch: declared {declared_count}, normalized {len(symbols)}"
+        )
+    return symbols
+
+
+def load_core_daily_basket_sources():
+    """Labeled candidate sources for the scheduled ETF lane.
+
+    The bounded union is the core daily basket SSOT plus the three configured
+    ETF sets (major, leveraged/focus, RIM trackers). The full StockAnalysis
+    universe/screener is intentionally absent.
+    """
+    sources = {}
+
+    def add(symbols, source):
+        for symbol in symbols:
+            if SYMBOL_RE.match(symbol):
+                sources.setdefault(symbol, set()).add(source)
+
+    add(load_core_daily_basket(), "core_daily_basket")
+    add(MAJOR_ETFS, "major_etf_configuration")
+    add(RIM_TRACKER_ETFS, "rim_tracker_configuration")
+    add(LEVERAGED_AND_FOCUS_ETFS, "focus_etf_configuration")
+    return {ticker: sorted(values) for ticker, values in sorted(sources.items())}
+
+
 def load_stockanalysis_etf_priority():
     priority = {}
     for path in (STOCKANALYSIS_ETF_UNIVERSE, STOCKANALYSIS_ETF_SCREENER):
@@ -1146,6 +1518,7 @@ def load_universe_sources(stocks_only=False, stockanalysis_etfs=False):
         add(load_dashboard_etfs(), "dashboard_configuration")
         add(load_portfolio_symbols(), "portfolio_configuration")
         add(MAJOR_ETFS, "major_etf_configuration")
+        add(RIM_TRACKER_ETFS, "rim_tracker_configuration")
         add(LEVERAGED_AND_FOCUS_ETFS, "focus_etf_configuration")
         if stockanalysis_etfs:
             add(load_stockanalysis_etfs(), "stockanalysis_etf")
@@ -1203,14 +1576,45 @@ def scheduled_shard_cycle_index(now, scheduled_weekday):
     return iso_monday.toordinal() // 7
 
 
-def validate_scheduled_shard(shard, scheduled_weekday):
+SCHEDULED_DAYS_PER_WEEK = 6
+
+
+def validate_scheduled_shard(shard, scheduled_weekday, scheduled_slot=None):
+    """Cross-check a scheduled run's shard against the slot it claims to be.
+
+    `scheduled_weekday` stays the real weekday, because
+    `scheduled_shard_cycle_index` needs it to locate the calendar occurrence.
+    A lane that runs several slots a day declares which one through
+    `scheduled_slot`, and the shard must be that slot out of the week.
+    """
     if scheduled_weekday is None:
         return
     if scheduled_weekday < 0 or scheduled_weekday > 5:
         raise ValueError("scheduled weekday must be within 0..5")
-    expected = f"{scheduled_weekday}/6"
-    if shard != expected:
-        raise ValueError(f"scheduled shard must match weekday/6: expected {expected}, got {shard or '<empty>'}")
+    if scheduled_slot is None:
+        expected = f"{scheduled_weekday}/6"
+        if shard != expected:
+            raise ValueError(f"scheduled shard must match weekday/6: expected {expected}, got {shard or '<empty>'}")
+        return
+    expected = f"{scheduled_slot}/"
+    if not shard or not shard.startswith(expected):
+        raise ValueError(f"scheduled shard must start with the declared slot: expected {scheduled_slot}/<count>, got {shard or '<empty>'}")
+    try:
+        shard_index, shard_count = (int(value) for value in shard.split("/"))
+    except ValueError as error:
+        raise ValueError(f"scheduled shard must be i/n: got {shard}") from error
+    if shard_index != scheduled_slot:
+        raise ValueError(f"scheduled shard index must equal the declared slot: expected {scheduled_slot}, got {shard_index}")
+    if shard_count % SCHEDULED_DAYS_PER_WEEK != 0:
+        raise ValueError(f"scheduled shard count must divide into {SCHEDULED_DAYS_PER_WEEK} days: got {shard_count}")
+    if scheduled_slot < 0 or scheduled_slot >= shard_count:
+        raise ValueError(f"scheduled slot must be within 0..{shard_count - 1}: got {scheduled_slot}")
+    slots_per_day = shard_count // SCHEDULED_DAYS_PER_WEEK
+    if scheduled_slot // slots_per_day != scheduled_weekday:
+        raise ValueError(
+            f"scheduled slot {scheduled_slot} belongs to weekday {scheduled_slot // slots_per_day}, "
+            f"not the declared weekday {scheduled_weekday}"
+        )
 
 
 def select_ticker_plan(
@@ -1224,6 +1628,8 @@ def select_ticker_plan(
     stable_shards=False,
     regular_limit=None,
     shard_cycle_index=0,
+    pin_rim_trackers=True,
+    return_retry_overflow_to_regular=False,
 ):
     ticker_set = set(tickers)
     retry_order = (
@@ -1231,8 +1637,15 @@ def select_ticker_plan(
         if isinstance(retry_tickers, (set, frozenset))
         else list(dict.fromkeys(retry_tickers))
     )
-    retry = [ticker for ticker in retry_order if ticker in ticker_set] if natural else []
-    retry_set = set(retry)
+    all_retry = [ticker for ticker in retry_order if ticker in ticker_set] if natural else []
+    retry = all_retry
+    if retry_limit is not None:
+        if retry_limit < 0:
+            raise ValueError("retry limit must be non-negative")
+        retry = retry[:retry_limit]
+    # The bounded core lane returns retry overflow to stable-shard ownership;
+    # broad/manual lanes preserve their historical full retry-set exclusion.
+    retry_set = set(retry if return_retry_overflow_to_regular else all_retry)
     regular = [ticker for ticker in tickers if ticker not in retry_set]
     shard_index = None
     if shard:
@@ -1245,12 +1658,86 @@ def select_ticker_plan(
             else regular[shard_index::shard_count]
         )
     claim_retry = natural and (not all_shards or shard_index in {None, 0})
-    if retry_limit is not None:
-        if retry_limit < 0:
-            raise ValueError("retry limit must be non-negative")
-        retry = retry[:retry_limit]
     regular = select_bounded_cycle_page(regular, regular_limit, shard_cycle_index)
-    return [*(retry if claim_retry else []), *regular]
+    selected = [*(retry if claim_retry else []), *regular]
+    # Historical broad/manual lanes pin RIM trackers ahead of the page. The
+    # core daily basket lane disables this because its stable six-shard union
+    # already owns every tracker exactly once per cycle.
+    seen = set(selected)
+    pinned = (
+        [t for t in sorted(RIM_TRACKER_ETFS) if t in ticker_set and t not in seen]
+        if pin_rim_trackers
+        else []
+    )
+    return [*pinned, *selected]
+
+
+def select_campaign_or_rotation_plan(
+    regular_tickers,
+    untracked_regular,
+    retry_queue,
+    selected_universe,
+    *,
+    shard,
+    natural,
+    all_shards,
+    retry_limit,
+    stable_shards,
+    regular_limit,
+    untracked_limit,
+    shard_cycle_index,
+    pin_rim_trackers=True,
+    return_retry_overflow_to_regular=False,
+):
+    retry_set = set(retry_queue)
+
+    if untracked_limit is not None:
+        if untracked_limit < 0:
+            raise ValueError("untracked limit must be non-negative")
+        if regular_limit is not None and untracked_limit > regular_limit:
+            raise ValueError("untracked limit must not exceed regular limit")
+
+    def select(regular, cycle_index, page_limit=regular_limit, *, include_retries=True):
+        planned = [
+            *(
+                [ticker for ticker in retry_queue if ticker in selected_universe]
+                if include_retries
+                else []
+            ),
+            *regular,
+        ]
+        return select_ticker_plan(
+            planned,
+            retry_queue if include_retries else [],
+            shard=shard,
+            natural=natural if include_retries else False,
+            all_shards=all_shards,
+            retry_limit=retry_limit if include_retries else None,
+            stable_shards=stable_shards,
+            regular_limit=page_limit,
+            shard_cycle_index=cycle_index,
+            pin_rim_trackers=pin_rim_trackers,
+            return_retry_overflow_to_regular=return_retry_overflow_to_regular,
+        )
+
+    campaign = select(untracked_regular, 0, untracked_limit)
+    campaign_regular = [ticker for ticker in campaign if ticker not in retry_set]
+    if campaign_regular:
+        if regular_limit is None:
+            return campaign
+        maintenance_limit = regular_limit - len(campaign_regular)
+        if maintenance_limit <= 0:
+            return campaign
+        untracked_set = set(untracked_regular)
+        maintenance_candidates = [ticker for ticker in regular_tickers if ticker not in untracked_set]
+        maintenance = select(
+            maintenance_candidates,
+            shard_cycle_index,
+            maintenance_limit,
+            include_retries=False,
+        )
+        return [*campaign, *maintenance]
+    return select(regular_tickers, shard_cycle_index)
 
 
 def validate_explicit_tickers(values):
@@ -1569,6 +2056,24 @@ def filter_history_gaps(tickers, min_rows):
     return selected
 
 
+def filter_untracked_candidates(tickers, state_store, active_universe):
+    untracked = state_store.untracked_tickers(active_universe)
+    return [ticker for ticker in tickers if ticker in untracked]
+
+
+def filter_pending_acquisition_candidates(tickers, state_store, active_universe, *, prospective=False):
+    pending = (
+        state_store.prospective_pending_acquisition_tickers(active_universe)
+        if prospective
+        else state_store.pending_acquisition_tickers(active_universe)
+    )
+    return [ticker for ticker in tickers if ticker in pending]
+
+
+def bootstrap_exclusions(tickers, *, untracked_only):
+    return set() if untracked_only else set(tickers)
+
+
 def write_empty_summary(profile, args, candidate_count, reason):
     OUT_DIR.mkdir(parents=True, exist_ok=True)
     summary = {
@@ -1585,9 +2090,12 @@ def write_empty_summary(profile, args, candidate_count, reason):
         "include_options": args.include_options,
         "include_shares_full": args.include_shares_full,
         "stockanalysis_etfs": args.stockanalysis_etfs,
+        "core_daily_basket": args.core_daily_basket,
         "priority": "stockanalysis_etf_aum" if args.stockanalysis_etfs else "ticker",
         "history_gaps_only": args.history_gaps_only,
         "history_min_rows": args.history_min_rows,
+        "untracked_only": args.untracked_only,
+        "untracked_limit": args.untracked_limit,
         "merge_existing": args.merge_existing,
         "empty_reason": reason,
         "errors": [],
@@ -1604,16 +2112,20 @@ def plan_summary(args, tickers, candidate_count):
         "candidate_count_before_filters": candidate_count,
         "profile": args.profile,
         "stockanalysis_etfs": args.stockanalysis_etfs,
+        "core_daily_basket": args.core_daily_basket,
         "priority": "stockanalysis_etf_aum" if args.stockanalysis_etfs else "ticker",
         "history_gaps_only": args.history_gaps_only,
         "history_min_rows": args.history_min_rows,
+        "untracked_only": args.untracked_only,
         "merge_existing": args.merge_existing,
         "limit": args.limit,
         "retry_limit": args.retry_limit,
         "regular_limit": args.regular_limit,
+        "untracked_limit": args.untracked_limit,
         "shard": args.shard,
         "shard_cycle_index": args.shard_cycle_index,
         "scheduled_weekday": args.scheduled_weekday,
+        "scheduled_slot": args.scheduled_slot,
         "stable_shards": args.stable_shards,
         "tickers_override": bool(args.tickers),
         "sample_size": args.plan_sample_size,
@@ -1623,6 +2135,7 @@ def plan_summary(args, tickers, candidate_count):
 
 def yahoo_source_freshness(source_by_ticker, now_iso):
     """Evaluate Yahoo source ages and the canonical bound through the JS contract SSOT."""
+    global _YAHOO_QUOTE_SOURCE_BOUND
     script = """
 import { yahooBusinessDayAge } from './scripts/lib/market-calendar.mjs';
 import { YAHOO_BATCH_MAX_SOURCE_BUSINESS_DAYS } from './scripts/lib/kpi-contract-constants.mjs';
@@ -1653,6 +2166,7 @@ process.stdout.write(JSON.stringify({ ages, max_source_business_days: YAHOO_BATC
     bound = payload.get("max_source_business_days")
     if ages is None or not isinstance(bound, int):
         raise RuntimeError("Yahoo source-age classifier returned an invalid contract shape")
+    _YAHOO_QUOTE_SOURCE_BOUND = bound
     return {"ages": ages, "max_source_business_days": bound}
 
 
@@ -1677,6 +2191,7 @@ def main():
     parser.add_argument("--limit", type=int, default=0)
     parser.add_argument("--retry-limit", type=int, default=None, help="reserve the remaining total limit for regular candidates after this many natural retries")
     parser.add_argument("--regular-limit", type=int, default=None, help="bounded regular candidates per stable-shard cycle page")
+    parser.add_argument("--untracked-limit", type=int, default=None, help="reserve up to N regular slots for the untracked-state campaign")
     parser.add_argument("--shard", type=str, default="", help="i/n e.g. 0/4")
     parser.add_argument("--shard-cycle-index", type=int, default=None, help="monotonic weekly cycle used to rotate bounded stable-shard pages")
     parser.add_argument("--scheduled-weekday", type=int, default=None, help="scheduled Sunday=0 weekday used to bind shard and delayed-run cycle")
@@ -1684,8 +2199,11 @@ def main():
     parser.add_argument("--tickers", type=str, default="", help="comma-separated override")
     parser.add_argument("--stocks-only", action="store_true", help="stock universe only: global-scouter stock detail plus market_facts stock candidates")
     parser.add_argument("--stockanalysis-etfs", action="store_true", help="include the full StockAnalysis ETF universe/screener in the Yahoo candidate set")
+    parser.add_argument("--core-daily-basket", action="store_true", help="scheduled ETF lane: bounded union of the core daily ETF basket and configured major/focus/RIM tracker sets; explicit --tickers overrides this selection; no StockAnalysis universe/screener expansion")
+    parser.add_argument("--scheduled-slot", type=int, default=None, help="slot index within the weekly shard cycle for lanes that run several slots a day")
     parser.add_argument("--history-gaps-only", action="store_true", help="fetch only tickers whose local payload lacks enough 1Y daily history for return facts")
     parser.add_argument("--history-min-rows", type=int, default=200, help="minimum history_1y rows needed to skip a ticker under --history-gaps-only")
+    parser.add_argument("--untracked-only", action="store_true", help="prioritize not-yet-observed regular candidates before reserved maintenance capacity")
     parser.add_argument("--profile", choices=("daily", "core", "full", "etf"), default="full", help="daily=price/history only, core=legacy compact fields, full=bounded extra Yahoo-only depth, etf=fund-focused depth")
     parser.add_argument("--include-options", action="store_true", help=argparse.SUPPRESS)
     parser.add_argument("--include-shares-full", action="store_true", help="fetch full share-count history sample; useful for buyback/dilution backfills")
@@ -1704,6 +2222,7 @@ def main():
     parser.add_argument("--event-name", default=os.environ.get("GITHUB_EVENT_NAME", "local"))
     parser.add_argument("--event-schedule", default=os.environ.get("EVENT_SCHEDULE", ""))
     parser.add_argument("--controlled-failure-tickers", default="", help="manual targeted failure proof; forbidden on schedules")
+    parser.add_argument("--tracker-unadjusted", action="store_true", help="RIM tracker lane only: full-history UNADJUSTED closes for SPY/QQQ/ONEQ/IWM/EWY/SOXX into sibling files; additive, canonical files untouched")
     args = parser.parse_args()
 
     if args.include_options:
@@ -1716,16 +2235,26 @@ def main():
                 if args.scheduled_weekday is not None
                 else 0
             )
+        if args.run_attempt < 1:
+            raise ValueError("run attempt must be positive")
         retries = validate_retry_count(args.retries)
         explicit_tickers = validate_explicit_tickers(args.tickers.split(","))
         if args.retry_limit is not None and args.retry_limit < 0:
             raise ValueError("retry limit must be non-negative")
         if args.regular_limit is not None and args.regular_limit <= 0:
             raise ValueError("regular limit must be positive")
+        if args.untracked_limit is not None and args.untracked_limit < 0:
+            raise ValueError("untracked limit must be non-negative")
+        if (
+            args.untracked_limit is not None
+            and args.regular_limit is not None
+            and args.untracked_limit > args.regular_limit
+        ):
+            raise ValueError("untracked limit must not exceed regular limit")
         if args.shard_cycle_index < 0:
             raise ValueError("shard cycle index must be non-negative")
         validate_ticker_plan_limits(args.limit, args.retry_limit, args.regular_limit)
-        validate_scheduled_shard(args.shard, args.scheduled_weekday)
+        validate_scheduled_shard(args.shard, args.scheduled_weekday, args.scheduled_slot)
     except ValueError as exc:
         parser.error(str(exc))
     controlled_failures = {
@@ -1740,14 +2269,45 @@ def main():
         record_batch_state=args.record_batch_state,
     )
 
-    selection_sources = load_universe_sources(
-        stocks_only=args.stocks_only,
-        stockanalysis_etfs=args.stockanalysis_etfs,
-    )
+    if args.tracker_unadjusted:
+        results = {}
+        for ticker in sorted(RIM_TRACKER_ETFS):
+            try:
+                payload = fetch_tracker_unadjusted_with_retry(ticker)
+                results[ticker] = {
+                    "ok": payload is not None,
+                    "rows": len(payload["data"]["history_unadjusted"]) if payload else 0,
+                    "history_as_of": payload["history_as_of"] if payload else None,
+                }
+            except Exception as exc:  # noqa: BLE001 — lane reports per-ticker failure and continues
+                results[ticker] = {"ok": False, "error": str(exc)}
+        print(stable_json({"tracker_unadjusted": results}, indent=2))
+        return
+
+    if args.core_daily_basket:
+        # Scheduled ETF lane: the candidate universe is the bounded union of
+        # the core daily basket SSOT (fenok-etf-core-daily-basket.json) and
+        # the configured major/focus/RIM tracker ETF sets, labeled truthfully
+        # per source. The ~5,512-name StockAnalysis universe/screener is never
+        # loaded or expanded here.
+        selection_sources = load_core_daily_basket_sources()
+    else:
+        selection_sources = load_universe_sources(
+            stocks_only=args.stocks_only,
+            stockanalysis_etfs=args.stockanalysis_etfs,
+        )
+    # Only the bounded core ETF lane narrows batch-state ownership to its real
+    # candidates. Other stateful lanes retain their historical StockAnalysis
+    # active-universe contract; in particular, the stock lane must not lose
+    # existing ETF state merely because its current fetch selection is stocks.
     universe_sources = (
-        load_universe_sources(stocks_only=False, stockanalysis_etfs=True)
-        if args.record_batch_state
-        else selection_sources
+        selection_sources
+        if args.core_daily_basket
+        else (
+            load_universe_sources(stocks_only=False, stockanalysis_etfs=True)
+            if args.record_batch_state
+            else selection_sources
+        )
     )
     active_universe = set(universe_sources)
     if args.tickers:
@@ -1755,11 +2315,15 @@ def main():
         for ticker in tickers:
             active_universe.add(ticker)
             universe_sources.setdefault(ticker, ["workflow_dispatch"])
+    elif args.core_daily_basket:
+        tickers = list(selection_sources)
     else:
         tickers = sort_universe(selection_sources, stockanalysis_etfs=args.stockanalysis_etfs)
 
     candidate_count = len(tickers)
     state_store = YahooBatchStateStore(YAHOO_BATCH_STATE_ROOT, OUT_DIR) if args.record_batch_state else None
+    if args.untracked_only and state_store is None:
+        parser.error("--untracked-only requires --record-batch-state")
     run_context = {
         "run_id": str(args.run_id),
         "run_attempt": args.run_attempt,
@@ -1767,36 +2331,81 @@ def main():
         "schedule": args.event_schedule,
         "natural": args.natural_run,
         "shard": args.shard,
+        "active_universe_scope": "core_etf" if args.core_daily_basket else "all_sources" if state_store else "selection",
         "observed_at": _observed_now(),
     }
+    eligible_universe = active_universe
+    terminal_evidence = state_store.load_terminal_evidence(S1_STOCK_PROMOTION_DRY_RUN) if state_store else None
+    terminal_tickers = set((terminal_evidence or {}).get("tickers") or {})
     if state_store and not args.plan_only:
-        freshness = yahoo_source_freshness(existing_yahoo_source_dates(active_universe), run_context["observed_at"])
+        freshness = yahoo_source_freshness(existing_yahoo_source_dates(eligible_universe), run_context["observed_at"])
         state_store.bootstrap_existing(
-            active_universe,
+            eligible_universe,
             universe_sources,
             run_context,
-            exclude_tickers=set(tickers),
+            exclude_tickers=bootstrap_exclusions(tickers, untracked_only=args.untracked_only),
             source_age_business_days=freshness["ages"],
             max_source_business_days=freshness["max_source_business_days"],
         )
-    retry_queue = state_store.retry_tickers_ordered(active_universe) if state_store and args.natural_run else []
+        state_store.transition_terminal_tickers(eligible_universe, terminal_evidence, run_context)
+        state_store.reconcile_active_universe(eligible_universe, universe_sources, run_context)
+    retry_queue = (
+        state_store.retry_tickers_ordered(eligible_universe, terminal_tickers)
+        if state_store and args.natural_run
+        else []
+    )
     retry_tickers = set(retry_queue)
     regular_tickers = [ticker for ticker in tickers if ticker not in retry_tickers]
     if args.history_gaps_only:
+        # The scheduled ETF slot runs history-gaps-only, which is a backfill
+        # pass: any ticker whose 1Y history is already complete is dropped here
+        # and never reaches the shard page at all. That is correct for history,
+        # but the RIM trackers are read for their dividend yield, which the
+        # backfill filter cannot see. Keep them regardless of history depth.
+        keep = [t for t in regular_tickers if t in RIM_TRACKER_ETFS]
         regular_tickers = filter_history_gaps(regular_tickers, args.history_min_rows)
+        present = set(regular_tickers)
+        regular_tickers = [*[t for t in keep if t not in present], *regular_tickers]
     selected_universe = set(tickers)
-    planned_tickers = [*[ticker for ticker in retry_queue if ticker in selected_universe], *regular_tickers]
-    tickers = select_ticker_plan(
-        planned_tickers,
-        retry_queue,
-        shard=args.shard,
-        natural=args.natural_run,
-        all_shards=args.all_shards_run,
-        retry_limit=args.retry_limit,
-        stable_shards=args.stable_shards,
-        regular_limit=args.regular_limit,
-        shard_cycle_index=args.shard_cycle_index,
-    )
+
+    if args.untracked_only:
+        untracked_regular = filter_pending_acquisition_candidates(
+            regular_tickers,
+            state_store,
+            eligible_universe,
+            prospective=args.plan_only,
+        )
+        tickers = select_campaign_or_rotation_plan(
+            regular_tickers,
+            untracked_regular,
+            retry_queue,
+            selected_universe,
+            shard=args.shard,
+            natural=args.natural_run,
+            all_shards=args.all_shards_run or args.core_daily_basket,
+            retry_limit=args.retry_limit,
+            stable_shards=args.stable_shards,
+            regular_limit=args.regular_limit,
+            untracked_limit=args.untracked_limit,
+            shard_cycle_index=args.shard_cycle_index,
+            pin_rim_trackers=not args.core_daily_basket,
+            return_retry_overflow_to_regular=args.core_daily_basket,
+        )
+    else:
+        planned_tickers = [*[ticker for ticker in retry_queue if ticker in selected_universe], *regular_tickers]
+        tickers = select_ticker_plan(
+            planned_tickers,
+            retry_queue,
+            shard=args.shard,
+            natural=args.natural_run,
+            all_shards=args.all_shards_run or args.core_daily_basket,
+            retry_limit=args.retry_limit,
+            stable_shards=args.stable_shards,
+            regular_limit=args.regular_limit,
+            shard_cycle_index=args.shard_cycle_index,
+            pin_rim_trackers=not args.core_daily_basket,
+            return_retry_overflow_to_regular=args.core_daily_basket,
+        )
     if args.limit:
         tickers = tickers[: args.limit]
 
@@ -1853,6 +2462,7 @@ def main():
 
     OUT_DIR.mkdir(parents=True, exist_ok=True)
     results = []
+    _ARCHIVE_RUN_COUNTS.update(appended=0, skipped=0, failures=0)
     total_start = time.perf_counter()
 
     for idx, ticker in enumerate(tickers, 1):
@@ -1905,6 +2515,7 @@ def main():
                 "failures": [] if error is None else [{"attempt": 1, "error": error}],
                 "latency_ms": latency_ms,
             }
+        evidence = bounded_failure_evidence(evidence)
         promotion_deferral = None
         provider_observation = None
         if error is None:
@@ -2038,31 +2649,38 @@ def main():
                     size_kb = round(out_path.stat().st_size / 1024, 1)
                     print(f"[{idx}/{len(tickers)}] {ticker} OK {latency_ms}ms {size_kb}KB", flush=True)
             if error is not None:
+                failure_detail = bounded_diagnostic_detail(error)
                 if state_store and promotion_deferral is None:
-                    failure_row = {"ticker": ticker, "error": error, "failures": evidence.get("failures") or []}
+                    failure_row = {"ticker": ticker, "error": failure_detail, "failures": evidence.get("failures") or []}
                     state_store.record_failure(
                         ticker,
-                        error,
+                        failure_detail,
                         run_context,
                         universe_sources.get(ticker, []),
                         evidence,
                         failure_kind=yahoo_failure_kind(failure_row, event_name=args.event_name),
                     )
-                print(f"[{idx}/{len(tickers)}] {ticker} FAIL: {error[:80]}", flush=True)
+                print(f"[{idx}/{len(tickers)}] {ticker} FAIL: {failure_detail}", flush=True)
         else:
+            failure_detail = bounded_diagnostic_detail(error)
             record_finance_failure(ticker, error)
             if state_store:
-                failure_row = {"ticker": ticker, "error": error, "failures": evidence.get("failures") or []}
+                failure_row = {"ticker": ticker, "error": failure_detail, "failures": evidence.get("failures") or []}
                 state_store.record_failure(
                     ticker,
-                    error,
+                    failure_detail,
                     run_context,
                     universe_sources.get(ticker, []),
                     evidence,
                     failure_kind=yahoo_failure_kind(failure_row, event_name=args.event_name),
                 )
-            print(f"[{idx}/{len(tickers)}] {ticker} FAIL: {error[:80]}", flush=True)
-        result = {"ticker": ticker, "latency_ms": latency_ms, "error": error, "skipped": False}
+            print(f"[{idx}/{len(tickers)}] {ticker} FAIL: {failure_detail}", flush=True)
+        result = {
+            "ticker": ticker,
+            "latency_ms": latency_ms,
+            "error": bounded_diagnostic_detail(error) if error is not None else None,
+            "skipped": False,
+        }
         if error is not None:
             result["failure_kind"] = promotion_deferral or yahoo_failure_kind(
                 {"ticker": ticker, "error": error, "failures": evidence.get("failures") or []},
@@ -2092,8 +2710,11 @@ def main():
         "priority": "stockanalysis_etf_aum" if args.stockanalysis_etfs else "ticker",
         "history_gaps_only": args.history_gaps_only,
         "history_min_rows": args.history_min_rows,
+        "untracked_only": args.untracked_only,
+        "untracked_limit": args.untracked_limit,
         "merge_existing": args.merge_existing,
         "candidate_count_before_filters": candidate_count,
+        "estimates_archive": dict(_ARCHIVE_RUN_COUNTS),
         "errors": errors,
     }
     (OUT_DIR / "_summary.json").write_text(stable_json(summary, indent=2), encoding="utf-8")

@@ -8,7 +8,7 @@
  * then aggregate across investors into bought/sold rankings.
  *
  * Run: node scripts/build-13f-trades.mjs
- * Output: data/sec-13f/analytics/trades_ranking.json (+ public mirror)
+ * Output: data/sec-13f/analytics/trades_ranking.json
  */
 
 import fs from "node:fs";
@@ -26,10 +26,6 @@ const ROOT = path.resolve(__dirname, "..");
 
 const INVESTORS_DIR = path.join(ROOT, "data/sec-13f/investors");
 const OUTPUT = path.join(ROOT, "data/sec-13f/analytics/trades_ranking.json");
-const PUBLIC_MIRROR_DIR = path.join(
-  ROOT,
-  "100xfenok-next/public/data/sec-13f/analytics",
-);
 const SECTOR_MAP_PATH = path.join(
   ROOT,
   "100xfenok-next/src/lib/design/sector-map.json",
@@ -44,11 +40,6 @@ const TOP_N = 50;
 function writeJson(filePath, data) {
   fs.mkdirSync(path.dirname(filePath), { recursive: true });
   fs.writeFileSync(filePath, JSON.stringify(data, null, 2));
-}
-
-function writeBoth(rootPath, data) {
-  writeJson(rootPath, data);
-  writeJson(path.join(PUBLIC_MIRROR_DIR, path.basename(rootPath)), data);
 }
 
 function median(values) {
@@ -284,11 +275,10 @@ const output = {
   sold: toRanking(sold, "exit_count"),
 };
 
-writeBoth(OUTPUT, output);
+writeJson(OUTPUT, output);
 
 console.log(
   `trades_ranking: quarter=${latestQuarter} cohort=${included.length}/${investors.length} ` +
     `bought=${bought.size} sold=${sold.size} (top ${TOP_N} each) skippedNoPrice=${skippedNoPrice}`,
 );
 console.log(`written: ${OUTPUT}`);
-console.log(`mirror:  ${path.join(PUBLIC_MIRROR_DIR, path.basename(OUTPUT))}`);

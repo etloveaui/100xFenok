@@ -14,11 +14,13 @@ import {
   applyYfForwardFallback,
   extractYfForwardEnrichment,
 } from "./lib/yf-screener-enrichment.mjs";
+import {
+  CALENDAR_RETURN_PERIODS,
+  compoundCalendarReturns,
+} from "./lib/screener-return-periods.mjs";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const ROOT = path.resolve(__dirname, "..");
-
-const PUBLIC_MIRROR = path.join(ROOT, "100xfenok-next/public/data/global-scouter/core");
 
 const PATHS = {
   stocksIndex: path.join(ROOT, "data/global-scouter/core/stocks_index.json"),
@@ -35,12 +37,6 @@ const PATHS = {
 function writeJson(filePath, data) {
   fs.mkdirSync(path.dirname(filePath), { recursive: true });
   fs.writeFileSync(filePath, JSON.stringify(data, null, 2));
-}
-
-function writeBoth(rootPath, data) {
-  writeJson(rootPath, data);
-  const mirrorPath = path.join(PUBLIC_MIRROR, path.basename(rootPath));
-  writeJson(mirrorPath, data);
 }
 
 function toFiniteNumber(value) {
@@ -72,6 +68,16 @@ function completeSourceFloor(values) {
   return dates.length > 0 && dates.every(Boolean) ? [...dates].sort().at(0) : null;
 }
 
+function canonicalScouterTicker(value, existing, source) {
+  // The provider renamed these worksheets in September 2026. Keep the
+  // platform's dotted identities while leaving the raw evidence unchanged.
+  const ticker = value === "BRKA" ? "BRK.A" : value === "BRKB" ? "BRK.B" : value;
+  if ((ticker === "BRK.A" || ticker === "BRK.B") && existing.has(ticker)) {
+    throw new Error(`Ambiguous Global Scouter alias for ${ticker} in ${source}`);
+  }
+  return ticker;
+}
+
 /* ── 1. stocks_index (base) ── */
 const index = loadJson(PATHS.stocksIndex);
 
@@ -81,7 +87,7 @@ const cmMap = new Map();
 
 for (const rec of cm.records) {
   const v = rec.values;
-  const ticker = rec.key;
+  const ticker = canonicalScouterTicker(rec.key, cmMap, "company master");
   if (!ticker) continue;
 
   cmMap.set(ticker, {
@@ -117,7 +123,7 @@ const globalScouterSourceDateReason = globalScouterSourceDate
 const EPS_SECTION_INDICES = [21, 22, 23, 24, 25, 26];
 
 for (const rec of ec.records) {
-  const ticker = rec.key;
+  const ticker = canonicalScouterTicker(rec.key, ecMap, "EPS consensus");
   if (!ticker) continue;
 
   let eps;
@@ -142,6 +148,17 @@ for (const [symbol] of Object.entries(index.stocks)) {
     detail = loadJson(path.join(PATHS.stocksDetailDir, `${symbol}.json`));
   } catch {
     // detail file missing
+  }
+
+  // Structured consensus carries converter quality decisions. An empty or
+  // rejected series is authoritative and must not be back-filled from raw EPS.
+  const epsWeekly = detail?.eps_consensus?.weekly?.fy_plus_1;
+  if (Array.isArray(epsWeekly)) {
+    const observations = epsWeekly
+      .map((point) => ({ date: sourceDate(point?.date), value: toFiniteNumber(point?.value) }))
+      .filter((point) => point.date && point.value !== undefined)
+      .sort((a, b) => b.date.localeCompare(a.date));
+    ecMap.set(symbol, { eps: observations[0]?.value });
   }
 
   const pb = detail?.per_bands;
@@ -178,26 +195,14 @@ for (const [symbol] of Object.entries(index.stocks)) {
   const epsForward = toFiniteNumber(slick.current.eps_forward);
   const dividendTtm = toFiniteNumber(slick.current.dividend_ttm);
 
-  // Returns: 1Y = 2025, 3Y = cumulative 2023-2025, 5Y = cumulative 2021-2025
+  // Compatibility field names are retained for saved screens. Values are
+  // fixed calendar-year windows, not rolling 1/3/5-year returns.
   let ret1y, ret3y, ret5y;
   const returns = slick.returns;
   if (Array.isArray(returns)) {
-    const byYear = new Map(returns.map((r) => [r.year, r.return]));
-
-    const r25 = byYear.get(2025);
-    if (r25 !== undefined) ret1y = r25 / 100;
-
-    const r23 = byYear.get(2023);
-    const r24 = byYear.get(2024);
-    if (r23 !== undefined && r24 !== undefined && r25 !== undefined) {
-      ret3y = (1 + r23 / 100) * (1 + r24 / 100) * (1 + r25 / 100) - 1;
-    }
-
-    const years5 = [2021, 2022, 2023, 2024, 2025];
-    const vals5 = years5.map((y) => byYear.get(y)).filter((v) => v !== undefined);
-    if (vals5.length === 5) {
-      ret5y = vals5.reduce((acc, v) => acc * (1 + v / 100), 1) - 1;
-    }
+    ret1y = compoundCalendarReturns(returns, CALENDAR_RETURN_PERIODS.ret1y.years);
+    ret3y = compoundCalendarReturns(returns, CALENDAR_RETURN_PERIODS.ret3y.years);
+    ret5y = compoundCalendarReturns(returns, CALENDAR_RETURN_PERIODS.ret5y.years);
   }
 
   slickMap.set(symbol, {
@@ -258,6 +263,20 @@ for (const [symbol, idx] of Object.entries(index.stocks)) {
 
   if (yfForwardRec) yfFallbackStats.matchedRows += 1;
 
+  // The converter deliberately nulls market-cap-over-statement ratios on rows
+  // where the workbook put market cap and the financial statements in different
+  // units (data_quality.affected_fields). Falling back to the company-master
+  // copy would silently restore the very number that was suppressed - measured:
+  // SKHY reached the screener at PBR 31.5 after the converter had nulled it,
+  // because `idx.pb ?? cmRec.pbr` treated the deliberate null as "missing".
+  // A suppressed field is a decision, not a gap, so it must not be back-filled.
+  const suppressedFields = new Set(
+    Array.isArray(idx?.data_quality?.affected_fields) ? idx.data_quality.affected_fields : [],
+  );
+  const preferIndex = (field, indexValue, fallbackValue) => (
+    suppressedFields.has(field) ? null : (toFiniteNumber(indexValue) ?? fallbackValue)
+  );
+
   merged.push({
     symbol,
     companyName: idx.n || cmRec.companyName || symbol,
@@ -267,7 +286,7 @@ for (const [symbol, idx] of Object.entries(index.stocks)) {
     price: toFiniteNumber(idx.p),
     marketCap: toFiniteNumber(idx.mc) ?? cmRec.marketCap,
     per: toFiniteNumber(idx.pe) ?? cmRec.per,
-    pbr: toFiniteNumber(idx.pb) ?? cmRec.pbr,
+    pbr: preferIndex("pbr", idx.pb, cmRec.pbr),
     dividendYield: toFiniteNumber(idx.dy),
     return12m: toFiniteNumber(idx.r12),
     roe: cmRec.roe,
@@ -338,6 +357,7 @@ const output = {
   source_date: globalScouterSourceDate,
   source_date_reason: globalScouterSourceDateReason,
   source_dates: globalScouterSourceDates,
+  calendar_return_periods: CALENDAR_RETURN_PERIODS,
   enrichment: {
     yf_finance: {
       mode: "fallback_only",
@@ -363,8 +383,8 @@ const output = {
   data: merged,
 };
 
-writeBoth(PATHS.output, output);
-console.log(`[build-stocks-analyzer] Written ${merged.length} stocks to ${PATHS.output} + mirror`);
+writeJson(PATHS.output, output);
+console.log(`[build-stocks-analyzer] Written ${merged.length} stocks to ${PATHS.output}`);
 
 /* ── 8. per_bands_index.json ── */
 const perBandsOutput = {
@@ -375,8 +395,8 @@ const perBandsOutput = {
   count: Object.keys(perBands).length,
   data: perBands,
 };
-writeBoth(PATHS.perBandsOutput, perBandsOutput);
-console.log(`[build-stocks-analyzer] Written ${perBandsOutput.count} per-band records to ${PATHS.perBandsOutput} + mirror`);
+writeJson(PATHS.perBandsOutput, perBandsOutput);
+console.log(`[build-stocks-analyzer] Written ${perBandsOutput.count} per-band records to ${PATHS.perBandsOutput}`);
 
 /* ── 9. slick_index.json ── */
 const slickIndex = {};
@@ -395,6 +415,7 @@ const slickOutput = {
   generated_at: new Date().toISOString(),
   source_date: slickSourceDate,
   source_date_reason: slickSourceDateReason,
+  calendar_return_periods: CALENDAR_RETURN_PERIODS,
   source_date_coverage: {
     dated_rows: slickSourceDates.length - slickMissingSourceDates,
     total_rows: slickSourceDates.length,
@@ -402,8 +423,8 @@ const slickOutput = {
   count: Object.keys(slickIndex).length,
   data: slickIndex,
 };
-writeBoth(PATHS.slickOutput, slickOutput);
-console.log(`[build-stocks-analyzer] Written ${slickOutput.count} slick records to ${PATHS.slickOutput} + mirror`);
+writeJson(PATHS.slickOutput, slickOutput);
+console.log(`[build-stocks-analyzer] Written ${slickOutput.count} slick records to ${PATHS.slickOutput}`);
 
 /* ── 10. Smoke check ── */
 const samples = ["AAPL", "NVDA", "MSFT"];

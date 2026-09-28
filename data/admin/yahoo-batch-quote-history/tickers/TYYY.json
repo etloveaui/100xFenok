@@ -1,0 +1,89 @@
+{
+  "attempts": [
+    {
+      "attempts_used": 1,
+      "event_name": "schedule",
+      "failures": [],
+      "latency_ms": 580,
+      "natural": true,
+      "observed_at": "2026-08-07T15:04:20Z",
+      "outcome": "fresh",
+      "run_attempt": 1,
+      "run_id": "31190633378",
+      "schedule": "7 14 * * 0-5",
+      "shard": "67/72"
+    },
+    {
+      "attempts_used": 1,
+      "event_name": "workflow_dispatch",
+      "failures": [],
+      "latency_ms": 463,
+      "natural": false,
+      "observed_at": "2026-09-28T06:30:00Z",
+      "outcome": "fresh",
+      "run_attempt": 1,
+      "run_id": "36367836615",
+      "schedule": "",
+      "shard": ""
+    }
+  ],
+  "current": {
+    "fetched_at": "2026-09-28T06:36:36Z",
+    "history_as_of": "2026-09-25",
+    "path": "data/yf/finance/TYYY.json",
+    "payload_sha256": "87ec43264e4bab3ba29d41fe5b8abd9acc17c62c256e1700e970e783ee19771f",
+    "quote_as_of": "2026-09-24T13:44:19Z",
+    "source_as_of": "2026-09-24T13:44:19Z"
+  },
+  "discovered_from": [
+    "stockanalysis_etf"
+  ],
+  "last_attempt": {
+    "attempts_used": 1,
+    "event_name": "workflow_dispatch",
+    "failures": [],
+    "latency_ms": 463,
+    "natural": false,
+    "observed_at": "2026-09-28T06:30:00Z",
+    "outcome": "fresh",
+    "run_attempt": 1,
+    "run_id": "36367836615",
+    "schedule": "",
+    "shard": ""
+  },
+  "lkg": {
+    "fetched_at": "2026-08-07T15:07:38Z",
+    "history_as_of": "2026-08-06",
+    "path": "data/admin/yahoo-batch-quote-history/lkg/TYYY.json",
+    "payload_sha256": "88dcdc96227c0e9c6171ea9594244d1603f64015a77e373157a2d28d6c2e511f",
+    "quote_as_of": "2026-08-04T14:06:04Z",
+    "source_as_of": "2026-08-04T14:06:04Z"
+  },
+  "promotion_contract": "provider_observation/v2",
+  "provider_observation": {
+    "event_name": "workflow_dispatch",
+    "history_as_of": "2026-09-25",
+    "observed_at": "2026-09-28T06:30:00Z",
+    "payload_sha256": "ad19d21fea44d74df451862a62c279486c9ec52ced467d54e4c4fe768bdae6a4",
+    "quote_as_of": "2026-09-24T13:44:19Z",
+    "run_attempt": 1,
+    "run_id": "36367836615",
+    "schema_version": "provider_observation/v2",
+    "source_as_of": "2026-09-24T13:44:19Z"
+  },
+  "resolution_state": "fresh_primary",
+  "retry": false,
+  "schema_version": "yahoo-batch-quote-history-state/v1",
+  "stale": {
+    "age_business_days": 7,
+    "classified_at": "2026-08-13T00:06:17Z",
+    "classified_run_id": "31652949582",
+    "expected_resolution": "next_natural_yahoo_run",
+    "max_business_days": 6,
+    "message": "TYYY holds LKG because Yahoo source date 2026-08-04T14:06:04Z is 7 business days old, beyond the 6-day bound; it will retry on the next natural Yahoo run.",
+    "reason": "source_age_exceeds_lane_bound",
+    "source_as_of": "2026-08-04T14:06:04Z"
+  },
+  "ticker": "TYYY",
+  "updated_at": "2026-09-28T06:30:00Z"
+}

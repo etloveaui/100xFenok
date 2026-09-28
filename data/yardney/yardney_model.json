@@ -4,9 +4,9 @@
     "model_version": "feno_yardeni_fred_v1",
     "description": "Feno Yardeni Bond PER to S&P 500 Fair Value",
     "frequency": "weekly",
-    "date_range": "1990-02-02 ~ 2026-07-17",
-    "total_records": 1890,
-    "generated_at": "2026-07-21T01:35:56.495Z",
+    "date_range": "1990-02-02 ~ 2026-09-18",
+    "total_records": 1899,
+    "generated_at": "2026-09-28T08:11:16.012Z",
     "generated_by": "build-feno-yardeni-model.mjs",
     "calculation_source": "FRED series/observations API corporate bond yields plus 100x benchmark S&P 500 price/EPS; benchmark EPS/SPX currently comes from the existing Bloomberg-sourced benchmarks pipeline; pre-benchmark history preserved from verified seed.",
     "source_components": {
@@ -14,12 +14,12 @@
         {
           "series_id": "WAAA",
           "label": "Moody's Seasoned Aaa Corporate Bond Yield",
-          "latest_date": "2026-07-17"
+          "latest_date": "2026-09-18"
         },
         {
           "series_id": "WBAA",
           "label": "Moody's Seasoned Baa Corporate Bond Yield",
-          "latest_date": "2026-07-17"
+          "latest_date": "2026-09-18"
         }
       ],
       "spx_eps_input": {
@@ -30,8 +30,8 @@
           "best_eps"
         ],
         "source": "Bloomberg Terminal",
-        "version": "2026-07-17",
-        "generated": "2026-07-21T10:31:49.922965"
+        "version": "2026-09-25",
+        "generated": "2026-09-28T16:42:47.393143"
       },
       "preserved_seed_input": {
         "file": "data/yardney/yardney_model.json",
@@ -47,12 +47,14 @@
     "last_update": {
       "mode": "feno_yardeni_rebuild",
       "seed_preserved_records": 1026,
-      "computed_records": 864,
-      "skipped_benchmark_records": 0,
-      "skipped_benchmark_dates_sample": [],
+      "computed_records": 873,
+      "skipped_benchmark_records": 1,
+      "skipped_benchmark_dates_sample": [
+        "2026-09-25"
+      ],
       "first_computed_date": "2010-01-01",
-      "last_computed_date": "2026-07-17",
-      "last_public_date": "2026-07-17"
+      "last_computed_date": "2026-09-18",
+      "last_public_date": "2026-09-18"
     },
     "columns": {
       "date": "Weekly Friday date",
@@ -8278,362 +8280,362 @@
     {
       "date": "2010-01-01",
       "spx": 1115.1,
-      "eps": 78.6127,
+      "eps": 78.5458,
       "bond_per": 17.02,
-      "fair_value": 1337.99,
-      "premium_pct": -16.66
+      "fair_value": 1336.85,
+      "premium_pct": -16.59
     },
     {
       "date": "2010-01-08",
       "spx": 1144.98,
-      "eps": 79.1824,
+      "eps": 79.1159,
       "bond_per": 17.18,
-      "fair_value": 1360.35,
-      "premium_pct": -15.83
+      "fair_value": 1359.21,
+      "premium_pct": -15.76
     },
     {
       "date": "2010-01-15",
       "spx": 1136.03,
-      "eps": 79.6816,
+      "eps": 79.6146,
       "bond_per": 17.41,
-      "fair_value": 1387.26,
-      "premium_pct": -18.11
+      "fair_value": 1386.09,
+      "premium_pct": -18.04
     },
     {
       "date": "2010-01-22",
       "spx": 1091.76,
-      "eps": 80.3325,
+      "eps": 80.2652,
       "bond_per": 17.57,
-      "fair_value": 1411.44,
-      "premium_pct": -22.65
+      "fair_value": 1410.26,
+      "premium_pct": -22.58
     },
     {
       "date": "2010-01-29",
       "spx": 1073.87,
-      "eps": 80.9644,
+      "eps": 80.8962,
       "bond_per": 17.38,
-      "fair_value": 1407.16,
-      "premium_pct": -23.69
+      "fair_value": 1405.98,
+      "premium_pct": -23.62
     },
     {
       "date": "2010-02-05",
       "spx": 1066.19,
-      "eps": 81.372,
+      "eps": 81.3045,
       "bond_per": 17.33,
-      "fair_value": 1410.18,
-      "premium_pct": -24.39
+      "fair_value": 1409.01,
+      "premium_pct": -24.33
     },
     {
       "date": "2010-02-12",
       "spx": 1075.51,
-      "eps": 81.7456,
+      "eps": 81.679,
       "bond_per": 17.06,
-      "fair_value": 1394.58,
-      "premium_pct": -22.88
+      "fair_value": 1393.44,
+      "premium_pct": -22.82
     },
     {
       "date": "2010-02-19",
       "spx": 1109.17,
-      "eps": 81.7603,
+      "eps": 81.6908,
       "bond_per": 16.82,
-      "fair_value": 1375.21,
-      "premium_pct": -19.35
+      "fair_value": 1374.04,
+      "premium_pct": -19.28
     },
     {
       "date": "2010-02-26",
       "spx": 1104.49,
-      "eps": 82.1603,
+      "eps": 82.0914,
       "bond_per": 17.18,
-      "fair_value": 1411.51,
-      "premium_pct": -21.75
+      "fair_value": 1410.33,
+      "premium_pct": -21.69
     },
     {
       "date": "2010-03-05",
       "spx": 1138.7,
-      "eps": 82.5848,
+      "eps": 82.5155,
       "bond_per": 17.39,
-      "fair_value": 1436.15,
-      "premium_pct": -20.71
+      "fair_value": 1434.94,
+      "premium_pct": -20.64
     },
     {
       "date": "2010-03-12",
       "spx": 1149.99,
-      "eps": 82.8426,
+      "eps": 82.7759,
       "bond_per": 17.27,
-      "fair_value": 1430.69,
-      "premium_pct": -19.62
+      "fair_value": 1429.54,
+      "premium_pct": -19.56
     },
     {
       "date": "2010-03-19",
       "spx": 1159.9,
-      "eps": 83.0832,
+      "eps": 83.0239,
       "bond_per": 17.51,
-      "fair_value": 1454.79,
-      "premium_pct": -20.27
+      "fair_value": 1453.75,
+      "premium_pct": -20.21
     },
     {
       "date": "2010-03-26",
       "spx": 1166.59,
-      "eps": 83.3672,
+      "eps": 83.2976,
       "bond_per": 17.27,
-      "fair_value": 1439.75,
-      "premium_pct": -18.97
+      "fair_value": 1438.55,
+      "premium_pct": -18.91
     },
     {
       "date": "2010-04-02",
       "spx": 1178.1,
-      "eps": 83.7064,
+      "eps": 83.6391,
       "bond_per": 17.08,
-      "fair_value": 1429.71,
-      "premium_pct": -17.6
+      "fair_value": 1428.56,
+      "premium_pct": -17.53
     },
     {
       "date": "2010-04-09",
       "spx": 1194.37,
-      "eps": 84.0605,
+      "eps": 83.9954,
       "bond_per": 17.01,
-      "fair_value": 1429.87,
-      "premium_pct": -16.47
+      "fair_value": 1428.76,
+      "premium_pct": -16.41
     },
     {
       "date": "2010-04-16",
       "spx": 1192.13,
-      "eps": 84.7778,
+      "eps": 84.7136,
       "bond_per": 17.33,
-      "fair_value": 1469.2,
-      "premium_pct": -18.86
+      "fair_value": 1468.09,
+      "premium_pct": -18.8
     },
     {
       "date": "2010-04-23",
       "spx": 1217.28,
-      "eps": 86.239,
+      "eps": 86.1717,
       "bond_per": 17.47,
-      "fair_value": 1506.6,
-      "premium_pct": -19.2
+      "fair_value": 1505.42,
+      "premium_pct": -19.14
     },
     {
       "date": "2010-04-30",
       "spx": 1186.69,
-      "eps": 87.2364,
+      "eps": 87.17,
       "bond_per": 17.64,
-      "fair_value": 1538.85,
-      "premium_pct": -22.88
+      "fair_value": 1537.68,
+      "premium_pct": -22.83
     },
     {
       "date": "2010-05-07",
       "spx": 1110.89,
-      "eps": 87.9097,
+      "eps": 87.8471,
       "bond_per": 18.21,
-      "fair_value": 1600.84,
-      "premium_pct": -30.61
+      "fair_value": 1599.7,
+      "premium_pct": -30.56
     },
     {
       "date": "2010-05-14",
       "spx": 1135.68,
-      "eps": 88.286,
+      "eps": 88.2261,
       "bond_per": 17.87,
-      "fair_value": 1577.67,
-      "premium_pct": -28.02
+      "fair_value": 1576.6,
+      "premium_pct": -27.97
     },
     {
       "date": "2010-05-21",
       "spx": 1087.69,
-      "eps": 88.6873,
+      "eps": 88.6204,
       "bond_per": 18.4,
-      "fair_value": 1631.85,
-      "premium_pct": -33.35
+      "fair_value": 1630.62,
+      "premium_pct": -33.3
     },
     {
       "date": "2010-05-28",
       "spx": 1089.41,
-      "eps": 88.9113,
+      "eps": 88.8517,
       "bond_per": 18.17,
-      "fair_value": 1615.52,
-      "premium_pct": -32.57
+      "fair_value": 1614.44,
+      "premium_pct": -32.52
     },
     {
       "date": "2010-06-04",
       "spx": 1064.88,
-      "eps": 89.1618,
+      "eps": 89.1015,
       "bond_per": 17.86,
-      "fair_value": 1592.43,
-      "premium_pct": -33.13
+      "fair_value": 1591.35,
+      "premium_pct": -33.08
     },
     {
       "date": "2010-06-11",
       "spx": 1091.6,
-      "eps": 89.488,
+      "eps": 89.4347,
       "bond_per": 17.97,
-      "fair_value": 1608.1,
-      "premium_pct": -32.12
+      "fair_value": 1607.14,
+      "premium_pct": -32.08
     },
     {
       "date": "2010-06-18",
       "spx": 1117.51,
-      "eps": 89.655,
+      "eps": 89.6026,
       "bond_per": 17.78,
-      "fair_value": 1594.07,
-      "premium_pct": -29.9
+      "fair_value": 1593.13,
+      "premium_pct": -29.85
     },
     {
       "date": "2010-06-25",
       "spx": 1076.77,
-      "eps": 89.6528,
+      "eps": 89.5987,
       "bond_per": 18.08,
-      "fair_value": 1620.92,
-      "premium_pct": -33.57
+      "fair_value": 1619.94,
+      "premium_pct": -33.53
     },
     {
       "date": "2010-07-02",
       "spx": 1022.58,
-      "eps": 89.8519,
+      "eps": 89.8002,
       "bond_per": 18.6,
-      "fair_value": 1671.25,
-      "premium_pct": -38.81
+      "fair_value": 1670.28,
+      "premium_pct": -38.78
     },
     {
       "date": "2010-07-09",
       "spx": 1077.96,
-      "eps": 89.9535,
+      "eps": 89.9024,
       "bond_per": 18.52,
-      "fair_value": 1665.94,
-      "premium_pct": -35.29
+      "fair_value": 1664.99,
+      "premium_pct": -35.26
     },
     {
       "date": "2010-07-16",
       "spx": 1064.88,
-      "eps": 90.4774,
+      "eps": 90.4212,
       "bond_per": 18.47,
-      "fair_value": 1671.12,
-      "premium_pct": -36.28
+      "fair_value": 1670.08,
+      "premium_pct": -36.24
     },
     {
       "date": "2010-07-23",
       "spx": 1102.66,
-      "eps": 90.748,
+      "eps": 90.6885,
       "bond_per": 18.78,
-      "fair_value": 1704.25,
-      "premium_pct": -35.3
+      "fair_value": 1703.13,
+      "premium_pct": -35.26
     },
     {
       "date": "2010-07-30",
       "spx": 1101.6,
-      "eps": 91.1751,
+      "eps": 91.1201,
       "bond_per": 18.69,
-      "fair_value": 1704.06,
-      "premium_pct": -35.35
+      "fair_value": 1703.03,
+      "premium_pct": -35.32
     },
     {
       "date": "2010-08-06",
       "spx": 1121.64,
-      "eps": 91.6799,
+      "eps": 91.4363,
       "bond_per": 18.89,
-      "fair_value": 1731.83,
-      "premium_pct": -35.23
+      "fair_value": 1727.23,
+      "premium_pct": -35.06
     },
     {
       "date": "2010-08-13",
       "spx": 1079.25,
-      "eps": 91.817,
+      "eps": 91.5594,
       "bond_per": 19.27,
-      "fair_value": 1769.31,
-      "premium_pct": -39
+      "fair_value": 1764.35,
+      "premium_pct": -38.83
     },
     {
       "date": "2010-08-20",
       "spx": 1071.69,
-      "eps": 91.9682,
+      "eps": 91.7624,
       "bond_per": 20.08,
-      "fair_value": 1846.72,
-      "premium_pct": -41.97
+      "fair_value": 1842.59,
+      "premium_pct": -41.84
     },
     {
       "date": "2010-08-27",
       "spx": 1064.59,
-      "eps": 92.1245,
+      "eps": 91.915,
       "bond_per": 20.37,
-      "fair_value": 1876.58,
-      "premium_pct": -43.27
+      "fair_value": 1872.31,
+      "premium_pct": -43.14
     },
     {
       "date": "2010-09-03",
       "spx": 1104.51,
-      "eps": 92.259,
+      "eps": 92.0605,
       "bond_per": 20.04,
-      "fair_value": 1848.87,
-      "premium_pct": -40.26
+      "fair_value": 1844.89,
+      "premium_pct": -40.13
     },
     {
       "date": "2010-09-10",
       "spx": 1109.55,
-      "eps": 92.4754,
+      "eps": 92.264,
       "bond_per": 19.67,
-      "fair_value": 1818.99,
-      "premium_pct": -39
+      "fair_value": 1814.83,
+      "premium_pct": -38.86
     },
     {
       "date": "2010-09-17",
       "spx": 1125.59,
-      "eps": 92.5857,
+      "eps": 92.3634,
       "bond_per": 19.38,
-      "fair_value": 1794.31,
-      "premium_pct": -37.27
+      "fair_value": 1790,
+      "premium_pct": -37.12
     },
     {
       "date": "2010-09-24",
       "spx": 1148.67,
-      "eps": 92.9719,
+      "eps": 92.6776,
       "bond_per": 19.59,
-      "fair_value": 1821.32,
-      "premium_pct": -36.93
+      "fair_value": 1815.55,
+      "premium_pct": -36.73
     },
     {
       "date": "2010-10-01",
       "spx": 1146.24,
-      "eps": 93.2109,
+      "eps": 92.9166,
       "bond_per": 19.8,
-      "fair_value": 1845.58,
-      "premium_pct": -37.89
+      "fair_value": 1839.75,
+      "premium_pct": -37.7
     },
     {
       "date": "2010-10-08",
       "spx": 1165.15,
-      "eps": 93.4554,
+      "eps": 93.1605,
       "bond_per": 19.7,
-      "fair_value": 1841.07,
-      "premium_pct": -36.71
+      "fair_value": 1835.26,
+      "premium_pct": -36.51
     },
     {
       "date": "2010-10-15",
       "spx": 1176.19,
-      "eps": 93.6729,
+      "eps": 93.2847,
       "bond_per": 19.16,
-      "fair_value": 1794.77,
-      "premium_pct": -34.47
+      "fair_value": 1787.33,
+      "premium_pct": -34.19
     },
     {
       "date": "2010-10-22",
       "spx": 1183.08,
-      "eps": 94.1823,
+      "eps": 93.7702,
       "bond_per": 19.1,
-      "fair_value": 1798.88,
-      "premium_pct": -34.23
+      "fair_value": 1791.01,
+      "premium_pct": -33.94
     },
     {
       "date": "2010-10-29",
       "spx": 1183.26,
-      "eps": 94.1749,
+      "eps": 93.761,
       "bond_per": 18.92,
-      "fair_value": 1781.79,
-      "premium_pct": -33.59
+      "fair_value": 1773.96,
+      "premium_pct": -33.3
     },
     {
       "date": "2010-11-05",
       "spx": 1225.85,
-      "eps": 94.32,
+      "eps": 93.9466,
       "bond_per": 18.98,
-      "fair_value": 1790.19,
-      "premium_pct": -31.52
+      "fair_value": 1783.11,
+      "premium_pct": -31.25
     },
     {
       "date": "2010-11-12",
@@ -15134,58 +15136,130 @@
     {
       "date": "2026-06-05",
       "spx": 7383.74,
-      "eps": 362.0441,
+      "eps": 362.1419,
       "bond_per": 17.36,
-      "fair_value": 6285.09,
-      "premium_pct": 17.48
+      "fair_value": 6286.78,
+      "premium_pct": 17.45
     },
     {
       "date": "2026-06-12",
       "spx": 7431.46,
-      "eps": 363.7763,
+      "eps": 363.644,
       "bond_per": 17.26,
-      "fair_value": 6278.78,
-      "premium_pct": 18.36
+      "fair_value": 6276.5,
+      "premium_pct": 18.4
     },
     {
       "date": "2026-06-19",
       "spx": 7500.58,
-      "eps": 365.1259,
+      "eps": 365.0434,
       "bond_per": 17.39,
-      "fair_value": 6349.54,
-      "premium_pct": 18.13
+      "fair_value": 6348.1,
+      "premium_pct": 18.15
     },
     {
       "date": "2026-06-26",
       "spx": 7354.02,
-      "eps": 368.7062,
+      "eps": 368.8234,
       "bond_per": 17.42,
-      "fair_value": 6422.86,
-      "premium_pct": 14.5
+      "fair_value": 6424.9,
+      "premium_pct": 14.46
     },
     {
       "date": "2026-07-03",
       "spx": 7483.24,
-      "eps": 370.6732,
+      "eps": 370.7959,
       "bond_per": 17.32,
-      "fair_value": 6420.06,
-      "premium_pct": 16.56
+      "fair_value": 6422.18,
+      "premium_pct": 16.52
     },
     {
       "date": "2026-07-10",
       "spx": 7575.39,
-      "eps": 371.4088,
+      "eps": 371.2769,
       "bond_per": 16.99,
-      "fair_value": 6310.24,
-      "premium_pct": 20.05
+      "fair_value": 6307.99,
+      "premium_pct": 20.09
     },
     {
       "date": "2026-07-17",
       "spx": 7457.69,
-      "eps": 374.5481,
+      "eps": 374.5194,
       "bond_per": 16.81,
-      "fair_value": 6296.15,
-      "premium_pct": 18.45
+      "fair_value": 6295.67,
+      "premium_pct": 18.46
+    },
+    {
+      "date": "2026-07-24",
+      "spx": 7411.98,
+      "eps": 379.3284,
+      "bond_per": 16.56,
+      "fair_value": 6281.68,
+      "premium_pct": 17.99
+    },
+    {
+      "date": "2026-07-31",
+      "spx": 7489.72,
+      "eps": 383.9668,
+      "bond_per": 16.43,
+      "fair_value": 6308.57,
+      "premium_pct": 18.72
+    },
+    {
+      "date": "2026-08-07",
+      "spx": 7757.64,
+      "eps": 386.3441,
+      "bond_per": 16.49,
+      "fair_value": 6370.81,
+      "premium_pct": 21.77
+    },
+    {
+      "date": "2026-08-14",
+      "spx": 7785.76,
+      "eps": 388.1895,
+      "bond_per": 16.35,
+      "fair_value": 6346.9,
+      "premium_pct": 22.67
+    },
+    {
+      "date": "2026-08-21",
+      "spx": 7674.37,
+      "eps": 389.8141,
+      "bond_per": 16.3,
+      "fair_value": 6353.97,
+      "premium_pct": 20.78
+    },
+    {
+      "date": "2026-08-28",
+      "spx": 7711.76,
+      "eps": 393.9624,
+      "bond_per": 16.49,
+      "fair_value": 6496.44,
+      "premium_pct": 18.71
+    },
+    {
+      "date": "2026-09-04",
+      "spx": 7718.6,
+      "eps": 397.0994,
+      "bond_per": 16.3,
+      "fair_value": 6472.72,
+      "premium_pct": 19.25
+    },
+    {
+      "date": "2026-09-11",
+      "spx": 7656.98,
+      "eps": 398.4529,
+      "bond_per": 16.12,
+      "fair_value": 6423.06,
+      "premium_pct": 19.21
+    },
+    {
+      "date": "2026-09-18",
+      "spx": 7650.5,
+      "eps": 399.8138,
+      "bond_per": 16.1,
+      "fair_value": 6437,
+      "premium_pct": 18.85
     }
   ]
 }

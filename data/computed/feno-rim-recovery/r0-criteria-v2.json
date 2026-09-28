@@ -1,0 +1,70 @@
+{
+  "schema_version": "feno_rim_recovery_r0_criteria.v2",
+  "phase": "R0",
+  "supersedes": "r0-criteria.json (sha256 5d2758840814a9ec8bec8ce15d0f406adf5d949e1fd6b6b0eb7a48382e1ca5f2)",
+  "supersession_reason": "Red-team criteria review RED_TEAM_R0_CRITERIA_REVIEW.md (cc, committed 117f2aca8e) found: ISSUE 1 NEGATIVE verdict wording asymmetry, ISSUE 2/3 variance treatment understating 12-quarter overlapping returns, ISSUE 4 unreachable ZERO band, plus gate and design gaps (ISSUES 5-12). Handler chose option (b) BEFORE weighing findings against results: v1 run authority discarded, artifacts preserved as superseded. This v2 freeze is the amendment. All v2 choices below are justified from the criteria text and the known data structure, not from observed v1 statistics.",
+  "authority": "Owner directive 2026-08-07 (FENO RIM RECOVERY). DEC-291. Public surface stays KEEP_QUARANTINED.",
+  "handler": "km (Kimi Code)",
+  "independent_red_team": "cc (Claude Code)",
+
+  "model_change": "NONE - identical X2 pipeline as v1 (deployPath/riValue H=3 FADE=3 TERM=10, ke=DGS10+ERP, 36m annualized total returns, same member filters, same origin sets). v2 changes statistics and inference only.",
+
+  "data_contract": "Unchanged from v1 r0-criteria.json data_contract (same sha256 pins). Verified again at v2 freeze time.",
+
+  "reproduction_gate_v2": {
+    "ordinal": "Per-origin ic_vp/ic_bp/n/complete must match RIM_CROSS_SECTIONAL_BOTTOM_UP.json within 1e-6 (as v1).",
+    "cardinal_extension": "ISSUE 5: additionally pin and verify (a) per-origin member symbol sets (exact), (b) sha256 of the concatenated per-origin tr vectors rounded to 1e-9, (c) per-origin rf0 values within 1e-9. Checksums are computed by the v2 script on first run and recorded inside R0_ADJUDICATION_V2.json together with this gate's pass/fail; any mismatch aborts before R0-B/C/D statistics."
+  },
+
+  "variance_treatment_v2": {
+    "recognition": "Origins are quarterly; returns are 36-month; consecutive origins share 11 of 12 quarters. Measured by red team on the published D series: acf(1) +0.45/+0.54; effective n 13.8/8.2 via X1's 11-lag ESS formula. X1 precedent on this same data: block_size_quarters 12, 36-lag ESS.",
+    "ess_formula": "ESS = T*(1-rho1)/(1+rho1), rho1 = sample lag-1 autocorrelation of the origin-level series; clamp ESS >= 3. ESS-adjusted 95% CI = mean +/- 1.96*sd/sqrt(ESS). This is the PRIMARY interval.",
+    "newey_west": "PRIMARY lag = 11 (Horowitz/Mandelovich-style for 12-quarter overlap at quarterly sampling). Lag 2 reported as sensitivity only.",
+    "block_bootstrap": "Circular moving-block, percentile [2.5%,97.5%] intervals identical to x2 boot() (ISSUE 6 pinned). Blocks {4,8,12} retained as SENSITIVITY only, each reported with independent_blocks = floor(T/block). Block-12 on T=18 is declared degenerate (resamples ~1.5 blocks, ISSUE 3) and can never be the basis of a verdict flag.",
+    "minimum_detectable_effect": "Reported beside every mean: MDE = 1.96*sd/sqrt(ESS) at the ESS of that series."
+  },
+
+  "tests_v2": {
+    "r0a_paired_ic_difference": "Unchanged statistic D_t = IC_t(V/P) - IC_t(B/P). Inference moved to ESS-adjusted CI + NW lag 11 (primary); lag 2 and block battery as sensitivity.",
+    "r0b_residualized_vp": {
+      "primary": "ISSUE 9: PARTIAL correlation - residualize BOTH rank(V/P) on rank(B/P) and ret on rank(B/P) per origin (OLS), then Spearman sp(resid_vp, resid_ret).",
+      "sensitivity": "Regressor-only residualization (v1 statistic) reported beside it.",
+      "x1_bar_non_transfer": "ISSUE 10: X1's 0.50 bar judged a pooled factor-adjusted time-series R-squared with a matched-universe sufficiency rule; R0-B is a mean of per-origin cross-sectional partial correlations gated by its own ESS-adjusted CI. The X1 bar does not transfer and is not applied to R0-B. Stated in advance per the red-team requirement."
+    },
+    "r0c_fama_macbeth": {
+      "models": "Unchanged: M1 exc ~ u(B/P)+u(V/P); M2 + u(Size)+u(Mom), sensitivity-only, members lacking momentum excluded from M2 only, void if M2 n<20.",
+      "inference": "ESS-adjusted CI + NW lag 11 primary on the b2 series; lag 2 and blocks sensitivity.",
+      "variance_inflation_report": "ISSUE 7: for every origin report se(b2,M2)/se(b2,M1); aggregate as mean ratio, so the shared-denominator collinearity of the size control is visible."
+    },
+    "r0d_stratified_permutation": {
+      "within_origin": "Unchanged: B/P terciles, within-tercile V/P median split, S = mean tercile high-low exc difference, 10000 within-strata label permutations per origin.",
+      "combined_test": "ISSUE 8: primary aggregate = mean of per-origin S with ESS-adjusted CI on the S series; per-origin significance counts demoted to description, reported beside their null expectation T*0.05."
+    }
+  },
+
+  "verdict_mapping_v2": {
+    "primary_set": "window_complete (carries effective n and regime span in the verdict object; ISSUE 11)",
+    "corroboration_set": "all_origins",
+    "disagreement_rule": "ISSUE 11: if the two sets disagree on the sign of the controlled effect (mean b2 or mean partial IC), the verdict is R0_INCONCLUSIVE regardless of primary-set significance.",
+    "R0_INCREMENTAL_POSITIVE": "ALL of: (1) R0-C M1 mean b2 > 0 on window_complete AND NW-lag11 p <= 0.05 AND ESS-adjusted CI lower > 0; (2) R0-C M1 mean b2 > 0 on all_origins (point estimate; disagreement voids per rule above); (3) R0-B primary partial correlation mean > 0 on window_complete AND ESS-adjusted CI lower > 0. Sensitivity flags: blocks_robust = blocks 4/8/12 ESS-independent replication is NOT required and NOT evaluated for the verdict (block battery is sensitivity-only in v2).",
+    "R0_INCREMENTAL_NEGATIVE": "ISSUE 1 fixed - written out in full, exact mirror of significance requirements: ALL of: (1) R0-C M1 mean b2 < 0 on window_complete AND NW-lag11 p <= 0.05 AND ESS-adjusted CI UPPER < 0; (2) mean b2 < 0 on all_origins; (3) R0-B partial correlation mean < 0 on window_complete AND ESS-adjusted CI UPPER < 0.",
+    "R0_INCREMENTAL_ZERO": "Formal test retained: ESS-adjusted CI on M1 b2 inside [-0.01,+0.01] on both sets AND partial IC CI inside [-0.05,+0.05] on both sets AND mean D CI inside [-0.05,+0.05] on both sets. ISSUE 4 DECLARED: at ESS 8-14 the achievable CI halfwidth on mean b2 is ~0.06-0.08, i.e. 6-8x the band; ZERO is structurally UNREACHABLE at this sample size. The verdict object must carry zero_unreachable = true with the computed minimum CI halfwidth, and INCONCLUSIVE therefore means 'cannot affirm increment AND cannot affirm equivalence' - the design cannot produce affirmative evidence for retirement at n=18/34. This is stated here, before v2 results, per the red-team requirement.",
+    "R0_INCONCLUSIVE": "Anything else.",
+    "hierarchy": "Controlled tests decide; R0-A and R0-D corroborate. The verdict object must also carry: effective_n per set (ESS formula above), regime_span (first/last origin dates of each set), survivorship_bound (current Dow 30 applied back to 2015; NVDA and SHW index members only from 2024; bias common to arms, bounds external validity - ISSUE 12), and minimum_detectable_effect per reported mean."
+  },
+
+  "prohibitions_v2": [
+    "No change to V/P, B/P, return, or member-filter construction.",
+    "No threshold, seed, lag, band, formula or set definition may change after v2 results are observed.",
+    "No overwriting prior artifacts; v1 results stay on disk marked superseded by this file, new results go to *_V2 files.",
+    "No public number republication; quarantine untouched.",
+    "No fifth experiment beyond R0-A..D."
+  ],
+
+  "seeds": "SEED=20260807 for all bootstrap/permutation RNG; permutation seed = SEED + origin_index (wc set offset +1000 as v1). LCG identical to x2 boot().",
+
+  "planned_result_paths": [
+    "data/computed/feno-rim-recovery/r0-firm-panel-v2.json",
+    "data/computed/feno-rim-recovery/R0_ADJUDICATION_V2.json"
+  ]
+}

@@ -1,0 +1,48 @@
+{
+  "schema_version": "fenok-finra-ats-weekly-marker/v1",
+  "lane_id": "finra_ats_weekly",
+  "source_as_of": "2026-07-13",
+  "generated_at": "2026-08-19T11:51:36.232Z",
+  "raw_public": false,
+  "public_mirror_allowed": false,
+  "rows_included": false,
+  "persistence_policy": {
+    "schema_version": "finra-ats-bounded-persistence/v1",
+    "basis": "summary_start_date",
+    "scope": "admin_raw_week_documents",
+    "max_retained_weeks": 26,
+    "eviction": "oldest_summary_start_date_first"
+  },
+  "persistence_state": {
+    "available_weeks": 6,
+    "retained_weeks": 6,
+    "pruned_weeks": 0,
+    "oldest_retained_week": "2026-06-22",
+    "newest_retained_week": "2026-07-27",
+    "applied": true
+  },
+  "counts": {
+    "total_rows": 1384,
+    "t1_rows": 1252,
+    "t2_otce_rows": 132
+  },
+  "partitions": [
+    {
+      "tier_group": "t1",
+      "tier_identifiers": [
+        "T1"
+      ],
+      "summary_start_date": "2026-07-27",
+      "row_count": 1252
+    },
+    {
+      "tier_group": "t2_otce",
+      "tier_identifiers": [
+        "T2",
+        "OTCE"
+      ],
+      "summary_start_date": "2026-07-13",
+      "row_count": 132
+    }
+  ]
+}

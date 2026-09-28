@@ -93,8 +93,6 @@ class MaterializerFixture:
         materializer = PublicDataSupplyMaterializer(
             repo_root=self.repo,
             state_reader=reader,
-            expected_enrollment_count=len(self.tickers),
-            expected_membership_sha256=self.membership_sha,
             failpoint=failpoint,
             require_git_tracking=require_git_tracking,
         )
@@ -191,17 +189,29 @@ class MaterializerFixture:
             "source": "stockanalysis",
         })
         (root / "IEFA.json").write_bytes(primary)
-        (public / "IEFA.json").write_bytes(primary)
-        for ticker in self.tickers:
-            legacy = pretty_bytes({
-                "schema_version": "stockanalysis/v1",
-                "ticker": ticker,
-                "asset_type": "etf",
-                "source": "yahoo_finance",
-                "source_provider": "yahoo_finance",
-                "detail_status": "yf_fallback",
+        shard_root = public / "shards"
+        snapshot = shard_root / "snapshots" / ("0" * 64)
+        snapshot.mkdir(parents=True, exist_ok=True)
+        shards = []
+        for shard_id in range(1024):
+            shard_name = f"{shard_id:03d}.json"
+            shard_path = snapshot / shard_name
+            shard_path.write_bytes(b"{}\n")
+            shards.append({
+                "id": shard_id,
+                "path": f"snapshots/{'0' * 64}/{shard_name}",
+                "member_count": 1 if shard_id == 0 else 0,
+                "sha256": hashlib.sha256(b"{}\n").hexdigest(),
+                "byte_length": 3,
             })
-            (public / f"{ticker}.json").write_bytes(legacy)
+        (shard_root / "index.json").write_bytes(pretty_bytes({
+            "schema_version": "stockanalysis-etf-shards/v2",
+            "compatibility_mode": "shard-only",
+            "shard_count": 1024,
+            "payload_count": 1,
+            "provenance": {"canonical_root": "data/stockanalysis/etfs"},
+            "shards": shards,
+        }))
 
 
 class PublicDataSupplyMaterializerTests(unittest.TestCase):
@@ -281,19 +291,38 @@ class PublicDataSupplyMaterializerTests(unittest.TestCase):
         self.assertEqual(fallback_projection.index["entries"]["LKG"]["provider_role"], "fallback")
         self.assertEqual(promoted_projection.index["entries"]["LKG"]["provider_role"], "primary")
 
-    def test_bootstrap_digest_and_existing_membership_fail_closed(self):
-        wrong = PublicDataSupplyMaterializer(
-            repo_root=self.fixture.repo,
-            state_reader=CountingStateReader(self.fixture.active),
-            expected_enrollment_count=3,
-            expected_membership_sha256="f" * 64,
+    def test_growth_enrolls_new_ticker_with_dynamic_count_and_digest_cross_links(self):
+        self.fixture.materializer()[0].write_canonical(generated_at="2026-07-11T01:00:00Z", bootstrap_enrollment=True)
+        self.fixture._seed_selection("NEW1", "fresh_fallback", "provider_object", "2026-07-12T00:00:00Z")
+        new_object = self.fixture.state_root / self.fixture.current["NEW1"]["payload_ref"]["path"]
+        subprocess.run(["git", "add", str(new_object.relative_to(self.fixture.repo))], cwd=self.fixture.repo, check=True)
+        grown, _ = self.fixture.materializer()
+        result = grown.write_canonical(generated_at="2026-07-12T01:00:00Z")
+        enrollment = json.loads((self.fixture.canonical_root / "enrollment.json").read_text())
+        index = json.loads((self.fixture.canonical_root / "index.json").read_text())
+        self.assertEqual(result["counts"], {"enrolled": 4, "selected": 3, "unavailable": 1, "payloads": 3})
+        self.assertEqual(enrollment["tickers"], self.fixture.tickers)
+        self.assertEqual(enrollment["membership_sha256"], self.fixture.membership_sha)
+        self.assertEqual(index["membership_sha256"], enrollment["membership_sha256"])
+        self.assertEqual(enrollment["enrolled_count"], index["enrolled_count"])
+        self.assertEqual(enrollment["enrolled_count"], len(self.fixture.tickers))
+        self.assertEqual(enrollment["index_sha256"], index_content_sha256(index))
+        self.assertEqual(
+            (self.fixture.canonical_root / "payloads/NEW1.json").read_bytes(),
+            self.fixture.payloads["NEW1"],
         )
-        with self.assertRaisesRegex(MaterializationError, "membership digest"):
-            wrong.write_canonical(generated_at="2026-07-11T01:00:00Z", bootstrap_enrollment=True)
-        self.assertFalse(self.fixture.canonical_root.exists())
 
+    def test_membership_removal_and_enrollment_tamper_fail_closed(self):
         good, _ = self.fixture.materializer()
         good.write_canonical(generated_at="2026-07-11T01:00:00Z", bootstrap_enrollment=True)
+        shrunken = self.fixture.active
+        shrunken["recovery"].pop("UNAV")
+        with self.assertRaisesRegex(MaterializationError, "not preserved"):
+            PublicDataSupplyMaterializer(
+                repo_root=self.fixture.repo,
+                state_reader=CountingStateReader(shrunken),
+            ).write_canonical(generated_at="2026-07-11T02:00:00Z")
+
         enrollment_path = self.fixture.canonical_root / "enrollment.json"
         enrollment = json.loads(enrollment_path.read_text())
         enrollment["tickers"] = ["DRIFT"]
@@ -347,10 +376,109 @@ class PublicDataSupplyMaterializerTests(unittest.TestCase):
             PublicDataSupplyMaterializer(
                 repo_root=self.fixture.repo,
                 state_reader=CountingStateReader(escaping),
-                expected_enrollment_count=len(self.fixture.tickers),
-                expected_membership_sha256=self.fixture.membership_sha,
             ).write_canonical(generated_at="2026-07-11T02:00:00Z")
         self.assertEqual((self.fixture.canonical_root / "index.json").read_bytes(), baseline)
+
+    def test_stockanalysis_lane_stage_tracks_resolver_state_before_materialization(self):
+        subprocess.run(
+            [
+                "git",
+                "-c",
+                "user.name=materializer-fixture",
+                "-c",
+                "user.email=fixture@example.invalid",
+                "commit",
+                "-qm",
+                "fixture baseline",
+            ],
+            cwd=self.fixture.repo,
+            check=True,
+        )
+        self.fixture.transaction_id = "3" * 64
+        self.fixture._seed_selection(
+            "FRESH",
+            "fresh_fallback",
+            "provider_object",
+            "2026-07-12T00:00:00Z",
+        )
+        self.fixture._write_state_files()
+        observation_history = self.fixture.state_root / "history/observations/2026-07-12.jsonl"
+        resolution_history = self.fixture.state_root / "history/resolutions/2026-07-12.jsonl"
+        observation_history.parent.mkdir(parents=True, exist_ok=True)
+        resolution_history.parent.mkdir(parents=True, exist_ok=True)
+        observation_history.write_text('{"fixture":"observation"}\n', encoding="utf-8")
+        resolution_history.write_text('{"fixture":"resolution"}\n', encoding="utf-8")
+
+        materializer, _ = self.fixture.materializer()
+        with self.assertRaisesRegex(MaterializationError, "Git-tracked"):
+            materializer.write_canonical(
+                generated_at="2026-07-12T01:00:00Z",
+                bootstrap_enrollment=True,
+            )
+
+        for relative in (
+            "data/stockanalysis",
+            "data/yf/etf-details",
+            "data/admin/stockanalysis-recovery",
+        ):
+            (self.fixture.repo / relative).mkdir(parents=True, exist_ok=True)
+        lane_manifest = SCRIPT_DIR.parent / "data/admin/lane-commit-manifest.json"
+        registry_digest = json.loads(lane_manifest.read_text(encoding="utf-8"))["registry_digest"]
+        subprocess.run(
+            [
+                "bash",
+                str(SCRIPT_DIR / "stage-lane-manifest.sh"),
+                "--repo-root",
+                str(self.fixture.repo),
+                "--manifest",
+                str(lane_manifest),
+                "--workflow",
+                ".github/workflows/fetch-stockanalysis.yml",
+                "--stage",
+                "always_if_exists",
+                "--expected-digest",
+                registry_digest,
+            ],
+            cwd=self.fixture.repo,
+            check=True,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+        )
+
+        generation_root = (
+            f"data/admin/data-supply-state/v1/domains/etf_detail/generations/"
+            f"{self.fixture.transaction_id}"
+        )
+        provider_object = (
+            "data/admin/data-supply-state/v1/"
+            + self.fixture.current["FRESH"]["payload_ref"]["path"]
+        )
+        expected_resolver_paths = {
+            "data/admin/data-supply-state/v1/domains/etf_detail/active.json",
+            *(f"{generation_root}/{name}.json" for name in ("manifest", "current", "lkg", "recovery", "decision")),
+            provider_object,
+            "100xfenok-next/public/data/admin/data-usage-manifest.json",
+            str(observation_history.relative_to(self.fixture.repo)),
+            str(resolution_history.relative_to(self.fixture.repo)),
+        }
+        cached = set(
+            subprocess.run(
+                ["git", "diff", "--cached", "--name-only"],
+                cwd=self.fixture.repo,
+                check=True,
+                stdout=subprocess.PIPE,
+                text=True,
+            ).stdout.splitlines()
+        )
+        self.assertEqual(cached, expected_resolver_paths)
+
+        materializer.write_canonical(
+            generated_at="2026-07-12T01:00:00Z",
+            bootstrap_enrollment=True,
+        )
+        (self.fixture.repo / provider_object).unlink()
+        with self.assertRaisesRegex(MaterializationError, "immutable payload.*missing"):
+            materializer.build_projection(generated_at="2026-07-12T02:00:00Z")
 
     def test_privacy_tokens_and_data_supply_collision_fail_before_write(self):
         selection = self.fixture.current["FRESH"]
@@ -389,33 +517,46 @@ class PublicDataSupplyMaterializerTests(unittest.TestCase):
             )
         self.assertFalse(self.fixture.canonical_root.exists())
 
-    def test_reconcile_validates_full_plan_resumes_partial_unlink_and_is_idempotent(self):
+    def test_reconcile_requires_shard_only_public_and_is_idempotent(self):
         materializer, _ = self.fixture.materializer()
         materializer.write_canonical(generated_at="2026-07-11T01:00:00Z", bootstrap_enrollment=True)
         self.fixture.copy_projection_public()
         self.fixture.seed_stockanalysis_reconcile()
-
-        def fail_after_first(point: str):
-            if point == "public_unlink_1":
-                raise RuntimeError("fixture crash")
-
-        crashing, _ = self.fixture.materializer(failpoint=fail_after_first)
-        with self.assertRaisesRegex(RuntimeError, "fixture crash"):
-            crashing.reconcile_public()
-        remaining = sorted(path.stem for path in (self.fixture.public_data_root / "stockanalysis/etfs").glob("*.json") if path.stem != "IEFA")
-        self.assertEqual(len(remaining), 2)
-
-        resumed, reader = self.fixture.materializer()
-        result = resumed.reconcile_public()
-        self.assertEqual(reader.calls, 1)
-        self.assertEqual(result["stale_deleted"], 2)
+        result = materializer.reconcile_public()
+        self.assertEqual(result["stale_deleted"], 0)
         self.assertEqual(result["postcondition"], {
-            "public_stockanalysis_true_primary": 1,
+            "public_stockanalysis_true_primary": 0,
             "public_stockanalysis_yahoo": 0,
+            "public_stockanalysis_direct": 0,
+            "public_stockanalysis_shards": 1024,
             "public_projection_payloads": 2,
             "public_status_rows": 3,
         })
-        self.assertEqual(resumed.reconcile_public()["stale_deleted"], 0)
+        self.assertEqual(materializer.reconcile_public()["stale_deleted"], 0)
+
+    def test_reconcile_prunes_a_payload_the_canonical_projection_dropped(self):
+        materializer, _ = self.fixture.materializer()
+        materializer.write_canonical(generated_at="2026-07-11T01:00:00Z", bootstrap_enrollment=True)
+        self.fixture.copy_projection_public()
+        self.fixture.seed_stockanalysis_reconcile()
+        payloads = self.fixture.public_data_root / "computed/data-supply/etf-detail/payloads"
+        stale = payloads / "DROPPED.json"
+        stale.write_bytes(b"{}\n")
+        result = materializer.reconcile_public()
+        self.assertEqual(result["stale_deleted"], 1)
+        self.assertFalse(stale.exists())
+        self.assertEqual(result["postcondition"]["public_projection_payloads"], 2)
+        self.assertEqual(materializer.reconcile_public()["stale_deleted"], 0)
+
+    def test_reconcile_still_fails_closed_on_a_missing_public_payload(self):
+        materializer, _ = self.fixture.materializer()
+        materializer.write_canonical(generated_at="2026-07-11T01:00:00Z", bootstrap_enrollment=True)
+        self.fixture.copy_projection_public()
+        self.fixture.seed_stockanalysis_reconcile()
+        payloads = self.fixture.public_data_root / "computed/data-supply/etf-detail/payloads"
+        (payloads / "FRESH.json").unlink()
+        with self.assertRaisesRegex(MaterializationError, "projection payload FRESH is missing"):
+            materializer.reconcile_public()
 
     def test_reconcile_rejects_out_of_set_and_primary_difference_without_deletion(self):
         materializer, _ = self.fixture.materializer()
@@ -429,15 +570,15 @@ class PublicDataSupplyMaterializerTests(unittest.TestCase):
             "source": "yahoo_finance", "source_provider": "yahoo_finance", "detail_status": "yf_fallback",
         }))
         before = sorted(path.name for path in public.glob("*.json"))
-        with self.assertRaises(MaterializationError):
+        with self.assertRaisesRegex(MaterializationError, "direct files"):
             materializer.reconcile_public()
         self.assertEqual(sorted(path.name for path in public.glob("*.json")), before)
 
         bad.unlink()
         (public / "IEFA.json").write_bytes(b"{}\n")
-        with self.assertRaises(MaterializationError):
+        with self.assertRaisesRegex(MaterializationError, "identity mismatch"):
             materializer.reconcile_public()
-        self.assertEqual(len(list(public.glob("*.json"))), 4)
+        self.assertEqual(len(list(public.glob("*.json"))), 1)
 
 
 def run_real_baseline_reconcile_fixture(root: Path) -> None:
@@ -450,17 +591,12 @@ def run_real_baseline_reconcile_fixture(root: Path) -> None:
         check=True,
     )
     materializer = PublicDataSupplyMaterializer(repo_root=root)
-    result = materializer.reconcile_public()
-    expected = {
-        "public_stockanalysis_true_primary": 4731,
-        "public_stockanalysis_yahoo": 0,
-        "public_projection_payloads": 506,
-        "public_status_rows": 718,
-    }
-    if result["postcondition"] != expected:
-        raise AssertionError(f"real baseline postcondition mismatch: {result['postcondition']!r}")
+    first = materializer.reconcile_public()
+    postcondition = first["postcondition"]
+    if postcondition["public_stockanalysis_direct"] != 0 or postcondition["public_stockanalysis_shards"] != 1024:
+        raise AssertionError(f"real baseline shard-only contract mismatch: {postcondition!r}")
     second = materializer.reconcile_public()
-    if second["stale_deleted"] != 0:
+    if second["postcondition"] != postcondition or second["stale_deleted"] != 0:
         raise AssertionError(f"real baseline reconciliation is not idempotent: {second!r}")
 
 

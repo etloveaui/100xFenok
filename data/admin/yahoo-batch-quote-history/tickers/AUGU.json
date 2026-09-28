@@ -25,65 +25,91 @@
       "run_id": "29785605821",
       "schedule": "0 22 * * 1",
       "shard": "1/6"
+    },
+    {
+      "attempts_used": 1,
+      "event_name": "schedule",
+      "failures": [],
+      "latency_ms": 755,
+      "natural": true,
+      "observed_at": "2026-08-09T20:40:44Z",
+      "outcome": "fresh",
+      "run_attempt": 1,
+      "run_id": "31334785949",
+      "schedule": "7 20 * * 0-5",
+      "shard": "10/72"
+    },
+    {
+      "attempts_used": 1,
+      "event_name": "workflow_dispatch",
+      "failures": [],
+      "latency_ms": 468,
+      "natural": false,
+      "observed_at": "2026-09-28T01:17:59Z",
+      "outcome": "fresh",
+      "run_attempt": 1,
+      "run_id": "36365270594",
+      "schedule": "",
+      "shard": ""
     }
   ],
   "current": {
-    "fetched_at": "2026-07-20T23:03:53Z",
-    "history_as_of": "2026-07-17",
+    "fetched_at": "2026-09-28T01:24:41Z",
+    "history_as_of": "2026-09-25",
     "path": "data/yf/finance/AUGU.json",
-    "payload_sha256": "093f21538e763924a65bf2a2651b11033886260ecfd43cbd4d9c174747946f3b",
-    "quote_as_of": "2026-07-17T19:37:40Z",
-    "source_as_of": "2026-07-17"
+    "payload_sha256": "7344d534c1a91490b162294900392a84d9ce6b1dbb216989a56a8347c089d396",
+    "quote_as_of": "2026-09-25T18:26:15Z",
+    "source_as_of": "2026-09-25"
   },
   "discovered_from": [
     "stockanalysis_etf"
   ],
   "last_attempt": {
     "attempts_used": 1,
-    "event_name": "schedule",
+    "event_name": "workflow_dispatch",
     "failures": [],
-    "latency_ms": 725,
-    "natural": true,
-    "observed_at": "2026-07-20T23:03:20Z",
+    "latency_ms": 468,
+    "natural": false,
+    "observed_at": "2026-09-28T01:17:59Z",
     "outcome": "fresh",
     "run_attempt": 1,
-    "run_id": "29785605821",
-    "schedule": "0 22 * * 1",
-    "shard": "1/6"
+    "run_id": "36365270594",
+    "schedule": "",
+    "shard": ""
   },
   "lkg": {
-    "fetched_at": "2026-06-29T23:07:02Z",
-    "history_as_of": "2026-06-26",
+    "fetched_at": "2026-08-09T20:42:45Z",
+    "history_as_of": "2026-08-07",
     "path": "data/admin/yahoo-batch-quote-history/lkg/AUGU.json",
-    "payload_sha256": "e47a03bff11e6de8397a22689326f4141df462101c93ee8c3b34d512d6701277",
-    "quote_as_of": null,
-    "source_as_of": "2026-06-26"
+    "payload_sha256": "803535e415dfb6329d191bbf8b1f6ca039dd7ba70963778e51bf3c1c73fdba8a",
+    "quote_as_of": "2026-08-07T19:51:30Z",
+    "source_as_of": "2026-08-07"
   },
   "promotion_contract": "provider_observation/v2",
   "provider_observation": {
-    "event_name": "schedule",
-    "history_as_of": "2026-07-17",
-    "observed_at": "2026-07-20T23:03:20Z",
-    "payload_sha256": "a112906f0f01058d2ab02edc5afa28f760bb1b0d22978c05f9a0c8313da3c615",
-    "quote_as_of": "2026-07-17T19:37:40Z",
+    "event_name": "workflow_dispatch",
+    "history_as_of": "2026-09-25",
+    "observed_at": "2026-09-28T01:17:59Z",
+    "payload_sha256": "f356bdf3276039e3b17c96f797b2a222c738a2305a6e622c183ae9fbd43a65f9",
+    "quote_as_of": "2026-09-25T18:26:15Z",
     "run_attempt": 1,
-    "run_id": "29785605821",
+    "run_id": "36365270594",
     "schema_version": "provider_observation/v2",
-    "source_as_of": "2026-07-17"
+    "source_as_of": "2026-09-25"
   },
   "resolution_state": "fresh_primary",
   "retry": false,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "stale": {
-    "age_business_days": 10,
-    "classified_at": "2026-07-13T04:33:56Z",
-    "classified_run_id": "29224221077",
+    "age_business_days": 8,
+    "classified_at": "2026-08-19T23:42:29Z",
+    "classified_run_id": "32314261503",
     "expected_resolution": "next_natural_yahoo_run",
     "max_business_days": 6,
-    "message": "AUGU holds LKG because Yahoo source date 2026-06-26 is 10 business days old, beyond the 6-day bound; it will retry on the next natural Yahoo run.",
+    "message": "AUGU holds LKG because Yahoo source date 2026-08-07 is 8 business days old, beyond the 6-day bound; it will retry on the next natural Yahoo run.",
     "reason": "source_age_exceeds_lane_bound",
-    "source_as_of": "2026-06-26"
+    "source_as_of": "2026-08-07"
   },
   "ticker": "AUGU",
-  "updated_at": "2026-07-20T23:03:20Z"
+  "updated_at": "2026-09-28T01:17:59Z"
 }

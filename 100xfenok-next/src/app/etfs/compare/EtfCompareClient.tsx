@@ -2,7 +2,7 @@
 
 import { FormEvent, useEffect, useMemo, useState } from "react";
 import TickerChip from "@/components/TickerChip";
-import { formatSignedPercent } from "@/lib/format";
+import { formatDateOnly, formatSignedPercent } from "@/lib/format";
 import { ROUTES } from "@/lib/routes";
 import { MAX_COMPARE_TICKERS, buildCompareCsv, isFiniteNumber, pairOverlaps, parseTickers } from "./etfCompareOverlap";
 import type { EtfCompareRow, EtfPayload, PairOverlap } from "./etfCompareOverlap";
@@ -12,17 +12,23 @@ import {
   parseEtfDataSupply,
 } from "@/lib/data-supply-etf-ui";
 
+type EtfCompareLoadState =
+  | "ok"
+  | "data_supply_unavailable"
+  | "shard_infrastructure_unavailable"
+  | "missing"
+  | "failed";
+
+type EtfCompareClientRow = EtfCompareRow & {
+  loadState: EtfCompareLoadState;
+};
+
 function rawText(value: unknown): string {
   if (typeof value === "string" && value.trim()) return value.trim();
   if (isFiniteNumber(value)) return value.toLocaleString("ko-KR");
   return "—";
 }
 
-function fmtDateish(value: unknown): string {
-  if (typeof value !== "string" || !value.trim()) return "—";
-  const text = value.trim();
-  return /^\d{4}-\d{2}-\d{2}/.test(text) ? text.slice(0, 10) : text;
-}
 
 function parsePercentPoints(value: unknown): number | null {
   if (isFiniteNumber(value)) return value;
@@ -39,32 +45,48 @@ function fmtSigned(value: number | null | undefined): string {
   return isFiniteNumber(value) ? formatSignedPercent(value, { digits: 2, fraction: false }) : "—";
 }
 
-async function loadEtf(ticker: string): Promise<EtfCompareRow> {
+async function loadEtf(ticker: string): Promise<EtfCompareClientRow> {
   try {
     const response = await fetch(`/api/data/stockanalysis/etfs/${encodeURIComponent(ticker)}/`, { cache: "no-store" });
-    const result = await parseEtfApiResponse<EtfPayload>(response);
-    if (result.kind === "ok") return { ticker, data: result.data, failed: false };
+    const result = await parseEtfApiResponse<EtfPayload>(response, ticker);
+    if (result.kind === "ok") return { ticker, data: result.data, failed: false, loadState: "ok" };
     if (result.kind === "unavailable") {
       return {
         ticker,
         data: { ticker, data_supply: result.dataSupply } as unknown as EtfPayload,
         failed: false,
+        loadState: "data_supply_unavailable",
       };
     }
-    return { ticker, data: null, failed: true };
+    if (result.kind === "shard_infrastructure_unavailable") {
+      return { ticker, data: null, failed: false, loadState: "shard_infrastructure_unavailable" };
+    }
+    return { ticker, data: null, failed: true, loadState: result.kind };
   } catch {
-    return { ticker, data: null, failed: true };
+    return { ticker, data: null, failed: true, loadState: "failed" };
   }
 }
 
-function CompareSummaryCard({ row }: { row: EtfCompareRow }) {
+function CompareSummaryCard({ row }: { row: EtfCompareClientRow }) {
+  if (row.loadState === "shard_infrastructure_unavailable") {
+    return (
+      <div
+        className="rounded-xl border border-red-200 bg-red-50 px-3 py-3"
+        data-etf-compare-shard-infrastructure-state="unavailable"
+      >
+        <TickerChip ticker={row.ticker} href={`/etfs/${encodeURIComponent(row.ticker)}`} variant="inline" className="text-sm text-red-900" />
+        <p className="mt-2 text-[12px] font-black text-red-900">ETF 상세 저장소를 확인할 수 없습니다.</p>
+        <p className="mt-1 text-[12px] font-semibold text-red-800">이 종목을 누락이나 빈 데이터로 바꾸지 않고 일시 장애로 표시합니다.</p>
+      </div>
+    );
+  }
   const dataSupply = parseEtfDataSupply((row.data as unknown as { data_supply?: unknown } | null)?.data_supply);
   const supplyPresentation = getEtfDataSupplyPresentation(dataSupply);
   const overview = row.data?.normalized?.overview ?? {};
   const performance = row.data?.normalized?.performance ?? {};
   const holdings = Array.isArray(row.data?.normalized?.holdings) ? row.data.normalized.holdings : [];
   const holdingCount = row.data?.normalized?.holding_count ?? holdings.length;
-  const holdingsDate = fmtDateish(row.data?.normalized?.holdings_updated);
+  const holdingsDate = formatDateOnly(row.data?.normalized?.holdings_updated);
   const expenseRatio = parsePercentPoints(overview.expenseRatio);
   const dividendYield = parsePercentPoints(overview.dividendYield);
   const aum = rawText(overview.aum);
@@ -74,24 +96,24 @@ function CompareSummaryCard({ row }: { row: EtfCompareRow }) {
     <div className="rounded-xl border border-[var(--c-line)] bg-[var(--c-panel)]/80 px-3 py-3" data-etf-compare-summary-card="true">
       <div className="flex min-w-0 items-start justify-between gap-3">
         <div className="min-w-0">
-          <TickerChip ticker={row.ticker} href={`/etfs/${encodeURIComponent(row.ticker)}`} variant="inline" className="orbitron text-sm text-[var(--c-ink)]" />
-          <p className="mt-1 min-w-0 truncate text-xs font-bold leading-snug text-[var(--c-ink-3)]" title={name}>{name}</p>
-          <p className="mt-1 text-[10px] font-bold text-[var(--c-ink-3)]">{holdingsDate === "—" ? "기준일 미확인" : `기준 ${holdingsDate}`}</p>
+          <TickerChip ticker={row.ticker} href={`/etfs/${encodeURIComponent(row.ticker)}`} variant="inline" className="text-sm text-[var(--c-ink)]" />
+          <p className="mt-1 min-w-0 truncate text-[12px] font-bold leading-snug text-[var(--c-ink-3)]" title={name}>{name}</p>
+          <p className="mt-1 text-[12px] font-bold text-[var(--c-ink-3)]">{holdingsDate === "—" ? "기준일 미확인" : `기준 ${holdingsDate}`}</p>
         </div>
-        <span className="orbitron tabular-nums shrink-0 rounded-full bg-[var(--c-surface-2)] px-2 py-1 text-[10px] font-black text-[var(--c-ink-3)]">
+        <span className="tabular-nums shrink-0 rounded-full bg-[var(--c-surface-2)] px-2 py-1 text-[10px] font-black text-[var(--c-ink-3)]">
           {fmtSigned(performance.tr1y)}
         </span>
       </div>
-      <div className="mt-3 grid grid-cols-2 gap-2 text-[10px] font-bold text-[var(--c-ink-3)]">
+      <div className="mt-3 grid grid-cols-2 gap-2 text-[12px] font-bold text-[var(--c-ink-3)]">
         <span className="rounded-lg bg-[var(--c-surface-2)] px-2 py-2">AUM <b className="tabular-nums text-[var(--c-ink)]">{aum}</b></span>
         <span className="rounded-lg bg-[var(--c-surface-2)] px-2 py-2">보수 <b className="tabular-nums text-[var(--c-ink)]">{fmtPercent(expenseRatio)}</b></span>
         <span className="rounded-lg bg-[var(--c-surface-2)] px-2 py-2">배당 <b className="tabular-nums text-[var(--c-ink)]">{fmtPercent(dividendYield)}</b></span>
         <span className="rounded-lg bg-[var(--c-surface-2)] px-2 py-2">보유 <b className="tabular-nums text-[var(--c-ink)]">{holdingCount.toLocaleString("ko-KR")}</b></span>
       </div>
-      {row.failed ? <p className="mt-2 text-[10px] font-bold text-red-700">상세 데이터를 불러오지 못했습니다.</p> : null}
+      {row.failed ? <p className="mt-2 text-[12px] font-bold text-red-700">상세 데이터를 불러오지 못했습니다.</p> : null}
       {supplyPresentation.label ? (
-        <p className="mt-2 text-[10px] font-bold text-amber-800" data-etf-data-supply-state={dataSupply?.resolution_state}>
-          {supplyPresentation.label}{supplyPresentation.sourceDate ? ` · ${fmtDateish(supplyPresentation.sourceDate)}` : ""}{supplyPresentation.ageDays !== null ? ` · ${supplyPresentation.ageDays}일 경과` : ""}
+        <p className="mt-2 text-[12px] font-bold text-amber-800" data-etf-data-supply-state={dataSupply?.resolution_state}>
+          {supplyPresentation.label}{supplyPresentation.sourceDate ? ` · ${formatDateOnly(supplyPresentation.sourceDate)}` : ""}{supplyPresentation.ageDays !== null ? ` · ${supplyPresentation.ageDays}일 경과` : ""}
         </p>
       ) : null}
     </div>
@@ -100,27 +122,45 @@ function CompareSummaryCard({ row }: { row: EtfCompareRow }) {
 
 function OverlapCard({ pair }: { pair: PairOverlap }) {
   const topCommon = pair.common.slice(0, 8);
+  const unavailable = pair.availability === "unavailable";
   return (
-    <div className="rounded-xl border border-[var(--c-line)] bg-[var(--c-panel)]/80 px-3 py-3" data-etf-compare-overlap-card="true">
+    <div
+      className="rounded-xl border border-[var(--c-line)] bg-[var(--c-panel)]/80 px-3 py-3"
+      data-etf-compare-overlap-card="true"
+      data-etf-compare-overlap-availability={pair.availability}
+    >
       <div className="flex flex-wrap items-start justify-between gap-2">
         <div>
-          <p className="orbitron text-sm font-black text-[var(--c-ink)]">
+          <p className="text-sm font-black text-[var(--c-ink)]">
             <TickerChip ticker={pair.left.ticker} href={`/etfs/${encodeURIComponent(pair.left.ticker)}`} variant="inline" className="text-[var(--c-ink)]" />
             {" / "}
             <TickerChip ticker={pair.right.ticker} href={`/etfs/${encodeURIComponent(pair.right.ticker)}`} variant="inline" className="text-[var(--c-ink)]" />
           </p>
-          <p className="mt-1 text-[10px] font-semibold text-[var(--c-ink-3)]">상위 25개 보유 항목 기준</p>
+          <p className="mt-1 text-[12px] font-semibold text-[var(--c-ink-3)]">상위 25개 보유 항목 기준</p>
         </div>
         <div className="text-right">
-          <p className="orbitron tabular-nums text-lg font-black text-[var(--c-ink)]">{fmtPercent(pair.overlapWeight)}</p>
-          <p className="text-[10px] font-bold text-[var(--c-ink-3)]">최소 비중 합계</p>
+          {unavailable ? (
+            <>
+              <p className="text-sm font-black text-amber-800">확인 불가</p>
+              <p className="text-[12px] font-bold text-[var(--c-ink-3)]">보유 데이터 부족</p>
+            </>
+          ) : (
+            <>
+              <p className="tabular-nums text-lg font-black text-[var(--c-ink)]">{fmtPercent(pair.overlapWeight)}</p>
+              <p className="text-[12px] font-bold text-[var(--c-ink-3)]">최소 비중 합계</p>
+            </>
+          )}
         </div>
       </div>
       <div className="mt-3 overflow-x-auto" role="region" aria-label={`${pair.left.ticker} ${pair.right.ticker} 공통 보유 항목`} tabIndex={0}>
-        {topCommon.length ? (
-          <table className="w-full min-w-[440px] text-xs">
+        {unavailable ? (
+          <p className="rounded-lg bg-amber-50 px-3 py-3 text-[12px] font-semibold text-amber-900">
+            두 ETF의 유효한 상위 25개 보유 항목을 확인할 수 없어 겹침을 계산하지 않았습니다.
+          </p>
+        ) : topCommon.length ? (
+          <table className="w-full min-w-[440px] text-[12px]">
             <thead>
-              <tr className="border-b border-[var(--c-line)] text-[10px] font-black uppercase tracking-[0.06em] text-[var(--c-ink-3)]">
+              <tr className="border-b border-[var(--c-line)] text-[12px] font-black uppercase tracking-[0.06em] text-[var(--c-ink-3)]">
                 <th scope="col" className="px-2 py-2 text-left">공통 항목</th>
                 <th scope="col" className="px-2 py-2 text-right">{pair.left.ticker}</th>
                 <th scope="col" className="px-2 py-2 text-right">{pair.right.ticker}</th>
@@ -132,14 +172,14 @@ function OverlapCard({ pair }: { pair: PairOverlap }) {
                   <th scope="row" className="px-2 py-2 text-left font-bold text-[var(--c-ink)]">
                     {item.symbol !== "—" ? `${item.symbol} · ` : ""}{item.name}
                   </th>
-                  <td className="px-2 py-2 text-right orbitron font-black tabular-nums text-[var(--c-ink)]">{fmtPercent(item.leftWeight)}</td>
-                  <td className="px-2 py-2 text-right orbitron font-black tabular-nums text-[var(--c-ink)]">{fmtPercent(item.rightWeight)}</td>
+                  <td className="px-2 py-2 text-right font-black tabular-nums text-[var(--c-ink)]">{fmtPercent(item.leftWeight)}</td>
+                  <td className="px-2 py-2 text-right font-black tabular-nums text-[var(--c-ink)]">{fmtPercent(item.rightWeight)}</td>
                 </tr>
               ))}
             </tbody>
           </table>
         ) : (
-          <p className="rounded-lg bg-[var(--c-surface-2)] px-3 py-3 text-xs font-semibold text-[var(--c-ink-3)]">
+          <p className="rounded-lg bg-[var(--c-surface-2)] px-3 py-3 text-[12px] font-semibold text-[var(--c-ink-3)]">
             공통 보유 항목을 찾지 못했습니다.
           </p>
         )}
@@ -163,12 +203,12 @@ function downloadCompareCsv(rows: EtfCompareRow[], overlaps: PairOverlap[]) {
 
 export default function EtfCompareClient({ initialTickers }: { initialTickers: string }) {
   const initial = parseTickers(initialTickers);
-  const [tickers, setTickers] = useState(initial.length >= 2 ? initial : ["SPY", "VOO"]);
+  const [tickers, setTickers] = useState(initial.length > 0 ? initial : ["SPY", "VOO"]);
   const [input, setInput] = useState(tickers.join(", "));
   const tickersKey = tickers.join(",");
   const [loadState, setLoadState] = useState<{
     key: string;
-    rows: EtfCompareRow[];
+    rows: EtfCompareClientRow[];
   }>({ key: "", rows: [] });
 
   useEffect(() => {
@@ -187,7 +227,7 @@ export default function EtfCompareClient({ initialTickers }: { initialTickers: s
   const rows = useMemo(() => (loading ? [] : loadState.rows), [loading, loadState.rows]);
   const overlaps = useMemo(() => pairOverlaps(rows), [rows]);
   const asOfDates = useMemo(() => {
-    return rows.map((row) => fmtDateish(row.data?.normalized?.holdings_updated));
+    return rows.map((row) => formatDateOnly(row.data?.normalized?.holdings_updated));
   }, [rows]);
   const hasUnknownAsOf = asOfDates.length === 0 || asOfDates.some((date) => date === "—");
   const distinctAsOfDates = [...new Set(asOfDates.filter((date) => date !== "—"))];
@@ -197,7 +237,7 @@ export default function EtfCompareClient({ initialTickers }: { initialTickers: s
   function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     const next = parseTickers(input);
-    if (next.length < 2) return;
+    if (next.length === 0) return;
     setTickers(next);
     setInput(next.join(", "));
     window.history.replaceState(null, "", ROUTES.etfCompareTickers(next));
@@ -223,7 +263,7 @@ export default function EtfCompareClient({ initialTickers }: { initialTickers: s
           <button
             type="submit"
             data-etf-compare-control="submit"
-            className="inline-flex min-h-11 items-center justify-center rounded-xl border border-[var(--c-brand)] bg-[var(--c-brand)] px-4 text-xs font-black uppercase tracking-[0.08em] text-white transition hover:bg-brand-interactive"
+            className="inline-flex min-h-11 items-center justify-center rounded-xl border border-[var(--c-brand)] bg-[var(--c-brand)] px-4 text-[12px] font-black uppercase tracking-[0.08em] text-white transition hover:bg-brand-interactive"
           >
             비교
           </button>
@@ -232,18 +272,18 @@ export default function EtfCompareClient({ initialTickers }: { initialTickers: s
             data-etf-compare-control="csv"
             onClick={() => downloadCompareCsv(rows, overlaps)}
             disabled={loading || rows.length === 0}
-            className="inline-flex min-h-11 items-center justify-center rounded-xl border border-[var(--c-line)] bg-white px-4 text-xs font-black uppercase tracking-[0.08em] text-[var(--c-ink-3)] transition hover:border-brand-interactive hover:text-brand-interactive disabled:cursor-not-allowed disabled:bg-[var(--c-surface-2)] disabled:text-[var(--c-ink-3)]"
+            className="inline-flex min-h-11 items-center justify-center rounded-xl border border-[var(--c-line)] bg-white px-4 text-[12px] font-black uppercase tracking-[0.08em] text-[var(--c-ink-3)] transition hover:border-brand-interactive hover:text-brand-interactive disabled:cursor-not-allowed disabled:bg-[var(--c-surface-2)] disabled:text-[var(--c-ink-3)]"
           >
             CSV 저장
           </button>
         </form>
 
-        <div className="rounded-xl border border-[var(--c-line)] bg-[var(--c-surface-2)] px-3 py-2 text-xs font-semibold text-[var(--c-ink-3)]">
+        <div className="rounded-xl border border-[var(--c-line)] bg-[var(--c-surface-2)] px-3 py-2 text-[12px] font-semibold text-[var(--c-ink-3)]">
           보유 구성 겹침은 각 ETF 상세 화면에 연결된 상위 25개 표시 항목 기준입니다. 전체 원장 겹침으로 해석하지 않습니다.
         </div>
 
         {hasMixedAsOf ? (
-          <div className="rounded-xl border border-amber-200 bg-amber-50 px-3 py-2 text-xs font-bold text-amber-900">
+          <div className="rounded-xl border border-amber-200 bg-amber-50 px-3 py-2 text-[12px] font-bold text-amber-900">
             비교 ETF의 보유 기준일이 서로 달라 각 카드의 기준일을 함께 확인하세요.
           </div>
         ) : null}
@@ -257,6 +297,13 @@ export default function EtfCompareClient({ initialTickers }: { initialTickers: s
                 <CompareSummaryCard key={row.ticker} row={row} />
               ))}
             </div>
+
+            {tickers.length === 1 ? (
+              <div className="rounded-xl border border-brand-200 bg-brand-50 px-3 py-3" data-etf-compare-single-selection="true" role="status">
+                <p className="text-sm font-black text-[var(--c-ink)]">비교할 ETF를 하나 더 추가하세요.</p>
+                <p className="mt-1 text-[12px] font-semibold text-[var(--c-ink-3)]">위 입력란에 티커를 하나 더 입력한 뒤 비교를 누르면 겹침이 표시됩니다.</p>
+              </div>
+            ) : null}
 
             <div className="grid gap-3 xl:grid-cols-2">
               {overlaps.map((pair) => (

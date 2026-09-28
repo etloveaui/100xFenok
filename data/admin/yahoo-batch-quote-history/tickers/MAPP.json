@@ -1,0 +1,89 @@
+{
+  "attempts": [
+    {
+      "attempts_used": 1,
+      "event_name": "schedule",
+      "failures": [],
+      "latency_ms": 576,
+      "natural": true,
+      "observed_at": "2026-08-10T11:19:59Z",
+      "outcome": "fresh",
+      "run_attempt": 1,
+      "run_id": "31382906749",
+      "schedule": "7 10 * * 0-5",
+      "shard": "17/72"
+    },
+    {
+      "attempts_used": 1,
+      "event_name": "schedule",
+      "failures": [],
+      "latency_ms": 671,
+      "natural": true,
+      "observed_at": "2026-08-11T09:13:07Z",
+      "outcome": "fresh",
+      "run_attempt": 1,
+      "run_id": "31476569032",
+      "schedule": "7 8 * * 0-5",
+      "shard": "28/72"
+    }
+  ],
+  "current": {
+    "fetched_at": "2026-08-11T09:14:08Z",
+    "history_as_of": "2026-08-10",
+    "path": "data/admin/yahoo-batch-quote-history/lkg/MAPP.json",
+    "payload_sha256": "28f066e6f90bb445770d550d033ed1e1c39fdfe77f0678f79fd4b60f5e4fb28d",
+    "quote_as_of": "2026-08-10T18:16:05Z",
+    "source_as_of": "2026-08-10"
+  },
+  "discovered_from": [
+    "stockanalysis_etf"
+  ],
+  "last_attempt": {
+    "attempts_used": 1,
+    "event_name": "schedule",
+    "failures": [],
+    "latency_ms": 671,
+    "natural": true,
+    "observed_at": "2026-08-11T09:13:07Z",
+    "outcome": "fresh",
+    "run_attempt": 1,
+    "run_id": "31476569032",
+    "schedule": "7 8 * * 0-5",
+    "shard": "28/72"
+  },
+  "lkg": {
+    "fetched_at": "2026-08-11T09:14:08Z",
+    "history_as_of": "2026-08-10",
+    "path": "data/admin/yahoo-batch-quote-history/lkg/MAPP.json",
+    "payload_sha256": "28f066e6f90bb445770d550d033ed1e1c39fdfe77f0678f79fd4b60f5e4fb28d",
+    "quote_as_of": "2026-08-10T18:16:05Z",
+    "source_as_of": "2026-08-10"
+  },
+  "promotion_contract": "provider_observation/v2",
+  "provider_observation": {
+    "event_name": "schedule",
+    "history_as_of": "2026-08-10",
+    "observed_at": "2026-08-11T09:13:07Z",
+    "payload_sha256": "8001193a47f335e40edb61b0f9d41574b127c358bb2cef942a3a4992ff9e0f86",
+    "quote_as_of": "2026-08-10T18:16:05Z",
+    "run_attempt": 1,
+    "run_id": "31476569032",
+    "schema_version": "provider_observation/v2",
+    "source_as_of": "2026-08-10"
+  },
+  "resolution_state": "lkg_primary",
+  "retry": true,
+  "schema_version": "yahoo-batch-quote-history-state/v1",
+  "stale": {
+    "age_business_days": 7,
+    "classified_at": "2026-08-19T23:42:29Z",
+    "classified_run_id": "32314261503",
+    "expected_resolution": "next_natural_yahoo_run",
+    "max_business_days": 6,
+    "message": "MAPP holds LKG because Yahoo source date 2026-08-10 is 7 business days old, beyond the 6-day bound; it will retry on the next natural Yahoo run.",
+    "reason": "source_age_exceeds_lane_bound",
+    "source_as_of": "2026-08-10"
+  },
+  "ticker": "MAPP",
+  "updated_at": "2026-08-19T23:42:29Z"
+}

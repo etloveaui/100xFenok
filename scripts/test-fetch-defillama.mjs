@@ -7,7 +7,6 @@ import os from "node:os";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 
-import { validateAttemptShard } from "./build-data-supply-detection-floor.mjs";
 import {
   DEFILLAMA_ENDPOINTS,
   DEFILLAMA_LANE_ID,
@@ -15,11 +14,29 @@ import {
   DEFILLAMA_PERSISTENCE_POLICY,
   boundDefillamaSeries,
   runDefillama,
+  stablecoinsSourceAsOf,
 } from "./fetch-defillama.mjs";
 import { DATA_SUPPLY_DETECTION_CONFIG } from "./lib/data-supply-detection-config.mjs";
 import { checkWorkflowCommitShardsAgainstRegistry } from "./check-lane-registry-commit-shards.mjs";
 
 const REPO_ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
+
+assert.equal(
+  stablecoinsSourceAsOf({
+    series: [
+      { date: "2026-07-16" },
+      { date: "2026-07-18" },
+      { date: "2026-07-17" },
+    ],
+  }),
+  "2026-07-18",
+  "DefiLlama source_as_of must use the provider-max source date",
+);
+assert.equal(
+  stablecoinsSourceAsOf({ series: [{ date: "invalid" }, { date: null }] }),
+  null,
+  "DefiLlama source_as_of must stay honestly null without a valid provider date",
+);
 
 function response(statusCode, payload) {
   return { statusCode, body: typeof payload === "string" ? payload : JSON.stringify(payload) };
@@ -48,9 +65,13 @@ function paths(root) {
   return {
     repoRoot: root,
     canonicalPath: path.join(root, "data", "macro", "stablecoins.json"),
-    publicPath: path.join(root, "public", "data", "macro", "stablecoins.json"),
     attemptShardPath: path.join(root, "data", "admin", "data-supply-state", "detection-attempts", `${DEFILLAMA_LANE_ID}.json`),
   };
+}
+
+function publicMirrorPath(root) {
+  // Producer default the fetch script used before the mirror write was removed.
+  return path.join(root, "100xfenok-next", "public", "data", "macro", "stablecoins.json");
 }
 
 function readJson(filePath) {
@@ -242,15 +263,18 @@ async function runCase(root, {
   const result = await runCase(root);
   assert.equal(result.ok, true);
   assert.equal(result.exitCode, 0);
-  assert.deepEqual(fs.readFileSync(paths(root).canonicalPath), fs.readFileSync(paths(root).publicPath));
+  assert.equal(
+    fs.existsSync(publicMirrorPath(root)),
+    false,
+    "a successful producer run must not create the public mirror (sync-public-data/Update Manifest owns the fallback)",
+  );
   const output = readJson(paths(root).canonicalPath);
   assert.equal(output.source, "DefiLlama");
   assert.equal(output.series.at(-1).date, "2026-07-16");
   assert.equal(output.current, 305_000_000_000);
   assert.equal(output.peggedAssets.length, 1);
 
-  const shard = readJson(paths(root).attemptShardPath);
-  assert.equal(validateAttemptShard(shard, DEFILLAMA_LANE_ID), true);
+  const shard = { attempts: [result.attempt] };
   assert.deepEqual(shard.attempts[0].assertions, [
     { id: "chart_array", passed: true },
     { id: "pegged_assets_array", passed: true },
@@ -259,6 +283,21 @@ async function runCase(root, {
   assert.deepEqual(state.retry_set, []);
   assert.equal(state.items.stablecoins.resolution_state, "fresh_primary");
   assert.equal(state.items.stablecoins.promotion_contract, "provider_observation/v2");
+}
+
+{
+  // A pre-existing public mirror must survive a successful run untouched:
+  // the producer no longer materializes or updates the fallback copy.
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), "fetch-defillama-public-mirror-sentinel-"));
+  const mirror = publicMirrorPath(root);
+  fs.mkdirSync(path.dirname(mirror), { recursive: true });
+  fs.writeFileSync(mirror, "sentinel-stale-mirror\n");
+  const result = await runCase(root, { runId: "public-mirror-sentinel-run" });
+  assert.equal(result.ok, true);
+  assert.equal(fs.readFileSync(mirror, "utf8"), "sentinel-stale-mirror\n",
+    "a successful producer run must not modify a pre-existing public mirror");
+  assert.equal(fs.existsSync(paths(root).canonicalPath), true,
+    "canonical write must still happen when the mirror already exists");
 }
 
 for (const failure of [
@@ -288,7 +327,7 @@ for (const failure of [
   assert.equal(result.ok, false, failure.name);
   assert.equal(result.reason, failure.expected.reason, failure.name);
   assert.equal(result.exitCode, 2, failure.name);
-  const row = readJson(paths(root).attemptShardPath).attempts[0];
+  const row = result.attempt;
   assert.equal(row.auth, failure.expected.auth, failure.name);
   assert.equal(row.decode, failure.expected.decode, failure.name);
   assert.equal(row.payload, failure.expected.payload, failure.name);
@@ -383,7 +422,38 @@ for (const failure of [
 }
 
 {
+  // A real request exception must keep its stable reason while carrying a
+  // bounded, secret-safe diagnostic beside the result only (never the shard).
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), "fetch-defillama-diagnostic-"));
+  const secret = "defillama-secret-must-not-leak";
+  const failed = await runCase(root, {
+    runId: "diagnostic-natural-error",
+    request: async () => {
+      throw Object.assign(new Error(`socket closed token=${secret}`), { code: "ECONNRESET" });
+    },
+  });
+  assert.equal(failed.reason, "transport_error", "reason enum must remain stable");
+  assert.match(failed.failure_detail, /Error: socket closed/, "caught error identity must reach the run result");
+  assert.match(failed.failure_detail, /token=\[redacted\]/, "diagnostic detail must redact secrets");
+  assert.doesNotMatch(failed.failure_detail, new RegExp(secret), "diagnostic detail must not leak a secret");
+  assert(failed.failure_detail.length <= 320, "diagnostic detail must stay bounded");
+  const shard = { attempts: [failed.attempt] };
+  assert.equal(Object.hasOwn(shard.attempts[0], "failure_detail"), false, "attempt shard schema must remain unchanged");
+}
+
+{
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), "fetch-defillama-controlled-no-detail-"));
+  const failed = await runCase(root, {
+    runId: "diagnostic-controlled-error",
+    controlledFailureEndpoint: "chart",
+  });
+  assert.equal(failed.failure_detail ?? null, null, "controlled synthetic failures must not invent diagnostic detail");
+}
+
+{
   const workflow = fs.readFileSync(path.join(REPO_ROOT, ".github", "workflows", "fetch-defillama.yml"), "utf8");
+  const producerSource = fs.readFileSync(new URL("./fetch-defillama.mjs", import.meta.url), "utf8");
+  assert.match(producerSource, /diagnosticSuffix\(result\.failure_detail\)/, "CLI failures must append bounded diagnostic detail");
   const workflowCrons = [...workflow.matchAll(/^\s*-\s*cron:\s*['\"]([^'\"]+)['\"]\s*$/gm)]
     .map((match) => match[1]);
   const lane = DATA_SUPPLY_DETECTION_CONFIG.lanes.find((row) => row.id === DEFILLAMA_LANE_ID);
@@ -392,11 +462,13 @@ for (const failure of [
   assert.deepEqual(producer?.schedule, workflowCrons, "workflow and detection-config cron declarations stay aligned");
   assert.match(workflow, /node scripts\/test-fetch-defillama\.mjs/);
   assert.match(workflow, /node scripts\/fetch-defillama\.mjs/);
+  assert.match(
+    workflow,
+    /- name: Start from latest main\n\s+run: \|\n\s+git fetch origin \+main:refs\/remotes\/origin\/main\n\s+git checkout -B main origin\/main/,
+    "workflow must pin execution to latest main immediately after checkout",
+  );
   assert.match(workflow, /controlled_failure_endpoint/);
   assert.match(workflow, /INPUT_CONTROLLED_FAILURE_ENDPOINT/);
-  assert.match(workflow, new RegExp(`detection-attempts/${DEFILLAMA_LANE_ID}\\.json`));
-  assert.match(workflow, new RegExp(`data/admin/${DEFILLAMA_LANE_ID}/index\\.json`));
-  assert.match(workflow, new RegExp(`data/admin/${DEFILLAMA_LANE_ID}/lkg/stablecoins\\.json`));
   assert.match(workflow, /- name: Commit and push\n\s+if: \$\{\{ always\(\) \}\}/);
   assert.match(workflow, /scripts\/stage-lane-manifest\.sh/);
   assert.match(workflow, /--stage always_if_exists/);
@@ -404,6 +476,51 @@ for (const failure of [
   assert.match(workflow, /FETCH_OUTCOME.*success[\s\S]*--stage success_if_exists/);
   assert.doesNotMatch(workflow, /node << ['"]?EOF/);
   assert.doesNotMatch(workflow, /git add -A/);
+}
+
+// DefiLlama integration: a structured first workflow_dispatch writes a
+// run-bound attempt and may recover when the provider source advances.
+{
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), "fetch-defillama-bound-dispatch-recovery-"));
+  const rp = paths(root);
+  await runCase(root, {
+    chartDate: "2026-07-15",
+    runId: "bound-dispatch-baseline",
+    observedAt: "2026-07-15T04:00:00.000Z",
+  });
+  const boundFailure = await runDefillama({
+    ...rp,
+    request: async (_url, endpoint) => (
+      endpoint === "chart" ? response(200, chart("2026-07-16")) : response(200, stablecoins())
+    ),
+    observedAt: "2026-07-16T03:10:00.000Z",
+    runId: "31551148251",
+    eventName: "workflow_dispatch",
+    controlledFailureEndpoint: "chart",
+    sleep: async () => {},
+  });
+  assert.equal(boundFailure.ok, false);
+  assert.equal(boundFailure.reason, "controlled_failure");
+  assert.deepEqual(boundFailure.retrySet, ["stablecoins"]);
+  assert.equal(boundFailure.attempt.execution, "threw");
+
+  const boundRecovered = await runDefillama({
+    ...rp,
+    request: async (_url, endpoint) => (
+      endpoint === "chart" ? response(200, chart("2026-07-16")) : response(200, stablecoins())
+    ),
+    observedAt: "2026-07-16T03:40:00.000Z",
+    runId: "31551148254",
+    eventName: "workflow_dispatch",
+    sleep: async () => {},
+  });
+  assert.equal(boundRecovered.ok, true, "structured first-attempt workflow_dispatch may recover when the source advances");
+  assert.equal(boundRecovered.recovered, true);
+  const boundState = readJson(path.join(root, "data", "admin", DEFILLAMA_LANE_ID, "index.json"));
+  assert.deepEqual(boundState.retry_set, []);
+  assert.equal(boundState.items.stablecoins.recovery_run_id, "31551148254");
+  assert.equal(boundState.items.stablecoins.recovery_event_name, "workflow_dispatch");
+  assert.equal(boundRecovered.attempt.http_status, 200);
 }
 
 

@@ -727,7 +727,7 @@ const ITEMS: DesignItem[] = [
     name: "Ridgeline Plot (Joy Division Density)",
     category: "dataviz",
     description: "Stacked density curves offset vertically creating mountain-range silhouette. Shows how distribution shape evolves across time — regime changes, fat tails, skewness shifts.",
-    applicability: "월별 VIX 분포 변화를 산맥 형태로 — 시장 레짐 전환(평온기 vs 공포기) 한눈에 파악",
+    applicability: "월별 VIX 분포 변화를 산맥 형태로 표시 — 변동성이 커지는 구간과 작아지는 구간을 한눈에 확인",
     difficulty: "Medium",
     tags: ["d3.js", "visx", "density", "temporal-distribution"],
   },
@@ -754,7 +754,7 @@ const ITEMS: DesignItem[] = [
     name: "Connected Scatterplot (Trajectory)",
     category: "dataviz",
     description: "Scatter plot where consecutive points are connected by lines — shows temporal trajectory through 2-variable space. Cycles, spirals, regime shifts visible. NYT graphics team popularized.",
-    applicability: "S&P 500 수익률 vs VIX 궤적: 평온기 나선형, 위기 시 급격한 움직임. 레짐 전환 시각화",
+    applicability: "S&P 500 수익률과 VIX의 궤적: 평온할 때는 나선형, 위기 때는 급격한 움직임",
     difficulty: "Easy",
     tags: ["d3.js", "recharts-custom", "trajectory", "temporal-scatter"],
   },
@@ -1217,7 +1217,7 @@ const ITEMS: DesignItem[] = [
     name: "Cross-Asset Correlation Matrix",
     category: "dataviz",
     description: "NxN heatmap: rolling Pearson correlation, blue(-1)→white(0)→red(+1). Web Worker for O(N^2) computation. CSS transition 1s for smooth color shifts. Diagonal shows sparklines. Tooltip with exact coefficient + trend arrow.",
-    applicability: "Macro Monitor에 자산 간 상관관계 매트릭스 추가 — 레짐 변화 감지 강력한 도구",
+    applicability: "Macro Monitor에 자산 간 상관관계 매트릭스 추가 — 상관관계 변화로 시장 상황 전환을 확인",
     difficulty: "Hard",
     tags: ["correlation", "heatmap", "Web-Worker", "rolling-computation"],
   },
@@ -1427,7 +1427,7 @@ export default function DesignGalleryPage() {
       {/* Header */}
       <section className="bg-gradient-to-r from-slate-900 via-indigo-900 to-violet-900 px-4 py-8 text-white">
         <div className="container mx-auto max-w-6xl">
-          <p className="text-xs font-semibold uppercase tracking-[0.16em] text-white/60">100xFenok Admin</p>
+          <p className="text-[12px] font-semibold uppercase tracking-[0.16em] text-white/60">100xFenok Admin</p>
           <h1 className="mt-2 text-3xl font-black tracking-tight md:text-4xl">Design Gallery</h1>
           <p className="mt-3 max-w-2xl text-sm text-white/80">
             금융 대시보드에 적용 가능한 {ITEMS.length}개 디자인 패턴. 카테고리별 탐색, 난이도 확인, 우리 시스템 적용 포인트 참조.
@@ -1437,7 +1437,7 @@ export default function DesignGalleryPage() {
               <a
                 key={cat.key}
                 href={`#cat-${cat.key}`}
-                className="inline-flex items-center gap-1.5 rounded-full border border-white/20 bg-white/10 px-3 py-1.5 text-xs font-semibold text-white transition hover:bg-white/20"
+                className="inline-flex items-center gap-1.5 rounded-full border border-white/20 bg-white/10 px-3 py-1.5 text-[12px] font-semibold text-white transition hover:bg-white/20"
               >
                 <span>{cat.icon}</span>
                 <span>{cat.label}</span>
@@ -1463,7 +1463,7 @@ export default function DesignGalleryPage() {
                 </span>
                 <div>
                   <h2 className="text-xl font-black text-slate-900">{cat.label}</h2>
-                  <p className="text-xs text-slate-500">{items.length} patterns</p>
+                  <p className="text-[12px] text-slate-500">{items.length} patterns</p>
                 </div>
               </div>
               <div className="grid grid-cols-1 gap-3 md:grid-cols-2 lg:grid-cols-3">
@@ -1474,19 +1474,19 @@ export default function DesignGalleryPage() {
                   >
                     <div className="flex items-start justify-between gap-2">
                       <h3 className="text-sm font-bold text-slate-900">
-                        <span className="mr-1.5 text-xs text-slate-500">#{item.id}</span>
+                        <span className="mr-1.5 text-[12px] text-slate-500">#{item.id}</span>
                         {item.name}
                       </h3>
                       <DifficultyBadge level={item.difficulty} />
                     </div>
-                    <p className="mt-2 text-xs leading-relaxed text-slate-600">{item.description}</p>
+                    <p className="mt-2 text-[12px] leading-relaxed text-slate-600">{item.description}</p>
                     <div className="mt-3 rounded-lg bg-indigo-50 p-2.5">
-                      <p className="text-[11px] font-semibold text-indigo-900">🎯 우리 시스템 적용</p>
-                      <p className="mt-0.5 text-[11px] leading-relaxed text-indigo-700">{item.applicability}</p>
+                      <p className="text-[12px] font-semibold text-indigo-900">🎯 우리 시스템 적용</p>
+                      <p className="mt-0.5 text-[12px] leading-relaxed text-indigo-700">{item.applicability}</p>
                     </div>
                     <div className="mt-3 flex flex-wrap gap-1">
                       {item.tags.map((tag) => (
-                        <span key={tag} className="rounded bg-slate-100 px-1.5 py-0.5 text-[10px] text-slate-500">
+                        <span key={tag} className="rounded bg-slate-100 px-1.5 py-0.5 text-[12px] text-slate-500">
                           {tag}
                         </span>
                       ))}
@@ -1496,7 +1496,7 @@ export default function DesignGalleryPage() {
                         href={item.reference}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="mt-2 inline-block text-[10px] text-indigo-500 hover:underline"
+                        className="mt-2 inline-block text-[12px] text-indigo-500 hover:underline"
                       >
                         Reference →
                       </a>
@@ -1515,7 +1515,7 @@ export default function DesignGalleryPage() {
           <p className="text-sm font-bold text-slate-700">
             Total: {ITEMS.length} patterns across {CATEGORIES.length} categories
           </p>
-          <p className="mt-1 text-xs text-slate-500">
+          <p className="mt-1 text-[12px] text-slate-500">
             Continuously updated — 2026-03-13 audit
           </p>
         </div>

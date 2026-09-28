@@ -21,6 +21,7 @@ import {
   type EtfUniverseRecord,
 } from "./etfUniverseUtils";
 import { formatPlainPercent } from "@/lib/format";
+import { fetchJsonOrNull } from "@/lib/client/data-fetch";
 
 export type { EtfClassification, EtfTypeFilter, EtfUniverseRecord } from "./etfUniverseUtils";
 export {
@@ -161,41 +162,16 @@ function matchesExpenseFilter(row: EtfUniverseRecord, filter: EtfExpenseFilter):
   return expense >= 1.00;
 }
 
-let universeCache: EtfUniverseDoc | null = null;
-let universePending: Promise<EtfUniverseDoc | null> | null = null;
-let snapshotCache: EtfSnapshotDoc | null = null;
-let snapshotPending: Promise<EtfSnapshotDoc | null> | null = null;
-
 function loadUniverse(): Promise<EtfUniverseDoc | null> {
-  if (universeCache) return Promise.resolve(universeCache);
-  if (universePending) return universePending;
-  universePending = fetch("/api/data/stockanalysis/etf-universe", { cache: "no-store" })
-    .then((res) => (res.ok ? res.json() as Promise<EtfUniverseDoc> : null))
-    .then((doc) => {
-      universeCache = doc;
-      return doc;
-    })
-    .catch(() => {
-      universePending = null;
-      return null;
-    });
-  return universePending;
+  // Through the shared layer: one request per URL (shared with the /etfs
+  // surface loader), and an HTTP error no longer sticks for the visit.
+  return fetchJsonOrNull<EtfUniverseDoc>("/api/data/stockanalysis/etf-universe", { init: { cache: "no-store" } });
 }
 
 function loadSnapshot(): Promise<EtfSnapshotDoc | null> {
-  if (snapshotCache) return Promise.resolve(snapshotCache);
-  if (snapshotPending) return snapshotPending;
-  snapshotPending = fetch("/api/data/stockanalysis/etf-snapshot", { cache: "no-store" })
-    .then((res) => (res.ok ? res.json() as Promise<EtfSnapshotDoc> : null))
-    .then((doc) => {
-      snapshotCache = doc;
-      return doc;
-    })
-    .catch(() => {
-      snapshotPending = null;
-      return null;
-    });
-  return snapshotPending;
+  // Through the shared layer: one request per URL (shared with the /etfs
+  // surface loader), and an HTTP error no longer sticks for the visit.
+  return fetchJsonOrNull<EtfSnapshotDoc>("/api/data/stockanalysis/etf-snapshot", { init: { cache: "no-store" } });
 }
 
 interface EtfUniverseCardProps {
@@ -640,7 +616,7 @@ export default function EtfUniverseCard({
         </div>
 
         {currentTopCategory ? (
-          <div className="mt-3 rounded-xl border border-[var(--c-line)] bg-[var(--c-surface-2)] px-3 py-2 text-[11px] font-bold text-[var(--c-ink-3)]">
+          <div className="mt-3 rounded-xl border border-[var(--c-line)] bg-[var(--c-surface-2)] px-3 py-2 text-[12px] font-bold text-[var(--c-ink-3)]">
             현재 조건에서 가장 많은 분류 <span className="text-[var(--c-ink)]">{currentTopCategory.name}</span> · {formatNumber(currentTopCategory.count)}개
             {assetClassFilter !== "전체" ? <span> · 자산군 {assetClassFilter}</span> : null}
             {issuerFilter !== "전체" ? <span> · 운용사 {issuerFilter}</span> : null}
@@ -649,12 +625,12 @@ export default function EtfUniverseCard({
           </div>
         ) : null}
         {digitalOnly ? (
-          <div className="mt-2 rounded-xl border border-[var(--c-line)] bg-white px-3 py-2 text-[11px] font-bold text-[var(--c-ink-3)]">
+          <div className="mt-2 rounded-xl border border-[var(--c-line)] bg-white px-3 py-2 text-[12px] font-bold text-[var(--c-ink-3)]">
             디지털자산 필터는 현재 비트코인 ETF 목록과 전체 ETF 목록이 함께 확인되는 항목을 보여줍니다.
           </div>
         ) : null}
         {screenerOnlyCount > 0 ? (
-          <div className="mt-2 rounded-xl border border-[var(--c-line)] bg-white px-3 py-2 text-[11px] font-bold text-[var(--c-ink-3)]">
+          <div className="mt-2 rounded-xl border border-[var(--c-line)] bg-white px-3 py-2 text-[12px] font-bold text-[var(--c-ink-3)]">
             전체 ETF 목록과 스크리너 데이터를 합쳐 보여줍니다. 세부 데이터가 아직 없는 ETF는 기본 정보부터 먼저 표시됩니다.
             <span className="text-[var(--c-ink)]"> 스크리너에서만 확인된 항목 {formatNumber(screenerOnlyCount)}개 포함.</span>
           </div>
@@ -688,7 +664,7 @@ export default function EtfUniverseCard({
                 </span>
                 <span className="pc num neutral">
                   {formatAum(row)}
-                  {expenseRatioValue(row) !== null ? <small className="block text-[10px] font-black text-[var(--c-ink-3)]">보수 {formatPlainPercent(expenseRatioValue(row), { digits: 2, fraction: false })}</small> : null}
+                  {expenseRatioValue(row) !== null ? <small className="block text-[12px] font-black text-[var(--c-ink-3)]">보수 {formatPlainPercent(expenseRatioValue(row), { digits: 2, fraction: false })}</small> : null}
                 </span>
               </TransitionLink>
             );

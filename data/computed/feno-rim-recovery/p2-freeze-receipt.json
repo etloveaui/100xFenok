@@ -1,0 +1,16 @@
+{
+ "schema_version": "feno_rim_p2_freeze_receipt.v1",
+ "phase": "P2",
+ "criteria_file": "data/computed/feno-rim-recovery/p2-criteria.json",
+ "criteria_sha256": "655dac31c5563627db8bfe84d75a1add851df641858f2ddec196699d3b1b84c9",
+ "asserts_result_paths_do_not_exist": {
+  "data/computed/feno-rim-recovery/FENO_RIM_FORECAST_COVERAGE_2019_2025.json": true,
+  "data/computed/feno-rim-recovery/FENO_RIM_FY3_GAP_AUDIT.md": true,
+  "data/computed/feno-rim-recovery/FENO_RIM_FORECAST_ORIGIN_ELIGIBILITY.json": true
+ },
+ "assertion_method": "checked on disk immediately before this receipt was written; all three absent",
+ "repo_head_at_freeze": "367fb6f238f7a2150021d0dfa7496a5f69e1c24c",
+ "frozen_at_utc": "2026-08-08T06:05:00Z",
+ "research_only": true,
+ "note": "P2 executes mandate section 6's audit and returns NO DEFECT FOUND with four measurements. The forecast is generated at every origin and horizon; the panel refuses to store rows whose realized outcome does not yet exist (r1-forecast-ext.mjs line 338). The preregistered FY3-unavailable fallback hierarchy is therefore not reached."
+}

@@ -3,7 +3,9 @@
 > Architect: Claude (right-top %1623). Implementor: Codex (left-top %1622).
 > Parent: `docs/planning/v5_master_design.md` §5 (Phase 4 = 척추 완성).
 > Scope: `?v5=1` + cookie ONLY. V1 untouched. Light-only. No backend regression.
-> Status: READY — MiMo Phase-4 recon + Codex audit folded in.
+> Status: **HISTORICAL v5 IMPLEMENTATION SPEC** — `TickerChip` remains a live
+> shared component, but this v5 rollout document is not a current dispatch queue
+> after the v6 default promotion.
 > Date: 2026-06-26
 
 ---

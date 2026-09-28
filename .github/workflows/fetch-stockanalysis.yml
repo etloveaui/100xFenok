@@ -7,9 +7,7 @@ on:
   schedule:
     # Daily bounded stock overview + financial pair refresh (KST 06:20).
     - cron: '20 21 * * *'
-    # Weekday scored-ETF daily 1Y continuity catch-up (KST Tue-Sat 07:50).
-    - cron: '50 22 * * 1-5'
-    # Weekday bounded ETF/surface catch-up after US close (KST Tue-Sat 08:50).
+    # Weekday core-basket ETF + surface refresh after US close (KST Tue-Sat 08:50).
     - cron: '50 23 * * 1-5'
     # 매주 일요일 23:20 UTC (한국 월요일 08:20) — Yahoo weekly refresh afterglow
     - cron: '20 23 * * 0'
@@ -34,7 +32,7 @@ on:
       discover_universe:
         description: 'Refresh the full StockAnalysis ETF universe list'
         required: false
-        default: 'true'
+        default: 'false'
       universe_backfill:
         description: 'Deep-fetch ETF payloads from the universe list (manual chunked runs only)'
         required: false
@@ -42,7 +40,7 @@ on:
       incremental_etf_backfill:
         description: 'Auto-fetch new/missing/stale ETF details without a full universe run'
         required: false
-        default: 'true'
+        default: 'false'
       incremental_etf_limit:
         description: 'Maximum incremental ETF detail retries per run'
         required: false
@@ -64,7 +62,7 @@ on:
         required: false
         default: 'false'
       core_basket_refresh:
-        description: 'Refresh exact ETF Core Daily Basket tickers from data/admin/fenok-etf-core-daily-basket.json'
+        description: 'Refresh exact ETF Core Daily Basket and recover guarded cloud publication (manual lineage)'
         required: false
         default: 'false'
       history_gaps_only:
@@ -96,7 +94,7 @@ on:
         required: false
         default: ''
       controlled_failure_surfaces:
-        description: 'Dispatch-only recovery chaos targets; subset of explicit surfaces. Reserved token etf_universe fails the ETF universe fetch on purpose (GitHub caps dispatch inputs at 25)'
+        description: 'Owner-approved failure proof: dispatch-only. Use etf_detail:TQQQ for StockAnalysis row6 or yahoo_etf_fallback:TQQQ for Yahoo row4; each requires that one exact explicit ETF. etf_universe remains separate (GitHub caps dispatch inputs at 25)'
         required: false
         default: ''
       offset:
@@ -127,8 +125,10 @@ jobs:
     concurrency:
       group: stockanalysis-acquire-${{ github.ref }}
       cancel-in-progress: false
+      queue: max
     outputs:
       artifact_digest: ${{ steps.upload.outputs.artifact-digest }}
+      artifact_name: ${{ steps.artifact_identity.outputs.name }}
     # 60 was structurally too short for post-outage catch-up: 261 rate-limited
     # ETF fetches x ~20s ≈ 87min, so the job died before its commit step and
     # the backlog could never drain (run 29117945172 cancelled at 60m, 171/261
@@ -153,6 +153,10 @@ jobs:
           echo "STOCKANALYSIS_ARTIFACT_ROOT=$RUNNER_TEMP/stockanalysis-artifact" >> "$GITHUB_ENV"
           echo "STOCKANALYSIS_ARTIFACT_NAME=stockanalysis-${{ github.run_id }}-${{ github.run_attempt }}" >> "$GITHUB_ENV"
           echo "STOCKANALYSIS_BASE_SHA=$(git rev-parse HEAD)" >> "$GITHUB_ENV"
+
+      - name: Expose immutable artifact identity
+        id: artifact_identity
+        run: echo "name=$STOCKANALYSIS_ARTIFACT_NAME" >> "$GITHUB_OUTPUT"
 
       - name: Install optional Yahoo fallback dependency
         run: pip install yfinance
@@ -191,11 +195,14 @@ jobs:
           INPUT_STOCK_LIMIT="0"
           INPUT_REQUIRE_STOCK_FINANCIAL_PAIR="false"
           INPUT_ISOLATED_STOCK_SCHEDULE="false"
+          UNIVERSE_FAILURE_PROOF="false"
+          ETF_DETAIL_FAILURE_PROOF="false"
+          YAHOO_ETF_FAILURE_PROOF="false"
           if [ "$EVENT_NAME" = "schedule" ]; then
             INPUT_FETCH_FINANCIALS="false"
             INPUT_DISCOVER_UNIVERSE="false"
             INPUT_UNIVERSE_BACKFILL="false"
-            INPUT_INCREMENTAL_ETF_BACKFILL="true"
+            INPUT_INCREMENTAL_ETF_BACKFILL="false"
             INPUT_YF_ETF_FALLBACK="true"
             INPUT_SLEEP="${STOCKANALYSIS_DAILY_SLEEP:-0.5}"
             INPUT_MAX_UNIVERSE_PAGES="${STOCKANALYSIS_DAILY_MAX_UNIVERSE_PAGES:-5}"
@@ -216,36 +223,23 @@ jobs:
               INPUT_REQUIRE_STOCK_FINANCIAL_PAIR="true"
               INPUT_ISOLATED_STOCK_SCHEDULE="true"
               NATURAL_RECOVERY_KINDS="stock,financial"
-            elif [ "$EVENT_SCHEDULE" = "50 22 * * 1-5" ]; then
-              INPUT_HISTORY_GAPS_ONLY="true"
-              INPUT_REQUIRED_HISTORY_PERIODS="daily_1y"
-              INPUT_INCREMENTAL_ETF_LIMIT="${STOCKANALYSIS_DAILY1Y_INCREMENTAL_LIMIT:-120}"
-              INPUT_INCREMENTAL_ETF_MAX_AGE_HOURS="${STOCKANALYSIS_DAILY1Y_MAX_AGE_HOURS:-168}"
-              INPUT_FETCH_SURFACES="false"
-              INPUT_SURFACE_SET=""
-              INPUT_CORE_BASKET_REFRESH="false"
-              NATURAL_RECOVERY_KINDS="none"
-              if [ -n "${STOCKANALYSIS_DAILY1Y_OFFSET:-}" ]; then
-                INPUT_OFFSET="$STOCKANALYSIS_DAILY1Y_OFFSET"
-              else
-                INPUT_OFFSET="$(node scripts/select-stockanalysis-daily1y-offset.mjs)"
-              fi
             elif [ "$EVENT_SCHEDULE" = "50 23 * * 1-5" ] || [ "$EVENT_SCHEDULE" = "20 23 * * 0" ]; then
               INPUT_HISTORY_GAPS_ONLY="false"
               INPUT_REQUIRED_HISTORY_PERIODS=""
-              INPUT_INCREMENTAL_ETF_LIMIT="${STOCKANALYSIS_DAILY_INCREMENTAL_LIMIT:-40}"
-              INPUT_INCREMENTAL_ETF_MAX_AGE_HOURS="${STOCKANALYSIS_DAILY_MAX_AGE_HOURS:-168}"
               INPUT_FETCH_SURFACES="true"
               INPUT_SURFACE_SET="${STOCKANALYSIS_DAILY_SURFACE_SET:-core}"
               INPUT_CORE_BASKET_REFRESH="${STOCKANALYSIS_DAILY_CORE_BASKET_REFRESH:-true}"
-              NATURAL_RECOVERY_KINDS="surface"
+              NATURAL_RECOVERY_KINDS="etf,surface"
               if [ "$EVENT_SCHEDULE" = "20 23 * * 0" ]; then
                 # BACKLOG #331: one complete weekly universe collection. Current
                 # measured universe is 11 pages; 100 preserves headroom without
-                # turning weekday bounded runs into broad discovery.
+                # turning weekday bounded runs into broad discovery. StockAnalysis
+                # publishes no membership source date, so the fetcher emits the
+                # KPI freshness attempt only for this exact natural schedule;
+                # manual dispatch may refresh the payload but cannot impersonate it.
                 INPUT_DISCOVER_UNIVERSE="true"
                 INPUT_MAX_UNIVERSE_PAGES="100"
-                NATURAL_RECOVERY_KINDS="surface,universe"
+                NATURAL_RECOVERY_KINDS="etf,surface,universe"
               fi
             else
               echo "unknown StockAnalysis schedule: $EVENT_SCHEDULE" >&2
@@ -259,6 +253,38 @@ jobs:
             fi
             if [ "${INPUT_FETCH_FINANCIALS:-true}" = "true" ]; then
               INPUT_REQUIRE_STOCK_FINANCIAL_PAIR="true"
+            fi
+            if [ "${INPUT_CONTROLLED_FAILURE_SURFACES:-}" = "etf_universe" ]; then
+              UNIVERSE_FAILURE_PROOF="true"
+            fi
+            case "${INPUT_CONTROLLED_FAILURE_SURFACES:-}" in
+              *[eE][tT][fF]_[dD][eE][tT][aA][iI][lL]:*)
+                ETF_DETAIL_FAILURE_PROOF="true"
+                ;;
+            esac
+            case "${INPUT_CONTROLLED_FAILURE_SURFACES:-}" in
+              *[yY][aA][hH][oO][oO]_[eE][tT][fF]_[fF][aA][lL][lL][bB][aA][cC][kK]:*)
+                YAHOO_ETF_FAILURE_PROOF="true"
+                ;;
+            esac
+            if [ "$ETF_DETAIL_FAILURE_PROOF" = "true" ] || [ "$YAHOO_ETF_FAILURE_PROOF" = "true" ]; then
+              INPUT_STOCKS=""
+              INPUT_STOCKS_ONLY="false"
+              INPUT_FETCH_FINANCIALS="false"
+              INPUT_DISCOVER_UNIVERSE="false"
+              INPUT_UNIVERSE_BACKFILL="false"
+              INPUT_INCREMENTAL_ETF_BACKFILL="false"
+              INPUT_INCREMENTAL_ETF_LIMIT="0"
+              INPUT_RECONCILE_MISSING_ETF_DETAILS="false"
+              INPUT_HISTORY_GAP_PLAN="false"
+              INPUT_CORE_BASKET_REFRESH="false"
+              INPUT_HISTORY_GAPS_ONLY="false"
+              INPUT_REQUIRED_HISTORY_PERIODS=""
+              INPUT_FETCH_SURFACES="false"
+              INPUT_SURFACE_SET=""
+              INPUT_SURFACES=""
+              INPUT_OFFSET="0"
+              INPUT_LIMIT_ETFS="1"
             fi
           fi
           {
@@ -278,14 +304,22 @@ jobs:
           if [ "${INPUT_CORE_BASKET_REFRESH:-false}" = "true" ]; then
             INPUT_ETFS="$(node -e 'const fs = require("fs"); const payload = JSON.parse(fs.readFileSync("data/admin/fenok-etf-core-daily-basket.json", "utf8")); const tickers = Array.isArray(payload.daily_refresh_universe?.tickers) ? payload.daily_refresh_universe.tickers : (Array.isArray(payload.rows) ? payload.rows.map((row) => row && row.ticker) : []); const seen = new Set(); const out = []; for (const raw of tickers) { const ticker = String(raw || "").trim().toUpperCase(); if (ticker && !seen.has(ticker)) { seen.add(ticker); out.push(ticker); } } if (!out.length) { console.error("Core Basket refresh requested, but no tickers were found"); process.exit(1); } process.stdout.write(out.join(","));')"
           fi
-          if [ "${INPUT_RECONCILE_MISSING_ETF_DETAILS:-false}" = "true" ]; then
+          if [ "$UNIVERSE_FAILURE_PROOF" = "true" ]; then
+            ARGS="--sleep ${INPUT_SLEEP:-0.25} --discover-etf-universe --universe-only --stocks-only --controlled-failure-surfaces etf_universe --limit-etfs 0"
+          elif [ "$ETF_DETAIL_FAILURE_PROOF" = "true" ] || [ "$YAHOO_ETF_FAILURE_PROOF" = "true" ]; then
+            ARGS="--sleep ${INPUT_SLEEP:-0.25} --etfs=${INPUT_ETFS} --controlled-failure-surfaces $INPUT_CONTROLLED_FAILURE_SURFACES --limit-etfs 1"
+            if [ "${INPUT_YF_ETF_FALLBACK:-true}" = "true" ]; then
+              ARGS="$ARGS --yf-etf-fallback"
+            else
+              ARGS="$ARGS --fail-on-error"
+            fi
+          elif [ "${INPUT_RECONCILE_MISSING_ETF_DETAILS:-false}" = "true" ]; then
             ARGS="--sleep ${INPUT_SLEEP:-0.25} --endpoint-canary --reconcile-missing-etf-details --incremental-etf-limit ${INPUT_RECONCILE_MISSING_ETF_LIMIT:-0}"
             if [ -n "$INPUT_ETFS" ]; then ARGS="$ARGS --etfs $INPUT_ETFS"; fi
             if [ -n "$INPUT_OFFSET" ]; then ARGS="$ARGS --offset $INPUT_OFFSET"; fi
           elif [ "${INPUT_HISTORY_GAP_PLAN:-false}" = "true" ]; then
             ARGS="--sleep ${INPUT_SLEEP:-0.25} --incremental-etf-backfill --incremental-etf-only --history-gaps-only --plan-only"
             PLAN_LIMIT="${INPUT_INCREMENTAL_ETF_LIMIT:-0}"
-            if [ "$PLAN_LIMIT" = "120" ]; then PLAN_LIMIT="0"; fi
             ARGS="$ARGS --incremental-etf-limit $PLAN_LIMIT"
             if [ -n "$INPUT_INCREMENTAL_ETF_MAX_AGE_HOURS" ]; then ARGS="$ARGS --incremental-etf-max-age-hours $INPUT_INCREMENTAL_ETF_MAX_AGE_HOURS"; fi
             if [ -n "$INPUT_REQUIRED_HISTORY_PERIODS" ]; then ARGS="$ARGS --required-history-periods $INPUT_REQUIRED_HISTORY_PERIODS"; fi
@@ -305,9 +339,9 @@ jobs:
             else
               ARGS="--sleep ${INPUT_SLEEP:-0.25} --endpoint-canary --classify-etf-catalogs"
             fi
-            if [ "${INPUT_DISCOVER_UNIVERSE:-true}" = "true" ]; then ARGS="$ARGS --discover-etf-universe"; fi
+            if [ "${INPUT_DISCOVER_UNIVERSE:-false}" = "true" ]; then ARGS="$ARGS --discover-etf-universe"; fi
             if [ "${INPUT_UNIVERSE_BACKFILL:-false}" = "true" ]; then ARGS="$ARGS --universe-backfill"; fi
-            if [ "${INPUT_INCREMENTAL_ETF_BACKFILL:-true}" = "true" ]; then ARGS="$ARGS --incremental-etf-backfill"; fi
+            if [ "${INPUT_INCREMENTAL_ETF_BACKFILL:-false}" = "true" ]; then ARGS="$ARGS --incremental-etf-backfill"; fi
             if [ "${INPUT_YF_ETF_FALLBACK:-true}" = "true" ]; then ARGS="$ARGS --yf-etf-fallback"; fi
             if [ -n "$INPUT_INCREMENTAL_ETF_LIMIT" ]; then ARGS="$ARGS --incremental-etf-limit $INPUT_INCREMENTAL_ETF_LIMIT"; fi
             if [ -n "$INPUT_INCREMENTAL_ETF_MAX_AGE_HOURS" ]; then ARGS="$ARGS --incremental-etf-max-age-hours $INPUT_INCREMENTAL_ETF_MAX_AGE_HOURS"; fi
@@ -325,7 +359,6 @@ jobs:
             if [ -n "$INPUT_OFFSET" ]; then ARGS="$ARGS --offset $INPUT_OFFSET"; fi
             if [ -n "$INPUT_LIMIT_ETFS" ]; then ARGS="$ARGS --limit-etfs $INPUT_LIMIT_ETFS"; fi
             if [ -n "$INPUT_MAX_UNIVERSE_PAGES" ]; then ARGS="$ARGS --max-universe-pages $INPUT_MAX_UNIVERSE_PAGES"; fi
-            if [ "${INPUT_YF_ETF_FALLBACK:-true}" != "true" ] && [ -n "$INPUT_ETFS" ]; then ARGS="$ARGS --fail-on-error"; fi
           fi
           if [ "$EVENT_NAME" = "schedule" ]; then
             ARGS="$ARGS --natural-run --natural-recovery-kinds $NATURAL_RECOVERY_KINDS"
@@ -349,7 +382,7 @@ jobs:
             | sort -u > "$PRIMARY_FETCHED_TICKERS"
 
       - name: Refresh history-gap plan after live backfill
-        if: ${{ github.event.inputs.history_gaps_only == 'true' || github.event.schedule == '50 22 * * 1-5' }}
+        if: ${{ github.event.inputs.history_gaps_only == 'true' }}
         env:
           INPUT_REQUIRED_HISTORY_PERIODS: ${{ github.event.inputs.required_history_periods }}
           INPUT_INCREMENTAL_ETF_MAX_AGE_HOURS: ${{ github.event.inputs.incremental_etf_max_age_hours }}
@@ -399,8 +432,10 @@ jobs:
     runs-on: ubuntu-latest
     # Semantic validation must follow fresh-main apply while the writer lock is
     # held; cap the fail-closed critical section instead of validating a stale
-    # pre-lock checkout.
-    timeout-minutes: 20
+    # pre-lock checkout. 45m: the measured Sunday publish (core basket + surfaces
+    # + universe list) ran 20m+ with the #377 broad mirror commit (ab50c4c24e)
+    # and previously timed out at 20m.
+    timeout-minutes: 45
     permissions:
       contents: write
       actions: write
@@ -408,11 +443,18 @@ jobs:
       group: fenok-data-writer-refs/heads/main
       cancel-in-progress: false
       queue: max
+    # The Git publication leg of the joined-cycle tuple. These were already
+    # computed inside the publish step's push/readback loop; exporting them is
+    # what lets a later job bind Cloud publication to the same artifact instead
+    # of re-deriving a weaker claim from ambient run metadata.
+    outputs:
+      published_commit: ${{ steps.publish.outputs.commit }}
+      readback_confirmation: ${{ steps.publish.outputs.confirmation }}
     steps:
-      - name: Checkout complete history
+      - name: Checkout repository
         uses: actions/checkout@v4
         with:
-          fetch-depth: 0
+          fetch-depth: 1
 
       - name: Setup Python
         uses: actions/setup-python@v5
@@ -427,19 +469,23 @@ jobs:
       - name: Download immutable StockAnalysis candidate
         uses: actions/download-artifact@v4
         with:
-          name: stockanalysis-${{ github.run_id }}-${{ github.run_attempt }}
+          name: ${{ needs.acquire-stockanalysis.outputs.artifact_name }}
           path: ${{ runner.temp }}/stockanalysis-artifact
 
       - name: Publish candidate to latest main
         id: publish
         env:
           ARTIFACT_DIGEST: ${{ needs.acquire-stockanalysis.outputs.artifact_digest }}
-          ARTIFACT_NAME: stockanalysis-${{ github.run_id }}-${{ github.run_attempt }}
+          ARTIFACT_NAME: ${{ needs.acquire-stockanalysis.outputs.artifact_name }}
+          # Reachability is proven by remote comparison rather than by local
+          # shallow history, so the readback needs an API token.
+          GH_TOKEN: ${{ github.token }}
         run: |
           set -euo pipefail
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
           ARTIFACT_ROOT="$RUNNER_TEMP/stockanalysis-artifact"
+          VALIDATED_INPUT_FINGERPRINT=""
           for attempt in $(seq 1 5); do
             git fetch origin main
             git checkout -f -B main origin/main
@@ -448,7 +494,8 @@ jobs:
               data/yf/finance \
               data/yf/etf-details \
               data/admin/data-supply-state \
-              data/admin/stockanalysis-recovery
+              data/admin/stockanalysis-recovery \
+              data/admin/yahoo_etf_fallback
 
             APPLY_JSON="$(
               python3 scripts/stockanalysis_artifact.py apply \
@@ -461,9 +508,25 @@ jobs:
                 --github-output "$RUNNER_TEMP/stockanalysis-apply-output"
             )"
             APPLY_STATUS="$(python3 -c 'import json,sys; print(json.load(sys.stdin)["status"])' <<<"$APPLY_JSON")"
+            APPLY_CONFIRMATION="$(python3 -c 'import json,sys; print(json.load(sys.stdin)["confirmation"])' <<<"$APPLY_JSON")"
+            APPLY_REASON="$(python3 -c 'import json,sys; print(json.load(sys.stdin).get("reason") or "")' <<<"$APPLY_JSON")"
             if [ "$APPLY_STATUS" = "stale" ]; then
+              if [ "$APPLY_CONFIRMATION" != "not_confirmed" ]; then
+                echo "stale artifact must be explicitly non-confirming" >&2
+                exit 1
+              fi
               echo "status=stale" >> "$GITHUB_OUTPUT"
-              exit 0
+              echo "confirmation=not_confirmed" >> "$GITHUB_OUTPUT"
+              echo "fence_reason=stale_candidate" >> "$GITHUB_OUTPUT"
+              echo "stale apply reason: $APPLY_REASON" >&2
+              {
+                echo "### StockAnalysis publish fence"
+                echo "- status: stale"
+                echo "- confirmation: not_confirmed"
+                echo "- fence_reason: stale_candidate"
+                echo "- reason: $APPLY_REASON"
+              } >> "${GITHUB_STEP_SUMMARY:-/dev/null}"
+              exit 75
             fi
 
             PROJECTION_ORACLE_ROOT="$RUNNER_TEMP/stockanalysis-projection-oracle"
@@ -471,25 +534,80 @@ jobs:
             rm -rf "$PROJECTION_ORACLE_ROOT"
             mkdir -p "$PROJECTION_ORACLE"
             rsync -a --checksum --delete data/stockanalysis/surfaces/ "$PROJECTION_ORACLE/"
-            python3 -m unittest scripts/test_fetch_stockanalysis_fixtures.py
-            python3 scripts/test_stockanalysis_recovery_state.py
-            node scripts/test-stockanalysis-attempt-emitter.mjs
-            STOCKANALYSIS_SOURCE_SURFACE_DIR="data/stockanalysis/surfaces" \
-              STOCKANALYSIS_PROJECTION_ORACLE_DIR="$PROJECTION_ORACLE" \
-              python3 -m unittest scripts/test_stockanalysis_surface_contract.py
-            python3 -m unittest scripts/test_stockanalysis_workflow_contract.py
-            python3 -m unittest scripts/test_stockanalysis_artifact.py
-            python3 scripts/test-stockanalysis-financials-fixtures.py
-            python3 -m unittest scripts/test_audit_market_data.py
-            node scripts/test-select-stockanalysis-daily1y-offset.mjs
-            node scripts/test-write-fenok-etf-daily1y-readiness.mjs
-            node scripts/test-build-fenok-etf-core-daily-basket.mjs
+            # A push race normally advances an unrelated data lane. Re-running
+            # this full contract suite cannot add evidence when every source it
+            # reads and the immutable acquisition artifact are identical. Bind
+            # the proof to those inputs; any relevant source/data drift reruns
+            # the suite before the candidate can be committed.
+            VALIDATION_INPUT_FINGERPRINT="$(
+              {
+                git ls-tree -r HEAD -- \
+                  .github/workflows \
+                  scripts \
+                  100xfenok-next/scripts \
+                  100xfenok-next/package.json \
+                  data/admin/lane-commit-manifest.json \
+                  data/stockanalysis \
+                  data/yf/finance \
+                  data/yf/etf-details \
+                  data/admin/data-supply-state \
+                  data/admin/stockanalysis-recovery \
+                  data/admin/yahoo_etf_fallback
+                printf 'artifact-digest %s\n' "$ARTIFACT_DIGEST"
+              } | sha256sum | awk '{print $1}'
+            )"
+            if [ "$VALIDATION_INPUT_FINGERPRINT" != "$VALIDATED_INPUT_FINGERPRINT" ]; then
+              python3 scripts/test_stockanalysis_recovery_state.py
+              node scripts/test-yahoo-etf-fallback-recovery.mjs
+              node scripts/test-stockanalysis-lane-parity.mjs
+              STOCKANALYSIS_SOURCE_SURFACE_DIR="data/stockanalysis/surfaces" \
+                STOCKANALYSIS_PROJECTION_ORACLE_DIR="$PROJECTION_ORACLE" \
+                python3 -m unittest scripts/test_stockanalysis_surface_contract.py
+              python3 -m unittest scripts/test_stockanalysis_workflow_contract.py
+              python3 -m unittest scripts/test_resolve_etf_detail_candidates.py
+              python3 -m unittest scripts/test_stockanalysis_artifact.py
+              python3 scripts/test-stockanalysis-financials-fixtures.py
+              python3 -m unittest scripts/test_audit_market_data.py
+              node scripts/test-select-stockanalysis-daily1y-offset.mjs
+              node scripts/test-write-fenok-etf-daily1y-readiness.mjs
+              node scripts/test-build-fenok-etf-core-daily-basket.mjs
+              VALIDATED_INPUT_FINGERPRINT="$VALIDATION_INPUT_FINGERPRINT"
+            else
+              echo "Reusing validation from the identical source and acquisition artifact"
+            fi
 
             scripts/stage-lane-manifest.sh \
               --workflow .github/workflows/fetch-stockanalysis.yml \
               --stage always_if_exists
             python3 scripts/stockanalysis_artifact.py audit-stage \
               --artifact-root "$ARTIFACT_ROOT"
+            python3 scripts/resolve_etf_detail_candidates.py \
+              --artifact-manifest "$ARTIFACT_ROOT/manifest.json"
+            scripts/stage-lane-manifest.sh \
+              --workflow .github/workflows/fetch-stockanalysis.yml \
+              --stage always_if_exists
+            (
+              cd 100xfenok-next
+              npm run build:data-supply-public
+              node scripts/sync-public-data.mjs --write
+              node sync-static-overrides.mjs
+              # The generic data->public copy adds and overwrites but never
+              # deletes, so a ticker dropping to `unavailable` leaves its
+              # public payload behind and every later directory-walking check
+              # reads it as an orphan (AKAF, 2026-09-07, run 34071869290).
+              # Reconcile the mirror here so the published commit already
+              # carries the deletion instead of failing the next build.
+              npm run reconcile:data-supply-public-mirror
+            )
+            node scripts/refresh-cloud-data-plane-migration-demand.mjs \
+              --candidate=stockanalysis_etf_detail
+            scripts/stage-lane-manifest.sh \
+              --workflow .github/workflows/fetch-stockanalysis.yml \
+              --stage always_if_exists
+            git add -- \
+              data/computed/data-supply/etf-detail \
+              100xfenok-next/public/data \
+              scripts/fixtures/cloud-data-plane/etf-migration-demand.json
             if git diff --staged --quiet; then
               COMMIT_ARGS=(--allow-empty)
               COMMIT_SUBJECT="chore: record stockanalysis no-change run"
@@ -505,8 +623,126 @@ jobs:
               -m "StockAnalysis-Run-Attempt: ${{ github.run_attempt }}" \
               -m "StockAnalysis-Run-ID: ${{ github.run_id }}" \
               -m "StockAnalysis-Artifact-Digest: $ARTIFACT_DIGEST"
+            # Capture the published commit BEFORE the push and the post-push
+            # checkout: the readback resets to origin/main, which by then can
+            # carry other lanes' commits, so HEAD afterwards is not necessarily
+            # this publication. The joined-cycle tuple needs this exact commit.
+            PUBLISHED_COMMIT="$(git rev-parse HEAD)"
             if git push origin HEAD:main; then
+              if ! git fetch origin main || ! git checkout -f -B main origin/main; then
+                echo "status=$ACCEPTED_STATUS" >> "$GITHUB_OUTPUT"
+                echo "confirmation=not_confirmed" >> "$GITHUB_OUTPUT"
+                echo "fence_reason=main_readback_infrastructure" >> "$GITHUB_OUTPUT"
+                echo "commit=$PUBLISHED_COMMIT" >> "$GITHUB_OUTPUT"
+                echo "post-publish main checkout/readback base was unavailable" >&2
+                {
+                  echo "### StockAnalysis publish fence"
+                  echo "- status: $ACCEPTED_STATUS"
+                  echo "- confirmation: not_confirmed"
+                  echo "- fence_reason: main_readback_infrastructure"
+                } >> "${GITHUB_STEP_SUMMARY:-/dev/null}"
+                exit 75
+              fi
+              if ! READBACK_JSON="$({
+                python3 scripts/stockanalysis_artifact.py verify-readback \
+                  --repo-root . \
+                  --artifact-root "$ARTIFACT_ROOT"
+              })"; then
+                echo "status=$ACCEPTED_STATUS" >> "$GITHUB_OUTPUT"
+                echo "confirmation=not_confirmed" >> "$GITHUB_OUTPUT"
+                echo "fence_reason=main_readback_mismatch" >> "$GITHUB_OUTPUT"
+                echo "commit=$PUBLISHED_COMMIT" >> "$GITHUB_OUTPUT"
+                echo "post-publish main readback did not confirm the candidate" >&2
+                {
+                  echo "### StockAnalysis publish fence"
+                  echo "- status: $ACCEPTED_STATUS"
+                  echo "- confirmation: not_confirmed"
+                  echo "- fence_reason: main_readback_mismatch"
+                } >> "${GITHUB_STEP_SUMMARY:-/dev/null}"
+                exit 75
+              fi
+              # Identity proof. The readback above verifies the packed candidate
+              # bytes in this checkout. The published commit must also remain
+              # reachable from current main, and its artifact-digest trailer must
+              # equal the acquisition digest. Together they bind current origin
+              # to this exact publication.
+              #
+              # Reachability is proven against the REMOTE, not against local
+              # history. A local ancestry test answers from whatever slice of
+              # the graph this shallow checkout happens to hold, and compares
+              # against a HEAD that is already stale, so a burst of commits
+              # between our push and this readback would fence a publication
+              # that actually succeeded. A fixed deepen only moves that cliff;
+              # it does not remove it. The remote comparison answers from the
+              # complete graph, so a negative result means the commit really is
+              # not on main.
+              # FH-20260902-496 fallback: queue already serializes via fenok-data-writer
+              # (concurrency group fenok-data-writer-refs/heads/main at fetch-stockanalysis.yml:443/828,
+              # same as fetch-fdic.yml:31, fenok-edge-daily.yml:63), but schedule burst still
+              # races shallow checkout. Keep fence but replace gh api compare with git.
+              COMPARE_STATUS=""
+              COMMIT_REACHABLE=""
+              for backoff in 15 30 60; do
+                git fetch origin main --deepen=50 2>/dev/null || git fetch origin main 2>/dev/null || true
+                if [ "$(git rev-parse "$PUBLISHED_COMMIT" 2>/dev/null)" = "$(git rev-parse origin/main 2>/dev/null)" ]; then
+                  COMPARE_STATUS="identical"; COMMIT_REACHABLE="yes"; break
+                elif git merge-base --is-ancestor "$PUBLISHED_COMMIT" origin/main 2>/dev/null; then
+                  COMPARE_STATUS="ahead"; COMMIT_REACHABLE="yes"; break
+                elif git merge-base --is-ancestor origin/main "$PUBLISHED_COMMIT" 2>/dev/null; then
+                  COMPARE_STATUS="behind"; COMMIT_REACHABLE="no"; break
+                elif git cat-file -e "$PUBLISHED_COMMIT" 2>/dev/null && git cat-file -e origin/main 2>/dev/null; then
+                  COMPARE_STATUS="diverged"; COMMIT_REACHABLE="no"; break
+                fi
+                sleep $backoff
+              done
+              # Availability and identity are different failures. An absent or
+              # unrecognised comparison leaves the answer UNKNOWN after the
+              # bounded attempts, and an unknown must never be reported as a
+              # proven mismatch — that is what the pre-existing infrastructure
+              # fence is for. Only behind/diverged can reach the identity fence.
+              if [ -z "$COMPARE_STATUS" ] || [ -z "$COMMIT_REACHABLE" ]; then
+                echo "status=$ACCEPTED_STATUS" >> "$GITHUB_OUTPUT"
+                echo "confirmation=not_confirmed" >> "$GITHUB_OUTPUT"
+                echo "fence_reason=main_readback_infrastructure" >> "$GITHUB_OUTPUT"
+                echo "commit=$PUBLISHED_COMMIT" >> "$GITHUB_OUTPUT"
+                echo "remote comparison for $PUBLISHED_COMMIT did not yield a documented status after 3 attempts" >&2
+                {
+                  echo "### StockAnalysis publish fence"
+                  echo "- status: $ACCEPTED_STATUS"
+                  echo "- confirmation: not_confirmed"
+                  echo "- fence_reason: main_readback_infrastructure"
+                } >> "${GITHUB_STEP_SUMMARY:-/dev/null}"
+                exit 75
+              fi
+              # The trailer is read locally by SHA on purpose. Git objects are
+              # content-addressed, so the local object at this commit is
+              # byte-identical to the remote's, and a second API call would add
+              # a failure mode without adding a fact.
+              COMMIT_ARTIFACT_DIGEST="$(
+                git log -1 --format=%B "$PUBLISHED_COMMIT" 2>/dev/null \
+                  | sed -n 's/^StockAnalysis-Artifact-Digest: //p' | tail -n 1
+              )" || COMMIT_ARTIFACT_DIGEST=""
+              if [ "$COMMIT_REACHABLE" != "yes" ] || [ "$COMMIT_ARTIFACT_DIGEST" != "$ARTIFACT_DIGEST" ]; then
+                echo "status=$ACCEPTED_STATUS" >> "$GITHUB_OUTPUT"
+                echo "confirmation=not_confirmed" >> "$GITHUB_OUTPUT"
+                echo "fence_reason=main_readback_identity" >> "$GITHUB_OUTPUT"
+                echo "commit=$PUBLISHED_COMMIT" >> "$GITHUB_OUTPUT"
+                echo "post-publish identity proof failed: compare_status=$COMPARE_STATUS reachable=$COMMIT_REACHABLE trailer_matches_acquisition=$([ "$COMMIT_ARTIFACT_DIGEST" = "$ARTIFACT_DIGEST" ] && echo yes || echo no)" >&2
+                {
+                  echo "### StockAnalysis publish fence"
+                  echo "- status: $ACCEPTED_STATUS"
+                  echo "- confirmation: not_confirmed"
+                  echo "- fence_reason: main_readback_identity"
+                  echo "- compare_status: $COMPARE_STATUS"
+                  echo "- commit_reachable: $COMMIT_REACHABLE"
+                } >> "${GITHUB_STEP_SUMMARY:-/dev/null}"
+                exit 75
+              fi
+              echo "$READBACK_JSON"
               echo "status=$ACCEPTED_STATUS" >> "$GITHUB_OUTPUT"
+              echo "confirmation=confirmed" >> "$GITHUB_OUTPUT"
+              echo "fence_reason=confirmed" >> "$GITHUB_OUTPUT"
+              echo "commit=$PUBLISHED_COMMIT" >> "$GITHUB_OUTPUT"
               exit 0
             fi
             echo "git push race on attempt ${attempt}; restarting from fresh origin/main"
@@ -515,8 +751,122 @@ jobs:
           echo "git push failed after retrying concurrent main updates"
           exit 1
 
+  publish-stockanalysis-etf-plane:
+    needs: acquire-stockanalysis
+    if: >-
+      (github.event_name == 'schedule' &&
+       (github.event.schedule == '50 23 * * 1-5' || github.event.schedule == '20 23 * * 0')) ||
+      (github.event_name == 'workflow_dispatch' && inputs.core_basket_refresh == 'true' &&
+       inputs.stocks_only != 'true' && inputs.history_gap_plan != 'true' &&
+       inputs.controlled_failure_tickers == '' && inputs.controlled_failure_surfaces == '')
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+    permissions:
+      contents: read
+      actions: read
+    concurrency:
+      group: stockanalysis-etf-detail-publish
+      cancel-in-progress: false
+      queue: max
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      - name: Download immutable StockAnalysis candidate
+        uses: actions/download-artifact@v4
+        with:
+          name: ${{ needs.acquire-stockanalysis.outputs.artifact_name }}
+          path: ${{ runner.temp }}/stockanalysis-artifact
+
+      - name: Apply the immutable candidate without taking the Git writer lock
+        env:
+          ARTIFACT_DIGEST: ${{ needs.acquire-stockanalysis.outputs.artifact_digest }}
+          ARTIFACT_NAME: ${{ needs.acquire-stockanalysis.outputs.artifact_name }}
+        run: |
+          set -euo pipefail
+          git fetch origin main
+          git checkout -f -B main origin/main
+          ARTIFACT_ROOT="$RUNNER_TEMP/stockanalysis-artifact"
+          APPLY_JSON="$(
+            python3 scripts/stockanalysis_artifact.py apply \
+              --artifact-root "$ARTIFACT_ROOT" \
+              --run-id "${{ github.run_id }}" \
+              --run-number "${{ github.run_number }}" \
+              --run-attempt "${{ github.run_attempt }}" \
+              --artifact-name "$ARTIFACT_NAME" \
+              --artifact-digest "$ARTIFACT_DIGEST" \
+              --github-output "$RUNNER_TEMP/stockanalysis-plane-apply-output"
+          )"
+          APPLY_STATUS="$(python3 -c 'import json,sys; print(json.load(sys.stdin)["status"])' <<<"$APPLY_JSON")"
+          if [ "$APPLY_STATUS" != "applied" ]; then
+            echo "::error::ETF plane publication requires an applied immutable candidate; got $APPLY_STATUS" >&2
+            exit 75
+          fi
+
+      - name: Publish guarded stockanalysis-etf-detail generation
+        id: publish_cloud_generation
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: aeeb5ea3affe55a2219d08ea02dad9e1
+          DATA_PLANE_ENDPOINT: https://100xfenok.etloveaui.workers.dev/internal/cloud-data-plane
+          DATA_PLANE_WRITE_KEY: ${{ secrets.DATA_PLANE_WRITE_KEY }}
+          # Bind publication to the immutable acquisition artifact; this job
+          # runs independently of the Git publisher.
+          PUBLISH_BINDING_ARTIFACT_DIGEST: ${{ needs.acquire-stockanalysis.outputs.artifact_digest }}
+        run: node scripts/publish-cloud-data-generation.mjs --family=stockanalysis-etf-detail --json
+
+  # Rebuild the shared projection after Git publication and the required cloud
+  # publication both succeed. Source-only runs keep their canonical path.
+  # This job stages no Git commit and holds no shared writer lock.
+  dispatch-stockanalysis-projection:
+    needs:
+      - publish-stockanalysis
+      - publish-stockanalysis-etf-plane
+    if: >-
+      always() &&
+      needs.publish-stockanalysis.result == 'success' &&
+      (
+        needs.publish-stockanalysis-etf-plane.result == 'success' ||
+        (
+          (github.event_name != 'schedule' ||
+            (github.event.schedule != '50 23 * * 1-5' && github.event.schedule != '20 23 * * 0')) &&
+          needs.publish-stockanalysis-etf-plane.result == 'skipped'
+        )
+      )
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      actions: write
+    steps:
       - name: Dispatch shared projection rebuild
-        if: ${{ steps.publish.outputs.status == 'published' }}
         env:
           GH_TOKEN: ${{ github.token }}
-        run: gh workflow run update-manifest.yml --ref main
+        run: |
+          set -euo pipefail
+          # This job intentionally has no checkout, so gh cannot infer the
+          # repository from a local git remote. Name it explicitly.
+          gh workflow run update-manifest.yml --repo ${{ github.repository }} --ref main
+
+  # The daily stock overview schedule also starts the SEC earnings refresh, but
+  # this job has no dependency on acquire-stockanalysis or its provider result.
+  # The reusable workflow owns its own writer lock and cloud publication.
+  refresh-earnings-overview:
+    if: >-
+      github.event_name == 'schedule' &&
+      github.event.schedule == '20 21 * * *'
+    permissions:
+      contents: write
+      actions: read
+    uses: ./.github/workflows/refresh-earnings-overview.yml
+    secrets: inherit

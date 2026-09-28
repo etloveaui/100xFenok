@@ -1,24 +1,26 @@
 {
-  "schema_version": "data-supply-detection-attempt-shard/v1",
+  "schema_version": "data-supply-detection-attempt-shard/v2",
   "lane_id": "yahoo_etf_fallback",
   "attempts": [
     {
       "lane_id": "yahoo_etf_fallback",
       "member_id": null,
-      "attempt_id": "stockanalysis-yahoo-29962904029-1",
-      "observed_at": "2026-07-22T22:28:53Z",
-      "execution": "returned",
-      "exception_kind": null,
+      "attempt_id": "stockanalysis-yahoo-36374111199-1",
+      "observed_at": "2026-09-28T03:58:06Z",
+      "execution": "threw",
+      "exception_kind": "unexpected",
       "http_status": null,
       "auth": "not_applicable",
       "rate_limited": false,
       "decode": "not_attempted",
-      "payload": "empty",
+      "payload": "not_available",
       "assertions": [],
-      "candidates": 0,
+      "candidates": 82,
       "retry_count": 0,
-      "latency_ms": 0,
-      "outcome": "no_fallback_candidates"
+      "latency_ms": 42591,
+      "outcome": "error",
+      "failure_entity": "AAAU",
+      "failure_detail": "ValueError: Yahoo ETF canonical provider identity mismatch"
     }
   ]
 }

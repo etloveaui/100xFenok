@@ -12,18 +12,8 @@ import { createHash } from "node:crypto";
 import fs from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
-import {
-  attemptResult,
-  atomicWrite,
-  classifyEndpointResponse,
-  defaultAttemptId,
-  returnedTuple,
-  threwTuple,
-  transportError,
-  unobservedTuple,
-  worstRequestResult,
-  writeAttemptShard,
-} from "./lib/data-supply-attempt-shard.mjs";
+import { atomicWrite } from "./lib/atomic-file.mjs";
+import { attemptResult, classifyEndpointResponse, defaultAttemptId, returnedTuple, threwTuple, transportError, unobservedTuple, worstRequestResult } from "./lib/provider-fetch-result.mjs";
 import {
   LaneLkgStore,
   PROMOTION_CONTRACT_PROVIDER_OBSERVATION_V2,
@@ -32,6 +22,7 @@ import {
   isNaturalScheduleRun,
   systemicLkgFailureReason,
 } from "./lib/data-supply-lkg-store.mjs";
+import { boundedDiagnosticDetail, diagnosticSuffix } from "./lib/diagnostic-detail.mjs";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const repoRoot = path.resolve(__dirname, "..");
@@ -322,7 +313,6 @@ function buildPayload({ yyyymmdd, sourceUrl, fetchedAt, rows }) {
     caveats: [
       "FINRA daily short-volume is an off-exchange/short-volume proxy, not true dark-pool intent.",
       "ShortVolume/TotalVolume is not buyer/seller direction.",
-      "Rows must remain admin-private until owner/legal redistribution review clears a derived public surface.",
     ],
     fields: [
       "date",
@@ -380,10 +370,32 @@ async function fetchResponseWithRetry(url, {
 
 function thrownEndpointResult(error) {
   const exceptionKind = transportError(error) ? "transport" : "unexpected";
-  return attemptResult(
-    exceptionKind === "transport" ? "transport_error" : "unexpected_error",
-    threwTuple(exceptionKind),
-  );
+  return {
+    ...attemptResult(
+      exceptionKind === "transport" ? "transport_error" : "unexpected_error",
+      threwTuple(exceptionKind),
+    ),
+    failure_detail: boundedDiagnosticDetail(error),
+  };
+}
+
+function attachEndpointResult(error, endpointResult) {
+  if (error && (typeof error === "object" || typeof error === "function")) {
+    if (!error.endpointResult) error.endpointResult = endpointResult;
+    if (endpointResult.failure_detail && !error.failure_detail) error.failure_detail = endpointResult.failure_detail;
+    return error;
+  }
+  const wrapped = new Error(String(error));
+  wrapped.endpointResult = endpointResult;
+  if (endpointResult.failure_detail) wrapped.failure_detail = endpointResult.failure_detail;
+  return wrapped;
+}
+
+function formatCliFailure(error) {
+  const endpointResult = error?.endpointResult;
+  const reason = endpointResult?.reason ?? "unexpected_error";
+  const detail = endpointResult?.failure_detail ?? boundedDiagnosticDetail(error);
+  return `[corrupt] FINRA daily ${reason}${diagnosticSuffix(detail)}`;
 }
 
 function stableAttemptId(prefix, observedAt) {
@@ -574,8 +586,7 @@ function finraLkgArtifactDescriptor(markerPath) {
 }
 
 // Additive LKG recovery wrapper around the existing per-date collection. It never
-// mutates the detection attempt shard (that stays owned by writeAttemptShard) and
-// never rewrites a per-date payload; it only maintains the store's freshness marker,
+// rewrites a per-date payload; it only maintains the store's freshness marker,
 // LKG copy, and recovery index under data/admin/finra_short_volume/.
 function applyFinraLkgStore({
   repoRoot: storeRepoRoot,
@@ -827,7 +838,6 @@ async function collectRegshoDailyDate({ yyyymmdd, inputFile, noFetch, noWrite, g
 
 async function run(argv = process.argv.slice(2), {
   request = fetchResponse,
-  attemptShardPath = path.join(repoRoot, "data/admin/data-supply-state/detection-attempts/finra_short_volume.json"),
   observedAt = new Date().toISOString(),
   attemptId = stableAttemptId("finra-short-volume", observedAt),
   lkgRepoRoot = repoRoot,
@@ -882,8 +892,8 @@ async function run(argv = process.argv.slice(2), {
   try {
     if (controlledFinraFailure) {
       // Do not touch the provider or private cache. The synthetic unavailable
-      // observation is still published to the attempt shard, while the flag
-      // below makes the real LKG store record the explicit controlled reason.
+      // observation is retained in memory, while the flag below makes the
+      // real LKG store record the explicit controlled reason.
       endpointResults.push(attemptResult("transport_error", threwTuple("transport")));
     } else {
       for (const yyyymmdd of dates) {
@@ -903,7 +913,7 @@ async function run(argv = process.argv.slice(2), {
         } catch (err) {
           const endpointResult = err?.endpointResult ?? thrownEndpointResult(err);
           endpointResults.push(endpointResult);
-          if (!isMissingFileError(err)) throw err;
+          if (!isMissingFileError(err)) throw attachEndpointResult(err, endpointResult);
           // Holiday or not-yet-published file inside the window: record and move on
           // instead of failing the whole run (and with it the downstream data push).
           skippedDates.push({ date: yyyymmdd, reason: `not_published (HTTP ${err.httpStatus})` });
@@ -1001,13 +1011,6 @@ async function run(argv = process.argv.slice(2), {
     outputs: results.map(({ payload, outputAbs, rawTextAbs, ...result }) => result),
     };
   } finally {
-    writeAttemptShard({
-      laneId: "finra_short_volume",
-      attemptShardPath,
-      observedAt,
-      attemptId,
-      result: reduceFinraEndpointResults(endpointResults),
-    });
   }
 }
 
@@ -1018,8 +1021,8 @@ if (process.argv[1] === fileURLToPath(import.meta.url)) {
       if (Number(summary.exit_code) > 0) process.exitCode = Number(summary.exit_code);
     })
     .catch((err) => {
-      console.error(err.stack || err.message);
-      process.exit(1);
+      console.error(formatCliFailure(err));
+      process.exitCode = 1;
     });
 }
 

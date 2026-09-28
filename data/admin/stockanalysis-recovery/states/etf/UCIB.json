@@ -1,0 +1,54 @@
+{
+  "schema_version": "stockanalysis-recovery-state/v1",
+  "artifact_kind": "etf",
+  "entity": "UCIB",
+  "attempts": [
+    {
+      "run_id": "36100473237",
+      "run_attempt": 1,
+      "event_name": "workflow_dispatch",
+      "schedule": "",
+      "natural": false,
+      "observed_at": "2026-09-25T05:55:35Z",
+      "outcome": "failed",
+      "controlled": false,
+      "error": "ValueError: svelte_contract_drift:holdings:missing_required:holdings"
+    }
+  ],
+  "resolution_state": "lkg_primary",
+  "retry": true,
+  "last_attempt": {
+    "run_id": "36100473237",
+    "run_attempt": 1,
+    "event_name": "workflow_dispatch",
+    "schedule": "",
+    "natural": false,
+    "observed_at": "2026-09-25T05:55:35Z",
+    "outcome": "failed",
+    "controlled": false,
+    "error": "ValueError: svelte_contract_drift:holdings:missing_required:holdings"
+  },
+  "latest_failure": {
+    "run_id": "36100473237",
+    "run_attempt": 1,
+    "observed_at": "2026-09-25T05:55:35Z",
+    "error": "ValueError: svelte_contract_drift:holdings:missing_required:holdings",
+    "controlled": false,
+    "had_canonical_before_failure": true,
+    "expected_payload_sha256": "07cb344c100ff067e03b6d7d8206b25be5122e88e7f82b09c484545c4e3f6528",
+    "data_loss": false
+  },
+  "updated_at": "2026-09-25T05:55:35Z",
+  "lkg": {
+    "path": "data/admin/stockanalysis-recovery/lkg/etf/UCIB.json",
+    "payload_sha256": "07cb344c100ff067e03b6d7d8206b25be5122e88e7f82b09c484545c4e3f6528",
+    "source_as_of": "2025-10-26T00:00:00Z",
+    "fetched_at": "2026-07-18T23:49:15Z"
+  },
+  "current": {
+    "path": "data/admin/stockanalysis-recovery/lkg/etf/UCIB.json",
+    "payload_sha256": "07cb344c100ff067e03b6d7d8206b25be5122e88e7f82b09c484545c4e3f6528",
+    "source_as_of": "2025-10-26T00:00:00Z",
+    "fetched_at": "2026-07-18T23:49:15Z"
+  }
+}

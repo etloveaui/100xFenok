@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import MarketValuationShell from "./MarketValuationShell";
-import "@/styles/cp-w5-market-valuation.css";
+import "./market-valuation.css";
 
 export const dynamic = "force-dynamic";
 
@@ -10,9 +10,5 @@ export const metadata: Metadata = {
 };
 
 export default function MarketValuationPage() {
-  return (
-    <div className="fnk-shell">
-      <MarketValuationShell />
-    </div>
-  );
+  return <MarketValuationShell />;
 }

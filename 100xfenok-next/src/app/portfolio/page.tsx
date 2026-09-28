@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import AppShell from "@/components/shell/AppShell";
 import { normalizeForEntityKey } from "@/lib/ticker";
 import PortfolioClient from "./PortfolioClient";
+import "./portfolio-light.css";
 
 interface Props {
   searchParams?: Promise<Record<string, string | string[] | undefined>>;
@@ -21,10 +22,8 @@ export default async function PortfolioPage({ searchParams }: Props) {
   const initialTicker = normalizeForEntityKey(firstParam(params.ticker));
 
   return (
-    <div className="fnk-shell">
-      <AppShell active="portfolio" title="포트폴리오">
-        <PortfolioClient initialTicker={initialTicker} />
-      </AppShell>
-    </div>
+    <AppShell active="portfolio" title="포트폴리오">
+      <PortfolioClient initialTicker={initialTicker} />
+    </AppShell>
   );
 }

@@ -177,7 +177,7 @@ function scoreDots(score: number) {
 function AxisRow({ label, value, detail, light = false }: { label: string; value: number; detail: string; light?: boolean }) {
   return (
     <div className="space-y-1.5">
-      <div className="flex items-center justify-between gap-3 text-xs font-bold uppercase tracking-[0.12em]">
+      <div className="flex items-center justify-between gap-3 text-[12px] font-bold uppercase tracking-[0.12em]">
         <span className={light ? "text-white/70" : "text-slate-500"}>{label}</span>
         <span className={light ? "text-white" : "text-slate-900"}>{value}%</span>
       </div>
@@ -187,7 +187,7 @@ function AxisRow({ label, value, detail, light = false }: { label: string; value
           style={{ width: `${value}%` }}
         />
       </div>
-      <p className={`text-xs ${light ? "text-white/65" : "text-slate-600"}`}>{detail}</p>
+      <p className={`text-[12px] ${light ? "text-white/65" : "text-slate-600"}`}>{detail}</p>
     </div>
   );
 }
@@ -214,7 +214,7 @@ function DeviceFrame({
               <span className="h-2.5 w-2.5 rounded-full bg-amber-300" />
               <span className="h-2.5 w-2.5 rounded-full bg-emerald-400" />
             </div>
-            <p className="text-[11px] font-bold uppercase tracking-[0.14em] text-slate-500">
+            <p className="text-[12px] font-bold uppercase tracking-[0.14em] text-slate-500">
               {title} · {viewport}px
             </p>
           </div>
@@ -245,13 +245,13 @@ function MacroBentoPreview({ isPhone }: PreviewContext) {
         <div className="flex items-start justify-between gap-3">
           <div>
             <p className="inline-flex rounded-full border border-white/15 bg-white/10 px-2.5 py-1 text-[10px] font-black uppercase tracking-[0.14em] text-white/80">
-              Regime Hero
+              Si-hwang Hero
             </p>
             <h3 className="mt-3 text-3xl font-black tracking-tight">위험 선호</h3>
             <p className="mt-1 text-sm text-white/70">핵심 판정 + 3축 분해를 가장 큰 타일로 고정합니다.</p>
           </div>
           <div className="rounded-2xl border border-white/10 bg-white/10 px-4 py-3 text-right">
-            <p className="text-[11px] font-black uppercase tracking-[0.14em] text-white/60">Confidence</p>
+            <p className="text-[12px] font-black uppercase tracking-[0.14em] text-white/60">Confidence</p>
             <p className="mt-1 text-4xl font-black">72%</p>
           </div>
         </div>
@@ -263,7 +263,7 @@ function MacroBentoPreview({ isPhone }: PreviewContext) {
       </section>
 
       <section className="rounded-[1.6rem] border border-slate-200 bg-white p-4 shadow-sm" style={{ gridRow: isPhone ? undefined : "span 2" }}>
-        <p className="text-[11px] font-black uppercase tracking-[0.14em] text-slate-500">Quick Indices</p>
+        <p className="text-[12px] font-black uppercase tracking-[0.14em] text-slate-500">Quick Indices</p>
         <div className="mt-4 grid gap-3">
           {quickStrip.map((item) => (
             <div key={item} className="rounded-2xl border border-slate-200 bg-slate-50 px-3 py-3 text-sm font-black text-slate-900">
@@ -274,7 +274,7 @@ function MacroBentoPreview({ isPhone }: PreviewContext) {
       </section>
 
       <section className="rounded-[1.6rem] border border-slate-200 bg-white p-4 shadow-sm">
-        <p className="text-[11px] font-black uppercase tracking-[0.14em] text-slate-500">Breadth</p>
+        <p className="text-[12px] font-black uppercase tracking-[0.14em] text-slate-500">Breadth</p>
         <p className="mt-2 text-2xl font-black text-slate-950">7 상승 · 4 하락</p>
         <div className="mt-3 flex flex-wrap gap-2">
           {breadthLeaders.map((item) => (
@@ -286,7 +286,7 @@ function MacroBentoPreview({ isPhone }: PreviewContext) {
       </section>
 
       <section className="rounded-[1.6rem] border border-slate-200 bg-white p-4 shadow-sm">
-        <p className="text-[11px] font-black uppercase tracking-[0.14em] text-slate-500">Liquidity</p>
+        <p className="text-[12px] font-black uppercase tracking-[0.14em] text-slate-500">Liquidity</p>
         <p className="mt-2 text-2xl font-black text-slate-950">+$27.6B</p>
         <div className="mt-3 flex h-12 items-end gap-1.5 rounded-2xl bg-slate-100 px-2 py-2">
           {liquidityBars.map((bar, index) => (
@@ -300,13 +300,13 @@ function MacroBentoPreview({ isPhone }: PreviewContext) {
       </section>
 
       <section className="rounded-[1.6rem] border border-slate-200 bg-white p-4 shadow-sm">
-        <p className="text-[11px] font-black uppercase tracking-[0.14em] text-slate-500">VIX</p>
+        <p className="text-[12px] font-black uppercase tracking-[0.14em] text-slate-500">VIX</p>
         <p className="mt-2 text-2xl font-black text-slate-950">14.2</p>
         <p className="mt-2 text-sm font-semibold text-slate-600">낮은 변동성</p>
       </section>
 
       <section className="rounded-[1.6rem] border border-slate-200 bg-white p-4 shadow-sm">
-        <p className="text-[11px] font-black uppercase tracking-[0.14em] text-slate-500">Crypto</p>
+        <p className="text-[12px] font-black uppercase tracking-[0.14em] text-slate-500">Crypto</p>
         <p className="mt-2 text-2xl font-black text-slate-950">78</p>
         <p className="mt-2 text-sm font-semibold text-slate-600">탐욕 구간</p>
       </section>
@@ -315,15 +315,15 @@ function MacroBentoPreview({ isPhone }: PreviewContext) {
         className="rounded-[1.6rem] border border-slate-200 bg-white p-4 shadow-sm"
         style={{ gridColumn: isPhone ? undefined : "span 2" }}
       >
-        <p className="text-[11px] font-black uppercase tracking-[0.14em] text-slate-500">Banking + Stress</p>
+        <p className="text-[12px] font-black uppercase tracking-[0.14em] text-slate-500">Banking + Stress</p>
         <div className="mt-3 grid gap-3 sm:grid-cols-2">
           <div className="rounded-2xl border border-slate-200 bg-slate-50 p-3">
-            <p className="text-xs font-bold uppercase tracking-[0.12em] text-slate-500">건전성</p>
+            <p className="text-[12px] font-bold uppercase tracking-[0.12em] text-slate-500">건전성</p>
             <p className="mt-2 text-lg font-black text-slate-950">안정</p>
             <p className="mt-1 text-sm text-slate-600">연체율 1.47% · 자본비율 14.17%</p>
           </div>
           <div className="rounded-2xl border border-slate-200 bg-slate-50 p-3">
-            <p className="text-xs font-bold uppercase tracking-[0.12em] text-slate-500">스트레스</p>
+            <p className="text-[12px] font-bold uppercase tracking-[0.12em] text-slate-500">스트레스</p>
             <p className="mt-2 text-lg font-black text-slate-950">0.16 · 낮음</p>
             <p className="mt-1 text-sm text-slate-600">HY 2.88% · 10Y 4.08%</p>
           </div>
@@ -331,12 +331,12 @@ function MacroBentoPreview({ isPhone }: PreviewContext) {
       </section>
 
       <section className="rounded-[1.6rem] border border-slate-200 bg-white p-4 shadow-sm">
-        <p className="text-[11px] font-black uppercase tracking-[0.14em] text-slate-500">Fear & Greed</p>
+        <p className="text-[12px] font-black uppercase tracking-[0.14em] text-slate-500">Fear & Greed</p>
         <div className="mt-3 flex items-center justify-center">
           <div className="flex h-28 w-28 items-center justify-center rounded-full border-[12px] border-amber-300 bg-amber-50 text-center">
             <div>
               <p className="text-3xl font-black text-amber-700">72</p>
-              <p className="text-xs font-bold uppercase tracking-[0.12em] text-amber-700">탐욕</p>
+              <p className="text-[12px] font-bold uppercase tracking-[0.12em] text-amber-700">탐욕</p>
             </div>
           </div>
         </div>
@@ -353,13 +353,13 @@ function SignalCommandPreview({ isPhone }: PreviewContext) {
           <div className="flex items-start justify-between gap-3">
             <div>
               <p className="inline-flex rounded-full border border-white/10 bg-white/10 px-2.5 py-1 text-[10px] font-black uppercase tracking-[0.14em] text-white/80">
-                Regime Command
+                Si-hwang Command
               </p>
               <h3 className="mt-3 text-4xl font-black tracking-tight">위험 선호 72%</h3>
               <p className="mt-2 max-w-lg text-sm text-white/70">상단 Hero가 결론을 먼저 말하고, 아래 패널이 심리·확산·유동성·건전성을 진단합니다.</p>
             </div>
             <div className="rounded-2xl border border-emerald-300/20 bg-emerald-400/10 px-4 py-3">
-              <p className="text-[11px] font-black uppercase tracking-[0.14em] text-emerald-200">Today</p>
+              <p className="text-[12px] font-black uppercase tracking-[0.14em] text-emerald-200">Today</p>
               <p className="mt-1 text-2xl font-black text-emerald-300">판정 유지</p>
             </div>
           </div>
@@ -420,15 +420,15 @@ function SignalCommandPreview({ isPhone }: PreviewContext) {
 
       <div className={`grid gap-3 ${isPhone ? "grid-cols-1" : "grid-cols-[1.2fr_0.8fr]"}`}>
         <section className="rounded-[1.5rem] border border-slate-200 bg-white p-4 shadow-sm">
-          <p className="text-[11px] font-black uppercase tracking-[0.14em] text-slate-500">금융건전성 + 스트레스</p>
+          <p className="text-[12px] font-black uppercase tracking-[0.14em] text-slate-500">금융건전성 + 스트레스</p>
           <div className="mt-3 grid gap-3 sm:grid-cols-2">
             <div className="rounded-2xl border border-slate-200 bg-slate-50 p-3">
-              <p className="text-xs font-bold uppercase tracking-[0.12em] text-slate-500">Banking</p>
+              <p className="text-[12px] font-bold uppercase tracking-[0.12em] text-slate-500">Banking</p>
               <p className="mt-2 text-xl font-black text-slate-950">안정</p>
               <p className="mt-1 text-sm text-slate-600">연체율 1.47% · 자본비율 14.17%</p>
             </div>
             <div className="rounded-2xl border border-slate-200 bg-slate-50 p-3">
-              <p className="text-xs font-bold uppercase tracking-[0.12em] text-slate-500">Stress</p>
+              <p className="text-[12px] font-bold uppercase tracking-[0.12em] text-slate-500">Stress</p>
               <p className="mt-2 text-xl font-black text-slate-950">0.16 · 낮음</p>
               <p className="mt-1 text-sm text-slate-600">HY 2.88% · 10Y 4.08%</p>
             </div>
@@ -436,7 +436,7 @@ function SignalCommandPreview({ isPhone }: PreviewContext) {
         </section>
 
         <section className="rounded-[1.5rem] border border-slate-200 bg-white p-4 shadow-sm">
-          <p className="text-[11px] font-black uppercase tracking-[0.14em] text-slate-500">Macro Notes</p>
+          <p className="text-[12px] font-black uppercase tracking-[0.14em] text-slate-500">Macro Notes</p>
           <div className="mt-3 space-y-2">
             {["일간 · 2026-03-15", "주간 · 2026-03-14", "분기 · 2025-Q4"].map((item) => (
               <div key={item} className="rounded-2xl border border-slate-200 bg-slate-50 px-3 py-2 text-sm font-semibold text-slate-700">
@@ -454,7 +454,7 @@ function BriefDiagnosticsPreview({ isPhone }: PreviewContext) {
   return (
     <div className="space-y-3">
       <section className="rounded-[1.7rem] border border-amber-200 bg-[linear-gradient(180deg,#fff8ed_0%,#ffffff_100%)] p-4 shadow-sm">
-        <p className="text-[11px] font-black uppercase tracking-[0.14em] text-amber-700">Headline Brief</p>
+        <p className="text-[12px] font-black uppercase tracking-[0.14em] text-amber-700">Headline Brief</p>
         <div className={`mt-3 flex gap-3 ${isPhone ? "flex-col" : "items-end justify-between"}`}>
           <div>
             <h3 className="text-3xl font-black tracking-tight text-slate-950">위험 선호 72% · 심리 주도, 스트레스 낮음</h3>
@@ -476,7 +476,7 @@ function BriefDiagnosticsPreview({ isPhone }: PreviewContext) {
                 <div className="flex h-24 w-24 items-center justify-center rounded-full border-[10px] border-amber-300 bg-white">
                   <div className="text-center">
                     <p className="text-3xl font-black text-amber-700">72</p>
-                    <p className="text-[11px] font-black uppercase tracking-[0.12em] text-amber-700">탐욕</p>
+                    <p className="text-[12px] font-black uppercase tracking-[0.12em] text-amber-700">탐욕</p>
                   </div>
                 </div>
               </div>
@@ -541,10 +541,10 @@ function BriefDiagnosticsPreview({ isPhone }: PreviewContext) {
         <section key={card.title} className="rounded-[1.5rem] border border-slate-200 bg-white p-4 shadow-sm">
           <div className={`flex gap-3 ${isPhone ? "flex-col" : "items-start justify-between"}`}>
             <div>
-              <p className="text-[11px] font-black uppercase tracking-[0.14em] text-slate-500">{card.title}</p>
+              <p className="text-[12px] font-black uppercase tracking-[0.14em] text-slate-500">{card.title}</p>
               <h4 className="mt-2 text-xl font-black text-slate-950">{card.headline}</h4>
             </div>
-            <button type="button" className="rounded-full border border-slate-200 bg-slate-50 px-3 py-1.5 text-xs font-black uppercase tracking-[0.12em] text-slate-600">
+            <button type="button" className="rounded-full border border-slate-200 bg-slate-50 px-3 py-1.5 text-[12px] font-black uppercase tracking-[0.12em] text-slate-600">
               Detail
             </button>
           </div>
@@ -561,10 +561,10 @@ function ChangeFeedPreview({ isPhone }: PreviewContext) {
       <section className="sticky top-0 rounded-[1.5rem] bg-[linear-gradient(180deg,#09111f_0%,#131f35_100%)] px-4 py-3 text-white shadow-[0_24px_42px_-32px_rgba(2,6,23,0.9)]">
         <div className={`flex gap-3 ${isPhone ? "flex-col" : "items-center justify-between"}`}>
           <div>
-            <p className="text-[11px] font-black uppercase tracking-[0.14em] text-white/65">Regime Status Bar</p>
+            <p className="text-[12px] font-black uppercase tracking-[0.14em] text-white/65">Si-hwang Status Bar</p>
             <h3 className="mt-1 text-2xl font-black">위험 선호 72% <span className="text-base text-emerald-300">▲2 vs 어제</span></h3>
           </div>
-          <div className="flex flex-wrap gap-2 text-xs font-bold text-white/75">
+          <div className="flex flex-wrap gap-2 text-[12px] font-bold text-white/75">
             {quickStrip.map((item) => (
               <span key={item} className="rounded-full border border-white/10 bg-white/5 px-2.5 py-1">
                 {item}
@@ -577,10 +577,10 @@ function ChangeFeedPreview({ isPhone }: PreviewContext) {
       <section className="rounded-[1.6rem] border border-slate-200 bg-white p-4 shadow-sm">
         <div className={`flex gap-3 ${isPhone ? "flex-col" : "items-end justify-between"}`}>
           <div>
-            <p className="text-[11px] font-black uppercase tracking-[0.14em] text-slate-500">Today&apos;s Changes</p>
+            <p className="text-[12px] font-black uppercase tracking-[0.14em] text-slate-500">Today&apos;s Changes</p>
             <h4 className="mt-2 text-2xl font-black text-slate-950">어제 대비 가장 많이 움직인 신호 순서</h4>
           </div>
-          <p className="rounded-full border border-slate-200 bg-slate-50 px-3 py-1.5 text-xs font-black uppercase tracking-[0.12em] text-slate-600">
+          <p className="rounded-full border border-slate-200 bg-slate-50 px-3 py-1.5 text-[12px] font-black uppercase tracking-[0.12em] text-slate-600">
             Delta First
           </p>
         </div>
@@ -596,7 +596,7 @@ function ChangeFeedPreview({ isPhone }: PreviewContext) {
                         item.tone === "up" ? "bg-emerald-500" : item.tone === "down" ? "bg-rose-500" : "bg-slate-500"
                       }`}
                     />
-                    <span className="text-xs font-black uppercase tracking-[0.12em] text-slate-500">{item.impact}</span>
+                    <span className="text-[12px] font-black uppercase tracking-[0.12em] text-slate-500">{item.impact}</span>
                   </div>
                   <h5 className="mt-2 text-lg font-black text-slate-950">{item.title}</h5>
                   <p className="mt-1 text-sm text-slate-600">{item.summary}</p>
@@ -611,7 +611,7 @@ function ChangeFeedPreview({ isPhone }: PreviewContext) {
       </section>
 
       <section className="rounded-[1.6rem] border border-slate-200 bg-white p-4 shadow-sm">
-        <p className="text-[11px] font-black uppercase tracking-[0.14em] text-slate-500">Weekly Context</p>
+        <p className="text-[12px] font-black uppercase tracking-[0.14em] text-slate-500">Weekly Context</p>
         <div className="mt-4 flex h-20 items-end gap-2 rounded-[1.25rem] bg-slate-100 px-3 py-3">
           {weeklyContextBars.map((bar, index) => (
             <span
@@ -672,7 +672,7 @@ function CandidateOverviewCard({ candidate }: { candidate: CandidateSpec }) {
           { label: "구현 비용", value: candidate.scores.cost },
         ].map((score) => (
           <div key={score.label} className="rounded-2xl border border-slate-200 bg-slate-50 px-3 py-3">
-            <p className="text-[11px] font-black uppercase tracking-[0.12em] text-slate-500">{score.label}</p>
+            <p className="text-[12px] font-black uppercase tracking-[0.12em] text-slate-500">{score.label}</p>
             <div className="mt-3 flex items-center gap-1.5">{scoreDots(score.value)}</div>
           </div>
         ))}
@@ -728,7 +728,7 @@ function CandidateDetail({ candidate, context }: { candidate: CandidateSpec; con
             { label: "구현 비용", value: candidate.scores.cost },
           ].map((score) => (
             <div key={score.label} className="rounded-2xl border border-slate-200 bg-slate-50 px-3 py-3">
-              <p className="text-[11px] font-black uppercase tracking-[0.12em] text-slate-500">{score.label}</p>
+              <p className="text-[12px] font-black uppercase tracking-[0.12em] text-slate-500">{score.label}</p>
               <div className="mt-3 flex items-center gap-1.5">{scoreDots(score.value)}</div>
             </div>
           ))}
@@ -736,7 +736,7 @@ function CandidateDetail({ candidate, context }: { candidate: CandidateSpec; con
 
         <div className="mt-4 grid gap-3 lg:grid-cols-2">
           <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4">
-            <p className="text-[11px] font-black uppercase tracking-[0.12em] text-slate-500">강점</p>
+            <p className="text-[12px] font-black uppercase tracking-[0.12em] text-slate-500">강점</p>
             <div className="mt-3 space-y-2">
               {candidate.strengths.map((item) => (
                 <div key={item} className="rounded-2xl border border-emerald-100 bg-white px-3 py-2 text-sm font-semibold text-slate-700">
@@ -746,7 +746,7 @@ function CandidateDetail({ candidate, context }: { candidate: CandidateSpec; con
             </div>
           </div>
           <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4">
-            <p className="text-[11px] font-black uppercase tracking-[0.12em] text-slate-500">주의점</p>
+            <p className="text-[12px] font-black uppercase tracking-[0.12em] text-slate-500">주의점</p>
             <div className="mt-3 space-y-2">
               {candidate.risks.map((item) => (
                 <div key={item} className="rounded-2xl border border-amber-100 bg-white px-3 py-2 text-sm font-semibold text-slate-700">
@@ -788,7 +788,7 @@ export default function HomeCandidatePreview({
   return (
     <div className="space-y-6">
       <section className="rounded-[1.75rem] border border-slate-200 bg-gradient-to-r from-slate-950 via-brand-navy to-brand-interactive p-5 text-white shadow-[0_26px_55px_-38px_rgba(2,6,23,0.92)]">
-        <p className="text-xs font-semibold uppercase tracking-[0.16em] text-white/70">Admin Home Candidate Lab</p>
+        <p className="text-[12px] font-semibold uppercase tracking-[0.16em] text-white/70">Admin Home Candidate Lab</p>
         <h1 className="mt-2 text-3xl font-black tracking-tight">
           {activeCandidate ? `${activeCandidate.code}. ${activeCandidate.name}` : "Home Layout Candidate Explorer"}
         </h1>
@@ -821,19 +821,19 @@ export default function HomeCandidatePreview({
       <section className="rounded-[1.75rem] border border-slate-200 bg-white p-4 shadow-sm">
         <div className="flex flex-wrap items-start justify-between gap-3">
           <div>
-            <p className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-500">Selection Criteria</p>
+            <p className="text-[12px] font-semibold uppercase tracking-[0.16em] text-slate-500">Selection Criteria</p>
             <h2 className="mt-2 text-2xl font-black text-slate-950">3초 요약 + 30초 오버뷰 기준으로 비교</h2>
             <p className="mt-2 text-sm text-slate-600">같은 데이터라도 화면의 정보구조가 다르면 판단 속도와 체감이 크게 달라집니다.</p>
           </div>
           <div>
-            <p className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-500">Viewport</p>
+            <p className="text-[12px] font-semibold uppercase tracking-[0.16em] text-slate-500">Viewport</p>
             <div className="mt-2 flex flex-wrap gap-2">
               {viewportOptions.map((option) => (
                 <button
                   key={option.value}
                   type="button"
                   onClick={() => setViewport(option.value)}
-                  className={`rounded-full border px-3 py-1.5 text-xs font-black uppercase tracking-[0.12em] transition ${
+                  className={`rounded-full border px-3 py-1.5 text-[12px] font-black uppercase tracking-[0.12em] transition ${
                     viewport === option.value
                       ? "border-brand-interactive bg-brand-interactive text-white"
                       : "border-slate-200 bg-slate-50 text-slate-600 hover:border-brand-interactive hover:text-brand-interactive"
@@ -854,7 +854,7 @@ export default function HomeCandidatePreview({
             { label: "구현 비용", value: "10%", description: "기존 카드 재사용이 가능한가" },
           ].map((item) => (
             <div key={item.label} className="rounded-2xl border border-slate-200 bg-slate-50 p-4">
-              <p className="text-[11px] font-black uppercase tracking-[0.12em] text-slate-500">{item.label}</p>
+              <p className="text-[12px] font-black uppercase tracking-[0.12em] text-slate-500">{item.label}</p>
               <p className="mt-3 text-2xl font-black text-slate-950">{item.value}</p>
               <p className="mt-2 text-sm text-slate-600">{item.description}</p>
             </div>

@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from 'next';
 import { cookies } from 'next/headers';
 import Link from 'next/link';
 import AppShell from '@/components/shell/AppShell';
+import ShellChromeOff from '@/components/shell/ShellChromeOff';
 import RouteEmbedFrame from '@/components/RouteEmbedFrame';
 import { ROUTES } from '@/lib/routes';
 import { getDesignVersionFromSearchParams } from '@/lib/design/version';
@@ -62,56 +63,53 @@ export default async function PostsPage({ searchParams }: PageProps) {
   if (filePath && await legacyPublicFileExists(filePath)) {
     const rawSrc = `/${filePath}`;
     const frame = <RouteEmbedFrame src={rawSrc} title="Posts Detail" loading="eager" shellClassName={version === "v1" ? undefined : "route-embed-shell-app"} />;
-    if (version === "v1") return frame;
+    if (version === "v1") return <ShellChromeOff>{frame}</ShellChromeOff>;
     return (
-      <div className="fnk-shell">
-        <AppShell active="posts" title="분석 아카이브 상세" backHref={ROUTES.home}>
-          <div
-            data-posts-detail-surface
-            data-posts-detail-route-owner="legacy-post-html"
-            className="min-h-screen px-3 py-4 sm:px-4 md:px-6"
-            style={{ backgroundColor: "var(--c-surface-2)" }}
+      <AppShell active="posts" title="분석 아카이브 상세" backHref={ROUTES.home}>
+        <div
+          data-posts-detail-surface
+          data-posts-detail-route-owner="legacy-post-html"
+          className="min-h-screen px-3 py-4 sm:px-4 md:px-6"
+          style={{ backgroundColor: "var(--c-surface-2)" }}
+        >
+          <section
+            data-posts-detail-boundary
+            className="mb-4 rounded-lg border border-slate-200 bg-white p-4 shadow-sm"
           >
-            <section
-              data-posts-detail-boundary
-              className="mb-4 rounded-lg border border-slate-200 bg-white p-4 shadow-sm"
-            >
-              <p className="text-xs font-bold uppercase tracking-wide text-slate-500">Route owner</p>
-              <h1 className="mt-2 text-xl font-black text-slate-900">레거시 리포트</h1>
-              <p className="mt-2 text-sm leading-relaxed text-slate-600">
-                기존 HTML 리포트를 분석 아카이브 안에서 읽는 상세 화면입니다. 네이티브 화면 전환 전까지
-                출처와 이동 경계를 분리합니다.
-              </p>
-              <div className="mt-4 flex flex-wrap gap-2">
-                {POSTS_BOUNDARY_CHIPS.map((chip) => (
-                  <span
-                    key={chip.key}
-                    data-posts-detail-boundary-chip={chip.key}
-                    className="inline-flex min-h-11 items-center rounded-full border border-slate-200 bg-slate-50 px-3 text-xs font-bold text-slate-700"
-                  >
-                    {chip.label}
-                  </span>
-                ))}
-              </div>
-              <div className="mt-4 grid gap-2 sm:grid-cols-3">
-                {POSTS_OWNER_LINKS.map((link) => (
-                  <Link
-                    key={link.key}
-                    href={link.href}
-                    data-posts-detail-owner-link={link.key}
-                    className="inline-flex min-h-11 items-center justify-center rounded-lg border border-slate-200 bg-white px-3 text-sm font-bold text-slate-700 shadow-sm transition hover:border-blue-300 hover:text-blue-700"
-                  >
-                    {link.label}
-                  </Link>
-                ))}
-              </div>
-            </section>
-            <div data-posts-detail-legacy-frame>
-              {frame}
+            <p className="text-[12px] font-bold uppercase tracking-wide text-slate-500">Route owner</p>
+            <h1 className="mt-2 text-xl font-black text-slate-900">레거시 리포트</h1>
+            <p className="mt-2 text-sm leading-relaxed text-slate-600">
+              기존 HTML 리포트를 분석 아카이브 안에서 읽는 상세 화면입니다. 출처와 이동 경로를 구분해 안내합니다.
+            </p>
+            <div className="mt-4 flex flex-wrap gap-2">
+              {POSTS_BOUNDARY_CHIPS.map((chip) => (
+                <span
+                  key={chip.key}
+                  data-posts-detail-boundary-chip={chip.key}
+                  className="inline-flex min-h-11 items-center rounded-full border border-slate-200 bg-slate-50 px-3 text-[12px] font-bold text-slate-700"
+                >
+                  {chip.label}
+                </span>
+              ))}
             </div>
+            <div className="mt-4 grid gap-2 sm:grid-cols-3">
+              {POSTS_OWNER_LINKS.map((link) => (
+                <Link
+                  key={link.key}
+                  href={link.href}
+                  data-posts-detail-owner-link={link.key}
+                  className="inline-flex min-h-11 items-center justify-center rounded-lg border border-slate-200 bg-white px-3 text-sm font-bold text-slate-700 shadow-sm transition hover:border-blue-300 hover:text-blue-700"
+                >
+                  {link.label}
+                </Link>
+              ))}
+            </div>
+          </section>
+          <div data-posts-detail-legacy-frame>
+            {frame}
           </div>
-        </AppShell>
-      </div>
+        </div>
+      </AppShell>
     );
   }
 
@@ -126,7 +124,7 @@ export default async function PostsPage({ searchParams }: PageProps) {
     >
       <div className="container mx-auto p-3 sm:p-4 md:p-8">
         <header className="text-center my-8 sm:my-10 md:my-16">
-          <h1 className="text-3xl sm:text-4xl md:text-5xl font-black text-slate-900 orbitron mb-3 leading-tight">분석 아카이브</h1>
+          <h1 className="text-3xl sm:text-4xl md:text-5xl font-black text-slate-900 mb-3 leading-tight">분석 아카이브</h1>
           <p className="text-lg text-slate-500 max-w-2xl mx-auto">
             시장의 거시적 흐름과 복잡한 현상의 본질을 파헤치는 심층 분석 콘텐츠.
           </p>
@@ -138,7 +136,7 @@ export default async function PostsPage({ searchParams }: PageProps) {
         >
           <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
             <div className="max-w-2xl">
-              <p className="text-xs font-bold uppercase tracking-wide text-slate-500">Route owner</p>
+              <p className="text-[12px] font-bold uppercase tracking-wide text-slate-500">Route owner</p>
               <h2 className="mt-2 text-xl font-black text-slate-900">분석 아카이브</h2>
               <p className="mt-2 text-sm leading-relaxed text-slate-600">
                 장문 리포트와 레거시 HTML 자료를 모아 두는 읽기 전용 아카이브입니다. 실시간 지표 화면은
@@ -150,7 +148,7 @@ export default async function PostsPage({ searchParams }: PageProps) {
                 <span
                   key={chip.key}
                   data-posts-boundary-chip={chip.key}
-                  className="inline-flex min-h-11 items-center rounded-full border border-slate-200 bg-slate-50 px-3 text-xs font-bold text-slate-700"
+                  className="inline-flex min-h-11 items-center rounded-full border border-slate-200 bg-slate-50 px-3 text-[12px] font-bold text-slate-700"
                 >
                   {chip.label}
                 </span>
@@ -185,7 +183,7 @@ export default async function PostsPage({ searchParams }: PageProps) {
               >
                 <div className="text-center p-6">
                   <div className="text-6xl mb-3">&#9878;</div>
-                  <div className="text-xs font-bold uppercase tracking-wider text-red-800 bg-red-100 px-3 py-1 rounded-full inline-block">
+                  <div className="text-[12px] font-bold uppercase tracking-wider text-red-800 bg-red-100 px-3 py-1 rounded-full inline-block">
                     {featuredPost.badgeLabel}
                   </div>
                 </div>
@@ -237,13 +235,11 @@ export default async function PostsPage({ searchParams }: PageProps) {
     </div>
   );
 
-  if (version === "v1") return landing;
+  if (version === "v1") return <ShellChromeOff>{landing}</ShellChromeOff>;
 
   return (
-    <div className="fnk-shell">
-      <AppShell active="posts" title="분석 아카이브" backHref={ROUTES.home}>
-        {landing}
-      </AppShell>
-    </div>
+    <AppShell active="posts" title="분석 아카이브" backHref={ROUTES.home}>
+      {landing}
+    </AppShell>
   );
 }

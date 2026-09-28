@@ -1,0 +1,57 @@
+{
+  "schema_version": "feno_rim_recovery_r3_criteria.v1",
+  "phase": "R3",
+  "title": "Incremental information test - does mechanical-forecast GLS-ICC carry return information beyond B/P?",
+  "status": "FROZEN",
+  "question": "Does firm_icc (GLS-ICC built on R1 mechanical forecasts) predict the cross-section of 36-month forward returns AFTER controlling for book-to-price, size, and momentum? This is the decisive viability test: R0 showed the heuristic V/P adds nothing over B/P; R1 showed mechanical forecasts ~ random walk for large caps; R2-B showed ICC is constructible and sane. R3 asks whether the ICC signal carries incremental information.",
+  "sample": {
+    "rows": "R2-B rows with a solved icc_ri (1638 firm-origin rows across origins 2019-2023), restricted to rows with a computable 36-month forward return.",
+    "origins": "June 30 of 2019-2023 (five origins).",
+    "forward_return_window": "origin (June 30 of Y) to June 30 of Y+3, using the extended r3 price cache (2019-05-01..2026-08-01) and extended r3 dividend cache (2018-01-01..2026-08-01)."
+  },
+  "dependent_variable": {
+    "definition": "36-month annualized TOTAL return tr = ((p1 + div)/p0)^(1/3) - 1, where p0 = last close on/before the origin, p1 = last close on/before origin+36m, div = dividends paid strictly inside (origin, origin+36m]. Matches the R0/X2 return convention.",
+    "excess_note": "The cross-sectional regression uses total return; subtracting the per-origin risk-free rate is a per-origin location shift that does not change cross-sectional slopes, so slopes are identical under excess returns. Stated in advance.",
+    "price_basis": "Prices are today-basis (split-adjusted); dividends are split-adjusted to the same basis. Consistent."
+  },
+  "regressors": {
+    "bp": "book-to-price at origin = B0/price (B0 = R2 book-per-share, today-basis; equivalently book/mcap).",
+    "icc": "firm_icc_ri (primary). icc_ep reported as sensitivity.",
+    "size": "log market cap at origin = log(price * shares_basis).",
+    "momentum": "12-1 momentum = P(origin-1m)/P(origin-12m) - 1. Available only where 12 months of pre-origin prices exist (origins 2020-2023; origin 2019 lacks pre-2019-05 prices). Momentum rows restricted accordingly."
+  },
+  "specifications_precommitted": [
+    "S1: tr ~ BP (baseline)",
+    "S2: tr ~ BP + ICC (incremental over B/P alone)",
+    "S3: tr ~ BP + ICC + size",
+    "S4: tr ~ BP + ICC + size + momentum (balanced panel, origins 2020-2023, momentum-available rows only)"
+  ],
+  "inference_precommitted": {
+    "fama_macbeth": "Per-origin cross-sectional OLS for each spec, then time-series mean of the per-origin coefficients with Newey-West (lag 1) t-stat across the 5 origins. Five origins is a thin time series; the FM t-stat is reported but its weakness is stated.",
+    "pooled": "Pooled OLS across all firm-origin rows with origin fixed effects (dummies), clustered standard errors by origin. This is the higher-power read; reported beside FM.",
+    "primary_read": "The incremental-information verdict rests on the ICC coefficient in S2/S3/S4: sign, and significance under BOTH pooled-origin-FE and FM. A coefficient is 'significant' if |t| >= 2 in the pooled read AND the FM sign agrees; the FM t is reported transparently given only 5 origins.",
+    "guards": "No outlier truncation of the dependent or regressors beyond the input-side plausibility guards already applied in R2 (guards on inputs only, per the R2 agreement). No post-result spec selection - all four specs reported."
+  },
+  "verdict_mapping_precommitted": {
+    "icc_incremental_positive": "ICC coefficient positive and significant (per primary_read) in S2 AND S3 (with momentum-robustness S4 agreeing in sign where computable) -> mechanical-forecast ICC carries incremental information over B/P. Feeds the final verdict toward RIM viability on the expected-return lens (supports B).",
+    "icc_incremental_none": "ICC coefficient not significant, or significant only without controls / flipping sign under controls -> mechanical-forecast ICC does NOT carry incremental information beyond B/P. Combined with R1 (forecasts ~ RW), this feeds the final verdict toward C (needs PIT analyst forecasts) or D.",
+    "icc_incremental_negative": "ICC coefficient significantly negative -> the mechanical ICC signal is actively misleading; feeds toward D."
+  },
+  "prohibitions": [
+    "No post-result spec selection, outlier trimming, or control swapping.",
+    "No analyst-data input.",
+    "No public number republication; quarantine untouched."
+  ],
+  "inputs_confirmed": {
+    "r2_icc_rows": 1638,
+    "r3_price_window": "2019-05-01..2026-08-01",
+    "r3_dividend_window": "2018-01-01..2026-08-01",
+    "origins": [
+      2019,
+      2020,
+      2021,
+      2022,
+      2023
+    ]
+  }
+}

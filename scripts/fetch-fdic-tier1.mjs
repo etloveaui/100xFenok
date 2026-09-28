@@ -1,20 +1,12 @@
 #!/usr/bin/env node
 
+import fs from "node:fs";
 import https from "node:https";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 
-import {
-  attemptResult,
-  atomicWrite,
-  classifyEndpointResponse,
-  defaultAttemptId,
-  returnedTuple,
-  threwTuple,
-  transportError,
-  worstRequestResult,
-  writeAttemptShard,
-} from "./lib/data-supply-attempt-shard.mjs";
+import { atomicWrite } from "./lib/atomic-file.mjs";
+import { attemptResult, classifyEndpointResponse, defaultAttemptId, returnedTuple, threwTuple, transportError, worstRequestResult } from "./lib/provider-fetch-result.mjs";
 import {
   LaneLkgStore,
   PROMOTION_CONTRACT_PROVIDER_OBSERVATION_V2,
@@ -24,6 +16,7 @@ import {
   isNaturalScheduleRun,
   systemicLkgFailureReason,
 } from "./lib/data-supply-lkg-store.mjs";
+import { boundedDiagnosticDetail, diagnosticSuffix } from "./lib/diagnostic-detail.mjs";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -47,6 +40,11 @@ function validQuarterIdentifier(quarter) {
   const isoDate = `${quarter.slice(0, 4)}-${quarter.slice(4, 6)}-${quarter.slice(6, 8)}`;
   const parsed = new Date(`${isoDate}T00:00:00.000Z`);
   return Number.isFinite(parsed.getTime()) && parsed.toISOString().slice(0, 10) === isoDate;
+}
+
+function quarterSourceDate(quarter) {
+  if (!validQuarterIdentifier(quarter)) throw new Error(`invalid FDIC quarter identifier: ${quarter}`);
+  return `${quarter.slice(0, 4)}-${quarter.slice(4, 6)}-${quarter.slice(6, 8)}`;
 }
 
 export function retainLatestQuarters(quarters, policy = FDIC_PERSISTENCE_POLICY) {
@@ -87,6 +85,23 @@ export function generateQuarters(now = new Date()) {
     }
   }
   return quarters;
+}
+
+export function latestClosedQuarter(now = new Date()) {
+  const instant = new Date(now);
+  if (!Number.isFinite(instant.getTime())) throw new Error("invalid FDIC quarter probe clock");
+  const year = instant.getUTCFullYear();
+  const candidates = [];
+  for (let candidateYear = year - 1; candidateYear <= year; candidateYear += 1) {
+    for (const suffix of ["0331", "0630", "0930", "1231"]) {
+      const month = Number(suffix.slice(0, 2));
+      const day = Number(suffix.slice(2));
+      const closedAfterMs = Date.UTC(candidateYear, month - 1, day + 1);
+      if (closedAfterMs <= instant.getTime()) candidates.push(`${candidateYear}${suffix}`);
+    }
+  }
+  if (candidates.length === 0) throw new Error("unable to derive latest closed FDIC quarter");
+  return candidates.sort().at(-1);
 }
 
 function buildUrl(quarter) {
@@ -153,6 +168,7 @@ async function evaluateQuarter({ request, quarter, controlledFailureQuarter }) {
         exceptionKind === "transport" ? "transport_error" : "unexpected_error",
         threwTuple(exceptionKind),
       ),
+      failure_detail: boundedDiagnosticDetail(error),
       quarter,
     };
   }
@@ -211,6 +227,87 @@ function validFdicDocument(document) {
     && available === retained + pruned;
 }
 
+export function migrateFdicPersistenceDocument(document) {
+  if (!validFdicDocument(document)) throw new Error("FDIC persistence migration source is invalid");
+  const hasPolicy = Object.prototype.hasOwnProperty.call(document, "persistence_policy");
+  const hasState = Object.prototype.hasOwnProperty.call(document, "persistence_state");
+  if (hasPolicy || hasState) {
+    if (!hasPolicy || !hasState || !exactFdicPersistencePolicy(document.persistence_policy)) {
+      throw new Error("FDIC persistence migration source has partial or invalid metadata");
+    }
+    return { changed: false, document: structuredClone(document) };
+  }
+
+  const byQuarter = new Map();
+  const quarters = document.data.map((row) => {
+    const quarter = row.date.replaceAll("-", "");
+    if (byQuarter.has(quarter)) throw new Error(`duplicate FDIC quarter identifier: ${quarter}`);
+    byQuarter.set(quarter, structuredClone(row));
+    return quarter;
+  });
+  const retained = retainLatestQuarters(quarters);
+  const migrated = {
+    updated: document.updated,
+    source: document.source,
+    description: document.description,
+    persistence_policy: FDIC_PERSISTENCE_POLICY,
+    persistence_state: retained.persistence_state,
+    data: retained.quarters.map((quarter) => byQuarter.get(quarter)),
+  };
+  if (!validFdicDocument(migrated)) throw new Error("FDIC persistence migration output is invalid");
+  return { changed: true, document: migrated };
+}
+
+export function runFdicPersistenceMigration({
+  canonicalPath = path.join(REPO_ROOT, "data", "macro", "fdic-tier1.json"),
+  eventName = process.env.GITHUB_EVENT_NAME || "local",
+  read = (targetPath) => fs.readFileSync(targetPath),
+  write = (targetPath, bytes) => atomicWrite(targetPath, bytes),
+} = {}) {
+  if (eventName !== "workflow_dispatch") {
+    throw new Error("FDIC persistence migration requires workflow_dispatch");
+  }
+  const canonicalBefore = Buffer.from(read(canonicalPath));
+  let source;
+  try {
+    source = JSON.parse(canonicalBefore.toString("utf8"));
+  } catch {
+    throw new Error("FDIC persistence migration source is invalid JSON");
+  }
+  const migrated = migrateFdicPersistenceDocument(source);
+  if (!migrated.changed) {
+    return {
+      ok: true,
+      reason: "already_migrated",
+      updated: false,
+      quarters: migrated.document.data.length,
+      pruned: migrated.document.persistence_state.pruned_quarters,
+    };
+  }
+
+  const bytes = Buffer.from(`${JSON.stringify(migrated.document, null, 2)}\n`);
+  try {
+    write(canonicalPath, bytes);
+  } catch (error) {
+    try {
+      atomicWrite(canonicalPath, canonicalBefore);
+    } catch (rollbackError) {
+      throw new AggregateError(
+        [error, rollbackError],
+        `FDIC persistence migration failed and rollback was incomplete: ${error.message}`,
+      );
+    }
+    throw error;
+  }
+  return {
+    ok: true,
+    reason: "migrated",
+    updated: true,
+    quarters: migrated.document.data.length,
+    pruned: migrated.document.persistence_state.pruned_quarters,
+  };
+}
+
 function controlledFailureQuarter(controlledFailureKey, eventName, quarters) {
   if (!controlledFailureKey) return null;
   if (eventName !== "workflow_dispatch") throw new Error("controlled failure requires workflow_dispatch");
@@ -222,9 +319,8 @@ function controlledFailureQuarter(controlledFailureKey, eventName, quarters) {
 export async function runFdicTier1({
   repoRoot = REPO_ROOT,
   canonicalPath = path.join(REPO_ROOT, "data", "macro", "fdic-tier1.json"),
-  publicPath = path.join(REPO_ROOT, "100xfenok-next", "public", "data", "macro", "fdic-tier1.json"),
-  attemptShardPath = path.join(REPO_ROOT, "data", "admin", "data-supply-state", "detection-attempts", "fdic_tier1.json"),
   quarters = generateQuarters(),
+  probeQuarter = null,
   request = requestBytes,
   observedAt = new Date().toISOString(),
   attemptId = defaultAttemptId("fdic-tier1", observedAt),
@@ -232,13 +328,28 @@ export async function runFdicTier1({
   runAttempt = Number(process.env.GITHUB_RUN_ATTEMPT || 1),
   eventName = process.env.GITHUB_EVENT_NAME || "local",
   controlledFailureKey = process.env.INPUT_CONTROLLED_FAILURE_KEY || "",
+  ownerApprovedRecovery = (process.env.INPUT_OWNER_APPROVED_RECOVERY || "").trim().toLowerCase() === "true",
   sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms)),
 } = {}) {
   if (!Array.isArray(quarters) || quarters.length === 0) throw new Error("FDIC quarter list must be non-empty");
+  if (probeQuarter !== null && !validQuarterIdentifier(probeQuarter)) {
+    throw new Error(`invalid FDIC probe quarter: ${probeQuarter}`);
+  }
   const retention = retainLatestQuarters(quarters);
   const retainedQuarters = retention.quarters;
+  if (probeQuarter !== null && !retainedQuarters.includes(probeQuarter) && probeQuarter <= retainedQuarters.at(-1)) {
+    throw new Error(`FDIC probe quarter must be newer than retained history: ${probeQuarter}`);
+  }
+  if (typeof ownerApprovedRecovery !== "boolean") throw new Error("ownerApprovedRecovery must be a boolean");
+  if (ownerApprovedRecovery && eventName !== "workflow_dispatch") {
+    throw new Error("owner-approved FDIC recovery requires workflow_dispatch");
+  }
   const injectedQuarter = controlledFailureQuarter(controlledFailureKey.trim(), eventName, retainedQuarters);
-  const lkgStore = new LaneLkgStore({ repoRoot, laneId: "fdic_tier1" });
+  const lkgStore = new LaneLkgStore({
+    repoRoot,
+    laneId: "fdic_tier1",
+    allowBoundWorkflowDispatchRecovery: ownerApprovedRecovery,
+  });
   const lkgArtifacts = [{
     key: "fdic_tier1",
     canonicalPath,
@@ -246,35 +357,137 @@ export async function runFdicTier1({
     sourceAsOf: fdicSourceAsOf,
   }];
   const run = { runId: String(runId), runAttempt: Number(runAttempt), eventName, observedAt };
+  const latestRetainedQuarter = retainedQuarters.at(-1);
+  const currentState = lkgStore.stateSnapshot().items.fdic_tier1;
+  let canonicalDocument = null;
+  if (fs.existsSync(canonicalPath)) {
+    try {
+      canonicalDocument = JSON.parse(fs.readFileSync(canonicalPath, "utf8"));
+    } catch {
+      canonicalDocument = null;
+    }
+  }
+  let prefetchedProbeResult = null;
+  if (injectedQuarter === null
+    && currentState?.resolution_state === "fresh_primary"
+    && currentState.retry === false
+    && validFdicDocument(canonicalDocument)
+    && fdicSourceAsOf(canonicalDocument) === quarterSourceDate(latestRetainedQuarter)) {
+    const currentProbeQuarter = probeQuarter !== null && probeQuarter > latestRetainedQuarter
+      ? probeQuarter
+      : latestRetainedQuarter;
+    const currentProbe = await evaluateQuarter({
+      request,
+      quarter: currentProbeQuarter,
+      controlledFailureQuarter: null,
+    });
+    if (currentProbeQuarter === latestRetainedQuarter && currentProbe.status === "ready") {
+      const attempt = (currentProbe).attempt;
+      return {
+        ok: true,
+        reason: "already_current",
+        updated: false,
+        attempt,
+        quarters: canonicalDocument.data.length,
+        recovered: false,
+        probe: { quarter: latestRetainedQuarter, status: "already_included", reason: "ready" },
+      };
+    }
+    if (currentProbeQuarter !== latestRetainedQuarter) {
+      if (currentProbe.status === "ready") {
+        prefetchedProbeResult = currentProbe;
+      } else {
+        const attempt = (currentProbe).attempt;
+        const providerWaiting = currentProbe.reason === "empty_payload";
+        return {
+          ok: providerWaiting,
+          reason: providerWaiting ? "provider_wait" : currentProbe.reason,
+          updated: false,
+          attempt,
+          retrySet: lkgStore.stateSnapshot().retry_set,
+          probe: {
+            quarter: currentProbeQuarter,
+            status: providerWaiting ? "not_yet_published" : "failed",
+            reason: currentProbe.reason,
+          },
+          ...(providerWaiting ? {} : {
+            degraded: true,
+            corrupt: false,
+            exitCode: 0,
+            ...(currentProbe.failure_detail ? { failure_detail: currentProbe.failure_detail } : {}),
+          }),
+        };
+      }
+    }
+  }
   const requestResults = [];
   for (const [index, quarter] of retainedQuarters.entries()) {
     requestResults.push(await evaluateQuarter({ request, quarter, controlledFailureQuarter: injectedQuarter }));
     if (index < retainedQuarters.length - 1) await sleep(300);
   }
-  const worst = worstRequestResult(requestResults);
-  const attempt = writeAttemptShard({
-    laneId: "fdic_tier1",
-    attemptShardPath,
-    observedAt,
-    attemptId,
-    result: worst,
-  });
-  if (worst.status !== "ready") {
+  const baselineWorst = worstRequestResult(requestResults);
+  if (baselineWorst.status !== "ready") {
+    const attempt = (baselineWorst).attempt;
     const systemicOutage = allNaturalRequestsFailed(requestResults, (row) => row.quarter === injectedQuarter);
-    const failureReason = systemicLkgFailureReason([worst.reason, ...requestResults.map((row) => row.reason)])
-      ?? (injectedQuarter && !systemicOutage ? "controlled_failure" : worst.reason);
+    const failureReason = systemicLkgFailureReason([baselineWorst.reason, ...requestResults.map((row) => row.reason)])
+      ?? (injectedQuarter && !systemicOutage ? "controlled_failure" : baselineWorst.reason);
     const failure = lkgStore.recordFailure({ artifacts: lkgArtifacts, run, reason: failureReason });
     const outcome = classifyLkgFailure({ reason: failureReason, hasCompleteLkg: failure.hasCompleteLkg, systemic: systemicOutage });
-    return { ok: false, reason: failureReason, updated: false, attempt, retrySet: failure.retrySet, ...outcome };
+    const failureDetail = failureReason === "controlled_failure"
+      ? null
+      : baselineWorst.failure_detail ?? requestResults.find((row) => row.failure_detail)?.failure_detail ?? null;
+    return {
+      ok: false,
+      reason: failureReason,
+      updated: false,
+      attempt,
+      retrySet: failure.retrySet,
+      ...(failureDetail ? { failure_detail: failureDetail } : {}),
+      ...outcome,
+    };
   }
 
-  const data = requestResults.map((row) => row.row).sort((a, b) => a.date.localeCompare(b.date));
+  let probe = null;
+  let acceptedProbeResult = null;
+  if (probeQuarter !== null) {
+    if (retainedQuarters.includes(probeQuarter)) {
+      probe = { quarter: probeQuarter, status: "already_included", reason: "ready" };
+    } else {
+      let probeResult = prefetchedProbeResult;
+      if (probeResult === null) {
+        await sleep(300);
+        probeResult = await evaluateQuarter({
+          request,
+          quarter: probeQuarter,
+          controlledFailureQuarter: null,
+        });
+      }
+      if (probeResult.status === "ready") {
+        acceptedProbeResult = probeResult;
+        probe = { quarter: probeQuarter, status: "included", reason: "ready" };
+      } else if (probeResult.reason === "empty_payload") {
+        probe = { quarter: probeQuarter, status: "not_yet_published", reason: probeResult.reason };
+      } else {
+        probe = { quarter: probeQuarter, status: "failed", reason: probeResult.reason };
+      }
+    }
+  }
+
+  const acceptedResults = acceptedProbeResult === null
+    ? requestResults
+    : [...requestResults, acceptedProbeResult];
+  const attempt = (worstRequestResult(acceptedResults)).attempt;
+  const availableQuarters = acceptedProbeResult === null ? quarters : [...quarters, probeQuarter];
+  const finalRetention = retainLatestQuarters(availableQuarters);
+  const rowByQuarter = new Map(acceptedResults.map((row) => [row.quarter, row.row]));
+  const data = finalRetention.quarters.map((quarter) => rowByQuarter.get(quarter));
+  if (data.some((row) => row == null)) throw new Error("FDIC retained quarter is missing a fetched row");
   const output = {
     updated: observedAt,
     source: "FDIC",
     description: "Average Tier 1 Capital Ratio (RBC1AAJ)",
     persistence_policy: FDIC_PERSISTENCE_POLICY,
-    persistence_state: retention.persistence_state,
+    persistence_state: finalRetention.persistence_state,
     data,
   };
   const serialized = `${JSON.stringify(output, null, 2)}\n`;
@@ -296,13 +509,16 @@ export async function runFdicTier1({
     }),
   };
   const recoveryState = lkgStore.stateSnapshot();
-  if (recoveryState.items.fdic_tier1?.retry === true && !isNaturalScheduleRun(run)) {
+  if (recoveryState.items.fdic_tier1?.retry === true
+    && !isNaturalScheduleRun(run)
+    && !ownerApprovedRecovery) {
     return {
       ok: false,
       reason: "recovery_requires_schedule",
       updated: false,
       attempt,
       retrySet: recoveryState.retry_set,
+      probe,
       degraded: true,
       corrupt: false,
       exitCode: 0,
@@ -321,29 +537,60 @@ export async function runFdicTier1({
       updated: false,
       attempt,
       retrySet: lkgStore.stateSnapshot().retry_set,
+      probe,
       degraded: true,
       corrupt: false,
       exitCode: 0,
     };
   }
   atomicWrite(canonicalPath, serialized);
-  atomicWrite(publicPath, serialized);
   const success = lkgStore.recordSuccess({ artifacts: promotable, run });
   const recovered = success.state.items.fdic_tier1?.recovered_at === observedAt;
-  return { ok: true, reason: "ok", updated: true, attempt, quarters: data.length, recovered };
+  return { ok: true, reason: "ok", updated: true, attempt, quarters: data.length, recovered, probe };
 }
 
 async function main() {
-  const result = await runFdicTier1();
+  if ((process.env.INPUT_PERSISTENCE_MIGRATION_ONLY || "").trim().toLowerCase() === "true") {
+    const result = runFdicPersistenceMigration();
+    console.log(
+      result.updated
+        ? `Migrated FDIC persistence metadata for ${result.quarters} quarters; pruned ${result.pruned}`
+        : `FDIC persistence metadata already current for ${result.quarters} quarters`,
+    );
+    return;
+  }
+  const observedAt = new Date().toISOString();
+  const result = await runFdicTier1({
+    observedAt,
+    probeQuarter: latestClosedQuarter(new Date(observedAt)),
+  });
+  if (process.env.GITHUB_OUTPUT) {
+    fs.appendFileSync(process.env.GITHUB_OUTPUT, `updated=${result.updated === true ? "true" : "false"}\n`);
+  }
+  const probeSuffix = result.probe?.status === "included"
+    ? `; discovered latest closed quarter ${result.probe.quarter}`
+    : result.probe?.status === "not_yet_published"
+      ? `; latest closed quarter ${result.probe.quarter} not yet published`
+      : result.probe?.status === "failed"
+        ? `; latest closed quarter probe ${result.probe.quarter} failed (${result.probe.reason})`
+        : "";
   if (!result.ok) {
     const prefix = result.degraded ? "[degraded]" : "[corrupt]";
-    const message = `${prefix} FDIC Tier1 ${result.reason}; retry set: ${(result.retrySet || []).join(", ") || "none"}`;
+    const message = `${prefix} FDIC Tier1 ${result.reason}; retry set: ${(result.retrySet || []).join(", ") || "none"}${probeSuffix}${diagnosticSuffix(result.failure_detail)}`;
     if (result.degraded) console.log(message);
     else console.error(message);
     process.exitCode = result.exitCode ?? 2;
     return;
   }
-  console.log(`Saved ${result.quarters} FDIC quarters and current-attempt evidence${result.recovered ? "; recovered from LKG" : ""}`);
+  if (result.reason === "already_current") {
+    console.log(`FDIC Tier1 already current through ${result.probe.quarter}; recorded one provider probe`);
+    return;
+  }
+  if (result.reason === "provider_wait") {
+    console.log(`FDIC Tier1 provider has not published ${result.probe.quarter}; current data retained for the next scheduled probe`);
+    return;
+  }
+  console.log(`Saved ${result.quarters} FDIC quarters and current-attempt evidence${result.recovered ? "; recovered from LKG" : ""}${probeSuffix}`);
 }
 
 if (process.argv[1] && path.resolve(process.argv[1]) === __filename) {

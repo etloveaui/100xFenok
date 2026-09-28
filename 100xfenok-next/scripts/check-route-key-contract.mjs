@@ -6,9 +6,11 @@ import { spawnSync } from "node:child_process";
 
 const APP_ROOT = path.resolve(path.dirname(new URL(import.meta.url).pathname), "..");
 const TSX_BIN = path.join(APP_ROOT, "node_modules", ".bin", process.platform === "win32" ? "tsx.cmd" : "tsx");
+const RETIREMENT_ONLY = process.argv.includes("--retirement-only");
 
 const REQUIRED_ROUTE_KEYS = [
   "explore",
+  "workbench",
   "market",
   "sectors",
   "etfs",
@@ -20,8 +22,21 @@ const REQUIRED_ROUTE_KEYS = [
   "stock",
   "etf",
   "posts",
+  "alphaScout",
+  "dailyWrap",
+  "stockAnalyzer",
+  "stockAnalyzerNative",
   "multichart",
   "radar",
+  "research",
+];
+
+const RETIRED_PUBLIC_NAV_IDS = [
+  "workbench",
+  "dailyWrap",
+  "posts",
+  "alphaScout",
+  "stockAnalyzer",
 ];
 
 const ROUTE_SCOPE_CLASSIFICATION_ACK = {
@@ -29,26 +44,26 @@ const ROUTE_SCOPE_CLASSIFICATION_ACK = {
   source: {
     path: "../../../docs/research/20260702_route_scope_classification.md",
     lines: "1-105",
-    note: "Lane C corrected route-scope classification source",
+    note: "Lane C corrected route-scope classification source; the 2026-08-30 owner decision moves three retired public roots and the new archive hub into admin-internal scope; 2026-09-06 adds the authenticated WIND DOWN records and conversations pages to the existing Mona out-of-scope family; 2026-09-17 adds the authenticated /intro face route to core_covered; 2026-09-17 adds the authenticated /admin/users page to admin_internal; 2026-09-17 adds /privacy and /terms legal pages to core_covered",
   },
-  page_route_count: 53,
-  core_covered_count: 19,
+  page_route_count: 67,
+  core_covered_count: 21,
   needs_route_owner_probe_count: 0,
   legacy_bridge_closed_count: 9,
-  admin_internal_count: 10,
+  admin_internal_count: 16,
   closed_alias_count: 4,
-  out_of_scope_count: 11,
+  out_of_scope_count: 17,
   blocked_actions: ["route_patch", "redirect", "delete", "deploy", "public_mutation"],
   core_covered_representative_routes: [
     "/etfs/SPY",
     "/etfs/compare",
     "/etfs/new",
     "/etfs",
-    "/explore",
     "/macro-chart",
     "/market-valuation",
     "/market-valuation/structure",
     "/market/events",
+    "/changes",
     "/multichart",
     "/",
     "/portfolio",
@@ -56,9 +71,11 @@ const ROUTE_SCOPE_CLASSIFICATION_ACK = {
     "/screener",
     "/sectors",
     "/stock/NVDA",
-    "/superinvestors?tab=insights",
-    "/tools/stock-analyzer/native",
-    "/workbench",
+    "/superinvestors?guru=blackrock",
+    "/research",
+    "/intro",
+    "/privacy",
+    "/terms",
   ],
 };
 
@@ -194,15 +211,8 @@ function collectSourcePathsFromJson(value, sink) {
 
 function collectDeclaredSourcePaths() {
   const sourcePaths = new Set();
-  const jsonPath = path.join(APP_ROOT, "public", "data", "catalog", "macro-series.json");
+  const jsonPath = path.join(APP_ROOT, "..", "data", "catalog", "macro-series.json");
   collectSourcePathsFromJson(JSON.parse(fs.readFileSync(jsonPath, "utf8")), sourcePaths);
-
-  const catalogTs = fs.readFileSync(path.join(APP_ROOT, "src", "lib", "macro-chart", "catalog.ts"), "utf8");
-  const sourcePathPattern = /\bsourcePath:\s*["']([^"']+)["']/g;
-  let match;
-  while ((match = sourcePathPattern.exec(catalogTs))) {
-    sourcePaths.add(match[1]);
-  }
   return [...sourcePaths];
 }
 
@@ -252,6 +262,26 @@ function assertSourceTokens(source, tokens, label, errors) {
   for (const token of tokens) {
     assert(source.includes(token), `${label}: missing ${token}`, errors);
   }
+}
+
+function sourceBlock(source, startToken, endToken) {
+  const start = source.indexOf(startToken);
+  if (start < 0) return "";
+  const end = source.indexOf(endToken, start + startToken.length);
+  return source.slice(start, end < 0 ? source.length : end);
+}
+
+function assertRetiredPublicNavigationContracts(shellSource, errors) {
+  const navSource = sourceBlock(shellSource, "const NAV: NavItem[] = [", "const MORE_TAB:");
+  const moreTabSource = sourceBlock(shellSource, "const MORE_TAB_IDS: ShellPage[] = [", "const NAV_GROUP_ORDER");
+  assert(navSource.length > 0, "AppShell public NAV block is missing", errors);
+  assert(moreTabSource.length > 0, "AppShell mobile More block is missing", errors);
+  for (const id of RETIRED_PUBLIC_NAV_IDS) {
+    assert(!navSource.includes(`id: "${id}"`), `AppShell public NAV must not expose ${id}`, errors);
+    assert(!moreTabSource.includes(`"${id}"`), `AppShell mobile More must not expose ${id}`, errors);
+  }
+  assert(!shellSource.includes('href={ROUTES.dailyWrap}'), "AppShell must not expose the Daily Wrap topbar shortcut", errors);
+  assert(!shellSource.includes('aria-label="Daily Wrap"'), "AppShell must not expose a Daily Wrap topbar label", errors);
 }
 
 function assertRouteScopeClassificationAck(errors) {
@@ -330,6 +360,7 @@ function assertRouteIaContracts(errors) {
   const explorePageSource = readAppSource("src/app/explore/page.tsx");
   const workbenchPageSource = readAppSource("src/app/workbench/page.tsx");
   const stockDetailSource = readAppSource("src/app/stock/[ticker]/StockDetailClient.tsx");
+  assertRetiredPublicNavigationContracts(shellSource, errors);
 
   assertSourceTokens(productNavSource, [
     "EXPLORE_ROUTE = ROUTES.home",
@@ -348,17 +379,12 @@ function assertRouteIaContracts(errors) {
     'id: "explore"',
     'label: EXPLORE_NAV_LABEL',
     "href: EXPLORE_ROUTE",
-    'id: "workbench"',
-    'group: "더보기"',
-    "href: ROUTES.workbench",
-    'label: WORKBENCH_NAV_LABEL',
     'id: "chart"',
     "href: CHART_ROUTE",
     "label: CHART_NAV_LABEL",
     'const PRIMARY_TAB_IDS: MobileTabId[] = ["explore", "market", "screener", "portfolio", "more"]',
     "const MORE_TAB_IDS: ShellPage[] = [",
     '"chart"',
-    '"workbench"',
     '"sectors"',
     '"etfs"',
     '"superinvestors"',
@@ -367,7 +393,7 @@ function assertRouteIaContracts(errors) {
   assertSourceTokens(nextConfigSource, [
     'source: "/briefing"',
     'destination: "/"',
-    "permanent: false",
+    "permanent: true",
   ], "briefing HTTP redirect alias", errors);
 
   assert(
@@ -434,6 +460,16 @@ for (const key of REQUIRED_ROUTE_KEYS) {
   assert(Boolean(routeExports.routes?.[key]), `ROUTES.${key} is missing`, errors);
 }
 
+if (RETIREMENT_ONLY) {
+  assertRetiredPublicNavigationContracts(
+    fs.readFileSync(path.join(APP_ROOT, "src", "components", "shell", "AppShell.tsx"), "utf8"),
+    errors,
+  );
+  if (errors.length) fail(`${errors.length} violation(s)`, errors);
+  console.log("[qa:routes] retired public navigation contract OK");
+  process.exit(0);
+}
+
 assertRouteIaContracts(errors);
 assertRouteScopeClassificationAck(errors);
 assertRank2DailyWrapRedirectContract(errors);
@@ -449,8 +485,8 @@ for (const sourcePath of collectDeclaredSourcePaths()) {
     errors.push(`${sourcePath}: declared macro source path must be /data/* or stooq:*`);
     continue;
   }
-  const filePath = path.join(APP_ROOT, "public", sourcePath);
-  assert(fs.existsSync(filePath), `${sourcePath} points to missing public file`, errors);
+  const filePath = path.join(APP_ROOT, "..", "data", sourcePath.replace(/^\/data\//, ""));
+  assert(fs.existsSync(filePath), `${sourcePath} points to missing data file`, errors);
 }
 
 const productPaths = new Set(routeExports.staticProductRoutePaths ?? []);
@@ -471,6 +507,19 @@ for (const file of DRIFT_SCAN_FILES) {
 }
 
 if (errors.length) fail(`${errors.length} violation(s)`, errors);
+
+const superinvestorsLiveContract = spawnSync(
+  TSX_BIN,
+  ["scripts/test-superinvestors-live-contract.ts"],
+  { cwd: APP_ROOT, encoding: "utf8", maxBuffer: 1024 * 1024 },
+);
+if (superinvestorsLiveContract.status !== 0) {
+  fail("superinvestors live contract failed", [
+    superinvestorsLiveContract.stdout?.trim(),
+    superinvestorsLiveContract.stderr?.trim(),
+  ].filter(Boolean));
+}
+process.stdout.write(superinvestorsLiveContract.stdout);
 
 console.log(
   `[qa:routes] route/key contract OK (${routeExports.appRoutePatterns.length} app routes, ${collectDeclaredSourcePaths().length} source paths, ${DRIFT_SCAN_FILES.length} drift scopes)`,

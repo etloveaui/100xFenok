@@ -25,7 +25,7 @@ export const METRIC_GLOSSARY = {
   },
   perBand: {
     label: "PER 밴드",
-    description: "과거 PER이 오르내린 범위를 띠 형태로 보여 주는 그래프입니다. 현재 PER이 그 범위의 위쪽인지 아래쪽인지로 비싼지 싼지를 가늠합니다.",
+    description: "여러 회계연도의 PER 범위와 기준연도 PER의 위치를 보여 줍니다. 구간에는 예상치가 포함될 수 있으며, 위치만으로 현재 가격의 적정성을 판단할 수는 없습니다.",
   },
   opm: {
     label: "OPM",
@@ -67,9 +67,21 @@ export const METRIC_GLOSSARY = {
     label: "가이던스",
     description: "회사가 직접 제시하는 향후 실적 전망입니다. 애널리스트 추정치와 비교하는 기준이 됩니다.",
   },
-  conviction: {
-    label: "컨빅션",
-    description: "여러 신호를 종합했을 때 판단의 확신이 얼마나 강한지를 나타내는 정도입니다. 높을수록 근거가 서로 일치한다는 뜻입니다.",
+  ticker: {
+    label: "티커",
+    description: "종목을 식별하는 거래소 코드입니다. 같은 칸 아래 줄에는 종목명이 함께 표시됩니다.",
+  },
+  shortEdge: {
+    label: "단기",
+    description: "20/60 거래일 기준 단기 진단 점수입니다. 높을수록 단기 방향성이 강하다는 뜻이며 투자 조언이 아닙니다.",
+  },
+  longEdge: {
+    label: "장기",
+    description: "5개 방향성 축 평균의 장기 진단 점수입니다. 높을수록 장기 방향성이 강하다는 뜻이며 투자 조언이 아닙니다.",
+  },
+  sector: {
+    label: "섹터",
+    description: "종목이 속한 산업 분류입니다. 같은 업종끼리 비교할 때 기준이 됩니다.",
   },
   coverage: {
     label: "커버리지",
@@ -205,11 +217,14 @@ const KEY_HINTS: Array<[RegExp, MetricGlossaryKey]> = [
   [/consensus|컨센서스|시장\s*예상치/i, "consensus"],
   [/revision|리비전|추정치\s*조정|추정\s*변경/i, "revision"],
   [/guidance|가이던스|실적\s*가이드/i, "guidance"],
-  [/conviction|컨빅션|확신도/i, "conviction"],
   [/coverage|커버리지|분석\s*범위/i, "coverage"],
   [/durability|내구\s*수익성|수익\s*지속/i, "durability"],
   [/upsidepotential|상승\s*잠재력|상방\s*잠재/i, "upsidePotential"],
-  [/downsidepotential|하락\s*잠재력|하방\s*잠재|하락\s*위험/i, "downsidePotential"],
+  [/downsidepotential|downsidepressure|하락\s*잠재력|하방\s*잠재|하락\s*위험|^하방$/i, "downsidePotential"],
+  [/^ticker$|티커/i, "ticker"],
+  [/fenokshorttermscore|^단기$/i, "shortEdge"],
+  [/fenoklongtermscore|^장기$/i, "longEdge"],
+  [/^sector$|섹터/i, "sector"],
   [/marketsimilarity|동종군\s*유사|유사도/i, "marketSimilarity"],
   [/momentum|모멘텀/i, "momentum"],
   [/factortilt|팩터\s*틸트|팩터\s*기울/i, "factorTilt"],

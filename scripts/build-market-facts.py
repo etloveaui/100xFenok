@@ -29,7 +29,6 @@ import sys
 ROOT = Path(__file__).resolve().parent.parent
 DATA = ROOT / "data"
 OUT = DATA / "computed" / "market_facts"
-PUBLIC_OUT = ROOT / "100xfenok-next" / "public" / "data" / "computed" / "market_facts"
 SCHEMA_VERSION = "market-facts/v1"
 MARKET_FACT_FIELDS = {
     "price",
@@ -254,7 +253,9 @@ def market_fact_source_stamps(rows: list[dict], core_members: set[str] | None, t
     if not row_tickers or not all(row_tickers) or len(set(row_tickers)) != len(row_tickers):
         return {"core_surface_source_as_of": None, "full_universe_floor_as_of": None, "source_stamp_diagnostics": {"status": "invalid_index_rows"}}
     row_set = set(row_tickers)
-    core_valid = bool(core_members) and set(core_members).issubset(row_set)
+    core_member_set = set(core_members or [])
+    core_price_absent_from_index = sorted(core_member_set - row_set)
+    core_valid = bool(core_members) and core_member_set.issubset(row_set)
     full_dates: list[str] = []
     core_dates: list[str] = []
     core_price_missing: list[str] = []
@@ -280,6 +281,19 @@ def market_fact_source_stamps(rows: list[dict], core_members: set[str] | None, t
                 core_price_stamped += 1
             else:
                 core_price_missing.append(ticker)
+    core_member_count = len(core_member_set)
+    core_partition_count = (
+        core_price_stamped
+        + len(core_price_missing)
+        + len(core_price_absent_from_index)
+    )
+    if core_partition_count != core_member_count:
+        raise AssertionError(
+            "core price diagnostic invariant violated: "
+            f"stamped={core_price_stamped} + missing={len(core_price_missing)} "
+            f"+ absent_from_index={len(core_price_absent_from_index)} "
+            f"!= members={core_member_count}"
+        )
     return {
         "core_surface_source_as_of": (
             min(core_dates)
@@ -292,10 +306,12 @@ def market_fact_source_stamps(rows: list[dict], core_members: set[str] | None, t
             else None
         ),
         "source_stamp_diagnostics": {
-            "core_member_count": len(core_members or []),
+            "core_member_count": core_member_count,
             "core_price_stamped_count": core_price_stamped,
             "core_price_missing_count": len(core_price_missing),
             "core_price_missing_tickers": core_price_missing,
+            "core_price_absent_from_index_count": len(core_price_absent_from_index),
+            "core_price_absent_from_index_tickers": core_price_absent_from_index,
             "core_price_source_complete": core_valid and len(core_price_missing) == 0,
             "full_fact_stamped_count": len(full_dates),
             "full_fact_missing_stamp_count": missing_fact_stamps,
@@ -462,6 +478,16 @@ def yf_fact(yf_payload, key):
     data = (yf_payload or {}).get("data") or {}
     info = data.get("info") or {}
     value = info.get(key)
+    return fact(value, "yf", as_of=yf_source_as_of(yf_payload), fetched_at=(yf_payload or {}).get("fetched_at"))
+
+
+def yf_current_price_fact(yf_payload):
+    """Use Yahoo's explicit current price, with its regular-market field as a same-source fallback."""
+    data = (yf_payload or {}).get("data") or {}
+    info = data.get("info") or {}
+    value = info.get("currentPrice")
+    if value is None:
+        value = info.get("regularMarketPrice")
     return fact(value, "yf", as_of=yf_source_as_of(yf_payload), fetched_at=(yf_payload or {}).get("fetched_at"))
 
 
@@ -786,7 +812,7 @@ def build_one(
 
     price = resolve_fact(
         "price",
-        yf_fact(yf_payload, "currentPrice"),
+        yf_current_price_fact(yf_payload),
         yf_fast_fact(yf_payload, "last_price"),
         stockanalysis_quote_fact(sa_payload, "p"),
         slick_fact(slick_payload, "price"),
@@ -805,7 +831,7 @@ def build_one(
 
     facts = {
         "price": price,
-        "previous_close": resolve_fact("previous_close", yf_fact(yf_payload, "previousClose"), stockanalysis_quote_fact(sa_payload, "pd")),
+        "previous_close": resolve_fact("previous_close", yf_fact(yf_payload, "previousClose"), stockanalysis_quote_fact(sa_payload, "cl")),
         "change": resolve_fact("change", stockanalysis_quote_fact(sa_payload, "c"), yf_fact(yf_payload, "regularMarketChange"), yf_derived_change_fact(yf_payload)),
         "change_pct": resolve_fact("change_pct", stockanalysis_quote_fact(sa_payload, "cp"), yf_fact(yf_payload, "regularMarketChangePercent"), yf_derived_change_pct_fact(yf_payload)),
         "market_cap": market_cap,
@@ -1062,19 +1088,27 @@ def parse_args(argv=None) -> argparse.Namespace:
     parser.add_argument(
         "--no-public-mirror",
         action="store_true",
-        help="Write only data/computed/market_facts; skip the Next public mirror.",
+        help="Retained for CI command compatibility; builds are canonical-only "
+        "(the public mirror is boundary-owned, #377 batch 3).",
     )
     return parser.parse_args(argv)
 
 
 def main(argv=None) -> None:
     args = parse_args([] if argv is None else argv)
-    mirror_public = not args.no_public_mirror
     target_tickers = parse_ticker_list(args.tickers)
     if args.tickers is not None and not target_tickers:
         raise SystemExit("--tickers requires at least one ticker")
 
-    yf_files = {p.stem: p for p in (DATA / "yf" / "finance").glob("*.json") if p.name != "_summary.json"}
+    # fetch-yf-finance.py writes a sibling {TICKER}.unadjusted.json beside {TICKER}.json for the
+    # unadjusted-history lane. Path.stem on that file is "AAPL.unadjusted", so a bare glob invents
+    # a ticker that no contract can satisfy — the payload carries the mixed-case stem while the
+    # validator demands ticker.upper(). Exclude the sibling lane rather than relaxing the contract.
+    yf_files = {
+        p.stem: p
+        for p in (DATA / "yf" / "finance").glob("*.json")
+        if p.name != "_summary.json" and not p.name.endswith(".unadjusted.json")
+    }
     sa_etf_files = {p.stem: p for p in (DATA / "stockanalysis" / "etfs").glob("*.json")}
     sa_stock_files = {p.stem: p for p in (DATA / "stockanalysis" / "stocks").glob("*.json")}
     sa_financial_files = {p.stem: p for p in (DATA / "stockanalysis" / "financials").glob("*.json")}
@@ -1155,8 +1189,6 @@ def main(argv=None) -> None:
         payload = carry_forward_stable_payload(load_json(OUT / rel), payload)
         assert_market_facts_payload(payload, ticker=ticker)
         write_json(OUT / rel, payload)
-        if mirror_public:
-            write_json(PUBLIC_OUT / rel, payload)
         row = {
             "ticker": ticker,
             "asset_type": payload["asset_type"],
@@ -1196,10 +1228,7 @@ def main(argv=None) -> None:
         "rows": rows,
     }
     write_json(OUT / "index.json", index)
-    if mirror_public:
-        write_json(PUBLIC_OUT / "index.json", index)
-    mirror_status = "public_mirror=on" if mirror_public else "public_mirror=off"
-    print(f"[build-market-facts] count={len(rows)} etf={index['coverage']['etf']} stock={index['coverage']['stock']} {mirror_status}")
+    print(f"[build-market-facts] count={len(rows)} etf={index['coverage']['etf']} stock={index['coverage']['stock']}")
 
 
 if __name__ == "__main__":

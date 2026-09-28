@@ -1,0 +1,153 @@
+{
+  "schema_version": "feno_rim_v2_x1_factor_criteria.v1",
+  "frozen_pre_result": true,
+  "freeze_policy": "verdict criteria frozen from the handler's directive alone; no factor data fetched and no factor number computed at freeze time",
+  "directive_ref": "feno-handoff fh-20260806-175-cc-b563494b (handler: cc; owner-amended contract, commit 671202c61b)",
+  "handler_decisions": {
+    "representative_value": "midpoint (endpoint ranks remain a reported diagnostic; switching to low post-X0 would be fitting to result)",
+    "primary_metric": "rank correlation; directional_rate demoted, not used in any verdict",
+    "origin_sets": "all 34 + the 18 window-complete ones, both required for every statistic"
+  },
+  "origin_sets_frozen": {
+    "all_34": [
+      "2015-03-27",
+      "2015-06-26",
+      "2015-09-25",
+      "2015-12-25",
+      "2016-03-25",
+      "2016-06-24",
+      "2016-09-23",
+      "2016-12-23",
+      "2017-03-24",
+      "2017-06-23",
+      "2017-09-22",
+      "2017-12-22",
+      "2018-03-23",
+      "2018-06-22",
+      "2018-09-21",
+      "2018-12-21",
+      "2019-03-22",
+      "2019-06-21",
+      "2019-09-20",
+      "2019-12-20",
+      "2020-03-20",
+      "2020-06-19",
+      "2020-09-18",
+      "2020-12-18",
+      "2021-03-19",
+      "2021-06-18",
+      "2021-09-17",
+      "2021-12-17",
+      "2022-03-18",
+      "2022-06-17",
+      "2022-09-16",
+      "2022-12-16",
+      "2023-03-17",
+      "2023-06-16"
+    ],
+    "window_complete_18": [
+      "2019-03-22",
+      "2019-06-21",
+      "2019-09-20",
+      "2019-12-20",
+      "2020-03-20",
+      "2020-06-19",
+      "2020-09-18",
+      "2020-12-18",
+      "2021-03-19",
+      "2021-06-18",
+      "2021-09-17",
+      "2021-12-17",
+      "2022-03-18",
+      "2022-06-17",
+      "2022-09-16",
+      "2022-12-16",
+      "2023-03-17",
+      "2023-06-16"
+    ],
+    "rule": "window_complete = baseline window_years >= 9.5 of the requested 10y span (X0 P0-3 reversal set)"
+  },
+  "factor_sources": [
+    {
+      "id": "ff_research_factors",
+      "url": "https://mba.tuck.dartmouth.edu/pages/faculty/ken.french/ftp/F-F_Research_Data_Factors_CSV.zip",
+      "contains": [
+        "Mkt-RF",
+        "SMB",
+        "HML",
+        "RF"
+      ]
+    },
+    {
+      "id": "ff_5factors_2x3",
+      "url": "https://mba.tuck.dartmouth.edu/pages/faculty/ken.french/ftp/F-F_Research_Data_5_Factors_2x3_CSV.zip",
+      "contains": [
+        "RMW",
+        "CMA"
+      ]
+    },
+    {
+      "id": "ff_momentum",
+      "url": "https://mba.tuck.dartmouth.edu/pages/faculty/ken.french/ftp/F-F_Momentum_Factor_CSV.zip",
+      "contains": [
+        "MOM"
+      ]
+    },
+    {
+      "id": "ff_25_me_bm",
+      "url": "https://mba.tuck.dartmouth.edu/pages/faculty/ken.french/ftp/25_Portfolios_ME_BM_CSV.zip",
+      "contains": [
+        "Big Value minus Big Growth = (ME5,BM5) - (ME5,BM1) monthly"
+      ]
+    }
+  ],
+  "factor_definitions": {
+    "hml": "HML (value factor), monthly, from F-F_Research_Data_5_Factors_2x3",
+    "big_value_minus_big_growth": "(ME5,BM5) - (ME5,BM1) monthly portfolio returns from 25_Portfolios_ME_BM",
+    "rmw": "RMW (profitability), monthly, from F-F_Research_Data_5_Factors_2x3",
+    "cma": "CMA (investment), monthly, from F-F_Research_Data_5_Factors_2x3",
+    "momentum": "MOM (momentum), monthly, from F-F_Momentum_Factor",
+    "market_excess": "Mkt-RF, monthly, from F-F_Research_Data_Factors"
+  },
+  "method": {
+    "window": "each origin's subsequent 36 months: compound the monthly factor returns over (t, t+36m]; the basket's 36m cumulative total return over the SAME window",
+    "period_window": "2015-01 .. 2023-12 cumulative factor returns (the origin span's matched period)",
+    "residual": "pooled OLS per origin set: y = basket 36m cumulative total return on X = [1, MktRF36, HML36, RMW36, CMA36, MOM36]; factor-residual return = y - yhat",
+    "primary_signal": "bottom-up V/P (midpoint) vs 36m cumulative return (raw and factor-residual), Spearman rank correlation with own moving-block bootstrap CI and ESS; top-down V/P reported alongside",
+    "both_origin_sets": "all 34 and the 18 window-complete origins — every statistic computed on both (handler decision)"
+  },
+  "verdict_criteria": {
+    "scope": "X1 factor/period control for the E2 bottom-up RIM signal on the fixed Dow-30 basket; factors are regime CONTEXT, never a substitute baseline (contract 6 X1)",
+    "origin_sets": "all_34 + window_complete_18 (both required for every statistic)",
+    "insufficient_matched_universe": {
+      "directive_rule": "the Dow basket cannot be matched to the factor universe closely enough to interpret the residual",
+      "operational": "any required 36m origin window has missing factor months (data gap), OR the pooled OLS R2 < 0.50 on BOTH origin sets (the factors barely co-move with the basket, so residuals are uninterpretable); do not force a number",
+      "fail_when": "data gap in any origin window, or R2 < 0.50 on both sets"
+    },
+    "period_effect_explains_most": {
+      "directive_rule": "value factors are materially negative over the matched window AND the RIM signal's rank correlation against FACTOR-RESIDUAL returns turns positive on both origin sets",
+      "operational": "cumulative HML over 2015-01..2023-12 < 0 (materially negative, magnitude reported) AND spearman(bottom-up V/P, factor-residual 36m return) > 0 on BOTH origin sets",
+      "pass_when": "HML_cum_2015_2023 < 0 AND residual_rho > 0 on both sets"
+    },
+    "period_effect_partial_only": {
+      "directive_rule": "factor-residual rank improves versus raw but remains <= 0 on at least one origin set",
+      "operational": "residual_rho > raw_rho on BOTH origin sets (improvement on the same set) AND residual_rho <= 0 on at least one set",
+      "pass_when": "residual_rho > raw_rho on both sets AND residual_rho <= 0 on >= 1 set"
+    },
+    "model_failure_remains": {
+      "directive_rule": "factor-residual rank stays <= 0 on both origin sets",
+      "operational": "residual_rho <= 0 on BOTH origin sets (or no criteria above is met — conservative default)",
+      "pass_when": "residual_rho <= 0 on both sets, or no other criterion fires"
+    },
+    "decision_order": [
+      "insufficient_matched_universe",
+      "period_effect_explains_most",
+      "period_effect_partial_only",
+      "model_failure_remains"
+    ],
+    "frozen_pre_result": true,
+    "freeze_mechanism": "criteria emitted as data by x1-criteria.mjs before any X1 number exists, consumed fail-closed by x1-factor-regime.mjs"
+  },
+  "generated_at": "2026-08-06T08:17:13.248Z",
+  "criteria_sha256": "0ba4dbf737800c1aab37f7f021f374a258962b820f410df7a1174e93af64fb37"
+}

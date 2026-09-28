@@ -31,19 +31,12 @@ class DataSpinePolicyTest(unittest.TestCase):
     @classmethod
     def setUpClass(cls) -> None:
         cls.facts = load_module(SCRIPTS / "build-market-facts.py", "build_market_facts_policy_test")
-        cls.p1 = load_module(SCRIPTS / "audit-data-spine-p1.py", "audit_data_spine_p1_policy_test")
-        cls.v0 = load_module(SCRIPTS / "audit-data-spine-v0.py", "audit_data_spine_v0_policy_test")
 
     def test_resolver_fields_match_ratified_policy_fields(self) -> None:
         self.assertEqual(
             set(self.facts.FIELD_SOURCE_POLICY),
             set(data_spine_policy.V0_FIELD_POLICY),
         )
-
-    def test_p1_and_v0_use_shared_policy_objects(self) -> None:
-        self.assertIs(self.p1.DIAGNOSIS_ACTION, data_spine_policy.DIAGNOSIS_ACTION)
-        self.assertIs(self.v0.V0_FIELD_POLICY, data_spine_policy.V0_FIELD_POLICY)
-        self.assertIs(self.v0.POLICY_RATIONALE, data_spine_policy.POLICY_RATIONALE)
 
     def test_v0_specific_tolerances_are_not_regressed_to_old_p1_draft(self) -> None:
         cases = {
@@ -63,6 +56,30 @@ class DataSpinePolicyTest(unittest.TestCase):
         label = data_spine_policy.tolerance_label("return_3m")
         self.assertIn("authority-only", label)
         self.assertIn("provenance", label)
+
+    def test_market_facts_price_accepts_yahoo_regular_market_fallback(self) -> None:
+        payload = {
+            "data": {
+                "info": {
+                    "symbol": "688825.SS",
+                    "quoteType": "EQUITY",
+                    "regularMarketPrice": 55.18,
+                    "regularMarketTime": 1786690801,
+                },
+                "history_1y": [],
+            },
+            "fetched_at": "2026-08-15T00:02:50Z",
+        }
+        built = self.facts.build_one("688825.SS", payload, None, None)
+        self.assertEqual(built["facts"]["price"]["value"], 55.18)
+        self.assertEqual(built["facts"]["price"]["source"], "yf")
+        self.assertEqual(built["source_as_of"], built["facts"]["price"]["as_of"])
+        self.assertIsNotNone(built["source_as_of"])
+
+        payload["data"]["info"]["currentPrice"] = 56.01
+        preferred = self.facts.build_one("688825.SS", payload, None, None)
+        self.assertEqual(preferred["facts"]["price"]["value"], 56.01,
+                         "currentPrice must remain preferred over regularMarketPrice")
 
 
 if __name__ == "__main__":

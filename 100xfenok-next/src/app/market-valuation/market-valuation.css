@@ -1,0 +1,627 @@
+/* Market Valuation — light-system route namespace (slice 7a).
+ * Layout only: grids, rows, and the valuation band. Panel chrome, type scale,
+ * and states come from src/components/ui; ink and fills reference --fnk-*
+ * system tokens. The .mv-band gradient is the single SPEC-allowed gradient
+ * exception (valuation-band raw stops, allowlisted by category). */
+
+.mv {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  padding: 20px 24px 32px;
+  background: var(--fnk-neutral-50);
+  font-size: 13px;
+  line-height: 1.45;
+}
+
+.mv-head {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.mv-title {
+  margin: 0;
+  font-size: 20px;
+  font-weight: 600;
+  color: var(--fnk-neutral-900);
+}
+
+.mv-verdict {
+  font-size: 13px;
+  color: var(--fnk-neutral-500);
+}
+
+/* While loading only (the span carries data-loading until the sentence lands):
+ * reserve its lines so the panels below do not move — measured +56px at
+ * 768 @2283ms. Scoped to the marker, so the loaded span keeps its natural box;
+ * display:block never applies after load. */
+@media (max-width: 1023px) {
+  .mv-verdict[data-loading="true"] {
+    display: block;
+    min-height: 4lh;
+  }
+}
+
+@media (max-width: 600px) {
+  /* On phones the completed verdict occupies two lines. Share that footprint
+   * with loading instead of dropping a four-line reserve at settle. */
+  .mv-verdict,
+  .mv-verdict[data-loading="true"] {
+    display: block;
+    min-height: 2lh;
+  }
+}
+
+/* One provenance line for the whole page: worst state of the four panels with
+ * the oldest date among them. Full-width inside .mv-head so it owns its row. */
+.mv-prov {
+  flex: 1 0 100%;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px 12px;
+  margin: 0;
+  font-size: 12px;
+  color: var(--fnk-neutral-500);
+}
+
+.mv-prov-state {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.mv-prov b {
+  font-weight: 600;
+  color: var(--fnk-neutral-700);
+}
+
+.mv-prov-dot {
+  display: inline-block;
+  width: 6px;
+  height: 6px;
+  border-radius: 999px;
+  background: var(--fnk-neutral-500);
+}
+
+.mv-prov-dot[data-state="fresh"] {
+  background: var(--fnk-color-gain);
+}
+
+.mv-prov-dot[data-state="stale"],
+.mv-prov-dot[data-state="pending"],
+.mv-prov-dot[data-state="partial"] {
+  background: var(--fnk-color-warn);
+}
+
+.mv-prov-dot[data-state="error"] {
+  background: var(--fnk-color-loss);
+}
+
+.mv-tabs {
+  display: flex;
+  gap: 4px;
+}
+
+.mv-tabs a {
+  height: 32px;
+  padding: 0 12px;
+  display: inline-flex;
+  align-items: center;
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--fnk-neutral-600);
+  text-decoration: none;
+}
+
+.mv-tabs a[aria-current="page"] {
+  background: var(--fnk-neutral-100);
+  color: var(--fnk-brand-interactive);
+  font-weight: 600;
+}
+
+/* Summary strip: the compact preview that leads the route — the distribution
+ * band spans the panel and the index rank bars sit in a right column beside
+ * their reading (stacked beneath it on phones). */
+.mv-sum {
+  display: grid;
+  gap: 12px;
+  padding: 12px 16px 14px;
+}
+
+.mv-sum-band {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  min-width: 0;
+}
+
+.mv-sum-peers {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 320px);
+  align-items: center;
+  gap: 6px 16px;
+}
+
+.mv-sum-peer-read,
+.mv-sum-bars {
+  min-width: 0;
+}
+
+.mv-sum-cap {
+  margin: 0;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--fnk-neutral-600);
+}
+
+.mv-sum-read {
+  margin: 0;
+  font-size: 12px;
+  color: var(--fnk-neutral-700);
+}
+
+.mv-sum-note {
+  margin: 0;
+  font-size: 12px;
+  color: var(--fnk-neutral-600);
+}
+
+.mv-stats {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  margin-top: 10px;
+}
+
+@media (max-width: 720px) {
+  .mv-stats {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+.mv-thead,
+.mv-trow {
+  display: grid;
+  grid-template-columns: 160px 1fr 1fr 1fr 140px;
+  align-items: center;
+  padding: 0 16px;
+}
+
+.mv-thead {
+  height: 30px;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--fnk-neutral-500);
+  border-bottom: 1px solid var(--fnk-neutral-100);
+}
+
+/* Single hairline under the peer header: the header owns border-bottom and the
+ * first body row drops its border-top (:first-of-type never matches a body
+ * row — the header div is the first div among the siblings). */
+.mv-thead + .mv-trow {
+  border-top: 0;
+}
+
+.mv-trow {
+  height: 38px;
+  font-size: 13px;
+  border-top: 1px solid var(--fnk-neutral-100);
+  transition: background-color 150ms ease;
+}
+
+.mv-trow:first-of-type {
+  border-top: 0;
+}
+
+.mv-trow:hover {
+  background: var(--fnk-neutral-50);
+}
+
+.mv-trow:focus-visible,
+.mv-brow:focus-visible {
+  background: var(--fnk-neutral-50);
+  box-shadow: inset 2px 0 0 var(--fnk-brand-interactive);
+  outline: none;
+}
+
+.mv-idx {
+  color: var(--fnk-neutral-900);
+  font-weight: 500;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* Peer reading cell: the pill keeps the verdict, the mini band under it shows
+ * where the index sits in its own history on the same zone scale. */
+.mv-range {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 3px;
+  min-width: 0;
+}
+
+/* Board name column: 180px floor fits the longest asset name at 12px
+ * ("코스닥 150 (KOSDQ150 Index)" ≈ 180px), growing to 240px when the panel
+ * allows it — 1100px viewports no longer clip names to ellipsis. */
+.mv-brow {
+  display: grid;
+  grid-template-columns: 26px minmax(180px, 240px) minmax(0, 1fr) 52px 72px;
+  align-items: center;
+  gap: 12px;
+  height: 34px;
+  padding: 0 16px;
+  border-top: 1px solid var(--fnk-neutral-100);
+  font-size: 12px;
+}
+
+.mv-brow:first-of-type {
+  border-top: 0;
+}
+
+.mv-brow:hover {
+  background: var(--fnk-neutral-50);
+}
+
+.mv-brank {
+  text-align: right;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--fnk-neutral-500);
+}
+
+.mv-bname {
+  color: var(--fnk-neutral-700);
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.mv-bpct {
+  text-align: right;
+  font-weight: 600;
+  color: var(--fnk-neutral-900);
+}
+
+.mv-blabel {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* Board controls: horizon segmented control + asset-group filter chips. */
+.mv-board-controls {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 16px 0;
+}
+
+.mv-horizons,
+.mv-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+}
+
+.mv-horizons button,
+.mv-chips button,
+.mv-sorts button {
+  height: 28px;
+  padding: 0 10px;
+  border-radius: 8px;
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--fnk-neutral-600);
+  background: transparent;
+  border: 0;
+  cursor: pointer;
+}
+
+.mv-horizons button[aria-pressed="true"],
+.mv-chips button[aria-pressed="true"],
+.mv-sorts button[aria-pressed="true"] {
+  background: var(--fnk-neutral-100);
+  color: var(--fnk-brand-interactive);
+  font-weight: 600;
+}
+
+/* Sortable peer headers: the header cell keeps role=columnheader and the
+ * button inside owns the click and the keyboard activation. */
+.mv-sort {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  max-width: 100%;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  font: inherit;
+  color: inherit;
+  cursor: pointer;
+}
+
+.mv-sort-hint {
+  font-style: normal;
+  font-weight: 600;
+  opacity: 0.45;
+}
+
+.mv-sort-hint[data-active] {
+  opacity: 1;
+  color: var(--fnk-brand-interactive);
+}
+
+/* Phone-only sort control: the stacked layout hides .mv-thead. */
+.mv-sorts {
+  display: none;
+}
+
+/* The board keeps every rankable row; the list scrolls instead of the page. */
+.mv-board-list {
+  margin-top: 10px;
+  max-height: 460px;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
+
+/* SPEC exception: the only gradient on the route (valuation-band stops). */
+.mv-band {
+  position: relative;
+  height: 8px;
+  border-radius: 4px;
+  background: linear-gradient(90deg, #dcfce7 0%, #f1f5f9 50%, #fdebed 100%);
+}
+
+/* Distribution/zone shading over the same scale, hard-edged at the SAME
+ * thresholds valuationMeta labels (20/40/60/80), so the picture and the word
+ * cannot disagree. The benchmark ordinal rows expose percentile/average/z only
+ * — no quartiles — so these are fixed zones, not a measured distribution.
+ * Tints are token mixes (no new raw color), and the marker still paints on top. */
+.mv-band::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background: linear-gradient(
+    90deg,
+    color-mix(in srgb, var(--fnk-color-gain) 22%, transparent) 0%,
+    color-mix(in srgb, var(--fnk-color-gain) 22%, transparent) 20%,
+    color-mix(in srgb, var(--fnk-color-gain) 8%, transparent) 20%,
+    color-mix(in srgb, var(--fnk-color-gain) 8%, transparent) 40%,
+    transparent 40%,
+    transparent 60%,
+    color-mix(in srgb, var(--fnk-color-warn) 14%, transparent) 60%,
+    color-mix(in srgb, var(--fnk-color-warn) 14%, transparent) 80%,
+    color-mix(in srgb, var(--fnk-color-loss) 18%, transparent) 80%,
+    color-mix(in srgb, var(--fnk-color-loss) 18%, transparent) 100%
+  );
+}
+
+.mv-band i {
+  position: absolute;
+  top: -3px;
+  width: 2px;
+  height: 14px;
+  background: #0f172a;
+  border-radius: 1px;
+  transform: translateX(-1px);
+}
+
+/* Compact in-row band (Peer Compare): same scale, zones and marker, shorter. */
+.mv-band-mini {
+  width: 100%;
+  height: 6px;
+  border-radius: 4px;
+}
+
+.mv-band-mini i {
+  top: -2px;
+  height: 10px;
+}
+
+.mv-note {
+  padding: 8px 16px 0;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--fnk-neutral-500);
+}
+
+/* Chart tabs: both charts stay mounted, so the idle one is hidden by CSS only
+ * and switching a tab never resizes, remounts or refetches a chart. */
+.mv-chart-tabs {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px;
+  padding: 10px 16px 0;
+}
+
+.mv-chart-tabs button {
+  height: 28px;
+  padding: 0 10px;
+  border-radius: 8px;
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--fnk-neutral-600);
+  background: transparent;
+  border: 0;
+  cursor: pointer;
+}
+
+.mv-chart-tabs button[aria-selected="true"] {
+  background: var(--fnk-neutral-100);
+  color: var(--fnk-brand-interactive);
+  font-weight: 600;
+}
+
+.mv-chart-cursor {
+  margin-left: auto;
+  font-size: 12px;
+  color: var(--fnk-neutral-500);
+}
+
+.mv-chart-cursor b {
+  font-weight: 600;
+  color: var(--fnk-neutral-700);
+}
+
+.mv-chart-panes {
+  position: relative;
+  padding: 14px 16px;
+}
+
+/* The idle pane keeps its layout box (visibility, not display) so the chart
+ * inside keeps a real canvas size and needs no resize when it comes back. It is
+ * clipped to the container while hidden so it can never add page scroll, and
+ * visibility:hidden keeps its controls out of the tab order. */
+.mv-chart-pane {
+  position: absolute;
+  top: 14px;
+  left: 16px;
+  right: 16px;
+  bottom: 14px;
+  overflow: hidden;
+  visibility: hidden;
+  pointer-events: none;
+}
+
+.mv-chart-pane[data-active] {
+  position: static;
+  overflow: visible;
+  visibility: visible;
+  pointer-events: auto;
+}
+
+.mv-chart-cap {
+  font-size: 12px;
+  color: var(--fnk-neutral-600);
+  font-weight: 600;
+}
+
+.mv-foot {
+  padding: 0 4px;
+  font-size: 12px;
+  color: var(--fnk-neutral-500);
+}
+
+/* slice 9 mobile-390 (after base rules: same-specificity overrides must win). */
+@media (max-width: 720px) {
+  .mv-thead {
+    display: none;
+  }
+  /* Phone stack: name + reading take full rows, so the three numeric cells
+   * fill exactly three tracks (no phantom fourth column). */
+  .mv-trow {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    height: auto;
+    min-height: 44px;
+    row-gap: 2px;
+    padding-top: 6px;
+    padding-bottom: 6px;
+  }
+  .mv-idx {
+    grid-column: 1 / -1;
+  }
+  .mv-brow {
+    grid-template-columns: auto minmax(0, 1fr) auto auto;
+    grid-template-rows: auto auto;
+    height: auto;
+    min-height: 44px;
+    row-gap: 4px;
+    padding-top: 6px;
+    padding-bottom: 6px;
+  }
+  .mv-brank {
+    grid-column: 1;
+    grid-row: 1;
+  }
+  .mv-bname {
+    grid-column: 2;
+    grid-row: 1;
+  }
+  .mv-bpct {
+    grid-column: 3;
+    grid-row: 1;
+  }
+  .mv-blabel {
+    grid-column: 4;
+    grid-row: 1;
+  }
+  .mv-brow .mv-band {
+    grid-column: 1 / -1;
+    grid-row: 2;
+  }
+  /* The reading pill is wider than a quarter column at phone widths, so the
+   * whole reading cell takes its own line with the pill and band side by side. */
+  .mv-range {
+    grid-column: 1 / -1;
+    flex-direction: row;
+    align-items: center;
+    gap: 8px;
+  }
+  .mv-range .mv-band {
+    width: auto;
+    min-width: 48px;
+    flex: 1 1 0;
+  }
+  .mv-horizons button,
+  .mv-chips button,
+  .mv-sorts button,
+  .mv-chart-tabs button {
+    height: 44px;
+    padding: 0 14px;
+  }
+  /* Phone sort control: single scrollable row so the control never splits
+   * into a ragged two-line header. */
+  .mv-sorts {
+    display: flex;
+    flex-wrap: nowrap;
+    align-items: center;
+    gap: 4px;
+    padding: 10px 16px 0;
+    overflow-x: auto;
+    font-size: 12px;
+    color: var(--fnk-neutral-500);
+  }
+  .mv-sorts > * {
+    flex-shrink: 0;
+  }
+  .mv-sorts-label {
+    font-weight: 600;
+  }
+  /* Touch-target audit: every control inside the route surface reaches 44px on
+   * phones — the local filters, the chart tabs, the sort control, the chart's
+   * own range/toggle buttons (already min-h-11), and the shared retry
+   * affordances (Panel's stale strip and the empty-state action) that are sized
+   * for desktop elsewhere. The stale strip grows with its button. */
+  .mv button {
+    min-height: 44px;
+  }
+  .mv .stale-state {
+    height: auto;
+    min-height: 44px;
+  }
+  /* Adequate spacing between adjacent controls. */
+  .mv-board-controls,
+  .mv-horizons,
+  .mv-chips,
+  .mv-sorts,
+  .mv-chart-tabs {
+    gap: 8px;
+  }
+  /* The strip stacks: the band keeps the full width and the index bars drop
+   * under their reading instead of holding a column beside it. */
+  .mv-sum-peers {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}

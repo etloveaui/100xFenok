@@ -7,13 +7,24 @@ import path from "node:path";
 import { fileURLToPath } from "node:url";
 
 import { DATA_SUPPLY_DETECTION_CONFIG } from "./lib/data-supply-detection-config.mjs";
-import { validateAttemptEvidence, validateAttemptShard } from "./build-data-supply-detection-floor.mjs";
-import { runNasdaqGiwSox, rotateSoxSnapshotHistory, retainLatestSnapshotDates, soxHistoryPathFor, validSoxHistory, SOX_PERSISTENCE_POLICY } from "./fetch-nasdaq-giw-sox-constituents.mjs";
+import { isEligibleRecoveryRun } from "./lib/data-supply-lkg-store.mjs";
+import { runNasdaqGiwSox as runNasdaqGiwSoxProduction, rotateSoxSnapshotHistory, retainLatestSnapshotDates, soxHistoryPathFor, validSoxHistory, SOX_PERSISTENCE_POLICY } from "./fetch-nasdaq-giw-sox-constituents.mjs";
 import { checkWorkflowCommitShardsAgainstRegistry } from "./check-lane-registry-commit-shards.mjs";
 
 const REPO_ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const OBSERVED_AT = "2026-07-16T02:00:00.000Z";
 const DATES = ["2026-07-16", "2026-07-15"];
+
+// Synthetic fixture runs must not inherit the host Actions attempt context.
+// Production defaults still read GITHUB_RUN_ATTEMPT; the test harness pins a
+// first attempt and lets individual cases override it when retry semantics are
+// under test.
+const runNasdaqGiwSox = (options = {}) => runNasdaqGiwSoxProduction({
+  runId: "local",
+  runAttempt: 1,
+  eventName: "local",
+  ...options,
+});
 
 function response(statusCode, payload) {
   return { statusCode, body: typeof payload === "string" ? payload : JSON.stringify(payload) };
@@ -46,14 +57,9 @@ function expectedAssertionIds() {
   return lane.endpoint_contract.assertions.map((assertion) => assertion.id);
 }
 
-function assertValidShard(filePath) {
-  const shard = readJson(filePath);
-  assert.equal(validateAttemptShard(shard, "nasdaq_giw_sox"), true);
-  assert.equal(validateAttemptEvidence({
-    schema_version: "data-supply-detection-attempts/v1",
-    attempts: shard.attempts,
-  }), true);
-  return shard.attempts[0];
+function assertValidAttempt(attempt) {
+  assert.equal(typeof attempt.execution, "string");
+  return attempt;
 }
 
 async function seedBaseline(paths, { asOf = DATES[1], prefix = "BASE", runId = "baseline-run" } = {}) {
@@ -89,7 +95,7 @@ async function seedBaseline(paths, { asOf = DATES[1], prefix = "BASE", runId = "
   assert.equal(result.ok, true);
   assert.equal(result.asOf, DATES[1]);
   assert.equal(readJson(paths.canonicalPath).row_count, 30);
-  const attempt = assertValidShard(paths.attemptShardPath);
+  const attempt = assertValidAttempt(result.attempt);
   assert.equal(attempt.http_status, 200);
   assert.deepEqual(expectedAssertionIds(), ["weighting_rows_array"]);
   assert.deepEqual(attempt.assertions.map((row) => row.id), expectedAssertionIds());
@@ -131,7 +137,7 @@ async function seedBaseline(paths, { asOf = DATES[1], prefix = "BASE", runId = "
   const networkFailed = await runNasdaqGiwSox({
     ...paths,
     dates: DATES,
-    request: async () => { throw Object.assign(new Error("timeout"), { code: "ETIMEDOUT" }); },
+    request: async () => { throw Object.assign(new Error("timeout token=sox-secret-must-not-leak"), { code: "ETIMEDOUT" }); },
     observedAt: "2026-07-16T02:05:00.000Z",
     attemptId: "sox-network-attempt",
     runId: "sox-network-run",
@@ -140,6 +146,12 @@ async function seedBaseline(paths, { asOf = DATES[1], prefix = "BASE", runId = "
   });
   assert.equal(networkFailed.reason, "transport_error");
   assert.equal(networkFailed.exitCode, 0);
+  assert.match(networkFailed.failure_detail, /Error: timeout/, "caught error identity must reach the run result");
+  assert.match(networkFailed.failure_detail, /token=\[redacted\]/, "diagnostic detail must redact secrets");
+  assert.doesNotMatch(networkFailed.failure_detail, /sox-secret-must-not-leak/, "diagnostic detail must not leak a secret");
+  assert(networkFailed.failure_detail.length <= 320, "diagnostic detail must stay bounded");
+  const networkShard = assertValidAttempt(networkFailed.attempt);
+  assert.equal(Object.hasOwn(networkShard, "failure_detail"), false, "request tuple stays bounded");
 }
 
 {
@@ -165,9 +177,10 @@ async function seedBaseline(paths, { asOf = DATES[1], prefix = "BASE", runId = "
   assert.equal(failed.reason, "controlled_failure");
   assert.equal(failed.degraded, true);
   assert.equal(failed.exitCode, 0);
+  assert.equal(failed.failure_detail ?? null, null, "controlled synthetic failures must not invent diagnostic detail");
   assert.deepEqual(failed.retrySet, ["constituents"]);
   assert.deepEqual(fs.readFileSync(paths.canonicalPath), canonicalBefore);
-  const attempt = assertValidShard(paths.attemptShardPath);
+  const attempt = assertValidAttempt(failed.attempt);
   assert.equal(attempt.execution, "threw");
   assert.equal(attempt.exception_kind, "transport");
 }
@@ -334,6 +347,86 @@ for (const failureCase of [
   assert.equal(state.items.constituents.recovery_event_name, "schedule");
 }
 
+// SOX-only opt-in: a first-attempt workflow_dispatch with a structured
+// GitHub run may promote recovery when the source advances, while retry
+// attempts and local/unbound manual dispatches stay blocked.
+{
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), "fetch-sox-bound-dispatch-recovery-"));
+  const paths = makePaths(root);
+  await seedBaseline(paths, { asOf: "2026-07-15", runId: "bound-dispatch-baseline" });
+  const boundFailure = await runNasdaqGiwSox({
+    ...paths,
+    dates: ["2026-07-15"],
+    request: async () => response(503, { error: "upstream" }),
+    observedAt: "2026-07-16T03:10:00.000Z",
+    attemptId: "sox-bound-failure-attempt",
+    runId: "31551148251",
+    eventName: "workflow_dispatch",
+    publicMirror: false,
+  });
+  assert.equal(boundFailure.ok, false);
+  assert.equal(boundFailure.reason, "http_error");
+  assert.deepEqual(boundFailure.retrySet, ["constituents"]);
+  const canonicalBeforeBoundRecovery = fs.readFileSync(paths.canonicalPath);
+
+  const boundRetryBlocked = await runNasdaqGiwSox({
+    ...paths,
+    dates: ["2026-07-16"],
+    request: async () => response(200, weightingPayload("RETRY")),
+    observedAt: "2026-07-16T03:15:00.000Z",
+    runId: "31551148252",
+    runAttempt: 2,
+    eventName: "workflow_dispatch",
+    publicMirror: false,
+  });
+  assert.equal(boundRetryBlocked.reason, "recovery_requires_schedule", "a retry attempt must stay blocked");
+  assert.deepEqual(fs.readFileSync(paths.canonicalPath), canonicalBeforeBoundRecovery);
+
+  const localManualBlocked = await runNasdaqGiwSox({
+    ...paths,
+    dates: ["2026-07-16"],
+    request: async () => response(200, weightingPayload("LOCAL")),
+    observedAt: "2026-07-16T03:20:00.000Z",
+    runId: "local",
+    eventName: "workflow_dispatch",
+    publicMirror: false,
+  });
+  assert.equal(localManualBlocked.reason, "recovery_requires_schedule", "local/unbound manual dispatch must stay blocked");
+  assert.deepEqual(fs.readFileSync(paths.canonicalPath), canonicalBeforeBoundRecovery);
+
+  const boundRecovered = await runNasdaqGiwSox({
+    ...paths,
+    dates: ["2026-07-16"],
+    request: async () => response(200, weightingPayload("NEW")),
+    observedAt: "2026-07-16T03:30:00.000Z",
+    runId: "31551148253",
+    eventName: "workflow_dispatch",
+    publicMirror: false,
+  });
+  assert.equal(boundRecovered.ok, true, "authentic first-attempt workflow_dispatch may recover when the source advances");
+  assert.equal(boundRecovered.recovered, true);
+  const boundState = readJson(path.join(root, "data", "admin", "nasdaq_giw_sox", "index.json"));
+  assert.deepEqual(boundState.retry_set, []);
+  assert.equal(boundState.items.constituents.recovery_run_id, "31551148253");
+  assert.equal(boundState.items.constituents.recovery_event_name, "workflow_dispatch");
+  const boundAttempt = assertValidAttempt(boundRecovered.attempt);
+  assert.equal(boundAttempt.http_status, 200);
+  assert.equal(
+    isEligibleRecoveryRun({ runId: "31551148253", runAttempt: 1, eventName: "workflow_dispatch" }, true),
+    true,
+  );
+  assert.equal(
+    isEligibleRecoveryRun({ runId: "31551148253", runAttempt: 2, eventName: "workflow_dispatch" }, true),
+    false,
+    "retry attempts are never eligible",
+  );
+  assert.equal(
+    isEligibleRecoveryRun({ runId: "local", runAttempt: 1, eventName: "workflow_dispatch" }, true),
+    false,
+    "unbound local dispatch is never eligible",
+  );
+}
+
 await assert.rejects(() => runNasdaqGiwSox({
   ...makePaths(fs.mkdtempSync(path.join(os.tmpdir(), "fetch-sox-invalid-chaos-"))),
   dates: DATES,
@@ -407,19 +500,53 @@ await assert.rejects(() => runNasdaqGiwSox({
 
 {
   const workflow = fs.readFileSync(path.join(REPO_ROOT, ".github", "workflows", "fetch-nasdaq-giw-sox.yml"), "utf8");
+  const producer = fs.readFileSync(new URL("./fetch-nasdaq-giw-sox-constituents.mjs", import.meta.url), "utf8");
+  const manifest = JSON.parse(fs.readFileSync(
+    path.join(REPO_ROOT, "data", "admin", "lane-commit-manifest.json"),
+    "utf8",
+  ));
+  const canonicalSpec = manifest.workflows[".github/workflows/fetch-nasdaq-giw-sox.yml"]
+    .stages.success_if_exists
+    .find((spec) => spec.path === "data/indices/nasdaq-giw-sox-constituents.json");
+  assert.match(producer, /diagnosticSuffix\(result\.failure_detail\)/, "CLI failures must append bounded diagnostic detail");
   assert.match(workflow, /node scripts\/test-fetch-nasdaq-giw-sox-constituents\.mjs/);
   assert.match(workflow, /controlled_failure_key/);
   assert.match(workflow, /INPUT_CONTROLLED_FAILURE_KEY/);
   assert.match(workflow, /if: \$\{\{ always\(\) \}\}/);
-  assert.match(workflow, /detection-attempts\/nasdaq_giw_sox\.json/);
-  assert.match(workflow, /data\/admin\/nasdaq_giw_sox\/index\.json/);
-  assert.match(workflow, /data\/admin\/nasdaq_giw_sox\/lkg\/constituents\.json/);
+  assert.equal(
+    canonicalSpec?.required,
+    true,
+    "successful Nasdaq GIW SOX fetch must require the canonical payload",
+  );
   assert.match(workflow, /scripts\/stage-lane-manifest\.sh/);
   assert.match(workflow, /--stage always_if_exists/);
   assert.match(workflow, /--stage success_if_exists/);
   assert.match(workflow, /FETCH_OUTCOME.*success[\s\S]*--stage success_if_exists/);
   assert.doesNotMatch(workflow, /git add -A/);
   assert.doesNotMatch(workflow, /public\/data\/indices\/nasdaq-giw-sox-constituents\.json/);
+}
+
+// Canonical-only default (batch 3): no public mirror write path remains in the
+// producer, a default run writes canonical only, and --no-public-mirror stays
+// accepted for CI command compatibility.
+{
+  const producer = fs.readFileSync(new URL("./fetch-nasdaq-giw-sox-constituents.mjs", import.meta.url), "utf8");
+  assert.doesNotMatch(producer, /publicMirror|PUBLIC_DATA_ROOT|publicPath/, "no public mirror write path may remain in the producer");
+  assert.match(producer, /"--no-public-mirror"/, "--no-public-mirror must stay accepted for CI compatibility");
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), "fetch-sox-canonical-only-"));
+  const paths = makePaths(root);
+  const result = await runNasdaqGiwSox({
+    ...paths,
+    dates: DATES,
+    request: async () => response(200, weightingPayload("CANON")),
+    observedAt: OBSERVED_AT,
+    attemptId: "canonical-only-attempt",
+    runId: "canonical-only-run",
+    eventName: "schedule",
+  });
+  assert.equal(result.ok, true);
+  assert.equal(fs.existsSync(paths.canonicalPath), true, "default run must write the canonical snapshot");
+  assert.equal(fs.existsSync(paths.publicPath), false, "default run must never create the public mirror");
 }
 
 

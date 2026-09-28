@@ -2,6 +2,7 @@
 
 import { createHash, randomBytes } from "node:crypto";
 import fs from "node:fs";
+import os from "node:os";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 
@@ -10,22 +11,34 @@ import {
   canonicalJson,
   validateDetectionConfig,
 } from "./lib/data-supply-detection-config.mjs";
+import { LANE_REGISTRY, registryDigest } from "./lib/lane-registry.mjs";
+import { matchesDayWeekday } from "./lib/schedule-day-weekday.mjs";
+import { freshnessVerdict, policyToday, resolveSourcePolicy, sourceAgeAnchor } from "../100xfenok-next/src/lib/freshness-policy.mjs";
+import { KRX_MARKET_HOLIDAYS_2026 } from "./lib/market-calendar.mjs";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 export const REPO_ROOT = path.resolve(__dirname, "..");
 export const FIXTURE_ROOT = path.join(REPO_ROOT, "scripts", "fixtures", "data_supply", "detection_floor");
 export const CALENDAR_PATH = path.join(REPO_ROOT, "scripts", "lib", "data-supply-detection-calendars.json");
+export const EXPECTED_FIXTURE_PATH = path.join(FIXTURE_ROOT, "cases.expected.json");
+export const ARTIFACTS_FIXTURE_PATH = path.join(FIXTURE_ROOT, "artifacts.fixture.json");
+export const CALENDARS_FIXTURE_PATH = path.join(FIXTURE_ROOT, "calendars.fixture.json");
+export const COMMITTED_REPORT_PATH = path.join(REPO_ROOT, "data", "admin", "data-supply-detection-floor.json");
 export const REPORT_BASENAME = "data-supply-detection-floor.json";
 export const REPORT_SCHEMA = "data-supply-detection-floor/v1";
-export const ATTEMPT_SCHEMA = "data-supply-detection-attempts/v1";
-export const ATTEMPT_SHARD_SCHEMA = "data-supply-detection-attempt-shard/v1";
+export const ATTEMPT_SCHEMA = "data-supply-detection-attempts/v2";
+export const ATTEMPT_SHARD_SCHEMA = "data-supply-detection-attempt-shard/v2";
+const LEGACY_ATTEMPT_SCHEMA = "data-supply-detection-attempts/v1";
+const LEGACY_ATTEMPT_SHARD_SCHEMA = "data-supply-detection-attempt-shard/v1";
 
 const HEX_16 = /^[0-9a-f]{16}$/;
 const RFC3339_UTC = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d{1,3})?Z$/;
 const DATE_ONLY = /^\d{4}-\d{2}-\d{2}$/;
 const IDENTIFIER = /^[a-z][a-z0-9_]{0,63}$/;
 const ATTEMPT_IDENTIFIER = /^[a-z][a-z0-9_-]{0,95}$/;
+const FAILURE_ENTITY = /^[A-Za-z0-9][A-Za-z0-9._-]{0,95}$/;
+const FAILURE_DETAIL = /^[A-Za-z0-9_.-]+: [^\u0000-\u001f\u007f]+$/;
 const FINAL_REASON_CODES = new Set([
   "ok",
   "declared_cadence",
@@ -76,6 +89,27 @@ const ATTEMPT_KEYS = Object.freeze([
   "payload",
   "assertions",
 ]);
+const HTTP_RETRY_KEYS = Object.freeze([
+  "retry_reason",
+  "retry_count",
+  "retry_wait_ms",
+]);
+const FAILURE_DIAGNOSTIC_KEYS = Object.freeze([
+  "failure_entity",
+  "failure_detail",
+]);
+const EVENT_PROVENANCE_KEYS = Object.freeze([
+  "event_name",
+  "run_id",
+  "run_attempt",
+]);
+export const ATTEMPT_HISTORY_LANE_IDS = Object.freeze(new Set([
+  "oecd_cli",
+]));
+const HTTP_RETRY_ATTEMPT_KEYS = Object.freeze([
+  ...ATTEMPT_KEYS,
+  ...HTTP_RETRY_KEYS,
+]);
 const LIBRARY_ATTEMPT_KEYS = Object.freeze([
   ...ATTEMPT_KEYS,
   "candidates",
@@ -112,22 +146,18 @@ function isPlainObject(value) {
   return prototype === Object.prototype || prototype === null;
 }
 
-function exactKeys(value, expected, context) {
+function exactKeys(value, expected, context, optional = []) {
   if (!isPlainObject(value)) fail("schema_error", `${context} must be a plain object`);
   const actual = Object.keys(value).sort();
   const wanted = [...expected].sort();
-  if (actual.length !== wanted.length || actual.some((key, index) => key !== wanted[index])) {
+  const allowed = new Set([...expected, ...optional]);
+  if (actual.length < wanted.length || actual.some((key) => !allowed.has(key))) {
     fail("schema_error", `${context} keys must be exactly ${wanted.join(",")}`);
   }
 }
 
 function sha256(bytes) {
   return createHash("sha256").update(bytes).digest("hex");
-}
-
-function digestConfig(config) {
-  validateDetectionConfig(config);
-  return sha256(Buffer.from(canonicalJson(config), "utf8"));
 }
 
 function strictUtc(value, context, { allowDate = false } = {}) {
@@ -522,6 +552,29 @@ function reasonResult(reason, extra = {}) {
   return { status, reason, ...extra };
 }
 
+function honestGeneratedAt(document) {
+  const value = isPlainObject(document) ? document.generated_at : null;
+  if (typeof value !== "string" || !RFC3339_UTC.test(value)) return null;
+  try {
+    strictUtc(value, "generated_at");
+  } catch {
+    return null;
+  }
+  return value;
+}
+
+// A lane/member is generated only as recently as its oldest required input.
+// Missing, future, or unreadable members withhold the aggregate clock.
+export function foldGeneratedAt(rows, nowValue) {
+  if (!rows.some((row) => Object.hasOwn(row, "generated_at"))
+    || rows.some((row) => row.source_as_of !== null)) return {};
+  const nowMs = Date.parse(nowValue);
+  const values = rows.map((row) => honestGeneratedAt(row));
+  if (!Number.isFinite(nowMs) || rows.some((row) => !["ready", "stale"].includes(row.status))
+    || values.some((value) => value === null || Date.parse(value) > nowMs)) return { generated_at: null };
+  return { generated_at: values.reduce((oldest, value) => Date.parse(value) < Date.parse(oldest) ? value : oldest) };
+}
+
 function evaluateArtifactFile(contract, resolved, artifactRootInfo, fsModule = fs) {
   let document;
   let fd = null;
@@ -552,7 +605,13 @@ function evaluateArtifactFile(contract, resolved, artifactRootInfo, fsModule = f
     const reason = assertion.kind === "min_rows" || assertion.kind === "min_keys" || assertion.kind === "non_empty_series" ? "empty_payload" : "schema_drift";
     return reasonResult(reason, { source_as_of: null });
   }
-  if (contract.source_selector.kind === "not_applicable") return reasonResult("ok", { source_as_of: null, source_required: false });
+  if (contract.source_selector.kind === "not_applicable") {
+    // B-OUTCOME-CLOCKS: a source-dateless artifact still records when it was
+    // generated. Project that clock honestly (canonical UTC or null) so the
+    // KPI outcome watchdog can observe the lane's advance without ever
+    // relabeling it as a provider source date.
+    return reasonResult("ok", { source_as_of: null, source_required: false, generated_at: honestGeneratedAt(document) });
+  }
   let source;
   try {
     source = extractSourceAsOf(document, contract.source_selector);
@@ -580,6 +639,11 @@ function evaluateArtifactContract(contract, artifactRootInfo, claimedPaths, fsMo
 }
 
 function calendarById(calendars, id) {
+  // KRX source age uses the canonical market calendar. The detector JSON
+  // continues to own workflow schedules and never copies these holidays.
+  if (id === "kr_trading") return {
+    id, timezone: "Asia/Seoul", weekend_days: [0, 6], holidays: KRX_MARKET_HOLIDAYS_2026,
+  };
   const row = calendars.calendars.find((candidate) => candidate.id === id);
   if (!row) fail("calendar_error", `calendar ${id} is missing`);
   return row;
@@ -686,17 +750,20 @@ function parseCron(cron) {
   };
 }
 
-function cronMatches(epoch, parsed, calendar) {
+function cronMatches(epoch, parsed, calendar, schedule) {
   const parts = calendarParts(epoch, "UTC");
   const calendarDate = calendarParts(epoch, calendar.timezone).iso;
-  if (calendar.holidays.includes(calendarDate)) return false;
   if (!parsed.minute.has(parts.minute) || !parsed.hour.has(parts.hour) || !parsed.month.has(parts.month)) return false;
   const dayMatch = parsed.day.has(parts.day);
   const weekdayMatch = parsed.weekday.has(parts.weekday);
-  if (parsed.dayWildcard && parsed.weekdayWildcard) return true;
-  if (parsed.dayWildcard) return weekdayMatch;
-  if (parsed.weekdayWildcard) return dayMatch;
-  return dayMatch || weekdayMatch;
+  return matchesDayWeekday({
+    dayMatch,
+    weekdayMatch,
+    dayWildcard: parsed.dayWildcard,
+    weekdayWildcard: parsed.weekdayWildcard,
+    dayWeekdayMode: schedule?.day_weekday_mode,
+    isHoliday: calendar.holidays.includes(calendarDate),
+  });
 }
 
 function graceElapsed(occurrenceEpoch, nowEpoch, grace, calendar) {
@@ -710,23 +777,52 @@ function graceElapsed(occurrenceEpoch, nowEpoch, grace, calendar) {
   return now.hour * 60 + now.minute >= occurrence.hour * 60 + occurrence.minute;
 }
 
-function latestDueOccurrence(schedule, nowEpoch, calendar, calendars) {
+function firstEligibleOccurrence(schedule, activatedAtEpoch, calendar) {
+  const parsed = parseCron(schedule.cron);
+  let cursor = Math.ceil(activatedAtEpoch / 60_000) * 60_000;
+  const ceiling = cursor + 400 * 86_400_000;
+  while (cursor <= ceiling) {
+    if (cronMatches(cursor, parsed, calendar, schedule)) return cursor;
+    cursor += 60_000;
+  }
+  fail("calendar_error", `no activation-eligible occurrence found for ${schedule.id}`);
+}
+
+function latestDueOccurrence(
+  schedule,
+  nowEpoch,
+  calendar,
+  calendars,
+  activatedAtEpoch = null,
+) {
   let cache = scheduleOccurrenceCache.get(calendars);
   if (!cache) {
     cache = new Map();
     scheduleOccurrenceCache.set(calendars, cache);
   }
-  const key = `${schedule.id}:${nowEpoch}`;
+  const key = `${schedule.id}:${nowEpoch}:${activatedAtEpoch ?? "unbounded"}`;
   if (cache.has(key)) return cache.get(key);
   const parsed = parseCron(schedule.cron);
   let cursor = Math.floor(nowEpoch / 60_000) * 60_000;
-  const floor = cursor - 400 * 86_400_000;
+  const searchFloor = cursor - 400 * 86_400_000;
+  const floor = activatedAtEpoch === null
+    ? searchFloor
+    : Math.max(searchFloor, Math.ceil(activatedAtEpoch / 60_000) * 60_000);
   while (cursor >= floor) {
-    if (cronMatches(cursor, parsed, calendar) && graceElapsed(cursor, nowEpoch, schedule.grace, calendar)) {
+    if (cronMatches(cursor, parsed, calendar, schedule) && graceElapsed(cursor, nowEpoch, schedule.grace, calendar)) {
       cache.set(key, cursor);
       return cursor;
     }
     cursor -= 60_000;
+  }
+  if (activatedAtEpoch !== null) {
+    const firstEligibleEpoch = firstEligibleOccurrence(schedule, activatedAtEpoch, calendar);
+    if (nowEpoch >= firstEligibleEpoch) {
+      cache.set(key, firstEligibleEpoch);
+      return firstEligibleEpoch;
+    }
+    cache.set(key, null);
+    return null;
   }
   fail("calendar_error", `no due occurrence found for ${schedule.id}`);
 }
@@ -753,37 +849,43 @@ export function evaluateAttemptCadence(observedAt, cronSchedules, calendarId, no
 // retained history, so a manual attempt can satisfy a slot and a later attempt
 // can hide an older gap. The public contract calls missing rows "suspected".
 export function buildFetchCronAttemptCoverage({
-  report,
+  attempts,
   calendars,
   nowValue = null,
   config = DATA_SUPPLY_DETECTION_CONFIG,
 }) {
-  if (report !== null && report !== undefined) validateDetectionReport(report, config);
+  validateAttemptEvidence(attempts, config);
   validateConfigCalendarBindings(config, calendars);
-  const evaluatedAt = report?.generated_at ?? nowValue;
-  const now = strictUtc(evaluatedAt, report ? "report.generated_at" : "nowValue");
+  const now = strictUtc(nowValue, "nowValue");
+  const attemptsByKey = new Map((attempts?.attempts ?? []).map((row) => [
+    `${row.lane_id}:${row.member_id ?? "_lane"}`,
+    row,
+  ]));
   const rows = [];
+  const preActivationMembers = [];
   let scheduledMembers = 0;
 
-  config.lanes.forEach((lane, laneIndex) => {
-    const reportLane = report?.lanes[laneIndex] ?? null;
-    lane.producer_members.forEach((member, memberIndex) => {
+  config.lanes.forEach((lane) => {
+    lane.producer_members.forEach((member) => {
       const scheduled = member.cadence_declaration?.kind === "github_workflow"
         && member.schedule.length > 0;
       if (!scheduled) return;
       scheduledMembers += 1;
-      const reportMember = lane.monitoring_mode === "composite"
-        ? reportLane?.members[memberIndex] ?? null
-        : reportLane;
-      const endpoint = reportMember?.endpoint ?? {
-        status: "unobserved",
-        reason: "workflow_unobserved",
-        observed_at: null,
-      };
+      const attempt = attemptsByKey.get(`${lane.id}:${lane.monitoring_mode === "composite" ? member.id : "_lane"}`);
+      const endpoint = attempt
+        ? classifyAttempt(attempt)
+        : {
+            status: "unobserved",
+            reason: "workflow_unobserved",
+            observed_at: null,
+          };
       const observedEpoch = endpoint.observed_at === null
         ? null
         : strictUtc(endpoint.observed_at, `${lane.id}:${member.id}.observed_at`).epoch;
       const calendar = calendarById(calendars, member.cadence_calendar);
+      const activatedAt = member.activated_at === undefined
+        ? null
+        : strictUtc(member.activated_at, `${lane.id}:${member.id}.activated_at`);
 
       for (const cron of member.schedule) {
         const matches = calendars.schedules.filter((schedule) => (
@@ -793,7 +895,27 @@ export function buildFetchCronAttemptCoverage({
           fail("calendar_error", `cron ${cron} must have exactly one grace contract`);
         }
         const schedule = matches[0];
-        const expectedEpoch = latestDueOccurrence(schedule, now.epoch, calendar, calendars);
+        const firstEligibleEpoch = activatedAt === null
+          ? null
+          : firstEligibleOccurrence(schedule, activatedAt.epoch, calendar);
+        const expectedEpoch = latestDueOccurrence(
+          schedule,
+          now.epoch,
+          calendar,
+          calendars,
+          activatedAt?.epoch ?? null,
+        );
+        if (expectedEpoch === null) {
+          preActivationMembers.push({
+            lane_id: lane.id,
+            member_id: member.id,
+            workflow: member.workflow,
+            cron,
+            activated_at: activatedAt.value,
+            first_eligible_at: new Date(firstEligibleEpoch).toISOString(),
+          });
+          continue;
+        }
         rows.push({
           lane_id: lane.id,
           member_id: member.id,
@@ -843,6 +965,7 @@ export function buildFetchCronAttemptCoverage({
     status: counts.suspected_skips > 0 || counts.attempt_gaps > 0 ? "warning" : "ready",
     deployment_blocking: false,
     counts,
+    pre_activation_members: preActivationMembers,
     rows,
   };
 }
@@ -854,7 +977,11 @@ export function evaluateFreshness(sourceAsOf, policy, nowValue, calendars) {
   const calendar = calendarById(calendars, policy.calendar);
   const localDateFuture = DATE_ONLY.test(source.value)
     && sourceOrdinal(source.epoch, source.value, calendar) > calendarParts(now.epoch, calendar.timezone).ordinal;
-  if (source.epoch > now.epoch || localDateFuture) return reasonResult("future_source", { source_as_of: sourceAsOf, age: null, unit: policy.unit });
+  // A KRX date-only stamp describes the Seoul civil day, which can begin
+  // while UTC is still on the previous date. Timestamps keep the instant guard.
+  const futureInstant = source.epoch > now.epoch
+    && !(policy.calendar === "kr_trading" && DATE_ONLY.test(source.value));
+  if (futureInstant || localDateFuture) return reasonResult("future_source", { source_as_of: sourceAsOf, age: null, unit: policy.unit });
   if (policy.unit === "due_window") {
     if (policy.due_policy.kind === "source_date_plus_days") {
       const due = source.epoch + policy.due_policy.days * 86_400_000;
@@ -932,10 +1059,16 @@ export function validateCalendars(calendars) {
   const scheduleIds = new Set();
   const scheduleContracts = new Set();
   for (const row of calendars.schedules) {
-    exactKeys(row, ["id", "cron", "calendar_id", "grace"], `schedule ${row?.id ?? "?"}`);
+    exactKeys(row, ["id", "cron", "calendar_id", "grace"], `schedule ${row?.id ?? "?"}`, ["day_weekday_mode"]);
     if (!IDENTIFIER.test(row.id) || scheduleIds.has(row.id) || !ids.has(row.calendar_id) || typeof row.cron !== "string") fail("calendar_error", "schedule identity is invalid");
     scheduleIds.add(row.id);
-    parseCron(row.cron);
+    const parsed = parseCron(row.cron);
+    if (row.day_weekday_mode !== undefined && !new Set(["or", "and"]).has(row.day_weekday_mode)) {
+      fail("calendar_error", `${row.id} day_weekday_mode is invalid`);
+    }
+    if (row.day_weekday_mode === "and" && (parsed.dayWildcard || parsed.weekdayWildcard)) {
+      fail("calendar_error", `${row.id} day_weekday_mode=and requires restricted day and weekday fields`);
+    }
     const scheduleKey = `${row.calendar_id}:${row.cron}`;
     if (scheduleContracts.has(scheduleKey)) fail("calendar_error", "duplicate cron/calendar grace contract");
     scheduleContracts.add(scheduleKey);
@@ -972,7 +1105,14 @@ export function validateConfigCalendarBindings(config, calendars) {
   validateCalendars(calendars);
   const calendarIds = new Set(calendars.calendars.map((row) => row.id));
   for (const lane of config.lanes) {
-    if (!calendarIds.has(lane.freshness.calendar)) fail("calendar_error", `${lane.id} source freshness calendar is missing`);
+    const krxCanonicalCalendar = lane.id === "krx" && lane.freshness.calendar === "kr_trading"
+      && lane.freshness.unit === "business_days";
+    if (lane.id === "krx" && !krxCanonicalCalendar) {
+      fail("calendar_error", "krx source freshness must use kr_trading business days");
+    }
+    if (!krxCanonicalCalendar && !calendarIds.has(lane.freshness.calendar)) {
+      fail("calendar_error", `${lane.id} source freshness calendar is missing`);
+    }
     for (const member of lane.producer_members) {
       if (member.cadence_declaration?.kind !== "github_workflow") continue;
       if (!calendarIds.has(member.cadence_calendar)) fail("calendar_error", `${lane.id}:${member.id} cadence calendar is missing`);
@@ -985,9 +1125,13 @@ export function validateConfigCalendarBindings(config, calendars) {
   return true;
 }
 
-export function validateAttemptEvidence(document, config = DATA_SUPPLY_DETECTION_CONFIG) {
+export function validateAttemptEvidence(document, config = DATA_SUPPLY_DETECTION_CONFIG, { allowHistory = false } = {}) {
   exactKeys(document, ["schema_version", "attempts"], "attempt evidence");
-  if (document.schema_version !== ATTEMPT_SCHEMA || !Array.isArray(document.attempts)) fail("schema_error", "attempt evidence schema is invalid");
+  if (!new Set([LEGACY_ATTEMPT_SCHEMA, ATTEMPT_SCHEMA]).has(document.schema_version)
+    || !Array.isArray(document.attempts)) {
+    fail("schema_error", "attempt evidence schema is invalid");
+  }
+  const diagnosticSchema = document.schema_version === ATTEMPT_SCHEMA;
   const laneMap = new Map(config.lanes.map((lane) => [lane.id, lane]));
   const seen = new Set();
   const attemptIds = new Set();
@@ -995,12 +1139,38 @@ export function validateAttemptEvidence(document, config = DATA_SUPPLY_DETECTION
     const lane = laneMap.get(row.lane_id);
     if (!lane) fail("schema_error", `unknown attempt lane ${row.lane_id}`);
     const libraryTransport = lane.endpoint_contract.transport === "library";
-    exactKeys(row, libraryTransport ? LIBRARY_ATTEMPT_KEYS : ATTEMPT_KEYS, `attempts[${index}]`);
+    const hasHttpRetryEvidence = !libraryTransport && HTTP_RETRY_KEYS.some((field) => Object.hasOwn(row, field));
+    const hasFailureEntity = Object.hasOwn(row, "failure_entity");
+    const hasFailureDetail = Object.hasOwn(row, "failure_detail");
+    if (hasFailureEntity !== hasFailureDetail) {
+      fail("schema_error", `attempts[${index}] failure diagnostic must contain both entity and detail`);
+    }
+    const hasEventProvenance = Object.hasOwn(row, "event_name")
+      || Object.hasOwn(row, "run_id")
+      || Object.hasOwn(row, "run_attempt");
+    if (hasEventProvenance) {
+      if (!Object.hasOwn(row, "event_name") || !Object.hasOwn(row, "run_id") || !Object.hasOwn(row, "run_attempt")) {
+        fail("schema_error", `attempts[${index}] event provenance must contain event_name, run_id, and run_attempt`);
+      }
+      if (typeof row.event_name !== "string" || !IDENTIFIER.test(row.event_name)
+        || typeof row.run_id !== "string" || !/^[a-zA-Z0-9_-]{1,96}$/.test(row.run_id)
+        || !Number.isSafeInteger(row.run_attempt) || row.run_attempt < 1) {
+        fail("schema_error", `attempts[${index}] event provenance fields are invalid`);
+      }
+    }
+    const failureDiagnosticKeys = diagnosticSchema && hasFailureEntity ? FAILURE_DIAGNOSTIC_KEYS : [];
+    const eventProvenanceKeys = hasEventProvenance ? EVENT_PROVENANCE_KEYS : [];
+    exactKeys(row, (libraryTransport
+      ? LIBRARY_ATTEMPT_KEYS
+      : (hasHttpRetryEvidence ? HTTP_RETRY_ATTEMPT_KEYS : ATTEMPT_KEYS)
+    )
+      .concat(failureDiagnosticKeys)
+      .concat(eventProvenanceKeys), `attempts[${index}]`, ["page_shape"]);
     const composite = lane.monitoring_mode === "composite";
     const memberIds = new Set(lane.producer_members.map((member) => member.id));
     if (composite ? !memberIds.has(row.member_id) : row.member_id !== null) fail("schema_error", `invalid attempt member for ${lane.id}`);
     const key = `${row.lane_id}:${row.member_id ?? "_lane"}`;
-    if (seen.has(key)) fail("schema_error", `duplicate attempt ${key}`);
+    if (!allowHistory && seen.has(key)) fail("schema_error", `duplicate attempt ${key}`);
     seen.add(key);
     if (!new Set(["unobserved", "returned", "threw"]).has(row.execution)) fail("schema_error", `${key} execution is invalid`);
     if (!new Set([null, "transport", "unexpected"]).has(row.exception_kind)) fail("schema_error", `${key} exception_kind is invalid`);
@@ -1008,6 +1178,26 @@ export function validateAttemptEvidence(document, config = DATA_SUPPLY_DETECTION
     if (!new Set(["ok", "error", "not_attempted"]).has(row.decode)) fail("schema_error", `${key} decode is invalid`);
     if (!new Set(["non_empty", "empty", "not_available"]).has(row.payload)) fail("schema_error", `${key} payload is invalid`);
     if (typeof row.rate_limited !== "boolean" || !Array.isArray(row.assertions)) fail("schema_error", `${key} typed fields are invalid`);
+    if (hasFailureEntity && (
+      row.execution !== "threw"
+      || typeof row.failure_entity !== "string"
+      || !FAILURE_ENTITY.test(row.failure_entity)
+      || typeof row.failure_detail !== "string"
+      || row.failure_detail.length > 320
+      || !FAILURE_DETAIL.test(row.failure_detail)
+    )) {
+      fail("schema_error", `${key} failure diagnostic is invalid`);
+    }
+    if (hasHttpRetryEvidence && (
+      row.execution !== "returned"
+      || row.retry_reason !== "rate_limited"
+      || !Number.isSafeInteger(row.retry_count)
+      || row.retry_count < 1
+      || !Number.isSafeInteger(row.retry_wait_ms)
+      || row.retry_wait_ms < 0
+    )) {
+      fail("schema_error", `${key} HTTP retry evidence is invalid`);
+    }
     const assertionIds = new Set();
     row.assertions.forEach((assertion, assertionIndex) => {
       exactKeys(assertion, ["id", "passed"], `${key}.assertions[${assertionIndex}]`);
@@ -1016,7 +1206,30 @@ export function validateAttemptEvidence(document, config = DATA_SUPPLY_DETECTION
     });
     const expectedAssertionIds = lane.endpoint_contract.assertions.map((assertion) => assertion.id).sort();
     const actualAssertionIds = [...assertionIds].sort();
-    const hasExactAssertions = canonicalJson(expectedAssertionIds) === canonicalJson(actualAssertionIds);
+    // Lanes whose contract declares per-shape assertion sets check each
+    // shaped row against the set for its own page_shape, never a global
+    // exact set. A present page_shape must name a known shape of the lane
+    // contract, checked independently before outcome-specific assertion
+    // handling, so an unknown shape cannot validate through empty-assertion
+    // failure tuples or the provider-throttled bypass. Shapeless rows keep
+    // the legacy global check.
+    const shapeSets = lane.endpoint_contract.assertion_sets;
+    const hasPageShape = Object.hasOwn(row, "page_shape");
+    if (hasPageShape
+      && (shapeSets === undefined
+        || typeof row.page_shape !== "string"
+        || !Object.hasOwn(shapeSets, row.page_shape))) {
+      fail("schema_error", `${key} page_shape is unknown`);
+    }
+    let hasExactAssertions;
+    if (shapeSets !== undefined && hasPageShape) {
+      const allowed = shapeSets[row.page_shape];
+      hasExactAssertions = canonicalJson([...allowed].sort()) === canonicalJson(actualAssertionIds);
+    } else {
+      hasExactAssertions = canonicalJson(expectedAssertionIds) === canonicalJson(actualAssertionIds);
+    }
+    const hasEmptyOrExactFailedAssertions = row.assertions.length === 0
+      || (hasExactAssertions && row.assertions.every((assertion) => assertion.passed === false));
     const providerThrottled = row.assertions.length === 1
       && row.assertions[0].id === "provider_throttled"
       && row.assertions[0].passed === false;
@@ -1036,7 +1249,7 @@ export function validateAttemptEvidence(document, config = DATA_SUPPLY_DETECTION
         if (!Number.isSafeInteger(row.candidates) || row.candidates < 0
           || !Number.isSafeInteger(row.retry_count) || row.retry_count < 0
           || !Number.isFinite(row.latency_ms) || row.latency_ms < 0
-          || !new Set(["success", "no_fallback_candidates", "not_attempted", "error"]).has(row.outcome)) {
+          || !new Set(["success", "no_fallback_candidates", "primary_succeeded_skip", "not_attempted", "error"]).has(row.outcome)) {
           fail("schema_error", `${key} library evidence is invalid`);
         }
         if (row.execution === "threw") {
@@ -1046,11 +1259,14 @@ export function validateAttemptEvidence(document, config = DATA_SUPPLY_DETECTION
             || row.decode !== "not_attempted" || row.payload !== "not_available" || row.assertions.length) {
             fail("schema_error", `${key} threw library tuple is contradictory`);
           }
-        } else if (row.outcome === "no_fallback_candidates") {
+        } else if (row.outcome === "no_fallback_candidates" || row.outcome === "primary_succeeded_skip") {
           if (row.candidates !== 0 || row.retry_count !== 0 || row.latency_ms !== 0
             || row.exception_kind !== null || row.auth !== "not_applicable" || row.rate_limited
             || row.decode !== "not_attempted" || row.payload !== "empty" || row.assertions.length) {
             fail("schema_error", `${key} empty-candidate library tuple is contradictory`);
+          }
+          if (row.outcome === "primary_succeeded_skip" && row.event_name !== "schedule") {
+            fail("schema_error", `${key} primary-success skip requires scheduled event provenance`);
           }
         } else if (row.outcome === "success") {
           if (row.candidates < 1 || row.exception_kind !== null
@@ -1074,7 +1290,7 @@ export function validateAttemptEvidence(document, config = DATA_SUPPLY_DETECTION
           fail("schema_error", `${key} returned library tuple has an unsupported outcome`);
         }
       } else if (row.execution === "threw") {
-        if (!new Set(["transport", "unexpected"]).has(row.exception_kind) || row.http_status !== null || row.auth !== "not_applicable" || row.rate_limited || row.decode !== "not_attempted" || row.payload !== "not_available" || row.assertions.length) fail("schema_error", `${key} threw tuple is contradictory`);
+        if (!new Set(["transport", "unexpected"]).has(row.exception_kind) || row.http_status !== null || row.auth !== "not_applicable" || row.rate_limited || row.decode !== "not_attempted" || row.payload !== "not_available" || !hasEmptyOrExactFailedAssertions) fail("schema_error", `${key} threw tuple is contradictory`);
       } else {
         if (row.exception_kind !== null || !Number.isInteger(row.http_status) || row.http_status < 100 || row.http_status > 599) fail("schema_error", `${key} returned tuple is invalid`);
         const finraMissingResponse = row.lane_id === "finra_short_volume"
@@ -1090,16 +1306,16 @@ export function validateAttemptEvidence(document, config = DATA_SUPPLY_DETECTION
             fail("schema_error", `${key} provider-throttled tuple is contradictory`);
           }
         } else if (authFailure) {
-          if (row.auth !== "rejected" || row.rate_limited || row.decode !== "not_attempted" || row.payload !== "not_available" || row.assertions.length) fail("schema_error", `${key} auth tuple is contradictory`);
+          if (row.auth !== "rejected" || row.rate_limited || row.decode !== "not_attempted" || row.payload !== "not_available" || !hasEmptyOrExactFailedAssertions) fail("schema_error", `${key} auth tuple is contradictory`);
         } else if (rateFailure) {
-          if (!row.rate_limited || !new Set(["ok", "not_applicable"]).has(row.auth) || row.decode !== "not_attempted" || row.payload !== "not_available" || row.assertions.length) fail("schema_error", `${key} rate tuple is contradictory`);
+          if (!row.rate_limited || !new Set(["ok", "not_applicable"]).has(row.auth) || row.decode !== "not_attempted" || row.payload !== "not_available" || !hasEmptyOrExactFailedAssertions) fail("schema_error", `${key} rate tuple is contradictory`);
         } else if (otherHttpFailure) {
-          if (row.auth !== "not_applicable" || row.rate_limited || row.decode !== "not_attempted" || row.payload !== "not_available" || row.assertions.length) fail("schema_error", `${key} HTTP tuple is contradictory`);
+          if (row.auth !== "not_applicable" || row.rate_limited || row.decode !== "not_attempted" || row.payload !== "not_available" || !hasEmptyOrExactFailedAssertions) fail("schema_error", `${key} HTTP tuple is contradictory`);
         } else if (row.decode === "error") {
-          if (!new Set(["ok", "not_applicable"]).has(row.auth) || row.rate_limited || row.payload !== "not_available" || row.assertions.length) fail("schema_error", `${key} decode tuple is contradictory`);
+          if (!new Set(["ok", "not_applicable"]).has(row.auth) || row.rate_limited || row.payload !== "not_available" || !hasEmptyOrExactFailedAssertions) fail("schema_error", `${key} decode tuple is contradictory`);
         } else if (row.decode === "ok") {
           if (!new Set(["ok", "not_applicable"]).has(row.auth) || row.rate_limited || row.payload === "not_available") fail("schema_error", `${key} decoded tuple is contradictory`);
-          if (row.payload === "empty" ? row.assertions.length !== 0 : !hasExactAssertions) fail("schema_error", `${key} assertion set is invalid`);
+          if (row.payload === "empty" ? !hasEmptyOrExactFailedAssertions : !hasExactAssertions) fail("schema_error", `${key} assertion set is invalid`);
         } else fail("schema_error", `${key} successful HTTP tuple did not decode`);
       }
     }
@@ -1109,40 +1325,78 @@ export function validateAttemptEvidence(document, config = DATA_SUPPLY_DETECTION
 
 export function validateAttemptShard(document, expectedLaneId, config = DATA_SUPPLY_DETECTION_CONFIG) {
   exactKeys(document, ["schema_version", "lane_id", "attempts"], "attempt shard");
-  if (document.schema_version !== ATTEMPT_SHARD_SCHEMA || document.lane_id !== expectedLaneId || !IDENTIFIER.test(expectedLaneId)) {
+  const evidenceSchema = document.schema_version === ATTEMPT_SHARD_SCHEMA
+    ? ATTEMPT_SCHEMA
+    : document.schema_version === LEGACY_ATTEMPT_SHARD_SCHEMA
+      ? LEGACY_ATTEMPT_SCHEMA
+      : null;
+  if (evidenceSchema === null || document.lane_id !== expectedLaneId || !IDENTIFIER.test(expectedLaneId)) {
     fail("schema_error", "attempt shard schema/filename identity is invalid");
   }
   const lane = config.lanes.find((candidate) => candidate.id === expectedLaneId);
   if (!lane) fail("schema_error", `unknown attempt shard lane ${expectedLaneId}`);
-  if (!Array.isArray(document.attempts) || document.attempts.some((row) => row?.lane_id !== expectedLaneId)) {
+  if (!Array.isArray(document.attempts) || document.attempts.length === 0 || document.attempts.some((row) => row?.lane_id !== expectedLaneId)) {
     fail("schema_error", `${expectedLaneId} shard contains cross-lane evidence`);
   }
-  validateAttemptEvidence({ schema_version: ATTEMPT_SCHEMA, attempts: document.attempts }, config);
+  const allowHistory = lane.allows_history === true || ATTEMPT_HISTORY_LANE_IDS.has(expectedLaneId);
+  validateAttemptEvidence({ schema_version: evidenceSchema, attempts: document.attempts }, config, { allowHistory });
   const expectedMembers = lane.monitoring_mode === "composite"
     ? lane.producer_members.map((member) => member.id)
     : [null];
-  const actualMembers = document.attempts.map((row) => row.member_id);
+  const actualMembers = allowHistory
+    ? [...new Set(document.attempts.map((row) => row.member_id))]
+    : document.attempts.map((row) => row.member_id);
   if (canonicalJson(actualMembers) !== canonicalJson(expectedMembers)) {
     fail("schema_error", `${expectedLaneId} shard must contain every member exactly once in config order`);
   }
   return true;
 }
 
-export function loadAttemptShards({ shardRoot, config = DATA_SUPPLY_DETECTION_CONFIG }) {
+export function loadAttemptShards({
+  shardRoot,
+  config = DATA_SUPPLY_DETECTION_CONFIG,
+  registry = LANE_REGISTRY,
+}) {
   validateDetectionConfig(config);
   const root = canonicalExistingDirectory(shardRoot);
   if (!pathInfoMatches(root)) fail("unsafe_path", "attempt shard root identity changed");
-  const laneIds = new Set(config.lanes.map((lane) => lane.id));
+  const configLaneIds = new Set(config.lanes.map((lane) => lane.id));
+  const laneByFileBase = new Map();
+  for (const lane of registry.lanes) {
+    if (!configLaneIds.has(lane.id) || lane.roots.detection_attempt === null) continue;
+    const fileName = path.posix.basename(lane.roots.detection_attempt);
+    const match = /^([a-z][a-z0-9_]{0,63})\.json$/.exec(fileName);
+    if (!match || laneByFileBase.has(match[1])) {
+      fail("schema_error", `registry attempt shard filename is invalid or duplicate: ${fileName}`);
+    }
+    laneByFileBase.set(match[1], lane.id);
+  }
   const byLane = new Map();
   for (const entry of fs.readdirSync(root.real, { withFileTypes: true }).sort((a, b) => a.name.localeCompare(b.name, "en"))) {
     const match = /^([a-z][a-z0-9_]{0,63})\.json$/.exec(entry.name);
     if (!match || !entry.isFile() || entry.isSymbolicLink()) fail("unsafe_path", `unexpected attempt shard entry ${entry.name}`);
-    const laneId = match[1];
-    if (!laneIds.has(laneId) || byLane.has(laneId)) fail("schema_error", `unknown or duplicate attempt shard ${laneId}`);
+    const laneId = laneByFileBase.get(match[1]);
+    if (!laneId || byLane.has(laneId)) fail("schema_error", `unknown or duplicate attempt shard ${match[1]}`);
     const filePath = path.join(root.real, entry.name);
     const document = readJsonStrict(filePath, [root]);
     validateAttemptShard(document, laneId, config);
-    byLane.set(laneId, document.attempts);
+    const lane = config.lanes.find((candidate) => candidate.id === laneId);
+    const allowHistory = lane?.allows_history === true || ATTEMPT_HISTORY_LANE_IDS.has(laneId);
+    if (allowHistory) {
+      const expectedMembers = lane.monitoring_mode === "composite"
+        ? lane.producer_members.map((member) => member.id)
+        : [null];
+      const latestAttempts = expectedMembers.map((memberId) => {
+        const memberRows = document.attempts.filter((row) => row.member_id === memberId);
+        const observed = memberRows
+          .filter((row) => row?.observed_at && typeof row.observed_at === "string")
+          .sort((a, b) => Date.parse(b.observed_at) - Date.parse(a.observed_at));
+        return observed[0] ?? memberRows.find((row) => row?.execution === "unobserved") ?? memberRows[0] ?? null;
+      }).filter(Boolean);
+      byLane.set(laneId, latestAttempts);
+    } else {
+      byLane.set(laneId, document.attempts);
+    }
   }
   if (!pathInfoMatches(root)) fail("unsafe_path", "attempt shard root identity changed during merge");
   const merged = {
@@ -1156,7 +1410,9 @@ export function loadAttemptShards({ shardRoot, config = DATA_SUPPLY_DETECTION_CO
 export function classifyAttempt(row) {
   if (!row || row.execution === "unobserved") return reasonResult("workflow_unobserved", { observed_at: null });
   if (row.execution === "threw") return reasonResult(row.exception_kind === "transport" ? "transport_error" : "unexpected_error", { observed_at: row.observed_at });
-  if (row.outcome === "no_fallback_candidates") return reasonResult("ok", { observed_at: row.observed_at });
+  if (row.outcome === "no_fallback_candidates" || row.outcome === "primary_succeeded_skip") {
+    return reasonResult("ok", { observed_at: row.observed_at });
+  }
   if (row.outcome === "not_attempted") return reasonResult("unexpected_error", { observed_at: row.observed_at });
   if (row.outcome === "error") return reasonResult("unexpected_error", { observed_at: row.observed_at });
   if (row.outcome === "success") {
@@ -1177,45 +1433,76 @@ export function classifyAttempt(row) {
   return reasonResult("ok", { observed_at: row.observed_at });
 }
 
-function attemptMap(document) {
-  return new Map(document.attempts.map((row) => [`${row.lane_id}:${row.member_id ?? "_lane"}`, row]));
+const SHARED_SOURCE_LANES = new Set([
+  "benchmarks", "global_scouter", "fred_yardeni", "fred_macro",
+  "fred_banking", "treasury_tga", "finra_ats_weekly", "krx",
+]);
+
+function sharedSourceResult(source, lane, now, calendars, artifactId = undefined) {
+  const registryLane = LANE_REGISTRY.lanes.find((item) => item.id === lane.id);
+  const policy = resolveSourcePolicy({
+    laneId: lane.id, cadence: registryLane?.cadence?.kind, artifactId,
+    calendar: lane.freshness.calendar,
+  });
+  const verdict = freshnessVerdict(source, policy, policyToday(now, policy), { calendars });
+  const legacy = source === null ? null : evaluateFreshness(source, lane.freshness, now, calendars);
+  const reason = legacy?.reason === "future_source" ? "future_source"
+    : verdict.state === "unknown" ? "schema_drift"
+      : verdict.state === "fresh" ? "ok" : "stale";
+  return { verdict, policy, result: reasonResult(reason, { source_as_of: source, age: verdict.ageDays, unit: lane.freshness.unit }) };
 }
 
-function evaluateMember(lane, member, attemptsByKey, artifactRootInfo, claimedPaths, now, calendars, fsModule = fs) {
-  const attemptKey = `${lane.id}:${lane.monitoring_mode === "composite" ? member.id : "_lane"}`;
-  const row = attemptsByKey.get(attemptKey) ?? null;
-  const cadenceKind = member.cadence_declaration?.kind ?? null;
-  const endpoint = cadenceKind === "github_workflow"
-    ? worstResult([
-      classifyAttempt(row),
-      evaluateAttemptCadence(row?.observed_at ?? null, member.schedule, member.cadence_calendar, now, calendars),
-    ])
-    : cadenceKind === "owner_contract" || cadenceKind === "payload_field"
-      ? reasonResult("declared_cadence", { observed_at: null })
-      : reasonResult("workflow_unobserved", { observed_at: null });
-  const artifacts = member.artifact_contracts.flatMap((contract) => evaluateArtifactContract(contract, artifactRootInfo, claimedPaths, fsModule));
+// A member row is derived from the lane artifact checks only: schema-valid
+// artifact, a real non-future source_as_of, and content age via the freshness
+// policy. Attempt/workflow observation is intentionally absent here; it moves
+// to the workflow-run failure-streak path.
+function evaluateMember(lane, member, artifactRootInfo, claimedPaths, now, calendars, fsModule = fs) {
+  const evaluatedContracts = member.artifact_contracts.map((contract) => ({
+    contract, results: evaluateArtifactContract(contract, artifactRootInfo, claimedPaths, fsModule),
+  }));
+  const artifacts = evaluatedContracts.flatMap((entry) => entry.results);
   const artifactWorst = worstResult(artifacts);
   const sourceAsOf = foldSourceTimes(artifacts, lane.freshness);
   const hasSourceContract = artifacts.some((artifact) => artifact.source_required !== false);
+  const generatedAtProjection = hasSourceContract ? {} : foldGeneratedAt(artifacts, now);
+  const sourceArtifacts = lane.id === "fred_banking" ? evaluatedContracts.map(({ contract, results }) => {
+    const result = worstResult(results);
+    const source = result.source_as_of ?? null;
+    const shared = source === null ? null : sharedSourceResult(source, lane, now, calendars, contract.id);
+    return {
+      id: contract.id, path: contract.path, source_as_of: source,
+      source_age_anchor: shared ? sourceAgeAnchor(source, shared.policy) : null,
+      source_age_days: shared?.verdict.ageDays ?? null,
+      source_state: shared?.verdict.state ?? "unknown",
+      status: result.status === "ready" ? shared.result.status : result.status,
+      reason: result.status === "ready" ? shared.result.reason : result.reason,
+    };
+  }) : null;
   const freshness = artifactWorst.status === "ready" && hasSourceContract
-    ? evaluateFreshness(sourceAsOf, lane.freshness, now, calendars)
+    ? lane.id === "fred_banking"
+      ? worstResult(sourceArtifacts.map((row) => reasonResult(row.reason, {
+          source_as_of: row.source_as_of, age: row.source_age_days, unit: lane.freshness.unit,
+        })))
+      : SHARED_SOURCE_LANES.has(lane.id)
+        ? sharedSourceResult(sourceAsOf, lane, now, calendars).result
+        : evaluateFreshness(sourceAsOf, lane.freshness, now, calendars)
     : artifactWorst.status === "ready"
       ? reasonResult("ok", { source_as_of: null, age: null, unit: lane.freshness.unit })
       : { ...artifactWorst, source_as_of: sourceAsOf, age: null, unit: lane.freshness.unit };
   const artifact = worstResult([artifactWorst, freshness]);
-  const combined = worstResult([endpoint, artifact]);
   return {
     id: member.id,
-    status: combined.status,
-    reason: combined.reason,
-    endpoint: { status: endpoint.status, reason: endpoint.reason, observed_at: endpoint.observed_at ?? null },
+    status: artifact.status,
+    reason: artifact.reason,
     artifact: {
       status: artifact.status,
       reason: artifact.reason,
       source_as_of: sourceAsOf,
       age: freshness.age ?? null,
       unit: lane.freshness.unit,
+      ...generatedAtProjection,
     },
+    ...(sourceArtifacts ? { source_artifacts: sourceArtifacts } : {}),
   };
 }
 
@@ -1231,29 +1518,25 @@ function increment(counts, status) {
 export function buildDetectionReport({
   config = DATA_SUPPLY_DETECTION_CONFIG,
   artifactRoot,
-  attempts,
   now,
   calendars,
   fsModule = fs,
 }) {
   validateDetectionConfig(config);
-  validateAttemptEvidence(attempts, config);
   validateConfigCalendarBindings(config, calendars);
   strictUtc(now, "now");
   const artifactRootInfo = canonicalExistingDirectory(artifactRoot, { fsModule });
-  const byAttempt = attemptMap(attempts);
   const claimedArtifactPaths = new Set();
   const logicalCounts = zeroCounts();
   const memberCounts = zeroCounts();
   const monitoringModeCounts = { post_fetch_artifact: 0, artifact_only: 0, composite: 0 };
   const lanes = config.lanes.map((lane) => {
     monitoringModeCounts[lane.monitoring_mode] += 1;
-    const members = lane.producer_members.map((member) => evaluateMember(lane, member, byAttempt, artifactRootInfo, claimedArtifactPaths, now, calendars, fsModule));
+    const members = lane.producer_members.map((member) => evaluateMember(lane, member, artifactRootInfo, claimedArtifactPaths, now, calendars, fsModule));
     members.forEach((member) => increment(memberCounts, member.status));
     const laneWorst = worstResult(members);
     increment(logicalCounts, laneWorst.status);
     const firstMember = members[0];
-    const endpointWorst = worstResult(members.map((member) => member.endpoint));
     const artifactWorst = lane.freshness.fold === "member_worst"
       ? worstMemberArtifact(members)
       : worstResult(members.map((member) => member.artifact));
@@ -1271,17 +1554,18 @@ export function buildDetectionReport({
       monitoring_mode: lane.monitoring_mode,
       status: laneWorst.status,
       reason: laneWorst.reason,
-      endpoint: lane.monitoring_mode === "composite" ? endpointWorst : firstMember.endpoint,
       artifact: {
         status: artifactWorst.status,
         reason: artifactWorst.reason,
         source_as_of: laneSource,
         age: artifactWorst.age,
         unit: lane.freshness.unit,
+        ...foldGeneratedAt(members.map((member) => member.artifact), now),
       },
       affected_surface_ids: [...lane.affected_surface_ids],
     };
     if (lane.monitoring_mode === "composite") laneRow.members = members;
+    if (lane.id === "fred_banking") laneRow.source_artifacts = firstMember.source_artifacts;
     return laneRow;
   });
   const counts = {
@@ -1299,7 +1583,6 @@ export function buildDetectionReport({
   const report = {
     schema_version: REPORT_SCHEMA,
     generated_at: now,
-    config_digest: digestConfig(config),
     logical_lane_count: config.logical_lane_count,
     producer_member_count: config.producer_member_count,
     counts,
@@ -1317,23 +1600,14 @@ function validateStatusReason(row, context, { allowUnavailableSchemaDrift = fals
   if (!compatible) fail("schema_error", `${context} status/reason is contradictory`);
 }
 
-function validateEndpointReport(row, context) {
-  exactKeys(row, ["status", "reason", "observed_at"], context);
-  validateStatusReason(row, context);
-  if (row.observed_at === null) {
-    if (!new Set(["workflow_unobserved", "declared_cadence"]).has(row.reason)) {
-      fail("schema_error", `${context}.observed_at is missing`);
-    }
-  } else {
-    strictUtc(row.observed_at, `${context}.observed_at`);
-    if (new Set(["workflow_unobserved", "declared_cadence"]).has(row.reason)) {
-      fail("schema_error", `${context}.observed_at contradicts cadence provenance`);
-    }
-  }
-}
-
 function validateArtifactReport(row, context, freshnessPolicy) {
-  exactKeys(row, ["status", "reason", "source_as_of", "age", "unit"], context);
+  exactKeys(row, ["status", "reason", "source_as_of", "age", "unit"], context, ["generated_at"]);
+  if (Object.hasOwn(row, "generated_at")) {
+    // Optional, source-dateless only: the artifact's own generation clock,
+    // canonical UTC or null. It is never a stand-in for source_as_of.
+    if (row.source_as_of !== null) fail("schema_error", `${context}.generated_at is only projected for source-dateless artifacts`);
+    if (row.generated_at !== null) strictUtc(row.generated_at, `${context}.generated_at`);
+  }
   validateStatusReason(row, context, { allowUnavailableSchemaDrift: row.source_as_of === null });
   if (row.unit !== freshnessPolicy.unit) fail("schema_error", `${context}.unit does not match config`);
   if (row.source_as_of !== null) strictUtc(row.source_as_of, `${context}.source_as_of`, { allowDate: true });
@@ -1350,14 +1624,13 @@ export function validateDetectionReport(report, config = DATA_SUPPLY_DETECTION_C
   exactKeys(report, [
     "schema_version",
     "generated_at",
-    "config_digest",
     "logical_lane_count",
     "producer_member_count",
     "counts",
     "monitoring_mode_counts",
     "lanes",
   ], "report");
-  if (report.schema_version !== REPORT_SCHEMA || report.config_digest !== digestConfig(config)) fail("schema_error", "report schema/config digest is invalid");
+  if (report.schema_version !== REPORT_SCHEMA) fail("schema_error", "report schema version is invalid");
   strictUtc(report.generated_at, "report.generated_at");
   if (report.logical_lane_count !== config.logical_lane_count
     || report.producer_member_count !== config.producer_member_count
@@ -1385,30 +1658,45 @@ export function validateDetectionReport(report, config = DATA_SUPPLY_DETECTION_C
     const laneConfig = config.lanes[index];
     const composite = laneConfig.monitoring_mode === "composite";
     exactKeys(row, composite
-      ? ["id", "label", "enforcement", "kpi_required", "monitoring_mode", "status", "reason", "endpoint", "artifact", "affected_surface_ids", "members"]
-      : ["id", "label", "enforcement", "kpi_required", "monitoring_mode", "status", "reason", "endpoint", "artifact", "affected_surface_ids"], `report.lanes[${index}]`);
+      ? ["id", "label", "enforcement", "kpi_required", "monitoring_mode", "status", "reason", "artifact", "affected_surface_ids", "members"]
+      : ["id", "label", "enforcement", "kpi_required", "monitoring_mode", "status", "reason", "artifact", "affected_surface_ids", ...(row.id === "fred_banking" ? ["source_artifacts"] : [])], `report.lanes[${index}]`);
     if (row.id !== laneConfig.id || row.label !== laneConfig.label || row.monitoring_mode !== laneConfig.monitoring_mode
       || row.enforcement !== laneConfig.enforcement || row.kpi_required !== laneConfig.kpi_required
       || canonicalJson(row.affected_surface_ids) !== canonicalJson(laneConfig.affected_surface_ids)) {
       fail("schema_error", `report.lanes[${index}] does not match config identity`);
     }
     validateStatusReason(row, `report.lanes[${index}]`, { allowUnavailableSchemaDrift: true });
-    validateEndpointReport(row.endpoint, `report.lanes[${index}].endpoint`);
     validateArtifactReport(row.artifact, `report.lanes[${index}].artifact`, laneConfig.freshness);
+    if (row.id === "fred_banking") {
+      const contracts = laneConfig.producer_members[0].artifact_contracts;
+      if (!Array.isArray(row.source_artifacts) || row.source_artifacts.length !== contracts.length) {
+        fail("schema_error", "fred_banking source artifact denominator is invalid");
+      }
+      row.source_artifacts.forEach((sourceRow, sourceIndex) => {
+        const contract = contracts[sourceIndex];
+        exactKeys(sourceRow, ["id", "path", "source_as_of", "source_age_anchor", "source_age_days", "source_state", "status", "reason"], `fred_banking.source_artifacts[${sourceIndex}]`);
+        if (sourceRow.id !== contract.id || sourceRow.path !== contract.path) fail("schema_error", "fred_banking source artifact identity differs from config");
+        if (sourceRow.source_as_of !== null) strictUtc(sourceRow.source_as_of, `${sourceRow.id}.source_as_of`, { allowDate: true });
+        if (sourceRow.source_age_anchor !== null) strictUtc(sourceRow.source_age_anchor, `${sourceRow.id}.source_age_anchor`, { allowDate: true });
+        if (sourceRow.source_age_days !== null && (!Number.isFinite(sourceRow.source_age_days) || sourceRow.source_age_days < 0)) fail("schema_error", `${sourceRow.id} source age is invalid`);
+        if (!["fresh", "delayed", "stopped", "unknown"].includes(sourceRow.source_state)) fail("schema_error", `${sourceRow.id} source state is invalid`);
+        validateStatusReason(sourceRow, `fred_banking.source_artifacts[${sourceIndex}]`, { allowUnavailableSchemaDrift: true });
+      });
+      if (row.artifact.status !== worstStatus(row.source_artifacts)) fail("schema_error", "fred_banking artifact status differs from its required files");
+    }
     modeCounts[row.monitoring_mode] += 1;
     increment(logicalCounts, row.status);
 
-    const componentRows = [row.endpoint, row.artifact];
+    const componentRows = [row.artifact];
     if (composite) {
       if (!Array.isArray(row.members) || row.members.length !== laneConfig.producer_members.length) fail("schema_error", `${row.id}.members denominator is invalid`);
       row.members.forEach((memberRow, memberIndex) => {
-        exactKeys(memberRow, ["id", "status", "reason", "endpoint", "artifact"], `${row.id}.members[${memberIndex}]`);
+        exactKeys(memberRow, ["id", "status", "reason", "artifact"], `${row.id}.members[${memberIndex}]`);
         if (memberRow.id !== laneConfig.producer_members[memberIndex].id) fail("schema_error", `${row.id}.members[${memberIndex}] identity is invalid`);
         validateStatusReason(memberRow, `${row.id}.members[${memberIndex}]`, { allowUnavailableSchemaDrift: true });
-        validateEndpointReport(memberRow.endpoint, `${row.id}.members[${memberIndex}].endpoint`);
         validateArtifactReport(memberRow.artifact, `${row.id}.members[${memberIndex}].artifact`, laneConfig.freshness);
-        if (memberRow.status !== worstStatus([memberRow.endpoint, memberRow.artifact])) fail("schema_error", `${row.id}.${memberRow.id} status does not match components`);
-        if (![memberRow.endpoint, memberRow.artifact].some((part) => part.status === memberRow.status && part.reason === memberRow.reason)) {
+        if (memberRow.status !== worstStatus([memberRow.artifact])) fail("schema_error", `${row.id}.${memberRow.id} status does not match components`);
+        if (![memberRow.artifact].some((part) => part.status === memberRow.status && part.reason === memberRow.reason)) {
           fail("schema_error", `${row.id}.${memberRow.id} reason does not match its worst component`);
         }
         increment(memberCounts, memberRow.status);
@@ -1525,7 +1813,7 @@ export function projectReportAtomic({
     }
     if (!tempBytes.equals(bytes) || sha256(tempBytes) !== reportFileSha256) fail("atomic_write_error", "temp readback mismatch");
     const parsed = JSON.parse(tempBytes.toString("utf8"));
-    if (parsed.schema_version !== REPORT_SCHEMA || parsed.config_digest !== report.config_digest) fail("atomic_write_error", "temp schema/digest mismatch");
+    if (parsed.schema_version !== REPORT_SCHEMA) fail("atomic_write_error", "temp schema mismatch");
     invokeFailpoint(failpoint, "after_temp_validation", { context, tempPath });
     validateRootBoundary(context, rootFd, "temp_live", tempName, fsModule);
     invokeFailpoint(failpoint, "before_rename", { context, tempPath });
@@ -1572,7 +1860,6 @@ export function projectReportAtomic({
 export function detectAndProject({
   config = DATA_SUPPLY_DETECTION_CONFIG,
   artifactRoot,
-  attempts,
   now,
   calendars,
   outputRoot,
@@ -1580,14 +1867,112 @@ export function detectAndProject({
   failpoint = null,
   tempToken,
 }) {
-  const report = buildDetectionReport({ config, artifactRoot, attempts, now, calendars, fsModule: fsAdapter });
+  const report = buildDetectionReport({ config, artifactRoot, now, calendars, fsModule: fsAdapter });
   const projection = projectReportAtomic({ report, outputRoot, artifactRoot, config, fsModule: fsAdapter, failpoint, tempToken });
   return { report, ...projection };
 }
 
+function materializeExpectedFixtureArtifacts(artifactsFixture) {
+  const artifactRoot = fs.mkdtempSync(path.join(os.tmpdir(), "fenok-detection-pin-"));
+  fs.chmodSync(artifactRoot, 0o700);
+  const documents = new Map(artifactsFixture.documents.map((document) => [document.id, document]));
+  const layout = artifactsFixture.layouts.find((candidate) => candidate.id === "all_valid");
+  if (!layout) fail("schema_error", "artifact fixture requires all_valid layout");
+  for (const node of layout.nodes) {
+    const absolute = path.join(artifactRoot, ...node.path.split("/"));
+    if (node.node_type === "directory") {
+      fs.mkdirSync(absolute, { recursive: true, mode: 0o700 });
+      continue;
+    }
+    if (node.node_type !== "regular") fail("schema_error", `all_valid contains ${node.node_type}`);
+    const document = documents.get(node.document_id);
+    if (!document) fail("schema_error", `artifact document is missing: ${node.document_id}`);
+    fs.mkdirSync(path.dirname(absolute), { recursive: true, mode: 0o700 });
+    const body = document.encoding === "json" ? JSON.stringify(document.content) : document.content;
+    fs.writeFileSync(absolute, body, { encoding: "utf8", mode: 0o600 });
+  }
+  return artifactRoot;
+}
+
+export function buildDetectionExpectedFixture({
+  expectedFixture,
+  artifactsFixture,
+  calendars,
+  config = DATA_SUPPLY_DETECTION_CONFIG,
+} = {}) {
+  const artifactRoot = materializeExpectedFixtureArtifacts(artifactsFixture);
+  try {
+    const report = buildDetectionReport({
+      config,
+      artifactRoot,
+      calendars,
+      now: expectedFixture.baseline.now,
+    });
+    // The emitter owns the fixture shape: retired pins (the config self-digest
+    // and attempt-evidence schema) are omitted rather than carried forward.
+    return {
+      schema_version: expectedFixture.schema_version,
+      privacy_exclusions: expectedFixture.privacy_exclusions,
+      artifact_cases: expectedFixture.artifact_cases,
+      reason_cases: expectedFixture.reason_cases,
+      registry_digest: registryDigest(),
+      logical_lane_count: config.logical_lane_count,
+      producer_member_count: config.producer_member_count,
+      baseline: {
+        id: expectedFixture.baseline.id,
+        artifact_layout_id: expectedFixture.baseline.artifact_layout_id,
+        now: expectedFixture.baseline.now,
+        calendar_fixture_schema: calendars.schema_version,
+        expected_report: report,
+        report_file_sha256: sha256(Buffer.from(`${canonicalJson(report)}\n`, "utf8")),
+      },
+      slickcharts_member_ids: config.lanes
+        .find((lane) => lane.id === "slickcharts")
+        .producer_members.map((member) => member.id),
+      slickcharts_member_worst_cases: expectedFixture.slickcharts_member_worst_cases,
+    };
+  } finally {
+    fs.rmSync(artifactRoot, { recursive: true, force: true });
+  }
+}
+
+export function emitDetectionExpectedFixture({
+  sourcePath = EXPECTED_FIXTURE_PATH,
+  outputPath = sourcePath,
+  artifactsPath = ARTIFACTS_FIXTURE_PATH,
+  calendarsPath = CALENDARS_FIXTURE_PATH,
+} = {}) {
+  const projected = buildDetectionExpectedFixture({
+    expectedFixture: JSON.parse(fs.readFileSync(sourcePath, "utf8")),
+    artifactsFixture: JSON.parse(fs.readFileSync(artifactsPath, "utf8")),
+    calendars: JSON.parse(fs.readFileSync(calendarsPath, "utf8")),
+  });
+  fs.mkdirSync(path.dirname(outputPath), { recursive: true });
+  fs.writeFileSync(outputPath, `${JSON.stringify(projected, null, 2)}\n`);
+  return projected;
+}
+
+export function buildPinnedDetectionReport(report, config = DATA_SUPPLY_DETECTION_CONFIG) {
+  const projected = JSON.parse(JSON.stringify(report));
+  projected.logical_lane_count = config.logical_lane_count;
+  projected.producer_member_count = config.producer_member_count;
+  validateDetectionReport(projected, config);
+  return projected;
+}
+
+export function emitPinnedDetectionReport({
+  sourcePath = COMMITTED_REPORT_PATH,
+  outputPath = sourcePath,
+} = {}) {
+  const projected = buildPinnedDetectionReport(JSON.parse(fs.readFileSync(sourcePath, "utf8")));
+  fs.mkdirSync(path.dirname(outputPath), { recursive: true });
+  fs.writeFileSync(outputPath, `${canonicalJson(projected)}\n`);
+  return projected;
+}
+
 function parseArgs(argv) {
   if (argv.length === 2 && argv[0] === "--verify-report") return { mode: "verify", reportPath: argv[1] };
-  const allowed = new Set(["--artifact-root", "--attempt-evidence", "--attempt-shard-root", "--calendar-fixture", "--calendars", "--now", "--output-root"]);
+  const allowed = new Set(["--artifact-root", "--calendar-fixture", "--calendars", "--now", "--output-root"]);
   const values = {};
   for (let index = 0; index < argv.length; index += 2) {
     const flag = argv[index];
@@ -1596,10 +1981,9 @@ function parseArgs(argv) {
     values[flag] = value;
   }
   const required = ["--artifact-root", "--now", "--output-root"];
-  const attemptInputs = ["--attempt-evidence", "--attempt-shard-root"].filter((flag) => values[flag] != null);
   const calendarInputs = ["--calendar-fixture", "--calendars"].filter((flag) => values[flag] != null);
-  if (argv.length % 2 !== 0 || required.some((flag) => values[flag] == null) || attemptInputs.length !== 1 || calendarInputs.length !== 1) {
-    fail("cli_error", "build requires artifact/now/output and exactly one attempt source plus one calendar source");
+  if (argv.length % 2 !== 0 || required.some((flag) => values[flag] == null) || calendarInputs.length !== 1) {
+    fail("cli_error", "build requires artifact/now/output and exactly one calendar source");
   }
   return { mode: "build", values };
 }
@@ -1670,9 +2054,6 @@ function main() {
   const args = parsed.values;
   const artifactRoot = canonicalExistingDirectory(args["--artifact-root"]);
   const fixtureRoot = canonicalExistingDirectory(FIXTURE_ROOT);
-  const attempts = args["--attempt-shard-root"]
-    ? loadAttemptShards({ shardRoot: args["--attempt-shard-root"] })
-    : readJsonStrict(args["--attempt-evidence"], [fixtureRoot, artifactRoot]);
   const calendars = args["--calendars"]
     ? readJsonStrict(args["--calendars"], [canonicalExistingDirectory(path.dirname(CALENDAR_PATH))])
     : readJsonStrict(args["--calendar-fixture"], [fixtureRoot, artifactRoot]);
@@ -1681,7 +2062,6 @@ function main() {
   }
   const result = detectAndProject({
     artifactRoot: artifactRoot.real,
-    attempts,
     now: args["--now"],
     calendars,
     outputRoot: args["--output-root"],

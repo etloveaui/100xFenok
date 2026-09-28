@@ -11,6 +11,10 @@ ROOT="${MONA_DATA_ROOT:-$NEXT_ROOT/data/${MONA_DATA_DIRNAME:-mona-english}}"
 ROOT="$(cd "$ROOT" && pwd -P)"   # resolve symlink so WatchPaths sees the real dir
 QUEUE_DIR="$ROOT/_queue"
 mkdir -p "$QUEUE_DIR"
+# Durable outcome receipts (fh-168/fh-181): launchd wipes /tmp each boot, so
+# job stdout/stderr live under ~/.local/state/feno-jobs instead.
+LOG_DIR="$HOME/.local/state/feno-jobs"
+mkdir -p "$LOG_DIR"
 
 AGENTS_DIR="$HOME/Library/LaunchAgents"
 mkdir -p "$AGENTS_DIR"
@@ -20,6 +24,7 @@ BANK_REFRESH="$SCRIPT_DIR/../bank_refresh.py"
 install_plist() {
   local src="$1" dst="$2"
   sed -e "s|__PYTHON3__|$PYTHON3|g" \
+      -e "s|__LOG_DIR__|$LOG_DIR|g" \
       -e "s|__WORKER__|$WORKER|g" \
       -e "s|__BANK_REFRESH__|$BANK_REFRESH|g" \
       -e "s|__QUEUE_DIR__|$QUEUE_DIR|g" \

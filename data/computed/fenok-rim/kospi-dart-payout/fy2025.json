@@ -1,0 +1,81 @@
+{
+  "schema_version": "kospi_dart_payout.v1",
+  "ok": true,
+  "fy": 2025,
+  "asOf": "2026-08-10",
+  "status": "ready",
+  "coverage": {
+    "covered_weight": 0.8542205585514179,
+    "gate": 0.75,
+    "pass": true,
+    "valid_issuers": 610,
+    "universe_issuers": 943,
+    "missing_not_in_dart": 110,
+    "missing_api_error": 223
+  },
+  "diagnostics": {
+    "parse_failure_count": 223,
+    "parse_failure_by_code": {
+      "api_error": 3,
+      "conflicting_latest_rows": 1,
+      "no_common_dividend_row": 216,
+      "stale_filing_freshness": 3
+    }
+  },
+  "index_dividend_yield": 0.011848194862584167,
+  "payout_ratio": 0.06527801132942394,
+  "earnings_yield": 0.18150361233880932,
+  "first_knowable_at": "2026-08-06T00:00:00Z",
+  "settlement_date_range": {
+    "earliest": "2025-06-30",
+    "latest": "2025-12-31"
+  },
+  "metadata": {
+    "tier": "trailing_realised_fy_index_level",
+    "basis": "sum(w_i * common-share cash dividend yield) over current KRX KOSPI membership",
+    "missing_treated_as": "zero dividend, excluded from coverage numerator",
+    "historical_membership_claim": false,
+    "fiscal_year_rule": "row stlm_dt calendar year must equal requested bsns_year; filing date must be on or after stlm_dt",
+    "annual_filing_freshness": {
+      "max_age_days": 450,
+      "newest_filing_date": "2026-08-06",
+      "oldest_filing_date": "2025-09-18",
+      "newest_settlement_date": "2025-12-31",
+      "oldest_settlement_date": "2025-06-30"
+    },
+    "per_issuer_redistribution": "never included in the public artifact; retained only in the private raw cache",
+    "sources": [
+      "OpenDART alotMatter.json (금융감독원, official free API)",
+      "OpenDART corpCode.xml exact uppercase 6-character stock_code join",
+      "KRX private stk_bydd_trd MKTCAP rows (exact issuer-level weights, supplied at runtime)"
+    ]
+  },
+  "per_issuer_rows": 610,
+  "provenance": {
+    "bridge": {
+      "source": "data/admin/fenok-edge-korea-krx-daily-index.json",
+      "private_source": "_private/admin/fenok-edge-korea/daily/krx_daily_20260807/raw/core_stock_index/stk_bydd_trd/20260807.json",
+      "source_field": "OutBlock_1[MKT_NM=KOSPI].MKTCAP / sum(OutBlock_1[MKT_NM=KOSPI].MKTCAP)",
+      "as_of": "2026-08-07",
+      "row_count": 943
+    },
+    "benchmark": {
+      "source": "data/benchmarks/emerging.json",
+      "as_of": "2026-08-02"
+    },
+    "corpcode": {
+      "source": "_private/admin/fenok-edge-korea/dart/corpcode/corpCode.xml.zip",
+      "receipt": "_private/admin/fenok-edge-korea/dart/corpcode/receipt.json",
+      "sha256": "ab8f5ff3404abdb8b77ce79ccdc5e71bd7ea27a6671007e70ecdf99d8165a674"
+    },
+    "annual_filings": {
+      "endpoint": "alotMatter.json",
+      "report_code": "11011",
+      "fiscal_year": 2025,
+      "settlement_date_rule": "selected row stlm_dt year equals bsns_year; filing date is on or after stlm_dt",
+      "max_age_days": 450,
+      "receipts": "_private/admin/fenok-edge-korea/dart/kospi-alotmatter-fy2025/receipts.json"
+    },
+    "private_cache_root": "_private/admin/fenok-edge-korea/dart"
+  }
+}

@@ -22,6 +22,37 @@ export const ETF_CORE_MAX_QUOTE_AGE_DAYS = 7;
 // Required RIM indices (OLDEST-of aggregation basis for rim_index_inputs SLA).
 export const REQUIRED_RIM_INDICES = Object.freeze(["SPX", "NDX", "KOSPI", "SOX"]);
 
+// The private five-index canonical line is a child diagnostic of rim_inputs,
+// not a new KPI lane. Keep its identity/shape vocabulary here so the builder
+// and its independent KPI checker agree without importing the canonical
+// producer or validator.
+export const RIM_FIVE_CANONICAL_INDICES = Object.freeze(["SPX", "CCMP", "NDX", "SOX", "KOSPI"]);
+export const RIM_FIVE_CANONICAL_IDENTITIES = Object.freeze({
+  SPX: Object.freeze({ id: "SPX", name: "S&P 500" }),
+  CCMP: Object.freeze({ id: "CCMP", name: "Nasdaq Composite" }),
+  NDX: Object.freeze({ id: "NDX", name: "Nasdaq-100" }),
+  SOX: Object.freeze({ id: "SOX", name: "Philadelphia Semiconductor Index" }),
+  KOSPI: Object.freeze({ id: "KOSPI", name: "KOSPI" }),
+});
+export const RIM_FIVE_CANONICAL_ARTIFACT_REL = "data/computed/rim-index/FENO_RIM_FIVE_CANONICAL_CURRENT.json";
+export const RIM_FIVE_CANONICAL_DATA_REL = "computed/rim-index/FENO_RIM_FIVE_CANONICAL_CURRENT.json";
+export const RIM_FIVE_CANONICAL_SCHEMA_VERSION = "feno_rim_five_canonical_current.v1";
+export const RIM_FIVE_CANONICAL_PUBLIC_STATUS = "QUARANTINED";
+export const RIM_FIVE_CANONICAL_YOO_STATUS = "NOT_IDENTIFIED";
+export const RIM_FIVE_CANONICAL_BLOCKER_KEYS = Object.freeze(["direct_input", "freshness", "identity"]);
+export const RIM_FIVE_CANONICAL_SOURCE_CLOCK_KEYS = Object.freeze([
+  "price_as_of",
+  "benchmark_as_of",
+  "payout_availability",
+  "forecast_availability",
+  "rf_as_of",
+  "erp_as_of",
+]);
+export const RIM_FIVE_CANONICAL_PUBLIC_MIRROR_RELS = Object.freeze([
+  "100xfenok-next/public/data/computed/rim-index/FENO_RIM_FIVE_CANONICAL_CURRENT.json",
+  "100xfenok-next/public/data/rim-index/FENO_RIM_FIVE_CANONICAL_CURRENT.json",
+]);
+
 // Required product surfaces (definitional; used once product_surface_coverage gets
 // its true per-surface source stamp — kept here where definitions live).
 export const REQUIRED_SURFACE_IDS = Object.freeze([
@@ -34,6 +65,7 @@ export const REQUIRED_SURFACE_IDS = Object.freeze([
 ]);
 
 export const PRODUCT_SURFACE_STAMP_VERSION = 2;
+export const PRODUCT_SURFACE_LIFECYCLE_MEMBERSHIP_VERSION = 3;
 export const PRODUCT_SURFACE_COVERAGE_SCHEMA_VERSION = "product-surface-coverage/v2";
 export const PRODUCT_SURFACE_COLLECTION_MAX_AGE_HOURS = 50;
 export const PRODUCT_SURFACE_DATE_MAX_AGE_BUSINESS_DAYS = 10;
@@ -70,7 +102,6 @@ export const PLATFORM_BLOCKING_CHECK_KEYS = Object.freeze([
   "automation_contract/deploy_worker_smokes_kpi",
   "automation_contract/phase_b_checker_strict",
   "automation_contract/phase_b_pending_max_age",
-  "automation_contract/deploy_worker_smoke_strict",
   "automation_contract/yf_daily_no_default_cap",
   "automation_contract/stockanalysis_daily1y_scheduled",
   "automation_contract/edge_daily_dispatches_manifest",
@@ -79,6 +110,7 @@ export const PLATFORM_BLOCKING_CHECK_KEYS = Object.freeze([
   "public_mirror_safety/rim_public_private_paths_redacted",
   "public_mirror_safety/coverage_public_private_paths_absent",
   "public_mirror_safety/forbidden_tokens_absent",
+  "rim_inputs/canonical_integrity",
   "slickcharts_delivery_freshness/json_integrity",
   "slickcharts_delivery_freshness/universe_identity",
 ]);
@@ -88,6 +120,13 @@ export const SLICKCHARTS_DELIVERY_GROUPS = Object.freeze([
     id: "slickcharts_daily_delivery",
     workflow: "slickcharts-daily",
     max_hours: 30,
+    // Stock movers, Treasury yields, and daily FX/mortgage rates only gain new
+    // content on a US market business day; a Friday delivery read on a Monday
+    // morning must not accrue the weekend's wall-clock hours as staleness.
+    // market_day_bound routes the freshness check through businessHoursAge
+    // over the "us_market" calendar (market-calendar.mjs) instead of raw
+    // wall-clock hours -- see evaluateSlaAge / assessSlickChartsDelivery.
+    market_day_bound: true,
     files: Object.freeze(["gainers.json", "losers.json", "treasury.json", "currency.json", "mortgage.json"]),
   }),
   Object.freeze({
@@ -146,7 +185,11 @@ export const SOURCE_SLA_DEF = Object.freeze([
     source_id: group.id,
     freshness_basis: ".updated (fetch/write delivery time, OLDEST; not provider publication time)",
     unit: "hours",
-    calendar: "wall_clock",
+    // market_day_bound groups (daily) age against "us_market" business hours;
+    // the weekly/symbols/monthly/history groups are genuinely continuous
+    // (fixed Sunday/1st-of-month crons, not tied to a trading day) and stay
+    // wall-clock (contract §5 "no second number" — group is the one source).
+    calendar: group.market_day_bound ? "us_market" : "wall_clock",
     max_staleness: group.max_hours,
     required: true,
   })),

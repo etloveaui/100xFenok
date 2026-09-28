@@ -30,16 +30,19 @@
   --cp-warning-soft: rgba(200, 137, 18, 0.12);
   --cp-neutral: #64748b;
 
-  /* Chart */
+  /* Chart — Light System: bg #ffffff text #191919 grid #D6DCDE up #1aa86f down #e84a5a vol #e2e8f0 accent #1B73D3 */
   --cp-chart-bg: #ffffff;
-  --cp-chart-grid: #e5ebf2;
-  --cp-chart-axis: #8792a2;
-  --cp-chart-crosshair: #758696;
-  --cp-chart-line-1: #1f78ff;
+  --cp-chart-grid: #D6DCDE;
+  --cp-chart-axis: #191919;
+  --cp-chart-crosshair: #191919;
+  --cp-chart-line-1: #1B73D3;
   --cp-chart-line-2: #7a3ff2;
   --cp-chart-line-3: #ff6a2b;
-  --cp-chart-positive-line: #10a35a;
-  --cp-chart-negative-line: #e05a3a;
+  --cp-chart-positive: #1aa86f;
+  --cp-chart-positive-line: #1aa86f;
+  --cp-chart-negative: #e84a5a;
+  --cp-chart-negative-line: #e84a5a;
+  --cp-chart-volume: #e2e8f0;
 
   /* Geometry */
   --cp-radius-sm: 8px;
@@ -479,11 +482,7 @@
   min-height: 180px;
   border: 1px solid var(--cp-chart-grid);
   border-radius: var(--cp-radius-md);
-  background:
-    linear-gradient(90deg, transparent, color-mix(in srgb, var(--cp-accent) 10%, transparent), transparent),
-    var(--cp-surface-muted);
-  background-size: 220px 100%, auto;
-  animation: cp-chart-skeleton-sweep 1.6s ease-in-out infinite;
+  background: var(--cp-surface-muted);
 }
 
 .cp-chart-fallback {
@@ -518,15 +517,6 @@
 .cp-poc {
   display: grid;
   gap: 18px;
-}
-
-.cp-home-shell .canvas-plus {
-  min-height: 100%;
-  border-radius: var(--cp-radius-lg);
-}
-
-.cp-home-production {
-  padding-block: 18px 28px;
 }
 
 .cp-hero-search {
@@ -647,655 +637,6 @@
   border-color: var(--cp-accent-strong);
 }
 
-.cp-market-band,
-.cp-edge-panel,
-.cp-sector-heatmap {
-  min-width: 0;
-  border: 1px solid color-mix(in srgb, var(--cp-border-strong) 82%, transparent);
-  border-radius: var(--cp-radius-lg);
-  background:
-    radial-gradient(circle at 14% 0%, color-mix(in srgb, var(--cp-accent) 12%, transparent), transparent 34%),
-    linear-gradient(180deg, color-mix(in srgb, var(--cp-surface) 96%, transparent) 0%, var(--cp-surface) 100%);
-  box-shadow:
-    0 1px 0 color-mix(in srgb, var(--cp-surface) 86%, transparent) inset,
-    0 18px 42px color-mix(in srgb, var(--cp-text-strong) 8%, transparent);
-}
-
-.cp-market-band {
-  display: grid;
-  gap: 16px;
-  padding: 18px;
-}
-
-.cp-market-band__header,
-.cp-edge-panel__header,
-.cp-sector-heatmap__header {
-  display: flex;
-  align-items: flex-start;
-  justify-content: space-between;
-  gap: 14px;
-  min-width: 0;
-}
-
-.cp-market-band__header h2,
-.cp-edge-panel__header h2,
-.cp-sector-heatmap__header h2 {
-  color: var(--cp-text-strong);
-  font-size: 18px;
-  font-weight: 850;
-  line-height: 1.18;
-}
-
-.cp-market-band__meta,
-.cp-sector-heatmap__header span {
-  flex: 0 0 auto;
-  padding: 5px 9px;
-  border: 1px solid var(--cp-divider);
-  border-radius: 999px;
-  color: var(--cp-text-muted);
-  background: color-mix(in srgb, var(--cp-surface) 72%, transparent);
-  font-size: 12px;
-  font-weight: 800;
-}
-
-.cp-market-band__cards {
-  display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 14px;
-}
-
-.cp-index-card {
-  --cp-index-tone: var(--cp-positive);
-  --cp-index-soft: color-mix(in srgb, var(--cp-positive) 12%, transparent);
-  position: relative;
-  display: grid;
-  gap: 13px;
-  min-width: 0;
-  overflow: hidden;
-  padding: 15px;
-  border: 1px solid color-mix(in srgb, var(--cp-index-tone) 30%, var(--cp-border));
-  border-radius: var(--cp-radius-md);
-  background:
-    linear-gradient(135deg, var(--cp-index-soft), transparent 46%),
-    linear-gradient(180deg, var(--cp-surface) 0%, color-mix(in srgb, var(--cp-accent) 4%, var(--cp-surface)) 100%);
-  box-shadow:
-    0 1px 0 color-mix(in srgb, var(--cp-surface) 90%, transparent) inset,
-    0 13px 26px color-mix(in srgb, var(--cp-text-strong) 7%, transparent);
-}
-
-.cp-index-card::before {
-  position: absolute;
-  top: 0;
-  right: 18px;
-  left: 18px;
-  height: 3px;
-  border-radius: 999px;
-  content: "";
-  background: linear-gradient(90deg, transparent, var(--cp-index-tone), transparent);
-}
-
-.cp-index-card[data-tone="negative"] {
-  --cp-index-tone: var(--cp-negative);
-  --cp-index-soft: color-mix(in srgb, var(--cp-negative) 10%, transparent);
-}
-
-.cp-index-card[data-tone="neutral"] {
-  --cp-index-tone: var(--cp-neutral);
-  --cp-index-soft: color-mix(in srgb, var(--cp-neutral) 10%, transparent);
-}
-
-.cp-index-card__topline,
-.cp-index-card__quote {
-  display: flex;
-  align-items: flex-start;
-  justify-content: space-between;
-  gap: 12px;
-  min-width: 0;
-}
-
-.cp-index-card__symbol {
-  display: block;
-  color: var(--cp-text-strong);
-  font-size: 13px;
-  font-weight: 900;
-  letter-spacing: 0;
-}
-
-.cp-index-card__topline p {
-  margin: 3px 0 0;
-  color: var(--cp-text-soft);
-  font-size: 12px;
-  font-weight: 750;
-}
-
-.cp-index-card__state {
-  flex: 0 0 auto;
-  padding: 4px 8px;
-  border: 1px solid color-mix(in srgb, var(--cp-index-tone) 24%, var(--cp-divider));
-  border-radius: 999px;
-  color: color-mix(in srgb, var(--cp-index-tone) 78%, var(--cp-text-strong));
-  background: color-mix(in srgb, var(--cp-surface) 78%, transparent);
-  font-size: 11px;
-  font-weight: 850;
-}
-
-.cp-index-card__quote strong {
-  color: var(--cp-text-strong);
-  font-size: 25px;
-  line-height: 1;
-}
-
-.cp-index-card__quote span {
-  flex: 0 0 auto;
-  padding: 5px 9px;
-  border-radius: 999px;
-  color: var(--cp-surface);
-  background: var(--cp-index-tone);
-  font-size: 12px;
-  font-weight: 900;
-  box-shadow: 0 9px 18px color-mix(in srgb, var(--cp-index-tone) 22%, transparent);
-}
-
-.cp-index-card__chart.cp-chart-shell {
-  gap: 0;
-  padding: 0;
-  border: 0;
-  background: transparent;
-  box-shadow: none;
-}
-
-.cp-index-card__chart .cp-chart-shell__header {
-  position: absolute;
-  overflow: hidden;
-  width: 1px;
-  height: 1px;
-  clip: rect(0 0 0 0);
-  white-space: nowrap;
-}
-
-.cp-index-card__chart .cp-chart-shell__canvas,
-.cp-index-card__chart .cp-chart-skeleton,
-.cp-index-card__chart .cp-chart-fallback {
-  min-height: 92px;
-  border: 1px solid color-mix(in srgb, var(--cp-index-tone) 22%, transparent);
-  border-radius: var(--cp-radius-sm);
-  background:
-    linear-gradient(180deg, color-mix(in srgb, var(--cp-surface) 72%, transparent), transparent),
-    linear-gradient(90deg, color-mix(in srgb, var(--cp-index-tone) 9%, transparent), transparent);
-}
-
-.cp-home-visual-grid {
-  display: grid;
-  grid-template-columns: minmax(320px, 0.84fr) minmax(0, 1.16fr);
-  gap: 16px;
-}
-
-.cp-edge-panel,
-.cp-sector-heatmap {
-  display: grid;
-  align-content: start;
-  gap: 16px;
-  padding: 18px;
-}
-
-.cp-edge-panel__body {
-  display: grid;
-  grid-template-columns: minmax(150px, 0.7fr) minmax(0, 1fr);
-  gap: 18px;
-  align-items: center;
-}
-
-.cp-edge-gauge {
-  position: relative;
-  display: grid;
-  place-items: center;
-  width: min(176px, 100%);
-  aspect-ratio: 1;
-  margin-inline: auto;
-}
-
-.cp-edge-gauge svg {
-  width: 100%;
-  height: 100%;
-  filter: drop-shadow(0 16px 22px color-mix(in srgb, var(--cp-accent) 18%, transparent));
-  transform: rotate(-90deg);
-}
-
-.cp-edge-gauge__track,
-.cp-edge-gauge__progress {
-  fill: none;
-  stroke-width: 10;
-}
-
-.cp-edge-gauge__track {
-  stroke: color-mix(in srgb, var(--cp-border) 78%, transparent);
-}
-
-.cp-edge-gauge__progress {
-  stroke: url("#cp-edge-gauge-gradient");
-  stroke-linecap: round;
-  transition: stroke-dashoffset 420ms ease;
-}
-
-.cp-edge-gauge__score {
-  position: absolute;
-  inset: 0;
-  display: grid;
-  place-content: center;
-  gap: 3px;
-  text-align: center;
-}
-
-.cp-edge-gauge__score strong {
-  color: var(--cp-text-strong);
-  font-size: 39px;
-  font-weight: 900;
-  line-height: 0.95;
-}
-
-.cp-edge-gauge__score span {
-  color: var(--cp-text-muted);
-  font-size: 12px;
-  font-weight: 850;
-}
-
-.cp-edge-forces {
-  display: grid;
-  gap: 12px;
-}
-
-.cp-edge-force {
-  display: grid;
-  gap: 6px;
-}
-
-.cp-edge-force__label {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 10px;
-  color: var(--cp-text-muted);
-  font-size: 12px;
-  font-weight: 850;
-}
-
-.cp-edge-force__label strong {
-  color: var(--cp-text-strong);
-  font-size: 13px;
-}
-
-.cp-edge-force__track {
-  height: 8px;
-  overflow: hidden;
-  border-radius: 999px;
-  background: var(--cp-surface-muted);
-  box-shadow: inset 0 0 0 1px var(--cp-divider);
-}
-
-.cp-edge-force__track span {
-  display: block;
-  height: 100%;
-  border-radius: inherit;
-  background: linear-gradient(90deg, var(--cp-chart-line-2) 0%, var(--cp-accent) 58%, var(--cp-positive) 100%);
-  box-shadow: 0 0 18px color-mix(in srgb, var(--cp-accent) 32%, transparent);
-}
-
-.cp-edge-force p {
-  margin: 0;
-  color: var(--cp-text-soft);
-  font-size: 12px;
-  font-weight: 700;
-}
-
-.cp-sector-heatmap__grid {
-  display: grid;
-  grid-auto-rows: minmax(66px, 1fr);
-  grid-template-columns: repeat(4, minmax(0, 1fr));
-  gap: 8px;
-}
-
-.cp-sector-heatmap__tile {
-  --cp-heat-tone: var(--cp-neutral);
-  position: relative;
-  display: grid;
-  align-content: space-between;
-  min-width: 0;
-  min-height: 66px;
-  overflow: hidden;
-  padding: 10px;
-  border: 1px solid color-mix(in srgb, var(--cp-heat-tone) 18%, transparent);
-  border-radius: var(--cp-radius-sm);
-  background:
-    linear-gradient(135deg, color-mix(in srgb, var(--cp-heat-tone) calc(var(--cp-heat-intensity) * 34%), transparent), transparent 70%),
-    linear-gradient(180deg, var(--cp-surface) 0%, color-mix(in srgb, var(--cp-heat-tone) 6%, var(--cp-surface)) 100%);
-  box-shadow:
-    inset 0 1px 0 color-mix(in srgb, var(--cp-surface) 74%, transparent),
-    0 10px 20px color-mix(in srgb, var(--cp-text-strong) 5%, transparent);
-}
-
-.cp-sector-heatmap__tile:nth-child(1) {
-  grid-column: span 2;
-  grid-row: span 2;
-}
-
-.cp-sector-heatmap__tile:nth-child(2),
-.cp-sector-heatmap__tile:nth-child(3) {
-  grid-row: span 2;
-}
-
-.cp-sector-heatmap__tile[data-tone="positive"] {
-  --cp-heat-tone: var(--cp-positive);
-}
-
-.cp-sector-heatmap__tile[data-tone="negative"] {
-  --cp-heat-tone: var(--cp-negative);
-}
-
-.cp-sector-heatmap__tile span {
-  color: color-mix(in srgb, var(--cp-heat-tone) 95%, var(--cp-text-strong));
-  font-size: 11px;
-  font-weight: 900;
-}
-
-.cp-sector-heatmap__tile strong {
-  overflow: hidden;
-  color: var(--cp-text-strong);
-  font-size: 13px;
-  font-weight: 900;
-  line-height: 1.12;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-.cp-sector-heatmap__tile em {
-  color: color-mix(in srgb, var(--cp-heat-tone) 98%, var(--cp-text-strong));
-  font-size: 13px;
-  font-style: normal;
-  font-weight: 900;
-}
-
-.cp-gateway-card {
-  --cp-gateway-tone: var(--cp-accent);
-  display: grid;
-  min-height: 100%;
-  gap: 10px;
-  padding: 15px;
-  border: 1px solid color-mix(in srgb, var(--cp-gateway-tone) 24%, var(--cp-border));
-  border-radius: var(--cp-radius-md);
-  background:
-    linear-gradient(145deg, color-mix(in srgb, var(--cp-gateway-tone) 9%, transparent), transparent 58%),
-    var(--cp-surface);
-  box-shadow:
-    0 1px 0 color-mix(in srgb, var(--cp-surface) 86%, transparent) inset,
-    0 13px 28px color-mix(in srgb, var(--cp-text-strong) 6%, transparent);
-  transition: border-color 160ms ease, box-shadow 160ms ease, transform 160ms ease;
-}
-
-.cp-gateway-card[data-tone="positive"] {
-  --cp-gateway-tone: var(--cp-positive);
-}
-
-.cp-gateway-card[data-tone="negative"] {
-  --cp-gateway-tone: var(--cp-negative);
-}
-
-.cp-gateway-card[data-tone="warning"] {
-  --cp-gateway-tone: var(--cp-warning);
-}
-
-.cp-gateway-card[data-tone="neutral"] {
-  --cp-gateway-tone: var(--cp-neutral);
-}
-
-.cp-gateway-card__topline {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 8px;
-  color: var(--cp-text-soft);
-  font-size: 12px;
-  font-weight: 850;
-}
-
-.cp-gateway-card__icon {
-  display: inline-grid;
-  place-items: center;
-  width: 34px;
-  height: 34px;
-  border: 1px solid color-mix(in srgb, var(--cp-gateway-tone) 28%, var(--cp-divider));
-  border-radius: 10px;
-  color: color-mix(in srgb, var(--cp-gateway-tone) 78%, var(--cp-text-strong));
-  background: color-mix(in srgb, var(--cp-gateway-tone) 10%, var(--cp-surface));
-  font-size: 18px;
-  font-weight: 900;
-  box-shadow: 0 10px 18px color-mix(in srgb, var(--cp-gateway-tone) 14%, transparent);
-}
-
-.cp-gateway-card h2 {
-  color: var(--cp-text-strong);
-  font-size: 16px;
-  font-weight: 850;
-  line-height: 1.22;
-}
-
-.cp-gateway-card strong {
-  color: var(--cp-text-strong);
-  font-size: 22px;
-  line-height: 1.08;
-}
-
-.cp-gateway-card p {
-  color: var(--cp-text-muted);
-  font-size: 13px;
-}
-
-.cp-home-gateway-link:hover .cp-gateway-card {
-  border-color: color-mix(in srgb, var(--cp-gateway-tone) 48%, var(--cp-border));
-  box-shadow:
-    0 1px 0 color-mix(in srgb, var(--cp-surface) 94%, transparent) inset,
-    0 18px 36px color-mix(in srgb, var(--cp-gateway-tone) 12%, transparent);
-  transform: translateY(-2px);
-}
-
-.cp-home-slice-two {
-  display: grid;
-  grid-template-columns: minmax(0, 1.28fr) minmax(300px, 0.72fr);
-  gap: 16px;
-  min-width: 0;
-}
-
-.cp-watch-zone,
-.cp-investor-card {
-  min-width: 0;
-  border: 1px solid color-mix(in srgb, var(--cp-border-strong) 78%, transparent);
-  border-radius: var(--cp-radius-lg);
-  background:
-    radial-gradient(circle at 88% 0%, color-mix(in srgb, var(--cp-chart-line-2) 10%, transparent), transparent 34%),
-    linear-gradient(180deg, color-mix(in srgb, var(--cp-surface) 96%, transparent) 0%, var(--cp-surface) 100%);
-  box-shadow:
-    0 1px 0 color-mix(in srgb, var(--cp-surface) 86%, transparent) inset,
-    0 16px 34px color-mix(in srgb, var(--cp-text-strong) 7%, transparent);
-}
-
-.cp-watch-zone {
-  display: grid;
-  gap: 14px;
-  padding: 18px;
-}
-
-.cp-watch-zone__header,
-.cp-investor-card__header {
-  display: flex;
-  align-items: flex-start;
-  justify-content: space-between;
-  gap: 14px;
-  min-width: 0;
-}
-
-.cp-watch-zone__header h2,
-.cp-investor-card__header h2 {
-  color: var(--cp-text-strong);
-  font-size: 18px;
-  font-weight: 850;
-  line-height: 1.18;
-}
-
-.cp-watch-zone__header span,
-.cp-investor-card__header span {
-  flex: 0 0 auto;
-  padding: 5px 9px;
-  border: 1px solid var(--cp-divider);
-  border-radius: 999px;
-  color: var(--cp-text-muted);
-  background: color-mix(in srgb, var(--cp-surface) 72%, transparent);
-  font-size: 12px;
-  font-weight: 800;
-}
-
-.cp-watch-zone__indices {
-  display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
-  gap: 10px;
-}
-
-.cp-watch-chip {
-  --cp-watch-tone: var(--cp-positive);
-  display: grid;
-  min-width: 0;
-  gap: 6px;
-  padding: 12px;
-  border: 1px solid color-mix(in srgb, var(--cp-watch-tone) 24%, var(--cp-border));
-  border-radius: var(--cp-radius-md);
-  color: inherit;
-  background:
-    linear-gradient(135deg, color-mix(in srgb, var(--cp-watch-tone) 10%, transparent), transparent 58%),
-    var(--cp-surface);
-  text-decoration: none;
-  transition: border-color 160ms ease, transform 160ms ease;
-}
-
-.cp-watch-chip[data-tone="negative"] {
-  --cp-watch-tone: var(--cp-negative);
-}
-
-.cp-watch-chip:hover {
-  border-color: color-mix(in srgb, var(--cp-watch-tone) 44%, var(--cp-border));
-  transform: translateY(-1px);
-}
-
-.cp-watch-chip span {
-  color: var(--cp-text-soft);
-  font-size: 12px;
-  font-weight: 850;
-}
-
-.cp-watch-chip strong {
-  overflow: hidden;
-  color: var(--cp-text-strong);
-  font-size: 18px;
-  font-weight: 900;
-  line-height: 1;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-.cp-watch-chip p {
-  overflow: hidden;
-  min-height: 30px;
-  color: var(--cp-text-muted);
-  font-size: 12px;
-  font-weight: 700;
-  line-height: 1.25;
-  text-overflow: ellipsis;
-}
-
-.cp-watch-chip em {
-  color: var(--cp-watch-tone);
-  font-size: 12px;
-  font-style: normal;
-  font-weight: 900;
-}
-
-.cp-investor-card {
-  display: grid;
-  gap: 14px;
-  padding: 18px;
-  color: inherit;
-  text-decoration: none;
-  transition: border-color 160ms ease, box-shadow 160ms ease, transform 160ms ease;
-}
-
-.cp-investor-card:hover {
-  border-color: color-mix(in srgb, var(--cp-accent) 44%, var(--cp-border));
-  box-shadow:
-    0 1px 0 color-mix(in srgb, var(--cp-surface) 92%, transparent) inset,
-    0 18px 36px color-mix(in srgb, var(--cp-accent) 11%, transparent);
-  transform: translateY(-1px);
-}
-
-.cp-investor-card__stack {
-  display: grid;
-  gap: 9px;
-}
-
-.cp-investor-row {
-  --cp-investor-tone: var(--cp-neutral);
-  display: grid;
-  grid-template-columns: minmax(70px, 0.7fr) minmax(64px, 0.62fr) minmax(0, 1.4fr) auto;
-  gap: 10px;
-  align-items: center;
-  min-width: 0;
-  min-height: 48px;
-  padding: 10px;
-  border: 1px solid color-mix(in srgb, var(--cp-investor-tone) 20%, var(--cp-divider));
-  border-radius: var(--cp-radius-sm);
-  background:
-    linear-gradient(90deg, color-mix(in srgb, var(--cp-investor-tone) 8%, transparent), transparent 68%),
-    var(--cp-surface-muted);
-}
-
-.cp-investor-row[data-tone="positive"] {
-  --cp-investor-tone: var(--cp-positive);
-}
-
-.cp-investor-row[data-tone="negative"] {
-  --cp-investor-tone: var(--cp-negative);
-}
-
-.cp-investor-row[data-tone="warning"] {
-  --cp-investor-tone: var(--cp-warning);
-}
-
-.cp-investor-row span {
-  color: var(--cp-text-soft);
-  font-size: 11px;
-  font-weight: 850;
-}
-
-.cp-investor-row strong {
-  color: var(--cp-text-strong);
-  font-size: 16px;
-  font-weight: 900;
-}
-
-.cp-investor-row p {
-  overflow: hidden;
-  margin: 0;
-  color: var(--cp-text-muted);
-  font-size: 12px;
-  font-weight: 700;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-.cp-investor-row em {
-  color: var(--cp-investor-tone);
-  font-size: 13px;
-  font-style: normal;
-  font-weight: 900;
-  font-variant-numeric: tabular-nums;
-}
-
 .cp-poc__feature-grid,
 .cp-poc__insight-grid,
 .cp-poc__two-column {
@@ -1310,29 +651,6 @@
 .cp-poc__insight-grid,
 .cp-poc__two-column {
   grid-template-columns: repeat(2, minmax(0, 1fr));
-}
-
-.cp-home-gateway-link {
-  display: block;
-  min-width: 0;
-  min-height: 44px;
-  color: inherit;
-  text-decoration: none;
-}
-
-.cp-home-gateway-link:focus-visible {
-  outline: 3px solid var(--cp-focus-ring);
-  outline-offset: 3px;
-}
-
-.cp-home-gateway-link .cp-feature-tile {
-  min-height: 100%;
-  transition: border-color 160ms ease, transform 160ms ease;
-}
-
-.cp-home-gateway-link:hover .cp-feature-tile {
-  border-color: var(--cp-accent);
-  transform: translateY(-1px);
 }
 
 .cp-feature-tile,
@@ -1499,23 +817,17 @@
   width: min(100%, 1320px);
   margin: 0 auto;
   padding: 18px;
-  background:
-    linear-gradient(180deg, color-mix(in srgb, var(--cp-surface) 84%, transparent), transparent 360px),
-    var(--cp-bg);
+  background: var(--ls-page-bg);
 }
 
 .cp-stock-detail-hero,
-.cp-stock-chart-card,
 .cp-stock-rail-card,
 .cp-stock-showcase-metrics,
 .cp-stock-action-strip {
   min-width: 0;
-  border: 1px solid var(--cp-border);
-  border-radius: var(--cp-radius-md);
-  background: var(--cp-surface);
-  box-shadow:
-    0 1px 2px color-mix(in srgb, var(--cp-text-strong) 5%, transparent),
-    0 16px 38px color-mix(in srgb, var(--cp-text-strong) 6%, transparent);
+  border: 1px solid var(--ls-panel-border);
+  border-radius: var(--ls-radius-panel);
+  background: var(--ls-panel-bg);
 }
 
 .cp-stock-detail-hero {
@@ -1545,9 +857,7 @@
   height: 50px;
   border-radius: 14px;
   color: var(--cp-surface);
-  background:
-    radial-gradient(circle at 32% 24%, color-mix(in srgb, var(--cp-surface) 40%, transparent), transparent 34%),
-    linear-gradient(135deg, var(--cp-text-strong), var(--cp-accent-strong));
+  background: var(--ls-text);
   font-size: 25px;
   font-weight: 900;
 }
@@ -1618,10 +928,6 @@
   grid-area: links;
 }
 
-.cp-stock-detail-preview .stock-market-links {
-  margin: 0;
-}
-
 .cp-stock-detail-preview .stock-tabs {
   grid-area: tabs;
   display: flex;
@@ -1634,19 +940,19 @@
 .cp-stock-detail-preview .stock-tab {
   min-height: 34px;
   flex: 0 0 auto;
-  border: 1px solid var(--cp-border);
-  border-radius: var(--cp-radius-sm);
+  border: 1px solid var(--ls-panel-border);
+  border-radius: var(--ls-radius-control);
   padding: 0 12px;
   color: var(--cp-text-muted);
-  background: var(--cp-surface);
+  background: var(--ls-panel-bg);
   font-size: 12px;
   font-weight: 850;
 }
 
 .cp-stock-detail-preview .stock-tab.on {
   color: var(--cp-surface);
-  border-color: var(--cp-accent);
-  background: var(--cp-accent);
+  border-color: #1B73D3;
+  background: #1B73D3;
 }
 
 .cp-stock-detail-body {
@@ -1665,8 +971,34 @@
 
 .cp-stock-chart-card {
   display: grid;
+  /* One column that never grows past the card: a figure row inside the price
+     section must wrap or scroll, not widen the page's main column. */
+  grid-template-columns: minmax(0, 1fr);
   gap: 14px;
+  min-width: 0;
   padding: 16px;
+}
+
+/* Loaded price-section heights on NVDA: 1,061px at 390, 940 at 768, 889 at
+   1024, 802 at 1440. The reservation stays just under them. */
+.cp-stock-price-slot {
+  min-width: 0;
+}
+
+.cp-stock-price-slot[data-reserve] {
+  min-height: 1040px;
+}
+
+@media (min-width: 640px) {
+  .cp-stock-price-slot[data-reserve] {
+    min-height: 920px;
+  }
+}
+
+@media (min-width: 1024px) {
+  .cp-stock-price-slot[data-reserve] {
+    min-height: 800px;
+  }
 }
 
 .cp-stock-chart-card__header,
@@ -1688,8 +1020,8 @@
 
 .cp-stock-rail-eyebrow {
   margin: 0 0 4px;
-  color: var(--cp-accent-strong);
-  font-size: 11px;
+  color: var(--cp-text-muted);
+  font-size: 12px;
   font-weight: 900;
   letter-spacing: 0;
   text-transform: uppercase;
@@ -1700,6 +1032,18 @@
   flex-wrap: wrap;
   justify-content: flex-end;
   gap: 6px;
+}
+
+/* Keep the TradingView attribution (license): give its injected link
+   (#tv-attr-logo) the 24px minimum touch target on touch widths. The element
+   is positioned by lightweight-charts, so this changes only its own hit box. */
+@media (max-width: 767px) {
+  #tv-attr-logo {
+    display: inline-flex;
+    align-items: center;
+    min-width: 24px;
+    min-height: 24px;
+  }
 }
 
 .cp-stock-price-chart.cp-chart-shell {
@@ -1735,7 +1079,7 @@
 .cp-stock-financial-list span,
 .cp-stock-edge-rows span {
   color: var(--cp-text-muted);
-  font-size: 11px;
+  font-size: 12px;
   font-weight: 850;
 }
 
@@ -1754,7 +1098,7 @@
 .cp-stock-showcase-metrics em,
 .cp-stock-financial-list em {
   color: var(--cp-text-soft);
-  font-size: 11px;
+  font-size: 12px;
   font-style: normal;
   font-weight: 750;
 }
@@ -1792,7 +1136,7 @@
 
 .cp-stock-action-strip span {
   color: var(--cp-text-muted);
-  font-size: 11px;
+  font-size: 12px;
   font-weight: 750;
 }
 
@@ -1813,7 +1157,7 @@
   padding: 5px 9px;
   color: var(--cp-text-muted);
   background: var(--cp-surface-muted);
-  font-size: 11px;
+  font-size: 12px;
   font-weight: 900;
 }
 
@@ -1881,10 +1225,6 @@
   color: var(--cp-text-strong);
 }
 
-.cp-stock-edge-gauge {
-  width: min(166px, 100%);
-}
-
 .cp-stock-edge-rows,
 .cp-stock-financial-list {
   display: grid;
@@ -1913,11 +1253,7 @@
 .cp-stock-skeleton-stack span {
   min-height: 56px;
   border-radius: var(--cp-radius-sm);
-  background:
-    linear-gradient(90deg, transparent, color-mix(in srgb, var(--cp-accent) 10%, transparent), transparent),
-    var(--cp-surface-muted);
-  background-size: 220px 100%, auto;
-  animation: cp-chart-skeleton-sweep 1.6s ease-in-out infinite;
+  background: var(--cp-surface-muted);
 }
 
 .cp-stock-detail-footer {
@@ -1931,11 +1267,11 @@
   display: inline-flex;
   min-height: 34px;
   align-items: center;
-  border: 1px solid var(--cp-border);
-  border-radius: var(--cp-radius-sm);
+  border: 1px solid var(--ls-panel-border);
+  border-radius: var(--ls-radius-control);
   padding: 0 12px;
   color: var(--cp-text-muted);
-  background: var(--cp-surface);
+  background: var(--ls-panel-bg);
   font-size: 12px;
   font-weight: 850;
 }
@@ -2036,7 +1372,9 @@
 
 .cp-screener-table-wrap {
   overflow: auto;
-  max-height: 720px;
+  /* Whole-row fit lives in the per-density preview overrides below (content
+     box = 46px live header + N x row pitch, plus the 2px wrap border). */
+  max-height: 698px;
   border: 1px solid var(--cp-border);
   border-radius: var(--cp-radius-lg);
   background: var(--cp-surface);
@@ -2105,7 +1443,7 @@
   justify-content: center;
   min-width: 0;
   color: var(--cp-text-muted);
-  font-size: 11px;
+  font-size: 12px;
   font-weight: 650;
 }
 
@@ -2158,12 +1496,79 @@
   opacity: 1;
 }
 
+/* B3-4: chevron hint riding the same gating as the fade — visible only while
+   the shell overflows and the end is not reached (e.g. "show all" mode on a
+   narrow viewport). Pointer-transparent so it never blocks cell taps. */
+[data-canvas-plus-screener-preview] .cp-screener-scroll-shell[data-canvas-plus-scroll-affordance="true"][data-canvas-plus-scroll-at-end="false"]::before {
+  content: "›";
+  position: absolute;
+  top: 50%;
+  right: 8px;
+  z-index: 8;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 22px;
+  height: 22px;
+  border: 1px solid var(--cp-border-strong);
+  border-radius: 999px;
+  color: var(--cp-text-strong);
+  background: color-mix(in srgb, var(--cp-surface) 88%, transparent);
+  font-size: 14px;
+  font-weight: 900;
+  line-height: 1;
+  transform: translateY(-50%);
+  pointer-events: none;
+}
+
+/* B3-4: tier-culling notice under the shell — hidden-column count plus the
+   fit-all restore toggle. Below the table so the table top never shifts. */
+[data-canvas-plus-screener-preview] .cp-screener-fit-notice {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 8px;
+  padding: 6px 2px 0;
+  font-size: 12px;
+  color: var(--cp-text-muted);
+}
+
+[data-canvas-plus-screener-preview] .cp-screener-fit-notice button {
+  border: 0;
+  background: transparent;
+  padding: 2px 4px;
+  color: var(--cp-text-strong);
+  font-size: 12px;
+  font-weight: 800;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+  white-space: nowrap;
+  cursor: pointer;
+}
+
 [data-canvas-plus-screener-preview] .cp-screener-table-wrap {
   border-color: var(--cp-border-strong);
   border-radius: 8px;
   box-shadow: inset 0 1px 0 color-mix(in srgb, var(--cp-surface) 70%, transparent);
   scrollbar-color: color-mix(in srgb, var(--cp-text-muted) 36%, transparent) transparent;
   scrollbar-width: thin;
+}
+
+/* Per-density whole-row fit: header 46px + N x row pitch (compact 36x18,
+   default 44x15, comfy 52x12), plus the 2px wrap border. The header height
+   is a live measurement (compact): th cell content exceeds the 36px th box,
+   so 686px fitted 17.72 rows and clipped the last row by 9px. Default/comfy
+   extrapolate the same 46px header; confirm by capture. */
+[data-canvas-plus-screener-preview][data-row-density="compact"] .cp-screener-table-wrap {
+  max-height: 696px;
+}
+
+[data-canvas-plus-screener-preview][data-row-density="default"] .cp-screener-table-wrap {
+  max-height: 708px;
+}
+
+[data-canvas-plus-screener-preview][data-row-density="comfy"] .cp-screener-table-wrap {
+  max-height: 672px;
 }
 
 [data-canvas-plus-screener-preview] .cp-screener-table-wrap::-webkit-scrollbar {
@@ -2193,25 +1598,84 @@
 
 [data-canvas-plus-screener-preview] .cp-screener-table thead th {
   z-index: 3;
+  height: 36px;
   border-bottom-color: var(--cp-border-strong);
   color: var(--cp-text-strong);
-  background: linear-gradient(180deg, color-mix(in srgb, var(--cp-surface) 72%, var(--cp-surface-muted)) 0%, var(--cp-surface-muted) 100%);
+  background: var(--fnk-neutral-50);
+  font-size: 12px;
+  line-height: 12px;
   font-weight: 850;
+  letter-spacing: 0.06em;
   text-transform: uppercase;
-  box-shadow: inset 0 -1px 0 var(--cp-border-strong);
+}
+
+/* The info glyph is optional reading; the label is not. It stays quiet until
+   the header cell is hovered or keyboard-focused. The sort glyph keeps the
+   base 4px gap from .cp-screener-table th button (the old 12px override here
+   spread label and arrow apart inside the 36px header). */
+[data-canvas-plus-screener-preview] .cp-screener-table thead .group\/metric-help > button {
+  opacity: 0.35;
+  transition: opacity 140ms ease;
+}
+
+[data-canvas-plus-screener-preview] .cp-screener-table thead .group\/metric-help:hover > button,
+[data-canvas-plus-screener-preview] .cp-screener-table thead .group\/metric-help:focus-within > button {
+  opacity: 1;
+}
+
+/* The base header sort-button rail is --cp-active-row-height - 4px, which is a
+   body-row rail; the header keeps its own 36px box. */
+[data-canvas-plus-screener-preview] .cp-screener-table thead th button {
+  min-height: 0;
 }
 
 [data-canvas-plus-screener-preview] .cp-screener-table th,
 [data-canvas-plus-screener-preview] .cp-screener-table td {
   overflow: hidden;
-  padding: 0 8px;
-  border-bottom-color: var(--cp-divider);
+  padding: 12px 16px;
+  border-bottom-color: var(--c-line-2);
   text-overflow: ellipsis;
+  font-variant-numeric: tabular-nums lining-nums;
+}
+
+/* Row rail: the body row is locked to --cp-active-row-height, which the
+   virtualizer sets from the same per-density constant it estimates with. The
+   previous rule neutralized the rail and let padding + content line-height size
+   the row, so a "44px" estimate sat on ~48px rows and every scroll offset past
+   the first screen drifted. data-row-density carries the second half of the
+   control: the horizontal number gutter per tier, below. */
+[data-canvas-plus-screener-preview] .cp-screener-table tbody tr[data-testid="screener-desktop-row"] td {
+  height: var(--cp-active-row-height);
+  padding-top: 0;
+  padding-bottom: 0;
+}
+
+[data-canvas-plus-screener-preview][data-row-density="compact"] .cp-screener-table th[data-align="right"],
+[data-canvas-plus-screener-preview][data-row-density="compact"] .cp-screener-table td[data-align="right"] {
+  padding-right: 8px;
+}
+
+[data-canvas-plus-screener-preview][data-row-density="default"] .cp-screener-table th[data-align="right"],
+[data-canvas-plus-screener-preview][data-row-density="default"] .cp-screener-table td[data-align="right"] {
+  padding-right: 12px;
+}
+
+[data-canvas-plus-screener-preview][data-row-density="comfy"] .cp-screener-table th[data-align="right"],
+[data-canvas-plus-screener-preview][data-row-density="comfy"] .cp-screener-table td[data-align="right"] {
+  padding-right: 18px;
+}
+
+[data-canvas-plus-screener-preview] .cp-screener-ticker {
+  line-height: 1.25;
+}
+
+[data-canvas-plus-screener-preview] .cp-screener-company-name {
+  line-height: 1.25;
 }
 
 [data-canvas-plus-screener-preview] .cp-screener-table th[data-align="right"],
 [data-canvas-plus-screener-preview] .cp-screener-table td[data-align="right"],
-[data-canvas-plus-screener-preview] .cp-screener-table td[data-align="right"] .orbitron,
+[data-canvas-plus-screener-preview] .cp-screener-table td[data-align="right"],
 [data-canvas-plus-screener-preview] .cp-screener-table td[data-align="right"] .tabular-nums {
   font-variant-numeric: tabular-nums lining-nums;
 }
@@ -2233,194 +1697,6 @@
   transform: translate(-50%, -50%);
 }
 
-[data-canvas-plus-screener-preview] .cp-screener-table th[data-column-id="fenokEdgeScore"],
-[data-canvas-plus-screener-preview] .cp-screener-table td[data-column-id="fenokEdgeScore"],
-[data-canvas-plus-screener-preview] .cp-screener-table th[data-column-id="profitabilityScore"],
-[data-canvas-plus-screener-preview] .cp-screener-table td[data-column-id="profitabilityScore"],
-[data-canvas-plus-screener-preview] .cp-screener-table th[data-column-id="growthScore"],
-[data-canvas-plus-screener-preview] .cp-screener-table td[data-column-id="growthScore"],
-[data-canvas-plus-screener-preview] .cp-screener-table th[data-column-id="technicalFlowScore"],
-[data-canvas-plus-screener-preview] .cp-screener-table td[data-column-id="technicalFlowScore"],
-[data-canvas-plus-screener-preview] .cp-screener-table th[data-column-id="durabilityProfitabilityScore"],
-[data-canvas-plus-screener-preview] .cp-screener-table td[data-column-id="durabilityProfitabilityScore"],
-[data-canvas-plus-screener-preview] .cp-screener-table th[data-column-id="upsidePotentialScore"],
-[data-canvas-plus-screener-preview] .cp-screener-table td[data-column-id="upsidePotentialScore"],
-[data-canvas-plus-screener-preview] .cp-screener-table th[data-column-id="downsidePressureScore"],
-[data-canvas-plus-screener-preview] .cp-screener-table td[data-column-id="downsidePressureScore"] {
-  padding-right: 10px;
-  padding-left: 10px;
-}
-
-[data-canvas-plus-screener-preview] .cp-screener-table th[data-column-id="downsidePressureScore"],
-[data-canvas-plus-screener-preview] .cp-screener-table td[data-column-id="downsidePressureScore"] {
-  padding-right: 14px;
-}
-
-[data-canvas-plus-screener-preview] [data-canvas-plus-cell-kind="score"],
-[data-canvas-plus-screener-preview] [data-canvas-plus-cell-kind="numeric"] {
-  display: flex;
-  align-items: center;
-  justify-content: flex-end;
-  width: 100%;
-  min-width: 0;
-}
-
-[data-canvas-plus-screener-preview] .cp-screener-table tbody td[data-column-id="fenokConvictionScore"] [data-canvas-plus-cell-frame] > span {
-  max-width: 100%;
-  min-width: 0;
-}
-
-[data-canvas-plus-screener-preview] .cp-screener-table tbody td[data-column-id="fenokConvictionScore"] [data-canvas-plus-cell-frame] > span > span:first-child {
-  max-width: 100%;
-  overflow: hidden;
-  flex-wrap: nowrap;
-}
-
-[data-canvas-plus-screener-preview] .cp-screener-table tbody td[data-column-id="fenokConvictionScore"] [data-canvas-plus-cell-frame] > span > span:nth-child(n+2) {
-  display: none;
-}
-
-[data-canvas-plus-screener-preview] .cp-screener-table tr[data-canvas-plus-detail-row] td {
-  overflow: visible;
-  padding: 0;
-  border-bottom: 1px solid var(--cp-border-strong);
-  background:
-    linear-gradient(180deg, color-mix(in srgb, var(--cp-accent) 7%, var(--cp-surface)) 0%, var(--cp-surface-muted) 100%);
-}
-
-[data-canvas-plus-screener-preview] .cp-screener-table tr[data-canvas-plus-detail-row] td > div {
-  display: grid;
-  gap: 14px;
-  padding: 18px 20px 20px;
-  border-top: 1px solid var(--cp-border-strong);
-  color: var(--cp-text-strong);
-  background:
-    radial-gradient(circle at 8% 0%, color-mix(in srgb, var(--cp-accent) 10%, transparent), transparent 28%),
-    linear-gradient(180deg, color-mix(in srgb, var(--cp-surface) 88%, var(--cp-surface-muted)) 0%, var(--cp-surface-muted) 100%);
-}
-
-[data-canvas-plus-screener-preview] .cp-screener-table tr[data-canvas-plus-detail-row] td > div > * {
-  min-width: 0;
-}
-
-[data-canvas-plus-screener-preview] .cp-screener-table tr[data-canvas-plus-detail-row] td > div > div {
-  margin-top: 0;
-  margin-bottom: 0;
-}
-
-[data-canvas-plus-screener-preview] .cp-screener-table tr[data-canvas-plus-detail-row] td > div > div[class*="rounded"] {
-  overflow: hidden;
-  border-color: var(--cp-border);
-  border-radius: 8px;
-  background:
-    linear-gradient(180deg, color-mix(in srgb, var(--cp-surface) 96%, transparent) 0%, var(--cp-surface) 100%);
-  box-shadow:
-    0 1px 0 color-mix(in srgb, var(--cp-surface) 92%, transparent) inset,
-    0 16px 30px color-mix(in srgb, var(--cp-text-strong) 6%, transparent);
-}
-
-[data-canvas-plus-screener-preview] .cp-screener-table tr[data-canvas-plus-detail-row] td > div > div[class*="rounded"]:first-child {
-  border-color: color-mix(in srgb, var(--cp-accent) 26%, var(--cp-border));
-  background:
-    linear-gradient(135deg, color-mix(in srgb, var(--cp-accent) 8%, transparent), transparent 42%),
-    var(--cp-surface);
-}
-
-[data-canvas-plus-screener-preview] .cp-screener-table tr[data-canvas-plus-detail-row] td > div > div:first-child > .mb-3.grid > div,
-[data-canvas-plus-screener-preview] .cp-screener-table tr[data-canvas-plus-detail-row] td > div > div[class*="rounded"] [class*="rounded-lg"],
-[data-canvas-plus-screener-preview] .cp-screener-table tr[data-canvas-plus-detail-row] td > div > div[class*="rounded"] [class*="rounded-xl"] {
-  border-color: var(--cp-divider);
-  background: var(--cp-surface-muted);
-}
-
-[data-canvas-plus-screener-preview] .cp-screener-table tr[data-canvas-plus-detail-row] td > div > div:first-child .space-y-4 > div:first-child {
-  padding: 12px;
-  border: 1px solid var(--cp-divider);
-  border-radius: 8px;
-  background:
-    linear-gradient(180deg, var(--cp-surface) 0%, var(--cp-surface-muted) 100%);
-}
-
-[data-canvas-plus-screener-preview] .cp-screener-table tr[data-canvas-plus-detail-row] td > div > div:first-child .space-y-4 > .grid > div {
-  padding: 12px;
-  border: 1px solid var(--cp-divider);
-  border-radius: 8px;
-  background: var(--cp-surface);
-}
-
-[data-canvas-plus-screener-preview] .cp-screener-table tr[data-canvas-plus-detail-row] td > div > div:first-child .space-y-4 > .grid > div h3 {
-  margin: 0 0 8px;
-}
-
-[data-canvas-plus-screener-preview] .cp-screener-table tr[data-canvas-plus-detail-row] td > div > div:first-child .space-y-4 > .grid > div .grid > div {
-  background: var(--cp-surface-muted);
-}
-
-[data-canvas-plus-screener-preview] .cp-screener-table tr[data-canvas-plus-detail-row] td > div > .mb-3.flex {
-  align-items: center;
-  margin: 0;
-  padding: 2px 2px 0;
-}
-
-[data-canvas-plus-screener-preview] .cp-screener-table tr[data-canvas-plus-detail-row] td > div > .mb-3.flex > span {
-  color: var(--cp-text-strong);
-  font-size: 12px;
-  letter-spacing: 0.08em;
-}
-
-[data-canvas-plus-screener-preview] .cp-screener-table tr[data-canvas-plus-detail-row] td > div > .mb-3.flex a {
-  border-color: var(--cp-border);
-  background: var(--cp-surface);
-  color: var(--cp-text-strong);
-  box-shadow: 0 8px 18px color-mix(in srgb, var(--cp-text-strong) 5%, transparent);
-}
-
-[data-canvas-plus-screener-preview] .cp-screener-table tr[data-canvas-plus-detail-row] td > div > .grid.gap-5 {
-  gap: 12px;
-  margin: 0;
-}
-
-[data-canvas-plus-screener-preview] .cp-screener-table tr[data-canvas-plus-detail-row] td > div > .grid.gap-5 > div {
-  min-width: 0;
-  padding: 12px;
-  border: 1px solid var(--cp-divider);
-  border-radius: 8px;
-  background: var(--cp-surface);
-  box-shadow:
-    0 1px 0 color-mix(in srgb, var(--cp-surface) 90%, transparent) inset,
-    0 12px 24px color-mix(in srgb, var(--cp-text-strong) 5%, transparent);
-}
-
-[data-canvas-plus-screener-preview] .cp-screener-table tr[data-canvas-plus-detail-row] td > div > .grid.gap-5 > div h4,
-[data-canvas-plus-screener-preview] .cp-screener-table tr[data-canvas-plus-detail-row] td > div h3,
-[data-canvas-plus-screener-preview] .cp-screener-table tr[data-canvas-plus-detail-row] td > div h4 {
-  color: var(--cp-text-strong);
-  font-weight: 850;
-  letter-spacing: 0.08em;
-}
-
-[data-canvas-plus-screener-preview] .cp-screener-table tr[data-canvas-plus-detail-row] td > div > .grid.gap-5 svg {
-  border: 1px solid var(--cp-divider);
-  border-radius: 8px;
-  background:
-    linear-gradient(180deg, var(--cp-surface-muted) 0%, var(--cp-surface) 100%);
-}
-
-[data-canvas-plus-screener-preview] .cp-screener-table tr[data-canvas-plus-detail-row] td > div table {
-  border-collapse: separate;
-  border-spacing: 0;
-}
-
-[data-canvas-plus-screener-preview] .cp-screener-table tr[data-canvas-plus-detail-row] td > div th,
-[data-canvas-plus-screener-preview] .cp-screener-table tr[data-canvas-plus-detail-row] td > div td {
-  border-color: var(--cp-divider);
-}
-
-[data-canvas-plus-screener-preview] .cp-screener-table tr[data-canvas-plus-detail-row] td > div th,
-[data-canvas-plus-screener-preview] .cp-screener-table tr[data-canvas-plus-detail-row] td > div td.sticky {
-  background: var(--cp-surface);
-}
-
 [data-canvas-plus-screener-preview] .cp-screener-table [data-canvas-plus-sticky-cell] {
   position: sticky;
   z-index: 4;
@@ -2429,7 +1705,7 @@
 
 [data-canvas-plus-screener-preview] .cp-screener-table thead [data-canvas-plus-sticky-cell] {
   z-index: 6;
-  background: linear-gradient(180deg, color-mix(in srgb, var(--cp-surface) 72%, var(--cp-surface-muted)) 0%, var(--cp-surface-muted) 100%);
+  background: var(--fnk-neutral-50);
 }
 
 [data-canvas-plus-screener-preview] .cp-screener-table [data-canvas-plus-sticky-cell="select"] {
@@ -2438,21 +1714,14 @@
 
 [data-canvas-plus-screener-preview] .cp-screener-table [data-canvas-plus-sticky-cell="ticker"] {
   left: 42px;
-  box-shadow:
-    1px 0 0 var(--cp-border),
-    6px 0 10px -10px color-mix(in srgb, var(--cp-text-strong) 42%, transparent);
+  box-shadow: 1px 0 0 var(--ls-panel-border);
 }
 
-[data-canvas-plus-screener-preview] .cp-screener-table tbody tr[data-row-parity="odd"] td {
-  background: color-mix(in srgb, var(--cp-surface) 86%, var(--cp-surface-muted));
-}
-
-[data-canvas-plus-screener-preview] .cp-screener-table tbody tr[data-testid="screener-desktop-row"]:hover td {
-  background: color-mix(in srgb, var(--cp-accent) 8%, var(--cp-surface));
-}
-
+/* Sticky columns paint an opaque background so they can slide over the
+   scrolling cells, which means the row hover has to restate itself here. Same
+   token as the React row hover (--fnk-neutral-50): one hover, not two tints. */
 [data-canvas-plus-screener-preview] .cp-screener-table tbody tr[data-testid="screener-desktop-row"]:hover [data-canvas-plus-sticky-cell] {
-  background: color-mix(in srgb, var(--cp-accent) 8%, var(--cp-surface));
+  background: var(--fnk-neutral-50);
 }
 
 [data-canvas-plus-screener-preview] .cp-screener-name-cell {
@@ -2470,42 +1739,22 @@
   gap: 4px;
 }
 
+/* In-cell hierarchy: the ticker carries the weight, the company name is
+   supporting text — it reads at body weight in the muted ink instead of
+   competing with the ticker at bold. */
 [data-canvas-plus-screener-preview] .cp-screener-company-name {
   display: block;
   overflow: hidden;
   max-width: 100%;
-  color: var(--cp-text-soft);
-  font-weight: 700;
+  color: var(--c-ink-3);
+  font-size: 12px;
+  font-weight: 400;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
 
-[data-canvas-plus-screener-preview] .cp-screener-table td[data-column-id="return12m"] .orbitron,
-[data-canvas-plus-screener-preview] .cp-screener-table td[data-column-id="growthRate"] .orbitron,
-[data-canvas-plus-screener-preview] .cp-screener-table td[data-column-id="momentum1m"] .orbitron,
-[data-canvas-plus-screener-preview] .cp-screener-table td[data-column-id="momentum3m"] .orbitron,
-[data-canvas-plus-screener-preview] .cp-screener-table td[data-column-id="momentum6m"] .orbitron,
-[data-canvas-plus-screener-preview] .cp-screener-table td[data-column-id="momentum12m"] .orbitron,
-[data-canvas-plus-screener-preview] .cp-screener-table td[data-column-id="ret1y"] .orbitron,
-[data-canvas-plus-screener-preview] .cp-screener-table td[data-column-id="ret3y"] .orbitron,
-[data-canvas-plus-screener-preview] .cp-screener-table td[data-column-id="ret5y"] .orbitron {
-  display: inline-flex;
-  align-items: center;
-  justify-content: flex-end;
-  min-width: 58px;
-  padding: 2px 6px;
-  border: 1px solid var(--cp-divider);
-  border-radius: 999px;
-  background: var(--cp-surface);
-}
-
 [data-canvas-plus-screener-preview] .cp-screener-table td [class*="rounded-full"][class*="border"] {
   box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--cp-surface) 44%, transparent);
-}
-
-[data-canvas-plus-screener-preview] .cp-screener-table td[data-column-id="downsidePressureScore"] [class*="rounded-full"][class*="border"]::before {
-  margin-right: 4px;
-  content: "·";
 }
 
 .cp-screener-card-grid {
@@ -2574,7 +1823,7 @@
 
 .cp-screener-card__metrics dt {
   color: var(--cp-text-soft);
-  font-size: 11px;
+  font-size: 12px;
   font-weight: 750;
 }
 
@@ -2614,148 +1863,6 @@
 
   .cp-hero-search__metrics {
     grid-template-columns: 1fr;
-  }
-
-  .cp-home-production {
-    gap: 12px;
-    padding: 10px 12px 20px;
-  }
-
-  .cp-home-production .cp-market-band {
-    order: 2;
-  }
-
-  .cp-home-production .cp-poc__feature-grid {
-    order: 1;
-  }
-
-  .cp-home-production .cp-home-visual-grid {
-    order: 3;
-  }
-
-  .cp-home-production .cp-home-slice-two {
-    order: 4;
-  }
-
-  .cp-home-production .cp-hero-search {
-    gap: 10px;
-    padding: 12px;
-  }
-
-  .cp-home-production .cp-hero-search__copy {
-    gap: 6px;
-  }
-
-  .cp-home-production .cp-hero-search__title {
-    font-size: 24px;
-    line-height: 1.1;
-  }
-
-  .cp-home-production .cp-hero-search__summary {
-    display: none;
-  }
-
-  .cp-home-production .cp-hero-search__metrics {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-    gap: 6px;
-  }
-
-  .cp-home-production .cp-hero-search__metric {
-    padding: 8px;
-  }
-
-  .cp-home-production .cp-poc__feature-grid {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-    gap: 8px;
-  }
-
-  .cp-home-production .cp-market-band,
-  .cp-home-production .cp-edge-panel,
-  .cp-home-production .cp-sector-heatmap,
-  .cp-home-production .cp-watch-zone,
-  .cp-home-production .cp-investor-card {
-    padding: 12px;
-  }
-
-  .cp-home-production .cp-market-band__cards,
-  .cp-home-production .cp-home-visual-grid,
-  .cp-home-production .cp-home-slice-two,
-  .cp-home-production .cp-edge-panel__body {
-    grid-template-columns: 1fr;
-  }
-
-  .cp-home-production .cp-index-card {
-    gap: 10px;
-    padding: 12px;
-  }
-
-  .cp-home-production .cp-index-card__quote strong {
-    font-size: 22px;
-  }
-
-  .cp-home-production .cp-edge-gauge {
-    width: 148px;
-  }
-
-  .cp-home-production .cp-sector-heatmap__grid {
-    grid-auto-rows: minmax(58px, 1fr);
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-  }
-
-  .cp-home-production .cp-sector-heatmap__tile:nth-child(1),
-  .cp-home-production .cp-sector-heatmap__tile:nth-child(2),
-  .cp-home-production .cp-sector-heatmap__tile:nth-child(3) {
-    grid-column: auto;
-    grid-row: auto;
-  }
-
-  .cp-home-production .cp-watch-zone__indices {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-    gap: 7px;
-  }
-
-  .cp-home-production .cp-watch-chip {
-    gap: 4px;
-    padding: 9px;
-  }
-
-  .cp-home-production .cp-watch-chip strong {
-    font-size: 16px;
-  }
-
-  .cp-home-production .cp-watch-chip p {
-    min-height: 28px;
-    font-size: 11px;
-  }
-
-  .cp-home-production .cp-investor-row {
-    grid-template-columns: minmax(0, 0.8fr) minmax(58px, 0.5fr) auto;
-  }
-
-  .cp-home-production .cp-investor-row p {
-    display: none;
-  }
-
-  .cp-home-production .cp-feature-tile,
-  .cp-home-production .cp-gateway-card {
-    gap: 6px;
-    padding: 10px;
-  }
-
-  .cp-home-production .cp-feature-tile__value,
-  .cp-home-production .cp-gateway-card strong {
-    font-size: 18px;
-  }
-
-  .cp-home-production .cp-feature-tile__detail,
-  .cp-home-production .cp-gateway-card p {
-    display: none;
-  }
-
-  .cp-home-production .cp-gateway-card__icon {
-    width: 30px;
-    height: 30px;
-    font-size: 16px;
   }
 
   .cp-screener-lab__toolbar,
@@ -2816,10 +1923,6 @@
 
   .cp-hero-search__control {
     display: grid;
-  }
-
-  .cp-home-production .cp-hero-search__control {
-    grid-template-columns: minmax(0, 1fr) auto;
   }
 
   .cp-stock-summary,
@@ -2905,12 +2008,9 @@
 .cp-stock-tab-card {
   display: block;
   min-width: 0;
-  border: 1px solid var(--cp-border);
-  border-radius: var(--cp-radius-md);
-  background: var(--cp-surface);
-  box-shadow:
-    0 1px 2px color-mix(in srgb, var(--cp-text-strong) 5%, transparent),
-    0 16px 38px color-mix(in srgb, var(--cp-text-strong) 6%, transparent);
+  border: 1px solid var(--ls-panel-border);
+  border-radius: var(--ls-radius-panel);
+  background: var(--ls-panel-bg);
 }
 
 .cp-stock-tab-card__header {
@@ -2947,7 +2047,7 @@
 .cp-stock-tab-card__subheading {
   margin: 0 0 8px;
   color: var(--cp-text-muted);
-  font-size: 11px;
+  font-size: 12px;
   font-weight: 900;
   letter-spacing: 0.02em;
   text-transform: uppercase;
@@ -2959,7 +2059,7 @@
 }
 
 .cp-stock-tab-card--secondary {
-  background: var(--cp-surface-muted);
+  background: var(--ls-page-bg);
   box-shadow: none;
 }
 
@@ -2970,7 +2070,7 @@
   gap: 10px;
   padding: 14px 16px;
   color: var(--cp-text-muted);
-  font-size: 11px;
+  font-size: 12px;
   font-weight: 900;
   letter-spacing: 0.04em;
   text-transform: uppercase;
@@ -3015,7 +2115,7 @@
 
 .cp-stock-tab-card__stat em {
   color: var(--cp-text-muted);
-  font-size: 11px;
+  font-size: 12px;
   font-style: normal;
   font-weight: 750;
   letter-spacing: 0.02em;
@@ -3030,12 +2130,12 @@
   display: grid;
   grid-template-columns: minmax(0, 1fr);
   align-content: start;
-  gap: 16px;
+  gap: 8px; /* v3.1: table header must start within ~320px of the viewport top. */
   width: 100%;
   max-width: 1440px;
   min-height: 100%;
   margin: 0 auto;
-  padding: 18px 18px 28px;
+  padding: 12px 14px 24px;
   background: var(--cp-bg);
   border-radius: var(--cp-radius-lg);
 }
@@ -3466,6 +2566,22 @@
   font-weight: 900;
 }
 
+/* Guru badge: keep the visible pill small and center a 44px invisible tap
+   target on it. Putting min-height on the pill drew an empty ring. */
+[data-testid="screener-guru-badge"] {
+  position: relative;
+}
+
+[data-testid="screener-guru-badge"]::after {
+  content: "";
+  position: absolute;
+  top: 50%;
+  right: -10px;
+  left: -10px;
+  height: 44px;
+  transform: translateY(-50%);
+}
+
 .cp-screener-inline-chip-row {
   display: flex;
   flex-wrap: wrap;
@@ -3615,10 +2731,16 @@
   text-transform: uppercase;
 }
 
-.cp-screener-selection-card,
-.cp-screener-toolbar-card,
+.cp-screener-selection-card {
+  padding: 8px 12px;
+}
+
+.cp-screener-toolbar-card {
+  padding: 12px;
+}
+
 .cp-screener-results-shell {
-  padding: 14px;
+  padding: 8px;
 }
 
 .cp-screener-selection-layout {
@@ -3743,9 +2865,20 @@
   background: var(--cp-accent-soft);
 }
 
+/* Restored density control in the results toolbar. The selected tier must be
+   visible: the row-height change is the only in-place feedback, and the tier
+   labels alone cannot show which one is on. Same selected treatment as
+   .cp-screener-segment, applied to the toolbar button idiom actually rendered
+   there. */
+[data-canvas-plus-screener-preview] [data-screener-density-option][data-canvas-plus-active="true"] {
+  border-color: color-mix(in srgb, var(--cp-accent) 36%, var(--cp-border));
+  color: var(--cp-accent-strong);
+  background: var(--cp-accent-soft);
+}
+
 .cp-screener-results-shell {
   display: grid;
-  gap: 12px;
+  gap: 8px;
   min-width: 0;
   overflow: hidden;
 }
@@ -3887,12 +3020,9 @@
   display: grid;
   min-width: 0;
   overflow: hidden;
-  border: 1px solid var(--cp-border);
-  border-radius: var(--cp-radius-md);
-  background: var(--cp-surface);
-  box-shadow:
-    0 1px 2px color-mix(in srgb, var(--cp-text-strong) 4%, transparent),
-    0 12px 28px color-mix(in srgb, var(--cp-text-strong) 8%, transparent);
+  border: 1px solid var(--ls-panel-border);
+  border-radius: var(--ls-radius-panel);
+  background: var(--ls-panel-bg);
 }
 
 [data-canvas-plus-screener-service="true"] .cp-screener-stock-card > div {
@@ -3911,18 +3041,18 @@
 
 [data-canvas-plus-screener-service="true"] .cp-screener-stock-card [data-testid="screener-mobile-metric-grid"],
 [data-canvas-plus-screener-service="true"] .cp-screener-stock-card > .grid {
-  background: var(--cp-surface-muted);
+  background: var(--ls-page-bg);
 }
 
 [data-canvas-plus-screener-service="true"] .cp-screener-stock-card [data-testid="screener-mobile-metric-grid"] > div,
 [data-canvas-plus-screener-service="true"] .cp-screener-stock-card > .grid > div {
-  border-color: var(--cp-border);
-  border-radius: var(--cp-radius-sm);
-  background: var(--cp-surface);
+  border-color: var(--ls-panel-border);
+  border-radius: var(--ls-radius-control);
+  background: var(--ls-panel-bg);
 }
 
 [data-canvas-plus-screener-service="true"] .cp-screener-stock-card--mobile {
-  border-radius: var(--cp-radius-md);
+  border-radius: var(--ls-radius-panel);
 }
 
 [data-canvas-plus-screener-service="true"] .cp-screener-empty-state {
@@ -3933,10 +3063,9 @@
   min-height: 180px;
   padding: 44px 16px;
   border: 1px dashed var(--cp-border-strong);
-  border-radius: var(--cp-radius-md);
+  border-radius: var(--ls-radius-panel);
   color: var(--cp-text-muted);
-  background:
-    linear-gradient(180deg, color-mix(in srgb, var(--cp-surface-muted) 64%, transparent), var(--cp-surface));
+  background: var(--ls-panel-bg);
   text-align: center;
 }
 
@@ -3950,16 +3079,128 @@
   border-radius: 999px;
 }
 
-[data-canvas-plus-screener-service="true"] .cp-screener-detail-shell {
+/* ---------------------------------------------------------------------------
+   Screener toolbar row — one line between the title block and the results.
+   The filter toggle, result count, page status, column/view/density controls
+   and the provenance rail share it, so no mostly-empty band sits between the
+   page title and the table header. Phone keeps the 44px touch rail.
+--------------------------------------------------------------------------- */
+
+.canvas-plus.cp-screener-service .cp-screener-toolbar-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px 10px;
   min-width: 0;
-  padding: 12px;
-  border-top: 1px solid var(--cp-divider);
-  background: var(--cp-surface-muted);
+  padding: 4px 10px; /* v3.1: vertical trim; buttons keep their own height. */
+  border: 1px solid var(--cp-border);
+  border-radius: var(--cp-radius-md);
+  background: var(--cp-surface);
 }
 
-[data-canvas-plus-screener-service="true"] .cp-screener-table .cp-screener-detail-shell {
-  padding: 14px;
+.canvas-plus.cp-screener-service .cp-screener-toolbar-row [data-screener-filter-toggle] {
+  gap: 6px;
+}
+
+.canvas-plus.cp-screener-service .cp-screener-toolbar-stat {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 12px;
+  font-weight: 800;
+  color: var(--cp-text-muted);
+  white-space: nowrap;
+}
+
+.canvas-plus.cp-screener-service .cp-screener-toolbar-stat b {
+  color: var(--cp-text-strong);
+  font-weight: 850;
+  font-variant-numeric: tabular-nums lining-nums;
+}
+
+/* One control rail for the toolbar row: the count pill (20px), the filter
+   segment and preset buttons (32px) and the action buttons (36px) each kept
+   their own height and read as a ragged strip beside the provenance links. */
+.canvas-plus.cp-screener-service .cp-screener-toolbar-row > span,
+.canvas-plus.cp-screener-service .cp-screener-toolbar-row .cp-screener-segment,
+.canvas-plus.cp-screener-service .cp-screener-toolbar-row .cpw4-preset-wrap button {
+  min-height: 36px;
+}
+
+/* Phone: the rail's controls are tap targets, so every button and link in it
+   takes 44px (the mobile UX contract's screener-toolbar-target), as the note
+   above this section promises. Pills that only show a count stay 36px. The
+   segment and preset selectors repeat the 36px rule's specificity so this
+   later block wins over it. */
+@media (max-width: 767px) {
+  .canvas-plus.cp-screener-service .cp-screener-toolbar-row button,
+  .canvas-plus.cp-screener-service .cp-screener-toolbar-row a,
+  .canvas-plus.cp-screener-service .cp-screener-toolbar-row .cp-screener-segment,
+  .canvas-plus.cp-screener-service .cp-screener-toolbar-row .cpw4-preset-wrap button {
+    min-height: 44px;
+  }
+
+  /* The 13F holder badge on a result card is a link of its own (to the
+     투자자 page) and drew 17px tall in 9px type: 24px (WCAG 2.2 AA target
+     size) and legible type on phones. */
+  .canvas-plus.cp-screener-service [data-testid="screener-guru-badge"] {
+    min-height: 24px;
+    font-size: 11px;
+  }
+}
+
+.canvas-plus.cp-screener-service .cp-screener-toolbar-row > span {
+  height: auto;
+}
+
+/* B2: chips wrap at inner spaces ("주식 1,066", "내 프리셋", "컬럼 표준") into
+   two lines with mismatched heights — keep every chip on one line. The row
+   itself still wraps as a whole via flex-wrap above. */
+.canvas-plus.cp-screener-service .cp-screener-toolbar-row > span,
+.canvas-plus.cp-screener-service .cp-screener-toolbar-row button,
+.canvas-plus.cp-screener-service .cp-screener-toolbar-row a {
+  white-space: nowrap;
+}
+
+/* The provenance rail keeps its content (freshness, coverage, retry, evidence)
+   but loses the standalone strip chrome while it lives in this row. */
+.canvas-plus.cp-screener-service .cp-screener-toolbar-provenance {
+  min-width: 0;
+  margin-left: auto;
+}
+
+.canvas-plus.cp-screener-service .cp-screener-toolbar-provenance .evidence-rail-row {
+  height: auto;
+  min-height: 0;
+  padding: 0;
   border-top: 0;
+  background: transparent;
+}
+
+/* v3.1 revised B3-4: the merged toolbar row wraps to two lines wherever one
+   line does not fit (at 1100px the density segment clipped out of view).
+   Wide viewports still read one line because flex-wrap only breaks on
+   overflow. The rail keeps freshness/as-of/evidence and sheds the source +
+   coverage spans that the title stat already carries. A closed filter deck
+   takes no space. */
+@media (min-width: 921px) {
+  .canvas-plus.cp-screener-service .cp-screener-toolbar-provenance .evidence-rail-row {
+    gap: 8px;
+  }
+  .canvas-plus.cp-screener-service .cp-screener-toolbar-provenance .evidence-rail-row > span.shrink-0.max-md\:hidden,
+  .canvas-plus.cp-screener-service .cp-screener-toolbar-provenance .evidence-rail-row > span.max-md\:hidden:not(.shrink-0) {
+    display: none;
+  }
+}
+
+[data-canvas-plus-screener-filter-deck]:empty {
+  display: none;
+}
+
+@media (max-width: 767px) {
+  .canvas-plus.cp-screener-service .cp-screener-toolbar-row button {
+    min-height: 44px;
+  }
 }
 
 @media (max-width: 1120px) {
@@ -3972,8 +3213,138 @@
   [data-canvas-plus-screener-service="true"] .cp-screener-card-grid {
     grid-template-columns: 1fr;
   }
+}
 
-  [data-canvas-plus-screener-service="true"] .cp-screener-detail-shell {
-    padding: 10px;
+/* ---------------------------------------------------------------------------
+   Screener row detail — master-detail sheet. ScreenerDetailSheet portals this
+   to <body>, so it is deliberately outside the service scope and uses only
+   :root tokens: phone is full screen, >=921px is a right-side drawer that
+   overlays the results instead of pushing the table.
+--------------------------------------------------------------------------- */
+
+.cp-screener-detail-sheet {
+  position: fixed;
+  inset: 0;
+  z-index: 60;
+  display: flex;
+  justify-content: flex-end;
+}
+
+.cp-screener-detail-sheet__backdrop {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  border: 0;
+  padding: 0;
+  background: color-mix(in srgb, var(--cp-text-strong) 38%, transparent);
+  cursor: pointer;
+}
+
+.cp-screener-detail-sheet__panel {
+  position: relative;
+  display: flex;
+  width: 100%;
+  min-width: 0;
+  height: 100dvh;
+  max-height: 100dvh;
+  flex-direction: column;
+  overflow: hidden;
+  background: var(--ls-page-bg);
+  box-shadow: 0 24px 60px -24px color-mix(in srgb, var(--cp-text-strong) 55%, transparent);
+}
+
+.cp-screener-detail-sheet__head {
+  display: flex;
+  flex: none;
+  align-items: center;
+  gap: 8px;
+  padding: calc(env(safe-area-inset-top, 0px) + 8px) 8px 8px 12px;
+  border-bottom: 1px solid var(--cp-divider);
+  background: var(--cp-surface);
+}
+
+.cp-screener-detail-sheet__identity {
+  display: grid;
+  flex: 1 1 auto;
+  min-width: 0;
+  gap: 1px;
+}
+
+.cp-screener-detail-sheet__identity strong {
+  font-family: var(--font-mono);
+  font-size: 15px;
+  font-weight: 900;
+  font-variant-numeric: tabular-nums lining-nums;
+  color: var(--cp-text-strong);
+}
+
+.cp-screener-detail-sheet__identity span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--cp-text-muted);
+}
+
+.cp-screener-detail-sheet__stock-link,
+.cp-screener-detail-sheet__close {
+  display: inline-flex;
+  flex: none;
+  align-items: center;
+  justify-content: center;
+  min-width: 44px;
+  min-height: 44px;
+  border: 1px solid var(--cp-border);
+  border-radius: 999px;
+  background: var(--cp-surface);
+  color: var(--cp-text-muted);
+  font-size: 12px;
+  font-weight: 900;
+  text-decoration: none;
+  transition: border-color 0.14s, color 0.14s;
+}
+
+.cp-screener-detail-sheet__stock-link {
+  padding: 0 12px;
+}
+
+.cp-screener-detail-sheet__close {
+  padding: 0;
+  cursor: pointer;
+}
+
+.cp-screener-detail-sheet__stock-link:hover,
+.cp-screener-detail-sheet__close:hover {
+  border-color: var(--cp-accent-strong);
+  color: var(--cp-text-strong);
+}
+
+.cp-screener-detail-sheet__stock-link:focus-visible,
+.cp-screener-detail-sheet__close:focus-visible {
+  outline: 2px solid var(--cp-accent-strong);
+  outline-offset: 2px;
+}
+
+.cp-screener-detail-sheet__body {
+  flex: 1 1 auto;
+  min-width: 0;
+  min-height: 0;
+  overflow-x: hidden;
+  overflow-y: auto;
+  padding-bottom: calc(env(safe-area-inset-bottom, 0px) + 18px);
+  -webkit-overflow-scrolling: touch;
+  background: var(--ls-page-bg);
+}
+
+@media (min-width: 921px) {
+  .cp-screener-detail-sheet__panel {
+    width: min(560px, 52vw);
+    border-left: 1px solid var(--cp-border);
+  }
+
+  .cp-screener-detail-sheet__head {
+    padding-top: 8px;
   }
 }

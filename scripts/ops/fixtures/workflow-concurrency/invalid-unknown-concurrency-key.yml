@@ -1,0 +1,18 @@
+# Regression fixture: a genuinely invented concurrency key. The YAML is
+# well-formed, so syntax validation alone would pass it.
+name: Invalid Unknown Concurrency Key
+
+on:
+  workflow_dispatch:
+
+concurrency:
+  group: fixture-writer
+  cancel-in-progress: false
+  depth: max
+
+jobs:
+  noop:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Noop
+        run: echo noop

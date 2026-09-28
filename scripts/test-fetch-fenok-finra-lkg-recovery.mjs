@@ -7,7 +7,7 @@
 //   (b) a market-holiday 403 is EXPECTED ABSENCE, never a failure,
 //   (c) a natural-schedule success after a miss records recovery provenance,
 //   (d) a workflow_dispatch success cannot promote a recovery (natural gate),
-//   (e) the index the store writes round-trips through the KPI recovery validator.
+//   (e) the private-store index preserves retry and recovery provenance.
 import assert from "node:assert/strict";
 import { createHash } from "node:crypto";
 import fs from "node:fs";
@@ -28,11 +28,8 @@ import {
   run,
   validFreshnessMarker,
 } from "./fetch-fenok-finra-daily-private.mjs";
-import {
-  projectRecoveryRecoveredSet,
-  projectRecoveryRetrySet,
-} from "./build-fenok-data-health-kpi.mjs";
 import { DATA_SUPPLY_DETECTION_CONFIG } from "./lib/data-supply-detection-config.mjs";
+import { LaneLkgStore } from "./lib/data-supply-lkg-store.mjs";
 
 function sampleFor(compactDate) {
   return [
@@ -67,7 +64,6 @@ function sampleFor(compactDate) {
       requests += 1;
       return { statusCode: 200, body: sampleFor("20260715") };
     },
-    attemptShardPath: path.join(root, "attempts", `${FINRA_LANE_ID}.json`),
     observedAt: "2026-07-15T04:00:00Z",
     attemptId: "finra-controlled-failure-attempt",
     lkgRepoRoot: root,
@@ -280,12 +276,11 @@ function markerSourceAsOf(root) {
     "retained LKG is sha256-bound to the on-disk lkg copy",
   );
 
-  // (e) the retry-state index round-trips through the KPI validator
-  const retrySet = projectRecoveryRetrySet(retained, FINRA_LANE_ID);
-  assert.equal(retrySet.length, 1);
-  assert.equal(retrySet[0].key, FINRA_LKG_KEY);
-  assert.equal(retrySet[0].resolution_state, "lkg_primary");
-  assert.equal(retrySet[0].failure_run_id, "chaos-run");
+  // (e) the private store validates the persisted retry index and provenance.
+  const retryState = new LaneLkgStore({ repoRoot: root, laneId: FINRA_LANE_ID }).stateSnapshot();
+  assert.deepEqual(retryState.retry_set, [FINRA_LKG_KEY]);
+  assert.equal(retryState.items[FINRA_LKG_KEY].retry, true);
+  assert.equal(retryState.items[FINRA_LKG_KEY].latest_failure.run_id, "chaos-run");
 
   // (d) a workflow_dispatch success cannot promote a recovery (natural gate)
   const dispatchAttempt = applyFinraLkgStore({
@@ -327,14 +322,13 @@ function markerSourceAsOf(root) {
   assert.equal(item.recovery_run_id, "natural-recovery-run");
   assert.equal(item.recovery_event_name, "schedule");
 
-  // (e) the recovered-state index round-trips through the KPI validator
-  const recoveredSet = projectRecoveryRecoveredSet(finalState, FINRA_LANE_ID);
-  assert.equal(recoveredSet.length, 1);
-  assert.equal(recoveredSet[0].key, FINRA_LKG_KEY);
-  assert.equal(recoveredSet[0].recovered_from_run_id, "chaos-run");
-  assert.equal(recoveredSet[0].recovery_event_name, "schedule");
-  assert.equal(recoveredSet[0].lkg_source_as_of, "2026-07-14");
-  assert.equal(recoveredSet[0].source_as_of, "2026-07-16");
+  // (e) the private store validates the recovered index and source dates.
+  const recoveredState = new LaneLkgStore({ repoRoot: root, laneId: FINRA_LANE_ID }).stateSnapshot();
+  assert.deepEqual(recoveredState.retry_set, []);
+  assert.equal(recoveredState.items[FINRA_LKG_KEY].recovered_from_run_id, "chaos-run");
+  assert.equal(recoveredState.items[FINRA_LKG_KEY].recovery_event_name, "schedule");
+  assert.equal(recoveredState.items[FINRA_LKG_KEY].lkg.source_as_of, "2026-07-14");
+  assert.equal(recoveredState.items[FINRA_LKG_KEY].current.source_as_of, "2026-07-16");
 }
 
 // --- Backfill guard: an older-date range never regresses the marker --------

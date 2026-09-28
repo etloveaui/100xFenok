@@ -32,9 +32,77 @@ URLS = {
     # includes large, small/risky, and financial lookup tables.
     "ratings": "https://pages.stern.nyu.edu/~adamodar/pc/ratings.xls",
 
-    # Country-based ERP (April 1, 2026 current update)
+    # Country-based ERP. This pinned value is only the LAST-RESORT fallback:
+    # resolve_erp_url() below probes for the newest published month first, so a
+    # hardcoded month can never silently freeze the dataset.
     "erp": "https://pages.stern.nyu.edu/~adamodar/pc/datasets/ctrypremApr26.xlsx",
 }
+
+# Damodaran republishes the country ERP workbook as ctryprem<Mon><YY>.xlsx.
+# Pinning one month means the weekly lane re-downloads the same stale file
+# forever, so the newest available month is resolved at run time instead.
+ERP_URL_TEMPLATE = "https://pages.stern.nyu.edu/~adamodar/pc/datasets/ctryprem{month}{yy}.xlsx"
+ERP_URL_LOOKBACK_MONTHS = 18
+
+
+def erp_url_candidates(today=None):
+    """Newest-first candidate URLs for the country ERP workbook."""
+    from datetime import date
+
+    if today is None:
+        today = date.today()
+    year, month = today.year, today.month
+    names_short = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"]
+    names_full = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"]
+    out = []
+    for _ in range(ERP_URL_LOOKBACK_MONTHS):
+        yy = f"{year % 100:02d}"
+        # FH-20260902-390: Damodaran drifted from Jul26 to July26 (datacurrent.html lists
+        # July 1, 2026 as https://pages.stern.nyu.edu/~adamodar/pc/datasets/ctrypremJuly26.xlsx,
+        # Last-Mod 10 Jul 2026). Try both 3-letter and full-month variants newest-first.
+        for mon in (names_full[month - 1], names_short[month - 1]):
+            url = ERP_URL_TEMPLATE.format(month=mon, yy=yy)
+            if url not in out:
+                out.append(url)
+        month -= 1
+        if month == 0:
+            month, year = 12, year - 1
+    return out
+
+
+def resolve_erp_url(today=None, timeout=15):
+    """Return (url, source_month, resolved) for the newest published workbook.
+
+    Falls back to the pinned URLS["erp"] when every probe fails, so a network
+    problem degrades to the previous behaviour instead of breaking the lane.
+    """
+    import urllib.request
+
+    # Map full month tokens back to 3-letter for canonicalize_source_date (which
+    # only accepts <Mon><YY>). Keep the URL verbatim for provenance.
+    _full_to_short = {
+        "January": "Jan", "February": "Feb", "March": "Mar", "April": "Apr",
+        "May": "May", "June": "Jun", "July": "Jul", "August": "Aug",
+        "September": "Sep", "October": "Oct", "November": "Nov", "December": "Dec",
+    }
+
+    for url in erp_url_candidates(today):
+        try:
+            request = urllib.request.Request(url, method="HEAD")
+            with urllib.request.urlopen(request, timeout=timeout) as response:
+                if response.status == 200:
+                    token = url.rsplit("ctryprem", 1)[-1].replace(".xlsx", "")
+                    # Normalize July26-style drift (datacurrent.html lists July, not Jul)
+                    # so the token stays <Mon><YY> for the downstream parser.
+                    for full, short in _full_to_short.items():
+                        if token.startswith(full):
+                            token = short + token[len(full):]
+                            break
+                    return url, token, True
+        except Exception:
+            continue
+    # Fallback still returns the pinned token (already short)
+    return URLS["erp"], URLS["erp"].rsplit("ctryprem", 1)[-1].replace(".xlsx", ""), False
 
 INDUSTRY_METRIC_URLS = {
     "wacc": "https://pages.stern.nyu.edu/~adamodar/New_Home_Page/datafile/wacc.html",

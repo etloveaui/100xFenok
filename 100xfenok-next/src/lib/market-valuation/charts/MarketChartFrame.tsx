@@ -14,6 +14,7 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import { useMarketChartTheme } from "./chartTheme";
 import { MarketChartEngine } from "./MarketChartEngine";
 import type {
+  MarketChartDateBand,
   MarketChartHoverPoint,
   MarketChartSeries,
   MarketChartType,
@@ -52,6 +53,9 @@ export interface MarketChartFrameProps {
   yAxisTitle?: string;
   /** Right (y1) axis unit title for dual-axis charts, e.g. "Stablecoin ($B)". */
   y1AxisTitle?: string;
+  logScale?: boolean;
+  /** Keep range state active while a parent-owned toolbar renders the controls. */
+  showRangeControls?: boolean;
   /** Footnote shown when not hovering, e.g. source + default/reachable coverage. */
   footnote?: string;
   /** Drop the outer card chrome when embedded in a parent shell (e.g. SlotShell). */
@@ -70,6 +74,18 @@ export interface MarketChartFrameProps {
    * first-seen label union would otherwise interleave out of order.
    */
   sortLabels?: boolean;
+  /** Connect sparse observations across dates contributed by denser peer series. */
+  spanGaps?: boolean;
+  /** Opt in to independent ISO-date points; category union remains the shared default. */
+  xScaleMode?: "category" | "time";
+  /** The caller already cut the data window before transforming/downsampling. */
+  seriesAreRangeFiltered?: boolean;
+  /** Optional ISO-date bands drawn behind time-series datasets. */
+  dateBands?: readonly MarketChartDateBand[];
+  /** Reports the hovered x label (null when it leaves) for a linked cursor. */
+  onHoverLabel?: (label: string | null) => void;
+  /** Shared cursor date from a sibling chart, drawn while this one is idle. */
+  cursorLabel?: string | null;
 }
 
 const DEFAULT_RANGES: readonly MarketChartRange[] = [
@@ -89,6 +105,13 @@ function orderedLabels(series: readonly MarketChartSeries[]): string[] {
     }
   }
   return labels;
+}
+
+function compareLabels(a: string, b: string): number {
+  const aDate = Date.parse(a);
+  const bDate = Date.parse(b);
+  if (Number.isFinite(aDate) && Number.isFinite(bDate)) return aDate - bDate;
+  return a.localeCompare(b);
 }
 
 /**
@@ -127,7 +150,7 @@ function applyRange(
   // Count mode (year/month-cadence ledger charts): keep trailing-N labels.
   if (!range.count) return series;
   const labels = orderedLabels(series);
-  const ordered = sortLabels ? [...labels].sort((a, b) => a.localeCompare(b)) : labels;
+  const ordered = sortLabels ? [...labels].sort(compareLabels) : labels;
   if (ordered.length <= range.count) return series;
   const kept = new Set(ordered.slice(ordered.length - range.count));
   return series.map((item) => ({
@@ -156,6 +179,8 @@ export function MarketChartFrame({
   formatValue,
   yAxisTitle,
   y1AxisTitle,
+  logScale = false,
+  showRangeControls = true,
   footnote,
   bare = false,
   rangeId: controlledRangeId,
@@ -163,6 +188,12 @@ export function MarketChartFrame({
   onRangeChange,
   onHiddenSeriesChange,
   sortLabels = false,
+  spanGaps = false,
+  xScaleMode = "category",
+  seriesAreRangeFiltered = false,
+  dateBands,
+  onHoverLabel,
+  cursorLabel = null,
 }: MarketChartFrameProps) {
   const [internalRangeId, setInternalRangeId] = useState<string>(
     defaultRangeId ?? ranges[ranges.length - 1]?.id ?? "MAX",
@@ -201,11 +232,11 @@ export function MarketChartFrame({
 
   const renderedSeries = useMemo(
     () =>
-      applyRange(series, activeRange, sortLabels).map((item) => ({
+      (seriesAreRangeFiltered ? series : applyRange(series, activeRange, sortLabels)).map((item) => ({
         ...item,
         hidden: hiddenIds.has(item.id),
       })),
-    [series, activeRange, hiddenIds, sortLabels],
+    [series, activeRange, hiddenIds, sortLabels, seriesAreRangeFiltered],
   );
 
   const toggleSeries = useCallback((id: string) => {
@@ -223,7 +254,44 @@ export function MarketChartFrame({
     [formatValue],
   );
 
-  const showRanges = ranges.length > 1;
+  // Broadcast the hovered label as the shared cursor date for sibling charts.
+  useEffect(() => {
+    onHoverLabel?.(hover?.label ?? null);
+  }, [hover, onHoverLabel]);
+
+  // Values at the shared cursor date while this chart is idle: the sibling's
+  // date is only useful if the reader can see what sat there.
+  const linkedReadout = useMemo(() => {
+    if (!cursorLabel || hover) return null;
+    const cursorMs = Date.parse(cursorLabel);
+    const points = renderedSeries
+      .filter((item) => !item.hidden)
+      .map((item) => {
+        let bestValue: number | null = null;
+        let bestDelta = Number.POSITIVE_INFINITY;
+        for (const point of item.points) {
+          const pointMs = Date.parse(point.label);
+          const delta = Number.isFinite(cursorMs) && Number.isFinite(pointMs)
+            ? Math.abs(pointMs - cursorMs)
+            : point.label === cursorLabel
+              ? 0
+              : Number.POSITIVE_INFINITY;
+          if (delta < bestDelta) {
+            bestDelta = delta;
+            bestValue = point.value;
+          }
+        }
+        return { seriesLabel: item.label, value: bestValue };
+      })
+      .filter((point) => point.value !== null);
+    return { label: cursorLabel, points, linked: true };
+  }, [cursorLabel, hover, renderedSeries]);
+
+  const readout = announcedHover
+    ? { label: announcedHover.label, points: announcedHover.points, linked: false }
+    : linkedReadout;
+
+  const showRanges = showRangeControls && ranges.length > 1;
   const showToggles = togglableSeries && series.length > 1;
 
   return (
@@ -238,12 +306,12 @@ export function MarketChartFrame({
         <div className="mb-3 flex flex-wrap items-start justify-between gap-2">
           <div className="min-w-0 flex-1">
             {title && (
-              <figcaption className="truncate text-sm font-extrabold text-slate-800">
+              <figcaption className="truncate text-sm font-extrabold text-[var(--c-ink)]">
                 {title}
               </figcaption>
             )}
             {subtitle && (
-              <p className="truncate text-xs font-semibold text-[var(--c-ink-2)]">{subtitle}</p>
+              <p className="truncate text-[12px] font-semibold text-[var(--c-ink-2)]">{subtitle}</p>
             )}
           </div>
           {showRanges && (
@@ -263,8 +331,8 @@ export function MarketChartFrame({
                     aria-pressed={active}
                     className={
                       active
-                        ? "rounded-md bg-[var(--c-brand)] px-2 py-1 text-[11px] font-bold text-white"
-                        : "rounded-md bg-[var(--c-surface-2)] px-2 py-1 text-[11px] font-bold text-[var(--c-ink-2)] hover:bg-[var(--c-line-2)]"
+                        ? "inline-flex min-h-11 min-w-11 items-center justify-center rounded-md bg-[var(--c-brand)] px-3 py-1 text-[12px] font-bold text-white focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--c-brand)]"
+                        : "inline-flex min-h-11 min-w-11 items-center justify-center rounded-md bg-[var(--c-surface-2)] px-3 py-1 text-[12px] font-bold text-[var(--c-ink-2)] hover:bg-[var(--c-line-2)] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--c-brand)]"
                     }
                   >
                     {range.label}
@@ -289,8 +357,8 @@ export function MarketChartFrame({
                 aria-pressed={!off}
                 className={
                   off
-                    ? "inline-flex min-h-7 max-w-full min-w-0 items-center gap-1 rounded-full border border-[var(--c-line)] px-2 py-0.5 text-left text-[10px] font-bold leading-tight text-[var(--c-ink-3)] sm:text-[11px]"
-                    : "inline-flex min-h-7 max-w-full min-w-0 items-center gap-1 rounded-full border border-[var(--c-line)] px-2 py-0.5 text-left text-[10px] font-bold leading-tight text-[var(--c-ink-2)] sm:text-[11px]"
+                    ? "inline-flex min-h-11 min-w-11 max-w-full items-center gap-1 rounded-full border border-[var(--c-line)] px-3 py-1 text-left text-[10px] font-bold leading-tight text-[var(--c-ink-3)] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--c-brand)] sm:text-[11px]"
+                    : "inline-flex min-h-11 min-w-11 max-w-full items-center gap-1 rounded-full border border-[var(--c-line)] px-3 py-1 text-left text-[10px] font-bold leading-tight text-[var(--c-ink-2)] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--c-brand)] sm:text-[11px]"
                 }
               >
                 <span
@@ -312,24 +380,32 @@ export function MarketChartFrame({
         heightClassName={heightClassName}
         showLegend={showLegend && !showToggles}
         sortLabels={sortLabels}
+        spanGaps={spanGaps}
+        xScaleMode={xScaleMode}
+        dateBands={dateBands}
         suggestedMin={suggestedMin}
         suggestedMax={suggestedMax}
         yAxisTitle={yAxisTitle}
         y1AxisTitle={y1AxisTitle}
+        logScale={logScale}
         formatValue={fmt}
         onHoverPoint={setHover}
+        cursorLabel={cursorLabel}
       />
 
       <div
-        className="mt-2 min-h-[1.25rem] text-[11px] font-semibold text-[var(--c-ink-2)]"
+        className="mt-2 min-h-[1.25rem] text-[12px] font-semibold text-[var(--c-ink-2)]"
         aria-atomic="true"
         role="status"
       >
-        {announcedHover ? (
+        {readout ? (
           <span>
-            <span className="font-bold text-[var(--c-ink)]">{announcedHover.label}</span>
+            {readout.linked && (
+              <span className="mr-1 font-bold text-[var(--c-brand)]">연결 커서</span>
+            )}
+            <span className="font-bold text-[var(--c-ink)]">{readout.label}</span>
             {"  "}
-            {announcedHover.points
+            {readout.points
               .filter((point) => point.value !== null)
               .map((point) => `${point.seriesLabel} ${fmt(point.value)}`)
               .join("   ")}

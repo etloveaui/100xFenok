@@ -7,10 +7,9 @@
  * remain auditable instead of silently disappearing.
  *
  * Outputs:
- *   - data/sec-13f/by_ticker.json (+ public mirror)
- *   - data/sec-13f/analytics/consensus.json (+ public mirror)
- *   - data/sec-13f/analytics/ticker_aliases.json (+ public mirror)
- *   - data/sec-13f/investors/*.json public mirror parity
+ *   - data/sec-13f/by_ticker.json
+ *   - data/sec-13f/analytics/consensus.json
+ *   - data/sec-13f/analytics/ticker_aliases.json
  */
 
 import fs from "node:fs";
@@ -26,27 +25,14 @@ import { loadTickerResolver, SYMBOL_RE } from "./lib/sec13f-symbols.mjs";
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const INVESTORS_DIR = path.join(ROOT, "data/sec-13f/investors");
-const PUBLIC_INVESTORS_DIR = path.join(ROOT, "100xfenok-next/public/data/sec-13f/investors");
 const BY_TICKER = "data/sec-13f/by_ticker.json";
 const CONSENSUS = "data/sec-13f/analytics/consensus.json";
 const ALIASES = "data/sec-13f/analytics/ticker_aliases.json";
 
 function writeJson(relPath, data) {
   const rootPath = path.join(ROOT, relPath);
-  const publicPath = path.join(ROOT, "100xfenok-next/public", relPath);
-  for (const filePath of [rootPath, publicPath]) {
-    fs.mkdirSync(path.dirname(filePath), { recursive: true });
-    fs.writeFileSync(filePath, JSON.stringify(data));
-  }
-}
-
-function copyInvestorMirror() {
-  fs.mkdirSync(PUBLIC_INVESTORS_DIR, { recursive: true });
-  const sourceFiles = fs.readdirSync(INVESTORS_DIR).filter((file) => file.endsWith(".json"));
-  for (const file of sourceFiles) {
-    fs.copyFileSync(path.join(INVESTORS_DIR, file), path.join(PUBLIC_INVESTORS_DIR, file));
-  }
-  return sourceFiles.length;
+  fs.mkdirSync(path.dirname(rootPath), { recursive: true });
+  fs.writeFileSync(rootPath, JSON.stringify(data));
 }
 
 const round4 = (value) => Math.round(value * 10000) / 10000;
@@ -241,10 +227,9 @@ writeJson(CONSENSUS, {
   consensus,
 });
 writeJson(ALIASES, aliasOutput);
-const mirroredInvestors = copyInvestorMirror();
 
 console.log(
   `13f_integrity: quarter=${targetQuarter} tickers=${Object.keys(consensus).length} ` +
     `aliases=${aliasOutput.aliases.length} unmapped=${aliasOutput.unmapped.length} ` +
-    `investor_mirror=${mirroredInvestors}`,
+    `investors=${investorFiles.length}`,
 );

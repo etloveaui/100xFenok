@@ -2,7 +2,8 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { useMarketChartTheme } from "@/lib/market-valuation/charts/chartTheme";
-import { formatAsOf, isStaleAsOf } from "@/lib/market-valuation/freshness";
+import { formatAsOf } from "@/lib/market-valuation/freshness";
+import { freshnessVerdict, freshnessMessage } from "@/lib/freshness-policy.mjs";
 import { formatDecimal, formatInteger, formatMultiple, formatPlainPercent } from "@/lib/format";
 
 interface YardneyRow {
@@ -72,15 +73,16 @@ function fmtNum(value: number | null | undefined, digits = 1): string {
 function AsOfPill({ value }: { value: string | null | undefined }) {
   const label = formatAsOf(value);
   if (!label) return null;
-  const stale = isStaleAsOf(value);
+  const verdict = freshnessVerdict(value, "fred_yardeni");
+  const stale = verdict.state === "delayed" || verdict.state === "stopped";
   return (
     <span
-      className={`rounded-full border px-2 py-1 text-[10px] font-black tabular-nums ${
+      className={`rounded-full border px-2 py-1 text-[12px] font-black tabular-nums ${
         stale
           ? "border-[var(--c-warn)] bg-[var(--c-warn-soft)] text-[var(--c-warn)]"
           : "border-[var(--c-line)] bg-[var(--c-surface-2)] text-[var(--c-ink-3)]"
       }`}
-      title={stale ? "7일 이상 오래된 자료입니다." : undefined}
+      title={freshnessMessage(verdict) ?? undefined}
     >
       기준 {label}
       {stale ? " · 오래됨" : ""}
@@ -150,30 +152,30 @@ export default function YardeniCard() {
   const v = verdict(active.premium_pct);
 
   return (
-    <div className="rounded-[1.5rem] border border-[var(--c-line)] bg-[var(--c-panel)] p-5">
+    <div className="rounded-2xl border border-[var(--c-line)] bg-[var(--c-panel)] p-5">
       <div>
         <h2 className="text-sm font-black tracking-tight text-[var(--c-ink)]">
           야데니 모델 (채권 PER)
         </h2>
-        <p className="mt-1 text-[11px] leading-5 text-[var(--c-ink-3)]">
+        <p className="mt-1 text-[12px] leading-5 text-[var(--c-ink-3)]">
           채권 PER × EPS = 주식 적정가. 국채·회사채 대비
           주식이 비싼지 보는 잣대.
         </p>
       </div>
 
-      <p className={`mt-3 text-xs font-black ${v.tone}`}>{v.text}</p>
+      <p className={`mt-3 text-[12px] font-black ${v.tone}`}>{v.text}</p>
 
-      <div className="mt-2 flex flex-wrap items-baseline gap-3 text-[11px] font-bold text-[var(--c-ink-3)]">
+      <div className="mt-2 flex flex-wrap items-baseline gap-3 text-[12px] font-bold text-[var(--c-ink-3)]">
         <span>
           S&P 500{" "}
-          <span className="orbitron font-black text-[var(--c-ink)]">
+          <span className="font-black text-[var(--c-ink)]">
             {fmtIndex(active.spx)}
           </span>
         </span>
         <span className="text-[var(--c-line-2)]">vs</span>
         <span>
           적정가{" "}
-          <span className="orbitron font-black text-[var(--c-ink)]">
+          <span className="font-black text-[var(--c-ink)]">
             {fmtIndex(active.fair_value)}
           </span>
         </span>
@@ -249,7 +251,7 @@ export default function YardeniCard() {
             ].map(([label, value]) => (
               <div key={label} className="rounded-xl border border-[var(--c-line)] bg-[var(--c-surface-2)] px-3 py-2">
                 <p className="text-[9px] font-black uppercase tracking-[0.08em] text-[var(--c-ink-3)]">{label}</p>
-                <p className="orbitron mt-1 text-xs font-black tabular-nums text-[var(--c-ink-2)]">{value}</p>
+                <p className="mt-1 text-[12px] font-black tabular-nums text-[var(--c-ink-2)]">{value}</p>
               </div>
             ))}
           </div>
@@ -257,7 +259,7 @@ export default function YardeniCard() {
       ) : null}
 
       {pctRank !== null ? (
-        <p className="mt-3 text-[11px] font-bold text-[var(--c-ink-3)]">
+        <p className="mt-3 text-[12px] font-bold text-[var(--c-ink-3)]">
           1990년 이후 프리미엄 상위 {pctRank}% 수준
         </p>
       ) : null}

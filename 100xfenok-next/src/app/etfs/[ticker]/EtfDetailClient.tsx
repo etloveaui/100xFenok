@@ -3,11 +3,12 @@
 import { useEffect, useMemo, useState } from "react";
 import TransitionLink from "@/components/TransitionLink";
 import WatchStar from "@/components/WatchStar";
-import { formatSignedPercent, formatCurrency, formatCurrencyCompact, formatDecimal, formatInteger, formatMultiple, type Currency } from "@/lib/format";
+import { formatCurrency, formatCurrencyCompact, formatDateish, formatDecimal, formatInteger, formatMultiple, formatSignedPercent, type Currency } from "@/lib/format";
 import TickerSurfaceEventsCard from "@/app/stock/[ticker]/TickerSurfaceEventsCard";
 import EtfRetryCallout from "@/app/etfs/EtfRetryCallout";
 import ExternalSourceLinks from "@/components/ExternalSourceLinks";
 import DataProvenanceNote from "@/components/DataProvenanceNote";
+import { EmptyState, Panel, Skeleton, useDelayedLoading } from "@/components/ui";
 import {
   cleanCategory,
   formatAum,
@@ -190,6 +191,7 @@ type EtfClassification = NonNullable<NonNullable<MarketFactsPayload["etf"]>["cla
 type LoadResult<T> =
   | { kind: "load_result"; status: "ok"; data: T }
   | { kind: "load_result"; status: "unavailable"; data: null; dataSupply: EtfDataSupply }
+  | { kind: "load_result"; status: "shard_infrastructure_unavailable"; data: null }
   | { kind: "load_result"; status: "missing"; data: null }
   | { kind: "load_result"; status: "failed"; data: null };
 
@@ -202,7 +204,7 @@ let etfUniversePending: Promise<LoadResult<EtfUniversePayload>> | null = null;
 const ETF_SIGNAL_SCORE_FIELDS = [
   { key: "cost_efficiency", label: "비용 효율" },
   { key: "liquidity", label: "유동성" },
-  { key: "tracking_quality", label: "추종 품질" },
+  { key: "tracking_quality", label: "베타·이력 점수" },
   { key: "momentum_trend", label: "추세" },
   { key: "risk_adjusted_momentum", label: "위험조정 추세" },
   { key: "income", label: "인컴" },
@@ -255,7 +257,13 @@ function okResult<T>(data: T): LoadResult<T> {
 function isLoadResult<T>(value: unknown): value is LoadResult<T> {
   const record = asRecord(value);
   return record?.kind === "load_result"
-    && (record.status === "ok" || record.status === "unavailable" || record.status === "missing" || record.status === "failed");
+    && (
+      record.status === "ok"
+      || record.status === "unavailable"
+      || record.status === "shard_infrastructure_unavailable"
+      || record.status === "missing"
+      || record.status === "failed"
+    );
 }
 
 function clearEtfRuntimeCache(ticker: string) {
@@ -274,7 +282,7 @@ function loadEtfPayload(ticker: string): Promise<LoadResult<EtfPayload>> {
   if (cached !== undefined) return Promise.resolve(okResult(cached));
 
   const request = fetch(`/api/data/stockanalysis/etfs/${encodeURIComponent(symbol)}/`, { cache: "no-store" })
-    .then((response) => parseEtfApiResponse<EtfPayload>(response))
+    .then((response) => parseEtfApiResponse<EtfPayload>(response, symbol))
     .then((result): LoadResult<EtfPayload> => {
       if (result.kind === "ok") {
         etfCache[symbol] = result.data;
@@ -283,6 +291,9 @@ function loadEtfPayload(ticker: string): Promise<LoadResult<EtfPayload>> {
       delete etfCache[symbol];
       if (result.kind === "unavailable") {
         return { kind: "load_result", status: "unavailable", data: null, dataSupply: result.dataSupply };
+      }
+      if (result.kind === "shard_infrastructure_unavailable") {
+        return { kind: "load_result", status: "shard_infrastructure_unavailable", data: null };
       }
       return result.kind === "missing" ? missingResult<EtfPayload>() : failedResult<EtfPayload>();
     })
@@ -433,10 +444,6 @@ function downloadHoldingsCsv(symbol: string, holdings: EtfHolding[], holdingsUpd
   window.URL.revokeObjectURL(url);
 }
 
-function fmtDateish(value: unknown): string {
-  if (typeof value !== "string" || !value.trim()) return "—";
-  return value.trim();
-}
 
 
 function fmtPercentPoints(value: MaybeNumber) {
@@ -720,22 +727,21 @@ function SectionCard({
 }
 
 function SkeletonSection() {
+  const show = useDelayedLoading(true, 120);
+  if (!show) return null;
   return (
-    <div className="panel stock-section">
-      <div className="panel-b">
-        <div className="h-5 w-1/3 rounded bg-[var(--c-surface-2)]" />
-        <div className="mt-3 h-32 rounded bg-[var(--c-surface-2)]" />
-      </div>
-    </div>
+    <Panel>
+      <Skeleton />
+    </Panel>
   );
 }
 
 function MetricCard({ label, value, note }: { label: string; value: string; note?: string }) {
   return (
     <div className="rounded-xl border border-[var(--c-line)] bg-[var(--c-panel)]/70 px-3 py-3" data-etf-detail-metric-card="true">
-      <p className="text-[10px] font-black uppercase tracking-[0.08em] text-[var(--c-ink-3)]">{label}</p>
-      <p className="orbitron mt-1 min-w-0 break-words text-base font-black tabular-nums text-[var(--c-ink)]">{value}</p>
-      {note && note !== "—" ? <p className="mt-1 min-w-0 break-words text-[10px] font-semibold text-[var(--c-ink-3)]">{note}</p> : null}
+      <p className="text-[12px] font-black uppercase tracking-[0.08em] text-[var(--c-ink-3)]">{label}</p>
+      <p className="mt-1 min-w-0 break-words text-base font-black tabular-nums text-[var(--c-ink)]">{value}</p>
+      {note && note !== "—" ? <p className="mt-1 min-w-0 break-words text-[12px] font-semibold text-[var(--c-ink-3)]">{note}</p> : null}
     </div>
   );
 }
@@ -755,16 +761,16 @@ function PeerEtfCard({ row, currentSymbol }: { row: DetailEtfUniverseRecord; cur
     <div className="min-w-0 rounded-xl border border-[var(--c-line)] bg-[var(--c-panel)]/70 px-3 py-3">
       <div className="flex min-w-0 items-start justify-between gap-3">
         <div className="min-w-0">
-          <TransitionLink href={`/etfs/${encodeURIComponent(ticker)}`} className="orbitron text-sm font-black text-[var(--c-ink)] hover:text-brand-interactive">
+          <TransitionLink href={`/etfs/${encodeURIComponent(ticker)}`} className="text-sm font-black text-[var(--c-ink)] hover:text-brand-interactive">
             {ticker}
           </TransitionLink>
-          <p className="mt-1 min-w-0 truncate text-xs font-bold leading-snug text-[var(--c-ink-3)]" title={row.name ?? ticker}>{row.name ?? ticker}</p>
+          <p className="mt-1 min-w-0 truncate text-[12px] font-bold leading-snug text-[var(--c-ink-3)]" title={row.name ?? ticker}>{row.name ?? ticker}</p>
         </div>
-        <span className="orbitron tabular-nums shrink-0 rounded-full bg-[var(--c-surface-2)] px-2 py-1 text-[10px] font-black text-[var(--c-ink-3)]">
+        <span className="tabular-nums shrink-0 rounded-full bg-[var(--c-surface-2)] px-2 py-1 text-[10px] font-black text-[var(--c-ink-3)]">
           {formatAum(row)}
         </span>
       </div>
-      <div className="mt-2 flex flex-wrap gap-1.5 text-[10px] font-black text-[var(--c-ink-3)]">
+      <div className="mt-2 flex flex-wrap gap-1.5 text-[12px] font-black text-[var(--c-ink-3)]">
         <span className="rounded-full border border-[var(--c-line)] bg-white px-2 py-1">{cleanCategory(row.category ?? row.assetClass)}</span>
         <span className="rounded-full border border-[var(--c-line)] bg-white px-2 py-1">{peerExpenseRatioLabel(row)}</span>
         {oneYear ? <span className="rounded-full border border-[var(--c-line)] bg-white px-2 py-1">1년 {oneYear}</span> : null}
@@ -793,8 +799,8 @@ function PeerLane({
   return (
     <div className="min-w-0">
       <div className="mb-2 min-w-0">
-        <p className="text-xs font-black text-[var(--c-ink)]">{title}</p>
-        <p className="mt-1 text-[10px] font-semibold leading-relaxed text-[var(--c-ink-3)]">{desc}</p>
+        <p className="text-[12px] font-black text-[var(--c-ink)]">{title}</p>
+        <p className="mt-1 text-[12px] font-semibold leading-relaxed text-[var(--c-ink-3)]">{desc}</p>
       </div>
       {rows.length ? (
         <div className="grid gap-2">
@@ -803,7 +809,7 @@ function PeerLane({
           ))}
         </div>
       ) : (
-        <p className="rounded-xl border border-[var(--c-line)] bg-[var(--c-surface-2)] px-3 py-3 text-xs font-semibold text-[var(--c-ink-3)]">
+        <p className="rounded-xl border border-[var(--c-line)] bg-[var(--c-surface-2)] px-3 py-3 text-[12px] font-semibold text-[var(--c-ink-3)]">
           현재 연결 후보 없음
         </p>
       )}
@@ -860,9 +866,9 @@ function EtfPeerCollectionsSection({
           currentSymbol={currentSymbol}
         />
       </div>
-      <div className="mt-3 flex flex-wrap items-center justify-between gap-2 rounded-xl border border-[var(--c-line)] bg-[var(--c-surface-2)] px-3 py-2 text-[10px] font-bold text-[var(--c-ink-3)]">
+      <div className="mt-3 flex flex-wrap items-center justify-between gap-2 rounded-xl border border-[var(--c-line)] bg-[var(--c-surface-2)] px-3 py-2 text-[12px] font-bold text-[var(--c-ink-3)]">
         <span>단일종목·레버리지 연결과 겹침 비교는 상위 25개 표시 항목 기준입니다.</span>
-        <span>생성 {fmtDateish(data.generatedAt)}</span>
+        <span>생성 {formatDateish(data.generatedAt)}</span>
       </div>
     </SectionCard>
   );
@@ -880,7 +886,7 @@ function PerformanceView({ performance }: { performance: EtfPerformance | null }
   ].filter((item) => isFiniteNumber(item.value));
 
   if (!items.length) {
-    return <p className="text-sm font-semibold text-[var(--c-ink-3)]">기간 수익률 데이터 없음</p>;
+    return <EmptyState reason="기간 수익률 데이터 없음" nextRefresh="수익률 데이터 연결 시" />;
   }
 
   return (
@@ -890,9 +896,9 @@ function PerformanceView({ performance }: { performance: EtfPerformance | null }
         const tone = value >= 0 ? "text-[var(--c-up)]" : "text-[var(--c-down)]";
         return (
           <div key={item.label} className="rounded-xl border border-[var(--c-line)] bg-[var(--c-panel)]/70 px-3 py-3">
-            <p className="text-[10px] font-black uppercase tracking-[0.08em] text-[var(--c-ink-3)]">{item.label}</p>
-            <p className={`orbitron mt-1 text-lg font-black tabular-nums ${tone}`}>{fmtCompactSignedPercent(value)}</p>
-            <p className="mt-1 text-[10px] font-semibold text-[var(--c-ink-3)]">{item.note}</p>
+            <p className="text-[12px] font-black uppercase tracking-[0.08em] text-[var(--c-ink-3)]">{item.label}</p>
+            <p className={` mt-1 text-lg font-black tabular-nums ${tone}`}>{fmtCompactSignedPercent(value)}</p>
+            <p className="mt-1 text-[12px] font-semibold text-[var(--c-ink-3)]">{item.note}</p>
           </div>
         );
       })}
@@ -915,12 +921,12 @@ function DetailAvailabilityCallout({
     <div className="mb-3 rounded-xl border border-amber-200 bg-amber-50 px-3 py-3">
       <div className="flex flex-col gap-3 lg:flex-row lg:items-start lg:justify-between">
         <div className="min-w-0">
-          <p className="text-xs font-black text-amber-900">{meta.title}</p>
-          <p className="mt-1 text-[11px] font-semibold leading-relaxed text-amber-800">{meta.description}</p>
+          <p className="text-[12px] font-black text-amber-900">{meta.title}</p>
+          <p className="mt-1 text-[12px] font-semibold leading-relaxed text-amber-800">{meta.description}</p>
         </div>
         <div className="grid min-w-0 gap-2 sm:grid-cols-2 lg:min-w-[360px]">
           <div className="min-w-0">
-            <p className="mb-1 text-[10px] font-black uppercase tracking-[0.08em] text-amber-700">현재 제공</p>
+            <p className="mb-1 text-[12px] font-black uppercase tracking-[0.08em] text-amber-700">현재 제공</p>
             <div className="flex flex-wrap gap-1">
               {availableItems.map((item) => (
                 <span key={`available-${item}`} className="rounded-full border border-amber-200 bg-white px-2 py-1 text-[10px] font-black text-amber-800">{item}</span>
@@ -928,7 +934,7 @@ function DetailAvailabilityCallout({
             </div>
           </div>
           <div className="min-w-0">
-            <p className="mb-1 text-[10px] font-black uppercase tracking-[0.08em] text-amber-700">보강 대기</p>
+            <p className="mb-1 text-[12px] font-black uppercase tracking-[0.08em] text-amber-700">보강 대기</p>
             <div className="flex flex-wrap gap-1">
               {pendingItems.map((item) => (
                 <span key={`pending-${item}`} className="rounded-full border border-amber-200 bg-amber-100 px-2 py-1 text-[10px] font-black text-amber-900">{item}</span>
@@ -943,13 +949,13 @@ function DetailAvailabilityCallout({
 
 function HoldingsTable({ holdings, currency }: { holdings: EtfHolding[]; currency: string }) {
   if (!holdings.length) {
-    return <p className="text-sm font-semibold text-[var(--c-ink-3)]">보유 구성 데이터 없음</p>;
+    return <EmptyState reason="보유 구성 데이터 없음" nextRefresh="보유 데이터 연결 시" />;
   }
   return (
     <div className="-mx-1 max-h-[560px] overflow-auto px-1" role="region" aria-label="보유 구성 표" tabIndex={0} data-etf-detail-holdings-table="true">
-      <table className="w-full min-w-[620px] text-xs">
+      <table className="w-full min-w-[620px] text-[12px]">
         <thead className="sticky top-0 z-10 bg-white">
-          <tr className="border-b border-[var(--c-line)] text-[10px] font-black uppercase tracking-[0.06em] text-[var(--c-ink-3)]">
+          <tr className="border-b border-[var(--c-line)] text-[12px] font-black uppercase tracking-[0.06em] text-[var(--c-ink-3)]">
             <th scope="col" className="px-2 py-2 text-right">#</th>
             <th scope="col" className="px-2 py-2 text-left">종목/계약</th>
             <th scope="col" className="px-2 py-2 text-right">비중</th>
@@ -962,30 +968,30 @@ function HoldingsTable({ holdings, currency }: { holdings: EtfHolding[]; currenc
             const weightClass = weight !== null && weight < 0 ? "text-[var(--c-down)]" : "text-[var(--c-ink)]";
             return (
               <tr key={`${item.rank ?? index}-${item.symbol ?? ""}-${item.name ?? ""}`} className="border-b border-[var(--c-line)] last:border-b-0" data-etf-detail-holding-row="true">
-                <td className="px-2 py-2 text-right orbitron tabular-nums text-[11px] font-bold text-[var(--c-ink-3)]">{item.rank ?? index + 1}</td>
+                <td className="px-2 py-2 text-right tabular-nums text-[12px] font-bold text-[var(--c-ink-3)]">{item.rank ?? index + 1}</td>
                 <th scope="row" className="px-2 py-2 text-left min-w-0">
                   {item.symbol ? (
-                    <span className="orbitron text-xs font-black text-[var(--c-ink)]">{item.symbol}</span>
+                    <span className="text-[12px] font-black text-[var(--c-ink)]">{item.symbol}</span>
                   ) : null}
                   <span className="block truncate max-w-[14rem] text-[11px] font-semibold text-[var(--c-ink-3)]" title={item.name ?? undefined}>
                     {item.name ?? "—"}
                   </span>
                 </th>
-                <td className={`px-2 py-2 text-right orbitron tabular-nums text-xs font-black ${weightClass}`}>{fmtPercentPoints(weight)}</td>
-                <td className="px-2 py-2 text-right orbitron tabular-nums text-[11px] font-semibold text-[var(--c-ink-3)]">{fmtShares(item.shares)}</td>
+                <td className={`px-2 py-2 text-right  tabular-nums text-[12px] font-black ${weightClass}`}>{fmtPercentPoints(weight)}</td>
+                <td className="px-2 py-2 text-right tabular-nums text-[12px] font-semibold text-[var(--c-ink-3)]">{fmtShares(item.shares)}</td>
               </tr>
             );
           })}
         </tbody>
       </table>
-      {currency ? <p className="mt-2 text-[10px] font-semibold text-[var(--c-ink-3)]">표시 통화: {currency}</p> : null}
+      {currency ? <p className="mt-2 text-[12px] font-semibold text-[var(--c-ink-3)]">표시 통화: {currency}</p> : null}
     </div>
   );
 }
 
 function WeightedList({ rows, empty }: { rows: WeightedRow[] | null | undefined; empty: string }) {
   const items = Array.isArray(rows) ? rows.filter((row) => weightedRowValue(row) !== null) : [];
-  if (!items.length) return <p className="text-sm font-semibold text-[var(--c-ink-3)]">{empty}</p>;
+  if (!items.length) return <EmptyState reason={empty} nextRefresh="데이터 연결 시" />;
   return (
     <div className="space-y-2">
       {items.map((row, index) => {
@@ -993,9 +999,9 @@ function WeightedList({ rows, empty }: { rows: WeightedRow[] | null | undefined;
         const width = Math.min(100, Math.abs(value));
         return (
           <div key={`${weightedRowName(row)}-${index}`}>
-            <div className="mb-1 flex items-center justify-between gap-3 text-xs">
+            <div className="mb-1 flex items-center justify-between gap-3 text-[12px]">
               <span className="min-w-0 truncate font-bold text-[var(--c-ink)]">{weightedRowName(row)}</span>
-              <span className={`orbitron tabular-nums font-black ${value < 0 ? "text-[var(--c-down)]" : "text-[var(--c-ink)]"}`}>{fmtPercentPoints(value)}</span>
+              <span className={` tabular-nums font-black ${value < 0 ? "text-[var(--c-down)]" : "text-[var(--c-ink)]"}`}>{fmtPercentPoints(value)}</span>
             </div>
             <div className="h-2 overflow-hidden rounded-full bg-[var(--c-surface-2)]">
               <div className={`h-2 rounded-full ${value < 0 ? "bg-[color:var(--c-down)]" : "bg-brand-interactive"}`} style={{ width: `${width}%` }} />
@@ -1203,7 +1209,7 @@ function HistoryView({
         isAvailable={isAvailable}
       />
       {pendingMultiYearRanges.length > 0 ? (
-        <p className="rounded-xl border border-[var(--c-line)] bg-[var(--c-surface-2)] px-3 py-2 text-xs font-semibold text-[var(--c-ink-3)]">
+        <p className="rounded-xl border border-[var(--c-line)] bg-[var(--c-surface-2)] px-3 py-2 text-[12px] font-semibold text-[var(--c-ink-3)]">
           {pendingMultiYearRanges.join("·")} 히스토리 대기: 해당 구간 데이터가 들어오면 차트와 표에 자동 반영됩니다.
         </p>
       ) : null}
@@ -1222,15 +1228,15 @@ function HistoryView({
             return (
               <div key={`${date ?? "period"}-${index}`} className="flex h-full min-w-[2px] flex-1 flex-col items-center justify-end gap-1" title={`${date ?? "—"}: ${formatCurrency(close, currency as Currency)}`}>
                 <div className={`w-full rounded-t ${up ? "bg-[color:var(--c-up)]" : "bg-[color:var(--c-down)]"}`} style={{ height: `${height}%` }} />
-                <span className="hidden max-w-full truncate text-[9px] font-bold text-[var(--c-ink-3)] sm:block">{(date ?? "").slice(5, 7)}</span>
+                <span className="hidden max-w-full truncate text-[12px] font-bold text-[var(--c-ink-3)] sm:block">{(date ?? "").slice(5, 7)}</span>
               </div>
             );
           })}
         </div>
         <div className="-mx-1 overflow-x-auto px-1" role="region" aria-label="가격 히스토리 표" tabIndex={0}>
-          <table className="w-full min-w-[360px] text-xs">
+          <table className="w-full min-w-[360px] text-[12px]">
             <thead>
-              <tr className="border-b border-[var(--c-line)] text-[10px] font-black uppercase tracking-[0.06em] text-[var(--c-ink-3)]">
+              <tr className="border-b border-[var(--c-line)] text-[12px] font-black uppercase tracking-[0.06em] text-[var(--c-ink-3)]">
                 <th scope="col" className="px-2 py-2 text-left">일자</th>
                 <th scope="col" className="px-2 py-2 text-right">종가</th>
                 <th scope="col" className="px-2 py-2 text-right">변화</th>
@@ -1241,9 +1247,9 @@ function HistoryView({
               {rows.map((point, index) => (
                 <tr key={`${historyPointDate(point) ?? "row"}-${index}`} className="border-b border-[var(--c-line)] last:border-b-0">
                   <th scope="row" className="px-2 py-2 text-left font-bold text-[var(--c-ink)]">{historyPointDate(point) ?? "—"}</th>
-                  <td className="px-2 py-2 text-right orbitron tabular-nums font-black text-[var(--c-ink)]">{formatCurrency(historyPointClose(point), currency as Currency)}</td>
-                  <td className={`px-2 py-2 text-right orbitron tabular-nums font-black ${isFiniteNumber(point.ch) && point.ch < 0 ? "text-[var(--c-down)]" : "text-[var(--c-up)]"}`}>{fmtSignedPercentPoints(point.ch)}</td>
-                  <td className="px-2 py-2 text-right orbitron tabular-nums font-semibold text-[var(--c-ink-3)]">{fmtShares(point.v)}</td>
+                  <td className="px-2 py-2 text-right tabular-nums font-black text-[var(--c-ink)]">{formatCurrency(historyPointClose(point), currency as Currency)}</td>
+                  <td className={`px-2 py-2 text-right  tabular-nums font-black ${isFiniteNumber(point.ch) && point.ch < 0 ? "text-[var(--c-down)]" : "text-[var(--c-up)]"}`}>{fmtSignedPercentPoints(point.ch)}</td>
+                  <td className="px-2 py-2 text-right tabular-nums font-semibold text-[var(--c-ink-3)]">{fmtShares(point.v)}</td>
                 </tr>
               ))}
             </tbody>
@@ -1299,11 +1305,15 @@ export default function EtfDetailClient({ ticker }: { ticker: string }) {
   }, []);
 
   useEffect(() => {
-    const controller = new AbortController();
-    loadStockServicesIndex(controller.signal).then((payload) => {
-      if (!controller.signal.aborted) setStockServicesIndex(payload);
+    // No abort on cleanup: the loader shares one in-flight request across
+    // every caller, so aborting it here would hand the next caller a null index.
+    let cancelled = false;
+    loadStockServicesIndex().then((payload) => {
+      if (!cancelled) setStockServicesIndex(payload);
     });
-    return () => controller.abort();
+    return () => {
+      cancelled = true;
+    };
   }, []);
 
   const currentState = state.symbol === symbol && state.reloadKey === reloadKey;
@@ -1359,7 +1369,7 @@ export default function EtfDetailClient({ ticker }: { ticker: string }) {
         title: dataSupplyPresentation.label,
         description: [
           dataSupplyPresentation.description ?? "ETF 세부 데이터 공급 상태를 확인해 주세요.",
-          dataSupplyPresentation.sourceDate ? `원래 기준일 ${fmtDateish(dataSupplyPresentation.sourceDate)}` : null,
+          dataSupplyPresentation.sourceDate ? `원래 기준일 ${formatDateish(dataSupplyPresentation.sourceDate)}` : null,
           dataSupplyPresentation.ageDays !== null ? `현재 기준 ${dataSupplyPresentation.ageDays}일 경과` : null,
         ].filter(Boolean).join(" · "),
       }
@@ -1380,7 +1390,7 @@ export default function EtfDetailClient({ ticker }: { ticker: string }) {
   const website = typeof overview.etf_website === "string" && overview.etf_website.trim() ? overview.etf_website.trim() : null;
   const inceptionDate = rawText(overview.inception);
   const sharesOutstanding = rawText(overview.sharesOut);
-  const quoteDate = fmtDateish(quote.u);
+  const quoteDate = formatDateish(quote.u);
   const updateDate = factDate(marketFacts, "price")
     ?? (quoteDate !== "—" ? quoteDate : null)
     ?? dataSupply?.source_as_of
@@ -1392,7 +1402,7 @@ export default function EtfDetailClient({ ticker }: { ticker: string }) {
         classification.underlying ? `분류 기초 ${classification.underlying}` : null,
         underlyingService?.stockTicker ? `기초 종목 ${underlyingService.stockTicker}` : null,
         underlyingService?.link.resolution_source ? `해결 출처 ${underlyingService.link.resolution_source}` : null,
-        fmtDateish(updateDate) !== "—" ? `기준 ${fmtDateish(updateDate)}` : null,
+        formatDateish(updateDate) !== "—" ? `기준 ${formatDateish(updateDate)}` : null,
       ]
     : [];
 
@@ -1424,7 +1434,7 @@ export default function EtfDetailClient({ ticker }: { ticker: string }) {
     history.length === 0 ? "가격 히스토리" : null,
   ].filter((item): item is string => Boolean(item));
   const metrics = [
-    { label: "가격", value: formatCurrency(price, currency as Currency), note: fmtDateish(updateDate) },
+    { label: "가격", value: formatCurrency(price, currency as Currency), note: formatDateish(updateDate) },
     { label: "당일 변화", value: fmtSignedPercentPoints(changePct), note: metricValue(quote.ex, exchange) },
     { label: "운용자산", value: totalAssets !== null ? formatCurrencyCompact(totalAssets, currency as Currency) : rawText(overview.aum), note: "총 운용자산" },
     { label: "보수율", value: expenseRatio !== null ? fmtPercentPoints(expenseRatio) : rawText(overview.expenseRatio), note: "총보수" },
@@ -1436,13 +1446,13 @@ export default function EtfDetailClient({ ticker }: { ticker: string }) {
     { label: "PER", value: trailingPe !== null ? formatDecimal(trailingPe, { digits: 1 }) : rawText(overview.peRatio), note: "최근 실적 기준" },
     { label: "52주 고가", value: isFiniteNumber(quote.h52) ? formatCurrency(quote.h52, currency as Currency) : "—", note: "최근 52주 고점" },
     { label: "52주 저가", value: isFiniteNumber(quote.l52) ? formatCurrency(quote.l52, currency as Currency) : "—", note: "최근 52주 저점" },
-    { label: "보유 항목", value: `${holdings.length.toLocaleString("ko-KR")} / ${holdingCount.toLocaleString("ko-KR")}`, note: fmtDateish(holdingsUpdated) },
+    { label: "보유 항목", value: `${holdings.length.toLocaleString("ko-KR")} / ${holdingCount.toLocaleString("ko-KR")}`, note: formatDateish(holdingsUpdated) },
     { label: "표시 비중 합계", value: holdings.length > 0 ? fmtPercentPoints(totalWeight) : "—", note: "표시 항목 기준" },
   ].filter((metric) => metric.value !== "—");
   const etfSignalScores = etfSignals?.row?.scores ?? {};
   const etfSignalCount = etfSignals?.row?.scored_signal_count;
   const etfSignalDetails = [
-    etfSignals?.generated_at ? `생성 ${fmtDateish(etfSignals.generated_at)}` : null,
+    etfSignals?.generated_at ? `생성 ${formatDateish(etfSignals.generated_at)}` : null,
     etfSignals?.formula_version ? `공식 ${etfSignals.formula_version}` : null,
     isFiniteNumber(etfSignalCount) ? `${etfSignalCount}개 항목` : null,
   ].filter((item): item is string => Boolean(item));
@@ -1469,6 +1479,25 @@ export default function EtfDetailClient({ ticker }: { ticker: string }) {
         </section>
         <SkeletonSection />
         <SkeletonSection />
+      </div>
+    );
+  }
+
+  if (etfResult?.status === "shard_infrastructure_unavailable") {
+    return (
+      <div className="stock-shell">
+        <div className="panel stock-empty" data-etf-shard-infrastructure-state="unavailable">
+          <p className="text-lg font-black text-[var(--c-ink)]">ETF 상세 저장소 일시 이용 불가</p>
+          <p className="mt-2 text-sm font-semibold text-[var(--c-ink-3)]">
+            {symbol} 상세 샤드의 무결성을 확인할 수 없어 독립 요약이나 예전 파일로 대체하지 않습니다.
+          </p>
+          <EtfRetryCallout
+            title="검증된 상세 데이터를 불러오지 못했습니다"
+            desc="잠시 뒤 다시 시도해 주세요."
+            onRetry={retryLoads}
+          />
+          <ExternalSourceLinks ticker={symbol} kind="etf" statusLine="ETF 상세 저장소 일시 이용 불가" className="mt-4" />
+        </div>
       </div>
     );
   }
@@ -1596,7 +1625,7 @@ export default function EtfDetailClient({ ticker }: { ticker: string }) {
           <div className="stock-price" data-etf-detail-price="true">
             <span className="big num">{formatCurrency(price, currency as Currency)}</span>
             {changePct !== null ? <span className={`stock-chip num ${changePct >= 0 ? "up" : "down"}`}>{fmtSignedPercentPoints(changePct)}</span> : null}
-            <span className="delay">{fmtDateish(updateDate)}</span>
+            <span className="delay">{formatDateish(updateDate)}</span>
           </div>
         </div>
       </section>
@@ -1612,7 +1641,7 @@ export default function EtfDetailClient({ ticker }: { ticker: string }) {
               <div className="mb-3">
                 <EtfRetryCallout
                   title="일부 ETF 데이터를 불러오지 못했습니다"
-                  desc="현재 보이는 값은 연결된 데이터만 사용합니다. 누락된 가격·상세 정보는 다시 시도해 확인할 수 있습니다."
+                  desc="현재 보이는 값은 연결된 데이터만 사용합니다. 누락된 가격·상세 정보는 다시 시도하면 표시됩니다."
                   onRetry={retryLoads}
                   compact
                 />
@@ -1648,7 +1677,7 @@ export default function EtfDetailClient({ ticker }: { ticker: string }) {
 
           <SectionCard title="Fenok Edge ETF 시그널" desc="별도 ETF 레인 · SCORED, not DAILY/GATED" marker="signals">
             {signalsResult === undefined ? (
-              <div className="rounded-xl border border-[var(--c-line)] bg-[var(--c-surface-2)] px-3 py-3 text-xs font-semibold text-[var(--c-ink-3)]">
+              <div className="rounded-xl border border-[var(--c-line)] bg-[var(--c-surface-2)] px-3 py-3 text-[12px] font-semibold text-[var(--c-ink-3)]">
                 ETF 전용 시그널 확인 중
               </div>
             ) : etfSignals?.row ? (
@@ -1672,7 +1701,7 @@ export default function EtfDetailClient({ ticker }: { ticker: string }) {
                 </DataProvenanceNote>
               </>
             ) : (
-              <div className="rounded-xl border border-[var(--c-line)] bg-[var(--c-surface-2)] px-3 py-3 text-xs font-semibold text-[var(--c-ink-3)]">
+              <div className="rounded-xl border border-[var(--c-line)] bg-[var(--c-surface-2)] px-3 py-3 text-[12px] font-semibold text-[var(--c-ink-3)]">
                 이 ETF의 별도 시그널 행이 아직 없습니다. 주식 점수로 대체하지 않습니다.
               </div>
             )}
@@ -1690,9 +1719,9 @@ export default function EtfDetailClient({ ticker }: { ticker: string }) {
           </SectionCard>
 
           <SectionCard title="보유·스왑 구성" desc={`${symbol} · ${formatInteger(holdings.length)}개 표시`} marker="holdings">
-            <div className="mb-3 flex flex-wrap items-center justify-between gap-2 text-[10px] font-bold uppercase tracking-[0.08em] text-[var(--c-ink-3)]">
+            <div className="mb-3 flex flex-wrap items-center justify-between gap-2 text-[12px] font-bold uppercase tracking-[0.08em] text-[var(--c-ink-3)]">
               <span>{formatInteger(holdingCount)}개 원장 중 표시 가능한 항목</span>
-              <span>{fmtDateish(holdingsUpdated) !== "—" ? `기준 ${fmtDateish(holdingsUpdated)}` : "기준일 미표시"}</span>
+              <span>{formatDateish(holdingsUpdated) !== "—" ? `기준 ${formatDateish(holdingsUpdated)}` : "기준일 미표시"}</span>
               <button
                 type="button"
                 onClick={() => downloadHoldingsCsv(symbol, holdings, holdingsUpdated)}
@@ -1732,8 +1761,8 @@ export default function EtfDetailClient({ ticker }: { ticker: string }) {
           </SectionCard>
 
           <footer className="stock-footer" data-etf-detail-footer="true">
-            <TransitionLink href={ROUTES.etfs} className="inline-flex min-h-11 items-center text-[10px] font-black uppercase tracking-[0.1em] text-[var(--c-ink-3)] hover:text-brand-interactive">← ETF 목록에서 보기</TransitionLink>
-            <TransitionLink href={ROUTES.portfolioTicker(symbol)} className="inline-flex min-h-11 items-center text-[10px] font-black uppercase tracking-[0.1em] text-[var(--c-ink-3)] hover:text-brand-interactive">포트폴리오에서 보기</TransitionLink>
+            <TransitionLink href={ROUTES.etfs} className="inline-flex min-h-11 items-center text-[12px] font-black uppercase tracking-[0.1em] text-[var(--c-ink-3)] hover:text-brand-interactive">← ETF 목록에서 보기</TransitionLink>
+            <TransitionLink href={ROUTES.portfolioTicker(symbol)} className="inline-flex min-h-11 items-center text-[12px] font-black uppercase tracking-[0.1em] text-[var(--c-ink-3)] hover:text-brand-interactive">포트폴리오에서 보기</TransitionLink>
           </footer>
         </div>
       </div>

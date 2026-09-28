@@ -1,0 +1,36 @@
+{
+  "schema_version": "feno_index_rim_v1_current.v1",
+  "criteria": "feno-index-rim-v1-criteria.json 2f660ac003",
+  "asset": "QQQ",
+  "current": {
+    "price": 687.99,
+    "as_of": "2026-07-31",
+    "note": "QQQ 2026-07-31 close from yf/finance/QQQ.json history_1y (same as-of as NDX benchmark); live quote 721.7 (2026-08-07) recorded for reference"
+  },
+  "scenarios": {
+    "bear": 436.97,
+    "base": 472.85,
+    "bull": 512.98,
+    "grid_mean": 473.94,
+    "bear_delta_pct": -36.5,
+    "base_delta_pct": -31.3,
+    "bull_delta_pct": -25.4,
+    "grid_mean_delta_pct": -31.1
+  },
+  "formula": "QQQ_s = current_QQQ × (NDX_s / current_NDX)",
+  "scale": 0.0243327839514469,
+  "label": "NDX-ratio indicative equivalent — not a reconstructed ETF NAV fair value",
+  "caveats": [
+    "expense ratio and tracking difference are disclosed and do not block the number"
+  ],
+  "as_of_dates": {
+    "benchmark (price/EPS/PB/ROE)": "2026-07-31",
+    "risk_free_rate (DGS10)": "2026-08-05",
+    "erp (Damodaran US)": "2026-04-01",
+    "ltroe_window": "2016-08-05 .. 2026-07-31",
+    "oldest_input": "2026-04-01 (Damodaran ERP)"
+  },
+  "evidence_status": "RESEARCH_PREVIEW",
+  "forward_book_status": "UNRESOLVED (top-down index lane; bottom-up lane demoted to research)",
+  "public_surface": "PUBLIC_ROWS = [], PUBLIC_STATE = MODEL_REVALIDATION"
+}

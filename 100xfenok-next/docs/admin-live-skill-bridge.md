@@ -80,19 +80,18 @@ Conversation logs:
   metrics, UI logs, and a compact user/model transcript.
 - `data/voice-logs/` is gitignored and must remain private local state.
 
-Mona vNext owner-test logs:
+WIND DOWN owner-test logs:
 
-- `/winddown` is the owner-facing vNext main surface and reuses the legacy
-  `MonaWindDown` design shell. `/winddown-vnext` remains the debug/test
-  dashboard, and `/winddown-legacy` keeps the previous `AdminLiveBench`
-  rollback runtime.
-- The settings-sheet entry inside the Wind-Down shell must remain a test escape
-  hatch to `/winddown-vnext`; it must not point back to `/winddown` after main
-  route promotion. The owner-smoke source invariant checks this exact href.
-- Product-card flow is intentionally learner-first on `/winddown`: the first
-  prompt hides English, a learner attempt reveals the natural English target,
-  and explicit next material hides English again for the new prompt. Debug
-  metrics/events stay on `/winddown-vnext`.
+- `/winddown` is the single owner-facing product route and uses the app-owned
+  teacher runtime inside the `MonaWindDown` design shell. The former
+  `/winddown-vnext` debug route and `/winddown-legacy` rollback route are
+  retired; the owner-smoke gate verifies both return HTTP 404.
+- The admin live bench links to `/winddown` as an operational entry point.
+  Product-card flow remains learner-first: the first prompt hides English, a
+  learner attempt reveals the natural English target, and explicit next
+  material hides English again for the new prompt.
+- The internal `mona-vnext` namespace remains for storage compatibility; it is
+  not a second product surface.
 - vNext must keep `productionWriteEnabled: false` until the owner explicitly
   approves production Mona writes.
 - vNext does not write to current Mona production study files. It writes

@@ -46,7 +46,7 @@ export default function DesignLabProfilePreview() {
       <div className="mx-auto w-full max-w-[375px] overflow-hidden rounded-[30px] border border-slate-300 bg-[#f2f2f2] shadow-[0_24px_55px_-38px_rgba(15,23,42,0.65)]">
         <header className="flex items-center justify-between px-5 pb-5 pt-4 text-[15px] font-semibold text-black">
           <span>9:27</span>
-          <span className="inline-flex items-center gap-1 text-[11px] text-slate-900">
+          <span className="inline-flex items-center gap-1 text-[12px] text-slate-900">
             <DotIcon className="size-[6px]" />
             <DotIcon className="size-[6px]" />
             <span className="inline-flex h-[10px] w-[18px] rounded-sm border border-current" aria-hidden="true">
@@ -64,6 +64,7 @@ export default function DesignLabProfilePreview() {
               height={128}
               className="size-full object-cover"
               priority
+              unoptimized
             />
           </div>
 
@@ -94,14 +95,14 @@ export default function DesignLabProfilePreview() {
             <div className="space-y-[9px]">
               {gridImages.map((item) => (
                 <div key={item.src} className={`relative overflow-hidden rounded-[2px] ${item.heightClass}`}>
-                  <Image src={item.src} alt={item.alt} fill sizes="(max-width: 768px) 45vw, 167px" className="object-cover" />
+                  <Image src={item.src} alt={item.alt} fill sizes="(max-width: 768px) 45vw, 167px" className="object-cover" unoptimized />
                 </div>
               ))}
             </div>
             <div className="space-y-[9px]">
               {gridImagesRight.map((item) => (
                 <div key={item.src} className={`relative overflow-hidden rounded-[2px] ${item.heightClass}`}>
-                  <Image src={item.src} alt={item.alt} fill sizes="(max-width: 768px) 45vw, 167px" className="object-cover" />
+                  <Image src={item.src} alt={item.alt} fill sizes="(max-width: 768px) 45vw, 167px" className="object-cover" unoptimized />
                 </div>
               ))}
             </div>
@@ -110,10 +111,10 @@ export default function DesignLabProfilePreview() {
 
         <div className="sticky bottom-0 border-t border-slate-200/80 bg-white/95 px-4 pb-[calc(10px+env(safe-area-inset-bottom))] pt-3 backdrop-blur">
           <div className="grid grid-cols-5 items-center gap-2 text-slate-700">
-            <button type="button" className="inline-flex min-h-10 items-center justify-center text-xs font-medium">
+            <button type="button" className="inline-flex min-h-10 items-center justify-center text-[12px] font-medium">
               Home
             </button>
-            <button type="button" className="inline-flex min-h-10 items-center justify-center text-xs font-medium">
+            <button type="button" className="inline-flex min-h-10 items-center justify-center text-[12px] font-medium">
               Search
             </button>
             <button
@@ -122,10 +123,10 @@ export default function DesignLabProfilePreview() {
             >
               +
             </button>
-            <button type="button" className="inline-flex min-h-10 items-center justify-center text-xs font-medium">
+            <button type="button" className="inline-flex min-h-10 items-center justify-center text-[12px] font-medium">
               Chat
             </button>
-            <button type="button" className="inline-flex min-h-10 items-center justify-center text-xs font-medium">
+            <button type="button" className="inline-flex min-h-10 items-center justify-center text-[12px] font-medium">
               Profile
             </button>
           </div>
