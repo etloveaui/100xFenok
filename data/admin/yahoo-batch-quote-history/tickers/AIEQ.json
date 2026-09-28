@@ -38,31 +38,44 @@
       "run_id": "31505333713",
       "schedule": "7 14 * * 0-5",
       "shard": "31/72"
+    },
+    {
+      "attempts_used": 1,
+      "event_name": "workflow_dispatch",
+      "failures": [],
+      "latency_ms": 475,
+      "natural": false,
+      "observed_at": "2026-09-28T01:17:59Z",
+      "outcome": "fresh",
+      "run_attempt": 1,
+      "run_id": "36365270594",
+      "schedule": "",
+      "shard": ""
     }
   ],
   "current": {
-    "fetched_at": "2026-08-11T15:11:02Z",
-    "history_as_of": "2026-08-11",
-    "path": "data/admin/yahoo-batch-quote-history/lkg/AIEQ.json",
-    "payload_sha256": "579a3275722377bc2967280310487cec5cf00c69158d3696fd4cf99729d3794b",
-    "quote_as_of": "2026-08-11T14:20:40Z",
-    "source_as_of": "2026-08-11"
+    "fetched_at": "2026-09-28T01:21:03Z",
+    "history_as_of": "2026-09-25",
+    "path": "data/yf/finance/AIEQ.json",
+    "payload_sha256": "b9e089a53a576974184f80ae392d1f81fdb6a32f5d688f412a1164ed5e0b782c",
+    "quote_as_of": "2026-09-25T17:46:26Z",
+    "source_as_of": "2026-09-25"
   },
   "discovered_from": [
     "stockanalysis_etf"
   ],
   "last_attempt": {
     "attempts_used": 1,
-    "event_name": "schedule",
+    "event_name": "workflow_dispatch",
     "failures": [],
-    "latency_ms": 695,
-    "natural": true,
-    "observed_at": "2026-08-11T15:09:25Z",
+    "latency_ms": 475,
+    "natural": false,
+    "observed_at": "2026-09-28T01:17:59Z",
     "outcome": "fresh",
     "run_attempt": 1,
-    "run_id": "31505333713",
-    "schedule": "7 14 * * 0-5",
-    "shard": "31/72"
+    "run_id": "36365270594",
+    "schedule": "",
+    "shard": ""
   },
   "lkg": {
     "fetched_at": "2026-08-11T15:11:02Z",
@@ -74,18 +87,18 @@
   },
   "promotion_contract": "provider_observation/v2",
   "provider_observation": {
-    "event_name": "schedule",
-    "history_as_of": "2026-08-11",
-    "observed_at": "2026-08-11T15:09:25Z",
-    "payload_sha256": "9876725c7e4a90f06a2318590e9b6792240fa21fd5d9e8f536a4795100f563c3",
-    "quote_as_of": "2026-08-11T14:20:40Z",
+    "event_name": "workflow_dispatch",
+    "history_as_of": "2026-09-25",
+    "observed_at": "2026-09-28T01:17:59Z",
+    "payload_sha256": "557182a972e0576621b72cbcf4e5f233233751b5cf845e16bc6a180a37548db3",
+    "quote_as_of": "2026-09-25T17:46:26Z",
     "run_attempt": 1,
-    "run_id": "31505333713",
+    "run_id": "36365270594",
     "schema_version": "provider_observation/v2",
-    "source_as_of": "2026-08-11"
+    "source_as_of": "2026-09-25"
   },
-  "resolution_state": "lkg_primary",
-  "retry": true,
+  "resolution_state": "fresh_primary",
+  "retry": false,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "stale": {
     "age_business_days": 7,
@@ -98,5 +111,5 @@
     "source_as_of": "2026-08-11"
   },
   "ticker": "AIEQ",
-  "updated_at": "2026-08-20T14:20:12Z"
+  "updated_at": "2026-09-28T01:17:59Z"
 }

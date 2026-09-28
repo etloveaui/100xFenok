@@ -38,31 +38,44 @@
       "run_id": "31111230701",
       "schedule": "7 12 * * 0-5",
       "shard": "54/72"
+    },
+    {
+      "attempts_used": 1,
+      "event_name": "workflow_dispatch",
+      "failures": [],
+      "latency_ms": 454,
+      "natural": false,
+      "observed_at": "2026-09-28T01:17:59Z",
+      "outcome": "fresh",
+      "run_attempt": 1,
+      "run_id": "36365270594",
+      "schedule": "",
+      "shard": ""
     }
   ],
   "current": {
-    "fetched_at": "2026-08-06T14:34:42Z",
-    "history_as_of": "2026-08-05",
-    "path": "data/admin/yahoo-batch-quote-history/lkg/BAVA.json",
-    "payload_sha256": "da5946da4c0f067cf1c4714022866c5d9789fc37e85945b215cb3b3c956504d2",
-    "quote_as_of": "2026-08-05T14:22:17Z",
-    "source_as_of": "2026-08-05"
+    "fetched_at": "2026-09-28T01:26:28Z",
+    "history_as_of": "2026-09-25",
+    "path": "data/yf/finance/BAVA.json",
+    "payload_sha256": "fc522fcb8b480f06e72862f262a017151c655628a1d7fe21f3db3d47b769b723",
+    "quote_as_of": "2026-09-25T19:51:35Z",
+    "source_as_of": "2026-09-25"
   },
   "discovered_from": [
     "stockanalysis_etf"
   ],
   "last_attempt": {
     "attempts_used": 1,
-    "event_name": "schedule",
+    "event_name": "workflow_dispatch",
     "failures": [],
-    "latency_ms": 748,
-    "natural": true,
-    "observed_at": "2026-08-06T14:33:02Z",
+    "latency_ms": 454,
+    "natural": false,
+    "observed_at": "2026-09-28T01:17:59Z",
     "outcome": "fresh",
     "run_attempt": 1,
-    "run_id": "31111230701",
-    "schedule": "7 12 * * 0-5",
-    "shard": "54/72"
+    "run_id": "36365270594",
+    "schedule": "",
+    "shard": ""
   },
   "lkg": {
     "fetched_at": "2026-08-06T14:34:42Z",
@@ -74,18 +87,18 @@
   },
   "promotion_contract": "provider_observation/v2",
   "provider_observation": {
-    "event_name": "schedule",
-    "history_as_of": "2026-08-05",
-    "observed_at": "2026-08-06T14:33:02Z",
-    "payload_sha256": "4e29287aea9906e528730500dc126e4fb7d7ebab71238db0480c8fc036100b91",
-    "quote_as_of": "2026-08-05T14:22:17Z",
+    "event_name": "workflow_dispatch",
+    "history_as_of": "2026-09-25",
+    "observed_at": "2026-09-28T01:17:59Z",
+    "payload_sha256": "998f44073b520bf3ca720e23c261283b7fa0caaa22c0ff1c1db1a8427dc98d40",
+    "quote_as_of": "2026-09-25T19:51:35Z",
     "run_attempt": 1,
-    "run_id": "31111230701",
+    "run_id": "36365270594",
     "schema_version": "provider_observation/v2",
-    "source_as_of": "2026-08-05"
+    "source_as_of": "2026-09-25"
   },
-  "resolution_state": "lkg_primary",
-  "retry": true,
+  "resolution_state": "fresh_primary",
+  "retry": false,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "stale": {
     "age_business_days": 7,
@@ -98,5 +111,5 @@
     "source_as_of": "2026-08-05"
   },
   "ticker": "BAVA",
-  "updated_at": "2026-08-14T00:10:47Z"
+  "updated_at": "2026-09-28T01:17:59Z"
 }
