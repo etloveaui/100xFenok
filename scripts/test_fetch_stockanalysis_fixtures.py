@@ -308,6 +308,221 @@ class StockanalysisFetcherFixtureTest(unittest.TestCase):
         self.assertEqual(case["active"]["current"]["SLON"]["source_as_of"], "2026-09-25T20:00:00Z")
         self.assertEqual(case["active"]["recovery"]["SLON"]["consecutive_green"], 0)
 
+    def complete_primary_preservation_case(self, *, enabled=True, fallback_error=False,
+                                           new_complete=False, old_partial=False, fallback_source="2026-09-25T20:00:00Z",
+                                           remote=True, run_attempt=1, no_current=False, cached=False,
+                                           primary_source="2026-09-25T20:00:00Z", old_source="2026-09-24T20:00:00Z"):
+        from data_supply_resolver import DataSupplyResolver
+        from resolve_etf_detail_candidates import resolve_entities
+        stamp = "2026-09-28T10:00:00Z"
+        old_fetched = (datetime.fromisoformat(old_source.replace("Z", "+00:00")) + timedelta(hours=1)).isoformat().replace("+00:00", "Z")
+        source = primary_source
+        old = {"schema_version": "stockanalysis/v1", "source": "stockanalysis", "asset_type": "etf", "ticker": "AFK",
+               "source_as_of": old_source, "fetched_at": old_fetched,
+               "normalized": {"overview": {"aum": 100}, "holdings": [{"symbol": "OLD", "weight_pct": 10}],
+                              "countries": [{"name": "South Africa", "weight_pct": 90}]},
+               "raw": {"quote": {"td": old_source[:10], "ts": int(datetime.fromisoformat(old_source.replace("Z", "+00:00")).timestamp())}}}
+        if old_partial:
+            old["detail_status"] = "stockanalysis_partial"
+            old["partial_reason_codes"] = ["holdings_countries_unavailable"]
+        candidate = {"schema_version": "stockanalysis/v1", "source": "stockanalysis", "asset_type": "etf", "ticker": "AFK",
+                     "source_as_of": source, "fetched_at": stamp,
+                     "normalized": {"overview": {"aum": 110}, "holdings": [{"symbol": "NEW", "weight_pct": 5}], "countries": []},
+                     "raw": {"quote": {"td": source[:10], "ts": int(datetime.fromisoformat(source.replace("Z", "+00:00")).timestamp())}}}
+        if new_complete:
+            candidate["normalized"]["countries"] = [{"name": "South Africa", "weight_pct": 85}]
+        else:
+            candidate["detail_status"] = "stockanalysis_partial"
+            candidate["partial_reason_codes"] = ["holdings_surface_fallback_overview", "holdings_countries_unavailable"]
+        data = {"info": {"symbol": "AFK", "quoteType": "ETF", "currentPrice": 31,
+                         "regularMarketTime": int(datetime.fromisoformat(fallback_source.replace("Z", "+00:00")).timestamp())},
+                "history_1y": [{"date": "2026-09-25", "close": 31}]}
+        yahoo_calls = []
+        class YahooModule:
+            @staticmethod
+            def fetch_with_retry(*_args, **_kwargs):
+                yahoo_calls.append("AFK")
+                return (None if fallback_error else data, 1, "provider unavailable" if fallback_error else None,
+                        {"attempts_used": 1, "latency_ms": 1, "cached": cached})
+
+        original_outputs = self.fetcher.current_candidate_outputs()
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            self.fetcher.install_candidate_outputs(self.fetcher.CandidateOutputs.from_root(root))
+            try:
+                canonical = self.fetcher.OUT_DIR / "etfs/AFK.json"
+                store = self.fetcher.data_supply_store(provider_truth_root=root)
+                before = None
+                if not no_current:
+                    self.fetcher.write_json(canonical, old)
+                    before = canonical.read_bytes()
+                    old_row = self.fetcher.record_etf_detail_observation(provider="stockanalysis", endpoint_family="stockanalysis_etf_detail",
+                        ticker="AFK", provider_path="data/stockanalysis/etfs/AFK.json", payload_path=canonical,
+                        provider_schema="stockanalysis/v1", source_as_of=old_source, observed_at=old["fetched_at"],
+                        validation_status="valid", reason_code="contract_valid", collection_origin="manual")
+                    initial_decision = (datetime.fromisoformat(old_fetched.replace("Z", "+00:00")) + timedelta(minutes=1)).isoformat().replace("+00:00", "Z")
+                    DataSupplyResolver(store).resolve_etf_detail(entity="AFK", observations=[old_row], decided_at=initial_decision)
+                with patch.object(self.fetcher, "now_iso", return_value="2026-09-24T21:02:00Z"):
+                    self.fetcher.record_etf_detail_failure_observation(provider="yahoo_finance", endpoint_family="yahoo_finance_etf_detail",
+                        ticker="AFK", provider_path="data/yf/etf-details/AFK.json", provider_schema="yf-etf-detail/v1",
+                        reason_code="source_date_unavailable", failure_detail="no dated fallback", collection_origin="manual")
+                with patch.dict(os.environ, {"GITHUB_ACTIONS": "true" if remote else "false", "GITHUB_RUN_ID": "950", "GITHUB_RUN_ATTEMPT": str(run_attempt),
+                                            "GITHUB_EVENT_NAME": "workflow_dispatch"}), \
+                     patch.object(self.fetcher, "now_iso", return_value=stamp), \
+                     patch.object(self.fetcher, "fetch_etf", return_value=candidate), \
+                     patch.object(self.fetcher, "load_yf_finance_module", return_value=YahooModule), \
+                     patch.object(self.fetcher, "list_yahoo_etf_fallback_retry_targets", return_value=[]):
+                    result = self.fetcher.run_one("etf", "AFK", 1, False, yf_fallback=enabled, collection_origin="manual",
+                        recovery_run={"run_id": "950", "run_attempt": run_attempt, "event_name": "workflow_dispatch", "observed_at": stamp})
+                resolved = resolve_entities(store, entities=["AFK"], decided_at="2026-09-28T10:01:00Z")
+                active = store.read_active_domain("etf_detail")
+                history = [json.loads(line) for file in (store.root / "history/observations").glob("*.jsonl") for line in file.read_text().splitlines()]
+                diagnostic = next((row for row in history if row["reason_code"] == "partial_primary_complete_preserved"), None)
+                candidate_raw = (root / diagnostic["provider_path"]).read_bytes() if diagnostic else None
+                lkg = active["lkg"].get("AFK")
+                lkg_payload = json.loads((store.root / lkg["payload_ref"]["path"]).read_bytes()) if lkg else None
+                return {"result": result, "resolved": resolved, "active": active, "history": history, "old": old,
+                        "before": before, "after": canonical.read_bytes() if canonical.exists() else None, "candidate": candidate, "candidate_raw": candidate_raw,
+                        "yahoo_calls": yahoo_calls, "yahoo_published": (self.fetcher.YF_OUT_DIR / "AFK.json").exists() or (self.fetcher.YF_ETF_DETAIL_OUT_DIR / "AFK.json").exists(),
+                        "diagnostic": diagnostic, "lkg_payload": lkg_payload,
+                        "selected_payload": store.read_resolved_payload("etf_detail", "AFK") if "AFK" in active["current"] else None}
+            finally:
+                self.fetcher.install_candidate_outputs(original_outputs)
+
+    def test_complete_primary_partial_response_preserves_full_bytes_and_selects_bound_yahoo(self):
+        case = self.complete_primary_preservation_case()
+        self.assertEqual(case["after"], case["before"])
+        self.assertFalse(case["result"]["canonical_write"])
+        self.assertEqual(case["result"]["provider_response"], "HTTP 200 partial contract valid")
+        self.assertEqual(case["result"]["fallback_refresh_status"], "ok")
+        self.assertEqual(case["active"]["current"]["AFK"]["provider"], "yahoo_finance")
+        self.assertEqual(case["active"]["current"]["AFK"]["source_as_of"], "2026-09-25T20:00:00Z")
+        self.assertEqual(case["lkg_payload"], case["old"])
+        self.assertEqual(json.loads(case["candidate_raw"]), case["candidate"])
+        self.assertEqual(case["diagnostic"]["validation_status"], "invalid")
+        self.assertEqual(case["diagnostic"]["source_as_of"], "2026-09-25T20:00:00Z")
+        self.assertNotIn("payload_available", case["diagnostic"])
+        yahoo = [row for row in case["history"] if row["provider"] == "yahoo_finance" and row["validation_status"] == "valid"][-1]
+        self.assertEqual(yahoo["etf_acquisition"]["run_id"], "950")
+        self.assertEqual(yahoo["observation_origin"], "rebuild")
+
+    def test_complete_primary_partial_response_without_valid_fallback_preserves_full_snapshot_and_diagnostic(self):
+        for kwargs in ({"enabled": False}, {"fallback_error": True}, {"remote": False}, {"run_attempt": 2},
+                       {"fallback_source": "2026-09-23T20:00:00Z"}, {"fallback_source": "2026-09-28T20:00:00Z"}):
+            with self.subTest(kwargs=kwargs):
+                case = self.complete_primary_preservation_case(**kwargs)
+                self.assertEqual(case["after"], case["before"])
+                self.assertEqual(json.loads(case["candidate_raw"]), case["candidate"])
+                self.assertEqual(case["active"]["current"]["AFK"]["resolution_state"], "lkg_primary")
+                self.assertEqual(case["active"]["current"]["AFK"]["source_as_of"], case["old"]["source_as_of"])
+                self.assertEqual(case["selected_payload"], case["old"])
+                self.assertEqual(case["lkg_payload"], case["old"])
+
+    def test_complete_primary_accepts_genuine_complete_refresh_and_disabled_partial_refresh_is_unchanged(self):
+        for kwargs in ({"new_complete": True}, {"old_partial": True, "enabled": False}):
+            with self.subTest(kwargs=kwargs):
+                case = self.complete_primary_preservation_case(**kwargs)
+                self.assertEqual(json.loads(case["after"]), case["candidate"])
+                self.assertTrue(case["result"]["canonical_write"])
+                self.assertIsNone(case["diagnostic"])
+                self.assertEqual(case["active"]["current"]["AFK"]["provider"], "stockanalysis")
+                self.assertEqual(case["selected_payload"], case["candidate"])
+
+    def test_preserved_partial_actual_bytes_stay_inside_existing_private_public_sync_boundary(self):
+        import subprocess
+        case = self.complete_primary_preservation_case()
+        relative = case["diagnostic"]["provider_path"]
+        self.assertTrue(relative.startswith("data/admin/data-supply-state/v1/partial_candidates/AFK/"))
+        self.assertEqual(json.loads(case["candidate_raw"]), case["candidate"])
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            private = root / relative
+            private.parent.mkdir(parents=True)
+            private.write_bytes(case["candidate_raw"])
+            marker = root / "data/public-marker.json"
+            marker.write_text('{"public":true}')
+            public = root / "public/data"
+            script = (
+                "import { pathToFileURL } from 'node:url'; "
+                "const { syncPublicData } = await import(pathToFileURL(process.argv[1]).href); "
+                "syncPublicData({sourceRoot:process.argv[2],destinationRoot:process.argv[3]});"
+            )
+            subprocess.run(["node", "--input-type=module", "-e", script,
+                            str(ROOT / "100xfenok-next/scripts/sync-public-data.mjs"), str(root / "data"), str(public)],
+                           check=True, capture_output=True, text=True)
+            self.assertEqual((public / "public-marker.json").read_bytes(), marker.read_bytes())
+            self.assertFalse((public / relative.removeprefix("data/")).exists())
+            self.assertFalse(any(path.read_bytes() == case["candidate_raw"] for path in public.rglob("*.json")))
+            self.assertEqual(private.read_bytes(), case["candidate_raw"])
+
+    def test_existing_partial_primary_prefers_bound_yahoo_and_retains_actual_primary_lineage(self):
+        case = self.complete_primary_preservation_case(old_partial=True)
+        self.assertEqual(json.loads(case["after"]), case["candidate"])
+        self.assertEqual(case["result"]["fallback_refresh_status"], "ok")
+        self.assertEqual(case["active"]["current"]["AFK"]["provider"], "yahoo_finance")
+        self.assertEqual(case["active"]["current"]["AFK"]["source_as_of"], "2026-09-25T20:00:00Z")
+        self.assertEqual(case["lkg_payload"], case["old"])
+        primary = [row for row in case["history"] if row["provider"] == "stockanalysis"][-1]
+        self.assertEqual(primary["validation_status"], "invalid")
+        self.assertEqual(primary["reason_code"], "partial_primary_bound_fallback_valid")
+        self.assertEqual(primary["source_as_of"], case["candidate"]["source_as_of"])
+        self.assertEqual(primary["collection_origin"], "manual")
+        self.assertEqual(primary["observation_origin"], "rebuild")
+        self.assertNotIn("payload_available", primary)
+        yahoo = [row for row in case["history"] if row["provider"] == "yahoo_finance" and row["validation_status"] == "valid"][-1]
+        self.assertEqual(yahoo["etf_acquisition"]["run_id"], "950")
+        self.assertEqual(yahoo["collection_origin"], "manual")
+        self.assertEqual(case["active"]["recovery"]["AFK"]["consecutive_green"], 0)
+
+    def test_initial_partial_primary_prefers_bound_yahoo_without_inventing_primary_credit(self):
+        case = self.complete_primary_preservation_case(no_current=True)
+        self.assertIsNone(case["before"])
+        self.assertEqual(json.loads(case["after"]), case["candidate"])
+        self.assertEqual(case["active"]["current"]["AFK"]["provider"], "yahoo_finance")
+        self.assertEqual(case["active"]["current"]["AFK"]["source_as_of"], "2026-09-25T20:00:00Z")
+        self.assertEqual(case["active"]["recovery"]["AFK"]["consecutive_green"], 0)
+        yahoo = [row for row in case["history"] if row["provider"] == "yahoo_finance" and row["validation_status"] == "valid"][-1]
+        self.assertEqual(yahoo["etf_acquisition"]["run_id"], "950")
+        self.assertEqual(yahoo["observation_origin"], "rebuild")
+
+    def test_existing_partial_primary_rejects_unbound_yahoo_and_checks_primary_floor_before_fetch(self):
+        for kwargs in ({"remote": False}, {"run_attempt": 2}, {"cached": True}, {"fallback_error": True}):
+            with self.subTest(kwargs=kwargs):
+                case = self.complete_primary_preservation_case(old_partial=True, **kwargs)
+                self.assertEqual(case["active"]["current"]["AFK"]["provider"], "stockanalysis")
+                self.assertEqual(case["selected_payload"], case["candidate"])
+                self.assertFalse(any(row["provider"] == "yahoo_finance" and row["validation_status"] == "valid"
+                                     for row in case["history"]))
+                self.assertEqual(case["active"]["recovery"]["AFK"]["consecutive_green"], 0)
+        case = self.complete_primary_preservation_case(old_partial=True, primary_source="2026-09-23T20:00:00Z")
+        self.assertEqual(case["after"], case["before"])
+        self.assertEqual(case["yahoo_calls"], [])
+        self.assertFalse(any(row["provider"] == "yahoo_finance" and row["validation_status"] == "valid"
+                             for row in case["history"]))
+
+    def test_stale_bound_yahoo_cannot_disqualify_fresh_partial_primary_or_publish_false_freshness(self):
+        for kwargs in ({"old_partial": True, "old_source": "2026-08-11T20:00:00Z"}, {"no_current": True}):
+            with self.subTest(kwargs=kwargs):
+                case = self.complete_primary_preservation_case(fallback_source="2026-09-10T20:00:00Z", **kwargs)
+                self.assertEqual(case["result"]["fallback_refresh_status"], "failed")
+                self.assertFalse(case["yahoo_published"])
+                self.assertEqual(json.loads(case["after"]), case["candidate"])
+                self.assertEqual(case["active"]["current"]["AFK"]["provider"], "stockanalysis")
+                self.assertEqual(case["active"]["current"]["AFK"]["source_as_of"], "2026-09-25T20:00:00Z")
+                self.assertEqual(case["selected_payload"], case["candidate"])
+                primary = max((row for row in case["history"] if row["provider"] == "stockanalysis"), key=lambda row: row["observed_at"])
+                self.assertEqual(primary["validation_status"], "valid")
+                self.assertEqual(primary["collection_origin"], "manual")
+                self.assertFalse(any(row["provider"] == "yahoo_finance" and row["validation_status"] == "valid"
+                                     for row in case["history"]))
+        case = self.complete_primary_preservation_case(old_source="2026-08-11T20:00:00Z", fallback_source="2026-09-10T20:00:00Z")
+        self.assertEqual(case["after"], case["before"])
+        self.assertEqual(json.loads(case["candidate_raw"]), case["candidate"])
+        self.assertEqual(case["result"]["fallback_refresh_status"], "failed")
+        self.assertFalse(case["yahoo_published"])
+        self.assertFalse(any(row["provider"] == "yahoo_finance" and row["validation_status"] == "valid"
+                             for row in case["history"]))
+
     def test_public_etf_detail_mirror_is_retired(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
             root = Path(tmp)

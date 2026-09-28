@@ -45,8 +45,11 @@ if str(SCRIPT_DIR) not in sys.path:
 
 from lib.diagnostic_detail import bounded_diagnostic_detail
 from data_supply_state import DataSupplyStateStore, canonical_sha256, deterministic_event_id
+from data_supply_resolver import _ETF_DETAIL_POLICY
 from stockanalysis_recovery_state import (
     StockAnalysisRecoveryStateStore,
+    _etf_provider_source,
+    _valid_payload,
     etf_manual_acquisition_allowed,
     is_natural_schedule_run,
     validate_controlled_failure_scope,
@@ -3469,6 +3472,60 @@ def validate_stockanalysis_etf_payload(ticker: str, payload: dict) -> None:
         raise ValueError("StockAnalysis ETF detail source stamp disagrees with provider evidence")
 
 
+def is_complete_stockanalysis_etf_payload(ticker: str, payload: dict | None) -> bool:
+    """Use the existing complete acquisition payload contract without run credit."""
+    if not _valid_payload("etf", ticker, payload):
+        return False
+    normalized = payload["normalized"]
+    if (payload.get("detail_status") == "stockanalysis_partial" or payload.get("noFetch") is True
+            or payload.get("source_provider") not in (None, "stockanalysis")
+            or not isinstance(normalized.get("holdings"), list) or not normalized["holdings"]):
+        return False
+    try:
+        source = parse_iso_timestamp(validate_aware_timestamp(payload.get("source_as_of"), "StockAnalysis ETF source stamp"))
+        fetched = parse_iso_timestamp(validate_aware_timestamp(payload.get("fetched_at"), "StockAnalysis ETF fetch stamp"))
+        return source == _etf_provider_source(payload) and source <= fetched <= parse_iso_timestamp(now_iso())
+    except (ValueError, TypeError):
+        return False
+
+
+def preserve_partial_etf_candidate(ticker: str, payload: dict, canonical_bytes: bytes, *, collection_origin: str) -> str:
+    """Retain actual partial bytes privately while leaving complete truth intact."""
+    if clean_symbol(ticker) != ticker:
+        raise ValueError("StockAnalysis ETF partial candidate ticker is invalid")
+    canonical_path = OUT_DIR / "etfs" / f"{ticker}.json"
+    if canonical_path.is_symlink() or canonical_path.read_bytes() != canonical_bytes:
+        raise ValueError("StockAnalysis ETF complete canonical changed before preservation")
+    raw = json_payload_bytes(payload)
+    rel = f"partial_candidates/{ticker}/{hashlib.sha256(raw).hexdigest()}.json"
+    target = DATA_SUPPLY_STATE_ROOT / rel
+    provider_path = f"data/admin/data-supply-state/v1/{rel}"
+    for path in (target, target.parent, target.parent.parent, DATA_SUPPLY_STATE_ROOT):
+        if path.is_symlink():
+            raise ValueError("StockAnalysis ETF partial evidence cannot be a symlink")
+    if target.exists():
+        if target.read_bytes() != raw:
+            raise ValueError("StockAnalysis ETF immutable partial evidence differs")
+    else:
+        target.parent.mkdir(parents=True, exist_ok=True)
+        stage = target.with_name(f".{target.name}.{os.getpid()}-{time.monotonic_ns()}.tmp")
+        try:
+            stage.write_bytes(raw)
+            if canonical_path.read_bytes() != canonical_bytes:
+                raise ValueError("StockAnalysis ETF complete canonical changed before preservation")
+            os.replace(stage, target)
+        finally:
+            stage.unlink(missing_ok=True)
+    record_etf_detail_observation(
+        provider="stockanalysis", endpoint_family="stockanalysis_etf_detail", ticker=ticker,
+        provider_path=provider_path, payload_path=target, provider_schema=SCHEMA_VERSION,
+        source_as_of=payload.get("source_as_of"), observed_at=payload["fetched_at"],
+        validation_status="invalid", reason_code="partial_primary_complete_preserved",
+        collection_origin=collection_origin,
+    )
+    return provider_path
+
+
 def read_json(path: Path):
     try:
         return json.loads(path.read_text(encoding="utf-8"))
@@ -5953,6 +6010,8 @@ def fetch_yahoo_etf_fallback(
     collection_origin: str = "natural",
     *,
     selected_refresh: bool = False,
+    minimum_source_as_of: str | None = None,
+    require_resolver_fresh: bool = False,
 ) -> dict:
     retry_count = 0
     library_latency_ms = 0
@@ -5997,6 +6056,12 @@ def fetch_yahoo_etf_fallback(
         if selected_refresh:
             etf_payload["role"] = "ETF detail fallback retained while StockAnalysis primary recovery is pending"
         validate_yf_etf_detail_payload(ticker, etf_payload)
+        if minimum_source_as_of is not None and parse_iso_timestamp(etf_payload["source_as_of"]) < parse_iso_timestamp(minimum_source_as_of):
+            raise ValueError("Yahoo ETF candidate would regress the retained complete primary source date")
+        if require_resolver_fresh:
+            source_age = int((parse_iso_timestamp(now_iso()) - parse_iso_timestamp(etf_payload["source_as_of"])).total_seconds())
+            if not 0 <= source_age <= _ETF_DETAIL_POLICY.fresh_ttl_hours * 3600:
+                raise ValueError("Yahoo ETF candidate is stale under the ETF resolver freshness policy")
         acquisition = bind_yahoo_etf_acquisition(yf_payload, etf_payload, started_at, now_iso())
         if selected_refresh and (acquisition is None or collection_origin != (
             "natural" if acquisition["event_name"] == "schedule" else "manual"
@@ -6808,16 +6873,63 @@ def run_one(
                         collection_origin=collection_origin,
                     )
                     raise
+                canonical_path = OUT_DIR / rel_path
+                canonical = read_json(canonical_path)
+                protected_complete = (payload.get("detail_status") == "stockanalysis_partial"
+                                      and is_complete_stockanalysis_etf_payload(ticker, canonical))
+                partial_candidate_path = None
+                if payload.get("detail_status") == "stockanalysis_partial":
+                    source = parse_iso_timestamp(payload.get("source_as_of"))
+                    if isinstance(canonical, dict) and canonical.get("source") == "stockanalysis":
+                        floor = parse_iso_timestamp(canonical.get("source_as_of"))
+                        if floor is not None and (source is None or source < floor):
+                            record_etf_detail_failure_observation(
+                                provider="stockanalysis", endpoint_family="stockanalysis_etf_detail",
+                                ticker=ticker, provider_path=f"data/stockanalysis/{rel_path}",
+                                provider_schema=SCHEMA_VERSION, reason_code="source_date_regression",
+                                failure_detail="StockAnalysis ETF candidate would regress the canonical source date",
+                                collection_origin=collection_origin,
+                            )
+                            raise ValueError("StockAnalysis ETF candidate would regress the canonical source date")
+                    if protected_complete or yf_fallback:
+                        fetched = parse_iso_timestamp(validate_aware_timestamp(payload.get("fetched_at"), "StockAnalysis ETF fetch stamp"))
+                        if fetched > parse_iso_timestamp(now_iso()) or (source is not None and source > fetched):
+                            raise ValueError("StockAnalysis ETF partial candidate fetch date is invalid")
+                if protected_complete:
+                    canonical_bytes = canonical_path.read_bytes()
+                    if json.loads(canonical_bytes) != canonical:
+                        raise ValueError("StockAnalysis ETF complete canonical changed before preservation")
+                    partial_candidate_path = preserve_partial_etf_candidate(
+                        ticker, payload, canonical_bytes, collection_origin=collection_origin,
+                    )
                 if yf_fallback and payload.get("detail_status") == "stockanalysis_partial":
                     selected = data_supply_store(provider_truth_root=STORAGE_ROOT).read_active_domain("etf_detail")["current"].get(ticker)
-                    if selected is not None and selected["provider"] == "yahoo_finance":
-                        ATTEMPT_TRACKER.record_yahoo_candidate()
-                        try:
-                            fetch_yahoo_etf_fallback(ticker, mirror_public, collection_origin=collection_origin, selected_refresh=True)
-                            fallback_refresh_status = "ok"
-                        except Exception as exc:
-                            fallback_refresh_status = "failed"
-                            fallback_refresh_error = bounded_diagnostic_detail(f"{type(exc).__name__}: {exc}")
+                    ATTEMPT_TRACKER.record_yahoo_candidate()
+                    try:
+                        fallback_options = {"collection_origin": collection_origin, "selected_refresh": True}
+                        if protected_complete or selected is None or selected["provider"] == "stockanalysis":
+                            fallback_options["require_resolver_fresh"] = True
+                        if (isinstance(canonical, dict) and canonical.get("source") == "stockanalysis"
+                                and parse_iso_timestamp(canonical.get("source_as_of")) is not None):
+                            fallback_options["minimum_source_as_of"] = canonical["source_as_of"]
+                        fetch_yahoo_etf_fallback(ticker, mirror_public, **fallback_options)
+                        fallback_refresh_status = "ok"
+                    except Exception as exc:
+                        fallback_refresh_status = "failed"
+                        fallback_refresh_error = bounded_diagnostic_detail(f"{type(exc).__name__}: {exc}")
+                if protected_complete:
+                    return {
+                        "ticker": ticker, "asset_type": kind, "status": "partial_observed_complete_primary_preserved",
+                        "provider": "stockanalysis", "selected_provider": None, "canonical_write": False,
+                        "path": rel_path, "candidate_path": partial_candidate_path,
+                        "fallback_candidate_path": f"data/yf/etf-details/{ticker}.json" if fallback_refresh_status == "ok" else None,
+                        "financials_path": None, "financials_error": None,
+                        "fallback_refresh_status": fallback_refresh_status, "fallback_refresh_error": fallback_refresh_error,
+                        "latency_ms": round((time.perf_counter() - start) * 1000), "stockanalysis_error": None,
+                        "provider_availability_status": provider_availability_status,
+                        "provider_availability_reason": "provider_partial_detail_complete_primary_preserved",
+                        "provider_response": provider_response, "error": None,
+                    }
                 if etf_recovery_pending and (
                     etf_run is None or not (
                         is_natural_schedule_run(etf_run)
@@ -6922,6 +7034,10 @@ def run_one(
                     if validation_status == "valid"
                     else "partial_source_date_unavailable"
                 )
+                if (payload.get("detail_status") == "stockanalysis_partial" and fallback_refresh_status == "ok"
+                        and (selected is None or selected["provider"] == "stockanalysis")):
+                    validation_status = "invalid"
+                    reason_code = "partial_primary_bound_fallback_valid"
                 if source_as_of is not None:
                     validate_aware_timestamp(
                         source_as_of,
