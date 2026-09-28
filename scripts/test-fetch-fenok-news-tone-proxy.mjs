@@ -1163,7 +1163,10 @@ const toneRow = (ticker, asOf, articleCount = 1) => ({
     errors: [],
     generatedAt: "2026-07-25T15:53:14.450Z",
   });
-  const seeded = await runLkgCase(root, complete, { runId: "complete-eight-seed" });
+  const seeded = await runLkgCase(root, complete, {
+    runId: "complete-eight-seed",
+    observedAt: complete.generated_at,
+  });
   assert.equal(seeded.ok, true, "8/8 reference coverage remains promotable");
   const shardPath = path.join(
     root, "data", "admin", "data-supply-state", "detection-attempts", "gdelt_news_tone.json",

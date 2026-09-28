@@ -88,6 +88,7 @@ const {
   checkDetectionFloorLane,
   checkFetchCronSourceParity,
   checkRecoveryStateSources,
+  checkYahooIssuerLifecycleSource,
   checkOutcomeWatchdog,
   checkSourceStatusProjections,
   executeCheckerRun,
@@ -105,6 +106,7 @@ const {
   bootstrapSlickchartsCompositeIndex,
   inspectSlickchartsCompositeLiveIntegrity,
 } = await import("./lib/slickcharts-composite-recovery.mjs");
+const { assessYahooIssuerLifecycle } = await import("./lib/yahoo-issuer-lifecycle.mjs");
 const { registerKpiFixtureRoot } = await import("./lib/kpi-fixture-hermetic-fs-guard.mjs");
 
 const BUILDER = path.join(__dirname, "build-fenok-data-health-kpi.mjs");
@@ -6772,6 +6774,253 @@ for (const [runId, delayMin] of [["26765173733", 368], ["27940007940", 364]]) {
     assert.ok(forgedErrors.length > 0, `${rel}: checker rejects a ready claim with missing proof`);
   }
   ok("GDELT selected TOC supply restores service with truthful DOC diagnostics and independent byte-bound checks");
+}
+
+// Issuer eligibility is independently bound to the private policy and scoped index.
+function issuerLifecycleFixture() {
+  const tmp = mkTmp("yahoo-issuer-lifecycle");
+  const dataRoot = path.join(tmp, "data");
+  const now = "2026-09-28T01:00:00Z";
+  const events = ["IWDL", "IWFL", "IWML", "MTUL", "QULL", "SCDL", "USML"].map((symbol) => ({
+    symbol, event: "issuer_announced_redemption", effective_date: "2026-08-19",
+    issuer: "UBS AG", primary_source_domain: "etracs.ubs.com",
+    source_urls: ["https://etracs.ubs.com/news/show-article/id/724", "https://etracs.ubs.com/news/show-article/id/727"],
+    last_trading_date_expected: "2026-08-18", settlement_date_expected: "2026-08-19", payment_status: "not_verified",
+    notice_date: "2026-07-16", source_published_date: "2026-07-16", settlement_amount_notice_date: "2026-08-17",
+    effective_date_basis: "issuer_expected_settlement",
+  }));
+  events.push({symbol: "MMC", event: "ticker_rename", alias_target: "MRSH", issuer: "Marsh McLennan",
+    primary_source_domain: "marshmclennan.com", notice_date: "2025-10-14", source_published_date: "2025-10-16",
+    announced_month: "2026-01", eligibility_after: "2026-02-01", eligibility_basis: "after_announced_month",
+    source_urls: ["https://www.marshmclennan.com/web-assets/files-for-download/investors/2025/pdf-2025-marsh-mclennan-investors-3q-news-release.pdf"]});
+  events.push({symbol: "EWCO", event: "ticker_rename", alias_target: "RSPC", issuer: "Invesco",
+    primary_source_domain: "sec.gov", notice_date: "2023-05-17", source_published_date: "2023-05-17",
+    after_market_close_date: "2023-06-06", eligibility_after: "2023-06-07", eligibility_basis: "after_market_close",
+    source_urls: ["https://www.sec.gov/Archives/edgar/data/1209466/000119312523147120/d428859d497k.htm"]});
+  for (const row of [
+    ["BLD", "2026-07-01", "TopBuild Corp.", "sec.gov", "https://www.sec.gov/Archives/edgar/data/1633931/000110465926079876/tm2618991d10_8k.htm"],
+    ["DAY", "2026-02-04", "Dayforce", "dayforce.com", "https://www.dayforce.com/who-we-are/newsroom/thoma-bravo-completes-acquisition-of-dayforce"],
+    ["HOLX", "2026-04-07", "Hologic", "hologic.com", "https://www.hologic.com/about/press-release/blackstone-and-tpg-complete-acquisition-hologic"],
+  ]) events.push({symbol: row[0], event: "issuer_completed_acquisition", effective_date: row[1], issuer: row[2], primary_source_domain: row[3], source_urls: [row[4]]});
+  const policy = {schema_version: "yahoo-issuer-lifecycle/v1", events};
+  const policyPath = path.join(dataRoot, "admin", "yahoo-batch-quote-history", "issuer-lifecycle.json");
+  const indexPath = path.join(dataRoot, "admin", "yahoo-batch-quote-history", "index.json");
+  const aliasPath = path.join(dataRoot, "yf", "finance", "MRSH.json");
+  writeJson(policyPath, policy);
+  const alias = {schema_version: "yf-finance/v2", ticker: "MRSH", profile: "daily", fetched_at: "2026-09-26T01:54:48Z",
+    quote_as_of: "2026-09-25T20:00:02Z", history_as_of: "2026-09-25", source_as_of: "2026-09-25",
+    data: {info: {symbol: "MRSH", regularMarketPrice: 171.12, regularMarketTime: 1790366402},
+      history_1y: [{date: "2026-09-25", Close: 171.12}]}};
+  writeJson(aliasPath, alias);
+  const rspcPath = path.join(dataRoot, "yf", "finance", "RSPC.json");
+  const agedRspc = {schema_version: "yf-finance/v2", ticker: "RSPC", profile: "daily",
+    fetched_at: "2026-08-07T13:29:30Z", quote_as_of: "2026-08-06T19:59:26Z", history_as_of: "2026-08-06", source_as_of: "2026-08-06",
+    data: {info: {symbol: "RSPC", quoteType: "ETF", regularMarketPrice: 36.545, regularMarketTime: 1786046366},
+      history_1y: [{date: "2026-08-06", Close: 36.54999923706055}]}};
+  // Hypothetical later provider observation isolates post-recovery readiness;
+  // the separate aged case below uses actual canonical RSPC source metadata.
+  const rspc = {...agedRspc, fetched_at: "2026-09-26T01:54:48Z", quote_as_of: "2026-09-25T20:00:02Z",
+    history_as_of: "2026-09-25", source_as_of: "2026-09-25",
+    data: {info: {...agedRspc.data.info, regularMarketTime: 1790366402}, history_1y: [{date: "2026-09-25", Close: 36.54999923706055}]}};
+  writeJson(rspcPath, rspc);
+  const hash = (file) => createHash("sha256").update(fs.readFileSync(file)).digest("hex");
+  const details = [...events].sort((a,b) => a.symbol.localeCompare(b.symbol)).map((row) => row.event === "ticker_rename"
+    ? {...row, alias_target_payload_sha256: hash(row.alias_target === "MRSH" ? aliasPath : rspcPath), alias_target_source_as_of: "2026-09-25"} : {...row});
+  const state = {schema_version: "yahoo-batch-quote-history-index/v1", generated_at: now,
+    lane_id: "yahoo_batch_quote_history", active_universe_scope: "all_sources",
+    counts: {active: 15, eligible: 3, lifecycle_inactive: 12, fresh: 3, lkg: 0, pending_history: 0,
+      pending_acquisition: 0, unavailable: 0, terminal: 0, untracked: 0, retry: 0, failed: 0, stale: 0},
+    catalogue_symbols: ["BLD", "DAY", "EWCO", "HOLX", "IWDL", "IWFL", "IWML", "MMC", "MRSH", "MTUL", "QULL", "RSPC", "SCDL", "UNKNOWN", "USML"],
+    lifecycle_inactive_symbols: ["BLD", "DAY", "EWCO", "HOLX", "IWDL", "IWFL", "IWML", "MMC", "MTUL", "QULL", "SCDL", "USML"],
+    issuer_lifecycle_details: details,
+    issuer_lifecycle_policy: {path: "admin/yahoo-batch-quote-history/issuer-lifecycle.json", sha256: hash(policyPath),
+      evaluated_at: now, active_universe_scope: "all_sources", run_id: "issuer-run", run_attempt: 1, event_name: "schedule"},
+    oldest_source_as_of: "2026-09-25", oldest_source_ticker: "MRSH", retry_symbols: [],
+    current_attempt: {run_id: "issuer-run", run_attempt: 1, event_name: "schedule", natural: true,
+      attempted: 3, successes: 3, failed: 0, skipped: 0, fetch_attempts: 3, promotion_deferrals: 0, promotion_deferral_symbols: [], errors: []},
+    pending_details: [], lkg_details: [], unavailable_details: [], stale_groups: [], promotion_deferral_details: []};
+  writeJson(indexPath, state);
+  return {tmp, dataRoot, now, state, policy, policyPath, indexPath, alias, aliasPath, rspcPath, rspc, agedRspc};
+}
+
+{
+  const f = issuerLifecycleFixture();
+  const laneRow = buildYahooBatchLane(f.state, f.now, {dataRoot: f.dataRoot});
+  assert.equal(laneRow.status, "ready", "15 catalogue names close as 3 live fresh names plus 12 verified issuer events");
+  assert.equal(laneRow.counts.active, 15);
+  assert.equal(laneRow.counts.eligible, 3);
+  assert.equal(laneRow.counts.lifecycle_inactive, 12);
+  assert.equal(laneRow.checks.find((row) => row.id === "issuer_lifecycle_verified").status, "ready");
+  assert.equal(laneRow.checks.find((row) => row.id === "live_eligible_fresh_coverage").status, "ready");
+  assert.equal(laneRow.checks.find((row) => row.id === "live_eligible_fresh_coverage").required, true);
+  const errors = [];
+  checkYahooIssuerLifecycleSource(laneRow, {dataRoot: f.dataRoot, nowIso: f.now}, errors);
+  assert.deepEqual(errors, [], "checker re-reads the actual injected policy/index/alias");
+  const projected = projectPublicKpi({lanes: [laneRow]}, f.now);
+  assert.equal(JSON.stringify(projected).includes("admin/yahoo-batch-quote-history/"), false);
+  assert.equal(JSON.stringify(projected).includes("catalogue_symbols"), false);
+  assert.equal(projected.lanes[0].details.issuer_lifecycle.policy_ref, "yahoo-issuer-lifecycle");
+  assert.equal(projected.lanes[0].details.issuer_lifecycle.events.find((row) => row.symbol === "IWDL").payment_status, "not_verified");
+  const coverageIndex = {public_scoring_readiness: {tracks: [{id: "expanded_stock_candidates", denominator: 10}]}};
+  const stockPromotionDryRun = {counts: {excluded_blocked_rows: 3}, blocked_rows: ["BLD", "DAY", "HOLX"].map((ticker) => ({ticker,
+    corporate_action_policy: {status: "policy_required_before_promotion", evidence: [{type: "Delisted", terminal: true}]}}))};
+  const reconciliation = buildStockDenominatorReconciliation({coverageIndex, yahooBatchState: f.state, stockPromotionDryRun,
+    dataRoot: f.dataRoot, nowIso: f.now});
+  assert.equal(reconciliation.status, "ready");
+  assert.equal(reconciliation.counts.canonical_daily_plan, 10, "issuer overlay never narrows the S1 ledger");
+  assert.equal(reconciliation.counts.terminal_provider_unsupported, 3);
+  assert.equal(reconciliation.equations.yahoo_active_partition.lifecycle_inactive, 12);
+  ok("verified issuer lifecycle closes Yahoo catalogue without rewriting stock denominator or private paths");
+}
+
+{
+  const f = issuerLifecycleFixture();
+  const untracked = structuredClone(f.state);
+  untracked.counts.fresh = 2; untracked.counts.untracked = 1;
+  writeJson(f.indexPath, untracked);
+  const laneRow = buildYahooBatchLane(untracked, f.now, {dataRoot: f.dataRoot});
+  assert.equal(laneRow.checks.find((row) => row.id === "issuer_lifecycle_verified").status, "ready");
+  assert.equal(laneRow.checks.find((row) => row.id === "active_universe_accounted").status, "ready");
+  const coverageCheck = laneRow.checks.find((row) => row.id === "live_eligible_fresh_coverage");
+  assert.equal(coverageCheck.required, true);
+  assert.equal(coverageCheck.status, "blocked");
+  assert.equal(laneRow.status, "degraded", "a closed catalogue with an untracked live eligible name is not fresh coverage");
+  const runtime = makeProducerRuntime({builtAt: f.now, slotKey: null, runId: "issuer-untracked-checker"});
+  runtime.cadence.v2_activated_at = f.now;
+  const {root} = seedReadyV2(f.tmp, {now: f.now, runtime, sla: readySla(f.now)});
+  root.lanes[root.lanes.findIndex((row) => row.id === "yahoo_batch_quote_history")] = laneRow;
+  writeJson(path.join(f.tmp, "data", KPI_REL), root);
+  writeJson(path.join(f.tmp, "public", "data", KPI_REL), projectPublicKpi(root, f.now));
+  const checked = executeCheckerRun({dataRoot: f.tmp, nowIso: f.now, slickchartsRepoRoot: HERMETIC_FIXTURE_ROOT});
+  assert.deepEqual(checked.errors.filter((error) => error.startsWith("yahoo_batch_quote_history")), [],
+    "builder and core checker agree that fresh 2 / eligible 3 is degraded even when the full partition closes");
+  ok("required eligible fresh coverage rejects a partition closed by an untracked live name");
+}
+
+{
+  const f = issuerLifecycleFixture();
+  const failed = structuredClone(f.state);
+  failed.counts.fresh = 2; failed.counts.unavailable = 1; failed.counts.retry = 1; failed.counts.failed = 1;
+  failed.retry_symbols = ["UNKNOWN"];
+  failed.current_attempt = {...failed.current_attempt, successes: 2, failed: 1, errors: [{ticker: "UNKNOWN"}]};
+  failed.unavailable_details = [{symbol: "UNKNOWN", failure_run_id: "issuer-run", failure_observed_at: f.now,
+    failure_kind: "transient_provider_miss", lkg_status: "absent", data_loss: false, deferred_acquisition: true,
+    retry: true, expected_resolution: "next_natural_yahoo_run"}];
+  writeJson(f.indexPath, failed);
+  const laneRow = buildYahooBatchLane(failed, f.now, {dataRoot: f.dataRoot});
+  assert.equal(laneRow.status, "degraded", "an ordinary live provider failure remains required");
+  assert.equal(laneRow.checks.find((row) => row.id === "no_unavailable").status, "blocked");
+  assert.match(laneRow.checks.find((row) => row.id === "no_unavailable").detail, /UNKNOWN/);
+  const washed = structuredClone(laneRow);
+  washed.counts.fresh = 3; washed.counts.unavailable = 0; washed.counts.retry = 0; washed.counts.failed = 0;
+  washed.details.unavailable = [];
+  const washedErrors = [];
+  checkYahooIssuerLifecycleSource(washed, {dataRoot: f.dataRoot, nowIso: f.now}, washedErrors);
+  assert.ok(washedErrors.some((error) => /resolution count/.test(error)),
+    "public eligibility proof cannot wash away a canonical eligible failure");
+  const aged = buildYahooBatchLane(f.state, "2026-10-28T01:00:00Z", {dataRoot: f.dataRoot});
+  assert.equal(aged.checks.find((row) => row.id === "issuer_lifecycle_verified").status, "ready");
+  assert.equal(aged.checks.find((row) => row.id === "oldest_source_fresh").status, "blocked");
+  assert.equal(aged.status, "degraded", "identity evidence never substitutes for live successor freshness");
+  writeJson(f.rspcPath, f.agedRspc);
+  const rspcAgedState = structuredClone(f.state);
+  rspcAgedState.oldest_source_as_of = "2026-08-06"; rspcAgedState.oldest_source_ticker = "RSPC";
+  rspcAgedState.counts.fresh = 2; rspcAgedState.counts.lkg = 1; rspcAgedState.counts.retry = 1; rspcAgedState.counts.stale = 1;
+  rspcAgedState.retry_symbols = ["RSPC"];
+  const agedQualification = rspcAgedState.issuer_lifecycle_details.find((row) => row.symbol === "EWCO");
+  agedQualification.alias_target_payload_sha256 = createHash("sha256").update(fs.readFileSync(f.rspcPath)).digest("hex");
+  agedQualification.alias_target_source_as_of = "2026-08-06";
+  const agedRspcLane = buildYahooBatchLane(rspcAgedState, f.now, {dataRoot: f.dataRoot});
+  assert.equal(agedRspcLane.checks.find((row) => row.id === "issuer_lifecycle_verified").status, "ready");
+  assert.equal(agedRspcLane.counts.eligible, 3);
+  assert.equal(agedRspcLane.checks.find((row) => row.id === "oldest_source_fresh").status, "blocked");
+  assert.equal(agedRspcLane.status, "degraded", "actual aged RSPC identity never supplies fresh live coverage");
+  writeJson(f.rspcPath, f.rspc);
+  writeJson(f.aliasPath, {...f.alias, fetched_at: "2026-09-28T00:50:00Z", profile: "full", extra_actual_fields: {provider: "Yahoo"}});
+  assert.equal(assessYahooIssuerLifecycle(f.state, {dataRoot: f.dataRoot, nowIso: f.now}).valid, true,
+    "a valid refreshed successor need not keep the qualification payload's old byte hash");
+  ok("ordinary live failures and aged successor sources remain degraded while alias identity stays qualified");
+}
+
+{
+  const mutations = [
+    ["missing policy", (f) => fs.unlinkSync(f.policyPath)],
+    ["malformed envelope", (f) => writeJson(f.policyPath, {schema_version: "wrong", events: []})],
+    ["hash drift", (f) => {f.state.issuer_lifecycle_policy.sha256 = "0".repeat(64);}],
+    ["pointer drift", (f) => {f.state.issuer_lifecycle_policy.path = "../../public/data/fake.json";}],
+    ["run drift", (f) => {f.state.issuer_lifecycle_policy.run_id = "other-run";}],
+    ["attempt drift", (f) => {f.state.issuer_lifecycle_policy.run_attempt = 2;}],
+    ["scope drift", (f) => {f.state.issuer_lifecycle_policy.active_universe_scope = "core_etf";}],
+    ["evaluation drift", (f) => {f.state.issuer_lifecycle_policy.evaluated_at = "2026-09-27T01:00:00Z";}],
+    ["future event", (f) => {f.policy.events[0].effective_date = "2026-10-01"; writeJson(f.policyPath, f.policy);
+      f.state.issuer_lifecycle_policy.sha256 = createHash("sha256").update(fs.readFileSync(f.policyPath)).digest("hex");}],
+    ["fake exclusions", (f) => {f.state.lifecycle_inactive_symbols[0] = "UNKNOWN";}],
+    ["duplicate exclusion", (f) => {f.state.lifecycle_inactive_symbols[0] = "DAY";}],
+    ["wrong equation", (f) => {f.state.counts.eligible = 4;}],
+    ["catalogue membership drift", (f) => {f.state.catalogue_symbols[0] = "FAKE";}],
+    ["detail drift", (f) => {f.state.issuer_lifecycle_details[0].effective_date = "2026-07-02";}],
+    ["missing alias", (f) => fs.unlinkSync(f.aliasPath)],
+    ["invalid alias quote", (f) => {f.alias.data.info.regularMarketPrice = 0; writeJson(f.aliasPath, f.alias);}],
+    ["future alias", (f) => {f.alias.fetched_at = "2026-10-01T00:00:00Z"; writeJson(f.aliasPath, f.alias);}],
+    ["alias history beyond canonical fetch bound", (f) => {
+      f.alias.fetched_at = "2026-09-01T20:01:00Z"; f.alias.quote_as_of = "2026-09-01T20:00:00Z";
+      f.alias.source_as_of = "2026-09-01T20:00:00Z";
+      f.alias.data.info.regularMarketTime = Date.parse("2026-09-01T20:00:00Z") / 1000;
+      // Bars remain September 25: nonfuture at the check clock, but impossible
+      // for this September 1 fetch under the existing canonical +14 hour bound.
+      writeJson(f.aliasPath, f.alias);
+    }],
+    ["wrong after-close boundary", (f) => {f.policy.events.find((row) => row.symbol === "EWCO").eligibility_after = "2023-06-06";
+      writeJson(f.policyPath, f.policy); f.state.issuer_lifecycle_policy.sha256 = createHash("sha256").update(fs.readFileSync(f.policyPath)).digest("hex");}],
+    ["conflicting after-close boundary", (f) => {f.policy.events.find((row) => row.symbol === "EWCO").announced_month = "2023-06";
+      writeJson(f.policyPath, f.policy); f.state.issuer_lifecycle_policy.sha256 = createHash("sha256").update(fs.readFileSync(f.policyPath)).digest("hex");}],
+    ["future after-close boundary", (f) => {Object.assign(f.policy.events.find((row) => row.symbol === "EWCO"),
+      {after_market_close_date: "2026-09-28", eligibility_after: "2026-09-29"});
+      writeJson(f.policyPath, f.policy); f.state.issuer_lifecycle_policy.sha256 = createHash("sha256").update(fs.readFileSync(f.policyPath)).digest("hex");}],
+    ["missing RSPC alias", (f) => fs.unlinkSync(f.rspcPath)],
+    ["invented exact rename day", (f) => {f.policy.events.find((row) => row.symbol === "MMC").effective_date = "2026-01-01";
+      writeJson(f.policyPath, f.policy); f.state.issuer_lifecycle_policy.sha256 = createHash("sha256").update(fs.readFileSync(f.policyPath)).digest("hex");}],
+  ];
+  for (const [label, mutate] of mutations) {
+    const f = issuerLifecycleFixture();
+    mutate(f);
+    writeJson(f.indexPath, f.state);
+    const laneRow = buildYahooBatchLane(f.state, f.now, {dataRoot: f.dataRoot});
+    assert.equal(laneRow.status, "degraded", label);
+    const errors = [];
+    checkYahooIssuerLifecycleSource(laneRow, {dataRoot: f.dataRoot, nowIso: f.now}, errors);
+    assert.ok(errors.length > 0, `checker rejects ${label}`);
+    assert.equal(JSON.stringify(laneRow).includes("admin/yahoo-batch-quote-history/"), false, `${label} cannot leak a private locator`);
+  }
+  const f = issuerLifecycleFixture();
+  assert.equal(buildYahooBatchLane(f.state, f.now).status, "degraded", "claimed exclusions require an explicit data root; no host fallback");
+  ok("policy, scope, run, date, membership, alias and equation mutations fail closed without privacy leaks");
+}
+
+{
+  const f = issuerLifecycleFixture();
+  const legacy = structuredClone(f.state);
+  legacy.counts = {...legacy.counts, active: 2, eligible: 2, lifecycle_inactive: 0, fresh: 2};
+  delete legacy.issuer_lifecycle_policy; delete legacy.issuer_lifecycle_details; delete legacy.lifecycle_inactive_symbols; delete legacy.catalogue_symbols;
+  const empty = mkTmp("yahoo-issuer-no-policy");
+  assert.equal(buildYahooBatchLane(legacy, f.now, {dataRoot: path.join(empty, "data")}).status, "ready");
+  const fake = {...legacy, counts: {...legacy.counts, eligible: 1, lifecycle_inactive: 1}};
+  assert.equal(buildYahooBatchLane(fake, f.now, {dataRoot: path.join(empty, "data")}).status, "degraded");
+  const now = f.now;
+  const runtime = makeProducerRuntime({builtAt: now, slotKey: null, runId: "issuer-checker"});
+  runtime.cadence.v2_activated_at = now;
+  const {root} = seedReadyV2(f.tmp, {now, runtime, sla: readySla(now)});
+  root.lanes[root.lanes.findIndex((row) => row.id === "yahoo_batch_quote_history")] = buildYahooBatchLane(f.state, now, {dataRoot: f.dataRoot});
+  writeJson(path.join(f.tmp, "data", KPI_REL), root);
+  writeJson(path.join(f.tmp, "public", "data", KPI_REL), projectPublicKpi(root, now));
+  const checked = executeCheckerRun({dataRoot: f.tmp, nowIso: now, slickchartsRepoRoot: HERMETIC_FIXTURE_ROOT});
+  assert.deepEqual(checked.errors.filter((error) => error.startsWith("yahoo_batch_quote_history")), [],
+    "production core checker accepts fresh===eligible only with independent issuer proof");
+  const publicTamper = projectPublicKpi(root, now);
+  publicTamper.lanes.find((row) => row.id === "yahoo_batch_quote_history").details.issuer_lifecycle.events[0].private_path = "admin/yahoo-batch-quote-history/issuer-lifecycle.json";
+  writeJson(path.join(f.tmp, "public", "data", KPI_REL), publicTamper);
+  assert.equal(executeCheckerRun({dataRoot: f.tmp, nowIso: now, slickchartsRepoRoot: HERMETIC_FIXTURE_ROOT}).exit, 1);
+  ok("legacy zero-exclusion shape stays compatible; production checker independently verifies eligible readiness and privacy");
 }
 
 console.log(`\n# ${passed} fixtures passed`);

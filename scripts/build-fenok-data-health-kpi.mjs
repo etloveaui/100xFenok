@@ -12,6 +12,7 @@ import { DATA_SUPPLY_DETECTION_CONFIG } from "./lib/data-supply-detection-config
 import { hasStructuredGithubRunBinding, isEligibleRecoveryRun } from "./lib/data-supply-lkg-store.mjs";
 import { canonicalJson } from "./lib/json-canonical.mjs";
 import { inspectGdeltSelectedSource } from "./lib/gdelt-selected-source.mjs";
+import { assessYahooIssuerLifecycle } from "./lib/yahoo-issuer-lifecycle.mjs";
 import { LANE_REGISTRY } from "./lib/lane-registry.mjs";
 import { validatePublishOutcomeShard } from "./lib/publish-outcome-shard.mjs";
 import {
@@ -1960,8 +1961,15 @@ export function buildStockDenominatorReconciliation({
   coverageIndex,
   yahooBatchState,
   stockPromotionDryRun,
+  dataRoot = null,
+  nowIso = yahooBatchState?.generated_at,
 } = {}) {
   const blockers = [];
+  const issuerLifecycle = assessYahooIssuerLifecycle(yahooBatchState, {dataRoot, nowIso});
+  const lifecycleFieldsPresent = Object.hasOwn(yahooBatchState?.counts ?? {}, "eligible")
+    || Object.hasOwn(yahooBatchState?.counts ?? {}, "lifecycle_inactive")
+    || yahooBatchState?.issuer_lifecycle_policy != null;
+  if (!issuerLifecycle.valid) blockers.push(`Yahoo issuer eligibility is unverified: ${issuerLifecycle.reasons.join(", ")}`);
   const coverageTrack = trackById(coverageIndex, "expanded_stock_candidates");
   const canonicalPlan = coverageTrack?.denominator;
   const yahooCounts = yahooBatchState?.counts;
@@ -2031,7 +2039,9 @@ export function buildStockDenominatorReconciliation({
     && classifiedCount
       + countValues.yahoo_active_pending_acquisition
       + countValues.yahoo_active_terminal
-      + countValues.yahoo_active_untracked === countValues.yahoo_active_universe;
+      + countValues.yahoo_active_untracked
+      + (issuerLifecycle.valid ? issuerLifecycle.inactive : 0) === countValues.yahoo_active_universe
+    && issuerLifecycle.valid;
   if (!activePartitionOk) blockers.push("Yahoo active universe is not closed by its exclusive states");
 
   const retrySymbols = yahooBatchState?.retry_symbols;
@@ -2109,6 +2119,7 @@ export function buildStockDenominatorReconciliation({
       : null,
     yahoo_active_untracked: countValues.yahoo_active_untracked,
     yahoo_active_classified: classifiedCount,
+    ...(lifecycleFieldsPresent ? {yahoo_live_eligible: issuerLifecycle.eligible, yahoo_lifecycle_inactive: issuerLifecycle.inactive} : {}),
     retry_debt: countValues.retry_debt,
     retry_debt_actionable: retryActionableCount,
     terminal_provider_unsupported: terminalCount,
@@ -2127,6 +2138,7 @@ export function buildStockDenominatorReconciliation({
         pending_acquisition: countValues.yahoo_active_pending_acquisition,
         terminal: countValues.yahoo_active_terminal,
         untracked: countValues.yahoo_active_untracked,
+        ...(lifecycleFieldsPresent ? {lifecycle_inactive: issuerLifecycle.inactive} : {}),
         total: countValues.yahoo_active_universe,
         ok: activePartitionOk,
       },
@@ -2155,7 +2167,7 @@ export function buildStockDenominatorReconciliation({
   };
 }
 
-function buildStockS1Lane(coverageIndex, stockanalysisRecovery, yahooBatchState, stockPromotionDryRun) {
+function buildStockS1Lane(coverageIndex, stockanalysisRecovery, yahooBatchState, stockPromotionDryRun, {dataRoot = null, nowIso = yahooBatchState?.generated_at} = {}) {
   const track = trackById(coverageIndex, "expanded_stock_candidates");
   const promotion = track?.promotion_gate_readiness || {};
   const counts = promotion.counts || {};
@@ -2164,7 +2176,7 @@ function buildStockS1Lane(coverageIndex, stockanalysisRecovery, yahooBatchState,
   const recovery = stockanalysisRecoveryEvidence(stockanalysisRecovery, ["stock", "financial"]);
   const hasDenominatorSources = coverageIndex !== null || yahooBatchState !== null || stockPromotionDryRun !== null;
   const denominatorReconciliation = hasDenominatorSources
-    ? buildStockDenominatorReconciliation({ coverageIndex, yahooBatchState, stockPromotionDryRun })
+    ? buildStockDenominatorReconciliation({ coverageIndex, yahooBatchState, stockPromotionDryRun, dataRoot, nowIso })
     : null;
   return lane("stock_s1_candidate_gate", "S1 candidate promotion gate", [
     check("requirements_complete", "PUBLIC+DAILY+GATED with blocked ledger", allRequirementsReady(track?.requirements), track?.stage || "missing"),
@@ -2235,7 +2247,8 @@ export function buildEtfLane(coverageIndex, etfDaily1y, etfFetchablePlan, etfCor
   });
 }
 
-export function buildYahooBatchLane(state, nowIso = state?.generated_at) {
+export function buildYahooBatchLane(state, nowIso = state?.generated_at, {dataRoot = null} = {}) {
+  const issuerLifecycle = assessYahooIssuerLifecycle(state, {dataRoot, nowIso});
   const counts = state?.counts || {};
   const currentAttempt = state?.current_attempt || {};
   const pendingDetails = (Array.isArray(state?.pending_details) ? state.pending_details : [])
@@ -2367,7 +2380,8 @@ export function buildYahooBatchLane(state, nowIso = state?.generated_at) {
     + number(counts.unavailable)
     + number(counts.pending_acquisition)
     + number(counts.terminal)
-    + number(counts.untracked);
+    + number(counts.untracked)
+    + (issuerLifecycle.valid ? issuerLifecycle.inactive : 0);
   const pendingDetail = pendingDetails.length > 0
     ? pendingDetails.map((item) => (
       `${item.symbol || "unknown"} is ${item.reason === "recent_listing" ? "a recent listing" : "newly discovered"} from ${(item.discovered_from || []).join(", ") || "an active-universe source"}; `
@@ -2399,12 +2413,19 @@ export function buildYahooBatchLane(state, nowIso = state?.generated_at) {
     : `${number(counts.unavailable)} unavailable`;
   return lane("yahoo_batch_quote_history", "Yahoo batch quote/history", [
     check("state_artifact_present", "Yahoo bounded state", Boolean(state), state?.generated_at || "missing"),
+    check("issuer_lifecycle_verified", "issuer lifecycle eligibility", issuerLifecycle.valid,
+      issuerLifecycle.valid ? `${issuerLifecycle.inactive} issuer-notified inactive; ${issuerLifecycle.eligible} live eligible`
+        : `Issuer eligibility unverified: ${issuerLifecycle.reasons.join(", ")}`),
     check(
       "active_universe_accounted",
       "active-universe state coverage",
       number(counts.active) > 0 && partitionCount === number(counts.active),
       `${partitionCount} partitioned / ${number(counts.active)} active; ${number(counts.untracked)} untracked`,
     ),
+    check("live_eligible_fresh_coverage", "live eligible fresh coverage",
+      issuerLifecycle.valid && issuerLifecycle.eligible > 0
+        && Number.isInteger(counts.fresh) && counts.fresh === issuerLifecycle.eligible,
+      `${number(counts.fresh)} fresh / ${issuerLifecycle.eligible ?? "unknown"} live eligible`, { required: true }),
     check(
       "current_attempt_evidence",
       "current attempt evidence",
@@ -2425,6 +2446,8 @@ export function buildYahooBatchLane(state, nowIso = state?.generated_at) {
   ], {
     counts: {
       active: number(counts.active),
+      eligible: issuerLifecycle.eligible,
+      lifecycle_inactive: issuerLifecycle.inactive,
       untracked: number(counts.untracked),
       pending_acquisition: number(counts.pending_acquisition),
       fresh: number(counts.fresh),
@@ -2443,6 +2466,7 @@ export function buildYahooBatchLane(state, nowIso = state?.generated_at) {
     details: {
       latest_attempt: publicAttempt,
       state_generated_at: state?.generated_at ?? null,
+      issuer_lifecycle: issuerLifecycle.projection,
       lkg: lkgDetails,
       stale_groups: staleGroups,
       pending_history: pendingDetails,
@@ -3956,9 +3980,9 @@ export function buildPayload(
 
   const lanes = [
     buildStockS0Lane(coverageIndex),
-    buildStockS1Lane(coverageIndex, stockanalysisRecovery, yahooBatchState, stockPromotionDryRun),
+    buildStockS1Lane(coverageIndex, stockanalysisRecovery, yahooBatchState, stockPromotionDryRun, {dataRoot, nowIso}),
     buildEtfLane(coverageIndex, etfDaily1y, etfFetchablePlan, etfCoreBasket, stockanalysisRecovery),
-    buildYahooBatchLane(yahooBatchState, nowIso),
+    buildYahooBatchLane(yahooBatchState, nowIso, {dataRoot}),
     buildSlickChartsDeliveryLane(nowIso, { assessment: slickchartsDelivery }),
     buildRimLane(rimInputs, nasdaqGiwSoxRecovery, rimFiveCanonicalHealth),
     buildProductSurfaceLane(productCoverage, stockanalysisRecovery),

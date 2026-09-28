@@ -61,6 +61,7 @@ import { buildFetchCronAttemptCoverage, evaluateAttemptCadence, evaluateFreshnes
 import { inspectSlickchartsCompositeLiveIntegrity } from "../../scripts/lib/slickcharts-composite-recovery.mjs";
 import { LANE_REGISTRY } from "../../scripts/lib/lane-registry.mjs";
 import { inspectGdeltSelectedSource } from "../../scripts/lib/gdelt-selected-source.mjs";
+import { assessYahooIssuerLifecycle } from "../../scripts/lib/yahoo-issuer-lifecycle.mjs";
 
 const APP_ROOT = path.resolve(path.dirname(new URL(import.meta.url).pathname), "..");
 const REPO_ROOT = path.resolve(APP_ROOT, "..");
@@ -744,6 +745,40 @@ export function checkOutcomeWatchdog(rootDoc, errors, { dataRoot = null } = {}) 
     `outcome_watchdog status ${watchdog.status} differs from ${expectedStatus}`);
 }
 
+export function checkYahooIssuerLifecycleSource(lane, {dataRoot, nowIso}, errors) {
+  let state = null;
+  try {
+    if (typeof dataRoot === "string" && dataRoot) {
+      state = readOptionalJson(path.join(dataRoot, "admin", "yahoo-batch-quote-history", "index.json"));
+    }
+  } catch {
+    errors.push("yahoo_batch_quote_history issuer source index is unreadable");
+  }
+  const claims = Number(lane?.counts?.lifecycle_inactive ?? 0) !== 0
+    || Number(lane?.counts?.eligible ?? lane?.counts?.active) !== Number(lane?.counts?.active)
+    || lane?.details?.issuer_lifecycle != null;
+  if (state === null && !claims) return {valid: true, eligible: lane?.counts?.active, inactive: 0, projection: null};
+  const assessment = assessYahooIssuerLifecycle(state, {dataRoot, nowIso: nowIso ?? state?.generated_at});
+  push(errors, assessment.valid, "yahoo_batch_quote_history issuer lifecycle proof is invalid");
+  push(errors, state !== null && lane?.counts?.active === state?.counts?.active
+    && (lane?.counts?.eligible ?? lane?.counts?.active) === assessment.eligible
+    && (lane?.counts?.lifecycle_inactive ?? 0) === assessment.inactive,
+  "yahoo_batch_quote_history issuer eligibility counts differ from canonical source");
+  for (const key of ["untracked", "pending_acquisition", "fresh", "lkg", "pending_history", "unavailable", "terminal", "retry", "failed", "stale"]) {
+    const expected = state?.counts?.[key] ?? 0;
+    push(errors, typeof expected === "number" && Number.isInteger(expected) && expected >= 0 && lane?.counts?.[key] === expected,
+      `yahoo_batch_quote_history resolution count ${key} differs from canonical source`);
+  }
+  push(errors, JSON.stringify(lane?.details?.issuer_lifecycle ?? null) === JSON.stringify(assessment.projection),
+    "yahoo_batch_quote_history issuer lifecycle public facts differ from canonical proof");
+  const policyCheck = lane?.checks?.find((row) => row?.id === "issuer_lifecycle_verified");
+  if (claims || policyCheck != null) {
+    push(errors, policyCheck?.status === (assessment.valid ? "ready" : "blocked"),
+      "yahoo_batch_quote_history issuer lifecycle check differs from canonical proof");
+  }
+  return assessment;
+}
+
 export function checkRecoveryStateSources(
   rootDoc,
   rootKpiPath,
@@ -815,6 +850,7 @@ export function checkRecoveryStateSources(
   {
     const state = readOptionalJson(path.join(adminRoot, "yahoo-batch-quote-history", "index.json"));
     const lane = lanesById.get("yahoo_batch_quote_history");
+    if (lane) checkYahooIssuerLifecycleSource(lane, {dataRoot: path.resolve(adminRoot, ".."), nowIso: rootDoc?.generated_at}, errors);
     const actualDetails = lane?.details?.promotion_deferrals ?? [];
     const actualAttempt = lane?.details?.latest_attempt ?? {};
     const hasEvidence = actualDetails.length > 0 || Number(actualAttempt.promotion_deferrals) > 0;
@@ -871,6 +907,8 @@ export function checkRecoveryStateSources(
         coverageIndex,
         yahooBatchState,
         stockPromotionDryRun,
+        dataRoot: path.resolve(adminRoot, ".."),
+        nowIso: rootDoc?.generated_at ?? yahooBatchState?.generated_at,
       });
       push(errors, actual && JSON.stringify(actual) === JSON.stringify(expected),
         "stock_s1_candidate_gate denominator reconciliation does not match its source artifacts");
@@ -982,6 +1020,7 @@ export function checkSourceStatusProjections(payload, errors) {
 }
 
 function validateCoreShape(payload, errors, expectedVersion, warnings = [], options = {}) {
+  const {dataRoot = null} = options;
   const isV2 = expectedVersion === SCHEMA_VERSION_V2;
   push(errors, payload?.schema_version === expectedVersion, `schema_version must be ${expectedVersion}, got ${payload?.schema_version ?? "missing"}`);
   push(errors, typeof payload?.generated_at === "string" && payload.generated_at.length >= 10, "generated_at is required");
@@ -1089,9 +1128,20 @@ function validateCoreShape(payload, errors, expectedVersion, warnings = [], opti
         `yahoo_batch_quote_history.counts.${key} must be a non-negative integer`);
     }
     const active = Number(yahooCounts.active);
+    const eligible = yahooCounts.eligible ?? active;
+    const lifecycleInactive = yahooCounts.lifecycle_inactive ?? 0;
+    push(errors, typeof eligible === "number" && Number.isInteger(eligible) && eligible >= 0
+      && typeof lifecycleInactive === "number" && Number.isInteger(lifecycleInactive) && lifecycleInactive >= 0
+      && eligible + lifecycleInactive === active,
+    "yahoo_batch_quote_history issuer eligible/inactive equation is invalid");
+    const lifecycleClaim = lifecycleInactive !== 0 || eligible !== active || yahoo?.details?.issuer_lifecycle != null;
+    const issuerProof = lifecycleClaim
+      ? checkYahooIssuerLifecycleSource(yahoo, {dataRoot, nowIso: payload.generated_at}, errors)
+      : {valid: true};
     const partitioned = Number(yahooCounts.untracked) + Number(yahooCounts.pending_acquisition)
       + Number(yahooCounts.fresh) + Number(yahooCounts.lkg) + Number(yahooCounts.pending_history)
-      + Number(yahooCounts.unavailable) + Number(yahooCounts.terminal);
+      + Number(yahooCounts.unavailable) + Number(yahooCounts.terminal)
+      + (issuerProof.valid ? lifecycleInactive : 0);
     push(errors, partitioned === active,
       `yahoo_batch_quote_history active partition mismatch: ${partitioned} vs active ${active}`);
     push(errors, Number(yahooCounts.retry) <= Number(yahooCounts.lkg) + Number(yahooCounts.pending_history) + Number(yahooCounts.unavailable),
@@ -1135,10 +1185,10 @@ function validateCoreShape(payload, errors, expectedVersion, warnings = [], opti
       "yahoo_batch_quote_history latest attempt totals do not reconcile");
     push(errors, Number(latestAttempt?.fetch_attempts) >= Number(latestAttempt?.attempted) - Number(latestAttempt?.skipped),
       "yahoo_batch_quote_history fetch_attempts is below non-skipped attempts");
-    const yahooReady = active > 0
+    const yahooReady = active > 0 && eligible > 0 && issuerProof.valid
       && Number(yahooCounts.untracked) === 0
       && Number(yahooCounts.pending_acquisition) === 0
-      && Number(yahooCounts.fresh) === active
+      && Number(yahooCounts.fresh) === eligible
       && Number(yahooCounts.lkg) === 0
       && Number(yahooCounts.pending_history) === 0
       && Number(yahooCounts.unavailable) === 0
