@@ -127,6 +127,85 @@ function normalizeTicker(value) {
   return String(value ?? "").trim().toUpperCase();
 }
 
+export function buildFullScoredFetchableCandidates(scored = {}) {
+  const count = (value) => {
+    if (value === null || value === undefined || value === "") return null;
+    const parsed = Number(value);
+    return Number.isInteger(parsed) && parsed >= 0 ? parsed : null;
+  };
+  scored = asObject(scored);
+  const scoredEtfCount = count(scored.scored_etf_count);
+  const complete = count(scored.complete);
+  const fetchable = count(scored.fetchable);
+  const inceptionLimited = count(scored.inception_limited);
+  const terminalLimited = count(scored.terminal_limited);
+  const sourceRowsPresent = Array.isArray(scored.fetchable_rows);
+  const sourceRows = sourceRowsPresent ? scored.fetchable_rows : [];
+  const rowsAreObjects = sourceRows.every((row) => row && typeof row === "object" && !Array.isArray(row));
+  const normalizedTickers = sourceRows.map((row) => normalizeTicker(row?.ticker));
+  const uniqueTickers = new Set(normalizedTickers.filter(Boolean));
+  const tickersAreValid = rowsAreObjects
+    && normalizedTickers.every((ticker, index) => ticker && ticker === sourceRows[index].ticker);
+  const exactRows = [...sourceRows].sort((left, right) => String(left?.ticker ?? "").localeCompare(String(right?.ticker ?? "")));
+  const calculatedProjection = sourceRowsPresent && rowsAreObjects
+    ? daily1yClassificationProjection({ fetchable: sourceRows })
+    : null;
+  const expectedProjection = asObject(scored.fetchable_classification_projection);
+  const classifiedCount = [complete, fetchable, inceptionLimited, terminalLimited].every((value) => value !== null)
+    ? complete + fetchable + inceptionLimited + terminalLimited
+    : null;
+  const countEquationOk = scoredEtfCount !== null
+    && classifiedCount !== null
+    && classifiedCount === scoredEtfCount;
+  const candidateCountMatchesReport = fetchable !== null && sourceRowsPresent && sourceRows.length === fetchable;
+  const classificationProjectionMatches = Boolean(
+    calculatedProjection
+    && expectedProjection.row_count === calculatedProjection.row_count
+    && expectedProjection.sha256 === calculatedProjection.sha256,
+  );
+  const uniqueTickerCount = uniqueTickers.size;
+  const uniqueTickersMatchRows = sourceRowsPresent && uniqueTickerCount === sourceRows.length;
+  const fullReportProjectionMatches = scored.classification_projection?.row_count === scoredEtfCount;
+  const status = !sourceRowsPresent
+    ? "missing_exact_source_rows"
+    : countEquationOk
+      && candidateCountMatchesReport
+      && classificationProjectionMatches
+      && tickersAreValid
+      && uniqueTickersMatchRows
+      && fullReportProjectionMatches
+      ? "complete"
+      : "invalid_source_rows";
+  const exactPlanReady = status === "complete";
+
+  return {
+    scope: "full_scored_etf_universe",
+    source_field: "history_gap_report.daily_1y_gap.scored_etfs.fetchable_rows",
+    status,
+    eligible_count: scoredEtfCount,
+    scored_etf_count: scoredEtfCount,
+    fetchable_count: fetchable,
+    complete_count: complete,
+    inception_limited_count: inceptionLimited,
+    terminal_limited_count: terminalLimited,
+    classified_count: classifiedCount,
+    candidate_row_count: sourceRows.length,
+    unique_ticker_count: uniqueTickerCount,
+    count_equation_ok: countEquationOk,
+    candidate_count_matches_report: candidateCountMatchesReport,
+    classification_projection_matches: classificationProjectionMatches,
+    identity_projection: {
+      row_count: expectedProjection.row_count ?? null,
+      sha256: expectedProjection.sha256 ?? null,
+    },
+    full_report_projection_matches: fullReportProjectionMatches,
+    rows: exactPlanReady ? exactRows : [],
+    tickers: exactPlanReady ? exactRows.map((row) => row.ticker) : [],
+    dispatch_authorized: false,
+    caveat: "Exact full-scored fetchable identities only; acquisition routing and dispatch authorization remain separate.",
+  };
+}
+
 function rowsForPeriod(payload, period) {
   const normalizedPeriods = asObject(asObject(payload?.normalized).history_periods);
   const rawPeriods = asObject(asObject(payload?.raw).history_periods);
@@ -445,6 +524,7 @@ export function buildScoredEtfDaily1yFetchablePlan({
   // the intersection equals the full core basket, so the core denominator is exact.
   const managedTickers = basketTickers.filter((ticker) => summaryTickerSet.has(ticker));
   const scored = historyGap?.daily_1y_gap?.scored_etfs ?? {};
+  const fullScoredFetchableCandidates = buildFullScoredFetchableCandidates(scored);
   const s3Track = findTrack(coverageIndex, "etf_scoring_lane");
   const readiness = s3Track?.evidence_based_readiness ?? coverageIndex?.etf_universe?.evidence_based_readiness ?? null;
   const generatedDailyCheck = findDailyCheck(readiness, "etf_no_fetchable_daily_1y_gap");
@@ -697,6 +777,7 @@ export function buildScoredEtfDaily1yFetchablePlan({
       effective_detail_resolution: effectiveResolutionCounts,
       full_scored_report_consistent: historyGapReportConsistent,
     },
+    full_scored_fetchable_candidates: fullScoredFetchableCandidates,
     yf_local_crosscheck: {
       complete: yfRows.complete.length,
       missing_or_lt_min_rows: yfGapCount,
@@ -915,6 +996,11 @@ export function buildEtfDaily1yReadiness({ rootDir = REPO_ROOT, now = new Date()
       output: FETCHABLE_PLAN_REL_PATH,
       fetchable_count: fetchablePlan.counts.fetchable,
       ticker_count: fetchablePlan.tickers.length,
+      full_scored_scope: fetchablePlan.full_scored_fetchable_candidates.scope,
+      full_scored_candidate_status: fetchablePlan.full_scored_fetchable_candidates.status,
+      full_scored_candidate_count: fetchablePlan.full_scored_fetchable_candidates.fetchable_count,
+      full_scored_candidate_ticker_count: fetchablePlan.full_scored_fetchable_candidates.tickers.length,
+      full_scored_dispatch_authorized: fetchablePlan.full_scored_fetchable_candidates.dispatch_authorized,
       can_drive_bounded_ticker_batches: fetchablePlan.bounded_batches.can_drive_bounded_ticker_batches,
       batch_count: fetchablePlan.bounded_batches.batch_count,
       default_batch_size: fetchablePlan.bounded_batches.default_batch_size,

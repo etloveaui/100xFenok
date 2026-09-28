@@ -11,6 +11,7 @@ import {
 import { DATA_SUPPLY_DETECTION_CONFIG } from "./lib/data-supply-detection-config.mjs";
 import { hasStructuredGithubRunBinding, isEligibleRecoveryRun } from "./lib/data-supply-lkg-store.mjs";
 import { canonicalJson } from "./lib/json-canonical.mjs";
+import { inspectGdeltSelectedSource } from "./lib/gdelt-selected-source.mjs";
 import { LANE_REGISTRY } from "./lib/lane-registry.mjs";
 import { validatePublishOutcomeShard } from "./lib/publish-outcome-shard.mjs";
 import {
@@ -1063,11 +1064,13 @@ const BOUND_DISPATCH_RECOVERY_LANES = Object.freeze(new Map([
   ["finra_ats_weekly", Object.freeze({ admin_root: "finra-ats" })],
 ]));
 
-// FDIC may use one explicitly owner-approved, first-attempt dispatch to restore
+// FDIC, KRX and GDELT may use a bound first-attempt dispatch to restore
 // currently available provider data. That recovery restores service state but
 // never enters the natural scheduled-recovery evidence set.
 const OPERATIONAL_DISPATCH_RECOVERY_LANES = Object.freeze(new Set([
   "fdic_tier1",
+  "krx",
+  "gdelt_news_tone",
 ]));
 
 // The KRX workflow may walk backward across provider dates inside one natural
@@ -1735,13 +1738,24 @@ export function mapDetectionFloorRow(row, recoveryState = undefined, options = {
   const recoveryRetrySet = targetRecovery ? null : projectRecoveryRetrySet(recoveryState, row.id);
   const recoveryRecovered = targetRecovery ? null : projectRecoveryRecoveredSet(recoveryState, row.id);
   const recovery = targetRecovery ? recoveryChecks(row.id, recoveryState, options) : null;
+  const gdeltSelectedSource = laneId === "gdelt_news_tone" && row.reason !== "ok"
+    ? inspectGdeltSelectedSource({ dataRoot: options.dataRoot ?? DATA_ROOT, nowIso: options.nowIso,
+      detectionRow: row }) : null;
+  const selectedSourceReady = gdeltSelectedSource?.ready === true;
   const result = lane(row.id, row.label, [
     check(
       "detection_floor_status",
       "Detection floor status",
       row.status === "ready",
       `${row.reason}; source_as_of ${sourceAsOf ?? "null"}`,
+      laneId === "gdelt_news_tone" ? { required: !selectedSourceReady } : {},
     ),
+    ...(laneId === "gdelt_news_tone" ? [check(
+      "gdelt_selected_source_ready", "Selected GDELT data source", row.reason === "ok" || selectedSourceReady,
+      selectedSourceReady ? `${gdeltSelectedSource.source_family}; primary ${gdeltSelectedSource.primary_reason}`
+        : row.reason === "ok" ? "DOC acquisition ready" : "provider-backed selected source not verified",
+      { required: true },
+    )] : []),
     ...(sourceVerdicts.length ? [check(
       "content_age_policy", "Source content age", contentAgeReady,
       sourceVerdicts.map((item) => `${item.id}:${item.state}:${item.age_days ?? "unknown"}`).join(", "),
@@ -1761,13 +1775,14 @@ export function mapDetectionFloorRow(row, recoveryState = undefined, options = {
     details: targetRecovery
       ? { detection_reason: row.reason, recovery: recovery.details, source_verdicts: sourceVerdicts, ...lastAttemptDetail(recoveryState) }
       : { detection_reason: row.reason, recovery_retry_set: recoveryRetrySet, recovery_recovered: recoveryRecovered, source_verdicts: sourceVerdicts,
+        ...(laneId === "gdelt_news_tone" ? { selected_source: selectedSourceReady ? gdeltSelectedSource : null } : {}),
         ...(laneId === "edgar_filings" ? { poll_endpoint: { lane_id: laneId, status: row.endpoint?.status ?? null,
           reason: row.endpoint?.reason ?? null, observed_at: row.endpoint?.observed_at ?? null } } : {}),
         ...lastAttemptDetail(recoveryState) },
   });
   return {
     ...result,
-    reason: row.reason === "ok" && !contentAgeReady ? "stale"
+    reason: selectedSourceReady ? "ok" : row.reason === "ok" && !contentAgeReady ? "stale"
       : targetRecovery && row.reason === "ok" && result.status !== "ready" ? "recovery_degraded" : row.reason,
     artifact: providerDateless
       ? { source_as_of: sourceAsOf, source_as_of_reason: "dateless_by_provider", ...generatedAtProjection }
@@ -3928,7 +3943,7 @@ export function buildPayload(
   const detectionFloorLanes = buildDetectionFloorLanes(
     detectionFloor,
     recoveryStates,
-    { slickchartsRepoRoot, nowIso },
+    { slickchartsRepoRoot, nowIso, dataRoot },
   );
   for (const [laneId, sourceStatuses] of Object.entries(requiredSourceStatuses)) {
     const target = detectionFloorLanes.find((item) => item.id === laneId);

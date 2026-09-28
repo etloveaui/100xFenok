@@ -8,6 +8,7 @@
  * to prove exit codes (warn-only Phase A) and reuses its validation functions.
  */
 import assert from "node:assert/strict";
+import { createHash } from "node:crypto";
 import fs from "node:fs";
 import os from "node:os";
 import path from "node:path";
@@ -96,7 +97,7 @@ const { projectFenokDataHealthKpiPublicMirror } = await import("../100xfenok-nex
 const { DATA_SUPPLY_DETECTION_CONFIG } = await import("./lib/data-supply-detection-config.mjs");
 const { LANE_REGISTRY } = await import("./lib/lane-registry.mjs");
 const { FAMILY_POLICY, FRESHNESS_CLASSES, policyToday, resolveSourcePolicy } = await import("../100xfenok-next/src/lib/freshness-policy.mjs");
-const { buildFetchCronAttemptCoverage } = await import("./build-data-supply-detection-floor.mjs");
+const { buildFetchCronAttemptCoverage, classifyAttempt } = await import("./build-data-supply-detection-floor.mjs");
 const { deriveProductSurfaceStampEvidence } = await import("./lib/product-surface-stamp-v2.mjs");
 const { ProducerLkgStateStore } = await import("./lib/producer-lkg-state.mjs");
 const { checkKpiRecoverySourcesAgainstRegistry } = await import("./check-lane-registry-kpi.mjs");
@@ -196,7 +197,7 @@ function readySlickchartsCompositeIndex(
   };
   return index;
 }
-function fixtureDetectionReport(evaluatedAt) {
+function fixtureDetectionReport(evaluatedAt, { gdeltReady = false } = {}) {
   const report = structuredClone(DETECTION_BASELINE_REPORT);
   report.generated_at = typeof evaluatedAt === "string"
     && /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d{1,3})?Z$/.test(evaluatedAt)
@@ -204,6 +205,18 @@ function fixtureDetectionReport(evaluatedAt) {
     ? evaluatedAt
     : DETECTION_BASELINE_REPORT.generated_at;
   report.lanes.find((item) => item.id === "edgar_filings").endpoint.observed_at = report.generated_at;
+  if (gdeltReady) {
+    const row = report.lanes.find((item) => item.id === "gdelt_news_tone");
+    report.counts[row.status] -= 1;
+    report.counts[`producer_members_${row.status}`] -= 1;
+    report.counts.ready += 1;
+    report.counts.producer_members_ready += 1;
+    Object.assign(row, {
+      status: "ready", reason: "ok",
+      endpoint: { status: "ready", reason: "ok", observed_at: report.generated_at },
+      artifact: { status: "ready", reason: "ok", source_as_of: report.generated_at, age: 0, unit: "calendar_days" },
+    });
+  }
   return report;
 }
 function fixtureFetchCronCoverage(evaluatedAt) {
@@ -1793,6 +1806,31 @@ assert.equal(PRODUCT_SURFACE_SLA?.max_staleness, 10, "weekly ETF universe cadenc
     "KRX intra-run date walkback restores service but cannot be projected as independent natural recovery proof",
   );
 
+  for (const laneId of ["krx", "gdelt_news_tone"]) {
+    const dispatchState = structuredClone(fdicRecovered);
+    dispatchState.lane_id = laneId;
+    const key = laneId === "krx" ? "bridge" : "news_tone_proxy";
+    dispatchState.items = { [key]: {
+      ...structuredClone(fdicRecovered.items.fdic_tier1), key,
+      current: { path: laneId === "krx" ? "data/admin/fenok-edge-korea-krx-daily-index.json"
+        : "data/computed/fenok_news_tone_proxy.json", payload_sha256: "b".repeat(64), source_as_of: "2026-06-30" },
+      lkg: { path: `data/admin/${laneId}/lkg/${key}.json`, payload_sha256: "a".repeat(64), source_as_of: "2026-03-31" },
+      recovery_run_id: "16400000001", recovery_event_name: "workflow_dispatch",
+    } };
+    const projected = buildDetectionFloorLanes(report(), { [laneId]: dispatchState })
+      .find((item) => item.id === laneId);
+    assert.equal(projected.status, "ready", `${laneId}: genuine operational dispatch is accepted`);
+    assert.deepEqual(projected.details.recovery_recovered, [], `${laneId}: dispatch never becomes scheduled proof`);
+    const errors = [];
+    checkDetectionFloorLane(projected, errors, liveConfigs.find((item) => item.id === laneId));
+    assert.deepEqual(errors, [], `${laneId}: independent checker accepts the operational projection`);
+    dispatchState.items[key].recovery_run_id = "local";
+    assert.throws(() => buildDetectionFloorLanes(report(), { [laneId]: dispatchState }), /recovery provenance.*malformed/);
+    dispatchState.items[key].recovery_run_id = "16400000001";
+    dispatchState.items[key].recovery_run_attempt = 2;
+    assert.throws(() => buildDetectionFloorLanes(report(), { [laneId]: dispatchState }), /recovery provenance.*malformed/);
+  }
+
   const finraDispatchRecovered = structuredClone(fdicRecovered);
   finraDispatchRecovered.lane_id = "finra_ats_weekly";
   finraDispatchRecovered.items = {
@@ -2146,8 +2184,9 @@ function fixtureSourceDate(id, now, artifactId) {
 function readyDetectionProjection(id, now) {
   const config = DATA_SUPPLY_DETECTION_CONFIG.lanes.find((item) => item.id === id && item.enforcement === "live");
   if (!config) return {};
-  const edgarEvidence = id === "edgar_filings"
-    ? fixtureDetectionReport(now).lanes.find((item) => item.id === id) : null;
+  const detectorEvidence = ["edgar_filings", "gdelt_news_tone"].includes(id)
+    ? fixtureDetectionReport(now, { gdeltReady: id === "gdelt_news_tone" })
+      .lanes.find((item) => item.id === id) : null;
   const providerDateless = config.freshness.source_basis.length === 0;
   const sharedAgeLanes = new Set(["benchmarks", "global_scouter", "fred_yardeni", "fred_macro", "treasury_tga", "finra_ats_weekly", "fred_banking", "krx"]);
   const row = {
@@ -2157,9 +2196,9 @@ function readyDetectionProjection(id, now) {
     kpi_required: true,
     status: "ready",
     reason: "ok",
-    ...(edgarEvidence ? { endpoint: structuredClone(edgarEvidence.endpoint) } : {}),
-    artifact: { status: "ready", reason: "ok", source_as_of: edgarEvidence
-      ? edgarEvidence.artifact.source_as_of : providerDateless ? null : sharedAgeLanes.has(id) ? fixtureSourceDate(id, now) : now.slice(0, 10) },
+    ...(detectorEvidence ? { endpoint: structuredClone(detectorEvidence.endpoint) } : {}),
+    artifact: { status: "ready", reason: "ok", source_as_of: detectorEvidence
+      ? detectorEvidence.artifact.source_as_of : providerDateless ? null : sharedAgeLanes.has(id) ? fixtureSourceDate(id, now) : now.slice(0, 10) },
   };
   if (id === "fred_banking") {
     // Use canonical required files, each with a source date fresh at this fixture clock.
@@ -2294,8 +2333,9 @@ function readyCoreV2(now) {
 // checker's status/lane gate is satisfied and only runtime/sla/projection is exercised.
 function seedReadyV2(tmp, { now, runtime, sla }) {
   writeReadyTargetRecoveryIndexes(tmp, now);
-  writeJson(path.join(tmp, "data", "admin", "data-supply-detection-floor.json"), fixtureDetectionReport(now));
-  runtime.fetch_cron_skip_detection = fixtureFetchCronCoverage(now);
+  const report = fixtureDetectionReport(now, { gdeltReady: true });
+  writeJson(path.join(tmp, "data", "admin", "data-supply-detection-floor.json"), report);
+  runtime.fetch_cron_skip_detection = buildFetchCronAttemptCoverage({ report, calendars: DETECTION_CALENDAR_FIXTURE });
   runtime.publication_gate = publicationGateForRuntime(runtime);
   const root = { ...readyCoreV2(now), runtime, source_sla: sla };
   const pub = projectPublicKpi(root, now);
@@ -3295,6 +3335,14 @@ console.log("# KPI v2 runtime self-proof fixtures");
     "ready EDGAR poll witness must match the installed detector report");
   assert.equal(kpiEdgar.artifact.source_as_of, reportEdgar.artifact.source_as_of,
     "quiet EDGAR poll must retain the detector's filing date");
+  const reportGdelt = JSON.parse(fs.readFileSync(path.join(tmp, "data", "admin", "data-supply-detection-floor.json"), "utf8"))
+    .lanes.find((item) => item.id === "gdelt_news_tone");
+  const kpiGdelt = root.lanes.find((item) => item.id === "gdelt_news_tone");
+  assert.equal(reportGdelt.endpoint.status, "ready", "ordinary DOC-ready fixture installs a successful detector report");
+  assert.equal(kpiGdelt.details.detection_reason, reportGdelt.reason);
+  assert.equal(kpiGdelt.artifact.source_as_of, reportGdelt.artifact.source_as_of);
+  assert.equal(kpiGdelt.checks.find((item) => item.id === "detection_floor_status").required, true);
+  assert.equal(kpiGdelt.details.selected_source, null, "ordinary DOC readiness does not claim TOC acquisition");
   for (const id of ["fred_macro", "fred_banking", "fred_yardeni", "treasury_tga", "finra_ats_weekly", "krx"]) {
     const lane = root.lanes.find((item) => item.id === id);
     assert.ok(lane.details.source_verdicts.length > 0, `${id} carries content-age evidence`);
@@ -5506,7 +5554,10 @@ for (const [runId, delayMin] of [["26765173733", 368], ["27940007940", 364]]) {
   root.totals = { lanes: REQUIRED_LANE_IDS.length, ready: REQUIRED_LANE_IDS.length - 1, degraded: 1, warning: 0, blocked: 0, unavailable: 0, required_not_ready: 1, platform_blocking_not_ready: 0 };
   const tmp = mkTmp("lane-degraded");
   writeReadyTargetRecoveryIndexes(tmp, now);
-  writeJson(path.join(tmp, "data", "admin", "data-supply-detection-floor.json"), fixtureDetectionReport(now));
+  const report = fixtureDetectionReport(now, { gdeltReady: true });
+  root.runtime.fetch_cron_skip_detection = buildFetchCronAttemptCoverage({ report, calendars: DETECTION_CALENDAR_FIXTURE });
+  root.runtime.publication_gate = publicationGateForRuntime(root.runtime);
+  writeJson(path.join(tmp, "data", "admin", "data-supply-detection-floor.json"), report);
   writeJson(path.join(tmp, "data", KPI_REL), root);
   writeJson(path.join(tmp, "public", "data", KPI_REL), projectPublicKpi(root, now));
   assert.equal(runChecker(tmp, now, { strict: true }).exit, 0,
@@ -6472,6 +6523,255 @@ for (const [runId, delayMin] of [["26765173733", 368], ["27940007940", 364]]) {
     assert.equal(buildPublicationOutcomes({ dataRoot: path.join(tmp, "data") }).families[0]?.result, "published", "valid historical and current publication schemas remain readable");
   }
   ok("invalid/future source clocks and forged publication evidence cannot manufacture advancement");
+}
+
+// A healthy TOC basket restores data service only when canonical bytes, the
+// current provider observation and the actual failed DOC attempt all agree.
+{
+  const { buildLegacyTocSnapshot } = await import("./fetch-fenok-news-tone-proxy.mjs");
+  const nowIso = "2026-09-28T02:00:00.000Z";
+  const observedAt = "2026-09-28T01:00:00.000Z";
+  const sourceAsOf = "2026-09-28T00:16:00.000Z";
+  const config = DATA_SUPPLY_DETECTION_CONFIG.lanes.find((item) => item.id === "gdelt_news_tone");
+  const bytes = (document) => Buffer.from(`${JSON.stringify(document, null, 2)}\n`);
+  const digest = (value) => createHash("sha256").update(value).digest("hex");
+  function fixture({ clock = nowIso, observed = observedAt, source = sourceAsOf,
+    primaryReason = "schema_drift", primaryTuple = null } = {}) {
+    const root = mkTmp("gdelt-selected-source");
+    const dataRoot = path.join(root, "data");
+    const tuple = primaryTuple ?? {
+      execution: "returned", exception_kind: null, http_status: 200,
+      auth: "not_applicable", rate_limited: false, decode: "ok", payload: "non_empty",
+      assertions: [{ id: "articles_array", passed: false }],
+    };
+    const snapshot = buildLegacyTocSnapshot({
+      records: ["DoorDash", "UnitedHealth", "PayPal", "Reddit", "Coinbase", "Micron", "Palantir", "NVIDIA"]
+        .map((company, index) => ({ date: source, lang: "en", title: `${company} reports growth`,
+          url: `https://fixture.invalid/${index}` })),
+      generatedAt: observed,
+    });
+    snapshot.acquisition = {
+      primary: { reason: primaryReason, attempt: structuredClone(tuple) },
+      fallback: { source_family: "GDELT Web Legacy NGrams TOC", source_as_of: source, observed_at: observed },
+    };
+    const shard = {
+      schema_version: "data-supply-detection-attempt-shard/v2", lane_id: "gdelt_news_tone",
+      attempts: [{ lane_id: "gdelt_news_tone", member_id: null, attempt_id: "gdelt-bound-toc",
+        observed_at: observed, event_name: "workflow_dispatch", run_id: "36341396597", run_attempt: 1, ...tuple }],
+    };
+    const state = {
+      schema_version: "data-supply-lkg-state/v1", lane_id: "gdelt_news_tone", updated_at: observed,
+      retry_set: [], items: { news_tone_proxy: {
+        key: "news_tone_proxy", resolution_state: "fresh_primary", retry: false, updated_at: observed,
+        promotion_contract: "provider_observation/v2",
+        current: { path: "data/computed/fenok_news_tone_proxy.json", source_as_of: source },
+        provider_observation: { schema_version: "provider_observation/v2", source_as_of: source,
+          run_id: "36341396597", run_attempt: 1, observed_at: observed },
+      } },
+    };
+    const report = fixtureDetectionReport(clock);
+    const row = report.lanes.find((item) => item.id === "gdelt_news_tone");
+    const primaryVerdict = classifyAttempt(shard.attempts[0]);
+    report.counts[row.status] -= 1;
+    report.counts[`producer_members_${row.status}`] -= 1;
+    report.counts[primaryVerdict.status] += 1;
+    report.counts[`producer_members_${primaryVerdict.status}`] += 1;
+    Object.assign(row, { status: primaryVerdict.status, reason: primaryVerdict.reason,
+      endpoint: { status: primaryVerdict.status, reason: primaryVerdict.reason, observed_at: observed },
+      artifact: { status: "ready", reason: "ok", source_as_of: source, age: 0, unit: "calendar_days" } });
+    const f = { root, dataRoot, snapshot, shard, state, report, row };
+    rebind(f);
+    return f;
+  }
+  function rebind(f) {
+    const source = f.snapshot.rows.map((row) => row.as_of).sort().at(-1);
+    const item = f.state.items.news_tone_proxy;
+    item.current.payload_sha256 = digest(bytes(f.snapshot));
+    item.provider_observation.payload_sha256 = digest(bytes({
+      schema_version: "gdelt-provider-observation/v1", source_as_of: source,
+      rows: f.snapshot.rows.map(({ ticker, as_of }) => ({ ticker, as_of })),
+    }));
+  }
+  function persist(f) {
+    writeJson(path.join(f.dataRoot, "computed", "fenok_news_tone_proxy.json"), f.snapshot);
+    writeJson(path.join(f.dataRoot, "admin", "gdelt_news_tone", "index.json"), f.state);
+    writeJson(path.join(f.dataRoot, "admin", "data-supply-state", "detection-attempts", "gdelt_news_tone.json"), f.shard);
+    writeJson(path.join(f.dataRoot, "admin", "data-supply-detection-floor.json"), f.report);
+  }
+  const valid = fixture();
+  persist(valid);
+  const recovered = mapDetectionFloorRow(valid.row, valid.state, { nowIso, dataRoot: valid.dataRoot });
+  assert.equal(recovered.status, "ready");
+  assert.equal(recovered.reason, "ok");
+  assert.equal(recovered.details.detection_reason, "schema_drift", "DOC failure stays visible after service recovery");
+  const primaryCheck = recovered.checks.find((item) => item.id === "detection_floor_status");
+  assert.equal(primaryCheck.status, "blocked");
+  assert.equal(primaryCheck.required, false, "only proven selected supply demotes the failed primary check");
+  assert.equal(recovered.checks.find((item) => item.id === "gdelt_selected_source_ready").required, true);
+  assert.deepEqual(recovered.details.recovery_recovered, []);
+  assert.equal(/https?:|fixture\.invalid|payload_sha256|reports growth/.test(JSON.stringify(recovered)), false,
+    "selected-source KPI proof contains no article content, URLs or private digests");
+  const errors = [];
+  checkDetectionFloorLane(recovered, errors, config, nowIso, { dataRoot: valid.dataRoot });
+  assert.deepEqual(errors, [], "checker independently accepts actual bound TOC bytes");
+  const washedPrimary = structuredClone(recovered);
+  washedPrimary.details.detection_reason = "ok";
+  washedPrimary.details.selected_source = null;
+  Object.assign(washedPrimary.checks.find((item) => item.id === "detection_floor_status"), { status: "ready", required: true });
+  const washedErrors = [];
+  checkDetectionFloorLane(washedPrimary, washedErrors, config, nowIso, { dataRoot: valid.dataRoot });
+  assert.ok(washedErrors.length > 0, "KPI metadata cannot relabel the committed failed DOC request as successful");
+  const fakeClockErrors = [];
+  checkDetectionFloorLane(washedPrimary, fakeClockErrors, config, "invalid-clock", { dataRoot: valid.dataRoot });
+  assert.ok(fakeClockErrors.length > 0, "a clocked production claim cannot bypass committed proof with a fake clock");
+  const built = buildPayload(nowIso, null, null, RECOVERY_STATE_SOURCES, {
+    dataRoot: valid.dataRoot, publicDataRoot: path.join(valid.root, "public", "data"),
+    slickchartsRepoRoot: valid.root, env: {}, scriptStartMs: Date.parse(nowIso),
+  });
+  assert.equal(built.lanes.find((item) => item.id === "gdelt_news_tone").status, "ready",
+    "full builder must pass its actual injected dataRoot into the selected-source mapping");
+
+  for (const [primaryReason, primaryTuple] of [
+    ["rate_limited", {
+      execution: "returned", exception_kind: null, http_status: 429,
+      auth: "not_applicable", rate_limited: true, decode: "not_attempted", payload: "not_available",
+      assertions: [{ id: "articles_array", passed: false }],
+      retry_reason: "rate_limited", retry_count: 1, retry_wait_ms: 6500,
+    }],
+    ["http_error", {
+      execution: "returned", exception_kind: null, http_status: 503,
+      auth: "not_applicable", rate_limited: false, decode: "not_attempted", payload: "not_available",
+      assertions: [{ id: "articles_array", passed: false }],
+    }],
+    ["transport_error", {
+      execution: "threw", exception_kind: "transport", http_status: null,
+      auth: "not_applicable", rate_limited: false, decode: "not_attempted", payload: "not_available",
+      assertions: [{ id: "articles_array", passed: false }],
+    }],
+  ]) {
+    const f = fixture({ primaryReason, primaryTuple });
+    persist(f);
+    const projected = mapDetectionFloorRow(f.row, f.state, { nowIso, dataRoot: f.dataRoot });
+    assert.equal(projected.status, "ready", `${primaryReason}: valid bound TOC supply restores service`);
+    assert.equal(projected.details.detection_reason, primaryReason);
+    assert.equal(projected.details.selected_source.primary_reason, primaryReason);
+    assert.deepEqual(f.snapshot.acquisition.primary.attempt, primaryTuple);
+    assert.equal(projected.checks.find((item) => item.id === "detection_floor_status").status, "blocked");
+    assert.equal(projected.checks.find((item) => item.id === "detection_floor_status").required, false);
+    const qualifiedErrors = [];
+    checkDetectionFloorLane(projected, qualifiedErrors, config, nowIso, { dataRoot: f.dataRoot });
+    assert.deepEqual(qualifiedErrors, [], `${primaryReason}: independent checker accepts the matching raw tuple and reason`);
+  }
+
+  const entryNow = "2026-07-10T02:35:00.000Z";
+  const fullEntry = fixture({ clock: entryNow,
+    observed: "2026-07-10T02:20:00.000Z", source: "2026-07-10T00:16:00.000Z" });
+  const entryRuntime = makeProducerRuntime({ builtAt: entryNow,
+    slotKey: "update-manifest.yml:30 2 * * *@2026-07-10T02:30Z", runId: "gdelt-full-entry" });
+  const { root: entryRoot } = seedReadyV2(fullEntry.root, { now: entryNow, runtime: entryRuntime, sla: readySla(entryNow) });
+  persist(fullEntry);
+  entryRoot.lanes[entryRoot.lanes.findIndex((item) => item.id === "gdelt_news_tone")] = mapDetectionFloorRow(
+    fullEntry.row, fullEntry.state, { nowIso: entryNow, dataRoot: fullEntry.dataRoot });
+  entryRoot.runtime.fetch_cron_skip_detection = buildFetchCronAttemptCoverage({
+    report: fullEntry.report, calendars: DETECTION_CALENDAR_FIXTURE,
+  });
+  entryRoot.runtime.publication_gate = publicationGateForRuntime(entryRoot.runtime);
+  entryRoot.outcome_watchdog = buildOutcomeWatchdog(entryNow, entryRoot.lanes);
+  writeJson(path.join(fullEntry.root, "data", KPI_REL), entryRoot);
+  writeJson(path.join(fullEntry.root, "public", "data", KPI_REL), projectPublicKpi(entryRoot, entryNow));
+  for (const relative of ["computed/fenok_news_tone_proxy.json", "admin/gdelt_news_tone/index.json",
+    "admin/data-supply-state/detection-attempts/gdelt_news_tone.json", "admin/data-supply-detection-floor.json"]) {
+    assert.equal(fs.existsSync(path.join(fullEntry.root, "public", "data", relative)), false,
+      "public projection has no private GDELT proof bytes");
+  }
+  const fullEntryResult = runChecker(fullEntry.root, entryNow);
+  assert.equal(fullEntryResult.exit, 0,
+    `full root/public checker accepts TOC recovery using its explicit private evidence root:\n${fullEntryResult.stderr}`);
+
+  const calendarBoundary = fixture();
+  const boundarySource = "2026-09-25T00:16:00.000Z";
+  calendarBoundary.snapshot.rows.forEach((row) => { row.as_of = boundarySource; });
+  calendarBoundary.snapshot.source_as_of = boundarySource;
+  calendarBoundary.snapshot.acquisition.fallback.source_as_of = boundarySource;
+  calendarBoundary.row.artifact.source_as_of = boundarySource;
+  calendarBoundary.row.artifact.age = 3;
+  calendarBoundary.state.items.news_tone_proxy.current.source_as_of = boundarySource;
+  calendarBoundary.state.items.news_tone_proxy.provider_observation.source_as_of = boundarySource;
+  rebind(calendarBoundary);
+  persist(calendarBoundary);
+  assert.equal(mapDetectionFloorRow(calendarBoundary.row, calendarBoundary.state,
+    { nowIso, dataRoot: calendarBoundary.dataRoot }).status, "ready",
+  "freshness accepts three UTC calendar days even when wall-clock age exceeds 72 hours");
+
+  for (const [name, mutate] of [
+    ["partial", (f) => { f.snapshot.rows.pop(); rebind(f); }],
+    ["source-floor", (f) => { f.snapshot.source_as_of = "2026-09-27T00:16:00.000Z"; rebind(f); }],
+    ["future", (f) => { f.snapshot.rows[0].as_of = "2026-09-28T03:00:00.000Z"; rebind(f); }],
+    ["malformed-date", (f) => { f.snapshot.rows[0].as_of = "2026-02-30T00:16:00.000Z"; rebind(f); }],
+    ["mixed-fresh-stale-basket", (f) => {
+      f.snapshot.rows.slice(1).forEach((row) => { row.as_of = "2026-09-24T00:16:00.000Z"; });
+      f.snapshot.source_as_of = "2026-09-24T00:16:00.000Z";
+      // The detector and current/provider pointers remain bound to the fresh
+      // Sep 28 maximum; recompute both hashes for the actual mixed-date bytes.
+      rebind(f);
+    }],
+    ["stale", (f) => {
+      f.snapshot.rows.forEach((row) => { row.as_of = "2026-09-24T00:16:00.000Z"; });
+      f.snapshot.source_as_of = "2026-09-24T00:16:00.000Z";
+      f.snapshot.acquisition.fallback.source_as_of = "2026-09-24T00:16:00.000Z";
+      f.row.artifact.source_as_of = "2026-09-24T00:16:00.000Z";
+      f.state.items.news_tone_proxy.current.source_as_of = "2026-09-24T00:16:00.000Z";
+      f.state.items.news_tone_proxy.provider_observation.source_as_of = "2026-09-24T00:16:00.000Z";
+      rebind(f);
+    }],
+    ["sha", (f) => { f.state.items.news_tone_proxy.current.payload_sha256 = "0".repeat(64); }],
+    ["pointer", (f) => { f.state.items.news_tone_proxy.current.path = "data/computed/other.json"; }],
+    ["provider-sha", (f) => { f.state.items.news_tone_proxy.provider_observation.payload_sha256 = "0".repeat(64); }],
+    ["provider-source", (f) => { f.state.items.news_tone_proxy.provider_observation.source_as_of = "2026-09-27T00:16:00.000Z"; }],
+    ["synthetic-run", (f) => { f.state.items.news_tone_proxy.provider_observation.run_id = "local"; f.shard.attempts[0].run_id = "local"; }],
+    ["rerun", (f) => { f.state.items.news_tone_proxy.provider_observation.run_attempt = 2; f.shard.attempts[0].run_attempt = 2; }],
+    ["observed-time", (f) => { f.state.items.news_tone_proxy.provider_observation.observed_at = "2026-09-28T00:59:00.000Z"; }],
+    ["primary-tuple", (f) => { f.snapshot.acquisition.primary.attempt.http_status = 503; rebind(f); }],
+    ["primary-reason", (f) => { f.snapshot.acquisition.primary.reason = "http_error"; rebind(f); }],
+    ["fallback-family", (f) => { f.snapshot.acquisition.fallback.source_family = "Unverified source"; rebind(f); }],
+    ["retry-retained", (f) => {
+      const item = f.state.items.news_tone_proxy;
+      item.resolution_state = "lkg_primary"; item.retry = true;
+      f.state.retry_set = ["news_tone_proxy"];
+      item.current.path = "data/admin/gdelt_news_tone/lkg/news_tone_proxy.json";
+      item.lkg = structuredClone(item.current);
+      item.latest_failure = { run_id: "36341396598", run_attempt: 1,
+        observed_at: "2026-09-28T01:30:00.000Z", reason: "schema_drift" };
+    }],
+    ["later-doc-attempt", (f) => { f.shard.attempts[0].run_id = "36341396598"; f.shard.attempts[0].observed_at = "2026-09-28T01:30:00.000Z"; }],
+    ["newer-canonical", (f) => { f.snapshot.rows[0].as_of = "2026-09-28T00:30:00.000Z"; }],
+    ["report-source", (f) => { f.row.artifact.source_as_of = "2026-09-27T00:16:00.000Z"; }],
+  ]) {
+    const f = fixture();
+    mutate(f);
+    persist(f);
+    const projected = mapDetectionFloorRow(f.row, f.state, { nowIso, dataRoot: f.dataRoot });
+    assert.equal(projected.status, "degraded", `${name}: invalid selected proof cannot restore service`);
+    assert.equal(projected.checks.find((item) => item.id === "detection_floor_status").required, true);
+    const honestErrors = [];
+    checkDetectionFloorLane(projected, honestErrors, config, nowIso, { dataRoot: f.dataRoot });
+    assert.deepEqual(honestErrors, [], `${name}: honest degradation agrees with independent checker`);
+    const forgedErrors = [];
+    checkDetectionFloorLane(recovered, forgedErrors, config, nowIso, { dataRoot: f.dataRoot });
+    assert.ok(forgedErrors.length > 0, `${name}: checker rereads actual bytes instead of trusting prior ready metadata`);
+  }
+  for (const rel of ["computed/fenok_news_tone_proxy.json", "admin/data-supply-detection-floor.json",
+    "admin/gdelt_news_tone/index.json", "admin/data-supply-state/detection-attempts/gdelt_news_tone.json"]) {
+    const f = fixture();
+    persist(f);
+    fs.unlinkSync(path.join(f.dataRoot, rel));
+    const projected = mapDetectionFloorRow(f.row, f.state, { nowIso, dataRoot: f.dataRoot });
+    assert.equal(projected.status, "degraded", `${rel}: missing committed proof stays degraded`);
+    const forgedErrors = [];
+    checkDetectionFloorLane(recovered, forgedErrors, config, nowIso, { dataRoot: f.dataRoot });
+    assert.ok(forgedErrors.length > 0, `${rel}: checker rejects a ready claim with missing proof`);
+  }
+  ok("GDELT selected TOC supply restores service with truthful DOC diagnostics and independent byte-bound checks");
 }
 
 console.log(`\n# ${passed} fixtures passed`);

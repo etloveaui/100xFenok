@@ -60,6 +60,7 @@ import { hasStructuredGithubRunBinding } from "../../scripts/lib/data-supply-lkg
 import { buildFetchCronAttemptCoverage, evaluateAttemptCadence, evaluateFreshness } from "../../scripts/build-data-supply-detection-floor.mjs";
 import { inspectSlickchartsCompositeLiveIntegrity } from "../../scripts/lib/slickcharts-composite-recovery.mjs";
 import { LANE_REGISTRY } from "../../scripts/lib/lane-registry.mjs";
+import { inspectGdeltSelectedSource } from "../../scripts/lib/gdelt-selected-source.mjs";
 
 const APP_ROOT = path.resolve(path.dirname(new URL(import.meta.url).pathname), "..");
 const REPO_ROOT = path.resolve(APP_ROOT, "..");
@@ -372,7 +373,10 @@ function isDetectionSourceStamp(value) {
 // workflow_dispatch run; every other lane stays natural-schedule-only.
 const BOUND_DISPATCH_RECOVERY_LANE_IDS = Object.freeze(new Set(["finra_ats_weekly"]));
 
-export function checkDetectionFloorLane(lane, errors, expectedConfig, nowIso = null) {
+export function checkDetectionFloorLane(lane, errors, expectedConfig, nowIso = null, {
+  dataRoot = path.resolve(path.dirname(resolvePaths().rootKpiPath), ".."),
+  selectedSourceNow = nowIso,
+} = {}) {
   const laneId = expectedConfig?.id ?? lane?.id ?? "<unknown>";
   const sourceAsOf = lane?.artifact?.source_as_of;
   const sourceAsOfReason = lane?.artifact?.source_as_of_reason;
@@ -382,6 +386,9 @@ export function checkDetectionFloorLane(lane, errors, expectedConfig, nowIso = n
   const recoveryChecks = (lane?.checks || []).filter((item) => String(item?.id ?? "").startsWith("recovery_"));
   const targetRecovery = TARGET_RECOVERY_LANE_IDS.has(laneId);
   const detectionReason = lane?.details?.detection_reason ?? (targetRecovery ? undefined : lane?.reason);
+  const gdeltSelectedSource = laneId === "gdelt_news_tone"
+    ? inspectGdeltSelectedSource({ dataRoot, nowIso: selectedSourceNow, sourceAsOf }) : null;
+  const selectedSourceReady = gdeltSelectedSource?.ready === true;
   const expectedDetectionStatus = detectionReason === "ok" ? "ready" : "blocked";
   const recoveryRetrySet = lane?.details?.recovery_retry_set;
   const recoveryRecovered = lane?.details?.recovery_recovered;
@@ -458,7 +465,7 @@ export function checkDetectionFloorLane(lane, errors, expectedConfig, nowIso = n
     `${laneId}: content age reassessment requires the original detector reason`);
   const expectedStatus = targetRecovery
     ? (lane?.reason === "recovery_degraded" || contentAgeBlocked || detectionReason !== "ok" ? "degraded" : "ready")
-    : (detectionReason === "ok" && !contentAgeBlocked && !hasRetry ? "ready" : "degraded");
+    : ((detectionReason === "ok" || selectedSourceReady) && !contentAgeBlocked && !hasRetry ? "ready" : "degraded");
   const retryCheck = (lane?.checks || []).find((item) => item?.id === "lkg_retry_set_empty");
   push(errors, expectedConfig?.enforcement === "live" && expectedConfig?.kpi_required === true,
     `${laneId}: canonical detection-floor config is not live/required`);
@@ -519,6 +526,31 @@ export function checkDetectionFloorLane(lane, errors, expectedConfig, nowIso = n
     `${laneId}: detection_floor_status check does not match detection reason`);
   push(errors, statusCheck?.platform_blocking === false,
     `${laneId}: detection_floor_status must not be platform blocking`);
+  if (laneId === "gdelt_news_tone") {
+    if (gdeltSelectedSource?.detection_reason !== undefined) {
+      push(errors, detectionReason === gdeltSelectedSource.detection_reason,
+        "gdelt_news_tone: primary detector reason differs from its committed report");
+      push(errors, (sourceAsOf === null && gdeltSelectedSource.source_as_of === null)
+        || Date.parse(sourceAsOf) === Date.parse(gdeltSelectedSource.source_as_of),
+        "gdelt_news_tone: source clock differs from its committed report");
+    }
+    if (selectedSourceNow !== null && lane?.status === "ready") {
+      push(errors, gdeltSelectedSource?.detection_reason !== undefined,
+        "gdelt_news_tone: ready service requires a valid clock and committed detector report");
+    }
+    const selectedCheck = (lane?.checks || []).filter((item) => item.id === "gdelt_selected_source_ready");
+    push(errors, selectedCheck.length === 1 && selectedCheck[0].required === true
+      && selectedCheck[0].platform_blocking === false,
+    "gdelt_news_tone: selected-source readiness must be one required lane-local check");
+    push(errors, selectedCheck[0]?.status === (detectionReason === "ok" || selectedSourceReady ? "ready" : "blocked"),
+      "gdelt_news_tone: selected-source readiness differs from committed proof");
+    push(errors, statusCheck?.required === !selectedSourceReady,
+      "gdelt_news_tone: primary DOC failure may be diagnostic only with verified selected supply");
+    push(errors, JSON.stringify(lane?.details?.selected_source) === JSON.stringify(selectedSourceReady ? gdeltSelectedSource : null),
+      "gdelt_news_tone: selected-source provenance differs from committed proof");
+    push(errors, lane?.reason === (selectedSourceReady ? "ok" : detectionReason),
+      "gdelt_news_tone: lane reason must preserve primary failure until selected supply qualifies");
+  }
   if (targetRecovery) {
     const expectedRecoveryIds = [
       "recovery_state_present",
@@ -949,7 +981,7 @@ export function checkSourceStatusProjections(payload, errors) {
   }
 }
 
-function validateCoreShape(payload, errors, expectedVersion, warnings = []) {
+function validateCoreShape(payload, errors, expectedVersion, warnings = [], options = {}) {
   const isV2 = expectedVersion === SCHEMA_VERSION_V2;
   push(errors, payload?.schema_version === expectedVersion, `schema_version must be ${expectedVersion}, got ${payload?.schema_version ?? "missing"}`);
   push(errors, typeof payload?.generated_at === "string" && payload.generated_at.length >= 10, "generated_at is required");
@@ -1021,7 +1053,7 @@ function validateCoreShape(payload, errors, expectedVersion, warnings = []) {
         `totals.${status} mismatch: ${payload?.totals?.[status]} vs derived ${count}`);
     }
     for (const laneConfig of DETECTION_LIVE_LANE_CONFIGS) {
-      checkDetectionFloorLane(lanesById.get(laneConfig.id), errors, laneConfig, payload.generated_at);
+      checkDetectionFloorLane(lanesById.get(laneConfig.id), errors, laneConfig, payload.generated_at, options);
     }
     push(errors, Number(payload?.totals?.required_not_ready) === derivedRequiredNotReady,
       `totals.required_not_ready mismatch: ${payload?.totals?.required_not_ready} vs derived ${derivedRequiredNotReady}`);
@@ -1746,9 +1778,10 @@ export function validateV2({
 }) {
   const errors = [];
   const warnings = [];
-  validateCoreShape(rootDoc, errors, SCHEMA_VERSION_V2, warnings);
+  const dataRoot = path.resolve(path.dirname(rootKpiPath), "..");
+  validateCoreShape(rootDoc, errors, SCHEMA_VERSION_V2, warnings, { dataRoot, selectedSourceNow: nowIso });
   // Public mirror keeps the same schema_version + lanes; only runtime is projected.
-  validateCoreShape(publicDoc, errors, SCHEMA_VERSION_V2, warnings);
+  validateCoreShape(publicDoc, errors, SCHEMA_VERSION_V2, warnings, { dataRoot, selectedSourceNow: nowIso });
   scanForbiddenTokens(publicKpiPath, errors);
   checkV2Runtime(rootDoc, { errors, warnings }, nowIso, { context, strict });
   checkOutcomeWatchdog(rootDoc, errors, { dataRoot: path.resolve(path.dirname(rootKpiPath), "..") });

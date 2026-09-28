@@ -12,10 +12,12 @@ import {
 } from "./effective-etf-detail-reader.mjs";
 import {
   buildScoredEtfDaily1yFetchablePlan,
+  buildFullScoredFetchableCandidates,
   buildEtfDaily1yReadiness,
   classifyDaily1yGap,
   etfInceptionDate,
 } from "./write-fenok-etf-daily1y-readiness.mjs";
+import { buildScoredDaily1yReport } from "../100xfenok-next/scripts/report-stockanalysis-history-gap.mjs";
 import {
   DAILY_1Y_HISTORY_EVIDENCE_POLICY,
   classifyDaily1yShortHistory,
@@ -263,6 +265,69 @@ function activeSelection(rootDir, ticker) {
   ));
   return { stateRoot, active, selection: current[ticker] };
 }
+
+const scoredDaily1yFixture = buildScoredDaily1yReport({
+  scoredEtfCount: 5,
+  completeRows: [{ ticker: "AAA" }],
+  fetchableRows: [
+    { ticker: "CCC", daily_1y_gap_source: "yahoo_fallback_short_rows" },
+    { ticker: "BBB", daily_1y_gap_source: "stockanalysis_short_rows" },
+  ],
+  inceptionLimitedRows: [{ ticker: "DDD", classification_reason: "inception_limited" }],
+  terminalLimitedRows: [{ ticker: "EEE", terminal_limit_source: "recent_provider_failure" }],
+});
+assert.equal(scoredDaily1yFixture.scored_etf_count, 5);
+assert.equal(scoredDaily1yFixture.fetchable, 2);
+assert.deepEqual(scoredDaily1yFixture.fetchable_rows.map((row) => row.ticker), ["BBB", "CCC"]);
+assert.equal(scoredDaily1yFixture.fetchable_classification_projection.row_count, 2);
+assert.deepEqual(
+  scoredDaily1yFixture.fetchable_rows,
+  [
+    { ticker: "BBB", daily_1y_gap_source: "stockanalysis_short_rows" },
+    { ticker: "CCC", daily_1y_gap_source: "yahoo_fallback_short_rows" },
+  ],
+);
+
+const fullScoredCandidates = buildFullScoredFetchableCandidates(scoredDaily1yFixture);
+assert.equal(fullScoredCandidates.status, "complete");
+assert.equal(fullScoredCandidates.eligible_count, 5);
+assert.equal(fullScoredCandidates.scored_etf_count, 5);
+assert.equal(fullScoredCandidates.fetchable_count, 2);
+assert.equal(fullScoredCandidates.classified_count, 5);
+assert.equal(fullScoredCandidates.count_equation_ok, true);
+assert.equal(fullScoredCandidates.classification_projection_matches, true);
+assert.equal(fullScoredCandidates.candidate_count_matches_report, true);
+assert.deepEqual(fullScoredCandidates.identity_projection, {
+  row_count: 2,
+  sha256: scoredDaily1yFixture.fetchable_classification_projection.sha256,
+});
+assert.equal(fullScoredCandidates.unique_ticker_count, 2);
+assert.deepEqual(fullScoredCandidates.tickers, ["BBB", "CCC"]);
+assert.deepEqual(fullScoredCandidates.rows, scoredDaily1yFixture.fetchable_rows);
+assert.equal(fullScoredCandidates.dispatch_authorized, false);
+
+const duplicateCandidateRows = [
+  { ticker: "BBB", daily_1y_gap_source: "stockanalysis_short_rows" },
+  { ticker: "bbb", daily_1y_gap_source: "yahoo_fallback_short_rows" },
+];
+const duplicateCandidatePlan = buildFullScoredFetchableCandidates({
+  ...scoredDaily1yFixture,
+  fetchable_rows: duplicateCandidateRows,
+  fetchable_classification_projection: daily1yClassificationProjection({ fetchable: duplicateCandidateRows }),
+});
+assert.equal(duplicateCandidatePlan.status, "invalid_source_rows");
+assert.equal(duplicateCandidatePlan.unique_ticker_count, 1);
+assert.deepEqual(duplicateCandidatePlan.rows, []);
+assert.equal(duplicateCandidatePlan.dispatch_authorized, false);
+
+const legacyCandidatePlan = buildFullScoredFetchableCandidates({
+  ...scoredDaily1yFixture,
+  fetchable_rows: undefined,
+  fetchable_classification_projection: undefined,
+});
+assert.equal(legacyCandidatePlan.status, "missing_exact_source_rows");
+assert.deepEqual(legacyCandidatePlan.rows, []);
+assert.equal(legacyCandidatePlan.dispatch_authorized, false);
 
 const fixtureRoot = fs.mkdtempSync(path.join(os.tmpdir(), "fenok-etf-daily1y-readiness-"));
 const fixtureGeneratedAt = "2026-07-09T00:00:00.000Z";
@@ -710,6 +775,9 @@ assert.equal(payload.readiness_status, "ready");
 
 assert.equal(Object.keys(payload).includes("fetchable_plan"), false);
 assert.equal(payload.exact_fetchable_plan.fetchable_count, readiness.daily_1y_fetchable);
+assert.equal(payload.exact_fetchable_plan.full_scored_candidate_status, "missing_exact_source_rows");
+assert.equal(plan.full_scored_fetchable_candidates.status, "missing_exact_source_rows");
+assert.deepEqual(plan.full_scored_fetchable_candidates.rows, []);
 assert.equal(payload.exact_fetchable_plan.can_drive_bounded_ticker_batches, true);
 assert.equal(payload.exact_fetchable_plan.batch_count, Math.ceil(readiness.daily_1y_fetchable / 120));
 
@@ -741,6 +809,57 @@ assert.equal(plan.tickers.length, readiness.daily_1y_fetchable);
 assert.equal(new Set(plan.tickers).size, readiness.daily_1y_fetchable);
 assert.deepEqual(plan.tickers, [...plan.tickers].sort());
 assert.equal(planBreakdownTotal, readiness.daily_1y_fetchable);
+
+const fullScoredHistory = {
+  ...scoredDaily1yFixture,
+  scored_etf_count: 5,
+  complete: 1,
+  fetchable: 2,
+  inception_limited: 1,
+  terminal_limited: 1,
+};
+const corePlanWithFullScoredRows = buildScoredEtfDaily1yFetchablePlan({
+  signalSummary: { rows: ["AAA", "BBB", "CCC", "DDD", "EEE"].map((ticker) => ({ ticker })) },
+  coreBasket: { daily_refresh_universe: { tickers: ["AAA"] } },
+  historyGap: {
+    classification_as_of: fixtureGeneratedAt,
+    daily_1y_gap: { scored_etfs: fullScoredHistory },
+  },
+  coverageIndex: null,
+  generatedAt: currentNow,
+  classificationAsOf: fixtureGeneratedAt,
+  rootDir: fixtureRoot,
+});
+const corePlanWithoutFullScoredRows = buildScoredEtfDaily1yFetchablePlan({
+  signalSummary: { rows: ["AAA", "BBB", "CCC", "DDD", "EEE"].map((ticker) => ({ ticker })) },
+  coreBasket: { daily_refresh_universe: { tickers: ["AAA"] } },
+  historyGap: {
+    classification_as_of: fixtureGeneratedAt,
+    daily_1y_gap: {
+      scored_etfs: {
+        ...fullScoredHistory,
+        fetchable_rows: undefined,
+        fetchable_classification_projection: undefined,
+      },
+    },
+  },
+  coverageIndex: null,
+  generatedAt: currentNow,
+  classificationAsOf: fixtureGeneratedAt,
+  rootDir: fixtureRoot,
+});
+const { full_scored_fetchable_candidates: _fullScoredRows, ...coreOnlyWithRows } = corePlanWithFullScoredRows;
+const { full_scored_fetchable_candidates: _legacyFullScoredRows, ...coreOnlyWithoutRows } = corePlanWithoutFullScoredRows;
+assert.deepEqual(coreOnlyWithRows, coreOnlyWithoutRows);
+assert.deepEqual(
+  corePlanWithFullScoredRows.full_scored_fetchable_candidates.tickers,
+  ["BBB", "CCC"],
+);
+assert.equal(corePlanWithFullScoredRows.full_scored_fetchable_candidates.count_equation_ok, true);
+assert.deepEqual(
+  corePlanWithFullScoredRows.full_scored_fetchable_candidates.rows.map((row) => row.ticker),
+  ["BBB", "CCC"],
+);
 
 assert.equal(plan.bounded_batches.can_drive_bounded_ticker_batches, true);
 assert.equal(plan.bounded_batches.gate_evidence.core_basket_ok, true);
