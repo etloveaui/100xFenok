@@ -2,25 +2,25 @@
   "schema_version": "market-facts/v1",
   "ticker": "TLG",
   "asset_type": "etf",
-  "generated_at": "2026-09-21T01:42:22Z",
-  "source_as_of": "2026-07-27",
+  "generated_at": "2026-09-28T06:33:17Z",
+  "source_as_of": "2026-09-25",
   "source_as_of_scope": "selected_price_fact",
   "source_as_of_reason": null,
   "identity": {
-    "name": "TLG",
-    "exchange": null,
-    "currency": null,
+    "name": "Touchstone Large Company Growth ETF",
+    "exchange": "NGM",
+    "currency": "USD",
     "sector": null,
     "industry": null,
-    "fund_family": null,
-    "category": null
+    "fund_family": "Touchstone",
+    "category": "Large Growth"
   },
   "facts": {
     "price": {
-      "value": 25.505,
-      "source": "stockanalysis.quote",
-      "as_of": "2026-07-27",
-      "fetched_at": "2026-07-27T23:48:03Z",
+      "value": 28.0531,
+      "source": "yf",
+      "as_of": "2026-09-25",
+      "fetched_at": "2026-09-28T06:22:43Z",
       "confidence": "observed",
       "policy": [
         "yf",
@@ -31,6 +31,13 @@
       ],
       "candidates": [
         {
+          "value": 28.0531,
+          "source": "yf",
+          "as_of": "2026-09-25",
+          "fetched_at": "2026-09-28T06:22:43Z",
+          "confidence": "observed"
+        },
+        {
           "value": 25.505,
           "source": "stockanalysis.quote",
           "as_of": "2026-07-27",
@@ -38,13 +45,13 @@
           "confidence": "observed"
         }
       ],
-      "candidate_count": 1
+      "candidate_count": 2
     },
     "previous_close": {
-      "value": 25.54,
-      "source": "stockanalysis.quote",
-      "as_of": "2026-07-27",
-      "fetched_at": "2026-07-27T23:48:03Z",
+      "value": 27.8179,
+      "source": "yf",
+      "as_of": "2026-09-25",
+      "fetched_at": "2026-09-28T06:22:43Z",
       "confidence": "observed",
       "policy": [
         "yf",
@@ -53,6 +60,13 @@
       ],
       "candidates": [
         {
+          "value": 27.8179,
+          "source": "yf",
+          "as_of": "2026-09-25",
+          "fetched_at": "2026-09-28T06:22:43Z",
+          "confidence": "observed"
+        },
+        {
           "value": 25.54,
           "source": "stockanalysis.quote",
           "as_of": "2026-07-27",
@@ -60,7 +74,7 @@
           "confidence": "observed"
         }
       ],
-      "candidate_count": 1
+      "candidate_count": 2
     },
     "change": {
       "value": -0.03,
@@ -81,9 +95,16 @@
           "as_of": "2026-07-27",
           "fetched_at": "2026-07-27T23:48:03Z",
           "confidence": "observed"
+        },
+        {
+          "value": 0.23520088,
+          "source": "yf",
+          "as_of": "2026-09-25",
+          "fetched_at": "2026-09-28T06:22:43Z",
+          "confidence": "observed"
         }
       ],
-      "candidate_count": 1
+      "candidate_count": 2
     },
     "change_pct": {
       "value": -0.12,
@@ -104,15 +125,22 @@
           "as_of": "2026-07-27",
           "fetched_at": "2026-07-27T23:48:03Z",
           "confidence": "observed"
+        },
+        {
+          "value": 0.84550196,
+          "source": "yf",
+          "as_of": "2026-09-25",
+          "fetched_at": "2026-09-28T06:22:43Z",
+          "confidence": "observed"
         }
       ],
-      "candidate_count": 1
+      "candidate_count": 2
     },
     "total_assets": {
-      "value": 130880000.0,
-      "source": "stockanalysis.overview",
-      "as_of": "2026-07-27",
-      "fetched_at": "2026-07-27T23:48:03Z",
+      "value": 139102928,
+      "source": "yf",
+      "as_of": "2026-09-25",
+      "fetched_at": "2026-09-28T06:22:43Z",
       "confidence": "observed",
       "policy": [
         "yf",
@@ -121,6 +149,13 @@
       ],
       "candidates": [
         {
+          "value": 139102928,
+          "source": "yf",
+          "as_of": "2026-09-25",
+          "fetched_at": "2026-09-28T06:22:43Z",
+          "confidence": "observed"
+        },
+        {
           "value": 130880000.0,
           "source": "stockanalysis.overview",
           "as_of": "2026-07-27",
@@ -128,13 +163,59 @@
           "confidence": "observed"
         }
       ],
+      "candidate_count": 2
+    },
+    "trailing_pe": {
+      "value": 30.88172,
+      "source": "yf",
+      "as_of": "2026-09-25",
+      "fetched_at": "2026-09-28T06:22:43Z",
+      "confidence": "observed",
+      "policy": [
+        "yf",
+        "slickcharts"
+      ],
+      "candidates": [
+        {
+          "value": 30.88172,
+          "source": "yf",
+          "as_of": "2026-09-25",
+          "fetched_at": "2026-09-28T06:22:43Z",
+          "confidence": "observed"
+        }
+      ],
+      "candidate_count": 1
+    },
+    "dividend_yield": {
+      "value": 0.0,
+      "source": "yf",
+      "as_of": "2026-09-25",
+      "fetched_at": "2026-09-28T06:22:43Z",
+      "confidence": "observed",
+      "unit": "percent_points",
+      "policy": [
+        "yf",
+        "stockanalysis.overview",
+        "yf.stockanalysis_fallback.overview",
+        "slickcharts"
+      ],
+      "candidates": [
+        {
+          "value": 0.0,
+          "source": "yf",
+          "as_of": "2026-09-25",
+          "fetched_at": "2026-09-28T06:22:43Z",
+          "confidence": "observed",
+          "unit": "percent_points"
+        }
+      ],
       "candidate_count": 1
     },
     "expense_ratio": {
       "value": 0.67,
-      "source": "stockanalysis.overview",
-      "as_of": "2026-07-27",
-      "fetched_at": "2026-07-27T23:48:03Z",
+      "source": "yf",
+      "as_of": "2026-09-25",
+      "fetched_at": "2026-09-28T06:22:43Z",
       "confidence": "observed",
       "unit": "percent_points",
       "policy": [
@@ -145,6 +226,14 @@
       "candidates": [
         {
           "value": 0.67,
+          "source": "yf",
+          "as_of": "2026-09-25",
+          "fetched_at": "2026-09-28T06:22:43Z",
+          "confidence": "observed",
+          "unit": "percent_points"
+        },
+        {
+          "value": 0.67,
           "source": "stockanalysis.overview",
           "as_of": "2026-07-27",
           "fetched_at": "2026-07-27T23:48:03Z",
@@ -152,14 +241,14 @@
           "unit": "percent_points"
         }
       ],
-      "candidate_count": 1
+      "candidate_count": 2
     },
     "return_1m": {
-      "value": -0.5906704559225349,
-      "source": "stockanalysis.detail.performance",
-      "as_of": "2026-07-27",
-      "fetched_at": "2026-07-27T23:48:03Z",
-      "confidence": "observed",
+      "value": 1.7410212098277227,
+      "source": "yf.history_1y",
+      "as_of": "2026-09-25",
+      "fetched_at": "2026-09-28T06:22:43Z",
+      "confidence": "derived",
       "unit": "percent_points",
       "policy": [
         "yf.history_1y",
@@ -168,6 +257,14 @@
         "stockanalysis.etf_universe.performance"
       ],
       "candidates": [
+        {
+          "value": 1.7410212098277227,
+          "source": "yf.history_1y",
+          "as_of": "2026-09-25",
+          "fetched_at": "2026-09-28T06:22:43Z",
+          "confidence": "derived",
+          "unit": "percent_points"
+        },
         {
           "value": -0.5906704559225349,
           "source": "stockanalysis.detail.performance",
@@ -185,13 +282,13 @@
           "unit": "percent_points"
         }
       ],
-      "candidate_count": 2
+      "candidate_count": 3
     },
     "return_3m": {
-      "value": -4.093896713615023,
-      "source": "stockanalysis.detail.history",
-      "as_of": "2026-07-24",
-      "fetched_at": "2026-07-27T23:48:03Z",
+      "value": 9.655978579833539,
+      "source": "yf.history_1y",
+      "as_of": "2026-09-25",
+      "fetched_at": "2026-09-28T06:22:43Z",
       "confidence": "derived",
       "unit": "percent_points",
       "policy": [
@@ -200,11 +297,135 @@
       ],
       "candidates": [
         {
+          "value": 9.655978579833539,
+          "source": "yf.history_1y",
+          "as_of": "2026-09-25",
+          "fetched_at": "2026-09-28T06:22:43Z",
+          "confidence": "derived",
+          "unit": "percent_points"
+        },
+        {
           "value": -4.093896713615023,
           "source": "stockanalysis.detail.history",
           "as_of": "2026-07-24",
           "fetched_at": "2026-07-27T23:48:03Z",
           "confidence": "derived",
+          "unit": "percent_points"
+        }
+      ],
+      "candidate_count": 2
+    },
+    "return_ytd": {
+      "value": 14.443080273851994,
+      "source": "yf.history_1y",
+      "as_of": "2026-09-25",
+      "fetched_at": "2026-09-28T06:22:43Z",
+      "confidence": "derived",
+      "unit": "percent_points",
+      "policy": [
+        "yf.history_1y",
+        "stockanalysis.detail.performance",
+        "stockanalysis.etf_screener.performance",
+        "stockanalysis.etf_universe.performance",
+        "yf"
+      ],
+      "candidates": [
+        {
+          "value": 14.443080273851994,
+          "source": "yf.history_1y",
+          "as_of": "2026-09-25",
+          "fetched_at": "2026-09-28T06:22:43Z",
+          "confidence": "derived",
+          "unit": "percent_points"
+        },
+        {
+          "value": 3.99491,
+          "source": "yf",
+          "as_of": "2026-09-25",
+          "fetched_at": "2026-09-28T06:22:43Z",
+          "confidence": "observed",
+          "unit": "percent_points"
+        }
+      ],
+      "candidate_count": 2
+    },
+    "return_1y": {
+      "value": 14.443080273851994,
+      "source": "yf.history_1y",
+      "as_of": "2026-09-25",
+      "fetched_at": "2026-09-28T06:22:43Z",
+      "confidence": "derived",
+      "unit": "percent_points",
+      "policy": [
+        "yf.history_1y",
+        "stockanalysis.detail.performance",
+        "stockanalysis.etf_screener.performance",
+        "stockanalysis.etf_universe.performance",
+        "yf"
+      ],
+      "candidates": [
+        {
+          "value": 14.443080273851994,
+          "source": "yf.history_1y",
+          "as_of": "2026-09-25",
+          "fetched_at": "2026-09-28T06:22:43Z",
+          "confidence": "derived",
+          "unit": "percent_points"
+        },
+        {
+          "value": 14.443088,
+          "source": "yf",
+          "as_of": "2026-09-25",
+          "fetched_at": "2026-09-28T06:22:43Z",
+          "confidence": "observed",
+          "unit": "percent_points"
+        }
+      ],
+      "candidate_count": 2
+    },
+    "return_3y_avg": {
+      "value": 22.012171,
+      "source": "yf",
+      "as_of": "2026-09-25",
+      "fetched_at": "2026-09-28T06:22:43Z",
+      "confidence": "observed",
+      "unit": "percent_points",
+      "policy": [
+        "yf",
+        "stockanalysis.detail.history"
+      ],
+      "candidates": [
+        {
+          "value": 22.012171,
+          "source": "yf",
+          "as_of": "2026-09-25",
+          "fetched_at": "2026-09-28T06:22:43Z",
+          "confidence": "observed",
+          "unit": "percent_points"
+        }
+      ],
+      "candidate_count": 1
+    },
+    "return_5y_avg": {
+      "value": 9.56915,
+      "source": "yf",
+      "as_of": "2026-09-25",
+      "fetched_at": "2026-09-28T06:22:43Z",
+      "confidence": "observed",
+      "unit": "percent_points",
+      "policy": [
+        "yf",
+        "stockanalysis.detail.performance",
+        "stockanalysis.etf_screener.performance",
+        "stockanalysis.etf_universe.performance"
+      ],
+      "candidates": [
+        {
+          "value": 9.56915,
+          "source": "yf",
+          "as_of": "2026-09-25",
+          "fetched_at": "2026-09-28T06:22:43Z",
+          "confidence": "observed",
           "unit": "percent_points"
         }
       ],
@@ -607,14 +828,14 @@
   },
   "financials": null,
   "sources": {
-    "yf": false,
+    "yf": true,
     "stockanalysis": true,
     "stockanalysis_yf_fallback": false,
     "stockanalysis_etf_catalog": true,
     "slickcharts": false
   },
   "source_files": {
-    "yf": null,
+    "yf": "yf/finance/TLG.json",
     "stockanalysis": "stockanalysis/etfs/TLG.json",
     "stockanalysis_yf_fallback": null,
     "stockanalysis_etf_catalog": "stockanalysis/etf_universe.json",
