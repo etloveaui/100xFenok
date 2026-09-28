@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/no-require-imports */
 const { chromium } = require("playwright");
 
-const pageUrl = process.env.QA_IB_HELPER_URL || "file:///Users/fenomenokim/agents-workspace/00_my_data/01_El_Fenomono/00_Project/100xFenok-platform/source/100xFenok/ib/ib-helper/index.html";
+const pageUrl = process.env.QA_IB_HELPER_URL || "file:///Users/fenomenokim/agents-workspace/00_my_data/01_El_Fenomeno/00_Project/100xFenok-platform/source/100xFenok/ib/ib-helper/index.html";
 
 const viewports = [
   { name: "fold", width: 280, height: 653 },
