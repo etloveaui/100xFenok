@@ -1,23 +1,9 @@
 {
   "schema_version": "alarm-state/v1",
-  "generated_at": "2026-09-27T22:19:49.406Z",
+  "generated_at": "2026-09-27T23:44:21.973Z",
   "status": "open",
-  "open_incident_count": 4,
+  "open_incident_count": 3,
   "open_incidents": [
-    {
-      "workflow": "fenok-edge-krx-daily.yml",
-      "label": "Fenok Edge KRX Daily Data",
-      "streak": 2,
-      "failure_streak_threshold": 2,
-      "first_failing_run_id": 36019903433,
-      "first_failing_run_url": "https://github.com/etloveaui/100xFenok/actions/runs/36019903433",
-      "alarm_reasons": [
-        "failure_streak"
-      ],
-      "lane_outcome_lanes": [],
-      "lost_schedule_slot_count": 0,
-      "cadence_status": "not_due"
-    },
     {
       "workflow": "fetch-fdic.yml",
       "label": "Fetch FDIC Tier1 Data",
@@ -317,7 +303,7 @@
       "cadence_status": "not_due",
       "cadence_evidence": [],
       "data_freshness_state": "healthy",
-      "data_freshness_age_hours_at_generation": 44
+      "data_freshness_age_hours_at_generation": 45
     },
     {
       "file": "fetch-treasury-tga.yml",
@@ -515,12 +501,11 @@
   "queue_evicted_run_count": 0,
   "queue_evicted_workflows": [],
   "last_firing": {
-    "run_id": "36354732627",
-    "run_url": "https://github.com/etloveaui/100xFenok/actions/runs/36354732627",
-    "observed_at": "2026-09-27T22:19:49.406Z",
-    "event": "schedule",
+    "run_id": "36359555574",
+    "run_url": "https://github.com/etloveaui/100xFenok/actions/runs/36359555574",
+    "observed_at": "2026-09-27T23:44:21.973Z",
+    "event": "workflow_run",
     "workflows": [
-      "fenok-edge-krx-daily.yml",
       "fetch-fdic.yml",
       "fetch-fenok-news-tone.yml",
       "retention-restore.yml"

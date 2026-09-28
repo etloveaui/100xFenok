@@ -1,13 +1,13 @@
 {
   "schema_version": "stockanalysis-recovery-index/v1",
-  "generated_at": "2026-09-27T22:45:40Z",
+  "generated_at": "2026-09-27T23:50:04Z",
   "counts": {
     "tracked": 292,
     "fresh": 100,
     "lkg": 182,
     "unavailable": 10,
     "retry": 192,
-    "failed": 10,
+    "failed": 0,
     "recovered": 0,
     "promotion_deferred": 0
   },
@@ -2945,89 +2945,99 @@
   "recovered_etfs": [],
   "promotion_deferral_details": [],
   "current_attempt": {
-    "run_id": "36356238226",
+    "run_id": "36359878068",
     "run_attempt": 1,
-    "event_name": "workflow_dispatch",
-    "schedule": "",
-    "natural": false,
-    "attempted": 10,
-    "successes": 0,
-    "failed": 10,
+    "event_name": "schedule",
+    "schedule": "20 21 * * *",
+    "natural": true,
+    "attempted": 16,
+    "successes": 16,
+    "failed": 0,
     "recovered": 0,
     "promotion_deferred": 0,
-    "errors": [
+    "errors": [],
+    "success_rows": [
       {
-        "artifact_kind": "etf",
-        "entity": "AMJB",
-        "error": "ValueError: svelte_contract_drift:holdings:missing_required:holdings",
-        "controlled": false,
-        "data_loss": false
+        "artifact_kind": "stock",
+        "entity": "AAPL",
+        "outcome": "fresh"
       },
       {
-        "artifact_kind": "etf",
-        "entity": "HYSA",
-        "error": "ValueError: svelte_contract_drift:holdings:missing_required:holdings",
-        "controlled": false,
-        "data_loss": false
+        "artifact_kind": "stock",
+        "entity": "AMZN",
+        "outcome": "fresh"
       },
       {
-        "artifact_kind": "etf",
-        "entity": "IBIC",
-        "error": "ValueError: svelte_contract_drift:holdings:missing_required:holdings",
-        "controlled": false,
-        "data_loss": false
+        "artifact_kind": "stock",
+        "entity": "GOOGL",
+        "outcome": "fresh"
       },
       {
-        "artifact_kind": "etf",
-        "entity": "IBIH",
-        "error": "ValueError: svelte_contract_drift:holdings:missing_required:holdings",
-        "controlled": false,
-        "data_loss": false
+        "artifact_kind": "stock",
+        "entity": "JPM",
+        "outcome": "fresh"
       },
       {
-        "artifact_kind": "etf",
-        "entity": "IBIJ",
-        "error": "ValueError: svelte_contract_drift:holdings:missing_required:holdings",
-        "controlled": false,
-        "data_loss": false
+        "artifact_kind": "stock",
+        "entity": "META",
+        "outcome": "fresh"
       },
       {
-        "artifact_kind": "etf",
-        "entity": "IBIK",
-        "error": "ValueError: svelte_contract_drift:holdings:missing_required:holdings",
-        "controlled": false,
-        "data_loss": false
+        "artifact_kind": "stock",
+        "entity": "MSFT",
+        "outcome": "fresh"
       },
       {
-        "artifact_kind": "etf",
-        "entity": "IBIL",
-        "error": "ValueError: svelte_contract_drift:holdings:missing_required:holdings",
-        "controlled": false,
-        "data_loss": false
+        "artifact_kind": "stock",
+        "entity": "NVDA",
+        "outcome": "fresh"
       },
       {
-        "artifact_kind": "etf",
-        "entity": "LGCF",
-        "error": "ValueError: svelte_contract_drift:holdings:missing_required:holdings",
-        "controlled": false,
-        "data_loss": false
+        "artifact_kind": "stock",
+        "entity": "TSLA",
+        "outcome": "fresh"
       },
       {
-        "artifact_kind": "etf",
-        "entity": "TETH",
-        "error": "ValueError: svelte_contract_drift:holdings:missing_required:holdings",
-        "controlled": false,
-        "data_loss": false
+        "artifact_kind": "financial",
+        "entity": "AAPL",
+        "outcome": "fresh"
       },
       {
-        "artifact_kind": "etf",
-        "entity": "VYLD",
-        "error": "ValueError: svelte_contract_drift:holdings:missing_required:holdings",
-        "controlled": false,
-        "data_loss": false
+        "artifact_kind": "financial",
+        "entity": "AMZN",
+        "outcome": "fresh"
+      },
+      {
+        "artifact_kind": "financial",
+        "entity": "GOOGL",
+        "outcome": "fresh"
+      },
+      {
+        "artifact_kind": "financial",
+        "entity": "JPM",
+        "outcome": "fresh"
+      },
+      {
+        "artifact_kind": "financial",
+        "entity": "META",
+        "outcome": "fresh"
+      },
+      {
+        "artifact_kind": "financial",
+        "entity": "MSFT",
+        "outcome": "fresh"
+      },
+      {
+        "artifact_kind": "financial",
+        "entity": "NVDA",
+        "outcome": "fresh"
+      },
+      {
+        "artifact_kind": "financial",
+        "entity": "TSLA",
+        "outcome": "fresh"
       }
     ],
-    "success_rows": [],
     "promotion_deferrals": []
   }
 }
