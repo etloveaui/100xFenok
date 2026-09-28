@@ -1,6 +1,6 @@
 {
   "schema_version": "fenok-data-health-kpi/v4",
-  "generated_at": "2026-09-28T10:37:24.379Z",
+  "generated_at": "2026-09-28T11:34:19.757Z",
   "sets": [
     {
       "set": "fred_macro",
@@ -55,14 +55,6 @@
       "serving_lkg": false
     },
     {
-      "set": "yahoo_etf_fallback",
-      "served_path": "data/yf/finance",
-      "newest_source_date": "2026-07-27",
-      "max_age": "2d",
-      "status": "stopped",
-      "serving_lkg": false
-    },
-    {
       "set": "stockanalysis_etf_universe",
       "served_path": "data/stockanalysis/etf_universe.json",
       "newest_source_date": "2026-09-21",
@@ -74,12 +66,12 @@
       "set": "stockanalysis_etf_detail",
       "served_path": "data/stockanalysis/etfs",
       "newest_source_date": "2026-09-25",
-      "max_age": "2d",
+      "max_age": "45d",
       "status": "stopped",
       "date_basis": "mixed",
       "oldest_source_date": "2025-10-27",
       "oldest_source_member": "BBB",
-      "fresh_members": 0,
+      "fresh_members": 567,
       "total_members": 5672
     },
     {
@@ -121,7 +113,7 @@
       "status": "stopped",
       "oldest_source_date": "2026-09-22",
       "oldest_source_member": "cftc",
-      "fresh_members": 1,
+      "fresh_members": 2,
       "total_members": 5,
       "serving_lkg": false
     },
@@ -165,19 +157,20 @@
       "served_path": "data/slickcharts/gainers.json",
       "newest_source_date": "2026-09-27",
       "max_age": "2d",
-      "status": "delayed",
+      "status": "fresh",
       "date_basis": "mixed",
       "oldest_source_date": "2026-09-04",
       "oldest_source_member": "monthly",
-      "fresh_members": 4,
+      "fresh_members": 5,
       "total_members": 5
     },
     {
       "set": "edgar_filings",
       "served_path": "data/edgar-korean-summaries",
-      "newest_source_date": "2026-09-03",
+      "newest_source_date": "2026-09-28",
       "max_age": "11d",
-      "status": "stopped",
+      "status": "fresh",
+      "date_basis": "collected",
       "serving_lkg": false
     },
     {
