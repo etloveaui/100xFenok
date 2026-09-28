@@ -99,7 +99,7 @@ class DataSupplyResolverTests(unittest.TestCase):
             decided_at=decided_at,
         )
 
-    def manual_etf(self, run_id, minute, *, payload_changes=None, proof_changes=None):
+    def manual_etf(self, run_id, minute, *, payload_changes=None, proof_changes=None, origin="rebuild"):
         stamp = f"2026-07-15T23:{minute:02d}:00Z"
         payload = {
             "schema_version": "stockanalysis/v1", "source": "stockanalysis",
@@ -111,9 +111,11 @@ class DataSupplyResolverTests(unittest.TestCase):
         payload.update(payload_changes or {})
         raw = (json.dumps(payload, ensure_ascii=False, indent=2) + "\n").encode()
         row, _ = observation(provider="stockanalysis", suffix=f"manual-{run_id}-{minute}",
-                             source_as_of=payload["source_as_of"], observed_at=stamp, origin="rebuild")
+                             source_as_of=payload["source_as_of"], observed_at=stamp, origin=origin)
         row.update({"provider_path": "data/stockanalysis/etfs/VYMI.json",
-                    "payload_sha256": hashlib.sha256(raw).hexdigest(), "collection_origin": "manual"})
+                    "payload_sha256": hashlib.sha256(raw).hexdigest()})
+        if origin == "rebuild":
+            row["collection_origin"] = "manual"
         proof = {"run_id": str(run_id), "run_attempt": 1, "event_name": "workflow_dispatch",
                  "remote": True, "fresh_fetch": True, "started_at": stamp, "completed_at": stamp,
                  "source_as_of": payload["source_as_of"], "fetched_at": stamp,
@@ -349,10 +351,7 @@ class DataSupplyResolverTests(unittest.TestCase):
         fallback = self.seed_manual_fallback()
         for count in (1, 2, 3):
             row = self.manual_etf(str(930 + count), count, payload_changes={"detail_status": "stockanalysis_partial"},
-                                  proof_changes={"event_name": "schedule"})
-            row["observation_origin"] = "natural"
-            row.pop("collection_origin")
-            row["event_id"] = deterministic_event_id("observation", row)
+                                  proof_changes={"event_name": "schedule"}, origin="natural")
             active = self.resolve_manual(row, fallback)
             self.assertEqual(active["current"]["VYMI"]["provider"], "yahoo_finance")
             self.assertEqual(active["recovery"]["VYMI"]["consecutive_green"], 0)
@@ -360,10 +359,7 @@ class DataSupplyResolverTests(unittest.TestCase):
     def test_three_distinct_bound_natural_complete_acquisitions_recover_primary(self):
         fallback = self.seed_manual_fallback()
         for count in (1, 2, 3):
-            row = self.manual_etf(str(940 + count), count, proof_changes={"event_name": "schedule"})
-            row["observation_origin"] = "natural"
-            row.pop("collection_origin")
-            row["event_id"] = deterministic_event_id("observation", row)
+            row = self.manual_etf(str(940 + count), count, proof_changes={"event_name": "schedule"}, origin="natural")
             active = self.resolve_manual(row, fallback)
             self.assertEqual(active["recovery"]["VYMI"]["consecutive_green"], count)
             self.assertEqual(active["current"]["VYMI"]["provider"], "stockanalysis" if count == 3 else "yahoo_finance")
@@ -430,10 +426,7 @@ class DataSupplyResolverTests(unittest.TestCase):
                     recovery_green_count=0, decided_at=row["observed_at"])
                 self.store.commit_prepared("etf_detail", tx)
                 primary = self.manual_etf("950", 1, payload_changes={"detail_status": "stockanalysis_partial"} if partial else {},
-                                          proof_changes={"event_name": "schedule"})
-                primary["observation_origin"] = "natural"
-                primary.pop("collection_origin")
-                primary["event_id"] = deterministic_event_id("observation", primary)
+                                          proof_changes={"event_name": "schedule"}, origin="natural")
                 active = self.resolver.resolve_etf_detail(entity="VYMI", observations=[primary], decided_at="2026-07-15T23:59:00Z")
                 self.assertEqual(active["current"]["VYMI"]["provider"], "yahoo_finance" if partial else "stockanalysis")
                 self.assertEqual(active["recovery"]["VYMI"]["consecutive_green"], 0)
