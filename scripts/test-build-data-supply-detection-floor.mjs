@@ -1192,8 +1192,62 @@ function runBaselineAndArtifactChecks() {
     "GDELT source freshness uses the latest provider row timestamp");
   assert.equal(lane(report, "fred_banking").artifact.reason, "ok",
     "the daily FRED contract must not require a series emitted by the monthly artifact");
+  for (const [offset, state, status] of [
+    [13, "fresh", "ready"], [14, "delayed", "stale"],
+    [20, "delayed", "stale"], [21, "stopped", "stale"],
+  ]) {
+    const now = new Date(Date.UTC(2026, 6, 10 + offset, 12)).toISOString();
+    const ownerReport = buildDetectionReport({ artifactRoot: artifactRoot.raw,
+      attempts: attemptsFixture, calendars: calendarsFixture, now });
+    const ownerLane = lane(ownerReport, "global_scouter");
+    assert.equal(ownerLane.artifact.status, status, `owner source day ${offset}: ${state}`);
+    assert.equal(ownerLane.status, status, `owner lane day ${offset}: ${state}`);
+  }
+  const fredSources = lane(report, "fred_banking").source_artifacts;
+  assert.deepEqual(fredSources.map((row) => row.id), [
+    "fred_banking_daily", "fred_banking_weekly", "fred_banking_monthly", "fred_banking_quarterly",
+  ]);
+  assert.equal(fredSources[3].source_as_of, "2026-01-01", "the canonical raw quarter-start date remains visible");
+  assert.equal(fredSources[3].source_age_anchor, "2026-03-31", "only age calculation moves to quarter end");
+  assert.equal(fredSources[3].source_state, "fresh");
   assert.deepEqual(report, expectedFixture.baseline.expected_report);
   assert.equal(createSha(reportBytes(report)), expectedFixture.baseline.report_file_sha256);
+
+  const staleDailyRoot = materializeArtifacts("all_valid");
+  const staleDailyPath = path.join(staleDailyRoot.raw, "data", "macro", "fred-banking-daily.json");
+  const staleDaily = readJson(staleDailyPath);
+  staleDaily.source_as_of = "2026-06-01";
+  fs.writeFileSync(staleDailyPath, JSON.stringify(staleDaily), { encoding: "utf8", mode: 0o600 });
+  const staleDailyReport = buildDetectionReport({
+    artifactRoot: staleDailyRoot.raw, attempts: attemptsFixture,
+    calendars: calendarsFixture, now: expectedFixture.baseline.now,
+  });
+  assert.equal(lane(staleDailyReport, "fred_banking").source_artifacts[0].source_state, "stopped");
+  assert.equal(lane(staleDailyReport, "fred_banking").source_artifacts[3].source_state, "fresh");
+  assert.equal(lane(staleDailyReport, "fred_banking").artifact.status, "stale",
+    "a stale daily file must not hide behind a fresh slow quarterly file");
+
+  const failedAttempt = replaceAttempt(attemptsFixture, "fred_banking", null, legalAttempt("transport_error"));
+  const failedAttemptReport = buildDetectionReport({ artifactRoot: artifactRoot.raw,
+    attempts: failedAttempt, calendars: calendarsFixture, now: expectedFixture.baseline.now });
+  assert.equal(lane(failedAttemptReport, "fred_banking").artifact.status, "ready");
+  assert.equal(lane(failedAttemptReport, "fred_banking").endpoint.reason, "transport_error");
+  assert.equal(lane(failedAttemptReport, "fred_banking").status, "unavailable",
+    "fresh FRED files must not hide the latest failed attempt");
+
+  for (const invalid of ["2026-02-30", "2026-07-12"]) {
+    const invalidRoot = materializeArtifacts("all_valid");
+    const invalidPath = path.join(invalidRoot.raw, "data", "macro", "fred-banking-daily.json");
+    const document = readJson(invalidPath);
+    document.source_as_of = invalid;
+    fs.writeFileSync(invalidPath, JSON.stringify(document), { encoding: "utf8", mode: 0o600 });
+    const invalidReport = buildDetectionReport({
+      artifactRoot: invalidRoot.raw, attempts: attemptsFixture,
+      calendars: calendarsFixture, now: expectedFixture.baseline.now,
+    });
+    assert.notEqual(lane(invalidReport, "fred_banking").artifact.status, "ready",
+      `${invalid} cannot become fresh`);
+  }
 
   const wrongMonthlyRoot = materializeArtifacts("all_valid");
   const monthlyPath = path.join(wrongMonthlyRoot.raw, "data", "macro", "fred-banking-monthly.json");

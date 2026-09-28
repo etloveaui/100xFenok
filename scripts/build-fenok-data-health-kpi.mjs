@@ -57,6 +57,7 @@ import {
   OUTCOME_WATCHDOG_THRESHOLD_MULTIPLIER,
 } from "./lib/kpi-contract-constants.mjs";
 import { classifyProductSurfaceV2, nextProductSurfaceLineageV2 } from "./lib/product-surface-stamp-v2.mjs";
+import { FRESHNESS_CLASSES, freshnessVerdict, policyToday, resolveSourcePolicy } from "../100xfenok-next/src/lib/freshness-policy.mjs";
 
 const ROOT = path.resolve(path.dirname(new URL(import.meta.url).pathname), "..");
 const SCHEMA_VERSION = "fenok-data-health-kpi/v2";
@@ -563,9 +564,18 @@ export function evaluateOutcomeWatchdogRow({
     }
   }
   const cadenceHours = OUTCOME_WATCHDOG_CADENCE_HOURS[registryLane.cadence.kind];
-  const thresholdHours = cadenceHours * OUTCOME_WATCHDOG_THRESHOLD_MULTIPLIER;
+  const sourcePolicy = advanceBasis === "canonical_file_source_as_of"
+    ? resolveSourcePolicy({ laneId: registryLane.id, cadence: registryLane.cadence.kind, calendar: freshness?.calendar }) : null;
+  const sourceVerdict = sourcePolicy
+    ? freshnessVerdict(lastAdvance, sourcePolicy, policyToday(nowIso, sourcePolicy), { calendars }) : null;
+  const sourceClass = sourcePolicy ? FRESHNESS_CLASSES[sourcePolicy.cadence] : null;
+  const thresholdHours = sourceVerdict
+    ? (sourceClass.cycleDays + sourceClass.graceDays + sourcePolicy.releaseLagDays) * 24
+    : cadenceHours * OUTCOME_WATCHDOG_THRESHOLD_MULTIPLIER;
   let ageHours = null;
-  if (Number.isFinite(advanceMs) && Number.isFinite(nowMs)) {
+  if (sourceVerdict) {
+    ageHours = sourceVerdict.ageDays === null ? null : sourceVerdict.ageDays * 24;
+  } else if (Number.isFinite(advanceMs) && Number.isFinite(nowMs)) {
     if (freshness?.unit === "business_days") {
       const folded = evaluateFreshness(lastAdvance, freshness, nowIso, calendars);
       ageHours = Number.isFinite(folded.age) ? folded.age * 24 : null;
@@ -573,7 +583,7 @@ export function evaluateOutcomeWatchdogRow({
       ageHours = Math.round(((nowMs - advanceMs) / 3600000) * 100) / 100;
     }
   }
-  const state = ageHours === null
+  const state = sourceVerdict ? (sourceVerdict.state === "fresh" ? "current" : "overdue") : ageHours === null
     ? "unobservable"
     : ageHours > thresholdHours ? "overdue" : "current";
   return {
@@ -1621,6 +1631,32 @@ export function mapDetectionFloorRow(row, recoveryState = undefined, options = {
     throw new Error(`detection floor ${laneId} status is better than its artifact status`);
   }
   const sourceAsOf = row.artifact.source_as_of;
+  const registryLane = LANE_REGISTRY.lanes.find((item) => item.id === laneId);
+  const sourceArtifacts = laneId === "fred_banking" ? row.source_artifacts : null;
+  if (laneId === "fred_banking" && sourceAsOf !== null
+    && (!Array.isArray(sourceArtifacts) || sourceArtifacts.length !== 4)) {
+    throw new Error("detection floor fred_banking requires four per-file source rows");
+  }
+  if (laneId === "fred_banking" && Array.isArray(sourceArtifacts)) {
+    const contracts = laneConfig.producer_members[0].artifact_contracts;
+    if (sourceArtifacts.length !== contracts.length || sourceArtifacts.some((item, index) =>
+      item?.id !== contracts[index].id || item?.path !== contracts[index].path)) {
+      throw new Error("detection floor fred_banking source file identities differ from config");
+    }
+  }
+  const sharedAgeLanes = new Set(["benchmarks", "global_scouter", "fred_yardeni", "treasury_tga", "finra_ats_weekly", "fred_banking"]);
+  const sourceVerdicts = sharedAgeLanes.has(laneId) && options.nowIso && sourceAsOf !== null
+    ? (sourceArtifacts ?? [{ id: laneId, source_as_of: sourceAsOf }]).map((item) => {
+      const policy = resolveSourcePolicy({
+        laneId, cadence: registryLane?.cadence?.kind,
+        artifactId: sourceArtifacts ? item.id : undefined,
+        calendar: laneConfig.freshness.calendar,
+      });
+      const verdict = freshnessVerdict(item.source_as_of, policy, policyToday(options.nowIso, policy), { calendars: options.calendars ?? FETCH_CRON_CALENDARS });
+      return { id: item.id, state: verdict.state, age_days: verdict.ageDays };
+    })
+    : [];
+  const contentAgeReady = sourceVerdicts.every((item) => item.state === "fresh");
   const providerDateless = Array.isArray(laneConfig.freshness?.source_basis)
     && laneConfig.freshness.source_basis.length === 0;
   if (sourceAsOf !== null && !isDetectionSourceStamp(sourceAsOf)) {
@@ -1659,6 +1695,10 @@ export function mapDetectionFloorRow(row, recoveryState = undefined, options = {
       row.status === "ready",
       `${row.reason}; source_as_of ${sourceAsOf ?? "null"}`,
     ),
+    ...(sourceVerdicts.length ? [check(
+      "content_age_policy", "Source content age", contentAgeReady,
+      sourceVerdicts.map((item) => `${item.id}:${item.state}:${item.age_days ?? "unknown"}`).join(", "),
+    )] : []),
     ...(targetRecovery
       ? recovery.checks
       : [check(
@@ -1672,15 +1712,16 @@ export function mapDetectionFloorRow(row, recoveryState = undefined, options = {
   ], {
     asOf: sourceAsOf,
     details: targetRecovery
-      ? { detection_reason: row.reason, recovery: recovery.details, ...lastAttemptDetail(recoveryState) }
-      : { recovery_retry_set: recoveryRetrySet, recovery_recovered: recoveryRecovered, ...lastAttemptDetail(recoveryState) },
+      ? { detection_reason: row.reason, recovery: recovery.details, source_verdicts: sourceVerdicts, ...lastAttemptDetail(recoveryState) }
+      : { detection_reason: row.reason, recovery_retry_set: recoveryRetrySet, recovery_recovered: recoveryRecovered, source_verdicts: sourceVerdicts, ...lastAttemptDetail(recoveryState) },
   });
   return {
     ...result,
-    reason: targetRecovery && row.reason === "ok" && result.status !== "ready" ? "recovery_degraded" : row.reason,
+    reason: row.reason === "ok" && !contentAgeReady ? "stale"
+      : targetRecovery && row.reason === "ok" && result.status !== "ready" ? "recovery_degraded" : row.reason,
     artifact: providerDateless
       ? { source_as_of: sourceAsOf, source_as_of_reason: "dateless_by_provider", ...generatedAtProjection }
-      : { source_as_of: sourceAsOf, ...generatedAtProjection },
+      : { source_as_of: sourceAsOf, ...(sourceArtifacts ? { source_artifacts: sourceArtifacts } : {}), ...generatedAtProjection },
   };
 }
 
@@ -3796,7 +3837,7 @@ export function buildPayload(
   const detectionFloorLanes = buildDetectionFloorLanes(
     detectionFloor,
     recoveryStates,
-    { slickchartsRepoRoot },
+    { slickchartsRepoRoot, nowIso },
   );
   for (const [laneId, sourceStatuses] of Object.entries(requiredSourceStatuses)) {
     const target = detectionFloorLanes.find((item) => item.id === laneId);

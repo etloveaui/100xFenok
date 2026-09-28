@@ -124,6 +124,25 @@ export function businessDayAge(sourceValue, nowValue, market) {
   return count;
 }
 
+/** Business-day age against a caller's canonical calendar (for example the
+ * detector's US federal calendar, which differs from the NYSE calendar). */
+export function businessDayAgeWithCalendar(sourceValue, nowValue, calendar) {
+  const source = isoDateOf(sourceValue);
+  const now = isoDateOf(nowValue);
+  if (!isRealCalendarDate(source) || !isRealCalendarDate(now)
+    || !Array.isArray(calendar?.weekend_days) || !Array.isArray(calendar?.holidays)) return null;
+  if (now <= source) return 0;
+  const weekends = new Set(calendar.weekend_days);
+  const holidays = new Set(calendar.holidays);
+  let count = 0;
+  let cursor = source;
+  while (cursor < now) {
+    cursor = addDays(cursor, 1);
+    if (!weekends.has(toUtcDate(cursor).getUTCDay()) && !holidays.has(cursor)) count += 1;
+  }
+  return count;
+}
+
 /** Yahoo universe market calendar selection; unknown foreign suffixes fail conservative. */
 export function yahooBusinessDayAge(sourceValue, nowValue, ticker) {
   const symbol = String(ticker ?? "").toUpperCase();

@@ -29,7 +29,19 @@
 
 import { ENROLLED_PATHS, ENROLLED_PREFIXES } from "../lib/cloud-data-plane-worker-read.mjs";
 import { performance } from "node:perf_hooks";
+import fs from "node:fs";
+import { fileURLToPath } from "node:url";
 import { liveRequestHeaders } from "../lib/live-request-headers.mjs";
+import { freshnessVerdict, policyToday, resolveSourcePolicy } from "../../100xfenok-next/src/lib/freshness-policy.mjs";
+
+const DETECTION_CALENDARS = JSON.parse(fs.readFileSync(
+  fileURLToPath(new URL("../lib/data-supply-detection-calendars.json", import.meta.url)), "utf8",
+));
+const SHARED_SOURCE_PATHS = new Map([
+  ...["AAPL", "AMZN", "META", "MSFT"].map((symbol) => [`/data/earnings-overview/${symbol}.json`, { laneId: "earnings_overview" }]),
+  ...["daily", "weekly", "monthly", "quarterly"].map((cadence) => [`/data/macro/fred-banking-${cadence}.json`, { artifactId: `fred_banking_${cadence}` }]),
+  ["/data/macro/tga.json", { laneId: "treasury_tga" }],
+]);
 
 export const DEFAULT_BASE_URL = "https://100xfenok.etloveaui.workers.dev";
 // Milliseconds a single enrolled URL may take to answer before it is cut off
@@ -238,6 +250,7 @@ export function evaluateProbeResponse({ path, family, status, generationHeader, 
   }
   const effectiveSourceAgeDays = tightenPolicyLimit(resolveSourceAgeDays({ path, family }), maxAgeDays);
   const effectivePublishedAgeDays = tightenPolicyLimit(resolvePublishedAgeDays({ path, family }), maxPublishedAgeDays);
+  const sharedSource = SHARED_SOURCE_PATHS.get(path);
   const sourceMs = parseRealIsoDay(sourceAsOfHeader);
   if (sourceMs === null) {
     failures.push(
@@ -248,6 +261,16 @@ export function evaluateProbeResponse({ path, family, status, generationHeader, 
   } else if (nowIsValid) {
     if (sourceMs > nowMs) {
       failures.push(`source date ${sourceAsOfHeader} is in the future relative to now ${nowIso}`);
+    } else if (sharedSource) {
+      const policy = resolveSourcePolicy(sharedSource);
+      const verdict = freshnessVerdict(sourceAsOfHeader, policy, policyToday(nowIso, policy), { calendars: DETECTION_CALENDARS });
+      if (verdict.state !== "fresh") {
+        failures.push(`source date ${sourceAsOfHeader} has ${verdict.state} content age under ${policy.label} policy`);
+      }
+      const rawAgeDays = (nowMs - sourceMs) / 86400000;
+      if (Number.isFinite(maxAgeDays) && maxAgeDays > 0 && rawAgeDays > maxAgeDays) {
+        failures.push(`source date ${sourceAsOfHeader} is ${rawAgeDays.toFixed(1)} days old (tightened limit ${maxAgeDays})`);
+      }
     } else {
       const ageDays = (nowMs - sourceMs) / 86400000;
       if (effectiveSourceAgeDays !== null && ageDays > effectiveSourceAgeDays) {
