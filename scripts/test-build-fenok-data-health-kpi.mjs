@@ -307,22 +307,33 @@ try {
   assert.equal(yahooBatch.total_members, 100);
   assert.equal(yahooBatch.served_path, "data/yf/finance", "the shared Yahoo output has an explicit public serving path");
   const yahooLane = LANE_REGISTRY.lanes.find((lane) => lane.id === "yahoo_batch_quote_history");
+  const thresholdDataRoot = path.join(root, "threshold-data");
+  fs.cpSync(
+    path.join(dataRoot, "admin/yahoo-batch-quote-history"),
+    path.join(thresholdDataRoot, "admin/yahoo-batch-quote-history"),
+    { recursive: true },
+  );
   for (let index = 80; index < 95; index += 1) {
-    writeJson(dataRoot, `admin/yahoo-batch-quote-history/tickers/SYM${index}.json`, {
+    writeJson(thresholdDataRoot, `admin/yahoo-batch-quote-history/tickers/SYM${index}.json`, {
       resolution_state: "fresh_primary",
       current: { source_as_of: "2026-04-10T19:35:04Z", fetched_at: "2026-04-11T01:00:00Z" },
     });
   }
-  const delayedAt80 = summarizeDataSetFreshness(yahooLane, null, now, undefined, dataRoot);
+  const delayedAt80 = summarizeDataSetFreshness(yahooLane, null, now, undefined, thresholdDataRoot);
   assert.equal(delayedAt80.fresh_members, 80);
   assert.equal(delayedAt80.status, "delayed", "an 80% fresh share meets the delayed threshold");
-  writeJson(dataRoot, "admin/yahoo-batch-quote-history/tickers/SYM79.json", {
+  writeJson(thresholdDataRoot, "admin/yahoo-batch-quote-history/tickers/SYM79.json", {
     resolution_state: "fresh_primary",
     current: { source_as_of: "2026-04-10T19:35:04Z", fetched_at: "2026-04-11T01:00:00Z" },
   });
-  const stoppedBelow80 = summarizeDataSetFreshness(yahooLane, null, now, undefined, dataRoot);
+  const stoppedBelow80 = summarizeDataSetFreshness(yahooLane, null, now, undefined, thresholdDataRoot);
   assert.equal(stoppedBelow80.fresh_members, 79);
   assert.equal(stoppedBelow80.status, "stopped", "a fresh share below 80% is stopped");
+  assert.equal(
+    summarizeDataSetFreshness(yahooLane, null, now, undefined, dataRoot).fresh_members,
+    95,
+    "threshold-boundary checks leave generated-document evidence unchanged",
+  );
   assert.equal(rootDoc.sets.find((set) => set.set === "nasdaq_giw_sox").served_path,
     "data/indices/nasdaq-giw-sox-constituents.json");
   assert.equal(rootDoc.sets.find((set) => set.set === "finra_short_volume").served_path,
