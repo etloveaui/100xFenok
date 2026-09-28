@@ -45,38 +45,14 @@ function sourceIdentity(dataRoot, target, after, nowMs) {
   return {source, sha256: digest(bytes)};
 }
 
-export function assessYahooIssuerLifecycle(state, {dataRoot = null, nowIso = state?.generated_at} = {}) {
-  const counts = state?.counts ?? {};
-  const active = counts.active;
-  const eligible = counts.eligible ?? active;
-  const inactive = counts.lifecycle_inactive ?? 0;
-  const result = {valid: false, reasons: [], active, eligible, inactive, projection: null};
-  const fail = (reason) => { result.reasons.push(reason); return result; };
-  if (![active, eligible, inactive].every(integer) || eligible + inactive !== active) return fail("eligibility_equation_invalid");
-  const metadata = state?.issuer_lifecycle_policy;
-  const noRows = (value) => value == null || (Array.isArray(value) && value.length === 0);
-  if (metadata == null && inactive === 0 && eligible === active
-      && noRows(state?.lifecycle_inactive_symbols) && noRows(state?.issuer_lifecycle_details)) {
-    return {...result, valid: true};
-  }
+// Independently verify issuer facts from canonical files, without a Yahoo state partition.
+export function readVerifiedYahooIssuerPolicy({dataRoot = null, nowIso, evaluatedAt = nowIso, expectedSha256 = null} = {}) {
+  const fail = (reason) => ({valid: false, reasons: [reason], rows: new Map(), sha256: null});
   if (typeof dataRoot !== "string" || !dataRoot) return fail("canonical_data_root_required");
-  const evaluatedMs = stampMs(metadata?.evaluated_at);
   const nowMs = stampMs(nowIso);
-  const scope = state?.active_universe_scope;
-  const attempt = state?.current_attempt;
-  if (state?.schema_version !== "yahoo-batch-quote-history-index/v1" || state?.lane_id !== "yahoo_batch_quote_history"
-      || !["all_sources", "core_etf"].includes(scope) || metadata?.active_universe_scope !== scope
-      || metadata?.path !== POLICY_REL || !SHA256.test(metadata?.sha256 ?? "")
-      || !Number.isFinite(evaluatedMs) || !Number.isFinite(nowMs) || evaluatedMs > nowMs
-      || metadata?.evaluated_at !== state?.generated_at
-      || typeof attempt?.run_id !== "string" || !attempt.run_id
-      || !integer(attempt?.run_attempt) || attempt.run_attempt < 1
-      || metadata?.run_id !== attempt.run_id || metadata?.run_attempt !== attempt.run_attempt
-      || typeof attempt?.event_name !== "string" || !attempt.event_name || metadata?.event_name !== attempt.event_name) {
-    return fail("policy_index_binding_invalid");
-  }
-  if (!sortedUniqueSymbols(state?.catalogue_symbols) || state.catalogue_symbols.length !== active
-      || !sortedUniqueSymbols(state?.lifecycle_inactive_symbols)) return fail("catalogue_or_inactive_symbols_invalid");
+  const evaluatedMs = stampMs(evaluatedAt);
+  if (!Number.isFinite(nowMs) || !Number.isFinite(evaluatedMs) || evaluatedMs > nowMs) return fail("issuer_policy_clock_invalid");
+  if (expectedSha256 !== null && !SHA256.test(expectedSha256)) return fail("canonical_policy_hash_invalid");
   let bytes;
   let policy;
   try {
@@ -85,10 +61,10 @@ export function assessYahooIssuerLifecycle(state, {dataRoot = null, nowIso = sta
   } catch {
     return fail("canonical_policy_unreadable");
   }
-  if (digest(bytes) !== metadata.sha256) return fail("canonical_policy_hash_mismatch");
+  if (expectedSha256 !== null && digest(bytes) !== expectedSha256) return fail("canonical_policy_hash_mismatch");
   if (policy?.schema_version !== "yahoo-issuer-lifecycle/v1" || !Array.isArray(policy?.events)) return fail("policy_envelope_invalid");
   const rows = new Map();
-  const cutoff = metadata.evaluated_at.slice(0, 10);
+  const cutoff = evaluatedAt.slice(0, 10);
   const validDate = (value) => typeof value === "string" && /^\d{4}-\d{2}-\d{2}$/.test(value)
     && isRealCalendarDate(value) && value <= cutoff;
   try {
@@ -144,6 +120,44 @@ export function assessYahooIssuerLifecycle(state, {dataRoot = null, nowIso = sta
   } catch {
     return fail("issuer_policy_or_successor_invalid");
   }
+  return {valid: true, reasons: [], rows, sha256: digest(bytes)};
+}
+
+export function assessYahooIssuerLifecycle(state, {dataRoot = null, nowIso = state?.generated_at} = {}) {
+  const counts = state?.counts ?? {};
+  const active = counts.active;
+  const eligible = counts.eligible ?? active;
+  const inactive = counts.lifecycle_inactive ?? 0;
+  const result = {valid: false, reasons: [], active, eligible, inactive, projection: null};
+  const fail = (reason) => { result.reasons.push(reason); return result; };
+  if (![active, eligible, inactive].every(integer) || eligible + inactive !== active) return fail("eligibility_equation_invalid");
+  const metadata = state?.issuer_lifecycle_policy;
+  const noRows = (value) => value == null || (Array.isArray(value) && value.length === 0);
+  if (metadata == null && inactive === 0 && eligible === active
+      && noRows(state?.lifecycle_inactive_symbols) && noRows(state?.issuer_lifecycle_details)) {
+    return {...result, valid: true};
+  }
+  if (typeof dataRoot !== "string" || !dataRoot) return fail("canonical_data_root_required");
+  const evaluatedMs = stampMs(metadata?.evaluated_at);
+  const nowMs = stampMs(nowIso);
+  const scope = state?.active_universe_scope;
+  const attempt = state?.current_attempt;
+  if (state?.schema_version !== "yahoo-batch-quote-history-index/v1" || state?.lane_id !== "yahoo_batch_quote_history"
+      || !["all_sources", "core_etf"].includes(scope) || metadata?.active_universe_scope !== scope
+      || metadata?.path !== POLICY_REL || !SHA256.test(metadata?.sha256 ?? "")
+      || !Number.isFinite(evaluatedMs) || !Number.isFinite(nowMs) || evaluatedMs > nowMs
+      || metadata?.evaluated_at !== state?.generated_at
+      || typeof attempt?.run_id !== "string" || !attempt.run_id
+      || !integer(attempt?.run_attempt) || attempt.run_attempt < 1
+      || metadata?.run_id !== attempt.run_id || metadata?.run_attempt !== attempt.run_attempt
+      || typeof attempt?.event_name !== "string" || !attempt.event_name || metadata?.event_name !== attempt.event_name) {
+    return fail("policy_index_binding_invalid");
+  }
+  if (!sortedUniqueSymbols(state?.catalogue_symbols) || state.catalogue_symbols.length !== active
+      || !sortedUniqueSymbols(state?.lifecycle_inactive_symbols)) return fail("catalogue_or_inactive_symbols_invalid");
+  const verifiedPolicy = readVerifiedYahooIssuerPolicy({dataRoot, nowIso, evaluatedAt: metadata.evaluated_at, expectedSha256: metadata.sha256});
+  if (!verifiedPolicy.valid) return fail(verifiedPolicy.reasons[0]);
+  const rows = verifiedPolicy.rows;
   const catalogue = new Set(state.catalogue_symbols);
   const expected = [...rows.keys()].filter((symbol) => catalogue.has(symbol)).sort();
   if (JSON.stringify(expected) !== JSON.stringify(state.lifecycle_inactive_symbols) || expected.length !== inactive) return fail("scoped_inactive_set_mismatch");

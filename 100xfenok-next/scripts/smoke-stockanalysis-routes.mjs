@@ -1,6 +1,7 @@
 #!/usr/bin/env node
 
-import { pathToFileURL } from "node:url";
+import { pathToFileURL, fileURLToPath } from "node:url";
+import path from "node:path";
 import { FATAL_MARKERS, SMOKE_PAGE_ROUTES } from "./qa-route-catalog.mjs";
 import { DEPLOY_SMOKE_ATTEMPTS, fetchTextWithBoundedRetry } from "./deploy-smoke-retry.mjs";
 import { PRODUCT_SURFACE_COLLECTION_MAX_AGE_HOURS } from "../../scripts/lib/kpi-contract-constants.mjs";
@@ -55,8 +56,8 @@ function assert(condition, message) {
   if (!condition) fail(message);
 }
 
-export function assertProductSurfaceCoverageV2Contract(payload) {
-  const errors = validateProductSurfaceCoverageV2Artifact(payload);
+export function assertProductSurfaceCoverageV2Contract(payload, {dataRoot = null, verificationNowIso = payload?.generated_at} = {}) {
+  const errors = validateProductSurfaceCoverageV2Artifact(payload, {dataRoot, verificationNowIso});
   assert(errors.length === 0, `Product surface coverage contract failed: ${errors.join("; ")}`);
 }
 
@@ -543,7 +544,7 @@ export async function checkProductSurfaceFreshness(root) {
     readPublicJson(PRODUCER_SOURCE_PATHS.yardeni),
     readPublicJson(PRODUCER_SOURCE_PATHS.stocksAnalyzer),
   ]);
-  assertProductSurfaceCoverageV2Contract(coverage);
+  assertProductSurfaceCoverageV2Contract(coverage, {dataRoot: path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..", "..", "data"), verificationNowIso: new Date().toISOString()});
   const surfaces = requiredArray(coverage?.surfaces, "Product surface coverage surfaces");
   const producerEvidence = buildProducerEvidence({ marketFacts, rimInputs, yardeni, stocksAnalyzer });
   const seenIds = new Set();

@@ -1546,7 +1546,7 @@ export function checkV2Runtime(rootDoc, { errors, warnings }, nowIso, { context 
   }
 }
 
-export function checkSourceSla(rootDoc, { errors, warnings }, nowIso) {
+export function checkSourceSla(rootDoc, { errors, warnings }, nowIso, {dataRoot = null} = {}) {
   // No real-clock fallback: staleness must be judged against the caller's injected clock
   // (KPI_FAKE_NOW in CI/tests, resolveNow() in prod). A missing clock is a caller bug, not
   // a silent Date.now() — fail-closed so the trap class this contract kills cannot regrow.
@@ -1595,7 +1595,7 @@ export function checkSourceSla(rootDoc, { errors, warnings }, nowIso) {
       const hasLineage = Object.prototype.hasOwnProperty.call(entry, "required_surface_rows");
       push(errors, Array.isArray(rows), "product_surface_coverage: required_surface_rows evidence missing");
       if (entry.source_stamp_version === PRODUCT_SURFACE_STAMP_VERSION) {
-        const cls = classifyProductSurfaceV2(Array.isArray(rows) ? rows : [], buildNow, REQUIRED_SURFACE_IDS);
+        const cls = classifyProductSurfaceV2(Array.isArray(rows) ? rows : [], buildNow, REQUIRED_SURFACE_IDS, {dataRoot, verificationNowIso: nowIso});
         const lineage = entry.stamp_lineage;
         const exactKeys = (value, expected) => value && typeof value === "object" && !Array.isArray(value)
           && JSON.stringify(Object.keys(value).sort()) === JSON.stringify([...expected].sort());
@@ -1836,7 +1836,7 @@ export function validateV2({
   checkV2Runtime(rootDoc, { errors, warnings }, nowIso, { context, strict });
   checkOutcomeWatchdog(rootDoc, errors, { dataRoot: path.resolve(path.dirname(rootKpiPath), "..") });
   checkFetchCronSourceParity(rootDoc, rootKpiPath, { errors, warnings });
-  checkSourceSla(rootDoc, { errors, warnings }, nowIso);
+  checkSourceSla(rootDoc, { errors, warnings }, nowIso, {dataRoot});
   checkRecoveryStateSources(rootDoc, rootKpiPath, errors, { slickchartsRepoRoot });
   checkPublicProjection(rootDoc, publicDoc, { errors, warnings });
   const report = { schema: SCHEMA_VERSION_V2, freshness: freshnessReport(rootDoc, nowIso) };

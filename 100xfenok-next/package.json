@@ -187,7 +187,7 @@
     "qa:data-freshness": "node scripts/test-source-clock-honesty-contract.mjs && node scripts/check-data-freshness.mjs",
     "qa:source-clock-honesty": "node scripts/test-source-clock-honesty-contract.mjs",
     "qa:fenok-data-health-kpi": "npm run qa:fenok-data-health-kpi:fixtures && npm run qa:fenok-data-health-kpi:artifact",
-    "qa:fenok-data-health-kpi:fixtures": "node ../scripts/test-fetch-fenok-news-tone-proxy.mjs && node ../scripts/test-fetch-cron-attempt-coverage.mjs && node ../scripts/test-build-fenok-data-health-kpi.mjs",
+    "qa:fenok-data-health-kpi:fixtures": "node ../scripts/test-fetch-fenok-news-tone-proxy.mjs && node ../scripts/test-fetch-cron-attempt-coverage.mjs && node ../scripts/test-build-fenok-data-health-kpi.mjs && node ../scripts/test-generate-product-surface-coverage-etf-live-dates.mjs",
     "qa:data-supply-detection-floor": "node ../scripts/test-build-data-supply-detection-floor.mjs",
     "qa:source-freshness-policy": "tsx src/lib/freshness-policy.test.ts && node ../scripts/test-build-data-supply-detection-floor.mjs && node ../scripts/test-build-fenok-data-health-kpi.mjs && node ../scripts/ops/test-probe-data-plane-serving.mjs",
     "build:source-freshness-pins": "bash scripts/build-source-freshness-pins.sh",

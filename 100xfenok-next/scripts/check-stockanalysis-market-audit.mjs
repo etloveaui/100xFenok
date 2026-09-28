@@ -483,7 +483,7 @@ function assertRenderedMarketAudit(payloads, errors) {
   }
 }
 
-export function assertProductSurfaceCoverageContract(payload, errors, warnings = []) {
+export function assertProductSurfaceCoverageContract(payload, errors, warnings = [], {dataRoot = null, verificationNowIso = payload?.generated_at} = {}) {
   const requiredIds = new Set([
     "stock_detail",
     "market_valuation",
@@ -496,7 +496,7 @@ export function assertProductSurfaceCoverageContract(payload, errors, warnings =
   const surfaces = Array.isArray(payload?.surfaces) ? payload.surfaces : [];
   const seenIds = new Set();
   const actualTotals = Object.fromEntries([...ALLOWED_SURFACE_STATUSES].map((status) => [status, 0]));
-  for (const message of validateProductSurfaceCoverageV2Artifact(payload)) {
+  for (const message of validateProductSurfaceCoverageV2Artifact(payload, {dataRoot, verificationNowIso})) {
     errors.push(`Product surface coverage: ${message}`);
   }
   assert(typeof payload?.generated_at === "string" && Number.isFinite(new Date(payload.generated_at).getTime()), "Product surface coverage: generated_at must be a valid timestamp", errors);
@@ -602,7 +602,7 @@ function main() {
     assertSurfaceConsumerContract(payloads.surfaceIndex, payloads.surfaceConsumers, errors, warnings);
   }
   if (payloads.productSurfaceCoverage) {
-    assertProductSurfaceCoverageContract(payloads.productSurfaceCoverage, errors, warnings);
+    assertProductSurfaceCoverageContract(payloads.productSurfaceCoverage, errors, warnings, {dataRoot: `${ROOT}/../data`, verificationNowIso: new Date().toISOString()});
   }
 
   const renderPayloadsReady = Object.values(payloads).every((payload) => payload !== null);

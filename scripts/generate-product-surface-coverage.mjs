@@ -16,7 +16,7 @@ import {
   PRODUCT_SURFACE_COVERAGE_SCHEMA_VERSION,
   PRODUCT_SURFACE_STAMP_VERSION,
 } from "./lib/kpi-contract-constants.mjs";
-import { deriveProductSurfaceStampEvidence } from "./lib/product-surface-stamp-v2.mjs";
+import { deriveProductSurfaceStampEvidence, createProductSurfaceIssuerLifecycle } from "./lib/product-surface-stamp-v2.mjs";
 
 const ROOT = path.resolve(path.dirname(new URL(import.meta.url).pathname), "..");
 
@@ -237,8 +237,8 @@ function trueSourceDate(value) {
   return value;
 }
 
-function stampEvidence(members) {
-  return deriveProductSurfaceStampEvidence(members, generatedAt);
+function stampEvidence(members, options = {}) {
+  return deriveProductSurfaceStampEvidence(members, generatedAt, options);
 }
 
 function surfaceConsumerMap(consumers) {
@@ -540,6 +540,14 @@ const contractedSectorSurfaceNames = contractedSurfaceNamesForRoute(surfaceConsu
 const contractedStockSurfaceNames = contractedSurfaceNamesForRoute(surfaceConsumers, "/stock/[ticker]");
 const contractedEtfSurfaceNames = contractedSurfaceNamesForRoute(surfaceConsumers, "/etfs");
 
+const etfStampMembers = [
+  ...etfDetailDateRows.map((row) => dateMember(`etf_detail:${row.ticker}`, row.source_as_of)),
+  ...datelessMembers(contractedEtfSurfaceNames),
+];
+const etfIssuerOverlay = createProductSurfaceIssuerLifecycle(etfStampMembers, generatedAt, {dataRoot: DATA_ROOT});
+const etfStampOptions = etfIssuerOverlay.issuerLifecycle
+  ? {policyVersion: 3, issuerLifecycle: etfIssuerOverlay.issuerLifecycle, dataRoot: DATA_ROOT, surfaceId: "etf_center"}
+  : {};
 const productStampEvidence = {
   stock_detail: stampEvidence([
     dateMember("market_facts:core_surface", stockDetailSourceAsOf),
@@ -554,13 +562,18 @@ const productStampEvidence = {
     dateMember("market_facts:core_surface", sectorsSourceAsOf),
     ...datelessMembers(contractedSectorSurfaceNames),
   ]),
-  etf_center: stampEvidence([
-    ...etfDetailDateRows.map((row) => dateMember(`etf_detail:${row.ticker}`, row.source_as_of)),
-    ...datelessMembers(contractedEtfSurfaceNames),
-  ]),
+  etf_center: stampEvidence(etfIssuerOverlay.members, etfStampOptions),
   screener: stampEvidence([dateMember("stocks_analyzer", screenerSourceAsOf)]),
 };
 const etfCenterSourceAsOf = productStampEvidence.etf_center.date_bearing.source_floor_as_of;
+if (etfIssuerOverlay.issuerLifecycle) {
+  Object.assign(etfDetailDateResolution, {
+    active_member_count: productStampEvidence.etf_center.membership.active_count,
+    issuer_notice_inactive_count: productStampEvidence.etf_center.membership.inactive_count,
+    active_missing_date_count: productStampEvidence.etf_center.date_bearing.missing_count,
+  });
+}
+
 
 function rimIndexReadyCheck(indexId, label) {
   const item = rimIndexInputs?.indices?.[indexId];

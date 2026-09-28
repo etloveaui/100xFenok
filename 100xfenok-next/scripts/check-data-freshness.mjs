@@ -207,8 +207,8 @@ function expectedAgeDays(value, calendar, errors, context) {
   return Math.max(0, Math.floor((now.getTime() - parsed.getTime()) / (24 * 60 * 60 * 1000)));
 }
 
-export function validateCoverage(payload, producerEvidence, errors, warnings) {
-  errors.push(...validateProductSurfaceCoverageV2Artifact(payload));
+export function validateCoverage(payload, producerEvidence, errors, warnings, {dataRoot = null, verificationNowIso = payload?.generated_at} = {}) {
+  errors.push(...validateProductSurfaceCoverageV2Artifact(payload, {dataRoot, verificationNowIso}));
   assert(nonEmptyString(payload?.generated_at) && Number.isFinite(new Date(payload.generated_at).getTime()), "generated_at must be a valid timestamp", errors);
   assert(Array.isArray(payload?.surfaces) && payload.surfaces.length > 0, "surfaces are required", errors);
   assert(payload?.raw_policy?.public_mirror_allowed === true, "raw_policy must allow the public mirror", errors);
@@ -341,7 +341,7 @@ function main() {
   const rootCoverage = coveragePair?.root ?? null;
   const producerEvidence = buildProducerEvidence(errors, warnings);
 
-  if (rootCoverage) validateCoverage(rootCoverage, producerEvidence, errors, warnings);
+  if (rootCoverage) validateCoverage(rootCoverage, producerEvidence, errors, warnings, {dataRoot: path.join(REPO_ROOT, "data"), verificationNowIso: new Date().toISOString()});
   if (errors.length) {
     console.error("data freshness check failed");
     for (const error of errors) console.error(`- ${error}`);

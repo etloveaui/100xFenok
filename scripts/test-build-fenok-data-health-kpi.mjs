@@ -92,6 +92,7 @@ const {
   checkOutcomeWatchdog,
   checkSourceStatusProjections,
   executeCheckerRun,
+  validateV2,
 } = await import("../100xfenok-next/scripts/check-fenok-data-health-kpi.mjs");
 const { checkRimInputsCanonicalHealth } = await import("./check-fenok-data-health-kpi.mjs");
 const { projectFenokDataHealthKpiPublicMirror } = await import("../100xfenok-next/sync-static-overrides.mjs");
@@ -99,7 +100,7 @@ const { DATA_SUPPLY_DETECTION_CONFIG } = await import("./lib/data-supply-detecti
 const { LANE_REGISTRY } = await import("./lib/lane-registry.mjs");
 const { FAMILY_POLICY, FRESHNESS_CLASSES, policyToday, resolveSourcePolicy } = await import("../100xfenok-next/src/lib/freshness-policy.mjs");
 const { buildFetchCronAttemptCoverage, classifyAttempt } = await import("./build-data-supply-detection-floor.mjs");
-const { deriveProductSurfaceStampEvidence } = await import("./lib/product-surface-stamp-v2.mjs");
+const { deriveProductSurfaceStampEvidence, createProductSurfaceIssuerLifecycle } = await import("./lib/product-surface-stamp-v2.mjs");
 const { ProducerLkgStateStore } = await import("./lib/producer-lkg-state.mjs");
 const { checkKpiRecoverySourcesAgainstRegistry } = await import("./check-lane-registry-kpi.mjs");
 const {
@@ -7021,6 +7022,78 @@ function issuerLifecycleFixture() {
   writeJson(path.join(f.tmp, "public", "data", KPI_REL), publicTamper);
   assert.equal(executeCheckerRun({dataRoot: f.tmp, nowIso: now, slickchartsRepoRoot: HERMETIC_FIXTURE_ROOT}).exit, 1);
   ok("legacy zero-exclusion shape stays compatible; production checker independently verifies eligible readiness and privacy");
+}
+
+// Product v3 membership uses canonical policy/catalogue independently of Yahoo freshness.
+{
+  const f = issuerLifecycleFixture();
+  const inactiveSymbols = ["IWDL", "IWFL", "IWML", "MTUL", "QULL", "SCDL", "USML"];
+  const members = [{id: "etf_detail:LIVE", stamp_class: "date_bearing", source_as_of: "2026-06-29"},
+    {id: "etf_detail:MISSING", stamp_class: "date_bearing", source_as_of: null},
+    ...inactiveSymbols.map((symbol) => ({id: `etf_detail:${symbol}`, stamp_class: "date_bearing", source_as_of: null}))];
+  const indexRel = path.join(f.dataRoot, "computed", "data-supply", "etf-detail", "index.json");
+  function coverageFor(current) {
+    writeJson(indexRel, {schema_version: "data-supply-etf-detail-public-index/v1", entries: Object.fromEntries(current.map((row) => {
+      const ticker = row.id.slice("etf_detail:".length); return [ticker, {ticker, source_as_of: row.source_as_of}];}))});
+    const overlay = createProductSurfaceIssuerLifecycle(current, f.now, {dataRoot: f.dataRoot});
+    const etfEvidence = deriveProductSurfaceStampEvidence(overlay.members, f.now,
+      {policyVersion: 3, issuerLifecycle: overlay.issuerLifecycle, dataRoot: f.dataRoot, surfaceId: "etf_center"});
+    const ordinary = deriveProductSurfaceStampEvidence([{id: "ordinary", stamp_class: "date_bearing", source_as_of: "2026-09-25"}], f.now);
+    const surfaces = REQUIRED_SURFACE_IDS.map((id) => {const stamp = id === "etf_center" ? etfEvidence : ordinary;
+      return {id, source_as_of: stamp.date_bearing.source_floor_as_of, stamp_evidence: stamp};});
+    writeJson(path.join(f.dataRoot, "admin", "product-surface-coverage.json"), {
+      schema_version: "product-surface-coverage/v2", source_stamp_version: 2, generated_at: f.now,
+      surfaces, totals: {surfaces: surfaces.length, stale: 0, unavailable: 0, error: 0}});
+    const built = buildPayload(f.now, null, null, RECOVERY_STATE_SOURCES, {dataRoot: f.dataRoot,
+      publicDataRoot: path.join(f.tmp, "public", "data"), slickchartsRepoRoot: HERMETIC_FIXTURE_ROOT, env: {}, scriptStartMs: Date.parse(f.now)});
+    return {built, etfEvidence, entry: built.source_sla.find((row) => row.source_id === "product_surface_coverage")};
+  }
+  const pending = coverageFor(members);
+  assert.equal(pending.entry.status, "degraded_pending_true_date");
+  assert.equal(pending.etfEvidence.date_bearing.missing_count, 1);
+  assert.equal(pending.etfEvidence.date_bearing.source_floor_as_of, "2026-06-29");
+  const completeOld = coverageFor(members.map((row) => row.id === "etf_detail:MISSING" ? {...row, source_as_of: "2026-09-25"} : row));
+  assert.equal(completeOld.entry.status, "stale", "a verified membership exclusion never waives an active old source floor");
+  const fresh = coverageFor(members.map((row) => row.id === "etf_detail:LIVE" || row.id === "etf_detail:MISSING" ? {...row, source_as_of: "2026-09-25"} : row));
+  assert.equal(fresh.entry.status, "ready");
+  assert.equal(fresh.built.lanes.find((row) => row.id === "product_surface_freshness").checks.find((row) => row.id === "issuer_membership_verified").status, "ready");
+  const errors = [], warnings = [];
+  checkSourceSla({generated_at: f.now, source_sla: [fresh.entry]}, {errors, warnings}, f.now, {dataRoot: f.dataRoot});
+  assert.deepEqual(errors.filter((error) => error.includes("product_surface_coverage")), [], "checker independently reopens the real product policy and catalogue");
+  const verificationNowIso = new Date(Date.parse(f.now) + 3600000).toISOString();
+  const aliasFetchedAt = new Date(Date.parse(f.now) + 1800000).toISOString();
+  writeJson(f.aliasPath, {...f.alias, fetched_at: aliasFetchedAt});
+  writeJson(f.rspcPath, {...f.rspc, fetched_at: aliasFetchedAt});
+  const currentBuilt = buildPayload(verificationNowIso, null, null, RECOVERY_STATE_SOURCES, {dataRoot: f.dataRoot,
+    publicDataRoot: path.join(f.tmp, "public", "data"), slickchartsRepoRoot: HERMETIC_FIXTURE_ROOT, env: {}, scriptStartMs: Date.parse(verificationNowIso)});
+  const rootKpiPath = path.join(f.dataRoot, KPI_REL);
+  const publicKpiPath = path.join(f.tmp, "public", "data", KPI_REL);
+  const currentPublic = projectPublicKpi(currentBuilt, verificationNowIso);
+  writeJson(rootKpiPath, currentBuilt); writeJson(publicKpiPath, currentPublic);
+  let validated;
+  assert.doesNotThrow(() => {validated = validateV2({rootDoc: currentBuilt, publicDoc: currentPublic, rootKpiPath, publicKpiPath,
+    nowIso: verificationNowIso, context: "deploy", slickchartsRepoRoot: HERMETIC_FIXTURE_ROOT});},
+    "full validateV2 must use its existing private dataRoot binding and retain selectedSourceNow");
+  assert.deepEqual(validated.errors.filter((error) => error.includes("product_surface_coverage")), [],
+    "full validator accepts unchanged product evidence after current MRSH and RSPC refreshes");
+  const tampered = structuredClone(fresh.entry);
+  tampered.required_surface_rows.find((row) => row.id === "etf_center").stamp_evidence.issuer_lifecycle.sha256 = "0".repeat(64);
+  const tamperErrors = [];
+  checkSourceSla({generated_at: f.now, source_sla: [tampered]}, {errors: tamperErrors, warnings: []}, f.now, {dataRoot: f.dataRoot});
+  assert.ok(tamperErrors.some((error) => error.includes("product_surface_coverage")));
+  assert.equal(JSON.stringify(projectPublicKpi(fresh.built, f.now)).includes("admin/yahoo-batch-quote-history/"), false);
+  writeJson(f.aliasPath, f.alias); writeJson(f.rspcPath, f.rspc);
+  const malformedCoveragePath = path.join(f.dataRoot, "admin", "product-surface-coverage.json");
+  const malformedCoverage = JSON.parse(fs.readFileSync(malformedCoveragePath, "utf8"));
+  malformedCoverage.surfaces = malformedCoverage.surfaces.filter((row) => row.id === "etf_center");
+  malformedCoverage.surfaces[0].stamp_evidence.issuer_lifecycle.private_path = "admin/yahoo-batch-quote-history/issuer-lifecycle.json";
+  writeJson(malformedCoveragePath, malformedCoverage);
+  const rejected = buildPayload(f.now, null, null, RECOVERY_STATE_SOURCES, {dataRoot: f.dataRoot,
+    publicDataRoot: path.join(f.tmp, "public", "data"), slickchartsRepoRoot: HERMETIC_FIXTURE_ROOT, env: {}, scriptStartMs: Date.parse(f.now)});
+  assert.equal(rejected.source_sla.find((row) => row.source_id === "product_surface_coverage").status, "error");
+  assert.equal(JSON.stringify(projectPublicKpi(rejected, f.now)).includes("admin/yahoo-batch-quote-history/"), false,
+    "missing required surfaces cannot bypass normalization of rejected issuer proof");
+  ok("product v3 keeps active nulls pending and old floors stale, then becomes ready only with fresh active dates and canonical issuer proof");
 }
 
 console.log(`\n# ${passed} fixtures passed`);

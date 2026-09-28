@@ -3314,7 +3314,7 @@ export function buildRimLane(rimInputs, soxRecoveryState = null, rimFiveCanonica
   });
 }
 
-function buildProductSurfaceLane(productCoverage, stockanalysisRecovery) {
+function buildProductSurfaceLane(productCoverage, stockanalysisRecovery, {dataRoot = null, nowIso = productCoverage?.generated_at} = {}) {
   const totals = productCoverage?.totals || {};
   const recovery = stockanalysisRecoveryEvidence(stockanalysisRecovery, ["surface"]);
   const stampRows = productCoverage?.source_stamp_version === PRODUCT_SURFACE_STAMP_VERSION
@@ -3323,8 +3323,14 @@ function buildProductSurfaceLane(productCoverage, stockanalysisRecovery) {
       .map((surface) => ({ id: surface.id, state: surface?.stamp_evidence?.state ?? "shape_error" }))
     : [];
   const nonStampedRows = stampRows.filter((row) => row.state !== "stamped");
+  const hasIssuerMembership = (productCoverage?.surfaces ?? []).some((row) => row?.stamp_evidence?.policy_version === 3);
+  const issuerMembershipValid = !hasIssuerMembership
+    || !["shape_error", "future"].includes(classifyProductSurfaceV2(productSurfaceRequiredRows(productCoverage), nowIso, REQUIRED_SURFACE_IDS, {dataRoot}).kind);
+
   return lane("product_surface_freshness", "Product surface freshness", [
     check("surface_payload_present", "product-surface-coverage", Boolean(productCoverage), productCoverage?.generated_at || "missing"),
+    ...(hasIssuerMembership ? [check("issuer_membership_verified", "product issuer notice membership", issuerMembershipValid,
+      issuerMembershipValid ? "Issuer facts and complete ETF catalogue verified" : "Issuer membership proof is unverified")] : []),
     check("no_stale_surfaces", "stale surfaces", number(totals.stale) === 0, `${number(totals.stale)} stale`),
     check("no_unavailable_surfaces", "unavailable surfaces", number(totals.unavailable) === 0, `${number(totals.unavailable)} unavailable`),
     check("no_error_surfaces", "error surfaces", number(totals.error) === 0, `${number(totals.error)} error`),
@@ -3556,14 +3562,14 @@ function productSurfaceRequiredRows(productCoverage) {
     });
 }
 
-function buildProductSurfaceEntry({ def, productCoverage, nowIso, priorPending }) {
+function buildProductSurfaceEntry({ def, productCoverage, nowIso, priorPending, dataRoot = null }) {
   const requiredRows = productSurfaceRequiredRows(productCoverage);
   const stampMarkerPresent = hasOwn(productCoverage, "source_stamp_version");
   const stampMarkerValue = stampMarkerPresent ? productCoverage.source_stamp_version : undefined;
   const isV2 = stampMarkerPresent && stampMarkerValue === PRODUCT_SURFACE_STAMP_VERSION;
   if (!isV2 && priorPending?.v2) throw new Error("product_surface source_stamp_version downgrade from v2 is not allowed");
   const cls = isV2
-    ? classifyProductSurfaceV2(requiredRows, nowIso, REQUIRED_SURFACE_IDS)
+    ? classifyProductSurfaceV2(requiredRows, nowIso, REQUIRED_SURFACE_IDS, {dataRoot})
     : classifyProductSurface(requiredRows, nowIso, { stampMarkerPresent, stampMarkerValue });
   if (isV2) {
     const v2RequiredRows = cls.normalized_rows ?? requiredRows;
@@ -3643,7 +3649,7 @@ function buildProductSurfaceEntry({ def, productCoverage, nowIso, priorPending }
   return { ...base, source_date: cls.source_date, age, status: slaStatusForAge(age, def.max_staleness), pending: { pending_since: null, ever_stamped: true } };
 }
 
-function buildSourceSla({ nowIso, finraOccLedger, rimInputs, etfCoreBasket, coverageIndex, productCoverage, etfDaily1y, priorProductSurfacePending, slickchartsDelivery }) {
+function buildSourceSla({ dataRoot = null, nowIso, finraOccLedger, rimInputs, etfCoreBasket, coverageIndex, productCoverage, etfDaily1y, priorProductSurfacePending, slickchartsDelivery }) {
   const sourceDates = {
     s0_finra_occ_mapping_ledger: oldestRequiredIsoDate([
       finraOccLedger?.source_audit?.source_dates?.finra_source_date,
@@ -3665,7 +3671,7 @@ function buildSourceSla({ nowIso, finraOccLedger, rimInputs, etfCoreBasket, cove
   return SOURCE_SLA_DEF.map((def) => {
     // product_surface_coverage: shape-strict classify + sticky pending_since (rev5.3).
     if (def.source_id === "product_surface_coverage") {
-      return buildProductSurfaceEntry({ def, productCoverage, nowIso, priorPending: priorProductSurfacePending });
+      return buildProductSurfaceEntry({ def, productCoverage, nowIso, priorPending: priorProductSurfacePending, dataRoot });
     }
 
     const sourceDate = sourceDates[def.source_id] ?? null;
@@ -3985,7 +3991,7 @@ export function buildPayload(
     buildYahooBatchLane(yahooBatchState, nowIso, {dataRoot}),
     buildSlickChartsDeliveryLane(nowIso, { assessment: slickchartsDelivery }),
     buildRimLane(rimInputs, nasdaqGiwSoxRecovery, rimFiveCanonicalHealth),
-    buildProductSurfaceLane(productCoverage, stockanalysisRecovery),
+    buildProductSurfaceLane(productCoverage, stockanalysisRecovery, {dataRoot, nowIso}),
     buildFinraOccLane(finraOccLedger, occAvailability, { publicDataRoot }),
     buildAutomationLane(),
     buildPublicMirrorLane(rimInputs, { publicDataRoot }),
@@ -4021,6 +4027,7 @@ export function buildPayload(
     })));
 
   const sourceSla = buildSourceSla({
+    dataRoot,
     nowIso,
     finraOccLedger,
     rimInputs,
