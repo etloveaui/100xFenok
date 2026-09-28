@@ -84,7 +84,6 @@ DASHBOARD_CONSTANTS = ROOT / "100xfenok-next" / "src" / "lib" / "dashboard" / "c
 PORTFOLIO_TS = ROOT / "100xfenok-next" / "src" / "lib" / "portfolio.ts"
 OUT_DIR = ROOT / "data" / "yf" / "finance"
 YAHOO_BATCH_STATE_ROOT = ROOT / "data" / "admin" / "yahoo-batch-quote-history"
-ISSUER_LIFECYCLE_POLICY = YAHOO_BATCH_STATE_ROOT / "issuer-lifecycle.json"
 S1_STOCK_PROMOTION_DRY_RUN = ROOT / "data" / "admin" / "fenok-s1-stock-public-promotion-dry-run.json"
 DATA_SUPPLY_STATE_ROOT = ROOT / "data" / "admin" / "data-supply-state" / "v1"
 DATA_SUPPLY_PROVIDER_TRUTH_ROOT = ROOT
@@ -2335,15 +2334,7 @@ def main():
         "active_universe_scope": "core_etf" if args.core_daily_basket else "all_sources" if state_store else "selection",
         "observed_at": _observed_now(),
     }
-    # Validate the whole input and qualify successors before any writes, including
-    # non-stateful and explicit acquisition. Keep the full catalogue for reporting.
-    eligibility_store = state_store or YahooBatchStateStore(YAHOO_BATCH_STATE_ROOT, OUT_DIR)
-    issuer_lifecycle = eligibility_store.load_issuer_lifecycle(
-        ISSUER_LIFECYCLE_POLICY, run_context["observed_at"],
-    )
-    lifecycle_inactive = set(issuer_lifecycle["inactive"])
-    eligible_universe = active_universe - lifecycle_inactive
-    tickers = [ticker for ticker in tickers if ticker not in lifecycle_inactive]
+    eligible_universe = active_universe
     terminal_evidence = state_store.load_terminal_evidence(S1_STOCK_PROMOTION_DRY_RUN) if state_store else None
     terminal_tickers = set((terminal_evidence or {}).get("tickers") or {})
     if state_store and not args.plan_only:
@@ -2451,7 +2442,6 @@ def main():
                 active_universe,
                 run_context,
                 batch_failure=batch_failure,
-                issuer_lifecycle=issuer_lifecycle,
             )
             finalized["done"] = True
             return finalized["index"]
@@ -2461,12 +2451,6 @@ def main():
             signal.signal(signal.SIGTERM, lambda _signum, _frame: (finalize_state(True), sys.exit(143)))
 
     if not tickers:
-        if candidate_count and not selected_universe and lifecycle_inactive:
-            write_empty_summary(args.profile, args, candidate_count, "issuer_lifecycle_inactive")
-            if finalize_state:
-                finalize_state(False)
-            print(f"[summary] no live acquisition candidates; catalogue candidates={candidate_count}")
-            return
         if args.history_gaps_only:
             write_empty_summary(args.profile, args, candidate_count, "no_history_gaps")
             if finalize_state:

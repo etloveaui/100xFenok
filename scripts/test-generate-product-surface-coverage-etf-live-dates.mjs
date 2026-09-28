@@ -196,8 +196,7 @@ try {
     over_90_days: 0,
   });
   assert.equal(freshOutput.source_stamp_diagnostics.etf_detail_date_resolution.deferred_reconciliation_member_count, 0);
-  // Optional v3 overlay: actual generator retains catalogue/null history and
-  // requires the active members' provider dates to advance before freshness.
+  // Formerly inactive ETF rows remain date-bearing members after issuer eligibility is removed.
   const lifecycleNow = "2026-09-28T03:00:00Z";
   const inactiveSymbols = ["IWDL", "IWFL", "IWML", "MTUL", "QULL", "SCDL", "USML"];
   const lifecycleEvents = inactiveSymbols.map((symbol) => ({symbol, event: "issuer_announced_redemption", effective_date: "2026-08-19",
@@ -221,27 +220,31 @@ try {
   };
   const lifecycleOutput = generateLifecycle();
   const lifecycleEtf = lifecycleOutput.surfaces.find((row) => row.id === "etf_center");
-  assert.equal(lifecycleOutput.source_stamp_version, 2, "v2 envelope and non-lifecycle semantics remain intact");
-  assert.equal(lifecycleEtf.stamp_evidence.policy_version, 3);
-  assert.equal(lifecycleEtf.stamp_evidence.membership.catalogue_count, 983);
-  assert.equal(lifecycleEtf.stamp_evidence.membership.active_count, 976);
-  assert.equal(lifecycleEtf.stamp_evidence.membership.inactive_count, 7);
+  assert.equal(lifecycleEtf.stamp_evidence.policy_version, 2);
+  assert.equal(lifecycleEtf.stamp_evidence.members.length, 983);
+  assert.equal(Object.hasOwn(lifecycleEtf.stamp_evidence, "membership"), false);
+  assert.equal(lifecycleEtf.stamp_evidence.date_bearing.required_count, 983);
   assert.equal(lifecycleEtf.stamp_evidence.date_bearing.stamped_count, 855);
-  assert.equal(lifecycleEtf.stamp_evidence.date_bearing.missing_count, 121);
+  assert.equal(lifecycleEtf.stamp_evidence.date_bearing.missing_count, 128);
   assert.equal(lifecycleEtf.stamp_evidence.state, "pending_true_date");
   assert.equal(lifecycleEtf.source_as_of, "2026-06-29");
   assert.equal(lifecycleEtf.checks.find((row) => row.label === "ETF 상세 전체 구성원 원천 기준일").status, "stale");
-  assert.equal(lifecycleOutput.source_stamp_diagnostics.etf_detail_date_resolution.missing_date_count, 128, "original catalogue diagnostics stay disclosed");
-  assert.equal(lifecycleOutput.source_stamp_diagnostics.etf_detail_date_resolution.active_missing_date_count, 121);
+  assert.equal(lifecycleOutput.source_stamp_diagnostics.etf_detail_date_resolution.missing_date_count, 128);
+  assert.equal(Object.hasOwn(lifecycleOutput.source_stamp_diagnostics.etf_detail_date_resolution, "active_missing_date_count"), false);
   assert.deepEqual(fs.readFileSync(oldHistoryPath), oldHistory);
   assert.equal(JSON.stringify(lifecycleOutput).includes("admin/yahoo-batch-quote-history/"), false);
-  for (const [ticker, entry] of Object.entries(lifecycleEntries)) if (!inactiveSymbols.includes(ticker)) entry.source_as_of = "2026-09-25";
+  for (const entry of Object.values(lifecycleEntries)) {
+    if (entry.resolution_state !== "unavailable") entry.source_as_of = "2026-09-25";
+  }
   writeJson("computed/data-supply/etf-detail/index.json", {schema_version: "data-supply-etf-detail-public-index/v1", entries: lifecycleEntries});
   const lifecycleFresh = generateLifecycle().surfaces.find((row) => row.id === "etf_center");
-  assert.equal(lifecycleFresh.stamp_evidence.state, "stamped");
-  assert.equal(lifecycleFresh.source_as_of, "2026-09-25");
+  assert.equal(lifecycleFresh.stamp_evidence.state, "pending_true_date");
+  assert.equal(lifecycleFresh.stamp_evidence.date_bearing.required_count, 983);
+  assert.equal(lifecycleFresh.stamp_evidence.date_bearing.stamped_count, 976);
+  assert.equal(lifecycleFresh.stamp_evidence.date_bearing.missing_count, 7);
+  assert.equal(lifecycleFresh.source_as_of, "2026-09-25", "the real source-date floor remains visible while seven unavailable members stay undated");
   assert.equal(lifecycleFresh.checks.find((row) => row.label === "ETF 상세 전체 구성원 원천 기준일").status, "ready");
-  assert.ok(lifecycleFresh.stamp_evidence.members.filter((row) => row.stamp_class === "issuer_notice_inactive").every((row) => row.source_as_of === null));
+  assert.ok(lifecycleFresh.stamp_evidence.members.every((row) => row.stamp_class === "date_bearing"));
   assert.deepEqual(fs.readFileSync(oldHistoryPath), oldHistory);
   console.log("test-generate-product-surface-coverage-etf-live-dates: ok");
 } finally {
