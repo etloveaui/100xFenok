@@ -23,6 +23,7 @@ import argparse
 import atexit
 from contextlib import contextmanager
 from contextvars import ContextVar
+from collections.abc import Mapping
 from datetime import datetime, timedelta, timezone
 import hashlib
 import json
@@ -35,6 +36,7 @@ import subprocess
 import sys
 import time
 from pathlib import Path
+from zoneinfo import ZoneInfo
 
 ROOT = Path(__file__).resolve().parent.parent
 SCRIPT_DIR = ROOT / "scripts"
@@ -851,6 +853,166 @@ def yahoo_symbol(ticker):
     return ticker
 
 
+_YAHOO_QUOTE_SOURCE_BOUND = None
+
+
+def _chart_quote_market(ticker):
+    if ticker.endswith((".KS", ".KQ")):
+        return "krx_market", "KRW", "Asia/Seoul"
+    head, separator, suffix = ticker.rpartition(".")
+    if not separator or (head.isalpha() and suffix.isalpha() and len(suffix) == 1
+                         and suffix not in SINGLE_LETTER_EXCHANGE_SUFFIXES):
+        return "us_market", "USD", "America/New_York"
+    return None
+
+
+def _quote_positive(value):
+    return isinstance(value, Number) and not isinstance(value, bool) and math.isfinite(value) and value > 0
+
+
+def _chart_quote_needed(ticker, data, now_iso):
+    info = data.get("info") if isinstance(data, dict) else None
+    market = _chart_quote_market(ticker)
+    # Never manufacture an identity after t.info failed or for an unsupported market.
+    if (not market or not isinstance(info, dict) or info.get("symbol") != yahoo_symbol(ticker)
+            or info.get("quoteType") not in {"EQUITY", "ETF"} or info.get("currency") != market[1]):
+        return False
+    raw_time = info.get("regularMarketTime")
+    quote = _parse_utc(raw_time) if _quote_positive(raw_time) else None
+    price = info.get("regularMarketPrice") if info.get("regularMarketPrice") is not None else info.get("currentPrice")
+    now = _parse_utc(now_iso)
+    if quote is not None and quote > now:
+        return False  # The existing future-clock rejection must remain visible.
+    if quote is None or not _quote_positive(price):
+        return True
+    # Reuse only a bound actually read from the existing contract in this process.
+    if isinstance(_YAHOO_QUOTE_SOURCE_BOUND, int) and (now.date() - quote.date()).days <= _YAHOO_QUOTE_SOURCE_BOUND:
+        return False
+    freshness = yahoo_source_freshness({ticker: _iso_utc(raw_time)}, now_iso)
+    age = freshness["ages"].get(ticker)
+    if not isinstance(age, int):
+        raise ValueError("chart quote eligibility calendar is unavailable")
+    return age > freshness["max_source_business_days"]
+
+
+def chart_quote_session_dates(ticker, quote_as_of):
+    market = _chart_quote_market(ticker)
+    if not market:
+        raise ValueError("chart quote market is unsupported")
+    session_date = _parse_utc(quote_as_of).astimezone(ZoneInfo(market[2])).date().isoformat()
+    script = r"""
+import {isBusinessDay, calendar_version} from './scripts/lib/market-calendar.mjs';
+let raw = ''; for await (const chunk of process.stdin) raw += chunk;
+const {date, market} = JSON.parse(raw);
+const year = calendar_version.match(/-(\d{4})$/)?.[1];
+if (!year || !date.startsWith(year + '-') || !isBusinessDay(date, market)) throw new Error('quote session is outside the verified calendar');
+let prior = date;
+do {prior = new Date(Date.parse(prior + 'T00:00:00Z') - 86400000).toISOString().slice(0, 10);}
+while (prior.startsWith(year + '-') && !isBusinessDay(prior, market));
+if (!prior.startsWith(year + '-')) throw new Error('previous session is outside the verified calendar');
+process.stdout.write(JSON.stringify([date, prior]));
+"""
+    result = subprocess.run(["node", "--input-type=module", "-e", script], cwd=ROOT,
+                            input=json.dumps({"date": session_date, "market": market[0]}),
+                            text=True, capture_output=True, check=False)
+    if result.returncode != 0:
+        raise ValueError("chart quote session calendar is unverified")
+    dates = json.loads(result.stdout)
+    if not isinstance(dates, list) or len(dates) != 2 or dates[0] != session_date:
+        raise ValueError("chart quote session calendar is malformed")
+    return tuple(dates)
+
+
+def _validated_chart_quote(ticker, data, metadata, observed_at):
+    info = data["info"]
+    market = _chart_quote_market(ticker)
+    if (metadata.get("symbol") != yahoo_symbol(ticker) or metadata.get("instrumentType") != info.get("quoteType")
+            or metadata.get("currency") != info.get("currency") or metadata.get("currency") != market[1]
+            or metadata.get("exchangeTimezoneName") != market[2]):
+        raise ValueError("chart quote identity/type/currency/timezone mismatch")
+    price = metadata.get("regularMarketPrice")
+    raw_time = metadata.get("regularMarketTime")
+    # Current yfinance may format this as a timezone-aware pandas Timestamp.
+    if isinstance(raw_time, datetime):
+        if raw_time.tzinfo is None or raw_time.utcoffset() is None:
+            raise ValueError("chart quote timestamp requires a timezone")
+        raw_time = raw_time.timestamp()
+    if not _quote_positive(price) or not _quote_positive(raw_time):
+        raise ValueError("chart quote requires a finite positive price and timestamp")
+    quote = _parse_utc(raw_time)
+    if quote is None:
+        raise ValueError("chart quote timestamp is invalid")
+    if quote > _parse_utc(observed_at):
+        raise ValueError("chart quote timestamp is in the future")
+    old_raw_time = info.get("regularMarketTime")
+    old_time = _parse_utc(old_raw_time) if _quote_positive(old_raw_time) else None
+    old_price = info.get("regularMarketPrice") if info.get("regularMarketPrice") is not None else info.get("currentPrice")
+    if old_time and quote < old_time:
+        raise ValueError("chart quote timestamp regression")
+    if old_time and quote == old_time:
+        if _quote_positive(old_price) and price != old_price:
+            raise ValueError("chart quote equal-clock price conflict")
+        if _quote_positive(old_price):
+            return None
+    quote_as_of = _iso_utc(raw_time)
+    session, previous_session = chart_quote_session_dates(ticker, quote_as_of)
+    return {"price": price, "regular_market_time": raw_time, "quote_as_of": quote_as_of,
+            "session": session, "previous_session": previous_session}
+
+
+def _chart_previous_close(rows, pair):
+    dates = []; closes = {}
+    for row in rows if isinstance(rows, list) else []:
+        date = row.get("date") if isinstance(row, dict) else None
+        parsed = _parse_utc(date)
+        if not isinstance(date, str) or len(date) != 10 or parsed is None or parsed.date().isoformat() != date or date in closes:
+            raise ValueError("chart quote previous-session series is malformed")
+        dates.append(date); closes[date] = row.get("Close")
+    if (not dates or dates != sorted(dates) or dates[-1] != pair["session"]
+            or not _quote_positive(closes.get(pair["session"]))
+            or not _quote_positive(closes.get(pair["previous_session"]))):
+        raise ValueError("chart quote previous-session unadjusted close is unverified")
+    return closes[pair["previous_session"]]
+
+
+def capture_chart_quote(ticker, data, ticker_client, *, yfinance_version=None):
+    if not _chart_quote_needed(ticker, data, _observed_now()):
+        return data
+    metadata = safe(lambda: ticker_client.get_history_metadata())
+    if not isinstance(metadata, Mapping):
+        raise ValueError("chart quote metadata is unavailable")
+    # Snapshot only these base keys. Enumerating the mapping can trigger lazy intraday requests.
+    keys = ("symbol", "instrumentType", "currency", "exchangeTimezoneName", "regularMarketPrice", "regularMarketTime")
+    snapshot = {key: metadata.get(key) for key in keys}
+    observed_at = _observed_now()
+    pair = _validated_chart_quote(ticker, data, snapshot, observed_at)
+    if pair is None:
+        return data
+    previous = None
+    query = {"period": "5d", "interval": "1d", "auto_adjust": False}
+    if is_enrolled_stock_detail(ticker):
+        # Main history is adjusted; only this bounded raw series can prove previous session close.
+        rows = safe(lambda: compact_history(ticker_client.history(**query)))
+        previous = _chart_previous_close(rows, pair)
+    info = dict(data["info"])
+    for key in ("currentPrice", "regularMarketPrice", "regularMarketTime", "previousClose", "regularMarketPreviousClose",
+                "regularMarketChange", "regularMarketChangePercent"):
+        info.pop(key, None)
+    info.update(currentPrice=pair["price"], regularMarketPrice=pair["price"], regularMarketTime=pair["regular_market_time"])
+    receipt = {"source": "yahoo_chart_metadata", "symbol": snapshot["symbol"], "quote_type": snapshot["instrumentType"],
+               "currency": snapshot["currency"], "exchange_timezone": snapshot["exchangeTimezoneName"],
+               "price": pair["price"], "quote_as_of": pair["quote_as_of"], "regular_market_time": pair["regular_market_time"],
+               "observed_at": observed_at, "yfinance_version": str(yfinance_version or "unknown")[:64],
+               "previous_close": None}
+    if previous is not None:
+        info.update(previousClose=previous, regularMarketPreviousClose=previous,
+                    regularMarketChange=pair["price"] - previous,
+                    regularMarketChangePercent=100 * (pair["price"] - previous) / previous)
+        receipt["previous_close"] = {"source": "yahoo_unadjusted_daily_history", "source_as_of": pair["previous_session"],
+                                     "quote_session": pair["session"], "price": previous, "query": query, "observed_at": _observed_now()}
+    return {**data, "info": info, "quote_observation": receipt}
+
+
 def fetch_ticker(ticker, profile="full", include_options=False, include_shares_full=False):
     # Keep local-only universe/summary consumers importable without the network
     # client. Collection workflows install yfinance before invoking this path.
@@ -867,6 +1029,7 @@ def fetch_ticker(ticker, profile="full", include_options=False, include_shares_f
     if profile == "daily":
         data["fast_info"] = safe(lambda: clean_dict(dict(t.fast_info)))
         data["history_1y"] = safe(lambda: compact_history(t.history(period="1y", interval="1d", auto_adjust=True)))
+        data = capture_chart_quote(ticker, data, t, yfinance_version=getattr(yf, "__version__", None))
         return data, round((time.perf_counter() - start) * 1000)
 
     if fund_like or profile == "etf":
@@ -918,6 +1081,7 @@ def fetch_ticker(ticker, profile="full", include_options=False, include_shares_f
             data["sec_filings"] = safe(lambda: sec_filings_records(t.sec_filings))
             data["news"] = safe(lambda: news_records(t.news))
         data["history_1y"] = safe(lambda: compact_history(t.history(period="1y", interval="1d", auto_adjust=True)))
+        data = capture_chart_quote(ticker, data, t, yfinance_version=getattr(yf, "__version__", None))
 
     if include_options:
         data["options"] = safe(lambda: option_chain_records(t))
@@ -1063,6 +1227,13 @@ def merge_existing_payload_data(existing_payload, fetched_data):
         return fetched_data
     merged = dict(existing_data)
     for key, value in (fetched_data or {}).items():
+        if key == "quote_observation":
+            # This receipt belongs to one observation; never nested-merge prior proof into it.
+            if value is None:
+                merged.pop(key, None)
+            else:
+                merged[key] = value
+            continue
         if value is None:
             continue
         if isinstance(value, dict) and isinstance(merged.get(key), dict):
@@ -1071,6 +1242,12 @@ def merge_existing_payload_data(existing_payload, fetched_data):
             merged[key] = nested
         else:
             merged[key] = value
+    if "quote_observation" not in (fetched_data or {}):
+        merged.pop("quote_observation", None)
+    if "quote_observation" in existing_data or "quote_observation" in (fetched_data or {}):
+        # Chart selection clears unmatched quote dependents. Preserve those absences
+        # for every ticker, including the next normal info observation after a chart pair.
+        merged = bind_enrolled_quote_group_to_fresh_fetch(merged, fetched_data)
     return merged
 
 
@@ -1959,6 +2136,7 @@ def plan_summary(args, tickers, candidate_count):
 
 def yahoo_source_freshness(source_by_ticker, now_iso):
     """Evaluate Yahoo source ages and the canonical bound through the JS contract SSOT."""
+    global _YAHOO_QUOTE_SOURCE_BOUND
     script = """
 import { yahooBusinessDayAge } from './scripts/lib/market-calendar.mjs';
 import { YAHOO_BATCH_MAX_SOURCE_BUSINESS_DAYS } from './scripts/lib/kpi-contract-constants.mjs';
@@ -1989,6 +2167,7 @@ process.stdout.write(JSON.stringify({ ages, max_source_business_days: YAHOO_BATC
     bound = payload.get("max_source_business_days")
     if ages is None or not isinstance(bound, int):
         raise RuntimeError("Yahoo source-age classifier returned an invalid contract shape")
+    _YAHOO_QUOTE_SOURCE_BOUND = bound
     return {"ages": ages, "max_source_business_days": bound}
 
 

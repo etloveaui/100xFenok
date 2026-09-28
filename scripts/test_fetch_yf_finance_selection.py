@@ -3534,5 +3534,362 @@ class YahooIssuerLifecycleTest(unittest.TestCase):
 
 
 
+class YahooChartQuoteTest(unittest.TestCase):
+    setUp = FetchYfFinanceSelectionTest.setUp
+    tearDown = FetchYfFinanceSelectionTest.tearDown
+
+    NOW = "2026-09-28T03:00:00Z"
+    OLD = int(datetime(2026, 9, 10, 20, tzinfo=timezone.utc).timestamp())
+    CURRENT = int(datetime(2026, 9, 25, 20, tzinfo=timezone.utc).timestamp())
+
+    def _data(self, stamp=None):
+        return {"info": {"symbol": "AVB", "quoteType": "EQUITY", "currency": "USD",
+                         "regularMarketTime": self.OLD if stamp is None else stamp,
+                         "currentPrice": 180, "regularMarketPrice": 180, "previousClose": 179,
+                         "regularMarketChange": 1, "regularMarketChangePercent": 0.5, "marketCap": 123},
+                "income_statement": {"2025": {"Revenue": 50}},
+                "history_1y": [{"date": "2026-09-24", "Close": 190}, {"date": "2026-09-25", "Close": 191}]}
+
+    def _metadata(self, **changes):
+        return {"symbol": "AVB", "instrumentType": "EQUITY", "currency": "USD",
+                "exchangeTimezoneName": "America/New_York", "regularMarketPrice": 200,
+                "regularMarketTime": self.CURRENT, "chartPreviousClose": 3, **changes}
+
+    def _collect(self, data=None, metadata=None, enrolled=False, rows=None):
+        data = self._data() if data is None else data
+        metadata = self._metadata() if metadata is None else metadata
+        rows = [{"date": "2026-09-24", "Close": 198}, {"date": "2026-09-25", "Close": 200}] if rows is None else rows
+        calls = []
+        class SelectedOnly(dict):
+            def __iter__(self):
+                raise AssertionError("metadata must not be enumerated")
+            def keys(self):
+                raise AssertionError("metadata must not be enumerated")
+            def get(self, key, default=None):
+                if key == "tradingPeriods": raise AssertionError("lazy metadata must not be read")
+                return super().get(key, default)
+        class Client:
+            def get_history_metadata(self):
+                calls.append("metadata")
+                return SelectedOnly(metadata)
+            def history(self, **kwargs):
+                calls.append(kwargs)
+                return rows
+        self.fetcher._observed_now = lambda: self.NOW
+        self.fetcher.compact_history = lambda frame: frame
+        self.fetcher.is_enrolled_stock_detail = lambda _ticker: enrolled
+        result = self.fetcher.capture_chart_quote("AVB", data, Client(), yfinance_version="fixture-1")
+        return result, calls
+
+    def test_newer_quote_pair_advances_atomically_without_replacing_financial_or_adjusted_history(self):
+        data = self._data()
+        result, calls = self._collect(data=data)
+        self.assertEqual(calls, ["metadata"])
+        self.assertEqual(result["info"]["currentPrice"], 200)
+        self.assertEqual(result["info"]["regularMarketPrice"], 200)
+        self.assertEqual(result["info"]["regularMarketTime"], self.CURRENT)
+        self.assertEqual(result["info"]["marketCap"], 123)
+        self.assertIs(result["history_1y"], data["history_1y"])
+        self.assertEqual(result["income_statement"], data["income_statement"])
+        self.assertNotIn("previousClose", result["info"])
+        self.assertNotIn("regularMarketChange", result["info"])
+        self.assertEqual(result["quote_observation"]["source"], "yahoo_chart_metadata")
+        self.assertEqual(result["quote_observation"]["quote_as_of"], "2026-09-25T20:00:00Z")
+        payload = self.fetcher.decorate_finance_payload("AVB", "daily", self.NOW, result)
+        self.assertEqual(payload["source_as_of"], "2026-09-25")
+        self.assertNotEqual(payload["quote_as_of"], payload["fetched_at"])
+
+    def test_metadata_cannot_override_current_info_pair(self):
+        result, calls = self._collect(data=self._data(self.CURRENT))
+        self.assertEqual(calls, [])
+        self.assertEqual(result["info"]["regularMarketPrice"], 180)
+
+    def test_six_business_day_boundary_does_not_request_metadata(self):
+        stamp = int(datetime(2026, 9, 18, 20, tzinfo=timezone.utc).timestamp())
+        _, calls = self._collect(data=self._data(stamp))
+        self.assertEqual(calls, [])
+
+    def test_missing_clock_with_full_fresh_identity_can_use_real_pair(self):
+        data = self._data(); data["info"].pop("regularMarketTime")
+        result, calls = self._collect(data=data)
+        self.assertEqual(result["info"]["regularMarketTime"], self.CURRENT)
+        self.assertEqual(calls, ["metadata"])
+
+    def test_empty_info_does_not_become_synthetic_success(self):
+        data = self._data(); data["info"] = None
+        result, calls = self._collect(data=data)
+        self.assertEqual(calls, [])
+        self.assertIsNone(result["info"])
+        with self.assertRaisesRegex(ValueError, "quote_as_of is unavailable"):
+            self.fetcher.decorate_finance_payload("AVB", "daily", self.NOW, result)
+
+    def test_missing_or_mismatched_quote_metadata_is_rejected(self):
+        mutations = [{"symbol": None}, {"symbol": "BK"}, {"instrumentType": None}, {"instrumentType": "ETF"},
+                     {"currency": None}, {"currency": "KRW"}, {"exchangeTimezoneName": "Asia/Seoul"},
+                     {"regularMarketPrice": None}, {"regularMarketPrice": float("nan")},
+                     {"regularMarketPrice": 0}, {"regularMarketTime": None}, {"regularMarketTime": float("inf")},
+                     {"regularMarketTime": True}]
+        for fields in mutations:
+            with self.subTest(fields=fields), self.assertRaises(ValueError):
+                self._collect(metadata=self._metadata(**fields))
+
+    def test_future_metadata_cannot_replace_old_quote(self):
+        future = int(datetime(2026, 9, 29, 20, tzinfo=timezone.utc).timestamp())
+        with self.assertRaisesRegex(ValueError, "future"):
+            self._collect(metadata=self._metadata(regularMarketTime=future))
+
+    def test_metadata_regression_is_rejected(self):
+        with self.assertRaisesRegex(ValueError, "regression"):
+            self._collect(metadata=self._metadata(regularMarketTime=self.OLD - 3600))
+
+    def test_equal_clock_conflicting_price_is_rejected(self):
+        with self.assertRaisesRegex(ValueError, "conflict"):
+            self._collect(metadata=self._metadata(regularMarketTime=self.OLD))
+
+    def test_same_old_pair_does_not_invent_advancement(self):
+        result, calls = self._collect(metadata=self._metadata(regularMarketTime=self.OLD, regularMarketPrice=180))
+        self.assertEqual(result["info"]["regularMarketTime"], self.OLD)
+        self.assertNotIn("quote_observation", result)
+        self.assertEqual(calls, ["metadata"])
+
+    def test_enrolled_previous_close_uses_one_unadjusted_request_and_actual_prior_session(self):
+        result, calls = self._collect(enrolled=True)
+        self.assertEqual(calls, ["metadata", {"period": "5d", "interval": "1d", "auto_adjust": False}])
+        self.assertEqual(result["info"]["previousClose"], 198)
+        self.assertEqual(result["info"]["regularMarketPreviousClose"], 198)
+        self.assertEqual(result["info"]["regularMarketChange"], 2)
+        self.assertEqual(result["info"]["regularMarketChangePercent"], 100 * 2 / 198)
+        proof = result["quote_observation"]["previous_close"]
+        self.assertEqual(proof["source_as_of"], "2026-09-24")
+        self.assertEqual(proof["query"], {"period": "5d", "interval": "1d", "auto_adjust": False})
+        self.assertNotEqual(result["info"]["previousClose"], 3, "chartPreviousClose is not previous session close")
+        self.assertEqual(result["history_1y"][-1]["Close"], 191, "adjusted main history stays unchanged")
+
+    def test_missing_prior_session_rejects_enrolled_pair_instead_of_using_adjusted_main_history(self):
+        with self.assertRaisesRegex(ValueError, "previous.session"):
+            self._collect(enrolled=True, rows=[{"date": "2026-09-23", "Close": 197}, {"date": "2026-09-25", "Close": 200}])
+
+    def test_unadjusted_series_must_end_at_quote_session(self):
+        with self.assertRaises(ValueError):
+            self._collect(enrolled=True, rows=[{"date": "2026-09-24", "Close": 198}, {"date": "2026-09-25", "Close": 200},
+                                               {"date": "2026-09-28", "Close": 201}])
+
+    def test_duplicate_or_nonpositive_previous_close_is_rejected(self):
+        for rows in [[{"date": "2026-09-24", "Close": 0}, {"date": "2026-09-25", "Close": 200}],
+                     [{"date": "2026-09-24", "Close": 198}, {"date": "2026-09-24", "Close": 199}, {"date": "2026-09-25", "Close": 200}]]:
+            with self.subTest(rows=rows), self.assertRaises(ValueError): self._collect(enrolled=True, rows=rows)
+
+    def test_previous_session_calendar_handles_us_holiday_and_korean_closure(self):
+        us = self.fetcher.chart_quote_session_dates("AVB", "2026-09-08T20:00:00Z")
+        kr = self.fetcher.chart_quote_session_dates("005930.KS", "2026-09-28T06:30:00Z")
+        self.assertEqual(us, ("2026-09-08", "2026-09-04"))
+        self.assertEqual(kr, ("2026-09-28", "2026-09-23"))
+
+    def test_rejected_alternate_retains_canonical_and_lkg_bytes(self):
+        self.fetcher._observed_now = lambda: self.NOW
+        data = self._data()
+        seed = self.fetcher.decorate_finance_payload("AVB", "daily", self.NOW, data)
+        canonical = self.fetcher.OUT_DIR / "AVB.json"; write_json(canonical, seed)
+        store = self.state.YahooBatchStateStore(self.fetcher.YAHOO_BATCH_STATE_ROOT, self.fetcher.OUT_DIR)
+        run = {"run_id": "seed", "run_attempt": 1, "event_name": "workflow_dispatch", "natural": False, "observed_at": self.NOW}
+        evidence = {"attempts_used": 1, "latency_ms": 1, "failures": []}
+        store.record_success("AVB", seed, run, ["fixture"], evidence)
+        store.record_failure("AVB", "seed miss", run, ["fixture"], evidence, failure_kind="transient_provider_miss")
+        lkg = store._lkg_path("AVB")
+        canonical_bytes, lkg_bytes = canonical.read_bytes(), lkg.read_bytes()
+        test = self
+        class Client:
+            info = data["info"]
+            fast_info = {}
+            def history(self, **kwargs): return data["history_1y"]
+            def get_history_metadata(self): return test._metadata(regularMarketPrice=0)
+        prior = sys.modules["yfinance"]
+        sys.modules["yfinance"] = types.SimpleNamespace(Ticker=lambda _ticker: Client(), __version__="fixture-1")
+        self.fetcher.compact_history = lambda frame: frame
+        self.fetcher.load_universe_sources = lambda **_kwargs: {"AVB": ["fixture"]}
+        original_argv, original_stdout = sys.argv, sys.stdout
+        try:
+            sys.argv = ["fetch-yf-finance.py", "--tickers", "AVB", "--profile", "daily", "--merge-existing",
+                        "--record-batch-state", "--run-id", "chart-rejection", "--run-attempt", "1",
+                        "--event-name", "workflow_dispatch", "--max-age-hours", "0", "--sleep", "0", "--retries", "0"]
+            sys.stdout = io.StringIO()
+            with self.assertRaises(SystemExit): self.fetcher.main()
+        finally: sys.modules["yfinance"] = prior; sys.argv, sys.stdout = original_argv, original_stdout
+        self.assertEqual(canonical.read_bytes(), canonical_bytes)
+        self.assertEqual(lkg.read_bytes(), lkg_bytes)
+        state = json.loads(store._state_path("AVB").read_text())
+        self.assertTrue(state["retry"])
+        self.assertIn("chart quote", state["latest_failure"]["error"])
+
+    def test_selected_pair_still_rejects_regression_against_canonical_payload(self):
+        result, _ = self._collect()
+        candidate = self.fetcher.decorate_finance_payload("AVB", "daily", self.NOW, result)
+        old = self._data(self.CURRENT + 3)
+        existing = self.fetcher.decorate_finance_payload("AVB", "daily", self.NOW, old)
+        with self.assertRaisesRegex(ValueError, "quote_as_of"):
+            self.fetcher.validate_source_progression(existing, candidate)
+
+    def test_provider_timestamp_format_requires_timezone_and_session_calendar(self):
+        aware = datetime(2026, 9, 25, 20, tzinfo=timezone.utc)
+        result, _ = self._collect(metadata=self._metadata(regularMarketTime=aware))
+        self.assertEqual(result["info"]["regularMarketTime"], self.CURRENT)
+        for value in [datetime(2026, 9, 25, 20), int(datetime(2026, 9, 26, 20, tzinfo=timezone.utc).timestamp())]:
+            with self.subTest(value=value), self.assertRaises(ValueError):
+                self._collect(metadata=self._metadata(regularMarketTime=value))
+
+    def test_merge_drops_prior_alternate_receipt_when_new_observation_has_no_alternate(self):
+        existing = {"data": {**self._data(), "quote_observation": {"source": "yahoo_chart_metadata", "price": 1}}}
+        merged = self.fetcher.merge_existing_payload_data(existing, self._data(self.CURRENT))
+        self.assertNotIn("quote_observation", merged)
+
+    def _collector_merge_write(self, ticker, enrolled, existing_data, incoming_info, metadata, *, expect_rejected=False):
+        self.fetcher._observed_now = lambda: self.NOW
+        self.fetcher.compact_history = lambda rows: rows
+        self.fetcher.is_enrolled_stock_detail = lambda _ticker: enrolled
+        self.fetcher.load_universe_sources = lambda **_kwargs: {ticker: ["fixture"]}
+        canonical = self.fetcher.OUT_DIR / (ticker + ".json")
+        seed = self.fetcher.decorate_finance_payload(ticker, "daily", self.NOW, existing_data)
+        write_json(canonical, seed)
+        store = self.state.YahooBatchStateStore(self.fetcher.YAHOO_BATCH_STATE_ROOT, self.fetcher.OUT_DIR)
+        run = {"run_id": "seed", "run_attempt": 1, "event_name": "workflow_dispatch", "natural": False, "observed_at": self.NOW}
+        evidence = {"attempts_used": 1, "latency_ms": 1, "failures": []}
+        store.record_success(ticker, seed, run, ["fixture"], evidence)
+        store.record_failure(ticker, "seed retry", run, ["fixture"], evidence, failure_kind="transient_provider_miss")
+        lkg = store._lkg_path(ticker)
+        before, lkg_before = canonical.read_bytes(), lkg.read_bytes()
+        calls = []
+        class Client:
+            info = incoming_info
+            fast_info = {}
+            def history(self, **kwargs):
+                calls.append(kwargs)
+                if kwargs.get("auto_adjust") is False:
+                    return [{"date": "2026-09-24", "Close": 198}, {"date": "2026-09-25", "Close": 200}]
+                return [{"date": "2026-09-24", "Close": 190}, {"date": "2026-09-25", "Close": 191}]
+            def get_history_metadata(self):
+                calls.append("metadata")
+                if metadata is None: raise AssertionError("current normal info quote must not acquire metadata")
+                return metadata
+        prior = sys.modules["yfinance"]
+        sys.modules["yfinance"] = types.SimpleNamespace(Ticker=lambda _ticker: Client(), __version__="fixture-1")
+        original_argv, original_stdout = sys.argv, sys.stdout
+        try:
+            sys.argv = ["fetch-yf-finance.py", "--tickers", ticker, "--profile", "daily", "--merge-existing",
+                        "--record-batch-state", "--run-id", "chart-merge", "--run-attempt", "1",
+                        "--event-name", "workflow_dispatch", "--max-age-hours", "0", "--sleep", "0", "--retries", "0"]
+            sys.stdout = io.StringIO()
+            try: self.fetcher.main()
+            except SystemExit as exc: self.assertEqual(exc.code, 0)
+        finally: sys.modules["yfinance"] = prior; sys.argv, sys.stdout = original_argv, original_stdout
+        if expect_rejected:
+            self.assertEqual(canonical.read_bytes(), before)
+            self.assertEqual(lkg.read_bytes(), lkg_before)
+            self.assertTrue(json.loads(store._state_path(ticker).read_text())["retry"])
+        return json.loads(canonical.read_text()), calls
+
+    def test_nonenrolled_chart_pair_collector_merge_writer_readback_clears_all_old_dependents(self):
+        data = self._data(); data["info"].update(symbol="ETF1", quoteType="ETF", regularMarketPreviousClose=177)
+        data["history_1y"].insert(0, {"date": "2026-09-23", "Close": 189})
+        meta = self._metadata(symbol="ETF1", instrumentType="ETF")
+        result, calls = self._collector_merge_write("ETF1", False, data, dict(data["info"]), meta)
+        info = result["data"]["info"]
+        self.assertEqual((info["currentPrice"], info["regularMarketPrice"], info["regularMarketTime"]), (200, 200, self.CURRENT))
+        for key in ["previousClose", "regularMarketPreviousClose", "regularMarketChange", "regularMarketChangePercent"]:
+            self.assertNotIn(key, info, key + " cannot be resurrected during nested merge")
+        self.assertEqual(info["marketCap"], 123)
+        self.assertEqual(result["data"]["income_statement"], data["income_statement"])
+        self.assertEqual(result["data"]["history_1y"], data["history_1y"])
+        self.assertEqual(result["data"]["quote_observation"]["previous_close"], None)
+        self.assertEqual(calls, [{"period": "1y", "interval": "1d", "auto_adjust": True}, "metadata"])
+
+    def test_enrolled_chart_pair_collector_merge_writer_readback_retains_new_unadjusted_dependents(self):
+        data = self._data(); data["info"].update(symbol="AAPL", regularMarketPreviousClose=177)
+        result, calls = self._collector_merge_write("AAPL", True, data, dict(data["info"]), self._metadata(symbol="AAPL"))
+        verified = self.fetcher.validate_stock_detail_candidate(
+            provider="yahoo_finance", entity="AAPL", provider_path="data/yf/finance/AAPL.json",
+            payload_bytes=(self.fetcher.OUT_DIR / "AAPL.json").read_bytes(), observed_at=self.NOW,
+            provider_truth_root=self.fetcher.DATA_SUPPLY_PROVIDER_TRUTH_ROOT,
+        )
+        self.assertEqual((verified.entity, verified.provider_path), ("AAPL", "data/yf/finance/AAPL.json"))
+        info = result["data"]["info"]
+        self.assertEqual((info["currentPrice"], info["regularMarketPrice"], info["regularMarketTime"]), (200, 200, self.CURRENT))
+        self.assertEqual((info["previousClose"], info["regularMarketPreviousClose"], info["regularMarketChange"]), (198, 198, 2))
+        self.assertEqual(info["regularMarketChangePercent"], 100 * 2 / 198)
+        self.assertEqual(result["data"]["history_1y"], data["history_1y"])
+        self.assertEqual(result["data"]["income_statement"], data["income_statement"])
+        self.assertEqual(calls, [{"period": "1y", "interval": "1d", "auto_adjust": True}, "metadata",
+                                {"period": "5d", "interval": "1d", "auto_adjust": False}])
+
+    def test_normal_info_after_chart_receipt_collector_merge_writer_rebinds_new_pair_without_stale_fields(self):
+        for with_previous in [False, True]:
+            with self.subTest(with_previous=with_previous):
+                ticker = "ETF2" if with_previous else "ETF1"
+                data = self._data(); data["info"].update(symbol=ticker, quoteType="ETF", regularMarketPreviousClose=177)
+                data["quote_observation"] = {"source": "yahoo_chart_metadata", "price": 180, "previous_close": {"price": 177}}
+                incoming = {"symbol": ticker, "quoteType": "ETF", "currency": "USD", "currentPrice": 210,
+                            "regularMarketPrice": 210, "regularMarketTime": self.CURRENT + 60}
+                if with_previous: incoming.update(previousClose=205, regularMarketChange=5, regularMarketChangePercent=100 * 5 / 205)
+                result, calls = self._collector_merge_write(ticker, False, data, incoming, None)
+                info = result["data"]["info"]
+                self.assertEqual((info["currentPrice"], info["regularMarketTime"]), (210, self.CURRENT + 60))
+                self.assertNotIn("quote_observation", result["data"])
+                self.assertNotIn("regularMarketPreviousClose", info)
+                if with_previous:
+                    self.assertEqual(info["previousClose"], 205); self.assertEqual(info["regularMarketChange"], 5)
+                else:
+                    for key in ["previousClose", "regularMarketChange", "regularMarketChangePercent"]: self.assertNotIn(key, info)
+                self.assertEqual(info["marketCap"], 123)
+                self.assertEqual(result["data"]["income_statement"], data["income_statement"])
+                self.assertEqual(calls, [{"period": "1y", "interval": "1d", "auto_adjust": True}])
+
+    def test_rejected_nonenrolled_chart_pair_collector_merge_writer_preserves_truth_history_and_lkg(self):
+        data = self._data(); data["info"].update(symbol="ETF1", quoteType="ETF", regularMarketPreviousClose=177)
+        self._collector_merge_write("ETF1", False, data, dict(data["info"]),
+                                    self._metadata(symbol="ETF1", instrumentType="ETF", regularMarketPrice=0), expect_rejected=True)
+
+    def test_metadata_timeout_uses_existing_attempt_budget_and_never_requests_previous_close(self):
+        calls = []; test = self
+        class Client:
+            info = test._data()["info"]
+            fast_info = {}
+            def history(self, **kwargs):
+                calls.append(kwargs); return test._data()["history_1y"]
+            def get_history_metadata(self):
+                calls.append("metadata")
+                raise test.fetcher.FetchTimeout("existing ticker deadline reached")
+        prior = sys.modules["yfinance"]
+        sys.modules["yfinance"] = types.SimpleNamespace(Ticker=lambda _ticker: Client(), __version__="fixture-1")
+        self.fetcher._observed_now = lambda: self.NOW
+        self.fetcher.compact_history = lambda frame: frame
+        self.fetcher.is_enrolled_stock_detail = lambda _ticker: True
+        try:
+            data, _, error, evidence = self.fetcher.fetch_with_retry("AVB", profile="daily", retries=0,
+                                                                   timeout_seconds=30, include_evidence=True)
+        finally: sys.modules["yfinance"] = prior
+        self.assertIsNone(data)
+        self.assertIn("existing ticker deadline", error)
+        self.assertEqual(evidence["attempts_used"], 1)
+        self.assertEqual(calls, [{"period": "1y", "interval": "1d", "auto_adjust": True}, "metadata"])
+
+    def test_collector_captures_after_main_history_inside_existing_attempt(self):
+        calls = []; test = self
+        class Client:
+            info = test._data()["info"]
+            fast_info = {}
+            def history(self, **kwargs):
+                calls.append(kwargs); return test._data()["history_1y"]
+            def get_history_metadata(self):
+                calls.append("metadata"); return test._metadata()
+        prior = sys.modules["yfinance"]
+        sys.modules["yfinance"] = types.SimpleNamespace(Ticker=lambda _ticker: Client(), __version__="fixture-1")
+        self.fetcher._observed_now = lambda: self.NOW
+        self.fetcher.compact_history = lambda frame: frame
+        self.fetcher.is_enrolled_stock_detail = lambda _ticker: False
+        try: result, _ = self.fetcher.fetch_ticker("AVB", profile="daily")
+        finally: sys.modules["yfinance"] = prior
+        self.assertEqual(calls, [{"period": "1y", "interval": "1d", "auto_adjust": True}, "metadata"])
+        self.assertEqual(result["quote_observation"]["yfinance_version"], "fixture-1")
+
+
 if __name__ == "__main__":
     unittest.main()
