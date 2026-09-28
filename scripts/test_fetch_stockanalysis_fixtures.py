@@ -444,10 +444,10 @@ class StockanalysisFetcherFixtureTest(unittest.TestCase):
             public = root / "public/data"
             script = (
                 "import { pathToFileURL } from 'node:url'; "
-                "const { syncPublicData } = await import(pathToFileURL(process.argv[1]).href); "
-                "syncPublicData({sourceRoot:process.argv[2],destinationRoot:process.argv[3]});"
+                "const { syncPublicData } = await import(pathToFileURL(process.argv[2]).href); "
+                "syncPublicData({sourceRoot:process.argv[3],destinationRoot:process.argv[4]});"
             )
-            subprocess.run(["node", "--input-type=module", "-e", script,
+            subprocess.run(["node", "--input-type=module", "-e", script, "fixture-driver",
                             str(ROOT / "100xfenok-next/scripts/sync-public-data.mjs"), str(root / "data"), str(public)],
                            check=True, capture_output=True, text=True)
             self.assertEqual((public / "public-marker.json").read_bytes(), marker.read_bytes())
