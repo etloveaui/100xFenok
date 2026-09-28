@@ -8,6 +8,7 @@ import { fileURLToPath } from "node:url";
 import { LANE_REGISTRY } from "./lib/lane-registry.mjs";
 import {
   DETECTION_CALENDARS,
+  HEALTH_SET_EXCLUSIONS,
   publicServedPath,
   readDetectionFloorRows,
   summarizeDataSetFreshness,
@@ -43,7 +44,9 @@ function validDate(value) {
 }
 
 function dataSetLanes(registry = LANE_REGISTRY) {
-  return registry.lanes.filter((lane) => lane.lane_class === "detection_floor");
+  return registry.lanes.filter((lane) => (
+    lane.lane_class === "detection_floor" && !HEALTH_SET_EXCLUSIONS.has(lane.id)
+  ));
 }
 
 function readJson(filePath) {

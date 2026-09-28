@@ -6,6 +6,7 @@ import { fileURLToPath } from "node:url";
 import { LANE_REGISTRY } from "./lib/lane-registry.mjs";
 import {
   DETECTION_CALENDARS,
+  HEALTH_SET_EXCLUSIONS,
   publicServedPath,
   readDetectionFloorRows,
   summarizeDataSetFreshness,
@@ -95,7 +96,7 @@ export function buildKpiDocuments(nowIso = resolveNow(), {
   void publicDataRoot;
   const rows = readDetectionFloorRows(dataRoot);
   const sets = LANE_REGISTRY.lanes
-    .filter((lane) => lane.lane_class === "detection_floor")
+    .filter((lane) => lane.lane_class === "detection_floor" && !HEALTH_SET_EXCLUSIONS.has(lane.id))
     .map((lane) => buildSet(lane, rows.get(lane.id), dataRoot, nowIso));
   const rootDoc = { schema_version: SCHEMA_VERSION, generated_at: nowIso, sets };
   // Paths are public-safe before projection, so both mirrors carry one contract.
