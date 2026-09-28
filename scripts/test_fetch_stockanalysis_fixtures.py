@@ -263,7 +263,8 @@ class StockanalysisFetcherFixtureTest(unittest.TestCase):
         self.assertEqual(case["active"]["recovery"]["SLON"]["consecutive_green"], 0)
         self.assertEqual(case["primary"]["detail_status"], "stockanalysis_partial")
         self.assertEqual(case["primary"]["partial_reason_codes"], ["holdings_surface_fallback_overview", "holdings_countries_unavailable"])
-        yahoo = [row for row in case["history"] if row["provider"] == "yahoo_finance"][-1]
+        yahoo = max((row for row in case["history"] if row["provider"] == "yahoo_finance"),
+                    key=lambda row: datetime.fromisoformat(row["observed_at"].replace("Z", "+00:00")))
         self.assertEqual(yahoo["observation_origin"], "rebuild")
         self.assertEqual(yahoo["collection_origin"], "manual")
         self.assertEqual(yahoo["etf_acquisition"]["run_id"], "901")
