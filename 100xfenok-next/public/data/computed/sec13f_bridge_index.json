@@ -1,6 +1,6 @@
 {
   "schema_version": "sec13f-bridge-index/v1",
-  "generated_at": "2026-09-28T01:40:03.964Z",
+  "generated_at": "2026-09-28T03:54:34.438Z",
   "purpose": "SEC 13F bridge index of tickers outside the Global Scouter universe, published live with honest 424/1,031 coverage.",
   "contract": {
     "candidate_type": "sec13f_extension_stock",
@@ -31,17 +31,17 @@
   },
   "input_fingerprints": {
     "analyzer": "2db81620e7b031ad0ba19fe8c21a0a4228c5f76b19ad6a445c58fc1aa090635a",
-    "action_index": "d633abb2c9b1b5d66cab092c24e32a4df3fd06a64e6ddca30e66c413bae9deb4",
-    "market_facts": "0bb4b6a58c6362ae286a320ab736d26ea9fc3d5256673287dd399a6af601751b",
+    "action_index": "4e052ea56357c608c06ed19c7b20c065707205d107172187a32295ef93af2186",
+    "market_facts": "87d1ffaa9b4a6383a23219acb73855d39fc1dd8a9e762898fa1beab93507a0c5",
     "sec13f_by_ticker": "18744c2a465ef72940da65510b0f80a26077607866ab7186cf4d2985164f8400",
     "sec13f_summary": "608791f2b4b70e0f165e5d6869ad39d8f6bee829207e70d1c06dd9dc995cf7e2",
     "market_facts_details": {
       "file_count": 116,
-      "sha256": "be92349297a1b65f66d944826480e70524448921970ce8a734af6585646401f8"
+      "sha256": "eadda41d5647f55c10219437e20630182fb9a98dd7f1607aeef4786beeadaf52"
     },
     "yf_finance_candidates": {
-      "file_count": 78,
-      "sha256": "abee814af1d400f7c2e3e46632ccfae6b9fa1218f94697d70acaad4461c5602f"
+      "file_count": 79,
+      "sha256": "8bf8ee4ee8f3a1b9db22ce8a42e521b120530d34cfc1ca252c45a9c60c48a3c2"
     }
   },
   "graph_invariants": {
@@ -54,27 +54,27 @@
   },
   "counts": {
     "sec13f_outside_core": 608,
-    "action_plus_market_facts": 78,
-    "market_facts_only": 38,
-    "no_action_index_overlap": 530,
+    "action_plus_market_facts": 79,
+    "market_facts_only": 37,
+    "no_action_index_overlap": 529,
     "no_market_facts": 492,
     "action_index_only": 0,
-    "sec13f_extension_stock": 78,
-    "sec13f_market_facts_only": 38,
+    "sec13f_extension_stock": 79,
+    "sec13f_market_facts_only": 37,
     "sec13f_unresolved": 492,
     "estimate": {
       "extension_full": 74,
-      "extension_incomplete": 4,
+      "extension_incomplete": 5,
       "market_facts_only_incomplete": 37,
       "unresolved_absent": 492,
       "as_of": {
-        "bridge_generated_at": "2026-09-28T01:40:03.964Z",
+        "bridge_generated_at": "2026-09-28T03:54:34.438Z",
         "yf_finance": "2026-09-25T00:00:00.000Z",
         "market_facts": "2026-09-21",
         "sec13f": "2026-Q2"
       }
     },
-    "price_observed_extension": 78,
+    "price_observed_extension": 79,
     "price_observed_extension_as_of": "2026-09-21"
   },
   "rows": [
@@ -2098,7 +2098,7 @@
         "file": true,
         "path": "data/yf/finance/ARKB.json",
         "state": "incomplete",
-        "source_as_of": "2026-08-07",
+        "source_as_of": "2026-09-25",
         "fields_present": [],
         "missing_fields": [
           "earnings_estimate",
@@ -3400,18 +3400,17 @@
     {
       "ticker": "BE",
       "classification": {
-        "type": "sec13f_market_facts_only",
+        "type": "sec13f_extension_stock",
         "classes": [
-          "market_facts_only",
-          "no_action_index_overlap"
+          "action_plus_market_facts"
         ]
       },
       "source_links": {
         "sec13f_by_ticker": true,
         "global_scouter_core": false,
-        "stock_action_index": false,
+        "stock_action_index": true,
         "market_facts": true,
-        "yf_finance": false
+        "yf_finance": true
       },
       "sec13f": {
         "holders_count": 10,
@@ -3419,21 +3418,33 @@
       },
       "market_facts": {
         "asset_type": "stock",
-        "source_as_of": "2026-09-27",
+        "source_as_of": "2026-09-25",
         "price": {
           "present": true,
           "value": 288.7,
           "confidence": "observed",
-          "source": "slickcharts",
-          "as_of": "2026-09-27"
+          "source": "yf",
+          "as_of": "2026-09-25"
         }
       },
-      "stock_action_index": null,
+      "stock_action_index": {
+        "price": 288.7,
+        "market_cap": 85030051840,
+        "per": 370.12823,
+        "forward_pe": 58.57517,
+        "confidence_label": "high",
+        "quality_flags": [
+          "missing_forward_eps",
+          "missing_global_scouter_core_row",
+          "missing_quarter_close_history",
+          "no_dividend_history"
+        ]
+      },
       "yf_estimates": {
-        "file": false,
+        "file": true,
         "path": "data/yf/finance/BE.json",
-        "state": "absent",
-        "source_as_of": null,
+        "state": "incomplete",
+        "source_as_of": "2026-09-25",
         "fields_present": [],
         "missing_fields": [
           "earnings_estimate",
@@ -3446,12 +3457,12 @@
       },
       "completeness": {
         "market_facts_price_observed": true,
-        "action_price_present": false,
-        "action_valuation_present": false,
-        "yf_estimate_or_absent_reason": false,
-        "bridge_field_floor": false,
-        "per_present": false,
-        "forward_pe_present": false
+        "action_price_present": true,
+        "action_valuation_present": true,
+        "yf_estimate_or_absent_reason": true,
+        "bridge_field_floor": true,
+        "per_present": true,
+        "forward_pe_present": true
       },
       "acceptance": {
         "promotion_status": "promoted",
@@ -4568,7 +4579,7 @@
       },
       "market_facts": {
         "asset_type": "etf",
-        "source_as_of": "2026-08-07",
+        "source_as_of": "2026-09-25",
         "price": {
           "present": false,
           "value": null,
@@ -4582,7 +4593,7 @@
         "file": true,
         "path": "data/yf/finance/BOTZ.json",
         "state": "incomplete",
-        "source_as_of": "2026-08-07",
+        "source_as_of": "2026-09-25",
         "fields_present": [],
         "missing_fields": [
           "earnings_estimate",
@@ -6363,7 +6374,7 @@
       },
       "market_facts": {
         "asset_type": "etf",
-        "source_as_of": "2026-08-06",
+        "source_as_of": "2026-09-25",
         "price": {
           "present": false,
           "value": null,
@@ -6377,7 +6388,7 @@
         "file": true,
         "path": "data/yf/finance/CHAT.json",
         "state": "incomplete",
-        "source_as_of": "2026-08-06",
+        "source_as_of": "2026-09-25",
         "fields_present": [],
         "missing_fields": [
           "earnings_estimate",
