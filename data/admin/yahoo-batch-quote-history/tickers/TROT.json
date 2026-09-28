@@ -2,20 +2,6 @@
   "attempts": [
     {
       "attempts_used": 1,
-      "error": "recovery_not_advanced_by_provider",
-      "event_name": "schedule",
-      "failures": [],
-      "latency_ms": 933,
-      "natural": true,
-      "observed_at": "2026-08-10T22:52:08Z",
-      "outcome": "failed",
-      "run_attempt": 1,
-      "run_id": "31439945275",
-      "schedule": "7 22 * * 0-5",
-      "shard": "23/72"
-    },
-    {
-      "attempts_used": 1,
       "event_name": "schedule",
       "failures": [],
       "latency_ms": 454,
@@ -199,40 +185,46 @@
       "run_id": "31648785047",
       "schedule": "7 22 * * 0-5",
       "shard": "47/72"
+    },
+    {
+      "attempts_used": 1,
+      "event_name": "workflow_dispatch",
+      "failures": [],
+      "latency_ms": 532,
+      "natural": false,
+      "observed_at": "2026-09-28T06:30:00Z",
+      "outcome": "fresh",
+      "run_attempt": 1,
+      "run_id": "36367836615",
+      "schedule": "",
+      "shard": ""
     }
   ],
   "current": {
-    "fetched_at": "2026-08-12T04:18:43Z",
-    "history_as_of": "2026-08-11",
-    "path": "data/admin/yahoo-batch-quote-history/lkg/TROT.json",
-    "payload_sha256": "14bf2f1acc7faf11b84884b5960e321d2c0b6103039da92f1d547011659cad7b",
-    "quote_as_of": "2026-03-24T15:56:44Z",
-    "source_as_of": "2026-03-24T15:56:44Z"
+    "fetched_at": "2026-09-28T06:34:40Z",
+    "history_as_of": "2026-09-25",
+    "path": "data/yf/finance/TROT.json",
+    "payload_sha256": "18af3925a178323e61d12c6b905c747b3d372d1146a938b8bf77922c4fa40652",
+    "quote_as_of": "2026-09-24T18:37:12Z",
+    "source_as_of": "2026-09-24T18:37:12Z"
   },
   "discovered_from": [
     "stockanalysis_etf"
   ],
   "last_attempt": {
     "attempts_used": 1,
-    "error": "ValueError: quote_as_of is unavailable for TROT despite available history",
-    "event_name": "schedule",
-    "failures": [
-      {
-        "attempt": 1,
-        "error": "YFRateLimitError: Too Many Requests. Rate limited. Try after a while.",
-        "source": "provider_safe_call"
-      }
-    ],
-    "latency_ms": 462,
-    "natural": true,
-    "observed_at": "2026-08-12T22:55:30Z",
-    "outcome": "failed",
+    "event_name": "workflow_dispatch",
+    "failures": [],
+    "latency_ms": 532,
+    "natural": false,
+    "observed_at": "2026-09-28T06:30:00Z",
+    "outcome": "fresh",
     "run_attempt": 1,
-    "run_id": "31648785047",
-    "schedule": "7 22 * * 0-5",
-    "shard": "47/72"
+    "run_id": "36367836615",
+    "schedule": "",
+    "shard": ""
   },
-  "latest_failure": {
+  "last_recovered_failure": {
     "attempts_used": 1,
     "data_loss": false,
     "deferred_acquisition": false,
@@ -260,18 +252,23 @@
   },
   "promotion_contract": "provider_observation/v2",
   "provider_observation": {
-    "event_name": "schedule",
-    "history_as_of": "2026-08-11",
-    "observed_at": "2026-08-12T04:17:21Z",
-    "payload_sha256": "e9f98679a3f79aa3a16ddaf6da4eba8f70f0e36b57a83cf81c3528409549a4d6",
-    "quote_as_of": "2026-03-24T15:56:44Z",
+    "event_name": "workflow_dispatch",
+    "history_as_of": "2026-09-25",
+    "observed_at": "2026-09-28T06:30:00Z",
+    "payload_sha256": "f75233c6cd2fc0f2d5fd3f2307cc4bf788584f2c32bab70da347be4aac47891a",
+    "quote_as_of": "2026-09-24T18:37:12Z",
     "run_attempt": 1,
-    "run_id": "31562660637",
+    "run_id": "36367836615",
     "schema_version": "provider_observation/v2",
-    "source_as_of": "2026-03-24T15:56:44Z"
+    "source_as_of": "2026-09-24T18:37:12Z"
   },
-  "resolution_state": "lkg_primary",
-  "retry": true,
+  "recovered_at": "2026-09-28T06:30:00Z",
+  "recovered_from_run_id": "31648785047",
+  "recovery_event_name": "workflow_dispatch",
+  "recovery_run_attempt": 1,
+  "recovery_run_id": "36367836615",
+  "resolution_state": "fresh_primary",
+  "retry": false,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "stale": {
     "age_business_days": 97,
@@ -284,5 +281,5 @@
     "source_as_of": "2026-03-24T15:56:44Z"
   },
   "ticker": "TROT",
-  "updated_at": "2026-08-12T22:55:30Z"
+  "updated_at": "2026-09-28T06:30:00Z"
 }

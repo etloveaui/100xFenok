@@ -198,7 +198,7 @@
   "current": {
     "fetched_at": "2026-09-28T06:10:04Z",
     "history_as_of": "2026-09-25",
-    "path": "data/yf/finance/REFA.json",
+    "path": "data/admin/yahoo-batch-quote-history/lkg/REFA.json",
     "payload_sha256": "889e21c04d3f03372720cd44d98087a18b5354f0cb9213ba1bfb856c57b00657",
     "quote_as_of": "2026-08-24T13:52:32Z",
     "source_as_of": "2026-08-24T13:52:32Z"
@@ -220,12 +220,12 @@
     "shard": ""
   },
   "lkg": {
-    "fetched_at": "2026-08-12T04:18:37Z",
-    "history_as_of": "2026-08-11",
+    "fetched_at": "2026-09-28T06:10:04Z",
+    "history_as_of": "2026-09-25",
     "path": "data/admin/yahoo-batch-quote-history/lkg/REFA.json",
-    "payload_sha256": "5109704804fb7dff395d05a140b1df29829fc6bad2fba6f42f7a71b42212d6c6",
-    "quote_as_of": "2026-05-06T14:34:26Z",
-    "source_as_of": "2026-05-06T14:34:26Z"
+    "payload_sha256": "889e21c04d3f03372720cd44d98087a18b5354f0cb9213ba1bfb856c57b00657",
+    "quote_as_of": "2026-08-24T13:52:32Z",
+    "source_as_of": "2026-08-24T13:52:32Z"
   },
   "promotion_contract": "provider_observation/v2",
   "provider_observation": {
@@ -239,19 +239,19 @@
     "schema_version": "provider_observation/v2",
     "source_as_of": "2026-08-24T13:52:32Z"
   },
-  "resolution_state": "fresh_primary",
-  "retry": false,
+  "resolution_state": "lkg_primary",
+  "retry": true,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "stale": {
-    "age_business_days": 67,
-    "classified_at": "2026-08-12T05:45:23Z",
-    "classified_run_id": "31567478446",
+    "age_business_days": 24,
+    "classified_at": "2026-09-28T06:30:00Z",
+    "classified_run_id": "36367836615",
     "expected_resolution": "next_natural_yahoo_run",
     "max_business_days": 6,
-    "message": "REFA holds LKG because Yahoo source date 2026-05-06T14:34:26Z is 67 business days old, beyond the 6-day bound; it will retry on the next natural Yahoo run.",
+    "message": "REFA holds LKG because Yahoo source date 2026-08-24T13:52:32Z is 24 business days old, beyond the 6-day bound; it will retry on the next natural Yahoo run.",
     "reason": "source_age_exceeds_lane_bound",
-    "source_as_of": "2026-05-06T14:34:26Z"
+    "source_as_of": "2026-08-24T13:52:32Z"
   },
   "ticker": "REFA",
-  "updated_at": "2026-09-28T06:02:24Z"
+  "updated_at": "2026-09-28T06:30:00Z"
 }

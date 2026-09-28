@@ -5,20 +5,6 @@
       "error": "recovery_not_advanced_by_provider",
       "event_name": "schedule",
       "failures": [],
-      "latency_ms": 542,
-      "natural": true,
-      "observed_at": "2026-08-10T09:46:13Z",
-      "outcome": "failed",
-      "run_attempt": 1,
-      "run_id": "31376005252",
-      "schedule": "7 8 * * 0-5",
-      "shard": "16/72"
-    },
-    {
-      "attempts_used": 1,
-      "error": "recovery_not_advanced_by_provider",
-      "event_name": "schedule",
-      "failures": [],
       "latency_ms": 434,
       "natural": true,
       "observed_at": "2026-08-10T15:10:15Z",
@@ -192,6 +178,25 @@
       "run_id": "31610461024",
       "schedule": "7 14 * * 0-5",
       "shard": "43/72"
+    },
+    {
+      "attempts_used": 1,
+      "error": "chart quote equal-clock price conflict",
+      "event_name": "workflow_dispatch",
+      "failures": [
+        {
+          "attempt": 1,
+          "error": "chart quote equal-clock price conflict"
+        }
+      ],
+      "latency_ms": 0,
+      "natural": false,
+      "observed_at": "2026-09-28T06:30:00Z",
+      "outcome": "failed",
+      "run_attempt": 1,
+      "run_id": "36367836615",
+      "schedule": "",
+      "shard": ""
     }
   ],
   "current": {
@@ -207,16 +212,39 @@
   ],
   "last_attempt": {
     "attempts_used": 1,
-    "event_name": "schedule",
-    "failures": [],
-    "latency_ms": 363,
-    "natural": true,
-    "observed_at": "2026-08-12T15:08:24Z",
-    "outcome": "fresh",
+    "error": "chart quote equal-clock price conflict",
+    "event_name": "workflow_dispatch",
+    "failures": [
+      {
+        "attempt": 1,
+        "error": "chart quote equal-clock price conflict"
+      }
+    ],
+    "latency_ms": 0,
+    "natural": false,
+    "observed_at": "2026-09-28T06:30:00Z",
+    "outcome": "failed",
     "run_attempt": 1,
-    "run_id": "31610461024",
-    "schedule": "7 14 * * 0-5",
-    "shard": "43/72"
+    "run_id": "36367836615",
+    "schedule": "",
+    "shard": ""
+  },
+  "latest_failure": {
+    "attempts_used": 1,
+    "data_loss": false,
+    "deferred_acquisition": false,
+    "error": "chart quote equal-clock price conflict",
+    "failure_kind": "unexpected",
+    "failures": [
+      {
+        "attempt": 1,
+        "error": "chart quote equal-clock price conflict"
+      }
+    ],
+    "lkg_status": "retained",
+    "observed_at": "2026-09-28T06:30:00Z",
+    "run_attempt": 1,
+    "run_id": "36367836615"
   },
   "lkg": {
     "fetched_at": "2026-08-12T15:08:59Z",
@@ -252,5 +280,5 @@
     "source_as_of": "2026-08-12"
   },
   "ticker": "TOAO",
-  "updated_at": "2026-08-21T23:43:33Z"
+  "updated_at": "2026-09-28T06:30:00Z"
 }

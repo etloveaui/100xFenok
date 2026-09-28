@@ -2,19 +2,6 @@
   "attempts": [
     {
       "attempts_used": 1,
-      "event_name": "schedule",
-      "failures": [],
-      "latency_ms": 597,
-      "natural": true,
-      "observed_at": "2026-09-01T01:52:51Z",
-      "outcome": "fresh",
-      "run_attempt": 1,
-      "run_id": "33460327385",
-      "schedule": "20 23 * * 1-5",
-      "shard": "0/5"
-    },
-    {
-      "attempts_used": 1,
       "error": "recovery_not_advanced_by_provider",
       "event_name": "schedule",
       "failures": [],
@@ -194,6 +181,26 @@
       "run_id": "36082706783",
       "schedule": "20 23 * * 1-5",
       "shard": "0/5"
+    },
+    {
+      "attempts_used": 1,
+      "error": "foreign_writer_conflict",
+      "event_name": "workflow_dispatch",
+      "failures": [
+        {
+          "attempt": 1,
+          "error": "AttributeError: 'Index' object has no attribute 'date'",
+          "source": "provider_safe_call"
+        }
+      ],
+      "latency_ms": 459,
+      "natural": false,
+      "observed_at": "2026-09-28T06:30:00Z",
+      "outcome": "failed",
+      "run_attempt": 1,
+      "run_id": "36367836615",
+      "schedule": "",
+      "shard": ""
     }
   ],
   "current": {
@@ -209,26 +216,32 @@
   ],
   "last_attempt": {
     "attempts_used": 1,
-    "error": "recovery_not_advanced_by_provider",
-    "event_name": "schedule",
-    "failures": [],
-    "latency_ms": 442,
-    "natural": true,
-    "observed_at": "2026-09-25T01:37:44Z",
+    "error": "foreign_writer_conflict",
+    "event_name": "workflow_dispatch",
+    "failures": [
+      {
+        "attempt": 1,
+        "error": "AttributeError: 'Index' object has no attribute 'date'",
+        "source": "provider_safe_call"
+      }
+    ],
+    "latency_ms": 459,
+    "natural": false,
+    "observed_at": "2026-09-28T06:30:00Z",
     "outcome": "failed",
     "run_attempt": 1,
-    "run_id": "36082706783",
-    "schedule": "20 23 * * 1-5",
-    "shard": "0/5"
+    "run_id": "36367836615",
+    "schedule": "",
+    "shard": ""
   },
   "latest_promotion_deferral": {
-    "event_name": "schedule",
-    "observed_at": "2026-09-25T01:37:44Z",
-    "provider_history_as_of": "2026-08-27",
+    "event_name": "workflow_dispatch",
+    "observed_at": "2026-09-28T06:30:00Z",
+    "provider_history_as_of": "2026-08-20",
     "provider_quote_as_of": "2026-08-20T18:53:33Z",
-    "reason": "recovery_not_advanced_by_provider",
+    "reason": "foreign_writer_conflict",
     "run_attempt": 1,
-    "run_id": "36082706783"
+    "run_id": "36367836615"
   },
   "lkg": {
     "fetched_at": "2026-09-01T01:53:10Z",
@@ -264,5 +277,5 @@
     "source_as_of": "2026-08-20T18:53:33Z"
   },
   "ticker": "VOOX",
-  "updated_at": "2026-09-25T01:37:44Z"
+  "updated_at": "2026-09-28T06:30:00Z"
 }

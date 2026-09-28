@@ -43,62 +43,44 @@
       "run_id": "31111230701",
       "schedule": "7 12 * * 0-5",
       "shard": "54/72"
+    },
+    {
+      "attempts_used": 1,
+      "event_name": "workflow_dispatch",
+      "failures": [],
+      "latency_ms": 490,
+      "natural": false,
+      "observed_at": "2026-09-28T06:30:00Z",
+      "outcome": "fresh",
+      "run_attempt": 1,
+      "run_id": "36367836615",
+      "schedule": "",
+      "shard": ""
     }
   ],
   "current": {
-    "fetched_at": "2026-08-06T14:36:34Z",
-    "history_as_of": "2026-08-06",
-    "path": "data/admin/yahoo-batch-quote-history/lkg/WSML.json",
-    "payload_sha256": "708fc26ba58c2b961fd0ea433af2c77fbc6bff6e1cda66efedc8b12d267e97eb",
-    "quote_as_of": "2026-08-06T14:11:53Z",
-    "source_as_of": "2026-08-06"
+    "fetched_at": "2026-09-28T06:44:05Z",
+    "history_as_of": "2026-09-25",
+    "path": "data/yf/finance/WSML.json",
+    "payload_sha256": "4cf84b97ca049cad4e65b9c5caba08faba5c88e3063a442dbbc5120ce0465c40",
+    "quote_as_of": "2026-09-25T20:00:00Z",
+    "source_as_of": "2026-09-25"
   },
   "discovered_from": [
     "stockanalysis_etf"
   ],
   "last_attempt": {
     "attempts_used": 1,
-    "event_name": "schedule",
-    "failures": [
-      {
-        "attempt": 1,
-        "error": "YFDataException: WSML: No Fund data found.",
-        "source": "provider_safe_call"
-      },
-      {
-        "attempt": 1,
-        "error": "YFDataException: WSML: No Fund data found.",
-        "source": "provider_safe_call"
-      },
-      {
-        "attempt": 1,
-        "error": "YFDataException: WSML: No Fund data found.",
-        "source": "provider_safe_call"
-      },
-      {
-        "attempt": 1,
-        "error": "YFDataException: WSML: No Fund data found.",
-        "source": "provider_safe_call"
-      },
-      {
-        "attempt": 1,
-        "error": "YFDataException: WSML: No Fund data found.",
-        "source": "provider_safe_call"
-      },
-      {
-        "attempt": 1,
-        "error": "YFDataException: WSML: No Fund data found.",
-        "source": "provider_safe_call"
-      }
-    ],
-    "latency_ms": 823,
-    "natural": true,
-    "observed_at": "2026-08-06T14:33:02Z",
+    "event_name": "workflow_dispatch",
+    "failures": [],
+    "latency_ms": 490,
+    "natural": false,
+    "observed_at": "2026-09-28T06:30:00Z",
     "outcome": "fresh",
     "run_attempt": 1,
-    "run_id": "31111230701",
-    "schedule": "7 12 * * 0-5",
-    "shard": "54/72"
+    "run_id": "36367836615",
+    "schedule": "",
+    "shard": ""
   },
   "lkg": {
     "fetched_at": "2026-08-06T14:36:34Z",
@@ -110,18 +92,18 @@
   },
   "promotion_contract": "provider_observation/v2",
   "provider_observation": {
-    "event_name": "schedule",
-    "history_as_of": "2026-08-06",
-    "observed_at": "2026-08-06T14:33:02Z",
-    "payload_sha256": "ff57b60b187c8c37147c3bc54ca8c1bae2a2405aa9171fa53a5760352a7ad968",
-    "quote_as_of": "2026-08-06T14:11:53Z",
+    "event_name": "workflow_dispatch",
+    "history_as_of": "2026-09-25",
+    "observed_at": "2026-09-28T06:30:00Z",
+    "payload_sha256": "3b9a28ab0bd96aa237ddb4e63e344a0a2e2ecfdbbfc8fc7c9d6bb6e362b74539",
+    "quote_as_of": "2026-09-25T20:00:00Z",
     "run_attempt": 1,
-    "run_id": "31111230701",
+    "run_id": "36367836615",
     "schema_version": "provider_observation/v2",
-    "source_as_of": "2026-08-06"
+    "source_as_of": "2026-09-25"
   },
-  "resolution_state": "lkg_primary",
-  "retry": true,
+  "resolution_state": "fresh_primary",
+  "retry": false,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "stale": {
     "age_business_days": 9,
@@ -134,5 +116,5 @@
     "source_as_of": "2026-08-06"
   },
   "ticker": "WSML",
-  "updated_at": "2026-08-19T23:42:29Z"
+  "updated_at": "2026-09-28T06:30:00Z"
 }

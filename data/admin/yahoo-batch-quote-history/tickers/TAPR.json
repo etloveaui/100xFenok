@@ -129,40 +129,46 @@
       "run_id": "31648785047",
       "schedule": "7 22 * * 0-5",
       "shard": "47/72"
+    },
+    {
+      "attempts_used": 1,
+      "event_name": "workflow_dispatch",
+      "failures": [],
+      "latency_ms": 462,
+      "natural": false,
+      "observed_at": "2026-09-28T06:30:00Z",
+      "outcome": "fresh",
+      "run_attempt": 1,
+      "run_id": "36367836615",
+      "schedule": "",
+      "shard": ""
     }
   ],
   "current": {
-    "fetched_at": "2026-08-12T04:17:52Z",
-    "history_as_of": "2026-08-11",
-    "path": "data/admin/yahoo-batch-quote-history/lkg/TAPR.json",
-    "payload_sha256": "f02f4d44caf815c9cc9a3ac1764f3c474b34198d1e805a49a468cb7966570cc9",
-    "quote_as_of": "2026-08-03T15:10:54Z",
-    "source_as_of": "2026-08-03T15:10:54Z"
+    "fetched_at": "2026-09-28T06:30:44Z",
+    "history_as_of": "2026-09-25",
+    "path": "data/yf/finance/TAPR.json",
+    "payload_sha256": "7e61df1cd5762fc05a7b7cb9ba2f556e4959b3198a6b84e0007b115f74297791",
+    "quote_as_of": "2026-09-24T16:06:22Z",
+    "source_as_of": "2026-09-24T16:06:22Z"
   },
   "discovered_from": [
     "stockanalysis_etf"
   ],
   "last_attempt": {
     "attempts_used": 1,
-    "error": "ValueError: quote_as_of is unavailable for TAPR despite available history",
-    "event_name": "schedule",
-    "failures": [
-      {
-        "attempt": 1,
-        "error": "YFRateLimitError: Too Many Requests. Rate limited. Try after a while.",
-        "source": "provider_safe_call"
-      }
-    ],
-    "latency_ms": 388,
-    "natural": true,
-    "observed_at": "2026-08-12T22:55:30Z",
-    "outcome": "failed",
+    "event_name": "workflow_dispatch",
+    "failures": [],
+    "latency_ms": 462,
+    "natural": false,
+    "observed_at": "2026-09-28T06:30:00Z",
+    "outcome": "fresh",
     "run_attempt": 1,
-    "run_id": "31648785047",
-    "schedule": "7 22 * * 0-5",
-    "shard": "47/72"
+    "run_id": "36367836615",
+    "schedule": "",
+    "shard": ""
   },
-  "latest_failure": {
+  "last_recovered_failure": {
     "attempts_used": 1,
     "data_loss": false,
     "deferred_acquisition": false,
@@ -190,18 +196,23 @@
   },
   "promotion_contract": "provider_observation/v2",
   "provider_observation": {
-    "event_name": "schedule",
-    "history_as_of": "2026-08-11",
-    "observed_at": "2026-08-12T04:17:21Z",
-    "payload_sha256": "129e1b4db389bb8cfb68e94a4a2215189bf8b2895bd8d0c19a296b41625ea9ee",
-    "quote_as_of": "2026-08-03T15:10:54Z",
+    "event_name": "workflow_dispatch",
+    "history_as_of": "2026-09-25",
+    "observed_at": "2026-09-28T06:30:00Z",
+    "payload_sha256": "54bdde1e22a27569b3eabdf776ec6a5cb48a59f0c24747f580134baa1cab500f",
+    "quote_as_of": "2026-09-24T16:06:22Z",
     "run_attempt": 1,
-    "run_id": "31562660637",
+    "run_id": "36367836615",
     "schema_version": "provider_observation/v2",
-    "source_as_of": "2026-08-03T15:10:54Z"
+    "source_as_of": "2026-09-24T16:06:22Z"
   },
-  "resolution_state": "lkg_primary",
-  "retry": true,
+  "recovered_at": "2026-09-28T06:30:00Z",
+  "recovered_from_run_id": "31648785047",
+  "recovery_event_name": "workflow_dispatch",
+  "recovery_run_attempt": 1,
+  "recovery_run_id": "36367836615",
+  "resolution_state": "fresh_primary",
+  "retry": false,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "stale": {
     "age_business_days": 7,
@@ -214,5 +225,5 @@
     "source_as_of": "2026-08-03T15:10:54Z"
   },
   "ticker": "TAPR",
-  "updated_at": "2026-08-12T22:55:30Z"
+  "updated_at": "2026-09-28T06:30:00Z"
 }

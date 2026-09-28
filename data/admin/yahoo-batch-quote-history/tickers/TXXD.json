@@ -90,31 +90,44 @@
       "run_id": "31422533403",
       "schedule": "7 18 * * 0-5",
       "shard": "21/72"
+    },
+    {
+      "attempts_used": 1,
+      "event_name": "workflow_dispatch",
+      "failures": [],
+      "latency_ms": 455,
+      "natural": false,
+      "observed_at": "2026-09-28T06:30:00Z",
+      "outcome": "fresh",
+      "run_attempt": 1,
+      "run_id": "36367836615",
+      "schedule": "",
+      "shard": ""
     }
   ],
   "current": {
-    "fetched_at": "2026-08-10T19:14:00Z",
-    "history_as_of": "2026-08-10",
-    "path": "data/admin/yahoo-batch-quote-history/lkg/TXXD.json",
-    "payload_sha256": "0d6d99cbcdaf6cc122c24556cde84207ca7018cafc0a964bf39fa57c0d52fabf",
-    "quote_as_of": "2026-08-10T18:55:21Z",
-    "source_as_of": "2026-08-10"
+    "fetched_at": "2026-09-28T06:36:24Z",
+    "history_as_of": "2026-09-25",
+    "path": "data/yf/finance/TXXD.json",
+    "payload_sha256": "551470c24bc4a7a593f38231d198dcfe568f67ac3450f35b56e79ea3cc92fc2e",
+    "quote_as_of": "2026-09-25T20:00:00Z",
+    "source_as_of": "2026-09-25"
   },
   "discovered_from": [
     "stockanalysis_etf"
   ],
   "last_attempt": {
     "attempts_used": 1,
-    "event_name": "schedule",
+    "event_name": "workflow_dispatch",
     "failures": [],
-    "latency_ms": 771,
-    "natural": true,
-    "observed_at": "2026-08-10T19:09:16Z",
+    "latency_ms": 455,
+    "natural": false,
+    "observed_at": "2026-09-28T06:30:00Z",
     "outcome": "fresh",
     "run_attempt": 1,
-    "run_id": "31422533403",
-    "schedule": "7 18 * * 0-5",
-    "shard": "21/72"
+    "run_id": "36367836615",
+    "schedule": "",
+    "shard": ""
   },
   "lkg": {
     "fetched_at": "2026-08-10T19:14:00Z",
@@ -126,18 +139,18 @@
   },
   "promotion_contract": "provider_observation/v2",
   "provider_observation": {
-    "event_name": "schedule",
-    "history_as_of": "2026-08-10",
-    "observed_at": "2026-08-10T19:09:16Z",
-    "payload_sha256": "582df727265e0985bfe831a5dcb524bf761ce2ee972a052af2b28e8df04da7b8",
-    "quote_as_of": "2026-08-10T18:55:21Z",
+    "event_name": "workflow_dispatch",
+    "history_as_of": "2026-09-25",
+    "observed_at": "2026-09-28T06:30:00Z",
+    "payload_sha256": "5724ca15496911bc590512cb08756c39d0fb8c38408cfdceda6322be12873d69",
+    "quote_as_of": "2026-09-25T20:00:00Z",
     "run_attempt": 1,
-    "run_id": "31422533403",
+    "run_id": "36367836615",
     "schema_version": "provider_observation/v2",
-    "source_as_of": "2026-08-10"
+    "source_as_of": "2026-09-25"
   },
-  "resolution_state": "lkg_primary",
-  "retry": true,
+  "resolution_state": "fresh_primary",
+  "retry": false,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "stale": {
     "age_business_days": 7,
@@ -150,5 +163,5 @@
     "source_as_of": "2026-08-10"
   },
   "ticker": "TXXD",
-  "updated_at": "2026-08-19T23:42:29Z"
+  "updated_at": "2026-09-28T06:30:00Z"
 }

@@ -2,20 +2,6 @@
   "attempts": [
     {
       "attempts_used": 1,
-      "error": "recovery_not_advanced_by_provider",
-      "event_name": "schedule",
-      "failures": [],
-      "latency_ms": 531,
-      "natural": true,
-      "observed_at": "2026-08-10T20:51:42Z",
-      "outcome": "failed",
-      "run_attempt": 1,
-      "run_id": "31430923656",
-      "schedule": "7 20 * * 0-5",
-      "shard": "22/72"
-    },
-    {
-      "attempts_used": 1,
       "event_name": "schedule",
       "failures": [],
       "latency_ms": 672,
@@ -199,40 +185,46 @@
       "run_id": "31648785047",
       "schedule": "7 22 * * 0-5",
       "shard": "47/72"
+    },
+    {
+      "attempts_used": 1,
+      "event_name": "workflow_dispatch",
+      "failures": [],
+      "latency_ms": 528,
+      "natural": false,
+      "observed_at": "2026-09-28T06:30:00Z",
+      "outcome": "fresh",
+      "run_attempt": 1,
+      "run_id": "36367836615",
+      "schedule": "",
+      "shard": ""
     }
   ],
   "current": {
-    "fetched_at": "2026-08-12T04:18:48Z",
-    "history_as_of": "2026-08-11",
-    "path": "data/admin/yahoo-batch-quote-history/lkg/XEML.json",
-    "payload_sha256": "d0050e19948508581536c45b0648757e2a56427d82a7ac31de780fa1be9b9004",
-    "quote_as_of": "2026-03-20T18:21:26Z",
-    "source_as_of": "2026-03-20T18:21:26Z"
+    "fetched_at": "2026-09-28T06:45:20Z",
+    "history_as_of": "2026-09-25",
+    "path": "data/yf/finance/XEML.json",
+    "payload_sha256": "fdcfee0271b24309e13a1b2ac6556ad44cb2f5f40d5a1c36422f8122eecdf976",
+    "quote_as_of": "2026-09-10T13:31:17Z",
+    "source_as_of": "2026-09-10T13:31:17Z"
   },
   "discovered_from": [
     "stockanalysis_etf"
   ],
   "last_attempt": {
     "attempts_used": 1,
-    "error": "ValueError: quote_as_of is unavailable for XEML despite available history",
-    "event_name": "schedule",
-    "failures": [
-      {
-        "attempt": 1,
-        "error": "YFRateLimitError: Too Many Requests. Rate limited. Try after a while.",
-        "source": "provider_safe_call"
-      }
-    ],
-    "latency_ms": 417,
-    "natural": true,
-    "observed_at": "2026-08-12T22:55:30Z",
-    "outcome": "failed",
+    "event_name": "workflow_dispatch",
+    "failures": [],
+    "latency_ms": 528,
+    "natural": false,
+    "observed_at": "2026-09-28T06:30:00Z",
+    "outcome": "fresh",
     "run_attempt": 1,
-    "run_id": "31648785047",
-    "schedule": "7 22 * * 0-5",
-    "shard": "47/72"
+    "run_id": "36367836615",
+    "schedule": "",
+    "shard": ""
   },
-  "latest_failure": {
+  "last_recovered_failure": {
     "attempts_used": 1,
     "data_loss": false,
     "deferred_acquisition": false,
@@ -260,18 +252,23 @@
   },
   "promotion_contract": "provider_observation/v2",
   "provider_observation": {
-    "event_name": "schedule",
-    "history_as_of": "2026-08-11",
-    "observed_at": "2026-08-12T04:17:21Z",
-    "payload_sha256": "a400950bd979f202165d3a821027c5421fffa9a820cc000237f4795a3535e183",
-    "quote_as_of": "2026-03-20T18:21:26Z",
+    "event_name": "workflow_dispatch",
+    "history_as_of": "2026-09-25",
+    "observed_at": "2026-09-28T06:30:00Z",
+    "payload_sha256": "21dc27470fb18f02b82a03a2168169db8532b7ced01e39674f8166523098cc84",
+    "quote_as_of": "2026-09-10T13:31:17Z",
     "run_attempt": 1,
-    "run_id": "31562660637",
+    "run_id": "36367836615",
     "schema_version": "provider_observation/v2",
-    "source_as_of": "2026-03-20T18:21:26Z"
+    "source_as_of": "2026-09-10T13:31:17Z"
   },
-  "resolution_state": "lkg_primary",
-  "retry": true,
+  "recovered_at": "2026-09-28T06:30:00Z",
+  "recovered_from_run_id": "31648785047",
+  "recovery_event_name": "workflow_dispatch",
+  "recovery_run_attempt": 1,
+  "recovery_run_id": "36367836615",
+  "resolution_state": "fresh_primary",
+  "retry": false,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "stale": {
     "age_business_days": 99,
@@ -284,5 +281,5 @@
     "source_as_of": "2026-03-20T18:21:26Z"
   },
   "ticker": "XEML",
-  "updated_at": "2026-08-12T22:55:30Z"
+  "updated_at": "2026-09-28T06:30:00Z"
 }

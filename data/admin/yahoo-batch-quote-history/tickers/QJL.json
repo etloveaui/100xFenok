@@ -98,7 +98,7 @@
   "current": {
     "fetched_at": "2026-09-28T06:07:18Z",
     "history_as_of": "2026-09-25",
-    "path": "data/yf/finance/QJL.json",
+    "path": "data/admin/yahoo-batch-quote-history/lkg/QJL.json",
     "payload_sha256": "b82523f260d67698d642dd48ade7d3dd212d6c254bd3e9b237122cf431fac76f",
     "quote_as_of": "2026-09-16T19:58:30Z",
     "source_as_of": "2026-09-16T19:58:30Z"
@@ -132,12 +132,12 @@
     "run_id": "31456720047"
   },
   "lkg": {
-    "fetched_at": "2026-08-11T15:10:15Z",
-    "history_as_of": "2026-08-11",
+    "fetched_at": "2026-09-28T06:07:18Z",
+    "history_as_of": "2026-09-25",
     "path": "data/admin/yahoo-batch-quote-history/lkg/QJL.json",
-    "payload_sha256": "a762e1754d3521b200bfcc3b723bf3b69469fea08c402dd973abe2e40114ba5a",
-    "quote_as_of": "2026-08-11T13:46:08Z",
-    "source_as_of": "2026-08-11"
+    "payload_sha256": "b82523f260d67698d642dd48ade7d3dd212d6c254bd3e9b237122cf431fac76f",
+    "quote_as_of": "2026-09-16T19:58:30Z",
+    "source_as_of": "2026-09-16T19:58:30Z"
   },
   "promotion_contract": "provider_observation/v2",
   "provider_observation": {
@@ -156,19 +156,19 @@
   "recovery_event_name": "schedule",
   "recovery_run_attempt": 1,
   "recovery_run_id": "31505333713",
-  "resolution_state": "fresh_primary",
-  "retry": false,
+  "resolution_state": "lkg_primary",
+  "retry": true,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "stale": {
-    "age_business_days": 7,
-    "classified_at": "2026-08-20T14:20:12Z",
-    "classified_run_id": "32379322022",
+    "age_business_days": 8,
+    "classified_at": "2026-09-28T06:30:00Z",
+    "classified_run_id": "36367836615",
     "expected_resolution": "next_natural_yahoo_run",
     "max_business_days": 6,
-    "message": "QJL holds LKG because Yahoo source date 2026-08-11 is 7 business days old, beyond the 6-day bound; it will retry on the next natural Yahoo run.",
+    "message": "QJL holds LKG because Yahoo source date 2026-09-16T19:58:30Z is 8 business days old, beyond the 6-day bound; it will retry on the next natural Yahoo run.",
     "reason": "source_age_exceeds_lane_bound",
-    "source_as_of": "2026-08-11"
+    "source_as_of": "2026-09-16T19:58:30Z"
   },
   "ticker": "QJL",
-  "updated_at": "2026-09-28T06:02:24Z"
+  "updated_at": "2026-09-28T06:30:00Z"
 }

@@ -146,7 +146,7 @@
   "current": {
     "fetched_at": "2026-09-28T06:03:28Z",
     "history_as_of": "2026-09-25",
-    "path": "data/yf/finance/PMMY.json",
+    "path": "data/admin/yahoo-batch-quote-history/lkg/PMMY.json",
     "payload_sha256": "89e9e0e89c510ca973d43a4d3697a5029a87ac4962c3edccccf5fb89cbc46df6",
     "quote_as_of": "2026-08-31T15:45:26Z",
     "source_as_of": "2026-08-31T15:45:26Z"
@@ -186,12 +186,12 @@
     "run_id": "31648785047"
   },
   "lkg": {
-    "fetched_at": "2026-08-10T17:05:23Z",
-    "history_as_of": "2026-08-10",
+    "fetched_at": "2026-09-28T06:03:28Z",
+    "history_as_of": "2026-09-25",
     "path": "data/admin/yahoo-batch-quote-history/lkg/PMMY.json",
-    "payload_sha256": "9f512930b4182cdb28ff0687cf2eefb72afe5e5e8f8b9de19b87cb5653263b41",
-    "quote_as_of": "2026-08-10T13:46:06Z",
-    "source_as_of": "2026-08-10"
+    "payload_sha256": "89e9e0e89c510ca973d43a4d3697a5029a87ac4962c3edccccf5fb89cbc46df6",
+    "quote_as_of": "2026-08-31T15:45:26Z",
+    "source_as_of": "2026-08-31T15:45:26Z"
   },
   "promotion_contract": "provider_observation/v2",
   "provider_observation": {
@@ -210,19 +210,19 @@
   "recovery_event_name": "workflow_dispatch",
   "recovery_run_attempt": 1,
   "recovery_run_id": "36367834787",
-  "resolution_state": "fresh_primary",
-  "retry": false,
+  "resolution_state": "lkg_primary",
+  "retry": true,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "stale": {
-    "age_business_days": 17,
-    "classified_at": "2026-08-09T07:09:35Z",
-    "classified_run_id": "31300442711",
+    "age_business_days": 19,
+    "classified_at": "2026-09-28T06:30:00Z",
+    "classified_run_id": "36367836615",
     "expected_resolution": "next_natural_yahoo_run",
     "max_business_days": 6,
-    "message": "PMMY holds LKG because Yahoo source date 2026-07-15T19:04:45Z is 17 business days old, beyond the 6-day bound; it will retry on the next natural Yahoo run.",
+    "message": "PMMY holds LKG because Yahoo source date 2026-08-31T15:45:26Z is 19 business days old, beyond the 6-day bound; it will retry on the next natural Yahoo run.",
     "reason": "source_age_exceeds_lane_bound",
-    "source_as_of": "2026-07-15T19:04:45Z"
+    "source_as_of": "2026-08-31T15:45:26Z"
   },
   "ticker": "PMMY",
-  "updated_at": "2026-09-28T06:02:24Z"
+  "updated_at": "2026-09-28T06:30:00Z"
 }
