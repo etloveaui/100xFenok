@@ -3514,7 +3514,7 @@ def write_yf_payload(ticker: str, data: dict, mirror_public: bool, fetched_at: s
     return payload
 
 
-def write_yf_etf_detail_payload(ticker: str, payload: dict) -> Path:
+def validate_yf_etf_detail_payload(ticker: str, payload: dict) -> None:
     if payload.get("schema_version") != "yf-etf-detail/v1":
         raise ValueError("Yahoo ETF detail candidate schema mismatch")
     if payload.get("source_provider") != "yahoo_finance" or payload.get("ticker") != ticker:
@@ -3529,6 +3529,13 @@ def write_yf_etf_detail_payload(ticker: str, payload: dict) -> Path:
     )
     if parse_iso_timestamp(claimed) != parse_iso_timestamp(provider_source):
         raise ValueError("Yahoo ETF detail source stamp disagrees with provider evidence")
+    fetched = parse_iso_timestamp(validate_aware_timestamp(payload.get("fetched_at"), "Yahoo ETF fetch stamp"))
+    if parse_iso_timestamp(claimed) > fetched or fetched > parse_iso_timestamp(now_iso()):
+        raise ValueError("Yahoo ETF detail provider or fetch date is in the future")
+
+
+def write_yf_etf_detail_payload(ticker: str, payload: dict) -> Path:
+    validate_yf_etf_detail_payload(ticker, payload)
     path = YF_ETF_DETAIL_OUT_DIR / f"{ticker}.json"
     write_json(path, payload)
     return path
@@ -5944,11 +5951,23 @@ def fetch_yahoo_etf_fallback(
     ticker: str,
     mirror_public: bool,
     collection_origin: str = "natural",
+    *,
+    selected_refresh: bool = False,
 ) -> dict:
     retry_count = 0
     library_latency_ms = 0
     returned_error_recorded = False
+    publication_snapshots = None
+    started_at = now_iso()
     try:
+        if selected_refresh and (
+            os.environ.get("GITHUB_ACTIONS") != "true"
+            or not re.fullmatch(r"[1-9][0-9]*", os.environ.get("GITHUB_RUN_ID", ""))
+            or os.environ.get("GITHUB_RUN_ATTEMPT") != "1"
+            or os.environ.get("GITHUB_EVENT_NAME") not in {"schedule", "workflow_dispatch"}
+            or collection_origin != ("natural" if os.environ.get("GITHUB_EVENT_NAME") == "schedule" else "manual")
+        ):
+            raise RuntimeError("Yahoo ETF selected refresh requires a remote first-attempt run")
         module = load_yf_finance_module()
         data, _latency_ms, error, evidence = module.fetch_with_retry(
             ticker,
@@ -5969,11 +5988,24 @@ def fetch_yahoo_etf_fallback(
             )
             returned_error_recorded = True
             raise RuntimeError(error or "Yahoo fallback returned no data")
+        if selected_refresh and (any((evidence or {}).get(key) is True for key in ("noFetch", "cached", "cache_hit"))
+                                 or data.get("noFetch") is True):
+            raise RuntimeError("Yahoo ETF selected refresh requires fresh provider data")
         fetched_at = now_iso()
         yf_payload = build_yf_payload(ticker, data, fetched_at)
-        raw_payload = write_yf_payload(ticker, data, mirror_public, fetched_at)
         etf_payload = yahoo_etf_payload(ticker, yf_payload)
-        candidate_path = write_yf_etf_detail_payload(ticker, etf_payload)
+        if selected_refresh:
+            etf_payload["role"] = "ETF detail fallback retained while StockAnalysis primary recovery is pending"
+        validate_yf_etf_detail_payload(ticker, etf_payload)
+        acquisition = bind_yahoo_etf_acquisition(yf_payload, etf_payload, started_at, now_iso())
+        if selected_refresh and (acquisition is None or collection_origin != (
+            "natural" if acquisition["event_name"] == "schedule" else "manual"
+        )):
+            raise RuntimeError("Yahoo ETF selected refresh requires a bound remote first-attempt acquisition")
+        if ticker in list_yahoo_etf_fallback_retry_targets():
+            raise RuntimeError("Yahoo ETF pending recovery requires the existing natural recovery lane")
+        publication_snapshots = publish_yahoo_etf_fallback_pair(ticker, yf_payload, etf_payload, mirror_public)
+        candidate_path = YF_ETF_DETAIL_OUT_DIR / f"{ticker}.json"
         record_etf_detail_observation(
             provider="yahoo_finance",
             endpoint_family="yahoo_finance_etf_detail",
@@ -5986,6 +6018,7 @@ def fetch_yahoo_etf_fallback(
             validation_status="valid",
             reason_code="contract_valid",
             collection_origin=collection_origin,
+            acquisition=acquisition,
         )
         ATTEMPT_TRACKER.record_yahoo_success(
             data,
@@ -5994,6 +6027,8 @@ def fetch_yahoo_etf_fallback(
         )
         return etf_payload
     except Exception as exc:
+        if publication_snapshots is not None:
+            restore_yahoo_etf_fallback_pair(publication_snapshots)
         if not returned_error_recorded:
             ATTEMPT_TRACKER.record_yahoo_error(
                 entity=ticker,
@@ -6030,6 +6065,105 @@ def fetch_yahoo_etf_fallback(
                 collection_origin=collection_origin,
             )
         raise
+
+
+def restore_yahoo_etf_fallback_pair(snapshots: dict[Path, bytes | None]) -> None:
+    for path, previous in snapshots.items():
+        if previous is None:
+            path.unlink(missing_ok=True)
+        else:
+            stage = path.with_name(f".{path.name}.restore-{os.getpid()}-{time.monotonic_ns()}.tmp")
+            try:
+                stage.write_bytes(previous)
+                os.replace(stage, path)
+            finally:
+                stage.unlink(missing_ok=True)
+
+
+def publish_yahoo_etf_fallback_pair(ticker: str, provider: dict, candidate: dict, mirror_public: bool) -> dict:
+    """Validate both source floors before staging either provider artifact."""
+    validate_yf_etf_detail_payload(ticker, candidate)
+    if (provider.get("schema_version") != "yf-finance/v2" or provider.get("ticker") != ticker
+            or provider.get("source") != "yahoo_finance" or provider.get("profile") != "etf"
+            or provider.get("source_as_of") != candidate["source_as_of"]
+            or provider.get("fetched_at") != candidate["fetched_at"]
+            or provider.get("data") != candidate.get("raw", {}).get("yf")):
+        raise ValueError("Yahoo ETF raw provider and normalized candidate binding mismatch")
+    targets = {YF_OUT_DIR / f"{ticker}.json": provider, YF_ETF_DETAIL_OUT_DIR / f"{ticker}.json": candidate}
+    if mirror_public:
+        targets[YF_PUBLIC_DIR / f"{ticker}.json"] = provider
+    source = parse_iso_timestamp(candidate["source_as_of"])
+    fetched = parse_iso_timestamp(candidate["fetched_at"])
+    snapshots = {}
+    for path in targets:
+        if path.is_symlink():
+            raise ValueError("Yahoo ETF provider artifact cannot be a symlink")
+        before = path.read_bytes() if path.exists() else None
+        snapshots[path] = before
+        if before is None:
+            continue
+        existing = json.loads(before)
+        if not isinstance(existing, dict) or existing.get("ticker") != ticker:
+            raise ValueError("Yahoo ETF canonical provider identity mismatch")
+        if (existing.get("source") != "yahoo_finance"
+                or existing.get("schema_version") != targets[path]["schema_version"]
+                or (targets[path]["schema_version"] == "yf-finance/v2" and existing.get("profile") != "etf")):
+            raise ValueError("Yahoo ETF canonical provider identity mismatch")
+        floor = parse_iso_timestamp(yahoo_detail_source_timestamp(existing))
+        claimed_floor = parse_iso_timestamp(existing.get("source_as_of"))
+        if claimed_floor != floor:
+            raise ValueError("Yahoo ETF canonical source stamp disagrees with provider evidence")
+        if floor is not None and (source < floor or (
+            source == floor and (prior_fetch := parse_iso_timestamp(existing.get("fetched_at"))) is not None
+            and fetched <= prior_fetch
+        )):
+            raise ValueError("Yahoo ETF candidate would regress the canonical provider clock")
+    stages = {}
+    published = {}
+    try:
+        for path, payload in targets.items():
+            path.parent.mkdir(parents=True, exist_ok=True)
+            stage = path.with_name(f".{path.name}.yahoo-{os.getpid()}-{time.monotonic_ns()}.tmp")
+            stages[path] = stage
+            stage.write_bytes(json_payload_bytes(payload))
+        for path, before in snapshots.items():
+            if (path.read_bytes() if path.exists() else None) != before:
+                raise ValueError("Yahoo ETF canonical changed before publication")
+        for path, stage in stages.items():
+            os.replace(stage, path)
+            published[path] = snapshots[path]
+    except Exception:
+        restore_yahoo_etf_fallback_pair(published)
+        raise
+    finally:
+        for stage in stages.values():
+            stage.unlink(missing_ok=True)
+    return snapshots
+
+
+def bind_yahoo_etf_acquisition(provider: dict, candidate: dict, started_at: str, completed_at: str) -> dict | None:
+    run_id = os.environ.get("GITHUB_RUN_ID", "")
+    event = os.environ.get("GITHUB_EVENT_NAME")
+    if (os.environ.get("GITHUB_ACTIONS") != "true" or not re.fullmatch(r"[1-9][0-9]*", run_id)
+            or os.environ.get("GITHUB_RUN_ATTEMPT") != "1" or event not in {"schedule", "workflow_dispatch"}):
+        return None
+    try:
+        source = parse_iso_timestamp(validate_aware_timestamp(candidate.get("source_as_of"), "Yahoo ETF source stamp"))
+        fetched = parse_iso_timestamp(validate_aware_timestamp(candidate.get("fetched_at"), "Yahoo ETF fetch stamp"))
+        started = parse_iso_timestamp(validate_aware_timestamp(started_at, "Yahoo ETF acquisition start"))
+        completed = parse_iso_timestamp(validate_aware_timestamp(completed_at, "Yahoo ETF acquisition completion"))
+        if (not source <= fetched <= completed <= parse_iso_timestamp(now_iso()) or not started <= fetched
+                or provider.get("source_as_of") != candidate["source_as_of"]
+                or provider.get("fetched_at") != candidate["fetched_at"]
+                or provider.get("data") != candidate.get("raw", {}).get("yf")):
+            return None
+    except (ValueError, TypeError, KeyError, AttributeError):
+        return None
+    return {"run_id": run_id, "run_attempt": 1, "event_name": event, "remote": True, "fresh_fetch": True,
+            "started_at": started_at, "completed_at": completed_at,
+            "source_as_of": candidate["source_as_of"], "fetched_at": candidate["fetched_at"],
+            "payload_sha256": hashlib.sha256(json_payload_bytes(candidate)).hexdigest(),
+            "provider_payload_sha256": hashlib.sha256(json_payload_bytes(provider)).hexdigest()}
 
 
 def yahoo_etf_fallback_key(ticker: str) -> str:
@@ -6163,9 +6297,12 @@ def collect_yahoo_etf_fallback_recovery_candidate(ticker: str) -> dict:
             latency_ms=library_latency_ms,
         )
         raise RuntimeError(error or "Yahoo fallback returned no data")
+    if any((evidence or {}).get(key) is True for key in ("noFetch", "cached", "cache_hit")) or data.get("noFetch") is True:
+        raise RuntimeError("Yahoo ETF recovery requires fresh provider data")
     fetched_at = now_iso()
     provider_payload = build_yf_payload(ticker, data, fetched_at)
     candidate_payload = yahoo_etf_payload(ticker, provider_payload)
+    validate_yf_etf_detail_payload(ticker, candidate_payload)
     if provider_payload.get("source_as_of") is None:
         raise ValueError("Yahoo ETF recovery provider source date is unavailable")
     return {
@@ -6186,8 +6323,17 @@ def run_yahoo_etf_fallback_recovery(
     recovery_run: dict,
 ) -> dict:
     start = time.perf_counter()
+    started_at = now_iso()
     ATTEMPT_TRACKER.record_yahoo_candidate()
     try:
+        if is_natural_schedule_run(recovery_run) and (
+            os.environ.get("GITHUB_ACTIONS") != "true" or os.environ.get("GITHUB_EVENT_NAME") != "schedule"
+            or not re.fullmatch(r"[1-9][0-9]*", os.environ.get("GITHUB_RUN_ID", ""))
+            or os.environ.get("GITHUB_RUN_ID") != str(recovery_run.get("run_id"))
+            or os.environ.get("GITHUB_RUN_ATTEMPT") != "1"
+            or type(recovery_run.get("run_attempt")) is not int or recovery_run["run_attempt"] != 1
+        ):
+            raise RuntimeError("Yahoo ETF natural recovery requires a bound remote first-attempt run")
         collected = collect_yahoo_etf_fallback_recovery_candidate(ticker)
         decision = invoke_yahoo_etf_fallback_adapter(
             "promote",
@@ -6218,6 +6364,19 @@ def run_yahoo_etf_fallback_recovery(
     )
     if decision.get("kind") == "success" and decision.get("updated") is True:
         canonical_path = YF_ETF_DETAIL_OUT_DIR / f"{ticker}.json"
+        canonical_bytes = canonical_path.read_bytes()
+        provider_bytes = (YF_OUT_DIR / f"{ticker}.json").read_bytes()
+        if canonical_bytes != collected["candidate_bytes"] or provider_bytes != collected["provider_bytes"]:
+            raise RuntimeError("Yahoo ETF recovered canonical bytes disagree with the actual acquisition")
+        acquisition = bind_yahoo_etf_acquisition(
+            collected["provider_payload"], collected["candidate_payload"], started_at, now_iso(),
+        )
+        if (acquisition is None or acquisition["event_name"] != "schedule"
+                or acquisition["run_id"] != str(recovery_run.get("run_id"))
+                or type(recovery_run.get("run_attempt")) is not int or recovery_run["run_attempt"] != 1):
+            raise RuntimeError("Yahoo ETF recovered observation requires a bound remote first-attempt acquisition")
+        acquisition["payload_sha256"] = hashlib.sha256(canonical_bytes).hexdigest()
+        acquisition["provider_payload_sha256"] = hashlib.sha256(provider_bytes).hexdigest()
         record_etf_detail_observation(
             provider="yahoo_finance",
             endpoint_family="yahoo_finance_etf_detail",
@@ -6230,6 +6389,7 @@ def run_yahoo_etf_fallback_recovery(
             validation_status="valid",
             reason_code="contract_valid",
             collection_origin="natural",
+            acquisition=acquisition,
         )
         status = "recovered"
         canonical_write = True
@@ -6363,6 +6523,8 @@ def run_one(
     financials_error = None
     acquisition = None
     etf_run = recovery_run
+    fallback_refresh_status = None
+    fallback_refresh_error = None
     try:
         if kind == "etf":
             try:
@@ -6646,6 +6808,16 @@ def run_one(
                         collection_origin=collection_origin,
                     )
                     raise
+                if yf_fallback and payload.get("detail_status") == "stockanalysis_partial":
+                    selected = data_supply_store(provider_truth_root=STORAGE_ROOT).read_active_domain("etf_detail")["current"].get(ticker)
+                    if selected is not None and selected["provider"] == "yahoo_finance":
+                        ATTEMPT_TRACKER.record_yahoo_candidate()
+                        try:
+                            fetch_yahoo_etf_fallback(ticker, mirror_public, collection_origin=collection_origin, selected_refresh=True)
+                            fallback_refresh_status = "ok"
+                        except Exception as exc:
+                            fallback_refresh_status = "failed"
+                            fallback_refresh_error = bounded_diagnostic_detail(f"{type(exc).__name__}: {exc}")
                 if etf_recovery_pending and (
                     etf_run is None or not (
                         is_natural_schedule_run(etf_run)
@@ -6852,6 +7024,8 @@ def run_one(
             "candidate_path": f"data/yf/etf-details/{ticker}.json" if provider == "yahoo_finance" else None,
             "financials_path": financials_rel_path,
             "financials_error": financials_error,
+            "fallback_refresh_status": fallback_refresh_status,
+            "fallback_refresh_error": fallback_refresh_error,
             "latency_ms": round((time.perf_counter() - start) * 1000),
             "stockanalysis_error": stockanalysis_error,
             "provider_availability_status": provider_availability_status,

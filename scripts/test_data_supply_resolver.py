@@ -1,6 +1,7 @@
 import tempfile
 import hashlib
 import json
+import datetime as dt
 import sys
 import unittest
 from pathlib import Path
@@ -13,6 +14,7 @@ from data_supply_resolver import DataSupplyResolver
 from data_supply_state import (
     DataSupplyStateStore,
     SchemaError,
+    build_selection,
     canonical_json_bytes,
     canonical_sha256,
     deterministic_event_id,
@@ -33,6 +35,11 @@ def observation(
     is_primary = provider == "stockanalysis"
     is_stock = domain == "stock_detail"
     payload = {"ticker": entity, "suffix": suffix}
+    if is_primary and not is_stock and status == "valid":
+        payload.update({"schema_version": "stockanalysis/v1", "source": "stockanalysis", "asset_type": "etf",
+                        "source_as_of": source_as_of, "fetched_at": observed_at,
+                        "normalized": {"overview": {"aum": 1}, "holdings": [{"symbol": "AAPL", "weight_pct": 1}]},
+                        "raw": {"quote": {"ts": int(dt.datetime.fromisoformat(source_as_of.replace("Z", "+00:00")).timestamp())}}})
     row = {
         "schema_version": "data-supply-observation/v1",
         "provider": provider,
@@ -194,6 +201,244 @@ class DataSupplyResolverTests(unittest.TestCase):
         row["event_id"] = deterministic_event_id("observation", row)
         active = self.resolve_manual(row, fallback)
         self.assertEqual(active["recovery"]["VYMI"]["consecutive_green"], 0)
+
+    def bound_yahoo_etf(self, *, run_id="911", source="2026-07-15T20:00:00Z"):
+        stamp = "2026-07-15T23:03:00Z"
+        epoch = int(dt.datetime.fromisoformat(source.replace("Z", "+00:00")).timestamp())
+        payload = {"schema_version": "yf-etf-detail/v1", "source": "yahoo_finance",
+                   "source_provider": "yahoo_finance", "detail_status": "yf_fallback",
+                   "asset_type": "etf", "ticker": "VYMI", "source_as_of": source,
+                   "fetched_at": stamp, "normalized": {"holdings": []},
+                   "raw": {"yf": {"info": {"symbol": "VYMI", "quoteType": "ETF", "regularMarketTime": epoch}}}}
+        raw = (json.dumps(payload, ensure_ascii=False, indent=2) + "\n").encode()
+        row, _ = observation(provider="yahoo_finance", suffix="bound-refresh", source_as_of=source,
+                             observed_at=stamp, origin="rebuild")
+        provider = {"schema_version": "yf-finance/v2", "ticker": "VYMI", "profile": "etf", "source": "yahoo_finance",
+                    "source_as_of": source, "fetched_at": stamp, "data": payload["raw"]["yf"]}
+        provider_raw = (json.dumps(provider, ensure_ascii=False, indent=2) + "\n").encode()
+        row.update({"provider_path": "data/yf/etf-details/VYMI.json", "payload_sha256": hashlib.sha256(raw).hexdigest(),
+                    "collection_origin": "manual", "etf_acquisition": {
+                        "run_id": run_id, "run_attempt": 1, "event_name": "workflow_dispatch",
+                        "remote": True, "fresh_fetch": True, "source_as_of": source, "fetched_at": stamp,
+                        "started_at": stamp, "completed_at": stamp, "payload_sha256": hashlib.sha256(raw).hexdigest(),
+                        "provider_payload_sha256": hashlib.sha256(provider_raw).hexdigest()}})
+        row["event_id"] = deterministic_event_id("observation", row)
+        canonical = self.store.provider_truth_root / row["provider_path"]
+        canonical.parent.mkdir(parents=True, exist_ok=True)
+        canonical.write_bytes(raw)
+        provider_path = self.store.provider_truth_root / "data/yf/finance/VYMI.json"
+        provider_path.parent.mkdir(parents=True, exist_ok=True)
+        provider_path.write_bytes(provider_raw)
+        self.store.store_provider_object(observation=row, payload=raw)
+        self.store.record_observation(row)
+        return row
+
+    def test_partial_primary_refreshes_selected_yahoo_without_primary_recovery_credit(self):
+        self.seed_manual_fallback()
+        primary = self.manual_etf("901", 1, payload_changes={"detail_status": "stockanalysis_partial"})
+        fallback = self.bound_yahoo_etf()
+        active = self.resolve_manual(primary, fallback)
+        self.assertEqual(active["current"]["VYMI"]["provider"], "yahoo_finance")
+        self.assertEqual(active["current"]["VYMI"]["source_as_of"], "2026-07-15T20:00:00Z")
+        self.assertEqual(active["current"]["VYMI"]["payload_sha256"], fallback["payload_sha256"])
+        self.assertEqual(active["recovery"]["VYMI"]["consecutive_green"], 0)
+        self.assertEqual(active["current"]["VYMI"]["reason_code"], "primary_recovery_pending_fallback_valid")
+
+    def test_selected_fallback_refresh_preserves_primary_count_and_replay_barrier(self):
+        prior_fallback = self.seed_manual_fallback()
+        self.resolve_manual(self.manual_etf("901", 1), prior_fallback)
+        partial = self.manual_etf("902", 2, payload_changes={"detail_status": "stockanalysis_partial"})
+        fallback = self.bound_yahoo_etf()
+        active = self.resolve_manual(partial, fallback)
+        recovery = active["recovery"]["VYMI"]
+        self.assertEqual(recovery["consecutive_green"], 1)
+        self.assertEqual(recovery["manual_run_ids"], ["901"])
+        replay = self.resolve_manual(partial, fallback)
+        self.assertEqual(replay["transaction_id"], active["transaction_id"])
+
+    def test_selected_fallback_refresh_rejects_unbound_or_foreign_canonical_bytes(self):
+        for fault in ("unbound", "foreign"):
+            with self.subTest(fault=fault):
+                self.seed_manual_fallback()
+                partial = self.manual_etf("901", 1, payload_changes={"detail_status": "stockanalysis_partial"})
+                fallback = self.bound_yahoo_etf()
+                if fault == "unbound":
+                    fallback.pop("etf_acquisition")
+                    fallback["event_id"] = deterministic_event_id("observation", fallback)
+                else:
+                    (self.store.provider_truth_root / fallback["provider_path"]).write_text('{"ticker":"FOREIGN"}')
+                active = self.resolve_manual(partial, fallback)
+                self.assertEqual(active["current"]["VYMI"]["source_as_of"], "2026-07-14T00:00:00Z")
+                self.assertEqual(active["recovery"]["VYMI"]["consecutive_green"], 0)
+
+    def nonfresh_partial_etf(self, kind):
+        if kind == "stale":
+            return self.manual_etf("902", 2, payload_changes={"detail_status": "stockanalysis_partial",
+                "source_as_of": "2026-07-01T00:00:00Z", "raw": {"quote": {"td": "2026-07-01"}}})
+        payload = {"schema_version": "stockanalysis/v1", "source": "stockanalysis", "asset_type": "etf",
+                   "ticker": "VYMI", "detail_status": "stockanalysis_partial", "source_as_of": None,
+                   "source_as_of_reason": "provider publishes no dated detail", "fetched_at": "2026-07-15T23:02:00Z",
+                   "normalized": {"overview": {"aum": 1}, "holdings": []}, "raw": {}}
+        raw = (json.dumps(payload, ensure_ascii=False, indent=2) + "\n").encode()
+        row, _ = observation(provider="stockanalysis", suffix="dateless-partial", source_as_of=None,
+                             observed_at=payload["fetched_at"], status="invalid", origin="rebuild")
+        row.update({"provider_path": "data/stockanalysis/etfs/VYMI.json", "collection_origin": "manual",
+                    "payload_sha256": hashlib.sha256(raw).hexdigest(), "reason_code": "partial_source_date_unavailable"})
+        row["event_id"] = deterministic_event_id("observation", row)
+        (self.store.provider_truth_root / row["provider_path"]).write_bytes(raw)
+        self.store.record_observation(row)
+        return row
+
+    def test_stale_or_dateless_partial_refresh_requires_proof_and_preserves_recovery(self):
+        for kind in ("stale", "dateless"):
+            with self.subTest(kind=kind):
+                self.store = DataSupplyStateStore(self.root / kind)
+                self.resolver = DataSupplyResolver(self.store)
+                fallback = self.seed_manual_fallback()
+                green = self.manual_etf("901", 1)
+                self.resolve_manual(green, fallback)
+                before = self.store.read_active_domain("etf_detail")["recovery"]["VYMI"]
+                primary = self.nonfresh_partial_etf(kind)
+                fallback = self.bound_yahoo_etf()
+                active = self.resolve_manual(primary, fallback)
+                self.assertEqual(active["current"]["VYMI"]["source_as_of"], fallback["source_as_of"])
+                recovery = active["recovery"]["VYMI"]
+                for field in ("consecutive_green", "last_primary_event_id", "manual_run_ids", "manual_green_count", "last_primary_source_as_of"):
+                    self.assertEqual(recovery[field], before[field])
+                self.assertEqual(self.resolve_manual(primary, fallback)["transaction_id"], active["transaction_id"])
+                # A previously consumed primary run still cannot contribute after the refresh.
+                replay = self.manual_etf("901", 4)
+                self.assertEqual(self.resolve_manual(replay, fallback)["recovery"]["VYMI"]["consecutive_green"], 1)
+
+    def test_stale_or_dateless_partial_rejects_local_rerun_unbound_and_foreign_refresh(self):
+        for kind in ("stale", "dateless"):
+            for fault in ("local", "attempt2", "unbound", "foreign"):
+                with self.subTest(kind=kind, fault=fault):
+                    self.store = DataSupplyStateStore(self.root / f"{kind}-{fault}")
+                    self.resolver = DataSupplyResolver(self.store)
+                    prior = self.seed_manual_fallback()
+                    self.resolve_manual(self.manual_etf("901", 1), prior)
+                    primary = self.nonfresh_partial_etf(kind)
+                    fallback = self.bound_yahoo_etf()
+                    if fault == "unbound":
+                        fallback.pop("etf_acquisition")
+                    elif fault == "local":
+                        fallback["etf_acquisition"]["remote"] = False
+                    elif fault == "attempt2":
+                        fallback["etf_acquisition"]["run_attempt"] = 2
+                    else:
+                        (self.store.provider_truth_root / fallback["provider_path"]).write_text('{"ticker":"FOREIGN"}')
+                    fallback["event_id"] = deterministic_event_id("observation", fallback)
+                    active = self.resolve_manual(primary, fallback)
+                    self.assertEqual(active["current"]["VYMI"]["payload_sha256"], prior["payload_sha256"])
+                    self.assertEqual(active["recovery"]["VYMI"]["consecutive_green"], 1)
+                    self.assertEqual(active["recovery"]["VYMI"]["manual_green_count"], 1)
+
+    def test_bound_refresh_with_actual_primary_failure_resets_count_but_preserves_replay_ids(self):
+        prior = self.seed_manual_fallback()
+        self.resolve_manual(self.manual_etf("901", 1), prior)
+        failed = self.publish(provider="stockanalysis", suffix="failed-refresh", status="invalid",
+                              source_as_of=None, observed_at="2026-07-15T23:02:00Z")
+        fallback = self.bound_yahoo_etf()
+        active = self.resolve_manual(failed, fallback)
+        self.assertEqual(active["current"]["VYMI"]["source_as_of"], fallback["source_as_of"])
+        self.assertEqual(active["recovery"]["VYMI"]["consecutive_green"], 0)
+        self.assertEqual(active["recovery"]["VYMI"]["manual_run_ids"], ["901"])
+
+    def test_three_distinct_natural_partial_acquisitions_never_recover_primary(self):
+        fallback = self.seed_manual_fallback()
+        for count in (1, 2, 3):
+            row = self.manual_etf(str(930 + count), count, payload_changes={"detail_status": "stockanalysis_partial"},
+                                  proof_changes={"event_name": "schedule"})
+            row["observation_origin"] = "natural"
+            row.pop("collection_origin")
+            row["event_id"] = deterministic_event_id("observation", row)
+            active = self.resolve_manual(row, fallback)
+            self.assertEqual(active["current"]["VYMI"]["provider"], "yahoo_finance")
+            self.assertEqual(active["recovery"]["VYMI"]["consecutive_green"], 0)
+
+    def test_three_distinct_bound_natural_complete_acquisitions_recover_primary(self):
+        fallback = self.seed_manual_fallback()
+        for count in (1, 2, 3):
+            row = self.manual_etf(str(940 + count), count, proof_changes={"event_name": "schedule"})
+            row["observation_origin"] = "natural"
+            row.pop("collection_origin")
+            row["event_id"] = deterministic_event_id("observation", row)
+            active = self.resolve_manual(row, fallback)
+            self.assertEqual(active["recovery"]["VYMI"]["consecutive_green"], count)
+            self.assertEqual(active["current"]["VYMI"]["provider"], "stockanalysis" if count == 3 else "yahoo_finance")
+
+    def test_migrated_initial_fallback_refresh_is_consumed_before_local_or_rerun_refresh(self):
+        for fault in ("local", "attempt2"):
+            with self.subTest(fault=fault):
+                self.store = DataSupplyStateStore(self.root / f"migration-{fault}")
+                self.resolver = DataSupplyResolver(self.store)
+                row, raw = observation(provider="yahoo_finance", suffix="migration", source_as_of="2026-07-01T00:00:00Z",
+                                       observed_at="2026-07-01T00:00:00Z")
+                self.store.store_provider_object(observation=row, payload=raw)
+                self.store.record_observation(row)
+                lkg = self.store.store_provider_lkg(provider="yahoo_finance", domain="etf_detail", entity="VYMI",
+                    payload=raw, meaningful_transition=True, expected_latest_sha256=None)
+                selected = build_selection(row, selected_at=row["observed_at"], resolution_state="lkg_fallback",
+                    reason_code="legacy_migration_fallback_lkg", fallback_depth=2,
+                    payload_ref_kind="provider_lkg", payload_ref_path=lkg["path"])
+                active = self.store.read_active_domain("etf_detail")
+                tx = self.store.prepare_transition(domain="etf_detail", entity="VYMI", current={"VYMI": selected}, lkg={},
+                    recovery={"VYMI": {"consecutive_green": 0, "last_transition": "migration_lkg_fallback"}},
+                    candidate_observations=[row], expected_active_transaction_id=active["transaction_id"],
+                    transition="migration_lkg_fallback", reason_code="legacy_migration_fallback_lkg",
+                    recovery_green_count=0, decided_at=row["observed_at"])
+                self.store.commit_prepared("etf_detail", tx)
+                first = self.publish(provider="yahoo_finance", suffix="migration-first", source_as_of="2026-07-14T00:00:00Z",
+                                     observed_at="2026-07-15T22:00:00Z")
+                failed = self.publish(provider="stockanalysis", suffix="migration-failed", status="invalid", source_as_of=None,
+                                      observed_at="2026-07-15T22:00:00Z")
+                active = self.resolve_manual(failed, first)
+                self.assertEqual(active["current"]["VYMI"]["resolution_state"], "fresh_fallback")
+                self.assertEqual(active["current"]["VYMI"]["payload_sha256"], first["payload_sha256"])
+                self.assertEqual(active["recovery"]["VYMI"]["consecutive_green"], 0)
+                self.assertNotEqual(active["current"]["VYMI"]["reason_code"], "legacy_migration_fallback_lkg")
+                self.resolve_manual(self.manual_etf("901", 1), first)
+                primary = self.nonfresh_partial_etf("dateless")
+                fallback = self.bound_yahoo_etf()
+                fallback["etf_acquisition"]["remote" if fault == "local" else "run_attempt"] = False if fault == "local" else 2
+                fallback["event_id"] = deterministic_event_id("observation", fallback)
+                active = self.resolve_manual(primary, fallback)
+                self.assertEqual(active["current"]["VYMI"]["payload_sha256"], first["payload_sha256"])
+                self.assertEqual(active["recovery"]["VYMI"]["consecutive_green"], 1)
+                self.assertEqual(active["recovery"]["VYMI"]["manual_run_ids"], ["901"])
+
+    def test_migrated_lkg_primary_advance_requires_complete_payload(self):
+        for partial in (True, False):
+            with self.subTest(partial=partial):
+                self.store = DataSupplyStateStore(self.root / f"migration-primary-{partial}")
+                self.resolver = DataSupplyResolver(self.store)
+                row, raw = observation(provider="yahoo_finance", suffix="migration-primary", source_as_of="2026-07-01T00:00:00Z",
+                                       observed_at="2026-07-01T00:00:00Z")
+                self.store.store_provider_object(observation=row, payload=raw)
+                self.store.record_observation(row)
+                lkg = self.store.store_provider_lkg(provider="yahoo_finance", domain="etf_detail", entity="VYMI",
+                    payload=raw, meaningful_transition=True, expected_latest_sha256=None)
+                selected = build_selection(row, selected_at=row["observed_at"], resolution_state="lkg_fallback",
+                    reason_code="legacy_migration_fallback_lkg", fallback_depth=2,
+                    payload_ref_kind="provider_lkg", payload_ref_path=lkg["path"])
+                active = self.store.read_active_domain("etf_detail")
+                tx = self.store.prepare_transition(domain="etf_detail", entity="VYMI", current={"VYMI": selected}, lkg={},
+                    recovery={"VYMI": {"consecutive_green": 0, "last_transition": "migration_lkg_fallback"}},
+                    candidate_observations=[row], expected_active_transaction_id=active["transaction_id"],
+                    transition="migration_lkg_fallback", reason_code="legacy_migration_fallback_lkg",
+                    recovery_green_count=0, decided_at=row["observed_at"])
+                self.store.commit_prepared("etf_detail", tx)
+                primary = self.manual_etf("950", 1, payload_changes={"detail_status": "stockanalysis_partial"} if partial else {},
+                                          proof_changes={"event_name": "schedule"})
+                primary["observation_origin"] = "natural"
+                primary.pop("collection_origin")
+                primary["event_id"] = deterministic_event_id("observation", primary)
+                active = self.resolver.resolve_etf_detail(entity="VYMI", observations=[primary], decided_at="2026-07-15T23:59:00Z")
+                self.assertEqual(active["current"]["VYMI"]["provider"], "yahoo_finance" if partial else "stockanalysis")
+                self.assertEqual(active["recovery"]["VYMI"]["consecutive_green"], 0)
+                self.assertEqual(active["current"]["VYMI"]["reason_code"],
+                                 "legacy_migration_fallback_lkg" if partial else "primary_valid")
 
     def test_primary_has_domain_atomic_authority_over_fallback(self):
         primary = self.publish(

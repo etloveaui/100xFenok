@@ -169,6 +169,145 @@ class StockanalysisFetcherFixtureTest(unittest.TestCase):
                     self.assertEqual(result["status"], "error")
                     self.assertEqual(canonical.read_bytes(), before)
 
+    def partial_primary_selected_yahoo_case(self, *, yahoo_source="2026-09-25T20:00:00Z",
+                                           returned_error=False, pending=False, floor=None,
+                                           foreign=False, fail_detail_write=False, enabled=True,
+                                           primary_kind="fresh", remote=True, run_attempt=1, unbound=False,
+                                           event_name="workflow_dispatch", cached=False):
+        from data_supply_resolver import DataSupplyResolver
+        from resolve_etf_detail_candidates import resolve_entities
+        stamp = "2026-09-28T10:00:00Z"
+        old_epoch = int(datetime(2026, 7, 8, 20, tzinfo=timezone.utc).timestamp())
+        source_epoch = int(datetime.fromisoformat(yahoo_source.replace("Z", "+00:00")).timestamp())
+        data = {"info": {"symbol": "SLON", "quoteType": "ETF", "currentPrice": 25,
+                         "regularMarketTime": source_epoch}, "history_1y": []}
+        primary = {"schema_version": "stockanalysis/v1", "source": "stockanalysis", "asset_type": "etf",
+                   "ticker": "SLON", "source_as_of": "2026-09-25T20:00:00Z", "fetched_at": stamp,
+                   "detail_status": "stockanalysis_partial",
+                   "partial_reason_codes": ["holdings_surface_fallback_overview", "holdings_countries_unavailable"],
+                   "normalized": {"overview": {"aum": 1}, "holdings": [{"symbol": "MSFT", "weight_pct": 1}]},
+                   "raw": {"quote": {"td": "2026-09-25", "ts": int(datetime(2026, 9, 25, 20, tzinfo=timezone.utc).timestamp())}}}
+        if primary_kind == "stale":
+            primary["source_as_of"] = "2026-07-01T00:00:00Z"
+            primary["raw"] = {"quote": {"td": "2026-07-01"}}
+        elif primary_kind == "dateless":
+            primary["source_as_of"] = None
+            primary["source_as_of_reason"] = "provider publishes no dated detail"
+            primary["raw"] = {}
+
+        class YahooModule:
+            @staticmethod
+            def fetch_with_retry(*_args, **_kwargs):
+                return (None if returned_error else data, 1, "provider unavailable" if returned_error else None,
+                        {"attempts_used": 1, "latency_ms": 1, "cached": cached})
+
+        original_outputs = self.fetcher.current_candidate_outputs()
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            self.fetcher.install_candidate_outputs(self.fetcher.CandidateOutputs.from_root(root))
+            try:
+                old_provider = self.fetcher.build_yf_payload("SLON", {"info": {"symbol": "SLON", "quoteType": "ETF",
+                    "regularMarketTime": old_epoch, "currentPrice": 24}, "history_1y": []}, "2026-07-09T00:00:00Z")
+                old_detail = self.fetcher.yahoo_etf_payload("SLON", old_provider)
+                raw_path = self.fetcher.YF_OUT_DIR / "SLON.json"
+                detail_path = self.fetcher.YF_ETF_DETAIL_OUT_DIR / "SLON.json"
+                self.fetcher.write_json(raw_path, old_provider)
+                self.fetcher.write_json(detail_path, old_detail)
+                row = self.fetcher.record_etf_detail_observation(provider="yahoo_finance",
+                    endpoint_family="yahoo_finance_etf_detail", ticker="SLON", provider_path="data/yf/etf-details/SLON.json",
+                    payload_path=detail_path, provider_schema="yf-etf-detail/v1", source_as_of=old_detail["source_as_of"],
+                    observed_at=old_provider["fetched_at"], validation_status="valid", reason_code="contract_valid", collection_origin="manual")
+                store = self.fetcher.data_supply_store(provider_truth_root=root)
+                DataSupplyResolver(store).resolve(domain="etf_detail", entity="SLON", observations=[row],
+                                                  decided_at="2026-07-09T00:01:00Z")
+                if floor is not None:
+                    newer = {"info": {"symbol": "SLON", "quoteType": "ETF", "currentPrice": 26,
+                             "regularMarketTime": int(datetime.fromisoformat(floor.replace("Z", "+00:00")).timestamp())}}
+                    self.fetcher.write_json(raw_path, self.fetcher.build_yf_payload("SLON", newer, stamp))
+                if foreign:
+                    self.fetcher.write_json(detail_path, {**old_detail, "ticker": "FOREIGN"})
+                before = (raw_path.read_bytes(), detail_path.read_bytes())
+                original_replace = os.replace
+
+                def replace(source, target):
+                    if fail_detail_write and Path(target) == detail_path:
+                        raise OSError("injected detail publication failure")
+                    return original_replace(source, target)
+
+                with patch.dict(os.environ, {"GITHUB_ACTIONS": "true" if remote else "false",
+                                           "GITHUB_RUN_ID": "" if unbound else "901", "GITHUB_RUN_ATTEMPT": str(run_attempt),
+                                           "GITHUB_EVENT_NAME": event_name}), \
+                     patch.object(self.fetcher, "now_iso", return_value=stamp), \
+                     patch.object(self.fetcher, "fetch_etf", return_value=primary), \
+                     patch.object(self.fetcher, "load_yf_finance_module", return_value=YahooModule), \
+                     patch.object(self.fetcher, "list_yahoo_etf_fallback_retry_targets", return_value=["SLON"] if pending else []), \
+                     patch.object(self.fetcher.os, "replace", side_effect=replace):
+                    result = self.fetcher.run_one("etf", "SLON", 1, False, yf_fallback=enabled,
+                        collection_origin="natural" if event_name == "schedule" else "manual",
+                        recovery_run={"run_id": "901", "run_attempt": run_attempt, "event_name": event_name, "observed_at": stamp})
+                resolved = resolve_entities(store, entities=["SLON"], decided_at="2026-09-28T10:01:00Z")
+                active = store.read_active_domain("etf_detail")
+                history = [json.loads(line) for path in (store.root / "history/observations").glob("*.jsonl")
+                           for line in path.read_text().splitlines()]
+                return {"result": result, "resolved": resolved, "active": active, "history": history,
+                        "before": before, "after": (raw_path.read_bytes(), detail_path.read_bytes()),
+                        "primary": json.loads((self.fetcher.OUT_DIR / "etfs/SLON.json").read_text())}
+            finally:
+                self.fetcher.install_candidate_outputs(original_outputs)
+
+    def test_partial_primary_real_fetch_path_refreshes_selected_yahoo_with_bound_manual_observation(self):
+        case = self.partial_primary_selected_yahoo_case()
+        self.assertEqual(case["result"]["fallback_refresh_status"], "ok")
+        self.assertEqual(case["resolved"]["results"][0]["provider"], "yahoo_finance")
+        self.assertEqual(case["active"]["current"]["SLON"]["source_as_of"], "2026-09-25T20:00:00Z")
+        self.assertEqual(case["active"]["recovery"]["SLON"]["consecutive_green"], 0)
+        self.assertEqual(case["primary"]["detail_status"], "stockanalysis_partial")
+        self.assertEqual(case["primary"]["partial_reason_codes"], ["holdings_surface_fallback_overview", "holdings_countries_unavailable"])
+        yahoo = [row for row in case["history"] if row["provider"] == "yahoo_finance"][-1]
+        self.assertEqual(yahoo["observation_origin"], "rebuild")
+        self.assertEqual(yahoo["collection_origin"], "manual")
+        self.assertEqual(yahoo["etf_acquisition"]["run_id"], "901")
+        self.assertEqual(yahoo["payload_sha256"], hashlib.sha256(case["after"][1]).hexdigest())
+
+    def test_partial_primary_selected_yahoo_keeps_original_bytes_when_refresh_is_unsafe_or_fails(self):
+        cases = ({"yahoo_source": "2026-09-28T20:00:00Z"}, {"yahoo_source": "2026-07-07T20:00:00Z"},
+                 {"floor": "2026-09-26T20:00:00Z"}, {"foreign": True}, {"returned_error": True},
+                 {"pending": True}, {"fail_detail_write": True}, {"enabled": False})
+        for kwargs in cases:
+            with self.subTest(kwargs=kwargs):
+                case = self.partial_primary_selected_yahoo_case(**kwargs)
+                self.assertEqual(case["after"], case["before"])
+                self.assertEqual(case["active"]["current"]["SLON"]["source_as_of"], "2026-07-08T20:00:00Z")
+                self.assertEqual(case["active"]["recovery"]["SLON"]["consecutive_green"], 0)
+                self.assertEqual(case["primary"]["detail_status"], "stockanalysis_partial")
+
+    def test_selected_yahoo_refresh_rejects_local_rerun_or_unbound_before_publication_and_observation(self):
+        for kwargs in ({"remote": False}, {"run_attempt": 2}, {"unbound": True}, {"cached": True}):
+            with self.subTest(kwargs=kwargs):
+                case = self.partial_primary_selected_yahoo_case(**kwargs)
+                self.assertEqual(case["result"]["fallback_refresh_status"], "failed")
+                self.assertEqual(case["after"], case["before"])
+                yahoo = [row for row in case["history"] if row["provider"] == "yahoo_finance"]
+                self.assertEqual(len(yahoo), 1)
+                self.assertEqual(case["active"]["current"]["SLON"]["source_as_of"], "2026-07-08T20:00:00Z")
+
+    def test_real_fetch_path_refreshes_yahoo_when_partial_primary_is_stale_or_dateless(self):
+        for kind in ("stale", "dateless"):
+            with self.subTest(kind=kind):
+                case = self.partial_primary_selected_yahoo_case(primary_kind=kind)
+                self.assertEqual(case["result"]["fallback_refresh_status"], "ok")
+                self.assertEqual(case["active"]["current"]["SLON"]["provider"], "yahoo_finance")
+                self.assertEqual(case["active"]["current"]["SLON"]["source_as_of"], "2026-09-25T20:00:00Z")
+                self.assertEqual(case["active"]["recovery"]["SLON"]["consecutive_green"], 0)
+                self.assertEqual(case["primary"]["detail_status"], "stockanalysis_partial")
+
+    def test_scheduled_partial_primary_refreshes_yahoo_without_natural_recovery_credit(self):
+        case = self.partial_primary_selected_yahoo_case(event_name="schedule")
+        self.assertEqual(case["result"]["fallback_refresh_status"], "ok")
+        self.assertEqual(case["active"]["current"]["SLON"]["provider"], "yahoo_finance")
+        self.assertEqual(case["active"]["current"]["SLON"]["source_as_of"], "2026-09-25T20:00:00Z")
+        self.assertEqual(case["active"]["recovery"]["SLON"]["consecutive_green"], 0)
+
     def test_public_etf_detail_mirror_is_retired(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
             root = Path(tmp)
@@ -1799,114 +1938,112 @@ module.main()
             self.assertFalse((root / "data/admin/stockanalysis-recovery").exists())
             self.assertFalse((root / "data/yf/finance/TQQQ.json").exists())
 
-    def test_yahoo_etf_fallback_natural_retry_collects_before_adapter_and_bypasses_primary(self) -> None:
+    def natural_yahoo_recovery_case(self, outcome="success"):
+        from data_supply_resolver import DataSupplyResolver
+        from resolve_etf_detail_candidates import resolve_entities
         original_outputs = self.fetcher.current_candidate_outputs()
-        original_loader = self.fetcher.load_yf_finance_module
         original_invoke = self.fetcher.invoke_yahoo_etf_fallback_adapter
-        original_fetch_etf = self.fetcher.fetch_etf
+        stamp = "2026-07-28T16:00:00Z"
         with tempfile.TemporaryDirectory() as tmp:
             root = Path(tmp)
-            self.fetcher.install_candidate_outputs(
-                self.fetcher.CandidateOutputs.from_root(root)
-            )
-            old_epoch = int(datetime(2026, 7, 25, 15, 15, 5, tzinfo=timezone.utc).timestamp())
-            old_provider = self.fetcher.build_yf_payload(
-                "TQQQ",
-                {
-                    "info": {
-                        "symbol": "TQQQ",
-                        "quoteType": "ETF",
-                        "currentPrice": 100.0,
-                        "previousClose": 99.0,
-                        "regularMarketTime": old_epoch,
-                    },
-                    "history_1y": [],
-                },
-                "2026-07-25T15:16:00Z",
-            )
-            old_canonical = self.fetcher.yahoo_etf_payload("TQQQ", old_provider)
-            canonical_path = self.fetcher.YF_ETF_DETAIL_OUT_DIR / "TQQQ.json"
-            self.fetcher.write_json(canonical_path, old_canonical)
-            before = canonical_path.read_bytes()
-            self.fetcher.run_yahoo_etf_fallback_controlled_failure(
-                "TQQQ",
-                {
-                    "run_id": "yahoo-chaos",
-                    "run_attempt": 1,
-                    "event_name": "workflow_dispatch",
-                    "observed_at": "2026-07-28T00:00:00Z",
-                },
-            )
-            self.assertEqual(
-                self.fetcher.list_yahoo_etf_fallback_retry_targets(),
-                ["TQQQ"],
-            )
-
-            new_epoch = int(datetime(2026, 7, 26, 15, 15, 5, tzinfo=timezone.utc).timestamp())
-
-            class FakeYahooModule:
-                @staticmethod
-                def fetch_with_retry(*_args, **_kwargs):
-                    return (
-                        {
-                            "info": {
-                                "symbol": "TQQQ",
-                                "quoteType": "ETF",
-                                "currentPrice": 101.0,
-                                "previousClose": 100.0,
-                                "regularMarketTime": new_epoch,
-                            },
-                            "history_1y": [],
-                        },
-                        7,
-                        None,
-                        {"attempts_used": 1, "latency_ms": 7, "failures": []},
-                    )
-
-            def unexpected_primary(*_args, **_kwargs):
-                self.fail("Yahoo recovery must bypass the StockAnalysis primary")
-
-            observed_prewrite = []
-
-            def inspect_then_invoke(action: str, **kwargs):
-                if action == "promote":
-                    observed_prewrite.append(
-                        (
-                            canonical_path.read_bytes(),
-                            (root / "data/yf/finance/TQQQ.json").exists(),
-                        )
-                    )
-                return original_invoke(action, **kwargs)
-
-            self.fetcher.load_yf_finance_module = lambda: FakeYahooModule
-            self.fetcher.fetch_etf = unexpected_primary
-            self.fetcher.invoke_yahoo_etf_fallback_adapter = inspect_then_invoke
+            self.fetcher.install_candidate_outputs(self.fetcher.CandidateOutputs.from_root(root))
             try:
-                result = self.fetcher.run_yahoo_etf_fallback_recovery(
-                    "TQQQ",
-                    False,
-                    {
-                        "run_id": "yahoo-recovery",
-                        "run_attempt": 1,
-                        "event_name": "schedule",
-                        "observed_at": "2026-07-28T16:00:00Z",
-                    },
-                )
+                old_epoch = int(datetime(2026, 7, 25, 15, 15, 5, tzinfo=timezone.utc).timestamp())
+                old_provider = self.fetcher.build_yf_payload("TQQQ", {"info": {"symbol": "TQQQ", "quoteType": "ETF",
+                    "currentPrice": 100.0, "previousClose": 99.0, "regularMarketTime": old_epoch}, "history_1y": []},
+                    "2026-07-25T15:16:00Z")
+                old_canonical = self.fetcher.yahoo_etf_payload("TQQQ", old_provider)
+                canonical_path = self.fetcher.YF_ETF_DETAIL_OUT_DIR / "TQQQ.json"
+                provider_path = self.fetcher.YF_OUT_DIR / "TQQQ.json"
+                self.fetcher.write_json(canonical_path, old_canonical)
+                before = canonical_path.read_bytes()
+                old_row = self.fetcher.record_etf_detail_observation(provider="yahoo_finance", endpoint_family="yahoo_finance_etf_detail",
+                    ticker="TQQQ", provider_path="data/yf/etf-details/TQQQ.json", payload_path=canonical_path,
+                    provider_schema="yf-etf-detail/v1", source_as_of=old_canonical["source_as_of"],
+                    observed_at=old_provider["fetched_at"], validation_status="valid", reason_code="contract_valid", collection_origin="manual")
+                store = self.fetcher.data_supply_store(provider_truth_root=root)
+                DataSupplyResolver(store).resolve_etf_detail(entity="TQQQ", observations=[old_row], decided_at="2026-07-25T15:17:00Z")
+                self.fetcher.run_yahoo_etf_fallback_controlled_failure("TQQQ", {"run_id": "yahoo-chaos", "run_attempt": 1,
+                    "event_name": "workflow_dispatch", "observed_at": "2026-07-28T00:00:00Z"})
+                self.assertEqual(self.fetcher.list_yahoo_etf_fallback_retry_targets(), ["TQQQ"])
+                new_epoch = old_epoch if outcome == "deferred" else int(datetime(2026, 7, 26, 15, 15, 5, tzinfo=timezone.utc).timestamp())
+
+                class FakeYahooModule:
+                    @staticmethod
+                    def fetch_with_retry(*_args, **_kwargs):
+                        return (None if outcome == "failed" else {"info": {"symbol": "TQQQ", "quoteType": "ETF",
+                            "currentPrice": 101.0, "previousClose": 100.0, "regularMarketTime": new_epoch}, "history_1y": []},
+                            7, "provider unavailable" if outcome == "failed" else None,
+                            {"attempts_used": 1, "latency_ms": 7, "failures": [], "cached": outcome == "cached"})
+
+                observed_prewrite = []
+                def inspect_then_invoke(action, **kwargs):
+                    if action == "promote":
+                        observed_prewrite.append((canonical_path.read_bytes(), provider_path.exists()))
+                    return original_invoke(action, **kwargs)
+
+                run_attempt = 2 if outcome == "rerun" else 1
+                error = None
+                result = None
+                with patch.dict(os.environ, {"GITHUB_ACTIONS": "false" if outcome == "local" else "true", "GITHUB_RUN_ID": "902",
+                    "GITHUB_RUN_ATTEMPT": str(run_attempt), "GITHUB_EVENT_NAME": "schedule"}), \
+                     patch.object(self.fetcher, "now_iso", return_value=stamp), \
+                     patch.object(self.fetcher, "load_yf_finance_module", return_value=FakeYahooModule), \
+                     patch.object(self.fetcher, "fetch_etf", side_effect=AssertionError("Yahoo recovery must bypass primary")), \
+                     patch.object(self.fetcher, "invoke_yahoo_etf_fallback_adapter", side_effect=inspect_then_invoke):
+                    self.fetcher.record_etf_detail_failure_observation(provider="stockanalysis", endpoint_family="stockanalysis_etf_detail",
+                        ticker="TQQQ", provider_path="data/stockanalysis/etfs/TQQQ.json", provider_schema="stockanalysis/v1",
+                        reason_code="transport_failure", failure_detail="provider unavailable", collection_origin="natural")
+                    try:
+                        result = self.fetcher.run_yahoo_etf_fallback_recovery("TQQQ", False, {"run_id": "902", "run_attempt": run_attempt,
+                            "event_name": "schedule", "observed_at": stamp})
+                    except RuntimeError as exc:
+                        error = str(exc)
+                resolve_entities(store, entities=["TQQQ"], decided_at="2026-07-28T16:01:00Z")
+                history = [json.loads(line) for file in (store.root / "history/observations").glob("*.jsonl") for line in file.read_text().splitlines()]
+                state = json.loads((root / "data/admin/yahoo_etf_fallback/index.json").read_text())
+                return {"result": result, "error": error, "before": before, "after": canonical_path.read_bytes(),
+                        "provider_bytes": provider_path.read_bytes() if provider_path.exists() else None,
+                        "history": history, "state": state, "active": store.read_active_domain("etf_detail"),
+                        "observed_prewrite": observed_prewrite}
             finally:
-                self.fetcher.load_yf_finance_module = original_loader
-                self.fetcher.fetch_etf = original_fetch_etf
-                self.fetcher.invoke_yahoo_etf_fallback_adapter = original_invoke
                 self.fetcher.install_candidate_outputs(original_outputs)
 
-            state = json.loads(
-                (root / "data/admin/yahoo_etf_fallback/index.json").read_text(encoding="utf-8")
-            )
-            self.assertEqual(observed_prewrite, [(before, False)])
-            self.assertEqual(result["status"], "recovered")
-            self.assertNotEqual(canonical_path.read_bytes(), before)
-            self.assertTrue((root / "data/yf/finance/TQQQ.json").is_file())
-            self.assertEqual(state["retry_set"], [])
-            self.assertFalse((root / "data/admin/stockanalysis-recovery").exists())
+    def test_yahoo_etf_fallback_natural_retry_collects_before_adapter_and_bypasses_primary(self) -> None:
+        case = self.natural_yahoo_recovery_case()
+        self.assertEqual(case["observed_prewrite"], [(case["before"], False)])
+        self.assertEqual(case["result"]["status"], "recovered")
+        self.assertNotEqual(case["after"], case["before"])
+        self.assertEqual(case["state"]["retry_set"], [])
+        yahoo = [row for row in case["history"] if row["provider"] == "yahoo_finance"][-1]
+        proof = yahoo["etf_acquisition"]
+        self.assertEqual(yahoo["observation_origin"], "natural")
+        self.assertEqual(proof["run_id"], "902")
+        self.assertEqual(proof["event_name"], "schedule")
+        self.assertEqual(proof["run_attempt"], 1)
+        self.assertEqual(proof["payload_sha256"], hashlib.sha256(case["after"]).hexdigest())
+        self.assertEqual(proof["provider_payload_sha256"], hashlib.sha256(case["provider_bytes"]).hexdigest())
+        selected = case["active"]["current"]["TQQQ"]
+        self.assertEqual(selected["source_as_of"], "2026-07-26T15:15:05Z")
+        self.assertEqual(selected["payload_sha256"], proof["payload_sha256"])
+
+    def test_yahoo_etf_fallback_natural_retry_failure_deferral_cache_and_rerun_do_not_refresh(self):
+        for outcome in ("failed", "deferred", "cached", "rerun", "local"):
+            with self.subTest(outcome=outcome):
+                case = self.natural_yahoo_recovery_case(outcome)
+                self.assertEqual(case["after"], case["before"])
+                self.assertIsNone(case["provider_bytes"])
+                self.assertEqual(len(case["state"]["retry_set"]), 1)
+                yahoo = [row for row in case["history"] if row["provider"] == "yahoo_finance"]
+                self.assertEqual(len(yahoo), 1)
+                self.assertNotIn("etf_acquisition", yahoo[0])
+                self.assertEqual(case["active"]["current"]["TQQQ"]["source_as_of"], "2026-07-25T15:15:05Z")
+                if outcome in ("failed", "cached", "local"):
+                    self.assertIsNotNone(case["error"])
+                    self.assertEqual(case["observed_prewrite"], [])
+                else:
+                    self.assertTrue(case["result"]["recovery_deferred"])
+                    self.assertEqual(case["observed_prewrite"], [(case["before"], False)])
 
     def test_etf_detail_controlled_failure_preflight_rejects_schedule(self) -> None:
         completed = subprocess.run(
@@ -5794,7 +5931,7 @@ module.main()
                 },
             )
 
-    def test_invalid_yahoo_fallback_writes_raw_evidence_and_invalid_observation_only(self) -> None:
+    def test_invalid_yahoo_fallback_preserves_provider_files_and_records_invalid_observation(self) -> None:
         original_loader = self.fetcher.load_yf_finance_module
         original_yf_out_dir = self.fetcher.YF_OUT_DIR
         original_yf_detail_out_dir = self.fetcher.YF_ETF_DETAIL_OUT_DIR
@@ -5827,7 +5964,7 @@ module.main()
             self.fetcher.YF_ETF_DETAIL_OUT_DIR = original_yf_detail_out_dir
             self.fetcher.DATA_SUPPLY_STATE_ROOT = original_state_root
 
-        self.assertTrue(raw_exists)
+        self.assertFalse(raw_exists)
         self.assertFalse(candidate_exists)
         self.assertEqual(len(observations), 1)
         self.assertEqual(observations[0]["validation_status"], "invalid")
@@ -5868,7 +6005,7 @@ module.main()
             self.fetcher.YF_ETF_DETAIL_OUT_DIR = original_yf_detail_out_dir
             self.fetcher.DATA_SUPPLY_STATE_ROOT = original_state_root
 
-        self.assertTrue(raw_exists)
+        self.assertFalse(raw_exists)
         self.assertFalse(candidate_exists)
         self.assertEqual(len(observations), 1)
         self.assertEqual(observations[0]["validation_status"], "invalid")
@@ -5906,7 +6043,7 @@ module.main()
                     self.fetcher.fetch_yahoo_etf_fallback("ADIU", mirror_public=False)
                 history_files = list((self.fetcher.DATA_SUPPLY_STATE_ROOT / "history" / "observations").glob("*.jsonl"))
                 observations = [json.loads(line) for line in history_files[0].read_text(encoding="utf-8").splitlines()]
-                raw_payload = json.loads((self.fetcher.YF_OUT_DIR / "ADIU.json").read_text(encoding="utf-8"))
+                raw_exists = (self.fetcher.YF_OUT_DIR / "ADIU.json").exists()
                 candidate_exists = (self.fetcher.YF_ETF_DETAIL_OUT_DIR / "ADIU.json").exists()
         finally:
             self.fetcher.load_yf_finance_module = original_loader
@@ -5914,8 +6051,7 @@ module.main()
             self.fetcher.YF_ETF_DETAIL_OUT_DIR = original_yf_detail_out_dir
             self.fetcher.DATA_SUPPLY_STATE_ROOT = original_state_root
 
-        self.assertIsNone(raw_payload["source_as_of"])
-        self.assertEqual(raw_payload["source_as_of_reason"], "provider payload carries no market observation date")
+        self.assertFalse(raw_exists)
         self.assertFalse(candidate_exists)
         self.assertEqual(len(observations), 1)
         self.assertEqual(observations[0]["reason_code"], "source_date_unavailable")
