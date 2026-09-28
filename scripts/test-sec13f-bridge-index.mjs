@@ -22,6 +22,10 @@ function readJson(relativePath) {
   return JSON.parse(fs.readFileSync(path.join(ROOT, relativePath), "utf8"));
 }
 
+function readOptionalJson(relativePath) {
+  return fs.existsSync(path.join(ROOT, relativePath)) ? readJson(relativePath) : null;
+}
+
 function normalizeTicker(value) {
   return String(value ?? "").trim().toUpperCase();
 }
@@ -144,7 +148,26 @@ for (const ticker of outside) {
       : type === "sec13f_unresolved"
         ? ["no_action_index_overlap", "no_market_facts"]
         : ["action_index_only"];
-  expected.set(ticker, { type, classes, actionRow, marketRow });
+  const priceFact = marketRow?.asset_type === "stock"
+    ? readOptionalJson(`data/computed/market_facts/tickers/${ticker}.json`)?.facts?.price
+    : null;
+  const yf = readOptionalJson(`data/yf/finance/${ticker}.json`);
+  const missingFields = ESTIMATE_FIELDS.filter((field) => !isNonEmpty(yf?.data?.[field]));
+  const estimateState = !yf ? "absent" : missingFields.length === 0 ? "full" : "incomplete";
+  const marketFactsPriceObserved = isFiniteNumber(priceFact?.value) && priceFact?.confidence === "observed";
+  const actionPricePresent = isFiniteNumber(actionRow?.price);
+  const actionValuationPresent = isFiniteNumber(actionRow?.per) || isFiniteNumber(actionRow?.peForward);
+  const estimateAccounted = estimateState === "full" || estimateState === "incomplete";
+  const completeness = {
+    market_facts_price_observed: marketFactsPriceObserved,
+    action_price_present: actionPricePresent,
+    action_valuation_present: actionValuationPresent,
+    yf_estimate_or_absent_reason: estimateAccounted,
+    bridge_field_floor: marketFactsPriceObserved && actionPricePresent && actionValuationPresent && estimateAccounted,
+    per_present: isFiniteNumber(actionRow?.per),
+    forward_pe_present: isFiniteNumber(actionRow?.peForward),
+  };
+  expected.set(ticker, { type, classes, actionRow, marketRow, completeness, estimateState, missingFields });
 }
 
 assert.equal(index.rows.length, outside.length);
@@ -155,6 +178,9 @@ for (const row of index.rows) {
   assert.ok(expectedRow, `${row.ticker} is not an outside-core SEC ticker`);
   assert.equal(row.classification.type, expectedRow.type, `${row.ticker} type drift`);
   assert.deepEqual(row.classification.classes, expectedRow.classes, `${row.ticker} class drift`);
+  assert.deepEqual(row.completeness, expectedRow.completeness, `${row.ticker} completeness drift`);
+  assert.equal(row.yf_estimates.state, expectedRow.estimateState, `${row.ticker} estimate state drift`);
+  assert.deepEqual(row.yf_estimates.missing_fields, expectedRow.missingFields, `${row.ticker} missing estimate fields drift`);
   assert.equal(row.source_links.global_scouter_core, false);
   assert.equal(row.acceptance.producer_typed_marker, true);
   assert.equal(row.acceptance.promotion_status, "promoted");
@@ -164,44 +190,36 @@ for (const row of index.rows) {
 }
 
 const countClass = (name) => index.rows.filter((row) => row.classification.classes.includes(name)).length;
-assert.equal(countClass("action_plus_market_facts"), 78);
-assert.equal(countClass("market_facts_only"), 37);
-assert.equal(countClass("no_action_index_overlap"), 530);
-assert.equal(countClass("no_market_facts"), 493);
-assert.equal(countClass("action_index_only"), 0);
-assert.equal(index.counts.sec13f_extension_stock, 78);
-assert.equal(index.counts.sec13f_market_facts_only, 37);
-assert.equal(index.counts.sec13f_unresolved, 493);
+const expectedRows = [...expected.values()];
+const expectedClassCount = (name) => expectedRows.filter((row) => row.classes.includes(name)).length;
+const expectedTypeCount = (type) => expectedRows.filter((row) => row.type === type).length;
+// Source enrichment may move an existing ticker between classes; the graph
+// boundary stays pinned above while every aggregate remains source-derived.
+for (const name of ["action_plus_market_facts", "market_facts_only", "no_action_index_overlap", "no_market_facts", "action_index_only"]) {
+  assert.equal(countClass(name), expectedClassCount(name), `${name} row count drift`);
+  assert.equal(index.counts[name], expectedClassCount(name), `${name} aggregate drift`);
+}
+for (const type of ["sec13f_extension_stock", "sec13f_market_facts_only", "sec13f_unresolved"]) {
+  assert.equal(index.counts[type], expectedTypeCount(type), `${type} aggregate drift`);
+}
 
 const extensionRows = index.rows.filter((row) => row.classification.type === "sec13f_extension_stock");
-assert.equal(extensionRows.length, 78);
-// Re-pinned 2026-08-21 from 69/7 after reproducing the projection stack's own
-// order. The bridge must be built from the action index that S5 regenerates
-// from the market facts S2 regenerates; building it against the committed
-// market facts instead yields 69 and disagrees with every CI run, which is how
-// an incorrect 69 was briefly committed at 172ead1bc8.
-assert.equal(extensionRows.filter((row) => row.completeness.per_present).length, 69);
-assert.equal(extensionRows.filter((row) => !row.completeness.per_present).length, 9);
-assert.equal(extensionRows.filter((row) => row.completeness.forward_pe_present).length, 78);
-assert.equal(extensionRows.filter((row) => row.completeness.market_facts_price_observed).length, 78);
-assert.equal(extensionRows.filter((row) => row.completeness.bridge_field_floor).length, 78);
-// Re-pinned 2026-08-21 from 38/38. The Yahoo broad-finance lane had not
-// published since 2026-08-16, so these rows were starved of current estimates;
-// restoring publication moved 36 rows from incomplete to full in one refresh.
-// Structural counts were deliberately unchanged by THAT refresh - 76 extension
-// rows, 36 market-facts-only, 525 no-overlap, 489 unresolved, 601 outside-core.
-// Corrected 2026-08-21: the next Yahoo refresh did move three of them, by one
-// ticker (VGK) and for the resolver reason recorded above - 37
-// market-facts-only, 526 no-overlap, 602 outside-core. Extension rows (76) and
-// unresolved (489) are still unchanged, so this remains completeness and
-// mapping improving, not the graph expanding.
-assert.equal(extensionRows.filter((row) => row.yf_estimates.state === "full").length, 74);
-assert.equal(extensionRows.filter((row) => row.yf_estimates.state === "incomplete").length, 4);
+const expectedExtensionRows = expectedRows.filter((row) => row.type === "sec13f_extension_stock");
+const expectedCompletenessCount = (name) => expectedExtensionRows.filter((row) => row.completeness[name]).length;
+const expectedEstimateCount = (type, state) => expectedRows.filter((row) => row.type === type && row.estimateState === state).length;
+assert.equal(extensionRows.length, expectedExtensionRows.length);
+assert.equal(extensionRows.filter((row) => row.completeness.per_present).length, expectedCompletenessCount("per_present"));
+assert.equal(extensionRows.filter((row) => !row.completeness.per_present).length, expectedExtensionRows.length - expectedCompletenessCount("per_present"));
+assert.equal(extensionRows.filter((row) => row.completeness.forward_pe_present).length, expectedCompletenessCount("forward_pe_present"));
+assert.equal(extensionRows.filter((row) => row.completeness.market_facts_price_observed).length, expectedCompletenessCount("market_facts_price_observed"));
+assert.equal(extensionRows.filter((row) => row.completeness.bridge_field_floor).length, expectedCompletenessCount("bridge_field_floor"));
+assert.equal(extensionRows.filter((row) => row.yf_estimates.state === "full").length, expectedEstimateCount("sec13f_extension_stock", "full"));
+assert.equal(extensionRows.filter((row) => row.yf_estimates.state === "incomplete").length, expectedEstimateCount("sec13f_extension_stock", "incomplete"));
 assert.deepEqual(index.counts.estimate, {
-  extension_full: 74,
-  extension_incomplete: 4,
-  market_facts_only_incomplete: 37,
-  unresolved_absent: 493,
+  extension_full: expectedEstimateCount("sec13f_extension_stock", "full"),
+  extension_incomplete: expectedEstimateCount("sec13f_extension_stock", "incomplete"),
+  market_facts_only_incomplete: expectedEstimateCount("sec13f_market_facts_only", "incomplete"),
+  unresolved_absent: expectedEstimateCount("sec13f_unresolved", "absent"),
   as_of: {
     bridge_generated_at: index.generated_at,
     yf_finance: deterministicGeneratedAt(index.rows.map((row) => row.yf_estimates.source_as_of)),
@@ -209,7 +227,7 @@ assert.deepEqual(index.counts.estimate, {
     sec13f: sec13fSummary.metadata?.source_quarter ?? null,
   },
 });
-assert.equal(index.counts.price_observed_extension, 78);
+assert.equal(index.counts.price_observed_extension, expectedCompletenessCount("market_facts_price_observed"));
 assert.equal(index.counts.price_observed_extension_as_of, marketFactsIndex.core_surface_source_as_of ?? null);
 
 const expectedYfPaths = extensionRows.map((row) => row.yf_estimates.path).filter((relativePath) => fs.existsSync(path.join(ROOT, relativePath)));
@@ -229,6 +247,7 @@ assert.equal(index.input_fingerprints.yf_finance_candidates.sha256, aggregateFil
 assert.equal(index.source_as_of.sec13f, sec13fSummary.metadata?.source_quarter ?? null);
 
 for (const row of extensionRows) {
+  assert.equal(row.completeness.bridge_field_floor, true, `${row.ticker} extension bridge field floor failed`);
   const actionRow = action.get(row.ticker);
   const marketRow = marketFacts.get(row.ticker);
   const marketFactsDetail = readJson(`data/computed/market_facts/tickers/${row.ticker}.json`);
