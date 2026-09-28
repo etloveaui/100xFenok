@@ -56,7 +56,12 @@ try {
 
   // A fresh source can be served from LKG while its age still meets policy.
   store.recordFailure({
-    artifacts: [candidate(JSON.stringify(good))],
+    artifacts: [{
+      key: "fred_macro",
+      canonicalPath,
+      validateDocument: valid,
+      sourceAsOf,
+    }],
     run: run("failed-fetch", "2026-09-27T12:00:00Z"),
     reason: "http_error",
   });
