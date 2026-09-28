@@ -52,6 +52,11 @@ const MEMBER_CADENCE = Object.freeze({
   // in data-supply-detection-config.mjs.
   slickcharts: Object.freeze({ weekly: "weekly", monthly: "monthly", history: "monthly", symbols: "weekly" }),
 });
+// Members that close with a market session are aged in that session's trading
+// days, so a Friday close is one day old on Monday rather than three.
+const MEMBER_CALENDAR = Object.freeze({
+  sentiment: Object.freeze({ cnn: "us_trading", vix: "us_trading", move: "us_trading" }),
+});
 
 // Data sets that are not scheduled producers and have no cadence to judge.
 export const HEALTH_SET_EXCLUSIONS = new Set([
@@ -90,12 +95,12 @@ function laneCadence(lane) {
   return FRESHNESS_CLASSES[lane.cadence?.kind] ? lane.cadence.kind : "daily";
 }
 
-function syntheticPolicy(lane, cadence) {
+function syntheticPolicy(lane, cadence, calendar) {
   return {
     cadence,
     releaseLagDays: 0,
     supplier: "automated",
-    calendar: US_TRADING_LANES.has(lane.id) ? "us_trading" : "calendar",
+    calendar: calendar ?? (US_TRADING_LANES.has(lane.id) ? "us_trading" : "calendar"),
   };
 }
 
@@ -109,8 +114,10 @@ function policyForPath(lane, output) {
 }
 
 function policyForMember(lane, member, fallback) {
-  const override = MEMBER_CADENCE[lane.id]?.[member?.id];
-  return FRESHNESS_CLASSES[override] ? syntheticPolicy(lane, override) : fallback;
+  const cadence = MEMBER_CADENCE[lane.id]?.[member?.id];
+  const calendar = MEMBER_CALENDAR[lane.id]?.[member?.id];
+  if (!FRESHNESS_CLASSES[cadence] && !calendar) return fallback;
+  return syntheticPolicy(lane, FRESHNESS_CLASSES[cadence] ? cadence : laneCadence(lane), calendar);
 }
 
 function widestPolicy(lane, policies) {
