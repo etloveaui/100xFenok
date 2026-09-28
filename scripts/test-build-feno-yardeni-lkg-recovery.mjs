@@ -28,10 +28,6 @@ import {
   YARDENI_LANE_ID,
   YARDENI_LKG_KEY,
 } from "./build-feno-yardeni-model.mjs";
-import {
-  projectRecoveryRecoveredSet,
-  projectRecoveryRetrySet,
-} from "./build-fenok-data-health-kpi.mjs";
 import { DATA_SUPPLY_DETECTION_CONFIG } from "./lib/data-supply-detection-config.mjs";
 import { checkWorkflowCommitShardsAgainstRegistry } from "./check-lane-registry-commit-shards.mjs";
 import { LaneLkgStore } from "./lib/data-supply-lkg-store.mjs";
@@ -218,12 +214,8 @@ async function runLane(root, { series, request, run, controlledFailureKey = "" }
     "retained LKG is sha256-bound to the on-disk lkg copy",
   );
 
-  // (g) the retry-state index round-trips through the KPI validator
-  const retrySet = projectRecoveryRetrySet(retained, YARDENI_LANE_ID);
-  assert.equal(retrySet.length, 1);
-  assert.equal(retrySet[0].key, YARDENI_LKG_KEY);
-  assert.equal(retrySet[0].resolution_state, "lkg_primary");
-  assert.equal(retrySet[0].failure_run_id, "transport-run");
+  // Retry provenance stays in the private LKG index; the slim KPI does not project it.
+  assert.deepEqual(retained.retry_set, [YARDENI_LKG_KEY]);
 
   // (d) a workflow_dispatch success cannot promote a recovery (natural gate)
   const dispatchAttempt = await runLane(root, { series: fredGen2, run: dispatchRun("manual-run", "2026-07-13T11:00:00Z") });
@@ -258,14 +250,7 @@ async function runLane(root, { series, request, run, controlledFailureKey = "" }
   assert.equal(item.recovery_event_name, "schedule");
   assert.equal(item.last_recovered_failure.reason, "transport_error");
 
-  // (g) the recovered-state index round-trips through the KPI validator
-  const recoveredSet = projectRecoveryRecoveredSet(finalState, YARDENI_LANE_ID);
-  assert.equal(recoveredSet.length, 1);
-  assert.equal(recoveredSet[0].key, YARDENI_LKG_KEY);
-  assert.equal(recoveredSet[0].recovered_from_run_id, "transport-run");
-  assert.equal(recoveredSet[0].recovery_event_name, "schedule");
-  assert.equal(recoveredSet[0].lkg_source_as_of, "2010-01-08");
-  assert.equal(recoveredSet[0].source_as_of, "2010-01-15");
+  assert.deepEqual(finalState.retry_set, []);
 }
 
 // --- (e) a systemic break is corruption, not degradation --------------------

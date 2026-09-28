@@ -849,34 +849,36 @@ export function evaluateAttemptCadence(observedAt, cronSchedules, calendarId, no
 // retained history, so a manual attempt can satisfy a slot and a later attempt
 // can hide an older gap. The public contract calls missing rows "suspected".
 export function buildFetchCronAttemptCoverage({
-  report,
+  attempts,
   calendars,
   nowValue = null,
   config = DATA_SUPPLY_DETECTION_CONFIG,
 }) {
-  if (report !== null && report !== undefined) validateDetectionReport(report, config);
+  validateAttemptEvidence(attempts, config);
   validateConfigCalendarBindings(config, calendars);
-  const evaluatedAt = report?.generated_at ?? nowValue;
-  const now = strictUtc(evaluatedAt, report ? "report.generated_at" : "nowValue");
+  const now = strictUtc(nowValue, "nowValue");
+  const attemptsByKey = new Map((attempts?.attempts ?? []).map((row) => [
+    `${row.lane_id}:${row.member_id ?? "_lane"}`,
+    row,
+  ]));
   const rows = [];
   const preActivationMembers = [];
   let scheduledMembers = 0;
 
-  config.lanes.forEach((lane, laneIndex) => {
-    const reportLane = report?.lanes[laneIndex] ?? null;
-    lane.producer_members.forEach((member, memberIndex) => {
+  config.lanes.forEach((lane) => {
+    lane.producer_members.forEach((member) => {
       const scheduled = member.cadence_declaration?.kind === "github_workflow"
         && member.schedule.length > 0;
       if (!scheduled) return;
       scheduledMembers += 1;
-      const reportMember = lane.monitoring_mode === "composite"
-        ? reportLane?.members[memberIndex] ?? null
-        : reportLane;
-      const endpoint = reportMember?.endpoint ?? {
-        status: "unobserved",
-        reason: "workflow_unobserved",
-        observed_at: null,
-      };
+      const attempt = attemptsByKey.get(`${lane.id}:${lane.monitoring_mode === "composite" ? member.id : "_lane"}`);
+      const endpoint = attempt
+        ? classifyAttempt(attempt)
+        : {
+            status: "unobserved",
+            reason: "workflow_unobserved",
+            observed_at: null,
+          };
       const observedEpoch = endpoint.observed_at === null
         ? null
         : strictUtc(endpoint.observed_at, `${lane.id}:${member.id}.observed_at`).epoch;

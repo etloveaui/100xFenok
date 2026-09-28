@@ -716,19 +716,14 @@ function activeRetryFixture(prefix) {
     reason: "ok",
     observed_at: "2026-08-29T23:20:01Z",
   });
-  const [LaneRegistryProjection, HealthKpi] = await Promise.all([
-    import("./build-lane-registry-projection.mjs"),
-    import("./build-fenok-data-health-kpi.mjs"),
-  ]);
+  const LaneRegistryProjection = await import("./build-lane-registry-projection.mjs");
   assert.equal(typeof LaneRegistryProjection.normalizeAttempt, "function");
-  assert.equal(typeof HealthKpi.normalizeDetectionAttempt, "function");
   const normalizedSkip = {
     observed_at: "2026-08-29T23:20:01Z",
     outcome: "success",
     failure_class: null,
   };
   assert.deepStrictEqual(LaneRegistryProjection.normalizeAttempt(row), normalizedSkip);
-  assert.deepStrictEqual(HealthKpi.normalizeDetectionAttempt(row), normalizedSkip);
   fs.rmSync(root, { recursive: true, force: true });
 }
 

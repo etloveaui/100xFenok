@@ -27,10 +27,6 @@ import {
   EDGAR_LANE_ID,
   EDGAR_LKG_KEY,
 } from "./build-edgar-filing-timeline.mjs";
-import {
-  projectRecoveryRecoveredSet,
-  projectRecoveryRetrySet,
-} from "./build-fenok-data-health-kpi.mjs";
 import { DATA_SUPPLY_DETECTION_CONFIG } from "./lib/data-supply-detection-config.mjs";
 import { LaneLkgStore } from "./lib/data-supply-lkg-store.mjs";
 import { checkWorkflowCommitShardsAgainstRegistry } from "./check-lane-registry-commit-shards.mjs";
@@ -202,11 +198,8 @@ function runLane(root, { gen, failures, request, run, controlledFailureKey = "" 
   assert.equal(retained.items[EDGAR_LKG_KEY].latest_failure.run_id, "partial-run");
   assert.deepEqual(readJson(lkgPath(root)), seedMarker, "only the public-safe freshness marker is retained");
 
-  // (g) the retry-state index round-trips through the KPI validator
-  const retrySet = projectRecoveryRetrySet(retained, EDGAR_LANE_ID);
-  assert.equal(retrySet.length, 1);
-  assert.equal(retrySet[0].key, EDGAR_LKG_KEY);
-  assert.equal(retrySet[0].failure_run_id, "partial-run");
+  // Retry provenance stays in the private LKG index; the slim KPI does not project it.
+  assert.deepEqual(retained.retry_set, [EDGAR_LKG_KEY]);
 
   // same-source natural poll cannot recover (provider filingDate not advanced)
   const sameSource = await runLane(root, { gen: GEN1, run: naturalRun("same-source-run", "2026-07-17T00:40:00Z") });
@@ -240,14 +233,7 @@ function runLane(root, { gen, failures, request, run, controlledFailureKey = "" 
   assert.equal(item.recovery_event_name, "schedule");
   assert.equal(item.last_recovered_failure.reason, "http_error");
 
-  // (g) the recovered-state index round-trips through the KPI validator
-  const recoveredSet = projectRecoveryRecoveredSet(finalState, EDGAR_LANE_ID);
-  assert.equal(recoveredSet.length, 1);
-  assert.equal(recoveredSet[0].key, EDGAR_LKG_KEY);
-  assert.equal(recoveredSet[0].recovered_from_run_id, "partial-run");
-  assert.equal(recoveredSet[0].recovery_event_name, "schedule");
-  assert.equal(recoveredSet[0].lkg_source_as_of, "2026-07-14");
-  assert.equal(recoveredSet[0].source_as_of, "2026-07-20");
+  assert.deepEqual(finalState.retry_set, []);
 }
 
 // --- (e) a systemic break is corruption, not degradation ----------------------

@@ -1,8 +1,5 @@
-// Lane Board (#365 P1): joins the 20 lane-registry projection lanes to the KPI
-// lanes[] by id for a single per-lane row (metadata + freshness + status +
-// recovery). KPI-only composite/platform gates render in a separate strip — they
-// are never force-joined to a registry lane. Pure/presentational so it can be
-// render-tested in isolation; the page passes the read artifacts in.
+// Joins detection-floor data sets to registry metadata by id. Operational
+// attempts and alerts remain in the separate control-room and alarm surfaces.
 
 export type LaneProjection = {
   id: string;
@@ -61,15 +58,11 @@ export type ControlRoomState = {
 
 export type LaneBoardKpiLane = {
   id?: string;
-  label?: string;
   status?: string;
-  status_label?: string;
-  as_of?: string | null;
-  details?: {
-    recovery_retry_set?: unknown[];
-    recovery_recovered?: unknown[];
-    last_attempt?: { event_name?: string | null; observed_at?: string | null } | null;
-  };
+  newest_source_date?: string | null;
+  max_age?: string | null;
+  served_path?: string | null;
+  serving_lkg?: boolean;
 };
 
 export type AlarmState = {
@@ -82,13 +75,16 @@ function dateLabel(value?: string | null) {
 }
 
 function statusClass(status?: string) {
-  if (status === "ready") return "border-emerald-200 bg-emerald-50 text-emerald-700";
-  if (status === "partial" || status === "pending" || status === "warning") return "border-amber-200 bg-amber-50 text-amber-700";
-  if (status === "stale" || status === "unavailable" || status === "error" || status === "blocked") return "border-rose-200 bg-rose-50 text-rose-700";
+  if (status === "fresh" || status === "ready") return "border-emerald-200 bg-emerald-50 text-emerald-700";
+  if (status === "delayed" || status === "partial" || status === "pending" || status === "warning") return "border-amber-200 bg-amber-50 text-amber-700";
+  if (status === "stopped" || status === "stale" || status === "unavailable" || status === "error" || status === "blocked") return "border-rose-200 bg-rose-50 text-rose-700";
   return "border-slate-200 bg-slate-50 text-slate-600";
 }
 
 const STATUS_KO: Record<string, string> = {
+  fresh: "신선",
+  delayed: "지연",
+  stopped: "중단",
   ready: "정상",
   partial: "부분",
   pending: "대기",
@@ -139,10 +135,6 @@ const CONTROL_QUEUE_KO: Record<string, string> = {
   unavailable: "증거 없음",
 };
 
-function countOf(list?: unknown[]) {
-  return Array.isArray(list) ? list.length : 0;
-}
-
 function controlDate(value?: string | null) {
   return value ? value.slice(0, 16).replace("T", " ") : "미확인";
 }
@@ -160,25 +152,15 @@ function controlTone(status?: string) {
   return "border-slate-200 bg-slate-50 text-slate-600";
 }
 
-const GITHUB_ACTIONS_RUN_BASE = "https://github.com/etloveaui/100xFenok/actions/runs";
-
-function githubRunHref(runId?: string) {
-  return runId && /^\d+$/.test(runId) ? `${GITHUB_ACTIONS_RUN_BASE}/${runId}` : null;
-}
-
 export default function LaneBoard({
   projection,
   kpiLanes,
   alarm = null,
-  runIds = {},
 }: {
   projection: LaneProjection[] | null;
   kpiLanes: LaneBoardKpiLane[];
   alarm?: AlarmState | null;
-  runIds?: Readonly<Record<string, string>>;
 }) {
-  const projectionIds = new Set((projection ?? []).map((lane) => lane.id));
-  const platformGates = kpiLanes.filter((lane) => lane.id && !projectionIds.has(lane.id));
   const controlRoomLanes = (projection ?? []).filter((lane) => lane.control_room_state);
 
   const alarmOpen = alarm?.status === "open";
@@ -205,7 +187,7 @@ export default function LaneBoard({
           <p className="text-[12px] font-black uppercase tracking-[0.12em] text-slate-500">Lane Registry × Data Health</p>
           <h2 className="text-lg font-black tracking-tight text-slate-950">레인 보드</h2>
           <p className="text-[12px] font-semibold text-slate-500">
-            관리 레인의 메타데이터·신선도·복구 상태를 한 화면에서 확인합니다.
+            관리 레인의 메타데이터와 원천 신선도를 확인합니다.
           </p>
         </div>
         <span
@@ -222,28 +204,14 @@ export default function LaneBoard({
             <tr className="text-[12px] font-black uppercase tracking-[0.12em] text-slate-500">
               <th className="border-b border-slate-200 px-3 py-2">레인</th>
               <th className="border-b border-slate-200 px-3 py-2">메타데이터</th>
-              <th className="border-b border-slate-200 px-3 py-2">기준일</th>
-              <th className="border-b border-slate-200 px-3 py-2">상태</th>
-              <th className="border-b border-slate-200 px-3 py-2">복구</th>
-              <th className="border-b border-slate-200 px-3 py-2">최근 실행</th>
+              <th className="border-b border-slate-200 px-3 py-2">최신 원천일</th>
+              <th className="border-b border-slate-200 px-3 py-2">신선도</th>
+              <th className="border-b border-slate-200 px-3 py-2">제공 상태</th>
             </tr>
           </thead>
           <tbody>
             {projection && projection.length > 0 ? projection.map((lane) => {
               const kpi = kpiLanes.find((k) => k.id === lane.id) ?? null;
-              const retry = countOf(kpi?.details?.recovery_retry_set);
-              const recovered = countOf(kpi?.details?.recovery_recovered);
-              const lastAttempt = kpi?.details?.last_attempt ?? null;
-              const runId = runIds[lane.id];
-              const runHref = githubRunHref(runId);
-              const lastAttemptLabel = lastAttempt?.observed_at ? (
-                <span className="font-semibold text-slate-500">
-                  {dateLabel(lastAttempt.observed_at)}
-                  {lastAttempt.event_name ? <span className="ml-1 text-[10px] text-slate-500">{lastAttempt.event_name}</span> : null}
-                </span>
-              ) : (
-                <span className="font-semibold text-slate-500">-</span>
-              );
               return (
                 <tr key={lane.id} className="align-top" data-lane-row={lane.id}>
                   <td className="border-b border-slate-100 px-3 py-3">
@@ -259,42 +227,31 @@ export default function LaneBoard({
                     </div>
                   </td>
                   <td className="border-b border-slate-100 px-3 py-3">
-                    <span className="font-semibold text-slate-500">{kpi ? dateLabel(kpi.as_of) : "-"}</span>
+                    <span className="font-semibold text-slate-500">{kpi ? dateLabel(kpi.newest_source_date) : "-"}</span>
                   </td>
                   <td className="border-b border-slate-100 px-3 py-3">
                     {kpi ? (
                       <span className={`inline-flex rounded-full border px-2 py-1 font-black ${statusClass(kpi.status)}`}>
-                        {statusText(kpi.status, kpi.status_label)}
+                        {statusText(kpi.status)}
                       </span>
                     ) : (
                       <span className="inline-flex rounded-full border border-slate-200 bg-slate-50 px-2 py-1 font-black text-slate-500">KPI 없음</span>
                     )}
                   </td>
                   <td className="border-b border-slate-100 px-3 py-3">
-                    <span className="font-black tabular-nums text-slate-900">재시도 {retry} · 복구 {recovered}</span>
-                  </td>
-                  <td className="border-b border-slate-100 px-3 py-3">
-                    {runHref ? (
-                      <span className="inline-flex flex-wrap items-center gap-1.5">
-                        {lastAttemptLabel}
-                        <a
-                          href={runHref}
-                          target="_blank"
-                          rel="noreferrer"
-                          data-lane-run-id={runId}
-                          className="inline-flex min-h-8 items-center rounded-full border border-blue-200 bg-blue-50 px-2 text-[10px] font-black text-blue-700 transition hover:border-blue-300 hover:bg-blue-100"
-                          aria-label={`${lane.label || lane.id} GitHub Actions 실행 ${runId}`}
-                        >
-                          실행 ↗
-                        </a>
-                      </span>
-                    ) : lastAttemptLabel}
+                    {kpi ? (
+                      <div className="space-y-1">
+                        <p className="font-semibold text-slate-600">허용 나이 {kpi.max_age || "-"}</p>
+                        <p className="font-semibold text-slate-500">LKG {typeof kpi.serving_lkg === "boolean" ? (kpi.serving_lkg ? "사용 중" : "아님") : "-"}</p>
+                        <code className="block break-all text-[10px] font-semibold text-slate-500">{kpi.served_path || "-"}</code>
+                      </div>
+                    ) : <span className="font-semibold text-slate-500">KPI 없음</span>}
                   </td>
                 </tr>
               );
             }) : (
               <tr>
-                <td className="px-3 py-4 text-sm font-bold text-rose-700" colSpan={6}>lane-registry-projection을 읽지 못했습니다.</td>
+                <td className="px-3 py-4 text-sm font-bold text-rose-700" colSpan={5}>lane-registry-projection을 읽지 못했습니다.</td>
               </tr>
             )}
           </tbody>
@@ -358,24 +315,6 @@ export default function LaneBoard({
         </div>
       </section>
 
-      <div className="mt-4" data-admin-platform-gates="true">
-        <p className="text-[12px] font-black uppercase tracking-[0.12em] text-slate-500">Platform Gates</p>
-        <p className="mt-1 text-[12px] font-semibold text-slate-500">레지스트리 레인에 속하지 않는 KPI 집계 게이트입니다.</p>
-        <div className="mt-2 flex flex-wrap gap-2">
-          {platformGates.length > 0 ? platformGates.map((gate) => (
-            <span
-              key={gate.id}
-              data-platform-gate={gate.id}
-              className={`inline-flex items-center gap-1 rounded-full border px-2 py-1 text-[12px] font-bold ${statusClass(gate.status)}`}
-            >
-              {gate.label || gate.id}
-              <span className="font-black">{statusText(gate.status, gate.status_label)}</span>
-            </span>
-          )) : (
-            <span className="text-[12px] font-semibold text-slate-500">표시할 플랫폼 게이트가 없습니다.</span>
-          )}
-        </div>
-      </div>
     </section>
   );
 }

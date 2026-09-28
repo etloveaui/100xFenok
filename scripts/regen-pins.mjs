@@ -27,11 +27,6 @@ import {
   emitPinnedDetectionReport,
 } from "./build-data-supply-detection-floor.mjs";
 import {
-  COMMITTED_KPI_PATH,
-  PUBLIC_KPI_PATH,
-  emitPinnedKpiCronCoverage,
-} from "./build-fenok-data-health-kpi.mjs";
-import {
   INK4_CONTRAST_FIXTURE_PATH,
   emitInk4ContrastFixture,
 } from "../100xfenok-next/scripts/build-ink4-contrast-fixture.mjs";
@@ -54,33 +49,6 @@ const POLICY_DIGEST_PATH = path.join(REPO_ROOT, "scripts/fixtures/data_supply/po
 const UPDATE_MANIFEST_WORKFLOW_PATH = path.join(REPO_ROOT, ".github/workflows/update-manifest.yml");
 const TRIGGER_START_MARKER = "# BEGIN GENERATED lane-commit-manifest trigger_paths";
 const TRIGGER_END_MARKER = "# END GENERATED lane-commit-manifest trigger_paths";
-
-// runtime/evaluated_at is runtime-observed data: the publish bots patch it on
-// their own cadence (e.g. the stockanalysis publish outcome), so a rebuild in a
-// clean checkout cannot byte-reproduce the value the bot committed. The stale
-// comparison therefore normalizes exactly this field for the KPI projections
-// (committed copy + public mirror); every other byte stays under strict
-// equality so real staleness still fails.
-const VOLATILE_PIN_FIELDS = new Map([
-  [COMMITTED_KPI_PATH, [["runtime", "evaluated_at"]]],
-  [PUBLIC_KPI_PATH, [["runtime", "evaluated_at"]]],
-]);
-
-function normalizeVolatilePinFields(canonicalPath, text) {
-  const fields = VOLATILE_PIN_FIELDS.get(canonicalPath);
-  if (!fields) return text;
-  let doc;
-  try {
-    doc = JSON.parse(text);
-  } catch {
-    return text;
-  }
-  for (const [section, field] of fields) {
-    const target = doc?.[section];
-    if (target && typeof target === "object" && field in target) target[field] = "<volatile>";
-  }
-  return JSON.stringify(doc);
-}
 
 function parseMode(args) {
   if (args.length === 0) return "write";
@@ -189,12 +157,6 @@ async function emitAll(outputFor) {
   });
   const projectedReportPath = outputFor(COMMITTED_REPORT_PATH);
   emitPinnedDetectionReport({ sourcePath: COMMITTED_REPORT_PATH, outputPath: projectedReportPath });
-  emitPinnedKpiCronCoverage({
-    rootSourcePath: COMMITTED_KPI_PATH,
-    reportPath: projectedReportPath,
-    rootOutputPath: outputFor(COMMITTED_KPI_PATH),
-    publicOutputPath: outputFor(PUBLIC_KPI_PATH),
-  });
   emitInk4ContrastFixture({ outputPath: outputFor(INK4_CONTRAST_FIXTURE_PATH) });
 }
 
@@ -210,8 +172,6 @@ function generatedPaths() {
     ...Object.values(MIGRATION_DEMAND_FIXTURE_PATHS).map((relativePath) => path.join(REPO_ROOT, relativePath)),
     DETECTION_EXPECTED_PATH,
     COMMITTED_REPORT_PATH,
-    COMMITTED_KPI_PATH,
-    PUBLIC_KPI_PATH,
     INK4_CONTRAST_FIXTURE_PATH,
   ];
 }
@@ -232,8 +192,7 @@ async function main() {
       if (!fs.existsSync(canonicalPath)) return true;
       const committedText = fs.readFileSync(canonicalPath, "utf8");
       const generatedText = fs.readFileSync(generatedPath, "utf8");
-      return normalizeVolatilePinFields(canonicalPath, committedText)
-        !== normalizeVolatilePinFields(canonicalPath, generatedText);
+      return committedText !== generatedText;
     });
     if (stale.length > 0) {
       throw new Error(`generated pins are stale: ${stale.map((filePath) => path.relative(REPO_ROOT, filePath)).join(", ")}`);

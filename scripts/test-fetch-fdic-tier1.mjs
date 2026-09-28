@@ -18,7 +18,7 @@ import {
   runFdicTier1,
 } from "./fetch-fdic-tier1.mjs";
 import { checkWorkflowCommitShardsAgainstRegistry } from "./check-lane-registry-commit-shards.mjs";
-import { projectRecoveryRecoveredSet } from "./build-fenok-data-health-kpi.mjs";
+import { LaneLkgStore } from "./lib/data-supply-lkg-store.mjs";
 
 const OBSERVED_AT = "2026-07-14T12:34:56.000Z";
 const ATTEMPT_ID = "fdic-tier1-20260714t123456000z-test";
@@ -825,12 +825,13 @@ function assertValidShard(shard) {
   });
   assert.equal(recovered.ok, true);
   assert.equal(recovered.recovered, true);
-  const state = readJson(path.join(root, "data", "admin", "fdic_tier1", "index.json"));
-  assert.equal(state.items.fdic_tier1.recovery_event_name, "workflow_dispatch");
-  assert.deepEqual(
-    projectRecoveryRecoveredSet(state, "fdic_tier1"),
-    [],
-    "owner-approved operational recovery must not earn natural schedule evidence",
+  const state = new LaneLkgStore({ repoRoot: root, laneId: "fdic_tier1" }).stateSnapshot();
+  assert.deepEqual(state.retry_set, []);
+  assert.equal(state.items.fdic_tier1.recovered_from_run_id, "40000000004");
+  assert.equal(
+    state.items.fdic_tier1.recovery_event_name,
+    "workflow_dispatch",
+    "owner-approved operational recovery must retain its dispatch provenance",
   );
 }
 

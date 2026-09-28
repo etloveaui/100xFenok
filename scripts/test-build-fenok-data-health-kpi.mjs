@@ -5,8 +5,8 @@ import fs from "node:fs";
 import os from "node:os";
 import path from "node:path";
 import { buildKpiDocuments } from "./build-fenok-data-health-kpi.mjs";
+import { validateKpiDocuments } from "./check-fenok-data-health-kpi.mjs";
 import { LaneLkgStore } from "./lib/data-supply-lkg-store.mjs";
-import { deriveFamilyFreshness } from "./ops/check-pipeline-job-health.mjs";
 
 const root = fs.mkdtempSync(path.join(os.tmpdir(), "fenok-kpi-k1-k3-"));
 const canonicalPath = path.join(root, "data", "macro", "fred-macro.json");
@@ -54,7 +54,42 @@ try {
     assert.deepEqual(fs.readFileSync(canonicalPath), goodBytes, `${name} must preserve served bytes`);
   }
 
-  // K3: one source date and one DEC-417 status per set, with public paths redacted.
+  // A fresh source can be served from LKG while its age still meets policy.
+  store.recordFailure({
+    artifacts: [candidate(JSON.stringify(good))],
+    run: run("failed-fetch", "2026-09-27T12:00:00Z"),
+    reason: "http_error",
+  });
+  const floorPath = path.join(root, "data", "admin", "data-supply-detection-floor.json");
+  fs.mkdirSync(path.dirname(floorPath), { recursive: true });
+  fs.writeFileSync(floorPath, `${JSON.stringify({
+    schema_version: "data-supply-detection-floor/v2",
+    lanes: [
+      {
+        id: "fred_macro",
+        status: "unavailable",
+        artifact: { status: "ready", source_as_of: "2026-09-26" },
+      },
+      {
+        id: "treasury_tga",
+        status: "ready",
+        artifact: { status: "ready", source_as_of: "2026-09-25" },
+      },
+      {
+        id: "fred_banking",
+        status: "ready",
+        artifact: { status: "ready", source_as_of: "2026-01-01" },
+        source_artifacts: [
+          { id: "fred_banking_daily", path: "data/macro/fred-banking-daily.json", source_as_of: "2026-09-01" },
+          { id: "fred_banking_weekly", path: "data/macro/fred-banking-weekly.json", source_as_of: "2026-09-16" },
+          { id: "fred_banking_monthly", path: "data/macro/fred-banking-monthly.json", source_as_of: "2026-08-01" },
+          { id: "fred_banking_quarterly", path: "data/macro/fred-banking-quarterly.json", source_as_of: "2026-01-01" },
+        ],
+      },
+    ],
+  })}\n`);
+
+  // K3: one source date and one freshness-policy status per set.
   const { rootDoc, publicDoc } = buildKpiDocuments(now, {
     dataRoot: path.join(root, "data"), publicDataRoot,
   });
@@ -62,34 +97,28 @@ try {
   const row = rootDoc.sets.find((set) => set.set === "fred_macro");
   assert.ok(row, "FRED fixture must appear as one data set");
   assert.deepEqual(Object.keys(row).sort(), [
-    "set", "served_path", "newest_source_date", "max_age", "last_success_at",
-    "consecutive_failures", "serving_lkg", "status",
+    "set", "served_path", "newest_source_date", "max_age", "serving_lkg", "status",
   ].sort());
   assert.equal(row.served_path, "data/macro/fred-macro.json");
   assert.equal(row.newest_source_date, "2026-09-26");
   assert.match(row.max_age, /^\d+d$/);
-  assert.equal(row.last_success_at, "2026-09-26T12:00:00Z");
-  assert.equal(row.consecutive_failures, 0);
-  assert.equal(row.serving_lkg, false);
-  assert.ok(["fresh", "delayed", "stopped"].includes(row.status));
+  assert.equal(row.serving_lkg, true);
+  assert.equal(row.status, "fresh", "status follows source age even when the floor reports an unavailable attempt");
+  const tga = rootDoc.sets.find((set) => set.set === "treasury_tga");
+  assert.ok(tga, "Treasury TGA fixture must appear as one data set");
+  assert.equal(tga.status, "fresh", "US federal holidays are applied when judging TGA source age");
+  const banking = rootDoc.sets.find((set) => set.set === "fred_banking");
+  assert.ok(banking, "FRED banking fixture must appear as one data set");
+  assert.equal(banking.newest_source_date, "2026-09-16");
+  assert.equal(banking.status, "stopped", "a stale daily file cannot be hidden by the quarterly policy/date");
+  const checked = validateKpiDocuments(rootDoc, publicDoc, { dataRoot: path.join(root, "data") });
+  assert.deepEqual(checked.errors, [], "the checker accepts the same calendar- and file-policy-aware result");
+  const badTga = structuredClone(rootDoc);
+  badTga.sets.find((set) => set.set === "treasury_tga").status = "stopped";
+  const rejected = validateKpiDocuments(badTga, publicDoc, { dataRoot: path.join(root, "data") });
+  assert.ok(rejected.errors.some((error) => error.includes("treasury_tga") && error.includes("freshness-policy")));
   assert.ok(Array.isArray(publicDoc.sets));
   assert.equal(JSON.stringify(publicDoc).includes("data/admin/fred_macro"), false);
-
-  // Existing alarm path changes state on the second consecutive failed fetch.
-  const records = [
-    { result: "published", observed_at: "2026-09-26T12:00:00Z" },
-    { result: "failed", observed_at: "2026-09-27T12:00:00Z" },
-  ];
-  const first = deriveFamilyFreshness({ records, now, maxAgeHours: 100 });
-  assert.equal(first.consecutive_non_success, 1);
-  assert.equal(first.state, "delayed");
-  const second = deriveFamilyFreshness({
-    records: [...records, { result: "failed", observed_at: "2026-09-28T02:00:00Z" }],
-    now, maxAgeHours: 100,
-  });
-  assert.equal(second.consecutive_non_success, 2);
-  assert.equal(second.state, "unavailable");
-  assert.ok(second.triggered_by.includes("consecutive_non_success"));
   console.log("K1/K3 KPI fixtures passed");
 } finally {
   fs.rmSync(root, { recursive: true, force: true });

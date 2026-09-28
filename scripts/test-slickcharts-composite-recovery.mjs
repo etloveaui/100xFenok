@@ -16,7 +16,6 @@ import {
   prepareSlickchartsCompositeSnapshot,
   validateSlickchartsCompositeIndex,
 } from "./lib/slickcharts-composite-recovery.mjs";
-import { mapDetectionFloorRow } from "./build-fenok-data-health-kpi.mjs";
 import { canonicalJson } from "./lib/json-canonical.mjs";
 
 const root = fs.mkdtempSync(path.join(os.tmpdir(), "slickcharts-composite-recovery-"));
@@ -373,24 +372,6 @@ let recoveredDaily = finalize("daily", {
 });
 assert.deepEqual(recoveredDaily.index.retry_members, []);
 assert.equal(recoveredDaily.index.retained_composite, null);
-
-const detectionConfig = {
-  id: "slickcharts",
-  label: "SlickCharts composite",
-  enforcement: "live",
-  kpi_required: true,
-  status: "ready",
-  reason: "ok",
-  artifact: { status: "ready", reason: "ok", source_as_of: "2026-08-04" },
-};
-const kpiReady = mapDetectionFloorRow(detectionConfig, result.index);
-assert.equal(kpiReady.status, "ready");
-assert.equal(kpiReady.details.recovery.composite_state, "ready");
-const tamperedKpiIndex = structuredClone(result.index);
-tamperedKpiIndex.members.monthly.bundle.tree_sha256 = "0".repeat(64);
-const kpiTampered = mapDetectionFloorRow(detectionConfig, tamperedKpiIndex);
-assert.equal(kpiTampered.status, "degraded");
-assert.equal(kpiTampered.checks.find((row) => row.id === "recovery_state_present").status, "blocked");
 
 // Partial runs never publish a mixed member bundle.
 const symbolsBefore = inspectSlickchartsMemberBundle(root, "symbols");

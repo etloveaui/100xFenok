@@ -6,6 +6,9 @@ import { DATA_SUPPLY_DETECTION_CONFIG } from "../lib/data-supply-detection-confi
 import { TRACKED_CRONS } from "../lib/kpi-contract-constants.mjs";
 import { classifyRuntimeSlots } from "../lib/kpi-runtime-slots.mjs";
 import { LANE_REGISTRY, PLANE_PUBLISH_OUTCOME_BINDINGS } from "../lib/lane-registry.mjs";
+import { buildFetchCronAttemptCoverage, loadAttemptShards } from "../build-data-supply-detection-floor.mjs";
+import { DETECTION_CALENDARS } from "../lib/fenok-data-health-freshness.mjs";
+import { buildLaneOutcomeWatchdog } from "./lane-outcome-watchdog.mjs";
 // The single place a family is registered; import is side-effect free.
 import { FAMILIES } from "../publish-cloud-data-generation.mjs";
 import {
@@ -28,7 +31,8 @@ const ALERT_EXIT = 2;
 const REPO_ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..", "..");
 const WORKFLOWS_DIR = path.join(REPO_ROOT, ".github", "workflows");
 const DETECTION_CALENDARS_PATH = path.join(REPO_ROOT, "scripts", "lib", "data-supply-detection-calendars.json");
-const KPI_PATH = path.join(REPO_ROOT, "data", "admin", "fenok-data-health-kpi.json");
+const DETECTION_FLOOR_PATH = path.join(REPO_ROOT, "data", "admin", "data-supply-detection-floor.json");
+const ATTEMPT_SHARD_ROOT = path.join(REPO_ROOT, "data", "admin", "data-supply-state", "detection-attempts");
 export const PUBLISH_OUTCOME_ROOT = path.join(REPO_ROOT, "data", "admin", "data-supply-state", "publish-outcomes");
 export const CADENCE_STATES = Object.freeze(["not_due", "overdue", "recovered", "no_declaration", "unknown"]);
 export const PLANE_PUBLISH_ALARM_REASONS = Object.freeze({
@@ -676,12 +680,9 @@ function workflowFileFromDeclaration(workflow) {
   return typeof workflow === "string" ? path.basename(workflow) : null;
 }
 
-// DEC-407 item 2: the KPI outcome_watchdog already judges every live detection
-// lane against its own cadence (canonical file source_as_of advance vs
-// cadence_hours * 1.5), but nothing pages when a lane goes overdue — the alarm
-// only watches workflow runs and publish-outcome records. These functions join
-// the watchdog verdict to the workflow rows that own the lane, reusing the
-// existing alarm channel instead of adding a workflow.
+// DEC-407 item 2: the alarm path rebuilds a per-lane source-age watchdog from
+// the detection-floor artifact and committed attempt shards, then joins its
+// verdict to the workflows that own each lane. No alert fields live in the KPI.
 //
 // Vocabulary note: the watchdog rows carry states current/overdue/unobservable
 // and the publish-outcome records carry results
@@ -1868,18 +1869,41 @@ export async function main() {
   const checkedAtUtc = new Date().toISOString().replace(/\.\d{3}Z$/, "Z");
   const policy = deriveWorkflowWatchPolicy();
   const calendars = readJsonOrNull(DETECTION_CALENDARS_PATH);
-  const kpi = readJsonOrNull(KPI_PATH);
+  const detectionFloor = readJsonOrNull(DETECTION_FLOOR_PATH);
+  let attempts = null;
+  let fetchCronCoverage = null;
+  let outcomeWatchdog = null;
+  try {
+    attempts = loadAttemptShards({ shardRoot: ATTEMPT_SHARD_ROOT });
+    fetchCronCoverage = buildFetchCronAttemptCoverage({
+      attempts,
+      calendars: calendars ?? DETECTION_CALENDARS,
+      nowValue: checkedAtUtc,
+    });
+  } catch {
+    // Missing or invalid attempt shards make cadence evidence unknown, never an invented alarm.
+  }
   const publishOutcomeProjection = readPublishOutcomeProjection();
   const { shards: publishOutcomeShards } = readPublishOutcomeShards();
+  try {
+    outcomeWatchdog = buildLaneOutcomeWatchdog({
+      detectionFloor,
+      attempts,
+      publication: publishOutcomeProjection,
+      nowIso: checkedAtUtc,
+      calendars: calendars ?? DETECTION_CALENDARS,
+    });
+  } catch {
+    // The publish streak axis below remains independent if source-clock evidence is unavailable.
+  }
   const laneOutcomeAlarms = deriveLaneOutcomeAlarms({
-    watchdog: kpi?.outcome_watchdog ?? null,
+    watchdog: outcomeWatchdog,
     shards: publishOutcomeShards,
     now: new Date(checkedAtUtc),
   });
   const cadenceProjection = deriveWorkflowCadenceProjection({
     watched: policy.watched,
-    coverage: kpi?.runtime?.fetch_cron_skip_detection ?? null,
-    kpiRuntime: kpi?.runtime ?? null,
+    coverage: fetchCronCoverage,
     calendars,
   });
   const calibratedWatched = attachWorkflowCadence(policy.watched, cadenceProjection);

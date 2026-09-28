@@ -1,7 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import RouteEmbedFrame from "@/components/RouteEmbedFrame";
-import { LANE_RUN_ID_MAP } from "@/generated/lane-runid-map";
 import { ROUTES } from "@/lib/routes";
 import { readPublicAssetText } from "@/lib/server/public-assets";
 import LaneBoard, { type AlarmState, type LaneProjection } from "./LaneBoard";
@@ -41,34 +40,18 @@ type ProductSurfaceCoverage = {
   surfaces?: CoverageSurface[];
 };
 
-type DataHealthCheck = {
-  id?: string;
-  label?: string;
+type DataHealthSet = {
+  set: string;
+  served_path: string | null;
+  newest_source_date: string | null;
+  max_age: string | null;
   status?: string;
-  status_label?: string;
-  detail?: string;
-};
-
-type DataHealthLane = {
-  id?: string;
-  label?: string;
-  status?: string;
-  status_label?: string;
-  as_of?: string | null;
-  counts?: Record<string, unknown>;
-  checks?: DataHealthCheck[];
-  details?: {
-    last_attempt?: { event_name?: string | null; observed_at?: string | null } | null;
-  };
+  serving_lkg?: boolean;
 };
 
 type DataHealthKpi = {
   generated_at?: string;
-  status?: string;
-  status_label?: string;
-  totals?: Record<string, number>;
-  lanes?: DataHealthLane[];
-  non_ready_checks?: Array<DataHealthCheck & { lane_id?: string; required?: boolean }>;
+  sets?: DataHealthSet[];
 };
 
 async function readProductSurfaceCoverage(): Promise<ProductSurfaceCoverage | null> {
@@ -110,14 +93,17 @@ function dateLabel(value?: string) {
 }
 
 function statusClass(status?: string) {
-  if (status === "ready") return "border-emerald-200 bg-emerald-50 text-emerald-700";
-  if (status === "partial" || status === "pending" || status === "warning") return "border-amber-200 bg-amber-50 text-amber-700";
-  if (status === "stale" || status === "unavailable" || status === "error" || status === "blocked") return "border-rose-200 bg-rose-50 text-rose-700";
+  if (status === "fresh" || status === "ready") return "border-emerald-200 bg-emerald-50 text-emerald-700";
+  if (status === "delayed" || status === "partial" || status === "pending" || status === "warning") return "border-amber-200 bg-amber-50 text-amber-700";
+  if (status === "stopped" || status === "stale" || status === "unavailable" || status === "error" || status === "blocked") return "border-rose-200 bg-rose-50 text-rose-700";
   return "border-slate-200 bg-slate-50 text-slate-600";
 }
 
 function statusText(status?: string, fallback?: string) {
   return fallback || {
+    fresh: "신선",
+    delayed: "지연",
+    stopped: "중단",
     ready: "정상",
     partial: "부분",
     pending: "대기",
@@ -133,40 +119,16 @@ function freshnessChecks(surface: CoverageSurface) {
   return (surface.checks || []).filter((check) => typeof check.max_age_days === "number");
 }
 
-function laneById(kpi: DataHealthKpi | null, id: string) {
-  return (kpi?.lanes || []).find((lane) => lane.id === id) || null;
-}
-
-function countValue(lane: DataHealthLane | null, key: string) {
-  const value = lane?.counts?.[key];
-  return typeof value === "number" ? value : null;
-}
-
-function compactLaneCounts(lane: DataHealthLane) {
-  const counts = lane.counts || {};
-  return Object.entries(counts)
-    .filter(([, value]) => typeof value === "number")
-    .slice(0, 4);
-}
-
 export default async function AdminDataLabPage() {
   const dataHealthKpi = await readDataHealthKpi();
   const coverage = await readProductSurfaceCoverage();
   const laneProjection = await readLaneRegistryProjection();
   const alarmState = await readAlarmState();
-  const kpiLanes = dataHealthKpi?.lanes || [];
-  const laneRunIds = Object.fromEntries(kpiLanes.flatMap((lane) => {
-    const laneId = lane.id || "";
-    const lastAttempt = lane.details?.last_attempt;
-    const privateAttempt = LANE_RUN_ID_MAP[laneId];
-    if (!laneId || !lastAttempt || !privateAttempt) return [];
-    if (privateAttempt.event_name !== (lastAttempt.event_name ?? null)
-      || privateAttempt.observed_at !== (lastAttempt.observed_at ?? null)) return [];
-    return [[laneId, privateAttempt.run_id]];
-  }));
-  const s0Lane = laneById(dataHealthKpi, "stock_s0_active_daily_gate");
-  const etfLane = laneById(dataHealthKpi, "etf_public_and_daily_gate");
-  const rimLane = laneById(dataHealthKpi, "rim_inputs");
+  const kpiSets = dataHealthKpi?.sets || [];
+  const setCounts = Object.fromEntries(["fresh", "delayed", "stopped"].map((status) => [
+    status,
+    kpiSets.filter((set) => set.status === status).length,
+  ]));
   const surfaces = coverage?.surfaces || [];
   const totals = coverage?.totals || {};
 
@@ -239,13 +201,12 @@ export default async function AdminDataLabPage() {
             <h2 className="mt-1 text-lg font-black tracking-tight text-slate-950">데이터 헬스 KPI</h2>
             <p className="mt-1 text-[12px] font-semibold text-slate-500">KPI 생성 {dateLabel(dataHealthKpi?.generated_at)}</p>
           </div>
-          <div className="grid grid-cols-2 gap-2 text-center text-[12px] font-black sm:grid-cols-5">
+          <div className="grid grid-cols-2 gap-2 text-center text-[12px] font-black sm:grid-cols-4">
             {[
-              ["전체 상태", statusText(dataHealthKpi?.status, dataHealthKpi?.status_label)],
-              ["게이트", `${Number(dataHealthKpi?.totals?.ready || 0).toLocaleString("ko-KR")}/${Number(dataHealthKpi?.totals?.lanes || 0).toLocaleString("ko-KR")}`],
-              ["S0 종목", countValue(s0Lane, "active_total")?.toLocaleString("ko-KR") || "-"],
-              ["ETF gap", countValue(etfLane, "fetchable_daily_1y_gap")?.toLocaleString("ko-KR") || "0"],
-              ["RIM", `${Number(rimLane?.counts?.required_ready || 0).toLocaleString("ko-KR")}/${Number(rimLane?.counts?.required_total || 0).toLocaleString("ko-KR")}`],
+              ["데이터 세트", kpiSets.length.toLocaleString("ko-KR")],
+              ["신선", setCounts.fresh.toLocaleString("ko-KR")],
+              ["지연", setCounts.delayed.toLocaleString("ko-KR")],
+              ["중단", setCounts.stopped.toLocaleString("ko-KR")],
             ].map(([label, value]) => (
               <div key={label} className="rounded-lg border border-slate-200 bg-slate-50 px-3 py-2">
                 <p className="text-slate-500">{label}</p>
@@ -256,54 +217,38 @@ export default async function AdminDataLabPage() {
         </div>
 
         <div className="mt-4 overflow-x-auto">
-          <table className="w-full min-w-[860px] border-separate border-spacing-0 text-left text-[12px]">
+          <table className="w-full min-w-[960px] border-separate border-spacing-0 text-left text-[12px]">
             <thead>
               <tr className="text-[12px] font-black uppercase tracking-[0.12em] text-slate-500">
-                <th className="border-b border-slate-200 px-3 py-2">KPI</th>
+                <th className="border-b border-slate-200 px-3 py-2">데이터 세트</th>
                 <th className="border-b border-slate-200 px-3 py-2">상태</th>
-                <th className="border-b border-slate-200 px-3 py-2">핵심 수치</th>
-                <th className="border-b border-slate-200 px-3 py-2">점검</th>
+                <th className="border-b border-slate-200 px-3 py-2">최신 원천일</th>
+                <th className="border-b border-slate-200 px-3 py-2">허용 나이</th>
+                <th className="border-b border-slate-200 px-3 py-2">LKG</th>
+                <th className="border-b border-slate-200 px-3 py-2">제공 경로</th>
               </tr>
             </thead>
             <tbody>
-              {kpiLanes.length > 0 ? kpiLanes.map((lane) => (
-                <tr key={lane.id} className="align-top">
+              {kpiSets.length > 0 ? kpiSets.map((set) => (
+                <tr key={set.set} className="align-top">
                   <td className="border-b border-slate-100 px-3 py-3">
-                    <p className="font-black text-slate-950">{lane.label || lane.id}</p>
-                    <p className="mt-1 font-semibold text-slate-500">{dateLabel(lane.as_of || undefined)}</p>
+                    <p className="font-black text-slate-950">{set.set}</p>
                   </td>
                   <td className="border-b border-slate-100 px-3 py-3">
-                    <span className={`inline-flex rounded-full border px-2 py-1 font-black ${statusClass(lane.status)}`}>
-                      {statusText(lane.status, lane.status_label)}
+                    <span className={`inline-flex rounded-full border px-2 py-1 font-black ${statusClass(set.status)}`}>
+                      {statusText(set.status)}
                     </span>
                   </td>
+                  <td className="border-b border-slate-100 px-3 py-3 font-semibold text-slate-600">{dateLabel(set.newest_source_date || undefined)}</td>
+                  <td className="border-b border-slate-100 px-3 py-3 font-semibold text-slate-600">{set.max_age || "-"}</td>
+                  <td className="border-b border-slate-100 px-3 py-3 font-semibold text-slate-600">{typeof set.serving_lkg === "boolean" ? (set.serving_lkg ? "사용 중" : "아님") : "-"}</td>
                   <td className="border-b border-slate-100 px-3 py-3">
-                    <div className="grid grid-cols-2 gap-1">
-                      {compactLaneCounts(lane).map(([key, value]) => (
-                        <div key={`${lane.id}-${key}`} className="rounded-lg bg-slate-50 px-2 py-1">
-                          <p className="font-bold text-slate-500">{key}</p>
-                          <p className="font-black text-slate-900">{Number(value).toLocaleString("ko-KR")}</p>
-                        </div>
-                      ))}
-                    </div>
-                  </td>
-                  <td className="border-b border-slate-100 px-3 py-3">
-                    <div className="flex flex-wrap gap-2">
-                      {(lane.checks || []).slice(0, 5).map((check) => (
-                        <span
-                          key={`${lane.id}-${check.id}`}
-                          className={`inline-flex rounded-full border px-2 py-1 font-bold ${statusClass(check.status)}`}
-                          title={check.detail || undefined}
-                        >
-                          {check.label || check.id}
-                        </span>
-                      ))}
-                    </div>
+                    <code className="break-all font-semibold text-slate-600">{set.served_path || "-"}</code>
                   </td>
                 </tr>
               )) : (
                 <tr>
-                  <td className="px-3 py-4 text-sm font-bold text-rose-700" colSpan={4}>fenok-data-health-kpi를 읽지 못했습니다.</td>
+                  <td className="px-3 py-4 text-sm font-bold text-rose-700" colSpan={6}>fenok-data-health-kpi를 읽지 못했습니다.</td>
                 </tr>
               )}
             </tbody>
@@ -311,7 +256,18 @@ export default async function AdminDataLabPage() {
         </div>
       </section>
 
-      <LaneBoard projection={laneProjection} kpiLanes={kpiLanes} alarm={alarmState} runIds={laneRunIds} />
+      <LaneBoard
+        projection={laneProjection}
+        kpiLanes={kpiSets.map((set) => ({
+          id: set.set,
+          status: set.status,
+          newest_source_date: set.newest_source_date,
+          max_age: set.max_age,
+          served_path: set.served_path,
+          serving_lkg: set.serving_lkg,
+        }))}
+        alarm={alarmState}
+      />
 
       <section className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm" data-admin-data-lab-coverage="true">
         <div className="flex flex-col gap-3 lg:flex-row lg:items-start lg:justify-between">

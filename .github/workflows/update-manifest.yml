@@ -109,28 +109,6 @@ on:
     - cron: '30 9 * * *'
   workflow_dispatch:
     inputs:
-      # KPI v2 authoritative-dispatch envelope (contract §3). Populated by the
-      # edge/krx daily workflows when they dispatch this reconciliation.
-      source_workflow:
-        description: 'Origin workflow file that dispatched this run (allowlist)'
-        required: false
-        default: ''
-      source_run_id:
-        description: 'Origin workflow run id'
-        required: false
-        default: ''
-      source_run_attempt:
-        description: 'Origin workflow run attempt'
-        required: false
-        default: ''
-      original_event:
-        description: 'Origin trigger event (schedule for authoritative)'
-        required: false
-        default: ''
-      slot_key:
-        description: 'Origin canonical slot_key (§2)'
-        required: false
-        default: ''
       etf_cloud_generation:
         description: 'True only when a natural StockAnalysis ETF plane generation was published AND persisted; enables the verified cloud overlay for this projection run'
         required: false
@@ -154,16 +132,6 @@ jobs:
   update-manifest:
     runs-on: ubuntu-latest
     timeout-minutes: 60
-    # KPI v2 builder reads GITHUB_* defaults plus this origin envelope from env.
-    # KPI_EVENT_SCHEDULE = the exact cron that triggered a scheduled run, so slot
-    # inference uses the run's OWN cron (never latest-across-crons).
-    env:
-      KPI_EVENT_SCHEDULE: ${{ github.event.schedule || '' }}
-      KPI_ORIGIN_SOURCE_WORKFLOW: ${{ github.event.inputs.source_workflow || '' }}
-      KPI_ORIGIN_SOURCE_RUN_ID: ${{ github.event.inputs.source_run_id || '' }}
-      KPI_ORIGIN_SOURCE_RUN_ATTEMPT: ${{ github.event.inputs.source_run_attempt || '' }}
-      KPI_ORIGIN_ORIGINAL_EVENT: ${{ github.event.inputs.original_event || '' }}
-      KPI_ORIGIN_SLOT_KEY: ${{ github.event.inputs.slot_key || '' }}
     permissions:
       contents: write  # Required for git push (manifest.json update)
       actions: write   # Required to dispatch Worker deploy after bot-authored commits

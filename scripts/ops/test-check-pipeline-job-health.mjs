@@ -4,11 +4,14 @@ import fs from "node:fs";
 import os from "node:os";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
+import { buildFetchCronAttemptCoverage, loadAttemptShards } from "../build-data-supply-detection-floor.mjs";
 import {
   buildPublishOutcomeRecord,
   PUBLISH_OUTCOME_SHARD_SCHEMA,
 } from "../lib/publish-outcome-shard.mjs";
 import { LANE_REGISTRY } from "../lib/lane-registry.mjs";
+import { DETECTION_CALENDARS } from "../lib/fenok-data-health-freshness.mjs";
+import { buildLaneOutcomeWatchdog } from "./lane-outcome-watchdog.mjs";
 import {
   NON_SCHEDULED_WORKFLOW_INCLUSIONS,
   SCHEDULED_WORKFLOW_EXCLUSIONS,
@@ -46,6 +49,46 @@ import {
   parseWorkflowRunsPayload,
   runtimeSlotKey,
 } from "./check-pipeline-job-health.mjs";
+
+// The data-health KPI is a slim source-age view. The alarm path independently
+// rebuilds its schedule and outcome clocks from detection-attempt shards and
+// the detection-floor artifact facts.
+{
+  const repoRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "../..");
+  const attemptDocument = loadAttemptShards({
+    shardRoot: path.join(repoRoot, "data", "admin", "data-supply-state", "detection-attempts"),
+  });
+  const edgarAttempt = attemptDocument.attempts.find((row) => row.lane_id === "edgar_filings");
+  assert.ok(edgarAttempt?.observed_at, "the committed EDGAR attempt shard provides an operational observation");
+  const coverage = buildFetchCronAttemptCoverage({
+    attempts: attemptDocument,
+    calendars: DETECTION_CALENDARS,
+    nowValue: edgarAttempt.observed_at,
+  });
+  assert.equal(
+    coverage.rows.find((row) => row.lane_id === "edgar_filings")?.observed_at,
+    edgarAttempt.observed_at,
+    "alarm coverage reads the attempt shard without a removed endpoint field",
+  );
+
+  const watchdog = buildLaneOutcomeWatchdog({
+    detectionFloor: {
+      generated_at: "2026-09-28T03:00:00Z",
+      lanes: [{
+        id: "fred_macro",
+        status: "ready",
+        reason: "ok",
+        artifact: { source_as_of: "2026-09-27", generated_at: null },
+      }],
+    },
+    attempts: attemptDocument,
+    publication: null,
+    nowIso: "2026-09-28T03:00:00Z",
+    calendars: DETECTION_CALENDARS,
+  });
+  assert.equal(watchdog.schema_version, LANE_OUTCOME_WATCHDOG_SCHEMA);
+  assert.equal(watchdog.rows.find((row) => row.lane_id === "fred_macro")?.state, "current");
+}
 
 assert.equal(runtimeSlotKey("update-manifest.yml", "30 2 * * *", null), null);
 assert.equal(runtimeSlotKey("update-manifest.yml", "30 2 * * *", ""), null);
