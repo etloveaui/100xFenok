@@ -12,31 +12,44 @@
       "run_id": "31349898588",
       "schedule": "7 0 * * 0-5",
       "shard": "12/72"
+    },
+    {
+      "attempts_used": 1,
+      "event_name": "workflow_dispatch",
+      "failures": [],
+      "latency_ms": 472,
+      "natural": false,
+      "observed_at": "2026-09-28T04:37:06Z",
+      "outcome": "fresh",
+      "run_attempt": 1,
+      "run_id": "36367831133",
+      "schedule": "",
+      "shard": ""
     }
   ],
   "current": {
-    "fetched_at": "2026-08-10T02:33:31Z",
-    "history_as_of": "2026-08-07",
-    "path": "data/admin/yahoo-batch-quote-history/lkg/IVOL.json",
-    "payload_sha256": "08715eefa7e6224aad7a45dd9183205d0e7c30760ac9df230e53e62de19cd4d7",
-    "quote_as_of": "2026-08-07T19:59:55Z",
-    "source_as_of": "2026-08-07"
+    "fetched_at": "2026-09-28T04:53:43Z",
+    "history_as_of": "2026-09-25",
+    "path": "data/yf/finance/IVOL.json",
+    "payload_sha256": "c4deb4a942f7a886d5c346d2e4d78a8491ccb4f9792a8d579cfed245f1c9245b",
+    "quote_as_of": "2026-09-25T20:00:00Z",
+    "source_as_of": "2026-09-25"
   },
   "discovered_from": [
     "stockanalysis_etf"
   ],
   "last_attempt": {
     "attempts_used": 1,
-    "event_name": "schedule",
+    "event_name": "workflow_dispatch",
     "failures": [],
-    "latency_ms": 662,
-    "natural": true,
-    "observed_at": "2026-08-10T02:30:39Z",
+    "latency_ms": 472,
+    "natural": false,
+    "observed_at": "2026-09-28T04:37:06Z",
     "outcome": "fresh",
     "run_attempt": 1,
-    "run_id": "31349898588",
-    "schedule": "7 0 * * 0-5",
-    "shard": "12/72"
+    "run_id": "36367831133",
+    "schedule": "",
+    "shard": ""
   },
   "lkg": {
     "fetched_at": "2026-08-10T02:33:31Z",
@@ -48,18 +61,18 @@
   },
   "promotion_contract": "provider_observation/v2",
   "provider_observation": {
-    "event_name": "schedule",
-    "history_as_of": "2026-08-07",
-    "observed_at": "2026-08-10T02:30:39Z",
-    "payload_sha256": "18ab1f333a77668556f30e535bb7490785d35329b597800bb07052602d1efc1d",
-    "quote_as_of": "2026-08-07T19:59:55Z",
+    "event_name": "workflow_dispatch",
+    "history_as_of": "2026-09-25",
+    "observed_at": "2026-09-28T04:37:06Z",
+    "payload_sha256": "d6ffdc9cd2a584d7d666c37fe7825841b7c54f1503d6bd02d8bbc4a7ac7f07a1",
+    "quote_as_of": "2026-09-25T20:00:00Z",
     "run_attempt": 1,
-    "run_id": "31349898588",
+    "run_id": "36367831133",
     "schema_version": "provider_observation/v2",
-    "source_as_of": "2026-08-07"
+    "source_as_of": "2026-09-25"
   },
-  "resolution_state": "lkg_primary",
-  "retry": true,
+  "resolution_state": "fresh_primary",
+  "retry": false,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "stale": {
     "age_business_days": 8,
@@ -72,5 +85,5 @@
     "source_as_of": "2026-08-07"
   },
   "ticker": "IVOL",
-  "updated_at": "2026-08-19T23:42:29Z"
+  "updated_at": "2026-09-28T04:37:06Z"
 }

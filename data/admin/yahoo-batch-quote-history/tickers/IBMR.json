@@ -12,31 +12,44 @@
       "run_id": "31461137754",
       "schedule": "7 4 * * 0-5",
       "shard": "26/72"
+    },
+    {
+      "attempts_used": 1,
+      "event_name": "workflow_dispatch",
+      "failures": [],
+      "latency_ms": 502,
+      "natural": false,
+      "observed_at": "2026-09-28T04:37:06Z",
+      "outcome": "fresh",
+      "run_attempt": 1,
+      "run_id": "36367831133",
+      "schedule": "",
+      "shard": ""
     }
   ],
   "current": {
-    "fetched_at": "2026-08-11T05:20:56Z",
-    "history_as_of": "2026-08-10",
-    "path": "data/admin/yahoo-batch-quote-history/lkg/IBMR.json",
-    "payload_sha256": "ad511399a6ffed98fc256bf42e5970ef9937d19872b64fb88ad9f95db78570e5",
-    "quote_as_of": "2026-08-10T19:52:41Z",
-    "source_as_of": "2026-08-10"
+    "fetched_at": "2026-09-28T04:48:53Z",
+    "history_as_of": "2026-09-25",
+    "path": "data/yf/finance/IBMR.json",
+    "payload_sha256": "caedf21d6ce0871cea348fde8ff9e76b8665e8e98f9281333b7e084d56739975",
+    "quote_as_of": "2026-09-25T20:00:00Z",
+    "source_as_of": "2026-09-25"
   },
   "discovered_from": [
     "stockanalysis_etf"
   ],
   "last_attempt": {
     "attempts_used": 1,
-    "event_name": "schedule",
+    "event_name": "workflow_dispatch",
     "failures": [],
-    "latency_ms": 662,
-    "natural": true,
-    "observed_at": "2026-08-11T05:18:59Z",
+    "latency_ms": 502,
+    "natural": false,
+    "observed_at": "2026-09-28T04:37:06Z",
     "outcome": "fresh",
     "run_attempt": 1,
-    "run_id": "31461137754",
-    "schedule": "7 4 * * 0-5",
-    "shard": "26/72"
+    "run_id": "36367831133",
+    "schedule": "",
+    "shard": ""
   },
   "lkg": {
     "fetched_at": "2026-08-11T05:20:56Z",
@@ -48,18 +61,18 @@
   },
   "promotion_contract": "provider_observation/v2",
   "provider_observation": {
-    "event_name": "schedule",
-    "history_as_of": "2026-08-10",
-    "observed_at": "2026-08-11T05:18:59Z",
-    "payload_sha256": "33b8f5d48664b67e6c6afd3beb4f0d651bbdff84d9dc0cfa56fe9f7297c5d957",
-    "quote_as_of": "2026-08-10T19:52:41Z",
+    "event_name": "workflow_dispatch",
+    "history_as_of": "2026-09-25",
+    "observed_at": "2026-09-28T04:37:06Z",
+    "payload_sha256": "fb824f4fe0c2b180bada79c1b0064e4986d1ea0a830389cf99c8a0108f21c3be",
+    "quote_as_of": "2026-09-25T20:00:00Z",
     "run_attempt": 1,
-    "run_id": "31461137754",
+    "run_id": "36367831133",
     "schema_version": "provider_observation/v2",
-    "source_as_of": "2026-08-10"
+    "source_as_of": "2026-09-25"
   },
-  "resolution_state": "lkg_primary",
-  "retry": true,
+  "resolution_state": "fresh_primary",
+  "retry": false,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "stale": {
     "age_business_days": 7,
@@ -72,5 +85,5 @@
     "source_as_of": "2026-08-10"
   },
   "ticker": "IBMR",
-  "updated_at": "2026-08-19T23:42:29Z"
+  "updated_at": "2026-09-28T04:37:06Z"
 }

@@ -32,40 +32,46 @@
       "run_id": "31648785047",
       "schedule": "7 22 * * 0-5",
       "shard": "47/72"
+    },
+    {
+      "attempts_used": 1,
+      "event_name": "workflow_dispatch",
+      "failures": [],
+      "latency_ms": 468,
+      "natural": false,
+      "observed_at": "2026-09-28T04:37:06Z",
+      "outcome": "fresh",
+      "run_attempt": 1,
+      "run_id": "36367831133",
+      "schedule": "",
+      "shard": ""
     }
   ],
   "current": {
-    "fetched_at": "2026-08-05T23:17:21Z",
-    "history_as_of": "2026-08-05",
-    "path": "data/admin/yahoo-batch-quote-history/lkg/IDVZ.json",
-    "payload_sha256": "2a25946deb0c1f1e8c65b2a88c7221f19595be4dc2f75c485ad4a95257531d8d",
-    "quote_as_of": "2026-08-05T19:59:45Z",
-    "source_as_of": "2026-08-05"
+    "fetched_at": "2026-09-28T04:49:56Z",
+    "history_as_of": "2026-09-25",
+    "path": "data/yf/finance/IDVZ.json",
+    "payload_sha256": "79ac8ecae46c1323d3c726df7827b3be0c885ef29e331442adcc98e8f22800c0",
+    "quote_as_of": "2026-09-25T19:16:25Z",
+    "source_as_of": "2026-09-25"
   },
   "discovered_from": [
     "stockanalysis_etf"
   ],
   "last_attempt": {
     "attempts_used": 1,
-    "error": "ValueError: quote_as_of is unavailable for IDVZ despite available history",
-    "event_name": "schedule",
-    "failures": [
-      {
-        "attempt": 1,
-        "error": "YFRateLimitError: Too Many Requests. Rate limited. Try after a while.",
-        "source": "provider_safe_call"
-      }
-    ],
-    "latency_ms": 416,
-    "natural": true,
-    "observed_at": "2026-08-12T22:55:30Z",
-    "outcome": "failed",
+    "event_name": "workflow_dispatch",
+    "failures": [],
+    "latency_ms": 468,
+    "natural": false,
+    "observed_at": "2026-09-28T04:37:06Z",
+    "outcome": "fresh",
     "run_attempt": 1,
-    "run_id": "31648785047",
-    "schedule": "7 22 * * 0-5",
-    "shard": "47/72"
+    "run_id": "36367831133",
+    "schedule": "",
+    "shard": ""
   },
-  "latest_failure": {
+  "last_recovered_failure": {
     "attempts_used": 1,
     "data_loss": false,
     "deferred_acquisition": false,
@@ -93,19 +99,24 @@
   },
   "promotion_contract": "provider_observation/v2",
   "provider_observation": {
-    "event_name": "schedule",
-    "history_as_of": "2026-08-05",
-    "observed_at": "2026-08-05T23:14:16Z",
-    "payload_sha256": "696252ae1cde540abf9f3f47aeed258351eb76bb2f2fd948a1a23ec10f14c14b",
-    "quote_as_of": "2026-08-05T19:59:45Z",
+    "event_name": "workflow_dispatch",
+    "history_as_of": "2026-09-25",
+    "observed_at": "2026-09-28T04:37:06Z",
+    "payload_sha256": "f27b8b1e27bef8d60428de0f61c3d61c4fb19de52f616486e369425ae39ab404",
+    "quote_as_of": "2026-09-25T19:16:25Z",
     "run_attempt": 1,
-    "run_id": "31055557073",
+    "run_id": "36367831133",
     "schema_version": "provider_observation/v2",
-    "source_as_of": "2026-08-05"
+    "source_as_of": "2026-09-25"
   },
-  "resolution_state": "lkg_primary",
-  "retry": true,
+  "recovered_at": "2026-09-28T04:37:06Z",
+  "recovered_from_run_id": "31648785047",
+  "recovery_event_name": "workflow_dispatch",
+  "recovery_run_attempt": 1,
+  "recovery_run_id": "36367831133",
+  "resolution_state": "fresh_primary",
+  "retry": false,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "ticker": "IDVZ",
-  "updated_at": "2026-08-12T22:55:30Z"
+  "updated_at": "2026-09-28T04:37:06Z"
 }

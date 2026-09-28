@@ -43,62 +43,44 @@
       "run_id": "31172586227",
       "schedule": "7 10 * * 0-5",
       "shard": "65/72"
+    },
+    {
+      "attempts_used": 1,
+      "event_name": "workflow_dispatch",
+      "failures": [],
+      "latency_ms": 506,
+      "natural": false,
+      "observed_at": "2026-09-28T04:37:06Z",
+      "outcome": "fresh",
+      "run_attempt": 1,
+      "run_id": "36367831133",
+      "schedule": "",
+      "shard": ""
     }
   ],
   "current": {
-    "fetched_at": "2026-08-07T11:08:03Z",
-    "history_as_of": "2026-08-06",
-    "path": "data/admin/yahoo-batch-quote-history/lkg/GARP.json",
-    "payload_sha256": "53eb4a13afa241ac6d52a184d80136a8554df0961d9e00a1f049f1f924523a76",
-    "quote_as_of": "2026-08-06T20:00:01Z",
-    "source_as_of": "2026-08-06"
+    "fetched_at": "2026-09-28T04:40:26Z",
+    "history_as_of": "2026-09-25",
+    "path": "data/yf/finance/GARP.json",
+    "payload_sha256": "f8edbffd725d442951b8e56574f17585ede21c53b6e8e1c68e125ffc6cc647cd",
+    "quote_as_of": "2026-09-25T20:00:01Z",
+    "source_as_of": "2026-09-25"
   },
   "discovered_from": [
     "stockanalysis_etf"
   ],
   "last_attempt": {
     "attempts_used": 1,
-    "event_name": "schedule",
-    "failures": [
-      {
-        "attempt": 1,
-        "error": "YFDataException: GARP: No Fund data found.",
-        "source": "provider_safe_call"
-      },
-      {
-        "attempt": 1,
-        "error": "YFDataException: GARP: No Fund data found.",
-        "source": "provider_safe_call"
-      },
-      {
-        "attempt": 1,
-        "error": "YFDataException: GARP: No Fund data found.",
-        "source": "provider_safe_call"
-      },
-      {
-        "attempt": 1,
-        "error": "YFDataException: GARP: No Fund data found.",
-        "source": "provider_safe_call"
-      },
-      {
-        "attempt": 1,
-        "error": "YFDataException: GARP: No Fund data found.",
-        "source": "provider_safe_call"
-      },
-      {
-        "attempt": 1,
-        "error": "YFDataException: GARP: No Fund data found.",
-        "source": "provider_safe_call"
-      }
-    ],
-    "latency_ms": 1193,
-    "natural": true,
-    "observed_at": "2026-08-07T11:06:01Z",
+    "event_name": "workflow_dispatch",
+    "failures": [],
+    "latency_ms": 506,
+    "natural": false,
+    "observed_at": "2026-09-28T04:37:06Z",
     "outcome": "fresh",
     "run_attempt": 1,
-    "run_id": "31172586227",
-    "schedule": "7 10 * * 0-5",
-    "shard": "65/72"
+    "run_id": "36367831133",
+    "schedule": "",
+    "shard": ""
   },
   "lkg": {
     "fetched_at": "2026-08-07T11:08:03Z",
@@ -110,18 +92,18 @@
   },
   "promotion_contract": "provider_observation/v2",
   "provider_observation": {
-    "event_name": "schedule",
-    "history_as_of": "2026-08-06",
-    "observed_at": "2026-08-07T11:06:01Z",
-    "payload_sha256": "09c30c4896708c942db9485186e492d2817054eaf1a62bbb7a627a350e0d37b5",
-    "quote_as_of": "2026-08-06T20:00:01Z",
+    "event_name": "workflow_dispatch",
+    "history_as_of": "2026-09-25",
+    "observed_at": "2026-09-28T04:37:06Z",
+    "payload_sha256": "5c874420e319859924a885c44a9a50b698b9f304e0f77be9f0de599ec7134449",
+    "quote_as_of": "2026-09-25T20:00:01Z",
     "run_attempt": 1,
-    "run_id": "31172586227",
+    "run_id": "36367831133",
     "schema_version": "provider_observation/v2",
-    "source_as_of": "2026-08-06"
+    "source_as_of": "2026-09-25"
   },
-  "resolution_state": "lkg_primary",
-  "retry": true,
+  "resolution_state": "fresh_primary",
+  "retry": false,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "stale": {
     "age_business_days": 9,
@@ -134,5 +116,5 @@
     "source_as_of": "2026-08-06"
   },
   "ticker": "GARP",
-  "updated_at": "2026-08-19T23:42:29Z"
+  "updated_at": "2026-09-28T04:37:06Z"
 }

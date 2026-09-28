@@ -152,62 +152,44 @@
       "run_id": "31496919771",
       "schedule": "7 12 * * 0-5",
       "shard": "30/72"
+    },
+    {
+      "attempts_used": 1,
+      "event_name": "workflow_dispatch",
+      "failures": [],
+      "latency_ms": 427,
+      "natural": false,
+      "observed_at": "2026-09-28T04:37:06Z",
+      "outcome": "fresh",
+      "run_attempt": 1,
+      "run_id": "36367831133",
+      "schedule": "",
+      "shard": ""
     }
   ],
   "current": {
-    "fetched_at": "2026-08-11T13:39:22Z",
-    "history_as_of": "2026-08-11",
-    "path": "data/admin/yahoo-batch-quote-history/lkg/INFH.json",
-    "payload_sha256": "03b46df78d5fe1d4e94ae8749a19a048686472448fbfc40110657dc2d78c0d2a",
-    "quote_as_of": "2026-08-11T13:38:05Z",
-    "source_as_of": "2026-08-11"
+    "fetched_at": "2026-09-28T04:51:41Z",
+    "history_as_of": "2026-09-25",
+    "path": "data/yf/finance/INFH.json",
+    "payload_sha256": "522c4aa7d0937cf69698be10935c81a76b20dc0302096751c14f0d87ecc434fc",
+    "quote_as_of": "2026-09-25T19:59:59Z",
+    "source_as_of": "2026-09-25"
   },
   "discovered_from": [
     "stockanalysis_etf"
   ],
   "last_attempt": {
     "attempts_used": 1,
-    "event_name": "schedule",
-    "failures": [
-      {
-        "attempt": 1,
-        "error": "YFDataException: INFH: No Fund data found.",
-        "source": "provider_safe_call"
-      },
-      {
-        "attempt": 1,
-        "error": "YFDataException: INFH: No Fund data found.",
-        "source": "provider_safe_call"
-      },
-      {
-        "attempt": 1,
-        "error": "YFDataException: INFH: No Fund data found.",
-        "source": "provider_safe_call"
-      },
-      {
-        "attempt": 1,
-        "error": "YFDataException: INFH: No Fund data found.",
-        "source": "provider_safe_call"
-      },
-      {
-        "attempt": 1,
-        "error": "YFDataException: INFH: No Fund data found.",
-        "source": "provider_safe_call"
-      },
-      {
-        "attempt": 1,
-        "error": "YFDataException: INFH: No Fund data found.",
-        "source": "provider_safe_call"
-      }
-    ],
-    "latency_ms": 1095,
-    "natural": true,
-    "observed_at": "2026-08-11T13:36:55Z",
+    "event_name": "workflow_dispatch",
+    "failures": [],
+    "latency_ms": 427,
+    "natural": false,
+    "observed_at": "2026-09-28T04:37:06Z",
     "outcome": "fresh",
     "run_attempt": 1,
-    "run_id": "31496919771",
-    "schedule": "7 12 * * 0-5",
-    "shard": "30/72"
+    "run_id": "36367831133",
+    "schedule": "",
+    "shard": ""
   },
   "lkg": {
     "fetched_at": "2026-08-11T13:39:22Z",
@@ -219,18 +201,18 @@
   },
   "promotion_contract": "provider_observation/v2",
   "provider_observation": {
-    "event_name": "schedule",
-    "history_as_of": "2026-08-11",
-    "observed_at": "2026-08-11T13:36:55Z",
-    "payload_sha256": "b8826fdd4b876d87db5be742553813242090da0cfda6ea97baf3d1bf1933dd70",
-    "quote_as_of": "2026-08-11T13:38:05Z",
+    "event_name": "workflow_dispatch",
+    "history_as_of": "2026-09-25",
+    "observed_at": "2026-09-28T04:37:06Z",
+    "payload_sha256": "19f3b6ede9d8bf288574a2dc03f02e70514045f555d765c00c93eb477c5673b1",
+    "quote_as_of": "2026-09-25T19:59:59Z",
     "run_attempt": 1,
-    "run_id": "31496919771",
+    "run_id": "36367831133",
     "schema_version": "provider_observation/v2",
-    "source_as_of": "2026-08-11"
+    "source_as_of": "2026-09-25"
   },
-  "resolution_state": "lkg_primary",
-  "retry": true,
+  "resolution_state": "fresh_primary",
+  "retry": false,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "stale": {
     "age_business_days": 7,
@@ -243,5 +225,5 @@
     "source_as_of": "2026-08-11"
   },
   "ticker": "INFH",
-  "updated_at": "2026-08-20T14:20:12Z"
+  "updated_at": "2026-09-28T04:37:06Z"
 }

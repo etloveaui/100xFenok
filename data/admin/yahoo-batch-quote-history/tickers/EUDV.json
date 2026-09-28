@@ -154,7 +154,7 @@
   "current": {
     "fetched_at": "2026-09-28T03:24:23Z",
     "history_as_of": "2026-09-25",
-    "path": "data/yf/finance/EUDV.json",
+    "path": "data/admin/yahoo-batch-quote-history/lkg/EUDV.json",
     "payload_sha256": "dff5391dab1d04e024aefbdd3f1eeae84ad4b84ea166efe51154fe8b2bb5acef",
     "quote_as_of": "2026-09-16T14:03:26Z",
     "source_as_of": "2026-09-16T14:03:26Z"
@@ -188,12 +188,12 @@
     "run_id": "31296241377"
   },
   "lkg": {
-    "fetched_at": "2026-08-10T17:05:01Z",
-    "history_as_of": "2026-08-10",
+    "fetched_at": "2026-09-28T03:24:23Z",
+    "history_as_of": "2026-09-25",
     "path": "data/admin/yahoo-batch-quote-history/lkg/EUDV.json",
-    "payload_sha256": "8156588718f3b23fbef0e346260a4c4bf90a05ca5ed9f969960a8007c8013528",
-    "quote_as_of": "2026-08-10T13:46:04Z",
-    "source_as_of": "2026-08-10"
+    "payload_sha256": "dff5391dab1d04e024aefbdd3f1eeae84ad4b84ea166efe51154fe8b2bb5acef",
+    "quote_as_of": "2026-09-16T14:03:26Z",
+    "source_as_of": "2026-09-16T14:03:26Z"
   },
   "promotion_contract": "provider_observation/v2",
   "provider_observation": {
@@ -212,19 +212,19 @@
   "recovery_event_name": "schedule",
   "recovery_run_attempt": 1,
   "recovery_run_id": "31411954324",
-  "resolution_state": "fresh_primary",
-  "retry": false,
+  "resolution_state": "lkg_primary",
+  "retry": true,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "stale": {
-    "age_business_days": 7,
-    "classified_at": "2026-08-19T23:42:29Z",
-    "classified_run_id": "32314261503",
+    "age_business_days": 8,
+    "classified_at": "2026-09-28T04:37:06Z",
+    "classified_run_id": "36367831133",
     "expected_resolution": "next_natural_yahoo_run",
     "max_business_days": 6,
-    "message": "EUDV holds LKG because Yahoo source date 2026-08-10 is 7 business days old, beyond the 6-day bound; it will retry on the next natural Yahoo run.",
+    "message": "EUDV holds LKG because Yahoo source date 2026-09-16T14:03:26Z is 8 business days old, beyond the 6-day bound; it will retry on the next natural Yahoo run.",
     "reason": "source_age_exceeds_lane_bound",
-    "source_as_of": "2026-08-10"
+    "source_as_of": "2026-09-16T14:03:26Z"
   },
   "ticker": "EUDV",
-  "updated_at": "2026-09-28T03:11:20Z"
+  "updated_at": "2026-09-28T04:37:06Z"
 }

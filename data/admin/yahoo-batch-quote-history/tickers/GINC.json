@@ -43,62 +43,44 @@
       "run_id": "31590557839",
       "schedule": "7 10 * * 0-5",
       "shard": "41/72"
+    },
+    {
+      "attempts_used": 1,
+      "event_name": "workflow_dispatch",
+      "failures": [],
+      "latency_ms": 446,
+      "natural": false,
+      "observed_at": "2026-09-28T04:37:06Z",
+      "outcome": "fresh",
+      "run_attempt": 1,
+      "run_id": "36367831133",
+      "schedule": "",
+      "shard": ""
     }
   ],
   "current": {
-    "fetched_at": "2026-08-12T11:13:27Z",
-    "history_as_of": "2026-08-11",
-    "path": "data/admin/yahoo-batch-quote-history/lkg/GINC.json",
-    "payload_sha256": "c19db41a1edfda97856e197e0ce245eebb25fd6d0fcc8b19c864d2bbdde1369d",
-    "quote_as_of": "2026-08-11T19:59:47Z",
-    "source_as_of": "2026-08-11"
+    "fetched_at": "2026-09-28T04:41:47Z",
+    "history_as_of": "2026-09-25",
+    "path": "data/yf/finance/GINC.json",
+    "payload_sha256": "3fa0f7f58899cbda30129b3f474261eb58a9f9d1b4a1acd3cbda6bd32f38c51a",
+    "quote_as_of": "2026-09-25T14:24:25Z",
+    "source_as_of": "2026-09-25"
   },
   "discovered_from": [
     "stockanalysis_etf"
   ],
   "last_attempt": {
     "attempts_used": 1,
-    "event_name": "schedule",
-    "failures": [
-      {
-        "attempt": 1,
-        "error": "YFDataException: GINC: No Fund data found.",
-        "source": "provider_safe_call"
-      },
-      {
-        "attempt": 1,
-        "error": "YFDataException: GINC: No Fund data found.",
-        "source": "provider_safe_call"
-      },
-      {
-        "attempt": 1,
-        "error": "YFDataException: GINC: No Fund data found.",
-        "source": "provider_safe_call"
-      },
-      {
-        "attempt": 1,
-        "error": "YFDataException: GINC: No Fund data found.",
-        "source": "provider_safe_call"
-      },
-      {
-        "attempt": 1,
-        "error": "YFDataException: GINC: No Fund data found.",
-        "source": "provider_safe_call"
-      },
-      {
-        "attempt": 1,
-        "error": "YFDataException: GINC: No Fund data found.",
-        "source": "provider_safe_call"
-      }
-    ],
-    "latency_ms": 1056,
-    "natural": true,
-    "observed_at": "2026-08-12T11:11:11Z",
+    "event_name": "workflow_dispatch",
+    "failures": [],
+    "latency_ms": 446,
+    "natural": false,
+    "observed_at": "2026-09-28T04:37:06Z",
     "outcome": "fresh",
     "run_attempt": 1,
-    "run_id": "31590557839",
-    "schedule": "7 10 * * 0-5",
-    "shard": "41/72"
+    "run_id": "36367831133",
+    "schedule": "",
+    "shard": ""
   },
   "lkg": {
     "fetched_at": "2026-08-12T11:13:27Z",
@@ -110,18 +92,18 @@
   },
   "promotion_contract": "provider_observation/v2",
   "provider_observation": {
-    "event_name": "schedule",
-    "history_as_of": "2026-08-11",
-    "observed_at": "2026-08-12T11:11:11Z",
-    "payload_sha256": "47b649ffbff4a7bfd8e4fbfc744c1d24b5dcaf43f1ec6d53b2b4e6297eed4e14",
-    "quote_as_of": "2026-08-11T19:59:47Z",
+    "event_name": "workflow_dispatch",
+    "history_as_of": "2026-09-25",
+    "observed_at": "2026-09-28T04:37:06Z",
+    "payload_sha256": "16f6b851f2aae906dbb06274d202ac30f4c596f11d881096c0908ad767db4959",
+    "quote_as_of": "2026-09-25T14:24:25Z",
     "run_attempt": 1,
-    "run_id": "31590557839",
+    "run_id": "36367831133",
     "schema_version": "provider_observation/v2",
-    "source_as_of": "2026-08-11"
+    "source_as_of": "2026-09-25"
   },
-  "resolution_state": "lkg_primary",
-  "retry": true,
+  "resolution_state": "fresh_primary",
+  "retry": false,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "stale": {
     "age_business_days": 7,
@@ -134,5 +116,5 @@
     "source_as_of": "2026-08-11"
   },
   "ticker": "GINC",
-  "updated_at": "2026-08-20T14:20:12Z"
+  "updated_at": "2026-09-28T04:37:06Z"
 }
