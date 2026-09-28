@@ -194,6 +194,8 @@ const LOG_ONLY_TOLERANT_STEPS = Object.freeze({
     "supplementary evidence for a lane that already persists a publish outcome and is watched by the alarm; measured passing on 2026-08-21 with {\"ok\":true} in the run log",
   "slickcharts-weekly.yml::Check slickcharts-weekly cloud acceptance":
     "supplementary evidence for a lane that already persists a publish outcome and is watched by the alarm; measured passing on 2026-08-21 with {\"ok\":true} in the run log",
+  "fetch-damodaran-shadow.yml::Publish damodaran generation to the cloud data plane":
+    "S3 removed the persist-outcome step that read this id, so the outcome is no longer referenced in the workflow. The failure is still observed, by the data-stoppage rule over consecutive committed KPI generations, which is the alarm's own input",
 });
 
 function tolerantUnits(root) {

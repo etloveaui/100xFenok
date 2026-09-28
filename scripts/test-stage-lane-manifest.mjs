@@ -322,13 +322,14 @@ assertTrackedFileFromGlobBelowIgnoredParentStillStages();
   }
 }
 
-// The full symbols merge publishes its attempt shard and canonical aggregate;
+// The full symbols merge publishes its composite-recovery index; the
 // shard-only/single-symbol calls must not opt into this workflow-wide stage.
+// S3 removed the attempt shard this policy used to stage alongside it.
 {
   const fixture = makeFixture({ workflow: SLICKCHARTS_SYMBOLS_WORKFLOW });
   const always = run(fixture.root, "always_if_exists", [], SLICKCHARTS_SYMBOLS_WORKFLOW);
   assert.equal(always.status, 0, `${always.stderr}\n${always.stdout}`);
-  assert.match(always.stdout, /declared=2 stage_selected=2 staged_index_total=2/);
+  assert.match(always.stdout, /declared=1 stage_selected=1 staged_index_total=1/);
   assert.deepEqual(cached(fixture.root), fixture.materialized.always.sort());
 }
 
