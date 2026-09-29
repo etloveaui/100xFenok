@@ -17,7 +17,8 @@ export async function loadEventSurface(name: string, force = false): Promise<Sur
   const url = `/api/data/stockanalysis/surfaces/${encodeURIComponent(name)}`;
   try {
     const { data } = await fetchJsonShared<SurfaceDoc>(url, { force, init: { cache: "no-store" } });
-    if (!data || typeof data !== "object" || Array.isArray(data)) {
+    if (!data || typeof data !== "object" || Array.isArray(data)
+      || (!Array.isArray(data.records) && !Array.isArray(data.tables))) {
       invalidateData(url);
       return { surface: name, load_failed: true };
     }

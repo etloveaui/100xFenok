@@ -76,6 +76,8 @@ async function rawFetch<T>(url: string, init: Pick<RequestInit, "cache"> | undef
   try {
     return { data: (await response.json()) as T, receivedAt: Date.now() };
   } catch (err) {
+    // Cancellation can occur after headers arrive, while the body is streaming.
+    if (isAbortError(err)) throw new DataFetchError(url, "aborted", response.status);
     throw new DataFetchError(url, "parse", response.status, err instanceof Error ? err.message : String(err));
   }
 }
@@ -146,15 +148,16 @@ function joinShared<T>(shared: Promise<Loaded<T>>, url: string, signal: AbortSig
     };
     const onAbort = () => finish(() => reject(new DataFetchError(url, "aborted", null)));
     const timer = timeoutMs !== undefined ? setTimeout(() => finish(() => reject(new DataFetchError(url, "timeout", null))), timeoutMs) : undefined;
+    // Always observe the shared result, even if cancellation raced with joining.
+    shared.then(
+      (value) => finish(() => resolve(value)),
+      (err) => finish(() => reject(err)),
+    );
     if (signal?.aborted) {
       onAbort();
       return;
     }
     signal?.addEventListener("abort", onAbort);
-    shared.then(
-      (value) => finish(() => resolve(value)),
-      (err) => finish(() => reject(err)),
-    );
   });
 }
 
@@ -185,6 +188,7 @@ async function serverFetch<T>(url: string, o: DataFetchOptions): Promise<Loaded<
 }
 
 export async function fetchJsonShared<T>(url: string, o: DataFetchOptions = {}): Promise<Loaded<T>> {
+  if (o.signal?.aborted) throw new DataFetchError(url, "aborted", null);
   if (typeof window === "undefined") return serverFetch<T>(url, o);
 
   if (!o.force) {

@@ -10,6 +10,7 @@ on:
   pull_request:
     paths:
       - '100xfenok-next/src/**'
+      - '100xfenok-next/scripts/check-pr-runtime-smoke.mjs'
       - '100xfenok-next/package.json'
       - '100xfenok-next/package-lock.json'
       - '100xfenok-next/tsconfig.json'
@@ -98,6 +99,7 @@ jobs:
     concurrency:
       group: remote-heavy-verification
       cancel-in-progress: false
+      queue: max
     defaults:
       run:
         working-directory: 100xfenok-next
@@ -120,3 +122,31 @@ jobs:
           FENOK_REMOTE_HEAVY_NESTED_EXECUTION: '1'
           FENOK_REMOTE_HEAVY_EXPECTED_REVISION: ${{ github.sha }}
         run: npm run build:runtime
+      - name: Install smoke-test browser
+        run: npx playwright install --with-deps chromium
+      - name: Check built routes on the isolated runtime
+        env:
+          NEXT_TELEMETRY_DISABLED: '1'
+          FENOK_REMOTE_HEAVY_NESTED_EXECUTION: '1'
+          FENOK_REMOTE_HEAVY_EXPECTED_REVISION: ${{ github.sha }}
+        run: |
+          set -euo pipefail
+          bash scripts/load-guard.sh --assert-nested
+          npm run start:qa -- --hostname 127.0.0.1 --port 3107 > "$RUNNER_TEMP/pr-runtime.log" 2>&1 &
+          server_pid=$!
+          trap 'kill "$server_pid" 2>/dev/null || true; wait "$server_pid" 2>/dev/null || true' EXIT
+          ready=false
+          for attempt in $(seq 1 30); do
+            if curl -fsS http://127.0.0.1:3107/ -o /dev/null; then ready=true; break; fi
+            sleep 1
+          done
+          if [ "$ready" != true ]; then cat "$RUNNER_TEMP/pr-runtime.log"; exit 1; fi
+          node scripts/check-pr-runtime-smoke.mjs
+      - name: Keep bounded runtime review results
+        if: ${{ always() }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: pr-runtime-smoke
+          path: 100xfenok-next/.qa-artifacts/pr-runtime/
+          if-no-files-found: ignore
+          retention-days: 3

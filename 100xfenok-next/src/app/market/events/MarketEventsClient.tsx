@@ -5,6 +5,7 @@ import TickerChip from "@/components/TickerChip";
 import MarketSectionNav from "@/components/market/MarketSectionNav";
 import { ROUTES } from "@/lib/routes";
 import { EmptyState } from "@/components/ui";
+import { refreshOnReturn } from "@/lib/client/refresh-on-return";
 import { EVENTS_STALE_LABEL, isEventBoardStale } from "@/lib/market-events/freshness";
 import { type MacroCalendar } from "@/lib/market-events/macro-calendar";
 import { loadMacroCalendar } from "@/lib/market-events/calendar-loader";
@@ -223,24 +224,34 @@ export default function MarketEventsClient({
 
   useEffect(() => {
     let cancelled = false;
-    loadEventData(reloadKey > 0).then((next) => {
-      if (!cancelled) {
-        setData(next);
-        setLoaded(true);
-      }
-    });
+    const load = (force = false) => {
+      void loadEventData(force).then((next) => {
+        if (!cancelled) {
+          setData(next);
+          setLoaded(true);
+        }
+      });
+    };
+    load(reloadKey > 0);
+    const unsubscribe = refreshOnReturn(() => load());
     return () => {
       cancelled = true;
+      unsubscribe();
     };
   }, [reloadKey]);
 
   useEffect(() => {
     let cancelled = false;
-    loadMacroCalendar({ force: reloadKey > 0 }).then((calendar) => {
-      if (!cancelled) setMacro({ loaded: true, calendar });
-    });
+    const load = (force = false) => {
+      void loadMacroCalendar({ force }).then((calendar) => {
+        if (!cancelled) setMacro({ loaded: true, calendar });
+      });
+    };
+    load(reloadKey > 0);
+    const unsubscribe = refreshOnReturn(() => load());
     return () => {
       cancelled = true;
+      unsubscribe();
     };
   }, [reloadKey]);
 

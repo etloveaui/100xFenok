@@ -4,6 +4,7 @@ import { useEffect, useMemo, useState } from "react";
 import TransitionLink from "@/components/TransitionLink";
 import { useKstToday } from "@/hooks/useKstToday";
 import { dateOnly, daysUntilKstDate, isStaleAsOf } from "@/lib/data-state";
+import { refreshOnReturn } from "@/lib/client/refresh-on-return";
 import { loadMacroCalendar } from "@/lib/market-events/calendar-loader";
 import {
   MACRO_CALENDAR_STALE_AFTER_DAYS,
@@ -42,11 +43,16 @@ export default function WeekAheadStrip() {
 
   useEffect(() => {
     let cancelled = false;
-    loadMacroCalendar({ withPreviousValues: false }).then((calendar) => {
-      if (!cancelled) setState({ loaded: true, calendar });
-    });
+    const load = () => {
+      void loadMacroCalendar({ withPreviousValues: false }).then((calendar) => {
+        if (!cancelled) setState({ loaded: true, calendar });
+      });
+    };
+    load();
+    const unsubscribe = refreshOnReturn(load);
     return () => {
       cancelled = true;
+      unsubscribe();
     };
   }, [today]);
 
