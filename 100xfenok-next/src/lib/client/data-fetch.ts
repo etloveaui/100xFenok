@@ -113,7 +113,9 @@ function getOrStartShared<T>(url: string, init: Pick<RequestInit, "cache"> | und
 
   const promise = rawFetch<T>(url, init, controller.signal)
     .then((result) => {
-      setCache(url, result);
+      // Invalidation detaches this request without aborting existing callers.
+      // Only the request still registered for this URL may fill the cache.
+      if (inflight.get(url) === promise) setCache(url, result);
       return result;
     })
     .catch((err) => {
@@ -124,7 +126,7 @@ function getOrStartShared<T>(url: string, init: Pick<RequestInit, "cache"> | und
     })
     .finally(() => {
       clearTimeout(hardTimer);
-      inflight.delete(url);
+      if (inflight.get(url) === promise) inflight.delete(url);
     });
 
   inflight.set(url, promise);
@@ -209,6 +211,8 @@ export async function fetchJsonOrNull<T>(url: string, o?: DataFetchOptions): Pro
   }
 }
 
+/** Future callers start fresh; existing callers may finish, but cannot repopulate the cache. */
 export function invalidateData(url: string): void {
   cache.delete(url);
+  inflight.delete(url);
 }

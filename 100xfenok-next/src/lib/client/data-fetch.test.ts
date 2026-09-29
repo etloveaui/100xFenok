@@ -250,3 +250,43 @@ test("a timeout while reading the body is a timeout, not corrupt JSON", async ()
     (globalThis as Record<string, unknown>).window = globalThis;
   }
 });
+
+for (const oldFinishesFirst of [true, false]) {
+  test(`invalidating in-flight data isolates the replacement when the old request finishes ${oldFinishesFirst ? "first" : "last"}`, async () => {
+    let calls = 0;
+    const releases: Array<() => void> = [];
+    globalThis.fetch = async () => {
+      const generation = ++calls;
+      await new Promise<void>((resolve) => { releases.push(resolve); });
+      return Response.json({ generation });
+    };
+    const url = uniqueUrl("invalidate-inflight");
+    const old = fetchJsonShared<{ generation: number }>(url);
+    invalidateData(url);
+    const replacement = fetchJsonShared<{ generation: number }>(url);
+    try {
+      assert.equal(calls, 2, "invalidation must detach the obsolete in-flight request");
+      if (oldFinishesFirst) {
+        releases[0]();
+        assert.equal((await old).data.generation, 1, "existing callers retain their own result");
+        const joined = fetchJsonShared<{ generation: number }>(url);
+        assert.equal(calls, 2, "the old finalizer must not remove the replacement from in-flight state");
+        releases[1]();
+        assert.equal((await joined).data.generation, 2, "an obsolete result must not become a fresh cache hit");
+      } else {
+        releases[1]();
+        assert.equal((await replacement).data.generation, 2);
+        releases[0]();
+        await old;
+      }
+      assert.equal((await replacement).data.generation, 2);
+      assert.equal((await fetchJsonShared<{ generation: number }>(url)).data.generation, 2,
+        "late obsolete data must never replace the new cache entry");
+      assert.equal(calls, 2);
+    } finally {
+      for (const release of releases) release();
+      await Promise.allSettled([old, replacement]);
+      invalidateData(url);
+    }
+  });
+}
