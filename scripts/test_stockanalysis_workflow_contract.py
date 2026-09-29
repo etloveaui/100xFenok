@@ -569,22 +569,20 @@ class StockAnalysisWorkflowContractTest(unittest.TestCase):
             publish.index('rsync -a --checksum --delete data/stockanalysis/surfaces/'),
         )
 
-    def test_projection_dispatch_requires_git_publisher_plane_and_persistence(self) -> None:
+    def test_projection_dispatch_requires_git_publisher_and_applicable_plane(self) -> None:
         dispatch = re.search(
-            r"  dispatch-stockanalysis-projection:\n(?P<body>.*)\Z",
+            r"  dispatch-stockanalysis-projection:\n(?P<body>.*?)(?=\n  [a-zA-Z0-9_-]+:\n|\Z)",
             self.text,
             flags=re.DOTALL,
         )
         self.assertIsNotNone(dispatch)
         body = dispatch.group("body")
         for expected in (
-            "needs:\n      - publish-stockanalysis\n      - publish-stockanalysis-etf-plane\n      - persist-stockanalysis-etf-plane",
+            "needs:\n      - publish-stockanalysis\n      - publish-stockanalysis-etf-plane",
             "always()",
             "needs.publish-stockanalysis.result == 'success'",
             "needs.publish-stockanalysis-etf-plane.result == 'success'",
-            "needs.persist-stockanalysis-etf-plane.result == 'success'",
             "needs.publish-stockanalysis-etf-plane.result == 'skipped'",
-            "needs.persist-stockanalysis-etf-plane.result == 'skipped'",
             "github.event.schedule != '50 23 * * 1-5'",
             "github.event.schedule != '20 23 * * 0'",
             "gh workflow run update-manifest.yml",
