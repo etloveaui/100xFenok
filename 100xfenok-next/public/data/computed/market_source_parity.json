@@ -1,6 +1,6 @@
 {
   "schema_version": "market-source-parity/v1",
-  "generated_at": "2026-09-29T03:15:25Z",
+  "generated_at": "2026-09-29T05:57:01Z",
   "source": "computed/market_facts candidate comparison",
   "summary": {
     "inspected_ticker_files": 7003,
@@ -11,13 +11,13 @@
     "diagnosis_counts": {
       "agreement": 12542,
       "scale_mismatch": 221,
-      "sign_divergence": 4512,
-      "stale": 37135,
-      "value_drift": 9749
+      "sign_divergence": 4509,
+      "stale": 37137,
+      "value_drift": 9750
     },
-    "stale_rows": 37135,
+    "stale_rows": 37137,
     "scale_mismatch_rows": 221,
-    "sign_divergence_rows": 4512
+    "sign_divergence_rows": 4509
   },
   "by_field": {
     "beta": {
@@ -272,11 +272,11 @@
       }
     },
     "trailing_pe": {
-      "ticker_count": 3901,
+      "ticker_count": 3902,
       "multi_candidate_count": 489,
       "selected_sources": {
         "slickcharts": 3,
-        "yf": 3898
+        "yf": 3899
       },
       "candidate_sources": {
         "slickcharts": 489,
@@ -4072,43 +4072,6 @@
       }
     },
     {
-      "ticker": "NVDL",
-      "asset_type": "etf",
-      "field": "change_pct",
-      "selected_source": "stockanalysis.quote",
-      "candidate_count": 2,
-      "relative_spread_pct": 198.82685,
-      "values": [
-        {
-          "source": "stockanalysis.quote",
-          "value": -4.73
-        },
-        {
-          "source": "yf",
-          "value": 4.67451
-        }
-      ],
-      "diagnosis": "stale",
-      "spread_pct": 198.82685,
-      "fresh_spread_pct": null,
-      "stale_sources": [
-        "stockanalysis.quote"
-      ],
-      "scale_mismatch": false,
-      "scale_factor": null,
-      "sign_divergence": true,
-      "selected_rationale": {
-        "selected": "stockanalysis.quote",
-        "policy_rank": 0,
-        "policy_len": 4,
-        "note": "policy-preferred; lower-ranked sources retained as candidates"
-      },
-      "freshness": {
-        "stockanalysis.quote": 67.0,
-        "yf": 0.0
-      }
-    },
-    {
       "ticker": "DLUX",
       "asset_type": "etf",
       "field": "change_pct",
@@ -4304,6 +4267,43 @@
       "freshness": {
         "stockanalysis.quote": 77.0,
         "yf": 0.0
+      }
+    },
+    {
+      "ticker": "GEMD",
+      "asset_type": "etf",
+      "field": "return_3m",
+      "selected_source": "yf.history_1y",
+      "candidate_count": 2,
+      "relative_spread_pct": 198.771521,
+      "values": [
+        {
+          "source": "yf.history_1y",
+          "value": -3.6752176019323186
+        },
+        {
+          "source": "stockanalysis.detail.history",
+          "value": 3.6300683091511123
+        }
+      ],
+      "diagnosis": "stale",
+      "spread_pct": 198.771521,
+      "fresh_spread_pct": null,
+      "stale_sources": [
+        "stockanalysis.detail.history"
+      ],
+      "scale_mismatch": false,
+      "scale_factor": null,
+      "sign_divergence": true,
+      "selected_rationale": {
+        "selected": "yf.history_1y",
+        "policy_rank": 0,
+        "policy_len": 2,
+        "note": "policy-preferred; lower-ranked sources retained as candidates"
+      },
+      "freshness": {
+        "yf.history_1y": 0.0,
+        "stockanalysis.detail.history": 99.0
       }
     }
   ],
@@ -10479,43 +10479,6 @@
       }
     },
     {
-      "ticker": "NVDL",
-      "asset_type": "etf",
-      "field": "change_pct",
-      "selected_source": "stockanalysis.quote",
-      "candidate_count": 2,
-      "relative_spread_pct": 198.82685,
-      "values": [
-        {
-          "source": "stockanalysis.quote",
-          "value": -4.73
-        },
-        {
-          "source": "yf",
-          "value": 4.67451
-        }
-      ],
-      "diagnosis": "stale",
-      "spread_pct": 198.82685,
-      "fresh_spread_pct": null,
-      "stale_sources": [
-        "stockanalysis.quote"
-      ],
-      "scale_mismatch": false,
-      "scale_factor": null,
-      "sign_divergence": true,
-      "selected_rationale": {
-        "selected": "stockanalysis.quote",
-        "policy_rank": 0,
-        "policy_len": 4,
-        "note": "policy-preferred; lower-ranked sources retained as candidates"
-      },
-      "freshness": {
-        "stockanalysis.quote": 67.0,
-        "yf": 0.0
-      }
-    },
-    {
       "ticker": "DLUX",
       "asset_type": "etf",
       "field": "change_pct",
@@ -12132,43 +12095,6 @@
       }
     },
     {
-      "ticker": "NVDL",
-      "asset_type": "etf",
-      "field": "change",
-      "selected_source": "stockanalysis.quote",
-      "candidate_count": 2,
-      "relative_spread_pct": 196.932515,
-      "values": [
-        {
-          "source": "stockanalysis.quote",
-          "value": -1.58
-        },
-        {
-          "source": "yf",
-          "value": 1.63
-        }
-      ],
-      "diagnosis": "stale",
-      "spread_pct": 196.932515,
-      "fresh_spread_pct": null,
-      "stale_sources": [
-        "stockanalysis.quote"
-      ],
-      "scale_mismatch": false,
-      "scale_factor": null,
-      "sign_divergence": true,
-      "selected_rationale": {
-        "selected": "stockanalysis.quote",
-        "policy_rank": 0,
-        "policy_len": 4,
-        "note": "policy-preferred; lower-ranked sources retained as candidates"
-      },
-      "freshness": {
-        "stockanalysis.quote": 67.0,
-        "yf": 0.0
-      }
-    },
-    {
       "ticker": "INVN",
       "asset_type": "etf",
       "field": "change",
@@ -12467,6 +12393,80 @@
         "stockanalysis.quote": 99.0,
         "yf": 0.0,
         "yf.derived": 0.0
+      }
+    },
+    {
+      "ticker": "FRI",
+      "asset_type": "etf",
+      "field": "return_3m",
+      "selected_source": "yf.history_1y",
+      "candidate_count": 2,
+      "relative_spread_pct": 196.625331,
+      "values": [
+        {
+          "source": "yf.history_1y",
+          "value": -7.200501285773145
+        },
+        {
+          "source": "stockanalysis.detail.history",
+          "value": 6.957508202953609
+        }
+      ],
+      "diagnosis": "stale",
+      "spread_pct": 196.625331,
+      "fresh_spread_pct": null,
+      "stale_sources": [
+        "stockanalysis.detail.history"
+      ],
+      "scale_mismatch": false,
+      "scale_factor": null,
+      "sign_divergence": true,
+      "selected_rationale": {
+        "selected": "yf.history_1y",
+        "policy_rank": 0,
+        "policy_len": 2,
+        "note": "policy-preferred; lower-ranked sources retained as candidates"
+      },
+      "freshness": {
+        "yf.history_1y": 0.0,
+        "stockanalysis.detail.history": 99.0
+      }
+    },
+    {
+      "ticker": "LSEQ",
+      "asset_type": "etf",
+      "field": "change_pct",
+      "selected_source": "stockanalysis.quote",
+      "candidate_count": 2,
+      "relative_spread_pct": 196.573037,
+      "values": [
+        {
+          "source": "stockanalysis.quote",
+          "value": -0.35
+        },
+        {
+          "source": "yf",
+          "value": 0.36242
+        }
+      ],
+      "diagnosis": "stale",
+      "spread_pct": 196.573037,
+      "fresh_spread_pct": null,
+      "stale_sources": [
+        "stockanalysis.quote"
+      ],
+      "scale_mismatch": false,
+      "scale_factor": null,
+      "sign_divergence": true,
+      "selected_rationale": {
+        "selected": "stockanalysis.quote",
+        "policy_rank": 0,
+        "policy_len": 4,
+        "note": "policy-preferred; lower-ranked sources retained as candidates"
+      },
+      "freshness": {
+        "stockanalysis.quote": 98.0,
+        "yf": 0.0
       }
     }
   ],
