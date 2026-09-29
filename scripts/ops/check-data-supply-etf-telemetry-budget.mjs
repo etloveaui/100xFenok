@@ -47,7 +47,7 @@ function authHeaders(token) {
 }
 
 async function fetchJson(url, options) {
-  const response = await fetch(url, options);
+  const response = await fetch(url, { ...options, signal: AbortSignal.timeout(20_000) });
   let payload;
   try {
     payload = await response.json();
@@ -109,17 +109,32 @@ WHERE timestamp >= toDateTime('${toSqlTimestamp(dayStart)}')
 `.trim();
 }
 
-function finiteNumber(value, fallback = 0) {
+function finiteNumber(value, fallback = null) {
   const number = Number(value);
   return Number.isFinite(number) ? number : fallback;
 }
 
+function requiredCount(value, field) {
+  const numeric = typeof value === "number" || (typeof value === "string" && value.trim() !== "");
+  const count = numeric ? Number(value) : NaN;
+  if (!Number.isFinite(count) || count < 0) {
+    throw new Error(`Analytics Engine ${field} is missing or invalid; usage is unknown.`);
+  }
+  return count;
+}
+
 export function parseAnalyticsResult(payload) {
-  const row = Array.isArray(payload?.data) ? payload.data[0] : null;
+  if (!Array.isArray(payload?.data) || payload.data.length > 1) {
+    throw new Error("Analytics Engine aggregate rows are missing or invalid; usage is unknown.");
+  }
+  // Preserve an explicit empty result; an absent data field is not equivalent.
+  const row = payload.data.length === 0
+    ? { request_count: 0, unique_ticker_count: 0, cache_hit_count: 0 }
+    : payload.data[0];
   return {
-    todayRequests: finiteNumber(row?.request_count),
-    uniqueTickers: finiteNumber(row?.unique_ticker_count),
-    cacheHits: finiteNumber(row?.cache_hit_count),
+    todayRequests: requiredCount(row?.request_count, "request_count"),
+    uniqueTickers: requiredCount(row?.unique_ticker_count, "unique_ticker_count"),
+    cacheHits: requiredCount(row?.cache_hit_count, "cache_hit_count"),
     averageStateAgeHours: row?.average_state_age_hours == null
       ? null
       : finiteNumber(row.average_state_age_hours),

@@ -46,7 +46,7 @@ function authHeaders(token) {
 }
 
 async function fetchJson(url, options) {
-  const response = await fetch(url, options);
+  const response = await fetch(url, { ...options, signal: AbortSignal.timeout(20_000) });
   let payload;
   try {
     payload = await response.json();
@@ -105,12 +105,23 @@ async function resolveAccount(token) {
 }
 
 function sumRequests(rows) {
-  return rows.reduce((total, row) => total + Number(row?.sum?.requests || 0), 0);
+  return rows.reduce((total, row) => {
+    const value = row?.sum?.requests;
+    const numeric = typeof value === "number" || (typeof value === "string" && value.trim() !== "");
+    const count = numeric ? Number(value) : NaN;
+    if (!Number.isFinite(count) || count < 0 || !Number.isFinite(total + count)) {
+      throw new Error("Cloudflare Worker request count is missing or invalid; usage is unknown.");
+    }
+    return total + count;
+  }, 0);
 }
 
 export function parseWorkerUsage(account) {
-  const dayRows = Array.isArray(account.day) ? account.day : [];
-  const hourRows = Array.isArray(account.hour) ? account.hour : [];
+  if (!Array.isArray(account?.day) || !Array.isArray(account?.hour)) {
+    throw new Error("Cloudflare Worker usage rows are missing; usage is unknown.");
+  }
+  const dayRows = account.day;
+  const hourRows = account.hour;
   return {
     dayRows: dayRows.length,
     hourRows: hourRows.length,
