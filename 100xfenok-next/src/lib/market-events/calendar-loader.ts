@@ -1,3 +1,4 @@
+import { fetchJsonOrNull } from "../client/data-fetch";
 import {
   MACRO_CALENDAR_URL,
   MACRO_PREV_VALUES_URL,
@@ -5,29 +6,18 @@ import {
   type MacroCalendar,
 } from "./macro-calendar";
 
-let calendarCache: MacroCalendar | null = null;
-let pending: Promise<MacroCalendar | null> | null = null;
-
-function fetchOptionalJson(url: string): Promise<unknown> {
-  return fetch(url)
-    .then((response) => response.ok ? response.json() : null)
-    .catch(() => null);
-}
-
 export type CalendarLoadOptions = { withPreviousValues?: boolean; force?: boolean };
 
-/** Calendar loading extracted from the event board for behavioral verification. */
-export function loadMacroCalendar(_options: CalendarLoadOptions = {}): Promise<MacroCalendar | null> {
-  if (calendarCache) return Promise.resolve(calendarCache);
-  if (pending) return pending;
-  pending = Promise.all([fetchOptionalJson(MACRO_CALENDAR_URL), fetchOptionalJson(MACRO_PREV_VALUES_URL)])
-    .then(([calendar, prevValues]) => {
-      if (calendar === null) {
-        pending = null;
-        return null;
-      }
-      calendarCache = parseMacroCalendar(calendar, prevValues);
-      return calendarCache;
-    });
-  return pending;
+/** Share raw responses for five minutes; never retain a parsed calendar forever. */
+export async function loadMacroCalendar({
+  withPreviousValues = true,
+  force = false,
+}: CalendarLoadOptions = {}): Promise<MacroCalendar | null> {
+  const options = { force, init: { cache: force ? "no-cache" as const : "default" as const } };
+  const [calendar, prevValues] = await Promise.all([
+    fetchJsonOrNull<unknown>(MACRO_CALENDAR_URL, options),
+    withPreviousValues ? fetchJsonOrNull<unknown>(MACRO_PREV_VALUES_URL, options) : null,
+  ]);
+  // A missing previous-print file must not hide the calendar itself.
+  return calendar === null ? null : parseMacroCalendar(calendar, prevValues);
 }
