@@ -93,3 +93,22 @@ test("manual refresh bypasses a fresh successful calendar without losing optiona
   assert.equal(calendarCalls, 2);
   assert.equal(afterRefresh?.previousAsOf, null);
 });
+
+test("HTTP-200 error envelopes are unavailable, never an empty cached calendar", async () => {
+  for (const invalid of [null, [], {}, { error: "upstream unavailable" }, { events: "not-an-array" }]) {
+    resetCache();
+    let calls = 0;
+    globalThis.fetch = async () => Response.json(++calls === 1 ? invalid : document("2026-09-29"));
+    assert.equal(await loadMacroCalendar({ withPreviousValues: false }), null);
+    assert.equal((await loadMacroCalendar({ withPreviousValues: false }))?.generatedAt, "2026-09-29T00:00:00Z");
+    assert.equal(calls, 2, "the invalid response must be evicted before retry");
+  }
+});
+
+test("a valid calendar with no events still represents a genuinely empty calendar", async () => {
+  resetCache();
+  globalThis.fetch = async () => Response.json(document("2026-09-29"));
+  const result = await loadMacroCalendar({ withPreviousValues: false });
+  assert.ok(result);
+  assert.deepEqual(result.events, []);
+});

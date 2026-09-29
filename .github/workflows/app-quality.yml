@@ -88,3 +88,35 @@ jobs:
           fi
           printf 'Linting %s changed file(s)\n' "${#changed[@]}"
           npx eslint -- "${changed[@]}"
+
+  runtime-build:
+    # This is the existing closed build entry on a hosted PR runner, not a local
+    # fallback or a production deploy. No secrets or write token are supplied.
+    needs: app-quality
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    concurrency:
+      group: remote-heavy-verification
+      cancel-in-progress: false
+    defaults:
+      run:
+        working-directory: 100xfenok-next
+    steps:
+      - name: Checkout exact checked revision
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.sha }}
+          fetch-depth: 1
+          persist-credentials: false
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Install dependencies
+        run: npm ci
+      - name: Build runtime without deployment
+        env:
+          NEXT_TELEMETRY_DISABLED: '1'
+          FENOK_REMOTE_HEAVY_NESTED_EXECUTION: '1'
+          FENOK_REMOTE_HEAVY_EXPECTED_REVISION: ${{ github.sha }}
+        run: npm run build:runtime

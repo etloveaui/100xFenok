@@ -46,3 +46,13 @@ test("manual refresh fetches the surface again instead of reusing its fresh cach
   assert.equal((await loadEventSurface("manual-refresh")).records?.[0].value, 1);
   assert.equal((await loadEventSurface("manual-refresh", true)).records?.[0].value, 2);
 });
+
+test("an error object without rows is unavailable, while a real empty feed remains valid", async () => {
+  let calls = 0;
+  globalThis.fetch = async () => Response.json(++calls === 1 ? { error: "upstream unavailable" } : { records: [] });
+  assert.equal((await loadEventSurface("error-envelope")).load_failed, true);
+  const empty = await loadEventSurface("error-envelope");
+  assert.equal(empty.load_failed, undefined);
+  assert.deepEqual(empty.records, []);
+  assert.equal(calls, 2);
+});
