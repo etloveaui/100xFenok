@@ -20,6 +20,8 @@ on:
       - 'scripts/ops/test-emit-alarm-state.mjs'
       - 'scripts/ops/check-alarm-liveness.mjs'
       - 'scripts/ops/test-alarm-liveness.mjs'
+      - 'scripts/ops/sync-budget-issue.mjs'
+      - 'scripts/ops/test-sync-budget-issue.mjs'
       - 'scripts/ops/test-workflow-credential-wiring.mjs'
       - 'scripts/ops/test-alarm-blindness.mjs'
       - 'scripts/ops/test-cost-gate-rate-limit.mjs'
@@ -135,6 +137,8 @@ on:
       - 'scripts/ops/test-emit-alarm-state.mjs'
       - 'scripts/ops/check-alarm-liveness.mjs'
       - 'scripts/ops/test-alarm-liveness.mjs'
+      - 'scripts/ops/sync-budget-issue.mjs'
+      - 'scripts/ops/test-sync-budget-issue.mjs'
       - 'scripts/ops/test-workflow-credential-wiring.mjs'
       - 'scripts/ops/test-alarm-blindness.mjs'
       - 'scripts/ops/test-cost-gate-rate-limit.mjs'
@@ -256,6 +260,7 @@ jobs:
           node scripts/ops/test-probe-limits-match-cadence.mjs
           node scripts/ops/test-missed-schedule-window.mjs
           node scripts/ops/test-alarm-liveness.mjs
+          node --test scripts/ops/test-sync-budget-issue.mjs
           node scripts/ops/test-workflow-credential-wiring.mjs
           node scripts/ops/test-alarm-blindness.mjs
           node scripts/ops/test-cost-gate-rate-limit.mjs
