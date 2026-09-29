@@ -1,8 +1,8 @@
 {
   "schema_version": "alarm-state/v1",
-  "generated_at": "2026-09-29T08:42:24.875Z",
+  "generated_at": "2026-09-29T08:59:33.748Z",
   "status": "open",
-  "open_incident_count": 5,
+  "open_incident_count": 6,
   "open_incidents": [
     {
       "workflow": "fenok-edge-krx-daily.yml",
@@ -11,6 +11,18 @@
       "failure_streak_threshold": 2,
       "first_failing_run_id": 36019903433,
       "first_failing_run_url": "https://github.com/etloveaui/100xFenok/actions/runs/36019903433",
+      "alarm_reasons": [
+        "failure_streak"
+      ],
+      "lost_schedule_slot_count": 0
+    },
+    {
+      "workflow": "fetch-stockanalysis.yml",
+      "label": "Fetch StockAnalysis Data",
+      "streak": 3,
+      "failure_streak_threshold": 2,
+      "first_failing_run_id": 36366931706,
+      "first_failing_run_url": "https://github.com/etloveaui/100xFenok/actions/runs/36366931706",
       "alarm_reasons": [
         "failure_streak"
       ],
@@ -62,8 +74,8 @@
         "stockanalysis_etf_detail",
         "stockanalysis_surfaces"
       ],
-      "latest_generated_at": "2026-09-29T07:02:45.209Z",
-      "previous_generated_at": "2026-09-29T05:58:28.664Z"
+      "latest_generated_at": "2026-09-29T08:53:55.131Z",
+      "previous_generated_at": "2026-09-29T07:02:45.209Z"
     }
   ],
   "watched_workflows": [
@@ -415,12 +427,13 @@
   "queue_evicted_run_count": 0,
   "queue_evicted_workflows": [],
   "last_firing": {
-    "run_id": "36544022747",
-    "run_url": "https://github.com/etloveaui/100xFenok/actions/runs/36544022747",
-    "observed_at": "2026-09-29T08:42:24.875Z",
-    "event": "schedule",
+    "run_id": "36545871183",
+    "run_url": "https://github.com/etloveaui/100xFenok/actions/runs/36545871183",
+    "observed_at": "2026-09-29T08:59:33.748Z",
+    "event": "workflow_run",
     "workflows": [
       "fenok-edge-krx-daily.yml",
+      "fetch-stockanalysis.yml",
       "fetch-yahoo-ticker.yml",
       "retention-restore.yml",
       "validate-workflows.yml",
