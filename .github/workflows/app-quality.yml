@@ -35,7 +35,9 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
         with:
-          fetch-depth: 0
+          # The PR merge commit and its parents are sufficient for a base-to-result
+          # diff. Fetching every branch's full history dominated this fast gate.
+          fetch-depth: 2
 
       - name: Setup Node
         uses: actions/setup-node@v4
@@ -72,7 +74,14 @@ jobs:
             npm run lint
             exit 0
           fi
-          mapfile -t changed < <(git diff --name-only --diff-filter=ACMR "$BASE_SHA"...HEAD -- 'src/**/*.ts' 'src/**/*.tsx' | sed 's|^100xfenok-next/||')
+          if ! git cat-file -e "$BASE_SHA^{commit}" 2>/dev/null; then
+            git fetch --no-tags --depth=1 origin "$BASE_SHA"
+          fi
+          # HEAD is GitHub's PR merge result, so compare its tree directly to the
+          # event's base tree. A failed diff must fail the gate, not masquerade as
+          # an empty list inside process substitution.
+          git diff --name-only --diff-filter=ACMR "$BASE_SHA" HEAD -- 'src/**/*.ts' 'src/**/*.tsx' > "$RUNNER_TEMP/app-quality-changed-files"
+          mapfile -t changed < <(sed 's|^100xfenok-next/||' "$RUNNER_TEMP/app-quality-changed-files")
           if [ "${#changed[@]}" -eq 0 ]; then
             echo "No changed TypeScript files to lint."
             exit 0
