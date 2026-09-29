@@ -80,11 +80,12 @@ assert.match(workflowText, /if: \$\{\{ always\(\)/,
   "KRX failure attempts must still reach the emitter and commit path");
 assert.doesNotMatch(workflowText, /git add -A/);
 
-function workflowRunBlock(stepName, nextStepName) {
-  const stepStart = workflowText.indexOf(`      - name: ${stepName}`);
-  const stepEnd = workflowText.indexOf(`      - name: ${nextStepName}`, stepStart);
-  assert.ok(stepStart >= 0 && stepEnd > stepStart, `workflow steps are missing: ${stepName} -> ${nextStepName}`);
-  const section = workflowText.slice(stepStart, stepEnd);
+function workflowRunBlock(stepName) {
+  const stepStart = workflowText.indexOf(`      - name: ${stepName}\n`);
+  assert.ok(stepStart >= 0, `workflow step is missing: ${stepName}`);
+  // Bound the selected step by YAML indentation, not the name of a retired
+  // following emitter. Only the refresh script runs in the isolated fixture.
+  const section = workflowText.slice(stepStart).split(/\n      - /u, 1)[0];
   const marker = "        run: |\n";
   const runStart = section.indexOf(marker);
   assert.ok(runStart >= 0, `workflow run block is missing: ${stepName}`);
@@ -165,7 +166,7 @@ function executeWalkbackScenario({ allDegraded = false, contradictorySuccess = f
     krx_end_date: "20260715",
     krx_auto_walkback_days: "1",
   };
-  const script = workflowRunBlock("Refresh KRX private daily source", "Emit KRX detection attempt")
+  const script = workflowRunBlock("Refresh KRX private daily source")
     .replace(/\$\{\{ steps\.window\.outputs\.([a-z_]+) \}\}/gu, (_, key) => {
       assert.ok(Object.hasOwn(expressions, key), `unmapped workflow expression: ${key}`);
       return expressions[key];
