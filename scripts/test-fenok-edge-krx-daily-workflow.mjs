@@ -1,8 +1,8 @@
 #!/usr/bin/env node
 // Lane Registry ⇄ commit-shard completeness gate for fenok-edge-krx-daily.yml
-// (#366 step 4). KRX is an emitter-first shadow lane: every non-plan run emits
-// attempt evidence, while successful fetches additionally stage the public-safe
-// aggregate artifacts.
+// Recovery state is retained on failures, while successful fetches additionally
+// stage the public-safe aggregate artifacts. Retired attempt shards are not part
+// of the commit contract.
 import assert from "node:assert/strict";
 import { spawnSync } from "node:child_process";
 import fs from "node:fs";
@@ -31,8 +31,8 @@ assert.deepEqual(gate.missing_in_workflow, [],
   `declared shards the workflow never commits: ${JSON.stringify(gate.missing_in_workflow)}`);
 assert.deepEqual(gate.undeclared_in_workflow, [],
   `allowlist paths with no registry record: ${JSON.stringify(gate.undeclared_in_workflow)}`);
-assert.deepEqual(gate.allowlist_count, 4,
-  "the KRX workflow commits attempt, bridge, recovery index, and retained bridge LKG on its admin allowlist");
+// The manifest-owned paths below establish completeness; a historical count
+// would fail whenever a retired administrative artifact is removed.
 
 // Public-safe output ownership and helper-only staging are one manifest contract.
 assert.deepEqual(

@@ -40,6 +40,8 @@ on:
       - 'scripts/fetch-fred-banking.mjs'
       - 'scripts/fetch-treasury-tga.mjs'
       - 'scripts/fetch-yahoo-ticker.mjs'
+      - 'scripts/test-fetch-yahoo-ticker.mjs'
+      - 'scripts/test-fenok-edge-krx-daily-workflow.mjs'
       - 'scripts/test-fetch-producers-public-write-fence.mjs'
       - 'scripts/test-build-producers-public-write-fence.mjs'
       - 'scripts/test-build-stocks-analyzer-manifest.mjs'
@@ -152,6 +154,8 @@ on:
       - 'scripts/fetch-fred-banking.mjs'
       - 'scripts/fetch-treasury-tga.mjs'
       - 'scripts/fetch-yahoo-ticker.mjs'
+      - 'scripts/test-fetch-yahoo-ticker.mjs'
+      - 'scripts/test-fenok-edge-krx-daily-workflow.mjs'
       - 'scripts/test-fetch-producers-public-write-fence.mjs'
       - 'scripts/test-build-producers-public-write-fence.mjs'
       - 'scripts/test-build-stocks-analyzer-manifest.mjs'
@@ -297,6 +301,8 @@ jobs:
 
       - name: Validate producer public-write fence (canonical-only batch)
         run: |
+          node scripts/test-fenok-edge-krx-daily-workflow.mjs
+          node scripts/test-fetch-yahoo-ticker.mjs
           node scripts/test-fetch-producers-public-write-fence.mjs
           node scripts/test-build-producers-public-write-fence.mjs
           node scripts/test-build-stocks-analyzer-manifest.mjs
