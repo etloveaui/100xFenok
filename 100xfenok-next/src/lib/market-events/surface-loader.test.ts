@@ -56,3 +56,15 @@ test("an error object without rows is unavailable, while a real empty feed remai
   assert.deepEqual(empty.records, []);
   assert.equal(calls, 2);
 });
+
+test("null rows and a different feed identity cannot reach the event renderer", async () => {
+  const invalid = [{ records: [null] }, { tables: [{ records: [null] }] }, { tables: [null] }, { surface: "wrong-feed", records: [] }];
+  for (let index = 0; index < invalid.length; index += 1) {
+    let calls = 0;
+    globalThis.fetch = async () => Response.json(++calls === 1 ? invalid[index] : { records: [] });
+    const name = `row-shape-${index}`;
+    assert.equal((await loadEventSurface(name)).load_failed, true);
+    assert.deepEqual((await loadEventSurface(name)).records, []);
+    assert.equal(calls, 2);
+  }
+});

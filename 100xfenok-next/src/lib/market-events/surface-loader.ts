@@ -12,13 +12,23 @@ export interface SurfaceDoc<T = Record<string, unknown>> {
   status_code?: number;
 }
 
+const isRow = (row: unknown): row is Record<string, unknown> =>
+  row !== null && typeof row === "object" && !Array.isArray(row);
+
+function hasValidRows(data: SurfaceDoc): boolean {
+  if (data.records !== undefined && (!Array.isArray(data.records) || !data.records.every(isRow))) return false;
+  if (data.tables !== undefined && (!Array.isArray(data.tables)
+    || !data.tables.every((table) => isRow(table) && Array.isArray(table.records) && table.records.every(isRow)))) return false;
+  return Array.isArray(data.records) || Array.isArray(data.tables);
+}
+
 /** Cache each public feed independently, never the board's partial-failure state. */
 export async function loadEventSurface(name: string, force = false): Promise<SurfaceDoc> {
   const url = `/api/data/stockanalysis/surfaces/${encodeURIComponent(name)}`;
   try {
     const { data } = await fetchJsonShared<SurfaceDoc>(url, { force, init: { cache: "no-store" } });
     if (!data || typeof data !== "object" || Array.isArray(data)
-      || (!Array.isArray(data.records) && !Array.isArray(data.tables))) {
+      || !hasValidRows(data) || (data.surface !== undefined && data.surface !== name)) {
       invalidateData(url);
       return { surface: name, load_failed: true };
     }
