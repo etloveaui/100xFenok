@@ -17,7 +17,7 @@
   "current": {
     "fetched_at": "2026-09-28T01:35:22Z",
     "history_as_of": "2026-09-25",
-    "path": "data/yf/finance/CGFS.json",
+    "path": "data/admin/yahoo-batch-quote-history/lkg/CGFS.json",
     "payload_sha256": "b76deb5f62d26fdea0bc9df6f65e7e8c4a858dfa7d3098c824f87e1e12e7245f",
     "quote_as_of": "2026-09-18T16:22:06Z",
     "source_as_of": "2026-09-18T16:22:06Z"
@@ -38,6 +38,14 @@
     "schedule": "",
     "shard": ""
   },
+  "lkg": {
+    "fetched_at": "2026-09-28T01:35:22Z",
+    "history_as_of": "2026-09-25",
+    "path": "data/admin/yahoo-batch-quote-history/lkg/CGFS.json",
+    "payload_sha256": "b76deb5f62d26fdea0bc9df6f65e7e8c4a858dfa7d3098c824f87e1e12e7245f",
+    "quote_as_of": "2026-09-18T16:22:06Z",
+    "source_as_of": "2026-09-18T16:22:06Z"
+  },
   "promotion_contract": "provider_observation/v2",
   "provider_observation": {
     "event_name": "workflow_dispatch",
@@ -50,9 +58,19 @@
     "schema_version": "provider_observation/v2",
     "source_as_of": "2026-09-18T16:22:06Z"
   },
-  "resolution_state": "fresh_primary",
-  "retry": false,
+  "resolution_state": "lkg_primary",
+  "retry": true,
   "schema_version": "yahoo-batch-quote-history-state/v1",
+  "stale": {
+    "age_business_days": 7,
+    "classified_at": "2026-09-29T02:38:15Z",
+    "classified_run_id": "36513342846",
+    "expected_resolution": "next_natural_yahoo_run",
+    "max_business_days": 6,
+    "message": "CGFS holds LKG because Yahoo source date 2026-09-18T16:22:06Z is 7 business days old, beyond the 6-day bound; it will retry on the next natural Yahoo run.",
+    "reason": "source_age_exceeds_lane_bound",
+    "source_as_of": "2026-09-18T16:22:06Z"
+  },
   "ticker": "CGFS",
-  "updated_at": "2026-09-28T01:17:59Z"
+  "updated_at": "2026-09-29T02:38:15Z"
 }

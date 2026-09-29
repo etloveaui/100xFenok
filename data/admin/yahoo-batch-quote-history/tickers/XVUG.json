@@ -5,20 +5,6 @@
       "error": "recovery_not_advanced_by_provider",
       "event_name": "schedule",
       "failures": [],
-      "latency_ms": 581,
-      "natural": true,
-      "observed_at": "2026-09-01T01:52:51Z",
-      "outcome": "failed",
-      "run_attempt": 1,
-      "run_id": "33460327385",
-      "schedule": "20 23 * * 1-5",
-      "shard": "0/5"
-    },
-    {
-      "attempts_used": 1,
-      "error": "recovery_not_advanced_by_provider",
-      "event_name": "schedule",
-      "failures": [],
       "latency_ms": 831,
       "natural": true,
       "observed_at": "2026-09-02T01:05:40Z",
@@ -201,6 +187,26 @@
       "run_id": "36367836615",
       "schedule": "",
       "shard": ""
+    },
+    {
+      "attempts_used": 1,
+      "error": "foreign_writer_conflict",
+      "event_name": "schedule",
+      "failures": [
+        {
+          "attempt": 1,
+          "error": "AttributeError: 'Index' object has no attribute 'date'",
+          "source": "provider_safe_call"
+        }
+      ],
+      "latency_ms": 493,
+      "natural": true,
+      "observed_at": "2026-09-29T02:38:15Z",
+      "outcome": "failed",
+      "run_attempt": 1,
+      "run_id": "36513342846",
+      "schedule": "20 23 * * 1-5",
+      "shard": "0/5"
     }
   ],
   "current": {
@@ -217,7 +223,7 @@
   "last_attempt": {
     "attempts_used": 1,
     "error": "foreign_writer_conflict",
-    "event_name": "workflow_dispatch",
+    "event_name": "schedule",
     "failures": [
       {
         "attempt": 1,
@@ -225,14 +231,14 @@
         "source": "provider_safe_call"
       }
     ],
-    "latency_ms": 466,
-    "natural": false,
-    "observed_at": "2026-09-28T06:30:00Z",
+    "latency_ms": 493,
+    "natural": true,
+    "observed_at": "2026-09-29T02:38:15Z",
     "outcome": "failed",
     "run_attempt": 1,
-    "run_id": "36367836615",
-    "schedule": "",
-    "shard": ""
+    "run_id": "36513342846",
+    "schedule": "20 23 * * 1-5",
+    "shard": "0/5"
   },
   "last_recovered_failure": {
     "attempts_used": 2,
@@ -277,13 +283,13 @@
     "run_id": "29544227703"
   },
   "latest_promotion_deferral": {
-    "event_name": "workflow_dispatch",
-    "observed_at": "2026-09-28T06:30:00Z",
+    "event_name": "schedule",
+    "observed_at": "2026-09-29T02:38:15Z",
     "provider_history_as_of": "2026-08-20",
     "provider_quote_as_of": "2026-08-20T19:22:34Z",
     "reason": "foreign_writer_conflict",
     "run_attempt": 1,
-    "run_id": "36367836615"
+    "run_id": "36513342846"
   },
   "lkg": {
     "fetched_at": "2026-08-29T04:17:40Z",
@@ -324,5 +330,5 @@
     "source_as_of": "2026-08-20T19:22:34Z"
   },
   "ticker": "XVUG",
-  "updated_at": "2026-09-28T06:30:00Z"
+  "updated_at": "2026-09-29T02:38:15Z"
 }

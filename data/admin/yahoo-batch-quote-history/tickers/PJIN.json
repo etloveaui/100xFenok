@@ -12,13 +12,26 @@
       "run_id": "36367832955",
       "schedule": "",
       "shard": ""
+    },
+    {
+      "attempts_used": 1,
+      "event_name": "schedule",
+      "failures": [],
+      "latency_ms": 530,
+      "natural": true,
+      "observed_at": "2026-09-29T02:38:15Z",
+      "outcome": "fresh",
+      "run_attempt": 1,
+      "run_id": "36513342846",
+      "schedule": "20 23 * * 1-5",
+      "shard": "0/5"
     }
   ],
   "current": {
-    "fetched_at": "2026-09-28T05:42:51Z",
-    "history_as_of": "2026-09-25",
+    "fetched_at": "2026-09-29T02:39:15Z",
+    "history_as_of": "2026-09-28",
     "path": "data/admin/yahoo-batch-quote-history/lkg/PJIN.json",
-    "payload_sha256": "2bf0bb6f787e44a8f655b818ff263862c0879135113f5506dcc1d68808a6a5dd",
+    "payload_sha256": "035499a3172a9e4d309d70c32e5fac1ba2a8b46a19f6eec64171afc19f820ef4",
     "quote_as_of": "2026-09-04T15:41:26Z",
     "source_as_of": "2026-09-04T15:41:26Z"
   },
@@ -28,34 +41,34 @@
   ],
   "last_attempt": {
     "attempts_used": 1,
-    "event_name": "workflow_dispatch",
+    "event_name": "schedule",
     "failures": [],
-    "latency_ms": 494,
-    "natural": false,
-    "observed_at": "2026-09-28T05:23:15Z",
+    "latency_ms": 530,
+    "natural": true,
+    "observed_at": "2026-09-29T02:38:15Z",
     "outcome": "fresh",
     "run_attempt": 1,
-    "run_id": "36367832955",
-    "schedule": "",
-    "shard": ""
+    "run_id": "36513342846",
+    "schedule": "20 23 * * 1-5",
+    "shard": "0/5"
   },
   "lkg": {
-    "fetched_at": "2026-09-28T05:42:51Z",
-    "history_as_of": "2026-09-25",
+    "fetched_at": "2026-09-29T02:39:15Z",
+    "history_as_of": "2026-09-28",
     "path": "data/admin/yahoo-batch-quote-history/lkg/PJIN.json",
-    "payload_sha256": "2bf0bb6f787e44a8f655b818ff263862c0879135113f5506dcc1d68808a6a5dd",
+    "payload_sha256": "035499a3172a9e4d309d70c32e5fac1ba2a8b46a19f6eec64171afc19f820ef4",
     "quote_as_of": "2026-09-04T15:41:26Z",
     "source_as_of": "2026-09-04T15:41:26Z"
   },
   "promotion_contract": "provider_observation/v2",
   "provider_observation": {
-    "event_name": "workflow_dispatch",
-    "history_as_of": "2026-09-25",
-    "observed_at": "2026-09-28T05:23:15Z",
-    "payload_sha256": "5673b6306c58ac0d458339c9f86811d45b6db52ad037e4904dc68b74757a4305",
+    "event_name": "schedule",
+    "history_as_of": "2026-09-28",
+    "observed_at": "2026-09-29T02:38:15Z",
+    "payload_sha256": "c1ee069e23eac60196a20996724f6c8c9fed083b4e6280024dfbb2c5db5a448a",
     "quote_as_of": "2026-09-04T15:41:26Z",
     "run_attempt": 1,
-    "run_id": "36367832955",
+    "run_id": "36513342846",
     "schema_version": "provider_observation/v2",
     "source_as_of": "2026-09-04T15:41:26Z"
   },
@@ -63,15 +76,15 @@
   "retry": true,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "stale": {
-    "age_business_days": 15,
-    "classified_at": "2026-09-28T06:02:24Z",
-    "classified_run_id": "36367834787",
+    "age_business_days": 16,
+    "classified_at": "2026-09-29T02:43:52Z",
+    "classified_run_id": "36513342846",
     "expected_resolution": "next_natural_yahoo_run",
     "max_business_days": 6,
-    "message": "PJIN holds LKG because Yahoo source date 2026-09-04T15:41:26Z is 15 business days old, beyond the 6-day bound; it will retry on the next natural Yahoo run.",
+    "message": "PJIN holds LKG because Yahoo source date 2026-09-04T15:41:26Z is 16 business days old, beyond the 6-day bound; it will retry on the next natural Yahoo run.",
     "reason": "source_age_exceeds_lane_bound",
     "source_as_of": "2026-09-04T15:41:26Z"
   },
   "ticker": "PJIN",
-  "updated_at": "2026-09-28T06:02:24Z"
+  "updated_at": "2026-09-29T02:43:52Z"
 }

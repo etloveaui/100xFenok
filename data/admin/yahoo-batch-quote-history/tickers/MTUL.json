@@ -5,20 +5,6 @@
       "error": "recovery_not_advanced_by_provider",
       "event_name": "schedule",
       "failures": [],
-      "latency_ms": 466,
-      "natural": true,
-      "observed_at": "2026-09-03T01:11:07Z",
-      "outcome": "failed",
-      "run_attempt": 1,
-      "run_id": "33702512577",
-      "schedule": "20 23 * * 1-5",
-      "shard": "0/5"
-    },
-    {
-      "attempts_used": 1,
-      "error": "recovery_not_advanced_by_provider",
-      "event_name": "schedule",
-      "failures": [],
       "latency_ms": 913,
       "natural": true,
       "observed_at": "2026-09-04T01:04:03Z",
@@ -207,6 +193,26 @@
       "run_id": "36357813129",
       "schedule": "",
       "shard": ""
+    },
+    {
+      "attempts_used": 1,
+      "error": "foreign_writer_conflict",
+      "event_name": "schedule",
+      "failures": [
+        {
+          "attempt": 1,
+          "error": "AttributeError: 'Index' object has no attribute 'date'",
+          "source": "provider_safe_call"
+        }
+      ],
+      "latency_ms": 537,
+      "natural": true,
+      "observed_at": "2026-09-29T02:38:15Z",
+      "outcome": "failed",
+      "run_attempt": 1,
+      "run_id": "36513342846",
+      "schedule": "20 23 * * 1-5",
+      "shard": "0/5"
     }
   ],
   "current": {
@@ -223,7 +229,7 @@
   "last_attempt": {
     "attempts_used": 1,
     "error": "foreign_writer_conflict",
-    "event_name": "workflow_dispatch",
+    "event_name": "schedule",
     "failures": [
       {
         "attempt": 1,
@@ -231,23 +237,23 @@
         "source": "provider_safe_call"
       }
     ],
-    "latency_ms": 570,
-    "natural": false,
-    "observed_at": "2026-09-27T23:13:04Z",
+    "latency_ms": 537,
+    "natural": true,
+    "observed_at": "2026-09-29T02:38:15Z",
     "outcome": "failed",
     "run_attempt": 1,
-    "run_id": "36357813129",
-    "schedule": "",
-    "shard": ""
+    "run_id": "36513342846",
+    "schedule": "20 23 * * 1-5",
+    "shard": "0/5"
   },
   "latest_promotion_deferral": {
-    "event_name": "workflow_dispatch",
-    "observed_at": "2026-09-27T23:13:04Z",
+    "event_name": "schedule",
+    "observed_at": "2026-09-29T02:38:15Z",
     "provider_history_as_of": "2026-08-18",
     "provider_quote_as_of": "2026-08-18T19:42:01Z",
     "reason": "foreign_writer_conflict",
     "run_attempt": 1,
-    "run_id": "36357813129"
+    "run_id": "36513342846"
   },
   "lkg": {
     "fetched_at": "2026-08-27T04:34:56Z",
@@ -283,5 +289,5 @@
     "source_as_of": "2026-08-18T19:42:01Z"
   },
   "ticker": "MTUL",
-  "updated_at": "2026-09-27T23:13:04Z"
+  "updated_at": "2026-09-29T02:38:15Z"
 }

@@ -5,20 +5,6 @@
       "error": "recovery_not_advanced_by_provider",
       "event_name": "schedule",
       "failures": [],
-      "latency_ms": 890,
-      "natural": true,
-      "observed_at": "2026-09-04T01:04:03Z",
-      "outcome": "failed",
-      "run_attempt": 1,
-      "run_id": "33824182428",
-      "schedule": "20 23 * * 1-5",
-      "shard": "0/5"
-    },
-    {
-      "attempts_used": 1,
-      "error": "recovery_not_advanced_by_provider",
-      "event_name": "schedule",
-      "failures": [],
       "latency_ms": 483,
       "natural": true,
       "observed_at": "2026-09-05T01:04:38Z",
@@ -207,6 +193,26 @@
       "run_id": "36367832955",
       "schedule": "",
       "shard": ""
+    },
+    {
+      "attempts_used": 1,
+      "error": "foreign_writer_conflict",
+      "event_name": "schedule",
+      "failures": [
+        {
+          "attempt": 1,
+          "error": "AttributeError: 'Index' object has no attribute 'date'",
+          "source": "provider_safe_call"
+        }
+      ],
+      "latency_ms": 570,
+      "natural": true,
+      "observed_at": "2026-09-29T02:38:15Z",
+      "outcome": "failed",
+      "run_attempt": 1,
+      "run_id": "36513342846",
+      "schedule": "20 23 * * 1-5",
+      "shard": "0/5"
     }
   ],
   "current": {
@@ -223,7 +229,7 @@
   "last_attempt": {
     "attempts_used": 1,
     "error": "foreign_writer_conflict",
-    "event_name": "workflow_dispatch",
+    "event_name": "schedule",
     "failures": [
       {
         "attempt": 1,
@@ -231,23 +237,23 @@
         "source": "provider_safe_call"
       }
     ],
-    "latency_ms": 534,
-    "natural": false,
-    "observed_at": "2026-09-28T05:23:15Z",
+    "latency_ms": 570,
+    "natural": true,
+    "observed_at": "2026-09-29T02:38:15Z",
     "outcome": "failed",
     "run_attempt": 1,
-    "run_id": "36367832955",
-    "schedule": "",
-    "shard": ""
+    "run_id": "36513342846",
+    "schedule": "20 23 * * 1-5",
+    "shard": "0/5"
   },
   "latest_promotion_deferral": {
-    "event_name": "workflow_dispatch",
-    "observed_at": "2026-09-28T05:23:15Z",
+    "event_name": "schedule",
+    "observed_at": "2026-09-29T02:38:15Z",
     "provider_history_as_of": "2026-08-20",
     "provider_quote_as_of": "2026-08-20T19:11:29Z",
     "reason": "foreign_writer_conflict",
     "run_attempt": 1,
-    "run_id": "36367832955"
+    "run_id": "36513342846"
   },
   "lkg": {
     "fetched_at": "2026-09-01T01:53:11Z",
@@ -283,5 +289,5 @@
     "source_as_of": "2026-08-20T19:11:29Z"
   },
   "ticker": "MGKX",
-  "updated_at": "2026-09-28T05:23:15Z"
+  "updated_at": "2026-09-29T02:38:15Z"
 }

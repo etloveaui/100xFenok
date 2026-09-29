@@ -12,6 +12,20 @@
       "run_id": "36367834787",
       "schedule": "",
       "shard": ""
+    },
+    {
+      "attempts_used": 1,
+      "error": "recovery_not_advanced_by_provider",
+      "event_name": "schedule",
+      "failures": [],
+      "latency_ms": 582,
+      "natural": true,
+      "observed_at": "2026-09-29T02:38:15Z",
+      "outcome": "failed",
+      "run_attempt": 1,
+      "run_id": "36513342846",
+      "schedule": "20 23 * * 1-5",
+      "shard": "0/5"
     }
   ],
   "current": {
@@ -23,20 +37,31 @@
     "source_as_of": "2026-09-16T14:34:21Z"
   },
   "discovered_from": [
+    "market_facts",
     "stockanalysis_etf"
   ],
   "last_attempt": {
     "attempts_used": 1,
-    "event_name": "workflow_dispatch",
+    "error": "recovery_not_advanced_by_provider",
+    "event_name": "schedule",
     "failures": [],
-    "latency_ms": 474,
-    "natural": false,
-    "observed_at": "2026-09-28T06:02:24Z",
-    "outcome": "fresh",
+    "latency_ms": 582,
+    "natural": true,
+    "observed_at": "2026-09-29T02:38:15Z",
+    "outcome": "failed",
     "run_attempt": 1,
-    "run_id": "36367834787",
-    "schedule": "",
-    "shard": ""
+    "run_id": "36513342846",
+    "schedule": "20 23 * * 1-5",
+    "shard": "0/5"
+  },
+  "latest_promotion_deferral": {
+    "event_name": "schedule",
+    "observed_at": "2026-09-29T02:38:15Z",
+    "provider_history_as_of": "2026-09-25",
+    "provider_quote_as_of": "2026-09-16T14:34:21Z",
+    "reason": "recovery_not_advanced_by_provider",
+    "run_attempt": 1,
+    "run_id": "36513342846"
   },
   "lkg": {
     "fetched_at": "2026-09-28T06:22:35Z",
@@ -72,5 +97,5 @@
     "source_as_of": "2026-09-16T14:34:21Z"
   },
   "ticker": "TIPF",
-  "updated_at": "2026-09-28T06:30:00Z"
+  "updated_at": "2026-09-29T02:38:15Z"
 }

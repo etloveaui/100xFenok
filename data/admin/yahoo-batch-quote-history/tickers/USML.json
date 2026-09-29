@@ -5,20 +5,6 @@
       "error": "recovery_not_advanced_by_provider",
       "event_name": "schedule",
       "failures": [],
-      "latency_ms": 459,
-      "natural": true,
-      "observed_at": "2026-09-03T01:11:07Z",
-      "outcome": "failed",
-      "run_attempt": 1,
-      "run_id": "33702512577",
-      "schedule": "20 23 * * 1-5",
-      "shard": "0/5"
-    },
-    {
-      "attempts_used": 1,
-      "error": "recovery_not_advanced_by_provider",
-      "event_name": "schedule",
-      "failures": [],
       "latency_ms": 808,
       "natural": true,
       "observed_at": "2026-09-04T01:04:03Z",
@@ -207,13 +193,46 @@
       "run_id": "36357813129",
       "schedule": "",
       "shard": ""
+    },
+    {
+      "attempts_used": 2,
+      "error": "chart quote equal-clock price conflict",
+      "event_name": "schedule",
+      "failures": [
+        {
+          "attempt": 1,
+          "error": "AttributeError: 'Index' object has no attribute 'date'",
+          "source": "provider_safe_call"
+        },
+        {
+          "attempt": 1,
+          "error": "chart quote equal-clock price conflict"
+        },
+        {
+          "attempt": 2,
+          "error": "AttributeError: 'Index' object has no attribute 'date'",
+          "source": "provider_safe_call"
+        },
+        {
+          "attempt": 2,
+          "error": "chart quote equal-clock price conflict"
+        }
+      ],
+      "latency_ms": 0,
+      "natural": true,
+      "observed_at": "2026-09-29T02:38:15Z",
+      "outcome": "failed",
+      "run_attempt": 1,
+      "run_id": "36513342846",
+      "schedule": "20 23 * * 1-5",
+      "shard": "0/5"
     }
   ],
   "current": {
-    "fetched_at": "2026-08-27T04:34:55Z",
+    "fetched_at": "2026-09-25T06:02:58Z",
     "history_as_of": "2026-08-25",
     "path": "data/admin/yahoo-batch-quote-history/lkg/USML.json",
-    "payload_sha256": "d0e87615dabac7bb9c96f1f5d7d818dc8c5f9a456a06dac8b9ca56a82818e021",
+    "payload_sha256": "0f029241b80abafc4b35a32b3733fd0492c70e435a6d71f6119d751676af5b90",
     "quote_as_of": "2026-08-18T19:47:41Z",
     "source_as_of": "2026-08-18T19:47:41Z"
   },
@@ -221,39 +240,74 @@
     "market_facts"
   ],
   "last_attempt": {
-    "attempts_used": 1,
-    "error": "foreign_writer_conflict",
-    "event_name": "workflow_dispatch",
+    "attempts_used": 2,
+    "error": "chart quote equal-clock price conflict",
+    "event_name": "schedule",
     "failures": [
       {
         "attempt": 1,
         "error": "AttributeError: 'Index' object has no attribute 'date'",
         "source": "provider_safe_call"
+      },
+      {
+        "attempt": 1,
+        "error": "chart quote equal-clock price conflict"
+      },
+      {
+        "attempt": 2,
+        "error": "AttributeError: 'Index' object has no attribute 'date'",
+        "source": "provider_safe_call"
+      },
+      {
+        "attempt": 2,
+        "error": "chart quote equal-clock price conflict"
       }
     ],
-    "latency_ms": 658,
-    "natural": false,
-    "observed_at": "2026-09-27T23:13:04Z",
+    "latency_ms": 0,
+    "natural": true,
+    "observed_at": "2026-09-29T02:38:15Z",
     "outcome": "failed",
     "run_attempt": 1,
-    "run_id": "36357813129",
-    "schedule": "",
-    "shard": ""
+    "run_id": "36513342846",
+    "schedule": "20 23 * * 1-5",
+    "shard": "0/5"
   },
-  "latest_promotion_deferral": {
-    "event_name": "workflow_dispatch",
-    "observed_at": "2026-09-27T23:13:04Z",
-    "provider_history_as_of": "2026-08-18",
-    "provider_quote_as_of": "2026-08-18T19:47:41Z",
-    "reason": "foreign_writer_conflict",
+  "latest_failure": {
+    "attempts_used": 2,
+    "data_loss": false,
+    "deferred_acquisition": false,
+    "error": "chart quote equal-clock price conflict",
+    "failure_kind": "unexpected",
+    "failures": [
+      {
+        "attempt": 1,
+        "error": "AttributeError: 'Index' object has no attribute 'date'",
+        "source": "provider_safe_call"
+      },
+      {
+        "attempt": 1,
+        "error": "chart quote equal-clock price conflict"
+      },
+      {
+        "attempt": 2,
+        "error": "AttributeError: 'Index' object has no attribute 'date'",
+        "source": "provider_safe_call"
+      },
+      {
+        "attempt": 2,
+        "error": "chart quote equal-clock price conflict"
+      }
+    ],
+    "lkg_status": "retained",
+    "observed_at": "2026-09-29T02:38:15Z",
     "run_attempt": 1,
-    "run_id": "36357813129"
+    "run_id": "36513342846"
   },
   "lkg": {
-    "fetched_at": "2026-08-27T04:34:55Z",
+    "fetched_at": "2026-09-25T06:02:58Z",
     "history_as_of": "2026-08-25",
     "path": "data/admin/yahoo-batch-quote-history/lkg/USML.json",
-    "payload_sha256": "d0e87615dabac7bb9c96f1f5d7d818dc8c5f9a456a06dac8b9ca56a82818e021",
+    "payload_sha256": "0f029241b80abafc4b35a32b3733fd0492c70e435a6d71f6119d751676af5b90",
     "quote_as_of": "2026-08-18T19:47:41Z",
     "source_as_of": "2026-08-18T19:47:41Z"
   },
@@ -283,5 +337,5 @@
     "source_as_of": "2026-08-18T19:47:41Z"
   },
   "ticker": "USML",
-  "updated_at": "2026-09-27T23:13:04Z"
+  "updated_at": "2026-09-29T02:38:15Z"
 }

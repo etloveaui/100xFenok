@@ -26,13 +26,26 @@
       "run_id": "36369581504",
       "schedule": "",
       "shard": ""
+    },
+    {
+      "attempts_used": 1,
+      "event_name": "schedule",
+      "failures": [],
+      "latency_ms": 493,
+      "natural": true,
+      "observed_at": "2026-09-29T02:38:15Z",
+      "outcome": "fresh",
+      "run_attempt": 1,
+      "run_id": "36513342846",
+      "schedule": "20 23 * * 1-5",
+      "shard": "0/5"
     }
   ],
   "current": {
-    "fetched_at": "2026-09-28T01:20:11Z",
-    "history_as_of": "2026-09-25",
+    "fetched_at": "2026-09-29T02:39:41Z",
+    "history_as_of": "2026-09-28",
     "path": "data/admin/yahoo-batch-quote-history/lkg/AESL.json",
-    "payload_sha256": "9a43354fc9b1724ca6b46d3d4b5b8e0457dcae184356d7a48faefbadf6b07141",
+    "payload_sha256": "a711cae36a33f6519d26cd32d9246aa87e667e9e3620710b48115546e2a00ed8",
     "quote_as_of": "2026-09-15T15:01:50Z",
     "source_as_of": "2026-09-15T15:01:50Z"
   },
@@ -42,44 +55,34 @@
   ],
   "last_attempt": {
     "attempts_used": 1,
-    "error": "recovery_not_advanced_by_provider",
-    "event_name": "workflow_dispatch",
+    "event_name": "schedule",
     "failures": [],
-    "latency_ms": 626,
-    "natural": false,
-    "observed_at": "2026-09-28T07:38:17Z",
-    "outcome": "failed",
+    "latency_ms": 493,
+    "natural": true,
+    "observed_at": "2026-09-29T02:38:15Z",
+    "outcome": "fresh",
     "run_attempt": 1,
-    "run_id": "36369581504",
-    "schedule": "",
-    "shard": ""
-  },
-  "latest_promotion_deferral": {
-    "event_name": "workflow_dispatch",
-    "observed_at": "2026-09-28T07:38:17Z",
-    "provider_history_as_of": "2026-09-25",
-    "provider_quote_as_of": "2026-09-15T15:01:50Z",
-    "reason": "recovery_not_advanced_by_provider",
-    "run_attempt": 1,
-    "run_id": "36369581504"
+    "run_id": "36513342846",
+    "schedule": "20 23 * * 1-5",
+    "shard": "0/5"
   },
   "lkg": {
-    "fetched_at": "2026-09-28T01:20:11Z",
-    "history_as_of": "2026-09-25",
+    "fetched_at": "2026-09-29T02:39:41Z",
+    "history_as_of": "2026-09-28",
     "path": "data/admin/yahoo-batch-quote-history/lkg/AESL.json",
-    "payload_sha256": "9a43354fc9b1724ca6b46d3d4b5b8e0457dcae184356d7a48faefbadf6b07141",
+    "payload_sha256": "a711cae36a33f6519d26cd32d9246aa87e667e9e3620710b48115546e2a00ed8",
     "quote_as_of": "2026-09-15T15:01:50Z",
     "source_as_of": "2026-09-15T15:01:50Z"
   },
   "promotion_contract": "provider_observation/v2",
   "provider_observation": {
-    "event_name": "workflow_dispatch",
-    "history_as_of": "2026-09-25",
-    "observed_at": "2026-09-28T01:17:59Z",
-    "payload_sha256": "caf249adb13f4497316f753c90649d7a43385674fab9c68f19d7bd7db7cc6160",
+    "event_name": "schedule",
+    "history_as_of": "2026-09-28",
+    "observed_at": "2026-09-29T02:38:15Z",
+    "payload_sha256": "d5eee84d2c6f486dce65939f0856d5d949ca05f8c9ade6c649afd15aa3d2b07e",
     "quote_as_of": "2026-09-15T15:01:50Z",
     "run_attempt": 1,
-    "run_id": "36365270594",
+    "run_id": "36513342846",
     "schema_version": "provider_observation/v2",
     "source_as_of": "2026-09-15T15:01:50Z"
   },
@@ -87,15 +90,15 @@
   "retry": true,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "stale": {
-    "age_business_days": 9,
-    "classified_at": "2026-09-28T03:11:20Z",
-    "classified_run_id": "36367829153",
+    "age_business_days": 10,
+    "classified_at": "2026-09-29T02:43:52Z",
+    "classified_run_id": "36513342846",
     "expected_resolution": "next_natural_yahoo_run",
     "max_business_days": 6,
-    "message": "AESL holds LKG because Yahoo source date 2026-09-15T15:01:50Z is 9 business days old, beyond the 6-day bound; it will retry on the next natural Yahoo run.",
+    "message": "AESL holds LKG because Yahoo source date 2026-09-15T15:01:50Z is 10 business days old, beyond the 6-day bound; it will retry on the next natural Yahoo run.",
     "reason": "source_age_exceeds_lane_bound",
     "source_as_of": "2026-09-15T15:01:50Z"
   },
   "ticker": "AESL",
-  "updated_at": "2026-09-28T07:38:17Z"
+  "updated_at": "2026-09-29T02:43:52Z"
 }

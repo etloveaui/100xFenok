@@ -2,19 +2,6 @@
   "attempts": [
     {
       "attempts_used": 1,
-      "event_name": "schedule",
-      "failures": [],
-      "latency_ms": 929,
-      "natural": true,
-      "observed_at": "2026-09-02T01:22:18Z",
-      "outcome": "fresh",
-      "run_attempt": 1,
-      "run_id": "33577879211",
-      "schedule": "20 23 * * 1-5",
-      "shard": "3/5"
-    },
-    {
-      "attempts_used": 1,
       "error": "StockDetailValidationError: Yahoo history close must be a finite number",
       "event_name": "schedule",
       "failures": [],
@@ -187,15 +174,28 @@
       "run_id": "36082706783",
       "schedule": "20 23 * * 1-5",
       "shard": "0/5"
+    },
+    {
+      "attempts_used": 1,
+      "event_name": "schedule",
+      "failures": [],
+      "latency_ms": 560,
+      "natural": true,
+      "observed_at": "2026-09-29T02:52:56Z",
+      "outcome": "fresh",
+      "run_attempt": 1,
+      "run_id": "36513342846",
+      "schedule": "20 23 * * 1-5",
+      "shard": "3/5"
     }
   ],
   "current": {
-    "fetched_at": "2026-09-25T01:42:40Z",
-    "history_as_of": "2026-09-24",
+    "fetched_at": "2026-09-29T02:57:05Z",
+    "history_as_of": "2026-09-28",
     "path": "data/yf/finance/TSM.json",
-    "payload_sha256": "ca3c6504b6a167b269640a39074b3746dcd6f6248a11902ff4b9546f95f2fdcc",
-    "quote_as_of": "2026-09-24T20:00:03Z",
-    "source_as_of": "2026-09-24"
+    "payload_sha256": "a58f5eeec3df0eb8c1aeceaf06c6ff6ea9dd2664d7704d2fa92e66f651135bbe",
+    "quote_as_of": "2026-09-28T20:00:02Z",
+    "source_as_of": "2026-09-28"
   },
   "discovered_from": [
     "global_scouter_stock",
@@ -206,14 +206,14 @@
     "attempts_used": 1,
     "event_name": "schedule",
     "failures": [],
-    "latency_ms": 541,
+    "latency_ms": 560,
     "natural": true,
-    "observed_at": "2026-09-25T01:37:44Z",
+    "observed_at": "2026-09-29T02:52:56Z",
     "outcome": "fresh",
     "run_attempt": 1,
-    "run_id": "36082706783",
+    "run_id": "36513342846",
     "schedule": "20 23 * * 1-5",
-    "shard": "0/5"
+    "shard": "3/5"
   },
   "last_recovered_failure": {
     "attempts_used": 1,
@@ -238,14 +238,14 @@
   "promotion_contract": "provider_observation/v2",
   "provider_observation": {
     "event_name": "schedule",
-    "history_as_of": "2026-09-24",
-    "observed_at": "2026-09-25T01:37:44Z",
-    "payload_sha256": "fd12b529a382219ae265a8357849495372f9596990112a68378e383f57f5f852",
-    "quote_as_of": "2026-09-24T20:00:03Z",
+    "history_as_of": "2026-09-28",
+    "observed_at": "2026-09-29T02:52:56Z",
+    "payload_sha256": "207069acf190b23203eeb0be8c33cfaa93abca679d7ace8a783c0e3e57328ea8",
+    "quote_as_of": "2026-09-28T20:00:02Z",
     "run_attempt": 1,
-    "run_id": "36082706783",
+    "run_id": "36513342846",
     "schema_version": "provider_observation/v2",
-    "source_as_of": "2026-09-24"
+    "source_as_of": "2026-09-28"
   },
   "recovered_at": "2026-09-19T01:16:57Z",
   "recovered_from_run_id": "35170770312",
@@ -256,5 +256,5 @@
   "retry": false,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "ticker": "TSM",
-  "updated_at": "2026-09-25T01:37:44Z"
+  "updated_at": "2026-09-29T02:52:56Z"
 }

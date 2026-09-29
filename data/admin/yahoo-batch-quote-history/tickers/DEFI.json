@@ -131,55 +131,123 @@
       "run_id": "36367829153",
       "schedule": "",
       "shard": ""
+    },
+    {
+      "attempts_used": 2,
+      "error": "chart quote equal-clock price conflict",
+      "event_name": "schedule",
+      "failures": [
+        {
+          "attempt": 1,
+          "error": "AttributeError: 'Index' object has no attribute 'date'",
+          "source": "provider_safe_call"
+        },
+        {
+          "attempt": 1,
+          "error": "chart quote equal-clock price conflict"
+        },
+        {
+          "attempt": 2,
+          "error": "AttributeError: 'Index' object has no attribute 'date'",
+          "source": "provider_safe_call"
+        },
+        {
+          "attempt": 2,
+          "error": "chart quote equal-clock price conflict"
+        }
+      ],
+      "latency_ms": 0,
+      "natural": true,
+      "observed_at": "2026-09-29T02:38:15Z",
+      "outcome": "failed",
+      "run_attempt": 1,
+      "run_id": "36513342846",
+      "schedule": "20 23 * * 1-5",
+      "shard": "0/5"
     }
   ],
   "current": {
-    "fetched_at": "2026-08-09T14:46:44Z",
-    "history_as_of": "2026-08-07",
+    "fetched_at": "2026-09-24T14:15:04Z",
+    "history_as_of": "2026-08-24",
     "path": "data/admin/yahoo-batch-quote-history/lkg/DEFI.json",
-    "payload_sha256": "9f5a9eb6a9816f4f0fecd62a49b1c2e4a394411a33d336b9b6998702d9af4af5",
-    "quote_as_of": "2026-08-06T17:37:43Z",
-    "source_as_of": "2026-08-06T17:37:43Z"
+    "payload_sha256": "b5a39b2bc4c6903bb8fbbabe04fbe01a8463b27aea5ad1545a05b36f1f28d4fe",
+    "quote_as_of": "2026-08-17T16:54:56Z",
+    "source_as_of": "2026-08-17T16:54:56Z"
   },
   "discovered_from": [
     "market_facts"
   ],
   "last_attempt": {
-    "attempts_used": 1,
-    "error": "foreign_writer_conflict",
-    "event_name": "workflow_dispatch",
+    "attempts_used": 2,
+    "error": "chart quote equal-clock price conflict",
+    "event_name": "schedule",
     "failures": [
       {
         "attempt": 1,
         "error": "AttributeError: 'Index' object has no attribute 'date'",
         "source": "provider_safe_call"
+      },
+      {
+        "attempt": 1,
+        "error": "chart quote equal-clock price conflict"
+      },
+      {
+        "attempt": 2,
+        "error": "AttributeError: 'Index' object has no attribute 'date'",
+        "source": "provider_safe_call"
+      },
+      {
+        "attempt": 2,
+        "error": "chart quote equal-clock price conflict"
       }
     ],
-    "latency_ms": 540,
-    "natural": false,
-    "observed_at": "2026-09-28T03:11:20Z",
+    "latency_ms": 0,
+    "natural": true,
+    "observed_at": "2026-09-29T02:38:15Z",
     "outcome": "failed",
     "run_attempt": 1,
-    "run_id": "36367829153",
-    "schedule": "",
-    "shard": ""
+    "run_id": "36513342846",
+    "schedule": "20 23 * * 1-5",
+    "shard": "0/5"
   },
-  "latest_promotion_deferral": {
-    "event_name": "workflow_dispatch",
-    "observed_at": "2026-09-28T03:11:20Z",
-    "provider_history_as_of": "2026-08-17",
-    "provider_quote_as_of": "2026-08-17T16:54:56Z",
-    "reason": "foreign_writer_conflict",
+  "latest_failure": {
+    "attempts_used": 2,
+    "data_loss": false,
+    "deferred_acquisition": false,
+    "error": "chart quote equal-clock price conflict",
+    "failure_kind": "unexpected",
+    "failures": [
+      {
+        "attempt": 1,
+        "error": "AttributeError: 'Index' object has no attribute 'date'",
+        "source": "provider_safe_call"
+      },
+      {
+        "attempt": 1,
+        "error": "chart quote equal-clock price conflict"
+      },
+      {
+        "attempt": 2,
+        "error": "AttributeError: 'Index' object has no attribute 'date'",
+        "source": "provider_safe_call"
+      },
+      {
+        "attempt": 2,
+        "error": "chart quote equal-clock price conflict"
+      }
+    ],
+    "lkg_status": "retained",
+    "observed_at": "2026-09-29T02:38:15Z",
     "run_attempt": 1,
-    "run_id": "36367829153"
+    "run_id": "36513342846"
   },
   "lkg": {
-    "fetched_at": "2026-08-09T14:46:44Z",
-    "history_as_of": "2026-08-07",
+    "fetched_at": "2026-09-24T14:15:04Z",
+    "history_as_of": "2026-08-24",
     "path": "data/admin/yahoo-batch-quote-history/lkg/DEFI.json",
-    "payload_sha256": "9f5a9eb6a9816f4f0fecd62a49b1c2e4a394411a33d336b9b6998702d9af4af5",
-    "quote_as_of": "2026-08-06T17:37:43Z",
-    "source_as_of": "2026-08-06T17:37:43Z"
+    "payload_sha256": "b5a39b2bc4c6903bb8fbbabe04fbe01a8463b27aea5ad1545a05b36f1f28d4fe",
+    "quote_as_of": "2026-08-17T16:54:56Z",
+    "source_as_of": "2026-08-17T16:54:56Z"
   },
   "promotion_contract": "provider_observation/v2",
   "provider_observation": {
@@ -207,5 +275,5 @@
     "source_as_of": "2026-08-06T17:37:43Z"
   },
   "ticker": "DEFI",
-  "updated_at": "2026-09-28T03:11:20Z"
+  "updated_at": "2026-09-29T02:38:15Z"
 }
