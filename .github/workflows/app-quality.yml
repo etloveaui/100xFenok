@@ -121,7 +121,14 @@ jobs:
           NEXT_TELEMETRY_DISABLED: '1'
           FENOK_REMOTE_HEAVY_NESTED_EXECUTION: '1'
           FENOK_REMOTE_HEAVY_EXPECTED_REVISION: ${{ github.sha }}
-        run: npm run build:runtime
+        run: |
+          mkdir -p .qa-artifacts/pr-runtime
+          # Keep the full log as an artifact, but surface only the useful tail.
+          # Preserve the build's exit code rather than masking it with tail/tee.
+          status=0
+          npm run build:runtime > .qa-artifacts/pr-runtime/build.log 2>&1 || status=$?
+          tail -n 80 .qa-artifacts/pr-runtime/build.log
+          exit "$status"
       - name: Install smoke-test browser
         run: npx playwright install --with-deps chromium
       - name: Check built routes on the isolated runtime
@@ -132,7 +139,7 @@ jobs:
         run: |
           set -euo pipefail
           bash scripts/load-guard.sh --assert-nested
-          npm run start:qa -- --hostname 127.0.0.1 --port 3107 > "$RUNNER_TEMP/pr-runtime.log" 2>&1 &
+          npm run start:qa -- --hostname 127.0.0.1 --port 3107 > .qa-artifacts/pr-runtime/server.log 2>&1 &
           server_pid=$!
           trap 'kill "$server_pid" 2>/dev/null || true; wait "$server_pid" 2>/dev/null || true' EXIT
           ready=false
@@ -140,7 +147,7 @@ jobs:
             if curl -fsS http://127.0.0.1:3107/ -o /dev/null; then ready=true; break; fi
             sleep 1
           done
-          if [ "$ready" != true ]; then cat "$RUNNER_TEMP/pr-runtime.log"; exit 1; fi
+          if [ "$ready" != true ]; then tail -n 80 .qa-artifacts/pr-runtime/server.log; exit 1; fi
           node scripts/check-pr-runtime-smoke.mjs
       - name: Keep bounded runtime review results
         if: ${{ always() }}
