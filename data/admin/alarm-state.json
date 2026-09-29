@@ -1,8 +1,8 @@
 {
   "schema_version": "alarm-state/v1",
-  "generated_at": "2026-09-29T08:59:33.748Z",
+  "generated_at": "2026-09-29T10:16:58.698Z",
   "status": "open",
-  "open_incident_count": 6,
+  "open_incident_count": 7,
   "open_incidents": [
     {
       "workflow": "fenok-edge-krx-daily.yml",
@@ -41,6 +41,18 @@
       "lost_schedule_slot_count": 0
     },
     {
+      "workflow": "global-writer-queue-observer.yml",
+      "label": "Global Writer Queue Observability",
+      "streak": 0,
+      "failure_streak_threshold": 2,
+      "first_failing_run_id": null,
+      "first_failing_run_url": null,
+      "alarm_reasons": [
+        "missed_schedule_window"
+      ],
+      "lost_schedule_slot_count": 0
+    },
+    {
       "workflow": "retention-restore.yml",
       "label": "R2 Retention Restore Watchdog",
       "streak": 0,
@@ -53,14 +65,14 @@
       "lost_schedule_slot_count": 0
     },
     {
-      "workflow": "validate-workflows.yml",
-      "label": "Validate GitHub Workflows",
-      "streak": 11,
+      "workflow": "worker-request-budget-alarm.yml",
+      "label": "Worker Request Budget Alarm",
+      "streak": 0,
       "failure_streak_threshold": 2,
-      "first_failing_run_id": 36424469518,
-      "first_failing_run_url": "https://github.com/etloveaui/100xFenok/actions/runs/36424469518",
+      "first_failing_run_id": null,
+      "first_failing_run_url": null,
       "alarm_reasons": [
-        "failure_streak"
+        "missed_schedule_window"
       ],
       "lost_schedule_slot_count": 0
     },
@@ -427,16 +439,17 @@
   "queue_evicted_run_count": 0,
   "queue_evicted_workflows": [],
   "last_firing": {
-    "run_id": "36545871183",
-    "run_url": "https://github.com/etloveaui/100xFenok/actions/runs/36545871183",
-    "observed_at": "2026-09-29T08:59:33.748Z",
+    "run_id": "36554182666",
+    "run_url": "https://github.com/etloveaui/100xFenok/actions/runs/36554182666",
+    "observed_at": "2026-09-29T10:16:58.698Z",
     "event": "workflow_run",
     "workflows": [
       "fenok-edge-krx-daily.yml",
       "fetch-stockanalysis.yml",
       "fetch-yahoo-ticker.yml",
+      "global-writer-queue-observer.yml",
       "retention-restore.yml",
-      "validate-workflows.yml",
+      "worker-request-budget-alarm.yml",
       "data-health-kpi"
     ],
     "title": "100xFenok pipeline job failure alarm"
