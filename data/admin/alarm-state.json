@@ -1,8 +1,8 @@
 {
   "schema_version": "alarm-state/v1",
-  "generated_at": "2026-09-29T02:05:14.933Z",
+  "generated_at": "2026-09-29T08:42:24.875Z",
   "status": "open",
-  "open_incident_count": 6,
+  "open_incident_count": 5,
   "open_incidents": [
     {
       "workflow": "fenok-edge-krx-daily.yml",
@@ -17,21 +17,9 @@
       "lost_schedule_slot_count": 0
     },
     {
-      "workflow": "fetch-stockanalysis.yml",
-      "label": "Fetch StockAnalysis Data",
-      "streak": 2,
-      "failure_streak_threshold": 2,
-      "first_failing_run_id": 36366931706,
-      "first_failing_run_url": "https://github.com/etloveaui/100xFenok/actions/runs/36366931706",
-      "alarm_reasons": [
-        "failure_streak"
-      ],
-      "lost_schedule_slot_count": 0
-    },
-    {
       "workflow": "fetch-yahoo-ticker.yml",
       "label": "Fetch Yahoo Finance Ticker Snapshot",
-      "streak": 3,
+      "streak": 4,
       "failure_streak_threshold": 2,
       "first_failing_run_id": 36442738145,
       "first_failing_run_url": "https://github.com/etloveaui/100xFenok/actions/runs/36442738145",
@@ -71,10 +59,11 @@
         "data_stopped_two_generations"
       ],
       "stopped_sets": [
-        "stockanalysis_etf_detail"
+        "stockanalysis_etf_detail",
+        "stockanalysis_surfaces"
       ],
-      "latest_generated_at": "2026-09-28T18:08:10.850Z",
-      "previous_generated_at": "2026-09-28T13:55:11.267Z"
+      "latest_generated_at": "2026-09-29T07:02:45.209Z",
+      "previous_generated_at": "2026-09-29T05:58:28.664Z"
     }
   ],
   "watched_workflows": [
@@ -426,13 +415,12 @@
   "queue_evicted_run_count": 0,
   "queue_evicted_workflows": [],
   "last_firing": {
-    "run_id": "36510687745",
-    "run_url": "https://github.com/etloveaui/100xFenok/actions/runs/36510687745",
-    "observed_at": "2026-09-29T02:05:14.933Z",
+    "run_id": "36544022747",
+    "run_url": "https://github.com/etloveaui/100xFenok/actions/runs/36544022747",
+    "observed_at": "2026-09-29T08:42:24.875Z",
     "event": "schedule",
     "workflows": [
       "fenok-edge-krx-daily.yml",
-      "fetch-stockanalysis.yml",
       "fetch-yahoo-ticker.yml",
       "retention-restore.yml",
       "validate-workflows.yml",
