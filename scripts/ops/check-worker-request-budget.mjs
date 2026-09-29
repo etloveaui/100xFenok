@@ -1,4 +1,5 @@
 import fs from "node:fs";
+import { pathToFileURL } from "node:url";
 
 const GRAPHQL_ENDPOINT = "https://api.cloudflare.com/client/v4/graphql";
 const REST_ENDPOINT = "https://api.cloudflare.com/client/v4";
@@ -107,6 +108,18 @@ function sumRequests(rows) {
   return rows.reduce((total, row) => total + Number(row?.sum?.requests || 0), 0);
 }
 
+export function parseWorkerUsage(account) {
+  const dayRows = Array.isArray(account.day) ? account.day : [];
+  const hourRows = Array.isArray(account.hour) ? account.hour : [];
+  return {
+    dayRows: dayRows.length,
+    hourRows: hourRows.length,
+    todayRequests: sumRequests(dayRows),
+    lastHourRequests: sumRequests(hourRows),
+    truncated: dayRows.length >= 10000 || hourRows.length >= 10000,
+  };
+}
+
 async function queryWorkerUsage({ token, accountId, scriptName, dayStart, hourStart, now }) {
   const query = `
     query WorkerRequestBudget(
@@ -171,16 +184,7 @@ async function queryWorkerUsage({ token, accountId, scriptName, dayStart, hourSt
     throw new Error("Cloudflare GraphQL returned no account data.");
   }
 
-  const dayRows = Array.isArray(account.day) ? account.day : [];
-  const hourRows = Array.isArray(account.hour) ? account.hour : [];
-
-  return {
-    dayRows: dayRows.length,
-    hourRows: hourRows.length,
-    todayRequests: sumRequests(dayRows),
-    lastHourRequests: sumRequests(hourRows),
-    truncated: dayRows.length >= 10000 || hourRows.length >= 10000,
-  };
+  return parseWorkerUsage(account);
 }
 
 function buildIssueBody(result) {
@@ -313,4 +317,4 @@ async function main() {
   }
 }
 
-main();
+if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) main();

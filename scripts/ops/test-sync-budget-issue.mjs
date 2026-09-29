@@ -1,6 +1,8 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { syncBudgetIssue } from "./sync-budget-issue.mjs";
+import { parseWorkerUsage } from "./check-worker-request-budget.mjs";
+import { parseAnalyticsResult } from "./check-data-supply-etf-telemetry-budget.mjs";
 
 const title = "100xFenok Worker request budget alarm";
 const result = (status) => ({ status, issueTitle: title, issueBody: `${status}: measured result` });
@@ -63,4 +65,23 @@ test("a failed body update cannot be followed by a misleading closure", () => {
   };
   assert.throws(() => syncBudgetIssue(result("ok"), mock), /API failure/);
   assert.equal(mock.calls.some((args) => args[1] === "close"), false);
+});
+
+test("missing and nonnumeric Worker measurements cannot masquerade as zero usage", () => {
+  for (const account of [{}, { day: [], hour: null }, { day: [null], hour: [] },
+    { day: [{ sum: { requests: "unreadable" } }], hour: [] }, { day: [{ sum: { requests: -1 } }], hour: [] }]) {
+    assert.throws(() => parseWorkerUsage(account));
+  }
+  assert.equal(parseWorkerUsage({ day: [], hour: [] }).todayRequests, 0);
+  assert.equal(parseWorkerUsage({ day: [{ sum: { requests: 12 } }], hour: [] }).todayRequests, 12);
+});
+
+test("missing and nonnumeric telemetry measurements cannot close a budget incident", () => {
+  for (const payload of [{}, { data: null }, { data: [{}] },
+    { data: [{ request_count: "invalid", unique_ticker_count: "0", cache_hit_count: "0" }] },
+    { data: [{ request_count: -1, unique_ticker_count: 0, cache_hit_count: 0 }] }]) {
+    assert.throws(() => parseAnalyticsResult(payload));
+  }
+  assert.equal(parseAnalyticsResult({ data: [] }).todayRequests, 0);
+  assert.equal(parseAnalyticsResult({ data: [{ request_count: "12", unique_ticker_count: "1", cache_hit_count: "0" }] }).todayRequests, 12);
 });

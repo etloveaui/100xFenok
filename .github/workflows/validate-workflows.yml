@@ -21,6 +21,8 @@ on:
       - 'scripts/ops/check-alarm-liveness.mjs'
       - 'scripts/ops/test-alarm-liveness.mjs'
       - 'scripts/ops/sync-budget-issue.mjs'
+      - 'scripts/ops/check-worker-request-budget.mjs'
+      - 'scripts/ops/check-data-supply-etf-telemetry-budget.mjs'
       - 'scripts/ops/test-sync-budget-issue.mjs'
       - 'scripts/ops/test-workflow-credential-wiring.mjs'
       - 'scripts/ops/test-alarm-blindness.mjs'
@@ -138,6 +140,8 @@ on:
       - 'scripts/ops/check-alarm-liveness.mjs'
       - 'scripts/ops/test-alarm-liveness.mjs'
       - 'scripts/ops/sync-budget-issue.mjs'
+      - 'scripts/ops/check-worker-request-budget.mjs'
+      - 'scripts/ops/check-data-supply-etf-telemetry-budget.mjs'
       - 'scripts/ops/test-sync-budget-issue.mjs'
       - 'scripts/ops/test-workflow-credential-wiring.mjs'
       - 'scripts/ops/test-alarm-blindness.mjs'
@@ -261,6 +265,7 @@ jobs:
           node scripts/ops/test-missed-schedule-window.mjs
           node scripts/ops/test-alarm-liveness.mjs
           node --test scripts/ops/test-sync-budget-issue.mjs
+          node scripts/ops/test-data-supply-etf-telemetry-budget.mjs
           node scripts/ops/test-workflow-credential-wiring.mjs
           node scripts/ops/test-alarm-blindness.mjs
           node scripts/ops/test-cost-gate-rate-limit.mjs
