@@ -77,7 +77,7 @@ assert.match(workflowText, /CANDIDATE_UPDATED.*true.*CANDIDATE_EXIT_CODE.*-eq 0.
 assert.match(workflowText, /if \[ "\$KRX_FETCH_OUTCOME" = "success" \]; then/,
   "canonical/computed outputs must only be staged after a promotable success");
 assert.match(workflowText, /if: \$\{\{ always\(\)/,
-  "KRX failure attempts must still reach the emitter and commit path");
+  "KRX failure state must still reach the commit path");
 assert.doesNotMatch(workflowText, /git add -A/);
 
 function workflowRunBlock(stepName) {
@@ -256,17 +256,15 @@ function executeWalkbackScenario({ allDegraded = false, contradictorySuccess = f
   assert.deepEqual(rejected.calls, ["20260715"],
     "walkback must stop at the first access-rejected candidate; earlier dates cannot cure a credential rejection");
   // The stopped attempt is still reported: the full failure record reaches the
-  // step output that the always()-guarded emitter and commit steps consume.
+  // step output that the always()-guarded commit step consumes.
   assert.deepEqual(Object.keys(rejected.outputs).sort(),
     ["attempt_outcome", "recovery_exit_code", "recovery_reason", "recovery_updated"],
-    "an access-rejected attempt must persist its complete failure evidence for the emit/commit steps");
+    "an access-rejected attempt must report its complete failure result to the commit step");
   assert.match(rejected.stdout, /recovery_reason=auth_error/,
     "the refresh log must name the access rejection so the run is attributable without the raw payload");
 }
 assert.match(workflowText, /CANDIDATE_REASON" = "auth_error" \]; then[\s\S]*?break/,
   "walkback must break on recovery_reason=auth_error rather than spending the date budget");
-assert.match(workflowText, /name: Emit KRX detection attempt\n\s+if: \$\{\{ always\(\)/,
-  "the attempt emitter must run after a failed refresh step so auth_error evidence is persisted");
 assert.match(workflowText, /name: Commit and push KRX source evidence\n\s+if: \$\{\{ always\(\)/,
   "the evidence commit must run after a failed refresh step so auth_error evidence reaches main");
 
