@@ -1,21 +1,9 @@
 {
   "schema_version": "alarm-state/v1",
-  "generated_at": "2026-09-28T22:09:51.142Z",
+  "generated_at": "2026-09-29T02:05:14.933Z",
   "status": "open",
-  "open_incident_count": 5,
+  "open_incident_count": 6,
   "open_incidents": [
-    {
-      "workflow": "data-plane-serving-probe.yml",
-      "label": "Data Plane Serving Probe",
-      "streak": 0,
-      "failure_streak_threshold": 2,
-      "first_failing_run_id": null,
-      "first_failing_run_url": null,
-      "alarm_reasons": [
-        "missed_schedule_window"
-      ],
-      "lost_schedule_slot_count": 0
-    },
     {
       "workflow": "fenok-edge-krx-daily.yml",
       "label": "Fenok Edge KRX Daily Data",
@@ -29,14 +17,38 @@
       "lost_schedule_slot_count": 0
     },
     {
+      "workflow": "fetch-stockanalysis.yml",
+      "label": "Fetch StockAnalysis Data",
+      "streak": 2,
+      "failure_streak_threshold": 2,
+      "first_failing_run_id": 36366931706,
+      "first_failing_run_url": "https://github.com/etloveaui/100xFenok/actions/runs/36366931706",
+      "alarm_reasons": [
+        "failure_streak"
+      ],
+      "lost_schedule_slot_count": 0
+    },
+    {
       "workflow": "fetch-yahoo-ticker.yml",
       "label": "Fetch Yahoo Finance Ticker Snapshot",
-      "streak": 2,
+      "streak": 3,
       "failure_streak_threshold": 2,
       "first_failing_run_id": 36442738145,
       "first_failing_run_url": "https://github.com/etloveaui/100xFenok/actions/runs/36442738145",
       "alarm_reasons": [
         "failure_streak"
+      ],
+      "lost_schedule_slot_count": 0
+    },
+    {
+      "workflow": "retention-restore.yml",
+      "label": "R2 Retention Restore Watchdog",
+      "streak": 0,
+      "failure_streak_threshold": 2,
+      "first_failing_run_id": null,
+      "first_failing_run_url": null,
+      "alarm_reasons": [
+        "missed_schedule_window"
       ],
       "lost_schedule_slot_count": 0
     },
@@ -414,14 +426,15 @@
   "queue_evicted_run_count": 0,
   "queue_evicted_workflows": [],
   "last_firing": {
-    "run_id": "36490394093",
-    "run_url": "https://github.com/etloveaui/100xFenok/actions/runs/36490394093",
-    "observed_at": "2026-09-28T22:09:51.142Z",
+    "run_id": "36510687745",
+    "run_url": "https://github.com/etloveaui/100xFenok/actions/runs/36510687745",
+    "observed_at": "2026-09-29T02:05:14.933Z",
     "event": "schedule",
     "workflows": [
-      "data-plane-serving-probe.yml",
       "fenok-edge-krx-daily.yml",
+      "fetch-stockanalysis.yml",
       "fetch-yahoo-ticker.yml",
+      "retention-restore.yml",
       "validate-workflows.yml",
       "data-health-kpi"
     ],
