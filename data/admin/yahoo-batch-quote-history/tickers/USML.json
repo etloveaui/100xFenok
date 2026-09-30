@@ -10,80 +10,36 @@
   "discovered_from": [
     "market_facts"
   ],
-  "failure_count": 1,
+  "failure_count": 2,
   "last_result": {
-    "attempts_used": 3,
-    "error": "chart quote equal-clock price conflict",
+    "attempts_used": 1,
+    "error": "ValueError: Yahoo provider source timestamp regresses for USML: history_as_of",
     "failures": [
       {
         "attempt": 1,
         "error": "AttributeError: 'Index' object has no attribute 'date'",
         "source": "provider_safe_call"
-      },
-      {
-        "attempt": 1,
-        "error": "chart quote equal-clock price conflict"
-      },
-      {
-        "attempt": 2,
-        "error": "AttributeError: 'Index' object has no attribute 'date'",
-        "source": "provider_safe_call"
-      },
-      {
-        "attempt": 2,
-        "error": "chart quote equal-clock price conflict"
-      },
-      {
-        "attempt": 3,
-        "error": "AttributeError: 'Index' object has no attribute 'date'",
-        "source": "provider_safe_call"
-      },
-      {
-        "attempt": 3,
-        "error": "chart quote equal-clock price conflict"
       }
     ],
-    "latency_ms": 0,
-    "observed_at": "2026-09-30T14:42:46Z",
+    "latency_ms": 581,
+    "observed_at": "2026-09-30T16:14:03Z",
     "outcome": "failed"
   },
   "latest_failure": {
-    "attempts_used": 3,
+    "attempts_used": 1,
     "data_loss": false,
     "deferred_acquisition": false,
-    "error": "chart quote equal-clock price conflict",
-    "failure_kind": "unexpected",
+    "error": "ValueError: Yahoo provider source timestamp regresses for USML: history_as_of",
+    "failure_kind": "systemic_integrity",
     "failures": [
       {
         "attempt": 1,
         "error": "AttributeError: 'Index' object has no attribute 'date'",
         "source": "provider_safe_call"
-      },
-      {
-        "attempt": 1,
-        "error": "chart quote equal-clock price conflict"
-      },
-      {
-        "attempt": 2,
-        "error": "AttributeError: 'Index' object has no attribute 'date'",
-        "source": "provider_safe_call"
-      },
-      {
-        "attempt": 2,
-        "error": "chart quote equal-clock price conflict"
-      },
-      {
-        "attempt": 3,
-        "error": "AttributeError: 'Index' object has no attribute 'date'",
-        "source": "provider_safe_call"
-      },
-      {
-        "attempt": 3,
-        "error": "chart quote equal-clock price conflict"
       }
     ],
     "lkg_status": "retained",
-    "observed_at": "2026-09-30T14:42:46Z"
+    "observed_at": "2026-09-30T16:14:03Z"
   },
   "lkg": {
     "fetched_at": "2026-09-25T06:02:58Z",
@@ -106,5 +62,5 @@
     "source_as_of": "2026-08-18T19:47:41Z"
   },
   "ticker": "USML",
-  "updated_at": "2026-09-30T14:42:46Z"
+  "updated_at": "2026-09-30T16:14:03Z"
 }
