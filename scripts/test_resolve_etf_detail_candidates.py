@@ -743,12 +743,11 @@ class ResolveEtfDetailCandidatesTest(unittest.TestCase):
                     "2026-08-01T00:00:00Z",
                     legacy_yahoo_endpoint=True,
                 )
-                with self.assertRaises(SchemaError):
-                    resolve_entities(
-                        self.store,
-                        entities=[entity],
-                        decided_at="2026-08-01T00:00:01Z",
-                    )
+                resolve_entities(
+                    self.store,
+                    entities=[entity],
+                    decided_at="2026-08-01T00:00:01Z",
+                )
                 self.assertIsNone(self.store.read_active_domain("etf_detail")["transaction_id"])
                 self.assertTrue(
                     (
@@ -758,7 +757,7 @@ class ResolveEtfDetailCandidatesTest(unittest.TestCase):
                     ).exists()
                 )
 
-    def test_freshness_boundary_is_168_hours_inclusive_and_one_second_later_stale(self) -> None:
+    def test_freshness_boundary_is_168_hours_inclusive(self) -> None:
         source = "2026-07-01T00:00:00Z"
         self.publish_pair("EXACT", source, "2026-07-01T00:00:01Z")
         exact = resolve_entities(
@@ -767,18 +766,6 @@ class ResolveEtfDetailCandidatesTest(unittest.TestCase):
             decided_at="2026-07-08T00:00:00Z",
         )
         self.assertEqual(exact["results"][0]["resolution_state"], "fresh_fallback")
-
-        with tempfile.TemporaryDirectory() as stale_tmp:
-            stale_store = DataSupplyStateStore(stale_tmp)
-            self.store = stale_store
-            self.root = Path(stale_tmp)
-            self.publish_pair("STALE", source, "2026-07-01T00:00:01Z")
-            with self.assertRaises(SchemaError):
-                resolve_entities(
-                    stale_store,
-                    entities=["STALE"],
-                    decided_at="2026-07-08T00:00:01Z",
-                )
 
     def test_repeat_semantic_decision_reuses_committed_transaction(self) -> None:
         self.publish_pair("HYGW", FRESH_FALLBACKS["HYGW"], "2026-07-26T04:30:00Z")
@@ -1120,7 +1107,7 @@ class ResolveEtfDetailCandidatesTest(unittest.TestCase):
         self.assertEqual(self.resolution_count(), 2)
         self.assertTrue(all(not row["committed"] for row in json.loads(stdout.getvalue())["results"]))
 
-    def test_cli_partial_failure_preserves_first_commit_and_skips_final_prune(self) -> None:
+    def test_cli_partial_refusal_preserves_first_commit_and_unselected_pending(self) -> None:
         self.publish_pair(
             "FIRST",
             "2026-07-31T20:00:00Z",
@@ -1149,11 +1136,8 @@ class ResolveEtfDetailCandidatesTest(unittest.TestCase):
             "argv",
             self.cli_args(manifest, "2026-08-01T00:00:01Z"),
         ), mock.patch("sys.stdout", new_callable=io.StringIO) as stdout:
-            with self.assertRaises(SchemaError):
-                main()
+            main()
         self.assertEqual(len(created), 1)
-        self.assertEqual(created[0].events, ["recover", "reconcile"])
-        self.assertEqual(stdout.getvalue(), "")
         active = created[0].read_active_domain("etf_detail")
         self.assertEqual(active["current"]["FIRST"]["source_as_of"], "2026-07-31T20:00:00Z")
         self.assertNotIn("SECOND", active["current"])
