@@ -1,42 +1,53 @@
 {
-  "attempts": [
-    {
-      "attempts_used": 1,
-      "event_name": "workflow_dispatch",
-      "failures": [],
-      "latency_ms": 491,
-      "natural": false,
-      "observed_at": "2026-09-28T06:30:00Z",
-      "outcome": "fresh",
-      "run_attempt": 1,
-      "run_id": "36367836615",
-      "schedule": "",
-      "shard": ""
-    }
-  ],
   "current": {
-    "fetched_at": "2026-09-28T06:38:44Z",
-    "history_as_of": "2026-09-25",
-    "path": "data/admin/yahoo-batch-quote-history/lkg/USGX.json",
-    "payload_sha256": "1b3871222105b6aff527c175c8dd9a5b033ae5c743cc08964952b17062f93f1a",
-    "quote_as_of": "2026-09-01T18:05:30Z",
-    "source_as_of": "2026-09-01T18:05:30Z"
+    "fetched_at": "2026-09-30T14:42:19Z",
+    "history_as_of": "2026-09-30",
+    "path": "data/yf/finance/USGX.json",
+    "payload_sha256": "5630bf413637a06f243728825849a9b2748291968646ba8bef0051d138ce6759",
+    "quote_as_of": "2026-09-30T13:46:08Z",
+    "source_as_of": "2026-09-30"
   },
   "discovered_from": [
     "stockanalysis_etf"
   ],
-  "last_attempt": {
+  "failure_count": 0,
+  "last_result": {
     "attempts_used": 1,
-    "event_name": "workflow_dispatch",
-    "failures": [],
-    "latency_ms": 491,
-    "natural": false,
-    "observed_at": "2026-09-28T06:30:00Z",
-    "outcome": "fresh",
-    "run_attempt": 1,
-    "run_id": "36367836615",
-    "schedule": "",
-    "shard": ""
+    "failures": [
+      {
+        "attempt": 1,
+        "error": "YFDataException: USGX: No Fund data found.",
+        "source": "provider_safe_call"
+      },
+      {
+        "attempt": 1,
+        "error": "YFDataException: USGX: No Fund data found.",
+        "source": "provider_safe_call"
+      },
+      {
+        "attempt": 1,
+        "error": "YFDataException: USGX: No Fund data found.",
+        "source": "provider_safe_call"
+      },
+      {
+        "attempt": 1,
+        "error": "YFDataException: USGX: No Fund data found.",
+        "source": "provider_safe_call"
+      },
+      {
+        "attempt": 1,
+        "error": "YFDataException: USGX: No Fund data found.",
+        "source": "provider_safe_call"
+      },
+      {
+        "attempt": 1,
+        "error": "YFDataException: USGX: No Fund data found.",
+        "source": "provider_safe_call"
+      }
+    ],
+    "latency_ms": 635,
+    "observed_at": "2026-09-30T14:42:19Z",
+    "outcome": "fresh"
   },
   "lkg": {
     "fetched_at": "2026-09-28T06:38:44Z",
@@ -46,25 +57,12 @@
     "quote_as_of": "2026-09-01T18:05:30Z",
     "source_as_of": "2026-09-01T18:05:30Z"
   },
-  "promotion_contract": "provider_observation/v2",
-  "provider_observation": {
-    "event_name": "workflow_dispatch",
-    "history_as_of": "2026-09-25",
-    "observed_at": "2026-09-28T06:30:00Z",
-    "payload_sha256": "e620f6db96e798e6716f915c2c84f0b5b943737f72e2e7fb3840a95e219dd6f3",
-    "quote_as_of": "2026-09-01T18:05:30Z",
-    "run_attempt": 1,
-    "run_id": "36367836615",
-    "schema_version": "provider_observation/v2",
-    "source_as_of": "2026-09-01T18:05:30Z"
-  },
-  "resolution_state": "lkg_primary",
-  "retry": true,
+  "resolution_state": "fresh_primary",
+  "retry": false,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "stale": {
     "age_business_days": 18,
     "classified_at": "2026-09-28T07:38:17Z",
-    "classified_run_id": "36369581504",
     "expected_resolution": "next_natural_yahoo_run",
     "max_business_days": 6,
     "message": "USGX holds LKG because Yahoo source date 2026-09-01T18:05:30Z is 18 business days old, beyond the 6-day bound; it will retry on the next natural Yahoo run.",
@@ -72,5 +70,5 @@
     "source_as_of": "2026-09-01T18:05:30Z"
   },
   "ticker": "USGX",
-  "updated_at": "2026-09-28T07:38:17Z"
+  "updated_at": "2026-09-30T14:42:19Z"
 }

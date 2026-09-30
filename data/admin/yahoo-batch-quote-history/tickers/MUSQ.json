@@ -1,68 +1,22 @@
 {
-  "attempts": [
-    {
-      "attempts_used": 1,
-      "event_name": "schedule",
-      "failures": [],
-      "latency_ms": 617,
-      "natural": true,
-      "observed_at": "2026-08-05T16:06:31Z",
-      "outcome": "fresh",
-      "run_attempt": 1,
-      "run_id": "31023479262",
-      "schedule": "7 14 * * 0-5",
-      "shard": "43/72"
-    },
-    {
-      "attempts_used": 1,
-      "event_name": "schedule",
-      "failures": [],
-      "latency_ms": 451,
-      "natural": true,
-      "observed_at": "2026-08-12T15:08:24Z",
-      "outcome": "fresh",
-      "run_attempt": 1,
-      "run_id": "31610461024",
-      "schedule": "7 14 * * 0-5",
-      "shard": "43/72"
-    },
-    {
-      "attempts_used": 1,
-      "event_name": "workflow_dispatch",
-      "failures": [],
-      "latency_ms": 487,
-      "natural": false,
-      "observed_at": "2026-09-28T05:23:15Z",
-      "outcome": "fresh",
-      "run_attempt": 1,
-      "run_id": "36367832955",
-      "schedule": "",
-      "shard": ""
-    }
-  ],
   "current": {
-    "fetched_at": "2026-09-28T05:33:51Z",
-    "history_as_of": "2026-09-25",
-    "path": "data/admin/yahoo-batch-quote-history/lkg/MUSQ.json",
-    "payload_sha256": "a4f8c095186d0c71f345ebd2275cf2408f27d652c565fa13a88c74022ce3f118",
-    "quote_as_of": "2026-09-21T13:46:35Z",
-    "source_as_of": "2026-09-21T13:46:35Z"
+    "fetched_at": "2026-09-30T14:39:04Z",
+    "history_as_of": "2026-09-30",
+    "path": "data/yf/finance/MUSQ.json",
+    "payload_sha256": "e33808e2f1ca9c68db3f8f8f10e2721c1b1846be0f2b0ffeba52b47bbc8c9154",
+    "quote_as_of": "2026-09-30T13:46:06Z",
+    "source_as_of": "2026-09-30"
   },
   "discovered_from": [
     "stockanalysis_etf"
   ],
-  "last_attempt": {
+  "failure_count": 0,
+  "last_result": {
     "attempts_used": 1,
-    "event_name": "workflow_dispatch",
     "failures": [],
-    "latency_ms": 487,
-    "natural": false,
-    "observed_at": "2026-09-28T05:23:15Z",
-    "outcome": "fresh",
-    "run_attempt": 1,
-    "run_id": "36367832955",
-    "schedule": "",
-    "shard": ""
+    "latency_ms": 608,
+    "observed_at": "2026-09-30T14:39:04Z",
+    "outcome": "fresh"
   },
   "lkg": {
     "fetched_at": "2026-09-28T05:33:51Z",
@@ -72,25 +26,12 @@
     "quote_as_of": "2026-09-21T13:46:35Z",
     "source_as_of": "2026-09-21T13:46:35Z"
   },
-  "promotion_contract": "provider_observation/v2",
-  "provider_observation": {
-    "event_name": "workflow_dispatch",
-    "history_as_of": "2026-09-25",
-    "observed_at": "2026-09-28T05:23:15Z",
-    "payload_sha256": "ed1c9f9a12a5ab7f36406ad7ab98093fdf8a239f2ef73e566f7e69deef45a499",
-    "quote_as_of": "2026-09-21T13:46:35Z",
-    "run_attempt": 1,
-    "run_id": "36367832955",
-    "schema_version": "provider_observation/v2",
-    "source_as_of": "2026-09-21T13:46:35Z"
-  },
-  "resolution_state": "lkg_primary",
-  "retry": true,
+  "resolution_state": "fresh_primary",
+  "retry": false,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "stale": {
     "age_business_days": 7,
     "classified_at": "2026-09-30T02:12:48Z",
-    "classified_run_id": "36658577543",
     "expected_resolution": "next_natural_yahoo_run",
     "max_business_days": 6,
     "message": "MUSQ holds LKG because Yahoo source date 2026-09-21T13:46:35Z is 7 business days old, beyond the 6-day bound; it will retry on the next natural Yahoo run.",
@@ -98,5 +39,5 @@
     "source_as_of": "2026-09-21T13:46:35Z"
   },
   "ticker": "MUSQ",
-  "updated_at": "2026-09-30T02:12:48Z"
+  "updated_at": "2026-09-30T14:39:04Z"
 }

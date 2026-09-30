@@ -1,82 +1,22 @@
 {
-  "attempts": [
-    {
-      "attempts_used": 1,
-      "event_name": "schedule",
-      "failures": [],
-      "latency_ms": 1000,
-      "natural": true,
-      "observed_at": "2026-08-11T09:13:07Z",
-      "outcome": "fresh",
-      "run_attempt": 1,
-      "run_id": "31476569032",
-      "schedule": "7 8 * * 0-5",
-      "shard": "28/72"
-    },
-    {
-      "attempts_used": 1,
-      "error": "recovery_not_advanced_by_provider",
-      "event_name": "schedule",
-      "failures": [],
-      "latency_ms": 773,
-      "natural": true,
-      "observed_at": "2026-08-11T13:36:55Z",
-      "outcome": "failed",
-      "run_attempt": 1,
-      "run_id": "31496919771",
-      "schedule": "7 12 * * 0-5",
-      "shard": "30/72"
-    },
-    {
-      "attempts_used": 1,
-      "event_name": "schedule",
-      "failures": [],
-      "latency_ms": 595,
-      "natural": true,
-      "observed_at": "2026-08-11T17:08:04Z",
-      "outcome": "fresh",
-      "run_attempt": 1,
-      "run_id": "31515819191",
-      "schedule": "7 16 * * 0-5",
-      "shard": "32/72"
-    },
-    {
-      "attempts_used": 1,
-      "event_name": "workflow_dispatch",
-      "failures": [],
-      "latency_ms": 498,
-      "natural": false,
-      "observed_at": "2026-09-28T05:23:15Z",
-      "outcome": "fresh",
-      "run_attempt": 1,
-      "run_id": "36367832955",
-      "schedule": "",
-      "shard": ""
-    }
-  ],
   "current": {
-    "fetched_at": "2026-09-28T05:27:56Z",
-    "history_as_of": "2026-09-25",
-    "path": "data/admin/yahoo-batch-quote-history/lkg/LIBD.json",
-    "payload_sha256": "f877ef8ada05636008ec1fd05fd37aaf4e784581f6ac3cfdaabc9de0cbd5d21b",
-    "quote_as_of": "2026-08-31T16:41:38Z",
-    "source_as_of": "2026-08-31T16:41:38Z"
+    "fetched_at": "2026-09-30T14:38:06Z",
+    "history_as_of": "2026-09-30",
+    "path": "data/yf/finance/LIBD.json",
+    "payload_sha256": "8480d36c51aa016db704aae8b42973ea900f6ff1a6b245dd49529ceeb3161cec",
+    "quote_as_of": "2026-09-30T13:46:05Z",
+    "source_as_of": "2026-09-30"
   },
   "discovered_from": [
     "stockanalysis_etf"
   ],
-  "last_attempt": {
+  "failure_count": 0,
+  "last_result": {
     "attempts_used": 1,
-    "event_name": "workflow_dispatch",
     "failures": [],
-    "latency_ms": 498,
-    "natural": false,
-    "observed_at": "2026-09-28T05:23:15Z",
-    "outcome": "fresh",
-    "run_attempt": 1,
-    "run_id": "36367832955",
-    "schedule": "",
-    "shard": ""
+    "latency_ms": 768,
+    "observed_at": "2026-09-30T14:38:06Z",
+    "outcome": "fresh"
   },
   "lkg": {
     "fetched_at": "2026-09-28T05:27:56Z",
@@ -86,25 +26,12 @@
     "quote_as_of": "2026-08-31T16:41:38Z",
     "source_as_of": "2026-08-31T16:41:38Z"
   },
-  "promotion_contract": "provider_observation/v2",
-  "provider_observation": {
-    "event_name": "workflow_dispatch",
-    "history_as_of": "2026-09-25",
-    "observed_at": "2026-09-28T05:23:15Z",
-    "payload_sha256": "edc45df8392ceaf484515f1412f72d53548c1d079fd46b535968c1644000daa3",
-    "quote_as_of": "2026-08-31T16:41:38Z",
-    "run_attempt": 1,
-    "run_id": "36367832955",
-    "schema_version": "provider_observation/v2",
-    "source_as_of": "2026-08-31T16:41:38Z"
-  },
-  "resolution_state": "lkg_primary",
-  "retry": true,
+  "resolution_state": "fresh_primary",
+  "retry": false,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "stale": {
     "age_business_days": 19,
     "classified_at": "2026-09-28T06:02:24Z",
-    "classified_run_id": "36367834787",
     "expected_resolution": "next_natural_yahoo_run",
     "max_business_days": 6,
     "message": "LIBD holds LKG because Yahoo source date 2026-08-31T16:41:38Z is 19 business days old, beyond the 6-day bound; it will retry on the next natural Yahoo run.",
@@ -112,5 +39,5 @@
     "source_as_of": "2026-08-31T16:41:38Z"
   },
   "ticker": "LIBD",
-  "updated_at": "2026-09-28T06:02:24Z"
+  "updated_at": "2026-09-30T14:38:06Z"
 }

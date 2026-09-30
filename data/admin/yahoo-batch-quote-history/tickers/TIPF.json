@@ -1,70 +1,23 @@
 {
-  "attempts": [
-    {
-      "attempts_used": 1,
-      "event_name": "workflow_dispatch",
-      "failures": [],
-      "latency_ms": 474,
-      "natural": false,
-      "observed_at": "2026-09-28T06:02:24Z",
-      "outcome": "fresh",
-      "run_attempt": 1,
-      "run_id": "36367834787",
-      "schedule": "",
-      "shard": ""
-    },
-    {
-      "attempts_used": 1,
-      "error": "recovery_not_advanced_by_provider",
-      "event_name": "schedule",
-      "failures": [],
-      "latency_ms": 582,
-      "natural": true,
-      "observed_at": "2026-09-29T02:38:15Z",
-      "outcome": "failed",
-      "run_attempt": 1,
-      "run_id": "36513342846",
-      "schedule": "20 23 * * 1-5",
-      "shard": "0/5"
-    },
-    {
-      "attempts_used": 1,
-      "event_name": "schedule",
-      "failures": [],
-      "latency_ms": 805,
-      "natural": true,
-      "observed_at": "2026-09-30T02:12:48Z",
-      "outcome": "fresh",
-      "run_attempt": 1,
-      "run_id": "36658577543",
-      "schedule": "20 23 * * 1-5",
-      "shard": "0/5"
-    }
-  ],
   "current": {
-    "fetched_at": "2026-09-30T02:14:22Z",
-    "history_as_of": "2026-09-28",
-    "path": "data/admin/yahoo-batch-quote-history/lkg/TIPF.json",
-    "payload_sha256": "0806eb0442a844c953f665e30df08805faed37ad900d8a57c3684368f0c3d799",
-    "quote_as_of": "2026-09-16T14:34:21Z",
-    "source_as_of": "2026-09-16T14:34:21Z"
+    "fetched_at": "2026-09-30T14:42:07Z",
+    "history_as_of": "2026-09-30",
+    "path": "data/yf/finance/TIPF.json",
+    "payload_sha256": "9d7adfe2650171ae8fffc4a16922d491144b565faecca11a8f798e7b2da6522c",
+    "quote_as_of": "2026-09-30T13:46:08Z",
+    "source_as_of": "2026-09-30"
   },
   "discovered_from": [
     "market_facts",
     "stockanalysis_etf"
   ],
-  "last_attempt": {
+  "failure_count": 0,
+  "last_result": {
     "attempts_used": 1,
-    "event_name": "schedule",
     "failures": [],
-    "latency_ms": 805,
-    "natural": true,
-    "observed_at": "2026-09-30T02:12:48Z",
-    "outcome": "fresh",
-    "run_attempt": 1,
-    "run_id": "36658577543",
-    "schedule": "20 23 * * 1-5",
-    "shard": "0/5"
+    "latency_ms": 3038,
+    "observed_at": "2026-09-30T14:42:07Z",
+    "outcome": "fresh"
   },
   "lkg": {
     "fetched_at": "2026-09-30T02:14:22Z",
@@ -74,25 +27,12 @@
     "quote_as_of": "2026-09-16T14:34:21Z",
     "source_as_of": "2026-09-16T14:34:21Z"
   },
-  "promotion_contract": "provider_observation/v2",
-  "provider_observation": {
-    "event_name": "schedule",
-    "history_as_of": "2026-09-28",
-    "observed_at": "2026-09-30T02:12:48Z",
-    "payload_sha256": "244a036fbf07b76a70091f5a0abca9fb0fdd42585ec61b43c91c59684da0b9c6",
-    "quote_as_of": "2026-09-16T14:34:21Z",
-    "run_attempt": 1,
-    "run_id": "36658577543",
-    "schema_version": "provider_observation/v2",
-    "source_as_of": "2026-09-16T14:34:21Z"
-  },
-  "resolution_state": "lkg_primary",
-  "retry": true,
+  "resolution_state": "fresh_primary",
+  "retry": false,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "stale": {
     "age_business_days": 10,
     "classified_at": "2026-09-30T02:19:44Z",
-    "classified_run_id": "36658577543",
     "expected_resolution": "next_natural_yahoo_run",
     "max_business_days": 6,
     "message": "TIPF holds LKG because Yahoo source date 2026-09-16T14:34:21Z is 10 business days old, beyond the 6-day bound; it will retry on the next natural Yahoo run.",
@@ -100,5 +40,5 @@
     "source_as_of": "2026-09-16T14:34:21Z"
   },
   "ticker": "TIPF",
-  "updated_at": "2026-09-30T02:19:44Z"
+  "updated_at": "2026-09-30T14:42:07Z"
 }

@@ -1,94 +1,22 @@
 {
-  "attempts": [
-    {
-      "attempts_used": 1,
-      "event_name": "schedule",
-      "failures": [],
-      "latency_ms": 953,
-      "natural": true,
-      "observed_at": "2026-07-22T23:45:22Z",
-      "outcome": "fresh",
-      "run_attempt": 1,
-      "run_id": "29965324287",
-      "schedule": "0 22 * * 3",
-      "shard": "3/6"
-    },
-    {
-      "attempts_used": 1,
-      "event_name": "schedule",
-      "failures": [],
-      "latency_ms": 429,
-      "natural": true,
-      "observed_at": "2026-08-06T06:42:20Z",
-      "outcome": "fresh",
-      "run_attempt": 1,
-      "run_id": "31078091927",
-      "schedule": "7 4 * * 0-5",
-      "shard": "50/72"
-    },
-    {
-      "attempts_used": 1,
-      "event_name": "schedule",
-      "failures": [],
-      "latency_ms": 1112,
-      "natural": true,
-      "observed_at": "2026-08-09T05:15:44Z",
-      "outcome": "fresh",
-      "run_attempt": 1,
-      "run_id": "31296241377",
-      "schedule": "7 4 * * 0-5",
-      "shard": "2/72"
-    },
-    {
-      "attempts_used": 1,
-      "event_name": "schedule",
-      "failures": [],
-      "latency_ms": 834,
-      "natural": true,
-      "observed_at": "2026-08-10T07:59:31Z",
-      "outcome": "fresh",
-      "run_attempt": 1,
-      "run_id": "31367988319",
-      "schedule": "7 6 * * 0-5",
-      "shard": "15/72"
-    },
-    {
-      "attempts_used": 1,
-      "event_name": "workflow_dispatch",
-      "failures": [],
-      "latency_ms": 511,
-      "natural": false,
-      "observed_at": "2026-09-28T01:17:59Z",
-      "outcome": "fresh",
-      "run_attempt": 1,
-      "run_id": "36365270594",
-      "schedule": "",
-      "shard": ""
-    }
-  ],
   "current": {
-    "fetched_at": "2026-09-28T01:35:43Z",
-    "history_as_of": "2026-09-25",
-    "path": "data/admin/yahoo-batch-quote-history/lkg/CGRO.json",
-    "payload_sha256": "69c6beef1206aea11b0d60ca89db0bf14e8533165d6bdb01b532982d4e509939",
-    "quote_as_of": "2026-09-21T16:43:57Z",
-    "source_as_of": "2026-09-21T16:43:57Z"
+    "fetched_at": "2026-09-30T14:34:09Z",
+    "history_as_of": "2026-09-30",
+    "path": "data/yf/finance/CGRO.json",
+    "payload_sha256": "b998f93d9fe575defcd87f979ccebc1c6a5bc8b54c0aca3914fe1e4fa9a9961a",
+    "quote_as_of": "2026-09-30T14:30:02Z",
+    "source_as_of": "2026-09-30"
   },
   "discovered_from": [
     "stockanalysis_etf"
   ],
-  "last_attempt": {
+  "failure_count": 0,
+  "last_result": {
     "attempts_used": 1,
-    "event_name": "workflow_dispatch",
     "failures": [],
-    "latency_ms": 511,
-    "natural": false,
-    "observed_at": "2026-09-28T01:17:59Z",
-    "outcome": "fresh",
-    "run_attempt": 1,
-    "run_id": "36365270594",
-    "schedule": "",
-    "shard": ""
+    "latency_ms": 626,
+    "observed_at": "2026-09-30T14:34:09Z",
+    "outcome": "fresh"
   },
   "lkg": {
     "fetched_at": "2026-09-28T01:35:43Z",
@@ -98,25 +26,12 @@
     "quote_as_of": "2026-09-21T16:43:57Z",
     "source_as_of": "2026-09-21T16:43:57Z"
   },
-  "promotion_contract": "provider_observation/v2",
-  "provider_observation": {
-    "event_name": "workflow_dispatch",
-    "history_as_of": "2026-09-25",
-    "observed_at": "2026-09-28T01:17:59Z",
-    "payload_sha256": "8767e99000ae1a9b0732af29a596fed7d8ade5f00638743c6358d49812a530e8",
-    "quote_as_of": "2026-09-21T16:43:57Z",
-    "run_attempt": 1,
-    "run_id": "36365270594",
-    "schema_version": "provider_observation/v2",
-    "source_as_of": "2026-09-21T16:43:57Z"
-  },
-  "resolution_state": "lkg_primary",
-  "retry": true,
+  "resolution_state": "fresh_primary",
+  "retry": false,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "stale": {
     "age_business_days": 7,
     "classified_at": "2026-09-30T02:12:48Z",
-    "classified_run_id": "36658577543",
     "expected_resolution": "next_natural_yahoo_run",
     "max_business_days": 6,
     "message": "CGRO holds LKG because Yahoo source date 2026-09-21T16:43:57Z is 7 business days old, beyond the 6-day bound; it will retry on the next natural Yahoo run.",
@@ -124,5 +39,5 @@
     "source_as_of": "2026-09-21T16:43:57Z"
   },
   "ticker": "CGRO",
-  "updated_at": "2026-09-30T02:12:48Z"
+  "updated_at": "2026-09-30T14:34:09Z"
 }

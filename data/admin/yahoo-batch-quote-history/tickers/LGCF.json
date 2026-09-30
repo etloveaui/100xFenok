@@ -1,58 +1,4 @@
 {
-  "attempts": [
-    {
-      "attempts_used": 0,
-      "event_name": "workflow_dispatch",
-      "failures": [],
-      "latency_ms": 0,
-      "natural": false,
-      "observed_at": "2026-07-13T04:33:56Z",
-      "outcome": "skipped_fresh",
-      "run_attempt": 1,
-      "run_id": "29224221077",
-      "schedule": "",
-      "shard": ""
-    },
-    {
-      "attempts_used": 1,
-      "event_name": "schedule",
-      "failures": [],
-      "latency_ms": 603,
-      "natural": true,
-      "observed_at": "2026-07-30T23:31:53Z",
-      "outcome": "fresh",
-      "run_attempt": 1,
-      "run_id": "30589620986",
-      "schedule": "0 22 * * 4",
-      "shard": "4/6"
-    },
-    {
-      "attempts_used": 1,
-      "event_name": "schedule",
-      "failures": [],
-      "latency_ms": 502,
-      "natural": true,
-      "observed_at": "2026-08-09T18:54:49Z",
-      "outcome": "fresh",
-      "run_attempt": 1,
-      "run_id": "31330182297",
-      "schedule": "7 18 * * 0-5",
-      "shard": "9/72"
-    },
-    {
-      "attempts_used": 1,
-      "event_name": "workflow_dispatch",
-      "failures": [],
-      "latency_ms": 479,
-      "natural": false,
-      "observed_at": "2026-09-28T05:23:15Z",
-      "outcome": "fresh",
-      "run_attempt": 1,
-      "run_id": "36367832955",
-      "schedule": "",
-      "shard": ""
-    }
-  ],
   "current": {
     "fetched_at": "2026-09-28T05:27:41Z",
     "history_as_of": "2026-09-25",
@@ -64,18 +10,50 @@
   "discovered_from": [
     "stockanalysis_etf"
   ],
-  "last_attempt": {
-    "attempts_used": 1,
-    "event_name": "workflow_dispatch",
-    "failures": [],
-    "latency_ms": 479,
-    "natural": false,
-    "observed_at": "2026-09-28T05:23:15Z",
-    "outcome": "fresh",
-    "run_attempt": 1,
-    "run_id": "36367832955",
-    "schedule": "",
-    "shard": ""
+  "failure_count": 1,
+  "last_result": {
+    "attempts_used": 3,
+    "error": "chart quote equal-clock price conflict",
+    "failures": [
+      {
+        "attempt": 1,
+        "error": "chart quote equal-clock price conflict"
+      },
+      {
+        "attempt": 2,
+        "error": "chart quote equal-clock price conflict"
+      },
+      {
+        "attempt": 3,
+        "error": "chart quote equal-clock price conflict"
+      }
+    ],
+    "latency_ms": 0,
+    "observed_at": "2026-09-30T14:38:01Z",
+    "outcome": "failed"
+  },
+  "latest_failure": {
+    "attempts_used": 3,
+    "data_loss": false,
+    "deferred_acquisition": false,
+    "error": "chart quote equal-clock price conflict",
+    "failure_kind": "unexpected",
+    "failures": [
+      {
+        "attempt": 1,
+        "error": "chart quote equal-clock price conflict"
+      },
+      {
+        "attempt": 2,
+        "error": "chart quote equal-clock price conflict"
+      },
+      {
+        "attempt": 3,
+        "error": "chart quote equal-clock price conflict"
+      }
+    ],
+    "lkg_status": "retained",
+    "observed_at": "2026-09-30T14:38:01Z"
   },
   "lkg": {
     "fetched_at": "2026-09-28T05:27:41Z",
@@ -85,25 +63,12 @@
     "quote_as_of": "2026-09-21T20:00:00Z",
     "source_as_of": "2026-09-21T20:00:00Z"
   },
-  "promotion_contract": "provider_observation/v2",
-  "provider_observation": {
-    "event_name": "workflow_dispatch",
-    "history_as_of": "2026-09-25",
-    "observed_at": "2026-09-28T05:23:15Z",
-    "payload_sha256": "ced687ddcb69a0532028238a18d8ed80dd8ed00bb8b17bab6c3958d6fe93711b",
-    "quote_as_of": "2026-09-21T20:00:00Z",
-    "run_attempt": 1,
-    "run_id": "36367832955",
-    "schema_version": "provider_observation/v2",
-    "source_as_of": "2026-09-21T20:00:00Z"
-  },
   "resolution_state": "lkg_primary",
   "retry": true,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "stale": {
     "age_business_days": 7,
     "classified_at": "2026-09-30T02:12:48Z",
-    "classified_run_id": "36658577543",
     "expected_resolution": "next_natural_yahoo_run",
     "max_business_days": 6,
     "message": "LGCF holds LKG because Yahoo source date 2026-09-21T20:00:00Z is 7 business days old, beyond the 6-day bound; it will retry on the next natural Yahoo run.",
@@ -111,5 +76,5 @@
     "source_as_of": "2026-09-21T20:00:00Z"
   },
   "ticker": "LGCF",
-  "updated_at": "2026-09-30T02:12:48Z"
+  "updated_at": "2026-09-30T14:38:01Z"
 }

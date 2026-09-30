@@ -1,94 +1,22 @@
 {
-  "attempts": [
-    {
-      "attempts_used": 0,
-      "event_name": "workflow_dispatch",
-      "failures": [],
-      "latency_ms": 0,
-      "natural": false,
-      "observed_at": "2026-07-13T04:33:56Z",
-      "outcome": "skipped_fresh",
-      "run_attempt": 1,
-      "run_id": "29224221077",
-      "schedule": "",
-      "shard": ""
-    },
-    {
-      "attempts_used": 1,
-      "event_name": "schedule",
-      "failures": [],
-      "latency_ms": 1217,
-      "natural": true,
-      "observed_at": "2026-07-19T22:59:54Z",
-      "outcome": "fresh",
-      "run_attempt": 1,
-      "run_id": "29707016827",
-      "schedule": "0 22 * * 0",
-      "shard": "0/6"
-    },
-    {
-      "attempts_used": 1,
-      "event_name": "schedule",
-      "failures": [],
-      "latency_ms": 670,
-      "natural": true,
-      "observed_at": "2026-08-05T12:11:49Z",
-      "outcome": "fresh",
-      "run_attempt": 1,
-      "run_id": "31004461242",
-      "schedule": "7 10 * * 0-5",
-      "shard": "41/72"
-    },
-    {
-      "attempts_used": 1,
-      "event_name": "schedule",
-      "failures": [],
-      "latency_ms": 802,
-      "natural": true,
-      "observed_at": "2026-08-10T04:06:52Z",
-      "outcome": "fresh",
-      "run_attempt": 1,
-      "run_id": "31354396475",
-      "schedule": "7 2 * * 0-5",
-      "shard": "13/72"
-    },
-    {
-      "attempts_used": 1,
-      "event_name": "workflow_dispatch",
-      "failures": [],
-      "latency_ms": 434,
-      "natural": false,
-      "observed_at": "2026-09-28T01:17:59Z",
-      "outcome": "fresh",
-      "run_attempt": 1,
-      "run_id": "36365270594",
-      "schedule": "",
-      "shard": ""
-    }
-  ],
   "current": {
-    "fetched_at": "2026-09-28T01:22:49Z",
-    "history_as_of": "2026-09-25",
-    "path": "data/admin/yahoo-batch-quote-history/lkg/APDB.json",
-    "payload_sha256": "143395d6a9f9d453cb48493f060c1b4bf8b5549a286aa157b621befe6d8f5573",
-    "quote_as_of": "2026-09-21T16:00:14Z",
-    "source_as_of": "2026-09-21T16:00:14Z"
+    "fetched_at": "2026-09-30T14:32:34Z",
+    "history_as_of": "2026-09-30",
+    "path": "data/yf/finance/APDB.json",
+    "payload_sha256": "abbad189c9d752670a6bf26c8574a9941d0db8e7c8b1ce35148e0f60e9fa700d",
+    "quote_as_of": "2026-09-30T13:46:01Z",
+    "source_as_of": "2026-09-30"
   },
   "discovered_from": [
     "stockanalysis_etf"
   ],
-  "last_attempt": {
+  "failure_count": 0,
+  "last_result": {
     "attempts_used": 1,
-    "event_name": "workflow_dispatch",
     "failures": [],
-    "latency_ms": 434,
-    "natural": false,
-    "observed_at": "2026-09-28T01:17:59Z",
-    "outcome": "fresh",
-    "run_attempt": 1,
-    "run_id": "36365270594",
-    "schedule": "",
-    "shard": ""
+    "latency_ms": 624,
+    "observed_at": "2026-09-30T14:32:34Z",
+    "outcome": "fresh"
   },
   "lkg": {
     "fetched_at": "2026-09-28T01:22:49Z",
@@ -98,25 +26,12 @@
     "quote_as_of": "2026-09-21T16:00:14Z",
     "source_as_of": "2026-09-21T16:00:14Z"
   },
-  "promotion_contract": "provider_observation/v2",
-  "provider_observation": {
-    "event_name": "workflow_dispatch",
-    "history_as_of": "2026-09-25",
-    "observed_at": "2026-09-28T01:17:59Z",
-    "payload_sha256": "11270edc1eff8ab66ddba9e16454e85192f73f256e6b4fc957438a150919628a",
-    "quote_as_of": "2026-09-21T16:00:14Z",
-    "run_attempt": 1,
-    "run_id": "36365270594",
-    "schema_version": "provider_observation/v2",
-    "source_as_of": "2026-09-21T16:00:14Z"
-  },
-  "resolution_state": "lkg_primary",
-  "retry": true,
+  "resolution_state": "fresh_primary",
+  "retry": false,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "stale": {
     "age_business_days": 7,
     "classified_at": "2026-09-30T02:12:48Z",
-    "classified_run_id": "36658577543",
     "expected_resolution": "next_natural_yahoo_run",
     "max_business_days": 6,
     "message": "APDB holds LKG because Yahoo source date 2026-09-21T16:00:14Z is 7 business days old, beyond the 6-day bound; it will retry on the next natural Yahoo run.",
@@ -124,5 +39,5 @@
     "source_as_of": "2026-09-21T16:00:14Z"
   },
   "ticker": "APDB",
-  "updated_at": "2026-09-30T02:12:48Z"
+  "updated_at": "2026-09-30T14:32:34Z"
 }

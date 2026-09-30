@@ -1,55 +1,22 @@
 {
-  "attempts": [
-    {
-      "attempts_used": 1,
-      "event_name": "schedule",
-      "failures": [],
-      "latency_ms": 1218,
-      "natural": true,
-      "observed_at": "2026-08-09T14:44:24Z",
-      "outcome": "fresh",
-      "run_attempt": 1,
-      "run_id": "31319162316",
-      "schedule": "7 14 * * 0-5",
-      "shard": "7/72"
-    },
-    {
-      "attempts_used": 1,
-      "event_name": "workflow_dispatch",
-      "failures": [],
-      "latency_ms": 521,
-      "natural": false,
-      "observed_at": "2026-09-28T06:02:24Z",
-      "outcome": "fresh",
-      "run_attempt": 1,
-      "run_id": "36367834787",
-      "schedule": "",
-      "shard": ""
-    }
-  ],
   "current": {
-    "fetched_at": "2026-09-28T06:22:00Z",
-    "history_as_of": "2026-09-25",
-    "path": "data/admin/yahoo-batch-quote-history/lkg/SUPL.json",
-    "payload_sha256": "73ad3e10ed3444559443e1bfb7f4a9ca4b98863c563b82f0bff73bd95293845a",
-    "quote_as_of": "2026-09-17T19:05:55Z",
-    "source_as_of": "2026-09-17T19:05:55Z"
+    "fetched_at": "2026-09-30T14:41:55Z",
+    "history_as_of": "2026-09-30",
+    "path": "data/yf/finance/SUPL.json",
+    "payload_sha256": "99a2aedf62d3b62a3889a3702f4f1bdfbb5794d75c76233114a5b80c6890db36",
+    "quote_as_of": "2026-09-30T14:32:16Z",
+    "source_as_of": "2026-09-30"
   },
   "discovered_from": [
     "stockanalysis_etf"
   ],
-  "last_attempt": {
+  "failure_count": 0,
+  "last_result": {
     "attempts_used": 1,
-    "event_name": "workflow_dispatch",
     "failures": [],
-    "latency_ms": 521,
-    "natural": false,
-    "observed_at": "2026-09-28T06:02:24Z",
-    "outcome": "fresh",
-    "run_attempt": 1,
-    "run_id": "36367834787",
-    "schedule": "",
-    "shard": ""
+    "latency_ms": 692,
+    "observed_at": "2026-09-30T14:41:55Z",
+    "outcome": "fresh"
   },
   "lkg": {
     "fetched_at": "2026-09-28T06:22:00Z",
@@ -59,25 +26,12 @@
     "quote_as_of": "2026-09-17T19:05:55Z",
     "source_as_of": "2026-09-17T19:05:55Z"
   },
-  "promotion_contract": "provider_observation/v2",
-  "provider_observation": {
-    "event_name": "workflow_dispatch",
-    "history_as_of": "2026-09-25",
-    "observed_at": "2026-09-28T06:02:24Z",
-    "payload_sha256": "a8a920aca6acaa1116125db1da830182c92c4e0fb86fcfca63ec18d4c593f7b2",
-    "quote_as_of": "2026-09-17T19:05:55Z",
-    "run_attempt": 1,
-    "run_id": "36367834787",
-    "schema_version": "provider_observation/v2",
-    "source_as_of": "2026-09-17T19:05:55Z"
-  },
-  "resolution_state": "lkg_primary",
-  "retry": true,
+  "resolution_state": "fresh_primary",
+  "retry": false,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "stale": {
     "age_business_days": 7,
     "classified_at": "2026-09-28T06:30:00Z",
-    "classified_run_id": "36367836615",
     "expected_resolution": "next_natural_yahoo_run",
     "max_business_days": 6,
     "message": "SUPL holds LKG because Yahoo source date 2026-09-17T19:05:55Z is 7 business days old, beyond the 6-day bound; it will retry on the next natural Yahoo run.",
@@ -85,5 +39,5 @@
     "source_as_of": "2026-09-17T19:05:55Z"
   },
   "ticker": "SUPL",
-  "updated_at": "2026-09-28T06:30:00Z"
+  "updated_at": "2026-09-30T14:41:55Z"
 }

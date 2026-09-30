@@ -1,81 +1,22 @@
 {
-  "attempts": [
-    {
-      "attempts_used": 0,
-      "event_name": "workflow_dispatch",
-      "failures": [],
-      "latency_ms": 0,
-      "natural": false,
-      "observed_at": "2026-07-13T04:33:56Z",
-      "outcome": "skipped_fresh",
-      "run_attempt": 1,
-      "run_id": "29224221077",
-      "schedule": "",
-      "shard": ""
-    },
-    {
-      "attempts_used": 1,
-      "event_name": "schedule",
-      "failures": [],
-      "latency_ms": 494,
-      "natural": true,
-      "observed_at": "2026-07-26T23:02:52Z",
-      "outcome": "fresh",
-      "run_attempt": 1,
-      "run_id": "30224292652",
-      "schedule": "0 22 * * 0",
-      "shard": "0/6"
-    },
-    {
-      "attempts_used": 1,
-      "event_name": "schedule",
-      "failures": [],
-      "latency_ms": 451,
-      "natural": true,
-      "observed_at": "2026-08-07T03:14:39Z",
-      "outcome": "fresh",
-      "run_attempt": 1,
-      "run_id": "31143656628",
-      "schedule": "7 0 * * 0-5",
-      "shard": "60/72"
-    },
-    {
-      "attempts_used": 1,
-      "event_name": "workflow_dispatch",
-      "failures": [],
-      "latency_ms": 582,
-      "natural": false,
-      "observed_at": "2026-09-28T03:11:20Z",
-      "outcome": "fresh",
-      "run_attempt": 1,
-      "run_id": "36367829153",
-      "schedule": "",
-      "shard": ""
-    }
-  ],
   "current": {
-    "fetched_at": "2026-09-28T03:28:49Z",
-    "history_as_of": "2026-09-25",
-    "path": "data/admin/yahoo-batch-quote-history/lkg/FHIL.json",
-    "payload_sha256": "df735f70acf2f6612eb7ef583e0c8a02b51109e5983f70e1616490b913acfefa",
-    "quote_as_of": "2026-09-18T14:36:22Z",
-    "source_as_of": "2026-09-18T14:36:22Z"
+    "fetched_at": "2026-09-30T14:36:11Z",
+    "history_as_of": "2026-09-30",
+    "path": "data/yf/finance/FHIL.json",
+    "payload_sha256": "c6c4827ebf88c2bc2cea8fb09d71ac7fd18fde1b7c882dd1323ea7bca89c8a67",
+    "quote_as_of": "2026-09-30T13:46:04Z",
+    "source_as_of": "2026-09-30"
   },
   "discovered_from": [
     "stockanalysis_etf"
   ],
-  "last_attempt": {
+  "failure_count": 0,
+  "last_result": {
     "attempts_used": 1,
-    "event_name": "workflow_dispatch",
     "failures": [],
-    "latency_ms": 582,
-    "natural": false,
-    "observed_at": "2026-09-28T03:11:20Z",
-    "outcome": "fresh",
-    "run_attempt": 1,
-    "run_id": "36367829153",
-    "schedule": "",
-    "shard": ""
+    "latency_ms": 615,
+    "observed_at": "2026-09-30T14:36:11Z",
+    "outcome": "fresh"
   },
   "lkg": {
     "fetched_at": "2026-09-28T03:28:49Z",
@@ -85,25 +26,12 @@
     "quote_as_of": "2026-09-18T14:36:22Z",
     "source_as_of": "2026-09-18T14:36:22Z"
   },
-  "promotion_contract": "provider_observation/v2",
-  "provider_observation": {
-    "event_name": "workflow_dispatch",
-    "history_as_of": "2026-09-25",
-    "observed_at": "2026-09-28T03:11:20Z",
-    "payload_sha256": "777fa9980b98173f91865bf3eab7e28899b8ed5b8f24302fb5a6bde3b595a643",
-    "quote_as_of": "2026-09-18T14:36:22Z",
-    "run_attempt": 1,
-    "run_id": "36367829153",
-    "schema_version": "provider_observation/v2",
-    "source_as_of": "2026-09-18T14:36:22Z"
-  },
-  "resolution_state": "lkg_primary",
-  "retry": true,
+  "resolution_state": "fresh_primary",
+  "retry": false,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "stale": {
     "age_business_days": 7,
     "classified_at": "2026-09-29T02:38:15Z",
-    "classified_run_id": "36513342846",
     "expected_resolution": "next_natural_yahoo_run",
     "max_business_days": 6,
     "message": "FHIL holds LKG because Yahoo source date 2026-09-18T14:36:22Z is 7 business days old, beyond the 6-day bound; it will retry on the next natural Yahoo run.",
@@ -111,5 +39,5 @@
     "source_as_of": "2026-09-18T14:36:22Z"
   },
   "ticker": "FHIL",
-  "updated_at": "2026-09-29T02:38:15Z"
+  "updated_at": "2026-09-30T14:36:11Z"
 }

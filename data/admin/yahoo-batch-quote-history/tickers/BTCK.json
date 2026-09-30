@@ -1,120 +1,22 @@
 {
-  "attempts": [
-    {
-      "attempts_used": 0,
-      "event_name": "workflow_dispatch",
-      "failures": [],
-      "latency_ms": 0,
-      "natural": false,
-      "observed_at": "2026-07-13T04:33:56Z",
-      "outcome": "skipped_fresh",
-      "run_attempt": 1,
-      "run_id": "29224221077",
-      "schedule": "",
-      "shard": ""
-    },
-    {
-      "attempts_used": 1,
-      "event_name": "schedule",
-      "failures": [],
-      "latency_ms": 1103,
-      "natural": true,
-      "observed_at": "2026-07-21T23:04:26Z",
-      "outcome": "fresh",
-      "run_attempt": 1,
-      "run_id": "29875696340",
-      "schedule": "0 22 * * 2",
-      "shard": "2/6"
-    },
-    {
-      "attempts_used": 1,
-      "event_name": "schedule",
-      "failures": [],
-      "latency_ms": 777,
-      "natural": true,
-      "observed_at": "2026-07-22T23:45:22Z",
-      "outcome": "fresh",
-      "run_attempt": 1,
-      "run_id": "29965324287",
-      "schedule": "0 22 * * 3",
-      "shard": "3/6"
-    },
-    {
-      "attempts_used": 1,
-      "event_name": "schedule",
-      "failures": [],
-      "latency_ms": 364,
-      "natural": true,
-      "observed_at": "2026-08-06T06:42:20Z",
-      "outcome": "fresh",
-      "run_attempt": 1,
-      "run_id": "31078091927",
-      "schedule": "7 4 * * 0-5",
-      "shard": "50/72"
-    },
-    {
-      "attempts_used": 1,
-      "event_name": "schedule",
-      "failures": [],
-      "latency_ms": 1046,
-      "natural": true,
-      "observed_at": "2026-08-09T05:15:44Z",
-      "outcome": "fresh",
-      "run_attempt": 1,
-      "run_id": "31296241377",
-      "schedule": "7 4 * * 0-5",
-      "shard": "2/72"
-    },
-    {
-      "attempts_used": 1,
-      "event_name": "schedule",
-      "failures": [],
-      "latency_ms": 1058,
-      "natural": true,
-      "observed_at": "2026-08-12T19:14:55Z",
-      "outcome": "fresh",
-      "run_attempt": 1,
-      "run_id": "31631524598",
-      "schedule": "7 18 * * 0-5",
-      "shard": "45/72"
-    },
-    {
-      "attempts_used": 1,
-      "event_name": "workflow_dispatch",
-      "failures": [],
-      "latency_ms": 432,
-      "natural": false,
-      "observed_at": "2026-09-28T01:17:59Z",
-      "outcome": "fresh",
-      "run_attempt": 1,
-      "run_id": "36365270594",
-      "schedule": "",
-      "shard": ""
-    }
-  ],
   "current": {
-    "fetched_at": "2026-09-28T01:32:16Z",
-    "history_as_of": "2026-09-25",
-    "path": "data/admin/yahoo-batch-quote-history/lkg/BTCK.json",
-    "payload_sha256": "9d47244062a8d6b2e7d53ae1d2057a72f136df03d21dc636339b02e11ba4f4d6",
-    "quote_as_of": "2026-09-21T13:41:23Z",
-    "source_as_of": "2026-09-21T13:41:23Z"
+    "fetched_at": "2026-09-30T14:33:55Z",
+    "history_as_of": "2026-09-30",
+    "path": "data/yf/finance/BTCK.json",
+    "payload_sha256": "fc05cae9d1d171fbab414de89ceed61b980ef2c9b4b40a6a28393905f4b64b2c",
+    "quote_as_of": "2026-09-30T13:46:02Z",
+    "source_as_of": "2026-09-30"
   },
   "discovered_from": [
     "stockanalysis_etf"
   ],
-  "last_attempt": {
+  "failure_count": 0,
+  "last_result": {
     "attempts_used": 1,
-    "event_name": "workflow_dispatch",
     "failures": [],
-    "latency_ms": 432,
-    "natural": false,
-    "observed_at": "2026-09-28T01:17:59Z",
-    "outcome": "fresh",
-    "run_attempt": 1,
-    "run_id": "36365270594",
-    "schedule": "",
-    "shard": ""
+    "latency_ms": 579,
+    "observed_at": "2026-09-30T14:33:55Z",
+    "outcome": "fresh"
   },
   "lkg": {
     "fetched_at": "2026-09-28T01:32:16Z",
@@ -124,25 +26,12 @@
     "quote_as_of": "2026-09-21T13:41:23Z",
     "source_as_of": "2026-09-21T13:41:23Z"
   },
-  "promotion_contract": "provider_observation/v2",
-  "provider_observation": {
-    "event_name": "workflow_dispatch",
-    "history_as_of": "2026-09-25",
-    "observed_at": "2026-09-28T01:17:59Z",
-    "payload_sha256": "49bc3b3637945c7de1a4a3cf8561ef7470c2cc23ec41635f853cf0fc01dde853",
-    "quote_as_of": "2026-09-21T13:41:23Z",
-    "run_attempt": 1,
-    "run_id": "36365270594",
-    "schema_version": "provider_observation/v2",
-    "source_as_of": "2026-09-21T13:41:23Z"
-  },
-  "resolution_state": "lkg_primary",
-  "retry": true,
+  "resolution_state": "fresh_primary",
+  "retry": false,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "stale": {
     "age_business_days": 7,
     "classified_at": "2026-09-30T02:12:48Z",
-    "classified_run_id": "36658577543",
     "expected_resolution": "next_natural_yahoo_run",
     "max_business_days": 6,
     "message": "BTCK holds LKG because Yahoo source date 2026-09-21T13:41:23Z is 7 business days old, beyond the 6-day bound; it will retry on the next natural Yahoo run.",
@@ -150,5 +39,5 @@
     "source_as_of": "2026-09-21T13:41:23Z"
   },
   "ticker": "BTCK",
-  "updated_at": "2026-09-30T02:12:48Z"
+  "updated_at": "2026-09-30T14:33:55Z"
 }

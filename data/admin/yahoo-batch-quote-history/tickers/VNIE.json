@@ -1,109 +1,22 @@
 {
-  "attempts": [
-    {
-      "attempts_used": 1,
-      "event_name": "schedule",
-      "failures": [],
-      "latency_ms": 875,
-      "natural": true,
-      "observed_at": "2026-08-09T22:44:05Z",
-      "outcome": "fresh",
-      "run_attempt": 1,
-      "run_id": "31340064113",
-      "schedule": "7 22 * * 0-5",
-      "shard": "11/72"
-    },
-    {
-      "attempts_used": 1,
-      "event_name": "schedule",
-      "failures": [],
-      "latency_ms": 526,
-      "natural": true,
-      "observed_at": "2026-08-12T04:17:21Z",
-      "outcome": "fresh",
-      "run_attempt": 1,
-      "run_id": "31562660637",
-      "schedule": "7 2 * * 0-5",
-      "shard": "37/72"
-    },
-    {
-      "attempts_used": 1,
-      "error": "foreign_writer_conflict",
-      "event_name": "schedule",
-      "failures": [],
-      "latency_ms": 548,
-      "natural": true,
-      "observed_at": "2026-08-12T07:59:44Z",
-      "outcome": "failed",
-      "run_attempt": 1,
-      "run_id": "31575211549",
-      "schedule": "7 6 * * 0-5",
-      "shard": "39/72"
-    },
-    {
-      "attempts_used": 1,
-      "error": "recovery_not_advanced_by_provider",
-      "event_name": "schedule",
-      "failures": [],
-      "latency_ms": 1052,
-      "natural": true,
-      "observed_at": "2026-08-12T11:11:11Z",
-      "outcome": "failed",
-      "run_attempt": 1,
-      "run_id": "31590557839",
-      "schedule": "7 10 * * 0-5",
-      "shard": "41/72"
-    },
-    {
-      "attempts_used": 1,
-      "event_name": "schedule",
-      "failures": [],
-      "latency_ms": 488,
-      "natural": true,
-      "observed_at": "2026-08-12T15:08:24Z",
-      "outcome": "fresh",
-      "run_attempt": 1,
-      "run_id": "31610461024",
-      "schedule": "7 14 * * 0-5",
-      "shard": "43/72"
-    },
-    {
-      "attempts_used": 1,
-      "event_name": "workflow_dispatch",
-      "failures": [],
-      "latency_ms": 466,
-      "natural": false,
-      "observed_at": "2026-09-28T06:30:00Z",
-      "outcome": "fresh",
-      "run_attempt": 1,
-      "run_id": "36367836615",
-      "schedule": "",
-      "shard": ""
-    }
-  ],
   "current": {
-    "fetched_at": "2026-09-28T06:41:32Z",
-    "history_as_of": "2026-09-25",
-    "path": "data/admin/yahoo-batch-quote-history/lkg/VNIE.json",
-    "payload_sha256": "b78edf089595d45e2c913ec8a501d1c51341462e41c57389f0f5e269d5bf5894",
-    "quote_as_of": "2026-09-18T19:05:33Z",
-    "source_as_of": "2026-09-18T19:05:33Z"
+    "fetched_at": "2026-09-30T14:43:00Z",
+    "history_as_of": "2026-09-30",
+    "path": "data/yf/finance/VNIE.json",
+    "payload_sha256": "2dfe0b973a1bf6c29b4493f4ee8cace39a97b2e03b97c4deacaf9571b29d5a7d",
+    "quote_as_of": "2026-09-30T14:15:05Z",
+    "source_as_of": "2026-09-30"
   },
   "discovered_from": [
     "stockanalysis_etf"
   ],
-  "last_attempt": {
+  "failure_count": 0,
+  "last_result": {
     "attempts_used": 1,
-    "event_name": "workflow_dispatch",
     "failures": [],
-    "latency_ms": 466,
-    "natural": false,
-    "observed_at": "2026-09-28T06:30:00Z",
-    "outcome": "fresh",
-    "run_attempt": 1,
-    "run_id": "36367836615",
-    "schedule": "",
-    "shard": ""
+    "latency_ms": 546,
+    "observed_at": "2026-09-30T14:43:00Z",
+    "outcome": "fresh"
   },
   "lkg": {
     "fetched_at": "2026-09-28T06:41:32Z",
@@ -113,25 +26,12 @@
     "quote_as_of": "2026-09-18T19:05:33Z",
     "source_as_of": "2026-09-18T19:05:33Z"
   },
-  "promotion_contract": "provider_observation/v2",
-  "provider_observation": {
-    "event_name": "workflow_dispatch",
-    "history_as_of": "2026-09-25",
-    "observed_at": "2026-09-28T06:30:00Z",
-    "payload_sha256": "3a47b5a7bd49b2bf0366fa64ec02c05700402f18c03b02de52fcfad6b853f689",
-    "quote_as_of": "2026-09-18T19:05:33Z",
-    "run_attempt": 1,
-    "run_id": "36367836615",
-    "schema_version": "provider_observation/v2",
-    "source_as_of": "2026-09-18T19:05:33Z"
-  },
-  "resolution_state": "lkg_primary",
-  "retry": true,
+  "resolution_state": "fresh_primary",
+  "retry": false,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "stale": {
     "age_business_days": 7,
     "classified_at": "2026-09-29T02:38:15Z",
-    "classified_run_id": "36513342846",
     "expected_resolution": "next_natural_yahoo_run",
     "max_business_days": 6,
     "message": "VNIE holds LKG because Yahoo source date 2026-09-18T19:05:33Z is 7 business days old, beyond the 6-day bound; it will retry on the next natural Yahoo run.",
@@ -139,5 +39,5 @@
     "source_as_of": "2026-09-18T19:05:33Z"
   },
   "ticker": "VNIE",
-  "updated_at": "2026-09-29T02:38:15Z"
+  "updated_at": "2026-09-30T14:43:00Z"
 }

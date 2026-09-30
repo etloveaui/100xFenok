@@ -1,94 +1,22 @@
 {
-  "attempts": [
-    {
-      "attempts_used": 0,
-      "event_name": "workflow_dispatch",
-      "failures": [],
-      "latency_ms": 0,
-      "natural": false,
-      "observed_at": "2026-07-13T04:33:56Z",
-      "outcome": "skipped_fresh",
-      "run_attempt": 1,
-      "run_id": "29224221077",
-      "schedule": "",
-      "shard": ""
-    },
-    {
-      "attempts_used": 1,
-      "event_name": "schedule",
-      "failures": [],
-      "latency_ms": 578,
-      "natural": true,
-      "observed_at": "2026-08-02T22:59:12Z",
-      "outcome": "fresh",
-      "run_attempt": 1,
-      "run_id": "30771231562",
-      "schedule": "0 22 * * 0",
-      "shard": "0/6"
-    },
-    {
-      "attempts_used": 1,
-      "event_name": "schedule",
-      "failures": [],
-      "latency_ms": 520,
-      "natural": true,
-      "observed_at": "2026-08-05T08:49:49Z",
-      "outcome": "fresh",
-      "run_attempt": 1,
-      "run_id": "30990520626",
-      "schedule": "7 6 * * 0-5",
-      "shard": "39/72"
-    },
-    {
-      "attempts_used": 1,
-      "event_name": "schedule",
-      "failures": [],
-      "latency_ms": 787,
-      "natural": true,
-      "observed_at": "2026-08-12T07:59:44Z",
-      "outcome": "fresh",
-      "run_attempt": 1,
-      "run_id": "31575211549",
-      "schedule": "7 6 * * 0-5",
-      "shard": "39/72"
-    },
-    {
-      "attempts_used": 1,
-      "event_name": "workflow_dispatch",
-      "failures": [],
-      "latency_ms": 456,
-      "natural": false,
-      "observed_at": "2026-09-28T06:30:00Z",
-      "outcome": "fresh",
-      "run_attempt": 1,
-      "run_id": "36367836615",
-      "schedule": "",
-      "shard": ""
-    }
-  ],
   "current": {
-    "fetched_at": "2026-09-28T06:45:39Z",
-    "history_as_of": "2026-09-25",
-    "path": "data/admin/yahoo-batch-quote-history/lkg/XIGV.json",
-    "payload_sha256": "77aa6461238e01aa33ece074ae7d9d1c52ec4e3dc37e981bdb1b6a7bd686a877",
-    "quote_as_of": "2026-09-17T18:12:27Z",
-    "source_as_of": "2026-09-17T18:12:27Z"
+    "fetched_at": "2026-09-30T14:43:09Z",
+    "history_as_of": "2026-09-30",
+    "path": "data/yf/finance/XIGV.json",
+    "payload_sha256": "c9c4f7db523c6587f0b9d9f846af880bf640fcc642b308054d89828dacd14138",
+    "quote_as_of": "2026-09-30T13:46:08Z",
+    "source_as_of": "2026-09-30"
   },
   "discovered_from": [
     "stockanalysis_etf"
   ],
-  "last_attempt": {
+  "failure_count": 0,
+  "last_result": {
     "attempts_used": 1,
-    "event_name": "workflow_dispatch",
     "failures": [],
-    "latency_ms": 456,
-    "natural": false,
-    "observed_at": "2026-09-28T06:30:00Z",
-    "outcome": "fresh",
-    "run_attempt": 1,
-    "run_id": "36367836615",
-    "schedule": "",
-    "shard": ""
+    "latency_ms": 600,
+    "observed_at": "2026-09-30T14:43:09Z",
+    "outcome": "fresh"
   },
   "lkg": {
     "fetched_at": "2026-09-28T06:45:39Z",
@@ -98,25 +26,12 @@
     "quote_as_of": "2026-09-17T18:12:27Z",
     "source_as_of": "2026-09-17T18:12:27Z"
   },
-  "promotion_contract": "provider_observation/v2",
-  "provider_observation": {
-    "event_name": "workflow_dispatch",
-    "history_as_of": "2026-09-25",
-    "observed_at": "2026-09-28T06:30:00Z",
-    "payload_sha256": "1b4e98f9ed1ff882c8d7f0f0e73601c3951c2230bc87d29edadd1ddf7af3a676",
-    "quote_as_of": "2026-09-17T18:12:27Z",
-    "run_attempt": 1,
-    "run_id": "36367836615",
-    "schema_version": "provider_observation/v2",
-    "source_as_of": "2026-09-17T18:12:27Z"
-  },
-  "resolution_state": "lkg_primary",
-  "retry": true,
+  "resolution_state": "fresh_primary",
+  "retry": false,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "stale": {
     "age_business_days": 7,
     "classified_at": "2026-09-28T07:38:17Z",
-    "classified_run_id": "36369581504",
     "expected_resolution": "next_natural_yahoo_run",
     "max_business_days": 6,
     "message": "XIGV holds LKG because Yahoo source date 2026-09-17T18:12:27Z is 7 business days old, beyond the 6-day bound; it will retry on the next natural Yahoo run.",
@@ -124,5 +39,5 @@
     "source_as_of": "2026-09-17T18:12:27Z"
   },
   "ticker": "XIGV",
-  "updated_at": "2026-09-28T07:38:17Z"
+  "updated_at": "2026-09-30T14:43:09Z"
 }

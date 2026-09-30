@@ -1,94 +1,22 @@
 {
-  "attempts": [
-    {
-      "attempts_used": 0,
-      "event_name": "workflow_dispatch",
-      "failures": [],
-      "latency_ms": 0,
-      "natural": false,
-      "observed_at": "2026-07-13T04:33:56Z",
-      "outcome": "skipped_fresh",
-      "run_attempt": 1,
-      "run_id": "29224221077",
-      "schedule": "",
-      "shard": ""
-    },
-    {
-      "attempts_used": 1,
-      "event_name": "schedule",
-      "failures": [],
-      "latency_ms": 673,
-      "natural": true,
-      "observed_at": "2026-07-23T23:19:22Z",
-      "outcome": "fresh",
-      "run_attempt": 1,
-      "run_id": "30051682457",
-      "schedule": "0 22 * * 4",
-      "shard": "4/6"
-    },
-    {
-      "attempts_used": 1,
-      "event_name": "schedule",
-      "failures": [],
-      "latency_ms": 1079,
-      "natural": true,
-      "observed_at": "2026-08-06T08:51:05Z",
-      "outcome": "fresh",
-      "run_attempt": 1,
-      "run_id": "31086476783",
-      "schedule": "7 6 * * 0-5",
-      "shard": "51/72"
-    },
-    {
-      "attempts_used": 1,
-      "event_name": "schedule",
-      "failures": [],
-      "latency_ms": 840,
-      "natural": true,
-      "observed_at": "2026-08-10T22:52:08Z",
-      "outcome": "fresh",
-      "run_attempt": 1,
-      "run_id": "31439945275",
-      "schedule": "7 22 * * 0-5",
-      "shard": "23/72"
-    },
-    {
-      "attempts_used": 1,
-      "event_name": "workflow_dispatch",
-      "failures": [],
-      "latency_ms": 479,
-      "natural": false,
-      "observed_at": "2026-09-28T03:11:20Z",
-      "outcome": "fresh",
-      "run_attempt": 1,
-      "run_id": "36367829153",
-      "schedule": "",
-      "shard": ""
-    }
-  ],
   "current": {
-    "fetched_at": "2026-09-28T03:13:31Z",
-    "history_as_of": "2026-09-25",
-    "path": "data/admin/yahoo-batch-quote-history/lkg/CTWO.json",
-    "payload_sha256": "7d7ea1898be63ee7f46aba67d024d7bc19376a9b68de3d2a4c5c2e584a647507",
-    "quote_as_of": "2026-09-17T14:46:33Z",
-    "source_as_of": "2026-09-17T14:46:33Z"
+    "fetched_at": "2026-09-30T14:35:00Z",
+    "history_as_of": "2026-09-30",
+    "path": "data/yf/finance/CTWO.json",
+    "payload_sha256": "19ffcb890abb8f11269c9a70a5c83b5067ae7baf46513b43b628e5916232ab6e",
+    "quote_as_of": "2026-09-30T13:46:02Z",
+    "source_as_of": "2026-09-30"
   },
   "discovered_from": [
     "stockanalysis_etf"
   ],
-  "last_attempt": {
+  "failure_count": 0,
+  "last_result": {
     "attempts_used": 1,
-    "event_name": "workflow_dispatch",
     "failures": [],
-    "latency_ms": 479,
-    "natural": false,
-    "observed_at": "2026-09-28T03:11:20Z",
-    "outcome": "fresh",
-    "run_attempt": 1,
-    "run_id": "36367829153",
-    "schedule": "",
-    "shard": ""
+    "latency_ms": 629,
+    "observed_at": "2026-09-30T14:35:00Z",
+    "outcome": "fresh"
   },
   "lkg": {
     "fetched_at": "2026-09-28T03:13:31Z",
@@ -98,25 +26,12 @@
     "quote_as_of": "2026-09-17T14:46:33Z",
     "source_as_of": "2026-09-17T14:46:33Z"
   },
-  "promotion_contract": "provider_observation/v2",
-  "provider_observation": {
-    "event_name": "workflow_dispatch",
-    "history_as_of": "2026-09-25",
-    "observed_at": "2026-09-28T03:11:20Z",
-    "payload_sha256": "09cfc797c467c22f42ebee960a57c59a13b5e2fb780d8f0de2f7e4397422457f",
-    "quote_as_of": "2026-09-17T14:46:33Z",
-    "run_attempt": 1,
-    "run_id": "36367829153",
-    "schema_version": "provider_observation/v2",
-    "source_as_of": "2026-09-17T14:46:33Z"
-  },
-  "resolution_state": "lkg_primary",
-  "retry": true,
+  "resolution_state": "fresh_primary",
+  "retry": false,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "stale": {
     "age_business_days": 7,
     "classified_at": "2026-09-28T04:37:06Z",
-    "classified_run_id": "36367831133",
     "expected_resolution": "next_natural_yahoo_run",
     "max_business_days": 6,
     "message": "CTWO holds LKG because Yahoo source date 2026-09-17T14:46:33Z is 7 business days old, beyond the 6-day bound; it will retry on the next natural Yahoo run.",
@@ -124,5 +39,5 @@
     "source_as_of": "2026-09-17T14:46:33Z"
   },
   "ticker": "CTWO",
-  "updated_at": "2026-09-28T04:37:06Z"
+  "updated_at": "2026-09-30T14:35:00Z"
 }

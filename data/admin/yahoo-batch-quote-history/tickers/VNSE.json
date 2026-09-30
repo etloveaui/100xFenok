@@ -1,95 +1,22 @@
 {
-  "attempts": [
-    {
-      "attempts_used": 1,
-      "event_name": "schedule",
-      "failures": [],
-      "latency_ms": 626,
-      "natural": true,
-      "observed_at": "2026-08-07T03:14:39Z",
-      "outcome": "fresh",
-      "run_attempt": 1,
-      "run_id": "31143656628",
-      "schedule": "7 0 * * 0-5",
-      "shard": "60/72"
-    },
-    {
-      "attempts_used": 1,
-      "event_name": "schedule",
-      "failures": [],
-      "latency_ms": 938,
-      "natural": true,
-      "observed_at": "2026-08-11T09:13:07Z",
-      "outcome": "fresh",
-      "run_attempt": 1,
-      "run_id": "31476569032",
-      "schedule": "7 8 * * 0-5",
-      "shard": "28/72"
-    },
-    {
-      "attempts_used": 1,
-      "error": "recovery_not_advanced_by_provider",
-      "event_name": "schedule",
-      "failures": [],
-      "latency_ms": 987,
-      "natural": true,
-      "observed_at": "2026-08-11T13:36:55Z",
-      "outcome": "failed",
-      "run_attempt": 1,
-      "run_id": "31496919771",
-      "schedule": "7 12 * * 0-5",
-      "shard": "30/72"
-    },
-    {
-      "attempts_used": 1,
-      "event_name": "schedule",
-      "failures": [],
-      "latency_ms": 634,
-      "natural": true,
-      "observed_at": "2026-08-11T17:08:04Z",
-      "outcome": "fresh",
-      "run_attempt": 1,
-      "run_id": "31515819191",
-      "schedule": "7 16 * * 0-5",
-      "shard": "32/72"
-    },
-    {
-      "attempts_used": 1,
-      "event_name": "workflow_dispatch",
-      "failures": [],
-      "latency_ms": 479,
-      "natural": false,
-      "observed_at": "2026-09-28T06:30:00Z",
-      "outcome": "fresh",
-      "run_attempt": 1,
-      "run_id": "36367836615",
-      "schedule": "",
-      "shard": ""
-    }
-  ],
   "current": {
-    "fetched_at": "2026-09-28T06:41:36Z",
-    "history_as_of": "2026-09-25",
-    "path": "data/admin/yahoo-batch-quote-history/lkg/VNSE.json",
-    "payload_sha256": "5e27e1c1397d1c1b6a0571136ec4fea1fbea6afee340eaaba1d120a056f3752c",
-    "quote_as_of": "2026-09-18T16:00:33Z",
-    "source_as_of": "2026-09-18T16:00:33Z"
+    "fetched_at": "2026-09-30T14:43:02Z",
+    "history_as_of": "2026-09-30",
+    "path": "data/yf/finance/VNSE.json",
+    "payload_sha256": "fcac9c5a00bcf7a53dbca19cd7aead6baa4cb1508783c56552f782d7ac52b7fb",
+    "quote_as_of": "2026-09-30T13:46:08Z",
+    "source_as_of": "2026-09-30"
   },
   "discovered_from": [
     "stockanalysis_etf"
   ],
-  "last_attempt": {
+  "failure_count": 0,
+  "last_result": {
     "attempts_used": 1,
-    "event_name": "workflow_dispatch",
     "failures": [],
-    "latency_ms": 479,
-    "natural": false,
-    "observed_at": "2026-09-28T06:30:00Z",
-    "outcome": "fresh",
-    "run_attempt": 1,
-    "run_id": "36367836615",
-    "schedule": "",
-    "shard": ""
+    "latency_ms": 669,
+    "observed_at": "2026-09-30T14:43:02Z",
+    "outcome": "fresh"
   },
   "lkg": {
     "fetched_at": "2026-09-28T06:41:36Z",
@@ -99,25 +26,12 @@
     "quote_as_of": "2026-09-18T16:00:33Z",
     "source_as_of": "2026-09-18T16:00:33Z"
   },
-  "promotion_contract": "provider_observation/v2",
-  "provider_observation": {
-    "event_name": "workflow_dispatch",
-    "history_as_of": "2026-09-25",
-    "observed_at": "2026-09-28T06:30:00Z",
-    "payload_sha256": "a356c8935e2c0c6bd1c15d3d9bbecf0a340231571496b5693704d42f38d7ddf1",
-    "quote_as_of": "2026-09-18T16:00:33Z",
-    "run_attempt": 1,
-    "run_id": "36367836615",
-    "schema_version": "provider_observation/v2",
-    "source_as_of": "2026-09-18T16:00:33Z"
-  },
-  "resolution_state": "lkg_primary",
-  "retry": true,
+  "resolution_state": "fresh_primary",
+  "retry": false,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "stale": {
     "age_business_days": 7,
     "classified_at": "2026-09-29T02:38:15Z",
-    "classified_run_id": "36513342846",
     "expected_resolution": "next_natural_yahoo_run",
     "max_business_days": 6,
     "message": "VNSE holds LKG because Yahoo source date 2026-09-18T16:00:33Z is 7 business days old, beyond the 6-day bound; it will retry on the next natural Yahoo run.",
@@ -125,5 +39,5 @@
     "source_as_of": "2026-09-18T16:00:33Z"
   },
   "ticker": "VNSE",
-  "updated_at": "2026-09-29T02:38:15Z"
+  "updated_at": "2026-09-30T14:43:02Z"
 }

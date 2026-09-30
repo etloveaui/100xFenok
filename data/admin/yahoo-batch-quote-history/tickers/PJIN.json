@@ -1,110 +1,23 @@
 {
-  "attempts": [
-    {
-      "attempts_used": 1,
-      "event_name": "workflow_dispatch",
-      "failures": [],
-      "latency_ms": 494,
-      "natural": false,
-      "observed_at": "2026-09-28T05:23:15Z",
-      "outcome": "fresh",
-      "run_attempt": 1,
-      "run_id": "36367832955",
-      "schedule": "",
-      "shard": ""
-    },
-    {
-      "attempts_used": 1,
-      "event_name": "schedule",
-      "failures": [],
-      "latency_ms": 530,
-      "natural": true,
-      "observed_at": "2026-09-29T02:38:15Z",
-      "outcome": "fresh",
-      "run_attempt": 1,
-      "run_id": "36513342846",
-      "schedule": "20 23 * * 1-5",
-      "shard": "0/5"
-    },
-    {
-      "attempts_used": 2,
-      "error": "chart quote equal-clock price conflict",
-      "event_name": "schedule",
-      "failures": [
-        {
-          "attempt": 1,
-          "error": "chart quote equal-clock price conflict"
-        },
-        {
-          "attempt": 2,
-          "error": "chart quote equal-clock price conflict"
-        }
-      ],
-      "latency_ms": 0,
-      "natural": true,
-      "observed_at": "2026-09-30T02:12:48Z",
-      "outcome": "failed",
-      "run_attempt": 1,
-      "run_id": "36658577543",
-      "schedule": "20 23 * * 1-5",
-      "shard": "0/5"
-    }
-  ],
   "current": {
-    "fetched_at": "2026-09-29T02:39:15Z",
-    "history_as_of": "2026-09-28",
-    "path": "data/admin/yahoo-batch-quote-history/lkg/PJIN.json",
-    "payload_sha256": "035499a3172a9e4d309d70c32e5fac1ba2a8b46a19f6eec64171afc19f820ef4",
-    "quote_as_of": "2026-09-04T15:41:26Z",
-    "source_as_of": "2026-09-04T15:41:26Z"
+    "fetched_at": "2026-09-30T14:39:36Z",
+    "history_as_of": "2026-09-30",
+    "path": "data/yf/finance/PJIN.json",
+    "payload_sha256": "c98162bdcf27a144cd7713d9de83115b2991f6ce3894524728f1393b2a39da53",
+    "quote_as_of": "2026-09-30T13:46:06Z",
+    "source_as_of": "2026-09-30"
   },
   "discovered_from": [
     "market_facts",
     "stockanalysis_etf"
   ],
-  "last_attempt": {
-    "attempts_used": 2,
-    "error": "chart quote equal-clock price conflict",
-    "event_name": "schedule",
-    "failures": [
-      {
-        "attempt": 1,
-        "error": "chart quote equal-clock price conflict"
-      },
-      {
-        "attempt": 2,
-        "error": "chart quote equal-clock price conflict"
-      }
-    ],
-    "latency_ms": 0,
-    "natural": true,
-    "observed_at": "2026-09-30T02:12:48Z",
-    "outcome": "failed",
-    "run_attempt": 1,
-    "run_id": "36658577543",
-    "schedule": "20 23 * * 1-5",
-    "shard": "0/5"
-  },
-  "latest_failure": {
-    "attempts_used": 2,
-    "data_loss": false,
-    "deferred_acquisition": false,
-    "error": "chart quote equal-clock price conflict",
-    "failure_kind": "unexpected",
-    "failures": [
-      {
-        "attempt": 1,
-        "error": "chart quote equal-clock price conflict"
-      },
-      {
-        "attempt": 2,
-        "error": "chart quote equal-clock price conflict"
-      }
-    ],
-    "lkg_status": "retained",
-    "observed_at": "2026-09-30T02:12:48Z",
-    "run_attempt": 1,
-    "run_id": "36658577543"
+  "failure_count": 0,
+  "last_result": {
+    "attempts_used": 1,
+    "failures": [],
+    "latency_ms": 2996,
+    "observed_at": "2026-09-30T14:39:36Z",
+    "outcome": "fresh"
   },
   "lkg": {
     "fetched_at": "2026-09-29T02:39:15Z",
@@ -114,25 +27,12 @@
     "quote_as_of": "2026-09-04T15:41:26Z",
     "source_as_of": "2026-09-04T15:41:26Z"
   },
-  "promotion_contract": "provider_observation/v2",
-  "provider_observation": {
-    "event_name": "schedule",
-    "history_as_of": "2026-09-28",
-    "observed_at": "2026-09-29T02:38:15Z",
-    "payload_sha256": "c1ee069e23eac60196a20996724f6c8c9fed083b4e6280024dfbb2c5db5a448a",
-    "quote_as_of": "2026-09-04T15:41:26Z",
-    "run_attempt": 1,
-    "run_id": "36513342846",
-    "schema_version": "provider_observation/v2",
-    "source_as_of": "2026-09-04T15:41:26Z"
-  },
-  "resolution_state": "lkg_primary",
-  "retry": true,
+  "resolution_state": "fresh_primary",
+  "retry": false,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "stale": {
     "age_business_days": 16,
     "classified_at": "2026-09-29T02:43:52Z",
-    "classified_run_id": "36513342846",
     "expected_resolution": "next_natural_yahoo_run",
     "max_business_days": 6,
     "message": "PJIN holds LKG because Yahoo source date 2026-09-04T15:41:26Z is 16 business days old, beyond the 6-day bound; it will retry on the next natural Yahoo run.",
@@ -140,5 +40,5 @@
     "source_as_of": "2026-09-04T15:41:26Z"
   },
   "ticker": "PJIN",
-  "updated_at": "2026-09-30T02:12:48Z"
+  "updated_at": "2026-09-30T14:39:36Z"
 }

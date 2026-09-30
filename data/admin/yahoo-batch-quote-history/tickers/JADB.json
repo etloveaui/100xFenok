@@ -1,123 +1,22 @@
 {
-  "attempts": [
-    {
-      "attempts_used": 0,
-      "event_name": "workflow_dispatch",
-      "failures": [],
-      "latency_ms": 0,
-      "natural": false,
-      "observed_at": "2026-07-13T04:33:56Z",
-      "outcome": "skipped_fresh",
-      "run_attempt": 1,
-      "run_id": "29224221077",
-      "schedule": "",
-      "shard": ""
-    },
-    {
-      "attempts_used": 1,
-      "event_name": "schedule",
-      "failures": [],
-      "latency_ms": 486,
-      "natural": true,
-      "observed_at": "2026-07-28T23:07:58Z",
-      "outcome": "fresh",
-      "run_attempt": 1,
-      "run_id": "30406712544",
-      "schedule": "0 22 * * 2",
-      "shard": "2/6"
-    },
-    {
-      "attempts_used": 1,
-      "event_name": "schedule",
-      "failures": [],
-      "latency_ms": 1466,
-      "natural": true,
-      "observed_at": "2026-08-07T13:26:16Z",
-      "outcome": "fresh",
-      "run_attempt": 1,
-      "run_id": "31182487397",
-      "schedule": "7 12 * * 0-5",
-      "shard": "66/72"
-    },
-    {
-      "attempts_used": 1,
-      "event_name": "schedule",
-      "failures": [],
-      "latency_ms": 605,
-      "natural": true,
-      "observed_at": "2026-08-12T17:16:04Z",
-      "outcome": "fresh",
-      "run_attempt": 1,
-      "run_id": "31620820614",
-      "schedule": "7 16 * * 0-5",
-      "shard": "44/72"
-    },
-    {
-      "attempts_used": 1,
-      "error": "chart quote equal-clock price conflict",
-      "event_name": "workflow_dispatch",
-      "failures": [
-        {
-          "attempt": 1,
-          "error": "chart quote equal-clock price conflict"
-        }
-      ],
-      "latency_ms": 0,
-      "natural": false,
-      "observed_at": "2026-09-28T04:37:06Z",
-      "outcome": "failed",
-      "run_attempt": 1,
-      "run_id": "36367831133",
-      "schedule": "",
-      "shard": ""
-    }
-  ],
   "current": {
-    "fetched_at": "2026-08-12T17:18:47Z",
-    "history_as_of": "2026-08-12",
-    "path": "data/admin/yahoo-batch-quote-history/lkg/JADB.json",
-    "payload_sha256": "139dcb196e39626ca86ce5b68dd44f5326ca575bbe325ee4af0d4b593dd975ba",
-    "quote_as_of": "2026-08-12T13:46:06Z",
-    "source_as_of": "2026-08-12"
+    "fetched_at": "2026-09-30T14:36:50Z",
+    "history_as_of": "2026-09-30",
+    "path": "data/yf/finance/JADB.json",
+    "payload_sha256": "c0d2e522c27ff5f3ee1490165f0e5cfdaede3425f1c32b02b18b77e0bf110cbc",
+    "quote_as_of": "2026-09-30T13:46:05Z",
+    "source_as_of": "2026-09-30"
   },
   "discovered_from": [
     "stockanalysis_etf"
   ],
-  "last_attempt": {
+  "failure_count": 0,
+  "last_result": {
     "attempts_used": 1,
-    "error": "chart quote equal-clock price conflict",
-    "event_name": "workflow_dispatch",
-    "failures": [
-      {
-        "attempt": 1,
-        "error": "chart quote equal-clock price conflict"
-      }
-    ],
-    "latency_ms": 0,
-    "natural": false,
-    "observed_at": "2026-09-28T04:37:06Z",
-    "outcome": "failed",
-    "run_attempt": 1,
-    "run_id": "36367831133",
-    "schedule": "",
-    "shard": ""
-  },
-  "latest_failure": {
-    "attempts_used": 1,
-    "data_loss": false,
-    "deferred_acquisition": false,
-    "error": "chart quote equal-clock price conflict",
-    "failure_kind": "unexpected",
-    "failures": [
-      {
-        "attempt": 1,
-        "error": "chart quote equal-clock price conflict"
-      }
-    ],
-    "lkg_status": "retained",
-    "observed_at": "2026-09-28T04:37:06Z",
-    "run_attempt": 1,
-    "run_id": "36367831133"
+    "failures": [],
+    "latency_ms": 517,
+    "observed_at": "2026-09-30T14:36:50Z",
+    "outcome": "fresh"
   },
   "lkg": {
     "fetched_at": "2026-08-12T17:18:47Z",
@@ -127,25 +26,12 @@
     "quote_as_of": "2026-08-12T13:46:06Z",
     "source_as_of": "2026-08-12"
   },
-  "promotion_contract": "provider_observation/v2",
-  "provider_observation": {
-    "event_name": "schedule",
-    "history_as_of": "2026-08-12",
-    "observed_at": "2026-08-12T17:16:04Z",
-    "payload_sha256": "932170c9cdd41e8ac96e6969b9564b0cc101c2184c2984696152217c6e067921",
-    "quote_as_of": "2026-08-12T13:46:06Z",
-    "run_attempt": 1,
-    "run_id": "31620820614",
-    "schema_version": "provider_observation/v2",
-    "source_as_of": "2026-08-12"
-  },
-  "resolution_state": "lkg_primary",
-  "retry": true,
+  "resolution_state": "fresh_primary",
+  "retry": false,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "stale": {
     "age_business_days": 7,
     "classified_at": "2026-08-21T23:43:33Z",
-    "classified_run_id": "32537807621",
     "expected_resolution": "next_natural_yahoo_run",
     "max_business_days": 6,
     "message": "JADB holds LKG because Yahoo source date 2026-08-12 is 7 business days old, beyond the 6-day bound; it will retry on the next natural Yahoo run.",
@@ -153,5 +39,5 @@
     "source_as_of": "2026-08-12"
   },
   "ticker": "JADB",
-  "updated_at": "2026-09-28T04:37:06Z"
+  "updated_at": "2026-09-30T14:36:50Z"
 }

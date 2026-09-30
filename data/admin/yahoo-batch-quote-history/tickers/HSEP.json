@@ -1,42 +1,22 @@
 {
-  "attempts": [
-    {
-      "attempts_used": 1,
-      "event_name": "workflow_dispatch",
-      "failures": [],
-      "latency_ms": 496,
-      "natural": false,
-      "observed_at": "2026-09-28T03:11:20Z",
-      "outcome": "fresh",
-      "run_attempt": 1,
-      "run_id": "36367829153",
-      "schedule": "",
-      "shard": ""
-    }
-  ],
   "current": {
-    "fetched_at": "2026-09-28T03:31:42Z",
-    "history_as_of": "2026-09-25",
-    "path": "data/admin/yahoo-batch-quote-history/lkg/HSEP.json",
-    "payload_sha256": "c2eea6552360caa402b949c471fdaaea10f1e51e69e0b9fe47327cc5ad2ef0de",
-    "quote_as_of": "2026-09-21T19:57:33Z",
-    "source_as_of": "2026-09-21T19:57:33Z"
+    "fetched_at": "2026-09-30T14:36:29Z",
+    "history_as_of": "2026-09-30",
+    "path": "data/yf/finance/HSEP.json",
+    "payload_sha256": "e4f129d9ee96daa3f253533b6ae35e01e49da0436a05c58d8883e8e357dfe02d",
+    "quote_as_of": "2026-09-30T13:46:04Z",
+    "source_as_of": "2026-09-30"
   },
   "discovered_from": [
     "stockanalysis_etf"
   ],
-  "last_attempt": {
+  "failure_count": 0,
+  "last_result": {
     "attempts_used": 1,
-    "event_name": "workflow_dispatch",
     "failures": [],
-    "latency_ms": 496,
-    "natural": false,
-    "observed_at": "2026-09-28T03:11:20Z",
-    "outcome": "fresh",
-    "run_attempt": 1,
-    "run_id": "36367829153",
-    "schedule": "",
-    "shard": ""
+    "latency_ms": 715,
+    "observed_at": "2026-09-30T14:36:29Z",
+    "outcome": "fresh"
   },
   "lkg": {
     "fetched_at": "2026-09-28T03:31:42Z",
@@ -46,25 +26,12 @@
     "quote_as_of": "2026-09-21T19:57:33Z",
     "source_as_of": "2026-09-21T19:57:33Z"
   },
-  "promotion_contract": "provider_observation/v2",
-  "provider_observation": {
-    "event_name": "workflow_dispatch",
-    "history_as_of": "2026-09-25",
-    "observed_at": "2026-09-28T03:11:20Z",
-    "payload_sha256": "c2e50e8414086451f82423dcab5a0c6c214279c7f41d67cd52cb563b3b29f82b",
-    "quote_as_of": "2026-09-21T19:57:33Z",
-    "run_attempt": 1,
-    "run_id": "36367829153",
-    "schema_version": "provider_observation/v2",
-    "source_as_of": "2026-09-21T19:57:33Z"
-  },
-  "resolution_state": "lkg_primary",
-  "retry": true,
+  "resolution_state": "fresh_primary",
+  "retry": false,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "stale": {
     "age_business_days": 7,
     "classified_at": "2026-09-30T02:12:48Z",
-    "classified_run_id": "36658577543",
     "expected_resolution": "next_natural_yahoo_run",
     "max_business_days": 6,
     "message": "HSEP holds LKG because Yahoo source date 2026-09-21T19:57:33Z is 7 business days old, beyond the 6-day bound; it will retry on the next natural Yahoo run.",
@@ -72,5 +39,5 @@
     "source_as_of": "2026-09-21T19:57:33Z"
   },
   "ticker": "HSEP",
-  "updated_at": "2026-09-30T02:12:48Z"
+  "updated_at": "2026-09-30T14:36:29Z"
 }
