@@ -5,20 +5,6 @@
       "error": "StockDetailValidationError: Yahoo history close must be a finite number",
       "event_name": "schedule",
       "failures": [],
-      "latency_ms": 513,
-      "natural": true,
-      "observed_at": "2026-09-10T01:10:13Z",
-      "outcome": "failed",
-      "run_attempt": 1,
-      "run_id": "34424274071",
-      "schedule": "20 23 * * 1-5",
-      "shard": "0/5"
-    },
-    {
-      "attempts_used": 1,
-      "error": "StockDetailValidationError: Yahoo history close must be a finite number",
-      "event_name": "schedule",
-      "failures": [],
       "latency_ms": 555,
       "natural": true,
       "observed_at": "2026-09-15T01:34:15Z",
@@ -186,15 +172,28 @@
       "run_id": "36513342846",
       "schedule": "20 23 * * 1-5",
       "shard": "4/5"
+    },
+    {
+      "attempts_used": 1,
+      "event_name": "schedule",
+      "failures": [],
+      "latency_ms": 512,
+      "natural": true,
+      "observed_at": "2026-09-30T02:34:03Z",
+      "outcome": "fresh",
+      "run_attempt": 1,
+      "run_id": "36658577543",
+      "schedule": "20 23 * * 1-5",
+      "shard": "4/5"
     }
   ],
   "current": {
-    "fetched_at": "2026-09-29T02:59:30Z",
-    "history_as_of": "2026-09-28",
+    "fetched_at": "2026-09-30T02:35:58Z",
+    "history_as_of": "2026-09-29",
     "path": "data/yf/finance/AVGO.json",
-    "payload_sha256": "0bd194c6755f65f72c96e02133172ff84aed336764ee5a04581fb78642912bc8",
-    "quote_as_of": "2026-09-28T20:00:01Z",
-    "source_as_of": "2026-09-28"
+    "payload_sha256": "2b388da76850c2effaf7ecb627e98d40d987d12f04119f57466a3c175c330439",
+    "quote_as_of": "2026-09-29T20:00:01Z",
+    "source_as_of": "2026-09-29"
   },
   "discovered_from": [
     "global_scouter_stock",
@@ -205,12 +204,12 @@
     "attempts_used": 1,
     "event_name": "schedule",
     "failures": [],
-    "latency_ms": 621,
+    "latency_ms": 512,
     "natural": true,
-    "observed_at": "2026-09-29T02:57:23Z",
+    "observed_at": "2026-09-30T02:34:03Z",
     "outcome": "fresh",
     "run_attempt": 1,
-    "run_id": "36513342846",
+    "run_id": "36658577543",
     "schedule": "20 23 * * 1-5",
     "shard": "4/5"
   },
@@ -237,14 +236,14 @@
   "promotion_contract": "provider_observation/v2",
   "provider_observation": {
     "event_name": "schedule",
-    "history_as_of": "2026-09-28",
-    "observed_at": "2026-09-29T02:57:23Z",
-    "payload_sha256": "5ee503e832a258a9f5e95ee0b7ad252744d604ac4ce222f24860a8a4705b2ef7",
-    "quote_as_of": "2026-09-28T20:00:01Z",
+    "history_as_of": "2026-09-29",
+    "observed_at": "2026-09-30T02:34:03Z",
+    "payload_sha256": "f6a13d631caa34a0369bda58196a3d6ed2058b75eb9168566b2f601e1d03ea39",
+    "quote_as_of": "2026-09-29T20:00:01Z",
     "run_attempt": 1,
-    "run_id": "36513342846",
+    "run_id": "36658577543",
     "schema_version": "provider_observation/v2",
-    "source_as_of": "2026-09-28"
+    "source_as_of": "2026-09-29"
   },
   "recovered_at": "2026-09-24T01:29:54Z",
   "recovered_from_run_id": "35806669054",
@@ -255,5 +254,5 @@
   "retry": false,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "ticker": "AVGO",
-  "updated_at": "2026-09-29T02:57:23Z"
+  "updated_at": "2026-09-30T02:34:03Z"
 }

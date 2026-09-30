@@ -2,19 +2,6 @@
   "attempts": [
     {
       "attempts_used": 1,
-      "event_name": "schedule",
-      "failures": [],
-      "latency_ms": 725,
-      "natural": true,
-      "observed_at": "2026-09-02T01:11:48Z",
-      "outcome": "fresh",
-      "run_attempt": 1,
-      "run_id": "33577879211",
-      "schedule": "20 23 * * 1-5",
-      "shard": "1/5"
-    },
-    {
-      "attempts_used": 1,
       "error": "StockDetailValidationError: Yahoo history close must be a finite number",
       "event_name": "schedule",
       "failures": [],
@@ -188,15 +175,28 @@
       "run_id": "36513342846",
       "schedule": "20 23 * * 1-5",
       "shard": "1/5"
+    },
+    {
+      "attempts_used": 1,
+      "event_name": "schedule",
+      "failures": [],
+      "latency_ms": 824,
+      "natural": true,
+      "observed_at": "2026-09-30T02:12:48Z",
+      "outcome": "fresh",
+      "run_attempt": 1,
+      "run_id": "36658577543",
+      "schedule": "20 23 * * 1-5",
+      "shard": "0/5"
     }
   ],
   "current": {
-    "fetched_at": "2026-09-29T02:47:01Z",
-    "history_as_of": "2026-09-28",
+    "fetched_at": "2026-09-30T02:18:01Z",
+    "history_as_of": "2026-09-29",
     "path": "data/yf/finance/INTC.json",
-    "payload_sha256": "2c6bdc3f4a2eeee0b850aca95f169c66ba3c1fbb6743945e4b45c6e9b8f1e4b2",
-    "quote_as_of": "2026-09-28T20:00:01Z",
-    "source_as_of": "2026-09-28"
+    "payload_sha256": "d60fd17bffd6e6964bc14671616a4fb130634fedb02f3c98ec889704f7b286ac",
+    "quote_as_of": "2026-09-29T20:00:01Z",
+    "source_as_of": "2026-09-29"
   },
   "discovered_from": [
     "global_scouter_stock",
@@ -207,14 +207,14 @@
     "attempts_used": 1,
     "event_name": "schedule",
     "failures": [],
-    "latency_ms": 581,
+    "latency_ms": 824,
     "natural": true,
-    "observed_at": "2026-09-29T02:43:52Z",
+    "observed_at": "2026-09-30T02:12:48Z",
     "outcome": "fresh",
     "run_attempt": 1,
-    "run_id": "36513342846",
+    "run_id": "36658577543",
     "schedule": "20 23 * * 1-5",
-    "shard": "1/5"
+    "shard": "0/5"
   },
   "last_recovered_failure": {
     "attempts_used": 1,
@@ -239,14 +239,14 @@
   "promotion_contract": "provider_observation/v2",
   "provider_observation": {
     "event_name": "schedule",
-    "history_as_of": "2026-09-28",
-    "observed_at": "2026-09-29T02:43:52Z",
-    "payload_sha256": "cf0f3ef318fc007726775110cb3f2035f58cc1bfefc79dbb8f37b6d60b3ab7ba",
-    "quote_as_of": "2026-09-28T20:00:01Z",
+    "history_as_of": "2026-09-29",
+    "observed_at": "2026-09-30T02:12:48Z",
+    "payload_sha256": "a2c55ad67ade5d9fb5a1688240993dd61ddd8031c233f98a541826d4217afcc3",
+    "quote_as_of": "2026-09-29T20:00:01Z",
     "run_attempt": 1,
-    "run_id": "36513342846",
+    "run_id": "36658577543",
     "schema_version": "provider_observation/v2",
-    "source_as_of": "2026-09-28"
+    "source_as_of": "2026-09-29"
   },
   "recovered_at": "2026-09-19T01:16:57Z",
   "recovered_from_run_id": "35294798817",
@@ -257,5 +257,5 @@
   "retry": false,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "ticker": "INTC",
-  "updated_at": "2026-09-29T02:43:52Z"
+  "updated_at": "2026-09-30T02:12:48Z"
 }

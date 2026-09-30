@@ -25,13 +25,26 @@
       "run_id": "36513342846",
       "schedule": "20 23 * * 1-5",
       "shard": "0/5"
+    },
+    {
+      "attempts_used": 1,
+      "event_name": "schedule",
+      "failures": [],
+      "latency_ms": 916,
+      "natural": true,
+      "observed_at": "2026-09-30T02:12:48Z",
+      "outcome": "fresh",
+      "run_attempt": 1,
+      "run_id": "36658577543",
+      "schedule": "20 23 * * 1-5",
+      "shard": "0/5"
     }
   ],
   "current": {
-    "fetched_at": "2026-09-29T02:39:13Z",
-    "history_as_of": "2026-09-28",
+    "fetched_at": "2026-09-30T02:13:57Z",
+    "history_as_of": "2026-09-29",
     "path": "data/admin/yahoo-batch-quote-history/lkg/GAIQ.json",
-    "payload_sha256": "e421715ffb80ed8c53e8d875156b40348171e822fc2f21071731ecef7fd590ee",
+    "payload_sha256": "20fae0df6c2770a9e64fcdcf570e4f0b3244e69b64c47a830abfd8d4fe2001d3",
     "quote_as_of": "2026-09-10T19:29:50Z",
     "source_as_of": "2026-09-10T19:29:50Z"
   },
@@ -43,32 +56,32 @@
     "attempts_used": 1,
     "event_name": "schedule",
     "failures": [],
-    "latency_ms": 513,
+    "latency_ms": 916,
     "natural": true,
-    "observed_at": "2026-09-29T02:38:15Z",
+    "observed_at": "2026-09-30T02:12:48Z",
     "outcome": "fresh",
     "run_attempt": 1,
-    "run_id": "36513342846",
+    "run_id": "36658577543",
     "schedule": "20 23 * * 1-5",
     "shard": "0/5"
   },
   "lkg": {
-    "fetched_at": "2026-09-29T02:39:13Z",
-    "history_as_of": "2026-09-28",
+    "fetched_at": "2026-09-30T02:13:57Z",
+    "history_as_of": "2026-09-29",
     "path": "data/admin/yahoo-batch-quote-history/lkg/GAIQ.json",
-    "payload_sha256": "e421715ffb80ed8c53e8d875156b40348171e822fc2f21071731ecef7fd590ee",
+    "payload_sha256": "20fae0df6c2770a9e64fcdcf570e4f0b3244e69b64c47a830abfd8d4fe2001d3",
     "quote_as_of": "2026-09-10T19:29:50Z",
     "source_as_of": "2026-09-10T19:29:50Z"
   },
   "promotion_contract": "provider_observation/v2",
   "provider_observation": {
     "event_name": "schedule",
-    "history_as_of": "2026-09-28",
-    "observed_at": "2026-09-29T02:38:15Z",
-    "payload_sha256": "4c81c3dfebf07f2e404b803137bdb8c04b7ae4b62a3477aea5f716fad66b4fa7",
+    "history_as_of": "2026-09-29",
+    "observed_at": "2026-09-30T02:12:48Z",
+    "payload_sha256": "91da849fdbc6081846cf77af3552d861ad697270b66d3438896e07f2180e7a05",
     "quote_as_of": "2026-09-10T19:29:50Z",
     "run_attempt": 1,
-    "run_id": "36513342846",
+    "run_id": "36658577543",
     "schema_version": "provider_observation/v2",
     "source_as_of": "2026-09-10T19:29:50Z"
   },
@@ -76,15 +89,15 @@
   "retry": true,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "stale": {
-    "age_business_days": 13,
-    "classified_at": "2026-09-29T02:43:52Z",
-    "classified_run_id": "36513342846",
+    "age_business_days": 14,
+    "classified_at": "2026-09-30T02:19:44Z",
+    "classified_run_id": "36658577543",
     "expected_resolution": "next_natural_yahoo_run",
     "max_business_days": 6,
-    "message": "GAIQ holds LKG because Yahoo source date 2026-09-10T19:29:50Z is 13 business days old, beyond the 6-day bound; it will retry on the next natural Yahoo run.",
+    "message": "GAIQ holds LKG because Yahoo source date 2026-09-10T19:29:50Z is 14 business days old, beyond the 6-day bound; it will retry on the next natural Yahoo run.",
     "reason": "source_age_exceeds_lane_bound",
     "source_as_of": "2026-09-10T19:29:50Z"
   },
   "ticker": "GAIQ",
-  "updated_at": "2026-09-29T02:43:52Z"
+  "updated_at": "2026-09-30T02:19:44Z"
 }

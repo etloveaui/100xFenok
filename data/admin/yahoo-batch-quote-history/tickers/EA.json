@@ -5,20 +5,6 @@
       "error": "ValueError: quote_as_of is unavailable for EA despite available history",
       "event_name": "schedule",
       "failures": [],
-      "latency_ms": 462,
-      "natural": true,
-      "observed_at": "2026-09-09T01:18:24Z",
-      "outcome": "failed",
-      "run_attempt": 1,
-      "run_id": "34298546032",
-      "schedule": "20 23 * * 1-5",
-      "shard": "0/5"
-    },
-    {
-      "attempts_used": 1,
-      "error": "ValueError: quote_as_of is unavailable for EA despite available history",
-      "event_name": "schedule",
-      "failures": [],
       "latency_ms": 534,
       "natural": true,
       "observed_at": "2026-09-12T01:13:27Z",
@@ -267,6 +253,26 @@
       "run_id": "36513342846",
       "schedule": "20 23 * * 1-5",
       "shard": "0/5"
+    },
+    {
+      "attempts_used": 1,
+      "error": "foreign_writer_conflict",
+      "event_name": "schedule",
+      "failures": [
+        {
+          "attempt": 1,
+          "error": "AttributeError: 'Index' object has no attribute 'date'",
+          "source": "provider_safe_call"
+        }
+      ],
+      "latency_ms": 855,
+      "natural": true,
+      "observed_at": "2026-09-30T02:12:48Z",
+      "outcome": "failed",
+      "run_attempt": 1,
+      "run_id": "36658577543",
+      "schedule": "20 23 * * 1-5",
+      "shard": "0/5"
     }
   ],
   "current": {
@@ -291,12 +297,12 @@
         "source": "provider_safe_call"
       }
     ],
-    "latency_ms": 467,
+    "latency_ms": 855,
     "natural": true,
-    "observed_at": "2026-09-29T02:38:15Z",
+    "observed_at": "2026-09-30T02:12:48Z",
     "outcome": "failed",
     "run_attempt": 1,
-    "run_id": "36513342846",
+    "run_id": "36658577543",
     "schedule": "20 23 * * 1-5",
     "shard": "0/5"
   },
@@ -320,12 +326,12 @@
   },
   "latest_promotion_deferral": {
     "event_name": "schedule",
-    "observed_at": "2026-09-29T02:38:15Z",
+    "observed_at": "2026-09-30T02:12:48Z",
     "provider_history_as_of": "2026-08-04",
     "provider_quote_as_of": "2026-08-04T20:00:00Z",
     "reason": "foreign_writer_conflict",
     "run_attempt": 1,
-    "run_id": "36513342846"
+    "run_id": "36658577543"
   },
   "lkg": {
     "fetched_at": "2026-08-12T00:31:05Z",
@@ -361,5 +367,5 @@
     "source_as_of": "2026-08-04T20:00:00Z"
   },
   "ticker": "EA",
-  "updated_at": "2026-09-29T02:38:15Z"
+  "updated_at": "2026-09-30T02:12:48Z"
 }

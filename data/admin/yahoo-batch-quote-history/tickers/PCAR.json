@@ -2,19 +2,6 @@
   "attempts": [
     {
       "attempts_used": 1,
-      "event_name": "schedule",
-      "failures": [],
-      "latency_ms": 980,
-      "natural": true,
-      "observed_at": "2026-09-04T01:04:03Z",
-      "outcome": "fresh",
-      "run_attempt": 1,
-      "run_id": "33824182428",
-      "schedule": "20 23 * * 1-5",
-      "shard": "0/5"
-    },
-    {
-      "attempts_used": 1,
       "error": "ValueError: quote_as_of is unavailable for PCAR despite available history",
       "event_name": "schedule",
       "failures": [],
@@ -182,15 +169,28 @@
       "run_id": "36513342846",
       "schedule": "20 23 * * 1-5",
       "shard": "0/5"
+    },
+    {
+      "attempts_used": 1,
+      "event_name": "schedule",
+      "failures": [],
+      "latency_ms": 619,
+      "natural": true,
+      "observed_at": "2026-09-30T02:29:48Z",
+      "outcome": "fresh",
+      "run_attempt": 1,
+      "run_id": "36658577543",
+      "schedule": "20 23 * * 1-5",
+      "shard": "3/5"
     }
   ],
   "current": {
-    "fetched_at": "2026-09-29T02:43:04Z",
-    "history_as_of": "2026-09-28",
+    "fetched_at": "2026-09-30T02:33:15Z",
+    "history_as_of": "2026-09-29",
     "path": "data/yf/finance/PCAR.json",
-    "payload_sha256": "b75b38c9fd027e02030e26234cd8ebccb6c772024c0c09151fc58e6beab9fc9e",
-    "quote_as_of": "2026-09-28T20:00:00Z",
-    "source_as_of": "2026-09-28"
+    "payload_sha256": "324385e4c6abf191c5d5d307fa67c6aa8d92dde4a6479cdf4b50a754a77d5dad",
+    "quote_as_of": "2026-09-29T20:00:00Z",
+    "source_as_of": "2026-09-29"
   },
   "discovered_from": [
     "global_scouter_stock",
@@ -200,14 +200,14 @@
     "attempts_used": 1,
     "event_name": "schedule",
     "failures": [],
-    "latency_ms": 574,
+    "latency_ms": 619,
     "natural": true,
-    "observed_at": "2026-09-29T02:38:15Z",
+    "observed_at": "2026-09-30T02:29:48Z",
     "outcome": "fresh",
     "run_attempt": 1,
-    "run_id": "36513342846",
+    "run_id": "36658577543",
     "schedule": "20 23 * * 1-5",
-    "shard": "0/5"
+    "shard": "3/5"
   },
   "last_recovered_failure": {
     "attempts_used": 1,
@@ -232,14 +232,14 @@
   "promotion_contract": "provider_observation/v2",
   "provider_observation": {
     "event_name": "schedule",
-    "history_as_of": "2026-09-28",
-    "observed_at": "2026-09-29T02:38:15Z",
-    "payload_sha256": "634981bfeb8b5f05980170927ade893f062999c2cb002ea4aca2430269913775",
-    "quote_as_of": "2026-09-28T20:00:00Z",
+    "history_as_of": "2026-09-29",
+    "observed_at": "2026-09-30T02:29:48Z",
+    "payload_sha256": "223954a7dbad63b83386f286df0e0c9b42f0839122310f1aa04a04498b41feea",
+    "quote_as_of": "2026-09-29T20:00:00Z",
     "run_attempt": 1,
-    "run_id": "36513342846",
+    "run_id": "36658577543",
     "schema_version": "provider_observation/v2",
-    "source_as_of": "2026-09-28"
+    "source_as_of": "2026-09-29"
   },
   "recovered_at": "2026-09-12T01:13:27Z",
   "recovered_from_run_id": "34175958781",
@@ -250,5 +250,5 @@
   "retry": false,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "ticker": "PCAR",
-  "updated_at": "2026-09-29T02:38:15Z"
+  "updated_at": "2026-09-30T02:29:48Z"
 }

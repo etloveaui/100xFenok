@@ -30,7 +30,7 @@
   "current": {
     "fetched_at": "2026-09-28T06:17:37Z",
     "history_as_of": "2026-09-25",
-    "path": "data/yf/finance/SMCF.json",
+    "path": "data/admin/yahoo-batch-quote-history/lkg/SMCF.json",
     "payload_sha256": "258ec0ea6b9f1de03f974b6d475c2a5ff4bbba203e78d6c097e283c51bd43b14",
     "quote_as_of": "2026-09-21T20:00:00Z",
     "source_as_of": "2026-09-21T20:00:00Z"
@@ -52,12 +52,12 @@
     "shard": ""
   },
   "lkg": {
-    "fetched_at": "2026-08-07T11:08:54Z",
-    "history_as_of": "2026-08-06",
+    "fetched_at": "2026-09-28T06:17:37Z",
+    "history_as_of": "2026-09-25",
     "path": "data/admin/yahoo-batch-quote-history/lkg/SMCF.json",
-    "payload_sha256": "12608344ae01b26ffac5b462ec70d02f754b082a07f96f098f696b4f9306373a",
-    "quote_as_of": "2026-08-06T20:00:00Z",
-    "source_as_of": "2026-08-06"
+    "payload_sha256": "258ec0ea6b9f1de03f974b6d475c2a5ff4bbba203e78d6c097e283c51bd43b14",
+    "quote_as_of": "2026-09-21T20:00:00Z",
+    "source_as_of": "2026-09-21T20:00:00Z"
   },
   "promotion_contract": "provider_observation/v2",
   "provider_observation": {
@@ -71,19 +71,19 @@
     "schema_version": "provider_observation/v2",
     "source_as_of": "2026-09-21T20:00:00Z"
   },
-  "resolution_state": "fresh_primary",
-  "retry": false,
+  "resolution_state": "lkg_primary",
+  "retry": true,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "stale": {
-    "age_business_days": 9,
-    "classified_at": "2026-08-19T23:42:29Z",
-    "classified_run_id": "32314261503",
+    "age_business_days": 7,
+    "classified_at": "2026-09-30T02:12:48Z",
+    "classified_run_id": "36658577543",
     "expected_resolution": "next_natural_yahoo_run",
     "max_business_days": 6,
-    "message": "SMCF holds LKG because Yahoo source date 2026-08-06 is 9 business days old, beyond the 6-day bound; it will retry on the next natural Yahoo run.",
+    "message": "SMCF holds LKG because Yahoo source date 2026-09-21T20:00:00Z is 7 business days old, beyond the 6-day bound; it will retry on the next natural Yahoo run.",
     "reason": "source_age_exceeds_lane_bound",
-    "source_as_of": "2026-08-06"
+    "source_as_of": "2026-09-21T20:00:00Z"
   },
   "ticker": "SMCF",
-  "updated_at": "2026-09-28T06:02:24Z"
+  "updated_at": "2026-09-30T02:12:48Z"
 }

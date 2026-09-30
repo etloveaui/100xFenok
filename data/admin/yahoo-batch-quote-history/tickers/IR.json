@@ -2,19 +2,6 @@
   "attempts": [
     {
       "attempts_used": 1,
-      "event_name": "schedule",
-      "failures": [],
-      "latency_ms": 578,
-      "natural": true,
-      "observed_at": "2026-09-03T01:16:16Z",
-      "outcome": "fresh",
-      "run_attempt": 1,
-      "run_id": "33702512577",
-      "schedule": "20 23 * * 1-5",
-      "shard": "1/5"
-    },
-    {
-      "attempts_used": 1,
       "error": "ValueError: quote_as_of is unavailable for IR despite available history",
       "event_name": "schedule",
       "failures": [],
@@ -182,15 +169,28 @@
       "run_id": "36513342846",
       "schedule": "20 23 * * 1-5",
       "shard": "2/5"
+    },
+    {
+      "attempts_used": 1,
+      "event_name": "schedule",
+      "failures": [],
+      "latency_ms": 661,
+      "natural": true,
+      "observed_at": "2026-09-30T02:19:44Z",
+      "outcome": "fresh",
+      "run_attempt": 1,
+      "run_id": "36658577543",
+      "schedule": "20 23 * * 1-5",
+      "shard": "1/5"
     }
   ],
   "current": {
-    "fetched_at": "2026-09-29T02:51:33Z",
-    "history_as_of": "2026-09-28",
+    "fetched_at": "2026-09-30T02:22:55Z",
+    "history_as_of": "2026-09-29",
     "path": "data/yf/finance/IR.json",
-    "payload_sha256": "30561aacc356b89c9fced0895391cf84d62bbabc0f153090129c6696c2ea5c32",
-    "quote_as_of": "2026-09-28T20:00:02Z",
-    "source_as_of": "2026-09-28"
+    "payload_sha256": "9bc0f8ed129fca18dd7d37e3e1b1f5aecb10692f7d2d3acc79958511ac97c767",
+    "quote_as_of": "2026-09-29T20:00:03Z",
+    "source_as_of": "2026-09-29"
   },
   "discovered_from": [
     "global_scouter_stock",
@@ -200,14 +200,14 @@
     "attempts_used": 1,
     "event_name": "schedule",
     "failures": [],
-    "latency_ms": 540,
+    "latency_ms": 661,
     "natural": true,
-    "observed_at": "2026-09-29T02:48:24Z",
+    "observed_at": "2026-09-30T02:19:44Z",
     "outcome": "fresh",
     "run_attempt": 1,
-    "run_id": "36513342846",
+    "run_id": "36658577543",
     "schedule": "20 23 * * 1-5",
-    "shard": "2/5"
+    "shard": "1/5"
   },
   "last_recovered_failure": {
     "attempts_used": 1,
@@ -232,14 +232,14 @@
   "promotion_contract": "provider_observation/v2",
   "provider_observation": {
     "event_name": "schedule",
-    "history_as_of": "2026-09-28",
-    "observed_at": "2026-09-29T02:48:24Z",
-    "payload_sha256": "046e4e1c51b4b249f7d4a1138535d834dc51aabfcc2aeaed6d2630370c4761bd",
-    "quote_as_of": "2026-09-28T20:00:02Z",
+    "history_as_of": "2026-09-29",
+    "observed_at": "2026-09-30T02:19:44Z",
+    "payload_sha256": "35343ef4dd011039b9859f7cb7241b316407964d5c58bc6bf55df96224b776f2",
+    "quote_as_of": "2026-09-29T20:00:03Z",
     "run_attempt": 1,
-    "run_id": "36513342846",
+    "run_id": "36658577543",
     "schema_version": "provider_observation/v2",
-    "source_as_of": "2026-09-28"
+    "source_as_of": "2026-09-29"
   },
   "recovered_at": "2026-09-10T01:10:13Z",
   "recovered_from_run_id": "34175958781",
@@ -250,5 +250,5 @@
   "retry": false,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "ticker": "IR",
-  "updated_at": "2026-09-29T02:48:24Z"
+  "updated_at": "2026-09-30T02:19:44Z"
 }

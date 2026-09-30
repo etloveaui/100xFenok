@@ -5,20 +5,6 @@
       "error": "recovery_not_advanced_by_provider",
       "event_name": "schedule",
       "failures": [],
-      "latency_ms": 863,
-      "natural": true,
-      "observed_at": "2026-09-04T01:04:03Z",
-      "outcome": "failed",
-      "run_attempt": 1,
-      "run_id": "33824182428",
-      "schedule": "20 23 * * 1-5",
-      "shard": "0/5"
-    },
-    {
-      "attempts_used": 1,
-      "error": "recovery_not_advanced_by_provider",
-      "event_name": "schedule",
-      "failures": [],
       "latency_ms": 480,
       "natural": true,
       "observed_at": "2026-09-05T01:04:38Z",
@@ -213,6 +199,26 @@
       "run_id": "36513342846",
       "schedule": "20 23 * * 1-5",
       "shard": "0/5"
+    },
+    {
+      "attempts_used": 1,
+      "error": "foreign_writer_conflict",
+      "event_name": "schedule",
+      "failures": [
+        {
+          "attempt": 1,
+          "error": "AttributeError: 'Index' object has no attribute 'date'",
+          "source": "provider_safe_call"
+        }
+      ],
+      "latency_ms": 802,
+      "natural": true,
+      "observed_at": "2026-09-30T02:12:48Z",
+      "outcome": "failed",
+      "run_attempt": 1,
+      "run_id": "36658577543",
+      "schedule": "20 23 * * 1-5",
+      "shard": "0/5"
     }
   ],
   "current": {
@@ -237,23 +243,23 @@
         "source": "provider_safe_call"
       }
     ],
-    "latency_ms": 483,
+    "latency_ms": 802,
     "natural": true,
-    "observed_at": "2026-09-29T02:38:15Z",
+    "observed_at": "2026-09-30T02:12:48Z",
     "outcome": "failed",
     "run_attempt": 1,
-    "run_id": "36513342846",
+    "run_id": "36658577543",
     "schedule": "20 23 * * 1-5",
     "shard": "0/5"
   },
   "latest_promotion_deferral": {
     "event_name": "schedule",
-    "observed_at": "2026-09-29T02:38:15Z",
+    "observed_at": "2026-09-30T02:12:48Z",
     "provider_history_as_of": "2026-08-17",
     "provider_quote_as_of": "2026-08-17T19:30:16Z",
     "reason": "foreign_writer_conflict",
     "run_attempt": 1,
-    "run_id": "36513342846"
+    "run_id": "36658577543"
   },
   "lkg": {
     "fetched_at": "2026-08-27T04:34:57Z",
@@ -289,5 +295,5 @@
     "source_as_of": "2026-08-17T19:30:16Z"
   },
   "ticker": "QULL",
-  "updated_at": "2026-09-29T02:38:15Z"
+  "updated_at": "2026-09-30T02:12:48Z"
 }

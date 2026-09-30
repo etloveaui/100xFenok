@@ -5,20 +5,6 @@
       "error": "StockDetailValidationError: Yahoo history close must be a finite number",
       "event_name": "schedule",
       "failures": [],
-      "latency_ms": 715,
-      "natural": true,
-      "observed_at": "2026-09-15T01:34:15Z",
-      "outcome": "failed",
-      "run_attempt": 1,
-      "run_id": "34917681226",
-      "schedule": "20 23 * * 1-5",
-      "shard": "0/5"
-    },
-    {
-      "attempts_used": 1,
-      "error": "StockDetailValidationError: Yahoo history close must be a finite number",
-      "event_name": "schedule",
-      "failures": [],
       "latency_ms": 635,
       "natural": true,
       "observed_at": "2026-09-16T01:29:38Z",
@@ -184,12 +170,26 @@
       "run_id": "36513342846",
       "schedule": "20 23 * * 1-5",
       "shard": "4/5"
+    },
+    {
+      "attempts_used": 1,
+      "error": "StockDetailValidationError: Yahoo history close must be a finite number",
+      "event_name": "schedule",
+      "failures": [],
+      "latency_ms": 620,
+      "natural": true,
+      "observed_at": "2026-09-30T02:34:03Z",
+      "outcome": "failed",
+      "run_attempt": 1,
+      "run_id": "36658577543",
+      "schedule": "20 23 * * 1-5",
+      "shard": "4/5"
     }
   ],
   "current": {
     "fetched_at": "2026-09-29T03:00:14Z",
     "history_as_of": "2026-09-28",
-    "path": "data/yf/finance/GE.json",
+    "path": "data/admin/yahoo-batch-quote-history/lkg/GE.json",
     "payload_sha256": "bcc4011ed49a0fc6524aea7eee330b672f81d07a7876236d5bdc7a40b7ee68cb",
     "quote_as_of": "2026-09-28T20:00:03Z",
     "source_as_of": "2026-09-28"
@@ -200,14 +200,15 @@
   ],
   "last_attempt": {
     "attempts_used": 1,
+    "error": "StockDetailValidationError: Yahoo history close must be a finite number",
     "event_name": "schedule",
     "failures": [],
-    "latency_ms": 692,
+    "latency_ms": 620,
     "natural": true,
-    "observed_at": "2026-09-29T02:57:23Z",
-    "outcome": "fresh",
+    "observed_at": "2026-09-30T02:34:03Z",
+    "outcome": "failed",
     "run_attempt": 1,
-    "run_id": "36513342846",
+    "run_id": "36658577543",
     "schedule": "20 23 * * 1-5",
     "shard": "4/5"
   },
@@ -223,13 +224,25 @@
     "run_attempt": 1,
     "run_id": "35294798817"
   },
+  "latest_failure": {
+    "attempts_used": 1,
+    "data_loss": false,
+    "deferred_acquisition": false,
+    "error": "StockDetailValidationError: Yahoo history close must be a finite number",
+    "failure_kind": "unexpected",
+    "failures": [],
+    "lkg_status": "retained",
+    "observed_at": "2026-09-30T02:34:03Z",
+    "run_attempt": 1,
+    "run_id": "36658577543"
+  },
   "lkg": {
-    "fetched_at": "2026-09-02T01:25:47Z",
-    "history_as_of": "2026-09-01",
+    "fetched_at": "2026-09-29T03:00:14Z",
+    "history_as_of": "2026-09-28",
     "path": "data/admin/yahoo-batch-quote-history/lkg/GE.json",
-    "payload_sha256": "96e412f7bc3c50613e2ff92daa3d3488ab57fe0af1899f486d662da727228ce6",
-    "quote_as_of": "2026-09-01T20:00:03Z",
-    "source_as_of": "2026-09-01"
+    "payload_sha256": "bcc4011ed49a0fc6524aea7eee330b672f81d07a7876236d5bdc7a40b7ee68cb",
+    "quote_as_of": "2026-09-28T20:00:03Z",
+    "source_as_of": "2026-09-28"
   },
   "promotion_contract": "provider_observation/v2",
   "provider_observation": {
@@ -248,9 +261,9 @@
   "recovery_event_name": "schedule",
   "recovery_run_attempt": 1,
   "recovery_run_id": "35412060320",
-  "resolution_state": "fresh_primary",
-  "retry": false,
+  "resolution_state": "lkg_primary",
+  "retry": true,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "ticker": "GE",
-  "updated_at": "2026-09-29T02:57:23Z"
+  "updated_at": "2026-09-30T02:34:03Z"
 }
