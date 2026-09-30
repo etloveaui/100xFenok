@@ -137,7 +137,13 @@ def _canonicalize_legacy_yahoo_observation(
         and row["provider_schema"] == "yf-finance/v2"
         and row["validation_status"] == "invalid"
         and row.get("payload_available") is False
-        and row["reason_code"] == "normalization_invalid"
+        and (
+            row["reason_code"] == "normalization_invalid"
+            or (
+                row["reason_code"] == "migration_minimum_detail_missing"
+                and row.get("observation_origin") == "migration"
+            )
+        )
     )
     historical_failure_schema = (
         failure_schema
