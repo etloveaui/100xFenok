@@ -13,6 +13,7 @@ from pathlib import Path
 import subprocess
 import sys
 import tempfile
+import threading
 import unittest
 from unittest.mock import patch
 import urllib.error
@@ -583,54 +584,188 @@ class StockanalysisFetcherFixtureTest(unittest.TestCase):
         )
         self.assertEqual(payload["generated_at"], payload["fetched_at"])
 
-    def test_manual_etf_preflight_closes_every_unbounded_network_path(self) -> None:
-        def args(**overrides):
-            values = {
-                "event_name": "workflow_dispatch",
-                "plan_only": False,
-                "etfs": "SPY",
-                "stocks_only": False,
-                "universe_backfill": False,
-                "incremental_etf_backfill": False,
-                "incremental_etf_only": False,
-                "reconcile_missing_etf_details": False,
-                "incremental_etf_limit": 100,
-                "limit_etfs": 0,
-            }
-            values.update(overrides)
-            return Namespace(**values)
-
+    def test_manual_etf_preflight_accepts_uncapped_maintenance_without_writes(self) -> None:
         too_many = ",".join(f"E{index:03d}" for index in range(101))
-        for case in (
-            args(etfs=too_many),
-            args(etfs="SPY", limit_etfs=101),
-            args(incremental_etf_backfill=True, incremental_etf_limit=101),
-            args(etfs="", reconcile_missing_etf_details=True, incremental_etf_limit=0),
-            args(etfs="", universe_backfill=True, limit_etfs=0),
-            args(
-                etfs=",".join(f"E{index:03d}" for index in range(60)),
-                incremental_etf_backfill=True,
-                incremental_etf_limit=50,
-            ),
+        for flags in (
+            ["--etfs", too_many],
+            ["--etfs", "SPY", "--limit-etfs", "101"],
+            ["--incremental-etf-backfill", "--incremental-etf-limit", "101"],
+            ["--reconcile-missing-etf-details", "--incremental-etf-limit", "0"],
+            ["--universe-backfill", "--limit-etfs", "0"],
         ):
-            with self.subTest(case=case):
-                with self.assertRaisesRegex(SystemExit, "100|bounded"):
-                    self.fetcher.validate_manual_etf_preflight(case)
+            with self.subTest(flags=flags), \
+                 patch.object(sys, "argv", ["fetch-stockanalysis.py", "--event-name", "workflow_dispatch",
+                                             "--preflight-only", *flags]), \
+                 patch.object(self.fetcher, "fetch_etf") as network, \
+                 patch.object(self.fetcher, "write_payload") as writer:
+                self.fetcher.main()
+                network.assert_not_called()
+                writer.assert_not_called()
 
-        self.fetcher.validate_manual_etf_preflight(
-            args(event_name="schedule", etfs="", incremental_etf_backfill=True, incremental_etf_limit=120)
-        )
-        self.fetcher.validate_manual_etf_preflight(
-            args(plan_only=True, etfs="", incremental_etf_backfill=True, incremental_etf_limit=0)
-        )
-        self.fetcher.validate_manual_etf_preflight(
-            args(
-                etfs="",
-                incremental_etf_backfill=True,
-                incremental_etf_limit=0,
-                limit_etfs=100,
-            )
-        )
+    def _etf_collection_payload(self, ticker: str) -> dict:
+        return {"schema_version": "stockanalysis/v1", "source": "stockanalysis", "asset_type": "etf",
+                "ticker": ticker, "source_as_of": "2026-09-25T00:00:00Z", "fetched_at": "2026-09-30T00:00:00Z",
+                "normalized": {"overview": {"aum": 1}, "holdings": [{"ticker": "AAPL", "weight": 1}]},
+                "raw": {"quote": {"td": "2026-09-25"}}}
+
+    def _run_etf_collection_main(self, tickers, collect, flags=(), *, existing=None, universe=()):
+        # Keep real publication, observations, recovery and summary behavior;
+        # replace only the external provider request and the clock.
+        writers = []
+        original_write = self.fetcher.write_payload
+        coordinator = threading.get_ident()
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            out = root / "data/stockanalysis"
+            if universe:
+                self.fetcher.write_json(out / "etf_universe.json", {"records": [{"ticker": ticker} for ticker in universe]})
+            if existing:
+                for ticker, payload in existing.items():
+                    self.fetcher.write_json(out / "etfs" / f"{ticker}.json", payload)
+            before = {path.name: path.read_bytes() for path in (out / "etfs").glob("*.json")}
+
+            def write(rel_path, payload, mirror):
+                writers.append((rel_path, threading.get_ident()))
+                return original_write(rel_path, payload, mirror)
+
+            exit_code = None
+            with patch.object(self.fetcher, "OUT_DIR", out), \
+                 patch.object(self.fetcher, "PUBLIC_DIR", root / "public/data/stockanalysis"), \
+                 patch.object(self.fetcher, "STORAGE_ROOT", root), \
+                 patch.object(self.fetcher, "DATA_SUPPLY_STATE_ROOT", root / "data/admin/data-supply-state/v1"), \
+                 patch.object(self.fetcher, "STOCKANALYSIS_RECOVERY_ROOT", root / "data/admin/stockanalysis-recovery"), \
+                 patch.object(self.fetcher, "fetch_etf", side_effect=collect), \
+                 patch.object(self.fetcher, "write_payload", side_effect=write), \
+                 patch.object(self.fetcher, "now_iso", return_value="2026-09-30T00:00:00Z"), \
+                 patch.object(sys, "argv", ["fetch-stockanalysis.py", "--etfs", ",".join(tickers),
+                                           "--event-name", "workflow_dispatch", "--sleep", "0",
+                                           "--no-public-mirror", *flags]), \
+                 patch.object(sys, "stdout", io.StringIO()), patch.object(sys, "stderr", io.StringIO()):
+                try:
+                    self.fetcher.main()
+                except SystemExit as exc:
+                    exit_code = exc.code
+            after = {path.name: path.read_bytes() for path in (out / "etfs").glob("*.json")}
+            index_path = out / "index.json"
+            index = json.loads(index_path.read_text()) if index_path.is_file() else None
+            state = {path.stem: json.loads(path.read_text())
+                     for path in (root / "data/admin/stockanalysis-recovery/states/etf").glob("*.json")}
+            for row in state.values():
+                if row.get("lkg"):
+                    row["_retained_bytes"] = (root / row["lkg"]["path"]).read_bytes()
+            return exit_code, writers, coordinator, before, after, index, state
+
+    def test_etf_parallel_collection_is_bounded_ordered_once_and_single_writer(self) -> None:
+        tickers = [f"E{index:03d}" for index in range(9)]
+        lock = threading.Lock()
+        first_four = threading.Barrier(4)
+        release_first = threading.Event()
+        active = peak = 0
+        calls = []
+
+        def collect(ticker, _timeout, **_kwargs):
+            nonlocal active, peak
+            with lock:
+                active += 1
+                peak = max(peak, active)
+                calls.append(ticker)
+            try:
+                if ticker in tickers[:4]:
+                    first_four.wait(timeout=5)
+                    if ticker == "E000":
+                        if not release_first.wait(timeout=5):
+                            raise TimeoutError("later collection did not complete")
+                    elif ticker == "E003":
+                        release_first.set()
+                return self._etf_collection_payload(ticker)
+            finally:
+                with lock:
+                    active -= 1
+
+        exit_code, writers, coordinator, _, after, index, _ = self._run_etf_collection_main(
+            tickers, collect, ["--etf-workers", "4"])
+        self.assertIsNone(exit_code)
+        self.assertEqual(peak, 4)
+        self.assertCountEqual(calls, tickers)
+        self.assertEqual([path for path, _ in writers if path.startswith("etfs/")],
+                         [f"etfs/{ticker}.json" for ticker in tickers])
+        self.assertTrue(all(thread == coordinator for _, thread in writers))
+        self.assertEqual([row["ticker"] for row in index["results"]], tickers)
+        self.assertEqual(len(after), 9)
+        self.assertTrue(all(json.loads(raw)["source_as_of"] == "2026-09-25T00:00:00Z"
+                            and json.loads(raw)["fetched_at"] == "2026-09-30T00:00:00Z"
+                            for raw in after.values()))
+
+    def test_etf_collection_default_stays_on_coordinator(self) -> None:
+        calls = []
+        coordinator = threading.get_ident()
+        def collect(ticker, _timeout, **_kwargs):
+            calls.append((ticker, threading.get_ident()))
+            return self._etf_collection_payload(ticker)
+        exit_code, _, _, _, after, _, _ = self._run_etf_collection_main(["AAA", "BBB"], collect)
+        self.assertIsNone(exit_code)
+        self.assertEqual(calls, [("AAA", coordinator), ("BBB", coordinator)])
+        self.assertEqual(len(after), 2)
+
+    def test_etf_parallel_hard_stop_does_not_publish_prefetched_targets(self) -> None:
+        tickers = [f"E{index:03d}" for index in range(9)]
+        calls = []
+        lock = threading.Lock()
+        def collect(ticker, _timeout, **_kwargs):
+            with lock:
+                calls.append(ticker)
+            if ticker == "E000":
+                raise ValueError("svelte_contract_drift:overview:missing_required:holdings")
+            return self._etf_collection_payload(ticker)
+        exit_code, _, _, _, after, index, state = self._run_etf_collection_main(
+            tickers, collect, ["--etf-workers", "4", "--stop-on-hard-error"])
+        self.assertEqual(exit_code, 2)
+        self.assertTrue(set(calls).issubset(set(tickers[:4])))
+        self.assertEqual(after, {})
+        self.assertEqual([row["ticker"] for row in index["results"]], ["E000"])
+        self.assertTrue(state["E000"]["retry"])
+
+    def test_etf_parallel_bad_candidate_preserves_existing_good_bytes_and_failure(self) -> None:
+        retained = self._etf_collection_payload("AAA")
+        def collect(ticker, _timeout, **_kwargs):
+            payload = self._etf_collection_payload(ticker)
+            if ticker == "AAA":
+                payload["ticker"] = "WRONG"
+            return payload
+        exit_code, _, _, before, after, index, state = self._run_etf_collection_main(
+            ["AAA", "BBB"], collect, ["--etf-workers", "4"], existing={"AAA": retained})
+        self.assertEqual(after["AAA.json"], before["AAA.json"])
+        self.assertIn("BBB.json", after)
+        self.assertEqual(index["counts"]["failed"], 1)
+        self.assertTrue(state["AAA"]["retry"])
+        self.assertIn("identity mismatch", index["results"][0]["error"])
+        self.assertEqual(state["AAA"]["_retained_bytes"], before["AAA.json"])
+
+    def test_manual_etf_collection_accepts_more_than_100_targets(self) -> None:
+        tickers = [f"E{index:03d}" for index in range(101)]
+        def collect(ticker, _timeout, **_kwargs):
+            return self._etf_collection_payload(ticker)
+        exit_code, _, _, _, after, index, _ = self._run_etf_collection_main(tickers, collect)
+        self.assertIsNone(exit_code)
+        self.assertEqual(len(after), 101)
+        self.assertEqual(index["counts"]["etfs_requested"], 101)
+
+    def test_manual_zero_incremental_limit_refills_all_stale_candidates(self) -> None:
+        tickers = [f"E{index:03d}" for index in range(101)]
+        old = {}
+        for ticker in tickers:
+            old[ticker] = {**self._etf_collection_payload(ticker), "source_as_of": "2026-06-01T00:00:00Z",
+                           "fetched_at": "2026-06-01T00:00:00Z", "raw": {"quote": {"td": "2026-06-01"}}}
+        def collect(ticker, _timeout, **_kwargs):
+            return self._etf_collection_payload(ticker)
+        exit_code, _, _, _, after, index, _ = self._run_etf_collection_main(
+            [], collect, ["--incremental-etf-backfill", "--incremental-etf-only", "--incremental-etf-limit", "0"],
+            existing=old, universe=tickers)
+        self.assertIsNone(exit_code)
+        self.assertEqual(index["counts"]["incremental_etf_backfill_selected"], 101)
+        self.assertEqual([row["ticker"] for row in index["results"]], tickers)
+        self.assertTrue(all(json.loads(raw)["source_as_of"] == "2026-09-25T00:00:00Z"
+                            for raw in after.values()))
 
     def test_candidate_root_rejects_repo_and_symlink_and_routes_all_outputs_outside_checkout(self) -> None:
         saved = self.fetcher.current_candidate_outputs()
@@ -679,7 +814,7 @@ class StockanalysisFetcherFixtureTest(unittest.TestCase):
         source = FETCHER_PATH.read_text(encoding="utf-8")
         self.assertEqual(source.count("DataSupplyStateStore("), 1)
 
-    def test_manual_cap_fails_before_canary_or_candidate_mutation(self) -> None:
+    def test_invalid_etf_worker_count_fails_before_canary_or_candidate_mutation(self) -> None:
         original_canary = self.fetcher.run_endpoint_canary
         original_argv = sys.argv
         saved = self.fetcher.current_candidate_outputs()
@@ -697,11 +832,14 @@ class StockanalysisFetcherFixtureTest(unittest.TestCase):
                 "--no-public-mirror",
                 "--event-name", "workflow_dispatch",
                 "--endpoint-canary",
-                "--etfs", ",".join(f"E{index:03d}" for index in range(101)),
+                "--etfs", "SPY", "--etf-workers", "0",
             ]
             try:
-                with self.assertRaisesRegex(SystemExit, "100"):
-                    self.fetcher.main()
+                for invalid in ("0", "5", "-1"):
+                    sys.argv[-1] = invalid
+                    with self.subTest(invalid=invalid):
+                        with self.assertRaisesRegex(SystemExit, "between 1 and 4"):
+                            self.fetcher.main()
             finally:
                 self.fetcher.run_endpoint_canary = original_canary
                 sys.argv = original_argv
@@ -755,7 +893,7 @@ class StockanalysisFetcherFixtureTest(unittest.TestCase):
                     "--candidate-root", str(failure_candidate),
                     "--no-public-mirror",
                     "--event-name", "workflow_dispatch",
-                    "--etfs", ",".join(f"E{index:03d}" for index in range(101)),
+                    "--etfs", "SPY", "--etf-workers", "0",
                 ],
                 cwd=ROOT,
                 env=env,
@@ -763,7 +901,7 @@ class StockanalysisFetcherFixtureTest(unittest.TestCase):
                 text=True,
             )
             self.assertNotEqual(failure.returncode, 0)
-            self.assertIn("100", failure.stderr)
+            self.assertIn("--etf-workers must be between 1 and 4", failure.stderr)
             self.assertEqual(list(failure_candidate.iterdir()), [])
 
             signal_candidate = root / "signal-candidate"

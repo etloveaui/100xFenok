@@ -4,9 +4,11 @@
 from __future__ import annotations
 
 import json
+import os
 from pathlib import Path
 import re
 import subprocess
+import textwrap
 import unittest
 
 
@@ -53,6 +55,53 @@ class StockAnalysisWorkflowContractTest(unittest.TestCase):
         )
         self.assertIn("scripts/stockanalysis_artifact.py", self.text)
         self.assertIn("scripts/stage-lane-manifest.sh", self.text)
+
+    def acquisition_args(self, event: str, schedule: str = "", **inputs: str) -> list[str]:
+        step = re.search(
+            r"- name: Run StockAnalysis fetch\n.*?\n\s+run: \|\n(?P<body>.*?)(?=\n\s+- name:)",
+            self.text, flags=re.DOTALL,
+        )
+        self.assertIsNotNone(step)
+        # Execute the real mapping and argument assembly, stopping before all
+        # provider calls, candidate writes, and artifact work.
+        body = textwrap.dedent(step.group("body").split("set -o pipefail", 1)[0])
+        input_block = self.text.split("  workflow_dispatch:\n", 1)[1].split("\njobs:", 1)[0]
+        environment = {"PATH": os.environ["PATH"], "EVENT_NAME": event, "EVENT_SCHEDULE": schedule}
+        for match in re.finditer(r"^      (\w+):\n((?:        .*\n)+)", input_block, re.MULTILINE):
+            default = re.search(r"default: '([^']*)'", match.group(2))
+            environment["INPUT_" + match.group(1).upper()] = default.group(1) if event == "workflow_dispatch" and default else ""
+        environment.update({"INPUT_" + key.upper(): value for key, value in inputs.items()})
+        result = subprocess.run(
+            ["bash", "-c", body + "\nprintf '%s\\0' $ARGS\n"],
+            env=environment, check=True, capture_output=True,
+        )
+        return [part.decode() for part in result.stdout.split(b"\0") if part]
+
+    def test_weekly_and_requested_incremental_collection_use_existing_inputs(self) -> None:
+        weekly = self.acquisition_args("schedule", "20 23 * * 0")
+        self.assertIn("--incremental-etf-backfill", weekly)
+        for flag, value in (("--incremental-etf-limit", "0"),
+                            ("--incremental-etf-max-age-hours", "720"),
+                            ("--limit-etfs", "0"), ("--etf-workers", "4")):
+            self.assertEqual(weekly[weekly.index(flag) + 1], value)
+        self.assertNotIn("--history-gaps-only", weekly)
+        self.assertNotIn("--required-history-periods", weekly)
+        self.assertIn("--discover-etf-universe", weekly)
+
+        incremental = self.acquisition_args("workflow_dispatch", incremental_etf_backfill="true")
+        self.assertIn("--incremental-etf-backfill", incremental)
+        self.assertEqual(incremental[incremental.index("--etf-workers") + 1], "4")
+        self.assertNotIn("--natural-run", incremental)
+
+        for args in (self.acquisition_args("schedule", "50 23 * * 1-5"),
+                     self.acquisition_args("workflow_dispatch")):
+            self.assertNotIn("--incremental-etf-backfill", args)
+            self.assertEqual(args[args.index("--etf-workers") + 1], "1")
+        bare = self.acquisition_args("workflow_dispatch")
+        self.assertEqual(bare[bare.index("--limit-etfs") + 1], "100")
+        # Worker count is derived internally: no extra dispatch input.
+        dispatch = self.text.split("  workflow_dispatch:\n", 1)[1].split("\njobs:", 1)[0]
+        self.assertNotRegex(dispatch, r"(?m)^      (?:workers|etf_workers):")
 
     def test_manual_stock_dispatch_cannot_publish_an_unpaired_overview(self) -> None:
         self.assertIn(
@@ -258,7 +307,8 @@ class StockAnalysisWorkflowContractTest(unittest.TestCase):
         natural_end = self.text.index('if [ "$EVENT_NAME" = "workflow_dispatch" ]; then')
         natural_body = self.text[natural_start:natural_end]
         self.assertIn('INPUT_INCREMENTAL_ETF_BACKFILL="false"', natural_body)
-        self.assertNotIn('INPUT_INCREMENTAL_ETF_BACKFILL="true"', natural_body)
+        weekday = self.acquisition_args("schedule", "50 23 * * 1-5")
+        self.assertNotIn("--incremental-etf-backfill", weekday)
         self.assertIn('INPUT_MAX_UNIVERSE_PAGES="100"', natural_body)
 
     def test_manual_preflight_precedes_candidate_seed_and_provider_fetch(self) -> None:
