@@ -474,9 +474,10 @@ def load_and_validate_artifact(
         "workflow": workflow,
         "run_id": str(run_id),
         "run_number": int(run_number),
-        "run_attempt": int(run_attempt),
         "artifact_name": str(artifact_name),
     }
+    # A publisher-only retry consumes the successful acquisition's artifact.
+    # Its own attempt number does not change those bytes or their source date.
     for key, value in expected_context.items():
         if manifest.get(key) != value:
             fail(f"artifact {key} does not match publish context")

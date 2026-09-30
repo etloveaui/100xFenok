@@ -116,6 +116,22 @@ class StockAnalysisArtifactTest(unittest.TestCase):
         run("git", "add", "--", "data/stockanalysis", cwd=self.root)
         self.helper.audit_staged_paths(self.root, self.artifact)
 
+    def test_publisher_retry_applies_the_existing_acquisition_bytes(self) -> None:
+        (self.candidate / "data/stockanalysis/a.json").write_text('{"value":2}\n')
+        self.pack(run_attempt=1)
+        result = self.helper.apply_artifact(
+            repo_root=self.root,
+            artifact_root=self.artifact,
+            workflow=WORKFLOW,
+            run_id="1000",
+            run_number=10,
+            run_attempt=2,
+            artifact_name="stockanalysis-1000-1",
+            artifact_digest="a" * 64,
+        )
+        self.assertEqual(result["status"], "applied")
+        self.assertEqual((self.root / "data/stockanalysis/a.json").read_text(), '{"value":2}\n')
+
     def test_source_growth_after_hash_fails_pack_with_path_and_sizes(self) -> None:
         target = self.candidate / "data/stockanalysis/a.json"
         target.write_text('{"value":2}\n')
