@@ -1,13 +1,37 @@
 {
   "schema_version": "alarm-state/v1",
-  "generated_at": "2026-09-29T02:05:14.933Z",
+  "generated_at": "2026-09-30T09:02:39.046Z",
   "status": "open",
-  "open_incident_count": 6,
+  "open_incident_count": 9,
   "open_incidents": [
+    {
+      "workflow": "build-stocks-analyzer.yml",
+      "label": "Build Stocks Analyzer",
+      "streak": 2,
+      "failure_streak_threshold": 2,
+      "first_failing_run_id": 36430391926,
+      "first_failing_run_url": "https://github.com/etloveaui/100xFenok/actions/runs/36430391926",
+      "alarm_reasons": [
+        "failure_streak"
+      ],
+      "lost_schedule_slot_count": 0
+    },
+    {
+      "workflow": "fenok-edge-daily.yml",
+      "label": "Fenok Edge Daily Data",
+      "streak": 2,
+      "failure_streak_threshold": 2,
+      "first_failing_run_id": 36528765055,
+      "first_failing_run_url": "https://github.com/etloveaui/100xFenok/actions/runs/36528765055",
+      "alarm_reasons": [
+        "failure_streak"
+      ],
+      "lost_schedule_slot_count": 0
+    },
     {
       "workflow": "fenok-edge-krx-daily.yml",
       "label": "Fenok Edge KRX Daily Data",
-      "streak": 3,
+      "streak": 4,
       "failure_streak_threshold": 2,
       "first_failing_run_id": 36019903433,
       "first_failing_run_url": "https://github.com/etloveaui/100xFenok/actions/runs/36019903433",
@@ -19,7 +43,7 @@
     {
       "workflow": "fetch-stockanalysis.yml",
       "label": "Fetch StockAnalysis Data",
-      "streak": 2,
+      "streak": 5,
       "failure_streak_threshold": 2,
       "first_failing_run_id": 36366931706,
       "first_failing_run_url": "https://github.com/etloveaui/100xFenok/actions/runs/36366931706",
@@ -29,9 +53,21 @@
       "lost_schedule_slot_count": 0
     },
     {
+      "workflow": "fetch-us-indices-daily.yml",
+      "label": "Fetch US Index Daily Close",
+      "streak": 2,
+      "failure_streak_threshold": 2,
+      "first_failing_run_id": 36509183600,
+      "first_failing_run_url": "https://github.com/etloveaui/100xFenok/actions/runs/36509183600",
+      "alarm_reasons": [
+        "failure_streak"
+      ],
+      "lost_schedule_slot_count": 0
+    },
+    {
       "workflow": "fetch-yahoo-ticker.yml",
       "label": "Fetch Yahoo Finance Ticker Snapshot",
-      "streak": 3,
+      "streak": 8,
       "failure_streak_threshold": 2,
       "first_failing_run_id": 36442738145,
       "first_failing_run_url": "https://github.com/etloveaui/100xFenok/actions/runs/36442738145",
@@ -41,8 +77,8 @@
       "lost_schedule_slot_count": 0
     },
     {
-      "workflow": "retention-restore.yml",
-      "label": "R2 Retention Restore Watchdog",
+      "workflow": "global-writer-queue-observer.yml",
+      "label": "Global Writer Queue Observability",
       "streak": 0,
       "failure_streak_threshold": 2,
       "first_failing_run_id": null,
@@ -71,10 +107,13 @@
         "data_stopped_two_generations"
       ],
       "stopped_sets": [
-        "stockanalysis_etf_detail"
+        "stockanalysis_etf_detail",
+        "stockanalysis_surfaces",
+        "us_indices_daily",
+        "yahoo_ticker_macro"
       ],
-      "latest_generated_at": "2026-09-28T18:08:10.850Z",
-      "previous_generated_at": "2026-09-28T13:55:11.267Z"
+      "latest_generated_at": "2026-09-30T08:56:11.979Z",
+      "previous_generated_at": "2026-09-30T06:51:30.959Z"
     }
   ],
   "watched_workflows": [
@@ -426,15 +465,18 @@
   "queue_evicted_run_count": 0,
   "queue_evicted_workflows": [],
   "last_firing": {
-    "run_id": "36510687745",
-    "run_url": "https://github.com/etloveaui/100xFenok/actions/runs/36510687745",
-    "observed_at": "2026-09-29T02:05:14.933Z",
-    "event": "schedule",
+    "run_id": "36693141383",
+    "run_url": "https://github.com/etloveaui/100xFenok/actions/runs/36693141383",
+    "observed_at": "2026-09-30T09:02:39.046Z",
+    "event": "workflow_run",
     "workflows": [
+      "build-stocks-analyzer.yml",
+      "fenok-edge-daily.yml",
       "fenok-edge-krx-daily.yml",
       "fetch-stockanalysis.yml",
+      "fetch-us-indices-daily.yml",
       "fetch-yahoo-ticker.yml",
-      "retention-restore.yml",
+      "global-writer-queue-observer.yml",
       "validate-workflows.yml",
       "data-health-kpi"
     ],

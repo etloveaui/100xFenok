@@ -1,19 +1,6 @@
 {
   "attempts": [
     {
-      "attempts_used": 0,
-      "event_name": "schedule",
-      "failures": [],
-      "latency_ms": 0,
-      "natural": true,
-      "observed_at": "2026-09-01T02:10:13Z",
-      "outcome": "skipped_fresh",
-      "run_attempt": 1,
-      "run_id": "33460327385",
-      "schedule": "20 23 * * 1-5",
-      "shard": "4/5"
-    },
-    {
       "attempts_used": 1,
       "event_name": "schedule",
       "failures": [],
@@ -185,15 +172,28 @@
       "run_id": "36513342846",
       "schedule": "20 23 * * 1-5",
       "shard": "1/5"
+    },
+    {
+      "attempts_used": 1,
+      "event_name": "schedule",
+      "failures": [],
+      "latency_ms": 567,
+      "natural": true,
+      "observed_at": "2026-09-30T02:19:44Z",
+      "outcome": "fresh",
+      "run_attempt": 1,
+      "run_id": "36658577543",
+      "schedule": "20 23 * * 1-5",
+      "shard": "1/5"
     }
   ],
   "current": {
-    "fetched_at": "2026-09-29T02:46:52Z",
-    "history_as_of": "2026-09-28",
+    "fetched_at": "2026-09-30T02:22:43Z",
+    "history_as_of": "2026-09-29",
     "path": "data/yf/finance/GOOG.json",
-    "payload_sha256": "f22791c5c496f9b3b4a14d42bf26170b791aa010d0fc0f41ad6cd20f9e1a2cdd",
-    "quote_as_of": "2026-09-28T20:00:01Z",
-    "source_as_of": "2026-09-28"
+    "payload_sha256": "e31c836bfb23f5ea3128120263004f0c0c49c35e696662b176ec5e4d6ba98c33",
+    "quote_as_of": "2026-09-29T20:00:01Z",
+    "source_as_of": "2026-09-29"
   },
   "discovered_from": [
     "global_scouter_stock",
@@ -203,12 +203,12 @@
     "attempts_used": 1,
     "event_name": "schedule",
     "failures": [],
-    "latency_ms": 915,
+    "latency_ms": 567,
     "natural": true,
-    "observed_at": "2026-09-29T02:43:52Z",
+    "observed_at": "2026-09-30T02:19:44Z",
     "outcome": "fresh",
     "run_attempt": 1,
-    "run_id": "36513342846",
+    "run_id": "36658577543",
     "schedule": "20 23 * * 1-5",
     "shard": "1/5"
   },
@@ -235,14 +235,14 @@
   "promotion_contract": "provider_observation/v2",
   "provider_observation": {
     "event_name": "schedule",
-    "history_as_of": "2026-09-28",
-    "observed_at": "2026-09-29T02:43:52Z",
-    "payload_sha256": "970c69a28e51885e9cc94b7bae5d2ae6691eeb278239a9222f6a3f4e77fd5e41",
-    "quote_as_of": "2026-09-28T20:00:01Z",
+    "history_as_of": "2026-09-29",
+    "observed_at": "2026-09-30T02:19:44Z",
+    "payload_sha256": "b696060962b40b129f395556b05d8f3f8a060359338513a1f475dbb473908e04",
+    "quote_as_of": "2026-09-29T20:00:01Z",
     "run_attempt": 1,
-    "run_id": "36513342846",
+    "run_id": "36658577543",
     "schema_version": "provider_observation/v2",
-    "source_as_of": "2026-09-28"
+    "source_as_of": "2026-09-29"
   },
   "recovered_at": "2026-09-19T01:16:57Z",
   "recovered_from_run_id": "35294798817",
@@ -253,5 +253,5 @@
   "retry": false,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "ticker": "GOOG",
-  "updated_at": "2026-09-29T02:43:52Z"
+  "updated_at": "2026-09-30T02:19:44Z"
 }

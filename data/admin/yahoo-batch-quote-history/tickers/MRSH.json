@@ -5,20 +5,6 @@
       "error": "StockDetailValidationError: Yahoo history close must be a finite number",
       "event_name": "schedule",
       "failures": [],
-      "latency_ms": 567,
-      "natural": true,
-      "observed_at": "2026-09-09T01:18:24Z",
-      "outcome": "failed",
-      "run_attempt": 1,
-      "run_id": "34298546032",
-      "schedule": "20 23 * * 1-5",
-      "shard": "0/5"
-    },
-    {
-      "attempts_used": 1,
-      "error": "StockDetailValidationError: Yahoo history close must be a finite number",
-      "event_name": "schedule",
-      "failures": [],
       "latency_ms": 593,
       "natural": true,
       "observed_at": "2026-09-15T01:34:15Z",
@@ -183,15 +169,28 @@
       "run_id": "36513342846",
       "schedule": "20 23 * * 1-5",
       "shard": "1/5"
+    },
+    {
+      "attempts_used": 1,
+      "event_name": "schedule",
+      "failures": [],
+      "latency_ms": 899,
+      "natural": true,
+      "observed_at": "2026-09-30T02:12:48Z",
+      "outcome": "fresh",
+      "run_attempt": 1,
+      "run_id": "36658577543",
+      "schedule": "20 23 * * 1-5",
+      "shard": "0/5"
     }
   ],
   "current": {
-    "fetched_at": "2026-09-29T02:47:21Z",
-    "history_as_of": "2026-09-28",
+    "fetched_at": "2026-09-30T02:18:25Z",
+    "history_as_of": "2026-09-29",
     "path": "data/yf/finance/MRSH.json",
-    "payload_sha256": "9daddc7f43b4ea93549aa80d1046f2bab98e63c52c18ae2887e7fb4ba1221f03",
-    "quote_as_of": "2026-09-28T20:05:31Z",
-    "source_as_of": "2026-09-28"
+    "payload_sha256": "f4cf25385f274bba1968e1833f0ff581fea8b2cddae61cd3b0e1a4b86e663a87",
+    "quote_as_of": "2026-09-29T20:02:30Z",
+    "source_as_of": "2026-09-29"
   },
   "discovered_from": [
     "market_facts"
@@ -200,14 +199,14 @@
     "attempts_used": 1,
     "event_name": "schedule",
     "failures": [],
-    "latency_ms": 587,
+    "latency_ms": 899,
     "natural": true,
-    "observed_at": "2026-09-29T02:43:52Z",
+    "observed_at": "2026-09-30T02:12:48Z",
     "outcome": "fresh",
     "run_attempt": 1,
-    "run_id": "36513342846",
+    "run_id": "36658577543",
     "schedule": "20 23 * * 1-5",
-    "shard": "1/5"
+    "shard": "0/5"
   },
   "last_recovered_failure": {
     "attempts_used": 1,
@@ -232,14 +231,14 @@
   "promotion_contract": "provider_observation/v2",
   "provider_observation": {
     "event_name": "schedule",
-    "history_as_of": "2026-09-28",
-    "observed_at": "2026-09-29T02:43:52Z",
-    "payload_sha256": "f7d0375d7c2c6daab56b1d14595fa18fd6916f33a114e9229b1d2a1dc7eb588b",
-    "quote_as_of": "2026-09-28T20:05:31Z",
+    "history_as_of": "2026-09-29",
+    "observed_at": "2026-09-30T02:12:48Z",
+    "payload_sha256": "7dec7c402ffc8844b5d06e40ded0407ae4ed3b310d05d66da9a0085b14250fe8",
+    "quote_as_of": "2026-09-29T20:02:30Z",
     "run_attempt": 1,
-    "run_id": "36513342846",
+    "run_id": "36658577543",
     "schema_version": "provider_observation/v2",
-    "source_as_of": "2026-09-28"
+    "source_as_of": "2026-09-29"
   },
   "recovered_at": "2026-09-17T01:31:25Z",
   "recovered_from_run_id": "34917681226",
@@ -250,5 +249,5 @@
   "retry": false,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "ticker": "MRSH",
-  "updated_at": "2026-09-29T02:43:52Z"
+  "updated_at": "2026-09-30T02:12:48Z"
 }

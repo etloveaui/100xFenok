@@ -26,13 +26,26 @@
       "run_id": "36513342846",
       "schedule": "20 23 * * 1-5",
       "shard": "0/5"
+    },
+    {
+      "attempts_used": 1,
+      "event_name": "schedule",
+      "failures": [],
+      "latency_ms": 805,
+      "natural": true,
+      "observed_at": "2026-09-30T02:12:48Z",
+      "outcome": "fresh",
+      "run_attempt": 1,
+      "run_id": "36658577543",
+      "schedule": "20 23 * * 1-5",
+      "shard": "0/5"
     }
   ],
   "current": {
-    "fetched_at": "2026-09-28T06:22:35Z",
-    "history_as_of": "2026-09-25",
+    "fetched_at": "2026-09-30T02:14:22Z",
+    "history_as_of": "2026-09-28",
     "path": "data/admin/yahoo-batch-quote-history/lkg/TIPF.json",
-    "payload_sha256": "313dfafb028d4830605cafba935c25326b7cbe280b502eef0cd3325c56f36449",
+    "payload_sha256": "0806eb0442a844c953f665e30df08805faed37ad900d8a57c3684368f0c3d799",
     "quote_as_of": "2026-09-16T14:34:21Z",
     "source_as_of": "2026-09-16T14:34:21Z"
   },
@@ -42,44 +55,34 @@
   ],
   "last_attempt": {
     "attempts_used": 1,
-    "error": "recovery_not_advanced_by_provider",
     "event_name": "schedule",
     "failures": [],
-    "latency_ms": 582,
+    "latency_ms": 805,
     "natural": true,
-    "observed_at": "2026-09-29T02:38:15Z",
-    "outcome": "failed",
+    "observed_at": "2026-09-30T02:12:48Z",
+    "outcome": "fresh",
     "run_attempt": 1,
-    "run_id": "36513342846",
+    "run_id": "36658577543",
     "schedule": "20 23 * * 1-5",
     "shard": "0/5"
   },
-  "latest_promotion_deferral": {
-    "event_name": "schedule",
-    "observed_at": "2026-09-29T02:38:15Z",
-    "provider_history_as_of": "2026-09-25",
-    "provider_quote_as_of": "2026-09-16T14:34:21Z",
-    "reason": "recovery_not_advanced_by_provider",
-    "run_attempt": 1,
-    "run_id": "36513342846"
-  },
   "lkg": {
-    "fetched_at": "2026-09-28T06:22:35Z",
-    "history_as_of": "2026-09-25",
+    "fetched_at": "2026-09-30T02:14:22Z",
+    "history_as_of": "2026-09-28",
     "path": "data/admin/yahoo-batch-quote-history/lkg/TIPF.json",
-    "payload_sha256": "313dfafb028d4830605cafba935c25326b7cbe280b502eef0cd3325c56f36449",
+    "payload_sha256": "0806eb0442a844c953f665e30df08805faed37ad900d8a57c3684368f0c3d799",
     "quote_as_of": "2026-09-16T14:34:21Z",
     "source_as_of": "2026-09-16T14:34:21Z"
   },
   "promotion_contract": "provider_observation/v2",
   "provider_observation": {
-    "event_name": "workflow_dispatch",
-    "history_as_of": "2026-09-25",
-    "observed_at": "2026-09-28T06:02:24Z",
-    "payload_sha256": "02c0c9e76aaad2a91f80fa757237db9ae64e4d57ddc9553f4c48bf62488867f6",
+    "event_name": "schedule",
+    "history_as_of": "2026-09-28",
+    "observed_at": "2026-09-30T02:12:48Z",
+    "payload_sha256": "244a036fbf07b76a70091f5a0abca9fb0fdd42585ec61b43c91c59684da0b9c6",
     "quote_as_of": "2026-09-16T14:34:21Z",
     "run_attempt": 1,
-    "run_id": "36367834787",
+    "run_id": "36658577543",
     "schema_version": "provider_observation/v2",
     "source_as_of": "2026-09-16T14:34:21Z"
   },
@@ -87,15 +90,15 @@
   "retry": true,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "stale": {
-    "age_business_days": 8,
-    "classified_at": "2026-09-28T06:30:00Z",
-    "classified_run_id": "36367836615",
+    "age_business_days": 10,
+    "classified_at": "2026-09-30T02:19:44Z",
+    "classified_run_id": "36658577543",
     "expected_resolution": "next_natural_yahoo_run",
     "max_business_days": 6,
-    "message": "TIPF holds LKG because Yahoo source date 2026-09-16T14:34:21Z is 8 business days old, beyond the 6-day bound; it will retry on the next natural Yahoo run.",
+    "message": "TIPF holds LKG because Yahoo source date 2026-09-16T14:34:21Z is 10 business days old, beyond the 6-day bound; it will retry on the next natural Yahoo run.",
     "reason": "source_age_exceeds_lane_bound",
     "source_as_of": "2026-09-16T14:34:21Z"
   },
   "ticker": "TIPF",
-  "updated_at": "2026-09-29T02:38:15Z"
+  "updated_at": "2026-09-30T02:19:44Z"
 }

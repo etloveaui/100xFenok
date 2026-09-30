@@ -2,19 +2,6 @@
   "attempts": [
     {
       "attempts_used": 1,
-      "event_name": "schedule",
-      "failures": [],
-      "latency_ms": 875,
-      "natural": true,
-      "observed_at": "2026-09-02T01:05:40Z",
-      "outcome": "fresh",
-      "run_attempt": 1,
-      "run_id": "33577879211",
-      "schedule": "20 23 * * 1-5",
-      "shard": "0/5"
-    },
-    {
-      "attempts_used": 1,
       "error": "StockDetailValidationError: Yahoo history close must be a finite number",
       "event_name": "schedule",
       "failures": [],
@@ -184,15 +171,28 @@
       "run_id": "36513342846",
       "schedule": "20 23 * * 1-5",
       "shard": "0/5"
+    },
+    {
+      "attempts_used": 1,
+      "event_name": "schedule",
+      "failures": [],
+      "latency_ms": 659,
+      "natural": true,
+      "observed_at": "2026-09-30T02:34:03Z",
+      "outcome": "fresh",
+      "run_attempt": 1,
+      "run_id": "36658577543",
+      "schedule": "20 23 * * 1-5",
+      "shard": "4/5"
     }
   ],
   "current": {
-    "fetched_at": "2026-09-29T02:42:33Z",
-    "history_as_of": "2026-09-28",
+    "fetched_at": "2026-09-30T02:36:57Z",
+    "history_as_of": "2026-09-29",
     "path": "data/yf/finance/JPM.json",
-    "payload_sha256": "7794c6de863934f7473647ac384352d61daa08d51733dd6dfa6c6fa34da7e1e2",
-    "quote_as_of": "2026-09-28T20:00:02Z",
-    "source_as_of": "2026-09-28"
+    "payload_sha256": "4e7e768eb5f31fb5098a7d066b366457013f2c8162be47c99b26e8a16ec5c0a7",
+    "quote_as_of": "2026-09-29T20:00:03Z",
+    "source_as_of": "2026-09-29"
   },
   "discovered_from": [
     "global_scouter_stock",
@@ -202,14 +202,14 @@
     "attempts_used": 1,
     "event_name": "schedule",
     "failures": [],
-    "latency_ms": 582,
+    "latency_ms": 659,
     "natural": true,
-    "observed_at": "2026-09-29T02:38:15Z",
+    "observed_at": "2026-09-30T02:34:03Z",
     "outcome": "fresh",
     "run_attempt": 1,
-    "run_id": "36513342846",
+    "run_id": "36658577543",
     "schedule": "20 23 * * 1-5",
-    "shard": "0/5"
+    "shard": "4/5"
   },
   "last_recovered_failure": {
     "attempts_used": 1,
@@ -234,14 +234,14 @@
   "promotion_contract": "provider_observation/v2",
   "provider_observation": {
     "event_name": "schedule",
-    "history_as_of": "2026-09-28",
-    "observed_at": "2026-09-29T02:38:15Z",
-    "payload_sha256": "b97d040e19ee4b75e24f7ac5cfb0d6107ffdcd2c46275ab1ff473b30ff45b6f3",
-    "quote_as_of": "2026-09-28T20:00:02Z",
+    "history_as_of": "2026-09-29",
+    "observed_at": "2026-09-30T02:34:03Z",
+    "payload_sha256": "6935b2d957857789b675c699161533c9c163ff2a53f21baeb158834a29c16fa9",
+    "quote_as_of": "2026-09-29T20:00:03Z",
     "run_attempt": 1,
-    "run_id": "36513342846",
+    "run_id": "36658577543",
     "schema_version": "provider_observation/v2",
-    "source_as_of": "2026-09-28"
+    "source_as_of": "2026-09-29"
   },
   "recovered_at": "2026-09-17T01:31:25Z",
   "recovered_from_run_id": "34917681226",
@@ -252,5 +252,5 @@
   "retry": false,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "ticker": "JPM",
-  "updated_at": "2026-09-29T02:38:15Z"
+  "updated_at": "2026-09-30T02:34:03Z"
 }

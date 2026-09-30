@@ -2,19 +2,6 @@
   "attempts": [
     {
       "attempts_used": 1,
-      "event_name": "schedule",
-      "failures": [],
-      "latency_ms": 898,
-      "natural": true,
-      "observed_at": "2026-09-02T01:22:18Z",
-      "outcome": "fresh",
-      "run_attempt": 1,
-      "run_id": "33577879211",
-      "schedule": "20 23 * * 1-5",
-      "shard": "3/5"
-    },
-    {
-      "attempts_used": 1,
       "error": "StockDetailValidationError: Yahoo history close must be a finite number",
       "event_name": "schedule",
       "failures": [],
@@ -186,15 +173,28 @@
       "run_id": "36513342846",
       "schedule": "20 23 * * 1-5",
       "shard": "4/5"
+    },
+    {
+      "attempts_used": 1,
+      "event_name": "schedule",
+      "failures": [],
+      "latency_ms": 771,
+      "natural": true,
+      "observed_at": "2026-09-30T02:24:19Z",
+      "outcome": "fresh",
+      "run_attempt": 1,
+      "run_id": "36658577543",
+      "schedule": "20 23 * * 1-5",
+      "shard": "2/5"
     }
   ],
   "current": {
-    "fetched_at": "2026-09-29T03:01:08Z",
-    "history_as_of": "2026-09-28",
+    "fetched_at": "2026-09-30T02:28:56Z",
+    "history_as_of": "2026-09-29",
     "path": "data/yf/finance/PSKY.json",
-    "payload_sha256": "1b0b2838aa7f6eb591b3c5fa358f214751ab9b7f094ce4ace8145a70c0bfe41a",
-    "quote_as_of": "2026-09-28T20:00:00Z",
-    "source_as_of": "2026-09-28"
+    "payload_sha256": "0f04ae8a1349da79ad009cb9bfaca27d0cc183dd28c52f1e510b5e85109d6a3a",
+    "quote_as_of": "2026-09-29T20:00:01Z",
+    "source_as_of": "2026-09-29"
   },
   "discovered_from": [
     "market_facts"
@@ -203,14 +203,14 @@
     "attempts_used": 1,
     "event_name": "schedule",
     "failures": [],
-    "latency_ms": 528,
+    "latency_ms": 771,
     "natural": true,
-    "observed_at": "2026-09-29T02:57:23Z",
+    "observed_at": "2026-09-30T02:24:19Z",
     "outcome": "fresh",
     "run_attempt": 1,
-    "run_id": "36513342846",
+    "run_id": "36658577543",
     "schedule": "20 23 * * 1-5",
-    "shard": "4/5"
+    "shard": "2/5"
   },
   "last_recovered_failure": {
     "attempts_used": 1,
@@ -235,14 +235,14 @@
   "promotion_contract": "provider_observation/v2",
   "provider_observation": {
     "event_name": "schedule",
-    "history_as_of": "2026-09-28",
-    "observed_at": "2026-09-29T02:57:23Z",
-    "payload_sha256": "1c8905d534c7f7b4a5593e2371ae5804c326ab933e4a96e35f15992fd7ea2c83",
-    "quote_as_of": "2026-09-28T20:00:00Z",
+    "history_as_of": "2026-09-29",
+    "observed_at": "2026-09-30T02:24:19Z",
+    "payload_sha256": "38c97ea8e2eda6e6507b87ca41bef27bba2acb2961a0a8cd841e9728f30248e8",
+    "quote_as_of": "2026-09-29T20:00:01Z",
     "run_attempt": 1,
-    "run_id": "36513342846",
+    "run_id": "36658577543",
     "schema_version": "provider_observation/v2",
-    "source_as_of": "2026-09-28"
+    "source_as_of": "2026-09-29"
   },
   "recovered_at": "2026-09-17T01:31:25Z",
   "recovered_from_run_id": "34917681226",
@@ -253,5 +253,5 @@
   "retry": false,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "ticker": "PSKY",
-  "updated_at": "2026-09-29T02:57:23Z"
+  "updated_at": "2026-09-30T02:24:19Z"
 }

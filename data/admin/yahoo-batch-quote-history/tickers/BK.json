@@ -26,39 +26,6 @@
       ],
       "latency_ms": 0,
       "natural": true,
-      "observed_at": "2026-09-10T01:10:13Z",
-      "outcome": "failed",
-      "run_attempt": 1,
-      "run_id": "34424274071",
-      "schedule": "20 23 * * 1-5",
-      "shard": "0/5"
-    },
-    {
-      "attempts_used": 2,
-      "error": "empty payload",
-      "event_name": "schedule",
-      "failures": [
-        {
-          "attempt": 1,
-          "error": "KeyError=[redacted]",
-          "source": "provider_safe_call"
-        },
-        {
-          "attempt": 1,
-          "error": "empty payload"
-        },
-        {
-          "attempt": 2,
-          "error": "KeyError=[redacted]",
-          "source": "provider_safe_call"
-        },
-        {
-          "attempt": 2,
-          "error": "empty payload"
-        }
-      ],
-      "latency_ms": 0,
-      "natural": true,
       "observed_at": "2026-09-15T01:34:15Z",
       "outcome": "failed",
       "run_attempt": 1,
@@ -452,6 +419,39 @@
       "run_id": "36369581504",
       "schedule": "",
       "shard": ""
+    },
+    {
+      "attempts_used": 2,
+      "error": "empty payload",
+      "event_name": "schedule",
+      "failures": [
+        {
+          "attempt": 1,
+          "error": "KeyError=[redacted]",
+          "source": "provider_safe_call"
+        },
+        {
+          "attempt": 1,
+          "error": "empty payload"
+        },
+        {
+          "attempt": 2,
+          "error": "KeyError=[redacted]",
+          "source": "provider_safe_call"
+        },
+        {
+          "attempt": 2,
+          "error": "empty payload"
+        }
+      ],
+      "latency_ms": 0,
+      "natural": true,
+      "observed_at": "2026-09-30T02:12:48Z",
+      "outcome": "failed",
+      "run_attempt": 1,
+      "run_id": "36658577543",
+      "schedule": "20 23 * * 1-5",
+      "shard": "0/5"
     }
   ],
   "current": {
@@ -468,7 +468,7 @@
   "last_attempt": {
     "attempts_used": 2,
     "error": "empty payload",
-    "event_name": "workflow_dispatch",
+    "event_name": "schedule",
     "failures": [
       {
         "attempt": 1,
@@ -490,13 +490,13 @@
       }
     ],
     "latency_ms": 0,
-    "natural": false,
-    "observed_at": "2026-09-28T07:38:17Z",
+    "natural": true,
+    "observed_at": "2026-09-30T02:12:48Z",
     "outcome": "failed",
     "run_attempt": 1,
-    "run_id": "36369581504",
-    "schedule": "",
-    "shard": ""
+    "run_id": "36658577543",
+    "schedule": "20 23 * * 1-5",
+    "shard": "0/5"
   },
   "latest_failure": {
     "attempts_used": 2,
@@ -525,9 +525,9 @@
       }
     ],
     "lkg_status": "retained",
-    "observed_at": "2026-09-28T07:38:17Z",
+    "observed_at": "2026-09-30T02:12:48Z",
     "run_attempt": 1,
-    "run_id": "36369581504"
+    "run_id": "36658577543"
   },
   "lkg": {
     "fetched_at": "2026-07-09T02:48:55Z",
@@ -551,5 +551,5 @@
     "source_as_of": "2026-07-02"
   },
   "ticker": "BK",
-  "updated_at": "2026-09-28T07:38:17Z"
+  "updated_at": "2026-09-30T02:12:48Z"
 }
