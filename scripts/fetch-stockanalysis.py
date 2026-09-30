@@ -140,6 +140,7 @@ class CandidateOutputs:
 
 REPOSITORY_INPUTS = RepositoryInputs.from_root(ROOT)
 CANDIDATE_OUTPUTS = CandidateOutputs.from_root(ROOT)
+_CANDIDATE_DATA_SUPPLY_STORE: tuple[tuple[Path, Path], DataSupplyStateStore] | None = None
 STORAGE_ROOT = ROOT
 OUT_DIR = CANDIDATE_OUTPUTS.stockanalysis
 PUBLIC_DIR = CANDIDATE_OUTPUTS.stockanalysis_public
@@ -161,8 +162,10 @@ def current_candidate_outputs() -> CandidateOutputs:
 
 def install_candidate_outputs(outputs: CandidateOutputs) -> CandidateOutputs:
     global CANDIDATE_OUTPUTS, STORAGE_ROOT
+    global _CANDIDATE_DATA_SUPPLY_STORE
     global OUT_DIR, PUBLIC_DIR, YF_OUT_DIR, YF_PUBLIC_DIR
     global YF_ETF_DETAIL_OUT_DIR, DATA_SUPPLY_STATE_ROOT, STOCKANALYSIS_RECOVERY_ROOT
+    _CANDIDATE_DATA_SUPPLY_STORE = None
     CANDIDATE_OUTPUTS = outputs
     STORAGE_ROOT = outputs.root
     OUT_DIR = outputs.stockanalysis
@@ -196,13 +199,21 @@ def configure_candidate_outputs(candidate_root: Path) -> CandidateOutputs:
 
 
 def data_supply_store(*, provider_truth_root: Path) -> DataSupplyStateStore:
-    """Keep candidate acquisitions append-only so artifacts never encode deletions."""
+    """Reuse deferred candidate validation; direct publication keeps fresh stores."""
 
-    return DataSupplyStateStore(
+    global _CANDIDATE_DATA_SUPPLY_STORE
+    deferred = CANDIDATE_OUTPUTS.root != ROOT
+    key = (DATA_SUPPLY_STATE_ROOT.resolve(), provider_truth_root.resolve()) if deferred else None
+    if key is not None and _CANDIDATE_DATA_SUPPLY_STORE is not None and _CANDIDATE_DATA_SUPPLY_STORE[0] == key:
+        return _CANDIDATE_DATA_SUPPLY_STORE[1]
+    store = DataSupplyStateStore(
         DATA_SUPPLY_STATE_ROOT,
         provider_truth_root=provider_truth_root,
-        defer_maintenance=CANDIDATE_OUTPUTS.root != ROOT,
+        defer_maintenance=deferred,
     )
+    if key is not None:
+        _CANDIDATE_DATA_SUPPLY_STORE = (key, store)
+    return store
 
 
 
