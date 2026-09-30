@@ -1,8 +1,8 @@
 {
   "schema_version": "alarm-state/v1",
-  "generated_at": "2026-09-30T09:02:39.046Z",
+  "generated_at": "2026-09-30T10:08:53.542Z",
   "status": "open",
-  "open_incident_count": 9,
+  "open_incident_count": 10,
   "open_incidents": [
     {
       "workflow": "build-stocks-analyzer.yml",
@@ -89,14 +89,26 @@
       "lost_schedule_slot_count": 0
     },
     {
-      "workflow": "validate-workflows.yml",
-      "label": "Validate GitHub Workflows",
-      "streak": 11,
+      "workflow": "retention-restore.yml",
+      "label": "R2 Retention Restore Watchdog",
+      "streak": 0,
       "failure_streak_threshold": 2,
-      "first_failing_run_id": 36424469518,
-      "first_failing_run_url": "https://github.com/etloveaui/100xFenok/actions/runs/36424469518",
+      "first_failing_run_id": null,
+      "first_failing_run_url": null,
       "alarm_reasons": [
-        "failure_streak"
+        "missed_schedule_window"
+      ],
+      "lost_schedule_slot_count": 0
+    },
+    {
+      "workflow": "worker-request-budget-alarm.yml",
+      "label": "Worker Request Budget Alarm",
+      "streak": 0,
+      "failure_streak_threshold": 2,
+      "first_failing_run_id": null,
+      "first_failing_run_url": null,
+      "alarm_reasons": [
+        "missed_schedule_window"
       ],
       "lost_schedule_slot_count": 0
     },
@@ -465,9 +477,9 @@
   "queue_evicted_run_count": 0,
   "queue_evicted_workflows": [],
   "last_firing": {
-    "run_id": "36693141383",
-    "run_url": "https://github.com/etloveaui/100xFenok/actions/runs/36693141383",
-    "observed_at": "2026-09-30T09:02:39.046Z",
+    "run_id": "36700244382",
+    "run_url": "https://github.com/etloveaui/100xFenok/actions/runs/36700244382",
+    "observed_at": "2026-09-30T10:08:53.542Z",
     "event": "workflow_run",
     "workflows": [
       "build-stocks-analyzer.yml",
@@ -477,7 +489,8 @@
       "fetch-us-indices-daily.yml",
       "fetch-yahoo-ticker.yml",
       "global-writer-queue-observer.yml",
-      "validate-workflows.yml",
+      "retention-restore.yml",
+      "worker-request-budget-alarm.yml",
       "data-health-kpi"
     ],
     "title": "100xFenok pipeline job failure alarm"
