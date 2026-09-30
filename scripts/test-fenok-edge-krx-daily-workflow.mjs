@@ -1,8 +1,8 @@
 #!/usr/bin/env node
 // Lane Registry ⇄ commit-shard completeness gate for fenok-edge-krx-daily.yml
-// (#366 step 4). KRX is an emitter-first shadow lane: every non-plan run emits
-// attempt evidence, while successful fetches additionally stage the public-safe
-// aggregate artifacts.
+// Recovery state is retained on failures, while successful fetches additionally
+// stage the public-safe aggregate artifacts. Retired attempt shards are not part
+// of the commit contract.
 import assert from "node:assert/strict";
 import { spawnSync } from "node:child_process";
 import fs from "node:fs";
@@ -31,8 +31,8 @@ assert.deepEqual(gate.missing_in_workflow, [],
   `declared shards the workflow never commits: ${JSON.stringify(gate.missing_in_workflow)}`);
 assert.deepEqual(gate.undeclared_in_workflow, [],
   `allowlist paths with no registry record: ${JSON.stringify(gate.undeclared_in_workflow)}`);
-assert.deepEqual(gate.allowlist_count, 4,
-  "the KRX workflow commits attempt, bridge, recovery index, and retained bridge LKG on its admin allowlist");
+// The manifest-owned paths below establish completeness; a historical count
+// would fail whenever a retired administrative artifact is removed.
 
 // Public-safe output ownership and helper-only staging are one manifest contract.
 assert.deepEqual(
@@ -77,14 +77,15 @@ assert.match(workflowText, /CANDIDATE_UPDATED.*true.*CANDIDATE_EXIT_CODE.*-eq 0.
 assert.match(workflowText, /if \[ "\$KRX_FETCH_OUTCOME" = "success" \]; then/,
   "canonical/computed outputs must only be staged after a promotable success");
 assert.match(workflowText, /if: \$\{\{ always\(\)/,
-  "KRX failure attempts must still reach the emitter and commit path");
+  "KRX failure state must still reach the commit path");
 assert.doesNotMatch(workflowText, /git add -A/);
 
-function workflowRunBlock(stepName, nextStepName) {
-  const stepStart = workflowText.indexOf(`      - name: ${stepName}`);
-  const stepEnd = workflowText.indexOf(`      - name: ${nextStepName}`, stepStart);
-  assert.ok(stepStart >= 0 && stepEnd > stepStart, `workflow steps are missing: ${stepName} -> ${nextStepName}`);
-  const section = workflowText.slice(stepStart, stepEnd);
+function workflowRunBlock(stepName) {
+  const stepStart = workflowText.indexOf(`      - name: ${stepName}\n`);
+  assert.ok(stepStart >= 0, `workflow step is missing: ${stepName}`);
+  // Bound the selected step by YAML indentation, not the name of a retired
+  // following emitter. Only the refresh script runs in the isolated fixture.
+  const section = workflowText.slice(stepStart).split(/\n      - /u, 1)[0];
   const marker = "        run: |\n";
   const runStart = section.indexOf(marker);
   assert.ok(runStart >= 0, `workflow run block is missing: ${stepName}`);
@@ -165,7 +166,7 @@ function executeWalkbackScenario({ allDegraded = false, contradictorySuccess = f
     krx_end_date: "20260715",
     krx_auto_walkback_days: "1",
   };
-  const script = workflowRunBlock("Refresh KRX private daily source", "Emit KRX detection attempt")
+  const script = workflowRunBlock("Refresh KRX private daily source")
     .replace(/\$\{\{ steps\.window\.outputs\.([a-z_]+) \}\}/gu, (_, key) => {
       assert.ok(Object.hasOwn(expressions, key), `unmapped workflow expression: ${key}`);
       return expressions[key];
@@ -255,17 +256,15 @@ function executeWalkbackScenario({ allDegraded = false, contradictorySuccess = f
   assert.deepEqual(rejected.calls, ["20260715"],
     "walkback must stop at the first access-rejected candidate; earlier dates cannot cure a credential rejection");
   // The stopped attempt is still reported: the full failure record reaches the
-  // step output that the always()-guarded emitter and commit steps consume.
+  // step output that the always()-guarded commit step consumes.
   assert.deepEqual(Object.keys(rejected.outputs).sort(),
     ["attempt_outcome", "recovery_exit_code", "recovery_reason", "recovery_updated"],
-    "an access-rejected attempt must persist its complete failure evidence for the emit/commit steps");
+    "an access-rejected attempt must report its complete failure result to the commit step");
   assert.match(rejected.stdout, /recovery_reason=auth_error/,
     "the refresh log must name the access rejection so the run is attributable without the raw payload");
 }
 assert.match(workflowText, /CANDIDATE_REASON" = "auth_error" \]; then[\s\S]*?break/,
   "walkback must break on recovery_reason=auth_error rather than spending the date budget");
-assert.match(workflowText, /name: Emit KRX detection attempt\n\s+if: \$\{\{ always\(\)/,
-  "the attempt emitter must run after a failed refresh step so auth_error evidence is persisted");
 assert.match(workflowText, /name: Commit and push KRX source evidence\n\s+if: \$\{\{ always\(\)/,
   "the evidence commit must run after a failed refresh step so auth_error evidence reaches main");
 

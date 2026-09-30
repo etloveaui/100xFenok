@@ -70,9 +70,8 @@ const INCIDENT_IF =
 // Editing a body sends no notification, so this cannot reintroduce comment spam;
 // the comment itself stays gated on the transition inside the step.
 const INCIDENT_BODY_IF = "steps.pipeline.outcome == 'failure'";
-const ISSUE_COMMANDS = [/gh issue comment/, /gh issue create/];
-// The pipeline alarm additionally rewrites the body, which the shared budget and
-// telemetry steps do not; those were never gated on a transition to begin with.
+// Pipeline state has its own transition-aware writer. Budget and telemetry now
+// share a tested issue synchronizer covering both incident and recovery paths.
 const PIPELINE_ISSUE_COMMANDS = [
   /gh issue edit "\$existing" --body-file pipeline-job-health-issue\.md/,
   /gh issue comment/,
@@ -150,18 +149,21 @@ const STEP_CONTRACTS = [
     condition: "steps.probe.outcome == 'success'",
     contains: [/gh issue comment/, /gh issue close "\$existing" --reason completed/],
   },
-  { workflow: "budget", name: "Check Worker request budget", id: "budget", bestEffort: true },
+  { workflow: "budget", name: "Check Worker request budget", id: "budget", bestEffort: true,
+    condition: "${{ !cancelled() }}" },
   {
-    workflow: "budget", name: "Open or update OPS issue", bestEffort: false,
-    condition: "steps.budget.outcome == 'failure'", contains: ISSUE_COMMANDS,
+    workflow: "budget", name: "Synchronize budget incident and recovery", bestEffort: false,
+    condition: "${{ !cancelled() && (steps.budget.outcome == 'success' || steps.budget.outcome == 'failure') }}",
+    contains: [/node scripts\/ops\/sync-budget-issue\.mjs worker-request-budget-result\.json/, /GH_TOKEN: \$\{\{ github\.token \}\}/],
   },
   {
     workflow: "budget", name: "Check ETF typed-unavailable telemetry budget",
     id: "telemetry", bestEffort: true,
   },
   {
-    workflow: "budget", name: "Open or update telemetry OPS issue", bestEffort: false,
-    condition: "steps.telemetry.outcome == 'failure'", contains: ISSUE_COMMANDS,
+    workflow: "budget", name: "Synchronize telemetry incident and recovery", bestEffort: false,
+    condition: "${{ !cancelled() && (steps.telemetry.outcome == 'success' || steps.telemetry.outcome == 'failure') }}",
+    contains: [/node scripts\/ops\/sync-budget-issue\.mjs data-supply-analytics-result\.json/, /GH_TOKEN: \$\{\{ github\.token \}\}/],
   },
 ];
 

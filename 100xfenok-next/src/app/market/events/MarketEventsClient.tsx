@@ -5,27 +5,13 @@ import TickerChip from "@/components/TickerChip";
 import MarketSectionNav from "@/components/market/MarketSectionNav";
 import { ROUTES } from "@/lib/routes";
 import { EmptyState } from "@/components/ui";
+import { refreshOnReturn } from "@/lib/client/refresh-on-return";
 import { EVENTS_STALE_LABEL, isEventBoardStale } from "@/lib/market-events/freshness";
-import {
-  MACRO_CALENDAR_URL,
-  MACRO_PREV_VALUES_URL,
-  parseMacroCalendar,
-  type MacroCalendar,
-} from "@/lib/market-events/macro-calendar";
+import { type MacroCalendar } from "@/lib/market-events/macro-calendar";
+import { loadMacroCalendar } from "@/lib/market-events/calendar-loader";
+import { loadEventSurface, type SurfaceDoc } from "@/lib/market-events/surface-loader";
 import MacroCalendarPanel from "./MacroCalendarPanel";
 import MarketEventsTimeline from "./MarketEventsTimeline";
-
-interface SurfaceDoc<T = EventRow> {
-  surface?: string;
-  fetched_at?: string | null;
-  source_as_of?: string | null;
-  source_as_of_reason?: string | null;
-  counts?: Record<string, number | null | undefined> | null;
-  records?: T[];
-  tables?: Array<{ records?: T[] }>;
-  load_failed?: boolean;
-  status_code?: number;
-}
 
 type EventRow = Record<string, unknown>;
 type EventSort = "date" | "symbol" | "section";
@@ -95,64 +81,18 @@ const SURFACES: Record<keyof EventData, string> = {
   losersYtd: "market_losers_ytd",
 };
 
-let cache: EventData | null = null;
-let pending: Promise<EventData | null> | null = null;
-let macroCache: MacroCalendar | null = null;
-let macroPending: Promise<MacroCalendar | null> | null = null;
-
-function fetchOptionalJson(url: string): Promise<unknown> {
-  return fetch(url)
-    .then((response) => (response.ok ? response.json() : null))
-    .catch(() => null);
-}
-
-/**
- * The macro calendar loads beside the stockanalysis surfaces, never inside
- * them: a calendar failure must not blank the earnings board, and the other
- * way round. Missing previous prints only drop the 직전 column.
- */
-function loadMacroCalendar(): Promise<MacroCalendar | null> {
-  if (macroCache) return Promise.resolve(macroCache);
-  if (macroPending) return macroPending;
-  macroPending = Promise.all([fetchOptionalJson(MACRO_CALENDAR_URL), fetchOptionalJson(MACRO_PREV_VALUES_URL)])
-    .then(([calendar, prevValues]) => {
-      if (calendar === null) {
-        macroPending = null;
-        return null;
-      }
-      macroCache = parseMacroCalendar(calendar, prevValues);
-      return macroCache;
-    });
-  return macroPending;
-}
-
-function loadSurface(name: string): Promise<SurfaceDoc> {
-  return fetch(`/api/data/stockanalysis/surfaces/${name}`, { cache: "no-store" })
-    .then((response) => (
-      response.ok
-        ? response.json() as Promise<SurfaceDoc>
-        : { surface: name, load_failed: true, status_code: response.status }
-    ))
-    .then((doc) => ({ ...doc, surface: doc.surface ?? name }))
-    .catch(() => ({ surface: name, load_failed: true }));
-}
-
-function loadEventData(): Promise<EventData | null> {
-  if (cache) return Promise.resolve(cache);
-  if (pending) return pending;
-  pending = Promise.all(
+function loadEventData(force = false): Promise<EventData | null> {
+  return Promise.all(
     Object.entries(SURFACES).map(([key, surface]) => (
-      loadSurface(surface).then((doc) => [key, doc] as const)
+      loadEventSurface(surface, force).then((doc) => [key, doc] as const)
     )),
   ).then((entries) => {
     const nextData: Partial<EventData> = {};
     entries.forEach(([key, doc]) => {
       nextData[key as keyof EventData] = doc;
     });
-    cache = nextData as EventData;
-    return cache;
+    return nextData as EventData;
   }).catch(() => null);
-  return pending;
 }
 
 function rowsOf<T extends EventRow = EventRow>(doc: SurfaceDoc<T> | null | undefined): T[] {
@@ -279,33 +219,39 @@ export default function MarketEventsClient({
   const [reloadKey, setReloadKey] = useState(0);
 
   const reload = useCallback(() => {
-    cache = null;
-    pending = null;
-    macroCache = null;
-    macroPending = null;
     setReloadKey((key) => key + 1);
   }, []);
 
   useEffect(() => {
     let cancelled = false;
-    loadEventData().then((next) => {
-      if (!cancelled) {
-        setData(next);
-        setLoaded(true);
-      }
-    });
+    const load = (force = false) => {
+      void loadEventData(force).then((next) => {
+        if (!cancelled) {
+          setData(next);
+          setLoaded(true);
+        }
+      });
+    };
+    load(reloadKey > 0);
+    const unsubscribe = refreshOnReturn(() => load());
     return () => {
       cancelled = true;
+      unsubscribe();
     };
   }, [reloadKey]);
 
   useEffect(() => {
     let cancelled = false;
-    loadMacroCalendar().then((calendar) => {
-      if (!cancelled) setMacro({ loaded: true, calendar });
-    });
+    const load = (force = false) => {
+      void loadMacroCalendar({ force }).then((calendar) => {
+        if (!cancelled) setMacro({ loaded: true, calendar });
+      });
+    };
+    load(reloadKey > 0);
+    const unsubscribe = refreshOnReturn(() => load());
     return () => {
       cancelled = true;
+      unsubscribe();
     };
   }, [reloadKey]);
 

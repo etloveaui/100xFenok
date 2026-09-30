@@ -87,6 +87,7 @@ jobs:
 
       - name: Check Worker request budget
         id: budget
+        if: ${{ !cancelled() }}
         continue-on-error: true
         env:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
@@ -98,28 +99,11 @@ jobs:
           WORKER_SCRIPT_NAME: 100xfenok
         run: node scripts/ops/check-worker-request-budget.mjs
 
-      - name: Prepare issue body
-        if: steps.budget.outcome == 'failure'
-        run: |
-          node <<'NODE'
-          const fs = require('fs');
-          const result = JSON.parse(fs.readFileSync('worker-request-budget-result.json', 'utf8'));
-          fs.writeFileSync('worker-request-budget-issue.md', result.issueBody || result.message || 'Worker request budget alarm failed.');
-          fs.writeFileSync('worker-request-budget-title.txt', result.issueTitle || '100xFenok Worker request budget alarm');
-          NODE
-
-      - name: Open or update OPS issue
-        if: steps.budget.outcome == 'failure'
+      - name: Synchronize budget incident and recovery
+        if: ${{ !cancelled() && (steps.budget.outcome == 'success' || steps.budget.outcome == 'failure') }}
         env:
           GH_TOKEN: ${{ github.token }}
-        run: |
-          title="$(cat worker-request-budget-title.txt)"
-          existing="$(gh issue list --state open --search "$title in:title" --json number --jq '.[0].number // empty')"
-          if [ -n "$existing" ]; then
-            gh issue comment "$existing" --body-file worker-request-budget-issue.md
-          else
-            gh issue create --title "$title" --body-file worker-request-budget-issue.md
-          fi
+        run: node scripts/ops/sync-budget-issue.mjs worker-request-budget-result.json
 
   data-supply-analytics:
     if: github.event_name == 'workflow_dispatch' || github.event.schedule == '17 2,14 * * *'
@@ -146,31 +130,14 @@ jobs:
           DATA_SUPPLY_ANALYTICS_RESULT: data-supply-analytics-result.json
         run: node scripts/ops/check-data-supply-etf-telemetry-budget.mjs
 
-      - name: Prepare telemetry issue body
-        if: steps.telemetry.outcome == 'failure'
-        run: |
-          node <<'NODE'
-          const fs = require('fs');
-          const result = JSON.parse(fs.readFileSync('data-supply-analytics-result.json', 'utf8'));
-          fs.writeFileSync('data-supply-analytics-issue.md', result.issueBody || result.message || 'ETF telemetry budget alarm failed.');
-          fs.writeFileSync('data-supply-analytics-title.txt', result.issueTitle || '100xFenok ETF typed-unavailable telemetry budget alarm');
-          NODE
-
-      - name: Open or update telemetry OPS issue
-        if: steps.telemetry.outcome == 'failure'
+      - name: Synchronize telemetry incident and recovery
+        if: ${{ !cancelled() && (steps.telemetry.outcome == 'success' || steps.telemetry.outcome == 'failure') }}
         env:
           GH_TOKEN: ${{ github.token }}
-        run: |
-          title="$(cat data-supply-analytics-title.txt)"
-          existing="$(gh issue list --state open --search "$title in:title" --json number --jq '.[0].number // empty')"
-          if [ -n "$existing" ]; then
-            gh issue comment "$existing" --body-file data-supply-analytics-issue.md
-          else
-            gh issue create --title "$title" --body-file data-supply-analytics-issue.md
-          fi
+        run: node scripts/ops/sync-budget-issue.mjs data-supply-analytics-result.json
 
       # The run's conclusion is alarm-machinery health, not incident state: an
       # exceeded budget is reported through the OPS issues above, and this run
       # stays green as long as that reporting succeeded. Red is reserved for a
-      # genuine issue preparation/API failure — the open-or-update steps are NOT
+      # genuine issue preparation/API failure — the synchronization steps are NOT
       # continue-on-error. No deliberate exit 1 here.

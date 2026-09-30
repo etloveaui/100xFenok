@@ -10,6 +10,7 @@ on:
   pull_request:
     paths:
       - '100xfenok-next/src/**'
+      - '100xfenok-next/scripts/check-pr-runtime-smoke.mjs'
       - '100xfenok-next/package.json'
       - '100xfenok-next/package-lock.json'
       - '100xfenok-next/tsconfig.json'
@@ -35,7 +36,9 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
         with:
-          fetch-depth: 0
+          # The PR merge commit and its parents are sufficient for a base-to-result
+          # diff. Fetching every branch's full history dominated this fast gate.
+          fetch-depth: 2
 
       - name: Setup Node
         uses: actions/setup-node@v4
@@ -72,10 +75,70 @@ jobs:
             npm run lint
             exit 0
           fi
-          mapfile -t changed < <(git diff --name-only --diff-filter=ACMR "$BASE_SHA"...HEAD -- 'src/**/*.ts' 'src/**/*.tsx' | sed 's|^100xfenok-next/||')
+          if ! git cat-file -e "$BASE_SHA^{commit}" 2>/dev/null; then
+            git fetch --no-tags --depth=1 origin "$BASE_SHA"
+          fi
+          # HEAD is GitHub's PR merge result, so compare its tree directly to the
+          # event's base tree. A failed diff must fail the gate, not masquerade as
+          # an empty list inside process substitution.
+          git diff --name-only --diff-filter=ACMR "$BASE_SHA" HEAD -- 'src/**/*.ts' 'src/**/*.tsx' > "$RUNNER_TEMP/app-quality-changed-files"
+          mapfile -t changed < <(sed 's|^100xfenok-next/||' "$RUNNER_TEMP/app-quality-changed-files")
           if [ "${#changed[@]}" -eq 0 ]; then
             echo "No changed TypeScript files to lint."
             exit 0
           fi
           printf 'Linting %s changed file(s)\n' "${#changed[@]}"
           npx eslint -- "${changed[@]}"
+
+  runtime-build:
+    # This is the existing closed build entry on a hosted PR runner, not a local
+    # fallback or a production deploy. No secrets or write token are supplied.
+    needs: app-quality
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    concurrency:
+      group: remote-heavy-verification
+      cancel-in-progress: false
+      queue: max
+    defaults:
+      run:
+        working-directory: 100xfenok-next
+    steps:
+      - name: Checkout exact checked revision
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.sha }}
+          fetch-depth: 1
+          persist-credentials: false
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Install dependencies
+        run: npm ci
+      - name: Build runtime without deployment
+        env:
+          NEXT_TELEMETRY_DISABLED: '1'
+          FENOK_REMOTE_HEAVY_NESTED_EXECUTION: '1'
+          FENOK_REMOTE_HEAVY_EXPECTED_REVISION: ${{ github.sha }}
+        run: npm run build:runtime
+      - name: Install smoke-test browser
+        run: npx playwright install --with-deps chromium
+      - name: Check built routes on the isolated runtime
+        env:
+          NEXT_TELEMETRY_DISABLED: '1'
+          FENOK_REMOTE_HEAVY_NESTED_EXECUTION: '1'
+          FENOK_REMOTE_HEAVY_EXPECTED_REVISION: ${{ github.sha }}
+        run: |
+          set -euo pipefail
+          bash scripts/load-guard.sh --assert-nested
+          npm run start:qa -- --hostname 127.0.0.1 --port 3107 > "$RUNNER_TEMP/pr-runtime-server.log" 2>&1 &
+          server_pid=$!
+          trap 'kill "$server_pid" 2>/dev/null || true; wait "$server_pid" 2>/dev/null || true' EXIT
+          ready=false
+          for attempt in $(seq 1 30); do
+            if curl -fsS http://127.0.0.1:3107/ -o /dev/null; then ready=true; break; fi
+            sleep 1
+          done
+          if [ "$ready" != true ]; then tail -n 80 "$RUNNER_TEMP/pr-runtime-server.log"; exit 1; fi
+          node scripts/check-pr-runtime-smoke.mjs

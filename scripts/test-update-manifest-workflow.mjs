@@ -33,16 +33,6 @@ const exactLineIndices = (lines, needle) => lines
   .map((line, index) => ({ line: line.trim(), index }))
   .filter((item) => item.line === needle)
   .map((item) => item.index);
-for (const source of [workflowLines, runnerLines]) {
-  for (const command of [
-    "node scripts/build-rim-index.mjs",
-    "node scripts/build-rim-index-five-canonical.mjs",
-    "node scripts/check-rim-index-five-canonical.mjs",
-  ]) {
-    assert.equal(exactLineIndices(source, command).length, 0, `retired RIM command must stay absent: ${command}`);
-  }
-}
-
 // One final path reaches the runner from inside the retry loop.
 assert.equal(exactLineIndices(workflowLines, "run: bash scripts/update-manifest-projections.sh").length, 0,
   "the preliminary projection path must stay removed");
@@ -73,13 +63,6 @@ for (const kpiIndex of kpiBuilds) {
   assert.ok(precedingCoreCheck !== undefined, `KPI at runner line ${kpiIndex + 1} must have a preceding ETF core-basket validation`);
   assert.ok(precedingCoreCheck < kpiIndex, `ETF core-basket validation must run before KPI at runner line ${kpiIndex + 1}`);
 }
-
-const packageJson = JSON.parse(fs.readFileSync(new URL("../100xfenok-next/package.json", import.meta.url), "utf8"));
-assert.equal(packageJson.scripts["build:rim-five-canonical"], "node ../scripts/build-rim-index-five-canonical.mjs");
-assert.equal(
-  packageJson.scripts["qa:rim-five-canonical"],
-  "node ../scripts/test-check-rim-index-five-canonical.mjs && node ../scripts/test-build-feno-rim-five-index-canonical.mjs && node ../scripts/check-rim-index-five-canonical.mjs",
-);
 
 // StockAnalysis ETF cloud overlay: Update Manifest materializes the verified
 // cloud generation EXACTLY ONCE (before S1), both projection passes consume

@@ -4,13 +4,13 @@ import { useEffect, useMemo, useState } from "react";
 import TransitionLink from "@/components/TransitionLink";
 import { useKstToday } from "@/hooks/useKstToday";
 import { dateOnly, daysUntilKstDate, isStaleAsOf } from "@/lib/data-state";
+import { refreshOnReturn } from "@/lib/client/refresh-on-return";
+import { loadMacroCalendar } from "@/lib/market-events/calendar-loader";
 import {
   MACRO_CALENDAR_STALE_AFTER_DAYS,
-  MACRO_CALENDAR_URL,
   formatKstDayHeading,
   isHeadlineMacro,
   macroEventsBetween,
-  parseMacroCalendar,
   type MacroCalendar,
   type MacroEvent,
 } from "@/lib/market-events/macro-calendar";
@@ -18,27 +18,6 @@ import { ROUTES } from "@/lib/routes";
 
 const HORIZON_DAYS = 7;
 const DAY_MS = 24 * 60 * 60 * 1000;
-
-let calendarCache: MacroCalendar | null = null;
-let calendarPending: Promise<MacroCalendar | null> | null = null;
-
-/** The strip needs names and times only, so it skips the previous-print file. */
-function loadCalendar(): Promise<MacroCalendar | null> {
-  if (calendarCache) return Promise.resolve(calendarCache);
-  if (calendarPending) return calendarPending;
-  calendarPending = fetch(MACRO_CALENDAR_URL)
-    .then((response) => (response.ok ? response.json() : null))
-    .catch(() => null)
-    .then((doc) => {
-      if (doc === null) {
-        calendarPending = null;
-        return null;
-      }
-      calendarCache = parseMacroCalendar(doc, null);
-      return calendarCache;
-    });
-  return calendarPending;
-}
 
 function addDaysIso(iso: string, days: number): string {
   const [y, m, d] = iso.split("-").map(Number);
@@ -64,13 +43,18 @@ export default function WeekAheadStrip() {
 
   useEffect(() => {
     let cancelled = false;
-    loadCalendar().then((calendar) => {
-      if (!cancelled) setState({ loaded: true, calendar });
-    });
+    const load = () => {
+      void loadMacroCalendar({ withPreviousValues: false }).then((calendar) => {
+        if (!cancelled) setState({ loaded: true, calendar });
+      });
+    };
+    load();
+    const unsubscribe = refreshOnReturn(load);
     return () => {
       cancelled = true;
+      unsubscribe();
     };
-  }, []);
+  }, [today]);
 
   const horizonEnd = addDaysIso(today, HORIZON_DAYS);
   // The mirror is refreshed outside CI; past its time_max the file simply has

@@ -7,7 +7,6 @@ import os from "node:os";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 
-import { validateAttemptShard } from "./build-data-supply-detection-floor.mjs";
 import {
   publishYahooOutputAtomic,
   runYahooTicker,
@@ -87,8 +86,10 @@ async function runCase(request, { seed = false, ...options } = {}) {
     ...options,
   });
   const shard = { attempts: [result.row] };
+  // The producer returns a diagnostic row but no longer persists attempt shards.
+  // Check the actual result, not a synthetic on-disk envelope with no consumer.
   assert.equal(fs.existsSync(paths.attemptShardPath), false);
-  assert.equal(validateAttemptShard(shard, "yahoo_ticker_macro"), true);
+  assert.equal(result.row.lane_id, "yahoo_ticker_macro");
   assert.equal(shard.attempts[0].member_id, null);
   return { root, result, shard, paths };
 }
