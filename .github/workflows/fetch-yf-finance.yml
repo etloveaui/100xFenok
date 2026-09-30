@@ -726,9 +726,10 @@ jobs:
   # concurrency group.
   publish-yf-cloud:
     needs: [acquire-yf-finance, publish-yf-finance]
+    # Publish confirmed canonical bytes, including accepted partial batches.
+    # Rejected acquisition candidates never enter these bytes; failures stay visible.
     if: >-
       always() &&
-      needs.acquire-yf-finance.result == 'success' &&
       needs.publish-yf-finance.result == 'success' &&
       needs.publish-yf-finance.outputs.readback_confirmed == 'true'
     runs-on: ubuntu-latest

@@ -108,15 +108,13 @@ assert.match(cloudJob, /publish-cloud-data-generation\.mjs/);
 assert.match(cloudJob, /ref: \$\{\{ needs\.publish-yf-finance\.outputs\.pushed_sha \}\}/,
   "the cloud job must publish the read-back source revision, not a moving branch");
 assert.match(cloudJob, /persist-credentials: false/);
-assert.match(cloudJob, /needs\.acquire-yf-finance\.result == 'success'/,
-  "failed acquisition still records source evidence but cannot publish a cloud candidate");
 const sharedDispatch = extractStepSpan(publishJob, "Dispatch shared projection rebuild");
 assert.match(sharedDispatch, /always\(\)/);
 assert.match(sharedDispatch, /success\(\)/);
 assert.match(sharedDispatch, /needs\.acquire-yf-finance\.outputs\.fetch_outcome == 'failure'/);
 assert.match(sharedDispatch, /steps\.readback\.outputs\.confirmed == 'true'/);
 assert.doesNotMatch(sharedDispatch, /needs\.publish-yf-cloud/,
-  "source failure evidence must not depend on the cloud job that the failure skips");
+  "source failure evidence must not depend on cloud publication");
 assert.equal(
   (publishJob.match(/gh workflow run update-manifest\.yml --ref main/g) ?? []).length,
   1,
