@@ -1,8 +1,8 @@
 {
   "schema_version": "alarm-state/v1",
-  "generated_at": "2026-09-30T15:09:44.160Z",
+  "generated_at": "2026-09-30T16:21:32.254Z",
   "status": "open",
-  "open_incident_count": 4,
+  "open_incident_count": 5,
   "open_incidents": [
     {
       "workflow": "fetch-stockanalysis.yml",
@@ -13,6 +13,18 @@
       "first_failing_run_url": "https://github.com/etloveaui/100xFenok/actions/runs/36366931706",
       "alarm_reasons": [
         "failure_streak"
+      ],
+      "lost_schedule_slot_count": 0
+    },
+    {
+      "workflow": "global-writer-queue-observer.yml",
+      "label": "Global Writer Queue Observability",
+      "streak": 0,
+      "failure_streak_threshold": 2,
+      "first_failing_run_id": null,
+      "first_failing_run_url": null,
+      "alarm_reasons": [
+        "missed_schedule_window"
       ],
       "lost_schedule_slot_count": 0
     },
@@ -31,10 +43,10 @@
     {
       "workflow": "worker-request-budget-alarm.yml",
       "label": "Worker Request Budget Alarm",
-      "streak": 1,
+      "streak": 0,
       "failure_streak_threshold": 2,
-      "first_failing_run_id": 36722842678,
-      "first_failing_run_url": "https://github.com/etloveaui/100xFenok/actions/runs/36722842678",
+      "first_failing_run_id": null,
+      "first_failing_run_url": null,
       "alarm_reasons": [
         "missed_schedule_window"
       ],
@@ -49,8 +61,8 @@
       "stopped_sets": [
         "stockanalysis_etf_detail"
       ],
-      "latest_generated_at": "2026-09-30T15:04:00.795Z",
-      "previous_generated_at": "2026-09-30T14:33:39.527Z"
+      "latest_generated_at": "2026-09-30T16:14:44.703Z",
+      "previous_generated_at": "2026-09-30T15:30:05.287Z"
     }
   ],
   "watched_workflows": [
@@ -402,12 +414,13 @@
   "queue_evicted_run_count": 0,
   "queue_evicted_workflows": [],
   "last_firing": {
-    "run_id": "36734004026",
-    "run_url": "https://github.com/etloveaui/100xFenok/actions/runs/36734004026",
-    "observed_at": "2026-09-30T15:09:44.160Z",
+    "run_id": "36743076532",
+    "run_url": "https://github.com/etloveaui/100xFenok/actions/runs/36743076532",
+    "observed_at": "2026-09-30T16:21:32.254Z",
     "event": "workflow_run",
     "workflows": [
       "fetch-stockanalysis.yml",
+      "global-writer-queue-observer.yml",
       "retention-restore.yml",
       "worker-request-budget-alarm.yml",
       "data-health-kpi"
