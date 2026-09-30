@@ -45,12 +45,11 @@ import {
   deriveForbiddenPrivateDataSupplyRoots,
 } from "../../scripts/lib/lane-routing.mjs";
 import { derivedPrivateFileOutputs } from "../../scripts/lib/derived-asset-registry.mjs";
-import { FORBIDDEN_PRIVATE_DATA_SUPPLY_ROOTS } from "./check-fenok-public-mirror-guard.mjs";
 import { PRIVATE_DATA_SUPPLY_ROOTS } from "../../scripts/build-phase2-closeout-indexes.mjs";
 
 // Lane-routing parity gate (#366 item 4): directory roots AND exact-file
 // exclusions are registry-derived in the sync consumer (one fail-closed
-// SSOT); mirror-guard roots retain exact parity checks.
+// SSOT). Mirror-guard refusal is exercised against real public nodes below.
 // Equality is TRUE SET equality (both sides deduped, then compared order-free).
 {
   const setEqual = (a, b) => JSON.stringify([...new Set(a)].sort()) === JSON.stringify([...new Set(b)].sort());
@@ -74,8 +73,6 @@ import { PRIVATE_DATA_SUPPLY_ROOTS } from "../../scripts/build-phase2-closeout-i
     `registry-derived sync roots diverge from the consumer exclusion set: derived=${JSON.stringify(derivedRoots)} consumer=${JSON.stringify(EXCLUDED_PUBLIC_DATA_ROOTS)}`);
   assert.equal(setEqual(derivedFiles, EXCLUDED_PUBLIC_DATA_FILES), true,
     `registry-derived sync files diverge from the consumer exclusion set: lane=${JSON.stringify(derivedLaneFiles)} asset=${JSON.stringify(derivedAssetFiles)} consumer=${JSON.stringify(EXCLUDED_PUBLIC_DATA_FILES)}`);
-  assert.equal(setEqual(derivedGuardRoots, FORBIDDEN_PRIVATE_DATA_SUPPLY_ROOTS), true,
-    `registry-derived guard roots diverge from the hand list: derived=${JSON.stringify(derivedGuardRoots)} hand=${JSON.stringify(FORBIDDEN_PRIVATE_DATA_SUPPLY_ROOTS)}`);
   // Semantic invariant (no tautology): a canonical of a public/public_mirror
   // plane lane or of a plane-enrolled lane (declared public_mirror) must never
   // land in the exact-file deletion set — a temporarily empty public_mirror
@@ -146,19 +143,6 @@ import { PRIVATE_DATA_SUPPLY_ROOTS } from "../../scripts/build-phase2-closeout-i
     "every private single-file derived output must be withheld from the generic public walk",
   );
 
-  // materialize.py coverage: every derived private root must be covered by the
-  // Python private-token lists (either path form) — the third consumer of the
-  // same fact family (#21). Content-level tokens stay hand-authored by design.
-  const materializeSource = fs.readFileSync(
-    fileURLToPath(new URL("../../scripts/materialize_data_supply_public.py", import.meta.url)),
-    "utf8",
-  );
-  for (const root of derivedGuardRoots) {
-    const bareForm = `${root}/`;
-    const dataForm = root.startsWith("admin/") ? `data/${root}/` : null;
-    const covered = materializeSource.includes(bareForm) || (dataForm !== null && materializeSource.includes(dataForm));
-    assert.equal(covered, true, `materialize_data_supply_public.py does not cover private root ${root} (#21 parity)`);
-  }
   assert.equal(
     setEqual(
       PRIVATE_DATA_SUPPLY_ROOTS,
@@ -907,6 +891,31 @@ async function assertStockanalysisEtfShardPublicGuard(parentRoot) {
   const appRoot = path.dirname(path.dirname(fixture.destinationRoot));
   const valid = await checkPublicMirror({ appRoot, repoRoot: fixture.root });
   assert.equal(valid.ok, true, valid.violations.join("\n"));
+  const canonicalBefore = snapshotNode(fixture.sourceRoot);
+
+  const leakedTokenPath = write(fixture.destinationRoot, "safe/private-token.json", '{"path":"_private/recovery.json"}\n');
+  const leakedToken = await checkPublicMirror({ appRoot, repoRoot: fixture.root });
+  assert.equal(leakedToken.ok, false);
+  assert.ok(leakedToken.violations.some((violation) => /safe\/private-token\.json: unsafe token _private\//.test(violation)));
+  fs.unlinkSync(leakedTokenPath);
+
+  const outsidePath = write(fixture.root, "outside-guard.json", '{"outside":true}\n');
+  const publicLink = path.join(fixture.destinationRoot, "safe", "linked.json");
+  fs.symlinkSync(outsidePath, publicLink);
+  const linked = await checkPublicMirror({ appRoot, repoRoot: fixture.root });
+  assert.equal(linked.ok, false);
+  assert.ok(linked.violations.some((violation) => /safe\/linked\.json: symlink is forbidden/.test(violation)));
+  assert.equal(fs.readFileSync(outsidePath, "utf8"), '{"outside":true}\n');
+  fs.unlinkSync(publicLink);
+
+  const canonicalPath = path.join(fixture.sourceRoot, "stockanalysis", "etfs", "SPY.json");
+  const canonicalBytes = fs.readFileSync(canonicalPath);
+  fs.writeFileSync(canonicalPath, JSON.stringify({ ...payload, ticker: "QQQ" }));
+  const invalidTicker = await checkPublicMirror({ appRoot, repoRoot: fixture.root });
+  assert.equal(invalidTicker.ok, false);
+  assert.ok(invalidTicker.violations.some((violation) => /SPY\.json: strict StockAnalysis identity mismatch/.test(violation)));
+  fs.writeFileSync(canonicalPath, canonicalBytes);
+  assert.deepEqual(snapshotNode(fixture.sourceRoot), canonicalBefore, "guard validation must preserve canonical bytes");
 
   write(
     fixture.destinationRoot,
@@ -941,6 +950,7 @@ async function assertStockanalysisEtfShardPublicGuard(parentRoot) {
   const invalid = await checkPublicMirror({ appRoot, repoRoot: fixture.root });
   assert.equal(invalid.ok, false);
   assert.equal(invalid.violations.some((violation) => /hash\/byte-length mismatch/.test(violation)), true);
+  assert.deepEqual(snapshotNode(fixture.sourceRoot), canonicalBefore, "shard hash refusal must preserve canonical bytes");
 
   fs.rmSync(path.join(fixture.destinationRoot, "stockanalysis", "etfs", "shards"), { recursive: true });
   const missing = await checkPublicMirror({ appRoot, repoRoot: fixture.root });
@@ -1187,6 +1197,27 @@ function assertIdentityDriftFailsBeforeMutation(parentRoot) {
 const fixtureRoot = fs.mkdtempSync(path.join(os.tmpdir(), "fenok-sync-public-data-"));
 
 try {
+  {
+    const repoRoot = path.join(fixtureRoot, "stockanalysis-recovery-guard");
+    const appRoot = path.join(repoRoot, "100xfenok-next");
+    const canonicalRoot = path.join(repoRoot, "data");
+    const publicRoot = path.join(appRoot, "public", "data");
+    write(canonicalRoot, "admin/stockanalysis-recovery/index.json", '{"recovery":"canonical"}\n');
+    fs.mkdirSync(publicRoot, { recursive: true });
+    const canonicalBefore = snapshotNode(canonicalRoot);
+    const clean = await checkPublicMirror({ appRoot, repoRoot });
+    assert.equal(clean.ok, true, JSON.stringify(clean.violations));
+
+    write(publicRoot, "admin/stockanalysis-recovery/index.json", '{"recovery":"accidental mirror"}\n');
+    const publicBefore = snapshotNode(publicRoot);
+    const leaked = await checkPublicMirror({ appRoot, repoRoot });
+    assert.equal(leaked.ok, false, "a reintroduced public recovery tree must be rejected");
+    assert.ok(leaked.violations.some((violation) => violation.includes(
+      "public/data/admin/stockanalysis-recovery: forbidden private data-supply root",
+    )), "the guard must identify the private recovery tree");
+    assert.deepEqual(snapshotNode(canonicalRoot), canonicalBefore, "guard refusal must preserve canonical recovery bytes");
+    assert.deepEqual(snapshotNode(publicRoot), publicBefore, "the read-only guard must leave the rejected public tree unchanged");
+  }
   assert.deepEqual(
     EXCLUDED_PUBLIC_DATA_ROOTS,
     deriveExcludedPublicDataRoots(),

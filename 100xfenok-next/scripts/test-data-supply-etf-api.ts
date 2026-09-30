@@ -3,10 +3,6 @@ import {
   buildUnavailableEtfRepresentation,
   canonicalJsonSha256,
   mergeEtfDataSupply,
-  ETF_FRESHNESS_WORKFLOW_FILE,
-  reconstructEtfFreshness,
-  etfStaleRefusalActive,
-  evaluateEtfStaleRefusal,
   resolveDataSupplyEtfDetail,
   sha256Text,
   type PublicJsonDocument,
@@ -34,8 +30,6 @@ async function fixture(options: {
   crossbind?: boolean;
   shardMissing?: boolean;
   shardUnavailable?: boolean;
-  staleRefusalActive?: boolean;
-  alarmState?: JsonRecord | null;
   plane?: JsonRecord | null;
   planeUnavailable?: boolean;
   planeThrows?: boolean;
@@ -113,8 +107,6 @@ async function fixture(options: {
 
   return resolveDataSupplyEtfDetail(ticker, {
     now: () => new Date("2026-07-12T00:00:00Z"),
-    staleRefusalActive: () => options.staleRefusalActive === true,
-    readAlarmState: async () => options.alarmState ? document(options.alarmState) : null,
     readEnrollment: async () => options.guardMissing ? null : document(guard),
     readIndex: async () => options.indexMissing ? null : document(index),
     readProjectionPayload: async () => payloadDoc,
@@ -161,6 +153,22 @@ async function fixture(options: {
 }
 
 async function main() {
+// Retired alarm proof must not make validated provider payloads unavailable.
+// Every fixture uses production admission with only source documents/time;
+// no publication-proof alarm state or policy bypass is supplied.
+for (const state of ["fresh_fallback", "lkg_fallback"] as const) {
+  const selected = await fixture({
+    state,
+  });
+  assert.equal(selected.kind, "selected", `${state} must serve without retired publication proof`);
+  if (selected.kind === "selected") {
+    assert.equal(selected.dataSupply.resolution_state, state);
+    assert.equal(selected.dataSupply.source_as_of, "2026-07-02T01:57:29Z");
+    assert.equal(selected.dataSupply.source_age_days, 9);
+    assert.equal(selected.payload.fetched_at, "2026-07-02T01:57:29Z",
+      "serving must not relabel old provider bytes as newly acquired");
+  }
+}
 const fresh = await fixture({ state: "fresh_fallback" });
 assert.equal(fresh.kind, "selected", JSON.stringify(fresh));
 if (fresh.kind === "selected") {
@@ -480,51 +488,6 @@ try {
   assert.equal(bypassLoads, 1);
 } finally {
   Object.defineProperty(globalThis, "caches", { configurable: true, value: originalCaches });
-}
-
-// D3 static-LKG aging is active on the public ETF detail resolver. A signal that
-// cannot be trusted refuses rather than serves; healthy publication state keeps
-// the existing selected response unmarked.
-{
-  const alarm = (state: string | null, age: unknown, generatedAt: unknown = "2026-07-12T00:00:00Z") => ({
-    generated_at: generatedAt,
-    watched_workflows: [{
-      file: ETF_FRESHNESS_WORKFLOW_FILE,
-      ...(state === null ? {} : { data_freshness_state: state }),
-      data_freshness_age_hours_at_generation: age,
-    }],
-  });
-  const armed = (alarmState: JsonRecord | null) =>
-    fixture({ state: "fresh_fallback", staleRefusalActive: true, alarmState });
-
-  assert.equal(etfStaleRefusalActive(), true, "runtime publication-cycle refusal must be active");
-
-  // One representative per rejection branch. A present-but-absurd field is not a
-  // lesser problem than a missing one, and a future clock must not be clamped.
-  for (const [label, alarmState] of [
-    ["negative age", alarm("healthy", -1)],
-    ["non-finite age", alarm("healthy", Number.NaN)],
-    ["invalid document clock", alarm("healthy", 12, "not-a-date")],
-    ["document clock later than now", alarm("healthy", 12, "2026-07-13T00:00:00Z")],
-    ["absent signal", null],
-  ] as const) {
-    assert.equal((await armed(alarmState)).kind, "unavailable", `${label} must refuse`);
-  }
-  assert.equal(reconstructEtfFreshness(alarm("healthy", 12), new Date(Number.NaN)).ageHours, null, "non-finite now");
-  assert.equal(evaluateEtfStaleRefusal({ state: "healthy", ageHours: Number.NaN, active: true }).verdict, "unavailable");
-
-  const delayed = await armed(alarm("delayed", 1));
-  assert.equal(
-    delayed.kind === "selected" ? delayed.dataSupply.publication_freshness : null,
-    "delayed",
-    "an active delayed verdict marks the selected response",
-  );
-  assert.equal((await armed(alarm("healthy", 61))).kind, "unavailable", "past the ceiling refuses");
-  const healthy = await armed(alarm("healthy", 1));
-  assert.ok(
-    healthy.kind === "selected" && !("publication_freshness" in healthy.dataSupply),
-    "a healthy signal serves unmarked, which is also how recovery clears",
-  );
 }
 
 console.log("data-supply ETF API tests passed");

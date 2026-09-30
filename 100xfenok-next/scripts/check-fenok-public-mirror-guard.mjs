@@ -4,6 +4,7 @@ import crypto from "node:crypto";
 import fs from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
+import { deriveForbiddenPrivateDataSupplyRoots } from "../../scripts/lib/lane-routing.mjs";
 
 export const FORBIDDEN_PATTERNS = [
   /^admin\/fenok-s1-stock-promotion-gate-plan\.json$/,
@@ -56,27 +57,7 @@ const FORBIDDEN_RAW_PATTERNS = [
   /(^|\/)(finra|occ|apewisdom|gdelt|reddit|social)(\/|_)/i,
 ];
 
-export const FORBIDDEN_PRIVATE_DATA_SUPPLY_ROOTS = [
-  "admin/data-supply-state",
-  "admin/slickcharts-daily-delivery",
-  // Raw per-ticker Yahoo batch quote/history admin store (declared exception).
-  // Canonical-only; must never reach the public mirror (asset-budget gate).
-  "admin/yahoo-batch-quote-history",
-  // Private derived proxies (apewisdom_attention / gdelt_news_tone lanes) must
-  // never reach the public mirror.
-  "computed/fenok_news_tone_proxy.json",
-  "computed/fenok_news_tone_proxy_history.json",
-  "computed/fenok_social_attention_proxy.json",
-  "computed/fenok_social_attention_proxy_history.json",
-  "yf/etf-details",
-  "yf/estimates-archive",
-  "yf/migration-evidence",
-  // The dated Russell factsheet captures belong here too, but this list is
-  // asserted equal to deriveForbiddenPrivateDataSupplyRoots(); adding a root by
-  // hand breaks that parity. The tree is still withheld — sync-static-overrides
-  // removes it before this guard runs — and it is registered properly as part
-  // of the registry-derived allowlist work.
-];
+export const FORBIDDEN_PRIVATE_DATA_SUPPLY_ROOTS = deriveForbiddenPrivateDataSupplyRoots();
 
 const DETECTION_FLOOR_REPORT_RELATIVE_PATH = "admin/data-supply-detection-floor.json";
 
@@ -151,7 +132,7 @@ function walkRegularFiles(root, violations, displayPrefix) {
       } else if (stat.isDirectory()) {
         visit(absolutePath);
       } else if (stat.isFile()) {
-        out.push({ absolutePath, relativePath, bytes: fs.readFileSync(absolutePath) });
+        out.push({ absolutePath, relativePath });
       } else {
         violations.push(`${displayPrefix}/${relativePath}: special file is forbidden`);
       }
@@ -376,9 +357,10 @@ function validateLegacyEtfFiles({ canonicalDataRoot, publicFiles, violations }) 
   for (const item of publicFiles.filter((file) => file.relativePath.startsWith(prefix)
     && !file.relativePath.startsWith(`${prefix}shards/`)
     && file.relativePath.endsWith(".json"))) {
+    const bytes = fs.readFileSync(item.absolutePath);
     let payload;
     try {
-      payload = JSON.parse(item.bytes.toString("utf8"));
+      payload = JSON.parse(bytes.toString("utf8"));
     } catch (error) {
       violations.push(`public/data/${item.relativePath}: invalid legacy ETF JSON (${error.message})`);
       continue;
@@ -393,7 +375,7 @@ function validateLegacyEtfFiles({ canonicalDataRoot, publicFiles, violations }) 
     const stat = lstatIfPresent(canonicalPath);
     if (!stat || stat.isSymbolicLink() || !stat.isFile()) {
       violations.push(`public/data/${item.relativePath}: canonical true-primary counterpart is missing`);
-    } else if (!item.bytes.equals(fs.readFileSync(canonicalPath))) {
+    } else if (!bytes.equals(fs.readFileSync(canonicalPath))) {
       violations.push(`public/data/${item.relativePath}: canonical/public true-primary bytes differ`);
     }
   }
@@ -535,13 +517,13 @@ async function validateStockanalysisEtfShards({ canonicalDataRoot, publicDataRoo
   for (const item of canonicalFiles) {
     const ticker = path.posix.basename(item.relativePath, ".json");
     try {
-      const raw = item.bytes.toString("utf8");
-      const payload = JSON.parse(raw);
+      const bytes = fs.readFileSync(item.absolutePath);
+      const payload = JSON.parse(bytes.toString("utf8"));
       if (!strictStockanalysisEtfPayload(payload, ticker)) {
         violations.push(`data/stockanalysis/etfs/${item.relativePath}: strict StockAnalysis identity mismatch`);
         continue;
       }
-      canonicalPayloads.set(ticker, { raw, payload, sha256: sha256(item.bytes) });
+      canonicalPayloads.set(ticker, { absolutePath: item.absolutePath, sha256: sha256(bytes) });
     } catch (error) {
       violations.push(`data/stockanalysis/etfs/${item.relativePath}: invalid JSON (${error.message})`);
     }
@@ -572,18 +554,19 @@ async function validateStockanalysisEtfShards({ canonicalDataRoot, publicDataRoo
     violations.push("StockAnalysis ETF legacy-fallback set must exactly match canonical ETF payloads");
   }
 
-  const shardedPayloads = new Map();
+  const shardedTickers = new Set();
   for (const [shardId, entry] of shardEntries) {
     const relativePath = `stockanalysis/etfs/shards/${entry.path}`;
     const item = shardFiles.find((file) => file.relativePath === relativePath);
     if (!item) continue;
-    if (sha256(item.bytes) !== entry.sha256 || item.bytes.length !== entry.byte_length) {
+    const bytes = fs.readFileSync(item.absolutePath);
+    if (sha256(bytes) !== entry.sha256 || bytes.length !== entry.byte_length) {
       violations.push(`StockAnalysis ETF shard ${entry.id}: hash/byte-length mismatch`);
       continue;
     }
     let shard;
     try {
-      shard = JSON.parse(item.bytes.toString("utf8"));
+      shard = JSON.parse(bytes.toString("utf8"));
     } catch (error) {
       violations.push(`StockAnalysis ETF shard ${entry.id}: invalid JSON (${error.message})`);
       continue;
@@ -618,20 +601,24 @@ async function validateStockanalysisEtfShards({ canonicalDataRoot, publicDataRoo
       if (
         normalizedTicker !== ticker
         || stockanalysisEtfShardId(ticker) !== shardId
-        || shardedPayloads.has(ticker)
+        || shardedTickers.has(ticker)
         || !document
         || !canonical
-        || document.raw !== canonical.raw
         || sha256(document.raw) !== canonical.sha256
-        || canonicalJson(document.value) !== canonicalJson(canonical.payload)
       ) {
         violations.push(`StockAnalysis ETF shard ${entry.id}: payload identity/provenance mismatch for ${ticker}`);
         continue;
       }
-      shardedPayloads.set(ticker, document.value);
+      const canonicalRaw = fs.readFileSync(canonical.absolutePath, "utf8");
+      if (document.raw !== canonicalRaw
+        || canonicalJson(document.value) !== canonicalJson(JSON.parse(canonicalRaw))) {
+        violations.push(`StockAnalysis ETF shard ${entry.id}: payload identity/provenance mismatch for ${ticker}`);
+        continue;
+      }
+      shardedTickers.add(ticker);
     }
   }
-  if (manifest.payload_count !== canonicalTickers.length || JSON.stringify([...shardedPayloads.keys()].sort()) !== JSON.stringify(canonicalTickers)) {
+  if (manifest.payload_count !== canonicalTickers.length || JSON.stringify([...shardedTickers].sort()) !== JSON.stringify(canonicalTickers)) {
     violations.push("StockAnalysis ETF shard payload membership must exactly match canonical ETF payloads");
   }
 }
@@ -639,7 +626,7 @@ async function validateStockanalysisEtfShards({ canonicalDataRoot, publicDataRoo
 function scanYardneyRawKeys(root, displayPrefix, violations) {
   for (const item of walkRegularFiles(path.join(root, "yardney"), violations, `${displayPrefix}/yardney`)) {
     if (!item.relativePath.endsWith(".json")) continue;
-    const text = item.bytes.toString("utf8");
+    const text = fs.readFileSync(item.absolutePath, "utf8");
     for (const match of text.matchAll(/"([^"]+)"\s*:/g)) {
       if (FORBIDDEN_YARDNEY_RAW_KEYS.has(match[1])) violations.push(`${displayPrefix}/yardney/${item.relativePath}: forbidden Yardney raw key ${match[1]}`);
     }
@@ -671,7 +658,7 @@ export async function checkPublicMirror({ appRoot, repoRoot }) {
     if (stat) violations.push(`public/data/${relativeRoot}: forbidden private data-supply root${stat.isSymbolicLink() ? " (symlink)" : ""}`);
   }
   for (const item of publicFiles.filter((file) => file.relativePath.endsWith(".json"))) {
-    const text = item.bytes.toString("utf8");
+    const text = fs.readFileSync(item.absolutePath, "utf8");
     for (const token of forbiddenPublicTokensInText(text)) {
       violations.push(`public/data/${item.relativePath}: unsafe token ${token}`);
     }

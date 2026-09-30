@@ -5,7 +5,6 @@ import {
   getDataSupplyEtfIndexDocument,
   getDataSupplyEtfPayloadDocument,
   getStockanalysisEtfPlaneDocument,
-  getAlarmStateDocument,
   getStockanalysisEtfShardDocument,
   type PublicJsonDocument,
   type StockanalysisEtfPlaneDocumentResult,
@@ -45,9 +44,6 @@ export interface EtfDataSupplyMetadata {
   reason_code: string | null;
   recovery_transition: "unavailable" | null;
   projection_digest: string;
-  // Set only when active and delayed; absent otherwise, so the dormant shape
-  // is unchanged.
-  publication_freshness?: "delayed";
 }
 
 // Internal comparison evidence only; the public route always serves the shard document.
@@ -66,73 +62,6 @@ export type EtfPlaneShadowParity = "match" | "mismatch" | "unavailable";
 export type EtfAuthorityMode = "static_primary_cloud_shadow";
 
 export const ETF_AUTHORITY_MODE: EtfAuthorityMode = "static_primary_cloud_shadow";
-
-// D3 owner-approved option A applies the publication-cycle state and 60-hour
-// ceiling only to enrolled ETFs on the authority-transition surface. Direct
-// unenrolled static shards remain outside P3; authority selection is unchanged.
-export const ETF_STALE_REFUSAL_MAX_AGE_HOURS = 60;
-
-export function etfStaleRefusalActive(): boolean {
-  return true;
-}
-
-// Freshness from the alarm document, whose per-family fields derive from the
-// private publish-outcome shard — the only thing advancing solely on this
-// family's successful publish. Neither field is safe alone: the elapsed hours
-// freeze at write time, so pairing them with the document's own generated_at is
-// what makes a stale alarm push age UP rather than down.
-export const ETF_FRESHNESS_WORKFLOW_FILE = "fetch-stockanalysis.yml";
-
-export type EtfFreshnessVerdict = "serve" | "serve_stale_lkg" | "unavailable";
-
-export function reconstructEtfFreshness(
-  alarmState: unknown,
-  now: Date,
-): { state: string | null; ageHours: number | null } {
-  const document = asRecord(alarmState);
-  const watched = Array.isArray(document?.watched_workflows) ? document.watched_workflows : [];
-  const entry = watched
-    .map((row) => asRecord(row))
-    .find((row) => row?.file === ETF_FRESHNESS_WORKFLOW_FILE) ?? null;
-  const state = typeof entry?.data_freshness_state === "string"
-    ? entry.data_freshness_state as string
-    : null;
-  const atGeneration = entry?.data_freshness_age_hours_at_generation;
-  const generatedAt = typeof document?.generated_at === "string"
-    ? Date.parse(document.generated_at as string)
-    : Number.NaN;
-  const sinceGeneration = ((now instanceof Date ? now.getTime() : Number.NaN) - generatedAt) / 3_600_000;
-  const ageHours = typeof atGeneration === "number" ? atGeneration + sinceGeneration : Number.NaN;
-  // A negative value sails under the ceiling and a NaN slips past it, since
-  // NaN > ceiling is false. A future-stamped document is untrustworthy, so it is
-  // rejected rather than clamped. Every term must be finite and non-negative.
-  const usable = Number.isFinite(ageHours) && (atGeneration as number) >= 0 && sinceGeneration >= 0;
-  return { state, ageHours: usable ? ageHours : null };
-}
-
-export function evaluateEtfStaleRefusal({
-  state,
-  ageHours,
-  active = etfStaleRefusalActive(),
-  maxAgeHours = ETF_STALE_REFUSAL_MAX_AGE_HOURS,
-}: {
-  state: string | null;
-  ageHours: number | null;
-  active?: boolean;
-  maxAgeHours?: number;
-}): { verdict: EtfFreshnessVerdict; ageHours: number | null; active: boolean } {
-  if (!active) return { verdict: "serve", ageHours, active };
-  // Unreadable state is unavailable, not healthy: a policy that defaults to
-  // "fine" when it cannot see is not a policy.
-  // The evaluator does not trust its own input either.
-  if (state === null || ageHours === null || !Number.isFinite(ageHours) || ageHours < 0) {
-    return { verdict: "unavailable", ageHours, active };
-  }
-  if (state === "unavailable" || ageHours > maxAgeHours) return { verdict: "unavailable", ageHours, active };
-  if (state === "delayed") return { verdict: "serve_stale_lkg", ageHours, active };
-  if (state === "healthy") return { verdict: "serve", ageHours, active };
-  return { verdict: "unavailable", ageHours, active };
-}
 
 // Receives both candidates so the choice is visible at the point it is made.
 // The switch is exhaustive: adding a mode without deciding what it serves is a
@@ -181,9 +110,6 @@ export interface EtfDetailResolverDependencies {
   readProjectionPayload: (ticker: string) => Promise<PublicJsonDocument | null>;
   readPlanePayload: (ticker: string) => Promise<StockanalysisEtfPlaneDocumentResult>;
   readShardPayload: (ticker: string) => Promise<StockanalysisEtfShardDocumentResult>;
-  readAlarmState: () => Promise<PublicJsonDocument | null>;
-  // Injectable only to isolate the focused refusal branches in contracts.
-  staleRefusalActive: () => boolean;
   now: () => Date;
 }
 
@@ -193,8 +119,6 @@ const DEFAULT_DEPENDENCIES: EtfDetailResolverDependencies = {
   readProjectionPayload: getDataSupplyEtfPayloadDocument,
   readPlanePayload: getStockanalysisEtfPlaneDocument,
   readShardPayload: getStockanalysisEtfShardDocument,
-  readAlarmState: getAlarmStateDocument,
-  staleRefusalActive: () => etfStaleRefusalActive(),
   now: () => new Date(),
 };
 
@@ -577,25 +501,6 @@ export async function resolveDataSupplyEtfDetail(
       stateObservedAt: parsedIndex.generatedAt,
     };
   }
-  // The read sits inside the enrollment guard. Missing, invalid, stale, or
-  // absent alarm state intentionally fails closed through the existing typed-
-  // unavailable response and telemetry path.
-  let publicationFreshness: "delayed" | null = null;
-  if (dependencies.staleRefusalActive()) {
-    const alarmDocument = await dependencies.readAlarmState();
-    const signal = reconstructEtfFreshness(alarmDocument?.value ?? null, dependencies.now());
-    const verdict = evaluateEtfStaleRefusal({ ...signal, active: true }).verdict;
-    if (verdict === "unavailable") {
-      return {
-        kind: "unavailable",
-        dataSupply: parsed.metadata,
-        projectionDigest: guard.indexSha,
-        stateObservedAt: parsedIndex.generatedAt,
-      };
-    }
-    if (verdict === "serve_stale_lkg") publicationFreshness = "delayed";
-  }
-
   const payloadDocument = await dependencies.readProjectionPayload(ticker);
   const selectedProvider = parsed.metadata.provider_role === "primary"
     ? DATA_SUPPLY_ETF_DETAIL_POLICY.providers[0]
@@ -617,9 +522,7 @@ export async function resolveDataSupplyEtfDetail(
   return {
     kind: "selected",
     payload: payloadDocument.value,
-    dataSupply: publicationFreshness === null
-      ? parsed.metadata
-      : { ...parsed.metadata, publication_freshness: publicationFreshness },
+    dataSupply: parsed.metadata,
     projectionDigest: guard.indexSha,
   };
 }
