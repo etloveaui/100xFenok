@@ -1,8 +1,8 @@
 {
   "schema_version": "alarm-state/v1",
-  "generated_at": "2026-09-30T16:21:32.254Z",
+  "generated_at": "2026-09-30T19:30:43.952Z",
   "status": "open",
-  "open_incident_count": 5,
+  "open_incident_count": 3,
   "open_incidents": [
     {
       "workflow": "fetch-stockanalysis.yml",
@@ -17,32 +17,8 @@
       "lost_schedule_slot_count": 0
     },
     {
-      "workflow": "global-writer-queue-observer.yml",
-      "label": "Global Writer Queue Observability",
-      "streak": 0,
-      "failure_streak_threshold": 2,
-      "first_failing_run_id": null,
-      "first_failing_run_url": null,
-      "alarm_reasons": [
-        "missed_schedule_window"
-      ],
-      "lost_schedule_slot_count": 0
-    },
-    {
       "workflow": "retention-restore.yml",
       "label": "R2 Retention Restore Watchdog",
-      "streak": 0,
-      "failure_streak_threshold": 2,
-      "first_failing_run_id": null,
-      "first_failing_run_url": null,
-      "alarm_reasons": [
-        "missed_schedule_window"
-      ],
-      "lost_schedule_slot_count": 0
-    },
-    {
-      "workflow": "worker-request-budget-alarm.yml",
-      "label": "Worker Request Budget Alarm",
       "streak": 0,
       "failure_streak_threshold": 2,
       "first_failing_run_id": null,
@@ -61,8 +37,8 @@
       "stopped_sets": [
         "stockanalysis_etf_detail"
       ],
-      "latest_generated_at": "2026-09-30T16:14:44.703Z",
-      "previous_generated_at": "2026-09-30T15:30:05.287Z"
+      "latest_generated_at": "2026-09-30T19:19:03.921Z",
+      "previous_generated_at": "2026-09-30T16:54:33.960Z"
     }
   ],
   "watched_workflows": [
@@ -414,15 +390,13 @@
   "queue_evicted_run_count": 0,
   "queue_evicted_workflows": [],
   "last_firing": {
-    "run_id": "36743076532",
-    "run_url": "https://github.com/etloveaui/100xFenok/actions/runs/36743076532",
-    "observed_at": "2026-09-30T16:21:32.254Z",
-    "event": "workflow_run",
+    "run_id": "36765675346",
+    "run_url": "https://github.com/etloveaui/100xFenok/actions/runs/36765675346",
+    "observed_at": "2026-09-30T19:30:43.952Z",
+    "event": "schedule",
     "workflows": [
       "fetch-stockanalysis.yml",
-      "global-writer-queue-observer.yml",
       "retention-restore.yml",
-      "worker-request-budget-alarm.yml",
       "data-health-kpi"
     ],
     "title": "100xFenok pipeline job failure alarm"
