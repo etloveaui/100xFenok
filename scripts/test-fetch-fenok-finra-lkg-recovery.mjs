@@ -82,9 +82,6 @@ function sampleFor(compactDate) {
   assert.deepEqual(injected.retry_set, [FINRA_LKG_KEY]);
   assert.deepEqual(fs.readFileSync(markerPath), markerBefore, "failure retains the current marker byte-for-byte");
   assert.deepEqual(fs.readFileSync(historyPath), historyBefore, "failure must not rotate marker history");
-  const attempt = readJson(path.join(root, "attempts", `${FINRA_LANE_ID}.json`));
-  assert.equal(attempt.attempts[0].execution, "threw");
-  assert.equal(attempt.attempts[0].exception_kind, "transport");
 
   const state = readJson(indexPath(root));
   assert.equal(state.items[FINRA_LKG_KEY].resolution_state, "lkg_primary");

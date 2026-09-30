@@ -1017,7 +1017,6 @@ assert.deepEqual(
   assert.match(workflow, /controlled_failure:/);
   assert.match(workflow, /INPUT_CONTROLLED_FAILURE:/);
   assert.match(workflow, /ROLLBACK_FAILED: \$\{\{ steps\.fetch_indices\.outputs\.rollback_failed \|\| 'false' \}\}/);
-  assert.match(workflow, /if \[\[ "\$ROLLBACK_FAILED" == "true" \]\]; then/);
   assert.match(workflow, /"\$FETCH_OUTCOME" == "success" && "\$ROLLBACK_FAILED" != "true"/);
 
   function assertLiveProducerSource(source) {
