@@ -10,10 +10,10 @@
   "discovered_from": [
     "market_facts"
   ],
-  "failure_count": 1,
+  "failure_count": 2,
   "last_result": {
-    "attempts_used": 3,
-    "error": "empty payload",
+    "attempts_used": 1,
+    "error": "ValueError: provider source timestamp is unavailable for 230360.KQ",
     "failures": [
       {
         "attempt": 1,
@@ -24,35 +24,17 @@
         "attempt": 1,
         "error": "KeyError=[redacted]",
         "source": "provider_safe_call"
-      },
-      {
-        "attempt": 1,
-        "error": "empty payload"
-      },
-      {
-        "attempt": 2,
-        "error": "AttributeError: 'NoneType' object has no attribute 'tail'",
-        "source": "provider_safe_call"
-      },
-      {
-        "attempt": 2,
-        "error": "KeyError=[redacted]",
-        "source": "provider_safe_call"
-      },
-      {
-        "attempt": 2,
-        "error": "empty payload"
       }
     ],
-    "latency_ms": 0,
-    "observed_at": "2026-09-30T14:32:12Z",
+    "latency_ms": 6474,
+    "observed_at": "2026-09-30T15:12:32Z",
     "outcome": "failed"
   },
   "latest_failure": {
-    "attempts_used": 3,
+    "attempts_used": 1,
     "data_loss": false,
     "deferred_acquisition": false,
-    "error": "empty payload",
+    "error": "ValueError: provider source timestamp is unavailable for 230360.KQ",
     "failure_kind": "transient_provider_miss",
     "failures": [
       {
@@ -64,28 +46,10 @@
         "attempt": 1,
         "error": "KeyError=[redacted]",
         "source": "provider_safe_call"
-      },
-      {
-        "attempt": 1,
-        "error": "empty payload"
-      },
-      {
-        "attempt": 2,
-        "error": "AttributeError: 'NoneType' object has no attribute 'tail'",
-        "source": "provider_safe_call"
-      },
-      {
-        "attempt": 2,
-        "error": "KeyError=[redacted]",
-        "source": "provider_safe_call"
-      },
-      {
-        "attempt": 2,
-        "error": "empty payload"
       }
     ],
     "lkg_status": "retained",
-    "observed_at": "2026-09-30T14:32:12Z"
+    "observed_at": "2026-09-30T15:12:32Z"
   },
   "lkg": {
     "fetched_at": "2026-07-09T02:48:17Z",
@@ -108,5 +72,5 @@
     "source_as_of": "2026-06-10T06:30:30Z"
   },
   "ticker": "230360.KQ",
-  "updated_at": "2026-09-30T14:32:12Z"
+  "updated_at": "2026-09-30T15:12:32Z"
 }

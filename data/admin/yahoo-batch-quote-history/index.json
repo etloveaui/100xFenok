@@ -6867,18 +6867,18 @@
     "active": 6861,
     "eligible": 6861,
     "failed": 39,
-    "fresh": 6819,
-    "lkg": 36,
+    "fresh": 6800,
+    "lkg": 55,
     "pending_acquisition": 0,
     "pending_history": 0,
-    "retry": 39,
-    "stale": 35,
+    "retry": 58,
+    "stale": 54,
     "terminal": 3,
     "unavailable": 3,
     "untracked": 0
   },
   "current_results": {
-    "attempted": 198,
+    "attempted": 9,
     "errors": [
       {
         "error": "empty payload",
@@ -6915,7 +6915,7 @@
         "ticker": "012510.KS"
       },
       {
-        "error": "empty payload",
+        "error": "ValueError: provider source timestamp is unavailable for 230360.KQ",
         "failures": [
           {
             "attempt": 1,
@@ -6926,50 +6926,9 @@
             "attempt": 1,
             "error": "KeyError=[redacted]",
             "source": "provider_safe_call"
-          },
-          {
-            "attempt": 1,
-            "error": "empty payload"
-          },
-          {
-            "attempt": 2,
-            "error": "AttributeError: 'NoneType' object has no attribute 'tail'",
-            "source": "provider_safe_call"
-          },
-          {
-            "attempt": 2,
-            "error": "KeyError=[redacted]",
-            "source": "provider_safe_call"
-          },
-          {
-            "attempt": 2,
-            "error": "empty payload"
           }
         ],
         "ticker": "230360.KQ"
-      },
-      {
-        "error": "ValueError: Yahoo provider source timestamp regresses for AVB: history_as_of",
-        "failures": [],
-        "ticker": "AVB"
-      },
-      {
-        "error": "chart quote equal-clock price conflict",
-        "failures": [
-          {
-            "attempt": 1,
-            "error": "chart quote equal-clock price conflict"
-          },
-          {
-            "attempt": 2,
-            "error": "chart quote equal-clock price conflict"
-          },
-          {
-            "attempt": 3,
-            "error": "chart quote equal-clock price conflict"
-          }
-        ],
-        "ticker": "BCKT"
       },
       {
         "error": "empty payload",
@@ -7040,94 +6999,6 @@
         "ticker": "CTRA"
       },
       {
-        "error": "chart quote equal-clock price conflict",
-        "failures": [
-          {
-            "attempt": 1,
-            "error": "AttributeError: 'Index' object has no attribute 'date'",
-            "source": "provider_safe_call"
-          },
-          {
-            "attempt": 1,
-            "error": "chart quote equal-clock price conflict"
-          },
-          {
-            "attempt": 2,
-            "error": "AttributeError: 'Index' object has no attribute 'date'",
-            "source": "provider_safe_call"
-          },
-          {
-            "attempt": 2,
-            "error": "chart quote equal-clock price conflict"
-          },
-          {
-            "attempt": 3,
-            "error": "AttributeError: 'Index' object has no attribute 'date'",
-            "source": "provider_safe_call"
-          },
-          {
-            "attempt": 3,
-            "error": "chart quote equal-clock price conflict"
-          }
-        ],
-        "ticker": "DEFI"
-      },
-      {
-        "error": "ValueError: Yahoo provider source timestamp regresses for EA: history_as_of",
-        "failures": [
-          {
-            "attempt": 1,
-            "error": "AttributeError: 'Index' object has no attribute 'date'",
-            "source": "provider_safe_call"
-          }
-        ],
-        "ticker": "EA"
-      },
-      {
-        "error": "ValueError: Yahoo provider source timestamp regresses for EQR: history_as_of",
-        "failures": [
-          {
-            "attempt": 1,
-            "error": "AttributeError: 'Index' object has no attribute 'date'",
-            "source": "provider_safe_call"
-          }
-        ],
-        "ticker": "EQR"
-      },
-      {
-        "error": "ValueError: Yahoo provider source timestamp regresses for IWDL: history_as_of",
-        "failures": [
-          {
-            "attempt": 1,
-            "error": "AttributeError: 'Index' object has no attribute 'date'",
-            "source": "provider_safe_call"
-          }
-        ],
-        "ticker": "IWDL"
-      },
-      {
-        "error": "ValueError: Yahoo provider source timestamp regresses for IWFL: history_as_of",
-        "failures": [
-          {
-            "attempt": 1,
-            "error": "AttributeError: 'Index' object has no attribute 'date'",
-            "source": "provider_safe_call"
-          }
-        ],
-        "ticker": "IWFL"
-      },
-      {
-        "error": "ValueError: Yahoo provider source timestamp regresses for IWML: history_as_of",
-        "failures": [
-          {
-            "attempt": 1,
-            "error": "AttributeError: 'Index' object has no attribute 'date'",
-            "source": "provider_safe_call"
-          }
-        ],
-        "ticker": "IWML"
-      },
-      {
         "error": "empty payload",
         "failures": [
           {
@@ -7162,101 +7033,7 @@
         "ticker": "LEAD"
       },
       {
-        "error": "ValueError: Yahoo provider source timestamp regresses for LFDR: quote_as_of",
-        "failures": [],
-        "ticker": "LFDR"
-      },
-      {
-        "error": "chart quote equal-clock price conflict",
-        "failures": [
-          {
-            "attempt": 1,
-            "error": "chart quote equal-clock price conflict"
-          },
-          {
-            "attempt": 2,
-            "error": "chart quote equal-clock price conflict"
-          },
-          {
-            "attempt": 3,
-            "error": "chart quote equal-clock price conflict"
-          }
-        ],
-        "ticker": "LGCF"
-      },
-      {
-        "error": "ValueError: Yahoo provider source timestamp regresses for MDCR: quote_as_of",
-        "failures": [],
-        "ticker": "MDCR"
-      },
-      {
-        "error": "ValueError: Yahoo provider source timestamp regresses for MGKX: history_as_of",
-        "failures": [
-          {
-            "attempt": 1,
-            "error": "AttributeError: 'Index' object has no attribute 'date'",
-            "source": "provider_safe_call"
-          }
-        ],
-        "ticker": "MGKX"
-      },
-      {
-        "error": "ValueError: Yahoo provider source timestamp regresses for MJUN: quote_as_of",
-        "failures": [],
-        "ticker": "MJUN"
-      },
-      {
-        "error": "ValueError: Yahoo provider source timestamp regresses for MMAR: quote_as_of",
-        "failures": [],
-        "ticker": "MMAR"
-      },
-      {
-        "error": "chart quote equal-clock price conflict",
-        "failures": [
-          {
-            "attempt": 1,
-            "error": "chart quote equal-clock price conflict"
-          },
-          {
-            "attempt": 2,
-            "error": "chart quote equal-clock price conflict"
-          },
-          {
-            "attempt": 3,
-            "error": "chart quote equal-clock price conflict"
-          }
-        ],
-        "ticker": "MNRS"
-      },
-      {
-        "error": "ValueError: Yahoo provider source timestamp regresses for MTUL: history_as_of",
-        "failures": [
-          {
-            "attempt": 1,
-            "error": "AttributeError: 'Index' object has no attribute 'date'",
-            "source": "provider_safe_call"
-          }
-        ],
-        "ticker": "MTUL"
-      },
-      {
-        "error": "ValueError: Yahoo provider source timestamp regresses for PIEL: quote_as_of",
-        "failures": [],
-        "ticker": "PIEL"
-      },
-      {
-        "error": "ValueError: Yahoo provider source timestamp regresses for QULL: history_as_of",
-        "failures": [
-          {
-            "attempt": 1,
-            "error": "AttributeError: 'Index' object has no attribute 'date'",
-            "source": "provider_safe_call"
-          }
-        ],
-        "ticker": "QULL"
-      },
-      {
-        "error": "empty payload",
+        "error": "ValueError: provider source timestamp is unavailable for SATS",
         "failures": [
           {
             "attempt": 1,
@@ -7267,38 +7044,9 @@
             "attempt": 1,
             "error": "KeyError=[redacted]",
             "source": "provider_safe_call"
-          },
-          {
-            "attempt": 1,
-            "error": "empty payload"
-          },
-          {
-            "attempt": 2,
-            "error": "AttributeError: 'NoneType' object has no attribute 'tail'",
-            "source": "provider_safe_call"
-          },
-          {
-            "attempt": 2,
-            "error": "KeyError=[redacted]",
-            "source": "provider_safe_call"
-          },
-          {
-            "attempt": 2,
-            "error": "empty payload"
           }
         ],
         "ticker": "SATS"
-      },
-      {
-        "error": "ValueError: Yahoo provider source timestamp regresses for SCDL: history_as_of",
-        "failures": [
-          {
-            "attempt": 1,
-            "error": "AttributeError: 'Index' object has no attribute 'date'",
-            "source": "provider_safe_call"
-          }
-        ],
-        "ticker": "SCDL"
       },
       {
         "error": "empty payload",
@@ -7335,228 +7083,71 @@
         "ticker": "SMAP"
       },
       {
-        "error": "chart quote equal-clock price conflict",
+        "error": "ValueError: provider source timestamp is unavailable for EWCO",
         "failures": [
           {
             "attempt": 1,
-            "error": "chart quote equal-clock price conflict"
+            "error": "AttributeError: 'NoneType' object has no attribute 'tail'",
+            "source": "provider_safe_call"
           },
           {
-            "attempt": 2,
-            "error": "chart quote equal-clock price conflict"
-          },
-          {
-            "attempt": 3,
-            "error": "chart quote equal-clock price conflict"
+            "attempt": 1,
+            "error": "KeyError=[redacted]",
+            "source": "provider_safe_call"
           }
         ],
-        "ticker": "SMCF"
+        "ticker": "EWCO"
       },
       {
-        "error": "ValueError: Yahoo provider source timestamp regresses for SPYA: quote_as_of",
-        "failures": [],
-        "ticker": "SPYA"
-      },
-      {
-        "error": "ValueError: Yahoo provider source timestamp regresses for TAJX: quote_as_of",
-        "failures": [],
-        "ticker": "TAJX"
-      },
-      {
-        "error": "chart quote equal-clock price conflict",
+        "error": "ValueError: provider source timestamp is unavailable for MMC",
         "failures": [
           {
             "attempt": 1,
-            "error": "AttributeError: 'Index' object has no attribute 'date'",
+            "error": "AttributeError: 'NoneType' object has no attribute 'tail'",
             "source": "provider_safe_call"
           },
           {
             "attempt": 1,
-            "error": "chart quote equal-clock price conflict"
-          },
-          {
-            "attempt": 2,
-            "error": "AttributeError: 'Index' object has no attribute 'date'",
-            "source": "provider_safe_call"
-          },
-          {
-            "attempt": 2,
-            "error": "chart quote equal-clock price conflict"
-          },
-          {
-            "attempt": 3,
-            "error": "AttributeError: 'Index' object has no attribute 'date'",
-            "source": "provider_safe_call"
-          },
-          {
-            "attempt": 3,
-            "error": "chart quote equal-clock price conflict"
-          }
-        ],
-        "ticker": "USML"
-      },
-      {
-        "error": "ValueError: Yahoo provider source timestamp regresses for VBX: history_as_of",
-        "failures": [
-          {
-            "attempt": 1,
-            "error": "AttributeError: 'Index' object has no attribute 'date'",
+            "error": "KeyError=[redacted]",
             "source": "provider_safe_call"
           }
         ],
-        "ticker": "VBX"
-      },
-      {
-        "error": "ValueError: Yahoo provider source timestamp regresses for VOOX: history_as_of",
-        "failures": [
-          {
-            "attempt": 1,
-            "error": "AttributeError: 'Index' object has no attribute 'date'",
-            "source": "provider_safe_call"
-          }
-        ],
-        "ticker": "VOOX"
-      },
-      {
-        "error": "ValueError: Yahoo provider source timestamp regresses for XVO: history_as_of",
-        "failures": [
-          {
-            "attempt": 1,
-            "error": "AttributeError: 'Index' object has no attribute 'date'",
-            "source": "provider_safe_call"
-          }
-        ],
-        "ticker": "XVO"
-      },
-      {
-        "error": "ValueError: Yahoo provider source timestamp regresses for XVUG: history_as_of",
-        "failures": [
-          {
-            "attempt": 1,
-            "error": "AttributeError: 'Index' object has no attribute 'date'",
-            "source": "provider_safe_call"
-          }
-        ],
-        "ticker": "XVUG"
-      },
-      {
-        "error": "ValueError: Yahoo provider source timestamp regresses for ZCBF: quote_as_of",
-        "failures": [],
-        "ticker": "ZCBF"
+        "ticker": "MMC"
       }
     ],
-    "failed": 35,
-    "fetch_attempts": 224,
+    "failed": 9,
+    "fetch_attempts": 19,
     "skipped": 0,
-    "successes": 163
+    "successes": 0
   },
-  "generated_at": "2026-09-30T14:43:23Z",
+  "generated_at": "2026-09-30T15:15:28Z",
   "lane_id": "yahoo_batch_quote_history",
   "latest_failure": {
     "attempts_used": 1,
     "data_loss": false,
-    "deferred_acquisition": false,
-    "error": "ValueError: Yahoo provider source timestamp regresses for ZCBF: quote_as_of",
-    "failure_kind": "systemic_integrity",
-    "failures": [],
-    "lkg_status": "retained",
-    "observed_at": "2026-09-30T14:43:23Z",
-    "ticker": "ZCBF"
+    "deferred_acquisition": true,
+    "error": "ValueError: provider source timestamp is unavailable for MMC",
+    "failure_kind": "transient_provider_miss",
+    "failures": [
+      {
+        "attempt": 1,
+        "error": "AttributeError: 'NoneType' object has no attribute 'tail'",
+        "source": "provider_safe_call"
+      },
+      {
+        "attempt": 1,
+        "error": "KeyError=[redacted]",
+        "source": "provider_safe_call"
+      }
+    ],
+    "lkg_status": "absent",
+    "observed_at": "2026-09-30T15:15:28Z",
+    "ticker": "MMC"
   },
   "lkg_details": [
     {
       "expected_resolution": "next_natural_yahoo_run",
-      "failure_observed_at": "2026-09-30T14:43:23Z",
-      "max_source_age_business_days": 6,
-      "payload_sha256": "75e092b6c0244f512e23e3d1f4a60b6edefa60f39bf2a1581ed5e979bf063e79",
-      "source_age_business_days": 7,
-      "source_as_of": "2026-08-10",
-      "state_reason": "source_age_exceeds_lane_bound",
-      "symbol": "ZCBF"
-    },
-    {
-      "expected_resolution": "next_natural_yahoo_run",
-      "failure_observed_at": "2026-09-30T14:43:13Z",
-      "max_source_age_business_days": 6,
-      "payload_sha256": "49600607787ac7f74040de4eb1d5a9fc53dc3165a1b6d77b522e5a2bc61854e9",
-      "source_age_business_days": 8,
-      "source_as_of": "2026-08-20T19:22:34Z",
-      "state_reason": "source_age_exceeds_lane_bound",
-      "symbol": "XVUG"
-    },
-    {
-      "expected_resolution": "next_natural_yahoo_run",
-      "failure_observed_at": "2026-09-30T14:43:12Z",
-      "max_source_age_business_days": 6,
-      "payload_sha256": "6594460da943d5b32641352251e50ed16c4c8f85761404dc5f65db3319ab96d2",
-      "source_age_business_days": 8,
-      "source_as_of": "2026-08-20T17:02:13Z",
-      "state_reason": "source_age_exceeds_lane_bound",
-      "symbol": "XVO"
-    },
-    {
-      "expected_resolution": "next_natural_yahoo_run",
-      "failure_observed_at": "2026-09-30T14:43:03Z",
-      "max_source_age_business_days": 6,
-      "payload_sha256": "509b8eeb68381c8ccfba9d1f585b4c6feb80f551e3567fdf39579113397f4eb7",
-      "source_age_business_days": 8,
-      "source_as_of": "2026-08-20T18:53:33Z",
-      "state_reason": "source_age_exceeds_lane_bound",
-      "symbol": "VOOX"
-    },
-    {
-      "expected_resolution": "next_natural_yahoo_run",
-      "failure_observed_at": "2026-09-30T14:42:52Z",
-      "max_source_age_business_days": 6,
-      "payload_sha256": "bcfadb787d863817b29b3c48895b8a7b16d33f6696dee86a2054382b73d8eb88",
-      "source_age_business_days": 8,
-      "source_as_of": "2026-08-20T19:41:32Z",
-      "state_reason": "source_age_exceeds_lane_bound",
-      "symbol": "VBX"
-    },
-    {
-      "expected_resolution": "next_natural_yahoo_run",
-      "failure_observed_at": "2026-09-30T14:42:46Z",
-      "max_source_age_business_days": 6,
-      "payload_sha256": "0f029241b80abafc4b35a32b3733fd0492c70e435a6d71f6119d751676af5b90",
-      "source_age_business_days": 7,
-      "source_as_of": "2026-08-18T19:47:41Z",
-      "state_reason": "source_age_exceeds_lane_bound",
-      "symbol": "USML"
-    },
-    {
-      "expected_resolution": "next_natural_yahoo_run",
-      "failure_observed_at": "2026-09-30T14:41:56Z",
-      "max_source_age_business_days": 6,
-      "payload_sha256": "7f74e9c5f020f6ad09c1389324048c1c4b71815790ed3fcf5096ca461c9cb761",
-      "source_age_business_days": 7,
-      "source_as_of": "2026-08-10",
-      "state_reason": "source_age_exceeds_lane_bound",
-      "symbol": "TAJX"
-    },
-    {
-      "expected_resolution": "next_natural_yahoo_run",
-      "failure_observed_at": "2026-09-30T14:41:52Z",
-      "max_source_age_business_days": 6,
-      "payload_sha256": "7ea41ae8f9b22fffd1322335c27c0753b831064ac7ff389729d024ca32bfe388",
-      "source_age_business_days": 7,
-      "source_as_of": "2026-08-10",
-      "state_reason": "source_age_exceeds_lane_bound",
-      "symbol": "SPYA"
-    },
-    {
-      "expected_resolution": "next_natural_yahoo_run",
-      "failure_observed_at": "2026-09-30T14:41:49Z",
-      "max_source_age_business_days": 6,
-      "payload_sha256": "258ec0ea6b9f1de03f974b6d475c2a5ff4bbba203e78d6c097e283c51bd43b14",
-      "source_age_business_days": 7,
-      "source_as_of": "2026-09-21T20:00:00Z",
-      "state_reason": "source_age_exceeds_lane_bound",
-      "symbol": "SMCF"
-    },
-    {
-      "expected_resolution": "next_natural_yahoo_run",
-      "failure_observed_at": "2026-09-30T14:41:22Z",
+      "failure_observed_at": "2026-09-30T15:15:15Z",
       "max_source_age_business_days": 6,
       "payload_sha256": "b1ebb8760c297693fd54ba1d03486f49031a630ddfe83adfe291a5071a43a36b",
       "source_age_business_days": 51,
@@ -7566,17 +7157,7 @@
     },
     {
       "expected_resolution": "next_natural_yahoo_run",
-      "failure_observed_at": "2026-09-30T14:40:40Z",
-      "max_source_age_business_days": 6,
-      "payload_sha256": "fcbac1a3b52ae3e610cb708db374a38094ab5c3c5416072e3f431ac70a9bc9c5",
-      "source_age_business_days": 7,
-      "source_as_of": "2026-08-18T16:21:13Z",
-      "state_reason": "source_age_exceeds_lane_bound",
-      "symbol": "SCDL"
-    },
-    {
-      "expected_resolution": "next_natural_yahoo_run",
-      "failure_observed_at": "2026-09-30T14:40:39Z",
+      "failure_observed_at": "2026-09-30T15:14:36Z",
       "max_source_age_business_days": 6,
       "payload_sha256": "75215225bfcfa9bd68893c3d8555530bb8f048376263731f76e94231748a42d2",
       "source_age_business_days": 10,
@@ -7586,83 +7167,183 @@
     },
     {
       "expected_resolution": "next_natural_yahoo_run",
-      "failure_observed_at": "2026-09-30T14:39:56Z",
+      "failure_observed_at": "2026-09-30T15:14:29Z",
       "max_source_age_business_days": 6,
-      "payload_sha256": "2bdba701a633e059b8c17a313bfa4f41a3f1177c86a04f7bf2b7417bcd88d3e9",
-      "source_age_business_days": 8,
-      "source_as_of": "2026-08-17T19:30:16Z",
+      "payload_sha256": "e42a605590bd8604ecf0b3be7e0b6308de55e1f9a175ddab2d70e9796759f4f1",
+      "source_age_business_days": 19,
+      "source_as_of": "2026-07-14T17:31:32Z",
       "state_reason": "source_age_exceeds_lane_bound",
-      "symbol": "QULL"
+      "symbol": "LEAD"
     },
     {
       "expected_resolution": "next_natural_yahoo_run",
-      "failure_observed_at": "2026-09-30T14:39:32Z",
+      "failure_observed_at": "2026-09-30T15:13:50Z",
       "max_source_age_business_days": 6,
-      "payload_sha256": "2010cc52ba60439c9971f871a900f56d06d6f2078b7386173efaec528ab1e94a",
+      "payload_sha256": "c1557c52900d93608f067b98d2df714394a7322a8d53d674d3524d275ab36b27",
+      "source_age_business_days": 45,
+      "source_as_of": "2026-05-06",
+      "state_reason": "source_age_exceeds_lane_bound",
+      "symbol": "CTRA"
+    },
+    {
+      "expected_resolution": "next_natural_yahoo_run",
+      "failure_observed_at": "2026-09-30T15:13:11Z",
+      "max_source_age_business_days": 6,
+      "payload_sha256": "9a18aac9ec21b758f886d3106e54facef2cfb0011356353c84097bd3fc0c356c",
       "source_age_business_days": 7,
-      "source_as_of": "2026-08-10",
+      "source_as_of": "2026-07-02",
       "state_reason": "source_age_exceeds_lane_bound",
-      "symbol": "PIEL"
+      "symbol": "BK"
     },
     {
       "expected_resolution": "next_natural_yahoo_run",
-      "failure_observed_at": "2026-09-30T14:39:03Z",
+      "failure_observed_at": "2026-09-30T15:12:32Z",
       "max_source_age_business_days": 6,
-      "payload_sha256": "7f484093955eb94af76554cdc35be040558184db7e25991dbdec1a923df27956",
+      "payload_sha256": "1045a62575964dd495119208688f18897b4819bfdea0ebe9b04b2cdd9c73bf8f",
+      "source_age_business_days": 23,
+      "source_as_of": "2026-06-10T06:30:30Z",
+      "state_reason": "source_age_exceeds_lane_bound",
+      "symbol": "230360.KQ"
+    },
+    {
+      "expected_resolution": "next_natural_yahoo_run",
+      "failure_observed_at": "2026-09-30T15:12:24Z",
+      "max_source_age_business_days": 6,
+      "payload_sha256": "3afedd0593b21109b3c9a7d5459a8f1ef37be9498a2cbb7ba4740762f97e9410",
+      "source_age_business_days": 14,
+      "source_as_of": "2026-06-25T06:30:30Z",
+      "state_reason": "source_age_exceeds_lane_bound",
+      "symbol": "012510.KS"
+    },
+    {
+      "expected_resolution": "next_natural_yahoo_run",
+      "failure_observed_at": "2026-09-30T14:32:40Z",
+      "max_source_age_business_days": 6,
+      "payload_sha256": "b6b2221a99f69fbebc0f8341c8c79da1d4c80cb439d66f433e648c48646ac54c",
       "source_age_business_days": 7,
-      "source_as_of": "2026-08-18T19:42:01Z",
+      "source_as_of": "2026-08-14T20:00:03Z",
       "state_reason": "source_age_exceeds_lane_bound",
-      "symbol": "MTUL"
+      "symbol": "AVB"
     },
     {
       "expected_resolution": "next_natural_yahoo_run",
-      "failure_observed_at": "2026-09-30T14:38:57Z",
+      "failure_observed_at": "2026-09-30T14:33:10Z",
       "max_source_age_business_days": 6,
-      "payload_sha256": "6f8f621622a9568230a2d21b813863a78e76650c28fb84b9bb720ce07db5093c",
-      "source_age_business_days": 7,
-      "source_as_of": "2026-09-21T19:58:54Z",
+      "payload_sha256": "2e4c7f4be2b61ed62308834bac126f89f2f1be21dc24d0b04b3f1871620ed96e",
+      "source_age_business_days": 37,
+      "source_as_of": "2026-08-05T13:43:16Z",
       "state_reason": "source_age_exceeds_lane_bound",
-      "symbol": "MNRS"
+      "symbol": "BCKT"
+    },
+    {
+      "expected_resolution": "next_yahoo_acquisition",
+      "failure_observed_at": null,
+      "max_source_age_business_days": 6,
+      "payload_sha256": "5e02bc9fb7019427526b01a4cd010f281e02f3e68a0e308c59776c9166e2c4c0",
+      "source_age_business_days": 28,
+      "source_as_of": "2026-08-20T19:10:18Z",
+      "state_reason": "source_age_exceeds_lane_bound",
+      "symbol": "BEMD"
+    },
+    {
+      "expected_resolution": "next_yahoo_acquisition",
+      "failure_observed_at": null,
+      "max_source_age_business_days": 6,
+      "payload_sha256": "510b75facf6dc6c1c9889b60b61d4057365ebfd1d6a4c4165f053c4f68c1856a",
+      "source_age_business_days": 103,
+      "source_as_of": "2026-05-04T20:00:00Z",
+      "state_reason": "source_age_exceeds_lane_bound",
+      "symbol": "CCRP"
     },
     {
       "expected_resolution": "next_natural_yahoo_run",
-      "failure_observed_at": "2026-09-30T14:38:30Z",
+      "failure_observed_at": "2026-09-30T14:35:29Z",
       "max_source_age_business_days": 6,
-      "payload_sha256": "e8da1642dfcb21b1676706c539649cd2cf7a18d366f3ab3ad0404df5148b607c",
-      "source_age_business_days": 7,
-      "source_as_of": "2026-08-10",
+      "payload_sha256": "b5a39b2bc4c6903bb8fbbabe04fbe01a8463b27aea5ad1545a05b36f1f28d4fe",
+      "source_age_business_days": 9,
+      "source_as_of": "2026-08-17T16:54:56Z",
       "state_reason": "source_age_exceeds_lane_bound",
-      "symbol": "MMAR"
+      "symbol": "DEFI"
     },
     {
-      "expected_resolution": "next_natural_yahoo_run",
-      "failure_observed_at": "2026-09-30T14:38:29Z",
+      "expected_resolution": "next_yahoo_acquisition",
+      "failure_observed_at": null,
       "max_source_age_business_days": 6,
-      "payload_sha256": "c01463010a89b9b0f6d65f04b735b101e648522b04d2bcad9a791b5159332150",
-      "source_age_business_days": 7,
-      "source_as_of": "2026-08-10",
+      "payload_sha256": "92060ea991d8825165c5b1b5d6a7e522aa0f2be1b48645eecef1cfab9d25a517",
+      "source_age_business_days": 24,
+      "source_as_of": "2026-08-26T20:00:00Z",
       "state_reason": "source_age_exceeds_lane_bound",
-      "symbol": "MJUN"
+      "symbol": "DVIN"
     },
     {
-      "expected_resolution": "next_natural_yahoo_run",
-      "failure_observed_at": "2026-09-30T14:38:22Z",
+      "expected_resolution": "next_yahoo_acquisition",
+      "failure_observed_at": null,
       "max_source_age_business_days": 6,
-      "payload_sha256": "3900cd18618a0c923b3685c8610b92df0597f44095cff616d83e43819cce382e",
-      "source_age_business_days": 8,
-      "source_as_of": "2026-08-20T19:11:29Z",
+      "payload_sha256": "5aa55c6b9dd999d9696a0a1614d059821d7a56cd6d950dd51687ef41bba02f67",
+      "source_age_business_days": 24,
+      "source_as_of": "2026-08-26T20:00:00Z",
       "state_reason": "source_age_exceeds_lane_bound",
-      "symbol": "MGKX"
+      "symbol": "DVRE"
     },
     {
-      "expected_resolution": "next_natural_yahoo_run",
-      "failure_observed_at": "2026-09-30T14:38:18Z",
+      "expected_resolution": "next_yahoo_acquisition",
+      "failure_observed_at": null,
       "max_source_age_business_days": 6,
-      "payload_sha256": "0b8f898774375aea2412af24ea7bf98b4ffd3fa180d9d55e496e537affa0845e",
-      "source_age_business_days": 7,
-      "source_as_of": "2026-08-12",
+      "payload_sha256": "3007b1118471bb60c459ec6cd41e80d270024b69905cc3e1719f8c4c4c1539cf",
+      "source_age_business_days": 24,
+      "source_as_of": "2026-08-26T20:00:00Z",
       "state_reason": "source_age_exceeds_lane_bound",
-      "symbol": "MDCR"
+      "symbol": "DVUT"
+    },
+    {
+      "expected_resolution": "next_yahoo_acquisition",
+      "failure_observed_at": null,
+      "max_source_age_business_days": 6,
+      "payload_sha256": "a5fe3699f3b5cbcaeacd3ab5b56a1d8405c88daa78cbdec8dfff611ac8daa393",
+      "source_age_business_days": 24,
+      "source_as_of": "2026-08-26T20:00:00Z",
+      "state_reason": "source_age_exceeds_lane_bound",
+      "symbol": "DVXB"
+    },
+    {
+      "expected_resolution": "next_yahoo_acquisition",
+      "failure_observed_at": null,
+      "max_source_age_business_days": 6,
+      "payload_sha256": "233ba0cff7499d3290d620e57d3f2425e659a572114990dd4033e8bfe25f8acd",
+      "source_age_business_days": 24,
+      "source_as_of": "2026-08-26T20:00:00Z",
+      "state_reason": "source_age_exceeds_lane_bound",
+      "symbol": "DVXC"
+    },
+    {
+      "expected_resolution": "next_yahoo_acquisition",
+      "failure_observed_at": null,
+      "max_source_age_business_days": 6,
+      "payload_sha256": "27e0763e8aaaf12073324ec6e379e1b8856e46c91e2c285c997e7a9f5087e133",
+      "source_age_business_days": 24,
+      "source_as_of": "2026-08-26T20:00:00Z",
+      "state_reason": "source_age_exceeds_lane_bound",
+      "symbol": "DVXE"
+    },
+    {
+      "expected_resolution": "next_yahoo_acquisition",
+      "failure_observed_at": null,
+      "max_source_age_business_days": 6,
+      "payload_sha256": "2ae5927cd8291a021214048695abfacd1790cfefd94ebbd5d4b6e90d710b5b7d",
+      "source_age_business_days": 24,
+      "source_as_of": "2026-08-26T20:00:00Z",
+      "state_reason": "source_age_exceeds_lane_bound",
+      "symbol": "DVXF"
+    },
+    {
+      "expected_resolution": "next_yahoo_acquisition",
+      "failure_observed_at": null,
+      "max_source_age_business_days": 6,
+      "payload_sha256": "95bd790d78af6014a05ffa511bd802efb57868369c95d3871d73320225471024",
+      "source_age_business_days": 24,
+      "source_as_of": "2026-08-26T20:00:00Z",
+      "state_reason": "source_age_exceeds_lane_bound",
+      "symbol": "DVXK"
     }
   ],
   "lkg_symbols": [
@@ -7670,24 +7351,24 @@
     "230360.KQ",
     "AVB",
     "BCKT",
+    "BEMD",
     "BK",
+    "CCRP",
     "CTRA",
     "DEFI",
-    "EA",
-    "EQR",
-    "GE",
-    "IWDL",
-    "IWFL",
-    "IWML",
-    "LEAD",
-    "LFDR",
-    "LGCF",
-    "MDCR",
-    "MGKX",
-    "MJUN",
-    "MMAR"
+    "DVIN",
+    "DVRE",
+    "DVUT",
+    "DVXB",
+    "DVXC",
+    "DVXE",
+    "DVXF",
+    "DVXK",
+    "DVXP",
+    "DVXV",
+    "DVXY"
   ],
-  "message": "Yahoo quote/history: fresh=6819, lkg=36, pending_history=0, unavailable=3, pending_acquisition=0, terminal=3, catalogue=6861, eligible=6861, retry=39, failed=39, source_stale=35. Pending history is a normal new-listing state and self-resolves on the next Yahoo acquisition.",
+  "message": "Yahoo quote/history: fresh=6800, lkg=55, pending_history=0, unavailable=3, pending_acquisition=0, terminal=3, catalogue=6861, eligible=6861, retry=58, failed=39, source_stale=54. Pending history is a normal new-listing state and self-resolves on the next Yahoo acquisition.",
   "oldest_source_as_of": "2026-04-10T19:35:04Z",
   "oldest_source_ticker": "ZCBE",
   "pending_acquisition_details": [],
@@ -7699,9 +7380,22 @@
     "230360.KQ",
     "AVB",
     "BCKT",
+    "BEMD",
     "BK",
+    "CCRP",
     "CTRA",
     "DEFI",
+    "DVIN",
+    "DVRE",
+    "DVUT",
+    "DVXB",
+    "DVXC",
+    "DVXE",
+    "DVXF",
+    "DVXK",
+    "DVXP",
+    "DVXV",
+    "DVXY",
     "EA",
     "EQR",
     "EWCO",
@@ -7712,6 +7406,7 @@
     "LEAD",
     "LFDR",
     "LGCF",
+    "LIMI",
     "MDCR",
     "MGKX",
     "MJUN",
@@ -7719,7 +7414,10 @@
     "MMC",
     "MNRS",
     "MTUL",
+    "MWHS",
+    "ODHY",
     "PIEL",
+    "PRVT",
     "QULL",
     "RGTC",
     "SATS",
@@ -7733,10 +7431,30 @@
     "VOOX",
     "XVO",
     "XVUG",
+    "ZCBB",
+    "ZCBE",
     "ZCBF"
   ],
   "schema_version": "yahoo-batch-quote-history-index/v1",
   "stale_groups": [
+    {
+      "expected_resolution": "next_yahoo_acquisition",
+      "max_source_age_business_days": 6,
+      "source_age_business_days": 119,
+      "source_as_of": "2026-04-10T19:35:04Z",
+      "symbols": [
+        "ZCBE"
+      ]
+    },
+    {
+      "expected_resolution": "next_yahoo_acquisition",
+      "max_source_age_business_days": 6,
+      "source_age_business_days": 103,
+      "source_as_of": "2026-05-04T20:00:00Z",
+      "symbols": [
+        "CCRP"
+      ]
+    },
     {
       "expected_resolution": "next_natural_yahoo_run",
       "max_source_age_business_days": 6,
@@ -7753,6 +7471,15 @@
       "source_as_of": "2026-05-28T16:58:09Z",
       "symbols": [
         "SMAP"
+      ]
+    },
+    {
+      "expected_resolution": "next_yahoo_acquisition",
+      "max_source_age_business_days": 6,
+      "source_age_business_days": 78,
+      "source_as_of": "2026-06-09T13:34:35Z",
+      "symbols": [
+        "ZCBB"
       ]
     },
     {
@@ -7798,6 +7525,15 @@
       "source_as_of": "2026-07-14T17:31:32Z",
       "symbols": [
         "LEAD"
+      ]
+    },
+    {
+      "expected_resolution": "next_yahoo_acquisition",
+      "max_source_age_business_days": 6,
+      "source_age_business_days": 41,
+      "source_as_of": "2026-08-03T19:25:00Z",
+      "symbols": [
+        "ODHY"
       ]
     },
     {
@@ -7935,6 +7671,15 @@
       ]
     },
     {
+      "expected_resolution": "next_yahoo_acquisition",
+      "max_source_age_business_days": 6,
+      "source_age_business_days": 28,
+      "source_as_of": "2026-08-20T19:10:18Z",
+      "symbols": [
+        "BEMD"
+      ]
+    },
+    {
       "expected_resolution": "next_natural_yahoo_run",
       "max_source_age_business_days": 6,
       "source_age_business_days": 8,
@@ -7959,6 +7704,52 @@
       "source_as_of": "2026-08-20T19:41:32Z",
       "symbols": [
         "VBX"
+      ]
+    },
+    {
+      "expected_resolution": "next_yahoo_acquisition",
+      "max_source_age_business_days": 6,
+      "source_age_business_days": 24,
+      "source_as_of": "2026-08-26T20:00:00Z",
+      "symbols": [
+        "DVIN",
+        "DVRE",
+        "DVUT",
+        "DVXB",
+        "DVXC",
+        "DVXE",
+        "DVXF",
+        "DVXK",
+        "DVXP",
+        "DVXV",
+        "DVXY"
+      ]
+    },
+    {
+      "expected_resolution": "next_yahoo_acquisition",
+      "max_source_age_business_days": 6,
+      "source_age_business_days": 19,
+      "source_as_of": "2026-09-02",
+      "symbols": [
+        "PRVT"
+      ]
+    },
+    {
+      "expected_resolution": "next_yahoo_acquisition",
+      "max_source_age_business_days": 6,
+      "source_age_business_days": 7,
+      "source_as_of": "2026-09-21T18:44:27Z",
+      "symbols": [
+        "LIMI"
+      ]
+    },
+    {
+      "expected_resolution": "next_yahoo_acquisition",
+      "max_source_age_business_days": 6,
+      "source_age_business_days": 7,
+      "source_as_of": "2026-09-21T19:31:33Z",
+      "symbols": [
+        "MWHS"
       ]
     },
     {
@@ -7992,20 +7783,20 @@
       "deferred_acquisition": true,
       "expected_resolution": "next_yahoo_acquisition",
       "failure_kind": "transient_provider_miss",
-      "failure_observed_at": "2026-09-30T02:12:48Z",
+      "failure_observed_at": "2026-09-30T15:15:28Z",
       "lkg_status": "absent",
       "retry": true,
-      "symbol": "EWCO"
+      "symbol": "MMC"
     },
     {
       "data_loss": false,
       "deferred_acquisition": true,
       "expected_resolution": "next_yahoo_acquisition",
       "failure_kind": "transient_provider_miss",
-      "failure_observed_at": "2026-09-30T02:12:48Z",
+      "failure_observed_at": "2026-09-30T15:15:21Z",
       "lkg_status": "absent",
       "retry": true,
-      "symbol": "MMC"
+      "symbol": "EWCO"
     },
     {
       "data_loss": false,
