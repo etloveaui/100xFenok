@@ -9,7 +9,7 @@ import fs from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 
-import { buildLaneCommitManifest } from "./build-lane-commit-manifest.mjs";
+import { UPDATE_MANIFEST_MATERIALIZATIONS } from "./materialize-update-manifest-routes.mjs";
 import { derivedPrivateFileOutputs } from "./lib/derived-asset-registry.mjs";
 import { PRIVATE_PUBLIC_PATHS } from "../100xfenok-next/scripts/cloud-data-plane/cloud-data-plane-routing-authority.mjs";
 
@@ -118,7 +118,7 @@ for (const [investorId, summaryInvestor] of investorEntries) {
 assert.equal(currentCohort, consensus.metadata.current_cohort_investors, "current cohort must match consensus metadata");
 assert.ok(Object.keys(byTicker).length > 0, "13F ticker projection must not be empty");
 
-const materializations = buildLaneCommitManifest().update_manifest.materializations;
+const materializations = UPDATE_MANIFEST_MATERIALIZATIONS;
 const secRoutes = materializations.filter((route) => route.source.startsWith("data/sec-13f/"));
 const routeBySource = new Map(secRoutes.map((route) => [route.source, route]));
 const canonicalJsonFiles = [];

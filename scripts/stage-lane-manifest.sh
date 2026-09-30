@@ -2,69 +2,63 @@
 set -euo pipefail
 
 REPO_ROOT="$(pwd -P)"
-MANIFEST=""
 WORKFLOW=""
 STAGE=""
-EXPECTED_DIGEST=""
 LIST_EXCLUDES=0
 
 while [[ $# -gt 0 ]]; do
   case "$1" in
     --repo-root) REPO_ROOT=$(cd "$2" && pwd -P); shift 2 ;;
-    --manifest) MANIFEST=$2; shift 2 ;;
     --workflow) WORKFLOW=$2; shift 2 ;;
     --stage) STAGE=$2; shift 2 ;;
-    --expected-digest) EXPECTED_DIGEST=$2; shift 2 ;;
     --list-excludes) LIST_EXCLUDES=1; shift ;;
     -h|--help) echo 'stage-lane-manifest.sh --workflow <workflow> (--stage <stage> | --list-excludes)'; exit 0 ;;
     *) echo "unknown argument: $1" >&2; exit 2 ;;
   esac
 done
 
-MANIFEST=${MANIFEST:-$REPO_ROOT/data/admin/lane-commit-manifest.json}
 if [[ -z "$WORKFLOW" ]]; then echo "workflow is required" >&2; exit 2; fi
-# --list-excludes is the single read-only source of truth for the exclusion set,
-# so a caller that builds its own candidate list cannot drift from what this
-# script later restores out of the index.
 if [[ $LIST_EXCLUDES -eq 1 ]]; then
   [[ -z "$STAGE" ]] || { echo "--list-excludes takes no stage" >&2; exit 2; }
-  command -v jq >/dev/null 2>&1 || { echo "lane-manifest requires jq" >&2; exit 1; }
-  [[ -f "$MANIFEST" ]] || { echo "lane-manifest manifest is missing" >&2; exit 1; }
-  jq -r --arg workflow "$WORKFLOW" '.workflows[$workflow].exclude[]?.path' "$MANIFEST"
+else
+  if [[ -z "$STAGE" ]]; then echo "workflow and stage are required" >&2; exit 2; fi
+  case "$STAGE" in
+    always_if_exists|success_if_exists|success_verify_not_plan_if_exists|required_on_success) ;;
+    *) echo "lane-manifest stage is invalid" >&2; exit 2 ;;
+  esac
+fi
+command -v jq >/dev/null 2>&1 || { echo "lane-manifest requires jq" >&2; exit 1; }
+POLICIES=$(node --input-type=module - "$REPO_ROOT/scripts/lib/lane-registry.mjs" <<'JS'
+import { pathToFileURL } from "node:url";
+const { LANE_REGISTRY } = await import(pathToFileURL(process.argv[2]));
+if (!LANE_REGISTRY?.workflow_policies || typeof LANE_REGISTRY.workflow_policies !== "object") throw new Error("workflow policies are missing");
+process.stdout.write(JSON.stringify(LANE_REGISTRY.workflow_policies));
+JS
+)
+jq -e --arg workflow "$WORKFLOW" '
+  .[$workflow] | type == "object"
+  and (.exclude | type == "array")
+  and all(.exclude[];
+    (.path | type == "string" and length > 0 and (startswith("/") | not))
+    and ((.path | split("/")) | index("..") | not)
+    and (.path | test("[\u0000-\u001f\u007f]") | not)
+  )
+' <<<"$POLICIES" >/dev/null
+if [[ $LIST_EXCLUDES -eq 1 ]]; then
+  jq -r --arg workflow "$WORKFLOW" '.[$workflow].exclude[]?.path' <<<"$POLICIES"
   exit 0
 fi
-if [[ -z "$STAGE" ]]; then echo "workflow and stage are required" >&2; exit 2; fi
-case "$STAGE" in
-  always_if_exists|success_if_exists|success_verify_not_plan_if_exists|required_on_success) ;;
-  *) echo "lane-manifest stage is invalid" >&2; exit 2 ;;
-esac
-command -v jq >/dev/null 2>&1 || { echo "lane-manifest requires jq" >&2; exit 1; }
-[[ -f "$MANIFEST" ]] || { echo "lane-manifest manifest is missing" >&2; exit 1; }
-
-if [[ -z "$EXPECTED_DIGEST" ]]; then
-  [[ -f "$REPO_ROOT/scripts/lib/lane-registry.mjs" ]] || { echo "cannot derive registry digest" >&2; exit 1; }
-  EXPECTED_DIGEST=$(cd "$REPO_ROOT" && node --input-type=module -e 'import("./scripts/lib/lane-registry.mjs").then((m) => process.stdout.write(m.registryDigest()))')
-fi
-if [[ -f "$REPO_ROOT/scripts/build-lane-commit-manifest.mjs" ]]; then
-  node "$REPO_ROOT/scripts/build-lane-commit-manifest.mjs" --check --output "$MANIFEST" >/dev/null
-fi
-
-jq -e --arg workflow "$WORKFLOW" --arg stage "$STAGE" --arg digest "$EXPECTED_DIGEST" '
-  .schema_version == "lane-commit-manifest/v1"
-  and .registry_schema == "lane-registry/v3"
-  and .registry_digest == $digest
-  and (.workflows | type == "object")
-  and (.workflows[$workflow] | type == "object")
-  and (.workflows[$workflow].stages[$stage] | type == "array")
-  and (.workflows[$workflow].stages[$stage] | length > 0)
-  and all(.workflows[$workflow].stages[$stage][];
-    (.path | type == "string" and length > 0 and startswith("/") | not)
+jq -e --arg workflow "$WORKFLOW" --arg stage "$STAGE" '
+  (.[$workflow].stages[$stage] | type == "array")
+  and (.[$workflow].stages[$stage] | length > 0)
+  and all(.[$workflow].stages[$stage][];
+    (.path | type == "string" and length > 0 and (startswith("/") | not))
     and ((.path | split("/")) | index("..") | not)
     and (.path | test("[\u0000-\u001f\u007f]") | not)
     and (.kind == "file" or .kind == "directory" or .kind == "glob" or .kind == "dynamic_set")
     and (.required | type == "boolean")
   )
-' "$MANIFEST" >/dev/null
+' <<<"$POLICIES" >/dev/null
 
 cd "$REPO_ROOT"
 declare -a SELECTED_EXACT=()
@@ -160,7 +154,7 @@ while IFS= read -r -d '' encoded; do
       for match in "${matches[@]}"; do [[ -z "${SEEN[$match]+x}" ]] && SELECTED_DYNAMIC+=("$match") && SEEN[$match]=1; done
       ;;
   esac
-done < <(jq -j --arg workflow "$WORKFLOW" --arg stage "$STAGE" '.workflows[$workflow].stages[$stage][] | @base64 + "\u0000"' "$MANIFEST")
+done < <(jq -j --arg workflow "$WORKFLOW" --arg stage "$STAGE" '.[$workflow].stages[$stage][] | @base64 + "\u0000"' <<<"$POLICIES")
 
 if [[ ${#SELECTED_TRACKED_FILES[@]} -gt 0 ]]; then printf '%s\0' "${SELECTED_TRACKED_FILES[@]}" | git add -u --pathspec-from-file=- --pathspec-file-nul; fi
 if [[ ${#SELECTED_UNTRACKED_FILES[@]} -gt 0 ]]; then printf '%s\0' "${SELECTED_UNTRACKED_FILES[@]}" | git add --pathspec-from-file=- --pathspec-file-nul; fi
@@ -176,10 +170,9 @@ while IFS= read -r -d '' encoded; do
   else
     git rm -r --cached --ignore-unmatch -- "$exclude_path" >/dev/null
   fi
-done < <(jq -j --arg workflow "$WORKFLOW" '.workflows[$workflow].exclude[]? | @base64 + "\u0000"' "$MANIFEST")
+done < <(jq -j --arg workflow "$WORKFLOW" '.[$workflow].exclude[]? | @base64 + "\u0000"' <<<"$POLICIES")
 
-declared_count=$(jq -r --arg workflow "$WORKFLOW" --arg stage "$STAGE" '.workflows[$workflow].stages[$stage] | length' "$MANIFEST")
+declared_count=$(jq -r --arg workflow "$WORKFLOW" --arg stage "$STAGE" '.[$workflow].stages[$stage] | length' <<<"$POLICIES")
 stage_selected=$(( ${#SELECTED_EXACT[@]} + ${#SELECTED_DIRECTORIES[@]} + ${#SELECTED_GLOB[@]} + ${#SELECTED_DYNAMIC[@]} ))
 staged_index_total=$(git diff --cached --name-only | awk 'NF { count += 1 } END { print count + 0 }')
-digest_prefix=${EXPECTED_DIGEST:0:12}
-printf 'lane-manifest stage proof: digest=%s workflow=%s stage=%s declared=%s stage_selected=%s staged_index_total=%s\n' "$digest_prefix" "$WORKFLOW" "$STAGE" "$declared_count" "$stage_selected" "$staged_index_total"
+printf 'lane staging: workflow=%s stage=%s declared=%s stage_selected=%s staged_index_total=%s\n' "$WORKFLOW" "$STAGE" "$declared_count" "$stage_selected" "$staged_index_total"

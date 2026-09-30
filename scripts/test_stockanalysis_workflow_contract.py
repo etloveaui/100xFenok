@@ -6,6 +6,7 @@ from __future__ import annotations
 import json
 from pathlib import Path
 import re
+import subprocess
 import unittest
 
 
@@ -72,74 +73,7 @@ class StockAnalysisWorkflowContractTest(unittest.TestCase):
             self.text,
         )
 
-    def test_etf_failure_proofs_are_separate_single_target_and_skip_unrelated_fetches(self) -> None:
-        control_input = re.search(
-            r"controlled_failure_surfaces:\n(?P<body>(?:\s+.*\n){1,5})",
-            self.text,
-        )
-        self.assertIsNotNone(control_input)
-        self.assertIn("Owner-approved failure proof", control_input.group("body"))
-        self.assertIn("etf_detail:TQQQ", control_input.group("body"))
-        self.assertIn("yahoo_etf_fallback:TQQQ", control_input.group("body"))
 
-        proof_profile = re.search(
-            r'(?:if|elif) \[ "\$ETF_DETAIL_FAILURE_PROOF" = "true" \] \|\| \[ "\$YAHOO_ETF_FAILURE_PROOF" = "true" \]; then(?P<body>\n\s*ARGS=.*?)\n\s*elif ',
-            self.text,
-            flags=re.DOTALL,
-        )
-        self.assertIsNotNone(proof_profile)
-        body = proof_profile.group("body")
-        for expected in (
-            "--etfs=${INPUT_ETFS}",
-            "--controlled-failure-surfaces $INPUT_CONTROLLED_FAILURE_SURFACES",
-            "--limit-etfs 1",
-            '--yf-etf-fallback"',
-            "--fail-on-error",
-        ):
-            self.assertIn(expected, body)
-        self.assertIn(
-            'if [ "${INPUT_YF_ETF_FALLBACK:-true}" = "true" ]; then',
-            body,
-        )
-        self.assertIn('YAHOO_ETF_FAILURE_PROOF="true"', self.text)
-        self.assertIn("data/admin/yahoo_etf_fallback", self.text)
-        self.assertIn("node scripts/test-yahoo-etf-fallback-recovery.mjs", self.text)
-        for unexpected in (
-            "--endpoint-canary",
-            "--discover-etf-universe",
-            "--incremental-etf-backfill",
-            "--fetch-surfaces",
-            "--stocks",
-            "--fetch-financials",
-        ):
-            self.assertNotIn(unexpected, body)
-
-    def test_universe_controlled_failure_profile_is_isolated(self) -> None:
-        proof_profile = re.search(
-            r'if \[ "\$UNIVERSE_FAILURE_PROOF" = "true" \]; then(?P<body>.*?)\n\s*elif \[ "\$ETF_DETAIL_FAILURE_PROOF"',
-            self.text,
-            flags=re.DOTALL,
-        )
-        self.assertIsNotNone(proof_profile)
-        body = proof_profile.group("body")
-        for expected in (
-            "--discover-etf-universe",
-            "--universe-only",
-            "--stocks-only",
-            "--controlled-failure-surfaces etf_universe",
-            "--limit-etfs 0",
-        ):
-            self.assertIn(expected, body)
-        for unexpected in (
-            "--endpoint-canary",
-            "--classify-etf-catalogs",
-            "--fetch-surfaces",
-            "--etfs=",
-            "--stocks ",
-            "--fetch-financials",
-        ):
-            self.assertNotIn(unexpected, body)
-        self.assertIn('UNIVERSE_FAILURE_PROOF="true"', self.text)
 
     def test_each_known_schedule_has_an_exact_recovery_scope_and_unknown_fails_closed(self) -> None:
         for schedule, scope in (
@@ -369,41 +303,6 @@ class StockAnalysisWorkflowContractTest(unittest.TestCase):
         self.assertIn("readback_confirmation: ${{ steps.publish.outputs.confirmation }}", job_header)
         self.assertEqual(self.text.count("steps.publish.outputs"), 2)
 
-    def test_rollback_rehearsal_is_manual_only_and_cannot_write_git(self) -> None:
-        source = (ROOT / ".github" / "workflows" / "etf-plane-rollback-rehearsal.yml").read_text(encoding="utf-8")
-        # Manual only: no schedule, no push, and a typed confirmation so a
-        # mis-click cannot move a production pointer.
-        self.assertNotIn("schedule:", source)
-        self.assertNotIn("push:", source)
-        self.assertIn("workflow_dispatch:", source)
-        self.assertIn(
-            "if: github.event.inputs.operation == 'ROLLBACK' && github.event.inputs.confirm == 'ROLLBACK'",
-            source,
-        )
-        # Inspection is read-only and reuses the existing live-route reader; it
-        # needs no typed confirmation because it cannot change anything.
-        self.assertIn("if: github.event.inputs.operation == 'INSPECT'", source)
-        self.assertIn(
-            "node scripts/dev-cloud-data-plane-route-live.mjs --family stockanalysis-etf-detail",
-            source,
-        )
-        # The reader must send the family header only when a family is given, so
-        # the family-absent call stays byte-identical to the legacy shape.
-        reader = (ROOT / "scripts" / "dev-cloud-data-plane-route-live.mjs").read_text(encoding="utf-8")
-        self.assertIn('const family = flag("family", null);', reader)
-        self.assertIn('if (family) headers["x-data-plane-family"] = family;', reader)
-        self.assertNotIn("--rollback", source.split("if: github.event.inputs.operation == 'INSPECT'", 1)[1].split("rollback:", 1)[0])
-        # Pointer authority only: read-only Git, bounded, and queued behind a
-        # publish rather than racing or cancelling one.
-        self.assertNotIn("contents: write", source)
-        self.assertIn("contents: read", source)
-        self.assertIn("timeout-minutes: 30", source)
-        self.assertIn("group: stockanalysis-etf-detail-publish", source)
-        self.assertIn("cancel-in-progress: false", source)
-        # Existing CLI and existing secrets; no new script.
-        self.assertIn("scripts/publish-cloud-data-generation.mjs --family=stockanalysis-etf-detail --rollback", source)
-        self.assertIn("secrets.DATA_PLANE_WRITE_KEY", source)
-
     def test_publish_is_non_confirming_on_stale_and_reads_back_current_main(self) -> None:
         publish = self.text.split("  publish-stockanalysis:\n", 1)[1]
         stale_start = publish.index('if [ "$APPLY_STATUS" = "stale" ]; then')
@@ -413,19 +312,13 @@ class StockAnalysisWorkflowContractTest(unittest.TestCase):
         self.assertIn('echo "stale apply reason: $APPLY_REASON" >&2', stale)
         self.assertIn('GITHUB_STEP_SUMMARY', stale)
         self.assertIn("exit 75", stale)
-        self.assertIn("scripts/stockanalysis_artifact.py verify-readback", publish)
-        verify_start = publish.index("python3 scripts/stockanalysis_artifact.py verify-readback")
-        verify_end = publish.index('})"; then', verify_start)
-        verify = publish[verify_start:verify_end]
-        self.assertIn('--artifact-root "$ARTIFACT_ROOT"', verify)
         self.assertIn("node scripts/test-stockanalysis-lane-parity.mjs", publish)
         self.assertNotIn('echo "status=not_confirmed" >> "$GITHUB_OUTPUT"', publish)
         self.assertIn('echo "confirmation=confirmed" >> "$GITHUB_OUTPUT"', publish)
         self.assertIn('echo "status=$ACCEPTED_STATUS" >> "$GITHUB_OUTPUT"', publish)
         self.assertIn('fence_reason=main_readback_infrastructure', publish)
-        self.assertIn('fence_reason=main_readback_mismatch', publish)
-        # Readback checks exact packed files on current main. Confirmation also
-        # requires commit reachability and the acquisition digest trailer.
+        # Resolution consumes acquisition pending pointers before publication.
+        # Confirmation checks delivered commit reachability and its digest trailer.
         self.assertIn('fence_reason=main_readback_identity', publish)
         self.assertIn("sed -n 's/^StockAnalysis-Artifact-Digest: //p'", publish)
         self.assertIn('[ "$COMMIT_ARTIFACT_DIGEST" != "$ARTIFACT_DIGEST" ]', publish)
@@ -443,7 +336,6 @@ class StockAnalysisWorkflowContractTest(unittest.TestCase):
     def test_publish_reuses_validation_only_for_identical_covered_inputs(self) -> None:
         publish = self.text.split("  publish-stockanalysis:\n", 1)[1]
         reachability = "for backoff in 15 30 60; do"
-        verify_start = publish.index("python3 scripts/stockanalysis_artifact.py verify-readback")
         self.assertIn('VALIDATED_INPUT_FINGERPRINT=""', publish)
         self.assertIn('VALIDATION_INPUT_FINGERPRINT="$(' , publish)
         for covered in (
@@ -451,7 +343,6 @@ class StockAnalysisWorkflowContractTest(unittest.TestCase):
             "scripts",
             "100xfenok-next/scripts",
             "100xfenok-next/package.json",
-            "data/admin/lane-commit-manifest.json",
             "data/stockanalysis",
             "data/yf/finance",
             "data/yf/etf-details",
@@ -516,12 +407,7 @@ class StockAnalysisWorkflowContractTest(unittest.TestCase):
             publish.index(unknown),
             publish.index('fence_reason=main_readback_identity'),
         )
-        # All three proofs gate the confirmation, in order: file readback, then remote
-        # reachability, then trailer equality.
-        self.assertLess(
-            publish.index("scripts/stockanalysis_artifact.py verify-readback"),
-            publish.index(reachability),
-        )
+        # Confirmation follows the fresh remote checkout, reachability, and trailer check.
         self.assertLess(
             publish.index(reachability),
             publish.index('echo "confirmation=confirmed" >> "$GITHUB_OUTPUT"'),
@@ -530,18 +416,9 @@ class StockAnalysisWorkflowContractTest(unittest.TestCase):
             publish.index('[ "$COMMIT_ARTIFACT_DIGEST" != "$ARTIFACT_DIGEST" ]'),
             publish.index('echo "confirmation=confirmed" >> "$GITHUB_OUTPUT"'),
         )
-        self.assertLess(
-            publish.index("git push origin HEAD:main"),
-            publish.index("scripts/stockanalysis_artifact.py verify-readback"),
-        )
         push = publish.index("git push origin HEAD:main")
         checkout = publish.index("git checkout -f -B main origin/main", push)
-        self.assertLess(checkout, publish.index("scripts/stockanalysis_artifact.py verify-readback"))
-        success_status = publish.index('echo "status=$ACCEPTED_STATUS" >> "$GITHUB_OUTPUT"', verify_start)
-        self.assertLess(
-            publish.index("scripts/stockanalysis_artifact.py verify-readback"),
-            success_status,
-        )
+        self.assertLess(checkout, publish.index(reachability))
 
     def test_projection_oracle_preserves_surface_relative_root(self) -> None:
         publish = self.text.split("  publish-stockanalysis:\n", 1)[1]
@@ -604,10 +481,13 @@ class StockAnalysisWorkflowContractTest(unittest.TestCase):
 
     def test_raw_etf_canonical_files_remain_owned_by_the_git_publisher(self) -> None:
         publisher = self.text.split("  publish-stockanalysis:\n", 1)[1].split("  publish-stockanalysis-etf-plane:\n", 1)[0]
-        manifest = json.loads(
-            (ROOT / "data" / "admin" / "lane-commit-manifest.json").read_text(encoding="utf-8")
-        )
-        policy = manifest["workflows"][".github/workflows/fetch-stockanalysis.yml"]
+        policy = json.loads(subprocess.check_output(
+            ["node", "--input-type=module", "-e",
+             "import { LANE_REGISTRY } from './scripts/lib/lane-registry.mjs'; "
+             "process.stdout.write(JSON.stringify(LANE_REGISTRY.workflow_policies[process.argv[1]]));",
+             ".github/workflows/fetch-stockanalysis.yml"],
+            cwd=ROOT, text=True,
+        ))
         self.assertIn(
             {"kind": "directory", "path": "data/stockanalysis", "required": True},
             policy["stages"]["always_if_exists"],

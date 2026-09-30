@@ -12,10 +12,7 @@ import { boundedDiagnosticDetail } from "./lib/diagnostic-detail.mjs";
 import { attemptResult, defaultAttemptId, libraryTuple } from "./lib/provider-fetch-result.mjs";
 import {
   LaneLkgStore,
-  PROMOTION_CONTRACT_PROVIDER_OBSERVATION_V2,
-  buildProviderObservationV2,
   classifyLkgFailure,
-  isNaturalScheduleRun,
 } from "./lib/data-supply-lkg-store.mjs";
 
 export const SCHEMA_VERSION = "damodaran-owner-guard/v1";
@@ -241,14 +238,6 @@ export function evaluateDamodaranProviderProgress(retainedBundle, candidateBundl
       advanced_files: advancedFiles,
     };
   }
-  if (advancedFiles.length === 0) {
-    return {
-      eligible: false,
-      reason: "recovery_not_advanced_by_provider",
-      regressed_files: [],
-      advanced_files: [],
-    };
-  }
   return {
     eligible: true,
     reason: "ok",
@@ -268,39 +257,8 @@ function retainedDamodaranBundle(repoRoot, store, item) {
   return bundle;
 }
 
-function recordSuccessWithVectorDecision(store, input, vectorDecision, approvedManualRecovery) {
-  if (vectorDecision?.eligible !== true) return store.recordSuccess(input);
-  const evaluatePromotionCandidates = store.evaluatePromotionCandidates;
-  store.evaluatePromotionCandidates = (artifacts) => artifacts.map((artifact) => ({
-    key: artifact.key,
-    eligible: true,
-    reason: "ok",
-    artifact,
-  }));
-  // An owner-approved manual dispatch is an explicit exception to the store's
-  // natural-schedule-only recovery guard. The state write itself stays the
-  // stock recordSuccess path (with the true workflow_dispatch event recorded),
-  // so the approved run is indistinguishable in shape from a schedule recovery
-  // except for recovery_event_name. The on-disk retry flag is cleared only
-  // inside this call; it is restored on any failure by the transaction
-  // snapshot taken by the caller.
-  const loadState = store._loadState;
-  if (approvedManualRecovery === true) {
-    store._loadState = function loadStateForApprovedRecovery() {
-      const state = loadState.call(this);
-      for (const artifact of input.artifacts) {
-        const item = state.items?.[artifact.key];
-        if (item) state.items[artifact.key] = { ...item, retry: false };
-      }
-      return state;
-    };
-  }
-  try {
-    return store.recordSuccess(input);
-  } finally {
-    store.evaluatePromotionCandidates = evaluatePromotionCandidates;
-    if (approvedManualRecovery === true) store._loadState = loadState;
-  }
+function recordSuccessWithVectorDecision(store, input) {
+  return store.recordSuccess(input);
 }
 
 function bundleBytes(bundle) {
@@ -701,33 +659,9 @@ export function runDamodaranShadow({
       sourceAsOf: candidateBundle.source_as_of,
       validateDocument,
       deriveSourceAsOf,
-      promotion_contract: PROMOTION_CONTRACT_PROVIDER_OBSERVATION_V2,
-      provider_observation: buildProviderObservationV2({
-        payloadBytes,
-        sourceAsOf: candidateBundle.source_as_of,
-        validateDocument,
-        deriveSourceAsOf,
-        candidateContainsObservation: (candidateDocument, providerDocument) => (
-          JSON.stringify(candidateDocument) === JSON.stringify(providerDocument)
-        ),
-        run,
-      }),
     };
     const before = store.stateSnapshot().items.damodaran;
-    const approvedManualRecovery = before?.retry === true
-      && ownerApprovedRecovery === true
-      && run.eventName === "workflow_dispatch";
     let vectorDecision = null;
-    if (before?.retry === true && !isNaturalScheduleRun(run) && !approvedManualRecovery) {
-      recoveryResult = {
-        ok: false,
-        degraded: true,
-        corrupt: false,
-        exitCode: 0,
-        reason: "recovery_requires_schedule",
-        retrySet: store.stateSnapshot().retry_set,
-      };
-    } else {
       if (before?.retry === true && before?.resolution_state === "lkg_primary") {
         vectorDecision = evaluateDamodaranProviderProgress(
           retainedDamodaranBundle(repoRoot, store, before),
@@ -736,9 +670,6 @@ export function runDamodaranShadow({
       }
       const decision = vectorDecision ?? store.evaluatePromotionCandidates([candidate], run)[0];
       if (!decision.eligible) {
-        if (["foreign_writer_conflict", "recovery_not_advanced_by_provider"].includes(decision.reason)) {
-          store.recordPromotionDeferral({ artifacts: [candidate], run, reason: decision.reason });
-        }
         recoveryResult = {
           ok: false,
           degraded: true,
@@ -772,6 +703,7 @@ export function runDamodaranShadow({
             historyPath,
             store.statePath,
           ]);
+          const recoveringKeys = new Set(store.stateSnapshot().retry_set);
           let success;
           try {
             promoteProducedBytes({ bytesByFile: verifiedBytes, canonicalRoot });
@@ -781,7 +713,6 @@ export function runDamodaranShadow({
               store,
               { artifacts: [candidate], run },
               vectorDecision,
-              approvedManualRecovery,
             );
           } catch (error) {
             restoreFiles(transactionSnapshot);
@@ -794,7 +725,7 @@ export function runDamodaranShadow({
             exitCode: 0,
             reason: "ok",
             retrySet: success.retrySet,
-            recovered: success.state.items.damodaran?.recovered_at === observedAt,
+            recovered: recoveringKeys.has("damodaran"),
           };
         } catch (error) {
           report = {
@@ -823,7 +754,6 @@ export function runDamodaranShadow({
           };
         }
       }
-    }
   }
 
   if (!recoveryResult && report.status !== "match") {

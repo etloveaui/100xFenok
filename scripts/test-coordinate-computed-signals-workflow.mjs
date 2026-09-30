@@ -2,8 +2,7 @@
 // Coordinator / trigger / lane-manifest contract for the one-asset
 // computed-signals pilot (dispatch-decoupling slice).
 //
-// Proves, statically against the committed workflows and the canonical lane
-// commit manifest:
+// Checks the committed workflows and canonical lane policies:
 //   1. the six source workflows never dispatch update-manifest.yml per run and
 //      keep their family publisher steps;
 //   2. coordinate-computed-signals.yml listens to exactly those six workflow
@@ -11,10 +10,7 @@
 //      overlapping completions, resets to latest origin/main, and executes
 //      export -> publish -> cleanup in that exact order with no
 //      Deploy Worker dispatch and no signals Git commit surface;
-//   3. the generated Update Manifest push contract excludes exactly the six
-//      owned canonical/admin source paths while schedule/manual/unrelated
-//      data triggers remain;
-//   4. the coordinator has no Git commit stage or recursive trigger path.
+//   3. the coordinator has no Git commit stage or recursive trigger path.
 
 import assert from "node:assert/strict";
 import fs from "node:fs";
@@ -22,19 +18,13 @@ import path from "node:path";
 import { fileURLToPath } from "node:url";
 
 import {
-  buildLaneCommitManifest,
-  validateLaneCommitManifest,
-} from "./build-lane-commit-manifest.mjs";
-import {
   COMPUTED_SIGNALS_SOURCE_LANE_IDS,
   LANE_REGISTRY,
   PLANE_PUBLISH_FAMILY_BINDINGS,
 } from "./lib/lane-registry.mjs";
-import { canonicalJson } from "./lib/json-canonical.mjs";
 
 const repoRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const workflowsDir = path.join(repoRoot, ".github", "workflows");
-const manifestPath = path.join(repoRoot, "data", "admin", "lane-commit-manifest.json");
 const COORDINATOR = ".github/workflows/coordinate-computed-signals.yml";
 const DISPATCH_CALL = "gh workflow run update-manifest.yml";
 const GLOBAL_WRITER_GROUP = "fenok-data-writer-refs/heads/main";
@@ -190,77 +180,14 @@ for (const { file, family, source } of SOURCE_WORKFLOWS) {
   }
 }
 
-// --- 3) Trigger narrowing (generated Update Manifest push contract) -----------
-function globRegex(pattern) {
-  const escaped = pattern.replace(/[.+^${}()|[\]\\]/g, "\\$&");
-  return new RegExp(`^${escaped.replaceAll("**", "\u0000").replaceAll("*", "[^/]*").replaceAll("\u0000", ".*")}$`);
-}
-
-function pathIncluded(triggerPaths, candidate) {
-  let included = false;
-  for (const entry of triggerPaths) {
-    const negative = entry.startsWith("!");
-    if (globRegex(negative ? entry.slice(1) : entry).test(candidate)) included = !negative;
-  }
-  return included;
-}
-
+// --- 3) Coordinator metadata and recursion exclusion -------------------------
 {
-  const manifest = JSON.parse(fs.readFileSync(manifestPath, "utf8"));
-  validateLaneCommitManifest(manifest, { registry: LANE_REGISTRY });
-  assert.equal(
-    canonicalJson(manifest),
-    canonicalJson(buildLaneCommitManifest(LANE_REGISTRY)),
-    "committed lane-commit-manifest.json must match the canonical build",
-  );
-  const triggerPaths = manifest.update_manifest.trigger_paths;
-  assert.ok(triggerPaths.includes("data/**"), "broad data trigger must remain for unrelated lanes");
-  assert.ok(triggerPaths.includes("!data/computed/**"), "generic computed data must stay excluded");
-  assert.ok(triggerPaths.includes("!data/admin/data-supply-state/**"), "admin state root must stay excluded");
-
-  const exactExclusions = [
-    ...SOURCE_WORKFLOWS.flatMap(({ lane }) => lane.roots.canonical_outputs.map((output) => {
-      const basename = path.posix.basename(output);
-      return `!${basename.includes(".") ? output : `${output}/**`}`;
-    })),
-    ...SOURCE_WORKFLOWS.map(({ lane }) => `!${lane.roots.admin_store}/**`),
-  ];
-  assert.equal(new Set(exactExclusions).size, exactExclusions.length,
-    "registry-derived computed-signals exclusions must be unique");
-  for (const exclusion of exactExclusions) {
-    assert.ok(triggerPaths.includes(exclusion), `trigger_paths must exclude ${exclusion}`);
-  }
-
-  // Every registry-manifest commit path of the six families must NOT trigger
-  // UM. Materialize one representative for directories/globs; the trigger
-  // matcher then proves the enclosing exclusion rather than a hand list.
-  const ownedPaths = SOURCE_WORKFLOWS.flatMap(({ workflow }) => {
-    const policy = manifest.workflows[workflow];
-    assert.ok(policy, `manifest policy must exist for ${workflow}`);
-    return Object.values(policy.stages).flat().map((spec) => {
-      if (spec.kind === "directory") return `${spec.path}/fixture.json`;
-      if (spec.kind === "glob") return spec.path.replace("*", "fixture");
-      return spec.path;
-    });
-  });
-  for (const owned of ownedPaths) {
-    assert.equal(pathIncluded(triggerPaths, owned), false, `${owned} must not implicitly trigger Update Manifest`);
-  }
-
-  // Unrelated data remains an Update Manifest trigger.
-  assert.equal(pathIncluded(triggerPaths, "data/indices/sp500.json"), true, "unrelated data push must still trigger");
-  assert.equal(pathIncluded(triggerPaths, "data/macro/yahoo-ticker.json"), true, "non-excluded macro push must still trigger");
-}
-
-// --- 4) Coordinator metadata and recursion exclusion -------------------------
-{
-  const manifest = JSON.parse(fs.readFileSync(manifestPath, "utf8"));
   const binding = PLANE_PUBLISH_FAMILY_BINDINGS["computed-signals"];
   assert.ok(binding, "computed-signals must be a bound plane publish family");
   assert.equal(binding.workflow, COORDINATOR, "computed-signals publish is owned by the coordinator");
 
-  const entry = manifest.workflows[COORDINATOR];
-  assert.ok(entry, "coordinator workflow must be declared in the lane-commit manifest");
+  const entry = LANE_REGISTRY.workflow_policies[COORDINATOR];
+  assert.ok(entry, "coordinator workflow policy must exist");
   assert.deepEqual(entry.lanes, [], "coordinator owns no acquisition lane");
   assert.deepEqual(entry.stages.always_if_exists, [], "coordinator owns no Git commit outputs");
   assert.deepEqual(entry.stages.success_if_exists, [], "coordinator must never stage canonical signal files");
@@ -275,16 +202,8 @@ function pathIncluded(triggerPaths, candidate) {
   const source = readWorkflow("coordinate-computed-signals.yml");
   const namesBlock = source.slice(source.indexOf("workflow_run:"), source.indexOf("types:"));
   assert.equal(namesBlock.includes("Update Manifest"), false, "coordinator must not listen to Update Manifest");
-  assert.equal(
-    manifest.update_manifest.central_commit_paths.includes("data/computed/signals.json"),
-    true,
-    "signals.json remains owned by Update Manifest reconciliation, not the coordinator",
-  );
-  assert.equal(
-    manifest.update_manifest.central_commit_paths.includes("100xfenok-next/public/data/computed/signals.json"),
-    true,
-    "public signals mirror remains owned by Update Manifest reconciliation",
-  );
+
+
 }
 
 console.log("coordinate-computed-signals: coordinator and triggers ok");

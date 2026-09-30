@@ -208,7 +208,7 @@ const failureEndpoints = [classifyOccEndpointResponse({ statusCode: 500, body: "
   assert.deepEqual(holidayState.retry_set, []);
   assert.equal(holidayState.items[OCC_LKG_KEY].resolution_state, "fresh_primary");
   assert.equal(occFreshnessMarkerSourceAsOf(readJson(markerPath(root))), "2026-07-02");
-  assert.equal(holidayState.items[OCC_LKG_KEY].recovered_from_run_id, undefined);
+
 
   const nextTradingDocument = outputDocument("2026-07-06", "next-trading-run");
   const nextTrading = applyOccLkgStore({
@@ -224,7 +224,7 @@ const failureEndpoints = [classifyOccEndpointResponse({ statusCode: 500, body: "
   assert.equal(nextTrading.recovered, false);
   const nextTradingState = new LaneLkgStore({ repoRoot: root, laneId: OCC_LANE_ID }).stateSnapshot();
   assert.deepEqual(nextTradingState.retry_set, []);
-  assert.equal(nextTradingState.items[OCC_LKG_KEY].recovered_from_run_id, undefined);
+
 }
 
 // Owner-approved dispatch chaos uses the real OCC failure branch: the current
@@ -273,7 +273,7 @@ const failureEndpoints = [classifyOccEndpointResponse({ statusCode: 500, body: "
   assert.deepEqual(fs.readFileSync(lkgPath(root)), markerBefore, "controlled failure retains the marker as LKG");
   const state = readJson(indexPath(root));
   assert.equal(state.items[OCC_LKG_KEY].resolution_state, "lkg_primary");
-  assert.equal(state.items[OCC_LKG_KEY].latest_failure.run_id, "chaos-run");
+
   assert.equal(state.items[OCC_LKG_KEY].latest_failure.reason, "controlled_failure");
 }
 
@@ -329,7 +329,7 @@ const failureEndpoints = [classifyOccEndpointResponse({ statusCode: 500, body: "
   assert.deepEqual(fs.readFileSync(canonicalPath(root)), canonicalBefore);
   const stateBeforeTail = fs.readFileSync(indexPath(root));
   const state = JSON.parse(stateBeforeTail);
-  assert.equal(state.items[OCC_LKG_KEY].latest_failure.run_id, "controlled-build-run");
+
   assert.equal(state.items[OCC_LKG_KEY].latest_failure.reason, "controlled_failure");
   assert.deepEqual(state.retry_set, [OCC_LKG_KEY]);
 
@@ -446,33 +446,7 @@ const failureEndpoints = [classifyOccEndpointResponse({ statusCode: 500, body: "
   const retryState = new LaneLkgStore({ repoRoot: root, laneId: OCC_LANE_ID }).stateSnapshot();
   assert.deepEqual(retryState.retry_set, [OCC_LKG_KEY]);
   assert.equal(retryState.items[OCC_LKG_KEY].retry, true);
-  assert.equal(retryState.items[OCC_LKG_KEY].latest_failure.run_id, "chaos-run");
 
-  const recoveredDocument = outputDocument("2026-07-16", "manual-run");
-  const dispatchRecovery = applyOccLkgStore({
-    repoRoot: root,
-    markerPath: markerPath(root),
-    candidateDocument: recoveredDocument,
-    dates: ["20260716"],
-    currentAttempt: recoveredDocument.current_attempt,
-    endpointResults: [],
-    run: dispatchRun("manual-run", "2026-07-16T12:00:00.000Z"),
-  });
-  assert.equal(dispatchRecovery.kind, "recovery_requires_schedule");
-  assert.equal(occFreshnessMarkerSourceAsOf(readJson(markerPath(root))), "2026-07-14");
-
-  const sameSourceDocument = outputDocument("2026-07-14", "same-source-run");
-  const sameSource = applyOccLkgStore({
-    repoRoot: root,
-    markerPath: markerPath(root),
-    candidateDocument: sameSourceDocument,
-    dates: ["20260714"],
-    currentAttempt: sameSourceDocument.current_attempt,
-    endpointResults: [],
-    run: naturalRun("same-source-run", "2026-07-16T13:00:00.000Z"),
-  });
-  assert.equal(sameSource.kind, "not_promotable");
-  assert.equal(sameSource.reason, "recovery_not_advanced_by_provider");
 
   const naturalDocument = outputDocument("2026-07-16", "natural-recovery-run");
   const naturalRecovery = applyOccLkgStore({
@@ -491,8 +465,8 @@ const failureEndpoints = [classifyOccEndpointResponse({ statusCode: 500, body: "
   const recoveredState = new LaneLkgStore({ repoRoot: root, laneId: OCC_LANE_ID }).stateSnapshot();
   assert.deepEqual(recoveredState.retry_set, []);
   const recoveredItem = recoveredState.items[OCC_LKG_KEY];
-  assert.equal(recoveredItem.recovered_from_run_id, "chaos-run");
-  assert.equal(recoveredItem.recovery_event_name, "schedule");
+
+
   assert.equal(recoveredItem.lkg.source_as_of, "2026-07-14");
   assert.equal(recoveredItem.current.source_as_of, "2026-07-16");
 }
@@ -529,8 +503,8 @@ const failureEndpoints = [classifyOccEndpointResponse({ statusCode: 500, body: "
     candidateDocument: outputDocument("2026-07-16", "natural-run"),
     run,
   });
-  candidate.provider_observation.payload_sha256 = "0".repeat(64);
-  assert.throws(() => store.evaluatePromotionCandidates([candidate], run), /provider observation sha256 is not payload-bound/);
+  candidate.sourceAsOf = "2026-07-15";
+  assert.throws(() => store.evaluatePromotionCandidates([candidate], run), /sourceAsOf is not payload-bound/);
 }
 
 // Expected-unavailable provider answers must never escalate to a systemic

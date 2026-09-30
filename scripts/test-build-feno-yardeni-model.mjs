@@ -5,6 +5,7 @@ import os from "node:os";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 
+import { LANE_REGISTRY } from "./lib/lane-registry.mjs";
 import { DATA_SUPPLY_DETECTION_CONFIG } from "./lib/data-supply-detection-config.mjs";
 import {
   buildFenoYardeniPayload,
@@ -271,11 +272,7 @@ function makeRunPaths(root) {
 
 {
   const workflow = fs.readFileSync(path.join(REPO_ROOT, ".github", "workflows", "fetch-fred-yardeni.yml"), "utf8");
-  const manifest = JSON.parse(fs.readFileSync(
-    path.join(REPO_ROOT, "data", "admin", "lane-commit-manifest.json"),
-    "utf8",
-  ));
-  const workflowLanes = manifest.workflows[".github/workflows/fetch-fred-yardeni.yml"];
+  const workflowLanes = LANE_REGISTRY.workflow_policies[".github/workflows/fetch-fred-yardeni.yml"];
   const canonicalSpec = workflowLanes?.stages?.success_if_exists
     ?.find((spec) => spec.path === "data/yardney/yardney_model.json");
   assert.equal(

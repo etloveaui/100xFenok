@@ -7,7 +7,6 @@
  * artifact is internal by default and must not be mirrored publicly.
  */
 
-import { createHash } from "node:crypto";
 import fs from "node:fs";
 import https from "node:https";
 import path from "node:path";
@@ -18,10 +17,7 @@ import { attemptResult, classifyEndpointResponse, defaultAttemptId, threwTuple, 
 import { DATA_SUPPLY_DETECTION_CONFIG } from "./lib/data-supply-detection-config.mjs";
 import {
   LaneLkgStore,
-  PROMOTION_CONTRACT_PROVIDER_OBSERVATION_V2,
-  buildProviderObservationV2,
   classifyLkgFailure,
-  isNaturalScheduleRun,
 } from "./lib/data-supply-lkg-store.mjs";
 import { boundedDiagnosticDetail, diagnosticSuffix } from "./lib/diagnostic-detail.mjs";
 
@@ -345,7 +341,7 @@ async function loadPages({ filter, maxPages, inputFile, noFetch, cacheDate, priv
   return pages;
 }
 
-function buildSnapshot({ filter, pages, rows, sourceDate, sourceAsOf, providerObservationPayloadSha256, generatedAt }) {
+function buildSnapshot({ filter, pages, rows, sourceDate, sourceAsOf, generatedAt }) {
   const firstPage = pages[0] ?? {};
   const count = Number(firstPage.count) || rows.length;
   return {
@@ -358,7 +354,6 @@ function buildSnapshot({ filter, pages, rows, sourceDate, sourceAsOf, providerOb
       source_url: apeWisdomUrl(filter, 1),
       source_date: sourceDate,
       source_as_of: sourceAsOf,
-      provider_observation_payload_sha256: providerObservationPayloadSha256,
       pages_collected: pages.length,
       reported_count: count,
     },
@@ -453,7 +448,6 @@ export function mergeHistory(snapshot, { dataRoot: root = dataRoot } = {}) {
 async function build(args, {
   cacheDate = ymdNow(),
   sourceAsOf = null,
-  providerObservationPayloadSha256 = null,
   generatedAt = isoNow(),
   dataRoot: root = dataRoot,
   privateDir = privateRoot,
@@ -463,9 +457,6 @@ async function build(args, {
 } = {}) {
   if (typeof sourceAsOf !== "string" || !Number.isFinite(Date.parse(sourceAsOf))) {
     throw new Error("ApeWisdom provider source_as_of is required");
-  }
-  if (!/^[0-9a-f]{64}$/.test(providerObservationPayloadSha256 ?? "")) {
-    throw new Error("ApeWisdom provider observation payload hash is required");
   }
   const pages = suppliedPages ?? await loadPages({
     filter: args.filter,
@@ -492,7 +483,6 @@ async function build(args, {
     rows,
     sourceDate,
     sourceAsOf,
-    providerObservationPayloadSha256,
     generatedAt,
   });
   const history = mergeHistory(snapshot, { dataRoot: root });
@@ -515,28 +505,12 @@ async function build(args, {
   };
 }
 
-function sha256Hex(bytes) {
-  return createHash("sha256").update(bytes).digest("hex");
-}
-
 function serializeDocument(document) {
   return `${JSON.stringify(document, null, 2)}\n`;
 }
 
 function validRfc3339Utc(value) {
   return typeof value === "string" && value.endsWith("Z") && Number.isFinite(Date.parse(value));
-}
-
-function validApeWisdomProviderObservation(document) {
-  return document !== null && typeof document === "object" && !Array.isArray(document)
-    && document.schema_version === "apewisdom-provider-observation/v1"
-    && validRfc3339Utc(document.source_as_of)
-    && document.response !== null && typeof document.response === "object" && !Array.isArray(document.response)
-    && Array.isArray(document.response.results) && document.response.results.length > 0;
-}
-
-function apeWisdomProviderSourceAsOf(document) {
-  return validApeWisdomProviderObservation(document) ? document.source_as_of : null;
 }
 
 function validApeWisdomSnapshot(document) {
@@ -547,7 +521,6 @@ function validApeWisdomSnapshot(document) {
     && validRfc3339Utc(source.source_as_of)
     && validSourceDate(source.source_date)
     && source.source_date === source.source_as_of.slice(0, 10).replaceAll("-", "")
-    && /^[0-9a-f]{64}$/.test(source.provider_observation_payload_sha256 ?? "")
     && Array.isArray(document.rows) && document.rows.length > 0;
 }
 
@@ -594,14 +567,6 @@ function legacyLkgSeedAllowed({ runnerRepoRoot, recoveryState }) {
   const expectedPath = `data/admin/${LANE_ID}/lkg/${LKG_KEY}.json`;
   if (item.resolution_state !== "lkg_primary" || descriptor?.path !== expectedPath) return false;
   return readLegacyApeWisdomSnapshot(path.join(runnerRepoRoot, descriptor.path)) !== null;
-}
-
-function candidateContainsProviderObservation(candidateDocument, providerDocument) {
-  if (!validApeWisdomSnapshot(candidateDocument) || !validApeWisdomProviderObservation(providerDocument)) return false;
-  return candidateDocument.source.source_as_of === providerDocument.source_as_of
-    && candidateDocument.source.provider_observation_payload_sha256 === sha256Hex(
-      Buffer.from(serializeDocument(providerDocument)),
-    );
 }
 
 function validateControlledFailure(value, eventName) {
@@ -683,12 +648,6 @@ export async function runApeWisdomAttention({
 
   const sourceAsOf = providerSourceAsOf(observation.response);
   if (sourceAsOf === null || observation.document === null) return fail("source_date_unavailable");
-  const providerObservation = {
-    schema_version: "apewisdom-provider-observation/v1",
-    source_as_of: sourceAsOf,
-    response: observation.document,
-  };
-  const providerSerialized = serializeDocument(providerObservation);
   const cacheDate = sourceAsOf.slice(0, 10).replaceAll("-", "");
 
   // Reuse the exact page-1 response that supplied the provider-issued Date.
@@ -698,7 +657,6 @@ export async function runApeWisdomAttention({
     built = await build(args, {
       cacheDate,
       sourceAsOf,
-      providerObservationPayloadSha256: sha256Hex(Buffer.from(providerSerialized)),
       generatedAt: observedAt,
       dataRoot: runnerDataRoot,
       privateDir: runnerPrivateRoot,
@@ -718,34 +676,11 @@ export async function runApeWisdomAttention({
     sourceAsOf: apeWisdomSnapshotSourceAsOf(built.snapshot),
     validateDocument: validApeWisdomSnapshot,
     deriveSourceAsOf: apeWisdomSnapshotSourceAsOf,
-    promotion_contract: PROMOTION_CONTRACT_PROVIDER_OBSERVATION_V2,
-    provider_observation: buildProviderObservationV2({
-      payloadBytes: Buffer.from(providerSerialized),
-      sourceAsOf: apeWisdomProviderSourceAsOf(providerObservation),
-      validateDocument: validApeWisdomProviderObservation,
-      deriveSourceAsOf: apeWisdomProviderSourceAsOf,
-      candidateContainsObservation: candidateContainsProviderObservation,
-      run,
-    }),
   };
   const recoveryState = lkgStore.stateSnapshot();
-  if (recoveryState.items[LKG_KEY]?.retry === true && !isNaturalScheduleRun(run)) {
-    return {
-      ok: false,
-      reason: "recovery_requires_schedule",
-      attempt,
-      retrySet: recoveryState.retry_set,
-      degraded: true,
-      corrupt: false,
-      exitCode: 0,
-    };
-  }
   const decisions = lkgStore.evaluatePromotionCandidates([candidate], run);
   if (!decisions[0].eligible) {
     const reason = decisions[0].reason;
-    if (["foreign_writer_conflict", "recovery_not_advanced_by_provider"].includes(reason) && !noWrite) {
-      lkgStore.recordPromotionDeferral({ artifacts: [candidate], run, reason });
-    }
     return {
       ok: false,
       reason,
@@ -759,6 +694,7 @@ export async function runApeWisdomAttention({
   if (noWrite) return { ok: true, reason: "ok", attempt, retrySet: recoveryState.retry_set, wrote: false, recovered: false };
   atomicWrite(canonicalPath, serialized);
   atomicWrite(historyPath, serializeDocument(built.history));
+  const recoveringKeys = new Set(lkgStore.stateSnapshot().retry_set);
   const success = lkgStore.recordSuccess({ artifacts: [candidate], run });
   return {
     ok: true,
@@ -766,7 +702,7 @@ export async function runApeWisdomAttention({
     attempt,
     retrySet: success.retrySet,
     wrote: true,
-    recovered: success.state.items[LKG_KEY]?.recovered_at === observedAt,
+    recovered: recoveringKeys.has(LKG_KEY),
   };
 }
 

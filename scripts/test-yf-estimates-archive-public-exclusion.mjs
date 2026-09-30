@@ -6,6 +6,7 @@ import os from "node:os";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { spawnSync } from "node:child_process";
+import { LANE_REGISTRY } from "./lib/lane-registry.mjs";
 import { removePrivateDataSupplyPublicTrees } from "../100xfenok-next/sync-static-overrides.mjs";
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
@@ -66,8 +67,7 @@ assert.equal(
   "a removed public tree must not remain in the exposed-no-consumer queue",
 );
 
-const laneManifest = JSON.parse(fs.readFileSync(path.join(ROOT, "data/admin/lane-commit-manifest.json"), "utf8"));
-const workflow = laneManifest.workflows?.[".github/workflows/fetch-yf-finance.yml"];
+const workflow = LANE_REGISTRY.workflow_policies[".github/workflows/fetch-yf-finance.yml"];
 const canonicalStages = workflow?.stages?.always_if_exists ?? [];
 assert.equal(
   canonicalStages.some((entry) => entry.path === "data/yf/estimates-archive"),

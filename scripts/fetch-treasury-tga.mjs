@@ -9,11 +9,8 @@ import { fileURLToPath } from "node:url";
 import { boundedDiagnosticDetail, diagnosticSuffix } from "./lib/diagnostic-detail.mjs";
 import {
   LaneLkgStore,
-  PROMOTION_CONTRACT_PROVIDER_OBSERVATION_V2,
   allNaturalRequestsFailed,
-  buildProviderObservationV2,
   classifyLkgFailure,
-  isNaturalScheduleRun,
   systemicLkgFailureReason,
 } from "./lib/data-supply-lkg-store.mjs";
 
@@ -512,31 +509,8 @@ export async function runTreasuryTga({
     sourceAsOf: tgaSourceAsOf(output),
     validateDocument: validTgaDocument,
     deriveSourceAsOf: tgaSourceAsOf,
-    promotion_contract: PROMOTION_CONTRACT_PROVIDER_OBSERVATION_V2,
-    provider_observation: buildProviderObservationV2({
-      payloadBytes: Buffer.from(serialized),
-      sourceAsOf: tgaSourceAsOf(output),
-      validateDocument: validTgaDocument,
-      deriveSourceAsOf: tgaSourceAsOf,
-      candidateContainsObservation: (candidateDocument, providerDocument) => (
-        JSON.stringify(candidateDocument) === JSON.stringify(providerDocument)
-      ),
-      run,
-    }),
   };
   const recoveryState = lkgStore.stateSnapshot();
-  if (recoveryState.items[LKG_KEY]?.retry === true && !isNaturalScheduleRun(run)) {
-    return {
-      ok: false,
-      reason: "recovery_requires_schedule",
-      updated: false,
-      attempt: row,
-      retrySet: recoveryState.retry_set,
-      degraded: true,
-      corrupt: false,
-      exitCode: 0,
-    };
-  }
   const currentCanonical = readValidCanonical(canonicalPath);
   if (currentCanonical !== null && recoveryState.items[LKG_KEY]?.retry !== true) {
     const currentSourceAsOf = tgaSourceAsOf(currentCanonical.document);
@@ -579,9 +553,6 @@ export async function runTreasuryTga({
   const promotable = decisions.filter((decision) => decision.eligible).map((decision) => decision.artifact);
   if (promotable.length === 0) {
     const reason = decisions[0].reason;
-    if (["foreign_writer_conflict", "recovery_not_advanced_by_provider"].includes(reason)) {
-      lkgStore.recordPromotionDeferral({ artifacts: [candidate], run, reason });
-    }
     return {
       ok: false,
       reason,
@@ -594,8 +565,9 @@ export async function runTreasuryTga({
     };
   }
   atomicWrite(canonicalPath, serialized);
+  const recoveringKeys = new Set(lkgStore.stateSnapshot().retry_set);
   const success = lkgStore.recordSuccess({ artifacts: promotable, run });
-  const recovered = success.state.items[LKG_KEY]?.recovered_at === observedAt;
+  const recovered = recoveringKeys.has(LKG_KEY);
   return { ok: true, reason: "ok", updated: true, attempt: row, points: output.series.length, recovered };
 }
 

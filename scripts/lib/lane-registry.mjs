@@ -1228,6 +1228,13 @@ const lanes = [
 // (DEC-266 discipline: statically declared, never runtime-inferred).
 const declared_exceptions = [
   {
+    path: "data/admin/stockanalysis-recovery",
+    kind: "root",
+    reason: "canonical recovery state and retained-good payloads; no public reader, so preserve the source and prune its duplicate public backup",
+    owner: "stockanalysis",
+    public_sync: "exclude",
+  },
+  {
     path: "data/admin/slickcharts-daily-delivery",
     kind: "root",
     reason: "row-10 compatibility per-file delivery LKG; row-9 recovery authority is the separate five-member composite store",
@@ -1288,7 +1295,8 @@ const declared_exceptions = [
   {
     path: "data/admin/lane-commit-manifest.json",
     kind: "file",
-    reason: "private deterministic workflow commit/routing manifest; generated from this registry and intentionally excluded from public sync and Update Manifest self-triggering",
+    may_be_absent: true,
+    reason: "retired private workflow manifest path; retain the public-sync refusal for legacy files",
     owner: "platform",
     public_sync: "exclude",
   },
@@ -1752,18 +1760,12 @@ workflow_policies[".github/workflows/pins-autosync.yml"] = policy([], {
     commitSpec("scripts/fixtures/lane-registry/registry.expected.json", "file"),
     commitSpec("scripts/fixtures/derived-asset-registry/registry.expected.json", "file"),
     commitSpec("scripts/fixtures/data_supply/policy_registry/registry.expected.json", "file"),
-    commitSpec("data/admin/lane-commit-manifest.json", "file"),
-    commitSpec("scripts/fixtures/update-manifest/materializations.expected.json", "file"),
     commitSpec("data/admin/lane-registry-projection.json", "file"),
     commitSpec("100xfenok-next/public/data/admin/lane-registry-projection.json", "file"),
-    commitSpec("100xfenok-next/scripts/cloud-data-plane/cloud-data-plane-enrollment.generated.mjs", "file"),
-    commitSpec("scripts/fixtures/cloud-data-plane/etf-migration-demand.json", "file"),
-    commitSpec("scripts/fixtures/cloud-data-plane/global-scouter-migration-demand.json", "file"),
     commitSpec("scripts/fixtures/data_supply/detection_floor/cases.expected.json", "file"),
     commitSpec("data/admin/data-supply-detection-floor.json", "file"),
     commitSpec("data/admin/fenok-data-health-kpi.json", "file"),
     commitSpec("100xfenok-next/public/data/admin/fenok-data-health-kpi.json", "file"),
-    commitSpec("100xfenok-next/scripts/fixtures/ink4-contrast-sites.json", "file"),
   ],
 });
 workflow_policies[".github/workflows/update-manifest.yml"] = policy([], {
@@ -1771,7 +1773,7 @@ workflow_policies[".github/workflows/update-manifest.yml"] = policy([], {
 });
 // The computed-signals coordinator publishes to the plane without a Git write.
 // It owns no lane and stages nothing, which is what the empty `lanes` list
-// declares; build-lane-commit-manifest accepts that shape.
+// declares; its direct staging policy therefore has no committed paths.
 workflow_policies[".github/workflows/coordinate-computed-signals.yml"] = policy([], {
   always_if_exists: [],
 });

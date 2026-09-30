@@ -11,6 +11,8 @@ import fs from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 
+import { UPDATE_MANIFEST_MATERIALIZATIONS } from "./materialize-update-manifest-routes.mjs";
+
 const REPO_ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const SEC13F_CONVERTER_ANALYTICS = Object.freeze([
   "buying_pressure.json",
@@ -151,10 +153,7 @@ assert.match(sources["scripts/build-revision-movers.mjs"], /writeFileSync\(OUT, 
 assert.match(sources["scripts/build-industry-benchmarks.mjs"], /writeFileSync\(OUT, JSON\.stringify\(payload\)\)/u);
 assert.match(sources["scripts/build-slickcharts-discovery.mjs"], /writeJson\(PATHS\.output, payload\)/u);
 
-const manifest = JSON.parse(
-  fs.readFileSync(path.join(REPO_ROOT, "data/admin/lane-commit-manifest.json"), "utf8"),
-);
-const routes = manifest.update_manifest.materializations;
+const routes = UPDATE_MANIFEST_MATERIALIZATIONS;
 for (const [relativePath, removedOutputs] of Object.entries(REMOVED_MIRROR_OUTPUTS)) {
   for (const expectedRoute of removedOutputs) {
     const covering = routes.filter((route) => (

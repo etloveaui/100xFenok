@@ -9,20 +9,16 @@
 
 import fs from "node:fs";
 import path from "node:path";
-import { createHash } from "node:crypto";
 import { isDeepStrictEqual } from "node:util";
 import { fileURLToPath } from "node:url";
 
 import {
   LaneLkgStore,
-  PROMOTION_CONTRACT_PROVIDER_OBSERVATION_V2,
-  buildProviderObservationV2,
   classifyLkgFailure,
-  isEligibleRecoveryRun,
 } from "./lib/data-supply-lkg-store.mjs";
 import {
-  activeKrxUniverseCodes,
-  buildKrxIssuerDailyCoverageReceipt,
+  buildKrxIssuerDailyCoverage,
+  currentListedKrxUniverseRows,
   normalizeKrxCoverageCode,
 } from "./lib/fenok-edge-krx-coverage-receipt.mjs";
 
@@ -869,6 +865,40 @@ async function fetchJson(endpoint, basDd, authKey, timeoutMs) {
   }
 }
 
+// Only enforce fields consumed by this fetcher's existing public/derived outputs.
+// Other endpoint payloads keep their existing row-count and provider-date checks.
+function krxConsumedPayloadError(apiId, data) {
+  const isIndex = PUBLIC_INDEX_ENDPOINTS.some((endpoint) => endpoint.api_id === apiId);
+  const isIssuerDaily = REQUIRED_DAILY_ISSUER_ENDPOINTS.has(apiId);
+  const isIssuerMaster = Object.hasOwn(CURRENT_ISSUER_MASTER_MARKETS, apiId);
+  if (!isIndex && !isIssuerDaily && !isIssuerMaster && apiId !== "kts_bydd_trd") return null;
+  const rows = data?.OutBlock_1;
+  if (!Array.isArray(rows) || rows.length === 0) return "KRX payload invalid: required OutBlock_1 rows";
+  const text = (value) => typeof value === "string" && value.trim().length > 0;
+  const numeric = (value) => (typeof value === "number" || text(value)) && Number.isFinite(Number(value));
+  if (rows.some((row) => !row || typeof row !== "object" || Array.isArray(row))) return "KRX payload invalid: required row object";
+  if (isIndex) {
+    if (rows.some((row) => !text(row.IDX_NM) || row.ISU_CD != null || row.ISU_NM != null)) return "KRX payload invalid: required aggregate index identity";
+    if (rows.some((row) => !numeric(row.CLSPRC_IDX))) return "KRX payload invalid: required numeric CLSPRC_IDX";
+  } else if (isIssuerMaster) {
+    // Preserve the master code aliases already accepted by the listing filter.
+    const hasMasterCode = (row) => [row.ISU_SRT_CD, row.ISU_CD, row.ISU_CODE, row.SHORT_CODE]
+      .some((value) => /^(?:[0-9A-Z]{6}|KR[0-9A-Z]{10})$/u.test(String(value ?? "").trim().toUpperCase()));
+    if (rows.some((row) => !hasMasterCode(row))) return "KRX payload invalid: required listed issuer identity";
+  } else if (isIssuerDaily) {
+    if (rows.some((row) => !text(row.MKT_NM) || !text(row.ISU_CD))) return "KRX payload invalid: required issuer and market identity";
+    const market = apiId === "stk_bydd_trd" ? "KOSPI" : "KOSDAQ";
+    const consumed = rows.filter((row) => row.MKT_NM === market);
+    if (consumed.length === 0) return "KRX payload invalid: required consumed market rows";
+    if (consumed.some((row) => !numeric(row.MKTCAP) || Number(row.MKTCAP) < 0)) return "KRX payload invalid: required nonnegative numeric MKTCAP";
+  } else {
+    const benchmarks = rows.filter((row) => String(row.BND_EXP_TP_NM ?? "").trim() === "10" && String(row.GOVBND_ISU_TP_NM ?? "").trim() === "지표");
+    if (benchmarks.length === 0 || benchmarks.some((row) => !text(row.ISU_NM))) return "KRX payload invalid: required 10Y benchmark identity";
+    if (benchmarks.some((row) => !numeric(row.CLSPRC_YD))) return "KRX payload invalid: required numeric benchmark CLSPRC_YD";
+  }
+  return null;
+}
+
 function readCachedRaw(filePath) {
   try {
     const data = JSON.parse(fs.readFileSync(filePath, "utf8"));
@@ -1250,76 +1280,44 @@ function buildDerivedRimInputs(manifest, config) {
   };
 }
 
-function normalizeIssuerMasterCode(row) {
-  for (const value of [row?.ISU_SRT_CD, row?.ISU_CD, row?.ISU_CODE, row?.SHORT_CODE]) {
-    const raw = String(value ?? "").trim().toUpperCase();
-    if (/^[0-9A-Z]{6}$/u.test(raw)) return raw;
-    if (/^KR[0-9A-Z]{10}$/u.test(raw)) return raw.slice(3, 9);
-  }
-  return "";
-}
-
-function currentListedActiveUniverseRows({ manifest, activeUniverseRows }) {
-  const listedCodesByMarket = {
-    KRX: new Set(),
-    KOSDAQ: new Set(),
-  };
-  const observedMarkets = new Set();
+function currentListedActiveUniverseRows({ manifest, activeUniverseRows, sourceDate }) {
+  const issuerMasterRowsByMarket = { KRX: [], KOSDAQ: [] };
   for (const file of manifest.files ?? []) {
     const market = CURRENT_ISSUER_MASTER_MARKETS[file.api_id];
     if (!market || !file.path || file.status !== "success" || Number(file.row_count) <= 0) continue;
+    if ((file.date ?? file.basDd ?? file.path.match(/(\d{8})\.json$/u)?.[1])?.replaceAll("-", "") !== sourceDate.replaceAll("-", "")) continue;
     const payload = readOptionalJson(resolveRepoPath(file.path));
-    const rows = Array.isArray(payload?.OutBlock_1) ? payload.OutBlock_1 : [];
-    for (const row of rows) {
-      const code = normalizeIssuerMasterCode(row);
-      if (code) listedCodesByMarket[market].add(code);
-    }
-    if (listedCodesByMarket[market].size > 0) observedMarkets.add(market);
+    issuerMasterRowsByMarket[market].push(...(Array.isArray(payload?.OutBlock_1) ? payload.OutBlock_1 : []));
   }
-  if (!Object.values(CURRENT_ISSUER_MASTER_MARKETS).every((market) => observedMarkets.has(market))) return null;
-  return (Array.isArray(activeUniverseRows) ? activeUniverseRows : []).filter((row) => {
-    if (row?.market !== "KRX" && row?.market !== "KOSDAQ") return false;
-    const code = normalizeKrxCoverageCode(row?.ticker_normalized ?? row?.ticker);
-    return code && listedCodesByMarket[row.market].has(code);
-  });
+  return currentListedKrxUniverseRows({ activeUniverseRows, issuerMasterRowsByMarket });
 }
 
-function buildIssuerDailyCoverageReceipt({ manifest, config, bridgeDocument, activeUniverseRows }) {
-  const listedActiveUniverseRows = currentListedActiveUniverseRows({ manifest, activeUniverseRows });
+function buildIssuerDailyCoverage({ manifest, config, bridgeDocument, activeUniverseRows }) {
+  const listedActiveUniverseRows = currentListedActiveUniverseRows({ manifest, activeUniverseRows, sourceDate: bridgeDocument.as_of });
   if (!listedActiveUniverseRows) return null;
-  const activeUniverseCodes = activeKrxUniverseCodes(listedActiveUniverseRows);
-  const coveredCodes = new Set();
   const coveredCodesByMarket = {
     KRX: new Set(),
     KOSDAQ: new Set(),
   };
   for (const file of manifest.files ?? []) {
     if (!file.path || !REQUIRED_DAILY_ISSUER_ENDPOINTS.has(file.api_id) || file.status !== "success" || Number(file.row_count) <= 0) continue;
+    if ((file.provider_source_date ?? file.date ?? file.basDd ?? file.path.match(/(\d{8})\.json$/u)?.[1])?.replaceAll("-", "") !== bridgeDocument.as_of.replaceAll("-", "")) continue;
     const market = file.api_id === "ksq_bydd_trd" ? "KOSDAQ" : "KRX";
     const payload = readOptionalJson(resolveRepoPath(file.path));
     for (const row of Array.isArray(payload?.OutBlock_1) ? payload.OutBlock_1 : []) {
       const code = String(row?.ISU_CD ?? "").replace(/[^0-9A-Z]/giu, "").slice(0, 6).toUpperCase();
       if (code) {
-        coveredCodes.add(code);
         coveredCodesByMarket[market].add(code);
       }
     }
   }
-  const proofManifestPath = path.join(config.outputRoot, "manifest.json");
-  if (!fs.existsSync(proofManifestPath)) return null;
-  const proofManifestSha256 = createHash("sha256")
-    .update(fs.readFileSync(proofManifestPath))
-    .digest("hex");
-  const receipt = buildKrxIssuerDailyCoverageReceipt({
-    bridgeDocument,
-    activeUniverseCodes,
-    coveredCodes,
+  const coverage = buildKrxIssuerDailyCoverage({
+    sourceDate: bridgeDocument.as_of,
     activeUniverseRows: listedActiveUniverseRows,
     sourceActiveUniverseRows: activeUniverseRows,
     coveredCodesByMarket,
-    proofManifestSha256,
   });
-  if (receipt?.missing_count > 0) {
+  if (coverage?.missing_count > 0) {
     const normalizedCoveredCodesByMarket = Object.fromEntries(
       Object.entries(coveredCodesByMarket).map(([market, codes]) => [market, new Set(codes)]),
     );
@@ -1340,17 +1338,16 @@ function buildIssuerDailyCoverageReceipt({ manifest, config, bridgeDocument, act
     }
     const missingIssuers = [...missingByIdentity.values()]
       .sort((a, b) => `${a.market}:${a.code}`.localeCompare(`${b.market}:${b.code}`));
-    if (missingIssuers.length !== receipt.missing_count) {
-      throw new Error(`KRX private issuer diagnostic count mismatch: expected=${receipt.missing_count} actual=${missingIssuers.length}`);
+    if (missingIssuers.length !== coverage.missing_count) {
+      throw new Error(`KRX private issuer diagnostic count mismatch: expected=${coverage.missing_count} actual=${missingIssuers.length}`);
     }
     const diagnostic = {
       schema_version: "fenok_krx_private_issuer_coverage_gap/v1",
       generated_at: bridgeDocument.generated_at,
       source_date: bridgeDocument.as_of,
-      run_id: bridgeDocument.latest_run.run_id,
-      covered_count: receipt.covered_count,
-      denominator: receipt.denominator,
-      missing_count: receipt.missing_count,
+      covered_count: coverage.covered_count,
+      denominator: coverage.denominator,
+      missing_count: coverage.missing_count,
       missing_issuers: missingIssuers,
       raw_public: false,
     };
@@ -1362,21 +1359,7 @@ function buildIssuerDailyCoverageReceipt({ manifest, config, bridgeDocument, act
     });
     console.log(`KRX_PRIVATE_ISSUER_COVERAGE_GAP ${JSON.stringify(diagnostic)}`);
   }
-  if (receipt) {
-    console.log(`KRX_ISSUER_DAILY_COVERAGE_RECEIPT ${JSON.stringify({
-      schema_version: receipt.schema_version,
-      source_date: receipt.source_date,
-      covered_count: receipt.covered_count,
-      denominator: receipt.denominator,
-      missing_count: receipt.missing_count,
-      market_coverage: receipt.market_coverage,
-      listing_status_filter: receipt.listing_status_filter,
-      status: receipt.status,
-      raw_public: receipt.raw_public,
-      per_issuer_rows: receipt.per_issuer_rows,
-    })}`);
-  }
-  return receipt;
+  return coverage;
 }
 
 function buildBridgeIndex(manifest, groupManifests, config, options = {}) {
@@ -1464,15 +1447,15 @@ function buildBridgeIndex(manifest, groupManifests, config, options = {}) {
       command: batchCommandTemplate(),
     },
   };
-  const issuerDailyCoverageReceipt = buildIssuerDailyCoverageReceipt({
+  const issuerDailyCoverage = buildIssuerDailyCoverage({
     manifest,
     config,
     bridgeDocument,
     activeUniverseRows: options.activeUniverseRows
       ?? readOptionalJson(path.join(REPO_ROOT, "data/computed/fenok_signals.json"))?.rows,
   });
-  return issuerDailyCoverageReceipt
-    ? { ...bridgeDocument, issuer_daily_coverage_receipt: issuerDailyCoverageReceipt }
+  return issuerDailyCoverage
+    ? { ...bridgeDocument, issuer_daily_coverage: issuerDailyCoverage }
     : bridgeDocument;
 }
 
@@ -1708,10 +1691,9 @@ export function applyKrxLkgContract({
   publicIndexCloses = null,
   publicKosdaqMarketCap = null,
   run,
-  freshProviderObservation = false,
   failureReason = null,
   controlledFailure = false,
-  store = new LaneLkgStore({ repoRoot, laneId: KRX_LANE_ID, allowBoundWorkflowDispatchRecovery: true }),
+  store = new LaneLkgStore({ repoRoot, laneId: KRX_LANE_ID }),
   io = fs,
 }) {
   if (controlledFailure && run?.eventName !== "workflow_dispatch") {
@@ -1747,48 +1729,15 @@ export function applyKrxLkgContract({
     sourceAsOf: bridgeDocument.as_of,
     validateDocument: validKrxBridge,
     deriveSourceAsOf: krxBridgeSourceAsOf,
-    promotion_contract: PROMOTION_CONTRACT_PROVIDER_OBSERVATION_V2,
-    provider_observation: buildProviderObservationV2({
-      payloadBytes,
-      sourceAsOf: bridgeDocument.as_of,
-      validateDocument: validKrxBridge,
-      deriveSourceAsOf: krxBridgeSourceAsOf,
-      candidateContainsObservation: isDeepStrictEqual,
-      run,
-    }),
   };
 
   const before = store.stateSnapshot().items[KRX_LKG_KEY];
-  if (before?.retry === true && !isEligibleRecoveryRun(run, true)) {
+  if (bridgeDocument.as_of > seoulCivilDate(new Date(run.observedAt))) {
     return {
-      kind: "recovery_requires_schedule",
-      ok: false,
-      updated: false,
-      attempt_outcome: "failure",
-      reason: "recovery_requires_schedule",
-      retry_set: store.stateSnapshot().retry_set,
-      degraded: true,
-      corrupt: false,
-      exit_code: 0,
+      kind: "not_promotable", ok: false, updated: false, attempt_outcome: "failure",
+      reason: "provider_source_future", retry_set: store.stateSnapshot().retry_set,
+      degraded: before?.retry === true, corrupt: false, exit_code: 0,
     };
-  }
-  if (before?.retry === true && run.eventName === "workflow_dispatch") {
-    const reason = freshProviderObservation !== true
-      ? "manual_recovery_requires_fresh_fetch"
-      : bridgeDocument.as_of > seoulCivilDate(new Date(run.observedAt)) ? "provider_source_future" : null;
-    if (reason) {
-      return {
-        kind: "not_promotable",
-        ok: false,
-        updated: false,
-        attempt_outcome: "failure",
-        reason,
-        retry_set: store.stateSnapshot().retry_set,
-        degraded: true,
-        corrupt: false,
-        exit_code: 0,
-      };
-    }
   }
   // Canonical and durable provider dates establish the floor during recovery
   // too: retained LKG may predate an independently advanced canonical file.
@@ -1804,7 +1753,6 @@ export function applyKrxLkgContract({
     validKrxBridge(currentBridge) ? krxBridgeSourceAsOf(currentBridge) : null,
     before?.current?.source_as_of,
     before?.lkg?.source_as_of,
-    before?.provider_observation?.source_as_of,
   ].filter(validIsoDate).sort().at(-1) ?? null;
   if (monotonicSourceFloor !== null
     && Date.parse(bridgeDocument.as_of) < Date.parse(monotonicSourceFloor)) {
@@ -1822,9 +1770,6 @@ export function applyKrxLkgContract({
   }
   const [decision] = store.evaluatePromotionCandidates([candidate], run);
   if (!decision.eligible) {
-    if (["foreign_writer_conflict", "recovery_not_advanced_by_provider"].includes(decision.reason)) {
-      store.recordPromotionDeferral({ artifacts: [candidate], run, reason: decision.reason });
-    }
     return {
       kind: "not_promotable",
       ok: false,
@@ -1852,7 +1797,6 @@ export function applyKrxLkgContract({
       attempt_outcome: "success",
       reason: "ok",
       retry_set: success.retrySet,
-      recovered: success.state.items[KRX_LKG_KEY]?.recovered_at === run.observedAt,
       degraded: false,
       corrupt: false,
       exit_code: 0,
@@ -1910,7 +1854,6 @@ async function run(argv = process.argv.slice(2), dependencies = {}) {
   const manifest = buildManifest(config, startedAt);
   const groupManifests = buildGroupManifests(config, startedAt);
   const tasks = buildTasks(config.dates);
-  let freshFetchCount = 0;
 
   console.log(`Starting ${MARKET} KRX daily fetch: ${tasks.length} calls, output=${repoRel(config.outputRoot)}`);
 
@@ -1940,7 +1883,6 @@ async function run(argv = process.argv.slice(2), dependencies = {}) {
     } else {
       try {
         result = await fetchJson(task.endpoint, task.basDd, authKey, config.timeoutMs);
-        if (["success", "empty"].includes(result.status)) freshFetchCount += 1;
       } catch (error) {
         result = {
           data: { error: shortErrorMessage(error) },
@@ -1953,10 +1895,6 @@ async function run(argv = process.argv.slice(2), dependencies = {}) {
     }
 
     const serialized = `${JSON.stringify(result.data, null, 2)}\n`;
-    if (!config.noWrite) {
-      ensureDir(rawDir);
-      fs.writeFileSync(filePath, serialized, "utf8");
-    }
     const providerSourceDate = task.endpoint.endpoint_class === "daily-history" && result.status === "success"
       ? inspectKrxProviderSourceDate(result.data, task.basDd)
       : {
@@ -1964,6 +1902,25 @@ async function run(argv = process.argv.slice(2), dependencies = {}) {
         source_date: null,
         source_field: null,
       };
+    if (result.status === "success") {
+      const payloadError = krxConsumedPayloadError(task.endpoint.api_id, result.data);
+      if (payloadError) result = { ...result, error: payloadError, row_count: 0, status: "failed" };
+    }
+    if (!config.noWrite) {
+      const validCandidate = result.status === "success"
+        && (task.endpoint.endpoint_class !== "daily-history" || providerSourceDate.status === "verified");
+      const retained = validCandidate ? null : readCachedRaw(filePath);
+      const hasGoodRaw = retained?.status === "success"
+        && krxConsumedPayloadError(task.endpoint.api_id, retained.data) === null
+        && (task.endpoint.endpoint_class !== "daily-history"
+          || inspectKrxProviderSourceDate(retained.data, task.basDd).status === "verified");
+      // A failed/empty/malformed attempt remains visible in the manifest. It
+      // cannot destroy the prior usable response for this endpoint and date.
+      if (validCandidate || !hasGoodRaw) {
+        ensureDir(rawDir);
+        fs.writeFileSync(filePath, serialized, "utf8");
+      }
+    }
     const fileRecord = {
       ...baseRecord,
       name: fileName,
@@ -2030,7 +1987,6 @@ async function run(argv = process.argv.slice(2), dependencies = {}) {
           publicIndexCloses,
           publicKosdaqMarketCap,
           run: recoveryRun,
-          freshProviderObservation: tasks.length > 0 && freshFetchCount === tasks.length,
         });
       } catch {
         recovery = applyKrxLkgContract({

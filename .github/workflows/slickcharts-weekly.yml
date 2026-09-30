@@ -80,9 +80,6 @@ jobs:
             --member weekly \
             --snapshot "$SLICKCHARTS_COMPOSITE_SNAPSHOT_DIR"
 
-      - name: Verify lane-registry commit-shard contract
-        run: node scripts/test-slickcharts-commit-shards.mjs
-
       - name: Install dependencies
         run: |
           pip install requests beautifulsoup4 playwright

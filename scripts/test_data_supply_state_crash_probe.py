@@ -193,7 +193,7 @@ def main():
         )
         lkg[entity] = bind_selection_to_provider_lkg(previous, ref)
     current[entity] = selected
-    recovery[entity] = {"consecutive_green": 0, "last_transition": "primary_to_fallback"}
+    recovery[entity] = {"last_transition": "primary_to_fallback"}
     transaction_id = store.prepare_transition(
         domain=domain,
         entity=entity,
@@ -204,7 +204,6 @@ def main():
         expected_active_transaction_id=active["transaction_id"],
         transition="primary_to_fallback",
         reason_code="primary_unavailable_fallback_valid",
-        recovery_green_count=0,
         decided_at="2026-07-10T03:00:00Z",
     )
     store.commit_prepared(domain, transaction_id)

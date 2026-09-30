@@ -18,8 +18,7 @@ import {
   LANE_REGISTRY,
   PLANE_PUBLISH_FAMILY_BINDINGS,
 } from "./lib/lane-registry.mjs";
-import { PLANE_ENROLLMENT_EXACT } from "../100xfenok-next/scripts/cloud-data-plane/cloud-data-plane-enrollment.generated.mjs";
-import { derivePublicPlaneEnrollment } from "./lib/plane-enrollment-derivation.mjs";
+import { PLANE_ENROLLMENT_EXACT, PLANE_ENROLLMENT_PREFIXES } from "../100xfenok-next/scripts/cloud-data-plane/cloud-data-plane-enrollment.generated.mjs";
 
 const FAMILY = "earnings-overview";
 const WORKFLOW = ".github/workflows/refresh-earnings-overview.yml";
@@ -240,23 +239,11 @@ function validDocument(ticker, newestEnd, olderEnd, updatedAt = "2026-09-06T12:0
   );
 }
 
-// Enrollment and Worker-first routing are generated from the public family
-// descriptor. This assertion gives the hosted RED a precise stale-descriptor
-// failure until the lead intentionally regenerates the artifact after the
-// publisher contract is green.
+// The finite committed serving allowlist stays in place after derivation retirement.
 {
-  const enrollment = derivePublicPlaneEnrollment(FAMILIES);
-  assert.deepEqual(
-    enrollment.exact.filter(([, family]) => family === FAMILY),
-    [...TICKERS].sort().map((ticker) => [`/data/earnings-overview/${ticker}.json`, FAMILY]),
-  );
-  assert.deepEqual(PLANE_ENROLLMENT_EXACT.filter(([, family]) => family === FAMILY), enrollment.exact.filter(([, family]) => family === FAMILY), "committed Worker enrollment must match the verified bounded family");
-  assert.equal(
-    enrollment.prefixes.some(({ family }) => family === FAMILY),
-    false,
-    "finite earnings allowlist must not become a broad public prefix",
-  );
-
+  assert.deepEqual(PLANE_ENROLLMENT_EXACT.filter(([, family]) => family === FAMILY),
+    [...TICKERS].sort().map((ticker) => [`/data/earnings-overview/${ticker}.json`, FAMILY]));
+  assert.equal(PLANE_ENROLLMENT_PREFIXES.some((row) => row.family === FAMILY), false, "finite earnings allowlist must not become a public prefix");
   const wrangler = await readFile(
     new URL("../100xfenok-next/wrangler.jsonc", import.meta.url),
     "utf8",

@@ -46,10 +46,7 @@ import { classifyHttpResponse, evaluateEndpointAssertions, foldWorstTuples, retu
 import { buildAttemptRow } from "./lib/provider-fetch-result.mjs";
 import {
   LaneLkgStore,
-  PROMOTION_CONTRACT_PROVIDER_OBSERVATION_V2,
-  buildProviderObservationV2,
   classifyLkgFailure,
-  isNaturalScheduleRun,
 } from './lib/data-supply-lkg-store.mjs';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
@@ -723,15 +720,6 @@ function bundleCandidate(source, bundle, serialized, providerBundle, providerSer
     sourceAsOf: bundle.source_as_of,
     validateDocument,
     deriveSourceAsOf,
-    promotion_contract: PROMOTION_CONTRACT_PROVIDER_OBSERVATION_V2,
-    provider_observation: buildProviderObservationV2({
-      payloadBytes: Buffer.from(providerSerialized),
-      sourceAsOf: providerBundle.source_as_of,
-      validateDocument,
-      deriveSourceAsOf,
-      candidateContainsObservation: sourceBundleContainsObservation,
-      run,
-    }),
   };
 }
 
@@ -839,25 +827,16 @@ export async function runSentiment({
         const providerSerialized = serializeBundle(providerBundle);
         const candidate = bundleCandidate(source, bundle, serialized, providerBundle, providerSerialized, run);
         const before = lkgStore.stateSnapshot().items[source.key];
-        if (before?.retry === true && !isNaturalScheduleRun(run)) {
-          failedTracked.push({ source, reason: 'recovery_requires_schedule', requestFailed: false });
-          classifications.push({ degraded: true, corrupt: false, exitCode: 0 });
-          sourceOutcomes.push({ key: source.key, status: 'degraded', reason: 'recovery_requires_schedule' });
-          failCount++;
-          continue;
-        }
         const decisions = lkgStore.evaluatePromotionCandidates([candidate], run);
         if (!decisions[0].eligible) {
           const reason = decisions[0].reason;
-          if (['foreign_writer_conflict', 'recovery_not_advanced_by_provider'].includes(reason)) {
-            lkgStore.recordPromotionDeferral({ artifacts: [candidate], run, reason });
-          }
           failedTracked.push({ source, reason, requestFailed: false });
           classifications.push({ degraded: true, corrupt: false, exitCode: 0 });
           sourceOutcomes.push({ key: source.key, status: 'degraded', reason });
           failCount++;
           continue;
         }
+        const recoveringKeys = new Set(lkgStore.stateSnapshot().retry_set);
         const success = withFileRollback(
           sourcePublicationPaths({ repoRoot, outputDir, source, results, lkgStore }),
           () => {
@@ -873,7 +852,7 @@ export async function runSentiment({
             return recordSuccessFn({ store: lkgStore, artifacts: [candidate], run });
           },
         );
-        if (success.state.items[source.key]?.recovered_at === observedAt) recoveredSources.push(source.key);
+        if (recoveringKeys.has(source.key)) recoveredSources.push(source.key);
       } else {
         withFileRollback(
           sourcePublicationPaths({ repoRoot, outputDir, source, results, lkgStore }),

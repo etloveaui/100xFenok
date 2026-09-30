@@ -123,17 +123,6 @@ jobs:
           if-no-files-found: ignore
           retention-days: 7
 
-      - name: Upload synthetic product flow evidence
-        if: ${{ always() && inputs.suite == 'npm-script' && inputs.script == 'qa:product-flow-isolated' }}
-        uses: actions/upload-artifact@v4
-        with:
-          name: product-flow-ui
-          path: |
-            100xfenok-next/test-results/product-flow/*.png
-            100xfenok-next/test-results/product-flow/*.json
-          if-no-files-found: ignore
-          retention-days: 7
-
       - name: Upload WIND DOWN practice projection
         if: ${{ success() && inputs.suite == 'npm-script' && inputs.script == 'qa:winddown-practice-publication' }}
         uses: actions/upload-artifact@v4
@@ -151,10 +140,8 @@ jobs:
         with:
           name: verified-scouter-projections
           path: |
-            data/admin/lane-commit-manifest.json
             data/admin/lane-registry-projection.json
             100xfenok-next/public/data/admin/lane-registry-projection.json
-            scripts/fixtures/cloud-data-plane/global-scouter-migration-demand.json
           if-no-files-found: error
           retention-days: 7
 
@@ -186,15 +173,6 @@ jobs:
           if-no-files-found: error
           retention-days: 7
 
-      - name: Upload earnings UI evidence
-        if: ${{ always() && inputs.suite == 'npm-script' && (inputs.script == 'qa:earnings-overview-isolated' || inputs.script == 'qa:earnings-overview-browser' || inputs.script == 'qa:earnings-overview-live') }}
-        uses: actions/upload-artifact@v4
-        with:
-          name: earnings-overview-ui
-          path: 100xfenok-next/test-results/earnings-overview/*.png
-          if-no-files-found: ignore
-          retention-days: 7
-
       - name: Upload earnings registry projections
         if: ${{ success() && inputs.suite == 'npm-script' && inputs.script == 'build:earnings-overview-pins' }}
         uses: actions/upload-artifact@v4
@@ -204,18 +182,13 @@ jobs:
             scripts/fixtures/lane-registry/registry.expected.json
             scripts/fixtures/derived-asset-registry/registry.expected.json
             scripts/fixtures/data_supply/policy_registry/registry.expected.json
-            data/admin/lane-commit-manifest.json
-            scripts/fixtures/update-manifest/materializations.expected.json
             data/admin/lane-registry-projection.json
             100xfenok-next/public/data/admin/lane-registry-projection.json
             100xfenok-next/scripts/cloud-data-plane/cloud-data-plane-enrollment.generated.mjs
-            scripts/fixtures/cloud-data-plane/etf-migration-demand.json
-            scripts/fixtures/cloud-data-plane/global-scouter-migration-demand.json
             scripts/fixtures/data_supply/detection_floor/cases.expected.json
             data/admin/data-supply-detection-floor.json
             data/admin/fenok-data-health-kpi.json
             100xfenok-next/public/data/admin/fenok-data-health-kpi.json
-            100xfenok-next/scripts/fixtures/ink4-contrast-sites.json
           if-no-files-found: error
           retention-days: 7
 

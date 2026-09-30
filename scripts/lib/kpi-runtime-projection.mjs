@@ -7,9 +7,8 @@
  * lane/count/retry summaries; generic natural-recovery rows use an explicit
  * field allowlist. Other non-runtime shape passes through unchanged.
  *
- * Consumers (contract §4): the builder's public-mirror write, sync-static-overrides
- * post-copy, and the checker's equality recompute. All three must agree, so the
- * projection must be a pure function of (rootDoc, nowIso).
+ * sync-static-overrides applies this allowlist after copying the canonical
+ * data tree. Projection remains a pure function of (rootDoc, nowIso).
  */
 
 import { PUBLIC_RUNTIME_DENY_KEYS } from "./kpi-contract-constants.mjs";
@@ -32,83 +31,94 @@ function deepClone(value) {
   return value == null ? value : JSON.parse(JSON.stringify(value));
 }
 
+// Public summaries accept only named scalar fields, never nested private state.
+function publicScalars(row, fields) {
+  return Object.fromEntries(fields.filter((key) => Object.hasOwn(row ?? {}, key)
+    && (row[key] === null || ["string", "number", "boolean"].includes(typeof row[key])))
+    .map((key) => [key, row[key]]));
+}
+
+function publicStrings(value) {
+  return Array.isArray(value) ? value.filter((item) => typeof item === "string") : [];
+}
+
+const COUNT_FIELDS = ["keys", "tracked", "active", "eligible", "untracked", "pending_acquisition",
+  "fresh", "lkg", "pending_history", "unavailable", "terminal", "retry", "failed", "stale"];
+const RESULT_FIELDS = ["attempted", "successes", "failed", "skipped", "fetch_attempts"];
+const FAILURE_FIELDS = ["key", "ticker", "symbol", "artifact_kind", "entity", "observed_at",
+  "failure_observed_at", "failure_kind", "reason", "error", "scope", "data_loss"];
+
+function publicCounts(row, fields = COUNT_FIELDS) {
+  return Object.fromEntries(fields.filter((key) => Number.isFinite(row?.[key]) && row[key] >= 0)
+    .map((key) => [key, row[key]]));
+}
+
+function publicResults(row) {
+  if (!row || typeof row !== "object" || Array.isArray(row)) return null;
+  return {
+    ...publicCounts(row, RESULT_FIELDS),
+    errors: (Array.isArray(row.errors) ? row.errors : [])
+      .map((error) => publicScalars(error, FAILURE_FIELDS)),
+  };
+}
+
 function projectLaneRecoveryDetails(doc) {
   for (const lane of Array.isArray(doc?.lanes) ? doc.lanes : []) {
-    // #365 P2: last_attempt is public-safe metadata EXCEPT the run_id runtime
-    // identity (same policy as recovery.current_attempt) — redact it for the
-    // public mirror, leaving event_name + observed_at.
-    const lastAttempt = lane?.details?.last_attempt;
-    if (lastAttempt && typeof lastAttempt === "object" && !Array.isArray(lastAttempt)) {
-      lane.details.last_attempt = {
-        event_name: lastAttempt.event_name ?? null,
-        observed_at: lastAttempt.observed_at ?? null,
-        ...(Object.hasOwn(lastAttempt, "outcome") ? { outcome: lastAttempt.outcome ?? null } : {}),
-        ...(Object.hasOwn(lastAttempt, "failure_class") ? { failure_class: lastAttempt.failure_class ?? null } : {}),
-      };
+    const details = lane?.details;
+    if (!details || typeof details !== "object" || Array.isArray(details)) continue;
+    delete details.last_attempt;
+    if (details.last_result && typeof details.last_result === "object") {
+      details.last_result = publicScalars(details.last_result,
+        ["observed_at", "outcome", "failure_class", "attempts_used", "latency_ms", "error"]);
     }
-    const recovered = lane?.details?.recovery_recovered;
-    if (Array.isArray(recovered)) {
-      lane.details.recovery_recovered = recovered.map((row) => ({
-        key: row?.key ?? null,
-        resolution_state: row?.resolution_state ?? null,
-        retry: row?.retry ?? null,
-        recovered_from_run_id: row?.recovered_from_run_id ?? null,
-        recovery_run_id: row?.recovery_run_id ?? null,
-        recovery_run_attempt: row?.recovery_run_attempt ?? null,
-        recovery_event_name: row?.recovery_event_name ?? null,
-        recovered_at: row?.recovered_at ?? null,
-        lkg_source_as_of: row?.lkg_source_as_of ?? null,
-        source_as_of: row?.source_as_of ?? null,
-      }));
+    if (Array.isArray(details.recovery_recovered)) {
+      details.recovery_recovered = details.recovery_recovered.map((row) => publicScalars(row,
+        ["key", "resolution_state", "retry", "recovered_at", "lkg_source_as_of", "source_as_of"]));
     }
-    const recovery = lane?.details?.recovery;
+    const recovery = details.recovery;
     if (!recovery || typeof recovery !== "object" || Array.isArray(recovery)) continue;
     if (recovery.lane_id === "slickcharts" && typeof recovery.composite_state === "string") {
-      lane.details.recovery = {
+      details.recovery = {
         lane_id: "slickcharts",
-        generated_at: recovery.generated_at ?? null,
-        composite_state: recovery.composite_state,
-        members: Object.fromEntries(Object.entries(recovery.members ?? {}).map(([member, row]) => [member, {
-          resolution_state: row?.resolution_state ?? null,
-          retry: row?.retry ?? null,
-          file_count: row?.file_count ?? 0,
-          recovered_at: row?.last_recovery?.recovered_at ?? null,
-          recovery_run_attempt: row?.last_recovery?.recovery_run_attempt ?? null,
-          recovery_event_name: row?.last_recovery?.recovery_event_name ?? null,
+        ...publicScalars(recovery, ["generated_at", "composite_state"]),
+        members: Object.fromEntries(["daily", "weekly", "monthly", "history", "symbols"]
+          .filter((member) => recovery.members?.[member])
+          .map((member) => [member, {
+          ...publicScalars(recovery.members[member], ["resolution_state", "retry", "source_as_of"]),
+          ...publicCounts(recovery.members[member].bundle, ["file_count"]),
+          last_failure: recovery.members[member].last_failure
+            ? publicScalars(recovery.members[member].last_failure, FAILURE_FIELDS) : null,
         }])),
-        retry_members: Array.isArray(recovery.retry_members) ? recovery.retry_members : [],
-        current_attempt: recovery.current_attempt ? {
-          event_name: recovery.current_attempt.event_name ?? null,
-          observed_at: recovery.current_attempt.observed_at ?? null,
-          member_id: recovery.current_attempt.member_id ?? null,
-          decision: recovery.current_attempt.decision ?? null,
-        } : null,
+        retry_members: publicStrings(recovery.retry_members)
+          .filter((member) => ["daily", "weekly", "monthly", "history", "symbols"].includes(member)),
+        current_attempt: recovery.current_attempt
+          ? publicScalars(recovery.current_attempt, ["observed_at", "member_id", "decision"])
+          : null,
       };
       continue;
     }
-    lane.details.recovery = {
-      lane_id: recovery.lane_id ?? null,
-      generated_at: recovery.generated_at ?? null,
-      keys: Array.isArray(recovery.keys) ? recovery.keys : [],
-      counts: recovery.counts ?? null,
-      retry_keys: Array.isArray(recovery.retry_keys) ? recovery.retry_keys : [],
-      promotion_deferral_details: Array.isArray(recovery.promotion_deferral_details)
-        ? recovery.promotion_deferral_details.map((row) => ({
-            key: row?.key ?? null,
-            event_name: row?.event_name ?? null,
-            observed_at: row?.observed_at ?? null,
-            source_as_of: row?.source_as_of ?? null,
-            reason: row?.reason ?? null,
-          }))
-        : [],
-      current_attempt: recovery.current_attempt ? {
-        event_name: recovery.current_attempt.event_name ?? null,
-        observed_at: recovery.current_attempt.observed_at ?? null,
-        promotion_deferrals: recovery.current_attempt.promotion_deferrals ?? 0,
-        promotion_deferral_keys: Array.isArray(recovery.current_attempt.promotion_deferral_keys)
-          ? recovery.current_attempt.promotion_deferral_keys
-          : [],
-      } : null,
+    details.recovery = {
+      ...publicScalars(recovery, ["lane_id", "generated_at", "oldest_source_as_of", "oldest_source_ticker"]),
+      keys: publicStrings(recovery.keys),
+      counts: publicCounts(recovery.counts),
+      retry_keys: publicStrings(recovery.retry_keys),
+      ...(Array.isArray(recovery.retry_symbols) ? { retry_symbols: publicStrings(recovery.retry_symbols) } : {}),
+      ...(Array.isArray(recovery.retry_artifacts) ? { retry_artifacts: recovery.retry_artifacts
+        .map((row) => publicScalars(row, ["artifact_kind", "entity"])) } : {}),
+      ...(Array.isArray(recovery.lkg_details) ? { lkg_details: recovery.lkg_details
+        .map((row) => publicScalars(row, ["key", "symbol", "source_as_of", "failure_observed_at",
+          "failure_kind", "retry", "source_age_business_days"])) } : {}),
+      ...(Array.isArray(recovery.degraded_details) ? { degraded_details: recovery.degraded_details
+        .map((row) => publicScalars(row, [...FAILURE_FIELDS, "resolution_state", "source_as_of", "failure_count"])) } : {}),
+      ...(recovery.latest_failure ? { latest_failure: publicScalars(recovery.latest_failure, FAILURE_FIELDS) } : {}),
+      ...(recovery.current_results ? { current_results: publicResults(recovery.current_results) } : {}),
+      // Producer LKG indexes still carry real attempt counts. Yahoo and
+      // StockAnalysis now expose current_results, with no run-credit state.
+      ...(!recovery.current_results && recovery.current_attempt ? { current_attempt: {
+        ...publicScalars(recovery.current_attempt, ["observed_at"]),
+        ...publicCounts(recovery.current_attempt, RESULT_FIELDS),
+        failed_keys: publicStrings(recovery.current_attempt.failed_keys),
+      } } : {}),
     };
   }
 }

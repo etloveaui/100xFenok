@@ -120,7 +120,7 @@
       "id": "unobserved"
     }
   ],
-  "registry_digest": "a79c6b0f609521bbb9856adcf6ddc36dd6672082231faf891a70e186f399d079",
+  "registry_digest": "7e1e7a4d38528abdbd841c128906d497896e96094284801f48a3f9545eb74c8b",
   "logical_lane_count": 31,
   "producer_member_count": 36,
   "baseline": {
@@ -134,14 +134,14 @@
       "logical_lane_count": 31,
       "producer_member_count": 36,
       "counts": {
-        "ready": 29,
+        "ready": 28,
         "stale": 0,
-        "drift": 0,
+        "drift": 1,
         "unavailable": 2,
         "unobserved": 0,
-        "producer_members_ready": 34,
+        "producer_members_ready": 32,
         "producer_members_stale": 0,
-        "producer_members_drift": 0,
+        "producer_members_drift": 2,
         "producer_members_unavailable": 2,
         "producer_members_unobserved": 0
       },
@@ -846,13 +846,13 @@
           "enforcement": "shadow",
           "kpi_required": false,
           "monitoring_mode": "composite",
-          "status": "ready",
-          "reason": "ok",
+          "status": "drift",
+          "reason": "schema_drift",
           "artifact": {
-            "status": "ready",
-            "reason": "ok",
-            "source_as_of": "2026-07-11T00:00:00Z",
-            "age": 0,
+            "status": "drift",
+            "reason": "schema_drift",
+            "source_as_of": null,
+            "age": null,
             "unit": "hours"
           },
           "affected_surface_ids": [
@@ -861,25 +861,25 @@
           "members": [
             {
               "id": "stock",
-              "status": "ready",
-              "reason": "ok",
+              "status": "drift",
+              "reason": "schema_drift",
               "artifact": {
-                "status": "ready",
-                "reason": "ok",
-                "source_as_of": "2026-07-11T00:00:00Z",
-                "age": 0,
+                "status": "drift",
+                "reason": "schema_drift",
+                "source_as_of": null,
+                "age": null,
                 "unit": "hours"
               }
             },
             {
               "id": "etf",
-              "status": "ready",
-              "reason": "ok",
+              "status": "drift",
+              "reason": "schema_drift",
               "artifact": {
-                "status": "ready",
-                "reason": "ok",
-                "source_as_of": "2026-07-11T00:00:00Z",
-                "age": 0,
+                "status": "drift",
+                "reason": "schema_drift",
+                "source_as_of": null,
+                "age": null,
                 "unit": "hours"
               }
             }
@@ -887,7 +887,7 @@
         }
       ]
     },
-    "report_file_sha256": "98adbfb86a7188203a518143c7c5350e2efeead414a3e33eadd7c9ec10ae5f32"
+    "report_file_sha256": "c40166a00eb7f935ae3d45a3a5a3d96447453f0e2bf15b1a3cc2cbb8fae3ce64"
   },
   "slickcharts_member_ids": [
     "daily",

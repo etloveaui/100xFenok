@@ -546,7 +546,6 @@ jobs:
                   scripts \
                   100xfenok-next/scripts \
                   100xfenok-next/package.json \
-                  data/admin/lane-commit-manifest.json \
                   data/stockanalysis \
                   data/yf/finance \
                   data/yf/etf-details \
@@ -599,15 +598,12 @@ jobs:
               # carries the deletion instead of failing the next build.
               npm run reconcile:data-supply-public-mirror
             )
-            node scripts/refresh-cloud-data-plane-migration-demand.mjs \
-              --candidate=stockanalysis_etf_detail
             scripts/stage-lane-manifest.sh \
               --workflow .github/workflows/fetch-stockanalysis.yml \
               --stage always_if_exists
             git add -- \
               data/computed/data-supply/etf-detail \
-              100xfenok-next/public/data \
-              scripts/fixtures/cloud-data-plane/etf-migration-demand.json
+              100xfenok-next/public/data
             if git diff --staged --quiet; then
               COMMIT_ARGS=(--allow-empty)
               COMMIT_SUBJECT="chore: record stockanalysis no-change run"
@@ -643,43 +639,9 @@ jobs:
                 } >> "${GITHUB_STEP_SUMMARY:-/dev/null}"
                 exit 75
               fi
-              if ! READBACK_JSON="$({
-                python3 scripts/stockanalysis_artifact.py verify-readback \
-                  --repo-root . \
-                  --artifact-root "$ARTIFACT_ROOT"
-              })"; then
-                echo "status=$ACCEPTED_STATUS" >> "$GITHUB_OUTPUT"
-                echo "confirmation=not_confirmed" >> "$GITHUB_OUTPUT"
-                echo "fence_reason=main_readback_mismatch" >> "$GITHUB_OUTPUT"
-                echo "commit=$PUBLISHED_COMMIT" >> "$GITHUB_OUTPUT"
-                echo "post-publish main readback did not confirm the candidate" >&2
-                {
-                  echo "### StockAnalysis publish fence"
-                  echo "- status: $ACCEPTED_STATUS"
-                  echo "- confirmation: not_confirmed"
-                  echo "- fence_reason: main_readback_mismatch"
-                } >> "${GITHUB_STEP_SUMMARY:-/dev/null}"
-                exit 75
-              fi
-              # Identity proof. The readback above verifies the packed candidate
-              # bytes in this checkout. The published commit must also remain
-              # reachable from current main, and its artifact-digest trailer must
-              # equal the acquisition digest. Together they bind current origin
-              # to this exact publication.
-              #
-              # Reachability is proven against the REMOTE, not against local
-              # history. A local ancestry test answers from whatever slice of
-              # the graph this shallow checkout happens to hold, and compares
-              # against a HEAD that is already stale, so a burst of commits
-              # between our push and this readback would fence a publication
-              # that actually succeeded. A fixed deepen only moves that cliff;
-              # it does not remove it. The remote comparison answers from the
-              # complete graph, so a negative result means the commit really is
-              # not on main.
-              # FH-20260902-496 fallback: queue already serializes via fenok-data-writer
-              # (concurrency group fenok-data-writer-refs/heads/main at fetch-stockanalysis.yml:443/828,
-              # same as fetch-fdic.yml:31, fenok-edge-daily.yml:63), but schedule burst still
-              # races shallow checkout. Keep fence but replace gh api compare with git.
+              # Resolution consumes pending acquisition pointers before this
+              # commit. Confirm the delivered post-resolution Git tree rather
+              # than demanding the original acquisition layout remain intact.
               COMPARE_STATUS=""
               COMMIT_REACHABLE=""
               for backoff in 15 30 60; do
@@ -738,7 +700,6 @@ jobs:
                 } >> "${GITHUB_STEP_SUMMARY:-/dev/null}"
                 exit 75
               fi
-              echo "$READBACK_JSON"
               echo "status=$ACCEPTED_STATUS" >> "$GITHUB_OUTPUT"
               echo "confirmation=confirmed" >> "$GITHUB_OUTPUT"
               echo "fence_reason=confirmed" >> "$GITHUB_OUTPUT"

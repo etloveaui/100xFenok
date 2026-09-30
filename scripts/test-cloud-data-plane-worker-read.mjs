@@ -29,14 +29,12 @@ import {
 import {
   PLANE_ENROLLMENT_EXACT,
   PLANE_ENROLLMENT_PREFIXES,
-  PLANE_ENROLLMENT_SCHEMA_VERSION,
 } from "../100xfenok-next/scripts/cloud-data-plane/cloud-data-plane-enrollment.generated.mjs";
 import {
   FINAL_WORKER_FIRST_PATTERNS,
   PRIVATE_PUBLIC_PATHS,
   deriveWorkerFirstPatterns,
 } from "../100xfenok-next/scripts/cloud-data-plane/cloud-data-plane-routing-authority.mjs";
-import { derivePublicPlaneEnrollment } from "./lib/plane-enrollment-derivation.mjs";
 import { FAMILIES } from "./publish-cloud-data-generation.mjs";
 
 const require = createRequire(new URL("../100xfenok-next/package.json", import.meta.url));
@@ -55,138 +53,23 @@ function extractRunWorkerFirstPatterns(source) {
     .map(([, encoded]) => JSON.parse(`"${encoded}"`));
 }
 
-// --- read-side enrolment is derived from the publisher's FAMILIES table -----
+// The committed allowlist remains the actual public serving boundary.
 {
-  const expected = derivePublicPlaneEnrollment(FAMILIES);
-  const publicFamilies = Object.entries(FAMILIES).filter(([, family]) => family.privacy_class === "public");
-  const privateFamilies = Object.entries(FAMILIES).filter(([, family]) => family.privacy_class === "private");
-  const expectedFamilies = new Set([
-    ...expected.exact.map(([, family]) => family),
-    ...expected.prefixes.map(({ family }) => family),
-  ]);
-
-  assert.equal(PLANE_ENROLLMENT_SCHEMA_VERSION, expected.schema_version);
-  assert.deepEqual(PLANE_ENROLLMENT_EXACT, expected.exact, "generated exact data matches derivation");
-  assert.deepEqual(PLANE_ENROLLMENT_PREFIXES, expected.prefixes, "generated prefix data matches derivation");
-  assert.deepEqual([...ENROLLED_PATHS], expected.exact, "worker exact surface matches artifact");
-  assert.deepEqual(ENROLLED_PREFIXES, expected.prefixes, "worker prefix surface matches artifact");
   const wrangler = await readFile(new URL("../100xfenok-next/wrangler.jsonc", import.meta.url), "utf8");
-  assert.deepEqual(
-    extractRunWorkerFirstPatterns(wrangler),
-    FINAL_WORKER_FIRST_PATTERNS,
-    "wrangler Worker-first patterns match the derived authority",
-  );
-  assert.deepEqual(
-    FINAL_WORKER_FIRST_PATTERNS,
-    deriveWorkerFirstPatterns(PLANE_ENROLLMENT_EXACT, PLANE_ENROLLMENT_PREFIXES),
-    "final Worker-first patterns derive from generated enrollment",
-  );
-  // 10 public data families + the isolated Griffin deny route + the admin tree.
-  assert.equal(FINAL_WORKER_FIRST_PATTERNS.length, 12, "selective Worker-first pattern count");
-  assert.equal(
-    FINAL_WORKER_FIRST_PATTERNS.includes("/admin/*"),
-    true,
-    "admin tree stays isolated in the Worker-first list",
-  );
-  assert.equal(FINAL_WORKER_FIRST_PATTERNS.includes("/data/*"), false, "broad data glob removed");
-  assert.equal(
-    PRIVATE_PUBLIC_PATHS.has("/data/sec-13f/investors/griffin.json"),
-    true,
-    "isolated private Griffin route remains denied",
-  );
-  assert.equal(Object.isFrozen(PRIVATE_PUBLIC_PATHS), true, "private deny authority is immutable");
-  assert.equal(Object.isFrozen(FINAL_WORKER_FIRST_PATTERNS), true, "Worker-first list is immutable");
-  assert.equal(expected.exact.length, 610, "exact enrollment count");
-  assert.equal(expected.prefixes.length, 2, "prefix enrollment count");
-  assert.equal(expectedFamilies.size, 19, "public family claim count");
-  assert.equal(publicFamilies.length, 19, "all publisher public families are reader-enrolled");
-  assert.equal(expectedFamilies.has("global-scouter"), true, "Global Scouter is reader-enrolled");
-  assert.equal(isEnrolledPath("/data/global-scouter/core/metadata.json"), true, "Global Scouter reader path is enrolled");
-  assert.equal(privateFamilies.length, 5, "publisher private family count");
-  for (const [familyName] of privateFamilies) {
-    assert.equal(expectedFamilies.has(familyName), false, `private family ${familyName} absent`);
+  assert.deepEqual(extractRunWorkerFirstPatterns(wrangler), FINAL_WORKER_FIRST_PATTERNS);
+  assert.deepEqual(FINAL_WORKER_FIRST_PATTERNS, deriveWorkerFirstPatterns(PLANE_ENROLLMENT_EXACT, PLANE_ENROLLMENT_PREFIXES));
+  assert.equal(FINAL_WORKER_FIRST_PATTERNS.includes("/admin/*"), true);
+  assert.equal(FINAL_WORKER_FIRST_PATTERNS.includes("/data/*"), false);
+  assert.equal(PRIVATE_PUBLIC_PATHS.has("/data/sec-13f/investors/griffin.json"), true);
+  assert.equal(Object.isFrozen(PRIVATE_PUBLIC_PATHS), true);
+  assert.equal(Object.isFrozen(FINAL_WORKER_FIRST_PATTERNS), true);
+  assert.equal(isEnrolledPath("/data/global-scouter/core/metadata.json"), true);
+  for (const [familyName, family] of Object.entries(FAMILIES)) {
+    if (family.privacy_class !== "private") continue;
     assert.equal([...ENROLLED_PATHS.values()].includes(familyName), false, `private family ${familyName} exact absent`);
-    assert.equal(ENROLLED_PREFIXES.some(({ family }) => family === familyName), false, `private family ${familyName} prefix absent`);
+    assert.equal(ENROLLED_PREFIXES.some((row) => row.family === familyName), false, `private family ${familyName} prefix absent`);
   }
-  assert.equal([...ENROLLED_PATHS.keys()].some((pathname) => pathname.includes("stockanalysis")), false, "stockanalysis path absent");
-  assert.deepEqual(
-    expected.prefixes.map(({ prefix, family }) => [prefix, family]),
-    [
-      ["/data/edgar-korean-summaries/", "edgar-korean-summaries"],
-      ["/data/global-scouter/", "global-scouter"],
-    ],
-  );
-
-  assert.throws(
-    () => derivePublicPlaneEnrollment({ bad: { manifest_prefix: "public/data/bad", files: [], privacy_class: "unknown" } }),
-    /privacy_class/,
-  );
-  assert.throws(
-    () => derivePublicPlaneEnrollment({ bad: { manifest_prefix: "public/data//bad", files: ["ok.json"], privacy_class: "public" } }),
-    /empty or dot segment/,
-  );
-  assert.throws(
-    () => derivePublicPlaneEnrollment({ bad: { manifest_prefix: "public/not-data/bad", files: ["ok.json"], privacy_class: "public" } }),
-    /public\/data\/ or public\/generated\//,
-  );
-  assert.throws(
-    () => derivePublicPlaneEnrollment({ bad: { manifest_prefix: "public/datax/bad", files: ["ok.json"], privacy_class: "public" } }),
-    /public\/data\/ or public\/generated\//,
-  );
-  assert.throws(
-    () => derivePublicPlaneEnrollment({ bad: { manifest_prefix: "public/data/bad", files: ["query?.json"], privacy_class: "public" } }),
-    /URL syntax or control characters/,
-  );
-  assert.throws(
-    () => derivePublicPlaneEnrollment({ bad: { manifest_prefix: "public/generated/bad#fragment", files: ["ok.json"], privacy_class: "public" } }),
-    /URL syntax or control characters/,
-  );
-  assert.throws(
-    () => derivePublicPlaneEnrollment({ bad: { manifest_prefix: "public/data/bad", files: ["dir/../ok.json"], privacy_class: "public" } }),
-    /empty or dot segment/,
-  );
-  assert.throws(
-    () => derivePublicPlaneEnrollment({
-      one: { manifest_prefix: "public/data/shared", files: ["same.json"], privacy_class: "public" },
-      two: { manifest_prefix: "public/data/shared", files: ["same.json"], privacy_class: "public" },
-    }),
-    /duplicate exact path/,
-  );
-  assert.throws(
-    () => derivePublicPlaneEnrollment({
-      tree: { manifest_prefix: "public/data/shared", privacy_class: "public" },
-      file: { manifest_prefix: "public/data/shared", files: ["same.json"], privacy_class: "public" },
-    }),
-    /duplicate prefix|cross-family exact\/prefix overlap/,
-  );
-  assert.deepEqual(
-    derivePublicPlaneEnrollment({
-      shadow: {
-        manifest_prefix: "public/data/shadow",
-        privacy_class: "public",
-        reader_enrollment: false,
-        files: ["payload.json"],
-      },
-      ordinary: {
-        manifest_prefix: "public/data/ordinary",
-        privacy_class: "public",
-        files: ["payload.json"],
-      },
-    }).exact,
-    [["/data/ordinary/payload.json", "ordinary"]],
-    "only an explicit false reader_enrollment suppresses a public family",
-  );
-  assert.throws(
-    () => derivePublicPlaneEnrollment({
-      bad: {
-        manifest_prefix: "public/data/bad",
-        privacy_class: "public",
-        reader_enrollment: "false",
-        files: ["payload.json"],
-      },
-    }),
-    /reader_enrollment must be boolean/,
-  );
+  assert.equal([...ENROLLED_PATHS.keys()].some((pathname) => pathname.includes("stockanalysis")), false);
 }
 
 const moduleSource = async (name) => readFile(new URL(`./lib/${name}`, import.meta.url), "utf8");

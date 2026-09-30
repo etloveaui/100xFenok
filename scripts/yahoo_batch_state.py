@@ -9,19 +9,12 @@ import json
 from pathlib import Path
 
 
-ATTEMPT_RETENTION = 14
 NEW_LISTING_PENDING_DAYS = 31
 ERROR_TEXT_LIMIT = 1000
-PROMOTION_CONTRACT_PROVIDER_OBSERVATION_V2 = "provider_observation/v2"
 ACTIVE_UNIVERSE_SCHEMA_VERSION = "yahoo-batch-active-universe/v1"
 CORE_ETF_INDEX_FILENAME = "index-core-etf.json"
 DEFAULT_INDEX_FILENAME = "index.json"
 TERMINAL_RESOLUTION_STATE = "terminal_provider_unsupported"
-PROMOTION_DEFERRAL_REASONS = {
-    "foreign_writer_conflict",
-    "recovery_not_advanced_by_provider",
-    "recovery_requires_schedule",
-}
 
 
 def _json_bytes(payload: dict) -> bytes:
@@ -92,7 +85,7 @@ def _pending_history_reason(payload: dict, state: dict, observed_at: str) -> str
     observed_ms = _iso_ms(observed_at)
     if first_seen_ms is not None and observed_ms is not None:
         return "newly_discovered_no_history" if 0 <= observed_ms - first_seen_ms <= NEW_LISTING_PENDING_DAYS * 86400000 else None
-    return "newly_discovered_no_history" if len(state.get("attempts") or []) == 0 else None
+    return "newly_discovered_no_history" if not isinstance(state.get("last_result"), dict) else None
 
 
 def _epoch_iso(value) -> str | None:
@@ -105,29 +98,8 @@ def _epoch_iso(value) -> str | None:
         return None
 
 
-def _is_natural_promotion_run(run: dict) -> bool:
-    # A scheduled acquisition promotes only when it is the natural first attempt.
-    # A manual dispatch is a real provider acquisition too, so it promotes on a
-    # first attempt with a complete run binding; retries and unbound or local
-    # runs stay excluded, and every payload/provider check still applies.
-    if int(run.get("run_attempt") or 1) != 1:
-        return False
-    if run.get("event_name") == "schedule":
-        return run.get("natural") is True
-    return run.get("event_name") == "workflow_dispatch" and _valid_run_binding(run)
 
 
-def _valid_run_binding(run: dict) -> bool:
-    try:
-        run_attempt = int(run.get("run_attempt"))
-    except (AttributeError, TypeError, ValueError):
-        return False
-    return (
-        bool(str(run.get("run_id") or ""))
-        and run_attempt >= 1
-        and bool(str(run.get("event_name") or ""))
-        and _iso_ms(str(run.get("observed_at") or "")) is not None
-    )
 
 
 def _contains_provider_value(candidate, provider) -> bool:
@@ -194,25 +166,14 @@ def _valid_canonical_payload(payload: dict | None, ticker: str) -> bool:
     return True
 
 
-def _attempt(run: dict, outcome: str, evidence: dict, *, error: str | None = None) -> dict:
-    attempts_used = evidence.get("attempts_used")
-    attempts_used = int(attempts_used) if attempts_used is not None else 1
+def _result(run: dict, outcome: str, evidence: dict, *, error: str | None = None) -> dict:
     row = {
-        "run_id": str(run.get("run_id") or "local"),
-        "run_attempt": int(run.get("run_attempt") or 1),
-        "event_name": str(run.get("event_name") or "local"),
-        "schedule": str(run.get("schedule") or ""),
-        "natural": bool(run.get("natural")),
-        "shard": str(run.get("shard") or ""),
         "observed_at": str(run.get("observed_at") or datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")),
         "outcome": outcome,
-        "attempts_used": attempts_used,
+        "attempts_used": int(evidence["attempts_used"]) if evidence.get("attempts_used") is not None else 1,
         "latency_ms": int(evidence.get("latency_ms") or 0),
-        "failures": [
-            {**item, "error": _bounded_error(item.get("error"))}
-            for item in list(evidence.get("failures") or [])[:6]
-            if isinstance(item, dict)
-        ],
+        "failures": [{**item, "error": _bounded_error(item.get("error"))}
+                     for item in list(evidence.get("failures") or [])[:6] if isinstance(item, dict)],
     }
     if error:
         row["error"] = _bounded_error(error)
@@ -220,7 +181,7 @@ def _attempt(run: dict, outcome: str, evidence: dict, *, error: str | None = Non
 
 
 class YahooBatchStateStore:
-    """Keep one canonical pointer, one exact LKG, and fourteen attempts per ticker."""
+    """Keep one canonical pointer, one exact LKG and actual failures per ticker."""
 
     def __init__(self, root: Path, finance_dir: Path):
         self.root = Path(root)
@@ -228,6 +189,7 @@ class YahooBatchStateStore:
         self.ticker_dir = self.root / "tickers"
         self.lkg_dir = self.root / "lkg"
         self.active_universe_path = self.root / "active-universe.json"
+        self._results: dict[str, dict] = {}
 
     def _state_path(self, ticker: str) -> Path:
         return self.ticker_dir / f"{ticker}.json"
@@ -236,11 +198,21 @@ class YahooBatchStateStore:
         return self.lkg_dir / f"{ticker}.json"
 
     def _load_state(self, ticker: str) -> dict:
-        return _read_json(self._state_path(ticker)) or {
-            "schema_version": "yahoo-batch-quote-history-state/v1",
-            "ticker": ticker,
-            "attempts": [],
+        state = _read_json(self._state_path(ticker)) or {
+            "schema_version": "yahoo-batch-quote-history-state/v1", "ticker": ticker,
         }
+        legacy_result = state.pop("last_attempt", None)
+        if "last_result" not in state and isinstance(legacy_result, dict):
+            state["last_result"] = legacy_result
+        for key in ("attempts", "provider_observation", "promotion_contract", "latest_promotion_deferral",
+                    "recovered_from_run_id", "recovery_run_id", "recovery_run_attempt", "recovery_event_name", "last_recovered_failure"):
+            state.pop(key, None)
+        for key in ("last_result", "latest_failure", "pending", "terminal", "stale"):
+            if isinstance(state.get(key), dict):
+                state[key] = {k: v for k, v in state[key].items()
+                              if k not in {"run_id", "run_attempt", "event_name", "natural", "schedule", "shard",
+                                           "initial_run_id", "classified_run_id"}}
+        return state
 
     def _load_active_universe(self) -> dict:
         payload = _read_json(self.active_universe_path)
@@ -249,6 +221,10 @@ class YahooBatchStateStore:
             and payload.get("schema_version") == ACTIVE_UNIVERSE_SCHEMA_VERSION
             and isinstance(payload.get("items"), dict)
         ):
+            for item in payload["items"].values():
+                if isinstance(item, dict):
+                    item.pop("first_seen_run_id", None)
+                    item.pop("last_seen_run_id", None)
             return payload
         return {"schema_version": ACTIVE_UNIVERSE_SCHEMA_VERSION, "items": {}}
 
@@ -286,7 +262,6 @@ class YahooBatchStateStore:
         inventory = self._load_active_universe()
         items = inventory["items"]
         observed_at = str(run.get("observed_at") or datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ"))
-        run_id = str(run.get("run_id") or "local")
         changed = 0
         for ticker in sorted(set(active_universe)):
             # Per-ticker observation/terminal state always wins over stale inventory.
@@ -306,9 +281,8 @@ class YahooBatchStateStore:
                 if existing.get("discovered_from") != merged_sources:
                     existing["discovered_from"] = merged_sources
                     changed += 1
-                if existing.get("last_seen_at") != observed_at or existing.get("last_seen_run_id") != run_id:
+                if existing.get("last_seen_at") != observed_at:
                     existing["last_seen_at"] = observed_at
-                    existing["last_seen_run_id"] = run_id
                     changed += 1
                 continue
             items[ticker] = {
@@ -319,9 +293,7 @@ class YahooBatchStateStore:
                 "discovered_from": discovered_from,
                 "first_seen_from": discovered_from,
                 "first_seen_at": observed_at,
-                "first_seen_run_id": run_id,
                 "last_seen_at": observed_at,
-                "last_seen_run_id": run_id,
             }
             changed += 1
         if changed or not self.active_universe_path.exists():
@@ -402,7 +374,6 @@ class YahooBatchStateStore:
                     "artifact_generated_at": terminal_evidence.get("artifact_generated_at"),
                     "evidence": terminal_evidence["tickers"][ticker],
                     "classified_at": str(run.get("observed_at") or datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")),
-                    "classified_run_id": str(run.get("run_id") or "local"),
                 },
                 "updated_at": str(run.get("observed_at") or datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")),
             })
@@ -413,11 +384,8 @@ class YahooBatchStateStore:
             transitioned += 1
         return transitioned
 
-    @staticmethod
-    def _append_attempt(state: dict, row: dict) -> None:
-        attempts = [item for item in state.get("attempts") or [] if isinstance(item, dict)]
-        attempts.append(row)
-        state["attempts"] = attempts[-ATTEMPT_RETENTION:]
+    def _record_result(self, state: dict, row: dict) -> None:
+        self._results[state["ticker"]] = dict(row)
 
     def retry_tickers_ordered(self, active_universe: set[str], terminal_tickers: set[str] | None = None) -> list[str]:
         active = set(active_universe)
@@ -431,7 +399,7 @@ class YahooBatchStateStore:
                 and state.get("resolution_state") != TERMINAL_RESOLUTION_STATE
                 and state.get("retry") is True
             ):
-                observed_at = str((state.get("last_attempt") or {}).get("observed_at") or "")
+                observed_at = str((state.get("last_result") or {}).get("observed_at") or "")
                 retry.append((observed_at, ticker))
         return [ticker for _observed_at, ticker in sorted(retry)]
 
@@ -539,12 +507,11 @@ class YahooBatchStateStore:
                 "age_business_days": age_business_days,
                 "max_business_days": max_business_days,
                 "classified_at": observed_at,
-                "classified_run_id": str(run.get("run_id") or "local"),
-                "expected_resolution": "next_natural_yahoo_run",
+                "expected_resolution": "next_yahoo_acquisition",
                 "message": (
                     f"{ticker} holds LKG because Yahoo source date {source.get('source_as_of') or 'unstamped'} "
                     f"is {age_business_days} business days old, beyond the {max_business_days}-day bound; "
-                    "it will retry on the next natural Yahoo run."
+                    "it will retry on the next Yahoo acquisition."
                 ),
             },
             "discovered_from": sorted(set(discovered_from)),
@@ -555,115 +522,35 @@ class YahooBatchStateStore:
         self._remove_pending_after_state(ticker)
         return state
 
-    def build_provider_observation(self, ticker: str, payload: dict, run: dict) -> dict:
-        if not _valid_canonical_payload(payload, ticker):
-            raise ValueError(f"provider observation proof payload is invalid for {ticker}")
-        payload_bytes = _json_bytes(payload)
-        source = _payload_source_fields(payload)
-        if not source.get("quote_as_of") and not source.get("history_as_of"):
-            raise ValueError(f"provider observation proof markers are missing for {ticker}")
-        if not _valid_run_binding(run):
-            raise ValueError(f"provider observation proof run binding is invalid for {ticker}")
-        observed_at = str(run.get("observed_at"))
-        return {
-            "schema_version": PROMOTION_CONTRACT_PROVIDER_OBSERVATION_V2,
-            "payload_bytes": payload_bytes,
-            "payload_sha256": _sha256(payload_bytes),
-            **source,
-            "run_id": str(run.get("run_id") or ""),
-            "run_attempt": int(run.get("run_attempt") or 1),
-            "event_name": str(run.get("event_name") or ""),
-            "observed_at": observed_at,
-        }
 
-    def _validated_provider_observation(self, ticker: str, provider_observation: dict, run: dict) -> tuple[dict, dict]:
-        if (
-            not isinstance(provider_observation, dict)
-            or provider_observation.get("schema_version") != PROMOTION_CONTRACT_PROVIDER_OBSERVATION_V2
-            or not isinstance(provider_observation.get("payload_bytes"), bytes)
-        ):
-            raise ValueError(f"provider observation proof contract is invalid for {ticker}")
-        payload_bytes = provider_observation["payload_bytes"]
-        try:
-            provider_payload = json.loads(payload_bytes)
-        except (TypeError, json.JSONDecodeError) as exc:
-            raise ValueError(f"provider observation proof payload decode failed for {ticker}: {exc}") from exc
-        if not _valid_canonical_payload(provider_payload, ticker):
-            raise ValueError(f"provider observation proof payload is invalid for {ticker}")
-        source = _payload_source_fields(provider_payload)
-        if (
-            provider_observation.get("payload_sha256") != _sha256(payload_bytes)
-            or any(provider_observation.get(key) != source.get(key) for key in ("quote_as_of", "history_as_of", "source_as_of"))
-        ):
-            raise ValueError(f"provider observation proof is not payload-bound for {ticker}")
-        if not _valid_run_binding(run) or (
-            provider_observation.get("run_id") != str(run.get("run_id") or "")
-            or int(provider_observation.get("run_attempt") or 1) != int(run.get("run_attempt") or 1)
-            or provider_observation.get("event_name") != str(run.get("event_name") or "")
-            or provider_observation.get("observed_at") != str(run.get("observed_at") or "")
-        ):
-            raise ValueError(f"provider observation proof is not bound to the current run for {ticker}")
-        return provider_payload, source
 
     def evaluate_recovery_candidate(
-        self,
-        ticker: str,
-        payload: dict,
-        provider_observation: dict,
-        run: dict,
-        canonical_payload: dict | None = None,
+        self, ticker: str, payload: dict, provider_payload: dict,
+        *, canonical_payload: dict | None = None,
     ) -> dict:
-        if not _valid_canonical_payload(payload, ticker):
-            raise ValueError(f"promotion candidate payload is invalid for {ticker}")
-        provider_payload, provider_source = self._validated_provider_observation(ticker, provider_observation, run)
-        state = self._load_state(ticker)
-        base = {
-            "ticker": ticker,
-            "candidate_payload": payload,
-            "canonical_payload": canonical_payload,
-            "provider_observation": provider_observation,
-            "provider_source": provider_source,
-        }
-        if state.get("retry") is not True:
-            return {**base, "eligible": True, "reason": "ok"}
-        if not _is_natural_promotion_run(run):
-            return {**base, "eligible": False, "reason": "recovery_requires_schedule"}
-        candidate_data = payload.get("data") if isinstance(payload.get("data"), dict) else {}
-        provider_data = provider_payload.get("data") if isinstance(provider_payload.get("data"), dict) else {}
-        if not _contains_provider_value(candidate_data, provider_data):
-            return {**base, "eligible": False, "reason": "foreign_writer_conflict"}
+        """Validate actual acquired values and honest retained quote/history dates."""
+        if not _valid_canonical_payload(provider_payload, ticker) or not _valid_canonical_payload(payload, ticker):
+            raise ValueError(f"Yahoo candidate payload is invalid for {ticker}")
+        if not _contains_provider_value(payload["data"], provider_payload["data"]):
+            raise ValueError(f"Yahoo candidate disagrees with actual provider values for {ticker}")
+        provider_source = _payload_source_fields(provider_payload)
         if isinstance(canonical_payload, dict):
-            canonical_source = _payload_source_fields(canonical_payload)
-            for key in ("quote_as_of", "history_as_of"):
-                canonical_marker = _iso_ms(canonical_source.get(key))
-                provider_marker = _iso_ms(provider_source.get(key))
-                if canonical_marker is not None and provider_marker is not None and canonical_marker > provider_marker:
-                    return {**base, "eligible": False, "reason": "foreign_writer_conflict"}
-        prior = (
-            state.get("lkg") if isinstance(state.get("lkg"), dict)
-            else state.get("current") if isinstance(state.get("current"), dict)
-            else {}
-        )
+            for key, before in _payload_source_fields(canonical_payload).items():
+                after = _iso_ms(provider_source.get(key))
+                if key in {"quote_as_of", "history_as_of"} and _iso_ms(before) is not None and after is not None and _iso_ms(before) > after:
+                    raise ValueError(f"Yahoo provider source timestamp regresses for {ticker}: {key}")
+        state = self._load_state(ticker)
+        prior = state.get("lkg") if state.get("retry") is True else state.get("current")
         candidate_source = _payload_source_fields(payload)
-        comparable = 0
-        advanced = False
         for key in ("quote_as_of", "history_as_of"):
-            before = _iso_ms(prior.get(key))
-            after = _iso_ms(provider_source.get(key))
-            candidate_after = _iso_ms(candidate_source.get(key))
-            candidate_advances = candidate_after is not None and (before is None or candidate_after > before)
-            if candidate_advances:
-                if after is None or candidate_after != after:
-                    return {**base, "eligible": False, "reason": "foreign_writer_conflict"}
-            if after is not None:
-                comparable += 1
-                advanced = advanced or before is None or after > before
-        if (
-            state.get("resolution_state") in {"pending_history", "unavailable"}
-            and candidate_source.get("history_as_of") is None
-        ):
-            return {**base, "eligible": True, "reason": "ok", "comparable_fields": comparable}
-        return {**base, "eligible": advanced, "reason": "ok" if advanced else "recovery_not_advanced_by_provider", "comparable_fields": comparable}
+            before = _iso_ms((prior or {}).get(key))
+            after = _iso_ms(candidate_source.get(key))
+            if after is not None and (before is None or after > before):
+                if after != _iso_ms(provider_source.get(key)):
+                    raise ValueError(f"Yahoo candidate source date is not supplied by its provider for {ticker}: {key}")
+        if not self.recovery_candidate_advances(ticker, payload):
+            raise ValueError(f"Yahoo candidate source date regresses or is invalid for {ticker}")
+        return {"eligible": True, "reason": "ok"}
 
     def valid_current_canonical(self, ticker: str, state: dict | None = None) -> bool:
         state = state if isinstance(state, dict) else self._load_state(ticker)
@@ -683,71 +570,22 @@ class YahooBatchStateStore:
             and all(current.get(key) == source.get(key) for key in ("quote_as_of", "history_as_of", "source_as_of"))
         )
 
-    def recovery_candidate_advances(
-        self,
-        ticker: str,
-        payload: dict,
-        provider_observation: dict | None = None,
-        run: dict | None = None,
-    ) -> bool:
-        if provider_observation is not None and run is not None:
-            return self.evaluate_recovery_candidate(ticker, payload, provider_observation, run)["eligible"]
+    def recovery_candidate_advances(self, ticker: str, payload: dict) -> bool:
+        if not _valid_canonical_payload(payload, ticker):
+            return False
+        now_ms = datetime.now(timezone.utc).timestamp() * 1000
+        if _iso_ms(payload.get("fetched_at")) > now_ms:
+            return False
         state = self._load_state(ticker)
-        if state.get("retry") is not True or state.get("resolution_state") != "lkg_primary":
-            return True
-        prior = state.get("lkg") if isinstance(state.get("lkg"), dict) else {}
-        comparable = 0
+        prior = state.get("lkg") if state.get("retry") is True else state.get("current")
+        source = _payload_source_fields(payload)
         for key in ("quote_as_of", "history_as_of"):
-            before = _iso_ms(prior.get(key))
-            after = _iso_ms(payload.get(key))
-            if before is not None and after is not None:
-                comparable += 1
-                if after > before:
-                    return True
-        return False
+            before = _iso_ms((prior or {}).get(key))
+            after = _iso_ms(source.get(key))
+            if before is not None and (after is None or after < before):
+                return False
+        return True
 
-    def record_promotion_deferral(
-        self,
-        ticker: str,
-        decision: dict,
-        run: dict,
-        discovered_from: list[str],
-        evidence: dict,
-    ) -> dict:
-        reason = decision.get("reason") if isinstance(decision, dict) else None
-        if reason not in PROMOTION_DEFERRAL_REASONS:
-            raise ValueError(f"promotion deferral reason is invalid for {ticker}")
-        state = self._load_state(ticker)
-        if state.get("retry") is not True:
-            raise ValueError(f"promotion deferral requires an active retry for {ticker}")
-        verified = self.evaluate_recovery_candidate(
-            ticker,
-            decision.get("candidate_payload"),
-            decision.get("provider_observation"),
-            run,
-            canonical_payload=decision.get("canonical_payload"),
-        )
-        if verified.get("eligible") is True or verified.get("reason") != reason:
-            raise ValueError(f"promotion deferral proof is invalid for {ticker}")
-        attempt = _attempt(run, "failed", evidence, error=reason)
-        self._append_attempt(state, attempt)
-        state.update({
-            "discovered_from": sorted(set(discovered_from)),
-            "last_attempt": attempt,
-            "latest_promotion_deferral": {
-                "run_id": attempt["run_id"],
-                "run_attempt": attempt["run_attempt"],
-                "event_name": attempt["event_name"],
-                "observed_at": attempt["observed_at"],
-                "reason": reason,
-                "provider_quote_as_of": decision.get("provider_source", {}).get("quote_as_of"),
-                "provider_history_as_of": decision.get("provider_source", {}).get("history_as_of"),
-            },
-            "updated_at": attempt["observed_at"],
-        })
-        _write_json(self._state_path(ticker), state)
-        self._remove_pending_after_state(ticker)
-        return state
 
     def record_success(
         self,
@@ -757,7 +595,6 @@ class YahooBatchStateStore:
         discovered_from: list[str],
         evidence: dict,
         *,
-        provider_observation: dict | None = None,
         expected_payload_sha256: str | None = None,
     ) -> dict:
         path = self.finance_dir / f"{ticker}.json"
@@ -771,29 +608,16 @@ class YahooBatchStateStore:
             raise ValueError(f"promotion candidate payload is not bound to canonical bytes for {ticker}")
         if not _valid_canonical_payload(canonical_payload, ticker):
             raise ValueError(f"promotion candidate canonical payload is invalid for {ticker}")
-        recovery_decision = None
-        if provider_observation is not None:
-            recovery_decision = self.evaluate_recovery_candidate(ticker, payload, provider_observation, run)
-            if not recovery_decision["eligible"]:
-                raise ValueError(f"recovery promotion rejected for {ticker}: {recovery_decision['reason']}")
-        elif state.get("retry") is True:
-            raise ValueError(f"provider observation proof is required for recovery promotion of {ticker}")
-        previous_state = state.get("resolution_state")
-        previous_run_id = None
-        latest_failure = state.get("latest_failure")
+        if not self.recovery_candidate_advances(ticker, payload):
+            raise ValueError(f"Yahoo candidate source date regresses or is invalid for {ticker}")
         pending = state.get("pending")
-        if isinstance(latest_failure, dict):
-            previous_run_id = latest_failure.get("run_id")
-        elif isinstance(pending, dict):
-            previous_run_id = pending.get("initial_run_id")
-
         data = payload.get("data") if isinstance(payload.get("data"), dict) else {}
         history = data.get("history_1y")
         has_history = isinstance(history, list) and len(history) > 0
         pending_reason = _pending_history_reason(payload, state, str(run.get("observed_at") or "")) if not has_history else None
         outcome = "fresh" if has_history else "pending_history" if pending_reason else "unavailable"
-        attempt = _attempt(run, outcome, evidence)
-        self._append_attempt(state, attempt)
+        attempt = _result(run, outcome, evidence)
+        self._record_result(state, attempt)
 
         state.update({
             "schema_version": "yahoo-batch-quote-history-state/v1",
@@ -807,46 +631,25 @@ class YahooBatchStateStore:
                 **_payload_source_fields(canonical_payload),
             },
             "discovered_from": sorted(set(discovered_from)),
-            "last_attempt": attempt,
+            "last_result": attempt,
             "updated_at": attempt["observed_at"],
         })
 
         if has_history:
             state.pop("pending", None)
-            if previous_state in {"lkg_primary", "pending_history", "unavailable"} and previous_run_id:
-                state["recovered_from_run_id"] = previous_run_id
-                state["recovered_at"] = attempt["observed_at"]
-                state["recovery_run_id"] = attempt["run_id"]
-                state["recovery_run_attempt"] = attempt["run_attempt"]
-                state["recovery_event_name"] = attempt["event_name"]
-                if isinstance(latest_failure, dict):
-                    state["last_recovered_failure"] = latest_failure
             state.pop("latest_failure", None)
-            state.pop("latest_promotion_deferral", None)
-            if provider_observation is not None:
-                state["promotion_contract"] = PROMOTION_CONTRACT_PROVIDER_OBSERVATION_V2
-                state["provider_observation"] = {
-                    key: value
-                    for key, value in provider_observation.items()
-                    if key != "payload_bytes"
-                }
+            state["failure_count"] = 0
         elif pending_reason:
-            initial_run_id = (
-                pending.get("initial_run_id")
-                if isinstance(pending, dict) and pending.get("initial_run_id")
-                else attempt["run_id"]
-            )
             state["pending"] = {
                 "missing": ["history"],
                 "discovered_from": sorted(set(discovered_from)),
                 "first_trade_date": payload.get("first_trade_date"),
-                "initial_run_id": initial_run_id,
                 "first_seen_at": pending.get("first_seen_at") if isinstance(pending, dict) and pending.get("first_seen_at") else attempt["observed_at"],
-                "expected_resolution": "next_natural_yahoo_run",
+                "expected_resolution": "next_yahoo_acquisition",
                 "reason": pending_reason,
                 "message": (
                     f"{ticker} is newly visible from {', '.join(sorted(set(discovered_from))) or 'the active universe'} "
-                    "but Yahoo history is not available yet; it will retry and promote itself on a natural Yahoo run."
+                    "but Yahoo history is not available yet; it will retry and promote itself on the next Yahoo acquisition."
                 ),
             }
         else:
@@ -871,9 +674,11 @@ class YahooBatchStateStore:
             state.get("resolution_state") in {"fresh_primary", "lkg_primary", "pending_history"}
             or isinstance(state.get("current"), dict)
             or isinstance(state.get("lkg"), dict)
+            or (isinstance(state.get("latest_failure"), dict)
+                and state["latest_failure"].get("data_loss") is True)
         )
-        attempt = _attempt(run, "failed", evidence, error=error)
-        self._append_attempt(state, attempt)
+        attempt = _result(run, "failed", evidence, error=error)
+        self._record_result(state, attempt)
         canonical = self.finance_dir / f"{ticker}.json"
         lkg_path = self._lkg_path(ticker)
 
@@ -891,7 +696,7 @@ class YahooBatchStateStore:
                     **_payload_source_fields(prior_lkg_payload),
                 }
         canonical_payload = _read_json(canonical)
-        if _valid_canonical_payload(canonical_payload, ticker):
+        if _valid_canonical_payload(canonical_payload, ticker) and self.recovery_candidate_advances(ticker, canonical_payload):
             payload_bytes = canonical.read_bytes()
             _write_bytes(lkg_path, payload_bytes)
             source = _payload_source_fields(canonical_payload)
@@ -906,8 +711,6 @@ class YahooBatchStateStore:
         data_loss = lkg_status == "lost"
         deferred_acquisition = failure_kind == "transient_provider_miss" and lkg_status == "absent"
         failure = {
-            "run_id": attempt["run_id"],
-            "run_attempt": attempt["run_attempt"],
             "observed_at": attempt["observed_at"],
             "error": _bounded_error(error),
             "attempts_used": attempt["attempts_used"],
@@ -923,11 +726,11 @@ class YahooBatchStateStore:
             "resolution_state": "lkg_primary" if lkg else "unavailable",
             "retry": True,
             "discovered_from": sorted(set(discovered_from)),
-            "last_attempt": attempt,
+            "last_result": attempt,
             "latest_failure": failure,
+            "failure_count": int(state.get("failure_count") or 0) + 1,
             "updated_at": attempt["observed_at"],
         })
-        state.pop("latest_promotion_deferral", None)
         if lkg:
             state["lkg"] = lkg
             state["current"] = dict(lkg)
@@ -951,19 +754,19 @@ class YahooBatchStateStore:
         payload_bytes = path.read_bytes()
         state = self._load_state(ticker)
         if state.get("retry") is True:
-            attempt = _attempt(run, "skipped_retry_not_recovered", {"attempts_used": 0, "latency_ms": 0, "failures": []})
-            self._append_attempt(state, attempt)
-            state["last_attempt"] = attempt
+            attempt = _result(run, "skipped_retry_not_recovered", {"attempts_used": 0, "latency_ms": 0, "failures": []})
+            self._record_result(state, attempt)
+            state["last_result"] = attempt
             state["updated_at"] = attempt["observed_at"]
             _write_json(self._state_path(ticker), state)
             self._remove_pending_after_state(ticker)
             return state
         history = (payload.get("data") or {}).get("history_1y") if isinstance(payload.get("data"), dict) else None
         has_history = isinstance(history, list) and len(history) > 0
-        attempt = _attempt(run, "skipped_fresh", {"attempts_used": 0, "latency_ms": 0, "failures": []})
+        attempt = _result(run, "skipped_fresh", {"attempts_used": 0, "latency_ms": 0, "failures": []})
         pending_reason = _pending_history_reason(payload, state, attempt["observed_at"]) if not has_history else None
         source = _payload_source_fields(payload)
-        self._append_attempt(state, attempt)
+        self._record_result(state, attempt)
         state.update({
             "schema_version": "yahoo-batch-quote-history-state/v1",
             "ticker": ticker,
@@ -976,7 +779,7 @@ class YahooBatchStateStore:
                 **source,
             },
             "discovered_from": sorted(set(discovered_from)),
-            "last_attempt": attempt,
+            "last_result": attempt,
             "updated_at": attempt["observed_at"],
         })
         if pending_reason:
@@ -984,9 +787,8 @@ class YahooBatchStateStore:
                 "missing": ["history"],
                 "discovered_from": sorted(set(discovered_from)),
                 "first_trade_date": payload.get("first_trade_date"),
-                "initial_run_id": attempt["run_id"],
                 "first_seen_at": attempt["observed_at"],
-                "expected_resolution": "next_natural_yahoo_run",
+                "expected_resolution": "next_yahoo_acquisition",
                 "reason": pending_reason,
             }
         else:
@@ -1020,16 +822,14 @@ class YahooBatchStateStore:
         terminal_symbols = []
         lkg_details = []
         unavailable_details = []
-        promotion_deferral_details = []
         failures = []
         source_rows = []
-        current_attempts = []
+        current_results = [{"ticker": ticker, **row} for ticker, row in self._results.items() if ticker in active]
         stale_groups = {}
-        run_id = str(run.get("run_id") or "local")
 
         inventory_items = self._load_active_universe()["items"]
         for ticker in sorted(active):
-            state = _read_json(self._state_path(ticker))
+            state = self._load_state(ticker) if self._state_path(ticker).exists() else None
             if not state:
                 pending_item = inventory_items.get(ticker)
                 if self._is_pending_acquisition(pending_item):
@@ -1053,14 +853,13 @@ class YahooBatchStateStore:
                         str(stale.get("source_as_of") or lkg.get("source_as_of") or ""),
                         int(stale.get("age_business_days") or 0),
                         int(stale.get("max_business_days") or 0),
-                        str(stale.get("expected_resolution") or "next_natural_yahoo_run"),
+                        str(stale.get("expected_resolution") or "next_yahoo_acquisition"),
                     )
                     stale_groups.setdefault(group_key, []).append(ticker)
                 lkg_details.append({
                     "symbol": ticker,
                     "payload_sha256": lkg.get("payload_sha256"),
                     "source_as_of": lkg.get("source_as_of"),
-                    "failure_run_id": failure.get("run_id"),
                     "failure_observed_at": failure.get("observed_at"),
                     "state_reason": stale.get("reason"),
                     "source_age_business_days": stale.get("age_business_days"),
@@ -1076,18 +875,16 @@ class YahooBatchStateStore:
                     "discovered_from": pending.get("discovered_from") or state.get("discovered_from") or [],
                     "missing": pending.get("missing") or ["history"],
                     "first_trade_date": pending.get("first_trade_date"),
-                    "initial_run_id": pending.get("initial_run_id"),
-                    "expected_resolution": pending.get("expected_resolution") or "next_natural_yahoo_run",
+                    "expected_resolution": pending.get("expected_resolution") or "next_yahoo_acquisition",
                     "reason": pending.get("reason") or "newly_discovered_no_history",
                 })
             elif resolution == "unavailable":
                 counts["unavailable"] += 1
                 failure = state.get("latest_failure") if isinstance(state.get("latest_failure"), dict) else {}
-                last_attempt = state.get("last_attempt") if isinstance(state.get("last_attempt"), dict) else {}
+                last_attempt = state.get("last_result") if isinstance(state.get("last_result"), dict) else {}
                 evidence = failure or last_attempt
                 unavailable_details.append({
                     "symbol": ticker,
-                    "failure_run_id": evidence.get("run_id"),
                     "failure_observed_at": evidence.get("observed_at"),
                     "failure_kind": failure.get("failure_kind") or (
                         "history_unavailable" if last_attempt.get("outcome") == "unavailable" else "legacy_unclassified"
@@ -1096,7 +893,7 @@ class YahooBatchStateStore:
                     "data_loss": failure.get("data_loss") is True,
                     "deferred_acquisition": failure.get("deferred_acquisition") is True,
                     "retry": state.get("retry") is True,
-                    "expected_resolution": "next_natural_yahoo_run" if state.get("retry") is True else None,
+                    "expected_resolution": "next_yahoo_acquisition" if state.get("retry") is True else None,
                 })
             elif resolution == TERMINAL_RESOLUTION_STATE:
                 counts["terminal"] += 1
@@ -1104,7 +901,7 @@ class YahooBatchStateStore:
             if state.get("retry") is True and resolution != TERMINAL_RESOLUTION_STATE:
                 counts["retry"] += 1
                 retry_symbols.append(ticker)
-            last_attempt = state.get("last_attempt")
+            last_attempt = state.get("last_result")
             # A failed last attempt is a retry-pending failure only while the symbol
             # remains retry-capable. Terminal (provider-unsupported) classification is
             # an absorbing state: its pre-terminal failed last attempt must not inflate
@@ -1123,49 +920,26 @@ class YahooBatchStateStore:
             latest_failure = state.get("latest_failure")
             if isinstance(latest_failure, dict):
                 failures.append({"ticker": ticker, **latest_failure})
-            latest_deferral = state.get("latest_promotion_deferral")
-            if isinstance(latest_deferral, dict):
-                promotion_deferral_details.append({"ticker": ticker, **latest_deferral})
-            for attempt in state.get("attempts") or []:
-                if (
-                    isinstance(attempt, dict)
-                    and str(attempt.get("run_id")) == run_id
-                    and int(attempt.get("run_attempt") or 1) == int(run.get("run_attempt") or 1)
-                ):
-                    current_attempts.append({"ticker": ticker, **attempt})
-
-        attempted = len(current_attempts) + (1 if batch_failure else 0)
-        succeeded = sum(row.get("outcome") in {"fresh", "pending_history", "unavailable"} for row in current_attempts)
-        failed = sum(row.get("outcome") == "failed" for row in current_attempts) + (1 if batch_failure else 0)
-        skipped = sum(row.get("outcome") in {"skipped_fresh", "skipped_retry_not_recovered"} for row in current_attempts)
-        current_failure_symbols = {
-            row["ticker"]
-            for row in current_attempts
+        attempted = len(current_results) + (1 if batch_failure else 0)
+        succeeded = sum(row.get("outcome") in {"fresh", "pending_history", "unavailable"} for row in current_results)
+        failed = sum(row.get("outcome") == "failed" for row in current_results) + (1 if batch_failure else 0)
+        skipped = sum(row.get("outcome") in {"skipped_fresh", "skipped_retry_not_recovered"} for row in current_results)
+        current_failure_times = {
+            row["ticker"]: _iso_ms(row.get("observed_at")) or 0
+            for row in current_results
             if row.get("outcome") == "failed" and row.get("ticker")
         }
-        prioritized_lkg_details = sorted(
-            lkg_details,
-            key=lambda row: (row.get("symbol") not in current_failure_symbols, row.get("symbol") or ""),
-        )
-        prioritized_unavailable_details = sorted(
-            unavailable_details,
-            key=lambda row: (row.get("symbol") not in current_failure_symbols, row.get("symbol") or ""),
-        )
-        current_promotion_deferrals = sorted(
-            (
-                row for row in promotion_deferral_details
-                if str(row.get("run_id")) == run_id
-                and int(row.get("run_attempt") or 1) == int(run.get("run_attempt") or 1)
-            ),
-            key=lambda row: row.get("ticker") or "",
-        )
+        def failure_priority(row):
+            symbol = row.get("symbol") or ""
+            return (symbol not in current_failure_times, -current_failure_times.get(symbol, 0), symbol)
+
+        prioritized_lkg_details = sorted(lkg_details, key=failure_priority)
+        prioritized_unavailable_details = sorted(unavailable_details, key=failure_priority)
         oldest = min(source_rows) if source_rows else (None, None)
         latest_failure = max(failures, key=lambda row: str(row.get("observed_at") or "")) if failures else None
         if batch_failure:
             latest_failure = {
                 "ticker": None,
-                "run_id": run_id,
-                "run_attempt": int(run.get("run_attempt") or 1),
                 "observed_at": str(run.get("observed_at") or ""),
                 "error": _bounded_error(batch_failure),
                 "scope": "batch",
@@ -1188,11 +962,6 @@ class YahooBatchStateStore:
             "pending_details": pending_details[:20],
             "lkg_details": prioritized_lkg_details[:20],
             "unavailable_details": prioritized_unavailable_details[:20],
-            "promotion_deferral_details": sorted(
-                promotion_deferral_details,
-                key=lambda row: (str(row.get("observed_at") or ""), row.get("ticker") or ""),
-                reverse=True,
-            ),
             "stale_groups": [
                 {
                     "source_as_of": key[0] or None,
@@ -1204,22 +973,15 @@ class YahooBatchStateStore:
                 for key, symbols in sorted(stale_groups.items())
             ],
             "latest_failure": latest_failure,
-            "current_attempt": {
-                "run_id": run_id,
-                "run_attempt": int(run.get("run_attempt") or 1),
-                "event_name": str(run.get("event_name") or "local"),
-                "schedule": str(run.get("schedule") or ""),
-                "natural": bool(run.get("natural")),
+            "current_results": {
                 "attempted": attempted,
                 "successes": succeeded,
                 "failed": failed,
                 "skipped": skipped,
-                "promotion_deferrals": len(current_promotion_deferrals),
-                "promotion_deferral_symbols": [row["ticker"] for row in current_promotion_deferrals],
-                "fetch_attempts": sum(int(row.get("attempts_used") or 0) for row in current_attempts) + (1 if batch_failure else 0),
+                "fetch_attempts": sum(int(row.get("attempts_used") or 0) for row in current_results) + (1 if batch_failure else 0),
                 "errors": [
                     {"ticker": row["ticker"], "error": row.get("error"), "failures": row.get("failures") or []}
-                    for row in current_attempts
+                    for row in current_results
                     if row.get("outcome") == "failed"
                 ] + ([{"ticker": None, "error": _bounded_error(batch_failure), "scope": "batch"}] if batch_failure else []),
             },
@@ -1229,7 +991,7 @@ class YahooBatchStateStore:
                 f"pending_acquisition={counts['pending_acquisition']}, terminal={counts['terminal']}, "
                 f"catalogue={counts['active']}, eligible={counts['eligible']}, "
                 f"retry={counts['retry']}, failed={counts['failed']}, source_stale={counts['stale']}. "
-                "Pending history is a normal new-listing state and self-resolves on a natural Yahoo run."
+                "Pending history is a normal new-listing state and self-resolves on the next Yahoo acquisition."
             ),
         }
         index_filename = CORE_ETF_INDEX_FILENAME if active_universe_scope == "core_etf" else DEFAULT_INDEX_FILENAME

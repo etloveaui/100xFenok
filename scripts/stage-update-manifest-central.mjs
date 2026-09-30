@@ -5,13 +5,10 @@ import path from "node:path";
 import { spawnSync } from "node:child_process";
 import { fileURLToPath } from "node:url";
 
-import { buildLaneCommitManifest, validateLaneCommitManifest } from "./build-lane-commit-manifest.mjs";
-import { canonicalJson } from "./lib/json-canonical.mjs";
+import { centralCommitPathKind, deriveCentralCommitPaths } from "./materialize-update-manifest-routes.mjs";
 
 const SCRIPT_DIR = path.dirname(fileURLToPath(import.meta.url));
 const DEFAULT_REPO_ROOT = path.resolve(SCRIPT_DIR, "..");
-const WORKFLOW = ".github/workflows/update-manifest.yml";
-const STAGE = "always_if_exists";
 
 function fail(message) {
   throw new Error(`update-manifest central staging: ${message}`);
@@ -35,15 +32,14 @@ function assertSafePath(value, label) {
 }
 
 function parseArgs(argv) {
-  const options = { repoRoot: DEFAULT_REPO_ROOT, manifestPath: null, mode: null };
+  const options = { repoRoot: DEFAULT_REPO_ROOT, mode: null };
   for (let index = 0; index < argv.length; index += 1) {
     const argument = argv[index];
-    if (["--repo-root", "--manifest"].includes(argument)) {
+    if (argument === "--repo-root") {
       const value = argv[index + 1];
       if (!value || value.startsWith("--")) fail(`${argument} requires a value`);
       index += 1;
-      if (argument === "--repo-root") options.repoRoot = path.resolve(value);
-      else options.manifestPath = path.resolve(value);
+      options.repoRoot = path.resolve(value);
     } else if (["--check", "--stage", "--clean-untracked-after-reset", "--assert-clean-after-reset"].includes(argument)) {
       if (options.mode) fail("select exactly one operation");
       options.mode = argument.slice(2);
@@ -51,28 +47,17 @@ function parseArgs(argv) {
   }
   if (!options.mode) fail("select exactly one operation");
   options.repoRoot = fs.realpathSync(options.repoRoot);
-  options.manifestPath ??= path.join(options.repoRoot, "data/admin/lane-commit-manifest.json");
   return options;
 }
 
-function loadPolicy(options) {
-  const manifest = JSON.parse(fs.readFileSync(options.manifestPath, "utf8"));
-  validateLaneCommitManifest(manifest);
-  const builtPaths = buildLaneCommitManifest().update_manifest.central_commit_paths;
-  const paths = manifest.update_manifest.central_commit_paths;
-  if (canonicalJson(paths) !== canonicalJson(builtPaths)) fail("central_commit_paths are stale");
-  // The exact count is derived from the generator (single source of truth)
-  // rather than hand-bumped per boundary addition.
-  if (paths.length !== builtPaths.length || new Set(paths).size !== paths.length) {
-    fail(`central_commit_paths must contain exactly ${builtPaths.length} unique paths`);
-  }
-  const specs = manifest.workflows[WORKFLOW]?.stages?.[STAGE];
-  if (!Array.isArray(specs) || canonicalJson(specs.map((spec) => spec.path)) !== canonicalJson(paths)) fail("workflow central stage is stale");
+function loadPolicy() {
+  const paths = deriveCentralCommitPaths();
+  const specs = paths.map((pathValue) => ({ path: pathValue, kind: centralCommitPathKind(pathValue), required: false }));
   for (const [index, spec] of specs.entries()) {
-    assertSafePath(spec.path, `central_commit_paths[${index}]`);
-    if (!["file", "directory"].includes(spec.kind) || spec.required !== false) fail(`central_commit_paths[${index}] policy is invalid`);
+    assertSafePath(spec.path, `central paths[${index}]`);
+    if (!["file", "directory"].includes(spec.kind)) fail(`central paths[${index}] policy is invalid`);
   }
-  return { digest: manifest.registry_digest, paths, specs };
+  return { paths, specs };
 }
 
 function pathCovered(candidate, specs) {
@@ -164,20 +149,20 @@ function stagePolicy(repoRoot, policy) {
 }
 
 export function runCentralStaging(options) {
-  const policy = loadPolicy(options);
+  const policy = loadPolicy();
   assertNoOutOfPolicyStaged(options.repoRoot, policy.specs);
-  if (options.mode === "clean-untracked-after-reset") return { ...cleanUntrackedAfterReset(options.repoRoot, policy), digest: policy.digest, declared: policy.paths.length };
-  if (options.mode === "assert-clean-after-reset") return { ...assertCleanAfterReset(options.repoRoot, policy), digest: policy.digest, declared: policy.paths.length };
-  if (options.mode === "stage") return { ...stagePolicy(options.repoRoot, policy), digest: policy.digest, declared: policy.paths.length };
+  if (options.mode === "clean-untracked-after-reset") return { ...cleanUntrackedAfterReset(options.repoRoot, policy), declared: policy.paths.length };
+  if (options.mode === "assert-clean-after-reset") return { ...assertCleanAfterReset(options.repoRoot, policy), declared: policy.paths.length };
+  if (options.mode === "stage") return { ...stagePolicy(options.repoRoot, policy), declared: policy.paths.length };
   const changed = collectChanged(options.repoRoot, policy).length;
-  return { digest: policy.digest, declared: policy.paths.length, changed, staged: listCached(options.repoRoot).filter((candidate) => pathCovered(candidate, policy.specs)).length };
+  return { declared: policy.paths.length, changed, staged: listCached(options.repoRoot).filter((candidate) => pathCovered(candidate, policy.specs)).length };
 }
 
 function main() {
   try {
     const options = parseArgs(process.argv.slice(2));
     const result = runCentralStaging(options);
-    console.log(`update-manifest central staging proof: digest=${result.digest.slice(0, 12)} mode=${options.mode} declared=${result.declared} changed=${result.changed} staged=${result.staged}`);
+    console.log(`update-manifest central staging: mode=${options.mode} declared=${result.declared} changed=${result.changed} staged=${result.staged}`);
     if (options.mode === "check" && result.changed === 0) process.exitCode = 3;
   } catch (error) {
     console.error(error.message);

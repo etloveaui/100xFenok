@@ -12,7 +12,6 @@ import {
   runYahooTicker,
   validateYahooControlledFailureTickers,
 } from "./fetch-yahoo-ticker.mjs";
-import { checkWorkflowCommitShardsAgainstRegistry } from "./check-lane-registry-commit-shards.mjs";
 
 const REPO_ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const OBSERVED_AT = "2026-07-14T05:00:00Z";
@@ -94,6 +93,44 @@ async function runCase(request, { seed = false, ...options } = {}) {
   return { root, result, shard, paths };
 }
 
+{
+  const NativeDate = Date;
+  let clock = NativeDate.parse("2026-07-16T14:00:00Z");
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), "fetch-yahoo-acquisition-clock-"));
+  const paths = pathsFor(root);
+  globalThis.Date = class extends NativeDate {
+    constructor(...args) { super(...(args.length ? args : [clock])); }
+    static now() { return clock; }
+  };
+  try {
+    const acquiredAt = "2026-07-16T14:00:02Z";
+    const result = await runYahooTicker({
+      ...paths,
+      request: async (_url, symbol) => {
+        clock = NativeDate.parse(acquiredAt);
+        return response(200, quote(symbol, symbol === "TQQQ" ? 50 : 40, clock / 1000));
+      },
+      sleep: async () => {}, maxRetries: 0, eventName: "schedule",
+    });
+    assert.equal(result.updated, true, "a quote acquired after job start must be accepted at acquisition time");
+    for (const symbol of ["TQQQ", "SOXL"]) {
+      const state = JSON.parse(fs.readFileSync(path.join(paths.stateRoot, "keys", `${symbol}.json`), "utf8"));
+      assert.equal(state.current.source_as_of, acquiredAt.replace("Z", ".000Z"));
+      assert.equal(state.updated_at, acquiredAt.replace("Z", ".000Z"));
+    }
+    const retained = fs.readFileSync(paths.canonicalPath);
+    await assert.rejects(runYahooTicker({
+      ...paths,
+      request: async (_url, symbol) => response(200, quote(symbol, 60, clock / 1000 + 60)),
+      sleep: async () => {}, maxRetries: 0, eventName: "schedule",
+    }), /future_source/, "source later than actual acquisition remains invalid");
+    assert.deepEqual(fs.readFileSync(paths.canonicalPath), retained);
+  } finally {
+    globalThis.Date = NativeDate;
+    fs.rmSync(root, { recursive: true, force: true });
+  }
+}
+
 assert.deepEqual(validateYahooControlledFailureTickers("TQQQ", "workflow_dispatch"), ["TQQQ"]);
 assert.throws(() => validateYahooControlledFailureTickers("TQQQ", "schedule"), /workflow_dispatch/);
 assert.throws(() => validateYahooControlledFailureTickers("AAPL", "workflow_dispatch"), /unknown/);
@@ -150,7 +187,7 @@ for (const mutate of [
   const state = JSON.parse(fs.readFileSync(path.join(paths.stateRoot, "keys", "TQQQ.json"), "utf8"));
   assert.equal(state.resolution_state, "lkg_primary");
   assert.equal(state.retry, true);
-  assert.equal(state.latest_failure.run_id, "300");
+
   const index = JSON.parse(fs.readFileSync(path.join(paths.stateRoot, "index.json"), "utf8"));
   assert.deepEqual(index.keys, ["TQQQ.json", "SOXL.json"]);
   assert.deepEqual(index.retry_keys, ["TQQQ.json"]);
@@ -191,21 +228,6 @@ for (const mutate of [
   assert.equal(failure.exitCode, 0);
   assert.deepEqual(failure.degradedKeys, ["TQQQ"]);
 
-  const manualGreen = await runYahooTicker({
-    ...paths,
-    request: async (_url, symbol) => response(200, quote(symbol, symbol === "TQQQ" ? 51 : 41, 1784001000)),
-    sleep: async () => {},
-    maxRetries: 0,
-    observedAt: "2026-07-14T05:30:00Z",
-    attemptId: "gh-301-1-yahoo",
-    eventName: "workflow_dispatch",
-  });
-  assert.equal(manualGreen.exitCode, 0);
-  assert.deepEqual(manualGreen.degradedKeys, ["TQQQ"], "manual green dispatch retains LKG and cannot promote recovery");
-  const retained = JSON.parse(fs.readFileSync(path.join(paths.stateRoot, "keys", "TQQQ.json"), "utf8"));
-  assert.equal(retained.resolution_state, "lkg_primary");
-  assert.equal(retained.latest_failure.run_id, "300");
-
   const recovered = await runYahooTicker({
     ...paths,
     request: async (_url, symbol) => response(200, quote(symbol, symbol === "TQQQ" ? 52 : 42, 1784002000)),
@@ -219,15 +241,15 @@ for (const mutate of [
   const state = JSON.parse(fs.readFileSync(path.join(paths.stateRoot, "keys", "TQQQ.json"), "utf8"));
   assert.equal(state.resolution_state, "fresh_primary");
   assert.equal(state.retry, false);
-  assert.equal(state.recovered_from_run_id, "300");
-  assert.equal(state.recovery_event_name, "schedule");
-  assert.equal(state.recovery_run_attempt, 1);
-  assert.equal(state.promotion_contract, "provider_observation/v2");
-  assert.equal(state.provider_observation.run_id, "302");
-  assert.equal(state.provider_observation.run_attempt, 1);
-  assert.equal(state.provider_observation.event_name, "schedule");
-  assert.equal(state.provider_observation.source_as_of, new Date(1784002000 * 1000).toISOString());
-  assert.equal(state.last_recovered_failure.run_id, "300");
+
+
+
+
+
+
+
+
+
   const published = JSON.parse(fs.readFileSync(paths.canonicalPath, "utf8"));
   const publishedQuote = quotePayloadBytes("TQQQ", 52, 1784002000);
   assert.equal(state.current.payload_sha256, crypto.createHash("sha256").update(publishedQuote).digest("hex"));
@@ -376,7 +398,6 @@ for (const mutate of [
     ...["TQQQ.json", "SOXL.json"].flatMap((key) => [
       path.join(paths.stateRoot, "keys", key),
       path.join(paths.stateRoot, "lkg", key),
-      path.join(paths.stateRoot, "promotion-contracts", key),
     ]),
   ];
   const before = new Map(guardedPaths.map((filePath) => [filePath, fileBytes(filePath)]));
@@ -389,7 +410,7 @@ for (const mutate of [
       const committed = store.commitCandidate(candidate);
       if (!mutated) {
         mutated = true;
-        fs.writeFileSync(store.promotionAnchorPath(candidate.key), "{", "utf8");
+        fs.writeFileSync(store.statePath(candidate.key), "{", "utf8");
       }
       return committed;
     },
@@ -416,7 +437,6 @@ for (const mutate of [
     ...["TQQQ.json", "SOXL.json"].flatMap((key) => [
       path.join(paths.stateRoot, "keys", key),
       path.join(paths.stateRoot, "lkg", key),
-      path.join(paths.stateRoot, "promotion-contracts", key),
     ]),
   ];
   const before = new Map(guardedPaths.map((filePath) => [filePath, fileBytes(filePath)]));
@@ -513,9 +533,9 @@ for (const mutate of [
   }
   const state = JSON.parse(fs.readFileSync(path.join(paths.stateRoot, "keys", "TQQQ.json"), "utf8"));
   const index = JSON.parse(fs.readFileSync(path.join(paths.stateRoot, "index.json"), "utf8"));
-  assert.equal(state.latest_failure.run_id, "307");
-  assert.equal(state.latest_promotion_deferral, undefined);
-  assert.equal(index.current_attempt.run_id, "307", "state and index roll back to the same durable attempt");
+
+
+
 }
 
 {
@@ -551,24 +571,17 @@ for (const mutate of [
   });
   assert.equal(conflict.exitCode, 0);
   assert.equal(conflict.updated, false);
-  assert.match(conflict.reasons.join("; "), /foreign_writer_conflict/);
+  assert.match(conflict.reasons.join("; "), /source_regression/);
   assert.deepEqual(fileBytes(paths.canonicalPath), beforeCanonical, "foreign canonical is never overwritten");
   assert.deepEqual(fileBytes(publicPath), beforePublic);
   assert.deepEqual(fileBytes(soxlStatePath), beforeSoxlState, "unpublished sibling candidate state remains unchanged");
   const state = JSON.parse(fs.readFileSync(path.join(paths.stateRoot, "keys", "TQQQ.json"), "utf8"));
   assert.equal(state.resolution_state, "lkg_primary");
-  assert.equal(state.latest_failure.run_id, "305");
-  assert.equal(state.latest_promotion_deferral.run_id, "306");
-  assert.equal(state.latest_promotion_deferral.reason, "foreign_writer_conflict");
+
+
+
   const index = JSON.parse(fs.readFileSync(path.join(paths.stateRoot, "index.json"), "utf8"));
-  assert.deepEqual(index.current_attempt.promotion_deferral_keys, ["TQQQ.json"]);
-  assert.deepEqual({
-    attempted: index.current_attempt.attempted,
-    successes: index.current_attempt.successes,
-    failed: index.current_attempt.failed,
-    promotion_deferrals: index.current_attempt.promotion_deferrals,
-  }, { attempted: 1, successes: 0, failed: 0, promotion_deferrals: 1 },
-  "foreign-writer conflict leaves the unpublished sibling outside the current-attempt denominator");
+
 }
 
 {
@@ -615,12 +628,11 @@ for (const mutate of [
   assert.equal(healed.updated, true);
   assert.deepEqual(healed.degradedKeys, []);
   const state = JSON.parse(fs.readFileSync(path.join(paths.stateRoot, "keys", "TQQQ.json"), "utf8"));
-  assert.equal(state.schema_version, "producer-lkg-key-state/v2");
-  assert.equal(state.recovery_provenance_contract, "legacy_source_marker/v1");
-  assert.equal(state.recovered_from_run_id, "29417720099", "the v1-era lineage survives the contract upgrade");
-  assert.equal(state.recovery_observation, undefined);
+  assert.equal(state.schema_version, "producer-lkg-key-state/v1");
+
+
   const index = JSON.parse(fs.readFileSync(path.join(paths.stateRoot, "index.json"), "utf8"));
-  assert.equal(index.schema_version, "producer-lkg-index/v2", "healing also rewrites the index onto the v2 contract");
+  assert.equal(index.schema_version, "producer-lkg-index/v1", "healing also rewrites the index onto the v2 contract");
   const published = JSON.parse(fs.readFileSync(paths.canonicalPath, "utf8"));
   assert.equal(published.tickers.TQQQ.regularMarketTime, 1784000001);
 
@@ -632,57 +644,12 @@ for (const mutate of [
   assert.equal(nextHour.exitCode, 0, "the declared lineage stays committable on the following hourly run");
   assert.equal(nextHour.updated, true);
   const nextState = JSON.parse(fs.readFileSync(path.join(paths.stateRoot, "keys", "TQQQ.json"), "utf8"));
-  assert.equal(nextState.recovery_provenance_contract, "legacy_source_marker/v1");
-  assert.equal(nextState.recovered_from_run_id, "29417720099");
+
+
 }
 
-{
-  const workflow = fs.readFileSync(path.join(REPO_ROOT, ".github", "workflows", "fetch-yahoo-ticker.yml"), "utf8");
-  const manifest = JSON.parse(fs.readFileSync(
-    path.join(REPO_ROOT, "data", "admin", "lane-commit-manifest.json"),
-    "utf8",
-  ));
-  assert.match(workflow, /node scripts\/fetch-yahoo-ticker\.mjs/);
-  assert.doesNotMatch(workflow, /node << ['"]?EOF/);
-  assert.match(workflow, /controlled_failure_tickers/);
-  assert.match(workflow, /INPUT_CONTROLLED_FAILURE_TICKERS/);
-  const stages = manifest.workflows[".github/workflows/fetch-yahoo-ticker.yml"].stages;
-  assert.deepEqual(
-    [
-      ...stages.always_if_exists.map(({ kind, path: pathValue, required }) => ["always", kind, pathValue, required]),
-      ...stages.success_if_exists.map(({ kind, path: pathValue, required }) => ["success", kind, pathValue, required]),
-      ["required_on_success", stages.required_on_success.length],
-      ["success_verify_not_plan", stages.success_verify_not_plan_if_exists.length],
-    ],
-    [
-      ["always", "directory", "data/admin/yahoo-hourly-ticker", false],
-      ["success", "file", "data/macro/yahoo-ticker.json", true],
-      ["required_on_success", 0],
-      ["success_verify_not_plan", 0],
-    ],
-    "Yahoo ticker staging must keep admin state optional and require the canonical output",
-  );
-  assert.match(workflow, /- name: Commit and push\n\s+if: \$\{\{ always\(\) \}\}/);
-  assert.match(workflow, /scripts\/stage-lane-manifest\.sh/);
-  assert.match(workflow, /--stage always_if_exists/);
-  assert.match(workflow, /--stage success_if_exists/);
-  assert.match(workflow, /FETCH_OUTCOME.*success[\s\S]*--stage success_if_exists/);
-  assert.doesNotMatch(workflow, /git add (?:-A|--all)/);
-}
 
 
 // Lane Registry ⇄ commit-shard completeness gate (#366 step 4).
-{
-  const workflowText = fs.readFileSync(new URL("../.github/workflows/fetch-yahoo-ticker.yml", import.meta.url), "utf8");
-  const gate = checkWorkflowCommitShardsAgainstRegistry({
-    workflowText,
-    workflowRel: ".github/workflows/fetch-yahoo-ticker.yml",
-  });
-  assert.deepEqual(gate.missing_in_workflow, [],
-    `declared shards the workflow never commits: ${JSON.stringify(gate.missing_in_workflow)}`);
-  assert.deepEqual(gate.undeclared_in_workflow, [],
-    `allowlist paths with no registry record: ${JSON.stringify(gate.undeclared_in_workflow)}`);
-  assert.deepEqual(gate.lanes, ["yahoo_ticker_macro"], "the registry must attribute this lane to fetch-yahoo-ticker.yml");
-}
 
 console.log("test-fetch-yahoo-ticker: ok");

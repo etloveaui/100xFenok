@@ -8,11 +8,8 @@ import { atomicWrite } from "./lib/atomic-file.mjs";
 import { attemptResult, classifyHttpResponse, evaluateEndpointAssertions, returnedTuple, threwTuple, transportError, worstRequestResult } from "./lib/provider-fetch-result.mjs";
 import {
   LaneLkgStore,
-  PROMOTION_CONTRACT_PROVIDER_OBSERVATION_V2,
   allNaturalRequestsFailed,
-  buildProviderObservationV2,
   classifyLkgFailure,
-  isEligibleRecoveryRun,
   systemicLkgFailureReason,
 } from "./lib/data-supply-lkg-store.mjs";
 import { boundedDiagnosticDetail, diagnosticSuffix } from "./lib/diagnostic-detail.mjs";
@@ -33,11 +30,6 @@ export const DEFILLAMA_PERSISTENCE_POLICY = Object.freeze({
   max_series_days: DEFILLAMA_MAX_SERIES_DAYS,
   eviction: "oldest_source_date_first",
 });
-
-// DefiLlama opts into recovery promotion for structured first-attempt
-// workflow_dispatch runs only; every other LaneLkgStore caller keeps the
-// natural-schedule-only default.
-const ALLOW_BOUND_WORKFLOW_DISPATCH_RECOVERY = true;
 
 const MAX_RETRIES = 2;
 const BACKOFFS_MS = Object.freeze([1000, 2000, 4000]);
@@ -228,7 +220,6 @@ export async function runDefillama({
   const lkgStore = new LaneLkgStore({
     repoRoot,
     laneId: DEFILLAMA_LANE_ID,
-    allowBoundWorkflowDispatchRecovery: ALLOW_BOUND_WORKFLOW_DISPATCH_RECOVERY,
   });
   const lkgArtifacts = [{
     key: "stablecoins",
@@ -295,36 +286,12 @@ export async function runDefillama({
     sourceAsOf: stablecoinsSourceAsOf(output),
     validateDocument: validStablecoinsDocument,
     deriveSourceAsOf: stablecoinsSourceAsOf,
-    promotion_contract: PROMOTION_CONTRACT_PROVIDER_OBSERVATION_V2,
-    provider_observation: buildProviderObservationV2({
-      payloadBytes: Buffer.from(serialized),
-      sourceAsOf: stablecoinsSourceAsOf(output),
-      validateDocument: validStablecoinsDocument,
-      deriveSourceAsOf: stablecoinsSourceAsOf,
-      candidateContainsObservation: (candidateDocument, providerDocument) => JSON.stringify(candidateDocument) === JSON.stringify(providerDocument),
-      run,
-    }),
   };
   const state = lkgStore.stateSnapshot();
-  if (state.items.stablecoins?.retry === true && !isEligibleRecoveryRun(run, ALLOW_BOUND_WORKFLOW_DISPATCH_RECOVERY)) {
-    return {
-      ok: false,
-      reason: "recovery_requires_schedule",
-      updated: false,
-      attempt,
-      retrySet: state.retry_set,
-      degraded: true,
-      corrupt: false,
-      exitCode: 0,
-    };
-  }
   const decisions = lkgStore.evaluatePromotionCandidates([candidate], run);
   const promotable = decisions.filter((decision) => decision.eligible).map((decision) => decision.artifact);
   if (promotable.length === 0) {
     const reason = decisions[0].reason;
-    if (["foreign_writer_conflict", "recovery_not_advanced_by_provider"].includes(reason)) {
-      lkgStore.recordPromotionDeferral({ artifacts: [candidate], run, reason });
-    }
     return {
       ok: false,
       reason,
@@ -340,8 +307,9 @@ export async function runDefillama({
   atomicWrite(canonicalPath, serialized);
   // Producer writes canonical/admin only. The 100xfenok-next/public mirror is
   // fallback materialization owned by sync-public-data / the Update Manifest.
+  const recoveringKeys = new Set(lkgStore.stateSnapshot().retry_set);
   const success = lkgStore.recordSuccess({ artifacts: promotable, run });
-  const recovered = success.state.items.stablecoins?.recovered_at === observedAt;
+  const recovered = recoveringKeys.has("stablecoins");
   return { ok: true, reason: "ok", updated: true, attempt, recovered, exitCode: 0 };
 }
 

@@ -8,11 +8,8 @@ import { atomicWrite } from "./lib/atomic-file.mjs";
 import { attemptResult, classifyEndpointResponse, defaultAttemptId, returnedTuple, threwTuple, transportError, worstRequestResult } from "./lib/provider-fetch-result.mjs";
 import {
   LaneLkgStore,
-  PROMOTION_CONTRACT_PROVIDER_OBSERVATION_V2,
   allNaturalRequestsFailed,
-  buildProviderObservationV2,
   classifyLkgFailure,
-  isNaturalScheduleRun,
   systemicLkgFailureReason,
 } from "./lib/data-supply-lkg-store.mjs";
 import { boundedDiagnosticDetail, diagnosticSuffix } from "./lib/diagnostic-detail.mjs";
@@ -300,39 +297,14 @@ export async function runFredBanking({
       sourceAsOf: outputs[group.id].source_as_of,
       validateDocument,
       deriveSourceAsOf,
-      promotion_contract: PROMOTION_CONTRACT_PROVIDER_OBSERVATION_V2,
-      provider_observation: buildProviderObservationV2({
-        payloadBytes: Buffer.from(serialized),
-        sourceAsOf: outputs[group.id].source_as_of,
-        validateDocument,
-        deriveSourceAsOf,
-        candidateContainsObservation: (candidateDocument, providerDocument) => JSON.stringify(candidateDocument) === JSON.stringify(providerDocument),
-        run,
-      }),
       serialized,
     };
   });
   const recoveryState = lkgStore.stateSnapshot();
   const hasSelectedRetry = candidates.some((candidate) => recoveryState.items[candidate.key]?.retry === true);
-  if (hasSelectedRetry && !isNaturalScheduleRun(run)) {
-    return {
-      ok: false,
-      reason: "recovery_requires_schedule",
-      updated: false,
-      attempt,
-      retrySet: recoveryState.retry_set,
-      degraded: true,
-      corrupt: false,
-      exitCode: 0,
-    };
-  }
   const decisions = lkgStore.evaluatePromotionCandidates(candidates, run);
   const promotable = decisions.filter((decision) => decision.eligible).map((decision) => decision.artifact);
   const rejected = decisions.filter((decision) => !decision.eligible);
-  for (const reason of ["foreign_writer_conflict", "recovery_not_advanced_by_provider"]) {
-    const artifacts = rejected.filter((decision) => decision.reason === reason).map((decision) => decision.artifact);
-    if (artifacts.length > 0) lkgStore.recordPromotionDeferral({ artifacts, run, reason });
-  }
   if (promotable.length === 0) {
     return {
       ok: false,
@@ -348,14 +320,15 @@ export async function runFredBanking({
   for (const candidate of promotable) {
     atomicWrite(canonicalPaths[candidate.key], candidate.serialized);
   }
+  const recoveringKeys = new Set(lkgStore.stateSnapshot().retry_set);
   const success = lkgStore.recordSuccess({ artifacts: promotable, run });
-  const recovered = promotable.some((candidate) => success.state.items[candidate.key]?.recovered_at === observedAt);
+  const recovered = promotable.some((candidate) => recoveringKeys.has(candidate.key));
   if (success.retrySet.length > 0) {
     return {
       ok: false,
       reason: rejected.find((decision) => decision.reason === "foreign_writer_conflict")?.reason
         ?? rejected[0]?.reason
-        ?? "recovery_not_advanced_by_provider",
+        ?? "source_regression",
       updated: true,
       attempt,
       retrySet: success.retrySet,

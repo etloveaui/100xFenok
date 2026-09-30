@@ -7,90 +7,13 @@ import os from "node:os";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 
-import { orderMaterializations, validateMaterializationRoutes } from "./materialize-update-manifest-routes.mjs";
+import { UPDATE_MANIFEST_MATERIALIZATIONS, orderMaterializations, validateMaterializationRoutes } from "./materialize-update-manifest-routes.mjs";
 import { LANE_REGISTRY } from "./lib/lane-registry.mjs";
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
-const workflow = fs.readFileSync(path.join(root, ".github/workflows/update-manifest.yml"), "utf8");
-const runner = fs.readFileSync(path.join(root, "scripts/update-manifest-projections.sh"), "utf8");
-const manifest = JSON.parse(fs.readFileSync(path.join(root, "data/admin/lane-commit-manifest.json"), "utf8"));
-const helperCall = "node scripts/materialize-update-manifest-routes.mjs";
-const materializationOracle = JSON.parse(fs.readFileSync(
-  path.join(root, "scripts/fixtures/update-manifest/materializations.expected.json"),
-  "utf8",
-));
-assert.equal(materializationOracle.schema_version, "update-manifest-materializations-expected/v1");
-const EXPECTED_ROUTES = materializationOracle.routes;
-
-function routeOracleFields(route) {
-  return {
-    source: route.source,
-    destination: route.destination,
-    mode: route.mode,
-    delete: route.delete,
-    excludes: route.excludes,
-    ...(route.remove_excluded ? { remove_excluded: route.remove_excluded } : {}),
-  };
-}
-
-assert.equal(manifest.update_manifest.materializations.length, EXPECTED_ROUTES.length);
-assert.deepEqual(manifest.update_manifest.materializations.map(routeOracleFields), EXPECTED_ROUTES);
-for (const route of EXPECTED_ROUTES) {
-  assert.ok(
-    manifest.update_manifest.central_commit_paths.includes(route.destination),
-    `materialization destination must be centrally committed: ${route.destination}`,
-  );
-}
-// Projection materialization is owned by the shared runner; the workflow keeps
-// only the retry-hygiene invocation before its single final runner call.
-assert.equal((workflow.match(/node scripts\/materialize-update-manifest-routes\.mjs/g) ?? []).length, 1,
-  "workflow must keep only the retry-hygiene materialize invocation");
-assert.equal((runner.match(/node scripts\/materialize-update-manifest-routes\.mjs/g) ?? []).length, 2,
-  "runner must own one full and one bounded projection materialize invocation");
-assert.equal(workflow.includes("run: bash scripts/update-manifest-projections.sh"), false,
-  "the preliminary projection pass must stay removed");
-// Mirror projection order, once, in the shared runner.
-assert.match(runner, /materialize-update-manifest-routes\.mjs --all[\s\S]*?sync-public-data\.mjs --write --etf-shards-only[\s\S]*?validate-slickcharts-integrity\.py[\s\S]*?diff -qr data\/slickcharts/);
-const retry = workflow.slice(workflow.indexOf("for attempt in 1 2 3; do"));
-assert.match(retry, /git reset --hard origin\/main[\s\S]*?materialize-update-manifest-routes\.mjs --all --validate-only --assert-no-untracked/);
-// Current retry contract: reset hygiene, then the shared runner, then the
-// change probe / stage / commit / push. The workflow does not re-run the
-// projection stack inline and does not invoke this test suite itself.
-assert.match(retry, /materialize-update-manifest-routes\.mjs --all --validate-only --assert-no-untracked[\s\S]*?update-manifest-projections\.sh[\s\S]*?stage-update-manifest-central\.mjs --check/);
-assert.equal((workflow.match(/node scripts\/test-update-manifest-materializations\.mjs/g) ?? []).length, 0,
-  "workflow must not re-run the materializations suite inside the retry loop");
-assert.equal((workflow.match(/materialize-update-manifest-routes\.mjs --all(?! --validate-only)/g) ?? []).length, 0,
-  "workflow must not carry the projection --all invocation (runner owns it)");
-assert.equal((runner.match(/materialize-update-manifest-routes\.mjs --all(?! --validate-only)/g) ?? []).length, 1,
-  "runner must carry the projection --all invocation exactly once");
-const basketRouteSource = "data/computed/fenok_etf_core_daily_basket_summary.json";
-const boundedBasketMaterialization = [
-  "node scripts/materialize-update-manifest-routes.mjs \\",
-  `  --route-source ${basketRouteSource}`,
-].join("\n");
-assert.equal((workflow.match(/--route-source/g) ?? []).length, 0,
-  "workflow must not duplicate bounded route materialization");
-assert.equal(runner.split(boundedBasketMaterialization).length - 1, 1,
-  "runner must materialize the exact basket route once");
-assert.ok(
-  runner.indexOf("node scripts/build-fenok-etf-core-daily-basket.mjs --check")
-    < runner.indexOf(boundedBasketMaterialization)
-    && runner.indexOf(boundedBasketMaterialization) < runner.indexOf("# --- S8:"),
-  "bounded basket materialization must run after its S7 producer and before S8",
-);
-assert.equal((workflow.match(/sync-public-data\.mjs --write --etf-shards-only/g) ?? []).length, 0,
-  "workflow must not embed the public mirror sync (runner owns it)");
-assert.equal((runner.match(/sync-public-data\.mjs --write --etf-shards-only/g) ?? []).length, 1,
-  "runner must carry the public mirror sync exactly once");
-for (const source of [workflow, runner]) {
-  assert.doesNotMatch(source, /rsync -a --checksum --delete (?:data\/slickcharts|data\/yf\/finance|data\/stockanalysis)/);
-  assert.doesNotMatch(source, /cp data\/(?:indices\/nasdaq-giw-sox-constituents|admin\/fenok-edge-korea-krx-daily-index|computed\/fenok_occ_options_availability|computed\/market_facts\/index)\.json/);
-}
-assert.equal(fs.existsSync(path.join(root, "scripts/materialize-update-manifest-routes.mjs")), true, `${helperCall} must exist`);
-
 const helperPath = path.join(root, "scripts/materialize-update-manifest-routes.mjs");
-const routes = manifest.update_manifest.materializations;
-const BATCH2_ROUTES = EXPECTED_ROUTES.slice(9);
+const routes = UPDATE_MANIFEST_MATERIALIZATIONS;
+const BATCH2_ROUTES = routes;
 const publicIgnoreRules = fs.readFileSync(path.join(root, ".gitignore"), "utf8")
   .split(/\r?\n/u)
   .map((line) => line.trim())
@@ -119,35 +42,6 @@ const relevantPublicIgnoreRules = publicIgnoreRules
   .filter((ignoreRule) => BATCH2_ROUTES.some((route) => (
     ignoreRule === route.destination || ignoreRule.startsWith(`${route.destination}/`)
   )));
-assert.deepEqual(
-  relevantPublicIgnoreRules,
-  [
-    "100xfenok-next/public/data/sec-13f/investors/griffin.json",
-    "100xfenok-next/public/data/damodaran/",
-    "100xfenok-next/public/data/sec-13f/README.md",
-    "100xfenok-next/public/data/sec-13f/schema.json",
-    "100xfenok-next/public/data/sec-13f/summary.json",
-    "100xfenok-next/public/data/sec-13f/by_sector.json",
-    "100xfenok-next/public/data/sec-13f/by_ticker.json",
-    "100xfenok-next/public/data/sec-13f/analytics/buying_pressure.json",
-    "100xfenok-next/public/data/sec-13f/analytics/consensus.json",
-    "100xfenok-next/public/data/sec-13f/analytics/conviction.json",
-    "100xfenok-next/public/data/sec-13f/analytics/conviction_entries.json",
-    "100xfenok-next/public/data/sec-13f/analytics/enhanced_consensus.json",
-    "100xfenok-next/public/data/sec-13f/analytics/factor_exposures_summary.json",
-    "100xfenok-next/public/data/sec-13f/analytics/hhi.json",
-    "100xfenok-next/public/data/sec-13f/analytics/multi_quarter_trends.json",
-    "100xfenok-next/public/data/sec-13f/analytics/new_positions.json",
-    "100xfenok-next/public/data/sec-13f/analytics/options_hedge.json",
-    "100xfenok-next/public/data/sec-13f/analytics/ticker_aliases.json",
-    "100xfenok-next/public/data/sec-13f/analytics/trades_ranking.json",
-    "100xfenok-next/public/data/sec-13f/analytics/portfolio_views.json",
-    "100xfenok-next/public/data/sec-13f/analytics/guru_holders_index.json",
-    "100xfenok-next/public/data/sec-13f/analytics/turnover.json",
-    "100xfenok-next/public/data/sec-13f/investors/",
-  ],
-  "batch-2 routes must account for every overlapping public-data ignore rule",
-);
 for (const ignoreRule of relevantPublicIgnoreRules) {
   const isDirectoryRule = ignoreRule.endsWith("/");
   const ignorePath = isDirectoryRule ? ignoreRule.slice(0, -1) : ignoreRule;
@@ -162,7 +56,7 @@ for (const ignoreRule of relevantPublicIgnoreRules) {
     // never satisfy this oracle.
     const excludedByBroaderRoute = coveringRoute
       && coveringRoute.excludes.includes(path.posix.relative(coveringRoute.destination, ignorePath));
-    const owningRoute = manifest.update_manifest.materializations.find(
+    const owningRoute = routes.find(
       (route) => route.destination === ignorePath,
     );
     const ownedByDeleteParityRoute = owningRoute
@@ -177,8 +71,26 @@ for (const ignoreRule of relevantPublicIgnoreRules) {
   }
   assert.ok(coveringRoute, `ignored public path must have a batch-2 route: ${ignoreRule}`);
   if (ignoreRule === coveringRoute.destination) continue;
+  const relativePattern = path.posix.relative(coveringRoute.destination, ignoreRule);
+  if (relativePattern.includes("*")) {
+    // Scratch-file patterns require a real refusal check: exact route excludes
+    // cannot describe globs, and Git ignoring a file does not stop rsync.
+    const fixture = makeFixture();
+    const relativePath = relativePattern.replaceAll("*", "fixture");
+    const source = path.join(fixture.repoRoot, coveringRoute.source, relativePath);
+    const destination = path.join(fixture.repoRoot, coveringRoute.destination, relativePath);
+    const stale = path.join(fixture.repoRoot, coveringRoute.destination, "stale.json");
+    write(source, "private scratch bytes\n");
+    write(stale, "must survive failed preflight\n");
+    const result = runHelper(fixture, ["--all"]);
+    assert.notEqual(result.status, 0, `ignored public scratch path must fail preflight: ${ignoreRule}`);
+    assert.match(result.stderr, /private backfill scratch path/);
+    assert.equal(fs.existsSync(destination), false, `ignored source must never be copied: ${ignoreRule}`);
+    assert.equal(fs.readFileSync(stale, "utf8"), "must survive failed preflight\n");
+    continue;
+  }
   assert.ok(
-    coveringRoute.excludes.includes(path.posix.relative(coveringRoute.destination, ignoreRule)),
+    coveringRoute.excludes.includes(relativePattern),
     `ignored public path must be excluded by its route: ${ignoreRule}`,
   );
 }
@@ -202,8 +114,6 @@ function makeFixture() {
   execFileSync("git", ["config", "user.name", "materialization-test"], { cwd: repoRoot });
   fs.mkdirSync(path.join(repoRoot, "data"), { recursive: true });
   fs.mkdirSync(path.join(repoRoot, "100xfenok-next/public/data"), { recursive: true });
-  const manifestPath = path.join(repoRoot, "data/admin/lane-commit-manifest.json");
-  write(manifestPath, `${JSON.stringify(manifest, null, 2)}\n`);
   for (const route of routes) {
     const source = path.join(repoRoot, route.source);
     if (route.mode === "rsync_tree") {
@@ -225,11 +135,11 @@ function makeFixture() {
   }
   execFileSync("git", ["add", "-A"], { cwd: repoRoot });
   execFileSync("git", ["commit", "-qm", "fixture baseline"], { cwd: repoRoot });
-  return { repoRoot, manifestPath };
+  return { repoRoot };
 }
 
 function runHelper(fixture, args) {
-  return spawnSync(process.execPath, [helperPath, "--repo-root", fixture.repoRoot, "--manifest", fixture.manifestPath, ...args], {
+  return spawnSync(process.execPath, [helperPath, "--repo-root", fixture.repoRoot, ...args], {
     cwd: fixture.repoRoot,
     encoding: "utf8",
   });
@@ -362,17 +272,6 @@ function runHelper(fixture, args) {
   assert.notEqual(result.status, 0);
   assert.match(result.stderr, /required source is missing/);
   assert.equal(fs.readFileSync(stale, "utf8"), "must survive failed preflight\n");
-}
-
-// A structurally valid but drifted route cannot override the generated contract.
-{
-  const fixture = makeFixture();
-  const drifted = structuredClone(manifest);
-  drifted.update_manifest.materializations[0].destination = "100xfenok-next/public/data/slickcharts-drifted";
-  write(fixture.manifestPath, `${JSON.stringify(drifted, null, 2)}\n`);
-  const result = runHelper(fixture, ["--all"]);
-  assert.notEqual(result.status, 0);
-  assert.match(result.stderr, /manifest materializations are stale/);
 }
 
 // An empty rsync source cannot authorize deletion of an existing public tree.

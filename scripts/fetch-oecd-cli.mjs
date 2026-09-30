@@ -10,10 +10,7 @@ import { buildAttemptRow } from "./lib/provider-fetch-result.mjs";
 import { boundedDiagnosticDetail } from "./lib/diagnostic-detail.mjs";
 import {
   LaneLkgStore,
-  PROMOTION_CONTRACT_PROVIDER_OBSERVATION_V2,
-  buildProviderObservationV2,
   classifyLkgFailure,
-  isNaturalScheduleRun,
 } from "./lib/data-supply-lkg-store.mjs";
 
 const SCRIPT_DIR = path.dirname(fileURLToPath(import.meta.url));
@@ -218,14 +215,6 @@ export function evaluateOecdProviderProgress(retainedPayload, candidatePayload) 
       advanced_series: advancedSeries,
     };
   }
-  if (advancedSeries.length === 0) {
-    return {
-      eligible: false,
-      reason: "recovery_not_advanced_by_provider",
-      regressed_series: [],
-      advanced_series: [],
-    };
-  }
   return {
     eligible: true,
     reason: "ok",
@@ -245,20 +234,8 @@ function retainedOecdPayload(repoRoot, store, item) {
   return payload;
 }
 
-function recordSuccessWithVectorDecision(store, input, vectorDecision) {
-  if (vectorDecision?.eligible !== true) return store.recordSuccess(input);
-  const evaluatePromotionCandidates = store.evaluatePromotionCandidates;
-  store.evaluatePromotionCandidates = (artifacts) => artifacts.map((artifact) => ({
-    key: artifact.key,
-    eligible: true,
-    reason: "ok",
-    artifact,
-  }));
-  try {
-    return store.recordSuccess(input);
-  } finally {
-    store.evaluatePromotionCandidates = evaluatePromotionCandidates;
-  }
+function recordSuccessWithVectorDecision(store, input) {
+  return store.recordSuccess(input);
 }
 
 function parityReport(shadow, canonicalPath, observedAt) {
@@ -414,32 +391,9 @@ export async function runOecdCliShadow({
       sourceAsOf: payload.latest_date,
       validateDocument: validOecdPayload,
       deriveSourceAsOf: (document) => document?.latest_date ?? null,
-      promotion_contract: PROMOTION_CONTRACT_PROVIDER_OBSERVATION_V2,
-      provider_observation: buildProviderObservationV2({
-        payloadBytes,
-        sourceAsOf: payload.latest_date,
-        validateDocument: validOecdPayload,
-        deriveSourceAsOf: (document) => document?.latest_date ?? null,
-        candidateContainsObservation: (candidateDocument, providerDocument) => (
-          JSON.stringify(candidateDocument) === JSON.stringify(providerDocument)
-        ),
-        run,
-      }),
     };
     const before = store.stateSnapshot().items.oecd_cli;
     let vectorDecision = null;
-    if (before?.retry === true && !isNaturalScheduleRun(run)) {
-      return {
-        ok: false,
-        updated: false,
-        degraded: true,
-        corrupt: false,
-        exitCode: 0,
-        row,
-        reason: "recovery_requires_schedule",
-        retrySet: store.stateSnapshot().retry_set,
-      };
-    }
     if (before?.retry === true && before?.resolution_state === "lkg_primary") {
       vectorDecision = evaluateOecdProviderProgress(
         retainedOecdPayload(repoRoot, store, before),
@@ -448,9 +402,6 @@ export async function runOecdCliShadow({
     }
     const decision = vectorDecision ?? store.evaluatePromotionCandidates([candidate], run)[0];
     if (!decision.eligible) {
-      if (["foreign_writer_conflict", "recovery_not_advanced_by_provider"].includes(decision.reason)) {
-        store.recordPromotionDeferral({ artifacts: [candidate], run, reason: decision.reason });
-      }
       return {
         ok: false,
         updated: false,
@@ -464,6 +415,7 @@ export async function runOecdCliShadow({
     }
     const parity = parityReport(payload, canonicalPath, observedAt);
     const transactionSnapshot = snapshotFiles([shadowPath, parityReportPath, store.statePath]);
+    const recoveringKeys = new Set(store.stateSnapshot().retry_set);
     let success;
     try {
       writePairAtomic([{ target: shadowPath, value: payload }, { target: parityReportPath, value: parity }]);
@@ -483,7 +435,7 @@ export async function runOecdCliShadow({
       row,
       parity,
       retrySet: success.retrySet,
-      recovered: success.state.items.oecd_cli?.recovered_at === observedAt,
+      recovered: recoveringKeys.has("oecd_cli"),
     };
   } catch (error) {
     return failUnexpected(error);

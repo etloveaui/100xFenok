@@ -4,49 +4,20 @@ on:
   workflow_dispatch:
     inputs:
       base_url:
-        description: 'Live target for final confirmation (iterative layout/responsive defaults to isolated preview)'
+        description: 'Deployed site for the requested snapshot or journey'
         required: false
         default: 'https://100xfenok.etloveaui.workers.dev'
-      execution_target:
-        description: 'Layout/responsive target; live explicitly opts into Worker requests'
-        required: false
-        type: choice
-        default: isolated
-        options:
-          - isolated
-          - live
-      include_layout:
-        description: 'Also check layout in the same isolated responsive preview'
-        required: false
-        type: boolean
-        default: false
-      responsive_routes:
-        description: "Optional comma-separated routes for a focused responsive recheck"
-        required: false
-        default: ""
-      responsive_viewports:
-        description: "Optional named viewports for isolated responsive verification"
-        required: false
-        default: ""
-      layout_routes:
-        description: "Optional independent layout routes when sharing a responsive preview build"
-        required: false
-        default: ""
       suite:
-        description: 'Interaction scope (all keeps the existing snapshot coverage)'
+        description: 'Requested snapshot scope'
         required: false
         type: choice
         default: all
         options:
           - all
           - journey
-          - responsive
-          - investor-isolated
-          - investor-evidence
-          - layout
 
 concurrency:
-  group: qa-visual-${{ github.ref }}${{ inputs.suite == 'investor-evidence' && '-evidence' || '' }}
+  group: qa-visual-${{ github.ref }}
   cancel-in-progress: true
 
 permissions:
@@ -67,21 +38,10 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        project: ${{ fromJSON((inputs.suite == 'investor-isolated' || inputs.suite == 'investor-evidence') && '["isolated"]' || inputs.suite == 'responsive' && '["responsive"]' || inputs.suite == 'layout' && '["layout"]' || '["desktop-1440", "mobile-390"]') }}
+        project: [desktop-1440, mobile-390]
     steps:
       - name: Checkout
         uses: actions/checkout@v4
-
-      - name: Validate combined verification target
-        env:
-          INCLUDE_LAYOUT: ${{ inputs.include_layout }}
-          SUITE: ${{ inputs.suite }}
-          EXECUTION_TARGET: ${{ inputs.execution_target }}
-        run: |
-          if [ "$INCLUDE_LAYOUT" = "true" ] && { [ "$SUITE" != "responsive" ] || [ "$EXECUTION_TARGET" = "live" ]; }; then
-            echo "include_layout requires an isolated responsive run" >&2
-            exit 64
-          fi
 
       - name: Setup Node
         uses: actions/setup-node@v4
@@ -93,226 +53,16 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
-      # Owner-requested UI iteration must not repeatedly load production.
-      # Reuse the guarded production build and serve its checked-in public data
-      # inside this one runner; browser requests to other origins are blocked.
-      - name: Build isolated QA preview
-        if: ${{ inputs.suite == 'investor-isolated' || inputs.suite == 'investor-evidence' || ((inputs.suite == 'layout' || inputs.suite == 'responsive') && inputs.execution_target != 'live') }}
-        shell: bash
-        env:
-          FENOK_REMOTE_HEAVY_NESTED_EXECUTION: "1"
-          FENOK_REMOTE_HEAVY_EXPECTED_REVISION: ${{ github.sha }}
-          NEXT_TELEMETRY_DISABLED: "1"
-          QA_EVIDENCE_ONLY: ${{ inputs.suite == 'investor-evidence' && '1' || '0' }}
-        run: |
-          set -euo pipefail
-          git config --global --add safe.directory "$GITHUB_WORKSPACE"
-          git rev-parse --show-toplevel
-          node scripts/build-ink4-contrast-fixture.mjs
-          node --input-type=module -e 'import { emitDetectionExpectedFixture } from "../scripts/build-data-supply-detection-floor.mjs"; emitDetectionExpectedFixture();'
-          npx tsx src/lib/freshness-policy.test.ts
-          npm run qa:journey-continuity
-          node ../scripts/build-guru-holders-index.mjs
-          # The isolated preview must derive its screener from this candidate's
-          # owner export. These runner-only files never publish to main.
-          node ../scripts/build-stocks-analyzer.mjs
-          node ../scripts/build-revision-movers.mjs
-          repo_root="$(git rev-parse --show-toplevel)"
-          floor_output="$(mktemp -d /tmp/investor-detection-floor-XXXXXX)"
-          trap 'rm -rf "$floor_output"' EXIT
-          node ../scripts/build-data-supply-detection-floor.mjs \
-            --artifact-root "$repo_root" \
-            --calendars "$repo_root/scripts/lib/data-supply-detection-calendars.json" \
-            --now "$(node -e 'process.stdout.write(new Date().toISOString())')" \
-            --output-root "$floor_output"
-          node ../scripts/build-data-supply-detection-floor.mjs --verify-report "$floor_output/data-supply-detection-floor.json"
-          install -m 0644 "$floor_output/data-supply-detection-floor.json" "$repo_root/data/admin/data-supply-detection-floor.json"
-          npm run build:fenok-edge-coverage-index
-          npm run build:fenok-data-health-kpi
-          if [ "$QA_EVIDENCE_ONLY" = "1" ]; then
-            npm run qa:fenok-data-health-kpi:artifact
-          else
-            npm run cf:build
-          fi
-
-      - name: Run isolated UI verification
-        shell: bash
-        if: ${{ inputs.suite == 'investor-isolated' || ((inputs.suite == 'layout' || inputs.suite == 'responsive') && inputs.execution_target != 'live') }}
-        env:
-          CI: "true"
-          SUITE: ${{ inputs.suite }}
-          RESPONSIVE_ROUTES: ${{ inputs.responsive_routes }}
-          INCLUDE_LAYOUT: ${{ inputs.include_layout }}
-          QA_BASE_URL: http://127.0.0.1:3107
-          QA_MOBILE_UX_ISOLATED: "1"
-          QA_LAYOUT_ISOLATED: "1"
-          QA_LAYOUT_ROUTES: ${{ inputs.layout_routes || inputs.responsive_routes }}
-          QA_MOBILE_UX_VIEWPORTS: ${{ inputs.responsive_viewports || 'narrow,mobile,tablet-portrait,tablet-mid,tablet,tablet-landscape' }}
-          QA_MOBILE_UX_ROUTES: ${{ inputs.responsive_routes || '/superinvestors,/superinvestors?tab=investors,/superinvestors?tab=stocks,/superinvestors?guru=blackrock,/superinvestors?tab=trades,/superinvestors?tab=insights,/superinvestors?tab=graph,/screener,/screener?mode=analyze' }}
-          QA_MOBILE_UX_OUTPUT_DIR: test-results/responsive
-          NEXT_TELEMETRY_DISABLED: "1"
-        run: |
-          set -euo pipefail
-          npm run start:qa -- --hostname 127.0.0.1 --port 3107 > /tmp/investor-preview.log 2>&1 &
-          preview_pid=$!
-          trap 'kill "$preview_pid" 2>/dev/null || true' EXIT
-          ready=false
-          for attempt in $(seq 1 30); do
-            if curl -fsS http://127.0.0.1:3107/superinvestors/ -o /dev/null; then ready=true; break; fi
-            sleep 2
-          done
-          if [ "$ready" != true ]; then cat /tmp/investor-preview.log; exit 1; fi
-          case "$SUITE" in
-            investor-isolated)
-              chromium_status=0
-              QA_BROWSER_NAME=chromium QA_MOBILE_UX_OUTPUT_DIR=test-results/responsive/chromium npm run qa:mobile-ux || chromium_status=$?
-              webkit_status=0
-              QA_BROWSER_NAME=webkit QA_MOBILE_UX_VIEWPORTS=mobile,tablet-portrait,tablet-mid QA_MOBILE_UX_OUTPUT_DIR=test-results/responsive/webkit npm run qa:mobile-ux || webkit_status=$?
-              if [ "$chromium_status" -ne 0 ] || [ "$webkit_status" -ne 0 ]; then exit 1; fi
-              ;;
-            responsive)
-              export QA_MOBILE_UX_ROUTES="/,/explore,/screener,/screener?mode=analyze,/stock/NVDA,/stock/NVDA?tab=financials,/superinvestors,/superinvestors?tab=investors,/superinvestors?guru=blackrock,/etfs,/etfs/SPY,/market-valuation,/regime,/sectors,/portfolio,/macro-chart,/superinvestors?tab=stocks"
-              if [ -n "$RESPONSIVE_ROUTES" ]; then export QA_MOBILE_UX_ROUTES="$RESPONSIVE_ROUTES"; fi
-              responsive_status=0
-              npm run qa:mobile-ux || responsive_status=$?
-              layout_status=0
-              if [ "$INCLUDE_LAYOUT" = "true" ]; then
-                export QA_LAYOUT_OUTPUT="test-results/layout-sweep/report.json"
-                npm run qa:layout-sweep || layout_status=$?
-              fi
-              if [ "$responsive_status" -ne 0 ] || [ "$layout_status" -ne 0 ]; then exit 1; fi
-              ;;
-            layout)
-              export QA_LAYOUT_OUTPUT="test-results/layout-sweep/report.json"
-              npm run qa:layout-sweep
-              ;;
-            *) echo "unsupported isolated visual suite" >&2; exit 64;;
-          esac
-
-      - name: Declare live Worker request estimate
-        if: ${{ (inputs.suite == 'layout' || inputs.suite == 'responsive') && inputs.execution_target == 'live' }}
-        shell: bash
-        env:
-          SUITE: ${{ inputs.suite }}
-          RESPONSIVE_ROUTES: ${{ inputs.responsive_routes }}
-        run: |
-          set -euo pipefail
-          if [ -n "$RESPONSIVE_ROUTES" ]; then
-            IFS=',' read -ra selected_routes <<< "$RESPONSIVE_ROUTES"
-            route_count=0
-            for route in "${selected_routes[@]}"; do
-              if [ -n "${route//[[:space:]]/}" ]; then route_count=$((route_count + 1)); fi
-            done
-          elif [ "$SUITE" = "layout" ]; then
-            route_count=20
-          else
-            route_count=17
-          fi
-          if [ "$route_count" -eq 0 ]; then echo "No routes selected" >&2; exit 64; fi
-          if [ "$SUITE" = "layout" ]; then
-            estimated_requests=$(((7500 * route_count + 19) / 20))
-            echo "::notice::Estimate before live layout QA: about $estimated_requests Worker requests for $route_count route(s) at seven widths (about 7,500 for the full sweep). Planning estimate, not a measured count."
-          else
-            estimated_requests=$((route_count * 6 * 80))
-            echo "::notice::Conservative estimate before live responsive QA: about $estimated_requests Worker requests for $route_count route(s) at six widths (80 requests per route-width assumed). Planning estimate, not a measured count."
-          fi
-
-      # All/journey snapshots retain the deployed-site path. An explicit live
-      # target also permits one final layout or responsive confirmation.
-      # The old snapshot path used to build the app itself with a raw
-      # NEXT_BUILD_TARGET=cloudflare next build, a combination no real build
-      # path uses: the runtime build targets runtime and the Cloudflare build
-      # goes through opennextjs-cloudflare. That invocation rotted and by
-      # 2026-08-20 it died in file tracing with "Encountered unexpected file in
-      # NFT list", so the job produced no screenshots at all. The visual config
-      # already skips its local server whenever QA_BASE_URL is set, so the
-      # build and server layers were removed from the snapshot path; those
-      # suites photograph the deployed site directly.
-      - name: Run visual QA against the deployed site
-        if: ${{ inputs.suite == 'all' || inputs.suite == 'journey' || ((inputs.suite == 'layout' || inputs.suite == 'responsive') && inputs.execution_target == 'live') }}
+      - name: Run requested visual QA
         env:
           CI: "true"
           PROJECT: ${{ matrix.project }}
           QA_BASE_URL: ${{ inputs.base_url || 'https://100xfenok.etloveaui.workers.dev' }}
           SUITE: ${{ inputs.suite || 'all' }}
-          RESPONSIVE_ROUTES: ${{ inputs.responsive_routes }}
           FENOK_VERIFY_TOKEN: ${{ secrets.FENOK_VERIFY_TOKEN }}
         run: |
           case "$SUITE" in
             all) npm run qa:visual -- --project="$PROJECT";;
             journey) npm run qa:visual -- tests/visual/journey.spec.ts --project="$PROJECT";;
-            responsive)
-              export QA_MOBILE_UX_VIEWPORTS="narrow,mobile,tablet-portrait,tablet-mid,tablet,tablet-landscape"
-              export QA_MOBILE_UX_ROUTES="/,/explore,/screener,/screener?mode=analyze,/stock/NVDA,/stock/NVDA?tab=financials,/superinvestors,/superinvestors?tab=investors,/superinvestors?guru=blackrock,/etfs,/etfs/SPY,/market-valuation,/regime,/sectors,/portfolio,/macro-chart,/superinvestors?tab=stocks"
-              if [ -n "$RESPONSIVE_ROUTES" ]; then export QA_MOBILE_UX_ROUTES="$RESPONSIVE_ROUTES"; fi
-              export QA_MOBILE_UX_OUTPUT_DIR="test-results/responsive"
-              npm run qa:mobile-ux
-              ;;
-            # Explicit final layout confirmation at seven deployed widths.
-            # It reports against
-            # qa-baselines/layout-sweep.json and never rewrites it here.
-            layout)
-              if [ -n "$RESPONSIVE_ROUTES" ]; then export QA_LAYOUT_ROUTES="$RESPONSIVE_ROUTES"; fi
-              export QA_LAYOUT_OUTPUT="test-results/layout-sweep/report.json"
-              npm run qa:layout-sweep
-              ;;
             *) echo "unsupported visual suite" >&2; exit 64;;
           esac
-
-      - name: Upload isolated Scouter derivation evidence
-        if: ${{ success() && inputs.suite == 'responsive' && inputs.include_layout && inputs.execution_target != 'live' }}
-        uses: actions/upload-artifact@v4
-        with:
-          name: preview-scouter-derived
-          path: |
-            data/global-scouter/core/stocks_analyzer.json
-            data/global-scouter/core/per_bands_index.json
-            data/global-scouter/core/revision_movers.json
-          if-no-files-found: error
-          retention-days: 7
-
-      - name: Upload layout sweep report
-        if: always() && (inputs.suite == 'layout' || (inputs.suite == 'responsive' && inputs.include_layout))
-        uses: actions/upload-artifact@v4
-        with:
-          name: layout-sweep
-          path: 100xfenok-next/test-results/layout-sweep/
-          retention-days: 7
-
-      - name: Upload visual report
-        if: always() && inputs.suite != 'responsive' && inputs.suite != 'investor-isolated' && inputs.suite != 'investor-evidence' && inputs.suite != 'layout'
-        uses: actions/upload-artifact@v4
-        with:
-          name: visual-report-${{ matrix.project }}
-          path: 100xfenok-next/playwright-report/visual/
-          retention-days: 7
-
-      - name: Upload visual diffs
-        if: always() && inputs.suite != 'responsive' && inputs.suite != 'investor-isolated' && inputs.suite != 'investor-evidence' && inputs.suite != 'layout'
-        uses: actions/upload-artifact@v4
-        with:
-          name: visual-results-${{ matrix.project }}
-          path: 100xfenok-next/test-results/visual/
-          retention-days: 7
-
-      - name: Upload responsive evidence
-        if: always() && (inputs.suite == 'responsive' || inputs.suite == 'investor-isolated')
-        uses: actions/upload-artifact@v4
-        with:
-          name: responsive-${{ matrix.project }}
-          path: 100xfenok-next/test-results/responsive/
-          retention-days: 7
-
-      - name: Upload regenerated investor evidence
-        if: always() && (inputs.suite == 'investor-isolated' || inputs.suite == 'investor-evidence')
-        uses: actions/upload-artifact@v4
-        with:
-          name: investor-derived-evidence
-          path: |
-            100xfenok-next/scripts/fixtures/ink4-contrast-sites.json
-            scripts/fixtures/data_supply/detection_floor/cases.expected.json
-            100xfenok-next/public/data/admin/fenok-data-health-kpi.json
-            data/sec-13f/analytics/guru_holders_index.json
-            data/admin/fenok-data-health-kpi.json
-            data/admin/data-supply-detection-floor.json
-          retention-days: 7

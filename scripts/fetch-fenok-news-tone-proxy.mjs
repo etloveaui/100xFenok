@@ -15,9 +15,6 @@ import { fileURLToPath } from "node:url";
 import { attemptResult, classifyEndpointResponse, defaultAttemptId, returnedTuple, threwTuple, transportError } from "./lib/provider-fetch-result.mjs";
 import {
   LaneLkgStore,
-  PROMOTION_CONTRACT_PROVIDER_OBSERVATION_V2,
-  buildProviderObservationV2,
-  hasStructuredGithubRunBinding,
 } from "./lib/data-supply-lkg-store.mjs";
 import { DATA_SUPPLY_DETECTION_CONFIG } from "./lib/data-supply-detection-config.mjs";
 
@@ -964,35 +961,6 @@ function snapshotSourceAsOf(snapshot) {
   return validToneSnapshot(snapshot) ? latestRowSourceAsOf(snapshot) : null;
 }
 
-function providerObservationFromSnapshot(snapshot) {
-  return {
-    schema_version: "gdelt-provider-observation/v1",
-    source_as_of: snapshotSourceAsOf(snapshot),
-    rows: snapshot.rows.map((row) => ({ ticker: row.ticker, as_of: row.as_of })),
-  };
-}
-
-function validProviderObservation(document) {
-  return document !== null && typeof document === "object" && !Array.isArray(document)
-    && document.schema_version === "gdelt-provider-observation/v1"
-    && validRfc3339Utc(document.source_as_of)
-    && Array.isArray(document.rows) && document.rows.length > 0
-    && document.rows.every((row) => typeof row?.ticker === "string" && validRfc3339Utc(row?.as_of))
-    && document.source_as_of === document.rows.map((row) => row.as_of).sort().at(-1);
-}
-
-function providerObservationSourceAsOf(document) {
-  return validProviderObservation(document) ? document.source_as_of : null;
-}
-
-function candidateContainsProviderObservation(candidate, providerObservation) {
-  if (!validToneSnapshot(candidate) || !validProviderObservation(providerObservation)) return false;
-  return snapshotSourceAsOf(candidate) === providerObservation.source_as_of
-    && providerObservation.rows.every((providerRow) => candidate.rows.some((row) => (
-      row.ticker === providerRow.ticker && row.as_of === providerRow.as_of
-    )));
-}
-
 function snapshotArtifact(repoRootPath) {
   return {
     key: LKG_ARTIFACT_KEY,
@@ -1008,8 +976,6 @@ function snapshotCandidate(snapshot, run) {
     throw new Error("GDELT snapshot has no provider-derived article seendate");
   }
   const payloadBytes = Buffer.from(`${JSON.stringify(snapshot, null, 2)}\n`);
-  const providerObservation = providerObservationFromSnapshot(snapshot);
-  const providerPayloadBytes = Buffer.from(`${JSON.stringify(providerObservation, null, 2)}\n`);
   return {
     key: LKG_ARTIFACT_KEY,
     currentRelativePath: `data/${OUTPUT_FILE}`,
@@ -1017,15 +983,6 @@ function snapshotCandidate(snapshot, run) {
     sourceAsOf,
     validateDocument: validToneSnapshot,
     deriveSourceAsOf: snapshotSourceAsOf,
-    promotion_contract: PROMOTION_CONTRACT_PROVIDER_OBSERVATION_V2,
-    provider_observation: buildProviderObservationV2({
-      payloadBytes: providerPayloadBytes,
-      sourceAsOf: providerObservationSourceAsOf(providerObservation),
-      validateDocument: validProviderObservation,
-      deriveSourceAsOf: providerObservationSourceAsOf,
-      candidateContainsObservation: candidateContainsProviderObservation,
-      run,
-    }),
   };
 }
 
@@ -1054,10 +1011,9 @@ export async function runNewsTone({
 } = {}) {
   const write = args.noWrite !== true;
   const run = runContext({ runId, runAttempt, eventName, observedAt });
-  const boundManualFetch = hasStructuredGithubRunBinding(run) && args.noFetch !== true;
+  const boundManualFetch = args.noFetch !== true;
   const store = new LaneLkgStore({
     repoRoot: repoRootPath, laneId: LANE_ID,
-    allowBoundWorkflowDispatchRecovery: args.noFetch !== true,
   });
   const observed = await observeAttemptFn({
     maxRecords: args.maxRecords,
@@ -1202,10 +1158,6 @@ export async function runNewsTone({
     ? { ...decisions[0], eligible: false, reason: "foreign_writer_conflict" }
     : decisions[0];
   if (!decision.eligible) {
-    if (["foreign_writer_conflict", "recovery_not_advanced_by_provider"].includes(decision.reason)
-      && store.stateSnapshot().retry_set.includes(LKG_ARTIFACT_KEY)) {
-      store.recordPromotionDeferral({ artifacts: [candidate], run, reason: decision.reason });
-    }
     return {
       ok: false,
       reason: decision.reason,
@@ -1220,6 +1172,7 @@ export async function runNewsTone({
   const history = built?.history ?? mergeHistory(snapshot, { dataRootPath: path.join(repoRootPath, "data") });
   writeJson(OUTPUT_FILE, snapshot, path.join(repoRootPath, "data"));
   writeJson(HISTORY_FILE, history, path.join(repoRootPath, "data"));
+  const recoveringKeys = new Set(store.stateSnapshot().retry_set);
   const success = store.recordSuccess({ artifacts: [candidate], run });
   return {
     ok: true,
@@ -1227,7 +1180,7 @@ export async function runNewsTone({
     degraded: false,
     exitCode: 0,
     retrySet: success.retrySet,
-    recovered: success.state.items[LKG_ARTIFACT_KEY]?.recovered_at === observedAt,
+    recovered: recoveringKeys.has(LKG_ARTIFACT_KEY),
     snapshot,
     history,
     result,

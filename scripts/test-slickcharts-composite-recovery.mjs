@@ -223,70 +223,23 @@ assert.deepEqual(result.index.retry_members, ["weekly"]);
 assert.equal(result.index.active_composite.generation_id, generationBeforeFailure);
 assert.equal(result.index.retained_composite.generation_id, generationBeforeFailure);
 assert.deepEqual(inspectSlickchartsMemberBundle(root, "weekly"), weeklyBefore);
-const failureRunId = result.index.members.weekly.last_failure.run.run_id;
-
-// The lane opts into the shared first-attempt structured workflow_dispatch
-// recovery policy: a bound (numeric nonzero run id) first-attempt dispatch is
-// admitted like a natural schedule run and still faces the provider gates.
-// Synthetic run ids, retry attempts, and stale observations cannot promote.
-write("data/slickcharts/sp500.json", { candidate: "dispatch" });
-result = finalize("weekly", { eventName: "workflow_dispatch", providerDate: "2026-08-03T00:00:00.000Z" });
-assert.equal(result.status.decision, "recovery_requires_advancing_provider_content");
-assert.equal(result.index.members.weekly.resolution_state, "lkg_primary");
-
-write("data/slickcharts/sp500.json", { candidate: "dispatch-synthetic-run-id" });
-result = finalize("weekly", {
-  eventName: "workflow_dispatch",
-  runId: "slickcharts-manual-recovery-run",
-  providerDate: "2026-08-03T00:00:00.000Z",
-  responseSha256: "b".repeat(64),
-});
-assert.equal(result.status.decision, "recovery_requires_natural_schedule_attempt_1");
-assert.equal(result.index.members.weekly.resolution_state, "lkg_primary");
-
-write("data/slickcharts/sp500.json", { candidate: "dispatch-attempt-2" });
-result = finalize("weekly", {
-  eventName: "workflow_dispatch",
-  runAttempt: 2,
-  providerDate: "2026-08-03T00:00:00.000Z",
-  responseSha256: "b".repeat(64),
-});
-assert.equal(result.status.decision, "recovery_requires_natural_schedule_attempt_1");
-
-write("data/slickcharts/sp500.json", { candidate: "dispatch-stale-provider-time" });
-result = finalize("weekly", { eventName: "workflow_dispatch", providerDate: "2026-08-01T00:00:00.000Z" });
-assert.equal(result.status.decision, "recovery_requires_advancing_provider_time");
-
-write("data/slickcharts/sp500.json", { candidate: "attempt-2" });
-result = finalize("weekly", { runAttempt: 2, providerDate: "2026-08-03T00:00:00.000Z" });
-assert.equal(result.status.decision, "recovery_requires_natural_schedule_attempt_1");
-
-write("data/slickcharts/sp500.json", { candidate: "same-date" });
-result = finalize("weekly", { providerDate: "2026-08-01T00:00:00.000Z" });
-assert.equal(result.status.decision, "recovery_requires_advancing_provider_time");
-
-write("data/slickcharts/sp500.json", { candidate: "later-date-identical-content" });
-result = finalize("weekly", { providerDate: "2026-08-04T00:00:00.000Z" });
-assert.equal(result.status.decision, "recovery_requires_advancing_provider_content");
-
-write("data/slickcharts/sp500.json", { candidate: "natural-recovery" });
-result = finalize("weekly", {
-  providerDate: "2026-08-05T00:00:00.000Z",
-  responseSha256: "b".repeat(64),
-});
-assert.equal(result.status.decision, "recovered_and_promoted");
-assert.equal(result.status.publish_data, true);
-assert.equal(result.index.composite_state, "ready");
-assert.deepEqual(result.index.retry_members, []);
-assert.equal(result.index.members.weekly.last_recovery.recovered_from_run_id, failureRunId);
-assert.equal(result.index.members.weekly.last_recovery.recovery_run_attempt, 1);
-assert.equal(result.index.members.weekly.last_recovery.recovery_event_name, "schedule");
+// Valid same-date provider acquisitions recover in every invocation context.
+for (const [eventName, runId, runAttempt] of [
+  ["workflow_dispatch", "manual", 1], ["schedule", "rerun", 2], ["local", "0", 1],
+]) {
+  write("data/slickcharts/sp500.json", { candidate: runId });
+  result = finalize("weekly", { eventName, runId, runAttempt, providerDate: "2026-08-01T00:00:00.000Z" });
+  assert.equal(result.status.decision, "recovered_and_promoted");
+  assert.equal(result.status.publish_data, true);
+  assert.equal(result.index.members.weekly.source_as_of, "2026-08-01T00:00:00.000Z");
+  assert.deepEqual(result.index.retry_members, []);
+  if (runId !== "0") failMember("weekly", "2026-08-02T00:00:00.000Z");
+}
 
 // A bound first-attempt workflow_dispatch with an advancing provider
 // observation recovers exactly like a natural schedule run.
 const dispatchFailure = failMember("weekly", "2026-08-06T00:00:00.000Z");
 assert.equal(dispatchFailure.status.decision, "retained_lkg");
-const dispatchFailureRunId = dispatchFailure.index.members.weekly.last_failure.run.run_id;
 write("data/slickcharts/sp500.json", { candidate: "dispatch-recovery" });
 result = finalize("weekly", {
   eventName: "workflow_dispatch",
@@ -297,9 +250,9 @@ assert.equal(result.status.decision, "recovered_and_promoted");
 assert.equal(result.status.publish_data, true);
 assert.equal(result.index.composite_state, "ready");
 assert.deepEqual(result.index.retry_members, []);
-assert.equal(result.index.members.weekly.last_recovery.recovered_from_run_id, dispatchFailureRunId);
-assert.equal(result.index.members.weekly.last_recovery.recovery_run_attempt, 1);
-assert.equal(result.index.members.weekly.last_recovery.recovery_event_name, "workflow_dispatch");
+
+
+
 
 // Every workflow-owned path contract uses the same all-or-nothing rollback.
 for (const [offset, member] of ["daily", "monthly", "history", "symbols"].entries()) {

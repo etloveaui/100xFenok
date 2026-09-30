@@ -72,10 +72,6 @@ for (const trigger of ["100x/data/metadata/**", "alpha-scout/data/metadata/**", 
 }
 assert.match(workflow, /- '!data\/metadata\/\*\*'/, "canonical bot commits must not retrigger Update Manifest");
 
-const manifest = JSON.parse(fs.readFileSync(path.join(root, "data/admin/lane-commit-manifest.json"), "utf8"));
-assert.ok(manifest.update_manifest.central_commit_paths.includes("data/metadata"),
-  "Update Manifest central staging must own canonical metadata");
-
 const live = materializeSiteMetadata({
   dailyWrapRoot: path.join(root, "100x/data/metadata"),
   alphaScoutRoot: path.join(root, "alpha-scout/data/metadata"),

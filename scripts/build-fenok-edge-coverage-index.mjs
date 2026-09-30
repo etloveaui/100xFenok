@@ -19,8 +19,10 @@ import {
   recomputeFenokEdgeSourceAsOf,
 } from "./lib/fenok-edge-source-stamp.mjs";
 import {
-  selectKrxIssuerDailyCoverageEvidence,
-  validateKrxIssuerDailyCoverageReceipt,
+  activeKrxUniverseCodes,
+  buildKrxIssuerDailyCoverage,
+  currentListedKrxUniverseRows,
+  normalizeKrxCoverageCode,
 } from "./lib/fenok-edge-krx-coverage-receipt.mjs";
 import { buildEtfScoringLaneReadiness } from "./lib/etf-readiness-gate.mjs";
 import {
@@ -86,10 +88,6 @@ function pct(count, total) {
 
 function normTicker(value) {
   return String(value ?? "").trim().toUpperCase().replaceAll(".", "-");
-}
-
-function krCode(value) {
-  return String(value ?? "").replace(/[^0-9A-Z]/gi, "").slice(0, 6).toUpperCase();
 }
 
 function toIsoDate(value) {
@@ -493,23 +491,70 @@ function preservePriorPrivateBackedActiveS0Evidence(evidence) {
   recomputeBlockingEvidence(evidence);
 }
 
-export function krxCoverageContract({ evidence, sourceDenominator, receiptValidation }) {
-  const coveredCount = Math.max(0, Number(evidence?.covered_count) || 0);
-  const denominator = Math.max(0, Number(evidence?.denominator) || 0);
-  const validatedFilter = evidence?.source === "bound_bridge_receipt"
-    && receiptValidation?.ok === true
-    && receiptValidation?.receipt?.schema_version === "fenok_krx_issuer_daily_coverage_receipt/v3"
-    ? receiptValidation.receipt.listing_status_filter
-    : null;
-  const excludedCount = Math.max(0, Number(validatedFilter?.excluded_count) || 0);
+export function krxCoverageContract({ evidence, sourceDenominator }) {
+  const sourceCount = Math.max(0, Number(sourceDenominator) || 0);
+  const filter = evidence?.listing_status_filter;
+  const covered = Number(evidence?.covered_count);
+  const eligible = Number(evidence?.denominator);
+  const excluded = Number(filter?.excluded_count);
+  const source = Number(filter?.source_denominator);
+  const countsValid = [covered, eligible, excluded, source].every(Number.isSafeInteger)
+    && covered >= 0 && covered <= eligible && eligible >= 0 && excluded >= 0
+    && source === sourceCount && eligible + excluded === source
+    && filter?.eligible_denominator === eligible;
+  const coveredCount = countsValid ? covered : 0;
+  const denominator = countsValid ? eligible : sourceCount;
   return {
     covered_count: coveredCount,
     denominator,
-    source_denominator: Math.max(0, Number(validatedFilter?.source_denominator) || Number(sourceDenominator) || 0),
-    excluded_count: excludedCount,
-    missing_count: Math.max(0, denominator - coveredCount),
-    coverage_ready: coveredCount === denominator,
+    source_denominator: sourceCount,
+    excluded_count: countsValid ? excluded : 0,
+    missing_count: denominator - coveredCount,
+    coverage_ready: countsValid && denominator > 0 && coveredCount === denominator,
   };
+}
+
+function krxSourceCoverage({ bridge, manifest, activeUniverseRows }) {
+  const sourceDate = bridge.as_of;
+  const issuerRowsByMarket = { KRX: [], KOSDAQ: [] };
+  const issuerMasterRowsByMarket = { KRX: [], KOSDAQ: [] };
+  let rawAvailable = false;
+  for (const file of manifest.files ?? []) {
+    const market = { stk_bydd_trd: "KRX", ksq_bydd_trd: "KOSDAQ", stk_isu_base_info: "KRX", ksq_isu_base_info: "KOSDAQ" }[file.api_id];
+    if (!market || file.status !== "success" || !file.path) continue;
+    const fileDate = toIsoDate(file.provider_source_date ?? file.source_date ?? file.date ?? file.basDd ?? file.path.match(/(\d{8})\.json$/u)?.[1]);
+    if (fileDate !== sourceDate) continue;
+    const payload = readJson(repoRelPath(file.path), null);
+    const rows = payload?.OutBlock_1;
+    if (!Array.isArray(rows)) continue;
+    if (file.api_id.endsWith("_isu_base_info")) {
+      issuerMasterRowsByMarket[market].push(...rows);
+    } else {
+      rawAvailable = true;
+      // The manifest's requested date is not a substitute for returned BAS_DD.
+      const currentRows = rows.filter((row) => {
+        const dates = [row?.BAS_DD, row?.BASDD, row?.basDd, row?.bas_dd].filter((value) => value != null).map((value) => {
+          const text = String(value).trim();
+          return /^(?:\d{8}|\d{4}-\d{2}-\d{2})$/u.test(text) ? toIsoDate(text) : null;
+        });
+        return dates.length > 0 && dates.every((date) => date === sourceDate);
+      });
+      issuerRowsByMarket[market].push(...currentRows);
+    }
+  }
+  if (rawAvailable) {
+    const listedRows = currentListedKrxUniverseRows({ activeUniverseRows, issuerMasterRowsByMarket });
+    const coverage = buildKrxIssuerDailyCoverage({
+      sourceDate, activeUniverseRows: listedRows ?? activeUniverseRows, sourceActiveUniverseRows: activeUniverseRows,
+      coveredCodesByMarket: Object.fromEntries(Object.entries(issuerRowsByMarket).map(([market, rows]) => [market, rows.map((row) => normalizeKrxCoverageCode(row?.ISU_CD))])),
+      listingBasis: listedRows ? "current_krx_issuer_master" : "active_scoring_universe_listing_unknown",
+    });
+    return { ...coverage, source: "current_private_rows" };
+  }
+  const snapshot = bridge.issuer_daily_coverage;
+  const applicable = snapshot?.source_date === sourceDate
+    && snapshot?.listing_status_filter?.source_denominator === activeKrxUniverseCodes(activeUniverseRows).size;
+  return applicable ? { ...snapshot, source: "producer_measured_snapshot" } : { source: "none", source_date: null };
 }
 
 function main() {
@@ -550,7 +595,6 @@ const taiwanTickerAnomalies = selectTaiwanTickerAnomalies(universeRows, explicit
 const japanTickerAnomalies = selectJapanTickerAnomalies(universeRows, explicitJapanRows);
 
 const usUniverse = new Set(usRows.map((row) => normTicker(row.ticker_normalized ?? row.ticker)));
-const krUniverseCodes = new Set(koreaRows.map((row) => krCode(row.ticker_normalized ?? row.ticker)).filter(Boolean));
 
 const flow = readJson("data/computed/fenok_flow_proxies.json", {});
 const flowSet = rowTickerSet(flow);
@@ -576,57 +620,11 @@ const usFull252FirstBatch = readJson("_private/admin/fenok-flow/backfill/2026062
 
 const koreaBridge = readJson("data/admin/fenok-edge-korea-krx-daily-index.json", {});
 const koreaLatestRun = koreaBridge.latest_run ?? {};
-const koreaProofManifestPath = repoRelPath(koreaBridge.private_artifacts?.top_manifest_path)
-  ?? "_private/admin/fenok-edge-korea/backfill/20260629/krx_daily_smoke_5d/manifest.json";
-const koreaProofManifest = readJson(koreaProofManifestPath, {});
-const koreaLatestCalendarManifest = readJson(
-  repoRelPath(koreaBridge.daily_accumulation?.latest_daily_manifest_path)
-    ?? "_private/admin/fenok-edge-korea/backfill/20260629/krx_daily_20260629/manifest.json",
-  {},
-);
-const koreaProofDates = unique((koreaProofManifest.files ?? [])
-  .filter((file) => Number(file.row_count) > 0)
-  .map((file) => toIsoDate(file.source_date ?? file.date ?? file.basDd)));
-const koreaRawProofAvailable = hasManifestPayload(koreaProofManifest) && koreaProofDates.length > 0;
-const koreaReceiptValidation = validateKrxIssuerDailyCoverageReceipt({
-  bridgeDocument: koreaBridge,
-  activeUniverseCodes: krUniverseCodes,
-  activeUniverseRows: koreaRows,
-});
-const koreaCountedSourceYmd = koreaRawProofAvailable ? ymd(koreaProofDates.at(-1)) : null;
-const koreaLatestCalendarDailyHistoryRows = (koreaLatestCalendarManifest.files ?? [])
-  .filter((file) => file.endpoint_class === "daily-history")
-  .reduce((sum, file) => sum + (Number(file.row_count) || 0), 0);
-const koreaProofRoot = koreaRawProofAvailable
-  ? repoRelPath(koreaProofManifest.runtime?.output_root ?? koreaBridge.private_artifacts?.output_root)
-  : null;
-const koreaStk = readJsonFirst([
-  koreaProofRoot && koreaCountedSourceYmd
-    ? `${koreaProofRoot}/raw/core_stock_index/stk_bydd_trd/${koreaCountedSourceYmd}.json`
-    : null,
-], {});
-const koreaKsq = readJsonFirst([
-  koreaProofRoot && koreaCountedSourceYmd
-    ? `${koreaProofRoot}/raw/core_stock_index/ksq_bydd_trd/${koreaCountedSourceYmd}.json`
-    : null,
-], {});
-const koreaIssueCodes = new Set([
-  ...(Array.isArray(koreaStk.OutBlock_1) ? koreaStk.OutBlock_1 : []),
-  ...(Array.isArray(koreaKsq.OutBlock_1) ? koreaKsq.OutBlock_1 : []),
-].map((row) => krCode(row.ISU_CD)).filter(Boolean));
-const koreaRawIntersection = [...krUniverseCodes].filter((code) => koreaIssueCodes.has(code));
-const koreaEvidence = selectKrxIssuerDailyCoverageEvidence({
-  rawProofDates: koreaRawProofAvailable ? koreaProofDates : [],
-  rawCoveredCount: koreaRawIntersection.length,
-  denominator: koreaRows.length,
-  receiptValidation: koreaReceiptValidation,
-});
-const koreaCountedSourceDate = koreaEvidence.source_date;
-const koreaCoverage = krxCoverageContract({
-  evidence: koreaEvidence,
-  sourceDenominator: koreaRows.length,
-  receiptValidation: koreaReceiptValidation,
-});
+const koreaSourceManifestPath = repoRelPath(koreaBridge.private_artifacts?.top_manifest_path);
+const koreaSourceManifest = readJson(koreaSourceManifestPath ?? "", {});
+const koreaEvidence = krxSourceCoverage({ bridge: koreaBridge, manifest: koreaSourceManifest, activeUniverseRows: koreaRows });
+const koreaCoverage = krxCoverageContract({ evidence: koreaEvidence, sourceDenominator: activeKrxUniverseCodes(koreaRows).size });
+const koreaCountedSourceDate = koreaEvidence.source_date ?? null;
 const koreaSourceEvidence = krxDailySourceEvidence({
   sourceDate: koreaCountedSourceDate, coverageReady: koreaCoverage.coverage_ready, now: buildNow,
 });
@@ -896,9 +894,8 @@ function activeS0BlockingEvidence() {
       source_state: koreaSourceEvidence.source_state,
       max_age_days: koreaSourceEvidence.max_age_days,
       evidence_source: koreaEvidence.source,
-      receipt_validation: koreaReceiptValidation.ok ? "valid" : koreaReceiptValidation.reason,
-      eligibility_policy: "Validated v3 receipt eligibility uses the current KRX issuer master; aggregate source, eligible, and excluded counts are disclosed without publishing per-issuer evidence.",
-      caveat: "Empty KRX calendar runs are not counted as issuer daily coverage; when private raw is absent, only a bridge receipt bound to the current bridge and active universe is accepted.",
+      eligibility_policy: "Raw-present coverage joins current issuer rows to the listed active universe; saved producer counts describe the measured source-date universe snapshot.",
+      caveat: "Empty daily responses are not issuer coverage. Without private rows, saved producer counts describe the measured universe at their source date, not a current issuer intersection.",
     },
     {
       id: "finra_full_us_source_ready",
@@ -1234,36 +1231,21 @@ const index = {
     sources: [
     coverageRow({
       id: "krx_issuer_daily_latest_full_proof",
-      label: "Korea KRX issuer daily coverage, latest fully populated proof",
+      label: "Korea KRX issuer daily coverage",
       count: koreaCoverage.covered_count,
       denominator: koreaCoverage.denominator,
-      denominatorLabel: "validated_krx_receipt.eligible_denominator",
+      denominatorLabel: "KRX listing-filtered source-date universe",
       sourceDate: koreaCountedSourceDate,
       status: koreaCoverage.coverage_ready ? "ready" : "partial",
       claimScope: "source_available",
       activeTotal: activeScoringTotal,
-      caveat: "Counted from current private KRX raw files when present, otherwise from a bridge receipt bound to the current bridge and active universe. Empty calendar runs are not counted as issuer daily coverage.",
+      caveat: "Current private rows are joined to the eligible issuer universe. Without raw rows, aggregate counts are the producer-measured source-date snapshot; they do not certify today’s issuer population.",
       extra: {
         evidence_source: koreaEvidence.source,
-        receipt_validation: koreaReceiptValidation.ok ? "valid" : koreaReceiptValidation.reason,
         source_denominator: koreaCoverage.source_denominator,
         eligible_denominator: koreaCoverage.denominator,
         listing_status_excluded_count: koreaCoverage.excluded_count,
-        private_manifest_file: koreaProofManifestPath,
-        counted_batch: {
-          run_id: koreaLatestRun.run_id ?? null,
-          as_of: koreaBridge.as_of ?? null,
-          summary: koreaLatestRun.summary ?? null,
-          date_count: koreaProofManifest.date_range?.date_count ?? koreaBridge.freshness?.date_count ?? null,
-          attempted_call_count: koreaLatestRun.attempted_call_count ?? koreaProofManifest.attempted_call_count ?? null,
-        },
-        latest_calendar_run: {
-          run_id: koreaLatestCalendarManifest.run_id ?? null,
-          as_of: koreaLatestCalendarManifest.date_range?.end_date ?? koreaBridge.as_of ?? null,
-          summary: koreaLatestCalendarManifest.summary ?? null,
-          daily_history_rows: koreaLatestCalendarDailyHistoryRows,
-          countable_for_issuer_daily: koreaLatestCalendarDailyHistoryRows > 0,
-        },
+        private_manifest_file: koreaSourceManifestPath,
       },
     }),
     coverageRow({
@@ -1423,7 +1405,7 @@ const index = {
       coverage_pct: pct(combinedKrUsFlow, activeScoringTotal),
       claim_scope: "source_availability_composite",
       not_public_scoring: true,
-      formula: "KRX latest fully populated issuer daily proof + US FINRA flow proxy",
+      formula: "KRX source-date issuer daily coverage + US FINRA flow proxy",
     },
     latest_available_kr_plus_us_occ: {
       covered_count: combinedKrUsOcc,
@@ -1432,7 +1414,7 @@ const index = {
       coverage_pct: pct(combinedKrUsOcc, activeScoringTotal),
       claim_scope: "source_availability_composite",
       not_public_scoring: true,
-      formula: "KRX latest fully populated issuer daily proof + US OCC options proxy",
+      formula: "KRX source-date issuer daily coverage + US OCC options proxy",
     },
     strict_new_bounded_run_plus_kr: {
       covered_count: combinedKrUsLatestBounded,
@@ -1441,7 +1423,7 @@ const index = {
       coverage_pct: pct(combinedKrUsLatestBounded, activeScoringTotal),
       claim_scope: "run_health_composite",
       not_public_scoring: true,
-      formula: "KRX latest fully populated issuer daily proof + latest US bounded reference-ticker run",
+      formula: "KRX source-date issuer daily coverage + latest US bounded reference-ticker run",
     },
     remaining_asia_ex_taiwan: {
       count: asiaYfBlockingEvidenceRows.length,
@@ -1464,7 +1446,7 @@ const index = {
       coverage_pct: pct(koreaCoveredCount + finraEligibleSourceReadyRows.length + usClassYfReadyEvidenceRows.length + asiaYfReadyEvidenceRows.length + taiwanYfReadyEvidenceRows.length, activeScoringTotal),
       claim_scope: "source_availability_composite",
       not_public_scoring: true,
-      formula: "KRX latest fully populated issuer daily proof + US FINRA source-ready rows + US_CLASS/non-plain YF daily source-ready rows + HKEX/SSE/SZSE YF daily source-ready rows + explicit Taiwan YF daily source-ready rows",
+      formula: "KRX source-date issuer daily coverage + US FINRA source-ready rows + US_CLASS/non-plain YF daily source-ready rows + HKEX/SSE/SZSE YF daily source-ready rows + explicit Taiwan YF daily source-ready rows",
     },
   },
   public_scoring_readiness: {
@@ -1572,10 +1554,10 @@ const index = {
       total_trading_dates: 252,
       completed_endpoint_calls: Number(koreaLatestRun.attempted_call_count) || 0,
       estimated_full_endpoint_calls: Number(koreaBridge.request_budget?.estimated_full_252_calls) || 7812,
-      latest_batch_manifest: koreaProofManifestPath,
-      latest_batch_dates: koreaProofManifest.date_range?.dates ?? [],
+      latest_batch_manifest: koreaSourceManifestPath,
+      latest_batch_dates: koreaSourceManifest.date_range?.dates ?? [],
       latest_batch_summary: koreaLatestRun.summary ?? null,
-      caveat: "This is Korea 20-trading-day bounded progress. It does not change the latest fully populated proof beyond the batch end date.",
+      caveat: "This is Korea 20-trading-day bounded progress. It does not change the source-date issuer coverage beyond the batch end date.",
     },
     us_252_reference_ticker_queue: {
       status: usFull252FirstBatch.run_id ? "started_bounded_supervised" : "not_started",
@@ -1611,8 +1593,7 @@ const index = {
         max_age_days: koreaSourceEvidence.max_age_days,
         status: koreaSourceEvidence.source_status,
         evidence_source: koreaEvidence.source,
-        receipt_validation: koreaReceiptValidation.ok ? "valid" : koreaReceiptValidation.reason,
-        caveat: "Gate uses the latest fully populated issuer proof date; a private-absence rebuild accepts only a receipt bound to the current bridge and active universe.",
+        caveat: "Source date is the actual KRX response date. Without private rows, coverage is the saved producer-measured universe snapshot.",
       },
       {
         id: "us_flow_source_date",
@@ -1727,8 +1708,8 @@ preservePriorPrivateBackedEvidence(index, priorIndex, {
 }, activeScoringTotal);
 
 // Compute the root SLA stamp only after the remaining private-backed carry-over
-// rows are reconciled. KRX itself is selected from current raw proof or its
-// bridge-bound receipt above; an unbound no-private rebuild stays fail-closed.
+// rows are reconciled. KRX uses actual rows or producer-measured snapshot counts;
+// absent source data does not become full coverage.
 recomputeFenokEdgeSourceAsOf(index);
 
 const publicIndex = compactPublicCoverageIndex(index);

@@ -128,14 +128,15 @@ function tempRoot(tag) {
       repoRoot: root,
       observedAt: recoveredAt,
       runId: "run-recovered",
-      runAttempt: 1,
-      eventName: "schedule",
-      collect: () => makeSummary(recoveredAt),
+      runAttempt: 2,
+      eventName: "workflow_dispatch",
+      collect: () => makeSummary(firstAt),
     });
     assert.equal(recovered.ok, true);
     const recoveredState = JSON.parse(fs.readFileSync(path.join(root, "data/admin/yahoo_private_options/index.json"), "utf8"));
     assert.equal(recoveredState.items.availability.retry, false);
-    assert.equal(recoveredState.items.availability.recovered_from_run_id, "run-failed");
+
+    assert.equal(recoveredState.items.availability.current.source_as_of, firstAt, "same-date recovery must retain the actual acquisition date");
   } finally {
     fs.rmSync(root, { recursive: true, force: true });
   }
@@ -180,7 +181,7 @@ function tempRoot(tag) {
     assert.deepEqual(fs.readFileSync(canonical), baselineBytes);
     const failedState = JSON.parse(fs.readFileSync(path.join(root, "data/admin/yahoo_private_options/index.json"), "utf8"));
     assert.equal(failedState.items.availability.resolution_state, "lkg_primary");
-    assert.equal(failedState.items.availability.latest_failure.run_id, "controlled-failure-run");
+
     assert.equal(failedState.items.availability.latest_failure.reason, "controlled_failure");
 
     const recoveredAt = "2026-07-19T01:10:00Z";
@@ -195,7 +196,7 @@ function tempRoot(tag) {
     assert.equal(recovered.ok, true);
     const recoveredState = JSON.parse(fs.readFileSync(path.join(root, "data/admin/yahoo_private_options/index.json"), "utf8"));
     assert.equal(recoveredState.items.availability.retry, false);
-    assert.equal(recoveredState.items.availability.recovered_from_run_id, "controlled-failure-run");
+
   } finally {
     fs.rmSync(root, { recursive: true, force: true });
   }

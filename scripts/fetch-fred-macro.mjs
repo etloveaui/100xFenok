@@ -9,11 +9,8 @@ import { atomicWrite } from "./lib/atomic-file.mjs";
 import { attemptResult, classifyEndpointResponse, defaultAttemptId, returnedTuple, threwTuple, transportError, worstRequestResult } from "./lib/provider-fetch-result.mjs";
 import {
   LaneLkgStore,
-  PROMOTION_CONTRACT_PROVIDER_OBSERVATION_V2,
   allNaturalRequestsFailed,
-  buildProviderObservationV2,
   classifyLkgFailure,
-  isNaturalScheduleRun,
   systemicLkgFailureReason,
 } from "./lib/data-supply-lkg-store.mjs";
 import { boundedDiagnosticDetail, diagnosticSuffix } from "./lib/diagnostic-detail.mjs";
@@ -211,36 +208,12 @@ export async function runFredMacro({
     sourceAsOf: macroSourceAsOf(output),
     validateDocument: validMacroDocument,
     deriveSourceAsOf: macroSourceAsOf,
-    promotion_contract: PROMOTION_CONTRACT_PROVIDER_OBSERVATION_V2,
-    provider_observation: buildProviderObservationV2({
-      payloadBytes: Buffer.from(serialized),
-      sourceAsOf: macroSourceAsOf(output),
-      validateDocument: validMacroDocument,
-      deriveSourceAsOf: macroSourceAsOf,
-      candidateContainsObservation: (candidateDocument, providerDocument) => JSON.stringify(candidateDocument) === JSON.stringify(providerDocument),
-      run,
-    }),
   };
   const recoveryState = lkgStore.stateSnapshot();
-  if (recoveryState.items.fred_macro?.retry === true && !isNaturalScheduleRun(run)) {
-    return {
-      ok: false,
-      reason: "recovery_requires_schedule",
-      updated: false,
-      attempt,
-      retrySet: recoveryState.retry_set,
-      degraded: true,
-      corrupt: false,
-      exitCode: 0,
-    };
-  }
   const decisions = lkgStore.evaluatePromotionCandidates([candidate], run);
   const promotable = decisions.filter((decision) => decision.eligible).map((decision) => decision.artifact);
   if (promotable.length === 0) {
     const reason = decisions[0].reason;
-    if (["foreign_writer_conflict", "recovery_not_advanced_by_provider"].includes(reason)) {
-      lkgStore.recordPromotionDeferral({ artifacts: [candidate], run, reason });
-    }
     return {
       ok: false,
       reason,
@@ -257,8 +230,9 @@ export async function runFredMacro({
   // it here left an unstaged file dirty after every run, which is what
   // cloud publication was refused for ten consecutive runs.
   atomicWrite(canonicalPath, serialized);
+  const recoveringKeys = new Set(lkgStore.stateSnapshot().retry_set);
   const success = lkgStore.recordSuccess({ artifacts: promotable, run });
-  const recovered = success.state.items.fred_macro?.recovered_at === observedAt;
+  const recovered = recoveringKeys.has("fred_macro");
   return { ok: true, reason: "ok", updated: true, attempt, seriesCount: FRED_MACRO_SERIES.length, recovered };
 }
 

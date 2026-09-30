@@ -7,8 +7,7 @@ import os from "node:os";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 
-import { buildLaneCommitManifest } from "./build-lane-commit-manifest.mjs";
-import { LANE_REGISTRY, registryDigest } from "./lib/lane-registry.mjs";
+import { LANE_REGISTRY } from "./lib/lane-registry.mjs";
 
 const REPO_ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const HELPER = path.join(REPO_ROOT, "scripts", "stage-lane-manifest.sh");
@@ -32,11 +31,16 @@ const SLICKCHARTS_MONTHLY_WORKFLOW = ".github/workflows/slickcharts-monthly.yml"
 const SLICKCHARTS_HISTORY_WORKFLOW = ".github/workflows/slickcharts-history.yml";
 const BUILD_STOCKS_ANALYZER_WORKFLOW = ".github/workflows/build-stocks-analyzer.yml";
 const PIPELINE_FAILURE_ALARM_WORKFLOW = ".github/workflows/pipeline-failure-alarm.yml";
-const DIGEST = registryDigest();
 
 function writeJson(filePath, value) {
   fs.mkdirSync(path.dirname(filePath), { recursive: true });
   fs.writeFileSync(filePath, `${JSON.stringify(value, null, 2)}\n`);
+}
+
+function writeRegistry(root, registry) {
+  const target = path.join(root, "scripts/lib/lane-registry.mjs");
+  fs.mkdirSync(path.dirname(target), { recursive: true });
+  fs.writeFileSync(target, `export const LANE_REGISTRY = ${JSON.stringify(registry)};\n`);
 }
 
 function makeFixture({ workflow = WORKFLOW, includeSuccess = true, successStage = "success_if_exists" } = {}) {
@@ -44,11 +48,11 @@ function makeFixture({ workflow = WORKFLOW, includeSuccess = true, successStage 
   execFileSync("git", ["init", "-q", "--initial-branch=main"], { cwd: root });
   execFileSync("git", ["config", "user.email", "test@example.invalid"], { cwd: root });
   execFileSync("git", ["config", "user.name", "manifest-test"], { cwd: root });
-  const manifest = buildLaneCommitManifest(LANE_REGISTRY);
-  writeJson(path.join(root, "data/admin/lane-commit-manifest.json"), manifest);
+  const registry = structuredClone(LANE_REGISTRY);
+  writeRegistry(root, registry);
   const paths = {
-    always: manifest.workflows[workflow].stages.always_if_exists.map((entry) => entry.path),
-    success: manifest.workflows[workflow].stages[successStage].map((entry) => entry.path),
+    always: registry.workflow_policies[workflow].stages.always_if_exists.map((entry) => entry.path),
+    success: registry.workflow_policies[workflow].stages[successStage].map((entry) => entry.path),
   };
   const materialized = { always: [], success: [], exclude: [] };
   const materialize = (entries, output) => {
@@ -85,14 +89,14 @@ function makeFixture({ workflow = WORKFLOW, includeSuccess = true, successStage 
       }
     }
   };
-  materialize(manifest.workflows[workflow].stages.always_if_exists, materialized.always);
-  if (includeSuccess) materialize(manifest.workflows[workflow].stages[successStage], materialized.success);
-  materialize(manifest.workflows[workflow].exclude, materialized.exclude);
-  return { root, manifest, paths, materialized };
+  materialize(registry.workflow_policies[workflow].stages.always_if_exists, materialized.always);
+  if (includeSuccess) materialize(registry.workflow_policies[workflow].stages[successStage], materialized.success);
+  materialize(registry.workflow_policies[workflow].exclude, materialized.exclude);
+  return { root, registry, paths, materialized };
 }
 
 function run(root, stage, extra = [], workflow = WORKFLOW, helper = HELPER) {
-  return spawnSync("bash", [helper, "--repo-root", root, "--manifest", path.join(root, "data/admin/lane-commit-manifest.json"), "--workflow", workflow, "--stage", stage, "--expected-digest", DIGEST, ...extra], {
+  return spawnSync("bash", [helper, "--repo-root", root, "--workflow", workflow, "--stage", stage, ...extra], {
     cwd: root,
     encoding: "utf8",
   });
@@ -104,9 +108,9 @@ function cached(root) {
 }
 
 function configureAlwaysStage(fixture, specs, exclude = []) {
-  fixture.manifest.workflows[WORKFLOW].stages.always_if_exists = specs;
-  fixture.manifest.workflows[WORKFLOW].exclude = exclude;
-  writeJson(path.join(fixture.root, "data/admin/lane-commit-manifest.json"), fixture.manifest);
+  fixture.registry.workflow_policies[WORKFLOW].stages.always_if_exists = specs;
+  fixture.registry.workflow_policies[WORKFLOW].exclude = exclude;
+  writeRegistry(fixture.root, fixture.registry);
 }
 
 function writeFixturePath(root, kind, relativePath) {
@@ -602,14 +606,10 @@ assertTrackedFileFromGlobBelowIgnoredParentStillStages();
   assert.deepEqual(cached(fixture.root), [...fixture.paths.always, ...fixture.paths.success].sort());
 }
 
-// Fail closed before mutation: missing, malformed, stale, unknown stage, and required path absence.
+// Fail closed before mutation: missing or malformed policy, unknown stage, and required path absence.
 for (const [label, mutate] of [
-  ["missing manifest", (fixture) => fs.unlinkSync(path.join(fixture.root, "data/admin/lane-commit-manifest.json"))],
-  ["stale digest", (fixture) => {
-    fixture.manifest.registry_digest = "0".repeat(64);
-    writeJson(path.join(fixture.root, "data/admin/lane-commit-manifest.json"), fixture.manifest);
-  }],
-  ["malformed manifest", (fixture) => fs.writeFileSync(path.join(fixture.root, "data/admin/lane-commit-manifest.json"), "{\n")],
+  ["missing registry", (fixture) => fs.unlinkSync(path.join(fixture.root, "scripts/lib/lane-registry.mjs"))],
+  ["malformed registry", (fixture) => fs.writeFileSync(path.join(fixture.root, "scripts/lib/lane-registry.mjs"), "export const LANE_REGISTRY = {\n")],
   ["required path absent", (fixture) => fs.rmSync(path.join(fixture.root, fixture.paths.success[0]), { force: true })],
 ]) {
   const fixture = makeFixture({ includeSuccess: label !== "required path absent" });
@@ -628,8 +628,8 @@ for (const [label, mutate] of [
 }
 
 {
-  // --list-excludes is the single source of truth a candidate/digest builder
-  // reads, so it must print exactly the manifest exclusions, stage nothing, and
+  // --list-excludes exposes the exclusions used by candidate selection,
+  // so it must print exactly those paths, stage nothing, and
   // refuse to be combined with a stage argument.
   const fixture = makeFixture();
   configureAlwaysStage(
@@ -643,7 +643,6 @@ for (const [label, mutate] of [
   const base = [
     HELPER,
     "--repo-root", fixture.root,
-    "--manifest", path.join(fixture.root, "data/admin/lane-commit-manifest.json"),
     "--workflow", WORKFLOW,
   ];
   const listed = spawnSync("bash", [...base, "--list-excludes"], { cwd: fixture.root, encoding: "utf8" });
@@ -651,7 +650,7 @@ for (const [label, mutate] of [
   assert.deepEqual(
     listed.stdout.split("\n").filter(Boolean),
     ["dropped.json", "nested/also-dropped.json"],
-    "--list-excludes must print exactly the manifest exclusion paths in order",
+    "--list-excludes must print exactly the policy exclusion paths in order",
   );
   assert.deepEqual(cached(fixture.root), [], "--list-excludes must not stage anything");
 

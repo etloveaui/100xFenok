@@ -15,7 +15,6 @@ from typing import Any
 
 STATE_SCHEMA = "stockanalysis-recovery-state/v1"
 INDEX_SCHEMA = "stockanalysis-recovery-index/v1"
-ATTEMPT_RETENTION = 14
 ARTIFACT_KINDS = ("stock", "financial", "etf", "surface", "universe")
 _ENTITY_RE = re.compile(r"^[A-Za-z0-9][A-Za-z0-9._-]{0,79}$")
 _DATE_RE = re.compile(r"^\d{4}-\d{2}-\d{2}$")
@@ -98,11 +97,6 @@ def _bounded_error(value: Any, limit: int = 240) -> str:
     return " ".join(str(value or "unknown error").split())[:limit]
 
 
-def is_natural_schedule_run(run: dict) -> bool:
-    return (
-        str(run.get("event_name") or "") == "schedule"
-        and int(run.get("run_attempt") or 1) == 1
-    )
 
 
 def _etf_provider_source(payload: dict) -> datetime | None:
@@ -136,43 +130,6 @@ def _etf_provider_source(payload: dict) -> datetime | None:
     return max(dates) if dates else None
 
 
-def etf_manual_acquisition_allowed(run: dict, entity: str, payload: dict) -> bool:
-    """Admit only a complete, payload-bound first remote manual ETF acquisition.
-
-    The fetcher issues this proof after its live provider call. It does not
-    turn a manual event into a natural recovery or scheduled freshness event.
-    """
-    proof = run.get("etf_acquisition")
-    if not isinstance(proof, dict) or not _valid_payload("etf", entity, payload):
-        return False
-    normalized = payload["normalized"]
-    if (
-        run.get("event_name") != "workflow_dispatch"
-        or proof.get("event_name") != "workflow_dispatch"
-        or not re.fullmatch(r"[1-9][0-9]*", str(run.get("run_id") or ""))
-        or str(proof.get("run_id")) != str(run["run_id"])
-        or type(run.get("run_attempt")) is not int or run["run_attempt"] != 1
-        or type(proof.get("run_attempt")) is not int or proof["run_attempt"] != 1
-        or proof.get("remote") is not True or proof.get("fresh_fetch") is not True
-        or proof.get("noFetch") is True or payload.get("noFetch") is True
-        or payload.get("detail_status") == "stockanalysis_partial"
-        or payload.get("source_provider") not in (None, "stockanalysis")
-        or not isinstance(normalized.get("holdings"), list) or not normalized["holdings"]
-    ):
-        return False
-    source = _iso_timestamp(payload.get("source_as_of"))
-    fetched = _iso_timestamp(payload.get("fetched_at"))
-    started = _iso_timestamp(proof.get("started_at"))
-    completed = _iso_timestamp(proof.get("completed_at"))
-    raw = (json.dumps(payload, ensure_ascii=False, indent=2) + "\n").encode("utf-8")
-    return bool(
-        source is not None and fetched is not None and started is not None and completed is not None
-        and source == _etf_provider_source(payload) and source <= completed
-        and started <= fetched <= completed
-        and proof.get("source_as_of") == payload.get("source_as_of")
-        and proof.get("fetched_at") == payload.get("fetched_at")
-        and proof.get("payload_sha256") == _sha256(raw)
-    )
 
 
 def _validate_identity(kind: str, entity: str) -> None:
@@ -271,6 +228,11 @@ def _stock_source_as_of(payload: dict) -> str | None:
 
 
 def _surface_source_as_of(payload: dict) -> str | None:
+    if payload.get("surface") in {"earnings_calendar", "ipos_calendar"}:
+        # Scheduled event dates describe the calendar, not when its provider
+        # measured the data. An unknown aggregate source date stays unknown.
+        source = _iso_timestamp(payload.get("source_as_of"))
+        return source.strftime("%Y-%m-%dT%H:%M:%SZ") if source else None
     candidates = [payload.get("source_as_of")]
     records = list(payload.get("records") or [])
     for table in payload.get("tables") or []:
@@ -300,34 +262,15 @@ def payload_source_fields(kind: str, payload: dict) -> dict[str, str | None]:
     }
 
 
-def validate_controlled_failure_scope(
-    controlled_tickers: set[str],
-    selected_tickers: set[str],
-    controlled_surfaces: set[str],
-    selected_surfaces: set[str],
-    *,
-    event_name: str,
-    controlled_universe: bool = False,
-    selected_universe: bool = False,
-) -> None:
-    if not controlled_tickers and not controlled_surfaces and not controlled_universe:
-        return
-    if event_name != "workflow_dispatch":
-        raise ValueError("controlled StockAnalysis failures are restricted to workflow_dispatch")
-    if not controlled_tickers.issubset(selected_tickers):
-        raise ValueError("controlled_failure_tickers must be a subset of explicit --stocks")
-    if not controlled_surfaces.issubset(selected_surfaces):
-        raise ValueError("controlled_failure_surfaces must be a subset of explicit --surfaces")
-    if controlled_universe and not selected_universe:
-        raise ValueError("controlled_failure_universe requires --discover-etf-universe")
 
 
 class StockAnalysisRecoveryStateStore:
-    """Track exact canonical bytes, one exact LKG, retry, and recovery provenance."""
+    """Track exact canonical bytes, one exact LKG and retryable failures."""
 
     def __init__(self, root: Path, repo_root: Path):
         self.root = Path(root)
         self.repo_root = Path(repo_root)
+        self._results: dict[tuple[str, str], dict] = {}
 
     def canonical_path(self, kind: str, entity: str) -> Path:
         _validate_identity(kind, entity)
@@ -356,34 +299,17 @@ class StockAnalysisRecoveryStateStore:
             raise ValueError("StockAnalysis recovery path escapes repository root") from exc
 
     def _load_state(self, kind: str, entity: str) -> dict:
-        return _read_json(self._state_path(kind, entity)) or {
-            "schema_version": STATE_SCHEMA,
-            "artifact_kind": kind,
-            "entity": entity,
-            "attempts": [],
-        }
-
-    @staticmethod
-    def _append_attempt(state: dict, attempt: dict) -> None:
-        attempts = [row for row in state.get("attempts") or [] if isinstance(row, dict)]
-        attempts.append(attempt)
-        state["attempts"] = attempts[-ATTEMPT_RETENTION:]
-
-    @staticmethod
-    def _attempt(run: dict, outcome: str, *, error: str | None = None, controlled: bool = False) -> dict:
-        row = {
-            "run_id": str(run.get("run_id") or "local"),
-            "run_attempt": int(run.get("run_attempt") or 1),
-            "event_name": str(run.get("event_name") or "local"),
-            "schedule": str(run.get("schedule") or ""),
-            "natural": run.get("natural") is True,
-            "observed_at": str(run.get("observed_at") or datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")),
-            "outcome": outcome,
-            "controlled": controlled,
-        }
-        if error is not None:
-            row["error"] = _bounded_error(error)
-        return row
+        existing = _read_json(self._state_path(kind, entity)) or {}
+        # Slim only an entity being touched; existing payload files stay intact.
+        keys = {"schema_version", "artifact_kind", "entity", "resolution_state",
+                "retry", "current", "lkg", "updated_at", "latest_failure", "failure_count"}
+        state = {key: value for key, value in existing.items() if key in keys}
+        failure = state.get("latest_failure")
+        if isinstance(failure, dict):
+            state["latest_failure"] = {key: value for key, value in failure.items()
+                if key in {"observed_at", "error", "had_canonical_before_failure",
+                           "expected_payload_sha256", "data_loss"}}
+        return state
 
     def _valid_bytes(self, kind: str, entity: str, path: Path) -> tuple[bytes, dict] | None:
         payload = _read_json(path)
@@ -519,47 +445,31 @@ class StockAnalysisRecoveryStateStore:
         return True
 
     def recovery_candidate_advances(self, kind: str, entity: str, payload: dict) -> bool:
+        """Admit a valid source date without making execution identity a condition."""
         _validate_identity(kind, entity)
         if not _valid_payload(kind, entity, payload):
-            raise ValueError(f"invalid StockAnalysis {kind} recovery candidate for {entity}")
-        state = self._load_state(kind, entity)
-        if state.get("retry") is not True or state.get("resolution_state") != "lkg_primary":
-            return True
-        prior = state.get("lkg") if isinstance(state.get("lkg"), dict) else {}
+            raise ValueError(f"invalid StockAnalysis {kind} candidate for {entity}")
         candidate = payload_source_fields(kind, payload)
-        if kind == "etf":
-            before = _iso_timestamp(prior.get("source_as_of"))
-            after = _iso_timestamp(candidate.get("source_as_of"))
-            return before is not None and after is not None and after > before
-        if kind == "financial":
-            before_source = _iso_timestamp(prior.get("source_as_of"))
-            after_source = _iso_timestamp(candidate.get("source_as_of"))
-            before_fetch = _iso_timestamp(prior.get("fetched_at"))
-            after_fetch = _iso_timestamp(candidate.get("fetched_at"))
-            if before_source is not None and after_source is not None:
-                if after_source < before_source:
-                    return False
-                if (
-                    before_fetch is None
-                    or after_fetch is None
-                    or after_fetch <= before_fetch
-                ):
-                    return False
-                if after_source == before_source:
-                    return True
-        before = _iso_timestamp(
-            prior.get("source_as_of") or prior.get("fetched_at")
-            if kind == "universe"
-            else prior.get("source_as_of")
-        )
-        after = _iso_timestamp(
-            candidate.get("source_as_of") or candidate.get("fetched_at")
-            if kind == "universe"
-            else candidate.get("source_as_of")
-        )
-        if before is None or after is None:
-            return True
-        return after > before
+        after = _iso_timestamp(candidate.get("source_as_of"))
+        fetched = _iso_timestamp(candidate.get("fetched_at"))
+        now = datetime.now(timezone.utc)
+        if (after is not None and after > now) or (fetched is not None and fetched > now):
+            return False
+        if after is not None and fetched is not None and after > fetched:
+            return False
+        state = self._load_state(kind, entity)
+        prior = state.get("lkg") if state.get("retry") is True else state.get("current")
+        before = _iso_timestamp((prior or {}).get("source_as_of"))
+        if kind == "surface" and entity in {"earnings_calendar", "ipos_calendar"} and prior:
+            # Older metadata derived the marker from scheduled events. Re-read
+            # only its exact bound bytes when this calendar is touched.
+            prior_path = self._lkg_path(kind, entity) if state.get("retry") is True else self.canonical_path(kind, entity)
+            bound = self._valid_bytes(kind, entity, prior_path)
+            if (bound and prior.get("path") == self._relative(prior_path)
+                    and _sha256(bound[0]) == prior.get("payload_sha256")):
+                before = _iso_timestamp(payload_source_fields(kind, bound[1])["source_as_of"])
+        # Unknown provider dates remain unknown; acquisition time is not freshness.
+        return before is None or (after is not None and after >= before)
 
     def record_failure(
         self,
@@ -576,7 +486,7 @@ class StockAnalysisRecoveryStateStore:
         prior_lkg = self._valid_advertised_lkg(kind, entity, state)
         canonical = self._valid_bytes(kind, entity, self.canonical_path(kind, entity))
         lkg = prior_lkg
-        if canonical:
+        if canonical and self.recovery_candidate_advances(kind, entity, canonical[1]):
             payload_bytes, payload = canonical
             lkg_path = self._lkg_path(kind, entity)
             _atomic_write_bytes(lkg_path, payload_bytes)
@@ -586,31 +496,24 @@ class StockAnalysisRecoveryStateStore:
                 **payload_source_fields(kind, payload),
             }
 
-        attempt = self._attempt(run, "failed", error=error, controlled=controlled)
-        self._append_attempt(state, attempt)
+        observed_at = str(run.get("observed_at") or datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ"))
         canonical_current = lkg if canonical else prior_current
         data_loss = canonical_current is not None and lkg is None
         failure = {
-            "run_id": attempt["run_id"],
-            "run_attempt": attempt["run_attempt"],
-            "observed_at": attempt["observed_at"],
-            "error": attempt["error"],
-            "controlled": controlled,
+            "observed_at": observed_at,
+            "error": _bounded_error(error),
             "had_canonical_before_failure": canonical_current is not None,
             "expected_payload_sha256": canonical_current.get("payload_sha256") if canonical_current else None,
             "data_loss": data_loss,
         }
         state.update({
-            "schema_version": STATE_SCHEMA,
-            "artifact_kind": kind,
-            "entity": entity,
-            "resolution_state": "lkg_primary" if lkg else "unavailable",
-            "retry": True,
-            "last_attempt": attempt,
-            "latest_failure": failure,
-            "updated_at": attempt["observed_at"],
+            "schema_version": STATE_SCHEMA, "artifact_kind": kind, "entity": entity,
+            "resolution_state": "lkg_primary" if lkg else "unavailable", "retry": True,
+            "latest_failure": failure, "updated_at": observed_at,
+            "failure_count": int(state.get("failure_count") or 0) + 1,
         })
-        state.pop("latest_promotion_deferral", None)
+        self._results[(kind, entity)] = {"artifact_kind": kind, "entity": entity,
+            "error": failure["error"], "data_loss": data_loss}
         if lkg:
             state["lkg"] = lkg
             state["current"] = dict(lkg)
@@ -620,54 +523,12 @@ class StockAnalysisRecoveryStateStore:
         _atomic_write_json(self._state_path(kind, entity), state)
         return state
 
-    def record_promotion_deferred(
-        self,
-        kind: str,
-        entity: str,
-        payload: dict,
-        run: dict,
-    ) -> dict:
-        """Retain a prior LKG when a natural candidate did not advance it."""
-        _validate_identity(kind, entity)
-        state = self._load_state(kind, entity)
-        if not is_natural_schedule_run(run) and not (
-            kind == "etf" and etf_manual_acquisition_allowed(run, entity, payload)
-        ):
-            raise ValueError(
-                f"recovery promotion deferral requires a natural schedule run for StockAnalysis {kind}:{entity}"
-            )
-        if state.get("retry") is not True or state.get("resolution_state") != "lkg_primary":
-            raise ValueError(f"no retained StockAnalysis LKG is pending for {kind}:{entity}")
-        if self.recovery_candidate_advances(kind, entity, payload):
-            raise ValueError(f"StockAnalysis {kind}:{entity} candidate advances and must be promoted")
-
-        candidate = payload_source_fields(kind, payload)
-        retained = state.get("lkg") if isinstance(state.get("lkg"), dict) else {}
-        attempt = self._attempt(run, "promotion_deferred")
-        self._append_attempt(state, attempt)
-        state.update({
-            "last_attempt": attempt,
-            "latest_promotion_deferral": {
-                "reason_code": "source_not_advanced",
-                "source_as_of": candidate.get("source_as_of"),
-                "retained_source_as_of": retained.get("source_as_of"),
-            },
-            "updated_at": attempt["observed_at"],
-        })
-        _atomic_write_json(self._state_path(kind, entity), state)
-        return state
 
     def record_success(self, kind: str, entity: str, payload: dict, run: dict) -> dict:
         _validate_identity(kind, entity)
         state = self._load_state(kind, entity)
-        if state.get("retry") is True and not is_natural_schedule_run(run) and not (
-            kind == "etf" and etf_manual_acquisition_allowed(run, entity, payload)
-        ):
-            raise ValueError(
-                f"recovery promotion requires a natural schedule run for StockAnalysis {kind}:{entity}"
-            )
         if not self.recovery_candidate_advances(kind, entity, payload):
-            raise ValueError(f"source did not advance beyond the retained LKG for {kind}:{entity}")
+            raise ValueError(f"candidate source date regresses or is invalid for {kind}:{entity}")
         canonical_path = self.canonical_path(kind, entity)
         valid = self._valid_bytes(kind, entity, canonical_path)
         if not valid:
@@ -676,35 +537,16 @@ class StockAnalysisRecoveryStateStore:
         if _sha256((json.dumps(payload, ensure_ascii=False, indent=2) + "\n").encode("utf-8")) != _sha256(payload_bytes):
             raise ValueError(f"written StockAnalysis {kind} payload differs from recovery candidate for {entity}")
 
-        previous_state = state.get("resolution_state")
-        latest_failure = state.get("latest_failure") if isinstance(state.get("latest_failure"), dict) else None
-        previous_run_id = latest_failure.get("run_id") if latest_failure else None
-        recovered = previous_state in {"lkg_primary", "unavailable"} and bool(previous_run_id)
-        attempt = self._attempt(run, "recovered" if recovered else "fresh")
-        self._append_attempt(state, attempt)
         state.update({
-            "schema_version": STATE_SCHEMA,
-            "artifact_kind": kind,
-            "entity": entity,
-            "resolution_state": "fresh_primary",
-            "retry": False,
-            "current": {
-                "path": self._relative(canonical_path),
-                "payload_sha256": _sha256(payload_bytes),
-                **payload_source_fields(kind, written_payload),
-            },
-            "last_attempt": attempt,
-            "updated_at": attempt["observed_at"],
+            "schema_version": STATE_SCHEMA, "artifact_kind": kind, "entity": entity,
+            "resolution_state": "fresh_primary", "retry": False,
+            "current": {"path": self._relative(canonical_path),
+                "payload_sha256": _sha256(payload_bytes), **payload_source_fields(kind, written_payload)},
+            "updated_at": str(run.get("observed_at") or datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")),
+            "failure_count": 0,
         })
-        if recovered:
-            state["recovered_from_run_id"] = str(previous_run_id)
-            state["recovered_at"] = attempt["observed_at"]
-            state["recovery_run_id"] = attempt["run_id"]
-            state["recovery_run_attempt"] = attempt["run_attempt"]
-            state["recovery_event_name"] = attempt["event_name"]
-            state["last_recovered_failure"] = latest_failure
         state.pop("latest_failure", None)
-        state.pop("latest_promotion_deferral", None)
+        self._results[(kind, entity)] = {"artifact_kind": kind, "entity": entity}
         _atomic_write_json(self._state_path(kind, entity), state)
         return state
 
@@ -720,155 +562,45 @@ class StockAnalysisRecoveryStateStore:
         )
 
     def rebuild_index(self, run: dict) -> dict:
-        counts = {
-            "tracked": 0,
-            "fresh": 0,
-            "lkg": 0,
-            "unavailable": 0,
-            "retry": 0,
-            "failed": 0,
-            "recovered": 0,
-            "promotion_deferred": 0,
-        }
-        counts_by_kind = {
-            kind: {"tracked": 0, "fresh": 0, "lkg": 0, "unavailable": 0, "retry": 0}
-            for kind in ARTIFACT_KINDS
-        }
+        counts = {"tracked": 0, "fresh": 0, "lkg": 0, "unavailable": 0, "retry": 0}
+        counts_by_kind = {kind: dict(counts) for kind in ARTIFACT_KINDS}
         retry_artifacts = []
         degraded_details = []
-        recovered_details = []
-        promotion_deferral_details = []
-        current_errors = []
-        current_successes = []
-        current_deferred = []
-        run_id = str(run.get("run_id") or "local")
-        run_attempt = int(run.get("run_attempt") or 1)
-
         for kind in ARTIFACT_KINDS:
             for path in sorted((self.root / "states" / kind).glob("*.json")):
                 state = _read_json(path)
                 if not state:
                     continue
                 entity = str(state.get("entity") or path.stem)
-                counts["tracked"] += 1
-                counts_by_kind[kind]["tracked"] += 1
                 resolution = state.get("resolution_state")
-                if resolution == "fresh_primary":
-                    counts["fresh"] += 1
-                    counts_by_kind[kind]["fresh"] += 1
-                elif resolution == "lkg_primary":
-                    counts["lkg"] += 1
-                    counts_by_kind[kind]["lkg"] += 1
-                else:
-                    counts["unavailable"] += 1
-                    counts_by_kind[kind]["unavailable"] += 1
+                key = {"fresh_primary": "fresh", "lkg_primary": "lkg"}.get(resolution, "unavailable")
+                for bucket in (counts, counts_by_kind[kind]):
+                    bucket["tracked"] += 1
+                    bucket[key] += 1
                 if state.get("retry") is True:
                     counts["retry"] += 1
                     counts_by_kind[kind]["retry"] += 1
                     retry_artifacts.append({"artifact_kind": kind, "entity": entity})
-                    failure = state.get("latest_failure") if isinstance(state.get("latest_failure"), dict) else {}
-                    lkg = state.get("lkg") if isinstance(state.get("lkg"), dict) else {}
-                    degraded_details.append({
-                        "artifact_kind": kind,
-                        "entity": entity,
-                        "resolution_state": resolution,
-                        "payload_sha256": lkg.get("payload_sha256"),
-                        "source_as_of": lkg.get("source_as_of"),
-                        "failure_run_id": failure.get("run_id"),
-                        "failure_observed_at": failure.get("observed_at"),
-                        "data_loss": failure.get("data_loss") is True,
-                    })
-                attempt = state.get("last_attempt") if isinstance(state.get("last_attempt"), dict) else {}
-                if str(attempt.get("run_id")) != run_id or int(attempt.get("run_attempt") or 1) != run_attempt:
-                    continue
-                if attempt.get("outcome") == "failed":
-                    counts["failed"] += 1
-                    failure = state.get("latest_failure") if isinstance(state.get("latest_failure"), dict) else {}
-                    current_errors.append({
-                        "artifact_kind": kind,
-                        "entity": entity,
-                        "error": attempt.get("error"),
-                        "controlled": attempt.get("controlled") is True,
-                        "data_loss": failure.get("data_loss") is True,
-                    })
-                elif attempt.get("outcome") == "promotion_deferred":
-                    counts["promotion_deferred"] += 1
-                    deferral = (
-                        state.get("latest_promotion_deferral")
-                        if isinstance(state.get("latest_promotion_deferral"), dict)
-                        else {}
-                    )
-                    detail = {
-                        "artifact_kind": kind,
-                        "entity": entity,
-                        "source_as_of": deferral.get("source_as_of"),
-                        "retained_source_as_of": deferral.get("retained_source_as_of"),
-                        "reason_code": deferral.get("reason_code") or "source_not_advanced",
-                    }
-                    promotion_deferral_details.append(detail)
-                    current_deferred.append(detail)
-                else:
-                    current_successes.append({"artifact_kind": kind, "entity": entity, "outcome": attempt.get("outcome")})
-                    if attempt.get("outcome") == "recovered":
-                        counts["recovered"] += 1
-                        recovered_details.append({
-                            "artifact_kind": kind,
-                            "entity": entity,
-                            "payload_sha256": (state.get("current") or {}).get("payload_sha256"),
-                            "source_as_of": (state.get("current") or {}).get("source_as_of"),
-                            "recovered_from_run_id": state.get("recovered_from_run_id"),
-                            "recovery_run_id": state.get("recovery_run_id"),
-                            "recovery_run_attempt": state.get("recovery_run_attempt"),
-                            "recovery_event_name": state.get("recovery_event_name"),
-                            "recovered_at": state.get("recovered_at"),
-                        })
-
-        degraded_tickers = sorted({row["entity"] for row in degraded_details if row["artifact_kind"] in {"stock", "financial"}})
-        degraded_surfaces = sorted({row["entity"] for row in degraded_details if row["artifact_kind"] == "surface"})
-        degraded_universes = sorted({row["entity"] for row in degraded_details if row["artifact_kind"] == "universe"})
-        degraded_etfs = sorted({row["entity"] for row in degraded_details if row["artifact_kind"] == "etf"})
-        recovered_tickers = sorted({row["entity"] for row in recovered_details if row["artifact_kind"] in {"stock", "financial"}})
-        recovered_surfaces = sorted({row["entity"] for row in recovered_details if row["artifact_kind"] == "surface"})
-        recovered_universes = sorted({row["entity"] for row in recovered_details if row["artifact_kind"] == "universe"})
-        recovered_etfs = sorted({row["entity"] for row in recovered_details if row["artifact_kind"] == "etf"})
-        index = {
-            "schema_version": INDEX_SCHEMA,
+                    failure, lkg = state.get("latest_failure") or {}, state.get("lkg") or {}
+                    degraded_details.append({"artifact_kind": kind, "entity": entity,
+                        "resolution_state": resolution, "source_as_of": lkg.get("source_as_of"),
+                        "failure_observed_at": failure.get("observed_at"), "error": failure.get("error"),
+                        "failure_count": state.get("failure_count", 0), "data_loss": failure.get("data_loss") is True})
+        errors = [row for row in self._results.values() if "error" in row]
+        counts["failed"] = len(errors)
+        index = {"schema_version": INDEX_SCHEMA,
             "generated_at": str(run.get("observed_at") or datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")),
-            "counts": counts,
-            "counts_by_kind": counts_by_kind,
-            "retry_artifacts": retry_artifacts,
+            "counts": counts, "counts_by_kind": counts_by_kind, "retry_artifacts": retry_artifacts,
             "degraded_details": degraded_details,
-            "degraded_tickers": degraded_tickers,
-            "degraded_surfaces": degraded_surfaces,
-            "degraded_universes": degraded_universes,
-            "degraded_etfs": degraded_etfs,
-            "recovered_details": recovered_details,
-            "recovered_tickers": recovered_tickers,
-            "recovered_surfaces": recovered_surfaces,
-            "recovered_universes": recovered_universes,
-            "recovered_etfs": recovered_etfs,
-            "promotion_deferral_details": promotion_deferral_details,
-            "current_attempt": {
-                "run_id": run_id,
-                "run_attempt": run_attempt,
-                "event_name": str(run.get("event_name") or "local"),
-                "schedule": str(run.get("schedule") or ""),
-                "natural": run.get("natural") is True,
-                "attempted": len(current_errors) + len(current_successes) + len(current_deferred),
-                "successes": len(current_successes),
-                "failed": len(current_errors),
-                "recovered": len(recovered_details),
-                "promotion_deferred": len(current_deferred),
-                "errors": current_errors,
-                "success_rows": current_successes,
-                "promotion_deferrals": current_deferred,
-            },
-        }
+            "current_results": {"failed": len(errors), "errors": errors}}
+        for suffix, kinds in (("tickers", {"stock", "financial"}), ("etfs", {"etf"}),
+                              ("surfaces", {"surface"}), ("universes", {"universe"})):
+            index[f"degraded_{suffix}"] = sorted({row["entity"] for row in degraded_details if row["artifact_kind"] in kinds})
         _atomic_write_json(self.root / "index.json", index)
         return index
 
     def assess_current_attempt(self, index: dict) -> dict:
-        attempt = index.get("current_attempt") if isinstance(index.get("current_attempt"), dict) else {}
+        attempt = index.get("current_results") if isinstance(index.get("current_results"), dict) else {}
         errors = [row for row in attempt.get("errors") or [] if isinstance(row, dict)]
         if not errors:
             return {"status": "ready", "exit_code": 0, "artifacts": [], "reasons": []}
@@ -899,7 +631,5 @@ class StockAnalysisRecoveryStateStore:
 
 __all__ = [
     "StockAnalysisRecoveryStateStore",
-    "is_natural_schedule_run",
     "payload_source_fields",
-    "validate_controlled_failure_scope",
 ]

@@ -107,7 +107,7 @@
 // is a clear error before any write; the token is enforced by the gate first.
 
 import { spawn } from "node:child_process";
-import { readdir, readFile, stat } from "node:fs/promises";
+import { readdir, readFile, lstat, realpath } from "node:fs/promises";
 import path from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
 
@@ -124,8 +124,7 @@ import {
   validatePublicationReceipt,
 } from "./lib/cloud-data-plane-generation.mjs";
 export { planActiveGenerationReuse };
-import { buildCandidateScope } from "./lib/cloud-data-plane-candidate-scope.mjs";
-import { PLANE_PUBLISH_FAMILY_BINDINGS, PLANE_PUBLISHER_EXCEPTIONS } from "./lib/lane-registry.mjs";
+import { PLANE_PUBLISH_FAMILY_BINDINGS, PLANE_PUBLISHER_EXCEPTIONS, registryLaneById } from "./lib/lane-registry.mjs";
 import { classifyPreparedReceipts } from "./lib/cloud-data-plane-prepared-receipt-lifecycle.mjs";
 import {
   BACKOFF_BASE_MS,
@@ -156,8 +155,8 @@ const DEFAULT_ACCOUNT_ID = "aeeb5ea3affe55a2219d08ea02dad9e1";
 //                    private, "public/data/" or "public/generated/" for public)
 //   files            explicit enrollment list (defaults to walking the whole
 //                    root tree); paths are relative to root
-//   candidate_scope_id optional registry-derived candidate scope replacing a
-//                    hand-written files list for a multi-root publication
+//   source_lane_id optional registry lane whose exact canonical roots define
+//                    a multi-root publication
 //   privacy_class    "private" or "public" (contract-enforced against prefix)
 //   reader_enrollment optional public read-side enrollment switch; only an
 //                    explicit false suppresses generated reader enrollment
@@ -749,7 +748,7 @@ export const FAMILIES = {
     // resolve an integrity-checked payload.
     root: "data/global-scouter",
     manifest_prefix: "public/data/global-scouter",
-    candidate_scope_id: "global_scouter",
+    source_lane_id: "global_scouter",
     reader_enrollment: true,
     privacy_class: "public",
     // Global Scouter's source clock is the export's provider date, not the
@@ -847,13 +846,14 @@ export function applyFamilyExclusions(files, exclude) {
   return kept;
 }
 
-async function walkFiles(absDir, prefix = "") {
+async function walkFiles(absDir, prefix = "", rejectSymlinks = false) {
   const entries = await readdir(absDir, { withFileTypes: true });
   const files = [];
   for (const entry of entries) {
     const relative = prefix ? `${prefix}/${entry.name}` : entry.name;
+    if (rejectSymlinks && entry.isSymbolicLink()) fail("FAMILY_SCOPE_ROOT_INVALID", `${relative} is a symlink`);
     if (entry.isDirectory()) {
-      files.push(...await walkFiles(path.join(absDir, entry.name), relative));
+      files.push(...await walkFiles(path.join(absDir, entry.name), relative, rejectSymlinks));
     } else if (entry.isFile()) {
       files.push(relative);
     }
@@ -861,27 +861,39 @@ async function walkFiles(absDir, prefix = "") {
   return files;
 }
 
-// Candidate scopes are the registry-derived source of truth for large or
-// multi-root publications. The publisher intentionally consumes the scope's
-// included roots rather than carrying a second hand-written asset list.
-async function filesFromCandidateScope({ candidateScopeId, absRoot }) {
-  const { manifest } = buildCandidateScope({ repoRoot: REPO_ROOT, candidateId: candidateScopeId });
-  const absoluteFamilyRoot = path.resolve(absRoot);
+// Publish only the lane's exact canonical roots. Sibling admission inventories
+// are unnecessary: an unselected path never enters the upload manifest.
+async function filesFromCanonicalRoots({ sourceLaneId, absRoot, familyRoot }) {
+  const lane = registryLaneById(sourceLaneId);
+  const roots = lane?.roots?.canonical_outputs;
+  if (!Array.isArray(roots) || roots.length === 0) fail("FAMILY_SCOPE_ROOT_INVALID", `${sourceLaneId}: no canonical roots`);
   const files = [];
-  for (const included of manifest.included_canonical_roots) {
-    const absolute = path.join(REPO_ROOT, included.path);
-    const relativeRoot = path.relative(absoluteFamilyRoot, absolute);
-    if (!relativeRoot || relativeRoot.startsWith("..") || path.isAbsolute(relativeRoot)) {
-      fail("FAMILY_SCOPE_ROOT_INVALID", `${candidateScopeId}: ${included.path} is outside ${absRoot}`);
+  const familyEntries = await lstat(absRoot);
+  if (familyEntries.isSymbolicLink() || !familyEntries.isDirectory()) fail("FAMILY_SCOPE_ROOT_INVALID", `${familyRoot} is not a regular directory`);
+  const realFamilyRoot = await realpath(absRoot);
+  for (const root of roots) {
+    const relativeRoot = path.posix.relative(familyRoot, root);
+    if (!relativeRoot || relativeRoot.startsWith("..") || path.posix.isAbsolute(relativeRoot)) {
+      fail("FAMILY_SCOPE_ROOT_INVALID", `${sourceLaneId}: ${root} is outside ${familyRoot}`);
     }
-    const entries = await stat(absolute);
+    const components = relativeRoot.split("/");
+    let absolute = absRoot;
+    let entries;
+    for (const [index, component] of components.entries()) {
+      absolute = path.join(absolute, component);
+      entries = await lstat(absolute);
+      if (entries.isSymbolicLink()) fail("FAMILY_SCOPE_ROOT_INVALID", `${root} has a symlink path component`);
+      if (index < components.length - 1 && !entries.isDirectory()) fail("FAMILY_SCOPE_ROOT_INVALID", `${root} has a non-directory path component`);
+    }
+    const realRelative = path.relative(realFamilyRoot, await realpath(absolute));
+    if (realRelative.startsWith("..") || path.isAbsolute(realRelative)) fail("FAMILY_SCOPE_ROOT_INVALID", `${root} escapes the family root`);
     if (entries.isFile()) {
       files.push(relativeRoot);
     } else if (entries.isDirectory()) {
-      const nested = await walkFiles(absolute);
-      files.push(...nested.map((relative) => path.join(relativeRoot, relative)));
+      const nested = await walkFiles(absolute, "", true);
+      files.push(...nested.map((relative) => path.posix.join(relativeRoot, relative)));
     } else {
-      fail("FAMILY_SCOPE_ROOT_INVALID", `${candidateScopeId}: ${included.path} is not a regular file or directory`);
+      fail("FAMILY_SCOPE_ROOT_INVALID", `${root} is not a regular file or directory`);
     }
   }
   return files;
@@ -1416,8 +1428,8 @@ export async function buildFamilyManifest({
   const family = FAMILIES[familyName];
   if (!family) fail("FAMILY_UNKNOWN", familyName);
   const enrolled = explicitFiles ?? family.files ?? (
-    family.candidate_scope_id
-      ? await filesFromCandidateScope({ candidateScopeId: family.candidate_scope_id, absRoot })
+    family.source_lane_id
+      ? await filesFromCanonicalRoots({ sourceLaneId: family.source_lane_id, absRoot, familyRoot: family.root })
       : null
   );
   // Exclusions apply only to the directory walk: a family that declares an
@@ -2151,13 +2163,9 @@ export async function collectFamiliesRetentionState({ families, createPlane, now
     states.push({
       name,
       pointer: inspection?.pointer ?? null,
-      // Live only. Pointer active/previous and cross-family manifest references
-      // are assembled separately and are unaffected by receipt expiry.
+      // Pointer active/previous and cross-family references remain protected
+      // independently of the prepared record resume window.
       preparedGenerations: lifecycle.live_generations,
-      expiredReceipts: lifecycle.expired_receipts,
-      releasedGenerations: lifecycle.released_generations,
-      clockAnomalies: lifecycle.clock_anomalies,
-      resumeWindowSeconds: lifecycle.resume_window_seconds,
     });
   }
   return states;
@@ -2805,18 +2813,6 @@ async function runRetention({
     manifests_read: retentionPlan.manifestCount,
     retained_generations: retentionPlan.retainedGenerations,
     prepared_generations: [...new Set(familiesState.flatMap((state) => state.preparedGenerations))].sort(),
-    // Audit only. A released generation is NOT a delete instruction: it merely
-    // stops being a protection root, and whether any of its objects are deleted
-    // is still decided by the single reference rule. Reported so an operator can
-    // see what the window let go of — the point of bounding protection is that
-    // the release is visible, not that the candidate set silently widens.
-    prepared_receipt_lifecycle: {
-      resume_window_seconds: resumeWindowSeconds,
-      evaluated_at: now,
-      expired_receipts: familiesState.flatMap((state) => (state.expiredReceipts ?? []).map((row) => ({ family: state.name, ...row }))),
-      released_generations: [...new Set(familiesState.flatMap((state) => state.releasedGenerations ?? []))].sort(),
-      clock_anomalies: familiesState.flatMap((state) => (state.clockAnomalies ?? []).map((row) => ({ family: state.name, ...row }))),
-    },
     referenced_object_count: retentionPlan.referencedKeys.length,
     protected_keys_present: retentionPlan.skippedProtected,
     state_revalidated: stateRevalidated,
@@ -3058,7 +3054,7 @@ export async function runPublisherCli({
         ...plan,
         // Explicit-enrollment families also list each enrolled asset; tree
         // families (oecd-cli) keep the original summary shape byte-identical.
-        ...(family.files || family.candidate_scope_id
+        ...(family.files || family.source_lane_id
           ? {
             enrolled: manifest.assets.map((asset) => ({
               path: asset.path,

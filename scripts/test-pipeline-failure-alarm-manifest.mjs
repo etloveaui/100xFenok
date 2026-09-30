@@ -191,7 +191,7 @@ function jobOf(model, workflow, name) {
 // say so on the record.
 const LOG_ONLY_TOLERANT_STEPS = Object.freeze({
   "qa-visual.yml::visual":
-    "job-level tolerance: the uploaded screenshot report is the evidence, and a diff against the owner-gated 2026-07-02 baselines is expected rather than a fault",
+    "manual snapshot comparison may differ from the owner-selected baseline; automatic build and deployment checks remain separate",
   "slickcharts-symbols.yml::Check slickcharts-symbols cloud acceptance":
     "supplementary evidence for a lane that already persists a publish outcome and is watched by the alarm; measured passing on 2026-08-21 with {\"ok\":true} in the run log",
   "slickcharts-weekly.yml::Check slickcharts-weekly cloud acceptance":

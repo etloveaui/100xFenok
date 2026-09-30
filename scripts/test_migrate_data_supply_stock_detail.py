@@ -373,6 +373,50 @@ class StockDetailMigrationTests(unittest.TestCase):
         with self.assertRaises(IntegrityError):
             migration.verify_state(manifest, expected_count=2)
 
+    def test_resolution_history_ignores_legacy_credit_without_rewriting(self):
+        write_pair(self.repo, "AAPL")
+        migration = self.migration(("AAPL",))
+        manifest = self.plan(("AAPL",), migration=migration)
+        migration.apply(manifest, decided_at=DECIDED_AT, no_delete=True)
+        path = self.state / "history/resolutions/2026-07-11.jsonl"
+        rows = [json.loads(line) for line in path.read_text().splitlines()]
+        rows[0]["recovery_green_count"] = "retired"
+        rows[0]["event_id"] = deterministic_event_id("resolution", rows[0])
+        legacy_bytes = b"".join(canonical_bytes(row) + b"\n" for row in rows)
+        path.write_bytes(legacy_bytes)
+
+        records = migration._history_records("resolutions", DECIDED_AT)
+        self.assertEqual(records[rows[0]["event_id"]], rows[0])
+        self.assertEqual(path.read_bytes(), legacy_bytes)
+        rows[0]["new_selection_digest"] = "0" * 64
+        path.write_bytes(b"".join(canonical_bytes(row) + b"\n" for row in rows))
+        with self.assertRaises(IntegrityError):
+            migration._history_records("resolutions", DECIDED_AT)
+
+    def test_unavailable_selection_ignores_legacy_credit(self):
+        write_pair(
+            self.repo, "AAPL",
+            sa_fetched_at="2026-06-20T00:00:00Z",
+            yf_fetched_at="2026-06-20T00:00:00Z",
+            sa_source_as_of="2026-06-20T00:00:00Z",
+            yf_source_as_of="2026-06-20T00:00:00Z",
+        )
+        migration = self.migration(("AAPL",))
+        manifest = self.plan(("AAPL",), migration=migration)
+        migration.apply(manifest, decided_at=DECIDED_AT, no_delete=True)
+        store = DataSupplyStateStore(self.state)
+        active = store.read_active_domain("stock_detail")
+        active["recovery"]["AAPL"]["consecutive_green"] = 7
+        entry = manifest["entries"][0]
+        candidates = migration._candidate_from_entry(entry, observed_at=DECIDED_AT)
+        observations = tuple(
+            migration._observation_for_candidate(candidate, observed_at=DECIDED_AT)
+            for candidate in candidates
+        )
+        self.assertTrue(migration._selected_matches(
+            store, active, entry, observations, decided_at=DECIDED_AT,
+        ))
+
     def test_unavailable_verify_requires_exact_manifest_evidence(self):
         write_pair(
             self.repo,

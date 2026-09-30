@@ -329,10 +329,9 @@ jobs:
           # to cross the job boundary as an output; GITHUB_ENV does not.
           # Written before the provider call so a failed fetch still carries it.
           echo "plan_only=${INPUT_PLAN_ONLY:-false}" >> "$GITHUB_OUTPUT"
-          ARGS="--profile ${INPUT_PROFILE:-full} --max-age-hours ${INPUT_MAX_AGE_HOURS:-0} --record-batch-state --run-id ${GITHUB_RUN_ID} --run-attempt ${GITHUB_RUN_ATTEMPT}"
-          # A bounded manual recovery uses the same deterministic retry lane
-          # as the scheduled ETF slot; ordinary manual dispatches keep their
-          # historical non-natural behavior.
+          ARGS="--profile ${INPUT_PROFILE:-full} --max-age-hours ${INPUT_MAX_AGE_HOURS:-0} --record-batch-state"
+          # This flag selects the bounded retry/shard lane; valid acquisition
+          # and recovery do not depend on invocation identity.
           if [ "$EVENT_NAME" = "schedule" ] || [ "$INPUT_UNTRACKED_ONLY" = "true" ]; then ARGS="$ARGS --natural-run"; fi
           if [ -n "$INPUT_LIMIT" ]; then ARGS="$ARGS --limit $INPUT_LIMIT"; fi
           if [ -n "$INPUT_RETRY_LIMIT" ]; then ARGS="$ARGS --retry-limit $INPUT_RETRY_LIMIT"; fi

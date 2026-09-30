@@ -16,10 +16,7 @@ import { atomicWrite } from "./lib/atomic-file.mjs";
 import { attemptResult, classifyEndpointResponse, defaultAttemptId, returnedTuple, threwTuple, transportError, unobservedTuple, worstRequestResult } from "./lib/provider-fetch-result.mjs";
 import {
   LaneLkgStore,
-  PROMOTION_CONTRACT_PROVIDER_OBSERVATION_V2,
-  buildProviderObservationV2,
   classifyLkgFailure,
-  isNaturalScheduleRun,
   systemicLkgFailureReason,
 } from "./lib/data-supply-lkg-store.mjs";
 import { boundedDiagnosticDetail, diagnosticSuffix } from "./lib/diagnostic-detail.mjs";
@@ -648,34 +645,18 @@ function applyFinraLkgStore({
     sourceAsOf,
     validateDocument: validFreshnessMarker,
     deriveSourceAsOf: freshnessMarkerSourceAsOf,
-    promotion_contract: PROMOTION_CONTRACT_PROVIDER_OBSERVATION_V2,
-    provider_observation: buildProviderObservationV2({
-      payloadBytes,
-      sourceAsOf,
-      validateDocument: validFreshnessMarker,
-      deriveSourceAsOf: freshnessMarkerSourceAsOf,
-      candidateContainsObservation: (candidateDocument, providerDocument) => (
-        JSON.stringify(candidateDocument) === JSON.stringify(providerDocument)
-      ),
-      run,
-    }),
   };
 
-  if (retryActive && !isNaturalScheduleRun(run)) {
-    return { kind: "recovery_requires_schedule", updated: false, reason: "recovery_requires_schedule", degraded: true, corrupt: false, exitCode: 0 };
-  }
 
   const [decision] = store.evaluatePromotionCandidates([candidate], run);
   if (!decision.eligible) {
-    if (["foreign_writer_conflict", "recovery_not_advanced_by_provider"].includes(decision.reason)) {
-      store.recordPromotionDeferral({ artifacts: [candidate], run, reason: decision.reason });
-    }
     return { kind: "not_promotable", updated: false, reason: decision.reason, degraded: true, corrupt: false, exitCode: 0 };
   }
 
   atomicWrite(markerPath, serialized);
+  const recoveringKeys = new Set(store.stateSnapshot().retry_set);
   const success = store.recordSuccess({ artifacts: [candidate], run });
-  const recovered = success.state.items[FINRA_LKG_KEY]?.recovered_at === run.observedAt;
+  const recovered = recoveringKeys.has(FINRA_LKG_KEY);
   const history = rotateFinraMarkerHistory({
     repoRootDir: storeRepoRoot,
     marker,

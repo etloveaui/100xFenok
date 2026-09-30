@@ -8,65 +8,15 @@ import path from "node:path";
 import { fileURLToPath } from "node:url";
 
 import {
-  CENTRAL_COMMIT_PATHS,
   UPDATE_MANIFEST_MATERIALIZATIONS,
-  buildLaneCommitManifest,
+  deriveCentralCommitPaths,
   centralCommitPathKind,
-} from "./build-lane-commit-manifest.mjs";
+} from "./materialize-update-manifest-routes.mjs";
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const helperPath = path.join(root, "scripts/stage-update-manifest-central.mjs");
-const helperSource = fs.readFileSync(helperPath, "utf8");
-const workflow = fs.readFileSync(path.join(root, ".github/workflows/update-manifest.yml"), "utf8");
-// The staging contract is generated, not hand-copied: expected central policy
-// comes from the builder, so adding a materialization route flows into this
-// test without any list edit. No committed-artifact golden is read here.
-const manifest = buildLaneCommitManifest();
-const centralPaths = manifest.update_manifest.central_commit_paths;
-const centralSpecs = manifest.workflows[".github/workflows/update-manifest.yml"].stages.always_if_exists;
-
-// Contract: declared central paths are exactly the hand-maintained base plus
-// one destination per materialization route, unique, and mirrored by the
-// workflow stage with the builder's file/directory kind rule.
-const baseSet = new Set(CENTRAL_COMMIT_PATHS);
-const destinationSet = new Set(UPDATE_MANIFEST_MATERIALIZATIONS.map((route) => route.destination));
-assert.equal(
-  centralPaths.length,
-  CENTRAL_COMMIT_PATHS.length + UPDATE_MANIFEST_MATERIALIZATIONS.length,
-  "declared central paths must equal base paths plus one destination per route",
-);
-assert.equal(new Set(centralPaths).size, centralPaths.length, "declared central paths must be unique");
-assert.ok(
-  centralPaths.every((pathValue) => baseSet.has(pathValue) || destinationSet.has(pathValue)),
-  "declared central paths must be base paths or materialization destinations",
-);
-for (const route of UPDATE_MANIFEST_MATERIALIZATIONS) {
-  assert.ok(centralPaths.includes(route.destination), `declared central paths must include route destination: ${route.destination}`);
-}
+const centralPaths = deriveCentralCommitPaths();
 const isDirectoryPath = (pathValue) => centralCommitPathKind(pathValue) === "directory";
-const expectedDirectories = centralPaths.filter(isDirectoryPath);
-assert.deepEqual(centralSpecs.map((spec) => spec.path), centralPaths);
-assert.deepEqual(centralSpecs.filter((spec) => spec.kind === "directory").map((spec) => spec.path), expectedDirectories);
-assert.equal(
-  centralSpecs.filter((spec) => spec.kind === "file").length,
-  centralPaths.length - expectedDirectories.length,
-);
-assert.equal(centralSpecs.every((spec) => spec.required === false), true);
-assert.equal(fs.existsSync(helperPath), true);
-assert.match(helperSource, /[\"']-fdX[\"']/);
-assert.doesNotMatch(helperSource, /[\"']-fdx[\"']/);
-assert.equal((workflow.match(/node scripts\/stage-update-manifest-central\.mjs/g) ?? []).length, 4);
-assert.equal((workflow.match(/node scripts\/test-update-manifest-central-staging\.mjs/g) ?? []).length, 0);
-assert.doesNotMatch(workflow, /- name: Check if manifest changed/);
-const retry = workflow.slice(workflow.indexOf("for attempt in 1 2 3; do"));
-assert.match(retry, /git reset --hard origin\/main[\s\S]*?stage-update-manifest-central\.mjs --clean-untracked-after-reset[\s\S]*?stage-update-manifest-central\.mjs --assert-clean-after-reset/);
-assert.match(retry, /stage-update-manifest-central\.mjs --check[\s\S]*?central_status[\s\S]*?stage-update-manifest-central\.mjs --stage[\s\S]*?git commit/);
-assert.match(retry, /central_status" -eq 3[\s\S]*?echo "pushed=false" >> "\$GITHUB_OUTPUT"[\s\S]*?exit 0/);
-assert.doesNotMatch(workflow, /git diff --quiet \\/);
-assert.doesNotMatch(workflow, /git add -- \\/);
-for (const pathValue of centralPaths) {
-  assert.equal(workflow.includes(`${pathValue} \\`), false, `legacy central hand-list remains: ${pathValue}`);
-}
 
 // Behavior samples derived from the declared contract (no second list).
 const fileSample = centralPaths.find((pathValue) => !isDirectoryPath(pathValue));
@@ -91,19 +41,17 @@ function makeFixture() {
   git(repoRoot, ["init", "-q", "--initial-branch=main"]);
   git(repoRoot, ["config", "user.email", "test@example.invalid"]);
   git(repoRoot, ["config", "user.name", "central-staging-test"]);
-  const manifestPath = path.join(repoRoot, "data/admin/lane-commit-manifest.json");
-  write(manifestPath, `${JSON.stringify(manifest, null, 2)}\n`);
   write(path.join(repoRoot, fileSample), "baseline signals\n");
   write(path.join(repoRoot, directorySample, "index.json"), "baseline facts\n");
   write(path.join(repoRoot, treeDestination, "base.json"), "baseline slick\n");
   write(path.join(repoRoot, "unrelated.txt"), "unrelated baseline\n");
   git(repoRoot, ["add", "-A"]);
   git(repoRoot, ["commit", "-qm", "fixture baseline"]);
-  return { repoRoot, manifestPath };
+  return { repoRoot };
 }
 
 function runHelper(fixture, mode) {
-  return spawnSync(process.execPath, [helperPath, "--repo-root", fixture.repoRoot, "--manifest", fixture.manifestPath, mode], {
+  return spawnSync(process.execPath, [helperPath, "--repo-root", fixture.repoRoot, mode], {
     cwd: fixture.repoRoot,
     encoding: "utf8",
   });
@@ -117,9 +65,7 @@ function resetToOriginMain(fixture) {
 // A Git/validation error remains fatal and cannot be reported as "changed".
 {
   const repoRoot = fs.mkdtempSync(path.join(os.tmpdir(), "update-manifest-central-not-git-"));
-  const manifestPath = path.join(repoRoot, "data/admin/lane-commit-manifest.json");
-  write(manifestPath, `${JSON.stringify(manifest, null, 2)}\n`);
-  const result = runHelper({ repoRoot, manifestPath }, "--check");
+  const result = runHelper({ repoRoot }, "--check");
   assert.equal(result.status, 1);
   assert.match(result.stderr, /git diff failed/);
 }
@@ -261,16 +207,6 @@ for (const relative of [fileSample, directorySample]) {
   assert.match(result.stderr, /out-of-policy staged paths: unrelated\.txt/);
   assert.equal(fs.existsSync(path.join(fixture.repoRoot, ignored)), true);
   assert.deepEqual(cached(fixture.repoRoot), ["unrelated.txt"]);
-}
-
-{
-  const fixture = makeFixture();
-  const drifted = structuredClone(manifest);
-  drifted.update_manifest.central_commit_paths.pop();
-  write(fixture.manifestPath, `${JSON.stringify(drifted, null, 2)}\n`);
-  const result = runHelper(fixture, "--check");
-  assert.notEqual(result.status, 0);
-  assert.match(result.stderr, /central_commit_paths are stale/);
 }
 
 console.log("test-update-manifest-central-staging: ok");

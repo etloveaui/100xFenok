@@ -15,8 +15,6 @@ import { attemptResult, defaultAttemptId, returnedTuple, threwTuple } from "./li
 import { boundedDiagnosticDetail } from "./lib/diagnostic-detail.mjs";
 import {
   LaneLkgStore,
-  PROMOTION_CONTRACT_PROVIDER_OBSERVATION_V2,
-  buildProviderObservationV2,
   classifyLkgFailure,
 } from "./lib/data-supply-lkg-store.mjs";
 
@@ -904,15 +902,6 @@ export async function run({
       sourceAsOf: marker.source_as_of,
       validateDocument: validMarker,
       deriveSourceAsOf: markerSourceAsOf,
-      promotion_contract: PROMOTION_CONTRACT_PROVIDER_OBSERVATION_V2,
-      provider_observation: buildProviderObservationV2({
-        payloadBytes: markerBytes,
-        sourceAsOf: marker.source_as_of,
-        validateDocument: validMarker,
-        deriveSourceAsOf: markerSourceAsOf,
-        candidateContainsObservation: (candidateDocument, providerDocument) => JSON.stringify(candidateDocument) === JSON.stringify(providerDocument),
-        run: runContext,
-      }),
     };
     const prior = snapshot.items[FINRA_ATS_LKG_KEY];
     const priorSource = prior?.current?.source_as_of;
@@ -923,9 +912,6 @@ export async function run({
     }
     const [decision] = store.evaluatePromotionCandidates([candidate], runContext);
     if (!decision.eligible) {
-      if (["foreign_writer_conflict", "recovery_not_advanced_by_provider"].includes(decision.reason)) {
-        store.recordPromotionDeferral({ artifacts: [candidate], run: runContext, reason: decision.reason });
-      }
       attempt = successAttempt([...t1.rows, ...t2Otce.rows]);
       response = { exit_code: 0, degraded: true, corrupt: false, promoted: false, reason: decision.reason, auth_path: token.auth_path, source_as_of: marker.source_as_of, request_count: budget.used };
       return response;
@@ -935,9 +921,10 @@ export async function run({
     // first candidate write. No partial raw/current candidate is materialized.
     writeWeeks(resolvedRoot, retainedWeeks, priorWeeks);
     atomicWrite(markerPath, markerBytes);
+    const recoveringKeys = new Set(store.stateSnapshot().retry_set);
     const success = store.recordSuccess({ artifacts: [candidate], run: runContext });
     attempt = successAttempt([...t1.rows, ...t2Otce.rows]);
-    response = { exit_code: 0, degraded: false, corrupt: false, promoted: true, recovered: success.state.items[FINRA_ATS_LKG_KEY]?.recovered_at === observedAt, auth_path: token.auth_path, source_as_of: marker.source_as_of, request_count: budget.used, counts: marker.counts };
+    response = { exit_code: 0, degraded: false, corrupt: false, promoted: true, recovered: recoveringKeys.has(FINRA_ATS_LKG_KEY), auth_path: token.auth_path, source_as_of: marker.source_as_of, request_count: budget.used, counts: marker.counts };
     return response;
   } catch (caught) {
     const error = caught instanceof CollectorError

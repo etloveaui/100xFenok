@@ -8,8 +8,6 @@ import { fileURLToPath } from "node:url";
 import { atomicWrite } from "./lib/atomic-file.mjs";
 import {
   LaneLkgStore,
-  PROMOTION_CONTRACT_PROVIDER_OBSERVATION_V2,
-  buildProviderObservationV2,
   classifyLkgFailure,
 } from "./lib/data-supply-lkg-store.mjs";
 
@@ -334,6 +332,9 @@ function recoveryCandidate(paths, candidateBytes, providerBytes, run) {
   }
   const sourceAsOf = yahooEtfProviderSourceAsOf(candidate.document);
   const providerSourceAsOf = yahooEtfProviderSourceAsOf(provider.document);
+  if (sourceAsOf !== providerSourceAsOf || !isDeepStrictEqual(candidate.document.raw?.yf, provider.document.data)) {
+    throw new Error("Yahoo ETF candidate does not match provider payload");
+  }
   return {
     key: paths.key,
     currentRelativePath: path.relative(paths.root, paths.canonicalPath).split(path.sep).join("/"),
@@ -341,19 +342,6 @@ function recoveryCandidate(paths, candidateBytes, providerBytes, run) {
     sourceAsOf,
     validateDocument: (document) => validYahooEtfDetailDocument(document, paths.ticker),
     deriveSourceAsOf: yahooEtfProviderSourceAsOf,
-    promotion_contract: PROMOTION_CONTRACT_PROVIDER_OBSERVATION_V2,
-    provider_observation: buildProviderObservationV2({
-      payloadBytes: provider.bytes,
-      sourceAsOf: providerSourceAsOf,
-      validateDocument: (document) => validYahooFinanceDocument(document, paths.ticker),
-      deriveSourceAsOf: yahooEtfProviderSourceAsOf,
-      candidateContainsObservation: (candidateDocument, providerDocument) => (
-        candidateDocument.ticker === providerDocument.ticker
-        && candidateDocument.source_as_of === providerDocument.source_as_of
-        && isDeepStrictEqual(candidateDocument.raw?.yf, providerDocument.data)
-      ),
-      run,
-    }),
   };
 }
 
@@ -380,15 +368,6 @@ export function promoteYahooEtfFallbackCandidate({
   );
   const [decision] = store.evaluatePromotionCandidates([candidate], normalizedRun);
   if (!decision.eligible) {
-    if (["foreign_writer_conflict", "recovery_not_advanced_by_provider"].includes(decision.reason)) {
-      withYahooEtfFallbackRollback([paths.statePath], () => (
-        store.recordPromotionDeferral({
-          artifacts: [candidate],
-          run: normalizedRun,
-          reason: decision.reason,
-        })
-      ));
-    }
     return {
       kind: "deferred",
       updated: false,
@@ -426,8 +405,7 @@ export function promoteYahooEtfFallbackCandidate({
     reason: "ok",
     key: paths.key,
     retrySet: success.retrySet,
-    recovered: item?.recovered_from_run_id !== undefined
-      && item?.recovery_run_id === normalizedRun.runId,
+    recovered: state.items[paths.key]?.retry === true,
     sourceAsOf: candidate.sourceAsOf,
   };
 }

@@ -1866,14 +1866,9 @@ function runWorkflowBridgeChecks() {
   assert.ok(runnerKpiStart > runnerBridgeStart, "shared runner installs the floor before KPI build");
   const retryReset = updateWorkflow.indexOf("git reset --hard origin/main");
   const retryRunnerCall = updateWorkflow.indexOf("bash scripts/update-manifest-projections.sh", retryReset);
-  const laneCommitManifest = readJson(path.join(REPO_ROOT, "data", "admin", "lane-commit-manifest.json"));
   assert.equal(updateWorkflow.includes("run: bash scripts/update-manifest-projections.sh"), false,
     "update-manifest must not repeat the projection before the retry loop");
   assert.ok(retryReset >= 0 && retryRunnerCall > retryReset, "update-manifest retry rebuilds the floor via the shared runner after resetting to latest main");
-  assert.ok(
-    laneCommitManifest.update_manifest.central_commit_paths.includes("data/admin/data-supply-detection-floor.json"),
-    "detection-floor report is committed with the KPI that consumes it",
-  );
   assert.equal(
     updateWorkflow.includes("data/admin/data-supply-detection-floor.json \\\n"),
     false,

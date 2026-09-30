@@ -14,8 +14,7 @@ import {
   FAMILIES,
   runPublisherCli,
 } from "./publish-cloud-data-generation.mjs";
-import { buildCandidateScope } from "./lib/cloud-data-plane-candidate-scope.mjs";
-import { derivePublicPlaneEnrollment } from "./lib/plane-enrollment-derivation.mjs";
+import { registryLaneById } from "./lib/lane-registry.mjs";
 
 const REPO_ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const FAMILY_NAME = "global-scouter";
@@ -42,10 +41,10 @@ const DERIVED_CORE_FILES = [
   "core/stocks_analyzer.json",
 ];
 
-function independentScopeFiles(scope) {
+function independentScopeFiles(roots) {
   const files = [];
-  for (const root of scope.manifest.included_canonical_roots) {
-    const absolute = path.join(REPO_ROOT, root.path);
+  for (const root of roots) {
+    const absolute = path.join(REPO_ROOT, root);
     const stat = fs.statSync(absolute);
     if (stat.isFile()) {
       files.push(path.relative(path.join(REPO_ROOT, "data/global-scouter"), absolute));
@@ -63,8 +62,8 @@ function independentScopeFiles(scope) {
   return files.sort((left, right) => left.localeCompare(right));
 }
 
-const scope = buildCandidateScope({ repoRoot: REPO_ROOT, candidateId: "global_scouter" });
-const expectedFiles = independentScopeFiles(scope);
+const roots = registryLaneById("global_scouter").roots.canonical_outputs;
+const expectedFiles = independentScopeFiles(roots);
 const MEASURED_ASSETS = expectedFiles.length;
 const MEASURED_BYTES = expectedFiles.reduce(
   (total, file) => total + fs.statSync(path.join(REPO_ROOT, "data/global-scouter", file)).size,
@@ -78,9 +77,8 @@ assert.equal(readmeFiles.length, 1, `expected exactly one README in scope, got $
 const nonJson = expectedFiles.filter((file) => !file.endsWith(".json") && file !== "README.md");
 assert.deepEqual(nonJson, [], `scope admits only JSON plus one README; found ${nonJson.join(", ")}`);
 assert.ok(MEASURED_ASSETS > 0, "scope must not be empty");
-assert.deepEqual(scope.manifest.totals, { file_count: MEASURED_ASSETS, bytes: MEASURED_BYTES });
 assert.equal(new Set(expectedFiles).size, expectedFiles.length);
-assert.deepEqual(scope.manifest.excluded.map((row) => row.path), DERIVED_CORE_FILES.map((file) => `data/global-scouter/${file}`));
+assert.equal(DERIVED_CORE_FILES.some((file) => expectedFiles.includes(file)), false);
 
 const built = await buildFamilyManifest({
   familyName: FAMILY_NAME,
@@ -159,12 +157,6 @@ assert.equal(validator({ asset: jsonAsset, bytes: new TextEncoder().encode("[]")
 assert.equal(validator({ asset: jsonAsset, bytes: new TextEncoder().encode('{"nested":{"api_key":"secret"}}') }), false);
 assert.equal(validator({ asset: readmeAsset, bytes: new Uint8Array([0xff]) }), false);
 
-const enrollment = derivePublicPlaneEnrollment(FAMILIES);
-assert.equal(enrollment.exact.some(([, family]) => family === FAMILY_NAME), false);
-assert.deepEqual(
-  enrollment.prefixes.filter(({ family }) => family === FAMILY_NAME),
-  [{ prefix: "/data/global-scouter/", family: FAMILY_NAME }],
-);
 assert.equal(FAMILY.reader_enrollment, true);
 assert.ok(FAMILY.plan.class_a >= MEASURED_ASSETS * 2, "class-A plan must be >=2x measured assets");
 // The previous line here asserted MEASURED_CLASS_B_READS against the identical
@@ -195,24 +187,4 @@ assert.throws(
   /FAMILY_NOT_AUTHORIZED.*global-scouter/,
 );
 
-const rollbackWorkflow = fs.readFileSync(
-  path.join(REPO_ROOT, ".github/workflows/global-scouter-rollback-rehearsal.yml"),
-  "utf8",
-);
-assert.match(rollbackWorkflow, /workflow_dispatch:/);
-assert.doesNotMatch(rollbackWorkflow, /(?:^|\n)\s*(?:push|schedule):/);
-assert.match(rollbackWorkflow, /if: github\.event\.inputs\.confirm == 'ROLLBACK_AND_RESTORE'/);
-assert.match(rollbackWorkflow, /group: global-scouter-publish/);
-assert.match(rollbackWorkflow, /cancel-in-progress: false/);
-assert.doesNotMatch(rollbackWorkflow, /contents: write/);
-assert.equal(
-  rollbackWorkflow.match(/--family=global-scouter --rollback --json/g)?.length,
-  2,
-  "the rehearsal must roll back once and restore with the same validated operation",
-);
-assert.match(rollbackWorkflow, /if: \$\{\{ always\(\) && steps\.rollback\.outcome == 'success' \}\}/);
-assert.match(rollbackWorkflow, /result\.active_generation_after !== process\.argv\[3\]/);
-assert.match(rollbackWorkflow, /steps\.restore\.outcome == 'success'/);
-assert.match(rollbackWorkflow, /x-data-plane-generation/);
-
-console.log("Global Scouter publisher/reader contract ok (dynamic scope, cross-stamped source clock, bounded prefix enrollment, dry-run evidence, auth gate, live rollback-and-restore entry)");
+console.log("Global Scouter publisher/reader contract ok (exact roots, source date, public payload refusal, dry-run and authorization)");

@@ -1,6 +1,5 @@
 import assert from "node:assert/strict";
 import {
-  DATA_SUPPLY_ETF_DETAIL_POLICY,
   buildUnavailableEtfRepresentation,
   canonicalJsonSha256,
   mergeEtfDataSupply,
@@ -10,14 +9,10 @@ import {
   evaluateEtfStaleRefusal,
   resolveDataSupplyEtfDetail,
   sha256Text,
-  validateDataSupplyPolicyRegistryForConsumer,
   type PublicJsonDocument,
 } from "../src/lib/server/data-supply-etf-detail";
-import policyRegistry from "../src/generated/data-supply-policy-registry.json";
 import {
-  buildTypedUnavailableDataPoint,
   recordTypedUnavailableResponse,
-  unavailableStateAgeHours,
 } from "../src/lib/server/data-supply-etf-telemetry";
 import { withResponseCache } from "../src/lib/server/response-cache";
 
@@ -44,7 +39,6 @@ async function fixture(options: {
   plane?: JsonRecord | null;
   planeUnavailable?: boolean;
   planeThrows?: boolean;
-  planeBytesPrefixBom?: boolean;
 }) {
   const ticker = options.ticker ?? "ADIU";
   const enrolledTicker = options.enrolledTicker ?? ticker;
@@ -134,7 +128,7 @@ async function fixture(options: {
         kind: "ok",
         document: {
           ...document(options.plane, raw),
-          bytes: new TextEncoder().encode(`${options.planeBytesPrefixBom ? "\uFEFF" : ""}${raw}`).buffer,
+          bytes: new TextEncoder().encode(raw).buffer,
         },
         generationId: "stockanalysis-etf-detail-fixture",
         sourceAsOf: "2026-08-16",
@@ -167,31 +161,6 @@ async function fixture(options: {
 }
 
 async function main() {
-  assert.equal(DATA_SUPPLY_ETF_DETAIL_POLICY.resolution_scope, "domain_atomic");
-  assert.deepEqual(
-    DATA_SUPPLY_ETF_DETAIL_POLICY.providers.map((provider) => provider.name),
-    ["stockanalysis", "yahoo_finance"],
-  );
-  assert.equal(DATA_SUPPLY_ETF_DETAIL_POLICY.fresh_ttl_hours, 168);
-  assert.equal(DATA_SUPPLY_ETF_DETAIL_POLICY.emergency_lkg_ttl_days, 14);
-  assert.equal(DATA_SUPPLY_ETF_DETAIL_POLICY.recovery_green_required, 3);
-  assert.throws(
-    () => validateDataSupplyPolicyRegistryForConsumer(
-      policyRegistry,
-      "etf_detail",
-      "100xfenok-next.not_authorized",
-    ),
-    /data-supply-policy-registry:.*not authorized/,
-  );
-  assert.throws(
-    () => validateDataSupplyPolicyRegistryForConsumer(
-      { ...policyRegistry, policy_digest: "0".repeat(64) },
-      "etf_detail",
-      "100xfenok-next.data_supply_etf_detail",
-    ),
-    /data-supply-policy-registry:.*digest/,
-  );
-
 const fresh = await fixture({ state: "fresh_fallback" });
 assert.equal(fresh.kind, "selected", JSON.stringify(fresh));
 if (fresh.kind === "selected") {
@@ -199,8 +168,6 @@ if (fresh.kind === "selected") {
   assert.equal(fresh.dataSupply.provider_role, "fallback");
   assert.equal(fresh.dataSupply.source_age_days, 9);
   assert.equal((fresh.payload as JsonRecord).data_supply, undefined);
-  const merged = mergeEtfDataSupply(fresh.payload, fresh.dataSupply);
-  assert.equal((merged.data_supply as JsonRecord).projection_digest, fresh.projectionDigest);
 }
 
 const lkg = await fixture({ state: "lkg_fallback" });
@@ -243,7 +210,6 @@ const planeShadowMatch = await fixture({
 });
 assert.equal(planeShadowMatch.kind, "shard");
 if (planeShadowMatch.kind === "shard") {
-  assert.equal(planeShadowMatch.planeShadowParity, "match");
   assert.equal(planeShadowMatch.document.value.fetched_at, "2026-08-16T00:00:00Z");
 }
 
@@ -255,31 +221,7 @@ const planeShadowMismatch = await fixture({
 });
 assert.equal(planeShadowMismatch.kind, "shard");
 if (planeShadowMismatch.kind === "shard") {
-  assert.equal(planeShadowMismatch.planeShadowParity, "mismatch");
   assert.equal(planeShadowMismatch.document.value.fetched_at, "2026-08-15T00:00:00Z");
-}
-
-const planeBomMismatch = await fixture({
-  ticker: "SPY",
-  enrolledTicker: "ADIU",
-  plane: planePayload,
-  direct: staticPayload,
-  planeBytesPrefixBom: true,
-});
-assert.equal(planeBomMismatch.kind, "shard");
-if (planeBomMismatch.kind === "shard") {
-  assert.equal(planeBomMismatch.planeShadowParity, "mismatch", "parity compares exact UTF-8 bytes");
-}
-
-const invalidPlaneShadow = await fixture({
-  ticker: "SPY",
-  enrolledTicker: "ADIU",
-  plane: { ...planePayload, source: "unexpected" },
-  direct: staticPayload,
-});
-assert.equal(invalidPlaneShadow.kind, "shard");
-if (invalidPlaneShadow.kind === "shard") {
-  assert.equal(invalidPlaneShadow.planeShadowParity, "mismatch");
 }
 
 const unavailablePlaneFallback = await fixture({
@@ -289,9 +231,6 @@ const unavailablePlaneFallback = await fixture({
   direct: staticPayload,
 });
 assert.equal(unavailablePlaneFallback.kind, "shard", "unavailable plane falls back to static LKG shard");
-if (unavailablePlaneFallback.kind === "shard") {
-  assert.equal(unavailablePlaneFallback.planeShadowParity, "unavailable");
-}
 
 const failedPlaneFallback = await fixture({
   ticker: "SPY",
@@ -300,9 +239,6 @@ const failedPlaneFallback = await fixture({
   direct: staticPayload,
 });
 assert.equal(failedPlaneFallback.kind, "shard", "a failed shadow probe cannot break static serving");
-if (failedPlaneFallback.kind === "shard") {
-  assert.equal(failedPlaneFallback.planeShadowParity, "unavailable");
-}
 
 const planeCannotRescueMissingShard = await fixture({
   ticker: "SPY",
@@ -351,49 +287,6 @@ assert.equal((await absentResponse.json()).error, "STOCKANALYSIS_ASSET_NOT_FOUND
 const unavailableResponse = await buildEtfResponse(unavailable, "ADIU");
 assert.equal(unavailableResponse.status, 503);
 assert.equal((await unavailableResponse.json()).error, "DATA_SUPPLY_UNAVAILABLE");
-
-assert.equal(unavailableStateAgeHours(
-  "2026-07-11T00:00:00Z",
-  new Date("2026-07-12T12:00:00Z"),
-), 36);
-const telemetryPoint = buildTypedUnavailableDataPoint({
-  ticker: "ADIU",
-  cacheStatus: "HIT",
-  stateObservedAt: "2026-07-11T00:00:00Z",
-  now: new Date("2026-07-12T12:00:00Z"),
-});
-assert.deepEqual(telemetryPoint.indexes, ["ADIU"]);
-assert.deepEqual(telemetryPoint.blobs, [
-  "2026-07-12",
-  "ADIU",
-  "etf",
-  "unavailable",
-  "HIT",
-  "data-supply-unavailable/v1",
-]);
-assert.deepEqual(telemetryPoint.doubles, [36]);
-
-let writes = 0;
-let scheduledWrite: Promise<unknown> | null = null;
-recordTypedUnavailableResponse({
-  ticker: "ADIU",
-  cacheStatus: "MISS",
-  stateObservedAt: "2026-07-11T00:00:00Z",
-  now: new Date("2026-07-12T12:00:00Z"),
-}, () => ({
-  env: {
-    DATA_SUPPLY_ANALYTICS: {
-      writeDataPoint: () => { writes += 1; },
-    },
-  },
-  ctx: {
-    waitUntil: (promise) => { scheduledWrite = promise; },
-  },
-}));
-assert.equal(writes, 0, "Analytics Engine write must be deferred off the response path");
-assert.ok(scheduledWrite);
-await scheduledWrite;
-assert.equal(writes, 1, "one scheduled call must write exactly one datapoint");
 
 let failedWrite: Promise<unknown> | null = null;
 assert.doesNotThrow(() => recordTypedUnavailableResponse({

@@ -1287,7 +1287,7 @@ const config = {
             assertions: [
               exactAssertion("lane_identity", "/lane_id", "yahoo_batch_quote_history"),
               typeAssertion("counts_object", "/counts", "object"),
-              typeAssertion("current_attempt_object", "/current_attempt", "object"),
+              typeAssertion("current_results_object", "/current_results", "object"),
             ],
           }),
         ], "utc", undefined, registryLaneById("yahoo_batch_quote_history").activated_at),
@@ -1298,14 +1298,14 @@ const config = {
             assertions: [
               exactAssertion("lane_identity", "/lane_id", "yahoo_batch_quote_history"),
               typeAssertion("counts_object", "/counts", "object"),
-              typeAssertion("current_attempt_object", "/current_attempt", "object"),
+              typeAssertion("current_results_object", "/current_results", "object"),
             ],
           }),
         ], "utc", undefined, registryLaneById("yahoo_batch_quote_history").activated_at),
       ],
       endpointContract: endpointAssertion(
         "yfinance_batch_library",
-        typeAssertion("current_attempt_completed", "/current_attempt/attempted", "number"),
+        typeAssertion("current_results_completed", "/current_results/attempted", "number"),
         "library",),
       freshnessPolicy: freshness({ fold: "latest", unit: "hours", calendar: "utc", maxStaleness: 30 }),
       affectedSurfaceIds: ["yahoo_batch_quote_history_admin"],

@@ -609,7 +609,7 @@ class LegacyYahooMigration:
         next_current[entity] = selected
         next_recovery = dict(active["recovery"])
         transition = f"migration_{state}"
-        next_recovery[entity] = {"consecutive_green": 0, "last_transition": transition}
+        next_recovery[entity] = {"last_transition": transition}
         transaction_id = store.prepare_transition(
             domain="etf_detail",
             entity=entity,
@@ -621,7 +621,6 @@ class LegacyYahooMigration:
             expected_active_transaction_id=active["transaction_id"],
             transition=transition,
             reason_code=selected["reason_code"],
-            recovery_green_count=0,
             decided_at=decided_at,
         )
         store.commit_prepared("etf_detail", transaction_id)

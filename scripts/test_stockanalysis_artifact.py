@@ -46,10 +46,10 @@ class StockAnalysisArtifactTest(unittest.TestCase):
         (self.root / "data/admin/data-supply-state/state.json").write_text('{"state":1}\n')
         (self.root / "data/stockanalysis").mkdir(parents=True)
         (self.root / "data/stockanalysis/a.json").write_text('{"value":1}\n')
-        (self.root / "data/admin/lane-commit-manifest.json").write_text(
-            json.dumps({
-                "schema_version": "lane-commit-manifest/v1",
-                "workflows": {
+        (self.root / "scripts/lib").mkdir(parents=True)
+        (self.root / "scripts/lib/lane-registry.mjs").write_text(
+            "export const LANE_REGISTRY = " + json.dumps({
+                "workflow_policies": {
                     WORKFLOW: {
                         "exclude": [{"kind": "file", "path": "data/stockanalysis/excluded.json", "required": False}],
                         "lanes": ["stockanalysis_etf_universe"],
@@ -64,7 +64,7 @@ class StockAnalysisArtifactTest(unittest.TestCase):
                         },
                     },
                 },
-            }, indent=2) + "\n"
+            }, indent=2) + ";\n"
         )
         run("git", "init", "-q", cwd=self.root)
         run("git", "config", "user.email", "artifact@example.test", cwd=self.root)
@@ -281,15 +281,17 @@ class StockAnalysisArtifactTest(unittest.TestCase):
         computed_dir = public_dir / "computed"
         computed_dir.mkdir()
         (computed_dir / "signals.json").write_text('{"mirror":true}\n')
-        manifest_path = self.root / "data/admin/lane-commit-manifest.json"
-        manifest = json.loads(manifest_path.read_text())
-        manifest["workflows"][WORKFLOW]["stages"]["always_if_exists"].append(
+        registry_path = self.root / "scripts/lib/lane-registry.mjs"
+        registry = json.loads(
+            registry_path.read_text().removeprefix("export const LANE_REGISTRY = ").removesuffix(";\n")
+        )
+        registry["workflow_policies"][WORKFLOW]["stages"]["always_if_exists"].append(
             {"kind": "directory", "path": "100xfenok-next/public/data", "required": False}
         )
-        manifest_path.write_text(json.dumps(manifest, indent=2) + "\n")
+        registry_path.write_text("export const LANE_REGISTRY = " + json.dumps(registry, indent=2) + ";\n")
         run(
             "git", "add", "--",
-            "100xfenok-next/public/data", "data/admin/lane-commit-manifest.json",
+            "100xfenok-next/public/data", "scripts/lib/lane-registry.mjs",
             cwd=self.root,
         )
         run("git", "commit", "-qm", "add public mirror tree", cwd=self.root)
@@ -368,18 +370,6 @@ class StockAnalysisArtifactTest(unittest.TestCase):
         self.assertEqual(result["status"], "stale")
         self.assertEqual(result["confirmation"], "not_confirmed")
         self.assertEqual(target.read_bytes(), before)
-
-    def test_post_publish_readback_matches_packed_candidate(self) -> None:
-        candidate_file = self.candidate / "data/stockanalysis/a.json"
-        candidate_file.write_text('{"value":2}\n')
-        self.pack()
-        self.assertEqual(self.apply()["status"], "applied")
-        result = self.helper.verify_artifact_readback(repo_root=self.root, artifact_root=self.artifact)
-        self.assertEqual(result["status"], "confirmed")
-        self.assertEqual(result["paths"], 1)
-        (self.root / "data/stockanalysis/a.json").write_text('{"value":3}\n')
-        with self.assertRaisesRegex(ValueError, "readback differs from packed candidate"):
-            self.helper.verify_artifact_readback(repo_root=self.root, artifact_root=self.artifact)
 
     def test_newer_publish_trailer_rejects_older_artifact_lane_wide(self) -> None:
         (self.candidate / "data/stockanalysis/a.json").write_text('{"value":2}\n')

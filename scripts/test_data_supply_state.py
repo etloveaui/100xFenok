@@ -141,12 +141,11 @@ class DataSupplyStateTests(unittest.TestCase):
             entity="VYMI",
             current={"VYMI": selected},
             lkg={},
-            recovery={"VYMI": {"consecutive_green": 1, "last_transition": "initial_primary"}},
+            recovery={"VYMI": {"last_transition": "initial_primary"}},
             candidate_observations=[row],
             expected_active_transaction_id=None,
             transition="initial_primary",
             reason_code="primary_valid",
-            recovery_green_count=1,
             decided_at="2026-07-10T02:00:00Z",
         )
         self.store.commit_prepared("etf_detail", transaction_id)
@@ -175,38 +174,19 @@ class DataSupplyStateTests(unittest.TestCase):
             payload_ref_kind="provider_object",
             payload_ref_path=ref["path"],
         )
-        prior = active["current"]["VYMI"]
-        latest_path = (
-            self.root
-            / "providers"
-            / prior["provider"]
-            / prior["domain"]
-            / "lkg"
-            / prior["entity"]
-            / "latest.json"
-        )
-        expected_latest = json.loads(latest_path.read_text(encoding="utf-8"))["sha256"] if latest_path.exists() else None
-        lkg_ref = self.store.store_provider_lkg(
-            provider=prior["provider"],
-            domain=prior["domain"],
-            entity=prior["entity"],
-            payload=(self.root / prior["payload_ref"]["path"]).read_bytes(),
-            meaningful_transition=True,
-            expected_latest_sha256=expected_latest,
-        )
-        lkg_selected = bind_selection_to_provider_lkg(prior, lkg_ref)
+        lkg_selected = self.store.preserve_current_as_provider_lkg(
+            "etf_detail", "VYMI", expected_active_transaction_id=active["transaction_id"])
         transaction_id = self.store.prepare_transition(
             domain="etf_detail",
             entity="VYMI",
             current={"VYMI": selected},
             lkg={"VYMI": lkg_selected},
-            recovery={"VYMI": {"consecutive_green": 0, "last_transition": "primary_to_fallback"}},
+            recovery={"VYMI": {"last_transition": "primary_to_fallback"}},
             candidate_observations=[row],
             evidence_observations=evidence_observations or [],
             expected_active_transaction_id=expected,
             transition="primary_to_fallback",
             reason_code="primary_unavailable_fallback_valid",
-            recovery_green_count=0,
             decided_at=observed_at,
         )
         return transaction_id, row, selected
@@ -215,6 +195,55 @@ class DataSupplyStateTests(unittest.TestCase):
         transaction_id, row, selected = self.prepare_next(suffix=suffix, observed_at=observed_at)
         self.store.commit_prepared("etf_detail", transaction_id)
         return transaction_id, row, selected
+
+    def test_retained_good_reuses_selected_object_without_copying_payload(self):
+        active_id, _, selected = self.commit_primary()
+        original = (self.root / selected["payload_ref"]["path"]).read_bytes()
+        retained = self.store.preserve_current_as_provider_lkg(
+            "etf_detail", "VYMI", expected_active_transaction_id=active_id)
+        self.assertEqual(retained["payload_ref"], selected["payload_ref"])
+        self.assertEqual((self.root / retained["payload_ref"]["path"]).read_bytes(), original)
+        self.assertFalse((self.root / "providers/stockanalysis/etf_detail/lkg").exists())
+        with self.assertRaises(ConcurrencyError):
+            self.store.preserve_current_as_provider_lkg(
+                "etf_detail", "VYMI", expected_active_transaction_id="stale")
+
+    def test_retained_provider_object_stays_pinned_after_old_generation_pruning(self):
+        _, _, original = self.commit_primary()
+        original_path = self.root / original["payload_ref"]["path"]
+        original_bytes = original_path.read_bytes()
+        self.commit_next(suffix="b", observed_at="2026-07-10T03:00:00Z")
+        for minute, suffix in enumerate(("c", "d", "e"), 1):
+            stamp = f"2026-07-10T03:{minute:02d}:00Z"
+            row = observation(suffix=suffix, observed_at=stamp)
+            self.store.store_provider_object(observation=row,
+                payload=canonical_json_bytes({"ticker": "VYMI", "suffix": suffix}))
+            self.store.record_observation(row)
+            active = self.store.read_active_domain("etf_detail")
+            transaction_id = self.store.prepare_transition(
+                domain="etf_detail", entity="VYMI", current={"VYMI": selection(row, state="fresh_fallback", selected_at=stamp)},
+                lkg=active["lkg"], recovery={"VYMI": {"last_transition": "fallback_refresh"}},
+                candidate_observations=[row], expected_active_transaction_id=active["transaction_id"],
+                transition="fallback_refresh", reason_code="primary_unavailable_fallback_valid", decided_at=stamp)
+            self.store.commit_prepared("etf_detail", transaction_id)
+        self.store.prune_domain("etf_detail")
+        self.assertEqual(original_path.read_bytes(), original_bytes)
+        self.assertEqual(self.store.read_active_domain("etf_detail")["lkg"]["VYMI"]["payload_ref"], original["payload_ref"])
+        self.assertFalse((self.root / "providers/stockanalysis/etf_detail/lkg").exists())
+
+    def test_prepare_does_not_require_or_emit_recovery_credit(self):
+        row = observation()
+        payload = canonical_json_bytes({"ticker": "VYMI", "suffix": "a"})
+        self.store.store_provider_object(observation=row, payload=payload)
+        self.store.record_observation(row)
+        transaction_id = self.store.prepare_transition(
+            domain="etf_detail", entity="VYMI", current={"VYMI": selection(row)}, lkg={},
+            recovery={"VYMI": {"last_transition": "initial_primary"}},
+            candidate_observations=[row], expected_active_transaction_id=None,
+            transition="initial_primary", reason_code="primary_valid", decided_at="2026-07-10T02:00:00Z")
+        active = self.store.commit_prepared("etf_detail", transaction_id)
+        self.assertEqual(active["recovery"]["VYMI"], {"last_transition": "initial_primary"})
+        self.assertNotIn("recovery_green_count", active["decision"])
 
     def test_canonical_hash_and_event_id_are_deterministic_and_reject_nan(self):
         self.assertEqual(canonical_sha256({"b": 2, "a": 1}), canonical_sha256({"a": 1, "b": 2}))
@@ -654,35 +683,6 @@ class DataSupplyStateTests(unittest.TestCase):
                 evidence_observations=[invalid],
             )
 
-    def test_invalid_evidence_cannot_advance_recovery(self):
-        active_id, candidate, _ = self.commit_primary()
-        invalid = observation(
-            status="invalid",
-            suffix="invalid",
-            observed_at="2026-07-10T02:30:00Z",
-        )
-        self.store.record_observation(invalid)
-        active = self.store.read_active_domain("etf_detail")
-        recovery = dict(active["recovery"])
-        recovery["VYMI"] = {
-            "consecutive_green": 2,
-            "last_transition": "primary_recovery_observation",
-        }
-        with self.assertRaises(SchemaError):
-            self.store.prepare_transition(
-                domain="etf_detail",
-                entity="VYMI",
-                current=active["current"],
-                lkg=active["lkg"],
-                recovery=recovery,
-                candidate_observations=[candidate],
-                evidence_observations=[invalid],
-                expected_active_transaction_id=active_id,
-                transition="primary_recovery_observation",
-                reason_code="primary_recovery_pending",
-                recovery_green_count=2,
-                decided_at="2026-07-10T02:31:00Z",
-            )
 
     def test_unavailable_removes_current_retains_lkg_and_evidence_history(self):
         active_id, _, selected = self.commit_primary()
@@ -710,7 +710,6 @@ class DataSupplyStateTests(unittest.TestCase):
         committed = self.store.commit_prepared("etf_detail", unavailable_id)
         self.assertNotIn("VYMI", committed["current"])
         self.assertEqual(committed["lkg"]["VYMI"], selected)
-        self.assertEqual(committed["recovery"]["VYMI"]["consecutive_green"], 0)
         self.assertEqual(
             committed["decision"]["evidence_event_ids"],
             sorted([primary_failure["event_id"], fallback_failure["event_id"]]),
@@ -913,12 +912,11 @@ class DataSupplyStateTests(unittest.TestCase):
                 entity="VYMI",
                 current={"VYMI": selected},
                 lkg={},
-                recovery={"VYMI": {"consecutive_green": 1, "last_transition": "initial_primary"}},
+                recovery={"VYMI": {"last_transition": "initial_primary"}},
                 candidate_observations=[row],
                 expected_active_transaction_id=None,
                 transition="initial_primary",
                 reason_code="primary_valid",
-                recovery_green_count=1,
                 decided_at="2026-07-10T02:00:00Z",
             )
 
@@ -1136,12 +1134,11 @@ class DataSupplyStateTests(unittest.TestCase):
                 entity="VYMI",
                 current={"VYMI": selection(row)},
                 lkg={},
-                recovery={"VYMI": {"consecutive_green": 1, "last_transition": "initial_primary"}},
+                recovery={"VYMI": {"last_transition": "initial_primary"}},
                 candidate_observations=[row],
                 expected_active_transaction_id=None,
                 transition="initial_primary",
                 reason_code="primary_valid",
-                recovery_green_count=1,
                 decided_at="2026-07-10T02:00:00Z",
             )
 
@@ -1162,12 +1159,11 @@ class DataSupplyStateTests(unittest.TestCase):
                         entity="VYMI",
                         current={"VYMI": selection(row)},
                         lkg={},
-                        recovery={"VYMI": {"consecutive_green": 1, "last_transition": "initial_primary"}},
+                        recovery={"VYMI": {"last_transition": "initial_primary"}},
                         candidate_observations=[row],
                         expected_active_transaction_id=None,
                         transition="initial_primary",
                         reason_code="primary_valid",
-                        recovery_green_count=1,
                         decided_at="2026-07-10T02:00:00Z",
                     )
 
@@ -1185,7 +1181,6 @@ class DataSupplyStateTests(unittest.TestCase):
                 expected_active_transaction_id=None,
                 transition="initial_primary",
                 reason_code="primary_valid",
-                recovery_green_count=1,
                 decided_at="2026-07-10T02:00:00Z",
             )
         self.assertIsNone(self.store.read_active_domain("etf_detail")["transaction_id"])
@@ -1202,12 +1197,11 @@ class DataSupplyStateTests(unittest.TestCase):
             entity="VYMI",
             current={"VYMI": second},
             lkg={"VYMI": lkg_selected},
-            recovery={"VYMI": {"consecutive_green": 0, "last_transition": "primary_to_fallback"}},
+            recovery={"VYMI": {"last_transition": "primary_to_fallback"}},
             candidate_observations=[row],
             expected_active_transaction_id=first_id,
             transition="primary_to_fallback",
             reason_code="primary_unavailable_fallback_valid",
-            recovery_green_count=0,
             decided_at="2026-07-10T03:00:00Z",
         )
         prepared_one = self.store.prepare_transition(**kwargs)
@@ -1229,13 +1223,12 @@ class DataSupplyStateTests(unittest.TestCase):
             entity="VYMI",
             current={"VYMI": selected},
             lkg={"VYMI": lkg_selected},
-            recovery={"VYMI": {"consecutive_green": 0, "last_transition": "primary_to_fallback"}},
+            recovery={"VYMI": {"last_transition": "primary_to_fallback"}},
             candidate_observations=[row],
             expected_active_transaction_id=first_id,
             transition="primary_to_fallback",
             reason_code="primary_unavailable_fallback_valid",
-            recovery_green_count=0,
-        )
+            )
         one = self.store.prepare_transition(**common, decided_at="2026-07-10T03:00:00Z")
         two = self.store.prepare_transition(**common, decided_at="2026-07-10T03:00:01Z")
         procs = [
@@ -1497,12 +1490,11 @@ class DataSupplyStateTests(unittest.TestCase):
             entity="VYMI",
             current={"VYMI": selected},
             lkg={},
-            recovery={"VYMI": {"consecutive_green": 0, "last_transition": "initial_lkg"}},
+            recovery={"VYMI": {"last_transition": "initial_lkg"}},
             candidate_observations=[row],
             expected_active_transaction_id=None,
             transition="initial_lkg",
             reason_code="primary_unavailable_lkg_valid",
-            recovery_green_count=0,
             decided_at="2026-07-10T02:00:00Z",
         )
         self.store.commit_prepared("etf_detail", transaction_id)
@@ -1561,9 +1553,8 @@ class DataSupplyStateTests(unittest.TestCase):
         injected = dict(first_selected)
         injected["reason_code"] = "injected"
         cases = (
-            ({"VYMI": injected}, {"VYMI": {"consecutive_green": 0, "last_transition": "primary_to_fallback"}}),
-            ({"VYMI": lkg_selected}, {"VYMI": {"consecutive_green": 9, "last_transition": "primary_to_fallback"}}),
-            ({"VYMI": lkg_selected}, {"VYMI": {"consecutive_green": 0, "last_transition": "wrong_transition"}}),
+            ({"VYMI": injected}, {"VYMI": {"last_transition": "primary_to_fallback"}}),
+            ({"VYMI": lkg_selected}, {"VYMI": {"last_transition": "wrong_transition"}}),
         )
         active_before = (self.root / "domains" / "etf_detail" / "active.json").read_bytes()
         for lkg, recovery in cases:
@@ -1578,7 +1569,6 @@ class DataSupplyStateTests(unittest.TestCase):
                     expected_active_transaction_id=first_id,
                     transition="primary_to_fallback",
                     reason_code="primary_unavailable_fallback_valid",
-                    recovery_green_count=0,
                     decided_at="2026-07-10T03:00:00Z",
                 )
         self.assertEqual((self.root / "domains" / "etf_detail" / "active.json").read_bytes(), active_before)
@@ -1614,12 +1604,11 @@ class DataSupplyStateTests(unittest.TestCase):
             entity="VYMI",
             current={"VYMI": selected},
             lkg={"VYMI": lkg_selected},
-            recovery={"VYMI": {"consecutive_green": 0, "last_transition": "primary_to_fallback"}},
+            recovery={"VYMI": {"last_transition": "primary_to_fallback"}},
             candidate_observations=[row],
             expected_active_transaction_id=first_id,
             transition="primary_to_fallback",
             reason_code="primary_unavailable_fallback_valid",
-            recovery_green_count=0,
             decided_at="2026-07-10T03:00:00Z",
         )
         with self.assertRaises(ConcurrencyError):
@@ -1643,12 +1632,11 @@ class DataSupplyStateTests(unittest.TestCase):
             entity="VYMI",
             current={"VYMI": selected},
             lkg={"VYMI": lkg_selected},
-            recovery={"VYMI": {"consecutive_green": 0, "last_transition": "primary_to_fallback"}},
+            recovery={"VYMI": {"last_transition": "primary_to_fallback"}},
             candidate_observations=[row],
             expected_active_transaction_id=first_id,
             transition="primary_to_fallback",
             reason_code="primary_unavailable_fallback_valid",
-            recovery_green_count=0,
             decided_at="2026-07-10T03:00:00Z",
         )
         winner = self.store.prepare_transition(**kwargs)
