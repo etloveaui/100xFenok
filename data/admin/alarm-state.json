@@ -1,9 +1,21 @@
 {
   "schema_version": "alarm-state/v1",
-  "generated_at": "2026-09-30T06:51:45.002Z",
+  "generated_at": "2026-09-30T09:02:39.046Z",
   "status": "open",
-  "open_incident_count": 8,
+  "open_incident_count": 9,
   "open_incidents": [
+    {
+      "workflow": "build-stocks-analyzer.yml",
+      "label": "Build Stocks Analyzer",
+      "streak": 2,
+      "failure_streak_threshold": 2,
+      "first_failing_run_id": 36430391926,
+      "first_failing_run_url": "https://github.com/etloveaui/100xFenok/actions/runs/36430391926",
+      "alarm_reasons": [
+        "failure_streak"
+      ],
+      "lost_schedule_slot_count": 0
+    },
     {
       "workflow": "fenok-edge-daily.yml",
       "label": "Fenok Edge Daily Data",
@@ -65,8 +77,8 @@
       "lost_schedule_slot_count": 0
     },
     {
-      "workflow": "retention-restore.yml",
-      "label": "R2 Retention Restore Watchdog",
+      "workflow": "global-writer-queue-observer.yml",
+      "label": "Global Writer Queue Observability",
       "streak": 0,
       "failure_streak_threshold": 2,
       "first_failing_run_id": null,
@@ -96,10 +108,12 @@
       ],
       "stopped_sets": [
         "stockanalysis_etf_detail",
-        "stockanalysis_surfaces"
+        "stockanalysis_surfaces",
+        "us_indices_daily",
+        "yahoo_ticker_macro"
       ],
-      "latest_generated_at": "2026-09-30T05:43:18.487Z",
-      "previous_generated_at": "2026-09-30T02:51:22.882Z"
+      "latest_generated_at": "2026-09-30T08:56:11.979Z",
+      "previous_generated_at": "2026-09-30T06:51:30.959Z"
     }
   ],
   "watched_workflows": [
@@ -451,17 +465,18 @@
   "queue_evicted_run_count": 0,
   "queue_evicted_workflows": [],
   "last_firing": {
-    "run_id": "36680169069",
-    "run_url": "https://github.com/etloveaui/100xFenok/actions/runs/36680169069",
-    "observed_at": "2026-09-30T06:51:45.002Z",
-    "event": "schedule",
+    "run_id": "36693141383",
+    "run_url": "https://github.com/etloveaui/100xFenok/actions/runs/36693141383",
+    "observed_at": "2026-09-30T09:02:39.046Z",
+    "event": "workflow_run",
     "workflows": [
+      "build-stocks-analyzer.yml",
       "fenok-edge-daily.yml",
       "fenok-edge-krx-daily.yml",
       "fetch-stockanalysis.yml",
       "fetch-us-indices-daily.yml",
       "fetch-yahoo-ticker.yml",
-      "retention-restore.yml",
+      "global-writer-queue-observer.yml",
       "validate-workflows.yml",
       "data-health-kpi"
     ],
