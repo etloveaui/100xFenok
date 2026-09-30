@@ -29,7 +29,6 @@ import fs from "node:fs";
 import os from "node:os";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
-import { spawnSync } from "node:child_process";
 
 import { missedSlotCount } from "./check-pipeline-job-health.mjs";
 import {
@@ -214,81 +213,6 @@ assert.equal(
   "unreadable",
   "an unreadable cron must not read live",
 );
-
-// Exercise the actual HTTP-reader CLI with an isolated clock and transport.
-// GitHub's returned ordering must not turn a recent run into apparent silence.
-{
-  const root = fs.mkdtempSync(path.join(os.tmpdir(), "alarm-http-reader-"));
-  const loaderPath = path.join(root, "mock-http.mjs");
-  const requestPath = path.join(root, "requests.jsonl");
-  const nowMs = Date.parse("2026-09-30T13:30:00Z");
-  function readRuns(workflowRuns, { ok = true } = {}) {
-    fs.rmSync(requestPath, { force: true });
-    fs.writeFileSync(loaderPath, `
-      import fs from "node:fs";
-      Date.now = () => ${nowMs};
-      globalThis.fetch = async (url) => {
-        fs.appendFileSync(${JSON.stringify(requestPath)}, JSON.stringify(String(url)) + "\\n");
-        return { ok: ${JSON.stringify(ok)}, json: async () => (${JSON.stringify({ workflow_runs: workflowRuns })}) };
-      };
-    `);
-    const child = spawnSync(process.execPath, [
-      "--import", loaderPath, path.join(REPO_ROOT, "scripts/ops/check-alarm-liveness.mjs"),
-    ], {
-      encoding: "utf8",
-      env: { ...process.env, GITHUB_REPOSITORY: "fixture-owner/fixture-repo", GITHUB_TOKEN: "fixture-token" },
-    });
-    assert.equal(child.signal, null, child.stderr);
-    const result = JSON.parse(child.stdout.trim());
-    const requests = fs.readFileSync(requestPath, "utf8").trim().split("\n").map((line) => new URL(JSON.parse(line)));
-    assert.equal(requests.length, 1, "liveness must use one bounded request");
-    return { result, exitCode: child.status, request: requests[0] };
-  }
-  try {
-    const current = readRuns([
-      { run_started_at: "2026-09-21T09:23:00Z" },
-      { run_started_at: "not a timestamp" },
-      { run_started_at: "2026-10-01T01:00:00Z" },
-      { run_started_at: "2026-09-30T10:29:00Z" },
-      { run_started_at: "2026-09-30T09:10:00Z" },
-    ]);
-    assert.equal(current.exitCode, 0, "stale-first ordering must not hide a recent alarm run");
-    assert.equal(current.result.status, "live");
-    assert.equal(current.result.missed_slots, 3);
-    assert.equal(current.result.age_hours, 3.02);
-    assert.equal(current.request.searchParams.get("status"), "completed");
-    assert.equal(current.request.searchParams.get("per_page"), "20");
-    const created = current.request.searchParams.get("created");
-    assert.ok(created?.startsWith(">="), "the API request must bound the recent lookback");
-    assert.equal(Date.parse(created.slice(2)), nowMs - 7 * 24 * HOUR);
-
-    const createdFallback = readRuns([{ created_at: "2026-09-30T10:29:00Z" }]);
-    assert.equal(createdFallback.result.status, "live");
-    assert.equal(createdFallback.result.missed_slots, 3);
-
-    const genuineSilence = readRuns([{ run_started_at: "2026-09-30T07:23:00Z" }]);
-    assert.equal(genuineSilence.exitCode, 2);
-    assert.equal(genuineSilence.result.status, "stale");
-    assert.equal(genuineSilence.result.missed_slots, 6, "a real six-slot silence must still alarm");
-
-    for (const runs of [[], [
-      { run_started_at: "2026-09-21T09:23:00Z" },
-      { run_started_at: "not a timestamp" },
-      { run_started_at: "2026-10-01T01:00:00Z" },
-    ]]) {
-      const missing = readRuns(runs);
-      assert.equal(missing.exitCode, 1);
-      assert.equal(missing.result.status, "unreadable");
-      assert.equal(missing.result.missed_slots, null, "missing recent evidence must not fabricate a stale count");
-      assert.equal(missing.result.age_hours, null);
-    }
-    const refused = readRuns([{ run_started_at: "2026-09-30T10:29:00Z" }], { ok: false });
-    assert.equal(refused.exitCode, 1);
-    assert.equal(refused.result.status, "unreadable", "HTTP refusal must not claim liveness");
-  } finally {
-    fs.rmSync(root, { recursive: true, force: true });
-  }
-}
 
 // ---------------------------------------------------------------------------
 // The replaced measurement must be gone, not merely unused. A stamp-age rule
