@@ -6,8 +6,8 @@
   "aggregate_only": true,
   "per_issuer_rows": false,
   "raw_public": false,
-  "generated_at": "2026-09-28T01:46:40.855Z",
-  "latest_source_date": "2026-09-23",
+  "generated_at": "2026-09-30T10:35:56.203Z",
+  "latest_source_date": "2026-09-29",
   "persistence_policy": {
     "schema_version": "krx-bridge-bounded-persistence/v1",
     "basis": "provider_source_date",
@@ -16,8 +16,8 @@
     "eviction": "oldest_source_date_first"
   },
   "persistence_state": {
-    "available_source_dates": 41,
-    "retained_source_dates": 41,
+    "available_source_dates": 42,
+    "retained_source_dates": 42,
     "pruned_source_dates": 0,
     "last_run_pruned_source_dates": 0
   },
@@ -1290,6 +1290,37 @@
           "status": "ready",
           "issuer_count": 1821,
           "top_n_weight": 0.179547321119
+        }
+      }
+    },
+    {
+      "source_date": "2026-09-29",
+      "as_of": "2026-09-29",
+      "generated_at": "2026-09-30T10:35:56.203Z",
+      "latest_run": {
+        "run_id": "krx_daily_20260929",
+        "endpoint_count": 31,
+        "attempted_call_count": 31,
+        "summary": {
+          "total_files": 31,
+          "success_files": 31,
+          "empty_files": 0,
+          "failed_files": 0
+        }
+      },
+      "derived_rim_inputs": {
+        "status": "ready",
+        "missing": []
+      },
+      "public_outputs": {
+        "index_closes": {
+          "status": "ready",
+          "row_count": 1164
+        },
+        "kosdaq_market_cap": {
+          "status": "ready",
+          "issuer_count": 1823,
+          "top_n_weight": 0.180802220161
         }
       }
     }
