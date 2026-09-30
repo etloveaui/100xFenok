@@ -20,7 +20,6 @@ import uuid
 
 PROTOCOL = "stockanalysis-acquire-artifact/v1"
 DEFAULT_WORKFLOW = ".github/workflows/fetch-stockanalysis.yml"
-DEFAULT_LANE_MANIFEST = "data/admin/lane-commit-manifest.json"
 MAX_FILE_COUNT = 20_000
 MAX_TOTAL_BYTES = 750 * 1024 * 1024
 # The Next.js public mirror tree is materialized by the shared projection
@@ -139,22 +138,26 @@ def external_root(repo_root: Path, requested: Path, label: str) -> Path:
     return resolved
 
 
-def load_policy(repo_root: Path, workflow: str, manifest_rel: str = DEFAULT_LANE_MANIFEST) -> tuple[list[dict], list[dict]]:
-    manifest_path = repo_root / normalize_rel(manifest_rel)
-    payload = json.loads(manifest_path.read_text(encoding="utf-8"))
-    if payload.get("schema_version") != "lane-commit-manifest/v1":
-        fail("lane commit manifest schema is invalid")
-    entry = (payload.get("workflows") or {}).get(workflow)
+def load_policy(repo_root: Path, workflow: str) -> tuple[list[dict], list[dict]]:
+    module_path = repo_root / "scripts/lib/lane-registry.mjs"
+    policy_json = subprocess.check_output(
+        ["node", "--input-type=module", "-e",
+         "import { pathToFileURL } from 'node:url'; "
+         "const { LANE_REGISTRY } = await import(pathToFileURL(process.argv[1])); "
+         "process.stdout.write(JSON.stringify(LANE_REGISTRY.workflow_policies));",
+         str(module_path)], cwd=repo_root, text=True,
+    )
+    entry = json.loads(policy_json).get(workflow)
     if not isinstance(entry, dict):
-        fail(f"lane commit manifest has no workflow entry: {workflow}")
+        fail(f"lane registry has no workflow entry: {workflow}")
     specs = ((entry.get("stages") or {}).get("always_if_exists"))
     excludes = entry.get("exclude")
     if not isinstance(specs, list) or not specs or not isinstance(excludes, list):
-        fail("lane commit manifest workflow policy is invalid")
+        fail("lane registry workflow policy is invalid")
     for group in (specs, excludes):
         for spec in group:
             if not isinstance(spec, dict) or spec.get("kind") not in {"file", "directory", "glob", "dynamic_set"}:
-                fail("lane commit manifest path spec is invalid")
+                fail("lane registry path spec is invalid")
             normalize_rel(spec.get("path"))
     return specs, excludes
 
@@ -647,36 +650,6 @@ def apply_artifact(
             temp_path.unlink(missing_ok=True)
 
 
-def verify_artifact_readback(*, repo_root: Path, artifact_root: Path) -> dict:
-    """Confirm latest main still carries the exact packed candidate files."""
-    repo = Path(repo_root).resolve(strict=True)
-    artifact = external_root(repo, Path(artifact_root), "artifact root")
-    manifest_path = artifact / "manifest.json"
-    try:
-        context = json.loads(manifest_path.read_text(encoding="utf-8"))
-    except (OSError, json.JSONDecodeError) as exc:
-        fail(f"StockAnalysis artifact manifest is not valid JSON: {exc}")
-    if not isinstance(context, dict):
-        fail("StockAnalysis artifact manifest must be an object")
-    manifest = load_and_validate_artifact(
-        repo_root=repo,
-        artifact_root=artifact,
-        workflow=DEFAULT_WORKFLOW,
-        run_id=context.get("run_id"),
-        run_number=context.get("run_number"),
-        run_attempt=context.get("run_attempt"),
-        artifact_name=context.get("artifact_name"),
-    )
-    for row in manifest["files"]:
-        rel = normalize_rel(row["path"])
-        target = repo / rel
-        if target.is_symlink() or not target.is_file():
-            fail(f"StockAnalysis readback file is missing or unsafe: {rel}")
-        if target.stat().st_size != row["size"] or sha256_file(target) != row["sha256"]:
-            fail(f"StockAnalysis readback differs from packed candidate: {rel}")
-    return {"status": "confirmed", "confirmation": "confirmed", "reason": None, "paths": len(manifest["files"])}
-
-
 def audit_staged_paths(repo_root: Path, artifact_root: Path) -> None:
     manifest = json.loads((Path(artifact_root) / "manifest.json").read_text(encoding="utf-8"))
     expected = manifest.get("paths")
@@ -749,12 +722,9 @@ def main() -> None:
     pack = subparsers.add_parser("pack")
     apply = subparsers.add_parser("apply")
     audit = subparsers.add_parser("audit-stage")
-    verify = subparsers.add_parser("verify-readback")
     for item in (seed, pack, apply, audit):
         item.add_argument("--repo-root", default=".")
         item.add_argument("--workflow", default=DEFAULT_WORKFLOW)
-    verify.add_argument("--repo-root", default=".")
-    verify.add_argument("--artifact-root", required=True)
     seed.add_argument("--candidate-root", required=True)
     seed.add_argument("--replace", action="store_true")
     pack.add_argument("--candidate-root", required=True)
@@ -797,8 +767,6 @@ def main() -> None:
             artifact_digest=args.artifact_digest,
         )
         write_outputs(args.github_output, result)
-    elif args.command == "verify-readback":
-        result = verify_artifact_readback(repo_root=repo, artifact_root=Path(args.artifact_root))
     else:
         audit_staged_paths(repo, Path(args.artifact_root))
         result = {"status": "ok"}

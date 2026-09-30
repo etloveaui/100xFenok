@@ -4,29 +4,6 @@ import path from "node:path";
 
 import { canonicalJson } from "./json-canonical.mjs";
 
-// Lane opt-in to the shared first-attempt structured workflow_dispatch
-// recovery policy (isEligibleRecoveryRun in data-supply-lkg-store.mjs).
-const ALLOW_BOUND_WORKFLOW_DISPATCH_RECOVERY = true;
-
-// Local mirror of the shared eligibility predicate from
-// data-supply-lkg-store.mjs (isNaturalScheduleRun,
-// hasStructuredGithubRunBinding, isEligibleRecoveryRun). A static import of
-// that module is impossible here: lane-registry.mjs:699 reads
-// SLICKCHARTS_MEMBER_PATHS at module-evaluation time inside the
-// data-supply-lkg-store import graph (atomic-file.mjs ->
-// data-supply-detection-config.mjs -> lane-registry.mjs -> this module),
-// so the edge would TDZ-crash every entry point. Keep this mirror
-// byte-identical in behavior to the shared predicate.
-function isEligibleRecoveryRun(run, allowBoundWorkflowDispatchRecovery = false) {
-  const natural = run?.eventName === "schedule" && Number(run?.runAttempt ?? 1) === 1;
-  if (natural) return true;
-  if (allowBoundWorkflowDispatchRecovery !== true) return false;
-  if (run?.eventName !== "workflow_dispatch" || Number(run?.runAttempt ?? 0) !== 1) return false;
-  if (typeof run?.runId !== "string" || run.runId.length === 0) return false;
-  const numeric = Number(run.runId);
-  return Number.isInteger(numeric) && numeric > 0 && String(numeric) === run.runId.trim();
-}
-
 export const SLICKCHARTS_COMPOSITE_SCHEMA = "slickcharts-composite-lkg-index/v1";
 export const SLICKCHARTS_COMPOSITE_LANE_ID = "slickcharts";
 export const SLICKCHARTS_COMPOSITE_MEMBERS = Object.freeze([
@@ -330,10 +307,8 @@ function currentBundleEntry(bundle, run, providerObservation, resolutionState = 
     resolution_state: resolutionState,
     retry: false,
     bundle,
-    provider_observation: providerObservation,
-    promoted_run: run,
+    source_as_of: providerObservation?.source_floor ?? null,
     last_failure: null,
-    last_recovery: null,
   };
 }
 
@@ -355,11 +330,9 @@ export function bootstrapSlickchartsCompositeIndex({
         resolution_state: "unavailable",
         retry: false,
         bundle: null,
-        provider_observation: null,
-        promoted_run: null,
-        last_failure: { kind: "bootstrap", detail: error.message, run },
-        last_recovery: null,
-      };
+        source_as_of: null,
+        last_failure: { kind: "bootstrap", detail: error.message, observed_at: run.observed_at },
+          };
     }
   }
   const active = generationFor(members);
@@ -396,19 +369,7 @@ export function validateSlickchartsCompositeIndex(index) {
     if ((row.resolution_state === "unavailable") !== (row.bundle === null)) {
       fail(`${member} availability state is inconsistent`);
     }
-    if (row.provider_observation !== null) {
-      const observation = row.provider_observation;
-      if (observation?.kind !== "http_date_receipt_set"
-        || !Number.isSafeInteger(observation.receipt_count)
-        || observation.receipt_count < 1
-        || strictIso(observation.source_floor) !== observation.source_floor
-        || strictIso(observation.source_ceiling) !== observation.source_ceiling
-        || observation.source_floor > observation.source_ceiling
-        || !/^[a-f0-9]{64}$/u.test(observation.content_set_sha256 ?? "")
-        || !/^[a-f0-9]{64}$/u.test(observation.receipt_set_sha256 ?? "")) {
-        fail(`${member} provider observation is invalid`);
-      }
-    }
+    if (row.source_as_of != null && strictIso(row.source_as_of) !== row.source_as_of) fail(`${member} source date is invalid`);
     if (row.bundle !== null) {
       const files = row.bundle.files;
       const paths = Array.isArray(files) ? files.map((entry) => entry?.path) : [];
@@ -530,13 +491,6 @@ export function finalizeSlickchartsCompositeRecovery({
   const row = JSON.parse(fs.readFileSync(rowPath, "utf8"));
   if (row.lane_id !== SLICKCHARTS_COMPOSITE_LANE_ID || row.member_id !== member) fail("attempt row identity is invalid");
   const prior = structuredClone(index.members[member]);
-  // Natural schedule attempt 1, or (lane opt-in) a bound first-attempt
-  // workflow_dispatch with a numeric nonzero GITHUB_RUN_ID.
-  const natural = isEligibleRecoveryRun({
-    eventName: run.event_name,
-    runAttempt: run.run_attempt,
-    runId: run.run_id == null ? run.run_id : String(run.run_id),
-  }, ALLOW_BOUND_WORKFLOW_DISPATCH_RECOVERY);
   let publishData = false;
   let exitCode = 0;
   let decision;
@@ -554,13 +508,13 @@ export function finalizeSlickchartsCompositeRecovery({
     const restored = restoreSlickchartsCompositeSnapshot({ repoRoot, member, snapshotRoot });
     const hasTrustedLkg = prior.resolution_state === "fresh_primary" || prior.resolution_state === "lkg_primary";
     index.members[member] = {
-      ...prior,
+      source_as_of: prior.source_as_of ?? prior.provider_observation?.source_floor ?? null,
       resolution_state: hasTrustedLkg ? "lkg_primary" : prior.resolution_state,
       retry: hasTrustedLkg,
       bundle: restored,
       last_failure: {
-        run,
-        attempt_id: row.attempt_id,
+        observed_at: run.observed_at,
+        reason: row.reason ?? row.status,
         retained_generation_id: index.active_composite.generation_id,
       },
     };
@@ -583,7 +537,7 @@ export function finalizeSlickchartsCompositeRecovery({
           ...prior,
           resolution_state: hasTrustedLkg ? "lkg_primary" : prior.resolution_state,
           retry: hasTrustedLkg,
-          last_failure: { run, attempt_id: row.attempt_id, detail: error.message, retained_generation_id: index.active_composite.generation_id },
+          last_failure: { observed_at: run.observed_at, reason: "invalid_payload", detail: error.message, retained_generation_id: index.active_composite.generation_id },
         };
         if (index.retained_composite === null && index.members[member].resolution_state === "lkg_primary") {
           index.retained_composite = structuredClone(index.active_composite);
@@ -596,23 +550,17 @@ export function finalizeSlickchartsCompositeRecovery({
 
     if (providerObservation !== null) {
       const recovering = prior.retry === true || prior.resolution_state === "lkg_primary";
-      const priorFloor = prior.provider_observation?.source_floor ?? null;
-      const advances = priorFloor !== null && providerObservation.source_floor > priorFloor;
-      const priorContentSet = prior.provider_observation?.content_set_sha256 ?? null;
-      const contentAdvances = /^[a-f0-9]{64}$/u.test(priorContentSet ?? "")
-        && providerObservation.content_set_sha256 !== priorContentSet;
-      if (recovering && (!natural || !advances || !contentAdvances)) {
+      const priorFloor = prior.source_as_of ?? prior.provider_observation?.source_floor ?? null;
+      if (priorFloor !== null && providerObservation.source_floor < priorFloor) {
         restoreSlickchartsCompositeSnapshot({ repoRoot, member, snapshotRoot });
         index.members[member] = {
-          ...prior,
-          retry: true,
+          resolution_state: prior.resolution_state,
+          bundle: prior.bundle,
+          source_as_of: priorFloor,
+          retry: prior.retry,
           last_failure: prior.last_failure,
         };
-        decision = !natural
-          ? "recovery_requires_natural_schedule_attempt_1"
-          : !advances
-            ? "recovery_requires_advancing_provider_time"
-            : "recovery_requires_advancing_provider_content";
+        decision = "source_regression";
       } else {
         let bundle;
         try {
@@ -630,17 +578,8 @@ export function finalizeSlickchartsCompositeRecovery({
             resolution_state: "fresh_primary",
             retry: false,
             bundle,
-            provider_observation: providerObservation,
-            promoted_run: run,
-            last_failure: prior.last_failure,
-            last_recovery: recovering ? {
-              recovered_from_run_id: prior.last_failure?.run?.run_id ?? null,
-              recovery_run_id: run.run_id,
-              recovery_run_attempt: run.run_attempt,
-              recovery_event_name: run.event_name,
-              recovered_at: run.observed_at,
-              retained_generation_id: prior.last_failure?.retained_generation_id ?? index.retained_composite?.generation_id ?? null,
-            } : prior.last_recovery,
+            source_as_of: providerObservation.source_floor,
+            last_failure: null,
           };
           publishData = true;
           decision = recovering ? "recovered_and_promoted" : "candidate_promoted";
@@ -652,9 +591,6 @@ export function finalizeSlickchartsCompositeRecovery({
   if (retryMembers(index.members).length === 0) index.retained_composite = null;
   updateEnvelope(index, run, { generationPublished: publishData });
   index.current_attempt = {
-    run_id: String(run.run_id),
-    run_attempt: run.run_attempt,
-    event_name: run.event_name,
     observed_at: run.observed_at,
     member_id: member,
     decision,

@@ -8,10 +8,7 @@ import { atomicWrite } from "./lib/atomic-file.mjs";
 import { attemptResult, classifyEndpointResponse, threwTuple, transportError, worstRequestResult } from "./lib/provider-fetch-result.mjs";
 import {
   LaneLkgStore,
-  PROMOTION_CONTRACT_PROVIDER_OBSERVATION_V2,
-  buildProviderObservationV2,
   classifyLkgFailure,
-  isEligibleRecoveryRun,
   systemicLkgFailureReason,
 } from "./lib/data-supply-lkg-store.mjs";
 import { boundedDiagnosticDetail, diagnosticSuffix } from "./lib/diagnostic-detail.mjs";
@@ -341,7 +338,6 @@ export async function runNasdaqGiwSox({
   const lkgStore = new LaneLkgStore({
     repoRoot,
     laneId: LANE_ID,
-    allowBoundWorkflowDispatchRecovery: true,
   });
   const lkgArtifacts = [{
     key: LKG_KEY,
@@ -404,31 +400,10 @@ export async function runNasdaqGiwSox({
     sourceAsOf: soxSourceAsOf(payload),
     validateDocument: validSoxDocument,
     deriveSourceAsOf: soxSourceAsOf,
-    promotion_contract: PROMOTION_CONTRACT_PROVIDER_OBSERVATION_V2,
-    provider_observation: buildProviderObservationV2({
-      payloadBytes: Buffer.from(serialized),
-      sourceAsOf: soxSourceAsOf(payload),
-      validateDocument: validSoxDocument,
-      deriveSourceAsOf: soxSourceAsOf,
-      candidateContainsObservation: (candidateDocument, providerDocument) => JSON.stringify(candidateDocument) === JSON.stringify(providerDocument),
-      run,
-    }),
   };
   if (!write) return { ok: true, reason: "ok", updated: false, attempt, payload, asOf: payload.as_of, rowCount: payload.row_count };
 
   const recoveryState = lkgStore.stateSnapshot();
-  if (recoveryState.items[LKG_KEY]?.retry === true && !isEligibleRecoveryRun(run, true)) {
-    return {
-      ok: false,
-      reason: "recovery_requires_schedule",
-      updated: false,
-      attempt,
-      retrySet: recoveryState.retry_set,
-      degraded: true,
-      corrupt: false,
-      exitCode: 0,
-    };
-  }
   const currentCanonical = readValidCanonical(canonicalPath);
   if (currentCanonical !== null && recoveryState.items[LKG_KEY]?.retry !== true) {
     const currentSourceAsOf = soxSourceAsOf(currentCanonical.document);
@@ -474,9 +449,6 @@ export async function runNasdaqGiwSox({
   const promotable = decisions.filter((decision) => decision.eligible).map((decision) => decision.artifact);
   if (promotable.length === 0) {
     const reason = decisions[0].reason;
-    if (["foreign_writer_conflict", "recovery_not_advanced_by_provider"].includes(reason)) {
-      lkgStore.recordPromotionDeferral({ artifacts: [candidate], run, reason });
-    }
     return {
       ok: false,
       reason,
@@ -489,8 +461,9 @@ export async function runNasdaqGiwSox({
     };
   }
   atomicWrite(canonicalPath, serialized);
+  const recoveringKeys = new Set(lkgStore.stateSnapshot().retry_set);
   const success = lkgStore.recordSuccess({ artifacts: promotable, run });
-  const recovered = success.state.items[LKG_KEY]?.recovered_at === observedAt;
+  const recovered = recoveringKeys.has(LKG_KEY);
   const history = rotateSoxSnapshotHistory({ repoRoot, payload, generatedAt: observedAt });
   return {
     ok: true,

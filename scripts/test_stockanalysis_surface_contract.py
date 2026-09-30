@@ -6,6 +6,7 @@ from __future__ import annotations
 import importlib.util
 import json
 import os
+import subprocess
 from pathlib import Path
 import unittest
 
@@ -99,13 +100,14 @@ class StockanalysisSurfaceContractTest(unittest.TestCase):
         projection_runner = (
             ROOT / "scripts" / "update-manifest-projections.sh"
         ).read_text(encoding="utf-8")
-        lane_manifest = json.loads(
-            (ROOT / "data" / "admin" / "lane-commit-manifest.json").read_text(encoding="utf-8")
-        )
+        routes = json.loads(subprocess.check_output(
+            ["node", "--input-type=module", "-e",
+             "import { UPDATE_MANIFEST_MATERIALIZATIONS } from './scripts/materialize-update-manifest-routes.mjs'; "
+             "process.stdout.write(JSON.stringify(UPDATE_MANIFEST_MATERIALIZATIONS));"],
+            cwd=ROOT, text=True,
+        ))
         stockanalysis_routes = [
-            route
-            for route in lane_manifest["update_manifest"]["materializations"]
-            if route["source"] == "data/stockanalysis"
+            route for route in routes if route["source"] == "data/stockanalysis"
         ]
         self.assertEqual(stockanalysis_routes, [{
             "source": "data/stockanalysis",

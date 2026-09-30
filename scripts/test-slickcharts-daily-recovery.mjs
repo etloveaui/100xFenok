@@ -158,7 +158,7 @@ writeOutcomes(outcomesPath, SLICKCHARTS_DAILY_KEYS.map((key) => ({
   const state = JSON.parse(fs.readFileSync(path.join(stateRoot, "keys", "treasury.json"), "utf8"));
   assert.equal(state.resolution_state, "lkg_primary");
   assert.equal(state.retry, true);
-  assert.equal(state.latest_failure.run_id, "slick-failure");
+
   assert.equal(JSON.parse(fs.readFileSync(statusPath, "utf8")).exit_code, 0);
   const index = JSON.parse(fs.readFileSync(path.join(stateRoot, "index.json"), "utf8"));
   assert.deepEqual(index.keys, SLICKCHARTS_DAILY_KEYS);
@@ -208,10 +208,11 @@ writeOutcomes(outcomesPath, SLICKCHARTS_DAILY_KEYS.map((key) => ({ key, outcome:
     run: run("slick-manual-green", "2026-07-16T01:00:00Z"),
   });
   assert.equal(result.exitCode, 0);
-  assert.deepEqual(result.degradedKeys, ["treasury.json"], "manual green dispatch retains per-file LKG instead of promoting recovery");
+  assert.deepEqual(result.degradedKeys, [], "a valid manual acquisition restores the per-file primary");
   const state = JSON.parse(fs.readFileSync(path.join(stateRoot, "keys", "treasury.json"), "utf8"));
-  assert.equal(state.resolution_state, "lkg_primary");
-  assert.equal(state.latest_failure.run_id, "slick-provider-throttled");
+  assert.equal(state.resolution_state, "fresh_primary");
+  assert.equal(state.retry, false);
+
 }
 
 prepareSlickchartsDailyRecovery({ dataDir, snapshotDir });
@@ -231,9 +232,9 @@ writeOutcomes(outcomesPath, SLICKCHARTS_DAILY_KEYS.map((key) => ({ key, outcome:
   const state = JSON.parse(fs.readFileSync(path.join(stateRoot, "keys", "treasury.json"), "utf8"));
   assert.equal(state.resolution_state, "fresh_primary");
   assert.equal(state.retry, false);
-  assert.equal(state.recovered_from_run_id, "slick-provider-throttled");
-  assert.equal(state.recovery_event_name, "schedule");
-  assert.equal(state.recovery_run_attempt, 1);
+
+
+
 }
 
 {

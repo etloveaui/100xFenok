@@ -170,10 +170,6 @@ class FetchYfFinanceSelectionTest(unittest.TestCase):
                 "--tickers",
                 ",".join(tickers),
                 "--record-batch-state",
-                "--run-id",
-                "semantic-exit-proof",
-                "--run-attempt",
-                "1",
                 "--event-name",
                 "workflow_dispatch",
                 "--sleep",
@@ -203,7 +199,7 @@ class FetchYfFinanceSelectionTest(unittest.TestCase):
         self.assertEqual(state["resolution_state"], "lkg_primary")
         self.assertTrue(state["retry"])
         self.assertIn("FAIL", index["retry_symbols"])
-        self.assertIn("FAIL", {row["ticker"] for row in index["current_attempt"]["errors"]})
+        self.assertIn("FAIL", {row["ticker"] for row in index["current_results"]["errors"]})
         self.assertIn("FAIL", {row["symbol"] for row in index["lkg_details"]})
         self.assertIn("[degraded] retained LKG: FAIL; deferred without LKG: none", output)
 
@@ -220,7 +216,7 @@ class FetchYfFinanceSelectionTest(unittest.TestCase):
         self.assertEqual(state["latest_failure"]["lkg_status"], "absent")
         self.assertTrue(state["latest_failure"]["deferred_acquisition"])
         self.assertIn("FAIL", index["retry_symbols"])
-        self.assertIn("FAIL", {row["ticker"] for row in index["current_attempt"]["errors"]})
+        self.assertIn("FAIL", {row["ticker"] for row in index["current_results"]["errors"]})
         self.assertIn("FAIL", {row["symbol"] for row in index["unavailable_details"]})
         self.assertIn("[degraded] retained LKG: none; deferred without LKG: FAIL", output)
 
@@ -345,7 +341,7 @@ class FetchYfFinanceSelectionTest(unittest.TestCase):
             "resolution_state": "unavailable",
             "retry": True,
             "latest_failure": legacy_failure,
-            "last_attempt": {**legacy_failure, "outcome": "failed"},
+            "last_result": {**legacy_failure, "outcome": "failed"},
             "attempts": [{**legacy_failure, "outcome": "failed"}],
         })
 
@@ -357,13 +353,13 @@ class FetchYfFinanceSelectionTest(unittest.TestCase):
         self.assertEqual(detail["lkg_status"], "absent")
         self.assertFalse(detail["deferred_acquisition"])
         self.assertTrue(detail["retry"])
-        self.assertEqual(detail["expected_resolution"], "next_natural_yahoo_run")
+        self.assertEqual(detail["expected_resolution"], "next_yahoo_acquisition")
 
-    def test_terminal_failed_last_attempt_stays_out_of_retry_pending_failed_count(self) -> None:
+    def test_terminal_failed_last_result_stays_out_of_retry_pending_failed_count(self) -> None:
         """counts.failed excludes terminal symbols while retryable failures still count.
 
         Regression: a terminal classification (provider-unsupported, e.g. acquired or
-        delisted) keeps the pre-terminal last_attempt.outcome == "failed", which used
+        delisted) keeps the pre-terminal last_result.outcome == "failed", which used
         to inflate counts.failed beyond the strict KPI retry-capable equation
         failed <= lkg + pending_history + unavailable. The index rebuild must stay
         deterministic and offline: it reads only per-ticker state files plus the
@@ -388,7 +384,7 @@ class FetchYfFinanceSelectionTest(unittest.TestCase):
             "ticker": "TERM",
             "resolution_state": self.state.TERMINAL_RESOLUTION_STATE,
             "retry": False,
-            "last_attempt": terminal_failed_attempt,
+            "last_result": terminal_failed_attempt,
             "attempts": [terminal_failed_attempt],
             "terminal": {
                 "classified_run_id": run["run_id"],
@@ -401,7 +397,7 @@ class FetchYfFinanceSelectionTest(unittest.TestCase):
             ("PEND1", "pending_history", "pending_history"),
             ("FRESH1", "fresh_primary", "fresh"),
         ):
-            current_attempt = {
+            current_results = {
                 "run_id": run["run_id"],
                 "run_attempt": run["run_attempt"],
                 "observed_at": run["observed_at"],
@@ -414,8 +410,8 @@ class FetchYfFinanceSelectionTest(unittest.TestCase):
                 "ticker": ticker,
                 "resolution_state": resolution,
                 "retry": resolution != "fresh_primary",
-                "last_attempt": current_attempt,
-                "attempts": [current_attempt],
+                "last_result": current_results,
+                "attempts": [current_results],
             })
 
         index = store.rebuild_index({"TERM", "LKG1", "UNA1", "PEND1", "FRESH1"}, run)
@@ -455,49 +451,25 @@ class FetchYfFinanceSelectionTest(unittest.TestCase):
         self.assertEqual(index["terminal_symbols"], ["TERM"])
         self.assertEqual(index["retry_symbols"], ["LKG1", "PEND1", "UNA1"])
         # latest_attempt accounting still reports the real current-run failures.
-        self.assertEqual(index["current_attempt"]["attempted"], 4)
-        self.assertEqual(index["current_attempt"]["successes"], 2)
-        self.assertEqual(index["current_attempt"]["failed"], 2)
-        self.assertEqual(index["current_attempt"]["skipped"], 0)
 
-    def test_data_loss_unavailable_cannot_be_laundered_by_promotion_deferral(self) -> None:
+    def test_data_loss_unavailable_cannot_be_laundered_by_later_transient_failure(self):
         store = self.fetcher.YahooBatchStateStore(self.fetcher.YAHOO_BATCH_STATE_ROOT, self.fetcher.OUT_DIR)
-        run = {**self._run("data-loss-deferral"), "event_name": "workflow_dispatch", "natural": False}
-        failure = {
-            "run_id": "data-loss-origin",
-            "run_attempt": 1,
-            "event_name": "schedule",
-            "observed_at": "2026-07-10T01:00:00Z",
-            "failure_kind": "unexpected",
-            "lkg_status": "lost",
-            "data_loss": True,
-            "deferred_acquisition": False,
-            "error": "previously advertised data disappeared",
-        }
-        deferral = {
-            "run_id": run["run_id"],
-            "run_attempt": run["run_attempt"],
-            "event_name": run["event_name"],
-            "observed_at": run["observed_at"],
-            "reason": "recovery_requires_schedule",
-            "provider_quote_as_of": "2026-07-10T20:00:00Z",
-            "provider_history_as_of": "2026-07-10",
-        }
+        run = {"event_name": "workflow_dispatch", "observed_at": "2026-07-15T22:00:00Z"}
         write_json(store._state_path("LOST"), {
-            "schema_version": "yahoo-batch-quote-history-state/v1",
-            "ticker": "LOST",
-            "resolution_state": "unavailable",
-            "retry": True,
-            "latest_failure": failure,
-            "latest_promotion_deferral": deferral,
-            "last_attempt": {**deferral, "outcome": "failed", "error": "recovery_requires_schedule", "attempts_used": 1, "failures": []},
-            "attempts": [{**deferral, "outcome": "failed", "error": "recovery_requires_schedule", "attempts_used": 1, "failures": []}],
+            "schema_version": "yahoo-batch-quote-history-state/v1", "ticker": "LOST",
+            "resolution_state": "unavailable", "retry": True,
+            "latest_failure": {"observed_at": "2026-07-10T01:00:00Z", "failure_kind": "unexpected",
+                               "lkg_status": "lost", "data_loss": True, "deferred_acquisition": False,
+                               "error": "previously advertised data disappeared"},
         })
+        state = store.record_failure("LOST", "provider source timestamp is unavailable", run, ["fixture"],
+                                     {"attempts_used": 1, "failures": []}, failure_kind="transient_provider_miss")
+        self.assertTrue(state["latest_failure"]["data_loss"])
+        self.assertFalse(state["latest_failure"]["deferred_acquisition"])
         index = store.rebuild_index({"LOST"}, run)
         assessment = self.fetcher.yahoo_failure_exit_assessment(
-            [{"ticker": "LOST", "error": "promotion deferred: recovery_requires_schedule", "failure_kind": "recovery_requires_schedule"}],
-            store,
-            index,
+            [{"ticker": "LOST", "error": "provider source timestamp is unavailable", "failure_kind": "transient_provider_miss"}],
+            store, index,
         )
         self.assertEqual(assessment["exit_code"], 2)
         self.assertTrue(any("lost previously advertised" in reason for reason in assessment["reasons"]))
@@ -567,6 +539,34 @@ class FetchYfFinanceSelectionTest(unittest.TestCase):
                 )
                 self.assertEqual(len(reasons), 1)
                 self.assertIn(category, reasons[0])
+
+    def test_actual_invalid_or_regressing_candidate_alarms_with_retained_good_bytes(self):
+        store = self.fetcher.YahooBatchStateStore(self.fetcher.YAHOO_BATCH_STATE_ROOT, self.fetcher.OUT_DIR)
+        retained = self._daily_payload("AAPL")
+        canonical = self.fetcher.OUT_DIR / "AAPL.json"
+        write_json(canonical, retained)
+        run = {"observed_at": "2026-07-15T03:00:00Z"}
+        evidence = {"attempts_used": 1, "failures": []}
+        store.record_failure("AAPL", "provider unavailable", run, ["fixture"], evidence)
+        before = canonical.read_bytes(), store._lkg_path("AAPL").read_bytes()
+        older = self.fetcher.decorate_finance_payload(
+            ticker="AAPL", profile="daily", fetched_at=run["observed_at"],
+            data={"info": {"symbol": "AAPL", "quoteType": "EQUITY",
+                           "regularMarketTime": int(datetime(2026, 7, 13, tzinfo=timezone.utc).timestamp())},
+                  "history_1y": [{"date": "2026-07-13", "Close": 9}]},
+        )
+        for candidate, provider in (({**retained, "source_as_of": "2026-01-01"}, retained), (older, older)):
+            with self.subTest(candidate=candidate):
+                with self.assertRaises(ValueError) as caught:
+                    store.evaluate_recovery_candidate("AAPL", candidate, provider, canonical_payload=retained)
+                row = {"ticker": "AAPL", "error": str(caught.exception), "failures": []}
+                kind = self.fetcher.yahoo_failure_kind(row)
+                self.assertEqual(kind, "systemic_integrity")
+                store.record_failure("AAPL", row["error"], run, ["fixture"], evidence, failure_kind=kind)
+                row["failure_kind"] = kind
+                assessment = self.fetcher.yahoo_failure_exit_assessment([row], store, store.rebuild_index({"AAPL"}, run))
+                self.assertEqual(assessment["exit_code"], 2)
+                self.assertEqual((canonical.read_bytes(), store._lkg_path("AAPL").read_bytes()), before)
 
     def test_current_failure_is_prioritized_into_bounded_kpi_lkg_details(self) -> None:
         store = self.fetcher.YahooBatchStateStore(
@@ -1019,8 +1019,7 @@ class FetchYfFinanceSelectionTest(unittest.TestCase):
         original_argv, original_stdout = sys.argv, sys.stdout
         try:
             sys.argv = [
-                "fetch-yf-finance.py", "--tickers", "FAIL", "--record-batch-state",
-                "--run-id", "redaction-state", "--run-attempt", "1", "--event-name", "workflow_dispatch",
+                "fetch-yf-finance.py", "--tickers", "FAIL", "--record-batch-state", "--event-name", "workflow_dispatch",
                 "--sleep", "0", "--retries", "0",
             ]
             sys.stdout = stdout
@@ -1149,7 +1148,7 @@ class FetchYfFinanceSelectionTest(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, "history coverage collapsed"):
             self.fetcher.validate_source_progression(existing, collapsed)
 
-    def test_failed_ticker_preserves_exact_lkg_and_last_fourteen_attempts(self) -> None:
+    def test_failed_ticker_preserves_exact_lkg_and_repeated_failure_count(self) -> None:
         state_root = self.root / "admin" / "yahoo-batch-quote-history"
         store = self.fetcher.YahooBatchStateStore(state_root, self.fetcher.OUT_DIR)
         payload = self.fetcher.decorate_finance_payload(
@@ -1185,19 +1184,17 @@ class FetchYfFinanceSelectionTest(unittest.TestCase):
         self.assertTrue(state["retry"])
         self.assertEqual(state["lkg"]["payload_sha256"], expected_hash)
         self.assertEqual(lkg.read_bytes(), expected_bytes)
-        self.assertEqual(len(state["attempts"]), 14)
-        self.assertEqual(state["attempts"][0]["run_id"], "run-2")
-        self.assertEqual(state["attempts"][-1]["run_id"], "run-15")
+        self.assertEqual(state["failure_count"], 16)
         self.assertEqual(len(list((state_root / "lkg").glob("AAPL*.json"))), 1)
 
         index = store.rebuild_index({"AAPL"}, self._run("run-15"))
         self.assertEqual(index["counts"]["lkg"], 1)
         self.assertEqual(index["counts"]["retry"], 1)
-        self.assertEqual(index["current_attempt"]["failed"], 1)
-        self.assertEqual(index["latest_failure"]["run_id"], "run-15")
+        self.assertEqual(index["current_results"]["failed"], 1)
+        self.assertEqual(index["latest_failure"]["error"], "controlled failure 15")
 
         same_source = dict(payload)
-        self.assertFalse(store.recovery_candidate_advances("AAPL", same_source))
+        self.assertTrue(store.recovery_candidate_advances("AAPL", same_source))
         advanced = self.fetcher.decorate_finance_payload(
             ticker="AAPL",
             profile="daily",
@@ -1229,7 +1226,60 @@ class FetchYfFinanceSelectionTest(unittest.TestCase):
         self.assertFalse(lkg.exists(), "identity/hash-invalid LKG must not remain advertised")
         self.assertEqual(list(state_root.rglob(".*.tmp")), [])
 
-    def test_yahoo_batch_promotion_v2_fieldwise_proof_and_natural_gate(self) -> None:
+    def test_yahoo_batch_same_source_date_recovers_without_execution_identity(self):
+        store = self.fetcher.YahooBatchStateStore(self.fetcher.YAHOO_BATCH_STATE_ROOT, self.fetcher.OUT_DIR)
+        payload = self._daily_payload("AAPL")
+        canonical = self.fetcher.OUT_DIR / "AAPL.json"
+        write_json(canonical, payload)
+        original = canonical.read_bytes()
+        evidence = {"attempts_used": 1, "failures": [], "latency_ms": 1}
+        contexts = ({"observed_at": "2026-07-15T03:00:00Z"},
+                    {"event_name": "workflow_dispatch", "run_attempt": 2, "observed_at": "2026-07-15T03:00:00Z"},
+                    {"event_name": "schedule", "natural": False, "observed_at": "2026-07-15T03:00:00Z"})
+        for run in contexts:
+            with self.subTest(run=run):
+                store.record_failure("AAPL", "provider unavailable", run, ["fixture"], evidence)
+                self.assertTrue(store.recovery_candidate_advances("AAPL", payload))
+                state = store.record_success("AAPL", payload, run, ["fixture"], evidence)
+                self.assertFalse(state["retry"])
+                self.assertEqual(state["resolution_state"], "fresh_primary")
+                self.assertEqual(canonical.read_bytes(), original)
+                self.assertEqual(store._lkg_path("AAPL").read_bytes(), original)
+                self.assertEqual(state["current"]["source_as_of"], payload["source_as_of"])
+
+    def test_yahoo_batch_main_same_date_local_manual_and_rerun_publish(self):
+        import os
+        from unittest.mock import patch
+        ticker = "AAPL"
+        self.fetcher.load_universe_sources = lambda **_kwargs: {ticker: ["fixture"]}
+        retained = self._daily_payload(ticker)
+        retained["data"]["info"].update({"currentPrice": 10, "previousClose": 9})
+        canonical = self.fetcher.OUT_DIR / f"{ticker}.json"
+        evidence = {"attempts_used": 1, "failures": [], "latency_ms": 1}
+        self.fetcher.fetch_with_retry = lambda *_args, **_kwargs: (retained["data"], 1, None, evidence)
+        for event, attempt in (("local", 1), ("workflow_dispatch", 1), ("workflow_dispatch", 2), ("schedule", 2)):
+            with self.subTest(event=event, attempt=attempt):
+                write_json(canonical, retained)
+                store = self.fetcher.YahooBatchStateStore(self.fetcher.YAHOO_BATCH_STATE_ROOT, self.fetcher.OUT_DIR)
+                store.record_failure(ticker, "provider unavailable", {"observed_at": "2026-07-15T03:00:00Z"},
+                                     ["fixture"], evidence)
+                lkg_bytes = store._lkg_path(ticker).read_bytes()
+                argv = ["fetch-yf-finance.py", "--tickers", ticker, "--profile", "daily", "--record-batch-state",
+                        "--event-name", event, "--sleep", "0", "--retries", "0", "--max-age-hours", "0"]
+                with patch.object(sys, "argv", argv), patch.dict(os.environ, {"GITHUB_RUN_ID": "", "GITHUB_RUN_ATTEMPT": str(attempt)}), \
+                     patch.object(self.fetcher, "_observed_now", return_value="2026-07-15T03:00:00Z"):
+                    try:
+                        self.fetcher.main()
+                    except SystemExit as exc:
+                        self.assertEqual(exc.code, 0)
+                state = json.loads(store._state_path(ticker).read_bytes())
+                self.assertFalse(state["retry"])
+                self.assertEqual(state["resolution_state"], "fresh_primary")
+                self.assertEqual(state["current"]["source_as_of"], retained["source_as_of"])
+                self.assertEqual(state["current"]["payload_sha256"], hashlib.sha256(canonical.read_bytes()).hexdigest())
+                self.assertEqual(store._lkg_path(ticker).read_bytes(), lkg_bytes)
+
+    def test_yahoo_batch_actual_provider_values_and_retained_history_are_validated(self) -> None:
         state_root = self.root / "admin" / "yahoo-batch-promotion-v2"
         store = self.fetcher.YahooBatchStateStore(state_root, self.fetcher.OUT_DIR)
         retained = self.fetcher.decorate_finance_payload(
@@ -1253,19 +1303,6 @@ class FetchYfFinanceSelectionTest(unittest.TestCase):
         lkg_path = state_root / "lkg" / "AAPL.json"
         retained_lkg_bytes = lkg_path.read_bytes()
 
-        same_run = self._run("same-natural")
-        same_proof = store.build_provider_observation("AAPL", retained, same_run)
-        same_decision = store.evaluate_recovery_candidate("AAPL", retained, same_proof, same_run)
-        self.assertFalse(same_decision["eligible"])
-        self.assertEqual(same_decision["reason"], "recovery_not_advanced_by_provider")
-        same_state = store.record_promotion_deferral(
-            "AAPL", same_decision, same_run, ["global_scouter"],
-            {"attempts_used": 1, "failures": [], "latency_ms": 1},
-        )
-        self.assertEqual(same_state["latest_failure"]["run_id"], "chaos")
-        self.assertEqual(same_state["latest_promotion_deferral"]["run_id"], "same-natural")
-        self.assertEqual(lkg_path.read_bytes(), retained_lkg_bytes)
-
         advanced_provider = self.fetcher.decorate_finance_payload(
             ticker="AAPL", profile="daily", fetched_at="2026-07-11T21:15:00Z",
             data={
@@ -1279,51 +1316,27 @@ class FetchYfFinanceSelectionTest(unittest.TestCase):
             ticker="AAPL", profile="daily", fetched_at="2026-07-11T21:15:00Z", data=merged_data,
         )
 
-        manual_run = {**self._run("manual"), "event_name": "workflow_dispatch", "natural": False}
-        manual_proof = store.build_provider_observation("AAPL", advanced_provider, manual_run)
-        self.assertEqual(
-            store.evaluate_recovery_candidate("AAPL", candidate, manual_proof, manual_run)["reason"],
-            "ok",
-        )
-        rerun = {**self._run("rerun", attempt=2), "natural": True}
-        rerun_proof = store.build_provider_observation("AAPL", advanced_provider, rerun)
-        self.assertEqual(
-            store.evaluate_recovery_candidate("AAPL", candidate, rerun_proof, rerun)["reason"],
-            "recovery_requires_schedule",
-        )
-
+        decision = store.evaluate_recovery_candidate("AAPL", candidate, advanced_provider)
+        self.assertTrue(decision["eligible"])
         recovery_run = self._run("recovery")
-        proof = store.build_provider_observation("AAPL", advanced_provider, recovery_run)
-        decision = store.evaluate_recovery_candidate("AAPL", candidate, proof, recovery_run)
-        self.assertTrue(decision["eligible"], "fresh quote proof may advance while retained history is honestly merged")
         foreign_history_data = json.loads(json.dumps(merged_data))
         foreign_history_data["history_1y"] = [{"date": "2026-07-12", "Close": 999}]
         foreign_history_candidate = self.fetcher.decorate_finance_payload(
             ticker="AAPL", profile="daily", fetched_at="2026-07-12T21:15:00Z", data=foreign_history_data,
         )
-        foreign_history_decision = store.evaluate_recovery_candidate(
-            "AAPL", foreign_history_candidate, proof, recovery_run,
-        )
-        self.assertFalse(foreign_history_decision["eligible"])
-        self.assertEqual(foreign_history_decision["reason"], "foreign_writer_conflict")
+        with self.assertRaisesRegex(ValueError, "source date is not supplied"):
+            store.evaluate_recovery_candidate("AAPL", foreign_history_candidate, advanced_provider)
         write_json(canonical, candidate)
         recovered = store.record_success(
             "AAPL", candidate, recovery_run, ["global_scouter"],
             {"attempts_used": 1, "failures": [], "latency_ms": 1},
-            provider_observation=proof,
         )
         self.assertEqual(recovered["resolution_state"], "fresh_primary")
         self.assertFalse(recovered["retry"])
-        self.assertEqual(recovered["promotion_contract"], "provider_observation/v2")
-        self.assertEqual(recovered["provider_observation"]["run_id"], "recovery")
-        self.assertEqual(recovered["recovered_from_run_id"], "chaos")
-        self.assertEqual(recovered["recovery_run_id"], "recovery")
-        self.assertEqual(recovered["recovery_run_attempt"], 1)
-        self.assertEqual(recovered["recovery_event_name"], "schedule")
-        self.assertEqual(recovered["last_recovered_failure"]["run_id"], "chaos")
         self.assertEqual(lkg_path.read_bytes(), retained_lkg_bytes, "promotion keeps the retained LKG byte-identical")
 
-    def test_yahoo_batch_promotion_v2_rejects_missing_provider_observation_and_tamper(self) -> None:
+
+    def test_yahoo_batch_rejects_actual_canonical_binding_and_source_tamper(self) -> None:
         state_root = self.root / "admin" / "yahoo-batch-promotion-conflict"
         store = self.fetcher.YahooBatchStateStore(state_root, self.fetcher.OUT_DIR)
         retained = self.fetcher.decorate_finance_payload(
@@ -1341,7 +1354,6 @@ class FetchYfFinanceSelectionTest(unittest.TestCase):
                   "history_1y": [{"date": "2026-07-11", "Close": 315}]},
         )
         run = self._run("natural")
-        proof = store.build_provider_observation("AAPL", provider, run)
         forged_canonical = json.loads(json.dumps(provider))
         forged_canonical["data"]["info"]["currentPrice"] = 999
         write_json(canonical, forged_canonical)
@@ -1349,55 +1361,23 @@ class FetchYfFinanceSelectionTest(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, "not bound to canonical bytes"):
             store.record_success(
                 "AAPL", provider, run, ["global_scouter"], {"attempts_used": 1, "failures": []},
-                provider_observation=proof, expected_payload_sha256=forged_hash,
+                expected_payload_sha256=forged_hash,
             )
         write_json(canonical, retained)
         contaminated = json.loads(json.dumps(provider))
         contaminated["data"]["info"]["currentPrice"] = 999
-        decision = store.evaluate_recovery_candidate("AAPL", contaminated, proof, run)
-        self.assertFalse(decision["eligible"])
-        self.assertEqual(decision["reason"], "foreign_writer_conflict")
-        before_lkg = (state_root / "lkg" / "AAPL.json").read_bytes()
-        deferred = store.record_promotion_deferral("AAPL", decision, run, ["global_scouter"], {"attempts_used": 1, "failures": []})
-        self.assertEqual(deferred["latest_failure"]["run_id"], "chaos")
-        self.assertEqual(deferred["latest_promotion_deferral"]["reason"], "foreign_writer_conflict")
-        self.assertEqual((state_root / "lkg" / "AAPL.json").read_bytes(), before_lkg)
-        index = store.rebuild_index({"AAPL"}, run)
-        assessment = self.fetcher.yahoo_failure_exit_assessment(
-            [{"ticker": "AAPL", "error": "promotion deferred: foreign_writer_conflict", "failure_kind": "foreign_writer_conflict"}],
-            store,
-            index,
-        )
-        self.assertEqual(assessment["exit_code"], 0)
-        self.assertEqual(assessment["retained_lkg_tickers"], ["AAPL"])
-        self.assertEqual(index["promotion_deferral_details"][0]["ticker"], "AAPL")
-
-        tampered = dict(proof)
-        tampered["payload_sha256"] = "0" * 64
-        with self.assertRaisesRegex(ValueError, "provider observation proof"):
-            store.evaluate_recovery_candidate("AAPL", provider, tampered, self._run("tamper"))
-
+        with self.assertRaisesRegex(ValueError, "disagrees with actual provider values"):
+            store.evaluate_recovery_candidate("AAPL", contaminated, provider)
         for source_field in ("quote_as_of", "history_as_of", "source_as_of"):
             with self.subTest(source_field=source_field):
                 source_tampered = json.loads(json.dumps(provider))
                 source_tampered[source_field] = "2026-01-01"
                 with self.assertRaisesRegex(ValueError, "payload is invalid"):
-                    store.build_provider_observation("AAPL", source_tampered, self._run(f"tamper-{source_field}"))
+                    store.evaluate_recovery_candidate("AAPL", source_tampered, provider)
 
-        proof_failure_run = self._run("proof-failure")
-        store.record_failure(
-            "AAPL", "provider observation proof is not payload-bound", proof_failure_run,
-            ["global_scouter"], {"attempts_used": 1, "failures": []}, failure_kind="systemic_proof_contract",
-        )
-        proof_index = store.rebuild_index({"AAPL"}, proof_failure_run)
-        proof_assessment = self.fetcher.yahoo_failure_exit_assessment(
-            [{"ticker": "AAPL", "error": "provider observation proof is not payload-bound", "failure_kind": "systemic_proof_contract"}],
-            store,
-            proof_index,
-        )
-        self.assertEqual(proof_assessment["exit_code"], 2, "our proof-contract violation is corruption even with LKG")
 
-    def test_yahoo_batch_main_natural_recovery_still_promotes_with_v2_attribution(self) -> None:
+
+    def test_yahoo_batch_main_natural_recovery_publishes_valid_provider_data(self) -> None:
         ticker = "AAPL"
         self.fetcher.load_universe_sources = lambda **_kwargs: {ticker: ["global_scouter"]}
         retained = self._daily_payload(ticker)
@@ -1432,8 +1412,7 @@ class FetchYfFinanceSelectionTest(unittest.TestCase):
         original_argv = sys.argv
         try:
             sys.argv = [
-                "fetch-yf-finance.py", "--tickers", ticker, "--record-batch-state",
-                "--run-id", "natural-recovery", "--run-attempt", "1", "--event-name", "schedule",
+                "fetch-yf-finance.py", "--tickers", ticker, "--record-batch-state", "--event-name", "schedule",
                 "--natural-run", "--sleep", "0", "--retries", "0", "--max-age-hours", "0",
             ]
             self.fetcher.main()
@@ -1443,12 +1422,6 @@ class FetchYfFinanceSelectionTest(unittest.TestCase):
         state = json.loads((self.fetcher.YAHOO_BATCH_STATE_ROOT / "tickers" / f"{ticker}.json").read_text())
         self.assertEqual(state["resolution_state"], "fresh_primary")
         self.assertFalse(state["retry"])
-        self.assertEqual(state["recovered_from_run_id"], "chaos")
-        self.assertEqual(state["recovery_run_id"], "natural-recovery")
-        self.assertEqual(state["recovery_run_attempt"], 1)
-        self.assertEqual(state["recovery_event_name"], "schedule")
-        self.assertEqual(state["promotion_contract"], "provider_observation/v2")
-        self.assertEqual(state["provider_observation"]["run_id"], "natural-recovery")
 
     def test_yahoo_batch_main_rejects_post_write_mutation_and_restores_canonical(self) -> None:
         ticker = "AAPL"
@@ -1488,8 +1461,7 @@ class FetchYfFinanceSelectionTest(unittest.TestCase):
         original_argv = sys.argv
         try:
             sys.argv = [
-                "fetch-yf-finance.py", "--tickers", ticker, "--record-batch-state",
-                "--run-id", "mutated-natural", "--run-attempt", "1", "--event-name", "schedule",
+                "fetch-yf-finance.py", "--tickers", ticker, "--record-batch-state", "--event-name", "schedule",
                 "--natural-run", "--sleep", "0", "--retries", "0", "--max-age-hours", "0",
             ]
             with self.assertRaises(SystemExit) as raised:
@@ -1499,13 +1471,12 @@ class FetchYfFinanceSelectionTest(unittest.TestCase):
             sys.argv = original_argv
 
         self.assertEqual(raised.exception.code, 2)
-        self.assertEqual(canonical.read_bytes(), before, "post-write proof failure restores the prior canonical bytes")
+        self.assertEqual(canonical.read_bytes(), before, "post-write integrity failure restores the prior canonical bytes")
         state = json.loads((self.fetcher.YAHOO_BATCH_STATE_ROOT / "tickers" / f"{ticker}.json").read_text())
         self.assertEqual(state["resolution_state"], "lkg_primary")
-        self.assertNotEqual(state.get("recovery_run_id"), "mutated-natural")
-        self.assertEqual(state["latest_failure"]["failure_kind"], "systemic_proof_contract")
+        self.assertEqual(state["latest_failure"]["failure_kind"], "systemic_integrity")
         pending_pointer = self.fetcher.DATA_SUPPLY_STATE_ROOT / "providers" / "yahoo_finance" / "stock_detail" / "pending" / f"{ticker}.json"
-        self.assertFalse(pending_pointer.exists(), "batch proof must commit before stock-detail side state")
+        self.assertFalse(pending_pointer.exists(), "batch integrity validation must commit before stock-detail side state")
         self.assertEqual(list((self.fetcher.DATA_SUPPLY_STATE_ROOT / "history" / "observations").glob("*.jsonl")), [])
 
     def test_yahoo_batch_rolls_back_partial_stock_detail_side_publication(self) -> None:
@@ -1548,8 +1519,7 @@ class FetchYfFinanceSelectionTest(unittest.TestCase):
         original_argv = sys.argv
         try:
             sys.argv = [
-                "fetch-yf-finance.py", "--tickers", ticker, "--record-batch-state",
-                "--run-id", "side-state-failure", "--run-attempt", "1", "--event-name", "schedule",
+                "fetch-yf-finance.py", "--tickers", ticker, "--record-batch-state", "--event-name", "schedule",
                 "--natural-run", "--sleep", "0", "--retries", "0", "--max-age-hours", "0",
             ]
             with self.assertRaises(SystemExit) as raised:
@@ -1562,7 +1532,7 @@ class FetchYfFinanceSelectionTest(unittest.TestCase):
         self.assertEqual(canonical.read_bytes(), before)
         state = json.loads((self.fetcher.YAHOO_BATCH_STATE_ROOT / "tickers" / f"{ticker}.json").read_text())
         self.assertEqual(state["resolution_state"], "lkg_primary")
-        self.assertEqual(state["latest_failure"]["failure_kind"], "systemic_proof_contract")
+        self.assertEqual(state["latest_failure"]["failure_kind"], "systemic_integrity")
         state_files = [
             path for path in self.fetcher.DATA_SUPPLY_STATE_ROOT.rglob("*")
             if path.is_file() and not any(part.startswith(".") for part in path.relative_to(self.fetcher.DATA_SUPPLY_STATE_ROOT).parts)
@@ -1606,8 +1576,7 @@ class FetchYfFinanceSelectionTest(unittest.TestCase):
         original_argv = sys.argv
         try:
             sys.argv = [
-                "fetch-yf-finance.py", "--tickers", ticker, "--record-batch-state",
-                "--run-id", "short-jsonl", "--run-attempt", "1", "--event-name", "schedule",
+                "fetch-yf-finance.py", "--tickers", ticker, "--record-batch-state", "--event-name", "schedule",
                 "--natural-run", "--sleep", "0", "--retries", "0", "--max-age-hours", "0",
             ]
             with self.assertRaises(SystemExit) as raised:
@@ -1621,7 +1590,7 @@ class FetchYfFinanceSelectionTest(unittest.TestCase):
         self.assertEqual(canonical.read_bytes(), before)
         state = json.loads((self.fetcher.YAHOO_BATCH_STATE_ROOT / "tickers" / f"{ticker}.json").read_text())
         self.assertEqual(state["resolution_state"], "lkg_primary")
-        self.assertEqual(state["latest_failure"]["failure_kind"], "systemic_proof_contract")
+        self.assertEqual(state["latest_failure"]["failure_kind"], "systemic_integrity")
         state_files = [
             path for path in self.fetcher.DATA_SUPPLY_STATE_ROOT.rglob("*")
             if path.is_file() and not any(part.startswith(".") for part in path.relative_to(self.fetcher.DATA_SUPPLY_STATE_ROOT).parts)
@@ -1763,59 +1732,13 @@ class FetchYfFinanceSelectionTest(unittest.TestCase):
         self.assertTrue(first["retry"])
         self.assertEqual(first["pending"]["missing"], ["history"])
         self.assertEqual(first["pending"]["discovered_from"], ["market_facts"])
-        self.assertEqual(first["pending"]["expected_resolution"], "next_natural_yahoo_run")
+        self.assertEqual(first["pending"]["expected_resolution"], "next_yahoo_acquisition")
         self.assertEqual(first["pending"]["reason"], "recent_listing")
 
-        manual_run = {
-            **self._run("manual-pending", attempt=2), "event_name": "workflow_dispatch", "natural": False,
-        }
-        manual_proof = store.build_provider_observation("NEW", pending, manual_run)
-        manual_decision = store.evaluate_recovery_candidate("NEW", pending, manual_proof, manual_run)
-        self.assertEqual(manual_decision["reason"], "recovery_requires_schedule")
-        store.record_promotion_deferral(
-            "NEW", manual_decision, manual_run, ["market_facts"],
-            {"attempts_used": 1, "failures": [], "latency_ms": 1},
-        )
-        manual_index = store.rebuild_index({"NEW"}, manual_run)
-        manual_assessment = self.fetcher.yahoo_failure_exit_assessment(
-            [{"ticker": "NEW", "error": "promotion deferred: recovery_requires_schedule", "failure_kind": "recovery_requires_schedule"}],
-            store,
-            manual_index,
-        )
-        self.assertEqual(manual_assessment["exit_code"], 0)
-        self.assertEqual(manual_assessment["deferred_without_lkg_tickers"], ["NEW"])
-        (self.fetcher.OUT_DIR / "NEW.json").unlink()
-        missing_current_assessment = self.fetcher.yahoo_failure_exit_assessment(
-            [{"ticker": "NEW", "error": "promotion deferred: recovery_requires_schedule", "failure_kind": "recovery_requires_schedule"}],
-            store,
-            manual_index,
-        )
-        self.assertEqual(missing_current_assessment["exit_code"], 2, "missing advertised pending canonical is corruption")
-        write_json(self.fetcher.OUT_DIR / "NEW.json", pending)
-
-        provider_without_history = self.fetcher.decorate_finance_payload(
-            ticker="NEW", profile="daily", fetched_at="2026-07-11T20:00:00Z",
-            data={
-                "info": {
-                    "symbol": "NEW", "quoteType": "EQUITY", "regularMarketTime": 1783800000,
-                    "firstTradeDateEpochUtc": 1783540800,
-                },
-                "history_1y": None,
-            },
-        )
-        foreign_data = json.loads(json.dumps(provider_without_history["data"]))
-        foreign_data["history_1y"] = [{"date": "2026-07-11", "Close": 999}]
-        foreign_history = self.fetcher.decorate_finance_payload(
-            ticker="NEW", profile="daily", fetched_at="2026-07-11T20:00:00Z", data=foreign_data,
-        )
-        foreign_run = self._run("pending-foreign-history")
-        foreign_proof = store.build_provider_observation("NEW", provider_without_history, foreign_run)
-        foreign_decision = store.evaluate_recovery_candidate(
-            "NEW", foreign_history, foreign_proof, foreign_run, canonical_payload=pending,
-        )
-        self.assertFalse(foreign_decision["eligible"])
-        self.assertEqual(foreign_decision["reason"], "foreign_writer_conflict")
-
+        manual_run = {"event_name": "workflow_dispatch", "observed_at": "2026-07-15T22:00:00Z"}
+        manual_state = store.record_success("NEW", pending, manual_run, ["market_facts"],
+                                           {"attempts_used": 1, "failures": []})
+        self.assertEqual(manual_state["resolution_state"], "pending_history")
         recovered = self.fetcher.decorate_finance_payload(
             ticker="NEW",
             profile="daily",
@@ -1832,17 +1755,13 @@ class FetchYfFinanceSelectionTest(unittest.TestCase):
         )
         write_json(self.fetcher.OUT_DIR / "NEW.json", recovered)
         recovery_run = self._run("natural-2")
-        recovery_proof = store.build_provider_observation("NEW", recovered, recovery_run)
         store.record_success(
             "NEW", recovered, recovery_run, ["market_facts"],
             {"attempts_used": 1, "failures": [], "latency_ms": 2},
-            provider_observation=recovery_proof,
         )
         second = json.loads((state_root / "tickers" / "NEW.json").read_text())
         self.assertEqual(second["resolution_state"], "fresh_primary")
         self.assertFalse(second["retry"])
-        self.assertEqual(second["recovered_from_run_id"], "natural-1")
-        self.assertEqual(second["recovery_run_id"], "natural-2")
 
         old = self.fetcher.decorate_finance_payload(
             ticker="OLD",
@@ -1865,14 +1784,13 @@ class FetchYfFinanceSelectionTest(unittest.TestCase):
         self.assertEqual(first_old_state["pending"]["reason"], "newly_discovered_no_history")
         late_run = self._run("natural-old-late")
         late_run["observed_at"] = "2026-08-20T22:00:00Z"
-        late_proof = store.build_provider_observation("OLD", old, late_run)
         old_state = store.record_success(
             "OLD", old, late_run, ["market_facts"],
             {"attempts_used": 1, "failures": [], "latency_ms": 2},
-            provider_observation=late_proof,
         )
         self.assertEqual(old_state["resolution_state"], "unavailable")
         self.assertNotIn("pending", old_state)
+
 
     def test_natural_retry_candidates_are_claimed_once_before_regular_shards(self) -> None:
         tickers = ["AAA", "AAPL", "BBB", "CCC", "DDD", "EEE"]
@@ -1904,7 +1822,7 @@ class FetchYfFinanceSelectionTest(unittest.TestCase):
                 "schema_version": "yahoo-batch-quote-history-state/v1",
                 "ticker": ticker,
                 "retry": True,
-                "last_attempt": {"observed_at": f"2026-07-01T00:{index:02d}:00Z"},
+                "last_result": {"observed_at": f"2026-07-01T00:{index:02d}:00Z"},
                 "attempts": [],
             })
 
@@ -1929,7 +1847,7 @@ class FetchYfFinanceSelectionTest(unittest.TestCase):
 
         for index, ticker in enumerate(first_retry_batch):
             state = json.loads(store._state_path(ticker).read_text(encoding="utf-8"))
-            state["last_attempt"]["observed_at"] = f"2026-07-02T00:{index:02d}:00Z"
+            state["last_result"]["observed_at"] = f"2026-07-02T00:{index:02d}:00Z"
             write_json(store._state_path(ticker), state)
 
         second_order = store.retry_tickers_ordered(set(retries))
@@ -2304,7 +2222,7 @@ class FetchYfFinanceSelectionTest(unittest.TestCase):
                 "schema_version": "yahoo-batch-quote-history-state/v1",
                 "ticker": ticker,
                 "retry": True,
-                "last_attempt": {"observed_at": observed_at},
+                "last_result": {"observed_at": observed_at},
                 "attempts": [],
             })
         self.assertEqual(
@@ -2353,7 +2271,6 @@ class FetchYfFinanceSelectionTest(unittest.TestCase):
         self.assertEqual(pending["coverage_status"], "not_observed")
         self.assertEqual(pending["provider_reachability"], "not_attempted")
         self.assertEqual(pending["first_seen_at"], first["observed_at"])
-        self.assertEqual(pending["first_seen_run_id"], "first-discovery")
         self.assertEqual(pending["first_seen_from"], ["stockanalysis_etf"])
         self.assertEqual(pending["discovered_from"], ["dashboard_configuration", "stockanalysis_etf"])
         index = store.rebuild_index({"PENDING"}, second)
@@ -2432,7 +2349,7 @@ class FetchYfFinanceSelectionTest(unittest.TestCase):
             write_json(store._state_path(ticker), {
                 "schema_version": "yahoo-batch-quote-history-state/v1", "ticker": ticker,
                 "resolution_state": "unavailable", "retry": True,
-                "last_attempt": {"observed_at": "2026-07-30T00:00:00Z"}, "attempts": [],
+                "last_result": {"observed_at": "2026-07-30T00:00:00Z"}, "attempts": [],
             })
         artifact = self.root / "terminal-evidence.json"
         write_json(artifact, {
@@ -2527,7 +2444,7 @@ class FetchYfFinanceSelectionTest(unittest.TestCase):
         self.assertFalse(self.fetcher.should_skip_cached_payload("AAPL", payload, 24, {"AAPL"}, set()))
         self.assertFalse(self.fetcher.should_skip_cached_payload("AAPL", payload, 24, set(), {"AAPL"}))
 
-    def test_current_attempt_isolated_by_run_attempt_and_skip_costs_zero_fetches(self) -> None:
+    def test_current_process_results_and_skip_costs_zero_fetches(self) -> None:
         state_root = self.root / "admin" / "yahoo-batch-quote-history"
         store = self.fetcher.YahooBatchStateStore(state_root, self.fetcher.OUT_DIR)
         payload = self.fetcher.decorate_finance_payload(
@@ -2543,9 +2460,9 @@ class FetchYfFinanceSelectionTest(unittest.TestCase):
         store.record_success("AAPL", payload, run_one, ["global_scouter"], {"attempts_used": 1, "failures": [], "latency_ms": 1})
         store.record_skip("AAPL", payload, run_two, ["global_scouter"])
         index = store.rebuild_index({"AAPL"}, run_two)
-        self.assertEqual(index["current_attempt"]["attempted"], 1)
-        self.assertEqual(index["current_attempt"]["skipped"], 1)
-        self.assertEqual(index["current_attempt"]["fetch_attempts"], 0)
+        self.assertEqual(index["current_results"]["attempted"], 1)
+        self.assertEqual(index["current_results"]["skipped"], 1)
+        self.assertEqual(index["current_results"]["fetch_attempts"], 0)
 
         legacy = {
             "schema_version": "yf-finance/v2", "ticker": "MSFT",
@@ -2561,9 +2478,10 @@ class FetchYfFinanceSelectionTest(unittest.TestCase):
         self.assertEqual(msft["current"]["quote_as_of"], "2026-07-10T20:00:00Z")
         self.assertEqual(msft["current"]["source_as_of"], "2026-07-10")
         run_three = self._run("terminated-run", attempt=1)
-        terminated = store.rebuild_index({"AAPL", "MSFT"}, run_three, batch_failure="batch terminated")
-        self.assertEqual(terminated["current_attempt"]["attempted"], 1)
-        self.assertEqual(terminated["current_attempt"]["failed"], 1)
+        next_process = self.fetcher.YahooBatchStateStore(state_root, self.fetcher.OUT_DIR)
+        terminated = next_process.rebuild_index({"AAPL", "MSFT"}, run_three, batch_failure="batch terminated")
+        self.assertEqual(terminated["current_results"]["attempted"], 1)
+        self.assertEqual(terminated["current_results"]["failed"], 1)
         self.assertEqual(terminated["latest_failure"]["scope"], "batch")
 
     def test_bootstrap_reclassifies_source_stale_payload_as_exact_lkg_before_selection(self) -> None:
@@ -2607,7 +2525,7 @@ class FetchYfFinanceSelectionTest(unittest.TestCase):
         self.assertEqual(state["lkg"]["payload_sha256"], canonical_hash)
         self.assertEqual(lkg.read_bytes(), canonical_bytes)
         self.assertEqual(store.retry_tickers({"GOOGL"}), {"GOOGL"})
-        self.assertFalse(store.recovery_candidate_advances("GOOGL", payload))
+        self.assertTrue(store.recovery_candidate_advances("GOOGL", payload))
 
         index = store.rebuild_index({"GOOGL"}, self._run("classification"))
         self.assertEqual(index["counts"]["stale"], 1)
@@ -2773,7 +2691,7 @@ class FetchYfFinanceSelectionTest(unittest.TestCase):
         self.assertEqual(observation["validation_status"], "invalid")
         self.assertFalse((self.root / "state" / "providers").exists())
 
-    def test_deferred_enrolled_validation_failure_has_no_side_effect_before_batch_proof(self) -> None:
+    def test_deferred_enrolled_validation_failure_has_no_side_effect_before_batch_validation(self) -> None:
         self.fetcher.DATA_SUPPLY_STATE_ROOT = self.root / "state"
         truth = self.fetcher.OUT_DIR / "AAPL.json"
         truth.parent.mkdir(parents=True)
@@ -2794,7 +2712,7 @@ class FetchYfFinanceSelectionTest(unittest.TestCase):
             path for path in (self.root / "state").rglob("*")
             if path.is_file() and not any(part.startswith(".") for part in path.relative_to(self.root / "state").parts)
         ]
-        self.assertEqual(state_files, [], "deferred stock-detail validation cannot publish failure evidence before batch proof")
+        self.assertEqual(state_files, [], "deferred stock-detail validation cannot publish failure evidence before batch integrity validation")
 
     def test_enrolled_merge_preserves_heavy_fields_but_never_fills_quote_from_old_payload(self) -> None:
         existing = {
@@ -2843,7 +2761,7 @@ class FetchYfFinanceSelectionTest(unittest.TestCase):
         self.assertTrue((self.fetcher.OUT_DIR / "MSFT.json").exists())
         self.assertTrue((self.fetcher.OUT_DIR / "_summary.json").exists())
 
-    def test_failed_batch_attempt_persists_run_evidence_and_holds_canonical_hash(self) -> None:
+    def test_failed_batch_persists_honest_failure_and_holds_canonical_hash(self) -> None:
         truth = self.fetcher.OUT_DIR / "AAPL.json"
         write_json(
             truth,
@@ -2869,8 +2787,7 @@ class FetchYfFinanceSelectionTest(unittest.TestCase):
         original_argv, original_stdout = sys.argv, sys.stdout
         try:
             sys.argv = [
-                "fetch-yf-finance.py", "--tickers", "AAPL", "--record-batch-state",
-                "--run-id", "12345", "--run-attempt", "2", "--event-name", "workflow_dispatch",
+                "fetch-yf-finance.py", "--tickers", "AAPL", "--record-batch-state", "--event-name", "workflow_dispatch",
                 "--sleep", "0", "--retries", "1",
             ]
             sys.stdout = io.StringIO()
@@ -2884,11 +2801,9 @@ class FetchYfFinanceSelectionTest(unittest.TestCase):
         state = json.loads((self.fetcher.YAHOO_BATCH_STATE_ROOT / "tickers" / "AAPL.json").read_text())
         index = json.loads((self.fetcher.YAHOO_BATCH_STATE_ROOT / "index.json").read_text())
         self.assertEqual(state["resolution_state"], "lkg_primary")
-        self.assertEqual(state["latest_failure"]["run_id"], "12345")
-        self.assertEqual(state["latest_failure"]["run_attempt"], 2)
-        self.assertEqual(index["current_attempt"]["attempted"], 1)
-        self.assertEqual(index["current_attempt"]["failed"], 1)
-        self.assertEqual(index["current_attempt"]["fetch_attempts"], 2)
+        self.assertEqual(index["current_results"]["attempted"], 1)
+        self.assertEqual(index["current_results"]["failed"], 1)
+        self.assertEqual(index["current_results"]["fetch_attempts"], 2)
 
     def test_fresh_enrolled_cache_skip_emits_no_observation(self) -> None:
         self.fetcher.DATA_SUPPLY_STATE_ROOT = self.root / "state"
@@ -2957,7 +2872,6 @@ assert callable(namespace["load_universe"])
         run_step = workflow[workflow.index("      - name: Run batch fetch"):quarter_start]
         self.assertIn("id: fetch_batch", run_step)
         self.assertIn("--record-batch-state", run_step)
-        self.assertIn("--run-id", run_step)
         self.assertIn("--natural-run", run_step)
         self.assertIn("--all-shards-run", run_step)
         # One scheduled ETF slot a day, Sunday-Friday at 00:07 UTC: six runs a
@@ -3278,7 +3192,7 @@ class YahooChartQuoteTest(unittest.TestCase):
         original_argv, original_stdout = sys.argv, sys.stdout
         try:
             sys.argv = ["fetch-yf-finance.py", "--tickers", "AVB", "--profile", "daily", "--merge-existing",
-                        "--record-batch-state", "--run-id", "chart-rejection", "--run-attempt", "1",
+                        "--record-batch-state",
                         "--event-name", "workflow_dispatch", "--max-age-hours", "0", "--sleep", "0", "--retries", "0"]
             sys.stdout = io.StringIO()
             with self.assertRaises(SystemExit): self.fetcher.main()
@@ -3343,7 +3257,7 @@ class YahooChartQuoteTest(unittest.TestCase):
         original_argv, original_stdout = sys.argv, sys.stdout
         try:
             sys.argv = ["fetch-yf-finance.py", "--tickers", ticker, "--profile", "daily", "--merge-existing",
-                        "--record-batch-state", "--run-id", "chart-merge", "--run-attempt", "1",
+                        "--record-batch-state",
                         "--event-name", "workflow_dispatch", "--max-age-hours", "0", "--sleep", "0", "--retries", "0"]
             sys.stdout = io.StringIO()
             try: self.fetcher.main()

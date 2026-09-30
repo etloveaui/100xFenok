@@ -146,11 +146,12 @@ class ResolveEtfDetailCandidatesTest(unittest.TestCase):
         state.store_provider_object(observation=fallback, payload=raw)
         state.record_observation(fallback)
         resolve_entities(state, entities=["VYMI"], decided_at="2026-07-15T22:01:00Z")
-        policy = repo / "data/admin/lane-commit-manifest.json"
-        policy.write_text(json.dumps({"schema_version": "lane-commit-manifest/v1", "workflows": {
+        registry = repo / "scripts/lib/lane-registry.mjs"
+        registry.parent.mkdir(parents=True, exist_ok=True)
+        registry.write_text("export const LANE_REGISTRY = " + json.dumps({"workflow_policies": {
             stockanalysis_artifact.DEFAULT_WORKFLOW: {"exclude": [], "stages": {"always_if_exists": [
                 {"kind": "directory", "path": "data/stockanalysis"},
-                {"kind": "directory", "path": "data/admin/data-supply-state"}]}}}}))
+                {"kind": "directory", "path": "data/admin/data-supply-state"}]}}}}) + ";\n")
 
         def git(*args):
             return subprocess.check_output(["git", *args], cwd=repo, text=True).strip()
@@ -165,7 +166,7 @@ class ResolveEtfDetailCandidatesTest(unittest.TestCase):
 
         base = save_fixture()
         outcomes = []
-        for count, run_id in enumerate(("901", "902", "903"), 1):
+        for count, run_id in enumerate(("901",), 1):
             stamp = f"2026-07-15T23:0{count}:00Z"
             candidate = self.root / f"candidate-{run_id}"
             artifact = self.root / f"artifact-{run_id}"
@@ -207,17 +208,17 @@ class ResolveEtfDetailCandidatesTest(unittest.TestCase):
                 main()
             printed = json.loads(stdout.getvalue())
             active = state.read_active_domain("etf_detail")
-            outcomes.append((printed["results"][0]["provider"], active["recovery"]["VYMI"]["consecutive_green"]))
+            outcomes.append(printed["results"][0]["provider"])
             base = save_fixture()
         return outcomes
 
-    def test_real_artifact_apply_and_cli_recover_after_three_independent_manual_acquisitions(self):
+    def test_real_artifact_apply_and_cli_recovers_on_first_valid_manual_acquisition(self):
         self.assertEqual(self.manual_artifact_cli_sequence(),
-                         [("yahoo_finance", 1), ("yahoo_finance", 2), ("stockanalysis", 3)])
+                         ["stockanalysis"])
 
     def test_real_artifact_cli_rejects_wrong_provider_truth_root(self):
         self.assertEqual(self.manual_artifact_cli_sequence(wrong_truth_root=True),
-                         [("yahoo_finance", 0), ("yahoo_finance", 0), ("yahoo_finance", 0)])
+                         ["yahoo_finance"])
 
     def publish_pair(
         self,
@@ -502,12 +503,11 @@ class ResolveEtfDetailCandidatesTest(unittest.TestCase):
             entity=entity,
             current={entity: selected},
             lkg={},
-            recovery={entity: {"consecutive_green": 0, "last_transition": "legacy_migration"}},
+            recovery={entity: {"last_transition": "legacy_migration"}},
             candidate_observations=[row],
             expected_active_transaction_id=active["transaction_id"],
             transition="legacy_migration",
             reason_code="legacy_migration_fallback_lkg",
-            recovery_green_count=0,
             decided_at=source_as_of,
         )
         self.store.commit_prepared("etf_detail", transaction_id)
@@ -592,7 +592,37 @@ class ResolveEtfDetailCandidatesTest(unittest.TestCase):
 
         entity = "ABXB"
         self.seed_legacy_migration_lkg_fallback(entity, "2026-08-01T00:00:00Z")
-        self.publish_pair(entity, "2026-08-20T00:00:00Z", "2026-08-20T00:10:00Z")
+        # A refresh must carry the real provider/detail family and truth-root
+        # bytes; the legacy selected ref remains a readable provider_lkg.
+        import importlib.util
+        from datetime import datetime
+        spec = importlib.util.spec_from_file_location("legacy_refresh_fetcher", SCRIPT_DIR / "fetch-stockanalysis.py")
+        fetcher = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(fetcher)
+        source = "2026-08-20T00:00:00Z"
+        observed = "2026-08-20T00:10:00Z"
+        provider = fetcher.build_yf_payload(entity, {"info": {
+            "symbol": entity, "quoteType": "ETF", "currentPrice": 25,
+            "regularMarketTime": int(datetime.fromisoformat(source.replace("Z", "+00:00")).timestamp()),
+        }, "history_1y": []}, observed)
+        detail = fetcher.yahoo_etf_payload(entity, provider)
+        raw = fetcher.json_payload_bytes(detail)
+        primary, _ = observation(provider="stockanalysis", entity=entity,
+                                 source_as_of=None, observed_at=observed, valid=False)
+        fallback, _ = observation(provider="yahoo_finance", entity=entity,
+                                  source_as_of=source, observed_at=observed, valid=True)
+        fallback["payload_sha256"] = hashlib.sha256(raw).hexdigest()
+        fallback.pop("event_id")
+        fallback["event_id"] = deterministic_event_id("observation", fallback)
+        self.store.provider_truth_root = self.root
+        for relative, payload in ((fallback["provider_path"], raw),
+                                  (f"data/yf/finance/{entity}.json", fetcher.json_payload_bytes(provider))):
+            path = self.root / relative
+            path.parent.mkdir(parents=True, exist_ok=True)
+            path.write_bytes(payload)
+        self.store.record_observation(primary)
+        self.store.store_provider_object(observation=fallback, payload=raw)
+        self.store.record_observation(fallback)
         result = resolve_entities(
             self.store,
             entities=[entity],
@@ -1219,7 +1249,7 @@ class ResolveEtfDetailCandidatesTest(unittest.TestCase):
             "transaction_id": "tx-unexpected",
             "current": {},
             "lkg": {},
-            "recovery": {"AKAF": {"consecutive_green": 0, "last_transition": "none"}},
+            "recovery": {"AKAF": {"last_transition": "none"}},
         }
         with mock.patch.object(
             resolve_etf_detail_candidates,
@@ -1290,7 +1320,6 @@ class ResolveEtfDetailCandidatesTest(unittest.TestCase):
         reconcile_call = "node scripts/sync-public-data.mjs --write"
         overrides_call = "node sync-static-overrides.mjs"
         mirror_reconcile_call = "npm run reconcile:data-supply-public-mirror"
-        demand_refresh_call = "node scripts/refresh-cloud-data-plane-migration-demand.mjs"
         self.assertNotIn(resolve_call, workflow.split("  publish-stockanalysis:\n", 1)[0])
         self.assertIn("group: fenok-data-writer-refs/heads/main", publish)
         self.assertLess(publish.index("audit-stage"), publish.index(resolve_call))
@@ -1300,10 +1329,6 @@ class ResolveEtfDetailCandidatesTest(unittest.TestCase):
         self.assertLess(publish.index(build_call), publish.index(reconcile_call))
         self.assertLess(publish.index(reconcile_call), publish.index(overrides_call))
         self.assertLess(publish.index(overrides_call), publish.index(mirror_reconcile_call))
-        self.assertLess(publish.index(mirror_reconcile_call), publish.index(demand_refresh_call))
-        self.assertIn("--candidate=stockanalysis_etf_detail", publish)
-        self.assertIn("scripts/fixtures/cloud-data-plane/etf-migration-demand.json", publish)
-        self.assertLess(publish.index(demand_refresh_call), publish.index("git commit"))
         self.assertLess(publish.index(mirror_reconcile_call), publish.index("git commit"))
         self.assertNotIn("fetched_at", (SCRIPT_DIR / "resolve_etf_detail_candidates.py").read_text())
 

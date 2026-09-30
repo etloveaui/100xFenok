@@ -63,29 +63,6 @@ class StockanalysisFetcherFixtureTest(unittest.TestCase):
     def setUpClass(cls) -> None:
         cls.fetcher = load_fetcher_module()
 
-    def test_remote_etf_binding_requires_matching_first_attempt_and_complete_fresh_payload(self):
-        stamp = "2026-07-15T23:00:00Z"
-        payload = {"schema_version": "stockanalysis/v1", "source": "stockanalysis", "asset_type": "etf",
-                   "ticker": "VYMI", "source_as_of": "2026-07-15T00:00:00Z", "fetched_at": stamp,
-                   "normalized": {"overview": {"aum": 1}, "holdings": [{"ticker": "AAPL", "weight": 1}]},
-                   "raw": {"quote": {"td": "2026-07-15"}}}
-        run = {"run_id": "901", "run_attempt": 1, "event_name": "workflow_dispatch", "observed_at": stamp}
-        environment = {"GITHUB_ACTIONS": "true", "GITHUB_RUN_ID": "901", "GITHUB_RUN_ATTEMPT": "1",
-                       "GITHUB_EVENT_NAME": "workflow_dispatch"}
-        with patch.dict(os.environ, environment, clear=True):
-            proof = self.fetcher.bind_etf_remote_acquisition("VYMI", payload, run, stamp, stamp)
-            self.assertEqual(proof["run_id"], "901")
-            self.assertEqual(proof["payload_sha256"], hashlib.sha256(
-                (json.dumps(payload, ensure_ascii=False, indent=2) + "\n").encode()).hexdigest())
-            for change in ({"run_id": "local"}, {"run_id": "902"}, {"run_attempt": 2}):
-                with self.subTest(run=change):
-                    self.assertIsNone(self.fetcher.bind_etf_remote_acquisition("VYMI", payload, {**run, **change}, stamp, stamp))
-            for change in ({"detail_status": "stockanalysis_partial"}, {"noFetch": True},
-                           {"fetched_at": "2026-07-14T23:00:00Z"}, {"source_as_of": "2026-07-16T00:00:00Z"}):
-                with self.subTest(payload=change):
-                    self.assertIsNone(self.fetcher.bind_etf_remote_acquisition("VYMI", {**payload, **change}, run, stamp, stamp))
-        with patch.dict(os.environ, {}, clear=True):
-            self.assertIsNone(self.fetcher.bind_etf_remote_acquisition("VYMI", payload, run, stamp, stamp))
 
     def test_scheduled_etf_retry_fairly_includes_selected_fallback_debt_with_primary_canonical(self):
         class Store:
@@ -94,7 +71,7 @@ class StockanalysisFetcherFixtureTest(unittest.TestCase):
                 return {"AAA"} if kind == "etf" else set()
 
         selected = {"current": {"SLON": {"provider": "yahoo_finance"}, "PRIMARY": {"provider": "stockanalysis"}},
-                    "recovery": {"SLON": {"consecutive_green": 1}}}
+                    "recovery": {"SLON": {"last_transition": "initial_fallback"}}}
         latest = {"AAA": {"observed_at": "2026-07-15T23:00:00Z"},
                   "SLON": {"observed_at": "2026-07-14T23:00:00Z"}}
         result = self.fetcher.select_natural_recovery_targets(
@@ -141,11 +118,9 @@ class StockanalysisFetcherFixtureTest(unittest.TestCase):
             self.assertEqual(len(rows), 1)
             self.assertEqual(rows[0]["observation_origin"], "rebuild")
             self.assertEqual(rows[0]["collection_origin"], "manual")
-            self.assertEqual(rows[0]["etf_acquisition"]["run_id"], "901")
             self.assertEqual(rows[0]["payload_sha256"], hashlib.sha256(canonical.read_bytes()).hexdigest())
             producer = json.loads((store.root / "states/etf/VYMI.json").read_text())
             self.assertFalse(producer["retry"])
-            self.assertFalse(producer["last_attempt"]["natural"])
 
     def test_etf_live_fetch_does_not_overwrite_newer_canonical_or_future_provider_date(self):
         stamp = "2026-07-15T23:00:00Z"
@@ -173,7 +148,7 @@ class StockanalysisFetcherFixtureTest(unittest.TestCase):
                                            returned_error=False, pending=False, floor=None,
                                            foreign=False, fail_detail_write=False, enabled=True,
                                            primary_kind="fresh", remote=True, run_attempt=1, unbound=False,
-                                           event_name="workflow_dispatch", cached=False):
+                                           event_name="workflow_dispatch", cached=False, metadata_error=False):
         from data_supply_resolver import DataSupplyResolver
         from resolve_etf_detail_candidates import resolve_entities
         stamp = "2026-09-28T10:00:00Z"
@@ -220,6 +195,9 @@ class StockanalysisFetcherFixtureTest(unittest.TestCase):
                 store = self.fetcher.data_supply_store(provider_truth_root=root)
                 DataSupplyResolver(store).resolve(domain="etf_detail", entity="SLON", observations=[row],
                                                   decided_at="2026-07-09T00:01:00Z")
+                if pending:
+                    self.fetcher.run_yahoo_etf_fallback_controlled_failure(
+                        "SLON", {"event_name": "workflow_dispatch", "observed_at": stamp})
                 if floor is not None:
                     newer = {"info": {"symbol": "SLON", "quoteType": "ETF", "currentPrice": 26,
                              "regularMarketTime": int(datetime.fromisoformat(floor.replace("Z", "+00:00")).timestamp())}}
@@ -228,6 +206,12 @@ class StockanalysisFetcherFixtureTest(unittest.TestCase):
                     self.fetcher.write_json(detail_path, {**old_detail, "ticker": "FOREIGN"})
                 before = (raw_path.read_bytes(), detail_path.read_bytes())
                 original_replace = os.replace
+                original_observation = self.fetcher.record_etf_detail_observation
+
+                def record_observation(**kwargs):
+                    if metadata_error and kwargs.get("provider") == "yahoo_finance":
+                        raise RuntimeError("injected observation persistence failure")
+                    return original_observation(**kwargs)
 
                 def replace(source, target):
                     if fail_detail_write and Path(target) == detail_path:
@@ -240,8 +224,8 @@ class StockanalysisFetcherFixtureTest(unittest.TestCase):
                      patch.object(self.fetcher, "now_iso", return_value=stamp), \
                      patch.object(self.fetcher, "fetch_etf", return_value=primary), \
                      patch.object(self.fetcher, "load_yf_finance_module", return_value=YahooModule), \
-                     patch.object(self.fetcher, "list_yahoo_etf_fallback_retry_targets", return_value=["SLON"] if pending else []), \
-                     patch.object(self.fetcher.os, "replace", side_effect=replace):
+                     patch.object(self.fetcher.os, "replace", side_effect=replace), \
+                     patch.object(self.fetcher, "record_etf_detail_observation", side_effect=record_observation):
                     result = self.fetcher.run_one("etf", "SLON", 1, False, yf_fallback=enabled,
                         collection_origin="natural" if event_name == "schedule" else "manual",
                         recovery_run={"run_id": "901", "run_attempt": run_attempt, "event_name": event_name, "observed_at": stamp})
@@ -251,6 +235,7 @@ class StockanalysisFetcherFixtureTest(unittest.TestCase):
                            for line in path.read_text().splitlines()]
                 return {"result": result, "resolved": resolved, "active": active, "history": history,
                         "before": before, "after": (raw_path.read_bytes(), detail_path.read_bytes()),
+                        "adapter_state": json.loads((root / "data/admin/yahoo_etf_fallback/index.json").read_text()) if pending else None,
                         "primary": json.loads((self.fetcher.OUT_DIR / "etfs/SLON.json").read_text())}
             finally:
                 self.fetcher.install_candidate_outputs(original_outputs)
@@ -260,37 +245,44 @@ class StockanalysisFetcherFixtureTest(unittest.TestCase):
         self.assertEqual(case["result"]["fallback_refresh_status"], "ok")
         self.assertEqual(case["resolved"]["results"][0]["provider"], "yahoo_finance")
         self.assertEqual(case["active"]["current"]["SLON"]["source_as_of"], "2026-09-25T20:00:00Z")
-        self.assertEqual(case["active"]["recovery"]["SLON"]["consecutive_green"], 0)
         self.assertEqual(case["primary"]["detail_status"], "stockanalysis_partial")
         self.assertEqual(case["primary"]["partial_reason_codes"], ["holdings_surface_fallback_overview", "holdings_countries_unavailable"])
         yahoo = max((row for row in case["history"] if row["provider"] == "yahoo_finance"),
                     key=lambda row: datetime.fromisoformat(row["observed_at"].replace("Z", "+00:00")))
         self.assertEqual(yahoo["observation_origin"], "rebuild")
         self.assertEqual(yahoo["collection_origin"], "manual")
-        self.assertEqual(yahoo["etf_acquisition"]["run_id"], "901")
         self.assertEqual(yahoo["payload_sha256"], hashlib.sha256(case["after"][1]).hexdigest())
 
     def test_partial_primary_selected_yahoo_keeps_original_bytes_when_refresh_is_unsafe_or_fails(self):
         cases = ({"yahoo_source": "2026-09-28T20:00:00Z"}, {"yahoo_source": "2026-07-07T20:00:00Z"},
                  {"floor": "2026-09-26T20:00:00Z"}, {"foreign": True}, {"returned_error": True},
-                 {"pending": True}, {"fail_detail_write": True}, {"enabled": False})
+                 {"fail_detail_write": True}, {"enabled": False})
         for kwargs in cases:
             with self.subTest(kwargs=kwargs):
                 case = self.partial_primary_selected_yahoo_case(**kwargs)
                 self.assertEqual(case["after"], case["before"])
                 self.assertEqual(case["active"]["current"]["SLON"]["source_as_of"], "2026-07-08T20:00:00Z")
-                self.assertEqual(case["active"]["recovery"]["SLON"]["consecutive_green"], 0)
                 self.assertEqual(case["primary"]["detail_status"], "stockanalysis_partial")
 
-    def test_selected_yahoo_refresh_rejects_local_rerun_or_unbound_before_publication_and_observation(self):
-        for kwargs in ({"remote": False}, {"run_attempt": 2}, {"unbound": True}, {"cached": True}):
-            with self.subTest(kwargs=kwargs):
-                case = self.partial_primary_selected_yahoo_case(**kwargs)
-                self.assertEqual(case["result"]["fallback_refresh_status"], "failed")
-                self.assertEqual(case["after"], case["before"])
-                yahoo = [row for row in case["history"] if row["provider"] == "yahoo_finance"]
-                self.assertEqual(len(yahoo), 1)
-                self.assertEqual(case["active"]["current"]["SLON"]["source_as_of"], "2026-07-08T20:00:00Z")
+
+    def test_pending_yahoo_retry_accepts_valid_manual_acquisition_through_existing_publisher(self):
+        case = self.partial_primary_selected_yahoo_case(pending=True, remote=False, run_attempt=2)
+        self.assertEqual(case["result"]["fallback_refresh_status"], "ok")
+        self.assertEqual(case["active"]["current"]["SLON"]["provider"], "yahoo_finance")
+        self.assertEqual(case["active"]["current"]["SLON"]["source_as_of"], "2026-09-25T20:00:00Z")
+
+    def test_committed_adapter_pair_survives_downstream_observation_failure(self):
+        case = self.partial_primary_selected_yahoo_case(pending=True, metadata_error=True)
+        self.assertEqual(case["result"]["fallback_refresh_status"], "failed")
+        self.assertIn("injected observation persistence failure", case["result"]["fallback_refresh_error"])
+        provider, detail = (json.loads(raw) for raw in case["after"])
+        self.assertEqual(detail["source_as_of"], "2026-09-25T20:00:00Z")
+        self.assertEqual(detail["raw"]["yf"], provider["data"])
+        item = case["adapter_state"]["items"][self.fetcher.yahoo_etf_fallback_key("SLON")]
+        self.assertFalse(item["retry"])
+        self.assertEqual(item["current"]["payload_sha256"], hashlib.sha256(case["after"][1]).hexdigest())
+        self.assertEqual(item["current"]["source_as_of"], detail["source_as_of"])
+        self.assertEqual(case["adapter_state"]["retry_set"], [])
 
     def test_real_fetch_path_refreshes_yahoo_when_partial_primary_is_stale_or_dateless(self):
         for kind in ("stale", "dateless"):
@@ -299,7 +291,6 @@ class StockanalysisFetcherFixtureTest(unittest.TestCase):
                 self.assertEqual(case["result"]["fallback_refresh_status"], "ok")
                 self.assertEqual(case["active"]["current"]["SLON"]["provider"], "yahoo_finance")
                 self.assertEqual(case["active"]["current"]["SLON"]["source_as_of"], "2026-09-25T20:00:00Z")
-                self.assertEqual(case["active"]["recovery"]["SLON"]["consecutive_green"], 0)
                 self.assertEqual(case["primary"]["detail_status"], "stockanalysis_partial")
 
     def test_scheduled_partial_primary_refreshes_yahoo_without_natural_recovery_credit(self):
@@ -307,7 +298,6 @@ class StockanalysisFetcherFixtureTest(unittest.TestCase):
         self.assertEqual(case["result"]["fallback_refresh_status"], "ok")
         self.assertEqual(case["active"]["current"]["SLON"]["provider"], "yahoo_finance")
         self.assertEqual(case["active"]["current"]["SLON"]["source_as_of"], "2026-09-25T20:00:00Z")
-        self.assertEqual(case["active"]["recovery"]["SLON"]["consecutive_green"], 0)
 
     def complete_primary_preservation_case(self, *, enabled=True, fallback_error=False,
                                            new_complete=False, old_partial=False, fallback_source="2026-09-25T20:00:00Z",
@@ -404,11 +394,10 @@ class StockanalysisFetcherFixtureTest(unittest.TestCase):
         self.assertEqual(case["diagnostic"]["source_as_of"], "2026-09-25T20:00:00Z")
         self.assertNotIn("payload_available", case["diagnostic"])
         yahoo = [row for row in case["history"] if row["provider"] == "yahoo_finance" and row["validation_status"] == "valid"][-1]
-        self.assertEqual(yahoo["etf_acquisition"]["run_id"], "950")
         self.assertEqual(yahoo["observation_origin"], "rebuild")
 
     def test_complete_primary_partial_response_without_valid_fallback_preserves_full_snapshot_and_diagnostic(self):
-        for kwargs in ({"enabled": False}, {"fallback_error": True}, {"remote": False}, {"run_attempt": 2},
+        for kwargs in ({"enabled": False}, {"fallback_error": True},
                        {"fallback_source": "2026-09-23T20:00:00Z"}, {"fallback_source": "2026-09-28T20:00:00Z"}):
             with self.subTest(kwargs=kwargs):
                 case = self.complete_primary_preservation_case(**kwargs)
@@ -471,9 +460,7 @@ class StockanalysisFetcherFixtureTest(unittest.TestCase):
         self.assertEqual(primary["observation_origin"], "rebuild")
         self.assertNotIn("payload_available", primary)
         yahoo = [row for row in case["history"] if row["provider"] == "yahoo_finance" and row["validation_status"] == "valid"][-1]
-        self.assertEqual(yahoo["etf_acquisition"]["run_id"], "950")
         self.assertEqual(yahoo["collection_origin"], "manual")
-        self.assertEqual(case["active"]["recovery"]["AFK"]["consecutive_green"], 0)
 
     def test_initial_partial_primary_prefers_bound_yahoo_without_inventing_primary_credit(self):
         case = self.complete_primary_preservation_case(no_current=True)
@@ -481,20 +468,17 @@ class StockanalysisFetcherFixtureTest(unittest.TestCase):
         self.assertEqual(json.loads(case["after"]), case["candidate"])
         self.assertEqual(case["active"]["current"]["AFK"]["provider"], "yahoo_finance")
         self.assertEqual(case["active"]["current"]["AFK"]["source_as_of"], "2026-09-25T20:00:00Z")
-        self.assertEqual(case["active"]["recovery"]["AFK"]["consecutive_green"], 0)
         yahoo = [row for row in case["history"] if row["provider"] == "yahoo_finance" and row["validation_status"] == "valid"][-1]
-        self.assertEqual(yahoo["etf_acquisition"]["run_id"], "950")
         self.assertEqual(yahoo["observation_origin"], "rebuild")
 
     def test_existing_partial_primary_rejects_unbound_yahoo_and_checks_primary_floor_before_fetch(self):
-        for kwargs in ({"remote": False}, {"run_attempt": 2}, {"cached": True}, {"fallback_error": True}):
+        for kwargs in ({"fallback_error": True},):
             with self.subTest(kwargs=kwargs):
                 case = self.complete_primary_preservation_case(old_partial=True, **kwargs)
                 self.assertEqual(case["active"]["current"]["AFK"]["provider"], "stockanalysis")
                 self.assertEqual(case["selected_payload"], case["candidate"])
                 self.assertFalse(any(row["provider"] == "yahoo_finance" and row["validation_status"] == "valid"
                                      for row in case["history"]))
-                self.assertEqual(case["active"]["recovery"]["AFK"]["consecutive_green"], 0)
         case = self.complete_primary_preservation_case(old_partial=True, primary_source="2026-09-23T20:00:00Z")
         self.assertEqual(case["after"], case["before"])
         self.assertEqual(case["yahoo_calls"], [])
@@ -570,85 +554,14 @@ class StockanalysisFetcherFixtureTest(unittest.TestCase):
                 "default CLI run must never create the public mirror",
             )
 
-    def test_stock_financial_detection_requires_exact_natural_schedule_and_basket(self) -> None:
-        def args(**overrides):
-            values = {
-                "require_stock_financial_pair": True,
-                "natural_run": True,
-                "event_name": "schedule",
-                "event_schedule": "20 21 * * *",
-            }
-            values.update(overrides)
-            return type("Args", (), values)()
 
-        basket = list(self.fetcher.STOCK_FINANCIAL_DETECTION_TICKERS)
-        self.assertTrue(self.fetcher.should_emit_stock_financial_detection(args(), basket))
-        self.assertFalse(self.fetcher.should_emit_stock_financial_detection(
-            args(event_name="workflow_dispatch", event_schedule=""), basket
-        ))
-        self.assertFalse(self.fetcher.should_emit_stock_financial_detection(
-            args(event_schedule="50 23 * * 1-5"), basket
-        ))
-        self.assertFalse(self.fetcher.should_emit_stock_financial_detection(
-            args(), [*basket[:-1], "AMD"]
-        ))
-        self.assertFalse(self.fetcher.should_emit_stock_financial_detection(
-            args(require_stock_financial_pair=False), basket
-        ))
 
-    def test_etf_universe_detection_requires_exact_natural_weekly_schedule(self) -> None:
-        def args(**overrides):
-            values = {
-                "discover_etf_universe": True,
-                "natural_run": True,
-                "event_name": "schedule",
-                "event_schedule": self.fetcher.STOCKANALYSIS_ETF_UNIVERSE_DETECTION_SCHEDULE,
-            }
-            values.update(overrides)
-            return Namespace(**values)
-
-        self.assertTrue(self.fetcher.should_emit_stockanalysis_etf_universe_detection(args()))
-        for overrides in (
-            {"discover_etf_universe": False},
-            {"natural_run": False},
-            {"event_name": "workflow_dispatch"},
-            {"event_schedule": "50 23 * * 1-5"},
-        ):
-            with self.subTest(overrides=overrides):
-                self.assertFalse(self.fetcher.should_emit_stockanalysis_etf_universe_detection(args(**overrides)))
-
-    def test_etf_detail_detection_requires_natural_etf_schedule(self) -> None:
-        def args(**overrides):
-            values = {
-                "natural_run": True,
-                "event_name": "schedule",
-                "event_schedule": "50 23 * * 1-5",
-            }
-            values.update(overrides)
-            return Namespace(**values)
-
-        self.assertTrue(self.fetcher.should_emit_stockanalysis_etf_detail_detection(args(), ["SPY"]))
-        self.assertTrue(self.fetcher.should_emit_stockanalysis_etf_detail_detection(
-            args(event_schedule="20 23 * * 0"), ["SPY"]
-        ))
-        for overrides, etfs in (
-            ({"natural_run": False}, ["SPY"]),
-            ({"event_name": "workflow_dispatch"}, ["SPY"]),
-            ({"event_schedule": "20 21 * * *"}, ["SPY"]),
-            ({}, []),
-        ):
-            with self.subTest(overrides=overrides, etfs=etfs):
-                self.assertFalse(self.fetcher.should_emit_stockanalysis_etf_detail_detection(args(**overrides), etfs))
 
     def test_etf_universe_payload_keeps_provider_date_unstamped(self) -> None:
         original_fetch = self.fetcher.fetch_text_response
         original_parse = self.fetcher.parse_etf_universe_page
         original_enrich = self.fetcher.enrich_etf_records
         original_now = self.fetcher.now_iso
-        original_tracker = self.fetcher.ATTEMPT_TRACKER
-        tracker = self.fetcher.StockAnalysisAttemptTracker()
-        tracker.configure(active=False, yahoo_enabled=False, run_id="fixture", run_attempt=1)
-        self.fetcher.ATTEMPT_TRACKER = tracker
         self.fetcher.fetch_text_response = lambda _path, _timeout: ("<html></html>", 200)
         self.fetcher.parse_etf_universe_page = lambda _html, page: [
             {"ticker": "SPY", "name": "SPY ETF", "source_page": page}
@@ -662,7 +575,6 @@ class StockanalysisFetcherFixtureTest(unittest.TestCase):
             self.fetcher.parse_etf_universe_page = original_parse
             self.fetcher.enrich_etf_records = original_enrich
             self.fetcher.now_iso = original_now
-            self.fetcher.ATTEMPT_TRACKER = original_tracker
 
         self.assertIsNone(payload["source_as_of"])
         self.assertEqual(
@@ -898,108 +810,14 @@ module.main()
 
         self.assertEqual(checkout_snapshot(), before)
 
-    def test_attempt_tracker_emits_empty_yahoo_and_http_universe_and_surfaces_with_distinct_ids(self) -> None:
-        original_run = self.fetcher.subprocess.run
-        calls = []
-
-        def fake_run(args, **kwargs):
-            calls.append((args, kwargs))
-            return subprocess.CompletedProcess(args, 0)
-
-        self.fetcher.subprocess.run = fake_run
-        try:
-            tracker = self.fetcher.StockAnalysisAttemptTracker()
-            tracker.configure(active=True, yahoo_enabled=True, run_id="123", run_attempt=1)
-            tracker.start_universe()
-            tracker.record_universe_http(200, [{"ticker": "SPY", "name": "SPDR S&P 500 ETF Trust"}])
-            tracker.start_surfaces()
-            tracker.record_surface_http(200, {
-                "surface": "actions_recent",
-                "status": "ok",
-                "endpoint": "/actions/__data.json?x-sveltekit-invalidated=01",
-                "tables": 0,
-                "rows": 12,
-                "latency_ms": 42,
-            })
-            tracker.emit()
-        finally:
-            self.fetcher.subprocess.run = original_run
-
-        self.assertEqual(len(calls), 3)
-        by_lane = {
-            args[args.index("--lane") + 1]: (args, json.loads(kwargs["input"]))
-            for args, kwargs in calls
-        }
-        yahoo_args, yahoo = by_lane["yahoo_etf_fallback"]
-        universe_args, universe = by_lane["stockanalysis_etf_universe"]
-        surface_args, surfaces = by_lane["stockanalysis_surfaces"]
-        self.assertEqual(yahoo["candidate_count"], 0)
-        self.assertEqual(yahoo["observations"], [])
-        self.assertEqual(universe["observations"][0]["status_code"], 200)
-        self.assertEqual(surfaces["observations"][0]["status_code"], 200)
-        self.assertEqual(surfaces["observations"][0]["document"]["results"][0]["surface"], "actions_recent")
-        self.assertNotEqual(
-            yahoo_args[yahoo_args.index("--attempt-id") + 1],
-            universe_args[universe_args.index("--attempt-id") + 1],
-        )
-        self.assertNotEqual(
-            universe_args[universe_args.index("--attempt-id") + 1],
-            surface_args[surface_args.index("--attempt-id") + 1],
-        )
 
 
-    def test_yahoo_fallback_error_carries_its_cause(self) -> None:
-        """A failed Yahoo fallback must say WHY, bounded and redacted.
 
-        Run 30189547294 recorded execution=threw / exception_kind=unexpected /
-        rate_limited=false for 23 candidates and left no cause anywhere - not in
-        the log, not in the attempt shard. The lane was unexplainable even after
-        the repo-wide diagnostics sweep, because this emission path sits in a
-        file the sweep was told not to touch. `exception_kind` stays the stable
-        vocabulary the detection floor consumes; the identity travels beside it.
-        """
-        tracker = self.fetcher.StockAnalysisAttemptTracker()
-        tracker.active = True
-        tracker.record_yahoo_candidate()
-        tracker.record_yahoo_error(
-            entity="MISS",
-            exception_kind="unexpected",
-            retry_count=0,
-            latency_ms=12.5,
-            error=ValueError("yahoo chart payload missing regularMarketTime"),
-        )
-        observation = tracker.yahoo_observations[-1]
-        self.assertEqual(observation["exception_kind"], "unexpected")
-        self.assertEqual(observation["entity"], "MISS")
-        self.assertIn("ValueError", observation["failure_detail"])
-        self.assertIn("regularMarketTime", observation["failure_detail"])
-        self.assertLessEqual(len(observation["failure_detail"]), 320)
 
-    def test_yahoo_fallback_error_detail_redacts_credentials(self) -> None:
-        secret = "sk_live_A1b2C3d4E5f6G7h8I9j0"
-        tracker = self.fetcher.StockAnalysisAttemptTracker()
-        tracker.active = True
-        tracker.record_yahoo_candidate()
-        tracker.record_yahoo_error(
-            entity="MISS",
-            exception_kind="transport",
-            retry_count=1,
-            latency_ms=1.0,
-            error=ValueError(f"GET https://query.example.com/v8/chart?api_key={secret} failed"),
-        )
-        self.assertNotIn(secret, tracker.yahoo_observations[-1]["failure_detail"])
-
-    def test_yahoo_fallback_success_carries_no_failure_detail(self) -> None:
-        tracker = self.fetcher.StockAnalysisAttemptTracker()
-        tracker.active = True
-        tracker.record_yahoo_candidate()
-        tracker.record_yahoo_success({"ok": True}, retry_count=0, latency_ms=1.0)
-        self.assertNotIn("failure_detail", tracker.yahoo_observations[-1])
 
     def test_surface_unexpected_exception_after_success_emits_failure_observation(self) -> None:
         original_fetch = self.fetcher.fetch_table_surface_response
         original_run = self.fetcher.subprocess.run
-        original_tracker = self.fetcher.ATTEMPT_TRACKER
         original_dirs = self.fetcher.OUT_DIR, self.fetcher.PUBLIC_DIR
         calls = []
 
@@ -1020,8 +838,6 @@ module.main()
 
         with tempfile.TemporaryDirectory() as tmp:
             root = Path(tmp)
-            tracker = self.fetcher.StockAnalysisAttemptTracker()
-            tracker.configure(active=True, yahoo_enabled=False, run_id="surface-unexpected", run_attempt=1)
             recovery_store = self.fetcher.StockAnalysisRecoveryStateStore(
                 root / "data" / "admin" / "stockanalysis-recovery", root
             )
@@ -1033,7 +849,6 @@ module.main()
             }
             self.fetcher.fetch_table_surface_response = fake_fetch
             self.fetcher.subprocess.run = fake_run
-            self.fetcher.ATTEMPT_TRACKER = tracker
             self.fetcher.OUT_DIR = root / "data" / "stockanalysis"
             self.fetcher.PUBLIC_DIR = root / "public" / "stockanalysis"
             try:
@@ -1045,239 +860,15 @@ module.main()
                 unexpected_state = json.loads(
                     (recovery_store.root / "states" / "surface" / "ipos_statistics.json").read_text()
                 )
-                tracker.emit()
             finally:
                 self.fetcher.fetch_table_surface_response = original_fetch
                 self.fetcher.subprocess.run = original_run
-                self.fetcher.ATTEMPT_TRACKER = original_tracker
                 self.fetcher.OUT_DIR, self.fetcher.PUBLIC_DIR = original_dirs
 
         self.assertEqual(summary["counts"]["ok"], 1)
         self.assertEqual(summary["counts"]["failed"], 1)
         self.assertTrue(unexpected_state["retry"])
         self.assertIn("TypeError: controlled uncaught schema branch", unexpected_state["latest_failure"]["error"])
-        surface_envelope = next(
-            json.loads(kwargs["input"])
-            for args, kwargs in calls
-            if args[args.index("--lane") + 1] == "stockanalysis_surfaces"
-        )
-        self.assertEqual(surface_envelope["observations"][0]["status_code"], 200)
-        self.assertEqual(surface_envelope["observations"][1], {
-            "execution": "threw",
-            "exception_kind": "unexpected",
-        })
-
-    def test_attempt_tracker_does_not_mislabel_disabled_gap_as_empty(self) -> None:
-        original_run = self.fetcher.subprocess.run
-        calls = []
-
-        def fake_run(args, **kwargs):
-            calls.append((args, kwargs))
-            return subprocess.CompletedProcess(args, 0)
-
-        self.fetcher.subprocess.run = fake_run
-        try:
-            tracker = self.fetcher.StockAnalysisAttemptTracker()
-            tracker.configure(active=True, yahoo_enabled=False, run_id="124", run_attempt=1)
-            tracker.record_yahoo_candidate()
-            tracker.emit()
-        finally:
-            self.fetcher.subprocess.run = original_run
-
-        self.assertEqual(len(calls), 1)
-        envelope = json.loads(calls[0][1]["input"])
-        self.assertEqual(envelope["candidate_count"], 1)
-        self.assertFalse(envelope["fallback_enabled"])
-        self.assertEqual(envelope["observations"], [])
-
-    def test_attempt_tracker_emits_honest_empty_set_when_fallback_is_disabled(self) -> None:
-        original_run = self.fetcher.subprocess.run
-        calls = []
-
-        def fake_run(args, **kwargs):
-            calls.append((args, kwargs))
-            return subprocess.CompletedProcess(args, 0)
-
-        self.fetcher.subprocess.run = fake_run
-        try:
-            tracker = self.fetcher.StockAnalysisAttemptTracker()
-            tracker.configure(active=True, yahoo_enabled=False, run_id="125", run_attempt=1)
-            tracker.emit()
-        finally:
-            self.fetcher.subprocess.run = original_run
-
-        self.assertEqual(len(calls), 1)
-        envelope = json.loads(calls[0][1]["input"])
-        self.assertEqual(envelope["candidate_count"], 0)
-        self.assertFalse(envelope["fallback_enabled"])
-        self.assertEqual(envelope["observations"], [])
-
-    def test_attempt_tracker_does_not_emit_unattempted_etf_detail(self) -> None:
-        original_run = self.fetcher.subprocess.run
-        calls = []
-
-        def fake_run(args, **kwargs):
-            calls.append((args, kwargs))
-            return subprocess.CompletedProcess(args, 0)
-
-        self.fetcher.subprocess.run = fake_run
-        try:
-            tracker = self.fetcher.StockAnalysisAttemptTracker()
-            tracker.configure(active=True, yahoo_enabled=False, run_id="126", run_attempt=1)
-            tracker.start_etf_detail(0)
-            tracker.emit()
-        finally:
-            self.fetcher.subprocess.run = original_run
-
-        lanes = [args[args.index("--lane") + 1] for args, _kwargs in calls]
-        self.assertEqual(lanes, ["yahoo_etf_fallback"])
-
-    def test_yahoo_thrown_error_wiring_carries_the_cause_to_the_observation(self) -> None:
-        """The real fetch path must hand the exception to the tracker.
-
-        Testing the recorder alone is not enough: dropping `error=exc` at the
-        call site leaves every recorder test green while every production
-        failure goes back to being unexplainable. That is the same two-hop gap
-        that let a workflow-key removal break the publish job earlier today, so
-        this exercises fetch_yahoo_etf_fallback itself.
-        """
-        original_loader = self.fetcher.load_yf_finance_module
-        original_tracker = self.fetcher.ATTEMPT_TRACKER
-        original_state_root = self.fetcher.DATA_SUPPLY_STATE_ROOT
-        real_observations_root = original_state_root / "history" / "observations"
-        real_today_path = (
-            real_observations_root
-            / f"{datetime.now(timezone.utc).date().isoformat()}.jsonl"
-        )
-
-        def snapshot_real_observations() -> dict[str, bytes]:
-            if not real_observations_root.exists():
-                return {}
-            return {
-                path.relative_to(real_observations_root).as_posix(): path.read_bytes()
-                for path in sorted(real_observations_root.rglob("*"))
-                if path.is_file()
-            }
-
-        real_observations_before = snapshot_real_observations()
-        real_today_before = (
-            real_today_path.read_bytes() if real_today_path.exists() else None
-        )
-
-        class ThrowingYahooModule:
-            @staticmethod
-            def fetch_with_retry(*_args, **_kwargs):
-                raise ValueError("yahoo chart payload missing regularMarketTime")
-
-        tracker = self.fetcher.StockAnalysisAttemptTracker()
-        tracker.configure(active=True, yahoo_enabled=True, run_id="127", run_attempt=1)
-        tracker.record_yahoo_candidate()
-        self.fetcher.ATTEMPT_TRACKER = tracker
-        self.fetcher.load_yf_finance_module = lambda: ThrowingYahooModule
-        try:
-            with tempfile.TemporaryDirectory() as tmp:
-                self.fetcher.DATA_SUPPLY_STATE_ROOT = (
-                    Path(tmp) / "data" / "admin" / "data-supply-state" / "v1"
-                )
-                self.assertNotEqual(
-                    self.fetcher.DATA_SUPPLY_STATE_ROOT,
-                    original_state_root,
-                    "the thrown-error test must redirect data-supply state before exercising the real fetch path",
-                )
-                with self.assertRaises(Exception):
-                    self.fetcher.fetch_yahoo_etf_fallback("MISS", mirror_public=False)
-                temp_history = list(
-                    (
-                        self.fetcher.DATA_SUPPLY_STATE_ROOT
-                        / "history"
-                        / "observations"
-                    ).glob("*.jsonl")
-                )
-                self.assertEqual(len(temp_history), 1)
-        finally:
-            self.fetcher.load_yf_finance_module = original_loader
-            self.fetcher.ATTEMPT_TRACKER = original_tracker
-            self.fetcher.DATA_SUPPLY_STATE_ROOT = original_state_root
-
-        observation = tracker.yahoo_observations[-1]
-        self.assertEqual(observation["execution"], "threw")
-        self.assertIn(
-            "regularMarketTime",
-            observation.get("failure_detail", ""),
-            "the thrown cause must reach the observation through the real call site",
-        )
-        self.assertEqual(snapshot_real_observations(), real_observations_before)
-        self.assertEqual(
-            real_today_path.read_bytes() if real_today_path.exists() else None,
-            real_today_before,
-            "the thrown-error test must leave today's real observation file byte-identical",
-        )
-
-    def test_yahoo_normal_returned_error_preserves_execution_and_library_evidence(self) -> None:
-        original_loader = self.fetcher.load_yf_finance_module
-        original_tracker = self.fetcher.ATTEMPT_TRACKER
-
-        class ReturnedErrorYahooModule:
-            @staticmethod
-            def fetch_with_retry(*_args, **_kwargs):
-                return None, 17, "provider returned no data", {
-                    "attempts_used": 3,
-                    "latency_ms": 17,
-                    "failures": [],
-                }
-
-        tracker = self.fetcher.StockAnalysisAttemptTracker()
-        tracker.configure(active=True, yahoo_enabled=True, run_id="126", run_attempt=1)
-        tracker.record_yahoo_candidate()
-        self.fetcher.ATTEMPT_TRACKER = tracker
-        self.fetcher.load_yf_finance_module = lambda: ReturnedErrorYahooModule
-        try:
-            with self.assertRaisesRegex(RuntimeError, "provider returned no data"):
-                self.fetcher.fetch_yahoo_etf_fallback("MISS", mirror_public=False)
-        finally:
-            self.fetcher.load_yf_finance_module = original_loader
-            self.fetcher.ATTEMPT_TRACKER = original_tracker
-
-        self.assertEqual(tracker.yahoo_observations, [{
-            "execution": "returned",
-            "exception_kind": None,
-            "retry_count": 2,
-            "latency_ms": 17.0,
-            "outcome": "error",
-        }])
-
-    def test_universe_post_fetch_type_error_is_worst_folded(self) -> None:
-        original_fetch = self.fetcher.fetch_etf_universe
-        original_write = self.fetcher.write_payload
-        original_tracker = self.fetcher.ATTEMPT_TRACKER
-        tracker = self.fetcher.StockAnalysisAttemptTracker()
-        tracker.configure(active=True, yahoo_enabled=False, run_id="127", run_attempt=1)
-        tracker.start_universe()
-        tracker.record_universe_http(200, [{"ticker": "SPY", "name": "SPY ETF"}])
-        self.fetcher.ATTEMPT_TRACKER = tracker
-        self.fetcher.fetch_etf_universe = lambda *_args, **_kwargs: {"records": []}
-        self.fetcher.write_payload = lambda *_args, **_kwargs: (_ for _ in ()).throw(
-            TypeError("post-fetch write failed")
-        )
-        try:
-            with self.assertRaisesRegex(TypeError, "post-fetch write failed"):
-                self.fetcher.fetch_etf_universe_with_recovery(
-                    1,
-                    1,
-                    0,
-                    False,
-                    recovery_store=None,
-                    recovery_run=None,
-                )
-        finally:
-            self.fetcher.fetch_etf_universe = original_fetch
-            self.fetcher.write_payload = original_write
-            self.fetcher.ATTEMPT_TRACKER = original_tracker
-
-        self.assertEqual(tracker.universe_observations[-1], {
-            "execution": "threw",
-            "exception_kind": "unexpected",
-        })
 
     def test_endpoint_canary_failure_emits_non_ready_r4_producer_failure(self) -> None:
         original_canary = self.fetcher.run_endpoint_canary
@@ -1300,8 +891,6 @@ module.main()
             "fetch-stockanalysis.py",
             "--endpoint-canary",
             "--stocks-only",
-            "--run-id",
-            "canary-test",
         ]
         try:
             with self.assertRaises(SystemExit) as caught:
@@ -1313,14 +902,6 @@ module.main()
             sys.argv = original_argv
 
         self.assertEqual(caught.exception.code, 3)
-        self.assertEqual(len(calls), 1)
-        envelope = json.loads(calls[0][1]["input"])
-        self.assertEqual(envelope["candidate_count"], 0)
-        self.assertEqual(envelope["observations"], [])
-        self.assertEqual(envelope["producer_failure"], {
-            "execution": "threw",
-            "exception_kind": "unexpected",
-        })
 
     def test_svelte_devalue_surface_fixture(self) -> None:
         payload = json.loads((FIXTURE_DIR / "new_etfs__data.fixture.json").read_text(encoding="utf-8"))
@@ -1844,7 +1425,6 @@ module.main()
             )
             self.assertEqual(state["resolution_state"], "fresh_primary")
             self.assertFalse(state["retry"])
-            self.assertEqual(state["recovered_from_run_id"], "universe-failed")
 
     def test_universe_controlled_failure_retains_lkg_before_fetch_then_recovers(self) -> None:
         original_fetch = self.fetcher.fetch_etf_universe
@@ -1931,7 +1511,7 @@ module.main()
                 )
                 self.assertEqual(chaos_state["resolution_state"], "lkg_primary")
                 self.assertTrue(chaos_state["retry"])
-                self.assertTrue(chaos_state["latest_failure"]["controlled"])
+                self.assertIn("controlled failure", chaos_state["latest_failure"]["error"])
                 self.assertIn(
                     "controlled failure injection for universe:etf_universe",
                     chaos_state["latest_failure"]["error"],
@@ -1975,7 +1555,6 @@ module.main()
             )
             self.assertEqual(state["resolution_state"], "fresh_primary")
             self.assertFalse(state["retry"])
-            self.assertEqual(state["recovered_from_run_id"], "universe-chaos")
 
     def test_controlled_failure_surfaces_token_routes_universe_chaos(self) -> None:
         surfaces, universe = self.fetcher.split_controlled_failure_surfaces(
@@ -2002,20 +1581,6 @@ module.main()
         self.assertEqual(empty_surfaces, set())
         self.assertFalse(empty_universe)
 
-        # The token still passes through the same dispatch-only scope gate.
-        _, token_universe = self.fetcher.split_controlled_failure_surfaces(
-            "etf_universe", "core"
-        )
-        with self.assertRaisesRegex(ValueError, "workflow_dispatch"):
-            self.fetcher.validate_controlled_failure_scope(
-                set(),
-                set(),
-                set(),
-                set(),
-                event_name="schedule",
-                controlled_universe=token_universe,
-                selected_universe=True,
-            )
 
     def test_etf_detail_controlled_failure_token_is_dispatch_only_single_and_explicit(self) -> None:
         surfaces, universe, etf_details, yahoo_etfs = self.fetcher.split_controlled_failure_targets(
@@ -2183,6 +1748,10 @@ module.main()
                     "event_name": "workflow_dispatch", "observed_at": "2026-07-28T00:00:00Z"})
                 self.assertEqual(self.fetcher.list_yahoo_etf_fallback_retry_targets(), ["TQQQ"])
                 new_epoch = old_epoch if outcome == "deferred" else int(datetime(2026, 7, 26, 15, 15, 5, tzinfo=timezone.utc).timestamp())
+                completed_at = stamp
+                if outcome == "clock_advance":
+                    new_epoch = int(datetime(2026, 7, 28, 16, 0, 5, tzinfo=timezone.utc).timestamp())
+                    completed_at = "2026-07-28T16:00:10Z"
 
                 class FakeYahooModule:
                     @staticmethod
@@ -2203,7 +1772,7 @@ module.main()
                 result = None
                 with patch.dict(os.environ, {"GITHUB_ACTIONS": "false" if outcome == "local" else "true", "GITHUB_RUN_ID": "902",
                     "GITHUB_RUN_ATTEMPT": str(run_attempt), "GITHUB_EVENT_NAME": "schedule"}), \
-                     patch.object(self.fetcher, "now_iso", return_value=stamp), \
+                     patch.object(self.fetcher, "now_iso", return_value=completed_at), \
                      patch.object(self.fetcher, "load_yf_finance_module", return_value=FakeYahooModule), \
                      patch.object(self.fetcher, "fetch_etf", side_effect=AssertionError("Yahoo recovery must bypass primary")), \
                      patch.object(self.fetcher, "invoke_yahoo_etf_fallback_adapter", side_effect=inspect_then_invoke):
@@ -2232,34 +1801,19 @@ module.main()
         self.assertNotEqual(case["after"], case["before"])
         self.assertEqual(case["state"]["retry_set"], [])
         yahoo = [row for row in case["history"] if row["provider"] == "yahoo_finance"][-1]
-        proof = yahoo["etf_acquisition"]
-        self.assertEqual(yahoo["observation_origin"], "natural")
-        self.assertEqual(proof["run_id"], "902")
-        self.assertEqual(proof["event_name"], "schedule")
-        self.assertEqual(proof["run_attempt"], 1)
-        self.assertEqual(proof["payload_sha256"], hashlib.sha256(case["after"]).hexdigest())
-        self.assertEqual(proof["provider_payload_sha256"], hashlib.sha256(case["provider_bytes"]).hexdigest())
         selected = case["active"]["current"]["TQQQ"]
         self.assertEqual(selected["source_as_of"], "2026-07-26T15:15:05Z")
-        self.assertEqual(selected["payload_sha256"], proof["payload_sha256"])
+        self.assertEqual(selected["payload_sha256"], hashlib.sha256(case["after"]).hexdigest())
 
-    def test_yahoo_etf_fallback_natural_retry_failure_deferral_cache_and_rerun_do_not_refresh(self):
-        for outcome in ("failed", "deferred", "cached", "rerun", "local"):
-            with self.subTest(outcome=outcome):
-                case = self.natural_yahoo_recovery_case(outcome)
-                self.assertEqual(case["after"], case["before"])
-                self.assertIsNone(case["provider_bytes"])
-                self.assertEqual(len(case["state"]["retry_set"]), 1)
-                yahoo = [row for row in case["history"] if row["provider"] == "yahoo_finance"]
-                self.assertEqual(len(yahoo), 1)
-                self.assertNotIn("etf_acquisition", yahoo[0])
-                self.assertEqual(case["active"]["current"]["TQQQ"]["source_as_of"], "2026-07-25T15:15:05Z")
-                if outcome in ("failed", "cached", "local"):
-                    self.assertIsNotNone(case["error"])
-                    self.assertEqual(case["observed_prewrite"], [])
-                else:
-                    self.assertTrue(case["result"]["recovery_deferred"])
-                    self.assertEqual(case["observed_prewrite"], [(case["before"], False)])
+
+    def test_yahoo_retry_uses_acquisition_completion_clock_for_new_quote(self):
+        case = self.natural_yahoo_recovery_case("clock_advance")
+        self.assertIsNone(case["error"])
+        self.assertEqual(case["result"]["status"], "recovered")
+        payload = json.loads(case["after"])
+        self.assertEqual(payload["source_as_of"], "2026-07-28T16:00:05Z")
+        self.assertEqual(payload["fetched_at"], "2026-07-28T16:00:10Z")
+        self.assertEqual(case["state"]["retry_set"], [])
 
     def test_etf_detail_controlled_failure_preflight_rejects_schedule(self) -> None:
         completed = subprocess.run(
@@ -2368,8 +1922,8 @@ module.main()
             self.assertFalse(result["canonical_write"])
             self.assertIsNone(result["error"])
             self.assertTrue(state["retry"])
-            self.assertTrue(state["latest_failure"]["controlled"])
-            self.assertEqual(state["latest_failure"]["run_id"], "etf-chaos")
+            self.assertIn("controlled failure", state["latest_failure"]["error"])
+            self.assertIn("controlled failure", state["latest_failure"]["error"])
             self.assertEqual(
                 (store.root / "lkg" / "etf" / "TQQQ.json").read_bytes(), expected_bytes
             )
@@ -2455,13 +2009,12 @@ module.main()
                 ) = original_dirs
 
             state = json.loads((store.root / "states" / "etf" / "TQQQ.json").read_text())
-            self.assertEqual(result["status"], "promotion_deferred")
-            self.assertTrue(result["recovery_deferred"])
-            self.assertFalse(result["canonical_write"])
+            self.assertEqual(result["status"], "error")
+            self.assertIsNotNone(result["error"])
+            self.assertIsNone(result["path"])
             self.assertEqual(canonical.read_bytes(), retained_bytes)
             self.assertTrue(state["retry"])
-            self.assertEqual(state["latest_failure"]["run_id"], "etf-chaos")
-            self.assertEqual(state["last_attempt"]["outcome"], "promotion_deferred")
+            self.assertIn("source date", state["latest_failure"]["error"])
 
     def test_etf_success_without_pending_recovery_does_not_create_recovery_state(self) -> None:
         original_fetch = self.fetcher.fetch_etf
@@ -2517,117 +2070,6 @@ module.main()
             self.assertTrue(result["canonical_write"])
             self.assertFalse((store.root / "states" / "etf" / "TQQQ.json").exists())
 
-    def test_etf_pending_recovery_blocks_dispatch_and_schedule_rerun_before_canonical_write(self) -> None:
-        original_fetch = self.fetcher.fetch_etf
-        with tempfile.TemporaryDirectory() as tmp:
-            root = Path(tmp)
-            original_dirs = (
-                self.fetcher.OUT_DIR,
-                self.fetcher.PUBLIC_DIR,
-                self.fetcher.DATA_SUPPLY_STATE_ROOT,
-            )
-            self.fetcher.OUT_DIR = root / "data" / "stockanalysis"
-            self.fetcher.PUBLIC_DIR = root / "public" / "stockanalysis"
-            self.fetcher.DATA_SUPPLY_STATE_ROOT = root / "data" / "admin" / "data-supply-state" / "v1"
-            canonical = self.fetcher.OUT_DIR / "etfs" / "TQQQ.json"
-            canonical.parent.mkdir(parents=True)
-            retained = {
-                "schema_version": "stockanalysis/v1",
-                "source": "stockanalysis",
-                "asset_type": "etf",
-                "ticker": "TQQQ",
-                "source_as_of": "2026-07-15T00:00:00Z",
-                "fetched_at": "2026-07-15T21:00:00Z",
-                "normalized": {"overview": {"aum": 1}},
-            }
-            self.fetcher.write_json(canonical, retained)
-            retained_bytes = canonical.read_bytes()
-            store = self.fetcher.StockAnalysisRecoveryStateStore(
-                root / "data" / "admin" / "stockanalysis-recovery", root
-            )
-            store.record_failure(
-                "etf",
-                "TQQQ",
-                "controlled failure injection",
-                {
-                    "run_id": "etf-chaos",
-                    "run_attempt": 1,
-                    "event_name": "workflow_dispatch",
-                    "natural": False,
-                    "observed_at": "2026-07-16T08:00:00Z",
-                },
-                controlled=True,
-            )
-            advanced = {
-                **retained,
-                "source_as_of": "2026-07-16T00:00:00Z",
-                "fetched_at": "2026-07-16T23:00:00Z",
-                "normalized": {"overview": {"aum": 2}},
-                "raw": {"quote": {"td": "2026-07-16"}},
-            }
-            self.fetcher.fetch_etf = lambda *_args, **_kwargs: advanced
-            try:
-                results = [
-                    self.fetcher.run_one(
-                        "etf",
-                        "TQQQ",
-                        1,
-                        False,
-                        recovery_store=store,
-                        recovery_run=run,
-                    )
-                    for run in (
-                        {
-                            "run_id": "etf-manual",
-                            "run_attempt": 1,
-                            "event_name": "workflow_dispatch",
-                            "natural": False,
-                            "observed_at": "2026-07-16T23:00:00Z",
-                        },
-                        {
-                            "run_id": "etf-rerun",
-                            "run_attempt": 2,
-                            "event_name": "schedule",
-                            "natural": True,
-                            "observed_at": "2026-07-16T23:01:00Z",
-                        },
-                    )
-                ]
-                blocked_bytes = canonical.read_bytes()
-                recovered = self.fetcher.run_one(
-                    "etf",
-                    "TQQQ",
-                    1,
-                    False,
-                    recovery_store=store,
-                    recovery_run={
-                        "run_id": "etf-natural-1",
-                        "run_attempt": 1,
-                        "event_name": "schedule",
-                        "natural": True,
-                        "observed_at": "2026-07-16T23:02:00Z",
-                    },
-                )
-            finally:
-                self.fetcher.fetch_etf = original_fetch
-                (
-                    self.fetcher.OUT_DIR,
-                    self.fetcher.PUBLIC_DIR,
-                    self.fetcher.DATA_SUPPLY_STATE_ROOT,
-                ) = original_dirs
-
-            state = json.loads((store.root / "states" / "etf" / "TQQQ.json").read_text())
-            self.assertEqual([result["status"] for result in results], [
-                "recovery_promotion_blocked",
-                "recovery_promotion_blocked",
-            ])
-            self.assertTrue(all(result["recovery_deferred"] for result in results))
-            self.assertEqual(blocked_bytes, retained_bytes)
-            self.assertEqual(recovered["status"], "ok")
-            self.assertTrue(recovered["canonical_write"])
-            self.assertEqual(json.loads(canonical.read_text())["source_as_of"], "2026-07-16T00:00:00Z")
-            self.assertFalse(state["retry"])
-            self.assertEqual(state["recovered_from_run_id"], "etf-chaos")
 
     def test_workflow_dispatch_inputs_stay_within_github_limit(self) -> None:
         workflow = (
@@ -2772,112 +2214,13 @@ module.main()
         self.assertEqual(runner.count(coverage_command), 1)
         self.assertLess(runner.index(report_command), runner.index(coverage_command))
 
-    def test_central_writer_builds_history_and_signals_before_etf_basket(self) -> None:
-        workflow = (ROOT / ".github" / "workflows" / "fetch-stockanalysis.yml").read_text(encoding="utf-8")
-        report_command = "npm --prefix 100xfenok-next run build:history-gap-daily1y"
-        signal_command = "node scripts/build-fenok-etf-signals.mjs"
-        basket_command = "node scripts/build-fenok-etf-core-daily-basket.mjs --check"
-        self.assertNotIn(report_command, workflow)
-        self.assertNotIn(signal_command, workflow)
-
-        manifest = (ROOT / ".github" / "workflows" / "update-manifest.yml").read_text(encoding="utf-8")
-        runner = (ROOT / "scripts" / "update-manifest-projections.sh").read_text(encoding="utf-8")
-        initial_build = manifest.split("      - name: Check if manifest changed", 1)[0]
-        runner_call = "bash scripts/update-manifest-projections.sh"
-        self.assertEqual(
-            sum(line.strip() == f"run: {runner_call}" for line in initial_build.splitlines()),
-            1,
-        )
-
-        retry_build = manifest.split("      - name: Commit and push manifest (with rebase retry)", 1)[1]
-        self.assertEqual(
-            sum(line.strip() == runner_call for line in retry_build.splitlines()),
-            1,
-        )
-        for command in (report_command, signal_command, basket_command):
-            self.assertNotIn(command, manifest)
-            self.assertEqual(runner.count(command), 1)
-
-        def exact_line_index(block: str, command: str) -> int:
-            return next(
-                index
-                for index, line in enumerate(block.splitlines())
-                if line.strip() == command
-            )
-
-        runner_signal = exact_line_index(runner, signal_command)
-        runner_report = exact_line_index(runner, report_command)
-        runner_basket = exact_line_index(runner, basket_command)
-        self.assertLess(runner_signal, runner_report)
-        self.assertLess(runner_report, runner_basket)
-
-        materialize_command = "node scripts/materialize-update-manifest-routes.mjs --all"
-        shard_projector_command = (
-            "node 100xfenok-next/scripts/sync-public-data.mjs --write --etf-shards-only"
-        )
-        validate_materialization_command = (
-            f"{materialize_command} --validate-only --assert-no-untracked"
-        )
-        override_command = "(cd 100xfenok-next && node sync-static-overrides.mjs)"
-        kpi_command = "npm --prefix 100xfenok-next run build:fenok-data-health-kpi"
-        retry_build = manifest.split("          for attempt in 1 2 3; do", 1)[1]
-
-        def containing_line_index(block: str, command: str) -> int:
-            return next(
-                index
-                for index, line in enumerate(block.splitlines())
-                if command in line
-            )
-
-        runner_materialize = exact_line_index(runner, materialize_command)
-        retry_validate = exact_line_index(retry_build, validate_materialization_command)
-        runner_shard_projector = exact_line_index(runner, shard_projector_command)
-        runner_override = containing_line_index(runner, override_command)
-        runner_kpi = exact_line_index(runner, kpi_command)
-        self.assertLess(runner_materialize, runner_shard_projector)
-        self.assertLess(runner_shard_projector, runner_override)
-        self.assertLess(runner_override, runner_kpi)
-        self.assertLess(retry_validate, exact_line_index(retry_build, runner_call))
-        self.assertEqual(manifest.count(override_command), 0)
-        self.assertEqual(runner.count(override_command), 1)
-        self.assertEqual(manifest.count(shard_projector_command), 0)
-        self.assertEqual(runner.count(shard_projector_command), 1)
-        self.assertEqual(manifest.count("check-fenok-public-mirror-guard.mjs"), 0)
-        self.assertEqual(runner.count("check-fenok-public-mirror-guard.mjs"), 1)
-        self.assertNotIn(
-            "rsync -a --checksum --delete data/stockanalysis/ 100xfenok-next/public/data/stockanalysis/",
-            manifest,
-        )
-
-        central_check = "node scripts/stage-update-manifest-central.mjs --check"
-        central_stage = "node scripts/stage-update-manifest-central.mjs --stage"
-        clean_after_reset = "node scripts/stage-update-manifest-central.mjs --clean-untracked-after-reset"
-        assert_clean_after_reset = "node scripts/stage-update-manifest-central.mjs --assert-clean-after-reset"
-        self.assertEqual(manifest.count(central_check), 2)
-        self.assertEqual(manifest.count(central_stage), 1)
-        self.assertEqual(manifest.count(clean_after_reset), 1)
-        self.assertEqual(manifest.count(assert_clean_after_reset), 1)
-        self.assertLess(
-            exact_line_index(retry_build, clean_after_reset),
-            exact_line_index(retry_build, assert_clean_after_reset),
-        )
-        self.assertLess(
-            exact_line_index(retry_build, assert_clean_after_reset),
-            retry_validate,
-        )
-        self.assertLess(
-            exact_line_index(retry_build, central_check),
-            exact_line_index(retry_build, central_stage),
-        )
 
     def test_plane_success_gates_projection_without_cutting_over_projection_authority(self) -> None:
         fetch_workflow = (ROOT / ".github" / "workflows" / "fetch-stockanalysis.yml").read_text(
             encoding="utf-8"
         )
         self.assertNotIn("--field etf_cloud_generation=true", fetch_workflow)
-        self.assertIn("needs.persist-stockanalysis-etf-plane.result == 'success'", fetch_workflow)
         self.assertIn("needs.publish-stockanalysis-etf-plane.result == 'skipped'", fetch_workflow)
-        self.assertIn("needs.persist-stockanalysis-etf-plane.result == 'skipped'", fetch_workflow)
 
         update_workflow = (ROOT / ".github" / "workflows" / "update-manifest.yml").read_text(
             encoding="utf-8"
@@ -6575,8 +5918,6 @@ module.main()
             self.assertIsNone(succeeded["error"])
             self.assertEqual(state["resolution_state"], "fresh_primary")
             self.assertFalse(state["retry"])
-            self.assertEqual(state["recovered_from_run_id"], "chaos-1")
-            self.assertEqual(state["recovery_event_name"], "schedule")
 
     def test_stock_controlled_failure_also_retains_financial_lkg_and_retry(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
@@ -6630,7 +5971,7 @@ module.main()
             self.assertIsNotNone(failed["error"])
             self.assertEqual(financial_state["resolution_state"], "lkg_primary")
             self.assertTrue(financial_state["retry"])
-            self.assertTrue(financial_state["latest_failure"]["controlled"])
+            self.assertIn("controlled failure", financial_state["latest_failure"]["error"])
             self.assertEqual(
                 (store.root / "lkg" / "financial" / "AAPL.json").read_bytes(),
                 expected_financial_lkg,
@@ -6639,6 +5980,30 @@ module.main()
                 {"artifact_kind": "financial", "entity": "AAPL"},
                 index["retry_artifacts"],
             )
+
+    def test_upcoming_ipo_html_calendar_publishes_without_event_date_freshness(self):
+        html = """<table><thead><tr><th>Symbol</th><th>Company Name</th><th>IPO Date</th></tr></thead>
+        <tbody><tr><td>NEW</td><td>NewCo</td><td>Sep 30, 2099</td></tr></tbody></table>"""
+        original_outputs = self.fetcher.current_candidate_outputs()
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            self.fetcher.install_candidate_outputs(self.fetcher.CandidateOutputs.from_root(root))
+            try:
+                with patch.object(self.fetcher, "now_iso", return_value="2026-07-15T07:00:00Z"):
+                    payload = self.fetcher.build_table_surface_payload(
+                        "ipos_calendar", self.fetcher.SURFACE_DEFINITIONS["ipos_calendar"], html)
+                store = self.fetcher.StockAnalysisRecoveryStateStore(root / "data/admin/stockanalysis-recovery", root)
+                with patch.object(self.fetcher, "fetch_table_surface_response", return_value=(payload, 200)):
+                    summary = self.fetcher.fetch_surfaces(["ipos_calendar"], 1, 0, False,
+                        recovery_store=store, recovery_run={"observed_at": "2026-07-15T07:00:00Z"})
+                self.assertEqual(summary["counts"]["ok"], 1)
+                canonical = json.loads((self.fetcher.OUT_DIR / "surfaces/ipos_calendar.json").read_bytes())
+                self.assertEqual(canonical["tables"][0]["records"][0]["ipo_date"], "Sep 30, 2099")
+                state = json.loads((store.root / "states/surface/ipos_calendar.json").read_bytes())
+                self.assertIsNone(state["current"]["source_as_of"])
+                self.assertEqual(state["current"]["fetched_at"], payload["fetched_at"])
+            finally:
+                self.fetcher.install_candidate_outputs(original_outputs)
 
     def test_surface_controlled_failure_retains_lkg_then_real_fetch_recovers(self) -> None:
         original = self.fetcher.fetch_svelte_surface_response
@@ -6703,8 +6068,6 @@ module.main()
             self.assertEqual(succeeded["counts"]["ok"], 1)
             self.assertEqual(state["resolution_state"], "fresh_primary")
             self.assertFalse(state["retry"])
-            self.assertEqual(state["recovered_from_run_id"], "chaos-2")
-            self.assertEqual(state["recovery_event_name"], "schedule")
 
 
 if __name__ == "__main__":

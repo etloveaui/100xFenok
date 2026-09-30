@@ -6,10 +6,11 @@ import os from "node:os";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 
+import { LANE_REGISTRY } from "./lib/lane-registry.mjs";
+
 const repoRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const workflowPath = path.join(repoRoot, ".github", "workflows", "fetch-finra-ats-weekly.yml");
 const source = fs.readFileSync(workflowPath, "utf8");
-const manifest = JSON.parse(fs.readFileSync(path.join(repoRoot, "data", "admin", "lane-commit-manifest.json"), "utf8"));
 
 function exactCount(haystack, needle) {
   return haystack.split(needle).length - 1;
@@ -32,7 +33,7 @@ assert.equal(exactCount(source, 'proof dispatch, nothing to stage: stage_selecte
 assert.equal(source.includes("100xfenok-next/public/"), false, "phase-1 workflow must have no public path");
 assert.equal(source.includes("finra_short_volume"), false, "weekly workflow must not touch the RegSHO lane");
 
-const successStage = manifest.workflows[".github/workflows/fetch-finra-ats-weekly.yml"].stages.success_if_exists;
+const successStage = LANE_REGISTRY.workflow_policies[".github/workflows/fetch-finra-ats-weekly.yml"].stages.success_if_exists;
 assert.deepEqual(
   successStage.map((entry) => entry.required),
   [true, true],

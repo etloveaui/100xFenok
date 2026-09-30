@@ -9,11 +9,8 @@ import { atomicWrite } from "./lib/atomic-file.mjs";
 import { attemptResult, classifyEndpointResponse, defaultAttemptId, returnedTuple, threwTuple, transportError, worstRequestResult } from "./lib/provider-fetch-result.mjs";
 import {
   LaneLkgStore,
-  PROMOTION_CONTRACT_PROVIDER_OBSERVATION_V2,
   allNaturalRequestsFailed,
-  buildProviderObservationV2,
   classifyLkgFailure,
-  isNaturalScheduleRun,
   systemicLkgFailureReason,
 } from "./lib/data-supply-lkg-store.mjs";
 import { boundedDiagnosticDetail, diagnosticSuffix } from "./lib/diagnostic-detail.mjs";
@@ -340,15 +337,10 @@ export async function runFdicTier1({
   if (probeQuarter !== null && !retainedQuarters.includes(probeQuarter) && probeQuarter <= retainedQuarters.at(-1)) {
     throw new Error(`FDIC probe quarter must be newer than retained history: ${probeQuarter}`);
   }
-  if (typeof ownerApprovedRecovery !== "boolean") throw new Error("ownerApprovedRecovery must be a boolean");
-  if (ownerApprovedRecovery && eventName !== "workflow_dispatch") {
-    throw new Error("owner-approved FDIC recovery requires workflow_dispatch");
-  }
   const injectedQuarter = controlledFailureQuarter(controlledFailureKey.trim(), eventName, retainedQuarters);
   const lkgStore = new LaneLkgStore({
     repoRoot,
     laneId: "fdic_tier1",
-    allowBoundWorkflowDispatchRecovery: ownerApprovedRecovery,
   });
   const lkgArtifacts = [{
     key: "fdic_tier1",
@@ -498,39 +490,12 @@ export async function runFdicTier1({
     sourceAsOf: fdicSourceAsOf(output),
     validateDocument: validFdicDocument,
     deriveSourceAsOf: fdicSourceAsOf,
-    promotion_contract: PROMOTION_CONTRACT_PROVIDER_OBSERVATION_V2,
-    provider_observation: buildProviderObservationV2({
-      payloadBytes: Buffer.from(serialized),
-      sourceAsOf: fdicSourceAsOf(output),
-      validateDocument: validFdicDocument,
-      deriveSourceAsOf: fdicSourceAsOf,
-      candidateContainsObservation: (candidateDocument, providerDocument) => JSON.stringify(candidateDocument) === JSON.stringify(providerDocument),
-      run,
-    }),
   };
   const recoveryState = lkgStore.stateSnapshot();
-  if (recoveryState.items.fdic_tier1?.retry === true
-    && !isNaturalScheduleRun(run)
-    && !ownerApprovedRecovery) {
-    return {
-      ok: false,
-      reason: "recovery_requires_schedule",
-      updated: false,
-      attempt,
-      retrySet: recoveryState.retry_set,
-      probe,
-      degraded: true,
-      corrupt: false,
-      exitCode: 0,
-    };
-  }
   const decisions = lkgStore.evaluatePromotionCandidates([candidate], run);
   const promotable = decisions.filter((decision) => decision.eligible).map((decision) => decision.artifact);
   if (promotable.length === 0) {
     const reason = decisions[0].reason;
-    if (["foreign_writer_conflict", "recovery_not_advanced_by_provider"].includes(reason)) {
-      lkgStore.recordPromotionDeferral({ artifacts: [candidate], run, reason });
-    }
     return {
       ok: false,
       reason,
@@ -544,8 +509,9 @@ export async function runFdicTier1({
     };
   }
   atomicWrite(canonicalPath, serialized);
+  const recoveringKeys = new Set(lkgStore.stateSnapshot().retry_set);
   const success = lkgStore.recordSuccess({ artifacts: promotable, run });
-  const recovered = success.state.items.fdic_tier1?.recovered_at === observedAt;
+  const recovered = recoveringKeys.has("fdic_tier1");
   return { ok: true, reason: "ok", updated: true, attempt, quarters: data.length, recovered, probe };
 }
 

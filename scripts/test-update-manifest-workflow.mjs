@@ -10,23 +10,10 @@
 import assert from "node:assert/strict";
 import fs from "node:fs";
 
-import { checkWorkflowCommitShardsAgainstRegistry } from "./check-lane-registry-commit-shards.mjs";
-
 const workflowPath = new URL("../.github/workflows/update-manifest.yml", import.meta.url);
 const runnerPath = new URL("../scripts/update-manifest-projections.sh", import.meta.url);
 const workflowText = fs.readFileSync(workflowPath, "utf8");
 const runnerText = fs.readFileSync(runnerPath, "utf8");
-const gate = checkWorkflowCommitShardsAgainstRegistry({
-  workflowText,
-  workflowRel: ".github/workflows/update-manifest.yml",
-});
-assert.deepEqual(gate.lanes, [], "update-manifest is a central reconciler with no lane attribution");
-assert.deepEqual(gate.missing_in_workflow, [],
-  `declared shards the workflow never commits: ${JSON.stringify(gate.missing_in_workflow)}`);
-assert.deepEqual(gate.undeclared_in_workflow, [],
-  `allowlist paths with no registry record: ${JSON.stringify(gate.undeclared_in_workflow)}`);
-assert.equal(gate.allowlist_count > 0, true, "update-manifest does commit admin control-plane artifacts");
-
 const workflowLines = workflowText.split("\n");
 const runnerLines = runnerText.split("\n");
 const exactLineIndices = (lines, needle) => lines

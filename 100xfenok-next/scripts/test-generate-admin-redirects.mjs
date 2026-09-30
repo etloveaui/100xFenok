@@ -144,7 +144,7 @@ for (const mutant of [
     workflow: deployWorkflow,
   },
   {
-    scripts: { ...packageJson.scripts, "cf:build:steps": packageJson.scripts["cf:build:steps"].replace("npm run qa:routes", "npm run qa:tokens") },
+    scripts: { ...packageJson.scripts, "cf:build:steps": packageJson.scripts["cf:build:steps"].replace("npm run qa:routes", "npm run build:version") },
     workflow: deployWorkflow,
   },
   {

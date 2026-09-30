@@ -11,10 +11,7 @@ import { attemptResult, defaultAttemptId, libraryTuple } from "./lib/provider-fe
 import { boundedDiagnosticDetail } from "./lib/diagnostic-detail.mjs";
 import {
   LaneLkgStore,
-  PROMOTION_CONTRACT_PROVIDER_OBSERVATION_V2,
-  buildProviderObservationV2,
   classifyLkgFailure,
-  isNaturalScheduleRun,
 } from "./lib/data-supply-lkg-store.mjs";
 
 const __filename = fileURLToPath(import.meta.url);
@@ -138,12 +135,6 @@ function markerSourceAsOf(marker) {
   return validAvailabilityMarker(marker) ? marker.source_as_of : null;
 }
 
-function markerContainsSummary(marker, summary) {
-  if (!validAvailabilityMarker(marker) || !validCollectionSummary(summary) || summary.failed_count !== 0) return false;
-  return marker.source_as_of === summarySourceAsOf(summary)
-    && JSON.stringify(marker.rows) === JSON.stringify(summary.results);
-}
-
 function validateControlledFailureKey(value, eventName) {
   const key = String(value ?? "").trim();
   if (!key) return null;
@@ -244,7 +235,6 @@ export function runYahooPrivateOptions({
 
   const marker = buildAvailabilityMarker(summary);
   const markerBytes = Buffer.from(`${JSON.stringify(marker, null, 2)}\n`);
-  const summaryBytes = Buffer.from(`${JSON.stringify(summary, null, 2)}\n`);
   const candidate = {
     key: "availability",
     currentRelativePath: "data/computed/fenok_yahoo_private_options_availability.json",
@@ -252,26 +242,10 @@ export function runYahooPrivateOptions({
     sourceAsOf: marker.source_as_of,
     validateDocument: validAvailabilityMarker,
     deriveSourceAsOf: markerSourceAsOf,
-    promotion_contract: PROMOTION_CONTRACT_PROVIDER_OBSERVATION_V2,
-    provider_observation: buildProviderObservationV2({
-      payloadBytes: summaryBytes,
-      sourceAsOf: summarySourceAsOf(summary),
-      validateDocument: validCollectionSummary,
-      deriveSourceAsOf: summarySourceAsOf,
-      candidateContainsObservation: markerContainsSummary,
-      run,
-    }),
   };
-  const state = store.stateSnapshot();
-  if (state.items.availability?.retry === true && !isNaturalScheduleRun(run)) {
-    return { ok: false, reason: "recovery_requires_schedule", attempt, retrySet: state.retry_set, degraded: true, corrupt: false, exitCode: 0 };
-  }
   const decisions = store.evaluatePromotionCandidates([candidate], run);
   if (!decisions[0].eligible) {
     const reason = decisions[0].reason;
-    if (["foreign_writer_conflict", "recovery_not_advanced_by_provider"].includes(reason)) {
-      store.recordPromotionDeferral({ artifacts: [candidate], run, reason });
-    }
     return { ok: false, reason, attempt, retrySet: store.stateSnapshot().retry_set, degraded: true, corrupt: false, exitCode: 0 };
   }
   atomicWrite(canonicalPath, markerBytes);

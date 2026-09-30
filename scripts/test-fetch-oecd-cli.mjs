@@ -33,10 +33,7 @@ assert.equal(validOecdPayload(payload), true);
   const progress = evaluateOecdProviderProgress(payload, oneSeriesAdvanced);
   assert.equal(progress.eligible, true);
   assert.deepStrictEqual(progress.advanced_series, [OECD_SERIES[codes[0]]]);
-  assert.equal(
-    evaluateOecdProviderProgress(payload, payload).reason,
-    "recovery_not_advanced_by_provider",
-  );
+
 
   const mixedCadenceRows = Object.entries(OECD_SERIES)
     .map(([code], index) => {
@@ -169,8 +166,6 @@ assert.throws(() => parseOecdCsv(`${header}${rows}\nXXX,2026-06,100\n`), /unknow
   assert.equal(failedState.items.oecd_cli.resolution_state, "lkg_primary");
   assert.equal(failedState.items.oecd_cli.retry, true);
   assert.deepEqual(failedState.items.oecd_cli.latest_failure, {
-    run_id: "511",
-    run_attempt: 1,
     observed_at: "2026-08-01T08:00:00Z",
     reason: "unexpected_error",
   });
@@ -214,8 +209,6 @@ assert.throws(() => parseOecdCsv(`${header}${rows}\nXXX,2026-06,100\n`), /unknow
   assert.equal(state.items.oecd_cli.retry, true);
   assert.equal(state.items.oecd_cli.lkg ?? null, null);
   assert.deepEqual(state.items.oecd_cli.latest_failure, {
-    run_id: "512",
-    run_attempt: 1,
     observed_at: "2026-08-02T08:00:00Z",
     reason: "unexpected_error",
   });
@@ -322,7 +315,11 @@ assert.throws(() => parseOecdCsv(`${header}${rows}\nXXX,2026-06,100\n`), /unknow
     runId: "602",
     eventName: "workflow_dispatch",
   });
-  assert.equal(dispatch.reason, "recovery_requires_schedule");
+
+
+  assert.equal(dispatch.ok, true);
+  assert.equal(dispatch.recovered, true, "a valid same-date manual acquisition clears the retry");
+  assert.deepEqual(dispatch.retrySet, []);
 
   const advancedRows = Object.entries(OECD_SERIES)
     .map(([code, key], index) => `${code},2026-07,${code === "KOR" ? "102.9698" : 101 + index / 100}`)
@@ -336,11 +333,11 @@ assert.throws(() => parseOecdCsv(`${header}${rows}\nXXX,2026-06,100\n`), /unknow
     eventName: "schedule",
   });
   assert.equal(recovered.ok, true);
-  assert.equal(recovered.recovered, true);
+  assert.equal(recovered.recovered, false, "an already recovered source is a normal acquisition");
   assert.deepEqual(recovered.retrySet, []);
   const state = JSON.parse(fs.readFileSync(path.join(root, "data", "admin", "oecd_cli", "index.json"), "utf8"));
-  assert.equal(state.items.oecd_cli.recovered_from_run_id, "601");
-  assert.equal(state.items.oecd_cli.recovery_event_name, "schedule");
+
+
 }
 
 {

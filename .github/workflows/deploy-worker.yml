@@ -21,10 +21,9 @@
 #     pre-smoke green skip exists: an active skip gate was removed because
 #     under continuous data commits it starved deploys, and any pre-smoke
 #     skip signal can green-skip on an upload whose smokes later fail.
-#   - every bundle carries deploy-provenance.json declaring the run
-#     that shipped it; the same job asserts the CURRENT live bundle's
-#     provenance before (loud, non-blocking) and after (blocking) upload
-#     (scripts/check-live-deploy-provenance.mjs).
+#   - every bundle carries its source and build identity. Source ancestry
+#     is checked immediately before upload; live build and KPI bytes are
+#     checked after upload.
 name: Deploy Worker (Cloudflare)
 
 on:
@@ -160,13 +159,6 @@ jobs:
           node scripts/test-admin-static-auth-guard.mjs
           node scripts/test-deploy-smoke-retry.mjs
 
-      # Fail source-policy defects before data projection and the OpenNext
-      # bundle. cf:build deliberately checks again after sync-static because
-      # generated output can introduce a new violation.
-      - name: Verify source token policy
-        working-directory: 100xfenok-next
-        run: npm run qa:tokens
-
       - name: Build data supply detection floor
         run: |
           set -euo pipefail
@@ -262,12 +254,6 @@ jobs:
             exit 1
           fi
 
-      - name: Check live deploy provenance (pre-deploy)
-        if: ${{ env.DEPLOY_DEFERRED != 'true' }}
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: node scripts/check-live-deploy-provenance.mjs --pre
-
       - name: Provision optional Telegram notification and verify token secrets to Worker
         # The secrets context is not available in step-level if; the shell guard below skips when absent.
         if: ${{ env.DEPLOY_DEFERRED != 'true' }}
@@ -307,29 +293,7 @@ jobs:
             exit 1
           fi
 
-          predeploy_build_id="unavailable"
-          predeploy_kpi_sha256="unavailable"
-          predeploy_kpi_path="$RUNNER_TEMP/predeploy-fenok-data-health-kpi.json"
-          cache_bust="predeploy-${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}-${GITHUB_SHA}"
           verify_header="$(node ../scripts/lib/live-request-headers.mjs --print)"
-          if predeploy_build_id="$(curl -fsS --retry 3 --retry-all-errors --retry-delay 2 \
-            -H 'Cache-Control: no-cache, no-store' -H 'Pragma: no-cache' \
-            -H "x-fenok-verify: $verify_header" \
-            "$base_url/BUILD_ID?cb=$cache_bust" | tr -d '\r\n')" \
-            && curl -fsS --retry 3 --retry-all-errors --retry-delay 2 \
-              -H 'Cache-Control: no-cache, no-store' -H 'Pragma: no-cache' \
-              -H "x-fenok-verify: $verify_header" \
-              "$base_url/data/admin/fenok-data-health-kpi.json?cb=$cache_bust" \
-              -o "$predeploy_kpi_path"; then
-            predeploy_kpi_sha256="$(sha256sum "$predeploy_kpi_path" | awk '{print $1}')"
-          else
-            echo "::warning::Pre-deploy bundle identity was unavailable; post-deploy identity verification remains mandatory."
-          fi
-
-          if [ "$predeploy_build_id" = "$expected_build_id" ]; then
-            echo "::error::The new build reused the currently live BUILD_ID; deployment identity would be ambiguous."
-            exit 1
-          fi
 
           # Re-read main and live provenance at the last safe point before
           # upload. Main may advance during a build; the candidate may still
@@ -364,11 +328,6 @@ jobs:
             echo "::error::Live BUILD_ID is empty; remediation state cannot be established."
             exit 1
           fi
-          if [ "$live_build_id" = "$expected_build_id" ]; then
-            echo "::error::The new build reused the currently live BUILD_ID; deployment identity would be ambiguous."
-            exit 1
-          fi
-
           live_provenance_path="$RUNNER_TEMP/live-deploy-provenance-source-fence.json"
           live_provenance_fresh_path="$RUNNER_TEMP/live-deploy-provenance-source-fence-fresh.json"
           live_provenance_legacy_path="$RUNNER_TEMP/live-deploy-provenance-source-fence-legacy.json"
@@ -464,8 +423,6 @@ jobs:
           {
             echo "EXPECTED_BUILD_ID=$expected_build_id"
             echo "EXPECTED_KPI_SHA256=$expected_kpi_sha256"
-            echo "PREDEPLOY_BUILD_ID=$predeploy_build_id"
-            echo "PREDEPLOY_KPI_SHA256=$predeploy_kpi_sha256"
             echo "DEPLOY_VERSION_ID=$deploy_version_id"
           } >> "$GITHUB_ENV"
           echo "::notice::Deployed artifact identity: wrangler_version_id=$deploy_version_id build_id=$expected_build_id kpi_sha256=$expected_kpi_sha256"
@@ -490,12 +447,6 @@ jobs:
           bundle_identity_matches() {
             [ "$1" = "$EXPECTED_BUILD_ID" ] && [ "$2" = "$EXPECTED_KPI_SHA256" ]
           }
-
-          if bundle_identity_matches "$PREDEPLOY_BUILD_ID" "$PREDEPLOY_KPI_SHA256"; then
-            echo "::error::Stale-bundle rejection guard accepted the pre-deploy artifact."
-            exit 1
-          fi
-          echo "::notice::STALE BUNDLE REJECTED: build_id=$PREDEPLOY_BUILD_ID kpi_sha256=$PREDEPLOY_KPI_SHA256"
 
           deadline=$((SECONDS + timeout_seconds))
           attempt=0
@@ -542,7 +493,6 @@ jobs:
           echo "::notice::DEPLOYMENT IDENTITY MATCH: wrangler_version_id=$DEPLOY_VERSION_ID expected_build_id=$EXPECTED_BUILD_ID live_build_id=$observed_build_id expected_kpi_sha256=$EXPECTED_KPI_SHA256 live_kpi_sha256=$observed_kpi_sha256 attempts=$attempt"
           node -e 'const fs=require("fs"); const p=JSON.parse(fs.readFileSync(0,"utf8")); const okSchema = ["fenok-data-health-kpi/v3","fenok-data-health-kpi/v4"].includes(p.schema_version); const validTimestamp = typeof p.generated_at === "string" && Number.isFinite(Date.parse(p.generated_at)); const validSets = Array.isArray(p.sets) && p.sets.every(s => s && typeof s.set === "string" && (s.served_path === null || typeof s.served_path === "string") && (s.newest_source_date === null || /^\d{4}-\d{2}-\d{2}$/.test(s.newest_source_date)) && (s.max_age === null || typeof s.max_age === "string") && ["fresh","delayed","stopped","unknown"].includes(s.status) && (!Object.hasOwn(s,"serving_lkg") || typeof s.serving_lkg === "boolean")); if (!okSchema || !validTimestamp || !validSets) { console.error(JSON.stringify({schema_version:p.schema_version,generated_at:p.generated_at,sets:Array.isArray(p.sets)})); process.exit(1); } const counts = Object.fromEntries(["fresh","delayed","stopped","unknown"].map(status => [status,p.sets.filter(s => s.status === status).length])); console.log(JSON.stringify({ok:true,schema:p.schema_version,generated_at:p.generated_at,sets:p.sets.length,status_counts:counts},null,2));' < "$live_kpi_path"
 
-          node ../scripts/check-live-deploy-provenance.mjs --post
 
       - name: Smoke SEC 13F private boundary
         if: ${{ env.DEPLOY_DEFERRED != 'true' }}

@@ -137,40 +137,16 @@ assert(fresh.denominator === 1177, "already-current denominator stays 1177");
 // Null-safe.
 assert(reconcileTaiwanCurrentUniverseDenominator(null, 1177, pct) === null, "null row is a no-op");
 
-// A validated v3 receipt can intentionally exclude a delisted source-universe
-// member. The gate must use the receipt's eligible denominator while retaining
-// the source denominator and exclusion count as honest aggregate disclosure.
+// Aggregate counts preserve the actual listing exclusions without proof identity.
 const krxEligibleContract = coverageBuilderModule.krxCoverageContract?.({
-  evidence: {
-    source: "bound_bridge_receipt",
-    covered_count: 336,
-    denominator: 336,
-    missing_count: 0,
-  },
+  evidence: { covered_count: 336, denominator: 336, listing_status_filter: { source_denominator: 337, eligible_denominator: 336, excluded_count: 1 } },
   sourceDenominator: 337,
-  receiptValidation: {
-    ok: true,
-    receipt: {
-      schema_version: "fenok_krx_issuer_daily_coverage_receipt/v3",
-      listing_status_filter: {
-        source_denominator: 337,
-        eligible_denominator: 336,
-        excluded_count: 1,
-      },
-    },
-  },
 });
-assert(
-  JSON.stringify(krxEligibleContract) === JSON.stringify({
-    covered_count: 336,
-    denominator: 336,
-    source_denominator: 337,
-    excluded_count: 1,
-    missing_count: 0,
-    coverage_ready: true,
-  }),
-  "validated KRX v3 exclusions use the eligible denominator and stay disclosed",
-);
+assert(JSON.stringify(krxEligibleContract) === JSON.stringify({ covered_count: 336, denominator: 336, source_denominator: 337, excluded_count: 1, missing_count: 0, coverage_ready: true }),
+  "actual KRX listing exclusions use the eligible denominator and stay disclosed");
+const missingKrx = coverageBuilderModule.krxCoverageContract?.({ evidence: null, sourceDenominator: 337 });
+assert(missingKrx?.covered_count === 0 && missingKrx.denominator === 337 && missingKrx.missing_count === 337 && missingKrx.coverage_ready === false,
+  "missing KRX payload cannot become full coverage");
 
 for (const [sourceDate, age, sourceState, sourceStatus] of [
   ["2026-09-22", 1, "fresh", "ready"],
@@ -231,14 +207,6 @@ assert(
 // compare its full history-gap denominator to scored_etf_count, never to the
 // managed-core dispatch denominator.
 const coverageBuilder = fs.readFileSync(new URL("./build-fenok-edge-coverage-index.mjs", import.meta.url), "utf8");
-assert(
-  coverageBuilder.includes("validateKrxIssuerDailyCoverageReceipt"),
-  "coverage index validates the KRX bridge issuer-coverage receipt",
-);
-assert(
-  coverageBuilder.includes("selectKrxIssuerDailyCoverageEvidence"),
-  "coverage index selects raw proof or a bound receipt, never an unbound stale raw fallback",
-);
 assert(
   !coverageBuilder.includes("krx_daily_smoke_5d/raw/core_stock_index/stk_bydd_trd/20260626.json"),
   "coverage index does not derive current KRX coverage from the historical smoke raw fallback",

@@ -59,7 +59,7 @@ class MaterializerFixture:
         self.recovery: dict[str, dict] = {}
         self._seed_selection("FRESH", "fresh_fallback", "provider_object", "2026-07-10T00:00:00Z")
         self._seed_selection("LKG", "lkg_fallback", "provider_lkg", "2026-07-01T00:00:00Z")
-        self.recovery["UNAV"] = {"consecutive_green": 0, "last_transition": "unavailable"}
+        self.recovery["UNAV"] = {"last_transition": "unavailable"}
         self._write_state_files()
         self._write_clean_usage_manifests()
         self._git_init_and_add()
@@ -137,7 +137,7 @@ class MaterializerFixture:
             "fallback_depth": 2,
             "age_seconds": 0,
         }
-        self.recovery[ticker] = {"consecutive_green": 0, "last_transition": f"fixture_{state}"}
+        self.recovery[ticker] = {"last_transition": f"fixture_{state}"}
 
     def _write_state_files(self):
         domain = self.state_root / "domains/etf_detail"
@@ -422,22 +422,23 @@ class PublicDataSupplyMaterializerTests(unittest.TestCase):
             "data/admin/stockanalysis-recovery",
         ):
             (self.fixture.repo / relative).mkdir(parents=True, exist_ok=True)
-        lane_manifest = SCRIPT_DIR.parent / "data/admin/lane-commit-manifest.json"
-        registry_digest = json.loads(lane_manifest.read_text(encoding="utf-8"))["registry_digest"]
+        fixture_registry = self.fixture.repo / "scripts/lib/lane-registry.mjs"
+        fixture_registry.parent.mkdir(parents=True, exist_ok=True)
+        registry_source = (SCRIPT_DIR / "lib/lane-registry.mjs").as_uri()
+        fixture_registry.write_text(
+            f"export {{ LANE_REGISTRY }} from {json.dumps(registry_source)};\n",
+            encoding="utf-8",
+        )
         subprocess.run(
             [
                 "bash",
                 str(SCRIPT_DIR / "stage-lane-manifest.sh"),
                 "--repo-root",
                 str(self.fixture.repo),
-                "--manifest",
-                str(lane_manifest),
                 "--workflow",
                 ".github/workflows/fetch-stockanalysis.yml",
                 "--stage",
                 "always_if_exists",
-                "--expected-digest",
-                registry_digest,
             ],
             cwd=self.fixture.repo,
             check=True,

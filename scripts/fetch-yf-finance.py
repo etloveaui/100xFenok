@@ -71,7 +71,7 @@ from data_supply_stock_detail import (
     validate_stock_detail_candidate,
     yahoo_provider_symbol,
 )
-from yahoo_batch_state import PROMOTION_DEFERRAL_REASONS, YahooBatchStateStore
+from yahoo_batch_state import YahooBatchStateStore
 
 STOCK_UNIVERSE_DIR = ROOT / "data" / "global-scouter" / "stocks" / "detail"
 ETF_INDEX = ROOT / "data" / "global-scouter" / "etfs" / "index.json"
@@ -1789,9 +1789,9 @@ SYSTEMIC_FAILURE_MARKERS = {
         "jsondecodeerror", "json decode", "failed to decode", "decode error",
         "invalid json", "expecting value", "unterminated string", "malformed json",
     ),
-    "proof_contract": (
-        "provider observation proof", "promotion candidate payload is invalid",
-        "promotion candidate payload is not bound", "recovery promotion rejected",
+    "integrity": (
+        "Yahoo candidate payload is invalid", "promotion candidate payload is not bound",
+        "Yahoo candidate disagrees", "Yahoo candidate source date", "Yahoo provider source timestamp",
         "stock-detail state publication failed",
     ),
 }
@@ -1831,7 +1831,7 @@ def _systemic_failure_reasons(errors):
     for row in errors:
         text = _failure_text(row)
         for category, markers in SYSTEMIC_FAILURE_MARKERS.items():
-            if any(marker in text for marker in markers):
+            if any(marker.lower() in text for marker in markers):
                 reasons.append(f"{row.get('ticker') or 'unknown'} indicates systemic {category} failure")
                 break
     return reasons
@@ -1840,7 +1840,7 @@ def _systemic_failure_reasons(errors):
 def yahoo_failure_kind(row, *, event_name=None):
     text = _failure_text(row)
     for category, markers in SYSTEMIC_FAILURE_MARKERS.items():
-        if any(marker in text for marker in markers):
+        if any(marker.lower() in text for marker in markers):
             return f"systemic_{category}"
     if event_name == "workflow_dispatch" and any(marker in text for marker in CONTROLLED_FAILURE_MARKERS):
         return "transient_provider_miss"
@@ -1908,10 +1908,10 @@ def yahoo_failure_exit_assessment(errors, state_store, state_index):
             "deferred_without_lkg_tickers": [],
         }
 
-    current_attempt = state_index.get("current_attempt") if isinstance(state_index.get("current_attempt"), dict) else {}
+    current_results = state_index.get("current_results") if isinstance(state_index.get("current_results"), dict) else {}
     named_attempts = {
         str(row.get("ticker"))
-        for row in current_attempt.get("errors") or []
+        for row in current_results.get("errors") or []
         if isinstance(row, dict) and row.get("ticker")
     }
     retry_symbols = {str(value) for value in state_index.get("retry_symbols") or []}
@@ -1928,7 +1928,7 @@ def yahoo_failure_exit_assessment(errors, state_store, state_index):
         for row in state_index.get("unavailable_details") or []
         if isinstance(row, dict) and row.get("symbol")
     )
-    for group_name in ("pending_details", "promotion_deferral_details"):
+    for group_name in ("pending_details",):
         kpi_names.update(
             str(row.get("symbol") or row.get("ticker"))
             for row in state_index.get(group_name) or []
@@ -1945,26 +1945,10 @@ def yahoo_failure_exit_assessment(errors, state_store, state_index):
         row = next((item for item in errors if str(item.get("ticker") or "") == ticker), {})
         expected_kind = row.get("failure_kind") or yahoo_failure_kind(
             row,
-            event_name=current_attempt.get("event_name"),
+            event_name=current_results.get("event_name"),
         )
-        if expected_kind in PROMOTION_DEFERRAL_REASONS:
-            deferral = state.get("latest_promotion_deferral") if isinstance(state, dict) else None
-            if (
-                not isinstance(deferral, dict)
-                or str(deferral.get("run_id")) != str(current_attempt.get("run_id"))
-                or int(deferral.get("run_attempt") or 1) != int(current_attempt.get("run_attempt") or 1)
-                or deferral.get("reason") != expected_kind
-            ):
-                reasons.append(f"{ticker} promotion deferral is not bound to the current attempt")
-        else:
-            if (
-                not isinstance(latest_failure, dict)
-                or str(latest_failure.get("run_id")) != str(current_attempt.get("run_id"))
-                or int(latest_failure.get("run_attempt") or 1) != int(current_attempt.get("run_attempt") or 1)
-            ):
-                reasons.append(f"{ticker} LKG evidence is not bound to the current attempt")
-            if not isinstance(latest_failure, dict) or latest_failure.get("failure_kind") != expected_kind:
-                reasons.append(f"{ticker} failure classification is not bound to the current attempt")
+        if not isinstance(latest_failure, dict) or latest_failure.get("failure_kind") != expected_kind:
+            reasons.append(f"{ticker} failure classification does not match the actual failure")
         valid_lkg = _valid_retained_lkg(state_store, ticker, state)
         deferred = (
             isinstance(latest_failure, dict)
@@ -1973,29 +1957,11 @@ def yahoo_failure_exit_assessment(errors, state_store, state_index):
             and latest_failure.get("lkg_status") == "absent"
             and latest_failure.get("data_loss") is False
         )
-        promotion_hold_without_lkg = (
-            expected_kind in PROMOTION_DEFERRAL_REASONS
-            and isinstance(state, dict)
-            and (
-                (
-                    state.get("resolution_state") == "pending_history"
-                    and state_store.valid_current_canonical(ticker, state)
-                )
-                or (
-                    state.get("resolution_state") == "unavailable"
-                    and isinstance(latest_failure, dict)
-                    and latest_failure.get("data_loss") is False
-                    and latest_failure.get("lkg_status") == "absent"
-                    and latest_failure.get("deferred_acquisition") is True
-                )
-            )
-            and state.get("retry") is True
-        )
         if valid_lkg:
             retained_lkg_tickers.append(ticker)
-        elif deferred or promotion_hold_without_lkg:
+        elif deferred:
             deferred_without_lkg_tickers.append(ticker)
-        if not valid_lkg and not deferred and not promotion_hold_without_lkg:
+        if not valid_lkg and not deferred:
             if isinstance(latest_failure, dict) and latest_failure.get("data_loss") is True:
                 reasons.append(f"{ticker} lost previously advertised Yahoo data/LKG")
             else:
@@ -2217,8 +2183,6 @@ def main():
     parser.add_argument("--record-batch-state", action="store_true", help="persist bounded Yahoo lane attempt/LKG state")
     parser.add_argument("--natural-run", action="store_true", help="mark a scheduled acquisition eligible for deterministic retry priority")
     parser.add_argument("--all-shards-run", action="store_true", help="claim retries only in shard zero of a sequential all-shard run")
-    parser.add_argument("--run-id", default=os.environ.get("GITHUB_RUN_ID", "local"))
-    parser.add_argument("--run-attempt", type=int, default=int(os.environ.get("GITHUB_RUN_ATTEMPT", "1")))
     parser.add_argument("--event-name", default=os.environ.get("GITHUB_EVENT_NAME", "local"))
     parser.add_argument("--event-schedule", default=os.environ.get("EVENT_SCHEDULE", ""))
     parser.add_argument("--controlled-failure-tickers", default="", help="manual targeted failure proof; forbidden on schedules")
@@ -2235,8 +2199,6 @@ def main():
                 if args.scheduled_weekday is not None
                 else 0
             )
-        if args.run_attempt < 1:
-            raise ValueError("run attempt must be positive")
         retries = validate_retry_count(args.retries)
         explicit_tickers = validate_explicit_tickers(args.tickers.split(","))
         if args.retry_limit is not None and args.retry_limit < 0:
@@ -2325,8 +2287,6 @@ def main():
     if args.untracked_only and state_store is None:
         parser.error("--untracked-only requires --record-batch-state")
     run_context = {
-        "run_id": str(args.run_id),
-        "run_attempt": args.run_attempt,
         "event_name": args.event_name,
         "schedule": args.event_schedule,
         "natural": args.natural_run,
@@ -2516,8 +2476,7 @@ def main():
                 "latency_ms": latency_ms,
             }
         evidence = bounded_failure_evidence(evidence)
-        promotion_deferral = None
-        provider_observation = None
+        run_context["observed_at"] = _observed_now()
         if error is None:
             fresh_data = data
             if args.merge_existing and existing:
@@ -2527,7 +2486,7 @@ def main():
             if existing:
                 data = preserve_history_coverage(existing, data)
             try:
-                fetched_at = _observed_now()
+                fetched_at = run_context["observed_at"]
                 provider_payload = decorate_finance_payload(
                     ticker=ticker,
                     profile=args.profile,
@@ -2541,28 +2500,9 @@ def main():
                     data=data,
                 )
                 if state_store:
-                    provider_observation = state_store.build_provider_observation(
-                        ticker,
-                        provider_payload,
-                        run_context,
+                    state_store.evaluate_recovery_candidate(
+                        ticker, payload, provider_payload, canonical_payload=existing,
                     )
-                    promotion_decision = state_store.evaluate_recovery_candidate(
-                        ticker,
-                        payload,
-                        provider_observation,
-                        run_context,
-                        canonical_payload=existing,
-                    )
-                    if not promotion_decision["eligible"]:
-                        promotion_deferral = promotion_decision["reason"]
-                        state_store.record_promotion_deferral(
-                            ticker,
-                            promotion_decision,
-                            run_context,
-                            universe_sources.get(ticker, []),
-                            evidence,
-                        )
-                        error = f"promotion deferred: {promotion_deferral}"
                 if error is None and existing:
                     validate_source_progression(existing, payload)
             except ValueError as exc:
@@ -2600,7 +2540,6 @@ def main():
                             run_context,
                             universe_sources.get(ticker, []),
                             evidence,
-                            provider_observation=provider_observation,
                             expected_payload_sha256=expected_payload_sha256,
                         )
                         if isinstance(stock_detail_publication, dict):
@@ -2650,7 +2589,7 @@ def main():
                     print(f"[{idx}/{len(tickers)}] {ticker} OK {latency_ms}ms {size_kb}KB", flush=True)
             if error is not None:
                 failure_detail = bounded_diagnostic_detail(error)
-                if state_store and promotion_deferral is None:
+                if state_store:
                     failure_row = {"ticker": ticker, "error": failure_detail, "failures": evidence.get("failures") or []}
                     state_store.record_failure(
                         ticker,
@@ -2682,7 +2621,7 @@ def main():
             "skipped": False,
         }
         if error is not None:
-            result["failure_kind"] = promotion_deferral or yahoo_failure_kind(
+            result["failure_kind"] = yahoo_failure_kind(
                 {"ticker": ticker, "error": error, "failures": evidence.get("failures") or []},
                 event_name=args.event_name,
             )

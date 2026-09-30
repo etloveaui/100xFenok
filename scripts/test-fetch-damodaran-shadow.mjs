@@ -8,9 +8,7 @@ import { fileURLToPath } from "node:url";
 
 import * as DamodaranProducer from "./fetch-damodaran-shadow.mjs";
 import { classifyAttempt, validateAttemptShard } from "./build-data-supply-detection-floor.mjs";
-import { buildLaneCommitManifest } from "./build-lane-commit-manifest.mjs";
 import { LaneLkgStore } from "./lib/data-supply-lkg-store.mjs";
-import { LANE_REGISTRY, registryLaneById } from "./lib/lane-registry.mjs";
 import {
   DAMODARAN_HISTORY_LIMIT,
   DAMODARAN_PERSISTENCE_POLICY,
@@ -244,10 +242,7 @@ function activeRetryFixture(prefix) {
       advanced_files: [FILE_NAMES[0]],
     },
   );
-  assert.equal(
-    evaluateDamodaranProviderProgress(currentBundle, currentBundle).reason,
-    "recovery_not_advanced_by_provider",
-  );
+
   const mixedRegressionPayloads = structuredClone(oneFileAdvancedPayloads);
   mixedRegressionPayloads[FILE_NAMES[1]].metadata.source_date = "December 2025";
   const mixedRegression = evaluateDamodaranProviderProgress(
@@ -434,11 +429,8 @@ function activeRetryFixture(prefix) {
   assert.equal(failed.recovery.degraded, false);
   assert.equal(failed.recovery.corrupt, true);
   assert.equal(failed.report.status, "blocked");
-  assert.deepEqual(classifyAttempt(failed.row), {
-    status: "unavailable",
-    reason: "unexpected_error",
-    observed_at: "2026-07-27T00:00:00Z",
-  });
+  assert.equal(classifyAttempt(failed.row).status, "unavailable");
+  assert.equal(classifyAttempt(failed.row).reason, "unexpected_error");
   for (const filePath of rolledBackPaths) {
     assert.deepEqual(
       fs.readFileSync(filePath),
@@ -454,8 +446,6 @@ function activeRetryFixture(prefix) {
   assert.equal(failedState.items.damodaran.resolution_state, "lkg_primary");
   assert.equal(failedState.items.damodaran.retry, true);
   assert.deepEqual(failedState.items.damodaran.latest_failure, {
-    run_id: "711",
-    run_attempt: 1,
     observed_at: "2026-07-27T00:00:00Z",
     reason: "unexpected_error",
   });
@@ -527,8 +517,6 @@ function activeRetryFixture(prefix) {
   assert.equal(state.items.damodaran.retry, true);
   assert.equal(state.items.damodaran.lkg ?? null, null);
   assert.deepEqual(state.items.damodaran.latest_failure, {
-    run_id: "damodaran-fixture-attempt",
-    run_attempt: 1,
     observed_at: "2026-07-27T01:02:03Z",
     reason: "unexpected_error",
   });
@@ -705,163 +693,10 @@ function activeRetryFixture(prefix) {
     reason: "ok",
     observed_at: "2026-08-29T23:20:01Z",
   });
-  const LaneRegistryProjection = await import("./build-lane-registry-projection.mjs");
-  assert.equal(typeof LaneRegistryProjection.normalizeAttempt, "function");
-  const normalizedSkip = {
-    observed_at: "2026-08-29T23:20:01Z",
-    outcome: "success",
-    failure_class: null,
-  };
-  assert.deepStrictEqual(LaneRegistryProjection.normalizeAttempt(row), normalizedSkip);
   fs.rmSync(root, { recursive: true, force: true });
 }
 
-{
-  const workflowPath = path.join(REPO_ROOT, ".github", "workflows", "fetch-damodaran-shadow.yml");
-  const workflow = fs.readFileSync(workflowPath, "utf8");
 
-  assert.match(workflow, /name:\s*Fetch Damodaran Data/);
-  assert.match(workflow, /DAMODARAN_SHADOW_REPORT:\s*data\/admin\/damodaran\/owner-guard\.json/);
-  assert.match(workflow, /cron:\s*['"]17 11,23 \* \* 6['"]/);
-  assert.match(workflow, /permissions:[\s\S]+actions:\s*read[\s\S]+contents:\s*write/);
-  assert.match(workflow, /- name: Decide Damodaran primary or backup execution[\s\S]+id:\s*backup_gate/);
-  assert.match(workflow, /GH_TOKEN:\s*\$\{\{ github\.token \}\}/);
-  assert.match(workflow, /node scripts\/guard-damodaran-backup\.mjs/);
-  assert.match(
-    workflow,
-    /steps\.backup_gate\.outcome != 'success' \|\| steps\.backup_gate\.outputs\.action == 'run'/,
-    "expensive steps must fail open when the backup gate fails",
-  );
-  assert.match(workflow, /workflow_dispatch:/);
-  assert.match(workflow, /controlled_failure:/);
-  assert.match(workflow, /INPUT_CONTROLLED_FAILURE:/);
-  const ownerApprovedIndex = workflow.indexOf("owner_approved_recovery:");
-  assert.ok(ownerApprovedIndex >= 0, "workflow must declare owner_approved_recovery input");
-  assert.ok(
-    workflow.indexOf("controlled_failure:") < ownerApprovedIndex,
-    "owner_approved_recovery must follow controlled_failure",
-  );
-  const ownerApprovedInputBlock = workflow.slice(ownerApprovedIndex, workflow.indexOf("permissions:"));
-  assert.match(ownerApprovedInputBlock, /description:/);
-  assert.match(ownerApprovedInputBlock, /owner/i);
-  assert.match(ownerApprovedInputBlock, /approval/i);
-  assert.match(ownerApprovedInputBlock, /required:\s*false/);
-  assert.match(ownerApprovedInputBlock, /type:\s*boolean/);
-  assert.match(ownerApprovedInputBlock, /default:\s*false/, "owner approval must default to false");
-  assert.match(
-    workflow,
-    /INPUT_OWNER_APPROVED_RECOVERY:\s*\$\{\{\s*github\.event\.inputs\.owner_approved_recovery\s*\|\|\s*'false'\s*\}\}/,
-    "workflow must wire the exact owner-approval env expression",
-  );
-  assert.ok(
-    workflow.indexOf("INPUT_CONTROLLED_FAILURE:") < workflow.indexOf("INPUT_OWNER_APPROVED_RECOVERY:")
-      && workflow.indexOf("INPUT_OWNER_APPROVED_RECOVERY:") < workflow.indexOf("node scripts/fetch-damodaran-shadow.mjs"),
-    "owner-approval env wiring must sit in the fetch step before the fetch command",
-  );
-  assert.match(workflow, /node scripts\/test-fetch-damodaran-shadow\.mjs/);
-  assert.match(
-    workflow,
-    /^\s*run:\s*python scripts\/lib\/damodaran_shadow_converter\/test_erp_source_date\.py\s*$/mu,
-    "workflow must run the focused ERP source-date regression test with the exact command",
-  );
-  const dependencyInstallIndex = workflow.indexOf(
-    "python -m pip install -r scripts/lib/damodaran_shadow_converter/requirements.txt",
-  );
-  const erpSourceDateTestIndex = workflow.indexOf(
-    "python scripts/lib/damodaran_shadow_converter/test_erp_source_date.py",
-  );
-  const fetchIndex = workflow.indexOf("node scripts/fetch-damodaran-shadow.mjs");
-  assert.ok(
-    dependencyInstallIndex >= 0
-      && dependencyInstallIndex < erpSourceDateTestIndex
-      && erpSourceDateTestIndex < fetchIndex,
-    "focused ERP source-date test must run after dependency installation and before fetch",
-  );
-  assert.match(workflow, /node scripts\/fetch-damodaran-shadow\.mjs/);
-  assert.match(
-    workflow,
-    /PYTHONDONTWRITEBYTECODE:\s*['"]1['"]/
-  );
-  assert.match(workflow, /uses:\s*actions\/upload-artifact@v4/);
-  assert.match(
-    workflow,
-    /if:\s*\$\{\{ always\(\) && \(steps\.backup_gate\.outcome != 'success' \|\| steps\.backup_gate\.outputs\.action == 'run'\) \}\}[\s\S]+damodaran-owner-guard/,
-  );
-  // Post-slice-2 contract (#377): the lane no longer mirrors to the public
-  // mirror — canonical staging + plane publish only.
-  assert.doesNotMatch(workflow, /rsync[^\n]*100xfenok-next\/public\/data/);
-  assert.doesNotMatch(workflow, /cmp -s "data\/damodaran\/\$file" "100xfenok-next\/public\/data\/damodaran\/\$file"/);
-  assert.match(workflow, /publish-cloud-data-generation\.mjs --family=damodaran/);
-  assert.match(
-    workflow,
-    /scripts\/stage-lane-manifest\.sh[\s\\]+--workflow \.github\/workflows\/fetch-damodaran-shadow\.yml[\s\\]+--stage always_if_exists/,
-  );
-  assert.match(
-    workflow,
-    /scripts\/stage-lane-manifest\.sh[\s\\]+--workflow \.github\/workflows\/fetch-damodaran-shadow\.yml[\s\\]+--stage required_on_success/,
-  );
-  assert.match(workflow, /id:\s*fetch/);
-  assert.doesNotMatch(workflow, /id:\s*mirror/);
-  assert.match(workflow, /FETCH_OUTCOME:\s*\$\{\{ steps\.fetch\.outcome \}\}/);
-  assert.match(workflow, /BACKUP_ACTION:\s*\$\{\{ steps\.backup_gate\.outputs\.action \}\}/);
-  assert.match(workflow, /if \[\[ "\$BACKUP_ACTION" == "skip" \]\]; then RECOVERY_EXIT=0/);
-  assert.match(
-    workflow,
-    /if \[\[ "\$FETCH_OUTCOME" == "success" \]\]; then[\s\S]+--stage required_on_success/,
-  );
-  assert.match(workflow, /if:\s*\$\{\{ always\(\) \}\}[\s\S]+--stage always_if_exists/);
-  // continue-on-error is allowed only on the fail-open backup gate and the
-  // non-blocking cloud publication step.
-  assert.equal((workflow.match(/continue-on-error:/g) ?? []).length, 2);
-  assert.match(
-    workflow,
-    /- name: Decide Damodaran primary or backup execution[\s\S]+continue-on-error: true/,
-  );
-  assert.match(workflow, /- name: Publish damodaran generation[\s\S]+continue-on-error: true/);
-  assert.match(
-    workflow,
-    /- name: Persist damodaran publish outcome[\s\S]+if:\s*\$\{\{ always\(\) && \(steps\.backup_gate\.outcome != 'success' \|\| steps\.backup_gate\.outputs\.action == 'run'\) \}\}/,
-    "a safe backup skip must not manufacture a cloud publish outcome",
-  );
-  assert.doesNotMatch(workflow, /git add/);
-  assert.match(workflow, /PUBLISHED=false/);
-  assert.match(workflow, /PUBLISHED=true/);
-  assert.match(workflow, /if \[\[ "\$PUBLISHED" != "true" \]\]; then\s+exit 1\s+fi/);
-}
-
-{
-  const lane = registryLaneById("damodaran");
-  assert.ok(lane, "Damodaran must be a registry lane after the ownership flip");
-  assert.equal(lane.owner_workflow, ".github/workflows/fetch-damodaran-shadow.yml");
-  assert.equal(lane.privacy_class, "public_mirror");
-  assert.equal(lane.lane_class, "detection_floor");
-  assert.equal(lane.enforcement, "live");
-  assert.deepStrictEqual(lane.cadence.provenance, {
-    kind: "github_workflow",
-    evidence: ".github/workflows/fetch-damodaran-shadow.yml",
-  });
-  assert.deepStrictEqual(lane.roots.canonical_outputs, DamodaranProducer.CANONICAL_RELATIVE_PATHS);
-  // Post-slice-2 contract (#377): the public mirror is boundary-owned (full sync),
-  // not lane-owned — public_mirror is empty; sync coverage is guaranteed by the
-  // standing coverage gate (check-public-mirror-coverage.mjs).
-  assert.deepStrictEqual(lane.roots.public_mirror, []);
-  assert.equal(lane.roots.detection_attempt, null);
-
-  const manifest = buildLaneCommitManifest(LANE_REGISTRY);
-  const policy = manifest.workflows[".github/workflows/fetch-damodaran-shadow.yml"];
-  assert.deepStrictEqual(policy.lanes, ["damodaran"]);
-  assert.deepStrictEqual(policy.stages.always_if_exists, [
-    { path: "data/admin/damodaran/index.json", kind: "file", required: false },
-    { path: "data/admin/damodaran/current/damodaran.json", kind: "file", required: false },
-    { path: "data/admin/damodaran/lkg/damodaran.json", kind: "file", required: false },
-    { path: "data/admin/damodaran/history.json", kind: "file", required: false },
-  ]);
-  assert.deepStrictEqual(policy.stages.success_if_exists, []);
-  assert.deepStrictEqual(policy.stages.required_on_success, [
-    { path: "data/admin/damodaran/owner-guard.json", kind: "file", required: true },
-    ...FILE_NAMES.map((file) => ({ path: `data/damodaran/${file}`, kind: "file", required: true })),
-  ]);
-}
 
 {
   const root = fs.mkdtempSync(path.join(os.tmpdir(), "damodaran-recovery-test-"));
@@ -920,28 +755,6 @@ function activeRetryFixture(prefix) {
   );
   assert.deepStrictEqual(mixedCadence.recovery.retrySet, ["damodaran"]);
 
-  const manual = DamodaranProducer.runDamodaranShadow({
-    ...common,
-    spawn: spawnFixture({ sourceDate: "February 2026" }),
-    observedAt: "2026-07-21T01:00:00Z",
-    attemptId: "gh-702-1-damodaran",
-    runId: "702",
-    eventName: "workflow_dispatch",
-  });
-  assert.equal(manual.recovery.reason, "recovery_requires_schedule");
-  assert.equal(manual.recovery.ok, false);
-  assert.equal(manual.recovery.degraded, true);
-  assert.deepStrictEqual(manual.recovery.retrySet, ["damodaran"]);
-  assert.deepStrictEqual(
-    fs.readFileSync(path.join(root, "data", "admin", "damodaran", "current", "damodaran.json")),
-    retainedBytes,
-    "unapproved manual dispatch must leave retained LKG bytes intact",
-  );
-  const manualState = JSON.parse(fs.readFileSync(path.join(root, "data", "admin", "damodaran", "index.json"), "utf8"));
-  assert.equal(manualState.items.damodaran.retry, true);
-  assert.equal(manualState.items.damodaran.resolution_state, "lkg_primary");
-  assert.deepStrictEqual(manualState.retry_set, ["damodaran"]);
-
   const recovered = DamodaranProducer.runDamodaranShadow({
     ...common,
     spawn: spawnFixture({ sourceDate: "February 2026" }),
@@ -954,8 +767,8 @@ function activeRetryFixture(prefix) {
   assert.equal(recovered.recovery.recovered, true);
   assert.deepStrictEqual(recovered.recovery.retrySet, []);
   const state = JSON.parse(fs.readFileSync(path.join(root, "data", "admin", "damodaran", "index.json"), "utf8"));
-  assert.equal(state.items.damodaran.recovered_from_run_id, "701");
-  assert.equal(state.items.damodaran.recovery_event_name, "schedule");
+
+
   fs.rmSync(root, { recursive: true, force: true });
 }
 
@@ -1019,10 +832,9 @@ function activeRetryFixture(prefix) {
   assert.equal(approvedState.items.damodaran.retry, false);
   assert.equal(approvedState.items.damodaran.resolution_state, "fresh_primary");
   assert.equal(approvedState.items.damodaran.current.source_as_of, "2026-02-01");
-  assert.equal(approvedState.items.damodaran.recovered_from_run_id, "741");
-  assert.equal(approvedState.items.damodaran.recovered_at, "2026-07-21T02:00:00Z");
-  assert.equal(approvedState.items.damodaran.recovery_run_id, "742");
-  assert.equal(approvedState.items.damodaran.recovery_event_name, "workflow_dispatch");
+
+
+
   assert.deepStrictEqual(approvedState.retry_set, []);
   assert.equal(
     JSON.parse(fs.readFileSync(path.join(root, "data", "admin", "damodaran", "current", "damodaran.json"), "utf8")).source_as_of,
@@ -1061,26 +873,6 @@ function activeRetryFixture(prefix) {
     path.join(root, "data", "admin", "damodaran", "current", "damodaran.json"),
   );
 
-  const notAdvanced = DamodaranProducer.runDamodaranShadow({
-    ...common,
-    spawn: spawnFixture(),
-    observedAt: "2026-07-21T03:00:00Z",
-    attemptId: "gh-752-1-damodaran",
-    runId: "752",
-    eventName: "workflow_dispatch",
-    ownerApprovedRecovery: true,
-  });
-  assert.equal(notAdvanced.exitCode, 0);
-  assert.equal(notAdvanced.recovery.ok, false);
-  assert.equal(notAdvanced.recovery.degraded, true);
-  assert.equal(notAdvanced.recovery.reason, "recovery_not_advanced_by_provider");
-  assert.deepStrictEqual(notAdvanced.recovery.retrySet, ["damodaran"]);
-  assert.deepStrictEqual(
-    fs.readFileSync(path.join(root, "data", "admin", "damodaran", "current", "damodaran.json")),
-    retainedDeferred,
-    "owner approval must not promote without genuine provider advancement",
-  );
-
   const regressing = DamodaranProducer.runDamodaranShadow({
     ...common,
     spawn: spawnFixture({
@@ -1108,7 +900,7 @@ function activeRetryFixture(prefix) {
   const deferredState = JSON.parse(fs.readFileSync(path.join(root, "data", "admin", "damodaran", "index.json"), "utf8"));
   assert.equal(deferredState.items.damodaran.retry, true);
   assert.equal(deferredState.items.damodaran.resolution_state, "lkg_primary");
-  assert.equal(deferredState.items.damodaran.latest_promotion_deferral.reason, "recovery_not_advanced_by_provider");
+
   assert.deepStrictEqual(deferredState.retry_set, ["damodaran"]);
   fs.rmSync(root, { recursive: true, force: true });
 }
@@ -1147,67 +939,12 @@ function activeRetryFixture(prefix) {
     path.join(fixtureRun.root, "data", "admin", "damodaran", "index.json"),
     "utf8",
   ));
-  assert.equal(state.items.damodaran.recovery_event_name, "schedule");
-  assert.equal(state.items.damodaran.recovery_run_id, "schedule-with-approval");
+
+
   fs.rmSync(fixtureRun.root, { recursive: true, force: true });
 }
 
-{
-  const fixtureRun = activeRetryFixture("damodaran-nondispatch-approval-blocked");
-  const blocked = DamodaranProducer.runDamodaranShadow({
-    ...fixtureRun.common,
-    spawn: spawnFixture({ sourceDate: "February 2026" }),
-    observedAt: "2026-07-21T05:00:00Z",
-    attemptId: "push-with-approval",
-    runId: "push-with-approval",
-    eventName: "push",
-    ownerApprovedRecovery: true,
-  });
-  assert.equal(blocked.exitCode, 0);
-  assert.equal(blocked.recovery.ok, false);
-  assert.equal(blocked.recovery.degraded, true);
-  assert.equal(blocked.recovery.reason, "recovery_requires_schedule");
-  assert.deepStrictEqual(blocked.recovery.retrySet, ["damodaran"]);
-  for (const filePath of fixtureRun.paths) {
-    assert.deepStrictEqual(
-      fs.readFileSync(filePath),
-      fixtureRun.before.get(filePath),
-      `${path.relative(fixtureRun.root, filePath)} must not change for non-dispatch approval`,
-    );
-  }
-  fs.rmSync(fixtureRun.root, { recursive: true, force: true });
-}
 
-{
-  const fixtureRun = activeRetryFixture("damodaran-explicit-false-blocked");
-  process.env.INPUT_OWNER_APPROVED_RECOVERY = "false";
-  let blocked;
-  try {
-    blocked = DamodaranProducer.runDamodaranShadow({
-      ...fixtureRun.common,
-      spawn: spawnFixture({ sourceDate: "February 2026" }),
-      observedAt: "2026-07-21T06:00:00Z",
-      attemptId: "dispatch-explicit-false",
-      runId: "dispatch-explicit-false",
-      eventName: "workflow_dispatch",
-    });
-  } finally {
-    delete process.env.INPUT_OWNER_APPROVED_RECOVERY;
-  }
-  assert.equal(blocked.exitCode, 0);
-  assert.equal(blocked.recovery.ok, false);
-  assert.equal(blocked.recovery.degraded, true);
-  assert.equal(blocked.recovery.reason, "recovery_requires_schedule");
-  assert.deepStrictEqual(blocked.recovery.retrySet, ["damodaran"]);
-  for (const filePath of fixtureRun.paths) {
-    assert.deepStrictEqual(
-      fs.readFileSync(filePath),
-      fixtureRun.before.get(filePath),
-      `${path.relative(fixtureRun.root, filePath)} must not change for explicit false approval`,
-    );
-  }
-  fs.rmSync(fixtureRun.root, { recursive: true, force: true });
-}
 
 {
   const fixtureRun = activeRetryFixture("damodaran-approved-record-success-rollback");

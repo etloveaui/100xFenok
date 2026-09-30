@@ -18,7 +18,6 @@ import {
   parseYahooChart,
   retainLatestSeriesRows,
   runUsIndicesDaily,
-  seriesContainsProviderObservation,
   US_INDICES_MAX_SERIES_DATES,
   US_INDICES_PERSISTENCE_POLICY,
   withFileRollback,
@@ -102,22 +101,6 @@ assert.deepEqual(mergeSeries(parsed, parsed), parsed, "same-date replay is idemp
 assert.throws(
   () => mergeSeries([{ date: "2026-07-17", value: 6210.2 }], [{ date: "2026-07-17", value: 1 }]),
   /conflicting value/,
-);
-assert.equal(
-  seriesContainsProviderObservation(
-    [{ date: "2026-07-17", value: 6210.2 }],
-    [{ date: "2026-07-17", value: 6210.21 }],
-  ),
-  true,
-  "a policy-tolerated same-date observation remains bound into the settled candidate",
-);
-assert.equal(
-  seriesContainsProviderObservation(
-    [{ date: "2026-07-17", value: 6210.2 }],
-    [{ date: "2026-07-18", value: 6220.2 }],
-  ),
-  false,
-  "a provider date missing from the candidate is not contained",
 );
 assert.equal(US_INDICES_MAX_SERIES_DATES, 15_000);
 assert.deepEqual(US_INDICES_PERSISTENCE_POLICY, {
@@ -518,8 +501,6 @@ assert.deepEqual(
     paths.persistencePath,
   ];
   const before = payloadPaths.map((filePath) => fs.readFileSync(filePath));
-  const providerReceiptRoot = path.join(paths.stateRoot, "provider-observations");
-  const receiptsBefore = fs.readdirSync(providerReceiptRoot).sort();
   let commitCalls = 0;
   const failed = await runUsIndicesDaily({
     ...paths,
@@ -548,11 +529,6 @@ assert.deepEqual(
   payloadPaths.forEach((filePath, index) => {
     assert.deepEqual(fs.readFileSync(filePath), before[index], `${filePath} payload bytes must roll back`);
   });
-  assert.deepEqual(
-    fs.readdirSync(providerReceiptRoot).sort(),
-    receiptsBefore,
-    "provider receipt creation must roll back with canonical/state publication",
-  );
   const shard = { lane_id: "us_indices_daily", attempts: [failed.row] };
   assert.equal(shard.attempts[0].execution, "threw");
   assert.equal(shard.attempts[0].exception_kind, "unexpected");
@@ -560,7 +536,6 @@ assert.deepEqual(
     const state = JSON.parse(fs.readFileSync(path.join(paths.stateRoot, "keys", `${key}.json`), "utf8"));
     assert.equal(state.resolution_state, "lkg_primary");
     assert.equal(state.retry, true);
-    assert.equal(state.latest_failure?.run_id, "411");
     assert.equal(state.latest_failure?.failure_kind, "unexpected");
   }
 }
@@ -691,43 +666,6 @@ assert.deepEqual(
   assert.equal(oneFailed.index.retry_keys.includes("sp500.json"), false);
   assert.equal(oneFailed.index.retry_keys.includes("nasdaq100.json"), false);
   assert.equal(oneFailed.index.retry_keys.includes("sox.json"), false);
-  const canonicalBeforeMixed = US_SERIES_KEYS.map((key) =>
-    fs.readFileSync(path.join(paths.canonicalRoot, `${key}.json`)));
-  const mixed = await runUsIndicesDaily({
-    ...paths,
-    request: async (_url, key) => yahooResponseForKey(key, {
-      sp500: [["2026-07-17", 6210], ["2026-07-18", 6220]],
-      nasdaq: [["2026-07-17", 20210]],
-      nasdaq100: [["2026-07-17", 28210]],
-      sox: [["2026-07-17", 11310]],
-    }),
-    observedAt: "2026-07-18T22:00:00Z",
-    attemptId: "gh-432-1-us-indices",
-    eventName: "schedule",
-  });
-  assert.equal(mixed.exitCode, 0);
-  assert.equal(mixed.updated, false);
-  assert.equal(mixed.index.current_attempt.attempted, 4);
-  assert.equal(mixed.index.current_attempt.successes, 0);
-  assert.equal(mixed.index.current_attempt.promotion_deferrals, 4);
-  const deferredSp500 = JSON.parse(
-    fs.readFileSync(path.join(paths.stateRoot, "keys", "sp500.json"), "utf8"),
-  );
-  for (const field of ["updated_at", "last_run_id", "last_run_attempt", "last_event_name"]) {
-    assert.equal(
-      deferredSp500[field],
-      freshSp500[field],
-      `fresh V2 provider proof binding ${field} must survive atomic peer deferral`,
-    );
-  }
-  assert.equal(deferredSp500.latest_promotion_deferral.reason, "atomic_peer_deferral");
-  for (const [index, key] of US_SERIES_KEYS.entries()) {
-    assert.deepEqual(
-      fs.readFileSync(path.join(paths.canonicalRoot, `${key}.json`)),
-      canonicalBeforeMixed[index],
-      "fresh/retry mixed recovery cannot publish partial canonical bytes",
-    );
-  }
   const recovered = await runUsIndicesDaily({
     ...paths,
     request: async (_url, key) => yahooResponseForKey(key, {
@@ -789,153 +727,6 @@ assert.deepEqual(
       "controlled failure must retain canonical bytes",
     );
   });
-  const recoveryStateBeforeMixed = Object.fromEntries(US_SERIES_KEYS.map((key) => [
-    key,
-    JSON.parse(fs.readFileSync(path.join(paths.stateRoot, "keys", `${key}.json`), "utf8")),
-  ]));
-  const mixedSource = await runUsIndicesDaily({
-    ...paths,
-    request: async (_url, key) => yahooResponseForKey(key, {
-      sp500: [["2026-07-17", 6210], ["2026-07-18", 6220]],
-      nasdaq: [["2026-07-17", 20210]],
-      nasdaq100: [["2026-07-17", 28210]],
-      sox: [["2026-07-17", 11310]],
-    }),
-    observedAt: "2026-07-18T19:30:00Z",
-    attemptId: "gh-4211-1-us-indices",
-    eventName: "schedule",
-  });
-  assert.equal(mixedSource.exitCode, 0);
-  assert.equal(mixedSource.degraded, true);
-  assert.equal(mixedSource.updated, false);
-  assert.equal(mixedSource.index.current_attempt.attempted, 4);
-  assert.equal(mixedSource.index.current_attempt.successes, 0);
-  assert.equal(mixedSource.index.current_attempt.failed, 0);
-  assert.equal(mixedSource.index.current_attempt.promotion_deferrals, 4);
-  assert.deepEqual(
-    mixedSource.index.current_attempt.promotion_deferral_keys,
-    US_SERIES_KEYS.map((key) => `${key}.json`),
-  );
-  assert.deepEqual(
-    mixedSource.index.promotion_deferral_details.map(({ key, reason, blocked_by_keys: blockedByKeys }) => ({
-      key,
-      reason,
-      blocked_by_keys: blockedByKeys,
-    })),
-    [
-      {
-        key: "sp500.json",
-        reason: "atomic_peer_deferral",
-        blocked_by_keys: ["nasdaq.json", "nasdaq100.json", "sox.json"],
-      },
-      { key: "nasdaq.json", reason: "recovery_not_advanced_by_provider", blocked_by_keys: undefined },
-      { key: "nasdaq100.json", reason: "recovery_not_advanced_by_provider", blocked_by_keys: undefined },
-      { key: "sox.json", reason: "recovery_not_advanced_by_provider", blocked_by_keys: undefined },
-    ],
-  );
-  for (const [index, key] of US_SERIES_KEYS.entries()) {
-    assert.deepEqual(
-      fs.readFileSync(path.join(paths.canonicalRoot, `${key}.json`)),
-      canonicalBefore[index],
-      "mixed recovery cannot publish partial canonical bytes",
-    );
-    const state = JSON.parse(fs.readFileSync(path.join(paths.stateRoot, "keys", `${key}.json`), "utf8"));
-    assert.deepEqual(state.latest_failure, recoveryStateBeforeMixed[key].latest_failure);
-    assert.deepEqual(state.lkg, recoveryStateBeforeMixed[key].lkg);
-  }
-  const sameSource = await runUsIndicesDaily({
-    ...paths,
-    request: async (_url, key) => yahooResponseForKey(key, {
-      sp500: [["2026-07-17", 6210]],
-      nasdaq: [["2026-07-17", 20210]],
-      nasdaq100: [["2026-07-17", 28210]],
-      sox: [["2026-07-17", 11310]],
-    }),
-    observedAt: "2026-07-18T20:00:00Z",
-    attemptId: "gh-422-1-us-indices",
-    eventName: "schedule",
-  });
-  assert.equal(sameSource.exitCode, 0);
-  assert.equal(sameSource.degraded, true);
-  assert.equal(sameSource.updated, false);
-  assert.equal(sameSource.reason, "recovery_not_advanced_by_provider");
-  assert.equal(sameSource.index.current_attempt.failed, 0);
-  assert.equal(sameSource.index.current_attempt.promotion_deferrals, 4);
-  assert.equal(sameSource.index.counts.retry, 4);
-  for (const key of US_SERIES_KEYS) {
-    const state = JSON.parse(fs.readFileSync(path.join(paths.stateRoot, "keys", `${key}.json`), "utf8"));
-    assert.equal(state.latest_failure.run_id, "421", "same-source deferral preserves the controlled failure");
-    assert.equal(state.latest_failure.failure_kind, "controlled_failure");
-    assert.equal(state.latest_promotion_deferral.reason, "recovery_not_advanced_by_provider");
-  }
-  canonicalBefore.forEach((bytes, index) => assert.deepEqual(
-    fs.readFileSync(path.join(paths.canonicalRoot, `${US_SERIES_KEYS[index]}.json`)),
-    bytes,
-    "same-source deferral cannot publish canonical bytes",
-  ));
-
-  for (const [eventName, attemptId, observedAt] of [
-    ["workflow_dispatch", "gh-423-1-us-indices", "2026-07-18T20:30:00Z"],
-    ["schedule", "gh-424-2-us-indices", "2026-07-18T21:00:00Z"],
-  ]) {
-    const nonNatural = await runUsIndicesDaily({
-      ...paths,
-      request: async (_url, key) => yahooResponseForKey(key, {
-        sp500: [["2026-07-17", 6210], ["2026-07-18", 6220]],
-        nasdaq: [["2026-07-17", 20210], ["2026-07-18", 20220]],
-        nasdaq100: [["2026-07-17", 28210], ["2026-07-18", 28220]],
-        sox: [["2026-07-17", 11310], ["2026-07-18", 11320]],
-      }),
-      observedAt,
-      attemptId,
-      eventName,
-    });
-    assert.equal(nonNatural.exitCode, 0);
-    assert.equal(nonNatural.updated, false);
-    assert.equal(nonNatural.reason, "recovery_requires_schedule");
-    assert.equal(nonNatural.index.current_attempt.promotion_deferrals, 4);
-    for (const key of US_SERIES_KEYS) {
-      const state = JSON.parse(fs.readFileSync(path.join(paths.stateRoot, "keys", `${key}.json`), "utf8"));
-      assert.equal(state.latest_failure.run_id, "421", "dispatch/attempt 2 cannot replace the controlled failure");
-    }
-  }
-
-  for (const [key, values] of Object.entries({
-    sp500: [6200, 6210, 6220, 6230],
-    nasdaq: [20200, 20210, 20220, 20230],
-    nasdaq100: [28200, 28210, 28220, 28230],
-    sox: [11300, 11310, 11320, 11330],
-  })) {
-    fs.writeFileSync(path.join(paths.canonicalRoot, `${key}.json`), `${JSON.stringify(
-      values.map((value, index) => ({ date: `2026-07-${String(16 + index).padStart(2, "0")}`, value })),
-      null,
-      2,
-    )}\n`);
-  }
-  const foreignWriter = await runUsIndicesDaily({
-    ...paths,
-    request: async (_url, key) => yahooResponseForKey(key, {
-      sp500: [["2026-07-17", 6210], ["2026-07-18", 6220]],
-      nasdaq: [["2026-07-17", 20210], ["2026-07-18", 20220]],
-      nasdaq100: [["2026-07-17", 28210], ["2026-07-18", 28220]],
-      sox: [["2026-07-17", 11310], ["2026-07-18", 11320]],
-    }),
-    observedAt: "2026-07-18T21:30:00Z",
-    attemptId: "gh-425-1-us-indices",
-    eventName: "schedule",
-  });
-  assert.equal(foreignWriter.exitCode, 0);
-  assert.equal(foreignWriter.reason, "foreign_writer_conflict");
-  assert.equal(foreignWriter.index.current_attempt.failed, 0);
-  for (const key of US_SERIES_KEYS) {
-    const state = JSON.parse(fs.readFileSync(path.join(paths.stateRoot, "keys", `${key}.json`), "utf8"));
-    assert.equal(state.latest_failure.run_id, "421");
-    assert.equal(state.latest_promotion_deferral.reason, "foreign_writer_conflict");
-  }
-  canonicalBefore.forEach((bytes, index) => fs.writeFileSync(
-    path.join(paths.canonicalRoot, `${US_SERIES_KEYS[index]}.json`),
-    bytes,
-  ));
   const recovered = await runUsIndicesDaily({
     ...paths,
     request: async (_url, key) => yahooResponseForKey(key, {
@@ -949,20 +740,12 @@ assert.deepEqual(
     eventName: "schedule",
   });
   assert.equal(recovered.exitCode, 0);
-  assert.equal(recovered.index.counts.recovered, 4);
+  assert.equal(recovered.index.counts.fresh, 4);
   assert.deepEqual(recovered.index.retry_keys, []);
   for (const key of US_SERIES_KEYS) {
     const state = JSON.parse(fs.readFileSync(path.join(paths.stateRoot, "keys", `${key}.json`), "utf8"));
-    assert.notEqual(
-      state.provider_observation.payload_sha256,
-      state.current.payload_sha256,
-      "the current provider response hash must remain distinct from merged canonical history",
-    );
-    assert.equal(fs.existsSync(path.join(
-      paths.stateRoot,
-      "provider-observations",
-      `${state.provider_observation.payload_sha256}.json`,
-    )), true);
+
+
   }
   await assert.rejects(() => runUsIndicesDaily({
     ...paths,
@@ -1001,57 +784,5 @@ assert.deepEqual(
   assert.equal(report.series.sp500[0].status, "fail");
 }
 
-{
-  const packageJson = JSON.parse(fs.readFileSync(path.join(REPO_ROOT, "100xfenok-next/package.json"), "utf8"));
-  const workflow = fs.readFileSync(path.join(REPO_ROOT, ".github/workflows/fetch-us-indices-daily.yml"), "utf8");
-  assert.equal(
-    packageJson.scripts?.["qa:us-indices-daily"],
-    "node ../scripts/test-fetch-us-indices-daily.mjs",
-    "package hop must own the US indices regression suite",
-  );
-  assert.match(
-    workflow,
-    /npm --prefix 100xfenok-next run qa:us-indices-daily/,
-    "workflow must invoke the package-script hop",
-  );
-  assert.match(workflow, /controlled_failure:/);
-  assert.match(workflow, /INPUT_CONTROLLED_FAILURE:/);
-  assert.match(workflow, /ROLLBACK_FAILED: \$\{\{ steps\.fetch_indices\.outputs\.rollback_failed \|\| 'false' \}\}/);
-  assert.match(workflow, /"\$FETCH_OUTCOME" == "success" && "\$ROLLBACK_FAILED" != "true"/);
-
-  function assertLiveProducerSource(source) {
-    assert.match(source, /if \(!Array\.isArray\(providerRevisions\) \|\| !seriesKey\) throw new Error\(`conflicting value for existing date \$\{row\.date\}`\);/,
-      "conflicts without an explicit evidence sink must fail closed");
-    assert.match(source, /providerRevisions\.push\(revision\);/,
-      "accepted provider revisions must be recorded before merge continues");
-    assert.match(source, /if \(outOfTolerance\.length > 0\) \{/,
-      "out-of-tolerance settled-date revisions must fail closed");
-    assert.match(source, /\{ targetPath: canonicalPath, bytes \}/u,
-      "successful live writes must include the canonical target");
-    assert.doesNotMatch(source, /\bpublicPath\b/u,
-      "the live producer must not retain a public write target");
-    assert.doesNotMatch(source, /emitUsIndicesParity|qualification/,
-      "the live producer must not retain the retired qualification clock or emit parity");
-  }
-  const producerSource = fs.readFileSync(path.join(REPO_ROOT, "scripts/fetch-us-indices-daily.mjs"), "utf8");
-  assertLiveProducerSource(producerSource);
-  const swallowedEvidence = producerSource.replace("providerRevisions.push(revision);", "void revision;");
-  assert.notEqual(swallowedEvidence, producerSource, "revision-recording mutation anchor must exist");
-  assert.throws(
-    () => assertLiveProducerSource(swallowedEvidence),
-    /must be recorded/,
-    "a mutation that swallows provider revision evidence must fail",
-  );
-  const bypassedRevisionGuard = producerSource.replace(
-    "if (outOfTolerance.length > 0) {",
-    "if (false) {",
-  );
-  assert.notEqual(bypassedRevisionGuard, producerSource, "revision-failure mutation anchor must exist");
-  assert.throws(
-    () => assertLiveProducerSource(bypassedRevisionGuard),
-    /must fail closed/,
-    "a mutation that bypasses the revision failure path must fail",
-  );
-}
 
 console.log("test-fetch-us-indices-daily: ok");

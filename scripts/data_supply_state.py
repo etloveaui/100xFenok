@@ -451,13 +451,8 @@ def _validate_recovery_map(value: Any) -> dict[str, Any]:
         _safe_component(entity, "recovery entity")
         if not isinstance(record, Mapping):
             raise SchemaError("recovery entry must be an object")
-        _require_keys(record, {"consecutive_green", "last_transition"}, "recovery entry")
-        count = record["consecutive_green"]
-        if not isinstance(count, int) or isinstance(count, bool) or count < 0:
-            raise SchemaError("consecutive_green must be a non-negative integer")
+        _require_keys(record, {"last_transition"}, "recovery entry")
         _safe_component(record["last_transition"], "last_transition")
-        if "last_primary_event_id" in record and record["last_primary_event_id"] is not None:
-            _validate_sha(record["last_primary_event_id"], "last_primary_event_id")
     return result
 
 
@@ -491,7 +486,6 @@ def _validate_decision(record: Mapping[str, Any]) -> dict[str, Any]:
             "new_selection_digest",
             "transition",
             "reason_code",
-            "recovery_green_count",
         },
         "decision",
     )
@@ -514,9 +508,6 @@ def _validate_decision(record: Mapping[str, Any]) -> dict[str, Any]:
             raise SchemaError(f"{field}s must be sorted and unique")
     _validate_sha(row["previous_selection_digest"], "previous_selection_digest")
     _validate_sha(row["new_selection_digest"], "new_selection_digest")
-    count = row["recovery_green_count"]
-    if not isinstance(count, int) or isinstance(count, bool) or count < 0:
-        raise SchemaError("recovery_green_count must be a non-negative integer")
     if row["event_id"] != deterministic_event_id("resolution", row):
         raise SchemaError("decision event_id does not match its payload")
     if "transaction_id" in row:
@@ -1312,7 +1303,6 @@ class DataSupplyStateStore:
         expected_active_transaction_id: str | None,
         transition: str,
         reason_code: str,
-        recovery_green_count: int,
         decided_at: str,
         evidence_observations: list[Mapping[str, Any]] | None = None,
     ) -> str:
@@ -1323,8 +1313,6 @@ class DataSupplyStateStore:
         _parse_timestamp(decided_at, "decided_at")
         if expected_active_transaction_id is not None:
             _safe_component(expected_active_transaction_id, "expected_active_transaction_id")
-        if not isinstance(recovery_green_count, int) or isinstance(recovery_green_count, bool) or recovery_green_count < 0:
-            raise SchemaError("recovery_green_count must be a non-negative integer")
         if not isinstance(candidate_observations, list):
             raise SchemaError("candidate_observations must be a list")
         candidates = [validate_observation(row, require_valid=True) for row in candidate_observations]
@@ -1399,25 +1387,17 @@ class DataSupplyStateStore:
                             raise SchemaError("LKG metadata must exactly preserve the prior current selection")
                         proposed_ref = proposed_lkg["payload_ref"]
                         if (
-                            proposed_ref["kind"] != "provider_lkg"
+                            proposed_ref["kind"] not in {"provider_object", "provider_lkg"}
                             or proposed_ref["sha256"] != prior_selected["payload_sha256"]
                         ):
-                            raise SchemaError("prior current must be rebound to an immutable provider LKG object")
+                            raise SchemaError("prior current must retain its validated immutable payload")
             elif proposed_lkg != prior_lkg.get(entity):
                 raise SchemaError("an unchanged current selection cannot mutate its LKG")
             proposed_recovery = next_recovery.get(entity)
             if proposed_recovery is None:
                 raise SchemaError("transition entity requires a recovery record")
-            if proposed_recovery["consecutive_green"] != recovery_green_count:
-                raise SchemaError("recovery_green_count differs from recovery state")
             if proposed_recovery["last_transition"] != transition:
                 raise SchemaError("last_transition differs from decision transition")
-            prior_green_count = prior_recovery.get(entity, {}).get("consecutive_green", 0)
-            if (
-                any(row["validation_status"] == "invalid" for row in evidence)
-                and recovery_green_count > prior_green_count
-            ):
-                raise SchemaError("invalid evidence cannot advance recovery")
             candidate_by_id = {row["event_id"]: row for row in candidates}
             if any(candidate["entity"] != entity for candidate in candidates):
                 raise SchemaError("candidate entity differs from transition entity")
@@ -1441,7 +1421,7 @@ class DataSupplyStateStore:
                     )
                     is_lkg_reselection = (
                         selected["resolution_state"] in {"lkg_primary", "lkg_fallback"}
-                        and selected["payload_ref"]["kind"] == "provider_lkg"
+                        and selected["payload_ref"]["kind"] in {"provider_object", "provider_lkg"}
                         and isinstance(proposed_lkg, Mapping)
                         and all(selected.get(field) == proposed_lkg.get(field) for field in stable_fields)
                         and selected["payload_ref"] == proposed_lkg["payload_ref"]
@@ -1466,7 +1446,6 @@ class DataSupplyStateStore:
                 "new_selection_digest": new_selection_digest,
                 "transition": transition,
                 "reason_code": reason_code,
-                "recovery_green_count": recovery_green_count,
             }
             decision["event_id"] = deterministic_event_id("resolution", decision)
             _validate_decision(decision)
@@ -1577,7 +1556,6 @@ class DataSupplyStateStore:
                 next_lkg.setdefault(entity, prior_selected)
             next_recovery = dict(active["recovery"])
             next_recovery[entity] = {
-                "consecutive_green": 0,
                 "last_transition": "unavailable",
             }
             self._validate_payload_refs(next_current)
@@ -1593,7 +1571,6 @@ class DataSupplyStateStore:
                 "new_selection_digest": canonical_sha256(next_current),
                 "transition": "unavailable",
                 "reason_code": reason_code,
-                "recovery_green_count": 0,
             }
             decision["event_id"] = deterministic_event_id("resolution", decision)
             _validate_decision(decision)
@@ -1731,7 +1708,6 @@ class DataSupplyStateStore:
                 "new_selection_digest": canonical_sha256(target["current"]),
                 "transition": "rollback",
                 "reason_code": "operator_rollback",
-                "recovery_green_count": 0,
                 "transaction_id": target_transaction_id,
             }
             decision["event_id"] = deterministic_event_id("resolution", decision)
@@ -2241,14 +2217,11 @@ class DataSupplyStateStore:
         *,
         expected_active_transaction_id: str,
     ) -> dict[str, Any]:
-        """Copy the CAS-bound current immutable bytes into provider LKG under lock order."""
-
+        """Retain the CAS-bound validated immutable reference without copying its bytes."""
         domain = _safe_component(domain, "domain")
         entity = _safe_component(entity, "entity")
         expected_active_transaction_id = _safe_component(
-            expected_active_transaction_id,
-            "expected_active_transaction_id",
-        )
+            expected_active_transaction_id, "expected_active_transaction_id")
         with self._lock(self._domain_dir(domain) / ".lock"):
             active = self._read_active_domain_unlocked(domain)
             if active["transaction_id"] != expected_active_transaction_id:
@@ -2256,34 +2229,11 @@ class DataSupplyStateStore:
             selected = active["current"].get(entity)
             if selected is None:
                 raise SchemaError("current-to-LKG requires a current selection")
-            ref = selected["payload_ref"]
-            if ref["kind"] == "provider_lkg":
-                return dict(selected)
-            payload_path = self._inside_root(self.root / ref["path"])
-            payload = payload_path.read_bytes()
-            if hashlib.sha256(payload).hexdigest() != ref["sha256"]:
-                raise IntegrityError("current immutable payload digest mismatch")
-            provider = selected["provider"]
-            base = self.root / "providers" / provider / domain / "lkg" / entity
-            latest_path = base / "latest.json"
-            expected_latest = None
-            if latest_path.exists():
-                latest = self._validate_provider_lkg_latest(
-                    latest_path,
-                    provider=provider,
-                    domain=domain,
-                    entity=entity,
-                )
-                expected_latest = latest["sha256"]
-            stored = self._store_provider_lkg_unlocked(
-                provider=provider,
-                domain=domain,
-                entity=entity,
-                payload=payload,
-                meaningful_transition=True,
-                expected_latest_sha256=expected_latest,
-            )
-            return bind_selection_to_provider_lkg(selected, stored)
+            # Active-generation loading has verified identity, strict JSON and SHA.
+            # Both ordinary objects and historical LKG objects remain readable.
+            if selected["payload_ref"]["kind"] not in {"provider_object", "provider_lkg"}:
+                raise IntegrityError("current selection is not an immutable payload")
+            return dict(selected)
 
     def store_provider_object(
         self,

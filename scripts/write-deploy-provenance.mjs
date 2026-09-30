@@ -1,11 +1,7 @@
 #!/usr/bin/env node
 
-// write-deploy-provenance — stamp the CI run's identity into the built bundle
-// as deploy-provenance.json so that any later run can ask: "which
-// run shipped the currently-live bundle, and did its smokes pass?" (BACKLOG #361)
-//
-// Runs AFTER cf:build, BEFORE wrangler deploy. Writes into the bundle assets
-// tree only (.open-next is gitignored build output) — never into tracked paths.
+// Stamp the actual built bundle with its build ID and source SHA.
+// Writes only into the build assets; built_at is diagnostic.
 
 import fs from "node:fs";
 import path from "node:path";
@@ -14,7 +10,6 @@ import { pathToFileURL } from "node:url";
 import {
   DEPLOY_PROVENANCE_PUBLIC_PATH,
   buildDeployProvenance,
-  isDeployProvenance,
 } from "./lib/deploy-provenance.mjs";
 
 function parseArgs(argv) {
@@ -42,16 +37,8 @@ export function writeDeployProvenance({ assetsDir, env = process.env, now = null
   const provenance = buildDeployProvenance({
     buildId,
     builtAt: now ?? new Date().toISOString(),
-    repository: env.GITHUB_REPOSITORY ?? "local/local",
-    runAttempt: env.GITHUB_RUN_ATTEMPT ?? "1",
-    runId: env.GITHUB_RUN_ID ?? "local",
-    runNumber: env.GITHUB_RUN_NUMBER ?? "0",
-    serverUrl: env.GITHUB_SERVER_URL ?? "https://github.com",
-    sha: env.GITHUB_SHA ?? "local",
+    sha: env.GITHUB_SHA,
   });
-  if (!isDeployProvenance(provenance)) {
-    throw new Error("internal error: built provenance failed its own contract");
-  }
   const outPath = path.join(assetsDir, DEPLOY_PROVENANCE_PUBLIC_PATH);
   fs.mkdirSync(path.dirname(outPath), { recursive: true });
   fs.writeFileSync(outPath, `${JSON.stringify(provenance, null, 2)}\n`);
@@ -63,7 +50,7 @@ function main() {
   const { outPath, provenance } = writeDeployProvenance({ assetsDir });
   console.log(
     `::notice::Deploy provenance stamped: build_id=${provenance.build_id} `
-    + `run_id=${provenance.run_id} attempt=${provenance.run_attempt} sha=${provenance.sha} -> ${outPath}`,
+    + `sha=${provenance.sha} -> ${outPath}`,
   );
 }
 

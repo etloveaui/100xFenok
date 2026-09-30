@@ -13,10 +13,7 @@ import { atomicWrite } from "./lib/atomic-file.mjs";
 import { attemptResult, classifyEndpointResponse, defaultAttemptId, returnedTuple, threwTuple, transportError, unobservedTuple, worstRequestResult } from "./lib/provider-fetch-result.mjs";
 import {
   LaneLkgStore,
-  PROMOTION_CONTRACT_PROVIDER_OBSERVATION_V2,
-  buildProviderObservationV2,
   classifyLkgFailure,
-  isNaturalScheduleRun,
   systemicLkgFailureReason,
 } from "./lib/data-supply-lkg-store.mjs";
 import { isUsTradingDate } from "./fetch-fenok-finra-daily-private.mjs";
@@ -1706,15 +1703,6 @@ function buildOccLkgCandidate({ repoRoot: storeRepoRoot, markerPath, candidateDo
     sourceAsOf,
     validateDocument: validOccFreshnessMarker,
     deriveSourceAsOf: occFreshnessMarkerSourceAsOf,
-    promotion_contract: PROMOTION_CONTRACT_PROVIDER_OBSERVATION_V2,
-    provider_observation: buildProviderObservationV2({
-      payloadBytes,
-      sourceAsOf,
-      validateDocument: validOccFreshnessMarker,
-      deriveSourceAsOf: occFreshnessMarkerSourceAsOf,
-      candidateContainsObservation: (candidate, provider) => JSON.stringify(candidate) === JSON.stringify(provider),
-      run,
-    }),
   };
 }
 
@@ -1813,22 +1801,9 @@ function applyOccLkgStore({
     && Date.parse(candidate.sourceAsOf) <= Date.parse(priorSourceAsOf)) {
     return { kind: "not_newer", updated: false, sourceAsOf: candidate.sourceAsOf };
   }
-  if (retryActive && !isNaturalScheduleRun(run)) {
-    return {
-      kind: "recovery_requires_schedule",
-      updated: false,
-      reason: "recovery_requires_schedule",
-      degraded: true,
-      corrupt: false,
-      exitCode: 0,
-    };
-  }
 
   const [decision] = store.evaluatePromotionCandidates([candidate], run);
   if (!decision.eligible) {
-    if (["foreign_writer_conflict", "recovery_not_advanced_by_provider"].includes(decision.reason)) {
-      store.recordPromotionDeferral({ artifacts: [candidate], run, reason: decision.reason });
-    }
     return {
       kind: "not_promotable",
       updated: false,
@@ -1840,8 +1815,9 @@ function applyOccLkgStore({
   }
 
   atomicWrite(currentMarkerPath, candidate.payloadBytes);
+  const recoveringKeys = new Set(store.stateSnapshot().retry_set);
   const success = store.recordSuccess({ artifacts: [candidate], run });
-  const recovered = success.state.items[OCC_LKG_KEY]?.recovered_at === run.observedAt;
+  const recovered = recoveringKeys.has(OCC_LKG_KEY);
   return { kind: "success", updated: true, recovered, sourceAsOf: candidate.sourceAsOf, exitCode: 0 };
 }
 

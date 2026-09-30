@@ -112,7 +112,6 @@ on:
       - 'scripts/fixtures/data_supply/policy_registry/**'
       - 'scripts/fixtures/cloud-data-plane/**'
       - 'scripts/fixtures/update-manifest/**'
-      - 'data/admin/lane-commit-manifest.json'
       - 'data/admin/lane-registry-projection.json'
       - 'data/admin/data-supply-detection-floor.json'
       - 'data/admin/fenok-data-health-kpi.json'
@@ -231,7 +230,6 @@ on:
       - 'scripts/fixtures/data_supply/policy_registry/**'
       - 'scripts/fixtures/cloud-data-plane/**'
       - 'scripts/fixtures/update-manifest/**'
-      - 'data/admin/lane-commit-manifest.json'
       - 'data/admin/lane-registry-projection.json'
       - 'data/admin/data-supply-detection-floor.json'
       - 'data/admin/fenok-data-health-kpi.json'
@@ -299,7 +297,6 @@ jobs:
       - name: Validate lane manifest staging
         run: |
           npm --prefix 100xfenok-next run qa:lane-manifest-staging
-          node scripts/test-check-lane-registry-commit-shards.mjs
 
       - name: Validate manifest halves agree (self-consistency gate)
         run: |
@@ -335,7 +332,6 @@ jobs:
           node scripts/test-sec13f-retention-web-contract.mjs
           node scripts/test-update-manifest-rebuild-policy.mjs
           node scripts/test-update-manifest-dispatch-decoupling.mjs
-          node scripts/test-sync-update-manifest-trigger-paths.mjs
           python3 -m unittest scripts/test_update_manifest_derived_description.py
 
       - name: Validate computed-signals coordinator and exporter contracts

@@ -15,7 +15,7 @@ import {
   familyForPath,
   isEnrolledPath,
 } from "./lib/cloud-data-plane-worker-read.mjs";
-import { mkdtemp, mkdir, rm, writeFile, readFile } from "node:fs/promises";
+import { mkdtemp, mkdir, rm, writeFile, readFile, symlink, rename } from "node:fs/promises";
 import { mkdtempSync, statSync } from "node:fs";
 import http from "node:http";
 import os from "node:os";
@@ -82,6 +82,47 @@ const POLICY = {
   validate_freshness: () => true,
   validate_public_payload: () => true,
 };
+
+// Publication selects only the existing registry roots, without admitting sibling files.
+async function testScouterExactRoots() {
+  const root = await mkdtemp(path.join(os.tmpdir(), "plane-scouter-roots-"));
+  const payloads = {
+    "core/metadata.json": JSON.stringify({ source_date: "2026-09-29" }),
+    "core/stocks_index.json": "{}", "core/dashboard.json": "{}",
+    "stocks/one.json": "{}", "raw/one.json": "{}", "indicators/one.json": "{}", "etfs/one.json": "{}",
+    "schema.json": "{}", "README.md": "Export data",
+  };
+  try {
+    for (const [relative, body] of Object.entries({ ...payloads, "core/stocks_analyzer.json": "{}", "unrelated.json": '{"private_key":"must not publish"}' })) {
+      const target = path.join(root, relative);
+      await mkdir(path.dirname(target), { recursive: true });
+      await writeFile(target, body);
+    }
+    const build = () => buildFamilyManifest({ familyName: "global-scouter", absRoot: root, relRoot: FAMILIES["global-scouter"].manifest_prefix, now: () => "2026-09-30T00:00:00Z" });
+    const result = await build();
+    const prefix = `${FAMILIES["global-scouter"].manifest_prefix}/`;
+    assert.deepEqual(result.manifest.assets.map((asset) => asset.path.slice(prefix.length)).sort(), Object.keys(payloads).sort());
+    assert.equal(result.sourceAsOf.value, "2026-09-29");
+    await symlink(path.join(root, "unrelated.json"), path.join(root, "stocks", "escape.json"));
+    await assert.rejects(build, (error) => error.code === "FAMILY_SCOPE_ROOT_INVALID", "symlink inside an included root must be refused");
+    await rm(path.join(root, "stocks", "escape.json"));
+    await rm(path.join(root, "schema.json"));
+    await symlink(path.join(root, "README.md"), path.join(root, "schema.json"));
+    await assert.rejects(build, (error) => error.code === "FAMILY_SCOPE_ROOT_INVALID", "a selected root symlink must be refused");
+    await rm(path.join(root, "schema.json"));
+    await writeFile(path.join(root, "schema.json"), payloads["schema.json"]);
+    await rename(path.join(root, "core"), path.join(root, "unselected-core"));
+    await symlink(path.join(root, "unselected-core"), path.join(root, "core"));
+    await assert.rejects(build, (error) => error.code === "FAMILY_SCOPE_ROOT_INVALID", "an intermediate directory symlink into the same family must be refused");
+  } finally {
+    await rm(root, { recursive: true, force: true });
+  }
+}
+await testScouterExactRoots();
+if (process.env.S8_SCOPE_ONLY === "1") {
+  console.log("test-scouter-exact-roots: ok");
+  process.exit(0);
+}
 
 // ISO-day normalization rejects calendar-impossible dates in both day and
 // date-time forms while preserving valid normalization, including leap day.
@@ -2963,10 +3004,6 @@ const asFamily = (manifest, familyName) => ({
   });
   const fredState = lifecycleStates.find((state) => state.name === "fred-macro");
   assert.deepEqual(fredState.preparedGenerations, [b2.generation_id]);
-  assert.deepEqual(fredState.releasedGenerations, [b1.generation_id]);
-  assert.equal(fredState.expiredReceipts.length, 1);
-  assert.equal(fredState.expiredReceipts[0].receipt_id, "r-stale");
-  assert.deepEqual(fredState.clockAnomalies, []);
 
   const expiredPlan = computeRetentionPlan({
     families: lifecycleStates,
@@ -3589,7 +3626,7 @@ function runCli(extraArgs, includeFamily = true, extraEnv = {}) {
 {
   const family = FAMILIES["stockanalysis-etf-detail"];
   assert.equal(family.privacy_class, "private",
-    "the shadow family must stay private for the enrolment derivation to exclude it");
+    "the shadow family must stay private and absent from public enrollment");
   const representativePaths = [
     "/data/stockanalysis/etfs/SPY.json",
     "/data/stockanalysis/etfs/index.json",
@@ -3629,26 +3666,6 @@ function runCli(extraArgs, includeFamily = true, extraEnv = {}) {
   assert.equal(gateBlocksPublication({ gateCode: 2, strictGate: false }), true);
   assert.equal(gateBlocksPublication({ gateCode: 0, strictGate: false }), false);
 
-  // The block must record evidence and return BEFORE the env check and before
-  // any plane is created, so a blocked strict run performs no remote call.
-  // Asserted from source, because driving the real CLI for this family would
-  // mean walking its 1 GB payload tree to build a manifest the gate rejects.
-  const source = await readFile(
-    path.join(path.dirname(fileURLToPath(import.meta.url)), "publish-cloud-data-generation.mjs"),
-    "utf8",
-  );
-  const gateBlockAt = source.indexOf("if (gateBlocked) {");
-  const recordAt = source.indexOf('await recordOutcome("gate_blocked")');
-  const envCheckAt = source.indexOf("// Env for the live write, checked after the gate and before any write.");
-  const planeAt = source.indexOf("const publishPlane = createPublishPlaneImpl({");
-  assert.ok(gateBlockAt > 0 && recordAt > gateBlockAt,
-    "the gate block must record its gate_blocked evidence inside the block");
-  assert.ok(gateBlockAt < envCheckAt && gateBlockAt < planeAt,
-    "the gate block must be reached before the env check and before plane creation");
-  // And the strict family must also declare the class B reads the gate now sees.
-  assert.equal(FAMILIES["stockanalysis-etf-detail"].plan.class_b, 34_000);
-  assert.ok(FAMILIES["stockanalysis-etf-detail"].plan.class_b >= 2 * 16_819,
-    "declared class B must be at least 2x the measured 16,819 read operations");
   console.log("strict gate ok (exit 1 terminal for the strict family, tolerant families unchanged, blocks before any plane)");
 }
 

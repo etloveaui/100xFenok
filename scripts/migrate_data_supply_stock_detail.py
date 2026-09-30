@@ -844,10 +844,12 @@ class StockDetailMigration:
         ticker = entry["ticker"]
         intended = entry["intended_selection"]
         if intended["resolution_state"] == "unavailable":
-            unavailable = ticker not in active["current"] and active["recovery"].get(ticker) == {
-                "consecutive_green": 0,
-                "last_transition": "unavailable",
-            }
+            recovery = active["recovery"].get(ticker)
+            unavailable = (
+                ticker not in active["current"]
+                and isinstance(recovery, Mapping)
+                and recovery.get("last_transition") == "unavailable"
+            )
             if not unavailable:
                 return False
             for observation in observations:
@@ -974,7 +976,7 @@ class StockDetailMigration:
             next_lkg[ticker] = preserved
             transition = "migration_provider_transition"
         next_recovery = dict(active["recovery"])
-        next_recovery[ticker] = {"consecutive_green": 0, "last_transition": transition}
+        next_recovery[ticker] = {"last_transition": transition}
         evidence = [row for row in observations if row["event_id"] != observation["event_id"]]
         transaction_id = store.prepare_transition(
             domain=DOMAIN,
@@ -987,7 +989,6 @@ class StockDetailMigration:
             expected_active_transaction_id=active["transaction_id"],
             transition=transition,
             reason_code=reason_code,
-            recovery_green_count=0,
             decided_at=decided_at,
         )
         self._failpoint(f"after_prepare:{ticker}")
@@ -1144,7 +1145,6 @@ class StockDetailMigration:
                     "new_selection_digest",
                     "transition",
                     "reason_code",
-                    "recovery_green_count",
                     "transaction_id",
                 }
                 if required.difference(record) or record.get("schema_version") != "data-supply-resolution-event/v1":
@@ -1162,9 +1162,6 @@ class StockDetailMigration:
                         or any(not isinstance(value, str) or not re.fullmatch(r"[0-9a-f]{64}", value) for value in values)
                     ):
                         raise IntegrityError(f"resolution history {field} is malformed")
-                count = record.get("recovery_green_count")
-                if not isinstance(count, int) or isinstance(count, bool) or count < 0:
-                    raise IntegrityError("resolution history recovery count is malformed")
             if event_id in records:
                 raise IntegrityError(f"{category} history contains a duplicate event")
             records[event_id] = record
@@ -1254,7 +1251,6 @@ class StockDetailMigration:
                 or resolution.get("transition")
                 != active["recovery"].get(ticker, {}).get("last_transition")
                 or resolution.get("reason_code") != reason_by_state[state]
-                or resolution.get("recovery_green_count") != 0
                 or resolution.get("candidate_event_ids") != expected_candidate_ids[ticker]
                 or resolution.get("evidence_event_ids") != expected_evidence_ids[ticker]
             ):
@@ -1418,7 +1414,7 @@ class StockDetailMigration:
             ):
                 raise IntegrityError(f"stock-detail state differs from manifest: {ticker}")
             recovery = active["recovery"].get(ticker)
-            if not isinstance(recovery, Mapping) or recovery.get("consecutive_green") != 0:
+            if not isinstance(recovery, Mapping):
                 raise IntegrityError(f"stock-detail recovery state is invalid: {ticker}")
             allowed_transitions = {
                 "fresh_primary": {"initial_primary", "primary_refresh", "migration_provider_transition"},

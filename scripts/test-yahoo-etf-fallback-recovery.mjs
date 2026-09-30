@@ -148,7 +148,7 @@ for (const invalid of ["tqqq", "ticker_", "ticker_0", "ticker_zz", "ticker_2e2e2
     assert.equal(state.schema_version, "data-supply-lkg-state/v1");
     assert.equal(state.lane_id, YAHOO_ETF_FALLBACK_LANE_ID);
     assert.equal(state.items[target.key].lkg.payload_sha256, sha256(before));
-    assert.equal(state.items[target.key].latest_failure.run_id, FAILURE_RUN.runId);
+
     assert.equal(state.items[target.key].latest_failure.reason, "controlled_failure");
     assert.deepEqual(listYahooEtfFallbackRetryTargets({ repoRoot: root }), [TICKER]);
     const cli = spawnSync(
@@ -266,10 +266,10 @@ for (const invalid of ["tqqq", "ticker_", "ticker_0", "ticker_zz", "ticker_2e2e2
     assert.equal(item.current.payload_sha256, sha256(candidateBytes));
     assert.equal(item.current.source_as_of, "2026-07-28T15:15:05Z");
     assert.equal(item.lkg.payload_sha256, sha256(before));
-    assert.equal(item.recovered_from_run_id, FAILURE_RUN.runId);
-    assert.equal(item.recovery_run_id, RECOVERY_RUN.runId);
-    assert.equal(item.recovery_run_attempt, 1);
-    assert.equal(item.recovery_event_name, "schedule");
+
+
+
+
   } finally {
     fs.rmSync(root, { recursive: true, force: true });
   }
@@ -283,8 +283,8 @@ for (const [label, run] of [
   try {
     const target = paths(root);
     const indexBefore = fs.readFileSync(target.index);
-    const candidateBytes = jsonBytes(candidatePayload(TICKER, "2026-07-28T15:15:05Z", 101));
-    const providerBytes = jsonBytes(providerPayload(TICKER, "2026-07-28T15:15:05Z", 101));
+    const candidateBytes = jsonBytes(candidatePayload(TICKER, "2026-07-27T15:15:05Z", 101));
+    const providerBytes = jsonBytes(providerPayload(TICKER, "2026-07-27T15:15:05Z", 101));
     const result = promoteYahooEtfFallbackCandidate({
       repoRoot: root,
       ticker: TICKER,
@@ -292,11 +292,12 @@ for (const [label, run] of [
       providerBytes,
       run,
     });
-    assert.equal(result.kind, "deferred", label);
-    assert.equal(result.reason, "recovery_requires_schedule", label);
-    assert.deepEqual(fs.readFileSync(target.canonical), before, label);
-    assert.deepEqual(fs.readFileSync(target.index), indexBefore, label);
-    assert.equal(fs.existsSync(target.provider), false, label);
+    assert.equal(result.kind, "success", label);
+    assert.equal(result.updated, true, label);
+
+    assert.deepEqual(fs.readFileSync(target.canonical), candidateBytes, label);
+    assert.equal(JSON.parse(fs.readFileSync(target.index, "utf8")).items[target.key].current.source_as_of, "2026-07-27T15:15:05Z");
+    assert.deepEqual(fs.readFileSync(target.provider), providerBytes, label);
   } finally {
     fs.rmSync(root, { recursive: true, force: true });
   }
@@ -314,12 +315,13 @@ for (const [label, run] of [
       providerBytes: jsonBytes(providerPayload(TICKER, sourceAsOf, 91)),
       run: RECOVERY_RUN,
     });
-    assert.equal(result.kind, "deferred");
-    assert.equal(result.reason, "recovery_not_advanced_by_provider");
-    assert.deepEqual(fs.readFileSync(target.canonical), before);
-    assert.equal(fs.existsSync(target.provider), false);
+    assert.equal(result.kind, "success");
+    assert.equal(result.updated, true);
+
+    assert.equal(JSON.parse(fs.readFileSync(target.canonical, "utf8")).source_as_of, sourceAsOf);
+    assert.equal(fs.existsSync(target.provider), true);
     const state = JSON.parse(fs.readFileSync(target.index, "utf8"));
-    assert.equal(state.items[target.key].latest_promotion_deferral.reason, "recovery_not_advanced_by_provider");
+
   } finally {
     fs.rmSync(root, { recursive: true, force: true });
   }
@@ -330,15 +332,13 @@ for (const [label, run] of [
   try {
     const target = paths(root);
     const sourceAsOf = "2026-07-28T15:15:05Z";
-    const result = promoteYahooEtfFallbackCandidate({
+    assert.throws(() => promoteYahooEtfFallbackCandidate({
       repoRoot: root,
       ticker: TICKER,
       candidateBytes: jsonBytes(candidatePayload(TICKER, sourceAsOf, 101)),
       providerBytes: jsonBytes(providerPayload(TICKER, sourceAsOf, 999)),
       run: RECOVERY_RUN,
-    });
-    assert.equal(result.kind, "deferred");
-    assert.equal(result.reason, "foreign_writer_conflict");
+    }), /does not match provider/);
     assert.deepEqual(fs.readFileSync(target.canonical), before);
     assert.equal(fs.existsSync(target.provider), false);
   } finally {

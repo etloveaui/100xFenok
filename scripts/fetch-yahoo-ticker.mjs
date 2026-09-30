@@ -290,13 +290,14 @@ export async function runYahooTicker({
   request = requestBytes,
   sleep = sleepMs,
   maxRetries = 2,
-  observedAt = new Date().toISOString(),
+  observedAt = null,
   attemptId = `gh-${process.env.GITHUB_RUN_ID ?? Date.now()}-${process.env.GITHUB_RUN_ATTEMPT ?? 1}-yahoo`,
   eventName = process.env.GITHUB_EVENT_NAME ?? null,
   controlledFailureTickers = [],
   publishOutputPair = publishYahooOutputAtomic,
   commitPlannedCandidate = (store, candidate) => store.commitCandidate(candidate),
 } = {}) {
+  const observationTime = () => observedAt ?? new Date().toISOString();
   const results = [];
   const errors = [];
   const controlled = validateYahooControlledFailureTickers(controlledFailureTickers, eventName);
@@ -304,6 +305,7 @@ export async function runYahooTicker({
     const current = controlled.includes(symbol)
       ? { tuple: threwTuple("unexpected"), quote: null, message: "owner-approved workflow_dispatch chaos injection", controlled: true }
       : await evaluateTicker({ symbol, request, sleep, maxRetries });
+    current.observedAt = observationTime();
     results.push(current);
     if (current.quote) {
       console.log(`${symbol}: price=${current.quote.price} change=${current.quote.change.toFixed(4)} (${current.quote.changePercent.toFixed(2)}%)`);
@@ -314,6 +316,7 @@ export async function runYahooTicker({
     await sleep(500);
   }
 
+  observedAt = observationTime();
   const tuple = foldWorstTuples(results.map((result) => result.tuple));
   const row = buildAttemptRow({ laneId: "yahoo_ticker_macro", memberId: null, observedAt, attemptId, tuple });
 
@@ -324,7 +327,7 @@ export async function runYahooTicker({
     path.join(stateRoot, "index.json"),
     ...TICKERS.flatMap((symbol) => {
       const key = `${symbol}.json`;
-      return [store.statePath(key), store.lkgPath(key), store.promotionAnchorPath(key)];
+      return [store.statePath(key), store.lkgPath(key)];
     }),
   ]);
   const run = runContext(attemptId, eventName, observedAt);
@@ -332,35 +335,32 @@ export async function runYahooTicker({
   const failedKeys = [];
   const fatalKeys = [];
   const plannedCandidates = [];
-  const promotionDeferralReasons = [];
   const outputQuotes = {};
+  let canonicalConflict = false;
+  const candidateRejections = [];
   for (let index = 0; index < TICKERS.length; index += 1) {
     const symbol = TICKERS[index];
     const key = `${symbol}.json`;
     const result = results[index];
     if (result.quote) {
       const providerBytes = quoteBytes(result.quote);
-      let candidateBytes = providerBytes;
-      const priorState = store.loadState(key);
+      const candidateBytes = providerBytes;
       const priorBytes = priorQuoteBytes(prior, symbol);
-      if (priorState?.retry === true && priorBytes) {
-        const priorInspected = store.inspectPayload(key, priorBytes);
-        const providerInspected = store.inspectPayload(key, providerBytes);
-        const priorTime = Date.parse(priorInspected.source_as_of);
-        const providerTime = Date.parse(providerInspected.source_as_of);
-        if (priorTime > providerTime
-          || (priorTime === providerTime && priorInspected.payload_sha256 !== providerInspected.payload_sha256)) {
-          candidateBytes = priorBytes;
-        }
-      }
+      const priorInspected = priorBytes ? store.inspectPayload(key, priorBytes) : null;
+      const providerInspected = store.inspectPayload(key, providerBytes);
+      const canonicalIsNewer = priorInspected?.valid && Date.parse(priorInspected.source_as_of) > Date.parse(providerInspected.source_as_of);
       const candidateArgs = {
         key,
         payloadBytes: candidateBytes,
-        providerObservation: store.buildProviderObservation({ key, payloadBytes: providerBytes, run }),
         canonicalRef: `data/macro/yahoo-ticker.json#/tickers/${symbol}`,
-        run,
+        run: runContext(attemptId, eventName, result.observedAt),
       };
       const candidate = store.planCandidate(candidateArgs);
+      if (canonicalIsNewer) {
+        candidate.accepted = false;
+        candidate.reason = "source_regression";
+        canonicalConflict = true;
+      }
       if (candidate.accepted) {
         plannedCandidates.push(candidate);
         const { symbol: _symbol, ...quote } = candidate.inspected.payload;
@@ -371,9 +371,10 @@ export async function runYahooTicker({
         failedKeys.push(key);
         fatalKeys.push(key);
       } else {
-        const deferredState = store.recordPromotionDeferral(candidate);
+        const deferredState = store.recordFailure({ key, canonicalRef: candidateArgs.canonicalRef, run, error: candidate.reason, failureKind: candidate.reason, fallbackBytes: null });
+        candidateRejections.push(`${key}: ${candidate.reason}`);
+        failedKeys.push(key);
         degradedKeys.push(key);
-        promotionDeferralReasons.push({ key, reason: candidate.reason });
         const retained = store.validRetainedLkg(key, deferredState);
         if (retained.valid) {
           const { symbol: _symbol, ...quote } = retained.payload;
@@ -405,9 +406,8 @@ export async function runYahooTicker({
   const complete = TICKERS.every((symbol) => outputQuotes[symbol]);
   let exitCode = complete ? assessment.exit_code : 2;
   let publishError = null;
-  const foreignWriterConflict = promotionDeferralReasons.some(({ reason }) => reason === "foreign_writer_conflict");
   let updated = false;
-  if (complete && exitCode === 0 && !foreignWriterConflict) {
+  if (complete && exitCode === 0 && !canonicalConflict) {
     const output = {
       updated: observedAt,
       source: "ticker-api-worker (yahoo-finance origin)",
@@ -449,7 +449,7 @@ export async function runYahooTicker({
     degradedKeys: degradedKeys.map((key) => key.replace(/\.json$/u, "")),
     reasons: [
       ...assessment.reasons,
-      ...promotionDeferralReasons.map(({ key, reason }) => `${key}: ${reason}`),
+      ...candidateRejections,
       ...(publishError ? [`publish failure: ${publishError.message}`] : []),
     ],
     index,

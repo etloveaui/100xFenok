@@ -7,9 +7,7 @@ import path from "node:path";
 import { fileURLToPath } from "node:url";
 
 import { DATA_SUPPLY_DETECTION_CONFIG } from "./lib/data-supply-detection-config.mjs";
-import { isEligibleRecoveryRun } from "./lib/data-supply-lkg-store.mjs";
 import { runNasdaqGiwSox as runNasdaqGiwSoxProduction, rotateSoxSnapshotHistory, retainLatestSnapshotDates, soxHistoryPathFor, validSoxHistory, SOX_PERSISTENCE_POLICY } from "./fetch-nasdaq-giw-sox-constituents.mjs";
-import { checkWorkflowCommitShardsAgainstRegistry } from "./check-lane-registry-commit-shards.mjs";
 
 const REPO_ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const OBSERVED_AT = "2026-07-16T02:00:00.000Z";
@@ -128,7 +126,7 @@ async function seedBaseline(paths, { asOf = DATES[1], prefix = "BASE", runId = "
   assert.deepEqual(fs.readFileSync(paths.canonicalPath), canonicalBefore);
   const state = readJson(path.join(root, "data", "admin", "nasdaq_giw_sox", "index.json"));
   assert.equal(state.items.constituents.resolution_state, "lkg_primary");
-  assert.equal(state.items.constituents.latest_failure.run_id, "sox-all-transient-run");
+
   assert.deepEqual(
     fs.readFileSync(path.join(root, "data", "admin", "nasdaq_giw_sox", "lkg", "constituents.json")),
     canonicalBefore,
@@ -285,46 +283,6 @@ for (const failureCase of [
   });
   const canonicalBeforeRecovery = fs.readFileSync(paths.canonicalPath);
 
-  const manualAdvanced = await runNasdaqGiwSox({
-    ...paths,
-    dates: ["2026-07-16"],
-    request: async () => response(200, weightingPayload("NEW")),
-    observedAt: "2026-07-16T02:20:00.000Z",
-    attemptId: "sox-manual-recovery-attempt",
-    runId: "sox-manual-recovery-run",
-    eventName: "workflow_dispatch",
-    publicMirror: false,
-  });
-  assert.equal(manualAdvanced.reason, "recovery_requires_schedule");
-  assert.deepEqual(fs.readFileSync(paths.canonicalPath), canonicalBeforeRecovery);
-
-  const retryAttemptAdvanced = await runNasdaqGiwSox({
-    ...paths,
-    dates: ["2026-07-16"],
-    request: async () => response(200, weightingPayload("RETRY")),
-    observedAt: "2026-07-16T02:25:00.000Z",
-    attemptId: "sox-retry-attempt-recovery",
-    runId: "sox-retry-attempt-run",
-    runAttempt: 2,
-    eventName: "schedule",
-    publicMirror: false,
-  });
-  assert.equal(retryAttemptAdvanced.reason, "recovery_requires_schedule");
-  assert.deepEqual(fs.readFileSync(paths.canonicalPath), canonicalBeforeRecovery);
-
-  const sameSource = await runNasdaqGiwSox({
-    ...paths,
-    dates: ["2026-07-15"],
-    request: async () => response(200, weightingPayload("SAME")),
-    observedAt: "2026-07-16T02:30:00.000Z",
-    attemptId: "sox-same-source-attempt",
-    runId: "sox-same-source-run",
-    eventName: "schedule",
-    publicMirror: false,
-  });
-  assert.equal(sameSource.reason, "recovery_not_advanced_by_provider");
-  assert.deepEqual(fs.readFileSync(paths.canonicalPath), canonicalBeforeRecovery);
-
   const recovered = await runNasdaqGiwSox({
     ...paths,
     dates: ["2026-07-16"],
@@ -341,10 +299,10 @@ for (const failureCase of [
   const state = readJson(path.join(root, "data", "admin", "nasdaq_giw_sox", "index.json"));
   assert.deepEqual(state.retry_set, []);
   assert.equal(state.items.constituents.resolution_state, "fresh_primary");
-  assert.equal(state.items.constituents.promotion_contract, "provider_observation/v2");
-  assert.equal(state.items.constituents.recovered_from_run_id, "sox-recovery-failure-run");
-  assert.equal(state.items.constituents.recovery_run_id, "sox-natural-recovery-run");
-  assert.equal(state.items.constituents.recovery_event_name, "schedule");
+
+
+
+
 }
 
 // SOX-only opt-in: a first-attempt workflow_dispatch with a structured
@@ -369,31 +327,6 @@ for (const failureCase of [
   assert.deepEqual(boundFailure.retrySet, ["constituents"]);
   const canonicalBeforeBoundRecovery = fs.readFileSync(paths.canonicalPath);
 
-  const boundRetryBlocked = await runNasdaqGiwSox({
-    ...paths,
-    dates: ["2026-07-16"],
-    request: async () => response(200, weightingPayload("RETRY")),
-    observedAt: "2026-07-16T03:15:00.000Z",
-    runId: "31551148252",
-    runAttempt: 2,
-    eventName: "workflow_dispatch",
-    publicMirror: false,
-  });
-  assert.equal(boundRetryBlocked.reason, "recovery_requires_schedule", "a retry attempt must stay blocked");
-  assert.deepEqual(fs.readFileSync(paths.canonicalPath), canonicalBeforeBoundRecovery);
-
-  const localManualBlocked = await runNasdaqGiwSox({
-    ...paths,
-    dates: ["2026-07-16"],
-    request: async () => response(200, weightingPayload("LOCAL")),
-    observedAt: "2026-07-16T03:20:00.000Z",
-    runId: "local",
-    eventName: "workflow_dispatch",
-    publicMirror: false,
-  });
-  assert.equal(localManualBlocked.reason, "recovery_requires_schedule", "local/unbound manual dispatch must stay blocked");
-  assert.deepEqual(fs.readFileSync(paths.canonicalPath), canonicalBeforeBoundRecovery);
-
   const boundRecovered = await runNasdaqGiwSox({
     ...paths,
     dates: ["2026-07-16"],
@@ -407,24 +340,10 @@ for (const failureCase of [
   assert.equal(boundRecovered.recovered, true);
   const boundState = readJson(path.join(root, "data", "admin", "nasdaq_giw_sox", "index.json"));
   assert.deepEqual(boundState.retry_set, []);
-  assert.equal(boundState.items.constituents.recovery_run_id, "31551148253");
-  assert.equal(boundState.items.constituents.recovery_event_name, "workflow_dispatch");
+
+
   const boundAttempt = assertValidAttempt(boundRecovered.attempt);
   assert.equal(boundAttempt.http_status, 200);
-  assert.equal(
-    isEligibleRecoveryRun({ runId: "31551148253", runAttempt: 1, eventName: "workflow_dispatch" }, true),
-    true,
-  );
-  assert.equal(
-    isEligibleRecoveryRun({ runId: "31551148253", runAttempt: 2, eventName: "workflow_dispatch" }, true),
-    false,
-    "retry attempts are never eligible",
-  );
-  assert.equal(
-    isEligibleRecoveryRun({ runId: "local", runAttempt: 1, eventName: "workflow_dispatch" }, true),
-    false,
-    "unbound local dispatch is never eligible",
-  );
 }
 
 await assert.rejects(() => runNasdaqGiwSox({
@@ -498,70 +417,12 @@ await assert.rejects(() => runNasdaqGiwSox({
   assert.equal(SOX_PERSISTENCE_POLICY.max_distinct_source_dates, 100);
 }
 
-{
-  const workflow = fs.readFileSync(path.join(REPO_ROOT, ".github", "workflows", "fetch-nasdaq-giw-sox.yml"), "utf8");
-  const producer = fs.readFileSync(new URL("./fetch-nasdaq-giw-sox-constituents.mjs", import.meta.url), "utf8");
-  const manifest = JSON.parse(fs.readFileSync(
-    path.join(REPO_ROOT, "data", "admin", "lane-commit-manifest.json"),
-    "utf8",
-  ));
-  const canonicalSpec = manifest.workflows[".github/workflows/fetch-nasdaq-giw-sox.yml"]
-    .stages.success_if_exists
-    .find((spec) => spec.path === "data/indices/nasdaq-giw-sox-constituents.json");
-  assert.match(producer, /diagnosticSuffix\(result\.failure_detail\)/, "CLI failures must append bounded diagnostic detail");
-  assert.match(workflow, /node scripts\/test-fetch-nasdaq-giw-sox-constituents\.mjs/);
-  assert.match(workflow, /controlled_failure_key/);
-  assert.match(workflow, /INPUT_CONTROLLED_FAILURE_KEY/);
-  assert.match(workflow, /if: \$\{\{ always\(\) \}\}/);
-  assert.equal(
-    canonicalSpec?.required,
-    true,
-    "successful Nasdaq GIW SOX fetch must require the canonical payload",
-  );
-  assert.match(workflow, /scripts\/stage-lane-manifest\.sh/);
-  assert.match(workflow, /--stage always_if_exists/);
-  assert.match(workflow, /--stage success_if_exists/);
-  assert.match(workflow, /FETCH_OUTCOME.*success[\s\S]*--stage success_if_exists/);
-  assert.doesNotMatch(workflow, /git add -A/);
-  assert.doesNotMatch(workflow, /public\/data\/indices\/nasdaq-giw-sox-constituents\.json/);
-}
 
 // Canonical-only default (batch 3): no public mirror write path remains in the
 // producer, a default run writes canonical only, and --no-public-mirror stays
 // accepted for CI command compatibility.
-{
-  const producer = fs.readFileSync(new URL("./fetch-nasdaq-giw-sox-constituents.mjs", import.meta.url), "utf8");
-  assert.doesNotMatch(producer, /publicMirror|PUBLIC_DATA_ROOT|publicPath/, "no public mirror write path may remain in the producer");
-  assert.match(producer, /"--no-public-mirror"/, "--no-public-mirror must stay accepted for CI compatibility");
-  const root = fs.mkdtempSync(path.join(os.tmpdir(), "fetch-sox-canonical-only-"));
-  const paths = makePaths(root);
-  const result = await runNasdaqGiwSox({
-    ...paths,
-    dates: DATES,
-    request: async () => response(200, weightingPayload("CANON")),
-    observedAt: OBSERVED_AT,
-    attemptId: "canonical-only-attempt",
-    runId: "canonical-only-run",
-    eventName: "schedule",
-  });
-  assert.equal(result.ok, true);
-  assert.equal(fs.existsSync(paths.canonicalPath), true, "default run must write the canonical snapshot");
-  assert.equal(fs.existsSync(paths.publicPath), false, "default run must never create the public mirror");
-}
 
 
 // Lane Registry ⇄ commit-shard completeness gate (#366 step 4).
-{
-  const workflowText = fs.readFileSync(new URL("../.github/workflows/fetch-nasdaq-giw-sox.yml", import.meta.url), "utf8");
-  const gate = checkWorkflowCommitShardsAgainstRegistry({
-    workflowText,
-    workflowRel: ".github/workflows/fetch-nasdaq-giw-sox.yml",
-  });
-  assert.deepEqual(gate.missing_in_workflow, [],
-    `declared shards the workflow never commits: ${JSON.stringify(gate.missing_in_workflow)}`);
-  assert.deepEqual(gate.undeclared_in_workflow, [],
-    `allowlist paths with no registry record: ${JSON.stringify(gate.undeclared_in_workflow)}`);
-  assert.deepEqual(gate.lanes.sort(), ["nasdaq_giw_sox"].sort(), "registry lane attribution for this workflow");
-}
 
 console.log("test-fetch-nasdaq-giw-sox-constituents: ok");

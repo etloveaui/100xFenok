@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 
 // Fail closed before `wrangler deploy` unless the downloaded artifact was
-// built by this workflow run, remains on current main, and is not older than
+// built from the requested source, remains on current main, and is not older than
 // the source already serving live. Remediation mode independently proves the
 // canonical Worker is live but exposes neither recognized provenance surface.
 
@@ -213,7 +213,7 @@ export async function runDeploySourceFenceCli({
     const probe = await probeUnprovenancedLive({
       fetchImpl,
       cacheBust:
-        `source-fence-cli-${env.GITHUB_RUN_ID ?? "run"}-${env.GITHUB_RUN_ATTEMPT ?? "1"}-${now()}`,
+        `source-fence-cli-${now()}`,
     });
     if (!probe.allowed) {
       emitError(`::error::Deploy remediation live probe ${probe.verdict}: ${probe.detail}`);
@@ -249,14 +249,6 @@ export async function runDeploySourceFenceCli({
     runSha: env.GITHUB_SHA ?? null,
     currentMainSha,
     liveSha,
-    artifactRunId: artifactPayload?.run_id ?? null,
-    currentRunId: env.GITHUB_RUN_ID ?? null,
-    artifactRunNumber: artifactPayload?.run_number ?? null,
-    currentRunNumber: Number.parseInt(env.GITHUB_RUN_NUMBER ?? "", 10),
-    artifactRunAttempt: artifactPayload?.run_attempt ?? null,
-    currentRunAttempt: Number.parseInt(env.GITHUB_RUN_ATTEMPT ?? "", 10),
-    liveRunNumber: liveProvenance?.run_number ?? null,
-    liveRunAttempt: liveProvenance?.run_attempt ?? null,
     artifactIsAncestorOfCurrentMain: isAncestor(artifactSha, currentMainSha, gitCwd),
     liveIsAncestorOfArtifact: isAncestor(liveSha, artifactSha, gitCwd),
     artifactIsAncestorOfLive: isAncestor(artifactSha, liveSha, gitCwd),
