@@ -31,6 +31,10 @@ PRIMARY_PROVIDER = _ETF_DETAIL_POLICY.primary.name
 FALLBACK_PROVIDER = _ETF_DETAIL_POLICY.fallback.name
 
 
+class NoFreshInitialCandidateError(SchemaError):
+    """No current selection exists and honest provider evidence has no fresh candidate."""
+
+
 def _timestamp(value: str) -> dt.datetime:
     normalized = value[:-1] + "+00:00" if value.endswith("Z") else value
     try:
@@ -330,7 +334,14 @@ class DataSupplyResolver:
                 transition = "initial_fallback"
                 reason_code = "primary_unavailable_fallback_valid"
             else:
-                raise SchemaError("no fresh provider candidate exists for initial selection")
+                # Future evidence remains an aborting schema fault, rather than
+                # being isolated as an ordinary stale/invalid initial refusal.
+                for row in rows:
+                    if _timestamp(row["observed_at"]) > decided:
+                        raise SchemaError("evidence observation cannot follow the decision time")
+                    if row["validation_status"] == "valid" and _timestamp(row["source_as_of"]) > decided:
+                        raise SchemaError("provider evidence source time follows the decision")
+                raise NoFreshInitialCandidateError("no fresh provider candidate exists for initial selection")
         elif primary_fresh and not primary_complete:
             # A dated partial primary cannot replace a retained complete selection.
             # It is still available evidence, so do not declare all providers absent.
@@ -467,4 +478,4 @@ class DataSupplyResolver:
         return active, self._committed_transaction_id == active["transaction_id"]
 
 
-__all__ = ["DataSupplyResolver", "FALLBACK_PROVIDER", "PRIMARY_PROVIDER"]
+__all__ = ["DataSupplyResolver", "FALLBACK_PROVIDER", "NoFreshInitialCandidateError", "PRIMARY_PROVIDER"]

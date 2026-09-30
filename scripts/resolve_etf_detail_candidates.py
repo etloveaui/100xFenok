@@ -10,7 +10,7 @@ from pathlib import Path, PurePosixPath
 import re
 from typing import Any, Iterable, Mapping
 
-from data_supply_resolver import DataSupplyResolver
+from data_supply_resolver import DataSupplyResolver, NoFreshInitialCandidateError
 from data_supply_state import (
     ConcurrencyError,
     DataSupplyStateStore,
@@ -243,6 +243,8 @@ def resolve_with_single_retry(
         except ConcurrencyError:
             if attempt == 1:
                 raise
+        except NoFreshInitialCandidateError as exc:
+            raise NoFreshInitialCandidateError(f"{exc} [entity={entity} decided_at={decided_at}]") from exc
         except SchemaError as exc:
             # The state and resolver modules raise fixed strings: a peer audit
             # counted 211 such sites across the two files, and none names the
@@ -272,13 +274,25 @@ def resolve_entities(
     latest_rows = latest_recorded_observations(store.root, requested)
     results: list[dict[str, Any]] = []
     for entity in requested:
-        active, committed = resolve_with_single_retry(
-            store,
-            entity=entity,
-            decided_at=decided_at,
-            latest_rows=latest_rows,
-            reconcile_pending_on_noop=reconcile_pending_on_noop,
-        )
+        try:
+            active, committed = resolve_with_single_retry(
+                store,
+                entity=entity,
+                decided_at=decided_at,
+                latest_rows=latest_rows,
+                reconcile_pending_on_noop=reconcile_pending_on_noop,
+            )
+        except NoFreshInitialCandidateError as exc:
+            results.append({
+                "entity": entity,
+                "provider": None,
+                "resolution_state": None,
+                "source_as_of": None,
+                "transaction_id": None,
+                "committed": False,
+                "resolution_error": str(exc),
+            })
+            continue
         selected = active["current"].get(entity)
         if selected is None:
             # The store removes an entity's current selection only through
