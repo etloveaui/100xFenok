@@ -552,6 +552,7 @@ class DataSupplyStateStore:
             raise SchemaError("defer_maintenance must be a boolean")
         self._defer_maintenance = defer_maintenance
         self._generation_cache: dict[tuple[str, str], dict[str, Any]] = {}
+        self._validated_immutable_refs: set[tuple[Path, str]] = set()
 
     def _now(self) -> dt.datetime:
         value = self._now_fn()
@@ -848,6 +849,10 @@ class DataSupplyStateStore:
                 label = "provider LKG"
             if ref["path"] != expected_path:
                 raise SchemaError(f"{label} ref identity mismatch")
+            # Deferred callers own immutable bytes until final maintenance.
+            cache_key = (ref_path, ref["sha256"])
+            if self._defer_maintenance and cache_key in self._validated_immutable_refs:
+                continue
             try:
                 payload_bytes = ref_path.read_bytes()
             except FileNotFoundError as exc:
@@ -858,6 +863,8 @@ class DataSupplyStateStore:
                 raise IntegrityError(f"{label} payload is not strict JSON") from exc
             if hashlib.sha256(payload_bytes).hexdigest() != ref["sha256"]:
                 raise IntegrityError(f"{label} payload digest mismatch")
+            if self._defer_maintenance:
+                self._validated_immutable_refs.add(cache_key)
 
     def _validate_generation(self, domain: str, transaction_id: str) -> dict[str, Any]:
         _safe_component(transaction_id, "transaction_id")
@@ -2125,8 +2132,12 @@ class DataSupplyStateStore:
         domain = _safe_component(domain, "domain")
         domain_dir = self._domain_dir(domain)
         with self._lock(domain_dir / ".lock"):
+            self._validated_immutable_refs.clear()
             self._generation_cache.clear()
-            return self._prune_domain_unlocked(domain)
+            try:
+                return self._prune_domain_unlocked(domain)
+            finally:
+                self._validated_immutable_refs.clear()
 
     def reconcile_committed_pending(self, domain: str) -> int:
         """Remove only pending pointers cited by transaction-bound committed decisions."""
