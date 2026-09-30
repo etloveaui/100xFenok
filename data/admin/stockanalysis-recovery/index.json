@@ -1,15 +1,15 @@
 {
   "schema_version": "stockanalysis-recovery-index/v1",
-  "generated_at": "2026-09-28T03:35:31Z",
+  "generated_at": "2026-09-30T02:30:51Z",
   "counts": {
-    "tracked": 292,
+    "tracked": 293,
     "fresh": 100,
     "lkg": 182,
-    "unavailable": 10,
-    "retry": 192,
-    "failed": 10,
+    "unavailable": 11,
+    "retry": 193,
+    "failed": 1,
     "recovered": 0,
-    "promotion_deferred": 1
+    "promotion_deferred": 0
   },
   "counts_by_kind": {
     "stock": {
@@ -27,11 +27,11 @@
       "retry": 0
     },
     "etf": {
-      "tracked": 174,
+      "tracked": 175,
       "fresh": 14,
       "lkg": 150,
-      "unavailable": 10,
-      "retry": 160
+      "unavailable": 11,
+      "retry": 161
     },
     "surface": {
       "tracked": 25,
@@ -404,6 +404,10 @@
     {
       "artifact_kind": "etf",
       "entity": "CPSU"
+    },
+    {
+      "artifact_kind": "etf",
+      "entity": "CUSD"
     },
     {
       "artifact_kind": "etf",
@@ -1711,6 +1715,16 @@
     },
     {
       "artifact_kind": "etf",
+      "entity": "CUSD",
+      "resolution_state": "unavailable",
+      "payload_sha256": null,
+      "source_as_of": null,
+      "failure_run_id": "36659957318",
+      "failure_observed_at": "2026-09-30T02:30:51Z",
+      "data_loss": false
+    },
+    {
+      "artifact_kind": "etf",
       "entity": "DACL",
       "resolution_state": "unavailable",
       "payload_sha256": null,
@@ -2834,6 +2848,7 @@
     "CPSR",
     "CPST",
     "CPSU",
+    "CUSD",
     "DACL",
     "DEFI",
     "DFIV",
@@ -2943,107 +2958,154 @@
   "recovered_surfaces": [],
   "recovered_universes": [],
   "recovered_etfs": [],
-  "promotion_deferral_details": [
-    {
-      "artifact_kind": "etf",
-      "entity": "BNDY",
-      "source_as_of": "2026-09-25T20:00:00Z",
-      "retained_source_as_of": null,
-      "reason_code": "source_not_advanced"
-    }
-  ],
+  "promotion_deferral_details": [],
   "current_attempt": {
-    "run_id": "36374111199",
+    "run_id": "36659957318",
     "run_attempt": 1,
-    "event_name": "workflow_dispatch",
-    "schedule": "",
-    "natural": false,
-    "attempted": 11,
-    "successes": 0,
-    "failed": 10,
+    "event_name": "schedule",
+    "schedule": "50 23 * * 1-5",
+    "natural": true,
+    "attempted": 26,
+    "successes": 25,
+    "failed": 1,
     "recovered": 0,
-    "promotion_deferred": 1,
+    "promotion_deferred": 0,
     "errors": [
       {
         "artifact_kind": "etf",
-        "entity": "ABXB",
-        "error": "ValueError: svelte_contract_drift:holdings:missing_required:holdings",
-        "controlled": false,
-        "data_loss": false
-      },
-      {
-        "artifact_kind": "etf",
-        "entity": "AMJB",
-        "error": "ValueError: svelte_contract_drift:holdings:missing_required:holdings",
-        "controlled": false,
-        "data_loss": false
-      },
-      {
-        "artifact_kind": "etf",
-        "entity": "AMUB",
-        "error": "ValueError: svelte_contract_drift:holdings:missing_required:holdings",
-        "controlled": false,
-        "data_loss": false
-      },
-      {
-        "artifact_kind": "etf",
-        "entity": "ATMP",
-        "error": "ValueError: svelte_contract_drift:holdings:missing_required:holdings",
-        "controlled": false,
-        "data_loss": false
-      },
-      {
-        "artifact_kind": "etf",
-        "entity": "BDCX",
-        "error": "ValueError: svelte_contract_drift:holdings:missing_required:holdings",
-        "controlled": false,
-        "data_loss": false
-      },
-      {
-        "artifact_kind": "etf",
-        "entity": "BDCZ",
-        "error": "ValueError: svelte_contract_drift:holdings:missing_required:holdings",
-        "controlled": false,
-        "data_loss": false
-      },
-      {
-        "artifact_kind": "etf",
-        "entity": "BLST",
-        "error": "ValueError: svelte_contract_drift:holdings:missing_required:holdings",
-        "controlled": false,
-        "data_loss": false
-      },
-      {
-        "artifact_kind": "etf",
-        "entity": "BLTD",
-        "error": "ValueError: svelte_contract_drift:holdings:missing_required:holdings",
-        "controlled": false,
-        "data_loss": false
-      },
-      {
-        "artifact_kind": "etf",
-        "entity": "BNDW",
-        "error": "ValueError: svelte_contract_drift:holdings:missing_required:holdings",
-        "controlled": false,
-        "data_loss": false
-      },
-      {
-        "artifact_kind": "etf",
-        "entity": "BUCK",
+        "entity": "CUSD",
         "error": "ValueError: svelte_contract_drift:holdings:missing_required:holdings",
         "controlled": false,
         "data_loss": false
       }
     ],
-    "success_rows": [],
-    "promotion_deferrals": [
+    "success_rows": [
       {
-        "artifact_kind": "etf",
-        "entity": "BNDY",
-        "source_as_of": "2026-09-25T20:00:00Z",
-        "retained_source_as_of": null,
-        "reason_code": "source_not_advanced"
+        "artifact_kind": "surface",
+        "entity": "actions_recent",
+        "outcome": "fresh"
+      },
+      {
+        "artifact_kind": "surface",
+        "entity": "actions_splits",
+        "outcome": "fresh"
+      },
+      {
+        "artifact_kind": "surface",
+        "entity": "earnings_calendar",
+        "outcome": "fresh"
+      },
+      {
+        "artifact_kind": "surface",
+        "entity": "etf_provider_blackrock",
+        "outcome": "fresh"
+      },
+      {
+        "artifact_kind": "surface",
+        "entity": "etf_provider_proshares",
+        "outcome": "fresh"
+      },
+      {
+        "artifact_kind": "surface",
+        "entity": "etf_screener",
+        "outcome": "fresh"
+      },
+      {
+        "artifact_kind": "surface",
+        "entity": "industries",
+        "outcome": "fresh"
+      },
+      {
+        "artifact_kind": "surface",
+        "entity": "industries_all",
+        "outcome": "fresh"
+      },
+      {
+        "artifact_kind": "surface",
+        "entity": "industry_semiconductors",
+        "outcome": "fresh"
+      },
+      {
+        "artifact_kind": "surface",
+        "entity": "ipos_calendar",
+        "outcome": "fresh"
+      },
+      {
+        "artifact_kind": "surface",
+        "entity": "ipos_filings",
+        "outcome": "fresh"
+      },
+      {
+        "artifact_kind": "surface",
+        "entity": "ipos_recent",
+        "outcome": "fresh"
+      },
+      {
+        "artifact_kind": "surface",
+        "entity": "ipos_statistics",
+        "outcome": "fresh"
+      },
+      {
+        "artifact_kind": "surface",
+        "entity": "ipos_withdrawn",
+        "outcome": "fresh"
+      },
+      {
+        "artifact_kind": "surface",
+        "entity": "list_bitcoin_etfs",
+        "outcome": "fresh"
+      },
+      {
+        "artifact_kind": "surface",
+        "entity": "market_active",
+        "outcome": "fresh"
+      },
+      {
+        "artifact_kind": "surface",
+        "entity": "market_afterhours",
+        "outcome": "fresh"
+      },
+      {
+        "artifact_kind": "surface",
+        "entity": "market_gainers",
+        "outcome": "fresh"
+      },
+      {
+        "artifact_kind": "surface",
+        "entity": "market_gainers_month",
+        "outcome": "fresh"
+      },
+      {
+        "artifact_kind": "surface",
+        "entity": "market_gainers_week",
+        "outcome": "fresh"
+      },
+      {
+        "artifact_kind": "surface",
+        "entity": "market_losers",
+        "outcome": "fresh"
+      },
+      {
+        "artifact_kind": "surface",
+        "entity": "market_losers_ytd",
+        "outcome": "fresh"
+      },
+      {
+        "artifact_kind": "surface",
+        "entity": "market_premarket",
+        "outcome": "fresh"
+      },
+      {
+        "artifact_kind": "surface",
+        "entity": "new_etfs",
+        "outcome": "fresh"
+      },
+      {
+        "artifact_kind": "surface",
+        "entity": "sector_technology",
+        "outcome": "fresh"
       }
-    ]
+    ],
+    "promotion_deferrals": []
   }
 }
