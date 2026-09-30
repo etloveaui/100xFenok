@@ -54,7 +54,7 @@ on:
         required: false
         default: 'false'
       reconcile_missing_etf_limit:
-        description: 'Maximum missing ETF details to reconcile (manual hard cap: 100)'
+        description: 'Maximum missing ETF details to reconcile (0 = all selected targets)'
         required: false
         default: '100'
       history_gap_plan:
@@ -102,7 +102,7 @@ on:
         required: false
         default: '0'
       limit_etfs:
-        description: 'Maximum base ETF detail targets before incremental retries (manual hard cap: 100)'
+        description: 'Maximum base ETF detail targets before incremental retries (0 = all selected targets)'
         required: false
         default: '100'
       max_universe_pages:
@@ -239,6 +239,10 @@ jobs:
                 # manual dispatch may refresh the payload but cannot impersonate it.
                 INPUT_DISCOVER_UNIVERSE="true"
                 INPUT_MAX_UNIVERSE_PAGES="100"
+                INPUT_INCREMENTAL_ETF_BACKFILL="true"
+                INPUT_INCREMENTAL_ETF_LIMIT="0"
+                INPUT_INCREMENTAL_ETF_MAX_AGE_HOURS="720"
+                INPUT_LIMIT_ETFS="0"
                 NATURAL_RECOVERY_KINDS="etf,surface,universe"
               fi
             else
@@ -360,14 +364,21 @@ jobs:
             if [ -n "$INPUT_LIMIT_ETFS" ]; then ARGS="$ARGS --limit-etfs $INPUT_LIMIT_ETFS"; fi
             if [ -n "$INPUT_MAX_UNIVERSE_PAGES" ]; then ARGS="$ARGS --max-universe-pages $INPUT_MAX_UNIVERSE_PAGES"; fi
           fi
+          # Reuse the existing incremental input; ordinary dispatch and
+          # weekday collection retain one worker and their existing bounds.
+          ETF_WORKERS="1"
+          if { [ "$EVENT_NAME" = "schedule" ] && [ "$EVENT_SCHEDULE" = "20 23 * * 0" ]; } || [ "${INPUT_INCREMENTAL_ETF_BACKFILL:-false}" = "true" ]; then
+            ETF_WORKERS="4"
+          fi
+          ARGS="$ARGS --etf-workers $ETF_WORKERS"
           if [ "$EVENT_NAME" = "schedule" ]; then
             ARGS="$ARGS --natural-run --natural-recovery-kinds $NATURAL_RECOVERY_KINDS"
           fi
           set -o pipefail
           PRIMARY_FETCH_LOG="$RUNNER_TEMP/stockanalysis-primary-fetch.log"
           PRIMARY_FETCHED_TICKERS="$RUNNER_TEMP/stockanalysis-primary-fetched-tickers.txt"
-          # Reject oversized manual shards before creating the candidate tree or
-          # opening any StockAnalysis/Yahoo endpoint.
+          # Validate the requested collection mode and authorized fault inputs
+          # before creating the candidate tree or opening provider endpoints.
           python3 scripts/fetch-stockanalysis.py $ARGS \
             --event-name "$EVENT_NAME" \
             --preflight-only \

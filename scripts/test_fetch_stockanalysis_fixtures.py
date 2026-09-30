@@ -583,54 +583,23 @@ class StockanalysisFetcherFixtureTest(unittest.TestCase):
         )
         self.assertEqual(payload["generated_at"], payload["fetched_at"])
 
-    def test_manual_etf_preflight_closes_every_unbounded_network_path(self) -> None:
-        def args(**overrides):
-            values = {
-                "event_name": "workflow_dispatch",
-                "plan_only": False,
-                "etfs": "SPY",
-                "stocks_only": False,
-                "universe_backfill": False,
-                "incremental_etf_backfill": False,
-                "incremental_etf_only": False,
-                "reconcile_missing_etf_details": False,
-                "incremental_etf_limit": 100,
-                "limit_etfs": 0,
-            }
-            values.update(overrides)
-            return Namespace(**values)
-
+    def test_manual_etf_preflight_accepts_uncapped_maintenance_without_writes(self) -> None:
         too_many = ",".join(f"E{index:03d}" for index in range(101))
-        for case in (
-            args(etfs=too_many),
-            args(etfs="SPY", limit_etfs=101),
-            args(incremental_etf_backfill=True, incremental_etf_limit=101),
-            args(etfs="", reconcile_missing_etf_details=True, incremental_etf_limit=0),
-            args(etfs="", universe_backfill=True, limit_etfs=0),
-            args(
-                etfs=",".join(f"E{index:03d}" for index in range(60)),
-                incremental_etf_backfill=True,
-                incremental_etf_limit=50,
-            ),
+        for flags in (
+            ["--etfs", too_many],
+            ["--etfs", "SPY", "--limit-etfs", "101"],
+            ["--incremental-etf-backfill", "--incremental-etf-limit", "101"],
+            ["--reconcile-missing-etf-details", "--incremental-etf-limit", "0"],
+            ["--universe-backfill", "--limit-etfs", "0"],
         ):
-            with self.subTest(case=case):
-                with self.assertRaisesRegex(SystemExit, "100|bounded"):
-                    self.fetcher.validate_manual_etf_preflight(case)
-
-        self.fetcher.validate_manual_etf_preflight(
-            args(event_name="schedule", etfs="", incremental_etf_backfill=True, incremental_etf_limit=120)
-        )
-        self.fetcher.validate_manual_etf_preflight(
-            args(plan_only=True, etfs="", incremental_etf_backfill=True, incremental_etf_limit=0)
-        )
-        self.fetcher.validate_manual_etf_preflight(
-            args(
-                etfs="",
-                incremental_etf_backfill=True,
-                incremental_etf_limit=0,
-                limit_etfs=100,
-            )
-        )
+            with self.subTest(flags=flags), \
+                 patch.object(sys, "argv", ["fetch-stockanalysis.py", "--event-name", "workflow_dispatch",
+                                             "--preflight-only", *flags]), \
+                 patch.object(self.fetcher, "fetch_etf") as network, \
+                 patch.object(self.fetcher, "write_payload") as writer:
+                self.fetcher.main()
+                network.assert_not_called()
+                writer.assert_not_called()
 
     def test_candidate_root_rejects_repo_and_symlink_and_routes_all_outputs_outside_checkout(self) -> None:
         saved = self.fetcher.current_candidate_outputs()
@@ -679,7 +648,7 @@ class StockanalysisFetcherFixtureTest(unittest.TestCase):
         source = FETCHER_PATH.read_text(encoding="utf-8")
         self.assertEqual(source.count("DataSupplyStateStore("), 1)
 
-    def test_manual_cap_fails_before_canary_or_candidate_mutation(self) -> None:
+    def test_invalid_etf_worker_count_fails_before_canary_or_candidate_mutation(self) -> None:
         original_canary = self.fetcher.run_endpoint_canary
         original_argv = sys.argv
         saved = self.fetcher.current_candidate_outputs()
@@ -697,11 +666,14 @@ class StockanalysisFetcherFixtureTest(unittest.TestCase):
                 "--no-public-mirror",
                 "--event-name", "workflow_dispatch",
                 "--endpoint-canary",
-                "--etfs", ",".join(f"E{index:03d}" for index in range(101)),
+                "--etfs", "SPY", "--etf-workers", "0",
             ]
             try:
-                with self.assertRaisesRegex(SystemExit, "100"):
-                    self.fetcher.main()
+                for invalid in ("0", "5", "-1"):
+                    sys.argv[-1] = invalid
+                    with self.subTest(invalid=invalid):
+                        with self.assertRaisesRegex(SystemExit, "between 1 and 4"):
+                            self.fetcher.main()
             finally:
                 self.fetcher.run_endpoint_canary = original_canary
                 sys.argv = original_argv
@@ -755,7 +727,7 @@ class StockanalysisFetcherFixtureTest(unittest.TestCase):
                     "--candidate-root", str(failure_candidate),
                     "--no-public-mirror",
                     "--event-name", "workflow_dispatch",
-                    "--etfs", ",".join(f"E{index:03d}" for index in range(101)),
+                    "--etfs", "SPY", "--etf-workers", "0",
                 ],
                 cwd=ROOT,
                 env=env,
@@ -763,7 +735,7 @@ class StockanalysisFetcherFixtureTest(unittest.TestCase):
                 text=True,
             )
             self.assertNotEqual(failure.returncode, 0)
-            self.assertIn("100", failure.stderr)
+            self.assertIn("--etf-workers must be between 1 and 4", failure.stderr)
             self.assertEqual(list(failure_candidate.iterdir()), [])
 
             signal_candidate = root / "signal-candidate"

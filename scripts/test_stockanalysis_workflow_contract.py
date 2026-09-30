@@ -217,7 +217,7 @@ class StockAnalysisWorkflowContractTest(unittest.TestCase):
             self.assertIn(expected, self.text)
         self.assertNotIn("overwrite: true", self.text)
 
-    def test_manual_network_etf_cap_is_forwarded_without_changing_natural_profiles(self) -> None:
+    def test_etf_selection_defaults_are_forwarded(self) -> None:
         incremental_input = re.search(
             r"incremental_etf_limit:\n(?P<body>(?:\s+.*\n){1,5})",
             self.text,
@@ -258,7 +258,6 @@ class StockAnalysisWorkflowContractTest(unittest.TestCase):
         natural_end = self.text.index('if [ "$EVENT_NAME" = "workflow_dispatch" ]; then')
         natural_body = self.text[natural_start:natural_end]
         self.assertIn('INPUT_INCREMENTAL_ETF_BACKFILL="false"', natural_body)
-        self.assertNotIn('INPUT_INCREMENTAL_ETF_BACKFILL="true"', natural_body)
         self.assertIn('INPUT_MAX_UNIVERSE_PAGES="100"', natural_body)
 
     def test_manual_preflight_precedes_candidate_seed_and_provider_fetch(self) -> None:

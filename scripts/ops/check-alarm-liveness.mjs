@@ -114,7 +114,7 @@ export function evaluateAlarmLiveness({ latestRunStartedAt, cron, nowMs = Date.n
   if (typeof latestRunStartedAt !== "string" || latestRunStartedAt === "") {
     return {
       status: "unreadable",
-      reason: "no completed pipeline-alarm run was returned; liveness cannot be measured",
+      reason: "no usable completed pipeline-alarm run was returned; liveness cannot be measured",
       missed_slots: null,
       age_hours: null,
     };
@@ -154,8 +154,10 @@ async function fetchLatestAlarmRunStart() {
   const token = process.env.GITHUB_TOKEN;
   const repo = process.env.GITHUB_REPOSITORY;
   if (!token || !repo) return null;
+  const earliestMs = Date.now() - 7 * 24 * 3_600_000;
+  const created = encodeURIComponent(`>=${new Date(earliestMs).toISOString()}`);
   const url = `${GITHUB_API}/repos/${repo}/actions/workflows/${ALARM_WORKFLOW}/runs`
-    + "?status=completed&per_page=1";
+    + `?status=completed&per_page=20&created=${created}`;
   const response = await fetch(url, {
     headers: {
       Authorization: `Bearer ${token}`,
@@ -165,8 +167,22 @@ async function fetchLatestAlarmRunStart() {
   });
   if (!response.ok) return null;
   const body = await response.json();
-  const run = body?.workflow_runs?.[0];
-  return run?.run_started_at || run?.created_at || null;
+  // Returned order can place an old run first. Measure actual recent starts,
+  // refusing invalid, out-of-window and future rows rather than inventing age.
+  const nowMs = Date.now();
+  let latestRunStartedAt = null;
+  let latestMs = -Infinity;
+  for (const run of Array.isArray(body?.workflow_runs) ? body.workflow_runs : []) {
+    const startedAt = run?.run_started_at || run?.created_at;
+    if (typeof startedAt !== "string") continue;
+    const startedMs = Date.parse(startedAt);
+    if (!Number.isFinite(startedMs) || startedMs < earliestMs || startedMs > nowMs) continue;
+    if (startedMs > latestMs) {
+      latestMs = startedMs;
+      latestRunStartedAt = startedAt;
+    }
+  }
+  return latestRunStartedAt;
 }
 
 async function main() {

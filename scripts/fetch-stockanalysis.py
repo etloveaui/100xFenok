@@ -22,6 +22,9 @@ from __future__ import annotations
 
 import argparse
 import base64
+from collections import deque
+from concurrent.futures import Future, ThreadPoolExecutor
+from contextlib import closing
 from datetime import datetime, timedelta, timezone
 import hashlib
 from html.parser import HTMLParser
@@ -150,7 +153,6 @@ SCHEMA_VERSION = "stockanalysis/v1"
 BASE_URL = "https://stockanalysis.com"
 SYMBOL_RE = re.compile(r"^[A-Z0-9][A-Z0-9.\-]{0,11}$")
 USER_AGENT = "Mozilla/5.0 feno-stockanalysis-fetcher/1.0"
-MAX_MANUAL_ETF_SHARD = 100
 
 
 def current_candidate_outputs() -> CandidateOutputs:
@@ -1279,70 +1281,6 @@ def select_base_etfs(
     if explicit_etfs:
         return explicit_etfs
     return unique_symbols(load_core_daily_basket_symbols() + DEFAULT_ETFS)
-
-
-def validate_manual_etf_preflight(args: argparse.Namespace) -> None:
-    """Reject every non-schedule network ETF mode whose upper bound exceeds 100.
-
-    This gate runs before endpoint canaries, universe discovery, recovery-store
-    bootstrap, or any candidate write. Natural schedules retain their existing
-    profiles; plan-only is non-network and remains unbounded.
-    """
-
-    if args.event_name == "schedule" or args.plan_only:
-        return
-    explicit = parse_symbols(args.etfs)
-    if len(explicit) > MAX_MANUAL_ETF_SHARD:
-        raise SystemExit(
-            f"manual ETF shard exceeds {MAX_MANUAL_ETF_SHARD} explicit tickers"
-        )
-    if args.stocks_only:
-        return
-    if args.limit_etfs > MAX_MANUAL_ETF_SHARD:
-        raise SystemExit(f"--limit-etfs must be between 0 and {MAX_MANUAL_ETF_SHARD}")
-    if (
-        (args.incremental_etf_backfill or args.reconcile_missing_etf_details)
-        and args.incremental_etf_limit > MAX_MANUAL_ETF_SHARD
-    ):
-        raise SystemExit(
-            f"--incremental-etf-limit must be between 0 and {MAX_MANUAL_ETF_SHARD}"
-        )
-    if args.universe_backfill and not explicit:
-        if not 1 <= args.limit_etfs <= MAX_MANUAL_ETF_SHARD:
-            raise SystemExit(
-                "manual universe backfill requires an explicit bounded --limit-etfs <=100"
-            )
-        return
-    if args.reconcile_missing_etf_details and not explicit:
-        if not 1 <= args.incremental_etf_limit <= MAX_MANUAL_ETF_SHARD:
-            raise SystemExit(
-                "manual reconcile requires an explicit bounded --incremental-etf-limit <=100"
-            )
-        return
-    if args.incremental_etf_only:
-        base_count = len(explicit)
-    elif explicit:
-        base_count = len(explicit)
-    else:
-        base_count = len(unique_symbols(load_core_daily_basket_symbols() + DEFAULT_ETFS))
-    if args.limit_etfs:
-        base_count = min(base_count, args.limit_etfs)
-    incremental_count = args.incremental_etf_limit if args.incremental_etf_backfill else 0
-    if base_count + incremental_count > MAX_MANUAL_ETF_SHARD:
-        raise SystemExit(
-            f"combined manual ETF shard exceeds {MAX_MANUAL_ETF_SHARD} tickers"
-        )
-
-
-def validate_selected_manual_etfs(args: argparse.Namespace, tickers: list[str]) -> None:
-    if (
-        args.event_name != "schedule"
-        and not args.plan_only
-        and len(tickers) > MAX_MANUAL_ETF_SHARD
-    ):
-        raise SystemExit(
-            f"selected manual ETF shard exceeds {MAX_MANUAL_ETF_SHARD} tickers"
-        )
 
 
 def fetch_json_response(rel_path: str, timeout: int) -> tuple[dict, int]:
@@ -2918,6 +2856,57 @@ def fetch_etf(
             "provider detail response carries no market or holdings observation date"
         )
     return payload
+
+
+def collect_etf_payload(ticker: str, timeout: int, include_history: bool) -> dict:
+    """Collect only provider responses; publication stays on the coordinator."""
+    if include_history:
+        return fetch_etf(ticker, timeout, allow_partial_holdings=True)
+    return fetch_etf(
+        ticker, timeout, include_history=False, include_quote=False,
+        allow_partial_holdings=True,
+    )
+
+
+def ordered_etf_collections(
+    symbols: list[str], timeout: int, workers: int, *,
+    include_history: bool, skip: set[str],
+):
+    """Keep at most one bounded worker window and yield in target order."""
+    if workers == 1:
+        for ticker in symbols:
+            yield ticker, None
+        return
+    remaining = iter(symbols)
+    window = deque()
+    executor = ThreadPoolExecutor(max_workers=workers, thread_name_prefix="etf-collect")
+
+    def append_next() -> bool:
+        ticker = next(remaining, None)
+        if ticker is None:
+            return False
+        future = (
+            None if ticker in skip
+            else executor.submit(collect_etf_payload, ticker, timeout, include_history)
+        )
+        window.append((ticker, future))
+        return True
+
+    try:
+        for _ in range(workers):
+            if not append_next():
+                break
+        while window:
+            ticker, future = window.popleft()
+            yield ticker, future
+            # Resume only after the coordinator finishes this target. A hard
+            # stop closes the generator without submitting another collection.
+            append_next()
+    finally:
+        for _, future in window:
+            if future is not None:
+                future.cancel()
+        executor.shutdown(wait=True, cancel_futures=True)
 
 
 def fetch_stock_overview(ticker: str, timeout: int) -> dict:
@@ -6109,6 +6098,7 @@ def run_one(
     controlled_etf_detail_failure: bool = False,
     require_stock_financial_pair: bool = False,
     collection_origin: str = "natural",
+    etf_collection: Future | None = None,
 ) -> dict:
     start = time.perf_counter()
     preserved_primary = False
@@ -6129,15 +6119,9 @@ def run_one(
                         f"controlled failure injection for etf_detail:{ticker}"
                     )
                 payload = (
-                    fetch_etf(ticker, timeout, allow_partial_holdings=True)
-                    if include_etf_history
-                    else fetch_etf(
-                        ticker,
-                        timeout,
-                        include_history=False,
-                        include_quote=False,
-                        allow_partial_holdings=True,
-                    )
+                    etf_collection.result()
+                    if etf_collection is not None
+                    else collect_etf_payload(ticker, timeout, include_etf_history)
                 )
                 provider = "stockanalysis"
                 stockanalysis_error = None
@@ -6727,8 +6711,9 @@ def _main() -> None:
     parser.add_argument("--max-universe-pages", type=int, default=100)
     parser.add_argument("--sleep", type=float, default=0.25)
     parser.add_argument("--timeout", type=int, default=20)
+    parser.add_argument("--etf-workers", type=int, default=1, help="ETF provider collection workers (1–4); publication stays sequential")
     parser.add_argument("--endpoint-canary", action="store_true", help="probe current ETF detail/quote/history contracts before collection")
-    parser.add_argument("--preflight-only", action="store_true", help="validate the manual ETF request bound, then exit before network or writes")
+    parser.add_argument("--preflight-only", action="store_true", help="validate request arguments, then exit before network or writes")
     parser.add_argument("--candidate-root", default="", help="external seeded root for acquire-only writes")
     parser.add_argument("--no-public-mirror", action="store_true")
     parser.add_argument("--fail-on-error", action="store_true", help="exit non-zero when any ticker fails")
@@ -6739,6 +6724,8 @@ def _main() -> None:
         raise SystemExit("--candidate-root requires --no-public-mirror")
     if args.incremental_etf_only and not args.incremental_etf_backfill:
         raise SystemExit("--incremental-etf-only requires --incremental-etf-backfill")
+    if not 1 <= args.etf_workers <= 4:
+        raise SystemExit("--etf-workers must be between 1 and 4")
     if args.stock_limit < 0:
         raise SystemExit("--stock-limit must be non-negative")
     if args.incremental_etf_limit < 0:
@@ -6779,7 +6766,6 @@ def _main() -> None:
         validate_controlled_etf_detail_failure_preflight(args)
     except ValueError as exc:
         raise SystemExit(str(exc)) from exc
-    validate_manual_etf_preflight(args)
     if args.preflight_only:
         return
 
@@ -6982,7 +6968,6 @@ def _main() -> None:
         if args.incremental_etf_limit > 0:
             reconcile_selected = reconcile_selected[: args.incremental_etf_limit]
         etfs = reconcile_selected[:]
-        validate_selected_manual_etfs(args, etfs)
         print(
             "[missing-detail-reconcile-plan] "
             f"initial_missing={len(reconcile_initial_missing)} selected={len(reconcile_selected)} "
@@ -7003,10 +6988,8 @@ def _main() -> None:
             etfs = etfs[args.offset:]
         if args.limit_etfs:
             etfs = etfs[: args.limit_etfs]
-        validate_selected_manual_etfs(args, etfs)
     if yahoo_retry_etfs or retry_etfs:
         etfs = unique_symbols(yahoo_retry_etfs + retry_etfs + etfs)
-        validate_selected_manual_etfs(args, etfs)
     incremental_summary = None
     if args.incremental_etf_backfill and not args.universe_backfill and not args.stocks_only:
         incremental_summary = incremental_etf_backfill_candidates(
@@ -7031,16 +7014,8 @@ def _main() -> None:
                 and args.incremental_etf_limit == NATURAL_GENERAL_INCREMENTAL_LIMIT
             ),
         )
-        if (
-            args.event_name != "schedule"
-            and not args.plan_only
-            and args.incremental_etf_limit == 0
-        ):
-            incremental_summary["selected"] = []
-            incremental_summary["counts"]["selected"] = 0
         incremental_etfs = [row["ticker"] for row in incremental_summary["selected"]]
         planned_etfs = unique_symbols(etfs + incremental_etfs)
-        validate_selected_manual_etfs(args, planned_etfs)
         if args.plan_only:
             plan_payload = build_incremental_etf_backfill_plan(
                 planned_etfs,
@@ -7081,64 +7056,70 @@ def _main() -> None:
     # existed, no lane owned that output and the data-plane inventory could not
     # account for the largest group in the estate.
     for kind, symbols in (("etf", etfs), ("stock", stocks)):
-        for idx, ticker in enumerate(symbols, 1):
-            if kind == "etf" and ticker in yahoo_retry_etfs:
-                result = run_yahoo_etf_fallback_recovery(
-                    ticker,
-                    mirror_public,
-                    recovery_run,
-                )
-            else:
-                result = run_one(
-                    kind,
-                    ticker,
-                    args.timeout,
-                    mirror_public,
-                    include_financials=(
-                        kind == "stock"
-                        and (args.fetch_financials or ticker in retry_financials)
-                    ),
-                    yf_fallback=(
-                        kind == "etf"
-                        and args.yf_etf_fallback
-                        and not args.reconcile_missing_etf_details
-                    ),
-                    include_etf_history=not args.reconcile_missing_etf_details,
-                    recovery_store=recovery_store if kind in {"stock", "etf"} else None,
-                    recovery_run=recovery_run if kind in {"stock", "etf"} else None,
-                    controlled_failure=(
-                        kind == "stock" and ticker in controlled_failure_tickers
-                    ),
-                    controlled_etf_detail_failure=(
-                        kind == "etf" and ticker in controlled_failure_etfs
-                    ),
-                    require_stock_financial_pair=(
-                        kind == "stock" and args.require_stock_financial_pair
-                    ),
-                    collection_origin=(
-                        "natural" if args.event_name == "schedule" else "manual"
-                    ),
-                )
-            results.append(result)
-            status = "OK" if result["error"] is None else f"FAIL {result['error'][:240]}"
-            if result["error"] is None and result.get("provider") == "yahoo_finance":
-                status = "YF_FALLBACK"
-            if result.get("provider_availability_status") == "absent":
-                status = (
-                    "PROVIDER_GAP "
-                    f"reason={result.get('provider_availability_reason')} "
-                    f"response={result.get('provider_response')}"
-                )
-            print(f"[{kind} {idx}/{len(symbols)}] {ticker} {status} {result['latency_ms']}ms", flush=True)
-            if args.stop_on_hard_error and is_hard_error(result["error"]):
-                stop_reason = {
-                    "ticker": ticker,
-                    "asset_type": kind,
-                    "error": result["error"],
-                    "message": "stopped on non-404 fetch error",
-                }
-                break
-            time.sleep(args.sleep)
+        with closing(ordered_etf_collections(
+            symbols, args.timeout, args.etf_workers if kind == "etf" else 1,
+            include_history=not args.reconcile_missing_etf_details,
+            skip=set(yahoo_retry_etfs) | controlled_failure_etfs,
+        )) as collections:
+            for idx, (ticker, etf_collection) in enumerate(collections, 1):
+                if kind == "etf" and ticker in yahoo_retry_etfs:
+                    result = run_yahoo_etf_fallback_recovery(
+                        ticker,
+                        mirror_public,
+                        recovery_run,
+                    )
+                else:
+                    result = run_one(
+                        kind,
+                        ticker,
+                        args.timeout,
+                        mirror_public,
+                        include_financials=(
+                            kind == "stock"
+                            and (args.fetch_financials or ticker in retry_financials)
+                        ),
+                        yf_fallback=(
+                            kind == "etf"
+                            and args.yf_etf_fallback
+                            and not args.reconcile_missing_etf_details
+                        ),
+                        include_etf_history=not args.reconcile_missing_etf_details,
+                        recovery_store=recovery_store if kind in {"stock", "etf"} else None,
+                        recovery_run=recovery_run if kind in {"stock", "etf"} else None,
+                        controlled_failure=(
+                            kind == "stock" and ticker in controlled_failure_tickers
+                        ),
+                        controlled_etf_detail_failure=(
+                            kind == "etf" and ticker in controlled_failure_etfs
+                        ),
+                        require_stock_financial_pair=(
+                            kind == "stock" and args.require_stock_financial_pair
+                        ),
+                        collection_origin=(
+                            "natural" if args.event_name == "schedule" else "manual"
+                        ),
+                        etf_collection=etf_collection,
+                    )
+                results.append(result)
+                status = "OK" if result["error"] is None else f"FAIL {result['error'][:240]}"
+                if result["error"] is None and result.get("provider") == "yahoo_finance":
+                    status = "YF_FALLBACK"
+                if result.get("provider_availability_status") == "absent":
+                    status = (
+                        "PROVIDER_GAP "
+                        f"reason={result.get('provider_availability_reason')} "
+                        f"response={result.get('provider_response')}"
+                    )
+                print(f"[{kind} {idx}/{len(symbols)}] {ticker} {status} {result['latency_ms']}ms", flush=True)
+                if args.stop_on_hard_error and is_hard_error(result["error"]):
+                    stop_reason = {
+                        "ticker": ticker,
+                        "asset_type": kind,
+                        "error": result["error"],
+                        "message": "stopped on non-404 fetch error",
+                    }
+                    break
+                time.sleep(args.sleep)
         if stop_reason:
             break
 

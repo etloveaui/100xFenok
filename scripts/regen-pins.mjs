@@ -111,7 +111,10 @@ async function main() {
   const tempRoot = fs.mkdtempSync(path.join(os.tmpdir(), "fenok-pins-"));
   try {
     await emitAll((canonicalPath) => tempPath(tempRoot, canonicalPath));
-    const stale = generatedPaths().filter((canonicalPath) => {
+    // Runtime lane dates are rebuilt by reconcile:derived. A provider date
+    // advance must not fail definition validation on committed snapshot bytes.
+    const checkedPaths = generatedPaths().filter((filePath) => !DEFAULT_PROJECTION_OUTPUT_PATHS.includes(filePath));
+    const stale = checkedPaths.filter((canonicalPath) => {
       const generatedPath = tempPath(tempRoot, canonicalPath);
       if (!fs.existsSync(canonicalPath)) return true;
       const committedText = fs.readFileSync(canonicalPath, "utf8");
@@ -121,7 +124,7 @@ async function main() {
     if (stale.length > 0) {
       throw new Error(`generated pins are stale: ${stale.map((filePath) => path.relative(REPO_ROOT, filePath)).join(", ")}`);
     }
-    console.log(`qa:pins ok (${generatedPaths().length} projections matched — volatile runtime fields normalized)`);
+    console.log(`qa:pins ok (${checkedPaths.length} definition projections matched)`);
   } finally {
     fs.rmSync(tempRoot, { recursive: true, force: true });
   }

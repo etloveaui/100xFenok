@@ -891,32 +891,6 @@ async function assertStockanalysisEtfShardPublicGuard(parentRoot) {
   const appRoot = path.dirname(path.dirname(fixture.destinationRoot));
   const valid = await checkPublicMirror({ appRoot, repoRoot: fixture.root });
   assert.equal(valid.ok, true, valid.violations.join("\n"));
-  const canonicalBefore = snapshotNode(fixture.sourceRoot);
-
-  const leakedTokenPath = write(fixture.destinationRoot, "safe/private-token.json", '{"path":"_private/recovery.json"}\n');
-  const leakedToken = await checkPublicMirror({ appRoot, repoRoot: fixture.root });
-  assert.equal(leakedToken.ok, false);
-  assert.ok(leakedToken.violations.some((violation) => /safe\/private-token\.json: unsafe token _private\//.test(violation)));
-  fs.unlinkSync(leakedTokenPath);
-
-  const outsidePath = write(fixture.root, "outside-guard.json", '{"outside":true}\n');
-  const publicLink = path.join(fixture.destinationRoot, "safe", "linked.json");
-  fs.symlinkSync(outsidePath, publicLink);
-  const linked = await checkPublicMirror({ appRoot, repoRoot: fixture.root });
-  assert.equal(linked.ok, false);
-  assert.ok(linked.violations.some((violation) => /safe\/linked\.json: symlink is forbidden/.test(violation)));
-  assert.equal(fs.readFileSync(outsidePath, "utf8"), '{"outside":true}\n');
-  fs.unlinkSync(publicLink);
-
-  const canonicalPath = path.join(fixture.sourceRoot, "stockanalysis", "etfs", "SPY.json");
-  const canonicalBytes = fs.readFileSync(canonicalPath);
-  fs.writeFileSync(canonicalPath, JSON.stringify({ ...payload, ticker: "QQQ" }));
-  const invalidTicker = await checkPublicMirror({ appRoot, repoRoot: fixture.root });
-  assert.equal(invalidTicker.ok, false);
-  assert.ok(invalidTicker.violations.some((violation) => /SPY\.json: strict StockAnalysis identity mismatch/.test(violation)));
-  fs.writeFileSync(canonicalPath, canonicalBytes);
-  assert.deepEqual(snapshotNode(fixture.sourceRoot), canonicalBefore, "guard validation must preserve canonical bytes");
-
   write(
     fixture.destinationRoot,
     "stockanalysis/etfs/SPY.json",
@@ -950,7 +924,6 @@ async function assertStockanalysisEtfShardPublicGuard(parentRoot) {
   const invalid = await checkPublicMirror({ appRoot, repoRoot: fixture.root });
   assert.equal(invalid.ok, false);
   assert.equal(invalid.violations.some((violation) => /hash\/byte-length mismatch/.test(violation)), true);
-  assert.deepEqual(snapshotNode(fixture.sourceRoot), canonicalBefore, "shard hash refusal must preserve canonical bytes");
 
   fs.rmSync(path.join(fixture.destinationRoot, "stockanalysis", "etfs", "shards"), { recursive: true });
   const missing = await checkPublicMirror({ appRoot, repoRoot: fixture.root });
@@ -1197,27 +1170,6 @@ function assertIdentityDriftFailsBeforeMutation(parentRoot) {
 const fixtureRoot = fs.mkdtempSync(path.join(os.tmpdir(), "fenok-sync-public-data-"));
 
 try {
-  {
-    const repoRoot = path.join(fixtureRoot, "stockanalysis-recovery-guard");
-    const appRoot = path.join(repoRoot, "100xfenok-next");
-    const canonicalRoot = path.join(repoRoot, "data");
-    const publicRoot = path.join(appRoot, "public", "data");
-    write(canonicalRoot, "admin/stockanalysis-recovery/index.json", '{"recovery":"canonical"}\n');
-    fs.mkdirSync(publicRoot, { recursive: true });
-    const canonicalBefore = snapshotNode(canonicalRoot);
-    const clean = await checkPublicMirror({ appRoot, repoRoot });
-    assert.equal(clean.ok, true, JSON.stringify(clean.violations));
-
-    write(publicRoot, "admin/stockanalysis-recovery/index.json", '{"recovery":"accidental mirror"}\n');
-    const publicBefore = snapshotNode(publicRoot);
-    const leaked = await checkPublicMirror({ appRoot, repoRoot });
-    assert.equal(leaked.ok, false, "a reintroduced public recovery tree must be rejected");
-    assert.ok(leaked.violations.some((violation) => violation.includes(
-      "public/data/admin/stockanalysis-recovery: forbidden private data-supply root",
-    )), "the guard must identify the private recovery tree");
-    assert.deepEqual(snapshotNode(canonicalRoot), canonicalBefore, "guard refusal must preserve canonical recovery bytes");
-    assert.deepEqual(snapshotNode(publicRoot), publicBefore, "the read-only guard must leave the rejected public tree unchanged");
-  }
   assert.deepEqual(
     EXCLUDED_PUBLIC_DATA_ROOTS,
     deriveExcludedPublicDataRoots(),

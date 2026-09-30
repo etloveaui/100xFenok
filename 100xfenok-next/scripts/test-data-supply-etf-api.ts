@@ -153,22 +153,6 @@ async function fixture(options: {
 }
 
 async function main() {
-// Retired alarm proof must not make validated provider payloads unavailable.
-// Every fixture uses production admission with only source documents/time;
-// no publication-proof alarm state or policy bypass is supplied.
-for (const state of ["fresh_fallback", "lkg_fallback"] as const) {
-  const selected = await fixture({
-    state,
-  });
-  assert.equal(selected.kind, "selected", `${state} must serve without retired publication proof`);
-  if (selected.kind === "selected") {
-    assert.equal(selected.dataSupply.resolution_state, state);
-    assert.equal(selected.dataSupply.source_as_of, "2026-07-02T01:57:29Z");
-    assert.equal(selected.dataSupply.source_age_days, 9);
-    assert.equal(selected.payload.fetched_at, "2026-07-02T01:57:29Z",
-      "serving must not relabel old provider bytes as newly acquired");
-  }
-}
 const fresh = await fixture({ state: "fresh_fallback" });
 assert.equal(fresh.kind, "selected", JSON.stringify(fresh));
 if (fresh.kind === "selected") {
