@@ -25,6 +25,7 @@ from contextlib import contextmanager
 from contextvars import ContextVar
 from collections.abc import Mapping
 from datetime import datetime, timedelta, timezone
+from decimal import Decimal, InvalidOperation, ROUND_HALF_UP
 import hashlib
 import json
 import math
@@ -198,7 +199,7 @@ INFO_KEYS = [
     "annualReportExpenseRatio", "threeYearAverageReturn",
     "fiveYearAverageReturn",
     # price / range
-    "currentPrice", "previousClose", "regularMarketPrice",
+    "currentPrice", "previousClose", "regularMarketPrice", "priceHint",
     "regularMarketChange", "regularMarketChangePercent", "regularMarketTime",
     "fiftyTwoWeekHigh", "fiftyTwoWeekLow",
     "fiftyTwoWeekChangePercent", "averageVolume", "averageVolume10days",
@@ -950,7 +951,19 @@ def _validated_chart_quote(ticker, data, metadata, observed_at):
         raise ValueError("chart quote timestamp regression")
     if old_time and quote == old_time:
         if _quote_positive(old_price) and price != old_price:
-            raise ValueError("chart quote equal-clock price conflict")
+            info_hint, chart_hint = info.get("priceHint"), metadata.get("priceHint")
+            same_precision = False
+            if (type(info_hint) is int and type(chart_hint) is int
+                    and 2 <= info_hint <= 8 and info_hint == chart_hint):
+                quantum = Decimal(1).scaleb(-info_hint)
+                try:
+                    old_display = Decimal(str(old_price)).quantize(quantum, rounding=ROUND_HALF_UP)
+                    chart_display = Decimal(str(price)).quantize(quantum, rounding=ROUND_HALF_UP)
+                    same_precision = old_display > 0 and old_display == chart_display
+                except InvalidOperation:
+                    pass
+            if not same_precision:
+                raise ValueError("chart quote equal-clock price conflict")
         if _quote_positive(old_price):
             return None
     quote_as_of = _iso_utc(raw_time)
@@ -981,7 +994,7 @@ def capture_chart_quote(ticker, data, ticker_client, *, yfinance_version=None):
     if not isinstance(metadata, Mapping):
         raise ValueError("chart quote metadata is unavailable")
     # Snapshot only these base keys. Enumerating the mapping can trigger lazy intraday requests.
-    keys = ("symbol", "instrumentType", "currency", "exchangeTimezoneName", "regularMarketPrice", "regularMarketTime")
+    keys = ("symbol", "instrumentType", "currency", "exchangeTimezoneName", "regularMarketPrice", "regularMarketTime", "priceHint")
     snapshot = {key: metadata.get(key) for key in keys}
     observed_at = _observed_now()
     pair = _validated_chart_quote(ticker, data, snapshot, observed_at)
