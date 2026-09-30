@@ -23,6 +23,18 @@ test("a measured recovery updates and closes only the exact bot-owned alarm", ()
   assert.deepEqual(writes(mock).map((args) => [args[1], args[2]]), [["edit", "92"], ["close", "92"]]);
 });
 
+test("a measured recovery recognizes the GitHub CLI app bot identity", () => {
+  const mock = runner([issue(92, { author: { login: "app/github-actions", is_bot: true } })]);
+  assert.equal(syncBudgetIssue(result("ok"), mock), "closed");
+  assert.deepEqual(writes(mock).map((args) => [args[1], args[2]]), [["edit", "92"], ["close", "92"]]);
+});
+
+test("the app login without a verified bot flag is never modified", () => {
+  const mock = runner([issue(92, { author: { login: "app/github-actions", is_bot: false } })]);
+  assert.equal(syncBudgetIssue(result("ok"), mock), "unchanged");
+  assert.deepEqual(writes(mock), []);
+});
+
 test("all-clear with no alarm does not create an issue", () => {
   const mock = runner();
   assert.equal(syncBudgetIssue(result("ok"), mock), "unchanged");

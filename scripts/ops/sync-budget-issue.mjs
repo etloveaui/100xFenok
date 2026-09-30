@@ -23,7 +23,8 @@ export function syncBudgetIssue(result, { repo, run = gh } = {}) {
   if (!Array.isArray(issues) || issues.length >= 100) throw new Error("Issue lookup may be incomplete");
   const matches = issues.filter((issue) => issue.title === result.issueTitle
     && (issue.author?.login === "github-actions[bot]"
-      || (issue.author?.login === "github-actions" && issue.author?.is_bot === true)));
+      || (["github-actions", "app/github-actions"].includes(issue.author?.login)
+        && issue.author?.is_bot === true)));
   if (matches.length > 1) throw new Error("Ambiguous duplicate budget alarms; no issue may be changed");
   const existing = matches[0];
   if (existing && (!Number.isSafeInteger(existing.number) || existing.number <= 0)) throw new Error("Invalid issue identity");
