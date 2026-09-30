@@ -129,11 +129,9 @@ jobs:
     outputs:
       artifact_digest: ${{ steps.upload.outputs.artifact-digest }}
       artifact_name: ${{ steps.artifact_identity.outputs.name }}
-    # 60 was structurally too short for post-outage catch-up: 261 rate-limited
-    # ETF fetches x ~20s ≈ 87min, so the job died before its commit step and
-    # the backlog could never drain (run 29117945172 cancelled at 60m, 171/261
-    # done, zero committed). YF lane precedent is 240.
-    timeout-minutes: 180
+    # Serial full-universe catch-up can exceed three hours. Allow the hosted
+    # maximum without treating six hours as a completion guarantee.
+    timeout-minutes: 360
     steps:
       - uses: actions/checkout@v4
 
@@ -231,6 +229,7 @@ jobs:
               INPUT_CORE_BASKET_REFRESH="${STOCKANALYSIS_DAILY_CORE_BASKET_REFRESH:-true}"
               NATURAL_RECOVERY_KINDS="etf,surface"
               if [ "$EVENT_SCHEDULE" = "20 23 * * 0" ]; then
+                INPUT_SLEEP="2"
                 # BACKLOG #331: one complete weekly universe collection. Current
                 # measured universe is 11 pages; 100 preserves headroom without
                 # turning weekday bounded runs into broad discovery. StockAnalysis
@@ -364,13 +363,8 @@ jobs:
             if [ -n "$INPUT_LIMIT_ETFS" ]; then ARGS="$ARGS --limit-etfs $INPUT_LIMIT_ETFS"; fi
             if [ -n "$INPUT_MAX_UNIVERSE_PAGES" ]; then ARGS="$ARGS --max-universe-pages $INPUT_MAX_UNIVERSE_PAGES"; fi
           fi
-          # Reuse the existing incremental input; ordinary dispatch and
-          # weekday collection retain one worker and their existing bounds.
-          ETF_WORKERS="1"
-          if { [ "$EVENT_NAME" = "schedule" ] && [ "$EVENT_SCHEDULE" = "20 23 * * 0" ]; } || [ "${INPUT_INCREMENTAL_ETF_BACKFILL:-false}" = "true" ]; then
-            ETF_WORKERS="4"
-          fi
-          ARGS="$ARGS --etf-workers $ETF_WORKERS"
+          # Avoid prefetched ETF request bursts; preserve dispatch sleep.
+          ARGS="$ARGS --etf-workers 1"
           if [ "$EVENT_NAME" = "schedule" ]; then
             ARGS="$ARGS --natural-run --natural-recovery-kinds $NATURAL_RECOVERY_KINDS"
           fi
