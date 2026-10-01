@@ -3692,6 +3692,33 @@ function runCli(extraArgs, includeFamily = true, extraEnv = {}) {
   assert.equal(calls.length, 2);
   assert.ok(writes > 0);
   assert.equal(JSON.parse(output.at(-1)).planned_bytes, calls[1].planBytes);
+  const activePointer = await plane.pointerStore.get();
+  const rejectBasis = async (binding, expectedCode) => {
+    const errors = [];
+    const writesBefore = writes;
+    const exit = await runPublisherCli({
+      argv: ["--family=stockanalysis-etf-detail", "--json"],
+      env: {
+        CLOUDFLARE_API_TOKEN: "fixture",
+        DATA_PLANE_ENDPOINT: "https://example.invalid",
+        DATA_PLANE_WRITE_KEY: "fixture",
+        PUBLISH_BINDING_ARTIFACT_DIGEST: "a".repeat(64),
+        ...binding,
+      },
+      buildFamilyManifestImpl: async () => built,
+      createPublishPlaneImpl: () => ({ plane: countingPlane, objectsWritten: () => writes }),
+      runCostGateImpl: async () => ({ code: 0, stdout: "", stderr: "" }),
+      stdout: () => {}, stderr: (line) => errors.push(line),
+    });
+    assert.equal(exit, 1);
+    assert.ok(errors.some((line) => line.includes(expectedCode)));
+    assert.equal(writes, writesBefore, "bad active basis must fail before any object write");
+  };
+  await rejectBasis({}, "ACTIVE_BASIS_BINDING_MISSING");
+  await rejectBasis({
+    PUBLISH_EXPECTED_ACTIVE_GENERATION_ID: "different-generation",
+    PUBLISH_EXPECTED_ACTIVE_MANIFEST_SHA256: activePointer.active.manifest_sha256,
+  }, "ACTIVE_BASIS_DRIFT");
   await rm(root, { recursive: true, force: true });
 }
 

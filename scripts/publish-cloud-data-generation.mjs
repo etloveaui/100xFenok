@@ -3198,6 +3198,20 @@ export async function runPublisherCli({
     });
     const { plane } = publishPlane;
     const livePointer = await plane.pointerStore.get();
+    if (args.family === "stockanalysis-etf-detail" && env.PUBLISH_BINDING_ARTIFACT_DIGEST) {
+      // The hosted ETF candidate is built from a verified active snapshot.
+      // Never publish that snapshot over a different live generation, even if
+      // the pointer moved before this process acquired its CAS sequence.
+      const expectedId = env.PUBLISH_EXPECTED_ACTIVE_GENERATION_ID;
+      const expectedSha = env.PUBLISH_EXPECTED_ACTIVE_MANIFEST_SHA256;
+      if (!expectedId || !/^[0-9a-f]{64}$/.test(expectedSha ?? "")) {
+        fail("ACTIVE_BASIS_BINDING_MISSING", "ETF publish needs its verified active receipt");
+      }
+      if (livePointer?.active?.generation_id !== expectedId
+        || livePointer.active.manifest_sha256 !== expectedSha) {
+        fail("ACTIVE_BASIS_DRIFT", "ETF active generation differs from the materialized basis");
+      }
+    }
     const pointerSequenceBefore = livePointer?.sequence ?? 0;
     const resolved = await resolveExpectedPointerSequence({
       pointer: livePointer,

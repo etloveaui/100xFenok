@@ -779,6 +779,182 @@ jobs:
             echo "::error::ETF plane publication requires an applied immutable candidate; got $APPLY_STATUS" >&2
             exit 75
           fi
+          printf '%s\n' "$APPLY_JSON" > "$RUNNER_TEMP/stockanalysis-plane-apply.json"
+
+      - name: Build ETF candidate from the verified active generation
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: aeeb5ea3affe55a2219d08ea02dad9e1
+          DATA_PLANE_ENDPOINT: https://100xfenok.etloveaui.workers.dev/internal/cloud-data-plane
+          DATA_PLANE_WRITE_KEY: ${{ secrets.DATA_PLANE_WRITE_KEY }}
+        run: |
+          set -euo pipefail
+          ACTIVE_ROOT="$RUNNER_TEMP/stockanalysis-etf-active"
+          CANDIDATE_ROOT="$RUNNER_TEMP/stockanalysis-etf-candidate"
+          RECEIPT="$RUNNER_TEMP/stockanalysis-etf-active-receipt.json"
+          if [ -e "$ACTIVE_ROOT" ] || [ -e "$CANDIDATE_ROOT" ] || [ -e "$RECEIPT" ]; then
+            echo "::error::ETF active/candidate scratch path already exists" >&2
+            exit 2
+          fi
+          node scripts/materialize-cloud-data-plane-family.mjs \
+            --family stockanalysis-etf-detail \
+            --manifest-prefix data/stockanalysis/etfs/ \
+            --output-root "$ACTIVE_ROOT" | tee "$RECEIPT"
+          # Hard links avoid a second 1GB download or copy. The overlay below
+          # replaces candidate links atomically, leaving the verified base intact.
+          cp -al "$ACTIVE_ROOT" "$CANDIDATE_ROOT"
+          python3 - "$RUNNER_TEMP/stockanalysis-artifact" \
+            "$RUNNER_TEMP/stockanalysis-plane-apply.json" "$CANDIDATE_ROOT" \
+            "$ACTIVE_ROOT" "scripts/fetch-stockanalysis.py" <<'PYEOF'
+          from datetime import datetime, timezone
+          import hashlib
+          from importlib.util import module_from_spec, spec_from_file_location
+          import json
+          import math
+          import os
+          from pathlib import Path
+          import re
+          import subprocess
+          import sys
+          import tempfile
+
+          artifact, applied_path, candidate, active_root, fetcher_path = map(Path, sys.argv[1:])
+          spec = spec_from_file_location("etf_overlay_contract", fetcher_path.resolve(strict=True))
+          fetcher = module_from_spec(spec)
+          sys.modules[spec.name] = fetcher
+          spec.loader.exec_module(fetcher)
+          manifest = json.loads((artifact / "manifest.json").read_text(encoding="utf-8"))
+          applied = json.loads(applied_path.read_text(encoding="utf-8"))
+          if applied.get("status") != "applied" or applied.get("paths") != manifest.get("paths"):
+              raise SystemExit("ETF candidate artifact paths differ from the applied immutable artifact")
+          prefix = "data/stockanalysis/etfs/"
+          rows = [row for row in manifest["files"] if row["path"].startswith(prefix)]
+          overlay_names = {row["path"][len(prefix):] for row in rows}
+          name_pattern = re.compile(r"[A-Z0-9][A-Z0-9._-]*\.json")
+          if any(not path.is_file() or path.is_symlink() or not name_pattern.fullmatch(path.name)
+                 for path in candidate.iterdir()):
+              raise SystemExit("verified ETF active generation is not a flat ticker JSON tree")
+          active_names = {path.name for path in candidate.iterdir() if path.is_file()}
+          git_root = Path(prefix)
+          if any(not path.is_file() or path.is_symlink() or not name_pattern.fullmatch(path.name)
+                 for path in git_root.iterdir()):
+              raise SystemExit("Git ETF LKG is not a flat ticker JSON tree")
+          git_names = {path.name for path in git_root.iterdir()}
+          git_only = sorted(git_names - active_names - overlay_names)
+          def checked_payload(body, ticker, label):
+              try:
+                  payload = json.loads(body)
+                  if not isinstance(payload, dict):
+                      raise ValueError("payload is not an object")
+                  fetcher.validate_stockanalysis_etf_payload(ticker, payload)
+              except (ValueError, TypeError) as error:
+                  raise SystemExit(f"ETF {label} contract invalid for {ticker}: {error}") from error
+              source = fetcher.parse_iso_timestamp(payload.get("source_as_of"))
+              fetched = fetcher.parse_iso_timestamp(payload.get("fetched_at"))
+              if fetched is None or fetched > datetime.now(timezone.utc) or (source and source > fetched):
+                  raise SystemExit(f"ETF {label} source/fetch clock invalid for {ticker}")
+              complete = fetcher.is_complete_stockanalysis_etf_payload(ticker, payload)
+              return payload, source, complete
+
+          def enforce_floor(ticker, candidate_payload, candidate_source, candidate_complete, baseline_bytes, label):
+              if baseline_bytes is None:
+                  return
+              baseline, baseline_source, baseline_complete = checked_payload(baseline_bytes, ticker, label)
+              if baseline_source and (candidate_source is None or candidate_source < baseline_source):
+                  raise SystemExit(f"ETF {ticker} artifact source date regresses {label}")
+              if baseline_complete and not candidate_complete:
+                  raise SystemExit(f"ETF {ticker} artifact loses complete {label} detail")
+              if baseline_complete:
+                  old_normalized = baseline.get("normalized") or {}
+                  new_normalized = candidate_payload.get("normalized") or {}
+                  for field in ("holding_count", "holdings_updated"):
+                      if old_normalized.get(field) is not None and new_normalized.get(field) is None:
+                          raise SystemExit(f"ETF {ticker} artifact loses {label} {field}")
+                  old_quote = (baseline.get("raw") or {}).get("quote")
+                  new_quote = (candidate_payload.get("raw") or {}).get("quote")
+                  if isinstance(old_quote, dict):
+                      old_price = old_quote.get("p")
+                      old_clock = fetcher.quote_source_timestamp(old_quote)
+                      if (isinstance(old_price, (int, float)) and not isinstance(old_price, bool)
+                              and math.isfinite(old_price) and old_price > 0 and old_clock):
+                          new_price = new_quote.get("p") if isinstance(new_quote, dict) else None
+                          new_clock = fetcher.quote_source_timestamp(new_quote)
+                          if (not isinstance(new_price, (int, float)) or isinstance(new_price, bool)
+                                  or not math.isfinite(new_price) or new_price <= 0 or not new_clock
+                                  or fetcher.parse_iso_timestamp(new_clock) < fetcher.parse_iso_timestamp(old_clock)):
+                              raise SystemExit(f"ETF {ticker} artifact loses {label} usable quote")
+                  old_periods = old_normalized.get("history_periods") or {}
+                  new_periods = new_normalized.get("history_periods") or {}
+                  for period, rows in old_periods.items():
+                      old_count = fetcher.valid_unique_history_date_count(rows)
+                      required_count = min(old_count, fetcher.history_period_min_rows(period) or old_count)
+                      if old_count > 0 and fetcher.valid_unique_history_date_count(
+                              new_periods.get(period)) < required_count:
+                          raise SystemExit(f"ETF {ticker} artifact loses {label} {period} history")
+
+          for name in git_only:
+              body = (git_root / name).read_bytes()
+              digest = hashlib.sha256(body).hexdigest()
+              with tempfile.NamedTemporaryFile(dir=candidate, prefix=f".{name}.", delete=False) as handle:
+                  temporary = Path(handle.name)
+                  handle.write(body)
+              os.replace(temporary, candidate / name)
+              if hashlib.sha256((candidate / name).read_bytes()).hexdigest() != digest:
+                  raise SystemExit(f"Git-only ETF addition readback failed: {name}")
+          for row in rows:
+              rel = row["path"]
+              name = rel[len(prefix):]
+              if not name_pattern.fullmatch(name):
+                  raise SystemExit(f"ETF candidate path is not a top-level ticker JSON: {rel}")
+              source = artifact / "files" / rel
+              body = source.read_bytes()
+              if len(body) != row["size"] or hashlib.sha256(body).hexdigest() != row["sha256"]:
+                  raise SystemExit(f"ETF candidate artifact changed after apply: {rel}")
+              ticker = name[:-5]
+              payload, source_as_of, complete = checked_payload(body, ticker, "artifact")
+              active_file = active_root / name
+              enforce_floor(ticker, payload, source_as_of, complete,
+                            active_file.read_bytes() if active_file.exists() else None, "active")
+              lkg = subprocess.run(["git", "show", f"HEAD:{rel}"], capture_output=True, check=False)
+              if lkg.returncode == 0:
+                  enforce_floor(ticker, payload, source_as_of, complete, lkg.stdout, "Git LKG")
+              else:
+                  tracked = subprocess.run(["git", "ls-files", "--error-unmatch", "--", rel],
+                                           capture_output=True, check=False)
+                  if tracked.returncode == 0:
+                      raise SystemExit(f"ETF {ticker} Git LKG is unreadable")
+              target = candidate / name
+              with tempfile.NamedTemporaryFile(dir=candidate, prefix=f".{name}.", delete=False) as handle:
+                  temporary = Path(handle.name)
+                  handle.write(body)
+              os.replace(temporary, target)
+              if hashlib.sha256(target.read_bytes()).hexdigest() != row["sha256"]:
+                  raise SystemExit(f"ETF candidate overlay readback failed: {rel}")
+          expected_names = active_names | git_names | overlay_names
+          if {path.name for path in candidate.iterdir()} != expected_names:
+              raise SystemExit("ETF candidate membership differs from active/Git/artifact union")
+          print(json.dumps({"active_etf_files": len(active_names), "git_only_additions": len(git_only),
+                            "artifact_etf_overlays": len(rows), "candidate_etf_files": len(expected_names)}))
+          PYEOF
+          # The base tree and pointer must still match the receipt after the
+          # hard-link overlay; publisher also checks the same pointer identity.
+          node scripts/materialize-cloud-data-plane-family.mjs \
+            --family stockanalysis-etf-detail \
+            --verify-receipt "$RECEIPT" >/dev/null
+          python3 - "$RECEIPT" "$CANDIDATE_ROOT" "$GITHUB_ENV" <<'PYEOF'
+          import json
+          from pathlib import Path
+          import sys
+
+          receipt = json.loads(Path(sys.argv[1]).read_text(encoding="utf-8"))
+          candidate = Path(sys.argv[2])
+          if receipt.get("family") != "stockanalysis-etf-detail" or not candidate.is_dir():
+              raise SystemExit("ETF active receipt/candidate is invalid")
+          with Path(sys.argv[3]).open("a", encoding="utf-8") as env:
+              env.write(f"ETF_CANDIDATE_ROOT={candidate}\n")
+              env.write(f"PUBLISH_EXPECTED_ACTIVE_GENERATION_ID={receipt['generation_id']}\n")
+              env.write(f"PUBLISH_EXPECTED_ACTIVE_MANIFEST_SHA256={receipt['manifest_sha256']}\n")
+          PYEOF
 
       - name: Publish guarded stockanalysis-etf-detail generation
         id: publish_cloud_generation
@@ -790,7 +966,16 @@ jobs:
           # Bind publication to the immutable acquisition artifact; this job
           # runs independently of the Git publisher.
           PUBLISH_BINDING_ARTIFACT_DIGEST: ${{ needs.acquire-stockanalysis.outputs.artifact_digest }}
-        run: node scripts/publish-cloud-data-generation.mjs --family=stockanalysis-etf-detail --json
+        run: |
+          node --input-type=module -e '
+            import { buildFamilyManifest, runPublisherCli } from "./scripts/publish-cloud-data-generation.mjs";
+            process.exitCode = await runPublisherCli({
+              argv: ["--family=stockanalysis-etf-detail", "--json"],
+              buildFamilyManifestImpl: (options) => buildFamilyManifest({
+                ...options, absRoot: process.env.ETF_CANDIDATE_ROOT,
+              }),
+            });
+          '
 
   # Rebuild the shared projection after Git publication and the required cloud
   # publication both succeed. Source-only runs keep their canonical path.
