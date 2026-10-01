@@ -318,10 +318,20 @@ const r2EtfCounts = dataSupplyEtfIndex?.schema_version === "data-supply-etf-deta
       unavailable: number(dataSupplyEtfIndex.unavailable_count),
     }
   : null;
+const enrolledEtfTickers = new Set(Object.keys(dataSupplyEtfIndex?.entries ?? {}));
+const canonicalEtfDir = path.join(DATA_ROOT, "stockanalysis/etfs");
+const unenrolledCanonicalEtfCount = r2EtfCounts && fs.existsSync(canonicalEtfDir)
+  ? fs.readdirSync(canonicalEtfDir, { withFileTypes: true }).filter((entry) => {
+      const ticker = entry.name.slice(0, -".json".length);
+      return entry.isFile() && entry.name.endsWith(".json")
+        && /^[A-Z0-9][A-Z0-9._-]*$/.test(ticker) && !ticker.includes("..")
+        && !enrolledEtfTickers.has(ticker);
+    }).length
+  : 0;
 const effectiveEtfDetail = r2EtfCounts
   ? {
-      available: counts.stockanalysisEtfs + r2EtfCounts.selected,
-      total: counts.stockanalysisEtfs + r2EtfCounts.enrolled,
+      available: unenrolledCanonicalEtfCount + r2EtfCounts.selected,
+      total: unenrolledCanonicalEtfCount + r2EtfCounts.enrolled,
       unavailable: r2EtfCounts.unavailable,
     }
   : {
