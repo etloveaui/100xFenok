@@ -1,23 +1,8 @@
 {
-  "attempts": [
-    {
-      "attempts_used": 1,
-      "event_name": "workflow_dispatch",
-      "failures": [],
-      "latency_ms": 426,
-      "natural": false,
-      "observed_at": "2026-09-28T03:11:20Z",
-      "outcome": "fresh",
-      "run_attempt": 1,
-      "run_id": "36367829153",
-      "schedule": "",
-      "shard": ""
-    }
-  ],
   "current": {
     "fetched_at": "2026-09-28T03:31:29Z",
     "history_as_of": "2026-09-25",
-    "path": "data/yf/finance/HAUG.json",
+    "path": "data/admin/yahoo-batch-quote-history/lkg/HAUG.json",
     "payload_sha256": "a76e2103f1e6996e1b505e35fa4bc478d1b977520d01f111ded58623c8b68694",
     "quote_as_of": "2026-09-22T17:00:33Z",
     "source_as_of": "2026-09-22T17:00:33Z"
@@ -25,34 +10,33 @@
   "discovered_from": [
     "stockanalysis_etf"
   ],
-  "last_attempt": {
+  "last_result": {
     "attempts_used": 1,
-    "event_name": "workflow_dispatch",
     "failures": [],
     "latency_ms": 426,
-    "natural": false,
     "observed_at": "2026-09-28T03:11:20Z",
-    "outcome": "fresh",
-    "run_attempt": 1,
-    "run_id": "36367829153",
-    "schedule": "",
-    "shard": ""
+    "outcome": "fresh"
   },
-  "promotion_contract": "provider_observation/v2",
-  "provider_observation": {
-    "event_name": "workflow_dispatch",
+  "lkg": {
+    "fetched_at": "2026-09-28T03:31:29Z",
     "history_as_of": "2026-09-25",
-    "observed_at": "2026-09-28T03:11:20Z",
-    "payload_sha256": "39795cf24eb1beeb82dccf100427775edea23613ab19ca37a8b06b458bad7dca",
+    "path": "data/admin/yahoo-batch-quote-history/lkg/HAUG.json",
+    "payload_sha256": "a76e2103f1e6996e1b505e35fa4bc478d1b977520d01f111ded58623c8b68694",
     "quote_as_of": "2026-09-22T17:00:33Z",
-    "run_attempt": 1,
-    "run_id": "36367829153",
-    "schema_version": "provider_observation/v2",
     "source_as_of": "2026-09-22T17:00:33Z"
   },
-  "resolution_state": "fresh_primary",
-  "retry": false,
+  "resolution_state": "lkg_primary",
+  "retry": true,
   "schema_version": "yahoo-batch-quote-history-state/v1",
+  "stale": {
+    "age_business_days": 7,
+    "classified_at": "2026-10-01T02:15:16Z",
+    "expected_resolution": "next_yahoo_acquisition",
+    "max_business_days": 6,
+    "message": "HAUG holds LKG because Yahoo source date 2026-09-22T17:00:33Z is 7 business days old, beyond the 6-day bound; it will retry on the next Yahoo acquisition.",
+    "reason": "source_age_exceeds_lane_bound",
+    "source_as_of": "2026-09-22T17:00:33Z"
+  },
   "ticker": "HAUG",
-  "updated_at": "2026-09-28T03:11:20Z"
+  "updated_at": "2026-10-01T02:15:16Z"
 }

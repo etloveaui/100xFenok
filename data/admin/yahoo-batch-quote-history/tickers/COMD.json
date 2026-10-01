@@ -1,62 +1,8 @@
 {
-  "attempts": [
-    {
-      "attempts_used": 0,
-      "event_name": "workflow_dispatch",
-      "failures": [],
-      "latency_ms": 0,
-      "natural": false,
-      "observed_at": "2026-07-13T04:33:56Z",
-      "outcome": "skipped_fresh",
-      "run_attempt": 1,
-      "run_id": "29224221077",
-      "schedule": "",
-      "shard": ""
-    },
-    {
-      "attempts_used": 1,
-      "event_name": "schedule",
-      "failures": [],
-      "latency_ms": 767,
-      "natural": true,
-      "observed_at": "2026-07-22T23:45:22Z",
-      "outcome": "fresh",
-      "run_attempt": 1,
-      "run_id": "29965324287",
-      "schedule": "0 22 * * 3",
-      "shard": "3/6"
-    },
-    {
-      "attempts_used": 1,
-      "event_name": "schedule",
-      "failures": [],
-      "latency_ms": 360,
-      "natural": true,
-      "observed_at": "2026-08-06T06:42:20Z",
-      "outcome": "fresh",
-      "run_attempt": 1,
-      "run_id": "31078091927",
-      "schedule": "7 4 * * 0-5",
-      "shard": "50/72"
-    },
-    {
-      "attempts_used": 1,
-      "event_name": "workflow_dispatch",
-      "failures": [],
-      "latency_ms": 418,
-      "natural": false,
-      "observed_at": "2026-09-28T01:17:59Z",
-      "outcome": "fresh",
-      "run_attempt": 1,
-      "run_id": "36365270594",
-      "schedule": "",
-      "shard": ""
-    }
-  ],
   "current": {
     "fetched_at": "2026-09-28T01:37:22Z",
     "history_as_of": "2026-09-25",
-    "path": "data/yf/finance/COMD.json",
+    "path": "data/admin/yahoo-batch-quote-history/lkg/COMD.json",
     "payload_sha256": "805723d0cb7c28d773f570726e3524b49f6a6cd8f41aa8ad1590ba29dc629a59",
     "quote_as_of": "2026-09-22T19:17:04Z",
     "source_as_of": "2026-09-22T19:17:04Z"
@@ -64,52 +10,33 @@
   "discovered_from": [
     "stockanalysis_etf"
   ],
-  "last_attempt": {
+  "last_result": {
     "attempts_used": 1,
-    "event_name": "workflow_dispatch",
     "failures": [],
     "latency_ms": 418,
-    "natural": false,
     "observed_at": "2026-09-28T01:17:59Z",
-    "outcome": "fresh",
-    "run_attempt": 1,
-    "run_id": "36365270594",
-    "schedule": "",
-    "shard": ""
+    "outcome": "fresh"
   },
   "lkg": {
-    "fetched_at": "2026-08-06T06:43:24Z",
-    "history_as_of": "2026-08-05",
-    "path": "data/admin/yahoo-batch-quote-history/lkg/COMD.json",
-    "payload_sha256": "864efbc69b9852b777e52d4b68c3104e50f5ba9f2a34cca1ac418c52fed2e430",
-    "quote_as_of": "2026-08-04T19:59:46Z",
-    "source_as_of": "2026-08-04T19:59:46Z"
-  },
-  "promotion_contract": "provider_observation/v2",
-  "provider_observation": {
-    "event_name": "workflow_dispatch",
+    "fetched_at": "2026-09-28T01:37:22Z",
     "history_as_of": "2026-09-25",
-    "observed_at": "2026-09-28T01:17:59Z",
-    "payload_sha256": "71b8fcafc1b46745afcb726feb8d0279968b7349f8143146c0a347719b829372",
+    "path": "data/admin/yahoo-batch-quote-history/lkg/COMD.json",
+    "payload_sha256": "805723d0cb7c28d773f570726e3524b49f6a6cd8f41aa8ad1590ba29dc629a59",
     "quote_as_of": "2026-09-22T19:17:04Z",
-    "run_attempt": 1,
-    "run_id": "36365270594",
-    "schema_version": "provider_observation/v2",
     "source_as_of": "2026-09-22T19:17:04Z"
   },
-  "resolution_state": "fresh_primary",
-  "retry": false,
+  "resolution_state": "lkg_primary",
+  "retry": true,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "stale": {
     "age_business_days": 7,
-    "classified_at": "2026-08-13T00:06:17Z",
-    "classified_run_id": "31652949582",
-    "expected_resolution": "next_natural_yahoo_run",
+    "classified_at": "2026-10-01T02:15:16Z",
+    "expected_resolution": "next_yahoo_acquisition",
     "max_business_days": 6,
-    "message": "COMD holds LKG because Yahoo source date 2026-08-04T19:59:46Z is 7 business days old, beyond the 6-day bound; it will retry on the next natural Yahoo run.",
+    "message": "COMD holds LKG because Yahoo source date 2026-09-22T19:17:04Z is 7 business days old, beyond the 6-day bound; it will retry on the next Yahoo acquisition.",
     "reason": "source_age_exceeds_lane_bound",
-    "source_as_of": "2026-08-04T19:59:46Z"
+    "source_as_of": "2026-09-22T19:17:04Z"
   },
   "ticker": "COMD",
-  "updated_at": "2026-09-28T01:17:59Z"
+  "updated_at": "2026-10-01T02:15:16Z"
 }

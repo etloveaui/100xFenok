@@ -1,50 +1,9 @@
 {
-  "attempts": [
-    {
-      "attempts_used": 1,
-      "event_name": "workflow_dispatch",
-      "failures": [],
-      "latency_ms": 456,
-      "natural": false,
-      "observed_at": "2026-09-28T05:23:15Z",
-      "outcome": "fresh",
-      "run_attempt": 1,
-      "run_id": "36367832955",
-      "schedule": "",
-      "shard": ""
-    },
-    {
-      "attempts_used": 1,
-      "event_name": "schedule",
-      "failures": [],
-      "latency_ms": 530,
-      "natural": true,
-      "observed_at": "2026-09-29T02:43:52Z",
-      "outcome": "fresh",
-      "run_attempt": 1,
-      "run_id": "36513342846",
-      "schedule": "20 23 * * 1-5",
-      "shard": "1/5"
-    },
-    {
-      "attempts_used": 1,
-      "event_name": "schedule",
-      "failures": [],
-      "latency_ms": 725,
-      "natural": true,
-      "observed_at": "2026-09-30T02:12:48Z",
-      "outcome": "fresh",
-      "run_attempt": 1,
-      "run_id": "36658577543",
-      "schedule": "20 23 * * 1-5",
-      "shard": "0/5"
-    }
-  ],
   "current": {
-    "fetched_at": "2026-09-30T02:18:29Z",
-    "history_as_of": "2026-09-28",
+    "fetched_at": "2026-10-01T02:15:38Z",
+    "history_as_of": "2026-09-29",
     "path": "data/yf/finance/MUNG.json",
-    "payload_sha256": "62b9a8543023ca2ae03462433a0c13e42ed41102672a284fcdff06210c9dcf9d",
+    "payload_sha256": "45eccf1269f23776160abbc3d361e70293750b31989c39a7672f1c86e4a034e5",
     "quote_as_of": "2026-09-22T20:00:00Z",
     "source_as_of": "2026-09-22T20:00:00Z"
   },
@@ -52,34 +11,34 @@
     "market_facts",
     "stockanalysis_etf"
   ],
-  "last_attempt": {
+  "failure_count": 0,
+  "last_result": {
     "attempts_used": 1,
-    "event_name": "schedule",
     "failures": [],
-    "latency_ms": 725,
-    "natural": true,
-    "observed_at": "2026-09-30T02:12:48Z",
-    "outcome": "fresh",
-    "run_attempt": 1,
-    "run_id": "36658577543",
-    "schedule": "20 23 * * 1-5",
-    "shard": "0/5"
+    "latency_ms": 507,
+    "observed_at": "2026-10-01T02:15:38Z",
+    "outcome": "fresh"
   },
-  "promotion_contract": "provider_observation/v2",
-  "provider_observation": {
-    "event_name": "schedule",
+  "lkg": {
+    "fetched_at": "2026-09-30T02:18:29Z",
     "history_as_of": "2026-09-28",
-    "observed_at": "2026-09-30T02:12:48Z",
-    "payload_sha256": "1dfbc913e83573f424c561fe0ebcf1a902e6a8490498ad003b6ee8b28bc6a393",
+    "path": "data/admin/yahoo-batch-quote-history/lkg/MUNG.json",
+    "payload_sha256": "62b9a8543023ca2ae03462433a0c13e42ed41102672a284fcdff06210c9dcf9d",
     "quote_as_of": "2026-09-22T20:00:00Z",
-    "run_attempt": 1,
-    "run_id": "36658577543",
-    "schema_version": "provider_observation/v2",
     "source_as_of": "2026-09-22T20:00:00Z"
   },
   "resolution_state": "fresh_primary",
   "retry": false,
   "schema_version": "yahoo-batch-quote-history-state/v1",
+  "stale": {
+    "age_business_days": 7,
+    "classified_at": "2026-10-01T02:15:16Z",
+    "expected_resolution": "next_yahoo_acquisition",
+    "max_business_days": 6,
+    "message": "MUNG holds LKG because Yahoo source date 2026-09-22T20:00:00Z is 7 business days old, beyond the 6-day bound; it will retry on the next Yahoo acquisition.",
+    "reason": "source_age_exceeds_lane_bound",
+    "source_as_of": "2026-09-22T20:00:00Z"
+  },
   "ticker": "MUNG",
-  "updated_at": "2026-09-30T02:12:48Z"
+  "updated_at": "2026-10-01T02:15:38Z"
 }
