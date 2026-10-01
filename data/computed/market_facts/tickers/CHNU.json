@@ -2,10 +2,10 @@
   "schema_version": "market-facts/v1",
   "ticker": "CHNU",
   "asset_type": "etf",
-  "generated_at": "2026-09-21T01:42:22Z",
-  "source_as_of": null,
+  "generated_at": "2026-10-01T05:48:34Z",
+  "source_as_of": "2026-09-30",
   "source_as_of_scope": "selected_price_fact",
-  "source_as_of_reason": "selected price fact has no provider source date",
+  "source_as_of_reason": null,
   "identity": {
     "name": "CHNU",
     "exchange": null,
@@ -16,11 +16,174 @@
     "category": null
   },
   "facts": {
+    "price": {
+      "value": 41.23,
+      "source": "stockanalysis.quote",
+      "as_of": "2026-09-30",
+      "fetched_at": "2026-09-30T19:42:58Z",
+      "confidence": "observed",
+      "policy": [
+        "yf",
+        "yf.fast_info",
+        "stockanalysis.quote",
+        "yf.stockanalysis_fallback.quote",
+        "slickcharts"
+      ],
+      "candidates": [
+        {
+          "value": 41.23,
+          "source": "stockanalysis.quote",
+          "as_of": "2026-09-30",
+          "fetched_at": "2026-09-30T19:42:58Z",
+          "confidence": "observed"
+        }
+      ],
+      "candidate_count": 1
+    },
+    "previous_close": {
+      "value": 43.55,
+      "source": "stockanalysis.quote",
+      "as_of": "2026-09-30",
+      "fetched_at": "2026-09-30T19:42:58Z",
+      "confidence": "observed",
+      "policy": [
+        "yf",
+        "stockanalysis.quote",
+        "yf.stockanalysis_fallback.quote"
+      ],
+      "candidates": [
+        {
+          "value": 43.55,
+          "source": "stockanalysis.quote",
+          "as_of": "2026-09-30",
+          "fetched_at": "2026-09-30T19:42:58Z",
+          "confidence": "observed"
+        }
+      ],
+      "candidate_count": 1
+    },
+    "change": {
+      "value": -2.32,
+      "source": "stockanalysis.quote",
+      "as_of": "2026-09-30",
+      "fetched_at": "2026-09-30T19:42:58Z",
+      "confidence": "observed",
+      "policy": [
+        "stockanalysis.quote",
+        "yf",
+        "yf.derived",
+        "yf.stockanalysis_fallback.quote"
+      ],
+      "candidates": [
+        {
+          "value": -2.32,
+          "source": "stockanalysis.quote",
+          "as_of": "2026-09-30",
+          "fetched_at": "2026-09-30T19:42:58Z",
+          "confidence": "observed"
+        }
+      ],
+      "candidate_count": 1
+    },
+    "change_pct": {
+      "value": -5.33,
+      "source": "stockanalysis.quote",
+      "as_of": "2026-09-30",
+      "fetched_at": "2026-09-30T19:42:58Z",
+      "confidence": "observed",
+      "policy": [
+        "stockanalysis.quote",
+        "yf",
+        "yf.derived",
+        "yf.stockanalysis_fallback.quote"
+      ],
+      "candidates": [
+        {
+          "value": -5.33,
+          "source": "stockanalysis.quote",
+          "as_of": "2026-09-30",
+          "fetched_at": "2026-09-30T19:42:58Z",
+          "confidence": "observed"
+        }
+      ],
+      "candidate_count": 1
+    },
+    "total_assets": {
+      "value": 3570000.0,
+      "source": "stockanalysis.overview",
+      "as_of": "2026-09-30",
+      "fetched_at": "2026-09-30T19:42:58Z",
+      "confidence": "observed",
+      "policy": [
+        "yf",
+        "stockanalysis.overview",
+        "yf.stockanalysis_fallback.overview"
+      ],
+      "candidates": [
+        {
+          "value": 3570000.0,
+          "source": "stockanalysis.overview",
+          "as_of": "2026-09-30",
+          "fetched_at": "2026-09-30T19:42:58Z",
+          "confidence": "observed"
+        }
+      ],
+      "candidate_count": 1
+    },
+    "dividend_yield": {
+      "value": 0.24,
+      "source": "stockanalysis.overview",
+      "as_of": "2026-09-30",
+      "fetched_at": "2026-09-30T19:42:58Z",
+      "confidence": "observed",
+      "unit": "percent_points",
+      "policy": [
+        "yf",
+        "stockanalysis.overview",
+        "yf.stockanalysis_fallback.overview",
+        "slickcharts"
+      ],
+      "candidates": [
+        {
+          "value": 0.24,
+          "source": "stockanalysis.overview",
+          "as_of": "2026-09-30",
+          "fetched_at": "2026-09-30T19:42:58Z",
+          "confidence": "observed",
+          "unit": "percent_points"
+        }
+      ],
+      "candidate_count": 1
+    },
+    "expense_ratio": {
+      "value": 1.85,
+      "source": "stockanalysis.overview",
+      "as_of": "2026-09-30",
+      "fetched_at": "2026-09-30T19:42:58Z",
+      "confidence": "observed",
+      "unit": "percent_points",
+      "policy": [
+        "yf",
+        "stockanalysis.overview",
+        "yf.stockanalysis_fallback.overview"
+      ],
+      "candidates": [
+        {
+          "value": 1.85,
+          "source": "stockanalysis.overview",
+          "as_of": "2026-09-30",
+          "fetched_at": "2026-09-30T19:42:58Z",
+          "confidence": "observed",
+          "unit": "percent_points"
+        }
+      ],
+      "candidate_count": 1
+    },
     "return_1m": {
-      "value": -2.062673790108402,
-      "source": "stockanalysis.etf_universe.performance",
-      "as_of": null,
-      "fetched_at": "2026-09-21T01:14:16Z",
+      "value": 57.011,
+      "source": "stockanalysis.detail.performance",
+      "as_of": "2026-09-30",
+      "fetched_at": "2026-09-30T19:42:58Z",
       "confidence": "observed",
       "unit": "percent_points",
       "policy": [
@@ -31,6 +194,14 @@
       ],
       "candidates": [
         {
+          "value": 57.011,
+          "source": "stockanalysis.detail.performance",
+          "as_of": "2026-09-30",
+          "fetched_at": "2026-09-30T19:42:58Z",
+          "confidence": "observed",
+          "unit": "percent_points"
+        },
+        {
           "value": -2.062673790108402,
           "source": "stockanalysis.etf_universe.performance",
           "as_of": null,
@@ -39,37 +210,165 @@
           "unit": "percent_points"
         }
       ],
+      "candidate_count": 2
+    },
+    "return_3m": {
+      "value": 260.9617579459245,
+      "source": "stockanalysis.detail.history",
+      "as_of": "2026-09-29",
+      "fetched_at": "2026-09-30T19:42:58Z",
+      "confidence": "derived",
+      "unit": "percent_points",
+      "policy": [
+        "yf.history_1y",
+        "stockanalysis.detail.history"
+      ],
+      "candidates": [
+        {
+          "value": 260.9617579459245,
+          "source": "stockanalysis.detail.history",
+          "as_of": "2026-09-29",
+          "fetched_at": "2026-09-30T19:42:58Z",
+          "confidence": "derived",
+          "unit": "percent_points"
+        }
+      ],
       "candidate_count": 1
     }
   },
   "etf": {
-    "holdings_count": null,
-    "holdings_updated": null,
-    "top_holdings": [],
+    "holdings_count": 8,
+    "holdings_updated": "Sep 23, 2026",
+    "top_holdings": [
+      {
+        "rank": 1,
+        "name": "LINK Futures Oct26",
+        "weight_pct": 87.69,
+        "shares": 78,
+        "raw": {
+          "no": 1,
+          "n": "LINK Futures Oct26",
+          "as": "87.69%",
+          "sh": "78"
+        }
+      },
+      {
+        "rank": 2,
+        "name": "OTHER ASSETS AND LIABILITIES",
+        "weight_pct": 47.61,
+        "shares": 2539278,
+        "raw": {
+          "no": 2,
+          "n": "OTHER ASSETS AND LIABILITIES",
+          "as": "47.61%",
+          "sh": "2,539,278"
+        }
+      },
+      {
+        "rank": 3,
+        "name": "OTHER ASSETS AND LIABILITIES",
+        "weight_pct": 45.66,
+        "shares": 2435765,
+        "raw": {
+          "no": 3,
+          "n": "OTHER ASSETS AND LIABILITIES",
+          "as": "45.66%",
+          "sh": "2,435,765"
+        }
+      },
+      {
+        "rank": 4,
+        "name": "LINK Futures Sep26",
+        "weight_pct": 23.3,
+        "shares": 19,
+        "raw": {
+          "no": 4,
+          "n": "LINK Futures Sep26",
+          "as": "23.30%",
+          "sh": "19"
+        }
+      },
+      {
+        "rank": 5,
+        "name": "US Bank Money Market Deposit Account",
+        "weight_pct": 4.73,
+        "shares": 252121,
+        "raw": {
+          "no": 5,
+          "n": "US Bank Money Market Deposit Account",
+          "as": "4.73%",
+          "sh": "252,121"
+        }
+      },
+      {
+        "rank": 6,
+        "name": "US Bank Money Market Deposit Account",
+        "weight_pct": 2.46,
+        "shares": 130993,
+        "raw": {
+          "no": 6,
+          "n": "US Bank Money Market Deposit Account",
+          "as": "2.46%",
+          "sh": "130,993"
+        }
+      },
+      {
+        "rank": 7,
+        "name": "US DOLLARS",
+        "weight_pct": 0.64,
+        "shares": 34266,
+        "raw": {
+          "no": 7,
+          "n": "US DOLLARS",
+          "as": "0.64%",
+          "sh": "34,266"
+        }
+      },
+      {
+        "rank": 8,
+        "name": "Cash Offset",
+        "weight_pct": -112.08,
+        "shares": 5978200,
+        "raw": {
+          "no": 8,
+          "n": "Cash Offset",
+          "as": "-112.08%",
+          "sh": "5,978,200"
+        }
+      }
+    ],
     "asset_allocation": null,
     "sectors": null,
     "countries": null,
-    "classification": null,
+    "classification": {
+      "is_leveraged": true,
+      "leverage_factor": 2.0,
+      "is_inverse": true,
+      "is_single_stock": false,
+      "underlying": null,
+      "source": "stockanalysis.overview.description",
+      "confidence": "high"
+    },
     "yahoo_funds_data_available": false
   },
   "financials": null,
   "sources": {
     "yf": false,
-    "stockanalysis": false,
+    "stockanalysis": true,
     "stockanalysis_yf_fallback": false,
     "stockanalysis_etf_catalog": true,
     "slickcharts": false
   },
   "source_files": {
     "yf": null,
-    "stockanalysis": null,
+    "stockanalysis": "computed/data-supply/etf-detail/payloads/CHNU.json",
     "stockanalysis_yf_fallback": null,
     "stockanalysis_etf_catalog": "stockanalysis/etf_universe.json",
     "slickcharts": null
   },
   "resolver": {
     "version": "market-facts-resolver/v1",
-    "detail_authority": "data_supply:unavailable",
+    "detail_authority": "data_supply:fresh_primary",
     "field_source_policy": {
       "price": [
         "yf",

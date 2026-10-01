@@ -1,15 +1,15 @@
 {
   "schema_version": "market-facts/v1",
   "ticker": "MUNJ",
-  "asset_type": "stock",
-  "generated_at": "2026-10-01T02:32:56Z",
+  "asset_type": "etf",
+  "generated_at": "2026-10-01T05:48:34Z",
   "source_as_of": "2026-09-30",
   "source_as_of_scope": "selected_price_fact",
   "source_as_of_reason": null,
   "identity": {
     "name": "MUNJ",
-    "exchange": "PCX",
-    "currency": "USD",
+    "exchange": null,
+    "currency": null,
     "sector": null,
     "industry": null,
     "fund_family": null,
@@ -17,10 +17,10 @@
   },
   "facts": {
     "price": {
-      "value": 97.9744,
-      "source": "yf",
+      "value": 97.845,
+      "source": "stockanalysis.quote",
       "as_of": "2026-09-30",
-      "fetched_at": "2026-10-01T02:19:38Z",
+      "fetched_at": "2026-09-30T15:18:44Z",
       "confidence": "observed",
       "policy": [
         "yf",
@@ -31,20 +31,20 @@
       ],
       "candidates": [
         {
-          "value": 97.9744,
-          "source": "yf",
+          "value": 97.845,
+          "source": "stockanalysis.quote",
           "as_of": "2026-09-30",
-          "fetched_at": "2026-10-01T02:19:38Z",
+          "fetched_at": "2026-09-30T15:18:44Z",
           "confidence": "observed"
         }
       ],
       "candidate_count": 1
     },
     "previous_close": {
-      "value": 97.585,
-      "source": "yf",
+      "value": 97.59,
+      "source": "stockanalysis.quote",
       "as_of": "2026-09-30",
-      "fetched_at": "2026-10-01T02:19:38Z",
+      "fetched_at": "2026-09-30T15:18:44Z",
       "confidence": "observed",
       "policy": [
         "yf",
@@ -53,20 +53,20 @@
       ],
       "candidates": [
         {
-          "value": 97.585,
-          "source": "yf",
+          "value": 97.59,
+          "source": "stockanalysis.quote",
           "as_of": "2026-09-30",
-          "fetched_at": "2026-10-01T02:19:38Z",
+          "fetched_at": "2026-09-30T15:18:44Z",
           "confidence": "observed"
         }
       ],
       "candidate_count": 1
     },
     "change": {
-      "value": 0.389404,
-      "source": "yf",
+      "value": 0.26,
+      "source": "stockanalysis.quote",
       "as_of": "2026-09-30",
-      "fetched_at": "2026-10-01T02:19:38Z",
+      "fetched_at": "2026-09-30T15:18:44Z",
       "confidence": "observed",
       "policy": [
         "stockanalysis.quote",
@@ -76,20 +76,20 @@
       ],
       "candidates": [
         {
-          "value": 0.389404,
-          "source": "yf",
+          "value": 0.26,
+          "source": "stockanalysis.quote",
           "as_of": "2026-09-30",
-          "fetched_at": "2026-10-01T02:19:38Z",
+          "fetched_at": "2026-09-30T15:18:44Z",
           "confidence": "observed"
         }
       ],
       "candidate_count": 1
     },
     "change_pct": {
-      "value": 0.399041,
-      "source": "yf",
+      "value": 0.27,
+      "source": "stockanalysis.quote",
       "as_of": "2026-09-30",
-      "fetched_at": "2026-10-01T02:19:38Z",
+      "fetched_at": "2026-09-30T15:18:44Z",
       "confidence": "observed",
       "policy": [
         "stockanalysis.quote",
@@ -99,95 +99,472 @@
       ],
       "candidates": [
         {
-          "value": 0.399041,
-          "source": "yf",
+          "value": 0.27,
+          "source": "stockanalysis.quote",
           "as_of": "2026-09-30",
-          "fetched_at": "2026-10-01T02:19:38Z",
+          "fetched_at": "2026-09-30T15:18:44Z",
           "confidence": "observed"
         }
       ],
       "candidate_count": 1
     },
-    "return_ytd": {
-      "value": -2.183084896806541,
-      "source": "yf.history_1y",
+    "total_assets": {
+      "value": 4920000.0,
+      "source": "stockanalysis.overview",
       "as_of": "2026-09-30",
-      "fetched_at": "2026-10-01T02:19:38Z",
-      "confidence": "derived",
-      "unit": "percent_points",
+      "fetched_at": "2026-09-30T15:18:44Z",
+      "confidence": "observed",
       "policy": [
-        "yf.history_1y",
-        "stockanalysis.detail.performance",
-        "stockanalysis.etf_screener.performance",
-        "stockanalysis.etf_universe.performance",
-        "yf"
+        "yf",
+        "stockanalysis.overview",
+        "yf.stockanalysis_fallback.overview"
       ],
       "candidates": [
         {
-          "value": -2.183084896806541,
-          "source": "yf.history_1y",
+          "value": 4920000.0,
+          "source": "stockanalysis.overview",
           "as_of": "2026-09-30",
-          "fetched_at": "2026-10-01T02:19:38Z",
-          "confidence": "derived",
+          "fetched_at": "2026-09-30T15:18:44Z",
+          "confidence": "observed"
+        }
+      ],
+      "candidate_count": 1
+    },
+    "expense_ratio": {
+      "value": 0.18,
+      "source": "stockanalysis.overview",
+      "as_of": "2026-09-30",
+      "fetched_at": "2026-09-30T15:18:44Z",
+      "confidence": "observed",
+      "unit": "percent_points",
+      "policy": [
+        "yf",
+        "stockanalysis.overview",
+        "yf.stockanalysis_fallback.overview"
+      ],
+      "candidates": [
+        {
+          "value": 0.18,
+          "source": "stockanalysis.overview",
+          "as_of": "2026-09-30",
+          "fetched_at": "2026-09-30T15:18:44Z",
+          "confidence": "observed",
           "unit": "percent_points"
         }
       ],
       "candidate_count": 1
     },
-    "return_1y": {
-      "value": -2.183084896806541,
-      "source": "yf.history_1y",
+    "return_1m": {
+      "value": -2.7602,
+      "source": "stockanalysis.detail.performance",
       "as_of": "2026-09-30",
-      "fetched_at": "2026-10-01T02:19:38Z",
-      "confidence": "derived",
+      "fetched_at": "2026-09-30T15:18:44Z",
+      "confidence": "observed",
       "unit": "percent_points",
       "policy": [
         "yf.history_1y",
         "stockanalysis.detail.performance",
         "stockanalysis.etf_screener.performance",
-        "stockanalysis.etf_universe.performance",
-        "yf"
+        "stockanalysis.etf_universe.performance"
       ],
       "candidates": [
         {
-          "value": -2.183084896806541,
-          "source": "yf.history_1y",
+          "value": -2.7602,
+          "source": "stockanalysis.detail.performance",
           "as_of": "2026-09-30",
-          "fetched_at": "2026-10-01T02:19:38Z",
-          "confidence": "derived",
-          "unit": "percent_points"
-        },
-        {
-          "value": -2.4111152,
-          "source": "yf",
-          "as_of": "2026-09-30",
-          "fetched_at": "2026-10-01T02:19:38Z",
+          "fetched_at": "2026-09-30T15:18:44Z",
           "confidence": "observed",
           "unit": "percent_points"
         }
       ],
-      "candidate_count": 2
+      "candidate_count": 1
     }
   },
-  "etf": null,
+  "etf": {
+    "holdings_count": 170,
+    "holdings_updated": "Sep 28, 2026",
+    "top_holdings": [
+      {
+        "rank": 1,
+        "symbol": "SD.TRISCD 5 08.01.2029",
+        "name": "TRI-VALLEY SCH DIST NO 49-6 S D LTD TAX CAP OUTLAY",
+        "weight_pct": 2.64,
+        "shares": 125000,
+        "raw": {
+          "no": 1,
+          "n": "TRI-VALLEY SCH DIST NO 49-6 S D LTD TAX CAP OUTLAY",
+          "s": "SD.TRISCD 5 08.01.2029",
+          "as": "2.64%",
+          "sh": "125,000"
+        }
+      },
+      {
+        "rank": 2,
+        "name": "CASH",
+        "weight_pct": 2.3,
+        "shares": 112720,
+        "raw": {
+          "no": 2,
+          "n": "CASH",
+          "as": "2.30%",
+          "sh": "112,720"
+        }
+      },
+      {
+        "rank": 3,
+        "symbol": "UT.SLK 5 12.15.2027",
+        "name": "SALT LAKE CNTY UTAH GO BDS 2019 18/DEC/2019",
+        "weight_pct": 2.18,
+        "shares": 105000,
+        "raw": {
+          "no": 3,
+          "n": "SALT LAKE CNTY UTAH GO BDS 2019 18/DEC/2019",
+          "s": "UT.SLK 5 12.15.2027",
+          "as": "2.18%",
+          "sh": "105,000"
+        }
+      },
+      {
+        "rank": 4,
+        "symbol": "TX.LOVSCD 5 02.15.2028",
+        "name": "LOVEJOY INDPT SCH DIST TEX UNLTD TAX BLDG BDS 2025",
+        "weight_pct": 1.98,
+        "shares": 95000,
+        "raw": {
+          "no": 4,
+          "n": "LOVEJOY INDPT SCH DIST TEX UNLTD TAX BLDG BDS 2025",
+          "s": "TX.LOVSCD 5 02.15.2028",
+          "as": "1.98%",
+          "sh": "95,000"
+        }
+      },
+      {
+        "rank": 5,
+        "symbol": "WA.PIESCD 5 12.01.2027",
+        "name": "PIERCE &#38; KING CNTYS WASH SCH DIST NO 417 FIFE ULTD",
+        "weight_pct": 1.66,
+        "shares": 80000,
+        "raw": {
+          "no": 5,
+          "n": "PIERCE &#38; KING CNTYS WASH SCH DIST NO 417 FIFE ULTD",
+          "s": "WA.PIESCD 5 12.01.2027",
+          "as": "1.66%",
+          "sh": "80,000"
+        }
+      },
+      {
+        "rank": 6,
+        "symbol": "DC.DISGEN 5 05.01.2030",
+        "name": "DISTRICT COLUMBIA INCOME TAX REV SECD BDS 2020 C",
+        "weight_pct": 1.59,
+        "shares": 75000,
+        "raw": {
+          "no": 6,
+          "n": "DISTRICT COLUMBIA INCOME TAX REV SECD BDS 2020 C",
+          "s": "DC.DISGEN 5 05.01.2030",
+          "as": "1.59%",
+          "sh": "75,000"
+        }
+      },
+      {
+        "rank": 7,
+        "symbol": "WI.WIS 5 05.01.2028",
+        "name": "WISCONSIN ST GO REF BDS 2024 1 14/MAR/2024",
+        "weight_pct": 1.46,
+        "shares": 70000,
+        "raw": {
+          "no": 7,
+          "n": "WISCONSIN ST GO REF BDS 2024 1 14/MAR/2024",
+          "s": "WI.WIS 5 05.01.2028",
+          "as": "1.46%",
+          "sh": "70,000"
+        }
+      },
+      {
+        "rank": 8,
+        "symbol": "SC.CHAUTL 4 01.01.2028",
+        "name": "CHARLESTON S C WTRWKS &#38; SWR REV REF SYS BDS 2021",
+        "weight_pct": 1.44,
+        "shares": 70000,
+        "raw": {
+          "no": 8,
+          "n": "CHARLESTON S C WTRWKS &#38; SWR REV REF SYS BDS 2021",
+          "s": "SC.CHAUTL 4 01.01.2028",
+          "as": "1.44%",
+          "sh": "70,000"
+        }
+      },
+      {
+        "rank": 9,
+        "symbol": "TX.CVLSCD 5 02.15.2028",
+        "name": "CLEVELAND TEX INDPT SCH DIST UNLTD TAX REF BDS",
+        "weight_pct": 1.25,
+        "shares": 60000,
+        "raw": {
+          "no": 9,
+          "n": "CLEVELAND TEX INDPT SCH DIST UNLTD TAX REF BDS",
+          "s": "TX.CVLSCD 5 02.15.2028",
+          "as": "1.25%",
+          "sh": "60,000"
+        }
+      },
+      {
+        "rank": 10,
+        "symbol": "UT.CANSCD 5 06.15.2029",
+        "name": "CANYONS SCH DIST UTAH GO REF BDS 2021 B",
+        "weight_pct": 1.16,
+        "shares": 55000,
+        "raw": {
+          "no": 10,
+          "n": "CANYONS SCH DIST UTAH GO REF BDS 2021 B",
+          "s": "UT.CANSCD 5 06.15.2029",
+          "as": "1.16%",
+          "sh": "55,000"
+        }
+      },
+      {
+        "rank": 11,
+        "symbol": "WA.EDM 5 12.01.2027",
+        "name": "EDMONDS WASH LTD TAX GO IMPT REF BDS 2021A",
+        "weight_pct": 1.14,
+        "shares": 55000,
+        "raw": {
+          "no": 11,
+          "n": "EDMONDS WASH LTD TAX GO IMPT REF BDS 2021A",
+          "s": "WA.EDM 5 12.01.2027",
+          "as": "1.14%",
+          "sh": "55,000"
+        }
+      },
+      {
+        "rank": 12,
+        "symbol": "ME.LEW 5 09.15.2030",
+        "name": "LEWISTON ME GO PUB IMPT BDS 10/SEP/2024",
+        "weight_pct": 1.06,
+        "shares": 50000,
+        "raw": {
+          "no": 12,
+          "n": "LEWISTON ME GO PUB IMPT BDS 10/SEP/2024",
+          "s": "ME.LEW 5 09.15.2030",
+          "as": "1.06%",
+          "sh": "50,000"
+        }
+      },
+      {
+        "rank": 13,
+        "symbol": "IL.ROCSCD 4 02.01.2030",
+        "name": "ROCK ISLAND CNTY ILL SCH DIST NO 037 EAST MOLINE",
+        "weight_pct": 1.02,
+        "shares": 50000,
+        "raw": {
+          "no": 13,
+          "n": "ROCK ISLAND CNTY ILL SCH DIST NO 037 EAST MOLINE",
+          "s": "IL.ROCSCD 4 02.01.2030",
+          "as": "1.02%",
+          "sh": "50,000"
+        }
+      },
+      {
+        "rank": 14,
+        "symbol": "IA.DES 6 06.01.2030",
+        "name": "DES MOINES IOWA GO BDS 2024A 12/NOV/2024",
+        "weight_pct": 0.99,
+        "shares": 45000,
+        "raw": {
+          "no": 14,
+          "n": "DES MOINES IOWA GO BDS 2024A 12/NOV/2024",
+          "s": "IA.DES 6 06.01.2030",
+          "as": "0.99%",
+          "sh": "45,000"
+        }
+      },
+      {
+        "rank": 15,
+        "symbol": "WI.PTWSCD 5 04.01.2029",
+        "name": "PORT WASHINGTON-SAUKVILLE WIS SCH DIST GO PROM NTS",
+        "weight_pct": 0.94,
+        "shares": 45000,
+        "raw": {
+          "no": 15,
+          "n": "PORT WASHINGTON-SAUKVILLE WIS SCH DIST GO PROM NTS",
+          "s": "WI.PTWSCD 5 04.01.2029",
+          "as": "0.94%",
+          "sh": "45,000"
+        }
+      },
+      {
+        "rank": 16,
+        "symbol": "TX.TXCSCD 5 08.15.2028",
+        "name": "TEXAS CITY TEX INDPT SCH DIST UNLTD TAX REF BDS",
+        "weight_pct": 0.94,
+        "shares": 45000,
+        "raw": {
+          "no": 16,
+          "n": "TEXAS CITY TEX INDPT SCH DIST UNLTD TAX REF BDS",
+          "s": "TX.TXCSCD 5 08.15.2028",
+          "as": "0.94%",
+          "sh": "45,000"
+        }
+      },
+      {
+        "rank": 17,
+        "symbol": "ME.MEMBBK 5 11.01.2027",
+        "name": "MAINE MUN BD BK BDS 2023B 02/NOV/2023 01/NOV/2027",
+        "weight_pct": 0.93,
+        "shares": 45000,
+        "raw": {
+          "no": 17,
+          "n": "MAINE MUN BD BK BDS 2023B 02/NOV/2023 01/NOV/2027",
+          "s": "ME.MEMBBK 5 11.01.2027",
+          "as": "0.93%",
+          "sh": "45,000"
+        }
+      },
+      {
+        "rank": 18,
+        "symbol": "ME.RGSSCD 5 11.01.2027",
+        "name": "REGIONAL SCH UNIT NO 14 ME GO BDS 2025 13/MAY/2025",
+        "weight_pct": 0.93,
+        "shares": 45000,
+        "raw": {
+          "no": 18,
+          "n": "REGIONAL SCH UNIT NO 14 ME GO BDS 2025 13/MAY/2025",
+          "s": "ME.RGSSCD 5 11.01.2027",
+          "as": "0.93%",
+          "sh": "45,000"
+        }
+      },
+      {
+        "rank": 19,
+        "symbol": "FL.JAC 5 10.01.2027",
+        "name": "JACKSONVILLE FLA SPL REV REF BDS 2022A 07/JUL/2022",
+        "weight_pct": 0.93,
+        "shares": 45000,
+        "raw": {
+          "no": 19,
+          "n": "JACKSONVILLE FLA SPL REV REF BDS 2022A 07/JUL/2022",
+          "s": "FL.JAC 5 10.01.2027",
+          "as": "0.93%",
+          "sh": "45,000"
+        }
+      },
+      {
+        "rank": 20,
+        "symbol": "NV.WASSCD 5 10.01.2027",
+        "name": "WASHOE CNTY NEV SCH DIST GO LTD TAX SCH IMPT BDS",
+        "weight_pct": 0.93,
+        "shares": 45000,
+        "raw": {
+          "no": 20,
+          "n": "WASHOE CNTY NEV SCH DIST GO LTD TAX SCH IMPT BDS",
+          "s": "NV.WASSCD 5 10.01.2027",
+          "as": "0.93%",
+          "sh": "45,000"
+        }
+      },
+      {
+        "rank": 21,
+        "symbol": "WI.RAC 4 03.01.2029",
+        "name": "RACINE CNTY WIS GEN OBLIG PROM NTS 2026A",
+        "weight_pct": 0.93,
+        "shares": 45000,
+        "raw": {
+          "no": 21,
+          "n": "RACINE CNTY WIS GEN OBLIG PROM NTS 2026A",
+          "s": "WI.RAC 4 03.01.2029",
+          "as": "0.93%",
+          "sh": "45,000"
+        }
+      },
+      {
+        "rank": 22,
+        "symbol": "OK.TULSCD 4 04.01.2028",
+        "name": "TULSA CNTY OKLA INDPT SCH DIST NO 9 UNION BRD ED",
+        "weight_pct": 0.92,
+        "shares": 45000,
+        "raw": {
+          "no": 22,
+          "n": "TULSA CNTY OKLA INDPT SCH DIST NO 9 UNION BRD ED",
+          "s": "OK.TULSCD 4 04.01.2028",
+          "as": "0.92%",
+          "sh": "45,000"
+        }
+      },
+      {
+        "rank": 23,
+        "symbol": "KS.TOPUTL 5 08.01.2031",
+        "name": "TOPEKA KANS UTIL REV COMBINED BDS 2023 A",
+        "weight_pct": 0.86,
+        "shares": 40000,
+        "raw": {
+          "no": 23,
+          "n": "TOPEKA KANS UTIL REV COMBINED BDS 2023 A",
+          "s": "KS.TOPUTL 5 08.01.2031",
+          "as": "0.86%",
+          "sh": "40,000"
+        }
+      },
+      {
+        "rank": 24,
+        "symbol": "FL.LTBGEN 5.5 10.01.2029",
+        "name": "LEON CNTY-TALLAHASSEE CITY FLA BLUEPRINT",
+        "weight_pct": 0.86,
+        "shares": 40000,
+        "raw": {
+          "no": 24,
+          "n": "LEON CNTY-TALLAHASSEE CITY FLA BLUEPRINT",
+          "s": "FL.LTBGEN 5.5 10.01.2029",
+          "as": "0.86%",
+          "sh": "40,000"
+        }
+      },
+      {
+        "rank": 25,
+        "symbol": "WI.WISTRN 5 07.01.2029",
+        "name": "WISCONSIN ST TRANSN REV BDS 2023 I 06/APR/2023",
+        "weight_pct": 0.84,
+        "shares": 40000,
+        "raw": {
+          "no": 25,
+          "n": "WISCONSIN ST TRANSN REV BDS 2023 I 06/APR/2023",
+          "s": "WI.WISTRN 5 07.01.2029",
+          "as": "0.84%",
+          "sh": "40,000"
+        }
+      }
+    ],
+    "asset_allocation": null,
+    "sectors": null,
+    "countries": null,
+    "classification": {
+      "is_leveraged": false,
+      "leverage_factor": null,
+      "is_inverse": false,
+      "is_single_stock": false,
+      "underlying": null,
+      "source": "stockanalysis.overview.description",
+      "confidence": "high"
+    },
+    "yahoo_funds_data_available": false
+  },
   "financials": null,
   "sources": {
-    "yf": true,
-    "stockanalysis": false,
+    "yf": false,
+    "stockanalysis": true,
     "stockanalysis_yf_fallback": false,
     "stockanalysis_etf_catalog": false,
     "slickcharts": false
   },
   "source_files": {
-    "yf": "yf/finance/MUNJ.json",
-    "stockanalysis": null,
+    "yf": null,
+    "stockanalysis": "computed/data-supply/etf-detail/payloads/MUNJ.json",
     "stockanalysis_yf_fallback": null,
     "stockanalysis_etf_catalog": null,
     "slickcharts": null
   },
   "resolver": {
     "version": "market-facts-resolver/v1",
-    "detail_authority": null,
+    "detail_authority": "data_supply:fresh_primary",
     "field_source_policy": {
       "price": [
         "yf",

@@ -1,15 +1,15 @@
 {
   "schema_version": "market-facts/v1",
   "ticker": "CLIM",
-  "asset_type": "stock",
-  "generated_at": "2026-09-30T02:48:38Z",
-  "source_as_of": "2026-09-29",
+  "asset_type": "etf",
+  "generated_at": "2026-10-01T05:48:34Z",
+  "source_as_of": "2026-09-30",
   "source_as_of_scope": "selected_price_fact",
   "source_as_of_reason": null,
   "identity": {
-    "name": "Climate Resilient US REIT Index ETF",
-    "exchange": "PCX",
-    "currency": "USD",
+    "name": "CLIM",
+    "exchange": null,
+    "currency": null,
     "sector": null,
     "industry": null,
     "fund_family": null,
@@ -17,10 +17,10 @@
   },
   "facts": {
     "price": {
-      "value": 24.536,
-      "source": "yf",
-      "as_of": "2026-09-29",
-      "fetched_at": "2026-09-30T02:32:00Z",
+      "value": 24.4527,
+      "source": "stockanalysis.quote",
+      "as_of": "2026-09-30",
+      "fetched_at": "2026-09-30T15:18:04Z",
       "confidence": "observed",
       "policy": [
         "yf",
@@ -31,20 +31,20 @@
       ],
       "candidates": [
         {
-          "value": 24.536,
-          "source": "yf",
-          "as_of": "2026-09-29",
-          "fetched_at": "2026-09-30T02:32:00Z",
+          "value": 24.4527,
+          "source": "stockanalysis.quote",
+          "as_of": "2026-09-30",
+          "fetched_at": "2026-09-30T15:18:04Z",
           "confidence": "observed"
         }
       ],
       "candidate_count": 1
     },
     "previous_close": {
-      "value": 24.5394,
-      "source": "yf",
-      "as_of": "2026-09-29",
-      "fetched_at": "2026-09-30T02:32:00Z",
+      "value": 24.54,
+      "source": "stockanalysis.quote",
+      "as_of": "2026-09-30",
+      "fetched_at": "2026-09-30T15:18:04Z",
       "confidence": "observed",
       "policy": [
         "yf",
@@ -53,20 +53,20 @@
       ],
       "candidates": [
         {
-          "value": 24.5394,
-          "source": "yf",
-          "as_of": "2026-09-29",
-          "fetched_at": "2026-09-30T02:32:00Z",
+          "value": 24.54,
+          "source": "stockanalysis.quote",
+          "as_of": "2026-09-30",
+          "fetched_at": "2026-09-30T15:18:04Z",
           "confidence": "observed"
         }
       ],
       "candidate_count": 1
     },
     "change": {
-      "value": -0.0034008,
-      "source": "yf",
-      "as_of": "2026-09-29",
-      "fetched_at": "2026-09-30T02:32:00Z",
+      "value": -0.08,
+      "source": "stockanalysis.quote",
+      "as_of": "2026-09-30",
+      "fetched_at": "2026-09-30T15:18:04Z",
       "confidence": "observed",
       "policy": [
         "stockanalysis.quote",
@@ -76,20 +76,20 @@
       ],
       "candidates": [
         {
-          "value": -0.0034008,
-          "source": "yf",
-          "as_of": "2026-09-29",
-          "fetched_at": "2026-09-30T02:32:00Z",
+          "value": -0.08,
+          "source": "stockanalysis.quote",
+          "as_of": "2026-09-30",
+          "fetched_at": "2026-09-30T15:18:04Z",
           "confidence": "observed"
         }
       ],
       "candidate_count": 1
     },
     "change_pct": {
-      "value": -0.0138585,
-      "source": "yf",
-      "as_of": "2026-09-29",
-      "fetched_at": "2026-09-30T02:32:00Z",
+      "value": -0.34,
+      "source": "stockanalysis.quote",
+      "as_of": "2026-09-30",
+      "fetched_at": "2026-09-30T15:18:04Z",
       "confidence": "observed",
       "policy": [
         "stockanalysis.quote",
@@ -99,42 +99,92 @@
       ],
       "candidates": [
         {
-          "value": -0.0138585,
-          "source": "yf",
-          "as_of": "2026-09-29",
-          "fetched_at": "2026-09-30T02:32:00Z",
+          "value": -0.34,
+          "source": "stockanalysis.quote",
+          "as_of": "2026-09-30",
+          "fetched_at": "2026-09-30T15:18:04Z",
           "confidence": "observed"
         }
       ],
       "candidate_count": 1
     },
-    "trailing_pe": {
-      "value": 25.71692,
-      "source": "yf",
-      "as_of": "2026-09-29",
-      "fetched_at": "2026-09-30T02:32:00Z",
+    "total_assets": {
+      "value": 1480000.0,
+      "source": "stockanalysis.overview",
+      "as_of": "2026-09-30",
+      "fetched_at": "2026-09-30T15:18:04Z",
       "confidence": "observed",
       "policy": [
         "yf",
+        "stockanalysis.overview",
+        "yf.stockanalysis_fallback.overview"
+      ],
+      "candidates": [
+        {
+          "value": 1480000.0,
+          "source": "stockanalysis.overview",
+          "as_of": "2026-09-30",
+          "fetched_at": "2026-09-30T15:18:04Z",
+          "confidence": "observed"
+        }
+      ],
+      "candidate_count": 1
+    },
+    "dividend_yield": {
+      "value": 1.52,
+      "source": "stockanalysis.overview",
+      "as_of": "2026-09-30",
+      "fetched_at": "2026-09-30T15:18:04Z",
+      "confidence": "observed",
+      "unit": "percent_points",
+      "policy": [
+        "yf",
+        "stockanalysis.overview",
+        "yf.stockanalysis_fallback.overview",
         "slickcharts"
       ],
       "candidates": [
         {
-          "value": 25.71692,
-          "source": "yf",
-          "as_of": "2026-09-29",
-          "fetched_at": "2026-09-30T02:32:00Z",
-          "confidence": "observed"
+          "value": 1.52,
+          "source": "stockanalysis.overview",
+          "as_of": "2026-09-30",
+          "fetched_at": "2026-09-30T15:18:04Z",
+          "confidence": "observed",
+          "unit": "percent_points"
+        }
+      ],
+      "candidate_count": 1
+    },
+    "expense_ratio": {
+      "value": 0.9,
+      "source": "stockanalysis.overview",
+      "as_of": "2026-09-30",
+      "fetched_at": "2026-09-30T15:18:04Z",
+      "confidence": "observed",
+      "unit": "percent_points",
+      "policy": [
+        "yf",
+        "stockanalysis.overview",
+        "yf.stockanalysis_fallback.overview"
+      ],
+      "candidates": [
+        {
+          "value": 0.9,
+          "source": "stockanalysis.overview",
+          "as_of": "2026-09-30",
+          "fetched_at": "2026-09-30T15:18:04Z",
+          "confidence": "observed",
+          "unit": "percent_points"
         }
       ],
       "candidate_count": 1
     },
     "return_1m": {
-      "value": -6.600689491634602,
-      "source": "yf.history_1y",
-      "as_of": "2026-09-29",
-      "fetched_at": "2026-09-30T02:32:00Z",
-      "confidence": "derived",
+      "value": -6.38491,
+      "source": "stockanalysis.detail.performance",
+      "as_of": "2026-09-30",
+      "fetched_at": "2026-09-30T15:18:04Z",
+      "confidence": "observed",
       "unit": "percent_points",
       "policy": [
         "yf.history_1y",
@@ -144,21 +194,21 @@
       ],
       "candidates": [
         {
-          "value": -6.600689491634602,
-          "source": "yf.history_1y",
-          "as_of": "2026-09-29",
-          "fetched_at": "2026-09-30T02:32:00Z",
-          "confidence": "derived",
+          "value": -6.38491,
+          "source": "stockanalysis.detail.performance",
+          "as_of": "2026-09-30",
+          "fetched_at": "2026-09-30T15:18:04Z",
+          "confidence": "observed",
           "unit": "percent_points"
         }
       ],
       "candidate_count": 1
     },
     "return_3m": {
-      "value": -7.655251863343961,
-      "source": "yf.history_1y",
+      "value": -7.43927758574353,
+      "source": "stockanalysis.detail.history",
       "as_of": "2026-09-29",
-      "fetched_at": "2026-09-30T02:32:00Z",
+      "fetched_at": "2026-09-30T15:18:04Z",
       "confidence": "derived",
       "unit": "percent_points",
       "policy": [
@@ -167,96 +217,415 @@
       ],
       "candidates": [
         {
-          "value": -7.655251863343961,
-          "source": "yf.history_1y",
+          "value": -7.43927758574353,
+          "source": "stockanalysis.detail.history",
           "as_of": "2026-09-29",
-          "fetched_at": "2026-09-30T02:32:00Z",
+          "fetched_at": "2026-09-30T15:18:04Z",
           "confidence": "derived",
           "unit": "percent_points"
         }
       ],
       "candidate_count": 1
-    },
-    "return_ytd": {
-      "value": -0.13838175478560533,
-      "source": "yf.history_1y",
-      "as_of": "2026-09-29",
-      "fetched_at": "2026-09-30T02:32:00Z",
-      "confidence": "derived",
-      "unit": "percent_points",
-      "policy": [
-        "yf.history_1y",
-        "stockanalysis.detail.performance",
-        "stockanalysis.etf_screener.performance",
-        "stockanalysis.etf_universe.performance",
-        "yf"
-      ],
-      "candidates": [
-        {
-          "value": -0.13838175478560533,
-          "source": "yf.history_1y",
-          "as_of": "2026-09-29",
-          "fetched_at": "2026-09-30T02:32:00Z",
-          "confidence": "derived",
-          "unit": "percent_points"
-        }
-      ],
-      "candidate_count": 1
-    },
-    "return_1y": {
-      "value": -0.13838175478560533,
-      "source": "yf.history_1y",
-      "as_of": "2026-09-29",
-      "fetched_at": "2026-09-30T02:32:00Z",
-      "confidence": "derived",
-      "unit": "percent_points",
-      "policy": [
-        "yf.history_1y",
-        "stockanalysis.detail.performance",
-        "stockanalysis.etf_screener.performance",
-        "stockanalysis.etf_universe.performance",
-        "yf"
-      ],
-      "candidates": [
-        {
-          "value": -0.13838175478560533,
-          "source": "yf.history_1y",
-          "as_of": "2026-09-29",
-          "fetched_at": "2026-09-30T02:32:00Z",
-          "confidence": "derived",
-          "unit": "percent_points"
-        },
-        {
-          "value": -0.122100115,
-          "source": "yf",
-          "as_of": "2026-09-29",
-          "fetched_at": "2026-09-30T02:32:00Z",
-          "confidence": "observed",
-          "unit": "percent_points"
-        }
-      ],
-      "candidate_count": 2
     }
   },
-  "etf": null,
+  "etf": {
+    "holdings_count": 78,
+    "holdings_updated": "Sep 25, 2026",
+    "top_holdings": [
+      {
+        "rank": 1,
+        "symbol": "WELL",
+        "name": "Welltower Inc.",
+        "weight_pct": 4.38,
+        "shares": 280,
+        "raw": {
+          "no": 1,
+          "n": "Welltower Inc.",
+          "s": "$WELL",
+          "as": "4.38%",
+          "sh": "280"
+        }
+      },
+      {
+        "rank": 2,
+        "symbol": "AMT",
+        "name": "American Tower Corporation",
+        "weight_pct": 3.52,
+        "shares": 308,
+        "raw": {
+          "no": 2,
+          "n": "American Tower Corporation",
+          "s": "$AMT",
+          "as": "3.52%",
+          "sh": "308"
+        }
+      },
+      {
+        "rank": 3,
+        "symbol": "PLD",
+        "name": "Prologis, Inc.",
+        "weight_pct": 3.26,
+        "shares": 362,
+        "raw": {
+          "no": 3,
+          "n": "Prologis, Inc.",
+          "s": "$PLD",
+          "as": "3.26%",
+          "sh": "362"
+        }
+      },
+      {
+        "rank": 4,
+        "symbol": "SPG",
+        "name": "Simon Property Group, Inc.",
+        "weight_pct": 2.98,
+        "shares": 215,
+        "raw": {
+          "no": 4,
+          "n": "Simon Property Group, Inc.",
+          "s": "$SPG",
+          "as": "2.98%",
+          "sh": "215"
+        }
+      },
+      {
+        "rank": 5,
+        "symbol": "O",
+        "name": "Realty Income Corporation",
+        "weight_pct": 2.89,
+        "shares": 770,
+        "raw": {
+          "no": 5,
+          "n": "Realty Income Corporation",
+          "s": "$O",
+          "as": "2.89%",
+          "sh": "770"
+        }
+      },
+      {
+        "rank": 6,
+        "symbol": "VTR",
+        "name": "Ventas, Inc.",
+        "weight_pct": 2.73,
+        "shares": 466,
+        "raw": {
+          "no": 6,
+          "n": "Ventas, Inc.",
+          "s": "$VTR",
+          "as": "2.73%",
+          "sh": "466"
+        }
+      },
+      {
+        "rank": 7,
+        "symbol": "PSA",
+        "name": "Public Storage",
+        "weight_pct": 2.63,
+        "shares": 135,
+        "raw": {
+          "no": 7,
+          "n": "Public Storage",
+          "s": "$PSA",
+          "as": "2.63%",
+          "sh": "135"
+        }
+      },
+      {
+        "rank": 8,
+        "symbol": "IRM",
+        "name": "Iron Mountain Incorporated",
+        "weight_pct": 2.47,
+        "shares": 328,
+        "raw": {
+          "no": 8,
+          "n": "Iron Mountain Incorporated",
+          "s": "$IRM",
+          "as": "2.47%",
+          "sh": "328"
+        }
+      },
+      {
+        "rank": 9,
+        "symbol": "CCI",
+        "name": "Crown Castle Inc.",
+        "weight_pct": 2.31,
+        "shares": 503,
+        "raw": {
+          "no": 9,
+          "n": "Crown Castle Inc.",
+          "s": "$CCI",
+          "as": "2.31%",
+          "sh": "503"
+        }
+      },
+      {
+        "rank": 10,
+        "symbol": "EXR",
+        "name": "Extra Space Storage Inc.",
+        "weight_pct": 2.25,
+        "shares": 250,
+        "raw": {
+          "no": 10,
+          "n": "Extra Space Storage Inc.",
+          "s": "$EXR",
+          "as": "2.25%",
+          "sh": "250"
+        }
+      },
+      {
+        "rank": 11,
+        "symbol": "SBAC",
+        "name": "SBA Communications Corporation",
+        "weight_pct": 1.94,
+        "shares": 173,
+        "raw": {
+          "no": 11,
+          "n": "SBA Communications Corporation",
+          "s": "$SBAC",
+          "as": "1.94%",
+          "sh": "173"
+        }
+      },
+      {
+        "rank": 12,
+        "symbol": "WPC",
+        "name": "W. P. Carey Inc.",
+        "weight_pct": 1.89,
+        "shares": 424,
+        "raw": {
+          "no": 12,
+          "n": "W. P. Carey Inc.",
+          "s": "$WPC",
+          "as": "1.89%",
+          "sh": "424"
+        }
+      },
+      {
+        "rank": 13,
+        "symbol": "OHI",
+        "name": "Omega Healthcare Investors, Inc.",
+        "weight_pct": 1.78,
+        "shares": 569,
+        "raw": {
+          "no": 13,
+          "n": "Omega Healthcare Investors, Inc.",
+          "s": "$OHI",
+          "as": "1.78%",
+          "sh": "569"
+        }
+      },
+      {
+        "rank": 14,
+        "symbol": "AHR",
+        "name": "American Healthcare REIT, Inc.",
+        "weight_pct": 1.74,
+        "shares": 495,
+        "raw": {
+          "no": 14,
+          "n": "American Healthcare REIT, Inc.",
+          "s": "$AHR",
+          "as": "1.74%",
+          "sh": "495"
+        }
+      },
+      {
+        "rank": 15,
+        "symbol": "MAA",
+        "name": "Mid-America Apartment Communities, Inc.",
+        "weight_pct": 1.71,
+        "shares": 214,
+        "raw": {
+          "no": 15,
+          "n": "Mid-America Apartment Communities, Inc.",
+          "s": "$MAA",
+          "as": "1.71%",
+          "sh": "214"
+        }
+      },
+      {
+        "rank": 16,
+        "symbol": "LAMR",
+        "name": "Lamar Advertising Company",
+        "weight_pct": 1.67,
+        "shares": 172,
+        "raw": {
+          "no": 16,
+          "n": "Lamar Advertising Company",
+          "s": "$LAMR",
+          "as": "1.67%",
+          "sh": "172"
+        }
+      },
+      {
+        "rank": 17,
+        "symbol": "EGP",
+        "name": "EastGroup Properties, Inc.",
+        "weight_pct": 1.65,
+        "shares": 121,
+        "raw": {
+          "no": 17,
+          "n": "EastGroup Properties, Inc.",
+          "s": "$EGP",
+          "as": "1.65%",
+          "sh": "121"
+        }
+      },
+      {
+        "rank": 18,
+        "symbol": "REG",
+        "name": "Regency Centers Corporation",
+        "weight_pct": 1.61,
+        "shares": 326,
+        "raw": {
+          "no": 18,
+          "n": "Regency Centers Corporation",
+          "s": "$REG",
+          "as": "1.61%",
+          "sh": "326"
+        }
+      },
+      {
+        "rank": 19,
+        "symbol": "FRT",
+        "name": "Federal Realty Investment Trust",
+        "weight_pct": 1.57,
+        "shares": 210,
+        "raw": {
+          "no": 19,
+          "n": "Federal Realty Investment Trust",
+          "s": "$FRT",
+          "as": "1.57%",
+          "sh": "210"
+        }
+      },
+      {
+        "rank": 20,
+        "symbol": "STAG",
+        "name": "STAG Industrial, Inc.",
+        "weight_pct": 1.57,
+        "shares": 630,
+        "raw": {
+          "no": 20,
+          "n": "STAG Industrial, Inc.",
+          "s": "$STAG",
+          "as": "1.57%",
+          "sh": "630"
+        }
+      },
+      {
+        "rank": 21,
+        "symbol": "DOC",
+        "name": "Healthpeak Properties, Inc.",
+        "weight_pct": 1.56,
+        "shares": 1140,
+        "raw": {
+          "no": 21,
+          "n": "Healthpeak Properties, Inc.",
+          "s": "$DOC",
+          "as": "1.56%",
+          "sh": "1,140"
+        }
+      },
+      {
+        "rank": 22,
+        "symbol": "ADC",
+        "name": "Agree Realty Corporation",
+        "weight_pct": 1.53,
+        "shares": 336,
+        "raw": {
+          "no": 22,
+          "n": "Agree Realty Corporation",
+          "s": "$ADC",
+          "as": "1.53%",
+          "sh": "336"
+        }
+      },
+      {
+        "rank": 23,
+        "symbol": "NNN",
+        "name": "NNN REIT, Inc.",
+        "weight_pct": 1.51,
+        "shares": 542,
+        "raw": {
+          "no": 23,
+          "n": "NNN REIT, Inc.",
+          "s": "$NNN",
+          "as": "1.51%",
+          "sh": "542"
+        }
+      },
+      {
+        "rank": 24,
+        "symbol": "LINE",
+        "name": "Lineage, Inc.",
+        "weight_pct": 1.5,
+        "shares": 612,
+        "raw": {
+          "no": 24,
+          "n": "Lineage, Inc.",
+          "s": "$LINE",
+          "as": "1.50%",
+          "sh": "612"
+        }
+      },
+      {
+        "rank": 25,
+        "symbol": "KIM",
+        "name": "Kimco Realty Corporation",
+        "weight_pct": 1.41,
+        "shares": 928,
+        "raw": {
+          "no": 25,
+          "n": "Kimco Realty Corporation",
+          "s": "$KIM",
+          "as": "1.41%",
+          "sh": "928"
+        }
+      }
+    ],
+    "asset_allocation": null,
+    "sectors": [
+      {
+        "n": "Real Estate",
+        "w": 100
+      }
+    ],
+    "countries": [
+      {
+        "code": "US",
+        "weight": 100,
+        "country": "United States"
+      }
+    ],
+    "classification": {
+      "is_leveraged": false,
+      "leverage_factor": null,
+      "is_inverse": false,
+      "is_single_stock": false,
+      "underlying": null,
+      "source": "stockanalysis.overview.description",
+      "confidence": "high"
+    },
+    "yahoo_funds_data_available": false
+  },
   "financials": null,
   "sources": {
-    "yf": true,
-    "stockanalysis": false,
+    "yf": false,
+    "stockanalysis": true,
     "stockanalysis_yf_fallback": false,
     "stockanalysis_etf_catalog": false,
     "slickcharts": false
   },
   "source_files": {
-    "yf": "yf/finance/CLIM.json",
-    "stockanalysis": null,
+    "yf": null,
+    "stockanalysis": "computed/data-supply/etf-detail/payloads/CLIM.json",
     "stockanalysis_yf_fallback": null,
     "stockanalysis_etf_catalog": null,
     "slickcharts": null
   },
   "resolver": {
     "version": "market-facts-resolver/v1",
-    "detail_authority": null,
+    "detail_authority": "data_supply:fresh_primary",
     "field_source_policy": {
       "price": [
         "yf",

@@ -1,15 +1,15 @@
 {
   "schema_version": "market-facts/v1",
   "ticker": "XWNG",
-  "asset_type": "stock",
-  "generated_at": "2026-10-01T02:32:56Z",
-  "source_as_of": "2026-09-25",
+  "asset_type": "etf",
+  "generated_at": "2026-10-01T05:48:34Z",
+  "source_as_of": "2026-09-30",
   "source_as_of_scope": "selected_price_fact",
   "source_as_of_reason": null,
   "identity": {
-    "name": "Amplify Top 10 Space ETF",
-    "exchange": "PCX",
-    "currency": "USD",
+    "name": "XWNG",
+    "exchange": null,
+    "currency": null,
     "sector": null,
     "industry": null,
     "fund_family": null,
@@ -17,10 +17,10 @@
   },
   "facts": {
     "price": {
-      "value": 22.4627,
-      "source": "yf",
-      "as_of": "2026-09-25",
-      "fetched_at": "2026-10-01T02:20:34Z",
+      "value": 22.94,
+      "source": "stockanalysis.quote",
+      "as_of": "2026-09-30",
+      "fetched_at": "2026-09-30T15:19:19Z",
       "confidence": "observed",
       "policy": [
         "yf",
@@ -31,20 +31,20 @@
       ],
       "candidates": [
         {
-          "value": 22.4627,
-          "source": "yf",
-          "as_of": "2026-09-25",
-          "fetched_at": "2026-10-01T02:20:34Z",
+          "value": 22.94,
+          "source": "stockanalysis.quote",
+          "as_of": "2026-09-30",
+          "fetched_at": "2026-09-30T15:19:19Z",
           "confidence": "observed"
         }
       ],
       "candidate_count": 1
     },
     "previous_close": {
-      "value": 22.3432,
-      "source": "yf",
-      "as_of": "2026-09-25",
-      "fetched_at": "2026-10-01T02:20:34Z",
+      "value": 22.34,
+      "source": "stockanalysis.quote",
+      "as_of": "2026-09-30",
+      "fetched_at": "2026-09-30T15:19:19Z",
       "confidence": "observed",
       "policy": [
         "yf",
@@ -53,20 +53,20 @@
       ],
       "candidates": [
         {
-          "value": 22.3432,
-          "source": "yf",
-          "as_of": "2026-09-25",
-          "fetched_at": "2026-10-01T02:20:34Z",
+          "value": 22.34,
+          "source": "stockanalysis.quote",
+          "as_of": "2026-09-30",
+          "fetched_at": "2026-09-30T15:19:19Z",
           "confidence": "observed"
         }
       ],
       "candidate_count": 1
     },
     "change": {
-      "value": 0.119499,
-      "source": "yf",
-      "as_of": "2026-09-25",
-      "fetched_at": "2026-10-01T02:20:34Z",
+      "value": 0.6,
+      "source": "stockanalysis.quote",
+      "as_of": "2026-09-30",
+      "fetched_at": "2026-09-30T15:19:19Z",
       "confidence": "observed",
       "policy": [
         "stockanalysis.quote",
@@ -76,20 +76,20 @@
       ],
       "candidates": [
         {
-          "value": 0.119499,
-          "source": "yf",
-          "as_of": "2026-09-25",
-          "fetched_at": "2026-10-01T02:20:34Z",
+          "value": 0.6,
+          "source": "stockanalysis.quote",
+          "as_of": "2026-09-30",
+          "fetched_at": "2026-09-30T15:19:19Z",
           "confidence": "observed"
         }
       ],
       "candidate_count": 1
     },
     "change_pct": {
-      "value": 0.534835,
-      "source": "yf",
-      "as_of": "2026-09-25",
-      "fetched_at": "2026-10-01T02:20:34Z",
+      "value": 2.67,
+      "source": "stockanalysis.quote",
+      "as_of": "2026-09-30",
+      "fetched_at": "2026-09-30T15:19:19Z",
       "confidence": "observed",
       "policy": [
         "stockanalysis.quote",
@@ -99,21 +99,67 @@
       ],
       "candidates": [
         {
-          "value": 0.534835,
-          "source": "yf",
-          "as_of": "2026-09-25",
-          "fetched_at": "2026-10-01T02:20:34Z",
+          "value": 2.67,
+          "source": "stockanalysis.quote",
+          "as_of": "2026-09-30",
+          "fetched_at": "2026-09-30T15:19:19Z",
           "confidence": "observed"
         }
       ],
       "candidate_count": 1
     },
-    "return_1m": {
-      "value": 1.0801070141074274,
-      "source": "yf.history_1y",
+    "total_assets": {
+      "value": 1170000.0,
+      "source": "stockanalysis.overview",
       "as_of": "2026-09-30",
-      "fetched_at": "2026-10-01T02:20:34Z",
-      "confidence": "derived",
+      "fetched_at": "2026-09-30T15:19:19Z",
+      "confidence": "observed",
+      "policy": [
+        "yf",
+        "stockanalysis.overview",
+        "yf.stockanalysis_fallback.overview"
+      ],
+      "candidates": [
+        {
+          "value": 1170000.0,
+          "source": "stockanalysis.overview",
+          "as_of": "2026-09-30",
+          "fetched_at": "2026-09-30T15:19:19Z",
+          "confidence": "observed"
+        }
+      ],
+      "candidate_count": 1
+    },
+    "expense_ratio": {
+      "value": 0.49,
+      "source": "stockanalysis.overview",
+      "as_of": "2026-09-30",
+      "fetched_at": "2026-09-30T15:19:19Z",
+      "confidence": "observed",
+      "unit": "percent_points",
+      "policy": [
+        "yf",
+        "stockanalysis.overview",
+        "yf.stockanalysis_fallback.overview"
+      ],
+      "candidates": [
+        {
+          "value": 0.49,
+          "source": "stockanalysis.overview",
+          "as_of": "2026-09-30",
+          "fetched_at": "2026-09-30T15:19:19Z",
+          "confidence": "observed",
+          "unit": "percent_points"
+        }
+      ],
+      "candidate_count": 1
+    },
+    "return_1m": {
+      "value": -0.89818,
+      "source": "stockanalysis.detail.performance",
+      "as_of": "2026-09-30",
+      "fetched_at": "2026-09-30T15:19:19Z",
+      "confidence": "observed",
       "unit": "percent_points",
       "policy": [
         "yf.history_1y",
@@ -123,96 +169,376 @@
       ],
       "candidates": [
         {
-          "value": 1.0801070141074274,
-          "source": "yf.history_1y",
+          "value": -0.89818,
+          "source": "stockanalysis.detail.performance",
           "as_of": "2026-09-30",
-          "fetched_at": "2026-10-01T02:20:34Z",
-          "confidence": "derived",
-          "unit": "percent_points"
-        }
-      ],
-      "candidate_count": 1
-    },
-    "return_ytd": {
-      "value": -8.810394438626545,
-      "source": "yf.history_1y",
-      "as_of": "2026-09-30",
-      "fetched_at": "2026-10-01T02:20:34Z",
-      "confidence": "derived",
-      "unit": "percent_points",
-      "policy": [
-        "yf.history_1y",
-        "stockanalysis.detail.performance",
-        "stockanalysis.etf_screener.performance",
-        "stockanalysis.etf_universe.performance",
-        "yf"
-      ],
-      "candidates": [
-        {
-          "value": -8.810394438626545,
-          "source": "yf.history_1y",
-          "as_of": "2026-09-30",
-          "fetched_at": "2026-10-01T02:20:34Z",
-          "confidence": "derived",
-          "unit": "percent_points"
-        }
-      ],
-      "candidate_count": 1
-    },
-    "return_1y": {
-      "value": -8.810394438626545,
-      "source": "yf.history_1y",
-      "as_of": "2026-09-30",
-      "fetched_at": "2026-10-01T02:20:34Z",
-      "confidence": "derived",
-      "unit": "percent_points",
-      "policy": [
-        "yf.history_1y",
-        "stockanalysis.detail.performance",
-        "stockanalysis.etf_screener.performance",
-        "stockanalysis.etf_universe.performance",
-        "yf"
-      ],
-      "candidates": [
-        {
-          "value": -8.810394438626545,
-          "source": "yf.history_1y",
-          "as_of": "2026-09-30",
-          "fetched_at": "2026-10-01T02:20:34Z",
-          "confidence": "derived",
-          "unit": "percent_points"
-        },
-        {
-          "value": -9.297604,
-          "source": "yf",
-          "as_of": "2026-09-25",
-          "fetched_at": "2026-10-01T02:20:34Z",
+          "fetched_at": "2026-09-30T15:19:19Z",
           "confidence": "observed",
           "unit": "percent_points"
         }
       ],
-      "candidate_count": 2
+      "candidate_count": 1
     }
   },
-  "etf": null,
+  "etf": {
+    "holdings_count": 25,
+    "holdings_updated": "Sep 24, 2026",
+    "top_holdings": [
+      {
+        "rank": 1,
+        "name": "US DOLLARS",
+        "weight_pct": 19.46,
+        "shares": 225000,
+        "raw": {
+          "no": 1,
+          "n": "US DOLLARS",
+          "as": "19.46%",
+          "sh": "225,000"
+        }
+      },
+      {
+        "rank": 2,
+        "symbol": "!MUTF/AGPXX",
+        "name": "Invesco Shrt-Trm Inv Gov&Agcy Instl",
+        "weight_pct": 18.17,
+        "shares": 210079,
+        "raw": {
+          "no": 2,
+          "n": "Invesco Shrt-Trm Inv Gov&Agcy Instl",
+          "s": "!mutf/AGPXX",
+          "as": "18.17%",
+          "sh": "210,079"
+        }
+      },
+      {
+        "rank": 3,
+        "symbol": "FTC.L",
+        "name": "Filtronic PLC",
+        "weight_pct": 12.71,
+        "shares": 46300,
+        "raw": {
+          "no": 3,
+          "n": "Filtronic PLC",
+          "s": "FTC.L",
+          "as": "12.71%",
+          "sh": "46,300"
+        }
+      },
+      {
+        "rank": 4,
+        "symbol": "!SWX/HUBN",
+        "name": "Huber+Suhner AG",
+        "weight_pct": 9.79,
+        "shares": 520,
+        "raw": {
+          "no": 4,
+          "n": "Huber+Suhner AG",
+          "s": "!swx/HUBN",
+          "as": "9.79%",
+          "sh": "520"
+        }
+      },
+      {
+        "rank": 5,
+        "symbol": "ATRO",
+        "name": "Astronics Corporation",
+        "weight_pct": 8.28,
+        "shares": 1385,
+        "raw": {
+          "no": 5,
+          "n": "Astronics Corporation",
+          "s": "$ATRO",
+          "as": "8.28%",
+          "sh": "1,385"
+        }
+      },
+      {
+        "rank": 6,
+        "name": "ASTROSCALE HOLDING NPV-SWAP-GOLD-L",
+        "weight_pct": 8.23,
+        "shares": 12700,
+        "raw": {
+          "no": 6,
+          "n": "ASTROSCALE HOLDING NPV-SWAP-GOLD-L",
+          "as": "8.23%",
+          "sh": "12,700"
+        }
+      },
+      {
+        "rank": 7,
+        "symbol": "SPCX",
+        "name": "Space Exploration Technologies Corp.",
+        "weight_pct": 7.23,
+        "shares": 565,
+        "raw": {
+          "no": 7,
+          "n": "Space Exploration Technologies Corp.",
+          "s": "$SPCX",
+          "as": "7.23%",
+          "sh": "565"
+        }
+      },
+      {
+        "rank": 8,
+        "symbol": "SPIR",
+        "name": "Spire Global, Inc.",
+        "weight_pct": 6.57,
+        "shares": 6200,
+        "raw": {
+          "no": 8,
+          "n": "Spire Global, Inc.",
+          "s": "$SPIR",
+          "as": "6.57%",
+          "sh": "6,200"
+        }
+      },
+      {
+        "rank": 9,
+        "name": "REDWIRE CORPORATION-SWAP-NBCB-L",
+        "weight_pct": 6.37,
+        "shares": 6346,
+        "raw": {
+          "no": 9,
+          "n": "REDWIRE CORPORATION-SWAP-NBCB-L",
+          "as": "6.37%",
+          "sh": "6,346"
+        }
+      },
+      {
+        "rank": 10,
+        "name": "VIASAT INC.-SWAP-NBCB-L",
+        "weight_pct": 5.5,
+        "shares": 863,
+        "raw": {
+          "no": 10,
+          "n": "VIASAT INC.-SWAP-NBCB-L",
+          "as": "5.50%",
+          "sh": "863"
+        }
+      },
+      {
+        "rank": 11,
+        "name": "MDA SPACE LTD.-SWAP-GOLD-L",
+        "weight_pct": 4.51,
+        "shares": 1657,
+        "raw": {
+          "no": 11,
+          "n": "MDA SPACE LTD.-SWAP-GOLD-L",
+          "as": "4.51%",
+          "sh": "1,657"
+        }
+      },
+      {
+        "rank": 12,
+        "symbol": "!TYO/186A",
+        "name": "Astroscale Holdings Inc.",
+        "weight_pct": 4.33,
+        "shares": 6680,
+        "raw": {
+          "no": 12,
+          "n": "Astroscale Holdings Inc.",
+          "s": "!tyo/186A",
+          "as": "4.33%",
+          "sh": "6,680"
+        }
+      },
+      {
+        "rank": 13,
+        "symbol": "VSAT",
+        "name": "Viasat, Inc.",
+        "weight_pct": 3.89,
+        "shares": 610,
+        "raw": {
+          "no": 13,
+          "n": "Viasat, Inc.",
+          "s": "$VSAT",
+          "as": "3.89%",
+          "sh": "610"
+        }
+      },
+      {
+        "rank": 14,
+        "symbol": "RDW",
+        "name": "Redwire Corporation",
+        "weight_pct": 3.67,
+        "shares": 3660,
+        "raw": {
+          "no": 14,
+          "n": "Redwire Corporation",
+          "s": "$RDW",
+          "as": "3.67%",
+          "sh": "3,660"
+        }
+      },
+      {
+        "rank": 15,
+        "symbol": "RKLB",
+        "name": "Rocket Lab Corporation",
+        "weight_pct": 3.57,
+        "shares": 560,
+        "raw": {
+          "no": 15,
+          "n": "Rocket Lab Corporation",
+          "s": "$RKLB",
+          "as": "3.57%",
+          "sh": "560"
+        }
+      },
+      {
+        "rank": 16,
+        "symbol": "!TSX/MDA",
+        "name": "MDA Space Ltd.",
+        "weight_pct": 3.5,
+        "shares": 1285,
+        "raw": {
+          "no": 16,
+          "n": "MDA Space Ltd.",
+          "s": "!tsx/MDA",
+          "as": "3.50%",
+          "sh": "1,285"
+        }
+      },
+      {
+        "rank": 17,
+        "name": "VIASAT INC.-SWAP-MREX-L",
+        "weight_pct": 2.63,
+        "shares": 412,
+        "raw": {
+          "no": 17,
+          "n": "VIASAT INC.-SWAP-MREX-L",
+          "as": "2.63%",
+          "sh": "412"
+        }
+      },
+      {
+        "rank": 18,
+        "name": "ROCKET LAB CORPORATION-SWAP-GOLD-L",
+        "weight_pct": 2.48,
+        "shares": 390,
+        "raw": {
+          "no": 18,
+          "n": "ROCKET LAB CORPORATION-SWAP-GOLD-L",
+          "as": "2.48%",
+          "sh": "390"
+        }
+      },
+      {
+        "rank": 19,
+        "name": "ROCKET LAB CORPORATION-SWAP-NBCB-L",
+        "weight_pct": 2.48,
+        "shares": 390,
+        "raw": {
+          "no": 19,
+          "n": "ROCKET LAB CORPORATION-SWAP-NBCB-L",
+          "as": "2.48%",
+          "sh": "390"
+        }
+      },
+      {
+        "rank": 20,
+        "name": "MDA SPACE LTD.-SWAP-NBCB-L",
+        "weight_pct": 1.93,
+        "shares": 708,
+        "raw": {
+          "no": 20,
+          "n": "MDA SPACE LTD.-SWAP-NBCB-L",
+          "as": "1.93%",
+          "sh": "708"
+        }
+      },
+      {
+        "rank": 21,
+        "name": "REDWIRE CORPORATION-SWAP-GOLD-L",
+        "weight_pct": 0.84,
+        "shares": 836,
+        "raw": {
+          "no": 21,
+          "n": "REDWIRE CORPORATION-SWAP-GOLD-L",
+          "as": "0.84%",
+          "sh": "836"
+        }
+      },
+      {
+        "rank": 22,
+        "name": "REDWIRE CORPORATION-SWAP-MREX-L",
+        "weight_pct": 0.8,
+        "shares": 798,
+        "raw": {
+          "no": 22,
+          "n": "REDWIRE CORPORATION-SWAP-MREX-L",
+          "as": "0.80%",
+          "sh": "798"
+        }
+      },
+      {
+        "rank": 23,
+        "name": "VIASAT INC.-SWAP-GOLD-L",
+        "weight_pct": 0.62,
+        "shares": 98,
+        "raw": {
+          "no": 23,
+          "n": "VIASAT INC.-SWAP-GOLD-L",
+          "as": "0.62%",
+          "sh": "98"
+        }
+      },
+      {
+        "rank": 24,
+        "name": "OTHER ASSETS AND LIABILITIES",
+        "weight_pct": -0.12,
+        "shares": 7845259,
+        "raw": {
+          "no": 24,
+          "n": "OTHER ASSETS AND LIABILITIES",
+          "as": "-0.12%",
+          "sh": "7,845,259"
+        }
+      },
+      {
+        "rank": 25,
+        "name": "Cash Offset",
+        "weight_pct": -37.45,
+        "shares": 432983,
+        "raw": {
+          "no": 25,
+          "n": "Cash Offset",
+          "as": "-37.45%",
+          "sh": "432,983"
+        }
+      }
+    ],
+    "asset_allocation": null,
+    "sectors": null,
+    "countries": null,
+    "classification": {
+      "is_leveraged": false,
+      "leverage_factor": null,
+      "is_inverse": false,
+      "is_single_stock": false,
+      "underlying": null,
+      "source": "stockanalysis.overview.description",
+      "confidence": "high"
+    },
+    "yahoo_funds_data_available": false
+  },
   "financials": null,
   "sources": {
-    "yf": true,
-    "stockanalysis": false,
+    "yf": false,
+    "stockanalysis": true,
     "stockanalysis_yf_fallback": false,
     "stockanalysis_etf_catalog": false,
     "slickcharts": false
   },
   "source_files": {
-    "yf": "yf/finance/XWNG.json",
-    "stockanalysis": null,
+    "yf": null,
+    "stockanalysis": "computed/data-supply/etf-detail/payloads/XWNG.json",
     "stockanalysis_yf_fallback": null,
     "stockanalysis_etf_catalog": null,
     "slickcharts": null
   },
   "resolver": {
     "version": "market-facts-resolver/v1",
-    "detail_authority": null,
+    "detail_authority": "data_supply:fresh_primary",
     "field_source_policy": {
       "price": [
         "yf",

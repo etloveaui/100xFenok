@@ -2,10 +2,10 @@
   "schema_version": "market-facts/v1",
   "ticker": "PCEB",
   "asset_type": "etf",
-  "generated_at": "2026-09-21T01:42:22Z",
-  "source_as_of": null,
+  "generated_at": "2026-10-01T05:48:34Z",
+  "source_as_of": "2026-09-30",
   "source_as_of_scope": "selected_price_fact",
-  "source_as_of_reason": "selected price fact has no provider source date",
+  "source_as_of_reason": null,
   "identity": {
     "name": "PCEB",
     "exchange": null,
@@ -16,11 +16,174 @@
     "category": null
   },
   "facts": {
+    "price": {
+      "value": 23.38,
+      "source": "stockanalysis.quote",
+      "as_of": "2026-09-30",
+      "fetched_at": "2026-09-30T20:09:23Z",
+      "confidence": "observed",
+      "policy": [
+        "yf",
+        "yf.fast_info",
+        "stockanalysis.quote",
+        "yf.stockanalysis_fallback.quote",
+        "slickcharts"
+      ],
+      "candidates": [
+        {
+          "value": 23.38,
+          "source": "stockanalysis.quote",
+          "as_of": "2026-09-30",
+          "fetched_at": "2026-09-30T20:09:23Z",
+          "confidence": "observed"
+        }
+      ],
+      "candidate_count": 1
+    },
+    "previous_close": {
+      "value": 23.51,
+      "source": "stockanalysis.quote",
+      "as_of": "2026-09-30",
+      "fetched_at": "2026-09-30T20:09:23Z",
+      "confidence": "observed",
+      "policy": [
+        "yf",
+        "stockanalysis.quote",
+        "yf.stockanalysis_fallback.quote"
+      ],
+      "candidates": [
+        {
+          "value": 23.51,
+          "source": "stockanalysis.quote",
+          "as_of": "2026-09-30",
+          "fetched_at": "2026-09-30T20:09:23Z",
+          "confidence": "observed"
+        }
+      ],
+      "candidate_count": 1
+    },
+    "change": {
+      "value": -0.13,
+      "source": "stockanalysis.quote",
+      "as_of": "2026-09-30",
+      "fetched_at": "2026-09-30T20:09:23Z",
+      "confidence": "observed",
+      "policy": [
+        "stockanalysis.quote",
+        "yf",
+        "yf.derived",
+        "yf.stockanalysis_fallback.quote"
+      ],
+      "candidates": [
+        {
+          "value": -0.13,
+          "source": "stockanalysis.quote",
+          "as_of": "2026-09-30",
+          "fetched_at": "2026-09-30T20:09:23Z",
+          "confidence": "observed"
+        }
+      ],
+      "candidate_count": 1
+    },
+    "change_pct": {
+      "value": -0.56,
+      "source": "stockanalysis.quote",
+      "as_of": "2026-09-30",
+      "fetched_at": "2026-09-30T20:09:23Z",
+      "confidence": "observed",
+      "policy": [
+        "stockanalysis.quote",
+        "yf",
+        "yf.derived",
+        "yf.stockanalysis_fallback.quote"
+      ],
+      "candidates": [
+        {
+          "value": -0.56,
+          "source": "stockanalysis.quote",
+          "as_of": "2026-09-30",
+          "fetched_at": "2026-09-30T20:09:23Z",
+          "confidence": "observed"
+        }
+      ],
+      "candidate_count": 1
+    },
+    "total_assets": {
+      "value": 21310000.0,
+      "source": "stockanalysis.overview",
+      "as_of": "2026-09-30",
+      "fetched_at": "2026-09-30T20:09:23Z",
+      "confidence": "observed",
+      "policy": [
+        "yf",
+        "stockanalysis.overview",
+        "yf.stockanalysis_fallback.overview"
+      ],
+      "candidates": [
+        {
+          "value": 21310000.0,
+          "source": "stockanalysis.overview",
+          "as_of": "2026-09-30",
+          "fetched_at": "2026-09-30T20:09:23Z",
+          "confidence": "observed"
+        }
+      ],
+      "candidate_count": 1
+    },
+    "dividend_yield": {
+      "value": 1.24,
+      "source": "stockanalysis.overview",
+      "as_of": "2026-09-30",
+      "fetched_at": "2026-09-30T20:09:23Z",
+      "confidence": "observed",
+      "unit": "percent_points",
+      "policy": [
+        "yf",
+        "stockanalysis.overview",
+        "yf.stockanalysis_fallback.overview",
+        "slickcharts"
+      ],
+      "candidates": [
+        {
+          "value": 1.24,
+          "source": "stockanalysis.overview",
+          "as_of": "2026-09-30",
+          "fetched_at": "2026-09-30T20:09:23Z",
+          "confidence": "observed",
+          "unit": "percent_points"
+        }
+      ],
+      "candidate_count": 1
+    },
+    "expense_ratio": {
+      "value": 0.55,
+      "source": "stockanalysis.overview",
+      "as_of": "2026-09-30",
+      "fetched_at": "2026-09-30T20:09:23Z",
+      "confidence": "observed",
+      "unit": "percent_points",
+      "policy": [
+        "yf",
+        "stockanalysis.overview",
+        "yf.stockanalysis_fallback.overview"
+      ],
+      "candidates": [
+        {
+          "value": 0.55,
+          "source": "stockanalysis.overview",
+          "as_of": "2026-09-30",
+          "fetched_at": "2026-09-30T20:09:23Z",
+          "confidence": "observed",
+          "unit": "percent_points"
+        }
+      ],
+      "candidate_count": 1
+    },
     "return_1m": {
-      "value": -0.15091815415065066,
-      "source": "stockanalysis.etf_universe.performance",
-      "as_of": null,
-      "fetched_at": "2026-09-21T01:14:16Z",
+      "value": -4.22677,
+      "source": "stockanalysis.detail.performance",
+      "as_of": "2026-09-30",
+      "fetched_at": "2026-09-30T20:09:23Z",
       "confidence": "observed",
       "unit": "percent_points",
       "policy": [
@@ -31,6 +194,14 @@
       ],
       "candidates": [
         {
+          "value": -4.22677,
+          "source": "stockanalysis.detail.performance",
+          "as_of": "2026-09-30",
+          "fetched_at": "2026-09-30T20:09:23Z",
+          "confidence": "observed",
+          "unit": "percent_points"
+        },
+        {
           "value": -0.15091815415065066,
           "source": "stockanalysis.etf_universe.performance",
           "as_of": null,
@@ -39,37 +210,419 @@
           "unit": "percent_points"
         }
       ],
+      "candidate_count": 2
+    },
+    "return_3m": {
+      "value": -3.474007054850546,
+      "source": "stockanalysis.detail.history",
+      "as_of": "2026-09-29",
+      "fetched_at": "2026-09-30T20:09:23Z",
+      "confidence": "derived",
+      "unit": "percent_points",
+      "policy": [
+        "yf.history_1y",
+        "stockanalysis.detail.history"
+      ],
+      "candidates": [
+        {
+          "value": -3.474007054850546,
+          "source": "stockanalysis.detail.history",
+          "as_of": "2026-09-29",
+          "fetched_at": "2026-09-30T20:09:23Z",
+          "confidence": "derived",
+          "unit": "percent_points"
+        }
+      ],
       "candidate_count": 1
     }
   },
   "etf": {
-    "holdings_count": null,
-    "holdings_updated": null,
-    "top_holdings": [],
+    "holdings_count": 95,
+    "holdings_updated": "Aug 31, 2026",
+    "top_holdings": [
+      {
+        "rank": 1,
+        "symbol": "FIBCOP.5.125 06.30.32",
+        "name": "Fibercop S.p.a. 5.125% 30-jun-2032",
+        "weight_pct": 2.23,
+        "shares": 400000,
+        "raw": {
+          "no": 1,
+          "n": "Fibercop S.p.a. 5.125% 30-jun-2032",
+          "s": "FIBCOP.5.125 06.30.32",
+          "as": "2.23%",
+          "sh": "400,000"
+        }
+      },
+      {
+        "rank": 2,
+        "symbol": "EDF.V5.625 PERP EMTN",
+        "name": "Electricite De France 5.625% PERP REG S",
+        "weight_pct": 2.22,
+        "shares": 400000,
+        "raw": {
+          "no": 2,
+          "n": "Electricite De France 5.625% PERP REG S",
+          "s": "EDF.V5.625 PERP EMTN",
+          "as": "2.22%",
+          "sh": "400,000"
+        }
+      },
+      {
+        "rank": 3,
+        "symbol": "EDPPL.V4.75 05.29.54 EMTN",
+        "name": "Edp S.a. 4.75% 29-may-2054 Jr Subordinated EUR REGS",
+        "weight_pct": 2.19,
+        "shares": 400000,
+        "raw": {
+          "no": 3,
+          "n": "Edp S.a. 4.75% 29-may-2054 Jr Subordinated EUR REGS",
+          "s": "EDPPL.V4.75 05.29.54 EMTN",
+          "as": "2.19%",
+          "sh": "400,000"
+        }
+      },
+      {
+        "rank": 4,
+        "symbol": "VOD.V4.625 09.12.55 EMTN",
+        "name": "Vodafone 4.625% Subordinate 2055 REG S",
+        "weight_pct": 2.1,
+        "shares": 400000,
+        "raw": {
+          "no": 4,
+          "n": "Vodafone 4.625% Subordinate 2055 REG S",
+          "s": "VOD.V4.625 09.12.55 EMTN",
+          "as": "2.10%",
+          "sh": "400,000"
+        }
+      },
+      {
+        "rank": 5,
+        "symbol": "TITIM.7.75 01.24.33 EMTN",
+        "name": "Olivetti Finance Nv 7.75% 24-jan-2033",
+        "weight_pct": 1.94,
+        "shares": 300000,
+        "raw": {
+          "no": 5,
+          "n": "Olivetti Finance Nv 7.75% 24-jan-2033",
+          "s": "TITIM.7.75 01.24.33 EMTN",
+          "as": "1.94%",
+          "sh": "300,000"
+        }
+      },
+      {
+        "rank": 6,
+        "symbol": "CESARS.6.5 09.30.31 REGS",
+        "name": "Cesars Spa 6.5 Secured EUR REGS",
+        "weight_pct": 1.67,
+        "shares": 300000,
+        "raw": {
+          "no": 6,
+          "n": "Cesars Spa 6.5 Secured EUR REGS",
+          "s": "CESARS.6.5 09.30.31 REGS",
+          "as": "1.67%",
+          "sh": "300,000"
+        }
+      },
+      {
+        "rank": 7,
+        "symbol": "BOOTFN.5.375 08.31.32 REGS",
+        "name": "Boots Group Finco L.p. 5.375% 31-aug-2032",
+        "weight_pct": 1.66,
+        "shares": 300000,
+        "raw": {
+          "no": 7,
+          "n": "Boots Group Finco L.p. 5.375% 31-aug-2032",
+          "s": "BOOTFN.5.375 08.31.32 REGs",
+          "as": "1.66%",
+          "sh": "300,000"
+        }
+      },
+      {
+        "rank": 8,
+        "symbol": "CZGRPA.5.25 01.10.31 REGS",
+        "name": "Czechoslovak Group As 5.25% 10-jan-2031",
+        "weight_pct": 1.66,
+        "shares": 300000,
+        "raw": {
+          "no": 8,
+          "n": "Czechoslovak Group As 5.25% 10-jan-2031",
+          "s": "CZGRPA.5.25 01.10.31 REGs",
+          "as": "1.66%",
+          "sh": "300,000"
+        }
+      },
+      {
+        "rank": 9,
+        "symbol": "AEGILU.5.625 10.29.31 REGS",
+        "name": "AEGILU 5.625 REGS 2030",
+        "weight_pct": 1.65,
+        "shares": 300000,
+        "raw": {
+          "no": 9,
+          "n": "AEGILU 5.625 REGS 2030",
+          "s": "AEGILU.5.625 10.29.31 REGS",
+          "as": "1.65%",
+          "sh": "300,000"
+        }
+      },
+      {
+        "rank": 10,
+        "symbol": "BTCLIC.5.125 12.10.31 REGS",
+        "name": "Betclic 5.125 Secured 2031 REGS",
+        "weight_pct": 1.65,
+        "shares": 300000,
+        "raw": {
+          "no": 10,
+          "n": "Betclic 5.125 Secured 2031 REGS",
+          "s": "BTCLIC.5.125 12.10.31 REGS",
+          "as": "1.65%",
+          "sh": "300,000"
+        }
+      },
+      {
+        "rank": 11,
+        "symbol": "SAZGR.5.625 02.21.30 REGS",
+        "name": "NIDDA HEALTH 5.625% 2030 REG S",
+        "weight_pct": 1.65,
+        "shares": 300000,
+        "raw": {
+          "no": 11,
+          "n": "NIDDA HEALTH 5.625% 2030 REG S",
+          "s": "SAZGR.5.625 02.21.30 REGS",
+          "as": "1.65%",
+          "sh": "300,000"
+        }
+      },
+      {
+        "rank": 12,
+        "symbol": "DOLCTH.5.625 07.14.32 REGS",
+        "name": "Dolcetto Holdco 5.625% Senior Secured 2032 REG S",
+        "weight_pct": 1.64,
+        "shares": 300000,
+        "raw": {
+          "no": 12,
+          "n": "Dolcetto Holdco 5.625% Senior Secured 2032 REG S",
+          "s": "DOLCTH.5.625 07.14.32 REGS",
+          "as": "1.64%",
+          "sh": "300,000"
+        }
+      },
+      {
+        "rank": 13,
+        "symbol": "SOFTBK.6.375 04.22.30",
+        "name": "Softbank Group Corp. 6.375% 22-Apr-2030",
+        "weight_pct": 1.64,
+        "shares": 300000,
+        "raw": {
+          "no": 13,
+          "n": "Softbank Group Corp. 6.375% 22-Apr-2030",
+          "s": "SOFTBK.6.375 04.22.30",
+          "as": "1.64%",
+          "sh": "300,000"
+        }
+      },
+      {
+        "rank": 14,
+        "symbol": "TEVA.4.125 06.01.31",
+        "name": "Teva Pharmaceutical Finance Netherlands Ii Bv 4.125% 01-jun-2031",
+        "weight_pct": 1.63,
+        "shares": 300000,
+        "raw": {
+          "no": 14,
+          "n": "Teva Pharmaceutical Finance Netherlands Ii Bv 4.125% 01-jun-2031",
+          "s": "TEVA.4.125 06.01.31",
+          "as": "1.63%",
+          "sh": "300,000"
+        }
+      },
+      {
+        "rank": 15,
+        "symbol": "ZFFNGR.5.5 02.17.32 EMTN",
+        "name": "ZF Europe 5 1/2 Finance BV REG S",
+        "weight_pct": 1.63,
+        "shares": 300000,
+        "raw": {
+          "no": 15,
+          "n": "ZF Europe 5 1/2 Finance BV REG S",
+          "s": "ZFFNGR.5.5 02.17.32 EMTN",
+          "as": "1.63%",
+          "sh": "300,000"
+        }
+      },
+      {
+        "rank": 16,
+        "symbol": "IQV.4.625 06.15.33 REGS",
+        "name": "Qvia Inc 4.625% Eur Reg S",
+        "weight_pct": 1.63,
+        "shares": 300000,
+        "raw": {
+          "no": 16,
+          "n": "Qvia Inc 4.625% Eur Reg S",
+          "s": "IQV.4.625 06.15.33 REGS",
+          "as": "1.63%",
+          "sh": "300,000"
+        }
+      },
+      {
+        "rank": 17,
+        "symbol": "DAR.4.5 07.15.32 REGS",
+        "name": "Darling Global Finance Bv 4.5% 15-jul-2032",
+        "weight_pct": 1.63,
+        "shares": 300000,
+        "raw": {
+          "no": 17,
+          "n": "Darling Global Finance Bv 4.5% 15-jul-2032",
+          "s": "DAR.4.5 07.15.32 REGS",
+          "as": "1.63%",
+          "sh": "300,000"
+        }
+      },
+      {
+        "rank": 18,
+        "symbol": "TCHEN.4.625 07.15.32 REGS",
+        "name": "Techem Verwal. 4.625% Senior Secured 2032 REG S",
+        "weight_pct": 1.63,
+        "shares": 300000,
+        "raw": {
+          "no": 18,
+          "n": "Techem Verwal. 4.625% Senior Secured 2032 REG S",
+          "s": "TCHEN.4.625 07.15.32 REGS",
+          "as": "1.63%",
+          "sh": "300,000"
+        }
+      },
+      {
+        "rank": 19,
+        "symbol": "AOXGR.5.5 03.20.31",
+        "name": "Alstria Office 5.5% Senior Unsecured 2031 REG S",
+        "weight_pct": 1.62,
+        "shares": 300000,
+        "raw": {
+          "no": 19,
+          "n": "Alstria Office 5.5% Senior Unsecured 2031 REG S",
+          "s": "AOXGR.5.5 03.20.31",
+          "as": "1.62%",
+          "sh": "300,000"
+        }
+      },
+      {
+        "rank": 20,
+        "symbol": "SAZKAG.4.625 08.15.31 REGS",
+        "name": "Allwyn Entertainment 4 5/8 08/15/31",
+        "weight_pct": 1.62,
+        "shares": 300000,
+        "raw": {
+          "no": 20,
+          "n": "Allwyn Entertainment 4 5/8 08/15/31",
+          "s": "SAZKAG.4.625 08.15.31 REGS",
+          "as": "1.62%",
+          "sh": "300,000"
+        }
+      },
+      {
+        "rank": 21,
+        "symbol": "RCSRDS.4.625 10.29.31 REGS",
+        "name": "Digi Romania S.a. 4.625% Sr Sec 2031 REGS",
+        "weight_pct": 1.6,
+        "shares": 300000,
+        "raw": {
+          "no": 21,
+          "n": "Digi Romania S.a. 4.625% Sr Sec 2031 REGS",
+          "s": "RCSRDS.4.625 10.29.31 REGS",
+          "as": "1.60%",
+          "sh": "300,000"
+        }
+      },
+      {
+        "rank": 22,
+        "symbol": "IRM.4.75 01.15.34 REGS",
+        "name": "Iron Mountain Incorporated 4.75% 15-jan-2034 EUR REGS",
+        "weight_pct": 1.6,
+        "shares": 300000,
+        "raw": {
+          "no": 22,
+          "n": "Iron Mountain Incorporated 4.75% 15-jan-2034 EUR REGS",
+          "s": "IRM.4.75 01.15.34 REGS",
+          "as": "1.60%",
+          "sh": "300,000"
+        }
+      },
+      {
+        "rank": 23,
+        "symbol": "FOUR.5.5 05.15.33 REGS",
+        "name": "Shift4 Payments Llc 5.5% 15-May-2033",
+        "weight_pct": 1.6,
+        "shares": 300000,
+        "raw": {
+          "no": 23,
+          "n": "Shift4 Payments Llc 5.5% 15-May-2033",
+          "s": "FOUR.5.5 05.15.33 REGS",
+          "as": "1.60%",
+          "sh": "300,000"
+        }
+      },
+      {
+        "rank": 24,
+        "symbol": "HEIBOS.V5 PERP",
+        "name": "Heimstaden Bostad Ab 5.00% Perpetual Subordinated Bond",
+        "weight_pct": 1.59,
+        "shares": 300000,
+        "raw": {
+          "no": 24,
+          "n": "Heimstaden Bostad Ab 5.00% Perpetual Subordinated Bond",
+          "s": "HEIBOS.V5 PERP",
+          "as": "1.59%",
+          "sh": "300,000"
+        }
+      },
+      {
+        "rank": 25,
+        "symbol": "ARNDTN.V5.125 PERP",
+        "name": "Aroundtown Finance Sarl 5.125% Perpetual REGS",
+        "weight_pct": 1.52,
+        "shares": 300000,
+        "raw": {
+          "no": 25,
+          "n": "Aroundtown Finance Sarl 5.125% Perpetual REGS",
+          "s": "ARNDTN.V5.125 PERP",
+          "as": "1.52%",
+          "sh": "300,000"
+        }
+      }
+    ],
     "asset_allocation": null,
     "sectors": null,
     "countries": null,
-    "classification": null,
+    "classification": {
+      "is_leveraged": false,
+      "leverage_factor": null,
+      "is_inverse": false,
+      "is_single_stock": false,
+      "underlying": null,
+      "source": "stockanalysis.overview.description",
+      "confidence": "high"
+    },
     "yahoo_funds_data_available": false
   },
   "financials": null,
   "sources": {
     "yf": false,
-    "stockanalysis": false,
+    "stockanalysis": true,
     "stockanalysis_yf_fallback": false,
     "stockanalysis_etf_catalog": true,
     "slickcharts": false
   },
   "source_files": {
     "yf": null,
-    "stockanalysis": null,
+    "stockanalysis": "computed/data-supply/etf-detail/payloads/PCEB.json",
     "stockanalysis_yf_fallback": null,
     "stockanalysis_etf_catalog": "stockanalysis/etf_universe.json",
     "slickcharts": null
   },
   "resolver": {
     "version": "market-facts-resolver/v1",
-    "detail_authority": "data_supply:unavailable",
+    "detail_authority": "data_supply:fresh_primary",
     "field_source_policy": {
       "price": [
         "yf",

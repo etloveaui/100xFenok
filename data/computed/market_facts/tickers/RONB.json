@@ -2,8 +2,8 @@
   "schema_version": "market-facts/v1",
   "ticker": "RONB",
   "asset_type": "etf",
-  "generated_at": "2026-09-21T01:42:22Z",
-  "source_as_of": "2026-07-08",
+  "generated_at": "2026-10-01T05:48:34Z",
+  "source_as_of": "2026-09-30",
   "source_as_of_scope": "selected_price_fact",
   "source_as_of_reason": null,
   "identity": {
@@ -17,10 +17,10 @@
   },
   "facts": {
     "price": {
-      "value": 23.59000015258789,
-      "source": "yf.stockanalysis_fallback.quote",
-      "as_of": "2026-07-08",
-      "fetched_at": "2026-07-09T09:24:02Z",
+      "value": 23.45,
+      "source": "stockanalysis.quote",
+      "as_of": "2026-09-30",
+      "fetched_at": "2026-09-30T20:10:00Z",
       "confidence": "observed",
       "policy": [
         "yf",
@@ -31,20 +31,42 @@
       ],
       "candidates": [
         {
-          "value": 23.59000015258789,
-          "source": "yf.stockanalysis_fallback.quote",
-          "as_of": "2026-07-08",
-          "fetched_at": "2026-07-09T09:24:02Z",
+          "value": 23.45,
+          "source": "stockanalysis.quote",
+          "as_of": "2026-09-30",
+          "fetched_at": "2026-09-30T20:10:00Z",
+          "confidence": "observed"
+        }
+      ],
+      "candidate_count": 1
+    },
+    "previous_close": {
+      "value": 23.38,
+      "source": "stockanalysis.quote",
+      "as_of": "2026-09-30",
+      "fetched_at": "2026-09-30T20:10:00Z",
+      "confidence": "observed",
+      "policy": [
+        "yf",
+        "stockanalysis.quote",
+        "yf.stockanalysis_fallback.quote"
+      ],
+      "candidates": [
+        {
+          "value": 23.38,
+          "source": "stockanalysis.quote",
+          "as_of": "2026-09-30",
+          "fetched_at": "2026-09-30T20:10:00Z",
           "confidence": "observed"
         }
       ],
       "candidate_count": 1
     },
     "change": {
-      "value": -0.42999984741210895,
-      "source": "yf.stockanalysis_fallback.quote",
-      "as_of": "2026-07-08",
-      "fetched_at": "2026-07-09T09:24:02Z",
+      "value": 0.07,
+      "source": "stockanalysis.quote",
+      "as_of": "2026-09-30",
+      "fetched_at": "2026-09-30T20:10:00Z",
       "confidence": "observed",
       "policy": [
         "stockanalysis.quote",
@@ -54,20 +76,20 @@
       ],
       "candidates": [
         {
-          "value": -0.42999984741210895,
-          "source": "yf.stockanalysis_fallback.quote",
-          "as_of": "2026-07-08",
-          "fetched_at": "2026-07-09T09:24:02Z",
+          "value": 0.07,
+          "source": "stockanalysis.quote",
+          "as_of": "2026-09-30",
+          "fetched_at": "2026-09-30T20:10:00Z",
           "confidence": "observed"
         }
       ],
       "candidate_count": 1
     },
     "change_pct": {
-      "value": -1.7901742190345917,
-      "source": "yf.stockanalysis_fallback.quote",
-      "as_of": "2026-07-08",
-      "fetched_at": "2026-07-09T09:24:02Z",
+      "value": 0.3,
+      "source": "stockanalysis.quote",
+      "as_of": "2026-09-30",
+      "fetched_at": "2026-09-30T20:10:00Z",
       "confidence": "observed",
       "policy": [
         "stockanalysis.quote",
@@ -77,20 +99,20 @@
       ],
       "candidates": [
         {
-          "value": -1.7901742190345917,
-          "source": "yf.stockanalysis_fallback.quote",
-          "as_of": "2026-07-08",
-          "fetched_at": "2026-07-09T09:24:02Z",
+          "value": 0.3,
+          "source": "stockanalysis.quote",
+          "as_of": "2026-09-30",
+          "fetched_at": "2026-09-30T20:10:00Z",
           "confidence": "observed"
         }
       ],
       "candidate_count": 1
     },
     "total_assets": {
-      "value": 491819296.0,
-      "source": "yf.stockanalysis_fallback.overview",
-      "as_of": "2026-07-08",
-      "fetched_at": "2026-07-09T09:24:02Z",
+      "value": 328920000.0,
+      "source": "stockanalysis.overview",
+      "as_of": "2026-09-30",
+      "fetched_at": "2026-09-30T20:10:00Z",
       "confidence": "observed",
       "policy": [
         "yf",
@@ -99,42 +121,45 @@
       ],
       "candidates": [
         {
-          "value": 491819296.0,
-          "source": "yf.stockanalysis_fallback.overview",
-          "as_of": "2026-07-08",
-          "fetched_at": "2026-07-09T09:24:02Z",
+          "value": 328920000.0,
+          "source": "stockanalysis.overview",
+          "as_of": "2026-09-30",
+          "fetched_at": "2026-09-30T20:10:00Z",
           "confidence": "observed"
         }
       ],
       "candidate_count": 1
     },
-    "beta": {
+    "dividend_yield": {
       "value": 0.0,
-      "source": "yf.stockanalysis_fallback.overview",
-      "as_of": "2026-07-08",
-      "fetched_at": "2026-07-09T09:24:02Z",
+      "source": "stockanalysis.overview",
+      "as_of": "2026-09-30",
+      "fetched_at": "2026-09-30T20:10:00Z",
       "confidence": "observed",
+      "unit": "percent_points",
       "policy": [
         "yf",
         "stockanalysis.overview",
-        "yf.stockanalysis_fallback.overview"
+        "yf.stockanalysis_fallback.overview",
+        "slickcharts"
       ],
       "candidates": [
         {
           "value": 0.0,
-          "source": "yf.stockanalysis_fallback.overview",
-          "as_of": "2026-07-08",
-          "fetched_at": "2026-07-09T09:24:02Z",
-          "confidence": "observed"
+          "source": "stockanalysis.overview",
+          "as_of": "2026-09-30",
+          "fetched_at": "2026-09-30T20:10:00Z",
+          "confidence": "observed",
+          "unit": "percent_points"
         }
       ],
       "candidate_count": 1
     },
     "expense_ratio": {
       "value": 1.0,
-      "source": "yf.stockanalysis_fallback.overview",
-      "as_of": "2026-07-08",
-      "fetched_at": "2026-07-09T09:24:02Z",
+      "source": "stockanalysis.overview",
+      "as_of": "2026-09-30",
+      "fetched_at": "2026-09-30T20:10:00Z",
       "confidence": "observed",
       "unit": "percent_points",
       "policy": [
@@ -145,9 +170,9 @@
       "candidates": [
         {
           "value": 1.0,
-          "source": "yf.stockanalysis_fallback.overview",
-          "as_of": "2026-07-08",
-          "fetched_at": "2026-07-09T09:24:02Z",
+          "source": "stockanalysis.overview",
+          "as_of": "2026-09-30",
+          "fetched_at": "2026-09-30T20:10:00Z",
           "confidence": "observed",
           "unit": "percent_points"
         }
@@ -155,10 +180,10 @@
       "candidate_count": 1
     },
     "return_1m": {
-      "value": -8.69565217391304,
-      "source": "stockanalysis.etf_universe.performance",
-      "as_of": null,
-      "fetched_at": "2026-09-21T01:14:16Z",
+      "value": -2.57179,
+      "source": "stockanalysis.detail.performance",
+      "as_of": "2026-09-30",
+      "fetched_at": "2026-09-30T20:10:00Z",
       "confidence": "observed",
       "unit": "percent_points",
       "policy": [
@@ -169,6 +194,14 @@
       ],
       "candidates": [
         {
+          "value": -2.57179,
+          "source": "stockanalysis.detail.performance",
+          "as_of": "2026-09-30",
+          "fetched_at": "2026-09-30T20:10:00Z",
+          "confidence": "observed",
+          "unit": "percent_points"
+        },
+        {
           "value": -8.69565217391304,
           "source": "stockanalysis.etf_universe.performance",
           "as_of": null,
@@ -177,13 +210,13 @@
           "unit": "percent_points"
         }
       ],
-      "candidate_count": 1
+      "candidate_count": 2
     },
     "return_3m": {
-      "value": 4.565605988601393,
+      "value": -4.179522819761403,
       "source": "stockanalysis.detail.history",
-      "as_of": "2026-07-08",
-      "fetched_at": "2026-07-09T09:24:02Z",
+      "as_of": "2026-09-29",
+      "fetched_at": "2026-09-30T20:10:00Z",
       "confidence": "derived",
       "unit": "percent_points",
       "policy": [
@@ -192,10 +225,10 @@
       ],
       "candidates": [
         {
-          "value": 4.565605988601393,
+          "value": -4.179522819761403,
           "source": "stockanalysis.detail.history",
-          "as_of": "2026-07-08",
-          "fetched_at": "2026-07-09T09:24:02Z",
+          "as_of": "2026-09-29",
+          "fetched_at": "2026-09-30T20:10:00Z",
           "confidence": "derived",
           "unit": "percent_points"
         }
@@ -203,10 +236,10 @@
       "candidate_count": 1
     },
     "return_ytd": {
-      "value": -14.350833699868042,
-      "source": "stockanalysis.etf_universe.performance",
-      "as_of": null,
-      "fetched_at": "2026-09-21T01:14:16Z",
+      "value": -6.11113,
+      "source": "stockanalysis.detail.performance",
+      "as_of": "2026-09-30",
+      "fetched_at": "2026-09-30T20:10:00Z",
       "confidence": "observed",
       "unit": "percent_points",
       "policy": [
@@ -218,6 +251,14 @@
       ],
       "candidates": [
         {
+          "value": -6.11113,
+          "source": "stockanalysis.detail.performance",
+          "as_of": "2026-09-30",
+          "fetched_at": "2026-09-30T20:10:00Z",
+          "confidence": "observed",
+          "unit": "percent_points"
+        },
+        {
           "value": -14.350833699868042,
           "source": "stockanalysis.etf_universe.performance",
           "as_of": null,
@@ -226,146 +267,379 @@
           "unit": "percent_points"
         }
       ],
-      "candidate_count": 1
+      "candidate_count": 2
     }
   },
   "etf": {
-    "holdings_count": 10,
-    "holdings_updated": "2026-07-09T09:24:02Z",
+    "holdings_count": 22,
+    "holdings_updated": "Sep 29, 2026",
     "top_holdings": [
       {
         "rank": 1,
         "symbol": "SPCX",
-        "name": "Space Exploration Technologies Corp Class A",
-        "weight_pct": 31.058629999999997,
+        "name": "Space Exploration Technologies Corp.",
+        "weight_pct": 40.0,
+        "shares": 905118,
         "raw": {
-          "_index": "SPCX",
-          "Name": "Space Exploration Technologies Corp Class A",
-          "Holding Percent": 0.3105863
+          "no": 1,
+          "n": "Space Exploration Technologies Corp.",
+          "s": "$SPCX",
+          "as": "40.00%",
+          "sh": "905,118"
         }
       },
       {
         "rank": 2,
         "symbol": "TSLA",
-        "name": "Tesla Inc",
-        "weight_pct": 12.2590706,
+        "name": "Tesla, Inc.",
+        "weight_pct": 8.89,
+        "shares": 81842,
         "raw": {
-          "_index": "TSLA",
-          "Name": "Tesla Inc",
-          "Holding Percent": 0.122590706
+          "no": 2,
+          "n": "Tesla, Inc.",
+          "s": "$TSLA",
+          "as": "8.89%",
+          "sh": "81,842"
         }
       },
       {
         "rank": 3,
-        "symbol": "H",
-        "name": "Hyatt Hotels Corp Class A",
-        "weight_pct": 4.58074,
+        "symbol": "FIGS",
+        "name": "FIGS, Inc.",
+        "weight_pct": 4.56,
+        "shares": 1101246,
         "raw": {
-          "_index": "H",
-          "Name": "Hyatt Hotels Corp Class A",
-          "Holding Percent": 0.0458074
+          "no": 3,
+          "n": "FIGS, Inc.",
+          "s": "$FIGS",
+          "as": "4.56%",
+          "sh": "1,101,246"
         }
       },
       {
         "rank": 4,
         "symbol": "MSCI",
-        "name": "MSCI Inc",
-        "weight_pct": 4.5057703,
+        "name": "MSCI Inc.",
+        "weight_pct": 4.37,
+        "shares": 26475,
         "raw": {
-          "_index": "MSCI",
-          "Name": "MSCI Inc",
-          "Holding Percent": 0.045057703
+          "no": 4,
+          "n": "MSCI Inc.",
+          "s": "$MSCI",
+          "as": "4.37%",
+          "sh": "26,475"
         }
       },
       {
         "rank": 5,
-        "symbol": "SCHW",
-        "name": "Charles Schwab Corp",
-        "weight_pct": 3.7239099999999996,
+        "symbol": "SHOP",
+        "name": "Shopify Inc.",
+        "weight_pct": 4.02,
+        "shares": 91946,
         "raw": {
-          "_index": "SCHW",
-          "Name": "Charles Schwab Corp",
-          "Holding Percent": 0.0372391
+          "no": 5,
+          "n": "Shopify Inc.",
+          "s": "$SHOP",
+          "as": "4.02%",
+          "sh": "91,946"
         }
       },
       {
         "rank": 6,
-        "symbol": "IBKR",
-        "name": "Interactive Brokers Group Inc Class A",
-        "weight_pct": 3.60534,
+        "symbol": "H",
+        "name": "Hyatt Hotels Corporation",
+        "weight_pct": 3.83,
+        "shares": 78149,
         "raw": {
-          "_index": "IBKR",
-          "Name": "Interactive Brokers Group Inc Class A",
-          "Holding Percent": 0.0360534
+          "no": 6,
+          "n": "Hyatt Hotels Corporation",
+          "s": "$H",
+          "as": "3.83%",
+          "sh": "78,149"
         }
       },
       {
         "rank": 7,
-        "symbol": "SHOP",
-        "name": "Shopify Inc Registered Shs -A- Subord Vtg",
-        "weight_pct": 3.3253900000000005,
+        "symbol": "IBKR",
+        "name": "Interactive Brokers Group, Inc.",
+        "weight_pct": 3.69,
+        "shares": 139589,
         "raw": {
-          "_index": "SHOP",
-          "Name": "Shopify Inc Registered Shs -A- Subord Vtg",
-          "Holding Percent": 0.0332539
+          "no": 7,
+          "n": "Interactive Brokers Group, Inc.",
+          "s": "$IBKR",
+          "as": "3.69%",
+          "sh": "139,589"
         }
       },
       {
         "rank": 8,
-        "symbol": "RRR",
-        "name": "Red Rock Resorts Inc Class A",
-        "weight_pct": 3.1045001,
+        "symbol": "SCHW",
+        "name": "The Charles Schwab Corporation",
+        "weight_pct": 3.5,
+        "shares": 117040,
         "raw": {
-          "_index": "RRR",
-          "Name": "Red Rock Resorts Inc Class A",
-          "Holding Percent": 0.031045001
+          "no": 8,
+          "n": "The Charles Schwab Corporation",
+          "s": "$SCHW",
+          "as": "3.50%",
+          "sh": "117,040"
         }
       },
       {
         "rank": 9,
-        "symbol": "VRSK",
-        "name": "Verisk Analytics Inc",
-        "weight_pct": 2.93871,
+        "symbol": "SPOT",
+        "name": "Spotify Technology S.A.",
+        "weight_pct": 2.94,
+        "shares": 19440,
         "raw": {
-          "_index": "VRSK",
-          "Name": "Verisk Analytics Inc",
-          "Holding Percent": 0.0293871
+          "no": 9,
+          "n": "Spotify Technology S.A.",
+          "s": "$SPOT",
+          "as": "2.94%",
+          "sh": "19,440"
         }
       },
       {
         "rank": 10,
-        "symbol": "SPOT",
-        "name": "Spotify Technology SA",
-        "weight_pct": 2.7419599999999997,
+        "symbol": "FDS",
+        "name": "FactSet Research Systems Inc.",
+        "weight_pct": 2.61,
+        "shares": 32122,
         "raw": {
-          "_index": "SPOT",
-          "Name": "Spotify Technology SA",
-          "Holding Percent": 0.0274196
+          "no": 10,
+          "n": "FactSet Research Systems Inc.",
+          "s": "$FDS",
+          "as": "2.61%",
+          "sh": "32,122"
+        }
+      },
+      {
+        "rank": 11,
+        "symbol": "RRR",
+        "name": "Red Rock Resorts, Inc.",
+        "weight_pct": 2.43,
+        "shares": 158281,
+        "raw": {
+          "no": 11,
+          "n": "Red Rock Resorts, Inc.",
+          "s": "$RRR",
+          "as": "2.43%",
+          "sh": "158,281"
+        }
+      },
+      {
+        "rank": 12,
+        "symbol": "MORN",
+        "name": "Morningstar, Inc.",
+        "weight_pct": 2.4,
+        "shares": 41269,
+        "raw": {
+          "no": 12,
+          "n": "Morningstar, Inc.",
+          "s": "$MORN",
+          "as": "2.40%",
+          "sh": "41,269"
+        }
+      },
+      {
+        "rank": 13,
+        "symbol": "CHH",
+        "name": "Choice Hotels International, Inc.",
+        "weight_pct": 2.22,
+        "shares": 70992,
+        "raw": {
+          "no": 13,
+          "n": "Choice Hotels International, Inc.",
+          "s": "$CHH",
+          "as": "2.22%",
+          "sh": "70,992"
+        }
+      },
+      {
+        "rank": 14,
+        "symbol": "HEI.A",
+        "name": "HEICO Corporation",
+        "weight_pct": 2.14,
+        "shares": 30470,
+        "raw": {
+          "no": 14,
+          "n": "HEICO Corporation",
+          "s": "$HEI.A",
+          "as": "2.14%",
+          "sh": "30,470"
+        }
+      },
+      {
+        "rank": 15,
+        "symbol": "ABNB",
+        "name": "Airbnb, Inc.",
+        "weight_pct": 2.1,
+        "shares": 44362,
+        "raw": {
+          "no": 15,
+          "n": "Airbnb, Inc.",
+          "s": "$ABNB",
+          "as": "2.10%",
+          "sh": "44,362"
+        }
+      },
+      {
+        "rank": 16,
+        "symbol": "BIRK",
+        "name": "Birkenstock Holding plc",
+        "weight_pct": 1.8,
+        "shares": 179459,
+        "raw": {
+          "no": 16,
+          "n": "Birkenstock Holding plc",
+          "s": "$BIRK",
+          "as": "1.80%",
+          "sh": "179,459"
+        }
+      },
+      {
+        "rank": 17,
+        "symbol": "ACGL",
+        "name": "Arch Capital Group Ltd.",
+        "weight_pct": 1.75,
+        "shares": 60792,
+        "raw": {
+          "no": 17,
+          "n": "Arch Capital Group Ltd.",
+          "s": "$ACGL",
+          "as": "1.75%",
+          "sh": "60,792"
+        }
+      },
+      {
+        "rank": 18,
+        "symbol": "GWRE",
+        "name": "Guidewire Software, Inc.",
+        "weight_pct": 1.74,
+        "shares": 39550,
+        "raw": {
+          "no": 18,
+          "n": "Guidewire Software, Inc.",
+          "s": "$GWRE",
+          "as": "1.74%",
+          "sh": "39,550"
+        }
+      },
+      {
+        "rank": 19,
+        "symbol": "IDXX",
+        "name": "IDEXX Laboratories, Inc.",
+        "weight_pct": 1.74,
+        "shares": 10807,
+        "raw": {
+          "no": 19,
+          "n": "IDEXX Laboratories, Inc.",
+          "s": "$IDXX",
+          "as": "1.74%",
+          "sh": "10,807"
+        }
+      },
+      {
+        "rank": 20,
+        "symbol": "ONON",
+        "name": "On Holding AG",
+        "weight_pct": 1.73,
+        "shares": 189634,
+        "raw": {
+          "no": 20,
+          "n": "On Holding AG",
+          "s": "$ONON",
+          "as": "1.73%",
+          "sh": "189,634"
+        }
+      },
+      {
+        "rank": 21,
+        "symbol": "KNSL",
+        "name": "Kinsale Capital Group, Inc.",
+        "weight_pct": 0.87,
+        "shares": 8795,
+        "raw": {
+          "no": 21,
+          "n": "Kinsale Capital Group, Inc.",
+          "s": "$KNSL",
+          "as": "0.87%",
+          "sh": "8,795"
+        }
+      },
+      {
+        "rank": 22,
+        "name": "Us Dollar",
+        "weight_pct": 0.68,
+        "shares": 2239447,
+        "raw": {
+          "no": 22,
+          "n": "Us Dollar",
+          "as": "0.68%",
+          "sh": "2,239,447"
         }
       }
     ],
-    "asset_allocation": {
-      "cashPosition": 0.002,
-      "stockPosition": 0.998,
-      "bondPosition": 0.0,
-      "preferredPosition": 0.0,
-      "convertiblePosition": 0.0,
-      "otherPosition": 0.0
-    },
-    "sectors": {
-      "realestate": 0.0,
-      "consumer_cyclical": 0.3379,
-      "basic_materials": 0.0,
-      "consumer_defensive": 0.0,
-      "technology": 0.048,
-      "communication_services": 0.042600002,
-      "financial_services": 0.19049999,
-      "utilities": 0.0,
-      "industrials": 0.3634,
-      "energy": 0.0,
-      "healthcare": 0.0177
-    },
-    "countries": null,
+    "asset_allocation": null,
+    "sectors": [
+      {
+        "n": "Industrials",
+        "w": 42.42
+      },
+      {
+        "n": "Consumer Discretionary",
+        "w": 27.75
+      },
+      {
+        "n": "Financials",
+        "w": 19.32
+      },
+      {
+        "n": "Technology",
+        "w": 5.8
+      },
+      {
+        "n": "Communication Services",
+        "w": 2.96
+      },
+      {
+        "n": "Healthcare",
+        "w": 1.75
+      }
+    ],
+    "countries": [
+      {
+        "code": "US",
+        "weight": 87.68,
+        "country": "United States"
+      },
+      {
+        "code": "CA",
+        "weight": 4.05,
+        "country": "Canada"
+      },
+      {
+        "code": "SE",
+        "weight": 2.96,
+        "country": "Sweden"
+      },
+      {
+        "code": "GB",
+        "weight": 1.81,
+        "country": "United Kingdom"
+      },
+      {
+        "code": "BM",
+        "weight": 1.76,
+        "country": "Bermuda"
+      },
+      {
+        "code": "CH",
+        "weight": 1.74,
+        "country": "Switzerland"
+      }
+    ],
     "classification": {
       "is_leveraged": false,
       "leverage_factor": null,
@@ -380,21 +654,21 @@
   "financials": null,
   "sources": {
     "yf": false,
-    "stockanalysis": false,
-    "stockanalysis_yf_fallback": true,
+    "stockanalysis": true,
+    "stockanalysis_yf_fallback": false,
     "stockanalysis_etf_catalog": true,
     "slickcharts": false
   },
   "source_files": {
     "yf": null,
-    "stockanalysis": null,
-    "stockanalysis_yf_fallback": "computed/data-supply/etf-detail/payloads/RONB.json",
+    "stockanalysis": "computed/data-supply/etf-detail/payloads/RONB.json",
+    "stockanalysis_yf_fallback": null,
     "stockanalysis_etf_catalog": "stockanalysis/etf_universe.json",
     "slickcharts": null
   },
   "resolver": {
     "version": "market-facts-resolver/v1",
-    "detail_authority": "data_supply:fresh_fallback",
+    "detail_authority": "data_supply:fresh_primary",
     "field_source_policy": {
       "price": [
         "yf",

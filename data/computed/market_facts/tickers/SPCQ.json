@@ -2,10 +2,10 @@
   "schema_version": "market-facts/v1",
   "ticker": "SPCQ",
   "asset_type": "etf",
-  "generated_at": "2026-09-21T01:42:22Z",
-  "source_as_of": null,
+  "generated_at": "2026-10-01T05:48:34Z",
+  "source_as_of": "2026-09-30",
   "source_as_of_scope": "selected_price_fact",
-  "source_as_of_reason": "selected price fact has no provider source date",
+  "source_as_of_reason": null,
   "identity": {
     "name": "SPCQ",
     "exchange": null,
@@ -16,11 +16,149 @@
     "category": null
   },
   "facts": {
+    "price": {
+      "value": 10.51,
+      "source": "stockanalysis.quote",
+      "as_of": "2026-09-30",
+      "fetched_at": "2026-09-30T19:48:30Z",
+      "confidence": "observed",
+      "policy": [
+        "yf",
+        "yf.fast_info",
+        "stockanalysis.quote",
+        "yf.stockanalysis_fallback.quote",
+        "slickcharts"
+      ],
+      "candidates": [
+        {
+          "value": 10.51,
+          "source": "stockanalysis.quote",
+          "as_of": "2026-09-30",
+          "fetched_at": "2026-09-30T19:48:30Z",
+          "confidence": "observed"
+        }
+      ],
+      "candidate_count": 1
+    },
+    "previous_close": {
+      "value": 10.92,
+      "source": "stockanalysis.quote",
+      "as_of": "2026-09-30",
+      "fetched_at": "2026-09-30T19:48:30Z",
+      "confidence": "observed",
+      "policy": [
+        "yf",
+        "stockanalysis.quote",
+        "yf.stockanalysis_fallback.quote"
+      ],
+      "candidates": [
+        {
+          "value": 10.92,
+          "source": "stockanalysis.quote",
+          "as_of": "2026-09-30",
+          "fetched_at": "2026-09-30T19:48:30Z",
+          "confidence": "observed"
+        }
+      ],
+      "candidate_count": 1
+    },
+    "change": {
+      "value": -0.41,
+      "source": "stockanalysis.quote",
+      "as_of": "2026-09-30",
+      "fetched_at": "2026-09-30T19:48:30Z",
+      "confidence": "observed",
+      "policy": [
+        "stockanalysis.quote",
+        "yf",
+        "yf.derived",
+        "yf.stockanalysis_fallback.quote"
+      ],
+      "candidates": [
+        {
+          "value": -0.41,
+          "source": "stockanalysis.quote",
+          "as_of": "2026-09-30",
+          "fetched_at": "2026-09-30T19:48:30Z",
+          "confidence": "observed"
+        }
+      ],
+      "candidate_count": 1
+    },
+    "change_pct": {
+      "value": -3.75,
+      "source": "stockanalysis.quote",
+      "as_of": "2026-09-30",
+      "fetched_at": "2026-09-30T19:48:30Z",
+      "confidence": "observed",
+      "policy": [
+        "stockanalysis.quote",
+        "yf",
+        "yf.derived",
+        "yf.stockanalysis_fallback.quote"
+      ],
+      "candidates": [
+        {
+          "value": -3.75,
+          "source": "stockanalysis.quote",
+          "as_of": "2026-09-30",
+          "fetched_at": "2026-09-30T19:48:30Z",
+          "confidence": "observed"
+        }
+      ],
+      "candidate_count": 1
+    },
+    "total_assets": {
+      "value": 11780000.0,
+      "source": "stockanalysis.overview",
+      "as_of": "2026-09-30",
+      "fetched_at": "2026-09-30T19:48:30Z",
+      "confidence": "observed",
+      "policy": [
+        "yf",
+        "stockanalysis.overview",
+        "yf.stockanalysis_fallback.overview"
+      ],
+      "candidates": [
+        {
+          "value": 11780000.0,
+          "source": "stockanalysis.overview",
+          "as_of": "2026-09-30",
+          "fetched_at": "2026-09-30T19:48:30Z",
+          "confidence": "observed"
+        }
+      ],
+      "candidate_count": 1
+    },
+    "expense_ratio": {
+      "value": 1.31,
+      "source": "stockanalysis.overview",
+      "as_of": "2026-09-30",
+      "fetched_at": "2026-09-30T19:48:30Z",
+      "confidence": "observed",
+      "unit": "percent_points",
+      "policy": [
+        "yf",
+        "stockanalysis.overview",
+        "yf.stockanalysis_fallback.overview"
+      ],
+      "candidates": [
+        {
+          "value": 1.31,
+          "source": "stockanalysis.overview",
+          "as_of": "2026-09-30",
+          "fetched_at": "2026-09-30T19:48:30Z",
+          "confidence": "observed",
+          "unit": "percent_points"
+        }
+      ],
+      "candidate_count": 1
+    },
     "return_1m": {
-      "value": 116.988,
-      "source": "stockanalysis.etf_universe.performance",
-      "as_of": null,
-      "fetched_at": "2026-09-21T01:14:16Z",
+      "value": -15.54524,
+      "source": "stockanalysis.detail.performance",
+      "as_of": "2026-09-30",
+      "fetched_at": "2026-09-30T19:48:30Z",
       "confidence": "observed",
       "unit": "percent_points",
       "policy": [
@@ -31,6 +169,14 @@
       ],
       "candidates": [
         {
+          "value": -15.54524,
+          "source": "stockanalysis.detail.performance",
+          "as_of": "2026-09-30",
+          "fetched_at": "2026-09-30T19:48:30Z",
+          "confidence": "observed",
+          "unit": "percent_points"
+        },
+        {
           "value": 116.988,
           "source": "stockanalysis.etf_universe.performance",
           "as_of": null,
@@ -39,37 +185,191 @@
           "unit": "percent_points"
         }
       ],
+      "candidate_count": 2
+    },
+    "return_3m": {
+      "value": -19.290465631929045,
+      "source": "stockanalysis.detail.history",
+      "as_of": "2026-09-29",
+      "fetched_at": "2026-09-30T19:48:30Z",
+      "confidence": "derived",
+      "unit": "percent_points",
+      "policy": [
+        "yf.history_1y",
+        "stockanalysis.detail.history"
+      ],
+      "candidates": [
+        {
+          "value": -19.290465631929045,
+          "source": "stockanalysis.detail.history",
+          "as_of": "2026-09-29",
+          "fetched_at": "2026-09-30T19:48:30Z",
+          "confidence": "derived",
+          "unit": "percent_points"
+        }
+      ],
       "candidate_count": 1
     }
   },
   "etf": {
-    "holdings_count": null,
-    "holdings_updated": null,
-    "top_holdings": [],
+    "holdings_count": 10,
+    "holdings_updated": "Sep 25, 2026",
+    "top_holdings": [
+      {
+        "rank": 1,
+        "name": "OTHER ASSETS AND LIABILITIES",
+        "weight_pct": 656.93,
+        "shares": 725063,
+        "raw": {
+          "no": 1,
+          "n": "OTHER ASSETS AND LIABILITIES",
+          "as": "656.93%",
+          "sh": "725,063"
+        }
+      },
+      {
+        "rank": 2,
+        "name": "Cash Offset",
+        "weight_pct": 222.53,
+        "shares": 245611,
+        "raw": {
+          "no": 2,
+          "n": "Cash Offset",
+          "as": "222.53%",
+          "sh": "245,611"
+        }
+      },
+      {
+        "rank": 3,
+        "symbol": "!MUTF/FGXXX",
+        "name": "First American Government Obligs X",
+        "weight_pct": 5.63,
+        "shares": 6211,
+        "raw": {
+          "no": 3,
+          "n": "First American Government Obligs X",
+          "s": "!mutf/FGXXX",
+          "as": "5.63%",
+          "sh": "6,211"
+        }
+      },
+      {
+        "rank": 4,
+        "name": "Space Exploration Technologies Corp. Class A Common Stock-Swap-Nmra-S",
+        "weight_pct": -23.71,
+        "shares": 176,
+        "raw": {
+          "no": 4,
+          "n": "Space Exploration Technologies Corp. Class A Common Stock-Swap-Nmra-S",
+          "as": "-23.71%",
+          "sh": "176"
+        }
+      },
+      {
+        "rank": 5,
+        "name": "Space Exploration Technologies Corp.-Swap-Cant-S",
+        "weight_pct": -29.1,
+        "shares": 216,
+        "raw": {
+          "no": 5,
+          "n": "Space Exploration Technologies Corp.-Swap-Cant-S",
+          "as": "-29.10%",
+          "sh": "216"
+        }
+      },
+      {
+        "rank": 6,
+        "name": "Space Exploration Technologies Corp.-Swap-Jnst-S",
+        "weight_pct": -29.91,
+        "shares": 222,
+        "raw": {
+          "no": 6,
+          "n": "Space Exploration Technologies Corp.-Swap-Jnst-S",
+          "as": "-29.91%",
+          "sh": "222"
+        }
+      },
+      {
+        "rank": 7,
+        "name": "Space Exploration Technologies Corp.-Swap-Mrex-S",
+        "weight_pct": -33.68,
+        "shares": 250,
+        "raw": {
+          "no": 7,
+          "n": "Space Exploration Technologies Corp.-Swap-Mrex-S",
+          "as": "-33.68%",
+          "sh": "250"
+        }
+      },
+      {
+        "rank": 8,
+        "name": "Space Exploration Technologies Corp.-Swap-Bmob-S",
+        "weight_pct": -40.41,
+        "shares": 300,
+        "raw": {
+          "no": 8,
+          "n": "Space Exploration Technologies Corp.-Swap-Bmob-S",
+          "as": "-40.41%",
+          "sh": "300"
+        }
+      },
+      {
+        "rank": 9,
+        "name": "Space Exploration Technologies Corp. Class A Common Stock-Swap-Clst-S",
+        "weight_pct": -45.8,
+        "shares": 340,
+        "raw": {
+          "no": 9,
+          "n": "Space Exploration Technologies Corp. Class A Common Stock-Swap-Clst-S",
+          "as": "-45.80%",
+          "sh": "340"
+        }
+      },
+      {
+        "rank": 10,
+        "name": "US DOLLARS",
+        "weight_pct": -582.49,
+        "shares": 642899,
+        "raw": {
+          "no": 10,
+          "n": "US DOLLARS",
+          "as": "-582.49%",
+          "sh": "642,899"
+        }
+      }
+    ],
     "asset_allocation": null,
     "sectors": null,
     "countries": null,
-    "classification": null,
+    "classification": {
+      "is_leveraged": true,
+      "leverage_factor": 2.0,
+      "is_inverse": true,
+      "is_single_stock": false,
+      "underlying": null,
+      "source": "stockanalysis.overview.description",
+      "confidence": "high"
+    },
     "yahoo_funds_data_available": false
   },
   "financials": null,
   "sources": {
     "yf": false,
-    "stockanalysis": false,
+    "stockanalysis": true,
     "stockanalysis_yf_fallback": false,
     "stockanalysis_etf_catalog": true,
     "slickcharts": false
   },
   "source_files": {
     "yf": null,
-    "stockanalysis": null,
+    "stockanalysis": "computed/data-supply/etf-detail/payloads/SPCQ.json",
     "stockanalysis_yf_fallback": null,
     "stockanalysis_etf_catalog": "stockanalysis/etf_universe.json",
     "slickcharts": null
   },
   "resolver": {
     "version": "market-facts-resolver/v1",
-    "detail_authority": "data_supply:unavailable",
+    "detail_authority": "data_supply:fresh_primary",
     "field_source_policy": {
       "price": [
         "yf",

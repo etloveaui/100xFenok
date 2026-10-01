@@ -2,10 +2,10 @@
   "schema_version": "market-facts/v1",
   "ticker": "THMR",
   "asset_type": "etf",
-  "generated_at": "2026-09-21T01:42:22Z",
-  "source_as_of": null,
+  "generated_at": "2026-10-01T05:48:34Z",
+  "source_as_of": "2026-09-30",
   "source_as_of_scope": "selected_price_fact",
-  "source_as_of_reason": "selected price fact has no provider source date",
+  "source_as_of_reason": null,
   "identity": {
     "name": "THMR",
     "exchange": null,
@@ -16,11 +16,149 @@
     "category": null
   },
   "facts": {
+    "price": {
+      "value": 26.25,
+      "source": "stockanalysis.quote",
+      "as_of": "2026-09-30",
+      "fetched_at": "2026-09-30T20:10:04Z",
+      "confidence": "observed",
+      "policy": [
+        "yf",
+        "yf.fast_info",
+        "stockanalysis.quote",
+        "yf.stockanalysis_fallback.quote",
+        "slickcharts"
+      ],
+      "candidates": [
+        {
+          "value": 26.25,
+          "source": "stockanalysis.quote",
+          "as_of": "2026-09-30",
+          "fetched_at": "2026-09-30T20:10:04Z",
+          "confidence": "observed"
+        }
+      ],
+      "candidate_count": 1
+    },
+    "previous_close": {
+      "value": 26.05,
+      "source": "stockanalysis.quote",
+      "as_of": "2026-09-30",
+      "fetched_at": "2026-09-30T20:10:04Z",
+      "confidence": "observed",
+      "policy": [
+        "yf",
+        "stockanalysis.quote",
+        "yf.stockanalysis_fallback.quote"
+      ],
+      "candidates": [
+        {
+          "value": 26.05,
+          "source": "stockanalysis.quote",
+          "as_of": "2026-09-30",
+          "fetched_at": "2026-09-30T20:10:04Z",
+          "confidence": "observed"
+        }
+      ],
+      "candidate_count": 1
+    },
+    "change": {
+      "value": 0.2,
+      "source": "stockanalysis.quote",
+      "as_of": "2026-09-30",
+      "fetched_at": "2026-09-30T20:10:04Z",
+      "confidence": "observed",
+      "policy": [
+        "stockanalysis.quote",
+        "yf",
+        "yf.derived",
+        "yf.stockanalysis_fallback.quote"
+      ],
+      "candidates": [
+        {
+          "value": 0.2,
+          "source": "stockanalysis.quote",
+          "as_of": "2026-09-30",
+          "fetched_at": "2026-09-30T20:10:04Z",
+          "confidence": "observed"
+        }
+      ],
+      "candidate_count": 1
+    },
+    "change_pct": {
+      "value": 0.77,
+      "source": "stockanalysis.quote",
+      "as_of": "2026-09-30",
+      "fetched_at": "2026-09-30T20:10:04Z",
+      "confidence": "observed",
+      "policy": [
+        "stockanalysis.quote",
+        "yf",
+        "yf.derived",
+        "yf.stockanalysis_fallback.quote"
+      ],
+      "candidates": [
+        {
+          "value": 0.77,
+          "source": "stockanalysis.quote",
+          "as_of": "2026-09-30",
+          "fetched_at": "2026-09-30T20:10:04Z",
+          "confidence": "observed"
+        }
+      ],
+      "candidate_count": 1
+    },
+    "total_assets": {
+      "value": 44030000.0,
+      "source": "stockanalysis.overview",
+      "as_of": "2026-09-30",
+      "fetched_at": "2026-09-30T20:10:04Z",
+      "confidence": "observed",
+      "policy": [
+        "yf",
+        "stockanalysis.overview",
+        "yf.stockanalysis_fallback.overview"
+      ],
+      "candidates": [
+        {
+          "value": 44030000.0,
+          "source": "stockanalysis.overview",
+          "as_of": "2026-09-30",
+          "fetched_at": "2026-09-30T20:10:04Z",
+          "confidence": "observed"
+        }
+      ],
+      "candidate_count": 1
+    },
+    "expense_ratio": {
+      "value": 1.1,
+      "source": "stockanalysis.overview",
+      "as_of": "2026-09-30",
+      "fetched_at": "2026-09-30T20:10:04Z",
+      "confidence": "observed",
+      "unit": "percent_points",
+      "policy": [
+        "yf",
+        "stockanalysis.overview",
+        "yf.stockanalysis_fallback.overview"
+      ],
+      "candidates": [
+        {
+          "value": 1.1,
+          "source": "stockanalysis.overview",
+          "as_of": "2026-09-30",
+          "fetched_at": "2026-09-30T20:10:04Z",
+          "confidence": "observed",
+          "unit": "percent_points"
+        }
+      ],
+      "candidate_count": 1
+    },
     "return_1m": {
-      "value": -0.16113683436092432,
-      "source": "stockanalysis.etf_universe.performance",
-      "as_of": null,
-      "fetched_at": "2026-09-21T01:14:16Z",
+      "value": 1.802,
+      "source": "stockanalysis.detail.performance",
+      "as_of": "2026-09-30",
+      "fetched_at": "2026-09-30T20:10:04Z",
       "confidence": "observed",
       "unit": "percent_points",
       "policy": [
@@ -31,6 +169,14 @@
       ],
       "candidates": [
         {
+          "value": 1.802,
+          "source": "stockanalysis.detail.performance",
+          "as_of": "2026-09-30",
+          "fetched_at": "2026-09-30T20:10:04Z",
+          "confidence": "observed",
+          "unit": "percent_points"
+        },
+        {
           "value": -0.16113683436092432,
           "source": "stockanalysis.etf_universe.performance",
           "as_of": null,
@@ -39,37 +185,361 @@
           "unit": "percent_points"
         }
       ],
+      "candidate_count": 2
+    },
+    "return_3m": {
+      "value": 2.699761878479173,
+      "source": "stockanalysis.detail.history",
+      "as_of": "2026-09-29",
+      "fetched_at": "2026-09-30T20:10:04Z",
+      "confidence": "derived",
+      "unit": "percent_points",
+      "policy": [
+        "yf.history_1y",
+        "stockanalysis.detail.history"
+      ],
+      "candidates": [
+        {
+          "value": 2.699761878479173,
+          "source": "stockanalysis.detail.history",
+          "as_of": "2026-09-29",
+          "fetched_at": "2026-09-30T20:10:04Z",
+          "confidence": "derived",
+          "unit": "percent_points"
+        }
+      ],
       "candidate_count": 1
     }
   },
   "etf": {
-    "holdings_count": null,
-    "holdings_updated": null,
-    "top_holdings": [],
+    "holdings_count": 21,
+    "holdings_updated": "Sep 29, 2026",
+    "top_holdings": [
+      {
+        "rank": 1,
+        "symbol": "#USDU",
+        "name": "WisdomTree Bloomberg US Dollar Bullish Fund",
+        "weight_pct": 14.69,
+        "shares": 238989,
+        "raw": {
+          "no": 1,
+          "n": "WisdomTree Bloomberg US Dollar Bullish Fund",
+          "s": "#USDU",
+          "as": "14.69%",
+          "sh": "238,989"
+        }
+      },
+      {
+        "rank": 2,
+        "symbol": "#XLE",
+        "name": "State Street Energy Select Sector SPDR ETF",
+        "weight_pct": 12.9,
+        "shares": 91881,
+        "raw": {
+          "no": 2,
+          "n": "State Street Energy Select Sector SPDR ETF",
+          "s": "#XLE",
+          "as": "12.90%",
+          "sh": "91,881"
+        }
+      },
+      {
+        "rank": 3,
+        "symbol": "#IGLD",
+        "name": "FT Vest Gold Strategy Target Income ETF",
+        "weight_pct": 10.44,
+        "shares": 224385,
+        "raw": {
+          "no": 3,
+          "n": "FT Vest Gold Strategy Target Income ETF",
+          "s": "#IGLD",
+          "as": "10.44%",
+          "sh": "224,385"
+        }
+      },
+      {
+        "rank": 4,
+        "symbol": "NVDA",
+        "name": "NVIDIA Corporation",
+        "weight_pct": 5.78,
+        "shares": 11144,
+        "raw": {
+          "no": 4,
+          "n": "NVIDIA Corporation",
+          "s": "$NVDA",
+          "as": "5.78%",
+          "sh": "11,144"
+        }
+      },
+      {
+        "rank": 5,
+        "symbol": "#TQQQ",
+        "name": "ProShares UltraPro QQQ",
+        "weight_pct": 5.75,
+        "shares": 32500,
+        "raw": {
+          "no": 5,
+          "n": "ProShares UltraPro QQQ",
+          "s": "#TQQQ",
+          "as": "5.75%",
+          "sh": "32,500"
+        }
+      },
+      {
+        "rank": 6,
+        "symbol": "#PFIX",
+        "name": "Simplify Interest Rate Hedge ETF",
+        "weight_pct": 5.28,
+        "shares": 37264,
+        "raw": {
+          "no": 6,
+          "n": "Simplify Interest Rate Hedge ETF",
+          "s": "#PFIX",
+          "as": "5.28%",
+          "sh": "37,264"
+        }
+      },
+      {
+        "rank": 7,
+        "symbol": "#SMH",
+        "name": "VanEck Semiconductor ETF",
+        "weight_pct": 4.84,
+        "shares": 3493,
+        "raw": {
+          "no": 7,
+          "n": "VanEck Semiconductor ETF",
+          "s": "#SMH",
+          "as": "4.84%",
+          "sh": "3,493"
+        }
+      },
+      {
+        "rank": 8,
+        "symbol": "#MAGS",
+        "name": "Roundhill Magnificent Seven ETF",
+        "weight_pct": 4.77,
+        "shares": 29305,
+        "raw": {
+          "no": 8,
+          "n": "Roundhill Magnificent Seven ETF",
+          "s": "#MAGS",
+          "as": "4.77%",
+          "sh": "29,305"
+        }
+      },
+      {
+        "rank": 9,
+        "symbol": "#PDBC",
+        "name": "Invesco Optimum Yield Diversified Commodity Strategy No K-1 ETF",
+        "weight_pct": 4.7,
+        "shares": 107927,
+        "raw": {
+          "no": 9,
+          "n": "Invesco Optimum Yield Diversified Commodity Strategy No K-1 ETF",
+          "s": "#PDBC",
+          "as": "4.70%",
+          "sh": "107,927"
+        }
+      },
+      {
+        "rank": 10,
+        "symbol": "#BITO",
+        "name": "ProShares Bitcoin ETF",
+        "weight_pct": 4.16,
+        "shares": 162541,
+        "raw": {
+          "no": 10,
+          "n": "ProShares Bitcoin ETF",
+          "s": "#BITO",
+          "as": "4.16%",
+          "sh": "162,541"
+        }
+      },
+      {
+        "rank": 11,
+        "symbol": "AVGO",
+        "name": "Broadcom Inc.",
+        "weight_pct": 4.08,
+        "shares": 5032,
+        "raw": {
+          "no": 11,
+          "n": "Broadcom Inc.",
+          "s": "$AVGO",
+          "as": "4.08%",
+          "sh": "5,032"
+        }
+      },
+      {
+        "rank": 12,
+        "symbol": "XOM",
+        "name": "ExxonMobil Holdings Corporation",
+        "weight_pct": 3.58,
+        "shares": 9717,
+        "raw": {
+          "no": 12,
+          "n": "ExxonMobil Holdings Corporation",
+          "s": "$XOM",
+          "as": "3.58%",
+          "sh": "9,717"
+        }
+      },
+      {
+        "rank": 13,
+        "symbol": "AAPL",
+        "name": "Apple Inc.",
+        "weight_pct": 2.97,
+        "shares": 3956,
+        "raw": {
+          "no": 13,
+          "n": "Apple Inc.",
+          "s": "$AAPL",
+          "as": "2.97%",
+          "sh": "3,956"
+        }
+      },
+      {
+        "rank": 14,
+        "symbol": "LLY",
+        "name": "Eli Lilly and Company",
+        "weight_pct": 2.93,
+        "shares": 1083,
+        "raw": {
+          "no": 14,
+          "n": "Eli Lilly and Company",
+          "s": "$LLY",
+          "as": "2.93%",
+          "sh": "1,083"
+        }
+      },
+      {
+        "rank": 15,
+        "symbol": "PLTR",
+        "name": "Palantir Technologies Inc.",
+        "weight_pct": 2.84,
+        "shares": 6654,
+        "raw": {
+          "no": 15,
+          "n": "Palantir Technologies Inc.",
+          "s": "$PLTR",
+          "as": "2.84%",
+          "sh": "6,654"
+        }
+      },
+      {
+        "rank": 16,
+        "symbol": "MSFT",
+        "name": "Microsoft Corporation",
+        "weight_pct": 2.8,
+        "shares": 2411,
+        "raw": {
+          "no": 16,
+          "n": "Microsoft Corporation",
+          "s": "$MSFT",
+          "as": "2.80%",
+          "sh": "2,411"
+        }
+      },
+      {
+        "rank": 17,
+        "symbol": "AMZN",
+        "name": "Amazon.com, Inc.",
+        "weight_pct": 2.1,
+        "shares": 3722,
+        "raw": {
+          "no": 17,
+          "n": "Amazon.com, Inc.",
+          "s": "$AMZN",
+          "as": "2.10%",
+          "sh": "3,722"
+        }
+      },
+      {
+        "rank": 18,
+        "symbol": "#EETH",
+        "name": "ProShares Ether ETF",
+        "weight_pct": 1.8,
+        "shares": 24227,
+        "raw": {
+          "no": 18,
+          "n": "ProShares Ether ETF",
+          "s": "#EETH",
+          "as": "1.80%",
+          "sh": "24,227"
+        }
+      },
+      {
+        "rank": 19,
+        "symbol": "ADBE",
+        "name": "Adobe Inc.",
+        "weight_pct": 1.75,
+        "shares": 3294,
+        "raw": {
+          "no": 19,
+          "n": "Adobe Inc.",
+          "s": "$ADBE",
+          "as": "1.75%",
+          "sh": "3,294"
+        }
+      },
+      {
+        "rank": 20,
+        "symbol": "GOOG",
+        "name": "Alphabet Inc.",
+        "weight_pct": 1.68,
+        "shares": 2187,
+        "raw": {
+          "no": 20,
+          "n": "Alphabet Inc.",
+          "s": "$GOOG",
+          "as": "1.68%",
+          "sh": "2,187"
+        }
+      },
+      {
+        "rank": 21,
+        "name": "Cash & Cash Equivalents",
+        "weight_pct": 0.17,
+        "shares": 74905,
+        "raw": {
+          "no": 21,
+          "n": "Cash & Cash Equivalents",
+          "as": "0.17%",
+          "sh": "74,905"
+        }
+      }
+    ],
     "asset_allocation": null,
     "sectors": null,
     "countries": null,
-    "classification": null,
+    "classification": {
+      "is_leveraged": false,
+      "leverage_factor": null,
+      "is_inverse": false,
+      "is_single_stock": false,
+      "underlying": null,
+      "source": "stockanalysis.overview.description",
+      "confidence": "high"
+    },
     "yahoo_funds_data_available": false
   },
   "financials": null,
   "sources": {
     "yf": false,
-    "stockanalysis": false,
+    "stockanalysis": true,
     "stockanalysis_yf_fallback": false,
     "stockanalysis_etf_catalog": true,
     "slickcharts": false
   },
   "source_files": {
     "yf": null,
-    "stockanalysis": null,
+    "stockanalysis": "computed/data-supply/etf-detail/payloads/THMR.json",
     "stockanalysis_yf_fallback": null,
     "stockanalysis_etf_catalog": "stockanalysis/etf_universe.json",
     "slickcharts": null
   },
   "resolver": {
     "version": "market-facts-resolver/v1",
-    "detail_authority": "data_supply:unavailable",
+    "detail_authority": "data_supply:fresh_primary",
     "field_source_policy": {
       "price": [
         "yf",

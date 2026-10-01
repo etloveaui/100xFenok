@@ -2,10 +2,10 @@
   "schema_version": "market-facts/v1",
   "ticker": "KEEX",
   "asset_type": "etf",
-  "generated_at": "2026-09-21T01:42:22Z",
-  "source_as_of": null,
+  "generated_at": "2026-10-01T05:48:34Z",
+  "source_as_of": "2026-09-30",
   "source_as_of_scope": "selected_price_fact",
-  "source_as_of_reason": "selected price fact has no provider source date",
+  "source_as_of_reason": null,
   "identity": {
     "name": "KEEX",
     "exchange": null,
@@ -16,11 +16,149 @@
     "category": null
   },
   "facts": {
+    "price": {
+      "value": 6.98,
+      "source": "stockanalysis.quote",
+      "as_of": "2026-09-30",
+      "fetched_at": "2026-09-30T20:09:15Z",
+      "confidence": "observed",
+      "policy": [
+        "yf",
+        "yf.fast_info",
+        "stockanalysis.quote",
+        "yf.stockanalysis_fallback.quote",
+        "slickcharts"
+      ],
+      "candidates": [
+        {
+          "value": 6.98,
+          "source": "stockanalysis.quote",
+          "as_of": "2026-09-30",
+          "fetched_at": "2026-09-30T20:09:15Z",
+          "confidence": "observed"
+        }
+      ],
+      "candidate_count": 1
+    },
+    "previous_close": {
+      "value": 7.13,
+      "source": "stockanalysis.quote",
+      "as_of": "2026-09-30",
+      "fetched_at": "2026-09-30T20:09:15Z",
+      "confidence": "observed",
+      "policy": [
+        "yf",
+        "stockanalysis.quote",
+        "yf.stockanalysis_fallback.quote"
+      ],
+      "candidates": [
+        {
+          "value": 7.13,
+          "source": "stockanalysis.quote",
+          "as_of": "2026-09-30",
+          "fetched_at": "2026-09-30T20:09:15Z",
+          "confidence": "observed"
+        }
+      ],
+      "candidate_count": 1
+    },
+    "change": {
+      "value": -0.15,
+      "source": "stockanalysis.quote",
+      "as_of": "2026-09-30",
+      "fetched_at": "2026-09-30T20:09:15Z",
+      "confidence": "observed",
+      "policy": [
+        "stockanalysis.quote",
+        "yf",
+        "yf.derived",
+        "yf.stockanalysis_fallback.quote"
+      ],
+      "candidates": [
+        {
+          "value": -0.15,
+          "source": "stockanalysis.quote",
+          "as_of": "2026-09-30",
+          "fetched_at": "2026-09-30T20:09:15Z",
+          "confidence": "observed"
+        }
+      ],
+      "candidate_count": 1
+    },
+    "change_pct": {
+      "value": -2.1,
+      "source": "stockanalysis.quote",
+      "as_of": "2026-09-30",
+      "fetched_at": "2026-09-30T20:09:15Z",
+      "confidence": "observed",
+      "policy": [
+        "stockanalysis.quote",
+        "yf",
+        "yf.derived",
+        "yf.stockanalysis_fallback.quote"
+      ],
+      "candidates": [
+        {
+          "value": -2.1,
+          "source": "stockanalysis.quote",
+          "as_of": "2026-09-30",
+          "fetched_at": "2026-09-30T20:09:15Z",
+          "confidence": "observed"
+        }
+      ],
+      "candidate_count": 1
+    },
+    "total_assets": {
+      "value": 7980000.0,
+      "source": "stockanalysis.overview",
+      "as_of": "2026-09-30",
+      "fetched_at": "2026-09-30T20:09:15Z",
+      "confidence": "observed",
+      "policy": [
+        "yf",
+        "stockanalysis.overview",
+        "yf.stockanalysis_fallback.overview"
+      ],
+      "candidates": [
+        {
+          "value": 7980000.0,
+          "source": "stockanalysis.overview",
+          "as_of": "2026-09-30",
+          "fetched_at": "2026-09-30T20:09:15Z",
+          "confidence": "observed"
+        }
+      ],
+      "candidate_count": 1
+    },
+    "expense_ratio": {
+      "value": 1.35,
+      "source": "stockanalysis.overview",
+      "as_of": "2026-09-30",
+      "fetched_at": "2026-09-30T20:09:15Z",
+      "confidence": "observed",
+      "unit": "percent_points",
+      "policy": [
+        "yf",
+        "stockanalysis.overview",
+        "yf.stockanalysis_fallback.overview"
+      ],
+      "candidates": [
+        {
+          "value": 1.35,
+          "source": "stockanalysis.overview",
+          "as_of": "2026-09-30",
+          "fetched_at": "2026-09-30T20:09:15Z",
+          "confidence": "observed",
+          "unit": "percent_points"
+        }
+      ],
+      "candidate_count": 1
+    },
     "return_1m": {
-      "value": -61.359912396505514,
-      "source": "stockanalysis.etf_universe.performance",
-      "as_of": null,
-      "fetched_at": "2026-09-21T01:14:16Z",
+      "value": 13.043,
+      "source": "stockanalysis.detail.performance",
+      "as_of": "2026-09-30",
+      "fetched_at": "2026-09-30T20:09:15Z",
       "confidence": "observed",
       "unit": "percent_points",
       "policy": [
@@ -31,6 +169,14 @@
       ],
       "candidates": [
         {
+          "value": 13.043,
+          "source": "stockanalysis.detail.performance",
+          "as_of": "2026-09-30",
+          "fetched_at": "2026-09-30T20:09:15Z",
+          "confidence": "observed",
+          "unit": "percent_points"
+        },
+        {
           "value": -61.359912396505514,
           "source": "stockanalysis.etf_universe.performance",
           "as_of": null,
@@ -39,13 +185,36 @@
           "unit": "percent_points"
         }
       ],
+      "candidate_count": 2
+    },
+    "return_3m": {
+      "value": -74.62407687516684,
+      "source": "stockanalysis.detail.history",
+      "as_of": "2026-09-29",
+      "fetched_at": "2026-09-30T20:09:15Z",
+      "confidence": "derived",
+      "unit": "percent_points",
+      "policy": [
+        "yf.history_1y",
+        "stockanalysis.detail.history"
+      ],
+      "candidates": [
+        {
+          "value": -74.62407687516684,
+          "source": "stockanalysis.detail.history",
+          "as_of": "2026-09-29",
+          "fetched_at": "2026-09-30T20:09:15Z",
+          "confidence": "derived",
+          "unit": "percent_points"
+        }
+      ],
       "candidate_count": 1
     },
     "return_ytd": {
-      "value": 32.651,
-      "source": "stockanalysis.etf_universe.performance",
-      "as_of": null,
-      "fetched_at": "2026-09-21T01:14:16Z",
+      "value": -22.49603,
+      "source": "stockanalysis.detail.performance",
+      "as_of": "2026-09-30",
+      "fetched_at": "2026-09-30T20:09:15Z",
       "confidence": "observed",
       "unit": "percent_points",
       "policy": [
@@ -57,6 +226,14 @@
       ],
       "candidates": [
         {
+          "value": -22.49603,
+          "source": "stockanalysis.detail.performance",
+          "as_of": "2026-09-30",
+          "fetched_at": "2026-09-30T20:09:15Z",
+          "confidence": "observed",
+          "unit": "percent_points"
+        },
+        {
           "value": 32.651,
           "source": "stockanalysis.etf_universe.performance",
           "as_of": null,
@@ -65,37 +242,122 @@
           "unit": "percent_points"
         }
       ],
-      "candidate_count": 1
+      "candidate_count": 2
     }
   },
   "etf": {
-    "holdings_count": null,
-    "holdings_updated": null,
-    "top_holdings": [],
+    "holdings_count": 6,
+    "holdings_updated": "Apr 30, 2026",
+    "top_holdings": [
+      {
+        "rank": 1,
+        "name": "KEEL INFRASTRUCTURE CORP COM SHS SWAP MREX-L",
+        "weight_pct": 14.49,
+        "shares": 1,
+        "raw": {
+          "no": 1,
+          "n": "KEEL INFRASTRUCTURE CORP COM SHS SWAP MREX-L",
+          "as": "14.49%",
+          "sh": "1"
+        }
+      },
+      {
+        "rank": 2,
+        "name": "KEEL INFRASTRUCTURE CORP COM SHS SWAP NBC-L",
+        "weight_pct": 13.92,
+        "shares": 1,
+        "raw": {
+          "no": 2,
+          "n": "KEEL INFRASTRUCTURE CORP COM SHS SWAP NBC-L",
+          "as": "13.92%",
+          "sh": "1"
+        }
+      },
+      {
+        "rank": 3,
+        "name": "KEEL INFRASTRUCTURE CORP COM SHS SWAP CS-L",
+        "weight_pct": 13.87,
+        "shares": 1,
+        "raw": {
+          "no": 3,
+          "n": "KEEL INFRASTRUCTURE CORP COM SHS SWAP CS-L",
+          "as": "13.87%",
+          "sh": "1"
+        }
+      },
+      {
+        "rank": 4,
+        "symbol": "B.0 05.21.26",
+        "name": "United States Treasury Bill",
+        "weight_pct": 12.57,
+        "shares": 240000,
+        "raw": {
+          "no": 4,
+          "n": "United States Treasury Bill",
+          "s": "B.0 05.21.26",
+          "as": "12.57%",
+          "sh": "240,000"
+        }
+      },
+      {
+        "rank": 5,
+        "name": "KEEL INFRASTRUCTURE CORP COM SHS SWAP CANT-L",
+        "weight_pct": 12.36,
+        "shares": 1,
+        "raw": {
+          "no": 5,
+          "n": "KEEL INFRASTRUCTURE CORP COM SHS SWAP CANT-L",
+          "as": "12.36%",
+          "sh": "1"
+        }
+      },
+      {
+        "rank": 6,
+        "symbol": "!MUTF/FGXXX",
+        "name": "First American Government Obligs X",
+        "weight_pct": 3.0,
+        "shares": 57269,
+        "raw": {
+          "no": 6,
+          "n": "First American Government Obligs X",
+          "s": "!mutf/FGXXX",
+          "as": "3.00%",
+          "sh": "57,269"
+        }
+      }
+    ],
     "asset_allocation": null,
     "sectors": null,
     "countries": null,
-    "classification": null,
+    "classification": {
+      "is_leveraged": true,
+      "leverage_factor": 2.0,
+      "is_inverse": false,
+      "is_single_stock": true,
+      "underlying": "KEEL",
+      "source": "stockanalysis.overview.description",
+      "confidence": "high"
+    },
     "yahoo_funds_data_available": false
   },
   "financials": null,
   "sources": {
     "yf": false,
-    "stockanalysis": false,
+    "stockanalysis": true,
     "stockanalysis_yf_fallback": false,
     "stockanalysis_etf_catalog": true,
     "slickcharts": false
   },
   "source_files": {
     "yf": null,
-    "stockanalysis": null,
+    "stockanalysis": "computed/data-supply/etf-detail/payloads/KEEX.json",
     "stockanalysis_yf_fallback": null,
     "stockanalysis_etf_catalog": "stockanalysis/etf_universe.json",
     "slickcharts": null
   },
   "resolver": {
     "version": "market-facts-resolver/v1",
-    "detail_authority": "data_supply:unavailable",
+    "detail_authority": "data_supply:fresh_primary",
     "field_source_policy": {
       "price": [
         "yf",

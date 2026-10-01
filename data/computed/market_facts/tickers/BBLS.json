@@ -1,15 +1,15 @@
 {
   "schema_version": "market-facts/v1",
   "ticker": "BBLS",
-  "asset_type": "stock",
-  "generated_at": "2026-09-30T02:48:38Z",
-  "source_as_of": "2026-09-25",
+  "asset_type": "etf",
+  "generated_at": "2026-10-01T05:48:34Z",
+  "source_as_of": "2026-09-30",
   "source_as_of_scope": "selected_price_fact",
   "source_as_of_reason": null,
   "identity": {
-    "name": "Munificent Seven ETF",
-    "exchange": "PCX",
-    "currency": "USD",
+    "name": "BBLS",
+    "exchange": null,
+    "currency": null,
     "sector": null,
     "industry": null,
     "fund_family": null,
@@ -17,10 +17,10 @@
   },
   "facts": {
     "price": {
-      "value": 24.4636,
-      "source": "yf",
-      "as_of": "2026-09-25",
-      "fetched_at": "2026-09-30T02:16:51Z",
+      "value": 24.58,
+      "source": "stockanalysis.quote",
+      "as_of": "2026-09-30",
+      "fetched_at": "2026-09-30T15:17:59Z",
       "confidence": "observed",
       "policy": [
         "yf",
@@ -31,20 +31,20 @@
       ],
       "candidates": [
         {
-          "value": 24.4636,
-          "source": "yf",
-          "as_of": "2026-09-25",
-          "fetched_at": "2026-09-30T02:16:51Z",
+          "value": 24.58,
+          "source": "stockanalysis.quote",
+          "as_of": "2026-09-30",
+          "fetched_at": "2026-09-30T15:17:59Z",
           "confidence": "observed"
         }
       ],
       "candidate_count": 1
     },
     "previous_close": {
-      "value": 24.7924,
-      "source": "yf",
-      "as_of": "2026-09-25",
-      "fetched_at": "2026-09-30T02:16:51Z",
+      "value": 24.46,
+      "source": "stockanalysis.quote",
+      "as_of": "2026-09-30",
+      "fetched_at": "2026-09-30T15:17:59Z",
       "confidence": "observed",
       "policy": [
         "yf",
@@ -53,20 +53,20 @@
       ],
       "candidates": [
         {
-          "value": 24.7924,
-          "source": "yf",
-          "as_of": "2026-09-25",
-          "fetched_at": "2026-09-30T02:16:51Z",
+          "value": 24.46,
+          "source": "stockanalysis.quote",
+          "as_of": "2026-09-30",
+          "fetched_at": "2026-09-30T15:17:59Z",
           "confidence": "observed"
         }
       ],
       "candidate_count": 1
     },
     "change": {
-      "value": -0.3288,
-      "source": "yf",
-      "as_of": "2026-09-25",
-      "fetched_at": "2026-09-30T02:16:51Z",
+      "value": 0.12,
+      "source": "stockanalysis.quote",
+      "as_of": "2026-09-30",
+      "fetched_at": "2026-09-30T15:17:59Z",
       "confidence": "observed",
       "policy": [
         "stockanalysis.quote",
@@ -76,20 +76,20 @@
       ],
       "candidates": [
         {
-          "value": -0.3288,
-          "source": "yf",
-          "as_of": "2026-09-25",
-          "fetched_at": "2026-09-30T02:16:51Z",
+          "value": 0.12,
+          "source": "stockanalysis.quote",
+          "as_of": "2026-09-30",
+          "fetched_at": "2026-09-30T15:17:59Z",
           "confidence": "observed"
         }
       ],
       "candidate_count": 1
     },
     "change_pct": {
-      "value": -1.32621,
-      "source": "yf",
-      "as_of": "2026-09-25",
-      "fetched_at": "2026-09-30T02:16:51Z",
+      "value": 0.48,
+      "source": "stockanalysis.quote",
+      "as_of": "2026-09-30",
+      "fetched_at": "2026-09-30T15:17:59Z",
       "confidence": "observed",
       "policy": [
         "stockanalysis.quote",
@@ -99,42 +99,67 @@
       ],
       "candidates": [
         {
-          "value": -1.32621,
-          "source": "yf",
-          "as_of": "2026-09-25",
-          "fetched_at": "2026-09-30T02:16:51Z",
+          "value": 0.48,
+          "source": "stockanalysis.quote",
+          "as_of": "2026-09-30",
+          "fetched_at": "2026-09-30T15:17:59Z",
           "confidence": "observed"
         }
       ],
       "candidate_count": 1
     },
-    "trailing_pe": {
-      "value": 16.348461,
-      "source": "yf",
-      "as_of": "2026-09-25",
-      "fetched_at": "2026-09-30T02:16:51Z",
+    "total_assets": {
+      "value": 8140000.000000001,
+      "source": "stockanalysis.overview",
+      "as_of": "2026-09-30",
+      "fetched_at": "2026-09-30T15:17:59Z",
       "confidence": "observed",
       "policy": [
         "yf",
-        "slickcharts"
+        "stockanalysis.overview",
+        "yf.stockanalysis_fallback.overview"
       ],
       "candidates": [
         {
-          "value": 16.348461,
-          "source": "yf",
-          "as_of": "2026-09-25",
-          "fetched_at": "2026-09-30T02:16:51Z",
+          "value": 8140000.000000001,
+          "source": "stockanalysis.overview",
+          "as_of": "2026-09-30",
+          "fetched_at": "2026-09-30T15:17:59Z",
           "confidence": "observed"
+        }
+      ],
+      "candidate_count": 1
+    },
+    "expense_ratio": {
+      "value": 0.32,
+      "source": "stockanalysis.overview",
+      "as_of": "2026-09-30",
+      "fetched_at": "2026-09-30T15:17:59Z",
+      "confidence": "observed",
+      "unit": "percent_points",
+      "policy": [
+        "yf",
+        "stockanalysis.overview",
+        "yf.stockanalysis_fallback.overview"
+      ],
+      "candidates": [
+        {
+          "value": 0.32,
+          "source": "stockanalysis.overview",
+          "as_of": "2026-09-30",
+          "fetched_at": "2026-09-30T15:17:59Z",
+          "confidence": "observed",
+          "unit": "percent_points"
         }
       ],
       "candidate_count": 1
     },
     "return_1m": {
-      "value": 1.5780696095123468,
-      "source": "yf.history_1y",
-      "as_of": "2026-09-29",
-      "fetched_at": "2026-09-30T02:16:51Z",
-      "confidence": "derived",
+      "value": 1.606,
+      "source": "stockanalysis.detail.performance",
+      "as_of": "2026-09-30",
+      "fetched_at": "2026-09-30T15:17:59Z",
+      "confidence": "observed",
       "unit": "percent_points",
       "policy": [
         "yf.history_1y",
@@ -144,96 +169,346 @@
       ],
       "candidates": [
         {
-          "value": 1.5780696095123468,
-          "source": "yf.history_1y",
-          "as_of": "2026-09-29",
-          "fetched_at": "2026-09-30T02:16:51Z",
-          "confidence": "derived",
-          "unit": "percent_points"
-        }
-      ],
-      "candidate_count": 1
-    },
-    "return_ytd": {
-      "value": -2.549805925379811,
-      "source": "yf.history_1y",
-      "as_of": "2026-09-29",
-      "fetched_at": "2026-09-30T02:16:51Z",
-      "confidence": "derived",
-      "unit": "percent_points",
-      "policy": [
-        "yf.history_1y",
-        "stockanalysis.detail.performance",
-        "stockanalysis.etf_screener.performance",
-        "stockanalysis.etf_universe.performance",
-        "yf"
-      ],
-      "candidates": [
-        {
-          "value": -2.549805925379811,
-          "source": "yf.history_1y",
-          "as_of": "2026-09-29",
-          "fetched_at": "2026-09-30T02:16:51Z",
-          "confidence": "derived",
-          "unit": "percent_points"
-        }
-      ],
-      "candidate_count": 1
-    },
-    "return_1y": {
-      "value": -2.549805925379811,
-      "source": "yf.history_1y",
-      "as_of": "2026-09-29",
-      "fetched_at": "2026-09-30T02:16:51Z",
-      "confidence": "derived",
-      "unit": "percent_points",
-      "policy": [
-        "yf.history_1y",
-        "stockanalysis.detail.performance",
-        "stockanalysis.etf_screener.performance",
-        "stockanalysis.etf_universe.performance",
-        "yf"
-      ],
-      "candidates": [
-        {
-          "value": -2.549805925379811,
-          "source": "yf.history_1y",
-          "as_of": "2026-09-29",
-          "fetched_at": "2026-09-30T02:16:51Z",
-          "confidence": "derived",
-          "unit": "percent_points"
-        },
-        {
-          "value": -2.5498033,
-          "source": "yf",
-          "as_of": "2026-09-25",
-          "fetched_at": "2026-09-30T02:16:51Z",
+          "value": 1.606,
+          "source": "stockanalysis.detail.performance",
+          "as_of": "2026-09-30",
+          "fetched_at": "2026-09-30T15:17:59Z",
           "confidence": "observed",
           "unit": "percent_points"
         }
       ],
-      "candidate_count": 2
+      "candidate_count": 1
     }
   },
-  "etf": null,
+  "etf": {
+    "holdings_count": 23,
+    "holdings_updated": "Sep 25, 2026",
+    "top_holdings": [
+      {
+        "rank": 1,
+        "symbol": "#HBIL",
+        "name": "Harbor Short Term Treasury ETF",
+        "weight_pct": 36.71,
+        "shares": 149850,
+        "raw": {
+          "no": 1,
+          "n": "Harbor Short Term Treasury ETF",
+          "s": "#HBIL",
+          "as": "36.71%",
+          "sh": "149,850"
+        }
+      },
+      {
+        "rank": 2,
+        "name": "Us Dollar",
+        "weight_pct": 31.23,
+        "shares": 2557971,
+        "raw": {
+          "no": 2,
+          "n": "Us Dollar",
+          "as": "31.23%",
+          "sh": "2,557,971"
+        }
+      },
+      {
+        "rank": 3,
+        "name": "Cvx260820 Trs Usd R E 166764100",
+        "weight_pct": 17.09,
+        "shares": 6783,
+        "raw": {
+          "no": 3,
+          "n": "Cvx260820 Trs Usd R E 166764100",
+          "as": "17.09%",
+          "sh": "6,783"
+        }
+      },
+      {
+        "rank": 4,
+        "name": "Xom260820 Trs Usd R E 30233q108",
+        "weight_pct": 16.92,
+        "shares": 8527,
+        "raw": {
+          "no": 4,
+          "n": "Xom260820 Trs Usd R E 30233q108",
+          "as": "16.92%",
+          "sh": "8,527"
+        }
+      },
+      {
+        "rank": 5,
+        "name": "She260820 Trs Usd R E 780259305",
+        "weight_pct": 11.56,
+        "shares": 9815,
+        "raw": {
+          "no": 5,
+          "n": "She260820 Trs Usd R E 780259305",
+          "as": "11.56%",
+          "sh": "9,815"
+        }
+      },
+      {
+        "rank": 6,
+        "name": "Tte260820 Trs Usd R E F92124100",
+        "weight_pct": 9.15,
+        "shares": 8292,
+        "raw": {
+          "no": 6,
+          "n": "Tte260820 Trs Usd R E F92124100",
+          "as": "9.15%",
+          "sh": "8,292"
+        }
+      },
+      {
+        "rank": 7,
+        "symbol": "CVX",
+        "name": "Chevron Corporation",
+        "weight_pct": 7.32,
+        "shares": 2904,
+        "raw": {
+          "no": 7,
+          "n": "Chevron Corporation",
+          "s": "$CVX",
+          "as": "7.32%",
+          "sh": "2,904"
+        }
+      },
+      {
+        "rank": 8,
+        "symbol": "XOM",
+        "name": "ExxonMobil Holdings Corporation",
+        "weight_pct": 7.27,
+        "shares": 3663,
+        "raw": {
+          "no": 8,
+          "n": "ExxonMobil Holdings Corporation",
+          "s": "$XOM",
+          "as": "7.27%",
+          "sh": "3,663"
+        }
+      },
+      {
+        "rank": 9,
+        "name": "Cop260820 Trs Usd R E 20825c104",
+        "weight_pct": 6.1,
+        "shares": 3963,
+        "raw": {
+          "no": 9,
+          "n": "Cop260820 Trs Usd R E 20825c104",
+          "as": "6.10%",
+          "sh": "3,963"
+        }
+      },
+      {
+        "rank": 10,
+        "symbol": "SHEL",
+        "name": "Shell plc",
+        "weight_pct": 5.01,
+        "shares": 4258,
+        "raw": {
+          "no": 10,
+          "n": "Shell plc",
+          "s": "$SHEL",
+          "as": "5.01%",
+          "sh": "4,258"
+        }
+      },
+      {
+        "rank": 11,
+        "name": "Bpu260820 Trs Usd R E 055622104",
+        "weight_pct": 4.99,
+        "shares": 9200,
+        "raw": {
+          "no": 11,
+          "n": "Bpu260820 Trs Usd R E 055622104",
+          "as": "4.99%",
+          "sh": "9,200"
+        }
+      },
+      {
+        "rank": 12,
+        "symbol": "!EPA/TTE",
+        "name": "TotalEnergies SE",
+        "weight_pct": 4.59,
+        "shares": 4159,
+        "raw": {
+          "no": 12,
+          "n": "TotalEnergies SE",
+          "s": "!epa/TTE",
+          "as": "4.59%",
+          "sh": "4,159"
+        }
+      },
+      {
+        "rank": 13,
+        "name": "Eqn260820 Trs Usd R E 29446m102",
+        "weight_pct": 4.14,
+        "shares": 8019,
+        "raw": {
+          "no": 13,
+          "n": "Eqn260820 Trs Usd R E 29446m102",
+          "as": "4.14%",
+          "sh": "8,019"
+        }
+      },
+      {
+        "rank": 14,
+        "symbol": "COP",
+        "name": "ConocoPhillips",
+        "weight_pct": 2.74,
+        "shares": 1781,
+        "raw": {
+          "no": 14,
+          "n": "ConocoPhillips",
+          "s": "$COP",
+          "as": "2.74%",
+          "sh": "1,781"
+        }
+      },
+      {
+        "rank": 15,
+        "symbol": "BP",
+        "name": "BP p.l.c.",
+        "weight_pct": 2.2,
+        "shares": 4058,
+        "raw": {
+          "no": 15,
+          "n": "BP p.l.c.",
+          "s": "$BP",
+          "as": "2.20%",
+          "sh": "4,058"
+        }
+      },
+      {
+        "rank": 16,
+        "symbol": "EQNR",
+        "name": "Equinor ASA",
+        "weight_pct": 1.81,
+        "shares": 3498,
+        "raw": {
+          "no": 16,
+          "n": "Equinor ASA",
+          "s": "$EQNR",
+          "as": "1.81%",
+          "sh": "3,498"
+        }
+      },
+      {
+        "rank": 17,
+        "name": "Eqn260820 Trs Usd P V 00mfedl Pv Fedl +75 Bps",
+        "weight_pct": -4.16,
+        "shares": 340727,
+        "raw": {
+          "no": 17,
+          "n": "Eqn260820 Trs Usd P V 00mfedl Pv Fedl +75 Bps",
+          "as": "-4.16%",
+          "sh": "340,727"
+        }
+      },
+      {
+        "rank": 18,
+        "name": "Bpu260820 Trs Usd P V 00mfedl Pv Fedl +75bps",
+        "weight_pct": -4.85,
+        "shares": 397072,
+        "raw": {
+          "no": 18,
+          "n": "Bpu260820 Trs Usd P V 00mfedl Pv Fedl +75bps",
+          "as": "-4.85%",
+          "sh": "397,072"
+        }
+      },
+      {
+        "rank": 19,
+        "name": "Cop260820 Trs Usd P V 00mfedl Pv Fedl +70bps",
+        "weight_pct": -6.17,
+        "shares": 505401,
+        "raw": {
+          "no": 19,
+          "n": "Cop260820 Trs Usd P V 00mfedl Pv Fedl +70bps",
+          "as": "-6.17%",
+          "sh": "505,401"
+        }
+      },
+      {
+        "rank": 20,
+        "name": "Tte260820 Trs Usd P V 00mfedl Fedl +75bps",
+        "weight_pct": -9.12,
+        "shares": 746778,
+        "raw": {
+          "no": 20,
+          "n": "Tte260820 Trs Usd P V 00mfedl Fedl +75bps",
+          "as": "-9.12%",
+          "sh": "746,778"
+        }
+      },
+      {
+        "rank": 21,
+        "name": "She260820 Trs Usd P V 00mfedl Pv Fedl +75bps",
+        "weight_pct": -11.18,
+        "shares": 915445,
+        "raw": {
+          "no": 21,
+          "n": "She260820 Trs Usd P V 00mfedl Pv Fedl +75bps",
+          "as": "-11.18%",
+          "sh": "915,445"
+        }
+      },
+      {
+        "rank": 22,
+        "name": "Xom260820 Trs Usd P V 00mfedl Pv Fedl +70 Bps",
+        "weight_pct": -16.48,
+        "shares": 1349824,
+        "raw": {
+          "no": 22,
+          "n": "Xom260820 Trs Usd P V 00mfedl Pv Fedl +70 Bps",
+          "as": "-16.48%",
+          "sh": "1,349,824"
+        }
+      },
+      {
+        "rank": 23,
+        "name": "Cvx260820 Trs Usd P V 00mfedl Pv Fedl +70 Bps",
+        "weight_pct": -16.87,
+        "shares": 1381494,
+        "raw": {
+          "no": 23,
+          "n": "Cvx260820 Trs Usd P V 00mfedl Pv Fedl +70 Bps",
+          "as": "-16.87%",
+          "sh": "1,381,494"
+        }
+      }
+    ],
+    "asset_allocation": null,
+    "sectors": null,
+    "countries": null,
+    "classification": {
+      "is_leveraged": false,
+      "leverage_factor": null,
+      "is_inverse": false,
+      "is_single_stock": false,
+      "underlying": null,
+      "source": "stockanalysis.overview.description",
+      "confidence": "high"
+    },
+    "yahoo_funds_data_available": false
+  },
   "financials": null,
   "sources": {
-    "yf": true,
-    "stockanalysis": false,
+    "yf": false,
+    "stockanalysis": true,
     "stockanalysis_yf_fallback": false,
     "stockanalysis_etf_catalog": false,
     "slickcharts": false
   },
   "source_files": {
-    "yf": "yf/finance/BBLS.json",
-    "stockanalysis": null,
+    "yf": null,
+    "stockanalysis": "computed/data-supply/etf-detail/payloads/BBLS.json",
     "stockanalysis_yf_fallback": null,
     "stockanalysis_etf_catalog": null,
     "slickcharts": null
   },
   "resolver": {
     "version": "market-facts-resolver/v1",
-    "detail_authority": null,
+    "detail_authority": "data_supply:fresh_primary",
     "field_source_policy": {
       "price": [
         "yf",

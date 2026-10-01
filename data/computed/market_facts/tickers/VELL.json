@@ -2,10 +2,10 @@
   "schema_version": "market-facts/v1",
   "ticker": "VELL",
   "asset_type": "etf",
-  "generated_at": "2026-09-21T01:42:22Z",
-  "source_as_of": null,
+  "generated_at": "2026-10-01T05:48:34Z",
+  "source_as_of": "2026-09-30",
   "source_as_of_scope": "selected_price_fact",
-  "source_as_of_reason": "selected price fact has no provider source date",
+  "source_as_of_reason": null,
   "identity": {
     "name": "VELL",
     "exchange": null,
@@ -16,11 +16,149 @@
     "category": null
   },
   "facts": {
+    "price": {
+      "value": 2.89,
+      "source": "stockanalysis.quote",
+      "as_of": "2026-09-30",
+      "fetched_at": "2026-09-30T20:11:20Z",
+      "confidence": "observed",
+      "policy": [
+        "yf",
+        "yf.fast_info",
+        "stockanalysis.quote",
+        "yf.stockanalysis_fallback.quote",
+        "slickcharts"
+      ],
+      "candidates": [
+        {
+          "value": 2.89,
+          "source": "stockanalysis.quote",
+          "as_of": "2026-09-30",
+          "fetched_at": "2026-09-30T20:11:20Z",
+          "confidence": "observed"
+        }
+      ],
+      "candidate_count": 1
+    },
+    "previous_close": {
+      "value": 2.775,
+      "source": "stockanalysis.quote",
+      "as_of": "2026-09-30",
+      "fetched_at": "2026-09-30T20:11:20Z",
+      "confidence": "observed",
+      "policy": [
+        "yf",
+        "stockanalysis.quote",
+        "yf.stockanalysis_fallback.quote"
+      ],
+      "candidates": [
+        {
+          "value": 2.775,
+          "source": "stockanalysis.quote",
+          "as_of": "2026-09-30",
+          "fetched_at": "2026-09-30T20:11:20Z",
+          "confidence": "observed"
+        }
+      ],
+      "candidate_count": 1
+    },
+    "change": {
+      "value": 0.115,
+      "source": "stockanalysis.quote",
+      "as_of": "2026-09-30",
+      "fetched_at": "2026-09-30T20:11:20Z",
+      "confidence": "observed",
+      "policy": [
+        "stockanalysis.quote",
+        "yf",
+        "yf.derived",
+        "yf.stockanalysis_fallback.quote"
+      ],
+      "candidates": [
+        {
+          "value": 0.115,
+          "source": "stockanalysis.quote",
+          "as_of": "2026-09-30",
+          "fetched_at": "2026-09-30T20:11:20Z",
+          "confidence": "observed"
+        }
+      ],
+      "candidate_count": 1
+    },
+    "change_pct": {
+      "value": 4.14,
+      "source": "stockanalysis.quote",
+      "as_of": "2026-09-30",
+      "fetched_at": "2026-09-30T20:11:20Z",
+      "confidence": "observed",
+      "policy": [
+        "stockanalysis.quote",
+        "yf",
+        "yf.derived",
+        "yf.stockanalysis_fallback.quote"
+      ],
+      "candidates": [
+        {
+          "value": 4.14,
+          "source": "stockanalysis.quote",
+          "as_of": "2026-09-30",
+          "fetched_at": "2026-09-30T20:11:20Z",
+          "confidence": "observed"
+        }
+      ],
+      "candidate_count": 1
+    },
+    "total_assets": {
+      "value": 1310000.0,
+      "source": "stockanalysis.overview",
+      "as_of": "2026-09-30",
+      "fetched_at": "2026-09-30T20:11:20Z",
+      "confidence": "observed",
+      "policy": [
+        "yf",
+        "stockanalysis.overview",
+        "yf.stockanalysis_fallback.overview"
+      ],
+      "candidates": [
+        {
+          "value": 1310000.0,
+          "source": "stockanalysis.overview",
+          "as_of": "2026-09-30",
+          "fetched_at": "2026-09-30T20:11:20Z",
+          "confidence": "observed"
+        }
+      ],
+      "candidate_count": 1
+    },
+    "expense_ratio": {
+      "value": 1.31,
+      "source": "stockanalysis.overview",
+      "as_of": "2026-09-30",
+      "fetched_at": "2026-09-30T20:11:20Z",
+      "confidence": "observed",
+      "unit": "percent_points",
+      "policy": [
+        "yf",
+        "stockanalysis.overview",
+        "yf.stockanalysis_fallback.overview"
+      ],
+      "candidates": [
+        {
+          "value": 1.31,
+          "source": "stockanalysis.overview",
+          "as_of": "2026-09-30",
+          "fetched_at": "2026-09-30T20:11:20Z",
+          "confidence": "observed",
+          "unit": "percent_points"
+        }
+      ],
+      "candidate_count": 1
+    },
     "return_1m": {
-      "value": -72.44401168451802,
-      "source": "stockanalysis.etf_universe.performance",
-      "as_of": null,
-      "fetched_at": "2026-09-21T01:14:16Z",
+      "value": -19.7832,
+      "source": "stockanalysis.detail.performance",
+      "as_of": "2026-09-30",
+      "fetched_at": "2026-09-30T20:11:20Z",
       "confidence": "observed",
       "unit": "percent_points",
       "policy": [
@@ -31,6 +169,14 @@
       ],
       "candidates": [
         {
+          "value": -19.7832,
+          "source": "stockanalysis.detail.performance",
+          "as_of": "2026-09-30",
+          "fetched_at": "2026-09-30T20:11:20Z",
+          "confidence": "observed",
+          "unit": "percent_points"
+        },
+        {
           "value": -72.44401168451802,
           "source": "stockanalysis.etf_universe.performance",
           "as_of": null,
@@ -39,37 +185,179 @@
           "unit": "percent_points"
         }
       ],
+      "candidate_count": 2
+    },
+    "return_3m": {
+      "value": -76.09819121447028,
+      "source": "stockanalysis.detail.history",
+      "as_of": "2026-09-29",
+      "fetched_at": "2026-09-30T20:11:20Z",
+      "confidence": "derived",
+      "unit": "percent_points",
+      "policy": [
+        "yf.history_1y",
+        "stockanalysis.detail.history"
+      ],
+      "candidates": [
+        {
+          "value": -76.09819121447028,
+          "source": "stockanalysis.detail.history",
+          "as_of": "2026-09-29",
+          "fetched_at": "2026-09-30T20:11:20Z",
+          "confidence": "derived",
+          "unit": "percent_points"
+        }
+      ],
       "candidate_count": 1
     }
   },
   "etf": {
-    "holdings_count": null,
-    "holdings_updated": null,
-    "top_holdings": [],
+    "holdings_count": 9,
+    "holdings_updated": "Sep 25, 2026",
+    "top_holdings": [
+      {
+        "rank": 1,
+        "name": "US DOLLARS",
+        "weight_pct": 172.12,
+        "shares": 2156857,
+        "raw": {
+          "no": 1,
+          "n": "US DOLLARS",
+          "as": "172.12%",
+          "sh": "2,156,857"
+        }
+      },
+      {
+        "rank": 2,
+        "name": "VELO3D INC.-SWAP-MREX-L",
+        "weight_pct": 40.74,
+        "shares": 45217,
+        "raw": {
+          "no": 2,
+          "n": "VELO3D INC.-SWAP-MREX-L",
+          "as": "40.74%",
+          "sh": "45,217"
+        }
+      },
+      {
+        "rank": 3,
+        "name": "VELO3D INC.-SWAP-NBCB-L",
+        "weight_pct": 39.73,
+        "shares": 44097,
+        "raw": {
+          "no": 3,
+          "n": "VELO3D INC.-SWAP-NBCB-L",
+          "as": "39.73%",
+          "sh": "44,097"
+        }
+      },
+      {
+        "rank": 4,
+        "name": "VELO3D INC.-SWAP-NMRA-L",
+        "weight_pct": 39.35,
+        "shares": 43673,
+        "raw": {
+          "no": 4,
+          "n": "VELO3D INC.-SWAP-NMRA-L",
+          "as": "39.35%",
+          "sh": "43,673"
+        }
+      },
+      {
+        "rank": 5,
+        "name": "VELO3D INC.-SWAP-CANT-L",
+        "weight_pct": 39.2,
+        "shares": 43507,
+        "raw": {
+          "no": 5,
+          "n": "VELO3D INC.-SWAP-CANT-L",
+          "as": "39.20%",
+          "sh": "43,507"
+        }
+      },
+      {
+        "rank": 6,
+        "name": "VELO3D INC.-SWAP-CLST-L",
+        "weight_pct": 37.24,
+        "shares": 41337,
+        "raw": {
+          "no": 6,
+          "n": "VELO3D INC.-SWAP-CLST-L",
+          "as": "37.24%",
+          "sh": "41,337"
+        }
+      },
+      {
+        "rank": 7,
+        "symbol": "!MUTF/FGXXX",
+        "name": "First American Government Obligs X",
+        "weight_pct": 15.23,
+        "shares": 190864,
+        "raw": {
+          "no": 7,
+          "n": "First American Government Obligs X",
+          "s": "!mutf/FGXXX",
+          "as": "15.23%",
+          "sh": "190,864"
+        }
+      },
+      {
+        "rank": 8,
+        "name": "OTHER ASSETS AND LIABILITIES",
+        "weight_pct": -94.06,
+        "shares": 1178692,
+        "raw": {
+          "no": 8,
+          "n": "OTHER ASSETS AND LIABILITIES",
+          "as": "-94.06%",
+          "sh": "1,178,692"
+        }
+      },
+      {
+        "rank": 9,
+        "name": "Cash Offset",
+        "weight_pct": -189.54,
+        "shares": 2375220,
+        "raw": {
+          "no": 9,
+          "n": "Cash Offset",
+          "as": "-189.54%",
+          "sh": "2,375,220"
+        }
+      }
+    ],
     "asset_allocation": null,
     "sectors": null,
     "countries": null,
-    "classification": null,
+    "classification": {
+      "is_leveraged": true,
+      "leverage_factor": 2.0,
+      "is_inverse": false,
+      "is_single_stock": true,
+      "underlying": "VELO",
+      "source": "stockanalysis.overview.description",
+      "confidence": "high"
+    },
     "yahoo_funds_data_available": false
   },
   "financials": null,
   "sources": {
     "yf": false,
-    "stockanalysis": false,
+    "stockanalysis": true,
     "stockanalysis_yf_fallback": false,
     "stockanalysis_etf_catalog": true,
     "slickcharts": false
   },
   "source_files": {
     "yf": null,
-    "stockanalysis": null,
+    "stockanalysis": "computed/data-supply/etf-detail/payloads/VELL.json",
     "stockanalysis_yf_fallback": null,
     "stockanalysis_etf_catalog": "stockanalysis/etf_universe.json",
     "slickcharts": null
   },
   "resolver": {
     "version": "market-facts-resolver/v1",
-    "detail_authority": "data_supply:unavailable",
+    "detail_authority": "data_supply:fresh_primary",
     "field_source_policy": {
       "price": [
         "yf",

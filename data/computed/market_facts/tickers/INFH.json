@@ -2,10 +2,10 @@
   "schema_version": "market-facts/v1",
   "ticker": "INFH",
   "asset_type": "etf",
-  "generated_at": "2026-09-21T01:42:22Z",
-  "source_as_of": null,
+  "generated_at": "2026-10-01T05:48:34Z",
+  "source_as_of": "2026-09-30",
   "source_as_of_scope": "selected_price_fact",
-  "source_as_of_reason": "selected price fact has no provider source date",
+  "source_as_of_reason": null,
   "identity": {
     "name": "INFH",
     "exchange": null,
@@ -16,11 +16,149 @@
     "category": null
   },
   "facts": {
+    "price": {
+      "value": 8.58,
+      "source": "stockanalysis.quote",
+      "as_of": "2026-09-30",
+      "fetched_at": "2026-09-30T19:44:49Z",
+      "confidence": "observed",
+      "policy": [
+        "yf",
+        "yf.fast_info",
+        "stockanalysis.quote",
+        "yf.stockanalysis_fallback.quote",
+        "slickcharts"
+      ],
+      "candidates": [
+        {
+          "value": 8.58,
+          "source": "stockanalysis.quote",
+          "as_of": "2026-09-30",
+          "fetched_at": "2026-09-30T19:44:49Z",
+          "confidence": "observed"
+        }
+      ],
+      "candidate_count": 1
+    },
+    "previous_close": {
+      "value": 8.85,
+      "source": "stockanalysis.quote",
+      "as_of": "2026-09-30",
+      "fetched_at": "2026-09-30T19:44:49Z",
+      "confidence": "observed",
+      "policy": [
+        "yf",
+        "stockanalysis.quote",
+        "yf.stockanalysis_fallback.quote"
+      ],
+      "candidates": [
+        {
+          "value": 8.85,
+          "source": "stockanalysis.quote",
+          "as_of": "2026-09-30",
+          "fetched_at": "2026-09-30T19:44:49Z",
+          "confidence": "observed"
+        }
+      ],
+      "candidate_count": 1
+    },
+    "change": {
+      "value": -0.27,
+      "source": "stockanalysis.quote",
+      "as_of": "2026-09-30",
+      "fetched_at": "2026-09-30T19:44:49Z",
+      "confidence": "observed",
+      "policy": [
+        "stockanalysis.quote",
+        "yf",
+        "yf.derived",
+        "yf.stockanalysis_fallback.quote"
+      ],
+      "candidates": [
+        {
+          "value": -0.27,
+          "source": "stockanalysis.quote",
+          "as_of": "2026-09-30",
+          "fetched_at": "2026-09-30T19:44:49Z",
+          "confidence": "observed"
+        }
+      ],
+      "candidate_count": 1
+    },
+    "change_pct": {
+      "value": -3.05,
+      "source": "stockanalysis.quote",
+      "as_of": "2026-09-30",
+      "fetched_at": "2026-09-30T19:44:49Z",
+      "confidence": "observed",
+      "policy": [
+        "stockanalysis.quote",
+        "yf",
+        "yf.derived",
+        "yf.stockanalysis_fallback.quote"
+      ],
+      "candidates": [
+        {
+          "value": -3.05,
+          "source": "stockanalysis.quote",
+          "as_of": "2026-09-30",
+          "fetched_at": "2026-09-30T19:44:49Z",
+          "confidence": "observed"
+        }
+      ],
+      "candidate_count": 1
+    },
+    "total_assets": {
+      "value": 7990000.0,
+      "source": "stockanalysis.overview",
+      "as_of": "2026-09-30",
+      "fetched_at": "2026-09-30T19:44:49Z",
+      "confidence": "observed",
+      "policy": [
+        "yf",
+        "stockanalysis.overview",
+        "yf.stockanalysis_fallback.overview"
+      ],
+      "candidates": [
+        {
+          "value": 7990000.0,
+          "source": "stockanalysis.overview",
+          "as_of": "2026-09-30",
+          "fetched_at": "2026-09-30T19:44:49Z",
+          "confidence": "observed"
+        }
+      ],
+      "candidate_count": 1
+    },
+    "expense_ratio": {
+      "value": 1.31,
+      "source": "stockanalysis.overview",
+      "as_of": "2026-09-30",
+      "fetched_at": "2026-09-30T19:44:49Z",
+      "confidence": "observed",
+      "unit": "percent_points",
+      "policy": [
+        "yf",
+        "stockanalysis.overview",
+        "yf.stockanalysis_fallback.overview"
+      ],
+      "candidates": [
+        {
+          "value": 1.31,
+          "source": "stockanalysis.overview",
+          "as_of": "2026-09-30",
+          "fetched_at": "2026-09-30T19:44:49Z",
+          "confidence": "observed",
+          "unit": "percent_points"
+        }
+      ],
+      "candidate_count": 1
+    },
     "return_1m": {
-      "value": -58.98135594683984,
-      "source": "stockanalysis.etf_universe.performance",
-      "as_of": null,
-      "fetched_at": "2026-09-21T01:14:16Z",
+      "value": 10.349,
+      "source": "stockanalysis.detail.performance",
+      "as_of": "2026-09-30",
+      "fetched_at": "2026-09-30T19:44:49Z",
       "confidence": "observed",
       "unit": "percent_points",
       "policy": [
@@ -31,6 +169,14 @@
       ],
       "candidates": [
         {
+          "value": 10.349,
+          "source": "stockanalysis.detail.performance",
+          "as_of": "2026-09-30",
+          "fetched_at": "2026-09-30T19:44:49Z",
+          "confidence": "observed",
+          "unit": "percent_points"
+        },
+        {
           "value": -58.98135594683984,
           "source": "stockanalysis.etf_universe.performance",
           "as_of": null,
@@ -39,37 +185,251 @@
           "unit": "percent_points"
         }
       ],
+      "candidate_count": 2
+    },
+    "return_3m": {
+      "value": -17.289719626168225,
+      "source": "stockanalysis.detail.history",
+      "as_of": "2026-09-29",
+      "fetched_at": "2026-09-30T19:44:49Z",
+      "confidence": "derived",
+      "unit": "percent_points",
+      "policy": [
+        "yf.history_1y",
+        "stockanalysis.detail.history"
+      ],
+      "candidates": [
+        {
+          "value": -17.289719626168225,
+          "source": "stockanalysis.detail.history",
+          "as_of": "2026-09-29",
+          "fetched_at": "2026-09-30T19:44:49Z",
+          "confidence": "derived",
+          "unit": "percent_points"
+        }
+      ],
       "candidate_count": 1
     }
   },
   "etf": {
-    "holdings_count": null,
-    "holdings_updated": null,
-    "top_holdings": [],
+    "holdings_count": 15,
+    "holdings_updated": "Sep 24, 2026",
+    "top_holdings": [
+      {
+        "rank": 1,
+        "name": "US DOLLARS",
+        "weight_pct": 80.24,
+        "shares": 6705155,
+        "raw": {
+          "no": 1,
+          "n": "US DOLLARS",
+          "as": "80.24%",
+          "sh": "6,705,155"
+        }
+      },
+      {
+        "rank": 2,
+        "name": "INFLEQTION INC.-SWAP-CANT-L Pay",
+        "weight_pct": 28.77,
+        "shares": 187725,
+        "raw": {
+          "no": 2,
+          "n": "INFLEQTION INC.-SWAP-CANT-L Pay",
+          "as": "28.77%",
+          "sh": "187,725"
+        }
+      },
+      {
+        "rank": 3,
+        "name": "INFLEQTION INC.-SWAP-MREX-L Pay",
+        "weight_pct": 28.49,
+        "shares": 185500,
+        "raw": {
+          "no": 3,
+          "n": "INFLEQTION INC.-SWAP-MREX-L Pay",
+          "as": "28.49%",
+          "sh": "185,500"
+        }
+      },
+      {
+        "rank": 4,
+        "name": "INFLEQTION INC.-SWAP-JNST-L Pay",
+        "weight_pct": 26.93,
+        "shares": 196612,
+        "raw": {
+          "no": 4,
+          "n": "INFLEQTION INC.-SWAP-JNST-L Pay",
+          "as": "26.93%",
+          "sh": "196,612"
+        }
+      },
+      {
+        "rank": 5,
+        "name": "INFLEQTION INC.-SWAP-CLST-L Pay",
+        "weight_pct": 25.5,
+        "shares": 194635,
+        "raw": {
+          "no": 5,
+          "n": "INFLEQTION INC.-SWAP-CLST-L Pay",
+          "as": "25.50%",
+          "sh": "194,635"
+        }
+      },
+      {
+        "rank": 6,
+        "name": "INFLEQTION INC.-SWAP-NBCB-L Pay",
+        "weight_pct": 25.25,
+        "shares": 183897,
+        "raw": {
+          "no": 6,
+          "n": "INFLEQTION INC.-SWAP-NBCB-L Pay",
+          "as": "25.25%",
+          "sh": "183,897"
+        }
+      },
+      {
+        "rank": 7,
+        "name": "INFLEQTION INC.-SWAP-NMRA-L Pay",
+        "weight_pct": 25.18,
+        "shares": 184012,
+        "raw": {
+          "no": 7,
+          "n": "INFLEQTION INC.-SWAP-NMRA-L Pay",
+          "as": "25.18%",
+          "sh": "184,012"
+        }
+      },
+      {
+        "rank": 8,
+        "symbol": "!MUTF/FGXXX",
+        "name": "First American Government Obligs X",
+        "weight_pct": 8.09,
+        "shares": 676337,
+        "raw": {
+          "no": 8,
+          "n": "First American Government Obligs X",
+          "s": "!mutf/FGXXX",
+          "as": "8.09%",
+          "sh": "676,337"
+        }
+      },
+      {
+        "rank": 9,
+        "name": "INFLEQTION INC.-SWAP-CLST-L Receive",
+        "weight_pct": -17.7,
+        "shares": 194635,
+        "raw": {
+          "no": 9,
+          "n": "INFLEQTION INC.-SWAP-CLST-L Receive",
+          "as": "-17.70%",
+          "sh": "194,635"
+        }
+      },
+      {
+        "rank": 10,
+        "name": "INFLEQTION INC.-SWAP-NMRA-L Receive",
+        "weight_pct": -18.87,
+        "shares": 184012,
+        "raw": {
+          "no": 10,
+          "n": "INFLEQTION INC.-SWAP-NMRA-L Receive",
+          "as": "-18.87%",
+          "sh": "184,012"
+        }
+      },
+      {
+        "rank": 11,
+        "name": "INFLEQTION INC.-SWAP-NBCB-L Receive",
+        "weight_pct": -19.03,
+        "shares": 183897,
+        "raw": {
+          "no": 11,
+          "n": "INFLEQTION INC.-SWAP-NBCB-L Receive",
+          "as": "-19.03%",
+          "sh": "183,897"
+        }
+      },
+      {
+        "rank": 12,
+        "name": "INFLEQTION INC.-SWAP-JNST-L Receive",
+        "weight_pct": -20.21,
+        "shares": 196612,
+        "raw": {
+          "no": 12,
+          "n": "INFLEQTION INC.-SWAP-JNST-L Receive",
+          "as": "-20.21%",
+          "sh": "196,612"
+        }
+      },
+      {
+        "rank": 13,
+        "name": "OTHER ASSETS AND LIABILITIES",
+        "weight_pct": -21.98,
+        "shares": 1837112,
+        "raw": {
+          "no": 13,
+          "n": "OTHER ASSETS AND LIABILITIES",
+          "as": "-21.98%",
+          "sh": "1,837,112"
+        }
+      },
+      {
+        "rank": 14,
+        "name": "INFLEQTION INC.-SWAP-MREX-L Receive",
+        "weight_pct": -25.23,
+        "shares": 185500,
+        "raw": {
+          "no": 14,
+          "n": "INFLEQTION INC.-SWAP-MREX-L Receive",
+          "as": "-25.23%",
+          "sh": "185,500"
+        }
+      },
+      {
+        "rank": 15,
+        "name": "INFLEQTION INC.-SWAP-CANT-L Receive",
+        "weight_pct": -25.41,
+        "shares": 187725,
+        "raw": {
+          "no": 15,
+          "n": "INFLEQTION INC.-SWAP-CANT-L Receive",
+          "as": "-25.41%",
+          "sh": "187,725"
+        }
+      }
+    ],
     "asset_allocation": null,
     "sectors": null,
     "countries": null,
-    "classification": null,
+    "classification": {
+      "is_leveraged": true,
+      "leverage_factor": 2.0,
+      "is_inverse": false,
+      "is_single_stock": true,
+      "underlying": "INFQ",
+      "source": "stockanalysis.overview.description",
+      "confidence": "high"
+    },
     "yahoo_funds_data_available": false
   },
   "financials": null,
   "sources": {
     "yf": false,
-    "stockanalysis": false,
+    "stockanalysis": true,
     "stockanalysis_yf_fallback": false,
     "stockanalysis_etf_catalog": true,
     "slickcharts": false
   },
   "source_files": {
     "yf": null,
-    "stockanalysis": null,
+    "stockanalysis": "computed/data-supply/etf-detail/payloads/INFH.json",
     "stockanalysis_yf_fallback": null,
     "stockanalysis_etf_catalog": "stockanalysis/etf_universe.json",
     "slickcharts": null
   },
   "resolver": {
     "version": "market-facts-resolver/v1",
-    "detail_authority": "data_supply:unavailable",
+    "detail_authority": "data_supply:fresh_primary",
     "field_source_policy": {
       "price": [
         "yf",
