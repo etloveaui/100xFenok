@@ -1,13 +1,13 @@
 {
   "schema_version": "stockanalysis-recovery-index/v1",
-  "generated_at": "2026-10-01T01:10:44Z",
+  "generated_at": "2026-10-01T03:37:43Z",
   "counts": {
     "tracked": 911,
-    "fresh": 765,
-    "lkg": 135,
-    "unavailable": 11,
-    "retry": 146,
-    "failed": 0
+    "fresh": 761,
+    "lkg": 136,
+    "unavailable": 14,
+    "retry": 150,
+    "failed": 4
   },
   "counts_by_kind": {
     "stock": {
@@ -33,10 +33,10 @@
     },
     "surface": {
       "tracked": 25,
-      "fresh": 25,
-      "lkg": 0,
-      "unavailable": 0,
-      "retry": 0
+      "fresh": 21,
+      "lkg": 1,
+      "unavailable": 3,
+      "retry": 4
     },
     "universe": {
       "tracked": 1,
@@ -630,6 +630,22 @@
     {
       "artifact_kind": "etf",
       "entity": "VYLD"
+    },
+    {
+      "artifact_kind": "surface",
+      "entity": "actions_recent"
+    },
+    {
+      "artifact_kind": "surface",
+      "entity": "actions_splits"
+    },
+    {
+      "artifact_kind": "surface",
+      "entity": "earnings_calendar"
+    },
+    {
+      "artifact_kind": "surface",
+      "entity": "ipos_calendar"
     }
   ],
   "degraded_details": [
@@ -2092,11 +2108,76 @@
       "error": "ValueError: svelte_contract_drift:holdings:missing_required:holdings",
       "failure_count": 0,
       "data_loss": false
+    },
+    {
+      "artifact_kind": "surface",
+      "entity": "actions_recent",
+      "resolution_state": "lkg_primary",
+      "source_as_of": "2026-07-10T00:00:00Z",
+      "failure_observed_at": "2026-10-01T02:33:35Z",
+      "error": "ValueError: source did not advance beyond the retained LKG for surface:actions_recent",
+      "failure_count": 1,
+      "data_loss": false
+    },
+    {
+      "artifact_kind": "surface",
+      "entity": "actions_splits",
+      "resolution_state": "unavailable",
+      "source_as_of": null,
+      "failure_observed_at": "2026-10-01T02:33:35Z",
+      "error": "ValueError: source did not advance beyond the retained LKG for surface:actions_splits",
+      "failure_count": 1,
+      "data_loss": false
+    },
+    {
+      "artifact_kind": "surface",
+      "entity": "earnings_calendar",
+      "resolution_state": "unavailable",
+      "source_as_of": null,
+      "failure_observed_at": "2026-10-01T02:33:35Z",
+      "error": "ValueError: candidate source date regresses or is invalid for surface:earnings_calendar",
+      "failure_count": 1,
+      "data_loss": false
+    },
+    {
+      "artifact_kind": "surface",
+      "entity": "ipos_calendar",
+      "resolution_state": "unavailable",
+      "source_as_of": null,
+      "failure_observed_at": "2026-10-01T02:33:35Z",
+      "error": "ValueError: candidate source date regresses or is invalid for surface:ipos_calendar",
+      "failure_count": 1,
+      "data_loss": false
     }
   ],
   "current_results": {
-    "failed": 0,
-    "errors": []
+    "failed": 4,
+    "errors": [
+      {
+        "artifact_kind": "surface",
+        "entity": "ipos_calendar",
+        "error": "ValueError: candidate source date regresses or is invalid for surface:ipos_calendar",
+        "data_loss": false
+      },
+      {
+        "artifact_kind": "surface",
+        "entity": "actions_recent",
+        "error": "ValueError: source did not advance beyond the retained LKG for surface:actions_recent",
+        "data_loss": false
+      },
+      {
+        "artifact_kind": "surface",
+        "entity": "actions_splits",
+        "error": "ValueError: source did not advance beyond the retained LKG for surface:actions_splits",
+        "data_loss": false
+      },
+      {
+        "artifact_kind": "surface",
+        "entity": "earnings_calendar",
+        "error": "ValueError: candidate source date regresses or is invalid for surface:earnings_calendar",
+        "data_loss": false
+      }
+    ]
   },
   "degraded_tickers": [
     "ABBV",
@@ -2248,6 +2329,11 @@
     "VXZ",
     "VYLD"
   ],
-  "degraded_surfaces": [],
+  "degraded_surfaces": [
+    "actions_recent",
+    "actions_splits",
+    "earnings_calendar",
+    "ipos_calendar"
+  ],
   "degraded_universes": []
 }
