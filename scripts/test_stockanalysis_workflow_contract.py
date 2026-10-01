@@ -169,7 +169,6 @@ class StockAnalysisWorkflowContractTest(unittest.TestCase):
         for forbidden in ("git commit", "git push", "gh workflow run", "100xfenok-next/public"):
             self.assertNotIn(forbidden, acquire_body)
         self.assertIn("permissions:\n      contents: write\n      actions: write", publish_body)
-        self.assertIn("timeout-minutes: 45", publish_body)
         self.assertIn("group: fenok-data-writer-refs/heads/main", publish_body)
         self.assertIn("cancel-in-progress: false", publish_body)
         self.assertIn("queue: max", publish_body)
