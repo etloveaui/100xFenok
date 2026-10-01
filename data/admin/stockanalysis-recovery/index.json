@@ -1,13 +1,13 @@
 {
   "schema_version": "stockanalysis-recovery-index/v1",
-  "generated_at": "2026-10-01T03:37:43Z",
+  "generated_at": "2026-10-01T14:18:27Z",
   "counts": {
     "tracked": 911,
-    "fresh": 761,
-    "lkg": 136,
+    "fresh": 763,
+    "lkg": 134,
     "unavailable": 14,
-    "retry": 150,
-    "failed": 4
+    "retry": 148,
+    "failed": 0
   },
   "counts_by_kind": {
     "stock": {
@@ -26,10 +26,10 @@
     },
     "etf": {
       "tracked": 793,
-      "fresh": 679,
-      "lkg": 103,
+      "fresh": 681,
+      "lkg": 101,
       "unavailable": 11,
-      "retry": 114
+      "retry": 112
     },
     "surface": {
       "tracked": 25,
@@ -317,10 +317,6 @@
     },
     {
       "artifact_kind": "etf",
-      "entity": "ESUM"
-    },
-    {
-      "artifact_kind": "etf",
       "entity": "EWCO"
     },
     {
@@ -398,10 +394,6 @@
     {
       "artifact_kind": "etf",
       "entity": "IBIL"
-    },
-    {
-      "artifact_kind": "etf",
-      "entity": "IBIM"
     },
     {
       "artifact_kind": "etf",
@@ -1321,16 +1313,6 @@
     },
     {
       "artifact_kind": "etf",
-      "entity": "ESUM",
-      "resolution_state": "lkg_primary",
-      "source_as_of": "2025-10-27T00:00:00Z",
-      "failure_observed_at": "2026-09-24T17:20:16Z",
-      "error": "ValueError: svelte_contract_drift:holdings:missing_required:holdings",
-      "failure_count": 0,
-      "data_loss": false
-    },
-    {
-      "artifact_kind": "etf",
       "entity": "EWCO",
       "resolution_state": "unavailable",
       "source_as_of": null,
@@ -1527,16 +1509,6 @@
       "failure_observed_at": "2026-09-27T22:45:40Z",
       "error": "ValueError: svelte_contract_drift:holdings:missing_required:holdings",
       "failure_count": 0,
-      "data_loss": false
-    },
-    {
-      "artifact_kind": "etf",
-      "entity": "IBIM",
-      "resolution_state": "lkg_primary",
-      "source_as_of": null,
-      "failure_observed_at": "2026-09-30T15:41:18Z",
-      "error": "ValueError: svelte_contract_drift:holdings:missing_required:holdings",
-      "failure_count": 2,
       "data_loss": false
     },
     {
@@ -2151,33 +2123,8 @@
     }
   ],
   "current_results": {
-    "failed": 4,
-    "errors": [
-      {
-        "artifact_kind": "surface",
-        "entity": "ipos_calendar",
-        "error": "ValueError: candidate source date regresses or is invalid for surface:ipos_calendar",
-        "data_loss": false
-      },
-      {
-        "artifact_kind": "surface",
-        "entity": "actions_recent",
-        "error": "ValueError: source did not advance beyond the retained LKG for surface:actions_recent",
-        "data_loss": false
-      },
-      {
-        "artifact_kind": "surface",
-        "entity": "actions_splits",
-        "error": "ValueError: source did not advance beyond the retained LKG for surface:actions_splits",
-        "data_loss": false
-      },
-      {
-        "artifact_kind": "surface",
-        "entity": "earnings_calendar",
-        "error": "ValueError: candidate source date regresses or is invalid for surface:earnings_calendar",
-        "data_loss": false
-      }
-    ]
+    "failed": 0,
+    "errors": []
   },
   "degraded_tickers": [
     "ABBV",
@@ -2249,7 +2196,6 @@
     "DZZ",
     "EJUN",
     "ERUS",
-    "ESUM",
     "EWCO",
     "FEAT",
     "FIHD",
@@ -2270,7 +2216,6 @@
     "IBIJ",
     "IBIK",
     "IBIL",
-    "IBIM",
     "IDEQ",
     "IFED",
     "IWDL",
