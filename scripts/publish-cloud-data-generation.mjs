@@ -110,6 +110,7 @@ import { spawn } from "node:child_process";
 import { readdir, readFile, lstat, realpath } from "node:fs/promises";
 import path from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
+import { validFdicDocument } from "./fetch-fdic-tier1.mjs";
 
 import {
   GENERATION_MANIFEST_SCHEMA,
@@ -413,7 +414,8 @@ export const FAMILIES = {
     policy: { max_assets: 4, max_total_bytes: 25_000 },
     validate_public_payload({ bytes }) {
       const value = JSON.parse(new TextDecoder().decode(bytes));
-      return !Object.keys(value).some((key) => /token|secret|password|cookie/i.test(key));
+      return validFdicDocument(value)
+        && !Object.keys(value).some((key) => /token|secret|password|cookie/i.test(key));
     },
   },
   "treasury-tga": {

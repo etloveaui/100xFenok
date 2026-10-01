@@ -187,12 +187,20 @@ function exactFdicPersistencePolicy(policy) {
     && expectedKeys.every((key) => policy[key] === FDIC_PERSISTENCE_POLICY[key]);
 }
 
-function validFdicDocument(document) {
+export function validFdicDocument(document, { allowLegacyOverCap = false } = {}) {
+  const today = new Date().toISOString().slice(0, 10);
   const validLegacyShape = document?.source === "FDIC"
     && Array.isArray(document?.data)
     && document.data.length > 0
-    && document.data.every((row) => (
-      /^\d{4}-\d{2}-\d{2}$/.test(row?.date)
+    && (document.data.length <= MAX_QUARTERS || (allowLegacyOverCap
+      && !Object.hasOwn(document, "persistence_policy")
+      && !Object.hasOwn(document, "persistence_state")))
+    && document.data.every((row, index) => (
+      typeof row?.date === "string"
+      && /^\d{4}-\d{2}-\d{2}$/.test(row.date)
+      && validQuarterIdentifier(row.date.replaceAll("-", ""))
+      && row.date <= today
+      && (index === 0 || document.data[index - 1].date < row.date)
       && Number.isFinite(row?.value)
       && Number.isInteger(row?.banks)
       && row.banks > 0
@@ -204,11 +212,6 @@ function validFdicDocument(document) {
   const hasState = Object.prototype.hasOwnProperty.call(document, "persistence_state");
   if (!hasPolicy && !hasState) return true;
   if (!hasPolicy || !hasState || !exactFdicPersistencePolicy(document.persistence_policy)) return false;
-  if (document.data.length > MAX_QUARTERS) return false;
-  if (document.data.some((row) => (
-    typeof row.date !== "string" || !validQuarterIdentifier(row.date.replaceAll("-", ""))
-  ))) return false;
-  if (document.data.some((row, index) => index > 0 && document.data[index - 1].date >= row.date)) return false;
 
   const state = document.persistence_state;
   const available = state?.available_quarters;
@@ -225,7 +228,7 @@ function validFdicDocument(document) {
 }
 
 export function migrateFdicPersistenceDocument(document) {
-  if (!validFdicDocument(document)) throw new Error("FDIC persistence migration source is invalid");
+  if (!validFdicDocument(document, { allowLegacyOverCap: true })) throw new Error("FDIC persistence migration source is invalid");
   const hasPolicy = Object.prototype.hasOwnProperty.call(document, "persistence_policy");
   const hasState = Object.prototype.hasOwnProperty.call(document, "persistence_state");
   if (hasPolicy || hasState) {

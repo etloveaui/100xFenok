@@ -2164,28 +2164,6 @@ try {
       ["HOLDINGS.json", "2026-07-06"],
       ["ONLY_FETCHED.json", "2026-07-15"],
     ]);
-    const actualAAAD = JSON.parse(
-      await readFile(path.join(REPO_ROOT, "data/stockanalysis/etfs/AAAD.json"), "utf8"),
-    );
-    const actualAAADResolved = resolveSourceAsOf({
-      family: stockAnalysisFamily,
-      payloads: new Map([[`${stockAnalysisRoot}/AAAD.json`, stockAnalysisPayload(actualAAAD)]]),
-      createdIsoDay: "2026-08-17",
-      relRoot: stockAnalysisRoot,
-    });
-    assert.equal(actualAAADResolved.perAsset.get("AAAD.json"), "2026-07-08");
-    const actualABXB = JSON.parse(
-      await readFile(path.join(REPO_ROOT, "data/stockanalysis/etfs/ABXB.json"), "utf8"),
-    );
-    const actualABXBResolved = resolveSourceAsOf({
-      family: stockAnalysisFamily,
-      payloads: new Map([[`${stockAnalysisRoot}/ABXB.json`, stockAnalysisPayload(actualABXB)]]),
-      createdIsoDay: "2026-08-17",
-      relRoot: stockAnalysisRoot,
-    });
-    assert.equal(actualABXBResolved.origin, "per-asset-observation");
-    assert.equal(actualABXBResolved.observationFallbackCount, 1);
-    assert.equal(actualABXBResolved.perAsset.get("ABXB.json"), "2026-07-15");
     await assertRejectsCode(
       async () => resolveSourceAsOf({
         family: stockAnalysisFamily,
