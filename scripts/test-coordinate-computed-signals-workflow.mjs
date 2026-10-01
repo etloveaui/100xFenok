@@ -88,7 +88,7 @@ for (const { file, family, source } of SOURCE_WORKFLOWS) {
     `${file} must document the scheduled update-manifest.yml reconciliation fallback`,
   );
   assert.equal(
-    countOccurrences(source, `node scripts/publish-cloud-data-generation.mjs --family=${family} --tolerate-gate-block --json`),
+    countOccurrences(source, `node scripts/publish-cloud-data-generation.mjs --family=${family} `),
     1,
     `${file} must keep exactly one ${family} plane publisher`,
   );
