@@ -1,0 +1,407 @@
+{
+  "schema_version": "stockanalysis/v1",
+  "source": "stockanalysis",
+  "asset_type": "etf",
+  "ticker": "VOOB",
+  "source_as_of": "2026-09-30T00:00:00Z",
+  "fetched_at": "2026-09-30T15:17:05Z",
+  "endpoints": {
+    "holdings": "/etf/voob/holdings/__data.json",
+    "overview": "/etf/voob/__data.json",
+    "quote": "/api/quotes/e/VOOB",
+    "history_periods": {
+      "daily_1y": "/api/symbol/e/VOOB/history?range=1Y&period=Daily",
+      "weekly_1y": "/api/symbol/e/VOOB/history?range=1Y&period=Weekly",
+      "monthly_1y": "/api/symbol/e/VOOB/history?range=1Y&period=Monthly",
+      "weekly_3y": "/api/symbol/e/VOOB/history?range=3Y&period=Weekly",
+      "monthly_3y": "/api/symbol/e/VOOB/history?range=3Y&period=Monthly",
+      "monthly_5y": "/api/symbol/e/VOOB/history?range=5Y&period=Monthly"
+    }
+  },
+  "endpoint_contracts": {
+    "overview": {
+      "format": "svelte_devalue",
+      "decoder": "svelte_devalue_node/v1",
+      "contract": "etf_detail_overview/v1"
+    },
+    "holdings": {
+      "format": "svelte_devalue",
+      "decoder": "svelte_devalue_node/v1",
+      "contract": "etf_detail_holdings/v1"
+    },
+    "quote": {
+      "format": "rest_json",
+      "contract": "stockanalysis_quote/v1"
+    },
+    "history_periods": {
+      "format": "rest_json",
+      "contract": "stockanalysis_history/v1"
+    }
+  },
+  "normalized": {
+    "holdings": [],
+    "asset_allocation": null,
+    "sectors": null,
+    "countries": null,
+    "holding_count": null,
+    "holdings_updated": null,
+    "classification": {
+      "is_leveraged": false,
+      "leverage_factor": null,
+      "is_inverse": false,
+      "is_single_stock": false,
+      "underlying": null,
+      "source": "stockanalysis.overview.description",
+      "confidence": "high"
+    },
+    "overview": {
+      "sharesOut": "40,000",
+      "inception": "Sep 21, 2026"
+    },
+    "performance": {
+      "tr1m": null,
+      "trYTD": null,
+      "tr1y": null,
+      "cagr5y": null,
+      "cagr10y": null,
+      "cagrMAX": null
+    },
+    "quote": {
+      "p": 25.005,
+      "pd": 25.01,
+      "c": 0,
+      "cp": 0,
+      "cdr": 0,
+      "cl": 25.01,
+      "o": 0,
+      "h": 0,
+      "l": 0,
+      "v": 0,
+      "u": "Sep 30, 2026, 11:17 AM EDT",
+      "td": "2026-09-30",
+      "ts": 0,
+      "h52": 25.12,
+      "l52": 25,
+      "ex": "NASDAQ",
+      "ms": "open",
+      "fms": "open",
+      "e": false,
+      "epd": 0,
+      "ec": 0,
+      "ecp": 0,
+      "eu": "Sep 30, 2026, 3:17 PM EDT",
+      "es": null,
+      "etd": null,
+      "days": null,
+      "exp": 1790781429548,
+      "symbol": "voob",
+      "uid": "VOOB"
+    },
+    "history": [],
+    "history_periods": {
+      "daily_1y": [
+        {
+          "t": "2026-09-29",
+          "o": 25.005,
+          "h": 25.005,
+          "l": 25.005,
+          "c": 25.005,
+          "a": 25.005,
+          "v": 68,
+          "ch": -0.06
+        },
+        {
+          "t": "2026-09-28",
+          "o": 25.07,
+          "h": 25.08,
+          "l": 25.02,
+          "c": 25.02,
+          "a": 25.02,
+          "v": 1640,
+          "ch": 0.04
+        },
+        {
+          "t": "2026-09-25",
+          "o": 25,
+          "h": 25.01,
+          "l": 25,
+          "c": 25.01,
+          "a": 25.01,
+          "v": 134,
+          "ch": -0.08
+        },
+        {
+          "t": "2026-09-24",
+          "o": 25.08,
+          "h": 25.08,
+          "l": 25.03,
+          "c": 25.03,
+          "a": 25.03,
+          "v": 312,
+          "ch": 0.12
+        },
+        {
+          "t": "2026-09-23",
+          "o": 25,
+          "h": 25,
+          "l": 25,
+          "c": 25,
+          "a": 25,
+          "v": 115,
+          "ch": -0.02
+        }
+      ],
+      "weekly_1y": [
+        {
+          "t": "2026-09-28",
+          "o": 25.07,
+          "h": 25.08,
+          "l": 25.005,
+          "c": 25.005,
+          "v": 1708,
+          "a": 25.005,
+          "ch": -0.02
+        }
+      ],
+      "monthly_1y": [],
+      "weekly_3y": [
+        {
+          "t": "2026-09-28",
+          "o": 25.07,
+          "h": 25.08,
+          "l": 25.005,
+          "c": 25.005,
+          "v": 1708,
+          "a": 25.005,
+          "ch": -0.02
+        }
+      ],
+      "monthly_3y": [],
+      "monthly_5y": []
+    }
+  },
+  "raw": {
+    "overview": {
+      "trust": {
+        "sources": [
+          {
+            "name": "S&P Global Market Intelligence",
+            "short": "S&P Global",
+            "url": "https://www.spglobal.com/market-intelligence/en"
+          },
+          {
+            "name": "CBOE",
+            "short": "CBOE",
+            "url": "https://www.cboe.com/"
+          },
+          {
+            "name": "Nasdaq UTP",
+            "short": "Nasdaq UTP",
+            "url": "https://www.utpplan.com/overview",
+            "noUtm": true
+          },
+          {
+            "name": "Finnhub",
+            "short": "Finnhub",
+            "url": "https://finnhub.io/"
+          }
+        ],
+        "topic": "overview",
+        "ticker": "VOOB",
+        "lastChecked": 1790781371534,
+        "summary": {
+          "text": "Historical data is provided by S&P Global Market Intelligence. Real-time stock price data is provided by CBOE and 15-minute delayed consolidated tape pricing data is provided by Nasdaq UTP. Several fund data points are also provided by Finnhub."
+        }
+      },
+      "type": "etf",
+      "aum": null,
+      "nav": null,
+      "expenseRatio": null,
+      "peRatio": null,
+      "sharesOut": "40,000",
+      "dps": null,
+      "dividendYield": null,
+      "payoutRatio": null,
+      "exDivDate": null,
+      "ch1y": null,
+      "payoutFrequency": "n/a",
+      "beta": null,
+      "holdings": null,
+      "inception": "Sep 21, 2026",
+      "chart": {
+        "expiration": null,
+        "data": null
+      },
+      "description": "The VistaShares Shield S&P 500 Enhanced Protection ETF (the Fund) seeks capital appreciation.",
+      "infoTable": [
+        [
+          "Region",
+          "North America"
+        ],
+        [
+          "Stock Exchange",
+          "NASDAQ"
+        ],
+        [
+          "Ticker Symbol",
+          "VOOB"
+        ]
+      ],
+      "etf_website": null,
+      "provider_page": null,
+      "holdingsTable": {
+        "count": null,
+        "updated": null,
+        "top10": null,
+        "holdings": null
+      },
+      "dividendTable": null,
+      "news": {
+        "exp": "1790790342498",
+        "data": []
+      },
+      "config": {
+        "no1d": true
+      },
+      "changes": {
+        "price1w": 25.005,
+        "price1m": null,
+        "price3m": null,
+        "price6m": null,
+        "priceYTD": null,
+        "price1y": null,
+        "price5y": null,
+        "priceMAX": 25.005
+      },
+      "performance": {
+        "tr1m": null,
+        "trYTD": null,
+        "tr1y": null,
+        "cagr5y": null,
+        "cagr10y": null,
+        "cagrMAX": null
+      }
+    },
+    "holdings": {},
+    "quote": {
+      "p": 25.005,
+      "pd": 25.01,
+      "c": 0,
+      "cp": 0,
+      "cdr": 0,
+      "cl": 25.01,
+      "o": 0,
+      "h": 0,
+      "l": 0,
+      "v": 0,
+      "u": "Sep 30, 2026, 11:17 AM EDT",
+      "td": "2026-09-30",
+      "ts": 0,
+      "h52": 25.12,
+      "l52": 25,
+      "ex": "NASDAQ",
+      "ms": "open",
+      "fms": "open",
+      "e": false,
+      "epd": 0,
+      "ec": 0,
+      "ecp": 0,
+      "eu": "Sep 30, 2026, 3:17 PM EDT",
+      "es": null,
+      "etd": null,
+      "days": null,
+      "exp": 1790781429548,
+      "symbol": "voob",
+      "uid": "VOOB"
+    },
+    "history": [],
+    "history_periods": {
+      "daily_1y": [
+        {
+          "t": "2026-09-29",
+          "o": 25.005,
+          "h": 25.005,
+          "l": 25.005,
+          "c": 25.005,
+          "a": 25.005,
+          "v": 68,
+          "ch": -0.06
+        },
+        {
+          "t": "2026-09-28",
+          "o": 25.07,
+          "h": 25.08,
+          "l": 25.02,
+          "c": 25.02,
+          "a": 25.02,
+          "v": 1640,
+          "ch": 0.04
+        },
+        {
+          "t": "2026-09-25",
+          "o": 25,
+          "h": 25.01,
+          "l": 25,
+          "c": 25.01,
+          "a": 25.01,
+          "v": 134,
+          "ch": -0.08
+        },
+        {
+          "t": "2026-09-24",
+          "o": 25.08,
+          "h": 25.08,
+          "l": 25.03,
+          "c": 25.03,
+          "a": 25.03,
+          "v": 312,
+          "ch": 0.12
+        },
+        {
+          "t": "2026-09-23",
+          "o": 25,
+          "h": 25,
+          "l": 25,
+          "c": 25,
+          "a": 25,
+          "v": 115,
+          "ch": -0.02
+        }
+      ],
+      "weekly_1y": [
+        {
+          "t": "2026-09-28",
+          "o": 25.07,
+          "h": 25.08,
+          "l": 25.005,
+          "c": 25.005,
+          "v": 1708,
+          "a": 25.005,
+          "ch": -0.02
+        }
+      ],
+      "monthly_1y": [],
+      "weekly_3y": [
+        {
+          "t": "2026-09-28",
+          "o": 25.07,
+          "h": 25.08,
+          "l": 25.005,
+          "c": 25.005,
+          "v": 1708,
+          "a": 25.005,
+          "ch": -0.02
+        }
+      ],
+      "monthly_3y": [],
+      "monthly_5y": []
+    }
+  },
+  "detail_status": "stockanalysis_partial",
+  "partial_reason_codes": [
+    "holdings_unavailable",
+    "holdings_count_unavailable",
+    "holdings_date_unavailable",
+    "holdings_countries_unavailable"
+  ]
+}

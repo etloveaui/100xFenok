@@ -2,41 +2,14 @@
   "schema_version": "stockanalysis-recovery-state/v1",
   "artifact_kind": "etf",
   "entity": "DACL",
-  "attempts": [
-    {
-      "run_id": "31655447501",
-      "run_attempt": 1,
-      "event_name": "schedule",
-      "schedule": "50 23 * * 1-5",
-      "natural": true,
-      "observed_at": "2026-08-13T00:46:42Z",
-      "outcome": "failed",
-      "controlled": false,
-      "error": "HTTPError: HTTP Error 404: Not Found"
-    }
-  ],
-  "resolution_state": "unavailable",
-  "retry": true,
-  "last_attempt": {
-    "run_id": "31655447501",
-    "run_attempt": 1,
-    "event_name": "schedule",
-    "schedule": "50 23 * * 1-5",
-    "natural": true,
-    "observed_at": "2026-08-13T00:46:42Z",
-    "outcome": "failed",
-    "controlled": false,
-    "error": "HTTPError: HTTP Error 404: Not Found"
+  "resolution_state": "fresh_primary",
+  "retry": false,
+  "updated_at": "2026-09-30T15:15:34Z",
+  "current": {
+    "path": "data/stockanalysis/etfs/DACL.json",
+    "payload_sha256": "3d1472382706962640b9a9740dfd0b36b22aef30dad465dbbac5ab7fd0a04646",
+    "source_as_of": "2026-09-30T14:54:02Z",
+    "fetched_at": "2026-09-30T15:18:07Z"
   },
-  "latest_failure": {
-    "run_id": "31655447501",
-    "run_attempt": 1,
-    "observed_at": "2026-08-13T00:46:42Z",
-    "error": "HTTPError: HTTP Error 404: Not Found",
-    "controlled": false,
-    "had_canonical_before_failure": false,
-    "expected_payload_sha256": null,
-    "data_loss": false
-  },
-  "updated_at": "2026-08-13T00:46:42Z"
+  "failure_count": 0
 }

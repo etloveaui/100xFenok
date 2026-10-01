@@ -1,0 +1,373 @@
+{
+  "schema_version": "stockanalysis/v1",
+  "source": "stockanalysis",
+  "asset_type": "etf",
+  "ticker": "MGIN",
+  "source_as_of": "2026-09-30T14:35:45Z",
+  "fetched_at": "2026-09-30T15:16:34Z",
+  "endpoints": {
+    "holdings": "/etf/mgin/holdings/__data.json",
+    "overview": "/etf/mgin/__data.json",
+    "quote": "/api/quotes/e/MGIN",
+    "history_periods": {
+      "daily_1y": "/api/symbol/e/MGIN/history?range=1Y&period=Daily",
+      "weekly_1y": "/api/symbol/e/MGIN/history?range=1Y&period=Weekly",
+      "monthly_1y": "/api/symbol/e/MGIN/history?range=1Y&period=Monthly",
+      "weekly_3y": "/api/symbol/e/MGIN/history?range=3Y&period=Weekly",
+      "monthly_3y": "/api/symbol/e/MGIN/history?range=3Y&period=Monthly",
+      "monthly_5y": "/api/symbol/e/MGIN/history?range=5Y&period=Monthly"
+    }
+  },
+  "endpoint_contracts": {
+    "overview": {
+      "format": "svelte_devalue",
+      "decoder": "svelte_devalue_node/v1",
+      "contract": "etf_detail_overview/v1"
+    },
+    "holdings": {
+      "format": "svelte_devalue",
+      "decoder": "svelte_devalue_node/v1",
+      "contract": "etf_detail_holdings/v1"
+    },
+    "quote": {
+      "format": "rest_json",
+      "contract": "stockanalysis_quote/v1"
+    },
+    "history_periods": {
+      "format": "rest_json",
+      "contract": "stockanalysis_history/v1"
+    }
+  },
+  "normalized": {
+    "holdings": [],
+    "asset_allocation": null,
+    "sectors": null,
+    "countries": null,
+    "holding_count": null,
+    "holdings_updated": null,
+    "classification": {
+      "is_leveraged": false,
+      "leverage_factor": null,
+      "is_inverse": false,
+      "is_single_stock": false,
+      "underlying": null,
+      "source": "stockanalysis.overview.description",
+      "confidence": "high"
+    },
+    "overview": {
+      "sharesOut": "400,001",
+      "inception": "Sep 23, 2026"
+    },
+    "performance": {
+      "tr1m": null,
+      "trYTD": null,
+      "tr1y": null,
+      "cagr5y": null,
+      "cagr10y": null,
+      "cagrMAX": null
+    },
+    "quote": {
+      "p": 24.62,
+      "pd": 24.62,
+      "c": 0.02,
+      "cp": 0.07,
+      "cl": 24.6,
+      "cdr": 1,
+      "o": 0,
+      "h": 0,
+      "l": 0,
+      "v": 6,
+      "ts": 1790778945905.5095,
+      "u": "Sep 30, 2026, 10:35 AM EDT",
+      "td": "2026-09-30",
+      "h52": 25.01,
+      "l52": 24.602,
+      "ex": "NYSEARCA",
+      "ms": "open",
+      "fms": "open",
+      "e": false,
+      "ep": null,
+      "epd": 0,
+      "ec": 0,
+      "ecp": 0,
+      "eu": null,
+      "es": null,
+      "ets": 1790778945905.5095,
+      "etd": null,
+      "epv": null,
+      "days": 0,
+      "exp": 1790781398323,
+      "symbol": "MGIN",
+      "uid": "MGIN"
+    },
+    "history": [],
+    "history_periods": {
+      "daily_1y": [
+        {
+          "t": "2026-09-29",
+          "o": 24.602,
+          "h": 24.602,
+          "l": 24.602,
+          "c": 24.602,
+          "a": 24.6023,
+          "v": 9,
+          "ch": -0.7
+        },
+        {
+          "t": "2026-09-28",
+          "o": 24.84,
+          "h": 24.84,
+          "l": 24.777,
+          "c": 24.777,
+          "a": 24.7765,
+          "v": 852,
+          "ch": -0.49
+        },
+        {
+          "t": "2026-09-25",
+          "o": 24.9,
+          "h": 24.9,
+          "l": 24.9,
+          "c": 24.9,
+          "a": 24.8996,
+          "v": 375008,
+          "ch": -0.44
+        }
+      ],
+      "weekly_1y": [
+        {
+          "t": "2026-09-28",
+          "o": 24.84,
+          "h": 24.84,
+          "l": 24.602,
+          "c": 24.602,
+          "v": 861,
+          "a": 24.6023,
+          "ch": -1.19
+        }
+      ],
+      "monthly_1y": [],
+      "weekly_3y": [
+        {
+          "t": "2026-09-28",
+          "o": 24.84,
+          "h": 24.84,
+          "l": 24.602,
+          "c": 24.602,
+          "v": 861,
+          "a": 24.6023,
+          "ch": -1.19
+        }
+      ],
+      "monthly_3y": [],
+      "monthly_5y": []
+    }
+  },
+  "raw": {
+    "overview": {
+      "trust": {
+        "sources": [
+          {
+            "name": "S&P Global Market Intelligence",
+            "short": "S&P Global",
+            "url": "https://www.spglobal.com/market-intelligence/en"
+          },
+          {
+            "name": "CBOE",
+            "short": "CBOE",
+            "url": "https://www.cboe.com/"
+          },
+          {
+            "name": "Nasdaq UTP",
+            "short": "Nasdaq UTP",
+            "url": "https://www.utpplan.com/overview",
+            "noUtm": true
+          },
+          {
+            "name": "Finnhub",
+            "short": "Finnhub",
+            "url": "https://finnhub.io/"
+          }
+        ],
+        "topic": "overview",
+        "ticker": "MGIN",
+        "lastChecked": 1790781371534,
+        "summary": {
+          "text": "Historical data is provided by S&P Global Market Intelligence. Real-time stock price data is provided by CBOE and 15-minute delayed consolidated tape pricing data is provided by Nasdaq UTP. Several fund data points are also provided by Finnhub."
+        }
+      },
+      "type": "etf",
+      "aum": null,
+      "nav": null,
+      "expenseRatio": null,
+      "peRatio": null,
+      "sharesOut": "400,001",
+      "dps": null,
+      "dividendYield": null,
+      "payoutRatio": null,
+      "exDivDate": null,
+      "ch1y": null,
+      "payoutFrequency": "n/a",
+      "beta": null,
+      "holdings": null,
+      "inception": "Sep 23, 2026",
+      "chart": {
+        "expiration": null,
+        "data": null
+      },
+      "description": "Man ETF Series Trust - Man Active Global Infrastructure ETF is an exchange traded fund launched and managed by Man Solutions LLC. The fund is co-managed by GLG LLC. It invests in public equity markets of global ex-US. It invests in stocks of companies operating across utilities companies, energy infrastructure companies, industrial infrastructure companies, communication services infrastructure companies, real estate infrastructure companies, health care infrastructure companies and transportation companies sectors. It invests in growth and value stocks of companies across diversified market capitalization. The fund employs fundamental analysis with top-down and bottom-up approach to create its portfolio. Man ETF Series Trust - Man Active Global Infrastructure ETF is domiciled in the United States.",
+      "infoTable": [
+        [
+          "Region",
+          "Global"
+        ],
+        [
+          "Stock Exchange",
+          "NYSEARCA"
+        ],
+        [
+          "Ticker Symbol",
+          "MGIN"
+        ]
+      ],
+      "etf_website": null,
+      "provider_page": null,
+      "holdingsTable": {
+        "count": null,
+        "updated": null,
+        "top10": null,
+        "holdings": null
+      },
+      "dividendTable": null,
+      "news": {
+        "exp": "1790811992534",
+        "data": []
+      },
+      "config": {
+        "no1d": true
+      },
+      "changes": {
+        "price1w": null,
+        "price1m": null,
+        "price3m": null,
+        "price6m": null,
+        "priceYTD": null,
+        "price1y": null,
+        "price5y": null,
+        "priceMAX": 25.01
+      },
+      "performance": {
+        "tr1m": null,
+        "trYTD": null,
+        "tr1y": null,
+        "cagr5y": null,
+        "cagr10y": null,
+        "cagrMAX": null
+      }
+    },
+    "holdings": {},
+    "quote": {
+      "p": 24.62,
+      "pd": 24.62,
+      "c": 0.02,
+      "cp": 0.07,
+      "cl": 24.6,
+      "cdr": 1,
+      "o": 0,
+      "h": 0,
+      "l": 0,
+      "v": 6,
+      "ts": 1790778945905.5095,
+      "u": "Sep 30, 2026, 10:35 AM EDT",
+      "td": "2026-09-30",
+      "h52": 25.01,
+      "l52": 24.602,
+      "ex": "NYSEARCA",
+      "ms": "open",
+      "fms": "open",
+      "e": false,
+      "ep": null,
+      "epd": 0,
+      "ec": 0,
+      "ecp": 0,
+      "eu": null,
+      "es": null,
+      "ets": 1790778945905.5095,
+      "etd": null,
+      "epv": null,
+      "days": 0,
+      "exp": 1790781398323,
+      "symbol": "MGIN",
+      "uid": "MGIN"
+    },
+    "history": [],
+    "history_periods": {
+      "daily_1y": [
+        {
+          "t": "2026-09-29",
+          "o": 24.602,
+          "h": 24.602,
+          "l": 24.602,
+          "c": 24.602,
+          "a": 24.6023,
+          "v": 9,
+          "ch": -0.7
+        },
+        {
+          "t": "2026-09-28",
+          "o": 24.84,
+          "h": 24.84,
+          "l": 24.777,
+          "c": 24.777,
+          "a": 24.7765,
+          "v": 852,
+          "ch": -0.49
+        },
+        {
+          "t": "2026-09-25",
+          "o": 24.9,
+          "h": 24.9,
+          "l": 24.9,
+          "c": 24.9,
+          "a": 24.8996,
+          "v": 375008,
+          "ch": -0.44
+        }
+      ],
+      "weekly_1y": [
+        {
+          "t": "2026-09-28",
+          "o": 24.84,
+          "h": 24.84,
+          "l": 24.602,
+          "c": 24.602,
+          "v": 861,
+          "a": 24.6023,
+          "ch": -1.19
+        }
+      ],
+      "monthly_1y": [],
+      "weekly_3y": [
+        {
+          "t": "2026-09-28",
+          "o": 24.84,
+          "h": 24.84,
+          "l": 24.602,
+          "c": 24.602,
+          "v": 861,
+          "a": 24.6023,
+          "ch": -1.19
+        }
+      ],
+      "monthly_3y": [],
+      "monthly_5y": []
+    }
+  },
+  "detail_status": "stockanalysis_partial",
+  "partial_reason_codes": [
+    "holdings_unavailable",
+    "holdings_count_unavailable",
+    "holdings_date_unavailable",
+    "holdings_countries_unavailable"
+  ]
+}

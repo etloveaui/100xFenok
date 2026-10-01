@@ -1,0 +1,2642 @@
+{
+  "schema_version": "stockanalysis/v1",
+  "source": "stockanalysis",
+  "asset_type": "etf",
+  "ticker": "KCHP",
+  "source_as_of": "2026-09-30T14:37:31Z",
+  "fetched_at": "2026-09-30T15:16:30Z",
+  "endpoints": {
+    "holdings": "/etf/kchp/holdings/__data.json",
+    "overview": "/etf/kchp/__data.json",
+    "quote": "/api/quotes/e/KCHP",
+    "history_periods": {
+      "daily_1y": "/api/symbol/e/KCHP/history?range=1Y&period=Daily",
+      "weekly_1y": "/api/symbol/e/KCHP/history?range=1Y&period=Weekly",
+      "monthly_1y": "/api/symbol/e/KCHP/history?range=1Y&period=Monthly",
+      "weekly_3y": "/api/symbol/e/KCHP/history?range=3Y&period=Weekly",
+      "monthly_3y": "/api/symbol/e/KCHP/history?range=3Y&period=Monthly",
+      "monthly_5y": "/api/symbol/e/KCHP/history?range=5Y&period=Monthly"
+    }
+  },
+  "endpoint_contracts": {
+    "overview": {
+      "format": "svelte_devalue",
+      "decoder": "svelte_devalue_node/v1",
+      "contract": "etf_detail_overview/v1"
+    },
+    "holdings": {
+      "format": "svelte_devalue",
+      "decoder": "svelte_devalue_node/v1",
+      "contract": "etf_detail_holdings/v1"
+    },
+    "quote": {
+      "format": "rest_json",
+      "contract": "stockanalysis_quote/v1"
+    },
+    "history_periods": {
+      "format": "rest_json",
+      "contract": "stockanalysis_history/v1"
+    }
+  },
+  "normalized": {
+    "holdings": [
+      {
+        "rank": 1,
+        "name": "Us Dollars",
+        "weight_pct": 39.56,
+        "shares": 1369082,
+        "raw": {
+          "no": 1,
+          "n": "Us Dollars",
+          "as": "39.56%",
+          "sh": "1,369,082"
+        }
+      },
+      {
+        "rank": 2,
+        "symbol": "!KRX/005930",
+        "name": "Samsung Electronics Co., Ltd.",
+        "weight_pct": 12.72,
+        "shares": 2096,
+        "raw": {
+          "no": 2,
+          "n": "Samsung Electronics Co., Ltd.",
+          "s": "!krx/005930",
+          "as": "12.72%",
+          "sh": "2,096"
+        }
+      },
+      {
+        "rank": 3,
+        "symbol": "!KRX/000660",
+        "name": "SK hynix Inc.",
+        "weight_pct": 10.13,
+        "shares": 256,
+        "raw": {
+          "no": 3,
+          "n": "SK hynix Inc.",
+          "s": "!krx/000660",
+          "as": "10.13%",
+          "sh": "256"
+        }
+      },
+      {
+        "rank": 4,
+        "symbol": "!KRX/007660",
+        "name": "ISU Petasys Co., Ltd.",
+        "weight_pct": 3.42,
+        "shares": 1352,
+        "raw": {
+          "no": 4,
+          "n": "ISU Petasys Co., Ltd.",
+          "s": "!krx/007660",
+          "as": "3.42%",
+          "sh": "1,352"
+        }
+      },
+      {
+        "rank": 5,
+        "symbol": "!KOSDAQ/036930",
+        "name": "JUSUNG ENGINEERING Co.,Ltd.",
+        "weight_pct": 3.21,
+        "shares": 720,
+        "raw": {
+          "no": 5,
+          "n": "JUSUNG ENGINEERING Co.,Ltd.",
+          "s": "!kosdaq/036930",
+          "as": "3.21%",
+          "sh": "720"
+        }
+      },
+      {
+        "rank": 6,
+        "symbol": "!KRX/042700",
+        "name": "HANMI Semiconductor Co., Ltd.",
+        "weight_pct": 2.94,
+        "shares": 568,
+        "raw": {
+          "no": 6,
+          "n": "HANMI Semiconductor Co., Ltd.",
+          "s": "!krx/042700",
+          "as": "2.94%",
+          "sh": "568"
+        }
+      },
+      {
+        "rank": 7,
+        "symbol": "!KOSDAQ/222800",
+        "name": "SIMMTECH Co., Ltd.",
+        "weight_pct": 2.49,
+        "shares": 784,
+        "raw": {
+          "no": 7,
+          "n": "SIMMTECH Co., Ltd.",
+          "s": "!kosdaq/222800",
+          "as": "2.49%",
+          "sh": "784"
+        }
+      },
+      {
+        "rank": 8,
+        "symbol": "!KOSDAQ/039030",
+        "name": "EO Technics Co., Ltd.",
+        "weight_pct": 2.46,
+        "shares": 240,
+        "raw": {
+          "no": 8,
+          "n": "EO Technics Co., Ltd.",
+          "s": "!kosdaq/039030",
+          "as": "2.46%",
+          "sh": "240"
+        }
+      },
+      {
+        "rank": 9,
+        "symbol": "!KRX/000990",
+        "name": "DB HiTek CO., LTD.",
+        "weight_pct": 2.38,
+        "shares": 848,
+        "raw": {
+          "no": 9,
+          "n": "DB HiTek CO., LTD.",
+          "s": "!krx/000990",
+          "as": "2.38%",
+          "sh": "848"
+        }
+      },
+      {
+        "rank": 10,
+        "symbol": "!KRX/353200",
+        "name": "DAEDUCK ELECTRONICS Co., Ltd.",
+        "weight_pct": 2.32,
+        "shares": 912,
+        "raw": {
+          "no": 10,
+          "n": "DAEDUCK ELECTRONICS Co., Ltd.",
+          "s": "!krx/353200",
+          "as": "2.32%",
+          "sh": "912"
+        }
+      },
+      {
+        "rank": 11,
+        "symbol": "!KRX/009150",
+        "name": "Samsung Electro-Mechanics Co., Ltd.",
+        "weight_pct": 2.31,
+        "shares": 72,
+        "raw": {
+          "no": 11,
+          "n": "Samsung Electro-Mechanics Co., Ltd.",
+          "s": "!krx/009150",
+          "as": "2.31%",
+          "sh": "72"
+        }
+      },
+      {
+        "rank": 12,
+        "symbol": "!KOSDAQ/240810",
+        "name": "Wonik IPS Co., Ltd.",
+        "weight_pct": 2.27,
+        "shares": 800,
+        "raw": {
+          "no": 12,
+          "n": "Wonik IPS Co., Ltd.",
+          "s": "!kosdaq/240810",
+          "as": "2.27%",
+          "sh": "800"
+        }
+      },
+      {
+        "rank": 13,
+        "symbol": "!KOSDAQ/058470",
+        "name": "LEENO Industrial Inc.",
+        "weight_pct": 2.2,
+        "shares": 1392,
+        "raw": {
+          "no": 13,
+          "n": "LEENO Industrial Inc.",
+          "s": "!kosdaq/058470",
+          "as": "2.20%",
+          "sh": "1,392"
+        }
+      },
+      {
+        "rank": 14,
+        "symbol": "!KOSDAQ/319660",
+        "name": "PSK Inc.",
+        "weight_pct": 1.85,
+        "shares": 600,
+        "raw": {
+          "no": 14,
+          "n": "PSK Inc.",
+          "s": "!kosdaq/319660",
+          "as": "1.85%",
+          "sh": "600"
+        }
+      },
+      {
+        "rank": 15,
+        "symbol": "!KOSDAQ/440110",
+        "name": "FADU Inc.",
+        "weight_pct": 1.83,
+        "shares": 1056,
+        "raw": {
+          "no": 15,
+          "n": "FADU Inc.",
+          "s": "!kosdaq/440110",
+          "as": "1.83%",
+          "sh": "1,056"
+        }
+      },
+      {
+        "rank": 16,
+        "symbol": "!KOSDAQ/403870",
+        "name": "HPSP Co., Ltd.",
+        "weight_pct": 1.8,
+        "shares": 1528,
+        "raw": {
+          "no": 16,
+          "n": "HPSP Co., Ltd.",
+          "s": "!kosdaq/403870",
+          "as": "1.80%",
+          "sh": "1,528"
+        }
+      },
+      {
+        "rank": 17,
+        "symbol": "!KOSDAQ/095340",
+        "name": "ISC Co., Ltd.",
+        "weight_pct": 1.77,
+        "shares": 392,
+        "raw": {
+          "no": 17,
+          "n": "ISC Co., Ltd.",
+          "s": "!kosdaq/095340",
+          "as": "1.77%",
+          "sh": "392"
+        }
+      },
+      {
+        "rank": 18,
+        "symbol": "!KOSDAQ/067310",
+        "name": "HANA Micron Inc.",
+        "weight_pct": 1.61,
+        "shares": 1640,
+        "raw": {
+          "no": 18,
+          "n": "HANA Micron Inc.",
+          "s": "!kosdaq/067310",
+          "as": "1.61%",
+          "sh": "1,640"
+        }
+      },
+      {
+        "rank": 19,
+        "symbol": "!KOSDAQ/080220",
+        "name": "Jeju Semiconductor Corp.",
+        "weight_pct": 1.5,
+        "shares": 912,
+        "raw": {
+          "no": 19,
+          "n": "Jeju Semiconductor Corp.",
+          "s": "!kosdaq/080220",
+          "as": "1.50%",
+          "sh": "912"
+        }
+      },
+      {
+        "rank": 20,
+        "symbol": "!KOSDAQ/005290",
+        "name": "Dongjin Semichem Co., Ltd.",
+        "weight_pct": 1.23,
+        "shares": 1232,
+        "raw": {
+          "no": 20,
+          "n": "Dongjin Semichem Co., Ltd.",
+          "s": "!kosdaq/005290",
+          "as": "1.23%",
+          "sh": "1,232"
+        }
+      }
+    ],
+    "asset_allocation": null,
+    "sectors": null,
+    "countries": null,
+    "holding_count": 20,
+    "holdings_updated": "Sep 25, 2026",
+    "classification": {
+      "is_leveraged": false,
+      "leverage_factor": null,
+      "is_inverse": false,
+      "is_single_stock": false,
+      "underlying": null,
+      "source": "stockanalysis.overview.description",
+      "confidence": "high"
+    },
+    "overview": {
+      "aum": "$2.14M",
+      "expenseRatio": "0.65%",
+      "sharesOut": "80,000",
+      "inception": "Sep 14, 2026",
+      "etf_website": "https://www.kicketfs.com/kchp"
+    },
+    "performance": {
+      "tr1m": null,
+      "trYTD": null,
+      "tr1y": null,
+      "cagr5y": null,
+      "cagr10y": null,
+      "cagrMAX": null
+    },
+    "quote": {
+      "p": 26.93,
+      "pd": 26.93,
+      "c": -0.35,
+      "cp": -1.28,
+      "cl": 27.28,
+      "cdr": -1,
+      "o": 26.99,
+      "h": 27.01,
+      "l": 26.99,
+      "v": 957.9948,
+      "ts": 1790779051497.2173,
+      "u": "Sep 30, 2026, 10:37 AM EDT",
+      "td": "2026-09-30",
+      "h52": 27.47,
+      "l52": 23.74,
+      "ex": "NYSEARCA",
+      "ms": "open",
+      "fms": "open",
+      "e": false,
+      "ep": null,
+      "epd": 0,
+      "ec": 0,
+      "ecp": 0,
+      "eu": null,
+      "es": null,
+      "ets": 1790779051497.2173,
+      "etd": null,
+      "epv": null,
+      "days": 0,
+      "exp": 1790781394767,
+      "symbol": "KCHP",
+      "uid": "KCHP"
+    },
+    "history": [],
+    "history_periods": {
+      "daily_1y": [
+        {
+          "t": "2026-09-29",
+          "o": 27.12,
+          "h": 27.32,
+          "l": 27.11,
+          "c": 27.28,
+          "a": 27.28,
+          "v": 6144,
+          "ch": 4.94
+        },
+        {
+          "t": "2026-09-28",
+          "o": 25.59,
+          "h": 26.27,
+          "l": 25.52,
+          "c": 25.995,
+          "a": 25.9948,
+          "v": 10590,
+          "ch": -3.17
+        },
+        {
+          "t": "2026-09-25",
+          "o": 26.29,
+          "h": 26.846,
+          "l": 26.23,
+          "c": 26.846,
+          "a": 26.8458,
+          "v": 2702,
+          "ch": 3.83
+        },
+        {
+          "t": "2026-09-24",
+          "o": 26.01,
+          "h": 26.01,
+          "l": 25.856,
+          "c": 25.856,
+          "a": 25.8564,
+          "v": 2894,
+          "ch": -2.22
+        },
+        {
+          "t": "2026-09-23",
+          "o": 27.47,
+          "h": 27.47,
+          "l": 26.415,
+          "c": 26.442,
+          "a": 26.4424,
+          "v": 1758,
+          "ch": -1.87
+        },
+        {
+          "t": "2026-09-22",
+          "o": 26.34,
+          "h": 27.06,
+          "l": 26.34,
+          "c": 26.948,
+          "a": 26.9475,
+          "v": 5909,
+          "ch": 2.81
+        },
+        {
+          "t": "2026-09-21",
+          "o": 25.88,
+          "h": 26.212,
+          "l": 25.88,
+          "c": 26.212,
+          "a": 26.2121,
+          "v": 5551,
+          "ch": 6.46
+        },
+        {
+          "t": "2026-09-18",
+          "o": 24.59,
+          "h": 24.623,
+          "l": 24.335,
+          "c": 24.623,
+          "a": 24.6227,
+          "v": 11405,
+          "ch": -3.08
+        },
+        {
+          "t": "2026-09-17",
+          "o": 25.05,
+          "h": 25.57,
+          "l": 25.01,
+          "c": 25.405,
+          "a": 25.405,
+          "v": 10965,
+          "ch": -0.53
+        },
+        {
+          "t": "2026-09-16",
+          "o": 24.85,
+          "h": 27.02,
+          "l": 24.65,
+          "c": 25.542,
+          "a": 25.5415,
+          "v": 10632,
+          "ch": 7.59
+        }
+      ],
+      "weekly_1y": [
+        {
+          "t": "2026-09-28",
+          "o": 25.59,
+          "h": 27.32,
+          "l": 25.52,
+          "c": 27.28,
+          "v": 16734,
+          "a": 27.28,
+          "ch": 1.62
+        },
+        {
+          "t": "2026-09-21",
+          "o": 25.88,
+          "h": 27.47,
+          "l": 25.856,
+          "c": 26.846,
+          "v": 18814,
+          "a": 26.8458,
+          "ch": 9.03
+        }
+      ],
+      "monthly_1y": [],
+      "weekly_3y": [
+        {
+          "t": "2026-09-28",
+          "o": 25.59,
+          "h": 27.32,
+          "l": 25.52,
+          "c": 27.28,
+          "v": 16734,
+          "a": 27.28,
+          "ch": 1.62
+        },
+        {
+          "t": "2026-09-21",
+          "o": 25.88,
+          "h": 27.47,
+          "l": 25.856,
+          "c": 26.846,
+          "v": 18814,
+          "a": 26.8458,
+          "ch": 9.03
+        }
+      ],
+      "monthly_3y": [],
+      "monthly_5y": []
+    }
+  },
+  "raw": {
+    "overview": {
+      "trust": {
+        "sources": [
+          {
+            "name": "S&P Global Market Intelligence",
+            "short": "S&P Global",
+            "url": "https://www.spglobal.com/market-intelligence/en"
+          },
+          {
+            "name": "CBOE",
+            "short": "CBOE",
+            "url": "https://www.cboe.com/"
+          },
+          {
+            "name": "Nasdaq UTP",
+            "short": "Nasdaq UTP",
+            "url": "https://www.utpplan.com/overview",
+            "noUtm": true
+          },
+          {
+            "name": "Finnhub",
+            "short": "Finnhub",
+            "url": "https://finnhub.io/"
+          }
+        ],
+        "topic": "overview",
+        "ticker": "KCHP",
+        "lastChecked": 1790780773118,
+        "summary": {
+          "text": "Historical data is provided by S&P Global Market Intelligence. Real-time stock price data is provided by CBOE and 15-minute delayed consolidated tape pricing data is provided by Nasdaq UTP. Several fund data points are also provided by Finnhub."
+        }
+      },
+      "type": "etf",
+      "aum": "$2.14M",
+      "nav": null,
+      "expenseRatio": "0.65%",
+      "peRatio": null,
+      "sharesOut": "80,000",
+      "dps": null,
+      "dividendYield": null,
+      "payoutRatio": null,
+      "exDivDate": null,
+      "ch1y": null,
+      "payoutFrequency": "n/a",
+      "beta": null,
+      "holdings": 20,
+      "inception": "Sep 14, 2026",
+      "chart": {
+        "expiration": 1790775000000,
+        "data": [
+          {
+            "t": 1790674200
+          },
+          {
+            "t": 1790674260
+          },
+          {
+            "t": 1790674320
+          },
+          {
+            "t": 1790674380
+          },
+          {
+            "t": 1790674440
+          },
+          {
+            "t": 1790674500
+          },
+          {
+            "t": 1790674560
+          },
+          {
+            "t": 1790674620
+          },
+          {
+            "t": 1790674680
+          },
+          {
+            "t": 1790674740
+          },
+          {
+            "t": 1790674800
+          },
+          {
+            "t": 1790674860
+          },
+          {
+            "t": 1790674920
+          },
+          {
+            "t": 1790674980
+          },
+          {
+            "c": 27.12,
+            "o": 27.12,
+            "t": 1790675040
+          },
+          {
+            "c": null,
+            "t": 1790675100
+          },
+          {
+            "c": 27.18,
+            "t": 1790675160
+          },
+          {
+            "c": null,
+            "t": 1790675220
+          },
+          {
+            "c": null,
+            "t": 1790675280
+          },
+          {
+            "c": null,
+            "t": 1790675340
+          },
+          {
+            "c": null,
+            "t": 1790675400
+          },
+          {
+            "c": null,
+            "t": 1790675460
+          },
+          {
+            "c": null,
+            "t": 1790675520
+          },
+          {
+            "c": null,
+            "t": 1790675580
+          },
+          {
+            "c": null,
+            "t": 1790675640
+          },
+          {
+            "c": null,
+            "t": 1790675700
+          },
+          {
+            "c": null,
+            "t": 1790675760
+          },
+          {
+            "c": null,
+            "t": 1790675820
+          },
+          {
+            "c": null,
+            "t": 1790675880
+          },
+          {
+            "c": null,
+            "t": 1790675940
+          },
+          {
+            "c": 27.12,
+            "t": 1790676000
+          },
+          {
+            "c": null,
+            "t": 1790676060
+          },
+          {
+            "c": null,
+            "t": 1790676120
+          },
+          {
+            "c": 27.22,
+            "t": 1790676180
+          },
+          {
+            "c": null,
+            "t": 1790676240
+          },
+          {
+            "c": 27.22,
+            "t": 1790676300
+          },
+          {
+            "c": null,
+            "t": 1790676360
+          },
+          {
+            "c": null,
+            "t": 1790676420
+          },
+          {
+            "c": null,
+            "t": 1790676480
+          },
+          {
+            "c": null,
+            "t": 1790676540
+          },
+          {
+            "c": null,
+            "t": 1790676600
+          },
+          {
+            "c": null,
+            "t": 1790676660
+          },
+          {
+            "c": null,
+            "t": 1790676720
+          },
+          {
+            "c": null,
+            "t": 1790676780
+          },
+          {
+            "c": 27.25,
+            "t": 1790676840
+          },
+          {
+            "c": 27.18,
+            "t": 1790676900
+          },
+          {
+            "c": null,
+            "t": 1790676960
+          },
+          {
+            "c": null,
+            "t": 1790677020
+          },
+          {
+            "c": null,
+            "t": 1790677080
+          },
+          {
+            "c": null,
+            "t": 1790677140
+          },
+          {
+            "c": null,
+            "t": 1790677200
+          },
+          {
+            "c": null,
+            "t": 1790677260
+          },
+          {
+            "c": null,
+            "t": 1790677320
+          },
+          {
+            "c": null,
+            "t": 1790677380
+          },
+          {
+            "c": null,
+            "t": 1790677440
+          },
+          {
+            "c": null,
+            "t": 1790677500
+          },
+          {
+            "c": null,
+            "t": 1790677560
+          },
+          {
+            "c": null,
+            "t": 1790677620
+          },
+          {
+            "c": null,
+            "t": 1790677680
+          },
+          {
+            "c": null,
+            "t": 1790677740
+          },
+          {
+            "c": null,
+            "t": 1790677800
+          },
+          {
+            "c": null,
+            "t": 1790677860
+          },
+          {
+            "c": null,
+            "t": 1790677920
+          },
+          {
+            "c": null,
+            "t": 1790677980
+          },
+          {
+            "c": null,
+            "t": 1790678040
+          },
+          {
+            "c": null,
+            "t": 1790678100
+          },
+          {
+            "c": null,
+            "t": 1790678160
+          },
+          {
+            "c": null,
+            "t": 1790678220
+          },
+          {
+            "c": null,
+            "t": 1790678280
+          },
+          {
+            "c": null,
+            "t": 1790678340
+          },
+          {
+            "c": null,
+            "t": 1790678400
+          },
+          {
+            "c": null,
+            "t": 1790678460
+          },
+          {
+            "c": null,
+            "t": 1790678520
+          },
+          {
+            "c": null,
+            "t": 1790678580
+          },
+          {
+            "c": null,
+            "t": 1790678640
+          },
+          {
+            "c": null,
+            "t": 1790678700
+          },
+          {
+            "c": null,
+            "t": 1790678760
+          },
+          {
+            "c": null,
+            "t": 1790678820
+          },
+          {
+            "c": null,
+            "t": 1790678880
+          },
+          {
+            "c": null,
+            "t": 1790678940
+          },
+          {
+            "c": null,
+            "t": 1790679000
+          },
+          {
+            "c": null,
+            "t": 1790679060
+          },
+          {
+            "c": null,
+            "t": 1790679120
+          },
+          {
+            "c": null,
+            "t": 1790679180
+          },
+          {
+            "c": null,
+            "t": 1790679240
+          },
+          {
+            "c": null,
+            "t": 1790679300
+          },
+          {
+            "c": null,
+            "t": 1790679360
+          },
+          {
+            "c": null,
+            "t": 1790679420
+          },
+          {
+            "c": null,
+            "t": 1790679480
+          },
+          {
+            "c": null,
+            "t": 1790679540
+          },
+          {
+            "c": null,
+            "t": 1790679600
+          },
+          {
+            "c": null,
+            "t": 1790679660
+          },
+          {
+            "c": null,
+            "t": 1790679720
+          },
+          {
+            "c": null,
+            "t": 1790679780
+          },
+          {
+            "c": null,
+            "t": 1790679840
+          },
+          {
+            "c": null,
+            "t": 1790679900
+          },
+          {
+            "c": null,
+            "t": 1790679960
+          },
+          {
+            "c": null,
+            "t": 1790680020
+          },
+          {
+            "c": null,
+            "t": 1790680080
+          },
+          {
+            "c": null,
+            "t": 1790680140
+          },
+          {
+            "c": null,
+            "t": 1790680200
+          },
+          {
+            "c": null,
+            "t": 1790680260
+          },
+          {
+            "c": null,
+            "t": 1790680320
+          },
+          {
+            "c": null,
+            "t": 1790680380
+          },
+          {
+            "c": null,
+            "t": 1790680440
+          },
+          {
+            "c": null,
+            "t": 1790680500
+          },
+          {
+            "c": null,
+            "t": 1790680560
+          },
+          {
+            "c": null,
+            "t": 1790680620
+          },
+          {
+            "c": null,
+            "t": 1790680680
+          },
+          {
+            "c": null,
+            "t": 1790680740
+          },
+          {
+            "c": null,
+            "t": 1790680800
+          },
+          {
+            "c": null,
+            "t": 1790680860
+          },
+          {
+            "c": null,
+            "t": 1790680920
+          },
+          {
+            "c": null,
+            "t": 1790680980
+          },
+          {
+            "c": null,
+            "t": 1790681040
+          },
+          {
+            "c": null,
+            "t": 1790681100
+          },
+          {
+            "c": null,
+            "t": 1790681160
+          },
+          {
+            "c": null,
+            "t": 1790681220
+          },
+          {
+            "c": null,
+            "t": 1790681280
+          },
+          {
+            "c": null,
+            "t": 1790681340
+          },
+          {
+            "c": null,
+            "t": 1790681400
+          },
+          {
+            "c": null,
+            "t": 1790681460
+          },
+          {
+            "c": 27.14,
+            "t": 1790681520
+          },
+          {
+            "c": null,
+            "t": 1790681580
+          },
+          {
+            "c": null,
+            "t": 1790681640
+          },
+          {
+            "c": null,
+            "t": 1790681700
+          },
+          {
+            "c": null,
+            "t": 1790681760
+          },
+          {
+            "c": null,
+            "t": 1790681820
+          },
+          {
+            "c": null,
+            "t": 1790681880
+          },
+          {
+            "c": null,
+            "t": 1790681940
+          },
+          {
+            "c": null,
+            "t": 1790682000
+          },
+          {
+            "c": null,
+            "t": 1790682060
+          },
+          {
+            "c": null,
+            "t": 1790682120
+          },
+          {
+            "c": null,
+            "t": 1790682180
+          },
+          {
+            "c": null,
+            "t": 1790682240
+          },
+          {
+            "c": null,
+            "t": 1790682300
+          },
+          {
+            "c": null,
+            "t": 1790682360
+          },
+          {
+            "c": 27.18,
+            "t": 1790682420
+          },
+          {
+            "c": null,
+            "t": 1790682480
+          },
+          {
+            "c": null,
+            "t": 1790682540
+          },
+          {
+            "c": null,
+            "t": 1790682600
+          },
+          {
+            "c": null,
+            "t": 1790682660
+          },
+          {
+            "c": null,
+            "t": 1790682720
+          },
+          {
+            "c": null,
+            "t": 1790682780
+          },
+          {
+            "c": 27.18,
+            "t": 1790682840
+          },
+          {
+            "c": null,
+            "t": 1790682900
+          },
+          {
+            "c": null,
+            "t": 1790682960
+          },
+          {
+            "c": null,
+            "t": 1790683020
+          },
+          {
+            "c": null,
+            "t": 1790683080
+          },
+          {
+            "c": null,
+            "t": 1790683140
+          },
+          {
+            "c": null,
+            "t": 1790683200
+          },
+          {
+            "c": null,
+            "t": 1790683260
+          },
+          {
+            "c": null,
+            "t": 1790683320
+          },
+          {
+            "c": null,
+            "t": 1790683380
+          },
+          {
+            "c": null,
+            "t": 1790683440
+          },
+          {
+            "c": null,
+            "t": 1790683500
+          },
+          {
+            "c": null,
+            "t": 1790683560
+          },
+          {
+            "c": null,
+            "t": 1790683620
+          },
+          {
+            "c": null,
+            "t": 1790683680
+          },
+          {
+            "c": null,
+            "t": 1790683740
+          },
+          {
+            "c": null,
+            "t": 1790683800
+          },
+          {
+            "c": null,
+            "t": 1790683860
+          },
+          {
+            "c": null,
+            "t": 1790683920
+          },
+          {
+            "c": null,
+            "t": 1790683980
+          },
+          {
+            "c": null,
+            "t": 1790684040
+          },
+          {
+            "c": null,
+            "t": 1790684100
+          },
+          {
+            "c": null,
+            "t": 1790684160
+          },
+          {
+            "c": null,
+            "t": 1790684220
+          },
+          {
+            "c": null,
+            "t": 1790684280
+          },
+          {
+            "c": null,
+            "t": 1790684340
+          },
+          {
+            "c": null,
+            "t": 1790684400
+          },
+          {
+            "c": null,
+            "t": 1790684460
+          },
+          {
+            "c": null,
+            "t": 1790684520
+          },
+          {
+            "c": null,
+            "t": 1790684580
+          },
+          {
+            "c": null,
+            "t": 1790684640
+          },
+          {
+            "c": null,
+            "t": 1790684700
+          },
+          {
+            "c": null,
+            "t": 1790684760
+          },
+          {
+            "c": null,
+            "t": 1790684820
+          },
+          {
+            "c": null,
+            "t": 1790684880
+          },
+          {
+            "c": null,
+            "t": 1790684940
+          },
+          {
+            "c": null,
+            "t": 1790685000
+          },
+          {
+            "c": null,
+            "t": 1790685060
+          },
+          {
+            "c": null,
+            "t": 1790685120
+          },
+          {
+            "c": null,
+            "t": 1790685180
+          },
+          {
+            "c": null,
+            "t": 1790685240
+          },
+          {
+            "c": null,
+            "t": 1790685300
+          },
+          {
+            "c": null,
+            "t": 1790685360
+          },
+          {
+            "c": null,
+            "t": 1790685420
+          },
+          {
+            "c": null,
+            "t": 1790685480
+          },
+          {
+            "c": null,
+            "t": 1790685540
+          },
+          {
+            "c": null,
+            "t": 1790685600
+          },
+          {
+            "c": null,
+            "t": 1790685660
+          },
+          {
+            "c": null,
+            "t": 1790685720
+          },
+          {
+            "c": null,
+            "t": 1790685780
+          },
+          {
+            "c": null,
+            "t": 1790685840
+          },
+          {
+            "c": null,
+            "t": 1790685900
+          },
+          {
+            "c": null,
+            "t": 1790685960
+          },
+          {
+            "c": null,
+            "t": 1790686020
+          },
+          {
+            "c": null,
+            "t": 1790686080
+          },
+          {
+            "c": null,
+            "t": 1790686140
+          },
+          {
+            "c": null,
+            "t": 1790686200
+          },
+          {
+            "c": null,
+            "t": 1790686260
+          },
+          {
+            "c": null,
+            "t": 1790686320
+          },
+          {
+            "c": null,
+            "t": 1790686380
+          },
+          {
+            "c": null,
+            "t": 1790686440
+          },
+          {
+            "c": null,
+            "t": 1790686500
+          },
+          {
+            "c": null,
+            "t": 1790686560
+          },
+          {
+            "c": null,
+            "t": 1790686620
+          },
+          {
+            "c": null,
+            "t": 1790686680
+          },
+          {
+            "c": null,
+            "t": 1790686740
+          },
+          {
+            "c": null,
+            "t": 1790686800
+          },
+          {
+            "c": null,
+            "t": 1790686860
+          },
+          {
+            "c": null,
+            "t": 1790686920
+          },
+          {
+            "c": null,
+            "t": 1790686980
+          },
+          {
+            "c": null,
+            "t": 1790687040
+          },
+          {
+            "c": null,
+            "t": 1790687100
+          },
+          {
+            "c": null,
+            "t": 1790687160
+          },
+          {
+            "c": null,
+            "t": 1790687220
+          },
+          {
+            "c": null,
+            "t": 1790687280
+          },
+          {
+            "c": null,
+            "t": 1790687340
+          },
+          {
+            "c": null,
+            "t": 1790687400
+          },
+          {
+            "c": null,
+            "t": 1790687460
+          },
+          {
+            "c": null,
+            "t": 1790687520
+          },
+          {
+            "c": null,
+            "t": 1790687580
+          },
+          {
+            "c": null,
+            "t": 1790687640
+          },
+          {
+            "c": null,
+            "t": 1790687700
+          },
+          {
+            "c": null,
+            "t": 1790687760
+          },
+          {
+            "c": null,
+            "t": 1790687820
+          },
+          {
+            "c": null,
+            "t": 1790687880
+          },
+          {
+            "c": null,
+            "t": 1790687940
+          },
+          {
+            "c": null,
+            "t": 1790688000
+          },
+          {
+            "c": null,
+            "t": 1790688060
+          },
+          {
+            "c": null,
+            "t": 1790688120
+          },
+          {
+            "c": null,
+            "t": 1790688180
+          },
+          {
+            "c": null,
+            "t": 1790688240
+          },
+          {
+            "c": null,
+            "t": 1790688300
+          },
+          {
+            "c": null,
+            "t": 1790688360
+          },
+          {
+            "c": null,
+            "t": 1790688420
+          },
+          {
+            "c": null,
+            "t": 1790688480
+          },
+          {
+            "c": null,
+            "t": 1790688540
+          },
+          {
+            "c": null,
+            "t": 1790688600
+          },
+          {
+            "c": null,
+            "t": 1790688660
+          },
+          {
+            "c": null,
+            "t": 1790688720
+          },
+          {
+            "c": null,
+            "t": 1790688780
+          },
+          {
+            "c": null,
+            "t": 1790688840
+          },
+          {
+            "c": null,
+            "t": 1790688900
+          },
+          {
+            "c": null,
+            "t": 1790688960
+          },
+          {
+            "c": null,
+            "t": 1790689020
+          },
+          {
+            "c": null,
+            "t": 1790689080
+          },
+          {
+            "c": null,
+            "t": 1790689140
+          },
+          {
+            "c": null,
+            "t": 1790689200
+          },
+          {
+            "c": null,
+            "t": 1790689260
+          },
+          {
+            "c": null,
+            "t": 1790689320
+          },
+          {
+            "c": null,
+            "t": 1790689380
+          },
+          {
+            "c": null,
+            "t": 1790689440
+          },
+          {
+            "c": null,
+            "t": 1790689500
+          },
+          {
+            "c": null,
+            "t": 1790689560
+          },
+          {
+            "c": null,
+            "t": 1790689620
+          },
+          {
+            "c": null,
+            "t": 1790689680
+          },
+          {
+            "c": null,
+            "t": 1790689740
+          },
+          {
+            "c": null,
+            "t": 1790689800
+          },
+          {
+            "c": null,
+            "t": 1790689860
+          },
+          {
+            "c": null,
+            "t": 1790689920
+          },
+          {
+            "c": null,
+            "t": 1790689980
+          },
+          {
+            "c": null,
+            "t": 1790690040
+          },
+          {
+            "c": null,
+            "t": 1790690100
+          },
+          {
+            "c": null,
+            "t": 1790690160
+          },
+          {
+            "c": null,
+            "t": 1790690220
+          },
+          {
+            "c": null,
+            "t": 1790690280
+          },
+          {
+            "c": null,
+            "t": 1790690340
+          },
+          {
+            "c": 27.11,
+            "t": 1790690400
+          },
+          {
+            "c": null,
+            "t": 1790690460
+          },
+          {
+            "c": null,
+            "t": 1790690520
+          },
+          {
+            "c": null,
+            "t": 1790690580
+          },
+          {
+            "c": null,
+            "t": 1790690640
+          },
+          {
+            "c": null,
+            "t": 1790690700
+          },
+          {
+            "c": null,
+            "t": 1790690760
+          },
+          {
+            "c": null,
+            "t": 1790690820
+          },
+          {
+            "c": null,
+            "t": 1790690880
+          },
+          {
+            "c": null,
+            "t": 1790690940
+          },
+          {
+            "c": null,
+            "t": 1790691000
+          },
+          {
+            "c": null,
+            "t": 1790691060
+          },
+          {
+            "c": null,
+            "t": 1790691120
+          },
+          {
+            "c": null,
+            "t": 1790691180
+          },
+          {
+            "c": null,
+            "t": 1790691240
+          },
+          {
+            "c": null,
+            "t": 1790691300
+          },
+          {
+            "c": null,
+            "t": 1790691360
+          },
+          {
+            "c": null,
+            "t": 1790691420
+          },
+          {
+            "c": null,
+            "t": 1790691480
+          },
+          {
+            "c": null,
+            "t": 1790691540
+          },
+          {
+            "c": null,
+            "t": 1790691600
+          },
+          {
+            "c": null,
+            "t": 1790691660
+          },
+          {
+            "c": null,
+            "t": 1790691720
+          },
+          {
+            "c": null,
+            "t": 1790691780
+          },
+          {
+            "c": null,
+            "t": 1790691840
+          },
+          {
+            "c": null,
+            "t": 1790691900
+          },
+          {
+            "c": null,
+            "t": 1790691960
+          },
+          {
+            "c": null,
+            "t": 1790692020
+          },
+          {
+            "c": null,
+            "t": 1790692080
+          },
+          {
+            "c": null,
+            "t": 1790692140
+          },
+          {
+            "c": null,
+            "t": 1790692200
+          },
+          {
+            "c": null,
+            "t": 1790692260
+          },
+          {
+            "c": null,
+            "t": 1790692320
+          },
+          {
+            "c": null,
+            "t": 1790692380
+          },
+          {
+            "c": null,
+            "t": 1790692440
+          },
+          {
+            "c": null,
+            "t": 1790692500
+          },
+          {
+            "c": null,
+            "t": 1790692560
+          },
+          {
+            "c": null,
+            "t": 1790692620
+          },
+          {
+            "c": null,
+            "t": 1790692680
+          },
+          {
+            "c": null,
+            "t": 1790692740
+          },
+          {
+            "c": null,
+            "t": 1790692800
+          },
+          {
+            "c": null,
+            "t": 1790692860
+          },
+          {
+            "c": null,
+            "t": 1790692920
+          },
+          {
+            "c": null,
+            "t": 1790692980
+          },
+          {
+            "c": null,
+            "t": 1790693040
+          },
+          {
+            "c": null,
+            "t": 1790693100
+          },
+          {
+            "c": null,
+            "t": 1790693160
+          },
+          {
+            "c": null,
+            "t": 1790693220
+          },
+          {
+            "c": null,
+            "t": 1790693280
+          },
+          {
+            "c": null,
+            "t": 1790693340
+          },
+          {
+            "c": null,
+            "t": 1790693400
+          },
+          {
+            "c": null,
+            "t": 1790693460
+          },
+          {
+            "c": 27.32,
+            "t": 1790693520
+          },
+          {
+            "c": null,
+            "t": 1790693580
+          },
+          {
+            "c": null,
+            "t": 1790693640
+          },
+          {
+            "c": null,
+            "t": 1790693700
+          },
+          {
+            "c": null,
+            "t": 1790693760
+          },
+          {
+            "c": null,
+            "t": 1790693820
+          },
+          {
+            "c": null,
+            "t": 1790693880
+          },
+          {
+            "c": null,
+            "t": 1790693940
+          },
+          {
+            "c": null,
+            "t": 1790694000
+          },
+          {
+            "c": null,
+            "t": 1790694060
+          },
+          {
+            "c": null,
+            "t": 1790694120
+          },
+          {
+            "c": null,
+            "t": 1790694180
+          },
+          {
+            "c": null,
+            "t": 1790694240
+          },
+          {
+            "c": null,
+            "t": 1790694300
+          },
+          {
+            "c": null,
+            "t": 1790694360
+          },
+          {
+            "c": null,
+            "t": 1790694420
+          },
+          {
+            "c": null,
+            "t": 1790694480
+          },
+          {
+            "c": null,
+            "t": 1790694540
+          },
+          {
+            "c": null,
+            "t": 1790694600
+          },
+          {
+            "c": null,
+            "t": 1790694660
+          },
+          {
+            "c": null,
+            "t": 1790694720
+          },
+          {
+            "c": null,
+            "t": 1790694780
+          },
+          {
+            "c": null,
+            "t": 1790694840
+          },
+          {
+            "c": null,
+            "t": 1790694900
+          },
+          {
+            "c": null,
+            "t": 1790694960
+          },
+          {
+            "c": null,
+            "t": 1790695020
+          },
+          {
+            "c": null,
+            "t": 1790695080
+          },
+          {
+            "c": null,
+            "t": 1790695140
+          },
+          {
+            "c": null,
+            "t": 1790695200
+          },
+          {
+            "c": null,
+            "t": 1790695260
+          },
+          {
+            "c": null,
+            "t": 1790695320
+          },
+          {
+            "c": null,
+            "t": 1790695380
+          },
+          {
+            "c": null,
+            "t": 1790695440
+          },
+          {
+            "c": null,
+            "t": 1790695500
+          },
+          {
+            "c": 27.32,
+            "t": 1790695560
+          },
+          {
+            "c": null,
+            "t": 1790695620
+          },
+          {
+            "c": null,
+            "t": 1790695680
+          },
+          {
+            "c": null,
+            "t": 1790695740
+          },
+          {
+            "c": null,
+            "t": 1790695800
+          },
+          {
+            "c": null,
+            "t": 1790695860
+          },
+          {
+            "c": null,
+            "t": 1790695920
+          },
+          {
+            "c": null,
+            "t": 1790695980
+          },
+          {
+            "c": null,
+            "t": 1790696040
+          },
+          {
+            "c": null,
+            "t": 1790696100
+          },
+          {
+            "c": null,
+            "t": 1790696160
+          },
+          {
+            "c": null,
+            "t": 1790696220
+          },
+          {
+            "c": null,
+            "t": 1790696280
+          },
+          {
+            "c": null,
+            "t": 1790696340
+          },
+          {
+            "c": null,
+            "t": 1790696400
+          },
+          {
+            "c": null,
+            "t": 1790696460
+          },
+          {
+            "c": null,
+            "t": 1790696520
+          },
+          {
+            "c": null,
+            "t": 1790696580
+          },
+          {
+            "c": null,
+            "t": 1790696640
+          },
+          {
+            "c": 27.26,
+            "t": 1790696700
+          },
+          {
+            "t": 1790696759
+          },
+          {
+            "t": 1790696819
+          },
+          {
+            "t": 1790696879
+          },
+          {
+            "t": 1790696939
+          },
+          {
+            "t": 1790696999
+          },
+          {
+            "t": 1790697059
+          },
+          {
+            "t": 1790697119
+          },
+          {
+            "t": 1790697179
+          },
+          {
+            "t": 1790697239
+          },
+          {
+            "t": 1790697299
+          },
+          {
+            "t": 1790697359
+          },
+          {
+            "t": 1790697419
+          },
+          {
+            "t": 1790697479
+          },
+          {
+            "t": 1790697539
+          },
+          {
+            "t": 1790697599
+          },
+          {
+            "t": 1790697600
+          }
+        ]
+      },
+      "description": "The KICK Korea Semiconductor Index ETF (KCHP) is an exchange-traded fund that is based on the Akros Korea Semiconductor index. The KICK Korea Semiconductor Index ETF (the Fund) seeks to provide investment results that, before fees and expenses, correspond generally to the total return performance of the Akros Korea Semiconductor Index (the Index). KCHP was launched on Sep 14, 2026 and is issued by KICK.",
+      "infoTable": [
+        [
+          "Asset Class",
+          "Equity"
+        ],
+        [
+          "Stock Exchange",
+          "NYSEARCA"
+        ],
+        [
+          "Ticker Symbol",
+          "KCHP"
+        ],
+        [
+          "Provider",
+          "KICK"
+        ],
+        [
+          "Index Tracked",
+          "Akros Korea Semiconductor Index"
+        ]
+      ],
+      "etf_website": "https://www.kicketfs.com/kchp",
+      "provider_page": null,
+      "holdingsTable": {
+        "count": 20,
+        "updated": "Sep 25, 2026",
+        "top10": 81.63,
+        "holdings": [
+          {
+            "n": "Us Dollars",
+            "as": "39.56%",
+            "sh": "1,369,082"
+          },
+          {
+            "n": "Samsung Electronics Co., Ltd.",
+            "s": "!krx/005930",
+            "as": "12.72%",
+            "sh": "2,096"
+          },
+          {
+            "n": "SK hynix Inc.",
+            "s": "!krx/000660",
+            "as": "10.13%",
+            "sh": "256"
+          },
+          {
+            "n": "ISU Petasys Co., Ltd.",
+            "s": "!krx/007660",
+            "as": "3.42%",
+            "sh": "1,352"
+          },
+          {
+            "n": "JUSUNG ENGINEERING Co.,Ltd.",
+            "s": "!kosdaq/036930",
+            "as": "3.21%",
+            "sh": "720"
+          },
+          {
+            "n": "HANMI Semiconductor Co., Ltd.",
+            "s": "!krx/042700",
+            "as": "2.94%",
+            "sh": "568"
+          },
+          {
+            "n": "SIMMTECH Co., Ltd.",
+            "s": "!kosdaq/222800",
+            "as": "2.49%",
+            "sh": "784"
+          },
+          {
+            "n": "EO Technics Co., Ltd.",
+            "s": "!kosdaq/039030",
+            "as": "2.46%",
+            "sh": "240"
+          },
+          {
+            "n": "DB HiTek CO., LTD.",
+            "s": "!krx/000990",
+            "as": "2.38%",
+            "sh": "848"
+          },
+          {
+            "n": "DAEDUCK ELECTRONICS Co., Ltd.",
+            "s": "!krx/353200",
+            "as": "2.32%",
+            "sh": "912"
+          }
+        ]
+      },
+      "dividendTable": null,
+      "news": {
+        "exp": "1790795214909",
+        "data": [
+          {
+            "url": "https://www.prnewswire.com/news-releases/exchange-traded-concepts-and-kiwoom-securities-usa-inc-launch-the-first-fund-for-the-kick-etfs-series-kchp-offering-focused-access-to-koreas-semiconductor-leaders-302878919.html",
+            "img": "https://cdn.snapi.dev/images/v1/h/m/f/press13-3923917.jpg",
+            "title": "Exchange Traded Concepts and Kiwoom Securities (USA) Inc. Launch the First fund for the KICK ETFs series, KCHP, Offering Focused Access to Korea's Semiconductor Leaders",
+            "text": "The KICK Korea Semiconductor Index ETF brings Korea's ecosystem of memory, equipment, materials, foundry and chip-design into a single U.S.-listed fund. OKLAHOMA CITY, Sept.",
+            "source": "PRNewsWire",
+            "type": "Article",
+            "tickers": null,
+            "time": "Sep 15, 2026, 8:30 AM EDT",
+            "ago": "15 days ago"
+          }
+        ]
+      },
+      "config": {
+        "no1d": false
+      },
+      "changes": {
+        "price1w": 26.948,
+        "price1m": null,
+        "price3m": null,
+        "price6m": null,
+        "priceYTD": null,
+        "price1y": null,
+        "price5y": null,
+        "priceMAX": 23.74
+      },
+      "performance": {
+        "tr1m": null,
+        "trYTD": null,
+        "tr1y": null,
+        "cagr5y": null,
+        "cagr10y": null,
+        "cagrMAX": null
+      }
+    },
+    "holdings": {
+      "holdings": [
+        {
+          "no": 1,
+          "n": "Us Dollars",
+          "as": "39.56%",
+          "sh": "1,369,082"
+        },
+        {
+          "no": 2,
+          "n": "Samsung Electronics Co., Ltd.",
+          "s": "!krx/005930",
+          "as": "12.72%",
+          "sh": "2,096"
+        },
+        {
+          "no": 3,
+          "n": "SK hynix Inc.",
+          "s": "!krx/000660",
+          "as": "10.13%",
+          "sh": "256"
+        },
+        {
+          "no": 4,
+          "n": "ISU Petasys Co., Ltd.",
+          "s": "!krx/007660",
+          "as": "3.42%",
+          "sh": "1,352"
+        },
+        {
+          "no": 5,
+          "n": "JUSUNG ENGINEERING Co.,Ltd.",
+          "s": "!kosdaq/036930",
+          "as": "3.21%",
+          "sh": "720"
+        },
+        {
+          "no": 6,
+          "n": "HANMI Semiconductor Co., Ltd.",
+          "s": "!krx/042700",
+          "as": "2.94%",
+          "sh": "568"
+        },
+        {
+          "no": 7,
+          "n": "SIMMTECH Co., Ltd.",
+          "s": "!kosdaq/222800",
+          "as": "2.49%",
+          "sh": "784"
+        },
+        {
+          "no": 8,
+          "n": "EO Technics Co., Ltd.",
+          "s": "!kosdaq/039030",
+          "as": "2.46%",
+          "sh": "240"
+        },
+        {
+          "no": 9,
+          "n": "DB HiTek CO., LTD.",
+          "s": "!krx/000990",
+          "as": "2.38%",
+          "sh": "848"
+        },
+        {
+          "no": 10,
+          "n": "DAEDUCK ELECTRONICS Co., Ltd.",
+          "s": "!krx/353200",
+          "as": "2.32%",
+          "sh": "912"
+        },
+        {
+          "no": 11,
+          "n": "Samsung Electro-Mechanics Co., Ltd.",
+          "s": "!krx/009150",
+          "as": "2.31%",
+          "sh": "72"
+        },
+        {
+          "no": 12,
+          "n": "Wonik IPS Co., Ltd.",
+          "s": "!kosdaq/240810",
+          "as": "2.27%",
+          "sh": "800"
+        },
+        {
+          "no": 13,
+          "n": "LEENO Industrial Inc.",
+          "s": "!kosdaq/058470",
+          "as": "2.20%",
+          "sh": "1,392"
+        },
+        {
+          "no": 14,
+          "n": "PSK Inc.",
+          "s": "!kosdaq/319660",
+          "as": "1.85%",
+          "sh": "600"
+        },
+        {
+          "no": 15,
+          "n": "FADU Inc.",
+          "s": "!kosdaq/440110",
+          "as": "1.83%",
+          "sh": "1,056"
+        },
+        {
+          "no": 16,
+          "n": "HPSP Co., Ltd.",
+          "s": "!kosdaq/403870",
+          "as": "1.80%",
+          "sh": "1,528"
+        },
+        {
+          "no": 17,
+          "n": "ISC Co., Ltd.",
+          "s": "!kosdaq/095340",
+          "as": "1.77%",
+          "sh": "392"
+        },
+        {
+          "no": 18,
+          "n": "HANA Micron Inc.",
+          "s": "!kosdaq/067310",
+          "as": "1.61%",
+          "sh": "1,640"
+        },
+        {
+          "no": 19,
+          "n": "Jeju Semiconductor Corp.",
+          "s": "!kosdaq/080220",
+          "as": "1.50%",
+          "sh": "912"
+        },
+        {
+          "no": 20,
+          "n": "Dongjin Semichem Co., Ltd.",
+          "s": "!kosdaq/005290",
+          "as": "1.23%",
+          "sh": "1,232"
+        }
+      ],
+      "asset_allocation": null,
+      "sectors": null,
+      "countries": null,
+      "allocationChartData": {
+        "sectors": [],
+        "assets": [],
+        "countries": []
+      },
+      "news": [
+        {
+          "t": "Exchange Traded Concepts and Kiwoom Securities (USA) Inc. Launch the First fund for the KICK ETFs series, KCHP, Offering Focused Access to Korea's Semiconductor Leaders",
+          "u": "https://www.prnewswire.com/news-releases/exchange-traded-concepts-and-kiwoom-securities-usa-inc-launch-the-first-fund-for-the-kick-etfs-series-kchp-offering-focused-access-to-koreas-semiconductor-leaders-302878919.html",
+          "n": "PRNewsWire",
+          "d": "15 days ago"
+        }
+      ],
+      "infoBox": "KCHP is an equity ETF with a total of 20 individual holdings. The top holdings are Us Dollars stock at 39.56%, Samsung Electronics at 12.72%, SK hynix at 10.13%, ISU Petasys at 3.42%, and JUSUNG ENGINEERING at 3.21%.",
+      "infoTable": {
+        "count": 20,
+        "top10": 81.63,
+        "assetClass": "Equity",
+        "category": null,
+        "categoryLabel": "ETF Category",
+        "aum": 2144000,
+        "peRatio": null
+      },
+      "date": "Sep 25, 2026",
+      "count": 20,
+      "trust": {
+        "sources": [
+          {
+            "name": "Finnhub",
+            "short": "Finnhub",
+            "url": "https://finnhub.io/"
+          }
+        ],
+        "freshnessLag": "days",
+        "updateFrequency": "daily",
+        "lastUpdated": "Sep 25, 2026",
+        "lastChecked": 1790759215873,
+        "topic": "holdings",
+        "ticker": "KCHP",
+        "summary": {
+          "pre": "ETF holdings data is provided by ",
+          "post": ". Holdings are typically published by the ETF issuer at the end of each trading day."
+        },
+        "extraSummaryLinks": null
+      }
+    },
+    "quote": {
+      "p": 26.93,
+      "pd": 26.93,
+      "c": -0.35,
+      "cp": -1.28,
+      "cl": 27.28,
+      "cdr": -1,
+      "o": 26.99,
+      "h": 27.01,
+      "l": 26.99,
+      "v": 957.9948,
+      "ts": 1790779051497.2173,
+      "u": "Sep 30, 2026, 10:37 AM EDT",
+      "td": "2026-09-30",
+      "h52": 27.47,
+      "l52": 23.74,
+      "ex": "NYSEARCA",
+      "ms": "open",
+      "fms": "open",
+      "e": false,
+      "ep": null,
+      "epd": 0,
+      "ec": 0,
+      "ecp": 0,
+      "eu": null,
+      "es": null,
+      "ets": 1790779051497.2173,
+      "etd": null,
+      "epv": null,
+      "days": 0,
+      "exp": 1790781394767,
+      "symbol": "KCHP",
+      "uid": "KCHP"
+    },
+    "history": [],
+    "history_periods": {
+      "daily_1y": [
+        {
+          "t": "2026-09-29",
+          "o": 27.12,
+          "h": 27.32,
+          "l": 27.11,
+          "c": 27.28,
+          "a": 27.28,
+          "v": 6144,
+          "ch": 4.94
+        },
+        {
+          "t": "2026-09-28",
+          "o": 25.59,
+          "h": 26.27,
+          "l": 25.52,
+          "c": 25.995,
+          "a": 25.9948,
+          "v": 10590,
+          "ch": -3.17
+        },
+        {
+          "t": "2026-09-25",
+          "o": 26.29,
+          "h": 26.846,
+          "l": 26.23,
+          "c": 26.846,
+          "a": 26.8458,
+          "v": 2702,
+          "ch": 3.83
+        },
+        {
+          "t": "2026-09-24",
+          "o": 26.01,
+          "h": 26.01,
+          "l": 25.856,
+          "c": 25.856,
+          "a": 25.8564,
+          "v": 2894,
+          "ch": -2.22
+        },
+        {
+          "t": "2026-09-23",
+          "o": 27.47,
+          "h": 27.47,
+          "l": 26.415,
+          "c": 26.442,
+          "a": 26.4424,
+          "v": 1758,
+          "ch": -1.87
+        },
+        {
+          "t": "2026-09-22",
+          "o": 26.34,
+          "h": 27.06,
+          "l": 26.34,
+          "c": 26.948,
+          "a": 26.9475,
+          "v": 5909,
+          "ch": 2.81
+        },
+        {
+          "t": "2026-09-21",
+          "o": 25.88,
+          "h": 26.212,
+          "l": 25.88,
+          "c": 26.212,
+          "a": 26.2121,
+          "v": 5551,
+          "ch": 6.46
+        },
+        {
+          "t": "2026-09-18",
+          "o": 24.59,
+          "h": 24.623,
+          "l": 24.335,
+          "c": 24.623,
+          "a": 24.6227,
+          "v": 11405,
+          "ch": -3.08
+        },
+        {
+          "t": "2026-09-17",
+          "o": 25.05,
+          "h": 25.57,
+          "l": 25.01,
+          "c": 25.405,
+          "a": 25.405,
+          "v": 10965,
+          "ch": -0.53
+        },
+        {
+          "t": "2026-09-16",
+          "o": 24.85,
+          "h": 27.02,
+          "l": 24.65,
+          "c": 25.542,
+          "a": 25.5415,
+          "v": 10632,
+          "ch": 7.59
+        }
+      ],
+      "weekly_1y": [
+        {
+          "t": "2026-09-28",
+          "o": 25.59,
+          "h": 27.32,
+          "l": 25.52,
+          "c": 27.28,
+          "v": 16734,
+          "a": 27.28,
+          "ch": 1.62
+        },
+        {
+          "t": "2026-09-21",
+          "o": 25.88,
+          "h": 27.47,
+          "l": 25.856,
+          "c": 26.846,
+          "v": 18814,
+          "a": 26.8458,
+          "ch": 9.03
+        }
+      ],
+      "monthly_1y": [],
+      "weekly_3y": [
+        {
+          "t": "2026-09-28",
+          "o": 25.59,
+          "h": 27.32,
+          "l": 25.52,
+          "c": 27.28,
+          "v": 16734,
+          "a": 27.28,
+          "ch": 1.62
+        },
+        {
+          "t": "2026-09-21",
+          "o": 25.88,
+          "h": 27.47,
+          "l": 25.856,
+          "c": 26.846,
+          "v": 18814,
+          "a": 26.8458,
+          "ch": 9.03
+        }
+      ],
+      "monthly_3y": [],
+      "monthly_5y": []
+    }
+  },
+  "detail_status": "stockanalysis_partial",
+  "partial_reason_codes": [
+    "holdings_countries_unavailable"
+  ]
+}

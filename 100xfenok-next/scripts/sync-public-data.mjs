@@ -448,8 +448,9 @@ function buildMarketFactsShardProjection(transformedSourceRoots) {
   };
 }
 
-function readBoundStockanalysisEtfFile(filePath) {
-  const binding = captureSourceBinding(filePath, "StockAnalysis ETF source file", "file");
+function readBoundStockanalysisEtfFile(filePath, expectedBinding) {
+  const binding = expectedBinding ?? captureSourceBinding(filePath, "StockAnalysis ETF source file", "file");
+  revalidateSourceBindings([binding], "before StockAnalysis ETF source read");
   if (typeof fs.constants.O_NOFOLLOW !== "number") {
     throw new Error("StockAnalysis ETF source read requires O_NOFOLLOW support");
   }
@@ -506,6 +507,38 @@ function timestampRange(values) {
   return { min: ordered.at(0) ?? null, max: ordered.at(-1) ?? null, present_count: ordered.length };
 }
 
+function buildStockanalysisEtfShardBody(shardId, members) {
+  const sortedEntries = {};
+  const document = {
+    schema_version: STOCKANALYSIS_ETF_SHARD_SCHEMA,
+    shard_algorithm: STOCKANALYSIS_ETF_SHARD_ALGORITHM,
+    shard_count: STOCKANALYSIS_ETF_SHARD_COUNT,
+    shard_id: shardId,
+    entries: sortedEntries,
+  };
+  let byteLength = Buffer.byteLength(JSON.stringify(document)) + 1;
+  let memberCount = 0;
+  for (const ticker of Object.keys(members).sort()) {
+    const member = members[ticker];
+    const { body } = readBoundStockanalysisEtfFile(member.binding.filePath, member.binding);
+    if (sha256Text(body) !== member.sha256) {
+      throw new Error(`StockAnalysis ETF source digest drift: ${member.binding.filePath}`);
+    }
+    const entry = { raw: body, sha256: member.sha256 };
+    byteLength += Buffer.byteLength(JSON.stringify(ticker)) + 1
+      + Buffer.byteLength(JSON.stringify(entry)) + (memberCount === 0 ? 0 : 1);
+    if (byteLength > STOCKANALYSIS_ETF_SHARD_MAX_BYTES) {
+      throw new Error(
+        `StockAnalysis ETF shard ${shardId} exceeds the ${STOCKANALYSIS_ETF_SHARD_MAX_BYTES}-byte asset limit: ${byteLength}`,
+      );
+    }
+    sortedEntries[ticker] = entry;
+    memberCount += 1;
+  }
+  const body = `${JSON.stringify(document)}\n`;
+  return { body, byteLength: Buffer.byteLength(body), sha256: sha256Text(body) };
+}
+
 function buildStockanalysisEtfShardProjection(sourceRoot) {
   const absolutePath = path.join(sourceRoot, ...STOCKANALYSIS_ETF_ROOT.split("/"));
   if (!lstatIfPresent(absolutePath)) return null;
@@ -531,12 +564,13 @@ function buildStockanalysisEtfShardProjection(sourceRoot) {
     }
     const { binding, body } = readBoundStockanalysisEtfFile(filePath);
     const payload = parseStockanalysisEtfPayload(body, filePath, ticker);
+    const sha256 = sha256Text(body);
     sourceBindings.push(binding);
     shards[stockanalysisEtfShardId(ticker)][ticker] = {
-      raw: body,
-      sha256: sha256Text(body),
+      binding,
+      sha256,
     };
-    sourceRows.push({ ticker, sha256: sha256Text(body) });
+    sourceRows.push({ ticker, sha256 });
     if (isoTimestamp(payload.source_as_of)) sourceAsOf.push(payload.source_as_of);
     fetchedAt.push(payload.fetched_at);
   }
@@ -544,31 +578,17 @@ function buildStockanalysisEtfShardProjection(sourceRoot) {
 
   const sourceSha256 = stockanalysisEtfSourceBindingSha256(sourceRows);
   const snapshotId = stockanalysisEtfSnapshotId(sourceSha256);
-  const shardFiles = shards.map((entriesByTicker, shardId) => {
-    const sortedEntries = {};
-    for (const key of Object.keys(entriesByTicker).sort()) {
-      sortedEntries[key] = entriesByTicker[key];
-    }
-    const body = `${JSON.stringify({
-      schema_version: STOCKANALYSIS_ETF_SHARD_SCHEMA,
-      shard_algorithm: STOCKANALYSIS_ETF_SHARD_ALGORITHM,
-      shard_count: STOCKANALYSIS_ETF_SHARD_COUNT,
-      shard_id: shardId,
-      entries: sortedEntries,
-    })}\n`;
-    const byteLength = Buffer.byteLength(body);
-    if (byteLength > STOCKANALYSIS_ETF_SHARD_MAX_BYTES) {
-      throw new Error(
-        `StockAnalysis ETF shard ${shardId} exceeds the ${STOCKANALYSIS_ETF_SHARD_MAX_BYTES}-byte asset limit: ${byteLength}`,
-      );
-    }
+  // Preflight one shard at a time; retain its source bindings and digest, not
+  // the full cohort's raw payloads or serialized shard bodies.
+  const shardFiles = shards.map((members, shardId) => {
+    const { byteLength, sha256 } = buildStockanalysisEtfShardBody(shardId, members);
     return {
       shardId,
       relativePath: `snapshots/${snapshotId}/${stockanalysisEtfShardFileNameForId(shardId)}`,
-      body,
-      sha256: sha256Text(body),
+      members,
+      sha256,
       byteLength,
-      memberCount: Object.keys(entriesByTicker).length,
+      memberCount: Object.keys(members).length,
     };
   });
   const manifest = {
@@ -805,13 +825,14 @@ function assertNoOrphanedDestinationStockanalysisEtfProjection(destinationRoot) 
   }
 }
 
-function removeDirectStockanalysisEtfFiles(destinationRoot) {
+function collectDirectStockanalysisEtfFiles(destinationRoot) {
   const etfRoot = path.join(destinationRoot, ...STOCKANALYSIS_ETF_ROOT.split("/"));
   const stat = lstatIfPresent(etfRoot);
-  if (!stat) return;
+  if (!stat) return [];
   if (stat.isSymbolicLink() || !stat.isDirectory()) {
     throw new Error(`StockAnalysis ETF destination root must be a real directory: ${etfRoot}`);
   }
+  const files = [];
   for (const entry of fs.readdirSync(etfRoot, { withFileTypes: true })) {
     if (entry.name === "shards") continue;
     const entryPath = path.join(etfRoot, entry.name);
@@ -819,8 +840,9 @@ function removeDirectStockanalysisEtfFiles(destinationRoot) {
     if (entryStat.isSymbolicLink() || !entryStat.isFile() || !entry.name.endsWith(".json")) {
       throw new Error(`StockAnalysis ETF direct public path is unsafe: ${entryPath}`);
     }
-    fs.unlinkSync(entryPath);
+    files.push(captureSourceBinding(entryPath, "StockAnalysis ETF direct destination file", "file"));
   }
+  return files;
 }
 
 function assertRemovalBinding(bindingByPath, filePath, expectedKind, stableOnly = false) {
@@ -908,9 +930,13 @@ function publishStockanalysisEtfShardProjection(destinationRoot, projection) {
   fs.mkdirSync(stageRoot, { recursive: true });
   try {
     for (const item of projection.shardFiles) {
+      const shard = buildStockanalysisEtfShardBody(item.shardId, item.members);
+      if (shard.sha256 !== item.sha256 || shard.byteLength !== item.byteLength) {
+        throw new Error(`StockAnalysis ETF shard changed after preflight: ${item.relativePath}`);
+      }
       const stagedPath = path.join(stageRoot, ...item.relativePath.split("/"));
       fs.mkdirSync(path.dirname(stagedPath), { recursive: true });
-      fs.writeFileSync(stagedPath, item.body, "utf8");
+      fs.writeFileSync(stagedPath, shard.body, "utf8");
       const stagedStat = fs.lstatSync(stagedPath);
       if (!stagedStat.isFile() || stagedStat.isSymbolicLink() || sha256Text(fs.readFileSync(stagedPath, "utf8")) !== item.sha256) {
         throw new Error(`StockAnalysis ETF shard staging verification failed: ${stagedPath}`);
@@ -1011,8 +1037,9 @@ export function syncStockanalysisEtfShardProjection({
   };
   if (dryRun || !projection) return result;
   revalidateSourceBindings(projection.sourceBindings, "immediately before StockAnalysis ETF shard publication");
-  removeDirectStockanalysisEtfFiles(destination);
+  const directFiles = collectDirectStockanalysisEtfFiles(destination);
   publishStockanalysisEtfShardProjection(destination, projection);
+  removeDestinationExactFiles(directFiles, new Map(directFiles.map((binding) => [binding.filePath, binding])));
   logger(`[sync-public-data] projected ${result.stockanalysisEtfTickerFiles} StockAnalysis ETF tickers into ${result.stockanalysisEtfShardFiles} shards plus ${result.stockanalysisEtfManifestFiles} manifest`);
   return result;
 }
@@ -1135,7 +1162,10 @@ export function syncPublicData({
   removeDestinationExactFiles(plan.exactRemovals, removalBindingByPath);
   removeDestinationExactFiles(plan.restrictedExactRemovals, removalBindingByPath);
   removeDestinationRoots(plan.removals, removalBindingByPath);
-  removeDestinationRoots(plan.transformedRemovals, removalBindingByPath);
+  removeDestinationRoots(
+    plan.transformedRemovals.filter((removal) => removal.relativeRoot !== STOCKANALYSIS_ETF_ROOT),
+    removalBindingByPath,
+  );
   removeDestinationRoots(plan.restrictedRemovals, removalBindingByPath);
   for (const relativeDirectory of plan.directories) {
     fs.mkdirSync(path.join(plan.destinationRoot, ...relativeDirectory.split("/")), { recursive: true });
@@ -1157,6 +1187,20 @@ export function syncPublicData({
     fs.writeFileSync(target, item.body);
   }
   publishStockanalysisEtfShardProjection(plan.destinationRoot, plan.stockanalysisEtfProjection);
+  // Keep the previous ETF index/snapshot (and legacy fallback files) until
+  // publication commits. Clean only the preflighted non-shard destination
+  // nodes afterward; the publisher owns cleanup inside the shard root.
+  const etfRoot = path.join(plan.destinationRoot, ...STOCKANALYSIS_ETF_ROOT.split("/"));
+  const etfShardRoot = path.join(plan.destinationRoot, ...STOCKANALYSIS_ETF_SHARD_ROOT.split("/"));
+  const isEtfShardNode = (filePath) => filePath === etfShardRoot || filePath.startsWith(`${etfShardRoot}${path.sep}`);
+  for (const removal of plan.transformedRemovals) {
+    if (removal.relativeRoot !== STOCKANALYSIS_ETF_ROOT) continue;
+    removeDestinationRoots([{
+      ...removal,
+      files: removal.files.filter((filePath) => !isEtfShardNode(filePath)),
+      directories: removal.directories.filter((directory) => directory !== etfRoot && !isEtfShardNode(directory)),
+    }], removalBindingByPath);
+  }
   logger(`[sync-public-data] copied ${result.filesCopied} files (${result.bytesCopied} bytes); sharded ${result.marketFactsTickerFiles} market-facts tickers into ${result.marketFactsShardFiles} files (${result.marketFactsShardBytes} bytes) and ${result.stockanalysisEtfTickerFiles} StockAnalysis ETF tickers into ${result.stockanalysisEtfShardFiles} files plus ${result.stockanalysisEtfManifestFiles} manifest; excluded ${result.excludedSourceRoots} private roots; removed ${result.removedDestinationRoots} stale private roots; excluded ${result.excludedSourceFiles} exact files; removed ${result.removedDestinationExactFiles} stale exact files; restricted ${result.restrictedSourceFiles} derived files and ${result.restrictedSourceRoots} derived roots; removed ${result.removedRestrictedDestinationExactFiles} stale restricted files and ${result.removedRestrictedDestinationRoots} stale restricted roots`);
   return result;
 }

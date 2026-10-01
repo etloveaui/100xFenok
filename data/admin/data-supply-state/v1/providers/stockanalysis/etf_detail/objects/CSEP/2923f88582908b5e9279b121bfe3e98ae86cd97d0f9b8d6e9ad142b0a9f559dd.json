@@ -1,0 +1,562 @@
+{
+  "schema_version": "stockanalysis/v1",
+  "source": "stockanalysis",
+  "asset_type": "etf",
+  "ticker": "CSEP",
+  "source_as_of": "2026-09-30T14:32:38Z",
+  "fetched_at": "2026-09-30T15:16:13Z",
+  "endpoints": {
+    "holdings": "/etf/csep/holdings/__data.json",
+    "overview": "/etf/csep/__data.json",
+    "quote": "/api/quotes/e/CSEP",
+    "history_periods": {
+      "daily_1y": "/api/symbol/e/CSEP/history?range=1Y&period=Daily",
+      "weekly_1y": "/api/symbol/e/CSEP/history?range=1Y&period=Weekly",
+      "monthly_1y": "/api/symbol/e/CSEP/history?range=1Y&period=Monthly",
+      "weekly_3y": "/api/symbol/e/CSEP/history?range=3Y&period=Weekly",
+      "monthly_3y": "/api/symbol/e/CSEP/history?range=3Y&period=Monthly",
+      "monthly_5y": "/api/symbol/e/CSEP/history?range=5Y&period=Monthly"
+    }
+  },
+  "endpoint_contracts": {
+    "overview": {
+      "format": "svelte_devalue",
+      "decoder": "svelte_devalue_node/v1",
+      "contract": "etf_detail_overview/v1"
+    },
+    "holdings": {
+      "format": "svelte_devalue",
+      "decoder": "svelte_devalue_node/v1",
+      "contract": "etf_detail_holdings/v1"
+    },
+    "quote": {
+      "format": "rest_json",
+      "contract": "stockanalysis_quote/v1"
+    },
+    "history_periods": {
+      "format": "rest_json",
+      "contract": "stockanalysis_history/v1"
+    }
+  },
+  "normalized": {
+    "holdings": [],
+    "asset_allocation": null,
+    "sectors": null,
+    "countries": null,
+    "holding_count": null,
+    "holdings_updated": null,
+    "classification": {
+      "is_leveraged": false,
+      "leverage_factor": null,
+      "is_inverse": false,
+      "is_single_stock": false,
+      "underlying": null,
+      "source": "stockanalysis.overview.description",
+      "confidence": "high"
+    },
+    "overview": {
+      "sharesOut": "45,000",
+      "inception": "Sep 14, 2026",
+      "etf_website": "https://corgiinvest.com/csep"
+    },
+    "performance": {
+      "tr1m": null,
+      "trYTD": null,
+      "tr1y": null,
+      "cagr5y": null,
+      "cagr10y": null,
+      "cagrMAX": null
+    },
+    "quote": {
+      "p": 25.33,
+      "pd": 25.33,
+      "c": 0.14,
+      "cp": 0.55,
+      "cl": 25.19,
+      "cdr": 1,
+      "o": 0,
+      "h": 0,
+      "l": 0,
+      "v": 6,
+      "ts": 1790778758323.6448,
+      "u": "Sep 30, 2026, 10:32 AM EDT",
+      "td": "2026-09-30",
+      "h52": 25.409,
+      "l52": 24.97,
+      "ex": "BATS",
+      "ms": "open",
+      "fms": "open",
+      "e": false,
+      "ep": null,
+      "epd": 0,
+      "ec": 0,
+      "ecp": 0,
+      "eu": null,
+      "es": null,
+      "ets": 1790778758323.6448,
+      "etd": null,
+      "epv": null,
+      "days": 0,
+      "exp": 1790781377621,
+      "symbol": "CSEP",
+      "uid": "CSEP"
+    },
+    "history": [],
+    "history_periods": {
+      "daily_1y": [
+        {
+          "t": "2026-09-29",
+          "o": 25.191,
+          "h": 25.191,
+          "l": 25.191,
+          "c": 25.191,
+          "a": 25.1914,
+          "v": 6,
+          "ch": -0.08
+        },
+        {
+          "t": "2026-09-28",
+          "o": 25.36,
+          "h": 25.36,
+          "l": 25.211,
+          "c": 25.211,
+          "a": 25.2111,
+          "v": 506.00000000000006,
+          "ch": -0.38
+        },
+        {
+          "t": "2026-09-25",
+          "o": 25.308,
+          "h": 25.308,
+          "l": 25.308,
+          "c": 25.308,
+          "a": 25.3082,
+          "v": 202,
+          "ch": 0.25
+        },
+        {
+          "t": "2026-09-24",
+          "o": 25.23,
+          "h": 25.245,
+          "l": 25.23,
+          "c": 25.245,
+          "a": 25.2453,
+          "v": 514,
+          "ch": -0.27
+        },
+        {
+          "t": "2026-09-23",
+          "o": 25.313,
+          "h": 25.313,
+          "l": 25.313,
+          "c": 25.313,
+          "a": 25.3132,
+          "v": 6,
+          "ch": -0.38
+        },
+        {
+          "t": "2026-09-22",
+          "o": 25.409,
+          "h": 25.409,
+          "l": 25.409,
+          "c": 25.409,
+          "a": 25.4089,
+          "v": 6,
+          "ch": 0.04
+        },
+        {
+          "t": "2026-09-21",
+          "o": 25.4,
+          "h": 25.4,
+          "l": 25.4,
+          "c": 25.4,
+          "a": 25.3998,
+          "v": 6,
+          "ch": 1.06
+        },
+        {
+          "t": "2026-09-18",
+          "o": 25.134,
+          "h": 25.134,
+          "l": 25.134,
+          "c": 25.134,
+          "a": 25.1336,
+          "v": 9,
+          "ch": 0.02
+        },
+        {
+          "t": "2026-09-17",
+          "o": 25.128,
+          "h": 25.128,
+          "l": 25.128,
+          "c": 25.128,
+          "a": 25.1279,
+          "v": 6,
+          "ch": 0.6
+        },
+        {
+          "t": "2026-09-16",
+          "o": 24.97,
+          "h": 24.979,
+          "l": 24.97,
+          "c": 24.979,
+          "a": 24.9785,
+          "v": 106,
+          "ch": -0.2
+        }
+      ],
+      "weekly_1y": [
+        {
+          "t": "2026-09-28",
+          "o": 25.36,
+          "h": 25.36,
+          "l": 25.191,
+          "c": 25.191,
+          "v": 512,
+          "a": 25.1914,
+          "ch": -0.46
+        },
+        {
+          "t": "2026-09-21",
+          "o": 25.4,
+          "h": 25.409,
+          "l": 25.23,
+          "c": 25.308,
+          "v": 734,
+          "a": 25.3082,
+          "ch": 0.69
+        }
+      ],
+      "monthly_1y": [],
+      "weekly_3y": [
+        {
+          "t": "2026-09-28",
+          "o": 25.36,
+          "h": 25.36,
+          "l": 25.191,
+          "c": 25.191,
+          "v": 512,
+          "a": 25.1914,
+          "ch": -0.46
+        },
+        {
+          "t": "2026-09-21",
+          "o": 25.4,
+          "h": 25.409,
+          "l": 25.23,
+          "c": 25.308,
+          "v": 734,
+          "a": 25.3082,
+          "ch": 0.69
+        }
+      ],
+      "monthly_3y": [],
+      "monthly_5y": []
+    }
+  },
+  "raw": {
+    "overview": {
+      "trust": {
+        "sources": [
+          {
+            "name": "S&P Global Market Intelligence",
+            "short": "S&P Global",
+            "url": "https://www.spglobal.com/market-intelligence/en"
+          },
+          {
+            "name": "CBOE",
+            "short": "CBOE",
+            "url": "https://www.cboe.com/"
+          },
+          {
+            "name": "Nasdaq UTP",
+            "short": "Nasdaq UTP",
+            "url": "https://www.utpplan.com/overview",
+            "noUtm": true
+          },
+          {
+            "name": "Finnhub",
+            "short": "Finnhub",
+            "url": "https://finnhub.io/"
+          }
+        ],
+        "topic": "overview",
+        "ticker": "CSEP",
+        "lastChecked": 1790781312062,
+        "summary": {
+          "text": "Historical data is provided by S&P Global Market Intelligence. Real-time stock price data is provided by CBOE and 15-minute delayed consolidated tape pricing data is provided by Nasdaq UTP. Several fund data points are also provided by Finnhub."
+        }
+      },
+      "type": "etf",
+      "aum": null,
+      "nav": null,
+      "expenseRatio": null,
+      "peRatio": null,
+      "sharesOut": "45,000",
+      "dps": null,
+      "dividendYield": null,
+      "payoutRatio": null,
+      "exDivDate": null,
+      "ch1y": null,
+      "payoutFrequency": "n/a",
+      "beta": null,
+      "holdings": null,
+      "inception": "Sep 14, 2026",
+      "chart": {
+        "expiration": null,
+        "data": null
+      },
+      "description": "The Corgi U.S. Equities 15% Structured Buffer ETF - September Series (CSEP) is an exchange-traded fund that mostly invests in downside hedge alternatives. The fund seeks to provide investors with returns that generally match the price return (excluding dividends) of the Invesco QQQ TrustSM, Series 1, up to the upside cap of 18.60% while providing a buffer against the first 15% of Invesco QQQ TrustSM, Series 1 losses, over the period from September 1, 2026 to August 31, 2027. CSEP was launched on Sep 14, 2026 and is issued by Corgi.",
+      "infoTable": [
+        [
+          "Asset Class",
+          "Alternatives"
+        ],
+        [
+          "Region",
+          "North America"
+        ],
+        [
+          "Stock Exchange",
+          "BATS"
+        ],
+        [
+          "Ticker Symbol",
+          "CSEP"
+        ],
+        [
+          "Provider",
+          "Corgi"
+        ]
+      ],
+      "etf_website": "https://corgiinvest.com/csep",
+      "provider_page": null,
+      "holdingsTable": {
+        "count": null,
+        "updated": null,
+        "top10": null,
+        "holdings": null
+      },
+      "dividendTable": null,
+      "news": {
+        "exp": "1790777274569",
+        "data": []
+      },
+      "config": {
+        "no1d": true
+      },
+      "changes": {
+        "price1w": 25.409,
+        "price1m": null,
+        "price3m": null,
+        "price6m": null,
+        "priceYTD": null,
+        "price1y": null,
+        "price5y": null,
+        "priceMAX": 25.029
+      },
+      "performance": {
+        "tr1m": null,
+        "trYTD": null,
+        "tr1y": null,
+        "cagr5y": null,
+        "cagr10y": null,
+        "cagrMAX": null
+      }
+    },
+    "holdings": {},
+    "quote": {
+      "p": 25.33,
+      "pd": 25.33,
+      "c": 0.14,
+      "cp": 0.55,
+      "cl": 25.19,
+      "cdr": 1,
+      "o": 0,
+      "h": 0,
+      "l": 0,
+      "v": 6,
+      "ts": 1790778758323.6448,
+      "u": "Sep 30, 2026, 10:32 AM EDT",
+      "td": "2026-09-30",
+      "h52": 25.409,
+      "l52": 24.97,
+      "ex": "BATS",
+      "ms": "open",
+      "fms": "open",
+      "e": false,
+      "ep": null,
+      "epd": 0,
+      "ec": 0,
+      "ecp": 0,
+      "eu": null,
+      "es": null,
+      "ets": 1790778758323.6448,
+      "etd": null,
+      "epv": null,
+      "days": 0,
+      "exp": 1790781377621,
+      "symbol": "CSEP",
+      "uid": "CSEP"
+    },
+    "history": [],
+    "history_periods": {
+      "daily_1y": [
+        {
+          "t": "2026-09-29",
+          "o": 25.191,
+          "h": 25.191,
+          "l": 25.191,
+          "c": 25.191,
+          "a": 25.1914,
+          "v": 6,
+          "ch": -0.08
+        },
+        {
+          "t": "2026-09-28",
+          "o": 25.36,
+          "h": 25.36,
+          "l": 25.211,
+          "c": 25.211,
+          "a": 25.2111,
+          "v": 506.00000000000006,
+          "ch": -0.38
+        },
+        {
+          "t": "2026-09-25",
+          "o": 25.308,
+          "h": 25.308,
+          "l": 25.308,
+          "c": 25.308,
+          "a": 25.3082,
+          "v": 202,
+          "ch": 0.25
+        },
+        {
+          "t": "2026-09-24",
+          "o": 25.23,
+          "h": 25.245,
+          "l": 25.23,
+          "c": 25.245,
+          "a": 25.2453,
+          "v": 514,
+          "ch": -0.27
+        },
+        {
+          "t": "2026-09-23",
+          "o": 25.313,
+          "h": 25.313,
+          "l": 25.313,
+          "c": 25.313,
+          "a": 25.3132,
+          "v": 6,
+          "ch": -0.38
+        },
+        {
+          "t": "2026-09-22",
+          "o": 25.409,
+          "h": 25.409,
+          "l": 25.409,
+          "c": 25.409,
+          "a": 25.4089,
+          "v": 6,
+          "ch": 0.04
+        },
+        {
+          "t": "2026-09-21",
+          "o": 25.4,
+          "h": 25.4,
+          "l": 25.4,
+          "c": 25.4,
+          "a": 25.3998,
+          "v": 6,
+          "ch": 1.06
+        },
+        {
+          "t": "2026-09-18",
+          "o": 25.134,
+          "h": 25.134,
+          "l": 25.134,
+          "c": 25.134,
+          "a": 25.1336,
+          "v": 9,
+          "ch": 0.02
+        },
+        {
+          "t": "2026-09-17",
+          "o": 25.128,
+          "h": 25.128,
+          "l": 25.128,
+          "c": 25.128,
+          "a": 25.1279,
+          "v": 6,
+          "ch": 0.6
+        },
+        {
+          "t": "2026-09-16",
+          "o": 24.97,
+          "h": 24.979,
+          "l": 24.97,
+          "c": 24.979,
+          "a": 24.9785,
+          "v": 106,
+          "ch": -0.2
+        }
+      ],
+      "weekly_1y": [
+        {
+          "t": "2026-09-28",
+          "o": 25.36,
+          "h": 25.36,
+          "l": 25.191,
+          "c": 25.191,
+          "v": 512,
+          "a": 25.1914,
+          "ch": -0.46
+        },
+        {
+          "t": "2026-09-21",
+          "o": 25.4,
+          "h": 25.409,
+          "l": 25.23,
+          "c": 25.308,
+          "v": 734,
+          "a": 25.3082,
+          "ch": 0.69
+        }
+      ],
+      "monthly_1y": [],
+      "weekly_3y": [
+        {
+          "t": "2026-09-28",
+          "o": 25.36,
+          "h": 25.36,
+          "l": 25.191,
+          "c": 25.191,
+          "v": 512,
+          "a": 25.1914,
+          "ch": -0.46
+        },
+        {
+          "t": "2026-09-21",
+          "o": 25.4,
+          "h": 25.409,
+          "l": 25.23,
+          "c": 25.308,
+          "v": 734,
+          "a": 25.3082,
+          "ch": 0.69
+        }
+      ],
+      "monthly_3y": [],
+      "monthly_5y": []
+    }
+  },
+  "detail_status": "stockanalysis_partial",
+  "partial_reason_codes": [
+    "holdings_unavailable",
+    "holdings_count_unavailable",
+    "holdings_date_unavailable",
+    "holdings_countries_unavailable"
+  ]
+}

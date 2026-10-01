@@ -2,43 +2,9 @@
   "schema_version": "stockanalysis-recovery-state/v1",
   "artifact_kind": "etf",
   "entity": "CPSP",
-  "attempts": [
-    {
-      "run_id": "30504504470",
-      "run_attempt": 1,
-      "event_name": "schedule",
-      "schedule": "50 23 * * 1-5",
-      "natural": true,
-      "observed_at": "2026-07-30T01:04:10Z",
-      "outcome": "failed",
-      "controlled": false,
-      "error": "ValueError: svelte_contract_drift:holdings:missing_required:holdings"
-    }
-  ],
-  "resolution_state": "lkg_primary",
-  "retry": true,
-  "last_attempt": {
-    "run_id": "30504504470",
-    "run_attempt": 1,
-    "event_name": "schedule",
-    "schedule": "50 23 * * 1-5",
-    "natural": true,
-    "observed_at": "2026-07-30T01:04:10Z",
-    "outcome": "failed",
-    "controlled": false,
-    "error": "ValueError: svelte_contract_drift:holdings:missing_required:holdings"
-  },
-  "latest_failure": {
-    "run_id": "30504504470",
-    "run_attempt": 1,
-    "observed_at": "2026-07-30T01:04:10Z",
-    "error": "ValueError: svelte_contract_drift:holdings:missing_required:holdings",
-    "controlled": false,
-    "had_canonical_before_failure": true,
-    "expected_payload_sha256": "49737b253732c861bd58fcfbb48665aabccaba38ec070571b2e8d4056a855a25",
-    "data_loss": false
-  },
-  "updated_at": "2026-07-30T01:04:10Z",
+  "resolution_state": "fresh_primary",
+  "retry": false,
+  "updated_at": "2026-09-30T15:15:34Z",
   "lkg": {
     "path": "data/admin/stockanalysis-recovery/lkg/etf/CPSP.json",
     "payload_sha256": "49737b253732c861bd58fcfbb48665aabccaba38ec070571b2e8d4056a855a25",
@@ -46,9 +12,10 @@
     "fetched_at": "2026-07-18T18:32:15Z"
   },
   "current": {
-    "path": "data/admin/stockanalysis-recovery/lkg/etf/CPSP.json",
-    "payload_sha256": "49737b253732c861bd58fcfbb48665aabccaba38ec070571b2e8d4056a855a25",
-    "source_as_of": "2026-05-31T00:00:00Z",
-    "fetched_at": "2026-07-18T18:32:15Z"
-  }
+    "path": "data/stockanalysis/etfs/CPSP.json",
+    "payload_sha256": "eb2e66051d3a0a131c651279d244aab6bdc8dbeef5e1d5b0940555a24c1e48bf",
+    "source_as_of": "2026-09-30T14:31:57Z",
+    "fetched_at": "2026-09-30T15:17:38Z"
+  },
+  "failure_count": 0
 }

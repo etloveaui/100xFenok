@@ -2,43 +2,9 @@
   "schema_version": "stockanalysis-recovery-state/v1",
   "artifact_kind": "etf",
   "entity": "LQDW",
-  "attempts": [
-    {
-      "run_id": "30706775328",
-      "run_attempt": 1,
-      "event_name": "workflow_dispatch",
-      "schedule": "",
-      "natural": false,
-      "observed_at": "2026-08-01T15:50:52Z",
-      "outcome": "failed",
-      "controlled": false,
-      "error": "ValueError: svelte_contract_drift:holdings:missing_required:holdings"
-    }
-  ],
-  "resolution_state": "lkg_primary",
-  "retry": true,
-  "last_attempt": {
-    "run_id": "30706775328",
-    "run_attempt": 1,
-    "event_name": "workflow_dispatch",
-    "schedule": "",
-    "natural": false,
-    "observed_at": "2026-08-01T15:50:52Z",
-    "outcome": "failed",
-    "controlled": false,
-    "error": "ValueError: svelte_contract_drift:holdings:missing_required:holdings"
-  },
-  "latest_failure": {
-    "run_id": "30706775328",
-    "run_attempt": 1,
-    "observed_at": "2026-08-01T15:50:52Z",
-    "error": "ValueError: svelte_contract_drift:holdings:missing_required:holdings",
-    "controlled": false,
-    "had_canonical_before_failure": true,
-    "expected_payload_sha256": "055778adca03b94e69353e0c14ecefb7367a25c062e7d73286a5326415cde56f",
-    "data_loss": false
-  },
-  "updated_at": "2026-08-01T15:50:52Z",
+  "resolution_state": "fresh_primary",
+  "retry": false,
+  "updated_at": "2026-09-30T15:15:34Z",
   "lkg": {
     "path": "data/admin/stockanalysis-recovery/lkg/etf/LQDW.json",
     "payload_sha256": "055778adca03b94e69353e0c14ecefb7367a25c062e7d73286a5326415cde56f",
@@ -46,9 +12,10 @@
     "fetched_at": "2026-07-18T21:47:40Z"
   },
   "current": {
-    "path": "data/admin/stockanalysis-recovery/lkg/etf/LQDW.json",
-    "payload_sha256": "055778adca03b94e69353e0c14ecefb7367a25c062e7d73286a5326415cde56f",
-    "source_as_of": null,
-    "fetched_at": "2026-07-18T21:47:40Z"
-  }
+    "path": "data/stockanalysis/etfs/LQDW.json",
+    "payload_sha256": "afd842518f1718f28cdce1ac72d0a8b9589eb3509d4846e2807fc8469d75d197",
+    "source_as_of": "2026-09-30T14:58:13Z",
+    "fetched_at": "2026-09-30T15:17:42Z"
+  },
+  "failure_count": 0
 }

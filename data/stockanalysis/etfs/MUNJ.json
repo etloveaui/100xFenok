@@ -1,0 +1,1656 @@
+{
+  "schema_version": "stockanalysis/v1",
+  "source": "stockanalysis",
+  "asset_type": "etf",
+  "ticker": "MUNJ",
+  "source_as_of": "2026-09-30T14:30:02Z",
+  "fetched_at": "2026-09-30T15:18:44Z",
+  "endpoints": {
+    "holdings": "/etf/munj/holdings/__data.json",
+    "overview": "/etf/munj/__data.json",
+    "quote": "/api/quotes/e/MUNJ",
+    "history_periods": {
+      "daily_1y": "/api/symbol/e/MUNJ/history?range=1Y&period=Daily",
+      "weekly_1y": "/api/symbol/e/MUNJ/history?range=1Y&period=Weekly",
+      "monthly_1y": "/api/symbol/e/MUNJ/history?range=1Y&period=Monthly",
+      "weekly_3y": "/api/symbol/e/MUNJ/history?range=3Y&period=Weekly",
+      "monthly_3y": "/api/symbol/e/MUNJ/history?range=3Y&period=Monthly",
+      "monthly_5y": "/api/symbol/e/MUNJ/history?range=5Y&period=Monthly"
+    }
+  },
+  "endpoint_contracts": {
+    "overview": {
+      "format": "svelte_devalue",
+      "decoder": "svelte_devalue_node/v1",
+      "contract": "etf_detail_overview/v1"
+    },
+    "holdings": {
+      "format": "svelte_devalue",
+      "decoder": "svelte_devalue_node/v1",
+      "contract": "etf_detail_holdings/v1"
+    },
+    "quote": {
+      "format": "rest_json",
+      "contract": "stockanalysis_quote/v1"
+    },
+    "history_periods": {
+      "format": "rest_json",
+      "contract": "stockanalysis_history/v1"
+    }
+  },
+  "normalized": {
+    "holdings": [
+      {
+        "rank": 1,
+        "symbol": "SD.TRISCD 5 08.01.2029",
+        "name": "TRI-VALLEY SCH DIST NO 49-6 S D LTD TAX CAP OUTLAY",
+        "weight_pct": 2.64,
+        "shares": 125000,
+        "raw": {
+          "no": 1,
+          "n": "TRI-VALLEY SCH DIST NO 49-6 S D LTD TAX CAP OUTLAY",
+          "s": "SD.TRISCD 5 08.01.2029",
+          "as": "2.64%",
+          "sh": "125,000"
+        }
+      },
+      {
+        "rank": 2,
+        "name": "CASH",
+        "weight_pct": 2.3,
+        "shares": 112720,
+        "raw": {
+          "no": 2,
+          "n": "CASH",
+          "as": "2.30%",
+          "sh": "112,720"
+        }
+      },
+      {
+        "rank": 3,
+        "symbol": "UT.SLK 5 12.15.2027",
+        "name": "SALT LAKE CNTY UTAH GO BDS 2019 18/DEC/2019",
+        "weight_pct": 2.18,
+        "shares": 105000,
+        "raw": {
+          "no": 3,
+          "n": "SALT LAKE CNTY UTAH GO BDS 2019 18/DEC/2019",
+          "s": "UT.SLK 5 12.15.2027",
+          "as": "2.18%",
+          "sh": "105,000"
+        }
+      },
+      {
+        "rank": 4,
+        "symbol": "TX.LOVSCD 5 02.15.2028",
+        "name": "LOVEJOY INDPT SCH DIST TEX UNLTD TAX BLDG BDS 2025",
+        "weight_pct": 1.98,
+        "shares": 95000,
+        "raw": {
+          "no": 4,
+          "n": "LOVEJOY INDPT SCH DIST TEX UNLTD TAX BLDG BDS 2025",
+          "s": "TX.LOVSCD 5 02.15.2028",
+          "as": "1.98%",
+          "sh": "95,000"
+        }
+      },
+      {
+        "rank": 5,
+        "symbol": "WA.PIESCD 5 12.01.2027",
+        "name": "PIERCE &#38; KING CNTYS WASH SCH DIST NO 417 FIFE ULTD",
+        "weight_pct": 1.66,
+        "shares": 80000,
+        "raw": {
+          "no": 5,
+          "n": "PIERCE &#38; KING CNTYS WASH SCH DIST NO 417 FIFE ULTD",
+          "s": "WA.PIESCD 5 12.01.2027",
+          "as": "1.66%",
+          "sh": "80,000"
+        }
+      },
+      {
+        "rank": 6,
+        "symbol": "DC.DISGEN 5 05.01.2030",
+        "name": "DISTRICT COLUMBIA INCOME TAX REV SECD BDS 2020 C",
+        "weight_pct": 1.59,
+        "shares": 75000,
+        "raw": {
+          "no": 6,
+          "n": "DISTRICT COLUMBIA INCOME TAX REV SECD BDS 2020 C",
+          "s": "DC.DISGEN 5 05.01.2030",
+          "as": "1.59%",
+          "sh": "75,000"
+        }
+      },
+      {
+        "rank": 7,
+        "symbol": "WI.WIS 5 05.01.2028",
+        "name": "WISCONSIN ST GO REF BDS 2024 1 14/MAR/2024",
+        "weight_pct": 1.46,
+        "shares": 70000,
+        "raw": {
+          "no": 7,
+          "n": "WISCONSIN ST GO REF BDS 2024 1 14/MAR/2024",
+          "s": "WI.WIS 5 05.01.2028",
+          "as": "1.46%",
+          "sh": "70,000"
+        }
+      },
+      {
+        "rank": 8,
+        "symbol": "SC.CHAUTL 4 01.01.2028",
+        "name": "CHARLESTON S C WTRWKS &#38; SWR REV REF SYS BDS 2021",
+        "weight_pct": 1.44,
+        "shares": 70000,
+        "raw": {
+          "no": 8,
+          "n": "CHARLESTON S C WTRWKS &#38; SWR REV REF SYS BDS 2021",
+          "s": "SC.CHAUTL 4 01.01.2028",
+          "as": "1.44%",
+          "sh": "70,000"
+        }
+      },
+      {
+        "rank": 9,
+        "symbol": "TX.CVLSCD 5 02.15.2028",
+        "name": "CLEVELAND TEX INDPT SCH DIST UNLTD TAX REF BDS",
+        "weight_pct": 1.25,
+        "shares": 60000,
+        "raw": {
+          "no": 9,
+          "n": "CLEVELAND TEX INDPT SCH DIST UNLTD TAX REF BDS",
+          "s": "TX.CVLSCD 5 02.15.2028",
+          "as": "1.25%",
+          "sh": "60,000"
+        }
+      },
+      {
+        "rank": 10,
+        "symbol": "UT.CANSCD 5 06.15.2029",
+        "name": "CANYONS SCH DIST UTAH GO REF BDS 2021 B",
+        "weight_pct": 1.16,
+        "shares": 55000,
+        "raw": {
+          "no": 10,
+          "n": "CANYONS SCH DIST UTAH GO REF BDS 2021 B",
+          "s": "UT.CANSCD 5 06.15.2029",
+          "as": "1.16%",
+          "sh": "55,000"
+        }
+      },
+      {
+        "rank": 11,
+        "symbol": "WA.EDM 5 12.01.2027",
+        "name": "EDMONDS WASH LTD TAX GO IMPT REF BDS 2021A",
+        "weight_pct": 1.14,
+        "shares": 55000,
+        "raw": {
+          "no": 11,
+          "n": "EDMONDS WASH LTD TAX GO IMPT REF BDS 2021A",
+          "s": "WA.EDM 5 12.01.2027",
+          "as": "1.14%",
+          "sh": "55,000"
+        }
+      },
+      {
+        "rank": 12,
+        "symbol": "ME.LEW 5 09.15.2030",
+        "name": "LEWISTON ME GO PUB IMPT BDS 10/SEP/2024",
+        "weight_pct": 1.06,
+        "shares": 50000,
+        "raw": {
+          "no": 12,
+          "n": "LEWISTON ME GO PUB IMPT BDS 10/SEP/2024",
+          "s": "ME.LEW 5 09.15.2030",
+          "as": "1.06%",
+          "sh": "50,000"
+        }
+      },
+      {
+        "rank": 13,
+        "symbol": "IL.ROCSCD 4 02.01.2030",
+        "name": "ROCK ISLAND CNTY ILL SCH DIST NO 037 EAST MOLINE",
+        "weight_pct": 1.02,
+        "shares": 50000,
+        "raw": {
+          "no": 13,
+          "n": "ROCK ISLAND CNTY ILL SCH DIST NO 037 EAST MOLINE",
+          "s": "IL.ROCSCD 4 02.01.2030",
+          "as": "1.02%",
+          "sh": "50,000"
+        }
+      },
+      {
+        "rank": 14,
+        "symbol": "IA.DES 6 06.01.2030",
+        "name": "DES MOINES IOWA GO BDS 2024A 12/NOV/2024",
+        "weight_pct": 0.99,
+        "shares": 45000,
+        "raw": {
+          "no": 14,
+          "n": "DES MOINES IOWA GO BDS 2024A 12/NOV/2024",
+          "s": "IA.DES 6 06.01.2030",
+          "as": "0.99%",
+          "sh": "45,000"
+        }
+      },
+      {
+        "rank": 15,
+        "symbol": "WI.PTWSCD 5 04.01.2029",
+        "name": "PORT WASHINGTON-SAUKVILLE WIS SCH DIST GO PROM NTS",
+        "weight_pct": 0.94,
+        "shares": 45000,
+        "raw": {
+          "no": 15,
+          "n": "PORT WASHINGTON-SAUKVILLE WIS SCH DIST GO PROM NTS",
+          "s": "WI.PTWSCD 5 04.01.2029",
+          "as": "0.94%",
+          "sh": "45,000"
+        }
+      },
+      {
+        "rank": 16,
+        "symbol": "TX.TXCSCD 5 08.15.2028",
+        "name": "TEXAS CITY TEX INDPT SCH DIST UNLTD TAX REF BDS",
+        "weight_pct": 0.94,
+        "shares": 45000,
+        "raw": {
+          "no": 16,
+          "n": "TEXAS CITY TEX INDPT SCH DIST UNLTD TAX REF BDS",
+          "s": "TX.TXCSCD 5 08.15.2028",
+          "as": "0.94%",
+          "sh": "45,000"
+        }
+      },
+      {
+        "rank": 17,
+        "symbol": "ME.MEMBBK 5 11.01.2027",
+        "name": "MAINE MUN BD BK BDS 2023B 02/NOV/2023 01/NOV/2027",
+        "weight_pct": 0.93,
+        "shares": 45000,
+        "raw": {
+          "no": 17,
+          "n": "MAINE MUN BD BK BDS 2023B 02/NOV/2023 01/NOV/2027",
+          "s": "ME.MEMBBK 5 11.01.2027",
+          "as": "0.93%",
+          "sh": "45,000"
+        }
+      },
+      {
+        "rank": 18,
+        "symbol": "ME.RGSSCD 5 11.01.2027",
+        "name": "REGIONAL SCH UNIT NO 14 ME GO BDS 2025 13/MAY/2025",
+        "weight_pct": 0.93,
+        "shares": 45000,
+        "raw": {
+          "no": 18,
+          "n": "REGIONAL SCH UNIT NO 14 ME GO BDS 2025 13/MAY/2025",
+          "s": "ME.RGSSCD 5 11.01.2027",
+          "as": "0.93%",
+          "sh": "45,000"
+        }
+      },
+      {
+        "rank": 19,
+        "symbol": "FL.JAC 5 10.01.2027",
+        "name": "JACKSONVILLE FLA SPL REV REF BDS 2022A 07/JUL/2022",
+        "weight_pct": 0.93,
+        "shares": 45000,
+        "raw": {
+          "no": 19,
+          "n": "JACKSONVILLE FLA SPL REV REF BDS 2022A 07/JUL/2022",
+          "s": "FL.JAC 5 10.01.2027",
+          "as": "0.93%",
+          "sh": "45,000"
+        }
+      },
+      {
+        "rank": 20,
+        "symbol": "NV.WASSCD 5 10.01.2027",
+        "name": "WASHOE CNTY NEV SCH DIST GO LTD TAX SCH IMPT BDS",
+        "weight_pct": 0.93,
+        "shares": 45000,
+        "raw": {
+          "no": 20,
+          "n": "WASHOE CNTY NEV SCH DIST GO LTD TAX SCH IMPT BDS",
+          "s": "NV.WASSCD 5 10.01.2027",
+          "as": "0.93%",
+          "sh": "45,000"
+        }
+      },
+      {
+        "rank": 21,
+        "symbol": "WI.RAC 4 03.01.2029",
+        "name": "RACINE CNTY WIS GEN OBLIG PROM NTS 2026A",
+        "weight_pct": 0.93,
+        "shares": 45000,
+        "raw": {
+          "no": 21,
+          "n": "RACINE CNTY WIS GEN OBLIG PROM NTS 2026A",
+          "s": "WI.RAC 4 03.01.2029",
+          "as": "0.93%",
+          "sh": "45,000"
+        }
+      },
+      {
+        "rank": 22,
+        "symbol": "OK.TULSCD 4 04.01.2028",
+        "name": "TULSA CNTY OKLA INDPT SCH DIST NO 9 UNION BRD ED",
+        "weight_pct": 0.92,
+        "shares": 45000,
+        "raw": {
+          "no": 22,
+          "n": "TULSA CNTY OKLA INDPT SCH DIST NO 9 UNION BRD ED",
+          "s": "OK.TULSCD 4 04.01.2028",
+          "as": "0.92%",
+          "sh": "45,000"
+        }
+      },
+      {
+        "rank": 23,
+        "symbol": "KS.TOPUTL 5 08.01.2031",
+        "name": "TOPEKA KANS UTIL REV COMBINED BDS 2023 A",
+        "weight_pct": 0.86,
+        "shares": 40000,
+        "raw": {
+          "no": 23,
+          "n": "TOPEKA KANS UTIL REV COMBINED BDS 2023 A",
+          "s": "KS.TOPUTL 5 08.01.2031",
+          "as": "0.86%",
+          "sh": "40,000"
+        }
+      },
+      {
+        "rank": 24,
+        "symbol": "FL.LTBGEN 5.5 10.01.2029",
+        "name": "LEON CNTY-TALLAHASSEE CITY FLA BLUEPRINT",
+        "weight_pct": 0.86,
+        "shares": 40000,
+        "raw": {
+          "no": 24,
+          "n": "LEON CNTY-TALLAHASSEE CITY FLA BLUEPRINT",
+          "s": "FL.LTBGEN 5.5 10.01.2029",
+          "as": "0.86%",
+          "sh": "40,000"
+        }
+      },
+      {
+        "rank": 25,
+        "symbol": "WI.WISTRN 5 07.01.2029",
+        "name": "WISCONSIN ST TRANSN REV BDS 2023 I 06/APR/2023",
+        "weight_pct": 0.84,
+        "shares": 40000,
+        "raw": {
+          "no": 25,
+          "n": "WISCONSIN ST TRANSN REV BDS 2023 I 06/APR/2023",
+          "s": "WI.WISTRN 5 07.01.2029",
+          "as": "0.84%",
+          "sh": "40,000"
+        }
+      }
+    ],
+    "asset_allocation": null,
+    "sectors": null,
+    "countries": null,
+    "holding_count": 170,
+    "holdings_updated": "Sep 28, 2026",
+    "classification": {
+      "is_leveraged": false,
+      "leverage_factor": null,
+      "is_inverse": false,
+      "is_single_stock": false,
+      "underlying": null,
+      "source": "stockanalysis.overview.description",
+      "confidence": "high"
+    },
+    "overview": {
+      "aum": "$4.92M",
+      "expenseRatio": "0.18%",
+      "sharesOut": "50,000",
+      "inception": "Aug 25, 2026",
+      "provider_page": "northern-trust",
+      "etf_website": "https://www.flexshares.com/us/en/individual/funds/munj"
+    },
+    "performance": {
+      "tr1m": -2.7602,
+      "trYTD": null,
+      "tr1y": null,
+      "cagr5y": null,
+      "cagr10y": null,
+      "cagrMAX": null
+    },
+    "quote": {
+      "p": 97.845,
+      "pd": 97.85,
+      "c": 0.26,
+      "cp": 0.27,
+      "cl": 97.59,
+      "cdr": 1,
+      "o": 0,
+      "h": 0,
+      "l": 0,
+      "v": 6,
+      "ts": 1790778602002.0864,
+      "u": "Sep 30, 2026, 10:30 AM EDT",
+      "td": "2026-09-30",
+      "h52": 100.415,
+      "l52": 97.585,
+      "ex": "NYSEARCA",
+      "ms": "open",
+      "fms": "open",
+      "e": false,
+      "ep": null,
+      "epd": 0,
+      "ec": 0,
+      "ecp": 0,
+      "eu": null,
+      "es": null,
+      "ets": 1790778602002.0864,
+      "etd": null,
+      "epv": null,
+      "days": 0,
+      "exp": 1790781528264,
+      "symbol": "MUNJ",
+      "uid": "MUNJ"
+    },
+    "history": [
+      {
+        "t": "2026-09-01",
+        "o": 100.135,
+        "h": 100.135,
+        "l": 97.585,
+        "c": 97.585,
+        "v": 124,
+        "a": 97.585,
+        "ch": -2.71
+      }
+    ],
+    "history_periods": {
+      "daily_1y": [
+        {
+          "t": "2026-09-29",
+          "o": 97.585,
+          "h": 97.585,
+          "l": 97.585,
+          "c": 97.585,
+          "a": 97.585,
+          "v": 6,
+          "ch": -0.12
+        },
+        {
+          "t": "2026-09-28",
+          "o": 97.7,
+          "h": 97.7,
+          "l": 97.7,
+          "c": 97.7,
+          "a": 97.7,
+          "v": 6,
+          "ch": -0.22
+        },
+        {
+          "t": "2026-09-25",
+          "o": 97.92,
+          "h": 97.92,
+          "l": 97.92,
+          "c": 97.92,
+          "a": 97.92,
+          "v": 8,
+          "ch": -0.17
+        },
+        {
+          "t": "2026-09-24",
+          "o": 98.09,
+          "h": 98.09,
+          "l": 98.09,
+          "c": 98.09,
+          "a": 98.09,
+          "v": 6,
+          "ch": -0.32
+        },
+        {
+          "t": "2026-09-23",
+          "o": 98.4,
+          "h": 98.4,
+          "l": 98.4,
+          "c": 98.4,
+          "a": 98.4003,
+          "v": 6,
+          "ch": -0.35
+        },
+        {
+          "t": "2026-09-22",
+          "o": 98.75,
+          "h": 98.75,
+          "l": 98.75,
+          "c": 98.75,
+          "a": 98.75,
+          "v": 6,
+          "ch": -0.18
+        },
+        {
+          "t": "2026-09-21",
+          "o": 98.925,
+          "h": 98.925,
+          "l": 98.925,
+          "c": 98.925,
+          "a": 98.925,
+          "v": 6,
+          "ch": -0.07
+        },
+        {
+          "t": "2026-09-18",
+          "o": 98.99,
+          "h": 98.99,
+          "l": 98.99,
+          "c": 98.99,
+          "a": 98.99,
+          "v": 6,
+          "ch": -0.14
+        },
+        {
+          "t": "2026-09-17",
+          "o": 99.125,
+          "h": 99.125,
+          "l": 99.125,
+          "c": 99.125,
+          "a": 99.125,
+          "v": 6,
+          "ch": 0.07
+        },
+        {
+          "t": "2026-09-16",
+          "o": 99.06,
+          "h": 99.06,
+          "l": 99.06,
+          "c": 99.06,
+          "a": 99.06,
+          "v": 6,
+          "ch": -0.06
+        },
+        {
+          "t": "2026-09-15",
+          "o": 99.12,
+          "h": 99.12,
+          "l": 99.12,
+          "c": 99.12,
+          "a": 99.12,
+          "v": 6,
+          "ch": -0.07
+        },
+        {
+          "t": "2026-09-14",
+          "o": 99.19,
+          "h": 99.19,
+          "l": 99.19,
+          "c": 99.19,
+          "a": 99.19,
+          "v": 6,
+          "ch": -0.02
+        },
+        {
+          "t": "2026-09-11",
+          "o": 99.21,
+          "h": 99.21,
+          "l": 99.21,
+          "c": 99.21,
+          "a": 99.21,
+          "v": 6,
+          "ch": 0.14
+        },
+        {
+          "t": "2026-09-10",
+          "o": 99.07,
+          "h": 99.07,
+          "l": 99.07,
+          "c": 99.07,
+          "a": 99.07,
+          "v": 6,
+          "ch": -0.36
+        },
+        {
+          "t": "2026-09-09",
+          "o": 99.43,
+          "h": 99.43,
+          "l": 99.43,
+          "c": 99.43,
+          "a": 99.43,
+          "v": 6,
+          "ch": -0.17
+        },
+        {
+          "t": "2026-09-08",
+          "o": 99.595,
+          "h": 99.595,
+          "l": 99.595,
+          "c": 99.595,
+          "a": 99.595,
+          "v": 6,
+          "ch": -0.07
+        },
+        {
+          "t": "2026-09-04",
+          "o": 99.668,
+          "h": 99.668,
+          "l": 99.668,
+          "c": 99.668,
+          "a": 99.6679,
+          "v": 6,
+          "ch": -0.04
+        },
+        {
+          "t": "2026-09-03",
+          "o": 99.703,
+          "h": 99.703,
+          "l": 99.703,
+          "c": 99.703,
+          "a": 99.7028,
+          "v": 6,
+          "ch": -0.43
+        },
+        {
+          "t": "2026-09-02",
+          "o": 100.13,
+          "h": 100.13,
+          "l": 100.13,
+          "c": 100.13,
+          "a": 100.13,
+          "v": 7,
+          "ch": 0
+        },
+        {
+          "t": "2026-09-01",
+          "o": 100.135,
+          "h": 100.135,
+          "l": 100.135,
+          "c": 100.135,
+          "a": 100.135,
+          "v": 7,
+          "ch": -0.16
+        },
+        {
+          "t": "2026-08-31",
+          "o": 100.299,
+          "h": 100.299,
+          "l": 100.299,
+          "c": 100.299,
+          "a": 100.2994,
+          "v": 6,
+          "ch": -0.06
+        },
+        {
+          "t": "2026-08-28",
+          "o": 100.355,
+          "h": 100.355,
+          "l": 100.355,
+          "c": 100.355,
+          "a": 100.355,
+          "v": 7,
+          "ch": -0.06
+        },
+        {
+          "t": "2026-08-27",
+          "o": 100.415,
+          "h": 100.415,
+          "l": 100.415,
+          "c": 100.415,
+          "a": 100.415,
+          "v": 3,
+          "ch": 0.13
+        }
+      ],
+      "weekly_1y": [
+        {
+          "t": "2026-09-28",
+          "o": 97.7,
+          "h": 97.7,
+          "l": 97.585,
+          "c": 97.585,
+          "v": 12,
+          "a": 97.585,
+          "ch": -0.34
+        },
+        {
+          "t": "2026-09-21",
+          "o": 98.925,
+          "h": 98.925,
+          "l": 97.92,
+          "c": 97.92,
+          "v": 32,
+          "a": 97.92,
+          "ch": -1.08
+        },
+        {
+          "t": "2026-09-14",
+          "o": 99.19,
+          "h": 99.19,
+          "l": 98.99,
+          "c": 98.99,
+          "v": 30,
+          "a": 98.99,
+          "ch": -0.22
+        },
+        {
+          "t": "2026-09-08",
+          "o": 99.595,
+          "h": 99.595,
+          "l": 99.07,
+          "c": 99.21,
+          "v": 24,
+          "a": 99.21,
+          "ch": -0.46
+        },
+        {
+          "t": "2026-08-31",
+          "o": 100.299,
+          "h": 100.299,
+          "l": 99.668,
+          "c": 99.668,
+          "v": 32,
+          "a": 99.6679,
+          "ch": -0.68
+        }
+      ],
+      "monthly_1y": [
+        {
+          "t": "2026-09-01",
+          "o": 100.135,
+          "h": 100.135,
+          "l": 97.585,
+          "c": 97.585,
+          "v": 124,
+          "a": 97.585,
+          "ch": -2.71
+        }
+      ],
+      "weekly_3y": [
+        {
+          "t": "2026-09-28",
+          "o": 97.7,
+          "h": 97.7,
+          "l": 97.585,
+          "c": 97.585,
+          "v": 12,
+          "a": 97.585,
+          "ch": -0.34
+        },
+        {
+          "t": "2026-09-21",
+          "o": 98.925,
+          "h": 98.925,
+          "l": 97.92,
+          "c": 97.92,
+          "v": 32,
+          "a": 97.92,
+          "ch": -1.08
+        },
+        {
+          "t": "2026-09-14",
+          "o": 99.19,
+          "h": 99.19,
+          "l": 98.99,
+          "c": 98.99,
+          "v": 30,
+          "a": 98.99,
+          "ch": -0.22
+        },
+        {
+          "t": "2026-09-08",
+          "o": 99.595,
+          "h": 99.595,
+          "l": 99.07,
+          "c": 99.21,
+          "v": 24,
+          "a": 99.21,
+          "ch": -0.46
+        },
+        {
+          "t": "2026-08-31",
+          "o": 100.299,
+          "h": 100.299,
+          "l": 99.668,
+          "c": 99.668,
+          "v": 32,
+          "a": 99.6679,
+          "ch": -0.68
+        }
+      ],
+      "monthly_3y": [
+        {
+          "t": "2026-09-01",
+          "o": 100.135,
+          "h": 100.135,
+          "l": 97.585,
+          "c": 97.585,
+          "v": 124,
+          "a": 97.585,
+          "ch": -2.71
+        }
+      ],
+      "monthly_5y": [
+        {
+          "t": "2026-09-01",
+          "o": 100.135,
+          "h": 100.135,
+          "l": 97.585,
+          "c": 97.585,
+          "v": 124,
+          "a": 97.585,
+          "ch": -2.71
+        }
+      ]
+    }
+  },
+  "raw": {
+    "overview": {
+      "trust": {
+        "sources": [
+          {
+            "name": "S&P Global Market Intelligence",
+            "short": "S&P Global",
+            "url": "https://www.spglobal.com/market-intelligence/en"
+          },
+          {
+            "name": "CBOE",
+            "short": "CBOE",
+            "url": "https://www.cboe.com/"
+          },
+          {
+            "name": "Nasdaq UTP",
+            "short": "Nasdaq UTP",
+            "url": "https://www.utpplan.com/overview",
+            "noUtm": true
+          },
+          {
+            "name": "Finnhub",
+            "short": "Finnhub",
+            "url": "https://finnhub.io/"
+          }
+        ],
+        "topic": "overview",
+        "ticker": "MUNJ",
+        "lastChecked": 1790781491569,
+        "summary": {
+          "text": "Historical data is provided by S&P Global Market Intelligence. Real-time stock price data is provided by CBOE and 15-minute delayed consolidated tape pricing data is provided by Nasdaq UTP. Several fund data points are also provided by Finnhub."
+        }
+      },
+      "type": "etf",
+      "aum": "$4.92M",
+      "nav": null,
+      "expenseRatio": "0.18%",
+      "peRatio": null,
+      "sharesOut": "50,000",
+      "dps": null,
+      "dividendYield": null,
+      "payoutRatio": null,
+      "exDivDate": null,
+      "ch1y": null,
+      "payoutFrequency": "n/a",
+      "beta": null,
+      "holdings": 170,
+      "inception": "Aug 25, 2026",
+      "chart": {
+        "expiration": null,
+        "data": null
+      },
+      "description": "The Northern Trust 2031 Tax-Exempt Distributing Ladder ETF (MUNJ) is an exchange-traded fund that mostly invests in investment grade fixed income. The fund seeks to provide regular cash distributions consisting of tax-exempt income and/or principal through an actively managed, laddered portfolio of US investment grade municipal bonds with various maturity dates through the year 2031. MUNJ was launched on Aug 25, 2026 and is issued by Northern Trust.",
+      "infoTable": [
+        [
+          "Asset Class",
+          "Fixed Income"
+        ],
+        [
+          "Region",
+          "North America"
+        ],
+        [
+          "Stock Exchange",
+          "NYSEARCA"
+        ],
+        [
+          "Ticker Symbol",
+          "MUNJ"
+        ],
+        [
+          "Provider",
+          "Northern Trust"
+        ]
+      ],
+      "etf_website": "https://www.flexshares.com/us/en/individual/funds/munj",
+      "provider_page": "northern-trust",
+      "holdingsTable": null,
+      "dividendTable": null,
+      "news": {
+        "exp": "1790767382782",
+        "data": [
+          {
+            "url": "https://www.etftrends.com/fixed-income-content-hub/muni-renaissance-tax-free-yields-in-high-rate-era/",
+            "img": "https://cdn.snapi.dev/images/v1/t/x/d/etf48-3917460.jpg",
+            "title": "The Muni Renaissance: Tax-Free Yields in a High-Rate Era",
+            "text": "In this higher-for-longer rate regime, municipal bonds have emerged as a prime go-to option. Elevated interest rates have investors scrambling for yield, and munis have been ready to answer the call w...",
+            "source": "ETF Trends",
+            "type": "Article",
+            "tickers": [
+              "#MUNF",
+              "#MUNG",
+              "#MUNH",
+              "#TAXT"
+            ],
+            "time": "Sep 10, 2026, 4:03 PM EDT",
+            "ago": "19 days ago"
+          },
+          {
+            "url": "https://www.etftrends.com/fixed-income-content-hub/northern-trust-launches-new-set-of-distributing-ladder-etfs/",
+            "img": "https://cdn.snapi.dev/images/v1/e/t/etf20-3891811.jpg",
+            "title": "Northern Trust Launches New Set of Distributing Ladder ETFs",
+            "text": "On Wednesday, August 26, 2026, Northern Trust Asset Management expanded its suite of distributing ladder ETFs with the launch of eight new funds. The newly launched ETFs offer additional target maturi...",
+            "source": "ETF Trends",
+            "type": "Article",
+            "tickers": [
+              "#MUNF",
+              "#MUNG",
+              "#MUNH",
+              "#TIPE",
+              "#TIPF",
+              "#TIPG",
+              "#TIPH"
+            ],
+            "time": "Aug 26, 2026, 2:29 PM EDT",
+            "ago": "4 weeks ago"
+          },
+          {
+            "url": "https://www.businesswire.com/news/home/20260825241709/en/Northern-Trust-Adds-New-Maturity-Options-to-Distributing-Ladder-ETF-Suite/",
+            "img": "https://cdn.snapi.dev/images/v1/5/j/v/press7-3890633.jpg",
+            "title": "Northern Trust Adds New Maturity Options to Distributing Ladder ETF Suite",
+            "text": "CHICAGO--(BUSINESS WIRE)--Northern Trust Asset Management, a leading global investment management firm with US$1.6 trillion in assets under management as of June 30, 2026, announced the addition of ei...",
+            "source": "Business Wire",
+            "type": "Article",
+            "tickers": [
+              "$NTRS",
+              "#MUNF",
+              "#MUNG",
+              "#MUNH",
+              "#TIPE",
+              "#TIPF",
+              "#TIPG"
+            ],
+            "time": "Aug 26, 2026, 9:30 AM EDT",
+            "ago": "5 weeks ago"
+          }
+        ]
+      },
+      "config": {
+        "no1d": true
+      },
+      "changes": {
+        "price1w": 98.75,
+        "price1m": 100.355,
+        "price3m": null,
+        "price6m": null,
+        "priceYTD": null,
+        "price1y": null,
+        "price5y": null,
+        "priceMAX": 100.289
+      },
+      "performance": {
+        "tr1m": -2.7602,
+        "trYTD": null,
+        "tr1y": null,
+        "cagr5y": null,
+        "cagr10y": null,
+        "cagrMAX": null
+      }
+    },
+    "holdings": {
+      "holdings": [
+        {
+          "no": 1,
+          "n": "TRI-VALLEY SCH DIST NO 49-6 S D LTD TAX CAP OUTLAY",
+          "s": "SD.TRISCD 5 08.01.2029",
+          "as": "2.64%",
+          "sh": "125,000"
+        },
+        {
+          "no": 2,
+          "n": "CASH",
+          "as": "2.30%",
+          "sh": "112,720"
+        },
+        {
+          "no": 3,
+          "n": "SALT LAKE CNTY UTAH GO BDS 2019 18/DEC/2019",
+          "s": "UT.SLK 5 12.15.2027",
+          "as": "2.18%",
+          "sh": "105,000"
+        },
+        {
+          "no": 4,
+          "n": "LOVEJOY INDPT SCH DIST TEX UNLTD TAX BLDG BDS 2025",
+          "s": "TX.LOVSCD 5 02.15.2028",
+          "as": "1.98%",
+          "sh": "95,000"
+        },
+        {
+          "no": 5,
+          "n": "PIERCE &#38; KING CNTYS WASH SCH DIST NO 417 FIFE ULTD",
+          "s": "WA.PIESCD 5 12.01.2027",
+          "as": "1.66%",
+          "sh": "80,000"
+        },
+        {
+          "no": 6,
+          "n": "DISTRICT COLUMBIA INCOME TAX REV SECD BDS 2020 C",
+          "s": "DC.DISGEN 5 05.01.2030",
+          "as": "1.59%",
+          "sh": "75,000"
+        },
+        {
+          "no": 7,
+          "n": "WISCONSIN ST GO REF BDS 2024 1 14/MAR/2024",
+          "s": "WI.WIS 5 05.01.2028",
+          "as": "1.46%",
+          "sh": "70,000"
+        },
+        {
+          "no": 8,
+          "n": "CHARLESTON S C WTRWKS &#38; SWR REV REF SYS BDS 2021",
+          "s": "SC.CHAUTL 4 01.01.2028",
+          "as": "1.44%",
+          "sh": "70,000"
+        },
+        {
+          "no": 9,
+          "n": "CLEVELAND TEX INDPT SCH DIST UNLTD TAX REF BDS",
+          "s": "TX.CVLSCD 5 02.15.2028",
+          "as": "1.25%",
+          "sh": "60,000"
+        },
+        {
+          "no": 10,
+          "n": "CANYONS SCH DIST UTAH GO REF BDS 2021 B",
+          "s": "UT.CANSCD 5 06.15.2029",
+          "as": "1.16%",
+          "sh": "55,000"
+        },
+        {
+          "no": 11,
+          "n": "EDMONDS WASH LTD TAX GO IMPT REF BDS 2021A",
+          "s": "WA.EDM 5 12.01.2027",
+          "as": "1.14%",
+          "sh": "55,000"
+        },
+        {
+          "no": 12,
+          "n": "LEWISTON ME GO PUB IMPT BDS 10/SEP/2024",
+          "s": "ME.LEW 5 09.15.2030",
+          "as": "1.06%",
+          "sh": "50,000"
+        },
+        {
+          "no": 13,
+          "n": "ROCK ISLAND CNTY ILL SCH DIST NO 037 EAST MOLINE",
+          "s": "IL.ROCSCD 4 02.01.2030",
+          "as": "1.02%",
+          "sh": "50,000"
+        },
+        {
+          "no": 14,
+          "n": "DES MOINES IOWA GO BDS 2024A 12/NOV/2024",
+          "s": "IA.DES 6 06.01.2030",
+          "as": "0.99%",
+          "sh": "45,000"
+        },
+        {
+          "no": 15,
+          "n": "PORT WASHINGTON-SAUKVILLE WIS SCH DIST GO PROM NTS",
+          "s": "WI.PTWSCD 5 04.01.2029",
+          "as": "0.94%",
+          "sh": "45,000"
+        },
+        {
+          "no": 16,
+          "n": "TEXAS CITY TEX INDPT SCH DIST UNLTD TAX REF BDS",
+          "s": "TX.TXCSCD 5 08.15.2028",
+          "as": "0.94%",
+          "sh": "45,000"
+        },
+        {
+          "no": 17,
+          "n": "MAINE MUN BD BK BDS 2023B 02/NOV/2023 01/NOV/2027",
+          "s": "ME.MEMBBK 5 11.01.2027",
+          "as": "0.93%",
+          "sh": "45,000"
+        },
+        {
+          "no": 18,
+          "n": "REGIONAL SCH UNIT NO 14 ME GO BDS 2025 13/MAY/2025",
+          "s": "ME.RGSSCD 5 11.01.2027",
+          "as": "0.93%",
+          "sh": "45,000"
+        },
+        {
+          "no": 19,
+          "n": "JACKSONVILLE FLA SPL REV REF BDS 2022A 07/JUL/2022",
+          "s": "FL.JAC 5 10.01.2027",
+          "as": "0.93%",
+          "sh": "45,000"
+        },
+        {
+          "no": 20,
+          "n": "WASHOE CNTY NEV SCH DIST GO LTD TAX SCH IMPT BDS",
+          "s": "NV.WASSCD 5 10.01.2027",
+          "as": "0.93%",
+          "sh": "45,000"
+        },
+        {
+          "no": 21,
+          "n": "RACINE CNTY WIS GEN OBLIG PROM NTS 2026A",
+          "s": "WI.RAC 4 03.01.2029",
+          "as": "0.93%",
+          "sh": "45,000"
+        },
+        {
+          "no": 22,
+          "n": "TULSA CNTY OKLA INDPT SCH DIST NO 9 UNION BRD ED",
+          "s": "OK.TULSCD 4 04.01.2028",
+          "as": "0.92%",
+          "sh": "45,000"
+        },
+        {
+          "no": 23,
+          "n": "TOPEKA KANS UTIL REV COMBINED BDS 2023 A",
+          "s": "KS.TOPUTL 5 08.01.2031",
+          "as": "0.86%",
+          "sh": "40,000"
+        },
+        {
+          "no": 24,
+          "n": "LEON CNTY-TALLAHASSEE CITY FLA BLUEPRINT",
+          "s": "FL.LTBGEN 5.5 10.01.2029",
+          "as": "0.86%",
+          "sh": "40,000"
+        },
+        {
+          "no": 25,
+          "n": "WISCONSIN ST TRANSN REV BDS 2023 I 06/APR/2023",
+          "s": "WI.WISTRN 5 07.01.2029",
+          "as": "0.84%",
+          "sh": "40,000"
+        }
+      ],
+      "asset_allocation": null,
+      "sectors": null,
+      "countries": null,
+      "allocationChartData": {
+        "sectors": [],
+        "assets": [],
+        "countries": []
+      },
+      "news": [
+        {
+          "t": "The Muni Renaissance: Tax-Free Yields in a High-Rate Era",
+          "u": "https://www.etftrends.com/fixed-income-content-hub/muni-renaissance-tax-free-yields-in-high-rate-era/",
+          "n": "ETF Trends",
+          "d": "19 days ago"
+        },
+        {
+          "t": "Northern Trust Launches New Set of Distributing Ladder ETFs",
+          "u": "https://www.etftrends.com/fixed-income-content-hub/northern-trust-launches-new-set-of-distributing-ladder-etfs/",
+          "n": "ETF Trends",
+          "d": "4 weeks ago"
+        },
+        {
+          "t": "Northern Trust Adds New Maturity Options to Distributing Ladder ETF Suite",
+          "u": "https://www.businesswire.com/news/home/20260825241709/en/Northern-Trust-Adds-New-Maturity-Options-to-Distributing-Ladder-ETF-Suite/",
+          "n": "Business Wire",
+          "d": "5 weeks ago"
+        }
+      ],
+      "date": "Sep 28, 2026",
+      "count": 170,
+      "trust": {
+        "sources": [
+          {
+            "name": "Finnhub",
+            "short": "Finnhub",
+            "url": "https://finnhub.io/"
+          }
+        ],
+        "freshnessLag": "days",
+        "updateFrequency": "daily",
+        "lastUpdated": "Sep 28, 2026",
+        "lastChecked": 1790761348648,
+        "topic": "holdings",
+        "ticker": "MUNJ",
+        "summary": {
+          "pre": "ETF holdings data is provided by ",
+          "post": ". Holdings are typically published by the ETF issuer at the end of each trading day."
+        },
+        "extraSummaryLinks": null
+      }
+    },
+    "quote": {
+      "p": 97.845,
+      "pd": 97.85,
+      "c": 0.26,
+      "cp": 0.27,
+      "cl": 97.59,
+      "cdr": 1,
+      "o": 0,
+      "h": 0,
+      "l": 0,
+      "v": 6,
+      "ts": 1790778602002.0864,
+      "u": "Sep 30, 2026, 10:30 AM EDT",
+      "td": "2026-09-30",
+      "h52": 100.415,
+      "l52": 97.585,
+      "ex": "NYSEARCA",
+      "ms": "open",
+      "fms": "open",
+      "e": false,
+      "ep": null,
+      "epd": 0,
+      "ec": 0,
+      "ecp": 0,
+      "eu": null,
+      "es": null,
+      "ets": 1790778602002.0864,
+      "etd": null,
+      "epv": null,
+      "days": 0,
+      "exp": 1790781528264,
+      "symbol": "MUNJ",
+      "uid": "MUNJ"
+    },
+    "history": [
+      {
+        "t": "2026-09-01",
+        "o": 100.135,
+        "h": 100.135,
+        "l": 97.585,
+        "c": 97.585,
+        "v": 124,
+        "a": 97.585,
+        "ch": -2.71
+      }
+    ],
+    "history_periods": {
+      "daily_1y": [
+        {
+          "t": "2026-09-29",
+          "o": 97.585,
+          "h": 97.585,
+          "l": 97.585,
+          "c": 97.585,
+          "a": 97.585,
+          "v": 6,
+          "ch": -0.12
+        },
+        {
+          "t": "2026-09-28",
+          "o": 97.7,
+          "h": 97.7,
+          "l": 97.7,
+          "c": 97.7,
+          "a": 97.7,
+          "v": 6,
+          "ch": -0.22
+        },
+        {
+          "t": "2026-09-25",
+          "o": 97.92,
+          "h": 97.92,
+          "l": 97.92,
+          "c": 97.92,
+          "a": 97.92,
+          "v": 8,
+          "ch": -0.17
+        },
+        {
+          "t": "2026-09-24",
+          "o": 98.09,
+          "h": 98.09,
+          "l": 98.09,
+          "c": 98.09,
+          "a": 98.09,
+          "v": 6,
+          "ch": -0.32
+        },
+        {
+          "t": "2026-09-23",
+          "o": 98.4,
+          "h": 98.4,
+          "l": 98.4,
+          "c": 98.4,
+          "a": 98.4003,
+          "v": 6,
+          "ch": -0.35
+        },
+        {
+          "t": "2026-09-22",
+          "o": 98.75,
+          "h": 98.75,
+          "l": 98.75,
+          "c": 98.75,
+          "a": 98.75,
+          "v": 6,
+          "ch": -0.18
+        },
+        {
+          "t": "2026-09-21",
+          "o": 98.925,
+          "h": 98.925,
+          "l": 98.925,
+          "c": 98.925,
+          "a": 98.925,
+          "v": 6,
+          "ch": -0.07
+        },
+        {
+          "t": "2026-09-18",
+          "o": 98.99,
+          "h": 98.99,
+          "l": 98.99,
+          "c": 98.99,
+          "a": 98.99,
+          "v": 6,
+          "ch": -0.14
+        },
+        {
+          "t": "2026-09-17",
+          "o": 99.125,
+          "h": 99.125,
+          "l": 99.125,
+          "c": 99.125,
+          "a": 99.125,
+          "v": 6,
+          "ch": 0.07
+        },
+        {
+          "t": "2026-09-16",
+          "o": 99.06,
+          "h": 99.06,
+          "l": 99.06,
+          "c": 99.06,
+          "a": 99.06,
+          "v": 6,
+          "ch": -0.06
+        },
+        {
+          "t": "2026-09-15",
+          "o": 99.12,
+          "h": 99.12,
+          "l": 99.12,
+          "c": 99.12,
+          "a": 99.12,
+          "v": 6,
+          "ch": -0.07
+        },
+        {
+          "t": "2026-09-14",
+          "o": 99.19,
+          "h": 99.19,
+          "l": 99.19,
+          "c": 99.19,
+          "a": 99.19,
+          "v": 6,
+          "ch": -0.02
+        },
+        {
+          "t": "2026-09-11",
+          "o": 99.21,
+          "h": 99.21,
+          "l": 99.21,
+          "c": 99.21,
+          "a": 99.21,
+          "v": 6,
+          "ch": 0.14
+        },
+        {
+          "t": "2026-09-10",
+          "o": 99.07,
+          "h": 99.07,
+          "l": 99.07,
+          "c": 99.07,
+          "a": 99.07,
+          "v": 6,
+          "ch": -0.36
+        },
+        {
+          "t": "2026-09-09",
+          "o": 99.43,
+          "h": 99.43,
+          "l": 99.43,
+          "c": 99.43,
+          "a": 99.43,
+          "v": 6,
+          "ch": -0.17
+        },
+        {
+          "t": "2026-09-08",
+          "o": 99.595,
+          "h": 99.595,
+          "l": 99.595,
+          "c": 99.595,
+          "a": 99.595,
+          "v": 6,
+          "ch": -0.07
+        },
+        {
+          "t": "2026-09-04",
+          "o": 99.668,
+          "h": 99.668,
+          "l": 99.668,
+          "c": 99.668,
+          "a": 99.6679,
+          "v": 6,
+          "ch": -0.04
+        },
+        {
+          "t": "2026-09-03",
+          "o": 99.703,
+          "h": 99.703,
+          "l": 99.703,
+          "c": 99.703,
+          "a": 99.7028,
+          "v": 6,
+          "ch": -0.43
+        },
+        {
+          "t": "2026-09-02",
+          "o": 100.13,
+          "h": 100.13,
+          "l": 100.13,
+          "c": 100.13,
+          "a": 100.13,
+          "v": 7,
+          "ch": 0
+        },
+        {
+          "t": "2026-09-01",
+          "o": 100.135,
+          "h": 100.135,
+          "l": 100.135,
+          "c": 100.135,
+          "a": 100.135,
+          "v": 7,
+          "ch": -0.16
+        },
+        {
+          "t": "2026-08-31",
+          "o": 100.299,
+          "h": 100.299,
+          "l": 100.299,
+          "c": 100.299,
+          "a": 100.2994,
+          "v": 6,
+          "ch": -0.06
+        },
+        {
+          "t": "2026-08-28",
+          "o": 100.355,
+          "h": 100.355,
+          "l": 100.355,
+          "c": 100.355,
+          "a": 100.355,
+          "v": 7,
+          "ch": -0.06
+        },
+        {
+          "t": "2026-08-27",
+          "o": 100.415,
+          "h": 100.415,
+          "l": 100.415,
+          "c": 100.415,
+          "a": 100.415,
+          "v": 3,
+          "ch": 0.13
+        }
+      ],
+      "weekly_1y": [
+        {
+          "t": "2026-09-28",
+          "o": 97.7,
+          "h": 97.7,
+          "l": 97.585,
+          "c": 97.585,
+          "v": 12,
+          "a": 97.585,
+          "ch": -0.34
+        },
+        {
+          "t": "2026-09-21",
+          "o": 98.925,
+          "h": 98.925,
+          "l": 97.92,
+          "c": 97.92,
+          "v": 32,
+          "a": 97.92,
+          "ch": -1.08
+        },
+        {
+          "t": "2026-09-14",
+          "o": 99.19,
+          "h": 99.19,
+          "l": 98.99,
+          "c": 98.99,
+          "v": 30,
+          "a": 98.99,
+          "ch": -0.22
+        },
+        {
+          "t": "2026-09-08",
+          "o": 99.595,
+          "h": 99.595,
+          "l": 99.07,
+          "c": 99.21,
+          "v": 24,
+          "a": 99.21,
+          "ch": -0.46
+        },
+        {
+          "t": "2026-08-31",
+          "o": 100.299,
+          "h": 100.299,
+          "l": 99.668,
+          "c": 99.668,
+          "v": 32,
+          "a": 99.6679,
+          "ch": -0.68
+        }
+      ],
+      "monthly_1y": [
+        {
+          "t": "2026-09-01",
+          "o": 100.135,
+          "h": 100.135,
+          "l": 97.585,
+          "c": 97.585,
+          "v": 124,
+          "a": 97.585,
+          "ch": -2.71
+        }
+      ],
+      "weekly_3y": [
+        {
+          "t": "2026-09-28",
+          "o": 97.7,
+          "h": 97.7,
+          "l": 97.585,
+          "c": 97.585,
+          "v": 12,
+          "a": 97.585,
+          "ch": -0.34
+        },
+        {
+          "t": "2026-09-21",
+          "o": 98.925,
+          "h": 98.925,
+          "l": 97.92,
+          "c": 97.92,
+          "v": 32,
+          "a": 97.92,
+          "ch": -1.08
+        },
+        {
+          "t": "2026-09-14",
+          "o": 99.19,
+          "h": 99.19,
+          "l": 98.99,
+          "c": 98.99,
+          "v": 30,
+          "a": 98.99,
+          "ch": -0.22
+        },
+        {
+          "t": "2026-09-08",
+          "o": 99.595,
+          "h": 99.595,
+          "l": 99.07,
+          "c": 99.21,
+          "v": 24,
+          "a": 99.21,
+          "ch": -0.46
+        },
+        {
+          "t": "2026-08-31",
+          "o": 100.299,
+          "h": 100.299,
+          "l": 99.668,
+          "c": 99.668,
+          "v": 32,
+          "a": 99.6679,
+          "ch": -0.68
+        }
+      ],
+      "monthly_3y": [
+        {
+          "t": "2026-09-01",
+          "o": 100.135,
+          "h": 100.135,
+          "l": 97.585,
+          "c": 97.585,
+          "v": 124,
+          "a": 97.585,
+          "ch": -2.71
+        }
+      ],
+      "monthly_5y": [
+        {
+          "t": "2026-09-01",
+          "o": 100.135,
+          "h": 100.135,
+          "l": 97.585,
+          "c": 97.585,
+          "v": 124,
+          "a": 97.585,
+          "ch": -2.71
+        }
+      ]
+    }
+  },
+  "detail_status": "stockanalysis_partial",
+  "partial_reason_codes": [
+    "holdings_countries_unavailable"
+  ]
+}

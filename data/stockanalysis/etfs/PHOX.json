@@ -1,0 +1,3522 @@
+{
+  "schema_version": "stockanalysis/v1",
+  "source": "stockanalysis",
+  "asset_type": "etf",
+  "ticker": "PHOX",
+  "source_as_of": "2026-09-30T14:46:47Z",
+  "fetched_at": "2026-09-30T15:18:51Z",
+  "endpoints": {
+    "holdings": "/etf/phox/holdings/__data.json",
+    "overview": "/etf/phox/__data.json",
+    "quote": "/api/quotes/e/PHOX",
+    "history_periods": {
+      "daily_1y": "/api/symbol/e/PHOX/history?range=1Y&period=Daily",
+      "weekly_1y": "/api/symbol/e/PHOX/history?range=1Y&period=Weekly",
+      "monthly_1y": "/api/symbol/e/PHOX/history?range=1Y&period=Monthly",
+      "weekly_3y": "/api/symbol/e/PHOX/history?range=3Y&period=Weekly",
+      "monthly_3y": "/api/symbol/e/PHOX/history?range=3Y&period=Monthly",
+      "monthly_5y": "/api/symbol/e/PHOX/history?range=5Y&period=Monthly"
+    }
+  },
+  "endpoint_contracts": {
+    "overview": {
+      "format": "svelte_devalue",
+      "decoder": "svelte_devalue_node/v1",
+      "contract": "etf_detail_overview/v1"
+    },
+    "holdings": {
+      "format": "svelte_devalue",
+      "decoder": "svelte_devalue_node/v1",
+      "contract": "etf_detail_holdings/v1"
+    },
+    "quote": {
+      "format": "rest_json",
+      "contract": "stockanalysis_quote/v1"
+    },
+    "history_periods": {
+      "format": "rest_json",
+      "contract": "stockanalysis_history/v1"
+    }
+  },
+  "normalized": {
+    "holdings": [
+      {
+        "rank": 1,
+        "symbol": "LITE",
+        "name": "Lumentum Holdings Inc.",
+        "weight_pct": 12.38,
+        "shares": 222,
+        "raw": {
+          "no": 1,
+          "n": "Lumentum Holdings Inc.",
+          "s": "$LITE",
+          "as": "12.38%",
+          "sh": "222"
+        }
+      },
+      {
+        "rank": 2,
+        "symbol": "COHR",
+        "name": "Coherent Corp.",
+        "weight_pct": 8.62,
+        "shares": 494,
+        "raw": {
+          "no": 2,
+          "n": "Coherent Corp.",
+          "s": "$COHR",
+          "as": "8.62%",
+          "sh": "494"
+        }
+      },
+      {
+        "rank": 3,
+        "symbol": "!SHE/300502",
+        "name": "Eoptolink Technology Inc., Ltd.",
+        "weight_pct": 8.05,
+        "shares": 2069,
+        "raw": {
+          "no": 3,
+          "n": "Eoptolink Technology Inc., Ltd.",
+          "s": "!she/300502",
+          "as": "8.05%",
+          "sh": "2,069"
+        }
+      },
+      {
+        "rank": 4,
+        "symbol": "!SHE/300308",
+        "name": "Zhongji Innolight Co., Ltd.",
+        "weight_pct": 7.21,
+        "shares": 900,
+        "raw": {
+          "no": 4,
+          "n": "Zhongji Innolight Co., Ltd.",
+          "s": "!she/300308",
+          "as": "7.21%",
+          "sh": "900"
+        }
+      },
+      {
+        "rank": 5,
+        "symbol": "CRDO",
+        "name": "Credo Technology Group Holding Ltd",
+        "weight_pct": 6.81,
+        "shares": 579,
+        "raw": {
+          "no": 5,
+          "n": "Credo Technology Group Holding Ltd",
+          "s": "$CRDO",
+          "as": "6.81%",
+          "sh": "579"
+        }
+      },
+      {
+        "rank": 6,
+        "symbol": "!SHE/300394",
+        "name": "Suzhou TFC Optical Communication Co., Ltd.",
+        "weight_pct": 5.66,
+        "shares": 2363,
+        "raw": {
+          "no": 6,
+          "n": "Suzhou TFC Optical Communication Co., Ltd.",
+          "s": "!she/300394",
+          "as": "5.66%",
+          "sh": "2,363"
+        }
+      },
+      {
+        "rank": 7,
+        "symbol": "!SHA/688498",
+        "name": "Yuanjie Semiconductor Technology Co., Ltd.",
+        "weight_pct": 5.11,
+        "shares": 336,
+        "raw": {
+          "no": 7,
+          "n": "Yuanjie Semiconductor Technology Co., Ltd.",
+          "s": "!sha/688498",
+          "as": "5.11%",
+          "sh": "336"
+        }
+      },
+      {
+        "rank": 8,
+        "symbol": "MRVL",
+        "name": "Marvell Technology, Inc.",
+        "weight_pct": 4.35,
+        "shares": 280,
+        "raw": {
+          "no": 8,
+          "n": "Marvell Technology, Inc.",
+          "s": "$MRVL",
+          "as": "4.35%",
+          "sh": "280"
+        }
+      },
+      {
+        "rank": 9,
+        "symbol": "ANET",
+        "name": "Arista Networks, Inc.",
+        "weight_pct": 4.16,
+        "shares": 337,
+        "raw": {
+          "no": 9,
+          "n": "Arista Networks, Inc.",
+          "s": "$ANET",
+          "as": "4.16%",
+          "sh": "337"
+        }
+      },
+      {
+        "rank": 10,
+        "symbol": "APH",
+        "name": "Amphenol Corporation",
+        "weight_pct": 3.93,
+        "shares": 788,
+        "raw": {
+          "no": 10,
+          "n": "Amphenol Corporation",
+          "s": "$APH",
+          "as": "3.93%",
+          "sh": "788"
+        }
+      },
+      {
+        "rank": 11,
+        "symbol": "AVGO",
+        "name": "Broadcom Inc.",
+        "weight_pct": 3.85,
+        "shares": 183,
+        "raw": {
+          "no": 11,
+          "n": "Broadcom Inc.",
+          "s": "$AVGO",
+          "as": "3.85%",
+          "sh": "183"
+        }
+      },
+      {
+        "rank": 12,
+        "symbol": "FN",
+        "name": "Fabrinet",
+        "weight_pct": 3.71,
+        "shares": 155,
+        "raw": {
+          "no": 12,
+          "n": "Fabrinet",
+          "s": "$FN",
+          "as": "3.71%",
+          "sh": "155"
+        }
+      },
+      {
+        "rank": 13,
+        "symbol": "!TPEX/3081",
+        "name": "LandMark Optoelectronics Corporation",
+        "weight_pct": 3.7,
+        "shares": 726,
+        "raw": {
+          "no": 13,
+          "n": "LandMark Optoelectronics Corporation",
+          "s": "!tpex/3081",
+          "as": "3.70%",
+          "sh": "726"
+        }
+      },
+      {
+        "rank": 14,
+        "symbol": "!TPEX/4971",
+        "name": "IntelliEPI Inc. (Cayman)",
+        "weight_pct": 2.95,
+        "shares": 2834,
+        "raw": {
+          "no": 14,
+          "n": "IntelliEPI Inc. (Cayman)",
+          "s": "!tpex/4971",
+          "as": "2.95%",
+          "sh": "2,834"
+        }
+      },
+      {
+        "rank": 15,
+        "symbol": "!SHE/301205",
+        "name": "Linktel Technologies Co., Ltd.",
+        "weight_pct": 2.65,
+        "shares": 963,
+        "raw": {
+          "no": 15,
+          "n": "Linktel Technologies Co., Ltd.",
+          "s": "!she/301205",
+          "as": "2.65%",
+          "sh": "963"
+        }
+      },
+      {
+        "rank": 16,
+        "symbol": "GLW",
+        "name": "Corning Incorporated",
+        "weight_pct": 2.35,
+        "shares": 254,
+        "raw": {
+          "no": 16,
+          "n": "Corning Incorporated",
+          "s": "$GLW",
+          "as": "2.35%",
+          "sh": "254"
+        }
+      },
+      {
+        "rank": 17,
+        "symbol": "!HKG/1879",
+        "name": "Shanghai Xizhi Technology Co., Ltd.",
+        "weight_pct": 2.32,
+        "shares": 973,
+        "raw": {
+          "no": 17,
+          "n": "Shanghai Xizhi Technology Co., Ltd.",
+          "s": "!hkg/1879",
+          "as": "2.32%",
+          "sh": "973"
+        }
+      },
+      {
+        "rank": 18,
+        "symbol": "POET",
+        "name": "POET Technologies Inc.",
+        "weight_pct": 2.2,
+        "shares": 4724,
+        "raw": {
+          "no": 18,
+          "n": "POET Technologies Inc.",
+          "s": "$POET",
+          "as": "2.20%",
+          "sh": "4,724"
+        }
+      },
+      {
+        "rank": 19,
+        "symbol": "AAOI",
+        "name": "Applied Optoelectronics, Inc.",
+        "weight_pct": 2.07,
+        "shares": 341,
+        "raw": {
+          "no": 19,
+          "n": "Applied Optoelectronics, Inc.",
+          "s": "$AAOI",
+          "as": "2.07%",
+          "sh": "341"
+        }
+      },
+      {
+        "rank": 20,
+        "symbol": "!ETR/AIXA",
+        "name": "AIXTRON SE",
+        "weight_pct": 1.86,
+        "shares": 778,
+        "raw": {
+          "no": 20,
+          "n": "AIXTRON SE",
+          "s": "!etr/AIXA",
+          "as": "1.86%",
+          "sh": "778"
+        }
+      },
+      {
+        "rank": 21,
+        "symbol": "LWLG",
+        "name": "Lightwave Logic, Inc.",
+        "weight_pct": 1.84,
+        "shares": 5801,
+        "raw": {
+          "no": 21,
+          "n": "Lightwave Logic, Inc.",
+          "s": "$LWLG",
+          "as": "1.84%",
+          "sh": "5,801"
+        }
+      },
+      {
+        "rank": 22,
+        "symbol": "ALMU",
+        "name": "Aeluma, Inc.",
+        "weight_pct": 1.79,
+        "shares": 2234,
+        "raw": {
+          "no": 22,
+          "n": "Aeluma, Inc.",
+          "s": "$ALMU",
+          "as": "1.79%",
+          "sh": "2,234"
+        }
+      },
+      {
+        "rank": 23,
+        "symbol": "ALAB",
+        "name": "Astera Labs, Inc.",
+        "weight_pct": 0.97,
+        "shares": 45,
+        "raw": {
+          "no": 23,
+          "n": "Astera Labs, Inc.",
+          "s": "$ALAB",
+          "as": "0.97%",
+          "sh": "45"
+        }
+      },
+      {
+        "rank": 24,
+        "symbol": "CIEN",
+        "name": "Ciena Corporation",
+        "weight_pct": 0.97,
+        "shares": 45,
+        "raw": {
+          "no": 24,
+          "n": "Ciena Corporation",
+          "s": "$CIEN",
+          "as": "0.97%",
+          "sh": "45"
+        }
+      },
+      {
+        "rank": 25,
+        "symbol": "MTSI",
+        "name": "MACOM Technology Solutions Holdings, Inc.",
+        "weight_pct": 0.29,
+        "shares": 17,
+        "raw": {
+          "no": 25,
+          "n": "MACOM Technology Solutions Holdings, Inc.",
+          "s": "$MTSI",
+          "as": "0.29%",
+          "sh": "17"
+        }
+      }
+    ],
+    "asset_allocation": null,
+    "sectors": [
+      {
+        "n": "Technology",
+        "w": 98.16
+      },
+      {
+        "n": "Materials",
+        "w": 1.84
+      }
+    ],
+    "countries": [
+      {
+        "code": "US",
+        "weight": 47.8,
+        "country": "United States"
+      },
+      {
+        "code": "CN",
+        "weight": 30.98,
+        "country": "China"
+      },
+      {
+        "code": "KY",
+        "weight": 13.46,
+        "country": "Cayman Islands"
+      },
+      {
+        "code": "TW",
+        "weight": 3.7,
+        "country": "Taiwan"
+      },
+      {
+        "code": "CA",
+        "weight": 2.2,
+        "country": "Canada"
+      },
+      {
+        "code": "DE",
+        "weight": 1.86,
+        "country": "Germany"
+      }
+    ],
+    "holding_count": 29,
+    "holdings_updated": "Sep 24, 2026",
+    "classification": {
+      "is_leveraged": false,
+      "leverage_factor": null,
+      "is_inverse": false,
+      "is_single_stock": false,
+      "underlying": null,
+      "source": "stockanalysis.overview.description",
+      "confidence": "high"
+    },
+    "overview": {
+      "aum": "$1.67M",
+      "expenseRatio": "0.60%",
+      "peRatio": "60.78",
+      "sharesOut": "70,000",
+      "inception": "Aug 10, 2026",
+      "etf_website": "https://www.aura-etfs.com/products/phox"
+    },
+    "performance": {
+      "tr1m": -0.47798,
+      "trYTD": null,
+      "tr1y": null,
+      "cagr5y": null,
+      "cagr10y": null,
+      "cagrMAX": null
+    },
+    "quote": {
+      "p": 23.26,
+      "pd": 23.26,
+      "c": -0.29,
+      "cp": -1.23,
+      "cl": 23.55,
+      "cdr": -1,
+      "o": 23.31,
+      "h": 23.31,
+      "l": 23.31,
+      "v": 473.4458,
+      "ts": 1790779607548.654,
+      "u": "Sep 30, 2026, 10:46 AM EDT",
+      "td": "2026-09-30",
+      "h52": 29.61,
+      "l52": 21.91,
+      "ex": "NYSEARCA",
+      "ms": "open",
+      "fms": "open",
+      "e": false,
+      "ep": null,
+      "epd": 0,
+      "ec": 0,
+      "ecp": 0,
+      "eu": null,
+      "es": null,
+      "ets": 1790779607548.654,
+      "etd": null,
+      "epv": null,
+      "days": 0,
+      "exp": 1790781535232,
+      "symbol": "PHOX",
+      "uid": "PHOX"
+    },
+    "history": [
+      {
+        "t": "2026-09-01",
+        "o": 23.24,
+        "h": 25,
+        "l": 21.91,
+        "c": 23.549,
+        "v": 58956,
+        "a": 23.5488,
+        "ch": -0.62
+      }
+    ],
+    "history_periods": {
+      "daily_1y": [
+        {
+          "t": "2026-09-29",
+          "o": 23.455,
+          "h": 23.549,
+          "l": 23.455,
+          "c": 23.549,
+          "a": 23.5488,
+          "v": 659,
+          "ch": 2.51
+        },
+        {
+          "t": "2026-09-28",
+          "o": 23.18,
+          "h": 23.18,
+          "l": 22.93,
+          "c": 22.971,
+          "a": 22.9714,
+          "v": 2779,
+          "ch": -4.89
+        },
+        {
+          "t": "2026-09-25",
+          "o": 24.03,
+          "h": 24.298,
+          "l": 24.03,
+          "c": 24.154,
+          "a": 24.1535,
+          "v": 1049,
+          "ch": 0.9
+        },
+        {
+          "t": "2026-09-24",
+          "o": 23.78,
+          "h": 23.938,
+          "l": 23.71,
+          "c": 23.938,
+          "a": 23.9384,
+          "v": 750,
+          "ch": -0.67
+        },
+        {
+          "t": "2026-09-23",
+          "o": 24.279,
+          "h": 24.279,
+          "l": 24.09,
+          "c": 24.101,
+          "a": 24.101,
+          "v": 410,
+          "ch": -2.62
+        },
+        {
+          "t": "2026-09-22",
+          "o": 24.47,
+          "h": 25,
+          "l": 24.47,
+          "c": 24.75,
+          "a": 24.7499,
+          "v": 7128,
+          "ch": -0.56
+        },
+        {
+          "t": "2026-09-21",
+          "o": 24.74,
+          "h": 24.965,
+          "l": 24.5,
+          "c": 24.89,
+          "a": 24.8895,
+          "v": 9829,
+          "ch": 3
+        },
+        {
+          "t": "2026-09-18",
+          "o": 24.16,
+          "h": 24.165,
+          "l": 24.16,
+          "c": 24.165,
+          "a": 24.165,
+          "v": 567,
+          "ch": 3.9
+        },
+        {
+          "t": "2026-09-17",
+          "o": 23.48,
+          "h": 23.48,
+          "l": 23.257,
+          "c": 23.257,
+          "a": 23.2573,
+          "v": 1127,
+          "ch": 0.85
+        },
+        {
+          "t": "2026-09-16",
+          "o": 23,
+          "h": 23.11,
+          "l": 22.8,
+          "c": 23.062,
+          "a": 23.0616,
+          "v": 5995,
+          "ch": 4.72
+        },
+        {
+          "t": "2026-09-15",
+          "o": 22.022,
+          "h": 22.022,
+          "l": 22.022,
+          "c": 22.022,
+          "a": 22.0219,
+          "v": 136,
+          "ch": 0.51
+        },
+        {
+          "t": "2026-09-14",
+          "o": 22.24,
+          "h": 22.24,
+          "l": 21.91,
+          "c": 21.91,
+          "a": 21.91,
+          "v": 3566,
+          "ch": -7.57
+        },
+        {
+          "t": "2026-09-11",
+          "o": 23.745,
+          "h": 23.745,
+          "l": 23.705,
+          "c": 23.705,
+          "a": 23.7049,
+          "v": 392,
+          "ch": 1.51
+        },
+        {
+          "t": "2026-09-10",
+          "o": 23.87,
+          "h": 23.87,
+          "l": 23.353,
+          "c": 23.353,
+          "a": 23.3531,
+          "v": 2514,
+          "ch": -2.86
+        },
+        {
+          "t": "2026-09-09",
+          "o": 24.25,
+          "h": 24.312,
+          "l": 24.041,
+          "c": 24.041,
+          "a": 24.0411,
+          "v": 3108,
+          "ch": 0
+        },
+        {
+          "t": "2026-09-08",
+          "o": 24.32,
+          "h": 24.32,
+          "l": 24.042,
+          "c": 24.042,
+          "a": 24.0415,
+          "v": 2076,
+          "ch": 4.29
+        },
+        {
+          "t": "2026-09-04",
+          "o": 22.54,
+          "h": 23.053,
+          "l": 22.54,
+          "c": 23.053,
+          "a": 23.0531,
+          "v": 2646,
+          "ch": 2.69
+        },
+        {
+          "t": "2026-09-03",
+          "o": 22.17,
+          "h": 22.51,
+          "l": 22.17,
+          "c": 22.45,
+          "a": 22.4496,
+          "v": 8182.999999999999,
+          "ch": -0.79
+        },
+        {
+          "t": "2026-09-02",
+          "o": 22.58,
+          "h": 22.627,
+          "l": 22.58,
+          "c": 22.627,
+          "a": 22.6274,
+          "v": 577,
+          "ch": -2.09
+        },
+        {
+          "t": "2026-09-01",
+          "o": 23.24,
+          "h": 23.25,
+          "l": 23.09,
+          "c": 23.111,
+          "a": 23.111,
+          "v": 5465,
+          "ch": -2.47
+        },
+        {
+          "t": "2026-08-31",
+          "o": 23.615,
+          "h": 23.695,
+          "l": 23.55,
+          "c": 23.695,
+          "a": 23.6953,
+          "v": 1048,
+          "ch": 0.14
+        },
+        {
+          "t": "2026-08-28",
+          "o": 24.43,
+          "h": 24.43,
+          "l": 23.63,
+          "c": 23.662,
+          "a": 23.6619,
+          "v": 5148,
+          "ch": -4.23
+        },
+        {
+          "t": "2026-08-27",
+          "o": 24.86,
+          "h": 24.92,
+          "l": 24.575,
+          "c": 24.707,
+          "a": 24.7071,
+          "v": 2072,
+          "ch": 2.07
+        },
+        {
+          "t": "2026-08-26",
+          "o": 23.96,
+          "h": 24.206,
+          "l": 23.96,
+          "c": 24.206,
+          "a": 24.2055,
+          "v": 1506,
+          "ch": 1.37
+        },
+        {
+          "t": "2026-08-25",
+          "o": 23.74,
+          "h": 23.879,
+          "l": 23.68,
+          "c": 23.879,
+          "a": 23.8791,
+          "v": 1862,
+          "ch": 2.52
+        },
+        {
+          "t": "2026-08-24",
+          "o": 23.5,
+          "h": 23.5,
+          "l": 22.94,
+          "c": 23.292,
+          "a": 23.2923,
+          "v": 5076,
+          "ch": -4.54
+        },
+        {
+          "t": "2026-08-21",
+          "o": 24.79,
+          "h": 24.84,
+          "l": 24.13,
+          "c": 24.401,
+          "a": 24.4008,
+          "v": 20195,
+          "ch": 0.25
+        },
+        {
+          "t": "2026-08-20",
+          "o": 24.25,
+          "h": 24.34,
+          "l": 24.03,
+          "c": 24.34,
+          "a": 24.3399,
+          "v": 3861,
+          "ch": 1.58
+        },
+        {
+          "t": "2026-08-19",
+          "o": 25,
+          "h": 25,
+          "l": 23.865,
+          "c": 23.961,
+          "a": 23.9607,
+          "v": 7579,
+          "ch": -4.36
+        },
+        {
+          "t": "2026-08-18",
+          "o": 26.25,
+          "h": 26.26,
+          "l": 25.052,
+          "c": 25.052,
+          "a": 25.0524,
+          "v": 9656,
+          "ch": -9.01
+        },
+        {
+          "t": "2026-08-17",
+          "o": 26.99,
+          "h": 27.85,
+          "l": 26.99,
+          "c": 27.532,
+          "a": 27.5323,
+          "v": 6315,
+          "ch": 4.55
+        },
+        {
+          "t": "2026-08-14",
+          "o": 26.53,
+          "h": 26.53,
+          "l": 26.15,
+          "c": 26.334,
+          "a": 26.3341,
+          "v": 5912,
+          "ch": 1.69
+        },
+        {
+          "t": "2026-08-13",
+          "o": 27.79,
+          "h": 29.61,
+          "l": 25.897,
+          "c": 25.897,
+          "a": 25.8974,
+          "v": 8154,
+          "ch": -2.17
+        },
+        {
+          "t": "2026-08-12",
+          "o": 25.925,
+          "h": 26.8,
+          "l": 25.925,
+          "c": 26.471,
+          "a": 26.4708,
+          "v": 5604,
+          "ch": 5.67
+        },
+        {
+          "t": "2026-08-11",
+          "o": 24.82,
+          "h": 25.05,
+          "l": 24.82,
+          "c": 25.05,
+          "a": 25.05,
+          "v": 5106,
+          "ch": 1.32
+        }
+      ],
+      "weekly_1y": [
+        {
+          "t": "2026-09-28",
+          "o": 23.18,
+          "h": 23.549,
+          "l": 22.93,
+          "c": 23.549,
+          "v": 3438,
+          "a": 23.5488,
+          "ch": -2.5
+        },
+        {
+          "t": "2026-09-21",
+          "o": 24.74,
+          "h": 25,
+          "l": 23.71,
+          "c": 24.154,
+          "v": 19166,
+          "a": 24.1535,
+          "ch": -0.05
+        },
+        {
+          "t": "2026-09-14",
+          "o": 22.24,
+          "h": 24.165,
+          "l": 21.91,
+          "c": 24.165,
+          "v": 11391,
+          "a": 24.165,
+          "ch": 1.94
+        },
+        {
+          "t": "2026-09-08",
+          "o": 24.32,
+          "h": 24.32,
+          "l": 23.353,
+          "c": 23.705,
+          "v": 8090,
+          "a": 23.7049,
+          "ch": 2.83
+        },
+        {
+          "t": "2026-08-31",
+          "o": 23.615,
+          "h": 23.695,
+          "l": 22.17,
+          "c": 23.053,
+          "v": 17919,
+          "a": 23.0531,
+          "ch": -2.57
+        },
+        {
+          "t": "2026-08-24",
+          "o": 23.5,
+          "h": 24.92,
+          "l": 22.94,
+          "c": 23.662,
+          "v": 15664,
+          "a": 23.6619,
+          "ch": -3.03
+        },
+        {
+          "t": "2026-08-17",
+          "o": 26.99,
+          "h": 27.85,
+          "l": 23.865,
+          "c": 24.401,
+          "v": 47606,
+          "a": 24.4008,
+          "ch": -7.34
+        }
+      ],
+      "monthly_1y": [
+        {
+          "t": "2026-09-01",
+          "o": 23.24,
+          "h": 25,
+          "l": 21.91,
+          "c": 23.549,
+          "v": 58956,
+          "a": 23.5488,
+          "ch": -0.62
+        }
+      ],
+      "weekly_3y": [
+        {
+          "t": "2026-09-28",
+          "o": 23.18,
+          "h": 23.549,
+          "l": 22.93,
+          "c": 23.549,
+          "v": 3438,
+          "a": 23.5488,
+          "ch": -2.5
+        },
+        {
+          "t": "2026-09-21",
+          "o": 24.74,
+          "h": 25,
+          "l": 23.71,
+          "c": 24.154,
+          "v": 19166,
+          "a": 24.1535,
+          "ch": -0.05
+        },
+        {
+          "t": "2026-09-14",
+          "o": 22.24,
+          "h": 24.165,
+          "l": 21.91,
+          "c": 24.165,
+          "v": 11391,
+          "a": 24.165,
+          "ch": 1.94
+        },
+        {
+          "t": "2026-09-08",
+          "o": 24.32,
+          "h": 24.32,
+          "l": 23.353,
+          "c": 23.705,
+          "v": 8090,
+          "a": 23.7049,
+          "ch": 2.83
+        },
+        {
+          "t": "2026-08-31",
+          "o": 23.615,
+          "h": 23.695,
+          "l": 22.17,
+          "c": 23.053,
+          "v": 17919,
+          "a": 23.0531,
+          "ch": -2.57
+        },
+        {
+          "t": "2026-08-24",
+          "o": 23.5,
+          "h": 24.92,
+          "l": 22.94,
+          "c": 23.662,
+          "v": 15664,
+          "a": 23.6619,
+          "ch": -3.03
+        },
+        {
+          "t": "2026-08-17",
+          "o": 26.99,
+          "h": 27.85,
+          "l": 23.865,
+          "c": 24.401,
+          "v": 47606,
+          "a": 24.4008,
+          "ch": -7.34
+        }
+      ],
+      "monthly_3y": [
+        {
+          "t": "2026-09-01",
+          "o": 23.24,
+          "h": 25,
+          "l": 21.91,
+          "c": 23.549,
+          "v": 58956,
+          "a": 23.5488,
+          "ch": -0.62
+        }
+      ],
+      "monthly_5y": [
+        {
+          "t": "2026-09-01",
+          "o": 23.24,
+          "h": 25,
+          "l": 21.91,
+          "c": 23.549,
+          "v": 58956,
+          "a": 23.5488,
+          "ch": -0.62
+        }
+      ]
+    }
+  },
+  "raw": {
+    "overview": {
+      "trust": {
+        "sources": [
+          {
+            "name": "S&P Global Market Intelligence",
+            "short": "S&P Global",
+            "url": "https://www.spglobal.com/market-intelligence/en"
+          },
+          {
+            "name": "CBOE",
+            "short": "CBOE",
+            "url": "https://www.cboe.com/"
+          },
+          {
+            "name": "Nasdaq UTP",
+            "short": "Nasdaq UTP",
+            "url": "https://www.utpplan.com/overview",
+            "noUtm": true
+          },
+          {
+            "name": "Finnhub",
+            "short": "Finnhub",
+            "url": "https://finnhub.io/"
+          }
+        ],
+        "topic": "overview",
+        "ticker": "PHOX",
+        "lastChecked": 1790781491569,
+        "summary": {
+          "text": "Historical data is provided by S&P Global Market Intelligence. Real-time stock price data is provided by CBOE and 15-minute delayed consolidated tape pricing data is provided by Nasdaq UTP. Several fund data points are also provided by Finnhub."
+        }
+      },
+      "type": "etf",
+      "aum": "$1.67M",
+      "nav": null,
+      "expenseRatio": "0.60%",
+      "peRatio": "60.78",
+      "sharesOut": "70,000",
+      "dps": null,
+      "dividendYield": null,
+      "payoutRatio": null,
+      "exDivDate": null,
+      "ch1y": null,
+      "payoutFrequency": "n/a",
+      "beta": null,
+      "holdings": 29,
+      "inception": "Aug 10, 2026",
+      "chart": {
+        "expiration": 1790775000000,
+        "data": [
+          {
+            "t": 1790674200
+          },
+          {
+            "t": 1790674260
+          },
+          {
+            "t": 1790674320
+          },
+          {
+            "t": 1790674380
+          },
+          {
+            "t": 1790674440
+          },
+          {
+            "t": 1790674500
+          },
+          {
+            "t": 1790674560
+          },
+          {
+            "t": 1790674620
+          },
+          {
+            "t": 1790674680
+          },
+          {
+            "t": 1790674740
+          },
+          {
+            "t": 1790674800
+          },
+          {
+            "t": 1790674860
+          },
+          {
+            "t": 1790674920
+          },
+          {
+            "t": 1790674980
+          },
+          {
+            "t": 1790675040
+          },
+          {
+            "t": 1790675100
+          },
+          {
+            "c": 22.971,
+            "o": 22.971,
+            "t": 1790675160
+          },
+          {
+            "c": null,
+            "t": 1790675220
+          },
+          {
+            "c": null,
+            "t": 1790675280
+          },
+          {
+            "c": null,
+            "t": 1790675340
+          },
+          {
+            "c": null,
+            "t": 1790675400
+          },
+          {
+            "c": null,
+            "t": 1790675460
+          },
+          {
+            "c": null,
+            "t": 1790675520
+          },
+          {
+            "c": null,
+            "t": 1790675580
+          },
+          {
+            "c": null,
+            "t": 1790675640
+          },
+          {
+            "c": null,
+            "t": 1790675700
+          },
+          {
+            "c": null,
+            "t": 1790675760
+          },
+          {
+            "c": null,
+            "t": 1790675820
+          },
+          {
+            "c": null,
+            "t": 1790675880
+          },
+          {
+            "c": null,
+            "t": 1790675940
+          },
+          {
+            "c": null,
+            "t": 1790676000
+          },
+          {
+            "c": null,
+            "t": 1790676060
+          },
+          {
+            "c": null,
+            "t": 1790676120
+          },
+          {
+            "c": null,
+            "t": 1790676180
+          },
+          {
+            "c": null,
+            "t": 1790676240
+          },
+          {
+            "c": null,
+            "t": 1790676300
+          },
+          {
+            "c": null,
+            "t": 1790676360
+          },
+          {
+            "c": null,
+            "t": 1790676420
+          },
+          {
+            "c": null,
+            "t": 1790676480
+          },
+          {
+            "c": null,
+            "t": 1790676540
+          },
+          {
+            "c": null,
+            "t": 1790676600
+          },
+          {
+            "c": null,
+            "t": 1790676660
+          },
+          {
+            "c": null,
+            "t": 1790676720
+          },
+          {
+            "c": null,
+            "t": 1790676780
+          },
+          {
+            "c": null,
+            "t": 1790676840
+          },
+          {
+            "c": null,
+            "t": 1790676900
+          },
+          {
+            "c": null,
+            "t": 1790676960
+          },
+          {
+            "c": null,
+            "t": 1790677020
+          },
+          {
+            "c": null,
+            "t": 1790677080
+          },
+          {
+            "c": null,
+            "t": 1790677140
+          },
+          {
+            "c": null,
+            "t": 1790677200
+          },
+          {
+            "c": null,
+            "t": 1790677260
+          },
+          {
+            "c": null,
+            "t": 1790677320
+          },
+          {
+            "c": null,
+            "t": 1790677380
+          },
+          {
+            "c": null,
+            "t": 1790677440
+          },
+          {
+            "c": null,
+            "t": 1790677500
+          },
+          {
+            "c": null,
+            "t": 1790677560
+          },
+          {
+            "c": null,
+            "t": 1790677620
+          },
+          {
+            "c": null,
+            "t": 1790677680
+          },
+          {
+            "c": null,
+            "t": 1790677740
+          },
+          {
+            "c": null,
+            "t": 1790677800
+          },
+          {
+            "c": null,
+            "t": 1790677860
+          },
+          {
+            "c": null,
+            "t": 1790677920
+          },
+          {
+            "c": null,
+            "t": 1790677980
+          },
+          {
+            "c": null,
+            "t": 1790678040
+          },
+          {
+            "c": null,
+            "t": 1790678100
+          },
+          {
+            "c": null,
+            "t": 1790678160
+          },
+          {
+            "c": null,
+            "t": 1790678220
+          },
+          {
+            "c": null,
+            "t": 1790678280
+          },
+          {
+            "c": null,
+            "t": 1790678340
+          },
+          {
+            "c": null,
+            "t": 1790678400
+          },
+          {
+            "c": null,
+            "t": 1790678460
+          },
+          {
+            "c": null,
+            "t": 1790678520
+          },
+          {
+            "c": null,
+            "t": 1790678580
+          },
+          {
+            "c": null,
+            "t": 1790678640
+          },
+          {
+            "c": null,
+            "t": 1790678700
+          },
+          {
+            "c": null,
+            "t": 1790678760
+          },
+          {
+            "c": null,
+            "t": 1790678820
+          },
+          {
+            "c": null,
+            "t": 1790678880
+          },
+          {
+            "c": null,
+            "t": 1790678940
+          },
+          {
+            "c": null,
+            "t": 1790679000
+          },
+          {
+            "c": null,
+            "t": 1790679060
+          },
+          {
+            "c": null,
+            "t": 1790679120
+          },
+          {
+            "c": null,
+            "t": 1790679180
+          },
+          {
+            "c": null,
+            "t": 1790679240
+          },
+          {
+            "c": null,
+            "t": 1790679300
+          },
+          {
+            "c": null,
+            "t": 1790679360
+          },
+          {
+            "c": null,
+            "t": 1790679420
+          },
+          {
+            "c": null,
+            "t": 1790679480
+          },
+          {
+            "c": null,
+            "t": 1790679540
+          },
+          {
+            "c": null,
+            "t": 1790679600
+          },
+          {
+            "c": null,
+            "t": 1790679660
+          },
+          {
+            "c": null,
+            "t": 1790679720
+          },
+          {
+            "c": null,
+            "t": 1790679780
+          },
+          {
+            "c": null,
+            "t": 1790679840
+          },
+          {
+            "c": null,
+            "t": 1790679900
+          },
+          {
+            "c": null,
+            "t": 1790679960
+          },
+          {
+            "c": null,
+            "t": 1790680020
+          },
+          {
+            "c": null,
+            "t": 1790680080
+          },
+          {
+            "c": null,
+            "t": 1790680140
+          },
+          {
+            "c": null,
+            "t": 1790680200
+          },
+          {
+            "c": null,
+            "t": 1790680260
+          },
+          {
+            "c": null,
+            "t": 1790680320
+          },
+          {
+            "c": null,
+            "t": 1790680380
+          },
+          {
+            "c": null,
+            "t": 1790680440
+          },
+          {
+            "c": null,
+            "t": 1790680500
+          },
+          {
+            "c": null,
+            "t": 1790680560
+          },
+          {
+            "c": null,
+            "t": 1790680620
+          },
+          {
+            "c": null,
+            "t": 1790680680
+          },
+          {
+            "c": null,
+            "t": 1790680740
+          },
+          {
+            "c": null,
+            "t": 1790680800
+          },
+          {
+            "c": null,
+            "t": 1790680860
+          },
+          {
+            "c": null,
+            "t": 1790680920
+          },
+          {
+            "c": null,
+            "t": 1790680980
+          },
+          {
+            "c": null,
+            "t": 1790681040
+          },
+          {
+            "c": null,
+            "t": 1790681100
+          },
+          {
+            "c": null,
+            "t": 1790681160
+          },
+          {
+            "c": null,
+            "t": 1790681220
+          },
+          {
+            "c": null,
+            "t": 1790681280
+          },
+          {
+            "c": null,
+            "t": 1790681340
+          },
+          {
+            "c": null,
+            "t": 1790681400
+          },
+          {
+            "c": null,
+            "t": 1790681460
+          },
+          {
+            "c": null,
+            "t": 1790681520
+          },
+          {
+            "c": null,
+            "t": 1790681580
+          },
+          {
+            "c": null,
+            "t": 1790681640
+          },
+          {
+            "c": null,
+            "t": 1790681700
+          },
+          {
+            "c": null,
+            "t": 1790681760
+          },
+          {
+            "c": null,
+            "t": 1790681820
+          },
+          {
+            "c": null,
+            "t": 1790681880
+          },
+          {
+            "c": null,
+            "t": 1790681940
+          },
+          {
+            "c": null,
+            "t": 1790682000
+          },
+          {
+            "c": null,
+            "t": 1790682060
+          },
+          {
+            "c": null,
+            "t": 1790682120
+          },
+          {
+            "c": null,
+            "t": 1790682180
+          },
+          {
+            "c": null,
+            "t": 1790682240
+          },
+          {
+            "c": null,
+            "t": 1790682300
+          },
+          {
+            "c": null,
+            "t": 1790682360
+          },
+          {
+            "c": null,
+            "t": 1790682420
+          },
+          {
+            "c": null,
+            "t": 1790682480
+          },
+          {
+            "c": null,
+            "t": 1790682540
+          },
+          {
+            "c": null,
+            "t": 1790682600
+          },
+          {
+            "c": null,
+            "t": 1790682660
+          },
+          {
+            "c": null,
+            "t": 1790682720
+          },
+          {
+            "c": null,
+            "t": 1790682780
+          },
+          {
+            "c": null,
+            "t": 1790682840
+          },
+          {
+            "c": null,
+            "t": 1790682900
+          },
+          {
+            "c": null,
+            "t": 1790682960
+          },
+          {
+            "c": null,
+            "t": 1790683020
+          },
+          {
+            "c": null,
+            "t": 1790683080
+          },
+          {
+            "c": null,
+            "t": 1790683140
+          },
+          {
+            "c": null,
+            "t": 1790683200
+          },
+          {
+            "c": null,
+            "t": 1790683260
+          },
+          {
+            "c": null,
+            "t": 1790683320
+          },
+          {
+            "c": null,
+            "t": 1790683380
+          },
+          {
+            "c": null,
+            "t": 1790683440
+          },
+          {
+            "c": null,
+            "t": 1790683500
+          },
+          {
+            "c": null,
+            "t": 1790683560
+          },
+          {
+            "c": null,
+            "t": 1790683620
+          },
+          {
+            "c": null,
+            "t": 1790683680
+          },
+          {
+            "c": null,
+            "t": 1790683740
+          },
+          {
+            "c": null,
+            "t": 1790683800
+          },
+          {
+            "c": null,
+            "t": 1790683860
+          },
+          {
+            "c": null,
+            "t": 1790683920
+          },
+          {
+            "c": null,
+            "t": 1790683980
+          },
+          {
+            "c": null,
+            "t": 1790684040
+          },
+          {
+            "c": null,
+            "t": 1790684100
+          },
+          {
+            "c": null,
+            "t": 1790684160
+          },
+          {
+            "c": null,
+            "t": 1790684220
+          },
+          {
+            "c": null,
+            "t": 1790684280
+          },
+          {
+            "c": null,
+            "t": 1790684340
+          },
+          {
+            "c": null,
+            "t": 1790684400
+          },
+          {
+            "c": null,
+            "t": 1790684460
+          },
+          {
+            "c": null,
+            "t": 1790684520
+          },
+          {
+            "c": null,
+            "t": 1790684580
+          },
+          {
+            "c": null,
+            "t": 1790684640
+          },
+          {
+            "c": null,
+            "t": 1790684700
+          },
+          {
+            "c": null,
+            "t": 1790684760
+          },
+          {
+            "c": null,
+            "t": 1790684820
+          },
+          {
+            "c": null,
+            "t": 1790684880
+          },
+          {
+            "c": null,
+            "t": 1790684940
+          },
+          {
+            "c": null,
+            "t": 1790685000
+          },
+          {
+            "c": null,
+            "t": 1790685060
+          },
+          {
+            "c": null,
+            "t": 1790685120
+          },
+          {
+            "c": null,
+            "t": 1790685180
+          },
+          {
+            "c": null,
+            "t": 1790685240
+          },
+          {
+            "c": null,
+            "t": 1790685300
+          },
+          {
+            "c": null,
+            "t": 1790685360
+          },
+          {
+            "c": null,
+            "t": 1790685420
+          },
+          {
+            "c": null,
+            "t": 1790685480
+          },
+          {
+            "c": null,
+            "t": 1790685540
+          },
+          {
+            "c": null,
+            "t": 1790685600
+          },
+          {
+            "c": null,
+            "t": 1790685660
+          },
+          {
+            "c": null,
+            "t": 1790685720
+          },
+          {
+            "c": null,
+            "t": 1790685780
+          },
+          {
+            "c": null,
+            "t": 1790685840
+          },
+          {
+            "c": null,
+            "t": 1790685900
+          },
+          {
+            "c": null,
+            "t": 1790685960
+          },
+          {
+            "c": null,
+            "t": 1790686020
+          },
+          {
+            "c": null,
+            "t": 1790686080
+          },
+          {
+            "c": null,
+            "t": 1790686140
+          },
+          {
+            "c": null,
+            "t": 1790686200
+          },
+          {
+            "c": null,
+            "t": 1790686260
+          },
+          {
+            "c": null,
+            "t": 1790686320
+          },
+          {
+            "c": null,
+            "t": 1790686380
+          },
+          {
+            "c": null,
+            "t": 1790686440
+          },
+          {
+            "c": null,
+            "t": 1790686500
+          },
+          {
+            "c": null,
+            "t": 1790686560
+          },
+          {
+            "c": null,
+            "t": 1790686620
+          },
+          {
+            "c": 23.5,
+            "t": 1790686680
+          },
+          {
+            "c": null,
+            "t": 1790686740
+          },
+          {
+            "c": null,
+            "t": 1790686800
+          },
+          {
+            "c": null,
+            "t": 1790686860
+          },
+          {
+            "c": null,
+            "t": 1790686920
+          },
+          {
+            "c": null,
+            "t": 1790686980
+          },
+          {
+            "c": null,
+            "t": 1790687040
+          },
+          {
+            "c": null,
+            "t": 1790687100
+          },
+          {
+            "c": null,
+            "t": 1790687160
+          },
+          {
+            "c": null,
+            "t": 1790687220
+          },
+          {
+            "c": null,
+            "t": 1790687280
+          },
+          {
+            "c": null,
+            "t": 1790687340
+          },
+          {
+            "c": null,
+            "t": 1790687400
+          },
+          {
+            "c": 23.5,
+            "t": 1790687460
+          },
+          {
+            "t": 1790687519
+          },
+          {
+            "t": 1790687579
+          },
+          {
+            "t": 1790687639
+          },
+          {
+            "t": 1790687699
+          },
+          {
+            "t": 1790687759
+          },
+          {
+            "t": 1790687819
+          },
+          {
+            "t": 1790687879
+          },
+          {
+            "t": 1790687939
+          },
+          {
+            "t": 1790687999
+          },
+          {
+            "t": 1790688059
+          },
+          {
+            "t": 1790688119
+          },
+          {
+            "t": 1790688179
+          },
+          {
+            "t": 1790688239
+          },
+          {
+            "t": 1790688299
+          },
+          {
+            "t": 1790688359
+          },
+          {
+            "t": 1790688419
+          },
+          {
+            "t": 1790688479
+          },
+          {
+            "t": 1790688539
+          },
+          {
+            "t": 1790688599
+          },
+          {
+            "t": 1790688659
+          },
+          {
+            "t": 1790688719
+          },
+          {
+            "t": 1790688779
+          },
+          {
+            "t": 1790688839
+          },
+          {
+            "t": 1790688899
+          },
+          {
+            "t": 1790688959
+          },
+          {
+            "t": 1790689019
+          },
+          {
+            "t": 1790689079
+          },
+          {
+            "t": 1790689139
+          },
+          {
+            "t": 1790689199
+          },
+          {
+            "t": 1790689259
+          },
+          {
+            "t": 1790689319
+          },
+          {
+            "t": 1790689379
+          },
+          {
+            "t": 1790689439
+          },
+          {
+            "t": 1790689499
+          },
+          {
+            "t": 1790689559
+          },
+          {
+            "t": 1790689619
+          },
+          {
+            "t": 1790689679
+          },
+          {
+            "t": 1790689739
+          },
+          {
+            "t": 1790689799
+          },
+          {
+            "t": 1790689859
+          },
+          {
+            "t": 1790689919
+          },
+          {
+            "t": 1790689979
+          },
+          {
+            "t": 1790690039
+          },
+          {
+            "t": 1790690099
+          },
+          {
+            "t": 1790690159
+          },
+          {
+            "t": 1790690219
+          },
+          {
+            "t": 1790690279
+          },
+          {
+            "t": 1790690339
+          },
+          {
+            "t": 1790690399
+          },
+          {
+            "t": 1790690459
+          },
+          {
+            "t": 1790690519
+          },
+          {
+            "t": 1790690579
+          },
+          {
+            "t": 1790690639
+          },
+          {
+            "t": 1790690699
+          },
+          {
+            "t": 1790690759
+          },
+          {
+            "t": 1790690819
+          },
+          {
+            "t": 1790690879
+          },
+          {
+            "t": 1790690939
+          },
+          {
+            "t": 1790690999
+          },
+          {
+            "t": 1790691059
+          },
+          {
+            "t": 1790691119
+          },
+          {
+            "t": 1790691179
+          },
+          {
+            "t": 1790691239
+          },
+          {
+            "t": 1790691299
+          },
+          {
+            "t": 1790691359
+          },
+          {
+            "t": 1790691419
+          },
+          {
+            "t": 1790691479
+          },
+          {
+            "t": 1790691539
+          },
+          {
+            "t": 1790691599
+          },
+          {
+            "t": 1790691659
+          },
+          {
+            "t": 1790691719
+          },
+          {
+            "t": 1790691779
+          },
+          {
+            "t": 1790691839
+          },
+          {
+            "t": 1790691899
+          },
+          {
+            "t": 1790691959
+          },
+          {
+            "t": 1790692019
+          },
+          {
+            "t": 1790692079
+          },
+          {
+            "t": 1790692139
+          },
+          {
+            "t": 1790692199
+          },
+          {
+            "t": 1790692259
+          },
+          {
+            "t": 1790692319
+          },
+          {
+            "t": 1790692379
+          },
+          {
+            "t": 1790692439
+          },
+          {
+            "t": 1790692499
+          },
+          {
+            "t": 1790692559
+          },
+          {
+            "t": 1790692619
+          },
+          {
+            "t": 1790692679
+          },
+          {
+            "t": 1790692739
+          },
+          {
+            "t": 1790692799
+          },
+          {
+            "t": 1790692859
+          },
+          {
+            "t": 1790692919
+          },
+          {
+            "t": 1790692979
+          },
+          {
+            "t": 1790693039
+          },
+          {
+            "t": 1790693099
+          },
+          {
+            "t": 1790693159
+          },
+          {
+            "t": 1790693219
+          },
+          {
+            "t": 1790693279
+          },
+          {
+            "t": 1790693339
+          },
+          {
+            "t": 1790693399
+          },
+          {
+            "t": 1790693459
+          },
+          {
+            "t": 1790693519
+          },
+          {
+            "t": 1790693579
+          },
+          {
+            "t": 1790693639
+          },
+          {
+            "t": 1790693699
+          },
+          {
+            "t": 1790693759
+          },
+          {
+            "t": 1790693819
+          },
+          {
+            "t": 1790693879
+          },
+          {
+            "t": 1790693939
+          },
+          {
+            "t": 1790693999
+          },
+          {
+            "t": 1790694059
+          },
+          {
+            "t": 1790694119
+          },
+          {
+            "t": 1790694179
+          },
+          {
+            "t": 1790694239
+          },
+          {
+            "t": 1790694299
+          },
+          {
+            "t": 1790694359
+          },
+          {
+            "t": 1790694419
+          },
+          {
+            "t": 1790694479
+          },
+          {
+            "t": 1790694539
+          },
+          {
+            "t": 1790694599
+          },
+          {
+            "t": 1790694659
+          },
+          {
+            "t": 1790694719
+          },
+          {
+            "t": 1790694779
+          },
+          {
+            "t": 1790694839
+          },
+          {
+            "t": 1790694899
+          },
+          {
+            "t": 1790694959
+          },
+          {
+            "t": 1790695019
+          },
+          {
+            "t": 1790695079
+          },
+          {
+            "t": 1790695139
+          },
+          {
+            "t": 1790695199
+          },
+          {
+            "t": 1790695259
+          },
+          {
+            "t": 1790695319
+          },
+          {
+            "t": 1790695379
+          },
+          {
+            "t": 1790695439
+          },
+          {
+            "t": 1790695499
+          },
+          {
+            "t": 1790695559
+          },
+          {
+            "t": 1790695619
+          },
+          {
+            "t": 1790695679
+          },
+          {
+            "t": 1790695739
+          },
+          {
+            "t": 1790695799
+          },
+          {
+            "t": 1790695859
+          },
+          {
+            "t": 1790695919
+          },
+          {
+            "t": 1790695979
+          },
+          {
+            "t": 1790696039
+          },
+          {
+            "t": 1790696099
+          },
+          {
+            "t": 1790696159
+          },
+          {
+            "t": 1790696219
+          },
+          {
+            "t": 1790696279
+          },
+          {
+            "t": 1790696339
+          },
+          {
+            "t": 1790696399
+          },
+          {
+            "t": 1790696459
+          },
+          {
+            "t": 1790696519
+          },
+          {
+            "t": 1790696579
+          },
+          {
+            "t": 1790696639
+          },
+          {
+            "t": 1790696699
+          },
+          {
+            "t": 1790696759
+          },
+          {
+            "t": 1790696819
+          },
+          {
+            "t": 1790696879
+          },
+          {
+            "t": 1790696939
+          },
+          {
+            "t": 1790696999
+          },
+          {
+            "t": 1790697059
+          },
+          {
+            "t": 1790697119
+          },
+          {
+            "t": 1790697179
+          },
+          {
+            "t": 1790697239
+          },
+          {
+            "t": 1790697299
+          },
+          {
+            "t": 1790697359
+          },
+          {
+            "t": 1790697419
+          },
+          {
+            "t": 1790697479
+          },
+          {
+            "t": 1790697539
+          },
+          {
+            "t": 1790697599
+          },
+          {
+            "t": 1790697600
+          }
+        ]
+      },
+      "description": "The Aura AI Photonics ETF (PHOX) is an exchange-traded fund that is based on the VettaFi AI Photonics index. The fund tracks an index of 25 optical and photonic companies engaged in the generation, transmission, and processing of data using light-based signaling for AI computing. The fund selects and weights companies by their engagement ranking and market capitalization. PHOX was launched on Aug 10, 2026 and is issued by Aura.",
+      "infoTable": [
+        [
+          "Asset Class",
+          "Equity"
+        ],
+        [
+          "Stock Exchange",
+          "NYSEARCA"
+        ],
+        [
+          "Ticker Symbol",
+          "PHOX"
+        ],
+        [
+          "Provider",
+          "Aura"
+        ],
+        [
+          "Index Tracked",
+          "VettaFi AI Photonics Index"
+        ]
+      ],
+      "etf_website": "https://www.aura-etfs.com/products/phox",
+      "provider_page": null,
+      "holdingsTable": {
+        "count": 29,
+        "updated": "Sep 24, 2026",
+        "top10": 66.26,
+        "holdings": [
+          {
+            "n": "Lumentum Holdings Inc.",
+            "s": "$LITE",
+            "as": "12.38%",
+            "sh": "222"
+          },
+          {
+            "n": "Coherent Corp.",
+            "s": "$COHR",
+            "as": "8.62%",
+            "sh": "494"
+          },
+          {
+            "n": "Eoptolink Technology Inc., Ltd.",
+            "s": "!she/300502",
+            "as": "8.05%",
+            "sh": "2,069"
+          },
+          {
+            "n": "Zhongji Innolight Co., Ltd.",
+            "s": "!she/300308",
+            "as": "7.21%",
+            "sh": "900"
+          },
+          {
+            "n": "Credo Technology Group Holding Ltd",
+            "s": "$CRDO",
+            "as": "6.81%",
+            "sh": "579"
+          },
+          {
+            "n": "Suzhou TFC Optical Communication Co., Ltd.",
+            "s": "!she/300394",
+            "as": "5.66%",
+            "sh": "2,363"
+          },
+          {
+            "n": "Yuanjie Semiconductor Technology Co., Ltd.",
+            "s": "!sha/688498",
+            "as": "5.11%",
+            "sh": "336"
+          },
+          {
+            "n": "Marvell Technology, Inc.",
+            "s": "$MRVL",
+            "as": "4.35%",
+            "sh": "280"
+          },
+          {
+            "n": "Arista Networks, Inc.",
+            "s": "$ANET",
+            "as": "4.16%",
+            "sh": "337"
+          },
+          {
+            "n": "Amphenol Corporation",
+            "s": "$APH",
+            "as": "3.93%",
+            "sh": "788"
+          }
+        ]
+      },
+      "dividendTable": null,
+      "news": {
+        "exp": "1790792237292",
+        "data": [
+          {
+            "url": "https://www.etftrends.com/thematic-investing-content-hub/top-etf-launches-summer-2026/",
+            "img": "https://cdn.snapi.dev/images/v1/n/u/e/etf24-3866390.jpg",
+            "title": "Top ETF Launches of Summer 2026",
+            "text": "The ETF industry continues its fast pace of innovation, with product development showing no signs of slowing. U.S. ETFs ended July with $15.7 trillion in total assets under management, bringing in $19...",
+            "source": "ETF Trends",
+            "type": "Article",
+            "tickers": [
+              "#AIHY",
+              "#BNAV",
+              "#DRVR",
+              "#IQQ",
+              "#LOEV",
+              "#LOFD",
+              "#NQLT"
+            ],
+            "time": "Aug 12, 2026, 12:27 PM EDT",
+            "ago": "6 weeks ago"
+          },
+          {
+            "url": "https://www.etftrends.com/thematic-investing-content-hub/new-aura-vettafi-photonics-index-etf-phox-targets-ai-optics-infrastructure/",
+            "img": "https://cdn.snapi.dev/images/v1/k/4/d/diversified-machinery8-3860719.jpg",
+            "title": "New Aura VettaFi Photonics Index ETF (PHOX) Targets AI Optics Infrastructure",
+            "text": "Aura ETF has expanded its thematic lineup with the launch of the Aura VettaFi Photonics Index ETF (PHOX). The ETF offers targeted exposure to companies driving the next generation of artificial intell...",
+            "source": "ETF Trends",
+            "type": "Article",
+            "tickers": [
+              "$COHR",
+              "$CRDO"
+            ],
+            "time": "Aug 10, 2026, 12:07 PM EDT",
+            "ago": "7 weeks ago"
+          }
+        ]
+      },
+      "config": {
+        "no1d": false
+      },
+      "changes": {
+        "price1w": 24.75,
+        "price1m": 23.662,
+        "price3m": null,
+        "price6m": null,
+        "priceYTD": null,
+        "price1y": null,
+        "price5y": null,
+        "priceMAX": 24.725
+      },
+      "performance": {
+        "tr1m": -0.47798,
+        "trYTD": null,
+        "tr1y": null,
+        "cagr5y": null,
+        "cagr10y": null,
+        "cagrMAX": null
+      }
+    },
+    "holdings": {
+      "holdings": [
+        {
+          "no": 1,
+          "n": "Lumentum Holdings Inc.",
+          "s": "$LITE",
+          "as": "12.38%",
+          "sh": "222"
+        },
+        {
+          "no": 2,
+          "n": "Coherent Corp.",
+          "s": "$COHR",
+          "as": "8.62%",
+          "sh": "494"
+        },
+        {
+          "no": 3,
+          "n": "Eoptolink Technology Inc., Ltd.",
+          "s": "!she/300502",
+          "as": "8.05%",
+          "sh": "2,069"
+        },
+        {
+          "no": 4,
+          "n": "Zhongji Innolight Co., Ltd.",
+          "s": "!she/300308",
+          "as": "7.21%",
+          "sh": "900"
+        },
+        {
+          "no": 5,
+          "n": "Credo Technology Group Holding Ltd",
+          "s": "$CRDO",
+          "as": "6.81%",
+          "sh": "579"
+        },
+        {
+          "no": 6,
+          "n": "Suzhou TFC Optical Communication Co., Ltd.",
+          "s": "!she/300394",
+          "as": "5.66%",
+          "sh": "2,363"
+        },
+        {
+          "no": 7,
+          "n": "Yuanjie Semiconductor Technology Co., Ltd.",
+          "s": "!sha/688498",
+          "as": "5.11%",
+          "sh": "336"
+        },
+        {
+          "no": 8,
+          "n": "Marvell Technology, Inc.",
+          "s": "$MRVL",
+          "as": "4.35%",
+          "sh": "280"
+        },
+        {
+          "no": 9,
+          "n": "Arista Networks, Inc.",
+          "s": "$ANET",
+          "as": "4.16%",
+          "sh": "337"
+        },
+        {
+          "no": 10,
+          "n": "Amphenol Corporation",
+          "s": "$APH",
+          "as": "3.93%",
+          "sh": "788"
+        },
+        {
+          "no": 11,
+          "n": "Broadcom Inc.",
+          "s": "$AVGO",
+          "as": "3.85%",
+          "sh": "183"
+        },
+        {
+          "no": 12,
+          "n": "Fabrinet",
+          "s": "$FN",
+          "as": "3.71%",
+          "sh": "155"
+        },
+        {
+          "no": 13,
+          "n": "LandMark Optoelectronics Corporation",
+          "s": "!tpex/3081",
+          "as": "3.70%",
+          "sh": "726"
+        },
+        {
+          "no": 14,
+          "n": "IntelliEPI Inc. (Cayman)",
+          "s": "!tpex/4971",
+          "as": "2.95%",
+          "sh": "2,834"
+        },
+        {
+          "no": 15,
+          "n": "Linktel Technologies Co., Ltd.",
+          "s": "!she/301205",
+          "as": "2.65%",
+          "sh": "963"
+        },
+        {
+          "no": 16,
+          "n": "Corning Incorporated",
+          "s": "$GLW",
+          "as": "2.35%",
+          "sh": "254"
+        },
+        {
+          "no": 17,
+          "n": "Shanghai Xizhi Technology Co., Ltd.",
+          "s": "!hkg/1879",
+          "as": "2.32%",
+          "sh": "973"
+        },
+        {
+          "no": 18,
+          "n": "POET Technologies Inc.",
+          "s": "$POET",
+          "as": "2.20%",
+          "sh": "4,724"
+        },
+        {
+          "no": 19,
+          "n": "Applied Optoelectronics, Inc.",
+          "s": "$AAOI",
+          "as": "2.07%",
+          "sh": "341"
+        },
+        {
+          "no": 20,
+          "n": "AIXTRON SE",
+          "s": "!etr/AIXA",
+          "as": "1.86%",
+          "sh": "778"
+        },
+        {
+          "no": 21,
+          "n": "Lightwave Logic, Inc.",
+          "s": "$LWLG",
+          "as": "1.84%",
+          "sh": "5,801"
+        },
+        {
+          "no": 22,
+          "n": "Aeluma, Inc.",
+          "s": "$ALMU",
+          "as": "1.79%",
+          "sh": "2,234"
+        },
+        {
+          "no": 23,
+          "n": "Astera Labs, Inc.",
+          "s": "$ALAB",
+          "as": "0.97%",
+          "sh": "45"
+        },
+        {
+          "no": 24,
+          "n": "Ciena Corporation",
+          "s": "$CIEN",
+          "as": "0.97%",
+          "sh": "45"
+        },
+        {
+          "no": 25,
+          "n": "MACOM Technology Solutions Holdings, Inc.",
+          "s": "$MTSI",
+          "as": "0.29%",
+          "sh": "17"
+        }
+      ],
+      "asset_allocation": null,
+      "sectors": [
+        {
+          "n": "Technology",
+          "w": 98.16
+        },
+        {
+          "n": "Materials",
+          "w": 1.84
+        }
+      ],
+      "countries": [
+        {
+          "code": "US",
+          "weight": 47.8,
+          "country": "United States"
+        },
+        {
+          "code": "CN",
+          "weight": 30.98,
+          "country": "China"
+        },
+        {
+          "code": "KY",
+          "weight": 13.46,
+          "country": "Cayman Islands"
+        },
+        {
+          "code": "TW",
+          "weight": 3.7,
+          "country": "Taiwan"
+        },
+        {
+          "code": "CA",
+          "weight": 2.2,
+          "country": "Canada"
+        },
+        {
+          "code": "DE",
+          "weight": 1.86,
+          "country": "Germany"
+        }
+      ],
+      "allocationChartData": {
+        "sectors": [
+          {
+            "name": "Technology",
+            "y": 98.16
+          },
+          {
+            "name": "Materials",
+            "y": 1.84
+          }
+        ],
+        "assets": [],
+        "countries": [
+          {
+            "name": "United States",
+            "y": 47.8
+          },
+          {
+            "name": "China",
+            "y": 30.98
+          },
+          {
+            "name": "Cayman Islands",
+            "y": 13.46
+          },
+          {
+            "name": "Taiwan",
+            "y": 3.7
+          },
+          {
+            "name": "Canada",
+            "y": 2.2
+          },
+          {
+            "name": "Germany",
+            "y": 1.86
+          }
+        ]
+      },
+      "news": [
+        {
+          "t": "Top ETF Launches of Summer 2026",
+          "u": "https://www.etftrends.com/thematic-investing-content-hub/top-etf-launches-summer-2026/",
+          "n": "ETF Trends",
+          "d": "6 weeks ago"
+        },
+        {
+          "t": "New Aura VettaFi Photonics Index ETF (PHOX) Targets AI Optics Infrastructure",
+          "u": "https://www.etftrends.com/thematic-investing-content-hub/new-aura-vettafi-photonics-index-etf-phox-targets-ai-optics-infrastructure/",
+          "n": "ETF Trends",
+          "d": "7 weeks ago"
+        }
+      ],
+      "infoBox": "PHOX is an equity ETF with a total of 29 individual holdings. The top holdings are Lumentum Holdings stock at 12.38%, Coherent at 8.62%, Eoptolink Technology Inc. at 8.05%, Zhongji Innolight at 7.21%, and Credo Technology Group Holding at 6.81%.",
+      "infoTable": {
+        "count": 29,
+        "top10": 66.26,
+        "assetClass": "Equity",
+        "category": null,
+        "categoryLabel": "ETF Category",
+        "aum": 1666399,
+        "peRatio": 60.77781
+      },
+      "date": "Sep 24, 2026",
+      "count": 29,
+      "trust": {
+        "sources": [
+          {
+            "name": "Finnhub",
+            "short": "Finnhub",
+            "url": "https://finnhub.io/"
+          }
+        ],
+        "freshnessLag": "days",
+        "updateFrequency": "daily",
+        "lastUpdated": "Sep 24, 2026",
+        "lastChecked": 1790749143107,
+        "topic": "holdings",
+        "ticker": "PHOX",
+        "summary": {
+          "pre": "ETF holdings data is provided by ",
+          "post": ". Holdings are typically published by the ETF issuer at the end of each trading day."
+        },
+        "extraSummaryLinks": null
+      }
+    },
+    "quote": {
+      "p": 23.26,
+      "pd": 23.26,
+      "c": -0.29,
+      "cp": -1.23,
+      "cl": 23.55,
+      "cdr": -1,
+      "o": 23.31,
+      "h": 23.31,
+      "l": 23.31,
+      "v": 473.4458,
+      "ts": 1790779607548.654,
+      "u": "Sep 30, 2026, 10:46 AM EDT",
+      "td": "2026-09-30",
+      "h52": 29.61,
+      "l52": 21.91,
+      "ex": "NYSEARCA",
+      "ms": "open",
+      "fms": "open",
+      "e": false,
+      "ep": null,
+      "epd": 0,
+      "ec": 0,
+      "ecp": 0,
+      "eu": null,
+      "es": null,
+      "ets": 1790779607548.654,
+      "etd": null,
+      "epv": null,
+      "days": 0,
+      "exp": 1790781535232,
+      "symbol": "PHOX",
+      "uid": "PHOX"
+    },
+    "history": [
+      {
+        "t": "2026-09-01",
+        "o": 23.24,
+        "h": 25,
+        "l": 21.91,
+        "c": 23.549,
+        "v": 58956,
+        "a": 23.5488,
+        "ch": -0.62
+      }
+    ],
+    "history_periods": {
+      "daily_1y": [
+        {
+          "t": "2026-09-29",
+          "o": 23.455,
+          "h": 23.549,
+          "l": 23.455,
+          "c": 23.549,
+          "a": 23.5488,
+          "v": 659,
+          "ch": 2.51
+        },
+        {
+          "t": "2026-09-28",
+          "o": 23.18,
+          "h": 23.18,
+          "l": 22.93,
+          "c": 22.971,
+          "a": 22.9714,
+          "v": 2779,
+          "ch": -4.89
+        },
+        {
+          "t": "2026-09-25",
+          "o": 24.03,
+          "h": 24.298,
+          "l": 24.03,
+          "c": 24.154,
+          "a": 24.1535,
+          "v": 1049,
+          "ch": 0.9
+        },
+        {
+          "t": "2026-09-24",
+          "o": 23.78,
+          "h": 23.938,
+          "l": 23.71,
+          "c": 23.938,
+          "a": 23.9384,
+          "v": 750,
+          "ch": -0.67
+        },
+        {
+          "t": "2026-09-23",
+          "o": 24.279,
+          "h": 24.279,
+          "l": 24.09,
+          "c": 24.101,
+          "a": 24.101,
+          "v": 410,
+          "ch": -2.62
+        },
+        {
+          "t": "2026-09-22",
+          "o": 24.47,
+          "h": 25,
+          "l": 24.47,
+          "c": 24.75,
+          "a": 24.7499,
+          "v": 7128,
+          "ch": -0.56
+        },
+        {
+          "t": "2026-09-21",
+          "o": 24.74,
+          "h": 24.965,
+          "l": 24.5,
+          "c": 24.89,
+          "a": 24.8895,
+          "v": 9829,
+          "ch": 3
+        },
+        {
+          "t": "2026-09-18",
+          "o": 24.16,
+          "h": 24.165,
+          "l": 24.16,
+          "c": 24.165,
+          "a": 24.165,
+          "v": 567,
+          "ch": 3.9
+        },
+        {
+          "t": "2026-09-17",
+          "o": 23.48,
+          "h": 23.48,
+          "l": 23.257,
+          "c": 23.257,
+          "a": 23.2573,
+          "v": 1127,
+          "ch": 0.85
+        },
+        {
+          "t": "2026-09-16",
+          "o": 23,
+          "h": 23.11,
+          "l": 22.8,
+          "c": 23.062,
+          "a": 23.0616,
+          "v": 5995,
+          "ch": 4.72
+        },
+        {
+          "t": "2026-09-15",
+          "o": 22.022,
+          "h": 22.022,
+          "l": 22.022,
+          "c": 22.022,
+          "a": 22.0219,
+          "v": 136,
+          "ch": 0.51
+        },
+        {
+          "t": "2026-09-14",
+          "o": 22.24,
+          "h": 22.24,
+          "l": 21.91,
+          "c": 21.91,
+          "a": 21.91,
+          "v": 3566,
+          "ch": -7.57
+        },
+        {
+          "t": "2026-09-11",
+          "o": 23.745,
+          "h": 23.745,
+          "l": 23.705,
+          "c": 23.705,
+          "a": 23.7049,
+          "v": 392,
+          "ch": 1.51
+        },
+        {
+          "t": "2026-09-10",
+          "o": 23.87,
+          "h": 23.87,
+          "l": 23.353,
+          "c": 23.353,
+          "a": 23.3531,
+          "v": 2514,
+          "ch": -2.86
+        },
+        {
+          "t": "2026-09-09",
+          "o": 24.25,
+          "h": 24.312,
+          "l": 24.041,
+          "c": 24.041,
+          "a": 24.0411,
+          "v": 3108,
+          "ch": 0
+        },
+        {
+          "t": "2026-09-08",
+          "o": 24.32,
+          "h": 24.32,
+          "l": 24.042,
+          "c": 24.042,
+          "a": 24.0415,
+          "v": 2076,
+          "ch": 4.29
+        },
+        {
+          "t": "2026-09-04",
+          "o": 22.54,
+          "h": 23.053,
+          "l": 22.54,
+          "c": 23.053,
+          "a": 23.0531,
+          "v": 2646,
+          "ch": 2.69
+        },
+        {
+          "t": "2026-09-03",
+          "o": 22.17,
+          "h": 22.51,
+          "l": 22.17,
+          "c": 22.45,
+          "a": 22.4496,
+          "v": 8182.999999999999,
+          "ch": -0.79
+        },
+        {
+          "t": "2026-09-02",
+          "o": 22.58,
+          "h": 22.627,
+          "l": 22.58,
+          "c": 22.627,
+          "a": 22.6274,
+          "v": 577,
+          "ch": -2.09
+        },
+        {
+          "t": "2026-09-01",
+          "o": 23.24,
+          "h": 23.25,
+          "l": 23.09,
+          "c": 23.111,
+          "a": 23.111,
+          "v": 5465,
+          "ch": -2.47
+        },
+        {
+          "t": "2026-08-31",
+          "o": 23.615,
+          "h": 23.695,
+          "l": 23.55,
+          "c": 23.695,
+          "a": 23.6953,
+          "v": 1048,
+          "ch": 0.14
+        },
+        {
+          "t": "2026-08-28",
+          "o": 24.43,
+          "h": 24.43,
+          "l": 23.63,
+          "c": 23.662,
+          "a": 23.6619,
+          "v": 5148,
+          "ch": -4.23
+        },
+        {
+          "t": "2026-08-27",
+          "o": 24.86,
+          "h": 24.92,
+          "l": 24.575,
+          "c": 24.707,
+          "a": 24.7071,
+          "v": 2072,
+          "ch": 2.07
+        },
+        {
+          "t": "2026-08-26",
+          "o": 23.96,
+          "h": 24.206,
+          "l": 23.96,
+          "c": 24.206,
+          "a": 24.2055,
+          "v": 1506,
+          "ch": 1.37
+        },
+        {
+          "t": "2026-08-25",
+          "o": 23.74,
+          "h": 23.879,
+          "l": 23.68,
+          "c": 23.879,
+          "a": 23.8791,
+          "v": 1862,
+          "ch": 2.52
+        },
+        {
+          "t": "2026-08-24",
+          "o": 23.5,
+          "h": 23.5,
+          "l": 22.94,
+          "c": 23.292,
+          "a": 23.2923,
+          "v": 5076,
+          "ch": -4.54
+        },
+        {
+          "t": "2026-08-21",
+          "o": 24.79,
+          "h": 24.84,
+          "l": 24.13,
+          "c": 24.401,
+          "a": 24.4008,
+          "v": 20195,
+          "ch": 0.25
+        },
+        {
+          "t": "2026-08-20",
+          "o": 24.25,
+          "h": 24.34,
+          "l": 24.03,
+          "c": 24.34,
+          "a": 24.3399,
+          "v": 3861,
+          "ch": 1.58
+        },
+        {
+          "t": "2026-08-19",
+          "o": 25,
+          "h": 25,
+          "l": 23.865,
+          "c": 23.961,
+          "a": 23.9607,
+          "v": 7579,
+          "ch": -4.36
+        },
+        {
+          "t": "2026-08-18",
+          "o": 26.25,
+          "h": 26.26,
+          "l": 25.052,
+          "c": 25.052,
+          "a": 25.0524,
+          "v": 9656,
+          "ch": -9.01
+        },
+        {
+          "t": "2026-08-17",
+          "o": 26.99,
+          "h": 27.85,
+          "l": 26.99,
+          "c": 27.532,
+          "a": 27.5323,
+          "v": 6315,
+          "ch": 4.55
+        },
+        {
+          "t": "2026-08-14",
+          "o": 26.53,
+          "h": 26.53,
+          "l": 26.15,
+          "c": 26.334,
+          "a": 26.3341,
+          "v": 5912,
+          "ch": 1.69
+        },
+        {
+          "t": "2026-08-13",
+          "o": 27.79,
+          "h": 29.61,
+          "l": 25.897,
+          "c": 25.897,
+          "a": 25.8974,
+          "v": 8154,
+          "ch": -2.17
+        },
+        {
+          "t": "2026-08-12",
+          "o": 25.925,
+          "h": 26.8,
+          "l": 25.925,
+          "c": 26.471,
+          "a": 26.4708,
+          "v": 5604,
+          "ch": 5.67
+        },
+        {
+          "t": "2026-08-11",
+          "o": 24.82,
+          "h": 25.05,
+          "l": 24.82,
+          "c": 25.05,
+          "a": 25.05,
+          "v": 5106,
+          "ch": 1.32
+        }
+      ],
+      "weekly_1y": [
+        {
+          "t": "2026-09-28",
+          "o": 23.18,
+          "h": 23.549,
+          "l": 22.93,
+          "c": 23.549,
+          "v": 3438,
+          "a": 23.5488,
+          "ch": -2.5
+        },
+        {
+          "t": "2026-09-21",
+          "o": 24.74,
+          "h": 25,
+          "l": 23.71,
+          "c": 24.154,
+          "v": 19166,
+          "a": 24.1535,
+          "ch": -0.05
+        },
+        {
+          "t": "2026-09-14",
+          "o": 22.24,
+          "h": 24.165,
+          "l": 21.91,
+          "c": 24.165,
+          "v": 11391,
+          "a": 24.165,
+          "ch": 1.94
+        },
+        {
+          "t": "2026-09-08",
+          "o": 24.32,
+          "h": 24.32,
+          "l": 23.353,
+          "c": 23.705,
+          "v": 8090,
+          "a": 23.7049,
+          "ch": 2.83
+        },
+        {
+          "t": "2026-08-31",
+          "o": 23.615,
+          "h": 23.695,
+          "l": 22.17,
+          "c": 23.053,
+          "v": 17919,
+          "a": 23.0531,
+          "ch": -2.57
+        },
+        {
+          "t": "2026-08-24",
+          "o": 23.5,
+          "h": 24.92,
+          "l": 22.94,
+          "c": 23.662,
+          "v": 15664,
+          "a": 23.6619,
+          "ch": -3.03
+        },
+        {
+          "t": "2026-08-17",
+          "o": 26.99,
+          "h": 27.85,
+          "l": 23.865,
+          "c": 24.401,
+          "v": 47606,
+          "a": 24.4008,
+          "ch": -7.34
+        }
+      ],
+      "monthly_1y": [
+        {
+          "t": "2026-09-01",
+          "o": 23.24,
+          "h": 25,
+          "l": 21.91,
+          "c": 23.549,
+          "v": 58956,
+          "a": 23.5488,
+          "ch": -0.62
+        }
+      ],
+      "weekly_3y": [
+        {
+          "t": "2026-09-28",
+          "o": 23.18,
+          "h": 23.549,
+          "l": 22.93,
+          "c": 23.549,
+          "v": 3438,
+          "a": 23.5488,
+          "ch": -2.5
+        },
+        {
+          "t": "2026-09-21",
+          "o": 24.74,
+          "h": 25,
+          "l": 23.71,
+          "c": 24.154,
+          "v": 19166,
+          "a": 24.1535,
+          "ch": -0.05
+        },
+        {
+          "t": "2026-09-14",
+          "o": 22.24,
+          "h": 24.165,
+          "l": 21.91,
+          "c": 24.165,
+          "v": 11391,
+          "a": 24.165,
+          "ch": 1.94
+        },
+        {
+          "t": "2026-09-08",
+          "o": 24.32,
+          "h": 24.32,
+          "l": 23.353,
+          "c": 23.705,
+          "v": 8090,
+          "a": 23.7049,
+          "ch": 2.83
+        },
+        {
+          "t": "2026-08-31",
+          "o": 23.615,
+          "h": 23.695,
+          "l": 22.17,
+          "c": 23.053,
+          "v": 17919,
+          "a": 23.0531,
+          "ch": -2.57
+        },
+        {
+          "t": "2026-08-24",
+          "o": 23.5,
+          "h": 24.92,
+          "l": 22.94,
+          "c": 23.662,
+          "v": 15664,
+          "a": 23.6619,
+          "ch": -3.03
+        },
+        {
+          "t": "2026-08-17",
+          "o": 26.99,
+          "h": 27.85,
+          "l": 23.865,
+          "c": 24.401,
+          "v": 47606,
+          "a": 24.4008,
+          "ch": -7.34
+        }
+      ],
+      "monthly_3y": [
+        {
+          "t": "2026-09-01",
+          "o": 23.24,
+          "h": 25,
+          "l": 21.91,
+          "c": 23.549,
+          "v": 58956,
+          "a": 23.5488,
+          "ch": -0.62
+        }
+      ],
+      "monthly_5y": [
+        {
+          "t": "2026-09-01",
+          "o": 23.24,
+          "h": 25,
+          "l": 21.91,
+          "c": 23.549,
+          "v": 58956,
+          "a": 23.5488,
+          "ch": -0.62
+        }
+      ]
+    }
+  }
+}
