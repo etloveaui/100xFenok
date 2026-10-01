@@ -2,7 +2,8 @@
 // A push trigger aimed at commits made by workflows can never fire.
 //
 // GitHub does not start a workflow from a push made with the default
-// GITHUB_TOKEN, and every producer in this repository pushes that way. DEC-360
+// GITHUB_TOKEN. The A1 FDIC service instead uses its existing external Git
+// credential; its observed push route is declared below. DEC-360
 // gave build-stocks-analyzer an `on: push` filter over seven input families so
 // the review-only SEC 13F bridge would re-seal when those inputs advanced.
 // Measured 2026-08-21: that workflow has exactly three push runs in its whole
@@ -29,7 +30,7 @@ import { fileURLToPath } from "node:url";
 const REPO_ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..", "..");
 const WORKFLOW_DIR = path.join(REPO_ROOT, ".github", "workflows");
 
-// Paths only a workflow ever writes. A push filter over these is unreachable.
+// Producer-written paths require measured reachability, not a path-only guess.
 const PRODUCER_WRITTEN = /^\s*-\s*'(data\/|100xfenok-next\/public\/data\/)/;
 
 function pushPathBlock(source) {
@@ -55,6 +56,8 @@ function pushPathBlock(source) {
 // measures it, and a declared workflow that no longer carries the filter fails
 // as a stale entry.
 const PRODUCER_PATH_PUSH_FILTER_REASONS = Object.freeze({
+  "fetch-fdic.yml":
+    "ALIVE, A1 service push. Run 36850851085 on 2026-10-01 was a push from f8fd1cd24b3, committed by runtime-proof-worker after the existing A1 oneshot succeeded. The external Git credential triggered publication and computed-signals without an app build. Exact canonical/status paths are intentional; failed A1 receipts fail before publication. GitHub collection remains manual fallback after the A1 timer cutover",
   "deploy-worker.yml":
     "ALIVE, human-push convenience. 1,318 push runs; the newest 100 are all actor etloveaui, most recently 'fix(ui): use defined Edge score token' on 2026-08-20. A person changing the site expects a redeploy, and producer commits reach it only through Update Manifest, never through this filter",
   "update-manifest.yml":
