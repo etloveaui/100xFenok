@@ -107,6 +107,117 @@ LEVERAGED_AND_FOCUS_ETFS = {
 }
 NON_YAHOO_ETF_LABELS = {"HSCEI", "KOSPI", "NASDAQ", "SHANGHAI", "TOPIX"}
 
+# Verified same-security ticker changes. Select the current security as a new
+# canonical ticker; never splice its prices into the retired symbol's history.
+# Issuer notices: SEC 2026-08-17 (EQR), BNY 2026-05-11, EchoStar 2026-06-22,
+# Marsh 2026-01-14, Corgi SEC 497(e) 2026-08-19, Invesco SEC 497k 2023-06-06.
+YAHOO_SAME_SECURITY_SUCCESSORS = {
+    "EQR": "VMRK", "BK": "BNY", "SATS": "ECHO", "MMC": "MRSH",
+    "MGKX": "MEGX", "VBX": "USSX", "VOOX": "USLX",
+    "XVO": "USMX", "XVUG": "USGX", "EWCO": "RSPC",
+}
+YAHOO_SAME_SECURITY_EFFECTIVE = {
+    "EQR": "2026-08-18", "BK": "2026-05-21", "SATS": "2026-06-24",
+    "MMC": "2026-01-14", "MGKX": "2026-08-21", "VBX": "2026-08-21",
+    "VOOX": "2026-08-21", "XVO": "2026-08-21", "XVUG": "2026-08-21",
+    "EWCO": "2023-06-07",
+}
+# Public securities ended; merger consideration is not a ticker alias.
+# AVB: 2.793 VMRK shares; CTRA: 0.70 DVN shares. EA was taken private.
+YAHOO_ENDED_SECURITIES = {
+    "AVB": "SEC closing 8-K 2026-08-17; 2.793 VMRK shares per AVB share",
+    "EA": "SEC closing 8-K 2026-08-04; public shares cancelled",
+    "CTRA": "SEC closing 8-K 2026-05-07; 0.70 DVN shares per CTRA share",
+    "IWDL": "UBS redemption settled 2026-08-19",
+    "IWFL": "UBS redemption settled 2026-08-19",
+    "IWML": "UBS redemption settled 2026-08-19",
+    "MTUL": "UBS redemption settled 2026-08-19",
+    "QULL": "UBS redemption settled 2026-08-19",
+    "SCDL": "UBS redemption settled 2026-08-19",
+    "DEFI": "Hashdex closure; last trading day 2026-08-17",
+    "012510.KS": "KRX final share exchange notice; delisted 2026-07-15",
+    "230360.KQ": "KRX final cash share exchange notice; delisted 2026-06-30",
+}
+YAHOO_SECURITY_END_DATES = {
+    "AVB": "2026-08-17", "EA": "2026-08-05", "CTRA": "2026-05-07",
+    "IWDL": "2026-08-19", "IWFL": "2026-08-19", "IWML": "2026-08-19",
+    "MTUL": "2026-08-19", "QULL": "2026-08-19", "SCDL": "2026-08-19",
+    "DEFI": "2026-08-18",
+    "012510.KS": "2026-07-15", "230360.KQ": "2026-06-30",
+}
+YAHOO_LIFECYCLE_SOURCES = {
+    "EQR": "https://www.sec.gov/Archives/edgar/data/915912/000110465926097833/tm2623381d1_8k.htm",
+    "BK": "https://www.bny.com/corporate/global/en/about-us/newsroom/press-release/bny-announces-planned-change-of-stock-ticker-symbol-to-bny-130465.html",
+    "SATS": "https://ir.echostar.com/news-releases/news-release-details/echostar-changing-stocker-ticker-sats-echo-marking-companys-next",
+    "MMC": "https://www.sec.gov/Archives/edgar/data/62709/000006270926000022/mrsh-20251231.htm",
+    "MGKX": "https://www.sec.gov/Archives/edgar/data/2078265/000207826526000347/497e_ticker_changes.htm",
+    "VBX": "https://www.sec.gov/Archives/edgar/data/2078265/000207826526000347/497e_ticker_changes.htm",
+    "VOOX": "https://www.sec.gov/Archives/edgar/data/2078265/000207826526000347/497e_ticker_changes.htm",
+    "XVO": "https://www.sec.gov/Archives/edgar/data/2078265/000207826526000347/497e_ticker_changes.htm",
+    "XVUG": "https://www.sec.gov/Archives/edgar/data/2078265/000207826526000347/497e_ticker_changes.htm",
+    "EWCO": "https://www.sec.gov/Archives/edgar/data/1209466/000119312523147120/d428859d497k.htm",
+    "AVB": "https://www.sec.gov/Archives/edgar/data/915912/000110465926097833/tm2623381d1_8k.htm",
+    "EA": "https://www.sec.gov/Archives/edgar/data/712515/000114036126031157/ef20079099_8k.htm",
+    "CTRA": "https://www.sec.gov/Archives/edgar/data/858470/000110465926057278/tm2613882d1_8k.htm",
+    "IWDL": "https://etracs.ubs.com/news/show-article/id/727",
+    "IWFL": "https://etracs.ubs.com/news/show-article/id/727",
+    "IWML": "https://etracs.ubs.com/news/show-article/id/727",
+    "MTUL": "https://etracs.ubs.com/news/show-article/id/727",
+    "QULL": "https://etracs.ubs.com/news/show-article/id/727",
+    "SCDL": "https://etracs.ubs.com/news/show-article/id/727",
+    "DEFI": "https://www.sec.gov/Archives/edgar/data/1985840/000121390026084293/ea030017001ex99-1.htm",
+    "012510.KS": "https://kind.krx.co.kr/external/2026/07/08/000166/20260708000253/68051.htm",
+    "230360.KQ": "https://kind.krx.co.kr/external/2026/06/25/000847/20260625002043/70769.htm",
+}
+YAHOO_RETIRED_SYMBOLS = frozenset(YAHOO_SAME_SECURITY_SUCCESSORS) | frozenset(YAHOO_ENDED_SECURITIES)
+
+
+def retired_yahoo_symbols(as_of):
+    day = str(as_of)[:10]
+    return {
+        ticker for ticker, effective in {
+            **YAHOO_SAME_SECURITY_EFFECTIVE, **YAHOO_SECURITY_END_DATES,
+        }.items() if day >= effective
+    }
+
+
+def current_yahoo_universe_sources(sources, as_of):
+    """Route scheduled selection to live identifiers while retaining provenance."""
+    current = {}
+    retired = retired_yahoo_symbols(as_of)
+    for ticker, discovered_from in sources.items():
+        if ticker in YAHOO_ENDED_SECURITIES and ticker in retired:
+            continue
+        selected = YAHOO_SAME_SECURITY_SUCCESSORS.get(ticker, ticker) if ticker in retired else ticker
+        labels = current.setdefault(selected, set())
+        labels.update(discovered_from)
+        if selected != ticker:
+            labels.add(f"same_security_successor:{ticker}")
+    return {ticker: sorted(labels) for ticker, labels in current.items()}
+
+
+def verified_yahoo_terminal_evidence(as_of):
+    """Lifecycle policy carried by this revision, not a synthetic run artifact."""
+    evidence = {
+        ticker: [{"symbol": ticker, "terminal": True, "alias_target": None,
+                  "reason": reason, "source": "verified_public_lifecycle",
+                  "source_url": YAHOO_LIFECYCLE_SOURCES[ticker],
+                  "effective_date": YAHOO_SECURITY_END_DATES[ticker]}]
+        for ticker, reason in YAHOO_ENDED_SECURITIES.items()
+    }
+    evidence.update({
+        ticker: [{"symbol": ticker, "terminal": True, "alias_target": successor,
+                  "reason": "same public security now trades under successor ticker",
+                  "source": "verified_public_lifecycle",
+                  "source_url": YAHOO_LIFECYCLE_SOURCES[ticker],
+                  "effective_date": YAHOO_SAME_SECURITY_EFFECTIVE[ticker]}]
+        for ticker, successor in YAHOO_SAME_SECURITY_SUCCESSORS.items()
+    })
+    retired = retired_yahoo_symbols(as_of)
+    return {"artifact_path": None, "artifact_sha256": None,
+            "artifact_generated_at": None,
+            "tickers": {ticker: rows for ticker, rows in evidence.items() if ticker in retired}}
+
 # The index trackers whose distribution yield is the payout operand of the RIM
 # residual-value engine. They are part of the scheduled ETF lane's bounded
 # union (core daily basket + configured major/focus sets), so the scheduled
@@ -2214,6 +2325,16 @@ def main():
             )
         retries = validate_retry_count(args.retries)
         explicit_tickers = validate_explicit_tickers(args.tickers.split(","))
+        lifecycle_as_of = _observed_now()
+        retired_overrides = sorted(set(explicit_tickers) & retired_yahoo_symbols(lifecycle_as_of))
+        if retired_overrides:
+            descriptions = [
+                f"{ticker}->{YAHOO_SAME_SECURITY_SUCCESSORS[ticker]} (same security)"
+                if ticker in YAHOO_SAME_SECURITY_SUCCESSORS
+                else f"{ticker} (ended: {YAHOO_ENDED_SECURITIES[ticker]})"
+                for ticker in retired_overrides
+            ]
+            raise ValueError("retired Yahoo ticker override: " + ", ".join(descriptions))
         if args.retry_limit is not None and args.retry_limit < 0:
             raise ValueError("retry limit must be non-negative")
         if args.regular_limit is not None and args.regular_limit <= 0:
@@ -2265,25 +2386,31 @@ def main():
         # the configured major/focus/RIM tracker ETF sets, labeled truthfully
         # per source. The ~5,512-name StockAnalysis universe/screener is never
         # loaded or expanded here.
-        selection_sources = load_core_daily_basket_sources()
+        raw_selection_sources = load_core_daily_basket_sources()
     else:
-        selection_sources = load_universe_sources(
+        raw_selection_sources = load_universe_sources(
             stocks_only=args.stocks_only,
             stockanalysis_etfs=args.stockanalysis_etfs,
         )
+    selection_sources = current_yahoo_universe_sources(raw_selection_sources, lifecycle_as_of)
     # Only the bounded core ETF lane narrows batch-state ownership to its real
     # candidates. Other stateful lanes retain their historical StockAnalysis
     # active-universe contract; in particular, the stock lane must not lose
     # existing ETF state merely because its current fetch selection is stocks.
-    universe_sources = (
-        selection_sources
+    raw_universe_sources = (
+        raw_selection_sources
         if args.core_daily_basket
         else (
             load_universe_sources(stocks_only=False, stockanalysis_etfs=True)
             if args.record_batch_state
-            else selection_sources
+            else raw_selection_sources
         )
     )
+    universe_sources = current_yahoo_universe_sources(raw_universe_sources, lifecycle_as_of)
+    # Keep retired identifiers in state ownership so their old canonical and
+    # LKG remain visible, but never put them in scheduled selection.
+    for retired in set(raw_universe_sources) & retired_yahoo_symbols(lifecycle_as_of):
+        universe_sources[retired] = raw_universe_sources[retired]
     active_universe = set(universe_sources)
     if args.tickers:
         tickers = explicit_tickers
@@ -2305,11 +2432,12 @@ def main():
         "natural": args.natural_run,
         "shard": args.shard,
         "active_universe_scope": "core_etf" if args.core_daily_basket else "all_sources" if state_store else "selection",
-        "observed_at": _observed_now(),
+        "observed_at": lifecycle_as_of,
     }
     eligible_universe = active_universe
     terminal_evidence = state_store.load_terminal_evidence(S1_STOCK_PROMOTION_DRY_RUN) if state_store else None
-    terminal_tickers = set((terminal_evidence or {}).get("tickers") or {})
+    lifecycle_evidence = verified_yahoo_terminal_evidence(lifecycle_as_of)
+    terminal_tickers = set((terminal_evidence or {}).get("tickers") or {}) | set(lifecycle_evidence["tickers"])
     if state_store and not args.plan_only:
         freshness = yahoo_source_freshness(existing_yahoo_source_dates(eligible_universe), run_context["observed_at"])
         state_store.bootstrap_existing(
@@ -2321,6 +2449,7 @@ def main():
             max_source_business_days=freshness["max_source_business_days"],
         )
         state_store.transition_terminal_tickers(eligible_universe, terminal_evidence, run_context)
+        state_store.transition_terminal_tickers(eligible_universe, lifecycle_evidence, run_context)
         state_store.reconcile_active_universe(eligible_universe, universe_sources, run_context)
     retry_queue = (
         state_store.retry_tickers_ordered(eligible_universe, terminal_tickers)

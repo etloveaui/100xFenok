@@ -1060,6 +1060,45 @@ function stockAnalysisDetailSourceObservation(payload) {
   const normalized = payload.normalized && typeof payload.normalized === "object"
     ? payload.normalized
     : {};
+  if (raw.official_holdings && typeof raw.official_holdings === "object") {
+    const endpoints = payload.endpoints && typeof payload.endpoints === "object" ? payload.endpoints : {};
+    const observedStamp = (value) => {
+      const parsed = parseStockAnalysisIsoTimestamp(value);
+      if (parsed) return parsed;
+      const day = stockAnalysisSourceDate(value);
+      return day ? parseStockAnalysisIsoTimestamp(day) : null;
+    };
+    const officialStamp = observedStamp(raw.official_holdings.source_as_of);
+    const fetchedStamp = parseStockAnalysisIsoTimestamp(payload.fetched_at);
+    const quote = raw.quote && typeof raw.quote === "object" ? raw.quote : {};
+    const quoteDate = observedStamp(quote.td);
+    let quoteStamp = null;
+    if (typeof quote.ts === "number" && Number.isFinite(quote.ts)) {
+      const epochMs = Math.abs(quote.ts) >= 100_000_000_000 ? quote.ts : quote.ts * 1000;
+      const parsed = new Date(epochMs);
+      if (Number.isFinite(parsed.getTime())
+        && (!quoteDate || parsed.toISOString().slice(0, 10) === quoteDate.toISOString().slice(0, 10))) {
+        quoteStamp = parsed;
+      }
+    }
+    quoteStamp ??= quoteDate;
+    const dailyRows = normalized.history_periods?.daily_1y;
+    const dailyStamps = Array.isArray(dailyRows)
+      ? dailyRows.filter((row) => row && typeof row === "object" && !Array.isArray(row))
+        .map((row) => observedStamp(row.date || row.t || row.time))
+        .filter(Boolean)
+      : [];
+    const dailyStamp = dailyStamps.length > 0
+      ? new Date(Math.max(...dailyStamps.map((stamp) => stamp.getTime()))) : null;
+    if (!officialStamp || !fetchedStamp || (endpoints.quote && !quoteStamp)
+      || (endpoints.history_periods?.daily_1y && !dailyStamp)) return null;
+    const clocks = [officialStamp, quoteStamp, dailyStamp].filter(Boolean);
+    if (clocks.some((stamp) => stamp > fetchedStamp)) return null;
+    const oldestMs = Math.floor(Math.min(...clocks.map((stamp) => stamp.getTime())) / 1000) * 1000;
+    const sourceStamp = parseStockAnalysisIsoTimestamp(payload.source_as_of);
+    if (!sourceStamp || sourceStamp.getTime() !== oldestMs) return null;
+    return { day: new Date(oldestMs).toISOString().slice(0, 10), origin: "source" };
+  }
   const sourceDay = stockAnalysisQuoteSourceDay(raw.quote)
     || stockAnalysisQuoteSourceDay(normalized.quote)
     || stockAnalysisSourceDate(raw.holdings?.date)

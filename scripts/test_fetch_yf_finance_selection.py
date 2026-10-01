@@ -2982,7 +2982,7 @@ assert callable(namespace["load_universe"])
                 self.assertNotEqual(ignored.returncode, 0, f"{candidate} must remain persistable")
 
 
-    def test_issuer_notice_does_not_subtract_from_active_universe(self) -> None:
+    def test_settled_redemption_leaves_legacy_out_of_fetch_plan(self) -> None:
         self.fetcher.load_universe_sources = lambda **_kwargs: {
             "IWDL": ["stockanalysis_etf"],
             "LIVE": ["stockanalysis_etf"],
@@ -3013,7 +3013,14 @@ assert callable(namespace["load_universe"])
             self.fetcher.main()
         finally:
             sys.argv, sys.stdout = original_argv, original_stdout
-        self.assertEqual(json.loads(output.getvalue())["sample"], ["IWDL", "LIVE"])
+        self.assertEqual(json.loads(output.getvalue())["sample"], ["LIVE"])
+        self.assertIn("IWDL", self.fetcher.verified_yahoo_terminal_evidence("2026-09-28T01:00:00Z")["tickers"])
+        current = self.fetcher.current_yahoo_universe_sources(
+            {"EQR": ["stock"], "MGKX": ["etf"], "IWDL": ["etf"]},
+            "2026-09-28T01:00:00Z",
+        )
+        self.assertEqual(set(current), {"VMRK", "MEGX"})
+        self.assertEqual(current["VMRK"], ["same_security_successor:EQR", "stock"])
 
 
 class YahooChartQuoteTest(unittest.TestCase):
@@ -3169,29 +3176,31 @@ class YahooChartQuoteTest(unittest.TestCase):
 
     def test_rejected_alternate_retains_canonical_and_lkg_bytes(self):
         self.fetcher._observed_now = lambda: self.NOW
+        ticker = "ALT1"
         data = self._data()
-        seed = self.fetcher.decorate_finance_payload("AVB", "daily", self.NOW, data)
-        canonical = self.fetcher.OUT_DIR / "AVB.json"; write_json(canonical, seed)
+        data["info"]["symbol"] = ticker
+        seed = self.fetcher.decorate_finance_payload(ticker, "daily", self.NOW, data)
+        canonical = self.fetcher.OUT_DIR / f"{ticker}.json"; write_json(canonical, seed)
         store = self.state.YahooBatchStateStore(self.fetcher.YAHOO_BATCH_STATE_ROOT, self.fetcher.OUT_DIR)
         run = {"run_id": "seed", "run_attempt": 1, "event_name": "workflow_dispatch", "natural": False, "observed_at": self.NOW}
         evidence = {"attempts_used": 1, "latency_ms": 1, "failures": []}
-        store.record_success("AVB", seed, run, ["fixture"], evidence)
-        store.record_failure("AVB", "seed miss", run, ["fixture"], evidence, failure_kind="transient_provider_miss")
-        lkg = store._lkg_path("AVB")
+        store.record_success(ticker, seed, run, ["fixture"], evidence)
+        store.record_failure(ticker, "seed miss", run, ["fixture"], evidence, failure_kind="transient_provider_miss")
+        lkg = store._lkg_path(ticker)
         canonical_bytes, lkg_bytes = canonical.read_bytes(), lkg.read_bytes()
         test = self
         class Client:
             info = data["info"]
             fast_info = {}
             def history(self, **kwargs): return data["history_1y"]
-            def get_history_metadata(self): return test._metadata(regularMarketPrice=0)
+            def get_history_metadata(self): return test._metadata(symbol=ticker, regularMarketPrice=0)
         prior = sys.modules["yfinance"]
         sys.modules["yfinance"] = types.SimpleNamespace(Ticker=lambda _ticker: Client(), __version__="fixture-1")
         self.fetcher.compact_history = lambda frame: frame
-        self.fetcher.load_universe_sources = lambda **_kwargs: {"AVB": ["fixture"]}
+        self.fetcher.load_universe_sources = lambda **_kwargs: {ticker: ["fixture"]}
         original_argv, original_stdout = sys.argv, sys.stdout
         try:
-            sys.argv = ["fetch-yf-finance.py", "--tickers", "AVB", "--profile", "daily", "--merge-existing",
+            sys.argv = ["fetch-yf-finance.py", "--tickers", ticker, "--profile", "daily", "--merge-existing",
                         "--record-batch-state",
                         "--event-name", "workflow_dispatch", "--max-age-hours", "0", "--sleep", "0", "--retries", "0"]
             sys.stdout = io.StringIO()
@@ -3199,7 +3208,7 @@ class YahooChartQuoteTest(unittest.TestCase):
         finally: sys.modules["yfinance"] = prior; sys.argv, sys.stdout = original_argv, original_stdout
         self.assertEqual(canonical.read_bytes(), canonical_bytes)
         self.assertEqual(lkg.read_bytes(), lkg_bytes)
-        state = json.loads(store._state_path("AVB").read_text())
+        state = json.loads(store._state_path(ticker).read_text())
         self.assertTrue(state["retry"])
         self.assertIn("chart quote", state["latest_failure"]["error"])
 

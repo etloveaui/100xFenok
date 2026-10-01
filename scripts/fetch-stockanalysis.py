@@ -22,6 +22,7 @@ from __future__ import annotations
 
 import argparse
 import base64
+import csv
 from collections import deque
 from concurrent.futures import Future, ThreadPoolExecutor
 from contextlib import closing
@@ -29,6 +30,7 @@ from datetime import datetime, timedelta, timezone
 import hashlib
 from html.parser import HTMLParser
 import importlib.util
+from io import StringIO
 import json
 import math
 import os
@@ -39,6 +41,7 @@ import sys
 import time
 import urllib.error
 import urllib.request
+from urllib.parse import urljoin, urlparse
 
 
 ROOT = Path(__file__).resolve().parent.parent
@@ -812,6 +815,10 @@ def stockanalysis_detail_source_timestamp(payload: dict | None) -> str | None:
         return None
     raw = payload.get("raw") if isinstance(payload.get("raw"), dict) else {}
     normalized = payload.get("normalized") if isinstance(payload.get("normalized"), dict) else {}
+    official_holdings = raw.get("official_holdings") if isinstance(raw.get("official_holdings"), dict) else None
+    if official_holdings:
+        source = _etf_provider_source(payload)
+        return utc_iso(source) if source is not None else None
     return (
         quote_source_timestamp(raw.get("quote"))
         or quote_source_timestamp(normalized.get("quote"))
@@ -1363,6 +1370,10 @@ ETF_DETAIL_SURFACE_CONTRACTS = {
     },
 }
 ETF_DETAIL_DECODER = "svelte_devalue_node/v1"
+OFFICIAL_HOLDINGS_FALLBACKS = {
+    "ESUM": "https://www.eventideinvestments.com/etfs/esum",
+    "IBIM": "https://www.ishares.com/us/products/350034/ishares-ibonds-oct-2036-term-tips-etf/latest-holdings.csv",
+}
 SVELTE_FAILURE_SIGNATURE_SCHEMA_VERSION = "svelte-contract-failure-signature/v1"
 SVELTE_FAILURE_SIGNATURE_MAX_KEY_SETS = 16
 SVELTE_FAILURE_SIGNATURE_MAX_KEYS_PER_SET = 24
@@ -1536,6 +1547,115 @@ def overview_declares_holdings_unavailable(overview: dict) -> bool:
         and table.get("count") is None
         and table.get("holdings") is None
     )
+
+
+def fetch_official_etf_holdings(ticker: str, timeout: int) -> tuple[str, dict, dict]:
+    """Fill two verified StockAnalysis holdings gaps from their own issuer CSV."""
+    if ticker not in OFFICIAL_HOLDINGS_FALLBACKS:
+        raise ValueError(f"no verified official holdings fallback for {ticker}")
+
+    def official_bytes(url: str, hostname: str) -> bytes:
+        request = urllib.request.Request(url, headers={"User-Agent": USER_AGENT})
+        with urllib.request.urlopen(request, timeout=timeout) as response:
+            final_url = response.geturl()
+            parsed = urlparse(final_url)
+            if parsed.scheme != "https" or parsed.hostname != hostname:
+                raise ValueError("official holdings redirected outside the issuer domain")
+            if response.status != 200:
+                raise ValueError("official holdings response is not HTTP 200")
+            body = response.read(2_000_001)
+        if not body or len(body) > 2_000_000:
+            raise ValueError("official holdings body is empty or over the size limit")
+        return body
+
+    source_page = OFFICIAL_HOLDINGS_FALLBACKS[ticker]
+    if ticker == "ESUM":
+        html = official_bytes(source_page, "www.eventideinvestments.com").decode("utf-8")
+        links = set(re.findall(r'href="(/assets/[A-Za-z0-9_-]+/ESUM_etfHoldingsCsv\.csv)"', html))
+        if len(links) != 1:
+            raise ValueError("ESUM official holdings CSV link is missing or ambiguous")
+        csv_url = urljoin(source_page, links.pop())
+    else:
+        csv_url = source_page
+    hostname = "www.eventideinvestments.com" if ticker == "ESUM" else "www.ishares.com"
+    body = official_bytes(csv_url, hostname)
+    rows = list(csv.reader(StringIO(body.decode("utf-8-sig"))))
+    if ticker == "ESUM":
+        if (len(rows) < 3 or rows[0] != ["Product", "Eventide US Market ETF"]
+                or rows[1] != ["Ticker", "ESUM"] or len(rows[2]) != 2
+                or rows[2][0] != "As-of Date"):
+            raise ValueError("ESUM official holdings identity is invalid")
+        date_text = rows[2][1]
+        header = ["Ticker", "Description", "Shares", "Weight"]
+    else:
+        if not rows or rows[0] != ["iShares® iBonds® Oct 2036 Term TIPS ETF"]:
+            raise ValueError("IBIM official holdings identity is invalid")
+        date_rows = [row for row in rows if len(row) == 2 and row[0] == "Fund Holdings as of"]
+        if len(date_rows) != 1:
+            raise ValueError("IBIM official holdings source date is unavailable")
+        date_text = date_rows[0][1]
+        header = ["Name", "Sector", "Asset Class", "Market Value", "Weight (%)",
+                  "Notional Value", "Par Value", "CUSIP", "ISIN", "SEDOL", "Location",
+                  "Exchange", "Currency", "Duration", "YTM (%)", "FX Rate", "Maturity",
+                  "Coupon (%)", "Mod. Duration", "Yield to Call (%)", "Yield to Worst (%)",
+                  "Real Duration", "Real YTM (%)", "Market Currency", "Accrual Date", "Effective Date"]
+    if rows.count(header) != 1:
+        raise ValueError("official holdings CSV schema is invalid")
+    date = parse_stockanalysis_date(date_text)
+    age = (datetime.now(timezone.utc).date() - date.date()).days if date else None
+    if age is None or not 0 <= age <= 7:
+        raise ValueError("official holdings source date is invalid, future, or stale")
+    holdings = []
+    total_weight = 0.0
+    country_weights = {}
+    for raw_row in rows[rows.index(header) + 1:]:
+        if not raw_row or not any(raw_row):
+            continue
+        if len(raw_row) != len(header):
+            raise ValueError("official holdings CSV row has invalid field coverage")
+        row = dict(zip(header, raw_row))
+        try:
+            if ticker == "ESUM":
+                symbol, name = row["Ticker"].strip(), row["Description"].strip()
+                weight = float(row["Weight"]) * 100
+                shares = float(row["Shares"])
+                # The issuer includes a real cash position with no exchange
+                # ticker. Keep its identity empty rather than inventing one;
+                # every other holding still requires a valid ticker.
+                cash_without_ticker = not symbol and name == "CASH AND CASH EQUIVALENTS"
+                if (not cash_without_ticker and not SYMBOL_RE.fullmatch(symbol)) or not name or not math.isfinite(shares) or shares < 0:
+                    raise ValueError("ESUM holding identity or shares invalid")
+                holding = {"s": symbol or None, "n": name, "as": weight, "sh": shares, "raw": row}
+            else:
+                name, cusip = row["Name"].strip(), row["CUSIP"].strip()
+                weight = float(row["Weight (%)"].replace(",", ""))
+                if not name or not re.fullmatch(r"[A-Z0-9]{9}", cusip):
+                    raise ValueError("IBIM holding identity or CUSIP invalid")
+                location = row["Location"].strip()
+                if location != "United States":
+                    raise ValueError("IBIM holding location is outside verified country coverage")
+                country_weights[location] = country_weights.get(location, 0.0) + weight
+                holding = {"n": name, "as": weight, "cusip": cusip, "raw": row}
+        except (TypeError, ValueError) as exc:
+            raise ValueError("official holdings CSV has an invalid holding") from exc
+        if not math.isfinite(weight) or weight < 0 or weight > 100:
+            raise ValueError("official holdings CSV has an invalid weight")
+        total_weight += weight
+        holdings.append(holding)
+    if not holdings or not 95 <= total_weight <= 105:
+        raise ValueError("official holdings CSV is empty or incomplete")
+    if ticker == "IBIM" and sum(row.get("raw", {}).get("Asset Class") == "Fixed Income" for row in holdings) < 2:
+        raise ValueError("IBIM official holdings have no Treasury bond coverage")
+    data = {"holdings": holdings, "count": len(holdings), "date": date.date().isoformat()}
+    if ticker == "IBIM":
+        data["countries"] = [{"code": "US", "country": "United States",
+                              "weight": round(country_weights["United States"], 4)}]
+    provenance = {"provider": "eventide" if ticker == "ESUM" else "ishares",
+                  "landing_page": source_page, "csv_url": csv_url,
+                  "csv_sha256": hashlib.sha256(body).hexdigest(),
+                  "source_as_of": data["date"], "weight_sum_pct": round(total_weight, 4),
+                  "country_coverage": "issuer_not_provided" if ticker == "ESUM" else "issuer_csv_location"}
+    return csv_url, data, provenance
 
 
 def fetch_etf_history_periods(ticker: str, timeout: int) -> tuple[dict, dict, dict]:
@@ -2710,6 +2830,7 @@ def fetch_etf(
     holdings_unavailable = overview_declares_holdings_unavailable(overview_data)
     holdings_unavailability_reason = None
     holdings_surface_fallback = False
+    official_holdings_provenance = None
     try:
         holdings_path, holdings_data = fetch_svelte_detail(
             ticker,
@@ -2725,9 +2846,9 @@ def fetch_etf(
         missing_holdings_endpoint = (
             isinstance(exc, urllib.error.HTTPError) and exc.code in (400, 404)
         )
-        if not allow_partial_holdings or not (
-            missing_holdings_contract or missing_holdings_endpoint
-        ):
+        if not (missing_holdings_contract or missing_holdings_endpoint):
+            raise
+        if not allow_partial_holdings and ticker not in OFFICIAL_HOLDINGS_FALLBACKS:
             raise
         holdings_path = ETF_DETAIL_SURFACE_CONTRACTS["holdings"]["path"].format(
             ticker=ticker.lower()
@@ -2740,7 +2861,7 @@ def fetch_etf(
             else None
         )
         overview_supplies_holdings = isinstance(overview_holdings, list) and bool(overview_holdings)
-        if not holdings_unavailable and not overview_supplies_holdings:
+        if not holdings_unavailable and not overview_supplies_holdings and ticker not in OFFICIAL_HOLDINGS_FALLBACKS:
             raise
         if overview_supplies_holdings:
             holdings_unavailable = False
@@ -2753,6 +2874,12 @@ def fetch_etf(
                 if missing_holdings_contract
                 else f"holdings_surface_http_{exc.code}"
             )
+    overview_holdings = (overview_data.get("holdingsTable") or {}).get("holdings")
+    if (ticker in OFFICIAL_HOLDINGS_FALLBACKS
+            and not holdings_data.get("holdings") and not overview_holdings):
+        holdings_path, holdings_data, official_holdings_provenance = fetch_official_etf_holdings(ticker, timeout)
+        holdings_unavailable = False
+        holdings_unavailability_reason = None
     if include_history:
         history_paths, history_periods, history_errors = fetch_etf_history_periods(ticker, timeout)
     else:
@@ -2772,6 +2899,8 @@ def fetch_etf(
             else None
         ),
     }
+    if official_holdings_provenance:
+        raw["official_holdings"] = official_holdings_provenance
     raw["history"] = history_periods.get("monthly_1y")
     raw["history_periods"] = history_periods
     if history_errors:
@@ -2794,6 +2923,17 @@ def fetch_etf(
             {"normalized": {"history_periods": history_periods}}
         )
     )
+    if official_holdings_provenance:
+        source_probe = {
+            "raw": raw,
+            "normalized": {"history_periods": history_periods},
+            "endpoints": paths,
+            "fetched_at": fetched_at,
+        }
+        verified_source = _etf_provider_source(source_probe)
+        if verified_source is None:
+            raise ValueError("official ETF holdings, quote, or daily history clock is missing or invalid")
+        provider_source_as_of = utc_iso(verified_source)
     payload = {
         "schema_version": SCHEMA_VERSION,
         "source": "stockanalysis",
@@ -2846,6 +2986,12 @@ def fetch_etf(
         },
         "raw": raw,
     }
+    if official_holdings_provenance:
+        payload["holdings_source"] = official_holdings_provenance
+        payload["endpoint_contracts"]["holdings"] = {
+            "format": "issuer_csv", "contract": "verified_official_etf_holdings/v1",
+            "provider": official_holdings_provenance["provider"],
+        }
     partial_reason_codes = [
         *(["holdings_unavailable"] if holdings_unavailable else []),
         *([holdings_unavailability_reason] if holdings_unavailability_reason else []),
@@ -2854,6 +3000,9 @@ def fetch_etf(
             for key in ("count", "date", "countries")
             if holdings_data.get(key) is None
             and not (holdings_surface_fallback and key in {"count", "date"})
+            # Country exposure is optional in the Svelte contract. Eventide's
+            # complete holdings CSV has no location field; keep it unknown.
+            and not (official_holdings_provenance and key == "countries")
         ),
         *(["history_deferred_initial_reconcile"] if not include_history else []),
         *(["quote_deferred_initial_reconcile"] if not include_quote else []),

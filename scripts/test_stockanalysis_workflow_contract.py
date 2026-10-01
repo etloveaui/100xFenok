@@ -192,7 +192,8 @@ class StockAnalysisWorkflowContractTest(unittest.TestCase):
             'if [ "$APPLY_STATUS" != "applied" ]; then',
             "group: stockanalysis-etf-detail-publish",
             "node scripts/publish-cloud-data-generation.mjs --family=stockanalysis-etf-detail --json",
-            "github.event_name == 'workflow_dispatch' && inputs.core_basket_refresh == 'true'",
+            "github.event_name == 'workflow_dispatch' &&",
+            "(inputs.core_basket_refresh == 'true' || inputs.etfs != '')",
             "inputs.stocks_only != 'true' && inputs.history_gap_plan != 'true'",
             "inputs.controlled_failure_tickers == '' && inputs.controlled_failure_surfaces == ''",
         ):

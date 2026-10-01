@@ -915,10 +915,10 @@ class YahooBatchStateStore:
                 counts["failed"] += 1
             current = state.get("current") if isinstance(state.get("current"), dict) else {}
             source_as_of = current.get("source_as_of")
-            if source_as_of:
+            if source_as_of and resolution != TERMINAL_RESOLUTION_STATE:
                 source_rows.append((str(source_as_of), ticker))
             latest_failure = state.get("latest_failure")
-            if isinstance(latest_failure, dict):
+            if isinstance(latest_failure, dict) and resolution != TERMINAL_RESOLUTION_STATE:
                 failures.append({"ticker": ticker, **latest_failure})
         attempted = len(current_results) + (1 if batch_failure else 0)
         succeeded = sum(row.get("outcome") in {"fresh", "pending_history", "unavailable"} for row in current_results)
