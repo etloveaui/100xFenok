@@ -137,7 +137,8 @@ function normalizeTicker(ticker) {
 
 function cleanCompanyName(value) {
   return String(value ?? "")
-    .replace(/\b(Class|Corp\.?|Corporation|Inc\.?|PLC|ADR|NV|SA|Ltd\.?)\b/gi, " ")
+    .replace(/\bClass(?:\s+[A-Z])?\b/gi, " ")
+    .replace(/\b(Corp\.?|Corporation|Inc\.?|PLC|ADR|NV|SA|Ltd\.?)\b/gi, " ")
     .replace(/\s+/g, " ")
     .trim();
 }

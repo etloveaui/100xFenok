@@ -34,7 +34,7 @@ const LANE_ID = "gdelt_news_tone";
 const WORKFLOW_REL = ".github/workflows/fetch-fenok-news-tone.yml";
 const REFERENCE_TICKERS = ["DASH", "UNH", "PYPL", "RDDT", "COIN", "MU", "PLTR", "NVDA"];
 
-assert.equal(cleanCompanyName("NVIDIA CORP Class A"), "NVIDIA A");
+assert.equal(cleanCompanyName("NVIDIA CORP Class A"), "NVIDIA");
 assert.equal(queryForTicker("NVDA", "NVIDIA CORP"), '"NVIDIA"');
 assert.deepEqual(cueCounts("Analyst upgrades company after strong profit growth"), { positive: 3, negative: 0 });
 assert.deepEqual(cueCounts("Company falls after weak warning and lawsuit"), { positive: 0, negative: 4 });

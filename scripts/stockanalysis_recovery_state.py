@@ -102,6 +102,50 @@ def _bounded_error(value: Any, limit: int = 240) -> str:
 def _etf_provider_source(payload: dict) -> datetime | None:
     raw = payload.get("raw") if isinstance(payload.get("raw"), dict) else {}
     normalized = payload.get("normalized") if isinstance(payload.get("normalized"), dict) else {}
+    official_holdings = raw.get("official_holdings") if isinstance(raw.get("official_holdings"), dict) else None
+    if official_holdings:
+        # A mixed-source detail is only as fresh as its oldest required surface.
+        # Missing quote/daily-history clocks cannot be hidden by a newer CSV.
+        source = _iso_timestamp(official_holdings.get("source_as_of"))
+        fetched = _iso_timestamp(payload.get("fetched_at"))
+        if source is None or fetched is None:
+            return None
+        clocks = [source]
+        endpoints = payload.get("endpoints") if isinstance(payload.get("endpoints"), dict) else {}
+        quote = raw.get("quote") if isinstance(raw.get("quote"), dict) else {}
+        quote_day = _iso_timestamp(quote.get("td"))
+        quote_value = quote.get("ts")
+        quote_stamp = None
+        if isinstance(quote_value, (int, float)) and not isinstance(quote_value, bool) and math.isfinite(quote_value):
+            try:
+                parsed = datetime.fromtimestamp(
+                    quote_value / 1000 if abs(quote_value) >= 100_000_000_000 else quote_value,
+                    timezone.utc,
+                )
+                if quote_day is None or parsed.date() == quote_day.date():
+                    quote_stamp = parsed
+            except (ValueError, OverflowError, OSError):
+                pass
+        quote_stamp = quote_stamp or quote_day
+        if endpoints.get("quote") and quote_stamp is None:
+            return None
+        if quote_stamp is not None:
+            clocks.append(quote_stamp)
+        periods = normalized.get("history_periods") if isinstance(normalized.get("history_periods"), dict) else {}
+        daily = periods.get("daily_1y")
+        daily_dates = [
+            stamp for row in daily if isinstance(row, dict)
+            if (stamp := _iso_timestamp(row.get("date") or row.get("t") or row.get("time"))) is not None
+        ] if isinstance(daily, list) else []
+        history_stamp = max(daily_dates) if daily_dates else None
+        requested_periods = endpoints.get("history_periods") if isinstance(endpoints.get("history_periods"), dict) else {}
+        if requested_periods.get("daily_1y") and history_stamp is None:
+            return None
+        if history_stamp is not None:
+            clocks.append(history_stamp)
+        if any(clock > fetched for clock in clocks):
+            return None
+        return min(clocks).replace(microsecond=0)
     for quote in (raw.get("quote"), normalized.get("quote")):
         if not isinstance(quote, dict):
             continue

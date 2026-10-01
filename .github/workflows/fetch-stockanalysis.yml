@@ -721,7 +721,8 @@ jobs:
     if: >-
       (github.event_name == 'schedule' &&
        (github.event.schedule == '50 23 * * 1-5' || github.event.schedule == '20 23 * * 0')) ||
-      (github.event_name == 'workflow_dispatch' && inputs.core_basket_refresh == 'true' &&
+      (github.event_name == 'workflow_dispatch' &&
+       (inputs.core_basket_refresh == 'true' || inputs.etfs != '') &&
        inputs.stocks_only != 'true' && inputs.history_gap_plan != 'true' &&
        inputs.controlled_failure_tickers == '' && inputs.controlled_failure_surfaces == '')
     runs-on: ubuntu-latest
