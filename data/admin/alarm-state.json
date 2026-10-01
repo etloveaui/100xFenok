@@ -1,9 +1,21 @@
 {
   "schema_version": "alarm-state/v1",
-  "generated_at": "2026-10-01T10:49:31.242Z",
+  "generated_at": "2026-10-01T13:32:19.098Z",
   "status": "open",
   "open_incident_count": 3,
   "open_incidents": [
+    {
+      "workflow": "data-plane-serving-probe.yml",
+      "label": "Data Plane Serving Probe",
+      "streak": 0,
+      "failure_streak_threshold": 2,
+      "first_failing_run_id": null,
+      "first_failing_run_url": null,
+      "alarm_reasons": [
+        "missed_schedule_window"
+      ],
+      "lost_schedule_slot_count": 0
+    },
     {
       "workflow": "global-writer-queue-observer.yml",
       "label": "Global Writer Queue Observability",
@@ -19,18 +31,6 @@
     {
       "workflow": "retention-restore.yml",
       "label": "R2 Retention Restore Watchdog",
-      "streak": 0,
-      "failure_streak_threshold": 2,
-      "first_failing_run_id": null,
-      "first_failing_run_url": null,
-      "alarm_reasons": [
-        "missed_schedule_window"
-      ],
-      "lost_schedule_slot_count": 0
-    },
-    {
-      "workflow": "worker-request-budget-alarm.yml",
-      "label": "Worker Request Budget Alarm",
       "streak": 0,
       "failure_streak_threshold": 2,
       "first_failing_run_id": null,
@@ -124,16 +124,6 @@
       ],
       "event": "schedule",
       "failure_streak_threshold": 1
-    },
-    {
-      "file": "fetch-fdic.yml",
-      "label": "Fetch FDIC Tier1 Data",
-      "events": [
-        "push",
-        "schedule"
-      ],
-      "event": null,
-      "failure_streak_threshold": 2
     },
     {
       "file": "fetch-fenok-apewisdom.yml",
@@ -396,14 +386,14 @@
   "queue_evicted_run_count": 0,
   "queue_evicted_workflows": [],
   "last_firing": {
-    "run_id": "36851006126",
-    "run_url": "https://github.com/etloveaui/100xFenok/actions/runs/36851006126",
-    "observed_at": "2026-10-01T10:49:31.242Z",
-    "event": "workflow_run",
+    "run_id": "36868801426",
+    "run_url": "https://github.com/etloveaui/100xFenok/actions/runs/36868801426",
+    "observed_at": "2026-10-01T13:32:19.098Z",
+    "event": "schedule",
     "workflows": [
+      "data-plane-serving-probe.yml",
       "global-writer-queue-observer.yml",
-      "retention-restore.yml",
-      "worker-request-budget-alarm.yml"
+      "retention-restore.yml"
     ],
     "title": "100xFenok pipeline job failure alarm"
   },
