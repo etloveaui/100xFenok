@@ -5,6 +5,10 @@ import {
 } from "../../../scripts/cloud-data-plane/cloud-data-plane-worker-read.mjs";
 import { createCloudflareCloudDataPlane } from "../../../scripts/cloud-data-plane/cloud-data-plane-cloudflare-adapter.mjs";
 import { resolveGenerationAsset } from "../../../scripts/cloud-data-plane/cloud-data-plane-generation.mjs";
+import {
+  readDataShardRecord,
+  resolveLegacyDataShard,
+} from "../public-data-binary-shard.mjs";
 
 /**
  * Unified data-asset reader — first slice (no production cutover).
@@ -222,11 +226,54 @@ async function readFromAssets(
     const response = await env.ASSETS.fetch(
       new Request(new URL(publicPath, "https://assets.local")),
     );
+    if (response.status === 404) {
+      try {
+        await response.body?.cancel();
+      } catch {
+        // The missing legacy asset is already known; continue to its packed form.
+      }
+      const packed = await readPackedPublicDataAsset(publicPath, env.ASSETS);
+      return packed === null ? null : { kind: "ok", raw: packed, source: "assets" };
+    }
     if (!response.ok) return null;
     return { kind: "ok", raw: await response.text(), source: "assets" };
   } catch {
     return null;
   }
+}
+
+/** Read one legacy JSON URL from its emitted binary bucket after its flat asset misses. */
+export async function readPackedPublicDataAsset(
+  publicPath: string,
+  assets: DataAssetReaderEnv["ASSETS"],
+): Promise<string | null> {
+  if (!assets) return null;
+  const descriptor = await resolveLegacyDataShard(publicPath);
+  if (!descriptor) return null;
+
+  const response = await assets.fetch(
+    new Request(new URL(descriptor.bucketPath, "https://assets.local"), { method: "GET" }),
+  );
+  if (response.status === 404) {
+    try {
+      await response.body?.cancel();
+    } catch {
+      // No packed object is equivalent to the existing unavailable result.
+    }
+    return null;
+  }
+  if (response.status !== 200 || !response.body) {
+    try {
+      await response.body?.cancel();
+    } catch {
+      // Preserve the caller's existing unavailable contract.
+    }
+    throw new Error("DATA_ASSET_SHARD_UNAVAILABLE");
+  }
+
+  const record = await readDataShardRecord(response.body, descriptor.stem);
+  if (!record) return null;
+  return new TextDecoder("utf-8", { fatal: true }).decode(record.bytes);
 }
 
 /**

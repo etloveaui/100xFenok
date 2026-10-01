@@ -6,6 +6,10 @@ import handler from "./.open-next/worker.js";
 import { handleCloudDataPlaneRequest } from "../scripts/lib/cloud-data-plane-worker-route.mjs";
 import { handleCloudDataPlaneAsset, isEnrolledPath } from "./scripts/cloud-data-plane/cloud-data-plane-worker-read.mjs";
 import { PRIVATE_PUBLIC_PATHS } from "./scripts/cloud-data-plane/cloud-data-plane-routing-authority.mjs";
+import {
+  readDataShardRecord,
+  resolveLegacyDataShard,
+} from "./src/lib/public-data-binary-shard.mjs";
 import { isProtectedAdminImageRequest } from "./scripts/admin-image-source-guard.mjs";
 import {
   handleMonaVnextProfileCoordinatorRequest,
@@ -26,6 +30,128 @@ import {
   type UserRegistryStats,
 } from "./src/lib/server/userRegistry";
 import { handleWorkerClosedSiteGate } from "./src/lib/server/closed-site";
+
+type StaticAssetsBinding = { fetch: (request: Request) => Promise<Response> };
+
+async function cancelResponseBody(response: Response) {
+  try {
+    await response.body?.cancel();
+  } catch {
+    // The caller has already decided how to handle this response.
+  }
+}
+
+function matchesIfNoneMatch(value: string | null, etag: string): boolean {
+  if (!value) return false;
+  const normalized = value.trim();
+  if (normalized === "*") return true;
+
+  const expectedOpaqueTag = etag.slice(1, -1);
+  let index = 0;
+  while (index < value.length) {
+    while (index < value.length && (value[index] === " " || value[index] === "\t" || value[index] === ",")) {
+      index += 1;
+    }
+    if (index >= value.length) break;
+
+    if (value.startsWith("W/", index)) index += 2;
+    if (value[index] !== '"') {
+      while (index < value.length && value[index] !== ",") index += 1;
+      continue;
+    }
+
+    index += 1;
+    const start = index;
+    while (index < value.length && value[index] !== '"') index += 1;
+    if (index >= value.length) return false;
+    const candidate = value.slice(start, index);
+    index += 1;
+
+    while (index < value.length && (value[index] === " " || value[index] === "\t")) index += 1;
+    if (index < value.length && value[index] !== ",") {
+      while (index < value.length && value[index] !== ",") index += 1;
+      continue;
+    }
+    if (candidate === expectedOpaqueTag) return true;
+    if (value[index] === ",") index += 1;
+  }
+  return false;
+}
+
+function unavailablePackedAssetResponse(method: string): Response {
+  return new Response(method === "HEAD" ? null : "PUBLIC_DATA_SHARD_UNAVAILABLE", {
+    status: 503,
+    headers: {
+      "cache-control": "no-store",
+      "content-type": "text/plain; charset=utf-8",
+      "x-content-type-options": "nosniff",
+    },
+  });
+}
+
+async function servePackedLegacyDataAsset(
+  request: Request,
+  url: URL,
+  assets: StaticAssetsBinding,
+): Promise<Response | null> {
+  if (request.method !== "GET" && request.method !== "HEAD") return null;
+
+  let descriptor: Awaited<ReturnType<typeof resolveLegacyDataShard>>;
+  try {
+    descriptor = await resolveLegacyDataShard(url.pathname);
+  } catch {
+    return unavailablePackedAssetResponse(request.method);
+  }
+  if (!descriptor) return null;
+
+  let packed: Response;
+  try {
+    // Fetch a clean GET so caller Range, validators, and credentials cannot
+    // change parsing of the small FNPK header or requested record.
+    packed = await assets.fetch(
+      new Request(new URL(descriptor.bucketPath, url.origin), { method: "GET" }),
+    );
+  } catch {
+    return unavailablePackedAssetResponse(request.method);
+  }
+  if (packed.status === 404) {
+    await cancelResponseBody(packed);
+    return null;
+  }
+  if (packed.status !== 200 || !packed.body) {
+    await cancelResponseBody(packed);
+    return unavailablePackedAssetResponse(request.method);
+  }
+
+  let record: Awaited<ReturnType<typeof readDataShardRecord>>;
+  try {
+    record = await readDataShardRecord(packed.body, descriptor.stem);
+  } catch {
+    return unavailablePackedAssetResponse(request.method);
+  }
+  if (!record) return null;
+  if (!/^[0-9a-f]{64}$/.test(record.sha256)) {
+    return unavailablePackedAssetResponse(request.method);
+  }
+
+  const etag = `"${record.sha256}"`;
+  const headers = new Headers({
+    "cache-control": "public, max-age=0, must-revalidate",
+    "content-type": "application/json; charset=utf-8",
+    etag,
+    "x-content-type-options": "nosniff",
+  });
+  if (matchesIfNoneMatch(request.headers.get("if-none-match"), etag)) {
+    return new Response(null, { status: 304, headers });
+  }
+
+  headers.set("content-length", String(record.bytes.byteLength));
+  if (request.method === "HEAD") return new Response(null, { status: 200, headers });
+
+  const body = new Uint8Array(record.bytes.byteLength);
+  body.set(record.bytes);
+  return new Response(body, { status: 200, headers });
+}
 
 
 const worker = {
@@ -69,8 +195,8 @@ const worker = {
     // assets are served from the published generation when they resolve
     // cleanly; every unhealthy plane outcome still falls back to the bundled
     // copy, exactly as the asset worker would have served it before enrollment.
-    // Only a true asset miss (404 from ASSETS) falls through to the application
-    // handler.
+    // A true miss from both the flat asset and its packed legacy bucket falls
+    // through to the application handler.
     if (url.pathname.startsWith("/data/")) {
       if (isEnrolledPath(url.pathname)) {
         const served = await handleCloudDataPlaneAsset(request, env);
@@ -79,6 +205,9 @@ const worker = {
       if (assets) {
         const bundled = await assets.fetch(request);
         if (bundled.status !== 404) return bundled;
+        await cancelResponseBody(bundled);
+        const packed = await servePackedLegacyDataAsset(request, url, assets);
+        if (packed) return packed;
       }
     }
 
@@ -337,5 +466,4 @@ export class UserRegistry extends DurableObject {
     return new Response("Not found", { status: 404 });
   }
 }
-
 

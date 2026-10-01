@@ -2,7 +2,11 @@ import type { Dirent } from "node:fs";
 import { lstat, readFile, readdir, stat } from "node:fs/promises";
 import path from "node:path";
 import { normalizeForFilePath } from "@/lib/ticker";
-import { readDataAsset, readPrivateCloudGenerationAsset } from "./data-asset-reader";
+import {
+  readDataAsset,
+  readPackedPublicDataAsset,
+  readPrivateCloudGenerationAsset,
+} from "./data-asset-reader";
 import {
   sha256Text,
   stockanalysisEtfPayloadDocumentResultFromVerifiedShard,
@@ -130,6 +134,15 @@ async function readPublicDataFile(filePath: string): Promise<string> {
       if (!assets) throw fsError;
 
       const response = await assets.fetch(new URL(publicPath, "https://assets.local"));
+      if (response.status === 404) {
+        try {
+          await response.body?.cancel();
+        } catch {
+          // Continue to the packed form when the flat asset is absent.
+        }
+        const packed = await readPackedPublicDataAsset(publicPath, assets);
+        if (packed !== null) return packed;
+      }
       if (!response.ok) {
         throw new Error(`ASSET_FETCH_FAILED:${response.status}:${publicPath}`);
       }
