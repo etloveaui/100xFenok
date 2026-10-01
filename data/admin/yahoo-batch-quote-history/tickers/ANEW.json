@@ -1,69 +1,8 @@
 {
-  "attempts": [
-    {
-      "attempts_used": 1,
-      "event_name": "schedule",
-      "failures": [],
-      "latency_ms": 611,
-      "natural": true,
-      "observed_at": "2026-07-24T23:12:06Z",
-      "outcome": "fresh",
-      "run_attempt": 1,
-      "run_id": "30132647097",
-      "schedule": "0 22 * * 5",
-      "shard": "5/6"
-    },
-    {
-      "attempts_used": 1,
-      "event_name": "schedule",
-      "failures": [],
-      "latency_ms": 993,
-      "natural": true,
-      "observed_at": "2026-08-06T14:33:02Z",
-      "outcome": "fresh",
-      "run_attempt": 1,
-      "run_id": "31111230701",
-      "schedule": "7 12 * * 0-5",
-      "shard": "54/72"
-    },
-    {
-      "attempts_used": 1,
-      "error": "ValueError: quote_as_of is unavailable for ANEW despite available history",
-      "event_name": "schedule",
-      "failures": [
-        {
-          "attempt": 1,
-          "error": "YFRateLimitError: Too Many Requests. Rate limited. Try after a while.",
-          "source": "provider_safe_call"
-        }
-      ],
-      "latency_ms": 455,
-      "natural": true,
-      "observed_at": "2026-08-12T22:55:30Z",
-      "outcome": "failed",
-      "run_attempt": 1,
-      "run_id": "31648785047",
-      "schedule": "7 22 * * 0-5",
-      "shard": "47/72"
-    },
-    {
-      "attempts_used": 1,
-      "event_name": "workflow_dispatch",
-      "failures": [],
-      "latency_ms": 434,
-      "natural": false,
-      "observed_at": "2026-09-28T01:17:59Z",
-      "outcome": "fresh",
-      "run_attempt": 1,
-      "run_id": "36365270594",
-      "schedule": "",
-      "shard": ""
-    }
-  ],
   "current": {
     "fetched_at": "2026-09-28T01:22:36Z",
     "history_as_of": "2026-09-25",
-    "path": "data/yf/finance/ANEW.json",
+    "path": "data/admin/yahoo-batch-quote-history/lkg/ANEW.json",
     "payload_sha256": "db7e6c39b214bbb80e4dc571a137a637ba0ecaa6ee0ec2a99d6056afd8ca5f55",
     "quote_as_of": "2026-09-22T18:40:40Z",
     "source_as_of": "2026-09-22T18:40:40Z"
@@ -71,75 +10,34 @@
   "discovered_from": [
     "stockanalysis_etf"
   ],
-  "last_attempt": {
+  "last_result": {
     "attempts_used": 1,
-    "event_name": "workflow_dispatch",
     "failures": [],
     "latency_ms": 434,
-    "natural": false,
     "observed_at": "2026-09-28T01:17:59Z",
-    "outcome": "fresh",
-    "run_attempt": 1,
-    "run_id": "36365270594",
-    "schedule": "",
-    "shard": ""
-  },
-  "last_recovered_failure": {
-    "attempts_used": 1,
-    "data_loss": false,
-    "deferred_acquisition": false,
-    "error": "ValueError: quote_as_of is unavailable for ANEW despite available history",
-    "failure_kind": "systemic_rate_limit",
-    "failures": [
-      {
-        "attempt": 1,
-        "error": "YFRateLimitError: Too Many Requests. Rate limited. Try after a while.",
-        "source": "provider_safe_call"
-      }
-    ],
-    "lkg_status": "retained",
-    "observed_at": "2026-08-12T22:55:30Z",
-    "run_attempt": 1,
-    "run_id": "31648785047"
+    "outcome": "fresh"
   },
   "lkg": {
-    "fetched_at": "2026-08-06T14:33:46Z",
-    "history_as_of": "2026-08-05",
-    "path": "data/admin/yahoo-batch-quote-history/lkg/ANEW.json",
-    "payload_sha256": "2ecd6643c8829822986944e8e2f8ce64ef1f2bb05f8e5712dd35732cc0574fe6",
-    "quote_as_of": "2026-08-06T13:46:02Z",
-    "source_as_of": "2026-08-05"
-  },
-  "promotion_contract": "provider_observation/v2",
-  "provider_observation": {
-    "event_name": "workflow_dispatch",
+    "fetched_at": "2026-09-28T01:22:36Z",
     "history_as_of": "2026-09-25",
-    "observed_at": "2026-09-28T01:17:59Z",
-    "payload_sha256": "9581db5ff3d22197d2c8e5230ed27900a1ea56f7668826309b2bad9447f185f5",
+    "path": "data/admin/yahoo-batch-quote-history/lkg/ANEW.json",
+    "payload_sha256": "db7e6c39b214bbb80e4dc571a137a637ba0ecaa6ee0ec2a99d6056afd8ca5f55",
     "quote_as_of": "2026-09-22T18:40:40Z",
-    "run_attempt": 1,
-    "run_id": "36365270594",
-    "schema_version": "provider_observation/v2",
     "source_as_of": "2026-09-22T18:40:40Z"
   },
   "recovered_at": "2026-09-28T01:17:59Z",
-  "recovered_from_run_id": "31648785047",
-  "recovery_event_name": "workflow_dispatch",
-  "recovery_run_attempt": 1,
-  "recovery_run_id": "36365270594",
-  "resolution_state": "fresh_primary",
-  "retry": false,
+  "resolution_state": "lkg_primary",
+  "retry": true,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "stale": {
     "age_business_days": 7,
-    "classified_at": "2026-07-30T00:35:13Z",
-    "classified_run_id": "30502016705",
-    "expected_resolution": "next_natural_yahoo_run",
+    "classified_at": "2026-10-01T02:15:16Z",
+    "expected_resolution": "next_yahoo_acquisition",
     "max_business_days": 6,
-    "message": "ANEW holds LKG because Yahoo source date 2026-07-21T14:23:16Z is 7 business days old, beyond the 6-day bound; it will retry on the next natural Yahoo run.",
+    "message": "ANEW holds LKG because Yahoo source date 2026-09-22T18:40:40Z is 7 business days old, beyond the 6-day bound; it will retry on the next Yahoo acquisition.",
     "reason": "source_age_exceeds_lane_bound",
-    "source_as_of": "2026-07-21T14:23:16Z"
+    "source_as_of": "2026-09-22T18:40:40Z"
   },
   "ticker": "ANEW",
-  "updated_at": "2026-09-28T01:17:59Z"
+  "updated_at": "2026-10-01T02:15:16Z"
 }

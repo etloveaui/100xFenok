@@ -10,46 +10,62 @@
   "discovered_from": [
     "market_facts"
   ],
-  "failure_count": 2,
+  "failure_count": 3,
   "last_result": {
-    "attempts_used": 1,
-    "error": "ValueError: provider source timestamp is unavailable for SATS",
+    "attempts_used": 2,
+    "error": "empty payload",
     "failures": [
-      {
-        "attempt": 1,
-        "error": "AttributeError: 'NoneType' object has no attribute 'tail'",
-        "source": "provider_safe_call"
-      },
       {
         "attempt": 1,
         "error": "KeyError=[redacted]",
         "source": "provider_safe_call"
+      },
+      {
+        "attempt": 1,
+        "error": "empty payload"
+      },
+      {
+        "attempt": 2,
+        "error": "KeyError=[redacted]",
+        "source": "provider_safe_call"
+      },
+      {
+        "attempt": 2,
+        "error": "empty payload"
       }
     ],
-    "latency_ms": 5833,
-    "observed_at": "2026-09-30T15:14:36Z",
+    "latency_ms": 0,
+    "observed_at": "2026-10-01T02:16:35Z",
     "outcome": "failed"
   },
   "latest_failure": {
-    "attempts_used": 1,
+    "attempts_used": 2,
     "data_loss": false,
     "deferred_acquisition": false,
-    "error": "ValueError: provider source timestamp is unavailable for SATS",
+    "error": "empty payload",
     "failure_kind": "transient_provider_miss",
     "failures": [
       {
         "attempt": 1,
-        "error": "AttributeError: 'NoneType' object has no attribute 'tail'",
+        "error": "KeyError=[redacted]",
         "source": "provider_safe_call"
       },
       {
         "attempt": 1,
+        "error": "empty payload"
+      },
+      {
+        "attempt": 2,
         "error": "KeyError=[redacted]",
         "source": "provider_safe_call"
+      },
+      {
+        "attempt": 2,
+        "error": "empty payload"
       }
     ],
     "lkg_status": "retained",
-    "observed_at": "2026-09-30T15:14:36Z"
+    "observed_at": "2026-10-01T02:16:35Z"
   },
   "lkg": {
     "fetched_at": "2026-06-29T14:45:38Z",
@@ -72,5 +88,5 @@
     "source_as_of": "2026-06-26"
   },
   "ticker": "SATS",
-  "updated_at": "2026-09-30T15:14:36Z"
+  "updated_at": "2026-10-01T02:16:35Z"
 }

@@ -1,63 +1,8 @@
 {
-  "attempts": [
-    {
-      "attempts_used": 1,
-      "event_name": "schedule",
-      "failures": [],
-      "latency_ms": 448,
-      "natural": true,
-      "observed_at": "2026-08-10T02:30:39Z",
-      "outcome": "fresh",
-      "run_attempt": 1,
-      "run_id": "31349898588",
-      "schedule": "7 0 * * 0-5",
-      "shard": "12/72"
-    },
-    {
-      "attempts_used": 1,
-      "error": "recovery_not_advanced_by_provider",
-      "event_name": "schedule",
-      "failures": [],
-      "latency_ms": 607,
-      "natural": true,
-      "observed_at": "2026-08-10T09:46:13Z",
-      "outcome": "failed",
-      "run_attempt": 1,
-      "run_id": "31376005252",
-      "schedule": "7 8 * * 0-5",
-      "shard": "16/72"
-    },
-    {
-      "attempts_used": 1,
-      "event_name": "schedule",
-      "failures": [],
-      "latency_ms": 372,
-      "natural": true,
-      "observed_at": "2026-08-10T15:10:15Z",
-      "outcome": "fresh",
-      "run_attempt": 1,
-      "run_id": "31401948552",
-      "schedule": "7 14 * * 0-5",
-      "shard": "19/72"
-    },
-    {
-      "attempts_used": 1,
-      "event_name": "workflow_dispatch",
-      "failures": [],
-      "latency_ms": 489,
-      "natural": false,
-      "observed_at": "2026-09-28T06:30:00Z",
-      "outcome": "fresh",
-      "run_attempt": 1,
-      "run_id": "36367836615",
-      "schedule": "",
-      "shard": ""
-    }
-  ],
   "current": {
     "fetched_at": "2026-09-28T06:32:50Z",
     "history_as_of": "2026-09-25",
-    "path": "data/yf/finance/TINS.json",
+    "path": "data/admin/yahoo-batch-quote-history/lkg/TINS.json",
     "payload_sha256": "ca26c83fe60e9af663ce54fbb3a4a2e5c3d98679c42a8879eaef40e740d2dae1",
     "quote_as_of": "2026-09-22T18:19:30Z",
     "source_as_of": "2026-09-22T18:19:30Z"
@@ -65,52 +10,33 @@
   "discovered_from": [
     "stockanalysis_etf"
   ],
-  "last_attempt": {
+  "last_result": {
     "attempts_used": 1,
-    "event_name": "workflow_dispatch",
     "failures": [],
     "latency_ms": 489,
-    "natural": false,
     "observed_at": "2026-09-28T06:30:00Z",
-    "outcome": "fresh",
-    "run_attempt": 1,
-    "run_id": "36367836615",
-    "schedule": "",
-    "shard": ""
+    "outcome": "fresh"
   },
   "lkg": {
-    "fetched_at": "2026-08-10T15:11:22Z",
-    "history_as_of": "2026-08-10",
-    "path": "data/admin/yahoo-batch-quote-history/lkg/TINS.json",
-    "payload_sha256": "e6265975cc80b8a23f63ba3178a2c3069e468fdf6c877ad3ed291944934be3b4",
-    "quote_as_of": "2026-08-10T13:46:08Z",
-    "source_as_of": "2026-08-10"
-  },
-  "promotion_contract": "provider_observation/v2",
-  "provider_observation": {
-    "event_name": "workflow_dispatch",
+    "fetched_at": "2026-09-28T06:32:50Z",
     "history_as_of": "2026-09-25",
-    "observed_at": "2026-09-28T06:30:00Z",
-    "payload_sha256": "dd1081ad9ebc531a1db0e9a5ee8d2271dea5189ce331a9a452f9660a5d431ea4",
+    "path": "data/admin/yahoo-batch-quote-history/lkg/TINS.json",
+    "payload_sha256": "ca26c83fe60e9af663ce54fbb3a4a2e5c3d98679c42a8879eaef40e740d2dae1",
     "quote_as_of": "2026-09-22T18:19:30Z",
-    "run_attempt": 1,
-    "run_id": "36367836615",
-    "schema_version": "provider_observation/v2",
     "source_as_of": "2026-09-22T18:19:30Z"
   },
-  "resolution_state": "fresh_primary",
-  "retry": false,
+  "resolution_state": "lkg_primary",
+  "retry": true,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "stale": {
     "age_business_days": 7,
-    "classified_at": "2026-08-19T23:42:29Z",
-    "classified_run_id": "32314261503",
-    "expected_resolution": "next_natural_yahoo_run",
+    "classified_at": "2026-10-01T02:15:16Z",
+    "expected_resolution": "next_yahoo_acquisition",
     "max_business_days": 6,
-    "message": "TINS holds LKG because Yahoo source date 2026-08-10 is 7 business days old, beyond the 6-day bound; it will retry on the next natural Yahoo run.",
+    "message": "TINS holds LKG because Yahoo source date 2026-09-22T18:19:30Z is 7 business days old, beyond the 6-day bound; it will retry on the next Yahoo acquisition.",
     "reason": "source_age_exceeds_lane_bound",
-    "source_as_of": "2026-08-10"
+    "source_as_of": "2026-09-22T18:19:30Z"
   },
   "ticker": "TINS",
-  "updated_at": "2026-09-28T06:30:00Z"
+  "updated_at": "2026-10-01T02:15:16Z"
 }
