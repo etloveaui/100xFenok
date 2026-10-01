@@ -4,9 +4,15 @@
 from __future__ import annotations
 
 import json
+import hashlib
+from datetime import datetime, timedelta, timezone
+import os
 from pathlib import Path
 import re
 import subprocess
+import sys
+import tempfile
+import textwrap
 import unittest
 
 
@@ -191,16 +197,153 @@ class StockAnalysisWorkflowContractTest(unittest.TestCase):
             "scripts/stockanalysis_artifact.py apply",
             'if [ "$APPLY_STATUS" != "applied" ]; then',
             "group: stockanalysis-etf-detail-publish",
-            "node scripts/publish-cloud-data-generation.mjs --family=stockanalysis-etf-detail --json",
+            "node scripts/materialize-cloud-data-plane-family.mjs \\",
+            "--manifest-prefix data/stockanalysis/etfs/ \\",
+            'cp -al "$ACTIVE_ROOT" "$CANDIDATE_ROOT"',
+            'node --input-type=module -e',
+            'absRoot: process.env.ETF_CANDIDATE_ROOT',
+            'PUBLISH_EXPECTED_ACTIVE_GENERATION_ID',
+            'PUBLISH_EXPECTED_ACTIVE_MANIFEST_SHA256',
+            '--verify-receipt "$RECEIPT"',
             "github.event_name == 'workflow_dispatch' &&",
             "(inputs.core_basket_refresh == 'true' || inputs.etfs != '')",
             "inputs.stocks_only != 'true' && inputs.history_gap_plan != 'true'",
             "inputs.controlled_failure_tickers == '' && inputs.controlled_failure_surfaces == ''",
         ):
             self.assertIn(expected, plane_body)
+        self.assertLess(plane_body.index("scripts/stockanalysis_artifact.py apply"),
+                        plane_body.index("scripts/materialize-cloud-data-plane-family.mjs"))
+        self.assertLess(plane_body.index('cp -al "$ACTIVE_ROOT" "$CANDIDATE_ROOT"'),
+                        plane_body.index('--verify-receipt "$RECEIPT"'))
+        self.assertLess(plane_body.index('--verify-receipt "$RECEIPT"'),
+                        plane_body.index('node --input-type=module -e'))
         self.assertNotIn("fenok-data-writer-refs/heads/main", plane_body)
         self.assertNotIn("git commit", plane_body)
         self.assertNotIn("git push", plane_body)
+
+    def test_etf_plane_candidate_preserves_active_siblings_and_git_only_names(self) -> None:
+        match = re.search(
+            r'python3 - "\$RUNNER_TEMP/stockanalysis-artifact" \\\n'
+            r'\s+"\$RUNNER_TEMP/stockanalysis-plane-apply.json" "\$CANDIDATE_ROOT" \\\n'
+            r'\s+"\$ACTIVE_ROOT" "scripts/fetch-stockanalysis.py" <<\'PYEOF\'\n'
+            r'(?P<code>.*?)\n\s+PYEOF',
+            self.text,
+            flags=re.DOTALL,
+        )
+        self.assertIsNotNone(match)
+        script = textwrap.dedent(match.group("code"))
+        with tempfile.TemporaryDirectory(prefix="etf-plane-merge-") as scratch:
+            root = Path(scratch)
+            repo = root / "repo"
+            git_etfs = repo / "data" / "stockanalysis" / "etfs"
+            active = root / "active"
+            artifact = root / "artifact"
+            payloads = artifact / "files" / "data" / "stockanalysis" / "etfs"
+            for directory in (git_etfs, active, payloads):
+                directory.mkdir(parents=True)
+            now = datetime.now(timezone.utc).replace(hour=12, minute=0, second=0, microsecond=0)
+
+            def etf_payload(days_ago: float, *, partial: bool = False,
+                            empty_quote: bool = False, malformed_history: bool = False,
+                            truncated_history: bool = False) -> bytes:
+                source = now - timedelta(days=days_ago)
+                iso = lambda value: value.isoformat().replace("+00:00", "Z")
+                history_rows = [
+                    {"date": source.date().isoformat()},
+                    {"date": (source - timedelta(days=1)).date().isoformat()},
+                ]
+                if malformed_history:
+                    history_rows = [{}]
+                elif truncated_history:
+                    history_rows = history_rows[:1]
+                result = {
+                    "schema_version": "stockanalysis/v1", "source": "stockanalysis",
+                    "asset_type": "etf", "ticker": "TARGET",
+                    "source_as_of": iso(source.replace(hour=0)) if empty_quote else iso(source),
+                    "fetched_at": iso(source + timedelta(hours=1)),
+                    "raw": {"quote": {} if empty_quote else {
+                        "p": 100.0, "td": source.date().isoformat(), "ts": int(source.timestamp())}},
+                    "normalized": {
+                        "overview": {}, "holdings": [] if partial else [{"symbol": "TARGET"}],
+                        "holding_count": None if partial else 1,
+                        "holdings_updated": source.date().isoformat(),
+                        "history_periods": {"daily_1y": history_rows},
+                    },
+                }
+                if partial:
+                    result["detail_status"] = "stockanalysis_partial"
+                    result["partial_reason_codes"] = ["holdings_unavailable"]
+                return json.dumps(result).encode()
+
+            for name, body in {
+                "KEEP.json": b"active-keep",
+                "SHARED.json": b"active-shared",
+                "TARGET.json": etf_payload(3),
+            }.items():
+                (active / name).write_bytes(body)
+            for name, body in {
+                "KEEP.json": b"old-git-keep",
+                "SHARED.json": b"old-git-shared",
+                "TARGET.json": etf_payload(2),
+                "NEW.json": b"git-only",
+            }.items():
+                (git_etfs / name).write_bytes(body)
+            for command in (
+                ["git", "init", "-q"],
+                ["git", "-c", "user.name=Fixture", "-c", "user.email=fixture@example.invalid",
+                 "add", "data/stockanalysis/etfs"],
+                ["git", "-c", "user.name=Fixture", "-c", "user.email=fixture@example.invalid",
+                 "commit", "-qm", "ETF LKG fixture"],
+            ):
+                completed = subprocess.run(command, cwd=repo, text=True, capture_output=True, check=False)
+                self.assertEqual(completed.returncode, 0, completed.stderr)
+            target_rel = "data/stockanalysis/etfs/TARGET.json"
+            applied = root / "applied.json"
+            applied.write_text(json.dumps({"status": "applied", "paths": [target_rel]}), encoding="utf-8")
+            def run_candidate(label: str, target_bytes: bytes) -> tuple[subprocess.CompletedProcess, Path]:
+                candidate = root / label
+                candidate.mkdir()
+                for original in active.iterdir():
+                    os.link(original, candidate / original.name)
+                (payloads / "TARGET.json").write_bytes(target_bytes)
+                (artifact / "manifest.json").write_text(json.dumps({
+                    "paths": [target_rel],
+                    "files": [{"path": target_rel, "size": len(target_bytes),
+                               "sha256": hashlib.sha256(target_bytes).hexdigest()}],
+                }), encoding="utf-8")
+                run = subprocess.run(
+                    [sys.executable, "-c", script, str(artifact), str(applied), str(candidate),
+                     str(active), str(ROOT / "scripts" / "fetch-stockanalysis.py")],
+                    cwd=repo, text=True, capture_output=True, check=False,
+                )
+                return run, candidate
+
+            target_bytes = etf_payload(1)
+            run, candidate = run_candidate("valid", target_bytes)
+            self.assertEqual(run.returncode, 0, run.stderr)
+            self.assertEqual({path.name for path in candidate.iterdir()},
+                             {"KEEP.json", "SHARED.json", "TARGET.json", "NEW.json"})
+            self.assertEqual((candidate / "KEEP.json").read_bytes(), b"active-keep")
+            self.assertEqual((candidate / "SHARED.json").read_bytes(), b"active-shared")
+            self.assertEqual((candidate / "TARGET.json").read_bytes(), target_bytes)
+            self.assertEqual((candidate / "NEW.json").read_bytes(), b"git-only")
+            self.assertEqual((active / "TARGET.json").read_bytes(), etf_payload(3))
+            self.assertEqual(json.loads(run.stdout), {
+                "active_etf_files": 3, "git_only_additions": 1,
+                "artifact_etf_overlays": 1, "candidate_etf_files": 4,
+            })
+            for label, body, diagnostic in (
+                ("active-regression", etf_payload(4), "regresses active"),
+                ("lkg-regression", etf_payload(2.5), "regresses Git LKG"),
+                ("complete-regression", etf_payload(1, partial=True), "loses complete active"),
+                ("quote-regression", etf_payload(1, empty_quote=True), "loses active usable quote"),
+                ("history-regression", etf_payload(1, malformed_history=True), "loses active daily_1y history"),
+                ("history-truncated", etf_payload(1, truncated_history=True), "loses active daily_1y history"),
+            ):
+                rejected, rejected_root = run_candidate(label, body)
+                self.assertNotEqual(rejected.returncode, 0, label)
+                self.assertIn(diagnostic, rejected.stderr)
+                self.assertEqual((rejected_root / "TARGET.json").read_bytes(), (active / "TARGET.json").read_bytes())
 
     def test_candidate_artifact_is_context_bound_and_immutable(self) -> None:
         for expected in (
