@@ -1,10 +1,10 @@
 {
   "schema_version": 1,
-  "generated_at": "2026-10-01T13:32:32.894Z",
+  "generated_at": "2026-10-01T14:49:51.213Z",
   "source_file": "computed/stock_action_index.json",
   "source_date": "2026-09-25",
   "source_date_reason": null,
-  "source_generated_at": "2026-10-01T13:32:30.373Z",
+  "source_generated_at": "2026-10-01T14:49:48.624Z",
   "source_score_contract": "action-score-v0.3.1",
   "formula_version": "fenok-native-signals-v0.2.4-null-comparable",
   "contract_doc": "docs/planning/CONTRACT_fenok_native_signals_v0_2_phase_a_20260628.md",
@@ -170881,9 +170881,9 @@
         "action_bucket": "watch"
       },
       "short_term_composite": {
-        "common_basis_score_0_100": 50.06,
+        "common_basis_score_0_100": 44.26,
         "common_basis_call": "mixed",
-        "conviction_score_0_100": 61.57,
+        "conviction_score_0_100": 58.09,
         "conviction_call": "mixed",
         "input_count": 5,
         "basis_code": "us_enriched_v1",
@@ -171161,41 +171161,41 @@
           ]
         },
         "volume_liquidity_trend": {
-          "score_0_100": 46.34,
-          "direction": "neutral",
+          "score_0_100": 37.6,
+          "direction": "weak",
           "coverage_ratio": 1,
           "confidence": "high",
           "basis": "local_yf_1y_volume_liquidity_trend_proxy",
           "caveat": "Volume/liquidity trend is a local OHLCV proxy, not true order flow.",
           "components": {
             "dollar_liquidity_20d": {
-              "value": 556358968.4276,
-              "score": 68.63,
+              "value": 529355475.8909,
+              "score": 68.09,
               "peer_group": "rule",
               "peer_count": null
             },
             "volume_trend_20d_vs_60d": {
-              "value": 1.1218,
-              "score": 55.51,
+              "value": 1.1183,
+              "score": 55.09,
               "peer_group": "rule",
               "peer_count": null
             },
             "latest_volume_vs_20d": {
-              "value": 1.114,
-              "score": 40.94,
+              "value": 0.2386,
+              "score": 0,
               "peer_group": "rule",
               "peer_count": null
             },
             "price_confirmation_20d": {
-              "value": -0.0887,
-              "score": 9.22,
+              "value": -0.1254,
+              "score": 0,
               "peer_group": "rule",
               "peer_count": null
             }
           }
         },
         "short_term_relative_strength": {
-          "score_0_100": 16.32,
+          "score_0_100": 7.67,
           "direction": "stressed",
           "coverage_ratio": 1,
           "confidence": "high",
@@ -171203,20 +171203,20 @@
           "caveat": "Short-term relative strength is a price-return proxy versus SPY, not a forecast.",
           "components": {
             "relative_return_20d_vs_spy": {
-              "value": -0.0923,
-              "score": 9.24,
+              "value": -0.129,
+              "score": 0,
               "peer_group": "rule",
               "peer_count": null
             },
             "relative_return_60d_vs_spy": {
-              "value": -0.0385,
-              "score": 29.49,
+              "value": -0.0748,
+              "score": 21.92,
               "peer_group": "rule",
               "peer_count": null
             },
             "absolute_return_20d": {
-              "value": -0.0887,
-              "score": 9.22,
+              "value": -0.1254,
+              "score": 0,
               "peer_group": "rule",
               "peer_count": null
             }
@@ -441640,9 +441640,9 @@
         "action_bucket": "income"
       },
       "short_term_composite": {
-        "common_basis_score_0_100": 54.35,
+        "common_basis_score_0_100": 54.55,
         "common_basis_call": "mixed",
-        "conviction_score_0_100": 60.87,
+        "conviction_score_0_100": 60.99,
         "conviction_call": "mixed",
         "input_count": 5,
         "basis_code": "us_enriched_v1",
@@ -441751,20 +441751,20 @@
           }
         },
         "technical_flow": {
-          "score_0_100": 72.03,
+          "score_0_100": 72.63,
           "direction": "strong",
           "coverage_ratio": 1,
           "confidence": "high",
           "components": {
             "return12m": {
               "value": 0.247,
-              "score": 76.07,
+              "score": 76.92,
               "peer_group": "market_sector",
               "peer_count": 118
             },
             "ret1y": {
               "value": 0.247,
-              "score": 76.07,
+              "score": 76.92,
               "peer_group": "market_sector",
               "peer_count": 118
             },
@@ -441783,12 +441783,12 @@
           }
         },
         "upside_downside": {
-          "score_0_100": 83.94,
+          "score_0_100": 84.28,
           "direction": "upside_bias",
           "coverage_ratio": 0.375,
           "confidence": "medium",
-          "upside_score_0_100": 83.65,
-          "downside_score_0_100": 15.78,
+          "upside_score_0_100": 83.91,
+          "downside_score_0_100": 15.35,
           "components": {
             "upside": {
               "valuation_room": null,
@@ -441801,7 +441801,7 @@
               "growth_support": null,
               "technical_confirmation": {
                 "value": null,
-                "score": 72.03,
+                "score": 72.63,
                 "peer_group": "rule",
                 "peer_count": null
               },
@@ -441817,7 +441817,7 @@
               },
               "negative_momentum": {
                 "value": -0.247,
-                "score": 23.93,
+                "score": 23.08,
                 "peer_group": "market_sector",
                 "peer_count": 118
               },
@@ -441827,7 +441827,7 @@
           }
         },
         "market_similarity": {
-          "score_0_100": 89.46,
+          "score_0_100": 89.45,
           "direction": "peer_comparable",
           "coverage_ratio": 0.5714,
           "confidence": "medium",
@@ -441836,19 +441836,19 @@
           "vector_feature_count": 4,
           "nearest_peers": [
             {
-              "ticker": "EG",
-              "company": "Everest Group, Ltd.",
-              "market_scope": "us",
-              "canonical_sector": "Other",
-              "similarity_score": 90.15,
-              "shared_feature_count": 4
-            },
-            {
               "ticker": "GL",
               "company": "Globe Life Inc.",
               "market_scope": "us",
               "canonical_sector": "Other",
-              "similarity_score": 89.93,
+              "similarity_score": 89.88,
+              "shared_feature_count": 4
+            },
+            {
+              "ticker": "EG",
+              "company": "Everest Group, Ltd.",
+              "market_scope": "us",
+              "canonical_sector": "Other",
+              "similarity_score": 89.81,
               "shared_feature_count": 4
             },
             {
@@ -441856,7 +441856,7 @@
               "company": "Invesco Ltd.",
               "market_scope": "us",
               "canonical_sector": "Other",
-              "similarity_score": 88.29,
+              "similarity_score": 88.67,
               "shared_feature_count": 4
             },
             {
@@ -441864,7 +441864,7 @@
               "company": "DaVita Inc.",
               "market_scope": "us",
               "canonical_sector": "Other",
-              "similarity_score": 88.04,
+              "similarity_score": 88.32,
               "shared_feature_count": 4
             },
             {
@@ -441872,7 +441872,7 @@
               "company": "Match Group, Inc.",
               "market_scope": "us",
               "canonical_sector": "Other",
-              "similarity_score": 85.49,
+              "similarity_score": 84.99,
               "shared_feature_count": 4
             }
           ]
@@ -443471,7 +443471,7 @@
           }
         },
         "market_similarity": {
-          "score_0_100": 88.46,
+          "score_0_100": 88.26,
           "direction": "peer_comparable",
           "coverage_ratio": 0.5714,
           "confidence": "medium",
@@ -443484,7 +443484,7 @@
               "company": "Marsh & McLennan Companies, Inc.",
               "market_scope": "us",
               "canonical_sector": "Other",
-              "similarity_score": 91.55,
+              "similarity_score": 90.95,
               "shared_feature_count": 4
             },
             {
@@ -444293,7 +444293,7 @@
           }
         },
         "market_similarity": {
-          "score_0_100": 89.75,
+          "score_0_100": 89.58,
           "direction": "peer_comparable",
           "coverage_ratio": 0.5714,
           "confidence": "medium",
@@ -444322,7 +444322,7 @@
               "company": "Marsh & McLennan Companies, Inc.",
               "market_scope": "us",
               "canonical_sector": "Other",
-              "similarity_score": 85.79,
+              "similarity_score": 85.27,
               "shared_feature_count": 4
             },
             {
@@ -444704,7 +444704,7 @@
           }
         },
         "market_similarity": {
-          "score_0_100": 92.8,
+          "score_0_100": 92.95,
           "direction": "peer_comparable",
           "coverage_ratio": 0.5714,
           "confidence": "medium",
@@ -444717,7 +444717,7 @@
               "company": "Brown-Forman Corporation",
               "market_scope": "us",
               "canonical_sector": "Other",
-              "similarity_score": 96.05,
+              "similarity_score": 96.48,
               "shared_feature_count": 4
             },
             {
@@ -444749,7 +444749,7 @@
               "company": "Huntington Ingalls Industries, Inc.",
               "market_scope": "us",
               "canonical_sector": "Other",
-              "similarity_score": 87.35,
+              "similarity_score": 87.69,
               "shared_feature_count": 4
             }
           ]
@@ -445526,7 +445526,7 @@
           }
         },
         "market_similarity": {
-          "score_0_100": 89.5,
+          "score_0_100": 89.67,
           "direction": "peer_comparable",
           "coverage_ratio": 0.5714,
           "confidence": "medium",
@@ -445539,7 +445539,7 @@
               "company": "Everpure, Inc.",
               "market_scope": "us",
               "canonical_sector": "Other",
-              "similarity_score": 90.04,
+              "similarity_score": 90.36,
               "shared_feature_count": 4
             },
             {
@@ -445547,7 +445547,7 @@
               "company": "Vertiv Holdings Co",
               "market_scope": "us",
               "canonical_sector": "Other",
-              "similarity_score": 89.99,
+              "similarity_score": 89.92,
               "shared_feature_count": 4
             },
             {
@@ -445555,7 +445555,7 @@
               "company": "Rocket Lab Corporation",
               "market_scope": "us",
               "canonical_sector": "Other",
-              "similarity_score": 88.46,
+              "similarity_score": 88.72,
               "shared_feature_count": 4
             },
             {
@@ -445563,7 +445563,7 @@
               "company": "Interactive Brokers Group, Inc.",
               "market_scope": "us",
               "canonical_sector": "Other",
-              "similarity_score": 86.64,
+              "similarity_score": 86.57,
               "shared_feature_count": 4
             },
             {
@@ -445571,7 +445571,7 @@
               "company": "Electronic Arts Inc.",
               "market_scope": "us",
               "canonical_sector": "Other",
-              "similarity_score": 85.36,
+              "similarity_score": 85.46,
               "shared_feature_count": 4
             }
           ]
@@ -446160,9 +446160,9 @@
         "action_bucket": "income"
       },
       "short_term_composite": {
-        "common_basis_score_0_100": 41.1,
+        "common_basis_score_0_100": 41.3,
         "common_basis_call": "mixed",
-        "conviction_score_0_100": 41.1,
+        "conviction_score_0_100": 41.3,
         "conviction_call": "mixed",
         "input_count": 3,
         "basis_code": "common_3_v1",
@@ -446271,20 +446271,20 @@
           }
         },
         "technical_flow": {
-          "score_0_100": 45.93,
+          "score_0_100": 46.52,
           "direction": "neutral",
           "coverage_ratio": 1,
           "confidence": "high",
           "components": {
             "return12m": {
               "value": -0.0083,
-              "score": 45.3,
+              "score": 46.15,
               "peer_group": "market_sector",
               "peer_count": 118
             },
             "ret1y": {
               "value": -0.0083,
-              "score": 45.3,
+              "score": 46.15,
               "peer_group": "market_sector",
               "peer_count": 118
             },
@@ -446303,12 +446303,12 @@
           }
         },
         "upside_downside": {
-          "score_0_100": 45.68,
+          "score_0_100": 46.02,
           "direction": "balanced",
           "coverage_ratio": 0.375,
           "confidence": "medium",
-          "upside_score_0_100": 45.83,
-          "downside_score_0_100": 54.47,
+          "upside_score_0_100": 46.09,
+          "downside_score_0_100": 54.05,
           "components": {
             "upside": {
               "valuation_room": null,
@@ -446321,7 +446321,7 @@
               "growth_support": null,
               "technical_confirmation": {
                 "value": null,
-                "score": 45.93,
+                "score": 46.52,
                 "peer_group": "rule",
                 "peer_count": null
               },
@@ -446337,7 +446337,7 @@
               },
               "negative_momentum": {
                 "value": 0.0083,
-                "score": 54.7,
+                "score": 53.85,
                 "peer_group": "market_sector",
                 "peer_count": 118
               },
@@ -446347,7 +446347,7 @@
           }
         },
         "market_similarity": {
-          "score_0_100": 93.38,
+          "score_0_100": 93.52,
           "direction": "peer_comparable",
           "coverage_ratio": 0.5714,
           "confidence": "medium",
@@ -446360,7 +446360,7 @@
               "company": "Avery Dennison Corporation",
               "market_scope": "us",
               "canonical_sector": "Other",
-              "similarity_score": 96.05,
+              "similarity_score": 96.48,
               "shared_feature_count": 4
             },
             {
@@ -446368,7 +446368,7 @@
               "company": "Paycom Software, Inc.",
               "market_scope": "us",
               "canonical_sector": "Other",
-              "similarity_score": 93.84,
+              "similarity_score": 94.15,
               "shared_feature_count": 4
             },
             {
@@ -446376,7 +446376,7 @@
               "company": "Jacobs Solutions Inc.",
               "market_scope": "us",
               "canonical_sector": "Other",
-              "similarity_score": 90.24,
+              "similarity_score": 89.93,
               "shared_feature_count": 4
             },
             {
@@ -446384,7 +446384,7 @@
               "company": "Huntington Ingalls Industries, Inc.",
               "market_scope": "us",
               "canonical_sector": "Other",
-              "similarity_score": 89.19,
+              "similarity_score": 89.2,
               "shared_feature_count": 4
             },
             {
@@ -446392,7 +446392,7 @@
               "company": "Molina Healthcare, Inc.",
               "market_scope": "us",
               "canonical_sector": "Other",
-              "similarity_score": 88.35,
+              "similarity_score": 88.74,
               "shared_feature_count": 4
             }
           ]
@@ -447958,7 +447958,7 @@
           }
         },
         "market_similarity": {
-          "score_0_100": 90.66,
+          "score_0_100": 90.72,
           "direction": "peer_comparable",
           "coverage_ratio": 0.5714,
           "confidence": "medium",
@@ -447979,7 +447979,7 @@
               "company": "Mid-America Apartment Communities, Inc.",
               "market_scope": "us",
               "canonical_sector": "Other",
-              "similarity_score": 91.76,
+              "similarity_score": 91.96,
               "shared_feature_count": 4
             },
             {
@@ -448405,7 +448405,7 @@
               "company": "Entergy Corporation",
               "market_scope": "us",
               "canonical_sector": "Other",
-              "similarity_score": 90.35,
+              "similarity_score": 89.99,
               "shared_feature_count": 4
             },
             {
@@ -448778,7 +448778,7 @@
           }
         },
         "market_similarity": {
-          "score_0_100": 93.74,
+          "score_0_100": 93.65,
           "direction": "peer_comparable",
           "coverage_ratio": 0.5714,
           "confidence": "medium",
@@ -448791,7 +448791,7 @@
               "company": "Entergy Corporation",
               "market_scope": "us",
               "canonical_sector": "Other",
-              "similarity_score": 97.64,
+              "similarity_score": 97.39,
               "shared_feature_count": 4
             },
             {
@@ -450011,7 +450011,7 @@
           }
         },
         "market_similarity": {
-          "score_0_100": 90.73,
+          "score_0_100": 90.9,
           "direction": "peer_comparable",
           "coverage_ratio": 0.5714,
           "confidence": "medium",
@@ -450024,7 +450024,7 @@
               "company": "VeriSign, Inc.",
               "market_scope": "us",
               "canonical_sector": "Other",
-              "similarity_score": 92.38,
+              "similarity_score": 92.63,
               "shared_feature_count": 4
             },
             {
@@ -450040,7 +450040,7 @@
               "company": "Extra Space Storage Inc.",
               "market_scope": "us",
               "canonical_sector": "Other",
-              "similarity_score": 88.97,
+              "similarity_score": 89.23,
               "shared_feature_count": 4
             },
             {
@@ -450833,7 +450833,7 @@
           }
         },
         "market_similarity": {
-          "score_0_100": 92.39,
+          "score_0_100": 92.27,
           "direction": "peer_comparable",
           "coverage_ratio": 0.5714,
           "confidence": "medium",
@@ -450862,7 +450862,7 @@
               "company": "Mid-America Apartment Communities, Inc.",
               "market_scope": "us",
               "canonical_sector": "Other",
-              "similarity_score": 89.65,
+              "similarity_score": 89.29,
               "shared_feature_count": 4
             },
             {
@@ -451655,7 +451655,7 @@
           }
         },
         "market_similarity": {
-          "score_0_100": 88.47,
+          "score_0_100": 88.39,
           "direction": "peer_comparable",
           "coverage_ratio": 0.5714,
           "confidence": "medium",
@@ -451664,19 +451664,19 @@
           "vector_feature_count": 4,
           "nearest_peers": [
             {
-              "ticker": "HBAN",
-              "company": "Huntington Bancshares Incorporated",
-              "market_scope": "us",
-              "canonical_sector": "Other",
-              "similarity_score": 89.62,
-              "shared_feature_count": 4
-            },
-            {
               "ticker": "MSTR",
               "company": "Strategy Inc",
               "market_scope": "us",
               "canonical_sector": "Other",
-              "similarity_score": 89.54,
+              "similarity_score": 89.67,
+              "shared_feature_count": 4
+            },
+            {
+              "ticker": "HBAN",
+              "company": "Huntington Bancshares Incorporated",
+              "market_scope": "us",
+              "canonical_sector": "Other",
+              "similarity_score": 89.37,
               "shared_feature_count": 4
             },
             {
@@ -451684,7 +451684,7 @@
               "company": "The Hartford Insurance Group, Inc.",
               "market_scope": "us",
               "canonical_sector": "Other",
-              "similarity_score": 86.26,
+              "similarity_score": 86.12,
               "shared_feature_count": 4
             },
             {
@@ -451692,7 +451692,7 @@
               "company": "VICI Properties Inc.",
               "market_scope": "us",
               "canonical_sector": "Other",
-              "similarity_score": 86.09,
+              "similarity_score": 85.75,
               "shared_feature_count": 4
             },
             {
@@ -451700,7 +451700,7 @@
               "company": "PDD Holdings Inc.",
               "market_scope": "us",
               "canonical_sector": "Other",
-              "similarity_score": 84.47,
+              "similarity_score": 84.67,
               "shared_feature_count": 4
             }
           ]
@@ -452066,7 +452066,7 @@
           }
         },
         "market_similarity": {
-          "score_0_100": 90.13,
+          "score_0_100": 89.79,
           "direction": "peer_comparable",
           "coverage_ratio": 0.5714,
           "confidence": "medium",
@@ -452074,14 +452074,6 @@
           "peer_count": 118,
           "vector_feature_count": 4,
           "nearest_peers": [
-            {
-              "ticker": "VMRK",
-              "company": "AvalonBay Communities, Inc.",
-              "market_scope": "us",
-              "canonical_sector": "Other",
-              "similarity_score": 92.08,
-              "shared_feature_count": 4
-            },
             {
               "ticker": "NDAQ",
               "company": "Nasdaq, Inc.",
@@ -452091,11 +452083,19 @@
               "shared_feature_count": 4
             },
             {
+              "ticker": "VMRK",
+              "company": "Vivmark Residential",
+              "market_scope": "us",
+              "canonical_sector": "Other",
+              "similarity_score": 90.96,
+              "shared_feature_count": 4
+            },
+            {
               "ticker": "EXR",
               "company": "Extra Space Storage Inc.",
               "market_scope": "us",
               "canonical_sector": "Other",
-              "similarity_score": 87.32,
+              "similarity_score": 87.41,
               "shared_feature_count": 4
             },
             {
@@ -453104,16 +453104,16 @@
         "computed/fenok_occ_options_volume.json"
       ],
       "stock_action_context": {
-        "action_score": 36.84,
-        "signal_score": 40,
+        "action_score": 32.89,
+        "signal_score": 35.71,
         "coverage_ratio": 0.7368,
         "confidence_label": "medium",
         "action_bucket": "watch"
       },
       "short_term_composite": {
-        "common_basis_score_0_100": 47.58,
+        "common_basis_score_0_100": 45.42,
         "common_basis_call": "mixed",
-        "conviction_score_0_100": 49.54,
+        "conviction_score_0_100": 48.25,
         "conviction_call": "mixed",
         "input_count": 5,
         "basis_code": "us_enriched_v1",
@@ -453222,20 +453222,20 @@
           }
         },
         "technical_flow": {
-          "score_0_100": 62.39,
+          "score_0_100": 61.19,
           "direction": "constructive",
           "coverage_ratio": 1,
           "confidence": "high",
           "components": {
             "return12m": {
-              "value": 0.2518,
-              "score": 77.78,
+              "value": 0.2344,
+              "score": 76.07,
               "peer_group": "market_sector",
               "peer_count": 118
             },
             "ret1y": {
-              "value": 0.2518,
-              "score": 77.78,
+              "value": 0.2344,
+              "score": 76.07,
               "peer_group": "market_sector",
               "peer_count": 118
             },
@@ -453254,17 +453254,17 @@
           }
         },
         "upside_downside": {
-          "score_0_100": 84.11,
+          "score_0_100": 83.42,
           "direction": "upside_bias",
           "coverage_ratio": 0.375,
           "confidence": "low",
-          "upside_score_0_100": 81.46,
-          "downside_score_0_100": 13.23,
+          "upside_score_0_100": 80.94,
+          "downside_score_0_100": 14.09,
           "components": {
             "upside": {
               "valuation_room": null,
               "forward_pe_discount": {
-                "value": 3.9547,
+                "value": 3.9358,
                 "score": 95.76,
                 "peer_group": "market_sector",
                 "peer_count": 119
@@ -453272,7 +453272,7 @@
               "growth_support": null,
               "technical_confirmation": {
                 "value": null,
-                "score": 62.39,
+                "score": 61.19,
                 "peer_group": "rule",
                 "peer_count": null
               },
@@ -453281,14 +453281,14 @@
             "downside": {
               "valuation_crowding": null,
               "forward_pe_pressure": {
-                "value": 3.9547,
+                "value": 3.9358,
                 "score": 4.24,
                 "peer_group": "market_sector",
                 "peer_count": 119
               },
               "negative_momentum": {
-                "value": -0.2518,
-                "score": 22.22,
+                "value": -0.2344,
+                "score": 23.93,
                 "peer_group": "market_sector",
                 "peer_count": 118
               },
@@ -453298,7 +453298,7 @@
           }
         },
         "market_similarity": {
-          "score_0_100": 86.46,
+          "score_0_100": 86.75,
           "direction": "peer_comparable",
           "coverage_ratio": 0.5714,
           "confidence": "medium",
@@ -453311,7 +453311,7 @@
               "company": "Citizens Financial Group, Inc.",
               "market_scope": "us",
               "canonical_sector": "Other",
-              "similarity_score": 87.52,
+              "similarity_score": 87.1,
               "shared_feature_count": 4
             },
             {
@@ -453319,7 +453319,7 @@
               "company": "KeyCorp",
               "market_scope": "us",
               "canonical_sector": "Other",
-              "similarity_score": 86.38,
+              "similarity_score": 87.02,
               "shared_feature_count": 4
             },
             {
@@ -453327,15 +453327,7 @@
               "company": "Arch Capital Group Ltd.",
               "market_scope": "us",
               "canonical_sector": "Other",
-              "similarity_score": 85.47,
-              "shared_feature_count": 4
-            },
-            {
-              "ticker": "MTB",
-              "company": "M&T Bank Corporation",
-              "market_scope": "us",
-              "canonical_sector": "Other",
-              "similarity_score": 85.35,
+              "similarity_score": 86.13,
               "shared_feature_count": 4
             },
             {
@@ -453343,13 +453335,21 @@
               "company": "United Airlines Holdings, Inc.",
               "market_scope": "us",
               "canonical_sector": "Other",
-              "similarity_score": 85.21,
+              "similarity_score": 85.98,
+              "shared_feature_count": 4
+            },
+            {
+              "ticker": "MTB",
+              "company": "M&T Bank Corporation",
+              "market_scope": "us",
+              "canonical_sector": "Other",
+              "similarity_score": 85.56,
               "shared_feature_count": 4
             }
           ]
         },
         "volume_liquidity_trend": {
-          "score_0_100": 42.26,
+          "score_0_100": 37.57,
           "direction": "weak",
           "coverage_ratio": 1,
           "confidence": "high",
@@ -453357,33 +453357,33 @@
           "caveat": "Volume/liquidity trend is a local OHLCV proxy, not true order flow.",
           "components": {
             "dollar_liquidity_20d": {
-              "value": 284473982.1684,
-              "score": 61.35,
+              "value": 281348597.3317,
+              "score": 61.23,
               "peer_group": "rule",
               "peer_count": null
             },
             "volume_trend_20d_vs_60d": {
-              "value": 0.8046,
-              "score": 18.19,
+              "value": 0.8188,
+              "score": 19.86,
               "peer_group": "rule",
               "peer_count": null
             },
             "latest_volume_vs_20d": {
-              "value": 0.9478,
-              "score": 29.86,
+              "value": 0.1305,
+              "score": 0,
               "peer_group": "rule",
               "peer_count": null
             },
             "price_confirmation_20d": {
-              "value": 0.0399,
-              "score": 47.03,
+              "value": 0.032,
+              "score": 44.69,
               "peer_group": "rule",
               "peer_count": null
             }
           }
         },
         "short_term_relative_strength": {
-          "score_0_100": 38.1,
+          "score_0_100": 37.51,
           "direction": "weak",
           "coverage_ratio": 1,
           "confidence": "high",
@@ -453391,20 +453391,20 @@
           "caveat": "Short-term relative strength is a price-return proxy versus SPY, not a forecast.",
           "components": {
             "relative_return_20d_vs_spy": {
-              "value": 0.0363,
-              "score": 52.1,
+              "value": 0.0284,
+              "score": 49.45,
               "peer_group": "rule",
               "peer_count": null
             },
             "relative_return_60d_vs_spy": {
-              "value": -0.1079,
-              "score": 15.01,
+              "value": -0.0933,
+              "score": 18.06,
               "peer_group": "rule",
               "peer_count": null
             },
             "absolute_return_20d": {
-              "value": 0.0399,
-              "score": 47.03,
+              "value": 0.032,
+              "score": 44.69,
               "peer_group": "rule",
               "peer_count": null
             }
@@ -454120,7 +454120,7 @@
           }
         },
         "market_similarity": {
-          "score_0_100": 88.92,
+          "score_0_100": 88.81,
           "direction": "peer_comparable",
           "coverage_ratio": 0.5714,
           "confidence": "medium",
@@ -454133,7 +454133,7 @@
               "company": "The AES Corporation",
               "market_scope": "us",
               "canonical_sector": "Other",
-              "similarity_score": 90.15,
+              "similarity_score": 89.81,
               "shared_feature_count": 4
             },
             {
@@ -454568,7 +454568,7 @@
               "company": "MGM Resorts International",
               "market_scope": "us",
               "canonical_sector": "Other",
-              "similarity_score": 89.61,
+              "similarity_score": 89.51,
               "shared_feature_count": 4
             },
             {
@@ -454942,7 +454942,7 @@
           }
         },
         "market_similarity": {
-          "score_0_100": 92.08,
+          "score_0_100": 92.09,
           "direction": "peer_comparable",
           "coverage_ratio": 0.5714,
           "confidence": "medium",
@@ -454963,7 +454963,7 @@
               "company": "Equity Residential",
               "market_scope": "us",
               "canonical_sector": "Other",
-              "similarity_score": 93.15,
+              "similarity_score": 93.19,
               "shared_feature_count": 4
             },
             {
@@ -454987,7 +454987,7 @@
               "company": "VeriSign, Inc.",
               "market_scope": "us",
               "canonical_sector": "Other",
-              "similarity_score": 85.61,
+              "similarity_score": 85.85,
               "shared_feature_count": 4
             }
           ]
@@ -455353,7 +455353,7 @@
           }
         },
         "market_similarity": {
-          "score_0_100": 94.15,
+          "score_0_100": 94.02,
           "direction": "peer_comparable",
           "coverage_ratio": 0.5714,
           "confidence": "medium",
@@ -455366,7 +455366,7 @@
               "company": "Coca-Cola Europacific Partners PLC",
               "market_scope": "us",
               "canonical_sector": "Other",
-              "similarity_score": 97.64,
+              "similarity_score": 97.39,
               "shared_feature_count": 4
             },
             {
@@ -455374,7 +455374,7 @@
               "company": "United Rentals, Inc.",
               "market_scope": "us",
               "canonical_sector": "Other",
-              "similarity_score": 94.45,
+              "similarity_score": 94.69,
               "shared_feature_count": 4
             },
             {
@@ -455382,7 +455382,7 @@
               "company": "Cboe Global Markets, Inc.",
               "market_scope": "us",
               "canonical_sector": "Other",
-              "similarity_score": 90.35,
+              "similarity_score": 89.99,
               "shared_feature_count": 4
             },
             {
@@ -455390,15 +455390,15 @@
               "company": "Howmet Aerospace Inc.",
               "market_scope": "us",
               "canonical_sector": "Other",
-              "similarity_score": 87.9,
+              "similarity_score": 87.88,
               "shared_feature_count": 4
             },
             {
-              "ticker": "IRM",
-              "company": "Iron Mountain Incorporated",
+              "ticker": "EA",
+              "company": "Electronic Arts Inc.",
               "market_scope": "us",
               "canonical_sector": "Other",
-              "similarity_score": 86.23,
+              "similarity_score": 85.94,
               "shared_feature_count": 4
             }
           ]
@@ -455577,9 +455577,9 @@
         "action_bucket": "income"
       },
       "short_term_composite": {
-        "common_basis_score_0_100": 38.69,
+        "common_basis_score_0_100": 38.88,
         "common_basis_call": "diluted",
-        "conviction_score_0_100": 45.82,
+        "conviction_score_0_100": 45.94,
         "conviction_call": "mixed",
         "input_count": 5,
         "basis_code": "us_enriched_v1",
@@ -455688,20 +455688,20 @@
           }
         },
         "technical_flow": {
-          "score_0_100": 45.91,
+          "score_0_100": 46.5,
           "direction": "neutral",
           "coverage_ratio": 1,
           "confidence": "high",
           "components": {
             "return12m": {
               "value": -0.0236,
-              "score": 43.59,
+              "score": 44.44,
               "peer_group": "market_sector",
               "peer_count": 118
             },
             "ret1y": {
               "value": -0.0236,
-              "score": 43.59,
+              "score": 44.44,
               "peer_group": "market_sector",
               "peer_count": 118
             },
@@ -455720,12 +455720,12 @@
           }
         },
         "upside_downside": {
-          "score_0_100": 31.63,
+          "score_0_100": 31.97,
           "direction": "downside_bias",
           "coverage_ratio": 0.375,
           "confidence": "medium",
-          "upside_score_0_100": 31.3,
-          "downside_score_0_100": 68.03,
+          "upside_score_0_100": 31.55,
+          "downside_score_0_100": 67.61,
           "components": {
             "upside": {
               "valuation_room": null,
@@ -455738,7 +455738,7 @@
               "growth_support": null,
               "technical_confirmation": {
                 "value": null,
-                "score": 45.91,
+                "score": 46.5,
                 "peer_group": "rule",
                 "peer_count": null
               },
@@ -455754,7 +455754,7 @@
               },
               "negative_momentum": {
                 "value": 0.0236,
-                "score": 56.41,
+                "score": 55.56,
                 "peer_group": "market_sector",
                 "peer_count": 118
               },
@@ -455764,7 +455764,7 @@
           }
         },
         "market_similarity": {
-          "score_0_100": 90.77,
+          "score_0_100": 91.07,
           "direction": "peer_comparable",
           "coverage_ratio": 0.5714,
           "confidence": "medium",
@@ -455777,23 +455777,15 @@
               "company": "VeriSign, Inc.",
               "market_scope": "us",
               "canonical_sector": "Other",
-              "similarity_score": 94.32,
-              "shared_feature_count": 4
-            },
-            {
-              "ticker": "NDAQ",
-              "company": "Nasdaq, Inc.",
-              "market_scope": "us",
-              "canonical_sector": "Other",
-              "similarity_score": 89.01,
+              "similarity_score": 94.31,
               "shared_feature_count": 4
             },
             {
               "ticker": "VMRK",
-              "company": "AvalonBay Communities, Inc.",
+              "company": "Vivmark Residential",
               "market_scope": "us",
               "canonical_sector": "Other",
-              "similarity_score": 88.98,
+              "similarity_score": 89.67,
               "shared_feature_count": 4
             },
             {
@@ -455801,7 +455793,15 @@
               "company": "Cincinnati Financial Corporation",
               "market_scope": "us",
               "canonical_sector": "Other",
-              "similarity_score": 88.97,
+              "similarity_score": 89.23,
+              "shared_feature_count": 4
+            },
+            {
+              "ticker": "NDAQ",
+              "company": "Nasdaq, Inc.",
+              "market_scope": "us",
+              "canonical_sector": "Other",
+              "similarity_score": 89.04,
               "shared_feature_count": 4
             },
             {
@@ -455809,7 +455809,7 @@
               "company": "Cintas Corporation",
               "market_scope": "us",
               "canonical_sector": "Other",
-              "similarity_score": 87.32,
+              "similarity_score": 87.41,
               "shared_feature_count": 4
             }
           ]
@@ -456175,7 +456175,7 @@
           }
         },
         "market_similarity": {
-          "score_0_100": 94.83,
+          "score_0_100": 94.94,
           "direction": "peer_comparable",
           "coverage_ratio": 0.5714,
           "confidence": "medium",
@@ -456196,7 +456196,7 @@
               "company": "MGM Resorts International",
               "market_scope": "us",
               "canonical_sector": "Other",
-              "similarity_score": 94.5,
+              "similarity_score": 94.82,
               "shared_feature_count": 4
             },
             {
@@ -456631,7 +456631,7 @@
               "company": "Mid-America Apartment Communities, Inc.",
               "market_scope": "us",
               "canonical_sector": "Other",
-              "similarity_score": 86.93,
+              "similarity_score": 87.26,
               "shared_feature_count": 4
             }
           ]
@@ -458267,7 +458267,7 @@
               "company": "The AES Corporation",
               "market_scope": "us",
               "canonical_sector": "Other",
-              "similarity_score": 89.93,
+              "similarity_score": 89.88,
               "shared_feature_count": 4
             },
             {
@@ -459052,7 +459052,7 @@
           }
         },
         "market_similarity": {
-          "score_0_100": 90.24,
+          "score_0_100": 90.29,
           "direction": "peer_comparable",
           "coverage_ratio": 0.5714,
           "confidence": "medium",
@@ -459065,7 +459065,7 @@
               "company": "Synchrony Financial",
               "market_scope": "us",
               "canonical_sector": "Other",
-              "similarity_score": 93.82,
+              "similarity_score": 93.97,
               "shared_feature_count": 4
             },
             {
@@ -459874,7 +459874,7 @@
           }
         },
         "market_similarity": {
-          "score_0_100": 91.56,
+          "score_0_100": 91.47,
           "direction": "peer_comparable",
           "coverage_ratio": 0.5714,
           "confidence": "medium",
@@ -459903,7 +459903,7 @@
               "company": "CoreWeave, Inc.",
               "market_scope": "us",
               "canonical_sector": "Other",
-              "similarity_score": 89.62,
+              "similarity_score": 89.37,
               "shared_feature_count": 4
             },
             {
@@ -459919,7 +459919,7 @@
               "company": "Synchrony Financial",
               "market_scope": "us",
               "canonical_sector": "Other",
-              "similarity_score": 86.83,
+              "similarity_score": 86.46,
               "shared_feature_count": 4
             }
           ]
@@ -460285,7 +460285,7 @@
           }
         },
         "market_similarity": {
-          "score_0_100": 90.43,
+          "score_0_100": 90.38,
           "direction": "peer_comparable",
           "coverage_ratio": 0.5714,
           "confidence": "medium",
@@ -460314,7 +460314,7 @@
               "company": "Synchrony Financial",
               "market_scope": "us",
               "canonical_sector": "Other",
-              "similarity_score": 88.14,
+              "similarity_score": 88.01,
               "shared_feature_count": 4
             },
             {
@@ -460322,7 +460322,7 @@
               "company": "CoreWeave, Inc.",
               "market_scope": "us",
               "canonical_sector": "Other",
-              "similarity_score": 86.26,
+              "similarity_score": 86.12,
               "shared_feature_count": 4
             },
             {
@@ -460509,9 +460509,9 @@
         "action_bucket": "watch"
       },
       "short_term_composite": {
-        "common_basis_score_0_100": 24.51,
+        "common_basis_score_0_100": 24.71,
         "common_basis_call": "diluted",
-        "conviction_score_0_100": 37.45,
+        "conviction_score_0_100": 37.57,
         "conviction_call": "diluted",
         "input_count": 5,
         "basis_code": "us_enriched_v1",
@@ -460620,20 +460620,20 @@
           }
         },
         "technical_flow": {
-          "score_0_100": 33.67,
+          "score_0_100": 34.27,
           "direction": "weak",
           "coverage_ratio": 1,
           "confidence": "high",
           "components": {
             "return12m": {
               "value": -0.0312,
-              "score": 41.88,
+              "score": 42.74,
               "peer_group": "market_sector",
               "peer_count": 118
             },
             "ret1y": {
               "value": -0.0312,
-              "score": 41.88,
+              "score": 42.74,
               "peer_group": "market_sector",
               "peer_count": 118
             },
@@ -460652,12 +460652,12 @@
           }
         },
         "upside_downside": {
-          "score_0_100": 50.83,
+          "score_0_100": 51.17,
           "direction": "balanced",
           "coverage_ratio": 0.375,
           "confidence": "low",
-          "upside_score_0_100": 49.78,
-          "downside_score_0_100": 48.13,
+          "upside_score_0_100": 50.04,
+          "downside_score_0_100": 47.7,
           "components": {
             "upside": {
               "valuation_room": null,
@@ -460670,7 +460670,7 @@
               "growth_support": null,
               "technical_confirmation": {
                 "value": null,
-                "score": 33.67,
+                "score": 34.27,
                 "peer_group": "rule",
                 "peer_count": null
               },
@@ -460686,7 +460686,7 @@
               },
               "negative_momentum": {
                 "value": 0.0312,
-                "score": 58.12,
+                "score": 57.26,
                 "peer_group": "market_sector",
                 "peer_count": 118
               },
@@ -460696,7 +460696,7 @@
           }
         },
         "market_similarity": {
-          "score_0_100": 89.81,
+          "score_0_100": 89.68,
           "direction": "peer_comparable",
           "coverage_ratio": 0.5714,
           "confidence": "medium",
@@ -460709,7 +460709,7 @@
               "company": "Textron Inc.",
               "market_scope": "us",
               "canonical_sector": "Other",
-              "similarity_score": 92.27,
+              "similarity_score": 92.05,
               "shared_feature_count": 4
             },
             {
@@ -460717,7 +460717,7 @@
               "company": "Brown-Forman Corporation",
               "market_scope": "us",
               "canonical_sector": "Other",
-              "similarity_score": 89.19,
+              "similarity_score": 89.2,
               "shared_feature_count": 4
             },
             {
@@ -460725,7 +460725,7 @@
               "company": "MGM Resorts International",
               "market_scope": "us",
               "canonical_sector": "Other",
-              "similarity_score": 87.96,
+              "similarity_score": 87.78,
               "shared_feature_count": 4
             },
             {
@@ -460733,7 +460733,7 @@
               "company": "Avery Dennison Corporation",
               "market_scope": "us",
               "canonical_sector": "Other",
-              "similarity_score": 87.35,
+              "similarity_score": 87.69,
               "shared_feature_count": 4
             },
             {
@@ -460741,7 +460741,7 @@
               "company": "FactSet Research Systems Inc.",
               "market_scope": "us",
               "canonical_sector": "Other",
-              "similarity_score": 87.04,
+              "similarity_score": 86.54,
               "shared_feature_count": 4
             }
           ]
@@ -461107,7 +461107,7 @@
           }
         },
         "market_similarity": {
-          "score_0_100": 92.54,
+          "score_0_100": 92.41,
           "direction": "peer_comparable",
           "coverage_ratio": 0.5714,
           "confidence": "medium",
@@ -461136,7 +461136,7 @@
               "company": "Marsh & McLennan Companies, Inc.",
               "market_scope": "us",
               "canonical_sector": "Other",
-              "similarity_score": 90.38,
+              "similarity_score": 89.98,
               "shared_feature_count": 4
             },
             {
@@ -462153,9 +462153,9 @@
         "action_bucket": "watch"
       },
       "short_term_composite": {
-        "common_basis_score_0_100": 46.7,
+        "common_basis_score_0_100": 46.91,
         "common_basis_call": "mixed",
-        "conviction_score_0_100": 59.39,
+        "conviction_score_0_100": 59.51,
         "conviction_call": "mixed",
         "input_count": 5,
         "basis_code": "us_enriched_v1",
@@ -462264,20 +462264,20 @@
           }
         },
         "technical_flow": {
-          "score_0_100": 76.35,
+          "score_0_100": 76.96,
           "direction": "strong",
           "coverage_ratio": 1,
           "confidence": "high",
           "components": {
             "return12m": {
               "value": 0.2483,
-              "score": 76.92,
+              "score": 77.78,
               "peer_group": "market_sector",
               "peer_count": 118
             },
             "ret1y": {
               "value": 0.2483,
-              "score": 76.92,
+              "score": 77.78,
               "peer_group": "market_sector",
               "peer_count": 118
             },
@@ -462296,12 +462296,12 @@
           }
         },
         "upside_downside": {
-          "score_0_100": 43.31,
+          "score_0_100": 43.66,
           "direction": "balanced",
           "coverage_ratio": 0.375,
           "confidence": "medium",
-          "upside_score_0_100": 40.96,
-          "downside_score_0_100": 54.34,
+          "upside_score_0_100": 41.22,
+          "downside_score_0_100": 53.91,
           "components": {
             "upside": {
               "valuation_room": null,
@@ -462314,7 +462314,7 @@
               "growth_support": null,
               "technical_confirmation": {
                 "value": null,
-                "score": 76.35,
+                "score": 76.96,
                 "peer_group": "rule",
                 "peer_count": null
               },
@@ -462330,7 +462330,7 @@
               },
               "negative_momentum": {
                 "value": -0.2483,
-                "score": 23.08,
+                "score": 22.22,
                 "peer_group": "market_sector",
                 "peer_count": 118
               },
@@ -462340,7 +462340,7 @@
           }
         },
         "market_similarity": {
-          "score_0_100": 89.53,
+          "score_0_100": 89.71,
           "direction": "peer_comparable",
           "coverage_ratio": 0.5714,
           "confidence": "medium",
@@ -462353,7 +462353,7 @@
               "company": "Interactive Brokers Group, Inc.",
               "market_scope": "us",
               "canonical_sector": "Other",
-              "similarity_score": 91.66,
+              "similarity_score": 92.09,
               "shared_feature_count": 4
             },
             {
@@ -462361,7 +462361,7 @@
               "company": "Iron Mountain Incorporated",
               "market_scope": "us",
               "canonical_sector": "Other",
-              "similarity_score": 88.86,
+              "similarity_score": 88.59,
               "shared_feature_count": 4
             },
             {
@@ -462369,7 +462369,7 @@
               "company": "Electronic Arts Inc.",
               "market_scope": "us",
               "canonical_sector": "Other",
-              "similarity_score": 88.08,
+              "similarity_score": 88.46,
               "shared_feature_count": 4
             },
             {
@@ -462377,15 +462377,15 @@
               "company": "Entergy Corporation",
               "market_scope": "us",
               "canonical_sector": "Other",
-              "similarity_score": 87.9,
+              "similarity_score": 87.88,
               "shared_feature_count": 4
             },
             {
-              "ticker": "CCEP",
-              "company": "Coca-Cola Europacific Partners PLC",
+              "ticker": "VRT",
+              "company": "Vertiv Holdings Co",
               "market_scope": "us",
               "canonical_sector": "Other",
-              "similarity_score": 87.12,
+              "similarity_score": 87.51,
               "shared_feature_count": 4
             }
           ]
@@ -462751,7 +462751,7 @@
           }
         },
         "market_similarity": {
-          "score_0_100": 93.13,
+          "score_0_100": 93.27,
           "direction": "peer_comparable",
           "coverage_ratio": 0.5714,
           "confidence": "medium",
@@ -462780,7 +462780,7 @@
               "company": "Howmet Aerospace Inc.",
               "market_scope": "us",
               "canonical_sector": "Other",
-              "similarity_score": 91.66,
+              "similarity_score": 92.09,
               "shared_feature_count": 4
             },
             {
@@ -462796,7 +462796,7 @@
               "company": "Bloom Energy Corporation",
               "market_scope": "us",
               "canonical_sector": "Other",
-              "similarity_score": 86.64,
+              "similarity_score": 86.57,
               "shared_feature_count": 4
             }
           ]
@@ -463162,7 +463162,7 @@
           }
         },
         "market_similarity": {
-          "score_0_100": 92.56,
+          "score_0_100": 92.44,
           "direction": "peer_comparable",
           "coverage_ratio": 0.5714,
           "confidence": "medium",
@@ -463175,7 +463175,7 @@
               "company": "Mid-America Apartment Communities, Inc.",
               "market_scope": "us",
               "canonical_sector": "Other",
-              "similarity_score": 94.62,
+              "similarity_score": 94.26,
               "shared_feature_count": 4
             },
             {
@@ -463940,18 +463940,18 @@
           }
         },
         "upside_downside": {
-          "score_0_100": 38,
+          "score_0_100": 37.55,
           "direction": "balanced",
           "coverage_ratio": 0.375,
           "confidence": "low",
-          "upside_score_0_100": 36.72,
-          "downside_score_0_100": 60.72,
+          "upside_score_0_100": 36.23,
+          "downside_score_0_100": 61.14,
           "components": {
             "upside": {
               "valuation_room": null,
               "forward_pe_discount": {
                 "value": 40.847,
-                "score": 7.63,
+                "score": 6.78,
                 "peer_group": "market_sector",
                 "peer_count": 119
               },
@@ -463968,7 +463968,7 @@
               "valuation_crowding": null,
               "forward_pe_pressure": {
                 "value": 40.847,
-                "score": 92.37,
+                "score": 93.22,
                 "peer_group": "market_sector",
                 "peer_count": 119
               },
@@ -463984,7 +463984,7 @@
           }
         },
         "market_similarity": {
-          "score_0_100": 88.38,
+          "score_0_100": 88.24,
           "direction": "peer_comparable",
           "coverage_ratio": 0.5714,
           "confidence": "medium",
@@ -463993,19 +463993,19 @@
           "vector_feature_count": 4,
           "nearest_peers": [
             {
-              "ticker": "HWM",
-              "company": "Howmet Aerospace Inc.",
-              "market_scope": "us",
-              "canonical_sector": "Other",
-              "similarity_score": 88.86,
-              "shared_feature_count": 4
-            },
-            {
               "ticker": "RKLB",
               "company": "Rocket Lab Corporation",
               "market_scope": "us",
               "canonical_sector": "Other",
-              "similarity_score": 88.52,
+              "similarity_score": 88.66,
+              "shared_feature_count": 4
+            },
+            {
+              "ticker": "HWM",
+              "company": "Howmet Aerospace Inc.",
+              "market_scope": "us",
+              "canonical_sector": "Other",
+              "similarity_score": 88.59,
               "shared_feature_count": 4
             },
             {
@@ -464013,15 +464013,7 @@
               "company": "Qnity Electronics, Inc.",
               "market_scope": "us",
               "canonical_sector": "Other",
-              "similarity_score": 87.75,
-              "shared_feature_count": 4
-            },
-            {
-              "ticker": "ETR",
-              "company": "Entergy Corporation",
-              "market_scope": "us",
-              "canonical_sector": "Other",
-              "similarity_score": 86.23,
+              "similarity_score": 87.46,
               "shared_feature_count": 4
             },
             {
@@ -464029,7 +464021,15 @@
               "company": "Everpure, Inc.",
               "market_scope": "us",
               "canonical_sector": "Other",
-              "similarity_score": 86.1,
+              "similarity_score": 86.03,
+              "shared_feature_count": 4
+            },
+            {
+              "ticker": "ETR",
+              "company": "Entergy Corporation",
+              "market_scope": "us",
+              "canonical_sector": "Other",
+              "similarity_score": 85.71,
               "shared_feature_count": 4
             }
           ]
@@ -464806,7 +464806,7 @@
           }
         },
         "market_similarity": {
-          "score_0_100": 90.74,
+          "score_0_100": 90.64,
           "direction": "peer_comparable",
           "coverage_ratio": 0.5714,
           "confidence": "medium",
@@ -464827,7 +464827,7 @@
               "company": "Brown-Forman Corporation",
               "market_scope": "us",
               "canonical_sector": "Other",
-              "similarity_score": 90.24,
+              "similarity_score": 89.93,
               "shared_feature_count": 4
             },
             {
@@ -465258,11 +465258,11 @@
               "shared_feature_count": 4
             },
             {
-              "ticker": "SW",
-              "company": "Smurfit Westrock Plc",
+              "ticker": "ECHO",
+              "company": "EchoStar Corporation",
               "market_scope": "us",
               "canonical_sector": "Other",
-              "similarity_score": 86.91,
+              "similarity_score": 87.02,
               "shared_feature_count": 4
             }
           ]
@@ -465628,7 +465628,7 @@
           }
         },
         "market_similarity": {
-          "score_0_100": 92.41,
+          "score_0_100": 92.45,
           "direction": "peer_comparable",
           "coverage_ratio": 0.5714,
           "confidence": "medium",
@@ -465641,7 +465641,7 @@
               "company": "Equity Residential",
               "market_scope": "us",
               "canonical_sector": "Other",
-              "similarity_score": 94.76,
+              "similarity_score": 94.51,
               "shared_feature_count": 4
             },
             {
@@ -465657,7 +465657,7 @@
               "company": "VeriSign, Inc.",
               "market_scope": "us",
               "canonical_sector": "Other",
-              "similarity_score": 88.5,
+              "similarity_score": 88.88,
               "shared_feature_count": 4
             },
             {
@@ -466263,9 +466263,9 @@
         "action_bucket": "income"
       },
       "short_term_composite": {
-        "common_basis_score_0_100": 24.46,
+        "common_basis_score_0_100": 24.26,
         "common_basis_call": "diluted",
-        "conviction_score_0_100": 19.41,
+        "conviction_score_0_100": 19.29,
         "conviction_call": "diluted",
         "input_count": 5,
         "basis_code": "us_enriched_v1",
@@ -466374,20 +466374,20 @@
           }
         },
         "technical_flow": {
-          "score_0_100": 26.86,
+          "score_0_100": 26.26,
           "direction": "stressed",
           "coverage_ratio": 1,
           "confidence": "high",
           "components": {
             "return12m": {
               "value": -0.1111,
-              "score": 29.91,
+              "score": 29.06,
               "peer_group": "market_sector",
               "peer_count": 118
             },
             "ret1y": {
               "value": -0.1111,
-              "score": 29.91,
+              "score": 29.06,
               "peer_group": "market_sector",
               "peer_count": 118
             },
@@ -466406,12 +466406,12 @@
           }
         },
         "upside_downside": {
-          "score_0_100": 20.5,
+          "score_0_100": 20.16,
           "direction": "downside_bias",
           "coverage_ratio": 0.375,
           "confidence": "medium",
-          "upside_score_0_100": 19.26,
-          "downside_score_0_100": 78.27,
+          "upside_score_0_100": 19,
+          "downside_score_0_100": 78.69,
           "components": {
             "upside": {
               "valuation_room": null,
@@ -466424,7 +466424,7 @@
               "growth_support": null,
               "technical_confirmation": {
                 "value": null,
-                "score": 26.86,
+                "score": 26.26,
                 "peer_group": "rule",
                 "peer_count": null
               },
@@ -466440,7 +466440,7 @@
               },
               "negative_momentum": {
                 "value": 0.1111,
-                "score": 70.09,
+                "score": 70.94,
                 "peer_group": "market_sector",
                 "peer_count": 118
               },
@@ -466450,7 +466450,7 @@
           }
         },
         "market_similarity": {
-          "score_0_100": 94,
+          "score_0_100": 94.04,
           "direction": "peer_comparable",
           "coverage_ratio": 0.5714,
           "confidence": "medium",
@@ -466463,7 +466463,7 @@
               "company": "Weyerhaeuser Company",
               "market_scope": "us",
               "canonical_sector": "Other",
-              "similarity_score": 95.49,
+              "similarity_score": 95.9,
               "shared_feature_count": 4
             },
             {
@@ -466471,15 +466471,7 @@
               "company": "Invitation Homes Inc.",
               "market_scope": "us",
               "canonical_sector": "Other",
-              "similarity_score": 94.62,
-              "shared_feature_count": 4
-            },
-            {
-              "ticker": "UDR",
-              "company": "UDR, Inc.",
-              "market_scope": "us",
-              "canonical_sector": "Other",
-              "similarity_score": 91.9,
+              "similarity_score": 94.26,
               "shared_feature_count": 4
             },
             {
@@ -466487,7 +466479,15 @@
               "company": "BXP, Inc.",
               "market_scope": "us",
               "canonical_sector": "Other",
-              "similarity_score": 91.76,
+              "similarity_score": 91.96,
+              "shared_feature_count": 4
+            },
+            {
+              "ticker": "UDR",
+              "company": "UDR, Inc.",
+              "market_scope": "us",
+              "canonical_sector": "Other",
+              "similarity_score": 91.58,
               "shared_feature_count": 4
             },
             {
@@ -466495,7 +466495,7 @@
               "company": "Camden Property Trust",
               "market_scope": "us",
               "canonical_sector": "Other",
-              "similarity_score": 89.65,
+              "similarity_score": 89.29,
               "shared_feature_count": 4
             }
           ]
@@ -466817,18 +466817,18 @@
           }
         },
         "upside_downside": {
-          "score_0_100": 37.66,
+          "score_0_100": 38.11,
           "direction": "balanced",
           "coverage_ratio": 0.375,
           "confidence": "low",
-          "upside_score_0_100": 38.34,
-          "downside_score_0_100": 63.02,
+          "upside_score_0_100": 38.82,
+          "downside_score_0_100": 62.61,
           "components": {
             "upside": {
               "valuation_room": null,
               "forward_pe_discount": {
                 "value": 15.0287,
-                "score": 48.31,
+                "score": 49.15,
                 "peer_group": "market_sector",
                 "peer_count": 119
               },
@@ -466845,7 +466845,7 @@
               "valuation_crowding": null,
               "forward_pe_pressure": {
                 "value": 15.0287,
-                "score": 51.69,
+                "score": 50.85,
                 "peer_group": "market_sector",
                 "peer_count": 119
               },
@@ -466861,7 +466861,7 @@
           }
         },
         "market_similarity": {
-          "score_0_100": 93.33,
+          "score_0_100": 93.55,
           "direction": "peer_comparable",
           "coverage_ratio": 0.5714,
           "confidence": "medium",
@@ -466874,7 +466874,7 @@
               "company": "FactSet Research Systems Inc.",
               "market_scope": "us",
               "canonical_sector": "Other",
-              "similarity_score": 94.5,
+              "similarity_score": 94.82,
               "shared_feature_count": 4
             },
             {
@@ -466882,7 +466882,7 @@
               "company": "Lamb Weston Holdings, Inc.",
               "market_scope": "us",
               "canonical_sector": "Other",
-              "similarity_score": 93.36,
+              "similarity_score": 93.67,
               "shared_feature_count": 4
             },
             {
@@ -466890,7 +466890,7 @@
               "company": "The Mosaic Company",
               "market_scope": "us",
               "canonical_sector": "Other",
-              "similarity_score": 92.12,
+              "similarity_score": 92.15,
               "shared_feature_count": 4
             },
             {
@@ -466898,7 +466898,7 @@
               "company": "Erie Indemnity Company",
               "market_scope": "us",
               "canonical_sector": "Other",
-              "similarity_score": 89.61,
+              "similarity_score": 89.51,
               "shared_feature_count": 4
             },
             {
@@ -466906,7 +466906,7 @@
               "company": "Wynn Resorts, Limited",
               "market_scope": "us",
               "canonical_sector": "Other",
-              "similarity_score": 88.05,
+              "similarity_score": 88.03,
               "shared_feature_count": 4
             }
           ]
@@ -467309,7 +467309,7 @@
               "company": "MGM Resorts International",
               "market_scope": "us",
               "canonical_sector": "Other",
-              "similarity_score": 92.12,
+              "similarity_score": 92.15,
               "shared_feature_count": 4
             },
             {
@@ -467489,16 +467489,16 @@
         "computed/fenok_occ_options_volume.json"
       ],
       "stock_action_context": {
-        "action_score": 35.53,
-        "signal_score": 38.57,
+        "action_score": 30.26,
+        "signal_score": 32.86,
         "coverage_ratio": 0.7368,
         "confidence_label": "medium",
         "action_bucket": "watch"
       },
       "short_term_composite": {
-        "common_basis_score_0_100": 29.33,
+        "common_basis_score_0_100": 27.78,
         "common_basis_call": "diluted",
-        "conviction_score_0_100": 39.02,
+        "conviction_score_0_100": 38.09,
         "conviction_call": "diluted",
         "input_count": 5,
         "basis_code": "us_enriched_v1",
@@ -467607,20 +467607,20 @@
           }
         },
         "technical_flow": {
-          "score_0_100": 28.22,
+          "score_0_100": 28.82,
           "direction": "stressed",
           "coverage_ratio": 1,
           "confidence": "high",
           "components": {
             "return12m": {
-              "value": -0.119,
-              "score": 29.06,
+              "value": -0.1091,
+              "score": 29.91,
               "peer_group": "market_sector",
               "peer_count": 118
             },
             "ret1y": {
-              "value": -0.119,
-              "score": 29.06,
+              "value": -0.1091,
+              "score": 29.91,
               "peer_group": "market_sector",
               "peer_count": 118
             },
@@ -467639,25 +467639,25 @@
           }
         },
         "upside_downside": {
-          "score_0_100": 39.64,
+          "score_0_100": 39.53,
           "direction": "balanced",
           "coverage_ratio": 0.375,
           "confidence": "low",
-          "upside_score_0_100": 40.18,
-          "downside_score_0_100": 60.9,
+          "upside_score_0_100": 39.96,
+          "downside_score_0_100": 60.89,
           "components": {
             "upside": {
               "valuation_room": null,
               "forward_pe_discount": {
-                "value": 14.9355,
-                "score": 49.15,
+                "value": 15.0556,
+                "score": 48.31,
                 "peer_group": "market_sector",
                 "peer_count": 119
               },
               "growth_support": null,
               "technical_confirmation": {
                 "value": null,
-                "score": 28.22,
+                "score": 28.82,
                 "peer_group": "rule",
                 "peer_count": null
               },
@@ -467666,14 +467666,14 @@
             "downside": {
               "valuation_crowding": null,
               "forward_pe_pressure": {
-                "value": 14.9355,
-                "score": 50.85,
+                "value": 15.0556,
+                "score": 51.69,
                 "peer_group": "market_sector",
                 "peer_count": 119
               },
               "negative_momentum": {
-                "value": 0.119,
-                "score": 70.94,
+                "value": 0.1091,
+                "score": 70.09,
                 "peer_group": "market_sector",
                 "peer_count": 118
               },
@@ -467683,7 +467683,7 @@
           }
         },
         "market_similarity": {
-          "score_0_100": 90,
+          "score_0_100": 89.7,
           "direction": "peer_comparable",
           "coverage_ratio": 0.5714,
           "confidence": "medium",
@@ -467696,7 +467696,7 @@
               "company": "Apollo Global Management, Inc.",
               "market_scope": "us",
               "canonical_sector": "Other",
-              "similarity_score": 91.55,
+              "similarity_score": 90.95,
               "shared_feature_count": 4
             },
             {
@@ -467704,7 +467704,7 @@
               "company": "Honeywell Aerospace Inc.",
               "market_scope": "us",
               "canonical_sector": "Other",
-              "similarity_score": 90.38,
+              "similarity_score": 89.98,
               "shared_feature_count": 4
             },
             {
@@ -467712,7 +467712,7 @@
               "company": "TransDigm Group Incorporated",
               "market_scope": "us",
               "canonical_sector": "Other",
-              "similarity_score": 88.07,
+              "similarity_score": 88.18,
               "shared_feature_count": 4
             },
             {
@@ -467720,55 +467720,55 @@
               "company": "TE Connectivity plc",
               "market_scope": "us",
               "canonical_sector": "Other",
-              "similarity_score": 85.91,
+              "similarity_score": 86.41,
               "shared_feature_count": 4
             },
             {
-              "ticker": "ARES",
-              "company": "Ares Management Corporation",
+              "ticker": "NDAQ",
+              "company": "Nasdaq, Inc.",
               "market_scope": "us",
               "canonical_sector": "Other",
-              "similarity_score": 85.79,
+              "similarity_score": 85.35,
               "shared_feature_count": 4
             }
           ]
         },
         "volume_liquidity_trend": {
-          "score_0_100": 46.49,
-          "direction": "neutral",
+          "score_0_100": 38.92,
+          "direction": "weak",
           "coverage_ratio": 1,
           "confidence": "high",
           "basis": "local_yf_1y_volume_liquidity_trend_proxy",
           "caveat": "Volume/liquidity trend is a local OHLCV proxy, not true order flow.",
           "components": {
             "dollar_liquidity_20d": {
-              "value": 473009225.9178,
-              "score": 66.87,
+              "value": 461816528.1104,
+              "score": 66.61,
               "peer_group": "rule",
               "peer_count": null
             },
             "volume_trend_20d_vs_60d": {
-              "value": 1.1237,
-              "score": 55.72,
+              "value": 1.0944,
+              "score": 52.28,
               "peer_group": "rule",
               "peer_count": null
             },
             "latest_volume_vs_20d": {
-              "value": 1.2846,
-              "score": 52.3,
+              "value": 0.0903,
+              "score": 0,
               "peer_group": "rule",
               "peer_count": null
             },
             "price_confirmation_20d": {
-              "value": -0.1021,
-              "score": 5.26,
+              "value": -0.0854,
+              "score": 10.16,
               "peer_group": "rule",
               "peer_count": null
             }
           }
         },
         "short_term_relative_strength": {
-          "score_0_100": 13.28,
+          "score_0_100": 15.6,
           "direction": "stressed",
           "coverage_ratio": 1,
           "confidence": "high",
@@ -467776,20 +467776,20 @@
           "caveat": "Short-term relative strength is a price-return proxy versus SPY, not a forecast.",
           "components": {
             "relative_return_20d_vs_spy": {
-              "value": -0.1057,
-              "score": 4.76,
+              "value": -0.089,
+              "score": 10.32,
               "peer_group": "rule",
               "peer_count": null
             },
             "relative_return_60d_vs_spy": {
-              "value": -0.0416,
-              "score": 28.83,
+              "value": -0.0576,
+              "score": 25.5,
               "peer_group": "rule",
               "peer_count": null
             },
             "absolute_return_20d": {
-              "value": -0.1021,
-              "score": 5.26,
+              "value": -0.0854,
+              "score": 10.16,
               "peer_group": "rule",
               "peer_count": null
             }
@@ -468094,7 +468094,7 @@
           }
         },
         "market_similarity": {
-          "score_0_100": 88.33,
+          "score_0_100": 88.37,
           "direction": "peer_comparable",
           "coverage_ratio": 0.5714,
           "confidence": "medium",
@@ -468115,7 +468115,7 @@
               "company": "CoreWeave, Inc.",
               "market_scope": "us",
               "canonical_sector": "Other",
-              "similarity_score": 89.54,
+              "similarity_score": 89.67,
               "shared_feature_count": 4
             },
             {
@@ -468916,7 +468916,7 @@
           }
         },
         "market_similarity": {
-          "score_0_100": 81.09,
+          "score_0_100": 81.08,
           "direction": "peer_comparable",
           "coverage_ratio": 0.5714,
           "confidence": "medium",
@@ -468941,14 +468941,6 @@
               "shared_feature_count": 4
             },
             {
-              "ticker": "ECHO",
-              "company": "EchoStar Corporation",
-              "market_scope": "us",
-              "canonical_sector": "Other",
-              "similarity_score": 75.72,
-              "shared_feature_count": 4
-            },
-            {
               "ticker": "FITB",
               "company": "Fifth Third Bancorp",
               "market_scope": "us",
@@ -468962,6 +468954,14 @@
               "market_scope": "us",
               "canonical_sector": "Other",
               "similarity_score": 75.56,
+              "shared_feature_count": 4
+            },
+            {
+              "ticker": "BK",
+              "company": "Bank of New York Mellon Corp",
+              "market_scope": "us",
+              "canonical_sector": "Other",
+              "similarity_score": 75.52,
               "shared_feature_count": 4
             }
           ]
@@ -469738,7 +469738,7 @@
           }
         },
         "market_similarity": {
-          "score_0_100": 91.49,
+          "score_0_100": 91.5,
           "direction": "peer_comparable",
           "coverage_ratio": 0.5714,
           "confidence": "medium",
@@ -469767,23 +469767,23 @@
               "company": "Extra Space Storage Inc.",
               "market_scope": "us",
               "canonical_sector": "Other",
-              "similarity_score": 89.01,
+              "similarity_score": 89.04,
               "shared_feature_count": 4
             },
             {
               "ticker": "VMRK",
-              "company": "AvalonBay Communities, Inc.",
+              "company": "Vivmark Residential",
               "market_scope": "us",
               "canonical_sector": "Other",
-              "similarity_score": 86.8,
+              "similarity_score": 87.1,
               "shared_feature_count": 4
             },
             {
-              "ticker": "VRSN",
-              "company": "VeriSign, Inc.",
+              "ticker": "MRSH",
+              "company": "Marsh & McLennan Companies, Inc.",
               "market_scope": "us",
               "canonical_sector": "Other",
-              "similarity_score": 85.11,
+              "similarity_score": 85.35,
               "shared_feature_count": 4
             }
           ]
@@ -470560,7 +470560,7 @@
           }
         },
         "market_similarity": {
-          "score_0_100": 90.62,
+          "score_0_100": 90.55,
           "direction": "peer_comparable",
           "coverage_ratio": 0.5714,
           "confidence": "medium",
@@ -470585,19 +470585,19 @@
               "shared_feature_count": 4
             },
             {
-              "ticker": "VRSN",
-              "company": "VeriSign, Inc.",
-              "market_scope": "us",
-              "canonical_sector": "Other",
-              "similarity_score": 88.46,
-              "shared_feature_count": 4
-            },
-            {
               "ticker": "INVH",
               "company": "Invitation Homes Inc.",
               "market_scope": "us",
               "canonical_sector": "Other",
               "similarity_score": 88.26,
+              "shared_feature_count": 4
+            },
+            {
+              "ticker": "VRSN",
+              "company": "VeriSign, Inc.",
+              "market_scope": "us",
+              "canonical_sector": "Other",
+              "similarity_score": 88.25,
               "shared_feature_count": 4
             },
             {
@@ -471008,7 +471008,7 @@
               "company": "Bloom Energy Corporation",
               "market_scope": "us",
               "canonical_sector": "Other",
-              "similarity_score": 90.04,
+              "similarity_score": 90.36,
               "shared_feature_count": 4
             },
             {
@@ -471382,7 +471382,7 @@
           }
         },
         "market_similarity": {
-          "score_0_100": 86.01,
+          "score_0_100": 86.07,
           "direction": "peer_comparable",
           "coverage_ratio": 0.5714,
           "confidence": "medium",
@@ -471403,7 +471403,7 @@
               "company": "CoreWeave, Inc.",
               "market_scope": "us",
               "canonical_sector": "Other",
-              "similarity_score": 84.47,
+              "similarity_score": 84.67,
               "shared_feature_count": 4
             },
             {
@@ -473026,7 +473026,7 @@
           }
         },
         "market_similarity": {
-          "score_0_100": 87.92,
+          "score_0_100": 87.82,
           "direction": "peer_comparable",
           "coverage_ratio": 0.5714,
           "confidence": "medium",
@@ -473043,19 +473043,19 @@
               "shared_feature_count": 4
             },
             {
-              "ticker": "IRM",
-              "company": "Iron Mountain Incorporated",
-              "market_scope": "us",
-              "canonical_sector": "Other",
-              "similarity_score": 87.75,
-              "shared_feature_count": 4
-            },
-            {
               "ticker": "P",
               "company": "Everpure, Inc.",
               "market_scope": "us",
               "canonical_sector": "Other",
               "similarity_score": 87.57,
+              "shared_feature_count": 4
+            },
+            {
+              "ticker": "IRM",
+              "company": "Iron Mountain Incorporated",
+              "market_scope": "us",
+              "canonical_sector": "Other",
+              "similarity_score": 87.46,
               "shared_feature_count": 4
             },
             {
@@ -473885,7 +473885,7 @@
               "company": "Synchrony Financial",
               "market_scope": "us",
               "canonical_sector": "Other",
-              "similarity_score": 88.87,
+              "similarity_score": 89.26,
               "shared_feature_count": 4
             },
             {
@@ -474670,7 +474670,7 @@
           }
         },
         "market_similarity": {
-          "score_0_100": 89.8,
+          "score_0_100": 89.93,
           "direction": "peer_comparable",
           "coverage_ratio": 0.5714,
           "confidence": "medium",
@@ -474687,19 +474687,19 @@
               "shared_feature_count": 4
             },
             {
-              "ticker": "IRM",
-              "company": "Iron Mountain Incorporated",
-              "market_scope": "us",
-              "canonical_sector": "Other",
-              "similarity_score": 88.52,
-              "shared_feature_count": 4
-            },
-            {
               "ticker": "BE",
               "company": "Bloom Energy Corporation",
               "market_scope": "us",
               "canonical_sector": "Other",
-              "similarity_score": 88.46,
+              "similarity_score": 88.72,
+              "shared_feature_count": 4
+            },
+            {
+              "ticker": "IRM",
+              "company": "Iron Mountain Incorporated",
+              "market_scope": "us",
+              "canonical_sector": "Other",
+              "similarity_score": 88.66,
               "shared_feature_count": 4
             },
             {
@@ -474707,7 +474707,7 @@
               "company": "Howmet Aerospace Inc.",
               "market_scope": "us",
               "canonical_sector": "Other",
-              "similarity_score": 87.04,
+              "similarity_score": 87.34,
               "shared_feature_count": 4
             },
             {
@@ -476127,9 +476127,9 @@
         "action_bucket": "watch"
       },
       "short_term_composite": {
-        "common_basis_score_0_100": 28.77,
+        "common_basis_score_0_100": 28.97,
         "common_basis_call": "diluted",
-        "conviction_score_0_100": 30.95,
+        "conviction_score_0_100": 31.07,
         "conviction_call": "diluted",
         "input_count": 5,
         "basis_code": "us_enriched_v1",
@@ -476238,20 +476238,20 @@
           }
         },
         "technical_flow": {
-          "score_0_100": 36.23,
+          "score_0_100": 36.83,
           "direction": "weak",
           "coverage_ratio": 1,
           "confidence": "high",
           "components": {
             "return12m": {
               "value": -0.0255,
-              "score": 42.74,
+              "score": 43.59,
               "peer_group": "market_sector",
               "peer_count": 118
             },
             "ret1y": {
               "value": -0.0255,
-              "score": 42.74,
+              "score": 43.59,
               "peer_group": "market_sector",
               "peer_count": 118
             },
@@ -476270,12 +476270,12 @@
           }
         },
         "upside_downside": {
-          "score_0_100": 67.03,
+          "score_0_100": 67.36,
           "direction": "upside_bias",
           "coverage_ratio": 0.375,
           "confidence": "medium",
-          "upside_score_0_100": 67.34,
-          "downside_score_0_100": 33.29,
+          "upside_score_0_100": 67.6,
+          "downside_score_0_100": 32.87,
           "components": {
             "upside": {
               "valuation_room": null,
@@ -476288,7 +476288,7 @@
               "growth_support": null,
               "technical_confirmation": {
                 "value": null,
-                "score": 36.23,
+                "score": 36.83,
                 "peer_group": "rule",
                 "peer_count": null
               },
@@ -476304,7 +476304,7 @@
               },
               "negative_momentum": {
                 "value": 0.0255,
-                "score": 57.26,
+                "score": 56.41,
                 "peer_group": "market_sector",
                 "peer_count": 118
               },
@@ -476314,7 +476314,7 @@
           }
         },
         "market_similarity": {
-          "score_0_100": 90.28,
+          "score_0_100": 90.41,
           "direction": "peer_comparable",
           "coverage_ratio": 0.5714,
           "confidence": "medium",
@@ -476327,7 +476327,7 @@
               "company": "Global Payments Inc.",
               "market_scope": "us",
               "canonical_sector": "Other",
-              "similarity_score": 93.82,
+              "similarity_score": 93.97,
               "shared_feature_count": 4
             },
             {
@@ -476335,7 +476335,7 @@
               "company": "Regions Financial Corporation",
               "market_scope": "us",
               "canonical_sector": "Other",
-              "similarity_score": 88.87,
+              "similarity_score": 89.26,
               "shared_feature_count": 4
             },
             {
@@ -476343,7 +476343,7 @@
               "company": "The Hartford Insurance Group, Inc.",
               "market_scope": "us",
               "canonical_sector": "Other",
-              "similarity_score": 88.14,
+              "similarity_score": 88.01,
               "shared_feature_count": 4
             },
             {
@@ -476351,7 +476351,7 @@
               "company": "Zimmer Biomet Holdings, Inc.",
               "market_scope": "us",
               "canonical_sector": "Other",
-              "similarity_score": 88.12,
+              "similarity_score": 87.92,
               "shared_feature_count": 4
             },
             {
@@ -476359,7 +476359,7 @@
               "company": "Huntington Bancshares Incorporated",
               "market_scope": "us",
               "canonical_sector": "Other",
-              "similarity_score": 86.83,
+              "similarity_score": 86.46,
               "shared_feature_count": 4
             }
           ]
@@ -476762,15 +476762,15 @@
               "company": "Marsh & McLennan Companies, Inc.",
               "market_scope": "us",
               "canonical_sector": "Other",
-              "similarity_score": 88.07,
+              "similarity_score": 88.18,
               "shared_feature_count": 4
             },
             {
-              "ticker": "NDAQ",
-              "company": "Nasdaq, Inc.",
+              "ticker": "VMRK",
+              "company": "Vivmark Residential",
               "market_scope": "us",
               "canonical_sector": "Other",
-              "similarity_score": 84.35,
+              "similarity_score": 84.38,
               "shared_feature_count": 4
             }
           ]
@@ -477584,7 +477584,7 @@
               "company": "Marsh & McLennan Companies, Inc.",
               "market_scope": "us",
               "canonical_sector": "Other",
-              "similarity_score": 85.91,
+              "similarity_score": 86.41,
               "shared_feature_count": 4
             },
             {
@@ -477592,7 +477592,7 @@
               "company": "Extra Space Storage Inc.",
               "market_scope": "us",
               "canonical_sector": "Other",
-              "similarity_score": 84.79,
+              "similarity_score": 84.86,
               "shared_feature_count": 4
             }
           ]
@@ -477958,7 +477958,7 @@
           }
         },
         "market_similarity": {
-          "score_0_100": 88.01,
+          "score_0_100": 88.8,
           "direction": "peer_comparable",
           "coverage_ratio": 0.5714,
           "confidence": "medium",
@@ -477966,6 +477966,14 @@
           "peer_count": 118,
           "vector_feature_count": 4,
           "nearest_peers": [
+            {
+              "ticker": "VMRK",
+              "company": "Vivmark Residential",
+              "market_scope": "us",
+              "canonical_sector": "Other",
+              "similarity_score": 91.21,
+              "shared_feature_count": 4
+            },
             {
               "ticker": "TDG",
               "company": "TransDigm Group Incorporated",
@@ -477975,19 +477983,11 @@
               "shared_feature_count": 4
             },
             {
-              "ticker": "VMRK",
-              "company": "AvalonBay Communities, Inc.",
-              "market_scope": "us",
-              "canonical_sector": "Other",
-              "similarity_score": 88.43,
-              "shared_feature_count": 4
-            },
-            {
               "ticker": "EXR",
               "company": "Extra Space Storage Inc.",
               "market_scope": "us",
               "canonical_sector": "Other",
-              "similarity_score": 86.99,
+              "similarity_score": 86.57,
               "shared_feature_count": 4
             },
             {
@@ -478369,7 +478369,7 @@
           }
         },
         "market_similarity": {
-          "score_0_100": 90.02,
+          "score_0_100": 89.95,
           "direction": "peer_comparable",
           "coverage_ratio": 0.5714,
           "confidence": "medium",
@@ -478382,7 +478382,7 @@
               "company": "Huntington Ingalls Industries, Inc.",
               "market_scope": "us",
               "canonical_sector": "Other",
-              "similarity_score": 92.27,
+              "similarity_score": 92.05,
               "shared_feature_count": 4
             },
             {
@@ -478414,7 +478414,7 @@
               "company": "Brown-Forman Corporation",
               "market_scope": "us",
               "canonical_sector": "Other",
-              "similarity_score": 85.16,
+              "similarity_score": 84.87,
               "shared_feature_count": 4
             }
           ]
@@ -478813,19 +478813,19 @@
               "shared_feature_count": 4
             },
             {
+              "ticker": "ECHO",
+              "company": "EchoStar Corporation",
+              "market_scope": "us",
+              "canonical_sector": "Other",
+              "similarity_score": 85.98,
+              "shared_feature_count": 4
+            },
+            {
               "ticker": "HIG",
               "company": "The Hartford Insurance Group, Inc.",
               "market_scope": "us",
               "canonical_sector": "Other",
               "similarity_score": 85.8,
-              "shared_feature_count": 4
-            },
-            {
-              "ticker": "RF",
-              "company": "Regions Financial Corporation",
-              "market_scope": "us",
-              "canonical_sector": "Other",
-              "similarity_score": 85.75,
               "shared_feature_count": 4
             }
           ]
@@ -479191,7 +479191,7 @@
           }
         },
         "market_similarity": {
-          "score_0_100": 93.77,
+          "score_0_100": 93.67,
           "direction": "peer_comparable",
           "coverage_ratio": 0.5714,
           "confidence": "medium",
@@ -479220,7 +479220,7 @@
               "company": "Mid-America Apartment Communities, Inc.",
               "market_scope": "us",
               "canonical_sector": "Other",
-              "similarity_score": 91.9,
+              "similarity_score": 91.58,
               "shared_feature_count": 4
             },
             {
@@ -479602,7 +479602,7 @@
           }
         },
         "market_similarity": {
-          "score_0_100": 91.88,
+          "score_0_100": 91.96,
           "direction": "peer_comparable",
           "coverage_ratio": 0.5714,
           "confidence": "medium",
@@ -479615,7 +479615,7 @@
               "company": "Entergy Corporation",
               "market_scope": "us",
               "canonical_sector": "Other",
-              "similarity_score": 94.45,
+              "similarity_score": 94.69,
               "shared_feature_count": 4
             },
             {
@@ -479647,7 +479647,7 @@
               "company": "Howmet Aerospace Inc.",
               "market_scope": "us",
               "canonical_sector": "Other",
-              "similarity_score": 85.72,
+              "similarity_score": 85.42,
               "shared_feature_count": 4
             }
           ]
@@ -480013,7 +480013,7 @@
           }
         },
         "market_similarity": {
-          "score_0_100": 88.45,
+          "score_0_100": 88.34,
           "direction": "peer_comparable",
           "coverage_ratio": 0.5714,
           "confidence": "medium",
@@ -480042,7 +480042,7 @@
               "company": "CoreWeave, Inc.",
               "market_scope": "us",
               "canonical_sector": "Other",
-              "similarity_score": 86.09,
+              "similarity_score": 85.75,
               "shared_feature_count": 4
             },
             {
@@ -480461,7 +480461,7 @@
               "company": "VeriSign, Inc.",
               "market_scope": "us",
               "canonical_sector": "Other",
-              "similarity_score": 87.85,
+              "similarity_score": 87.4,
               "shared_feature_count": 4
             },
             {
@@ -480469,7 +480469,7 @@
               "company": "Extra Space Storage Inc.",
               "market_scope": "us",
               "canonical_sector": "Other",
-              "similarity_score": 87.2,
+              "similarity_score": 86.86,
               "shared_feature_count": 4
             }
           ]
@@ -480619,7 +480619,7 @@
     {
       "ticker": "VMRK",
       "ticker_normalized": "VMRK",
-      "company": "AvalonBay Communities, Inc.",
+      "company": "Vivmark Residential",
       "market_scope": "us",
       "market": "US",
       "canonical_sector": "Other",
@@ -480648,9 +480648,9 @@
         "action_bucket": "income"
       },
       "short_term_composite": {
-        "common_basis_score_0_100": 34.76,
+        "common_basis_score_0_100": 31.4,
         "common_basis_call": "diluted",
-        "conviction_score_0_100": 34.31,
+        "conviction_score_0_100": 32.3,
         "conviction_call": "diluted",
         "input_count": 5,
         "basis_code": "us_enriched_v1",
@@ -480759,20 +480759,20 @@
           }
         },
         "technical_flow": {
-          "score_0_100": 42.35,
+          "score_0_100": 39.36,
           "direction": "weak",
           "coverage_ratio": 1,
           "confidence": "high",
           "components": {
             "return12m": {
-              "value": -0.0079,
-              "score": 46.15,
+              "value": -0.0352,
+              "score": 41.88,
               "peer_group": "market_sector",
               "peer_count": 118
             },
             "ret1y": {
-              "value": -0.0079,
-              "score": 46.15,
+              "value": -0.0352,
+              "score": 41.88,
               "peer_group": "market_sector",
               "peer_count": 118
             },
@@ -480791,25 +480791,25 @@
           }
         },
         "upside_downside": {
-          "score_0_100": 23.79,
+          "score_0_100": 23,
           "direction": "downside_bias",
           "coverage_ratio": 0.375,
           "confidence": "low",
-          "upside_score_0_100": 21.54,
-          "downside_score_0_100": 73.96,
+          "upside_score_0_100": 21.23,
+          "downside_score_0_100": 75.24,
           "components": {
             "upside": {
               "valuation_room": null,
               "forward_pe_discount": {
-                "value": 41.729,
-                "score": 5.93,
+                "value": 40.8448,
+                "score": 7.63,
                 "peer_group": "market_sector",
                 "peer_count": 119
               },
               "growth_support": null,
               "technical_confirmation": {
                 "value": null,
-                "score": 42.35,
+                "score": 39.36,
                 "peer_group": "rule",
                 "peer_count": null
               },
@@ -480818,14 +480818,14 @@
             "downside": {
               "valuation_crowding": null,
               "forward_pe_pressure": {
-                "value": 41.729,
-                "score": 94.07,
+                "value": 40.8448,
+                "score": 92.37,
                 "peer_group": "market_sector",
                 "peer_count": 119
               },
               "negative_momentum": {
-                "value": 0.0079,
-                "score": 53.85,
+                "value": 0.0352,
+                "score": 58.12,
                 "peer_group": "market_sector",
                 "peer_count": 118
               },
@@ -480835,7 +480835,7 @@
           }
         },
         "market_similarity": {
-          "score_0_100": 89.83,
+          "score_0_100": 90.61,
           "direction": "peer_comparable",
           "coverage_ratio": 0.5714,
           "confidence": "medium",
@@ -480844,11 +480844,19 @@
           "vector_feature_count": 4,
           "nearest_peers": [
             {
+              "ticker": "TKO",
+              "company": "TKO Group Holdings, Inc.",
+              "market_scope": "us",
+              "canonical_sector": "Other",
+              "similarity_score": 91.21,
+              "shared_feature_count": 4
+            },
+            {
               "ticker": "CTAS",
               "company": "Cintas Corporation",
               "market_scope": "us",
               "canonical_sector": "Other",
-              "similarity_score": 92.08,
+              "similarity_score": 90.96,
               "shared_feature_count": 4
             },
             {
@@ -480856,15 +480864,7 @@
               "company": "Extra Space Storage Inc.",
               "market_scope": "us",
               "canonical_sector": "Other",
-              "similarity_score": 88.98,
-              "shared_feature_count": 4
-            },
-            {
-              "ticker": "TKO",
-              "company": "TKO Group Holdings, Inc.",
-              "market_scope": "us",
-              "canonical_sector": "Other",
-              "similarity_score": 88.43,
+              "similarity_score": 89.67,
               "shared_feature_count": 4
             },
             {
@@ -480872,55 +480872,55 @@
               "company": "Nasdaq, Inc.",
               "market_scope": "us",
               "canonical_sector": "Other",
-              "similarity_score": 86.8,
+              "similarity_score": 87.1,
               "shared_feature_count": 4
             },
             {
-              "ticker": "VRSN",
-              "company": "VeriSign, Inc.",
+              "ticker": "TDG",
+              "company": "TransDigm Group Incorporated",
               "market_scope": "us",
               "canonical_sector": "Other",
-              "similarity_score": 83.81,
+              "similarity_score": 84.38,
               "shared_feature_count": 4
             }
           ]
         },
         "volume_liquidity_trend": {
-          "score_0_100": 47.02,
-          "direction": "neutral",
+          "score_0_100": 43.29,
+          "direction": "weak",
           "coverage_ratio": 1,
           "confidence": "high",
           "basis": "local_yf_1y_volume_liquidity_trend_proxy",
           "caveat": "Volume/liquidity trend is a local OHLCV proxy, not true order flow.",
           "components": {
             "dollar_liquidity_20d": {
-              "value": 385148848.6707,
-              "score": 64.64,
+              "value": 362718698.2991,
+              "score": 63.99,
               "peer_group": "rule",
               "peer_count": null
             },
             "volume_trend_20d_vs_60d": {
-              "value": 1.296,
-              "score": 76,
+              "value": 1.2477,
+              "score": 70.32,
               "peer_group": "rule",
               "peer_count": null
             },
             "latest_volume_vs_20d": {
-              "value": 0.5851,
-              "score": 5.68,
+              "value": 0.0668,
+              "score": 0,
               "peer_group": "rule",
               "peer_count": null
             },
             "price_confirmation_20d": {
-              "value": -0.0582,
-              "score": 18.18,
+              "value": -0.0749,
+              "score": 13.27,
               "peer_group": "rule",
               "peer_count": null
             }
           }
         },
         "short_term_relative_strength": {
-          "score_0_100": 14.91,
+          "score_0_100": 11.55,
           "direction": "stressed",
           "coverage_ratio": 1,
           "confidence": "high",
@@ -480928,20 +480928,20 @@
           "caveat": "Short-term relative strength is a price-return proxy versus SPY, not a forecast.",
           "components": {
             "relative_return_20d_vs_spy": {
-              "value": -0.0618,
-              "score": 19.41,
+              "value": -0.0785,
+              "score": 13.84,
               "peer_group": "rule",
               "peer_count": null
             },
             "relative_return_60d_vs_spy": {
-              "value": -0.1452,
-              "score": 7.25,
+              "value": -0.1434,
+              "score": 7.62,
               "peer_group": "rule",
               "peer_count": null
             },
             "absolute_return_20d": {
-              "value": -0.0582,
-              "score": 18.18,
+              "value": -0.0749,
+              "score": 13.27,
               "peer_group": "rule",
               "peer_count": null
             }
@@ -481059,9 +481059,9 @@
         "action_bucket": "watch"
       },
       "short_term_composite": {
-        "common_basis_score_0_100": 42.62,
+        "common_basis_score_0_100": 42.82,
         "common_basis_call": "mixed",
-        "conviction_score_0_100": 57.3,
+        "conviction_score_0_100": 57.42,
         "conviction_call": "mixed",
         "input_count": 5,
         "basis_code": "us_enriched_v1",
@@ -481170,20 +481170,20 @@
           }
         },
         "technical_flow": {
-          "score_0_100": 51.4,
+          "score_0_100": 52,
           "direction": "neutral",
           "coverage_ratio": 1,
           "confidence": "high",
           "components": {
             "return12m": {
               "value": -0.0154,
-              "score": 44.44,
+              "score": 45.3,
               "peer_group": "market_sector",
               "peer_count": 118
             },
             "ret1y": {
               "value": -0.0154,
-              "score": 44.44,
+              "score": 45.3,
               "peer_group": "market_sector",
               "peer_count": 118
             },
@@ -481202,12 +481202,12 @@
           }
         },
         "upside_downside": {
-          "score_0_100": 34.84,
+          "score_0_100": 35.19,
           "direction": "downside_bias",
           "coverage_ratio": 0.375,
           "confidence": "medium",
-          "upside_score_0_100": 35.59,
-          "downside_score_0_100": 65.91,
+          "upside_score_0_100": 35.85,
+          "downside_score_0_100": 65.48,
           "components": {
             "upside": {
               "valuation_room": null,
@@ -481220,7 +481220,7 @@
               "growth_support": null,
               "technical_confirmation": {
                 "value": null,
-                "score": 51.4,
+                "score": 52,
                 "peer_group": "rule",
                 "peer_count": null
               },
@@ -481236,7 +481236,7 @@
               },
               "negative_momentum": {
                 "value": 0.0154,
-                "score": 55.56,
+                "score": 54.7,
                 "peer_group": "market_sector",
                 "peer_count": 118
               },
@@ -481246,7 +481246,7 @@
           }
         },
         "market_similarity": {
-          "score_0_100": 91.94,
+          "score_0_100": 92,
           "direction": "peer_comparable",
           "coverage_ratio": 0.5714,
           "confidence": "medium",
@@ -481259,7 +481259,7 @@
               "company": "Extra Space Storage Inc.",
               "market_scope": "us",
               "canonical_sector": "Other",
-              "similarity_score": 94.32,
+              "similarity_score": 94.31,
               "shared_feature_count": 4
             },
             {
@@ -481267,7 +481267,7 @@
               "company": "Cincinnati Financial Corporation",
               "market_scope": "us",
               "canonical_sector": "Other",
-              "similarity_score": 92.38,
+              "similarity_score": 92.63,
               "shared_feature_count": 4
             },
             {
@@ -481275,7 +481275,7 @@
               "company": "Equity Residential",
               "market_scope": "us",
               "canonical_sector": "Other",
-              "similarity_score": 89.11,
+              "similarity_score": 89.07,
               "shared_feature_count": 4
             },
             {
@@ -481283,7 +481283,7 @@
               "company": "Loews Corporation",
               "market_scope": "us",
               "canonical_sector": "Other",
-              "similarity_score": 88.5,
+              "similarity_score": 88.88,
               "shared_feature_count": 4
             },
             {
@@ -481291,7 +481291,7 @@
               "company": "News Corporation",
               "market_scope": "us",
               "canonical_sector": "Other",
-              "similarity_score": 88.46,
+              "similarity_score": 88.25,
               "shared_feature_count": 4
             }
           ]
@@ -481657,7 +481657,7 @@
           }
         },
         "market_similarity": {
-          "score_0_100": 92.53,
+          "score_0_100": 92.5,
           "direction": "peer_comparable",
           "coverage_ratio": 0.5714,
           "confidence": "medium",
@@ -481686,7 +481686,7 @@
               "company": "Bloom Energy Corporation",
               "market_scope": "us",
               "canonical_sector": "Other",
-              "similarity_score": 89.99,
+              "similarity_score": 89.92,
               "shared_feature_count": 4
             },
             {
@@ -481702,7 +481702,7 @@
               "company": "Howmet Aerospace Inc.",
               "market_scope": "us",
               "canonical_sector": "Other",
-              "similarity_score": 87.01,
+              "similarity_score": 87.51,
               "shared_feature_count": 4
             }
           ]
@@ -482890,7 +482890,7 @@
           }
         },
         "market_similarity": {
-          "score_0_100": 93.17,
+          "score_0_100": 93.3,
           "direction": "peer_comparable",
           "coverage_ratio": 0.5714,
           "confidence": "medium",
@@ -482903,7 +482903,7 @@
               "company": "Mid-America Apartment Communities, Inc.",
               "market_scope": "us",
               "canonical_sector": "Other",
-              "similarity_score": 95.49,
+              "similarity_score": 95.9,
               "shared_feature_count": 4
             },
             {
@@ -483712,7 +483712,7 @@
           }
         },
         "market_similarity": {
-          "score_0_100": 89.08,
+          "score_0_100": 89.01,
           "direction": "peer_comparable",
           "coverage_ratio": 0.5714,
           "confidence": "medium",
@@ -483733,7 +483733,7 @@
               "company": "Synchrony Financial",
               "market_scope": "us",
               "canonical_sector": "Other",
-              "similarity_score": 88.12,
+              "similarity_score": 87.92,
               "shared_feature_count": 4
             },
             {
@@ -488577,7 +488577,7 @@
               "company": "Howmet Aerospace Inc.",
               "market_scope": "us",
               "canonical_sector": "Other",
-              "similarity_score": 88.08,
+              "similarity_score": 88.46,
               "shared_feature_count": 4
             },
             {
@@ -489308,18 +489308,18 @@
           }
         },
         "upside_downside": {
-          "score_0_100": 30.09,
+          "score_0_100": 29.63,
           "direction": "downside_bias",
           "coverage_ratio": 0.375,
           "confidence": "low",
-          "upside_score_0_100": 29,
-          "downside_score_0_100": 68.83,
+          "upside_score_0_100": 28.51,
+          "downside_score_0_100": 69.25,
           "components": {
             "upside": {
               "valuation_room": null,
               "forward_pe_discount": {
                 "value": 41.0919,
-                "score": 6.78,
+                "score": 5.93,
                 "peer_group": "market_sector",
                 "peer_count": 119
               },
@@ -489336,7 +489336,7 @@
               "valuation_crowding": null,
               "forward_pe_pressure": {
                 "value": 41.0919,
-                "score": 93.22,
+                "score": 94.07,
                 "peer_group": "market_sector",
                 "peer_count": 119
               },
@@ -489352,7 +489352,7 @@
           }
         },
         "market_similarity": {
-          "score_0_100": 92.34,
+          "score_0_100": 92.26,
           "direction": "peer_comparable",
           "coverage_ratio": 0.5714,
           "confidence": "medium",
@@ -489365,7 +489365,7 @@
               "company": "Loews Corporation",
               "market_scope": "us",
               "canonical_sector": "Other",
-              "similarity_score": 94.76,
+              "similarity_score": 94.51,
               "shared_feature_count": 4
             },
             {
@@ -489373,7 +489373,7 @@
               "company": "Essex Property Trust, Inc.",
               "market_scope": "us",
               "canonical_sector": "Other",
-              "similarity_score": 93.15,
+              "similarity_score": 93.19,
               "shared_feature_count": 4
             },
             {
@@ -489381,7 +489381,7 @@
               "company": "VeriSign, Inc.",
               "market_scope": "us",
               "canonical_sector": "Other",
-              "similarity_score": 89.11,
+              "similarity_score": 89.07,
               "shared_feature_count": 4
             },
             {
@@ -489389,15 +489389,15 @@
               "company": "Extra Space Storage Inc.",
               "market_scope": "us",
               "canonical_sector": "Other",
-              "similarity_score": 87.25,
+              "similarity_score": 87.35,
               "shared_feature_count": 4
             },
             {
-              "ticker": "CINF",
-              "company": "Cincinnati Financial Corporation",
+              "ticker": "IRM",
+              "company": "Iron Mountain Incorporated",
               "market_scope": "us",
               "canonical_sector": "Other",
-              "similarity_score": 85.07,
+              "similarity_score": 84.98,
               "shared_feature_count": 4
             }
           ]
@@ -489758,7 +489758,7 @@
           }
         },
         "market_similarity": {
-          "score_0_100": 94.25,
+          "score_0_100": 94.36,
           "direction": "peer_comparable",
           "coverage_ratio": 0.5714,
           "confidence": "medium",
@@ -489775,19 +489775,19 @@
               "shared_feature_count": 4
             },
             {
+              "ticker": "MGM",
+              "company": "MGM Resorts International",
+              "market_scope": "us",
+              "canonical_sector": "Other",
+              "similarity_score": 93.67,
+              "shared_feature_count": 4
+            },
+            {
               "ticker": "MOS",
               "company": "The Mosaic Company",
               "market_scope": "us",
               "canonical_sector": "Other",
               "similarity_score": 93.45,
-              "shared_feature_count": 4
-            },
-            {
-              "ticker": "MGM",
-              "company": "MGM Resorts International",
-              "market_scope": "us",
-              "canonical_sector": "Other",
-              "similarity_score": 93.36,
               "shared_feature_count": 4
             },
             {
@@ -490201,7 +490201,7 @@
               "company": "Brown-Forman Corporation",
               "market_scope": "us",
               "canonical_sector": "Other",
-              "similarity_score": 88.35,
+              "similarity_score": 88.74,
               "shared_feature_count": 4
             },
             {
@@ -490570,7 +490570,7 @@
           }
         },
         "market_similarity": {
-          "score_0_100": 85.56,
+          "score_0_100": 85.39,
           "direction": "peer_comparable",
           "coverage_ratio": 0.5714,
           "confidence": "medium",
@@ -490591,7 +490591,7 @@
               "company": "The AES Corporation",
               "market_scope": "us",
               "canonical_sector": "Other",
-              "similarity_score": 85.49,
+              "similarity_score": 84.99,
               "shared_feature_count": 4
             },
             {
@@ -490607,7 +490607,7 @@
               "company": "Huntington Ingalls Industries, Inc.",
               "market_scope": "us",
               "canonical_sector": "Other",
-              "similarity_score": 82.58,
+              "similarity_score": 82.91,
               "shared_feature_count": 4
             },
             {
@@ -490976,7 +490976,7 @@
           }
         },
         "market_similarity": {
-          "score_0_100": 93.34,
+          "score_0_100": 93.44,
           "direction": "peer_comparable",
           "coverage_ratio": 0.5714,
           "confidence": "medium",
@@ -490989,7 +490989,7 @@
               "company": "Brown-Forman Corporation",
               "market_scope": "us",
               "canonical_sector": "Other",
-              "similarity_score": 93.84,
+              "similarity_score": 94.15,
               "shared_feature_count": 4
             },
             {
@@ -491013,7 +491013,7 @@
               "company": "Huntington Ingalls Industries, Inc.",
               "market_scope": "us",
               "canonical_sector": "Other",
-              "similarity_score": 85.88,
+              "similarity_score": 86.2,
               "shared_feature_count": 4
             },
             {
@@ -491422,11 +491422,11 @@
               "shared_feature_count": 4
             },
             {
-              "ticker": "ECHO",
-              "company": "EchoStar Corporation",
+              "ticker": "APA",
+              "company": "APA Corporation",
               "market_scope": "us",
               "canonical_sector": "Other",
-              "similarity_score": 79.37,
+              "similarity_score": 78.73,
               "shared_feature_count": 4
             }
           ]

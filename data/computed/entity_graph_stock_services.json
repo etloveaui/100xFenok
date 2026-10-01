@@ -1,6 +1,6 @@
 {
   "schema_version": "data-entity-graph-stock-services/v1",
-  "generated_at": "2026-10-01T13:34:32.250Z",
+  "generated_at": "2026-10-01T14:51:49.661Z",
   "source_as_of": {
     "stocks_analyzer": "2026-09-25",
     "stock_action_index": "2026-09-25",
@@ -27,8 +27,8 @@
   },
   "totals": {
     "stocks": 1066,
-    "with_single_stock_etfs": 86,
-    "single_stock_etfs": 184
+    "with_single_stock_etfs": 84,
+    "single_stock_etfs": 188
   },
   "stocks": {
     "AAL": {
@@ -372,205 +372,37 @@
         "market_facts": "2026-09-29"
       }
     },
-    "AMD": {
-      "target_key": "ticker:AMD",
-      "ticker": "AMD",
-      "route": "/stock/AMD",
-      "single_stock_etfs": [
-        {
-          "etf_key": "etf:AMDG",
-          "target_key": "ticker:AMD",
-          "ticker": "AMDG",
-          "label": "Leverage Shares 2X Long AMD Daily ETF",
-          "route": "/etfs/AMDG",
-          "category": "Equity",
-          "confidence": "high",
-          "classification_source": "stockanalysis.overview.description",
-          "raw_underlying": "AMD",
-          "canonical_underlying_ticker": "AMD",
-          "resolution_method": "direct",
-          "resolution_source": "raw_underlying.symbol",
-          "matched_alias": "AMD",
-          "resolution_note": null,
-          "market_facts": true,
-          "service_flags": [
-            "etf_center",
-            "leveraged",
-            "single_stock"
-          ],
-          "as_of": {
-            "etf_universe": null,
-            "market_facts": "2026-09-30"
-          }
-        },
-        {
-          "etf_key": "etf:AMDL",
-          "target_key": "ticker:AMD",
-          "ticker": "AMDL",
-          "label": "GraniteShares 2x Long AMD Daily ETF",
-          "route": "/etfs/AMDL",
-          "category": "Equity",
-          "confidence": "high",
-          "classification_source": "stockanalysis.overview.description",
-          "raw_underlying": "Advanced Micro Devices",
-          "canonical_underlying_ticker": "AMD",
-          "resolution_method": "alias",
-          "resolution_source": "stocks_analyzer.companyName",
-          "matched_alias": "advanced micro devices",
-          "resolution_note": "classification_confidence=high; resolution_method=alias; resolution_source=stocks_analyzer.companyName",
-          "market_facts": true,
-          "service_flags": [
-            "etf_center",
-            "leveraged",
-            "single_stock"
-          ],
-          "as_of": {
-            "etf_universe": null,
-            "market_facts": "2026-09-30"
-          }
-        },
-        {
-          "etf_key": "etf:AMDW",
-          "target_key": "ticker:AMD",
-          "ticker": "AMDW",
-          "label": "Roundhill AMD WeeklyPay ETF",
-          "route": "/etfs/AMDW",
-          "category": "Equity",
-          "confidence": "high",
-          "classification_source": "stockanalysis.overview.description",
-          "raw_underlying": "AMD",
-          "canonical_underlying_ticker": "AMD",
-          "resolution_method": "direct",
-          "resolution_source": "raw_underlying.symbol",
-          "matched_alias": "AMD",
-          "resolution_note": null,
-          "market_facts": true,
-          "service_flags": [
-            "etf_center",
-            "leveraged",
-            "single_stock"
-          ],
-          "as_of": {
-            "etf_universe": null,
-            "market_facts": "2026-09-18"
-          }
-        },
-        {
-          "etf_key": "etf:AMUU",
-          "target_key": "ticker:AMD",
-          "ticker": "AMUU",
-          "label": "Direxion Daily AMD Bull 2X ETF",
-          "route": "/etfs/AMUU",
-          "category": "Equity",
-          "confidence": "high",
-          "classification_source": "stockanalysis.overview.description",
-          "raw_underlying": "AMD",
-          "canonical_underlying_ticker": "AMD",
-          "resolution_method": "direct",
-          "resolution_source": "raw_underlying.symbol",
-          "matched_alias": "AMD",
-          "resolution_note": null,
-          "market_facts": true,
-          "service_flags": [
-            "etf_center",
-            "leveraged",
-            "single_stock"
-          ],
-          "as_of": {
-            "etf_universe": null,
-            "market_facts": "2026-09-30"
-          }
-        },
-        {
-          "etf_key": "etf:AMYY",
-          "target_key": "ticker:AMD",
-          "ticker": "AMYY",
-          "label": "GraniteShares YieldBOOST AMD ETF",
-          "route": "/etfs/AMYY",
-          "category": "Equity",
-          "confidence": "high",
-          "classification_source": "stockanalysis.overview.description",
-          "raw_underlying": "AMD",
-          "canonical_underlying_ticker": "AMD",
-          "resolution_method": "direct",
-          "resolution_source": "raw_underlying.symbol",
-          "matched_alias": "AMD",
-          "resolution_note": null,
-          "market_facts": true,
-          "service_flags": [
-            "etf_center",
-            "leveraged",
-            "single_stock"
-          ],
-          "as_of": {
-            "etf_universe": null,
-            "market_facts": "2026-09-30"
-          }
-        },
-        {
-          "etf_key": "etf:DAMD",
-          "target_key": "ticker:AMD",
-          "ticker": "DAMD",
-          "label": "Defiance Daily Target 2X Short AMD ETF",
-          "route": "/etfs/DAMD",
-          "category": "Equity",
-          "confidence": "high",
-          "classification_source": "stockanalysis.overview.description",
-          "raw_underlying": "AMD",
-          "canonical_underlying_ticker": "AMD",
-          "resolution_method": "direct",
-          "resolution_source": "raw_underlying.symbol",
-          "matched_alias": "AMD",
-          "resolution_note": null,
-          "market_facts": true,
-          "service_flags": [
-            "etf_center",
-            "leveraged",
-            "inverse",
-            "single_stock"
-          ],
-          "as_of": {
-            "etf_universe": null,
-            "market_facts": "2026-09-30"
-          }
-        },
-        {
-          "etf_key": "etf:SKHL",
-          "target_key": "ticker:AMD",
-          "ticker": "SKHL",
-          "label": "Direxion Daily SK Hynix Bull 2X ETF",
-          "route": "/etfs/SKHL",
-          "category": "Equity",
-          "confidence": "high",
-          "classification_source": "stockanalysis.overview.description",
-          "raw_underlying": "AMD",
-          "canonical_underlying_ticker": "AMD",
-          "resolution_method": "direct",
-          "resolution_source": "raw_underlying.symbol",
-          "matched_alias": "AMD",
-          "resolution_note": null,
-          "market_facts": true,
-          "service_flags": [
-            "etf_center",
-            "leveraged",
-            "single_stock"
-          ],
-          "as_of": {
-            "etf_universe": null,
-            "market_facts": "2026-09-30"
-          }
-        }
-      ],
-      "as_of": {
-        "etf_universe": null,
-        "market_facts": "2026-09-30"
-      }
-    },
     "AMZN": {
       "target_key": "ticker:AMZN",
       "ticker": "AMZN",
       "route": "/stock/AMZN",
       "single_stock_etfs": [
+        {
+          "etf_key": "etf:AMAA",
+          "target_key": "ticker:AMZN",
+          "ticker": "AMAA",
+          "label": "Corgi AMZN 2x Daily ETF",
+          "route": "/etfs/AMAA",
+          "category": "Equity",
+          "confidence": "high",
+          "classification_source": "stockanalysis.overview.description",
+          "raw_underlying": "AMZN",
+          "canonical_underlying_ticker": "AMZN",
+          "resolution_method": "direct",
+          "resolution_source": "raw_underlying.symbol",
+          "matched_alias": "AMZN",
+          "resolution_note": null,
+          "market_facts": true,
+          "service_flags": [
+            "etf_center",
+            "leveraged",
+            "single_stock"
+          ],
+          "as_of": {
+            "etf_universe": null,
+            "market_facts": "2026-09-30"
+          }
+        },
         {
           "etf_key": "etf:AMZG",
           "target_key": "ticker:AMZN",
@@ -732,6 +564,200 @@
       "as_of": {
         "etf_universe": null,
         "market_facts": "2026-09-29"
+      }
+    },
+    "AMD": {
+      "target_key": "ticker:AMD",
+      "ticker": "AMD",
+      "route": "/stock/AMD",
+      "single_stock_etfs": [
+        {
+          "etf_key": "etf:AMDC",
+          "target_key": "ticker:AMD",
+          "ticker": "AMDC",
+          "label": "Corgi AMD 2x Daily ETF",
+          "route": "/etfs/AMDC",
+          "category": "Equity",
+          "confidence": "high",
+          "classification_source": "stockanalysis.overview.description",
+          "raw_underlying": "AMD",
+          "canonical_underlying_ticker": "AMD",
+          "resolution_method": "direct",
+          "resolution_source": "raw_underlying.symbol",
+          "matched_alias": "AMD",
+          "resolution_note": null,
+          "market_facts": true,
+          "service_flags": [
+            "etf_center",
+            "leveraged",
+            "single_stock"
+          ],
+          "as_of": {
+            "etf_universe": null,
+            "market_facts": "2026-09-30"
+          }
+        },
+        {
+          "etf_key": "etf:AMDG",
+          "target_key": "ticker:AMD",
+          "ticker": "AMDG",
+          "label": "Leverage Shares 2X Long AMD Daily ETF",
+          "route": "/etfs/AMDG",
+          "category": "Equity",
+          "confidence": "high",
+          "classification_source": "stockanalysis.overview.description",
+          "raw_underlying": "AMD",
+          "canonical_underlying_ticker": "AMD",
+          "resolution_method": "direct",
+          "resolution_source": "raw_underlying.symbol",
+          "matched_alias": "AMD",
+          "resolution_note": null,
+          "market_facts": true,
+          "service_flags": [
+            "etf_center",
+            "leveraged",
+            "single_stock"
+          ],
+          "as_of": {
+            "etf_universe": null,
+            "market_facts": "2026-09-30"
+          }
+        },
+        {
+          "etf_key": "etf:AMDL",
+          "target_key": "ticker:AMD",
+          "ticker": "AMDL",
+          "label": "GraniteShares 2x Long AMD Daily ETF",
+          "route": "/etfs/AMDL",
+          "category": "Equity",
+          "confidence": "high",
+          "classification_source": "stockanalysis.overview.description",
+          "raw_underlying": "Advanced Micro Devices",
+          "canonical_underlying_ticker": "AMD",
+          "resolution_method": "alias",
+          "resolution_source": "stocks_analyzer.companyName",
+          "matched_alias": "advanced micro devices",
+          "resolution_note": "classification_confidence=high; resolution_method=alias; resolution_source=stocks_analyzer.companyName",
+          "market_facts": true,
+          "service_flags": [
+            "etf_center",
+            "leveraged",
+            "single_stock"
+          ],
+          "as_of": {
+            "etf_universe": null,
+            "market_facts": "2026-09-30"
+          }
+        },
+        {
+          "etf_key": "etf:AMDW",
+          "target_key": "ticker:AMD",
+          "ticker": "AMDW",
+          "label": "Roundhill AMD WeeklyPay ETF",
+          "route": "/etfs/AMDW",
+          "category": "Equity",
+          "confidence": "high",
+          "classification_source": "stockanalysis.overview.description",
+          "raw_underlying": "AMD",
+          "canonical_underlying_ticker": "AMD",
+          "resolution_method": "direct",
+          "resolution_source": "raw_underlying.symbol",
+          "matched_alias": "AMD",
+          "resolution_note": null,
+          "market_facts": true,
+          "service_flags": [
+            "etf_center",
+            "leveraged",
+            "single_stock"
+          ],
+          "as_of": {
+            "etf_universe": null,
+            "market_facts": "2026-09-18"
+          }
+        },
+        {
+          "etf_key": "etf:AMUU",
+          "target_key": "ticker:AMD",
+          "ticker": "AMUU",
+          "label": "Direxion Daily AMD Bull 2X ETF",
+          "route": "/etfs/AMUU",
+          "category": "Equity",
+          "confidence": "high",
+          "classification_source": "stockanalysis.overview.description",
+          "raw_underlying": "AMD",
+          "canonical_underlying_ticker": "AMD",
+          "resolution_method": "direct",
+          "resolution_source": "raw_underlying.symbol",
+          "matched_alias": "AMD",
+          "resolution_note": null,
+          "market_facts": true,
+          "service_flags": [
+            "etf_center",
+            "leveraged",
+            "single_stock"
+          ],
+          "as_of": {
+            "etf_universe": null,
+            "market_facts": "2026-09-30"
+          }
+        },
+        {
+          "etf_key": "etf:AMYY",
+          "target_key": "ticker:AMD",
+          "ticker": "AMYY",
+          "label": "GraniteShares YieldBOOST AMD ETF",
+          "route": "/etfs/AMYY",
+          "category": "Equity",
+          "confidence": "high",
+          "classification_source": "stockanalysis.overview.description",
+          "raw_underlying": "AMD",
+          "canonical_underlying_ticker": "AMD",
+          "resolution_method": "direct",
+          "resolution_source": "raw_underlying.symbol",
+          "matched_alias": "AMD",
+          "resolution_note": null,
+          "market_facts": true,
+          "service_flags": [
+            "etf_center",
+            "leveraged",
+            "single_stock"
+          ],
+          "as_of": {
+            "etf_universe": null,
+            "market_facts": "2026-09-30"
+          }
+        },
+        {
+          "etf_key": "etf:DAMD",
+          "target_key": "ticker:AMD",
+          "ticker": "DAMD",
+          "label": "Defiance Daily Target 2X Short AMD ETF",
+          "route": "/etfs/DAMD",
+          "category": "Equity",
+          "confidence": "high",
+          "classification_source": "stockanalysis.overview.description",
+          "raw_underlying": "AMD",
+          "canonical_underlying_ticker": "AMD",
+          "resolution_method": "direct",
+          "resolution_source": "raw_underlying.symbol",
+          "matched_alias": "AMD",
+          "resolution_note": null,
+          "market_facts": true,
+          "service_flags": [
+            "etf_center",
+            "leveraged",
+            "inverse",
+            "single_stock"
+          ],
+          "as_of": {
+            "etf_universe": null,
+            "market_facts": "2026-09-30"
+          }
+        }
+      ],
+      "as_of": {
+        "etf_universe": null,
+        "market_facts": "2026-09-30"
       }
     },
     "ANET": {
@@ -1439,14 +1465,14 @@
           "label": "Tradr 2X Short COHR Daily ETF",
           "route": "/etfs/COHQ",
           "category": "Equity",
-          "confidence": "medium",
-          "classification_source": "stockanalysis.etf_list.name",
+          "confidence": "high",
+          "classification_source": "stockanalysis.overview.description",
           "raw_underlying": "COHR",
           "canonical_underlying_ticker": "COHR",
           "resolution_method": "direct",
           "resolution_source": "raw_underlying.symbol",
           "matched_alias": "COHR",
-          "resolution_note": "classification_confidence=medium; resolution_method=direct; resolution_source=raw_underlying.symbol",
+          "resolution_note": null,
           "market_facts": true,
           "service_flags": [
             "etf_center",
@@ -1572,6 +1598,32 @@
           "as_of": {
             "etf_universe": null,
             "market_facts": "2026-06-29"
+          }
+        },
+        {
+          "etf_key": "etf:COIX",
+          "target_key": "ticker:COIN",
+          "ticker": "COIX",
+          "label": "Corgi COIN 2x Daily ETF",
+          "route": "/etfs/COIX",
+          "category": "Equity",
+          "confidence": "high",
+          "classification_source": "stockanalysis.overview.description",
+          "raw_underlying": "COIN",
+          "canonical_underlying_ticker": "COIN",
+          "resolution_method": "direct",
+          "resolution_source": "raw_underlying.symbol",
+          "matched_alias": "COIN",
+          "resolution_note": null,
+          "market_facts": true,
+          "service_flags": [
+            "etf_center",
+            "leveraged",
+            "single_stock"
+          ],
+          "as_of": {
+            "etf_universe": null,
+            "market_facts": "2026-09-30"
           }
         },
         {
@@ -2045,14 +2097,14 @@
           "label": "Tradr 2X Short META Daily ETF",
           "route": "/etfs/METQ",
           "category": "Equity",
-          "confidence": "medium",
-          "classification_source": "stockanalysis.etf_list.name",
+          "confidence": "high",
+          "classification_source": "stockanalysis.overview.description",
           "raw_underlying": "META",
           "canonical_underlying_ticker": "META",
           "resolution_method": "direct",
           "resolution_source": "raw_underlying.symbol",
           "matched_alias": "META",
-          "resolution_note": "classification_confidence=medium; resolution_method=direct; resolution_source=raw_underlying.symbol",
+          "resolution_note": null,
           "market_facts": true,
           "service_flags": [
             "etf_center",
@@ -2146,51 +2198,14 @@
           "label": "Leverage Shares 2X Long FIX Daily ETF",
           "route": "/etfs/FIXX",
           "category": "Equity",
-          "confidence": "medium",
-          "classification_source": "stockanalysis.etf_list.name",
+          "confidence": "high",
+          "classification_source": "stockanalysis.overview.description",
           "raw_underlying": "FIX",
           "canonical_underlying_ticker": "FIX",
           "resolution_method": "direct",
           "resolution_source": "raw_underlying.symbol",
           "matched_alias": "FIX",
-          "resolution_note": "classification_confidence=medium; resolution_method=direct; resolution_source=raw_underlying.symbol",
-          "market_facts": true,
-          "service_flags": [
-            "etf_center",
-            "leveraged",
-            "single_stock"
-          ],
-          "as_of": {
-            "etf_universe": null,
-            "market_facts": "2026-09-30"
-          }
-        }
-      ],
-      "as_of": {
-        "etf_universe": null,
-        "market_facts": "2026-09-29"
-      }
-    },
-    "FLEX": {
-      "target_key": "ticker:FLEX",
-      "ticker": "FLEX",
-      "route": "/stock/FLEX",
-      "single_stock_etfs": [
-        {
-          "etf_key": "etf:FLEL",
-          "target_key": "ticker:FLEX",
-          "ticker": "FLEL",
-          "label": "Leverage Shares 2X Long FLEX Daily ETF",
-          "route": "/etfs/FLEL",
-          "category": "Equity",
-          "confidence": "medium",
-          "classification_source": "stockanalysis.etf_list.name",
-          "raw_underlying": "FLEX",
-          "canonical_underlying_ticker": "FLEX",
-          "resolution_method": "direct",
-          "resolution_source": "raw_underlying.symbol",
-          "matched_alias": "FLEX",
-          "resolution_note": "classification_confidence=medium; resolution_method=direct; resolution_source=raw_underlying.symbol",
+          "resolution_note": null,
           "market_facts": true,
           "service_flags": [
             "etf_center",
@@ -2388,32 +2403,6 @@
       "route": "/stock/GOOGL",
       "single_stock_etfs": [
         {
-          "etf_key": "etf:GOGL",
-          "target_key": "ticker:GOOGL",
-          "ticker": "GOGL",
-          "label": "Corgi GOOGL 2x Daily ETF",
-          "route": "/etfs/GOGL",
-          "category": "Equity",
-          "confidence": "medium",
-          "classification_source": "stockanalysis.etf_list.name",
-          "raw_underlying": "GOOGL",
-          "canonical_underlying_ticker": "GOOGL",
-          "resolution_method": "direct",
-          "resolution_source": "raw_underlying.symbol",
-          "matched_alias": "GOOGL",
-          "resolution_note": "classification_confidence=medium; resolution_method=direct; resolution_source=raw_underlying.symbol",
-          "market_facts": true,
-          "service_flags": [
-            "etf_center",
-            "leveraged",
-            "single_stock"
-          ],
-          "as_of": {
-            "etf_universe": null,
-            "market_facts": "2026-09-30"
-          }
-        },
-        {
           "etf_key": "etf:GOOL",
           "target_key": "ticker:GOOGL",
           "ticker": "GOOL",
@@ -2508,6 +2497,32 @@
           "ticker": "HODU",
           "label": "Direxion Daily HOOD Bull 2X ETF",
           "route": "/etfs/HODU",
+          "category": "Equity",
+          "confidence": "high",
+          "classification_source": "stockanalysis.overview.description",
+          "raw_underlying": "HOOD",
+          "canonical_underlying_ticker": "HOOD",
+          "resolution_method": "direct",
+          "resolution_source": "raw_underlying.symbol",
+          "matched_alias": "HOOD",
+          "resolution_note": null,
+          "market_facts": true,
+          "service_flags": [
+            "etf_center",
+            "leveraged",
+            "single_stock"
+          ],
+          "as_of": {
+            "etf_universe": null,
+            "market_facts": "2026-09-30"
+          }
+        },
+        {
+          "etf_key": "etf:HOOC",
+          "target_key": "ticker:HOOD",
+          "ticker": "HOOC",
+          "label": "Corgi HOOD 2x Daily ETF",
+          "route": "/etfs/HOOC",
           "category": "Equity",
           "confidence": "high",
           "classification_source": "stockanalysis.overview.description",
@@ -2701,43 +2716,6 @@
         "market_facts": "2026-09-29"
       }
     },
-    "SKHY": {
-      "target_key": "ticker:SKHY",
-      "ticker": "SKHY",
-      "route": "/stock/SKHY",
-      "single_stock_etfs": [
-        {
-          "etf_key": "etf:HYNX",
-          "target_key": "ticker:SKHY",
-          "ticker": "HYNX",
-          "label": "T-REX 2X Long SKHY Daily Target ETF",
-          "route": "/etfs/HYNX",
-          "category": "Equity",
-          "confidence": "high",
-          "classification_source": "stockanalysis.overview.description",
-          "raw_underlying": "SKHY",
-          "canonical_underlying_ticker": "SKHY",
-          "resolution_method": "direct",
-          "resolution_source": "raw_underlying.symbol",
-          "matched_alias": "SKHY",
-          "resolution_note": null,
-          "market_facts": true,
-          "service_flags": [
-            "etf_center",
-            "leveraged",
-            "single_stock"
-          ],
-          "as_of": {
-            "etf_universe": null,
-            "market_facts": "2026-09-30"
-          }
-        }
-      ],
-      "as_of": {
-        "etf_universe": null,
-        "market_facts": "2026-09-29"
-      }
-    },
     "IBM": {
       "target_key": "ticker:IBM",
       "ticker": "IBM",
@@ -2780,6 +2758,32 @@
       "ticker": "INTC",
       "route": "/stock/INTC",
       "single_stock_etfs": [
+        {
+          "etf_key": "etf:INT",
+          "target_key": "ticker:INTC",
+          "ticker": "INT",
+          "label": "Corgi INTC 2x Daily ETF",
+          "route": "/etfs/INT",
+          "category": "Equity",
+          "confidence": "high",
+          "classification_source": "stockanalysis.overview.description",
+          "raw_underlying": "INTC",
+          "canonical_underlying_ticker": "INTC",
+          "resolution_method": "direct",
+          "resolution_source": "raw_underlying.symbol",
+          "matched_alias": "INTC",
+          "resolution_note": null,
+          "market_facts": true,
+          "service_flags": [
+            "etf_center",
+            "leveraged",
+            "single_stock"
+          ],
+          "as_of": {
+            "etf_universe": null,
+            "market_facts": "2026-09-30"
+          }
+        },
         {
           "etf_key": "etf:INTW",
           "target_key": "ticker:INTC",
@@ -3035,14 +3039,14 @@
           "label": "Leverage Shares 2X Long LITE Daily ETF",
           "route": "/etfs/LITG",
           "category": "Equity",
-          "confidence": "medium",
-          "classification_source": "stockanalysis.etf_list.name",
+          "confidence": "high",
+          "classification_source": "stockanalysis.overview.description",
           "raw_underlying": "LITE",
           "canonical_underlying_ticker": "LITE",
           "resolution_method": "direct",
           "resolution_source": "raw_underlying.symbol",
           "matched_alias": "LITE",
-          "resolution_note": "classification_confidence=medium; resolution_method=direct; resolution_source=raw_underlying.symbol",
+          "resolution_note": null,
           "market_facts": true,
           "service_flags": [
             "etf_center",
@@ -3222,6 +3226,174 @@
           "service_flags": [
             "etf_center",
             "leveraged",
+            "single_stock"
+          ],
+          "as_of": {
+            "etf_universe": null,
+            "market_facts": "2026-09-30"
+          }
+        }
+      ],
+      "as_of": {
+        "etf_universe": null,
+        "market_facts": "2026-09-29"
+      }
+    },
+    "MU": {
+      "target_key": "ticker:MU",
+      "ticker": "MU",
+      "route": "/stock/MU",
+      "single_stock_etfs": [
+        {
+          "etf_key": "etf:MIC",
+          "target_key": "ticker:MU",
+          "ticker": "MIC",
+          "label": "Corgi MU 2x Daily ETF",
+          "route": "/etfs/MIC",
+          "category": "Equity",
+          "confidence": "high",
+          "classification_source": "stockanalysis.overview.description",
+          "raw_underlying": "MU",
+          "canonical_underlying_ticker": "MU",
+          "resolution_method": "direct",
+          "resolution_source": "raw_underlying.symbol",
+          "matched_alias": "MU",
+          "resolution_note": null,
+          "market_facts": true,
+          "service_flags": [
+            "etf_center",
+            "leveraged",
+            "single_stock"
+          ],
+          "as_of": {
+            "etf_universe": null,
+            "market_facts": "2026-07-08"
+          }
+        },
+        {
+          "etf_key": "etf:MUG",
+          "target_key": "ticker:MU",
+          "ticker": "MUG",
+          "label": "Leverage Shares 2X Long MU Daily ETF",
+          "route": "/etfs/MUG",
+          "category": "Equity",
+          "confidence": "high",
+          "classification_source": "stockanalysis.overview.description",
+          "raw_underlying": "MU",
+          "canonical_underlying_ticker": "MU",
+          "resolution_method": "direct",
+          "resolution_source": "raw_underlying.symbol",
+          "matched_alias": "MU",
+          "resolution_note": null,
+          "market_facts": true,
+          "service_flags": [
+            "etf_center",
+            "leveraged",
+            "single_stock"
+          ],
+          "as_of": {
+            "etf_universe": null,
+            "market_facts": "2026-09-30"
+          }
+        },
+        {
+          "etf_key": "etf:MULL",
+          "target_key": "ticker:MU",
+          "ticker": "MULL",
+          "label": "GraniteShares 2x Long MU Daily ETF",
+          "route": "/etfs/MULL",
+          "category": "Equity",
+          "confidence": "high",
+          "classification_source": "stockanalysis.overview.description",
+          "raw_underlying": "MU",
+          "canonical_underlying_ticker": "MU",
+          "resolution_method": "direct",
+          "resolution_source": "raw_underlying.symbol",
+          "matched_alias": "MU",
+          "resolution_note": null,
+          "market_facts": true,
+          "service_flags": [
+            "etf_center",
+            "leveraged",
+            "single_stock"
+          ],
+          "as_of": {
+            "etf_universe": null,
+            "market_facts": "2026-09-30"
+          }
+        },
+        {
+          "etf_key": "etf:MUU",
+          "target_key": "ticker:MU",
+          "ticker": "MUU",
+          "label": "Direxion Daily MU Bull 2X ETF",
+          "route": "/etfs/MUU",
+          "category": "Equity",
+          "confidence": "high",
+          "classification_source": "stockanalysis.overview.description",
+          "raw_underlying": "Micron Technology, Inc",
+          "canonical_underlying_ticker": "MU",
+          "resolution_method": "alias",
+          "resolution_source": "stocks_analyzer.companyName",
+          "matched_alias": "micron technology",
+          "resolution_note": "classification_confidence=high; resolution_method=alias; resolution_source=stocks_analyzer.companyName",
+          "market_facts": true,
+          "service_flags": [
+            "etf_center",
+            "leveraged",
+            "single_stock"
+          ],
+          "as_of": {
+            "etf_universe": null,
+            "market_facts": "2026-09-30"
+          }
+        },
+        {
+          "etf_key": "etf:MUYY",
+          "target_key": "ticker:MU",
+          "ticker": "MUYY",
+          "label": "GraniteShares YieldBOOST MU ETF",
+          "route": "/etfs/MUYY",
+          "category": "Equity",
+          "confidence": "high",
+          "classification_source": "stockanalysis.overview.description",
+          "raw_underlying": "MU",
+          "canonical_underlying_ticker": "MU",
+          "resolution_method": "direct",
+          "resolution_source": "raw_underlying.symbol",
+          "matched_alias": "MU",
+          "resolution_note": null,
+          "market_facts": true,
+          "service_flags": [
+            "etf_center",
+            "leveraged",
+            "single_stock"
+          ],
+          "as_of": {
+            "etf_universe": null,
+            "market_facts": "2026-09-30"
+          }
+        },
+        {
+          "etf_key": "etf:MUZ",
+          "target_key": "ticker:MU",
+          "ticker": "MUZ",
+          "label": "Defiance Daily Target 2X Short MU ETF",
+          "route": "/etfs/MUZ",
+          "category": "Equity",
+          "confidence": "high",
+          "classification_source": "stockanalysis.overview.description",
+          "raw_underlying": "MU",
+          "canonical_underlying_ticker": "MU",
+          "resolution_method": "direct",
+          "resolution_source": "raw_underlying.symbol",
+          "matched_alias": "MU",
+          "resolution_note": null,
+          "market_facts": true,
+          "service_flags": [
+            "etf_center",
+            "leveraged",
+            "inverse",
             "single_stock"
           ],
           "as_of": {
@@ -3422,148 +3594,6 @@
       "as_of": {
         "etf_universe": null,
         "market_facts": "2026-09-30"
-      }
-    },
-    "MU": {
-      "target_key": "ticker:MU",
-      "ticker": "MU",
-      "route": "/stock/MU",
-      "single_stock_etfs": [
-        {
-          "etf_key": "etf:MUG",
-          "target_key": "ticker:MU",
-          "ticker": "MUG",
-          "label": "Leverage Shares 2X Long MU Daily ETF",
-          "route": "/etfs/MUG",
-          "category": "Equity",
-          "confidence": "medium",
-          "classification_source": "stockanalysis.etf_list.name",
-          "raw_underlying": "MU",
-          "canonical_underlying_ticker": "MU",
-          "resolution_method": "direct",
-          "resolution_source": "raw_underlying.symbol",
-          "matched_alias": "MU",
-          "resolution_note": "classification_confidence=medium; resolution_method=direct; resolution_source=raw_underlying.symbol",
-          "market_facts": true,
-          "service_flags": [
-            "etf_center",
-            "leveraged",
-            "single_stock"
-          ],
-          "as_of": {
-            "etf_universe": null,
-            "market_facts": "2026-09-30"
-          }
-        },
-        {
-          "etf_key": "etf:MULL",
-          "target_key": "ticker:MU",
-          "ticker": "MULL",
-          "label": "GraniteShares 2x Long MU Daily ETF",
-          "route": "/etfs/MULL",
-          "category": "Equity",
-          "confidence": "high",
-          "classification_source": "stockanalysis.overview.description",
-          "raw_underlying": "MU",
-          "canonical_underlying_ticker": "MU",
-          "resolution_method": "direct",
-          "resolution_source": "raw_underlying.symbol",
-          "matched_alias": "MU",
-          "resolution_note": null,
-          "market_facts": true,
-          "service_flags": [
-            "etf_center",
-            "leveraged",
-            "single_stock"
-          ],
-          "as_of": {
-            "etf_universe": null,
-            "market_facts": "2026-09-30"
-          }
-        },
-        {
-          "etf_key": "etf:MUU",
-          "target_key": "ticker:MU",
-          "ticker": "MUU",
-          "label": "Direxion Daily MU Bull 2X ETF",
-          "route": "/etfs/MUU",
-          "category": "Equity",
-          "confidence": "high",
-          "classification_source": "stockanalysis.overview.description",
-          "raw_underlying": "Micron Technology, Inc",
-          "canonical_underlying_ticker": "MU",
-          "resolution_method": "alias",
-          "resolution_source": "stocks_analyzer.companyName",
-          "matched_alias": "micron technology",
-          "resolution_note": "classification_confidence=high; resolution_method=alias; resolution_source=stocks_analyzer.companyName",
-          "market_facts": true,
-          "service_flags": [
-            "etf_center",
-            "leveraged",
-            "single_stock"
-          ],
-          "as_of": {
-            "etf_universe": null,
-            "market_facts": "2026-09-30"
-          }
-        },
-        {
-          "etf_key": "etf:MUYY",
-          "target_key": "ticker:MU",
-          "ticker": "MUYY",
-          "label": "GraniteShares YieldBOOST MU ETF",
-          "route": "/etfs/MUYY",
-          "category": "Equity",
-          "confidence": "high",
-          "classification_source": "stockanalysis.overview.description",
-          "raw_underlying": "MU",
-          "canonical_underlying_ticker": "MU",
-          "resolution_method": "direct",
-          "resolution_source": "raw_underlying.symbol",
-          "matched_alias": "MU",
-          "resolution_note": null,
-          "market_facts": true,
-          "service_flags": [
-            "etf_center",
-            "leveraged",
-            "single_stock"
-          ],
-          "as_of": {
-            "etf_universe": null,
-            "market_facts": "2026-09-30"
-          }
-        },
-        {
-          "etf_key": "etf:MUZ",
-          "target_key": "ticker:MU",
-          "ticker": "MUZ",
-          "label": "Defiance Daily Target 2X Short MU ETF",
-          "route": "/etfs/MUZ",
-          "category": "Equity",
-          "confidence": "high",
-          "classification_source": "stockanalysis.overview.description",
-          "raw_underlying": "MU",
-          "canonical_underlying_ticker": "MU",
-          "resolution_method": "direct",
-          "resolution_source": "raw_underlying.symbol",
-          "matched_alias": "MU",
-          "resolution_note": null,
-          "market_facts": true,
-          "service_flags": [
-            "etf_center",
-            "leveraged",
-            "inverse",
-            "single_stock"
-          ],
-          "as_of": {
-            "etf_universe": null,
-            "market_facts": "2026-09-30"
-          }
-        }
-      ],
-      "as_of": {
-        "etf_universe": null,
-        "market_facts": "2026-09-29"
       }
     },
     "NEM": {
@@ -4355,6 +4385,32 @@
           "ticker": "PLTG",
           "label": "Leverage Shares 2X Long PLTR Daily ETF",
           "route": "/etfs/PLTG",
+          "category": "Equity",
+          "confidence": "high",
+          "classification_source": "stockanalysis.overview.description",
+          "raw_underlying": "PLTR",
+          "canonical_underlying_ticker": "PLTR",
+          "resolution_method": "direct",
+          "resolution_source": "raw_underlying.symbol",
+          "matched_alias": "PLTR",
+          "resolution_note": null,
+          "market_facts": true,
+          "service_flags": [
+            "etf_center",
+            "leveraged",
+            "single_stock"
+          ],
+          "as_of": {
+            "etf_universe": null,
+            "market_facts": "2026-09-30"
+          }
+        },
+        {
+          "etf_key": "etf:PLTL",
+          "target_key": "ticker:PLTR",
+          "ticker": "PLTL",
+          "label": "Corgi PLTR 2x Daily ETF",
+          "route": "/etfs/PLTL",
           "category": "Equity",
           "confidence": "high",
           "classification_source": "stockanalysis.overview.description",
@@ -5261,6 +5317,32 @@
       "ticker": "TSLA",
       "route": "/stock/TSLA",
       "single_stock_etfs": [
+        {
+          "etf_key": "etf:TESC",
+          "target_key": "ticker:TSLA",
+          "ticker": "TESC",
+          "label": "Corgi TSLA 2x Daily ETF",
+          "route": "/etfs/TESC",
+          "category": "Equity",
+          "confidence": "high",
+          "classification_source": "stockanalysis.overview.description",
+          "raw_underlying": "TSLA",
+          "canonical_underlying_ticker": "TSLA",
+          "resolution_method": "direct",
+          "resolution_source": "raw_underlying.symbol",
+          "matched_alias": "TSLA",
+          "resolution_note": null,
+          "market_facts": true,
+          "service_flags": [
+            "etf_center",
+            "leveraged",
+            "single_stock"
+          ],
+          "as_of": {
+            "etf_universe": null,
+            "market_facts": "2026-09-30"
+          }
+        },
         {
           "etf_key": "etf:TSDD",
           "target_key": "ticker:TSLA",

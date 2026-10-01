@@ -1,6 +1,6 @@
 {
   "schema_version": "data-entity-graph/v1",
-  "generated_at": "2026-10-01T13:34:32.250Z",
+  "generated_at": "2026-10-01T14:51:49.661Z",
   "source_as_of": {
     "stocks_analyzer": "2026-09-25",
     "stock_action_index": "2026-09-25",
@@ -45,11 +45,11 @@
     "stocks_with_market_facts": 1066,
     "stocks_with_filings": 202,
     "stocks_with_13f": 424,
-    "stocks_with_single_stock_etfs": 86,
+    "stocks_with_single_stock_etfs": 84,
     "etfs_with_market_facts": 5642
   },
   "diagnostics": {
-    "stock_alias_collisions": 110,
+    "stock_alias_collisions": 108,
     "stock_alias_collision_examples": [
       {
         "alias": "alphabet",
@@ -131,16 +131,8 @@
         "skipped_source": "stocks_analyzer.companyName"
       }
     ],
-    "single_stock_etfs_unresolved": 159,
+    "single_stock_etfs_unresolved": 135,
     "single_stock_etfs_unresolved_list": [
-      {
-        "ticker": "AAOZ",
-        "label": "Tradr 2X Short AAOI Daily ETF",
-        "raw_underlying": "AAOI",
-        "classification_source": "stockanalysis.overview.description",
-        "confidence": "high",
-        "reason": "no_canonical_us_stock_match"
-      },
       {
         "ticker": "AEHG",
         "label": "Leverage Shares 2X Long AEHR Daily ETF",
@@ -152,22 +144,6 @@
       {
         "ticker": "ALA",
         "label": "Corgi ALAB 2x Daily ETF",
-        "raw_underlying": "the publicly-traded common",
-        "classification_source": "stockanalysis.overview.description",
-        "confidence": "high",
-        "reason": "no_canonical_us_stock_match"
-      },
-      {
-        "ticker": "AMAA",
-        "label": "Corgi AMZN 2x Daily ETF",
-        "raw_underlying": "the publicly-traded common",
-        "classification_source": "stockanalysis.overview.description",
-        "confidence": "high",
-        "reason": "no_canonical_us_stock_match"
-      },
-      {
-        "ticker": "AMDC",
-        "label": "Corgi AMD 2x Daily ETF",
         "raw_underlying": "the publicly-traded common",
         "classification_source": "stockanalysis.overview.description",
         "confidence": "high",
@@ -193,8 +169,8 @@
         "ticker": "ASSX",
         "label": "ETF Opportunities Trust - T-REX 2X Long ASST Daily Target ETF",
         "raw_underlying": "ASST",
-        "classification_source": "stockanalysis.etf_list.name",
-        "confidence": "medium",
+        "classification_source": "stockanalysis.overview.description",
+        "confidence": "high",
         "reason": "no_canonical_us_stock_match"
       },
       {
@@ -214,14 +190,6 @@
         "reason": "no_canonical_us_stock_match"
       },
       {
-        "ticker": "ASTT",
-        "label": "Corgi ASTS 2x Daily ETF",
-        "raw_underlying": "the publicly-traded common",
-        "classification_source": "stockanalysis.overview.description",
-        "confidence": "high",
-        "reason": "no_canonical_us_stock_match"
-      },
-      {
         "ticker": "ASTX",
         "label": "Tradr 2X Long ASTS Daily ETF",
         "raw_underlying": "ASTS",
@@ -235,14 +203,6 @@
         "raw_underlying": "AXTI",
         "classification_source": "stockanalysis.overview.description",
         "confidence": "high",
-        "reason": "no_canonical_us_stock_match"
-      },
-      {
-        "ticker": "AXTQ",
-        "label": "Tradr 2X Short AXTI Daily ETF",
-        "raw_underlying": "AXTI",
-        "classification_source": "stockanalysis.etf_list.name",
-        "confidence": "medium",
         "reason": "no_canonical_us_stock_match"
       },
       {
@@ -350,14 +310,6 @@
         "reason": "no_canonical_us_stock_match"
       },
       {
-        "ticker": "BNMC",
-        "label": "Corgi BMNR 2x Daily ETF",
-        "raw_underlying": "the publicly-traded common",
-        "classification_source": "stockanalysis.overview.description",
-        "confidence": "high",
-        "reason": "no_canonical_us_stock_match"
-      },
-      {
         "ticker": "BRKU",
         "label": "Direxion Daily BRKB Bull 2X ETF",
         "raw_underlying": "Berkshire Hathaway",
@@ -371,30 +323,6 @@
         "raw_underlying": "BULL",
         "classification_source": "stockanalysis.overview.description",
         "confidence": "high",
-        "reason": "no_canonical_us_stock_match"
-      },
-      {
-        "ticker": "CAMC",
-        "label": "Corgi CAMT 2x Daily ETF",
-        "raw_underlying": "the publicly-traded common",
-        "classification_source": "stockanalysis.overview.description",
-        "confidence": "high",
-        "reason": "no_canonical_us_stock_match"
-      },
-      {
-        "ticker": "CARX",
-        "label": "Corgi CART 2x Daily ETF",
-        "raw_underlying": "the publicly-traded common",
-        "classification_source": "stockanalysis.overview.description",
-        "confidence": "high",
-        "reason": "no_canonical_us_stock_match"
-      },
-      {
-        "ticker": "CBRG",
-        "label": "Leverage Shares 2X Long CBRS Daily ETF",
-        "raw_underlying": "CBRS",
-        "classification_source": "stockanalysis.etf_list.name",
-        "confidence": "medium",
         "reason": "no_canonical_us_stock_match"
       },
       {
@@ -414,17 +342,17 @@
         "reason": "no_canonical_us_stock_match"
       },
       {
-        "ticker": "CLSX",
-        "label": "Tradr 2X Long CLSK Daily ETF",
-        "raw_underlying": "CLSK",
+        "ticker": "CIFC",
+        "label": "Corgi CIFR 2x Daily ETF",
+        "raw_underlying": "the publicly-traded common",
         "classification_source": "stockanalysis.overview.description",
         "confidence": "high",
         "reason": "no_canonical_us_stock_match"
       },
       {
-        "ticker": "COIX",
-        "label": "Corgi COIN 2x Daily ETF",
-        "raw_underlying": "the publicly-traded common",
+        "ticker": "CLSX",
+        "label": "Tradr 2X Long CLSK Daily ETF",
+        "raw_underlying": "CLSK",
         "classification_source": "stockanalysis.overview.description",
         "confidence": "high",
         "reason": "no_canonical_us_stock_match"
@@ -462,14 +390,6 @@
         "reason": "no_canonical_us_stock_match"
       },
       {
-        "ticker": "CRD",
-        "label": "Corgi CRDO 2x Daily ETF",
-        "raw_underlying": "the publicly-traded common",
-        "classification_source": "stockanalysis.overview.description",
-        "confidence": "high",
-        "reason": "no_canonical_us_stock_match"
-      },
-      {
         "ticker": "CRMU",
         "label": "Leverage Shares 2x Long CRML Daily ETF",
         "raw_underlying": "CRML",
@@ -481,14 +401,6 @@
         "ticker": "CRMX",
         "label": "Tradr 2X Long CRML Daily ETF",
         "raw_underlying": "CRML",
-        "classification_source": "stockanalysis.overview.description",
-        "confidence": "high",
-        "reason": "no_canonical_us_stock_match"
-      },
-      {
-        "ticker": "CRUC",
-        "label": "Corgi CRUS 2x Daily ETF",
-        "raw_underlying": "the publicly-traded common",
         "classification_source": "stockanalysis.overview.description",
         "confidence": "high",
         "reason": "no_canonical_us_stock_match"
@@ -529,6 +441,14 @@
         "ticker": "ELIL",
         "label": "Direxion Daily LLY Bull 2X ETF",
         "raw_underlying": "Eli Lilly and Company",
+        "classification_source": "stockanalysis.overview.description",
+        "confidence": "high",
+        "reason": "no_canonical_us_stock_match"
+      },
+      {
+        "ticker": "EO",
+        "label": "Corgi EOSE 2x Daily ETF",
+        "raw_underlying": "the publicly-traded common",
         "classification_source": "stockanalysis.overview.description",
         "confidence": "high",
         "reason": "no_canonical_us_stock_match"
@@ -582,17 +502,17 @@
         "reason": "no_canonical_us_stock_match"
       },
       {
-        "ticker": "GEVC",
-        "label": "Corgi GEV 2x Daily ETF",
-        "raw_underlying": "the publicly-traded common",
+        "ticker": "GGLL",
+        "label": "Direxion Daily GOOGL Bull 2X ETF",
+        "raw_underlying": "Google",
         "classification_source": "stockanalysis.overview.description",
         "confidence": "high",
         "reason": "no_canonical_us_stock_match"
       },
       {
-        "ticker": "GGLL",
-        "label": "Direxion Daily GOOGL Bull 2X ETF",
-        "raw_underlying": "Google",
+        "ticker": "GOGL",
+        "label": "Corgi GOOGL 2x Daily ETF",
+        "raw_underlying": "the publicly-traded common",
         "classification_source": "stockanalysis.overview.description",
         "confidence": "high",
         "reason": "no_canonical_us_stock_match"
@@ -606,25 +526,9 @@
         "reason": "no_canonical_us_stock_match"
       },
       {
-        "ticker": "HOOC",
-        "label": "Corgi HOOD 2x Daily ETF",
-        "raw_underlying": "the publicly-traded common",
-        "classification_source": "stockanalysis.overview.description",
-        "confidence": "high",
-        "reason": "no_canonical_us_stock_match"
-      },
-      {
         "ticker": "INFH",
         "label": "Defiance Daily Target 2X Long INFQ ETF",
         "raw_underlying": "INFQ",
-        "classification_source": "stockanalysis.overview.description",
-        "confidence": "high",
-        "reason": "no_canonical_us_stock_match"
-      },
-      {
-        "ticker": "INT",
-        "label": "Corgi INTC 2x Daily ETF",
-        "raw_underlying": "the publicly-traded common",
         "classification_source": "stockanalysis.overview.description",
         "confidence": "high",
         "reason": "no_canonical_us_stock_match"
@@ -670,22 +574,6 @@
         "reason": "no_canonical_us_stock_match"
       },
       {
-        "ticker": "JOBC",
-        "label": "Corgi JOBY 2x Daily ETF",
-        "raw_underlying": "the publicly-traded common",
-        "classification_source": "stockanalysis.overview.description",
-        "confidence": "high",
-        "reason": "no_canonical_us_stock_match"
-      },
-      {
-        "ticker": "KATT",
-        "label": "T-REX 2X Long PURR Daily Target ETF",
-        "raw_underlying": "PURR",
-        "classification_source": "stockanalysis.etf_list.name",
-        "confidence": "medium",
-        "reason": "no_canonical_us_stock_match"
-      },
-      {
         "ticker": "KBAB",
         "label": "KraneShares 2x Long BABA Daily ETF",
         "raw_underlying": "BABA",
@@ -718,14 +606,6 @@
         "reason": "no_canonical_us_stock_match"
       },
       {
-        "ticker": "LITC",
-        "label": "Corgi LITE 2x Daily ETF",
-        "raw_underlying": "the publicly-traded common",
-        "classification_source": "stockanalysis.overview.description",
-        "confidence": "high",
-        "reason": "no_canonical_us_stock_match"
-      },
-      {
         "ticker": "LNOK",
         "label": "Defiance Daily Target 2X Long NOK ETF",
         "raw_underlying": "NOK",
@@ -737,22 +617,6 @@
         "ticker": "LOFD",
         "label": "Direxion Daily SpaceX Bear 2X ETF",
         "raw_underlying": "SPACEX",
-        "classification_source": "stockanalysis.etf_list.name",
-        "confidence": "medium",
-        "reason": "no_canonical_us_stock_match"
-      },
-      {
-        "ticker": "LWLX",
-        "label": "Tradr 2X Long LWLG Daily ETF",
-        "raw_underlying": "LWLG",
-        "classification_source": "stockanalysis.etf_list.name",
-        "confidence": "medium",
-        "reason": "no_canonical_us_stock_match"
-      },
-      {
-        "ticker": "MIC",
-        "label": "Corgi MU 2x Daily ETF",
-        "raw_underlying": "the publicly-traded common",
         "classification_source": "stockanalysis.overview.description",
         "confidence": "high",
         "reason": "no_canonical_us_stock_match"
@@ -771,14 +635,6 @@
         "raw_underlying": "MARA",
         "classification_source": "stockanalysis.overview.description",
         "confidence": "high",
-        "reason": "no_canonical_us_stock_match"
-      },
-      {
-        "ticker": "MRAX",
-        "label": "Tradr 2X Long MRAM Daily ETF",
-        "raw_underlying": "MRAM",
-        "classification_source": "stockanalysis.etf_list.name",
-        "confidence": "medium",
         "reason": "no_canonical_us_stock_match"
       },
       {
@@ -833,8 +689,16 @@
         "ticker": "MXLL",
         "label": "Leverage Shares 2X Long MXL Daily ETF",
         "raw_underlying": "MXL",
-        "classification_source": "stockanalysis.etf_list.name",
-        "confidence": "medium",
+        "classification_source": "stockanalysis.overview.description",
+        "confidence": "high",
+        "reason": "no_canonical_us_stock_match"
+      },
+      {
+        "ticker": "NBIC",
+        "label": "Corgi NBIS 2x Daily ETF",
+        "raw_underlying": "the publicly-traded common",
+        "classification_source": "stockanalysis.overview.description",
+        "confidence": "high",
         "reason": "no_canonical_us_stock_match"
       },
       {
@@ -854,6 +718,14 @@
         "reason": "no_canonical_us_stock_match"
       },
       {
+        "ticker": "NOWX",
+        "label": "Corgi NOW 2x Daily ETF",
+        "raw_underlying": "the publicly-traded common",
+        "classification_source": "stockanalysis.overview.description",
+        "confidence": "high",
+        "reason": "no_canonical_us_stock_match"
+      },
+      {
         "ticker": "NUG",
         "label": "Leverage Shares 2X Long NU Daily ETF",
         "raw_underlying": "NU",
@@ -865,8 +737,8 @@
         "ticker": "OCNL",
         "label": "T-REX 2X Long DOCN Daily Target ETF",
         "raw_underlying": "DOCN",
-        "classification_source": "stockanalysis.etf_list.name",
-        "confidence": "medium",
+        "classification_source": "stockanalysis.overview.description",
+        "confidence": "high",
         "reason": "no_canonical_us_stock_match"
       },
       {
@@ -926,14 +798,6 @@
         "reason": "no_canonical_us_stock_match"
       },
       {
-        "ticker": "OUSL",
-        "label": "Defiance Daily Target 2X Long OUST ETF",
-        "raw_underlying": "OUST",
-        "classification_source": "stockanalysis.overview.description",
-        "confidence": "high",
-        "reason": "no_canonical_us_stock_match"
-      },
-      {
         "ticker": "PBRG",
         "label": "Leverage Shares 2X Long PBR Daily ETF",
         "raw_underlying": "PBR",
@@ -945,22 +809,6 @@
         "ticker": "PDDL",
         "label": "GraniteShares 2x Long PDD Daily ETF",
         "raw_underlying": "PDD Holdings Inc",
-        "classification_source": "stockanalysis.overview.description",
-        "confidence": "high",
-        "reason": "no_canonical_us_stock_match"
-      },
-      {
-        "ticker": "PENU",
-        "label": "T-REX 2X Long PENG Daily Target ETF",
-        "raw_underlying": "PENG",
-        "classification_source": "stockanalysis.etf_list.name",
-        "confidence": "medium",
-        "reason": "no_canonical_us_stock_match"
-      },
-      {
-        "ticker": "PLTL",
-        "label": "Corgi PLTR 2x Daily ETF",
-        "raw_underlying": "the publicly-traded common",
         "classification_source": "stockanalysis.overview.description",
         "confidence": "high",
         "reason": "no_canonical_us_stock_match"
@@ -1006,14 +854,6 @@
         "reason": "no_canonical_us_stock_match"
       },
       {
-        "ticker": "QUA",
-        "label": "Corgi QBTS 2x Daily ETF",
-        "raw_underlying": "the publicly-traded common",
-        "classification_source": "stockanalysis.overview.description",
-        "confidence": "high",
-        "reason": "no_canonical_us_stock_match"
-      },
-      {
         "ticker": "QUBX",
         "label": "Tradr 2X Long QUBT Daily ETF",
         "raw_underlying": "QUBT",
@@ -1041,6 +881,14 @@
         "ticker": "RCAX",
         "label": "Defiance Daily Target 2x Long RCAT ETF",
         "raw_underlying": "RCAT",
+        "classification_source": "stockanalysis.overview.description",
+        "confidence": "high",
+        "reason": "no_canonical_us_stock_match"
+      },
+      {
+        "ticker": "RDDC",
+        "label": "Corgi RDDT 2x Daily ETF",
+        "raw_underlying": "the publicly-traded common",
         "classification_source": "stockanalysis.overview.description",
         "confidence": "high",
         "reason": "no_canonical_us_stock_match"
@@ -1086,6 +934,14 @@
         "reason": "no_canonical_us_stock_match"
       },
       {
+        "ticker": "RIVC",
+        "label": "Corgi RIVN 2x Daily ETF",
+        "raw_underlying": "the publicly-traded common",
+        "classification_source": "stockanalysis.overview.description",
+        "confidence": "high",
+        "reason": "no_canonical_us_stock_match"
+      },
+      {
         "ticker": "RKLX",
         "label": "Defiance Daily Target 2X Long RKLB ETF",
         "raw_underlying": "RKLB",
@@ -1099,14 +955,6 @@
         "raw_underlying": "SBET",
         "classification_source": "stockanalysis.overview.description",
         "confidence": "high",
-        "reason": "no_canonical_us_stock_match"
-      },
-      {
-        "ticker": "SITX",
-        "label": "Tradr 2X Long SITM Daily ETF",
-        "raw_underlying": "SITM",
-        "classification_source": "stockanalysis.etf_list.name",
-        "confidence": "medium",
         "reason": "no_canonical_us_stock_match"
       },
       {
@@ -1158,14 +1006,6 @@
         "reason": "no_canonical_us_stock_match"
       },
       {
-        "ticker": "SNDC",
-        "label": "Corgi SNDK 2x Daily ETF",
-        "raw_underlying": "the publicly-traded common",
-        "classification_source": "stockanalysis.overview.description",
-        "confidence": "high",
-        "reason": "no_canonical_us_stock_match"
-      },
-      {
         "ticker": "SOFC",
         "label": "Corgi SOFI 2x Daily ETF",
         "raw_underlying": "the publicly-traded common",
@@ -1185,16 +1025,16 @@
         "ticker": "STLL",
         "label": "Leverage Shares 2X Long STRL Daily ETF",
         "raw_underlying": "STRL",
-        "classification_source": "stockanalysis.etf_list.name",
-        "confidence": "medium",
+        "classification_source": "stockanalysis.overview.description",
+        "confidence": "high",
         "reason": "no_canonical_us_stock_match"
       },
       {
         "ticker": "STMX",
         "label": "Leverage Shares 2X Long STM Daily ETF",
         "raw_underlying": "STM",
-        "classification_source": "stockanalysis.etf_list.name",
-        "confidence": "medium",
+        "classification_source": "stockanalysis.overview.description",
+        "confidence": "high",
         "reason": "no_canonical_us_stock_match"
       },
       {
@@ -1238,14 +1078,6 @@
         "reason": "no_canonical_us_stock_match"
       },
       {
-        "ticker": "TESC",
-        "label": "Corgi TSLA 2x Daily ETF",
-        "raw_underlying": "the publicly-traded common",
-        "classification_source": "stockanalysis.overview.description",
-        "confidence": "high",
-        "reason": "no_canonical_us_stock_match"
-      },
-      {
         "ticker": "TEUP",
         "label": "T-REX 2X Long TE Daily Target ETF",
         "raw_underlying": "TE",
@@ -1273,8 +1105,8 @@
         "ticker": "UMCU",
         "label": "Tradr 2X Long UMC Daily ETF",
         "raw_underlying": "UMC",
-        "classification_source": "stockanalysis.etf_list.name",
-        "confidence": "medium",
+        "classification_source": "stockanalysis.overview.description",
+        "confidence": "high",
         "reason": "no_canonical_us_stock_match"
       },
       {
@@ -1326,14 +1158,6 @@
         "reason": "no_canonical_us_stock_match"
       },
       {
-        "ticker": "UUUC",
-        "label": "Corgi UUUU 2x Daily ETF",
-        "raw_underlying": "the publicly-traded common",
-        "classification_source": "stockanalysis.overview.description",
-        "confidence": "high",
-        "reason": "no_canonical_us_stock_match"
-      },
-      {
         "ticker": "UUUG",
         "label": "Leverage Shares 2X Long UUUU Daily ETF",
         "raw_underlying": "UUUU",
@@ -1358,25 +1182,9 @@
         "reason": "no_canonical_us_stock_match"
       },
       {
-        "ticker": "VIAG",
-        "label": "Leverage Shares 2X Long VIAV Daily ETF",
-        "raw_underlying": "VIAV",
-        "classification_source": "stockanalysis.overview.description",
-        "confidence": "high",
-        "reason": "no_canonical_us_stock_match"
-      },
-      {
         "ticker": "VRTL",
         "label": "GraniteShares 2x Long VRT Daily ETF",
         "raw_underlying": "VRT",
-        "classification_source": "stockanalysis.overview.description",
-        "confidence": "high",
-        "reason": "no_canonical_us_stock_match"
-      },
-      {
-        "ticker": "WDCC",
-        "label": "Corgi WDC 2x Daily ETF",
-        "raw_underlying": "the publicly-traded common",
         "classification_source": "stockanalysis.overview.description",
         "confidence": "high",
         "reason": "no_canonical_us_stock_match"
@@ -1837,6 +1645,17 @@
           },
           {
             "type": "referenced_by_single_stock_etf",
+            "target": "etf:AMAA",
+            "source": "stockanalysis.overview.description",
+            "raw_underlying": "AMZN",
+            "canonical_underlying_ticker": "AMZN",
+            "resolution_method": "direct",
+            "resolution_source": "raw_underlying.symbol",
+            "matched_alias": "AMZN",
+            "resolution_note": null
+          },
+          {
+            "type": "referenced_by_single_stock_etf",
             "target": "etf:AMZG",
             "source": "stockanalysis.overview.description",
             "raw_underlying": "AMZN",
@@ -2076,17 +1895,6 @@
           },
           {
             "type": "referenced_by_single_stock_etf",
-            "target": "etf:GOGL",
-            "source": "stockanalysis.etf_list.name",
-            "raw_underlying": "GOOGL",
-            "canonical_underlying_ticker": "GOOGL",
-            "resolution_method": "direct",
-            "resolution_source": "raw_underlying.symbol",
-            "matched_alias": "GOOGL",
-            "resolution_note": "classification_confidence=medium; resolution_method=direct; resolution_source=raw_underlying.symbol"
-          },
-          {
-            "type": "referenced_by_single_stock_etf",
             "target": "etf:GOOL",
             "source": "stockanalysis.overview.description",
             "raw_underlying": "GOOGL",
@@ -2256,13 +2064,13 @@
           {
             "type": "referenced_by_single_stock_etf",
             "target": "etf:METQ",
-            "source": "stockanalysis.etf_list.name",
+            "source": "stockanalysis.overview.description",
             "raw_underlying": "META",
             "canonical_underlying_ticker": "META",
             "resolution_method": "direct",
             "resolution_source": "raw_underlying.symbol",
             "matched_alias": "META",
-            "resolution_note": "classification_confidence=medium; resolution_method=direct; resolution_source=raw_underlying.symbol"
+            "resolution_note": null
           },
           {
             "type": "referenced_by_single_stock_etf",
@@ -2499,6 +2307,17 @@
           },
           {
             "type": "referenced_by_single_stock_etf",
+            "target": "etf:TESC",
+            "source": "stockanalysis.overview.description",
+            "raw_underlying": "TSLA",
+            "canonical_underlying_ticker": "TSLA",
+            "resolution_method": "direct",
+            "resolution_source": "raw_underlying.symbol",
+            "matched_alias": "TSLA",
+            "resolution_note": null
+          },
+          {
+            "type": "referenced_by_single_stock_etf",
             "target": "etf:TSDD",
             "source": "stockanalysis.overview.description",
             "raw_underlying": "Tesla",
@@ -2704,14 +2523,25 @@
           },
           {
             "type": "referenced_by_single_stock_etf",
-            "target": "etf:MUG",
-            "source": "stockanalysis.etf_list.name",
+            "target": "etf:MIC",
+            "source": "stockanalysis.overview.description",
             "raw_underlying": "MU",
             "canonical_underlying_ticker": "MU",
             "resolution_method": "direct",
             "resolution_source": "raw_underlying.symbol",
             "matched_alias": "MU",
-            "resolution_note": "classification_confidence=medium; resolution_method=direct; resolution_source=raw_underlying.symbol"
+            "resolution_note": null
+          },
+          {
+            "type": "referenced_by_single_stock_etf",
+            "target": "etf:MUG",
+            "source": "stockanalysis.overview.description",
+            "raw_underlying": "MU",
+            "canonical_underlying_ticker": "MU",
+            "resolution_method": "direct",
+            "resolution_source": "raw_underlying.symbol",
+            "matched_alias": "MU",
+            "resolution_note": null
           },
           {
             "type": "referenced_by_single_stock_etf",
@@ -2878,6 +2708,17 @@
           },
           {
             "type": "referenced_by_single_stock_etf",
+            "target": "etf:AMDC",
+            "source": "stockanalysis.overview.description",
+            "raw_underlying": "AMD",
+            "canonical_underlying_ticker": "AMD",
+            "resolution_method": "direct",
+            "resolution_source": "raw_underlying.symbol",
+            "matched_alias": "AMD",
+            "resolution_note": null
+          },
+          {
+            "type": "referenced_by_single_stock_etf",
             "target": "etf:AMDG",
             "source": "stockanalysis.overview.description",
             "raw_underlying": "AMD",
@@ -2934,17 +2775,6 @@
           {
             "type": "referenced_by_single_stock_etf",
             "target": "etf:DAMD",
-            "source": "stockanalysis.overview.description",
-            "raw_underlying": "AMD",
-            "canonical_underlying_ticker": "AMD",
-            "resolution_method": "direct",
-            "resolution_source": "raw_underlying.symbol",
-            "matched_alias": "AMD",
-            "resolution_note": null
-          },
-          {
-            "type": "referenced_by_single_stock_etf",
-            "target": "etf:SKHL",
             "source": "stockanalysis.overview.description",
             "raw_underlying": "AMD",
             "canonical_underlying_ticker": "AMD",
@@ -3040,17 +2870,6 @@
             "type": "has_filing_summary",
             "target": "filing:SKHY",
             "source": "edgar-korean-summaries"
-          },
-          {
-            "type": "referenced_by_single_stock_etf",
-            "target": "etf:HYNX",
-            "source": "stockanalysis.overview.description",
-            "raw_underlying": "SKHY",
-            "canonical_underlying_ticker": "SKHY",
-            "resolution_method": "direct",
-            "resolution_source": "raw_underlying.symbol",
-            "matched_alias": "SKHY",
-            "resolution_note": null
           }
         ]
       },
@@ -3508,6 +3327,17 @@
           },
           {
             "type": "referenced_by_single_stock_etf",
+            "target": "etf:INT",
+            "source": "stockanalysis.overview.description",
+            "raw_underlying": "INTC",
+            "canonical_underlying_ticker": "INTC",
+            "resolution_method": "direct",
+            "resolution_source": "raw_underlying.symbol",
+            "matched_alias": "INTC",
+            "resolution_note": null
+          },
+          {
+            "type": "referenced_by_single_stock_etf",
             "target": "etf:INTW",
             "source": "stockanalysis.overview.description",
             "raw_underlying": "INTC",
@@ -3786,6 +3616,17 @@
           {
             "type": "referenced_by_single_stock_etf",
             "target": "etf:PLTG",
+            "source": "stockanalysis.overview.description",
+            "raw_underlying": "PLTR",
+            "canonical_underlying_ticker": "PLTR",
+            "resolution_method": "direct",
+            "resolution_source": "raw_underlying.symbol",
+            "matched_alias": "PLTR",
+            "resolution_note": null
+          },
+          {
+            "type": "referenced_by_single_stock_etf",
+            "target": "etf:PLTL",
             "source": "stockanalysis.overview.description",
             "raw_underlying": "PLTR",
             "canonical_underlying_ticker": "PLTR",
@@ -11070,6 +10911,17 @@
           },
           {
             "type": "referenced_by_single_stock_etf",
+            "target": "etf:HOOC",
+            "source": "stockanalysis.overview.description",
+            "raw_underlying": "HOOD",
+            "canonical_underlying_ticker": "HOOD",
+            "resolution_method": "direct",
+            "resolution_source": "raw_underlying.symbol",
+            "matched_alias": "HOOD",
+            "resolution_note": null
+          },
+          {
+            "type": "referenced_by_single_stock_etf",
             "target": "etf:HOOG",
             "source": "stockanalysis.overview.description",
             "raw_underlying": "HOOD",
@@ -11681,7 +11533,7 @@
         "as_of": {
           "profile": "2026-09-25",
           "action_index": "2026-09-25",
-          "market_facts": "2026-09-29",
+          "market_facts": "2026-10-01",
           "filings": null,
           "sec_13f": "2026-Q2"
         },
@@ -13640,13 +13492,13 @@
           {
             "type": "referenced_by_single_stock_etf",
             "target": "etf:LITG",
-            "source": "stockanalysis.etf_list.name",
+            "source": "stockanalysis.overview.description",
             "raw_underlying": "LITE",
             "canonical_underlying_ticker": "LITE",
             "resolution_method": "direct",
             "resolution_source": "raw_underlying.symbol",
             "matched_alias": "LITE",
-            "resolution_note": "classification_confidence=medium; resolution_method=direct; resolution_source=raw_underlying.symbol"
+            "resolution_note": null
           },
           {
             "type": "referenced_by_single_stock_etf",
@@ -17680,13 +17532,13 @@
           {
             "type": "referenced_by_single_stock_etf",
             "target": "etf:FIXX",
-            "source": "stockanalysis.etf_list.name",
+            "source": "stockanalysis.overview.description",
             "raw_underlying": "FIX",
             "canonical_underlying_ticker": "FIX",
             "resolution_method": "direct",
             "resolution_source": "raw_underlying.symbol",
             "matched_alias": "FIX",
-            "resolution_note": "classification_confidence=medium; resolution_method=direct; resolution_source=raw_underlying.symbol"
+            "resolution_note": null
           }
         ]
       },
@@ -17798,13 +17650,13 @@
           {
             "type": "referenced_by_single_stock_etf",
             "target": "etf:COHQ",
-            "source": "stockanalysis.etf_list.name",
+            "source": "stockanalysis.overview.description",
             "raw_underlying": "COHR",
             "canonical_underlying_ticker": "COHR",
             "resolution_method": "direct",
             "resolution_source": "raw_underlying.symbol",
             "matched_alias": "COHR",
-            "resolution_note": "classification_confidence=medium; resolution_method=direct; resolution_source=raw_underlying.symbol"
+            "resolution_note": null
           },
           {
             "type": "referenced_by_single_stock_etf",
@@ -19041,6 +18893,17 @@
           {
             "type": "referenced_by_single_stock_etf",
             "target": "etf:COIW",
+            "source": "stockanalysis.overview.description",
+            "raw_underlying": "COIN",
+            "canonical_underlying_ticker": "COIN",
+            "resolution_method": "direct",
+            "resolution_source": "raw_underlying.symbol",
+            "matched_alias": "COIN",
+            "resolution_note": null
+          },
+          {
+            "type": "referenced_by_single_stock_etf",
+            "target": "etf:COIX",
             "source": "stockanalysis.overview.description",
             "raw_underlying": "COIN",
             "canonical_underlying_ticker": "COIN",
@@ -21424,17 +21287,6 @@
             "type": "held_by_13f_investors",
             "target": "sec13f:FLEX",
             "source": "sec-13f/by_ticker"
-          },
-          {
-            "type": "referenced_by_single_stock_etf",
-            "target": "etf:FLEL",
-            "source": "stockanalysis.etf_list.name",
-            "raw_underlying": "FLEX",
-            "canonical_underlying_ticker": "FLEX",
-            "resolution_method": "direct",
-            "resolution_source": "raw_underlying.symbol",
-            "matched_alias": "FLEX",
-            "resolution_note": "classification_confidence=medium; resolution_method=direct; resolution_source=raw_underlying.symbol"
           }
         ]
       },
@@ -51770,7 +51622,7 @@
           "label": "high",
           "rank": 3,
           "classification_source": "stockanalysis.overview.description",
-          "underlying_raw": "AAOI",
+          "underlying_raw": null,
           "canonical_underlying_ticker": null,
           "canonical_underlying_key": null,
           "resolution_method": null,
@@ -51790,8 +51642,7 @@
         "service_flags": [
           "etf_center",
           "leveraged",
-          "inverse",
-          "single_stock"
+          "inverse"
         ],
         "relations": [
           {
@@ -52694,9 +52545,9 @@
         "category": "Fixed Income",
         "route": "/etfs/ABND",
         "confidence": {
-          "label": "low",
-          "rank": 1,
-          "classification_source": "stockanalysis.etf_list.name",
+          "label": "high",
+          "rank": 3,
+          "classification_source": "stockanalysis.overview.description",
           "underlying_raw": null,
           "canonical_underlying_ticker": null,
           "canonical_underlying_key": null,
@@ -52850,9 +52701,9 @@
         "category": "Alternatives",
         "route": "/etfs/ACBE",
         "confidence": {
-          "label": "low",
-          "rank": 1,
-          "classification_source": "stockanalysis.etf_list.name",
+          "label": "high",
+          "rank": 3,
+          "classification_source": "stockanalysis.overview.description",
           "underlying_raw": null,
           "canonical_underlying_ticker": null,
           "canonical_underlying_key": null,
@@ -52889,9 +52740,9 @@
         "category": "Alternatives",
         "route": "/etfs/ACBH",
         "confidence": {
-          "label": "low",
-          "rank": 1,
-          "classification_source": "stockanalysis.etf_list.name",
+          "label": "high",
+          "rank": 3,
+          "classification_source": "stockanalysis.overview.description",
           "underlying_raw": null,
           "canonical_underlying_ticker": null,
           "canonical_underlying_key": null,
@@ -53438,9 +53289,9 @@
         "category": "Commodity",
         "route": "/etfs/ACOM",
         "confidence": {
-          "label": "low",
-          "rank": 1,
-          "classification_source": "stockanalysis.etf_list.name",
+          "label": "high",
+          "rank": 3,
+          "classification_source": "stockanalysis.overview.description",
           "underlying_raw": null,
           "canonical_underlying_ticker": null,
           "canonical_underlying_key": null,
@@ -53477,9 +53328,9 @@
         "category": "Alternatives",
         "route": "/etfs/ACQQ",
         "confidence": {
-          "label": "low",
-          "rank": 1,
-          "classification_source": "stockanalysis.etf_list.name",
+          "label": "high",
+          "rank": 3,
+          "classification_source": "stockanalysis.overview.description",
           "underlying_raw": null,
           "canonical_underlying_ticker": null,
           "canonical_underlying_key": null,
@@ -53516,9 +53367,9 @@
         "category": "Alternatives",
         "route": "/etfs/ACRT",
         "confidence": {
-          "label": "low",
-          "rank": 1,
-          "classification_source": "stockanalysis.etf_list.name",
+          "label": "high",
+          "rank": 3,
+          "classification_source": "stockanalysis.overview.description",
           "underlying_raw": null,
           "canonical_underlying_ticker": null,
           "canonical_underlying_key": null,
@@ -53633,9 +53484,9 @@
         "category": "Alternatives",
         "route": "/etfs/ACSP",
         "confidence": {
-          "label": "low",
-          "rank": 1,
-          "classification_source": "stockanalysis.etf_list.name",
+          "label": "high",
+          "rank": 3,
+          "classification_source": "stockanalysis.overview.description",
           "underlying_raw": null,
           "canonical_underlying_ticker": null,
           "canonical_underlying_key": null,
@@ -54493,9 +54344,9 @@
         "category": "Equity",
         "route": "/etfs/AELV",
         "confidence": {
-          "label": "low",
-          "rank": 1,
-          "classification_source": "stockanalysis.etf_list.name",
+          "label": "high",
+          "rank": 3,
+          "classification_source": "stockanalysis.overview.description",
           "underlying_raw": null,
           "canonical_underlying_ticker": null,
           "canonical_underlying_key": null,
@@ -54532,9 +54383,9 @@
         "category": "Equity",
         "route": "/etfs/AEMC",
         "confidence": {
-          "label": "low",
-          "rank": 1,
-          "classification_source": "stockanalysis.etf_list.name",
+          "label": "high",
+          "rank": 3,
+          "classification_source": "stockanalysis.overview.description",
           "underlying_raw": null,
           "canonical_underlying_ticker": null,
           "canonical_underlying_key": null,
@@ -54571,9 +54422,9 @@
         "category": "Equity",
         "route": "/etfs/AEMG",
         "confidence": {
-          "label": "low",
-          "rank": 1,
-          "classification_source": "stockanalysis.etf_list.name",
+          "label": "high",
+          "rank": 3,
+          "classification_source": "stockanalysis.overview.description",
           "underlying_raw": null,
           "canonical_underlying_ticker": null,
           "canonical_underlying_key": null,
@@ -54610,9 +54461,9 @@
         "category": "Equity",
         "route": "/etfs/AEMV",
         "confidence": {
-          "label": "low",
-          "rank": 1,
-          "classification_source": "stockanalysis.etf_list.name",
+          "label": "high",
+          "rank": 3,
+          "classification_source": "stockanalysis.overview.description",
           "underlying_raw": null,
           "canonical_underlying_ticker": null,
           "canonical_underlying_key": null,
@@ -54649,9 +54500,9 @@
         "category": "Equity",
         "route": "/etfs/AESB",
         "confidence": {
-          "label": "low",
-          "rank": 1,
-          "classification_source": "stockanalysis.etf_list.name",
+          "label": "high",
+          "rank": 3,
+          "classification_source": "stockanalysis.overview.description",
           "underlying_raw": null,
           "canonical_underlying_ticker": null,
           "canonical_underlying_key": null,
@@ -54688,9 +54539,9 @@
         "category": "Equity",
         "route": "/etfs/AESG",
         "confidence": {
-          "label": "low",
-          "rank": 1,
-          "classification_source": "stockanalysis.etf_list.name",
+          "label": "high",
+          "rank": 3,
+          "classification_source": "stockanalysis.overview.description",
           "underlying_raw": null,
           "canonical_underlying_ticker": null,
           "canonical_underlying_key": null,
@@ -54727,9 +54578,9 @@
         "category": "Equity",
         "route": "/etfs/AESL",
         "confidence": {
-          "label": "low",
-          "rank": 1,
-          "classification_source": "stockanalysis.etf_list.name",
+          "label": "high",
+          "rank": 3,
+          "classification_source": "stockanalysis.overview.description",
           "underlying_raw": null,
           "canonical_underlying_ticker": null,
           "canonical_underlying_key": null,
@@ -54845,9 +54696,9 @@
         "category": "Equity",
         "route": "/etfs/AFDM",
         "confidence": {
-          "label": "low",
-          "rank": 1,
-          "classification_source": "stockanalysis.etf_list.name",
+          "label": "high",
+          "rank": 3,
+          "classification_source": "stockanalysis.overview.description",
           "underlying_raw": null,
           "canonical_underlying_ticker": null,
           "canonical_underlying_key": null,
@@ -54884,9 +54735,9 @@
         "category": "Equity",
         "route": "/etfs/AFEM",
         "confidence": {
-          "label": "low",
-          "rank": 1,
-          "classification_source": "stockanalysis.etf_list.name",
+          "label": "high",
+          "rank": 3,
+          "classification_source": "stockanalysis.overview.description",
           "underlying_raw": null,
           "canonical_underlying_ticker": null,
           "canonical_underlying_key": null,
@@ -55470,9 +55321,9 @@
         "category": "Fixed Income",
         "route": "/etfs/AGGM",
         "confidence": {
-          "label": "low",
-          "rank": 1,
-          "classification_source": "stockanalysis.etf_list.name",
+          "label": "high",
+          "rank": 3,
+          "classification_source": "stockanalysis.overview.description",
           "underlying_raw": null,
           "canonical_underlying_ticker": null,
           "canonical_underlying_key": null,
@@ -55979,9 +55830,9 @@
         "category": "Equity",
         "route": "/etfs/AHBM",
         "confidence": {
-          "label": "low",
-          "rank": 1,
-          "classification_source": "stockanalysis.etf_list.name",
+          "label": "high",
+          "rank": 3,
+          "classification_source": "stockanalysis.overview.description",
           "underlying_raw": null,
           "canonical_underlying_ticker": null,
           "canonical_underlying_key": null,
@@ -56255,9 +56106,9 @@
         "category": "-",
         "route": "/etfs/AICH",
         "confidence": {
-          "label": "low",
-          "rank": 1,
-          "classification_source": "stockanalysis.etf_list.name",
+          "label": "high",
+          "rank": 3,
+          "classification_source": "stockanalysis.overview.description",
           "underlying_raw": null,
           "canonical_underlying_ticker": null,
           "canonical_underlying_key": null,
@@ -56372,9 +56223,9 @@
         "category": "Equity",
         "route": "/etfs/AIFR",
         "confidence": {
-          "label": "low",
-          "rank": 1,
-          "classification_source": "stockanalysis.etf_list.name",
+          "label": "high",
+          "rank": 3,
+          "classification_source": "stockanalysis.overview.description",
           "underlying_raw": null,
           "canonical_underlying_ticker": null,
           "canonical_underlying_key": null,
@@ -56411,9 +56262,9 @@
         "category": "Equity",
         "route": "/etfs/AIHY",
         "confidence": {
-          "label": "low",
-          "rank": 1,
-          "classification_source": "stockanalysis.etf_list.name",
+          "label": "high",
+          "rank": 3,
+          "classification_source": "stockanalysis.overview.description",
           "underlying_raw": null,
           "canonical_underlying_ticker": null,
           "canonical_underlying_key": null,
@@ -56450,9 +56301,9 @@
         "category": "Equity",
         "route": "/etfs/AIMG",
         "confidence": {
-          "label": "low",
-          "rank": 1,
-          "classification_source": "stockanalysis.etf_list.name",
+          "label": "high",
+          "rank": 3,
+          "classification_source": "stockanalysis.overview.description",
           "underlying_raw": null,
           "canonical_underlying_ticker": null,
           "canonical_underlying_key": null,
@@ -56528,9 +56379,9 @@
         "category": "Equity",
         "route": "/etfs/AINF",
         "confidence": {
-          "label": "low",
-          "rank": 1,
-          "classification_source": "stockanalysis.etf_list.name",
+          "label": "high",
+          "rank": 3,
+          "classification_source": "stockanalysis.overview.description",
           "underlying_raw": null,
           "canonical_underlying_ticker": null,
           "canonical_underlying_key": null,
@@ -57800,12 +57651,12 @@
           "label": "high",
           "rank": 3,
           "classification_source": "stockanalysis.overview.description",
-          "underlying_raw": "the publicly-traded common",
-          "canonical_underlying_ticker": null,
-          "canonical_underlying_key": null,
-          "resolution_method": null,
-          "resolution_source": null,
-          "matched_alias": null,
+          "underlying_raw": "AMZN",
+          "canonical_underlying_ticker": "AMZN",
+          "canonical_underlying_key": "ticker:AMZN",
+          "resolution_method": "direct",
+          "resolution_source": "raw_underlying.symbol",
+          "matched_alias": "AMZN",
           "resolution_note": null
         },
         "as_of": {
@@ -57827,6 +57678,17 @@
             "type": "belongs_to_etf_category",
             "target": "etf_category:Equity",
             "source": "stockanalysis/etf_universe"
+          },
+          {
+            "type": "tracks_underlying",
+            "target": "ticker:AMZN",
+            "source": "stockanalysis.overview.description",
+            "raw_underlying": "AMZN",
+            "canonical_underlying_ticker": "AMZN",
+            "resolution_method": "direct",
+            "resolution_source": "raw_underlying.symbol",
+            "matched_alias": "AMZN",
+            "resolution_note": null
           }
         ]
       },
@@ -57920,12 +57782,12 @@
           "label": "high",
           "rank": 3,
           "classification_source": "stockanalysis.overview.description",
-          "underlying_raw": "the publicly-traded common",
-          "canonical_underlying_ticker": null,
-          "canonical_underlying_key": null,
-          "resolution_method": null,
-          "resolution_source": null,
-          "matched_alias": null,
+          "underlying_raw": "AMD",
+          "canonical_underlying_ticker": "AMD",
+          "canonical_underlying_key": "ticker:AMD",
+          "resolution_method": "direct",
+          "resolution_source": "raw_underlying.symbol",
+          "matched_alias": "AMD",
           "resolution_note": null
         },
         "as_of": {
@@ -57947,6 +57809,17 @@
             "type": "belongs_to_etf_category",
             "target": "etf_category:Equity",
             "source": "stockanalysis/etf_universe"
+          },
+          {
+            "type": "tracks_underlying",
+            "target": "ticker:AMD",
+            "source": "stockanalysis.overview.description",
+            "raw_underlying": "AMD",
+            "canonical_underlying_ticker": "AMD",
+            "resolution_method": "direct",
+            "resolution_source": "raw_underlying.symbol",
+            "matched_alias": "AMD",
+            "resolution_note": null
           }
         ]
       },
@@ -59356,9 +59229,9 @@
         "category": "Equity",
         "route": "/etfs/ANTW",
         "confidence": {
-          "label": "low",
-          "rank": 1,
-          "classification_source": "stockanalysis.etf_list.name",
+          "label": "high",
+          "rank": 3,
+          "classification_source": "stockanalysis.overview.description",
           "underlying_raw": null,
           "canonical_underlying_ticker": null,
           "canonical_underlying_key": null,
@@ -60087,9 +59960,9 @@
         "category": "Equity",
         "route": "/etfs/APMI",
         "confidence": {
-          "label": "medium",
-          "rank": 2,
-          "classification_source": "stockanalysis.etf_list.name",
+          "label": "high",
+          "rank": 3,
+          "classification_source": "stockanalysis.overview.description",
           "underlying_raw": null,
           "canonical_underlying_ticker": null,
           "canonical_underlying_key": null,
@@ -61445,9 +61318,9 @@
         "category": "Alternatives",
         "route": "/etfs/ARKY",
         "confidence": {
-          "label": "low",
-          "rank": 1,
-          "classification_source": "stockanalysis.etf_list.name",
+          "label": "high",
+          "rank": 3,
+          "classification_source": "stockanalysis.overview.description",
           "underlying_raw": null,
           "canonical_underlying_ticker": null,
           "canonical_underlying_key": null,
@@ -62592,9 +62465,9 @@
         "category": "-",
         "route": "/etfs/ASSX",
         "confidence": {
-          "label": "medium",
-          "rank": 2,
-          "classification_source": "stockanalysis.etf_list.name",
+          "label": "high",
+          "rank": 3,
+          "classification_source": "stockanalysis.overview.description",
           "underlying_raw": "ASST",
           "canonical_underlying_ticker": null,
           "canonical_underlying_key": null,
@@ -62719,7 +62592,7 @@
           "label": "high",
           "rank": 3,
           "classification_source": "stockanalysis.overview.description",
-          "underlying_raw": "the publicly-traded common",
+          "underlying_raw": null,
           "canonical_underlying_ticker": null,
           "canonical_underlying_key": null,
           "resolution_method": null,
@@ -62738,8 +62611,7 @@
         },
         "service_flags": [
           "etf_center",
-          "leveraged",
-          "single_stock"
+          "leveraged"
         ],
         "relations": [
           {
@@ -62878,9 +62750,9 @@
         "category": "Equity",
         "route": "/etfs/AT",
         "confidence": {
-          "label": "low",
-          "rank": 1,
-          "classification_source": "stockanalysis.etf_list.name",
+          "label": "high",
+          "rank": 3,
+          "classification_source": "stockanalysis.overview.description",
           "underlying_raw": null,
           "canonical_underlying_ticker": null,
           "canonical_underlying_key": null,
@@ -62917,9 +62789,9 @@
         "category": "Alternatives",
         "route": "/etfs/ATC",
         "confidence": {
-          "label": "low",
-          "rank": 1,
-          "classification_source": "stockanalysis.etf_list.name",
+          "label": "high",
+          "rank": 3,
+          "classification_source": "stockanalysis.overview.description",
           "underlying_raw": null,
           "canonical_underlying_ticker": null,
           "canonical_underlying_key": null,
@@ -65381,10 +65253,10 @@
         "category": "Equity",
         "route": "/etfs/AXTQ",
         "confidence": {
-          "label": "medium",
-          "rank": 2,
-          "classification_source": "stockanalysis.etf_list.name",
-          "underlying_raw": "AXTI",
+          "label": "high",
+          "rank": 3,
+          "classification_source": "stockanalysis.overview.description",
+          "underlying_raw": null,
           "canonical_underlying_ticker": null,
           "canonical_underlying_key": null,
           "resolution_method": null,
@@ -65404,8 +65276,7 @@
         "service_flags": [
           "etf_center",
           "leveraged",
-          "inverse",
-          "single_stock"
+          "inverse"
         ],
         "relations": [
           {
@@ -67556,9 +67427,9 @@
         "category": "Equity",
         "route": "/etfs/BBLS",
         "confidence": {
-          "label": "low",
-          "rank": 1,
-          "classification_source": "stockanalysis.etf_list.name",
+          "label": "high",
+          "rank": 3,
+          "classification_source": "stockanalysis.overview.description",
           "underlying_raw": null,
           "canonical_underlying_ticker": null,
           "canonical_underlying_key": null,
@@ -69243,9 +69114,9 @@
         "category": "Fixed Income",
         "route": "/etfs/BEMD",
         "confidence": {
-          "label": "low",
-          "rank": 1,
-          "classification_source": "stockanalysis.etf_list.name",
+          "label": "high",
+          "rank": 3,
+          "classification_source": "stockanalysis.overview.description",
           "underlying_raw": null,
           "canonical_underlying_ticker": null,
           "canonical_underlying_key": null,
@@ -71230,7 +71101,8 @@
           "classification": true
         },
         "service_flags": [
-          "etf_center"
+          "etf_center",
+          "inverse"
         ],
         "relations": [
           {
@@ -73564,9 +73436,9 @@
         "category": "Currency",
         "route": "/etfs/BNAV",
         "confidence": {
-          "label": "low",
-          "rank": 1,
-          "classification_source": "stockanalysis.etf_list.name",
+          "label": "high",
+          "rank": 3,
+          "classification_source": "stockanalysis.overview.description",
           "underlying_raw": null,
           "canonical_underlying_ticker": null,
           "canonical_underlying_key": null,
@@ -73585,7 +73457,8 @@
           "classification": true
         },
         "service_flags": [
-          "etf_center"
+          "etf_center",
+          "inverse"
         ],
         "relations": [
           {
@@ -74037,7 +73910,7 @@
           "label": "high",
           "rank": 3,
           "classification_source": "stockanalysis.overview.description",
-          "underlying_raw": "the publicly-traded common",
+          "underlying_raw": null,
           "canonical_underlying_ticker": null,
           "canonical_underlying_key": null,
           "resolution_method": null,
@@ -74056,8 +73929,7 @@
         },
         "service_flags": [
           "etf_center",
-          "leveraged",
-          "single_stock"
+          "leveraged"
         ],
         "relations": [
           {
@@ -76593,9 +76465,9 @@
         "category": "-",
         "route": "/etfs/BSMA",
         "confidence": {
-          "label": "low",
-          "rank": 1,
-          "classification_source": "stockanalysis.etf_list.name",
+          "label": "high",
+          "rank": 3,
+          "classification_source": "stockanalysis.overview.description",
           "underlying_raw": null,
           "canonical_underlying_ticker": null,
           "canonical_underlying_key": null,
@@ -78753,9 +78625,9 @@
         "category": "-",
         "route": "/etfs/BUIL",
         "confidence": {
-          "label": "low",
-          "rank": 1,
-          "classification_source": "stockanalysis.etf_list.name",
+          "label": "high",
+          "rank": 3,
+          "classification_source": "stockanalysis.overview.description",
           "underlying_raw": null,
           "canonical_underlying_ticker": null,
           "canonical_underlying_key": null,
@@ -80050,7 +79922,7 @@
           "label": "high",
           "rank": 3,
           "classification_source": "stockanalysis.overview.description",
-          "underlying_raw": "the publicly-traded common",
+          "underlying_raw": null,
           "canonical_underlying_ticker": null,
           "canonical_underlying_key": null,
           "resolution_method": null,
@@ -80069,8 +79941,7 @@
         },
         "service_flags": [
           "etf_center",
-          "leveraged",
-          "single_stock"
+          "leveraged"
         ],
         "relations": [
           {
@@ -80322,9 +80193,9 @@
         "category": "Equity",
         "route": "/etfs/CAPA",
         "confidence": {
-          "label": "low",
-          "rank": 1,
-          "classification_source": "stockanalysis.etf_list.name",
+          "label": "high",
+          "rank": 3,
+          "classification_source": "stockanalysis.overview.description",
           "underlying_raw": null,
           "canonical_underlying_ticker": null,
           "canonical_underlying_key": null,
@@ -80482,7 +80353,7 @@
           "label": "high",
           "rank": 3,
           "classification_source": "stockanalysis.overview.description",
-          "underlying_raw": "the publicly-traded common",
+          "underlying_raw": null,
           "canonical_underlying_ticker": null,
           "canonical_underlying_key": null,
           "resolution_method": null,
@@ -80501,8 +80372,7 @@
         },
         "service_flags": [
           "etf_center",
-          "leveraged",
-          "single_stock"
+          "leveraged"
         ],
         "relations": [
           {
@@ -81197,10 +81067,10 @@
         "category": "Equity",
         "route": "/etfs/CBRG",
         "confidence": {
-          "label": "medium",
-          "rank": 2,
-          "classification_source": "stockanalysis.etf_list.name",
-          "underlying_raw": "CBRS",
+          "label": "high",
+          "rank": 3,
+          "classification_source": "stockanalysis.overview.description",
+          "underlying_raw": null,
           "canonical_underlying_ticker": null,
           "canonical_underlying_key": null,
           "resolution_method": null,
@@ -81219,8 +81089,7 @@
         },
         "service_flags": [
           "etf_center",
-          "leveraged",
-          "single_stock"
+          "leveraged"
         ],
         "relations": [
           {
@@ -81828,9 +81697,9 @@
         "category": "Equity",
         "route": "/etfs/CCML",
         "confidence": {
-          "label": "low",
-          "rank": 1,
-          "classification_source": "stockanalysis.etf_list.name",
+          "label": "high",
+          "rank": 3,
+          "classification_source": "stockanalysis.overview.description",
           "underlying_raw": null,
           "canonical_underlying_ticker": null,
           "canonical_underlying_key": null,
@@ -83146,9 +83015,9 @@
         "category": "-",
         "route": "/etfs/CGFS",
         "confidence": {
-          "label": "low",
-          "rank": 1,
-          "classification_source": "stockanalysis.etf_list.name",
+          "label": "high",
+          "rank": 3,
+          "classification_source": "stockanalysis.overview.description",
           "underlying_raw": null,
           "canonical_underlying_ticker": null,
           "canonical_underlying_key": null,
@@ -83731,9 +83600,9 @@
         "category": "Equity",
         "route": "/etfs/CGPT",
         "confidence": {
-          "label": "low",
-          "rank": 1,
-          "classification_source": "stockanalysis.etf_list.name",
+          "label": "high",
+          "rank": 3,
+          "classification_source": "stockanalysis.overview.description",
           "underlying_raw": null,
           "canonical_underlying_ticker": null,
           "canonical_underlying_key": null,
@@ -84778,7 +84647,7 @@
           "label": "high",
           "rank": 3,
           "classification_source": "stockanalysis.overview.description",
-          "underlying_raw": null,
+          "underlying_raw": "the publicly-traded common",
           "canonical_underlying_ticker": null,
           "canonical_underlying_key": null,
           "resolution_method": null,
@@ -84797,7 +84666,8 @@
         },
         "service_flags": [
           "etf_center",
-          "leveraged"
+          "leveraged",
+          "single_stock"
         ],
         "relations": [
           {
@@ -85130,9 +85000,9 @@
         "category": "Equity",
         "route": "/etfs/CLIM",
         "confidence": {
-          "label": "low",
-          "rank": 1,
-          "classification_source": "stockanalysis.etf_list.name",
+          "label": "high",
+          "rank": 3,
+          "classification_source": "stockanalysis.overview.description",
           "underlying_raw": null,
           "canonical_underlying_ticker": null,
           "canonical_underlying_key": null,
@@ -86514,16 +86384,16 @@
         "category": "Equity",
         "route": "/etfs/COHQ",
         "confidence": {
-          "label": "medium",
-          "rank": 2,
-          "classification_source": "stockanalysis.etf_list.name",
+          "label": "high",
+          "rank": 3,
+          "classification_source": "stockanalysis.overview.description",
           "underlying_raw": "COHR",
           "canonical_underlying_ticker": "COHR",
           "canonical_underlying_key": "ticker:COHR",
           "resolution_method": "direct",
           "resolution_source": "raw_underlying.symbol",
           "matched_alias": "COHR",
-          "resolution_note": "classification_confidence=medium; resolution_method=direct; resolution_source=raw_underlying.symbol"
+          "resolution_note": null
         },
         "as_of": {
           "etf_universe": null,
@@ -86549,13 +86419,13 @@
           {
             "type": "tracks_underlying",
             "target": "ticker:COHR",
-            "source": "stockanalysis.etf_list.name",
+            "source": "stockanalysis.overview.description",
             "raw_underlying": "COHR",
             "canonical_underlying_ticker": "COHR",
             "resolution_method": "direct",
             "resolution_source": "raw_underlying.symbol",
             "matched_alias": "COHR",
-            "resolution_note": "classification_confidence=medium; resolution_method=direct; resolution_source=raw_underlying.symbol"
+            "resolution_note": null
           }
         ]
       },
@@ -86778,12 +86648,12 @@
           "label": "high",
           "rank": 3,
           "classification_source": "stockanalysis.overview.description",
-          "underlying_raw": "the publicly-traded common",
-          "canonical_underlying_ticker": null,
-          "canonical_underlying_key": null,
-          "resolution_method": null,
-          "resolution_source": null,
-          "matched_alias": null,
+          "underlying_raw": "COIN",
+          "canonical_underlying_ticker": "COIN",
+          "canonical_underlying_key": "ticker:COIN",
+          "resolution_method": "direct",
+          "resolution_source": "raw_underlying.symbol",
+          "matched_alias": "COIN",
           "resolution_note": null
         },
         "as_of": {
@@ -86805,6 +86675,17 @@
             "type": "belongs_to_etf_category",
             "target": "etf_category:Equity",
             "source": "stockanalysis/etf_universe"
+          },
+          {
+            "type": "tracks_underlying",
+            "target": "ticker:COIN",
+            "source": "stockanalysis.overview.description",
+            "raw_underlying": "COIN",
+            "canonical_underlying_ticker": "COIN",
+            "resolution_method": "direct",
+            "resolution_source": "raw_underlying.symbol",
+            "matched_alias": "COIN",
+            "resolution_note": null
           }
         ]
       },
@@ -87196,9 +87077,9 @@
         "category": "Equity",
         "route": "/etfs/COOL",
         "confidence": {
-          "label": "low",
-          "rank": 1,
-          "classification_source": "stockanalysis.etf_list.name",
+          "label": "high",
+          "rank": 3,
+          "classification_source": "stockanalysis.overview.description",
           "underlying_raw": null,
           "canonical_underlying_ticker": null,
           "canonical_underlying_key": null,
@@ -89298,9 +89179,9 @@
         "category": "Equity",
         "route": "/etfs/CRAM",
         "confidence": {
-          "label": "low",
-          "rank": 1,
-          "classification_source": "stockanalysis.etf_list.name",
+          "label": "high",
+          "rank": 3,
+          "classification_source": "stockanalysis.overview.description",
           "underlying_raw": null,
           "canonical_underlying_ticker": null,
           "canonical_underlying_key": null,
@@ -89540,7 +89421,7 @@
           "label": "high",
           "rank": 3,
           "classification_source": "stockanalysis.overview.description",
-          "underlying_raw": "the publicly-traded common",
+          "underlying_raw": null,
           "canonical_underlying_ticker": null,
           "canonical_underlying_key": null,
           "resolution_method": null,
@@ -89559,8 +89440,7 @@
         },
         "service_flags": [
           "etf_center",
-          "leveraged",
-          "single_stock"
+          "leveraged"
         ],
         "relations": [
           {
@@ -89923,9 +89803,9 @@
         "category": "Equity",
         "route": "/etfs/CROB",
         "confidence": {
-          "label": "low",
-          "rank": 1,
-          "classification_source": "stockanalysis.etf_list.name",
+          "label": "high",
+          "rank": 3,
+          "classification_source": "stockanalysis.overview.description",
           "underlying_raw": null,
           "canonical_underlying_ticker": null,
           "canonical_underlying_key": null,
@@ -90083,7 +89963,7 @@
           "label": "high",
           "rank": 3,
           "classification_source": "stockanalysis.overview.description",
-          "underlying_raw": "the publicly-traded common",
+          "underlying_raw": null,
           "canonical_underlying_ticker": null,
           "canonical_underlying_key": null,
           "resolution_method": null,
@@ -90102,8 +89982,7 @@
         },
         "service_flags": [
           "etf_center",
-          "leveraged",
-          "single_stock"
+          "leveraged"
         ],
         "relations": [
           {
@@ -90674,9 +90553,9 @@
         "category": "Alternatives",
         "route": "/etfs/CSEP",
         "confidence": {
-          "label": "low",
-          "rank": 1,
-          "classification_source": "stockanalysis.etf_list.name",
+          "label": "high",
+          "rank": 3,
+          "classification_source": "stockanalysis.overview.description",
           "underlying_raw": null,
           "canonical_underlying_ticker": null,
           "canonical_underlying_key": null,
@@ -91547,9 +91426,9 @@
         "category": "Alternatives",
         "route": "/etfs/CTSE",
         "confidence": {
-          "label": "low",
-          "rank": 1,
-          "classification_source": "stockanalysis.etf_list.name",
+          "label": "high",
+          "rank": 3,
+          "classification_source": "stockanalysis.overview.description",
           "underlying_raw": null,
           "canonical_underlying_ticker": null,
           "canonical_underlying_key": null,
@@ -92567,9 +92446,9 @@
         "category": "Alternatives",
         "route": "/etfs/DACL",
         "confidence": {
-          "label": "low",
-          "rank": 1,
-          "classification_source": "stockanalysis.etf_list.name",
+          "label": "high",
+          "rank": 3,
+          "classification_source": "stockanalysis.overview.description",
           "underlying_raw": null,
           "canonical_underlying_ticker": null,
           "canonical_underlying_key": null,
@@ -92588,7 +92467,8 @@
           "classification": true
         },
         "service_flags": [
-          "etf_center"
+          "etf_center",
+          "leveraged"
         ],
         "relations": [
           {
@@ -95624,9 +95504,9 @@
         "category": "Equity",
         "route": "/etfs/DEPW",
         "confidence": {
-          "label": "low",
-          "rank": 1,
-          "classification_source": "stockanalysis.etf_list.name",
+          "label": "high",
+          "rank": 3,
+          "classification_source": "stockanalysis.overview.description",
           "underlying_raw": null,
           "canonical_underlying_ticker": null,
           "canonical_underlying_key": null,
@@ -96912,9 +96792,9 @@
         "category": "Equity",
         "route": "/etfs/DFMC",
         "confidence": {
-          "label": "low",
-          "rank": 1,
-          "classification_source": "stockanalysis.etf_list.name",
+          "label": "high",
+          "rank": 3,
+          "classification_source": "stockanalysis.overview.description",
           "underlying_raw": null,
           "canonical_underlying_ticker": null,
           "canonical_underlying_key": null,
@@ -98199,9 +98079,9 @@
         "category": "Equity",
         "route": "/etfs/DICE",
         "confidence": {
-          "label": "low",
-          "rank": 1,
-          "classification_source": "stockanalysis.etf_list.name",
+          "label": "high",
+          "rank": 3,
+          "classification_source": "stockanalysis.overview.description",
           "underlying_raw": null,
           "canonical_underlying_ticker": null,
           "canonical_underlying_key": null,
@@ -98865,9 +98745,9 @@
         "category": "Equity",
         "route": "/etfs/DIVH",
         "confidence": {
-          "label": "low",
-          "rank": 1,
-          "classification_source": "stockanalysis.etf_list.name",
+          "label": "high",
+          "rank": 3,
+          "classification_source": "stockanalysis.overview.description",
           "underlying_raw": null,
           "canonical_underlying_ticker": null,
           "canonical_underlying_key": null,
@@ -100053,9 +99933,9 @@
         "category": "Equity",
         "route": "/etfs/DMXU",
         "confidence": {
-          "label": "low",
-          "rank": 1,
-          "classification_source": "stockanalysis.etf_list.name",
+          "label": "high",
+          "rank": 3,
+          "classification_source": "stockanalysis.overview.description",
           "underlying_raw": null,
           "canonical_underlying_ticker": null,
           "canonical_underlying_key": null,
@@ -101430,9 +101310,9 @@
         "category": "Equity",
         "route": "/etfs/DSPC",
         "confidence": {
-          "label": "low",
-          "rank": 1,
-          "classification_source": "stockanalysis.etf_list.name",
+          "label": "high",
+          "rank": 3,
+          "classification_source": "stockanalysis.overview.description",
           "underlying_raw": null,
           "canonical_underlying_ticker": null,
           "canonical_underlying_key": null,
@@ -108207,9 +108087,9 @@
         "category": "Alternatives",
         "route": "/etfs/EMSE",
         "confidence": {
-          "label": "low",
-          "rank": 1,
-          "classification_source": "stockanalysis.etf_list.name",
+          "label": "high",
+          "rank": 3,
+          "classification_source": "stockanalysis.overview.description",
           "underlying_raw": null,
           "canonical_underlying_ticker": null,
           "canonical_underlying_key": null,
@@ -108720,7 +108600,7 @@
           "label": "high",
           "rank": 3,
           "classification_source": "stockanalysis.overview.description",
-          "underlying_raw": null,
+          "underlying_raw": "the publicly-traded common",
           "canonical_underlying_ticker": null,
           "canonical_underlying_key": null,
           "resolution_method": null,
@@ -108739,7 +108619,8 @@
         },
         "service_flags": [
           "etf_center",
-          "leveraged"
+          "leveraged",
+          "single_stock"
         ],
         "relations": [
           {
@@ -110443,9 +110324,9 @@
         "category": "Equity",
         "route": "/etfs/ESSC",
         "confidence": {
-          "label": "low",
-          "rank": 1,
-          "classification_source": "stockanalysis.etf_list.name",
+          "label": "high",
+          "rank": 3,
+          "classification_source": "stockanalysis.overview.description",
           "underlying_raw": null,
           "canonical_underlying_ticker": null,
           "canonical_underlying_key": null,
@@ -110495,7 +110376,7 @@
         },
         "as_of": {
           "etf_universe": null,
-          "market_facts": "2026-09-25"
+          "market_facts": "2026-10-01"
         },
         "source_links": {
           "etf_universe": true,
@@ -113328,9 +113209,9 @@
         "category": "Asset Allocation",
         "route": "/etfs/EXPN",
         "confidence": {
-          "label": "low",
-          "rank": 1,
-          "classification_source": "stockanalysis.etf_list.name",
+          "label": "high",
+          "rank": 3,
+          "classification_source": "stockanalysis.overview.description",
           "underlying_raw": null,
           "canonical_underlying_ticker": null,
           "canonical_underlying_key": null,
@@ -119890,16 +119771,16 @@
         "category": "Equity",
         "route": "/etfs/FIXX",
         "confidence": {
-          "label": "medium",
-          "rank": 2,
-          "classification_source": "stockanalysis.etf_list.name",
+          "label": "high",
+          "rank": 3,
+          "classification_source": "stockanalysis.overview.description",
           "underlying_raw": "FIX",
           "canonical_underlying_ticker": "FIX",
           "canonical_underlying_key": "ticker:FIX",
           "resolution_method": "direct",
           "resolution_source": "raw_underlying.symbol",
           "matched_alias": "FIX",
-          "resolution_note": "classification_confidence=medium; resolution_method=direct; resolution_source=raw_underlying.symbol"
+          "resolution_note": null
         },
         "as_of": {
           "etf_universe": null,
@@ -119924,13 +119805,13 @@
           {
             "type": "tracks_underlying",
             "target": "ticker:FIX",
-            "source": "stockanalysis.etf_list.name",
+            "source": "stockanalysis.overview.description",
             "raw_underlying": "FIX",
             "canonical_underlying_ticker": "FIX",
             "resolution_method": "direct",
             "resolution_source": "raw_underlying.symbol",
             "matched_alias": "FIX",
-            "resolution_note": "classification_confidence=medium; resolution_method=direct; resolution_source=raw_underlying.symbol"
+            "resolution_note": null
           }
         ]
       },
@@ -120216,9 +120097,9 @@
         "category": "Equity",
         "route": "/etfs/FLAG",
         "confidence": {
-          "label": "low",
-          "rank": 1,
-          "classification_source": "stockanalysis.etf_list.name",
+          "label": "high",
+          "rank": 3,
+          "classification_source": "stockanalysis.overview.description",
           "underlying_raw": null,
           "canonical_underlying_ticker": null,
           "canonical_underlying_key": null,
@@ -120918,16 +120799,16 @@
         "category": "Equity",
         "route": "/etfs/FLEL",
         "confidence": {
-          "label": "medium",
-          "rank": 2,
-          "classification_source": "stockanalysis.etf_list.name",
-          "underlying_raw": "FLEX",
-          "canonical_underlying_ticker": "FLEX",
-          "canonical_underlying_key": "ticker:FLEX",
-          "resolution_method": "direct",
-          "resolution_source": "raw_underlying.symbol",
-          "matched_alias": "FLEX",
-          "resolution_note": "classification_confidence=medium; resolution_method=direct; resolution_source=raw_underlying.symbol"
+          "label": "high",
+          "rank": 3,
+          "classification_source": "stockanalysis.overview.description",
+          "underlying_raw": null,
+          "canonical_underlying_ticker": null,
+          "canonical_underlying_key": null,
+          "resolution_method": null,
+          "resolution_source": null,
+          "matched_alias": null,
+          "resolution_note": null
         },
         "as_of": {
           "etf_universe": null,
@@ -120940,25 +120821,13 @@
         },
         "service_flags": [
           "etf_center",
-          "leveraged",
-          "single_stock"
+          "leveraged"
         ],
         "relations": [
           {
             "type": "belongs_to_etf_category",
             "target": "etf_category:Equity",
             "source": "stockanalysis/etf_universe"
-          },
-          {
-            "type": "tracks_underlying",
-            "target": "ticker:FLEX",
-            "source": "stockanalysis.etf_list.name",
-            "raw_underlying": "FLEX",
-            "canonical_underlying_ticker": "FLEX",
-            "resolution_method": "direct",
-            "resolution_source": "raw_underlying.symbol",
-            "matched_alias": "FLEX",
-            "resolution_note": "classification_confidence=medium; resolution_method=direct; resolution_source=raw_underlying.symbol"
           }
         ]
       },
@@ -124814,9 +124683,9 @@
         "category": "Equity",
         "route": "/etfs/FRUT",
         "confidence": {
-          "label": "low",
-          "rank": 1,
-          "classification_source": "stockanalysis.etf_list.name",
+          "label": "high",
+          "rank": 3,
+          "classification_source": "stockanalysis.overview.description",
           "underlying_raw": null,
           "canonical_underlying_ticker": null,
           "canonical_underlying_key": null,
@@ -125985,9 +125854,9 @@
         "category": "Equity",
         "route": "/etfs/FTG",
         "confidence": {
-          "label": "low",
-          "rank": 1,
-          "classification_source": "stockanalysis.etf_list.name",
+          "label": "high",
+          "rank": 3,
+          "classification_source": "stockanalysis.overview.description",
           "underlying_raw": null,
           "canonical_underlying_ticker": null,
           "canonical_underlying_key": null,
@@ -126650,9 +126519,9 @@
         "category": "Fixed Income",
         "route": "/etfs/FTPA",
         "confidence": {
-          "label": "low",
-          "rank": 1,
-          "classification_source": "stockanalysis.etf_list.name",
+          "label": "high",
+          "rank": 3,
+          "classification_source": "stockanalysis.overview.description",
           "underlying_raw": null,
           "canonical_underlying_ticker": null,
           "canonical_underlying_key": null,
@@ -128603,9 +128472,9 @@
         "category": "Equity",
         "route": "/etfs/GAIQ",
         "confidence": {
-          "label": "low",
-          "rank": 1,
-          "classification_source": "stockanalysis.etf_list.name",
+          "label": "high",
+          "rank": 3,
+          "classification_source": "stockanalysis.overview.description",
           "underlying_raw": null,
           "canonical_underlying_ticker": null,
           "canonical_underlying_key": null,
@@ -129348,9 +129217,9 @@
         "category": "Fixed Income",
         "route": "/etfs/GCLO",
         "confidence": {
-          "label": "low",
-          "rank": 1,
-          "classification_source": "stockanalysis.etf_list.name",
+          "label": "high",
+          "rank": 3,
+          "classification_source": "stockanalysis.overview.description",
           "underlying_raw": null,
           "canonical_underlying_ticker": null,
           "canonical_underlying_key": null,
@@ -130054,9 +129923,9 @@
         "category": "Equity",
         "route": "/etfs/GEEQ",
         "confidence": {
-          "label": "low",
-          "rank": 1,
-          "classification_source": "stockanalysis.etf_list.name",
+          "label": "high",
+          "rank": 3,
+          "classification_source": "stockanalysis.overview.description",
           "underlying_raw": null,
           "canonical_underlying_ticker": null,
           "canonical_underlying_key": null,
@@ -130250,9 +130119,9 @@
         "category": "Equity",
         "route": "/etfs/GEMQ",
         "confidence": {
-          "label": "low",
-          "rank": 1,
-          "classification_source": "stockanalysis.etf_list.name",
+          "label": "high",
+          "rank": 3,
+          "classification_source": "stockanalysis.overview.description",
           "underlying_raw": null,
           "canonical_underlying_ticker": null,
           "canonical_underlying_key": null,
@@ -130526,7 +130395,7 @@
           "label": "high",
           "rank": 3,
           "classification_source": "stockanalysis.overview.description",
-          "underlying_raw": "the publicly-traded common",
+          "underlying_raw": null,
           "canonical_underlying_ticker": null,
           "canonical_underlying_key": null,
           "resolution_method": null,
@@ -130545,8 +130414,7 @@
         },
         "service_flags": [
           "etf_center",
-          "leveraged",
-          "single_stock"
+          "leveraged"
         ],
         "relations": [
           {
@@ -132049,9 +131917,9 @@
         "category": "Asset Allocation",
         "route": "/etfs/GLDB",
         "confidence": {
-          "label": "low",
-          "rank": 1,
-          "classification_source": "stockanalysis.etf_list.name",
+          "label": "high",
+          "rank": 3,
+          "classification_source": "stockanalysis.overview.description",
           "underlying_raw": null,
           "canonical_underlying_ticker": null,
           "canonical_underlying_key": null,
@@ -133592,16 +133460,16 @@
         "category": "Equity",
         "route": "/etfs/GOGL",
         "confidence": {
-          "label": "medium",
-          "rank": 2,
-          "classification_source": "stockanalysis.etf_list.name",
-          "underlying_raw": "GOOGL",
-          "canonical_underlying_ticker": "GOOGL",
-          "canonical_underlying_key": "ticker:GOOGL",
-          "resolution_method": "direct",
-          "resolution_source": "raw_underlying.symbol",
-          "matched_alias": "GOOGL",
-          "resolution_note": "classification_confidence=medium; resolution_method=direct; resolution_source=raw_underlying.symbol"
+          "label": "high",
+          "rank": 3,
+          "classification_source": "stockanalysis.overview.description",
+          "underlying_raw": "the publicly-traded common",
+          "canonical_underlying_ticker": null,
+          "canonical_underlying_key": null,
+          "resolution_method": null,
+          "resolution_source": null,
+          "matched_alias": null,
+          "resolution_note": null
         },
         "as_of": {
           "etf_universe": null,
@@ -133622,17 +133490,6 @@
             "type": "belongs_to_etf_category",
             "target": "etf_category:Equity",
             "source": "stockanalysis/etf_universe"
-          },
-          {
-            "type": "tracks_underlying",
-            "target": "ticker:GOOGL",
-            "source": "stockanalysis.etf_list.name",
-            "raw_underlying": "GOOGL",
-            "canonical_underlying_ticker": "GOOGL",
-            "resolution_method": "direct",
-            "resolution_source": "raw_underlying.symbol",
-            "matched_alias": "GOOGL",
-            "resolution_note": "classification_confidence=medium; resolution_method=direct; resolution_source=raw_underlying.symbol"
           }
         ]
       },
@@ -133644,9 +133501,9 @@
         "category": "Alternatives",
         "route": "/etfs/GOIB",
         "confidence": {
-          "label": "low",
-          "rank": 1,
-          "classification_source": "stockanalysis.etf_list.name",
+          "label": "high",
+          "rank": 3,
+          "classification_source": "stockanalysis.overview.description",
           "underlying_raw": null,
           "canonical_underlying_ticker": null,
           "canonical_underlying_key": null,
@@ -137240,9 +137097,9 @@
         "category": "Currency",
         "route": "/etfs/GXRP",
         "confidence": {
-          "label": "low",
-          "rank": 1,
-          "classification_source": "stockanalysis.etf_list.name",
+          "label": "high",
+          "rank": 3,
+          "classification_source": "stockanalysis.overview.description",
           "underlying_raw": null,
           "canonical_underlying_ticker": null,
           "canonical_underlying_key": null,
@@ -137261,7 +137118,9 @@
           "classification": true
         },
         "service_flags": [
-          "etf_center"
+          "etf_center",
+          "leveraged",
+          "inverse"
         ],
         "relations": [
           {
@@ -137787,9 +137646,9 @@
         "category": "Equity",
         "route": "/etfs/HAWG",
         "confidence": {
-          "label": "low",
-          "rank": 1,
-          "classification_source": "stockanalysis.etf_list.name",
+          "label": "high",
+          "rank": 3,
+          "classification_source": "stockanalysis.overview.description",
           "underlying_raw": null,
           "canonical_underlying_ticker": null,
           "canonical_underlying_key": null,
@@ -137943,9 +137802,9 @@
         "category": "Currency",
         "route": "/etfs/HBIT",
         "confidence": {
-          "label": "low",
-          "rank": 1,
-          "classification_source": "stockanalysis.etf_list.name",
+          "label": "high",
+          "rank": 3,
+          "classification_source": "stockanalysis.overview.description",
           "underlying_raw": null,
           "canonical_underlying_ticker": null,
           "canonical_underlying_key": null,
@@ -137964,7 +137823,8 @@
           "classification": true
         },
         "service_flags": [
-          "etf_center"
+          "etf_center",
+          "inverse"
         ],
         "relations": [
           {
@@ -139710,9 +139570,9 @@
         "category": "Equity",
         "route": "/etfs/HIAI",
         "confidence": {
-          "label": "low",
-          "rank": 1,
-          "classification_source": "stockanalysis.etf_list.name",
+          "label": "high",
+          "rank": 3,
+          "classification_source": "stockanalysis.overview.description",
           "underlying_raw": null,
           "canonical_underlying_ticker": null,
           "canonical_underlying_key": null,
@@ -140340,9 +140200,9 @@
         "category": "Equity",
         "route": "/etfs/HLTH",
         "confidence": {
-          "label": "low",
-          "rank": 1,
-          "classification_source": "stockanalysis.etf_list.name",
+          "label": "high",
+          "rank": 3,
+          "classification_source": "stockanalysis.overview.description",
           "underlying_raw": null,
           "canonical_underlying_ticker": null,
           "canonical_underlying_key": null,
@@ -140787,12 +140647,12 @@
           "label": "high",
           "rank": 3,
           "classification_source": "stockanalysis.overview.description",
-          "underlying_raw": "the publicly-traded common",
-          "canonical_underlying_ticker": null,
-          "canonical_underlying_key": null,
-          "resolution_method": null,
-          "resolution_source": null,
-          "matched_alias": null,
+          "underlying_raw": "HOOD",
+          "canonical_underlying_ticker": "HOOD",
+          "canonical_underlying_key": "ticker:HOOD",
+          "resolution_method": "direct",
+          "resolution_source": "raw_underlying.symbol",
+          "matched_alias": "HOOD",
           "resolution_note": null
         },
         "as_of": {
@@ -140814,6 +140674,17 @@
             "type": "belongs_to_etf_category",
             "target": "etf_category:Equity",
             "source": "stockanalysis/etf_universe"
+          },
+          {
+            "type": "tracks_underlying",
+            "target": "ticker:HOOD",
+            "source": "stockanalysis.overview.description",
+            "raw_underlying": "HOOD",
+            "canonical_underlying_ticker": "HOOD",
+            "resolution_method": "direct",
+            "resolution_source": "raw_underlying.symbol",
+            "matched_alias": "HOOD",
+            "resolution_note": null
           }
         ]
       },
@@ -141124,9 +140995,9 @@
         "category": "Equity",
         "route": "/etfs/HQDG",
         "confidence": {
-          "label": "low",
-          "rank": 1,
-          "classification_source": "stockanalysis.etf_list.name",
+          "label": "high",
+          "rank": 3,
+          "classification_source": "stockanalysis.overview.description",
           "underlying_raw": null,
           "canonical_underlying_ticker": null,
           "canonical_underlying_key": null,
@@ -141358,9 +141229,9 @@
         "category": "Alternatives",
         "route": "/etfs/HSEP",
         "confidence": {
-          "label": "low",
-          "rank": 1,
-          "classification_source": "stockanalysis.etf_list.name",
+          "label": "high",
+          "rank": 3,
+          "classification_source": "stockanalysis.overview.description",
           "underlying_raw": null,
           "canonical_underlying_ticker": null,
           "canonical_underlying_key": null,
@@ -141672,9 +141543,9 @@
         "category": "-",
         "route": "/etfs/HUMM",
         "confidence": {
-          "label": "low",
-          "rank": 1,
-          "classification_source": "stockanalysis.etf_list.name",
+          "label": "high",
+          "rank": 3,
+          "classification_source": "stockanalysis.overview.description",
           "underlying_raw": null,
           "canonical_underlying_ticker": null,
           "canonical_underlying_key": null,
@@ -141868,9 +141739,9 @@
         "category": "Equity",
         "route": "/etfs/HWGV",
         "confidence": {
-          "label": "low",
-          "rank": 1,
-          "classification_source": "stockanalysis.etf_list.name",
+          "label": "high",
+          "rank": 3,
+          "classification_source": "stockanalysis.overview.description",
           "underlying_raw": null,
           "canonical_underlying_ticker": null,
           "canonical_underlying_key": null,
@@ -142024,9 +141895,9 @@
         "category": "Alternatives",
         "route": "/etfs/HXA",
         "confidence": {
-          "label": "low",
-          "rank": 1,
-          "classification_source": "stockanalysis.etf_list.name",
+          "label": "high",
+          "rank": 3,
+          "classification_source": "stockanalysis.overview.description",
           "underlying_raw": null,
           "canonical_underlying_ticker": null,
           "canonical_underlying_key": null,
@@ -142063,9 +141934,9 @@
         "category": "Commodity",
         "route": "/etfs/HXC",
         "confidence": {
-          "label": "low",
-          "rank": 1,
-          "classification_source": "stockanalysis.etf_list.name",
+          "label": "high",
+          "rank": 3,
+          "classification_source": "stockanalysis.overview.description",
           "underlying_raw": null,
           "canonical_underlying_ticker": null,
           "canonical_underlying_key": null,
@@ -142102,9 +141973,9 @@
         "category": "Alternatives",
         "route": "/etfs/HXE",
         "confidence": {
-          "label": "low",
-          "rank": 1,
-          "classification_source": "stockanalysis.etf_list.name",
+          "label": "high",
+          "rank": 3,
+          "classification_source": "stockanalysis.overview.description",
           "underlying_raw": null,
           "canonical_underlying_ticker": null,
           "canonical_underlying_key": null,
@@ -142141,9 +142012,9 @@
         "category": "Alternatives",
         "route": "/etfs/HXF",
         "confidence": {
-          "label": "low",
-          "rank": 1,
-          "classification_source": "stockanalysis.etf_list.name",
+          "label": "high",
+          "rank": 3,
+          "classification_source": "stockanalysis.overview.description",
           "underlying_raw": null,
           "canonical_underlying_ticker": null,
           "canonical_underlying_key": null,
@@ -142162,7 +142033,8 @@
           "classification": true
         },
         "service_flags": [
-          "etf_center"
+          "etf_center",
+          "inverse"
         ],
         "relations": [
           {
@@ -142964,12 +142836,12 @@
           "label": "high",
           "rank": 3,
           "classification_source": "stockanalysis.overview.description",
-          "underlying_raw": "SKHY",
-          "canonical_underlying_ticker": "SKHY",
-          "canonical_underlying_key": "ticker:SKHY",
-          "resolution_method": "direct",
-          "resolution_source": "raw_underlying.symbol",
-          "matched_alias": "SKHY",
+          "underlying_raw": null,
+          "canonical_underlying_ticker": null,
+          "canonical_underlying_key": null,
+          "resolution_method": null,
+          "resolution_source": null,
+          "matched_alias": null,
           "resolution_note": null
         },
         "as_of": {
@@ -142983,25 +142855,13 @@
         },
         "service_flags": [
           "etf_center",
-          "leveraged",
-          "single_stock"
+          "leveraged"
         ],
         "relations": [
           {
             "type": "belongs_to_etf_category",
             "target": "etf_category:Equity",
             "source": "stockanalysis/etf_universe"
-          },
-          {
-            "type": "tracks_underlying",
-            "target": "ticker:SKHY",
-            "source": "stockanalysis.overview.description",
-            "raw_underlying": "SKHY",
-            "canonical_underlying_ticker": "SKHY",
-            "resolution_method": "direct",
-            "resolution_source": "raw_underlying.symbol",
-            "matched_alias": "SKHY",
-            "resolution_note": null
           }
         ]
       },
@@ -143405,9 +143265,9 @@
         "category": "Alternatives",
         "route": "/etfs/IACL",
         "confidence": {
-          "label": "low",
-          "rank": 1,
-          "classification_source": "stockanalysis.etf_list.name",
+          "label": "high",
+          "rank": 3,
+          "classification_source": "stockanalysis.overview.description",
           "underlying_raw": null,
           "canonical_underlying_ticker": null,
           "canonical_underlying_key": null,
@@ -145407,7 +145267,7 @@
         },
         "as_of": {
           "etf_universe": null,
-          "market_facts": null
+          "market_facts": "2026-10-01"
         },
         "source_links": {
           "etf_universe": true,
@@ -147553,9 +147413,9 @@
         "category": "Alternatives",
         "route": "/etfs/IDSE",
         "confidence": {
-          "label": "low",
-          "rank": 1,
-          "classification_source": "stockanalysis.etf_list.name",
+          "label": "high",
+          "rank": 3,
+          "classification_source": "stockanalysis.overview.description",
           "underlying_raw": null,
           "canonical_underlying_ticker": null,
           "canonical_underlying_key": null,
@@ -151539,12 +151399,12 @@
           "label": "high",
           "rank": 3,
           "classification_source": "stockanalysis.overview.description",
-          "underlying_raw": "the publicly-traded common",
-          "canonical_underlying_ticker": null,
-          "canonical_underlying_key": null,
-          "resolution_method": null,
-          "resolution_source": null,
-          "matched_alias": null,
+          "underlying_raw": "INTC",
+          "canonical_underlying_ticker": "INTC",
+          "canonical_underlying_key": "ticker:INTC",
+          "resolution_method": "direct",
+          "resolution_source": "raw_underlying.symbol",
+          "matched_alias": "INTC",
           "resolution_note": null
         },
         "as_of": {
@@ -151566,6 +151426,17 @@
             "type": "belongs_to_etf_category",
             "target": "etf_category:Equity",
             "source": "stockanalysis/etf_universe"
+          },
+          {
+            "type": "tracks_underlying",
+            "target": "ticker:INTC",
+            "source": "stockanalysis.overview.description",
+            "raw_underlying": "INTC",
+            "canonical_underlying_ticker": "INTC",
+            "resolution_method": "direct",
+            "resolution_source": "raw_underlying.symbol",
+            "matched_alias": "INTC",
+            "resolution_note": null
           }
         ]
       },
@@ -152626,9 +152497,9 @@
         "category": "-",
         "route": "/etfs/IQGR",
         "confidence": {
-          "label": "low",
-          "rank": 1,
-          "classification_source": "stockanalysis.etf_list.name",
+          "label": "high",
+          "rank": 3,
+          "classification_source": "stockanalysis.overview.description",
           "underlying_raw": null,
           "canonical_underlying_ticker": null,
           "canonical_underlying_key": null,
@@ -153846,9 +153717,9 @@
         "category": "Equity",
         "route": "/etfs/ISRL",
         "confidence": {
-          "label": "low",
-          "rank": 1,
-          "classification_source": "stockanalysis.etf_list.name",
+          "label": "high",
+          "rank": 3,
+          "classification_source": "stockanalysis.overview.description",
           "underlying_raw": null,
           "canonical_underlying_ticker": null,
           "canonical_underlying_key": null,
@@ -159685,9 +159556,9 @@
         "category": "Equity",
         "route": "/etfs/JINT",
         "confidence": {
-          "label": "low",
-          "rank": 1,
-          "classification_source": "stockanalysis.etf_list.name",
+          "label": "high",
+          "rank": 3,
+          "classification_source": "stockanalysis.overview.description",
           "underlying_raw": null,
           "canonical_underlying_ticker": null,
           "canonical_underlying_key": null,
@@ -159880,9 +159751,9 @@
         "category": "Equity",
         "route": "/etfs/JLVP",
         "confidence": {
-          "label": "low",
-          "rank": 1,
-          "classification_source": "stockanalysis.etf_list.name",
+          "label": "high",
+          "rank": 3,
+          "classification_source": "stockanalysis.overview.description",
           "underlying_raw": null,
           "canonical_underlying_ticker": null,
           "canonical_underlying_key": null,
@@ -159901,7 +159772,8 @@
           "classification": true
         },
         "service_flags": [
-          "etf_center"
+          "etf_center",
+          "inverse"
         ],
         "relations": [
           {
@@ -160430,7 +160302,7 @@
           "label": "high",
           "rank": 3,
           "classification_source": "stockanalysis.overview.description",
-          "underlying_raw": "the publicly-traded common",
+          "underlying_raw": null,
           "canonical_underlying_ticker": null,
           "canonical_underlying_key": null,
           "resolution_method": null,
@@ -160449,8 +160321,7 @@
         },
         "service_flags": [
           "etf_center",
-          "leveraged",
-          "single_stock"
+          "leveraged"
         ],
         "relations": [
           {
@@ -162227,9 +162098,9 @@
         "category": "Alternatives",
         "route": "/etfs/JULV",
         "confidence": {
-          "label": "low",
-          "rank": 1,
-          "classification_source": "stockanalysis.etf_list.name",
+          "label": "high",
+          "rank": 3,
+          "classification_source": "stockanalysis.overview.description",
           "underlying_raw": null,
           "canonical_underlying_ticker": null,
           "canonical_underlying_key": null,
@@ -162773,9 +162644,9 @@
         "category": "Equity",
         "route": "/etfs/KAIT",
         "confidence": {
-          "label": "low",
-          "rank": 1,
-          "classification_source": "stockanalysis.etf_list.name",
+          "label": "high",
+          "rank": 3,
+          "classification_source": "stockanalysis.overview.description",
           "underlying_raw": null,
           "canonical_underlying_ticker": null,
           "canonical_underlying_key": null,
@@ -162968,10 +162839,10 @@
         "category": "Equity",
         "route": "/etfs/KATT",
         "confidence": {
-          "label": "medium",
-          "rank": 2,
-          "classification_source": "stockanalysis.etf_list.name",
-          "underlying_raw": "PURR",
+          "label": "high",
+          "rank": 3,
+          "classification_source": "stockanalysis.overview.description",
+          "underlying_raw": null,
           "canonical_underlying_ticker": null,
           "canonical_underlying_key": null,
           "resolution_method": null,
@@ -162990,8 +162861,7 @@
         },
         "service_flags": [
           "etf_center",
-          "leveraged",
-          "single_stock"
+          "leveraged"
         ],
         "relations": [
           {
@@ -163558,9 +163428,9 @@
         "category": "Equity",
         "route": "/etfs/KCHP",
         "confidence": {
-          "label": "low",
-          "rank": 1,
-          "classification_source": "stockanalysis.etf_list.name",
+          "label": "high",
+          "rank": 3,
+          "classification_source": "stockanalysis.overview.description",
           "underlying_raw": null,
           "canonical_underlying_ticker": null,
           "canonical_underlying_key": null,
@@ -163989,9 +163859,9 @@
         "category": "Equity",
         "route": "/etfs/KEO",
         "confidence": {
-          "label": "low",
-          "rank": 1,
-          "classification_source": "stockanalysis.etf_list.name",
+          "label": "high",
+          "rank": 3,
+          "classification_source": "stockanalysis.overview.description",
           "underlying_raw": null,
           "canonical_underlying_ticker": null,
           "canonical_underlying_key": null,
@@ -165661,9 +165531,9 @@
         "category": "Equity",
         "route": "/etfs/KPO",
         "confidence": {
-          "label": "low",
-          "rank": 1,
-          "classification_source": "stockanalysis.etf_list.name",
+          "label": "high",
+          "rank": 3,
+          "classification_source": "stockanalysis.overview.description",
           "underlying_raw": null,
           "canonical_underlying_ticker": null,
           "canonical_underlying_key": null,
@@ -166091,9 +165961,9 @@
         "category": "Equity",
         "route": "/etfs/KSMH",
         "confidence": {
-          "label": "low",
-          "rank": 1,
-          "classification_source": "stockanalysis.etf_list.name",
+          "label": "high",
+          "rank": 3,
+          "classification_source": "stockanalysis.overview.description",
           "underlying_raw": null,
           "canonical_underlying_ticker": null,
           "canonical_underlying_key": null,
@@ -167085,9 +166955,9 @@
         "category": "Alternatives",
         "route": "/etfs/LBOX",
         "confidence": {
-          "label": "low",
-          "rank": 1,
-          "classification_source": "stockanalysis.etf_list.name",
+          "label": "high",
+          "rank": 3,
+          "classification_source": "stockanalysis.overview.description",
           "underlying_raw": null,
           "canonical_underlying_ticker": null,
           "canonical_underlying_key": null,
@@ -169092,7 +168962,7 @@
           "label": "high",
           "rank": 3,
           "classification_source": "stockanalysis.overview.description",
-          "underlying_raw": "the publicly-traded common",
+          "underlying_raw": null,
           "canonical_underlying_ticker": null,
           "canonical_underlying_key": null,
           "resolution_method": null,
@@ -169111,8 +168981,7 @@
         },
         "service_flags": [
           "etf_center",
-          "leveraged",
-          "single_stock"
+          "leveraged"
         ],
         "relations": [
           {
@@ -169130,16 +168999,16 @@
         "category": "Equity",
         "route": "/etfs/LITG",
         "confidence": {
-          "label": "medium",
-          "rank": 2,
-          "classification_source": "stockanalysis.etf_list.name",
+          "label": "high",
+          "rank": 3,
+          "classification_source": "stockanalysis.overview.description",
           "underlying_raw": "LITE",
           "canonical_underlying_ticker": "LITE",
           "canonical_underlying_key": "ticker:LITE",
           "resolution_method": "direct",
           "resolution_source": "raw_underlying.symbol",
           "matched_alias": "LITE",
-          "resolution_note": "classification_confidence=medium; resolution_method=direct; resolution_source=raw_underlying.symbol"
+          "resolution_note": null
         },
         "as_of": {
           "etf_universe": null,
@@ -169164,13 +169033,13 @@
           {
             "type": "tracks_underlying",
             "target": "ticker:LITE",
-            "source": "stockanalysis.etf_list.name",
+            "source": "stockanalysis.overview.description",
             "raw_underlying": "LITE",
             "canonical_underlying_ticker": "LITE",
             "resolution_method": "direct",
             "resolution_source": "raw_underlying.symbol",
             "matched_alias": "LITE",
-            "resolution_note": "classification_confidence=medium; resolution_method=direct; resolution_source=raw_underlying.symbol"
+            "resolution_note": null
           }
         ]
       },
@@ -169928,9 +169797,9 @@
         "category": "Equity",
         "route": "/etfs/LOFD",
         "confidence": {
-          "label": "medium",
-          "rank": 2,
-          "classification_source": "stockanalysis.etf_list.name",
+          "label": "high",
+          "rank": 3,
+          "classification_source": "stockanalysis.overview.description",
           "underlying_raw": "SPACEX",
           "canonical_underlying_ticker": null,
           "canonical_underlying_key": null,
@@ -170322,9 +170191,9 @@
         "category": "Equity",
         "route": "/etfs/LPSV",
         "confidence": {
-          "label": "low",
-          "rank": 1,
-          "classification_source": "stockanalysis.etf_list.name",
+          "label": "high",
+          "rank": 3,
+          "classification_source": "stockanalysis.overview.description",
           "underlying_raw": null,
           "canonical_underlying_ticker": null,
           "canonical_underlying_key": null,
@@ -171195,9 +171064,9 @@
         "category": "Fixed Income",
         "route": "/etfs/LSCP",
         "confidence": {
-          "label": "low",
-          "rank": 1,
-          "classification_source": "stockanalysis.etf_list.name",
+          "label": "high",
+          "rank": 3,
+          "classification_source": "stockanalysis.overview.description",
           "underlying_raw": null,
           "canonical_underlying_ticker": null,
           "canonical_underlying_key": null,
@@ -171942,10 +171811,10 @@
         "category": "Equity",
         "route": "/etfs/LWLX",
         "confidence": {
-          "label": "medium",
-          "rank": 2,
-          "classification_source": "stockanalysis.etf_list.name",
-          "underlying_raw": "LWLG",
+          "label": "high",
+          "rank": 3,
+          "classification_source": "stockanalysis.overview.description",
+          "underlying_raw": null,
           "canonical_underlying_ticker": null,
           "canonical_underlying_key": null,
           "resolution_method": null,
@@ -171964,8 +171833,7 @@
         },
         "service_flags": [
           "etf_center",
-          "leveraged",
-          "single_stock"
+          "leveraged"
         ],
         "relations": [
           {
@@ -172022,9 +171890,9 @@
         "category": "Equity",
         "route": "/etfs/LYTE",
         "confidence": {
-          "label": "low",
-          "rank": 1,
-          "classification_source": "stockanalysis.etf_list.name",
+          "label": "high",
+          "rank": 3,
+          "classification_source": "stockanalysis.overview.description",
           "underlying_raw": null,
           "canonical_underlying_ticker": null,
           "canonical_underlying_key": null,
@@ -172804,9 +172672,9 @@
         "category": "Asset Allocation",
         "route": "/etfs/MATR",
         "confidence": {
-          "label": "low",
-          "rank": 1,
-          "classification_source": "stockanalysis.etf_list.name",
+          "label": "high",
+          "rank": 3,
+          "classification_source": "stockanalysis.overview.description",
           "underlying_raw": null,
           "canonical_underlying_ticker": null,
           "canonical_underlying_key": null,
@@ -173950,9 +173818,9 @@
         "category": "Fixed Income",
         "route": "/etfs/MCVT",
         "confidence": {
-          "label": "low",
-          "rank": 1,
-          "classification_source": "stockanalysis.etf_list.name",
+          "label": "high",
+          "rank": 3,
+          "classification_source": "stockanalysis.overview.description",
           "underlying_raw": null,
           "canonical_underlying_ticker": null,
           "canonical_underlying_key": null,
@@ -174496,9 +174364,9 @@
         "category": "-",
         "route": "/etfs/MEGX",
         "confidence": {
-          "label": "medium",
-          "rank": 2,
-          "classification_source": "stockanalysis.etf_list.name",
+          "label": "high",
+          "rank": 3,
+          "classification_source": "stockanalysis.overview.description",
           "underlying_raw": null,
           "canonical_underlying_ticker": null,
           "canonical_underlying_key": null,
@@ -174536,9 +174404,9 @@
         "category": "Alternatives",
         "route": "/etfs/MEIB",
         "confidence": {
-          "label": "low",
-          "rank": 1,
-          "classification_source": "stockanalysis.etf_list.name",
+          "label": "high",
+          "rank": 3,
+          "classification_source": "stockanalysis.overview.description",
           "underlying_raw": null,
           "canonical_underlying_ticker": null,
           "canonical_underlying_key": null,
@@ -174941,16 +174809,16 @@
         "category": "Equity",
         "route": "/etfs/METQ",
         "confidence": {
-          "label": "medium",
-          "rank": 2,
-          "classification_source": "stockanalysis.etf_list.name",
+          "label": "high",
+          "rank": 3,
+          "classification_source": "stockanalysis.overview.description",
           "underlying_raw": "META",
           "canonical_underlying_ticker": "META",
           "canonical_underlying_key": "ticker:META",
           "resolution_method": "direct",
           "resolution_source": "raw_underlying.symbol",
           "matched_alias": "META",
-          "resolution_note": "classification_confidence=medium; resolution_method=direct; resolution_source=raw_underlying.symbol"
+          "resolution_note": null
         },
         "as_of": {
           "etf_universe": null,
@@ -174976,13 +174844,13 @@
           {
             "type": "tracks_underlying",
             "target": "ticker:META",
-            "source": "stockanalysis.etf_list.name",
+            "source": "stockanalysis.overview.description",
             "raw_underlying": "META",
             "canonical_underlying_ticker": "META",
             "resolution_method": "direct",
             "resolution_source": "raw_underlying.symbol",
             "matched_alias": "META",
-            "resolution_note": "classification_confidence=medium; resolution_method=direct; resolution_source=raw_underlying.symbol"
+            "resolution_note": null
           }
         ]
       },
@@ -175438,9 +175306,9 @@
         "category": "Fixed Income",
         "route": "/etfs/MFSD",
         "confidence": {
-          "label": "low",
-          "rank": 1,
-          "classification_source": "stockanalysis.etf_list.name",
+          "label": "high",
+          "rank": 3,
+          "classification_source": "stockanalysis.overview.description",
           "underlying_raw": null,
           "canonical_underlying_ticker": null,
           "canonical_underlying_key": null,
@@ -175633,9 +175501,9 @@
         "category": "Fixed Income",
         "route": "/etfs/MFSX",
         "confidence": {
-          "label": "low",
-          "rank": 1,
-          "classification_source": "stockanalysis.etf_list.name",
+          "label": "high",
+          "rank": 3,
+          "classification_source": "stockanalysis.overview.description",
           "underlying_raw": null,
           "canonical_underlying_ticker": null,
           "canonical_underlying_key": null,
@@ -176222,12 +176090,12 @@
           "label": "high",
           "rank": 3,
           "classification_source": "stockanalysis.overview.description",
-          "underlying_raw": "the publicly-traded common",
-          "canonical_underlying_ticker": null,
-          "canonical_underlying_key": null,
-          "resolution_method": null,
-          "resolution_source": null,
-          "matched_alias": null,
+          "underlying_raw": "MU",
+          "canonical_underlying_ticker": "MU",
+          "canonical_underlying_key": "ticker:MU",
+          "resolution_method": "direct",
+          "resolution_source": "raw_underlying.symbol",
+          "matched_alias": "MU",
           "resolution_note": null
         },
         "as_of": {
@@ -176249,6 +176117,17 @@
             "type": "belongs_to_etf_category",
             "target": "etf_category:Equity",
             "source": "stockanalysis/etf_universe"
+          },
+          {
+            "type": "tracks_underlying",
+            "target": "ticker:MU",
+            "source": "stockanalysis.overview.description",
+            "raw_underlying": "MU",
+            "canonical_underlying_ticker": "MU",
+            "resolution_method": "direct",
+            "resolution_source": "raw_underlying.symbol",
+            "matched_alias": "MU",
+            "resolution_note": null
           }
         ]
       },
@@ -177042,9 +176921,9 @@
         "category": "Equity",
         "route": "/etfs/MLCC",
         "confidence": {
-          "label": "low",
-          "rank": 1,
-          "classification_source": "stockanalysis.etf_list.name",
+          "label": "high",
+          "rank": 3,
+          "classification_source": "stockanalysis.overview.description",
           "underlying_raw": null,
           "canonical_underlying_ticker": null,
           "canonical_underlying_key": null,
@@ -177901,9 +177780,9 @@
         "category": "-",
         "route": "/etfs/MNGZ",
         "confidence": {
-          "label": "medium",
-          "rank": 2,
-          "classification_source": "stockanalysis.etf_list.name",
+          "label": "high",
+          "rank": 3,
+          "classification_source": "stockanalysis.overview.description",
           "underlying_raw": null,
           "canonical_underlying_ticker": null,
           "canonical_underlying_key": null,
@@ -178449,9 +178328,9 @@
         "category": "Alternatives",
         "route": "/etfs/MPDB",
         "confidence": {
-          "label": "low",
-          "rank": 1,
-          "classification_source": "stockanalysis.etf_list.name",
+          "label": "high",
+          "rank": 3,
+          "classification_source": "stockanalysis.overview.description",
           "underlying_raw": null,
           "canonical_underlying_ticker": null,
           "canonical_underlying_key": null,
@@ -178488,9 +178367,9 @@
         "category": "Alternatives",
         "route": "/etfs/MPDY",
         "confidence": {
-          "label": "low",
-          "rank": 1,
-          "classification_source": "stockanalysis.etf_list.name",
+          "label": "high",
+          "rank": 3,
+          "classification_source": "stockanalysis.overview.description",
           "underlying_raw": null,
           "canonical_underlying_ticker": null,
           "canonical_underlying_key": null,
@@ -178509,7 +178388,8 @@
           "classification": true
         },
         "service_flags": [
-          "etf_center"
+          "etf_center",
+          "leveraged"
         ],
         "relations": [
           {
@@ -178568,9 +178448,9 @@
         "category": "Alternatives",
         "route": "/etfs/MPIA",
         "confidence": {
-          "label": "low",
-          "rank": 1,
-          "classification_source": "stockanalysis.etf_list.name",
+          "label": "high",
+          "rank": 3,
+          "classification_source": "stockanalysis.overview.description",
           "underlying_raw": null,
           "canonical_underlying_ticker": null,
           "canonical_underlying_key": null,
@@ -178589,7 +178469,8 @@
           "classification": true
         },
         "service_flags": [
-          "etf_center"
+          "etf_center",
+          "leveraged"
         ],
         "relations": [
           {
@@ -178607,9 +178488,9 @@
         "category": "Alternatives",
         "route": "/etfs/MPIM",
         "confidence": {
-          "label": "low",
-          "rank": 1,
-          "classification_source": "stockanalysis.etf_list.name",
+          "label": "high",
+          "rank": 3,
+          "classification_source": "stockanalysis.overview.description",
           "underlying_raw": null,
           "canonical_underlying_ticker": null,
           "canonical_underlying_key": null,
@@ -178936,10 +178817,10 @@
         "category": "Equity",
         "route": "/etfs/MRAX",
         "confidence": {
-          "label": "medium",
-          "rank": 2,
-          "classification_source": "stockanalysis.etf_list.name",
-          "underlying_raw": "MRAM",
+          "label": "high",
+          "rank": 3,
+          "classification_source": "stockanalysis.overview.description",
+          "underlying_raw": null,
           "canonical_underlying_ticker": null,
           "canonical_underlying_key": null,
           "resolution_method": null,
@@ -178958,8 +178839,7 @@
         },
         "service_flags": [
           "etf_center",
-          "leveraged",
-          "single_stock"
+          "leveraged"
         ],
         "relations": [
           {
@@ -179798,7 +179678,8 @@
           "classification": true
         },
         "service_flags": [
-          "etf_center"
+          "etf_center",
+          "inverse"
         ],
         "relations": [
           {
@@ -179955,7 +179836,8 @@
           "classification": true
         },
         "service_flags": [
-          "etf_center"
+          "etf_center",
+          "inverse"
         ],
         "relations": [
           {
@@ -180533,9 +180415,9 @@
         "category": "Equity",
         "route": "/etfs/MTAW",
         "confidence": {
-          "label": "low",
-          "rank": 1,
-          "classification_source": "stockanalysis.etf_list.name",
+          "label": "high",
+          "rank": 3,
+          "classification_source": "stockanalysis.overview.description",
           "underlying_raw": null,
           "canonical_underlying_ticker": null,
           "canonical_underlying_key": null,
@@ -180888,16 +180770,16 @@
         "category": "Equity",
         "route": "/etfs/MUG",
         "confidence": {
-          "label": "medium",
-          "rank": 2,
-          "classification_source": "stockanalysis.etf_list.name",
+          "label": "high",
+          "rank": 3,
+          "classification_source": "stockanalysis.overview.description",
           "underlying_raw": "MU",
           "canonical_underlying_ticker": "MU",
           "canonical_underlying_key": "ticker:MU",
           "resolution_method": "direct",
           "resolution_source": "raw_underlying.symbol",
           "matched_alias": "MU",
-          "resolution_note": "classification_confidence=medium; resolution_method=direct; resolution_source=raw_underlying.symbol"
+          "resolution_note": null
         },
         "as_of": {
           "etf_universe": null,
@@ -180922,13 +180804,13 @@
           {
             "type": "tracks_underlying",
             "target": "ticker:MU",
-            "source": "stockanalysis.etf_list.name",
+            "source": "stockanalysis.overview.description",
             "raw_underlying": "MU",
             "canonical_underlying_ticker": "MU",
             "resolution_method": "direct",
             "resolution_source": "raw_underlying.symbol",
             "matched_alias": "MU",
-            "resolution_note": "classification_confidence=medium; resolution_method=direct; resolution_source=raw_underlying.symbol"
+            "resolution_note": null
           }
         ]
       },
@@ -180940,9 +180822,9 @@
         "category": "Alternatives",
         "route": "/etfs/MUIB",
         "confidence": {
-          "label": "low",
-          "rank": 1,
-          "classification_source": "stockanalysis.etf_list.name",
+          "label": "high",
+          "rank": 3,
+          "classification_source": "stockanalysis.overview.description",
           "underlying_raw": null,
           "canonical_underlying_ticker": null,
           "canonical_underlying_key": null,
@@ -181226,9 +181108,9 @@
         "category": "Fixed Income",
         "route": "/etfs/MUNF",
         "confidence": {
-          "label": "low",
-          "rank": 1,
-          "classification_source": "stockanalysis.etf_list.name",
+          "label": "high",
+          "rank": 3,
+          "classification_source": "stockanalysis.overview.description",
           "underlying_raw": null,
           "canonical_underlying_ticker": null,
           "canonical_underlying_key": null,
@@ -181265,9 +181147,9 @@
         "category": "Fixed Income",
         "route": "/etfs/MUNG",
         "confidence": {
-          "label": "low",
-          "rank": 1,
-          "classification_source": "stockanalysis.etf_list.name",
+          "label": "high",
+          "rank": 3,
+          "classification_source": "stockanalysis.overview.description",
           "underlying_raw": null,
           "canonical_underlying_ticker": null,
           "canonical_underlying_key": null,
@@ -181304,9 +181186,9 @@
         "category": "Fixed Income",
         "route": "/etfs/MUNH",
         "confidence": {
-          "label": "low",
-          "rank": 1,
-          "classification_source": "stockanalysis.etf_list.name",
+          "label": "high",
+          "rank": 3,
+          "classification_source": "stockanalysis.overview.description",
           "underlying_raw": null,
           "canonical_underlying_ticker": null,
           "canonical_underlying_key": null,
@@ -181382,9 +181264,9 @@
         "category": "Fixed Income",
         "route": "/etfs/MUNJ",
         "confidence": {
-          "label": "low",
-          "rank": 1,
-          "classification_source": "stockanalysis.etf_list.name",
+          "label": "high",
+          "rank": 3,
+          "classification_source": "stockanalysis.overview.description",
           "underlying_raw": null,
           "canonical_underlying_ticker": null,
           "canonical_underlying_key": null,
@@ -182139,9 +182021,9 @@
         "category": "Equity",
         "route": "/etfs/MXLL",
         "confidence": {
-          "label": "medium",
-          "rank": 2,
-          "classification_source": "stockanalysis.etf_list.name",
+          "label": "high",
+          "rank": 3,
+          "classification_source": "stockanalysis.overview.description",
           "underlying_raw": "MXL",
           "canonical_underlying_ticker": null,
           "canonical_underlying_key": null,
@@ -183747,7 +183629,7 @@
           "label": "high",
           "rank": 3,
           "classification_source": "stockanalysis.overview.description",
-          "underlying_raw": null,
+          "underlying_raw": "the publicly-traded common",
           "canonical_underlying_ticker": null,
           "canonical_underlying_key": null,
           "resolution_method": null,
@@ -183766,7 +183648,8 @@
         },
         "service_flags": [
           "etf_center",
-          "leveraged"
+          "leveraged",
+          "single_stock"
         ],
         "relations": [
           {
@@ -184179,9 +184062,9 @@
         "category": "Equity",
         "route": "/etfs/NCLD",
         "confidence": {
-          "label": "low",
-          "rank": 1,
-          "classification_source": "stockanalysis.etf_list.name",
+          "label": "high",
+          "rank": 3,
+          "classification_source": "stockanalysis.overview.description",
           "underlying_raw": null,
           "canonical_underlying_ticker": null,
           "canonical_underlying_key": null,
@@ -186658,7 +186541,7 @@
           "label": "high",
           "rank": 3,
           "classification_source": "stockanalysis.overview.description",
-          "underlying_raw": null,
+          "underlying_raw": "the publicly-traded common",
           "canonical_underlying_ticker": null,
           "canonical_underlying_key": null,
           "resolution_method": null,
@@ -186677,7 +186560,8 @@
         },
         "service_flags": [
           "etf_center",
-          "leveraged"
+          "leveraged",
+          "single_stock"
         ],
         "relations": [
           {
@@ -186773,9 +186657,9 @@
         "category": "Equity",
         "route": "/etfs/NQLT",
         "confidence": {
-          "label": "low",
-          "rank": 1,
-          "classification_source": "stockanalysis.etf_list.name",
+          "label": "high",
+          "rank": 3,
+          "classification_source": "stockanalysis.overview.description",
           "underlying_raw": null,
           "canonical_underlying_ticker": null,
           "canonical_underlying_key": null,
@@ -186812,9 +186696,9 @@
         "category": "Equity",
         "route": "/etfs/NRAM",
         "confidence": {
-          "label": "low",
-          "rank": 1,
-          "classification_source": "stockanalysis.etf_list.name",
+          "label": "high",
+          "rank": 3,
+          "classification_source": "stockanalysis.overview.description",
           "underlying_raw": null,
           "canonical_underlying_ticker": null,
           "canonical_underlying_key": null,
@@ -187792,9 +187676,9 @@
         "category": "Fixed Income",
         "route": "/etfs/NUIB",
         "confidence": {
-          "label": "low",
-          "rank": 1,
-          "classification_source": "stockanalysis.etf_list.name",
+          "label": "high",
+          "rank": 3,
+          "classification_source": "stockanalysis.overview.description",
           "underlying_raw": null,
           "canonical_underlying_ticker": null,
           "canonical_underlying_key": null,
@@ -189045,9 +188929,9 @@
         "category": "Alternatives",
         "route": "/etfs/NVIB",
         "confidence": {
-          "label": "low",
-          "rank": 1,
-          "classification_source": "stockanalysis.etf_list.name",
+          "label": "high",
+          "rank": 3,
+          "classification_source": "stockanalysis.overview.description",
           "underlying_raw": null,
           "canonical_underlying_ticker": null,
           "canonical_underlying_key": null,
@@ -190090,9 +189974,9 @@
         "category": "Equity",
         "route": "/etfs/OAIW",
         "confidence": {
-          "label": "low",
-          "rank": 1,
-          "classification_source": "stockanalysis.etf_list.name",
+          "label": "high",
+          "rank": 3,
+          "classification_source": "stockanalysis.overview.description",
           "underlying_raw": null,
           "canonical_underlying_ticker": null,
           "canonical_underlying_key": null,
@@ -190558,9 +190442,9 @@
         "category": "Equity",
         "route": "/etfs/OCNL",
         "confidence": {
-          "label": "medium",
-          "rank": 2,
-          "classification_source": "stockanalysis.etf_list.name",
+          "label": "high",
+          "rank": 3,
+          "classification_source": "stockanalysis.overview.description",
           "underlying_raw": "DOCN",
           "canonical_underlying_ticker": null,
           "canonical_underlying_key": null,
@@ -192489,9 +192373,9 @@
         "category": "Equity",
         "route": "/etfs/OPPG",
         "confidence": {
-          "label": "low",
-          "rank": 1,
-          "classification_source": "stockanalysis.etf_list.name",
+          "label": "high",
+          "rank": 3,
+          "classification_source": "stockanalysis.overview.description",
           "underlying_raw": null,
           "canonical_underlying_ticker": null,
           "canonical_underlying_key": null,
@@ -193132,9 +193016,9 @@
         "category": "Equity",
         "route": "/etfs/OTAX",
         "confidence": {
-          "label": "low",
-          "rank": 1,
-          "classification_source": "stockanalysis.etf_list.name",
+          "label": "high",
+          "rank": 3,
+          "classification_source": "stockanalysis.overview.description",
           "underlying_raw": null,
           "canonical_underlying_ticker": null,
           "canonical_underlying_key": null,
@@ -193291,7 +193175,7 @@
           "label": "high",
           "rank": 3,
           "classification_source": "stockanalysis.overview.description",
-          "underlying_raw": "OUST",
+          "underlying_raw": null,
           "canonical_underlying_ticker": null,
           "canonical_underlying_key": null,
           "resolution_method": null,
@@ -193310,8 +193194,7 @@
         },
         "service_flags": [
           "etf_center",
-          "leveraged",
-          "single_stock"
+          "leveraged"
         ],
         "relations": [
           {
@@ -196179,9 +196062,9 @@
         "category": "Equity",
         "route": "/etfs/PCOV",
         "confidence": {
-          "label": "low",
-          "rank": 1,
-          "classification_source": "stockanalysis.etf_list.name",
+          "label": "high",
+          "rank": 3,
+          "classification_source": "stockanalysis.overview.description",
           "underlying_raw": null,
           "canonical_underlying_ticker": null,
           "canonical_underlying_key": null,
@@ -196218,9 +196101,9 @@
         "category": "Equity",
         "route": "/etfs/PCPC",
         "confidence": {
-          "label": "low",
-          "rank": 1,
-          "classification_source": "stockanalysis.etf_list.name",
+          "label": "high",
+          "rank": 3,
+          "classification_source": "stockanalysis.overview.description",
           "underlying_raw": null,
           "canonical_underlying_ticker": null,
           "canonical_underlying_key": null,
@@ -196805,10 +196688,10 @@
         "category": "Equity",
         "route": "/etfs/PENU",
         "confidence": {
-          "label": "medium",
-          "rank": 2,
-          "classification_source": "stockanalysis.etf_list.name",
-          "underlying_raw": "PENG",
+          "label": "high",
+          "rank": 3,
+          "classification_source": "stockanalysis.overview.description",
+          "underlying_raw": null,
           "canonical_underlying_ticker": null,
           "canonical_underlying_key": null,
           "resolution_method": null,
@@ -196827,8 +196710,7 @@
         },
         "service_flags": [
           "etf_center",
-          "leveraged",
-          "single_stock"
+          "leveraged"
         ],
         "relations": [
           {
@@ -198016,9 +197898,9 @@
         "category": "Equity",
         "route": "/etfs/PHOX",
         "confidence": {
-          "label": "low",
-          "rank": 1,
-          "classification_source": "stockanalysis.etf_list.name",
+          "label": "high",
+          "rank": 3,
+          "classification_source": "stockanalysis.overview.description",
           "underlying_raw": null,
           "canonical_underlying_ticker": null,
           "canonical_underlying_key": null,
@@ -198797,9 +198679,9 @@
         "category": "Equity",
         "route": "/etfs/PJIN",
         "confidence": {
-          "label": "low",
-          "rank": 1,
-          "classification_source": "stockanalysis.etf_list.name",
+          "label": "high",
+          "rank": 3,
+          "classification_source": "stockanalysis.overview.description",
           "underlying_raw": null,
           "canonical_underlying_ticker": null,
           "canonical_underlying_key": null,
@@ -198914,9 +198796,9 @@
         "category": "Equity",
         "route": "/etfs/PJSM",
         "confidence": {
-          "label": "low",
-          "rank": 1,
-          "classification_source": "stockanalysis.etf_list.name",
+          "label": "high",
+          "rank": 3,
+          "classification_source": "stockanalysis.overview.description",
           "underlying_raw": null,
           "canonical_underlying_ticker": null,
           "canonical_underlying_key": null,
@@ -199226,9 +199108,9 @@
         "category": "Alternatives",
         "route": "/etfs/PLIB",
         "confidence": {
-          "label": "low",
-          "rank": 1,
-          "classification_source": "stockanalysis.etf_list.name",
+          "label": "high",
+          "rank": 3,
+          "classification_source": "stockanalysis.overview.description",
           "underlying_raw": null,
           "canonical_underlying_ticker": null,
           "canonical_underlying_key": null,
@@ -199412,12 +199294,12 @@
           "label": "high",
           "rank": 3,
           "classification_source": "stockanalysis.overview.description",
-          "underlying_raw": "the publicly-traded common",
-          "canonical_underlying_ticker": null,
-          "canonical_underlying_key": null,
-          "resolution_method": null,
-          "resolution_source": null,
-          "matched_alias": null,
+          "underlying_raw": "PLTR",
+          "canonical_underlying_ticker": "PLTR",
+          "canonical_underlying_key": "ticker:PLTR",
+          "resolution_method": "direct",
+          "resolution_source": "raw_underlying.symbol",
+          "matched_alias": "PLTR",
           "resolution_note": null
         },
         "as_of": {
@@ -199439,6 +199321,17 @@
             "type": "belongs_to_etf_category",
             "target": "etf_category:Equity",
             "source": "stockanalysis/etf_universe"
+          },
+          {
+            "type": "tracks_underlying",
+            "target": "ticker:PLTR",
+            "source": "stockanalysis.overview.description",
+            "raw_underlying": "PLTR",
+            "canonical_underlying_ticker": "PLTR",
+            "resolution_method": "direct",
+            "resolution_source": "raw_underlying.symbol",
+            "matched_alias": "PLTR",
+            "resolution_note": null
           }
         ]
       },
@@ -201536,9 +201429,9 @@
         "category": "-",
         "route": "/etfs/PRAM",
         "confidence": {
-          "label": "low",
-          "rank": 1,
-          "classification_source": "stockanalysis.etf_list.name",
+          "label": "high",
+          "rank": 3,
+          "classification_source": "stockanalysis.overview.description",
           "underlying_raw": null,
           "canonical_underlying_ticker": null,
           "canonical_underlying_key": null,
@@ -203564,9 +203457,9 @@
         "category": "Equity",
         "route": "/etfs/PSOX",
         "confidence": {
-          "label": "low",
-          "rank": 1,
-          "classification_source": "stockanalysis.etf_list.name",
+          "label": "high",
+          "rank": 3,
+          "classification_source": "stockanalysis.overview.description",
           "underlying_raw": null,
           "canonical_underlying_ticker": null,
           "canonical_underlying_key": null,
@@ -205832,9 +205725,9 @@
         "category": "Alternatives",
         "route": "/etfs/QAU",
         "confidence": {
-          "label": "low",
-          "rank": 1,
-          "classification_source": "stockanalysis.etf_list.name",
+          "label": "high",
+          "rank": 3,
+          "classification_source": "stockanalysis.overview.description",
           "underlying_raw": null,
           "canonical_underlying_ticker": null,
           "canonical_underlying_key": null,
@@ -208941,9 +208834,9 @@
         "category": "Alternatives",
         "route": "/etfs/QQAU",
         "confidence": {
-          "label": "low",
-          "rank": 1,
-          "classification_source": "stockanalysis.etf_list.name",
+          "label": "high",
+          "rank": 3,
+          "classification_source": "stockanalysis.overview.description",
           "underlying_raw": null,
           "canonical_underlying_ticker": null,
           "canonical_underlying_key": null,
@@ -209882,9 +209775,9 @@
         "category": "Alternatives",
         "route": "/etfs/QQSE",
         "confidence": {
-          "label": "low",
-          "rank": 1,
-          "classification_source": "stockanalysis.etf_list.name",
+          "label": "high",
+          "rank": 3,
+          "classification_source": "stockanalysis.overview.description",
           "underlying_raw": null,
           "canonical_underlying_ticker": null,
           "canonical_underlying_key": null,
@@ -210118,9 +210011,9 @@
         "category": "Alternatives",
         "route": "/etfs/QSE",
         "confidence": {
-          "label": "low",
-          "rank": 1,
-          "classification_source": "stockanalysis.etf_list.name",
+          "label": "high",
+          "rank": 3,
+          "classification_source": "stockanalysis.overview.description",
           "underlying_raw": null,
           "canonical_underlying_ticker": null,
           "canonical_underlying_key": null,
@@ -210831,7 +210724,7 @@
           "label": "high",
           "rank": 3,
           "classification_source": "stockanalysis.overview.description",
-          "underlying_raw": "the publicly-traded common",
+          "underlying_raw": null,
           "canonical_underlying_ticker": null,
           "canonical_underlying_key": null,
           "resolution_method": null,
@@ -210850,8 +210743,7 @@
         },
         "service_flags": [
           "etf_center",
-          "leveraged",
-          "single_stock"
+          "leveraged"
         ],
         "relations": [
           {
@@ -211850,9 +211742,9 @@
         "category": "Equity",
         "route": "/etfs/RAMZ",
         "confidence": {
-          "label": "medium",
-          "rank": 2,
-          "classification_source": "stockanalysis.etf_list.name",
+          "label": "high",
+          "rank": 3,
+          "classification_source": "stockanalysis.overview.description",
           "underlying_raw": null,
           "canonical_underlying_ticker": null,
           "canonical_underlying_key": null,
@@ -212482,7 +212374,7 @@
           "label": "high",
           "rank": 3,
           "classification_source": "stockanalysis.overview.description",
-          "underlying_raw": null,
+          "underlying_raw": "the publicly-traded common",
           "canonical_underlying_ticker": null,
           "canonical_underlying_key": null,
           "resolution_method": null,
@@ -212501,7 +212393,8 @@
         },
         "service_flags": [
           "etf_center",
-          "leveraged"
+          "leveraged",
+          "single_stock"
         ],
         "relations": [
           {
@@ -213237,9 +213130,9 @@
         "category": "-",
         "route": "/etfs/REIX",
         "confidence": {
-          "label": "low",
-          "rank": 1,
-          "classification_source": "stockanalysis.etf_list.name",
+          "label": "high",
+          "rank": 3,
+          "classification_source": "stockanalysis.overview.description",
           "underlying_raw": null,
           "canonical_underlying_ticker": null,
           "canonical_underlying_key": null,
@@ -214777,7 +214670,7 @@
           "label": "high",
           "rank": 3,
           "classification_source": "stockanalysis.overview.description",
-          "underlying_raw": null,
+          "underlying_raw": "the publicly-traded common",
           "canonical_underlying_ticker": null,
           "canonical_underlying_key": null,
           "resolution_method": null,
@@ -214796,7 +214689,8 @@
         },
         "service_flags": [
           "etf_center",
-          "leveraged"
+          "leveraged",
+          "single_stock"
         ],
         "relations": [
           {
@@ -214853,9 +214747,9 @@
         "category": "Equity",
         "route": "/etfs/RJCA",
         "confidence": {
-          "label": "low",
-          "rank": 1,
-          "classification_source": "stockanalysis.etf_list.name",
+          "label": "high",
+          "rank": 3,
+          "classification_source": "stockanalysis.overview.description",
           "underlying_raw": null,
           "canonical_underlying_ticker": null,
           "canonical_underlying_key": null,
@@ -215965,9 +215859,9 @@
         "category": "Equity",
         "route": "/etfs/ROBX",
         "confidence": {
-          "label": "low",
-          "rank": 1,
-          "classification_source": "stockanalysis.etf_list.name",
+          "label": "high",
+          "rank": 3,
+          "classification_source": "stockanalysis.overview.description",
           "underlying_raw": null,
           "canonical_underlying_ticker": null,
           "canonical_underlying_key": null,
@@ -219003,9 +218897,9 @@
         "category": "Alternatives",
         "route": "/etfs/SALI",
         "confidence": {
-          "label": "low",
-          "rank": 1,
-          "classification_source": "stockanalysis.etf_list.name",
+          "label": "high",
+          "rank": 3,
+          "classification_source": "stockanalysis.overview.description",
           "underlying_raw": null,
           "canonical_underlying_ticker": null,
           "canonical_underlying_key": null,
@@ -219750,9 +219644,9 @@
         "category": "Alternatives",
         "route": "/etfs/SCAU",
         "confidence": {
-          "label": "low",
-          "rank": 1,
-          "classification_source": "stockanalysis.etf_list.name",
+          "label": "high",
+          "rank": 3,
+          "classification_source": "stockanalysis.overview.description",
           "underlying_raw": null,
           "canonical_underlying_ticker": null,
           "canonical_underlying_key": null,
@@ -221273,9 +221167,9 @@
         "category": "Alternatives",
         "route": "/etfs/SCSE",
         "confidence": {
-          "label": "low",
-          "rank": 1,
-          "classification_source": "stockanalysis.etf_list.name",
+          "label": "high",
+          "rank": 3,
+          "classification_source": "stockanalysis.overview.description",
           "underlying_raw": null,
           "canonical_underlying_ticker": null,
           "canonical_underlying_key": null,
@@ -222021,9 +221915,9 @@
         "category": "Fixed Income",
         "route": "/etfs/SDUR",
         "confidence": {
-          "label": "low",
-          "rank": 1,
-          "classification_source": "stockanalysis.etf_list.name",
+          "label": "high",
+          "rank": 3,
+          "classification_source": "stockanalysis.overview.description",
           "underlying_raw": null,
           "canonical_underlying_ticker": null,
           "canonical_underlying_key": null,
@@ -222803,9 +222697,9 @@
         "category": "Alternatives",
         "route": "/etfs/SEPC",
         "confidence": {
-          "label": "low",
-          "rank": 1,
-          "classification_source": "stockanalysis.etf_list.name",
+          "label": "high",
+          "rank": 3,
+          "classification_source": "stockanalysis.overview.description",
           "underlying_raw": null,
           "canonical_underlying_ticker": null,
           "canonical_underlying_key": null,
@@ -222959,9 +222853,9 @@
         "category": "-",
         "route": "/etfs/SEPQ",
         "confidence": {
-          "label": "low",
-          "rank": 1,
-          "classification_source": "stockanalysis.etf_list.name",
+          "label": "high",
+          "rank": 3,
+          "classification_source": "stockanalysis.overview.description",
           "underlying_raw": null,
           "canonical_underlying_ticker": null,
           "canonical_underlying_key": null,
@@ -225123,10 +225017,10 @@
         "category": "Equity",
         "route": "/etfs/SITX",
         "confidence": {
-          "label": "medium",
-          "rank": 2,
-          "classification_source": "stockanalysis.etf_list.name",
-          "underlying_raw": "SITM",
+          "label": "high",
+          "rank": 3,
+          "classification_source": "stockanalysis.overview.description",
+          "underlying_raw": null,
           "canonical_underlying_ticker": null,
           "canonical_underlying_key": null,
           "resolution_method": null,
@@ -225145,8 +225039,7 @@
         },
         "service_flags": [
           "etf_center",
-          "leveraged",
-          "single_stock"
+          "leveraged"
         ],
         "relations": [
           {
@@ -225913,9 +225806,9 @@
         "category": "Equity",
         "route": "/etfs/SKHA",
         "confidence": {
-          "label": "medium",
-          "rank": 2,
-          "classification_source": "stockanalysis.etf_list.name",
+          "label": "high",
+          "rank": 3,
+          "classification_source": "stockanalysis.overview.description",
           "underlying_raw": null,
           "canonical_underlying_ticker": null,
           "canonical_underlying_key": null,
@@ -225956,12 +225849,12 @@
           "label": "high",
           "rank": 3,
           "classification_source": "stockanalysis.overview.description",
-          "underlying_raw": "AMD",
-          "canonical_underlying_ticker": "AMD",
-          "canonical_underlying_key": "ticker:AMD",
-          "resolution_method": "direct",
-          "resolution_source": "raw_underlying.symbol",
-          "matched_alias": "AMD",
+          "underlying_raw": null,
+          "canonical_underlying_ticker": null,
+          "canonical_underlying_key": null,
+          "resolution_method": null,
+          "resolution_source": null,
+          "matched_alias": null,
           "resolution_note": null
         },
         "as_of": {
@@ -225975,25 +225868,13 @@
         },
         "service_flags": [
           "etf_center",
-          "leveraged",
-          "single_stock"
+          "leveraged"
         ],
         "relations": [
           {
             "type": "belongs_to_etf_category",
             "target": "etf_category:Equity",
             "source": "stockanalysis/etf_universe"
-          },
-          {
-            "type": "tracks_underlying",
-            "target": "ticker:AMD",
-            "source": "stockanalysis.overview.description",
-            "raw_underlying": "AMD",
-            "canonical_underlying_ticker": "AMD",
-            "resolution_method": "direct",
-            "resolution_source": "raw_underlying.symbol",
-            "matched_alias": "AMD",
-            "resolution_note": null
           }
         ]
       },
@@ -226005,9 +225886,9 @@
         "category": "Equity",
         "route": "/etfs/SKHN",
         "confidence": {
-          "label": "medium",
-          "rank": 2,
-          "classification_source": "stockanalysis.etf_list.name",
+          "label": "high",
+          "rank": 3,
+          "classification_source": "stockanalysis.overview.description",
           "underlying_raw": null,
           "canonical_underlying_ticker": null,
           "canonical_underlying_key": null,
@@ -226046,9 +225927,9 @@
         "category": "Equity",
         "route": "/etfs/SKHQ",
         "confidence": {
-          "label": "medium",
-          "rank": 2,
-          "classification_source": "stockanalysis.etf_list.name",
+          "label": "high",
+          "rank": 3,
+          "classification_source": "stockanalysis.overview.description",
           "underlying_raw": null,
           "canonical_underlying_ticker": null,
           "canonical_underlying_key": null,
@@ -228783,7 +228664,7 @@
           "label": "high",
           "rank": 3,
           "classification_source": "stockanalysis.overview.description",
-          "underlying_raw": "the publicly-traded common",
+          "underlying_raw": null,
           "canonical_underlying_ticker": null,
           "canonical_underlying_key": null,
           "resolution_method": null,
@@ -228802,8 +228683,7 @@
         },
         "service_flags": [
           "etf_center",
-          "leveraged",
-          "single_stock"
+          "leveraged"
         ],
         "relations": [
           {
@@ -233488,9 +233368,9 @@
         "category": "Alternatives",
         "route": "/etfs/SQBA",
         "confidence": {
-          "label": "low",
-          "rank": 1,
-          "classification_source": "stockanalysis.etf_list.name",
+          "label": "high",
+          "rank": 3,
+          "classification_source": "stockanalysis.overview.description",
           "underlying_raw": null,
           "canonical_underlying_ticker": null,
           "canonical_underlying_key": null,
@@ -234748,9 +234628,9 @@
         "category": "Equity",
         "route": "/etfs/STLL",
         "confidence": {
-          "label": "medium",
-          "rank": 2,
-          "classification_source": "stockanalysis.etf_list.name",
+          "label": "high",
+          "rank": 3,
+          "classification_source": "stockanalysis.overview.description",
           "underlying_raw": "STRL",
           "canonical_underlying_ticker": null,
           "canonical_underlying_key": null,
@@ -234830,9 +234710,9 @@
         "category": "Equity",
         "route": "/etfs/STMX",
         "confidence": {
-          "label": "medium",
-          "rank": 2,
-          "classification_source": "stockanalysis.etf_list.name",
+          "label": "high",
+          "rank": 3,
+          "classification_source": "stockanalysis.overview.description",
           "underlying_raw": "STM",
           "canonical_underlying_ticker": null,
           "canonical_underlying_key": null,
@@ -238433,9 +238313,9 @@
         "category": "-",
         "route": "/etfs/TDNA",
         "confidence": {
-          "label": "low",
-          "rank": 1,
-          "classification_source": "stockanalysis.etf_list.name",
+          "label": "high",
+          "rank": 3,
+          "classification_source": "stockanalysis.overview.description",
           "underlying_raw": null,
           "canonical_underlying_ticker": null,
           "canonical_underlying_key": null,
@@ -239623,12 +239503,12 @@
           "label": "high",
           "rank": 3,
           "classification_source": "stockanalysis.overview.description",
-          "underlying_raw": "the publicly-traded common",
-          "canonical_underlying_ticker": null,
-          "canonical_underlying_key": null,
-          "resolution_method": null,
-          "resolution_source": null,
-          "matched_alias": null,
+          "underlying_raw": "TSLA",
+          "canonical_underlying_ticker": "TSLA",
+          "canonical_underlying_key": "ticker:TSLA",
+          "resolution_method": "direct",
+          "resolution_source": "raw_underlying.symbol",
+          "matched_alias": "TSLA",
           "resolution_note": null
         },
         "as_of": {
@@ -239650,6 +239530,17 @@
             "type": "belongs_to_etf_category",
             "target": "etf_category:Equity",
             "source": "stockanalysis/etf_universe"
+          },
+          {
+            "type": "tracks_underlying",
+            "target": "ticker:TSLA",
+            "source": "stockanalysis.overview.description",
+            "raw_underlying": "TSLA",
+            "canonical_underlying_ticker": "TSLA",
+            "resolution_method": "direct",
+            "resolution_source": "raw_underlying.symbol",
+            "matched_alias": "TSLA",
+            "resolution_note": null
           }
         ]
       },
@@ -240407,9 +240298,9 @@
         "category": "Equity",
         "route": "/etfs/TGRZ",
         "confidence": {
-          "label": "low",
-          "rank": 1,
-          "classification_source": "stockanalysis.etf_list.name",
+          "label": "high",
+          "rank": 3,
+          "classification_source": "stockanalysis.overview.description",
           "underlying_raw": null,
           "canonical_underlying_ticker": null,
           "canonical_underlying_key": null,
@@ -240758,9 +240649,9 @@
         "category": "Equity",
         "route": "/etfs/THOR",
         "confidence": {
-          "label": "low",
-          "rank": 1,
-          "classification_source": "stockanalysis.etf_list.name",
+          "label": "high",
+          "rank": 3,
+          "classification_source": "stockanalysis.overview.description",
           "underlying_raw": null,
           "canonical_underlying_ticker": null,
           "canonical_underlying_key": null,
@@ -241111,9 +241002,9 @@
         "category": "Equity",
         "route": "/etfs/TIH",
         "confidence": {
-          "label": "low",
-          "rank": 1,
-          "classification_source": "stockanalysis.etf_list.name",
+          "label": "high",
+          "rank": 3,
+          "classification_source": "stockanalysis.overview.description",
           "underlying_raw": null,
           "canonical_underlying_ticker": null,
           "canonical_underlying_key": null,
@@ -241659,9 +241550,9 @@
         "category": "Fixed Income",
         "route": "/etfs/TIPF",
         "confidence": {
-          "label": "low",
-          "rank": 1,
-          "classification_source": "stockanalysis.etf_list.name",
+          "label": "high",
+          "rank": 3,
+          "classification_source": "stockanalysis.overview.description",
           "underlying_raw": null,
           "canonical_underlying_ticker": null,
           "canonical_underlying_key": null,
@@ -241698,9 +241589,9 @@
         "category": "Fixed Income",
         "route": "/etfs/TIPG",
         "confidence": {
-          "label": "low",
-          "rank": 1,
-          "classification_source": "stockanalysis.etf_list.name",
+          "label": "high",
+          "rank": 3,
+          "classification_source": "stockanalysis.overview.description",
           "underlying_raw": null,
           "canonical_underlying_ticker": null,
           "canonical_underlying_key": null,
@@ -241737,9 +241628,9 @@
         "category": "Fixed Income",
         "route": "/etfs/TIPH",
         "confidence": {
-          "label": "low",
-          "rank": 1,
-          "classification_source": "stockanalysis.etf_list.name",
+          "label": "high",
+          "rank": 3,
+          "classification_source": "stockanalysis.overview.description",
           "underlying_raw": null,
           "canonical_underlying_ticker": null,
           "canonical_underlying_key": null,
@@ -241893,9 +241784,9 @@
         "category": "Fixed Income",
         "route": "/etfs/TIZE",
         "confidence": {
-          "label": "low",
-          "rank": 1,
-          "classification_source": "stockanalysis.etf_list.name",
+          "label": "high",
+          "rank": 3,
+          "classification_source": "stockanalysis.overview.description",
           "underlying_raw": null,
           "canonical_underlying_ticker": null,
           "canonical_underlying_key": null,
@@ -242149,7 +242040,8 @@
           "classification": true
         },
         "service_flags": [
-          "etf_center"
+          "etf_center",
+          "inverse"
         ],
         "relations": [
           {
@@ -243125,7 +243017,8 @@
           "classification": true
         },
         "service_flags": [
-          "etf_center"
+          "etf_center",
+          "leveraged"
         ],
         "relations": [
           {
@@ -243182,9 +243075,9 @@
         "category": "-",
         "route": "/etfs/TMID",
         "confidence": {
-          "label": "low",
-          "rank": 1,
-          "classification_source": "stockanalysis.etf_list.name",
+          "label": "high",
+          "rank": 3,
+          "classification_source": "stockanalysis.overview.description",
           "underlying_raw": null,
           "canonical_underlying_ticker": null,
           "canonical_underlying_key": null,
@@ -245819,9 +245712,9 @@
         "category": "Currency",
         "route": "/etfs/TRXS",
         "confidence": {
-          "label": "low",
-          "rank": 1,
-          "classification_source": "stockanalysis.etf_list.name",
+          "label": "high",
+          "rank": 3,
+          "classification_source": "stockanalysis.overview.description",
           "underlying_raw": null,
           "canonical_underlying_ticker": null,
           "canonical_underlying_key": null,
@@ -245840,7 +245733,8 @@
           "classification": true
         },
         "service_flags": [
-          "etf_center"
+          "etf_center",
+          "inverse"
         ],
         "relations": [
           {
@@ -245936,9 +245830,9 @@
         "category": "Fixed Income",
         "route": "/etfs/TSCZ",
         "confidence": {
-          "label": "low",
-          "rank": 1,
-          "classification_source": "stockanalysis.etf_list.name",
+          "label": "high",
+          "rank": 3,
+          "classification_source": "stockanalysis.overview.description",
           "underlying_raw": null,
           "canonical_underlying_ticker": null,
           "canonical_underlying_key": null,
@@ -246067,9 +245961,9 @@
         "category": "-",
         "route": "/etfs/TSEE",
         "confidence": {
-          "label": "low",
-          "rank": 1,
-          "classification_source": "stockanalysis.etf_list.name",
+          "label": "high",
+          "rank": 3,
+          "classification_source": "stockanalysis.overview.description",
           "underlying_raw": null,
           "canonical_underlying_ticker": null,
           "canonical_underlying_key": null,
@@ -246304,9 +246198,9 @@
         "category": "Alternatives",
         "route": "/etfs/TSIB",
         "confidence": {
-          "label": "low",
-          "rank": 1,
-          "classification_source": "stockanalysis.etf_list.name",
+          "label": "high",
+          "rank": 3,
+          "classification_source": "stockanalysis.overview.description",
           "underlying_raw": null,
           "canonical_underlying_ticker": null,
           "canonical_underlying_key": null,
@@ -249504,9 +249398,9 @@
         "category": "Asset Allocation",
         "route": "/etfs/UCBG",
         "confidence": {
-          "label": "low",
-          "rank": 1,
-          "classification_source": "stockanalysis.etf_list.name",
+          "label": "high",
+          "rank": 3,
+          "classification_source": "stockanalysis.overview.description",
           "underlying_raw": null,
           "canonical_underlying_ticker": null,
           "canonical_underlying_key": null,
@@ -251009,9 +250903,9 @@
         "category": "Equity",
         "route": "/etfs/UMCU",
         "confidence": {
-          "label": "medium",
-          "rank": 2,
-          "classification_source": "stockanalysis.etf_list.name",
+          "label": "high",
+          "rank": 3,
+          "classification_source": "stockanalysis.overview.description",
           "underlying_raw": "UMC",
           "canonical_underlying_ticker": null,
           "canonical_underlying_key": null,
@@ -253095,9 +252989,9 @@
         "category": "-",
         "route": "/etfs/USGX",
         "confidence": {
-          "label": "medium",
-          "rank": 2,
-          "classification_source": "stockanalysis.etf_list.name",
+          "label": "high",
+          "rank": 3,
+          "classification_source": "stockanalysis.overview.description",
           "underlying_raw": null,
           "canonical_underlying_ticker": null,
           "canonical_underlying_key": null,
@@ -253370,9 +253264,9 @@
         "category": "-",
         "route": "/etfs/USLX",
         "confidence": {
-          "label": "medium",
-          "rank": 2,
-          "classification_source": "stockanalysis.etf_list.name",
+          "label": "high",
+          "rank": 3,
+          "classification_source": "stockanalysis.overview.description",
           "underlying_raw": null,
           "canonical_underlying_ticker": null,
           "canonical_underlying_key": null,
@@ -253566,9 +253460,9 @@
         "category": "-",
         "route": "/etfs/USMX",
         "confidence": {
-          "label": "medium",
-          "rank": 2,
-          "classification_source": "stockanalysis.etf_list.name",
+          "label": "high",
+          "rank": 3,
+          "classification_source": "stockanalysis.overview.description",
           "underlying_raw": null,
           "canonical_underlying_ticker": null,
           "canonical_underlying_key": null,
@@ -253957,9 +253851,9 @@
         "category": "-",
         "route": "/etfs/USSX",
         "confidence": {
-          "label": "medium",
-          "rank": 2,
-          "classification_source": "stockanalysis.etf_list.name",
+          "label": "high",
+          "rank": 3,
+          "classification_source": "stockanalysis.overview.description",
           "underlying_raw": null,
           "canonical_underlying_ticker": null,
           "canonical_underlying_key": null,
@@ -254590,7 +254484,7 @@
           "label": "high",
           "rank": 3,
           "classification_source": "stockanalysis.overview.description",
-          "underlying_raw": "the publicly-traded common",
+          "underlying_raw": null,
           "canonical_underlying_ticker": null,
           "canonical_underlying_key": null,
           "resolution_method": null,
@@ -254609,8 +254503,7 @@
         },
         "service_flags": [
           "etf_center",
-          "leveraged",
-          "single_stock"
+          "leveraged"
         ],
         "relations": [
           {
@@ -256748,9 +256641,9 @@
         "category": "Equity",
         "route": "/etfs/VEEM",
         "confidence": {
-          "label": "low",
-          "rank": 1,
-          "classification_source": "stockanalysis.etf_list.name",
+          "label": "high",
+          "rank": 3,
+          "classification_source": "stockanalysis.overview.description",
           "underlying_raw": null,
           "canonical_underlying_ticker": null,
           "canonical_underlying_key": null,
@@ -256943,9 +256836,9 @@
         "category": "Equity",
         "route": "/etfs/VEGX",
         "confidence": {
-          "label": "low",
-          "rank": 1,
-          "classification_source": "stockanalysis.etf_list.name",
+          "label": "high",
+          "rank": 3,
+          "classification_source": "stockanalysis.overview.description",
           "underlying_raw": null,
           "canonical_underlying_ticker": null,
           "canonical_underlying_key": null,
@@ -258002,7 +257895,7 @@
           "label": "high",
           "rank": 3,
           "classification_source": "stockanalysis.overview.description",
-          "underlying_raw": "VIAV",
+          "underlying_raw": null,
           "canonical_underlying_ticker": null,
           "canonical_underlying_key": null,
           "resolution_method": null,
@@ -258021,8 +257914,7 @@
         },
         "service_flags": [
           "etf_center",
-          "leveraged",
-          "single_stock"
+          "leveraged"
         ],
         "relations": [
           {
@@ -259210,9 +259102,9 @@
         "category": "Equity",
         "route": "/etfs/VOOY",
         "confidence": {
-          "label": "low",
-          "rank": 1,
-          "classification_source": "stockanalysis.etf_list.name",
+          "label": "high",
+          "rank": 3,
+          "classification_source": "stockanalysis.overview.description",
           "underlying_raw": null,
           "canonical_underlying_ticker": null,
           "canonical_underlying_key": null,
@@ -262234,7 +262126,7 @@
           "label": "high",
           "rank": 3,
           "classification_source": "stockanalysis.overview.description",
-          "underlying_raw": "the publicly-traded common",
+          "underlying_raw": null,
           "canonical_underlying_ticker": null,
           "canonical_underlying_key": null,
           "resolution_method": null,
@@ -262253,8 +262145,7 @@
         },
         "service_flags": [
           "etf_center",
-          "leveraged",
-          "single_stock"
+          "leveraged"
         ],
         "relations": [
           {
@@ -263800,9 +263691,9 @@
         "category": "Equity",
         "route": "/etfs/WSMD",
         "confidence": {
-          "label": "low",
-          "rank": 1,
-          "classification_source": "stockanalysis.etf_list.name",
+          "label": "high",
+          "rank": 3,
+          "classification_source": "stockanalysis.overview.description",
           "underlying_raw": null,
           "canonical_underlying_ticker": null,
           "canonical_underlying_key": null,
@@ -264746,9 +264637,9 @@
         "category": "Equity",
         "route": "/etfs/XAIW",
         "confidence": {
-          "label": "low",
-          "rank": 1,
-          "classification_source": "stockanalysis.etf_list.name",
+          "label": "high",
+          "rank": 3,
+          "classification_source": "stockanalysis.overview.description",
           "underlying_raw": null,
           "canonical_underlying_ticker": null,
           "canonical_underlying_key": null,
@@ -265813,9 +265704,9 @@
         "category": "Alternatives",
         "route": "/etfs/XCSH",
         "confidence": {
-          "label": "low",
-          "rank": 1,
-          "classification_source": "stockanalysis.etf_list.name",
+          "label": "high",
+          "rank": 3,
+          "classification_source": "stockanalysis.overview.description",
           "underlying_raw": null,
           "canonical_underlying_ticker": null,
           "canonical_underlying_key": null,
@@ -269612,9 +269503,9 @@
         "category": "Equity",
         "route": "/etfs/XQBT",
         "confidence": {
-          "label": "low",
-          "rank": 1,
-          "classification_source": "stockanalysis.etf_list.name",
+          "label": "high",
+          "rank": 3,
+          "classification_source": "stockanalysis.overview.description",
           "underlying_raw": null,
           "canonical_underlying_ticker": null,
           "canonical_underlying_key": null,
@@ -271228,9 +271119,9 @@
         "category": "Equity",
         "route": "/etfs/XUSM",
         "confidence": {
-          "label": "low",
-          "rank": 1,
-          "classification_source": "stockanalysis.etf_list.name",
+          "label": "high",
+          "rank": 3,
+          "classification_source": "stockanalysis.overview.description",
           "underlying_raw": null,
           "canonical_underlying_ticker": null,
           "canonical_underlying_key": null,
@@ -271345,9 +271236,9 @@
         "category": "Alternatives",
         "route": "/etfs/XVAP",
         "confidence": {
-          "label": "low",
-          "rank": 1,
-          "classification_source": "stockanalysis.etf_list.name",
+          "label": "high",
+          "rank": 3,
+          "classification_source": "stockanalysis.overview.description",
           "underlying_raw": null,
           "canonical_underlying_ticker": null,
           "canonical_underlying_key": null,
@@ -271384,9 +271275,9 @@
         "category": "Alternatives",
         "route": "/etfs/XVNV",
         "confidence": {
-          "label": "low",
-          "rank": 1,
-          "classification_source": "stockanalysis.etf_list.name",
+          "label": "high",
+          "rank": 3,
+          "classification_source": "stockanalysis.overview.description",
           "underlying_raw": null,
           "canonical_underlying_ticker": null,
           "canonical_underlying_key": null,
@@ -271423,9 +271314,9 @@
         "category": "Alternatives",
         "route": "/etfs/XVSP",
         "confidence": {
-          "label": "low",
-          "rank": 1,
-          "classification_source": "stockanalysis.etf_list.name",
+          "label": "high",
+          "rank": 3,
+          "classification_source": "stockanalysis.overview.description",
           "underlying_raw": null,
           "canonical_underlying_ticker": null,
           "canonical_underlying_key": null,
@@ -271462,9 +271353,9 @@
         "category": "Alternatives",
         "route": "/etfs/XVTS",
         "confidence": {
-          "label": "low",
-          "rank": 1,
-          "classification_source": "stockanalysis.etf_list.name",
+          "label": "high",
+          "rank": 3,
+          "classification_source": "stockanalysis.overview.description",
           "underlying_raw": null,
           "canonical_underlying_ticker": null,
           "canonical_underlying_key": null,
@@ -271580,9 +271471,9 @@
         "category": "Equity",
         "route": "/etfs/XWNG",
         "confidence": {
-          "label": "low",
-          "rank": 1,
-          "classification_source": "stockanalysis.etf_list.name",
+          "label": "high",
+          "rank": 3,
+          "classification_source": "stockanalysis.overview.description",
           "underlying_raw": null,
           "canonical_underlying_ticker": null,
           "canonical_underlying_key": null,
@@ -272697,9 +272588,9 @@
         "category": "Equity",
         "route": "/etfs/YLDY",
         "confidence": {
-          "label": "low",
-          "rank": 1,
-          "classification_source": "stockanalysis.etf_list.name",
+          "label": "high",
+          "rank": 3,
+          "classification_source": "stockanalysis.overview.description",
           "underlying_raw": null,
           "canonical_underlying_ticker": null,
           "canonical_underlying_key": null,
@@ -273010,9 +272901,9 @@
         "category": "Equity",
         "route": "/etfs/YRAM",
         "confidence": {
-          "label": "low",
-          "rank": 1,
-          "classification_source": "stockanalysis.etf_list.name",
+          "label": "high",
+          "rank": 3,
+          "classification_source": "stockanalysis.overview.description",
           "underlying_raw": null,
           "canonical_underlying_ticker": null,
           "canonical_underlying_key": null,
@@ -273792,9 +273683,9 @@
         "category": "Currency",
         "route": "/etfs/ZCSH",
         "confidence": {
-          "label": "low",
-          "rank": 1,
-          "classification_source": "stockanalysis.etf_list.name",
+          "label": "high",
+          "rank": 3,
+          "classification_source": "stockanalysis.overview.description",
           "underlying_raw": null,
           "canonical_underlying_ticker": null,
           "canonical_underlying_key": null,
@@ -273813,7 +273704,8 @@
           "classification": true
         },
         "service_flags": [
-          "etf_center"
+          "etf_center",
+          "inverse"
         ],
         "relations": [
           {
@@ -273870,9 +273762,9 @@
         "category": "Equity",
         "route": "/etfs/ZDIS",
         "confidence": {
-          "label": "low",
-          "rank": 1,
-          "classification_source": "stockanalysis.etf_list.name",
+          "label": "high",
+          "rank": 3,
+          "classification_source": "stockanalysis.overview.description",
           "underlying_raw": null,
           "canonical_underlying_ticker": null,
           "canonical_underlying_key": null,
@@ -274143,9 +274035,9 @@
         "category": "Equity",
         "route": "/etfs/ZINN",
         "confidence": {
-          "label": "low",
-          "rank": 1,
-          "classification_source": "stockanalysis.etf_list.name",
+          "label": "high",
+          "rank": 3,
+          "classification_source": "stockanalysis.overview.description",
           "underlying_raw": null,
           "canonical_underlying_ticker": null,
           "canonical_underlying_key": null,

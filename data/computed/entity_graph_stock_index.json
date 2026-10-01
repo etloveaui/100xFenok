@@ -1,6 +1,6 @@
 {
   "schema_version": "data-entity-graph-stock-index/v1",
-  "generated_at": "2026-10-01T13:34:32.250Z",
+  "generated_at": "2026-10-01T14:51:49.661Z",
   "source_as_of": {
     "stocks_analyzer": "2026-09-25",
     "stock_action_index": "2026-09-25",
@@ -31,7 +31,7 @@
     "with_filings": 202,
     "with_sec_13f": 424,
     "with_index_membership": 415,
-    "with_single_stock_etfs": 86
+    "with_single_stock_etfs": 84
   },
   "stocks": {
     "NVDA": {
@@ -255,7 +255,7 @@
         "single_stock_etfs": true
       },
       "connection_count": 4,
-      "service_count": 6,
+      "service_count": 7,
       "as_of": {
         "profile": "2026-09-25",
         "action_index": "2026-09-25",
@@ -275,6 +275,10 @@
         {
           "type": "held_by_13f_investors",
           "target": "sec13f:AMZN"
+        },
+        {
+          "type": "referenced_by_single_stock_etf",
+          "target": "etf:AMAA"
         },
         {
           "type": "referenced_by_single_stock_etf",
@@ -387,7 +391,7 @@
         "single_stock_etfs": true
       },
       "connection_count": 4,
-      "service_count": 4,
+      "service_count": 3,
       "as_of": {
         "profile": "2026-09-25",
         "action_index": "2026-09-25",
@@ -407,10 +411,6 @@
         {
           "type": "held_by_13f_investors",
           "target": "sec13f:GOOGL"
-        },
-        {
-          "type": "referenced_by_single_stock_etf",
-          "target": "etf:GOGL"
         },
         {
           "type": "referenced_by_single_stock_etf",
@@ -649,7 +649,7 @@
         "single_stock_etfs": true
       },
       "connection_count": 4,
-      "service_count": 10,
+      "service_count": 11,
       "as_of": {
         "profile": "2026-09-25",
         "action_index": "2026-09-25",
@@ -669,6 +669,10 @@
         {
           "type": "held_by_13f_investors",
           "target": "sec13f:TSLA"
+        },
+        {
+          "type": "referenced_by_single_stock_etf",
+          "target": "etf:TESC"
         },
         {
           "type": "referenced_by_single_stock_etf",
@@ -765,7 +769,7 @@
         "single_stock_etfs": true
       },
       "connection_count": 4,
-      "service_count": 5,
+      "service_count": 6,
       "as_of": {
         "profile": "2026-09-25",
         "action_index": "2026-09-25",
@@ -785,6 +789,10 @@
         {
           "type": "held_by_13f_investors",
           "target": "sec13f:MU"
+        },
+        {
+          "type": "referenced_by_single_stock_etf",
+          "target": "etf:MIC"
         },
         {
           "type": "referenced_by_single_stock_etf",
@@ -896,6 +904,10 @@
         },
         {
           "type": "referenced_by_single_stock_etf",
+          "target": "etf:AMDC"
+        },
+        {
+          "type": "referenced_by_single_stock_etf",
           "target": "etf:AMDG"
         },
         {
@@ -917,10 +929,6 @@
         {
           "type": "referenced_by_single_stock_etf",
           "target": "etf:DAMD"
-        },
-        {
-          "type": "referenced_by_single_stock_etf",
-          "target": "etf:SKHL"
         }
       ]
     },
@@ -974,10 +982,10 @@
         "filings": true,
         "sec_13f": false,
         "index_membership": false,
-        "single_stock_etfs": true
+        "single_stock_etfs": false
       },
       "connection_count": 2,
-      "service_count": 1,
+      "service_count": 0,
       "as_of": {
         "profile": "2026-09-25",
         "action_index": "2026-09-25",
@@ -993,10 +1001,6 @@
         {
           "type": "has_filing_summary",
           "target": "filing:SKHY"
-        },
-        {
-          "type": "referenced_by_single_stock_etf",
-          "target": "etf:HYNX"
         }
       ]
     },
@@ -1321,7 +1325,7 @@
         "single_stock_etfs": true
       },
       "connection_count": 4,
-      "service_count": 2,
+      "service_count": 3,
       "as_of": {
         "profile": "2026-09-25",
         "action_index": "2026-09-25",
@@ -1341,6 +1345,10 @@
         {
           "type": "held_by_13f_investors",
           "target": "sec13f:INTC"
+        },
+        {
+          "type": "referenced_by_single_stock_etf",
+          "target": "etf:INT"
         },
         {
           "type": "referenced_by_single_stock_etf",
@@ -1523,7 +1531,7 @@
         "single_stock_etfs": true
       },
       "connection_count": 4,
-      "service_count": 7,
+      "service_count": 8,
       "as_of": {
         "profile": "2026-09-25",
         "action_index": "2026-09-25",
@@ -1551,6 +1559,10 @@
         {
           "type": "referenced_by_single_stock_etf",
           "target": "etf:PLTG"
+        },
+        {
+          "type": "referenced_by_single_stock_etf",
+          "target": "etf:PLTL"
         },
         {
           "type": "referenced_by_single_stock_etf",
@@ -7021,7 +7033,7 @@
         "single_stock_etfs": true
       },
       "connection_count": 4,
-      "service_count": 6,
+      "service_count": 7,
       "as_of": {
         "profile": "2026-09-25",
         "action_index": "2026-09-25",
@@ -7045,6 +7057,10 @@
         {
           "type": "referenced_by_single_stock_etf",
           "target": "etf:HODU"
+        },
+        {
+          "type": "referenced_by_single_stock_etf",
+          "target": "etf:HOOC"
         },
         {
           "type": "referenced_by_single_stock_etf",
@@ -7499,7 +7515,7 @@
       "as_of": {
         "profile": "2026-09-25",
         "action_index": "2026-09-25",
-        "market_facts": "2026-09-29",
+        "market_facts": "2026-10-01",
         "filings": null,
         "sec_13f": "2026-Q2"
       },
@@ -13241,7 +13257,7 @@
         "single_stock_etfs": true
       },
       "connection_count": 3,
-      "service_count": 6,
+      "service_count": 7,
       "as_of": {
         "profile": "2026-09-25",
         "action_index": "2026-09-25",
@@ -13269,6 +13285,10 @@
         {
           "type": "referenced_by_single_stock_etf",
           "target": "etf:COIW"
+        },
+        {
+          "type": "referenced_by_single_stock_etf",
+          "target": "etf:COIX"
         },
         {
           "type": "referenced_by_single_stock_etf",
@@ -15110,10 +15130,10 @@
         "filings": false,
         "sec_13f": true,
         "index_membership": true,
-        "single_stock_etfs": true
+        "single_stock_etfs": false
       },
       "connection_count": 3,
-      "service_count": 1,
+      "service_count": 0,
       "as_of": {
         "profile": "2026-09-25",
         "action_index": "2026-09-25",
@@ -15129,10 +15149,6 @@
         {
           "type": "held_by_13f_investors",
           "target": "sec13f:FLEX"
-        },
-        {
-          "type": "referenced_by_single_stock_etf",
-          "target": "etf:FLEL"
         }
       ]
     },
