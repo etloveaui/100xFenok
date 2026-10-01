@@ -1,32 +1,44 @@
 {
   "schema_version": "alarm-state/v1",
-  "generated_at": "2026-09-30T23:59:44.998Z",
+  "generated_at": "2026-10-01T01:28:01.164Z",
   "status": "open",
-  "open_incident_count": 2,
+  "open_incident_count": 3,
   "open_incidents": [
     {
-      "workflow": "fetch-stockanalysis.yml",
-      "label": "Fetch StockAnalysis Data",
-      "streak": 5,
+      "workflow": "global-writer-queue-observer.yml",
+      "label": "Global Writer Queue Observability",
+      "streak": 0,
       "failure_streak_threshold": 2,
-      "first_failing_run_id": 36366931706,
-      "first_failing_run_url": "https://github.com/etloveaui/100xFenok/actions/runs/36366931706",
+      "first_failing_run_id": null,
+      "first_failing_run_url": null,
       "alarm_reasons": [
-        "failure_streak"
+        "missed_schedule_window"
       ],
       "lost_schedule_slot_count": 0
     },
     {
-      "workflow": "data-health-kpi",
-      "label": "Data stopped advancing",
+      "workflow": "retention-restore.yml",
+      "label": "R2 Retention Restore Watchdog",
+      "streak": 0,
+      "failure_streak_threshold": 2,
+      "first_failing_run_id": null,
+      "first_failing_run_url": null,
       "alarm_reasons": [
-        "data_stopped_two_generations"
+        "missed_schedule_window"
       ],
-      "stopped_sets": [
-        "stockanalysis_etf_detail"
+      "lost_schedule_slot_count": 0
+    },
+    {
+      "workflow": "worker-request-budget-alarm.yml",
+      "label": "Worker Request Budget Alarm",
+      "streak": 0,
+      "failure_streak_threshold": 2,
+      "first_failing_run_id": null,
+      "first_failing_run_url": null,
+      "alarm_reasons": [
+        "missed_schedule_window"
       ],
-      "latest_generated_at": "2026-09-30T23:48:19.783Z",
-      "previous_generated_at": "2026-09-30T19:19:03.921Z"
+      "lost_schedule_slot_count": 0
     }
   ],
   "watched_workflows": [
@@ -374,17 +386,23 @@
       "reason": "self-monitoring would create a recursive alarm loop"
     }
   ],
-  "unknown_workflows": [],
+  "unknown_workflows": [
+    {
+      "workflow": "data-health-kpi",
+      "status": "unknown"
+    }
+  ],
   "queue_evicted_run_count": 0,
   "queue_evicted_workflows": [],
   "last_firing": {
-    "run_id": "36793535801",
-    "run_url": "https://github.com/etloveaui/100xFenok/actions/runs/36793535801",
-    "observed_at": "2026-09-30T23:59:44.998Z",
-    "event": "schedule",
+    "run_id": "36800853157",
+    "run_url": "https://github.com/etloveaui/100xFenok/actions/runs/36800853157",
+    "observed_at": "2026-10-01T01:28:01.164Z",
+    "event": "workflow_run",
     "workflows": [
-      "fetch-stockanalysis.yml",
-      "data-health-kpi"
+      "global-writer-queue-observer.yml",
+      "retention-restore.yml",
+      "worker-request-budget-alarm.yml"
     ],
     "title": "100xFenok pipeline job failure alarm"
   },
