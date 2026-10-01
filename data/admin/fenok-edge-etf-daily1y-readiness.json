@@ -1,8 +1,8 @@
 {
   "ok": true,
   "schema_version": "fenok-edge-etf-daily1y-readiness-admin/v0.1",
-  "generated_at": "2026-10-01T00:52:39.876Z",
-  "classification_as_of": "2026-10-01T00:52:07.025Z",
+  "generated_at": "2026-10-01T01:20:33.459Z",
+  "classification_as_of": "2026-10-01T01:17:58.911Z",
   "purpose": "Admin-only generated S3 ETF daily 1Y readiness evidence for the auto-managed core daily basket. Separates the managed core ETF surface from DAILY/GATED readiness.",
   "asset_type": "etf",
   "stage": "PUBLIC",
@@ -25,10 +25,10 @@
     "fetchable_plan_output": "data/admin/fenok-edge-etf-daily1y-fetchable-plan.json"
   },
   "daily_1y_readiness": {
-    "managed_etf_count": 116,
+    "managed_etf_count": 120,
     "scored_universe_total": 4579,
-    "denominator": 116,
-    "daily_1y_complete": 116,
+    "denominator": 120,
+    "daily_1y_complete": 120,
     "daily_1y_missing": 0,
     "daily_1y_fetchable": 0,
     "inception_limited_daily_1y_gap": 0,
@@ -53,38 +53,30 @@
   },
   "generated_count_checks": {
     "summary_rows": 4579,
-    "managed_etf_count": 116,
+    "managed_etf_count": 120,
     "scored_universe_total": 4579,
-    "core_basket_ticker_count": 116,
+    "core_basket_ticker_count": 120,
     "core_tickers_missing_from_summary": 0,
     "summary_count_ok": true,
     "coverage_index_count_ok": true,
     "coverage_index_daily_check_count_ok": true,
-    "coverage_index_fetchable_daily_1y_gap": 271,
-    "coverage_index_inception_limited_daily_1y_gap": 694,
-    "coverage_index_terminal_limited_daily_1y_gap": 12,
+    "coverage_index_fetchable_daily_1y_gap": 3,
+    "coverage_index_inception_limited_daily_1y_gap": 726,
+    "coverage_index_terminal_limited_daily_1y_gap": 28,
     "history_gap_report_count_ok": true,
     "history_gap_classification_clock_match": true,
     "coverage_index_classification_clock_match": true,
     "coverage_index_daily_check_classification_clock_match": true,
     "history_gap_report_scored_etf_count": 4579,
-    "history_gap_report_fetchable_daily_1y_gap": 271,
-    "history_gap_report_inception_limited_daily_1y_gap": 694,
-    "history_gap_report_terminal_limited_daily_1y_gap": 12
+    "history_gap_report_fetchable_daily_1y_gap": 3,
+    "history_gap_report_inception_limited_daily_1y_gap": 726,
+    "history_gap_report_terminal_limited_daily_1y_gap": 28
   },
   "samples": {
     "fetchable": [],
     "inception_limited": [],
     "terminal_limited": [],
     "complete": [
-      {
-        "ticker": "AGG",
-        "actual_rows": 251,
-        "missing_file": false,
-        "inception_date": null,
-        "classification_reason": null,
-        "effective_start_source": null
-      },
       {
         "ticker": "AOA",
         "actual_rows": 251,
@@ -116,6 +108,14 @@
         "inception_date": null,
         "classification_reason": null,
         "effective_start_source": null
+      },
+      {
+        "ticker": "AVEM",
+        "actual_rows": 251,
+        "missing_file": false,
+        "inception_date": null,
+        "classification_reason": null,
+        "effective_start_source": null
       }
     ]
   },
@@ -125,45 +125,27 @@
     "ticker_count": 0,
     "full_scored_scope": "full_scored_etf_universe",
     "full_scored_candidate_status": "complete",
-    "full_scored_candidate_count": 271,
-    "full_scored_candidate_ticker_count": 271,
+    "full_scored_candidate_count": 3,
+    "full_scored_candidate_ticker_count": 3,
     "full_scored_dispatch_authorized": false,
     "can_drive_bounded_ticker_batches": true,
     "batch_count": 0,
     "default_batch_size": 120,
-    "yf_local_crosscheck_gap_count": 0,
-    "yf_local_crosscheck_matches": true,
+    "yf_local_crosscheck_gap_count": 1,
+    "yf_local_crosscheck_matches": false,
     "caveat": "Scope is the auto-managed core daily basket only: the exact readiness blocker is effective ETF detail daily_1y continuity for managed core tickers (true StockAnalysis primary first, then the verified R2 active selection). Raw local YF is cross-check-only and is never treated as selected authority."
   },
   "recommended_dispatch": {
-    "status": "manual_dispatch_recommended",
+    "status": "scheduled_backfill_active",
     "workflow": "fetch-stockanalysis.yml",
+    "schedule": "50 23 * * 1-5",
+    "schedule_kst": "Tue-Sat 08:50",
     "inputs": {
       "history_gaps_only": "true",
       "required_history_periods": "daily_1y",
-      "incremental_etf_limit": "100"
+      "incremental_etf_limit": "120"
     },
-    "dispatch_plan": {
-      "status": "ready",
-      "selection": "explicit full-primary daily_1y fetchable tickers; not the scored-ETF scheduled plan",
-      "single_writer": true,
-      "shard_size": 100,
-      "ticker_count": 48,
-      "shard_count": 1,
-      "shards": [
-        {
-          "shard": 1,
-          "ticker_count": 48,
-          "inputs": {
-            "history_gaps_only": "true",
-            "required_history_periods": "daily_1y",
-            "incremental_etf_limit": "0",
-            "etfs": "ARLU,AUGU,AVGW,BBB,BCCC,BETE,BETH,BITB,BNDY,BRKW,BRRR,BTC,BTCO,BTCW,BTRN,CBOJ,CBOY,CBTJ,CBTY,CBXY,CEGX,CERY,COIW,CPHY,CPNJ,CPNM,CPNQ,CPNS,CPRA,CPRJ,CPRO,CPRY,CPSA,CPSD,CPSF,CPSJ,CPSM,CPSN,CPSO,CPSP,CPSR,CPST,CPSU,HYGW,LQDW,TOCT,TOT,XLII"
-          }
-        }
-      ]
-    },
-    "note": "Full-primary daily 1Y gaps are outside the exact scored-ETF scheduled plan. Use only the explicit single-writer shards after owner approval; no dispatch has been run."
+    "note": "The weekday scheduled lane drains ETF daily 1Y required-history gaps at 120 per run. Manual reruns remain owner-gated and this diagnostic lane is not the ETF service gate."
   },
   "errors": []
 }
