@@ -75,18 +75,26 @@
     "quote_as_of": "2026-06-10T06:30:30Z",
     "source_as_of": "2026-06-10T06:30:30Z"
   },
-  "resolution_state": "lkg_primary",
-  "retry": true,
+  "resolution_state": "terminal_provider_unsupported",
+  "retry": false,
   "schema_version": "yahoo-batch-quote-history-state/v1",
-  "stale": {
-    "age_business_days": 23,
-    "classified_at": "2026-07-13T04:33:56Z",
-    "expected_resolution": "next_natural_yahoo_run",
-    "max_business_days": 6,
-    "message": "230360.KQ holds LKG because Yahoo source date 2026-06-10T06:30:30Z is 23 business days old, beyond the 6-day bound; it will retry on the next natural Yahoo run.",
-    "reason": "source_age_exceeds_lane_bound",
-    "source_as_of": "2026-06-10T06:30:30Z"
+  "terminal": {
+    "artifact_generated_at": null,
+    "artifact_path": null,
+    "classified_at": "2026-10-01T14:18:47Z",
+    "evidence": [
+      {
+        "alias_target": null,
+        "effective_date": "2026-06-30",
+        "reason": "KRX final cash share exchange notice; delisted 2026-06-30",
+        "source": "verified_public_lifecycle",
+        "source_url": "https://kind.krx.co.kr/external/2026/06/25/000847/20260625002043/70769.htm",
+        "symbol": "230360.KQ",
+        "terminal": true
+      }
+    ],
+    "evidence_sha256": null
   },
   "ticker": "230360.KQ",
-  "updated_at": "2026-10-01T02:16:16Z"
+  "updated_at": "2026-10-01T14:18:47Z"
 }

@@ -50,18 +50,26 @@
     "source_as_of": "2026-08-20T19:22:34Z"
   },
   "recovered_at": "2026-07-18T00:37:10Z",
-  "resolution_state": "lkg_primary",
-  "retry": true,
+  "resolution_state": "terminal_provider_unsupported",
+  "retry": false,
   "schema_version": "yahoo-batch-quote-history-state/v1",
-  "stale": {
-    "age_business_days": 8,
-    "classified_at": "2026-09-01T01:52:51Z",
-    "expected_resolution": "next_natural_yahoo_run",
-    "max_business_days": 6,
-    "message": "XVUG holds LKG because Yahoo source date 2026-08-20T19:22:34Z is 8 business days old, beyond the 6-day bound; it will retry on the next natural Yahoo run.",
-    "reason": "source_age_exceeds_lane_bound",
-    "source_as_of": "2026-08-20T19:22:34Z"
+  "terminal": {
+    "artifact_generated_at": null,
+    "artifact_path": null,
+    "classified_at": "2026-10-01T14:18:47Z",
+    "evidence": [
+      {
+        "alias_target": "USGX",
+        "effective_date": "2026-08-21",
+        "reason": "same public security now trades under successor ticker",
+        "source": "verified_public_lifecycle",
+        "source_url": "https://www.sec.gov/Archives/edgar/data/2078265/000207826526000347/497e_ticker_changes.htm",
+        "symbol": "XVUG",
+        "terminal": true
+      }
+    ],
+    "evidence_sha256": null
   },
   "ticker": "XVUG",
-  "updated_at": "2026-10-01T02:16:02Z"
+  "updated_at": "2026-10-01T14:18:47Z"
 }

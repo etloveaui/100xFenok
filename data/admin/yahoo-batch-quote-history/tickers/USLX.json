@@ -1,20 +1,54 @@
 {
   "current": {
-    "fetched_at": "2026-09-28T06:38:52Z",
-    "history_as_of": "2026-09-25",
-    "path": "data/admin/yahoo-batch-quote-history/lkg/USLX.json",
-    "payload_sha256": "be1c964a2dd77d40c5b6bd7463f04a8675ff4e0d7c831adc73e5426bcaf1c097",
-    "quote_as_of": "2026-09-22T17:10:29Z",
-    "source_as_of": "2026-09-22T17:10:29Z"
+    "fetched_at": "2026-10-01T14:19:16Z",
+    "history_as_of": "2026-10-01",
+    "path": "data/yf/finance/USLX.json",
+    "payload_sha256": "417cf2a34f08e89f9f7803b76139db7d3617ae75497f515d8a2d843a732645de",
+    "quote_as_of": "2026-10-01T13:46:08Z",
+    "source_as_of": "2026-10-01"
   },
   "discovered_from": [
+    "market_facts",
+    "same_security_successor:VOOX",
     "stockanalysis_etf"
   ],
+  "failure_count": 0,
   "last_result": {
     "attempts_used": 1,
-    "failures": [],
-    "latency_ms": 405,
-    "observed_at": "2026-09-28T06:30:00Z",
+    "failures": [
+      {
+        "attempt": 1,
+        "error": "YFDataException: USLX: No Fund data found.",
+        "source": "provider_safe_call"
+      },
+      {
+        "attempt": 1,
+        "error": "YFDataException: USLX: No Fund data found.",
+        "source": "provider_safe_call"
+      },
+      {
+        "attempt": 1,
+        "error": "YFDataException: USLX: No Fund data found.",
+        "source": "provider_safe_call"
+      },
+      {
+        "attempt": 1,
+        "error": "YFDataException: USLX: No Fund data found.",
+        "source": "provider_safe_call"
+      },
+      {
+        "attempt": 1,
+        "error": "YFDataException: USLX: No Fund data found.",
+        "source": "provider_safe_call"
+      },
+      {
+        "attempt": 1,
+        "error": "YFDataException: USLX: No Fund data found.",
+        "source": "provider_safe_call"
+      }
+    ],
+    "latency_ms": 435,
+    "observed_at": "2026-10-01T14:19:16Z",
     "outcome": "fresh"
   },
   "lkg": {
@@ -25,8 +59,8 @@
     "quote_as_of": "2026-09-22T17:10:29Z",
     "source_as_of": "2026-09-22T17:10:29Z"
   },
-  "resolution_state": "lkg_primary",
-  "retry": true,
+  "resolution_state": "fresh_primary",
+  "retry": false,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "stale": {
     "age_business_days": 7,
@@ -38,5 +72,5 @@
     "source_as_of": "2026-09-22T17:10:29Z"
   },
   "ticker": "USLX",
-  "updated_at": "2026-10-01T02:15:16Z"
+  "updated_at": "2026-10-01T14:19:16Z"
 }

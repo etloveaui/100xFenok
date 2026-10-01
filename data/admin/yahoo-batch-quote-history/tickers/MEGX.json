@@ -1,58 +1,59 @@
 {
-  "attempts": [
-    {
-      "attempts_used": 1,
-      "event_name": "workflow_dispatch",
-      "failures": [],
-      "latency_ms": 499,
-      "natural": false,
-      "observed_at": "2026-09-28T04:37:06Z",
-      "outcome": "fresh",
-      "run_attempt": 1,
-      "run_id": "36367831133",
-      "schedule": "",
-      "shard": ""
-    }
-  ],
   "current": {
-    "fetched_at": "2026-09-28T04:57:16Z",
-    "history_as_of": "2026-09-25",
+    "fetched_at": "2026-10-01T14:19:14Z",
+    "history_as_of": "2026-10-01",
     "path": "data/yf/finance/MEGX.json",
-    "payload_sha256": "de305f5462ca71cb7edbb1469340522be83260e006b7ea15fe166ba1e48d263d",
-    "quote_as_of": "2026-09-23T14:53:42Z",
-    "source_as_of": "2026-09-23T14:53:42Z"
+    "payload_sha256": "0f67120b013289b5b89aee17000fa54dd9f46d5d84aed57478a5935a0a4df448",
+    "quote_as_of": "2026-10-01T13:46:05Z",
+    "source_as_of": "2026-10-01"
   },
   "discovered_from": [
+    "market_facts",
+    "same_security_successor:MGKX",
     "stockanalysis_etf"
   ],
-  "last_attempt": {
+  "failure_count": 0,
+  "last_result": {
     "attempts_used": 1,
-    "event_name": "workflow_dispatch",
-    "failures": [],
-    "latency_ms": 499,
-    "natural": false,
-    "observed_at": "2026-09-28T04:37:06Z",
-    "outcome": "fresh",
-    "run_attempt": 1,
-    "run_id": "36367831133",
-    "schedule": "",
-    "shard": ""
-  },
-  "promotion_contract": "provider_observation/v2",
-  "provider_observation": {
-    "event_name": "workflow_dispatch",
-    "history_as_of": "2026-09-25",
-    "observed_at": "2026-09-28T04:37:06Z",
-    "payload_sha256": "35788e26f9b8ea2e79d0fdd75ce30ee3f87afaa044e46c4a0a1ab3f92b79b27c",
-    "quote_as_of": "2026-09-23T14:53:42Z",
-    "run_attempt": 1,
-    "run_id": "36367831133",
-    "schema_version": "provider_observation/v2",
-    "source_as_of": "2026-09-23T14:53:42Z"
+    "failures": [
+      {
+        "attempt": 1,
+        "error": "YFDataException: MEGX: No Fund data found.",
+        "source": "provider_safe_call"
+      },
+      {
+        "attempt": 1,
+        "error": "YFDataException: MEGX: No Fund data found.",
+        "source": "provider_safe_call"
+      },
+      {
+        "attempt": 1,
+        "error": "YFDataException: MEGX: No Fund data found.",
+        "source": "provider_safe_call"
+      },
+      {
+        "attempt": 1,
+        "error": "YFDataException: MEGX: No Fund data found.",
+        "source": "provider_safe_call"
+      },
+      {
+        "attempt": 1,
+        "error": "YFDataException: MEGX: No Fund data found.",
+        "source": "provider_safe_call"
+      },
+      {
+        "attempt": 1,
+        "error": "YFDataException: MEGX: No Fund data found.",
+        "source": "provider_safe_call"
+      }
+    ],
+    "latency_ms": 365,
+    "observed_at": "2026-10-01T14:19:14Z",
+    "outcome": "fresh"
   },
   "resolution_state": "fresh_primary",
   "retry": false,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "ticker": "MEGX",
-  "updated_at": "2026-09-28T04:37:06Z"
+  "updated_at": "2026-10-01T14:19:14Z"
 }

@@ -75,18 +75,26 @@
     "quote_as_of": null,
     "source_as_of": "2026-06-26"
   },
-  "resolution_state": "lkg_primary",
-  "retry": true,
+  "resolution_state": "terminal_provider_unsupported",
+  "retry": false,
   "schema_version": "yahoo-batch-quote-history-state/v1",
-  "stale": {
-    "age_business_days": 10,
-    "classified_at": "2026-07-13T04:33:56Z",
-    "expected_resolution": "next_natural_yahoo_run",
-    "max_business_days": 6,
-    "message": "SATS holds LKG because Yahoo source date 2026-06-26 is 10 business days old, beyond the 6-day bound; it will retry on the next natural Yahoo run.",
-    "reason": "source_age_exceeds_lane_bound",
-    "source_as_of": "2026-06-26"
+  "terminal": {
+    "artifact_generated_at": null,
+    "artifact_path": null,
+    "classified_at": "2026-10-01T14:18:47Z",
+    "evidence": [
+      {
+        "alias_target": "ECHO",
+        "effective_date": "2026-06-24",
+        "reason": "same public security now trades under successor ticker",
+        "source": "verified_public_lifecycle",
+        "source_url": "https://ir.echostar.com/news-releases/news-release-details/echostar-changing-stocker-ticker-sats-echo-marking-companys-next",
+        "symbol": "SATS",
+        "terminal": true
+      }
+    ],
+    "evidence_sha256": null
   },
   "ticker": "SATS",
-  "updated_at": "2026-10-01T02:16:35Z"
+  "updated_at": "2026-10-01T14:18:47Z"
 }
