@@ -1,8 +1,8 @@
 {
   "schema_version": "alarm-state/v1",
-  "generated_at": "2026-10-02T18:34:37.681Z",
+  "generated_at": "2026-10-02T23:05:45.365Z",
   "status": "open",
-  "open_incident_count": 4,
+  "open_incident_count": 3,
   "open_incidents": [
     {
       "workflow": "fenok-edge-krx-daily.yml",
@@ -31,18 +31,6 @@
     {
       "workflow": "retention-restore.yml",
       "label": "R2 Retention Restore Watchdog",
-      "streak": 0,
-      "failure_streak_threshold": 2,
-      "first_failing_run_id": null,
-      "first_failing_run_url": null,
-      "alarm_reasons": [
-        "missed_schedule_window"
-      ],
-      "lost_schedule_slot_count": 0
-    },
-    {
-      "workflow": "worker-request-budget-alarm.yml",
-      "label": "Worker Request Budget Alarm",
       "streak": 0,
       "failure_streak_threshold": 2,
       "first_failing_run_id": null,
@@ -398,15 +386,14 @@
   "queue_evicted_run_count": 0,
   "queue_evicted_workflows": [],
   "last_firing": {
-    "run_id": "37047744722",
-    "run_url": "https://github.com/etloveaui/100xFenok/actions/runs/37047744722",
-    "observed_at": "2026-10-02T18:34:37.681Z",
+    "run_id": "37075496629",
+    "run_url": "https://github.com/etloveaui/100xFenok/actions/runs/37075496629",
+    "observed_at": "2026-10-02T23:05:45.365Z",
     "event": "schedule",
     "workflows": [
       "fenok-edge-krx-daily.yml",
       "global-writer-queue-observer.yml",
-      "retention-restore.yml",
-      "worker-request-budget-alarm.yml"
+      "retention-restore.yml"
     ],
     "title": "100xFenok pipeline job failure alarm"
   },
