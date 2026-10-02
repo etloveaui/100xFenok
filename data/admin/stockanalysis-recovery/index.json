@@ -1,13 +1,13 @@
 {
   "schema_version": "stockanalysis-recovery-index/v1",
-  "generated_at": "2026-10-02T00:51:11Z",
+  "generated_at": "2026-10-02T02:40:30Z",
   "counts": {
     "tracked": 911,
-    "fresh": 763,
+    "fresh": 765,
     "lkg": 134,
-    "unavailable": 14,
-    "retry": 148,
-    "failed": 0
+    "unavailable": 12,
+    "retry": 146,
+    "failed": 3
   },
   "counts_by_kind": {
     "stock": {
@@ -33,10 +33,10 @@
     },
     "surface": {
       "tracked": 25,
-      "fresh": 21,
+      "fresh": 23,
       "lkg": 1,
-      "unavailable": 3,
-      "retry": 4
+      "unavailable": 1,
+      "retry": 2
     },
     "universe": {
       "tracked": 1,
@@ -630,14 +630,6 @@
     {
       "artifact_kind": "surface",
       "entity": "actions_splits"
-    },
-    {
-      "artifact_kind": "surface",
-      "entity": "earnings_calendar"
-    },
-    {
-      "artifact_kind": "surface",
-      "entity": "ipos_calendar"
     }
   ],
   "degraded_details": [
@@ -1096,9 +1088,9 @@
       "entity": "CEFD",
       "resolution_state": "lkg_primary",
       "source_as_of": "2025-11-01T00:00:00Z",
-      "failure_observed_at": "2026-09-24T14:09:27Z",
+      "failure_observed_at": "2026-10-02T02:40:30Z",
       "error": "ValueError: svelte_contract_drift:holdings:missing_required:holdings",
-      "failure_count": 0,
+      "failure_count": 1,
       "data_loss": false
     },
     {
@@ -2086,9 +2078,9 @@
       "entity": "actions_recent",
       "resolution_state": "lkg_primary",
       "source_as_of": "2026-07-10T00:00:00Z",
-      "failure_observed_at": "2026-10-01T02:33:35Z",
+      "failure_observed_at": "2026-10-02T02:40:30Z",
       "error": "ValueError: source did not advance beyond the retained LKG for surface:actions_recent",
-      "failure_count": 1,
+      "failure_count": 2,
       "data_loss": false
     },
     {
@@ -2096,35 +2088,34 @@
       "entity": "actions_splits",
       "resolution_state": "unavailable",
       "source_as_of": null,
-      "failure_observed_at": "2026-10-01T02:33:35Z",
+      "failure_observed_at": "2026-10-02T02:40:30Z",
       "error": "ValueError: source did not advance beyond the retained LKG for surface:actions_splits",
-      "failure_count": 1,
-      "data_loss": false
-    },
-    {
-      "artifact_kind": "surface",
-      "entity": "earnings_calendar",
-      "resolution_state": "unavailable",
-      "source_as_of": null,
-      "failure_observed_at": "2026-10-01T02:33:35Z",
-      "error": "ValueError: candidate source date regresses or is invalid for surface:earnings_calendar",
-      "failure_count": 1,
-      "data_loss": false
-    },
-    {
-      "artifact_kind": "surface",
-      "entity": "ipos_calendar",
-      "resolution_state": "unavailable",
-      "source_as_of": null,
-      "failure_observed_at": "2026-10-01T02:33:35Z",
-      "error": "ValueError: candidate source date regresses or is invalid for surface:ipos_calendar",
-      "failure_count": 1,
+      "failure_count": 2,
       "data_loss": false
     }
   ],
   "current_results": {
-    "failed": 0,
-    "errors": []
+    "failed": 3,
+    "errors": [
+      {
+        "artifact_kind": "surface",
+        "entity": "actions_recent",
+        "error": "ValueError: source did not advance beyond the retained LKG for surface:actions_recent",
+        "data_loss": false
+      },
+      {
+        "artifact_kind": "surface",
+        "entity": "actions_splits",
+        "error": "ValueError: source did not advance beyond the retained LKG for surface:actions_splits",
+        "data_loss": false
+      },
+      {
+        "artifact_kind": "etf",
+        "entity": "CEFD",
+        "error": "ValueError: svelte_contract_drift:holdings:missing_required:holdings",
+        "data_loss": false
+      }
+    ]
   },
   "degraded_tickers": [
     "ABBV",
@@ -2276,9 +2267,7 @@
   ],
   "degraded_surfaces": [
     "actions_recent",
-    "actions_splits",
-    "earnings_calendar",
-    "ipos_calendar"
+    "actions_splits"
   ],
   "degraded_universes": []
 }
