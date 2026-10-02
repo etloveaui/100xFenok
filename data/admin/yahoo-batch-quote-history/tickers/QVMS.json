@@ -1,49 +1,8 @@
 {
-  "attempts": [
-    {
-      "attempts_used": 1,
-      "event_name": "schedule",
-      "failures": [],
-      "latency_ms": 629,
-      "natural": true,
-      "observed_at": "2026-08-05T12:11:49Z",
-      "outcome": "fresh",
-      "run_attempt": 1,
-      "run_id": "31004461242",
-      "schedule": "7 10 * * 0-5",
-      "shard": "41/72"
-    },
-    {
-      "attempts_used": 1,
-      "event_name": "schedule",
-      "failures": [],
-      "latency_ms": 797,
-      "natural": true,
-      "observed_at": "2026-08-12T11:11:11Z",
-      "outcome": "fresh",
-      "run_attempt": 1,
-      "run_id": "31590557839",
-      "schedule": "7 10 * * 0-5",
-      "shard": "41/72"
-    },
-    {
-      "attempts_used": 1,
-      "event_name": "workflow_dispatch",
-      "failures": [],
-      "latency_ms": 464,
-      "natural": false,
-      "observed_at": "2026-09-28T06:02:24Z",
-      "outcome": "fresh",
-      "run_attempt": 1,
-      "run_id": "36367834787",
-      "schedule": "",
-      "shard": ""
-    }
-  ],
   "current": {
     "fetched_at": "2026-09-28T06:09:03Z",
     "history_as_of": "2026-09-25",
-    "path": "data/yf/finance/QVMS.json",
+    "path": "data/admin/yahoo-batch-quote-history/lkg/QVMS.json",
     "payload_sha256": "340871e037ed97f7e09abb079117b3cf3efbec975beb18c8d5215295ca7a5301",
     "quote_as_of": "2026-09-23T16:45:00Z",
     "source_as_of": "2026-09-23T16:45:00Z"
@@ -51,52 +10,33 @@
   "discovered_from": [
     "stockanalysis_etf"
   ],
-  "last_attempt": {
+  "last_result": {
     "attempts_used": 1,
-    "event_name": "workflow_dispatch",
     "failures": [],
     "latency_ms": 464,
-    "natural": false,
     "observed_at": "2026-09-28T06:02:24Z",
-    "outcome": "fresh",
-    "run_attempt": 1,
-    "run_id": "36367834787",
-    "schedule": "",
-    "shard": ""
+    "outcome": "fresh"
   },
   "lkg": {
-    "fetched_at": "2026-08-12T11:14:29Z",
-    "history_as_of": "2026-08-11",
-    "path": "data/admin/yahoo-batch-quote-history/lkg/QVMS.json",
-    "payload_sha256": "da13c4b5ca32622110dc2832cd80c35e5e0403d0d6811656086b576a23057509",
-    "quote_as_of": "2026-08-11T14:42:40Z",
-    "source_as_of": "2026-08-11"
-  },
-  "promotion_contract": "provider_observation/v2",
-  "provider_observation": {
-    "event_name": "workflow_dispatch",
+    "fetched_at": "2026-09-28T06:09:03Z",
     "history_as_of": "2026-09-25",
-    "observed_at": "2026-09-28T06:02:24Z",
-    "payload_sha256": "77d4c8656c4851968a43a4d09aff6205dd5c671410fe3ab5587ee9115da0825b",
+    "path": "data/admin/yahoo-batch-quote-history/lkg/QVMS.json",
+    "payload_sha256": "340871e037ed97f7e09abb079117b3cf3efbec975beb18c8d5215295ca7a5301",
     "quote_as_of": "2026-09-23T16:45:00Z",
-    "run_attempt": 1,
-    "run_id": "36367834787",
-    "schema_version": "provider_observation/v2",
     "source_as_of": "2026-09-23T16:45:00Z"
   },
-  "resolution_state": "fresh_primary",
-  "retry": false,
+  "resolution_state": "lkg_primary",
+  "retry": true,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "stale": {
     "age_business_days": 7,
-    "classified_at": "2026-08-20T14:20:12Z",
-    "classified_run_id": "32379322022",
-    "expected_resolution": "next_natural_yahoo_run",
+    "classified_at": "2026-10-02T02:22:31Z",
+    "expected_resolution": "next_yahoo_acquisition",
     "max_business_days": 6,
-    "message": "QVMS holds LKG because Yahoo source date 2026-08-11 is 7 business days old, beyond the 6-day bound; it will retry on the next natural Yahoo run.",
+    "message": "QVMS holds LKG because Yahoo source date 2026-09-23T16:45:00Z is 7 business days old, beyond the 6-day bound; it will retry on the next Yahoo acquisition.",
     "reason": "source_age_exceeds_lane_bound",
-    "source_as_of": "2026-08-11"
+    "source_as_of": "2026-09-23T16:45:00Z"
   },
   "ticker": "QVMS",
-  "updated_at": "2026-09-28T06:02:24Z"
+  "updated_at": "2026-10-02T02:22:31Z"
 }

@@ -1,162 +1,42 @@
 {
-  "attempts": [
-    {
-      "attempts_used": 1,
-      "event_name": "workflow_dispatch",
-      "failures": [],
-      "latency_ms": 705,
-      "natural": false,
-      "observed_at": "2026-08-09T15:40:09Z",
-      "outcome": "fresh",
-      "run_attempt": 1,
-      "run_id": "31321645091",
-      "schedule": "",
-      "shard": ""
-    },
-    {
-      "attempts_used": 0,
-      "event_name": "schedule",
-      "failures": [],
-      "latency_ms": 0,
-      "natural": true,
-      "observed_at": "2026-08-09T20:40:44Z",
-      "outcome": "skipped_fresh",
-      "run_attempt": 1,
-      "run_id": "31334785949",
-      "schedule": "7 20 * * 0-5",
-      "shard": "10/72"
-    },
-    {
-      "attempts_used": 1,
-      "event_name": "schedule",
-      "failures": [],
-      "latency_ms": 687,
-      "natural": true,
-      "observed_at": "2026-08-13T02:42:30Z",
-      "outcome": "fresh",
-      "run_attempt": 1,
-      "run_id": "31661522793",
-      "schedule": "7 0 * * 0-5",
-      "shard": "4/6"
-    },
-    {
-      "attempts_used": 1,
-      "event_name": "schedule",
-      "failures": [],
-      "latency_ms": 830,
-      "natural": true,
-      "observed_at": "2026-08-20T01:48:52Z",
-      "outcome": "fresh",
-      "run_attempt": 1,
-      "run_id": "32322266030",
-      "schedule": "7 0 * * 0-5",
-      "shard": "4/6"
-    },
-    {
-      "attempts_used": 1,
-      "event_name": "schedule",
-      "failures": [],
-      "latency_ms": 677,
-      "natural": true,
-      "observed_at": "2026-08-27T09:32:41Z",
-      "outcome": "fresh",
-      "run_attempt": 1,
-      "run_id": "33058933745",
-      "schedule": "7 0 * * 0-5",
-      "shard": "4/6"
-    },
-    {
-      "attempts_used": 1,
-      "event_name": "schedule",
-      "failures": [],
-      "latency_ms": 587,
-      "natural": true,
-      "observed_at": "2026-09-03T04:16:28Z",
-      "outcome": "fresh",
-      "run_attempt": 1,
-      "run_id": "33714346614",
-      "schedule": "7 0 * * 0-5",
-      "shard": "4/6"
-    },
-    {
-      "attempts_used": 1,
-      "event_name": "schedule",
-      "failures": [],
-      "latency_ms": 1173,
-      "natural": true,
-      "observed_at": "2026-09-10T04:32:35Z",
-      "outcome": "fresh",
-      "run_attempt": 1,
-      "run_id": "34437484927",
-      "schedule": "7 0 * * 0-5",
-      "shard": "4/6"
-    },
-    {
-      "attempts_used": 1,
-      "event_name": "schedule",
-      "failures": [],
-      "latency_ms": 890,
-      "natural": true,
-      "observed_at": "2026-09-17T04:46:25Z",
-      "outcome": "fresh",
-      "run_attempt": 1,
-      "run_id": "35183078548",
-      "schedule": "7 0 * * 0-5",
-      "shard": "4/6"
-    },
-    {
-      "attempts_used": 1,
-      "event_name": "schedule",
-      "failures": [],
-      "latency_ms": 494,
-      "natural": true,
-      "observed_at": "2026-09-24T04:39:02Z",
-      "outcome": "fresh",
-      "run_attempt": 1,
-      "run_id": "35956430174",
-      "schedule": "7 0 * * 0-5",
-      "shard": "4/6"
-    }
-  ],
   "current": {
     "fetched_at": "2026-09-24T04:39:36Z",
     "history_as_of": "2026-09-23",
-    "path": "data/yf/finance/USHY.json",
+    "path": "data/admin/yahoo-batch-quote-history/lkg/USHY.json",
     "payload_sha256": "f49d87b487a2cc73ce6403b920d91f5407f37113edc4eb1c25a252e3f58e47ed",
     "quote_as_of": "2026-09-23T20:00:01Z",
     "source_as_of": "2026-09-23"
   },
   "discovered_from": [
-    "core_daily_basket"
+    "stockanalysis_etf"
   ],
-  "last_attempt": {
+  "last_result": {
     "attempts_used": 1,
-    "event_name": "schedule",
     "failures": [],
     "latency_ms": 494,
-    "natural": true,
     "observed_at": "2026-09-24T04:39:02Z",
-    "outcome": "fresh",
-    "run_attempt": 1,
-    "run_id": "35956430174",
-    "schedule": "7 0 * * 0-5",
-    "shard": "4/6"
+    "outcome": "fresh"
   },
-  "promotion_contract": "provider_observation/v2",
-  "provider_observation": {
-    "event_name": "schedule",
+  "lkg": {
+    "fetched_at": "2026-09-24T04:39:36Z",
     "history_as_of": "2026-09-23",
-    "observed_at": "2026-09-24T04:39:02Z",
-    "payload_sha256": "2b2631f2589e4b0b61ca75d141b52428be6382e31adf17b3d821166a7a455301",
+    "path": "data/admin/yahoo-batch-quote-history/lkg/USHY.json",
+    "payload_sha256": "f49d87b487a2cc73ce6403b920d91f5407f37113edc4eb1c25a252e3f58e47ed",
     "quote_as_of": "2026-09-23T20:00:01Z",
-    "run_attempt": 1,
-    "run_id": "35956430174",
-    "schema_version": "provider_observation/v2",
     "source_as_of": "2026-09-23"
   },
-  "resolution_state": "fresh_primary",
-  "retry": false,
+  "resolution_state": "lkg_primary",
+  "retry": true,
   "schema_version": "yahoo-batch-quote-history-state/v1",
+  "stale": {
+    "age_business_days": 7,
+    "classified_at": "2026-10-02T02:22:31Z",
+    "expected_resolution": "next_yahoo_acquisition",
+    "max_business_days": 6,
+    "message": "USHY holds LKG because Yahoo source date 2026-09-23 is 7 business days old, beyond the 6-day bound; it will retry on the next Yahoo acquisition.",
+    "reason": "source_age_exceeds_lane_bound",
+    "source_as_of": "2026-09-23"
+  },
   "ticker": "USHY",
-  "updated_at": "2026-09-24T04:39:02Z"
+  "updated_at": "2026-10-02T02:22:31Z"
 }

@@ -1,50 +1,9 @@
 {
-  "attempts": [
-    {
-      "attempts_used": 1,
-      "event_name": "workflow_dispatch",
-      "failures": [],
-      "latency_ms": 435,
-      "natural": false,
-      "observed_at": "2026-09-28T03:11:20Z",
-      "outcome": "fresh",
-      "run_attempt": 1,
-      "run_id": "36367829153",
-      "schedule": "",
-      "shard": ""
-    },
-    {
-      "attempts_used": 1,
-      "event_name": "schedule",
-      "failures": [],
-      "latency_ms": 436,
-      "natural": true,
-      "observed_at": "2026-09-29T02:38:15Z",
-      "outcome": "fresh",
-      "run_attempt": 1,
-      "run_id": "36513342846",
-      "schedule": "20 23 * * 1-5",
-      "shard": "0/5"
-    },
-    {
-      "attempts_used": 1,
-      "event_name": "schedule",
-      "failures": [],
-      "latency_ms": 852,
-      "natural": true,
-      "observed_at": "2026-09-30T02:12:48Z",
-      "outcome": "fresh",
-      "run_attempt": 1,
-      "run_id": "36658577543",
-      "schedule": "20 23 * * 1-5",
-      "shard": "0/5"
-    }
-  ],
   "current": {
-    "fetched_at": "2026-09-30T02:17:52Z",
-    "history_as_of": "2026-09-29",
+    "fetched_at": "2026-10-02T02:22:46Z",
+    "history_as_of": "2026-10-01",
     "path": "data/yf/finance/HBIL.json",
-    "payload_sha256": "ef6f7d7ffc5297aa9a84ddd699f041b69a3310b8aab1b87008490d4eef55fa98",
+    "payload_sha256": "ed42843f1de644b8f3c452b06989d8ccbdbcd618d77e1362a51faacd743bacbf",
     "quote_as_of": "2026-09-23T13:43:23Z",
     "source_as_of": "2026-09-23T13:43:23Z"
   },
@@ -52,34 +11,34 @@
     "market_facts",
     "stockanalysis_etf"
   ],
-  "last_attempt": {
+  "failure_count": 0,
+  "last_result": {
     "attempts_used": 1,
-    "event_name": "schedule",
     "failures": [],
-    "latency_ms": 852,
-    "natural": true,
-    "observed_at": "2026-09-30T02:12:48Z",
-    "outcome": "fresh",
-    "run_attempt": 1,
-    "run_id": "36658577543",
-    "schedule": "20 23 * * 1-5",
-    "shard": "0/5"
+    "latency_ms": 975,
+    "observed_at": "2026-10-02T02:22:46Z",
+    "outcome": "fresh"
   },
-  "promotion_contract": "provider_observation/v2",
-  "provider_observation": {
-    "event_name": "schedule",
+  "lkg": {
+    "fetched_at": "2026-09-30T02:17:52Z",
     "history_as_of": "2026-09-29",
-    "observed_at": "2026-09-30T02:12:48Z",
-    "payload_sha256": "26ad6bcc57e1aa827a7325beab465bc9493296bedd0f99153307439f75b5e9ff",
+    "path": "data/admin/yahoo-batch-quote-history/lkg/HBIL.json",
+    "payload_sha256": "ef6f7d7ffc5297aa9a84ddd699f041b69a3310b8aab1b87008490d4eef55fa98",
     "quote_as_of": "2026-09-23T13:43:23Z",
-    "run_attempt": 1,
-    "run_id": "36658577543",
-    "schema_version": "provider_observation/v2",
     "source_as_of": "2026-09-23T13:43:23Z"
   },
   "resolution_state": "fresh_primary",
   "retry": false,
   "schema_version": "yahoo-batch-quote-history-state/v1",
+  "stale": {
+    "age_business_days": 7,
+    "classified_at": "2026-10-02T02:22:31Z",
+    "expected_resolution": "next_yahoo_acquisition",
+    "max_business_days": 6,
+    "message": "HBIL holds LKG because Yahoo source date 2026-09-23T13:43:23Z is 7 business days old, beyond the 6-day bound; it will retry on the next Yahoo acquisition.",
+    "reason": "source_age_exceeds_lane_bound",
+    "source_as_of": "2026-09-23T13:43:23Z"
+  },
   "ticker": "HBIL",
-  "updated_at": "2026-09-30T02:12:48Z"
+  "updated_at": "2026-10-02T02:22:46Z"
 }

@@ -1,23 +1,8 @@
 {
-  "attempts": [
-    {
-      "attempts_used": 1,
-      "event_name": "workflow_dispatch",
-      "failures": [],
-      "latency_ms": 469,
-      "natural": false,
-      "observed_at": "2026-09-28T05:23:15Z",
-      "outcome": "fresh",
-      "run_attempt": 1,
-      "run_id": "36367832955",
-      "schedule": "",
-      "shard": ""
-    }
-  ],
   "current": {
     "fetched_at": "2026-09-28T05:43:14Z",
     "history_as_of": "2026-09-25",
-    "path": "data/yf/finance/QQAU.json",
+    "path": "data/admin/yahoo-batch-quote-history/lkg/QQAU.json",
     "payload_sha256": "1369a93c35c0cf133a8b1379704e6eaed44b4071a0a34bd8a8ecdd05c2315e3a",
     "quote_as_of": "2026-09-23T19:52:41Z",
     "source_as_of": "2026-09-23T19:52:41Z"
@@ -25,34 +10,33 @@
   "discovered_from": [
     "stockanalysis_etf"
   ],
-  "last_attempt": {
+  "last_result": {
     "attempts_used": 1,
-    "event_name": "workflow_dispatch",
     "failures": [],
     "latency_ms": 469,
-    "natural": false,
     "observed_at": "2026-09-28T05:23:15Z",
-    "outcome": "fresh",
-    "run_attempt": 1,
-    "run_id": "36367832955",
-    "schedule": "",
-    "shard": ""
+    "outcome": "fresh"
   },
-  "promotion_contract": "provider_observation/v2",
-  "provider_observation": {
-    "event_name": "workflow_dispatch",
+  "lkg": {
+    "fetched_at": "2026-09-28T05:43:14Z",
     "history_as_of": "2026-09-25",
-    "observed_at": "2026-09-28T05:23:15Z",
-    "payload_sha256": "4d31bf20ab94f523b301bcb62a54992497d040a8035fd43bff5b03a27e64a47b",
+    "path": "data/admin/yahoo-batch-quote-history/lkg/QQAU.json",
+    "payload_sha256": "1369a93c35c0cf133a8b1379704e6eaed44b4071a0a34bd8a8ecdd05c2315e3a",
     "quote_as_of": "2026-09-23T19:52:41Z",
-    "run_attempt": 1,
-    "run_id": "36367832955",
-    "schema_version": "provider_observation/v2",
     "source_as_of": "2026-09-23T19:52:41Z"
   },
-  "resolution_state": "fresh_primary",
-  "retry": false,
+  "resolution_state": "lkg_primary",
+  "retry": true,
   "schema_version": "yahoo-batch-quote-history-state/v1",
+  "stale": {
+    "age_business_days": 7,
+    "classified_at": "2026-10-02T02:22:31Z",
+    "expected_resolution": "next_yahoo_acquisition",
+    "max_business_days": 6,
+    "message": "QQAU holds LKG because Yahoo source date 2026-09-23T19:52:41Z is 7 business days old, beyond the 6-day bound; it will retry on the next Yahoo acquisition.",
+    "reason": "source_age_exceeds_lane_bound",
+    "source_as_of": "2026-09-23T19:52:41Z"
+  },
   "ticker": "QQAU",
-  "updated_at": "2026-09-28T05:23:15Z"
+  "updated_at": "2026-10-02T02:22:31Z"
 }

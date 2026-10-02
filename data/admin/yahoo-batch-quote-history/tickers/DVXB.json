@@ -10,13 +10,36 @@
   "discovered_from": [
     "market_facts"
   ],
-  "failure_count": 0,
+  "failure_count": 1,
   "last_result": {
     "attempts_used": 1,
-    "failures": [],
-    "latency_ms": 519,
-    "observed_at": "2026-10-01T02:15:45Z",
-    "outcome": "fresh"
+    "error": "ValueError: Yahoo provider source timestamp regresses for DVXB: history_as_of",
+    "failures": [
+      {
+        "attempt": 1,
+        "error": "AttributeError: 'Index' object has no attribute 'date'",
+        "source": "provider_safe_call"
+      }
+    ],
+    "latency_ms": 870,
+    "observed_at": "2026-10-02T02:22:52Z",
+    "outcome": "failed"
+  },
+  "latest_failure": {
+    "attempts_used": 1,
+    "data_loss": false,
+    "deferred_acquisition": false,
+    "error": "ValueError: Yahoo provider source timestamp regresses for DVXB: history_as_of",
+    "failure_kind": "systemic_integrity",
+    "failures": [
+      {
+        "attempt": 1,
+        "error": "AttributeError: 'Index' object has no attribute 'date'",
+        "source": "provider_safe_call"
+      }
+    ],
+    "lkg_status": "retained",
+    "observed_at": "2026-10-02T02:22:52Z"
   },
   "lkg": {
     "fetched_at": "2026-10-01T02:15:45Z",
@@ -39,5 +62,5 @@
     "source_as_of": "2026-08-26T20:00:00Z"
   },
   "ticker": "DVXB",
-  "updated_at": "2026-10-01T14:18:47Z"
+  "updated_at": "2026-10-02T02:22:52Z"
 }

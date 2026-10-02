@@ -1,62 +1,8 @@
 {
-  "attempts": [
-    {
-      "attempts_used": 1,
-      "event_name": "schedule",
-      "failures": [],
-      "latency_ms": 646,
-      "natural": true,
-      "observed_at": "2026-07-23T23:19:22Z",
-      "outcome": "fresh",
-      "run_attempt": 1,
-      "run_id": "30051682457",
-      "schedule": "0 22 * * 4",
-      "shard": "4/6"
-    },
-    {
-      "attempts_used": 1,
-      "event_name": "schedule",
-      "failures": [],
-      "latency_ms": 671,
-      "natural": true,
-      "observed_at": "2026-08-06T12:16:00Z",
-      "outcome": "fresh",
-      "run_attempt": 1,
-      "run_id": "31100540842",
-      "schedule": "7 10 * * 0-5",
-      "shard": "53/72"
-    },
-    {
-      "attempts_used": 1,
-      "event_name": "schedule",
-      "failures": [],
-      "latency_ms": 707,
-      "natural": true,
-      "observed_at": "2026-08-10T20:51:42Z",
-      "outcome": "fresh",
-      "run_attempt": 1,
-      "run_id": "31430923656",
-      "schedule": "7 20 * * 0-5",
-      "shard": "22/72"
-    },
-    {
-      "attempts_used": 1,
-      "event_name": "workflow_dispatch",
-      "failures": [],
-      "latency_ms": 461,
-      "natural": false,
-      "observed_at": "2026-09-28T03:11:20Z",
-      "outcome": "fresh",
-      "run_attempt": 1,
-      "run_id": "36367829153",
-      "schedule": "",
-      "shard": ""
-    }
-  ],
   "current": {
     "fetched_at": "2026-09-28T03:20:36Z",
     "history_as_of": "2026-09-25",
-    "path": "data/yf/finance/ECML.json",
+    "path": "data/admin/yahoo-batch-quote-history/lkg/ECML.json",
     "payload_sha256": "04057c0d6333ed29340770c21cd100b0494fdaa3a9a6fa4195ef49e4db7b6782",
     "quote_as_of": "2026-09-23T16:00:48Z",
     "source_as_of": "2026-09-23T16:00:48Z"
@@ -64,52 +10,33 @@
   "discovered_from": [
     "stockanalysis_etf"
   ],
-  "last_attempt": {
+  "last_result": {
     "attempts_used": 1,
-    "event_name": "workflow_dispatch",
     "failures": [],
     "latency_ms": 461,
-    "natural": false,
     "observed_at": "2026-09-28T03:11:20Z",
-    "outcome": "fresh",
-    "run_attempt": 1,
-    "run_id": "36367829153",
-    "schedule": "",
-    "shard": ""
+    "outcome": "fresh"
   },
   "lkg": {
-    "fetched_at": "2026-08-10T20:54:01Z",
-    "history_as_of": "2026-08-07",
-    "path": "data/admin/yahoo-batch-quote-history/lkg/ECML.json",
-    "payload_sha256": "d36f4fef00122f1365a3a83c5e47f588119d1c25944b8c2d9377c403dac90046",
-    "quote_as_of": "2026-08-07T14:49:29Z",
-    "source_as_of": "2026-08-07"
-  },
-  "promotion_contract": "provider_observation/v2",
-  "provider_observation": {
-    "event_name": "workflow_dispatch",
+    "fetched_at": "2026-09-28T03:20:36Z",
     "history_as_of": "2026-09-25",
-    "observed_at": "2026-09-28T03:11:20Z",
-    "payload_sha256": "7aaa3f3674b5ddeeb4050a57027bfdf4251848d210b33ac459c33a65c64d2522",
+    "path": "data/admin/yahoo-batch-quote-history/lkg/ECML.json",
+    "payload_sha256": "04057c0d6333ed29340770c21cd100b0494fdaa3a9a6fa4195ef49e4db7b6782",
     "quote_as_of": "2026-09-23T16:00:48Z",
-    "run_attempt": 1,
-    "run_id": "36367829153",
-    "schema_version": "provider_observation/v2",
     "source_as_of": "2026-09-23T16:00:48Z"
   },
-  "resolution_state": "fresh_primary",
-  "retry": false,
+  "resolution_state": "lkg_primary",
+  "retry": true,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "stale": {
-    "age_business_days": 8,
-    "classified_at": "2026-08-19T23:42:29Z",
-    "classified_run_id": "32314261503",
-    "expected_resolution": "next_natural_yahoo_run",
+    "age_business_days": 7,
+    "classified_at": "2026-10-02T02:22:31Z",
+    "expected_resolution": "next_yahoo_acquisition",
     "max_business_days": 6,
-    "message": "ECML holds LKG because Yahoo source date 2026-08-07 is 8 business days old, beyond the 6-day bound; it will retry on the next natural Yahoo run.",
+    "message": "ECML holds LKG because Yahoo source date 2026-09-23T16:00:48Z is 7 business days old, beyond the 6-day bound; it will retry on the next Yahoo acquisition.",
     "reason": "source_age_exceeds_lane_bound",
-    "source_as_of": "2026-08-07"
+    "source_as_of": "2026-09-23T16:00:48Z"
   },
   "ticker": "ECML",
-  "updated_at": "2026-09-28T03:11:20Z"
+  "updated_at": "2026-10-02T02:22:31Z"
 }

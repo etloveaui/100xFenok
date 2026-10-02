@@ -1,62 +1,8 @@
 {
-  "attempts": [
-    {
-      "attempts_used": 1,
-      "event_name": "workflow_dispatch",
-      "failures": [],
-      "latency_ms": 483,
-      "natural": true,
-      "observed_at": "2026-08-01T18:48:56Z",
-      "outcome": "fresh",
-      "run_attempt": 1,
-      "run_id": "30711926935",
-      "schedule": "",
-      "shard": "5/6"
-    },
-    {
-      "attempts_used": 1,
-      "event_name": "schedule",
-      "failures": [],
-      "latency_ms": 981,
-      "natural": true,
-      "observed_at": "2026-08-09T02:25:42Z",
-      "outcome": "fresh",
-      "run_attempt": 1,
-      "run_id": "31290251671",
-      "schedule": "7 0 * * 0-5",
-      "shard": "0/72"
-    },
-    {
-      "attempts_used": 1,
-      "event_name": "schedule",
-      "failures": [],
-      "latency_ms": 519,
-      "natural": true,
-      "observed_at": "2026-08-11T11:03:07Z",
-      "outcome": "fresh",
-      "run_attempt": 1,
-      "run_id": "31484759300",
-      "schedule": "7 10 * * 0-5",
-      "shard": "29/72"
-    },
-    {
-      "attempts_used": 1,
-      "event_name": "workflow_dispatch",
-      "failures": [],
-      "latency_ms": 488,
-      "natural": false,
-      "observed_at": "2026-09-28T03:11:20Z",
-      "outcome": "fresh",
-      "run_attempt": 1,
-      "run_id": "36367829153",
-      "schedule": "",
-      "shard": ""
-    }
-  ],
   "current": {
     "fetched_at": "2026-09-28T03:18:00Z",
     "history_as_of": "2026-09-25",
-    "path": "data/yf/finance/DOCK.json",
+    "path": "data/admin/yahoo-batch-quote-history/lkg/DOCK.json",
     "payload_sha256": "6b4d4d4c025500a0c6b1a0e04ddf8b9b47de6f94ebeae7228e9050ecaae151a9",
     "quote_as_of": "2026-09-23T14:23:51Z",
     "source_as_of": "2026-09-23T14:23:51Z"
@@ -64,52 +10,33 @@
   "discovered_from": [
     "stockanalysis_etf"
   ],
-  "last_attempt": {
+  "last_result": {
     "attempts_used": 1,
-    "event_name": "workflow_dispatch",
     "failures": [],
     "latency_ms": 488,
-    "natural": false,
     "observed_at": "2026-09-28T03:11:20Z",
-    "outcome": "fresh",
-    "run_attempt": 1,
-    "run_id": "36367829153",
-    "schedule": "",
-    "shard": ""
+    "outcome": "fresh"
   },
   "lkg": {
-    "fetched_at": "2026-08-11T11:04:51Z",
-    "history_as_of": "2026-08-10",
-    "path": "data/admin/yahoo-batch-quote-history/lkg/DOCK.json",
-    "payload_sha256": "a6708e4ea166ab8c9f7ffe6091a00106bd7ed2fd74f01c2a6a1e91abd5366563",
-    "quote_as_of": "2026-08-10T19:58:03Z",
-    "source_as_of": "2026-08-10"
-  },
-  "promotion_contract": "provider_observation/v2",
-  "provider_observation": {
-    "event_name": "workflow_dispatch",
+    "fetched_at": "2026-09-28T03:18:00Z",
     "history_as_of": "2026-09-25",
-    "observed_at": "2026-09-28T03:11:20Z",
-    "payload_sha256": "c435c36f61a16e6052c2358531545793a7e80804d17f5d817ff88b2ac437fcf7",
+    "path": "data/admin/yahoo-batch-quote-history/lkg/DOCK.json",
+    "payload_sha256": "6b4d4d4c025500a0c6b1a0e04ddf8b9b47de6f94ebeae7228e9050ecaae151a9",
     "quote_as_of": "2026-09-23T14:23:51Z",
-    "run_attempt": 1,
-    "run_id": "36367829153",
-    "schema_version": "provider_observation/v2",
     "source_as_of": "2026-09-23T14:23:51Z"
   },
-  "resolution_state": "fresh_primary",
-  "retry": false,
+  "resolution_state": "lkg_primary",
+  "retry": true,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "stale": {
     "age_business_days": 7,
-    "classified_at": "2026-08-19T23:42:29Z",
-    "classified_run_id": "32314261503",
-    "expected_resolution": "next_natural_yahoo_run",
+    "classified_at": "2026-10-02T02:22:31Z",
+    "expected_resolution": "next_yahoo_acquisition",
     "max_business_days": 6,
-    "message": "DOCK holds LKG because Yahoo source date 2026-08-10 is 7 business days old, beyond the 6-day bound; it will retry on the next natural Yahoo run.",
+    "message": "DOCK holds LKG because Yahoo source date 2026-09-23T14:23:51Z is 7 business days old, beyond the 6-day bound; it will retry on the next Yahoo acquisition.",
     "reason": "source_age_exceeds_lane_bound",
-    "source_as_of": "2026-08-10"
+    "source_as_of": "2026-09-23T14:23:51Z"
   },
   "ticker": "DOCK",
-  "updated_at": "2026-09-28T03:11:20Z"
+  "updated_at": "2026-10-02T02:22:31Z"
 }

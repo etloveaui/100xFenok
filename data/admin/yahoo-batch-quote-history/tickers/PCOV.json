@@ -1,23 +1,8 @@
 {
-  "attempts": [
-    {
-      "attempts_used": 1,
-      "event_name": "workflow_dispatch",
-      "failures": [],
-      "latency_ms": 432,
-      "natural": false,
-      "observed_at": "2026-09-28T05:23:15Z",
-      "outcome": "fresh",
-      "run_attempt": 1,
-      "run_id": "36367832955",
-      "schedule": "",
-      "shard": ""
-    }
-  ],
   "current": {
     "fetched_at": "2026-09-28T05:41:31Z",
     "history_as_of": "2026-09-25",
-    "path": "data/yf/finance/PCOV.json",
+    "path": "data/admin/yahoo-batch-quote-history/lkg/PCOV.json",
     "payload_sha256": "0a54838b3e97f9683dc5dc66d8492e02ab4e8ff0dd24478e3e04f4177da22146",
     "quote_as_of": "2026-09-23T14:57:06Z",
     "source_as_of": "2026-09-23T14:57:06Z"
@@ -25,34 +10,33 @@
   "discovered_from": [
     "stockanalysis_etf"
   ],
-  "last_attempt": {
+  "last_result": {
     "attempts_used": 1,
-    "event_name": "workflow_dispatch",
     "failures": [],
     "latency_ms": 432,
-    "natural": false,
     "observed_at": "2026-09-28T05:23:15Z",
-    "outcome": "fresh",
-    "run_attempt": 1,
-    "run_id": "36367832955",
-    "schedule": "",
-    "shard": ""
+    "outcome": "fresh"
   },
-  "promotion_contract": "provider_observation/v2",
-  "provider_observation": {
-    "event_name": "workflow_dispatch",
+  "lkg": {
+    "fetched_at": "2026-09-28T05:41:31Z",
     "history_as_of": "2026-09-25",
-    "observed_at": "2026-09-28T05:23:15Z",
-    "payload_sha256": "3f51a38fef5a4f03b2724417e474b287ee36eb811e4d50e5fca5564ad60582b8",
+    "path": "data/admin/yahoo-batch-quote-history/lkg/PCOV.json",
+    "payload_sha256": "0a54838b3e97f9683dc5dc66d8492e02ab4e8ff0dd24478e3e04f4177da22146",
     "quote_as_of": "2026-09-23T14:57:06Z",
-    "run_attempt": 1,
-    "run_id": "36367832955",
-    "schema_version": "provider_observation/v2",
     "source_as_of": "2026-09-23T14:57:06Z"
   },
-  "resolution_state": "fresh_primary",
-  "retry": false,
+  "resolution_state": "lkg_primary",
+  "retry": true,
   "schema_version": "yahoo-batch-quote-history-state/v1",
+  "stale": {
+    "age_business_days": 7,
+    "classified_at": "2026-10-02T02:22:31Z",
+    "expected_resolution": "next_yahoo_acquisition",
+    "max_business_days": 6,
+    "message": "PCOV holds LKG because Yahoo source date 2026-09-23T14:57:06Z is 7 business days old, beyond the 6-day bound; it will retry on the next Yahoo acquisition.",
+    "reason": "source_age_exceeds_lane_bound",
+    "source_as_of": "2026-09-23T14:57:06Z"
+  },
   "ticker": "PCOV",
-  "updated_at": "2026-09-28T05:23:15Z"
+  "updated_at": "2026-10-02T02:22:31Z"
 }
