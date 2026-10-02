@@ -1,18 +1,30 @@
 {
   "schema_version": "alarm-state/v1",
-  "generated_at": "2026-10-02T16:12:16.150Z",
+  "generated_at": "2026-10-02T18:34:37.681Z",
   "status": "open",
-  "open_incident_count": 3,
+  "open_incident_count": 4,
   "open_incidents": [
     {
       "workflow": "fenok-edge-krx-daily.yml",
       "label": "Fenok Edge KRX Daily Data",
-      "streak": 2,
+      "streak": 3,
       "failure_streak_threshold": 2,
       "first_failing_run_id": 36744439474,
       "first_failing_run_url": "https://github.com/etloveaui/100xFenok/actions/runs/36744439474",
       "alarm_reasons": [
         "failure_streak"
+      ],
+      "lost_schedule_slot_count": 0
+    },
+    {
+      "workflow": "global-writer-queue-observer.yml",
+      "label": "Global Writer Queue Observability",
+      "streak": 0,
+      "failure_streak_threshold": 2,
+      "first_failing_run_id": null,
+      "first_failing_run_url": null,
+      "alarm_reasons": [
+        "missed_schedule_window"
       ],
       "lost_schedule_slot_count": 0
     },
@@ -386,12 +398,13 @@
   "queue_evicted_run_count": 0,
   "queue_evicted_workflows": [],
   "last_firing": {
-    "run_id": "37031775225",
-    "run_url": "https://github.com/etloveaui/100xFenok/actions/runs/37031775225",
-    "observed_at": "2026-10-02T16:12:16.150Z",
-    "event": "workflow_run",
+    "run_id": "37047744722",
+    "run_url": "https://github.com/etloveaui/100xFenok/actions/runs/37047744722",
+    "observed_at": "2026-10-02T18:34:37.681Z",
+    "event": "schedule",
     "workflows": [
       "fenok-edge-krx-daily.yml",
+      "global-writer-queue-observer.yml",
       "retention-restore.yml",
       "worker-request-budget-alarm.yml"
     ],
