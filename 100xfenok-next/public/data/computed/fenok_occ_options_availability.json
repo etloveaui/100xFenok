@@ -1,6 +1,6 @@
 {
   "schema_version": "fenok-occ-options-availability/v0.1",
-  "generated_at": "2026-10-02T06:30:03.216Z",
+  "generated_at": "2026-10-03T05:45:25.904Z",
   "formula_version": "fenok-occ-options-volume-v0.2-volume-skew-calibration",
   "purpose": "Derived OCC availability evidence. No raw CSV rows or private cache paths.",
   "raw_policy": {
@@ -8,12 +8,12 @@
     "raw_rows_included": false,
     "private_artifact_paths_included": false
   },
-  "source_date": "20260928",
+  "source_date": "20261002",
   "collection_mode": "all_eligible_batched",
   "selected_tickers": 197,
   "eligible_count": 697,
   "request_budget": {
-    "estimated_max_live_requests": 1576,
+    "estimated_max_live_requests": 1182,
     "max_requests": 2000
   },
   "persistence_policy": {
@@ -27,13 +27,13 @@
     "retained_tickers": 699,
     "collections": {
       "rows": {
-        "before": 43402,
-        "retained": 43402,
+        "before": 44099,
+        "retained": 44099,
         "pruned": 0
       },
       "side_attempts": {
-        "before": 86804,
-        "retained": 86804,
+        "before": 88198,
+        "retained": 88198,
         "pruned": 0
       }
     },
@@ -41,26 +41,26 @@
     "total_pruned_rows": 0
   },
   "current_attempt": {
-    "attempt_ref": "36971381852",
+    "attempt_ref": "37100256714",
     "attempt_number": 1,
-    "observed_at": "2026-10-02T06:30:03.402Z",
-    "target_source_date": "2026-10-01",
-    "served_source_date": "2026-10-01",
+    "observed_at": "2026-10-03T05:45:26.551Z",
+    "target_source_date": "2026-10-02",
+    "served_source_date": "2026-10-02",
     "status": "ready_current",
     "fallback_active": false,
     "selected_tickers": 697,
-    "message": "OCC target 2026-10-01 is current across 3 non-empty batch(es); no fallback is active.",
+    "message": "OCC target 2026-10-02 is current across 3 non-empty batch(es); no fallback is active.",
     "missing_day_backfill": {
-      "status": "backfilled",
+      "status": "holes_found_none_backfilled",
       "calendar_id": "us_trading",
       "calendar_fallback_used": false,
       "lookback_trading_days": 15,
       "coverage_threshold_ratio": 0.6,
       "typical_row_count": 684,
-      "selected_source_date": "2026-09-28",
-      "attempted_source_date": "2026-09-28",
-      "backfilled_source_date": "2026-09-28",
-      "accepted_rows": 193,
+      "selected_source_date": null,
+      "attempted_source_date": null,
+      "backfilled_source_date": null,
+      "accepted_rows": 0,
       "holes_before": [],
       "holes_remaining": [],
       "outside_lookback_holes": [
@@ -69,21 +69,21 @@
         "2026-07-01",
         "2026-07-02"
       ],
-      "message": "OCC backfilled 2026-09-28; 0 in-window hole(s) remain."
+      "message": "OCC found missing trading days but backfilled none; 0 in-window and 4 outside-lookback hole(s) remain."
     },
     "batch_retention_limit": 100,
     "batches": [
       {
         "batch_index": 0,
         "selected_tickers": 250,
-        "target_source_date": "2026-10-01",
-        "served_source_date": "2026-10-01",
+        "target_source_date": "2026-10-02",
+        "served_source_date": "2026-10-02",
         "status": "ready_current",
         "fallback_active": false,
-        "message": "OCC target 2026-10-01 is current and served without fallback.",
+        "message": "OCC target 2026-10-02 is current and served without fallback.",
         "date_attempts": [
           {
-            "source_date": "2026-10-01",
+            "source_date": "2026-10-02",
             "accepted_rows": 245,
             "usable_rows": 245,
             "status_counts": {
@@ -96,110 +96,16 @@
           }
         ],
         "missing_day_backfill": {
-          "status": "backfilled",
+          "status": "holes_found_none_backfilled",
           "calendar_id": "us_trading",
           "calendar_fallback_used": false,
           "lookback_trading_days": 15,
           "coverage_threshold_ratio": 0.6,
           "typical_row_count": 684,
-          "selected_source_date": "2026-09-28",
-          "attempted_source_date": "2026-09-28",
-          "backfilled_source_date": "2026-09-28",
-          "accepted_rows": 245,
-          "holes_before": [
-            "2026-09-28"
-          ],
-          "holes_remaining": [
-            "2026-09-28"
-          ],
-          "outside_lookback_holes": [
-            "2026-06-29",
-            "2026-06-30",
-            "2026-07-01",
-            "2026-07-02"
-          ],
-          "message": "OCC backfilled 2026-09-28; 1 in-window hole(s) remain."
-        }
-      },
-      {
-        "batch_index": 1,
-        "selected_tickers": 250,
-        "target_source_date": "2026-10-01",
-        "served_source_date": "2026-10-01",
-        "status": "ready_current",
-        "fallback_active": false,
-        "message": "OCC target 2026-10-01 is current and served without fallback.",
-        "date_attempts": [
-          {
-            "source_date": "2026-10-01",
-            "accepted_rows": 247,
-            "usable_rows": 247,
-            "status_counts": {
-              "options_activity_available": 241,
-              "no_record": 3,
-              "partial_no_record_or_form_gap": 6
-            },
-            "hard_failure_count": 0,
-            "stopped_fail_threshold": false
-          }
-        ],
-        "missing_day_backfill": {
-          "status": "backfilled",
-          "calendar_id": "us_trading",
-          "calendar_fallback_used": false,
-          "lookback_trading_days": 15,
-          "coverage_threshold_ratio": 0.6,
-          "typical_row_count": 684,
-          "selected_source_date": "2026-09-28",
-          "attempted_source_date": "2026-09-28",
-          "backfilled_source_date": "2026-09-28",
-          "accepted_rows": 245,
-          "holes_before": [
-            "2026-09-28"
-          ],
-          "holes_remaining": [],
-          "outside_lookback_holes": [
-            "2026-06-29",
-            "2026-06-30",
-            "2026-07-01",
-            "2026-07-02"
-          ],
-          "message": "OCC backfilled 2026-09-28; 0 in-window hole(s) remain."
-        }
-      },
-      {
-        "batch_index": 2,
-        "selected_tickers": 197,
-        "target_source_date": "2026-10-01",
-        "served_source_date": "2026-10-01",
-        "status": "ready_current",
-        "fallback_active": false,
-        "message": "OCC target 2026-10-01 is current and served without fallback.",
-        "date_attempts": [
-          {
-            "source_date": "2026-10-01",
-            "accepted_rows": 195,
-            "usable_rows": 195,
-            "status_counts": {
-              "options_activity_available": 190,
-              "partial_no_record_or_form_gap": 5,
-              "no_record": 2
-            },
-            "hard_failure_count": 0,
-            "stopped_fail_threshold": false
-          }
-        ],
-        "missing_day_backfill": {
-          "status": "backfilled",
-          "calendar_id": "us_trading",
-          "calendar_fallback_used": false,
-          "lookback_trading_days": 15,
-          "coverage_threshold_ratio": 0.6,
-          "typical_row_count": 684,
-          "selected_source_date": "2026-09-28",
-          "attempted_source_date": "2026-09-28",
-          "backfilled_source_date": "2026-09-28",
-          "accepted_rows": 193,
+          "selected_source_date": null,
+          "attempted_source_date": null,
+          "backfilled_source_date": null,
+          "accepted_rows": 0,
           "holes_before": [],
           "holes_remaining": [],
           "outside_lookback_holes": [
@@ -208,12 +114,100 @@
             "2026-07-01",
             "2026-07-02"
           ],
-          "message": "OCC backfilled 2026-09-28; 0 in-window hole(s) remain."
+          "message": "OCC found missing trading days but backfilled none; 0 in-window and 4 outside-lookback hole(s) remain."
+        }
+      },
+      {
+        "batch_index": 1,
+        "selected_tickers": 250,
+        "target_source_date": "2026-10-02",
+        "served_source_date": "2026-10-02",
+        "status": "ready_current",
+        "fallback_active": false,
+        "message": "OCC target 2026-10-02 is current and served without fallback.",
+        "date_attempts": [
+          {
+            "source_date": "2026-10-02",
+            "accepted_rows": 247,
+            "usable_rows": 247,
+            "status_counts": {
+              "options_activity_available": 237,
+              "no_record": 3,
+              "partial_no_record_or_form_gap": 10
+            },
+            "hard_failure_count": 0,
+            "stopped_fail_threshold": false
+          }
+        ],
+        "missing_day_backfill": {
+          "status": "holes_found_none_backfilled",
+          "calendar_id": "us_trading",
+          "calendar_fallback_used": false,
+          "lookback_trading_days": 15,
+          "coverage_threshold_ratio": 0.6,
+          "typical_row_count": 684,
+          "selected_source_date": null,
+          "attempted_source_date": null,
+          "backfilled_source_date": null,
+          "accepted_rows": 0,
+          "holes_before": [],
+          "holes_remaining": [],
+          "outside_lookback_holes": [
+            "2026-06-29",
+            "2026-06-30",
+            "2026-07-01",
+            "2026-07-02"
+          ],
+          "message": "OCC found missing trading days but backfilled none; 0 in-window and 4 outside-lookback hole(s) remain."
+        }
+      },
+      {
+        "batch_index": 2,
+        "selected_tickers": 197,
+        "target_source_date": "2026-10-02",
+        "served_source_date": "2026-10-02",
+        "status": "ready_current",
+        "fallback_active": false,
+        "message": "OCC target 2026-10-02 is current and served without fallback.",
+        "date_attempts": [
+          {
+            "source_date": "2026-10-02",
+            "accepted_rows": 194,
+            "usable_rows": 194,
+            "status_counts": {
+              "options_activity_available": 189,
+              "partial_no_record_or_form_gap": 5,
+              "no_record": 3
+            },
+            "hard_failure_count": 0,
+            "stopped_fail_threshold": false
+          }
+        ],
+        "missing_day_backfill": {
+          "status": "holes_found_none_backfilled",
+          "calendar_id": "us_trading",
+          "calendar_fallback_used": false,
+          "lookback_trading_days": 15,
+          "coverage_threshold_ratio": 0.6,
+          "typical_row_count": 684,
+          "selected_source_date": null,
+          "attempted_source_date": null,
+          "backfilled_source_date": null,
+          "accepted_rows": 0,
+          "holes_before": [],
+          "holes_remaining": [],
+          "outside_lookback_holes": [
+            "2026-06-29",
+            "2026-06-30",
+            "2026-07-01",
+            "2026-07-02"
+          ],
+          "message": "OCC found missing trading days but backfilled none; 0 in-window and 4 outside-lookback hole(s) remain."
         }
       }
     ]
   },
-  "previous_generated_at": "2026-10-02T06:27:29.674Z",
+  "previous_generated_at": "2026-10-03T05:42:58.308Z",
   "upsert_policy": {
     "key": [
       "ticker",
@@ -222,6 +216,6 @@
     ],
     "replaced_rows": 0,
     "added_rows": 197,
-    "cumulative_rows": 43402
+    "cumulative_rows": 44099
   }
 }
