@@ -6866,12 +6866,12 @@
   "counts": {
     "active": 6861,
     "eligible": 6861,
-    "failed": 14,
-    "fresh": 6666,
-    "lkg": 170,
+    "failed": 15,
+    "fresh": 6665,
+    "lkg": 171,
     "pending_acquisition": 0,
     "pending_history": 0,
-    "retry": 170,
+    "retry": 171,
     "stale": 170,
     "terminal": 25,
     "unavailable": 0,
@@ -6923,36 +6923,45 @@
           }
         ],
         "ticker": "DVXV"
+      },
+      {
+        "error": "ValueError: Yahoo provider source timestamp regresses for MEGX: quote_as_of",
+        "failures": [],
+        "ticker": "MEGX"
       }
     ],
-    "failed": 4,
-    "fetch_attempts": 249,
-    "skipped": 2,
-    "successes": 245
+    "failed": 5,
+    "fetch_attempts": 251,
+    "skipped": 0,
+    "successes": 246
   },
-  "generated_at": "2026-10-02T02:27:44Z",
+  "generated_at": "2026-10-03T02:11:50Z",
   "lane_id": "yahoo_batch_quote_history",
   "latest_failure": {
     "attempts_used": 1,
     "data_loss": false,
     "deferred_acquisition": false,
-    "error": "ValueError: Yahoo provider source timestamp regresses for DVXV: history_as_of",
+    "error": "ValueError: Yahoo provider source timestamp regresses for MEGX: quote_as_of",
     "failure_kind": "systemic_integrity",
-    "failures": [
-      {
-        "attempt": 1,
-        "error": "AttributeError: 'Index' object has no attribute 'date'",
-        "source": "provider_safe_call"
-      }
-    ],
+    "failures": [],
     "lkg_status": "retained",
-    "observed_at": "2026-10-02T02:22:58Z",
-    "ticker": "DVXV"
+    "observed_at": "2026-10-03T02:10:52Z",
+    "ticker": "MEGX"
   },
   "lkg_details": [
     {
+      "expected_resolution": null,
+      "failure_observed_at": "2026-10-03T02:10:52Z",
+      "max_source_age_business_days": null,
+      "payload_sha256": "0f67120b013289b5b89aee17000fa54dd9f46d5d84aed57478a5935a0a4df448",
+      "source_age_business_days": null,
+      "source_as_of": "2026-10-01",
+      "state_reason": null,
+      "symbol": "MEGX"
+    },
+    {
       "expected_resolution": "next_yahoo_acquisition",
-      "failure_observed_at": "2026-10-02T02:22:58Z",
+      "failure_observed_at": "2026-10-03T02:08:07Z",
       "max_source_age_business_days": 6,
       "payload_sha256": "ed1d3cd771d9d0f5e7cd26a62758c61cf1476d038d489b2c08bcdd2461ce5920",
       "source_age_business_days": 25,
@@ -6962,7 +6971,7 @@
     },
     {
       "expected_resolution": "next_yahoo_acquisition",
-      "failure_observed_at": "2026-10-02T02:22:52Z",
+      "failure_observed_at": "2026-10-03T02:08:02Z",
       "max_source_age_business_days": 6,
       "payload_sha256": "063a715fb52858f61d5d4b2f1899874299cb1dff20f3451f90ef20c4ba11365f",
       "source_age_business_days": 25,
@@ -6972,7 +6981,7 @@
     },
     {
       "expected_resolution": "next_yahoo_acquisition",
-      "failure_observed_at": "2026-10-02T02:22:48Z",
+      "failure_observed_at": "2026-10-03T02:07:59Z",
       "max_source_age_business_days": 6,
       "payload_sha256": "c4c86e3d7b21b6e936bf89cef5c61751e1afcfb7b7f138a5721cb641ac727233",
       "source_age_business_days": 25,
@@ -6982,7 +6991,7 @@
     },
     {
       "expected_resolution": "next_natural_yahoo_run",
-      "failure_observed_at": "2026-10-02T02:22:47Z",
+      "failure_observed_at": "2026-10-03T02:07:58Z",
       "max_source_age_business_days": 6,
       "payload_sha256": "0f029241b80abafc4b35a32b3733fd0492c70e435a6d71f6119d751676af5b90",
       "source_age_business_days": 7,
@@ -7139,16 +7148,6 @@
       "source_as_of": "2026-09-23T19:42:12Z",
       "state_reason": "source_age_exceeds_lane_bound",
       "symbol": "AVTM"
-    },
-    {
-      "expected_resolution": "next_yahoo_acquisition",
-      "failure_observed_at": null,
-      "max_source_age_business_days": 6,
-      "payload_sha256": "acfd4f885433a27e31cbdf8ce607fd4d9b8a037b2da736d83fd623800ba0e5d4",
-      "source_age_business_days": 7,
-      "source_as_of": "2026-09-23T15:37:08Z",
-      "state_reason": "source_age_exceeds_lane_bound",
-      "symbol": "BCGS"
     }
   ],
   "lkg_symbols": [
@@ -7173,7 +7172,7 @@
     "BEMD",
     "BHYB"
   ],
-  "message": "Yahoo quote/history: fresh=6666, lkg=170, pending_history=0, unavailable=0, pending_acquisition=0, terminal=25, catalogue=6861, eligible=6861, retry=170, failed=14, source_stale=170. Pending history is a normal new-listing state and self-resolves on the next Yahoo acquisition.",
+  "message": "Yahoo quote/history: fresh=6665, lkg=171, pending_history=0, unavailable=0, pending_acquisition=0, terminal=25, catalogue=6861, eligible=6861, retry=171, failed=15, source_stale=170. Pending history is a normal new-listing state and self-resolves on the next Yahoo acquisition.",
   "oldest_source_as_of": "2026-04-10T19:35:04Z",
   "oldest_source_ticker": "ZCBE",
   "pending_acquisition_details": [],
@@ -7269,6 +7268,7 @@
     "MBBB",
     "MDCR",
     "MDEV",
+    "MEGX",
     "MEMY",
     "MGV",
     "MJUN",

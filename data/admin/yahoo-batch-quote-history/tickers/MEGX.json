@@ -2,7 +2,7 @@
   "current": {
     "fetched_at": "2026-10-01T14:19:14Z",
     "history_as_of": "2026-10-01",
-    "path": "data/yf/finance/MEGX.json",
+    "path": "data/admin/yahoo-batch-quote-history/lkg/MEGX.json",
     "payload_sha256": "0f67120b013289b5b89aee17000fa54dd9f46d5d84aed57478a5935a0a4df448",
     "quote_as_of": "2026-10-01T13:46:05Z",
     "source_as_of": "2026-10-01"
@@ -12,17 +12,36 @@
     "same_security_successor:MGKX",
     "stockanalysis_etf"
   ],
-  "failure_count": 0,
+  "failure_count": 1,
   "last_result": {
-    "attempts_used": 0,
+    "attempts_used": 1,
+    "error": "ValueError: Yahoo provider source timestamp regresses for MEGX: quote_as_of",
     "failures": [],
-    "latency_ms": 0,
-    "observed_at": "2026-10-02T02:26:29Z",
-    "outcome": "skipped_fresh"
+    "latency_ms": 422,
+    "observed_at": "2026-10-03T02:10:52Z",
+    "outcome": "failed"
   },
-  "resolution_state": "fresh_primary",
-  "retry": false,
+  "latest_failure": {
+    "attempts_used": 1,
+    "data_loss": false,
+    "deferred_acquisition": false,
+    "error": "ValueError: Yahoo provider source timestamp regresses for MEGX: quote_as_of",
+    "failure_kind": "systemic_integrity",
+    "failures": [],
+    "lkg_status": "retained",
+    "observed_at": "2026-10-03T02:10:52Z"
+  },
+  "lkg": {
+    "fetched_at": "2026-10-01T14:19:14Z",
+    "history_as_of": "2026-10-01",
+    "path": "data/admin/yahoo-batch-quote-history/lkg/MEGX.json",
+    "payload_sha256": "0f67120b013289b5b89aee17000fa54dd9f46d5d84aed57478a5935a0a4df448",
+    "quote_as_of": "2026-10-01T13:46:05Z",
+    "source_as_of": "2026-10-01"
+  },
+  "resolution_state": "lkg_primary",
+  "retry": true,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "ticker": "MEGX",
-  "updated_at": "2026-10-02T02:26:29Z"
+  "updated_at": "2026-10-03T02:10:52Z"
 }
