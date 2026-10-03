@@ -2,17 +2,17 @@
   "schema_version": "stockanalysis/v1",
   "source": "stockanalysis",
   "asset_type": "etf_detail_coverage",
-  "generated_at": "2026-10-03T00:34:44Z",
+  "generated_at": "2026-10-03T02:30:13Z",
   "source_date_summary": {
-    "total_members": 5685,
-    "newest_source_date": "2026-10-01",
+    "total_members": 5694,
+    "newest_source_date": "2026-10-02",
     "oldest_source_date": "2025-10-27",
     "oldest_source_member": "LGCF",
     "source_date_histogram": [
       {
         "date": null,
         "basis": null,
-        "count": 10
+        "count": 19
       },
       {
         "date": "2025-10-27",
@@ -107,10 +107,15 @@
       {
         "date": "2026-09-30",
         "basis": "source",
-        "count": 5057
+        "count": 5039
       },
       {
         "date": "2026-10-01",
+        "basis": "source",
+        "count": 18
+      },
+      {
+        "date": "2026-10-02",
         "basis": "source",
         "count": 120
       }
@@ -130,7 +135,7 @@
     "pending_ledger": "backfill/pending_ledger.json"
   },
   "counts": {
-    "candidate_total": 5685,
+    "candidate_total": 5694,
     "source_breakdown": {
       "etf_universe": 5642,
       "etf_screener": 20,
@@ -138,28 +143,28 @@
     },
     "detail_files": 5840,
     "covered_detail_files": 5675,
-    "missing_detail_files": 10,
+    "missing_detail_files": 19,
     "extra_detail_files": 165,
     "stockanalysis_detail_files": 5840,
     "yahoo_fallback_files": 0,
     "invalid_detail_files": 0,
-    "coverage_pct": 99.82,
-    "primary_stockanalysis_pct": 99.82,
+    "coverage_pct": 99.67,
+    "primary_stockanalysis_pct": 99.67,
     "missing_by_source": {
       "etf_universe": 1,
       "etf_screener": 0,
-      "new_etfs": 9
+      "new_etfs": 18
     },
     "missing_status_breakdown": {
       "retry_pending": 1,
-      "untracked": 9
+      "untracked": 18
     },
     "missing_failure_breakdown": {
       "other_error": 1,
-      "untracked": 9
+      "untracked": 18
     },
     "missing_availability_breakdown": {
-      "unprobed": 9,
+      "unprobed": 18,
       "unresolved": 1
     },
     "pending_tracked": 133,
@@ -169,14 +174,14 @@
   },
   "missing_reason_summary": {
     "other_error": 1,
-    "untracked": 9
+    "untracked": 18
   },
   "missing_status_summary": {
     "retry_pending": 1,
-    "untracked": 9
+    "untracked": 18
   },
   "missing_availability_summary": {
-    "unprobed": 9,
+    "unprobed": 18,
     "unresolved": 1
   },
   "missing_reason_samples": {
@@ -187,12 +192,15 @@
       "ACIG",
       "ACSM",
       "AVNC",
+      "DBAR",
+      "EAFH",
+      "ENHE",
       "JQTY",
+      "LCIV",
+      "LLMA",
       "LUNC",
-      "MUY",
-      "NRR",
-      "OCT",
-      "PFRX"
+      "MMHI",
+      "MUY"
     ]
   },
   "missing_status_samples": {
@@ -203,12 +211,15 @@
       "ACIG",
       "ACSM",
       "AVNC",
+      "DBAR",
+      "EAFH",
+      "ENHE",
       "JQTY",
+      "LCIV",
+      "LLMA",
       "LUNC",
-      "MUY",
-      "NRR",
-      "OCT",
-      "PFRX"
+      "MMHI",
+      "MUY"
     ]
   },
   "missing_availability_samples": {
@@ -216,12 +227,15 @@
       "ACIG",
       "ACSM",
       "AVNC",
+      "DBAR",
+      "EAFH",
+      "ENHE",
       "JQTY",
+      "LCIV",
+      "LLMA",
       "LUNC",
-      "MUY",
-      "NRR",
-      "OCT",
-      "PFRX"
+      "MMHI",
+      "MUY"
     ],
     "unresolved": [
       "HBIL"
@@ -231,13 +245,22 @@
     "ACIG",
     "ACSM",
     "AVNC",
+    "DBAR",
+    "EAFH",
+    "ENHE",
     "HBIL",
     "JQTY",
+    "LCIV",
+    "LLMA",
     "LUNC",
+    "MMHI",
     "MUY",
     "NRR",
     "OCT",
-    "PFRX"
+    "OCTI",
+    "PFRX",
+    "TDEM",
+    "XX"
   ],
   "provider_absent_tickers": [],
   "yahoo_fallback_tickers": [],
@@ -414,13 +437,22 @@
       "ACIG",
       "ACSM",
       "AVNC",
+      "DBAR",
+      "EAFH",
+      "ENHE",
       "HBIL",
       "JQTY",
+      "LCIV",
+      "LLMA",
       "LUNC",
+      "MMHI",
       "MUY",
       "NRR",
       "OCT",
-      "PFRX"
+      "OCTI",
+      "PFRX",
+      "TDEM",
+      "XX"
     ],
     "missing_retry_pending": [
       "HBIL"
@@ -429,12 +461,15 @@
       "ACIG",
       "ACSM",
       "AVNC",
+      "DBAR",
+      "EAFH",
+      "ENHE",
       "JQTY",
+      "LCIV",
+      "LLMA",
       "LUNC",
-      "MUY",
-      "NRR",
-      "OCT",
-      "PFRX"
+      "MMHI",
+      "MUY"
     ],
     "missing_other_error": [
       "HBIL"
