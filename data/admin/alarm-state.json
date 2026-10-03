@@ -1,8 +1,8 @@
 {
   "schema_version": "alarm-state/v1",
-  "generated_at": "2026-10-03T18:02:57.067Z",
+  "generated_at": "2026-10-03T21:28:32.657Z",
   "status": "open",
-  "open_incident_count": 1,
+  "open_incident_count": 2,
   "open_incidents": [
     {
       "workflow": "fenok-edge-krx-daily.yml",
@@ -13,6 +13,18 @@
       "first_failing_run_url": "https://github.com/etloveaui/100xFenok/actions/runs/36744439474",
       "alarm_reasons": [
         "failure_streak"
+      ],
+      "lost_schedule_slot_count": 0
+    },
+    {
+      "workflow": "retention-restore.yml",
+      "label": "R2 Retention Restore Watchdog",
+      "streak": 0,
+      "failure_streak_threshold": 2,
+      "first_failing_run_id": null,
+      "first_failing_run_url": null,
+      "alarm_reasons": [
+        "missed_schedule_window"
       ],
       "lost_schedule_slot_count": 0
     }
@@ -362,12 +374,13 @@
   "queue_evicted_run_count": 0,
   "queue_evicted_workflows": [],
   "last_firing": {
-    "run_id": "37142556199",
-    "run_url": "https://github.com/etloveaui/100xFenok/actions/runs/37142556199",
-    "observed_at": "2026-10-03T18:02:57.067Z",
+    "run_id": "37154950469",
+    "run_url": "https://github.com/etloveaui/100xFenok/actions/runs/37154950469",
+    "observed_at": "2026-10-03T21:28:32.657Z",
     "event": "schedule",
     "workflows": [
-      "fenok-edge-krx-daily.yml"
+      "fenok-edge-krx-daily.yml",
+      "retention-restore.yml"
     ],
     "title": "100xFenok pipeline job failure alarm"
   },
