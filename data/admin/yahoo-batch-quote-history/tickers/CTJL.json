@@ -1,20 +1,52 @@
 {
   "current": {
-    "fetched_at": "2026-09-28T03:13:26Z",
-    "history_as_of": "2026-09-25",
-    "path": "data/admin/yahoo-batch-quote-history/lkg/CTJL.json",
-    "payload_sha256": "96e2d418e7a5b64435b05caa6a7707169611d72a4ef70d56a3905c50214feed2",
+    "fetched_at": "2026-10-04T17:04:19Z",
+    "history_as_of": "2026-10-02",
+    "path": "data/yf/finance/CTJL.json",
+    "payload_sha256": "678d9bd7d83d8d9df370a484c5067022bef6660c48cd9b61535d8cac68358a4c",
     "quote_as_of": "2026-09-23T16:35:06Z",
     "source_as_of": "2026-09-23T16:35:06Z"
   },
   "discovered_from": [
     "stockanalysis_etf"
   ],
+  "failure_count": 0,
   "last_result": {
     "attempts_used": 1,
-    "failures": [],
-    "latency_ms": 434,
-    "observed_at": "2026-09-28T03:11:20Z",
+    "failures": [
+      {
+        "attempt": 1,
+        "error": "YFDataException: CTJL: No Fund data found.",
+        "source": "provider_safe_call"
+      },
+      {
+        "attempt": 1,
+        "error": "YFDataException: CTJL: No Fund data found.",
+        "source": "provider_safe_call"
+      },
+      {
+        "attempt": 1,
+        "error": "YFDataException: CTJL: No Fund data found.",
+        "source": "provider_safe_call"
+      },
+      {
+        "attempt": 1,
+        "error": "YFDataException: CTJL: No Fund data found.",
+        "source": "provider_safe_call"
+      },
+      {
+        "attempt": 1,
+        "error": "YFDataException: CTJL: No Fund data found.",
+        "source": "provider_safe_call"
+      },
+      {
+        "attempt": 1,
+        "error": "YFDataException: CTJL: No Fund data found.",
+        "source": "provider_safe_call"
+      }
+    ],
+    "latency_ms": 594,
+    "observed_at": "2026-10-04T17:04:19Z",
     "outcome": "fresh"
   },
   "lkg": {
@@ -25,8 +57,8 @@
     "quote_as_of": "2026-09-23T16:35:06Z",
     "source_as_of": "2026-09-23T16:35:06Z"
   },
-  "resolution_state": "lkg_primary",
-  "retry": true,
+  "resolution_state": "fresh_primary",
+  "retry": false,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "stale": {
     "age_business_days": 7,
@@ -38,5 +70,5 @@
     "source_as_of": "2026-09-23T16:35:06Z"
   },
   "ticker": "CTJL",
-  "updated_at": "2026-10-02T02:22:31Z"
+  "updated_at": "2026-10-04T17:04:19Z"
 }

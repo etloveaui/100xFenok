@@ -1,20 +1,52 @@
 {
   "current": {
-    "fetched_at": "2026-09-28T01:19:09Z",
-    "history_as_of": "2026-09-25",
-    "path": "data/admin/yahoo-batch-quote-history/lkg/ABXB.json",
-    "payload_sha256": "76bdc28fde0bccdd46da123a85e9f6e3f2da8e002b31ae2f413f9acd1b890ac5",
-    "quote_as_of": "2026-09-22T17:40:42Z",
-    "source_as_of": "2026-09-22T17:40:42Z"
+    "fetched_at": "2026-10-04T17:03:27Z",
+    "history_as_of": "2026-10-02",
+    "path": "data/yf/finance/ABXB.json",
+    "payload_sha256": "40de8c19c9afdb8fbee0d8a28f54d28b78494743906c413fce267184bd1503a2",
+    "quote_as_of": "2026-09-28T17:27:08Z",
+    "source_as_of": "2026-09-28T17:27:08Z"
   },
   "discovered_from": [
     "stockanalysis_etf"
   ],
+  "failure_count": 0,
   "last_result": {
     "attempts_used": 1,
-    "failures": [],
-    "latency_ms": 496,
-    "observed_at": "2026-09-28T01:17:59Z",
+    "failures": [
+      {
+        "attempt": 1,
+        "error": "YFDataException: ABXB: No Fund data found.",
+        "source": "provider_safe_call"
+      },
+      {
+        "attempt": 1,
+        "error": "YFDataException: ABXB: No Fund data found.",
+        "source": "provider_safe_call"
+      },
+      {
+        "attempt": 1,
+        "error": "YFDataException: ABXB: No Fund data found.",
+        "source": "provider_safe_call"
+      },
+      {
+        "attempt": 1,
+        "error": "YFDataException: ABXB: No Fund data found.",
+        "source": "provider_safe_call"
+      },
+      {
+        "attempt": 1,
+        "error": "YFDataException: ABXB: No Fund data found.",
+        "source": "provider_safe_call"
+      },
+      {
+        "attempt": 1,
+        "error": "YFDataException: ABXB: No Fund data found.",
+        "source": "provider_safe_call"
+      }
+    ],
+    "latency_ms": 623,
+    "observed_at": "2026-10-04T17:03:27Z",
     "outcome": "fresh"
   },
   "lkg": {
@@ -25,8 +57,8 @@
     "quote_as_of": "2026-09-22T17:40:42Z",
     "source_as_of": "2026-09-22T17:40:42Z"
   },
-  "resolution_state": "lkg_primary",
-  "retry": true,
+  "resolution_state": "fresh_primary",
+  "retry": false,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "stale": {
     "age_business_days": 7,
@@ -38,5 +70,5 @@
     "source_as_of": "2026-09-22T17:40:42Z"
   },
   "ticker": "ABXB",
-  "updated_at": "2026-10-01T02:15:16Z"
+  "updated_at": "2026-10-04T17:03:27Z"
 }
