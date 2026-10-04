@@ -1,6 +1,6 @@
 {
   "schema_version": "data-entity-graph/v1",
-  "generated_at": "2026-10-04T09:39:07.483Z",
+  "generated_at": "2026-10-04T10:07:26.775Z",
   "source_as_of": {
     "stocks_analyzer": "2026-10-02",
     "stock_action_index": "2026-10-02",
@@ -37,7 +37,7 @@
   },
   "totals": {
     "stocks": 1066,
-    "etfs": 5642,
+    "etfs": 5700,
     "sectors": 10,
     "etf_categories": 7,
     "filing_nodes": 202,
@@ -46,7 +46,7 @@
     "stocks_with_filings": 202,
     "stocks_with_13f": 424,
     "stocks_with_single_stock_etfs": 84,
-    "etfs_with_market_facts": 5642
+    "etfs_with_market_facts": 5669
   },
   "diagnostics": {
     "stock_alias_collisions": 108,
@@ -167,7 +167,7 @@
       },
       {
         "ticker": "ASSX",
-        "label": "ETF Opportunities Trust - T-REX 2X Long ASST Daily Target ETF",
+        "label": "T-REX 2X Long ASST Daily Target ETF",
         "raw_underlying": "ASST",
         "classification_source": "stockanalysis.overview.description",
         "confidence": "high",
@@ -53007,6 +53007,45 @@
         ]
       },
       {
+        "id": "etf:ACIG",
+        "type": "etf",
+        "ticker": "ACIG",
+        "label": "Hartford Funds Exchange-Traded Trust - Alpha Capture International Growth ETF",
+        "category": "-",
+        "route": "/etfs/ACIG",
+        "confidence": {
+          "label": "low",
+          "rank": 1,
+          "classification_source": "stockanalysis.etf_list.name",
+          "underlying_raw": null,
+          "canonical_underlying_ticker": null,
+          "canonical_underlying_key": null,
+          "resolution_method": null,
+          "resolution_source": null,
+          "matched_alias": null,
+          "resolution_note": null
+        },
+        "as_of": {
+          "etf_universe": null,
+          "market_facts": null
+        },
+        "source_links": {
+          "etf_universe": true,
+          "market_facts": false,
+          "classification": true
+        },
+        "service_flags": [
+          "etf_center"
+        ],
+        "relations": [
+          {
+            "type": "belongs_to_etf_category",
+            "target": "etf_category:-",
+            "source": "stockanalysis/etf_universe"
+          }
+        ]
+      },
+      {
         "id": "etf:ACII",
         "type": "etf",
         "ticker": "ACII",
@@ -53472,6 +53511,45 @@
           {
             "type": "belongs_to_etf_category",
             "target": "etf_category:Equity",
+            "source": "stockanalysis/etf_universe"
+          }
+        ]
+      },
+      {
+        "id": "etf:ACSM",
+        "type": "etf",
+        "ticker": "ACSM",
+        "label": "Hartford Funds Exchange-Traded Trust - Alpha Capture Small mid Cap ETF",
+        "category": "-",
+        "route": "/etfs/ACSM",
+        "confidence": {
+          "label": "low",
+          "rank": 1,
+          "classification_source": "stockanalysis.etf_list.name",
+          "underlying_raw": null,
+          "canonical_underlying_ticker": null,
+          "canonical_underlying_key": null,
+          "resolution_method": null,
+          "resolution_source": null,
+          "matched_alias": null,
+          "resolution_note": null
+        },
+        "as_of": {
+          "etf_universe": null,
+          "market_facts": null
+        },
+        "source_links": {
+          "etf_universe": true,
+          "market_facts": false,
+          "classification": true
+        },
+        "service_flags": [
+          "etf_center"
+        ],
+        "relations": [
+          {
+            "type": "belongs_to_etf_category",
+            "target": "etf_category:-",
             "source": "stockanalysis/etf_universe"
           }
         ]
@@ -56059,6 +56137,45 @@
         ]
       },
       {
+        "id": "etf:AIBF",
+        "type": "etf",
+        "ticker": "AIBF",
+        "label": "iShares Future AI Beneficiaries ETF",
+        "category": "-",
+        "route": "/etfs/AIBF",
+        "confidence": {
+          "label": "high",
+          "rank": 3,
+          "classification_source": "stockanalysis.overview.description",
+          "underlying_raw": null,
+          "canonical_underlying_ticker": null,
+          "canonical_underlying_key": null,
+          "resolution_method": null,
+          "resolution_source": null,
+          "matched_alias": null,
+          "resolution_note": null
+        },
+        "as_of": {
+          "etf_universe": null,
+          "market_facts": "2026-09-30"
+        },
+        "source_links": {
+          "etf_universe": true,
+          "market_facts": true,
+          "classification": true
+        },
+        "service_flags": [
+          "etf_center"
+        ],
+        "relations": [
+          {
+            "type": "belongs_to_etf_category",
+            "target": "etf_category:-",
+            "source": "stockanalysis/etf_universe"
+          }
+        ]
+      },
+      {
         "id": "etf:AIBU",
         "type": "etf",
         "ticker": "AIBU",
@@ -56102,7 +56219,7 @@
         "id": "etf:AICH",
         "type": "etf",
         "ticker": "AICH",
-        "label": "Tidal Trust IV - China AI ETF",
+        "label": "China AI ETF",
         "category": "-",
         "route": "/etfs/AICH",
         "confidence": {
@@ -62461,7 +62578,7 @@
         "id": "etf:ASSX",
         "type": "etf",
         "ticker": "ASSX",
-        "label": "ETF Opportunities Trust - T-REX 2X Long ASST Daily Target ETF",
+        "label": "T-REX 2X Long ASST Daily Target ETF",
         "category": "-",
         "route": "/etfs/ASSX",
         "confidence": {
@@ -62746,7 +62863,7 @@
         "id": "etf:AT",
         "type": "etf",
         "ticker": "AT",
-        "label": "ETF Series Solutions - Defiance Robotics Actuators ETF",
+        "label": "Defiance Robotics Actuators ETF",
         "category": "Equity",
         "route": "/etfs/AT",
         "confidence": {
@@ -64456,6 +64573,45 @@
           {
             "type": "belongs_to_etf_category",
             "target": "etf_category:Equity",
+            "source": "stockanalysis/etf_universe"
+          }
+        ]
+      },
+      {
+        "id": "etf:AVNC",
+        "type": "etf",
+        "ticker": "AVNC",
+        "label": "American Century ETF Trust - Avantis All International Core Equity ETF",
+        "category": "-",
+        "route": "/etfs/AVNC",
+        "confidence": {
+          "label": "low",
+          "rank": 1,
+          "classification_source": "stockanalysis.etf_list.name",
+          "underlying_raw": null,
+          "canonical_underlying_ticker": null,
+          "canonical_underlying_key": null,
+          "resolution_method": null,
+          "resolution_source": null,
+          "matched_alias": null,
+          "resolution_note": null
+        },
+        "as_of": {
+          "etf_universe": null,
+          "market_facts": null
+        },
+        "source_links": {
+          "etf_universe": true,
+          "market_facts": false,
+          "classification": true
+        },
+        "service_flags": [
+          "etf_center"
+        ],
+        "relations": [
+          {
+            "type": "belongs_to_etf_category",
+            "target": "etf_category:-",
             "source": "stockanalysis/etf_universe"
           }
         ]
@@ -68278,6 +68434,45 @@
           {
             "type": "belongs_to_etf_category",
             "target": "etf_category:Fixed Income",
+            "source": "stockanalysis/etf_universe"
+          }
+        ]
+      },
+      {
+        "id": "etf:BCOM",
+        "type": "etf",
+        "ticker": "BCOM",
+        "label": "Collaborative Investment Series Trust - Rareview Bloomberg Commodity Index ETF",
+        "category": "-",
+        "route": "/etfs/BCOM",
+        "confidence": {
+          "label": "low",
+          "rank": 1,
+          "classification_source": "stockanalysis.etf_list.name",
+          "underlying_raw": null,
+          "canonical_underlying_ticker": null,
+          "canonical_underlying_key": null,
+          "resolution_method": null,
+          "resolution_source": null,
+          "matched_alias": null,
+          "resolution_note": null
+        },
+        "as_of": {
+          "etf_universe": null,
+          "market_facts": null
+        },
+        "source_links": {
+          "etf_universe": true,
+          "market_facts": false,
+          "classification": true
+        },
+        "service_flags": [
+          "etf_center"
+        ],
+        "relations": [
+          {
+            "type": "belongs_to_etf_category",
+            "target": "etf_category:-",
             "source": "stockanalysis/etf_universe"
           }
         ]
@@ -77798,45 +77993,6 @@
         ]
       },
       {
-        "id": "etf:BTR",
-        "type": "etf",
-        "ticker": "BTR",
-        "label": "Beacon Tactical Risk ETF",
-        "category": "Asset Allocation",
-        "route": "/etfs/BTR",
-        "confidence": {
-          "label": "high",
-          "rank": 3,
-          "classification_source": "stockanalysis.overview.description",
-          "underlying_raw": null,
-          "canonical_underlying_ticker": null,
-          "canonical_underlying_key": null,
-          "resolution_method": null,
-          "resolution_source": null,
-          "matched_alias": null,
-          "resolution_note": null
-        },
-        "as_of": {
-          "etf_universe": null,
-          "market_facts": "2026-09-23"
-        },
-        "source_links": {
-          "etf_universe": true,
-          "market_facts": true,
-          "classification": true
-        },
-        "service_flags": [
-          "etf_center"
-        ],
-        "relations": [
-          {
-            "type": "belongs_to_etf_category",
-            "target": "etf_category:Asset Allocation",
-            "source": "stockanalysis/etf_universe"
-          }
-        ]
-      },
-      {
         "id": "etf:BTRN",
         "type": "etf",
         "ticker": "BTRN",
@@ -78621,7 +78777,7 @@
         "id": "etf:BUIL",
         "type": "etf",
         "ticker": "BUIL",
-        "label": "Advisor Managed Portfolios - Rebuild America ETF",
+        "label": "Rebuild America ETF",
         "category": "-",
         "route": "/etfs/BUIL",
         "confidence": {
@@ -83011,7 +83167,7 @@
         "id": "etf:CGFS",
         "type": "etf",
         "ticker": "CGFS",
-        "label": "EA Series Trust - CG Flagship Equity ETF",
+        "label": "CG Flagship Equity ETF",
         "category": "-",
         "route": "/etfs/CGFS",
         "confidence": {
@@ -84107,6 +84263,45 @@
         "label": "Stance Sustainable Beta ETF",
         "category": "Equity",
         "route": "/etfs/CHGX",
+        "confidence": {
+          "label": "high",
+          "rank": 3,
+          "classification_source": "stockanalysis.overview.description",
+          "underlying_raw": null,
+          "canonical_underlying_ticker": null,
+          "canonical_underlying_key": null,
+          "resolution_method": null,
+          "resolution_source": null,
+          "matched_alias": null,
+          "resolution_note": null
+        },
+        "as_of": {
+          "etf_universe": null,
+          "market_facts": "2026-09-30"
+        },
+        "source_links": {
+          "etf_universe": true,
+          "market_facts": true,
+          "classification": true
+        },
+        "service_flags": [
+          "etf_center"
+        ],
+        "relations": [
+          {
+            "type": "belongs_to_etf_category",
+            "target": "etf_category:Equity",
+            "source": "stockanalysis/etf_universe"
+          }
+        ]
+      },
+      {
+        "id": "etf:CHIP",
+        "type": "etf",
+        "ticker": "CHIP",
+        "label": "REX AI Chipmaking ETF",
+        "category": "Equity",
+        "route": "/etfs/CHIP",
         "confidence": {
           "label": "high",
           "rank": 3,
@@ -90549,7 +90744,7 @@
         "id": "etf:CSEP",
         "type": "etf",
         "ticker": "CSEP",
-        "label": "Corgi ETF Trust I - U.S. Equities 15% Structured Buffer ETF - September Series",
+        "label": "Corgi U.S. Equities 15% Structured Buffer ETF - September Series",
         "category": "Alternatives",
         "route": "/etfs/CSEP",
         "confidence": {
@@ -90911,6 +91106,45 @@
         ]
       },
       {
+        "id": "etf:CSRA",
+        "type": "etf",
+        "ticker": "CSRA",
+        "label": "Cohen & Steers Real Assets Active ETF",
+        "category": "Asset Allocation",
+        "route": "/etfs/CSRA",
+        "confidence": {
+          "label": "low",
+          "rank": 1,
+          "classification_source": "stockanalysis.etf_list.name",
+          "underlying_raw": null,
+          "canonical_underlying_ticker": null,
+          "canonical_underlying_key": null,
+          "resolution_method": null,
+          "resolution_source": null,
+          "matched_alias": null,
+          "resolution_note": null
+        },
+        "as_of": {
+          "etf_universe": null,
+          "market_facts": null
+        },
+        "source_links": {
+          "etf_universe": true,
+          "market_facts": false,
+          "classification": true
+        },
+        "service_flags": [
+          "etf_center"
+        ],
+        "relations": [
+          {
+            "type": "belongs_to_etf_category",
+            "target": "etf_category:Asset Allocation",
+            "source": "stockanalysis/etf_universe"
+          }
+        ]
+      },
+      {
         "id": "etf:CSRE",
         "type": "etf",
         "ticker": "CSRE",
@@ -91062,6 +91296,45 @@
           {
             "type": "belongs_to_etf_category",
             "target": "etf_category:Alternatives",
+            "source": "stockanalysis/etf_universe"
+          }
+        ]
+      },
+      {
+        "id": "etf:CTAG",
+        "type": "etf",
+        "ticker": "CTAG",
+        "label": "Calamos Timpani Active SMID Growth ETF",
+        "category": "-",
+        "route": "/etfs/CTAG",
+        "confidence": {
+          "label": "low",
+          "rank": 1,
+          "classification_source": "stockanalysis.etf_list.name",
+          "underlying_raw": null,
+          "canonical_underlying_ticker": null,
+          "canonical_underlying_key": null,
+          "resolution_method": null,
+          "resolution_source": null,
+          "matched_alias": null,
+          "resolution_note": null
+        },
+        "as_of": {
+          "etf_universe": null,
+          "market_facts": null
+        },
+        "source_links": {
+          "etf_universe": true,
+          "market_facts": false,
+          "classification": true
+        },
+        "service_flags": [
+          "etf_center"
+        ],
+        "relations": [
+          {
+            "type": "belongs_to_etf_category",
+            "target": "etf_category:-",
             "source": "stockanalysis/etf_universe"
           }
         ]
@@ -91422,7 +91695,7 @@
         "id": "etf:CTSE",
         "type": "etf",
         "ticker": "CTSE",
-        "label": "Corgi ETF Trust I - Corgi U.S. Equities 30% Structured Buffer ETF - September Series",
+        "label": "Corgi U.S. Equities 30% Structured Buffer ETF - September Series",
         "category": "Alternatives",
         "route": "/etfs/CTSE",
         "confidence": {
@@ -92961,6 +93234,45 @@
         ]
       },
       {
+        "id": "etf:DBAR",
+        "type": "etf",
+        "ticker": "DBAR",
+        "label": "iM Global Partner Funds - iMGP DBi Absolute Return ETF",
+        "category": "-",
+        "route": "/etfs/DBAR",
+        "confidence": {
+          "label": "low",
+          "rank": 1,
+          "classification_source": "stockanalysis.etf_list.name",
+          "underlying_raw": null,
+          "canonical_underlying_ticker": null,
+          "canonical_underlying_key": null,
+          "resolution_method": null,
+          "resolution_source": null,
+          "matched_alias": null,
+          "resolution_note": null
+        },
+        "as_of": {
+          "etf_universe": null,
+          "market_facts": null
+        },
+        "source_links": {
+          "etf_universe": true,
+          "market_facts": false,
+          "classification": true
+        },
+        "service_flags": [
+          "etf_center"
+        ],
+        "relations": [
+          {
+            "type": "belongs_to_etf_category",
+            "target": "etf_category:-",
+            "source": "stockanalysis/etf_universe"
+          }
+        ]
+      },
+      {
         "id": "etf:DBAW",
         "type": "etf",
         "ticker": "DBAW",
@@ -93463,6 +93775,45 @@
           {
             "type": "belongs_to_etf_category",
             "target": "etf_category:Commodity",
+            "source": "stockanalysis/etf_universe"
+          }
+        ]
+      },
+      {
+        "id": "etf:DCAP",
+        "type": "etf",
+        "ticker": "DCAP",
+        "label": "ETF Opportunities Trust - T-Strive Digital Credit Preferred Income ETF",
+        "category": "Equity",
+        "route": "/etfs/DCAP",
+        "confidence": {
+          "label": "high",
+          "rank": 3,
+          "classification_source": "stockanalysis.overview.description",
+          "underlying_raw": null,
+          "canonical_underlying_ticker": null,
+          "canonical_underlying_key": null,
+          "resolution_method": null,
+          "resolution_source": null,
+          "matched_alias": null,
+          "resolution_note": null
+        },
+        "as_of": {
+          "etf_universe": null,
+          "market_facts": "2026-09-30"
+        },
+        "source_links": {
+          "etf_universe": true,
+          "market_facts": true,
+          "classification": true
+        },
+        "service_flags": [
+          "etf_center"
+        ],
+        "relations": [
+          {
+            "type": "belongs_to_etf_category",
+            "target": "etf_category:Equity",
             "source": "stockanalysis/etf_universe"
           }
         ]
@@ -100436,6 +100787,45 @@
         ]
       },
       {
+        "id": "etf:DQSE",
+        "type": "etf",
+        "ticker": "DQSE",
+        "label": "FT Vest Nasdaq-100 Dual Directional Buffer ETF - September",
+        "category": "-",
+        "route": "/etfs/DQSE",
+        "confidence": {
+          "label": "high",
+          "rank": 3,
+          "classification_source": "stockanalysis.overview.description",
+          "underlying_raw": null,
+          "canonical_underlying_ticker": null,
+          "canonical_underlying_key": null,
+          "resolution_method": null,
+          "resolution_source": null,
+          "matched_alias": null,
+          "resolution_note": null
+        },
+        "as_of": {
+          "etf_universe": null,
+          "market_facts": "2026-09-30"
+        },
+        "source_links": {
+          "etf_universe": true,
+          "market_facts": true,
+          "classification": true
+        },
+        "service_flags": [
+          "etf_center"
+        ],
+        "relations": [
+          {
+            "type": "belongs_to_etf_category",
+            "target": "etf_category:-",
+            "source": "stockanalysis/etf_universe"
+          }
+        ]
+      },
+      {
         "id": "etf:DRAI",
         "type": "etf",
         "ticker": "DRAI",
@@ -103570,6 +103960,45 @@
           {
             "type": "belongs_to_etf_category",
             "target": "etf_category:Equity",
+            "source": "stockanalysis/etf_universe"
+          }
+        ]
+      },
+      {
+        "id": "etf:EAFH",
+        "type": "etf",
+        "ticker": "EAFH",
+        "label": "DBX ETF Trust - Xtrackers MSCI EAFE 50% Hedged Equity ETF",
+        "category": "-",
+        "route": "/etfs/EAFH",
+        "confidence": {
+          "label": "low",
+          "rank": 1,
+          "classification_source": "stockanalysis.etf_list.name",
+          "underlying_raw": null,
+          "canonical_underlying_ticker": null,
+          "canonical_underlying_key": null,
+          "resolution_method": null,
+          "resolution_source": null,
+          "matched_alias": null,
+          "resolution_note": null
+        },
+        "as_of": {
+          "etf_universe": null,
+          "market_facts": null
+        },
+        "source_links": {
+          "etf_universe": true,
+          "market_facts": false,
+          "classification": true
+        },
+        "service_flags": [
+          "etf_center"
+        ],
+        "relations": [
+          {
+            "type": "belongs_to_etf_category",
+            "target": "etf_category:-",
             "source": "stockanalysis/etf_universe"
           }
         ]
@@ -108083,7 +108512,7 @@
         "id": "etf:EMSE",
         "type": "etf",
         "ticker": "EMSE",
-        "label": "Corgi ETF Trust I - Corgi Emerging Markets Equities 15% Structured Buffer ETF - September Series",
+        "label": "Corgi Emerging Markets Equities 15% Structured Buffer ETF - September Series",
         "category": "Alternatives",
         "route": "/etfs/EMSE",
         "confidence": {
@@ -108394,6 +108823,45 @@
         ]
       },
       {
+        "id": "etf:ENHE",
+        "type": "etf",
+        "ticker": "ENHE",
+        "label": "BlackRock iShares Enhanced Emerging Markets Active ETF",
+        "category": "-",
+        "route": "/etfs/ENHE",
+        "confidence": {
+          "label": "low",
+          "rank": 1,
+          "classification_source": "stockanalysis.etf_list.name",
+          "underlying_raw": null,
+          "canonical_underlying_ticker": null,
+          "canonical_underlying_key": null,
+          "resolution_method": null,
+          "resolution_source": null,
+          "matched_alias": null,
+          "resolution_note": null
+        },
+        "as_of": {
+          "etf_universe": null,
+          "market_facts": null
+        },
+        "source_links": {
+          "etf_universe": true,
+          "market_facts": false,
+          "classification": true
+        },
+        "service_flags": [
+          "etf_center"
+        ],
+        "relations": [
+          {
+            "type": "belongs_to_etf_category",
+            "target": "etf_category:-",
+            "source": "stockanalysis/etf_universe"
+          }
+        ]
+      },
+      {
         "id": "etf:ENHI",
         "type": "etf",
         "ticker": "ENHI",
@@ -108478,6 +108946,45 @@
         "label": "iShares MSCI Norway ETF",
         "category": "Equity",
         "route": "/etfs/ENOR",
+        "confidence": {
+          "label": "high",
+          "rank": 3,
+          "classification_source": "stockanalysis.overview.description",
+          "underlying_raw": null,
+          "canonical_underlying_ticker": null,
+          "canonical_underlying_key": null,
+          "resolution_method": null,
+          "resolution_source": null,
+          "matched_alias": null,
+          "resolution_note": null
+        },
+        "as_of": {
+          "etf_universe": null,
+          "market_facts": "2026-09-30"
+        },
+        "source_links": {
+          "etf_universe": true,
+          "market_facts": true,
+          "classification": true
+        },
+        "service_flags": [
+          "etf_center"
+        ],
+        "relations": [
+          {
+            "type": "belongs_to_etf_category",
+            "target": "etf_category:Equity",
+            "source": "stockanalysis/etf_universe"
+          }
+        ]
+      },
+      {
+        "id": "etf:ENRG",
+        "type": "etf",
+        "ticker": "ENRG",
+        "label": "SoFi Smart Energy ETF",
+        "category": "Equity",
+        "route": "/etfs/ENRG",
         "confidence": {
           "label": "high",
           "rank": 3,
@@ -111710,6 +112217,45 @@
           {
             "type": "belongs_to_etf_category",
             "target": "etf_category:Equity",
+            "source": "stockanalysis/etf_universe"
+          }
+        ]
+      },
+      {
+        "id": "etf:EVMO",
+        "type": "etf",
+        "ticker": "EVMO",
+        "label": "Eaton Vance Mortgage Opportunities ETF",
+        "category": "Fixed Income",
+        "route": "/etfs/EVMO",
+        "confidence": {
+          "label": "low",
+          "rank": 1,
+          "classification_source": "stockanalysis.etf_list.name",
+          "underlying_raw": null,
+          "canonical_underlying_ticker": null,
+          "canonical_underlying_key": null,
+          "resolution_method": null,
+          "resolution_source": null,
+          "matched_alias": null,
+          "resolution_note": null
+        },
+        "as_of": {
+          "etf_universe": null,
+          "market_facts": null
+        },
+        "source_links": {
+          "etf_universe": true,
+          "market_facts": false,
+          "classification": true
+        },
+        "service_flags": [
+          "etf_center"
+        ],
+        "relations": [
+          {
+            "type": "belongs_to_etf_category",
+            "target": "etf_category:Fixed Income",
             "source": "stockanalysis/etf_universe"
           }
         ]
@@ -118315,6 +118861,45 @@
         ]
       },
       {
+        "id": "etf:FFLX",
+        "type": "etf",
+        "ticker": "FFLX",
+        "label": "First Trust Flexible Income ETF",
+        "category": "Fixed Income",
+        "route": "/etfs/FFLX",
+        "confidence": {
+          "label": "low",
+          "rank": 1,
+          "classification_source": "stockanalysis.etf_list.name",
+          "underlying_raw": null,
+          "canonical_underlying_ticker": null,
+          "canonical_underlying_key": null,
+          "resolution_method": null,
+          "resolution_source": null,
+          "matched_alias": null,
+          "resolution_note": null
+        },
+        "as_of": {
+          "etf_universe": null,
+          "market_facts": null
+        },
+        "source_links": {
+          "etf_universe": true,
+          "market_facts": false,
+          "classification": true
+        },
+        "service_flags": [
+          "etf_center"
+        ],
+        "relations": [
+          {
+            "type": "belongs_to_etf_category",
+            "target": "etf_category:Fixed Income",
+            "source": "stockanalysis/etf_universe"
+          }
+        ]
+      },
+      {
         "id": "etf:FFND",
         "type": "etf",
         "ticker": "FFND",
@@ -119320,6 +119905,45 @@
         "source_links": {
           "etf_universe": true,
           "market_facts": true,
+          "classification": true
+        },
+        "service_flags": [
+          "etf_center"
+        ],
+        "relations": [
+          {
+            "type": "belongs_to_etf_category",
+            "target": "etf_category:Fixed Income",
+            "source": "stockanalysis/etf_universe"
+          }
+        ]
+      },
+      {
+        "id": "etf:FIMU",
+        "type": "etf",
+        "ticker": "FIMU",
+        "label": "Fidelity Intermediate Municipal Income ETF",
+        "category": "Fixed Income",
+        "route": "/etfs/FIMU",
+        "confidence": {
+          "label": "low",
+          "rank": 1,
+          "classification_source": "stockanalysis.etf_list.name",
+          "underlying_raw": null,
+          "canonical_underlying_ticker": null,
+          "canonical_underlying_key": null,
+          "resolution_method": null,
+          "resolution_source": null,
+          "matched_alias": null,
+          "resolution_note": null
+        },
+        "as_of": {
+          "etf_universe": null,
+          "market_facts": null
+        },
+        "source_links": {
+          "etf_universe": true,
+          "market_facts": false,
           "classification": true
         },
         "service_flags": [
@@ -129361,6 +129985,45 @@
           {
             "type": "belongs_to_etf_category",
             "target": "etf_category:Fixed Income",
+            "source": "stockanalysis/etf_universe"
+          }
+        ]
+      },
+      {
+        "id": "etf:GCPU",
+        "type": "etf",
+        "ticker": "GCPU",
+        "label": "Grayscale Bitcoin Miners ETF",
+        "category": "Equity",
+        "route": "/etfs/GCPU",
+        "confidence": {
+          "label": "low",
+          "rank": 1,
+          "classification_source": "stockanalysis.etf_list.name",
+          "underlying_raw": null,
+          "canonical_underlying_ticker": null,
+          "canonical_underlying_key": null,
+          "resolution_method": null,
+          "resolution_source": null,
+          "matched_alias": null,
+          "resolution_note": null
+        },
+        "as_of": {
+          "etf_universe": null,
+          "market_facts": null
+        },
+        "source_links": {
+          "etf_universe": true,
+          "market_facts": false,
+          "classification": true
+        },
+        "service_flags": [
+          "etf_center"
+        ],
+        "relations": [
+          {
+            "type": "belongs_to_etf_category",
+            "target": "etf_category:Equity",
             "source": "stockanalysis/etf_universe"
           }
         ]
@@ -141225,7 +141888,7 @@
         "id": "etf:HSEP",
         "type": "etf",
         "ticker": "HSEP",
-        "label": "Corgi ETF Trust I - Corgi U.S. Equities 100% Structured Buffer ETF - September Series",
+        "label": "Corgi U.S. Equities 100% Structured Buffer ETF - September Series",
         "category": "Alternatives",
         "route": "/etfs/HSEP",
         "confidence": {
@@ -141539,7 +142202,7 @@
         "id": "etf:HUMM",
         "type": "etf",
         "ticker": "HUMM",
-        "label": "Harbor 800VDC AI Datacenter Ecosystem ETF",
+        "label": "800VDC AI Datacenter Ecosystem ETF",
         "category": "-",
         "route": "/etfs/HUMM",
         "confidence": {
@@ -141805,6 +142468,45 @@
           {
             "type": "belongs_to_etf_category",
             "target": "etf_category:Equity",
+            "source": "stockanalysis/etf_universe"
+          }
+        ]
+      },
+      {
+        "id": "etf:HWMV",
+        "type": "etf",
+        "ticker": "HWMV",
+        "label": "Hotchkis & Wiley Funds - Hotchkis & Wiley Mid-Cap Value Fund ETF",
+        "category": "-",
+        "route": "/etfs/HWMV",
+        "confidence": {
+          "label": "high",
+          "rank": 3,
+          "classification_source": "stockanalysis.overview.description",
+          "underlying_raw": null,
+          "canonical_underlying_ticker": null,
+          "canonical_underlying_key": null,
+          "resolution_method": null,
+          "resolution_source": null,
+          "matched_alias": null,
+          "resolution_note": null
+        },
+        "as_of": {
+          "etf_universe": null,
+          "market_facts": "2026-09-30"
+        },
+        "source_links": {
+          "etf_universe": true,
+          "market_facts": true,
+          "classification": true
+        },
+        "service_flags": [
+          "etf_center"
+        ],
+        "relations": [
+          {
+            "type": "belongs_to_etf_category",
+            "target": "etf_category:-",
             "source": "stockanalysis/etf_universe"
           }
         ]
@@ -146587,6 +147289,45 @@
         ]
       },
       {
+        "id": "etf:ICMO",
+        "type": "etf",
+        "ticker": "ICMO",
+        "label": "Symmetry Panoramic Trust - Symmetry Panoramic International Country Momentum ETF",
+        "category": "-",
+        "route": "/etfs/ICMO",
+        "confidence": {
+          "label": "high",
+          "rank": 3,
+          "classification_source": "stockanalysis.overview.description",
+          "underlying_raw": null,
+          "canonical_underlying_ticker": null,
+          "canonical_underlying_key": null,
+          "resolution_method": null,
+          "resolution_source": null,
+          "matched_alias": null,
+          "resolution_note": null
+        },
+        "as_of": {
+          "etf_universe": null,
+          "market_facts": "2026-09-30"
+        },
+        "source_links": {
+          "etf_universe": true,
+          "market_facts": true,
+          "classification": true
+        },
+        "service_flags": [
+          "etf_center"
+        ],
+        "relations": [
+          {
+            "type": "belongs_to_etf_category",
+            "target": "etf_category:-",
+            "source": "stockanalysis/etf_universe"
+          }
+        ]
+      },
+      {
         "id": "etf:ICOP",
         "type": "etf",
         "ticker": "ICOP",
@@ -147409,7 +148150,7 @@
         "id": "etf:IDSE",
         "type": "etf",
         "ticker": "IDSE",
-        "label": "Corgi ETF Trust 1 - International Developed Equities 15% Structured Buffer ETF",
+        "label": "Corgi International Developed Equities 15% Structured Buffer ETF - September Series",
         "category": "Alternatives",
         "route": "/etfs/IDSE",
         "confidence": {
@@ -149313,6 +150054,45 @@
           {
             "type": "belongs_to_etf_category",
             "target": "etf_category:Fixed Income",
+            "source": "stockanalysis/etf_universe"
+          }
+        ]
+      },
+      {
+        "id": "etf:IHYF",
+        "type": "etf",
+        "ticker": "IHYF",
+        "label": "Invesco High Yield Bond Factor ETF",
+        "category": "-",
+        "route": "/etfs/IHYF",
+        "confidence": {
+          "label": "low",
+          "rank": 1,
+          "classification_source": "stockanalysis.etf_list.name",
+          "underlying_raw": null,
+          "canonical_underlying_ticker": null,
+          "canonical_underlying_key": null,
+          "resolution_method": null,
+          "resolution_source": null,
+          "matched_alias": null,
+          "resolution_note": null
+        },
+        "as_of": {
+          "etf_universe": null,
+          "market_facts": null
+        },
+        "source_links": {
+          "etf_universe": true,
+          "market_facts": false,
+          "classification": true
+        },
+        "service_flags": [
+          "etf_center"
+        ],
+        "relations": [
+          {
+            "type": "belongs_to_etf_category",
+            "target": "etf_category:-",
             "source": "stockanalysis/etf_universe"
           }
         ]
@@ -152493,7 +153273,7 @@
         "id": "etf:IQGR",
         "type": "etf",
         "ticker": "IQGR",
-        "label": "EA Series Trust - Astoria International Quality Growth Kings ETF",
+        "label": "Astoria International Quality Growth Kings ETF",
         "category": "-",
         "route": "/etfs/IQGR",
         "confidence": {
@@ -161311,6 +162091,45 @@
         ]
       },
       {
+        "id": "etf:JQTY",
+        "type": "etf",
+        "ticker": "JQTY",
+        "label": "Trust for Professional Managers - Jensen U.S. Quality Index ETF",
+        "category": "-",
+        "route": "/etfs/JQTY",
+        "confidence": {
+          "label": "low",
+          "rank": 1,
+          "classification_source": "stockanalysis.etf_list.name",
+          "underlying_raw": null,
+          "canonical_underlying_ticker": null,
+          "canonical_underlying_key": null,
+          "resolution_method": null,
+          "resolution_source": null,
+          "matched_alias": null,
+          "resolution_note": null
+        },
+        "as_of": {
+          "etf_universe": null,
+          "market_facts": null
+        },
+        "source_links": {
+          "etf_universe": true,
+          "market_facts": false,
+          "classification": true
+        },
+        "service_flags": [
+          "etf_center"
+        ],
+        "relations": [
+          {
+            "type": "belongs_to_etf_category",
+            "target": "etf_category:-",
+            "source": "stockanalysis/etf_universe"
+          }
+        ]
+      },
+      {
         "id": "etf:JQUA",
         "type": "etf",
         "ticker": "JQUA",
@@ -163424,7 +164243,7 @@
         "id": "etf:KCHP",
         "type": "etf",
         "ticker": "KCHP",
-        "label": "Exchange Listed Funds Trust - KICK Korea Semiconductor Index ETF",
+        "label": "KICK Korea Semiconductor Index ETF",
         "category": "Equity",
         "route": "/etfs/KCHP",
         "confidence": {
@@ -165365,6 +166184,45 @@
         ]
       },
       {
+        "id": "etf:KOOL",
+        "type": "etf",
+        "ticker": "KOOL",
+        "label": "North Shore Equity Rotation ETF",
+        "category": "Equity",
+        "route": "/etfs/KOOL",
+        "confidence": {
+          "label": "low",
+          "rank": 1,
+          "classification_source": "stockanalysis.etf_list.name",
+          "underlying_raw": null,
+          "canonical_underlying_ticker": null,
+          "canonical_underlying_key": null,
+          "resolution_method": null,
+          "resolution_source": null,
+          "matched_alias": null,
+          "resolution_note": null
+        },
+        "as_of": {
+          "etf_universe": null,
+          "market_facts": null
+        },
+        "source_links": {
+          "etf_universe": true,
+          "market_facts": false,
+          "classification": true
+        },
+        "service_flags": [
+          "etf_center"
+        ],
+        "relations": [
+          {
+            "type": "belongs_to_etf_category",
+            "target": "etf_category:Equity",
+            "source": "stockanalysis/etf_universe"
+          }
+        ]
+      },
+      {
         "id": "etf:KORP",
         "type": "etf",
         "ticker": "KORP",
@@ -167104,6 +167962,45 @@
         ]
       },
       {
+        "id": "etf:LCIV",
+        "type": "etf",
+        "ticker": "LCIV",
+        "label": "Advisors Series Trust - Logan Capital International ETF",
+        "category": "-",
+        "route": "/etfs/LCIV",
+        "confidence": {
+          "label": "low",
+          "rank": 1,
+          "classification_source": "stockanalysis.etf_list.name",
+          "underlying_raw": null,
+          "canonical_underlying_ticker": null,
+          "canonical_underlying_key": null,
+          "resolution_method": null,
+          "resolution_source": null,
+          "matched_alias": null,
+          "resolution_note": null
+        },
+        "as_of": {
+          "etf_universe": null,
+          "market_facts": null
+        },
+        "source_links": {
+          "etf_universe": true,
+          "market_facts": false,
+          "classification": true
+        },
+        "service_flags": [
+          "etf_center"
+        ],
+        "relations": [
+          {
+            "type": "belongs_to_etf_category",
+            "target": "etf_category:-",
+            "source": "stockanalysis/etf_universe"
+          }
+        ]
+      },
+      {
         "id": "etf:LCLG",
         "type": "etf",
         "ticker": "LCLG",
@@ -168315,45 +169212,6 @@
         ]
       },
       {
-        "id": "etf:LGCF",
-        "type": "etf",
-        "ticker": "LGCF",
-        "label": "Themes US Cash Flow Champions ETF",
-        "category": "Equity",
-        "route": "/etfs/LGCF",
-        "confidence": {
-          "label": "high",
-          "rank": 3,
-          "classification_source": "stockanalysis.overview.description",
-          "underlying_raw": null,
-          "canonical_underlying_ticker": null,
-          "canonical_underlying_key": null,
-          "resolution_method": null,
-          "resolution_source": null,
-          "matched_alias": null,
-          "resolution_note": null
-        },
-        "as_of": {
-          "etf_universe": null,
-          "market_facts": "2026-09-25"
-        },
-        "source_links": {
-          "etf_universe": true,
-          "market_facts": true,
-          "classification": true
-        },
-        "service_flags": [
-          "etf_center"
-        ],
-        "relations": [
-          {
-            "type": "belongs_to_etf_category",
-            "target": "etf_category:Equity",
-            "source": "stockanalysis/etf_universe"
-          }
-        ]
-      },
-      {
         "id": "etf:LGDS",
         "type": "etf",
         "ticker": "LGDS",
@@ -168817,45 +169675,6 @@
           {
             "type": "belongs_to_etf_category",
             "target": "etf_category:Fixed Income",
-            "source": "stockanalysis/etf_universe"
-          }
-        ]
-      },
-      {
-        "id": "etf:LIMI",
-        "type": "etf",
-        "ticker": "LIMI",
-        "label": "Themes Lithium & Battery Metal Miners ETF",
-        "category": "Equity",
-        "route": "/etfs/LIMI",
-        "confidence": {
-          "label": "high",
-          "rank": 3,
-          "classification_source": "stockanalysis.overview.description",
-          "underlying_raw": null,
-          "canonical_underlying_ticker": null,
-          "canonical_underlying_key": null,
-          "resolution_method": null,
-          "resolution_source": null,
-          "matched_alias": null,
-          "resolution_note": null
-        },
-        "as_of": {
-          "etf_universe": null,
-          "market_facts": "2026-09-21"
-        },
-        "source_links": {
-          "etf_universe": true,
-          "market_facts": true,
-          "classification": true
-        },
-        "service_flags": [
-          "etf_center"
-        ],
-        "relations": [
-          {
-            "type": "belongs_to_etf_category",
-            "target": "etf_category:Equity",
             "source": "stockanalysis/etf_universe"
           }
         ]
@@ -169406,6 +170225,45 @@
           {
             "type": "belongs_to_etf_category",
             "target": "etf_category:Fixed Income",
+            "source": "stockanalysis/etf_universe"
+          }
+        ]
+      },
+      {
+        "id": "etf:LLMA",
+        "type": "etf",
+        "ticker": "LLMA",
+        "label": "Global X LLM ETF",
+        "category": "-",
+        "route": "/etfs/LLMA",
+        "confidence": {
+          "label": "low",
+          "rank": 1,
+          "classification_source": "stockanalysis.etf_list.name",
+          "underlying_raw": null,
+          "canonical_underlying_ticker": null,
+          "canonical_underlying_key": null,
+          "resolution_method": null,
+          "resolution_source": null,
+          "matched_alias": null,
+          "resolution_note": null
+        },
+        "as_of": {
+          "etf_universe": null,
+          "market_facts": null
+        },
+        "source_links": {
+          "etf_universe": true,
+          "market_facts": false,
+          "classification": true
+        },
+        "service_flags": [
+          "etf_center"
+        ],
+        "relations": [
+          {
+            "type": "belongs_to_etf_category",
+            "target": "etf_category:-",
             "source": "stockanalysis/etf_universe"
           }
         ]
@@ -170187,7 +171045,7 @@
         "id": "etf:LPSV",
         "type": "etf",
         "ticker": "LPSV",
-        "label": "Exchange Place Advisors Trust - Lone Peak SMID Value ETF",
+        "label": "Lone Peak SMID Value ETF",
         "category": "Equity",
         "route": "/etfs/LPSV",
         "confidence": {
@@ -171563,6 +172421,45 @@
           {
             "type": "belongs_to_etf_category",
             "target": "etf_category:Equity",
+            "source": "stockanalysis/etf_universe"
+          }
+        ]
+      },
+      {
+        "id": "etf:LUNC",
+        "type": "etf",
+        "ticker": "LUNC",
+        "label": "EA Series Trust - Longnook Uncommon Compounders ETF",
+        "category": "-",
+        "route": "/etfs/LUNC",
+        "confidence": {
+          "label": "low",
+          "rank": 1,
+          "classification_source": "stockanalysis.etf_list.name",
+          "underlying_raw": null,
+          "canonical_underlying_ticker": null,
+          "canonical_underlying_key": null,
+          "resolution_method": null,
+          "resolution_source": null,
+          "matched_alias": null,
+          "resolution_note": null
+        },
+        "as_of": {
+          "etf_universe": null,
+          "market_facts": null
+        },
+        "source_links": {
+          "etf_universe": true,
+          "market_facts": false,
+          "classification": true
+        },
+        "service_flags": [
+          "etf_center"
+        ],
+        "relations": [
+          {
+            "type": "belongs_to_etf_category",
+            "target": "etf_category:-",
             "source": "stockanalysis/etf_universe"
           }
         ]
@@ -174361,7 +175258,7 @@
         "type": "etf",
         "ticker": "MEGX",
         "label": "Corgi U.S. Mega-Cap Growth 2x Daily ETF",
-        "category": "-",
+        "category": "Equity",
         "route": "/etfs/MEGX",
         "confidence": {
           "label": "high",
@@ -174391,7 +175288,7 @@
         "relations": [
           {
             "type": "belongs_to_etf_category",
-            "target": "etf_category:-",
+            "target": "etf_category:Equity",
             "source": "stockanalysis/etf_universe"
           }
         ]
@@ -174510,45 +175407,6 @@
           {
             "type": "belongs_to_etf_category",
             "target": "etf_category:Alternatives",
-            "source": "stockanalysis/etf_universe"
-          }
-        ]
-      },
-      {
-        "id": "etf:MEME",
-        "type": "etf",
-        "ticker": "MEME",
-        "label": "Roundhill Meme Stock ETF",
-        "category": "Equity",
-        "route": "/etfs/MEME",
-        "confidence": {
-          "label": "high",
-          "rank": 3,
-          "classification_source": "stockanalysis.overview.description",
-          "underlying_raw": null,
-          "canonical_underlying_ticker": null,
-          "canonical_underlying_key": null,
-          "resolution_method": null,
-          "resolution_source": null,
-          "matched_alias": null,
-          "resolution_note": null
-        },
-        "as_of": {
-          "etf_universe": null,
-          "market_facts": "2026-09-25"
-        },
-        "source_links": {
-          "etf_universe": true,
-          "market_facts": true,
-          "classification": true
-        },
-        "service_flags": [
-          "etf_center"
-        ],
-        "relations": [
-          {
-            "type": "belongs_to_etf_category",
-            "target": "etf_category:Equity",
             "source": "stockanalysis/etf_universe"
           }
         ]
@@ -175723,6 +176581,45 @@
           {
             "type": "belongs_to_etf_category",
             "target": "etf_category:Equity",
+            "source": "stockanalysis/etf_universe"
+          }
+        ]
+      },
+      {
+        "id": "etf:MGIN",
+        "type": "etf",
+        "ticker": "MGIN",
+        "label": "Man Active Global Infrastructure ETF",
+        "category": "-",
+        "route": "/etfs/MGIN",
+        "confidence": {
+          "label": "high",
+          "rank": 3,
+          "classification_source": "stockanalysis.overview.description",
+          "underlying_raw": null,
+          "canonical_underlying_ticker": null,
+          "canonical_underlying_key": null,
+          "resolution_method": null,
+          "resolution_source": null,
+          "matched_alias": null,
+          "resolution_note": null
+        },
+        "as_of": {
+          "etf_universe": null,
+          "market_facts": "2026-09-30"
+        },
+        "source_links": {
+          "etf_universe": true,
+          "market_facts": true,
+          "classification": true
+        },
+        "service_flags": [
+          "etf_center"
+        ],
+        "relations": [
+          {
+            "type": "belongs_to_etf_category",
+            "target": "etf_category:-",
             "source": "stockanalysis/etf_universe"
           }
         ]
@@ -177343,6 +178240,45 @@
         ]
       },
       {
+        "id": "etf:MMHI",
+        "type": "etf",
+        "ticker": "MMHI",
+        "label": "NYLIM Active ETF Trust - NYLIM MacKay Muni High Income ETF",
+        "category": "-",
+        "route": "/etfs/MMHI",
+        "confidence": {
+          "label": "low",
+          "rank": 1,
+          "classification_source": "stockanalysis.etf_list.name",
+          "underlying_raw": null,
+          "canonical_underlying_ticker": null,
+          "canonical_underlying_key": null,
+          "resolution_method": null,
+          "resolution_source": null,
+          "matched_alias": null,
+          "resolution_note": null
+        },
+        "as_of": {
+          "etf_universe": null,
+          "market_facts": null
+        },
+        "source_links": {
+          "etf_universe": true,
+          "market_facts": false,
+          "classification": true
+        },
+        "service_flags": [
+          "etf_center"
+        ],
+        "relations": [
+          {
+            "type": "belongs_to_etf_category",
+            "target": "etf_category:-",
+            "source": "stockanalysis/etf_universe"
+          }
+        ]
+      },
+      {
         "id": "etf:MMID",
         "type": "etf",
         "ticker": "MMID",
@@ -177694,6 +178630,45 @@
         ]
       },
       {
+        "id": "etf:MN",
+        "type": "etf",
+        "ticker": "MN",
+        "label": "Corgi ETF Trust I - Corgi MANGOS ETF",
+        "category": "-",
+        "route": "/etfs/MN",
+        "confidence": {
+          "label": "low",
+          "rank": 1,
+          "classification_source": "stockanalysis.etf_list.name",
+          "underlying_raw": null,
+          "canonical_underlying_ticker": null,
+          "canonical_underlying_key": null,
+          "resolution_method": null,
+          "resolution_source": null,
+          "matched_alias": null,
+          "resolution_note": null
+        },
+        "as_of": {
+          "etf_universe": null,
+          "market_facts": null
+        },
+        "source_links": {
+          "etf_universe": true,
+          "market_facts": false,
+          "classification": true
+        },
+        "service_flags": [
+          "etf_center"
+        ],
+        "relations": [
+          {
+            "type": "belongs_to_etf_category",
+            "target": "etf_category:-",
+            "source": "stockanalysis/etf_universe"
+          }
+        ]
+      },
+      {
         "id": "etf:MNA",
         "type": "etf",
         "ticker": "MNA",
@@ -177773,10 +178748,51 @@
         ]
       },
       {
+        "id": "etf:MNGB",
+        "type": "etf",
+        "ticker": "MNGB",
+        "label": "Yorkville America 2X Inverse MANGOS Plus Daily Target ETF",
+        "category": "-",
+        "route": "/etfs/MNGB",
+        "confidence": {
+          "label": "high",
+          "rank": 3,
+          "classification_source": "stockanalysis.overview.description",
+          "underlying_raw": null,
+          "canonical_underlying_ticker": null,
+          "canonical_underlying_key": null,
+          "resolution_method": null,
+          "resolution_source": null,
+          "matched_alias": null,
+          "resolution_note": null
+        },
+        "as_of": {
+          "etf_universe": null,
+          "market_facts": "2026-09-30"
+        },
+        "source_links": {
+          "etf_universe": true,
+          "market_facts": true,
+          "classification": true
+        },
+        "service_flags": [
+          "etf_center",
+          "leveraged",
+          "inverse"
+        ],
+        "relations": [
+          {
+            "type": "belongs_to_etf_category",
+            "target": "etf_category:-",
+            "source": "stockanalysis/etf_universe"
+          }
+        ]
+      },
+      {
         "id": "etf:MNGZ",
         "type": "etf",
         "ticker": "MNGZ",
-        "label": "Yorkville America Investment Trust - Yorkville America 2X Long MANGOS Plus Daily Target ETF",
+        "label": "Yorkville America 2X Long MANGOS Plus Daily Target ETF",
         "category": "-",
         "route": "/etfs/MNGZ",
         "confidence": {
@@ -177808,45 +178824,6 @@
           {
             "type": "belongs_to_etf_category",
             "target": "etf_category:-",
-            "source": "stockanalysis/etf_universe"
-          }
-        ]
-      },
-      {
-        "id": "etf:MNRS",
-        "type": "etf",
-        "ticker": "MNRS",
-        "label": "Grayscale Bitcoin Miners ETF",
-        "category": "Equity",
-        "route": "/etfs/MNRS",
-        "confidence": {
-          "label": "high",
-          "rank": 3,
-          "classification_source": "stockanalysis.overview.description",
-          "underlying_raw": null,
-          "canonical_underlying_ticker": null,
-          "canonical_underlying_key": null,
-          "resolution_method": null,
-          "resolution_source": null,
-          "matched_alias": null,
-          "resolution_note": null
-        },
-        "as_of": {
-          "etf_universe": null,
-          "market_facts": "2026-09-21"
-        },
-        "source_links": {
-          "etf_universe": true,
-          "market_facts": true,
-          "classification": true
-        },
-        "service_flags": [
-          "etf_center"
-        ],
-        "relations": [
-          {
-            "type": "belongs_to_etf_category",
-            "target": "etf_category:Equity",
             "source": "stockanalysis/etf_universe"
           }
         ]
@@ -181543,6 +182520,45 @@
         ]
       },
       {
+        "id": "etf:MUY",
+        "type": "etf",
+        "ticker": "MUY",
+        "label": "YieldMax MU Option Income Strategy ETF",
+        "category": "Equity",
+        "route": "/etfs/MUY",
+        "confidence": {
+          "label": "low",
+          "rank": 1,
+          "classification_source": "stockanalysis.etf_list.name",
+          "underlying_raw": null,
+          "canonical_underlying_ticker": null,
+          "canonical_underlying_key": null,
+          "resolution_method": null,
+          "resolution_source": null,
+          "matched_alias": null,
+          "resolution_note": null
+        },
+        "as_of": {
+          "etf_universe": null,
+          "market_facts": null
+        },
+        "source_links": {
+          "etf_universe": true,
+          "market_facts": false,
+          "classification": true
+        },
+        "service_flags": [
+          "etf_center"
+        ],
+        "relations": [
+          {
+            "type": "belongs_to_etf_category",
+            "target": "etf_category:Equity",
+            "source": "stockanalysis/etf_universe"
+          }
+        ]
+      },
+      {
         "id": "etf:MUYY",
         "type": "etf",
         "ticker": "MUYY",
@@ -182445,6 +183461,45 @@
         ]
       },
       {
+        "id": "etf:MYCP",
+        "type": "etf",
+        "ticker": "MYCP",
+        "label": "State Street My2036 Corporate Bond ETF",
+        "category": "-",
+        "route": "/etfs/MYCP",
+        "confidence": {
+          "label": "high",
+          "rank": 3,
+          "classification_source": "stockanalysis.overview.description",
+          "underlying_raw": null,
+          "canonical_underlying_ticker": null,
+          "canonical_underlying_key": null,
+          "resolution_method": null,
+          "resolution_source": null,
+          "matched_alias": null,
+          "resolution_note": null
+        },
+        "as_of": {
+          "etf_universe": null,
+          "market_facts": "2026-09-30"
+        },
+        "source_links": {
+          "etf_universe": true,
+          "market_facts": true,
+          "classification": true
+        },
+        "service_flags": [
+          "etf_center"
+        ],
+        "relations": [
+          {
+            "type": "belongs_to_etf_category",
+            "target": "etf_category:-",
+            "source": "stockanalysis/etf_universe"
+          }
+        ]
+      },
+      {
         "id": "etf:MYHA",
         "type": "etf",
         "ticker": "MYHA",
@@ -182635,6 +183690,45 @@
           {
             "type": "belongs_to_etf_category",
             "target": "etf_category:Fixed Income",
+            "source": "stockanalysis/etf_universe"
+          }
+        ]
+      },
+      {
+        "id": "etf:MYHF",
+        "type": "etf",
+        "ticker": "MYHF",
+        "label": "State Street My2032 High Yield Corporate Bond ETF",
+        "category": "-",
+        "route": "/etfs/MYHF",
+        "confidence": {
+          "label": "high",
+          "rank": 3,
+          "classification_source": "stockanalysis.overview.description",
+          "underlying_raw": null,
+          "canonical_underlying_ticker": null,
+          "canonical_underlying_key": null,
+          "resolution_method": null,
+          "resolution_source": null,
+          "matched_alias": null,
+          "resolution_note": null
+        },
+        "as_of": {
+          "etf_universe": null,
+          "market_facts": "2026-09-30"
+        },
+        "source_links": {
+          "etf_universe": true,
+          "market_facts": true,
+          "classification": true
+        },
+        "service_flags": [
+          "etf_center"
+        ],
+        "relations": [
+          {
+            "type": "belongs_to_etf_category",
+            "target": "etf_category:-",
             "source": "stockanalysis/etf_universe"
           }
         ]
@@ -182908,6 +184002,45 @@
           {
             "type": "belongs_to_etf_category",
             "target": "etf_category:Fixed Income",
+            "source": "stockanalysis/etf_universe"
+          }
+        ]
+      },
+      {
+        "id": "etf:MYML",
+        "type": "etf",
+        "ticker": "MYML",
+        "label": "State Street My2032 Municipal Bond ETF",
+        "category": "-",
+        "route": "/etfs/MYML",
+        "confidence": {
+          "label": "high",
+          "rank": 3,
+          "classification_source": "stockanalysis.overview.description",
+          "underlying_raw": null,
+          "canonical_underlying_ticker": null,
+          "canonical_underlying_key": null,
+          "resolution_method": null,
+          "resolution_source": null,
+          "matched_alias": null,
+          "resolution_note": null
+        },
+        "as_of": {
+          "etf_universe": null,
+          "market_facts": "2026-09-30"
+        },
+        "source_links": {
+          "etf_universe": true,
+          "market_facts": true,
+          "classification": true
+        },
+        "service_flags": [
+          "etf_center"
+        ],
+        "relations": [
+          {
+            "type": "belongs_to_etf_category",
+            "target": "etf_category:-",
             "source": "stockanalysis/etf_universe"
           }
         ]
@@ -184441,6 +185574,45 @@
           {
             "type": "belongs_to_etf_category",
             "target": "etf_category:Equity",
+            "source": "stockanalysis/etf_universe"
+          }
+        ]
+      },
+      {
+        "id": "etf:NECK",
+        "type": "etf",
+        "ticker": "NECK",
+        "label": "xETFs AI Bottlenecks ETF",
+        "category": "-",
+        "route": "/etfs/NECK",
+        "confidence": {
+          "label": "high",
+          "rank": 3,
+          "classification_source": "stockanalysis.overview.description",
+          "underlying_raw": null,
+          "canonical_underlying_ticker": null,
+          "canonical_underlying_key": null,
+          "resolution_method": null,
+          "resolution_source": null,
+          "matched_alias": null,
+          "resolution_note": null
+        },
+        "as_of": {
+          "etf_universe": null,
+          "market_facts": "2026-09-30"
+        },
+        "source_links": {
+          "etf_universe": true,
+          "market_facts": true,
+          "classification": true
+        },
+        "service_flags": [
+          "etf_center"
+        ],
+        "relations": [
+          {
+            "type": "belongs_to_etf_category",
+            "target": "etf_category:-",
             "source": "stockanalysis/etf_universe"
           }
         ]
@@ -186767,6 +187939,45 @@
         ]
       },
       {
+        "id": "etf:NRR",
+        "type": "etf",
+        "ticker": "NRR",
+        "label": "Bitwise NEAR ETF",
+        "category": "-",
+        "route": "/etfs/NRR",
+        "confidence": {
+          "label": "low",
+          "rank": 1,
+          "classification_source": "stockanalysis.etf_list.name",
+          "underlying_raw": null,
+          "canonical_underlying_ticker": null,
+          "canonical_underlying_key": null,
+          "resolution_method": null,
+          "resolution_source": null,
+          "matched_alias": null,
+          "resolution_note": null
+        },
+        "as_of": {
+          "etf_universe": null,
+          "market_facts": null
+        },
+        "source_links": {
+          "etf_universe": true,
+          "market_facts": false,
+          "classification": true
+        },
+        "service_flags": [
+          "etf_center"
+        ],
+        "relations": [
+          {
+            "type": "belongs_to_etf_category",
+            "target": "etf_category:-",
+            "source": "stockanalysis/etf_universe"
+          }
+        ]
+      },
+      {
         "id": "etf:NRSH",
         "type": "etf",
         "ticker": "NRSH",
@@ -187672,7 +188883,7 @@
         "id": "etf:NUIB",
         "type": "etf",
         "ticker": "NUIB",
-        "label": "Nushares ETF Trust - Nuveen Impact Bond ETF",
+        "label": "Nuveen Impact Bond ETF",
         "category": "Fixed Income",
         "route": "/etfs/NUIB",
         "confidence": {
@@ -190476,6 +191687,45 @@
         ]
       },
       {
+        "id": "etf:OCT",
+        "type": "etf",
+        "ticker": "OCT",
+        "label": "Vaneck ETF Trust - VanEck U.S. Equity Buffer ETF - October",
+        "category": "-",
+        "route": "/etfs/OCT",
+        "confidence": {
+          "label": "low",
+          "rank": 1,
+          "classification_source": "stockanalysis.etf_list.name",
+          "underlying_raw": null,
+          "canonical_underlying_ticker": null,
+          "canonical_underlying_key": null,
+          "resolution_method": null,
+          "resolution_source": null,
+          "matched_alias": null,
+          "resolution_note": null
+        },
+        "as_of": {
+          "etf_universe": null,
+          "market_facts": null
+        },
+        "source_links": {
+          "etf_universe": true,
+          "market_facts": false,
+          "classification": true
+        },
+        "service_flags": [
+          "etf_center"
+        ],
+        "relations": [
+          {
+            "type": "belongs_to_etf_category",
+            "target": "etf_category:-",
+            "source": "stockanalysis/etf_universe"
+          }
+        ]
+      },
+      {
         "id": "etf:OCTB",
         "type": "etf",
         "ticker": "OCTB",
@@ -190549,6 +191799,45 @@
           {
             "type": "belongs_to_etf_category",
             "target": "etf_category:Alternatives",
+            "source": "stockanalysis/etf_universe"
+          }
+        ]
+      },
+      {
+        "id": "etf:OCTI",
+        "type": "etf",
+        "ticker": "OCTI",
+        "label": "AIM ETF Products Trust - AllianzIM International Equity Buffer15 Uncapped Oct ETF",
+        "category": "-",
+        "route": "/etfs/OCTI",
+        "confidence": {
+          "label": "low",
+          "rank": 1,
+          "classification_source": "stockanalysis.etf_list.name",
+          "underlying_raw": null,
+          "canonical_underlying_ticker": null,
+          "canonical_underlying_key": null,
+          "resolution_method": null,
+          "resolution_source": null,
+          "matched_alias": null,
+          "resolution_note": null
+        },
+        "as_of": {
+          "etf_universe": null,
+          "market_facts": null
+        },
+        "source_links": {
+          "etf_universe": true,
+          "market_facts": false,
+          "classification": true
+        },
+        "service_flags": [
+          "etf_center"
+        ],
+        "relations": [
+          {
+            "type": "belongs_to_etf_category",
+            "target": "etf_category:-",
             "source": "stockanalysis/etf_universe"
           }
         ]
@@ -194571,6 +195860,45 @@
         ]
       },
       {
+        "id": "etf:PBCS",
+        "type": "etf",
+        "ticker": "PBCS",
+        "label": "Tidal Trust IV - Portfolio Building Block World Consumer Staples ETF",
+        "category": "-",
+        "route": "/etfs/PBCS",
+        "confidence": {
+          "label": "high",
+          "rank": 3,
+          "classification_source": "stockanalysis.overview.description",
+          "underlying_raw": null,
+          "canonical_underlying_ticker": null,
+          "canonical_underlying_key": null,
+          "resolution_method": null,
+          "resolution_source": null,
+          "matched_alias": null,
+          "resolution_note": null
+        },
+        "as_of": {
+          "etf_universe": null,
+          "market_facts": "2026-09-30"
+        },
+        "source_links": {
+          "etf_universe": true,
+          "market_facts": true,
+          "classification": true
+        },
+        "service_flags": [
+          "etf_center"
+        ],
+        "relations": [
+          {
+            "type": "belongs_to_etf_category",
+            "target": "etf_category:-",
+            "source": "stockanalysis/etf_universe"
+          }
+        ]
+      },
+      {
         "id": "etf:PBD",
         "type": "etf",
         "ticker": "PBD",
@@ -195548,6 +196876,45 @@
         ]
       },
       {
+        "id": "etf:PBUB",
+        "type": "etf",
+        "ticker": "PBUB",
+        "label": "Portfolio Building Block US Banks ETF",
+        "category": "-",
+        "route": "/etfs/PBUB",
+        "confidence": {
+          "label": "high",
+          "rank": 3,
+          "classification_source": "stockanalysis.overview.description",
+          "underlying_raw": null,
+          "canonical_underlying_ticker": null,
+          "canonical_underlying_key": null,
+          "resolution_method": null,
+          "resolution_source": null,
+          "matched_alias": null,
+          "resolution_note": null
+        },
+        "as_of": {
+          "etf_universe": null,
+          "market_facts": "2026-09-30"
+        },
+        "source_links": {
+          "etf_universe": true,
+          "market_facts": true,
+          "classification": true
+        },
+        "service_flags": [
+          "etf_center"
+        ],
+        "relations": [
+          {
+            "type": "belongs_to_etf_category",
+            "target": "etf_category:-",
+            "source": "stockanalysis/etf_universe"
+          }
+        ]
+      },
+      {
         "id": "etf:PBUS",
         "type": "etf",
         "ticker": "PBUS",
@@ -195621,6 +196988,45 @@
           {
             "type": "belongs_to_etf_category",
             "target": "etf_category:Equity",
+            "source": "stockanalysis/etf_universe"
+          }
+        ]
+      },
+      {
+        "id": "etf:PBWN",
+        "type": "etf",
+        "ticker": "PBWN",
+        "label": "Tidal Trust IV - Portfolio Building Block World Ex US Industrials ETF",
+        "category": "-",
+        "route": "/etfs/PBWN",
+        "confidence": {
+          "label": "high",
+          "rank": 3,
+          "classification_source": "stockanalysis.overview.description",
+          "underlying_raw": null,
+          "canonical_underlying_ticker": null,
+          "canonical_underlying_key": null,
+          "resolution_method": null,
+          "resolution_source": null,
+          "matched_alias": null,
+          "resolution_note": null
+        },
+        "as_of": {
+          "etf_universe": null,
+          "market_facts": "2026-09-30"
+        },
+        "source_links": {
+          "etf_universe": true,
+          "market_facts": true,
+          "classification": true
+        },
+        "service_flags": [
+          "etf_center"
+        ],
+        "relations": [
+          {
+            "type": "belongs_to_etf_category",
+            "target": "etf_category:-",
             "source": "stockanalysis/etf_universe"
           }
         ]
@@ -197496,6 +198902,45 @@
           {
             "type": "belongs_to_etf_category",
             "target": "etf_category:Fixed Income",
+            "source": "stockanalysis/etf_universe"
+          }
+        ]
+      },
+      {
+        "id": "etf:PFRX",
+        "type": "etf",
+        "ticker": "PFRX",
+        "label": "Putnam ETF Trust - Focused U.S. Research ETF",
+        "category": "-",
+        "route": "/etfs/PFRX",
+        "confidence": {
+          "label": "low",
+          "rank": 1,
+          "classification_source": "stockanalysis.etf_list.name",
+          "underlying_raw": null,
+          "canonical_underlying_ticker": null,
+          "canonical_underlying_key": null,
+          "resolution_method": null,
+          "resolution_source": null,
+          "matched_alias": null,
+          "resolution_note": null
+        },
+        "as_of": {
+          "etf_universe": null,
+          "market_facts": null
+        },
+        "source_links": {
+          "etf_universe": true,
+          "market_facts": false,
+          "classification": true
+        },
+        "service_flags": [
+          "etf_center"
+        ],
+        "relations": [
+          {
+            "type": "belongs_to_etf_category",
+            "target": "etf_category:-",
             "source": "stockanalysis/etf_universe"
           }
         ]
@@ -201425,8 +202870,8 @@
         "id": "etf:PRAM",
         "type": "etf",
         "ticker": "PRAM",
-        "label": "ETF Series Solutions - Defiance Memory & Photonics ETF",
-        "category": "-",
+        "label": "Defiance Memory & Photonics ETF",
+        "category": "Equity",
         "route": "/etfs/PRAM",
         "confidence": {
           "label": "high",
@@ -201455,7 +202900,7 @@
         "relations": [
           {
             "type": "belongs_to_etf_category",
-            "target": "etf_category:-",
+            "target": "etf_category:Equity",
             "source": "stockanalysis/etf_universe"
           }
         ]
@@ -204751,6 +206196,45 @@
           {
             "type": "belongs_to_etf_category",
             "target": "etf_category:Equity",
+            "source": "stockanalysis/etf_universe"
+          }
+        ]
+      },
+      {
+        "id": "etf:PWRX",
+        "type": "etf",
+        "ticker": "PWRX",
+        "label": "Ultimus Managers Trust - Westwood Salient Enhanced Power & Infrastructure ETF",
+        "category": "-",
+        "route": "/etfs/PWRX",
+        "confidence": {
+          "label": "low",
+          "rank": 1,
+          "classification_source": "stockanalysis.etf_list.name",
+          "underlying_raw": null,
+          "canonical_underlying_ticker": null,
+          "canonical_underlying_key": null,
+          "resolution_method": null,
+          "resolution_source": null,
+          "matched_alias": null,
+          "resolution_note": null
+        },
+        "as_of": {
+          "etf_universe": null,
+          "market_facts": null
+        },
+        "source_links": {
+          "etf_universe": true,
+          "market_facts": false,
+          "classification": true
+        },
+        "service_flags": [
+          "etf_center"
+        ],
+        "relations": [
+          {
+            "type": "belongs_to_etf_category",
+            "target": "etf_category:-",
             "source": "stockanalysis/etf_universe"
           }
         ]
@@ -208866,6 +210350,45 @@
         ]
       },
       {
+        "id": "etf:QQBF",
+        "type": "etf",
+        "ticker": "QQBF",
+        "label": "FT Vest Nasdaq-100 Quarterly 15 Buffer ETF",
+        "category": "-",
+        "route": "/etfs/QQBF",
+        "confidence": {
+          "label": "high",
+          "rank": 3,
+          "classification_source": "stockanalysis.overview.description",
+          "underlying_raw": null,
+          "canonical_underlying_ticker": null,
+          "canonical_underlying_key": null,
+          "resolution_method": null,
+          "resolution_source": null,
+          "matched_alias": null,
+          "resolution_note": null
+        },
+        "as_of": {
+          "etf_universe": null,
+          "market_facts": "2026-09-30"
+        },
+        "source_links": {
+          "etf_universe": true,
+          "market_facts": true,
+          "classification": true
+        },
+        "service_flags": [
+          "etf_center"
+        ],
+        "relations": [
+          {
+            "type": "belongs_to_etf_category",
+            "target": "etf_category:-",
+            "source": "stockanalysis/etf_universe"
+          }
+        ]
+      },
+      {
         "id": "etf:QQDN",
         "type": "etf",
         "ticker": "QQDN",
@@ -209019,6 +210542,45 @@
           {
             "type": "belongs_to_etf_category",
             "target": "etf_category:Equity",
+            "source": "stockanalysis/etf_universe"
+          }
+        ]
+      },
+      {
+        "id": "etf:QQI",
+        "type": "etf",
+        "ticker": "QQI",
+        "label": "Invesco Nasdaq International Innovators 100 ETF",
+        "category": "-",
+        "route": "/etfs/QQI",
+        "confidence": {
+          "label": "high",
+          "rank": 3,
+          "classification_source": "stockanalysis.overview.description",
+          "underlying_raw": null,
+          "canonical_underlying_ticker": null,
+          "canonical_underlying_key": null,
+          "resolution_method": null,
+          "resolution_source": null,
+          "matched_alias": null,
+          "resolution_note": null
+        },
+        "as_of": {
+          "etf_universe": null,
+          "market_facts": "2026-09-30"
+        },
+        "source_links": {
+          "etf_universe": true,
+          "market_facts": true,
+          "classification": true
+        },
+        "service_flags": [
+          "etf_center"
+        ],
+        "relations": [
+          {
+            "type": "belongs_to_etf_category",
+            "target": "etf_category:-",
             "source": "stockanalysis/etf_universe"
           }
         ]
@@ -209292,6 +210854,45 @@
           {
             "type": "belongs_to_etf_category",
             "target": "etf_category:Equity",
+            "source": "stockanalysis/etf_universe"
+          }
+        ]
+      },
+      {
+        "id": "etf:QQQB",
+        "type": "etf",
+        "ticker": "QQQB",
+        "label": "VistaShares Shield Nasdaq 100 Enhanced Protection ETF",
+        "category": "-",
+        "route": "/etfs/QQQB",
+        "confidence": {
+          "label": "high",
+          "rank": 3,
+          "classification_source": "stockanalysis.overview.description",
+          "underlying_raw": null,
+          "canonical_underlying_ticker": null,
+          "canonical_underlying_key": null,
+          "resolution_method": null,
+          "resolution_source": null,
+          "matched_alias": null,
+          "resolution_note": null
+        },
+        "as_of": {
+          "etf_universe": null,
+          "market_facts": "2026-09-30"
+        },
+        "source_links": {
+          "etf_universe": true,
+          "market_facts": true,
+          "classification": true
+        },
+        "service_flags": [
+          "etf_center"
+        ],
+        "relations": [
+          {
+            "type": "belongs_to_etf_category",
+            "target": "etf_category:-",
             "source": "stockanalysis/etf_universe"
           }
         ]
@@ -209771,7 +211372,7 @@
         "id": "etf:QQSE",
         "type": "etf",
         "ticker": "QQSE",
-        "label": "Corgi ETF Trust I - Corgi Growth & Technology 15% Structured Buffer ETF - September Series",
+        "label": "Corgi Growth & Technology 15% Structured Buffer ETF - September Series",
         "category": "Alternatives",
         "route": "/etfs/QQSE",
         "confidence": {
@@ -210007,7 +211608,7 @@
         "id": "etf:QSE",
         "type": "etf",
         "ticker": "QSE",
-        "label": "Corgi ETF Trust I - Corgi Growth & Technology 10% Structured Buffer ETF - September Series",
+        "label": "Corgi Growth & Technology 10% Structured Buffer ETF - September Series",
         "category": "Alternatives",
         "route": "/etfs/QSE",
         "confidence": {
@@ -213126,8 +214727,8 @@
         "id": "etf:REIX",
         "type": "etf",
         "ticker": "REIX",
-        "label": "NYLIM CBRE Real Estate & Infrastructure ETF",
-        "category": "-",
+        "label": "NYLIM CBRE Real Assets ETF",
+        "category": "Equity",
         "route": "/etfs/REIX",
         "confidence": {
           "label": "high",
@@ -213156,7 +214757,7 @@
         "relations": [
           {
             "type": "belongs_to_etf_category",
-            "target": "etf_category:-",
+            "target": "etf_category:Equity",
             "source": "stockanalysis/etf_universe"
           }
         ]
@@ -214533,6 +216134,45 @@
           "etf_center",
           "leveraged",
           "single_stock"
+        ],
+        "relations": [
+          {
+            "type": "belongs_to_etf_category",
+            "target": "etf_category:Equity",
+            "source": "stockanalysis/etf_universe"
+          }
+        ]
+      },
+      {
+        "id": "etf:RISE",
+        "type": "etf",
+        "ticker": "RISE",
+        "label": "Pictet Emerging Markets Rising Economies ETF",
+        "category": "Equity",
+        "route": "/etfs/RISE",
+        "confidence": {
+          "label": "low",
+          "rank": 1,
+          "classification_source": "stockanalysis.etf_list.name",
+          "underlying_raw": null,
+          "canonical_underlying_ticker": null,
+          "canonical_underlying_key": null,
+          "resolution_method": null,
+          "resolution_source": null,
+          "matched_alias": null,
+          "resolution_note": null
+        },
+        "as_of": {
+          "etf_universe": null,
+          "market_facts": null
+        },
+        "source_links": {
+          "etf_universe": true,
+          "market_facts": false,
+          "classification": true
+        },
+        "service_flags": [
+          "etf_center"
         ],
         "relations": [
           {
@@ -218893,7 +220533,7 @@
         "id": "etf:SALI",
         "type": "etf",
         "ticker": "SALI",
-        "label": "Advisors Inner Circle Fund III - Schroders US Autocallable Ladder Income ETF",
+        "label": "Schroders US Autocallable Ladder Income ETF",
         "category": "Alternatives",
         "route": "/etfs/SALI",
         "confidence": {
@@ -221163,7 +222803,7 @@
         "id": "etf:SCSE",
         "type": "etf",
         "ticker": "SCSE",
-        "label": "Corgi ETF Trust I - Corgi U.S. Small-Cap 15% Structured Buffer ETF - September Series",
+        "label": "Corgi U.S. Small-Cap 15% Structured Buffer ETF - September Series",
         "category": "Alternatives",
         "route": "/etfs/SCSE",
         "confidence": {
@@ -222103,6 +223743,45 @@
         ]
       },
       {
+        "id": "etf:SECA",
+        "type": "etf",
+        "ticker": "SECA",
+        "label": "Main Active Rotation ETF",
+        "category": "-",
+        "route": "/etfs/SECA",
+        "confidence": {
+          "label": "high",
+          "rank": 3,
+          "classification_source": "stockanalysis.overview.description",
+          "underlying_raw": null,
+          "canonical_underlying_ticker": null,
+          "canonical_underlying_key": null,
+          "resolution_method": null,
+          "resolution_source": null,
+          "matched_alias": null,
+          "resolution_note": null
+        },
+        "as_of": {
+          "etf_universe": null,
+          "market_facts": "2026-09-30"
+        },
+        "source_links": {
+          "etf_universe": true,
+          "market_facts": true,
+          "classification": true
+        },
+        "service_flags": [
+          "etf_center"
+        ],
+        "relations": [
+          {
+            "type": "belongs_to_etf_category",
+            "target": "etf_category:-",
+            "source": "stockanalysis/etf_universe"
+          }
+        ]
+      },
+      {
         "id": "etf:SECR",
         "type": "etf",
         "ticker": "SECR",
@@ -222693,7 +224372,7 @@
         "id": "etf:SEPC",
         "type": "etf",
         "ticker": "SEPC",
-        "label": "Corgi ETF Trust I - U.S. Equities 10% Structured Buffer ETF - September Series",
+        "label": "Corgi U.S. Equities 10% Structured Buffer ETF - September Series",
         "category": "Alternatives",
         "route": "/etfs/SEPC",
         "confidence": {
@@ -222850,7 +224529,7 @@
         "type": "etf",
         "ticker": "SEPQ",
         "label": "STF Tactical Growth & Income ETF",
-        "category": "-",
+        "category": "Asset Allocation",
         "route": "/etfs/SEPQ",
         "confidence": {
           "label": "high",
@@ -222879,7 +224558,7 @@
         "relations": [
           {
             "type": "belongs_to_etf_category",
-            "target": "etf_category:-",
+            "target": "etf_category:Asset Allocation",
             "source": "stockanalysis/etf_universe"
           }
         ]
@@ -226868,45 +228547,6 @@
         ]
       },
       {
-        "id": "etf:SMAP",
-        "type": "etf",
-        "ticker": "SMAP",
-        "label": "Amplify Small-Mid Cap Equity ETF",
-        "category": "Equity",
-        "route": "/etfs/SMAP",
-        "confidence": {
-          "label": "high",
-          "rank": 3,
-          "classification_source": "stockanalysis.overview.description",
-          "underlying_raw": null,
-          "canonical_underlying_ticker": null,
-          "canonical_underlying_key": null,
-          "resolution_method": null,
-          "resolution_source": null,
-          "matched_alias": null,
-          "resolution_note": null
-        },
-        "as_of": {
-          "etf_universe": null,
-          "market_facts": "2026-05-28"
-        },
-        "source_links": {
-          "etf_universe": true,
-          "market_facts": true,
-          "classification": true
-        },
-        "service_flags": [
-          "etf_center"
-        ],
-        "relations": [
-          {
-            "type": "belongs_to_etf_category",
-            "target": "etf_category:Equity",
-            "source": "stockanalysis/etf_universe"
-          }
-        ]
-      },
-      {
         "id": "etf:SMAX",
         "type": "etf",
         "ticker": "SMAX",
@@ -227058,45 +228698,6 @@
           {
             "type": "belongs_to_etf_category",
             "target": "etf_category:Fixed Income",
-            "source": "stockanalysis/etf_universe"
-          }
-        ]
-      },
-      {
-        "id": "etf:SMCF",
-        "type": "etf",
-        "ticker": "SMCF",
-        "label": "Themes US Small Cap Cash Flow Champions ETF",
-        "category": "Equity",
-        "route": "/etfs/SMCF",
-        "confidence": {
-          "label": "high",
-          "rank": 3,
-          "classification_source": "stockanalysis.overview.description",
-          "underlying_raw": null,
-          "canonical_underlying_ticker": null,
-          "canonical_underlying_key": null,
-          "resolution_method": null,
-          "resolution_source": null,
-          "matched_alias": null,
-          "resolution_note": null
-        },
-        "as_of": {
-          "etf_universe": null,
-          "market_facts": "2026-09-21"
-        },
-        "source_links": {
-          "etf_universe": true,
-          "market_facts": true,
-          "classification": true
-        },
-        "service_flags": [
-          "etf_center"
-        ],
-        "relations": [
-          {
-            "type": "belongs_to_etf_category",
-            "target": "etf_category:Equity",
             "source": "stockanalysis/etf_universe"
           }
         ]
@@ -232912,7 +234513,7 @@
         },
         "as_of": {
           "etf_universe": null,
-          "market_facts": "2026-09-30"
+          "market_facts": "2026-10-02"
         },
         "source_links": {
           "etf_universe": true,
@@ -238228,6 +239829,45 @@
         ]
       },
       {
+        "id": "etf:TDEM",
+        "type": "etf",
+        "ticker": "TDEM",
+        "label": "T. Rowe Price Dynamic Emerging Markets Bond ETF",
+        "category": "-",
+        "route": "/etfs/TDEM",
+        "confidence": {
+          "label": "low",
+          "rank": 1,
+          "classification_source": "stockanalysis.etf_list.name",
+          "underlying_raw": null,
+          "canonical_underlying_ticker": null,
+          "canonical_underlying_key": null,
+          "resolution_method": null,
+          "resolution_source": null,
+          "matched_alias": null,
+          "resolution_note": null
+        },
+        "as_of": {
+          "etf_universe": null,
+          "market_facts": null
+        },
+        "source_links": {
+          "etf_universe": true,
+          "market_facts": false,
+          "classification": true
+        },
+        "service_flags": [
+          "etf_center"
+        ],
+        "relations": [
+          {
+            "type": "belongs_to_etf_category",
+            "target": "etf_category:-",
+            "source": "stockanalysis/etf_universe"
+          }
+        ]
+      },
+      {
         "id": "etf:TDI",
         "type": "etf",
         "ticker": "TDI",
@@ -238309,7 +239949,7 @@
         "id": "etf:TDNA",
         "type": "etf",
         "ticker": "TDNA",
-        "label": "T. Rowe Price Exchange-Traded Funds, Inc. - T. Rowe Price Biotech ETF",
+        "label": "T. Rowe Price Biotech ETF",
         "category": "-",
         "route": "/etfs/TDNA",
         "confidence": {
@@ -241543,6 +243183,45 @@
         ]
       },
       {
+        "id": "etf:TIPE",
+        "type": "etf",
+        "ticker": "TIPE",
+        "label": "Northern Trust 2031 Inflation-Linked Distributing Ladder ETF",
+        "category": "Fixed Income",
+        "route": "/etfs/TIPE",
+        "confidence": {
+          "label": "low",
+          "rank": 1,
+          "classification_source": "stockanalysis.etf_list.name",
+          "underlying_raw": null,
+          "canonical_underlying_ticker": null,
+          "canonical_underlying_key": null,
+          "resolution_method": null,
+          "resolution_source": null,
+          "matched_alias": null,
+          "resolution_note": null
+        },
+        "as_of": {
+          "etf_universe": null,
+          "market_facts": null
+        },
+        "source_links": {
+          "etf_universe": true,
+          "market_facts": false,
+          "classification": true
+        },
+        "service_flags": [
+          "etf_center"
+        ],
+        "relations": [
+          {
+            "type": "belongs_to_etf_category",
+            "target": "etf_category:Fixed Income",
+            "source": "stockanalysis/etf_universe"
+          }
+        ]
+      },
+      {
         "id": "etf:TIPF",
         "type": "etf",
         "ticker": "TIPF",
@@ -241780,7 +243459,7 @@
         "id": "etf:TIZE",
         "type": "etf",
         "ticker": "TIZE",
-        "label": "TCW ETF Trust - TCW Securitized Income ETF",
+        "label": "TCW Securitized Income ETF",
         "category": "Fixed Income",
         "route": "/etfs/TIZE",
         "confidence": {
@@ -242242,6 +243921,45 @@
           {
             "type": "belongs_to_etf_category",
             "target": "etf_category:Fixed Income",
+            "source": "stockanalysis/etf_universe"
+          }
+        ]
+      },
+      {
+        "id": "etf:TLIE",
+        "type": "etf",
+        "ticker": "TLIE",
+        "label": "American Beacon The London Company Income Equity ETF",
+        "category": "-",
+        "route": "/etfs/TLIE",
+        "confidence": {
+          "label": "high",
+          "rank": 3,
+          "classification_source": "stockanalysis.overview.description",
+          "underlying_raw": null,
+          "canonical_underlying_ticker": null,
+          "canonical_underlying_key": null,
+          "resolution_method": null,
+          "resolution_source": null,
+          "matched_alias": null,
+          "resolution_note": null
+        },
+        "as_of": {
+          "etf_universe": null,
+          "market_facts": "2026-09-30"
+        },
+        "source_links": {
+          "etf_universe": true,
+          "market_facts": true,
+          "classification": true
+        },
+        "service_flags": [
+          "etf_center"
+        ],
+        "relations": [
+          {
+            "type": "belongs_to_etf_category",
+            "target": "etf_category:-",
             "source": "stockanalysis/etf_universe"
           }
         ]
@@ -243071,7 +244789,7 @@
         "id": "etf:TMID",
         "type": "etf",
         "ticker": "TMID",
-        "label": "T. Rowe Price Exchange-Traded Funds, Inc. - T. Rowe Price Mid-Cap Equity Research ETF",
+        "label": "T. Rowe Price Mid Cap Equity Research ETF",
         "category": "-",
         "route": "/etfs/TMID",
         "confidence": {
@@ -243977,6 +245695,45 @@
           {
             "type": "belongs_to_etf_category",
             "target": "etf_category:Equity",
+            "source": "stockanalysis/etf_universe"
+          }
+        ]
+      },
+      {
+        "id": "etf:TORK",
+        "type": "etf",
+        "ticker": "TORK",
+        "label": "KraneShares Actuator ETF",
+        "category": "-",
+        "route": "/etfs/TORK",
+        "confidence": {
+          "label": "high",
+          "rank": 3,
+          "classification_source": "stockanalysis.overview.description",
+          "underlying_raw": null,
+          "canonical_underlying_ticker": null,
+          "canonical_underlying_key": null,
+          "resolution_method": null,
+          "resolution_source": null,
+          "matched_alias": null,
+          "resolution_note": null
+        },
+        "as_of": {
+          "etf_universe": null,
+          "market_facts": "2026-09-30"
+        },
+        "source_links": {
+          "etf_universe": true,
+          "market_facts": true,
+          "classification": true
+        },
+        "service_flags": [
+          "etf_center"
+        ],
+        "relations": [
+          {
+            "type": "belongs_to_etf_category",
+            "target": "etf_category:-",
             "source": "stockanalysis/etf_universe"
           }
         ]
@@ -245957,7 +247714,7 @@
         "id": "etf:TSEE",
         "type": "etf",
         "ticker": "TSEE",
-        "label": "T. Rowe Price Exchange-Traded Funds, Inc. - T. Rowe Price Small-Cap ETF",
+        "label": "T. Rowe Price Small Cap ETF",
         "category": "-",
         "route": "/etfs/TSEE",
         "confidence": {
@@ -248412,6 +250169,45 @@
         ]
       },
       {
+        "id": "etf:TXCA",
+        "type": "etf",
+        "ticker": "TXCA",
+        "label": "Northern Trust California Intermediate Tax-Exempt Bond ETF",
+        "category": "-",
+        "route": "/etfs/TXCA",
+        "confidence": {
+          "label": "high",
+          "rank": 3,
+          "classification_source": "stockanalysis.overview.description",
+          "underlying_raw": null,
+          "canonical_underlying_ticker": null,
+          "canonical_underlying_key": null,
+          "resolution_method": null,
+          "resolution_source": null,
+          "matched_alias": null,
+          "resolution_note": null
+        },
+        "as_of": {
+          "etf_universe": null,
+          "market_facts": "2026-09-30"
+        },
+        "source_links": {
+          "etf_universe": true,
+          "market_facts": true,
+          "classification": true
+        },
+        "service_flags": [
+          "etf_center"
+        ],
+        "relations": [
+          {
+            "type": "belongs_to_etf_category",
+            "target": "etf_category:-",
+            "source": "stockanalysis/etf_universe"
+          }
+        ]
+      },
+      {
         "id": "etf:TXNU",
         "type": "etf",
         "ticker": "TXNU",
@@ -248460,6 +250256,45 @@
             "resolution_source": "raw_underlying.symbol",
             "matched_alias": "TXN",
             "resolution_note": null
+          }
+        ]
+      },
+      {
+        "id": "etf:TXNY",
+        "type": "etf",
+        "ticker": "TXNY",
+        "label": "Northern Trust New York Intermediate Tax-Exempt Bond ETF",
+        "category": "-",
+        "route": "/etfs/TXNY",
+        "confidence": {
+          "label": "high",
+          "rank": 3,
+          "classification_source": "stockanalysis.overview.description",
+          "underlying_raw": null,
+          "canonical_underlying_ticker": null,
+          "canonical_underlying_key": null,
+          "resolution_method": null,
+          "resolution_source": null,
+          "matched_alias": null,
+          "resolution_note": null
+        },
+        "as_of": {
+          "etf_universe": null,
+          "market_facts": "2026-09-30"
+        },
+        "source_links": {
+          "etf_universe": true,
+          "market_facts": true,
+          "classification": true
+        },
+        "service_flags": [
+          "etf_center"
+        ],
+        "relations": [
+          {
+            "type": "belongs_to_etf_category",
+            "target": "etf_category:-",
+            "source": "stockanalysis/etf_universe"
           }
         ]
       },
@@ -252986,7 +254821,7 @@
         "type": "etf",
         "ticker": "USGX",
         "label": "Corgi U.S. Growth 2x Daily ETF",
-        "category": "-",
+        "category": "Equity",
         "route": "/etfs/USGX",
         "confidence": {
           "label": "high",
@@ -253016,7 +254851,7 @@
         "relations": [
           {
             "type": "belongs_to_etf_category",
-            "target": "etf_category:-",
+            "target": "etf_category:Equity",
             "source": "stockanalysis/etf_universe"
           }
         ]
@@ -253261,7 +255096,7 @@
         "type": "etf",
         "ticker": "USLX",
         "label": "Corgi U.S. Large-Cap 2x Daily ETF",
-        "category": "-",
+        "category": "Equity",
         "route": "/etfs/USLX",
         "confidence": {
           "label": "high",
@@ -253291,7 +255126,7 @@
         "relations": [
           {
             "type": "belongs_to_etf_category",
-            "target": "etf_category:-",
+            "target": "etf_category:Equity",
             "source": "stockanalysis/etf_universe"
           }
         ]
@@ -253457,7 +255292,7 @@
         "type": "etf",
         "ticker": "USMX",
         "label": "Corgi U.S. Mid-Cap 2x Daily ETF",
-        "category": "-",
+        "category": "Equity",
         "route": "/etfs/USMX",
         "confidence": {
           "label": "high",
@@ -253487,7 +255322,7 @@
         "relations": [
           {
             "type": "belongs_to_etf_category",
-            "target": "etf_category:-",
+            "target": "etf_category:Equity",
             "source": "stockanalysis/etf_universe"
           }
         ]
@@ -253848,7 +255683,7 @@
         "type": "etf",
         "ticker": "USSX",
         "label": "Corgi U.S. Small-Cap 2x Daily ETF",
-        "category": "-",
+        "category": "Equity",
         "route": "/etfs/USSX",
         "confidence": {
           "label": "high",
@@ -253878,7 +255713,7 @@
         "relations": [
           {
             "type": "belongs_to_etf_category",
-            "target": "etf_category:-",
+            "target": "etf_category:Equity",
             "source": "stockanalysis/etf_universe"
           }
         ]
@@ -255104,6 +256939,45 @@
           {
             "type": "belongs_to_etf_category",
             "target": "etf_category:Fixed Income",
+            "source": "stockanalysis/etf_universe"
+          }
+        ]
+      },
+      {
+        "id": "etf:VAIC",
+        "type": "etf",
+        "ticker": "VAIC",
+        "label": "VegaShares ETF Trust - VegaShares US Equity Autocallable Conservative Income ETF",
+        "category": "-",
+        "route": "/etfs/VAIC",
+        "confidence": {
+          "label": "high",
+          "rank": 3,
+          "classification_source": "stockanalysis.overview.description",
+          "underlying_raw": null,
+          "canonical_underlying_ticker": null,
+          "canonical_underlying_key": null,
+          "resolution_method": null,
+          "resolution_source": null,
+          "matched_alias": null,
+          "resolution_note": null
+        },
+        "as_of": {
+          "etf_universe": null,
+          "market_facts": "2026-09-30"
+        },
+        "source_links": {
+          "etf_universe": true,
+          "market_facts": true,
+          "classification": true
+        },
+        "service_flags": [
+          "etf_center"
+        ],
+        "relations": [
+          {
+            "type": "belongs_to_etf_category",
+            "target": "etf_category:-",
             "source": "stockanalysis/etf_universe"
           }
         ]
@@ -258432,6 +260306,45 @@
         ]
       },
       {
+        "id": "etf:VMHY",
+        "type": "etf",
+        "ticker": "VMHY",
+        "label": "VictoryShares Municipal High Yield ETF",
+        "category": "-",
+        "route": "/etfs/VMHY",
+        "confidence": {
+          "label": "high",
+          "rank": 3,
+          "classification_source": "stockanalysis.overview.description",
+          "underlying_raw": null,
+          "canonical_underlying_ticker": null,
+          "canonical_underlying_key": null,
+          "resolution_method": null,
+          "resolution_source": null,
+          "matched_alias": null,
+          "resolution_note": null
+        },
+        "as_of": {
+          "etf_universe": null,
+          "market_facts": "2026-09-30"
+        },
+        "source_links": {
+          "etf_universe": true,
+          "market_facts": true,
+          "classification": true
+        },
+        "service_flags": [
+          "etf_center"
+        ],
+        "relations": [
+          {
+            "type": "belongs_to_etf_category",
+            "target": "etf_category:-",
+            "source": "stockanalysis/etf_universe"
+          }
+        ]
+      },
+      {
         "id": "etf:VMSB",
         "type": "etf",
         "ticker": "VMSB",
@@ -258466,6 +260379,45 @@
           {
             "type": "belongs_to_etf_category",
             "target": "etf_category:Fixed Income",
+            "source": "stockanalysis/etf_universe"
+          }
+        ]
+      },
+      {
+        "id": "etf:VMSD",
+        "type": "etf",
+        "ticker": "VMSD",
+        "label": "VictoryShares Short-Duration Municipal ETF",
+        "category": "-",
+        "route": "/etfs/VMSD",
+        "confidence": {
+          "label": "high",
+          "rank": 3,
+          "classification_source": "stockanalysis.overview.description",
+          "underlying_raw": null,
+          "canonical_underlying_ticker": null,
+          "canonical_underlying_key": null,
+          "resolution_method": null,
+          "resolution_source": null,
+          "matched_alias": null,
+          "resolution_note": null
+        },
+        "as_of": {
+          "etf_universe": null,
+          "market_facts": "2026-09-30"
+        },
+        "source_links": {
+          "etf_universe": true,
+          "market_facts": true,
+          "classification": true
+        },
+        "service_flags": [
+          "etf_center"
+        ],
+        "relations": [
+          {
+            "type": "belongs_to_etf_category",
+            "target": "etf_category:-",
             "source": "stockanalysis/etf_universe"
           }
         ]
@@ -259012,6 +260964,45 @@
           {
             "type": "belongs_to_etf_category",
             "target": "etf_category:Equity",
+            "source": "stockanalysis/etf_universe"
+          }
+        ]
+      },
+      {
+        "id": "etf:VOOB",
+        "type": "etf",
+        "ticker": "VOOB",
+        "label": "VistaShares Shield S&P 500 Enhanced Protection ETF",
+        "category": "-",
+        "route": "/etfs/VOOB",
+        "confidence": {
+          "label": "high",
+          "rank": 3,
+          "classification_source": "stockanalysis.overview.description",
+          "underlying_raw": null,
+          "canonical_underlying_ticker": null,
+          "canonical_underlying_key": null,
+          "resolution_method": null,
+          "resolution_source": null,
+          "matched_alias": null,
+          "resolution_note": null
+        },
+        "as_of": {
+          "etf_universe": null,
+          "market_facts": "2026-09-30"
+        },
+        "source_links": {
+          "etf_universe": true,
+          "market_facts": true,
+          "classification": true
+        },
+        "service_flags": [
+          "etf_center"
+        ],
+        "relations": [
+          {
+            "type": "belongs_to_etf_category",
+            "target": "etf_category:-",
             "source": "stockanalysis/etf_universe"
           }
         ]
@@ -270369,7 +272360,7 @@
         "id": "etf:XSPC",
         "type": "etf",
         "ticker": "XSPC",
-        "label": "VegaShares SpaceX & Beyond Earth ETF",
+        "label": "VegaShares Space & AI ETF",
         "category": "Equity",
         "route": "/etfs/XSPC",
         "confidence": {
@@ -271115,7 +273106,7 @@
         "id": "etf:XUSM",
         "type": "etf",
         "ticker": "XUSM",
-        "label": "EA Series Trust - MarketDesk International Momentum ETF",
+        "label": "MarketDesk International Momentum ETF",
         "category": "Equity",
         "route": "/etfs/XUSM",
         "confidence": {
@@ -271229,6 +273220,45 @@
         ]
       },
       {
+        "id": "etf:XVAD",
+        "type": "etf",
+        "ticker": "XVAD",
+        "label": "FT Vest AMD & Target Income ETF",
+        "category": "-",
+        "route": "/etfs/XVAD",
+        "confidence": {
+          "label": "high",
+          "rank": 3,
+          "classification_source": "stockanalysis.overview.description",
+          "underlying_raw": null,
+          "canonical_underlying_ticker": null,
+          "canonical_underlying_key": null,
+          "resolution_method": null,
+          "resolution_source": null,
+          "matched_alias": null,
+          "resolution_note": null
+        },
+        "as_of": {
+          "etf_universe": null,
+          "market_facts": "2026-09-30"
+        },
+        "source_links": {
+          "etf_universe": true,
+          "market_facts": true,
+          "classification": true
+        },
+        "service_flags": [
+          "etf_center"
+        ],
+        "relations": [
+          {
+            "type": "belongs_to_etf_category",
+            "target": "etf_category:-",
+            "source": "stockanalysis/etf_universe"
+          }
+        ]
+      },
+      {
         "id": "etf:XVAP",
         "type": "etf",
         "ticker": "XVAP",
@@ -271268,6 +273298,162 @@
         ]
       },
       {
+        "id": "etf:XVAZ",
+        "type": "etf",
+        "ticker": "XVAZ",
+        "label": "FT Vest AMZN & Target Income ETF",
+        "category": "-",
+        "route": "/etfs/XVAZ",
+        "confidence": {
+          "label": "high",
+          "rank": 3,
+          "classification_source": "stockanalysis.overview.description",
+          "underlying_raw": null,
+          "canonical_underlying_ticker": null,
+          "canonical_underlying_key": null,
+          "resolution_method": null,
+          "resolution_source": null,
+          "matched_alias": null,
+          "resolution_note": null
+        },
+        "as_of": {
+          "etf_universe": null,
+          "market_facts": "2026-09-30"
+        },
+        "source_links": {
+          "etf_universe": true,
+          "market_facts": true,
+          "classification": true
+        },
+        "service_flags": [
+          "etf_center"
+        ],
+        "relations": [
+          {
+            "type": "belongs_to_etf_category",
+            "target": "etf_category:-",
+            "source": "stockanalysis/etf_universe"
+          }
+        ]
+      },
+      {
+        "id": "etf:XVGL",
+        "type": "etf",
+        "ticker": "XVGL",
+        "label": "FT Vest GOOG & Target Income ETF",
+        "category": "-",
+        "route": "/etfs/XVGL",
+        "confidence": {
+          "label": "high",
+          "rank": 3,
+          "classification_source": "stockanalysis.overview.description",
+          "underlying_raw": null,
+          "canonical_underlying_ticker": null,
+          "canonical_underlying_key": null,
+          "resolution_method": null,
+          "resolution_source": null,
+          "matched_alias": null,
+          "resolution_note": null
+        },
+        "as_of": {
+          "etf_universe": null,
+          "market_facts": "2026-09-30"
+        },
+        "source_links": {
+          "etf_universe": true,
+          "market_facts": true,
+          "classification": true
+        },
+        "service_flags": [
+          "etf_center"
+        ],
+        "relations": [
+          {
+            "type": "belongs_to_etf_category",
+            "target": "etf_category:-",
+            "source": "stockanalysis/etf_universe"
+          }
+        ]
+      },
+      {
+        "id": "etf:XVMS",
+        "type": "etf",
+        "ticker": "XVMS",
+        "label": "FT Vest MSFT & Target Income ETF",
+        "category": "-",
+        "route": "/etfs/XVMS",
+        "confidence": {
+          "label": "high",
+          "rank": 3,
+          "classification_source": "stockanalysis.overview.description",
+          "underlying_raw": null,
+          "canonical_underlying_ticker": null,
+          "canonical_underlying_key": null,
+          "resolution_method": null,
+          "resolution_source": null,
+          "matched_alias": null,
+          "resolution_note": null
+        },
+        "as_of": {
+          "etf_universe": null,
+          "market_facts": "2026-09-30"
+        },
+        "source_links": {
+          "etf_universe": true,
+          "market_facts": true,
+          "classification": true
+        },
+        "service_flags": [
+          "etf_center"
+        ],
+        "relations": [
+          {
+            "type": "belongs_to_etf_category",
+            "target": "etf_category:-",
+            "source": "stockanalysis/etf_universe"
+          }
+        ]
+      },
+      {
+        "id": "etf:XVMT",
+        "type": "etf",
+        "ticker": "XVMT",
+        "label": "FT Vest META & Target Income ETF",
+        "category": "-",
+        "route": "/etfs/XVMT",
+        "confidence": {
+          "label": "high",
+          "rank": 3,
+          "classification_source": "stockanalysis.overview.description",
+          "underlying_raw": null,
+          "canonical_underlying_ticker": null,
+          "canonical_underlying_key": null,
+          "resolution_method": null,
+          "resolution_source": null,
+          "matched_alias": null,
+          "resolution_note": null
+        },
+        "as_of": {
+          "etf_universe": null,
+          "market_facts": "2026-09-30"
+        },
+        "source_links": {
+          "etf_universe": true,
+          "market_facts": true,
+          "classification": true
+        },
+        "service_flags": [
+          "etf_center"
+        ],
+        "relations": [
+          {
+            "type": "belongs_to_etf_category",
+            "target": "etf_category:-",
+            "source": "stockanalysis/etf_universe"
+          }
+        ]
+      },
+      {
         "id": "etf:XVNV",
         "type": "etf",
         "ticker": "XVNV",
@@ -271302,6 +273488,45 @@
           {
             "type": "belongs_to_etf_category",
             "target": "etf_category:Alternatives",
+            "source": "stockanalysis/etf_universe"
+          }
+        ]
+      },
+      {
+        "id": "etf:XVPT",
+        "type": "etf",
+        "ticker": "XVPT",
+        "label": "FT Vest PLTR & Target Income ETF",
+        "category": "-",
+        "route": "/etfs/XVPT",
+        "confidence": {
+          "label": "high",
+          "rank": 3,
+          "classification_source": "stockanalysis.overview.description",
+          "underlying_raw": null,
+          "canonical_underlying_ticker": null,
+          "canonical_underlying_key": null,
+          "resolution_method": null,
+          "resolution_source": null,
+          "matched_alias": null,
+          "resolution_note": null
+        },
+        "as_of": {
+          "etf_universe": null,
+          "market_facts": "2026-09-30"
+        },
+        "source_links": {
+          "etf_universe": true,
+          "market_facts": true,
+          "classification": true
+        },
+        "service_flags": [
+          "etf_center"
+        ],
+        "relations": [
+          {
+            "type": "belongs_to_etf_category",
+            "target": "etf_category:-",
             "source": "stockanalysis/etf_universe"
           }
         ]
@@ -271498,6 +273723,45 @@
           {
             "type": "belongs_to_etf_category",
             "target": "etf_category:Equity",
+            "source": "stockanalysis/etf_universe"
+          }
+        ]
+      },
+      {
+        "id": "etf:XX",
+        "type": "etf",
+        "ticker": "XX",
+        "label": "Roundhill ETF Trust - Roundhill S&P 500 10,000 Target 2030 ETF",
+        "category": "-",
+        "route": "/etfs/XX",
+        "confidence": {
+          "label": "low",
+          "rank": 1,
+          "classification_source": "stockanalysis.etf_list.name",
+          "underlying_raw": null,
+          "canonical_underlying_ticker": null,
+          "canonical_underlying_key": null,
+          "resolution_method": null,
+          "resolution_source": null,
+          "matched_alias": null,
+          "resolution_note": null
+        },
+        "as_of": {
+          "etf_universe": null,
+          "market_facts": null
+        },
+        "source_links": {
+          "etf_universe": true,
+          "market_facts": false,
+          "classification": true
+        },
+        "service_flags": [
+          "etf_center"
+        ],
+        "relations": [
+          {
+            "type": "belongs_to_etf_category",
+            "target": "etf_category:-",
             "source": "stockanalysis/etf_universe"
           }
         ]
@@ -274888,7 +277152,7 @@
         "id": "etf_category:-",
         "type": "etf_category",
         "label": "-",
-        "etf_count": 21
+        "etf_count": 66
       },
       {
         "id": "etf_category:Alternatives",
@@ -274900,7 +277164,7 @@
         "id": "etf_category:Asset Allocation",
         "type": "etf_category",
         "label": "Asset Allocation",
-        "etf_count": 194
+        "etf_count": 195
       },
       {
         "id": "etf_category:Commodity",
@@ -274918,13 +277182,13 @@
         "id": "etf_category:Equity",
         "type": "etf_category",
         "label": "Equity",
-        "etf_count": 3429
+        "etf_count": 3437
       },
       {
         "id": "etf_category:Fixed Income",
         "type": "etf_category",
         "label": "Fixed Income",
-        "etf_count": 1048
+        "etf_count": 1052
       }
     ],
     "filings": [
