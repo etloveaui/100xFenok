@@ -84,6 +84,11 @@ export interface WindowedMetric {
   points: number;
 }
 
+export interface DatedBenchmarkValue {
+  date: string;
+  value: number;
+}
+
 export interface BenchmarkOrdinalRow {
   id: string;
   groupId: BenchmarkGroupId;
@@ -92,6 +97,14 @@ export interface BenchmarkOrdinalRow {
   /** Last ROW date in the section — never an envelope stamp. */
   asOf: string | null;
   price: number | null;
+  /** Same-as-of-row forward EPS; never borrowed from an older observation. */
+  currentForwardEps: number | null;
+  /** Price from the same latest row as currentForwardEps. */
+  currentPriceAtAsOf: number | null;
+  /** Positive, finite dated observations for the price-axis reference chart. */
+  priceHistory: DatedBenchmarkValue[];
+  /** Positive, finite dated forward-P/E observations for price bands. */
+  forwardPeHistory: DatedBenchmarkValue[];
   /** Forward P/E (best_pe_ratio) vs own history. */
   pe: OrdinalMetric;
   /** P/B (px_to_book_ratio) vs own history. */
@@ -134,6 +147,7 @@ export interface BenchmarkHorizonReading {
 interface RawRow {
   date?: unknown;
   px_last?: unknown;
+  best_eps?: unknown;
   best_pe_ratio?: unknown;
   px_to_book_ratio?: unknown;
   roe?: unknown;
@@ -272,6 +286,64 @@ export function windowedMetricFromRows(
   };
 }
 
+export type PriceBandRefusal = "missing_eps" | "missing_current_price" | "missing_pe_history" | "truncated" | "insufficient_history" | "invalid_level";
+
+export interface PriceValuationBand {
+  years: number;
+  asOf: string | null;
+  currentForwardEps: number | null;
+  spanYears: number | null;
+  points: number;
+  refusal: PriceBandRefusal | null;
+  p25: number | null;
+  p50: number | null;
+  p75: number | null;
+}
+
+/** Linear interpolation at q*(n-1), the same accepted population for all three levels. */
+export function linearQuantile(sorted: readonly number[], q: number): number | null {
+  if (sorted.length === 0 || q < 0 || q > 1) return null;
+  const position = (sorted.length - 1) * q;
+  const lower = Math.floor(position);
+  const upper = Math.ceil(position);
+  return sorted[lower] + (sorted[upper] - sorted[lower]) * (position - lower);
+}
+
+/** A current-EPS price reference, refused unless its own PE history spans the full window. */
+export function priceValuationBand(row: BenchmarkOrdinalRow, years: number): PriceValuationBand {
+  const result: PriceValuationBand = {
+    years, asOf: row.asOf, currentForwardEps: row.currentForwardEps,
+    spanYears: null, points: 0, refusal: "missing_pe_history",
+    p25: null, p50: null, p75: null,
+  };
+  if (!row.asOf || !Number.isInteger(years) || years < 1 || years > 30) return result;
+  const asOfMs = msOfDay(row.asOf);
+  const valid = row.forwardPeHistory.filter((point) => Number.isFinite(point.value) && point.value > 0 && msOfDay(point.date) <= asOfMs);
+  if (valid.length === 0) return result;
+  const earliestMs = Math.min(...valid.map((point) => msOfDay(point.date)));
+  const startMs = asOfMs - years * YEAR_MS;
+  const span = (asOfMs - earliestMs) / YEAR_MS;
+  result.spanYears = Math.round(span * 100) / 100;
+  const values = valid
+    .filter((point) => msOfDay(point.date) > startMs)
+    .map((point) => point.value)
+    .sort((a, b) => a - b);
+  result.points = values.length;
+  if (!isFiniteNumber(row.currentForwardEps) || row.currentForwardEps <= 0) result.refusal = "missing_eps";
+  else if (!isFiniteNumber(row.currentPriceAtAsOf) || row.currentPriceAtAsOf <= 0) result.refusal = "missing_current_price";
+  else if (earliestMs > startMs) result.refusal = "truncated";
+  else if (values.length < BENCHMARK_ORDINAL_MIN_HISTORY) result.refusal = "insufficient_history";
+  else {
+    const levels = [0.25, 0.5, 0.75].map((q) => linearQuantile(values, q)! * row.currentForwardEps!);
+    if (levels.some((value) => !Number.isFinite(value) || value <= 0)) result.refusal = "invalid_level";
+    else {
+      [result.p25, result.p50, result.p75] = levels;
+      result.refusal = null;
+    }
+  }
+  return result;
+}
+
 function windowedMetrics(rows: readonly RawRow[], asOfMs: number, current: number | null): Record<BenchmarkWindowId, WindowedMetric> {
   return Object.fromEntries(
     BENCHMARK_ORDINAL_WINDOWS.map((w) => [w.id, windowedMetricFromRows(rows, asOfMs, w.years, current)]),
@@ -368,6 +440,17 @@ function buildGroup(
     const pb = metricFromSeries(pbSeries as unknown[] as readonly number[], rowDates, asOfMsForRows);
     const roe = metricFromSeries(roeSeries as unknown[] as readonly number[], rowDates, asOfMsForRows);
     const price = lastFinite(data.map((row) => row.px_last) as unknown[] as number[]);
+    const asOfRow = asOf === null ? null : [...data].reverse().find((row) => row.date === asOf);
+    const currentForwardEps = asOfRow && isFiniteNumber(asOfRow.best_eps) ? asOfRow.best_eps : null;
+    const currentPriceAtAsOf = asOfRow && isFiniteNumber(asOfRow.px_last) ? asOfRow.px_last : null;
+    const priceHistory: DatedBenchmarkValue[] = data
+      .filter((row) => isIsoDay(row.date) && isFiniteNumber(row.px_last) && row.px_last > 0)
+      .map((row) => ({ date: row.date as string, value: row.px_last as number }))
+      .sort((a, b) => a.date.localeCompare(b.date));
+    const forwardPeHistory: DatedBenchmarkValue[] = data
+      .filter((row) => isIsoDay(row.date) && isFiniteNumber(row.best_pe_ratio) && row.best_pe_ratio > 0)
+      .map((row) => ({ date: row.date as string, value: row.best_pe_ratio as number }))
+      .sort((a, b) => a.date.localeCompare(b.date));
 
     let spxPremium: number | null = null;
     if (
@@ -392,6 +475,10 @@ function buildGroup(
       nameEn: typeof rawSection.name_en === "string" ? rawSection.name_en : null,
       asOf,
       price,
+      currentForwardEps,
+      currentPriceAtAsOf,
+      priceHistory,
+      forwardPeHistory,
       pe,
       pb,
       roe,

@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import MarketSectionNav from "@/components/market/MarketSectionNav";
+import PriceValuationBands from "./PriceValuationBands";
 import { useMarketValuation } from "@/hooks/useMarketValuation";
 import {
   useBenchmarkOrdinals,
@@ -1001,6 +1002,7 @@ export default function MarketValuationClient({
         setGroup={setGroup}
         onProvenance={setBoardProvenance}
       />
+      <PriceValuationBands board={board} />
       <HistoricalReferencePanel
         erpSourceDate={erpInsight?.sourceDate ?? null}
         onProvenance={setReferenceProvenance}

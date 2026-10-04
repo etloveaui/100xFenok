@@ -21,6 +21,8 @@ import {
   BENCHMARK_ORDINAL_MIN_HISTORY,
   benchmarkHorizonReading,
   percentileRank,
+  linearQuantile,
+  priceValuationBand,
   readBenchmarkOrdinals,
   zScorePopulation,
   type BenchmarkGroupId,
@@ -126,6 +128,15 @@ assert(spx!.pe.average !== null && near(spx!.pe.average, mean(longDates.map((_, 
 assert(spx!.pb.average !== null && near(spx!.pb.average, mean(longDates.map((_, i) => 2 + i * 0.01))), "all-history P/B average must be the arithmetic mean of the accepted ramp");
 assert(spx!.roe.average !== null && near(spx!.roe.average, mean(longDates.map((_, i) => 0.15 + i * 0.001))), "all-history ROE average must be the arithmetic mean of the accepted ramp");
 
+// --- price-axis historical forward-PER bands ------------------------------------
+
+assert(linearQuantile([10, 20, 30, 40], 0.25) === 17.5, "P25 must interpolate between adjacent ranks");
+assert(linearQuantile([10, 20, 30, 40], 0.5) === 25, "P50 must interpolate between adjacent ranks");
+assert(linearQuantile([10, 20, 30, 40], 0.75) === 32.5, "P75 must interpolate between adjacent ranks");
+assert(linearQuantile([], 0.5) === null, "an empty population has no quantile");
+assert(spx!.currentForwardEps === 50, "current EPS must come from the latest dated row");
+assert(spx!.priceHistory.length === longDates.length && spx!.forwardPeHistory.length === longDates.length, "dated price and PE history must be exposed");
+
 // --- sector premium: same-date SPX base or nothing --------------------------------
 
 const sectorDates = longDates;
@@ -224,6 +235,44 @@ assert(w6.w10.spanYears !== null && w6.w10.spanYears < 10 && w6.w10.spanYears >=
 const sixYFiveYearValues = acceptedRampValues(sixYDates, 15, 0.1, 5);
 assert(w6.w5.points === sixYFiveYearValues.length, "5y window points must equal the exact accepted ramp population");
 assert(w6.w5.average !== null && near(w6.w5.average, mean(sixYFiveYearValues)), "6y fixture 5y average must use the exact accepted 5y window population");
+
+// One index can accept 3y and 5y while refusing 10y; no fallback to all-history.
+const priceBand3 = priceValuationBand(sixYRow!, 3);
+const priceBand5 = priceValuationBand(sixYRow!, 5);
+const priceBand10 = priceValuationBand(sixYRow!, 10);
+assert(priceBand3.refusal === null && priceBand5.refusal === null, "3y and 5y price bands must coexist on a 6y history");
+assert(priceBand3.p25 !== null && priceBand3.p50 !== null && priceBand3.p75 !== null, "accepted band must expose all three levels");
+assert(priceBand5.p25 !== null && near(priceBand5.p25, linearQuantile([...sixYFiveYearValues].sort((a, b) => a - b), 0.25)! * 50), "P25 price must multiply historical PE quantile by current EPS");
+assert(priceBand5.points === sixYFiveYearValues.length, "price band sample count must match its exact trailing window");
+assert(priceBand10.refusal === "truncated" && priceBand10.p50 === null && priceBand10.spanYears !== null && priceBand10.spanYears < 10, "10y price band must refuse a 6y history and show its actual span");
+const shortBand = priceValuationBand(tiny!, 1);
+assert(shortBand.refusal === "truncated" && shortBand.p50 === null, "short history must not produce a band");
+const negativeEpsFixture = rows(sixYDates, 15, 0.1);
+negativeEpsFixture[negativeEpsFixture.length - 1].best_eps = -2;
+const negativeEpsView = readBenchmarkOrdinals({ us: payload({ sp500: { data: negativeEpsFixture } }) });
+if (negativeEpsView.status !== "ready") throw new Error("negative-EPS fixture must be readable");
+const negativeEpsRow = negativeEpsView.groups[0].rows[0];
+assert(negativeEpsRow.priceHistory.length === sixYDates.length && priceValuationBand(negativeEpsRow, 5).refusal === "missing_eps", "negative EPS must refuse bands but preserve price");
+const zeroEpsFixture = rows(sixYDates, 15, 0.1);
+zeroEpsFixture[zeroEpsFixture.length - 1].best_eps = 0;
+const zeroEpsView = readBenchmarkOrdinals({ us: payload({ sp500: { data: zeroEpsFixture } }) });
+if (zeroEpsView.status !== "ready") throw new Error("zero-EPS fixture must be readable");
+assert(priceValuationBand(zeroEpsView.groups[0].rows[0], 5).refusal === "missing_eps", "zero EPS must refuse a band");
+const infiniteEpsFixture = rows(sixYDates, 15, 0.1);
+infiniteEpsFixture[infiniteEpsFixture.length - 1].best_eps = Number.POSITIVE_INFINITY;
+const infiniteEpsView = readBenchmarkOrdinals({ us: payload({ sp500: { data: infiniteEpsFixture } }) });
+if (infiniteEpsView.status !== "ready") throw new Error("nonfinite-EPS fixture must be readable");
+assert(priceValuationBand(infiniteEpsView.groups[0].rows[0], 5).refusal === "missing_eps", "nonfinite EPS must refuse a band");
+const missingPriceFixture = rows(sixYDates, 15, 0.1) as Array<Partial<FixtureRow>>;
+delete missingPriceFixture[missingPriceFixture.length - 1].px_last;
+const missingPriceView = readBenchmarkOrdinals({ us: payload({ sp500: { data: missingPriceFixture as FixtureRow[] } }) });
+if (missingPriceView.status !== "ready") throw new Error("missing-price fixture must be readable");
+assert(missingPriceView.groups[0].rows[0].currentPriceAtAsOf === null && priceValuationBand(missingPriceView.groups[0].rows[0], 5).refusal === "missing_current_price", "latest EPS must not be combined with an older price");
+const missingEpsFixture = rows(sixYDates, 15, 0.1) as Array<Partial<FixtureRow>>;
+delete missingEpsFixture[missingEpsFixture.length - 1].best_eps;
+const missingEpsView = readBenchmarkOrdinals({ us: payload({ sp500: { data: missingEpsFixture as FixtureRow[] } }) });
+if (missingEpsView.status !== "ready") throw new Error("missing-EPS fixture must be readable");
+assert(missingEpsView.groups[0].rows[0].currentForwardEps === null && priceValuationBand(missingEpsView.groups[0].rows[0], 5).refusal === "missing_eps", "missing latest EPS must never borrow an older row's EPS");
 
 const allHorizon: BenchmarkOrdinalHorizon = "all";
 const allReading = benchmarkHorizonReading(sixYRow!, allHorizon);
@@ -327,10 +376,19 @@ assert(liveRows.length === 38, `live benchmark estate must yield 38 index rows, 
 const shortAt10y = liveRows
   .filter((r) => r.pe.windows.w10.truncated)
   .map((r) => ({ id: r.id, spanYears: r.pe.windows.w10.spanYears }));
-const expectedShort = ["hang_seng_tech", "real_estate", "us_regional_banks", "과창판_(star50_index)"];
+// The live estate grows across the ten-year boundary. Derive the expected
+// refusal from its raw clocks; the fixed short-window fixtures above stay strict.
+const expectedShort = Object.values(livePayloads).flatMap((payload: any) =>
+  Object.entries(payload.sections).flatMap(([id, section]: [string, any]) => {
+    const dated = section.data.filter((row: any) => typeof row.date === "string" && Number.isFinite(Date.parse(row.date)));
+    const lastDate = dated.map((row: any) => row.date).sort().at(-1);
+    const firstPe = dated.filter((row: any) => typeof row.best_pe_ratio === "number" && Number.isFinite(row.best_pe_ratio))
+      .map((row: any) => row.date).sort()[0];
+    return lastDate && firstPe && Date.parse(firstPe) > Date.parse(lastDate) - 10 * 365.25 * 86_400_000 ? [id] : [];
+  }));
 assert(
   shortAt10y.map((s) => s.id).sort().join("|") === [...expectedShort].sort().join("|"),
-  `live 10y-truncated set must be exactly the four short sections, got ${JSON.stringify(shortAt10y)}`,
+  `live 10y-truncated set must match the raw dated PE histories, got ${JSON.stringify(shortAt10y)}`,
 );
 for (const row of liveRows) {
   const w10m = row.pe.windows.w10;
