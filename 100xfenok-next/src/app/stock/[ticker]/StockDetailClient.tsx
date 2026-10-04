@@ -2812,6 +2812,7 @@ export default function StockDetailClient({
   const isEtfAsset = assetHint === "etf" || marketFacts?.asset_type === "etf" || etfData?.asset_type === "etf" || hasEtfSurfaceData;
   const isEtfOnlyAsset = isEtfAsset && !row;
   const showFilingsTab = !isEtfAsset;
+  const has13FHolders = Array.isArray(f13Entries) && f13Entries.length > 0;
   const activeStockTab: StockTab = !isEtfAsset && stockTab === "etf"
     ? "overview"
     : !showFilingsTab && stockTab === "filings"
@@ -2827,9 +2828,9 @@ export default function StockDetailClient({
           { id: "statistics" as const, label: "밸류" },
           { id: "estimates" as const, label: "추정치" },
           { id: "financials" as const, label: "재무" },
-          { id: "ownership" as const, label: "보유기관" },
         ]
       : []),
+    ...(yfAvailable || has13FHolders ? [{ id: "ownership" as const, label: "보유기관" }] : []),
     ...(showFilingsTab ? [{ id: "filings" as const, label: "공시" }] : []),
   ];
 
@@ -2872,6 +2873,21 @@ export default function StockDetailClient({
 
   // Unknown ticker
   if (!rowLoading && !row) {
+    if (!isEtfAsset && (activeStockTab === "filings" || (has13FHolders && (activeStockTab === "ownership" || (!marketFacts && !etfData && !hasEtfSurfaceData))))) {
+      const availableTab = activeStockTab === "filings" ? "filings" : "ownership";
+      return <div className="stock-shell" data-stock-13f-only={availableTab === "ownership" ? true : undefined}>
+        <Panel>
+          <PanelHeader title={`${symbol} ${availableTab === "filings" ? "공시" : "기관 보유"}`} eyebrow={availableTab === "filings" ? "SEC EDGAR" : "SEC 13F"} />
+          <p className="px-4 pb-4 text-sm text-[var(--c-ink-2)]">{availableTab === "filings" ? "공시 요약과 SEC 원문을 확인합니다." : "기관의 분기말 보유 내역입니다. 가격·재무 자료는 별도로 확인해야 합니다."}</p>
+          <StockTabsNav symbol={symbol} tabs={[...(has13FHolders ? [{ id: "ownership" as const, label: "보유기관" }] : []), { id: "filings", label: "공시" }]}
+            activeTab={availableTab} onSelect={selectStockTab} />
+        </Panel>
+        <div id={stockPanelId(symbol, availableTab)} role="tabpanel" aria-labelledby={stockTabId(symbol, availableTab)} tabIndex={0}>
+          {availableTab === "filings" ? <FilingsHeroFeedCp ticker={symbol} />
+            : <OwnershipHeroCp f13Entries={f13Entries} ticker={symbol} yfData={null} displayPrice={null} f13Quality={{ error: f13Error, onRetry: retryF13 }} />}
+        </div>
+      </div>;
+    }
     if (marketFactsLoading || etfData === undefined || etfSurfaceData === undefined) {
       // Mounted from the first paint so the slot keeps its space; only the
       // visibility waits for the 120 ms delay (anti-flash kept).
@@ -3667,12 +3683,12 @@ export default function StockDetailClient({
   function renderOwnershipCpTab(showSkeleton: boolean) {
     return (
       <div className="cp-stock-tab-financials">
-        {showSkeleton ? (
+        {showSkeleton && !has13FHolders ? (
           <div className="cp-stock-tab-loading">
             <SkeletonSection />
             <SkeletonSection />
           </div>
-        ) : detail ? (
+        ) : detail || has13FHolders || yfAvailable ? (
           <>
             <OwnershipHeroCp f13Entries={f13Entries} ticker={symbol} yfData={yfData} displayPrice={displayPrice} f13Quality={{ error: f13Error, onRetry: retryF13 }} yQuality={{ loading: !yfLoaded, error: yfError, onRetry: retryYfFinance }} />
 
