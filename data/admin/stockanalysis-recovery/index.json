@@ -1,13 +1,13 @@
 {
   "schema_version": "stockanalysis-recovery-index/v1",
-  "generated_at": "2026-10-04T11:59:59Z",
+  "generated_at": "2026-10-04T12:16:55Z",
   "counts": {
     "tracked": 912,
-    "fresh": 797,
-    "lkg": 102,
+    "fresh": 798,
+    "lkg": 101,
     "unavailable": 13,
-    "retry": 115,
-    "failed": 1
+    "retry": 114,
+    "failed": 0
   },
   "counts_by_kind": {
     "stock": {
@@ -26,10 +26,10 @@
     },
     "etf": {
       "tracked": 794,
-      "fresh": 681,
-      "lkg": 101,
+      "fresh": 682,
+      "lkg": 100,
       "unavailable": 12,
-      "retry": 113
+      "retry": 112
     },
     "surface": {
       "tracked": 25,
@@ -47,10 +47,6 @@
     }
   },
   "retry_artifacts": [
-    {
-      "artifact_kind": "etf",
-      "entity": "ABXB"
-    },
     {
       "artifact_kind": "etf",
       "entity": "ACBE"
@@ -509,16 +505,6 @@
     }
   ],
   "degraded_details": [
-    {
-      "artifact_kind": "etf",
-      "entity": "ABXB",
-      "resolution_state": "lkg_primary",
-      "source_as_of": null,
-      "failure_observed_at": "2026-09-28T03:35:31Z",
-      "error": "ValueError: svelte_contract_drift:holdings:missing_required:holdings",
-      "failure_count": 0,
-      "data_loss": false
-    },
     {
       "artifact_kind": "etf",
       "entity": "ACBE",
@@ -1661,19 +1647,11 @@
     }
   ],
   "current_results": {
-    "failed": 1,
-    "errors": [
-      {
-        "artifact_kind": "etf",
-        "entity": "XX",
-        "error": "ValueError: StockAnalysis ETF provider source date is in the future",
-        "data_loss": false
-      }
-    ]
+    "failed": 0,
+    "errors": []
   },
   "degraded_tickers": [],
   "degraded_etfs": [
-    "ABXB",
     "ACBE",
     "AEMG",
     "AMJB",
