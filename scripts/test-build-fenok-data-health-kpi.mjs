@@ -376,6 +376,27 @@ try {
     "data/computed/fenok_social_attention_proxy.json");
   assert.equal(rootDoc.sets.find((set) => set.set === "gdelt_news_tone").served_path,
     "data/computed/fenok_news_tone_proxy.json");
+  const gdeltLane = LANE_REGISTRY.lanes.find((lane) => lane.id === "gdelt_news_tone");
+  const gdeltSelected = { artifact: { source_as_of: "2026-09-28T03:01:00.000Z" } };
+  const gdeltDataRoot = path.join(root, "gdelt-retained");
+  writeJson(gdeltDataRoot, "computed/fenok_news_tone_proxy.json", {
+    source_as_of: "2026-09-27T17:17:00.000Z",
+    generated_at: "2026-09-28T03:11:39.692Z",
+    coverage: { complete: true, expected_row_count: 8, row_count: 8 },
+    rows: ["DASH", "UNH", "PYPL", "RDDT", "COIN", "MU", "PLTR", "NVDA"].map((ticker) => ({
+      ticker,
+      as_of: ticker === "RDDT" ? "2026-09-27T17:17:00.000Z"
+        : ticker === "NVDA" ? "2026-09-28T03:01:00.000Z" : "2026-09-28T01:31:00.000Z",
+    })),
+  });
+  const gdeltRetained = summarizeDataSetFreshness(gdeltLane, gdeltSelected, now, undefined, gdeltDataRoot);
+  assert.equal(gdeltRetained.newest_source_date, "2026-09-27",
+    "the served basket floor, not the newest row used for LKG promotion, dates the KPI");
+  const gdeltMissing = summarizeDataSetFreshness(gdeltLane, gdeltSelected, now, undefined,
+    path.join(root, "gdelt-missing-payload"));
+  assert.equal(gdeltMissing.newest_source_date, null,
+    "missing served payload cannot inherit the newer detection selector clock");
+  assert.equal(gdeltMissing.status, "unknown");
   const unknown = rootDoc.sets.find((set) => set.set === missingEvidenceId);
   assert.equal(unknown.newest_source_date, null);
   assert.equal(unknown.status, "unknown", "only a data set with no source date reports unknown");

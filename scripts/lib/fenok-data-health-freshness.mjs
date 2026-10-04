@@ -222,6 +222,12 @@ function datedOrCollected(
 
 function sourceMembersForLane(lane, floorRow, dataRoot) {
   if (!dataRoot) return null;
+  if (lane.id === "gdelt_news_tone") {
+    // The retained eight-reference document reports its oldest article clock.
+    // The detection selector uses the newest row for promotion, not basket freshness.
+    const document = readOptionalJson(dataRoot, "computed/fenok_news_tone_proxy.json");
+    return { members: [memberDate(document?.source_as_of)], totalMembers: 1 };
+  }
   if (lane.id === "yahoo_etf_fallback") {
     const state = readOptionalJson(dataRoot, lane.recovery_store);
     if (!state?.items || typeof state.items !== "object" || Array.isArray(state.items)) return null;
