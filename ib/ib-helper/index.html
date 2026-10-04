@@ -1167,48 +1167,36 @@
     // Auto-Save to Sheets (v4.20.0)
     // =====================================================
 
-    /**
-     * Debounce utility - prevents rapid-fire API calls
-     * @param {Function} fn - Function to debounce
-     * @param {number} delay - Delay in ms
-     */
-    function debounce(fn, delay) {
-      let timeoutId;
-      return function(...args) {
-        clearTimeout(timeoutId);
-        timeoutId = setTimeout(() => fn.apply(this, args), delay);
-      };
-    }
+    const autoSyncTimers = new Map();
+    const autoSyncVersions = new Map();
+    const failedSyncProfiles = new Set();
 
     /**
      * Auto-sync to Google Sheets (5초 debounce)
      * - 로그인 상태일 때만 실행
      * - 연속 입력 시 마지막 입력 후 5초 뒤 동기화
      */
-    const debouncedSheetSync = debounce(async function(syncProfileId) {
-      // Check if SheetsSync is available and authenticated
-      if (typeof SheetsSync === 'undefined' || !SheetsSync.isAuthenticated()) {
-        console.log('Auto-sync: Skipped (not logged in)');
-        updateSyncStatus('local');
-        return;
-      }
-
-      if (!currentProfile) {
-        console.log('Auto-sync: Skipped (no profile)');
+    async function runAutoSync(syncProfileId, version, syncAccountEmail) {
+      autoSyncTimers.delete(syncProfileId);
+      // A timer belongs to the account that was active when the edit was saved.
+      if (!syncAccountEmail || typeof SheetsSync === 'undefined' || !SheetsSync.isAuthenticated()
+          || SheetsSync.getUserEmail() !== syncAccountEmail) {
+        failedSyncProfiles.add(syncProfileId);
+        updateSyncStatus('failed');
         return;
       }
 
       try {
-        updateSyncStatus('syncing');
-
-        // v4.0.3 (#272-C): debounce 안전성 — 캡처된 profileId 사용
-        SheetsSync.setCurrentProfile(syncProfileId || currentProfile.id);
-
-        // Push to sheets with captured profileId
+        if (currentProfile?.id === syncProfileId) updateSyncStatus('syncing');
         await SheetsSync.push(syncProfileId);
+        failedSyncProfiles.delete(syncProfileId);
+        if (failedSyncProfiles.size > 0) updateSyncStatus('failed');
+        if (autoSyncVersions.get(syncProfileId) !== version) return;
 
         // Visual feedback (subtle)
-        const status = document.getElementById('sheets-status');
+        const status = currentProfile?.id === syncProfileId
+          ? document.getElementById('sheets-status')
+          : null;
         if (status) {
           status.textContent = '✓ 동기화됨';
           status.className = 'text-xs text-green-600';
@@ -1219,26 +1207,33 @@
           }, 2000);
         }
 
-        updateSyncStatus('synced');
+        if (currentProfile?.id === syncProfileId && failedSyncProfiles.size === 0) updateSyncStatus('synced');
         console.log('Auto-sync: Success');
       } catch (error) {
         console.error('Auto-sync: Failed', error);
+        failedSyncProfiles.add(syncProfileId);
         updateSyncStatus('failed');
-        // Silent failure - 사용자 작업 방해 안함
       }
-    }, 5000); // 5초 debounce
+    }
 
     /**
      * Trigger auto-sync after local save
      * Called from saveCurrentInputs()
      */
     function triggerAutoSync(syncProfileId) {
-      if (!currentProfile) return;
-      if (typeof SheetsSync !== 'undefined' && SheetsSync.isAuthenticated()) {
-        updateSyncStatus('pending');
-        debouncedSheetSync(syncProfileId || currentProfile.id);
+      const profileId = syncProfileId || currentProfile?.id;
+      if (!profileId) return;
+      const version = (autoSyncVersions.get(profileId) || 0) + 1;
+      autoSyncVersions.set(profileId, version);
+      clearTimeout(autoSyncTimers.get(profileId));
+      if (typeof SheetsSync !== 'undefined' && SheetsSync.isAuthenticated() && SheetsSync.getUserEmail()) {
+        const syncAccountEmail = SheetsSync.getUserEmail();
+        if (currentProfile?.id === profileId) updateSyncStatus('pending');
+        autoSyncTimers.set(profileId, setTimeout(() => {
+          void runAutoSync(profileId, version, syncAccountEmail);
+        }, 5000));
       } else {
-        updateSyncStatus('local');
+        if (currentProfile?.id === profileId) updateSyncStatus('local');
       }
     }
 
@@ -2081,6 +2076,10 @@
 
       // 1. 현재 입력값 최종 저장 (혹시 모를 미저장 데이터)
       saveCurrentInputs();
+      const syncProfileId = currentProfile.id;
+      const syncVersion = autoSyncVersions.get(syncProfileId);
+      clearTimeout(autoSyncTimers.get(syncProfileId));
+      autoSyncTimers.delete(syncProfileId);
 
       // 🔴 v4.30.0 (#3): 동기화 전 필수값 체크
       const stocks = currentProfile?.stocks || [];
@@ -2115,14 +2114,22 @@
       try {
         showToast('시트 동기화 중...', 'info', 2000);
         updateSyncStatus('syncing');
-        await SheetsSync.push();
-        showToast('클라우드 동기화 완료!', 'success');
+        await SheetsSync.push(syncProfileId);
+        failedSyncProfiles.delete(syncProfileId);
+        if (currentProfile?.id === syncProfileId) showToast('클라우드 동기화 완료!', 'success');
         // 🔴 v4.31.0 (B5-10): 동기화 상태 업데이트
-        updateSyncStatus('synced');
+        if (failedSyncProfiles.size > 0) {
+          updateSyncStatus('failed');
+        } else if (currentProfile?.id === syncProfileId && autoSyncVersions.get(syncProfileId) === syncVersion) {
+          updateSyncStatus('synced');
+        }
       } catch (error) {
         console.error('Sync error:', error);
-        showToast('동기화 실패: ' + error.message, 'error');
+        failedSyncProfiles.add(syncProfileId);
         updateSyncStatus('failed');
+        if (currentProfile?.id === syncProfileId) {
+          showToast('동기화 실패: ' + error.message, 'error');
+        }
       }
 
       updateProfileSelector();
@@ -2574,8 +2581,9 @@
      * - dailyData (평단가, 총매입금, 수량)
      * - stock settings (세팅원금, 매도%)
      * @param {boolean} silent - true면 토스트 안보여줌 (종목/프로필 전환 시)
+     * @param {boolean} localOnly - pagehide에서는 비동기 시트 저장을 예약하지 않음
      */
-    function saveCurrentInputs(silent = false) {
+    function saveCurrentInputs(silent = false, localOnly = false) {
       if (!currentProfile || !selectedTicker) return;
 
       // 2. Stock settings 저장 (세팅원금, 분할 수, AFTER%, LOC%)
@@ -2592,6 +2600,19 @@
         console.log(`saveCurrentInputs: SKIP ${selectedTicker} (not in profile, principal=0)`);
         return;
       }
+      if (localOnly) {
+        const previousDaily = ProfileManager.loadDailyData(currentProfile.id, selectedTicker) || {};
+        const totalInvested = parseFloat(document.getElementById('input-totalInvested').value) || 0;
+        const holdings = parseInt(document.getElementById('input-holdings').value) || 0;
+        const dailyUnchanged = (Number(previousDaily.totalInvested) || 0) === totalInvested
+          && (Number(previousDaily.holdings) || 0) === holdings;
+        const settingsUnchanged = existingStock
+          && (Number(existingStock.principal) || 0) === principal
+          && (Number(existingStock.divisions) || 40) === divisions
+          && (Number(existingStock.sellPercent) || (selectedTicker === 'SOXL' ? 12 : 10)) === sellPercent
+          && (Number(existingStock.locSellPercent) || 5) === locSellPercent;
+        if (dailyUnchanged && settingsUnchanged) return;
+      }
 
       // 1. Daily data 저장 (종목이 저장될 때만)
       saveDailyInputs();
@@ -2603,6 +2624,7 @@
         sellPercent: sellPercent,
         locSellPercent: locSellPercent
       });
+      if (localOnly) return;
 
       // 3. 자동 저장 피드백 (silent 모드에선 안보여줌)
       if (!silent) {
@@ -2624,6 +2646,12 @@
         selectTicker(selectedTicker);
       }
     }
+
+    window.addEventListener('pagehide', () => {
+      // The browser cannot finish an asynchronous Sheets write while unloading.
+      // Preserve the latest field values locally without scheduling another push.
+      saveCurrentInputs(true, true);
+    });
 
     function saveDailyInputs() {
       if (!currentProfile || !selectedTicker) return;
@@ -5552,30 +5580,48 @@
         showToast('프로필을 먼저 선택하세요', 'warning');
         return;
       }
+      const syncProfileId = currentProfile.id;
+      const syncVersion = autoSyncVersions.get(syncProfileId);
+      const syncAccountEmail = SheetsSync.getUserEmail();
 
       try {
         status.textContent = '저장하는 중...';
         status.className = 'text-xs text-amber-600';
 
-        // Initialize and sign in
+        // Initialize and sign in. A new login needs an explicit second save.
         await initSheets();
+        if (!syncAccountEmail || !SheetsSync.isAuthenticated()
+            || SheetsSync.getUserEmail() !== syncAccountEmail) {
+          throw new Error('로그인 계정이 변경되었습니다. 현재 계정을 확인한 뒤 다시 저장하세요.');
+        }
+        clearTimeout(autoSyncTimers.get(syncProfileId));
+        autoSyncTimers.delete(syncProfileId);
 
         // Set current profile for filtering
-        SheetsSync.setCurrentProfile(currentProfile.id);
+        SheetsSync.setCurrentProfile(syncProfileId);
 
         // Push data to sheet (내 구글ID + 내 프로필만 업데이트)
-        await SheetsSync.push();
+        await SheetsSync.push(syncProfileId);
+        failedSyncProfiles.delete(syncProfileId);
 
-        status.textContent = '연결됨';
-        status.className = 'text-xs text-green-600';
+        if (failedSyncProfiles.size > 0) {
+          updateSyncStatus('failed');
+        } else if (currentProfile?.id === syncProfileId && autoSyncVersions.get(syncProfileId) === syncVersion) {
+          status.textContent = '연결됨';
+          status.className = 'text-xs text-green-600';
+        }
         // 🔴 v4.29.0: ID 대신 name 표시
-        showToast(`✅ ${currentProfile.name || '프로필'} 저장 완료`, 'success');
+        if (currentProfile?.id === syncProfileId) showToast('✅ 프로필 저장 완료', 'success');
 
       } catch (error) {
         console.error('Sheets push error:', error);
-        status.textContent = '오류';
-        status.className = 'text-xs text-red-600';
-        showToast('저장 실패: ' + error.message, 'error');
+        failedSyncProfiles.add(syncProfileId);
+        updateSyncStatus('failed');
+        if (currentProfile?.id === syncProfileId) {
+          status.textContent = '오류';
+          status.className = 'text-xs text-red-600';
+          showToast('저장 실패: ' + error.message, 'error');
+        }
       }
     }
 
