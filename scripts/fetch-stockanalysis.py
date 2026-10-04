@@ -1373,6 +1373,7 @@ ETF_DETAIL_DECODER = "svelte_devalue_node/v1"
 OFFICIAL_HOLDINGS_FALLBACKS = {
     "ABXB": "https://abacusfcf.com/abxb/",
     "ESUM": "https://www.eventideinvestments.com/etfs/esum",
+    "HBIL": "https://www.harborcapital.com/etf/hbil/",
     "IBIM": "https://www.ishares.com/us/products/350034/ishares-ibonds-oct-2036-term-tips-etf/latest-holdings.csv",
 }
 SVELTE_FAILURE_SIGNATURE_SCHEMA_VERSION = "svelte-contract-failure-signature/v1"
@@ -1540,13 +1541,13 @@ def fetch_svelte_detail(
 
 
 def overview_declares_holdings_unavailable(overview: dict) -> bool:
-    if overview.get("holdings") is not None:
+    if overview.get("holdings") not in (None, 0):
         return False
     table = overview.get("holdingsTable")
     return table is None or (
         isinstance(table, dict)
-        and table.get("count") is None
-        and table.get("holdings") is None
+        and table.get("count") in (None, 0)
+        and (table.get("holdings") is None or table.get("holdings") == [])
     )
 
 
@@ -1588,6 +1589,140 @@ def parse_abxb_official_page(body: bytes, source_page: str) -> tuple[str, dateti
     return urljoin(source_page, csv_path), date, tables[0]["rows"]
 
 
+def parse_hbil_official_page(body: bytes, source_page: str) -> tuple[datetime, list[dict], dict]:
+    """Use Harbor's complete dated HTML table, including its signed NAV offset."""
+    html = body.decode("utf-8")
+    if extract_title(html) != "ETFs | Harbor Short Term Treasury ETF (HBIL) | Harbor Capital":
+        raise ValueError("HBIL official holdings fund identity is invalid")
+    if re.findall(r'<link rel="canonical" href="([^"]+)"', html) != [source_page]:
+        raise ValueError("HBIL official holdings canonical page is invalid")
+    for value in ("HBIL", "41151J570", "NYSE Arca"):
+        if len(re.findall(r">\s*" + re.escape(value) + r"\s*<", html)) != 1:
+            raise ValueError("HBIL official holdings fund facts are invalid")
+    regions = re.findall(
+        r'id="panel-FullHoldings-performance-content"(.*?)id="panel-SectorAllocation-performance-title"',
+        html, flags=re.DOTALL,
+    )
+    if len(regions) != 1:
+        raise ValueError("HBIL official full holdings section is missing or ambiguous")
+    region = regions[0]
+    dates = re.findall(
+        r'<h2\b[^>]*>\s*As of\s*(?:<!--.*?-->\s*)?(\d{1,2}/\d{1,2}/\d{4})\s*</h2>',
+        region, flags=re.DOTALL,
+    )
+    if len(dates) != 1 or region.count('aria-label="Data table" role="table"') != 1:
+        raise ValueError("HBIL official full holdings date or table is invalid")
+    try:
+        date = datetime.strptime(dates[0], "%m/%d/%Y").replace(tzinfo=timezone.utc)
+    except ValueError as exc:
+        raise ValueError("HBIL official full holdings date is invalid") from exc
+    age = (datetime.now(timezone.utc).date() - date.date()).days
+    if not 0 <= age <= 7:
+        raise ValueError("HBIL official full holdings date is future or stale")
+
+    class DirectTableCells(HTMLParser):
+        def __init__(self):
+            super().__init__()
+            self.depth = 0
+            self.done = False
+            self.cell = None
+            self.cells = []
+
+        def handle_starttag(self, tag, attrs):
+            if tag != "div" or self.done:
+                return
+            if self.depth:
+                self.depth += 1
+                if self.depth == 2:
+                    self.cell = []
+            elif dict(attrs).get("role") == "table":
+                self.depth = 1
+
+        def handle_endtag(self, tag):
+            if tag != "div" or not self.depth:
+                return
+            if self.depth == 2:
+                self.cells.append(normalize_space("".join(self.cell)))
+                self.cell = None
+            self.depth -= 1
+            if self.depth == 0:
+                self.done = True
+
+        def handle_data(self, data):
+            if self.cell is not None:
+                self.cell.append(data)
+
+    table = DirectTableCells()
+    table.feed(region)
+    header = ["Company Name", "Category Name", "Cusip", "Shares", "Maturity Date",
+              "Coupon Rate (%)", "Market Value ($000's)", "% of Net Assets"]
+    if not table.done or table.cells[:8] != header or (len(table.cells) - 8) % 8:
+        raise ValueError("HBIL official full holdings table schema is invalid")
+    rows = [table.cells[i:i + 8] for i in range(8, len(table.cells), 8)]
+    if len(rows) < 4 or [row[0] for row in rows[-3:]] != [
+        "Total", "Cash and Other Assets Less Liabilities", "Total Net Assets"
+    ]:
+        raise ValueError("HBIL official full holdings accounting rows are incomplete")
+
+    def number(value: str, *, signed: bool = False) -> float:
+        pattern = r"-?\d+(?:\.\d+)?" if signed else r"\d+(?:\.\d+)?"
+        if not re.fullmatch(pattern, value.replace(",", "")):
+            raise ValueError("HBIL official holding has an invalid number")
+        parsed = float(value.replace(",", ""))
+        if not math.isfinite(parsed):
+            raise ValueError("HBIL official holding has a nonfinite number")
+        return parsed
+
+    holdings = []
+    seen_cusips = set()
+    for row in rows[:-3]:
+        name, category, cusip, shares_text, maturity, coupon, market_text, weight_text = row
+        if (name != "TREASURY BILL" or category != "FIXED INCOME"
+                or not re.fullmatch(r"912797[A-Z0-9]{3}", cusip)
+                or cusip in seen_cusips or coupon != "--" and not re.fullmatch(r"\d+(?:\.\d+)?", coupon)):
+            raise ValueError("HBIL official Treasury identity is invalid")
+        seen_cusips.add(cusip)
+        try:
+            maturity_date = datetime.strptime(maturity, "%m/%d/%Y").date()
+        except ValueError as exc:
+            raise ValueError("HBIL official Treasury maturity is invalid") from exc
+        shares, market, weight = number(shares_text), number(market_text), number(weight_text)
+        if maturity_date <= date.date() or shares <= 0 or market < 0 or not 0 <= weight <= 300:
+            raise ValueError("HBIL official Treasury shares, value, or weight is invalid")
+        holdings.append({"s": None, "n": name, "cusip": cusip, "sh": shares,
+                         "as": weight, "raw": dict(zip(header, row))})
+    total, cash, net = rows[-3:]
+    if (total[1:6] != ["--"] * 5 or cash[1:7] != ["--"] * 6
+            or net[1:7] != ["--"] * 6):
+        raise ValueError("HBIL official accounting row fields are invalid")
+    gross_market, gross_weight = number(total[6]), number(total[7])
+    cash_weight, net_weight = number(cash[7], signed=True), number(net[7])
+    weight_tolerance = 0.05 * (len(holdings) + 1) + 0.01
+    market_tolerance = 0.5 * (len(holdings) + 1)
+    if (abs(net_weight - 100.0) > 0.051 or not 0.05 < gross_weight <= 300
+            or gross_market <= 0.5
+            or not -200 <= cash_weight <= 100
+            or abs(sum(row["as"] for row in holdings) - gross_weight) > weight_tolerance
+            or abs(sum(number(row["raw"][header[6]]) for row in holdings) - gross_market) > market_tolerance
+            or abs(gross_weight + cash_weight - net_weight) > 0.11):
+        raise ValueError("HBIL official holdings do not reconcile to net assets")
+    # The source rounds market values to $000 and weights to one decimal place.
+    # Each row must admit the same fraction of the displayed gross holdings.
+    for row in holdings:
+        market = number(row["raw"][header[6]])
+        weight = row["as"]
+        market_low = max(0.0, market - 0.5) / (gross_market + 0.5)
+        market_high = (market + 0.5) / (gross_market - 0.5)
+        weight_low = max(0.0, weight - 0.05) / (gross_weight + 0.05)
+        weight_high = (weight + 0.05) / (gross_weight - 0.05)
+        if max(market_low, weight_low) > min(market_high, weight_high) + 1e-12:
+            raise ValueError("HBIL official Treasury value and weight disagree")
+    holdings.append({"s": None, "n": cash[0], "as": cash_weight,
+                     "raw": dict(zip(header, cash))})
+    return date, holdings, {"gross_weight_pct": gross_weight,
+                            "cash_weight_pct": cash_weight, "net_assets_weight_pct": net_weight}
+
+
 def fetch_official_etf_holdings(ticker: str, timeout: int) -> tuple[str, dict, dict]:
     """Fill verified StockAnalysis holdings gaps from issuer holdings tables and CSVs."""
     if ticker not in OFFICIAL_HOLDINGS_FALLBACKS:
@@ -1600,8 +1735,8 @@ def fetch_official_etf_holdings(ticker: str, timeout: int) -> tuple[str, dict, d
             parsed = urlparse(final_url)
             if parsed.scheme != "https" or parsed.hostname != hostname:
                 raise ValueError("official holdings redirected outside the issuer domain")
-            if ticker == "ABXB" and final_url != url:
-                raise ValueError("ABXB official holdings redirect is not verified")
+            if ticker in {"ABXB", "HBIL"} and final_url != url:
+                raise ValueError(f"{ticker} official holdings redirect is not verified")
             if response.status != 200:
                 raise ValueError("official holdings response is not HTTP 200")
             body = response.read(2_000_001)
@@ -1610,6 +1745,15 @@ def fetch_official_etf_holdings(ticker: str, timeout: int) -> tuple[str, dict, d
         return body
 
     source_page = OFFICIAL_HOLDINGS_FALLBACKS[ticker]
+    if ticker == "HBIL":
+        page_body = official_bytes(source_page, "www.harborcapital.com")
+        date, holdings, accounting = parse_hbil_official_page(page_body, source_page)
+        data = {"holdings": holdings, "count": len(holdings), "date": date.date().isoformat()}
+        provenance = {"provider": "harborcapital", "landing_page": source_page,
+                      "page_sha256": hashlib.sha256(page_body).hexdigest(),
+                      "source_as_of": data["date"], "weight_sum_pct": accounting["net_assets_weight_pct"],
+                      "accounting": accounting, "country_coverage": "issuer_not_provided"}
+        return source_page, data, provenance
     page_hash = None
     page_rows = None
     page_date = None
@@ -2148,7 +2292,7 @@ def normalize_holdings(rows):
             "rank": parse_int(row.get("no") or row.get("rank")),
             "symbol": symbol,
             "name": name,
-            "weight_pct": parse_percent(row.get("as") or row.get("weight")),
+            "weight_pct": parse_percent(row.get("as") if row.get("as") is not None else row.get("weight")),
             "shares": parse_int(row.get("sh") or row.get("shares")),
             "raw": row,
         }
@@ -3081,7 +3225,8 @@ def fetch_etf(
     if official_holdings_provenance:
         payload["holdings_source"] = official_holdings_provenance
         payload["endpoint_contracts"]["holdings"] = {
-            "format": "issuer_csv", "contract": "verified_official_etf_holdings/v1",
+            "format": "issuer_html" if ticker == "HBIL" else "issuer_csv",
+            "contract": "verified_official_etf_holdings/v1",
             "provider": official_holdings_provenance["provider"],
         }
     partial_reason_codes = [
@@ -4480,6 +4625,15 @@ def etf_detail_backfill_reason(
         return "fallback_retry", age_hours
     if required_history_periods and missing_history_periods(payload, required_history_periods):
         return "history_gap", age_hours
+    # A lightweight missing-detail reconciliation is not a completed refresh.
+    # Revisit its deliberately deferred quote/history through the existing full
+    # collector even while fetched_at is recent; ordinary provider omissions
+    # (for example countries) alone do not create another retry loop.
+    if detail_status == "stockanalysis_partial" and any(
+        reason in {"quote_deferred_initial_reconcile", "history_deferred_initial_reconcile"}
+        for reason in payload.get("partial_reason_codes", [])
+    ):
+        return "deferred_detail", age_hours
     if max_age_hours > 0 and (age_hours is None or age_hours >= max_age_hours):
         return "stale", age_hours
     return None, age_hours
@@ -5369,7 +5523,7 @@ def incremental_etf_backfill_candidates(
     terminal_limited_rows = []
     seen = set()
     source_priority = {"new_etfs": 0, "etf_universe": 1, "etf_screener": 2}
-    reason_priority = {"missing": 0, "invalid": 0, "fallback_retry": 1, "history_gap": 2, "stale": 3}
+    reason_priority = {"missing": 0, "invalid": 0, "fallback_retry": 1, "deferred_detail": 2, "history_gap": 2, "stale": 3}
     latest_primary_observations = latest_stockanalysis_etf_detail_observations()
 
     for source_name, symbols in sources:
@@ -5464,7 +5618,7 @@ def incremental_etf_backfill_candidates(
                 if history_gaps_only
                 else "scheduled natural non-history 40-name quota across new listings, owner/default leveraged focus, market-liquid or holdings-stale ETFs outside core, and a deterministic rotating tail"
                 if priority_selector is not None
-                else "never-fetched or latest-observation-invalid ETF details first, lower prior failures before retries, then Yahoo fallback retries, then multi-year history gaps, then stale records; new_etfs are prioritized within each reason/failure bucket, then etf_universe, then etf_screener-only rows"
+                else "never-fetched or latest-observation-invalid ETF details first, lower prior failures before retries, then Yahoo fallback retries, then deferred quote/history and multi-year history gaps, then stale records; new_etfs are prioritized within each reason/failure bucket, then etf_universe, then etf_screener-only rows"
             ),
         },
         "counts": {
@@ -5473,6 +5627,7 @@ def incremental_etf_backfill_candidates(
             "missing": sum(1 for row in candidates if row["reason"] == "missing"),
             "invalid": sum(1 for row in candidates if row["reason"] == "invalid"),
             "fallback_retry": sum(1 for row in candidates if row["reason"] == "fallback_retry"),
+            "deferred_detail": sum(1 for row in candidates if row["reason"] == "deferred_detail"),
             "history_gap": sum(1 for row in candidates if row["reason"] == "history_gap"),
             "inception_limited_history_gap": len(inception_limited_rows),
             "terminal_limited_history_gap": len(terminal_limited_rows),

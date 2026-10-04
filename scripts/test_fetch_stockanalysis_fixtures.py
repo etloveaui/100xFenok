@@ -65,6 +65,103 @@ class StockanalysisFetcherFixtureTest(unittest.TestCase):
     def setUpClass(cls) -> None:
         cls.fetcher = load_fetcher_module()
 
+    def test_hbil_official_html_reconciles_signed_net_assets_and_rejects_bad_rows(self) -> None:
+        page_url = "https://www.harborcapital.com/etf/hbil/"
+        header = ["Company Name", "Category Name", "Cusip", "Shares", "Maturity Date",
+                  "Coupon Rate (%)", "Market Value ($000's)", "% of Net Assets"]
+        rows = [
+            ["TREASURY BILL", "FIXED INCOME", "912797SU2", "5,540,500", "11/27/2026", "--", "5,506", "100.1"],
+            ["TREASURY BILL", "FIXED INCOME", "912797VJ3", "5,540,300", "12/31/2026", "0.0", "5,485", "99.7"],
+            ["Total", "--", "--", "--", "--", "--", "10,992", "199.8"],
+            ["Cash and Other Assets Less Liabilities", "--", "--", "--", "--", "--", "--", "-99.8"],
+            ["Total Net Assets", "--", "--", "--", "--", "--", "--", "100.0"],
+        ]
+
+        def page(date="10/01/2026", *, rows_input=rows, title="ETFs | Harbor Short Term Treasury ETF (HBIL) | Harbor Capital"):
+            header_html = "".join(
+                f'<div role="row"><div role="columnheader"><span>{html.escape(value)}</span></div></div>'
+                for value in header
+            )
+            body_html = "".join(
+                "".join(f"<div><span>{html.escape(value)}</span></div>" for value in row)
+                for row in rows_input
+            )
+            return (f'<title>{title}</title><link rel="canonical" href="{page_url}" />'
+                    '<p>HBIL</p><p>41151J570</p><p>NYSE Arca</p>'
+                    '<div id="panel-FullHoldings-performance-content" role="region">'
+                    f'<h2>As of <!-- -->{date}</h2>'
+                    '<div aria-label="Data table" role="table">'
+                    f'{header_html}{body_html}</div></div>'
+                    '<h3 id="panel-SectorAllocation-performance-title">Sector Allocation</h3>')
+
+        class FixedDateTime(datetime):
+            @classmethod
+            def now(cls, tz=None):
+                return datetime(2026, 10, 4, tzinfo=tz or timezone.utc)
+
+        def fetch(page_text, *, redirect=None):
+            class Response(io.BytesIO):
+                status = 200
+
+                def geturl(self):
+                    return redirect or page_url
+
+            with patch.object(self.fetcher, "datetime", FixedDateTime), \
+                    patch.object(self.fetcher.urllib.request, "urlopen",
+                                 side_effect=lambda request, timeout: Response(page_text.encode())):
+                return self.fetcher.fetch_official_etf_holdings("HBIL", 1)
+
+        page_text = page()
+        url, data, provenance = fetch(page_text)
+        self.assertEqual(url, page_url)
+        self.assertEqual((data["date"], data["count"]), ("2026-10-01", 3))
+        self.assertEqual([row["cusip"] for row in data["holdings"][:-1]], ["912797SU2", "912797VJ3"])
+        self.assertEqual([row["as"] for row in data["holdings"]], [100.1, 99.7, -99.8])
+        self.assertTrue(all(row["s"] is None for row in data["holdings"]))
+        self.assertAlmostEqual(sum(row["as"] for row in data["holdings"]), 100.0)
+        self.assertEqual([row["weight_pct"] for row in self.fetcher.normalize_holdings(data["holdings"])],
+                         [100.1, 99.7, -99.8])
+        self.assertEqual(provenance["accounting"], {
+            "gross_weight_pct": 199.8, "cash_weight_pct": -99.8, "net_assets_weight_pct": 100.0,
+        })
+        self.assertEqual(provenance["page_sha256"], hashlib.sha256(page_text.encode()).hexdigest())
+        self.assertNotIn("csv_url", provenance)
+
+        zero_cash = [rows[0][:-1] + ["50.1"], rows[1][:-1] + ["49.9"],
+                     rows[2][:-1] + ["100.0"], rows[3][:-1] + ["0.0"], rows[4]]
+        _, zero_data, _ = fetch(page(rows_input=zero_cash))
+        self.assertEqual(self.fetcher.normalize_holdings(zero_data["holdings"])[-1]["weight_pct"], 0.0)
+        tiny = rows[0][:2] + ["912797ZZ1", "1000", *rows[0][4:6], "1", "0.0"]
+        tiny_rows = [*rows[:2], tiny, rows[2][:6] + ["10,993", "199.8"], *rows[3:]]
+        _, tiny_data, _ = fetch(page(rows_input=tiny_rows))
+        self.assertEqual(self.fetcher.normalize_holdings(tiny_data["holdings"])[2]["weight_pct"], 0.0)
+        rounded_zero = tiny[:3] + ["100", *tiny[4:6], "0", "0.0"]
+        _, rounded_data, _ = fetch(page(rows_input=[*rows[:2], rounded_zero, *rows[2:]]))
+        self.assertEqual(self.fetcher.normalize_holdings(rounded_data["holdings"])[2]["weight_pct"], 0.0)
+
+        cases = {
+            "wrong fund": page(title="Other ETF"),
+            "wrong CUSIP": page_text.replace("<p>41151J570</p>", "<p>000000000</p>"),
+            "future date": page(date="10/05/2026"),
+            "stale date": page(date="09/26/2026"),
+            "missing Treasury": page(rows_input=rows[1:]),
+            "negative Treasury weight": page(rows_input=[rows[0][:-1] + ["-100.1"], *rows[1:]]),
+            "duplicate Treasury": page(rows_input=[rows[0], rows[1][:2] + [rows[0][2]] + rows[1][3:], *rows[2:]]),
+            "positive liability offset": page(rows_input=[*rows[:3], rows[3][:-1] + ["99.8"], rows[4]]),
+            "malformed liability weight": page(rows_input=[*rows[:3], rows[3][:-1] + ["nan"], rows[4]]),
+            "wrong net assets": page(rows_input=[*rows[:4], rows[4][:-1] + ["120.0"]]),
+            "offset and net agree but net is not 100": page(rows_input=[*rows[:3], rows[3][:-1] + ["-95.8"], rows[4][:-1] + ["104.0"]]),
+            "row weights disagree with values": page(rows_input=[rows[0][:-1] + ["199.7"], rows[1][:-1] + ["0.1"], *rows[2:]]),
+            "nonfinite shares": page(rows_input=[rows[0][:3] + ["9" * 400] + rows[0][4:], *rows[1:]]),
+            "nonfinite market and total": page(rows_input=[rows[0][:6] + ["9" * 400, rows[0][7]], rows[1], rows[2][:6] + ["9" * 400, rows[2][7]], *rows[3:]]),
+            "missing accounting row": page(rows_input=rows[:-1]),
+        }
+        for label, page_input in cases.items():
+            with self.subTest(label=label), self.assertRaises(ValueError):
+                fetch(page_input)
+        with self.assertRaisesRegex(ValueError, "redirect"):
+            fetch(page_text, redirect="https://www.harborcapital.com/etf/other/")
+
     def test_abxb_official_holdings_require_complete_dated_page_csv_parity(self) -> None:
         csv_text = (
             "Ticker,CUSIP,Security Description,Shares,Market Value,% of Net Assets\n"
@@ -1043,6 +1140,15 @@ module.main()
             self.fetcher.fetch_json = original_fetch_json
         self.assertEqual(path, "/etf/new/holdings/__data.json")
         self.assertEqual(decoded, {})
+        self.assertTrue(self.fetcher.overview_declares_holdings_unavailable({
+            "holdings": 0, "holdingsTable": {"count": 0, "holdings": [], "updated": "Oct 31, 2025"},
+        }))
+        self.assertFalse(self.fetcher.overview_declares_holdings_unavailable({
+            "holdings": 4, "holdingsTable": None,
+        }))
+        self.assertFalse(self.fetcher.overview_declares_holdings_unavailable({
+            "holdings": 0, "holdingsTable": {"count": 0, "holdings": [{"s": "AAA"}]},
+        }))
 
     def test_sparse_holdings_contract_accepts_provider_partial_metadata(self) -> None:
         sparse = json.loads((FIXTURE_DIR / "etf_holdings__data.fixture.json").read_text())
@@ -3263,8 +3369,22 @@ module.main()
                 encoding="utf-8",
             )
 
+            # Initial missing-detail reconciliation deliberately defers these
+            # surfaces. A recent collection must not hide their unfinished work.
+            for ticker, reasons in (
+                ("DFQ", ["quote_deferred_initial_reconcile"]),
+                ("DFH", ["history_deferred_initial_reconcile"]),
+                ("CNT", ["holdings_countries_unavailable"]),
+            ):
+                (out_dir / "etfs" / f"{ticker}.json").write_text(json.dumps({
+                    "source": "stockanalysis", "asset_type": "etf",
+                    "detail_status": "stockanalysis_partial",
+                    "fetched_at": datetime.now(timezone.utc).isoformat(),
+                    "partial_reason_codes": reasons,
+                }), encoding="utf-8")
+
             summary = self.fetcher.incremental_etf_backfill_candidates(
-                universe_payload={"records": [{"ticker": "OLD"}]},
+                universe_payload={"records": [{"ticker": ticker} for ticker in ("OLD", "DFQ", "DFH", "CNT")]},
                 limit=10,
                 max_age_hours=1,
                 exclude=set(),
@@ -3275,7 +3395,11 @@ module.main()
         self.assertEqual(selected["ADIU"], "missing")
         self.assertEqual(selected["FNG"], "fallback_retry")
         self.assertEqual(selected["OLD"], "stale")
-        self.assertEqual(summary["counts"]["selected"], 3)
+        self.assertEqual(selected["DFQ"], "deferred_detail")
+        self.assertEqual(selected["DFH"], "deferred_detail")
+        self.assertNotIn("CNT", selected)
+        self.assertEqual(summary["counts"]["deferred_detail"], 2)
+        self.assertEqual(summary["counts"]["selected"], 5)
 
     def test_natural_general_incremental_priority_rotates_tail_and_records_evidence(self) -> None:
         """The scheduled 40-name general budget serves each freshness sibling.
