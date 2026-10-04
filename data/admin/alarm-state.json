@@ -1,9 +1,21 @@
 {
   "schema_version": "alarm-state/v1",
-  "generated_at": "2026-10-04T17:40:42.650Z",
+  "generated_at": "2026-10-04T20:48:32.457Z",
   "status": "open",
-  "open_incident_count": 3,
+  "open_incident_count": 4,
   "open_incidents": [
+    {
+      "workflow": "global-writer-queue-observer.yml",
+      "label": "Global Writer Queue Observability",
+      "streak": 0,
+      "failure_streak_threshold": 2,
+      "first_failing_run_id": null,
+      "first_failing_run_url": null,
+      "alarm_reasons": [
+        "missed_schedule_window"
+      ],
+      "lost_schedule_slot_count": 0
+    },
     {
       "workflow": "retention-restore.yml",
       "label": "R2 Retention Restore Watchdog",
@@ -37,8 +49,8 @@
       "stopped_sets": [
         "gdelt_news_tone"
       ],
-      "latest_generated_at": "2026-10-04T17:34:20.469Z",
-      "previous_generated_at": "2026-10-04T17:04:51.928Z"
+      "latest_generated_at": "2026-10-04T20:22:06.849Z",
+      "previous_generated_at": "2026-10-04T20:12:04.839Z"
     }
   ],
   "watched_workflows": [
@@ -327,9 +339,9 @@
       "file": "slickcharts-symbols.yml",
       "label": "SlickCharts Symbols",
       "events": [
-        "schedule"
+        "workflow_run"
       ],
-      "event": "schedule",
+      "event": "workflow_run",
       "failure_streak_threshold": 1
     },
     {
@@ -381,11 +393,12 @@
   "queue_evicted_run_count": 0,
   "queue_evicted_workflows": [],
   "last_firing": {
-    "run_id": "37221217764",
-    "run_url": "https://github.com/etloveaui/100xFenok/actions/runs/37221217764",
-    "observed_at": "2026-10-04T17:40:42.650Z",
-    "event": "schedule",
+    "run_id": "37233295440",
+    "run_url": "https://github.com/etloveaui/100xFenok/actions/runs/37233295440",
+    "observed_at": "2026-10-04T20:48:32.457Z",
+    "event": "workflow_run",
     "workflows": [
+      "global-writer-queue-observer.yml",
       "retention-restore.yml",
       "worker-request-budget-alarm.yml",
       "data-health-kpi"
