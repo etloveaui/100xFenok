@@ -2,7 +2,7 @@
 # Scrapers for slow-changing data that doesn't need daily updates
 #
 # Scrapers: magnificent7, etf, berkshire, sp500 (4 total)
-# Note: symbol-scraper has its own workflow (slickcharts-symbols.yml) with matrix builds
+# A successful scheduled/all run triggers the Symbols matrix via workflow_run.
 #
 # Schedule: Sunday at 7:00 AM UTC
 #
@@ -10,6 +10,7 @@
 # Reference: docs/planning/slickcharts-data-pipeline.md
 
 name: SlickCharts Weekly
+run-name: SlickCharts Weekly (${{ github.event.inputs.scraper || 'all' }})
 
 on:
   schedule:

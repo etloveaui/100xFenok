@@ -24,7 +24,22 @@ for (const member of ["weekly", "symbols"]) {
   assert.match(workflow, /CLOUD_ACCEPTANCE_MIN_OBSERVED_AT/);
 }
 
+const weekly = fs.readFileSync(path.join(root, ".github/workflows/slickcharts-weekly.yml"), "utf8");
 const symbols = fs.readFileSync(path.join(root, ".github/workflows/slickcharts-symbols.yml"), "utf8");
+assert.match(weekly, /^run-name: SlickCharts Weekly \(\$\{\{ github\.event\.inputs\.scraper \|\| 'all' \}\}\)$/m);
+assert.doesNotMatch(weekly, /gh workflow run slickcharts-symbols\.yml/);
+assert.match(symbols, /workflow_run:\s*\n\s+workflows: \[SlickCharts Weekly\]\s*\n\s+types: \[completed\]\s*\n\s+branches: \[main\]/);
+assert.match(symbols, /github\.event\.workflow_run\.conclusion == 'success'/);
+assert.match(symbols, /github\.event\.workflow_run\.head_branch == 'main'/);
+assert.match(symbols, /github\.event\.workflow_run\.event == 'schedule'/);
+assert.match(symbols, /github\.event\.workflow_run\.event == 'workflow_dispatch'/);
+assert.match(symbols, /display_title == 'SlickCharts Weekly \(all\)'/);
+assert.match(symbols, /needs\.scrape-batch\.result != 'skipped'/);
+assert.match(symbols, /--full-run "\$\{\{ \(github\.event_name == 'workflow_run' \|\| github\.event\.inputs\.batch == 'ALL'\)/);
+assert.doesNotMatch(symbols, /^  schedule:/m, "symbols has no independent timed run");
+assert.match(symbols, /workflow_dispatch:/);
+assert.match(symbols, /- ALL/);
+assert.match(symbols, /- single/);
 assert.match(symbols, /Remove consumed symbol attempt artifacts/);
 assert.doesNotMatch(symbols, /artifacts\/attempt-symbols-\*/);
 

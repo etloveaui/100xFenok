@@ -9,14 +9,15 @@
 #
 # Created: 2026-01-10
 # Reference: docs/planning/slickcharts-data-pipeline.md
-# DEC-102: Changed from 7:00 to 7:30 UTC to prevent Git Lock with weekly workflow
+# The Weekly completion trigger waits for its published S&P 500 membership.
 
 name: SlickCharts Symbols
 
 on:
-  schedule:
-    # Weekly on Sunday at 7:30 AM UTC (30min after weekly to avoid conflict)
-    - cron: '30 7 * * 0'
+  workflow_run:
+    workflows: [SlickCharts Weekly]
+    types: [completed]
+    branches: [main]
   workflow_dispatch:
     inputs:
       batch:
@@ -48,7 +49,7 @@ permissions:
 jobs:
   # Matrix build for parallel batch execution
   scrape-batch:
-    if: ${{ github.event.inputs.batch != 'single' || github.event_name == 'schedule' }}
+    if: ${{ (github.event_name == 'workflow_dispatch' && github.event.inputs.batch != 'single') || (github.event_name == 'workflow_run' && github.event.workflow_run.conclusion == 'success' && github.event.workflow_run.head_branch == 'main' && (github.event.workflow_run.event == 'schedule' || (github.event.workflow_run.event == 'workflow_dispatch' && github.event.workflow_run.display_title == 'SlickCharts Weekly (all)'))) }}
     runs-on: ubuntu-latest
     timeout-minutes: 120
     strategy:
@@ -83,7 +84,7 @@ jobs:
           pip install requests beautifulsoup4
 
       - name: Run Symbol scraper (batch ${{ matrix.batch }})
-        if: ${{ github.event.inputs.batch == 'ALL' || github.event.inputs.batch == matrix.batch || github.event_name == 'schedule' }}
+        if: ${{ github.event_name == 'workflow_run' || github.event.inputs.batch == 'ALL' || github.event.inputs.batch == matrix.batch }}
         run: |
           python scripts/scrapers/symbol-scraper.py \
             --batch ${{ matrix.batch }} \
@@ -111,7 +112,7 @@ jobs:
     needs: scrape-batch
     runs-on: ubuntu-latest
     timeout-minutes: 120
-    if: ${{ always() && (github.event.inputs.batch == 'ALL' || github.event_name == 'schedule') }}
+    if: ${{ always() && needs.scrape-batch.result != 'skipped' && (github.event_name == 'workflow_run' || github.event.inputs.batch == 'ALL') }}
     concurrency:
       group: fenok-data-writer-refs/heads/main
       cancel-in-progress: false
@@ -217,7 +218,7 @@ jobs:
             --row "$RUNNER_TEMP/slickcharts-symbols-row.json" \
             --receipts artifacts \
             --status "$SLICKCHARTS_COMPOSITE_STATUS_PATH" \
-            --full-run "${{ (github.event_name == 'schedule' || github.event.inputs.batch == 'ALL') && 'true' || 'false' }}"
+            --full-run "${{ (github.event_name == 'workflow_run' || github.event.inputs.batch == 'ALL') && 'true' || 'false' }}"
 
       - name: Commit and push changes
         if: ${{ always() }}
@@ -274,7 +275,7 @@ jobs:
 
   # Single symbol scraping for testing
   scrape-single:
-    if: ${{ github.event.inputs.batch == 'single' && github.event.inputs.symbol != '' }}
+    if: ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.batch == 'single' && github.event.inputs.symbol != '' }}
     runs-on: ubuntu-latest
     timeout-minutes: 120
     concurrency:

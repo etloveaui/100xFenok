@@ -525,6 +525,14 @@ function runConfigAndFixtureChecks() {
   assert.equal(Object.hasOwn(stockFinancialLane.producer_members[0], "activated_at"), false);
   const slickcharts = DATA_SUPPLY_DETECTION_CONFIG.lanes.find((item) => item.id === "slickcharts");
   assert.deepEqual(slickcharts.producer_members.map((item) => item.id), ["daily", "weekly", "monthly", "history", "symbols"]);
+  const slickSymbols = slickcharts.producer_members.find((item) => item.id === "symbols");
+  assert.equal(slickSymbols.workflow, ".github/workflows/slickcharts-symbols.yml");
+  assert.deepEqual(slickSymbols.schedule, []);
+  assert.equal(slickSymbols.cadence_calendar, null);
+  assert.deepEqual(slickSymbols.cadence_declaration, {
+    kind: "upstream_workflow",
+    evidence: ".github/workflows/slickcharts-weekly.yml",
+  });
   assert.deepEqual(
     slickcharts.producer_members.find((item) => item.id === "daily").artifact_contracts.map((item) => item.id),
     ["slickcharts_daily", "slickcharts_daily_treasury"],
@@ -740,6 +748,14 @@ function runConfigAndFixtureChecks() {
         assert.equal(memberConfig.cadence_calendar, null, `${laneConfig.id}:${memberConfig.id} ownerless cadence`);
         continue;
       }
+      if (memberConfig.cadence_declaration.kind === "upstream_workflow") {
+        assert.equal(laneConfig.monitoring_mode, "composite");
+        assert.ok(laneConfig.producer_members.some((candidate) => candidate.workflow === memberConfig.cadence_declaration.evidence
+          && candidate.cadence_declaration.kind === "github_workflow" && candidate.schedule.length > 0));
+        assert.deepEqual(memberConfig.schedule, [], `${laneConfig.id}:${memberConfig.id} upstream cadence has no own slot`);
+        assert.equal(memberConfig.cadence_calendar, null, `${laneConfig.id}:${memberConfig.id} upstream cadence has no own calendar`);
+        continue;
+      }
       if (memberConfig.cadence_declaration.kind !== "github_workflow") {
         assert.equal(memberConfig.workflow, null, `${laneConfig.id}:${memberConfig.id} external cadence has no workflow`);
         assert.deepEqual(memberConfig.schedule, [], `${laneConfig.id}:${memberConfig.id} external cadence has no fabricated slot`);
@@ -813,6 +829,10 @@ function runConfigAndFixtureChecks() {
     (value) => { delete value.lanes[0].producer_members[0].cadence_calendar; },
     (value) => { value.lanes[0].producer_members[0].cadence_calendar = "unknown"; },
     (value) => { value.lanes[0].producer_members[0].cadence_declaration = null; },
+    (value) => { const member = value.lanes.find((item) => item.id === "slickcharts").producer_members.find((item) => item.id === "symbols"); member.cadence_declaration.evidence = member.workflow; },
+    (value) => { const member = value.lanes.find((item) => item.id === "slickcharts").producer_members.find((item) => item.id === "symbols"); member.cadence_declaration.evidence = ".github/workflows/slickcharts-monthly-missing.yml"; },
+    (value) => { const lane = value.lanes.find((item) => item.id === "slickcharts"); const monthly = lane.producer_members.find((item) => item.id === "monthly"); monthly.schedule = []; monthly.cadence_calendar = null; monthly.cadence_declaration = { kind: "upstream_workflow", evidence: ".github/workflows/slickcharts-weekly.yml" }; lane.producer_members.find((item) => item.id === "symbols").cadence_declaration.evidence = monthly.workflow; },
+    (value) => { const member = value.lanes.find((item) => item.id === "slickcharts").producer_members.find((item) => item.id === "symbols"); member.schedule = ["30 7 * * 0"]; member.cadence_calendar = "utc"; },
     (value) => { value.lanes[0].producer_members[0].cadence_declaration = { kind: "payload_field", evidence: "not-a-pointer" }; value.lanes[0].producer_members[0].workflow = null; value.lanes[0].owner_workflow = null; },
     (value) => { value.lanes[0].producer_members[0].cadence_declaration = { kind: "owner_contract", evidence: "?" }; value.lanes[0].producer_members[0].workflow = null; value.lanes[0].owner_workflow = null; },
     (value) => { const member = value.lanes.find((item) => item.id === "benchmarks").producer_members[0]; member.cadence_declaration.evidence = "/metadata/missing_frequency"; },
@@ -938,6 +958,7 @@ function runConfigAndFixtureChecks() {
   assert.deepEqual(canonicalCalendars, calendarsFixture, "promoted calendar SSOT matches the proven fixture byte-for-data");
   assert.equal(validateCalendars(canonicalCalendars), undefined);
   assert.equal(validateConfigCalendarBindings(DATA_SUPPLY_DETECTION_CONFIG, canonicalCalendars), true);
+  assert.equal(canonicalCalendars.schedules.some((row) => row.id === "weekly_0730_sun_utc"), false);
   {
     const fdicMonday = canonicalCalendars.schedules.find((row) => row.id === "weekly_0600_mon_utc");
     const fdicThursday = canonicalCalendars.schedules.find((row) => row.id === "weekly_0600_thu_utc");

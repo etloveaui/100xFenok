@@ -266,6 +266,21 @@ function writeWorkflow(root, file, source) {
     /inclusion must reference an existing workflow/,
   );
 
+  for (const invalid of [0, 1.5, 3, "1"]) {
+    assert.throws(() => deriveWorkflowWatchPolicy({
+      workflowsDir,
+      scheduledExclusions: { "self-alarm.yaml": "self-monitoring loop" },
+      nonScheduledInclusions: {
+        "critical-gate.yml": { reason: "critical push gate", events: ["push"], failure_streak_threshold: invalid },
+      },
+    }), /failure_streak_threshold must be 1 or 2/);
+  }
+  assert.throws(() => deriveWorkflowWatchPolicy({
+    workflowsDir,
+    scheduledExclusions: { "self-alarm.yaml": "self-monitoring loop" },
+    nonScheduledInclusions: { "critical-gate.yml": { reason: "critical push gate", events: ["workflow_run"] } },
+  }), /inclusion event must be a declared workflow trigger/);
+
   writeWorkflow(workflowsDir, "aliased-on.yml", "name: Aliased On\non: *shared_triggers\n");
   assert.throws(
     () => deriveWorkflowWatchPolicy({
@@ -347,6 +362,20 @@ function writeWorkflow(root, file, source) {
     1,
     "the weekly workflow must retain its run-history paging threshold",
   );
+  const symbolsWatch = policy.watched.find((row) => row.file === "slickcharts-symbols.yml");
+  assert.deepEqual(symbolsWatch?.events, ["workflow_run"]);
+  assert.deepEqual(symbolsWatch?.crons, []);
+  assert.equal(symbolsWatch?.failure_streak_threshold, 1,
+    "one failed automatic symbols run must still page at weekly cadence");
+  const symbolsResult = evaluateWorkflow(symbolsWatch, [
+    { ...F(303), event: "workflow_dispatch" },
+    { ...F(302), event: "workflow_run" },
+    { ...S(301), event: "workflow_run" },
+  ]);
+  assert.equal(symbolsResult.status, "alarm");
+  assert.equal(symbolsResult.streak, 1);
+  assert.equal(symbolsResult.latestRunUrl, "https://gh/run/302",
+    "manual failures cannot displace the newest automatic symbols run");
 }
 
 // GitHub accepts one event filter per workflow-runs request. Event-scoped
@@ -792,12 +821,14 @@ const ranJobs = jobsOf({ name: "fetch", conclusion: "failure", steps: [{ name: "
   assert.match(workflow, /workflow_dispatch:/);
   assert.match(
     workflow,
-    /workflow_run:\s*\n\s+workflows:\s*\['Update Manifest', 'Deploy Worker \(Cloudflare\)', 'Fenok Edge Daily Data'\]\s*\n\s+types:\s*\[completed\]/,
-    "completed runs from the three fast-path publisher workflows trigger the alarm immediately",
+    /workflow_run:\s*\n\s+workflows:\s*\['Update Manifest', 'Deploy Worker \(Cloudflare\)', 'Fenok Edge Daily Data', 'SlickCharts Symbols'\]\s*\n\s+types:\s*\[completed\]/,
+    "completed runs from the four fast-path workflows trigger the alarm immediately",
   );
   assert.match(updateManifestWorkflow, /^name: Update Manifest$/m, "workflow_run display name stays exact");
   assert.match(deployWorkerWorkflow, /^name: Deploy Worker \(Cloudflare\)$/m, "workflow_run display name stays exact");
   assert.match(edgeDailyWorkflow, /^name: Fenok Edge Daily Data$/m, "workflow_run display name stays exact");
+  const symbolsWorkflow = fs.readFileSync(path.join(repoRoot, ".github", "workflows", "slickcharts-symbols.yml"), "utf8");
+  assert.match(symbolsWorkflow, /^name: SlickCharts Symbols$/m, "alarm wake-up workflow name stays exact");
   assert.match(workflow, /issues: write/);
   assert.match(workflow, /actions: read/);
   assert.match(workflow, /group: pipeline-failure-alarm/, "alarm runs share one serialized concurrency group");

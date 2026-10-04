@@ -129,7 +129,7 @@ const VISIBILITIES = new Set(["public_safe_aggregate", "admin_only"]);
 const CALENDAR_IDS = new Set(["utc", "us_federal_business", "us_trading", "kr_trading"]);
 const SOURCE_FORMATS = new Set(["date", "rfc3339", "yyyymmdd", "unix_seconds"]);
 const SOURCE_SELECTOR_KINDS = new Set(["pointer", "max_array_field", "max_object_series_field", "max_object_field", "max_quarter", "not_applicable"]);
-const CADENCE_DECLARATION_KINDS = new Set(["github_workflow", "owner_contract", "payload_field"]);
+const CADENCE_DECLARATION_KINDS = new Set(["github_workflow", "upstream_workflow", "owner_contract", "payload_field"]);
 const OWNER_CONTRACT_RE = /^[a-z][a-z0-9._:/-]{2,127}$/;
 
 function isStrictUtcTimestamp(value) {
@@ -960,12 +960,12 @@ const config = {
             assertions: [exactAssertion("source_slickcharts", "/source", "slickcharts"), typeAssertion("count_number", "/count", "number"), typeAssertion("stocks_array", "/stocks", "array"), minRowsAssertion("stocks_non_empty", "/stocks")],
           }),
         ]),
-        member("symbols", ".github/workflows/slickcharts-symbols.yml", ["30 7 * * 0"], [
+        member("symbols", ".github/workflows/slickcharts-symbols.yml", [], [
           artifact("slickcharts_symbols", "data/slickcharts/symbols.json", {
             sourceSelector: maxArrayFieldSource("/history", "date", "date"),
             assertions: [exactAssertion("source_slickcharts", "/source", "slickcharts"), typeAssertion("history_array", "/history", "array"), minRowsAssertion("history_non_empty", "/history")],
           }),
-        ]),
+        ], null, { kind: "upstream_workflow", evidence: ".github/workflows/slickcharts-weekly.yml" }),
       ],
       endpointContract: {
         // Per-shape page-assertion acceptance: table pages carry exactly
@@ -1514,13 +1514,16 @@ function validateMember(memberValue, context) {
     if (kind === "github_workflow" && (!WORKFLOW_RE.test(evidence) || evidence !== memberValue.workflow)) {
       fail(`${context}.cadence_declaration does not match its GitHub workflow`);
     }
+    if (kind === "upstream_workflow" && (!WORKFLOW_RE.test(evidence) || evidence === memberValue.workflow)) {
+      fail(`${context}.upstream_workflow must name another valid GitHub workflow`);
+    }
     if (kind === "owner_contract" && !OWNER_CONTRACT_RE.test(evidence)) {
       fail(`${context}.cadence_declaration owner contract is invalid`);
     }
     if (kind === "payload_field" && (evidence === "" || !POINTER_RE.test(evidence))) {
       fail(`${context}.cadence_declaration payload pointer is invalid`);
     }
-    if (kind !== "github_workflow" && memberValue.workflow !== null) {
+    if (kind !== "github_workflow" && kind !== "upstream_workflow" && memberValue.workflow !== null) {
       fail(`${context}.external cadence declaration contradicts GitHub workflow ownership`);
     }
   }
@@ -1537,13 +1540,14 @@ function validateMember(memberValue, context) {
   });
   const cadenceKind = memberValue.cadence_declaration?.kind ?? null;
   const githubCadence = cadenceKind === "github_workflow";
+  const upstreamCadence = cadenceKind === "upstream_workflow";
   const externalCadence = cadenceKind === "owner_contract" || cadenceKind === "payload_field";
   if (githubCadence !== (memberValue.schedule.length > 0)) fail(`${context}.schedule contradicts cadence declaration`);
   if (githubCadence !== (memberValue.cadence_calendar !== null)) fail(`${context}.cadence_calendar contradicts cadence declaration`);
-  if (externalCadence && (memberValue.schedule.length !== 0 || memberValue.cadence_calendar !== null)) {
-    fail(`${context}.external cadence fabricates a run slot`);
+  if ((externalCadence || upstreamCadence) && (memberValue.schedule.length !== 0 || memberValue.cadence_calendar !== null)) {
+    fail(`${context}.non-scheduled cadence fabricates a run slot`);
   }
-  if ((memberValue.workflow !== null) !== githubCadence) {
+  if ((memberValue.workflow !== null) !== (githubCadence || upstreamCadence)) {
     fail(`${context}.workflow contradicts cadence declaration provenance`);
   }
   if (!Array.isArray(memberValue.artifact_contracts) || memberValue.artifact_contracts.length === 0) {
@@ -1690,6 +1694,14 @@ function validateLane(laneValue, index) {
     }
     if (laneValue.producer_members.some((memberValue) => memberValue.cadence_declaration === null)) {
       fail(`${context} every composite member must carry an evidence-backed cadence declaration`);
+    }
+    for (const memberValue of laneValue.producer_members) {
+      if (memberValue.cadence_declaration.kind !== "upstream_workflow") continue;
+      const upstream = memberValue.cadence_declaration.evidence;
+      if (!laneValue.producer_members.some((candidate) => candidate.workflow === upstream
+        && candidate.cadence_declaration.kind === "github_workflow" && candidate.schedule.length > 0)) {
+        fail(`${context}:${memberValue.id} upstream_workflow must be a scheduled member of this composite`);
+      }
     }
     const actualIds = laneValue.producer_members.map((memberValue) => memberValue.id);
     if (canonicalJson(actualIds) !== canonicalJson(declared.members)) fail(`${context} has the wrong members`);

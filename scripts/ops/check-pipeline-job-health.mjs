@@ -67,6 +67,11 @@ export const NON_SCHEDULED_WORKFLOW_INCLUSIONS = Object.freeze({
     reason: "critical workflow syntax gate must page despite having no schedule",
     events: Object.freeze(["push"]),
   }),
+  "slickcharts-symbols.yml": Object.freeze({
+    reason: "weekly membership completion triggers symbols without an independent cron",
+    events: Object.freeze(["workflow_run"]),
+    failure_streak_threshold: 1,
+  }),
 });
 
 const ISSUE_TITLE = "100xFenok pipeline job failure alarm";
@@ -172,8 +177,13 @@ function normalizeInclusion(file, entry) {
     throw new Error(`non-scheduled inclusion ${file}: policy must be a reason string or object`);
   }
   validateReason("non-scheduled inclusion", file, config.reason);
+  const failureStreakThreshold = config.failure_streak_threshold;
+  if (Object.hasOwn(config, "failure_streak_threshold")
+    && ![SLOW_CADENCE_FAILURE_STREAK_THRESHOLD, FAST_CADENCE_FAILURE_STREAK_THRESHOLD].includes(failureStreakThreshold)) {
+    throw new Error(`non-scheduled inclusion ${file}: failure_streak_threshold must be 1 or 2`);
+  }
   const events = config.events ?? (config.event === undefined ? null : [config.event]);
-  if (events === null) return { reason: config.reason.trim(), events: null };
+  if (events === null) return { reason: config.reason.trim(), events: null, failure_streak_threshold: failureStreakThreshold };
   if (!Array.isArray(events) || events.length === 0 || events.some((event) => typeof event !== "string" || event.trim() === "")) {
     throw new Error(`non-scheduled inclusion ${file}: events must be a non-empty string array`);
   }
@@ -181,7 +191,7 @@ function normalizeInclusion(file, entry) {
   if (normalizedEvents.includes("workflow_dispatch")) {
     throw new Error(`non-scheduled inclusion ${file}: workflow_dispatch can never be counted`);
   }
-  return { reason: config.reason.trim(), events: normalizedEvents };
+  return { reason: config.reason.trim(), events: normalizedEvents, failure_streak_threshold: failureStreakThreshold };
 }
 
 /**
@@ -212,11 +222,14 @@ export function deriveWorkflowWatchPolicy({
       throw new Error(`${file}: exclusion must reference a scheduled workflow`);
     }
   }
-  for (const [file] of inclusionConfigs) {
+  for (const [file, inclusion] of inclusionConfigs) {
     const row = byFile.get(file);
     if (!row) throw new Error(`${file}: inclusion must reference an existing workflow`);
     if (row.scheduled) {
       throw new Error(`${file}: inclusion must reference a non-scheduled workflow`);
+    }
+    if (inclusion.events?.some((event) => !row.triggers.includes(event))) {
+      throw new Error(`${file}: inclusion event must be a declared workflow trigger`);
     }
   }
 
@@ -234,7 +247,8 @@ export function deriveWorkflowWatchPolicy({
         label,
         events,
         crons: declaredCrons,
-        failure_streak_threshold: deriveFailureStreakThreshold(declaredCrons),
+        failure_streak_threshold: inclusionConfigs.get(file)?.failure_streak_threshold
+          ?? deriveFailureStreakThreshold(declaredCrons),
       };
     })
     .sort((a, b) => a.file.localeCompare(b.file));
