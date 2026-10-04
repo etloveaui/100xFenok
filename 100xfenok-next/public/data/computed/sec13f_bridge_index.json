@@ -1,6 +1,6 @@
 {
   "schema_version": "sec13f-bridge-index/v1",
-  "generated_at": "2026-10-04T16:02:21.201Z",
+  "generated_at": "2026-10-04T17:32:05.946Z",
   "purpose": "SEC 13F bridge index of tickers outside the Global Scouter universe, published live with honest 424/1,031 coverage.",
   "contract": {
     "candidate_type": "sec13f_extension_stock",
@@ -30,51 +30,51 @@
     "sec13f": "2026-Q2"
   },
   "input_fingerprints": {
-    "analyzer": "607bebc9a3e79fd9c7ede70110468db0679ecc11625bc2462e02f19e9679d8d0",
-    "action_index": "ffb29cbb06b041e66cf7a3fe427b9407e8230d0e0f9e6d7e1c14a7922c3e2a94",
-    "market_facts": "66f7d2a07e1f85aea00584330e8f9de527c02d46909af4ba351f6f26ee2bc1c8",
-    "sec13f_by_ticker": "6c2a65da0fef553d6445e412bfb024354a5e1bcb0aaca269f7beb5e990927e0e",
-    "sec13f_summary": "eb681edb668cc0a9efe057d3083f664ca8502364c103c86faaa2936c9d07e624",
+    "analyzer": "9b7995ae439dee6411c6e386822d2458aa8c895ee0d34e8b6923bbef23745666",
+    "action_index": "4b62ecba5b7605fcbfe72085f81554ecfebc80c0f30b693f70a7ac207762be12",
+    "market_facts": "c64533db0895ab80e1798ba73491d20100ecb4a836934b69255363da51e6dab1",
+    "sec13f_by_ticker": "74d88a17a1ffe92121a38c9deb42552258e371eceacb4550991fde0462210fcc",
+    "sec13f_summary": "6f81d56f736f85db002172654dad58a40349fb555680a16364cf0c2edf8c5080",
     "market_facts_details": {
-      "file_count": 117,
-      "sha256": "9b15bc0a8cc00d00ba8778f940cf14b2bc4a67d85e5a0a0e60b23924520f9c56"
+      "file_count": 132,
+      "sha256": "90574e149929f9f5b916d086abf40c4591bd1d06bfbf447700b908d1c9845949"
     },
     "yf_finance_candidates": {
-      "file_count": 80,
-      "sha256": "2a1fbca859e2cf7a1158bc872ea31d945b4f39d059f6811c06900c05f7b49d4c"
+      "file_count": 82,
+      "sha256": "dc6b199c612736f853a429f30d5289572f2e51957ba2705c0c52d7f6da490a6b"
     }
   },
   "graph_invariants": {
     "core_stock_count": 1066,
-    "sec13f_ticker_count": 1033,
-    "core_intersection_count": 424,
+    "sec13f_ticker_count": 1073,
+    "core_intersection_count": 436,
     "warning_threshold": 450,
     "graph_mutation_applied": false,
     "public_surface_mutation_applied": true
   },
   "counts": {
-    "sec13f_outside_core": 609,
-    "action_plus_market_facts": 80,
-    "market_facts_only": 37,
-    "no_action_index_overlap": 529,
-    "no_market_facts": 492,
+    "sec13f_outside_core": 637,
+    "action_plus_market_facts": 82,
+    "market_facts_only": 50,
+    "no_action_index_overlap": 555,
+    "no_market_facts": 505,
     "action_index_only": 0,
-    "sec13f_extension_stock": 80,
-    "sec13f_market_facts_only": 37,
-    "sec13f_unresolved": 492,
+    "sec13f_extension_stock": 82,
+    "sec13f_market_facts_only": 50,
+    "sec13f_unresolved": 505,
     "estimate": {
-      "extension_full": 74,
+      "extension_full": 76,
       "extension_incomplete": 6,
-      "market_facts_only_incomplete": 37,
-      "unresolved_absent": 492,
+      "market_facts_only_incomplete": 50,
+      "unresolved_absent": 505,
       "as_of": {
-        "bridge_generated_at": "2026-10-04T16:02:21.201Z",
+        "bridge_generated_at": "2026-10-04T17:32:05.946Z",
         "yf_finance": "2026-10-02T00:00:00.000Z",
         "market_facts": "2026-09-29",
         "sec13f": "2026-Q2"
       }
     },
-    "price_observed_extension": 80,
+    "price_observed_extension": 82,
     "price_observed_extension_as_of": "2026-09-29"
   },
   "rows": [
@@ -1610,6 +1610,61 @@
         "bridge_field_floor": true,
         "per_present": true,
         "forward_pe_present": true
+      },
+      "acceptance": {
+        "promotion_status": "promoted",
+        "reason": "promoted_live_honest_coverage",
+        "producer_typed_marker": true,
+        "current_consumer": "public/superinvestors and /data/computed/sec13f_bridge_index.json",
+        "public_route": "/data/computed/sec13f_bridge_index.json",
+        "live_readback": "verified"
+      }
+    },
+    {
+      "ticker": "APG",
+      "classification": {
+        "type": "sec13f_unresolved",
+        "classes": [
+          "no_action_index_overlap",
+          "no_market_facts"
+        ]
+      },
+      "source_links": {
+        "sec13f_by_ticker": true,
+        "global_scouter_core": false,
+        "stock_action_index": false,
+        "market_facts": false,
+        "yf_finance": false
+      },
+      "sec13f": {
+        "holders_count": 2,
+        "total_market_value": 635093856
+      },
+      "market_facts": null,
+      "stock_action_index": null,
+      "yf_estimates": {
+        "file": false,
+        "path": "data/yf/finance/APG.json",
+        "state": "absent",
+        "source_as_of": null,
+        "fields_present": [],
+        "missing_fields": [
+          "earnings_estimate",
+          "revenue_estimate",
+          "growth_estimates",
+          "eps_trend",
+          "eps_revisions",
+          "recommendations_summary"
+        ]
+      },
+      "completeness": {
+        "market_facts_price_observed": false,
+        "action_price_present": false,
+        "action_valuation_present": false,
+        "yf_estimate_or_absent_reason": false,
+        "bridge_field_floor": false,
+        "per_present": false,
+        "forward_pe_present": false
       },
       "acceptance": {
         "promotion_status": "promoted",
@@ -5746,6 +5801,116 @@
       "yf_estimates": {
         "file": false,
         "path": "data/yf/finance/CALM.json",
+        "state": "absent",
+        "source_as_of": null,
+        "fields_present": [],
+        "missing_fields": [
+          "earnings_estimate",
+          "revenue_estimate",
+          "growth_estimates",
+          "eps_trend",
+          "eps_revisions",
+          "recommendations_summary"
+        ]
+      },
+      "completeness": {
+        "market_facts_price_observed": false,
+        "action_price_present": false,
+        "action_valuation_present": false,
+        "yf_estimate_or_absent_reason": false,
+        "bridge_field_floor": false,
+        "per_present": false,
+        "forward_pe_present": false
+      },
+      "acceptance": {
+        "promotion_status": "promoted",
+        "reason": "promoted_live_honest_coverage",
+        "producer_typed_marker": true,
+        "current_consumer": "public/superinvestors and /data/computed/sec13f_bridge_index.json",
+        "public_route": "/data/computed/sec13f_bridge_index.json",
+        "live_readback": "verified"
+      }
+    },
+    {
+      "ticker": "CART",
+      "classification": {
+        "type": "sec13f_unresolved",
+        "classes": [
+          "no_action_index_overlap",
+          "no_market_facts"
+        ]
+      },
+      "source_links": {
+        "sec13f_by_ticker": true,
+        "global_scouter_core": false,
+        "stock_action_index": false,
+        "market_facts": false,
+        "yf_finance": false
+      },
+      "sec13f": {
+        "holders_count": 2,
+        "total_market_value": 1070587288
+      },
+      "market_facts": null,
+      "stock_action_index": null,
+      "yf_estimates": {
+        "file": false,
+        "path": "data/yf/finance/CART.json",
+        "state": "absent",
+        "source_as_of": null,
+        "fields_present": [],
+        "missing_fields": [
+          "earnings_estimate",
+          "revenue_estimate",
+          "growth_estimates",
+          "eps_trend",
+          "eps_revisions",
+          "recommendations_summary"
+        ]
+      },
+      "completeness": {
+        "market_facts_price_observed": false,
+        "action_price_present": false,
+        "action_valuation_present": false,
+        "yf_estimate_or_absent_reason": false,
+        "bridge_field_floor": false,
+        "per_present": false,
+        "forward_pe_present": false
+      },
+      "acceptance": {
+        "promotion_status": "promoted",
+        "reason": "promoted_live_honest_coverage",
+        "producer_typed_marker": true,
+        "current_consumer": "public/superinvestors and /data/computed/sec13f_bridge_index.json",
+        "public_route": "/data/computed/sec13f_bridge_index.json",
+        "live_readback": "verified"
+      }
+    },
+    {
+      "ticker": "CBRS",
+      "classification": {
+        "type": "sec13f_unresolved",
+        "classes": [
+          "no_action_index_overlap",
+          "no_market_facts"
+        ]
+      },
+      "source_links": {
+        "sec13f_by_ticker": true,
+        "global_scouter_core": false,
+        "stock_action_index": false,
+        "market_facts": false,
+        "yf_finance": false
+      },
+      "sec13f": {
+        "holders_count": 10,
+        "total_market_value": 6044281048
+      },
+      "market_facts": null,
+      "stock_action_index": null,
+      "yf_estimates": {
+        "file": false,
+        "path": "data/yf/finance/CBRS.json",
         "state": "absent",
         "source_as_of": null,
         "fields_present": [],
@@ -11374,6 +11539,71 @@
       }
     },
     {
+      "ticker": "EUFN",
+      "classification": {
+        "type": "sec13f_market_facts_only",
+        "classes": [
+          "market_facts_only",
+          "no_action_index_overlap"
+        ]
+      },
+      "source_links": {
+        "sec13f_by_ticker": true,
+        "global_scouter_core": false,
+        "stock_action_index": false,
+        "market_facts": true,
+        "yf_finance": true
+      },
+      "sec13f": {
+        "holders_count": 1,
+        "total_market_value": 730118382
+      },
+      "market_facts": {
+        "asset_type": "etf",
+        "source_as_of": "2026-09-24",
+        "price": {
+          "present": false,
+          "value": null,
+          "confidence": null,
+          "source": null,
+          "as_of": null
+        }
+      },
+      "stock_action_index": null,
+      "yf_estimates": {
+        "file": true,
+        "path": "data/yf/finance/EUFN.json",
+        "state": "incomplete",
+        "source_as_of": "2026-09-25",
+        "fields_present": [],
+        "missing_fields": [
+          "earnings_estimate",
+          "revenue_estimate",
+          "growth_estimates",
+          "eps_trend",
+          "eps_revisions",
+          "recommendations_summary"
+        ]
+      },
+      "completeness": {
+        "market_facts_price_observed": false,
+        "action_price_present": false,
+        "action_valuation_present": false,
+        "yf_estimate_or_absent_reason": true,
+        "bridge_field_floor": false,
+        "per_present": false,
+        "forward_pe_present": false
+      },
+      "acceptance": {
+        "promotion_status": "promoted",
+        "reason": "promoted_live_honest_coverage",
+        "producer_typed_marker": true,
+        "current_consumer": "public/superinvestors and /data/computed/sec13f_bridge_index.json",
+        "public_route": "/data/computed/sec13f_bridge_index.json",
+        "live_readback": "verified"
+      }
+    },
+    {
       "ticker": "EVGO",
       "classification": {
         "type": "sec13f_unresolved",
@@ -12832,6 +13062,61 @@
       "yf_estimates": {
         "file": false,
         "path": "data/yf/finance/FOUR.json",
+        "state": "absent",
+        "source_as_of": null,
+        "fields_present": [],
+        "missing_fields": [
+          "earnings_estimate",
+          "revenue_estimate",
+          "growth_estimates",
+          "eps_trend",
+          "eps_revisions",
+          "recommendations_summary"
+        ]
+      },
+      "completeness": {
+        "market_facts_price_observed": false,
+        "action_price_present": false,
+        "action_valuation_present": false,
+        "yf_estimate_or_absent_reason": false,
+        "bridge_field_floor": false,
+        "per_present": false,
+        "forward_pe_present": false
+      },
+      "acceptance": {
+        "promotion_status": "promoted",
+        "reason": "promoted_live_honest_coverage",
+        "producer_typed_marker": true,
+        "current_consumer": "public/superinvestors and /data/computed/sec13f_bridge_index.json",
+        "public_route": "/data/computed/sec13f_bridge_index.json",
+        "live_readback": "verified"
+      }
+    },
+    {
+      "ticker": "FPS",
+      "classification": {
+        "type": "sec13f_unresolved",
+        "classes": [
+          "no_action_index_overlap",
+          "no_market_facts"
+        ]
+      },
+      "source_links": {
+        "sec13f_by_ticker": true,
+        "global_scouter_core": false,
+        "stock_action_index": false,
+        "market_facts": false,
+        "yf_finance": false
+      },
+      "sec13f": {
+        "holders_count": 3,
+        "total_market_value": 1169514286
+      },
+      "market_facts": null,
+      "stock_action_index": null,
+      "yf_estimates": {
+        "file": false,
+        "path": "data/yf/finance/FPS.json",
         "state": "absent",
         "source_as_of": null,
         "fields_present": [],
@@ -14372,6 +14657,71 @@
       }
     },
     {
+      "ticker": "GUNR",
+      "classification": {
+        "type": "sec13f_market_facts_only",
+        "classes": [
+          "market_facts_only",
+          "no_action_index_overlap"
+        ]
+      },
+      "source_links": {
+        "sec13f_by_ticker": true,
+        "global_scouter_core": false,
+        "stock_action_index": false,
+        "market_facts": true,
+        "yf_finance": true
+      },
+      "sec13f": {
+        "holders_count": 1,
+        "total_market_value": 3403194059
+      },
+      "market_facts": {
+        "asset_type": "etf",
+        "source_as_of": "2026-09-30",
+        "price": {
+          "present": false,
+          "value": null,
+          "confidence": null,
+          "source": null,
+          "as_of": null
+        }
+      },
+      "stock_action_index": null,
+      "yf_estimates": {
+        "file": true,
+        "path": "data/yf/finance/GUNR.json",
+        "state": "incomplete",
+        "source_as_of": "2026-09-25",
+        "fields_present": [],
+        "missing_fields": [
+          "earnings_estimate",
+          "revenue_estimate",
+          "growth_estimates",
+          "eps_trend",
+          "eps_revisions",
+          "recommendations_summary"
+        ]
+      },
+      "completeness": {
+        "market_facts_price_observed": false,
+        "action_price_present": false,
+        "action_valuation_present": false,
+        "yf_estimate_or_absent_reason": true,
+        "bridge_field_floor": false,
+        "per_present": false,
+        "forward_pe_present": false
+      },
+      "acceptance": {
+        "promotion_status": "promoted",
+        "reason": "promoted_live_honest_coverage",
+        "producer_typed_marker": true,
+        "current_consumer": "public/superinvestors and /data/computed/sec13f_bridge_index.json",
+        "public_route": "/data/computed/sec13f_bridge_index.json",
+        "live_readback": "verified"
+      }
+    },
+    {
       "ticker": "HALO",
       "classification": {
         "type": "sec13f_unresolved",
@@ -15811,6 +16161,116 @@
         "bridge_field_floor": true,
         "per_present": true,
         "forward_pe_present": true
+      },
+      "acceptance": {
+        "promotion_status": "promoted",
+        "reason": "promoted_live_honest_coverage",
+        "producer_typed_marker": true,
+        "current_consumer": "public/superinvestors and /data/computed/sec13f_bridge_index.json",
+        "public_route": "/data/computed/sec13f_bridge_index.json",
+        "live_readback": "verified"
+      }
+    },
+    {
+      "ticker": "IBN",
+      "classification": {
+        "type": "sec13f_unresolved",
+        "classes": [
+          "no_action_index_overlap",
+          "no_market_facts"
+        ]
+      },
+      "source_links": {
+        "sec13f_by_ticker": true,
+        "global_scouter_core": false,
+        "stock_action_index": false,
+        "market_facts": false,
+        "yf_finance": false
+      },
+      "sec13f": {
+        "holders_count": 1,
+        "total_market_value": 1511566346
+      },
+      "market_facts": null,
+      "stock_action_index": null,
+      "yf_estimates": {
+        "file": false,
+        "path": "data/yf/finance/IBN.json",
+        "state": "absent",
+        "source_as_of": null,
+        "fields_present": [],
+        "missing_fields": [
+          "earnings_estimate",
+          "revenue_estimate",
+          "growth_estimates",
+          "eps_trend",
+          "eps_revisions",
+          "recommendations_summary"
+        ]
+      },
+      "completeness": {
+        "market_facts_price_observed": false,
+        "action_price_present": false,
+        "action_valuation_present": false,
+        "yf_estimate_or_absent_reason": false,
+        "bridge_field_floor": false,
+        "per_present": false,
+        "forward_pe_present": false
+      },
+      "acceptance": {
+        "promotion_status": "promoted",
+        "reason": "promoted_live_honest_coverage",
+        "producer_typed_marker": true,
+        "current_consumer": "public/superinvestors and /data/computed/sec13f_bridge_index.json",
+        "public_route": "/data/computed/sec13f_bridge_index.json",
+        "live_readback": "verified"
+      }
+    },
+    {
+      "ticker": "ICLR",
+      "classification": {
+        "type": "sec13f_unresolved",
+        "classes": [
+          "no_action_index_overlap",
+          "no_market_facts"
+        ]
+      },
+      "source_links": {
+        "sec13f_by_ticker": true,
+        "global_scouter_core": false,
+        "stock_action_index": false,
+        "market_facts": false,
+        "yf_finance": false
+      },
+      "sec13f": {
+        "holders_count": 2,
+        "total_market_value": 1022814729
+      },
+      "market_facts": null,
+      "stock_action_index": null,
+      "yf_estimates": {
+        "file": false,
+        "path": "data/yf/finance/ICLR.json",
+        "state": "absent",
+        "source_as_of": null,
+        "fields_present": [],
+        "missing_fields": [
+          "earnings_estimate",
+          "revenue_estimate",
+          "growth_estimates",
+          "eps_trend",
+          "eps_revisions",
+          "recommendations_summary"
+        ]
+      },
+      "completeness": {
+        "market_facts_price_observed": false,
+        "action_price_present": false,
+        "action_valuation_present": false,
+        "yf_estimate_or_absent_reason": false,
+        "bridge_field_floor": false,
+        "per_present": false,
+        "forward_pe_present": false
       },
       "acceptance": {
         "promotion_status": "promoted",
@@ -17910,6 +18370,61 @@
       }
     },
     {
+      "ticker": "KMX",
+      "classification": {
+        "type": "sec13f_unresolved",
+        "classes": [
+          "no_action_index_overlap",
+          "no_market_facts"
+        ]
+      },
+      "source_links": {
+        "sec13f_by_ticker": true,
+        "global_scouter_core": false,
+        "stock_action_index": false,
+        "market_facts": false,
+        "yf_finance": false
+      },
+      "sec13f": {
+        "holders_count": 2,
+        "total_market_value": 653508394
+      },
+      "market_facts": null,
+      "stock_action_index": null,
+      "yf_estimates": {
+        "file": false,
+        "path": "data/yf/finance/KMX.json",
+        "state": "absent",
+        "source_as_of": null,
+        "fields_present": [],
+        "missing_fields": [
+          "earnings_estimate",
+          "revenue_estimate",
+          "growth_estimates",
+          "eps_trend",
+          "eps_revisions",
+          "recommendations_summary"
+        ]
+      },
+      "completeness": {
+        "market_facts_price_observed": false,
+        "action_price_present": false,
+        "action_valuation_present": false,
+        "yf_estimate_or_absent_reason": false,
+        "bridge_field_floor": false,
+        "per_present": false,
+        "forward_pe_present": false
+      },
+      "acceptance": {
+        "promotion_status": "promoted",
+        "reason": "promoted_live_honest_coverage",
+        "producer_typed_marker": true,
+        "current_consumer": "public/superinvestors and /data/computed/sec13f_bridge_index.json",
+        "public_route": "/data/computed/sec13f_bridge_index.json",
+        "live_readback": "verified"
+      }
+    },
+    {
       "ticker": "KNX",
       "classification": {
         "type": "sec13f_unresolved",
@@ -18116,6 +18631,71 @@
         "action_price_present": false,
         "action_valuation_present": false,
         "yf_estimate_or_absent_reason": false,
+        "bridge_field_floor": false,
+        "per_present": false,
+        "forward_pe_present": false
+      },
+      "acceptance": {
+        "promotion_status": "promoted",
+        "reason": "promoted_live_honest_coverage",
+        "producer_typed_marker": true,
+        "current_consumer": "public/superinvestors and /data/computed/sec13f_bridge_index.json",
+        "public_route": "/data/computed/sec13f_bridge_index.json",
+        "live_readback": "verified"
+      }
+    },
+    {
+      "ticker": "KXI",
+      "classification": {
+        "type": "sec13f_market_facts_only",
+        "classes": [
+          "market_facts_only",
+          "no_action_index_overlap"
+        ]
+      },
+      "source_links": {
+        "sec13f_by_ticker": true,
+        "global_scouter_core": false,
+        "stock_action_index": false,
+        "market_facts": true,
+        "yf_finance": true
+      },
+      "sec13f": {
+        "holders_count": 1,
+        "total_market_value": 490424378
+      },
+      "market_facts": {
+        "asset_type": "etf",
+        "source_as_of": "2026-09-30",
+        "price": {
+          "present": false,
+          "value": null,
+          "confidence": null,
+          "source": null,
+          "as_of": null
+        }
+      },
+      "stock_action_index": null,
+      "yf_estimates": {
+        "file": true,
+        "path": "data/yf/finance/KXI.json",
+        "state": "incomplete",
+        "source_as_of": "2026-09-25",
+        "fields_present": [],
+        "missing_fields": [
+          "earnings_estimate",
+          "revenue_estimate",
+          "growth_estimates",
+          "eps_trend",
+          "eps_revisions",
+          "recommendations_summary"
+        ]
+      },
+      "completeness": {
+        "market_facts_price_observed": false,
+        "action_price_present": false,
+        "action_valuation_present": false,
+        "yf_estimate_or_absent_reason": true,
         "bridge_field_floor": false,
         "per_present": false,
         "forward_pe_present": false
@@ -19721,6 +20301,61 @@
       }
     },
     {
+      "ticker": "MDLN",
+      "classification": {
+        "type": "sec13f_unresolved",
+        "classes": [
+          "no_action_index_overlap",
+          "no_market_facts"
+        ]
+      },
+      "source_links": {
+        "sec13f_by_ticker": true,
+        "global_scouter_core": false,
+        "stock_action_index": false,
+        "market_facts": false,
+        "yf_finance": false
+      },
+      "sec13f": {
+        "holders_count": 6,
+        "total_market_value": 3055362187
+      },
+      "market_facts": null,
+      "stock_action_index": null,
+      "yf_estimates": {
+        "file": false,
+        "path": "data/yf/finance/MDLN.json",
+        "state": "absent",
+        "source_as_of": null,
+        "fields_present": [],
+        "missing_fields": [
+          "earnings_estimate",
+          "revenue_estimate",
+          "growth_estimates",
+          "eps_trend",
+          "eps_revisions",
+          "recommendations_summary"
+        ]
+      },
+      "completeness": {
+        "market_facts_price_observed": false,
+        "action_price_present": false,
+        "action_valuation_present": false,
+        "yf_estimate_or_absent_reason": false,
+        "bridge_field_floor": false,
+        "per_present": false,
+        "forward_pe_present": false
+      },
+      "acceptance": {
+        "promotion_status": "promoted",
+        "reason": "promoted_live_honest_coverage",
+        "producer_typed_marker": true,
+        "current_consumer": "public/superinvestors and /data/computed/sec13f_bridge_index.json",
+        "public_route": "/data/computed/sec13f_bridge_index.json",
+        "live_readback": "verified"
+      }
+    },
+    {
       "ticker": "MEDP",
       "classification": {
         "type": "sec13f_unresolved",
@@ -20291,6 +20926,81 @@
       }
     },
     {
+      "ticker": "MRSH",
+      "classification": {
+        "type": "sec13f_extension_stock",
+        "classes": [
+          "action_plus_market_facts"
+        ]
+      },
+      "source_links": {
+        "sec13f_by_ticker": true,
+        "global_scouter_core": false,
+        "stock_action_index": true,
+        "market_facts": true,
+        "yf_finance": true
+      },
+      "sec13f": {
+        "holders_count": 9,
+        "total_market_value": 16886457068
+      },
+      "market_facts": {
+        "asset_type": "stock",
+        "source_as_of": "2026-10-01",
+        "price": {
+          "present": true,
+          "value": 171.79,
+          "confidence": "observed",
+          "source": "yf",
+          "as_of": "2026-10-01"
+        }
+      },
+      "stock_action_index": {
+        "price": 171.79,
+        "market_cap": 81980121088,
+        "per": 20.949999,
+        "forward_pe": 15.055602,
+        "confidence_label": "high",
+        "quality_flags": [
+          "missing_forward_eps",
+          "missing_global_scouter_core_row",
+          "missing_quarter_close_history"
+        ]
+      },
+      "yf_estimates": {
+        "file": true,
+        "path": "data/yf/finance/MRSH.json",
+        "state": "full",
+        "source_as_of": "2026-10-01",
+        "fields_present": [
+          "earnings_estimate",
+          "revenue_estimate",
+          "growth_estimates",
+          "eps_trend",
+          "eps_revisions",
+          "recommendations_summary"
+        ],
+        "missing_fields": []
+      },
+      "completeness": {
+        "market_facts_price_observed": true,
+        "action_price_present": true,
+        "action_valuation_present": true,
+        "yf_estimate_or_absent_reason": true,
+        "bridge_field_floor": true,
+        "per_present": true,
+        "forward_pe_present": true
+      },
+      "acceptance": {
+        "promotion_status": "promoted",
+        "reason": "promoted_live_honest_coverage",
+        "producer_typed_marker": true,
+        "current_consumer": "public/superinvestors and /data/computed/sec13f_bridge_index.json",
+        "public_route": "/data/computed/sec13f_bridge_index.json",
+        "live_readback": "verified"
+      }
+    },
+    {
       "ticker": "MSTR",
       "classification": {
         "type": "sec13f_extension_stock",
@@ -20521,6 +21231,61 @@
       "yf_estimates": {
         "file": false,
         "path": "data/yf/finance/MTH.json",
+        "state": "absent",
+        "source_as_of": null,
+        "fields_present": [],
+        "missing_fields": [
+          "earnings_estimate",
+          "revenue_estimate",
+          "growth_estimates",
+          "eps_trend",
+          "eps_revisions",
+          "recommendations_summary"
+        ]
+      },
+      "completeness": {
+        "market_facts_price_observed": false,
+        "action_price_present": false,
+        "action_valuation_present": false,
+        "yf_estimate_or_absent_reason": false,
+        "bridge_field_floor": false,
+        "per_present": false,
+        "forward_pe_present": false
+      },
+      "acceptance": {
+        "promotion_status": "promoted",
+        "reason": "promoted_live_honest_coverage",
+        "producer_typed_marker": true,
+        "current_consumer": "public/superinvestors and /data/computed/sec13f_bridge_index.json",
+        "public_route": "/data/computed/sec13f_bridge_index.json",
+        "live_readback": "verified"
+      }
+    },
+    {
+      "ticker": "MUFG",
+      "classification": {
+        "type": "sec13f_unresolved",
+        "classes": [
+          "no_action_index_overlap",
+          "no_market_facts"
+        ]
+      },
+      "source_links": {
+        "sec13f_by_ticker": true,
+        "global_scouter_core": false,
+        "stock_action_index": false,
+        "market_facts": false,
+        "yf_finance": false
+      },
+      "sec13f": {
+        "holders_count": 1,
+        "total_market_value": 1947436795
+      },
+      "market_facts": null,
+      "stock_action_index": null,
+      "yf_estimates": {
+        "file": false,
+        "path": "data/yf/finance/MUFG.json",
         "state": "absent",
         "source_as_of": null,
         "fields_present": [],
@@ -21129,6 +21894,71 @@
         "action_price_present": false,
         "action_valuation_present": false,
         "yf_estimate_or_absent_reason": false,
+        "bridge_field_floor": false,
+        "per_present": false,
+        "forward_pe_present": false
+      },
+      "acceptance": {
+        "promotion_status": "promoted",
+        "reason": "promoted_live_honest_coverage",
+        "producer_typed_marker": true,
+        "current_consumer": "public/superinvestors and /data/computed/sec13f_bridge_index.json",
+        "public_route": "/data/computed/sec13f_bridge_index.json",
+        "live_readback": "verified"
+      }
+    },
+    {
+      "ticker": "NFRA",
+      "classification": {
+        "type": "sec13f_market_facts_only",
+        "classes": [
+          "market_facts_only",
+          "no_action_index_overlap"
+        ]
+      },
+      "source_links": {
+        "sec13f_by_ticker": true,
+        "global_scouter_core": false,
+        "stock_action_index": false,
+        "market_facts": true,
+        "yf_finance": true
+      },
+      "sec13f": {
+        "holders_count": 1,
+        "total_market_value": 1878840142
+      },
+      "market_facts": {
+        "asset_type": "etf",
+        "source_as_of": "2026-09-30",
+        "price": {
+          "present": false,
+          "value": null,
+          "confidence": null,
+          "source": null,
+          "as_of": null
+        }
+      },
+      "stock_action_index": null,
+      "yf_estimates": {
+        "file": true,
+        "path": "data/yf/finance/NFRA.json",
+        "state": "incomplete",
+        "source_as_of": "2026-09-25",
+        "fields_present": [],
+        "missing_fields": [
+          "earnings_estimate",
+          "revenue_estimate",
+          "growth_estimates",
+          "eps_trend",
+          "eps_revisions",
+          "recommendations_summary"
+        ]
+      },
+      "completeness": {
+        "market_facts_price_observed": false,
+        "action_price_present": false,
+        "action_valuation_present": false,
+        "yf_estimate_or_absent_reason": true,
         "bridge_field_floor": false,
         "per_present": false,
         "forward_pe_present": false
@@ -23434,6 +24264,71 @@
       }
     },
     {
+      "ticker": "PBEU",
+      "classification": {
+        "type": "sec13f_market_facts_only",
+        "classes": [
+          "market_facts_only",
+          "no_action_index_overlap"
+        ]
+      },
+      "source_links": {
+        "sec13f_by_ticker": true,
+        "global_scouter_core": false,
+        "stock_action_index": false,
+        "market_facts": true,
+        "yf_finance": true
+      },
+      "sec13f": {
+        "holders_count": 1,
+        "total_market_value": 581612660
+      },
+      "market_facts": {
+        "asset_type": "etf",
+        "source_as_of": "2026-09-30",
+        "price": {
+          "present": false,
+          "value": null,
+          "confidence": null,
+          "source": null,
+          "as_of": null
+        }
+      },
+      "stock_action_index": null,
+      "yf_estimates": {
+        "file": true,
+        "path": "data/yf/finance/PBEU.json",
+        "state": "incomplete",
+        "source_as_of": "2026-09-25",
+        "fields_present": [],
+        "missing_fields": [
+          "earnings_estimate",
+          "revenue_estimate",
+          "growth_estimates",
+          "eps_trend",
+          "eps_revisions",
+          "recommendations_summary"
+        ]
+      },
+      "completeness": {
+        "market_facts_price_observed": false,
+        "action_price_present": false,
+        "action_valuation_present": false,
+        "yf_estimate_or_absent_reason": true,
+        "bridge_field_floor": false,
+        "per_present": false,
+        "forward_pe_present": false
+      },
+      "acceptance": {
+        "promotion_status": "promoted",
+        "reason": "promoted_live_honest_coverage",
+        "producer_typed_marker": true,
+        "current_consumer": "public/superinvestors and /data/computed/sec13f_bridge_index.json",
+        "public_route": "/data/computed/sec13f_bridge_index.json",
+        "live_readback": "verified"
+      }
+    },
+    {
       "ticker": "PBF",
       "classification": {
         "type": "sec13f_unresolved",
@@ -23475,6 +24370,136 @@
         "action_price_present": false,
         "action_valuation_present": false,
         "yf_estimate_or_absent_reason": false,
+        "bridge_field_floor": false,
+        "per_present": false,
+        "forward_pe_present": false
+      },
+      "acceptance": {
+        "promotion_status": "promoted",
+        "reason": "promoted_live_honest_coverage",
+        "producer_typed_marker": true,
+        "current_consumer": "public/superinvestors and /data/computed/sec13f_bridge_index.json",
+        "public_route": "/data/computed/sec13f_bridge_index.json",
+        "live_readback": "verified"
+      }
+    },
+    {
+      "ticker": "PBOG",
+      "classification": {
+        "type": "sec13f_market_facts_only",
+        "classes": [
+          "market_facts_only",
+          "no_action_index_overlap"
+        ]
+      },
+      "source_links": {
+        "sec13f_by_ticker": true,
+        "global_scouter_core": false,
+        "stock_action_index": false,
+        "market_facts": true,
+        "yf_finance": true
+      },
+      "sec13f": {
+        "holders_count": 1,
+        "total_market_value": 448318379
+      },
+      "market_facts": {
+        "asset_type": "etf",
+        "source_as_of": "2026-09-30",
+        "price": {
+          "present": false,
+          "value": null,
+          "confidence": null,
+          "source": null,
+          "as_of": null
+        }
+      },
+      "stock_action_index": null,
+      "yf_estimates": {
+        "file": true,
+        "path": "data/yf/finance/PBOG.json",
+        "state": "incomplete",
+        "source_as_of": "2026-09-25",
+        "fields_present": [],
+        "missing_fields": [
+          "earnings_estimate",
+          "revenue_estimate",
+          "growth_estimates",
+          "eps_trend",
+          "eps_revisions",
+          "recommendations_summary"
+        ]
+      },
+      "completeness": {
+        "market_facts_price_observed": false,
+        "action_price_present": false,
+        "action_valuation_present": false,
+        "yf_estimate_or_absent_reason": true,
+        "bridge_field_floor": false,
+        "per_present": false,
+        "forward_pe_present": false
+      },
+      "acceptance": {
+        "promotion_status": "promoted",
+        "reason": "promoted_live_honest_coverage",
+        "producer_typed_marker": true,
+        "current_consumer": "public/superinvestors and /data/computed/sec13f_bridge_index.json",
+        "public_route": "/data/computed/sec13f_bridge_index.json",
+        "live_readback": "verified"
+      }
+    },
+    {
+      "ticker": "PBPH",
+      "classification": {
+        "type": "sec13f_market_facts_only",
+        "classes": [
+          "market_facts_only",
+          "no_action_index_overlap"
+        ]
+      },
+      "source_links": {
+        "sec13f_by_ticker": true,
+        "global_scouter_core": false,
+        "stock_action_index": false,
+        "market_facts": true,
+        "yf_finance": true
+      },
+      "sec13f": {
+        "holders_count": 1,
+        "total_market_value": 844310190
+      },
+      "market_facts": {
+        "asset_type": "etf",
+        "source_as_of": "2026-09-30",
+        "price": {
+          "present": false,
+          "value": null,
+          "confidence": null,
+          "source": null,
+          "as_of": null
+        }
+      },
+      "stock_action_index": null,
+      "yf_estimates": {
+        "file": true,
+        "path": "data/yf/finance/PBPH.json",
+        "state": "incomplete",
+        "source_as_of": "2026-09-25",
+        "fields_present": [],
+        "missing_fields": [
+          "earnings_estimate",
+          "revenue_estimate",
+          "growth_estimates",
+          "eps_trend",
+          "eps_revisions",
+          "recommendations_summary"
+        ]
+      },
+      "completeness": {
+        "market_facts_price_observed": false,
+        "action_price_present": false,
+        "action_valuation_present": false,
+        "yf_estimate_or_absent_reason": true,
         "bridge_field_floor": false,
         "per_present": false,
         "forward_pe_present": false
@@ -23993,6 +25018,81 @@
         "bridge_field_floor": false,
         "per_present": false,
         "forward_pe_present": false
+      },
+      "acceptance": {
+        "promotion_status": "promoted",
+        "reason": "promoted_live_honest_coverage",
+        "producer_typed_marker": true,
+        "current_consumer": "public/superinvestors and /data/computed/sec13f_bridge_index.json",
+        "public_route": "/data/computed/sec13f_bridge_index.json",
+        "live_readback": "verified"
+      }
+    },
+    {
+      "ticker": "PKG",
+      "classification": {
+        "type": "sec13f_extension_stock",
+        "classes": [
+          "action_plus_market_facts"
+        ]
+      },
+      "source_links": {
+        "sec13f_by_ticker": true,
+        "global_scouter_core": false,
+        "stock_action_index": true,
+        "market_facts": true,
+        "yf_finance": true
+      },
+      "sec13f": {
+        "holders_count": 2,
+        "total_market_value": 1759265087
+      },
+      "market_facts": {
+        "asset_type": "stock",
+        "source_as_of": "2026-09-29",
+        "price": {
+          "present": true,
+          "value": 233.28,
+          "confidence": "observed",
+          "source": "yf",
+          "as_of": "2026-09-29"
+        }
+      },
+      "stock_action_index": {
+        "price": 233.28,
+        "market_cap": 20784850944,
+        "per": 30.494118,
+        "forward_pe": 17.780853,
+        "confidence_label": "high",
+        "quality_flags": [
+          "missing_forward_eps",
+          "missing_global_scouter_core_row",
+          "missing_quarter_close_history"
+        ]
+      },
+      "yf_estimates": {
+        "file": true,
+        "path": "data/yf/finance/PKG.json",
+        "state": "full",
+        "source_as_of": "2026-09-29",
+        "fields_present": [
+          "earnings_estimate",
+          "revenue_estimate",
+          "growth_estimates",
+          "eps_trend",
+          "eps_revisions",
+          "recommendations_summary"
+        ],
+        "missing_fields": []
+      },
+      "completeness": {
+        "market_facts_price_observed": true,
+        "action_price_present": true,
+        "action_valuation_present": true,
+        "yf_estimate_or_absent_reason": true,
+        "bridge_field_floor": true,
+        "per_present": true,
+        "forward_pe_present": true
       },
       "acceptance": {
         "promotion_status": "promoted",
@@ -24804,6 +25904,71 @@
       }
     },
     {
+      "ticker": "QDF",
+      "classification": {
+        "type": "sec13f_market_facts_only",
+        "classes": [
+          "market_facts_only",
+          "no_action_index_overlap"
+        ]
+      },
+      "source_links": {
+        "sec13f_by_ticker": true,
+        "global_scouter_core": false,
+        "stock_action_index": false,
+        "market_facts": true,
+        "yf_finance": true
+      },
+      "sec13f": {
+        "holders_count": 1,
+        "total_market_value": 860167526
+      },
+      "market_facts": {
+        "asset_type": "etf",
+        "source_as_of": "2026-09-30",
+        "price": {
+          "present": false,
+          "value": null,
+          "confidence": null,
+          "source": null,
+          "as_of": null
+        }
+      },
+      "stock_action_index": null,
+      "yf_estimates": {
+        "file": true,
+        "path": "data/yf/finance/QDF.json",
+        "state": "incomplete",
+        "source_as_of": "2026-09-25",
+        "fields_present": [],
+        "missing_fields": [
+          "earnings_estimate",
+          "revenue_estimate",
+          "growth_estimates",
+          "eps_trend",
+          "eps_revisions",
+          "recommendations_summary"
+        ]
+      },
+      "completeness": {
+        "market_facts_price_observed": false,
+        "action_price_present": false,
+        "action_valuation_present": false,
+        "yf_estimate_or_absent_reason": true,
+        "bridge_field_floor": false,
+        "per_present": false,
+        "forward_pe_present": false
+      },
+      "acceptance": {
+        "promotion_status": "promoted",
+        "reason": "promoted_live_honest_coverage",
+        "producer_typed_marker": true,
+        "current_consumer": "public/superinvestors and /data/computed/sec13f_bridge_index.json",
+        "public_route": "/data/computed/sec13f_bridge_index.json",
+        "live_readback": "verified"
+      }
+    },
+    {
       "ticker": "QQQ",
       "classification": {
         "type": "sec13f_market_facts_only",
@@ -25130,6 +26295,71 @@
         "action_price_present": false,
         "action_valuation_present": false,
         "yf_estimate_or_absent_reason": false,
+        "bridge_field_floor": false,
+        "per_present": false,
+        "forward_pe_present": false
+      },
+      "acceptance": {
+        "promotion_status": "promoted",
+        "reason": "promoted_live_honest_coverage",
+        "producer_typed_marker": true,
+        "current_consumer": "public/superinvestors and /data/computed/sec13f_bridge_index.json",
+        "public_route": "/data/computed/sec13f_bridge_index.json",
+        "live_readback": "verified"
+      }
+    },
+    {
+      "ticker": "RAVI",
+      "classification": {
+        "type": "sec13f_market_facts_only",
+        "classes": [
+          "market_facts_only",
+          "no_action_index_overlap"
+        ]
+      },
+      "source_links": {
+        "sec13f_by_ticker": true,
+        "global_scouter_core": false,
+        "stock_action_index": false,
+        "market_facts": true,
+        "yf_finance": true
+      },
+      "sec13f": {
+        "holders_count": 1,
+        "total_market_value": 1089778359
+      },
+      "market_facts": {
+        "asset_type": "etf",
+        "source_as_of": "2026-09-30",
+        "price": {
+          "present": false,
+          "value": null,
+          "confidence": null,
+          "source": null,
+          "as_of": null
+        }
+      },
+      "stock_action_index": null,
+      "yf_estimates": {
+        "file": true,
+        "path": "data/yf/finance/RAVI.json",
+        "state": "incomplete",
+        "source_as_of": "2026-09-25",
+        "fields_present": [],
+        "missing_fields": [
+          "earnings_estimate",
+          "revenue_estimate",
+          "growth_estimates",
+          "eps_trend",
+          "eps_revisions",
+          "recommendations_summary"
+        ]
+      },
+      "completeness": {
+        "market_facts_price_observed": false,
+        "action_price_present": false,
+        "action_valuation_present": false,
+        "yf_estimate_or_absent_reason": true,
         "bridge_field_floor": false,
         "per_present": false,
         "forward_pe_present": false
@@ -25537,6 +26767,61 @@
       "yf_estimates": {
         "file": false,
         "path": "data/yf/finance/RGEN.json",
+        "state": "absent",
+        "source_as_of": null,
+        "fields_present": [],
+        "missing_fields": [
+          "earnings_estimate",
+          "revenue_estimate",
+          "growth_estimates",
+          "eps_trend",
+          "eps_revisions",
+          "recommendations_summary"
+        ]
+      },
+      "completeness": {
+        "market_facts_price_observed": false,
+        "action_price_present": false,
+        "action_valuation_present": false,
+        "yf_estimate_or_absent_reason": false,
+        "bridge_field_floor": false,
+        "per_present": false,
+        "forward_pe_present": false
+      },
+      "acceptance": {
+        "promotion_status": "promoted",
+        "reason": "promoted_live_honest_coverage",
+        "producer_typed_marker": true,
+        "current_consumer": "public/superinvestors and /data/computed/sec13f_bridge_index.json",
+        "public_route": "/data/computed/sec13f_bridge_index.json",
+        "live_readback": "verified"
+      }
+    },
+    {
+      "ticker": "RGLD",
+      "classification": {
+        "type": "sec13f_unresolved",
+        "classes": [
+          "no_action_index_overlap",
+          "no_market_facts"
+        ]
+      },
+      "source_links": {
+        "sec13f_by_ticker": true,
+        "global_scouter_core": false,
+        "stock_action_index": false,
+        "market_facts": false,
+        "yf_finance": false
+      },
+      "sec13f": {
+        "holders_count": 1,
+        "total_market_value": 1860925216
+      },
+      "market_facts": null,
+      "stock_action_index": null,
+      "yf_estimates": {
+        "file": false,
+        "path": "data/yf/finance/RGLD.json",
         "state": "absent",
         "source_as_of": null,
         "fields_present": [],
@@ -28668,6 +29953,71 @@
       }
     },
     {
+      "ticker": "SOXL",
+      "classification": {
+        "type": "sec13f_market_facts_only",
+        "classes": [
+          "market_facts_only",
+          "no_action_index_overlap"
+        ]
+      },
+      "source_links": {
+        "sec13f_by_ticker": true,
+        "global_scouter_core": false,
+        "stock_action_index": false,
+        "market_facts": true,
+        "yf_finance": true
+      },
+      "sec13f": {
+        "holders_count": 1,
+        "total_market_value": 3198679701
+      },
+      "market_facts": {
+        "asset_type": "etf",
+        "source_as_of": "2026-09-30",
+        "price": {
+          "present": false,
+          "value": null,
+          "confidence": null,
+          "source": null,
+          "as_of": null
+        }
+      },
+      "stock_action_index": null,
+      "yf_estimates": {
+        "file": true,
+        "path": "data/yf/finance/SOXL.json",
+        "state": "incomplete",
+        "source_as_of": "2026-10-01",
+        "fields_present": [],
+        "missing_fields": [
+          "earnings_estimate",
+          "revenue_estimate",
+          "growth_estimates",
+          "eps_trend",
+          "eps_revisions",
+          "recommendations_summary"
+        ]
+      },
+      "completeness": {
+        "market_facts_price_observed": false,
+        "action_price_present": false,
+        "action_valuation_present": false,
+        "yf_estimate_or_absent_reason": true,
+        "bridge_field_floor": false,
+        "per_present": false,
+        "forward_pe_present": false
+      },
+      "acceptance": {
+        "promotion_status": "promoted",
+        "reason": "promoted_live_honest_coverage",
+        "producer_typed_marker": true,
+        "current_consumer": "public/superinvestors and /data/computed/sec13f_bridge_index.json",
+        "public_route": "/data/computed/sec13f_bridge_index.json",
+        "live_readback": "verified"
+      }
+    },
+    {
       "ticker": "SPHR",
       "classification": {
         "type": "sec13f_unresolved",
@@ -28819,6 +30169,71 @@
         "action_price_present": false,
         "action_valuation_present": false,
         "yf_estimate_or_absent_reason": false,
+        "bridge_field_floor": false,
+        "per_present": false,
+        "forward_pe_present": false
+      },
+      "acceptance": {
+        "promotion_status": "promoted",
+        "reason": "promoted_live_honest_coverage",
+        "producer_typed_marker": true,
+        "current_consumer": "public/superinvestors and /data/computed/sec13f_bridge_index.json",
+        "public_route": "/data/computed/sec13f_bridge_index.json",
+        "live_readback": "verified"
+      }
+    },
+    {
+      "ticker": "SPUU",
+      "classification": {
+        "type": "sec13f_market_facts_only",
+        "classes": [
+          "market_facts_only",
+          "no_action_index_overlap"
+        ]
+      },
+      "source_links": {
+        "sec13f_by_ticker": true,
+        "global_scouter_core": false,
+        "stock_action_index": false,
+        "market_facts": true,
+        "yf_finance": true
+      },
+      "sec13f": {
+        "holders_count": 1,
+        "total_market_value": 24596449
+      },
+      "market_facts": {
+        "asset_type": "etf",
+        "source_as_of": "2026-09-30",
+        "price": {
+          "present": false,
+          "value": null,
+          "confidence": null,
+          "source": null,
+          "as_of": null
+        }
+      },
+      "stock_action_index": null,
+      "yf_estimates": {
+        "file": true,
+        "path": "data/yf/finance/SPUU.json",
+        "state": "incomplete",
+        "source_as_of": "2026-09-25",
+        "fields_present": [],
+        "missing_fields": [
+          "earnings_estimate",
+          "revenue_estimate",
+          "growth_estimates",
+          "eps_trend",
+          "eps_revisions",
+          "recommendations_summary"
+        ]
+      },
+      "completeness": {
+        "market_facts_price_observed": false,
+        "action_price_present": false,
+        "action_valuation_present": false,
+        "yf_estimate_or_absent_reason": true,
         "bridge_field_floor": false,
         "per_present": false,
         "forward_pe_present": false
@@ -29317,6 +30732,61 @@
       "yf_estimates": {
         "file": false,
         "path": "data/yf/finance/SUI.json",
+        "state": "absent",
+        "source_as_of": null,
+        "fields_present": [],
+        "missing_fields": [
+          "earnings_estimate",
+          "revenue_estimate",
+          "growth_estimates",
+          "eps_trend",
+          "eps_revisions",
+          "recommendations_summary"
+        ]
+      },
+      "completeness": {
+        "market_facts_price_observed": false,
+        "action_price_present": false,
+        "action_valuation_present": false,
+        "yf_estimate_or_absent_reason": false,
+        "bridge_field_floor": false,
+        "per_present": false,
+        "forward_pe_present": false
+      },
+      "acceptance": {
+        "promotion_status": "promoted",
+        "reason": "promoted_live_honest_coverage",
+        "producer_typed_marker": true,
+        "current_consumer": "public/superinvestors and /data/computed/sec13f_bridge_index.json",
+        "public_route": "/data/computed/sec13f_bridge_index.json",
+        "live_readback": "verified"
+      }
+    },
+    {
+      "ticker": "SUNB",
+      "classification": {
+        "type": "sec13f_unresolved",
+        "classes": [
+          "no_action_index_overlap",
+          "no_market_facts"
+        ]
+      },
+      "source_links": {
+        "sec13f_by_ticker": true,
+        "global_scouter_core": false,
+        "stock_action_index": false,
+        "market_facts": false,
+        "yf_finance": false
+      },
+      "sec13f": {
+        "holders_count": 5,
+        "total_market_value": 1438909466
+      },
+      "market_facts": null,
+      "stock_action_index": null,
+      "yf_estimates": {
+        "file": false,
+        "path": "data/yf/finance/SUNB.json",
         "state": "absent",
         "source_as_of": null,
         "fields_present": [],
@@ -29978,6 +31448,71 @@
       }
     },
     {
+      "ticker": "TDTT",
+      "classification": {
+        "type": "sec13f_market_facts_only",
+        "classes": [
+          "market_facts_only",
+          "no_action_index_overlap"
+        ]
+      },
+      "source_links": {
+        "sec13f_by_ticker": true,
+        "global_scouter_core": false,
+        "stock_action_index": false,
+        "market_facts": true,
+        "yf_finance": true
+      },
+      "sec13f": {
+        "holders_count": 1,
+        "total_market_value": 1987988797
+      },
+      "market_facts": {
+        "asset_type": "etf",
+        "source_as_of": "2026-09-30",
+        "price": {
+          "present": false,
+          "value": null,
+          "confidence": null,
+          "source": null,
+          "as_of": null
+        }
+      },
+      "stock_action_index": null,
+      "yf_estimates": {
+        "file": true,
+        "path": "data/yf/finance/TDTT.json",
+        "state": "incomplete",
+        "source_as_of": "2026-09-25",
+        "fields_present": [],
+        "missing_fields": [
+          "earnings_estimate",
+          "revenue_estimate",
+          "growth_estimates",
+          "eps_trend",
+          "eps_revisions",
+          "recommendations_summary"
+        ]
+      },
+      "completeness": {
+        "market_facts_price_observed": false,
+        "action_price_present": false,
+        "action_valuation_present": false,
+        "yf_estimate_or_absent_reason": true,
+        "bridge_field_floor": false,
+        "per_present": false,
+        "forward_pe_present": false
+      },
+      "acceptance": {
+        "promotion_status": "promoted",
+        "reason": "promoted_live_honest_coverage",
+        "producer_typed_marker": true,
+        "current_consumer": "public/superinvestors and /data/computed/sec13f_bridge_index.json",
+        "public_route": "/data/computed/sec13f_bridge_index.json",
+        "live_readback": "verified"
+      }
+    },
+    {
       "ticker": "TECH",
       "classification": {
         "type": "sec13f_extension_stock",
@@ -30172,6 +31707,61 @@
         "bridge_field_floor": true,
         "per_present": true,
         "forward_pe_present": true
+      },
+      "acceptance": {
+        "promotion_status": "promoted",
+        "reason": "promoted_live_honest_coverage",
+        "producer_typed_marker": true,
+        "current_consumer": "public/superinvestors and /data/computed/sec13f_bridge_index.json",
+        "public_route": "/data/computed/sec13f_bridge_index.json",
+        "live_readback": "verified"
+      }
+    },
+    {
+      "ticker": "TEM",
+      "classification": {
+        "type": "sec13f_unresolved",
+        "classes": [
+          "no_action_index_overlap",
+          "no_market_facts"
+        ]
+      },
+      "source_links": {
+        "sec13f_by_ticker": true,
+        "global_scouter_core": false,
+        "stock_action_index": false,
+        "market_facts": false,
+        "yf_finance": false
+      },
+      "sec13f": {
+        "holders_count": 1,
+        "total_market_value": 580611200
+      },
+      "market_facts": null,
+      "stock_action_index": null,
+      "yf_estimates": {
+        "file": false,
+        "path": "data/yf/finance/TEM.json",
+        "state": "absent",
+        "source_as_of": null,
+        "fields_present": [],
+        "missing_fields": [
+          "earnings_estimate",
+          "revenue_estimate",
+          "growth_estimates",
+          "eps_trend",
+          "eps_revisions",
+          "recommendations_summary"
+        ]
+      },
+      "completeness": {
+        "market_facts_price_observed": false,
+        "action_price_present": false,
+        "action_valuation_present": false,
+        "yf_estimate_or_absent_reason": false,
+        "bridge_field_floor": false,
+        "per_present": false,
+        "forward_pe_present": false
       },
       "acceptance": {
         "promotion_status": "promoted",
@@ -30499,6 +32089,71 @@
         "action_price_present": false,
         "action_valuation_present": false,
         "yf_estimate_or_absent_reason": false,
+        "bridge_field_floor": false,
+        "per_present": false,
+        "forward_pe_present": false
+      },
+      "acceptance": {
+        "promotion_status": "promoted",
+        "reason": "promoted_live_honest_coverage",
+        "producer_typed_marker": true,
+        "current_consumer": "public/superinvestors and /data/computed/sec13f_bridge_index.json",
+        "public_route": "/data/computed/sec13f_bridge_index.json",
+        "live_readback": "verified"
+      }
+    },
+    {
+      "ticker": "TILT",
+      "classification": {
+        "type": "sec13f_market_facts_only",
+        "classes": [
+          "market_facts_only",
+          "no_action_index_overlap"
+        ]
+      },
+      "source_links": {
+        "sec13f_by_ticker": true,
+        "global_scouter_core": false,
+        "stock_action_index": false,
+        "market_facts": true,
+        "yf_finance": true
+      },
+      "sec13f": {
+        "holders_count": 1,
+        "total_market_value": 1443106092
+      },
+      "market_facts": {
+        "asset_type": "etf",
+        "source_as_of": "2026-09-30",
+        "price": {
+          "present": false,
+          "value": null,
+          "confidence": null,
+          "source": null,
+          "as_of": null
+        }
+      },
+      "stock_action_index": null,
+      "yf_estimates": {
+        "file": true,
+        "path": "data/yf/finance/TILT.json",
+        "state": "incomplete",
+        "source_as_of": "2026-09-25",
+        "fields_present": [],
+        "missing_fields": [
+          "earnings_estimate",
+          "revenue_estimate",
+          "growth_estimates",
+          "eps_trend",
+          "eps_revisions",
+          "recommendations_summary"
+        ]
+      },
+      "completeness": {
+        "market_facts_price_observed": false,
+        "action_price_present": false,
+        "action_valuation_present": false,
+        "yf_estimate_or_absent_reason": true,
         "bridge_field_floor": false,
         "per_present": false,
         "forward_pe_present": false
@@ -32437,6 +34092,61 @@
         "bridge_field_floor": true,
         "per_present": true,
         "forward_pe_present": true
+      },
+      "acceptance": {
+        "promotion_status": "promoted",
+        "reason": "promoted_live_honest_coverage",
+        "producer_typed_marker": true,
+        "current_consumer": "public/superinvestors and /data/computed/sec13f_bridge_index.json",
+        "public_route": "/data/computed/sec13f_bridge_index.json",
+        "live_readback": "verified"
+      }
+    },
+    {
+      "ticker": "USFD",
+      "classification": {
+        "type": "sec13f_unresolved",
+        "classes": [
+          "no_action_index_overlap",
+          "no_market_facts"
+        ]
+      },
+      "source_links": {
+        "sec13f_by_ticker": true,
+        "global_scouter_core": false,
+        "stock_action_index": false,
+        "market_facts": false,
+        "yf_finance": false
+      },
+      "sec13f": {
+        "holders_count": 5,
+        "total_market_value": 3102836169
+      },
+      "market_facts": null,
+      "stock_action_index": null,
+      "yf_estimates": {
+        "file": false,
+        "path": "data/yf/finance/USFD.json",
+        "state": "absent",
+        "source_as_of": null,
+        "fields_present": [],
+        "missing_fields": [
+          "earnings_estimate",
+          "revenue_estimate",
+          "growth_estimates",
+          "eps_trend",
+          "eps_revisions",
+          "recommendations_summary"
+        ]
+      },
+      "completeness": {
+        "market_facts_price_observed": false,
+        "action_price_present": false,
+        "action_valuation_present": false,
+        "yf_estimate_or_absent_reason": false,
+        "bridge_field_floor": false,
+        "per_present": false,
+        "forward_pe_present": false
       },
       "acceptance": {
         "promotion_status": "promoted",
