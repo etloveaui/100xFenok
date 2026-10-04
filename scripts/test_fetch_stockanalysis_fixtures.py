@@ -5720,6 +5720,154 @@ module.main()
                 },
             )
 
+    def test_yahoo_pair_promotes_genuine_daily_finance_and_refuses_false_canonical(self) -> None:
+        ticker = "IAUM"
+        now = datetime.now(timezone.utc).replace(microsecond=0)
+        old_quote = now - timedelta(days=2)
+        new_quote = now - timedelta(days=1)
+        old_dates = [(now - timedelta(days=3)).date().isoformat(), old_quote.date().isoformat()]
+        new_dates = [*old_dates, new_quote.date().isoformat()]
+
+        def data(quote, dates):
+            return {"info": {"symbol": ticker, "quoteType": "ETF", "currentPrice": 10.0,
+                             "regularMarketTime": int(quote.timestamp())},
+                    "history_1y": [{"date": day, "close": 10.0} for day in dates]}
+
+        engine = self.fetcher.load_yf_finance_module()
+        old_data = data(old_quote, old_dates)
+        old_fetched = (old_quote + timedelta(hours=1)).isoformat().replace("+00:00", "Z")
+        existing = engine.decorate_finance_payload(ticker, "daily", old_fetched, old_data)
+        existing.pop("first_trade_date", None)  # The engine serializer omits null fields.
+        self.assertNotIn("source", existing)
+        self.assertEqual(existing["source_as_of"], old_quote.date().isoformat())
+        candidate_provider = self.fetcher.build_yf_payload(
+            ticker, data(new_quote, new_dates), now.isoformat().replace("+00:00", "Z")
+        )
+        candidate_detail = self.fetcher.yahoo_etf_payload(ticker, candidate_provider)
+        old_detail = self.fetcher.yahoo_etf_payload(
+            ticker, self.fetcher.build_yf_payload(ticker, old_data, old_fetched)
+        )
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            with patch.object(self.fetcher, "YF_OUT_DIR", root / "data/yf/finance"), \
+                    patch.object(self.fetcher, "YF_ETF_DETAIL_OUT_DIR", root / "data/yf/etf-details"), \
+                    patch.object(self.fetcher, "YF_PUBLIC_DIR", root / "public/data/yf/finance"):
+                finance = self.fetcher.YF_OUT_DIR / f"{ticker}.json"
+                detail = self.fetcher.YF_ETF_DETAIL_OUT_DIR / f"{ticker}.json"
+                public = self.fetcher.YF_PUBLIC_DIR / f"{ticker}.json"
+                paths = (finance, detail, public)
+                for path in paths:
+                    path.parent.mkdir(parents=True, exist_ok=True)
+
+                def seed(finance_payload=existing, detail_payload=old_detail):
+                    finance.write_bytes(self.fetcher.json_payload_bytes(finance_payload))
+                    detail.write_bytes(self.fetcher.json_payload_bytes(detail_payload))
+                    public.write_bytes(finance.read_bytes())
+                    return [path.read_bytes() for path in paths]
+
+                seed()
+                self.fetcher.publish_yahoo_etf_fallback_pair(
+                    ticker, candidate_provider, candidate_detail, mirror_public=True
+                )
+                self.assertEqual(json.loads(finance.read_bytes()), candidate_provider)
+                self.assertEqual(json.loads(detail.read_bytes()), candidate_detail)
+                self.assertEqual(public.read_bytes(), finance.read_bytes())
+
+                cases = {
+                    "wrong source": {**existing, "source": "other"},
+                    "wrong schema": {**existing, "schema_version": "yf-finance/v1"},
+                    "unsupported profile": {**existing, "profile": "other"},
+                    "core snapshot": {**existing, "profile": "core"},
+                    "full snapshot": {**existing, "profile": "full"},
+                    "wrong symbol": {**existing, "data": data(old_quote, old_dates) | {
+                        "info": {**old_data["info"], "symbol": "WRONG"}}},
+                    "wrong kind": {**existing, "data": data(old_quote, old_dates) | {
+                        "info": {**old_data["info"], "quoteType": "EQUITY"}}},
+                    "false quote": {**existing, "quote_as_of": "2026-01-01T00:00:00Z"},
+                    "false history": {**existing, "history_as_of": "2026-01-01"},
+                    "false source": {**existing, "source_as_of": "2026-01-01"},
+                    "false first trade": {**existing, "first_trade_date": "2020-01-01"},
+                    "missing source stamp": {key: value for key, value in existing.items() if key != "source_as_of"},
+                    "future fetch": {**existing, "fetched_at": (now + timedelta(days=1)).isoformat().replace("+00:00", "Z")},
+                    "future quote": {**existing, "data": data(now + timedelta(days=1), old_dates)},
+                }
+                newer_data = data(now - timedelta(hours=1), [*old_dates, now.date().isoformat()])
+                newer = engine.decorate_finance_payload(
+                    ticker, "daily", now.isoformat().replace("+00:00", "Z"), newer_data
+                )
+                newer.pop("first_trade_date", None)
+                cases["source regression"] = newer
+                wider_data = data(old_quote, [(now - timedelta(days=4)).date().isoformat(), *old_dates])
+                wider = engine.decorate_finance_payload(ticker, "daily", old_fetched, wider_data)
+                wider.pop("first_trade_date", None)
+                cases["history collapse"] = wider
+                for label, bad_finance in cases.items():
+                    with self.subTest(label=label):
+                        before = seed(bad_finance)
+                        with self.assertRaises(ValueError):
+                            self.fetcher.publish_yahoo_etf_fallback_pair(
+                                ticker, candidate_provider, candidate_detail, mirror_public=True
+                            )
+                        self.assertEqual([path.read_bytes() for path in paths], before)
+                with self.subTest(label="wrong detail canonical"):
+                    before = seed(existing, {**old_detail, "ticker": "WRONG"})
+                    with self.assertRaises(ValueError):
+                        self.fetcher.publish_yahoo_etf_fallback_pair(
+                            ticker, candidate_provider, candidate_detail, mirror_public=True
+                        )
+                    self.assertEqual([path.read_bytes() for path in paths], before)
+                with self.subTest(label="candidate raw mismatch"):
+                    before = seed()
+                    mismatched = {**candidate_detail, "raw": {"yf": old_data}}
+                    with self.assertRaises(ValueError):
+                        self.fetcher.publish_yahoo_etf_fallback_pair(
+                            ticker, candidate_provider, mismatched, mirror_public=True
+                        )
+                    self.assertEqual([path.read_bytes() for path in paths], before)
+                with self.subTest(label="valid same-day raw clocks"):
+                    before = seed()
+                    same_day = data(now, [*new_dates, now.date().isoformat()])
+                    same_provider = self.fetcher.build_yf_payload(
+                        ticker, same_day, now.isoformat().replace("+00:00", "Z")
+                    )
+                    same_detail = self.fetcher.yahoo_etf_payload(ticker, same_provider)
+                    self.fetcher.publish_yahoo_etf_fallback_pair(
+                        ticker, same_provider, same_detail, mirror_public=True
+                    )
+                    self.assertNotEqual(finance.read_bytes(), before[0])
+                    self.assertEqual(json.loads(detail.read_bytes()), same_detail)
+                for label, bad_data in (
+                    ("candidate wrong symbol", {**data(new_quote, new_dates), "info": {
+                        **candidate_provider["data"]["info"], "symbol": "WRONG",
+                    }}),
+                    ("candidate wrong kind", {**data(new_quote, new_dates), "info": {
+                        **candidate_provider["data"]["info"], "quoteType": "EQUITY",
+                    }}),
+                    ("candidate future history", data(new_quote, [*new_dates,
+                        (now + timedelta(days=1)).date().isoformat()])),
+                    ("candidate future first trade", {**data(new_quote, new_dates), "info": {
+                        **candidate_provider["data"]["info"],
+                        "firstTradeDateEpochUtc": int((now + timedelta(days=2)).timestamp()),
+                    }}),
+                ):
+                    with self.subTest(label=label):
+                        bad_provider = self.fetcher.build_yf_payload(
+                            ticker, bad_data, now.isoformat().replace("+00:00", "Z")
+                        )
+                        # Bypass the normalizer's own identity rejection to test
+                        # the pair publisher against mutually bound forged raw.
+                        bad_detail = (
+                            {**candidate_detail, "raw": {"yf": bad_data}}
+                            if label in {"candidate wrong symbol", "candidate wrong kind"}
+                            else self.fetcher.yahoo_etf_payload(ticker, bad_provider)
+                        )
+                        before = seed()
+                        with self.assertRaises(ValueError):
+                            self.fetcher.publish_yahoo_etf_fallback_pair(
+                                ticker, bad_provider, bad_detail, mirror_public=True
+                            )
+                        self.assertEqual([path.read_bytes() for path in paths], before)
+
     def test_invalid_yahoo_fallback_preserves_provider_files_and_records_invalid_observation(self) -> None:
         original_loader = self.fetcher.load_yf_finance_module
         original_yf_out_dir = self.fetcher.YF_OUT_DIR

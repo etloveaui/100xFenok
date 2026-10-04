@@ -6169,6 +6169,56 @@ def restore_yahoo_etf_fallback_pair(snapshots: dict[Path, bytes | None]) -> None
                 stage.unlink(missing_ok=True)
 
 
+def validated_yahoo_engine_finance_floor(ticker: str, existing: dict, candidate: dict) -> datetime:
+    """Bind an existing owner-engine finance artifact to its raw Yahoo clocks."""
+    engine_fields = {"schema_version", "ticker", "fetched_at", "profile", "data",
+                     "quote_as_of", "history_as_of", "source_as_of", "first_trade_date"}
+    if (set(existing) - engine_fields or existing.get("profile") not in {"daily", "etf"}
+            or not isinstance(existing.get("data"), dict)):
+        raise ValueError("Yahoo ETF canonical provider identity mismatch")
+    info = existing["data"].get("info")
+    if not isinstance(info, dict) or info.get("symbol") != ticker or info.get("quoteType") != "ETF":
+        raise ValueError("Yahoo ETF canonical provider identity mismatch")
+    fetched_at = validate_aware_timestamp(existing.get("fetched_at"), "Yahoo canonical finance fetch stamp")
+    fetched = parse_iso_timestamp(fetched_at)
+    now = parse_iso_timestamp(now_iso())
+    if fetched > now:
+        raise ValueError("Yahoo ETF canonical finance fetch stamp is in the future")
+    engine = load_yf_finance_module()
+    reconstructed = engine.decorate_finance_payload(
+        ticker, existing["profile"], fetched_at, existing["data"]
+    )
+    for key in ("quote_as_of", "history_as_of", "source_as_of", "first_trade_date"):
+        if (existing.get(key) != reconstructed[key]
+                or reconstructed[key] is not None and key not in existing):
+            raise ValueError("Yahoo ETF canonical finance metadata disagrees with provider evidence")
+    floor = parse_iso_timestamp(reconstructed["source_as_of"])
+    if floor is None or floor > now:
+        raise ValueError("Yahoo ETF canonical finance source stamp is invalid or in the future")
+    if reconstructed["history_as_of"] and parse_iso_timestamp(reconstructed["history_as_of"]) > now:
+        raise ValueError("Yahoo ETF canonical finance history date is in the future")
+    if reconstructed["first_trade_date"] and parse_iso_timestamp(reconstructed["first_trade_date"]) > now:
+        raise ValueError("Yahoo ETF canonical finance first trade date is in the future")
+    candidate_info = (candidate.get("data") or {}).get("info")
+    if (not isinstance(candidate_info, dict) or candidate_info.get("symbol") != ticker
+            or candidate_info.get("quoteType") != "ETF"):
+        raise ValueError("Yahoo ETF candidate provider identity mismatch")
+    engine.validate_source_progression(existing, candidate)
+    return floor
+
+
+def validate_yahoo_etf_candidate_raw_clocks(ticker: str, provider: dict) -> None:
+    """Check raw Yahoo dates without changing ETF detail's timestamp source stamp."""
+    fetched_at = validate_aware_timestamp(provider.get("fetched_at"), "Yahoo ETF provider fetch stamp")
+    engine = load_yf_finance_module()
+    reconstructed = engine.decorate_finance_payload(ticker, "etf", fetched_at, provider["data"])
+    now = parse_iso_timestamp(now_iso())
+    for field in ("quote_as_of", "history_as_of", "source_as_of", "first_trade_date"):
+        value = reconstructed[field]
+        if value is not None and parse_iso_timestamp(value) > now:
+            raise ValueError(f"Yahoo ETF candidate raw {field} is in the future")
+
+
 def publish_yahoo_etf_fallback_pair(ticker: str, provider: dict, candidate: dict, mirror_public: bool) -> dict:
     """Validate both source floors before staging either provider artifact."""
     validate_yf_etf_detail_payload(ticker, candidate)
@@ -6178,6 +6228,7 @@ def publish_yahoo_etf_fallback_pair(ticker: str, provider: dict, candidate: dict
             or provider.get("fetched_at") != candidate["fetched_at"]
             or provider.get("data") != candidate.get("raw", {}).get("yf")):
         raise ValueError("Yahoo ETF raw provider and normalized candidate binding mismatch")
+    validate_yahoo_etf_candidate_raw_clocks(ticker, provider)
     targets = {YF_OUT_DIR / f"{ticker}.json": provider, YF_ETF_DETAIL_OUT_DIR / f"{ticker}.json": candidate}
     if mirror_public:
         targets[YF_PUBLIC_DIR / f"{ticker}.json"] = provider
@@ -6194,14 +6245,18 @@ def publish_yahoo_etf_fallback_pair(ticker: str, provider: dict, candidate: dict
         existing = json.loads(before)
         if not isinstance(existing, dict) or existing.get("ticker") != ticker:
             raise ValueError("Yahoo ETF canonical provider identity mismatch")
-        if (existing.get("source") != "yahoo_finance"
-                or existing.get("schema_version") != targets[path]["schema_version"]
-                or (targets[path]["schema_version"] == "yf-finance/v2" and existing.get("profile") != "etf")):
+        finance = targets[path]["schema_version"] == "yf-finance/v2"
+        if existing.get("schema_version") != targets[path]["schema_version"]:
             raise ValueError("Yahoo ETF canonical provider identity mismatch")
-        floor = parse_iso_timestamp(yahoo_detail_source_timestamp(existing))
-        claimed_floor = parse_iso_timestamp(existing.get("source_as_of"))
-        if claimed_floor != floor:
-            raise ValueError("Yahoo ETF canonical source stamp disagrees with provider evidence")
+        if finance and "source" not in existing:
+            floor = validated_yahoo_engine_finance_floor(ticker, existing, provider)
+        else:
+            if existing.get("source") != "yahoo_finance" or (finance and existing.get("profile") != "etf"):
+                raise ValueError("Yahoo ETF canonical provider identity mismatch")
+            floor = parse_iso_timestamp(yahoo_detail_source_timestamp(existing))
+            claimed_floor = parse_iso_timestamp(existing.get("source_as_of"))
+            if claimed_floor != floor:
+                raise ValueError("Yahoo ETF canonical source stamp disagrees with provider evidence")
         if floor is not None and source < floor:
             raise ValueError("Yahoo ETF candidate would regress the canonical provider date")
     stages = {}
