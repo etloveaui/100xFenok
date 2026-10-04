@@ -1,55 +1,22 @@
 {
-  "attempts": [
-    {
-      "attempts_used": 1,
-      "event_name": "schedule",
-      "failures": [],
-      "latency_ms": 869,
-      "natural": true,
-      "observed_at": "2026-08-09T02:25:42Z",
-      "outcome": "fresh",
-      "run_attempt": 1,
-      "run_id": "31290251671",
-      "schedule": "7 0 * * 0-5",
-      "shard": "0/72"
-    },
-    {
-      "attempts_used": 1,
-      "event_name": "workflow_dispatch",
-      "failures": [],
-      "latency_ms": 525,
-      "natural": false,
-      "observed_at": "2026-09-28T06:02:24Z",
-      "outcome": "fresh",
-      "run_attempt": 1,
-      "run_id": "36367834787",
-      "schedule": "",
-      "shard": ""
-    }
-  ],
   "current": {
-    "fetched_at": "2026-09-28T06:09:17Z",
-    "history_as_of": "2026-09-25",
+    "fetched_at": "2026-10-04T05:48:50Z",
+    "history_as_of": "2026-10-02",
     "path": "data/yf/finance/RAAX.json",
-    "payload_sha256": "243e959278128dcae572b80013f32f1d3006addee170f48f4975de935052eb9a",
-    "quote_as_of": "2026-09-25T20:00:00Z",
-    "source_as_of": "2026-09-25"
+    "payload_sha256": "b5dd30d06f565acbd6b6bad4182921e77d715ccf6bf8c5256cfc5f781ef2da90",
+    "quote_as_of": "2026-10-02T20:00:00Z",
+    "source_as_of": "2026-10-02"
   },
   "discovered_from": [
-    "stockanalysis_etf"
+    "core_daily_basket"
   ],
-  "last_attempt": {
+  "failure_count": 0,
+  "last_result": {
     "attempts_used": 1,
-    "event_name": "workflow_dispatch",
     "failures": [],
-    "latency_ms": 525,
-    "natural": false,
-    "observed_at": "2026-09-28T06:02:24Z",
-    "outcome": "fresh",
-    "run_attempt": 1,
-    "run_id": "36367834787",
-    "schedule": "",
-    "shard": ""
+    "latency_ms": 576,
+    "observed_at": "2026-10-04T05:48:50Z",
+    "outcome": "fresh"
   },
   "lkg": {
     "fetched_at": "2026-08-09T02:29:47Z",
@@ -59,25 +26,12 @@
     "quote_as_of": "2026-08-07T19:59:51Z",
     "source_as_of": "2026-08-07"
   },
-  "promotion_contract": "provider_observation/v2",
-  "provider_observation": {
-    "event_name": "workflow_dispatch",
-    "history_as_of": "2026-09-25",
-    "observed_at": "2026-09-28T06:02:24Z",
-    "payload_sha256": "5e8c07f1b3e4661b71d58689337d939d918db5c2efb533b37583c25b7de636b3",
-    "quote_as_of": "2026-09-25T20:00:00Z",
-    "run_attempt": 1,
-    "run_id": "36367834787",
-    "schema_version": "provider_observation/v2",
-    "source_as_of": "2026-09-25"
-  },
   "resolution_state": "fresh_primary",
   "retry": false,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "stale": {
     "age_business_days": 8,
     "classified_at": "2026-08-19T23:42:29Z",
-    "classified_run_id": "32314261503",
     "expected_resolution": "next_natural_yahoo_run",
     "max_business_days": 6,
     "message": "RAAX holds LKG because Yahoo source date 2026-08-07 is 8 business days old, beyond the 6-day bound; it will retry on the next natural Yahoo run.",
@@ -85,5 +39,5 @@
     "source_as_of": "2026-08-07"
   },
   "ticker": "RAAX",
-  "updated_at": "2026-09-28T06:02:24Z"
+  "updated_at": "2026-10-04T05:48:50Z"
 }
