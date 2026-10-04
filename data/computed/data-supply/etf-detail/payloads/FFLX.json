@@ -1,0 +1,2638 @@
+{
+  "schema_version": "stockanalysis/v1",
+  "source": "stockanalysis",
+  "asset_type": "etf",
+  "ticker": "FFLX",
+  "source_as_of": "2026-10-01T00:00:00Z",
+  "fetched_at": "2026-10-04T12:00:23Z",
+  "endpoints": {
+    "holdings": "/etf/fflx/holdings/__data.json",
+    "overview": "/etf/fflx/__data.json",
+    "quote": null,
+    "history_periods": {}
+  },
+  "endpoint_contracts": {
+    "overview": {
+      "format": "svelte_devalue",
+      "decoder": "svelte_devalue_node/v1",
+      "contract": "etf_detail_overview/v1"
+    },
+    "holdings": {
+      "format": "svelte_devalue",
+      "decoder": "svelte_devalue_node/v1",
+      "contract": "etf_detail_holdings/v1"
+    },
+    "quote": {
+      "format": "rest_json",
+      "contract": "stockanalysis_quote/v1"
+    },
+    "history_periods": {
+      "format": "rest_json",
+      "contract": "stockanalysis_history/v1"
+    }
+  },
+  "normalized": {
+    "holdings": [
+      {
+        "rank": 1,
+        "name": "2 Year Treasury Note Future Dec 26",
+        "weight_pct": 14.5,
+        "shares": 157,
+        "raw": {
+          "no": 1,
+          "n": "2 Year Treasury Note Future Dec 26",
+          "as": "14.50%",
+          "sh": "157"
+        }
+      },
+      {
+        "rank": 2,
+        "name": "5 Year Treasury Note Future Dec 26",
+        "weight_pct": 5.78,
+        "shares": 123,
+        "raw": {
+          "no": 2,
+          "n": "5 Year Treasury Note Future Dec 26",
+          "as": "5.78%",
+          "sh": "123"
+        }
+      },
+      {
+        "rank": 3,
+        "name": "US Treasury Bond Future Dec 26",
+        "weight_pct": 2.1,
+        "shares": 45,
+        "raw": {
+          "no": 3,
+          "n": "US Treasury Bond Future Dec 26",
+          "as": "2.10%",
+          "sh": "45"
+        }
+      },
+      {
+        "rank": 4,
+        "symbol": "!MUTF/MISXX",
+        "name": "Morgan Stanley Instl Lqudty Trs Instl",
+        "weight_pct": 2.09,
+        "shares": 4597366,
+        "raw": {
+          "no": 4,
+          "n": "Morgan Stanley Instl Lqudty Trs Instl",
+          "s": "!mutf/MISXX",
+          "as": "2.09%",
+          "sh": "4,597,366"
+        }
+      },
+      {
+        "rank": 5,
+        "name": "Ultra US Treasury Bond Future Dec 26",
+        "weight_pct": 1.75,
+        "shares": 37,
+        "raw": {
+          "no": 5,
+          "n": "Ultra US Treasury Bond Future Dec 26",
+          "as": "1.75%",
+          "sh": "37"
+        }
+      },
+      {
+        "rank": 6,
+        "symbol": "CNSL.2025-1A C",
+        "name": "Consolidated Communications LLC / Fidium Fiber Finance Holdco LLC 9.408%",
+        "weight_pct": 1.39,
+        "shares": 3000000,
+        "raw": {
+          "no": 6,
+          "n": "Consolidated Communications LLC / Fidium Fiber Finance Holdco LLC 9.408%",
+          "s": "CNSL.2025-1A C",
+          "as": "1.39%",
+          "sh": "3,000,000"
+        }
+      },
+      {
+        "rank": 7,
+        "symbol": "GNR.2026-133 IO",
+        "name": "Government National Mortgage Association 0.83207%",
+        "weight_pct": 1.1,
+        "shares": 39587567,
+        "raw": {
+          "no": 7,
+          "n": "Government National Mortgage Association 0.83207%",
+          "s": "GNR.2026-133 IO",
+          "as": "1.10%",
+          "sh": "39,587,567"
+        }
+      },
+      {
+        "rank": 8,
+        "symbol": "G2.MA7366",
+        "name": "Government National Mortgage Association 2%",
+        "weight_pct": 1.08,
+        "shares": 3079403,
+        "raw": {
+          "no": 8,
+          "n": "Government National Mortgage Association 2%",
+          "s": "G2.MA7366",
+          "as": "1.08%",
+          "sh": "3,079,403"
+        }
+      },
+      {
+        "rank": 9,
+        "symbol": "ZAYO.2025-2A C",
+        "name": "ZAYO ISSUER LLC 9.489%",
+        "weight_pct": 0.94,
+        "shares": 2000000,
+        "raw": {
+          "no": 9,
+          "n": "ZAYO ISSUER LLC 9.489%",
+          "s": "ZAYO.2025-2A C",
+          "as": "0.94%",
+          "sh": "2,000,000"
+        }
+      },
+      {
+        "rank": 10,
+        "symbol": "CNSL.2025-1A B",
+        "name": "Consolidated Communications LLC / Fidium Fiber Finance Holdco LLC 6.506%",
+        "weight_pct": 0.9,
+        "shares": 2000000,
+        "raw": {
+          "no": 10,
+          "n": "Consolidated Communications LLC / Fidium Fiber Finance Holdco LLC 6.506%",
+          "s": "CNSL.2025-1A B",
+          "as": "0.90%",
+          "sh": "2,000,000"
+        }
+      },
+      {
+        "rank": 11,
+        "symbol": "ZAYO.2025-1A A2",
+        "name": "ZAYO ISSUER LLC 5.648%",
+        "weight_pct": 0.89,
+        "shares": 2000000,
+        "raw": {
+          "no": 11,
+          "n": "ZAYO ISSUER LLC 5.648%",
+          "s": "ZAYO.2025-1A A2",
+          "as": "0.89%",
+          "sh": "2,000,000"
+        }
+      },
+      {
+        "rank": 12,
+        "symbol": "CHASE.2026-AGY2 A11",
+        "name": "CHASE HOME LENDING MORTGAGE TRUST 2026-AGY2 4.99029%",
+        "weight_pct": 0.89,
+        "shares": 1983712,
+        "raw": {
+          "no": 12,
+          "n": "CHASE HOME LENDING MORTGAGE TRUST 2026-AGY2 4.99029%",
+          "s": "CHASE.2026-AGY2 A11",
+          "as": "0.89%",
+          "sh": "1,983,712"
+        }
+      },
+      {
+        "rank": 13,
+        "symbol": "JPMMT.2026-LTV1 A1",
+        "name": "J.P. MORGAN MORTGAGE TRUST 2026-LTV1 5.416%",
+        "weight_pct": 0.85,
+        "shares": 1907343,
+        "raw": {
+          "no": 13,
+          "n": "J.P. MORGAN MORTGAGE TRUST 2026-LTV1 5.416%",
+          "s": "JPMMT.2026-LTV1 A1",
+          "as": "0.85%",
+          "sh": "1,907,343"
+        }
+      },
+      {
+        "rank": 14,
+        "symbol": "CIM.2026-NR1 A1",
+        "name": "CIM TRUST 2026-NR1 5%",
+        "weight_pct": 0.82,
+        "shares": 1814811,
+        "raw": {
+          "no": 14,
+          "n": "CIM TRUST 2026-NR1 5%",
+          "s": "CIM.2026-NR1 A1",
+          "as": "0.82%",
+          "sh": "1,814,811"
+        }
+      },
+      {
+        "rank": 15,
+        "symbol": "FHR.5502 FC",
+        "name": "FEDERAL HOME LN MTG CORP MULTICLASS MTG PARTN CTFS GTD 5.69029%",
+        "weight_pct": 0.73,
+        "shares": 1624774,
+        "raw": {
+          "no": 15,
+          "n": "FEDERAL HOME LN MTG CORP MULTICLASS MTG PARTN CTFS GTD 5.69029%",
+          "s": "FHR.5502 FC",
+          "as": "0.73%",
+          "sh": "1,624,774"
+        }
+      },
+      {
+        "rank": 16,
+        "symbol": "SGR.2022-1 A1",
+        "name": "SG RESIDENTIAL MTG TR 2022-1 3.95248%",
+        "weight_pct": 0.71,
+        "shares": 1737876,
+        "raw": {
+          "no": 16,
+          "n": "SG RESIDENTIAL MTG TR 2022-1 3.95248%",
+          "s": "SGR.2022-1 A1",
+          "as": "0.71%",
+          "sh": "1,737,876"
+        }
+      },
+      {
+        "rank": 17,
+        "symbol": "G2SF.6.5 11.11",
+        "name": "Government National Mortgage Association 6.5%",
+        "weight_pct": 0.68,
+        "shares": 1500000,
+        "raw": {
+          "no": 17,
+          "n": "Government National Mortgage Association 6.5%",
+          "s": "G2SF.6.5 11.11",
+          "as": "0.68%",
+          "sh": "1,500,000"
+        }
+      },
+      {
+        "rank": 18,
+        "symbol": "FNCL.6.5 11.11",
+        "name": "Federal National Mortgage Association 6.5%",
+        "weight_pct": 0.68,
+        "shares": 1500000,
+        "raw": {
+          "no": 18,
+          "n": "Federal National Mortgage Association 6.5%",
+          "s": "FNCL.6.5 11.11",
+          "as": "0.68%",
+          "sh": "1,500,000"
+        }
+      },
+      {
+        "rank": 19,
+        "symbol": "KLLM.2024-15A D1R",
+        "name": "KENNEDY LEWIS CLO 15 LTD 6.68551%",
+        "weight_pct": 0.68,
+        "shares": 1500000,
+        "raw": {
+          "no": 19,
+          "n": "KENNEDY LEWIS CLO 15 LTD 6.68551%",
+          "s": "KLLM.2024-15A D1R",
+          "as": "0.68%",
+          "sh": "1,500,000"
+        }
+      },
+      {
+        "rank": 20,
+        "symbol": "PRPM.2026-5 A1",
+        "name": "PRPM 2026-5 LLC 5.93%",
+        "weight_pct": 0.68,
+        "shares": 1500000,
+        "raw": {
+          "no": 20,
+          "n": "PRPM 2026-5 LLC 5.93%",
+          "s": "PRPM.2026-5 A1",
+          "as": "0.68%",
+          "sh": "1,500,000"
+        }
+      },
+      {
+        "rank": 21,
+        "symbol": "GNR.2026-136 SK",
+        "name": "Government National Mortgage Association 5.40325%",
+        "weight_pct": 0.66,
+        "shares": 1698005,
+        "raw": {
+          "no": 21,
+          "n": "Government National Mortgage Association 5.40325%",
+          "s": "GNR.2026-136 SK",
+          "as": "0.66%",
+          "sh": "1,698,005"
+        }
+      },
+      {
+        "rank": 22,
+        "symbol": "GSAR.2026-3A D",
+        "name": "GLS AUTO SELECT RECEIVABLES ISSUER TRUST 2026-3 5.55%",
+        "weight_pct": 0.66,
+        "shares": 1486000,
+        "raw": {
+          "no": 22,
+          "n": "GLS AUTO SELECT RECEIVABLES ISSUER TRUST 2026-3 5.55%",
+          "s": "GSAR.2026-3A D",
+          "as": "0.66%",
+          "sh": "1,486,000"
+        }
+      },
+      {
+        "rank": 23,
+        "symbol": "CONE.2026-DFW3 D",
+        "name": "CONE COMMERCIAL MORTGAGE TRUST 2026-DFW3 7.35457%",
+        "weight_pct": 0.66,
+        "shares": 1500000,
+        "raw": {
+          "no": 23,
+          "n": "CONE COMMERCIAL MORTGAGE TRUST 2026-DFW3 7.35457%",
+          "s": "CONE.2026-DFW3 D",
+          "as": "0.66%",
+          "sh": "1,500,000"
+        }
+      },
+      {
+        "rank": 24,
+        "symbol": "FNCL.5.5 11.11",
+        "name": "Federal National Mortgage Association 5.5%",
+        "weight_pct": 0.65,
+        "shares": 1500000,
+        "raw": {
+          "no": 24,
+          "n": "Federal National Mortgage Association 5.5%",
+          "s": "FNCL.5.5 11.11",
+          "as": "0.65%",
+          "sh": "1,500,000"
+        }
+      },
+      {
+        "rank": 25,
+        "symbol": "CLRES.2026-RTL1 M2",
+        "name": "CASTLELAKE RESIDENTIAL MORTGAGE TRUST 2026-RTL1 6.5%",
+        "weight_pct": 0.64,
+        "shares": 1450000,
+        "raw": {
+          "no": 25,
+          "n": "CASTLELAKE RESIDENTIAL MORTGAGE TRUST 2026-RTL1 6.5%",
+          "s": "CLRES.2026-RTL1 M2",
+          "as": "0.64%",
+          "sh": "1,450,000"
+        }
+      }
+    ],
+    "asset_allocation": null,
+    "sectors": null,
+    "countries": null,
+    "holding_count": 284,
+    "holdings_updated": "Oct 1, 2026",
+    "classification": {
+      "is_leveraged": false,
+      "leverage_factor": null,
+      "is_inverse": false,
+      "is_single_stock": false,
+      "underlying": null,
+      "source": "stockanalysis.overview.description",
+      "confidence": "high"
+    },
+    "overview": {
+      "aum": "$173.82M",
+      "expenseRatio": "0.65%",
+      "sharesOut": "18.48M",
+      "dividendYield": "1.05%",
+      "inception": "May 25, 2004",
+      "provider_page": "first-trust",
+      "etf_website": "https://www.ftportfolios.com/retail/etf/etfsummary.aspx?Ticker=FFLX"
+    },
+    "performance": {
+      "tr1m": -1.88961,
+      "trYTD": null,
+      "tr1y": null,
+      "cagr5y": null,
+      "cagr10y": null,
+      "cagrMAX": null
+    },
+    "quote": null,
+    "history": null,
+    "history_periods": {}
+  },
+  "raw": {
+    "overview": {
+      "trust": {
+        "sources": [
+          {
+            "name": "S&P Global Market Intelligence",
+            "short": "S&P Global",
+            "url": "https://www.spglobal.com/market-intelligence/en"
+          },
+          {
+            "name": "CBOE",
+            "short": "CBOE",
+            "url": "https://www.cboe.com/"
+          },
+          {
+            "name": "Nasdaq UTP",
+            "short": "Nasdaq UTP",
+            "url": "https://www.utpplan.com/overview",
+            "noUtm": true
+          },
+          {
+            "name": "Finnhub",
+            "short": "Finnhub",
+            "url": "https://finnhub.io/"
+          }
+        ],
+        "topic": "overview",
+        "ticker": "FFLX",
+        "lastChecked": 1790987811357,
+        "summary": {
+          "text": "Historical data is provided by S&P Global Market Intelligence. Real-time stock price data is provided by CBOE and 15-minute delayed consolidated tape pricing data is provided by Nasdaq UTP. Several fund data points are also provided by Finnhub."
+        }
+      },
+      "type": "etf",
+      "aum": "$173.82M",
+      "expenseRatio": "0.65%",
+      "peRatio": null,
+      "sharesOut": "18.48M",
+      "dps": "$0.10",
+      "dividendYield": "1.05%",
+      "payoutRatio": null,
+      "exDivDate": "Sep 24, 2026",
+      "ch1y": null,
+      "payoutFrequency": "Monthly",
+      "beta": null,
+      "holdings": 284,
+      "inception": "May 25, 2004",
+      "chart": {
+        "expiration": 1791207000000,
+        "data": [
+          {
+            "t": 1790933400
+          },
+          {
+            "t": 1790933460
+          },
+          {
+            "t": 1790933520
+          },
+          {
+            "t": 1790933580
+          },
+          {
+            "t": 1790933640
+          },
+          {
+            "t": 1790933700
+          },
+          {
+            "t": 1790933760
+          },
+          {
+            "t": 1790933820
+          },
+          {
+            "t": 1790933880
+          },
+          {
+            "t": 1790933940
+          },
+          {
+            "c": 9.41,
+            "o": 9.41,
+            "t": 1790934000
+          },
+          {
+            "c": null,
+            "t": 1790934060
+          },
+          {
+            "c": null,
+            "t": 1790934120
+          },
+          {
+            "c": null,
+            "t": 1790934180
+          },
+          {
+            "c": null,
+            "t": 1790934240
+          },
+          {
+            "c": null,
+            "t": 1790934300
+          },
+          {
+            "c": null,
+            "t": 1790934360
+          },
+          {
+            "c": null,
+            "t": 1790934420
+          },
+          {
+            "c": null,
+            "t": 1790934480
+          },
+          {
+            "c": null,
+            "t": 1790934540
+          },
+          {
+            "c": null,
+            "t": 1790934600
+          },
+          {
+            "c": null,
+            "t": 1790934660
+          },
+          {
+            "c": null,
+            "t": 1790934720
+          },
+          {
+            "c": null,
+            "t": 1790934780
+          },
+          {
+            "c": null,
+            "t": 1790934840
+          },
+          {
+            "c": 9.41,
+            "t": 1790934900
+          },
+          {
+            "c": 9.41,
+            "t": 1790934960
+          },
+          {
+            "c": null,
+            "t": 1790935020
+          },
+          {
+            "c": null,
+            "t": 1790935080
+          },
+          {
+            "c": null,
+            "t": 1790935140
+          },
+          {
+            "c": 9.41,
+            "t": 1790935200
+          },
+          {
+            "c": null,
+            "t": 1790935260
+          },
+          {
+            "c": null,
+            "t": 1790935320
+          },
+          {
+            "c": null,
+            "t": 1790935380
+          },
+          {
+            "c": null,
+            "t": 1790935440
+          },
+          {
+            "c": 9.42,
+            "t": 1790935500
+          },
+          {
+            "c": null,
+            "t": 1790935560
+          },
+          {
+            "c": null,
+            "t": 1790935620
+          },
+          {
+            "c": null,
+            "t": 1790935680
+          },
+          {
+            "c": null,
+            "t": 1790935740
+          },
+          {
+            "c": null,
+            "t": 1790935800
+          },
+          {
+            "c": null,
+            "t": 1790935860
+          },
+          {
+            "c": null,
+            "t": 1790935920
+          },
+          {
+            "c": null,
+            "t": 1790935980
+          },
+          {
+            "c": null,
+            "t": 1790936040
+          },
+          {
+            "c": null,
+            "t": 1790936100
+          },
+          {
+            "c": null,
+            "t": 1790936160
+          },
+          {
+            "c": null,
+            "t": 1790936220
+          },
+          {
+            "c": null,
+            "t": 1790936280
+          },
+          {
+            "c": null,
+            "t": 1790936340
+          },
+          {
+            "c": 9.415,
+            "t": 1790936400
+          },
+          {
+            "c": null,
+            "t": 1790936460
+          },
+          {
+            "c": null,
+            "t": 1790936520
+          },
+          {
+            "c": null,
+            "t": 1790936580
+          },
+          {
+            "c": null,
+            "t": 1790936640
+          },
+          {
+            "c": null,
+            "t": 1790936700
+          },
+          {
+            "c": null,
+            "t": 1790936760
+          },
+          {
+            "c": null,
+            "t": 1790936820
+          },
+          {
+            "c": null,
+            "t": 1790936880
+          },
+          {
+            "c": null,
+            "t": 1790936940
+          },
+          {
+            "c": null,
+            "t": 1790937000
+          },
+          {
+            "c": null,
+            "t": 1790937060
+          },
+          {
+            "c": null,
+            "t": 1790937120
+          },
+          {
+            "c": null,
+            "t": 1790937180
+          },
+          {
+            "c": null,
+            "t": 1790937240
+          },
+          {
+            "c": null,
+            "t": 1790937300
+          },
+          {
+            "c": null,
+            "t": 1790937360
+          },
+          {
+            "c": null,
+            "t": 1790937420
+          },
+          {
+            "c": null,
+            "t": 1790937480
+          },
+          {
+            "c": null,
+            "t": 1790937540
+          },
+          {
+            "c": null,
+            "t": 1790937600
+          },
+          {
+            "c": null,
+            "t": 1790937660
+          },
+          {
+            "c": null,
+            "t": 1790937720
+          },
+          {
+            "c": 9.41,
+            "t": 1790937780
+          },
+          {
+            "c": null,
+            "t": 1790937840
+          },
+          {
+            "c": null,
+            "t": 1790937900
+          },
+          {
+            "c": null,
+            "t": 1790937960
+          },
+          {
+            "c": null,
+            "t": 1790938020
+          },
+          {
+            "c": null,
+            "t": 1790938080
+          },
+          {
+            "c": null,
+            "t": 1790938140
+          },
+          {
+            "c": null,
+            "t": 1790938200
+          },
+          {
+            "c": null,
+            "t": 1790938260
+          },
+          {
+            "c": null,
+            "t": 1790938320
+          },
+          {
+            "c": null,
+            "t": 1790938380
+          },
+          {
+            "c": 9.39,
+            "t": 1790938440
+          },
+          {
+            "c": 9.39,
+            "t": 1790938500
+          },
+          {
+            "c": null,
+            "t": 1790938560
+          },
+          {
+            "c": null,
+            "t": 1790938620
+          },
+          {
+            "c": null,
+            "t": 1790938680
+          },
+          {
+            "c": null,
+            "t": 1790938740
+          },
+          {
+            "c": null,
+            "t": 1790938800
+          },
+          {
+            "c": null,
+            "t": 1790938860
+          },
+          {
+            "c": null,
+            "t": 1790938920
+          },
+          {
+            "c": null,
+            "t": 1790938980
+          },
+          {
+            "c": null,
+            "t": 1790939040
+          },
+          {
+            "c": 9.39,
+            "t": 1790939100
+          },
+          {
+            "c": 9.39,
+            "t": 1790939160
+          },
+          {
+            "c": 9.39,
+            "t": 1790939220
+          },
+          {
+            "c": null,
+            "t": 1790939280
+          },
+          {
+            "c": 9.39,
+            "t": 1790939340
+          },
+          {
+            "c": null,
+            "t": 1790939400
+          },
+          {
+            "c": 9.39,
+            "t": 1790939460
+          },
+          {
+            "c": null,
+            "t": 1790939520
+          },
+          {
+            "c": 9.39,
+            "t": 1790939580
+          },
+          {
+            "c": null,
+            "t": 1790939640
+          },
+          {
+            "c": null,
+            "t": 1790939700
+          },
+          {
+            "c": null,
+            "t": 1790939760
+          },
+          {
+            "c": null,
+            "t": 1790939820
+          },
+          {
+            "c": null,
+            "t": 1790939880
+          },
+          {
+            "c": null,
+            "t": 1790939940
+          },
+          {
+            "c": null,
+            "t": 1790940000
+          },
+          {
+            "c": null,
+            "t": 1790940060
+          },
+          {
+            "c": null,
+            "t": 1790940120
+          },
+          {
+            "c": null,
+            "t": 1790940180
+          },
+          {
+            "c": null,
+            "t": 1790940240
+          },
+          {
+            "c": null,
+            "t": 1790940300
+          },
+          {
+            "c": null,
+            "t": 1790940360
+          },
+          {
+            "c": null,
+            "t": 1790940420
+          },
+          {
+            "c": 9.38,
+            "t": 1790940480
+          },
+          {
+            "c": null,
+            "t": 1790940540
+          },
+          {
+            "c": null,
+            "t": 1790940600
+          },
+          {
+            "c": null,
+            "t": 1790940660
+          },
+          {
+            "c": null,
+            "t": 1790940720
+          },
+          {
+            "c": null,
+            "t": 1790940780
+          },
+          {
+            "c": null,
+            "t": 1790940840
+          },
+          {
+            "c": 9.39,
+            "t": 1790940900
+          },
+          {
+            "c": 9.4,
+            "t": 1790940960
+          },
+          {
+            "c": null,
+            "t": 1790941020
+          },
+          {
+            "c": null,
+            "t": 1790941080
+          },
+          {
+            "c": null,
+            "t": 1790941140
+          },
+          {
+            "c": null,
+            "t": 1790941200
+          },
+          {
+            "c": null,
+            "t": 1790941260
+          },
+          {
+            "c": null,
+            "t": 1790941320
+          },
+          {
+            "c": null,
+            "t": 1790941380
+          },
+          {
+            "c": null,
+            "t": 1790941440
+          },
+          {
+            "c": null,
+            "t": 1790941500
+          },
+          {
+            "c": null,
+            "t": 1790941560
+          },
+          {
+            "c": null,
+            "t": 1790941620
+          },
+          {
+            "c": null,
+            "t": 1790941680
+          },
+          {
+            "c": null,
+            "t": 1790941740
+          },
+          {
+            "c": 9.39,
+            "t": 1790941800
+          },
+          {
+            "c": 9.39,
+            "t": 1790941860
+          },
+          {
+            "c": null,
+            "t": 1790941920
+          },
+          {
+            "c": null,
+            "t": 1790941980
+          },
+          {
+            "c": null,
+            "t": 1790942040
+          },
+          {
+            "c": null,
+            "t": 1790942100
+          },
+          {
+            "c": null,
+            "t": 1790942160
+          },
+          {
+            "c": null,
+            "t": 1790942220
+          },
+          {
+            "c": null,
+            "t": 1790942280
+          },
+          {
+            "c": 9.38,
+            "t": 1790942340
+          },
+          {
+            "c": null,
+            "t": 1790942400
+          },
+          {
+            "c": null,
+            "t": 1790942460
+          },
+          {
+            "c": null,
+            "t": 1790942520
+          },
+          {
+            "c": null,
+            "t": 1790942580
+          },
+          {
+            "c": null,
+            "t": 1790942640
+          },
+          {
+            "c": null,
+            "t": 1790942700
+          },
+          {
+            "c": null,
+            "t": 1790942760
+          },
+          {
+            "c": null,
+            "t": 1790942820
+          },
+          {
+            "c": null,
+            "t": 1790942880
+          },
+          {
+            "c": null,
+            "t": 1790942940
+          },
+          {
+            "c": null,
+            "t": 1790943000
+          },
+          {
+            "c": 9.38,
+            "t": 1790943060
+          },
+          {
+            "c": null,
+            "t": 1790943120
+          },
+          {
+            "c": null,
+            "t": 1790943180
+          },
+          {
+            "c": 9.384,
+            "t": 1790943240
+          },
+          {
+            "c": null,
+            "t": 1790943300
+          },
+          {
+            "c": null,
+            "t": 1790943360
+          },
+          {
+            "c": null,
+            "t": 1790943420
+          },
+          {
+            "c": null,
+            "t": 1790943480
+          },
+          {
+            "c": null,
+            "t": 1790943540
+          },
+          {
+            "c": null,
+            "t": 1790943600
+          },
+          {
+            "c": null,
+            "t": 1790943660
+          },
+          {
+            "c": null,
+            "t": 1790943720
+          },
+          {
+            "c": null,
+            "t": 1790943780
+          },
+          {
+            "c": null,
+            "t": 1790943840
+          },
+          {
+            "c": null,
+            "t": 1790943900
+          },
+          {
+            "c": null,
+            "t": 1790943960
+          },
+          {
+            "c": null,
+            "t": 1790944020
+          },
+          {
+            "c": 9.385,
+            "t": 1790944080
+          },
+          {
+            "c": 9.39,
+            "t": 1790944140
+          },
+          {
+            "c": null,
+            "t": 1790944200
+          },
+          {
+            "c": null,
+            "t": 1790944260
+          },
+          {
+            "c": null,
+            "t": 1790944320
+          },
+          {
+            "c": null,
+            "t": 1790944380
+          },
+          {
+            "c": null,
+            "t": 1790944440
+          },
+          {
+            "c": 9.39,
+            "t": 1790944500
+          },
+          {
+            "c": null,
+            "t": 1790944560
+          },
+          {
+            "c": null,
+            "t": 1790944620
+          },
+          {
+            "c": null,
+            "t": 1790944680
+          },
+          {
+            "c": null,
+            "t": 1790944740
+          },
+          {
+            "c": null,
+            "t": 1790944800
+          },
+          {
+            "c": null,
+            "t": 1790944860
+          },
+          {
+            "c": null,
+            "t": 1790944920
+          },
+          {
+            "c": null,
+            "t": 1790944980
+          },
+          {
+            "c": null,
+            "t": 1790945040
+          },
+          {
+            "c": null,
+            "t": 1790945100
+          },
+          {
+            "c": null,
+            "t": 1790945160
+          },
+          {
+            "c": null,
+            "t": 1790945220
+          },
+          {
+            "c": null,
+            "t": 1790945280
+          },
+          {
+            "c": null,
+            "t": 1790945340
+          },
+          {
+            "c": null,
+            "t": 1790945400
+          },
+          {
+            "c": 9.39,
+            "t": 1790945460
+          },
+          {
+            "c": null,
+            "t": 1790945520
+          },
+          {
+            "c": null,
+            "t": 1790945580
+          },
+          {
+            "c": null,
+            "t": 1790945640
+          },
+          {
+            "c": null,
+            "t": 1790945700
+          },
+          {
+            "c": null,
+            "t": 1790945760
+          },
+          {
+            "c": null,
+            "t": 1790945820
+          },
+          {
+            "c": null,
+            "t": 1790945880
+          },
+          {
+            "c": null,
+            "t": 1790945940
+          },
+          {
+            "c": null,
+            "t": 1790946000
+          },
+          {
+            "c": null,
+            "t": 1790946060
+          },
+          {
+            "c": null,
+            "t": 1790946120
+          },
+          {
+            "c": null,
+            "t": 1790946180
+          },
+          {
+            "c": null,
+            "t": 1790946240
+          },
+          {
+            "c": null,
+            "t": 1790946300
+          },
+          {
+            "c": null,
+            "t": 1790946360
+          },
+          {
+            "c": null,
+            "t": 1790946420
+          },
+          {
+            "c": null,
+            "t": 1790946480
+          },
+          {
+            "c": null,
+            "t": 1790946540
+          },
+          {
+            "c": null,
+            "t": 1790946600
+          },
+          {
+            "c": null,
+            "t": 1790946660
+          },
+          {
+            "c": null,
+            "t": 1790946720
+          },
+          {
+            "c": null,
+            "t": 1790946780
+          },
+          {
+            "c": null,
+            "t": 1790946840
+          },
+          {
+            "c": null,
+            "t": 1790946900
+          },
+          {
+            "c": null,
+            "t": 1790946960
+          },
+          {
+            "c": null,
+            "t": 1790947020
+          },
+          {
+            "c": null,
+            "t": 1790947080
+          },
+          {
+            "c": null,
+            "t": 1790947140
+          },
+          {
+            "c": null,
+            "t": 1790947200
+          },
+          {
+            "c": null,
+            "t": 1790947260
+          },
+          {
+            "c": null,
+            "t": 1790947320
+          },
+          {
+            "c": null,
+            "t": 1790947380
+          },
+          {
+            "c": null,
+            "t": 1790947440
+          },
+          {
+            "c": null,
+            "t": 1790947500
+          },
+          {
+            "c": null,
+            "t": 1790947560
+          },
+          {
+            "c": 9.39,
+            "t": 1790947620
+          },
+          {
+            "c": null,
+            "t": 1790947680
+          },
+          {
+            "c": null,
+            "t": 1790947740
+          },
+          {
+            "c": null,
+            "t": 1790947800
+          },
+          {
+            "c": null,
+            "t": 1790947860
+          },
+          {
+            "c": null,
+            "t": 1790947920
+          },
+          {
+            "c": 9.39,
+            "t": 1790947980
+          },
+          {
+            "c": 9.39,
+            "t": 1790948040
+          },
+          {
+            "c": null,
+            "t": 1790948100
+          },
+          {
+            "c": null,
+            "t": 1790948160
+          },
+          {
+            "c": null,
+            "t": 1790948220
+          },
+          {
+            "c": null,
+            "t": 1790948280
+          },
+          {
+            "c": null,
+            "t": 1790948340
+          },
+          {
+            "c": null,
+            "t": 1790948400
+          },
+          {
+            "c": null,
+            "t": 1790948460
+          },
+          {
+            "c": 9.39,
+            "t": 1790948520
+          },
+          {
+            "c": null,
+            "t": 1790948580
+          },
+          {
+            "c": null,
+            "t": 1790948640
+          },
+          {
+            "c": null,
+            "t": 1790948700
+          },
+          {
+            "c": null,
+            "t": 1790948760
+          },
+          {
+            "c": null,
+            "t": 1790948820
+          },
+          {
+            "c": null,
+            "t": 1790948880
+          },
+          {
+            "c": null,
+            "t": 1790948940
+          },
+          {
+            "c": null,
+            "t": 1790949000
+          },
+          {
+            "c": null,
+            "t": 1790949060
+          },
+          {
+            "c": null,
+            "t": 1790949120
+          },
+          {
+            "c": null,
+            "t": 1790949180
+          },
+          {
+            "c": null,
+            "t": 1790949240
+          },
+          {
+            "c": null,
+            "t": 1790949300
+          },
+          {
+            "c": null,
+            "t": 1790949360
+          },
+          {
+            "c": null,
+            "t": 1790949420
+          },
+          {
+            "c": null,
+            "t": 1790949480
+          },
+          {
+            "c": null,
+            "t": 1790949540
+          },
+          {
+            "c": null,
+            "t": 1790949600
+          },
+          {
+            "c": null,
+            "t": 1790949660
+          },
+          {
+            "c": null,
+            "t": 1790949720
+          },
+          {
+            "c": null,
+            "t": 1790949780
+          },
+          {
+            "c": null,
+            "t": 1790949840
+          },
+          {
+            "c": null,
+            "t": 1790949900
+          },
+          {
+            "c": null,
+            "t": 1790949960
+          },
+          {
+            "c": null,
+            "t": 1790950020
+          },
+          {
+            "c": null,
+            "t": 1790950080
+          },
+          {
+            "c": null,
+            "t": 1790950140
+          },
+          {
+            "c": null,
+            "t": 1790950200
+          },
+          {
+            "c": null,
+            "t": 1790950260
+          },
+          {
+            "c": null,
+            "t": 1790950320
+          },
+          {
+            "c": null,
+            "t": 1790950380
+          },
+          {
+            "c": null,
+            "t": 1790950440
+          },
+          {
+            "c": null,
+            "t": 1790950500
+          },
+          {
+            "c": null,
+            "t": 1790950560
+          },
+          {
+            "c": null,
+            "t": 1790950620
+          },
+          {
+            "c": null,
+            "t": 1790950680
+          },
+          {
+            "c": null,
+            "t": 1790950740
+          },
+          {
+            "c": null,
+            "t": 1790950800
+          },
+          {
+            "c": null,
+            "t": 1790950860
+          },
+          {
+            "c": null,
+            "t": 1790950920
+          },
+          {
+            "c": null,
+            "t": 1790950980
+          },
+          {
+            "c": null,
+            "t": 1790951040
+          },
+          {
+            "c": null,
+            "t": 1790951100
+          },
+          {
+            "c": null,
+            "t": 1790951160
+          },
+          {
+            "c": null,
+            "t": 1790951220
+          },
+          {
+            "c": null,
+            "t": 1790951280
+          },
+          {
+            "c": null,
+            "t": 1790951340
+          },
+          {
+            "c": null,
+            "t": 1790951400
+          },
+          {
+            "c": null,
+            "t": 1790951460
+          },
+          {
+            "c": 9.39,
+            "t": 1790951520
+          },
+          {
+            "c": null,
+            "t": 1790951580
+          },
+          {
+            "c": null,
+            "t": 1790951640
+          },
+          {
+            "c": null,
+            "t": 1790951700
+          },
+          {
+            "c": null,
+            "t": 1790951760
+          },
+          {
+            "c": null,
+            "t": 1790951820
+          },
+          {
+            "c": null,
+            "t": 1790951880
+          },
+          {
+            "c": 9.381,
+            "t": 1790951940
+          },
+          {
+            "c": null,
+            "t": 1790952000
+          },
+          {
+            "c": null,
+            "t": 1790952060
+          },
+          {
+            "c": null,
+            "t": 1790952120
+          },
+          {
+            "c": null,
+            "t": 1790952180
+          },
+          {
+            "c": null,
+            "t": 1790952240
+          },
+          {
+            "c": null,
+            "t": 1790952300
+          },
+          {
+            "c": null,
+            "t": 1790952360
+          },
+          {
+            "c": 9.39,
+            "t": 1790952420
+          },
+          {
+            "c": null,
+            "t": 1790952480
+          },
+          {
+            "c": 9.39,
+            "t": 1790952540
+          },
+          {
+            "c": null,
+            "t": 1790952600
+          },
+          {
+            "c": null,
+            "t": 1790952660
+          },
+          {
+            "c": null,
+            "t": 1790952720
+          },
+          {
+            "c": null,
+            "t": 1790952780
+          },
+          {
+            "c": null,
+            "t": 1790952840
+          },
+          {
+            "c": 9.37,
+            "t": 1790952900
+          },
+          {
+            "c": null,
+            "t": 1790952960
+          },
+          {
+            "c": null,
+            "t": 1790953020
+          },
+          {
+            "c": null,
+            "t": 1790953080
+          },
+          {
+            "c": null,
+            "t": 1790953140
+          },
+          {
+            "c": null,
+            "t": 1790953200
+          },
+          {
+            "c": null,
+            "t": 1790953260
+          },
+          {
+            "c": null,
+            "t": 1790953320
+          },
+          {
+            "c": null,
+            "t": 1790953380
+          },
+          {
+            "c": null,
+            "t": 1790953440
+          },
+          {
+            "c": null,
+            "t": 1790953500
+          },
+          {
+            "c": null,
+            "t": 1790953560
+          },
+          {
+            "c": null,
+            "t": 1790953620
+          },
+          {
+            "c": null,
+            "t": 1790953680
+          },
+          {
+            "c": null,
+            "t": 1790953740
+          },
+          {
+            "c": null,
+            "t": 1790953800
+          },
+          {
+            "c": null,
+            "t": 1790953860
+          },
+          {
+            "c": null,
+            "t": 1790953920
+          },
+          {
+            "c": null,
+            "t": 1790953980
+          },
+          {
+            "c": null,
+            "t": 1790954040
+          },
+          {
+            "c": null,
+            "t": 1790954100
+          },
+          {
+            "c": null,
+            "t": 1790954160
+          },
+          {
+            "c": null,
+            "t": 1790954220
+          },
+          {
+            "c": 9.37,
+            "t": 1790954280
+          },
+          {
+            "c": null,
+            "t": 1790954340
+          },
+          {
+            "c": null,
+            "t": 1790954400
+          },
+          {
+            "c": null,
+            "t": 1790954460
+          },
+          {
+            "c": null,
+            "t": 1790954520
+          },
+          {
+            "c": null,
+            "t": 1790954580
+          },
+          {
+            "c": 9.377,
+            "t": 1790954640
+          },
+          {
+            "c": null,
+            "t": 1790954700
+          },
+          {
+            "c": null,
+            "t": 1790954760
+          },
+          {
+            "c": 9.38,
+            "t": 1790954820
+          },
+          {
+            "c": null,
+            "t": 1790954880
+          },
+          {
+            "c": null,
+            "t": 1790954940
+          },
+          {
+            "c": null,
+            "t": 1790955000
+          },
+          {
+            "c": null,
+            "t": 1790955060
+          },
+          {
+            "c": null,
+            "t": 1790955120
+          },
+          {
+            "c": null,
+            "t": 1790955180
+          },
+          {
+            "c": null,
+            "t": 1790955240
+          },
+          {
+            "c": null,
+            "t": 1790955300
+          },
+          {
+            "c": null,
+            "t": 1790955360
+          },
+          {
+            "c": 9.375,
+            "t": 1790955420
+          },
+          {
+            "c": null,
+            "t": 1790955480
+          },
+          {
+            "c": 9.375,
+            "t": 1790955540
+          },
+          {
+            "c": null,
+            "t": 1790955600
+          },
+          {
+            "c": null,
+            "t": 1790955660
+          },
+          {
+            "c": null,
+            "t": 1790955720
+          },
+          {
+            "c": null,
+            "t": 1790955780
+          },
+          {
+            "c": null,
+            "t": 1790955840
+          },
+          {
+            "c": null,
+            "t": 1790955900
+          },
+          {
+            "c": null,
+            "t": 1790955960
+          },
+          {
+            "c": null,
+            "t": 1790956020
+          },
+          {
+            "c": null,
+            "t": 1790956080
+          },
+          {
+            "c": null,
+            "t": 1790956140
+          },
+          {
+            "c": null,
+            "t": 1790956200
+          },
+          {
+            "c": null,
+            "t": 1790956260
+          },
+          {
+            "c": null,
+            "t": 1790956320
+          },
+          {
+            "c": null,
+            "t": 1790956380
+          },
+          {
+            "c": null,
+            "t": 1790956440
+          },
+          {
+            "c": null,
+            "t": 1790956500
+          },
+          {
+            "c": null,
+            "t": 1790956560
+          },
+          {
+            "c": null,
+            "t": 1790956620
+          },
+          {
+            "c": null,
+            "t": 1790956680
+          },
+          {
+            "c": 9.37,
+            "t": 1790956740
+          },
+          {
+            "c": 9.375,
+            "t": 1790956800
+          }
+        ]
+      },
+      "description": "The First Trust Flexible Income ETF (FFLX) is an exchange-traded fund that mostly invests in broad credit fixed income. The fund actively manages a portfolio of fixed income securities that generate income. Debt securities may be of any sector, maturity, currency and geography. FFLX was launched on May 25, 2004 and is issued by First Trust.",
+      "infoTable": [
+        [
+          "Asset Class",
+          "Fixed Income"
+        ],
+        [
+          "Stock Exchange",
+          "NYSE Arca"
+        ],
+        [
+          "Ticker Symbol",
+          "FFLX"
+        ],
+        [
+          "Provider",
+          "First Trust"
+        ]
+      ],
+      "etf_website": "https://www.ftportfolios.com/retail/etf/etfsummary.aspx?Ticker=FFLX",
+      "provider_page": "first-trust",
+      "holdingsTable": null,
+      "dividendTable": [
+        {
+          "dt": "2026-09-24",
+          "amt": 0.049,
+          "pay": "2026-09-30"
+        },
+        {
+          "dt": "2026-08-21",
+          "amt": 0.049,
+          "pay": "2026-08-31"
+        }
+      ],
+      "news": {
+        "exp": "1791118631602",
+        "data": [
+          {
+            "url": "https://www.businesswire.com/news/home/20260810668483/en/First-Trust-Announces-Completion-of-First-Trust-Senior-Floating-Rate-Income-Fund-II-Reorganization-into-First-Trust-Flexible-Income-ETF/",
+            "img": "https://cdn.snapi.dev/images/v1/i/3/a/press13-3859801.jpg",
+            "title": "First Trust Announces Completion of First Trust Senior Floating Rate Income Fund II Reorganization into First Trust Flexible Income ETF",
+            "text": "WHEATON, Ill--(BUSINESS WIRE)--First Trust Advisors L.P. (“FTA”) announced today that the reorganization of First Trust Senior Floating Rate Income Fund II (NYSE: FCT), a closed-end management investm...",
+            "source": "Business Wire",
+            "type": "Article",
+            "tickers": [
+              "#FFLX"
+            ],
+            "time": "Aug 10, 2026, 8:03 AM EDT",
+            "ago": "7 weeks ago"
+          },
+          {
+            "url": "https://www.businesswire.com/news/home/20260625881643/en/First-Trust-Announces-Results-of-Special-Meeting-of-Shareholders-Relating-to-the-Reorganization-of-First-Trust-Senior-Floating-Rate-Income-Fund-II-with-and-into-First-Trust-Flexible-Income-ETF/",
+            "img": "https://cdn.snapi.dev/images/v1/t/l/9/press14-3772904.jpg",
+            "title": "First Trust Announces Results of Special Meeting of Shareholders Relating to the Reorganization of First Trust Senior Floating Rate Income Fund II with and into First Trust Flexible Income ETF",
+            "text": "WHEATON, Ill.--(BUSINESS WIRE)--First Trust Advisors L.P. (“FTA”) announced today the results of the special meeting of shareholders of First Trust Senior Floating Rate Income Fund II (NYSE: FCT) (the...",
+            "source": "Business Wire",
+            "type": "Article",
+            "tickers": null,
+            "time": "Jun 25, 2026, 4:10 PM EDT",
+            "ago": "3 months ago"
+          },
+          {
+            "url": "https://www.businesswire.com/news/home/20260618474588/en/First-Trust-Senior-Floating-Rate-Income-Fund-II-Decreases-its-Monthly-Common-Share-Distribution-to-0.0813-Per-Share-for-July/",
+            "img": "https://cdn.snapi.dev/images/v1/i/i/j/press5-3762120.jpg",
+            "title": "First Trust Senior Floating Rate Income Fund II Decreases its Monthly Common Share Distribution to $0.0813 Per Share for July",
+            "text": "WHEATON, Ill.--(BUSINESS WIRE)--First Trust Senior Floating Rate Income Fund II (the \"Fund\") (NYSE: FCT) has decreased its regularly scheduled monthly common share distribution to $0.0813 per share fr...",
+            "source": "Business Wire",
+            "type": "Article",
+            "tickers": null,
+            "time": "Jun 18, 2026, 4:10 PM EDT",
+            "ago": "3 months ago"
+          },
+          {
+            "url": "https://www.businesswire.com/news/home/20260609824253/en/First-Trust-Announces-Adjournment-of-Special-Meeting-of-Shareholders-Relating-to-the-Reorganization-of-First-Trust-Senior-Floating-Rate-Income-Fund-II-with-and-into-First-Trust-Flexible-Income-ETF/",
+            "img": "https://cdn.snapi.dev/images/v1/r/t/m/press13-3745304.jpg",
+            "title": "First Trust Announces Adjournment of Special Meeting of Shareholders Relating to the Reorganization of First Trust Senior Floating Rate Income Fund II with and into First Trust Flexible Income ETF",
+            "text": "WHEATON, Ill.--(BUSINESS WIRE)--First Trust Advisors L.P. (“FTA”) announced today that the special meeting of shareholders of First Trust Senior Floating Rate Income Fund II (NYSE: FCT) (the “Fund”) h...",
+            "source": "Business Wire",
+            "type": "Article",
+            "tickers": null,
+            "time": "Jun 9, 2026, 4:10 PM EDT",
+            "ago": "3 months ago"
+          },
+          {
+            "url": "https://www.businesswire.com/news/home/20260520706686/en/First-Trust-Senior-Floating-Rate-Income-Fund-II-Declares-its-Monthly-Common-Share-Distribution-of-0.097-Per-Share-for-June/",
+            "img": "https://cdn.snapi.dev/images/v1/a/t/m/press2-3712477.jpg",
+            "title": "First Trust Senior Floating Rate Income Fund II Declares its Monthly Common Share Distribution of $0.097 Per Share for June",
+            "text": "WHEATON, Ill.--(BUSINESS WIRE)--First Trust Senior Floating Rate Income Fund II (the \"Fund\") (NYSE: FCT) has declared the Fund's regularly scheduled monthly common share distribution in the amount of ...",
+            "source": "Business Wire",
+            "type": "Article",
+            "tickers": null,
+            "time": "May 20, 2026, 4:10 PM EDT",
+            "ago": "4 months ago"
+          },
+          {
+            "url": "https://www.businesswire.com/news/home/20260514078391/en/First-Trust-Advisors-L.P.-Announces-Portfolio-Manager-Update-Regarding-the-Reorganization-of-First-Trust-Senior-Floating-Rate-Income-Fund-II/",
+            "img": "https://cdn.snapi.dev/images/v1/q/w/w/press11-3702262.jpg",
+            "title": "First Trust Advisors L.P. Announces Portfolio Manager Update Regarding the Reorganization of First Trust Senior Floating Rate Income Fund II",
+            "text": "WHEATON, Ill.--(BUSINESS WIRE)--First Trust Advisors L.P. (“FTA”) announced today that its Leveraged Finance Investment Team, portfolio manager for First Trust Senior Floating Rate Income Fund II (NYS...",
+            "source": "Business Wire",
+            "type": "Article",
+            "tickers": null,
+            "time": "May 14, 2026, 4:10 PM EDT",
+            "ago": "4 months ago"
+          },
+          {
+            "url": "https://www.businesswire.com/news/home/20260420739686/en/First-Trust-Senior-Floating-Rate-Income-Fund-II-Declares-its-Monthly-Common-Share-Distribution-of-0.097-Per-Share-for-May/",
+            "img": "https://cdn.snapi.dev/images/v1/y/u/j/press6-3644124.jpg",
+            "title": "First Trust Senior Floating Rate Income Fund II Declares its Monthly Common Share Distribution of $0.097 Per Share for May",
+            "text": "WHEATON, Ill.--(BUSINESS WIRE)--First Trust Senior Floating Rate Income Fund II (the \"Fund\") (NYSE: FCT) has declared the Fund's regularly scheduled monthly common share distribution in the amount of ...",
+            "source": "Business Wire",
+            "type": "Article",
+            "tickers": null,
+            "time": "Apr 20, 2026, 4:10 PM EDT",
+            "ago": "5 months ago"
+          },
+          {
+            "url": "https://www.businesswire.com/news/home/20260319340503/en/First-Trust-Senior-Floating-Rate-Income-Fund-II-Declares-its-Monthly-Common-Share-Distribution-of-0.097-Per-Share-for-April/",
+            "img": "https://cdn.snapi.dev/images/v1/h/8/5/press3-3592466.jpg",
+            "title": "First Trust Senior Floating Rate Income Fund II Declares its Monthly Common Share Distribution of $0.097 Per Share for April",
+            "text": "WHEATON, Ill.--(BUSINESS WIRE)--First Trust Senior Floating Rate Income Fund II (the \"Fund\") (NYSE: FCT) has declared the Fund's regularly scheduled monthly common share distribution in the amount of ...",
+            "source": "Business Wire",
+            "type": "Article",
+            "tickers": null,
+            "time": "Mar 19, 2026, 4:10 PM EDT",
+            "ago": "6 months ago"
+          },
+          {
+            "url": "https://www.businesswire.com/news/home/20260219661062/en/First-Trust-Senior-Floating-Rate-Income-Fund-II-Declares-its-Monthly-Common-Share-Distribution-of-0.097-Per-Share-for-March/",
+            "img": "https://cdn.snapi.dev/images/v1/n/v/d/press19-3539344.jpg",
+            "title": "First Trust Senior Floating Rate Income Fund II Declares its Monthly Common Share Distribution of $0.097 Per Share for March",
+            "text": "WHEATON, Ill.--(BUSINESS WIRE)--First Trust Senior Floating Rate Income Fund II (the \"Fund\") (NYSE: FCT) has declared the Fund's regularly scheduled monthly common share distribution in the amount of ...",
+            "source": "Business Wire",
+            "type": "Article",
+            "tickers": null,
+            "time": "Feb 19, 2026, 4:10 PM EST",
+            "ago": "7 months ago"
+          },
+          {
+            "url": "https://www.businesswire.com/news/home/20260120480280/en/First-Trust-Senior-Floating-Rate-Income-Fund-II-Declares-its-Monthly-Common-Share-Distribution-of-0.097-Per-Share-for-February/",
+            "img": "https://cdn.snapi.dev/images/v1/i/e/7/press17-3483096.jpg",
+            "title": "First Trust Senior Floating Rate Income Fund II Declares its Monthly Common Share Distribution of $0.097 Per Share for February",
+            "text": "WHEATON, Ill.--(BUSINESS WIRE)--First Trust Senior Floating Rate Income Fund II (the \"Fund\") (NYSE: FCT) has declared the Fund's regularly scheduled monthly common share distribution in the amount of ...",
+            "source": "Business Wire",
+            "type": "Article",
+            "tickers": null,
+            "time": "Jan 20, 2026, 4:10 PM EST",
+            "ago": "8 months ago"
+          },
+          {
+            "url": "https://www.businesswire.com/news/home/20251218333790/en/First-Trust-Senior-Floating-Rate-Income-Fund-II-Declares-its-Monthly-Common-Share-Distribution-of-0.097-Per-Share-for-January/",
+            "img": "https://cdn.snapi.dev/images/v1/m/m/6/press14-3444246.jpg",
+            "title": "First Trust Senior Floating Rate Income Fund II Declares its Monthly Common Share Distribution of $0.097 Per Share for January",
+            "text": "WHEATON, Ill.--(BUSINESS WIRE)--First Trust Senior Floating Rate Income Fund II (the \"Fund\") (NYSE: FCT) has declared the Fund's regularly scheduled monthly common share distribution in the amount of ...",
+            "source": "Business Wire",
+            "type": "Article",
+            "tickers": null,
+            "time": "Dec 18, 2025, 4:12 PM EST",
+            "ago": "9 months ago"
+          },
+          {
+            "url": "https://www.businesswire.com/news/home/20251209358029/en/Board-of-First-Trust-Senior-Floating-Rate-Income-Fund-II-Approves-Conversion-into-an-ETF/",
+            "img": "https://cdn.snapi.dev/images/v1/s/v/z/press3-3429378.jpg",
+            "title": "Board of First Trust Senior Floating Rate Income Fund II Approves Conversion into an ETF",
+            "text": "WHEATON, Ill.--(BUSINESS WIRE)--First Trust Advisors L.P. (“FTA”) announced today that the Board of Trustees of First Trust Senior Floating Rate Income Fund II (NYSE: FCT), a closed-end fund managed b...",
+            "source": "Business Wire",
+            "type": "Article",
+            "tickers": null,
+            "time": "Dec 9, 2025, 4:10 PM EST",
+            "ago": "9 months ago"
+          },
+          {
+            "url": "https://www.businesswire.com/news/home/20251120864388/en/First-Trust-Senior-Floating-Rate-Income-Fund-II-Declares-its-Monthly-Common-Share-Distribution-of-0.097-Per-Share-for-December/",
+            "img": "https://cdn.snapi.dev/images/v1/f/l/r/press3-3403041.jpg",
+            "title": "First Trust Senior Floating Rate Income Fund II Declares its Monthly Common Share Distribution of $0.097 Per Share for December",
+            "text": "WHEATON, Ill.--(BUSINESS WIRE)--First Trust Senior Floating Rate Income Fund II (the \"Fund\") (NYSE: FCT) has declared the Fund's regularly scheduled monthly common share distribution in the amount of ...",
+            "source": "Business Wire",
+            "type": "Article",
+            "tickers": null,
+            "time": "Nov 20, 2025, 4:10 PM EST",
+            "ago": "10 months ago"
+          },
+          {
+            "url": "https://www.businesswire.com/news/home/20251020917196/en/First-Trust-Senior-Floating-Rate-Income-Fund-II-Declares-its-Monthly-Common-Share-Distribution-of-0.097-Per-Share-for-November/",
+            "img": "https://cdn.snapi.dev/images/v1/v/1/9/press8-3338383.jpg",
+            "title": "First Trust Senior Floating Rate Income Fund II Declares its Monthly Common Share Distribution of $0.097 Per Share for November",
+            "text": "WHEATON, Ill.--(BUSINESS WIRE)--First Trust Senior Floating Rate Income Fund II (the \"Fund\") (NYSE: FCT) has declared the Fund's regularly scheduled monthly common share distribution in the amount of ...",
+            "source": "Business Wire",
+            "type": "Article",
+            "tickers": null,
+            "time": "Oct 20, 2025, 9:03 PM EDT",
+            "ago": "11 months ago"
+          },
+          {
+            "url": "https://www.businesswire.com/news/home/20250918789248/en/First-Trust-Senior-Floating-Rate-Income-Fund-II-Declares-its-Monthly-Common-Share-Distribution-of-0.097-Per-Share-for-October/",
+            "img": "https://cdn.snapi.dev/images/v1/3/r/f/press8-3291332.jpg",
+            "title": "First Trust Senior Floating Rate Income Fund II Declares its Monthly Common Share Distribution of $0.097 Per Share for October",
+            "text": "WHEATON, Ill.--(BUSINESS WIRE)--First Trust Senior Floating Rate Income Fund II (the \"Fund\") (NYSE: FCT) has declared the Fund's regularly scheduled monthly common share distribution in the amount of ...",
+            "source": "Business Wire",
+            "type": "Article",
+            "tickers": null,
+            "time": "Sep 18, 2025, 4:10 PM EDT",
+            "ago": "1 year ago"
+          },
+          {
+            "url": "https://www.businesswire.com/news/home/20250820347263/en/First-Trust-Senior-Floating-Rate-Income-Fund-II-Declares-its-Monthly-Common-Share-Distribution-of-0.097-Per-Share-for-September/",
+            "img": "https://cdn.snapi.dev/images/v1/c/z/z/press3-3248492.jpg",
+            "title": "First Trust Senior Floating Rate Income Fund II Declares its Monthly Common Share Distribution of $0.097 Per Share for September",
+            "text": "WHEATON, Ill.--(BUSINESS WIRE)--First Trust Senior Floating Rate Income Fund II (the \"Fund\") (NYSE: FCT) has declared the Fund's regularly scheduled monthly common share distribution in the amount of ...",
+            "source": "Business Wire",
+            "type": "Article",
+            "tickers": null,
+            "time": "Aug 20, 2025, 4:10 PM EDT",
+            "ago": "1 year ago"
+          },
+          {
+            "url": "https://www.businesswire.com/news/home/20250721999891/en/First-Trust-Senior-Floating-Rate-Income-Fund-II-Declares-its-Monthly-Common-Share-Distribution-of-0.097-Per-Share-for-August/",
+            "img": "https://cdn.snapi.dev/images/v1/i/c/s/press4-3189126.jpg",
+            "title": "First Trust Senior Floating Rate Income Fund II Declares its Monthly Common Share Distribution of $0.097 Per Share for August",
+            "text": "WHEATON, Ill--(BUSINESS WIRE)--First Trust Senior Floating Rate Income Fund II (the \"Fund\") (NYSE: FCT) has declared the Fund's regularly scheduled monthly common share distribution in the amount of $...",
+            "source": "Business Wire",
+            "type": "Article",
+            "tickers": null,
+            "time": "Jul 21, 2025, 4:10 PM EDT",
+            "ago": "1 year ago"
+          },
+          {
+            "url": "https://www.businesswire.com/news/home/20250618597537/en/First-Trust-Senior-Floating-Rate-Income-Fund-II-Declares-its-Monthly-Common-Share-Distribution-of-0.097-Per-Share-for-July/",
+            "img": "https://cdn.snapi.dev/images/v1/a/e/w/press18-3145485.jpg",
+            "title": "First Trust Senior Floating Rate Income Fund II Declares its Monthly Common Share Distribution of $0.097 Per Share for July",
+            "text": "WHEATON, Ill.--(BUSINESS WIRE)--First Trust Senior Floating Rate Income Fund II (the \"Fund\") (NYSE: FCT) has declared the Fund's regularly scheduled monthly common share distribution in the amount of ...",
+            "source": "Business Wire",
+            "type": "Article",
+            "tickers": null,
+            "time": "Jun 18, 2025, 4:10 PM EDT",
+            "ago": "1 year ago"
+          },
+          {
+            "url": "https://www.businesswire.com/news/home/20250121005620/en/First-Trust-Senior-Floating-Rate-Income-Fund-II-Declares-Its-Monthly-Common-Share-Distribution-of-0.097-Per-Share-for-February/",
+            "img": "https://cdn.snapi.dev/images/v1/o/j/o/press17-2863088.jpg",
+            "title": "First Trust Senior Floating Rate Income Fund II Declares Its Monthly Common Share Distribution of $0.097 Per Share for February",
+            "text": "WHEATON, Ill.--(BUSINESS WIRE)--First Trust Senior Floating Rate Income Fund II (the \"Fund\") (NYSE: FCT) has declared the Fund's regularly scheduled monthly common share distribution in the amount of ...",
+            "source": "Business Wire",
+            "type": "Article",
+            "tickers": null,
+            "time": "Jan 21, 2025, 4:10 PM EST",
+            "ago": "1 year ago"
+          },
+          {
+            "url": "https://www.businesswire.com/news/home/20241219282952/en/First-Trust-Senior-Floating-Rate-Income-Fund-II-Declares-Its-Monthly-Common-Share-Distribution-of-0.097-Per-Share-for-January/",
+            "img": "https://cdn.snapi.dev/images/v1/q/x/l/press15-2815801.jpg",
+            "title": "First Trust Senior Floating Rate Income Fund II Declares Its Monthly Common Share Distribution of $0.097 Per Share for January",
+            "text": "WHEATON, Ill.--(BUSINESS WIRE)--First Trust Senior Floating Rate Income Fund II (the \"Fund\") (NYSE: FCT) has declared the Fund's regularly scheduled monthly common share distribution in the amount of ...",
+            "source": "Business Wire",
+            "type": "Article",
+            "tickers": null,
+            "time": "Dec 19, 2024, 4:10 PM EST",
+            "ago": "1 year ago"
+          },
+          {
+            "url": "https://www.businesswire.com/news/home/20231113897327/en/First-Trust-Advisors-L.P.-Announces-Portfolio-Manager-Update-for-First-Trust-Senior-Floating-Rate-Income-Fund-II-and-First-Trust-High-Yield-Opportunities-2027-Term-Fund/",
+            "img": "https://cdn.snapi.dev/images/v1/6/w/press2-2155548.jpg",
+            "title": "First Trust Advisors L.P. Announces Portfolio Manager Update for First Trust Senior Floating Rate Income Fund II and First Trust High Yield Opportunities 2027 Term Fund",
+            "text": "WHEATON, Ill.--(BUSINESS WIRE)--First Trust Advisors L.P. (\"FTA\") announced today that its Leveraged Finance Investment Team, portfolio manager for First Trust Senior Floating Rate Income Fund II (NYS...",
+            "source": "Business Wire",
+            "type": "Article",
+            "tickers": [
+              "$FTHY"
+            ],
+            "time": "Nov 13, 2023, 4:10 PM EST",
+            "ago": "2 years ago"
+          },
+          {
+            "url": "https://www.businesswire.com/news/home/20230522005671/en/First-Trust-Senior-Floating-Rate-Income-Fund-II-Increases-its-Monthly-Common-Share-Distribution-to-0.097-Per-Share-for-June/",
+            "img": "https://cdn.snapi.dev/images/v1/b/i/press14-1902167.jpg",
+            "title": "First Trust Senior Floating Rate Income Fund II Increases its Monthly Common Share Distribution to $0.097 Per Share for June",
+            "text": "WHEATON, Ill.--(BUSINESS WIRE)--First Trust Senior Floating Rate Income Fund II (the \"Fund\") (NYSE: FCT) has increased its regularly scheduled monthly common share distribution to $0.097 per share fro...",
+            "source": "Business Wire",
+            "type": "Article",
+            "tickers": null,
+            "time": "May 22, 2023, 4:15 PM EDT",
+            "ago": "3 years ago"
+          },
+          {
+            "url": "https://www.businesswire.com/news/home/20230420005905/en/First-Trust-Senior-Floating-Rate-Income-Fund-II-Declares-its-Monthly-Common-Share-Distribution-of-0.092-Per-Share-for-May/",
+            "img": "https://cdn.snapi.dev/images/v1/k/l/press20-1847051.jpg",
+            "title": "First Trust Senior Floating Rate Income Fund II Declares its Monthly Common Share Distribution of $0.092 Per Share for May",
+            "text": "WHEATON, Ill.--(BUSINESS WIRE)--First Trust Senior Floating Rate Income Fund II (the \"Fund\") (NYSE: FCT) has declared the Fund's regularly scheduled monthly common share distribution in the amount of ...",
+            "source": "Business Wire",
+            "type": "Article",
+            "tickers": null,
+            "time": "Apr 20, 2023, 4:15 PM EDT",
+            "ago": "3 years ago"
+          },
+          {
+            "url": "https://www.businesswire.com/news/home/20230320005645/en/First-Trust-Senior-Floating-Rate-Income-Fund-II-Increases-its-Monthly-Common-Share-Distribution-to-0.092-Per-Share-for-April/",
+            "img": "https://cdn.snapi.dev/images/v1/g/d/press1-1804892.jpg",
+            "title": "First Trust Senior Floating Rate Income Fund II Increases its Monthly Common Share Distribution to $0.092 Per Share for April",
+            "text": "WHEATON, Ill.--(BUSINESS WIRE)--First Trust Senior Floating Rate Income Fund II (the \"Fund\") (NYSE: FCT) has increased its regularly scheduled monthly common share distribution to $0.092 per share fro...",
+            "source": "Business Wire",
+            "type": "Article",
+            "tickers": null,
+            "time": "Mar 20, 2023, 4:05 PM EDT",
+            "ago": "3 years ago"
+          },
+          {
+            "url": "https://www.businesswire.com/news/home/20230221005862/en/First-Trust-Senior-Floating-Rate-Income-Fund-II-Declares-its-Monthly-Common-Share-Distribution-of-0.0695-Per-Share-for-March/",
+            "img": "https://cdn.snapi.dev/images/v1/j/k/press14-1763534.jpg",
+            "title": "First Trust Senior Floating Rate Income Fund II Declares its Monthly Common Share Distribution of $0.0695 Per Share for March",
+            "text": "WHEATON, Ill.--(BUSINESS WIRE)--First Trust Senior Floating Rate Income Fund II (the \"Fund\") (NYSE: FCT) has declared the Fund's regularly scheduled monthly common share distribution in the amount of ...",
+            "source": "Business Wire",
+            "type": "Article",
+            "tickers": null,
+            "time": "Feb 21, 2023, 4:05 PM EST",
+            "ago": "3 years ago"
+          }
+        ]
+      },
+      "config": {
+        "no1d": false
+      },
+      "changes": {
+        "price1w": 9.43,
+        "price1m": 9.605,
+        "price3m": null,
+        "price6m": null,
+        "priceYTD": null,
+        "price1y": null,
+        "price5y": null,
+        "priceMAX": 9.671
+      },
+      "performance": {
+        "tr1m": -1.88961,
+        "trYTD": null,
+        "tr1y": null,
+        "cagr5y": null,
+        "cagr10y": null,
+        "cagrMAX": null
+      }
+    },
+    "holdings": {
+      "holdings": [
+        {
+          "no": 1,
+          "n": "2 Year Treasury Note Future Dec 26",
+          "as": "14.50%",
+          "sh": "157"
+        },
+        {
+          "no": 2,
+          "n": "5 Year Treasury Note Future Dec 26",
+          "as": "5.78%",
+          "sh": "123"
+        },
+        {
+          "no": 3,
+          "n": "US Treasury Bond Future Dec 26",
+          "as": "2.10%",
+          "sh": "45"
+        },
+        {
+          "no": 4,
+          "n": "Morgan Stanley Instl Lqudty Trs Instl",
+          "s": "!mutf/MISXX",
+          "as": "2.09%",
+          "sh": "4,597,366"
+        },
+        {
+          "no": 5,
+          "n": "Ultra US Treasury Bond Future Dec 26",
+          "as": "1.75%",
+          "sh": "37"
+        },
+        {
+          "no": 6,
+          "n": "Consolidated Communications LLC / Fidium Fiber Finance Holdco LLC 9.408%",
+          "s": "CNSL.2025-1A C",
+          "as": "1.39%",
+          "sh": "3,000,000"
+        },
+        {
+          "no": 7,
+          "n": "Government National Mortgage Association 0.83207%",
+          "s": "GNR.2026-133 IO",
+          "as": "1.10%",
+          "sh": "39,587,567"
+        },
+        {
+          "no": 8,
+          "n": "Government National Mortgage Association 2%",
+          "s": "G2.MA7366",
+          "as": "1.08%",
+          "sh": "3,079,403"
+        },
+        {
+          "no": 9,
+          "n": "ZAYO ISSUER LLC 9.489%",
+          "s": "ZAYO.2025-2A C",
+          "as": "0.94%",
+          "sh": "2,000,000"
+        },
+        {
+          "no": 10,
+          "n": "Consolidated Communications LLC / Fidium Fiber Finance Holdco LLC 6.506%",
+          "s": "CNSL.2025-1A B",
+          "as": "0.90%",
+          "sh": "2,000,000"
+        },
+        {
+          "no": 11,
+          "n": "ZAYO ISSUER LLC 5.648%",
+          "s": "ZAYO.2025-1A A2",
+          "as": "0.89%",
+          "sh": "2,000,000"
+        },
+        {
+          "no": 12,
+          "n": "CHASE HOME LENDING MORTGAGE TRUST 2026-AGY2 4.99029%",
+          "s": "CHASE.2026-AGY2 A11",
+          "as": "0.89%",
+          "sh": "1,983,712"
+        },
+        {
+          "no": 13,
+          "n": "J.P. MORGAN MORTGAGE TRUST 2026-LTV1 5.416%",
+          "s": "JPMMT.2026-LTV1 A1",
+          "as": "0.85%",
+          "sh": "1,907,343"
+        },
+        {
+          "no": 14,
+          "n": "CIM TRUST 2026-NR1 5%",
+          "s": "CIM.2026-NR1 A1",
+          "as": "0.82%",
+          "sh": "1,814,811"
+        },
+        {
+          "no": 15,
+          "n": "FEDERAL HOME LN MTG CORP MULTICLASS MTG PARTN CTFS GTD 5.69029%",
+          "s": "FHR.5502 FC",
+          "as": "0.73%",
+          "sh": "1,624,774"
+        },
+        {
+          "no": 16,
+          "n": "SG RESIDENTIAL MTG TR 2022-1 3.95248%",
+          "s": "SGR.2022-1 A1",
+          "as": "0.71%",
+          "sh": "1,737,876"
+        },
+        {
+          "no": 17,
+          "n": "Government National Mortgage Association 6.5%",
+          "s": "G2SF.6.5 11.11",
+          "as": "0.68%",
+          "sh": "1,500,000"
+        },
+        {
+          "no": 18,
+          "n": "Federal National Mortgage Association 6.5%",
+          "s": "FNCL.6.5 11.11",
+          "as": "0.68%",
+          "sh": "1,500,000"
+        },
+        {
+          "no": 19,
+          "n": "KENNEDY LEWIS CLO 15 LTD 6.68551%",
+          "s": "KLLM.2024-15A D1R",
+          "as": "0.68%",
+          "sh": "1,500,000"
+        },
+        {
+          "no": 20,
+          "n": "PRPM 2026-5 LLC 5.93%",
+          "s": "PRPM.2026-5 A1",
+          "as": "0.68%",
+          "sh": "1,500,000"
+        },
+        {
+          "no": 21,
+          "n": "Government National Mortgage Association 5.40325%",
+          "s": "GNR.2026-136 SK",
+          "as": "0.66%",
+          "sh": "1,698,005"
+        },
+        {
+          "no": 22,
+          "n": "GLS AUTO SELECT RECEIVABLES ISSUER TRUST 2026-3 5.55%",
+          "s": "GSAR.2026-3A D",
+          "as": "0.66%",
+          "sh": "1,486,000"
+        },
+        {
+          "no": 23,
+          "n": "CONE COMMERCIAL MORTGAGE TRUST 2026-DFW3 7.35457%",
+          "s": "CONE.2026-DFW3 D",
+          "as": "0.66%",
+          "sh": "1,500,000"
+        },
+        {
+          "no": 24,
+          "n": "Federal National Mortgage Association 5.5%",
+          "s": "FNCL.5.5 11.11",
+          "as": "0.65%",
+          "sh": "1,500,000"
+        },
+        {
+          "no": 25,
+          "n": "CASTLELAKE RESIDENTIAL MORTGAGE TRUST 2026-RTL1 6.5%",
+          "s": "CLRES.2026-RTL1 M2",
+          "as": "0.64%",
+          "sh": "1,450,000"
+        }
+      ],
+      "asset_allocation": null,
+      "sectors": null,
+      "countries": null,
+      "allocationChartData": {
+        "sectors": [],
+        "assets": [],
+        "countries": []
+      },
+      "news": [
+        {
+          "t": "First Trust Announces Completion of First Trust Senior Floating Rate Income Fund II Reorganization into First Trust Flexible Income ETF",
+          "u": "https://www.businesswire.com/news/home/20260810668483/en/First-Trust-Announces-Completion-of-First-Trust-Senior-Floating-Rate-Income-Fund-II-Reorganization-into-First-Trust-Flexible-Income-ETF/",
+          "n": "Business Wire",
+          "d": "7 weeks ago"
+        },
+        {
+          "t": "First Trust Announces Results of Special Meeting of Shareholders Relating to the Reorganization of First Trust Senior Floating Rate Income Fund II with and into First Trust Flexible Income ETF",
+          "u": "https://www.businesswire.com/news/home/20260625881643/en/First-Trust-Announces-Results-of-Special-Meeting-of-Shareholders-Relating-to-the-Reorganization-of-First-Trust-Senior-Floating-Rate-Income-Fund-II-with-and-into-First-Trust-Flexible-Income-ETF/",
+          "n": "Business Wire",
+          "d": "3 months ago"
+        },
+        {
+          "t": "First Trust Senior Floating Rate Income Fund II Decreases its Monthly Common Share Distribution to $0.0813 Per Share for July",
+          "u": "https://www.businesswire.com/news/home/20260618474588/en/First-Trust-Senior-Floating-Rate-Income-Fund-II-Decreases-its-Monthly-Common-Share-Distribution-to-0.0813-Per-Share-for-July/",
+          "n": "Business Wire",
+          "d": "3 months ago"
+        },
+        {
+          "t": "First Trust Announces Adjournment of Special Meeting of Shareholders Relating to the Reorganization of First Trust Senior Floating Rate Income Fund II with and into First Trust Flexible Income ETF",
+          "u": "https://www.businesswire.com/news/home/20260609824253/en/First-Trust-Announces-Adjournment-of-Special-Meeting-of-Shareholders-Relating-to-the-Reorganization-of-First-Trust-Senior-Floating-Rate-Income-Fund-II-with-and-into-First-Trust-Flexible-Income-ETF/",
+          "n": "Business Wire",
+          "d": "3 months ago"
+        },
+        {
+          "t": "First Trust Senior Floating Rate Income Fund II Declares its Monthly Common Share Distribution of $0.097 Per Share for June",
+          "u": "https://www.businesswire.com/news/home/20260520706686/en/First-Trust-Senior-Floating-Rate-Income-Fund-II-Declares-its-Monthly-Common-Share-Distribution-of-0.097-Per-Share-for-June/",
+          "n": "Business Wire",
+          "d": "4 months ago"
+        },
+        {
+          "t": "First Trust Advisors L.P. Announces Portfolio Manager Update Regarding the Reorganization of First Trust Senior Floating Rate Income Fund II",
+          "u": "https://www.businesswire.com/news/home/20260514078391/en/First-Trust-Advisors-L.P.-Announces-Portfolio-Manager-Update-Regarding-the-Reorganization-of-First-Trust-Senior-Floating-Rate-Income-Fund-II/",
+          "n": "Business Wire",
+          "d": "4 months ago"
+        },
+        {
+          "t": "First Trust Senior Floating Rate Income Fund II Declares its Monthly Common Share Distribution of $0.097 Per Share for May",
+          "u": "https://www.businesswire.com/news/home/20260420739686/en/First-Trust-Senior-Floating-Rate-Income-Fund-II-Declares-its-Monthly-Common-Share-Distribution-of-0.097-Per-Share-for-May/",
+          "n": "Business Wire",
+          "d": "5 months ago"
+        },
+        {
+          "t": "First Trust Senior Floating Rate Income Fund II Declares its Monthly Common Share Distribution of $0.097 Per Share for April",
+          "u": "https://www.businesswire.com/news/home/20260319340503/en/First-Trust-Senior-Floating-Rate-Income-Fund-II-Declares-its-Monthly-Common-Share-Distribution-of-0.097-Per-Share-for-April/",
+          "n": "Business Wire",
+          "d": "6 months ago"
+        },
+        {
+          "t": "First Trust Senior Floating Rate Income Fund II Declares its Monthly Common Share Distribution of $0.097 Per Share for March",
+          "u": "https://www.businesswire.com/news/home/20260219661062/en/First-Trust-Senior-Floating-Rate-Income-Fund-II-Declares-its-Monthly-Common-Share-Distribution-of-0.097-Per-Share-for-March/",
+          "n": "Business Wire",
+          "d": "7 months ago"
+        },
+        {
+          "t": "First Trust Senior Floating Rate Income Fund II Declares its Monthly Common Share Distribution of $0.097 Per Share for February",
+          "u": "https://www.businesswire.com/news/home/20260120480280/en/First-Trust-Senior-Floating-Rate-Income-Fund-II-Declares-its-Monthly-Common-Share-Distribution-of-0.097-Per-Share-for-February/",
+          "n": "Business Wire",
+          "d": "8 months ago"
+        }
+      ],
+      "date": "Oct 1, 2026",
+      "count": 284,
+      "trust": {
+        "sources": [
+          {
+            "name": "Finnhub",
+            "short": "Finnhub",
+            "url": "https://finnhub.io/"
+          }
+        ],
+        "freshnessLag": "days",
+        "updateFrequency": "daily",
+        "lastUpdated": "Oct 1, 2026",
+        "lastChecked": 1791100250493,
+        "topic": "holdings",
+        "ticker": "FFLX",
+        "summary": {
+          "pre": "ETF holdings data is provided by ",
+          "post": ". Holdings are typically published by the ETF issuer at the end of each trading day."
+        },
+        "extraSummaryLinks": null
+      }
+    },
+    "quote": null,
+    "history": null,
+    "history_periods": {}
+  },
+  "detail_status": "stockanalysis_partial",
+  "partial_reason_codes": [
+    "holdings_countries_unavailable",
+    "history_deferred_initial_reconcile",
+    "quote_deferred_initial_reconcile"
+  ]
+}

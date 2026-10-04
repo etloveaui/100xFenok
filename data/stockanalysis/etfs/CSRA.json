@@ -1,0 +1,1523 @@
+{
+  "schema_version": "stockanalysis/v1",
+  "source": "stockanalysis",
+  "asset_type": "etf",
+  "ticker": "CSRA",
+  "source_as_of": null,
+  "fetched_at": "2026-10-04T12:00:20Z",
+  "endpoints": {
+    "holdings": "/etf/csra/holdings/__data.json",
+    "overview": "/etf/csra/__data.json",
+    "quote": null,
+    "history_periods": {}
+  },
+  "endpoint_contracts": {
+    "overview": {
+      "format": "svelte_devalue",
+      "decoder": "svelte_devalue_node/v1",
+      "contract": "etf_detail_overview/v1"
+    },
+    "holdings": {
+      "format": "svelte_devalue",
+      "decoder": "svelte_devalue_node/v1",
+      "contract": "etf_detail_holdings/v1"
+    },
+    "quote": {
+      "format": "rest_json",
+      "contract": "stockanalysis_quote/v1"
+    },
+    "history_periods": {
+      "format": "rest_json",
+      "contract": "stockanalysis_history/v1"
+    }
+  },
+  "normalized": {
+    "holdings": [],
+    "asset_allocation": null,
+    "sectors": null,
+    "countries": null,
+    "holding_count": null,
+    "holdings_updated": null,
+    "classification": {
+      "is_leveraged": false,
+      "leverage_factor": null,
+      "is_inverse": false,
+      "is_single_stock": false,
+      "underlying": null,
+      "source": "stockanalysis.overview.description",
+      "confidence": "high"
+    },
+    "overview": {
+      "aum": "$18.28M",
+      "expenseRatio": "0.80%",
+      "sharesOut": "750,000",
+      "dividendYield": "0.32%",
+      "inception": "Aug 11, 2026",
+      "etf_website": "https://www.cohenandsteers.com/funds/real-assets-active-etf/"
+    },
+    "performance": {
+      "tr1m": -3.78274,
+      "trYTD": null,
+      "tr1y": null,
+      "cagr5y": null,
+      "cagr10y": null,
+      "cagrMAX": null
+    },
+    "quote": null,
+    "history": null,
+    "history_periods": {}
+  },
+  "raw": {
+    "overview": {
+      "trust": {
+        "sources": [
+          {
+            "name": "S&P Global Market Intelligence",
+            "short": "S&P Global",
+            "url": "https://www.spglobal.com/market-intelligence/en"
+          },
+          {
+            "name": "CBOE",
+            "short": "CBOE",
+            "url": "https://www.cboe.com/"
+          },
+          {
+            "name": "Nasdaq UTP",
+            "short": "Nasdaq UTP",
+            "url": "https://www.utpplan.com/overview",
+            "noUtm": true
+          },
+          {
+            "name": "Finnhub",
+            "short": "Finnhub",
+            "url": "https://finnhub.io/"
+          }
+        ],
+        "topic": "overview",
+        "ticker": "CSRA",
+        "lastChecked": 1791006094684,
+        "summary": {
+          "text": "Historical data is provided by S&P Global Market Intelligence. Real-time stock price data is provided by CBOE and 15-minute delayed consolidated tape pricing data is provided by Nasdaq UTP. Several fund data points are also provided by Finnhub."
+        }
+      },
+      "type": "etf",
+      "aum": "$18.28M",
+      "expenseRatio": "0.80%",
+      "peRatio": null,
+      "sharesOut": "750,000",
+      "dps": "$0.08",
+      "dividendYield": "0.32%",
+      "payoutRatio": null,
+      "exDivDate": "Sep 29, 2026",
+      "ch1y": null,
+      "payoutFrequency": "n/a",
+      "beta": null,
+      "holdings": null,
+      "inception": "Aug 11, 2026",
+      "chart": {
+        "expiration": 1791207000000,
+        "data": [
+          {
+            "t": 1790933400
+          },
+          {
+            "t": 1790933460
+          },
+          {
+            "t": 1790933520
+          },
+          {
+            "t": 1790933580
+          },
+          {
+            "t": 1790933640
+          },
+          {
+            "t": 1790933700
+          },
+          {
+            "t": 1790933760
+          },
+          {
+            "t": 1790933820
+          },
+          {
+            "t": 1790933880
+          },
+          {
+            "t": 1790933940
+          },
+          {
+            "t": 1790934000
+          },
+          {
+            "t": 1790934060
+          },
+          {
+            "t": 1790934120
+          },
+          {
+            "t": 1790934180
+          },
+          {
+            "t": 1790934240
+          },
+          {
+            "t": 1790934300
+          },
+          {
+            "c": 24.393,
+            "o": 24.393,
+            "t": 1790934360
+          },
+          {
+            "c": null,
+            "t": 1790934420
+          },
+          {
+            "c": null,
+            "t": 1790934480
+          },
+          {
+            "c": null,
+            "t": 1790934540
+          },
+          {
+            "c": null,
+            "t": 1790934600
+          },
+          {
+            "c": null,
+            "t": 1790934660
+          },
+          {
+            "c": null,
+            "t": 1790934720
+          },
+          {
+            "c": null,
+            "t": 1790934780
+          },
+          {
+            "c": null,
+            "t": 1790934840
+          },
+          {
+            "c": null,
+            "t": 1790934900
+          },
+          {
+            "c": null,
+            "t": 1790934960
+          },
+          {
+            "c": null,
+            "t": 1790935020
+          },
+          {
+            "c": null,
+            "t": 1790935080
+          },
+          {
+            "c": null,
+            "t": 1790935140
+          },
+          {
+            "c": null,
+            "t": 1790935200
+          },
+          {
+            "c": null,
+            "t": 1790935260
+          },
+          {
+            "c": null,
+            "t": 1790935320
+          },
+          {
+            "c": null,
+            "t": 1790935380
+          },
+          {
+            "c": null,
+            "t": 1790935440
+          },
+          {
+            "c": null,
+            "t": 1790935500
+          },
+          {
+            "c": null,
+            "t": 1790935560
+          },
+          {
+            "c": null,
+            "t": 1790935620
+          },
+          {
+            "c": null,
+            "t": 1790935680
+          },
+          {
+            "c": null,
+            "t": 1790935740
+          },
+          {
+            "c": null,
+            "t": 1790935800
+          },
+          {
+            "c": null,
+            "t": 1790935860
+          },
+          {
+            "c": null,
+            "t": 1790935920
+          },
+          {
+            "c": null,
+            "t": 1790935980
+          },
+          {
+            "c": null,
+            "t": 1790936040
+          },
+          {
+            "c": null,
+            "t": 1790936100
+          },
+          {
+            "c": null,
+            "t": 1790936160
+          },
+          {
+            "c": null,
+            "t": 1790936220
+          },
+          {
+            "c": null,
+            "t": 1790936280
+          },
+          {
+            "c": null,
+            "t": 1790936340
+          },
+          {
+            "c": null,
+            "t": 1790936400
+          },
+          {
+            "c": null,
+            "t": 1790936460
+          },
+          {
+            "c": null,
+            "t": 1790936520
+          },
+          {
+            "c": null,
+            "t": 1790936580
+          },
+          {
+            "c": null,
+            "t": 1790936640
+          },
+          {
+            "c": null,
+            "t": 1790936700
+          },
+          {
+            "c": null,
+            "t": 1790936760
+          },
+          {
+            "c": null,
+            "t": 1790936820
+          },
+          {
+            "c": null,
+            "t": 1790936880
+          },
+          {
+            "c": null,
+            "t": 1790936940
+          },
+          {
+            "c": null,
+            "t": 1790937000
+          },
+          {
+            "c": null,
+            "t": 1790937060
+          },
+          {
+            "c": null,
+            "t": 1790937120
+          },
+          {
+            "c": null,
+            "t": 1790937180
+          },
+          {
+            "c": null,
+            "t": 1790937240
+          },
+          {
+            "c": null,
+            "t": 1790937300
+          },
+          {
+            "c": null,
+            "t": 1790937360
+          },
+          {
+            "c": null,
+            "t": 1790937420
+          },
+          {
+            "c": null,
+            "t": 1790937480
+          },
+          {
+            "c": null,
+            "t": 1790937540
+          },
+          {
+            "c": null,
+            "t": 1790937600
+          },
+          {
+            "c": null,
+            "t": 1790937660
+          },
+          {
+            "c": null,
+            "t": 1790937720
+          },
+          {
+            "c": null,
+            "t": 1790937780
+          },
+          {
+            "c": null,
+            "t": 1790937840
+          },
+          {
+            "c": null,
+            "t": 1790937900
+          },
+          {
+            "c": null,
+            "t": 1790937960
+          },
+          {
+            "c": null,
+            "t": 1790938020
+          },
+          {
+            "c": null,
+            "t": 1790938080
+          },
+          {
+            "c": null,
+            "t": 1790938140
+          },
+          {
+            "c": null,
+            "t": 1790938200
+          },
+          {
+            "c": null,
+            "t": 1790938260
+          },
+          {
+            "c": null,
+            "t": 1790938320
+          },
+          {
+            "c": null,
+            "t": 1790938380
+          },
+          {
+            "c": null,
+            "t": 1790938440
+          },
+          {
+            "c": null,
+            "t": 1790938500
+          },
+          {
+            "c": 24.43,
+            "t": 1790938560
+          },
+          {
+            "c": null,
+            "t": 1790938620
+          },
+          {
+            "c": null,
+            "t": 1790938680
+          },
+          {
+            "c": null,
+            "t": 1790938740
+          },
+          {
+            "c": null,
+            "t": 1790938800
+          },
+          {
+            "c": null,
+            "t": 1790938860
+          },
+          {
+            "c": null,
+            "t": 1790938920
+          },
+          {
+            "c": null,
+            "t": 1790938980
+          },
+          {
+            "c": null,
+            "t": 1790939040
+          },
+          {
+            "c": null,
+            "t": 1790939100
+          },
+          {
+            "c": null,
+            "t": 1790939160
+          },
+          {
+            "c": null,
+            "t": 1790939220
+          },
+          {
+            "c": null,
+            "t": 1790939280
+          },
+          {
+            "c": null,
+            "t": 1790939340
+          },
+          {
+            "c": null,
+            "t": 1790939400
+          },
+          {
+            "c": null,
+            "t": 1790939460
+          },
+          {
+            "c": null,
+            "t": 1790939520
+          },
+          {
+            "c": null,
+            "t": 1790939580
+          },
+          {
+            "c": null,
+            "t": 1790939640
+          },
+          {
+            "c": null,
+            "t": 1790939700
+          },
+          {
+            "c": null,
+            "t": 1790939760
+          },
+          {
+            "c": null,
+            "t": 1790939820
+          },
+          {
+            "c": null,
+            "t": 1790939880
+          },
+          {
+            "c": null,
+            "t": 1790939940
+          },
+          {
+            "c": null,
+            "t": 1790940000
+          },
+          {
+            "c": null,
+            "t": 1790940060
+          },
+          {
+            "c": null,
+            "t": 1790940120
+          },
+          {
+            "c": null,
+            "t": 1790940180
+          },
+          {
+            "c": null,
+            "t": 1790940240
+          },
+          {
+            "c": null,
+            "t": 1790940300
+          },
+          {
+            "c": 24.43,
+            "t": 1790940360
+          },
+          {
+            "t": 1790940419
+          },
+          {
+            "t": 1790940479
+          },
+          {
+            "t": 1790940539
+          },
+          {
+            "t": 1790940599
+          },
+          {
+            "t": 1790940659
+          },
+          {
+            "t": 1790940719
+          },
+          {
+            "t": 1790940779
+          },
+          {
+            "t": 1790940839
+          },
+          {
+            "t": 1790940899
+          },
+          {
+            "t": 1790940959
+          },
+          {
+            "t": 1790941019
+          },
+          {
+            "t": 1790941079
+          },
+          {
+            "t": 1790941139
+          },
+          {
+            "t": 1790941199
+          },
+          {
+            "t": 1790941259
+          },
+          {
+            "t": 1790941319
+          },
+          {
+            "t": 1790941379
+          },
+          {
+            "t": 1790941439
+          },
+          {
+            "t": 1790941499
+          },
+          {
+            "t": 1790941559
+          },
+          {
+            "t": 1790941619
+          },
+          {
+            "t": 1790941679
+          },
+          {
+            "t": 1790941739
+          },
+          {
+            "t": 1790941799
+          },
+          {
+            "t": 1790941859
+          },
+          {
+            "t": 1790941919
+          },
+          {
+            "t": 1790941979
+          },
+          {
+            "t": 1790942039
+          },
+          {
+            "t": 1790942099
+          },
+          {
+            "t": 1790942159
+          },
+          {
+            "t": 1790942219
+          },
+          {
+            "t": 1790942279
+          },
+          {
+            "t": 1790942339
+          },
+          {
+            "t": 1790942399
+          },
+          {
+            "t": 1790942459
+          },
+          {
+            "t": 1790942519
+          },
+          {
+            "t": 1790942579
+          },
+          {
+            "t": 1790942639
+          },
+          {
+            "t": 1790942699
+          },
+          {
+            "t": 1790942759
+          },
+          {
+            "t": 1790942819
+          },
+          {
+            "t": 1790942879
+          },
+          {
+            "t": 1790942939
+          },
+          {
+            "t": 1790942999
+          },
+          {
+            "t": 1790943059
+          },
+          {
+            "t": 1790943119
+          },
+          {
+            "t": 1790943179
+          },
+          {
+            "t": 1790943239
+          },
+          {
+            "t": 1790943299
+          },
+          {
+            "t": 1790943359
+          },
+          {
+            "t": 1790943419
+          },
+          {
+            "t": 1790943479
+          },
+          {
+            "t": 1790943539
+          },
+          {
+            "t": 1790943599
+          },
+          {
+            "t": 1790943659
+          },
+          {
+            "t": 1790943719
+          },
+          {
+            "t": 1790943779
+          },
+          {
+            "t": 1790943839
+          },
+          {
+            "t": 1790943899
+          },
+          {
+            "t": 1790943959
+          },
+          {
+            "t": 1790944019
+          },
+          {
+            "t": 1790944079
+          },
+          {
+            "t": 1790944139
+          },
+          {
+            "t": 1790944199
+          },
+          {
+            "t": 1790944259
+          },
+          {
+            "t": 1790944319
+          },
+          {
+            "t": 1790944379
+          },
+          {
+            "t": 1790944439
+          },
+          {
+            "t": 1790944499
+          },
+          {
+            "t": 1790944559
+          },
+          {
+            "t": 1790944619
+          },
+          {
+            "t": 1790944679
+          },
+          {
+            "t": 1790944739
+          },
+          {
+            "t": 1790944799
+          },
+          {
+            "t": 1790944859
+          },
+          {
+            "t": 1790944919
+          },
+          {
+            "t": 1790944979
+          },
+          {
+            "t": 1790945039
+          },
+          {
+            "t": 1790945099
+          },
+          {
+            "t": 1790945159
+          },
+          {
+            "t": 1790945219
+          },
+          {
+            "t": 1790945279
+          },
+          {
+            "t": 1790945339
+          },
+          {
+            "t": 1790945399
+          },
+          {
+            "t": 1790945459
+          },
+          {
+            "t": 1790945519
+          },
+          {
+            "t": 1790945579
+          },
+          {
+            "t": 1790945639
+          },
+          {
+            "t": 1790945699
+          },
+          {
+            "t": 1790945759
+          },
+          {
+            "t": 1790945819
+          },
+          {
+            "t": 1790945879
+          },
+          {
+            "t": 1790945939
+          },
+          {
+            "t": 1790945999
+          },
+          {
+            "t": 1790946059
+          },
+          {
+            "t": 1790946119
+          },
+          {
+            "t": 1790946179
+          },
+          {
+            "t": 1790946239
+          },
+          {
+            "t": 1790946299
+          },
+          {
+            "t": 1790946359
+          },
+          {
+            "t": 1790946419
+          },
+          {
+            "t": 1790946479
+          },
+          {
+            "t": 1790946539
+          },
+          {
+            "t": 1790946599
+          },
+          {
+            "t": 1790946659
+          },
+          {
+            "t": 1790946719
+          },
+          {
+            "t": 1790946779
+          },
+          {
+            "t": 1790946839
+          },
+          {
+            "t": 1790946899
+          },
+          {
+            "t": 1790946959
+          },
+          {
+            "t": 1790947019
+          },
+          {
+            "t": 1790947079
+          },
+          {
+            "t": 1790947139
+          },
+          {
+            "t": 1790947199
+          },
+          {
+            "t": 1790947259
+          },
+          {
+            "t": 1790947319
+          },
+          {
+            "t": 1790947379
+          },
+          {
+            "t": 1790947439
+          },
+          {
+            "t": 1790947499
+          },
+          {
+            "t": 1790947559
+          },
+          {
+            "t": 1790947619
+          },
+          {
+            "t": 1790947679
+          },
+          {
+            "t": 1790947739
+          },
+          {
+            "t": 1790947799
+          },
+          {
+            "t": 1790947859
+          },
+          {
+            "t": 1790947919
+          },
+          {
+            "t": 1790947979
+          },
+          {
+            "t": 1790948039
+          },
+          {
+            "t": 1790948099
+          },
+          {
+            "t": 1790948159
+          },
+          {
+            "t": 1790948219
+          },
+          {
+            "t": 1790948279
+          },
+          {
+            "t": 1790948339
+          },
+          {
+            "t": 1790948399
+          },
+          {
+            "t": 1790948459
+          },
+          {
+            "t": 1790948519
+          },
+          {
+            "t": 1790948579
+          },
+          {
+            "t": 1790948639
+          },
+          {
+            "t": 1790948699
+          },
+          {
+            "t": 1790948759
+          },
+          {
+            "t": 1790948819
+          },
+          {
+            "t": 1790948879
+          },
+          {
+            "t": 1790948939
+          },
+          {
+            "t": 1790948999
+          },
+          {
+            "t": 1790949059
+          },
+          {
+            "t": 1790949119
+          },
+          {
+            "t": 1790949179
+          },
+          {
+            "t": 1790949239
+          },
+          {
+            "t": 1790949299
+          },
+          {
+            "t": 1790949359
+          },
+          {
+            "t": 1790949419
+          },
+          {
+            "t": 1790949479
+          },
+          {
+            "t": 1790949539
+          },
+          {
+            "t": 1790949599
+          },
+          {
+            "t": 1790949659
+          },
+          {
+            "t": 1790949719
+          },
+          {
+            "t": 1790949779
+          },
+          {
+            "t": 1790949839
+          },
+          {
+            "t": 1790949899
+          },
+          {
+            "t": 1790949959
+          },
+          {
+            "t": 1790950019
+          },
+          {
+            "t": 1790950079
+          },
+          {
+            "t": 1790950139
+          },
+          {
+            "t": 1790950199
+          },
+          {
+            "t": 1790950259
+          },
+          {
+            "t": 1790950319
+          },
+          {
+            "t": 1790950379
+          },
+          {
+            "t": 1790950439
+          },
+          {
+            "t": 1790950499
+          },
+          {
+            "t": 1790950559
+          },
+          {
+            "t": 1790950619
+          },
+          {
+            "t": 1790950679
+          },
+          {
+            "t": 1790950739
+          },
+          {
+            "t": 1790950799
+          },
+          {
+            "t": 1790950859
+          },
+          {
+            "t": 1790950919
+          },
+          {
+            "t": 1790950979
+          },
+          {
+            "t": 1790951039
+          },
+          {
+            "t": 1790951099
+          },
+          {
+            "t": 1790951159
+          },
+          {
+            "t": 1790951219
+          },
+          {
+            "t": 1790951279
+          },
+          {
+            "t": 1790951339
+          },
+          {
+            "t": 1790951399
+          },
+          {
+            "t": 1790951459
+          },
+          {
+            "t": 1790951519
+          },
+          {
+            "t": 1790951579
+          },
+          {
+            "t": 1790951639
+          },
+          {
+            "t": 1790951699
+          },
+          {
+            "t": 1790951759
+          },
+          {
+            "t": 1790951819
+          },
+          {
+            "t": 1790951879
+          },
+          {
+            "t": 1790951939
+          },
+          {
+            "t": 1790951999
+          },
+          {
+            "t": 1790952059
+          },
+          {
+            "t": 1790952119
+          },
+          {
+            "t": 1790952179
+          },
+          {
+            "t": 1790952239
+          },
+          {
+            "t": 1790952299
+          },
+          {
+            "t": 1790952359
+          },
+          {
+            "t": 1790952419
+          },
+          {
+            "t": 1790952479
+          },
+          {
+            "t": 1790952539
+          },
+          {
+            "t": 1790952599
+          },
+          {
+            "t": 1790952659
+          },
+          {
+            "t": 1790952719
+          },
+          {
+            "t": 1790952779
+          },
+          {
+            "t": 1790952839
+          },
+          {
+            "t": 1790952899
+          },
+          {
+            "t": 1790952959
+          },
+          {
+            "t": 1790953019
+          },
+          {
+            "t": 1790953079
+          },
+          {
+            "t": 1790953139
+          },
+          {
+            "t": 1790953199
+          },
+          {
+            "t": 1790953259
+          },
+          {
+            "t": 1790953319
+          },
+          {
+            "t": 1790953379
+          },
+          {
+            "t": 1790953439
+          },
+          {
+            "t": 1790953499
+          },
+          {
+            "t": 1790953559
+          },
+          {
+            "t": 1790953619
+          },
+          {
+            "t": 1790953679
+          },
+          {
+            "t": 1790953739
+          },
+          {
+            "t": 1790953799
+          },
+          {
+            "t": 1790953859
+          },
+          {
+            "t": 1790953919
+          },
+          {
+            "t": 1790953979
+          },
+          {
+            "t": 1790954039
+          },
+          {
+            "t": 1790954099
+          },
+          {
+            "t": 1790954159
+          },
+          {
+            "t": 1790954219
+          },
+          {
+            "t": 1790954279
+          },
+          {
+            "t": 1790954339
+          },
+          {
+            "t": 1790954399
+          },
+          {
+            "t": 1790954459
+          },
+          {
+            "t": 1790954519
+          },
+          {
+            "t": 1790954579
+          },
+          {
+            "t": 1790954639
+          },
+          {
+            "t": 1790954699
+          },
+          {
+            "t": 1790954759
+          },
+          {
+            "t": 1790954819
+          },
+          {
+            "t": 1790954879
+          },
+          {
+            "t": 1790954939
+          },
+          {
+            "t": 1790954999
+          },
+          {
+            "t": 1790955059
+          },
+          {
+            "t": 1790955119
+          },
+          {
+            "t": 1790955179
+          },
+          {
+            "t": 1790955239
+          },
+          {
+            "t": 1790955299
+          },
+          {
+            "t": 1790955359
+          },
+          {
+            "t": 1790955419
+          },
+          {
+            "t": 1790955479
+          },
+          {
+            "t": 1790955539
+          },
+          {
+            "t": 1790955599
+          },
+          {
+            "t": 1790955659
+          },
+          {
+            "t": 1790955719
+          },
+          {
+            "t": 1790955779
+          },
+          {
+            "t": 1790955839
+          },
+          {
+            "t": 1790955899
+          },
+          {
+            "t": 1790955959
+          },
+          {
+            "t": 1790956019
+          },
+          {
+            "t": 1790956079
+          },
+          {
+            "t": 1790956139
+          },
+          {
+            "t": 1790956199
+          },
+          {
+            "t": 1790956259
+          },
+          {
+            "t": 1790956319
+          },
+          {
+            "t": 1790956379
+          },
+          {
+            "t": 1790956439
+          },
+          {
+            "t": 1790956499
+          },
+          {
+            "t": 1790956559
+          },
+          {
+            "t": 1790956619
+          },
+          {
+            "t": 1790956679
+          },
+          {
+            "t": 1790956739
+          },
+          {
+            "t": 1790956799
+          },
+          {
+            "t": 1790956800
+          }
+        ]
+      },
+      "description": "The Cohen & Steers Real Assets Active ETF (CSRA) is an exchange-traded fund that mostly invests in target outcome asset allocation. The fund is actively managed, seeking attractive long-term total returns and maximum real returns through exposure to US and non-US real assets. This includes equities, commodities, and fixed income securities. CSRA was launched on Aug 11, 2026 and is issued by Cohen & Steers.",
+      "infoTable": [
+        [
+          "Asset Class",
+          "Asset Allocation"
+        ],
+        [
+          "Region",
+          "North America"
+        ],
+        [
+          "Stock Exchange",
+          "NYSE Arca"
+        ],
+        [
+          "Ticker Symbol",
+          "CSRA"
+        ],
+        [
+          "Provider",
+          "Cohen & Steers"
+        ]
+      ],
+      "etf_website": "https://www.cohenandsteers.com/funds/real-assets-active-etf/",
+      "provider_page": null,
+      "holdingsTable": {
+        "count": null,
+        "updated": null,
+        "top10": null,
+        "holdings": null
+      },
+      "dividendTable": [
+        {
+          "dt": "2026-09-29",
+          "amt": 0.079,
+          "pay": "2026-09-30"
+        }
+      ],
+      "news": {
+        "exp": "1791070758266",
+        "data": [
+          {
+            "url": "https://www.etftrends.com/equity-etf-content-hub/investors-turning-real-assets-era-scarcity/",
+            "img": "https://cdn.snapi.dev/images/v1/2/b/c/etf11-3917458.jpg",
+            "title": "Why Investors Are Turning to Real Assets in an Era of Scarcity",
+            "text": "Real assets are gaining attention as global markets move from a 15-year “era of abundance” to an “era of scarcity.” Persistent inflation, underinvestment, and fragile supply chains are driving this sh...",
+            "source": "ETF Trends",
+            "type": "Article",
+            "tickers": [
+              "#CSIO",
+              "#CSNR",
+              "#CSRE",
+              "#CSEN"
+            ],
+            "time": "Sep 10, 2026, 4:03 PM EDT",
+            "ago": "23 days ago"
+          },
+          {
+            "url": "https://www.etftrends.com/commodities-content-hub/cohen-steers-expands-active-etf-lineup-with-real-assets-fund/",
+            "img": "https://cdn.snapi.dev/images/v1/h/3/d/etf43-3866866.jpg",
+            "title": "Cohen & Steers Expands Active ETF Lineup With Real Assets Fund",
+            "text": "On August 12, Cohen & Steers launched the Cohen & Steers Real Assets Active ETF (CSRA). This actively managed ETF looks to deliver attractive long-term total returns and to maximize real returns durin...",
+            "source": "ETF Trends",
+            "type": "Article",
+            "tickers": [
+              "#CSNR",
+              "#CSRE"
+            ],
+            "time": "Aug 12, 2026, 3:30 PM EDT",
+            "ago": "7 weeks ago"
+          },
+          {
+            "url": "https://www.prnewswire.com/news-releases/cohen--steers-launches-real-assets-active-etf-csra-302849762.html",
+            "img": "https://cdn.snapi.dev/images/v1/r/m/z/press5-3865736.jpg",
+            "title": "Cohen & Steers Launches Real Assets Active ETF (CSRA)",
+            "text": "NEW YORK, Aug. 12, 2026 /PRNewswire/ -- Cohen & Steers, Inc. (NYSE: CNS) today announced it has launched the Cohen & Steers Real Assets Active ETF (CSRA). This ETF harnesses the firm's four decades of...",
+            "source": "PRNewsWire",
+            "type": "Article",
+            "tickers": [
+              "$CNS"
+            ],
+            "time": "Aug 12, 2026, 9:44 AM EDT",
+            "ago": "7 weeks ago"
+          }
+        ]
+      },
+      "config": {
+        "no1d": false
+      },
+      "changes": {
+        "price1w": 24.844,
+        "price1m": 25.504,
+        "price3m": null,
+        "price6m": null,
+        "priceYTD": null,
+        "price1y": null,
+        "price5y": null,
+        "priceMAX": 25.128
+      },
+      "performance": {
+        "tr1m": -3.78274,
+        "trYTD": null,
+        "tr1y": null,
+        "cagr5y": null,
+        "cagr10y": null,
+        "cagrMAX": null
+      }
+    },
+    "holdings": {},
+    "quote": null,
+    "history": null,
+    "history_periods": {}
+  },
+  "detail_status": "stockanalysis_partial",
+  "partial_reason_codes": [
+    "holdings_unavailable",
+    "holdings_count_unavailable",
+    "holdings_date_unavailable",
+    "holdings_countries_unavailable",
+    "history_deferred_initial_reconcile",
+    "quote_deferred_initial_reconcile"
+  ],
+  "source_as_of_reason": "provider detail response carries no market or holdings observation date"
+}
