@@ -345,6 +345,26 @@ class StockAnalysisWorkflowContractTest(unittest.TestCase):
                 self.assertIn(diagnostic, rejected.stderr)
                 self.assertEqual((rejected_root / "TARGET.json").read_bytes(), (active / "TARGET.json").read_bytes())
 
+            legacy = json.loads(etf_payload(3))
+            del legacy["source_as_of"]
+            legacy_bytes = json.dumps(legacy).encode()
+            (active / "TARGET.json").write_bytes(legacy_bytes)
+            recovered, recovered_root = run_candidate("legacy-active", target_bytes)
+            self.assertEqual(recovered.returncode, 0, recovered.stderr)
+            self.assertEqual((recovered_root / "TARGET.json").read_bytes(), target_bytes)
+            self.assertEqual((active / "TARGET.json").read_bytes(), legacy_bytes)
+            for label, body, diagnostic in (
+                ("legacy-active-regression", etf_payload(4), "regresses active"),
+                ("legacy-complete-regression", etf_payload(1, partial=True), "loses complete active"),
+                ("legacy-quote-regression", etf_payload(1, empty_quote=True), "loses active usable quote"),
+                ("legacy-history-regression", etf_payload(1, truncated_history=True), "loses active daily_1y history"),
+                ("unstamped-artifact", legacy_bytes, "artifact contract invalid"),
+            ):
+                rejected, rejected_root = run_candidate(label, body)
+                self.assertNotEqual(rejected.returncode, 0, label)
+                self.assertIn(diagnostic, rejected.stderr)
+                self.assertEqual((rejected_root / "TARGET.json").read_bytes(), legacy_bytes)
+
     def test_candidate_artifact_is_context_bound_and_immutable(self) -> None:
         for expected in (
             "--candidate-root \"$STOCKANALYSIS_CANDIDATE_ROOT\"",

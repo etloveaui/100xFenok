@@ -841,11 +841,16 @@ jobs:
               raise SystemExit("Git ETF LKG is not a flat ticker JSON tree")
           git_names = {path.name for path in git_root.iterdir()}
           git_only = sorted(git_names - active_names - overlay_names)
-          def checked_payload(body, ticker, label):
+          def checked_payload(body, ticker, label, *, legacy_baseline=False):
               try:
                   payload = json.loads(body)
                   if not isinstance(payload, dict):
                       raise ValueError("payload is not an object")
+                  # Earlier active generations predate the explicit source stamp.
+                  # Derive their floor from the same provider fields as acquisition;
+                  # incoming artifacts still require their own verified stamp.
+                  if legacy_baseline and "source_as_of" not in payload:
+                      payload["source_as_of"] = fetcher.stockanalysis_detail_source_timestamp(payload)
                   fetcher.validate_stockanalysis_etf_payload(ticker, payload)
               except (ValueError, TypeError) as error:
                   raise SystemExit(f"ETF {label} contract invalid for {ticker}: {error}") from error
@@ -859,7 +864,8 @@ jobs:
           def enforce_floor(ticker, candidate_payload, candidate_source, candidate_complete, baseline_bytes, label):
               if baseline_bytes is None:
                   return
-              baseline, baseline_source, baseline_complete = checked_payload(baseline_bytes, ticker, label)
+              baseline, baseline_source, baseline_complete = checked_payload(
+                  baseline_bytes, ticker, label, legacy_baseline=True)
               if baseline_source and (candidate_source is None or candidate_source < baseline_source):
                   raise SystemExit(f"ETF {ticker} artifact source date regresses {label}")
               if baseline_complete and not candidate_complete:
