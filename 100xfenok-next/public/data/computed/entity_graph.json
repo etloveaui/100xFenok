@@ -1,6 +1,6 @@
 {
   "schema_version": "data-entity-graph/v1",
-  "generated_at": "2026-10-04T16:04:17.293Z",
+  "generated_at": "2026-10-04T16:41:02.840Z",
   "source_as_of": {
     "stocks_analyzer": "2026-10-02",
     "stock_action_index": "2026-10-02",
@@ -41,10 +41,10 @@
     "sectors": 10,
     "etf_categories": 7,
     "filing_nodes": 202,
-    "sec13f_nodes": 1033,
+    "sec13f_nodes": 1073,
     "stocks_with_market_facts": 1066,
     "stocks_with_filings": 202,
-    "stocks_with_13f": 424,
+    "stocks_with_13f": 436,
     "stocks_with_single_stock_etfs": 84,
     "etfs_with_market_facts": 5699
   },
@@ -10329,28 +10329,29 @@
         "canonical_sector": "Financials",
         "route": "/stock/BMO",
         "confidence": {
-          "label": "medium",
-          "rank": 2,
-          "coverage_ratio": 0.5222
+          "label": "high",
+          "rank": 3,
+          "coverage_ratio": 0.8
         },
         "as_of": {
           "profile": "2026-10-02",
           "action_index": "2026-10-02",
           "market_facts": "2026-09-29",
           "filings": null,
-          "sec_13f": null
+          "sec_13f": "2026-Q2"
         },
         "source_links": {
           "stocks_analyzer": true,
           "stock_action_index": true,
           "market_facts": true,
           "edgar_summary": true,
-          "sec_13f": false
+          "sec_13f": true
         },
         "service_flags": [
           "screener",
           "stock_detail",
-          "filings"
+          "filings",
+          "smart_money"
         ],
         "relations": [
           {
@@ -10362,6 +10363,11 @@
             "type": "has_filing_summary",
             "target": "filing:BMO",
             "source": "edgar-korean-summaries"
+          },
+          {
+            "type": "held_by_13f_investors",
+            "target": "sec13f:BMO",
+            "source": "sec-13f/by_ticker"
           }
         ]
       },
@@ -12723,26 +12729,27 @@
         "confidence": {
           "label": "high",
           "rank": 3,
-          "coverage_ratio": 0.75
+          "coverage_ratio": 1
         },
         "as_of": {
           "profile": "2026-10-02",
           "action_index": "2026-10-02",
           "market_facts": "2026-10-02",
           "filings": null,
-          "sec_13f": null
+          "sec_13f": "2026-Q2"
         },
         "source_links": {
           "stocks_analyzer": true,
           "stock_action_index": true,
           "market_facts": true,
           "edgar_summary": true,
-          "sec_13f": false
+          "sec_13f": true
         },
         "service_flags": [
           "screener",
           "stock_detail",
           "filings",
+          "smart_money",
           "index_membership"
         ],
         "relations": [
@@ -12755,6 +12762,11 @@
             "type": "has_filing_summary",
             "target": "filing:EMR",
             "source": "edgar-korean-summaries"
+          },
+          {
+            "type": "held_by_13f_investors",
+            "target": "sec13f:EMR",
+            "source": "sec-13f/by_ticker"
           }
         ]
       },
@@ -13388,26 +13400,27 @@
         "confidence": {
           "label": "high",
           "rank": 3,
-          "coverage_ratio": 0.75
+          "coverage_ratio": 1
         },
         "as_of": {
           "profile": "2026-10-02",
           "action_index": "2026-10-02",
           "market_facts": "2026-09-29",
           "filings": null,
-          "sec_13f": null
+          "sec_13f": "2026-Q2"
         },
         "source_links": {
           "stocks_analyzer": true,
           "stock_action_index": true,
           "market_facts": true,
           "edgar_summary": true,
-          "sec_13f": false
+          "sec_13f": true
         },
         "service_flags": [
           "screener",
           "stock_detail",
           "filings",
+          "smart_money",
           "index_membership"
         ],
         "relations": [
@@ -13420,6 +13433,11 @@
             "type": "has_filing_summary",
             "target": "filing:ICE",
             "source": "edgar-korean-summaries"
+          },
+          {
+            "type": "held_by_13f_investors",
+            "target": "sec13f:ICE",
+            "source": "sec-13f/by_ticker"
           }
         ]
       },
@@ -13781,26 +13799,27 @@
         "confidence": {
           "label": "high",
           "rank": 3,
-          "coverage_ratio": 0.75
+          "coverage_ratio": 1
         },
         "as_of": {
           "profile": "2026-10-02",
           "action_index": "2026-10-02",
           "market_facts": "2026-09-29",
           "filings": null,
-          "sec_13f": null
+          "sec_13f": "2026-Q2"
         },
         "source_links": {
           "stocks_analyzer": true,
           "stock_action_index": true,
           "market_facts": true,
           "edgar_summary": true,
-          "sec_13f": false
+          "sec_13f": true
         },
         "service_flags": [
           "screener",
           "stock_detail",
           "filings",
+          "smart_money",
           "index_membership"
         ],
         "relations": [
@@ -13813,6 +13832,11 @@
             "type": "has_filing_summary",
             "target": "filing:WM",
             "source": "edgar-korean-summaries"
+          },
+          {
+            "type": "held_by_13f_investors",
+            "target": "sec13f:WM",
+            "source": "sec-13f/by_ticker"
           }
         ]
       },
@@ -13965,26 +13989,27 @@
         "confidence": {
           "label": "high",
           "rank": 3,
-          "coverage_ratio": 0.75
+          "coverage_ratio": 1
         },
         "as_of": {
           "profile": "2026-10-02",
           "action_index": "2026-10-02",
           "market_facts": "2026-09-29",
           "filings": null,
-          "sec_13f": null
+          "sec_13f": "2026-Q2"
         },
         "source_links": {
           "stocks_analyzer": true,
           "stock_action_index": true,
           "market_facts": true,
           "edgar_summary": true,
-          "sec_13f": false
+          "sec_13f": true
         },
         "service_flags": [
           "screener",
           "stock_detail",
           "filings",
+          "smart_money",
           "index_membership"
         ],
         "relations": [
@@ -13997,6 +14022,11 @@
             "type": "has_filing_summary",
             "target": "filing:UPS",
             "source": "edgar-korean-summaries"
+          },
+          {
+            "type": "held_by_13f_investors",
+            "target": "sec13f:UPS",
+            "source": "sec-13f/by_ticker"
           }
         ]
       },
@@ -14746,26 +14776,27 @@
         "confidence": {
           "label": "high",
           "rank": 3,
-          "coverage_ratio": 0.75
+          "coverage_ratio": 1
         },
         "as_of": {
           "profile": "2026-10-02",
           "action_index": "2026-10-02",
           "market_facts": "2026-09-29",
           "filings": null,
-          "sec_13f": null
+          "sec_13f": "2026-Q2"
         },
         "source_links": {
           "stocks_analyzer": true,
           "stock_action_index": true,
           "market_facts": true,
           "edgar_summary": true,
-          "sec_13f": false
+          "sec_13f": true
         },
         "service_flags": [
           "screener",
           "stock_detail",
           "filings",
+          "smart_money",
           "index_membership"
         ],
         "relations": [
@@ -14778,6 +14809,11 @@
             "type": "has_filing_summary",
             "target": "filing:ITW",
             "source": "edgar-korean-summaries"
+          },
+          {
+            "type": "held_by_13f_investors",
+            "target": "sec13f:ITW",
+            "source": "sec-13f/by_ticker"
           }
         ]
       },
@@ -17224,25 +17260,26 @@
         "confidence": {
           "label": "high",
           "rank": 3,
-          "coverage_ratio": 0.75
+          "coverage_ratio": 1
         },
         "as_of": {
           "profile": "2026-10-02",
           "action_index": "2026-10-02",
           "market_facts": "2026-09-30",
           "filings": null,
-          "sec_13f": null
+          "sec_13f": "2026-Q2"
         },
         "source_links": {
           "stocks_analyzer": true,
           "stock_action_index": true,
           "market_facts": true,
           "edgar_summary": false,
-          "sec_13f": false
+          "sec_13f": true
         },
         "service_flags": [
           "screener",
           "stock_detail",
+          "smart_money",
           "index_membership"
         ],
         "relations": [
@@ -17250,6 +17287,11 @@
             "type": "belongs_to_sector",
             "target": "sector:Energy",
             "source": "stock_action_index.canonicalSector"
+          },
+          {
+            "type": "held_by_13f_investors",
+            "target": "sec13f:TRGP",
+            "source": "sec-13f/by_ticker"
           }
         ]
       },
@@ -20808,25 +20850,26 @@
         "confidence": {
           "label": "high",
           "rank": 3,
-          "coverage_ratio": 0.75
+          "coverage_ratio": 1
         },
         "as_of": {
           "profile": "2026-10-02",
           "action_index": "2026-10-02",
           "market_facts": "2026-09-30",
           "filings": null,
-          "sec_13f": null
+          "sec_13f": "2026-Q2"
         },
         "source_links": {
           "stocks_analyzer": true,
           "stock_action_index": true,
           "market_facts": true,
           "edgar_summary": false,
-          "sec_13f": false
+          "sec_13f": true
         },
         "service_flags": [
           "screener",
           "stock_detail",
+          "smart_money",
           "index_membership"
         ],
         "relations": [
@@ -20834,6 +20877,11 @@
             "type": "belongs_to_sector",
             "target": "sector:Financials",
             "source": "stock_action_index.canonicalSector"
+          },
+          {
+            "type": "held_by_13f_investors",
+            "target": "sec13f:AMP",
+            "source": "sec-13f/by_ticker"
           }
         ]
       },
@@ -23197,25 +23245,26 @@
         "confidence": {
           "label": "high",
           "rank": 3,
-          "coverage_ratio": 0.75
+          "coverage_ratio": 1
         },
         "as_of": {
           "profile": "2026-10-02",
           "action_index": "2026-10-02",
           "market_facts": "2026-09-30",
           "filings": null,
-          "sec_13f": null
+          "sec_13f": "2026-Q2"
         },
         "source_links": {
           "stocks_analyzer": true,
           "stock_action_index": true,
           "market_facts": true,
           "edgar_summary": false,
-          "sec_13f": false
+          "sec_13f": true
         },
         "service_flags": [
           "screener",
           "stock_detail",
+          "smart_money",
           "index_membership"
         ],
         "relations": [
@@ -23223,6 +23272,11 @@
             "type": "belongs_to_sector",
             "target": "sector:Utilities",
             "source": "stock_action_index.canonicalSector"
+          },
+          {
+            "type": "held_by_13f_investors",
+            "target": "sec13f:PEG",
+            "source": "sec-13f/by_ticker"
           }
         ]
       },
@@ -25880,33 +25934,39 @@
         "canonical_sector": "Industrials",
         "route": "/stock/NVT",
         "confidence": {
-          "label": "medium",
-          "rank": 2,
-          "coverage_ratio": 0.5222
+          "label": "high",
+          "rank": 3,
+          "coverage_ratio": 0.8
         },
         "as_of": {
           "profile": "2026-10-02",
           "action_index": "2026-10-02",
           "market_facts": "2026-09-29",
           "filings": null,
-          "sec_13f": null
+          "sec_13f": "2026-Q2"
         },
         "source_links": {
           "stocks_analyzer": true,
           "stock_action_index": true,
           "market_facts": true,
           "edgar_summary": false,
-          "sec_13f": false
+          "sec_13f": true
         },
         "service_flags": [
           "screener",
-          "stock_detail"
+          "stock_detail",
+          "smart_money"
         ],
         "relations": [
           {
             "type": "belongs_to_sector",
             "target": "sector:Industrials",
             "source": "stock_action_index.canonicalSector"
+          },
+          {
+            "type": "held_by_13f_investors",
+            "target": "sec13f:NVT",
+            "source": "sec-13f/by_ticker"
           }
         ]
       },
@@ -26717,25 +26777,26 @@
         "confidence": {
           "label": "high",
           "rank": 3,
-          "coverage_ratio": 0.75
+          "coverage_ratio": 1
         },
         "as_of": {
           "profile": "2026-10-02",
           "action_index": "2026-10-02",
           "market_facts": "2026-09-29",
           "filings": null,
-          "sec_13f": null
+          "sec_13f": "2026-Q2"
         },
         "source_links": {
           "stocks_analyzer": true,
           "stock_action_index": true,
           "market_facts": true,
           "edgar_summary": false,
-          "sec_13f": false
+          "sec_13f": true
         },
         "service_flags": [
           "screener",
           "stock_detail",
+          "smart_money",
           "index_membership"
         ],
         "relations": [
@@ -26743,6 +26804,11 @@
             "type": "belongs_to_sector",
             "target": "sector:Utilities",
             "source": "stock_action_index.canonicalSector"
+          },
+          {
+            "type": "held_by_13f_investors",
+            "target": "sec13f:AWK",
+            "source": "sec-13f/by_ticker"
           }
         ]
       },
@@ -34580,33 +34646,39 @@
         "canonical_sector": "Industrials",
         "route": "/stock/AIT",
         "confidence": {
-          "label": "medium",
-          "rank": 2,
-          "coverage_ratio": 0.5222
+          "label": "high",
+          "rank": 3,
+          "coverage_ratio": 0.8
         },
         "as_of": {
           "profile": "2026-10-02",
           "action_index": "2026-10-02",
           "market_facts": "2026-10-02",
           "filings": null,
-          "sec_13f": null
+          "sec_13f": "2026-Q2"
         },
         "source_links": {
           "stocks_analyzer": true,
           "stock_action_index": true,
           "market_facts": true,
           "edgar_summary": false,
-          "sec_13f": false
+          "sec_13f": true
         },
         "service_flags": [
           "screener",
-          "stock_detail"
+          "stock_detail",
+          "smart_money"
         ],
         "relations": [
           {
             "type": "belongs_to_sector",
             "target": "sector:Industrials",
             "source": "stock_action_index.canonicalSector"
+          },
+          {
+            "type": "held_by_13f_investors",
+            "target": "sec13f:AIT",
+            "source": "sec-13f/by_ticker"
           }
         ]
       },
@@ -138426,9 +138498,9 @@
         "category": "Fixed Income",
         "route": "/etfs/HBIL",
         "confidence": {
-          "label": "low",
-          "rank": 1,
-          "classification_source": "stockanalysis.etf_list.name",
+          "label": "high",
+          "rank": 3,
+          "classification_source": "stockanalysis.overview.description",
           "underlying_raw": null,
           "canonical_underlying_ticker": null,
           "canonical_underlying_key": null,
@@ -138439,7 +138511,7 @@
         },
         "as_of": {
           "etf_universe": null,
-          "market_facts": "2026-09-23"
+          "market_facts": "2026-10-02"
         },
         "source_links": {
           "etf_universe": true,
@@ -199434,7 +199506,7 @@
         },
         "as_of": {
           "etf_universe": null,
-          "market_facts": "2026-09-25"
+          "market_facts": "2026-10-02"
         },
         "source_links": {
           "etf_universe": true,
@@ -204720,7 +204792,7 @@
         },
         "as_of": {
           "etf_universe": null,
-          "market_facts": "2026-09-24"
+          "market_facts": "2026-10-02"
         },
         "source_links": {
           "etf_universe": true,
@@ -233454,7 +233526,7 @@
         },
         "as_of": {
           "etf_universe": null,
-          "market_facts": "2026-09-25"
+          "market_facts": "2026-10-02"
         },
         "source_links": {
           "etf_universe": true,
@@ -279063,6 +279135,13 @@
         "as_of": "2026-Q2"
       },
       {
+        "id": "sec13f:AIT",
+        "type": "sec13f_ticker",
+        "ticker": "AIT",
+        "holder_count": 3,
+        "as_of": "2026-Q2"
+      },
+      {
         "id": "sec13f:AJG",
         "type": "sec13f_ticker",
         "ticker": "AJG",
@@ -279196,6 +279275,13 @@
         "as_of": "2026-Q2"
       },
       {
+        "id": "sec13f:AMP",
+        "type": "sec13f_ticker",
+        "ticker": "AMP",
+        "holder_count": 2,
+        "as_of": "2026-Q2"
+      },
+      {
         "id": "sec13f:AMRC",
         "type": "sec13f_ticker",
         "ticker": "AMRC",
@@ -279248,6 +279334,13 @@
         "id": "sec13f:APA",
         "type": "sec13f_ticker",
         "ticker": "APA",
+        "holder_count": 2,
+        "as_of": "2026-Q2"
+      },
+      {
+        "id": "sec13f:APG",
+        "type": "sec13f_ticker",
+        "ticker": "APG",
         "holder_count": 2,
         "as_of": "2026-Q2"
       },
@@ -279431,6 +279524,13 @@
         "type": "sec13f_ticker",
         "ticker": "AVY",
         "holder_count": 2,
+        "as_of": "2026-Q2"
+      },
+      {
+        "id": "sec13f:AWK",
+        "type": "sec13f_ticker",
+        "ticker": "AWK",
+        "holder_count": 1,
         "as_of": "2026-Q2"
       },
       {
@@ -279742,6 +279842,13 @@
         "as_of": "2026-Q2"
       },
       {
+        "id": "sec13f:BMO",
+        "type": "sec13f_ticker",
+        "ticker": "BMO",
+        "holder_count": 2,
+        "as_of": "2026-Q2"
+      },
+      {
         "id": "sec13f:BMRN",
         "type": "sec13f_ticker",
         "ticker": "BMRN",
@@ -279966,6 +280073,13 @@
         "as_of": "2026-Q2"
       },
       {
+        "id": "sec13f:CART",
+        "type": "sec13f_ticker",
+        "ticker": "CART",
+        "holder_count": 2,
+        "as_of": "2026-Q2"
+      },
+      {
         "id": "sec13f:CAT",
         "type": "sec13f_ticker",
         "ticker": "CAT",
@@ -279984,6 +280098,13 @@
         "type": "sec13f_ticker",
         "ticker": "CBRE",
         "holder_count": 5,
+        "as_of": "2026-Q2"
+      },
+      {
+        "id": "sec13f:CBRS",
+        "type": "sec13f_ticker",
+        "ticker": "CBRS",
+        "holder_count": 10,
         "as_of": "2026-Q2"
       },
       {
@@ -281065,6 +281186,13 @@
         "as_of": "2026-Q2"
       },
       {
+        "id": "sec13f:EMR",
+        "type": "sec13f_ticker",
+        "ticker": "EMR",
+        "holder_count": 5,
+        "as_of": "2026-Q2"
+      },
+      {
         "id": "sec13f:ENB",
         "type": "sec13f_ticker",
         "ticker": "ENB",
@@ -281209,6 +281337,13 @@
         "type": "sec13f_ticker",
         "ticker": "ETSY",
         "holder_count": 7,
+        "as_of": "2026-Q2"
+      },
+      {
+        "id": "sec13f:EUFN",
+        "type": "sec13f_ticker",
+        "ticker": "EUFN",
+        "holder_count": 1,
         "as_of": "2026-Q2"
       },
       {
@@ -281517,6 +281652,13 @@
         "type": "sec13f_ticker",
         "ticker": "FOX",
         "holder_count": 1,
+        "as_of": "2026-Q2"
+      },
+      {
+        "id": "sec13f:FPS",
+        "type": "sec13f_ticker",
+        "ticker": "FPS",
+        "holder_count": 3,
         "as_of": "2026-Q2"
       },
       {
@@ -281835,6 +281977,13 @@
         "as_of": "2026-Q2"
       },
       {
+        "id": "sec13f:GUNR",
+        "type": "sec13f_ticker",
+        "ticker": "GUNR",
+        "holder_count": 1,
+        "as_of": "2026-Q2"
+      },
+      {
         "id": "sec13f:GWW",
         "type": "sec13f_ticker",
         "ticker": "GWW",
@@ -282080,6 +282229,27 @@
         "as_of": "2026-Q2"
       },
       {
+        "id": "sec13f:IBN",
+        "type": "sec13f_ticker",
+        "ticker": "IBN",
+        "holder_count": 1,
+        "as_of": "2026-Q2"
+      },
+      {
+        "id": "sec13f:ICE",
+        "type": "sec13f_ticker",
+        "ticker": "ICE",
+        "holder_count": 13,
+        "as_of": "2026-Q2"
+      },
+      {
+        "id": "sec13f:ICLR",
+        "type": "sec13f_ticker",
+        "ticker": "ICLR",
+        "holder_count": 2,
+        "as_of": "2026-Q2"
+      },
+      {
         "id": "sec13f:IDA",
         "type": "sec13f_ticker",
         "ticker": "IDA",
@@ -282266,6 +282436,13 @@
         "type": "sec13f_ticker",
         "ticker": "ITUB",
         "holder_count": 2,
+        "as_of": "2026-Q2"
+      },
+      {
+        "id": "sec13f:ITW",
+        "type": "sec13f_ticker",
+        "ticker": "ITW",
+        "holder_count": 8,
         "as_of": "2026-Q2"
       },
       {
@@ -282486,6 +282663,13 @@
         "as_of": "2026-Q2"
       },
       {
+        "id": "sec13f:KMX",
+        "type": "sec13f_ticker",
+        "ticker": "KMX",
+        "holder_count": 2,
+        "as_of": "2026-Q2"
+      },
+      {
         "id": "sec13f:KNX",
         "type": "sec13f_ticker",
         "ticker": "KNX",
@@ -282532,6 +282716,13 @@
         "type": "sec13f_ticker",
         "ticker": "KVUE",
         "holder_count": 6,
+        "as_of": "2026-Q2"
+      },
+      {
+        "id": "sec13f:KXI",
+        "type": "sec13f_ticker",
+        "ticker": "KXI",
+        "holder_count": 1,
         "as_of": "2026-Q2"
       },
       {
@@ -282871,6 +283062,13 @@
         "as_of": "2026-Q2"
       },
       {
+        "id": "sec13f:MDLN",
+        "type": "sec13f_ticker",
+        "ticker": "MDLN",
+        "holder_count": 6,
+        "as_of": "2026-Q2"
+      },
+      {
         "id": "sec13f:MDT",
         "type": "sec13f_ticker",
         "ticker": "MDT",
@@ -283039,6 +283237,13 @@
         "as_of": "2026-Q2"
       },
       {
+        "id": "sec13f:MRSH",
+        "type": "sec13f_ticker",
+        "ticker": "MRSH",
+        "holder_count": 9,
+        "as_of": "2026-Q2"
+      },
+      {
         "id": "sec13f:MRVL",
         "type": "sec13f_ticker",
         "ticker": "MRVL",
@@ -283106,6 +283311,13 @@
         "type": "sec13f_ticker",
         "ticker": "MU",
         "holder_count": 27,
+        "as_of": "2026-Q2"
+      },
+      {
+        "id": "sec13f:MUFG",
+        "type": "sec13f_ticker",
+        "ticker": "MUFG",
+        "holder_count": 1,
         "as_of": "2026-Q2"
       },
       {
@@ -283218,6 +283430,13 @@
         "type": "sec13f_ticker",
         "ticker": "NFLX",
         "holder_count": 27,
+        "as_of": "2026-Q2"
+      },
+      {
+        "id": "sec13f:NFRA",
+        "type": "sec13f_ticker",
+        "ticker": "NFRA",
+        "holder_count": 1,
         "as_of": "2026-Q2"
       },
       {
@@ -283407,6 +283626,13 @@
         "type": "sec13f_ticker",
         "ticker": "NVST",
         "holder_count": 2,
+        "as_of": "2026-Q2"
+      },
+      {
+        "id": "sec13f:NVT",
+        "type": "sec13f_ticker",
+        "ticker": "NVT",
+        "holder_count": 5,
         "as_of": "2026-Q2"
       },
       {
@@ -283704,9 +283930,30 @@
         "as_of": "2026-Q2"
       },
       {
+        "id": "sec13f:PBEU",
+        "type": "sec13f_ticker",
+        "ticker": "PBEU",
+        "holder_count": 1,
+        "as_of": "2026-Q2"
+      },
+      {
         "id": "sec13f:PBF",
         "type": "sec13f_ticker",
         "ticker": "PBF",
+        "holder_count": 1,
+        "as_of": "2026-Q2"
+      },
+      {
+        "id": "sec13f:PBOG",
+        "type": "sec13f_ticker",
+        "ticker": "PBOG",
+        "holder_count": 1,
+        "as_of": "2026-Q2"
+      },
+      {
+        "id": "sec13f:PBPH",
+        "type": "sec13f_ticker",
+        "ticker": "PBPH",
         "holder_count": 1,
         "as_of": "2026-Q2"
       },
@@ -283764,6 +284011,13 @@
         "type": "sec13f_ticker",
         "ticker": "PEB",
         "holder_count": 1,
+        "as_of": "2026-Q2"
+      },
+      {
+        "id": "sec13f:PEG",
+        "type": "sec13f_ticker",
+        "ticker": "PEG",
+        "holder_count": 2,
         "as_of": "2026-Q2"
       },
       {
@@ -283834,6 +284088,13 @@
         "type": "sec13f_ticker",
         "ticker": "PINS",
         "holder_count": 5,
+        "as_of": "2026-Q2"
+      },
+      {
+        "id": "sec13f:PKG",
+        "type": "sec13f_ticker",
+        "ticker": "PKG",
+        "holder_count": 2,
         "as_of": "2026-Q2"
       },
       {
@@ -284019,6 +284280,13 @@
         "as_of": "2026-Q2"
       },
       {
+        "id": "sec13f:QDF",
+        "type": "sec13f_ticker",
+        "ticker": "QDF",
+        "holder_count": 1,
+        "as_of": "2026-Q2"
+      },
+      {
         "id": "sec13f:QQQ",
         "type": "sec13f_ticker",
         "ticker": "QQQ",
@@ -284078,6 +284346,13 @@
         "id": "sec13f:RARE",
         "type": "sec13f_ticker",
         "ticker": "RARE",
+        "holder_count": 1,
+        "as_of": "2026-Q2"
+      },
+      {
+        "id": "sec13f:RAVI",
+        "type": "sec13f_ticker",
+        "ticker": "RAVI",
         "holder_count": 1,
         "as_of": "2026-Q2"
       },
@@ -284162,6 +284437,13 @@
         "id": "sec13f:RGEN",
         "type": "sec13f_ticker",
         "ticker": "RGEN",
+        "holder_count": 1,
+        "as_of": "2026-Q2"
+      },
+      {
+        "id": "sec13f:RGLD",
+        "type": "sec13f_ticker",
+        "ticker": "RGLD",
         "holder_count": 1,
         "as_of": "2026-Q2"
       },
@@ -284719,6 +285001,13 @@
         "as_of": "2026-Q2"
       },
       {
+        "id": "sec13f:SOXL",
+        "type": "sec13f_ticker",
+        "ticker": "SOXL",
+        "holder_count": 1,
+        "as_of": "2026-Q2"
+      },
+      {
         "id": "sec13f:SPGI",
         "type": "sec13f_ticker",
         "ticker": "SPGI",
@@ -284750,6 +285039,13 @@
         "id": "sec13f:SPRY",
         "type": "sec13f_ticker",
         "ticker": "SPRY",
+        "holder_count": 1,
+        "as_of": "2026-Q2"
+      },
+      {
+        "id": "sec13f:SPUU",
+        "type": "sec13f_ticker",
+        "ticker": "SPUU",
         "holder_count": 1,
         "as_of": "2026-Q2"
       },
@@ -284859,6 +285155,13 @@
         "as_of": "2026-Q2"
       },
       {
+        "id": "sec13f:SUNB",
+        "type": "sec13f_ticker",
+        "ticker": "SUNB",
+        "holder_count": 5,
+        "as_of": "2026-Q2"
+      },
+      {
         "id": "sec13f:SW",
         "type": "sec13f_ticker",
         "ticker": "SW",
@@ -284950,6 +285253,13 @@
         "as_of": "2026-Q2"
       },
       {
+        "id": "sec13f:TDTT",
+        "type": "sec13f_ticker",
+        "ticker": "TDTT",
+        "holder_count": 1,
+        "as_of": "2026-Q2"
+      },
+      {
         "id": "sec13f:TDY",
         "type": "sec13f_ticker",
         "ticker": "TDY",
@@ -284982,6 +285292,13 @@
         "type": "sec13f_ticker",
         "ticker": "TEL",
         "holder_count": 8,
+        "as_of": "2026-Q2"
+      },
+      {
+        "id": "sec13f:TEM",
+        "type": "sec13f_ticker",
+        "ticker": "TEM",
+        "holder_count": 1,
         "as_of": "2026-Q2"
       },
       {
@@ -285037,6 +285354,13 @@
         "id": "sec13f:TIC",
         "type": "sec13f_ticker",
         "ticker": "TIC",
+        "holder_count": 1,
+        "as_of": "2026-Q2"
+      },
+      {
+        "id": "sec13f:TILT",
+        "type": "sec13f_ticker",
+        "ticker": "TILT",
         "holder_count": 1,
         "as_of": "2026-Q2"
       },
@@ -285129,6 +285453,13 @@
         "type": "sec13f_ticker",
         "ticker": "TQQQ",
         "holder_count": 1,
+        "as_of": "2026-Q2"
+      },
+      {
+        "id": "sec13f:TRGP",
+        "type": "sec13f_ticker",
+        "ticker": "TRGP",
+        "holder_count": 5,
         "as_of": "2026-Q2"
       },
       {
@@ -285419,6 +285750,13 @@
         "as_of": "2026-Q2"
       },
       {
+        "id": "sec13f:UPS",
+        "type": "sec13f_ticker",
+        "ticker": "UPS",
+        "holder_count": 5,
+        "as_of": "2026-Q2"
+      },
+      {
         "id": "sec13f:UPST",
         "type": "sec13f_ticker",
         "ticker": "UPST",
@@ -285451,6 +285789,13 @@
         "type": "sec13f_ticker",
         "ticker": "USB",
         "holder_count": 7,
+        "as_of": "2026-Q2"
+      },
+      {
+        "id": "sec13f:USFD",
+        "type": "sec13f_ticker",
+        "ticker": "USFD",
+        "holder_count": 5,
         "as_of": "2026-Q2"
       },
       {
@@ -285836,6 +286181,13 @@
         "type": "sec13f_ticker",
         "ticker": "WK",
         "holder_count": 1,
+        "as_of": "2026-Q2"
+      },
+      {
+        "id": "sec13f:WM",
+        "type": "sec13f_ticker",
+        "ticker": "WM",
+        "holder_count": 4,
         "as_of": "2026-Q2"
       },
       {
