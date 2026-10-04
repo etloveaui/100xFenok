@@ -2,168 +2,20 @@
   "schema_version": "stockanalysis-recovery-state/v1",
   "artifact_kind": "universe",
   "entity": "etf_universe",
-  "attempts": [
-    {
-      "run_id": "29487745768",
-      "run_attempt": 1,
-      "event_name": "workflow_dispatch",
-      "schedule": "",
-      "natural": false,
-      "observed_at": "2026-07-16T09:37:22Z",
-      "outcome": "fresh",
-      "controlled": false
-    },
-    {
-      "run_id": "29558385830",
-      "run_attempt": 1,
-      "event_name": "workflow_dispatch",
-      "schedule": "",
-      "natural": false,
-      "observed_at": "2026-07-17T05:51:44Z",
-      "outcome": "failed",
-      "controlled": true,
-      "error": "RuntimeError: controlled failure injection for universe:etf_universe"
-    },
-    {
-      "run_id": "29621081806",
-      "run_attempt": 1,
-      "event_name": "schedule",
-      "schedule": "50 22 * * 1-5",
-      "natural": true,
-      "observed_at": "2026-07-17T23:53:18Z",
-      "outcome": "recovered",
-      "controlled": false
-    },
-    {
-      "run_id": "29647721523",
-      "run_attempt": 1,
-      "event_name": "workflow_dispatch",
-      "schedule": "",
-      "natural": false,
-      "observed_at": "2026-07-18T14:17:23Z",
-      "outcome": "fresh",
-      "controlled": false
-    },
-    {
-      "run_id": "29709201498",
-      "run_attempt": 1,
-      "event_name": "schedule",
-      "schedule": "20 23 * * 0",
-      "natural": true,
-      "observed_at": "2026-07-20T00:15:24Z",
-      "outcome": "fresh",
-      "controlled": false
-    },
-    {
-      "run_id": "31501591748",
-      "run_attempt": 1,
-      "event_name": "workflow_dispatch",
-      "schedule": "",
-      "natural": false,
-      "observed_at": "2026-08-11T14:28:54Z",
-      "outcome": "fresh",
-      "controlled": false
-    },
-    {
-      "run_id": "31979508924",
-      "run_attempt": 1,
-      "event_name": "schedule",
-      "schedule": "20 23 * * 0",
-      "natural": true,
-      "observed_at": "2026-08-16T23:35:41Z",
-      "outcome": "fresh",
-      "controlled": false
-    },
-    {
-      "run_id": "32674249390",
-      "run_attempt": 1,
-      "event_name": "schedule",
-      "schedule": "20 23 * * 0",
-      "natural": true,
-      "observed_at": "2026-08-23T23:41:03Z",
-      "outcome": "fresh",
-      "controlled": false
-    },
-    {
-      "run_id": "33313424368",
-      "run_attempt": 1,
-      "event_name": "workflow_dispatch",
-      "schedule": "",
-      "natural": false,
-      "observed_at": "2026-08-30T13:11:44Z",
-      "outcome": "failed",
-      "controlled": true,
-      "error": "RuntimeError: controlled failure injection for universe:etf_universe"
-    },
-    {
-      "run_id": "34071869290",
-      "run_attempt": 1,
-      "event_name": "schedule",
-      "schedule": "20 23 * * 0",
-      "natural": true,
-      "observed_at": "2026-09-07T01:07:11Z",
-      "outcome": "recovered",
-      "controlled": false
-    },
-    {
-      "run_id": "34795160331",
-      "run_attempt": 1,
-      "event_name": "schedule",
-      "schedule": "20 23 * * 0",
-      "natural": true,
-      "observed_at": "2026-09-14T01:14:05Z",
-      "outcome": "fresh",
-      "controlled": false
-    },
-    {
-      "run_id": "35550120187",
-      "run_attempt": 1,
-      "event_name": "schedule",
-      "schedule": "20 23 * * 0",
-      "natural": true,
-      "observed_at": "2026-09-21T01:13:54Z",
-      "outcome": "fresh",
-      "controlled": false
-    }
-  ],
   "resolution_state": "fresh_primary",
   "retry": false,
   "current": {
     "path": "data/stockanalysis/etf_universe.json",
-    "payload_sha256": "0e871c814e7e6af2765ca8f05e15d2cca0ec4d35b56b7d4453e35a1029a8a158",
+    "payload_sha256": "44d62100618b9a83b0537b2b5aef1fedacf0838fb8b3ab3151e90239683b309d",
     "source_as_of": null,
-    "fetched_at": "2026-09-21T01:14:16Z"
+    "fetched_at": "2026-10-04T09:28:55Z"
   },
-  "updated_at": "2026-09-21T01:13:54Z",
-  "last_attempt": {
-    "run_id": "35550120187",
-    "run_attempt": 1,
-    "event_name": "schedule",
-    "schedule": "20 23 * * 0",
-    "natural": true,
-    "observed_at": "2026-09-21T01:13:54Z",
-    "outcome": "fresh",
-    "controlled": false
-  },
+  "updated_at": "2026-10-04T09:28:38Z",
   "lkg": {
     "path": "data/admin/stockanalysis-recovery/lkg/universe/etf_universe.json",
     "payload_sha256": "ea5ff2fe30f8e4199365a9ea94c6007339f6b95e44dcf035626db98166dc598b",
     "source_as_of": null,
     "fetched_at": "2026-08-23T23:41:24Z"
   },
-  "recovered_from_run_id": "33313424368",
-  "recovered_at": "2026-09-07T01:07:11Z",
-  "last_recovered_failure": {
-    "run_id": "33313424368",
-    "run_attempt": 1,
-    "observed_at": "2026-08-30T13:11:44Z",
-    "error": "RuntimeError: controlled failure injection for universe:etf_universe",
-    "controlled": true,
-    "had_canonical_before_failure": true,
-    "expected_payload_sha256": "ea5ff2fe30f8e4199365a9ea94c6007339f6b95e44dcf035626db98166dc598b",
-    "data_loss": false
-  },
-  "recovery_run_id": "34071869290",
-  "recovery_run_attempt": 1,
-  "recovery_event_name": "schedule"
+  "failure_count": 0
 }

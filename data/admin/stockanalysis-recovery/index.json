@@ -1,21 +1,21 @@
 {
   "schema_version": "stockanalysis-recovery-index/v1",
-  "generated_at": "2026-10-03T23:49:05Z",
+  "generated_at": "2026-10-04T09:28:38Z",
   "counts": {
     "tracked": 911,
-    "fresh": 765,
-    "lkg": 134,
+    "fresh": 797,
+    "lkg": 102,
     "unavailable": 12,
-    "retry": 146,
-    "failed": 0
+    "retry": 114,
+    "failed": 2
   },
   "counts_by_kind": {
     "stock": {
       "tracked": 49,
-      "fresh": 17,
-      "lkg": 32,
+      "fresh": 49,
+      "lkg": 0,
       "unavailable": 0,
-      "retry": 32
+      "retry": 0
     },
     "financial": {
       "tracked": 43,
@@ -47,134 +47,6 @@
     }
   },
   "retry_artifacts": [
-    {
-      "artifact_kind": "stock",
-      "entity": "ABBV"
-    },
-    {
-      "artifact_kind": "stock",
-      "entity": "AMAT"
-    },
-    {
-      "artifact_kind": "stock",
-      "entity": "AMD"
-    },
-    {
-      "artifact_kind": "stock",
-      "entity": "ARM"
-    },
-    {
-      "artifact_kind": "stock",
-      "entity": "ASML"
-    },
-    {
-      "artifact_kind": "stock",
-      "entity": "AVGO"
-    },
-    {
-      "artifact_kind": "stock",
-      "entity": "BAC"
-    },
-    {
-      "artifact_kind": "stock",
-      "entity": "BRK.A"
-    },
-    {
-      "artifact_kind": "stock",
-      "entity": "BRK.B"
-    },
-    {
-      "artifact_kind": "stock",
-      "entity": "CAT"
-    },
-    {
-      "artifact_kind": "stock",
-      "entity": "COST"
-    },
-    {
-      "artifact_kind": "stock",
-      "entity": "CSCO"
-    },
-    {
-      "artifact_kind": "stock",
-      "entity": "CVX"
-    },
-    {
-      "artifact_kind": "stock",
-      "entity": "GE"
-    },
-    {
-      "artifact_kind": "stock",
-      "entity": "GOOG"
-    },
-    {
-      "artifact_kind": "stock",
-      "entity": "INTC"
-    },
-    {
-      "artifact_kind": "stock",
-      "entity": "JNJ"
-    },
-    {
-      "artifact_kind": "stock",
-      "entity": "KO"
-    },
-    {
-      "artifact_kind": "stock",
-      "entity": "LLY"
-    },
-    {
-      "artifact_kind": "stock",
-      "entity": "LRCX"
-    },
-    {
-      "artifact_kind": "stock",
-      "entity": "MA"
-    },
-    {
-      "artifact_kind": "stock",
-      "entity": "MS"
-    },
-    {
-      "artifact_kind": "stock",
-      "entity": "MU"
-    },
-    {
-      "artifact_kind": "stock",
-      "entity": "NFLX"
-    },
-    {
-      "artifact_kind": "stock",
-      "entity": "ORCL"
-    },
-    {
-      "artifact_kind": "stock",
-      "entity": "PG"
-    },
-    {
-      "artifact_kind": "stock",
-      "entity": "PLTR"
-    },
-    {
-      "artifact_kind": "stock",
-      "entity": "TSM"
-    },
-    {
-      "artifact_kind": "stock",
-      "entity": "UNH"
-    },
-    {
-      "artifact_kind": "stock",
-      "entity": "V"
-    },
-    {
-      "artifact_kind": "stock",
-      "entity": "WMT"
-    },
-    {
-      "artifact_kind": "stock",
-      "entity": "XOM"
-    },
     {
       "artifact_kind": "etf",
       "entity": "ABXB"
@@ -633,326 +505,6 @@
     }
   ],
   "degraded_details": [
-    {
-      "artifact_kind": "stock",
-      "entity": "ABBV",
-      "resolution_state": "lkg_primary",
-      "source_as_of": "2026-09-17T20:00:00Z",
-      "failure_observed_at": "2026-09-18T06:47:26Z",
-      "error": "ValueError: recovery promotion requires a natural schedule run for StockAnalysis stock:ABBV",
-      "failure_count": 0,
-      "data_loss": false
-    },
-    {
-      "artifact_kind": "stock",
-      "entity": "AMAT",
-      "resolution_state": "lkg_primary",
-      "source_as_of": "2026-09-17T20:00:00Z",
-      "failure_observed_at": "2026-09-18T06:47:26Z",
-      "error": "ValueError: recovery promotion requires a natural schedule run for StockAnalysis stock:AMAT",
-      "failure_count": 0,
-      "data_loss": false
-    },
-    {
-      "artifact_kind": "stock",
-      "entity": "AMD",
-      "resolution_state": "lkg_primary",
-      "source_as_of": "2026-09-17T20:00:00Z",
-      "failure_observed_at": "2026-09-18T06:47:26Z",
-      "error": "ValueError: recovery promotion requires a natural schedule run for StockAnalysis stock:AMD",
-      "failure_count": 0,
-      "data_loss": false
-    },
-    {
-      "artifact_kind": "stock",
-      "entity": "ARM",
-      "resolution_state": "lkg_primary",
-      "source_as_of": "2026-09-17T20:00:00Z",
-      "failure_observed_at": "2026-09-18T06:47:26Z",
-      "error": "ValueError: recovery promotion requires a natural schedule run for StockAnalysis stock:ARM",
-      "failure_count": 0,
-      "data_loss": false
-    },
-    {
-      "artifact_kind": "stock",
-      "entity": "ASML",
-      "resolution_state": "lkg_primary",
-      "source_as_of": "2026-09-17T20:00:00Z",
-      "failure_observed_at": "2026-09-18T06:47:26Z",
-      "error": "ValueError: recovery promotion requires a natural schedule run for StockAnalysis stock:ASML",
-      "failure_count": 0,
-      "data_loss": false
-    },
-    {
-      "artifact_kind": "stock",
-      "entity": "AVGO",
-      "resolution_state": "lkg_primary",
-      "source_as_of": "2026-09-17T20:00:00Z",
-      "failure_observed_at": "2026-09-18T06:47:26Z",
-      "error": "ValueError: recovery promotion requires a natural schedule run for StockAnalysis stock:AVGO",
-      "failure_count": 0,
-      "data_loss": false
-    },
-    {
-      "artifact_kind": "stock",
-      "entity": "BAC",
-      "resolution_state": "lkg_primary",
-      "source_as_of": "2026-09-17T20:00:00Z",
-      "failure_observed_at": "2026-09-18T06:47:26Z",
-      "error": "ValueError: recovery promotion requires a natural schedule run for StockAnalysis stock:BAC",
-      "failure_count": 0,
-      "data_loss": false
-    },
-    {
-      "artifact_kind": "stock",
-      "entity": "BRK.A",
-      "resolution_state": "lkg_primary",
-      "source_as_of": "2026-09-17T20:00:00Z",
-      "failure_observed_at": "2026-09-18T06:47:26Z",
-      "error": "ValueError: recovery promotion requires a natural schedule run for StockAnalysis stock:BRK.A",
-      "failure_count": 0,
-      "data_loss": false
-    },
-    {
-      "artifact_kind": "stock",
-      "entity": "BRK.B",
-      "resolution_state": "lkg_primary",
-      "source_as_of": "2026-09-17T20:00:00Z",
-      "failure_observed_at": "2026-09-18T06:47:26Z",
-      "error": "ValueError: recovery promotion requires a natural schedule run for StockAnalysis stock:BRK.B",
-      "failure_count": 0,
-      "data_loss": false
-    },
-    {
-      "artifact_kind": "stock",
-      "entity": "CAT",
-      "resolution_state": "lkg_primary",
-      "source_as_of": "2026-09-17T20:00:00Z",
-      "failure_observed_at": "2026-09-18T06:47:26Z",
-      "error": "ValueError: recovery promotion requires a natural schedule run for StockAnalysis stock:CAT",
-      "failure_count": 0,
-      "data_loss": false
-    },
-    {
-      "artifact_kind": "stock",
-      "entity": "COST",
-      "resolution_state": "lkg_primary",
-      "source_as_of": "2026-09-17T20:00:00Z",
-      "failure_observed_at": "2026-09-18T06:47:26Z",
-      "error": "ValueError: recovery promotion requires a natural schedule run for StockAnalysis stock:COST",
-      "failure_count": 0,
-      "data_loss": false
-    },
-    {
-      "artifact_kind": "stock",
-      "entity": "CSCO",
-      "resolution_state": "lkg_primary",
-      "source_as_of": "2026-09-17T20:00:00Z",
-      "failure_observed_at": "2026-09-18T06:47:26Z",
-      "error": "ValueError: recovery promotion requires a natural schedule run for StockAnalysis stock:CSCO",
-      "failure_count": 0,
-      "data_loss": false
-    },
-    {
-      "artifact_kind": "stock",
-      "entity": "CVX",
-      "resolution_state": "lkg_primary",
-      "source_as_of": "2026-09-17T20:00:00Z",
-      "failure_observed_at": "2026-09-18T06:47:26Z",
-      "error": "ValueError: recovery promotion requires a natural schedule run for StockAnalysis stock:CVX",
-      "failure_count": 0,
-      "data_loss": false
-    },
-    {
-      "artifact_kind": "stock",
-      "entity": "GE",
-      "resolution_state": "lkg_primary",
-      "source_as_of": "2026-09-17T20:00:00Z",
-      "failure_observed_at": "2026-09-18T06:47:26Z",
-      "error": "ValueError: recovery promotion requires a natural schedule run for StockAnalysis stock:GE",
-      "failure_count": 0,
-      "data_loss": false
-    },
-    {
-      "artifact_kind": "stock",
-      "entity": "GOOG",
-      "resolution_state": "lkg_primary",
-      "source_as_of": "2026-09-17T20:00:00Z",
-      "failure_observed_at": "2026-09-18T06:47:26Z",
-      "error": "ValueError: recovery promotion requires a natural schedule run for StockAnalysis stock:GOOG",
-      "failure_count": 0,
-      "data_loss": false
-    },
-    {
-      "artifact_kind": "stock",
-      "entity": "INTC",
-      "resolution_state": "lkg_primary",
-      "source_as_of": "2026-09-17T20:00:00Z",
-      "failure_observed_at": "2026-09-18T06:47:26Z",
-      "error": "ValueError: recovery promotion requires a natural schedule run for StockAnalysis stock:INTC",
-      "failure_count": 0,
-      "data_loss": false
-    },
-    {
-      "artifact_kind": "stock",
-      "entity": "JNJ",
-      "resolution_state": "lkg_primary",
-      "source_as_of": "2026-09-17T20:00:00Z",
-      "failure_observed_at": "2026-09-18T06:47:26Z",
-      "error": "ValueError: recovery promotion requires a natural schedule run for StockAnalysis stock:JNJ",
-      "failure_count": 0,
-      "data_loss": false
-    },
-    {
-      "artifact_kind": "stock",
-      "entity": "KO",
-      "resolution_state": "lkg_primary",
-      "source_as_of": "2026-09-17T20:00:00Z",
-      "failure_observed_at": "2026-09-18T06:47:26Z",
-      "error": "ValueError: recovery promotion requires a natural schedule run for StockAnalysis stock:KO",
-      "failure_count": 0,
-      "data_loss": false
-    },
-    {
-      "artifact_kind": "stock",
-      "entity": "LLY",
-      "resolution_state": "lkg_primary",
-      "source_as_of": "2026-09-17T20:00:00Z",
-      "failure_observed_at": "2026-09-18T06:47:26Z",
-      "error": "ValueError: recovery promotion requires a natural schedule run for StockAnalysis stock:LLY",
-      "failure_count": 0,
-      "data_loss": false
-    },
-    {
-      "artifact_kind": "stock",
-      "entity": "LRCX",
-      "resolution_state": "lkg_primary",
-      "source_as_of": "2026-09-17T20:00:00Z",
-      "failure_observed_at": "2026-09-18T06:47:26Z",
-      "error": "ValueError: recovery promotion requires a natural schedule run for StockAnalysis stock:LRCX",
-      "failure_count": 0,
-      "data_loss": false
-    },
-    {
-      "artifact_kind": "stock",
-      "entity": "MA",
-      "resolution_state": "lkg_primary",
-      "source_as_of": "2026-09-17T20:00:00Z",
-      "failure_observed_at": "2026-09-18T06:47:26Z",
-      "error": "ValueError: recovery promotion requires a natural schedule run for StockAnalysis stock:MA",
-      "failure_count": 0,
-      "data_loss": false
-    },
-    {
-      "artifact_kind": "stock",
-      "entity": "MS",
-      "resolution_state": "lkg_primary",
-      "source_as_of": "2026-09-17T20:00:00Z",
-      "failure_observed_at": "2026-09-18T06:47:26Z",
-      "error": "ValueError: recovery promotion requires a natural schedule run for StockAnalysis stock:MS",
-      "failure_count": 0,
-      "data_loss": false
-    },
-    {
-      "artifact_kind": "stock",
-      "entity": "MU",
-      "resolution_state": "lkg_primary",
-      "source_as_of": "2026-09-17T20:00:00Z",
-      "failure_observed_at": "2026-09-18T06:47:26Z",
-      "error": "ValueError: recovery promotion requires a natural schedule run for StockAnalysis stock:MU",
-      "failure_count": 0,
-      "data_loss": false
-    },
-    {
-      "artifact_kind": "stock",
-      "entity": "NFLX",
-      "resolution_state": "lkg_primary",
-      "source_as_of": "2026-09-17T20:00:00Z",
-      "failure_observed_at": "2026-09-18T06:47:26Z",
-      "error": "ValueError: recovery promotion requires a natural schedule run for StockAnalysis stock:NFLX",
-      "failure_count": 0,
-      "data_loss": false
-    },
-    {
-      "artifact_kind": "stock",
-      "entity": "ORCL",
-      "resolution_state": "lkg_primary",
-      "source_as_of": "2026-09-17T20:00:00Z",
-      "failure_observed_at": "2026-09-18T06:47:26Z",
-      "error": "ValueError: recovery promotion requires a natural schedule run for StockAnalysis stock:ORCL",
-      "failure_count": 0,
-      "data_loss": false
-    },
-    {
-      "artifact_kind": "stock",
-      "entity": "PG",
-      "resolution_state": "lkg_primary",
-      "source_as_of": "2026-09-17T20:00:00Z",
-      "failure_observed_at": "2026-09-18T06:47:26Z",
-      "error": "ValueError: recovery promotion requires a natural schedule run for StockAnalysis stock:PG",
-      "failure_count": 0,
-      "data_loss": false
-    },
-    {
-      "artifact_kind": "stock",
-      "entity": "PLTR",
-      "resolution_state": "lkg_primary",
-      "source_as_of": "2026-09-17T20:00:00Z",
-      "failure_observed_at": "2026-09-18T06:47:26Z",
-      "error": "ValueError: recovery promotion requires a natural schedule run for StockAnalysis stock:PLTR",
-      "failure_count": 0,
-      "data_loss": false
-    },
-    {
-      "artifact_kind": "stock",
-      "entity": "TSM",
-      "resolution_state": "lkg_primary",
-      "source_as_of": "2026-09-17T20:00:00Z",
-      "failure_observed_at": "2026-09-18T06:47:26Z",
-      "error": "ValueError: recovery promotion requires a natural schedule run for StockAnalysis stock:TSM",
-      "failure_count": 0,
-      "data_loss": false
-    },
-    {
-      "artifact_kind": "stock",
-      "entity": "UNH",
-      "resolution_state": "lkg_primary",
-      "source_as_of": "2026-09-17T20:00:00Z",
-      "failure_observed_at": "2026-09-18T06:47:26Z",
-      "error": "ValueError: recovery promotion requires a natural schedule run for StockAnalysis stock:UNH",
-      "failure_count": 0,
-      "data_loss": false
-    },
-    {
-      "artifact_kind": "stock",
-      "entity": "V",
-      "resolution_state": "lkg_primary",
-      "source_as_of": "2026-09-17T20:00:00Z",
-      "failure_observed_at": "2026-09-18T06:47:26Z",
-      "error": "ValueError: recovery promotion requires a natural schedule run for StockAnalysis stock:V",
-      "failure_count": 0,
-      "data_loss": false
-    },
-    {
-      "artifact_kind": "stock",
-      "entity": "WMT",
-      "resolution_state": "lkg_primary",
-      "source_as_of": "2026-09-17T20:00:00Z",
-      "failure_observed_at": "2026-09-18T06:47:26Z",
-      "error": "ValueError: recovery promotion requires a natural schedule run for StockAnalysis stock:WMT",
-      "failure_count": 0,
-      "data_loss": false
-    },
-    {
-      "artifact_kind": "stock",
-      "entity": "XOM",
-      "resolution_state": "lkg_primary",
-      "source_as_of": "2026-09-17T20:00:00Z",
-      "failure_observed_at": "2026-09-18T06:47:26Z",
-      "error": "ValueError: recovery promotion requires a natural schedule run for StockAnalysis stock:XOM",
-      "failure_count": 0,
-      "data_loss": false
-    },
     {
       "artifact_kind": "etf",
       "entity": "ABXB",
@@ -2078,9 +1630,9 @@
       "entity": "actions_recent",
       "resolution_state": "lkg_primary",
       "source_as_of": "2026-07-10T00:00:00Z",
-      "failure_observed_at": "2026-10-03T02:26:30Z",
+      "failure_observed_at": "2026-10-04T09:28:38Z",
       "error": "ValueError: source did not advance beyond the retained LKG for surface:actions_recent",
-      "failure_count": 3,
+      "failure_count": 4,
       "data_loss": false
     },
     {
@@ -2088,50 +1640,30 @@
       "entity": "actions_splits",
       "resolution_state": "unavailable",
       "source_as_of": null,
-      "failure_observed_at": "2026-10-03T02:26:30Z",
+      "failure_observed_at": "2026-10-04T09:28:38Z",
       "error": "ValueError: source did not advance beyond the retained LKG for surface:actions_splits",
-      "failure_count": 3,
+      "failure_count": 4,
       "data_loss": false
     }
   ],
   "current_results": {
-    "failed": 0,
-    "errors": []
+    "failed": 2,
+    "errors": [
+      {
+        "artifact_kind": "surface",
+        "entity": "actions_recent",
+        "error": "ValueError: source did not advance beyond the retained LKG for surface:actions_recent",
+        "data_loss": false
+      },
+      {
+        "artifact_kind": "surface",
+        "entity": "actions_splits",
+        "error": "ValueError: source did not advance beyond the retained LKG for surface:actions_splits",
+        "data_loss": false
+      }
+    ]
   },
-  "degraded_tickers": [
-    "ABBV",
-    "AMAT",
-    "AMD",
-    "ARM",
-    "ASML",
-    "AVGO",
-    "BAC",
-    "BRK.A",
-    "BRK.B",
-    "CAT",
-    "COST",
-    "CSCO",
-    "CVX",
-    "GE",
-    "GOOG",
-    "INTC",
-    "JNJ",
-    "KO",
-    "LLY",
-    "LRCX",
-    "MA",
-    "MS",
-    "MU",
-    "NFLX",
-    "ORCL",
-    "PG",
-    "PLTR",
-    "TSM",
-    "UNH",
-    "V",
-    "WMT",
-    "XOM"
-  ],
+  "degraded_tickers": [],
   "degraded_etfs": [
     "ABXB",
     "ACBE",

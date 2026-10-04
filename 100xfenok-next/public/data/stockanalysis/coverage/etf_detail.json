@@ -2,22 +2,17 @@
   "schema_version": "stockanalysis/v1",
   "source": "stockanalysis",
   "asset_type": "etf_detail_coverage",
-  "generated_at": "2026-10-03T23:49:32Z",
+  "generated_at": "2026-10-04T09:30:38Z",
   "source_date_summary": {
-    "total_members": 5694,
+    "total_members": 5700,
     "newest_source_date": "2026-10-02",
-    "oldest_source_date": "2025-10-27",
-    "oldest_source_member": "LGCF",
+    "oldest_source_date": "2025-10-31",
+    "oldest_source_member": "DRUP",
     "source_date_histogram": [
       {
         "date": null,
         "basis": null,
-        "count": 19
-      },
-      {
-        "date": "2025-10-27",
-        "basis": "source",
-        "count": 1
+        "count": 32
       },
       {
         "date": "2025-10-31",
@@ -32,7 +27,7 @@
       {
         "date": "2026-06-19",
         "basis": "collected",
-        "count": 8
+        "count": 2
       },
       {
         "date": "2026-07-15",
@@ -107,7 +102,7 @@
       {
         "date": "2026-09-30",
         "basis": "source",
-        "count": 5039
+        "count": 5038
       },
       {
         "date": "2026-10-01",
@@ -117,7 +112,7 @@
       {
         "date": "2026-10-02",
         "basis": "source",
-        "count": 120
+        "count": 121
       }
     ]
   },
@@ -135,36 +130,36 @@
     "pending_ledger": "backfill/pending_ledger.json"
   },
   "counts": {
-    "candidate_total": 5694,
+    "candidate_total": 5700,
     "source_breakdown": {
-      "etf_universe": 5642,
+      "etf_universe": 5700,
       "etf_screener": 20,
       "new_etfs": 100
     },
     "detail_files": 5840,
-    "covered_detail_files": 5675,
-    "missing_detail_files": 19,
-    "extra_detail_files": 165,
+    "covered_detail_files": 5668,
+    "missing_detail_files": 32,
+    "extra_detail_files": 172,
     "stockanalysis_detail_files": 5840,
     "yahoo_fallback_files": 0,
     "invalid_detail_files": 0,
-    "coverage_pct": 99.67,
-    "primary_stockanalysis_pct": 99.67,
+    "coverage_pct": 99.44,
+    "primary_stockanalysis_pct": 99.44,
     "missing_by_source": {
-      "etf_universe": 1,
+      "etf_universe": 32,
       "etf_screener": 0,
-      "new_etfs": 18
+      "new_etfs": 19
     },
     "missing_status_breakdown": {
       "retry_pending": 1,
-      "untracked": 18
+      "untracked": 31
     },
     "missing_failure_breakdown": {
       "other_error": 1,
-      "untracked": 18
+      "untracked": 31
     },
     "missing_availability_breakdown": {
-      "unprobed": 18,
+      "unprobed": 31,
       "unresolved": 1
     },
     "pending_tracked": 133,
@@ -174,14 +169,14 @@
   },
   "missing_reason_summary": {
     "other_error": 1,
-    "untracked": 18
+    "untracked": 31
   },
   "missing_status_summary": {
     "retry_pending": 1,
-    "untracked": 18
+    "untracked": 31
   },
   "missing_availability_summary": {
-    "unprobed": 18,
+    "unprobed": 31,
     "unresolved": 1
   },
   "missing_reason_samples": {
@@ -192,15 +187,15 @@
       "ACIG",
       "ACSM",
       "AVNC",
+      "BCOM",
+      "CSRA",
+      "CTAG",
       "DBAR",
       "EAFH",
       "ENHE",
-      "JQTY",
-      "LCIV",
-      "LLMA",
-      "LUNC",
-      "MMHI",
-      "MUY"
+      "EVMO",
+      "FFLX",
+      "FIMU"
     ]
   },
   "missing_status_samples": {
@@ -211,15 +206,15 @@
       "ACIG",
       "ACSM",
       "AVNC",
+      "BCOM",
+      "CSRA",
+      "CTAG",
       "DBAR",
       "EAFH",
       "ENHE",
-      "JQTY",
-      "LCIV",
-      "LLMA",
-      "LUNC",
-      "MMHI",
-      "MUY"
+      "EVMO",
+      "FFLX",
+      "FIMU"
     ]
   },
   "missing_availability_samples": {
@@ -227,15 +222,15 @@
       "ACIG",
       "ACSM",
       "AVNC",
+      "BCOM",
+      "CSRA",
+      "CTAG",
       "DBAR",
       "EAFH",
       "ENHE",
-      "JQTY",
-      "LCIV",
-      "LLMA",
-      "LUNC",
-      "MMHI",
-      "MUY"
+      "EVMO",
+      "FFLX",
+      "FIMU"
     ],
     "unresolved": [
       "HBIL"
@@ -245,21 +240,34 @@
     "ACIG",
     "ACSM",
     "AVNC",
+    "BCOM",
+    "CSRA",
+    "CTAG",
     "DBAR",
     "EAFH",
     "ENHE",
+    "EVMO",
+    "FFLX",
+    "FIMU",
+    "GCPU",
     "HBIL",
+    "IHYF",
     "JQTY",
+    "KOOL",
     "LCIV",
     "LLMA",
     "LUNC",
     "MMHI",
+    "MN",
     "MUY",
     "NRR",
     "OCT",
     "OCTI",
     "PFRX",
+    "PWRX",
+    "RISE",
     "TDEM",
+    "TIPE",
     "XX"
   ],
   "provider_absent_tickers": [],
@@ -285,6 +293,7 @@
     "BITK",
     "BLCN",
     "BNKU",
+    "BTR",
     "BTYB",
     "BULX",
     "BULZ",
@@ -361,13 +370,17 @@
     "KRMA",
     "LACG",
     "LCDL",
+    "LGCF",
+    "LIMI",
     "LMNX",
     "MAGO",
     "MAPP",
     "MARB",
+    "MEME",
     "MGKX",
     "MLPB",
     "MLPR",
+    "MNRS",
     "MPL",
     "MSDD",
     "MSOO",
@@ -407,6 +420,8 @@
     "SCLS",
     "SHNY",
     "SLVO",
+    "SMAP",
+    "SMCF",
     "SMHB",
     "SOLR",
     "SPCZ",
@@ -437,21 +452,34 @@
       "ACIG",
       "ACSM",
       "AVNC",
+      "BCOM",
+      "CSRA",
+      "CTAG",
       "DBAR",
       "EAFH",
       "ENHE",
+      "EVMO",
+      "FFLX",
+      "FIMU",
+      "GCPU",
       "HBIL",
+      "IHYF",
       "JQTY",
+      "KOOL",
       "LCIV",
       "LLMA",
       "LUNC",
       "MMHI",
+      "MN",
       "MUY",
       "NRR",
       "OCT",
       "OCTI",
       "PFRX",
+      "PWRX",
+      "RISE",
       "TDEM",
+      "TIPE",
       "XX"
     ],
     "missing_retry_pending": [
@@ -461,15 +489,15 @@
       "ACIG",
       "ACSM",
       "AVNC",
+      "BCOM",
+      "CSRA",
+      "CTAG",
       "DBAR",
       "EAFH",
       "ENHE",
-      "JQTY",
-      "LCIV",
-      "LLMA",
-      "LUNC",
-      "MMHI",
-      "MUY"
+      "EVMO",
+      "FFLX",
+      "FIMU"
     ],
     "missing_other_error": [
       "HBIL"
@@ -495,6 +523,7 @@
       "BITK",
       "BLCN",
       "BNKU",
+      "BTR",
       "BTYB",
       "BULX",
       "BULZ",
@@ -524,8 +553,7 @@
       "DVXP",
       "DVXV",
       "DVXY",
-      "DZZ",
-      "EAOA"
+      "DZZ"
     ]
   }
 }
