@@ -889,6 +889,100 @@ class FetchYfFinanceSelectionTest(unittest.TestCase):
         del no_retry_budget[retry_arg:retry_arg + 2]
         self.assertEqual(plan(no_retry_budget)["sample"], ["CORE"])
 
+    def test_current_catalogue_pending_etf_and_failed_no_canonical_retry_share_core_plan(self) -> None:
+        self.fetcher.load_core_daily_basket_sources = lambda: {"CORE": ["core_daily_basket"]}
+        self.fetcher._observed_now = lambda: "2026-10-05T01:00:00Z"
+        self.fetcher.yahoo_source_freshness = lambda _sources, _now: {
+            "ages": {}, "max_source_business_days": 6,
+        }
+        self.fetcher.verified_yahoo_terminal_evidence = lambda _as_of: {"tickers": {"TERMINAL": []}}
+        store = self.fetcher.YahooBatchStateStore(
+            self.fetcher.YAHOO_BATCH_STATE_ROOT, self.fetcher.OUT_DIR,
+        )
+        catalogue = {"CORE", "PENDING", "FAILED", "NONETF", "STOCKPEND", "TERMINAL", "INVALID", "MALFORMED", "../OUTSIDE"}
+        write_json(store.root / "index.json", {
+            "schema_version": "yahoo-batch-quote-history-index/v1",
+            "active_universe_scope": "all_sources", "catalogue_symbols": sorted(catalogue),
+        })
+
+        def pending(source="stockanalysis_etf"):
+            return {
+                "resolution_state": "pending_acquisition", "coverage": False,
+                "coverage_status": "not_observed", "provider_reachability": "not_attempted",
+                "discovered_from": [source], "first_seen_from": [source],
+                "first_seen_at": "2026-10-04T01:00:00Z", "last_seen_at": "2026-10-04T01:00:00Z",
+            }
+
+        write_json(store.active_universe_path, {
+            "schema_version": "yahoo-batch-active-universe/v1",
+            "items": {
+                **{ticker: pending() for ticker in ("PENDING", "FAILED", "NONETF", "TERMINAL", "INVALID", "MALFORMED", "ORPHAN", "../OUTSIDE")},
+                "STOCKPEND": pending("global_scouter_stock"),
+            },
+        })
+        write_json(self.fetcher.STOCKANALYSIS_ETF_UNIVERSE, {
+            "schema_version": "stockanalysis/v1", "asset_type": "etf",
+            "records": [
+                *({"ticker": ticker} for ticker in ("PENDING", "FAILED", "TERMINAL", "INVALID", "MALFORMED", "ORPHAN", "STOCKPEND", "../OUTSIDE")),
+                {"ticker": "NONETF", "type": "stock"},
+            ],
+        })
+        write_json(self.fetcher.OUT_DIR / "INVALID.json", self._daily_payload("OTHER"))
+        malformed = self.fetcher.OUT_DIR / "MALFORMED.json"
+        malformed.write_text("{invalid json", encoding="utf-8")
+        store.record_failure(
+            "FAILED", "fixture provider miss", self._run("failed-pending"),
+            ["stockanalysis_etf"],
+            {"attempts_used": 1, "failures": [{"attempt": 1, "error": "fixture provider miss"}], "latency_ms": 1},
+            failure_kind="transient_provider_miss",
+        )
+        self.assertNotIn("FAILED", json.loads(store.active_universe_path.read_text())["items"])
+        self.assertFalse((self.fetcher.OUT_DIR / "FAILED.json").exists())
+
+        original_state_path = store._state_path
+        def checked_state_path(ticker):
+            self.assertNotEqual(ticker, "../OUTSIDE", "reject malformed key before path lookup")
+            return original_state_path(ticker)
+        store._state_path = checked_state_path
+        expected = {"PENDING", "FAILED"}
+        self.assertEqual(
+            set(store.retained_stockanalysis_etf_sources({"TERMINAL"}, self.fetcher.STOCKANALYSIS_ETF_UNIVERSE)),
+            expected,
+        )
+        typed_source = json.loads(self.fetcher.STOCKANALYSIS_ETF_UNIVERSE.read_text())
+        write_json(self.fetcher.STOCKANALYSIS_ETF_UNIVERSE, {**typed_source, "asset_type": "stock"})
+        self.assertEqual(store.retained_stockanalysis_etf_sources({"TERMINAL"}, self.fetcher.STOCKANALYSIS_ETF_UNIVERSE), {})
+        write_json(self.fetcher.STOCKANALYSIS_ETF_UNIVERSE, typed_source)
+        before = {path: path.read_bytes() for path in self.root.rglob("*.json")}
+        weekly_regular = []
+        for weekday in range(6):
+            original_argv, original_stdout = sys.argv, sys.stdout
+            output = io.StringIO()
+            try:
+                sys.argv = [
+                    "fetch-yf-finance.py", "--core-daily-basket", "--record-batch-state",
+                    "--natural-run", "--plan-only", "--stable-shards", "--limit", "1140",
+                    "--regular-limit", "1100", "--retry-limit", "40",
+                    "--shard", f"{weekday}/6", "--scheduled-weekday", str(weekday),
+                    "--shard-cycle-index", "0", "--plan-sample-size", "200",
+                ]
+                sys.stdout = output
+                self.fetcher.main()
+            finally:
+                sys.argv, sys.stdout = original_argv, original_stdout
+            plan = json.loads(output.getvalue())
+            self.assertEqual(plan["candidate_count_before_filters"], 3)
+            self.assertEqual(plan["sample"][0], "FAILED")
+            regular = plan["sample"][1:]
+            self.assertEqual(regular, sorted(
+                ticker for ticker in {"CORE", "PENDING"}
+                if self.fetcher.stable_shard_index(ticker, 6) == weekday
+            ))
+            weekly_regular.extend(regular)
+        self.assertEqual(set(weekly_regular), {"CORE", "PENDING"})
+        self.assertEqual(len(weekly_regular), 2)
+        self.assertEqual(before, {path: path.read_bytes() for path in self.root.rglob("*.json")})
+
     def test_core_retry_overflow_in_regular_shard_bypasses_fresh_cache_and_attempts_provider(self) -> None:
         self.fetcher.load_core_daily_basket_sources = lambda: {"CORE": ["core_daily_basket"]}
         self.fetcher.yahoo_source_freshness = lambda _sources, _now: {

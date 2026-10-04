@@ -1,5 +1,5 @@
 # yf Finance Engine v2 — bounded Yahoo Finance depth for the stock lens.
-# Daily measured-stock refresh + bounded current-catalogue retained ETF refresh.
+# Daily measured-stock refresh + bounded current-catalogue ETF acquisition/refresh.
 # Output: owned canonical Yahoo data. Update Manifest owns shared/public projections.
 
 name: Fetch YF Finance Data
@@ -13,8 +13,8 @@ on:
     # :00 slots did not fire at all.
     # Sunday-Friday, one ETF slot a day at 00:07 UTC: six runs a week on a
     # six-shard cycle. The scheduled ETF lane combines the configured core
-    # union with current-catalogue ETFs that already have valid state and
-    # canonical payloads; it does not acquire the broad ETF universe.
+    # union with current-catalogue retained ETFs and verified pending ETF
+    # acquisitions; unbound broad-universe entries are not admitted.
     # The weekday is read from the clock and maps directly to the shard index
     # of that cycle, so a slot delayed past midnight lands in the next day's
     # cycle and self-corrects on the next pass.
@@ -275,10 +275,10 @@ jobs:
               DAILY_INDEX="$SLOT_WEEKDAY"
               DAILY_SHARDS=6
               echo "ETF slot: weekday=$SLOT_WEEKDAY shard=$DAILY_INDEX/$DAILY_SHARDS"
-              # Regular candidates are the configured core union plus retained
-              # ETFs already present in the current Yahoo catalogue, per-ticker
-              # state, and canonical files. Six stable shards refresh that
-              # validated union; the broad StockAnalysis universe is not loaded.
+              # Regular candidates are the configured core union plus current
+              # catalogue ETFs with canonical state or verified pending records.
+              # Six stable shards cover that bounded union; the broad
+              # StockAnalysis universe is not admitted as candidates.
               # The outer limit covers both retry and regular budgets.
               INPUT_LIMIT="${YF_WEEKLY_ETF_LIMIT:-1140}"
               INPUT_RETRY_LIMIT="${YF_WEEKLY_ETF_RETRY_LIMIT:-40}"
@@ -305,8 +305,8 @@ jobs:
               INPUT_HISTORY_GAPS_ONLY="${YF_WEEKLY_ETF_HISTORY_GAPS_ONLY:-false}"
               INPUT_HISTORY_MIN_ROWS="${YF_WEEKLY_ETF_HISTORY_MIN_ROWS:-200}"
               INPUT_UNTRACKED_ONLY="${YF_WEEKLY_ETF_UNTRACKED_ONLY:-false}"
-              # The scheduled lane is bounded to configured and retained ETFs.
-              # Broad StockAnalysis ETF acquisition remains manual opt-in.
+              # The scheduled lane is bounded to configured and verified
+              # current-catalogue ETFs; broad acquisition remains manual opt-in.
               INPUT_STOCKANALYSIS_ETFS="false"
               INPUT_CORE_DAILY_BASKET="true"
               INPUT_STOCKS_ONLY="false"

@@ -72,7 +72,7 @@ from data_supply_stock_detail import (
     validate_stock_detail_candidate,
     yahoo_provider_symbol,
 )
-from yahoo_batch_state import YahooBatchStateStore
+from yahoo_batch_state import SYMBOL_RE, YahooBatchStateStore
 
 STOCK_UNIVERSE_DIR = ROOT / "data" / "global-scouter" / "stocks" / "detail"
 ETF_INDEX = ROOT / "data" / "global-scouter" / "etfs" / "index.json"
@@ -90,7 +90,6 @@ DATA_SUPPLY_STATE_ROOT = ROOT / "data" / "admin" / "data-supply-state" / "v1"
 DATA_SUPPLY_PROVIDER_TRUTH_ROOT = ROOT
 
 SCHEMA_VERSION = "yf-finance/v2"
-SYMBOL_RE = re.compile(r"^[A-Z0-9][A-Z0-9.\-]{0,11}$")
 MAJOR_ETFS = {
     "SPY", "QQQ", "DIA", "IWM", "VOO", "VTI",
     "TLT", "IEF", "SHY", "GLD", "SLV", "VNQ",
@@ -2290,7 +2289,7 @@ def main():
     parser.add_argument("--tickers", type=str, default="", help="comma-separated override")
     parser.add_argument("--stocks-only", action="store_true", help="stock universe only: global-scouter stock detail plus market_facts stock candidates")
     parser.add_argument("--stockanalysis-etfs", action="store_true", help="include the full StockAnalysis ETF universe/screener in the Yahoo candidate set")
-    parser.add_argument("--core-daily-basket", action="store_true", help="scheduled ETF lane: bounded core union plus already observed ETFs in the current Yahoo catalogue; explicit --tickers overrides this selection; no StockAnalysis universe/screener expansion")
+    parser.add_argument("--core-daily-basket", action="store_true", help="scheduled ETF lane: bounded core union plus current-catalogue ETF records and verified pending acquisitions; explicit --tickers overrides this selection; no broad StockAnalysis universe expansion")
     parser.add_argument("--scheduled-slot", type=int, default=None, help="slot index within the weekly shard cycle for lanes that run several slots a day")
     parser.add_argument("--history-gaps-only", action="store_true", help="fetch only tickers whose local payload lacks enough 1Y daily history for return facts")
     parser.add_argument("--history-min-rows", type=int, default=200, help="minimum history_1y rows needed to skip a ticker under --history-gaps-only")
@@ -2385,15 +2384,16 @@ def main():
     terminal_evidence = state_store.load_terminal_evidence(S1_STOCK_PROMOTION_DRY_RUN) if state_store else None
     lifecycle_evidence = verified_yahoo_terminal_evidence(lifecycle_as_of)
     terminal_tickers = set((terminal_evidence or {}).get("tickers") or {}) | set(lifecycle_evidence["tickers"])
-    # Only a bounded automatic core acquisition may refresh already observed
-    # ETFs beyond the configured core basket. Manual selection is unchanged.
+    # Only a bounded automatic core run may refresh or acquire verified
+    # current-catalogue ETFs beyond the core basket. Manual selection is unchanged.
     core_retained_lane = bool(
         args.core_daily_basket and args.natural_run and not args.tickers and state_store
         and args.retry_limit is not None and args.regular_limit is not None and args.limit > 0
     )
     retained_sources = (
         state_store.retained_stockanalysis_etf_sources(
-            terminal_tickers | retired_yahoo_symbols(lifecycle_as_of)
+            terminal_tickers | retired_yahoo_symbols(lifecycle_as_of),
+            STOCKANALYSIS_ETF_UNIVERSE,
         )
         if core_retained_lane else {}
     )
@@ -2401,8 +2401,8 @@ def main():
     if args.core_daily_basket:
         # The configured core candidates are the bounded union of
         # the core daily basket SSOT (fenok-etf-core-daily-basket.json) and
-        # configured major/focus/RIM tracker ETF sets. Current-catalogue
-        # retained ETFs join automatic stable-shard refresh below.
+        # configured major/focus/RIM tracker ETF sets. Verified current-catalogue
+        # ETF records and pending acquisitions join the stable-shard plan below.
         raw_selection_sources = load_core_daily_basket_sources()
     else:
         raw_selection_sources = load_universe_sources(
@@ -2413,7 +2413,7 @@ def main():
     if core_retained_lane:
         for ticker, sources in retained_sources.items():
             selection_sources[ticker] = sorted(set(selection_sources.get(ticker, [])) | set(sources))
-    # The core lane owns its regular candidates plus already observed retained
+    # The core lane owns its regular candidates plus validated current-catalogue
     # ETFs. Other stateful lanes retain their historical StockAnalysis
     # active-universe contract; in particular, the stock lane must not lose
     # existing ETF state merely because its current fetch selection is stocks.

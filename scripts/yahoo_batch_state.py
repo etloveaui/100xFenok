@@ -6,9 +6,11 @@ from __future__ import annotations
 from datetime import datetime, timezone
 import hashlib
 import json
+import re
 from pathlib import Path
 
 
+SYMBOL_RE = re.compile(r"^[A-Z0-9][A-Z0-9.\-]{0,11}$")
 NEW_LISTING_PENDING_DAYS = 31
 ERROR_TEXT_LIMIT = 1000
 ACTIVE_UNIVERSE_SCHEMA_VERSION = "yahoo-batch-active-universe/v1"
@@ -387,11 +389,16 @@ class YahooBatchStateStore:
     def _record_result(self, state: dict, row: dict) -> None:
         self._results[state["ticker"]] = dict(row)
 
-    def retained_stockanalysis_etf_sources(self, excluded_tickers: set[str] | None = None) -> dict[str, list[str]]:
-        """Read current-catalogue ETF records with state and canonical payload.
+    def retained_stockanalysis_etf_sources(
+        self,
+        excluded_tickers: set[str] | None = None,
+        etf_universe_path: Path | None = None,
+    ) -> dict[str, list[str]]:
+        """Bind observed or pending ETFs to the current Yahoo catalogue.
 
-        The full StockAnalysis inventory and pending-acquisition inventory are
-        intentionally not inputs: this only keeps existing per-ticker state.
+        Canonical records retain their existing admission rules. A missing
+        canonical is allowed only for an exact pending acquisition or failed
+        retry also present in the current typed StockAnalysis ETF source.
         """
         catalogue_index = _read_json(self.root / DEFAULT_INDEX_FILENAME)
         catalogue_symbols = catalogue_index.get("catalogue_symbols") if catalogue_index else None
@@ -408,6 +415,7 @@ class YahooBatchStateStore:
         catalogue = set(catalogue_symbols)
         excluded = set(excluded_tickers or set())
         sources = {}
+        missing_canonical = set()
         for path in sorted(self.ticker_dir.glob("*.json")):
             ticker = path.stem
             if ticker not in catalogue or ticker in excluded:
@@ -424,9 +432,57 @@ class YahooBatchStateStore:
                 or "stockanalysis_etf" not in state["discovered_from"]
             ):
                 continue
-            if not _valid_canonical_payload(_read_json(self.finance_dir / f"{ticker}.json"), ticker):
+            canonical = self.finance_dir / f"{ticker}.json"
+            if canonical.exists():
+                if not _valid_canonical_payload(_read_json(canonical), ticker):
+                    continue
+                sources[ticker] = sorted({source for source in state["discovered_from"] if isinstance(source, str)})
                 continue
-            sources[ticker] = sorted({source for source in state["discovered_from"] if isinstance(source, str)})
+            last_result = state.get("last_result")
+            if (
+                state.get("resolution_state") == "unavailable"
+                and state.get("retry") is True
+                and isinstance(last_result, dict)
+                and last_result.get("outcome") == "failed"
+                and state["discovered_from"] == ["stockanalysis_etf"]
+            ):
+                missing_canonical.add(ticker)
+
+        # The index's pending details are display-capped. The owning inventory
+        # carries every pending key and distinguishes it from an invalid state.
+        for ticker, item in self._load_active_universe()["items"].items():
+            if (
+                isinstance(ticker, str)
+                and SYMBOL_RE.fullmatch(ticker)
+                and ticker in catalogue
+                and ticker not in excluded
+                and ticker not in sources
+                and not self._state_path(ticker).exists()
+                and not (self.finance_dir / f"{ticker}.json").exists()
+                and self._is_pending_acquisition(item)
+                and item.get("discovered_from") == ["stockanalysis_etf"]
+            ):
+                missing_canonical.add(ticker)
+
+        if missing_canonical and etf_universe_path is not None:
+            etf_universe = _read_json(Path(etf_universe_path))
+            if (
+                etf_universe
+                and etf_universe.get("schema_version") == "stockanalysis/v1"
+                and etf_universe.get("asset_type") == "etf"
+                and isinstance(etf_universe.get("records"), list)
+            ):
+                for row in etf_universe["records"]:
+                    if not isinstance(row, dict):
+                        continue
+                    ticker = row.get("ticker")
+                    if (
+                        isinstance(ticker, str)
+                        and ticker in missing_canonical
+                        and row.get("asset_type", "etf") == "etf"
+                        and row.get("type", "etf") == "etf"
+                    ):
+                        sources[ticker] = ["stockanalysis_etf"]
         return sources
 
     def prospective_source_stale_tickers(
