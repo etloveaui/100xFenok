@@ -11,7 +11,7 @@
 
 Stock screening, ETF benchmarks, economic indicators, and source-sheet raw tables exported from Global Scouter tool.
 
-### Berkshire source correction (validated 2026-09-04, 2026-09-11, 2026-09-18 and 2026-09-25 snapshots)
+### Berkshire source correction (validated 2026-09-04, 2026-09-11, 2026-09-18, 2026-09-25 and 2026-10-02 snapshots)
 
 Structured Berkshire B history normalizes duplicated A-class EPS, BPS, CPS and SPS
 using the official 1:1,500 economic share ratio. Historical price multiples and
@@ -27,10 +27,10 @@ For both Berkshire classes, each validated snapshot's latest consensus observati
 the detail sheet's explicit 2026, 2027 and 2028 annual estimate columns. This
 replaces the summary sheet's misplaced actual/forecast values; it does not turn
 historical earnings into a forecast. Correction provenance accompanies the
-structured data. The override is bounded to the four exact source fingerprints and
+structured data. The override is bounded to the five exact source fingerprints and
 validated source evidence; it must not silently normalize a future supplier release.
 
-### TSM ADS and PER basis (validated September 25 source)
+### TSM ADS and PER basis (validated September 25 and October 2 sources)
 
 Historical TSM EPS/BPS/CPS/SPS and dividends are expressed per common share in
 this source, while its quoted prices are per ADS. One ADS represents five common
@@ -39,7 +39,9 @@ Structured history is normalized by five; multiples, yields and affected EPS
 growth are recalculated. The already-correct 2026–2028 ADS estimates, company
 statements and raw layers remain unchanged. The mixed-basis forward interpolation
 curve and undefined historical PEG are withheld with original-value provenance.
-This correction is admitted only for the validated September 25 workbook hash.
+This correction is admitted only for the validated September 25 and October 2 workbook hashes.
+The October 2 annual ADS EPS estimates remain 17.02, 22.17 and 28.04;
+correction provenance retains that snapshot's raw warning values.
 
 PER-band current means explicit FY0. Source-derived bands use S_Valuation column
 P and retain the separate F aggregate as source_current. Calculated bands use the
@@ -66,7 +68,7 @@ global-scouter/
 ├── etfs/                    # v2.1.0
 │   └── index.json           # ETF/Index data (22 items)
 ├── indicators/              # v2.1.0
-│   └── economic.json        # Economic indicators (1,079 records)
+│   └── economic.json        # Economic indicators (1,080 records)
 ├── raw/                     # v2.3.0
     ├── manifest.json        # Raw layer file catalog
     ├── companies_a_company.json
@@ -235,6 +237,7 @@ const indicators = await fetch(`${BASE}/indicators/economic.json`).then(r => r.j
 
 | Version | Date | Changes |
 |---------|------|---------|
+| 2.4.0 | 2026-10-04 | October 2 weekly export: 1,066 stocks, 1,080 indicators; independently validated Berkshire/TSM corrections, preserved raw sources and forecasts |
 | 2.4.0 | 2026-09-27 | Weekly refresh (2026-09-25 source): 1,066 stocks, 1,079 economic observations, 22 ETFs and 1,047 PER-band profiles. Validated Berkshire and TSM share-unit corrections preserve raw source and normal forecasts; band current now uses FY0. Existing hosted derivation and publication paths own final site propagation. |
 | 2.4.0 | 2026-09-20 | Weekly refresh (2026-09-18 source): 1,066 stocks with the same canonical ticker set, 1,078 economic observations, 22 ETFs and 1,047 PER-band profiles. The recurring Berkshire B historical unit anomaly is normalized only for the exact validated workbook fingerprint; raw source values remain preserved. Derived indexes follow the existing hosted refresh chain. |
 | 2.4.0 | 2026-09-13 | Weekly refresh (2026-09-11 source): 1,066 stocks with the same canonical ticker set, 1,077 economic observations, 22 ETFs and 1,047 PER-band profiles. The recurring Berkshire B historical unit anomaly is normalized only for the exact validated workbook fingerprint; raw source values remain preserved. Derived indexes follow the existing hosted refresh chain. |
@@ -276,4 +279,4 @@ const indicators = await fetch(`${BASE}/indicators/economic.json`).then(r => r.j
 
 ---
 
-*Last Updated: 2026-09-27*
+*Last Updated: 2026-10-04*

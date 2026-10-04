@@ -1,6 +1,6 @@
 # Data Catalog
 
-> **Last Updated**: 2026-09-28
+> **Last Updated**: 2026-10-04
 > **Scope**: Canonical source tree (`data/`) — **42,090 tracked JSON payload files**
 > **Public projection**: `100xfenok-next/public/data/` — **11,007 tracked JSON payload files**, an intentionally curated subset
 > **Catalog contract**: This file owns the source catalog. Update the relevant folder README with payload changes and record material changes in `docs/CHANGELOG.md`.
@@ -66,8 +66,8 @@
 - 13 indicators
 
 ### Stock Screening (global-scouter/)
-- 1,066 stock profiles + ETFs (22) + Economic Indicators (1,079 records) + raw preservation files (9)
-- **v2.4.0**: 2026-09-27 weekly refresh (2026-09-25 source); downstream screener artifacts use the existing hosted rebuild path; 1,079 indicators
+- 1,066 stock profiles + ETFs (22) + Economic Indicators (1,080 records) + raw preservation files (9)
+- **v2.4.0**: 2026-10-04 weekly refresh (2026-10-02 source); downstream screener artifacts use the existing hosted rebuild path; 1,080 indicators
 - v2.3.0: Raw source-sheet preservation + FY+1~FY+3 forward/revision detail extensions
 - v2.2.0: Extended fields (eps_consensus, growth_consensus, per_bands, fiscal_month)
 - v2.1.0: Added etfs/index.json, indicators/economic.json
