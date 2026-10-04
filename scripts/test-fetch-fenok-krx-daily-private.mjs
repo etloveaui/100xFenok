@@ -331,6 +331,7 @@ assert.deepEqual(
   fs.writeFileSync(path.join(dir("kospi_dd_trd"), "20260629.json"), `${JSON.stringify({
     OutBlock_1: [
       { IDX_CLSS: "KOSPI", IDX_NM: "코스피", CLSPRC_IDX: "2500.50", CMPPREVDD_IDX: "10.5", FLUC_RT: "0.42", ACC_TRDVOL: "500000", ACC_TRDVAL: "8000000" },
+      { IDX_NM: "코스피 (외국주포함)", CLSPRC_IDX: "", CMPPREVDD_IDX: "", FLUC_RT: "", OPNPRC_IDX: "", HGPRC_IDX: "", LWPRC_IDX: "", ACC_TRDVOL: "600000" },
     ],
   }, null, 2)}\n`);
   fs.writeFileSync(path.join(dir("kosdaq_dd_trd"), "20260629.json"), `${JSON.stringify({
@@ -359,7 +360,8 @@ assert.deepEqual(
   assert.equal(artifact.date_min, "2026-06-29");
   assert.equal(artifact.date_max, "2026-06-29");
   assert.equal(artifact.as_of, "2026-06-29");
-  assert.equal(artifact.raw_input_row_count, 5, "5 raw rows observed (incl. the issuer row)");
+  assert.equal(artifact.raw_input_row_count, 6, "observed rows include issuer and unpriced market total");
+  assert.equal(artifact.indices.some((row) => row.index_name === "코스피 (외국주포함)"), false, "unpriced market total is not a zero-price index");
   const kospi = artifact.indices.find((row) => row.index_name === "코스피");
   assert.ok(kospi, "KOSPI index row present");
   assert.equal(kospi.close, 2500.5);
@@ -410,6 +412,7 @@ assert.deepEqual(
       // Newer than the fresh observation: must not advance as_of.
       kospiRow("2026-06-30", 2510.0, { origin: "yahoo_chart_backfill", origin_symbol: "^KS11" }),
       // Invalid rows never survive accumulation.
+      kospiRow("2026-06-26", 0, { index_name: "코스피 (외국주포함)", change: 0, open: 0, high: 0, low: 0 }),
       { market: "KOSPI", index_class: "KOSPI", index_name: "코스피", date: "not-a-date", close: 1 },
       { market: "KOSPI", index_class: "KOSPI", index_name: "코스피", date: "2026-06-24", close: Number.NaN },
     ],
@@ -1072,6 +1075,15 @@ async function testPrivateConsumedFields() {
     { api: "ksq_bydd_trd", group: "core_stock_index", good: { ISU_CD: "123456", MKT_NM: "KOSDAQ", MKTCAP: "1000" }, bad: { ISU_CD: "", MKT_NM: "KOSDAQ", MKTCAP: "1000" } },
     { api: "kts_bydd_trd", group: "bond_commodity_esg", good: { ISU_NM: "국고10년", BND_EXP_TP_NM: "10", GOVBND_ISU_TP_NM: "지표", CLSPRC_YD: "3.5" }, bad: { ISU_NM: "국고10년", BND_EXP_TP_NM: "10", GOVBND_ISU_TP_NM: "지표", CLSPRC_YD: "broken" } },
     { api: "kospi_dd_trd", group: "core_stock_index", good: { IDX_NM: "KOSPI", CLSPRC_IDX: "2500" }, accepted: { IDX_NM: "KOSPI", CLSPRC_IDX: "0" } },
+    ...["kospi_dd_trd", "kosdaq_dd_trd"].flatMap((api) => {
+      const name = api === "kospi_dd_trd" ? "코스피 (외국주포함)" : "코스닥 (외국주포함)";
+      const aggregate = { IDX_NM: name, CLSPRC_IDX: "", CMPPREVDD_IDX: "", FLUC_RT: "", OPNPRC_IDX: "", HGPRC_IDX: "", LWPRC_IDX: "" };
+      return [
+        { api, group: "core_stock_index", good: { IDX_NM: "INDEX", CLSPRC_IDX: "2500" }, accepted: { IDX_NM: "INDEX", CLSPRC_IDX: "2500" }, extra: aggregate },
+        { api, group: "core_stock_index", good: { IDX_NM: "INDEX", CLSPRC_IDX: "2500" }, bad: aggregate },
+        { api, group: "core_stock_index", good: { IDX_NM: "INDEX", CLSPRC_IDX: "2500" }, bad: { ...aggregate, CLSPRC_IDX: "broken" } },
+      ];
+    }),
     { api: "stk_bydd_trd", group: "core_stock_index", good: { ISU_CD: "005930", MKT_NM: "KOSPI", MKTCAP: "1000" }, accepted: { ISU_CD: "005930", MKT_NM: "KOSPI", MKTCAP: "0" } },
   ];
   for (const [index, item] of cases.entries()) {
@@ -1084,6 +1096,7 @@ async function testPrivateConsumedFields() {
       fs.mkdirSync(path.dirname(rawPath), { recursive: true });
       fs.writeFileSync(rawPath, goodBytes);
       const incoming = { OutBlock_1: [{ BAS_DD: "20260715", ...(item.accepted ?? item.bad) }] };
+      if (item.extra) incoming.OutBlock_1.push({ BAS_DD: "20260715", ...item.extra });
       await runAgainstStubbedProvider(root, runId, (url) => url.includes(`/${item.api}?`) ? new Response(JSON.stringify(incoming), { status: 200 }) : new Response("unavailable", { status: 503 }));
       const manifest = readJson(path.join(root, "_private/admin/fenok-edge-korea/daily", runId, "manifest.json"));
       const record = manifest.files.find((file) => file.api_id === item.api);

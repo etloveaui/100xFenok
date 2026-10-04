@@ -378,8 +378,18 @@ function finite(value) {
 }
 
 function numberOrNull(value) {
+  if (value == null || (typeof value === "string" && !value.trim())) return null;
   const num = Number(value);
   return finite(num) ? num : null;
+}
+
+// KRX includes market totals with no calculated index in these index APIs.
+// Their volume/value/capitalization are real, but blank prices are not zeroes.
+function isUnpricedMarketAggregate(apiId, row) {
+  const name = { kospi_dd_trd: "코스피 (외국주포함)", kosdaq_dd_trd: "코스닥 (외국주포함)" }[apiId];
+  return name !== undefined && row?.IDX_NM === name
+    && ["CLSPRC_IDX", "CMPPREVDD_IDX", "FLUC_RT", "OPNPRC_IDX", "HGPRC_IDX", "LWPRC_IDX"]
+      .every((field) => row[field] === "");
 }
 
 function round(value, digits = 6) {
@@ -879,7 +889,8 @@ function krxConsumedPayloadError(apiId, data) {
   if (rows.some((row) => !row || typeof row !== "object" || Array.isArray(row))) return "KRX payload invalid: required row object";
   if (isIndex) {
     if (rows.some((row) => !text(row.IDX_NM) || row.ISU_CD != null || row.ISU_NM != null)) return "KRX payload invalid: required aggregate index identity";
-    if (rows.some((row) => !numeric(row.CLSPRC_IDX))) return "KRX payload invalid: required numeric CLSPRC_IDX";
+    const priced = rows.filter((row) => !isUnpricedMarketAggregate(apiId, row));
+    if (priced.length === 0 || priced.some((row) => !numeric(row.CLSPRC_IDX))) return "KRX payload invalid: required numeric CLSPRC_IDX";
   } else if (isIssuerMaster) {
     // Preserve the master code aliases already accepted by the listing filter.
     const hasMasterCode = (row) => [row.ISU_SRT_CD, row.ISU_CD, row.ISU_CODE, row.SHORT_CODE]
@@ -1056,7 +1067,8 @@ function validAccumulatedIndexRow(row) {
     && typeof row.index_name === "string"
     && row.index_name.length > 0
     && validIsoDate(row.date)
-    && finite(row.close);
+    && finite(row.close)
+    && !(row.close === 0 && ["코스피 (외국주포함)", "코스닥 (외국주포함)"].includes(row.index_name));
 }
 
 export function mergeKrxPublicIndexCloses({ freshRows = [], previousDocument = null, ceilingDate = null } = {}) {
@@ -1117,6 +1129,7 @@ function buildKrxPublicIndexCloses(manifest, config, options = {}) {
           continue;
         }
         const indexName = String(row?.IDX_NM ?? "").trim();
+        if (isUnpricedMarketAggregate(endpoint.api_id, row)) continue;
         const close = numberOrNull(row?.CLSPRC_IDX);
         if (!indexName || !finite(close)) continue;
         indices.push({
