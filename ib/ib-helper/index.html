@@ -2641,9 +2641,9 @@
       currentProfile = ProfileManager.getActive();
       updateTickerButtons();
 
-      // 버튼 DOM이 재생성되므로 기존 선택 종목의 상태를 복원
+      // Restore selection after rebuilding buttons without refreshing the same price.
       if (selectedTicker) {
-        selectTicker(selectedTicker);
+        selectTicker(selectedTicker, false);
       }
     }
 
@@ -2760,7 +2760,7 @@
     // Ticker Selection
     // =====================================================
 
-    function selectTicker(ticker) {
+    function selectTicker(ticker, refreshPrice = true) {
       // 🔴 종목 전환 전에 현재 입력값 저장 (v4.11.0 버그 수정)
       // 🔴 v4.15.0: silent=true 추가 (토스트 스팸 방지)
       if (selectedTicker && selectedTicker !== ticker) {
@@ -2803,7 +2803,7 @@
       loadDailyInputs();
 
       // 🔴 v4.30.0 (#10): 현재가 표시 (평단가 옆)
-      updateCurrentPriceDisplay(ticker);
+      if (refreshPrice) updateCurrentPriceDisplay(ticker);
 
       // 🔴 v4.17.0: 종목 전환 시 모든 결과 영역 초기화 (Bug 12 수정)
       document.getElementById('results-section').classList.add('hidden');
