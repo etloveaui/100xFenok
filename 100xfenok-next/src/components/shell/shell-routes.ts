@@ -78,6 +78,7 @@ const SHELL_ROUTE_RULES: readonly ShellRouteRule[] = [
   { pattern: /^\/macro-chart$/, meta: fixed({ active: "chart", title: "차트", backHref: ROUTES.home }) },
   { pattern: /^\/multichart$/, meta: fixed({ active: "chart", title: "시장 비교", backHref: ROUTES.macroChart }) },
   { pattern: /^\/research$/, meta: fixed({ active: "research", title: "리서치", backHref: ROUTES.home }) },
+  { pattern: /^\/filings$/, meta: fixed({ active: "research", title: "공시 한글 요약", backHref: ROUTES.research }) },
   { pattern: /^\/posts$/, meta: fixed({ active: "posts", title: "분석 아카이브", backHref: ROUTES.home }) },
   { pattern: /^\/posts\/.+$/, meta: fixed({ active: "posts", title: "분석 아카이브", backHref: ROUTES.posts }) },
   { pattern: /^\/alpha-scout$/, meta: fixed({ active: "alphaScout", title: "Alpha Scout", backHref: ROUTES.home }) },

@@ -55,11 +55,6 @@ const nextConfig: NextConfig = {
         permanent: true,
       },
       {
-        source: "/filings",
-        destination: "/stock/NVDA?tab=filings",
-        permanent: false,
-      },
-      {
         source: "/filings/nvda-10k",
         destination: "/stock/NVDA?tab=filings",
         permanent: false,

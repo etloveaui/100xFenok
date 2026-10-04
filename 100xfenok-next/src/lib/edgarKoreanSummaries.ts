@@ -162,6 +162,13 @@ export function loadEdgarKoreanSummaryCoverage(): Promise<EdgarKoreanSummaryCove
   });
 }
 
+export function loadEdgarKoreanSummaryTickers(): Promise<{ tickers: string[]; updated: string } | null> {
+  return loadEdgarKoreanSummaryIndex().then((index) => index ? {
+    tickers: [...new Set(index.tickers.filter(Boolean))].sort(),
+    updated: index.updated,
+  } : null);
+}
+
 export function loadEdgarKoreanSummariesForTicker(ticker: string): Promise<EdgarKoreanTickerSummaryManifest | null> {
   const symbol = normalizeEdgarTicker(ticker);
   if (!symbol) return Promise.resolve(null);

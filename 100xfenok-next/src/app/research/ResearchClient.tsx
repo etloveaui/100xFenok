@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import RouteEmbedFrame from "@/components/RouteEmbedFrame";
+import TransitionLink from "@/components/TransitionLink";
 import { ROUTES } from "@/lib/routes";
 import catalogShape from "../../../public/research/catalog.json";
 
@@ -88,6 +89,9 @@ export default function ResearchClient() {
   return (
     <div data-research-root="true">
       <p className="text-sm text-slate-600">기업 리서치 자료와 제품 브리프를 모은 목록입니다.</p>
+      <TransitionLink href={ROUTES.filings} className="mt-3 inline-flex min-h-11 items-center rounded-lg border border-slate-300 px-4 text-sm font-semibold">
+        공시 한글 요약 찾기
+      </TransitionLink>
 
       <div className="mt-3 flex flex-wrap items-center gap-2" role="group" aria-label="리서치 분류">
         {FILTERS.map((tab) => (

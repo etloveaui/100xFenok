@@ -75,7 +75,7 @@ for (const forbidden of [
   "liveBench",
   "travel",
   "winddown",
-  "filings",
+  "nvda-10k",
 ]) {
   assert(
     !sitemapBlock.includes(forbidden),
@@ -89,6 +89,7 @@ for (const key of [
   "ROUTES.etfs",
   "ROUTES.screener",
   "ROUTES.superinvestors",
+  "ROUTES.filings",
 ]) {
   assert(sitemapBlock.includes(key), `SITEMAP_PRODUCT_ROUTES missing ${key}`, errors);
 }
