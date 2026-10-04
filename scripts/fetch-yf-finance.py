@@ -2290,7 +2290,7 @@ def main():
     parser.add_argument("--tickers", type=str, default="", help="comma-separated override")
     parser.add_argument("--stocks-only", action="store_true", help="stock universe only: global-scouter stock detail plus market_facts stock candidates")
     parser.add_argument("--stockanalysis-etfs", action="store_true", help="include the full StockAnalysis ETF universe/screener in the Yahoo candidate set")
-    parser.add_argument("--core-daily-basket", action="store_true", help="scheduled ETF lane: bounded union of the core daily ETF basket and configured major/focus/RIM tracker sets; explicit --tickers overrides this selection; no StockAnalysis universe/screener expansion")
+    parser.add_argument("--core-daily-basket", action="store_true", help="scheduled ETF lane: bounded core union plus already observed ETFs in the current Yahoo catalogue; explicit --tickers overrides this selection; no StockAnalysis universe/screener expansion")
     parser.add_argument("--scheduled-slot", type=int, default=None, help="slot index within the weekly shard cycle for lanes that run several slots a day")
     parser.add_argument("--history-gaps-only", action="store_true", help="fetch only tickers whose local payload lacks enough 1Y daily history for return facts")
     parser.add_argument("--history-min-rows", type=int, default=200, help="minimum history_1y rows needed to skip a ticker under --history-gaps-only")
@@ -2385,8 +2385,8 @@ def main():
     terminal_evidence = state_store.load_terminal_evidence(S1_STOCK_PROMOTION_DRY_RUN) if state_store else None
     lifecycle_evidence = verified_yahoo_terminal_evidence(lifecycle_as_of)
     terminal_tickers = set((terminal_evidence or {}).get("tickers") or {}) | set(lifecycle_evidence["tickers"])
-    # Only an automatic core acquisition may retry already observed ETFs
-    # outside the bounded regular basket. Manual explicit selection is unchanged.
+    # Only a bounded automatic core acquisition may refresh already observed
+    # ETFs beyond the configured core basket. Manual selection is unchanged.
     core_retained_lane = bool(
         args.core_daily_basket and args.natural_run and not args.tickers and state_store
         and args.retry_limit is not None and args.regular_limit is not None and args.limit > 0
@@ -2399,10 +2399,10 @@ def main():
     )
 
     if args.core_daily_basket:
-        # Scheduled ETF regular candidates are the bounded union of
+        # The configured core candidates are the bounded union of
         # the core daily basket SSOT (fenok-etf-core-daily-basket.json) and
-        # configured major/focus/RIM tracker ETF sets. Retained StockAnalysis
-        # ETF state only extends retry ownership; no broad ETF universe loads.
+        # configured major/focus/RIM tracker ETF sets. Current-catalogue
+        # retained ETFs join automatic stable-shard refresh below.
         raw_selection_sources = load_core_daily_basket_sources()
     else:
         raw_selection_sources = load_universe_sources(
@@ -2410,6 +2410,9 @@ def main():
             stockanalysis_etfs=args.stockanalysis_etfs,
         )
     selection_sources = current_yahoo_universe_sources(raw_selection_sources, lifecycle_as_of)
+    if core_retained_lane:
+        for ticker, sources in retained_sources.items():
+            selection_sources[ticker] = sorted(set(selection_sources.get(ticker, [])) | set(sources))
     # The core lane owns its regular candidates plus already observed retained
     # ETFs. Other stateful lanes retain their historical StockAnalysis
     # active-universe contract; in particular, the stock lane must not lose
@@ -2485,8 +2488,8 @@ def main():
     # beyond today's retry budget and enter their regular shard page.
     retry_tickers = set(retry_queue)
     # One daily core slot can claim up to the shared retry budget, regardless
-    # of weekday shard. Core retry overflow remains in regular shard ownership;
-    # retained off-core overflow waits for the next day's oldest-first retry.
+    # of weekday shard. Retry overflow also remains in regular stable-shard
+    # ownership and, until attempted, in the next day's oldest-first queue.
     if core_retained_lane and args.retry_limit is not None:
         retry_queue = retry_queue[:args.retry_limit]
     selected_retry_tickers = set(retry_queue)

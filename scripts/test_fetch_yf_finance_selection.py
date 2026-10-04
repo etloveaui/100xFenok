@@ -842,9 +842,28 @@ class FetchYfFinanceSelectionTest(unittest.TestCase):
         })
         before = {path: path.read_bytes() for path in self.root.rglob("*.json")}
         first = plan(args)
-        self.assertEqual(first["candidate_count_before_filters"], 1)
-        self.assertEqual(first["sample"][:40], ["STALE", *retries[:39]])
-        self.assertEqual(first["sample"][40:], ["CORE"])
+        expected_union = set(retries) | {"STALE", "CORE"}
+        first_retries = ["STALE", *retries[:39]]
+        self.assertEqual(first["candidate_count_before_filters"], len(expected_union))
+        self.assertEqual(first["sample"][:40], first_retries)
+        first_regular = expected_union - set(first_retries)
+        weekly_regular = []
+        for weekday in range(6):
+            slot_args = list(args)
+            slot_args[slot_args.index("--shard") + 1] = f"{weekday}/6"
+            slot_args[slot_args.index("--scheduled-weekday") + 1] = str(weekday)
+            slot = plan(slot_args)
+            self.assertEqual(slot["candidate_count_before_filters"], len(expected_union))
+            self.assertEqual(slot["sample"][:40], first_retries)
+            regular_page = slot["sample"][40:]
+            self.assertEqual(regular_page, sorted(
+                ticker for ticker in first_regular
+                if self.fetcher.stable_shard_index(ticker, 6) == weekday
+            ))
+            weekly_regular.extend(regular_page)
+        self.assertEqual(len(weekly_regular), len(set(weekly_regular)))
+        self.assertEqual(set(weekly_regular), first_regular)
+        self.assertIn("CORE", first["sample"][40:])
         self.assertEqual(before, {path: path.read_bytes() for path in self.root.rglob("*.json")})
 
         # An attempted batch moves to the back; the next daily shard claims
@@ -857,7 +876,12 @@ class FetchYfFinanceSelectionTest(unittest.TestCase):
             write_json(store._state_path(ticker), state)
         second = plan(args)
         self.assertEqual(second["sample"][:6], retries[39:])
-        self.assertEqual(second["sample"][-1], "CORE")
+        second_regular = expected_union - set(second["sample"][:40])
+        self.assertEqual(second["sample"][40:], sorted(
+            ticker for ticker in second_regular
+            if self.fetcher.stable_shard_index(ticker, 6) == shard
+        ))
+        self.assertIn("CORE", second["sample"][40:])
         explicit = plan([*args, "--tickers", "CORE"])
         self.assertEqual(explicit["sample"], ["CORE"])
         no_retry_budget = list(args)
@@ -3078,8 +3102,8 @@ assert callable(namespace["load_universe"])
         self.assertIn("YF_WEEKLY_ETF_RETRY_LIMIT:-40", run_step)
         # The regular cap must clear the largest 6-way shard, or that shard's
         # tail is never collected.
-        self.assertIn("YF_WEEKLY_ETF_REGULAR_LIMIT:-140", run_step)
-        self.assertIn("YF_WEEKLY_ETF_LIMIT:-200", run_step)
+        self.assertIn("YF_WEEKLY_ETF_REGULAR_LIMIT:-1100", run_step)
+        self.assertIn("YF_WEEKLY_ETF_LIMIT:-1140", run_step)
         self.assertIn("YF_WEEKLY_ETF_UNTRACKED_LIMIT:-80", run_step)
         # The ETF slot is a refresh pass. Either narrowing flag turns it back
         # into an acquisition-and-backfill pass that never revisits a tracked
