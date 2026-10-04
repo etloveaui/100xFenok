@@ -1,21 +1,9 @@
 {
   "schema_version": "alarm-state/v1",
-  "generated_at": "2026-10-04T10:23:28.739Z",
+  "generated_at": "2026-10-04T12:38:59.626Z",
   "status": "open",
   "open_incident_count": 3,
   "open_incidents": [
-    {
-      "workflow": "global-writer-queue-observer.yml",
-      "label": "Global Writer Queue Observability",
-      "streak": 0,
-      "failure_streak_threshold": 2,
-      "first_failing_run_id": null,
-      "first_failing_run_url": null,
-      "alarm_reasons": [
-        "missed_schedule_window"
-      ],
-      "lost_schedule_slot_count": 0
-    },
     {
       "workflow": "retention-restore.yml",
       "label": "R2 Retention Restore Watchdog",
@@ -39,6 +27,18 @@
         "missed_schedule_window"
       ],
       "lost_schedule_slot_count": 0
+    },
+    {
+      "workflow": "data-health-kpi",
+      "label": "Data stopped advancing",
+      "alarm_reasons": [
+        "data_stopped_two_generations"
+      ],
+      "stopped_sets": [
+        "gdelt_news_tone"
+      ],
+      "latest_generated_at": "2026-10-04T11:57:12.564Z",
+      "previous_generated_at": "2026-10-04T10:27:36.583Z"
     }
   ],
   "watched_workflows": [
@@ -377,23 +377,18 @@
       "reason": "self-monitoring would create a recursive alarm loop"
     }
   ],
-  "unknown_workflows": [
-    {
-      "workflow": "data-health-kpi",
-      "status": "unknown"
-    }
-  ],
+  "unknown_workflows": [],
   "queue_evicted_run_count": 0,
   "queue_evicted_workflows": [],
   "last_firing": {
-    "run_id": "37194956386",
-    "run_url": "https://github.com/etloveaui/100xFenok/actions/runs/37194956386",
-    "observed_at": "2026-10-04T10:23:28.739Z",
+    "run_id": "37202663138",
+    "run_url": "https://github.com/etloveaui/100xFenok/actions/runs/37202663138",
+    "observed_at": "2026-10-04T12:38:59.626Z",
     "event": "workflow_run",
     "workflows": [
-      "global-writer-queue-observer.yml",
       "retention-restore.yml",
-      "worker-request-budget-alarm.yml"
+      "worker-request-budget-alarm.yml",
+      "data-health-kpi"
     ],
     "title": "100xFenok pipeline job failure alarm"
   },

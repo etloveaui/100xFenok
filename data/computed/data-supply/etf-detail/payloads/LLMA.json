@@ -3,13 +3,20 @@
   "source": "stockanalysis",
   "asset_type": "etf",
   "ticker": "LLMA",
-  "source_as_of": "2026-10-02T00:00:00Z",
-  "fetched_at": "2026-10-04T12:00:26Z",
+  "source_as_of": "2026-10-02T20:00:00Z",
+  "fetched_at": "2026-10-04T13:19:45Z",
   "endpoints": {
     "holdings": "/etf/llma/holdings/__data.json",
     "overview": "/etf/llma/__data.json",
-    "quote": null,
-    "history_periods": {}
+    "quote": "/api/quotes/e/LLMA",
+    "history_periods": {
+      "daily_1y": "/api/symbol/e/LLMA/history?range=1Y&period=Daily",
+      "weekly_1y": "/api/symbol/e/LLMA/history?range=1Y&period=Weekly",
+      "monthly_1y": "/api/symbol/e/LLMA/history?range=1Y&period=Monthly",
+      "weekly_3y": "/api/symbol/e/LLMA/history?range=3Y&period=Weekly",
+      "monthly_3y": "/api/symbol/e/LLMA/history?range=3Y&period=Monthly",
+      "monthly_5y": "/api/symbol/e/LLMA/history?range=5Y&period=Monthly"
+    }
   },
   "endpoint_contracts": {
     "overview": {
@@ -252,9 +259,57 @@
       "cagr10y": null,
       "cagrMAX": null
     },
-    "quote": null,
-    "history": null,
-    "history_periods": {}
+    "quote": {
+      "c": 0.18,
+      "e": true,
+      "h": 25.47,
+      "l": 25.33,
+      "o": 25.39,
+      "p": 25.3853,
+      "u": "Oct 2, 2026, 4:00 PM EDT",
+      "v": 4643.932014,
+      "cl": 25.21,
+      "cp": 0.7,
+      "ec": -0.52,
+      "ep": 24.87,
+      "es": "After-hours",
+      "eu": "Oct 2, 2026, 8:00 PM EDT",
+      "ex": "BATS",
+      "ms": "closed",
+      "pd": 25.39,
+      "td": "2026-10-02",
+      "ts": 1790971200000,
+      "cdr": 1,
+      "ecp": -2.03,
+      "epd": 24.87,
+      "etd": "2026-10-02",
+      "ets": 1790985604425.6567,
+      "exp": 1791188100000,
+      "fms": "closed",
+      "uid": "LLMA",
+      "days": 0,
+      "symbol": "LLMA"
+    },
+    "history": [],
+    "history_periods": {
+      "daily_1y": [
+        {
+          "t": "2026-10-02",
+          "o": 25.39,
+          "h": 25.47,
+          "l": 25.33,
+          "c": 25.385,
+          "a": 25.3853,
+          "v": 4643,
+          "ch": 0.69
+        }
+      ],
+      "weekly_1y": [],
+      "monthly_1y": [],
+      "weekly_3y": [],
+      "monthly_3y": [],
+      "monthly_5y": []
+    }
   },
   "raw": {
     "overview": {
@@ -1917,7 +1972,7 @@
       },
       "dividendTable": null,
       "news": {
-        "exp": "1791115900647",
+        "exp": "1791138647608",
         "data": [
           {
             "url": "https://www.businesswire.com/news/home/20261001055470/en/Global-X-Launches-New-ETF-Focusing-on-Large-Language-Models/",
@@ -1928,7 +1983,7 @@
             "type": "Article",
             "tickers": null,
             "time": "Oct 1, 2026, 8:30 AM EDT",
-            "ago": "2 days ago"
+            "ago": "3 days ago"
           }
         ]
       },
@@ -2066,7 +2121,7 @@
           "t": "Global X Launches New ETF Focusing on Large Language Models",
           "u": "https://www.businesswire.com/news/home/20261001055470/en/Global-X-Launches-New-ETF-Focusing-on-Large-Language-Models/",
           "n": "Business Wire",
-          "d": "2 days ago"
+          "d": "3 days ago"
         }
       ],
       "date": "Oct 2, 2026",
@@ -2092,14 +2147,60 @@
         "extraSummaryLinks": null
       }
     },
-    "quote": null,
-    "history": null,
-    "history_periods": {}
+    "quote": {
+      "c": 0.18,
+      "e": true,
+      "h": 25.47,
+      "l": 25.33,
+      "o": 25.39,
+      "p": 25.3853,
+      "u": "Oct 2, 2026, 4:00 PM EDT",
+      "v": 4643.932014,
+      "cl": 25.21,
+      "cp": 0.7,
+      "ec": -0.52,
+      "ep": 24.87,
+      "es": "After-hours",
+      "eu": "Oct 2, 2026, 8:00 PM EDT",
+      "ex": "BATS",
+      "ms": "closed",
+      "pd": 25.39,
+      "td": "2026-10-02",
+      "ts": 1790971200000,
+      "cdr": 1,
+      "ecp": -2.03,
+      "epd": 24.87,
+      "etd": "2026-10-02",
+      "ets": 1790985604425.6567,
+      "exp": 1791188100000,
+      "fms": "closed",
+      "uid": "LLMA",
+      "days": 0,
+      "symbol": "LLMA"
+    },
+    "history": [],
+    "history_periods": {
+      "daily_1y": [
+        {
+          "t": "2026-10-02",
+          "o": 25.39,
+          "h": 25.47,
+          "l": 25.33,
+          "c": 25.385,
+          "a": 25.3853,
+          "v": 4643,
+          "ch": 0.69
+        }
+      ],
+      "weekly_1y": [],
+      "monthly_1y": [],
+      "weekly_3y": [],
+      "monthly_3y": [],
+      "monthly_5y": []
+    }
   },
   "detail_status": "stockanalysis_partial",
   "partial_reason_codes": [
-    "holdings_countries_unavailable",
-    "history_deferred_initial_reconcile",
-    "quote_deferred_initial_reconcile"
+    "holdings_countries_unavailable"
   ]
 }

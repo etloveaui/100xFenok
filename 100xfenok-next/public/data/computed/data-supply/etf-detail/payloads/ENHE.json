@@ -3,13 +3,20 @@
   "source": "stockanalysis",
   "asset_type": "etf",
   "ticker": "ENHE",
-  "source_as_of": "2026-10-01T00:00:00Z",
-  "fetched_at": "2026-10-04T12:00:22Z",
+  "source_as_of": "2026-10-02T20:00:00Z",
+  "fetched_at": "2026-10-04T13:19:14Z",
   "endpoints": {
     "holdings": "/etf/enhe/holdings/__data.json",
     "overview": "/etf/enhe/__data.json",
-    "quote": null,
-    "history_periods": {}
+    "quote": "/api/quotes/e/ENHE",
+    "history_periods": {
+      "daily_1y": "/api/symbol/e/ENHE/history?range=1Y&period=Daily",
+      "weekly_1y": "/api/symbol/e/ENHE/history?range=1Y&period=Weekly",
+      "monthly_1y": "/api/symbol/e/ENHE/history?range=1Y&period=Monthly",
+      "weekly_3y": "/api/symbol/e/ENHE/history?range=3Y&period=Weekly",
+      "monthly_3y": "/api/symbol/e/ENHE/history?range=3Y&period=Monthly",
+      "monthly_5y": "/api/symbol/e/ENHE/history?range=5Y&period=Monthly"
+    }
   },
   "endpoint_contracts": {
     "overview": {
@@ -409,9 +416,110 @@
       "cagr10y": null,
       "cagrMAX": null
     },
-    "quote": null,
-    "history": null,
-    "history_periods": {}
+    "quote": {
+      "c": 0.25,
+      "e": false,
+      "h": 24.55,
+      "l": 24.55,
+      "o": 24.55,
+      "p": 24.5549,
+      "u": "Oct 2, 2026, 4:00 PM EDT",
+      "v": 30,
+      "cl": 24.3,
+      "cp": 1.05,
+      "ec": 0,
+      "es": "After-hours",
+      "ex": "NASDAQ",
+      "ms": "closed",
+      "pd": 24.55,
+      "td": "2026-10-02",
+      "ts": 1790971200000,
+      "cdr": 1,
+      "ecp": 0,
+      "epd": 0,
+      "ets": 1790972100015.0564,
+      "exp": 1791188100000,
+      "fms": "closed",
+      "h52": 24.59,
+      "l52": 24.143,
+      "uid": "ENHE",
+      "days": 0,
+      "symbol": "ENHE"
+    },
+    "history": [
+      {
+        "t": "2026-10-01",
+        "o": 24.304,
+        "h": 24.555,
+        "l": 24.304,
+        "c": 24.555,
+        "v": 185,
+        "a": 24.5549,
+        "ch": 1.71
+      }
+    ],
+    "history_periods": {
+      "daily_1y": [
+        {
+          "t": "2026-10-02",
+          "o": 24.555,
+          "h": 24.555,
+          "l": 24.555,
+          "c": 24.555,
+          "a": 24.5549,
+          "v": 30,
+          "ch": 1.03
+        },
+        {
+          "t": "2026-10-01",
+          "o": 24.304,
+          "h": 24.304,
+          "l": 24.304,
+          "c": 24.304,
+          "a": 24.3038,
+          "v": 155,
+          "ch": 0.67
+        }
+      ],
+      "weekly_1y": [],
+      "monthly_1y": [
+        {
+          "t": "2026-10-01",
+          "o": 24.304,
+          "h": 24.555,
+          "l": 24.304,
+          "c": 24.555,
+          "v": 185,
+          "a": 24.5549,
+          "ch": 1.71
+        }
+      ],
+      "weekly_3y": [],
+      "monthly_3y": [
+        {
+          "t": "2026-10-01",
+          "o": 24.304,
+          "h": 24.555,
+          "l": 24.304,
+          "c": 24.555,
+          "v": 185,
+          "a": 24.5549,
+          "ch": 1.71
+        }
+      ],
+      "monthly_5y": [
+        {
+          "t": "2026-10-01",
+          "o": 24.304,
+          "h": 24.555,
+          "l": 24.304,
+          "c": 24.555,
+          "v": 185,
+          "a": 24.5549,
+          "ch": 1.71
+        }
+      ]
+    }
   },
   "raw": {
     "overview": {
@@ -2229,14 +2337,113 @@
         "extraSummaryLinks": null
       }
     },
-    "quote": null,
-    "history": null,
-    "history_periods": {}
+    "quote": {
+      "c": 0.25,
+      "e": false,
+      "h": 24.55,
+      "l": 24.55,
+      "o": 24.55,
+      "p": 24.5549,
+      "u": "Oct 2, 2026, 4:00 PM EDT",
+      "v": 30,
+      "cl": 24.3,
+      "cp": 1.05,
+      "ec": 0,
+      "es": "After-hours",
+      "ex": "NASDAQ",
+      "ms": "closed",
+      "pd": 24.55,
+      "td": "2026-10-02",
+      "ts": 1790971200000,
+      "cdr": 1,
+      "ecp": 0,
+      "epd": 0,
+      "ets": 1790972100015.0564,
+      "exp": 1791188100000,
+      "fms": "closed",
+      "h52": 24.59,
+      "l52": 24.143,
+      "uid": "ENHE",
+      "days": 0,
+      "symbol": "ENHE"
+    },
+    "history": [
+      {
+        "t": "2026-10-01",
+        "o": 24.304,
+        "h": 24.555,
+        "l": 24.304,
+        "c": 24.555,
+        "v": 185,
+        "a": 24.5549,
+        "ch": 1.71
+      }
+    ],
+    "history_periods": {
+      "daily_1y": [
+        {
+          "t": "2026-10-02",
+          "o": 24.555,
+          "h": 24.555,
+          "l": 24.555,
+          "c": 24.555,
+          "a": 24.5549,
+          "v": 30,
+          "ch": 1.03
+        },
+        {
+          "t": "2026-10-01",
+          "o": 24.304,
+          "h": 24.304,
+          "l": 24.304,
+          "c": 24.304,
+          "a": 24.3038,
+          "v": 155,
+          "ch": 0.67
+        }
+      ],
+      "weekly_1y": [],
+      "monthly_1y": [
+        {
+          "t": "2026-10-01",
+          "o": 24.304,
+          "h": 24.555,
+          "l": 24.304,
+          "c": 24.555,
+          "v": 185,
+          "a": 24.5549,
+          "ch": 1.71
+        }
+      ],
+      "weekly_3y": [],
+      "monthly_3y": [
+        {
+          "t": "2026-10-01",
+          "o": 24.304,
+          "h": 24.555,
+          "l": 24.304,
+          "c": 24.555,
+          "v": 185,
+          "a": 24.5549,
+          "ch": 1.71
+        }
+      ],
+      "monthly_5y": [
+        {
+          "t": "2026-10-01",
+          "o": 24.304,
+          "h": 24.555,
+          "l": 24.304,
+          "c": 24.555,
+          "v": 185,
+          "a": 24.5549,
+          "ch": 1.71
+        }
+      ]
+    }
   },
   "detail_status": "stockanalysis_partial",
   "partial_reason_codes": [
-    "holdings_countries_unavailable",
-    "history_deferred_initial_reconcile",
-    "quote_deferred_initial_reconcile"
+    "holdings_countries_unavailable"
   ]
 }
