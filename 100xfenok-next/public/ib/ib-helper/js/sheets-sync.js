@@ -180,8 +180,10 @@ const SheetsSync = (function() {
   let gisInited = false;
   let isSignedIn = false;
 
-  // 🔴 v3.4.0: 중복 push 방지
+  // Only the queue below may enter the sheet write path.
   let isPushing = false;
+  const pendingPushes = new Map();
+  let pushDrainPromise = null;
 
   // 🔴 v3.8.0: 세션 스토리지 키 (보안 강화)
   const TOKEN_STORAGE_KEY = 'ib_helper_google_token';
@@ -821,17 +823,87 @@ const SheetsSync = (function() {
    * - 새 데이터 추가
    * - 다른 사용자 데이터 보존
    *
-   * 🔴 v3.4.0: 중복 실행 방지 (isPushing flag)
+   * Serialize writes by account and profile. A new request during a write
+   * remains dirty until a later pass reads its latest local snapshot.
    */
-  async function push(overrideProfileId) {
-    if (!currentUserEmail) {
-      throw new Error('로그인이 필요합니다');
+  function assertPushAccount(email) {
+    if (!email || currentUserEmail !== email || !isAuthenticated() || getUserEmail() !== email) {
+      throw new Error('동기화 중 로그인 계정이 변경되었습니다. 다시 로그인한 뒤 저장하세요.');
     }
+  }
 
-    // 🔴 v3.4.0: 이미 push 중이면 스킵
+  function hasRunnablePush() {
+    return [...pendingPushes.values()].some(state => !state.blocked && state.dirtyVersion > state.savedVersion);
+  }
+
+  function startPushDrain() {
+    if (pushDrainPromise) return;
+    pushDrainPromise = Promise.resolve().then(drainPushQueue).finally(() => {
+      pushDrainPromise = null;
+      if (hasRunnablePush()) startPushDrain();
+    });
+  }
+
+  async function drainPushQueue() {
+    while (hasRunnablePush()) {
+      const [key, state] = [...pendingPushes.entries()]
+        .find(([, item]) => !item.blocked && item.dirtyVersion > item.savedVersion);
+      const version = state.dirtyVersion;
+      try {
+        assertPushAccount(state.email);
+        await pushOnce(state.profileId, state.email);
+        assertPushAccount(state.email);
+        state.savedVersion = version;
+        const completed = state.waiters.filter(waiter => waiter.version <= version);
+        state.waiters = state.waiters.filter(waiter => waiter.version > version);
+        completed.forEach(waiter => waiter.resolve());
+        if (state.savedVersion === state.dirtyVersion && state.waiters.length === 0) {
+          pendingPushes.delete(key);
+        }
+      } catch (error) {
+        // Retain the dirty version for the next explicit/automatic request.
+        // A rejected request never reports a successful cloud sync.
+        state.blocked = true;
+        state.waiters.splice(0).forEach(waiter => waiter.reject(error));
+      }
+    }
+  }
+
+  function push(overrideProfileId) {
+    const email = getUserEmail();
+    try {
+      assertPushAccount(email);
+    } catch (error) {
+      return Promise.reject(error);
+    }
+    const profileId = String(overrideProfileId || ProfileManager.getActive()?.id || '').trim();
+    if (!profileId) return Promise.reject(new Error('프로필이 없습니다'));
+    const key = `${email}\0${profileId}`;
+    const state = pendingPushes.get(key) || {
+      email,
+      profileId,
+      dirtyVersion: 0,
+      savedVersion: 0,
+      blocked: false,
+      waiters: []
+    };
+    state.dirtyVersion += 1;
+    state.blocked = false;
+    pendingPushes.set(key, state);
+    const version = state.dirtyVersion;
+    const result = new Promise((resolve, reject) => {
+      state.waiters.push({ version, resolve, reject });
+    });
+    startPushDrain();
+    return result;
+  }
+
+  async function pushOnce(overrideProfileId, email) {
+    assertPushAccount(email);
+
+    // A concurrent entry is an error; callers must wait on push().
     if (isPushing) {
-      console.log('SheetsSync push: Already in progress, skipping');
-      return;
+      throw new Error('시트 동기화가 이미 진행 중입니다');
     }
 
     // v4.0.3 (#272-C): debounce 안전성 — 호출 시점의 profileId 사용
@@ -875,18 +947,19 @@ const SheetsSync = (function() {
       } else {
         allRows = await readAllRows();
       }
+      assertPushAccount(email);
 
       const myRows = [];
       allRows.forEach((row, idx) => {
         const normalized = _normalizePortfolioRow(row);
-        if (normalized[0] === currentUserEmail && normalized[1] === profile.id) {
+        if (normalized[0] === email && normalized[1] === profile.id) {
           const absoluteRowIndexRaw = parseInt(allRowIndices[idx], 10);
           const absoluteRowIndex = Number.isFinite(absoluteRowIndexRaw) ? absoluteRowIndexRaw : (idx + 2);
           myRows.push({ rowIndex: absoluteRowIndex, row: normalized });
         }
       });
 
-      const sheetRevision = _getProfileRevision(allRows, currentUserEmail, profile.id);
+      const sheetRevision = _getProfileRevision(allRows, email, profile.id);
       const revisionKey = _getRevisionStorageKey(profile.id);
       const localRevision = localStorage.getItem(revisionKey);
       if (localRevision && sheetRevision && localRevision !== sheetRevision) {
@@ -895,7 +968,8 @@ const SheetsSync = (function() {
 
       // 2) Just-before-write recheck to shrink TOCTOU window.
       const latestRows = await readAllRows();
-      const latestRevision = _getProfileRevision(latestRows, currentUserEmail, profile.id);
+      assertPushAccount(email);
+      const latestRevision = _getProfileRevision(latestRows, email, profile.id);
       if (sheetRevision && latestRevision && sheetRevision !== latestRevision) {
         throw new Error('동시 저장 충돌이 감지되었습니다. 다시 불러온 후 저장하세요.');
       }
@@ -949,7 +1023,7 @@ const SheetsSync = (function() {
           : (existingRow ? (String(existingRow[10] || '').trim() || today) : today);
 
         const rowValues = [
-          currentUserEmail,             // A: 구글ID
+          email,                        // A: 구글ID
           profile.id,                   // B: 프로필ID
           profileName,                  // C: 프로필 이름
           sym,                          // D: 종목
@@ -976,7 +1050,7 @@ const SheetsSync = (function() {
 
       if (targetSymbols.size === 0) {
         console.warn(
-          `SheetsSync: Skip push for ${currentUserEmail}/${profile.id} (no valid symbols in local profile)`
+          `SheetsSync: Skip push for ${email}/${profile.id} (no valid symbols in local profile)`
         );
         return;
       }
@@ -989,13 +1063,17 @@ const SheetsSync = (function() {
       });
 
       const rowsToClear = [...new Set([...staleRowIndices, ...duplicateRowIndices])];
+      assertPushAccount(email);
       await batchClearPortfolioRows(rowsToClear, profile.id);
+      assertPushAccount(email);
       await batchUpdatePortfolioRows(rowUpdates, profile.id);
+      assertPushAccount(email);
       await appendPortfolioRows(appendRows, profile.id);
+      assertPushAccount(email);
 
       localStorage.setItem(revisionKey, revision);
       console.log(
-        `SheetsSync: Pushed ${targetSymbols.size} rows (updated=${rowUpdates.length}, appended=${appendRows.length}, cleared=${rowsToClear.length}) for ${currentUserEmail}/${profile.id}`
+        `SheetsSync: Pushed ${targetSymbols.size} rows (updated=${rowUpdates.length}, appended=${appendRows.length}, cleared=${rowsToClear.length}) for ${email}/${profile.id}`
       );
     } finally {
       // 🔴 v3.4.0: push 완료 (에러 발생해도 플래그 해제)
