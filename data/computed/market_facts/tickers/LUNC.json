@@ -2,10 +2,10 @@
   "schema_version": "market-facts/v1",
   "ticker": "LUNC",
   "asset_type": "etf",
-  "generated_at": "2026-10-04T12:45:58Z",
-  "source_as_of": null,
+  "generated_at": "2026-10-04T16:00:52Z",
+  "source_as_of": "2026-10-02",
   "source_as_of_scope": "selected_price_fact",
-  "source_as_of_reason": "selected price fact has no provider source date",
+  "source_as_of_reason": null,
   "identity": {
     "name": "LUNC",
     "exchange": null,
@@ -15,7 +15,100 @@
     "fund_family": null,
     "category": null
   },
-  "facts": {},
+  "facts": {
+    "price": {
+      "value": 25.0448,
+      "source": "stockanalysis.quote",
+      "as_of": "2026-10-02",
+      "fetched_at": "2026-10-04T15:26:44Z",
+      "confidence": "observed",
+      "policy": [
+        "yf",
+        "yf.fast_info",
+        "stockanalysis.quote",
+        "yf.stockanalysis_fallback.quote",
+        "slickcharts"
+      ],
+      "candidates": [
+        {
+          "value": 25.0448,
+          "source": "stockanalysis.quote",
+          "as_of": "2026-10-02",
+          "fetched_at": "2026-10-04T15:26:44Z",
+          "confidence": "observed"
+        }
+      ],
+      "candidate_count": 1
+    },
+    "previous_close": {
+      "value": 24.88,
+      "source": "stockanalysis.quote",
+      "as_of": "2026-10-02",
+      "fetched_at": "2026-10-04T15:26:44Z",
+      "confidence": "observed",
+      "policy": [
+        "yf",
+        "stockanalysis.quote",
+        "yf.stockanalysis_fallback.quote"
+      ],
+      "candidates": [
+        {
+          "value": 24.88,
+          "source": "stockanalysis.quote",
+          "as_of": "2026-10-02",
+          "fetched_at": "2026-10-04T15:26:44Z",
+          "confidence": "observed"
+        }
+      ],
+      "candidate_count": 1
+    },
+    "change": {
+      "value": 0.16,
+      "source": "stockanalysis.quote",
+      "as_of": "2026-10-02",
+      "fetched_at": "2026-10-04T15:26:44Z",
+      "confidence": "observed",
+      "policy": [
+        "stockanalysis.quote",
+        "yf",
+        "yf.derived",
+        "yf.stockanalysis_fallback.quote"
+      ],
+      "candidates": [
+        {
+          "value": 0.16,
+          "source": "stockanalysis.quote",
+          "as_of": "2026-10-02",
+          "fetched_at": "2026-10-04T15:26:44Z",
+          "confidence": "observed"
+        }
+      ],
+      "candidate_count": 1
+    },
+    "change_pct": {
+      "value": 0.66,
+      "source": "stockanalysis.quote",
+      "as_of": "2026-10-02",
+      "fetched_at": "2026-10-04T15:26:44Z",
+      "confidence": "observed",
+      "policy": [
+        "stockanalysis.quote",
+        "yf",
+        "yf.derived",
+        "yf.stockanalysis_fallback.quote"
+      ],
+      "candidates": [
+        {
+          "value": 0.66,
+          "source": "stockanalysis.quote",
+          "as_of": "2026-10-02",
+          "fetched_at": "2026-10-04T15:26:44Z",
+          "confidence": "observed"
+        }
+      ],
+      "candidate_count": 1
+    }
+  },
   "etf": {
     "holdings_count": null,
     "holdings_updated": null,
@@ -44,14 +137,14 @@
   },
   "source_files": {
     "yf": null,
-    "stockanalysis": "stockanalysis/etfs/LUNC.json",
+    "stockanalysis": "computed/data-supply/etf-detail/payloads/LUNC.json",
     "stockanalysis_yf_fallback": null,
     "stockanalysis_etf_catalog": "stockanalysis/etf_universe.json",
     "slickcharts": null
   },
   "resolver": {
     "version": "market-facts-resolver/v1",
-    "detail_authority": "stockanalysis:strict_unenrolled",
+    "detail_authority": "data_supply:fresh_primary",
     "field_source_policy": {
       "price": [
         "yf",
