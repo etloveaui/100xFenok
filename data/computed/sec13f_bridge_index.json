@@ -1,6 +1,6 @@
 {
   "schema_version": "sec13f-bridge-index/v1",
-  "generated_at": "2026-10-04T19:32:13.439Z",
+  "generated_at": "2026-10-04T19:39:55.384Z",
   "purpose": "SEC 13F bridge index of tickers outside the Global Scouter universe, published live with honest 424/1,031 coverage.",
   "contract": {
     "candidate_type": "sec13f_extension_stock",
@@ -30,11 +30,11 @@
     "sec13f": "2026-Q2"
   },
   "input_fingerprints": {
-    "analyzer": "9b7995ae439dee6411c6e386822d2458aa8c895ee0d34e8b6923bbef23745666",
+    "analyzer": "253ceaaaf0da56e161b90133959fd2be4f3e98c7054ed5fe4b69d8e939109b4f",
     "action_index": "be2ce461b95d66825b368422ec61293c3edb1ffce5b9a1a314182ef59eaa46c2",
     "market_facts": "0a84373a7906e4e9f5d3737921f40e862fdb0be984306234566b98a022c0df91",
-    "sec13f_by_ticker": "74d88a17a1ffe92121a38c9deb42552258e371eceacb4550991fde0462210fcc",
-    "sec13f_summary": "6f81d56f736f85db002172654dad58a40349fb555680a16364cf0c2edf8c5080",
+    "sec13f_by_ticker": "9324bc7f1106551ba7fc71dce3921a3ed0f39318975174b00220c36a45f64f7d",
+    "sec13f_summary": "a4b1d3f7d1a5cfa63b8bea6ddc7025bbd5d361e6a2b39926ad9b92ec4654c1e9",
     "market_facts_details": {
       "file_count": 132,
       "sha256": "d538faf0592ee3e709856c0a22b51b0afc56ecae676467e3d0d96e61c82fca7a"
@@ -46,29 +46,29 @@
   },
   "graph_invariants": {
     "core_stock_count": 1066,
-    "sec13f_ticker_count": 1073,
-    "core_intersection_count": 436,
+    "sec13f_ticker_count": 1075,
+    "core_intersection_count": 437,
     "warning_threshold": 450,
     "graph_mutation_applied": false,
     "public_surface_mutation_applied": true
   },
   "counts": {
-    "sec13f_outside_core": 637,
+    "sec13f_outside_core": 638,
     "action_plus_market_facts": 82,
     "market_facts_only": 50,
-    "no_action_index_overlap": 555,
-    "no_market_facts": 505,
+    "no_action_index_overlap": 556,
+    "no_market_facts": 506,
     "action_index_only": 0,
     "sec13f_extension_stock": 82,
     "sec13f_market_facts_only": 50,
-    "sec13f_unresolved": 505,
+    "sec13f_unresolved": 506,
     "estimate": {
       "extension_full": 76,
       "extension_incomplete": 6,
       "market_facts_only_incomplete": 50,
-      "unresolved_absent": 505,
+      "unresolved_absent": 506,
       "as_of": {
-        "bridge_generated_at": "2026-10-04T19:32:13.439Z",
+        "bridge_generated_at": "2026-10-04T19:39:55.384Z",
         "yf_finance": "2026-10-02T00:00:00.000Z",
         "market_facts": "2026-09-29",
         "sec13f": "2026-Q2"
@@ -6370,6 +6370,61 @@
       "yf_estimates": {
         "file": false,
         "path": "data/yf/finance/CFR.json",
+        "state": "absent",
+        "source_as_of": null,
+        "fields_present": [],
+        "missing_fields": [
+          "earnings_estimate",
+          "revenue_estimate",
+          "growth_estimates",
+          "eps_trend",
+          "eps_revisions",
+          "recommendations_summary"
+        ]
+      },
+      "completeness": {
+        "market_facts_price_observed": false,
+        "action_price_present": false,
+        "action_valuation_present": false,
+        "yf_estimate_or_absent_reason": false,
+        "bridge_field_floor": false,
+        "per_present": false,
+        "forward_pe_present": false
+      },
+      "acceptance": {
+        "promotion_status": "promoted",
+        "reason": "promoted_live_honest_coverage",
+        "producer_typed_marker": true,
+        "current_consumer": "public/superinvestors and /data/computed/sec13f_bridge_index.json",
+        "public_route": "/data/computed/sec13f_bridge_index.json",
+        "live_readback": "verified"
+      }
+    },
+    {
+      "ticker": "CFRHF",
+      "classification": {
+        "type": "sec13f_unresolved",
+        "classes": [
+          "no_action_index_overlap",
+          "no_market_facts"
+        ]
+      },
+      "source_links": {
+        "sec13f_by_ticker": true,
+        "global_scouter_core": false,
+        "stock_action_index": false,
+        "market_facts": false,
+        "yf_finance": false
+      },
+      "sec13f": {
+        "holders_count": 1,
+        "total_market_value": 773661807
+      },
+      "market_facts": null,
+      "stock_action_index": null,
+      "yf_estimates": {
+        "file": false,
+        "path": "data/yf/finance/CFRHF.json",
         "state": "absent",
         "source_as_of": null,
         "fields_present": [],
