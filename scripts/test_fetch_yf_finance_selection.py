@@ -3307,6 +3307,19 @@ assert callable(namespace["load_universe"])
         self.assertEqual(set(current), {"VMRK", "MEGX"})
         self.assertEqual(current["VMRK"], ["same_security_successor:EQR", "stock"])
 
+    def test_confirmed_ihyf_successor_routes_once_without_rewriting_history(self) -> None:
+        sources = {"IHYF": ["stockanalysis_etf"], "GTOQ": ["stockanalysis_etf"]}
+        before = self.fetcher.current_yahoo_universe_sources(sources, "2026-02-26T23:59:59Z")
+        self.assertEqual(set(before), {"IHYF", "GTOQ"})
+        current = self.fetcher.current_yahoo_universe_sources(sources, "2026-02-27T00:00:00Z")
+        self.assertEqual(current, {"GTOQ": ["same_security_successor:IHYF", "stockanalysis_etf"]})
+        evidence = self.fetcher.verified_yahoo_terminal_evidence("2026-10-05T00:00:00Z")["tickers"]["IHYF"][0]
+        self.assertEqual(evidence["alias_target"], "GTOQ")
+        self.assertTrue(evidence["terminal"])
+        self.assertEqual(evidence["effective_date"], "2026-02-27")
+        self.assertIn("000119312526079070", evidence["source_url"])
+        self.assertEqual(list(self.fetcher.OUT_DIR.glob("*.json")), [])
+
 
 class YahooChartQuoteTest(unittest.TestCase):
     setUp = FetchYfFinanceSelectionTest.setUp

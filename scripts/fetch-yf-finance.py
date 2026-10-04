@@ -113,13 +113,16 @@ NON_YAHOO_ETF_LABELS = {"HSCEI", "KOSPI", "NASDAQ", "SHANGHAI", "TOPIX"}
 YAHOO_SAME_SECURITY_SUCCESSORS = {
     "EQR": "VMRK", "BK": "BNY", "SATS": "ECHO", "MMC": "MRSH",
     "MGKX": "MEGX", "VBX": "USSX", "VOOX": "USLX",
-    "XVO": "USMX", "XVUG": "USGX", "EWCO": "RSPC",
+    "XVO": "USMX", "XVUG": "USGX", "EWCO": "RSPC", "IHYF": "GTOQ",
 }
 YAHOO_SAME_SECURITY_EFFECTIVE = {
     "EQR": "2026-08-18", "BK": "2026-05-21", "SATS": "2026-06-24",
     "MMC": "2026-01-14", "MGKX": "2026-08-21", "VBX": "2026-08-21",
     "VOOX": "2026-08-21", "XVO": "2026-08-21", "XVUG": "2026-08-21",
     "EWCO": "2023-06-07",
+    # Conservative routing cutoff: this dated SEC prospectus confirms the
+    # completed rename. This is not a claim about the first GTOQ trading day.
+    "IHYF": "2026-02-27",
 }
 # Public securities ended; merger consideration is not a ticker alias.
 # AVB: 2.793 VMRK shares; CTRA: 0.70 DVN shares. EA was taken private.
@@ -155,6 +158,7 @@ YAHOO_LIFECYCLE_SOURCES = {
     "XVO": "https://www.sec.gov/Archives/edgar/data/2078265/000207826526000347/497e_ticker_changes.htm",
     "XVUG": "https://www.sec.gov/Archives/edgar/data/2078265/000207826526000347/497e_ticker_changes.htm",
     "EWCO": "https://www.sec.gov/Archives/edgar/data/1209466/000119312523147120/d428859d497k.htm",
+    "IHYF": "https://www.sec.gov/Archives/edgar/data/1418144/000119312526079070/d106358d497k.htm",
     "AVB": "https://www.sec.gov/Archives/edgar/data/915912/000110465926097833/tm2623381d1_8k.htm",
     "EA": "https://www.sec.gov/Archives/edgar/data/712515/000114036126031157/ef20079099_8k.htm",
     "CTRA": "https://www.sec.gov/Archives/edgar/data/858470/000110465926057278/tm2613882d1_8k.htm",
