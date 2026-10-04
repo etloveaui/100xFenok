@@ -6925,101 +6925,37 @@
   "counts": {
     "active": 6920,
     "eligible": 6920,
-    "failed": 30,
+    "failed": 29,
     "fresh": 6753,
     "lkg": 140,
     "pending_acquisition": 1,
     "pending_history": 0,
-    "retry": 141,
+    "retry": 140,
     "stale": 139,
-    "terminal": 25,
-    "unavailable": 1,
+    "terminal": 26,
+    "unavailable": 0,
     "untracked": 0
   },
   "current_results": {
-    "attempted": 65,
-    "errors": [
-      {
-        "error": "empty payload",
-        "failures": [
-          {
-            "attempt": 1,
-            "error": "AttributeError: 'NoneType' object has no attribute 'tail'",
-            "source": "provider_safe_call"
-          },
-          {
-            "attempt": 1,
-            "error": "KeyError=[redacted]",
-            "source": "provider_safe_call"
-          },
-          {
-            "attempt": 1,
-            "error": "empty payload"
-          },
-          {
-            "attempt": 2,
-            "error": "AttributeError: 'NoneType' object has no attribute 'tail'",
-            "source": "provider_safe_call"
-          },
-          {
-            "attempt": 2,
-            "error": "KeyError=[redacted]",
-            "source": "provider_safe_call"
-          },
-          {
-            "attempt": 2,
-            "error": "empty payload"
-          }
-        ],
-        "ticker": "IHYF"
-      }
-    ],
-    "failed": 1,
-    "fetch_attempts": 66,
+    "attempted": 1,
+    "errors": [],
+    "failed": 0,
+    "fetch_attempts": 1,
     "skipped": 0,
-    "successes": 64
+    "successes": 1
   },
-  "generated_at": "2026-10-04T19:23:25Z",
+  "generated_at": "2026-10-04T20:49:14Z",
   "lane_id": "yahoo_batch_quote_history",
   "latest_failure": {
-    "attempts_used": 2,
+    "attempts_used": 1,
     "data_loss": false,
-    "deferred_acquisition": true,
-    "error": "empty payload",
-    "failure_kind": "transient_provider_miss",
-    "failures": [
-      {
-        "attempt": 1,
-        "error": "AttributeError: 'NoneType' object has no attribute 'tail'",
-        "source": "provider_safe_call"
-      },
-      {
-        "attempt": 1,
-        "error": "KeyError=[redacted]",
-        "source": "provider_safe_call"
-      },
-      {
-        "attempt": 1,
-        "error": "empty payload"
-      },
-      {
-        "attempt": 2,
-        "error": "AttributeError: 'NoneType' object has no attribute 'tail'",
-        "source": "provider_safe_call"
-      },
-      {
-        "attempt": 2,
-        "error": "KeyError=[redacted]",
-        "source": "provider_safe_call"
-      },
-      {
-        "attempt": 2,
-        "error": "empty payload"
-      }
-    ],
-    "lkg_status": "absent",
-    "observed_at": "2026-10-04T19:22:31Z",
-    "ticker": "IHYF"
+    "deferred_acquisition": false,
+    "error": "ValueError: Yahoo provider source timestamp regresses for YUNG: quote_as_of",
+    "failure_kind": "systemic_integrity",
+    "failures": [],
+    "lkg_status": "retained",
+    "observed_at": "2026-10-04T17:56:08Z",
+    "ticker": "YUNG"
   },
   "lkg_details": [
     {
@@ -7245,7 +7181,7 @@
     "DVXB",
     "DVXC"
   ],
-  "message": "Yahoo quote/history: fresh=6753, lkg=140, pending_history=0, unavailable=1, pending_acquisition=1, terminal=25, catalogue=6920, eligible=6920, retry=141, failed=30, source_stale=139. Pending history is a normal new-listing state and self-resolves on the next Yahoo acquisition.",
+  "message": "Yahoo quote/history: fresh=6753, lkg=140, pending_history=0, unavailable=0, pending_acquisition=1, terminal=26, catalogue=6920, eligible=6920, retry=140, failed=29, source_stale=139. Pending history is a normal new-listing state and self-resolves on the next Yahoo acquisition.",
   "oldest_source_as_of": "2026-04-10T19:35:04Z",
   "oldest_source_ticker": "ZCBE",
   "pending_acquisition_details": [
@@ -7259,7 +7195,7 @@
       "first_seen_from": [
         "market_facts"
       ],
-      "last_seen_at": "2026-10-04T19:21:47Z",
+      "last_seen_at": "2026-10-04T20:48:55Z",
       "provider_reachability": "not_attempted",
       "resolution_state": "pending_acquisition",
       "symbol": "VYLR"
@@ -7324,7 +7260,6 @@
     "HXC",
     "IDJL",
     "IGCB",
-    "IHYF",
     "JOBC",
     "JPSV",
     "JUDO",
@@ -8528,25 +8463,14 @@
     "EQR",
     "EWCO",
     "HOLX",
+    "IHYF",
     "IWDL",
     "IWFL",
     "IWML",
     "MGKX",
     "MMC",
     "MTUL",
-    "QULL",
-    "SATS"
+    "QULL"
   ],
-  "unavailable_details": [
-    {
-      "data_loss": false,
-      "deferred_acquisition": true,
-      "expected_resolution": "next_yahoo_acquisition",
-      "failure_kind": "transient_provider_miss",
-      "failure_observed_at": "2026-10-04T19:22:31Z",
-      "lkg_status": "absent",
-      "retry": true,
-      "symbol": "IHYF"
-    }
-  ]
+  "unavailable_details": []
 }
