@@ -3,7 +3,7 @@ import path from "node:path";
 
 export const SYMBOL_RE = /^[A-Z0-9][A-Z0-9.-]{0,11}$/;
 
-// Exact primary-source security identities. October 4 additions and same-class
+// Exact primary-source security identities. October 4/5 additions and same-class
 // CUSIP/ticker source pairs are recorded in the platform's data-recovery receipt.
 // Trust shares (SLV) retain their security identity; this map assigns no sector.
 const AUTHORITATIVE_CUSIP_SYMBOLS = new Map([
@@ -21,8 +21,51 @@ const AUTHORITATIVE_CUSIP_SYMBOLS = new Map([
   ["77543R102", { symbol: "ROKU", source: "sec-roku-13g-2026-10k-2026-class-a" }],
   ["780087102", { symbol: "RY", source: "sec-nport-2026-rbc-common" }],
   ["872540109", { symbol: "TJX", source: "issuer-tjx-13g-2025-8k-2026-common" }],
+  ["00187Y100", { symbol: "APG", source: "sec-issuer-2026-apg-common" }],
+  ["030420103", { symbol: "AWK", source: "sec-issuer-2026-awk-common" }],
+  ["03076C106", { symbol: "AMP", source: "sec-issuer-2026-amp-common" }],
+  ["03820C105", { symbol: "AIT", source: "sec-issuer-2026-ait-common" }],
+  ["063671101", { symbol: "BMO", source: "sec-issuer-2026-bmo-common-shares" }],
+  ["143130102", { symbol: "KMX", source: "sec-issuer-2026-kmx-common" }],
+  ["15675D103", { symbol: "CBRS", source: "sec-issuer-2026-cbrs-class-a-common" }],
+  ["25459W458", { symbol: "SOXL", source: "sec-issuer-2026-soxl-etf-shares" }],
+  ["25459Y165", { symbol: "SPUU", source: "sec-issuer-2026-spuu-etf-shares" }],
+  ["291011104", { symbol: "EMR", source: "sec-issuer-2026-emr-common" }],
+  ["33939L100", { symbol: "TILT", source: "sec-issuer-2026-tilt-etf-shares" }],
+  ["33939L407", { symbol: "GUNR", source: "sec-issuer-2026-gunr-etf-shares" }],
+  ["33939L506", { symbol: "TDTT", source: "sec-issuer-2026-tdtt-etf-shares" }],
+  ["33939L795", { symbol: "NFRA", source: "sec-issuer-2026-nfra-etf-shares" }],
+  ["33939L860", { symbol: "QDF", source: "sec-issuer-2026-qdf-etf-shares" }],
+  ["33939L886", { symbol: "RAVI", source: "sec-issuer-2026-ravi-etf-shares" }],
+  ["34631F102", { symbol: "FPS", source: "sec-issuer-2026-fps-class-a-common" }],
+  ["45104G104", { symbol: "IBN", source: "sec-issuer-2026-ibn-adr" }],
+  ["452308109", { symbol: "ITW", source: "sec-issuer-2026-itw-common" }],
+  ["45866F104", { symbol: "ICE", source: "sec-issuer-2026-ice-common" }],
+  ["464288737", { symbol: "KXI", source: "sec-issuer-2026-kxi-etf-shares" }],
+  ["464289180", { symbol: "EUFN", source: "sec-issuer-2026-eufn-etf-shares" }],
+  ["565394103", { symbol: "CART", source: "sec-issuer-2026-cart-common" }],
+  ["571748102", { symbol: "MRSH", source: "sec-issuer-2026-mrsh-common" }],
+  ["58507V107", { symbol: "MDLN", source: "sec-issuer-2026-mdln-class-a-common" }],
+  ["606822104", { symbol: "MUFG", source: "sec-issuer-2026-mufg-adr" }],
+  ["695156109", { symbol: "PKG", source: "sec-issuer-2026-pkg-common" }],
+  ["744573106", { symbol: "PEG", source: "sec-issuer-2026-peg-common" }],
+  ["780287108", { symbol: "RGLD", source: "sec-issuer-2026-rgld-common" }],
+  ["866966104", { symbol: "SUNB", source: "sec-issuer-2026-sunb-common" }],
+  ["87612G101", { symbol: "TRGP", source: "sec-issuer-2026-trgp-common" }],
+  ["88023B103", { symbol: "TEM", source: "sec-issuer-2026-tem-class-a-common" }],
+  ["88635A105", { symbol: "PBEU", source: "sec-issuer-2026-pbeu-etf-shares" }],
+  ["88635A204", { symbol: "PBPH", source: "sec-issuer-2026-pbph-etf-shares" }],
+  ["88635A303", { symbol: "PBOG", source: "sec-issuer-2026-pbog-etf-shares" }],
+  ["911312106", { symbol: "UPS", source: "sec-issuer-2026-ups-class-b-common" }],
+  ["912008109", { symbol: "USFD", source: "sec-issuer-2026-usfd-common" }],
+  ["94106L109", { symbol: "WM", source: "sec-issuer-2026-wm-common" }],
+  ["G4705A100", { symbol: "ICLR", source: "sec-issuer-2026-iclr-ordinary-shares" }],
+  ["G6700G107", { symbol: "NVT", source: "sec-issuer-2026-nvt-ordinary-shares" }],
 ]);
 const LIBERTY_LIVE_NAME = "LIBERTY LIVE";
+const AUTHORITATIVE_ALIAS_SOURCES = new Set(
+  Array.from(AUTHORITATIVE_CUSIP_SYMBOLS.values(), (identity) => identity.source),
+);
 
 const LEGAL_WORDS = new Set([
   "ADR",
@@ -171,6 +214,11 @@ function loadExistingAliases(root, aliasMap, nameMap) {
 
   if (Array.isArray(aliasDoc.aliases)) {
     for (const alias of aliasDoc.aliases) {
+      // Exact security evidence must not become an issuer/fund-family guess
+      // for another class or CUSIP when generated aliases are loaded again.
+      if (AUTHORITATIVE_ALIAS_SOURCES.has(alias.source) || Array.isArray(alias.cusips) && alias.cusips.some(
+        (cusip) => AUTHORITATIVE_CUSIP_SYMBOLS.has(normalizeCusip(cusip)),
+      )) continue;
       addAlias(aliasMap, alias.raw_key, alias.normalized_key, alias.symbol, alias.source ?? "alias-history");
       addName(nameMap, alias.raw_key, alias.symbol, alias.source ?? "alias-history");
     }

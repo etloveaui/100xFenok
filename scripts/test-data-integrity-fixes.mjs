@@ -55,6 +55,16 @@ try {
       }],
     },
   }));
+  const aliasesDir = path.join(resolverRoot, "data/sec-13f/analytics");
+  fs.mkdirSync(aliasesDir, { recursive: true });
+  fs.writeFileSync(path.join(aliasesDir, "ticker_aliases.json"), JSON.stringify({
+    aliases: [{ raw_key: "Fixture shared security family", normalized_key: "Fixture shared security family",
+      symbol: "PNC", source: "issuer-pnc-common-stock-faq", cusips: ["693475105"] },
+      { raw_key: "Fixture shared security family INC", normalized_key: "Fixture shared security family",
+        symbol: "PNC", source: "issuer-pnc-common-stock-faq", cusips: ["000000000"] },
+      { raw_key: "Unrelated retained alias", normalized_key: "Unrelated retained alias",
+        symbol: "ZZZ", source: "alias-history", cusips: ["999999999"] }],
+  }));
   const resolver = loadTickerResolver(resolverRoot);
   assert.equal(resolver.resolveHoldingSymbol({ ticker: "IVE", cusip: "530909100", name: "LIBERTY LIVE HOLDINGS INC" }).symbol, "LLYVA");
   assert.equal(resolver.resolveHoldingSymbol({ ticker: "IVE", cusip: "530909308", name: "LIBERTY LIVE HOLDINGS INC" }).symbol, "LLYVK");
@@ -64,6 +74,46 @@ try {
     ["219350105", "GLW"], ["46428Q109", "SLV"], ["49177J102", "KVUE"],
     ["56585A102", "MPC"], ["693475105", "PNC"], ["74762E102", "PWR"],
     ["77543R102", "ROKU"], ["780087102", "RY"], ["872540109", "TJX"],
+    ["00187Y100", "APG"],
+    ["030420103", "AWK"],
+    ["03076C106", "AMP"],
+    ["03820C105", "AIT"],
+    ["063671101", "BMO"],
+    ["143130102", "KMX"],
+    ["15675D103", "CBRS"],
+    ["25459W458", "SOXL"],
+    ["25459Y165", "SPUU"],
+    ["291011104", "EMR"],
+    ["33939L100", "TILT"],
+    ["33939L407", "GUNR"],
+    ["33939L506", "TDTT"],
+    ["33939L795", "NFRA"],
+    ["33939L860", "QDF"],
+    ["33939L886", "RAVI"],
+    ["34631F102", "FPS"],
+    ["45104G104", "IBN"],
+    ["452308109", "ITW"],
+    ["45866F104", "ICE"],
+    ["464288737", "KXI"],
+    ["464289180", "EUFN"],
+    ["565394103", "CART"],
+    ["571748102", "MRSH"],
+    ["58507V107", "MDLN"],
+    ["606822104", "MUFG"],
+    ["695156109", "PKG"],
+    ["744573106", "PEG"],
+    ["780287108", "RGLD"],
+    ["866966104", "SUNB"],
+    ["87612G101", "TRGP"],
+    ["88023B103", "TEM"],
+    ["88635A105", "PBEU"],
+    ["88635A204", "PBPH"],
+    ["88635A303", "PBOG"],
+    ["911312106", "UPS"],
+    ["912008109", "USFD"],
+    ["94106L109", "WM"],
+    ["G4705A100", "ICLR"],
+    ["G6700G107", "NVT"],
   ];
   for (const [cusip, symbol] of exactPrimaryIdentities) {
     const exact = resolver.resolveHoldingSymbol({ ticker: "WRONG", cusip, name: "Unrelated fixture name" });
@@ -75,6 +125,11 @@ try {
   assert.equal(resolver.resolveHoldingSymbol({ name: "Unrelated fixture name" }).symbol, null);
   assert.equal(resolver.resolveHoldingSymbol({ cusip: "464286772", name: "Unknown iShares class" }).symbol, null);
   assert.equal(resolver.resolveHoldingSymbol({ cusip: "000000000" }).symbol, null);
+  assert.equal(resolver.resolveHoldingSymbol({ cusip: "000000000", name: "Fixture shared security family" }).symbol, null);
+  assert.equal(resolver.resolveHoldingSymbol({ name: "Fixture shared security family" }).symbol, null);
+  assert.equal(resolver.resolveHoldingSymbol({ cusip: "000000000", name: "Fixture shared security family INC" }).symbol, null);
+  assert.equal(resolver.resolveHoldingSymbol({ name: "Unrelated retained alias" }).symbol, "ZZZ");
+  assert.equal(resolver.resolveHoldingSymbol({ ticker: "ZZZ" }).symbol, "ZZZ");
   const profileSource = read("scripts/build-13f-enrichment-backfill.mjs");
   const profileBody = profileSource.slice(profileSource.indexOf("function resolveProfile("), profileSource.indexOf("function priceSnapshot("));
   const calls = [];
