@@ -1489,7 +1489,15 @@ function evaluateMember(lane, member, artifactRootInfo, claimedPaths, now, calen
     : artifactWorst.status === "ready"
       ? reasonResult("ok", { source_as_of: null, age: null, unit: lane.freshness.unit })
       : { ...artifactWorst, source_as_of: sourceAsOf, age: null, unit: lane.freshness.unit };
-  const artifact = worstResult([artifactWorst, freshness]);
+  // The oldest retained collection must not hide a corrupt future clock in
+  // another stock/financial state from the same producer.
+  const collectionClockGuard = lane.id === "stockanalysis_stock_financial"
+    ? worstResult([reasonResult("ok"), ...artifacts.filter((row) => row.status === "ready" && row.source_as_of).map((row) => {
+        const result = evaluateFreshness(row.source_as_of, lane.freshness, now, calendars);
+        return result.reason === "future_source" ? result : reasonResult("ok");
+      })])
+    : reasonResult("ok");
+  const artifact = worstResult([artifactWorst, freshness, collectionClockGuard]);
   return {
     id: member.id,
     status: artifact.status,

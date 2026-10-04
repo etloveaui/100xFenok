@@ -1136,7 +1136,12 @@ function runBaselineAndArtifactChecks() {
     "data/admin/stockanalysis-recovery/states/stock/AAPL.json",
   );
   const staleState = readJson(staleStatePath);
-  staleState.last_attempt.observed_at = "2026-07-01T00:00:00Z";
+  staleState.resolution_state = "lkg_primary";
+  staleState.retry = true;
+  staleState.current.path = "data/admin/stockanalysis-recovery/lkg/stock/AAPL.json";
+  staleState.current.fetched_at = "2026-07-01T00:00:00Z";
+  staleState.latest_failure = { observed_at: expectedFixture.baseline.now, error: "provider failure" };
+  staleState.updated_at = expectedFixture.baseline.now;
   fs.writeFileSync(staleStatePath, JSON.stringify(staleState), { encoding: "utf8", mode: 0o600 });
   const staleStockFinancialReport = buildDetectionReport({
     artifactRoot: staleStockFinancialRoot.raw,
@@ -1144,7 +1149,37 @@ function runBaselineAndArtifactChecks() {
     now: expectedFixture.baseline.now,
   });
   assert.equal(lane(staleStockFinancialReport, "stockanalysis_stock_financial").artifact.status, "stale",
-    "an old recovery-state attempt cannot satisfy the bounded stock/financial lane");
+    "a new failure/update clock cannot refresh old retained collection bytes");
+
+  const stockFinancialContracts = DATA_SUPPLY_DETECTION_CONFIG.lanes
+    .find((item) => item.id === "stockanalysis_stock_financial").producer_members[0].artifact_contracts;
+  for (const [name, mutate, expectedReason] of [
+    ["missing current", (state) => { delete state.current; }, "schema_drift"],
+    ["wrong current path", (state) => { state.current.path = "data/stockanalysis/stocks/NVDA.json"; }, "schema_drift"],
+    ["missing digest", (state) => { delete state.current.payload_sha256; }, "schema_drift"],
+    ["malformed collection clock", (state) => { state.current.fetched_at = "2026-02-30T00:00:00Z"; }, "schema_drift"],
+    ["one future collection clock", (state) => { state.current.fetched_at = "2026-07-12T00:00:00Z"; }, "future_source"],
+    ["future collection clocks", (state) => { state.current.fetched_at = "2026-07-12T00:00:00Z"; }, "future_source"],
+  ]) {
+    const variantRoot = materializeArtifacts("all_valid");
+    const statePath = path.join(variantRoot.raw, "data/admin/stockanalysis-recovery/states/stock/AAPL.json");
+    const state = readJson(statePath);
+    mutate(state);
+    fs.writeFileSync(statePath, JSON.stringify(state), { encoding: "utf8", mode: 0o600 });
+    if (name === "future collection clocks") {
+      for (const contract of stockFinancialContracts) {
+        const siblingPath = path.join(variantRoot.raw, contract.path);
+        const sibling = readJson(siblingPath);
+        sibling.current.fetched_at = state.current.fetched_at;
+        fs.writeFileSync(siblingPath, JSON.stringify(sibling), { encoding: "utf8", mode: 0o600 });
+      }
+    }
+    const variant = buildDetectionReport({
+      artifactRoot: variantRoot.raw, calendars: calendarsFixture, now: expectedFixture.baseline.now,
+    });
+    assert.equal(lane(variant, "stockanalysis_stock_financial").artifact.reason, expectedReason,
+      `${name} must not pass as a fresh collection`);
+  }
 
   for (const [laneId, relativePath, mutate] of [
     ["benchmarks", "data/benchmarks/msci.json", (payload) => { delete payload.metadata.update_frequency; }],

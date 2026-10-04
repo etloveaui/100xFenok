@@ -332,8 +332,8 @@ function sourceMembersForLane(lane, floorRow, dataRoot) {
         ?? state?.current?.provider_observation?.source_floor
         ?? state?.lkg?.provider_observation?.source_floor;
       return datedOrCollected({
-        source_as_of: artifact?.source_as_of,
-      fetched_at: artifact?.fetched_at ?? promotedRun?.observed_at ?? receipt,
+        source_as_of: artifact?.source_as_of ?? state?.source_as_of,
+        fetched_at: artifact?.fetched_at ?? promotedRun?.observed_at ?? receipt,
       }, ["source_as_of"], ["fetched_at"], id, artifact?.path ?? null);
     });
     return { members, totalMembers: members.length };

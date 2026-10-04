@@ -613,32 +613,37 @@ const config = {
     lane({
       id: "stockanalysis_stock_financial",
       label: "StockAnalysis bounded stock and financial pairs",
+      // Collection freshness follows the currently retained bytes, not financial period dates.
       members: [registryMember("stockanalysis_stock_financial", ["20 21 * * *"],
         STOCKANALYSIS_STOCK_FINANCIAL_TICKERS.flatMap((ticker) => [
           artifact(`stockanalysis_stock_state_${ticker.toLowerCase()}`, `data/admin/stockanalysis-recovery/states/stock/${ticker}.json`, {
             schemaVersion: schemaVersion("/schema_version", "stockanalysis-recovery-state/v1"),
-            sourceSelector: pointerSource("/last_attempt/observed_at", "rfc3339"),
+            sourceSelector: pointerSource("/current/fetched_at", "rfc3339"),
             assertions: [
               exactAssertion(`stockanalysis_stock_kind_${ticker.toLowerCase()}`, "/artifact_kind", "stock"),
               exactAssertion(`stockanalysis_stock_entity_${ticker.toLowerCase()}`, "/entity", ticker),
-              exactAssertion(`stockanalysis_stock_event_${ticker.toLowerCase()}`, "/last_attempt/event_name", "schedule"),
-              exactAssertion(`stockanalysis_stock_schedule_${ticker.toLowerCase()}`, "/last_attempt/schedule", "20 21 * * *"),
-              exactAssertion(`stockanalysis_stock_natural_${ticker.toLowerCase()}`, "/last_attempt/natural", true),
-              exactAssertion(`stockanalysis_stock_controlled_${ticker.toLowerCase()}`, "/last_attempt/controlled", false),
-              enumAssertion(`stockanalysis_stock_outcome_${ticker.toLowerCase()}`, "/last_attempt/outcome", ["fresh", "recovered"]),
+              objectFieldsAssertion(`stockanalysis_stock_current_${ticker.toLowerCase()}`, "/current", {
+                path: "string", payload_sha256: "string", fetched_at: "string",
+              }),
+              enumAssertion(`stockanalysis_stock_path_${ticker.toLowerCase()}`, "/current/path", [
+                `data/stockanalysis/stocks/${ticker}.json`,
+                `data/admin/stockanalysis-recovery/lkg/stock/${ticker}.json`,
+              ]),
             ],
           }),
           artifact(`stockanalysis_financial_state_${ticker.toLowerCase()}`, `data/admin/stockanalysis-recovery/states/financial/${ticker}.json`, {
             schemaVersion: schemaVersion("/schema_version", "stockanalysis-recovery-state/v1"),
-            sourceSelector: pointerSource("/last_attempt/observed_at", "rfc3339"),
+            sourceSelector: pointerSource("/current/fetched_at", "rfc3339"),
             assertions: [
               exactAssertion(`stockanalysis_financial_kind_${ticker.toLowerCase()}`, "/artifact_kind", "financial"),
               exactAssertion(`stockanalysis_financial_entity_${ticker.toLowerCase()}`, "/entity", ticker),
-              exactAssertion(`stockanalysis_financial_event_${ticker.toLowerCase()}`, "/last_attempt/event_name", "schedule"),
-              exactAssertion(`stockanalysis_financial_schedule_${ticker.toLowerCase()}`, "/last_attempt/schedule", "20 21 * * *"),
-              exactAssertion(`stockanalysis_financial_natural_${ticker.toLowerCase()}`, "/last_attempt/natural", true),
-              exactAssertion(`stockanalysis_financial_controlled_${ticker.toLowerCase()}`, "/last_attempt/controlled", false),
-              enumAssertion(`stockanalysis_financial_outcome_${ticker.toLowerCase()}`, "/last_attempt/outcome", ["fresh", "recovered"]),
+              objectFieldsAssertion(`stockanalysis_financial_current_${ticker.toLowerCase()}`, "/current", {
+                path: "string", payload_sha256: "string", fetched_at: "string",
+              }),
+              enumAssertion(`stockanalysis_financial_path_${ticker.toLowerCase()}`, "/current/path", [
+                `data/stockanalysis/financials/${ticker}.json`,
+                `data/admin/stockanalysis-recovery/lkg/financial/${ticker}.json`,
+              ]),
             ],
           }),
         ]))],

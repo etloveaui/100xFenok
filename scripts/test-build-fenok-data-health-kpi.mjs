@@ -202,7 +202,9 @@ try {
   writeJson(dataRoot, "admin/slickcharts-composite-recovery/index.json", {
     members: Object.fromEntries(["daily", "weekly", "monthly", "history", "symbols"].map((id) => [id, {
       resolution_state: "fresh_primary",
-      promoted_run: { observed_at: "2026-09-27T12:00:00Z" },
+      ...(id === "monthly" || id === "history"
+        ? { source_as_of: "2026-09-01T12:00:00Z" }
+        : { promoted_run: { observed_at: "2026-09-27T12:00:00Z" } }),
     }])),
   });
   writeJson(dataRoot, "macro/yahoo-ticker.json", {
@@ -298,6 +300,7 @@ try {
   assert.equal(slickcharts.newest_source_date, "2026-09-27");
   assert.equal(slickcharts.date_basis, "mixed", "promoted run times fill missing member dates as collected");
   assert.equal(slickcharts.fresh_members, 5, "each SlickCharts member is judged on its own cadence");
+  assert.equal(slickcharts.oldest_source_date, "2026-09-01", "monthly source clocks survive when the selector has no source date");
   assert.equal(slickcharts.status, "fresh", "weekly and monthly members are not held to the daily window");
   const sentiment = rootDoc.sets.find((set) => set.set === "sentiment");
   assert.equal(sentiment.total_members, 5);
