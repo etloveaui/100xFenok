@@ -2,17 +2,17 @@
   "schema_version": "stockanalysis/v1",
   "source": "stockanalysis",
   "asset_type": "etf_detail_coverage",
-  "generated_at": "2026-10-04T09:30:38Z",
+  "generated_at": "2026-10-04T12:00:39Z",
   "source_date_summary": {
     "total_members": 5700,
-    "newest_source_date": "2026-10-02",
+    "newest_source_date": "2026-10-04",
     "oldest_source_date": "2025-10-31",
     "oldest_source_member": "DRUP",
     "source_date_histogram": [
       {
         "date": null,
         "basis": null,
-        "count": 32
+        "count": 2
       },
       {
         "date": "2025-10-31",
@@ -107,12 +107,22 @@
       {
         "date": "2026-10-01",
         "basis": "source",
-        "count": 18
+        "count": 23
       },
       {
         "date": "2026-10-02",
         "basis": "source",
-        "count": 121
+        "count": 126
+      },
+      {
+        "date": "2026-10-04",
+        "basis": "collected",
+        "count": 18
+      },
+      {
+        "date": "2026-10-04",
+        "basis": "source",
+        "count": 2
       }
     ]
   },
@@ -136,138 +146,63 @@
       "etf_screener": 20,
       "new_etfs": 100
     },
-    "detail_files": 5840,
-    "covered_detail_files": 5668,
-    "missing_detail_files": 32,
+    "detail_files": 5870,
+    "covered_detail_files": 5698,
+    "missing_detail_files": 2,
     "extra_detail_files": 172,
-    "stockanalysis_detail_files": 5840,
+    "stockanalysis_detail_files": 5870,
     "yahoo_fallback_files": 0,
     "invalid_detail_files": 0,
-    "coverage_pct": 99.44,
-    "primary_stockanalysis_pct": 99.44,
+    "coverage_pct": 99.96,
+    "primary_stockanalysis_pct": 99.96,
     "missing_by_source": {
-      "etf_universe": 32,
+      "etf_universe": 2,
       "etf_screener": 0,
-      "new_etfs": 19
+      "new_etfs": 1
     },
     "missing_status_breakdown": {
-      "retry_pending": 1,
-      "untracked": 31
+      "retry_pending": 2
     },
     "missing_failure_breakdown": {
-      "other_error": 1,
-      "untracked": 31
+      "other_error": 2
     },
     "missing_availability_breakdown": {
-      "unprobed": 31,
-      "unresolved": 1
+      "unresolved": 2
     },
-    "pending_tracked": 133,
+    "pending_tracked": 134,
     "pending_cooldown": 21,
-    "pending_tracked_missing": 1,
+    "pending_tracked_missing": 2,
     "provider_coverage_gaps": 27
   },
   "missing_reason_summary": {
-    "other_error": 1,
-    "untracked": 31
+    "other_error": 2
   },
   "missing_status_summary": {
-    "retry_pending": 1,
-    "untracked": 31
+    "retry_pending": 2
   },
   "missing_availability_summary": {
-    "unprobed": 31,
-    "unresolved": 1
+    "unresolved": 2
   },
   "missing_reason_samples": {
     "other_error": [
-      "HBIL"
-    ],
-    "untracked": [
-      "ACIG",
-      "ACSM",
-      "AVNC",
-      "BCOM",
-      "CSRA",
-      "CTAG",
-      "DBAR",
-      "EAFH",
-      "ENHE",
-      "EVMO",
-      "FFLX",
-      "FIMU"
+      "HBIL",
+      "XX"
     ]
   },
   "missing_status_samples": {
     "retry_pending": [
-      "HBIL"
-    ],
-    "untracked": [
-      "ACIG",
-      "ACSM",
-      "AVNC",
-      "BCOM",
-      "CSRA",
-      "CTAG",
-      "DBAR",
-      "EAFH",
-      "ENHE",
-      "EVMO",
-      "FFLX",
-      "FIMU"
+      "HBIL",
+      "XX"
     ]
   },
   "missing_availability_samples": {
-    "unprobed": [
-      "ACIG",
-      "ACSM",
-      "AVNC",
-      "BCOM",
-      "CSRA",
-      "CTAG",
-      "DBAR",
-      "EAFH",
-      "ENHE",
-      "EVMO",
-      "FFLX",
-      "FIMU"
-    ],
     "unresolved": [
-      "HBIL"
+      "HBIL",
+      "XX"
     ]
   },
   "missing_tickers": [
-    "ACIG",
-    "ACSM",
-    "AVNC",
-    "BCOM",
-    "CSRA",
-    "CTAG",
-    "DBAR",
-    "EAFH",
-    "ENHE",
-    "EVMO",
-    "FFLX",
-    "FIMU",
-    "GCPU",
     "HBIL",
-    "IHYF",
-    "JQTY",
-    "KOOL",
-    "LCIV",
-    "LLMA",
-    "LUNC",
-    "MMHI",
-    "MN",
-    "MUY",
-    "NRR",
-    "OCT",
-    "OCTI",
-    "PFRX",
-    "PWRX",
-    "RISE",
-    "TDEM",
-    "TIPE",
     "XX"
   ],
   "provider_absent_tickers": [],
@@ -449,58 +384,16 @@
   ],
   "samples": {
     "missing": [
-      "ACIG",
-      "ACSM",
-      "AVNC",
-      "BCOM",
-      "CSRA",
-      "CTAG",
-      "DBAR",
-      "EAFH",
-      "ENHE",
-      "EVMO",
-      "FFLX",
-      "FIMU",
-      "GCPU",
       "HBIL",
-      "IHYF",
-      "JQTY",
-      "KOOL",
-      "LCIV",
-      "LLMA",
-      "LUNC",
-      "MMHI",
-      "MN",
-      "MUY",
-      "NRR",
-      "OCT",
-      "OCTI",
-      "PFRX",
-      "PWRX",
-      "RISE",
-      "TDEM",
-      "TIPE",
       "XX"
     ],
     "missing_retry_pending": [
-      "HBIL"
-    ],
-    "missing_untracked": [
-      "ACIG",
-      "ACSM",
-      "AVNC",
-      "BCOM",
-      "CSRA",
-      "CTAG",
-      "DBAR",
-      "EAFH",
-      "ENHE",
-      "EVMO",
-      "FFLX",
-      "FIMU"
+      "HBIL",
+      "XX"
     ],
     "missing_other_error": [
-      "HBIL"
+      "HBIL",
+      "XX"
     ],
     "yahoo_fallback": [],
     "extra": [

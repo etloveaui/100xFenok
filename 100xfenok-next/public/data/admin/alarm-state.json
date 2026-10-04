@@ -1,24 +1,36 @@
 {
   "schema_version": "alarm-state/v1",
-  "generated_at": "2026-10-04T08:54:30.522Z",
+  "generated_at": "2026-10-04T10:23:28.739Z",
   "status": "open",
-  "open_incident_count": 2,
+  "open_incident_count": 3,
   "open_incidents": [
     {
-      "workflow": "fenok-edge-krx-daily.yml",
-      "label": "Fenok Edge KRX Daily Data",
-      "streak": 3,
+      "workflow": "global-writer-queue-observer.yml",
+      "label": "Global Writer Queue Observability",
+      "streak": 0,
       "failure_streak_threshold": 2,
-      "first_failing_run_id": 36744439474,
-      "first_failing_run_url": "https://github.com/etloveaui/100xFenok/actions/runs/36744439474",
+      "first_failing_run_id": null,
+      "first_failing_run_url": null,
       "alarm_reasons": [
-        "failure_streak"
+        "missed_schedule_window"
       ],
       "lost_schedule_slot_count": 0
     },
     {
-      "workflow": "global-writer-queue-observer.yml",
-      "label": "Global Writer Queue Observability",
+      "workflow": "retention-restore.yml",
+      "label": "R2 Retention Restore Watchdog",
+      "streak": 0,
+      "failure_streak_threshold": 2,
+      "first_failing_run_id": null,
+      "first_failing_run_url": null,
+      "alarm_reasons": [
+        "missed_schedule_window"
+      ],
+      "lost_schedule_slot_count": 0
+    },
+    {
+      "workflow": "worker-request-budget-alarm.yml",
+      "label": "Worker Request Budget Alarm",
       "streak": 0,
       "failure_streak_threshold": 2,
       "first_failing_run_id": null,
@@ -374,13 +386,14 @@
   "queue_evicted_run_count": 0,
   "queue_evicted_workflows": [],
   "last_firing": {
-    "run_id": "37190189463",
-    "run_url": "https://github.com/etloveaui/100xFenok/actions/runs/37190189463",
-    "observed_at": "2026-10-04T08:54:30.522Z",
+    "run_id": "37194956386",
+    "run_url": "https://github.com/etloveaui/100xFenok/actions/runs/37194956386",
+    "observed_at": "2026-10-04T10:23:28.739Z",
     "event": "workflow_run",
     "workflows": [
-      "fenok-edge-krx-daily.yml",
-      "global-writer-queue-observer.yml"
+      "global-writer-queue-observer.yml",
+      "retention-restore.yml",
+      "worker-request-budget-alarm.yml"
     ],
     "title": "100xFenok pipeline job failure alarm"
   },

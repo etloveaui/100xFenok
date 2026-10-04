@@ -1,13 +1,13 @@
 {
   "schema_version": "stockanalysis-recovery-index/v1",
-  "generated_at": "2026-10-04T09:28:38Z",
+  "generated_at": "2026-10-04T11:59:59Z",
   "counts": {
-    "tracked": 911,
+    "tracked": 912,
     "fresh": 797,
     "lkg": 102,
-    "unavailable": 12,
-    "retry": 114,
-    "failed": 2
+    "unavailable": 13,
+    "retry": 115,
+    "failed": 1
   },
   "counts_by_kind": {
     "stock": {
@@ -25,11 +25,11 @@
       "retry": 0
     },
     "etf": {
-      "tracked": 793,
+      "tracked": 794,
       "fresh": 681,
       "lkg": 101,
-      "unavailable": 11,
-      "retry": 112
+      "unavailable": 12,
+      "retry": 113
     },
     "surface": {
       "tracked": 25,
@@ -494,6 +494,10 @@
     {
       "artifact_kind": "etf",
       "entity": "VYLD"
+    },
+    {
+      "artifact_kind": "etf",
+      "entity": "XX"
     },
     {
       "artifact_kind": "surface",
@@ -1626,6 +1630,16 @@
       "data_loss": false
     },
     {
+      "artifact_kind": "etf",
+      "entity": "XX",
+      "resolution_state": "unavailable",
+      "source_as_of": null,
+      "failure_observed_at": "2026-10-04T11:59:59Z",
+      "error": "ValueError: StockAnalysis ETF provider source date is in the future",
+      "failure_count": 1,
+      "data_loss": false
+    },
+    {
       "artifact_kind": "surface",
       "entity": "actions_recent",
       "resolution_state": "lkg_primary",
@@ -1647,18 +1661,12 @@
     }
   ],
   "current_results": {
-    "failed": 2,
+    "failed": 1,
     "errors": [
       {
-        "artifact_kind": "surface",
-        "entity": "actions_recent",
-        "error": "ValueError: source did not advance beyond the retained LKG for surface:actions_recent",
-        "data_loss": false
-      },
-      {
-        "artifact_kind": "surface",
-        "entity": "actions_splits",
-        "error": "ValueError: source did not advance beyond the retained LKG for surface:actions_splits",
+        "artifact_kind": "etf",
+        "entity": "XX",
+        "error": "ValueError: StockAnalysis ETF provider source date is in the future",
         "data_loss": false
       }
     ]
@@ -1776,7 +1784,8 @@
     "UTWY",
     "VXX",
     "VXZ",
-    "VYLD"
+    "VYLD",
+    "XX"
   ],
   "degraded_surfaces": [
     "actions_recent",
