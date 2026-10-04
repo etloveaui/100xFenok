@@ -59,6 +59,66 @@ try {
   assert.equal(resolver.resolveHoldingSymbol({ ticker: "IVE", cusip: "530909100", name: "LIBERTY LIVE HOLDINGS INC" }).symbol, "LLYVA");
   assert.equal(resolver.resolveHoldingSymbol({ ticker: "IVE", cusip: "530909308", name: "LIBERTY LIVE HOLDINGS INC" }).symbol, "LLYVK");
   assert.equal(resolver.resolveHoldingSymbol({ ticker: "IVE", name: "LIBERTY LIVE HOLDINGS INC" }).symbol, null);
+  const exactPrimaryIdentities = [
+    ["025537101", "AEP"], ["064058100", "BNY"], ["12504L109", "CBRE"],
+    ["219350105", "GLW"], ["46428Q109", "SLV"], ["49177J102", "KVUE"],
+    ["56585A102", "MPC"], ["693475105", "PNC"], ["74762E102", "PWR"],
+    ["77543R102", "ROKU"], ["780087102", "RY"], ["872540109", "TJX"],
+  ];
+  for (const [cusip, symbol] of exactPrimaryIdentities) {
+    const exact = resolver.resolveHoldingSymbol({ ticker: "WRONG", cusip, name: "Unrelated fixture name" });
+    assert.equal(exact.symbol, symbol);
+    assert.match(exact.source, /^(sec|issuer)-/);
+    assert.equal(exact.authoritative, true);
+    assert.equal(resolver.resolveHoldingSymbol({ cusip: ` ${cusip.toLowerCase()} ` }).symbol, symbol);
+  }
+  assert.equal(resolver.resolveHoldingSymbol({ name: "Unrelated fixture name" }).symbol, null);
+  assert.equal(resolver.resolveHoldingSymbol({ cusip: "464286772", name: "Unknown iShares class" }).symbol, null);
+  assert.equal(resolver.resolveHoldingSymbol({ cusip: "000000000" }).symbol, null);
+  const profileSource = read("scripts/build-13f-enrichment-backfill.mjs");
+  const profileBody = profileSource.slice(profileSource.indexOf("function resolveProfile("), profileSource.indexOf("function priceSnapshot("));
+  const calls = [];
+  let exactAvailable = true;
+  const resolveProfile = new Function("resolver", "profileForSymbol", "normalizeCompanyName", `${profileBody}; return resolveProfile;`)(
+    resolver,
+    (symbol) => { calls.push(symbol); return symbol === "WRONG" || exactAvailable ? { symbol } : null; },
+    (name) => name,
+  );
+  for (const [cusip, symbol] of exactPrimaryIdentities) {
+    calls.length = 0;
+    exactAvailable = true;
+    assert.equal(resolveProfile({ ticker: "WRONG", cusip }).symbol, symbol);
+    assert.deepEqual(calls, [symbol]);
+    calls.length = 0;
+    exactAvailable = false;
+    assert.equal(resolveProfile({ ticker: "WRONG", cusip }), null);
+    assert.deepEqual(calls, [symbol]);
+  }
+  const backfillBody = profileSource.slice(profileSource.indexOf("function backfillHolding("), profileSource.indexOf("function collectCoverage("));
+  const backfillHolding = new Function("resolver", "resolveProfile", "classifyMarketCap", "priceSnapshot", `${backfillBody}; return backfillHolding;`)(
+    resolver, () => null, () => null, () => null,
+  );
+  for (const [cusip] of exactPrimaryIdentities) {
+    const raw = { ticker: null, cusip, name: "Reported security", shares: 11, market_value: 220, weight: 3, title_of_class: "Reported class" };
+    const holding = { ...raw, sector: "Wrong sector", industry: "Wrong industry", price_latest: 999, price_source: "wrong", market_cap_usd: 999, enrichment_source: "wrong", enrichment_symbol: "WRONG" };
+    const stats = { total: 0, profileMiss: 0 };
+    backfillHolding(holding, {}, stats);
+    assert.deepEqual(holding, raw);
+    assert.deepEqual(stats, { total: 1, profileMiss: 1 });
+  }
+  const unrelated = { cusip: "000000000", sector: "Existing sector", price_latest: 9 };
+  backfillHolding(unrelated, {}, { total: 0, profileMiss: 0 });
+  assert.deepEqual(unrelated, { cusip: "000000000", sector: "Existing sector", price_latest: 9 });
+  const partialProfileBackfill = new Function("resolver", "resolveProfile", "classifyMarketCap", "priceSnapshot", `${backfillBody}; return backfillHolding;`)(
+    resolver, (holding) => ({ symbol: resolver.resolveHoldingSymbol(holding).symbol, sector: "Current sector", industry: null, market_cap: null }), () => null, () => null,
+  );
+  const partialHolding = { cusip: "693475105", ticker: null, shares: 11, sector: "Wrong sector", industry: "Wrong industry", price_latest: 999, market_cap_usd: 999 };
+  partialProfileBackfill(partialHolding, {}, { total: 0, profileHit: 0, profileSymbols: new Set(), touched: 0 });
+  assert.deepEqual(partialHolding, { cusip: "693475105", ticker: null, shares: 11, sector: "Current sector", enrichment_source: "yf-local", enrichment_symbol: "PNC" });
+  const verifiedLkg = { cusip: "693475105", ticker: null, sector: "Financials", price_latest: 200, enrichment_source: "yf-local", enrichment_symbol: "PNC" };
+  const verifiedBefore = { ...verifiedLkg };
+  backfillHolding(verifiedLkg, {}, { total: 0, profileMiss: 0 });
+  assert.deepEqual(verifiedLkg, verifiedBefore);
 } finally {
   fs.rmSync(resolverRoot, { recursive: true, force: true });
 }
@@ -74,7 +134,7 @@ for (const row of libertyRows) {
   }
 }
 const enrichmentBackfill = read("scripts/build-13f-enrichment-backfill.mjs");
-assert.match(enrichmentBackfill, /resolved\.source === "sec-liberty-live-2025-annual-report"/);
+assert.match(enrichmentBackfill, /resolved\.authoritative/);
 assert.match(enrichmentBackfill, /return resolved\.symbol \? profileForSymbol\(resolved\.symbol\) : null/);
 
 const filing = {

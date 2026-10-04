@@ -3,11 +3,24 @@ import path from "node:path";
 
 export const SYMBOL_RE = /^[A-Z0-9][A-Z0-9.-]{0,11}$/;
 
-// SEC-hosted Liberty Live annual-report security table (2025): exact class
-// identities. Name-only aliases are deliberately insufficient for this issuer.
+// Exact primary-source security identities. October 4 additions and same-class
+// CUSIP/ticker source pairs are recorded in the platform's data-recovery receipt.
+// Trust shares (SLV) retain their security identity; this map assigns no sector.
 const AUTHORITATIVE_CUSIP_SYMBOLS = new Map([
   ["530909100", { symbol: "LLYVA", source: "sec-liberty-live-2025-annual-report" }],
   ["530909308", { symbol: "LLYVK", source: "sec-liberty-live-2025-annual-report" }],
+  ["025537101", { symbol: "AEP", source: "issuer-aep-2025-cdp-security-identifiers" }],
+  ["064058100", { symbol: "BNY", source: "sec-nport-2026-bny-common" }],
+  ["12504L109", { symbol: "CBRE", source: "sec-nport-2026-cbre-class-a" }],
+  ["219350105", { symbol: "GLW", source: "sec-nport-2026-corning-common" }],
+  ["46428Q109", { symbol: "SLV", source: "issuer-ishares-2026-silver-trust" }],
+  ["49177J102", { symbol: "KVUE", source: "sec-kenvue-13g-2025-10q-2026-common" }],
+  ["56585A102", { symbol: "MPC", source: "sec-marathon-13g-2025-10k-2026-common" }],
+  ["693475105", { symbol: "PNC", source: "issuer-pnc-common-stock-faq" }],
+  ["74762E102", { symbol: "PWR", source: "sec-nport-2026-quanta-common" }],
+  ["77543R102", { symbol: "ROKU", source: "sec-roku-13g-2026-10k-2026-class-a" }],
+  ["780087102", { symbol: "RY", source: "sec-nport-2026-rbc-common" }],
+  ["872540109", { symbol: "TJX", source: "issuer-tjx-13g-2025-8k-2026-common" }],
 ]);
 const LIBERTY_LIVE_NAME = "LIBERTY LIVE";
 
@@ -212,12 +225,13 @@ export function loadTickerResolver(rootPath) {
   loadExistingAliases(root, aliasMap, nameMap);
   loadInvestorHistory(root, symbols, nameMap, cusipMap);
 
-  function result(symbol, rawKey, normalizedKey, source) {
+  function result(symbol, rawKey, normalizedKey, source, authoritative = false) {
     return {
       symbol: normalizeSymbol(symbol),
       rawKey: String(rawKey ?? "").trim(),
       normalizedKey: String(normalizedKey ?? "").trim(),
       source,
+      authoritative,
     };
   }
 
@@ -231,7 +245,7 @@ export function loadTickerResolver(rootPath) {
 
     const authoritative = AUTHORITATIVE_CUSIP_SYMBOLS.get(rawCusip);
     if (authoritative) {
-      return result(authoritative.symbol, rawKey, normalizedKey, authoritative.source);
+      return result(authoritative.symbol, rawKey, normalizedKey, authoritative.source, true);
     }
     if (normalizedName === LIBERTY_LIVE_NAME) {
       return result(null, rawKey, normalizedKey, "unmapped-liberty-live-without-exact-cusip");

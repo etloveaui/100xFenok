@@ -292,9 +292,9 @@ function profileForSymbol(symbol) {
 
 function resolveProfile(holding) {
   const resolved = resolver.resolveHoldingSymbol(holding);
-  if (resolved.source === "sec-liberty-live-2025-annual-report") {
+  if (resolved.authoritative) {
     // Exact CUSIP identity is authoritative. If its own profile is unavailable,
-    // leave enrichment empty instead of falling back to the stale IVE alias.
+    // leave enrichment empty instead of falling back to an unrelated raw alias.
     return resolved.symbol ? profileForSymbol(resolved.symbol) : null;
   }
   const raw = String(holding?.ticker ?? "").trim().toUpperCase();
@@ -332,6 +332,21 @@ function priceSnapshot(symbol, filing) {
 
 function backfillHolding(holding, filing, stats) {
   stats.total += 1;
+  const resolved = resolver.resolveHoldingSymbol(holding);
+  const enrichmentSymbol = String(holding.enrichment_symbol ?? holding.ticker ?? "").trim().toUpperCase();
+  const verifiedOwnEnrichment = holding.enrichment_source === "yf-local"
+    && enrichmentSymbol === resolved.symbol;
+  if (resolved.authoritative && !verifiedOwnEnrichment) {
+    // Remove unknown or mismatched identity metadata before exact enrichment.
+    // Verified same-security LKG survives a temporary missing/failed profile.
+    for (const key of [
+      "sector", "industry", "market_cap_usd", "market_cap_bucket_abs",
+      "market_cap_bucket_rel", "market_cap_as_of", "market_cap_as_of_reason",
+      "market_cap_source", "price_at_filing", "price_latest",
+      "return_since_filing_pct", "return_as_of", "price_source",
+      "enrichment_source", "enrichment_symbol",
+    ]) delete holding[key];
+  }
   const profile = resolveProfile(holding);
   if (!profile) {
     stats.profileMiss += 1;
