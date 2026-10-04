@@ -1,6 +1,7 @@
 #!/usr/bin/env node
 
 import fs from "node:fs";
+import { createHash } from "node:crypto";
 import path from "node:path";
 import { isDeepStrictEqual } from "node:util";
 import { fileURLToPath } from "node:url";
@@ -211,7 +212,7 @@ function restoreSnapshots(snapshots) {
 export function withYahooEtfFallbackRollback(filePaths, action, restore = restoreSnapshots) {
   const snapshots = snapshotFiles(filePaths);
   try {
-    return action();
+    return action(snapshots);
   } catch (error) {
     try {
       restore(snapshots);
@@ -352,8 +353,13 @@ export function promoteYahooEtfFallbackCandidate({
   providerBytes,
   run,
   mirrorPublic = false,
+  expectedFinanceSha256 = undefined,
   store = defaultStore(repoRoot),
 }) {
+  if (expectedFinanceSha256 !== undefined && expectedFinanceSha256 !== null
+    && (typeof expectedFinanceSha256 !== "string" || !/^[0-9a-f]{64}$/.test(expectedFinanceSha256))) {
+    throw new Error("Yahoo ETF expected finance SHA-256 is invalid");
+  }
   const paths = lanePaths(repoRoot, ticker);
   const normalizedRun = normalizeRun(run);
   const state = store.stateSnapshot();
@@ -386,7 +392,17 @@ export function promoteYahooEtfFallbackCandidate({
     ...(mirrorPublic ? [paths.publicProviderPath] : []),
     paths.statePath,
   ];
-  const success = withYahooEtfFallbackRollback(outputPaths, () => {
+  const financeMatches = (bytes) => expectedFinanceSha256 === undefined
+    || (expectedFinanceSha256 === null
+      ? bytes === null
+      : bytes !== null && createHash("sha256").update(bytes).digest("hex") === expectedFinanceSha256);
+  const success = withYahooEtfFallbackRollback(outputPaths, (snapshots) => {
+    const financeSnapshot = snapshots.find(({ filePath }) => filePath === paths.providerPath)?.bytes ?? null;
+    const currentFinance = fs.existsSync(paths.providerPath) ? fs.readFileSync(paths.providerPath) : null;
+    if (!financeMatches(financeSnapshot) || !financeMatches(currentFinance)) {
+      // No file or state was changed, so keep the intervening writer's bytes.
+      return { concurrentFinance: true };
+    }
     atomicWrite(paths.canonicalPath, candidate.payloadBytes);
     atomicWrite(paths.providerPath, Buffer.from(providerBytes));
     if (mirrorPublic) atomicWrite(paths.publicProviderPath, Buffer.from(providerBytes));
@@ -398,6 +414,18 @@ export function promoteYahooEtfFallbackCandidate({
     }
     return recorded;
   });
+  if (success.concurrentFinance) {
+    return {
+      kind: "deferred",
+      updated: false,
+      reason: "provider_changed_after_history_validation",
+      key: paths.key,
+      retrySet: state.retry_set,
+      degraded: true,
+      corrupt: false,
+      exitCode: 0,
+    };
+  }
   const item = success.state.items[paths.key];
   return {
     kind: "success",
@@ -452,6 +480,8 @@ export function executeYahooEtfFallbackRecoveryCommand(command) {
       providerBytes: decodeBase64(command.provider_payload_base64, "provider payload"),
       run: command.run,
       mirrorPublic: command.mirror_public === true,
+      expectedFinanceSha256: Object.hasOwn(command, "expected_finance_sha256")
+        ? command.expected_finance_sha256 : undefined,
     });
   }
   throw new Error(`unknown Yahoo ETF fallback recovery action: ${String(command.action)}`);

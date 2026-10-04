@@ -384,7 +384,11 @@ class StockanalysisFetcherFixtureTest(unittest.TestCase):
             primary["source_as_of_reason"] = "provider publishes no dated detail"
             primary["raw"] = {}
 
+        engine = self.fetcher.load_yf_finance_module()
         class YahooModule:
+            decorate_finance_payload = staticmethod(engine.decorate_finance_payload)
+            preserve_history_coverage = staticmethod(engine.preserve_history_coverage)
+            validate_source_progression = staticmethod(engine.validate_source_progression)
             @staticmethod
             def fetch_with_retry(*_args, **_kwargs):
                 return (None if returned_error else data, 1, "provider unavailable" if returned_error else None,
@@ -543,7 +547,9 @@ class StockanalysisFetcherFixtureTest(unittest.TestCase):
                          "regularMarketTime": int(datetime.fromisoformat(fallback_source.replace("Z", "+00:00")).timestamp())},
                 "history_1y": [{"date": "2026-09-25", "close": 31}]}
         yahoo_calls = []
+        engine = self.fetcher.load_yf_finance_module()
         class YahooModule:
+            decorate_finance_payload = staticmethod(engine.decorate_finance_payload)
             @staticmethod
             def fetch_with_retry(*_args, **_kwargs):
                 yahoo_calls.append("AFK")
@@ -1948,7 +1954,9 @@ module.main()
                     new_epoch = int(datetime(2026, 7, 28, 16, 0, 5, tzinfo=timezone.utc).timestamp())
                     completed_at = "2026-07-28T16:00:10Z"
 
+                engine = self.fetcher.load_yf_finance_module()
                 class FakeYahooModule:
+                    decorate_finance_payload = staticmethod(engine.decorate_finance_payload)
                     @staticmethod
                     def fetch_with_retry(*_args, **_kwargs):
                         return (None if outcome == "failed" else {"info": {"symbol": "TQQQ", "quoteType": "ETF",
@@ -5238,7 +5246,9 @@ module.main()
         original_yf_detail_out_dir = self.fetcher.YF_ETF_DETAIL_OUT_DIR
         original_state_root = self.fetcher.DATA_SUPPLY_STATE_ROOT
 
+        engine = original_loader()
         class FakeYahooModule:
+            decorate_finance_payload = staticmethod(engine.decorate_finance_payload)
             @staticmethod
             def fetch_with_retry(_ticker: str, profile: str = "etf", retries: int = 1, backoffs: tuple = (3,), include_evidence: bool = False):
                 result = ({
@@ -5527,7 +5537,9 @@ module.main()
         original_yf_detail_out_dir = self.fetcher.YF_ETF_DETAIL_OUT_DIR
         original_state_root = self.fetcher.DATA_SUPPLY_STATE_ROOT
 
+        engine = original_loader()
         class FakeYahooModule:
+            decorate_finance_payload = staticmethod(engine.decorate_finance_payload)
             @staticmethod
             def fetch_with_retry(_ticker: str, profile: str = "etf", retries: int = 1, backoffs: tuple = (3,), include_evidence: bool = False):
                 result = ({
@@ -5867,6 +5879,115 @@ module.main()
                                 ticker, bad_provider, bad_detail, mirror_public=True
                             )
                         self.assertEqual([path.read_bytes() for path in paths], before)
+
+    def test_yahoo_fallback_preserves_validated_history_before_normalizing(self) -> None:
+        ticker = "IAUM"
+        now = datetime.now(timezone.utc).replace(microsecond=0)
+        old_quote = now - timedelta(days=2)
+        new_quote = now - timedelta(days=1)
+        dates = [(now - timedelta(days=offset)).date().isoformat() for offset in (4, 3, 2, 1)]
+        old_rows = [{"date": day, "Close": 10.0} for day in dates[:3]]
+        fresh_rows = [{"date": day, "Close": 11.0} for day in (dates[0], dates[2], dates[3])]
+
+        def data(quote, rows):
+            return {"info": {"symbol": ticker, "quoteType": "ETF", "currentPrice": 11.0,
+                             "regularMarketTime": int(quote.timestamp())},
+                    "history_1y": rows, "funds_data": {"description": "fresh only"}}
+
+        old_data = data(old_quote, old_rows)
+        fresh_data = data(new_quote, fresh_rows)
+        old_fetch = (old_quote + timedelta(hours=1)).isoformat().replace("+00:00", "Z")
+        fresh_fetch = now.isoformat().replace("+00:00", "Z")
+        engine = self.fetcher.load_yf_finance_module()
+        source_less = engine.decorate_finance_payload(ticker, "daily", old_fetch, old_data)
+        source_less.pop("first_trade_date", None)
+        explicit = self.fetcher.build_yf_payload(ticker, old_data, old_fetch)
+        with tempfile.TemporaryDirectory() as tmp, patch.object(self.fetcher, "YF_OUT_DIR", Path(tmp)):
+            canonical = Path(tmp) / f"{ticker}.json"
+            for existing in (source_less, explicit):
+                with self.subTest(profile=existing["profile"], source=existing.get("source")):
+                    canonical.write_bytes(self.fetcher.json_payload_bytes(existing))
+                    merged, snapshot = self.fetcher.preserve_yahoo_etf_history_coverage(
+                        ticker, fresh_data, fresh_fetch)
+                    self.assertEqual(snapshot, canonical.read_bytes())
+                    self.assertEqual([row["date"] for row in merged["history_1y"]], dates)
+                    self.assertEqual(merged["history_1y"][1], old_rows[1])
+                    self.assertEqual(merged["history_1y"][2], fresh_rows[1])
+                    self.assertEqual(merged["funds_data"], fresh_data["funds_data"])
+                    self.assertEqual(merged["info"], fresh_data["info"])
+                    self.assertEqual(json.loads(canonical.read_bytes()), existing)
+                    provider = self.fetcher.build_yf_payload(ticker, merged, fresh_fetch)
+                    detail = self.fetcher.yahoo_etf_payload(ticker, provider)
+                    with patch.object(self.fetcher, "YF_ETF_DETAIL_OUT_DIR", Path(tmp) / "detail"):
+                        self.fetcher.publish_yahoo_etf_fallback_pair(
+                            ticker, provider, detail, mirror_public=False,
+                            expected_finance_bytes=snapshot)
+                    # The next fallback must preserve coverage after canonical is explicit-source.
+                    canonical.write_bytes(self.fetcher.json_payload_bytes(explicit))
+                    self.assertEqual(
+                        len(self.fetcher.preserve_yahoo_etf_history_coverage(
+                            ticker, fresh_data, fresh_fetch)[0]["history_1y"]), 4)
+            canonical.write_bytes(self.fetcher.json_payload_bytes(source_less))
+            merged, snapshot = self.fetcher.preserve_yahoo_etf_history_coverage(
+                ticker, fresh_data, fresh_fetch)
+            provider = self.fetcher.build_yf_payload(ticker, merged, fresh_fetch)
+            detail = self.fetcher.yahoo_etf_payload(ticker, provider)
+            concurrent = self.fetcher.build_yf_payload(
+                ticker, data(old_quote, [*old_rows, {"date": dates[3], "Close": 12.0}]), old_fetch)
+            with patch.object(self.fetcher, "YF_ETF_DETAIL_OUT_DIR", Path(tmp) / "detail"), \
+                    patch.object(self.fetcher, "YF_PUBLIC_DIR", Path(tmp) / "public"):
+                detail_path = self.fetcher.YF_ETF_DETAIL_OUT_DIR / f"{ticker}.json"
+                public_path = self.fetcher.YF_PUBLIC_DIR / f"{ticker}.json"
+                for target in (detail_path, public_path):
+                    target.parent.mkdir(parents=True, exist_ok=True)
+                    target.write_bytes(b"unchanged sentinel\n")
+                canonical.write_bytes(self.fetcher.json_payload_bytes(concurrent))
+                before = (canonical.read_bytes(), detail_path.read_bytes(), public_path.read_bytes())
+                with self.assertRaisesRegex(ValueError, "changed after history validation"):
+                    self.fetcher.publish_yahoo_etf_fallback_pair(
+                        ticker, provider, detail, mirror_public=True,
+                        expected_finance_bytes=snapshot)
+                self.assertEqual(
+                    (canonical.read_bytes(), detail_path.read_bytes(), public_path.read_bytes()), before)
+            for label, bad_data in (
+                ("missing fresh history", {**fresh_data, "history_1y": []}),
+                ("null fresh history", {**fresh_data, "history_1y": None}),
+                ("malformed fresh history", {**fresh_data, "history_1y": [
+                    {"date": dates[-1], "Close": float("nan")}] }),
+                ("regressed fresh history", data(new_quote, old_rows[:2])),
+                ("regressed quote", data(old_quote - timedelta(days=1), fresh_rows)),
+                ("wrong identity", {**fresh_data, "info": {**fresh_data["info"], "symbol": "WRONG"}}),
+            ):
+                with self.subTest(label=label):
+                    canonical.write_bytes(self.fetcher.json_payload_bytes(source_less))
+                    before = canonical.read_bytes()
+                    with self.assertRaises(ValueError):
+                        self.fetcher.preserve_yahoo_etf_history_coverage(ticker, bad_data, fresh_fetch)
+                    self.assertEqual(canonical.read_bytes(), before)
+            canonical.write_bytes(self.fetcher.json_payload_bytes(
+                {**explicit, "source_as_of": "2020-01-01T00:00:00Z"}))
+            with self.assertRaises(ValueError):
+                self.fetcher.preserve_yahoo_etf_history_coverage(ticker, fresh_data, fresh_fetch)
+
+    def test_yahoo_quote_only_fallback_keeps_empty_history_valid(self) -> None:
+        ticker = "SLON"
+        now = datetime.now(timezone.utc).replace(microsecond=0)
+        old = (now - timedelta(days=1)).isoformat().replace("+00:00", "Z")
+        fetched = now.isoformat().replace("+00:00", "Z")
+        data = {"info": {"symbol": ticker, "quoteType": "ETF", "currentPrice": 24,
+                         "regularMarketTime": int((now - timedelta(days=1)).timestamp())},
+                "history_1y": []}
+        with tempfile.TemporaryDirectory() as tmp, patch.object(self.fetcher, "YF_OUT_DIR", Path(tmp)):
+            canonical = Path(tmp) / f"{ticker}.json"
+            canonical.write_bytes(self.fetcher.json_payload_bytes(
+                self.fetcher.build_yf_payload(ticker, data, old)))
+            for fresh_data in (data, {**data, "history_1y": None},
+                               {key: value for key, value in data.items() if key != "history_1y"}):
+                with self.subTest(history=fresh_data.get("history_1y")):
+                    fresh, snapshot = self.fetcher.preserve_yahoo_etf_history_coverage(
+                        ticker, fresh_data, fetched)
+                    self.assertEqual(fresh, fresh_data)
+                    self.assertEqual(snapshot, canonical.read_bytes())
 
     def test_invalid_yahoo_fallback_preserves_provider_files_and_records_invalid_observation(self) -> None:
         original_loader = self.fetcher.load_yf_finance_module

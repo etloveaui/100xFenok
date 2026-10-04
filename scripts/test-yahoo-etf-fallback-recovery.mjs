@@ -12,6 +12,7 @@ import {
   YAHOO_ETF_FALLBACK_LANE_ID,
   decodeYahooEtfTickerKey,
   encodeYahooEtfTickerKey,
+  executeYahooEtfFallbackRecoveryCommand,
   listYahooEtfFallbackRetryTargets,
   promoteYahooEtfFallbackCandidate,
   recordYahooEtfFallbackControlledFailure,
@@ -250,6 +251,7 @@ for (const invalid of ["tqqq", "ticker_", "ticker_0", "ticker_zz", "ticker_2e2e2
       providerBytes,
       run: RECOVERY_RUN,
       mirrorPublic: true,
+      expectedFinanceSha256: null,
     });
     assert.equal(result.kind, "success");
     assert.equal(result.updated, true);
@@ -270,6 +272,55 @@ for (const invalid of ["tqqq", "ticker_", "ticker_0", "ticker_zz", "ticker_2e2e2
 
 
 
+  } finally {
+    fs.rmSync(root, { recursive: true, force: true });
+  }
+}
+
+{
+  const { root, before } = makeFailedRoot();
+  try {
+    const target = paths(root);
+    const oldProvider = jsonBytes(providerPayload(TICKER, "2026-07-27T15:15:05Z", 90));
+    writeBytes(target.provider, oldProvider);
+    const concurrent = providerPayload(TICKER, "2026-07-27T15:15:05Z", 90);
+    concurrent.data.history_1y.unshift({ date: "2026-07-26", close: 89 });
+    const concurrentBytes = jsonBytes(concurrent);
+    const publicBefore = Buffer.from("retained public provider\n");
+    writeBytes(target.provider, concurrentBytes);
+    writeBytes(target.publicProvider, publicBefore);
+    const indexBefore = fs.readFileSync(target.index);
+    const lkgBefore = fs.readFileSync(target.lkg);
+    const candidateBytes = jsonBytes(candidatePayload(TICKER, "2026-07-28T15:15:05Z", 101));
+    const providerBytes = jsonBytes(providerPayload(TICKER, "2026-07-28T15:15:05Z", 101));
+    const result = executeYahooEtfFallbackRecoveryCommand({
+      action: "promote",
+      repo_root: root,
+      ticker: TICKER,
+      candidate_payload_base64: candidateBytes.toString("base64"),
+      provider_payload_base64: providerBytes.toString("base64"),
+      run: RECOVERY_RUN,
+      mirror_public: true,
+      expected_finance_sha256: sha256(oldProvider),
+    });
+    assert.equal(result.kind, "deferred");
+    assert.equal(result.reason, "provider_changed_after_history_validation");
+    assert.deepEqual(fs.readFileSync(target.canonical), before);
+    assert.deepEqual(fs.readFileSync(target.provider), concurrentBytes);
+    assert.deepEqual(fs.readFileSync(target.publicProvider), publicBefore);
+    assert.deepEqual(fs.readFileSync(target.index), indexBefore);
+    assert.deepEqual(fs.readFileSync(target.lkg), lkgBefore);
+    assert.throws(() => promoteYahooEtfFallbackCandidate({
+      repoRoot: root, ticker: TICKER, candidateBytes, providerBytes,
+      run: RECOVERY_RUN, expectedFinanceSha256: "invalid",
+    }), /expected finance SHA-256 is invalid/);
+    const accepted = promoteYahooEtfFallbackCandidate({
+      repoRoot: root, ticker: TICKER, candidateBytes, providerBytes,
+      run: RECOVERY_RUN, mirrorPublic: true,
+      expectedFinanceSha256: sha256(concurrentBytes),
+    });
+    assert.equal(accepted.kind, "success");
+    assert.deepEqual(fs.readFileSync(target.provider), providerBytes);
   } finally {
     fs.rmSync(root, { recursive: true, force: true });
   }

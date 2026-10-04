@@ -6090,6 +6090,7 @@ def fetch_yahoo_etf_fallback(
         if error is not None or data is None:
             raise RuntimeError(error or "Yahoo fallback returned no data")
         fetched_at = now_iso()
+        data, finance_snapshot = preserve_yahoo_etf_history_coverage(ticker, data, fetched_at)
         yf_payload = build_yf_payload(ticker, data, fetched_at)
         etf_payload = yahoo_etf_payload(ticker, yf_payload)
         if selected_refresh:
@@ -6107,11 +6108,14 @@ def fetch_yahoo_etf_fallback(
             decision = invoke_yahoo_etf_fallback_adapter(
                 "promote", ticker=ticker, run={"observed_at": fetched_at},
                 candidate_bytes=json_payload_bytes(etf_payload),
-                provider_bytes=json_payload_bytes(yf_payload), mirror_public=mirror_public)
+                provider_bytes=json_payload_bytes(yf_payload), mirror_public=mirror_public,
+                expected_finance_bytes=finance_snapshot)
             if decision.get("kind") != "success" or decision.get("updated") is not True:
                 raise ValueError("Yahoo ETF candidate was refused by retained-good validation")
         else:
-            publication_snapshots = publish_yahoo_etf_fallback_pair(ticker, yf_payload, etf_payload, mirror_public)
+            publication_snapshots = publish_yahoo_etf_fallback_pair(
+                ticker, yf_payload, etf_payload, mirror_public,
+                expected_finance_bytes=finance_snapshot)
         candidate_path = YF_ETF_DETAIL_OUT_DIR / f"{ticker}.json"
         record_etf_detail_observation(
             provider="yahoo_finance",
@@ -6169,6 +6173,98 @@ def restore_yahoo_etf_fallback_pair(snapshots: dict[Path, bytes | None]) -> None
                 stage.unlink(missing_ok=True)
 
 
+_YAHOO_FINANCE_UNBOUND = object()
+
+
+def preserve_yahoo_etf_history_coverage(
+    ticker: str, fresh_data: dict, fetched_at: str
+) -> tuple[dict, bytes | None]:
+    """Retain validated canonical dates only after checking the fresh raw observation."""
+    path = YF_OUT_DIR / f"{ticker}.json"
+    if path.is_symlink():
+        raise ValueError("Yahoo ETF canonical provider artifact cannot be a symlink")
+    if not path.exists():
+        return fresh_data, None
+    finance_snapshot = path.read_bytes()
+    existing = json.loads(finance_snapshot)
+    if (not isinstance(existing, dict) or existing.get("schema_version") != "yf-finance/v2"
+            or existing.get("ticker") != ticker or existing.get("profile") not in {"daily", "etf"}
+            or not isinstance(existing.get("data"), dict)):
+        raise ValueError("Yahoo ETF canonical provider identity mismatch")
+    engine = load_yf_finance_module()
+    existing_info = existing["data"].get("info")
+    if (not isinstance(existing_info, dict) or existing_info.get("symbol") != ticker
+            or existing_info.get("quoteType") != "ETF"):
+        raise ValueError("Yahoo ETF canonical provider identity mismatch")
+    if "source" not in existing:
+        # This also verifies every source-less engine metadata claim against raw data.
+        existing_floor = validated_yahoo_engine_finance_floor(ticker, existing, existing)
+    else:
+        if (existing.get("source") != "yahoo_finance" or existing.get("profile") != "etf"
+                or existing.get("source_context") != "stockanalysis_etf_fallback"):
+            raise ValueError("Yahoo ETF canonical provider identity mismatch")
+        existing_fetch = parse_iso_timestamp(validate_aware_timestamp(
+            existing.get("fetched_at"), "Yahoo canonical finance fetch stamp"))
+        existing_source = yahoo_detail_source_timestamp(existing)
+        claimed_source = parse_iso_timestamp(validate_aware_timestamp(
+            existing.get("source_as_of"), "Yahoo canonical finance source stamp"))
+        existing_floor = parse_iso_timestamp(existing_source)
+        now = parse_iso_timestamp(now_iso())
+        if (existing_floor is None or claimed_source != existing_floor
+                or existing_floor > existing_fetch or existing_fetch > now):
+            raise ValueError("Yahoo ETF canonical source stamp disagrees with provider evidence")
+        validate_yahoo_etf_candidate_raw_clocks(ticker, existing)
+
+    # A missing or malformed new history cannot be made valid by retained rows.
+    if not isinstance(fresh_data, dict):
+        raise ValueError("Yahoo ETF candidate data container is invalid")
+    fresh_info = fresh_data.get("info")
+    if (not isinstance(fresh_info, dict) or fresh_info.get("symbol") != ticker
+            or fresh_info.get("quoteType") != "ETF"):
+        raise ValueError("Yahoo ETF candidate provider identity mismatch")
+    fresh_history = fresh_data.get("history_1y")
+    existing_history = existing["data"].get("history_1y")
+    if ((fresh_history is not None and not isinstance(fresh_history, list))
+            or (existing_history and not fresh_history)):
+        raise ValueError("Yahoo ETF candidate fresh history is unavailable")
+    for label, rows in (("canonical", existing_history),
+                        ("candidate fresh", fresh_history)):
+        if rows is None and (label == "canonical" or not existing_history):
+            continue
+        if not isinstance(rows, list):
+            raise ValueError(f"Yahoo ETF {label} history is invalid")
+        for row in rows:
+            if (not isinstance(row, dict) or not isinstance(row.get("date"), str)
+                    or not re.fullmatch(r"\d{4}-\d{2}-\d{2}", row["date"])):
+                raise ValueError(f"Yahoo ETF {label} history row is invalid")
+            try:
+                datetime.strptime(row["date"], "%Y-%m-%d")
+            except ValueError as exc:
+                raise ValueError(f"Yahoo ETF {label} history date is invalid") from exc
+            close = row.get("close", row.get("Close"))
+            if (not isinstance(close, (int, float)) or isinstance(close, bool)
+                    or not math.isfinite(close)):
+                raise ValueError(f"Yahoo ETF {label} history close is invalid")
+    fresh = engine.decorate_finance_payload(ticker, "etf", fetched_at, fresh_data)
+    old_raw = engine.decorate_finance_payload(
+        ticker, existing["profile"], existing["fetched_at"], existing["data"])
+    now = parse_iso_timestamp(now_iso())
+    for field in ("quote_as_of", "history_as_of", "source_as_of", "first_trade_date"):
+        old_value = parse_iso_timestamp(old_raw.get(field))
+        fresh_value = parse_iso_timestamp(fresh.get(field))
+        if old_value and old_value > now or fresh_value and fresh_value > now:
+            raise ValueError(f"Yahoo ETF {field} is in the future")
+        if field != "first_trade_date" and old_value and (not fresh_value or fresh_value < old_value):
+            raise ValueError(f"Yahoo ETF candidate raw {field} would regress")
+    fresh_source = parse_iso_timestamp(yahoo_detail_source_timestamp({"data": fresh_data}))
+    if fresh_source is None or fresh_source < existing_floor or fresh_source > now:
+        raise ValueError("Yahoo ETF candidate raw source stamp would regress or is invalid")
+    merged = engine.preserve_history_coverage(existing, fresh_data) if existing_history else fresh_data
+    candidate = engine.decorate_finance_payload(ticker, "etf", fetched_at, merged)
+    engine.validate_source_progression(existing, candidate)
+    return merged, finance_snapshot
+
+
 def validated_yahoo_engine_finance_floor(ticker: str, existing: dict, candidate: dict) -> datetime:
     """Bind an existing owner-engine finance artifact to its raw Yahoo clocks."""
     engine_fields = {"schema_version", "ticker", "fetched_at", "profile", "data",
@@ -6219,7 +6315,10 @@ def validate_yahoo_etf_candidate_raw_clocks(ticker: str, provider: dict) -> None
             raise ValueError(f"Yahoo ETF candidate raw {field} is in the future")
 
 
-def publish_yahoo_etf_fallback_pair(ticker: str, provider: dict, candidate: dict, mirror_public: bool) -> dict:
+def publish_yahoo_etf_fallback_pair(
+    ticker: str, provider: dict, candidate: dict, mirror_public: bool, *,
+    expected_finance_bytes: bytes | None | object = _YAHOO_FINANCE_UNBOUND,
+) -> dict:
     """Validate both source floors before staging either provider artifact."""
     validate_yf_etf_detail_payload(ticker, candidate)
     if (provider.get("schema_version") != "yf-finance/v2" or provider.get("ticker") != ticker
@@ -6239,6 +6338,10 @@ def publish_yahoo_etf_fallback_pair(ticker: str, provider: dict, candidate: dict
         if path.is_symlink():
             raise ValueError("Yahoo ETF provider artifact cannot be a symlink")
         before = path.read_bytes() if path.exists() else None
+        if (path == YF_OUT_DIR / f"{ticker}.json"
+                and expected_finance_bytes is not _YAHOO_FINANCE_UNBOUND
+                and before != expected_finance_bytes):
+            raise ValueError("Yahoo ETF canonical finance changed after history validation")
         snapshots[path] = before
         if before is None:
             continue
@@ -6303,6 +6406,7 @@ def invoke_yahoo_etf_fallback_adapter(
     candidate_bytes: bytes | None = None,
     provider_bytes: bytes | None = None,
     mirror_public: bool = False,
+    expected_finance_bytes: bytes | None | object = _YAHOO_FINANCE_UNBOUND,
 ) -> dict:
     command: dict = {
         "action": action,
@@ -6324,6 +6428,11 @@ def invoke_yahoo_etf_fallback_adapter(
         ).decode("ascii")
     if mirror_public:
         command["mirror_public"] = True
+    if expected_finance_bytes is not _YAHOO_FINANCE_UNBOUND:
+        command["expected_finance_sha256"] = (
+            hashlib.sha256(expected_finance_bytes).hexdigest()
+            if expected_finance_bytes is not None else None
+        )
     completed = subprocess.run(
         ["node", str(YAHOO_ETF_FALLBACK_RECOVERY_ADAPTER)],
         input=json.dumps(command, ensure_ascii=False, separators=(",", ":")),
