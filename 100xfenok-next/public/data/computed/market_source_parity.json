@@ -1,6 +1,6 @@
 {
   "schema_version": "market-source-parity/v1",
-  "generated_at": "2026-10-04T17:01:34Z",
+  "generated_at": "2026-10-04T17:31:15Z",
   "source": "computed/market_facts candidate comparison",
   "summary": {
     "inspected_ticker_files": 7067,
@@ -12,10 +12,10 @@
       "agreement": 26063,
       "scale_mismatch": 6,
       "sign_divergence": 130,
-      "stale": 883,
-      "value_drift": 1361
+      "stale": 885,
+      "value_drift": 1359
     },
-    "stale_rows": 883,
+    "stale_rows": 885,
     "scale_mismatch_rows": 6,
     "sign_divergence_rows": 130
   },
@@ -745,43 +745,6 @@
       }
     },
     {
-      "ticker": "BTR",
-      "asset_type": "etf",
-      "field": "return_3m",
-      "selected_source": "yf.history_1y",
-      "candidate_count": 2,
-      "relative_spread_pct": 194.457346,
-      "values": [
-        {
-          "source": "yf.history_1y",
-          "value": -6.530791474434541
-        },
-        {
-          "source": "stockanalysis.detail.history",
-          "value": 6.1688123012075655
-        }
-      ],
-      "diagnosis": "stale",
-      "spread_pct": 194.457346,
-      "fresh_spread_pct": null,
-      "stale_sources": [
-        "stockanalysis.detail.history"
-      ],
-      "scale_mismatch": false,
-      "scale_factor": null,
-      "sign_divergence": true,
-      "selected_rationale": {
-        "selected": "yf.history_1y",
-        "policy_rank": 0,
-        "policy_len": 2,
-        "note": "policy-preferred; lower-ranked sources retained as candidates"
-      },
-      "freshness": {
-        "yf.history_1y": 0.0,
-        "stockanalysis.detail.history": 99.0
-      }
-    },
-    {
       "ticker": "CBOE",
       "asset_type": "stock",
       "field": "change_pct",
@@ -935,6 +898,43 @@
       "freshness": {
         "stockanalysis.quote": 43.0,
         "yf": 0.0
+      }
+    },
+    {
+      "ticker": "BTR",
+      "asset_type": "etf",
+      "field": "return_3m",
+      "selected_source": "yf.history_1y",
+      "candidate_count": 2,
+      "relative_spread_pct": 193.14361,
+      "values": [
+        {
+          "source": "yf.history_1y",
+          "value": -5.745854467259956
+        },
+        {
+          "source": "stockanalysis.detail.history",
+          "value": 6.1688123012075655
+        }
+      ],
+      "diagnosis": "stale",
+      "spread_pct": 193.14361,
+      "fresh_spread_pct": null,
+      "stale_sources": [
+        "stockanalysis.detail.history"
+      ],
+      "scale_mismatch": false,
+      "scale_factor": null,
+      "sign_divergence": true,
+      "selected_rationale": {
+        "selected": "yf.history_1y",
+        "policy_rank": 0,
+        "policy_len": 2,
+        "note": "policy-preferred; lower-ranked sources retained as candidates"
+      },
+      "freshness": {
+        "yf.history_1y": 0.0,
+        "stockanalysis.detail.history": 104.0
       }
     },
     {
@@ -4486,43 +4486,6 @@
       }
     },
     {
-      "ticker": "BTR",
-      "asset_type": "etf",
-      "field": "return_3m",
-      "selected_source": "yf.history_1y",
-      "candidate_count": 2,
-      "relative_spread_pct": 194.457346,
-      "values": [
-        {
-          "source": "yf.history_1y",
-          "value": -6.530791474434541
-        },
-        {
-          "source": "stockanalysis.detail.history",
-          "value": 6.1688123012075655
-        }
-      ],
-      "diagnosis": "stale",
-      "spread_pct": 194.457346,
-      "fresh_spread_pct": null,
-      "stale_sources": [
-        "stockanalysis.detail.history"
-      ],
-      "scale_mismatch": false,
-      "scale_factor": null,
-      "sign_divergence": true,
-      "selected_rationale": {
-        "selected": "yf.history_1y",
-        "policy_rank": 0,
-        "policy_len": 2,
-        "note": "policy-preferred; lower-ranked sources retained as candidates"
-      },
-      "freshness": {
-        "yf.history_1y": 0.0,
-        "stockanalysis.detail.history": 99.0
-      }
-    },
-    {
       "ticker": "CBOE",
       "asset_type": "stock",
       "field": "change_pct",
@@ -4641,6 +4604,43 @@
       "freshness": {
         "stockanalysis.quote": 43.0,
         "yf": 0.0
+      }
+    },
+    {
+      "ticker": "BTR",
+      "asset_type": "etf",
+      "field": "return_3m",
+      "selected_source": "yf.history_1y",
+      "candidate_count": 2,
+      "relative_spread_pct": 193.14361,
+      "values": [
+        {
+          "source": "yf.history_1y",
+          "value": -5.745854467259956
+        },
+        {
+          "source": "stockanalysis.detail.history",
+          "value": 6.1688123012075655
+        }
+      ],
+      "diagnosis": "stale",
+      "spread_pct": 193.14361,
+      "fresh_spread_pct": null,
+      "stale_sources": [
+        "stockanalysis.detail.history"
+      ],
+      "scale_mismatch": false,
+      "scale_factor": null,
+      "sign_divergence": true,
+      "selected_rationale": {
+        "selected": "yf.history_1y",
+        "policy_rank": 0,
+        "policy_len": 2,
+        "note": "policy-preferred; lower-ranked sources retained as candidates"
+      },
+      "freshness": {
+        "yf.history_1y": 0.0,
+        "stockanalysis.detail.history": 104.0
       }
     },
     {
@@ -7833,11 +7833,11 @@
       "field": "return_1m",
       "selected_source": "yf.history_1y",
       "candidate_count": 2,
-      "relative_spread_pct": 111.579622,
+      "relative_spread_pct": 111.786701,
       "values": [
         {
           "source": "yf.history_1y",
-          "value": -8.091801264455052
+          "value": -7.94963721267473
         },
         {
           "source": "stockanalysis.detail.performance",
@@ -7845,7 +7845,7 @@
         }
       ],
       "diagnosis": "stale",
-      "spread_pct": 111.579622,
+      "spread_pct": 111.786701,
       "fresh_spread_pct": null,
       "stale_sources": [
         "stockanalysis.detail.performance"
@@ -7861,7 +7861,7 @@
       },
       "freshness": {
         "yf.history_1y": 0.0,
-        "stockanalysis.detail.performance": 99.0
+        "stockanalysis.detail.performance": 104.0
       }
     },
     {
