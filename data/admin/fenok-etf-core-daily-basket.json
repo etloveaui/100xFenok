@@ -1,6 +1,6 @@
 {
   "schema_version": "fenok-etf-core-daily-basket/v0.1",
-  "generated_at": "2026-10-04T13:39:20.408Z",
+  "generated_at": "2026-10-04T14:18:14.735Z",
   "basket_id": "etf_core_daily_basket",
   "asset_type": "etf",
   "contract_doc": "docs/planning/CONTRACT_fenok_etf_signals_v0_1_20260629.md",
@@ -12,9 +12,9 @@
     "etf_detail_dir": "data/stockanalysis/etfs"
   },
   "source_generated_at": {
-    "etf_signal_summary": "2026-10-04T13:38:24.240Z",
-    "etf_action_index": "2026-10-04T13:39:20.306Z",
-    "etf_detail_coverage": "2026-10-04T12:17:25Z",
+    "etf_signal_summary": "2026-10-04T14:17:17.345Z",
+    "etf_action_index": "2026-10-04T14:18:14.633Z",
+    "etf_detail_coverage": "2026-10-04T13:19:56Z",
     "new_etfs": "2026-10-04T09:28:56Z"
   },
   "raw_policy": {
@@ -65,8 +65,8 @@
     "detail_candidate_total": 5700,
     "detail_stockanalysis_files": 5870,
     "detail_yahoo_fallback_files": null,
-    "structural_candidate_count": 1746,
-    "fresh_structural_candidate_count": 1627,
+    "structural_candidate_count": 1747,
+    "fresh_structural_candidate_count": 1628,
     "stale_structural_candidate_count": 119,
     "selected_count": 120,
     "fresh_selected_count": 120,
@@ -85,7 +85,7 @@
       "Commodity": 47,
       "Currency": 9,
       "Equity": 1074,
-      "Fixed Income": 524
+      "Fixed Income": 525
     },
     "cohort_metrics": {
       "Alternatives": {
@@ -129,27 +129,27 @@
         "max_quote_age_days": 4
       },
       "Fixed Income": {
-        "eligible_count": 524,
+        "eligible_count": 525,
         "selected_count": 35,
         "fresh_selected_count": 35,
         "stale_selected_count": 0,
-        "achieved_coverage_pct": 6.68,
+        "achieved_coverage_pct": 6.67,
         "max_quote_age_days": 3
       }
     },
     "freshness_blocker_counts": {},
     "excluded_reason_counts": {
-      "action_confidence_not_high": 545,
+      "action_confidence_not_high": 539,
       "aum_lt_50m": 1568,
-      "avg_dollar_volume_5d_lt_1m": 2747,
+      "avg_dollar_volume_5d_lt_1m": 2745,
       "classification_not_high_confidence": 12,
-      "coverage_ratio_lt_0_75": 545,
-      "daily_1y_rows_lt_200": 801,
+      "coverage_ratio_lt_0_75": 539,
+      "daily_1y_rows_lt_200": 797,
       "detail_file_missing": 5,
       "detail_missing": 2,
       "inverse_etf": 5,
       "new_etf_radar_only": 95,
-      "scored_signal_count_lt_6": 545,
+      "scored_signal_count_lt_6": 539,
       "single_stock_or_concentrated_derivative_income_strategy": 57
     }
   },
@@ -190,21 +190,21 @@
       "VTV",
       "XT",
       "DFAX",
+      "EFV",
       "FNDX",
       "DFUV",
       "DFEV",
       "QQA",
       "AVXC",
-      "EFV",
       "FLTW",
       "FLKR",
       "IVLU",
       "ITOT",
       "DFIC",
+      "EWJV",
       "ESGE",
       "DFAI",
       "PXF",
-      "EWJV",
       "SCHB",
       "DMXF",
       "RDVI",
@@ -253,8 +253,8 @@
       "GSST",
       "KNG",
       "TBUX",
-      "IBDR",
       "USHY",
+      "IBDR",
       "CEFS",
       "CAIQ",
       "AOR",
@@ -1299,8 +1299,8 @@
       "beta": 0.77,
       "scored_signal_count": 7,
       "coverage_ratio": 1,
-      "signal_score": 81.07,
-      "action_score": 81.07,
+      "signal_score": 81.15,
+      "action_score": 81.15,
       "confidence_label": "high",
       "core_candidate_allowed": true,
       "core_candidate_reason": "passes_structural_core_daily_filters",
@@ -1314,6 +1314,34 @@
         "quote_volume": 568686,
         "daily_1y_rows": 252,
         "average_dollar_volume_5d": 23628660.97
+      }
+    },
+    {
+      "ticker": "EFV",
+      "company": "iShares MSCI EAFE Value ETF",
+      "asset_type": "etf",
+      "category": "Equity",
+      "aum": 31370000000,
+      "expense_ratio": 0.33,
+      "dividend_yield": 4.66,
+      "beta": 0.63,
+      "scored_signal_count": 7,
+      "coverage_ratio": 1,
+      "signal_score": 81.07,
+      "action_score": 81.07,
+      "confidence_label": "high",
+      "core_candidate_allowed": true,
+      "core_candidate_reason": "passes_structural_core_daily_filters",
+      "status": "fresh",
+      "freshness_blockers": [],
+      "proof": {
+        "detail_source": "stockanalysis",
+        "classification_confidence": "high",
+        "quote_date": "2026-10-02",
+        "quote_age_days": 2,
+        "quote_volume": 2509432,
+        "daily_1y_rows": 252,
+        "average_dollar_volume_5d": 63070203.21
       }
     },
     {
@@ -1457,34 +1485,6 @@
       }
     },
     {
-      "ticker": "EFV",
-      "company": "iShares MSCI EAFE Value ETF",
-      "asset_type": "etf",
-      "category": "Equity",
-      "aum": 31370000000,
-      "expense_ratio": 0.33,
-      "dividend_yield": 4.66,
-      "beta": 0.63,
-      "scored_signal_count": 7,
-      "coverage_ratio": 1,
-      "signal_score": 80.93,
-      "action_score": 80.93,
-      "confidence_label": "high",
-      "core_candidate_allowed": true,
-      "core_candidate_reason": "passes_structural_core_daily_filters",
-      "status": "fresh",
-      "freshness_blockers": [],
-      "proof": {
-        "detail_source": "stockanalysis",
-        "classification_confidence": "high",
-        "quote_date": "2026-10-02",
-        "quote_age_days": 2,
-        "quote_volume": 2509432,
-        "daily_1y_rows": 252,
-        "average_dollar_volume_5d": 63070203.21
-      }
-    },
-    {
       "ticker": "FLTW",
       "company": "Franklin FTSE Taiwan ETF",
       "asset_type": "etf",
@@ -1625,6 +1625,34 @@
       }
     },
     {
+      "ticker": "EWJV",
+      "company": "iShares MSCI Japan Value ETF",
+      "asset_type": "etf",
+      "category": "Equity",
+      "aum": 799730000,
+      "expense_ratio": 0.15,
+      "dividend_yield": 4.61,
+      "beta": 0.5,
+      "scored_signal_count": 7,
+      "coverage_ratio": 1,
+      "signal_score": 79.61,
+      "action_score": 79.61,
+      "confidence_label": "high",
+      "core_candidate_allowed": true,
+      "core_candidate_reason": "passes_structural_core_daily_filters",
+      "status": "fresh",
+      "freshness_blockers": [],
+      "proof": {
+        "detail_source": "stockanalysis",
+        "classification_confidence": "high",
+        "quote_date": "2026-10-02",
+        "quote_age_days": 2,
+        "quote_volume": 260203,
+        "daily_1y_rows": 252,
+        "average_dollar_volume_5d": 6254590.2
+      }
+    },
+    {
       "ticker": "ESGE",
       "company": "iShares ESG Aware MSCI EM ETF",
       "asset_type": "etf",
@@ -1706,34 +1734,6 @@
         "quote_volume": 344267,
         "daily_1y_rows": 252,
         "average_dollar_volume_5d": 11968093.27
-      }
-    },
-    {
-      "ticker": "EWJV",
-      "company": "iShares MSCI Japan Value ETF",
-      "asset_type": "etf",
-      "category": "Equity",
-      "aum": 799730000,
-      "expense_ratio": 0.15,
-      "dividend_yield": 4.61,
-      "beta": 0.5,
-      "scored_signal_count": 7,
-      "coverage_ratio": 1,
-      "signal_score": 79.47,
-      "action_score": 79.47,
-      "confidence_label": "high",
-      "core_candidate_allowed": true,
-      "core_candidate_reason": "passes_structural_core_daily_filters",
-      "status": "fresh",
-      "freshness_blockers": [],
-      "proof": {
-        "detail_source": "stockanalysis",
-        "classification_confidence": "high",
-        "quote_date": "2026-10-02",
-        "quote_age_days": 2,
-        "quote_volume": 260203,
-        "daily_1y_rows": 252,
-        "average_dollar_volume_5d": 6254590.2
       }
     },
     {
@@ -2615,8 +2615,8 @@
       "beta": null,
       "scored_signal_count": 7,
       "coverage_ratio": 1,
-      "signal_score": 67.98,
-      "action_score": 67.98,
+      "signal_score": 68.05,
+      "action_score": 68.05,
       "confidence_label": "high",
       "core_candidate_allowed": true,
       "core_candidate_reason": "passes_structural_core_daily_filters",
@@ -3081,6 +3081,34 @@
       }
     },
     {
+      "ticker": "USHY",
+      "company": "iShares Broad USD High Yield Corporate Bond ETF",
+      "asset_type": "etf",
+      "category": "Fixed Income",
+      "aum": 26480000000,
+      "expense_ratio": 0.08,
+      "dividend_yield": 7.18,
+      "beta": 0.41,
+      "scored_signal_count": 7,
+      "coverage_ratio": 1,
+      "signal_score": 66,
+      "action_score": 66,
+      "confidence_label": "high",
+      "core_candidate_allowed": true,
+      "core_candidate_reason": "passes_structural_core_daily_filters",
+      "status": "fresh",
+      "freshness_blockers": [],
+      "proof": {
+        "detail_source": "stockanalysis",
+        "classification_confidence": "high",
+        "quote_date": "2026-10-02",
+        "quote_age_days": 2,
+        "quote_volume": 11811428,
+        "daily_1y_rows": 252,
+        "average_dollar_volume_5d": 867252167.32
+      }
+    },
+    {
       "ticker": "IBDR",
       "company": "iShares iBonds Dec 2026 Term Corporate ETF",
       "asset_type": "etf",
@@ -3106,34 +3134,6 @@
         "quote_volume": 794678,
         "daily_1y_rows": 252,
         "average_dollar_volume_5d": 15648178.51
-      }
-    },
-    {
-      "ticker": "USHY",
-      "company": "iShares Broad USD High Yield Corporate Bond ETF",
-      "asset_type": "etf",
-      "category": "Fixed Income",
-      "aum": 26480000000,
-      "expense_ratio": 0.08,
-      "dividend_yield": 7.18,
-      "beta": 0.41,
-      "scored_signal_count": 7,
-      "coverage_ratio": 1,
-      "signal_score": 65.85,
-      "action_score": 65.85,
-      "confidence_label": "high",
-      "core_candidate_allowed": true,
-      "core_candidate_reason": "passes_structural_core_daily_filters",
-      "status": "fresh",
-      "freshness_blockers": [],
-      "proof": {
-        "detail_source": "stockanalysis",
-        "classification_confidence": "high",
-        "quote_date": "2026-10-02",
-        "quote_age_days": 2,
-        "quote_volume": 11811428,
-        "daily_1y_rows": 252,
-        "average_dollar_volume_5d": 867252167.32
       }
     },
     {
