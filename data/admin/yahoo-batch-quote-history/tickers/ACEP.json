@@ -1,81 +1,22 @@
 {
-  "attempts": [
-    {
-      "attempts_used": 1,
-      "event_name": "schedule",
-      "failures": [],
-      "latency_ms": 1074,
-      "natural": true,
-      "observed_at": "2026-07-19T22:59:54Z",
-      "outcome": "fresh",
-      "run_attempt": 1,
-      "run_id": "29707016827",
-      "schedule": "0 22 * * 0",
-      "shard": "0/6"
-    },
-    {
-      "attempts_used": 1,
-      "event_name": "schedule",
-      "failures": [],
-      "latency_ms": 591,
-      "natural": true,
-      "observed_at": "2026-08-05T10:46:42Z",
-      "outcome": "fresh",
-      "run_attempt": 1,
-      "run_id": "30998672232",
-      "schedule": "7 8 * * 0-5",
-      "shard": "40/72"
-    },
-    {
-      "attempts_used": 1,
-      "event_name": "schedule",
-      "failures": [],
-      "latency_ms": 547,
-      "natural": true,
-      "observed_at": "2026-08-10T02:30:39Z",
-      "outcome": "fresh",
-      "run_attempt": 1,
-      "run_id": "31349898588",
-      "schedule": "7 0 * * 0-5",
-      "shard": "12/72"
-    },
-    {
-      "attempts_used": 1,
-      "event_name": "workflow_dispatch",
-      "failures": [],
-      "latency_ms": 422,
-      "natural": false,
-      "observed_at": "2026-09-28T01:17:59Z",
-      "outcome": "fresh",
-      "run_attempt": 1,
-      "run_id": "36365270594",
-      "schedule": "",
-      "shard": ""
-    }
-  ],
   "current": {
-    "fetched_at": "2026-09-28T01:19:14Z",
-    "history_as_of": "2026-09-25",
+    "fetched_at": "2026-10-04T17:28:32Z",
+    "history_as_of": "2026-10-02",
     "path": "data/yf/finance/ACEP.json",
-    "payload_sha256": "287345716fde5ee7ad460a9131eaac455db64911c7a2b1a4399c2d12d9b16c72",
-    "quote_as_of": "2026-09-25T20:00:00Z",
-    "source_as_of": "2026-09-25"
+    "payload_sha256": "694538809c99610b5f9f528ad7aec22ab20e06425a9c1311783ca6b803b17de2",
+    "quote_as_of": "2026-10-02T20:00:00Z",
+    "source_as_of": "2026-10-02"
   },
   "discovered_from": [
     "stockanalysis_etf"
   ],
-  "last_attempt": {
+  "failure_count": 0,
+  "last_result": {
     "attempts_used": 1,
-    "event_name": "workflow_dispatch",
     "failures": [],
-    "latency_ms": 422,
-    "natural": false,
-    "observed_at": "2026-09-28T01:17:59Z",
-    "outcome": "fresh",
-    "run_attempt": 1,
-    "run_id": "36365270594",
-    "schedule": "",
-    "shard": ""
+    "latency_ms": 958,
+    "observed_at": "2026-10-04T17:28:32Z",
+    "outcome": "fresh"
   },
   "lkg": {
     "fetched_at": "2026-08-10T02:32:07Z",
@@ -85,25 +26,12 @@
     "quote_as_of": "2026-08-07T20:00:00Z",
     "source_as_of": "2026-08-07"
   },
-  "promotion_contract": "provider_observation/v2",
-  "provider_observation": {
-    "event_name": "workflow_dispatch",
-    "history_as_of": "2026-09-25",
-    "observed_at": "2026-09-28T01:17:59Z",
-    "payload_sha256": "3468c1bd38a2b65dfe1b9578e6bdcc3e78b852b5bb3a6ccc466bbf442fbe9b9b",
-    "quote_as_of": "2026-09-25T20:00:00Z",
-    "run_attempt": 1,
-    "run_id": "36365270594",
-    "schema_version": "provider_observation/v2",
-    "source_as_of": "2026-09-25"
-  },
   "resolution_state": "fresh_primary",
   "retry": false,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "stale": {
     "age_business_days": 8,
     "classified_at": "2026-08-19T23:42:29Z",
-    "classified_run_id": "32314261503",
     "expected_resolution": "next_natural_yahoo_run",
     "max_business_days": 6,
     "message": "ACEP holds LKG because Yahoo source date 2026-08-07 is 8 business days old, beyond the 6-day bound; it will retry on the next natural Yahoo run.",
@@ -111,5 +39,5 @@
     "source_as_of": "2026-08-07"
   },
   "ticker": "ACEP",
-  "updated_at": "2026-09-28T01:17:59Z"
+  "updated_at": "2026-10-04T17:28:32Z"
 }

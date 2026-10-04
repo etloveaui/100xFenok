@@ -1,95 +1,22 @@
 {
-  "attempts": [
-    {
-      "attempts_used": 0,
-      "event_name": "workflow_dispatch",
-      "failures": [],
-      "latency_ms": 0,
-      "natural": false,
-      "observed_at": "2026-07-13T04:33:56Z",
-      "outcome": "skipped_fresh",
-      "run_attempt": 1,
-      "run_id": "29224221077",
-      "schedule": "",
-      "shard": ""
-    },
-    {
-      "attempts_used": 1,
-      "error": "recovery_requires_schedule",
-      "event_name": "workflow_dispatch",
-      "failures": [],
-      "latency_ms": 530,
-      "natural": true,
-      "observed_at": "2026-08-01T18:48:56Z",
-      "outcome": "failed",
-      "run_attempt": 1,
-      "run_id": "30711926935",
-      "schedule": "",
-      "shard": "5/6"
-    },
-    {
-      "attempts_used": 1,
-      "event_name": "schedule",
-      "failures": [],
-      "latency_ms": 922,
-      "natural": true,
-      "observed_at": "2026-08-09T02:25:42Z",
-      "outcome": "fresh",
-      "run_attempt": 1,
-      "run_id": "31290251671",
-      "schedule": "7 0 * * 0-5",
-      "shard": "0/72"
-    },
-    {
-      "attempts_used": 1,
-      "event_name": "schedule",
-      "failures": [],
-      "latency_ms": 527,
-      "natural": true,
-      "observed_at": "2026-08-10T02:30:39Z",
-      "outcome": "fresh",
-      "run_attempt": 1,
-      "run_id": "31349898588",
-      "schedule": "7 0 * * 0-5",
-      "shard": "12/72"
-    },
-    {
-      "attempts_used": 1,
-      "event_name": "workflow_dispatch",
-      "failures": [],
-      "latency_ms": 434,
-      "natural": false,
-      "observed_at": "2026-09-28T06:30:00Z",
-      "outcome": "fresh",
-      "run_attempt": 1,
-      "run_id": "36367836615",
-      "schedule": "",
-      "shard": ""
-    }
-  ],
   "current": {
-    "fetched_at": "2026-09-28T06:39:35Z",
-    "history_as_of": "2026-09-25",
+    "fetched_at": "2026-10-04T17:53:32Z",
+    "history_as_of": "2026-10-02",
     "path": "data/yf/finance/UX.json",
-    "payload_sha256": "e97210bbc9a79b26e372a00a9e5aa875e64bc4b8c58c75f7e2427b9a1f00a838",
-    "quote_as_of": "2026-09-25T18:55:41Z",
-    "source_as_of": "2026-09-25"
+    "payload_sha256": "2ae955f4aaa26044103cd60cb370e57750d0062f6447cf7b49ed662062fc7f0d",
+    "quote_as_of": "2026-10-02T19:03:14Z",
+    "source_as_of": "2026-10-02"
   },
   "discovered_from": [
     "stockanalysis_etf"
   ],
-  "last_attempt": {
+  "failure_count": 0,
+  "last_result": {
     "attempts_used": 1,
-    "event_name": "workflow_dispatch",
     "failures": [],
-    "latency_ms": 434,
-    "natural": false,
-    "observed_at": "2026-09-28T06:30:00Z",
-    "outcome": "fresh",
-    "run_attempt": 1,
-    "run_id": "36367836615",
-    "schedule": "",
-    "shard": ""
+    "latency_ms": 1055,
+    "observed_at": "2026-10-04T17:53:32Z",
+    "outcome": "fresh"
   },
   "lkg": {
     "fetched_at": "2026-08-10T02:34:57Z",
@@ -99,25 +26,12 @@
     "quote_as_of": "2026-08-07T19:55:24Z",
     "source_as_of": "2026-08-07"
   },
-  "promotion_contract": "provider_observation/v2",
-  "provider_observation": {
-    "event_name": "workflow_dispatch",
-    "history_as_of": "2026-09-25",
-    "observed_at": "2026-09-28T06:30:00Z",
-    "payload_sha256": "a7baa982fd3d488c473c7635e2a5238a71288009db5ef80a959b7db8c0b673da",
-    "quote_as_of": "2026-09-25T18:55:41Z",
-    "run_attempt": 1,
-    "run_id": "36367836615",
-    "schema_version": "provider_observation/v2",
-    "source_as_of": "2026-09-25"
-  },
   "resolution_state": "fresh_primary",
   "retry": false,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "stale": {
     "age_business_days": 8,
     "classified_at": "2026-08-19T23:42:29Z",
-    "classified_run_id": "32314261503",
     "expected_resolution": "next_natural_yahoo_run",
     "max_business_days": 6,
     "message": "UX holds LKG because Yahoo source date 2026-08-07 is 8 business days old, beyond the 6-day bound; it will retry on the next natural Yahoo run.",
@@ -125,5 +39,5 @@
     "source_as_of": "2026-08-07"
   },
   "ticker": "UX",
-  "updated_at": "2026-09-28T06:30:00Z"
+  "updated_at": "2026-10-04T17:53:32Z"
 }

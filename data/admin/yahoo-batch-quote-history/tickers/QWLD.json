@@ -1,55 +1,22 @@
 {
-  "attempts": [
-    {
-      "attempts_used": 1,
-      "event_name": "schedule",
-      "failures": [],
-      "latency_ms": 1313,
-      "natural": true,
-      "observed_at": "2026-08-07T13:26:16Z",
-      "outcome": "fresh",
-      "run_attempt": 1,
-      "run_id": "31182487397",
-      "schedule": "7 12 * * 0-5",
-      "shard": "66/72"
-    },
-    {
-      "attempts_used": 1,
-      "event_name": "workflow_dispatch",
-      "failures": [],
-      "latency_ms": 507,
-      "natural": false,
-      "observed_at": "2026-09-28T06:02:24Z",
-      "outcome": "fresh",
-      "run_attempt": 1,
-      "run_id": "36367834787",
-      "schedule": "",
-      "shard": ""
-    }
-  ],
   "current": {
-    "fetched_at": "2026-09-28T06:09:08Z",
-    "history_as_of": "2026-09-25",
+    "fetched_at": "2026-10-04T17:47:57Z",
+    "history_as_of": "2026-10-02",
     "path": "data/yf/finance/QWLD.json",
-    "payload_sha256": "7a4795640d1d671d72408bb9f173b8e94b20fa0627e6459caa781edf132cd0b6",
-    "quote_as_of": "2026-09-25T18:36:43Z",
-    "source_as_of": "2026-09-25"
+    "payload_sha256": "c3cbeed60ab74f94b893ec9ea04e8f2b4d82b39b1395f587b75fce1c415c3ddc",
+    "quote_as_of": "2026-10-02T19:46:47Z",
+    "source_as_of": "2026-10-02"
   },
   "discovered_from": [
     "stockanalysis_etf"
   ],
-  "last_attempt": {
+  "failure_count": 0,
+  "last_result": {
     "attempts_used": 1,
-    "event_name": "workflow_dispatch",
     "failures": [],
-    "latency_ms": 507,
-    "natural": false,
-    "observed_at": "2026-09-28T06:02:24Z",
-    "outcome": "fresh",
-    "run_attempt": 1,
-    "run_id": "36367834787",
-    "schedule": "",
-    "shard": ""
+    "latency_ms": 968,
+    "observed_at": "2026-10-04T17:47:57Z",
+    "outcome": "fresh"
   },
   "lkg": {
     "fetched_at": "2026-08-07T13:29:26Z",
@@ -59,25 +26,12 @@
     "quote_as_of": "2026-08-06T19:55:44Z",
     "source_as_of": "2026-08-06"
   },
-  "promotion_contract": "provider_observation/v2",
-  "provider_observation": {
-    "event_name": "workflow_dispatch",
-    "history_as_of": "2026-09-25",
-    "observed_at": "2026-09-28T06:02:24Z",
-    "payload_sha256": "0f1ec1e24e0b39c6d845a8cd757a3a15dafb21af79fdc68757018f65c552e4b8",
-    "quote_as_of": "2026-09-25T18:36:43Z",
-    "run_attempt": 1,
-    "run_id": "36367834787",
-    "schema_version": "provider_observation/v2",
-    "source_as_of": "2026-09-25"
-  },
   "resolution_state": "fresh_primary",
   "retry": false,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "stale": {
     "age_business_days": 9,
     "classified_at": "2026-08-19T23:42:29Z",
-    "classified_run_id": "32314261503",
     "expected_resolution": "next_natural_yahoo_run",
     "max_business_days": 6,
     "message": "QWLD holds LKG because Yahoo source date 2026-08-06 is 9 business days old, beyond the 6-day bound; it will retry on the next natural Yahoo run.",
@@ -85,5 +39,5 @@
     "source_as_of": "2026-08-06"
   },
   "ticker": "QWLD",
-  "updated_at": "2026-09-28T06:02:24Z"
+  "updated_at": "2026-10-04T17:47:57Z"
 }

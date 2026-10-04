@@ -1,81 +1,22 @@
 {
-  "attempts": [
-    {
-      "attempts_used": 1,
-      "event_name": "schedule",
-      "failures": [],
-      "latency_ms": 1090,
-      "natural": true,
-      "observed_at": "2026-07-19T22:59:54Z",
-      "outcome": "fresh",
-      "run_attempt": 1,
-      "run_id": "29707016827",
-      "schedule": "0 22 * * 0",
-      "shard": "0/6"
-    },
-    {
-      "attempts_used": 1,
-      "event_name": "schedule",
-      "failures": [],
-      "latency_ms": 660,
-      "natural": true,
-      "observed_at": "2026-08-05T14:29:49Z",
-      "outcome": "fresh",
-      "run_attempt": 1,
-      "run_id": "31015333400",
-      "schedule": "7 12 * * 0-5",
-      "shard": "42/72"
-    },
-    {
-      "attempts_used": 1,
-      "event_name": "schedule",
-      "failures": [],
-      "latency_ms": 1016,
-      "natural": true,
-      "observed_at": "2026-08-07T13:26:16Z",
-      "outcome": "fresh",
-      "run_attempt": 1,
-      "run_id": "31182487397",
-      "schedule": "7 12 * * 0-5",
-      "shard": "66/72"
-    },
-    {
-      "attempts_used": 1,
-      "event_name": "workflow_dispatch",
-      "failures": [],
-      "latency_ms": 483,
-      "natural": false,
-      "observed_at": "2026-09-28T01:17:59Z",
-      "outcome": "fresh",
-      "run_attempt": 1,
-      "run_id": "36365270594",
-      "schedule": "",
-      "shard": ""
-    }
-  ],
   "current": {
-    "fetched_at": "2026-09-28T01:28:27Z",
-    "history_as_of": "2026-09-25",
+    "fetched_at": "2026-10-04T17:30:49Z",
+    "history_as_of": "2026-10-02",
     "path": "data/yf/finance/BGRO.json",
-    "payload_sha256": "ba61e441a3ad04039ac384dfecc4339fac498d47df01f84c91c951a3bd338b33",
-    "quote_as_of": "2026-09-25T20:00:00Z",
-    "source_as_of": "2026-09-25"
+    "payload_sha256": "9a6b39069b32ea945a4c9acce631e1da1895247fe022668dc16aeda828a5d320",
+    "quote_as_of": "2026-10-02T20:00:00Z",
+    "source_as_of": "2026-10-02"
   },
   "discovered_from": [
     "stockanalysis_etf"
   ],
-  "last_attempt": {
+  "failure_count": 0,
+  "last_result": {
     "attempts_used": 1,
-    "event_name": "workflow_dispatch",
     "failures": [],
-    "latency_ms": 483,
-    "natural": false,
-    "observed_at": "2026-09-28T01:17:59Z",
-    "outcome": "fresh",
-    "run_attempt": 1,
-    "run_id": "36365270594",
-    "schedule": "",
-    "shard": ""
+    "latency_ms": 871,
+    "observed_at": "2026-10-04T17:30:49Z",
+    "outcome": "fresh"
   },
   "lkg": {
     "fetched_at": "2026-08-07T13:28:11Z",
@@ -85,25 +26,12 @@
     "quote_as_of": "2026-08-06T20:00:00Z",
     "source_as_of": "2026-08-06"
   },
-  "promotion_contract": "provider_observation/v2",
-  "provider_observation": {
-    "event_name": "workflow_dispatch",
-    "history_as_of": "2026-09-25",
-    "observed_at": "2026-09-28T01:17:59Z",
-    "payload_sha256": "ce3778cec62ae021dc0a4359c49c2aa1e29b32d70827738e453be224141c4631",
-    "quote_as_of": "2026-09-25T20:00:00Z",
-    "run_attempt": 1,
-    "run_id": "36365270594",
-    "schema_version": "provider_observation/v2",
-    "source_as_of": "2026-09-25"
-  },
   "resolution_state": "fresh_primary",
   "retry": false,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "stale": {
     "age_business_days": 9,
     "classified_at": "2026-08-19T23:42:29Z",
-    "classified_run_id": "32314261503",
     "expected_resolution": "next_natural_yahoo_run",
     "max_business_days": 6,
     "message": "BGRO holds LKG because Yahoo source date 2026-08-06 is 9 business days old, beyond the 6-day bound; it will retry on the next natural Yahoo run.",
@@ -111,5 +39,5 @@
     "source_as_of": "2026-08-06"
   },
   "ticker": "BGRO",
-  "updated_at": "2026-09-28T01:17:59Z"
+  "updated_at": "2026-10-04T17:30:49Z"
 }

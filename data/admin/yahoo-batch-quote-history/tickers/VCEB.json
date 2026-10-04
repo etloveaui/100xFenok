@@ -1,68 +1,22 @@
 {
-  "attempts": [
-    {
-      "attempts_used": 1,
-      "event_name": "schedule",
-      "failures": [],
-      "latency_ms": 652,
-      "natural": true,
-      "observed_at": "2026-08-05T14:29:49Z",
-      "outcome": "fresh",
-      "run_attempt": 1,
-      "run_id": "31015333400",
-      "schedule": "7 12 * * 0-5",
-      "shard": "42/72"
-    },
-    {
-      "attempts_used": 1,
-      "event_name": "schedule",
-      "failures": [],
-      "latency_ms": 917,
-      "natural": true,
-      "observed_at": "2026-08-12T13:41:31Z",
-      "outcome": "fresh",
-      "run_attempt": 1,
-      "run_id": "31602424796",
-      "schedule": "7 12 * * 0-5",
-      "shard": "42/72"
-    },
-    {
-      "attempts_used": 1,
-      "event_name": "workflow_dispatch",
-      "failures": [],
-      "latency_ms": 523,
-      "natural": false,
-      "observed_at": "2026-09-28T06:30:00Z",
-      "outcome": "fresh",
-      "run_attempt": 1,
-      "run_id": "36367836615",
-      "schedule": "",
-      "shard": ""
-    }
-  ],
   "current": {
-    "fetched_at": "2026-09-28T06:40:15Z",
-    "history_as_of": "2026-09-25",
+    "fetched_at": "2026-10-04T17:53:43Z",
+    "history_as_of": "2026-10-02",
     "path": "data/yf/finance/VCEB.json",
-    "payload_sha256": "505dafe37dec252b80312b306b50bf6d15e68e5c9d7af7d226fdee8c542346c5",
-    "quote_as_of": "2026-09-25T19:59:51Z",
-    "source_as_of": "2026-09-25"
+    "payload_sha256": "7ae3a2e32db6952f193dc05ac3bd079dcf50e022470b06b63d6344b79a832367",
+    "quote_as_of": "2026-10-02T20:00:01Z",
+    "source_as_of": "2026-10-02"
   },
   "discovered_from": [
     "stockanalysis_etf"
   ],
-  "last_attempt": {
+  "failure_count": 0,
+  "last_result": {
     "attempts_used": 1,
-    "event_name": "workflow_dispatch",
     "failures": [],
-    "latency_ms": 523,
-    "natural": false,
-    "observed_at": "2026-09-28T06:30:00Z",
-    "outcome": "fresh",
-    "run_attempt": 1,
-    "run_id": "36367836615",
-    "schedule": "",
-    "shard": ""
+    "latency_ms": 865,
+    "observed_at": "2026-10-04T17:53:43Z",
+    "outcome": "fresh"
   },
   "lkg": {
     "fetched_at": "2026-08-12T13:45:18Z",
@@ -72,25 +26,12 @@
     "quote_as_of": "2026-08-12T13:32:30Z",
     "source_as_of": "2026-08-12"
   },
-  "promotion_contract": "provider_observation/v2",
-  "provider_observation": {
-    "event_name": "workflow_dispatch",
-    "history_as_of": "2026-09-25",
-    "observed_at": "2026-09-28T06:30:00Z",
-    "payload_sha256": "257ca9e0f997fa1a0c4e262d49a0f7007e04961c69a5fa9e503ac4ecbe114276",
-    "quote_as_of": "2026-09-25T19:59:51Z",
-    "run_attempt": 1,
-    "run_id": "36367836615",
-    "schema_version": "provider_observation/v2",
-    "source_as_of": "2026-09-25"
-  },
   "resolution_state": "fresh_primary",
   "retry": false,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "stale": {
     "age_business_days": 7,
     "classified_at": "2026-08-21T23:43:33Z",
-    "classified_run_id": "32537807621",
     "expected_resolution": "next_natural_yahoo_run",
     "max_business_days": 6,
     "message": "VCEB holds LKG because Yahoo source date 2026-08-12 is 7 business days old, beyond the 6-day bound; it will retry on the next natural Yahoo run.",
@@ -98,5 +39,5 @@
     "source_as_of": "2026-08-12"
   },
   "ticker": "VCEB",
-  "updated_at": "2026-09-28T06:30:00Z"
+  "updated_at": "2026-10-04T17:53:43Z"
 }

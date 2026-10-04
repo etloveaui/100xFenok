@@ -1,81 +1,22 @@
 {
-  "attempts": [
-    {
-      "attempts_used": 1,
-      "event_name": "schedule",
-      "failures": [],
-      "latency_ms": 1250,
-      "natural": true,
-      "observed_at": "2026-07-19T22:59:54Z",
-      "outcome": "fresh",
-      "run_attempt": 1,
-      "run_id": "29707016827",
-      "schedule": "0 22 * * 0",
-      "shard": "0/6"
-    },
-    {
-      "attempts_used": 1,
-      "event_name": "schedule",
-      "failures": [],
-      "latency_ms": 568,
-      "natural": true,
-      "observed_at": "2026-08-05T10:46:42Z",
-      "outcome": "fresh",
-      "run_attempt": 1,
-      "run_id": "30998672232",
-      "schedule": "7 8 * * 0-5",
-      "shard": "40/72"
-    },
-    {
-      "attempts_used": 1,
-      "event_name": "schedule",
-      "failures": [],
-      "latency_ms": 556,
-      "natural": true,
-      "observed_at": "2026-08-07T03:14:39Z",
-      "outcome": "fresh",
-      "run_attempt": 1,
-      "run_id": "31143656628",
-      "schedule": "7 0 * * 0-5",
-      "shard": "60/72"
-    },
-    {
-      "attempts_used": 1,
-      "event_name": "workflow_dispatch",
-      "failures": [],
-      "latency_ms": 458,
-      "natural": false,
-      "observed_at": "2026-09-28T01:17:59Z",
-      "outcome": "fresh",
-      "run_attempt": 1,
-      "run_id": "36365270594",
-      "schedule": "",
-      "shard": ""
-    }
-  ],
   "current": {
-    "fetched_at": "2026-09-28T01:21:01Z",
-    "history_as_of": "2026-09-25",
+    "fetched_at": "2026-10-04T17:28:59Z",
+    "history_as_of": "2026-10-02",
     "path": "data/yf/finance/AIBU.json",
-    "payload_sha256": "54384d6926787dcf017b6cf1e50e72d9ad6527d10ae6382fdcb61b2c99fe0082",
-    "quote_as_of": "2026-09-25T19:35:28Z",
-    "source_as_of": "2026-09-25"
+    "payload_sha256": "fabbb98e4460b7ab50a3700253df8883906fd3eb26bf9297238371906c177578",
+    "quote_as_of": "2026-10-02T20:00:00Z",
+    "source_as_of": "2026-10-02"
   },
   "discovered_from": [
     "stockanalysis_etf"
   ],
-  "last_attempt": {
+  "failure_count": 0,
+  "last_result": {
     "attempts_used": 1,
-    "event_name": "workflow_dispatch",
     "failures": [],
-    "latency_ms": 458,
-    "natural": false,
-    "observed_at": "2026-09-28T01:17:59Z",
-    "outcome": "fresh",
-    "run_attempt": 1,
-    "run_id": "36365270594",
-    "schedule": "",
-    "shard": ""
+    "latency_ms": 812,
+    "observed_at": "2026-10-04T17:28:59Z",
+    "outcome": "fresh"
   },
   "lkg": {
     "fetched_at": "2026-08-07T03:16:01Z",
@@ -85,25 +26,12 @@
     "quote_as_of": "2026-08-06T19:53:30Z",
     "source_as_of": "2026-08-06"
   },
-  "promotion_contract": "provider_observation/v2",
-  "provider_observation": {
-    "event_name": "workflow_dispatch",
-    "history_as_of": "2026-09-25",
-    "observed_at": "2026-09-28T01:17:59Z",
-    "payload_sha256": "b929540233e1cc5e66d94717841ab8973f937a48c9645e605415aa8d625c1dca",
-    "quote_as_of": "2026-09-25T19:35:28Z",
-    "run_attempt": 1,
-    "run_id": "36365270594",
-    "schema_version": "provider_observation/v2",
-    "source_as_of": "2026-09-25"
-  },
   "resolution_state": "fresh_primary",
   "retry": false,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "stale": {
     "age_business_days": 9,
     "classified_at": "2026-08-19T23:42:29Z",
-    "classified_run_id": "32314261503",
     "expected_resolution": "next_natural_yahoo_run",
     "max_business_days": 6,
     "message": "AIBU holds LKG because Yahoo source date 2026-08-06 is 9 business days old, beyond the 6-day bound; it will retry on the next natural Yahoo run.",
@@ -111,5 +39,5 @@
     "source_as_of": "2026-08-06"
   },
   "ticker": "AIBU",
-  "updated_at": "2026-09-28T01:17:59Z"
+  "updated_at": "2026-10-04T17:28:59Z"
 }

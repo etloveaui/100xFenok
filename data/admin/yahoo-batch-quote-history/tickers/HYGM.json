@@ -1,68 +1,22 @@
 {
-  "attempts": [
-    {
-      "attempts_used": 1,
-      "event_name": "schedule",
-      "failures": [],
-      "latency_ms": 521,
-      "natural": true,
-      "observed_at": "2026-08-02T22:59:12Z",
-      "outcome": "fresh",
-      "run_attempt": 1,
-      "run_id": "30771231562",
-      "schedule": "0 22 * * 0",
-      "shard": "0/6"
-    },
-    {
-      "attempts_used": 1,
-      "event_name": "schedule",
-      "failures": [],
-      "latency_ms": 762,
-      "natural": true,
-      "observed_at": "2026-08-06T14:33:02Z",
-      "outcome": "fresh",
-      "run_attempt": 1,
-      "run_id": "31111230701",
-      "schedule": "7 12 * * 0-5",
-      "shard": "54/72"
-    },
-    {
-      "attempts_used": 1,
-      "event_name": "workflow_dispatch",
-      "failures": [],
-      "latency_ms": 456,
-      "natural": false,
-      "observed_at": "2026-09-28T04:37:06Z",
-      "outcome": "fresh",
-      "run_attempt": 1,
-      "run_id": "36367831133",
-      "schedule": "",
-      "shard": ""
-    }
-  ],
   "current": {
-    "fetched_at": "2026-09-28T04:47:21Z",
-    "history_as_of": "2026-09-25",
+    "fetched_at": "2026-10-04T17:39:28Z",
+    "history_as_of": "2026-10-02",
     "path": "data/yf/finance/HYGM.json",
-    "payload_sha256": "07b7d5f57798937e93da21ff0d2a7157aac970cd5e379bf7a724eb6f9e3b7a66",
-    "quote_as_of": "2026-09-25T15:10:07Z",
-    "source_as_of": "2026-09-25"
+    "payload_sha256": "41c6705f696dd87a1e00b11be715f24ece4903e792ed2e87703dbf407f55aa96",
+    "quote_as_of": "2026-10-02T18:57:23Z",
+    "source_as_of": "2026-10-02"
   },
   "discovered_from": [
     "stockanalysis_etf"
   ],
-  "last_attempt": {
+  "failure_count": 0,
+  "last_result": {
     "attempts_used": 1,
-    "event_name": "workflow_dispatch",
     "failures": [],
-    "latency_ms": 456,
-    "natural": false,
-    "observed_at": "2026-09-28T04:37:06Z",
-    "outcome": "fresh",
-    "run_attempt": 1,
-    "run_id": "36367831133",
-    "schedule": "",
-    "shard": ""
+    "latency_ms": 917,
+    "observed_at": "2026-10-04T17:39:28Z",
+    "outcome": "fresh"
   },
   "lkg": {
     "fetched_at": "2026-08-06T14:35:27Z",
@@ -72,25 +26,12 @@
     "quote_as_of": "2026-08-06T13:46:04Z",
     "source_as_of": "2026-08-06"
   },
-  "promotion_contract": "provider_observation/v2",
-  "provider_observation": {
-    "event_name": "workflow_dispatch",
-    "history_as_of": "2026-09-25",
-    "observed_at": "2026-09-28T04:37:06Z",
-    "payload_sha256": "b71f5a387f81aeb73e0ee3c374158ea5ee0aa474fb8c2dcb1ddf66e7c6517548",
-    "quote_as_of": "2026-09-25T15:10:07Z",
-    "run_attempt": 1,
-    "run_id": "36367831133",
-    "schema_version": "provider_observation/v2",
-    "source_as_of": "2026-09-25"
-  },
   "resolution_state": "fresh_primary",
   "retry": false,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "stale": {
     "age_business_days": 9,
     "classified_at": "2026-08-19T23:42:29Z",
-    "classified_run_id": "32314261503",
     "expected_resolution": "next_natural_yahoo_run",
     "max_business_days": 6,
     "message": "HYGM holds LKG because Yahoo source date 2026-08-06 is 9 business days old, beyond the 6-day bound; it will retry on the next natural Yahoo run.",
@@ -98,5 +39,5 @@
     "source_as_of": "2026-08-06"
   },
   "ticker": "HYGM",
-  "updated_at": "2026-09-28T04:37:06Z"
+  "updated_at": "2026-10-04T17:39:28Z"
 }

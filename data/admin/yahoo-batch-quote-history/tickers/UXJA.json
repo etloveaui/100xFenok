@@ -1,55 +1,22 @@
 {
-  "attempts": [
-    {
-      "attempts_used": 1,
-      "event_name": "schedule",
-      "failures": [],
-      "latency_ms": 1178,
-      "natural": true,
-      "observed_at": "2026-08-06T14:33:02Z",
-      "outcome": "fresh",
-      "run_attempt": 1,
-      "run_id": "31111230701",
-      "schedule": "7 12 * * 0-5",
-      "shard": "54/72"
-    },
-    {
-      "attempts_used": 1,
-      "event_name": "workflow_dispatch",
-      "failures": [],
-      "latency_ms": 480,
-      "natural": false,
-      "observed_at": "2026-09-28T06:30:00Z",
-      "outcome": "fresh",
-      "run_attempt": 1,
-      "run_id": "36367836615",
-      "schedule": "",
-      "shard": ""
-    }
-  ],
   "current": {
-    "fetched_at": "2026-09-28T06:39:39Z",
-    "history_as_of": "2026-09-25",
+    "fetched_at": "2026-10-04T17:53:33Z",
+    "history_as_of": "2026-10-02",
     "path": "data/yf/finance/UXJA.json",
-    "payload_sha256": "59adf9a05e1f6744faad7823747f1787c3ce78fb3cfb5e4d5082520c08d5b593",
-    "quote_as_of": "2026-09-24T18:07:14Z",
-    "source_as_of": "2026-09-24T18:07:14Z"
+    "payload_sha256": "0e10697a757902f98301a289910089b354221c1e0710e7465e7944d664cda61f",
+    "quote_as_of": "2026-10-02T18:43:06Z",
+    "source_as_of": "2026-10-02"
   },
   "discovered_from": [
     "stockanalysis_etf"
   ],
-  "last_attempt": {
+  "failure_count": 0,
+  "last_result": {
     "attempts_used": 1,
-    "event_name": "workflow_dispatch",
     "failures": [],
-    "latency_ms": 480,
-    "natural": false,
-    "observed_at": "2026-09-28T06:30:00Z",
-    "outcome": "fresh",
-    "run_attempt": 1,
-    "run_id": "36367836615",
-    "schedule": "",
-    "shard": ""
+    "latency_ms": 932,
+    "observed_at": "2026-10-04T17:53:33Z",
+    "outcome": "fresh"
   },
   "lkg": {
     "fetched_at": "2026-08-06T14:36:23Z",
@@ -59,25 +26,12 @@
     "quote_as_of": "2026-08-06T13:46:08Z",
     "source_as_of": "2026-08-06"
   },
-  "promotion_contract": "provider_observation/v2",
-  "provider_observation": {
-    "event_name": "workflow_dispatch",
-    "history_as_of": "2026-09-25",
-    "observed_at": "2026-09-28T06:30:00Z",
-    "payload_sha256": "5b18d1e50647d16ed48183488b980fc8214d720bbbc1250e8307b79893b1dbcf",
-    "quote_as_of": "2026-09-24T18:07:14Z",
-    "run_attempt": 1,
-    "run_id": "36367836615",
-    "schema_version": "provider_observation/v2",
-    "source_as_of": "2026-09-24T18:07:14Z"
-  },
   "resolution_state": "fresh_primary",
   "retry": false,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "stale": {
     "age_business_days": 9,
     "classified_at": "2026-08-19T23:42:29Z",
-    "classified_run_id": "32314261503",
     "expected_resolution": "next_natural_yahoo_run",
     "max_business_days": 6,
     "message": "UXJA holds LKG because Yahoo source date 2026-08-06 is 9 business days old, beyond the 6-day bound; it will retry on the next natural Yahoo run.",
@@ -85,5 +39,5 @@
     "source_as_of": "2026-08-06"
   },
   "ticker": "UXJA",
-  "updated_at": "2026-09-28T06:30:00Z"
+  "updated_at": "2026-10-04T17:53:33Z"
 }

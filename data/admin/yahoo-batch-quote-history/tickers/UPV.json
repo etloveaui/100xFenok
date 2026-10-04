@@ -1,55 +1,22 @@
 {
-  "attempts": [
-    {
-      "attempts_used": 1,
-      "event_name": "schedule",
-      "failures": [],
-      "latency_ms": 1122,
-      "natural": true,
-      "observed_at": "2026-08-07T13:26:16Z",
-      "outcome": "fresh",
-      "run_attempt": 1,
-      "run_id": "31182487397",
-      "schedule": "7 12 * * 0-5",
-      "shard": "66/72"
-    },
-    {
-      "attempts_used": 1,
-      "event_name": "workflow_dispatch",
-      "failures": [],
-      "latency_ms": 501,
-      "natural": false,
-      "observed_at": "2026-09-28T06:30:00Z",
-      "outcome": "fresh",
-      "run_attempt": 1,
-      "run_id": "36367836615",
-      "schedule": "",
-      "shard": ""
-    }
-  ],
   "current": {
-    "fetched_at": "2026-09-28T06:38:09Z",
-    "history_as_of": "2026-09-25",
+    "fetched_at": "2026-10-04T17:53:16Z",
+    "history_as_of": "2026-10-02",
     "path": "data/yf/finance/UPV.json",
-    "payload_sha256": "d61186c1c943ca73f2ab5760b80683e88d107451e15a3b885be95b2b81a7925e",
-    "quote_as_of": "2026-09-25T13:46:26Z",
-    "source_as_of": "2026-09-25"
+    "payload_sha256": "5836d73a9cde41e9d3e0b53ce08d62f54619cbb39bba9c86cdee2c41d10eb333",
+    "quote_as_of": "2026-10-02T19:18:55Z",
+    "source_as_of": "2026-10-02"
   },
   "discovered_from": [
     "stockanalysis_etf"
   ],
-  "last_attempt": {
+  "failure_count": 0,
+  "last_result": {
     "attempts_used": 1,
-    "event_name": "workflow_dispatch",
     "failures": [],
-    "latency_ms": 501,
-    "natural": false,
-    "observed_at": "2026-09-28T06:30:00Z",
-    "outcome": "fresh",
-    "run_attempt": 1,
-    "run_id": "36367836615",
-    "schedule": "",
-    "shard": ""
+    "latency_ms": 968,
+    "observed_at": "2026-10-04T17:53:16Z",
+    "outcome": "fresh"
   },
   "lkg": {
     "fetched_at": "2026-08-07T13:29:43Z",
@@ -59,25 +26,12 @@
     "quote_as_of": "2026-08-06T16:22:26Z",
     "source_as_of": "2026-08-06"
   },
-  "promotion_contract": "provider_observation/v2",
-  "provider_observation": {
-    "event_name": "workflow_dispatch",
-    "history_as_of": "2026-09-25",
-    "observed_at": "2026-09-28T06:30:00Z",
-    "payload_sha256": "58ac9b367557d639d02e3bb6dbfc21e8a134f38439691b2d1762e4db7274d5fd",
-    "quote_as_of": "2026-09-25T13:46:26Z",
-    "run_attempt": 1,
-    "run_id": "36367836615",
-    "schema_version": "provider_observation/v2",
-    "source_as_of": "2026-09-25"
-  },
   "resolution_state": "fresh_primary",
   "retry": false,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "stale": {
     "age_business_days": 9,
     "classified_at": "2026-08-19T23:42:29Z",
-    "classified_run_id": "32314261503",
     "expected_resolution": "next_natural_yahoo_run",
     "max_business_days": 6,
     "message": "UPV holds LKG because Yahoo source date 2026-08-06 is 9 business days old, beyond the 6-day bound; it will retry on the next natural Yahoo run.",
@@ -85,5 +39,5 @@
     "source_as_of": "2026-08-06"
   },
   "ticker": "UPV",
-  "updated_at": "2026-09-28T06:30:00Z"
+  "updated_at": "2026-10-04T17:53:16Z"
 }

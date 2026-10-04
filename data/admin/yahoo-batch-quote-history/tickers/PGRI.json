@@ -1,55 +1,22 @@
 {
-  "attempts": [
-    {
-      "attempts_used": 1,
-      "event_name": "schedule",
-      "failures": [],
-      "latency_ms": 834,
-      "natural": true,
-      "observed_at": "2026-08-12T02:41:04Z",
-      "outcome": "fresh",
-      "run_attempt": 1,
-      "run_id": "31557511991",
-      "schedule": "7 0 * * 0-5",
-      "shard": "36/72"
-    },
-    {
-      "attempts_used": 1,
-      "event_name": "workflow_dispatch",
-      "failures": [],
-      "latency_ms": 491,
-      "natural": false,
-      "observed_at": "2026-09-28T05:23:15Z",
-      "outcome": "fresh",
-      "run_attempt": 1,
-      "run_id": "36367832955",
-      "schedule": "",
-      "shard": ""
-    }
-  ],
   "current": {
-    "fetched_at": "2026-09-28T05:42:22Z",
-    "history_as_of": "2026-09-25",
+    "fetched_at": "2026-10-04T17:45:53Z",
+    "history_as_of": "2026-10-02",
     "path": "data/yf/finance/PGRI.json",
-    "payload_sha256": "1eb47509546228f5a1172f8e3b71f51d2406490d8696c01a7c6e7afcaf4b5cda",
-    "quote_as_of": "2026-09-25T16:04:54Z",
-    "source_as_of": "2026-09-25"
+    "payload_sha256": "e13278a7760b8cb19cf414c7b65fa7076dfb84e86836c97ae71b9d708ccdaa87",
+    "quote_as_of": "2026-10-02T19:19:21Z",
+    "source_as_of": "2026-10-02"
   },
   "discovered_from": [
     "stockanalysis_etf"
   ],
-  "last_attempt": {
+  "failure_count": 0,
+  "last_result": {
     "attempts_used": 1,
-    "event_name": "workflow_dispatch",
     "failures": [],
-    "latency_ms": 491,
-    "natural": false,
-    "observed_at": "2026-09-28T05:23:15Z",
-    "outcome": "fresh",
-    "run_attempt": 1,
-    "run_id": "36367832955",
-    "schedule": "",
-    "shard": ""
+    "latency_ms": 703,
+    "observed_at": "2026-10-04T17:45:53Z",
+    "outcome": "fresh"
   },
   "lkg": {
     "fetched_at": "2026-08-12T02:44:27Z",
@@ -59,25 +26,12 @@
     "quote_as_of": "2026-08-10T20:00:00Z",
     "source_as_of": "2026-08-10"
   },
-  "promotion_contract": "provider_observation/v2",
-  "provider_observation": {
-    "event_name": "workflow_dispatch",
-    "history_as_of": "2026-09-25",
-    "observed_at": "2026-09-28T05:23:15Z",
-    "payload_sha256": "6d5ccb4ec65fc54304b98f2f6dce97839ecb3178595b97f7615d8b044a8cde0a",
-    "quote_as_of": "2026-09-25T16:04:54Z",
-    "run_attempt": 1,
-    "run_id": "36367832955",
-    "schema_version": "provider_observation/v2",
-    "source_as_of": "2026-09-25"
-  },
   "resolution_state": "fresh_primary",
   "retry": false,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "stale": {
     "age_business_days": 7,
     "classified_at": "2026-08-19T23:42:29Z",
-    "classified_run_id": "32314261503",
     "expected_resolution": "next_natural_yahoo_run",
     "max_business_days": 6,
     "message": "PGRI holds LKG because Yahoo source date 2026-08-10 is 7 business days old, beyond the 6-day bound; it will retry on the next natural Yahoo run.",
@@ -85,5 +39,5 @@
     "source_as_of": "2026-08-10"
   },
   "ticker": "PGRI",
-  "updated_at": "2026-09-28T05:23:15Z"
+  "updated_at": "2026-10-04T17:45:53Z"
 }

@@ -1,94 +1,22 @@
 {
-  "attempts": [
-    {
-      "attempts_used": 1,
-      "event_name": "schedule",
-      "failures": [],
-      "latency_ms": 1339,
-      "natural": true,
-      "observed_at": "2026-07-19T22:59:54Z",
-      "outcome": "fresh",
-      "run_attempt": 1,
-      "run_id": "29707016827",
-      "schedule": "0 22 * * 0",
-      "shard": "0/6"
-    },
-    {
-      "attempts_used": 1,
-      "event_name": "schedule",
-      "failures": [],
-      "latency_ms": 799,
-      "natural": true,
-      "observed_at": "2026-08-05T12:11:49Z",
-      "outcome": "fresh",
-      "run_attempt": 1,
-      "run_id": "31004461242",
-      "schedule": "7 10 * * 0-5",
-      "shard": "41/72"
-    },
-    {
-      "attempts_used": 1,
-      "event_name": "schedule",
-      "failures": [],
-      "latency_ms": 1260,
-      "natural": true,
-      "observed_at": "2026-08-07T13:26:16Z",
-      "outcome": "fresh",
-      "run_attempt": 1,
-      "run_id": "31182487397",
-      "schedule": "7 12 * * 0-5",
-      "shard": "66/72"
-    },
-    {
-      "attempts_used": 1,
-      "event_name": "workflow_dispatch",
-      "failures": [],
-      "latency_ms": 650,
-      "natural": false,
-      "observed_at": "2026-08-09T15:40:09Z",
-      "outcome": "fresh",
-      "run_attempt": 1,
-      "run_id": "31321645091",
-      "schedule": "",
-      "shard": ""
-    },
-    {
-      "attempts_used": 1,
-      "event_name": "workflow_dispatch",
-      "failures": [],
-      "latency_ms": 538,
-      "natural": false,
-      "observed_at": "2026-09-28T01:17:59Z",
-      "outcome": "fresh",
-      "run_attempt": 1,
-      "run_id": "36365270594",
-      "schedule": "",
-      "shard": ""
-    }
-  ],
   "current": {
-    "fetched_at": "2026-09-28T01:25:38Z",
-    "history_as_of": "2026-09-25",
+    "fetched_at": "2026-10-04T17:30:00Z",
+    "history_as_of": "2026-10-02",
     "path": "data/yf/finance/AVUV.json",
-    "payload_sha256": "94a14dca6493beb8ba9d7ddffbc757ee9eb026e136eb3b6e035f0bc12a9a1ff1",
-    "quote_as_of": "2026-09-25T20:00:00Z",
-    "source_as_of": "2026-09-25"
+    "payload_sha256": "2f5bf1a42a69adeb6278f94437a405fd12636fcb1223ea9cd47b7000991a2838",
+    "quote_as_of": "2026-10-02T20:00:00Z",
+    "source_as_of": "2026-10-02"
   },
   "discovered_from": [
     "stockanalysis_etf"
   ],
-  "last_attempt": {
+  "failure_count": 0,
+  "last_result": {
     "attempts_used": 1,
-    "event_name": "workflow_dispatch",
     "failures": [],
-    "latency_ms": 538,
-    "natural": false,
-    "observed_at": "2026-09-28T01:17:59Z",
-    "outcome": "fresh",
-    "run_attempt": 1,
-    "run_id": "36365270594",
-    "schedule": "",
-    "shard": ""
+    "latency_ms": 986,
+    "observed_at": "2026-10-04T17:30:00Z",
+    "outcome": "fresh"
   },
   "lkg": {
     "fetched_at": "2026-08-09T15:42:41Z",
@@ -98,25 +26,12 @@
     "quote_as_of": "2026-08-07T20:00:00Z",
     "source_as_of": "2026-08-07"
   },
-  "promotion_contract": "provider_observation/v2",
-  "provider_observation": {
-    "event_name": "workflow_dispatch",
-    "history_as_of": "2026-09-25",
-    "observed_at": "2026-09-28T01:17:59Z",
-    "payload_sha256": "2a415917d44dc71df9bad655678395d70860af840acaac063bf58e0cf06a96e0",
-    "quote_as_of": "2026-09-25T20:00:00Z",
-    "run_attempt": 1,
-    "run_id": "36365270594",
-    "schema_version": "provider_observation/v2",
-    "source_as_of": "2026-09-25"
-  },
   "resolution_state": "fresh_primary",
   "retry": false,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "stale": {
     "age_business_days": 8,
     "classified_at": "2026-08-19T23:42:29Z",
-    "classified_run_id": "32314261503",
     "expected_resolution": "next_natural_yahoo_run",
     "max_business_days": 6,
     "message": "AVUV holds LKG because Yahoo source date 2026-08-07 is 8 business days old, beyond the 6-day bound; it will retry on the next natural Yahoo run.",
@@ -124,5 +39,5 @@
     "source_as_of": "2026-08-07"
   },
   "ticker": "AVUV",
-  "updated_at": "2026-09-28T01:17:59Z"
+  "updated_at": "2026-10-04T17:30:00Z"
 }

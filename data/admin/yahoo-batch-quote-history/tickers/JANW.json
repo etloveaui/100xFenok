@@ -1,81 +1,22 @@
 {
-  "attempts": [
-    {
-      "attempts_used": 0,
-      "event_name": "workflow_dispatch",
-      "failures": [],
-      "latency_ms": 0,
-      "natural": false,
-      "observed_at": "2026-07-13T04:33:56Z",
-      "outcome": "skipped_fresh",
-      "run_attempt": 1,
-      "run_id": "29224221077",
-      "schedule": "",
-      "shard": ""
-    },
-    {
-      "attempts_used": 1,
-      "event_name": "schedule",
-      "failures": [],
-      "latency_ms": 577,
-      "natural": true,
-      "observed_at": "2026-07-28T23:07:58Z",
-      "outcome": "fresh",
-      "run_attempt": 1,
-      "run_id": "30406712544",
-      "schedule": "0 22 * * 2",
-      "shard": "2/6"
-    },
-    {
-      "attempts_used": 1,
-      "event_name": "schedule",
-      "failures": [],
-      "latency_ms": 1113,
-      "natural": true,
-      "observed_at": "2026-08-07T13:26:16Z",
-      "outcome": "fresh",
-      "run_attempt": 1,
-      "run_id": "31182487397",
-      "schedule": "7 12 * * 0-5",
-      "shard": "66/72"
-    },
-    {
-      "attempts_used": 1,
-      "event_name": "workflow_dispatch",
-      "failures": [],
-      "latency_ms": 451,
-      "natural": false,
-      "observed_at": "2026-09-28T04:37:06Z",
-      "outcome": "fresh",
-      "run_attempt": 1,
-      "run_id": "36367831133",
-      "schedule": "",
-      "shard": ""
-    }
-  ],
   "current": {
-    "fetched_at": "2026-09-28T04:55:05Z",
-    "history_as_of": "2026-09-25",
+    "fetched_at": "2026-10-04T17:41:10Z",
+    "history_as_of": "2026-10-02",
     "path": "data/yf/finance/JANW.json",
-    "payload_sha256": "ee47133cff562e4a8b740fc169573dea5368e5118115ff65aa785c3d8b98fab6",
-    "quote_as_of": "2026-09-25T19:58:33Z",
-    "source_as_of": "2026-09-25"
+    "payload_sha256": "2c06ac34f1fba50f9b5c2169513c000023e40584e56f7005c9056c17d0df1909",
+    "quote_as_of": "2026-10-02T19:33:37Z",
+    "source_as_of": "2026-10-02"
   },
   "discovered_from": [
     "stockanalysis_etf"
   ],
-  "last_attempt": {
+  "failure_count": 0,
+  "last_result": {
     "attempts_used": 1,
-    "event_name": "workflow_dispatch",
     "failures": [],
-    "latency_ms": 451,
-    "natural": false,
-    "observed_at": "2026-09-28T04:37:06Z",
-    "outcome": "fresh",
-    "run_attempt": 1,
-    "run_id": "36367831133",
-    "schedule": "",
-    "shard": ""
+    "latency_ms": 785,
+    "observed_at": "2026-10-04T17:41:10Z",
+    "outcome": "fresh"
   },
   "lkg": {
     "fetched_at": "2026-08-07T13:26:40Z",
@@ -85,25 +26,12 @@
     "quote_as_of": "2026-08-06T19:47:02Z",
     "source_as_of": "2026-08-06"
   },
-  "promotion_contract": "provider_observation/v2",
-  "provider_observation": {
-    "event_name": "workflow_dispatch",
-    "history_as_of": "2026-09-25",
-    "observed_at": "2026-09-28T04:37:06Z",
-    "payload_sha256": "176adbc8d5505235a9ae7cd5f68a5eaf20c107d28d078715d83418fb3b80ab40",
-    "quote_as_of": "2026-09-25T19:58:33Z",
-    "run_attempt": 1,
-    "run_id": "36367831133",
-    "schema_version": "provider_observation/v2",
-    "source_as_of": "2026-09-25"
-  },
   "resolution_state": "fresh_primary",
   "retry": false,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "stale": {
     "age_business_days": 9,
     "classified_at": "2026-08-19T23:42:29Z",
-    "classified_run_id": "32314261503",
     "expected_resolution": "next_natural_yahoo_run",
     "max_business_days": 6,
     "message": "JANW holds LKG because Yahoo source date 2026-08-06 is 9 business days old, beyond the 6-day bound; it will retry on the next natural Yahoo run.",
@@ -111,5 +39,5 @@
     "source_as_of": "2026-08-06"
   },
   "ticker": "JANW",
-  "updated_at": "2026-09-28T04:37:06Z"
+  "updated_at": "2026-10-04T17:41:10Z"
 }

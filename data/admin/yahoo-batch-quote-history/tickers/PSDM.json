@@ -1,55 +1,22 @@
 {
-  "attempts": [
-    {
-      "attempts_used": 1,
-      "event_name": "schedule",
-      "failures": [],
-      "latency_ms": 446,
-      "natural": true,
-      "observed_at": "2026-08-06T03:31:35Z",
-      "outcome": "fresh",
-      "run_attempt": 1,
-      "run_id": "31068593165",
-      "schedule": "7 0 * * 0-5",
-      "shard": "48/72"
-    },
-    {
-      "attempts_used": 1,
-      "event_name": "workflow_dispatch",
-      "failures": [],
-      "latency_ms": 490,
-      "natural": false,
-      "observed_at": "2026-09-28T06:02:24Z",
-      "outcome": "fresh",
-      "run_attempt": 1,
-      "run_id": "36367834787",
-      "schedule": "",
-      "shard": ""
-    }
-  ],
   "current": {
-    "fetched_at": "2026-09-28T06:04:44Z",
-    "history_as_of": "2026-09-25",
+    "fetched_at": "2026-10-04T17:46:36Z",
+    "history_as_of": "2026-10-02",
     "path": "data/yf/finance/PSDM.json",
-    "payload_sha256": "923244657f81e58f0f63a408d9c688246f8f8c224088dfb3b82b16e6231b2975",
-    "quote_as_of": "2026-09-25T20:00:00Z",
-    "source_as_of": "2026-09-25"
+    "payload_sha256": "490a6ecd36bc9c694c1ab1ff4251ec5c8ec431093160f60fcadf986a56ea29e4",
+    "quote_as_of": "2026-10-02T20:00:00Z",
+    "source_as_of": "2026-10-02"
   },
   "discovered_from": [
     "stockanalysis_etf"
   ],
-  "last_attempt": {
+  "failure_count": 0,
+  "last_result": {
     "attempts_used": 1,
-    "event_name": "workflow_dispatch",
     "failures": [],
-    "latency_ms": 490,
-    "natural": false,
-    "observed_at": "2026-09-28T06:02:24Z",
-    "outcome": "fresh",
-    "run_attempt": 1,
-    "run_id": "36367834787",
-    "schedule": "",
-    "shard": ""
+    "latency_ms": 1011,
+    "observed_at": "2026-10-04T17:46:36Z",
+    "outcome": "fresh"
   },
   "lkg": {
     "fetched_at": "2026-08-06T03:33:32Z",
@@ -59,25 +26,12 @@
     "quote_as_of": "2026-08-05T19:47:29Z",
     "source_as_of": "2026-08-05"
   },
-  "promotion_contract": "provider_observation/v2",
-  "provider_observation": {
-    "event_name": "workflow_dispatch",
-    "history_as_of": "2026-09-25",
-    "observed_at": "2026-09-28T06:02:24Z",
-    "payload_sha256": "aa82445431b65a9ff4ed960788916d64a3980ed38431a077bc278507b3dd3eef",
-    "quote_as_of": "2026-09-25T20:00:00Z",
-    "run_attempt": 1,
-    "run_id": "36367834787",
-    "schema_version": "provider_observation/v2",
-    "source_as_of": "2026-09-25"
-  },
   "resolution_state": "fresh_primary",
   "retry": false,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "stale": {
     "age_business_days": 7,
     "classified_at": "2026-08-14T00:10:47Z",
-    "classified_run_id": "31755913658",
     "expected_resolution": "next_natural_yahoo_run",
     "max_business_days": 6,
     "message": "PSDM holds LKG because Yahoo source date 2026-08-05 is 7 business days old, beyond the 6-day bound; it will retry on the next natural Yahoo run.",
@@ -85,5 +39,5 @@
     "source_as_of": "2026-08-05"
   },
   "ticker": "PSDM",
-  "updated_at": "2026-09-28T06:02:24Z"
+  "updated_at": "2026-10-04T17:46:36Z"
 }

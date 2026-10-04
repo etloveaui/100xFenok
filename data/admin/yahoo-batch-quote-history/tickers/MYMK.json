@@ -1,55 +1,22 @@
 {
-  "attempts": [
-    {
-      "attempts_used": 1,
-      "event_name": "schedule",
-      "failures": [],
-      "latency_ms": 1153,
-      "natural": true,
-      "observed_at": "2026-08-09T13:12:35Z",
-      "outcome": "fresh",
-      "run_attempt": 1,
-      "run_id": "31315136344",
-      "schedule": "7 12 * * 0-5",
-      "shard": "6/72"
-    },
-    {
-      "attempts_used": 1,
-      "event_name": "workflow_dispatch",
-      "failures": [],
-      "latency_ms": 452,
-      "natural": false,
-      "observed_at": "2026-09-28T05:23:15Z",
-      "outcome": "fresh",
-      "run_attempt": 1,
-      "run_id": "36367832955",
-      "schedule": "",
-      "shard": ""
-    }
-  ],
   "current": {
-    "fetched_at": "2026-09-28T05:34:37Z",
-    "history_as_of": "2026-09-25",
+    "fetched_at": "2026-10-04T17:44:03Z",
+    "history_as_of": "2026-10-02",
     "path": "data/yf/finance/MYMK.json",
-    "payload_sha256": "255a5def5c37c7c866e3f47e3f113115421905f6ec450c689c03dd653e2a8fbc",
-    "quote_as_of": "2026-09-25T20:00:00Z",
-    "source_as_of": "2026-09-25"
+    "payload_sha256": "8710a5926db471fbf0c6ff745edb984329d22f114c42c950187206a601ac88cc",
+    "quote_as_of": "2026-10-02T20:00:00Z",
+    "source_as_of": "2026-10-02"
   },
   "discovered_from": [
     "stockanalysis_etf"
   ],
-  "last_attempt": {
+  "failure_count": 0,
+  "last_result": {
     "attempts_used": 1,
-    "event_name": "workflow_dispatch",
     "failures": [],
-    "latency_ms": 452,
-    "natural": false,
-    "observed_at": "2026-09-28T05:23:15Z",
-    "outcome": "fresh",
-    "run_attempt": 1,
-    "run_id": "36367832955",
-    "schedule": "",
-    "shard": ""
+    "latency_ms": 776,
+    "observed_at": "2026-10-04T17:44:03Z",
+    "outcome": "fresh"
   },
   "lkg": {
     "fetched_at": "2026-08-09T13:16:38Z",
@@ -59,25 +26,12 @@
     "quote_as_of": "2026-08-07T20:00:00Z",
     "source_as_of": "2026-08-07"
   },
-  "promotion_contract": "provider_observation/v2",
-  "provider_observation": {
-    "event_name": "workflow_dispatch",
-    "history_as_of": "2026-09-25",
-    "observed_at": "2026-09-28T05:23:15Z",
-    "payload_sha256": "168322b58794a970e70427053c7df4dfe88574289d641842122b40d8a2519064",
-    "quote_as_of": "2026-09-25T20:00:00Z",
-    "run_attempt": 1,
-    "run_id": "36367832955",
-    "schema_version": "provider_observation/v2",
-    "source_as_of": "2026-09-25"
-  },
   "resolution_state": "fresh_primary",
   "retry": false,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "stale": {
     "age_business_days": 8,
     "classified_at": "2026-08-19T23:42:29Z",
-    "classified_run_id": "32314261503",
     "expected_resolution": "next_natural_yahoo_run",
     "max_business_days": 6,
     "message": "MYMK holds LKG because Yahoo source date 2026-08-07 is 8 business days old, beyond the 6-day bound; it will retry on the next natural Yahoo run.",
@@ -85,5 +39,5 @@
     "source_as_of": "2026-08-07"
   },
   "ticker": "MYMK",
-  "updated_at": "2026-09-28T05:23:15Z"
+  "updated_at": "2026-10-04T17:44:03Z"
 }

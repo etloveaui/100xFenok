@@ -1,55 +1,22 @@
 {
-  "attempts": [
-    {
-      "attempts_used": 1,
-      "event_name": "schedule",
-      "failures": [],
-      "latency_ms": 844,
-      "natural": true,
-      "observed_at": "2026-08-12T02:41:04Z",
-      "outcome": "fresh",
-      "run_attempt": 1,
-      "run_id": "31557511991",
-      "schedule": "7 0 * * 0-5",
-      "shard": "36/72"
-    },
-    {
-      "attempts_used": 1,
-      "event_name": "workflow_dispatch",
-      "failures": [],
-      "latency_ms": 512,
-      "natural": false,
-      "observed_at": "2026-09-28T06:30:00Z",
-      "outcome": "fresh",
-      "run_attempt": 1,
-      "run_id": "36367836615",
-      "schedule": "",
-      "shard": ""
-    }
-  ],
   "current": {
-    "fetched_at": "2026-09-28T06:43:35Z",
-    "history_as_of": "2026-09-25",
+    "fetched_at": "2026-10-04T17:54:52Z",
+    "history_as_of": "2026-10-02",
     "path": "data/yf/finance/WELD.json",
-    "payload_sha256": "ab08439fdf4b35095bdb88ea4f98e0d423541c58cddc01dba538ba728ab6ec62",
-    "quote_as_of": "2026-09-25T19:57:10Z",
-    "source_as_of": "2026-09-25"
+    "payload_sha256": "26075e70859b271e640c2f3ee94b61c1a38523a26d212313a1f3ef57a9cc67ba",
+    "quote_as_of": "2026-10-02T19:59:48Z",
+    "source_as_of": "2026-10-02"
   },
   "discovered_from": [
     "stockanalysis_etf"
   ],
-  "last_attempt": {
+  "failure_count": 0,
+  "last_result": {
     "attempts_used": 1,
-    "event_name": "workflow_dispatch",
     "failures": [],
-    "latency_ms": 512,
-    "natural": false,
-    "observed_at": "2026-09-28T06:30:00Z",
-    "outcome": "fresh",
-    "run_attempt": 1,
-    "run_id": "36367836615",
-    "schedule": "",
-    "shard": ""
+    "latency_ms": 780,
+    "observed_at": "2026-10-04T17:54:52Z",
+    "outcome": "fresh"
   },
   "lkg": {
     "fetched_at": "2026-08-12T02:45:38Z",
@@ -59,25 +26,12 @@
     "quote_as_of": "2026-08-11T19:45:32Z",
     "source_as_of": "2026-08-11"
   },
-  "promotion_contract": "provider_observation/v2",
-  "provider_observation": {
-    "event_name": "workflow_dispatch",
-    "history_as_of": "2026-09-25",
-    "observed_at": "2026-09-28T06:30:00Z",
-    "payload_sha256": "25eccfbbffa17f76374a64146b2c4de5bb01bf806fb110ff33b695fa0fd2498b",
-    "quote_as_of": "2026-09-25T19:57:10Z",
-    "run_attempt": 1,
-    "run_id": "36367836615",
-    "schema_version": "provider_observation/v2",
-    "source_as_of": "2026-09-25"
-  },
   "resolution_state": "fresh_primary",
   "retry": false,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "stale": {
     "age_business_days": 7,
     "classified_at": "2026-08-20T14:20:12Z",
-    "classified_run_id": "32379322022",
     "expected_resolution": "next_natural_yahoo_run",
     "max_business_days": 6,
     "message": "WELD holds LKG because Yahoo source date 2026-08-11 is 7 business days old, beyond the 6-day bound; it will retry on the next natural Yahoo run.",
@@ -85,5 +39,5 @@
     "source_as_of": "2026-08-11"
   },
   "ticker": "WELD",
-  "updated_at": "2026-09-28T06:30:00Z"
+  "updated_at": "2026-10-04T17:54:52Z"
 }

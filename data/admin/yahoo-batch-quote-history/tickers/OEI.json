@@ -1,68 +1,22 @@
 {
-  "attempts": [
-    {
-      "attempts_used": 1,
-      "event_name": "schedule",
-      "failures": [],
-      "latency_ms": 485,
-      "natural": true,
-      "observed_at": "2026-08-05T14:29:49Z",
-      "outcome": "fresh",
-      "run_attempt": 1,
-      "run_id": "31015333400",
-      "schedule": "7 12 * * 0-5",
-      "shard": "42/72"
-    },
-    {
-      "attempts_used": 1,
-      "event_name": "schedule",
-      "failures": [],
-      "latency_ms": 654,
-      "natural": true,
-      "observed_at": "2026-08-12T13:41:31Z",
-      "outcome": "fresh",
-      "run_attempt": 1,
-      "run_id": "31602424796",
-      "schedule": "7 12 * * 0-5",
-      "shard": "42/72"
-    },
-    {
-      "attempts_used": 1,
-      "event_name": "workflow_dispatch",
-      "failures": [],
-      "latency_ms": 473,
-      "natural": false,
-      "observed_at": "2026-09-28T05:23:15Z",
-      "outcome": "fresh",
-      "run_attempt": 1,
-      "run_id": "36367832955",
-      "schedule": "",
-      "shard": ""
-    }
-  ],
   "current": {
-    "fetched_at": "2026-09-28T05:38:58Z",
-    "history_as_of": "2026-09-25",
+    "fetched_at": "2026-10-04T17:44:53Z",
+    "history_as_of": "2026-10-02",
     "path": "data/yf/finance/OEI.json",
-    "payload_sha256": "0c3708704e9b5de670446286d7904ea171d34529dfbbefdf0ccae849dc33325e",
-    "quote_as_of": "2026-09-25T19:38:32Z",
-    "source_as_of": "2026-09-25"
+    "payload_sha256": "34bdc3e68734ec0fbd5d8ffbe874f1a7c239b27467bc7829caa88c8eac44aaf2",
+    "quote_as_of": "2026-10-02T20:00:00Z",
+    "source_as_of": "2026-10-02"
   },
   "discovered_from": [
     "stockanalysis_etf"
   ],
-  "last_attempt": {
+  "failure_count": 0,
+  "last_result": {
     "attempts_used": 1,
-    "event_name": "workflow_dispatch",
     "failures": [],
-    "latency_ms": 473,
-    "natural": false,
-    "observed_at": "2026-09-28T05:23:15Z",
-    "outcome": "fresh",
-    "run_attempt": 1,
-    "run_id": "36367832955",
-    "schedule": "",
-    "shard": ""
+    "latency_ms": 760,
+    "observed_at": "2026-10-04T17:44:53Z",
+    "outcome": "fresh"
   },
   "lkg": {
     "fetched_at": "2026-08-12T13:44:29Z",
@@ -72,25 +26,12 @@
     "quote_as_of": "2026-08-11T19:32:17Z",
     "source_as_of": "2026-08-10"
   },
-  "promotion_contract": "provider_observation/v2",
-  "provider_observation": {
-    "event_name": "workflow_dispatch",
-    "history_as_of": "2026-09-25",
-    "observed_at": "2026-09-28T05:23:15Z",
-    "payload_sha256": "783480e0c108d4c4391eb1798c7fb92f3b23f03c2712e89cf4a4d88e66cd5569",
-    "quote_as_of": "2026-09-25T19:38:32Z",
-    "run_attempt": 1,
-    "run_id": "36367832955",
-    "schema_version": "provider_observation/v2",
-    "source_as_of": "2026-09-25"
-  },
   "resolution_state": "fresh_primary",
   "retry": false,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "stale": {
     "age_business_days": 7,
     "classified_at": "2026-08-19T23:42:29Z",
-    "classified_run_id": "32314261503",
     "expected_resolution": "next_natural_yahoo_run",
     "max_business_days": 6,
     "message": "OEI holds LKG because Yahoo source date 2026-08-10 is 7 business days old, beyond the 6-day bound; it will retry on the next natural Yahoo run.",
@@ -98,5 +39,5 @@
     "source_as_of": "2026-08-10"
   },
   "ticker": "OEI",
-  "updated_at": "2026-09-28T05:23:15Z"
+  "updated_at": "2026-10-04T17:44:53Z"
 }

@@ -1,81 +1,22 @@
 {
-  "attempts": [
-    {
-      "attempts_used": 1,
-      "event_name": "schedule",
-      "failures": [],
-      "latency_ms": 712,
-      "natural": true,
-      "observed_at": "2026-08-02T22:59:12Z",
-      "outcome": "fresh",
-      "run_attempt": 1,
-      "run_id": "30771231562",
-      "schedule": "0 22 * * 0",
-      "shard": "0/6"
-    },
-    {
-      "attempts_used": 1,
-      "event_name": "schedule",
-      "failures": [],
-      "latency_ms": 699,
-      "natural": true,
-      "observed_at": "2026-08-11T07:21:44Z",
-      "outcome": "fresh",
-      "run_attempt": 1,
-      "run_id": "31468517777",
-      "schedule": "7 6 * * 0-5",
-      "shard": "27/72"
-    },
-    {
-      "attempts_used": 0,
-      "event_name": "schedule",
-      "failures": [],
-      "latency_ms": 0,
-      "natural": true,
-      "observed_at": "2026-08-11T13:36:55Z",
-      "outcome": "skipped_fresh",
-      "run_attempt": 1,
-      "run_id": "31496919771",
-      "schedule": "7 12 * * 0-5",
-      "shard": "30/72"
-    },
-    {
-      "attempts_used": 1,
-      "event_name": "workflow_dispatch",
-      "failures": [],
-      "latency_ms": 528,
-      "natural": false,
-      "observed_at": "2026-09-28T04:37:06Z",
-      "outcome": "fresh",
-      "run_attempt": 1,
-      "run_id": "36367831133",
-      "schedule": "",
-      "shard": ""
-    }
-  ],
   "current": {
-    "fetched_at": "2026-09-28T04:37:30Z",
-    "history_as_of": "2026-09-25",
+    "fetched_at": "2026-10-04T17:37:20Z",
+    "history_as_of": "2026-10-02",
     "path": "data/yf/finance/FNDA.json",
-    "payload_sha256": "36df195ead86508cc8bb94663f49895d315ad2624963904bb20b0399081195e5",
-    "quote_as_of": "2026-09-25T20:00:00Z",
-    "source_as_of": "2026-09-25"
+    "payload_sha256": "18af8c926c5bf03cf57fc1605e5f58b33cce7bb0c452e2d5742354b49b2e65b6",
+    "quote_as_of": "2026-10-02T20:00:00Z",
+    "source_as_of": "2026-10-02"
   },
   "discovered_from": [
     "stockanalysis_etf"
   ],
-  "last_attempt": {
+  "failure_count": 0,
+  "last_result": {
     "attempts_used": 1,
-    "event_name": "workflow_dispatch",
     "failures": [],
-    "latency_ms": 528,
-    "natural": false,
-    "observed_at": "2026-09-28T04:37:06Z",
-    "outcome": "fresh",
-    "run_attempt": 1,
-    "run_id": "36367831133",
-    "schedule": "",
-    "shard": ""
+    "latency_ms": 988,
+    "observed_at": "2026-10-04T17:37:20Z",
+    "outcome": "fresh"
   },
   "lkg": {
     "fetched_at": "2026-08-11T07:22:20Z",
@@ -85,25 +26,12 @@
     "quote_as_of": "2026-08-10T20:00:00Z",
     "source_as_of": "2026-08-10"
   },
-  "promotion_contract": "provider_observation/v2",
-  "provider_observation": {
-    "event_name": "workflow_dispatch",
-    "history_as_of": "2026-09-25",
-    "observed_at": "2026-09-28T04:37:06Z",
-    "payload_sha256": "95cffcf3bf79fd365ea939d597f3bda235b95f8a8443c06b2b3a81a6c0a3b0ef",
-    "quote_as_of": "2026-09-25T20:00:00Z",
-    "run_attempt": 1,
-    "run_id": "36367831133",
-    "schema_version": "provider_observation/v2",
-    "source_as_of": "2026-09-25"
-  },
   "resolution_state": "fresh_primary",
   "retry": false,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "stale": {
     "age_business_days": 7,
     "classified_at": "2026-08-19T23:42:29Z",
-    "classified_run_id": "32314261503",
     "expected_resolution": "next_natural_yahoo_run",
     "max_business_days": 6,
     "message": "FNDA holds LKG because Yahoo source date 2026-08-10 is 7 business days old, beyond the 6-day bound; it will retry on the next natural Yahoo run.",
@@ -111,5 +39,5 @@
     "source_as_of": "2026-08-10"
   },
   "ticker": "FNDA",
-  "updated_at": "2026-09-28T04:37:06Z"
+  "updated_at": "2026-10-04T17:37:20Z"
 }

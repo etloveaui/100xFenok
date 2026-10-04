@@ -1,55 +1,22 @@
 {
-  "attempts": [
-    {
-      "attempts_used": 1,
-      "event_name": "schedule",
-      "failures": [],
-      "latency_ms": 1258,
-      "natural": true,
-      "observed_at": "2026-08-10T13:38:56Z",
-      "outcome": "fresh",
-      "run_attempt": 1,
-      "run_id": "31393796703",
-      "schedule": "7 12 * * 0-5",
-      "shard": "18/72"
-    },
-    {
-      "attempts_used": 1,
-      "event_name": "workflow_dispatch",
-      "failures": [],
-      "latency_ms": 476,
-      "natural": false,
-      "observed_at": "2026-09-28T04:37:06Z",
-      "outcome": "fresh",
-      "run_attempt": 1,
-      "run_id": "36367831133",
-      "schedule": "",
-      "shard": ""
-    }
-  ],
   "current": {
-    "fetched_at": "2026-09-28T04:54:47Z",
-    "history_as_of": "2026-09-25",
+    "fetched_at": "2026-10-04T17:41:07Z",
+    "history_as_of": "2026-10-02",
     "path": "data/yf/finance/IZRL.json",
-    "payload_sha256": "dee63f9e52c2c91857ba1c22cb44d79872d205d91074b22e4782050ef5f50429",
-    "quote_as_of": "2026-09-25T19:48:35Z",
-    "source_as_of": "2026-09-25"
+    "payload_sha256": "7f58f5ee875311397c38593f46c330a3e6ba36d091534fc2a2fad66228a04eb0",
+    "quote_as_of": "2026-10-02T19:17:04Z",
+    "source_as_of": "2026-10-02"
   },
   "discovered_from": [
     "stockanalysis_etf"
   ],
-  "last_attempt": {
+  "failure_count": 0,
+  "last_result": {
     "attempts_used": 1,
-    "event_name": "workflow_dispatch",
     "failures": [],
-    "latency_ms": 476,
-    "natural": false,
-    "observed_at": "2026-09-28T04:37:06Z",
-    "outcome": "fresh",
-    "run_attempt": 1,
-    "run_id": "36367831133",
-    "schedule": "",
-    "shard": ""
+    "latency_ms": 1008,
+    "observed_at": "2026-10-04T17:41:07Z",
+    "outcome": "fresh"
   },
   "lkg": {
     "fetched_at": "2026-08-10T13:41:29Z",
@@ -59,25 +26,12 @@
     "quote_as_of": "2026-08-10T13:31:40Z",
     "source_as_of": "2026-08-10"
   },
-  "promotion_contract": "provider_observation/v2",
-  "provider_observation": {
-    "event_name": "workflow_dispatch",
-    "history_as_of": "2026-09-25",
-    "observed_at": "2026-09-28T04:37:06Z",
-    "payload_sha256": "3198458d8cf8d5f2ee49a04e77ced7a5348b2a56d4e6799dc48fa4091386d685",
-    "quote_as_of": "2026-09-25T19:48:35Z",
-    "run_attempt": 1,
-    "run_id": "36367831133",
-    "schema_version": "provider_observation/v2",
-    "source_as_of": "2026-09-25"
-  },
   "resolution_state": "fresh_primary",
   "retry": false,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "stale": {
     "age_business_days": 7,
     "classified_at": "2026-08-19T23:42:29Z",
-    "classified_run_id": "32314261503",
     "expected_resolution": "next_natural_yahoo_run",
     "max_business_days": 6,
     "message": "IZRL holds LKG because Yahoo source date 2026-08-10 is 7 business days old, beyond the 6-day bound; it will retry on the next natural Yahoo run.",
@@ -85,5 +39,5 @@
     "source_as_of": "2026-08-10"
   },
   "ticker": "IZRL",
-  "updated_at": "2026-09-28T04:37:06Z"
+  "updated_at": "2026-10-04T17:41:07Z"
 }

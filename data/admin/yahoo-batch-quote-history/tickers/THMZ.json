@@ -1,55 +1,22 @@
 {
-  "attempts": [
-    {
-      "attempts_used": 1,
-      "event_name": "schedule",
-      "failures": [],
-      "latency_ms": 729,
-      "natural": true,
-      "observed_at": "2026-08-06T14:33:02Z",
-      "outcome": "fresh",
-      "run_attempt": 1,
-      "run_id": "31111230701",
-      "schedule": "7 12 * * 0-5",
-      "shard": "54/72"
-    },
-    {
-      "attempts_used": 1,
-      "event_name": "workflow_dispatch",
-      "failures": [],
-      "latency_ms": 462,
-      "natural": false,
-      "observed_at": "2026-09-28T06:30:00Z",
-      "outcome": "fresh",
-      "run_attempt": 1,
-      "run_id": "36367836615",
-      "schedule": "",
-      "shard": ""
-    }
-  ],
   "current": {
-    "fetched_at": "2026-09-28T06:32:31Z",
-    "history_as_of": "2026-09-25",
+    "fetched_at": "2026-10-04T17:51:46Z",
+    "history_as_of": "2026-10-02",
     "path": "data/yf/finance/THMZ.json",
-    "payload_sha256": "f8ce3fc1e205f1fd4b0808e4e9d334370ea480b28719dac92eaa0c458f18bb73",
-    "quote_as_of": "2026-09-25T20:00:00Z",
-    "source_as_of": "2026-09-25"
+    "payload_sha256": "4c2b79d459c407d1e7051f4719cb8473f4538c24d66bd1a617dfb1705d7eb9df",
+    "quote_as_of": "2026-10-02T20:00:00Z",
+    "source_as_of": "2026-10-02"
   },
   "discovered_from": [
     "stockanalysis_etf"
   ],
-  "last_attempt": {
+  "failure_count": 0,
+  "last_result": {
     "attempts_used": 1,
-    "event_name": "workflow_dispatch",
     "failures": [],
-    "latency_ms": 462,
-    "natural": false,
-    "observed_at": "2026-09-28T06:30:00Z",
-    "outcome": "fresh",
-    "run_attempt": 1,
-    "run_id": "36367836615",
-    "schedule": "",
-    "shard": ""
+    "latency_ms": 984,
+    "observed_at": "2026-10-04T17:51:46Z",
+    "outcome": "fresh"
   },
   "lkg": {
     "fetched_at": "2026-08-06T14:36:17Z",
@@ -59,25 +26,12 @@
     "quote_as_of": "2026-08-06T13:33:48Z",
     "source_as_of": "2026-08-05"
   },
-  "promotion_contract": "provider_observation/v2",
-  "provider_observation": {
-    "event_name": "workflow_dispatch",
-    "history_as_of": "2026-09-25",
-    "observed_at": "2026-09-28T06:30:00Z",
-    "payload_sha256": "72bd2298c6c679c71990da639da78b373f6a57b8dfd62f1e4ff213f59b21d6d9",
-    "quote_as_of": "2026-09-25T20:00:00Z",
-    "run_attempt": 1,
-    "run_id": "36367836615",
-    "schema_version": "provider_observation/v2",
-    "source_as_of": "2026-09-25"
-  },
   "resolution_state": "fresh_primary",
   "retry": false,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "stale": {
     "age_business_days": 7,
     "classified_at": "2026-08-14T00:10:47Z",
-    "classified_run_id": "31755913658",
     "expected_resolution": "next_natural_yahoo_run",
     "max_business_days": 6,
     "message": "THMZ holds LKG because Yahoo source date 2026-08-05 is 7 business days old, beyond the 6-day bound; it will retry on the next natural Yahoo run.",
@@ -85,5 +39,5 @@
     "source_as_of": "2026-08-05"
   },
   "ticker": "THMZ",
-  "updated_at": "2026-09-28T06:30:00Z"
+  "updated_at": "2026-10-04T17:51:46Z"
 }

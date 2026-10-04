@@ -1,68 +1,22 @@
 {
-  "attempts": [
-    {
-      "attempts_used": 1,
-      "event_name": "schedule",
-      "failures": [],
-      "latency_ms": 530,
-      "natural": true,
-      "observed_at": "2026-08-02T22:59:12Z",
-      "outcome": "fresh",
-      "run_attempt": 1,
-      "run_id": "30771231562",
-      "schedule": "0 22 * * 0",
-      "shard": "0/6"
-    },
-    {
-      "attempts_used": 1,
-      "event_name": "schedule",
-      "failures": [],
-      "latency_ms": 720,
-      "natural": true,
-      "observed_at": "2026-08-06T14:33:02Z",
-      "outcome": "fresh",
-      "run_attempt": 1,
-      "run_id": "31111230701",
-      "schedule": "7 12 * * 0-5",
-      "shard": "54/72"
-    },
-    {
-      "attempts_used": 1,
-      "event_name": "workflow_dispatch",
-      "failures": [],
-      "latency_ms": 469,
-      "natural": false,
-      "observed_at": "2026-09-28T04:37:06Z",
-      "outcome": "fresh",
-      "run_attempt": 1,
-      "run_id": "36367831133",
-      "schedule": "",
-      "shard": ""
-    }
-  ],
   "current": {
-    "fetched_at": "2026-09-28T04:46:21Z",
-    "history_as_of": "2026-09-25",
+    "fetched_at": "2026-10-04T17:39:04Z",
+    "history_as_of": "2026-10-02",
     "path": "data/yf/finance/HMYY.json",
-    "payload_sha256": "2421762f081a22e5218c9bd482f347a6f09c70593a3ab65ec97dd255184950fe",
-    "quote_as_of": "2026-09-25T20:00:00Z",
-    "source_as_of": "2026-09-25"
+    "payload_sha256": "37bc86c382e401c5a657c8306a74a199a05ae6520bc148532f63a6eb099087d9",
+    "quote_as_of": "2026-10-02T20:00:00Z",
+    "source_as_of": "2026-10-02"
   },
   "discovered_from": [
     "stockanalysis_etf"
   ],
-  "last_attempt": {
+  "failure_count": 0,
+  "last_result": {
     "attempts_used": 1,
-    "event_name": "workflow_dispatch",
     "failures": [],
-    "latency_ms": 469,
-    "natural": false,
-    "observed_at": "2026-09-28T04:37:06Z",
-    "outcome": "fresh",
-    "run_attempt": 1,
-    "run_id": "36367831133",
-    "schedule": "",
-    "shard": ""
+    "latency_ms": 922,
+    "observed_at": "2026-10-04T17:39:04Z",
+    "outcome": "fresh"
   },
   "lkg": {
     "fetched_at": "2026-08-06T14:35:25Z",
@@ -72,25 +26,12 @@
     "quote_as_of": "2026-08-06T14:26:41Z",
     "source_as_of": "2026-08-06"
   },
-  "promotion_contract": "provider_observation/v2",
-  "provider_observation": {
-    "event_name": "workflow_dispatch",
-    "history_as_of": "2026-09-25",
-    "observed_at": "2026-09-28T04:37:06Z",
-    "payload_sha256": "ec93537102059692fe48ea26a2b6579398187ace8695adda25a3e59061dac0a3",
-    "quote_as_of": "2026-09-25T20:00:00Z",
-    "run_attempt": 1,
-    "run_id": "36367831133",
-    "schema_version": "provider_observation/v2",
-    "source_as_of": "2026-09-25"
-  },
   "resolution_state": "fresh_primary",
   "retry": false,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "stale": {
     "age_business_days": 9,
     "classified_at": "2026-08-19T23:42:29Z",
-    "classified_run_id": "32314261503",
     "expected_resolution": "next_natural_yahoo_run",
     "max_business_days": 6,
     "message": "HMYY holds LKG because Yahoo source date 2026-08-06 is 9 business days old, beyond the 6-day bound; it will retry on the next natural Yahoo run.",
@@ -98,5 +39,5 @@
     "source_as_of": "2026-08-06"
   },
   "ticker": "HMYY",
-  "updated_at": "2026-09-28T04:37:06Z"
+  "updated_at": "2026-10-04T17:39:04Z"
 }

@@ -1,130 +1,53 @@
 {
-  "attempts": [
-    {
-      "attempts_used": 1,
-      "event_name": "workflow_dispatch",
-      "failures": [
-        {
-          "attempt": 1,
-          "error": "YFDataException: FFLG: No Fund data found.",
-          "source": "provider_safe_call"
-        },
-        {
-          "attempt": 1,
-          "error": "YFDataException: FFLG: No Fund data found.",
-          "source": "provider_safe_call"
-        },
-        {
-          "attempt": 1,
-          "error": "YFDataException: FFLG: No Fund data found.",
-          "source": "provider_safe_call"
-        },
-        {
-          "attempt": 1,
-          "error": "YFDataException: FFLG: No Fund data found.",
-          "source": "provider_safe_call"
-        },
-        {
-          "attempt": 1,
-          "error": "YFDataException: FFLG: No Fund data found.",
-          "source": "provider_safe_call"
-        },
-        {
-          "attempt": 1,
-          "error": "YFDataException: FFLG: No Fund data found.",
-          "source": "provider_safe_call"
-        }
-      ],
-      "latency_ms": 711,
-      "natural": true,
-      "observed_at": "2026-08-01T17:32:35Z",
-      "outcome": "fresh",
-      "run_attempt": 1,
-      "run_id": "30707126488",
-      "schedule": "",
-      "shard": "0/6"
-    },
-    {
-      "attempts_used": 1,
-      "event_name": "schedule",
-      "failures": [
-        {
-          "attempt": 1,
-          "error": "YFDataException: FFLG: No Fund data found.",
-          "source": "provider_safe_call"
-        },
-        {
-          "attempt": 1,
-          "error": "YFDataException: FFLG: No Fund data found.",
-          "source": "provider_safe_call"
-        },
-        {
-          "attempt": 1,
-          "error": "YFDataException: FFLG: No Fund data found.",
-          "source": "provider_safe_call"
-        },
-        {
-          "attempt": 1,
-          "error": "YFDataException: FFLG: No Fund data found.",
-          "source": "provider_safe_call"
-        },
-        {
-          "attempt": 1,
-          "error": "YFDataException: FFLG: No Fund data found.",
-          "source": "provider_safe_call"
-        },
-        {
-          "attempt": 1,
-          "error": "YFDataException: FFLG: No Fund data found.",
-          "source": "provider_safe_call"
-        }
-      ],
-      "latency_ms": 1482,
-      "natural": true,
-      "observed_at": "2026-08-07T13:26:16Z",
-      "outcome": "fresh",
-      "run_attempt": 1,
-      "run_id": "31182487397",
-      "schedule": "7 12 * * 0-5",
-      "shard": "66/72"
-    },
-    {
-      "attempts_used": 1,
-      "event_name": "workflow_dispatch",
-      "failures": [],
-      "latency_ms": 517,
-      "natural": false,
-      "observed_at": "2026-09-28T03:11:20Z",
-      "outcome": "fresh",
-      "run_attempt": 1,
-      "run_id": "36367829153",
-      "schedule": "",
-      "shard": ""
-    }
-  ],
   "current": {
-    "fetched_at": "2026-09-28T03:28:26Z",
-    "history_as_of": "2026-09-25",
+    "fetched_at": "2026-10-04T17:36:28Z",
+    "history_as_of": "2026-10-02",
     "path": "data/yf/finance/FFLG.json",
-    "payload_sha256": "daa18192a3b2d5b7a8200092f294f0d49a44ba38ba2c5164253022a73146bcf9",
-    "quote_as_of": "2026-09-25T19:59:46Z",
-    "source_as_of": "2026-09-25"
+    "payload_sha256": "a2bad912b83b802ebdeb06540ba194c4b50eb3addcf0845762844c30cf8ecc34",
+    "quote_as_of": "2026-10-02T19:59:46Z",
+    "source_as_of": "2026-10-02"
   },
   "discovered_from": [
     "stockanalysis_etf"
   ],
-  "last_attempt": {
+  "failure_count": 0,
+  "last_result": {
     "attempts_used": 1,
-    "event_name": "workflow_dispatch",
-    "failures": [],
-    "latency_ms": 517,
-    "natural": false,
-    "observed_at": "2026-09-28T03:11:20Z",
-    "outcome": "fresh",
-    "run_attempt": 1,
-    "run_id": "36367829153",
-    "schedule": "",
-    "shard": ""
+    "failures": [
+      {
+        "attempt": 1,
+        "error": "YFDataException: FFLG: No Fund data found.",
+        "source": "provider_safe_call"
+      },
+      {
+        "attempt": 1,
+        "error": "YFDataException: FFLG: No Fund data found.",
+        "source": "provider_safe_call"
+      },
+      {
+        "attempt": 1,
+        "error": "YFDataException: FFLG: No Fund data found.",
+        "source": "provider_safe_call"
+      },
+      {
+        "attempt": 1,
+        "error": "YFDataException: FFLG: No Fund data found.",
+        "source": "provider_safe_call"
+      },
+      {
+        "attempt": 1,
+        "error": "YFDataException: FFLG: No Fund data found.",
+        "source": "provider_safe_call"
+      },
+      {
+        "attempt": 1,
+        "error": "YFDataException: FFLG: No Fund data found.",
+        "source": "provider_safe_call"
+      }
+    ],
+    "latency_ms": 1022,
+    "observed_at": "2026-10-04T17:36:28Z",
+    "outcome": "fresh"
   },
   "lkg": {
     "fetched_at": "2026-08-07T13:28:37Z",
@@ -134,25 +57,12 @@
     "quote_as_of": "2026-08-06T19:59:46Z",
     "source_as_of": "2026-08-06"
   },
-  "promotion_contract": "provider_observation/v2",
-  "provider_observation": {
-    "event_name": "workflow_dispatch",
-    "history_as_of": "2026-09-25",
-    "observed_at": "2026-09-28T03:11:20Z",
-    "payload_sha256": "7df28e395be45d781e96d33637050642d40e7ea07f5f1620320c890d7d3c07e6",
-    "quote_as_of": "2026-09-25T19:59:46Z",
-    "run_attempt": 1,
-    "run_id": "36367829153",
-    "schema_version": "provider_observation/v2",
-    "source_as_of": "2026-09-25"
-  },
   "resolution_state": "fresh_primary",
   "retry": false,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "stale": {
     "age_business_days": 9,
     "classified_at": "2026-08-19T23:42:29Z",
-    "classified_run_id": "32314261503",
     "expected_resolution": "next_natural_yahoo_run",
     "max_business_days": 6,
     "message": "FFLG holds LKG because Yahoo source date 2026-08-06 is 9 business days old, beyond the 6-day bound; it will retry on the next natural Yahoo run.",
@@ -160,5 +70,5 @@
     "source_as_of": "2026-08-06"
   },
   "ticker": "FFLG",
-  "updated_at": "2026-09-28T03:11:20Z"
+  "updated_at": "2026-10-04T17:36:28Z"
 }

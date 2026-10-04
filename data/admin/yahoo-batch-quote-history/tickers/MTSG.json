@@ -1,95 +1,22 @@
 {
-  "attempts": [
-    {
-      "attempts_used": 0,
-      "event_name": "workflow_dispatch",
-      "failures": [],
-      "latency_ms": 0,
-      "natural": false,
-      "observed_at": "2026-07-13T04:33:56Z",
-      "outcome": "skipped_fresh",
-      "run_attempt": 1,
-      "run_id": "29224221077",
-      "schedule": "",
-      "shard": ""
-    },
-    {
-      "attempts_used": 1,
-      "error": "recovery_requires_schedule",
-      "event_name": "workflow_dispatch",
-      "failures": [],
-      "latency_ms": 557,
-      "natural": true,
-      "observed_at": "2026-08-01T17:32:35Z",
-      "outcome": "failed",
-      "run_attempt": 1,
-      "run_id": "30707126488",
-      "schedule": "",
-      "shard": "0/6"
-    },
-    {
-      "attempts_used": 1,
-      "event_name": "schedule",
-      "failures": [],
-      "latency_ms": 723,
-      "natural": true,
-      "observed_at": "2026-08-07T15:04:20Z",
-      "outcome": "fresh",
-      "run_attempt": 1,
-      "run_id": "31190633378",
-      "schedule": "7 14 * * 0-5",
-      "shard": "67/72"
-    },
-    {
-      "attempts_used": 1,
-      "event_name": "schedule",
-      "failures": [],
-      "latency_ms": 802,
-      "natural": true,
-      "observed_at": "2026-08-12T02:41:04Z",
-      "outcome": "fresh",
-      "run_attempt": 1,
-      "run_id": "31557511991",
-      "schedule": "7 0 * * 0-5",
-      "shard": "36/72"
-    },
-    {
-      "attempts_used": 1,
-      "event_name": "workflow_dispatch",
-      "failures": [],
-      "latency_ms": 442,
-      "natural": false,
-      "observed_at": "2026-09-28T05:23:15Z",
-      "outcome": "fresh",
-      "run_attempt": 1,
-      "run_id": "36367832955",
-      "schedule": "",
-      "shard": ""
-    }
-  ],
   "current": {
-    "fetched_at": "2026-09-28T05:33:24Z",
-    "history_as_of": "2026-09-25",
+    "fetched_at": "2026-10-04T17:43:50Z",
+    "history_as_of": "2026-10-02",
     "path": "data/yf/finance/MTSG.json",
-    "payload_sha256": "cc0bb6a7fc39b10ae59cb5db68ac5f072c0ddd0fd6ec1a14061357a46ace0ee6",
-    "quote_as_of": "2026-09-25T17:50:06Z",
-    "source_as_of": "2026-09-25"
+    "payload_sha256": "12dc7e3ee09eef37f92b75cb34fe8aa693d22db3275d6682d49a0af102361a17",
+    "quote_as_of": "2026-10-02T19:59:50Z",
+    "source_as_of": "2026-10-02"
   },
   "discovered_from": [
     "stockanalysis_etf"
   ],
-  "last_attempt": {
+  "failure_count": 0,
+  "last_result": {
     "attempts_used": 1,
-    "event_name": "workflow_dispatch",
     "failures": [],
-    "latency_ms": 442,
-    "natural": false,
-    "observed_at": "2026-09-28T05:23:15Z",
-    "outcome": "fresh",
-    "run_attempt": 1,
-    "run_id": "36367832955",
-    "schedule": "",
-    "shard": ""
+    "latency_ms": 734,
+    "observed_at": "2026-10-04T17:43:50Z",
+    "outcome": "fresh"
   },
   "lkg": {
     "fetched_at": "2026-08-12T02:44:08Z",
@@ -99,25 +26,12 @@
     "quote_as_of": "2026-08-11T19:41:41Z",
     "source_as_of": "2026-08-11"
   },
-  "promotion_contract": "provider_observation/v2",
-  "provider_observation": {
-    "event_name": "workflow_dispatch",
-    "history_as_of": "2026-09-25",
-    "observed_at": "2026-09-28T05:23:15Z",
-    "payload_sha256": "7fa2cca26f040b78ed8df456d49d4cbc07227baa1cd055ee923c61d76df1a53f",
-    "quote_as_of": "2026-09-25T17:50:06Z",
-    "run_attempt": 1,
-    "run_id": "36367832955",
-    "schema_version": "provider_observation/v2",
-    "source_as_of": "2026-09-25"
-  },
   "resolution_state": "fresh_primary",
   "retry": false,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "stale": {
     "age_business_days": 7,
     "classified_at": "2026-08-20T14:20:12Z",
-    "classified_run_id": "32379322022",
     "expected_resolution": "next_natural_yahoo_run",
     "max_business_days": 6,
     "message": "MTSG holds LKG because Yahoo source date 2026-08-11 is 7 business days old, beyond the 6-day bound; it will retry on the next natural Yahoo run.",
@@ -125,5 +39,5 @@
     "source_as_of": "2026-08-11"
   },
   "ticker": "MTSG",
-  "updated_at": "2026-09-28T05:23:15Z"
+  "updated_at": "2026-10-04T17:43:50Z"
 }

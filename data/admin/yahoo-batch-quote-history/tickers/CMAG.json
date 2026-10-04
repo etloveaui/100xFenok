@@ -1,68 +1,22 @@
 {
-  "attempts": [
-    {
-      "attempts_used": 1,
-      "event_name": "schedule",
-      "failures": [],
-      "latency_ms": 453,
-      "natural": true,
-      "observed_at": "2026-07-26T23:02:52Z",
-      "outcome": "fresh",
-      "run_attempt": 1,
-      "run_id": "30224292652",
-      "schedule": "0 22 * * 0",
-      "shard": "0/6"
-    },
-    {
-      "attempts_used": 1,
-      "event_name": "schedule",
-      "failures": [],
-      "latency_ms": 804,
-      "natural": true,
-      "observed_at": "2026-08-07T01:34:03Z",
-      "outcome": "fresh",
-      "run_attempt": 1,
-      "run_id": "31138342067",
-      "schedule": "7 22 * * 0-5",
-      "shard": "71/72"
-    },
-    {
-      "attempts_used": 1,
-      "event_name": "workflow_dispatch",
-      "failures": [],
-      "latency_ms": 532,
-      "natural": false,
-      "observed_at": "2026-09-28T01:17:59Z",
-      "outcome": "fresh",
-      "run_attempt": 1,
-      "run_id": "36365270594",
-      "schedule": "",
-      "shard": ""
-    }
-  ],
   "current": {
-    "fetched_at": "2026-09-28T01:36:48Z",
-    "history_as_of": "2026-09-25",
+    "fetched_at": "2026-10-04T17:32:52Z",
+    "history_as_of": "2026-10-02",
     "path": "data/yf/finance/CMAG.json",
-    "payload_sha256": "b626d284d6c4bf606350b807d7ad45c2aeca6d5a631deee5ef18dd7407283877",
-    "quote_as_of": "2026-09-25T17:59:24Z",
-    "source_as_of": "2026-09-25"
+    "payload_sha256": "3fc04c431ef7fe92f8403d829503cafdea36b45fe4f02c5ff164f6c1ed32cd75",
+    "quote_as_of": "2026-10-02T19:57:14Z",
+    "source_as_of": "2026-10-02"
   },
   "discovered_from": [
     "stockanalysis_etf"
   ],
-  "last_attempt": {
+  "failure_count": 0,
+  "last_result": {
     "attempts_used": 1,
-    "event_name": "workflow_dispatch",
     "failures": [],
-    "latency_ms": 532,
-    "natural": false,
-    "observed_at": "2026-09-28T01:17:59Z",
-    "outcome": "fresh",
-    "run_attempt": 1,
-    "run_id": "36365270594",
-    "schedule": "",
-    "shard": ""
+    "latency_ms": 786,
+    "observed_at": "2026-10-04T17:32:52Z",
+    "outcome": "fresh"
   },
   "lkg": {
     "fetched_at": "2026-08-07T01:35:04Z",
@@ -72,25 +26,12 @@
     "quote_as_of": "2026-08-06T17:51:43Z",
     "source_as_of": "2026-08-06"
   },
-  "promotion_contract": "provider_observation/v2",
-  "provider_observation": {
-    "event_name": "workflow_dispatch",
-    "history_as_of": "2026-09-25",
-    "observed_at": "2026-09-28T01:17:59Z",
-    "payload_sha256": "c69d87ca0b33df0f7c910e0ee3a0f0219afd580134e43719fdbc29cb9ad60cbf",
-    "quote_as_of": "2026-09-25T17:59:24Z",
-    "run_attempt": 1,
-    "run_id": "36365270594",
-    "schema_version": "provider_observation/v2",
-    "source_as_of": "2026-09-25"
-  },
   "resolution_state": "fresh_primary",
   "retry": false,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "stale": {
     "age_business_days": 9,
     "classified_at": "2026-08-19T23:42:29Z",
-    "classified_run_id": "32314261503",
     "expected_resolution": "next_natural_yahoo_run",
     "max_business_days": 6,
     "message": "CMAG holds LKG because Yahoo source date 2026-08-06 is 9 business days old, beyond the 6-day bound; it will retry on the next natural Yahoo run.",
@@ -98,5 +39,5 @@
     "source_as_of": "2026-08-06"
   },
   "ticker": "CMAG",
-  "updated_at": "2026-09-28T01:17:59Z"
+  "updated_at": "2026-10-04T17:32:52Z"
 }

@@ -1,55 +1,22 @@
 {
-  "attempts": [
-    {
-      "attempts_used": 1,
-      "event_name": "schedule",
-      "failures": [],
-      "latency_ms": 1387,
-      "natural": true,
-      "observed_at": "2026-08-11T02:24:04Z",
-      "outcome": "fresh",
-      "run_attempt": 1,
-      "run_id": "31452163623",
-      "schedule": "7 0 * * 0-5",
-      "shard": "24/72"
-    },
-    {
-      "attempts_used": 1,
-      "event_name": "workflow_dispatch",
-      "failures": [],
-      "latency_ms": 502,
-      "natural": false,
-      "observed_at": "2026-09-28T05:23:15Z",
-      "outcome": "fresh",
-      "run_attempt": 1,
-      "run_id": "36367832955",
-      "schedule": "",
-      "shard": ""
-    }
-  ],
   "current": {
-    "fetched_at": "2026-09-28T05:28:59Z",
-    "history_as_of": "2026-09-25",
+    "fetched_at": "2026-10-04T17:42:42Z",
+    "history_as_of": "2026-10-02",
     "path": "data/yf/finance/LSEQ.json",
-    "payload_sha256": "992fd3abd959d9126b087e2e1f1195fb536343afa7e6badf5e2016c8f9af02a9",
-    "quote_as_of": "2026-09-24T18:45:17Z",
-    "source_as_of": "2026-09-24T18:45:17Z"
+    "payload_sha256": "e79b8e330f079cd10950325318ad48e973af96116a2e97a74b25a724a4bcaa14",
+    "quote_as_of": "2026-10-01T19:55:04Z",
+    "source_as_of": "2026-10-01T19:55:04Z"
   },
   "discovered_from": [
     "stockanalysis_etf"
   ],
-  "last_attempt": {
+  "failure_count": 0,
+  "last_result": {
     "attempts_used": 1,
-    "event_name": "workflow_dispatch",
     "failures": [],
-    "latency_ms": 502,
-    "natural": false,
-    "observed_at": "2026-09-28T05:23:15Z",
-    "outcome": "fresh",
-    "run_attempt": 1,
-    "run_id": "36367832955",
-    "schedule": "",
-    "shard": ""
+    "latency_ms": 834,
+    "observed_at": "2026-10-04T17:42:42Z",
+    "outcome": "fresh"
   },
   "lkg": {
     "fetched_at": "2026-08-11T02:26:57Z",
@@ -59,25 +26,12 @@
     "quote_as_of": "2026-08-10T19:48:01Z",
     "source_as_of": "2026-08-10"
   },
-  "promotion_contract": "provider_observation/v2",
-  "provider_observation": {
-    "event_name": "workflow_dispatch",
-    "history_as_of": "2026-09-25",
-    "observed_at": "2026-09-28T05:23:15Z",
-    "payload_sha256": "c6fd1904da12f5d4d93fcc9ad68894d9992a11acc849bb8a264a8d2eb794ceba",
-    "quote_as_of": "2026-09-24T18:45:17Z",
-    "run_attempt": 1,
-    "run_id": "36367832955",
-    "schema_version": "provider_observation/v2",
-    "source_as_of": "2026-09-24T18:45:17Z"
-  },
   "resolution_state": "fresh_primary",
   "retry": false,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "stale": {
     "age_business_days": 7,
     "classified_at": "2026-08-19T23:42:29Z",
-    "classified_run_id": "32314261503",
     "expected_resolution": "next_natural_yahoo_run",
     "max_business_days": 6,
     "message": "LSEQ holds LKG because Yahoo source date 2026-08-10 is 7 business days old, beyond the 6-day bound; it will retry on the next natural Yahoo run.",
@@ -85,5 +39,5 @@
     "source_as_of": "2026-08-10"
   },
   "ticker": "LSEQ",
-  "updated_at": "2026-09-28T05:23:15Z"
+  "updated_at": "2026-10-04T17:42:42Z"
 }

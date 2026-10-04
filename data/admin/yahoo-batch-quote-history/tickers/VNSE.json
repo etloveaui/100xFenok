@@ -2,7 +2,7 @@
   "current": {
     "fetched_at": "2026-09-30T14:43:02Z",
     "history_as_of": "2026-09-30",
-    "path": "data/yf/finance/VNSE.json",
+    "path": "data/admin/yahoo-batch-quote-history/lkg/VNSE.json",
     "payload_sha256": "fcac9c5a00bcf7a53dbca19cd7aead6baa4cb1508783c56552f782d7ac52b7fb",
     "quote_as_of": "2026-09-30T13:46:08Z",
     "source_as_of": "2026-09-30"
@@ -10,24 +10,35 @@
   "discovered_from": [
     "stockanalysis_etf"
   ],
-  "failure_count": 0,
+  "failure_count": 1,
   "last_result": {
     "attempts_used": 1,
+    "error": "ValueError: Yahoo provider source timestamp regresses for VNSE: quote_as_of",
     "failures": [],
-    "latency_ms": 669,
-    "observed_at": "2026-09-30T14:43:02Z",
-    "outcome": "fresh"
+    "latency_ms": 1003,
+    "observed_at": "2026-10-04T17:54:03Z",
+    "outcome": "failed"
+  },
+  "latest_failure": {
+    "attempts_used": 1,
+    "data_loss": false,
+    "deferred_acquisition": false,
+    "error": "ValueError: Yahoo provider source timestamp regresses for VNSE: quote_as_of",
+    "failure_kind": "systemic_integrity",
+    "failures": [],
+    "lkg_status": "retained",
+    "observed_at": "2026-10-04T17:54:03Z"
   },
   "lkg": {
-    "fetched_at": "2026-09-28T06:41:36Z",
-    "history_as_of": "2026-09-25",
+    "fetched_at": "2026-09-30T14:43:02Z",
+    "history_as_of": "2026-09-30",
     "path": "data/admin/yahoo-batch-quote-history/lkg/VNSE.json",
-    "payload_sha256": "5e27e1c1397d1c1b6a0571136ec4fea1fbea6afee340eaaba1d120a056f3752c",
-    "quote_as_of": "2026-09-18T16:00:33Z",
-    "source_as_of": "2026-09-18T16:00:33Z"
+    "payload_sha256": "fcac9c5a00bcf7a53dbca19cd7aead6baa4cb1508783c56552f782d7ac52b7fb",
+    "quote_as_of": "2026-09-30T13:46:08Z",
+    "source_as_of": "2026-09-30"
   },
-  "resolution_state": "fresh_primary",
-  "retry": false,
+  "resolution_state": "lkg_primary",
+  "retry": true,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "stale": {
     "age_business_days": 7,
@@ -39,5 +50,5 @@
     "source_as_of": "2026-09-18T16:00:33Z"
   },
   "ticker": "VNSE",
-  "updated_at": "2026-09-30T14:43:02Z"
+  "updated_at": "2026-10-04T17:54:03Z"
 }

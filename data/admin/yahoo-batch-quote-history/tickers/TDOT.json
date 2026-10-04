@@ -1,82 +1,22 @@
 {
-  "attempts": [
-    {
-      "attempts_used": 0,
-      "event_name": "workflow_dispatch",
-      "failures": [],
-      "latency_ms": 0,
-      "natural": false,
-      "observed_at": "2026-07-13T04:33:56Z",
-      "outcome": "skipped_fresh",
-      "run_attempt": 1,
-      "run_id": "29224221077",
-      "schedule": "",
-      "shard": ""
-    },
-    {
-      "attempts_used": 1,
-      "error": "recovery_requires_schedule",
-      "event_name": "workflow_dispatch",
-      "failures": [],
-      "latency_ms": 507,
-      "natural": true,
-      "observed_at": "2026-08-01T18:35:05Z",
-      "outcome": "failed",
-      "run_attempt": 1,
-      "run_id": "30711924670",
-      "schedule": "",
-      "shard": "3/6"
-    },
-    {
-      "attempts_used": 1,
-      "event_name": "schedule",
-      "failures": [],
-      "latency_ms": 903,
-      "natural": true,
-      "observed_at": "2026-08-07T20:49:21Z",
-      "outcome": "fresh",
-      "run_attempt": 1,
-      "run_id": "31217379411",
-      "schedule": "7 20 * * 0-5",
-      "shard": "70/72"
-    },
-    {
-      "attempts_used": 1,
-      "event_name": "workflow_dispatch",
-      "failures": [],
-      "latency_ms": 441,
-      "natural": false,
-      "observed_at": "2026-09-28T06:30:00Z",
-      "outcome": "fresh",
-      "run_attempt": 1,
-      "run_id": "36367836615",
-      "schedule": "",
-      "shard": ""
-    }
-  ],
   "current": {
-    "fetched_at": "2026-09-28T06:31:28Z",
-    "history_as_of": "2026-09-25",
+    "fetched_at": "2026-10-04T17:51:30Z",
+    "history_as_of": "2026-10-02",
     "path": "data/yf/finance/TDOT.json",
-    "payload_sha256": "57c03eb498ab2cc1d6fe3ed155a0a9052cd6b85dabf5817b7d90e16306c1aa3c",
-    "quote_as_of": "2026-09-25T20:00:00Z",
-    "source_as_of": "2026-09-25"
+    "payload_sha256": "b3c0402be267fef3452d04f6e00e90584c6dde1d031bb9d36b8819a8de212e9b",
+    "quote_as_of": "2026-10-02T20:00:00Z",
+    "source_as_of": "2026-10-02"
   },
   "discovered_from": [
     "stockanalysis_etf"
   ],
-  "last_attempt": {
+  "failure_count": 0,
+  "last_result": {
     "attempts_used": 1,
-    "event_name": "workflow_dispatch",
     "failures": [],
-    "latency_ms": 441,
-    "natural": false,
-    "observed_at": "2026-09-28T06:30:00Z",
-    "outcome": "fresh",
-    "run_attempt": 1,
-    "run_id": "36367836615",
-    "schedule": "",
-    "shard": ""
+    "latency_ms": 863,
+    "observed_at": "2026-10-04T17:51:30Z",
+    "outcome": "fresh"
   },
   "lkg": {
     "fetched_at": "2026-08-07T20:50:42Z",
@@ -86,25 +26,12 @@
     "quote_as_of": "2026-08-07T20:00:00Z",
     "source_as_of": "2026-08-07"
   },
-  "promotion_contract": "provider_observation/v2",
-  "provider_observation": {
-    "event_name": "workflow_dispatch",
-    "history_as_of": "2026-09-25",
-    "observed_at": "2026-09-28T06:30:00Z",
-    "payload_sha256": "99f181646b74018976d4c7c6d2215e18548bd0b54d19aae1e3b7f90cb132a49a",
-    "quote_as_of": "2026-09-25T20:00:00Z",
-    "run_attempt": 1,
-    "run_id": "36367836615",
-    "schema_version": "provider_observation/v2",
-    "source_as_of": "2026-09-25"
-  },
   "resolution_state": "fresh_primary",
   "retry": false,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "stale": {
     "age_business_days": 8,
     "classified_at": "2026-08-19T23:42:29Z",
-    "classified_run_id": "32314261503",
     "expected_resolution": "next_natural_yahoo_run",
     "max_business_days": 6,
     "message": "TDOT holds LKG because Yahoo source date 2026-08-07 is 8 business days old, beyond the 6-day bound; it will retry on the next natural Yahoo run.",
@@ -112,5 +39,5 @@
     "source_as_of": "2026-08-07"
   },
   "ticker": "TDOT",
-  "updated_at": "2026-09-28T06:30:00Z"
+  "updated_at": "2026-10-04T17:51:30Z"
 }
