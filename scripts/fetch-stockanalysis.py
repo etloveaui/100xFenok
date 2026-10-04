@@ -1371,6 +1371,7 @@ ETF_DETAIL_SURFACE_CONTRACTS = {
 }
 ETF_DETAIL_DECODER = "svelte_devalue_node/v1"
 OFFICIAL_HOLDINGS_FALLBACKS = {
+    "ABXB": "https://abacusfcf.com/abxb/",
     "ESUM": "https://www.eventideinvestments.com/etfs/esum",
     "IBIM": "https://www.ishares.com/us/products/350034/ishares-ibonds-oct-2036-term-tips-etf/latest-holdings.csv",
 }
@@ -1549,8 +1550,46 @@ def overview_declares_holdings_unavailable(overview: dict) -> bool:
     )
 
 
+def parse_abxb_official_page(body: bytes, source_page: str) -> tuple[str, datetime, list[dict]]:
+    """Bind the undated ABXB CSV to the complete, dated issuer page table."""
+    html = body.decode("utf-8")
+    if extract_title(html) != "Abacus Flexible Bond Leaders ETF (ABXB) | Abacus FCF":
+        raise ValueError("ABXB official holdings fund identity is invalid")
+    if re.findall(r'<link rel="canonical" href="([^"]+)"', html) != [source_page]:
+        raise ValueError("ABXB official holdings canonical page is invalid")
+    parser = HTMLTableParser()
+    parser.feed(html)
+    facts: dict[str, set[str]] = {}
+    for table in parser.tables:
+        for row in table["rows"]:
+            label = row.get("column_1")
+            if label in {"TICKER:", "CUSIP:"}:
+                facts.setdefault(label, set()).add(row.get("column_2", ""))
+    if facts != {"TICKER:": {"ABXB"}, "CUSIP:": {"89628W609"}}:
+        raise ValueError("ABXB official holdings ticker or fund CUSIP is invalid")
+    csv_path = "/wp-content/uploads/DailyUploads/ABXB_allHoldings.csv"
+    if re.findall(r'href="([^"]*ABXB_allHoldings\.csv)"', html).count(csv_path) != 1:
+        raise ValueError("ABXB observed official holdings CSV link is missing or ambiguous")
+    headings = re.findall(r'<h2\b[^>]*>\s*Top 10 Holdings\b(.*?)</h2>', html,
+                          flags=re.IGNORECASE | re.DOTALL)
+    dates = [re.fullmatch(r'\s*<span[^>]*>\(as of (\d{2}/\d{2}/\d{4})\)</span>\s*', heading)
+             for heading in headings]
+    if not dates or any(match is None for match in dates) or len({match.group(1) for match in dates}) != 1:
+        raise ValueError("ABXB official holdings page date is missing or ambiguous")
+    try:
+        date = datetime.strptime(dates[0].group(1), "%m/%d/%Y").replace(tzinfo=timezone.utc)
+    except ValueError as exc:
+        raise ValueError("ABXB official holdings page date is invalid") from exc
+    page_header = ["TICKER", "CUSIP", "SECURITY DESCRIPTION", "SHARES",
+                   "MARKET VALUE", "% OF NET ASSETS"]
+    tables = [table for table in parser.tables if table["headers"] == page_header]
+    if len(tables) != 1 or not tables[0]["rows"]:
+        raise ValueError("ABXB official holdings page table is missing or ambiguous")
+    return urljoin(source_page, csv_path), date, tables[0]["rows"]
+
+
 def fetch_official_etf_holdings(ticker: str, timeout: int) -> tuple[str, dict, dict]:
-    """Fill two verified StockAnalysis holdings gaps from their own issuer CSV."""
+    """Fill verified StockAnalysis holdings gaps from issuer holdings tables and CSVs."""
     if ticker not in OFFICIAL_HOLDINGS_FALLBACKS:
         raise ValueError(f"no verified official holdings fallback for {ticker}")
 
@@ -1561,6 +1600,8 @@ def fetch_official_etf_holdings(ticker: str, timeout: int) -> tuple[str, dict, d
             parsed = urlparse(final_url)
             if parsed.scheme != "https" or parsed.hostname != hostname:
                 raise ValueError("official holdings redirected outside the issuer domain")
+            if ticker == "ABXB" and final_url != url:
+                raise ValueError("ABXB official holdings redirect is not verified")
             if response.status != 200:
                 raise ValueError("official holdings response is not HTTP 200")
             body = response.read(2_000_001)
@@ -1569,15 +1610,23 @@ def fetch_official_etf_holdings(ticker: str, timeout: int) -> tuple[str, dict, d
         return body
 
     source_page = OFFICIAL_HOLDINGS_FALLBACKS[ticker]
+    page_hash = None
+    page_rows = None
+    page_date = None
     if ticker == "ESUM":
         html = official_bytes(source_page, "www.eventideinvestments.com").decode("utf-8")
         links = set(re.findall(r'href="(/assets/[A-Za-z0-9_-]+/ESUM_etfHoldingsCsv\.csv)"', html))
         if len(links) != 1:
             raise ValueError("ESUM official holdings CSV link is missing or ambiguous")
         csv_url = urljoin(source_page, links.pop())
+    elif ticker == "ABXB":
+        page_body = official_bytes(source_page, "abacusfcf.com")
+        csv_url, page_date, page_rows = parse_abxb_official_page(page_body, source_page)
+        page_hash = hashlib.sha256(page_body).hexdigest()
     else:
         csv_url = source_page
-    hostname = "www.eventideinvestments.com" if ticker == "ESUM" else "www.ishares.com"
+    hostname = {"ABXB": "abacusfcf.com", "ESUM": "www.eventideinvestments.com",
+                "IBIM": "www.ishares.com"}[ticker]
     body = official_bytes(csv_url, hostname)
     rows = list(csv.reader(StringIO(body.decode("utf-8-sig"))))
     if ticker == "ESUM":
@@ -1587,7 +1636,7 @@ def fetch_official_etf_holdings(ticker: str, timeout: int) -> tuple[str, dict, d
             raise ValueError("ESUM official holdings identity is invalid")
         date_text = rows[2][1]
         header = ["Ticker", "Description", "Shares", "Weight"]
-    else:
+    elif ticker == "IBIM":
         if not rows or rows[0] != ["iShares® iBonds® Oct 2036 Term TIPS ETF"]:
             raise ValueError("IBIM official holdings identity is invalid")
         date_rows = [row for row in rows if len(row) == 2 and row[0] == "Fund Holdings as of"]
@@ -1599,15 +1648,28 @@ def fetch_official_etf_holdings(ticker: str, timeout: int) -> tuple[str, dict, d
                   "Exchange", "Currency", "Duration", "YTM (%)", "FX Rate", "Maturity",
                   "Coupon (%)", "Mod. Duration", "Yield to Call (%)", "Yield to Worst (%)",
                   "Real Duration", "Real YTM (%)", "Market Currency", "Accrual Date", "Effective Date"]
+    else:
+        date_text = None
+        header = ["Ticker", "CUSIP", "Security Description", "Shares",
+                  "Market Value", "% of Net Assets"]
+        if not rows or rows[0] != header or len(rows) != len(page_rows) + 1:
+            raise ValueError("ABXB official holdings CSV header or row count is invalid")
+        keys = [slug_key(column) for column in header]
+        for csv_row, page_row in zip(rows[1:], page_rows):
+            if (len(csv_row) != len(header) or set(page_row) != set(keys)
+                    or csv_row != [page_row[key] for key in keys]):
+                raise ValueError("ABXB official holdings CSV differs from dated page table")
     if rows.count(header) != 1:
         raise ValueError("official holdings CSV schema is invalid")
-    date = parse_stockanalysis_date(date_text)
+    date = page_date if ticker == "ABXB" else parse_stockanalysis_date(date_text)
     age = (datetime.now(timezone.utc).date() - date.date()).days if date else None
     if age is None or not 0 <= age <= 7:
         raise ValueError("official holdings source date is invalid, future, or stale")
     holdings = []
     total_weight = 0.0
     country_weights = {}
+    abxb_symbols = set()
+    abxb_cusips = set()
     for raw_row in rows[rows.index(header) + 1:]:
         if not raw_row or not any(raw_row):
             continue
@@ -1626,7 +1688,7 @@ def fetch_official_etf_holdings(ticker: str, timeout: int) -> tuple[str, dict, d
                 if (not cash_without_ticker and not SYMBOL_RE.fullmatch(symbol)) or not name or not math.isfinite(shares) or shares < 0:
                     raise ValueError("ESUM holding identity or shares invalid")
                 holding = {"s": symbol or None, "n": name, "as": weight, "sh": shares, "raw": row}
-            else:
+            elif ticker == "IBIM":
                 name, cusip = row["Name"].strip(), row["CUSIP"].strip()
                 weight = float(row["Weight (%)"].replace(",", ""))
                 if not name or not re.fullmatch(r"[A-Z0-9]{9}", cusip):
@@ -1636,6 +1698,33 @@ def fetch_official_etf_holdings(ticker: str, timeout: int) -> tuple[str, dict, d
                     raise ValueError("IBIM holding location is outside verified country coverage")
                 country_weights[location] = country_weights.get(location, 0.0) + weight
                 holding = {"n": name, "as": weight, "cusip": cusip, "raw": row}
+            else:
+                symbol, cusip = row["Ticker"].strip(), row["CUSIP"].strip()
+                name = row["Security Description"].strip()
+                shares = float(row["Shares"].replace(",", ""))
+                weight_text = row["% of Net Assets"].strip()
+                if not weight_text.endswith("%") or not name or not math.isfinite(shares) or shares < 0:
+                    raise ValueError("ABXB holding shares, weight, or name is invalid")
+                weight = float(weight_text[:-1].replace(",", ""))
+                if symbol in abxb_symbols or cusip in abxb_cusips:
+                    raise ValueError("ABXB official holdings contain a duplicate")
+                abxb_symbols.add(symbol)
+                abxb_cusips.add(cusip)
+                holding = {"n": name, "as": weight, "sh": shares, "raw": row}
+                if (symbol, cusip, name) == ("Cash&Other", "Cash&Other", "Cash & Other"):
+                    holding["s"] = None
+                elif (symbol, cusip, name) == (
+                    "8AMMF0JA0", "8AMMF0JA0", "US BANK MMDA - USBGFS 9 09/01/2037"
+                ):
+                    holding.update({"s": None, "cusip": cusip})
+                elif (symbol == "8AMMF0JA0" or cusip == "8AMMF0JA0"
+                      or re.search(r"\bMMDA\b", name, flags=re.IGNORECASE)
+                      or name == "Cash & Other"):
+                    raise ValueError("ABXB cash or MMDA identity differs from verified page")
+                elif SYMBOL_RE.fullmatch(symbol) and re.fullmatch(r"[A-Z0-9]{9}", cusip):
+                    holding.update({"s": symbol, "cusip": cusip})
+                else:
+                    raise ValueError("ABXB holding ticker or CUSIP is invalid")
         except (TypeError, ValueError) as exc:
             raise ValueError("official holdings CSV has an invalid holding") from exc
         if not math.isfinite(weight) or weight < 0 or weight > 100:
@@ -1650,11 +1739,14 @@ def fetch_official_etf_holdings(ticker: str, timeout: int) -> tuple[str, dict, d
     if ticker == "IBIM":
         data["countries"] = [{"code": "US", "country": "United States",
                               "weight": round(country_weights["United States"], 4)}]
-    provenance = {"provider": "eventide" if ticker == "ESUM" else "ishares",
+    provenance = {"provider": {"ABXB": "abacusfcf", "ESUM": "eventide", "IBIM": "ishares"}[ticker],
                   "landing_page": source_page, "csv_url": csv_url,
                   "csv_sha256": hashlib.sha256(body).hexdigest(),
                   "source_as_of": data["date"], "weight_sum_pct": round(total_weight, 4),
-                  "country_coverage": "issuer_not_provided" if ticker == "ESUM" else "issuer_csv_location"}
+                  "country_coverage": "issuer_csv_location" if ticker == "IBIM" else "issuer_not_provided"}
+    if ticker == "ABXB":
+        provenance.update({"page_sha256": page_hash,
+                           "date_binding": "dated_page_table_complete_csv_parity"})
     return csv_url, data, provenance
 
 

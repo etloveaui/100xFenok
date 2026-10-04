@@ -4,6 +4,8 @@
 from __future__ import annotations
 
 import hashlib
+import csv
+import html
 import importlib.util
 import io
 import json
@@ -62,6 +64,121 @@ class StockanalysisFetcherFixtureTest(unittest.TestCase):
     @classmethod
     def setUpClass(cls) -> None:
         cls.fetcher = load_fetcher_module()
+
+    def test_abxb_official_holdings_require_complete_dated_page_csv_parity(self) -> None:
+        csv_text = (
+            "Ticker,CUSIP,Security Description,Shares,Market Value,% of Net Assets\n"
+            "VGSH,92206C102,Vanguard Short-Term Treasury ETF,5755,\"$330,826.18\",17.78%\n"
+            "VCSH,92206C409,Vanguard Short-Term Corporate Bond ETF,4238,\"$326,876.94\",17.56%\n"
+            "SGOV,46436E718,iShares 0-3 Month Treasury Bond ETF,3199,\"$321,211.59\",17.26%\n"
+            "VTIP,922020805,Vanguard Short-Term Inflation-Protected Securities ETF,6600,\"$319,506.00\",17.17%\n"
+            "EMLC,92189H300,VanEck J. P. Morgan EM Local Currency Bond ETF,7480,\"$183,484.40\",9.86%\n"
+            "BKLN,46138G508,Invesco Senior Loan ETF,8928,\"$182,666.88\",9.82%\n"
+            "FLOT,46429B655,iShares Floating Rate Bond ETF,3584,\"$182,282.24\",9.79%\n"
+            "Cash&Other,Cash&Other,Cash & Other,7579,\"$7,578.75\",0.41%\n"
+            "8AMMF0JA0,8AMMF0JA0,US BANK MMDA - USBGFS 9 09/01/2037,6141,\"$6,141.25\",0.33%\n"
+        )
+        page_url = "https://abacusfcf.com/abxb/"
+        csv_url = "https://abacusfcf.com/wp-content/uploads/DailyUploads/ABXB_allHoldings.csv"
+
+        def page(table_csv=csv_text, date="10/02/2026", *, second_date=None,
+                 title="Abacus Flexible Bond Leaders ETF (ABXB) | Abacus FCF",
+                 link="/wp-content/uploads/DailyUploads/ABXB_allHoldings.csv"):
+            rows = list(csv.reader(io.StringIO(table_csv)))
+            header = "".join(f"<th>{html.escape(value.upper())}</th>" for value in rows[0])
+            body = "".join("<tr>" + "".join(f"<td>{html.escape(value)}</td>" for value in row)
+                           + "</tr>" for row in rows[1:])
+            return (f'<title>{title}</title><link rel="canonical" href="{page_url}" />'
+                    '<table><tr><td>TICKER:</td><td>ABXB</td></tr>'
+                    '<tr><td>CUSIP:</td><td>89628W609</td></tr></table>'
+                    f'<h2>Top 10 Holdings <span>(as of {date})</span></h2>'
+                    f'<h2>Top 10 Holdings <span>(as of {second_date or date})</span></h2>'
+                    f'<a href="{link}">DOWNLOAD FULL HOLDINGS</a>'
+                    '<a href="/wp-content/uploads/2026/09/ABXB_allHoldings.csv">Old link</a>'
+                    f'<table><thead><tr>{header}</tr></thead><tbody>{body}</tbody></table>')
+
+        class FixedDateTime(datetime):
+            @classmethod
+            def now(cls, tz=None):
+                return datetime(2026, 10, 4, tzinfo=tz or timezone.utc)
+
+        def fetch(page_text, csv_data, *, redirect=None):
+            class Response(io.BytesIO):
+                status = 200
+
+                def __init__(self, data, final_url):
+                    super().__init__(data)
+                    self.final_url = final_url
+
+                def geturl(self):
+                    return self.final_url
+
+            def urlopen(request, timeout):
+                url = request.full_url
+                if url == page_url:
+                    return Response(page_text.encode(), redirect or page_url)
+                if url == csv_url:
+                    return Response(csv_data.encode(), redirect or csv_url)
+                raise AssertionError(f"unexpected URL: {url}")
+
+            with patch.object(self.fetcher, "datetime", FixedDateTime), \
+                    patch.object(self.fetcher.urllib.request, "urlopen", side_effect=urlopen):
+                return self.fetcher.fetch_official_etf_holdings("ABXB", 1)
+
+        page_text = page()
+        url, data, provenance = fetch(page_text, csv_text)
+        self.assertEqual(url, csv_url)
+        self.assertEqual((data["date"], data["count"]), ("2026-10-02", 9))
+        self.assertEqual(round(sum(row["as"] for row in data["holdings"]), 2), 99.98)
+        self.assertEqual([row["s"] for row in data["holdings"][-2:]], [None, None])
+        self.assertNotIn("cusip", data["holdings"][-2])
+        self.assertEqual(data["holdings"][-1]["cusip"], "8AMMF0JA0")
+        self.assertNotIn("countries", data)
+        self.assertEqual(provenance["page_sha256"], hashlib.sha256(page_text.encode()).hexdigest())
+        self.assertEqual(provenance["csv_sha256"], hashlib.sha256(csv_text.encode()).hexdigest())
+        self.assertEqual(provenance["source_as_of"], data["date"])
+
+        # A complete issuer change remains eligible: the MMDA is gone and its
+        # weight moves to a security, while every page and CSV row still agrees.
+        changed_csv = csv_text.replace("17.78%", "18.11%", 1).rsplit("\n8AMMF0JA0,", 1)[0] + "\n"
+        _, changed_data, _ = fetch(page(changed_csv), changed_csv)
+        self.assertEqual(changed_data["count"], 8)
+        self.assertEqual(round(sum(row["as"] for row in changed_data["holdings"]), 2), 99.98)
+        self.assertIsNone(changed_data["holdings"][-1]["s"])
+
+        cases = {
+            "wrong fund": (page(title="Other ETF"), csv_text, None),
+            "missing observed link": (page(link="/other.csv"), csv_text, None),
+            "conflicting dates": (page(second_date="10/01/2026"), csv_text, None),
+            "malformed second date": (page(second_date="updated yesterday"), csv_text, None),
+            "stale date": (page(date="09/26/2026"), csv_text, None),
+            "future date": (page(date="10/05/2026"), csv_text, None),
+            "page CSV drift": (page_text, csv_text.replace("$330,826.18", "$330,826.19"), None),
+            "missing CSV row": (page_text, csv_text.rsplit("8AMMF0JA0,", 1)[0], None),
+            "wrong CSV header": (page_text, csv_text.replace("Ticker,CUSIP", "Symbol,CUSIP", 1), None),
+            "redirect": (page_text, csv_text, "https://abacusfcf.com/changed"),
+        }
+        duplicate = csv_text.replace("VCSH,92206C409", "VGSH,92206C102")
+        cases["duplicate holding"] = (page(duplicate), duplicate, None)
+        negative_shares = csv_text.replace("VGSH,92206C102,Vanguard Short-Term Treasury ETF,5755,",
+                                           "VGSH,92206C102,Vanguard Short-Term Treasury ETF,-1,")
+        cases["negative shares"] = (page(negative_shares), negative_shares, None)
+        nonfinite_weight = csv_text.replace("17.78%", "nan%")
+        cases["nonfinite weight"] = (page(nonfinite_weight), nonfinite_weight, None)
+        wrong_cusip = csv_text.replace("VGSH,92206C102", "VGSH,123")
+        cases["invalid CUSIP"] = (page(wrong_cusip), wrong_cusip, None)
+        wrong_mmda = csv_text.replace("US BANK MMDA - USBGFS 9 09/01/2037", "Other instrument")
+        cases["MMDA cannot become a ticker"] = (page(wrong_mmda), wrong_mmda, None)
+        unknown_mmda = csv_text.replace(
+            "8AMMF0JA0,8AMMF0JA0,US BANK MMDA - USBGFS 9 09/01/2037",
+            "MMDA,123456789,Other MMDA deposit",
+        )
+        cases["unknown MMDA cannot become a ticker"] = (page(unknown_mmda), unknown_mmda, None)
+        wrong_total = csv_text.replace("17.78%", "1.78%")
+        cases["incomplete total"] = (page(wrong_total), wrong_total, None)
+        for label, (page_input, csv_input, redirect) in cases.items():
+            with self.subTest(label=label), self.assertRaises(ValueError):
+                fetch(page_input, csv_input, redirect=redirect)
 
 
     def test_scheduled_etf_retry_fairly_includes_selected_fallback_debt_with_primary_canonical(self):
