@@ -238,7 +238,7 @@ async function inspectStaticContracts() {
   if (!macroSource.includes("macroContextId") || !macroSource.includes('aria-label="매크로 인사이트"')) {
     addFailure(failures, "macro-context-state", "MacroChartClient must carry macro context state and render the insight section");
   }
-  for (const id of ["risk-liquidity", "bank-credit", "activity", "crypto-liquidity"]) {
+  for (const id of ["risk-liquidity", "bank-credit", "activity", "crypto-liquidity", "sentiment"]) {
     if (!macroContextSource.includes(`id: "${id}"`) || !macroContextSource.includes(`macro=${id}`)) {
       addFailure(failures, "macro-context-registry", `${id} context href contract missing`);
     }
@@ -249,8 +249,35 @@ async function inspectStaticContracts() {
   if (catalog.schema_version !== "macro-series-catalog/v1") {
     addFailure(failures, "catalog-schema-version", `schema=${catalog.schema_version ?? "missing"}`);
   }
-  if (!Array.isArray(catalog.series) || catalog.series.length !== 30) {
+  if (!Array.isArray(catalog.series) || catalog.series.length !== 35) {
     addFailure(failures, "catalog-series-count", `count=${catalog.series?.length ?? "missing"}`);
+  }
+  for (const [id, unit] of [
+    ["cnn_momentum", "index"],
+    ["cnn_strength", "ratio"],
+    ["cnn_breadth", "index"],
+    ["cnn_junk_bond", "percent"],
+    ["cnn_safe_haven", "percent"],
+  ]) {
+    const item = (catalog.series ?? []).find((series) => series.id === id);
+    if (!item || item.unit !== unit || item.source_path !== `/data/sentiment/${id.replaceAll("_", "-")}.json` || !String(item.path_shape ?? "").startsWith("$[] {date,value")) {
+      addFailure(failures, "sentiment-cnn-series", `${id}: source, shape or unit mismatch`);
+    }
+  }
+  if ((catalog.series ?? []).find((series) => series.id === "cnn_put_call")?.unit !== "ratio" ||
+      !loaderSource.includes('if (unit === "ratio") return "ratio"') ||
+      !macroSource.includes('ratio: "비율"')) {
+    addFailure(failures, "sentiment-ratio-unit", "Put/Call and strength must display dimensionless ratios");
+  }
+  if (!macroSource.includes('data-macro-chart-sentiment-components="true"') ||
+      !macroSource.includes('fetch("/data/sentiment/cnn-components.json"') ||
+      !macroSource.includes('macroContextId !== "sentiment"')) {
+    addFailure(failures, "sentiment-components-table", "CNN components must load only inside the sentiment context");
+  }
+  if (!(catalog.analysis_lenses ?? []).some((lens) => lens.id === "sentiment") ||
+      !macroSource.includes('data-macro-chart-lens={lens.id}') ||
+      !macroSource.includes('label: "시장 심리"')) {
+    addFailure(failures, "sentiment-lens-reachability", "sentiment must be available from the existing lens controls");
   }
   if (!Array.isArray(catalog.analysis_lenses) || catalog.analysis_lenses.length < 4) {
     addFailure(failures, "catalog-analysis-lenses", `count=${catalog.analysis_lenses?.length ?? "missing"}`);
@@ -301,7 +328,7 @@ async function inspectStaticContracts() {
   for (const item of [
     ['id: "explore"', 'href: EXPLORE_ROUTE', 'label: EXPLORE_NAV_LABEL'],
     // workbench surface is retired (src/lib/routes.ts) and intentionally absent from the public rail
-    ['id: "market"', 'href: ROUTES.market', 'label: "시장"'],
+    ['id: "market"', 'href: ROUTES.market', 'label: "밸류에이션"'],
     ['id: "sectors"', 'href: ROUTES.sectors', 'label: "섹터"'],
     ['id: "etfs"', 'href: ROUTES.etfs', 'label: "ETF"'],
     ['id: "screener"', 'href: ROUTES.screener', 'label: "스크리너"'],

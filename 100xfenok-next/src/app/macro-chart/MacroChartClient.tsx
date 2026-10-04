@@ -9,6 +9,7 @@ import { CpDataTable, type CpDataTableColumn } from "@/components/canvas-plus/ki
 import { EmptyState, EvidenceRail, Panel, RankBars, useDelayedLoading } from "@/components/ui";
 import { okabeItoPalette } from "@/lib/chart-theme";
 import { formatAsOf, freshnessDataState } from "@/lib/data-state";
+import { freshnessVerdict, freshnessRailState } from "@/lib/freshness-policy.mjs";
 import { MarketChartFrame, type MarketChartRange } from "@/lib/market-valuation/charts/MarketChartFrame";
 import type { MarketChartDateBand, MarketChartSeries } from "@/lib/market-valuation/charts/types";
 import {
@@ -48,6 +49,40 @@ const DEFAULT_RANGE_ID = "5Y";
 const MAX_SELECTED_SERIES = 8;
 const MAX_FORMULA_SERIES = 3;
 const USER_PRESET_STORAGE_KEY = "100xfenok.macroChart.userPresets.v1";
+const CNN_COMPONENTS = [
+  { key: "market_momentum", label: "시장 모멘텀" },
+  { key: "stock_strength", label: "주가 강도" },
+  { key: "stock_breadth", label: "시장 폭" },
+  { key: "put_call", label: "풋/콜" },
+  { key: "volatility", label: "변동성" },
+  { key: "safe_haven", label: "안전자산 수요" },
+  { key: "junk_bond", label: "하이일드 채권 수요" },
+] as const;
+type CnnComponentKey = (typeof CNN_COMPONENTS)[number]["key"];
+type CnnComponentSnapshot = { date: string; values: Record<CnnComponentKey, number | null> };
+type CnnComponentsState =
+  | { status: "idle" | "loading" | "error" }
+  | { status: "ready"; latest: CnnComponentSnapshot; previous: CnnComponentSnapshot | null };
+type CnnComponentTableRow = { key: CnnComponentKey; label: string; latest: number | null; previous: number | null };
+
+function parseCnnComponents(payload: unknown): { latest: CnnComponentSnapshot; previous: CnnComponentSnapshot | null } {
+  if (!Array.isArray(payload)) throw new Error("CNN components must be an array");
+  const snapshots = payload.flatMap((item): CnnComponentSnapshot[] => {
+    if (!item || typeof item !== "object" || Array.isArray(item)) return [];
+    const record = item as Record<string, unknown>;
+    const date = record.date;
+    if (typeof date !== "string" || !/^\d{4}-\d{2}-\d{2}$/.test(date) || !Number.isFinite(Date.parse(date)) || new Date(date).toISOString().slice(0, 10) !== date) return [];
+    const values = Object.fromEntries(CNN_COMPONENTS.map(({ key }) => {
+      const value = record[key];
+      return [key, typeof value === "number" && Number.isFinite(value) ? value : null];
+    })) as Record<CnnComponentKey, number | null>;
+    return Object.values(values).some((value) => value !== null) ? [{ date, values }] : [];
+  }).sort((a, b) => b.date.localeCompare(a.date));
+  const latest = snapshots[0];
+  if (!latest) throw new Error("CNN components have no finite observations");
+  return { latest, previous: snapshots.find((item) => item.date < latest.date) ?? null };
+}
+
 const MACRO_RANGES: readonly MarketChartRange[] = [
   { id: "3M", label: "3M", months: 3 },
   { id: "6M", label: "6M", months: 6 },
@@ -328,6 +363,23 @@ const MACRO_ANALYSIS_LENSES: readonly MacroAnalysisLens[] = [
       ],
     },
   },
+  {
+    id: "sentiment",
+    label: "시장 심리 렌즈",
+    detail: "CNN·크립토 공포탐욕과 주식·채권 변동성을 비교한다.",
+    state: {
+      selected: [
+        { id: "cnn_fear_greed", transform: "raw" },
+        { id: "crypto_fear_greed", transform: "raw" },
+        { id: "vix", transform: "raw" },
+        { id: "move", transform: "raw" },
+      ],
+      rangeId: "3Y",
+      hiddenIds: [],
+      axisById: { vix: "right", move: "right" },
+      formulas: [],
+    },
+  },
 ];
 
 const MACRO_TOP_LENSES = [
@@ -359,6 +411,21 @@ const MACRO_TOP_LENSES = [
       rangeId: "10Y",
       axisById: { GDP: "right" as const },
       macroContextId: "activity" as const,
+    },
+  },
+  {
+    id: "sentiment",
+    label: "시장 심리",
+    state: {
+      selected: [
+        { id: "cnn_fear_greed", transform: "raw" as const },
+        { id: "crypto_fear_greed", transform: "raw" as const },
+        { id: "vix", transform: "raw" as const },
+        { id: "move", transform: "raw" as const },
+      ],
+      rangeId: "3Y",
+      axisById: { vix: "right" as const, move: "right" as const },
+      macroContextId: "sentiment" as const,
     },
   },
   { id: "inflation", label: "인플레이션", unavailable: "인플레이션 시리즈는 아직 없습니다" },
@@ -764,6 +831,7 @@ const MACRO_FREQUENCY_DISPLAY_LABELS: Record<MacroSeriesDefinition["frequency"],
 const MACRO_UNIT_DISPLAY_LABELS: Record<MacroSeriesDefinition["unit"], string> = {
   index: "지수",
   score: "점수",
+  ratio: "비율",
   percent: "%",
   spread: "스프레드",
   usd_billion: "$B",
@@ -1530,6 +1598,8 @@ export default function MacroChartClient({ initialMode = "macro" }: { initialMod
   const [stooqTickerNotice, setStooqTickerNotice] = useState<string | null>(null);
   const [loadState, setLoadState] = useState<LoadState>({ status: "idle" });
   const [loadRetryKey, setLoadRetryKey] = useState(0);
+  const [cnnComponentsState, setCnnComponentsState] = useState<CnnComponentsState>({ status: "idle" });
+  const [cnnComponentsRetryKey, setCnnComponentsRetryKey] = useState(0);
   const [seriesEditorOpen, setSeriesEditorOpen] = useState(stockCompareMode);
   const [limitNotice, setLimitNotice] = useState<string | null>(null);
   const [searchOpen, setSearchOpen] = useState(false);
@@ -1580,6 +1650,13 @@ export default function MacroChartClient({ initialMode = "macro" }: { initialMod
       setAxisById(nextState.axisById);
       setFormulas(nextState.formulas);
       setMacroContextId(nextState.macroContextId);
+      if (nextState.macroContextId === "sentiment") {
+        setActiveTopLensId(
+          nextState.selected.map((item) => item.id).join(",") === "cnn_fear_greed,crypto_fear_greed,vix,move"
+            ? "sentiment"
+            : "custom",
+        );
+      }
       setFormulaLeftId(nextState.selected[0]?.id ?? "");
       setFormulaRightId(nextState.selected[1]?.id ?? "");
       const params = new URLSearchParams(window.location.search);
@@ -1634,6 +1711,28 @@ export default function MacroChartClient({ initialMode = "macro" }: { initialMod
       cancelled = true;
     };
   }, [clientStateReady, loadRetryKey, rangeId, selectedDefinitions, transformMap, viewOptions]);
+
+  useEffect(() => {
+    if (!clientStateReady || macroContextId !== "sentiment") return;
+    let cancelled = false;
+    Promise.resolve().then(() => {
+      if (!cancelled) setCnnComponentsState({ status: "loading" });
+    });
+    fetch("/data/sentiment/cnn-components.json", { cache: "force-cache" })
+      .then((response) => {
+        if (!response.ok) throw new Error(`CNN components ${response.status}`);
+        return response.json() as Promise<unknown>;
+      })
+      .then((payload) => {
+        if (!cancelled) setCnnComponentsState({ status: "ready", ...parseCnnComponents(payload) });
+      })
+      .catch((error: unknown) => {
+        if (cancelled) return;
+        console.error("[macro-chart] CNN components load failed", error);
+        setCnnComponentsState({ status: "error" });
+      });
+    return () => { cancelled = true; };
+  }, [clientStateReady, cnnComponentsRetryKey, macroContextId]);
 
   useEffect(() => {
     if (!clientStateReady || typeof window === "undefined") return;
@@ -1782,6 +1881,7 @@ export default function MacroChartClient({ initialMode = "macro" }: { initialMod
   const applyPreset = useCallback((presetId: string) => {
     const preset = MACRO_CHART_PRESETS.find((item) => item.id === presetId);
     if (preset) {
+      setActiveTopLensId(presetId === "sentiment" ? "sentiment" : "custom");
       applyChartState({
         selected: cloneSelection(preset.series),
         rangeId,
@@ -1807,6 +1907,7 @@ export default function MacroChartClient({ initialMode = "macro" }: { initialMod
   }, [applyChartState, macroContextId]);
 
   const applyAnalysisLens = useCallback((lens: MacroAnalysisLens) => {
+    setActiveTopLensId(lens.id);
     applyChartState({ ...lens.state, macroContextId: macroContextFromParam(lens.id)?.id ?? DEFAULT_MACRO_CONTEXT_ID });
     setPresetName(`${lens.label.replace(" 렌즈", "")} 뷰`);
     window.setTimeout(() => document.querySelector('[data-macro-chart-hero="true"]')?.scrollIntoView({ behavior: "smooth", block: "start" }), 0);
@@ -2229,6 +2330,37 @@ export default function MacroChartClient({ initialMode = "macro" }: { initialMod
         : evidenceFreshness === "partial" || evidenceFreshness === "stale"
           ? "stale"
           : "ready";
+  const cnnComponentRows = useMemo<readonly CnnComponentTableRow[]>(() => {
+    if (cnnComponentsState.status !== "ready") return [];
+    return CNN_COMPONENTS.map(({ key, label }) => ({
+      key,
+      label,
+      latest: cnnComponentsState.latest.values[key],
+      previous: cnnComponentsState.previous?.values[key] ?? null,
+    }));
+  }, [cnnComponentsState]);
+  const cnnComponentColumns = useMemo<readonly CpDataTableColumn<CnnComponentTableRow>[]>(() => [
+    { key: "label", header: "CNN 성분", align: "left" },
+    {
+      key: "latest",
+      header: cnnComponentsState.status === "ready" ? cnnComponentsState.latest.date : "최근",
+      render: (row) => row.latest === null ? "—" : row.latest.toFixed(1),
+    },
+    {
+      key: "previous",
+      header: cnnComponentsState.status === "ready" ? cnnComponentsState.previous?.date ?? "이전 없음" : "이전",
+      render: (row) => row.previous === null ? "—" : row.previous.toFixed(1),
+    },
+    {
+      key: "change",
+      header: "변화(점)",
+      render: (row) => {
+        if (row.latest === null || row.previous === null) return "—";
+        const change = row.latest - row.previous;
+        return `${change > 0 ? "+" : ""}${change.toFixed(1)}`;
+      },
+    },
+  ], [cnnComponentsState]);
 
   return (
     <div
@@ -2705,6 +2837,47 @@ export default function MacroChartClient({ initialMode = "macro" }: { initialMod
           </div>
         ) : null}
       </details>
+
+      {macroContextId === "sentiment" ? (
+        <details className="cpw5-macro-table-panel" data-macro-chart-sentiment-components="true">
+          <summary>
+            <span className="cpw5-macro-table-panel__summary">
+              <span>CNN 공포탐욕 7개 성분</span>
+              <b>0~100점 · 최근 두 관측일 비교</b>
+            </span>
+            <span className="cpw5-macro-table-panel__meta">
+              {cnnComponentsState.status === "ready" ? cnnComponentsState.latest.date : "기준일 확인 중"}
+              <i aria-hidden>⌄</i>
+            </span>
+          </summary>
+          <div className="cpw5-macro-table-panel__body">
+            {cnnComponentsState.status === "ready" ? (
+              <CpDataTable
+                columns={cnnComponentColumns}
+                rows={cnnComponentRows}
+                getRowKey={(row) => row.key}
+                density="compact"
+                caption={`CNN 성분 점수 · ${cnnComponentsState.latest.date} / ${cnnComponentsState.previous?.date ?? "이전 관측 없음"}`}
+              />
+            ) : cnnComponentsState.status === "error" ? (
+              <EmptyState
+                reason="CNN 성분 데이터를 불러오지 못했습니다"
+                nextRefresh="다시 시도하면 최신 파일을 읽습니다"
+                actionLabel="다시 시도"
+                onAction={() => setCnnComponentsRetryKey((value) => value + 1)}
+              />
+            ) : (
+              <p role="status">CNN 성분 데이터를 불러오는 중입니다.</p>
+            )}
+            <EvidenceRail
+              freshness={cnnComponentsState.status === "ready" ? freshnessRailState(freshnessVerdict(cnnComponentsState.latest.date, "sentiment"))?.freshness ?? "partial" : cnnComponentsState.status === "error" ? "error" : "pending"}
+              source="CNN 공포탐욕 성분"
+              asOf={cnnComponentsState.status === "ready" ? cnnComponentsState.latest.date : "—"}
+              coverage="7개 성분 · 원시 시계열과 별도 점수"
+            />
+          </div>
+        </details>
+      ) : null}
 
       <section className="cpw5-macro-insight-grid" aria-label="매크로 인사이트">
         <article className="cpw5-macro-insight-card">

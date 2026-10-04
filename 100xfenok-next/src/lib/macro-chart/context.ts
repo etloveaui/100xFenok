@@ -1,6 +1,6 @@
 import { ROUTES } from "@/lib/routes";
 
-export const MACRO_CONTEXT_IDS = ["risk-liquidity", "bank-credit", "activity", "crypto-liquidity"] as const;
+export const MACRO_CONTEXT_IDS = ["risk-liquidity", "bank-credit", "activity", "crypto-liquidity", "sentiment"] as const;
 
 export type MacroContextId = (typeof MACRO_CONTEXT_IDS)[number];
 
@@ -94,6 +94,24 @@ export const MACRO_CONTEXTS: Record<MacroContextId, MacroWorkbenchContext> = {
       "대표 종목은 가격·공시·기관 보유 연결로 변동성의 질을 봅니다.",
     ],
   },
+  sentiment: {
+    id: "sentiment",
+    label: "시장 심리",
+    shortLabel: "심리",
+    detail: "주식·채권 변동성과 CNN·크립토 공포탐욕 지수를 같은 날짜 기준으로 비교합니다.",
+    chartHref: ROUTES.macroChartQuery("macro=sentiment&series=cnn_fear_greed,crypto_fear_greed,vix,move&range=3Y&axis=vix:right,move:right"),
+    screenerHref: `${ROUTES.screener}?macro=sentiment&preset=momentum&action=momentum`,
+    etfHref: `${ROUTES.etfs}?macro=sentiment&type=inverse`,
+    stockHref: `${ROUTES.stock("SPY")}?macro=sentiment`,
+    stockSymbol: "SPY",
+    stockLabel: "미국 주식시장 ETF",
+    screenerPreset: "모멘텀",
+    insightBullets: [
+      "공포탐욕 점수와 VIX·MOVE의 기준일을 먼저 맞춰 봅니다.",
+      "CNN 세부 지표와 투자자 포지션은 아래 선택 목록에서 각각 확인합니다.",
+      "성분 표의 점수는 0~100이며 원시 시계열과 단위가 다릅니다.",
+    ],
+  },
 };
 
 export function isMacroContextId(value: string | null | undefined): value is MacroContextId {
@@ -112,5 +130,6 @@ export function macroContextOrDefault(value: string | string[] | null | undefine
 export function macroContextIdForPreset(presetId: string | null | undefined): MacroContextId {
   if (presetId === "activity") return "activity";
   if (presetId === "liquidity") return "risk-liquidity";
+  if (presetId?.startsWith("sentiment")) return "sentiment";
   return DEFAULT_MACRO_CONTEXT_ID;
 }

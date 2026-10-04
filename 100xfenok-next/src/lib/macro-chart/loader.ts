@@ -295,6 +295,7 @@ export async function loadMacroSeries(
 export function unitLabel(unit: MacroSeriesUnitKind): string {
   if (unit === "percent") return "%";
   if (unit === "spread") return "spread";
+  if (unit === "ratio") return "ratio";
   if (unit === "usd_billion") return "$B";
   if (unit === "usd_million") return "$M";
   if (unit === "usd") return "$";
@@ -371,6 +372,7 @@ export function transformedUnitGroup(item: Pick<LoadedMacroSeries, "definition" 
   if (item.transform === "yoy" || item.transform === "pctChange") return "percent";
   if (item.transform === "change") return unitLabel(item.definition.unit);
   if (item.definition.unit === "index" || item.definition.unit === "score") return "level";
+  if (item.definition.unit === "ratio") return "ratio";
   if (item.definition.unit === "percent" || item.definition.unit === "spread") return "percent";
   return unitLabel(item.definition.unit);
 }

@@ -12,6 +12,7 @@ export type MacroSeriesGroup =
 export type MacroSeriesUnitKind =
   | "index"
   | "score"
+  | "ratio"
   | "percent"
   | "spread"
   | "usd_billion"
