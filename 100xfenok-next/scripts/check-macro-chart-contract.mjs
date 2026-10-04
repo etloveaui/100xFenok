@@ -373,9 +373,12 @@ function inspectPlottedRanges() {
   const failures = [];
   if (!existsSync(TSX_BIN)) {
     addFailure(failures, "tsx-runtime", `tsx binary missing: ${TSX_BIN}`);
-    return { route: "static:macro-chart-ranges", viewport: "node", status: null, failures, ranges: [] };
+    return { route: "static:macro-chart-ranges", viewport: "node", status: null, failures, fixtureRanges: [], ranges: [] };
   }
 
+  // Exact numbers belong to controlled inputs. Canonical macro JSON changes
+  // independently of this code; its QA must check shape and pipeline health,
+  // not yesterday's rolling 60-month minima and observation counts.
   const probe = `
     import fs from "node:fs";
     import path from "node:path";
@@ -384,20 +387,6 @@ function inspectPlottedRanges() {
 
     (async () => {
     const appRoot = process.cwd();
-    globalThis.fetch = async (input) => {
-      const pathname = new URL(String(input), "https://qa.local").pathname;
-      const candidates = [
-        path.resolve(appRoot, "..", "." + pathname),
-        path.resolve(appRoot, "public", "." + pathname),
-      ];
-      const filePath = candidates.find((candidate) => fs.existsSync(candidate));
-      if (!filePath) return new Response("not found", { status: 404 });
-      return new Response(fs.readFileSync(filePath), {
-        status: 200,
-        headers: { "content-type": "application/json" },
-      });
-    };
-
     const ids = ["sp500", "DGS10", "HY_spread", "M2SL"];
     const definitions = ids.map((id) => {
       const definition = seriesById(id);
@@ -410,28 +399,91 @@ function inspectPlottedRanges() {
       ["HY_spread", "raw"],
       ["M2SL", "yoy"],
     ]);
-    const loaded = await loadMacroSeries(definitions, transforms, { months: 60 });
-    const plotted = buildMarketSeries(loaded);
-    const ranges = ids.map((id) => {
-      const source = loaded.find((item) => item.definition.id === id);
-      const series = plotted.find((item) => item.id === id);
-      if (!source || source.error || !series) {
-        return { id, error: source?.error ?? "series missing after pipeline" };
-      }
-      const values = series.points
-        .map((point) => point.value)
-        .filter((value) => typeof value === "number" && Number.isFinite(value));
-      return {
-        id,
-        count: values.length,
-        min: Math.min(...values),
-        max: Math.max(...values),
-        first: values[0],
-        last: values.at(-1),
-        unitGroup: series.unitGroup,
-        axis: series.yAxisId,
-      };
-    });
+    const m2 = Array.from({ length: 63 }, (_, index) => ({
+      date: new Date(Date.UTC(2020, 10 + index, 1)).toISOString().slice(0, 10),
+      value: 1000 + 10 * (index - 2),
+    }));
+    const fixtures = new Map([
+      ["/data/indices/sp500.json", [
+        { date: "2020-12-31", value: 999 }, // outside the 60-month window
+        { date: "2021-01-01", value: 200 },
+        { date: "2022-01-01", value: 240 },
+        { date: "2023-01-01", value: 180 },
+        { date: "2024-01-01", value: 300 },
+        { date: "2025-01-01", value: 360 },
+        { date: "2026-01-01", value: 400 },
+      ]],
+      ["/data/macro/fred-banking-daily.json", { series: {
+        DGS10: [
+          { date: "2020-12-31", value: 9 },
+          { date: "2021-01-01", value: 1.2 },
+          { date: "2023-01-01", value: 3.5 },
+          { date: "2026-01-01", value: 4.2 },
+        ],
+        BAMLH0A0HYM2: [
+          { date: "2020-12-31", value: 9 },
+          { date: "2021-02-01", value: 5.2 },
+          { date: "2024-06-01", value: 3.1 },
+          { date: "2026-01-01", value: 2.7 },
+        ],
+      } }],
+      ["/data/macro/fred-macro.json", { series: { M2SL: m2 } }],
+    ]);
+    const fixtureFetch = async (input) => {
+      const pathname = new URL(String(input), "https://qa.local").pathname;
+      if (!fixtures.has(pathname)) return new Response("not found", { status: 404 });
+      return new Response(JSON.stringify(fixtures.get(pathname)), {
+        status: 200,
+        headers: { "content-type": "application/json" },
+      });
+    };
+    const canonicalFetch = async (input) => {
+      const pathname = new URL(String(input), "https://qa.local").pathname;
+      const candidates = [
+        path.resolve(appRoot, "..", "." + pathname),
+        path.resolve(appRoot, "public", "." + pathname),
+      ];
+      const filePath = candidates.find((candidate) => fs.existsSync(candidate));
+      if (!filePath) return new Response("not found", { status: 404 });
+      return new Response(fs.readFileSync(filePath), {
+        status: 200,
+        headers: { "content-type": "application/json" },
+      });
+    };
+    async function rangesFrom(fetcher) {
+      globalThis.fetch = fetcher;
+      const loaded = await loadMacroSeries(definitions, transforms, { months: 60 });
+      const plotted = buildMarketSeries(loaded);
+      return ids.map((id) => {
+        const source = loaded.find((item) => item.definition.id === id);
+        const series = plotted.find((item) => item.id === id);
+        if (!source || source.error || !series) {
+          return { id, error: source?.error ?? "series missing after pipeline" };
+        }
+        const finite = series.points.filter((point) => typeof point.value === "number" && Number.isFinite(point.value));
+        const values = finite.map((point) => point.value);
+        const datesValid = series.points.every((point, index) =>
+          /^\\d{4}-\\d{2}-\\d{2}$/.test(point.label)
+          && (index === 0 || series.points[index - 1].label <= point.label));
+        return {
+          id,
+          count: values.length,
+          rawCount: source.rawPoints.length,
+          min: values.length ? Math.min(...values) : null,
+          max: values.length ? Math.max(...values) : null,
+          first: values[0] ?? null,
+          last: values.at(-1) ?? null,
+          firstDate: finite[0]?.label ?? null,
+          lastDate: finite.at(-1)?.label ?? null,
+          invalidValues: series.points.filter((point) => point.value !== null && !Number.isFinite(point.value)).length,
+          datesValid,
+          unitGroup: series.unitGroup,
+          axis: series.yAxisId,
+        };
+      });
+    }
+    const fixtureRanges = await rangesFrom(fixtureFetch);
+    const liveRanges = await rangesFrom(canonicalFetch);
     const aggregationFixture = [
       { date: "2026-01-02", value: 10 },
       { date: "2026-01-20", value: 20 },
@@ -443,7 +495,7 @@ function inspectPlottedRanges() {
       end: aggregateMacroPoints(aggregationFixture, "daily", "monthly", "end"),
       noUpsample: aggregateMacroPoints(aggregationFixture.slice(0, 1), "monthly", "daily", "average"),
     };
-    console.log(JSON.stringify({ ranges, aggregations }));
+    console.log(JSON.stringify({ fixtureRanges, liveRanges, aggregations }));
     })().catch((error) => {
       console.error(error);
       process.exit(1);
@@ -456,18 +508,16 @@ function inspectPlottedRanges() {
     maxBuffer: 4 * 1024 * 1024,
   });
   if (result.status !== 0) {
-    addFailure(
-      failures,
-      "plotted-range-pipeline",
-      (result.stderr || result.stdout || `exit=${result.status}`).trim(),
-    );
-    return { route: "static:macro-chart-ranges", viewport: "node", status: result.status, failures, ranges: [] };
+    addFailure(failures, "plotted-range-pipeline", (result.stderr || result.stdout || `exit=${result.status}`).trim());
+    return { route: "static:macro-chart-ranges", viewport: "node", status: result.status, failures, fixtureRanges: [], ranges: [] };
   }
 
+  let fixtureRanges;
   let ranges;
   try {
     const parsed = JSON.parse(result.stdout);
-    ranges = parsed.ranges;
+    fixtureRanges = parsed.fixtureRanges;
+    ranges = parsed.liveRanges;
     const aggregations = parsed.aggregations;
     if (aggregations?.average?.[0]?.value !== 15 || aggregations?.sum?.[0]?.value !== 30 || aggregations?.end?.[0]?.value !== 20) {
       addFailure(failures, "frequency-aggregation", JSON.stringify(aggregations));
@@ -477,40 +527,59 @@ function inspectPlottedRanges() {
     }
   } catch (error) {
     addFailure(failures, "plotted-range-json", `${String(error)} output=${result.stdout.trim()}`);
-    return { route: "static:macro-chart-ranges", viewport: "node", status: result.status, failures, ranges: [] };
+    return { route: "static:macro-chart-ranges", viewport: "node", status: result.status, failures, fixtureRanges: [], ranges: [] };
   }
 
   const expected = {
-    sp500: { count: 628, min: 79.3521, max: 172.4418, first: 100, last: 169.9466, unitGroup: "level", axis: "y" },
-    DGS10: { count: 625, min: 1.29, max: 4.93, first: 1.3, last: 4.75, unitGroup: "percent", axis: "y1" },
-    HY_spread: { count: 785, min: 2.59, max: 4.61, first: 3.81, last: 2.63, unitGroup: "percent", axis: "y1" },
-    M2SL: { count: 47, min: -4.6398, max: 5.4142, first: 2.6485, last: 5.4142, unitGroup: "percent", axis: "y1" },
+    sp500: { count: 6, rawCount: 6, min: 90, max: 200, first: 100, last: 200, firstDate: "2021-01-01", lastDate: "2026-01-01", unitGroup: "level", axis: "y" },
+    DGS10: { count: 3, rawCount: 3, min: 1.2, max: 4.2, first: 1.2, last: 4.2, firstDate: "2021-01-01", lastDate: "2026-01-01", unitGroup: "percent", axis: "y1" },
+    HY_spread: { count: 3, rawCount: 3, min: 2.7, max: 5.2, first: 5.2, last: 2.7, firstDate: "2021-02-01", lastDate: "2026-01-01", unitGroup: "percent", axis: "y1" },
+    M2SL: { count: 49, rawCount: 61, min: 120 / 1480 * 100, max: 12, first: 12, last: 120 / 1480 * 100, firstDate: "2022-01-01", lastDate: "2026-01-01", unitGroup: "percent", axis: "y1" },
   };
-  const tolerance = 0.001;
-
+  const tolerance = 0.000001;
   for (const [id, wanted] of Object.entries(expected)) {
-    const actual = ranges.find((item) => item.id === id);
+    const actual = fixtureRanges?.find((item) => item.id === id);
     if (!actual || actual.error) {
-      addFailure(failures, "plotted-range-series", `${id}: ${actual?.error ?? "missing"}`);
+      addFailure(failures, "fixture-plotted-series", `${id}: ${actual?.error ?? "missing"}`);
       continue;
     }
-    for (const field of ["count", "unitGroup", "axis"]) {
+    for (const field of ["count", "rawCount", "firstDate", "lastDate", "unitGroup", "axis"]) {
       if (actual[field] !== wanted[field]) {
-        addFailure(failures, "plotted-range-contract", `${id}.${field}: expected ${wanted[field]}, got ${actual[field]}`);
+        addFailure(failures, "fixture-plotted-contract", `${id}.${field}: expected ${wanted[field]}, got ${actual[field]}`);
       }
     }
     for (const field of ["min", "max", "first", "last"]) {
       if (!Number.isFinite(actual[field]) || Math.abs(actual[field] - wanted[field]) > tolerance) {
-        addFailure(
-          failures,
-          "plotted-range-contract",
-          `${id}.${field}: expected ${wanted[field]} ± ${tolerance}, got ${actual[field]}`,
-        );
+        addFailure(failures, "fixture-plotted-contract", `${id}.${field}: expected ${wanted[field]} ± ${tolerance}, got ${actual[field]}`);
       }
+    }
+    if (!actual.datesValid || actual.invalidValues !== 0) {
+      addFailure(failures, "fixture-plotted-structure", `${id}: invalid date order or nonfinite plotted value`);
     }
   }
 
-  return { route: "static:macro-chart-ranges", viewport: "node", status: result.status, failures, ranges };
+  for (const [id, wanted] of Object.entries(expected)) {
+    const actual = ranges?.find((item) => item.id === id);
+    if (!actual || actual.error) {
+      addFailure(failures, "live-plotted-series", `${id}: ${actual?.error ?? "missing"}`);
+      continue;
+    }
+    if (actual.unitGroup !== wanted.unitGroup || actual.axis !== wanted.axis) {
+      addFailure(failures, "live-plotted-axis", `${id}: group=${actual.unitGroup}, axis=${actual.axis}`);
+    }
+    if (actual.count < 2 || actual.rawCount < actual.count || !actual.datesValid || actual.invalidValues !== 0 ||
+        !actual.firstDate || !actual.lastDate || actual.firstDate >= actual.lastDate ||
+        ![actual.min, actual.max, actual.first, actual.last].every(Number.isFinite) ||
+        actual.min > actual.first || actual.first > actual.max || actual.min > actual.last || actual.last > actual.max) {
+      addFailure(failures, "live-plotted-structure", `${id}: ${JSON.stringify(actual)}`);
+    }
+  }
+  const liveSp500 = ranges?.find((item) => item.id === "sp500");
+  if (liveSp500 && !liveSp500.error && Math.abs(liveSp500.first - 100) > tolerance) {
+    addFailure(failures, "live-rebase-baseline", `sp500.first=${liveSp500.first}`);
+  }
+
+  return { route: "static:macro-chart-ranges", viewport: "node", status: result.status, failures, fixtureRanges, ranges };
 }
 
 const results = [await inspectStaticContracts(), inspectPlottedRanges()];
