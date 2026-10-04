@@ -4,6 +4,7 @@ import MarketSectionNav from "@/components/market/MarketSectionNav";
 import AppShell from "@/components/shell/AppShell";
 import { MarketStructureDetailWired } from "@/lib/market-valuation/charts/marketStructurePanelComponents";
 import { ROUTES } from "@/lib/routes";
+import KoreaMarketPanel from "./KoreaMarketPanel";
 
 export const dynamic = "force-dynamic";
 
@@ -22,6 +23,7 @@ export default function MarketStructureDetailPage() {
           </div>
         </section>
         <MarketStructureDetailWired />
+        <KoreaMarketPanel />
       </AppShell>
     </div>
   );
