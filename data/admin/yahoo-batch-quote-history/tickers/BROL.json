@@ -1,107 +1,22 @@
 {
-  "attempts": [
-    {
-      "attempts_used": 0,
-      "event_name": "workflow_dispatch",
-      "failures": [],
-      "latency_ms": 0,
-      "natural": false,
-      "observed_at": "2026-07-13T04:33:56Z",
-      "outcome": "skipped_fresh",
-      "run_attempt": 1,
-      "run_id": "29224221077",
-      "schedule": "",
-      "shard": ""
-    },
-    {
-      "attempts_used": 1,
-      "event_name": "schedule",
-      "failures": [],
-      "latency_ms": 1001,
-      "natural": true,
-      "observed_at": "2026-07-21T23:04:26Z",
-      "outcome": "fresh",
-      "run_attempt": 1,
-      "run_id": "29875696340",
-      "schedule": "0 22 * * 2",
-      "shard": "2/6"
-    },
-    {
-      "attempts_used": 1,
-      "event_name": "schedule",
-      "failures": [],
-      "latency_ms": 489,
-      "natural": true,
-      "observed_at": "2026-07-26T23:02:52Z",
-      "outcome": "fresh",
-      "run_attempt": 1,
-      "run_id": "30224292652",
-      "schedule": "0 22 * * 0",
-      "shard": "0/6"
-    },
-    {
-      "attempts_used": 1,
-      "event_name": "schedule",
-      "failures": [],
-      "latency_ms": 611,
-      "natural": true,
-      "observed_at": "2026-08-07T00:55:33Z",
-      "outcome": "fresh",
-      "run_attempt": 1,
-      "run_id": "31136222210",
-      "schedule": "7 20 * * 0-5",
-      "shard": "70/72"
-    },
-    {
-      "attempts_used": 1,
-      "event_name": "schedule",
-      "failures": [],
-      "latency_ms": 806,
-      "natural": true,
-      "observed_at": "2026-08-12T02:41:04Z",
-      "outcome": "fresh",
-      "run_attempt": 1,
-      "run_id": "31557511991",
-      "schedule": "7 0 * * 0-5",
-      "shard": "36/72"
-    },
-    {
-      "attempts_used": 1,
-      "event_name": "workflow_dispatch",
-      "failures": [],
-      "latency_ms": 473,
-      "natural": false,
-      "observed_at": "2026-09-28T01:17:59Z",
-      "outcome": "fresh",
-      "run_attempt": 1,
-      "run_id": "36365270594",
-      "schedule": "",
-      "shard": ""
-    }
-  ],
   "current": {
-    "fetched_at": "2026-09-28T01:31:08Z",
-    "history_as_of": "2026-09-25",
+    "fetched_at": "2026-10-04T17:31:33Z",
+    "history_as_of": "2026-10-02",
     "path": "data/yf/finance/BROL.json",
-    "payload_sha256": "48e0e3f40048765e92d56ad487a7c8796530b2c625433fc56456e0b27b3233d9",
-    "quote_as_of": "2026-09-25T19:42:55Z",
-    "source_as_of": "2026-09-25"
+    "payload_sha256": "d89c7aacd7be1034b7e8189e4e80701abed64e6bb878afa5219684fb45965474",
+    "quote_as_of": "2026-10-02T19:59:50Z",
+    "source_as_of": "2026-10-02"
   },
   "discovered_from": [
     "stockanalysis_etf"
   ],
-  "last_attempt": {
+  "failure_count": 0,
+  "last_result": {
     "attempts_used": 1,
-    "event_name": "workflow_dispatch",
     "failures": [],
-    "latency_ms": 473,
-    "natural": false,
-    "observed_at": "2026-09-28T01:17:59Z",
-    "outcome": "fresh",
-    "run_attempt": 1,
-    "run_id": "36365270594",
-    "schedule": "",
-    "shard": ""
+    "latency_ms": 797,
+    "observed_at": "2026-10-04T17:31:33Z",
+    "outcome": "fresh"
   },
   "lkg": {
     "fetched_at": "2026-08-12T02:43:03Z",
@@ -111,25 +26,12 @@
     "quote_as_of": "2026-08-11T17:12:07Z",
     "source_as_of": "2026-08-11"
   },
-  "promotion_contract": "provider_observation/v2",
-  "provider_observation": {
-    "event_name": "workflow_dispatch",
-    "history_as_of": "2026-09-25",
-    "observed_at": "2026-09-28T01:17:59Z",
-    "payload_sha256": "ebea8d518e2da385116041ddcb414d34ef6299fd30ec70552d7d47255740fa65",
-    "quote_as_of": "2026-09-25T19:42:55Z",
-    "run_attempt": 1,
-    "run_id": "36365270594",
-    "schema_version": "provider_observation/v2",
-    "source_as_of": "2026-09-25"
-  },
   "resolution_state": "fresh_primary",
   "retry": false,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "stale": {
     "age_business_days": 7,
     "classified_at": "2026-08-20T14:20:12Z",
-    "classified_run_id": "32379322022",
     "expected_resolution": "next_natural_yahoo_run",
     "max_business_days": 6,
     "message": "BROL holds LKG because Yahoo source date 2026-08-11 is 7 business days old, beyond the 6-day bound; it will retry on the next natural Yahoo run.",
@@ -137,5 +39,5 @@
     "source_as_of": "2026-08-11"
   },
   "ticker": "BROL",
-  "updated_at": "2026-09-28T01:17:59Z"
+  "updated_at": "2026-10-04T17:31:33Z"
 }

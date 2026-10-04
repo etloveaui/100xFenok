@@ -1,55 +1,22 @@
 {
-  "attempts": [
-    {
-      "attempts_used": 1,
-      "event_name": "schedule",
-      "failures": [],
-      "latency_ms": 874,
-      "natural": true,
-      "observed_at": "2026-08-09T02:25:42Z",
-      "outcome": "fresh",
-      "run_attempt": 1,
-      "run_id": "31290251671",
-      "schedule": "7 0 * * 0-5",
-      "shard": "0/72"
-    },
-    {
-      "attempts_used": 1,
-      "event_name": "workflow_dispatch",
-      "failures": [],
-      "latency_ms": 461,
-      "natural": false,
-      "observed_at": "2026-09-28T06:30:00Z",
-      "outcome": "fresh",
-      "run_attempt": 1,
-      "run_id": "36367836615",
-      "schedule": "",
-      "shard": ""
-    }
-  ],
   "current": {
-    "fetched_at": "2026-09-28T06:45:44Z",
-    "history_as_of": "2026-09-25",
+    "fetched_at": "2026-10-04T17:55:24Z",
+    "history_as_of": "2026-10-02",
     "path": "data/yf/finance/XITK.json",
-    "payload_sha256": "b8b43f4765ad7b4c6a87d5fd2f039b5b06d71389397a0ae764981982a2a9eab8",
-    "quote_as_of": "2026-09-24T18:38:39Z",
-    "source_as_of": "2026-09-24T18:38:39Z"
+    "payload_sha256": "5a7a29689d66ef3792b2c27fa766902e6ac778402e7ed4af03e69729054fd395",
+    "quote_as_of": "2026-10-02T13:34:35Z",
+    "source_as_of": "2026-10-02"
   },
   "discovered_from": [
     "stockanalysis_etf"
   ],
-  "last_attempt": {
+  "failure_count": 0,
+  "last_result": {
     "attempts_used": 1,
-    "event_name": "workflow_dispatch",
     "failures": [],
-    "latency_ms": 461,
-    "natural": false,
-    "observed_at": "2026-09-28T06:30:00Z",
-    "outcome": "fresh",
-    "run_attempt": 1,
-    "run_id": "36367836615",
-    "schedule": "",
-    "shard": ""
+    "latency_ms": 895,
+    "observed_at": "2026-10-04T17:55:24Z",
+    "outcome": "fresh"
   },
   "lkg": {
     "fetched_at": "2026-08-09T02:30:27Z",
@@ -59,25 +26,12 @@
     "quote_as_of": "2026-08-06T20:00:00Z",
     "source_as_of": "2026-08-06T20:00:00Z"
   },
-  "promotion_contract": "provider_observation/v2",
-  "provider_observation": {
-    "event_name": "workflow_dispatch",
-    "history_as_of": "2026-09-25",
-    "observed_at": "2026-09-28T06:30:00Z",
-    "payload_sha256": "5347e4f89ce03bd00f08650769c8dc9cc873020dd2a112af60355d5b8c6e4161",
-    "quote_as_of": "2026-09-24T18:38:39Z",
-    "run_attempt": 1,
-    "run_id": "36367836615",
-    "schema_version": "provider_observation/v2",
-    "source_as_of": "2026-09-24T18:38:39Z"
-  },
   "resolution_state": "fresh_primary",
   "retry": false,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "stale": {
     "age_business_days": 9,
     "classified_at": "2026-08-19T23:42:29Z",
-    "classified_run_id": "32314261503",
     "expected_resolution": "next_natural_yahoo_run",
     "max_business_days": 6,
     "message": "XITK holds LKG because Yahoo source date 2026-08-06T20:00:00Z is 9 business days old, beyond the 6-day bound; it will retry on the next natural Yahoo run.",
@@ -85,5 +39,5 @@
     "source_as_of": "2026-08-06T20:00:00Z"
   },
   "ticker": "XITK",
-  "updated_at": "2026-09-28T06:30:00Z"
+  "updated_at": "2026-10-04T17:55:24Z"
 }

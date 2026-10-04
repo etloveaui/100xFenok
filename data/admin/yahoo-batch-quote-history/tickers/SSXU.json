@@ -1,55 +1,22 @@
 {
-  "attempts": [
-    {
-      "attempts_used": 1,
-      "event_name": "schedule",
-      "failures": [],
-      "latency_ms": 760,
-      "natural": true,
-      "observed_at": "2026-08-06T14:33:02Z",
-      "outcome": "fresh",
-      "run_attempt": 1,
-      "run_id": "31111230701",
-      "schedule": "7 12 * * 0-5",
-      "shard": "54/72"
-    },
-    {
-      "attempts_used": 1,
-      "event_name": "workflow_dispatch",
-      "failures": [],
-      "latency_ms": 509,
-      "natural": false,
-      "observed_at": "2026-09-28T06:02:24Z",
-      "outcome": "fresh",
-      "run_attempt": 1,
-      "run_id": "36367834787",
-      "schedule": "",
-      "shard": ""
-    }
-  ],
   "current": {
-    "fetched_at": "2026-09-28T06:21:20Z",
-    "history_as_of": "2026-09-25",
+    "fetched_at": "2026-10-04T17:51:03Z",
+    "history_as_of": "2026-10-02",
     "path": "data/yf/finance/SSXU.json",
-    "payload_sha256": "3a0a8f1334563a9259e334400990e102e3f2c93abeb08d89ec757d532084354a",
-    "quote_as_of": "2026-09-25T13:35:50Z",
-    "source_as_of": "2026-09-25"
+    "payload_sha256": "e88df8c1efd041ff5c39f77f84d7a6d5dc43f9c630e25e65c491106fdc4ad9af",
+    "quote_as_of": "2026-10-02T16:52:50Z",
+    "source_as_of": "2026-10-02"
   },
   "discovered_from": [
     "stockanalysis_etf"
   ],
-  "last_attempt": {
+  "failure_count": 0,
+  "last_result": {
     "attempts_used": 1,
-    "event_name": "workflow_dispatch",
     "failures": [],
-    "latency_ms": 509,
-    "natural": false,
-    "observed_at": "2026-09-28T06:02:24Z",
-    "outcome": "fresh",
-    "run_attempt": 1,
-    "run_id": "36367834787",
-    "schedule": "",
-    "shard": ""
+    "latency_ms": 889,
+    "observed_at": "2026-10-04T17:51:03Z",
+    "outcome": "fresh"
   },
   "lkg": {
     "fetched_at": "2026-08-06T14:36:14Z",
@@ -59,25 +26,12 @@
     "quote_as_of": "2026-08-05T19:59:46Z",
     "source_as_of": "2026-08-05"
   },
-  "promotion_contract": "provider_observation/v2",
-  "provider_observation": {
-    "event_name": "workflow_dispatch",
-    "history_as_of": "2026-09-25",
-    "observed_at": "2026-09-28T06:02:24Z",
-    "payload_sha256": "dee6b100065e6641a95009f109d84dcce62e696730a7749e982c28e5ca52dd29",
-    "quote_as_of": "2026-09-25T13:35:50Z",
-    "run_attempt": 1,
-    "run_id": "36367834787",
-    "schema_version": "provider_observation/v2",
-    "source_as_of": "2026-09-25"
-  },
   "resolution_state": "fresh_primary",
   "retry": false,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "stale": {
     "age_business_days": 7,
     "classified_at": "2026-08-14T00:10:47Z",
-    "classified_run_id": "31755913658",
     "expected_resolution": "next_natural_yahoo_run",
     "max_business_days": 6,
     "message": "SSXU holds LKG because Yahoo source date 2026-08-05 is 7 business days old, beyond the 6-day bound; it will retry on the next natural Yahoo run.",
@@ -85,5 +39,5 @@
     "source_as_of": "2026-08-05"
   },
   "ticker": "SSXU",
-  "updated_at": "2026-09-28T06:02:24Z"
+  "updated_at": "2026-10-04T17:51:03Z"
 }

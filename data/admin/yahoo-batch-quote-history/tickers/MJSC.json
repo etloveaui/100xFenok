@@ -2,7 +2,7 @@
   "current": {
     "fetched_at": "2026-09-30T14:38:27Z",
     "history_as_of": "2026-09-30",
-    "path": "data/yf/finance/MJSC.json",
+    "path": "data/admin/yahoo-batch-quote-history/lkg/MJSC.json",
     "payload_sha256": "592ff823f380b22b114058da51893a4d3851f69b44dc03777a90ccbe71fefa81",
     "quote_as_of": "2026-09-30T13:46:05Z",
     "source_as_of": "2026-09-30"
@@ -10,24 +10,35 @@
   "discovered_from": [
     "stockanalysis_etf"
   ],
-  "failure_count": 0,
+  "failure_count": 1,
   "last_result": {
     "attempts_used": 1,
+    "error": "ValueError: Yahoo provider source timestamp regresses for MJSC: quote_as_of",
     "failures": [],
-    "latency_ms": 2661,
-    "observed_at": "2026-09-30T14:38:27Z",
-    "outcome": "fresh"
+    "latency_ms": 688,
+    "observed_at": "2026-10-04T17:43:23Z",
+    "outcome": "failed"
+  },
+  "latest_failure": {
+    "attempts_used": 1,
+    "data_loss": false,
+    "deferred_acquisition": false,
+    "error": "ValueError: Yahoo provider source timestamp regresses for MJSC: quote_as_of",
+    "failure_kind": "systemic_integrity",
+    "failures": [],
+    "lkg_status": "retained",
+    "observed_at": "2026-10-04T17:43:23Z"
   },
   "lkg": {
-    "fetched_at": "2026-09-28T05:31:38Z",
-    "history_as_of": "2026-09-25",
+    "fetched_at": "2026-09-30T14:38:27Z",
+    "history_as_of": "2026-09-30",
     "path": "data/admin/yahoo-batch-quote-history/lkg/MJSC.json",
-    "payload_sha256": "16c3e46a9c87ed09129984bb8ee3edd9f3ceaaa6e21a6aef667e16ce873c0f60",
-    "quote_as_of": "2026-09-14T14:38:05Z",
-    "source_as_of": "2026-09-14T14:38:05Z"
+    "payload_sha256": "592ff823f380b22b114058da51893a4d3851f69b44dc03777a90ccbe71fefa81",
+    "quote_as_of": "2026-09-30T13:46:05Z",
+    "source_as_of": "2026-09-30"
   },
-  "resolution_state": "fresh_primary",
-  "retry": false,
+  "resolution_state": "lkg_primary",
+  "retry": true,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "stale": {
     "age_business_days": 10,
@@ -39,5 +50,5 @@
     "source_as_of": "2026-09-14T14:38:05Z"
   },
   "ticker": "MJSC",
-  "updated_at": "2026-09-30T14:38:27Z"
+  "updated_at": "2026-10-04T17:43:23Z"
 }

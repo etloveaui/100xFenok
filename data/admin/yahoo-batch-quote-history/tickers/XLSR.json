@@ -1,68 +1,22 @@
 {
-  "attempts": [
-    {
-      "attempts_used": 1,
-      "event_name": "schedule",
-      "failures": [],
-      "latency_ms": 682,
-      "natural": true,
-      "observed_at": "2026-08-05T14:29:49Z",
-      "outcome": "fresh",
-      "run_attempt": 1,
-      "run_id": "31015333400",
-      "schedule": "7 12 * * 0-5",
-      "shard": "42/72"
-    },
-    {
-      "attempts_used": 1,
-      "event_name": "schedule",
-      "failures": [],
-      "latency_ms": 931,
-      "natural": true,
-      "observed_at": "2026-08-12T13:41:31Z",
-      "outcome": "fresh",
-      "run_attempt": 1,
-      "run_id": "31602424796",
-      "schedule": "7 12 * * 0-5",
-      "shard": "42/72"
-    },
-    {
-      "attempts_used": 1,
-      "event_name": "workflow_dispatch",
-      "failures": [],
-      "latency_ms": 533,
-      "natural": false,
-      "observed_at": "2026-09-28T06:30:00Z",
-      "outcome": "fresh",
-      "run_attempt": 1,
-      "run_id": "36367836615",
-      "schedule": "",
-      "shard": ""
-    }
-  ],
   "current": {
-    "fetched_at": "2026-09-28T06:46:24Z",
-    "history_as_of": "2026-09-25",
+    "fetched_at": "2026-10-04T17:55:36Z",
+    "history_as_of": "2026-10-02",
     "path": "data/yf/finance/XLSR.json",
-    "payload_sha256": "0daa1e476d25f8614a2e6c44cbc27179068981ab1139c80c184c052cc90071f2",
-    "quote_as_of": "2026-09-25T19:47:46Z",
-    "source_as_of": "2026-09-25"
+    "payload_sha256": "ef5a5cc8fe8eb1692455190323912ba72728cbfbad6ce338b48738c6b4fe4a27",
+    "quote_as_of": "2026-10-02T19:59:50Z",
+    "source_as_of": "2026-10-02"
   },
   "discovered_from": [
     "stockanalysis_etf"
   ],
-  "last_attempt": {
+  "failure_count": 0,
+  "last_result": {
     "attempts_used": 1,
-    "event_name": "workflow_dispatch",
     "failures": [],
-    "latency_ms": 533,
-    "natural": false,
-    "observed_at": "2026-09-28T06:30:00Z",
-    "outcome": "fresh",
-    "run_attempt": 1,
-    "run_id": "36367836615",
-    "schedule": "",
-    "shard": ""
+    "latency_ms": 857,
+    "observed_at": "2026-10-04T17:55:36Z",
+    "outcome": "fresh"
   },
   "lkg": {
     "fetched_at": "2026-08-12T13:45:29Z",
@@ -72,25 +26,12 @@
     "quote_as_of": "2026-08-12T13:33:55Z",
     "source_as_of": "2026-08-12"
   },
-  "promotion_contract": "provider_observation/v2",
-  "provider_observation": {
-    "event_name": "workflow_dispatch",
-    "history_as_of": "2026-09-25",
-    "observed_at": "2026-09-28T06:30:00Z",
-    "payload_sha256": "7c6d0a32739c5ca1acd489eb74adeeb021a75d8181394f8ed38504ec7110d2fc",
-    "quote_as_of": "2026-09-25T19:47:46Z",
-    "run_attempt": 1,
-    "run_id": "36367836615",
-    "schema_version": "provider_observation/v2",
-    "source_as_of": "2026-09-25"
-  },
   "resolution_state": "fresh_primary",
   "retry": false,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "stale": {
     "age_business_days": 7,
     "classified_at": "2026-08-21T23:43:33Z",
-    "classified_run_id": "32537807621",
     "expected_resolution": "next_natural_yahoo_run",
     "max_business_days": 6,
     "message": "XLSR holds LKG because Yahoo source date 2026-08-12 is 7 business days old, beyond the 6-day bound; it will retry on the next natural Yahoo run.",
@@ -98,5 +39,5 @@
     "source_as_of": "2026-08-12"
   },
   "ticker": "XLSR",
-  "updated_at": "2026-09-28T06:30:00Z"
+  "updated_at": "2026-10-04T17:55:36Z"
 }

@@ -2,7 +2,7 @@
   "current": {
     "fetched_at": "2026-09-30T14:36:20Z",
     "history_as_of": "2026-09-30",
-    "path": "data/yf/finance/GEVC.json",
+    "path": "data/admin/yahoo-batch-quote-history/lkg/GEVC.json",
     "payload_sha256": "1f5d481ae6874b4db648651bbc45efadd917af96f1b40093fc8ac796b8735990",
     "quote_as_of": "2026-09-30T13:46:04Z",
     "source_as_of": "2026-09-30"
@@ -10,25 +10,36 @@
   "discovered_from": [
     "stockanalysis_etf"
   ],
-  "failure_count": 0,
+  "failure_count": 1,
   "last_result": {
     "attempts_used": 1,
+    "error": "ValueError: Yahoo provider source timestamp regresses for GEVC: quote_as_of",
     "failures": [],
-    "latency_ms": 578,
-    "observed_at": "2026-09-30T14:36:20Z",
-    "outcome": "fresh"
+    "latency_ms": 1097,
+    "observed_at": "2026-10-04T17:38:01Z",
+    "outcome": "failed"
+  },
+  "latest_failure": {
+    "attempts_used": 1,
+    "data_loss": false,
+    "deferred_acquisition": false,
+    "error": "ValueError: Yahoo provider source timestamp regresses for GEVC: quote_as_of",
+    "failure_kind": "systemic_integrity",
+    "failures": [],
+    "lkg_status": "retained",
+    "observed_at": "2026-10-04T17:38:01Z"
   },
   "lkg": {
-    "fetched_at": "2026-09-28T04:41:17Z",
-    "history_as_of": "2026-09-25",
+    "fetched_at": "2026-09-30T14:36:20Z",
+    "history_as_of": "2026-09-30",
     "path": "data/admin/yahoo-batch-quote-history/lkg/GEVC.json",
-    "payload_sha256": "ac5298df5d4eb6bbf6b3932ecb164de1a159d8d1f62033224ca4c5269a381348",
-    "quote_as_of": "2026-09-18T16:03:00Z",
-    "source_as_of": "2026-09-18T16:03:00Z"
+    "payload_sha256": "1f5d481ae6874b4db648651bbc45efadd917af96f1b40093fc8ac796b8735990",
+    "quote_as_of": "2026-09-30T13:46:04Z",
+    "source_as_of": "2026-09-30"
   },
   "recovered_at": "2026-08-12T17:16:04Z",
-  "resolution_state": "fresh_primary",
-  "retry": false,
+  "resolution_state": "lkg_primary",
+  "retry": true,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "stale": {
     "age_business_days": 7,
@@ -40,5 +51,5 @@
     "source_as_of": "2026-09-18T16:03:00Z"
   },
   "ticker": "GEVC",
-  "updated_at": "2026-09-30T14:36:20Z"
+  "updated_at": "2026-10-04T17:38:01Z"
 }

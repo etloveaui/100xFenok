@@ -2,7 +2,7 @@
   "current": {
     "fetched_at": "2026-09-30T14:36:11Z",
     "history_as_of": "2026-09-30",
-    "path": "data/yf/finance/FHIL.json",
+    "path": "data/admin/yahoo-batch-quote-history/lkg/FHIL.json",
     "payload_sha256": "c6c4827ebf88c2bc2cea8fb09d71ac7fd18fde1b7c882dd1323ea7bca89c8a67",
     "quote_as_of": "2026-09-30T13:46:04Z",
     "source_as_of": "2026-09-30"
@@ -10,24 +10,35 @@
   "discovered_from": [
     "stockanalysis_etf"
   ],
-  "failure_count": 0,
+  "failure_count": 1,
   "last_result": {
     "attempts_used": 1,
+    "error": "ValueError: Yahoo provider source timestamp regresses for FHIL: quote_as_of",
     "failures": [],
-    "latency_ms": 615,
-    "observed_at": "2026-09-30T14:36:11Z",
-    "outcome": "fresh"
+    "latency_ms": 1017,
+    "observed_at": "2026-10-04T17:36:35Z",
+    "outcome": "failed"
+  },
+  "latest_failure": {
+    "attempts_used": 1,
+    "data_loss": false,
+    "deferred_acquisition": false,
+    "error": "ValueError: Yahoo provider source timestamp regresses for FHIL: quote_as_of",
+    "failure_kind": "systemic_integrity",
+    "failures": [],
+    "lkg_status": "retained",
+    "observed_at": "2026-10-04T17:36:35Z"
   },
   "lkg": {
-    "fetched_at": "2026-09-28T03:28:49Z",
-    "history_as_of": "2026-09-25",
+    "fetched_at": "2026-09-30T14:36:11Z",
+    "history_as_of": "2026-09-30",
     "path": "data/admin/yahoo-batch-quote-history/lkg/FHIL.json",
-    "payload_sha256": "df735f70acf2f6612eb7ef583e0c8a02b51109e5983f70e1616490b913acfefa",
-    "quote_as_of": "2026-09-18T14:36:22Z",
-    "source_as_of": "2026-09-18T14:36:22Z"
+    "payload_sha256": "c6c4827ebf88c2bc2cea8fb09d71ac7fd18fde1b7c882dd1323ea7bca89c8a67",
+    "quote_as_of": "2026-09-30T13:46:04Z",
+    "source_as_of": "2026-09-30"
   },
-  "resolution_state": "fresh_primary",
-  "retry": false,
+  "resolution_state": "lkg_primary",
+  "retry": true,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "stale": {
     "age_business_days": 7,
@@ -39,5 +50,5 @@
     "source_as_of": "2026-09-18T14:36:22Z"
   },
   "ticker": "FHIL",
-  "updated_at": "2026-09-30T14:36:11Z"
+  "updated_at": "2026-10-04T17:36:35Z"
 }

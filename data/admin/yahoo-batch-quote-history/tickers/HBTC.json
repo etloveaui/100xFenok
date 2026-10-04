@@ -2,7 +2,7 @@
   "current": {
     "fetched_at": "2026-09-30T14:36:21Z",
     "history_as_of": "2026-09-30",
-    "path": "data/yf/finance/HBTC.json",
+    "path": "data/admin/yahoo-batch-quote-history/lkg/HBTC.json",
     "payload_sha256": "f1e000e8eb2cd61b6f210a2a251292792cf868c32a24910998e7da9349e33a3c",
     "quote_as_of": "2026-09-30T13:46:04Z",
     "source_as_of": "2026-09-30"
@@ -10,24 +10,35 @@
   "discovered_from": [
     "stockanalysis_etf"
   ],
-  "failure_count": 0,
+  "failure_count": 1,
   "last_result": {
     "attempts_used": 1,
+    "error": "ValueError: Yahoo provider source timestamp regresses for HBTC: quote_as_of",
     "failures": [],
-    "latency_ms": 659,
-    "observed_at": "2026-09-30T14:36:21Z",
-    "outcome": "fresh"
+    "latency_ms": 816,
+    "observed_at": "2026-10-04T17:38:50Z",
+    "outcome": "failed"
+  },
+  "latest_failure": {
+    "attempts_used": 1,
+    "data_loss": false,
+    "deferred_acquisition": false,
+    "error": "ValueError: Yahoo provider source timestamp regresses for HBTC: quote_as_of",
+    "failure_kind": "systemic_integrity",
+    "failures": [],
+    "lkg_status": "retained",
+    "observed_at": "2026-10-04T17:38:50Z"
   },
   "lkg": {
-    "fetched_at": "2026-09-28T04:45:11Z",
-    "history_as_of": "2026-09-25",
+    "fetched_at": "2026-09-30T14:36:21Z",
+    "history_as_of": "2026-09-30",
     "path": "data/admin/yahoo-batch-quote-history/lkg/HBTC.json",
-    "payload_sha256": "74a5c7b75974710ba9468cd16b29ef094a02e1a179674aa84cfbd461f5edc0aa",
-    "quote_as_of": "2026-08-26T17:31:04Z",
-    "source_as_of": "2026-08-26T17:31:04Z"
+    "payload_sha256": "f1e000e8eb2cd61b6f210a2a251292792cf868c32a24910998e7da9349e33a3c",
+    "quote_as_of": "2026-09-30T13:46:04Z",
+    "source_as_of": "2026-09-30"
   },
-  "resolution_state": "fresh_primary",
-  "retry": false,
+  "resolution_state": "lkg_primary",
+  "retry": true,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "stale": {
     "age_business_days": 22,
@@ -39,5 +50,5 @@
     "source_as_of": "2026-08-26T17:31:04Z"
   },
   "ticker": "HBTC",
-  "updated_at": "2026-09-30T14:36:21Z"
+  "updated_at": "2026-10-04T17:38:50Z"
 }

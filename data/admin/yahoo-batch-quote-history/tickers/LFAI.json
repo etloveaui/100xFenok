@@ -2,7 +2,7 @@
   "current": {
     "fetched_at": "2026-09-30T14:37:30Z",
     "history_as_of": "2026-09-30",
-    "path": "data/yf/finance/LFAI.json",
+    "path": "data/admin/yahoo-batch-quote-history/lkg/LFAI.json",
     "payload_sha256": "978822c2c23738f777038645dddc2da3865471a957ba2a247e94898dee3d5b82",
     "quote_as_of": "2026-09-30T13:46:05Z",
     "source_as_of": "2026-09-30"
@@ -10,24 +10,35 @@
   "discovered_from": [
     "stockanalysis_etf"
   ],
-  "failure_count": 0,
+  "failure_count": 1,
   "last_result": {
     "attempts_used": 1,
+    "error": "ValueError: Yahoo provider source timestamp regresses for LFAI: quote_as_of",
     "failures": [],
-    "latency_ms": 671,
-    "observed_at": "2026-09-30T14:37:30Z",
-    "outcome": "fresh"
+    "latency_ms": 817,
+    "observed_at": "2026-10-04T17:42:25Z",
+    "outcome": "failed"
+  },
+  "latest_failure": {
+    "attempts_used": 1,
+    "data_loss": false,
+    "deferred_acquisition": false,
+    "error": "ValueError: Yahoo provider source timestamp regresses for LFAI: quote_as_of",
+    "failure_kind": "systemic_integrity",
+    "failures": [],
+    "lkg_status": "retained",
+    "observed_at": "2026-10-04T17:42:25Z"
   },
   "lkg": {
-    "fetched_at": "2026-09-28T05:27:31Z",
-    "history_as_of": "2026-09-25",
+    "fetched_at": "2026-09-30T14:37:30Z",
+    "history_as_of": "2026-09-30",
     "path": "data/admin/yahoo-batch-quote-history/lkg/LFAI.json",
-    "payload_sha256": "ae2f7fa1f039fdce1d58916c4eb327db7b052daa399ec8857cf808ac609d62df",
-    "quote_as_of": "2026-09-09T15:10:15Z",
-    "source_as_of": "2026-09-09T15:10:15Z"
+    "payload_sha256": "978822c2c23738f777038645dddc2da3865471a957ba2a247e94898dee3d5b82",
+    "quote_as_of": "2026-09-30T13:46:05Z",
+    "source_as_of": "2026-09-30"
   },
-  "resolution_state": "fresh_primary",
-  "retry": false,
+  "resolution_state": "lkg_primary",
+  "retry": true,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "stale": {
     "age_business_days": 13,
@@ -39,5 +50,5 @@
     "source_as_of": "2026-09-09T15:10:15Z"
   },
   "ticker": "LFAI",
-  "updated_at": "2026-09-30T14:37:30Z"
+  "updated_at": "2026-10-04T17:42:25Z"
 }

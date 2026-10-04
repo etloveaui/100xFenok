@@ -2,7 +2,7 @@
   "current": {
     "fetched_at": "2026-09-30T14:39:15Z",
     "history_as_of": "2026-09-30",
-    "path": "data/yf/finance/NYNY.json",
+    "path": "data/admin/yahoo-batch-quote-history/lkg/NYNY.json",
     "payload_sha256": "bad813b58dd9287bd5a1914b59010090c4c688596253b6db32f6be7f927cc3a3",
     "quote_as_of": "2026-09-30T13:46:06Z",
     "source_as_of": "2026-09-30"
@@ -10,24 +10,35 @@
   "discovered_from": [
     "stockanalysis_etf"
   ],
-  "failure_count": 0,
+  "failure_count": 1,
   "last_result": {
     "attempts_used": 1,
+    "error": "ValueError: Yahoo provider source timestamp regresses for NYNY: quote_as_of",
     "failures": [],
-    "latency_ms": 520,
-    "observed_at": "2026-09-30T14:39:15Z",
-    "outcome": "fresh"
+    "latency_ms": 884,
+    "observed_at": "2026-10-04T17:44:45Z",
+    "outcome": "failed"
+  },
+  "latest_failure": {
+    "attempts_used": 1,
+    "data_loss": false,
+    "deferred_acquisition": false,
+    "error": "ValueError: Yahoo provider source timestamp regresses for NYNY: quote_as_of",
+    "failure_kind": "systemic_integrity",
+    "failures": [],
+    "lkg_status": "retained",
+    "observed_at": "2026-10-04T17:44:45Z"
   },
   "lkg": {
-    "fetched_at": "2026-09-28T05:38:12Z",
-    "history_as_of": "2026-09-25",
+    "fetched_at": "2026-09-30T14:39:15Z",
+    "history_as_of": "2026-09-30",
     "path": "data/admin/yahoo-batch-quote-history/lkg/NYNY.json",
-    "payload_sha256": "82ee4121c756ac8f9c31203f4b94f1de75721f217c8e949cfdcf9b41ceac7676",
-    "quote_as_of": "2026-09-18T16:04:02Z",
-    "source_as_of": "2026-09-18T16:04:02Z"
+    "payload_sha256": "bad813b58dd9287bd5a1914b59010090c4c688596253b6db32f6be7f927cc3a3",
+    "quote_as_of": "2026-09-30T13:46:06Z",
+    "source_as_of": "2026-09-30"
   },
-  "resolution_state": "fresh_primary",
-  "retry": false,
+  "resolution_state": "lkg_primary",
+  "retry": true,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "stale": {
     "age_business_days": 7,
@@ -39,5 +50,5 @@
     "source_as_of": "2026-09-18T16:04:02Z"
   },
   "ticker": "NYNY",
-  "updated_at": "2026-09-30T14:39:15Z"
+  "updated_at": "2026-10-04T17:44:45Z"
 }

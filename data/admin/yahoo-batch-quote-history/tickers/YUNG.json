@@ -2,7 +2,7 @@
   "current": {
     "fetched_at": "2026-09-30T14:43:16Z",
     "history_as_of": "2026-09-30",
-    "path": "data/yf/finance/YUNG.json",
+    "path": "data/admin/yahoo-batch-quote-history/lkg/YUNG.json",
     "payload_sha256": "e327dbebf3b5817a7df71b758b64da52aa3872c25e72d998f2f26d8f7ee071c9",
     "quote_as_of": "2026-09-30T13:46:09Z",
     "source_as_of": "2026-09-30"
@@ -10,24 +10,35 @@
   "discovered_from": [
     "stockanalysis_etf"
   ],
-  "failure_count": 0,
+  "failure_count": 1,
   "last_result": {
     "attempts_used": 1,
+    "error": "ValueError: Yahoo provider source timestamp regresses for YUNG: quote_as_of",
     "failures": [],
-    "latency_ms": 568,
-    "observed_at": "2026-09-30T14:43:16Z",
-    "outcome": "fresh"
+    "latency_ms": 1091,
+    "observed_at": "2026-10-04T17:56:08Z",
+    "outcome": "failed"
+  },
+  "latest_failure": {
+    "attempts_used": 1,
+    "data_loss": false,
+    "deferred_acquisition": false,
+    "error": "ValueError: Yahoo provider source timestamp regresses for YUNG: quote_as_of",
+    "failure_kind": "systemic_integrity",
+    "failures": [],
+    "lkg_status": "retained",
+    "observed_at": "2026-10-04T17:56:08Z"
   },
   "lkg": {
-    "fetched_at": "2026-09-28T06:49:17Z",
-    "history_as_of": "2026-09-25",
+    "fetched_at": "2026-09-30T14:43:16Z",
+    "history_as_of": "2026-09-30",
     "path": "data/admin/yahoo-batch-quote-history/lkg/YUNG.json",
-    "payload_sha256": "7a1ba27f64fadc44915d28d40f84095f6380507f794729a71019cb663fe7d7a8",
-    "quote_as_of": "2026-09-18T19:33:11Z",
-    "source_as_of": "2026-09-18T19:33:11Z"
+    "payload_sha256": "e327dbebf3b5817a7df71b758b64da52aa3872c25e72d998f2f26d8f7ee071c9",
+    "quote_as_of": "2026-09-30T13:46:09Z",
+    "source_as_of": "2026-09-30"
   },
-  "resolution_state": "fresh_primary",
-  "retry": false,
+  "resolution_state": "lkg_primary",
+  "retry": true,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "stale": {
     "age_business_days": 7,
@@ -39,5 +50,5 @@
     "source_as_of": "2026-09-18T19:33:11Z"
   },
   "ticker": "YUNG",
-  "updated_at": "2026-09-30T14:43:16Z"
+  "updated_at": "2026-10-04T17:56:08Z"
 }
