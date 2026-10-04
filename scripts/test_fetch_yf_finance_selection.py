@@ -764,6 +764,173 @@ class FetchYfFinanceSelectionTest(unittest.TestCase):
         self.assertEqual(len(attempted), len(bounded_union))
         self.assertEqual(len(set(attempted)), len(bounded_union))
 
+    def test_core_daily_retained_retry_is_bounded_daily_and_plan_only_is_pure(self) -> None:
+        self.fetcher.load_core_daily_basket_sources = lambda: {"CORE": ["core_daily_basket"]}
+        self.fetcher._observed_now = lambda: "2026-10-05T01:00:00Z"
+        self.fetcher.yahoo_source_freshness = lambda _sources, _now: {
+            "ages": {"STALE": 7}, "max_source_business_days": 6,
+        }
+        self.fetcher.verified_yahoo_terminal_evidence = lambda _as_of: {"tickers": {"VERIFIED": []}}
+        store = self.fetcher.YahooBatchStateStore(
+            self.fetcher.YAHOO_BATCH_STATE_ROOT, self.fetcher.OUT_DIR,
+        )
+
+        def observed(ticker, *, source="stockanalysis_etf", retry=True, resolution="lkg_primary", at="2026-09-01T00:00:00Z", canonical=True):
+            write_json(store._state_path(ticker), {
+                "schema_version": "yahoo-batch-quote-history-state/v1",
+                "ticker": ticker,
+                "discovered_from": [source],
+                "resolution_state": resolution,
+                "retry": retry,
+                "last_result": {"observed_at": at},
+            })
+            if canonical:
+                write_json(self.fetcher.OUT_DIR / f"{ticker}.json", self._daily_payload(ticker))
+
+        retries = [f"RETRY{index:03d}" for index in range(45)]
+        for index, ticker in enumerate(retries):
+            observed(ticker, at=f"2026-09-01T00:{index:02d}:00Z")
+        observed("STALE", retry=False, resolution="fresh_primary", at="2026-08-01T00:00:00Z")
+        observed("STOCK", source="global_scouter_stock")
+        observed("TERMINAL", resolution="terminal_provider_unsupported")
+        observed("NOCAN", canonical=False)
+        write_json(self.fetcher.OUT_DIR / "PENDING.json", self._daily_payload("PENDING"))
+        observed("VERIFIED")
+        observed("ORPHAN")
+        self.assertEqual(store.retained_stockanalysis_etf_sources(), {}, "missing catalogue fails closed")
+        write_json(store.root / "index.json", {
+            "schema_version": "other-index/v1", "active_universe_scope": "all_sources",
+            "catalogue_symbols": sorted({*retries, "STALE", "STOCK", "TERMINAL", "NOCAN", "VERIFIED"}),
+        })
+        self.assertEqual(store.retained_stockanalysis_etf_sources(), {}, "wrong index schema fails closed")
+        write_json(store.root / "index.json", {
+            "schema_version": "yahoo-batch-quote-history-index/v1",
+            "active_universe_scope": "all_sources",
+            "catalogue_symbols": sorted({*retries, "STALE", "STOCK", "TERMINAL", "NOCAN", "VERIFIED"}),
+        })
+        retained = store.retained_stockanalysis_etf_sources({"VERIFIED"})
+        self.assertEqual(set(retained), set(retries) | {"STALE"})
+
+        shard = self.fetcher.stable_shard_index("CORE", 6)
+        args = [
+            "fetch-yf-finance.py", "--core-daily-basket", "--record-batch-state",
+            "--natural-run", "--plan-only", "--stable-shards", "--limit", "200",
+            "--regular-limit", "140", "--retry-limit", "40",
+            "--shard", f"{shard}/6", "--scheduled-weekday", str(shard),
+            "--shard-cycle-index", "0", "--plan-sample-size", "200",
+        ]
+
+        def plan(argv):
+            original_argv, original_stdout = sys.argv, sys.stdout
+            output = io.StringIO()
+            try:
+                sys.argv, sys.stdout = argv, output
+                self.fetcher.main()
+            finally:
+                sys.argv, sys.stdout = original_argv, original_stdout
+            return json.loads(output.getvalue())
+
+        write_json(store.root / "index.json", {
+            "schema_version": "yahoo-batch-quote-history-index/v1",
+            "active_universe_scope": "all_sources", "catalogue_symbols": {"not": "a list"},
+        })
+        self.assertEqual(plan(args)["sample"], ["CORE"], "malformed catalogue cannot acquire orphan state")
+        write_json(store.root / "index.json", {
+            "schema_version": "yahoo-batch-quote-history-index/v1",
+            "active_universe_scope": "all_sources",
+            "catalogue_symbols": sorted({*retries, "STALE", "STOCK", "TERMINAL", "NOCAN", "VERIFIED"}),
+        })
+        before = {path: path.read_bytes() for path in self.root.rglob("*.json")}
+        first = plan(args)
+        self.assertEqual(first["candidate_count_before_filters"], 1)
+        self.assertEqual(first["sample"][:40], ["STALE", *retries[:39]])
+        self.assertEqual(first["sample"][40:], ["CORE"])
+        self.assertEqual(before, {path: path.read_bytes() for path in self.root.rglob("*.json")})
+
+        # An attempted batch moves to the back; the next daily shard claims
+        # the six waiting records first, with its regular core page unchanged.
+        for ticker in first["sample"][:40]:
+            state = json.loads(store._state_path(ticker).read_text(encoding="utf-8"))
+            state["last_result"]["observed_at"] = "2026-10-05T02:00:00Z"
+            state["retry"] = True
+            state["resolution_state"] = "lkg_primary"
+            write_json(store._state_path(ticker), state)
+        second = plan(args)
+        self.assertEqual(second["sample"][:6], retries[39:])
+        self.assertEqual(second["sample"][-1], "CORE")
+        explicit = plan([*args, "--tickers", "CORE"])
+        self.assertEqual(explicit["sample"], ["CORE"])
+        no_retry_budget = list(args)
+        retry_arg = no_retry_budget.index("--retry-limit")
+        del no_retry_budget[retry_arg:retry_arg + 2]
+        self.assertEqual(plan(no_retry_budget)["sample"], ["CORE"])
+
+    def test_core_retry_overflow_in_regular_shard_bypasses_fresh_cache_and_attempts_provider(self) -> None:
+        self.fetcher.load_core_daily_basket_sources = lambda: {"CORE": ["core_daily_basket"]}
+        self.fetcher.yahoo_source_freshness = lambda _sources, _now: {
+            "ages": {"CORE": 0, "OFFCORE": 0}, "max_source_business_days": 6,
+        }
+        store = self.fetcher.YahooBatchStateStore(
+            self.fetcher.YAHOO_BATCH_STATE_ROOT, self.fetcher.OUT_DIR,
+        )
+        now = datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
+        for ticker, source, observed_at in (
+            ("OFFCORE", "stockanalysis_etf", "2026-09-01T00:00:00Z"),
+            ("CORE", "core_daily_basket", "2026-09-02T00:00:00Z"),
+        ):
+            payload = self._daily_payload(ticker)
+            payload["fetched_at"] = now
+            write_json(self.fetcher.OUT_DIR / f"{ticker}.json", payload)
+            self.assertTrue(self.fetcher.is_fresh_payload(payload, 18))
+            write_json(store._state_path(ticker), {
+                "schema_version": "yahoo-batch-quote-history-state/v1",
+                "ticker": ticker,
+                "discovered_from": [source],
+                "resolution_state": "lkg_primary",
+                "retry": True,
+                "last_result": {"observed_at": observed_at, "outcome": "failed"},
+            })
+        write_json(store.root / "index.json", {
+            "schema_version": "yahoo-batch-quote-history-index/v1",
+            "active_universe_scope": "all_sources", "catalogue_symbols": ["CORE", "OFFCORE"],
+        })
+
+        calls = []
+
+        def failed_fetch(ticker, **_kwargs):
+            calls.append(ticker)
+            return None, 1, "fixture provider miss", {
+                "attempts_used": 1,
+                "failures": [{"attempt": 1, "error": "fixture provider miss"}],
+                "latency_ms": 1,
+            }
+
+        self.fetcher.fetch_with_retry = failed_fetch
+        shard = self.fetcher.stable_shard_index("CORE", 6)
+        original_argv, original_stdout = sys.argv, sys.stdout
+        try:
+            sys.argv = [
+                "fetch-yf-finance.py", "--core-daily-basket", "--record-batch-state",
+                "--natural-run", "--stable-shards", "--limit", "200",
+                "--regular-limit", "140", "--retry-limit", "1",
+                "--shard", f"{shard}/6", "--scheduled-weekday", str(shard),
+                "--shard-cycle-index", "0", "--max-age-hours", "18",
+                "--sleep", "0", "--retries", "0",
+            ]
+            sys.stdout = io.StringIO()
+            try:
+                self.fetcher.main()
+            except SystemExit:
+                pass  # Failure exit is orthogonal to whether CORE was attempted.
+        finally:
+            sys.argv, sys.stdout = original_argv, original_stdout
+
+        self.assertEqual(calls, ["OFFCORE", "CORE"])
+        core_state = json.loads(store._state_path("CORE").read_text(encoding="utf-8"))
+        self.assertTrue(core_state["retry"])
+        self.assertEqual(core_state["last_result"]["outcome"], "failed")
+        self.assertEqual(core_state["last_result"]["attempts_used"], 1)
+
     def test_load_universe_keeps_stockanalysis_etfs_aum_first_for_limited_backfills(self) -> None:
         write_json(self.fetcher.STOCKANALYSIS_ETF_UNIVERSE, {"records": [{"ticker": "SMALL", "aum": "1M"}]})
         write_json(self.fetcher.STOCKANALYSIS_ETF_SCREENER, {"records": [{"s": "BIG", "aum": "10B"}]})

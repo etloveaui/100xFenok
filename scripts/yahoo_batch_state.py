@@ -387,9 +387,72 @@ class YahooBatchStateStore:
     def _record_result(self, state: dict, row: dict) -> None:
         self._results[state["ticker"]] = dict(row)
 
-    def retry_tickers_ordered(self, active_universe: set[str], terminal_tickers: set[str] | None = None) -> list[str]:
+    def retained_stockanalysis_etf_sources(self, excluded_tickers: set[str] | None = None) -> dict[str, list[str]]:
+        """Read current-catalogue ETF records with state and canonical payload.
+
+        The full StockAnalysis inventory and pending-acquisition inventory are
+        intentionally not inputs: this only keeps existing per-ticker state.
+        """
+        catalogue_index = _read_json(self.root / DEFAULT_INDEX_FILENAME)
+        catalogue_symbols = catalogue_index.get("catalogue_symbols") if catalogue_index else None
+        if (
+            not catalogue_index
+            or catalogue_index.get("schema_version") != "yahoo-batch-quote-history-index/v1"
+            or catalogue_index.get("active_universe_scope") != "all_sources"
+            or not isinstance(catalogue_symbols, list)
+            or not catalogue_symbols
+            or any(not isinstance(ticker, str) or not ticker for ticker in catalogue_symbols)
+            or len(catalogue_symbols) != len(set(catalogue_symbols))
+        ):
+            return {}
+        catalogue = set(catalogue_symbols)
+        excluded = set(excluded_tickers or set())
+        sources = {}
+        for path in sorted(self.ticker_dir.glob("*.json")):
+            ticker = path.stem
+            if ticker not in catalogue or ticker in excluded:
+                continue
+            state = _read_json(path)
+            if (
+                not state
+                or state.get("schema_version") != "yahoo-batch-quote-history-state/v1"
+                or state.get("ticker") != ticker
+                or state.get("resolution_state") not in {
+                    "fresh_primary", "lkg_primary", "pending_history", "unavailable"
+                }
+                or not isinstance(state.get("discovered_from"), list)
+                or "stockanalysis_etf" not in state["discovered_from"]
+            ):
+                continue
+            if not _valid_canonical_payload(_read_json(self.finance_dir / f"{ticker}.json"), ticker):
+                continue
+            sources[ticker] = sorted({source for source in state["discovered_from"] if isinstance(source, str)})
+        return sources
+
+    def prospective_source_stale_tickers(
+        self,
+        tickers: set[str],
+        source_age_business_days: dict[str, int | None],
+        max_source_business_days: int,
+    ) -> set[str]:
+        """Preview the existing bootstrap transition without persisting it."""
+        return {
+            ticker for ticker in tickers
+            if isinstance(source_age_business_days.get(ticker), int)
+            and source_age_business_days[ticker] > max_source_business_days
+            and (_read_json(self._state_path(ticker)) or {}).get("resolution_state") == "fresh_primary"
+            and _valid_canonical_payload(_read_json(self.finance_dir / f"{ticker}.json"), ticker)
+        }
+
+    def retry_tickers_ordered(
+        self,
+        active_universe: set[str],
+        terminal_tickers: set[str] | None = None,
+        prospective_stale_tickers: set[str] | None = None,
+    ) -> list[str]:
         active = set(active_universe)
         terminal = set(terminal_tickers or set())
+        prospective_stale = set(prospective_stale_tickers or set())
         retry = []
         for ticker in sorted(active):
             state = _read_json(self._state_path(ticker))
@@ -397,7 +460,9 @@ class YahooBatchStateStore:
                 ticker not in terminal
                 and state
                 and state.get("resolution_state") != TERMINAL_RESOLUTION_STATE
-                and state.get("retry") is True
+                and (state.get("retry") is True or (
+                    ticker in prospective_stale and state.get("resolution_state") == "fresh_primary"
+                ))
             ):
                 observed_at = str((state.get("last_result") or {}).get("observed_at") or "")
                 retry.append((observed_at, ticker))

@@ -1812,6 +1812,7 @@ def select_campaign_or_rotation_plan(
     shard_cycle_index,
     pin_rim_trackers=True,
     return_retry_overflow_to_regular=False,
+    allow_retained_retries=False,
 ):
     retry_set = set(retry_queue)
 
@@ -1824,7 +1825,7 @@ def select_campaign_or_rotation_plan(
     def select(regular, cycle_index, page_limit=regular_limit, *, include_retries=True):
         planned = [
             *(
-                [ticker for ticker in retry_queue if ticker in selected_universe]
+                [ticker for ticker in retry_queue if allow_retained_retries or ticker in selected_universe]
                 if include_retries
                 else []
             ),
@@ -2380,12 +2381,28 @@ def main():
         print(stable_json({"tracker_unadjusted": results}, indent=2))
         return
 
+    state_store = YahooBatchStateStore(YAHOO_BATCH_STATE_ROOT, OUT_DIR) if args.record_batch_state else None
+    terminal_evidence = state_store.load_terminal_evidence(S1_STOCK_PROMOTION_DRY_RUN) if state_store else None
+    lifecycle_evidence = verified_yahoo_terminal_evidence(lifecycle_as_of)
+    terminal_tickers = set((terminal_evidence or {}).get("tickers") or {}) | set(lifecycle_evidence["tickers"])
+    # Only an automatic core acquisition may retry already observed ETFs
+    # outside the bounded regular basket. Manual explicit selection is unchanged.
+    core_retained_lane = bool(
+        args.core_daily_basket and args.natural_run and not args.tickers and state_store
+        and args.retry_limit is not None and args.regular_limit is not None and args.limit > 0
+    )
+    retained_sources = (
+        state_store.retained_stockanalysis_etf_sources(
+            terminal_tickers | retired_yahoo_symbols(lifecycle_as_of)
+        )
+        if core_retained_lane else {}
+    )
+
     if args.core_daily_basket:
-        # Scheduled ETF lane: the candidate universe is the bounded union of
+        # Scheduled ETF regular candidates are the bounded union of
         # the core daily basket SSOT (fenok-etf-core-daily-basket.json) and
-        # the configured major/focus/RIM tracker ETF sets, labeled truthfully
-        # per source. The ~5,512-name StockAnalysis universe/screener is never
-        # loaded or expanded here.
+        # configured major/focus/RIM tracker ETF sets. Retained StockAnalysis
+        # ETF state only extends retry ownership; no broad ETF universe loads.
         raw_selection_sources = load_core_daily_basket_sources()
     else:
         raw_selection_sources = load_universe_sources(
@@ -2393,12 +2410,13 @@ def main():
             stockanalysis_etfs=args.stockanalysis_etfs,
         )
     selection_sources = current_yahoo_universe_sources(raw_selection_sources, lifecycle_as_of)
-    # Only the bounded core ETF lane narrows batch-state ownership to its real
-    # candidates. Other stateful lanes retain their historical StockAnalysis
+    # The core lane owns its regular candidates plus already observed retained
+    # ETFs. Other stateful lanes retain their historical StockAnalysis
     # active-universe contract; in particular, the stock lane must not lose
     # existing ETF state merely because its current fetch selection is stocks.
     raw_universe_sources = (
-        raw_selection_sources
+        {ticker: sorted(set(raw_selection_sources.get(ticker, [])) | set(retained_sources.get(ticker, [])))
+         for ticker in set(raw_selection_sources) | set(retained_sources)}
         if args.core_daily_basket
         else (
             load_universe_sources(stocks_only=False, stockanalysis_etfs=True)
@@ -2423,7 +2441,6 @@ def main():
         tickers = sort_universe(selection_sources, stockanalysis_etfs=args.stockanalysis_etfs)
 
     candidate_count = len(tickers)
-    state_store = YahooBatchStateStore(YAHOO_BATCH_STATE_ROOT, OUT_DIR) if args.record_batch_state else None
     if args.untracked_only and state_store is None:
         parser.error("--untracked-only requires --record-batch-state")
     run_context = {
@@ -2435,11 +2452,11 @@ def main():
         "observed_at": lifecycle_as_of,
     }
     eligible_universe = active_universe
-    terminal_evidence = state_store.load_terminal_evidence(S1_STOCK_PROMOTION_DRY_RUN) if state_store else None
-    lifecycle_evidence = verified_yahoo_terminal_evidence(lifecycle_as_of)
-    terminal_tickers = set((terminal_evidence or {}).get("tickers") or {}) | set(lifecycle_evidence["tickers"])
+    freshness = (
+        yahoo_source_freshness(existing_yahoo_source_dates(eligible_universe), run_context["observed_at"])
+        if state_store and (not args.plan_only or core_retained_lane) else None
+    )
     if state_store and not args.plan_only:
-        freshness = yahoo_source_freshness(existing_yahoo_source_dates(eligible_universe), run_context["observed_at"])
         state_store.bootstrap_existing(
             eligible_universe,
             universe_sources,
@@ -2452,12 +2469,28 @@ def main():
         state_store.transition_terminal_tickers(eligible_universe, lifecycle_evidence, run_context)
         state_store.reconcile_active_universe(eligible_universe, universe_sources, run_context)
     retry_queue = (
-        state_store.retry_tickers_ordered(eligible_universe, terminal_tickers)
+        state_store.retry_tickers_ordered(
+            eligible_universe,
+            terminal_tickers,
+            prospective_stale_tickers=(
+                state_store.prospective_source_stale_tickers(
+                    eligible_universe, freshness["ages"], freshness["max_source_business_days"]
+                ) if core_retained_lane and args.plan_only else None
+            ),
+        )
         if state_store and args.natural_run
         else []
     )
+    # Cache reuse must still recognize retry-pending core tickers that fall
+    # beyond today's retry budget and enter their regular shard page.
     retry_tickers = set(retry_queue)
-    regular_tickers = [ticker for ticker in tickers if ticker not in retry_tickers]
+    # One daily core slot can claim up to the shared retry budget, regardless
+    # of weekday shard. Core retry overflow remains in regular shard ownership;
+    # retained off-core overflow waits for the next day's oldest-first retry.
+    if core_retained_lane and args.retry_limit is not None:
+        retry_queue = retry_queue[:args.retry_limit]
+    selected_retry_tickers = set(retry_queue)
+    regular_tickers = [ticker for ticker in tickers if ticker not in selected_retry_tickers]
     if args.history_gaps_only:
         # The scheduled ETF slot runs history-gaps-only, which is a backfill
         # pass: any ticker whose 1Y history is already complete is dropped here
@@ -2484,7 +2517,7 @@ def main():
             selected_universe,
             shard=args.shard,
             natural=args.natural_run,
-            all_shards=args.all_shards_run or args.core_daily_basket,
+            all_shards=(args.all_shards_run or args.core_daily_basket) and not core_retained_lane,
             retry_limit=args.retry_limit,
             stable_shards=args.stable_shards,
             regular_limit=args.regular_limit,
@@ -2492,15 +2525,19 @@ def main():
             shard_cycle_index=args.shard_cycle_index,
             pin_rim_trackers=not args.core_daily_basket,
             return_retry_overflow_to_regular=args.core_daily_basket,
+            allow_retained_retries=core_retained_lane,
         )
     else:
-        planned_tickers = [*[ticker for ticker in retry_queue if ticker in selected_universe], *regular_tickers]
+        planned_tickers = [
+            *[ticker for ticker in retry_queue if core_retained_lane or ticker in selected_universe],
+            *regular_tickers,
+        ]
         tickers = select_ticker_plan(
             planned_tickers,
             retry_queue,
             shard=args.shard,
             natural=args.natural_run,
-            all_shards=args.all_shards_run or args.core_daily_basket,
+            all_shards=(args.all_shards_run or args.core_daily_basket) and not core_retained_lane,
             retry_limit=args.retry_limit,
             stable_shards=args.stable_shards,
             regular_limit=args.regular_limit,

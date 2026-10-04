@@ -276,12 +276,12 @@ jobs:
               DAILY_INDEX="$SLOT_WEEKDAY"
               DAILY_SHARDS=6
               echo "ETF slot: weekday=$SLOT_WEEKDAY shard=$DAILY_INDEX/$DAILY_SHARDS"
-              # The scheduled lane selects the core daily basket plus the
-              # configured major/focus/RIM tracker sets (155 names), not the
-              # StockAnalysis universe. A six-shard split averages about 26
-              # tickers per slot, so the regular cap is not binding; the outer
-              # limit still has to cover the retry budget and any explicit
-              # manual tickers.
+              # Regular candidates are the core daily basket plus the
+              # configured major/focus/RIM tracker sets (155 names). Existing
+              # StockAnalysis ETF records can enter the 40-name daily retry
+              # budget, but the broad StockAnalysis universe is never loaded.
+              # A six-shard split averages about 26 regular tickers per slot;
+              # the outer limit covers both retry and regular budgets.
               INPUT_LIMIT="${YF_WEEKLY_ETF_LIMIT:-200}"
               INPUT_RETRY_LIMIT="${YF_WEEKLY_ETF_RETRY_LIMIT:-40}"
               INPUT_REGULAR_LIMIT="${YF_WEEKLY_ETF_REGULAR_LIMIT:-140}"
