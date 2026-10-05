@@ -1,8 +1,8 @@
 {
   "ok": true,
   "schema_version": "fenok-edge-etf-daily1y-readiness-admin/v0.1",
-  "generated_at": "2026-10-05T02:04:32.791Z",
-  "classification_as_of": "2026-10-05T02:03:25.578Z",
+  "generated_at": "2026-10-05T03:21:59.129Z",
+  "classification_as_of": "2026-10-05T03:20:54.720Z",
   "purpose": "Admin-only generated S3 ETF daily 1Y readiness evidence for the auto-managed core daily basket. Separates the managed core ETF surface from DAILY/GATED readiness.",
   "asset_type": "etf",
   "stage": "PUBLIC",
@@ -26,7 +26,7 @@
   },
   "daily_1y_readiness": {
     "managed_etf_count": 120,
-    "scored_universe_total": 4618,
+    "scored_universe_total": 4619,
     "denominator": 120,
     "daily_1y_complete": 120,
     "daily_1y_missing": 0,
@@ -52,31 +52,39 @@
     "caveat": "Only immediately fetchable daily 1Y gaps for auto-managed core daily basket tickers block the managed-core diagnostic lane. ETF Core Daily Basket is the service daily/gated target; inception-limited and recent provider-terminal gaps are tracked but do not block by themselves. Full scored-universe counts are preserved as separate source consistency evidence and are never compared directly to the core subset."
   },
   "generated_count_checks": {
-    "summary_rows": 4618,
+    "summary_rows": 4619,
     "managed_etf_count": 120,
-    "scored_universe_total": 4618,
+    "scored_universe_total": 4619,
     "core_basket_ticker_count": 120,
     "core_tickers_missing_from_summary": 0,
     "summary_count_ok": true,
     "coverage_index_count_ok": true,
     "coverage_index_daily_check_count_ok": true,
     "coverage_index_fetchable_daily_1y_gap": 6,
-    "coverage_index_inception_limited_daily_1y_gap": 761,
-    "coverage_index_terminal_limited_daily_1y_gap": 25,
+    "coverage_index_inception_limited_daily_1y_gap": 765,
+    "coverage_index_terminal_limited_daily_1y_gap": 21,
     "history_gap_report_count_ok": true,
     "history_gap_classification_clock_match": true,
     "coverage_index_classification_clock_match": true,
     "coverage_index_daily_check_classification_clock_match": true,
-    "history_gap_report_scored_etf_count": 4618,
+    "history_gap_report_scored_etf_count": 4619,
     "history_gap_report_fetchable_daily_1y_gap": 6,
-    "history_gap_report_inception_limited_daily_1y_gap": 761,
-    "history_gap_report_terminal_limited_daily_1y_gap": 25
+    "history_gap_report_inception_limited_daily_1y_gap": 765,
+    "history_gap_report_terminal_limited_daily_1y_gap": 21
   },
   "samples": {
     "fetchable": [],
     "inception_limited": [],
     "terminal_limited": [],
     "complete": [
+      {
+        "ticker": "ALLW",
+        "actual_rows": 252,
+        "missing_file": false,
+        "inception_date": null,
+        "classification_reason": null,
+        "effective_start_source": null
+      },
       {
         "ticker": "AOA",
         "actual_rows": 252,
@@ -103,14 +111,6 @@
       },
       {
         "ticker": "AVDV",
-        "actual_rows": 252,
-        "missing_file": false,
-        "inception_date": null,
-        "classification_reason": null,
-        "effective_start_source": null
-      },
-      {
-        "ticker": "AVEM",
         "actual_rows": 252,
         "missing_file": false,
         "inception_date": null,
@@ -148,17 +148,17 @@
       "selection": "explicit full-primary daily_1y fetchable tickers; not the scored-ETF scheduled plan",
       "single_writer": true,
       "shard_size": 100,
-      "ticker_count": 72,
+      "ticker_count": 50,
       "shard_count": 1,
       "shards": [
         {
           "shard": 1,
-          "ticker_count": 72,
+          "ticker_count": 50,
           "inputs": {
             "history_gaps_only": "true",
             "required_history_periods": "daily_1y",
             "incremental_etf_limit": "0",
-            "etfs": "AMJB,AMUB,ATMP,BDCX,BDCZ,BLST,BLTD,BNDW,BUCK,CEFD,COIO,CPAG,DEFI,DGP,DGZ,DVIN,DVRE,DVUT,DVXB,DVXC,DVXE,DVXF,DVXK,DVXP,DVXV,DVXY,DZZ,FEAT,FIVY,GLDI,GRN,HDLB,HYSA,IBIC,IBIH,IBIJ,IBIK,IBIL,IFED,IWDL,IWFL,IWML,LGCF,MLPB,MLPR,MSOO,MTUL,MVRL,NVDO,OPER,PFFL,PLOO,QULL,SCDL,SLVO,SMHB,TBLL,TLTW,TSLO,UCIB,UFIV,USML,USOI,USVN,UTEN,UTHY,UTRE,UTWO,UTWY,VXX,VXZ,VYLD"
+            "etfs": "AMJB,AMUB,ATMP,BDCX,BDCZ,CEFD,COIO,DGP,DGZ,DVIN,DVRE,DVUT,DVXB,DVXC,DVXE,DVXF,DVXK,DVXP,DVXV,DVXY,DZZ,FEAT,FIVY,GLDI,GRN,HDLB,IFED,IWDL,IWFL,IWML,LGCF,MLPB,MLPR,MSOO,MTUL,MVRL,NVDO,PFFL,PLOO,QULL,SCDL,SLVO,SMHB,TSLO,UCIB,USML,USOI,VXX,VXZ,VYLD"
           }
         }
       ]

@@ -2,7 +2,7 @@
   "schema_version": "market-facts/v1",
   "ticker": "USO",
   "asset_type": "etf",
-  "generated_at": "2026-10-04T10:03:58Z",
+  "generated_at": "2026-10-05T03:18:56Z",
   "source_as_of": "2026-10-02",
   "source_as_of_scope": "selected_price_fact",
   "source_as_of_reason": null,
@@ -17,10 +17,10 @@
   },
   "facts": {
     "price": {
-      "value": 147.37,
-      "source": "stockanalysis.quote",
+      "value": 147.3699951171875,
+      "source": "yf.stockanalysis_fallback.quote",
       "as_of": "2026-10-02",
-      "fetched_at": "2026-10-03T02:29:33Z",
+      "fetched_at": "2026-10-05T02:12:47Z",
       "confidence": "observed",
       "policy": [
         "yf",
@@ -31,42 +31,20 @@
       ],
       "candidates": [
         {
-          "value": 147.37,
-          "source": "stockanalysis.quote",
+          "value": 147.3699951171875,
+          "source": "yf.stockanalysis_fallback.quote",
           "as_of": "2026-10-02",
-          "fetched_at": "2026-10-03T02:29:33Z",
-          "confidence": "observed"
-        }
-      ],
-      "candidate_count": 1
-    },
-    "previous_close": {
-      "value": 150.02,
-      "source": "stockanalysis.quote",
-      "as_of": "2026-10-02",
-      "fetched_at": "2026-10-03T02:29:33Z",
-      "confidence": "observed",
-      "policy": [
-        "yf",
-        "stockanalysis.quote",
-        "yf.stockanalysis_fallback.quote"
-      ],
-      "candidates": [
-        {
-          "value": 150.02,
-          "source": "stockanalysis.quote",
-          "as_of": "2026-10-02",
-          "fetched_at": "2026-10-03T02:29:33Z",
+          "fetched_at": "2026-10-05T02:12:47Z",
           "confidence": "observed"
         }
       ],
       "candidate_count": 1
     },
     "change": {
-      "value": -2.65,
-      "source": "stockanalysis.quote",
+      "value": -2.6500048828125102,
+      "source": "yf.stockanalysis_fallback.quote",
       "as_of": "2026-10-02",
-      "fetched_at": "2026-10-03T02:29:33Z",
+      "fetched_at": "2026-10-05T02:12:47Z",
       "confidence": "observed",
       "policy": [
         "stockanalysis.quote",
@@ -76,20 +54,20 @@
       ],
       "candidates": [
         {
-          "value": -2.65,
-          "source": "stockanalysis.quote",
+          "value": -2.6500048828125102,
+          "source": "yf.stockanalysis_fallback.quote",
           "as_of": "2026-10-02",
-          "fetched_at": "2026-10-03T02:29:33Z",
+          "fetched_at": "2026-10-05T02:12:47Z",
           "confidence": "observed"
         }
       ],
       "candidate_count": 1
     },
     "change_pct": {
-      "value": -1.77,
-      "source": "stockanalysis.quote",
+      "value": -1.7664343972887016,
+      "source": "yf.stockanalysis_fallback.quote",
       "as_of": "2026-10-02",
-      "fetched_at": "2026-10-03T02:29:33Z",
+      "fetched_at": "2026-10-05T02:12:47Z",
       "confidence": "observed",
       "policy": [
         "stockanalysis.quote",
@@ -99,20 +77,20 @@
       ],
       "candidates": [
         {
-          "value": -1.77,
-          "source": "stockanalysis.quote",
+          "value": -1.7664343972887016,
+          "source": "yf.stockanalysis_fallback.quote",
           "as_of": "2026-10-02",
-          "fetched_at": "2026-10-03T02:29:33Z",
+          "fetched_at": "2026-10-05T02:12:47Z",
           "confidence": "observed"
         }
       ],
       "candidate_count": 1
     },
     "total_assets": {
-      "value": 1890000000.0,
-      "source": "stockanalysis.overview",
+      "value": 1897174656.0,
+      "source": "yf.stockanalysis_fallback.overview",
       "as_of": "2026-10-02",
-      "fetched_at": "2026-10-03T02:29:33Z",
+      "fetched_at": "2026-10-05T02:12:47Z",
       "confidence": "observed",
       "policy": [
         "yf",
@@ -121,20 +99,45 @@
       ],
       "candidates": [
         {
-          "value": 1890000000.0,
-          "source": "stockanalysis.overview",
+          "value": 1897174656.0,
+          "source": "yf.stockanalysis_fallback.overview",
           "as_of": "2026-10-02",
-          "fetched_at": "2026-10-03T02:29:33Z",
+          "fetched_at": "2026-10-05T02:12:47Z",
           "confidence": "observed"
         }
       ],
       "candidate_count": 1
     },
-    "beta": {
-      "value": 0.01,
-      "source": "stockanalysis.overview",
+    "dividend_yield": {
+      "value": 0.0,
+      "source": "yf.stockanalysis_fallback.overview",
       "as_of": "2026-10-02",
-      "fetched_at": "2026-10-03T02:29:33Z",
+      "fetched_at": "2026-10-05T02:12:47Z",
+      "confidence": "observed",
+      "unit": "percent_points",
+      "policy": [
+        "yf",
+        "stockanalysis.overview",
+        "yf.stockanalysis_fallback.overview",
+        "slickcharts"
+      ],
+      "candidates": [
+        {
+          "value": 0.0,
+          "source": "yf.stockanalysis_fallback.overview",
+          "as_of": "2026-10-02",
+          "fetched_at": "2026-10-05T02:12:47Z",
+          "confidence": "observed",
+          "unit": "percent_points"
+        }
+      ],
+      "candidate_count": 1
+    },
+    "beta": {
+      "value": 2.15,
+      "source": "yf.stockanalysis_fallback.overview",
+      "as_of": "2026-10-02",
+      "fetched_at": "2026-10-05T02:12:47Z",
       "confidence": "observed",
       "policy": [
         "yf",
@@ -143,20 +146,20 @@
       ],
       "candidates": [
         {
-          "value": 0.01,
-          "source": "stockanalysis.overview",
+          "value": 2.15,
+          "source": "yf.stockanalysis_fallback.overview",
           "as_of": "2026-10-02",
-          "fetched_at": "2026-10-03T02:29:33Z",
+          "fetched_at": "2026-10-05T02:12:47Z",
           "confidence": "observed"
         }
       ],
       "candidate_count": 1
     },
     "expense_ratio": {
-      "value": 0.6,
-      "source": "stockanalysis.overview",
+      "value": 0.86,
+      "source": "yf.stockanalysis_fallback.overview",
       "as_of": "2026-10-02",
-      "fetched_at": "2026-10-03T02:29:33Z",
+      "fetched_at": "2026-10-05T02:12:47Z",
       "confidence": "observed",
       "unit": "percent_points",
       "policy": [
@@ -166,10 +169,10 @@
       ],
       "candidates": [
         {
-          "value": 0.6,
-          "source": "stockanalysis.overview",
+          "value": 0.86,
+          "source": "yf.stockanalysis_fallback.overview",
           "as_of": "2026-10-02",
-          "fetched_at": "2026-10-03T02:29:33Z",
+          "fetched_at": "2026-10-05T02:12:47Z",
           "confidence": "observed",
           "unit": "percent_points"
         }
@@ -178,9 +181,9 @@
     },
     "return_1m": {
       "value": 4.518,
-      "source": "stockanalysis.detail.performance",
-      "as_of": "2026-10-02",
-      "fetched_at": "2026-10-03T02:29:33Z",
+      "source": "stockanalysis.etf_universe.performance",
+      "as_of": null,
+      "fetched_at": "2026-10-05T02:06:18Z",
       "confidence": "observed",
       "unit": "percent_points",
       "policy": [
@@ -192,28 +195,20 @@
       "candidates": [
         {
           "value": 4.518,
-          "source": "stockanalysis.detail.performance",
-          "as_of": "2026-10-02",
-          "fetched_at": "2026-10-03T02:29:33Z",
-          "confidence": "observed",
-          "unit": "percent_points"
-        },
-        {
-          "value": 4.518,
           "source": "stockanalysis.etf_universe.performance",
           "as_of": null,
-          "fetched_at": "2026-10-04T09:28:55Z",
+          "fetched_at": "2026-10-05T02:06:18Z",
           "confidence": "observed",
           "unit": "percent_points"
         }
       ],
-      "candidate_count": 2
+      "candidate_count": 1
     },
     "return_3m": {
-      "value": 41.22664111164352,
+      "value": 41.226638497494,
       "source": "stockanalysis.detail.history",
       "as_of": "2026-10-02",
-      "fetched_at": "2026-10-03T02:29:33Z",
+      "fetched_at": "2026-10-05T02:12:47Z",
       "confidence": "derived",
       "unit": "percent_points",
       "policy": [
@@ -222,10 +217,10 @@
       ],
       "candidates": [
         {
-          "value": 41.22664111164352,
+          "value": 41.226638497494,
           "source": "stockanalysis.detail.history",
           "as_of": "2026-10-02",
-          "fetched_at": "2026-10-03T02:29:33Z",
+          "fetched_at": "2026-10-05T02:12:47Z",
           "confidence": "derived",
           "unit": "percent_points"
         }
@@ -234,9 +229,9 @@
     },
     "return_ytd": {
       "value": 113.086,
-      "source": "stockanalysis.detail.performance",
-      "as_of": "2026-10-02",
-      "fetched_at": "2026-10-03T02:29:33Z",
+      "source": "stockanalysis.etf_universe.performance",
+      "as_of": null,
+      "fetched_at": "2026-10-05T02:06:18Z",
       "confidence": "observed",
       "unit": "percent_points",
       "policy": [
@@ -249,28 +244,20 @@
       "candidates": [
         {
           "value": 113.086,
-          "source": "stockanalysis.detail.performance",
-          "as_of": "2026-10-02",
-          "fetched_at": "2026-10-03T02:29:33Z",
-          "confidence": "observed",
-          "unit": "percent_points"
-        },
-        {
-          "value": 113.086,
           "source": "stockanalysis.etf_universe.performance",
           "as_of": null,
-          "fetched_at": "2026-10-04T09:28:55Z",
+          "fetched_at": "2026-10-05T02:06:18Z",
           "confidence": "observed",
           "unit": "percent_points"
         }
       ],
-      "candidate_count": 2
+      "candidate_count": 1
     },
     "return_1y": {
       "value": 101.49,
-      "source": "stockanalysis.detail.performance",
-      "as_of": "2026-10-02",
-      "fetched_at": "2026-10-03T02:29:33Z",
+      "source": "stockanalysis.etf_universe.performance",
+      "as_of": null,
+      "fetched_at": "2026-10-05T02:06:18Z",
       "confidence": "observed",
       "unit": "percent_points",
       "policy": [
@@ -283,41 +270,10 @@
       "candidates": [
         {
           "value": 101.49,
-          "source": "stockanalysis.detail.performance",
-          "as_of": "2026-10-02",
-          "fetched_at": "2026-10-03T02:29:33Z",
-          "confidence": "observed",
-          "unit": "percent_points"
-        },
-        {
-          "value": 101.49,
           "source": "stockanalysis.etf_universe.performance",
           "as_of": null,
-          "fetched_at": "2026-10-04T09:28:55Z",
+          "fetched_at": "2026-10-05T02:06:18Z",
           "confidence": "observed",
-          "unit": "percent_points"
-        }
-      ],
-      "candidate_count": 2
-    },
-    "return_3y_avg": {
-      "value": 25.687951623401737,
-      "source": "stockanalysis.detail.history",
-      "as_of": "2026-10-01",
-      "fetched_at": "2026-10-03T02:29:33Z",
-      "confidence": "derived",
-      "unit": "percent_points",
-      "policy": [
-        "yf",
-        "stockanalysis.detail.history"
-      ],
-      "candidates": [
-        {
-          "value": 25.687951623401737,
-          "source": "stockanalysis.detail.history",
-          "as_of": "2026-10-01",
-          "fetched_at": "2026-10-03T02:29:33Z",
-          "confidence": "derived",
           "unit": "percent_points"
         }
       ],
@@ -325,9 +281,9 @@
     },
     "return_5y_avg": {
       "value": 22.578,
-      "source": "stockanalysis.detail.performance",
-      "as_of": "2026-10-02",
-      "fetched_at": "2026-10-03T02:29:33Z",
+      "source": "stockanalysis.etf_universe.performance",
+      "as_of": null,
+      "fetched_at": "2026-10-05T02:06:18Z",
       "confidence": "observed",
       "unit": "percent_points",
       "policy": [
@@ -339,28 +295,20 @@
       "candidates": [
         {
           "value": 22.578,
-          "source": "stockanalysis.detail.performance",
-          "as_of": "2026-10-02",
-          "fetched_at": "2026-10-03T02:29:33Z",
-          "confidence": "observed",
-          "unit": "percent_points"
-        },
-        {
-          "value": 22.578,
           "source": "stockanalysis.etf_universe.performance",
           "as_of": null,
-          "fetched_at": "2026-10-04T09:28:55Z",
+          "fetched_at": "2026-10-05T02:06:18Z",
           "confidence": "observed",
           "unit": "percent_points"
         }
       ],
-      "candidate_count": 2
+      "candidate_count": 1
     },
     "return_10y_avg": {
       "value": 5.359,
-      "source": "stockanalysis.detail.performance",
-      "as_of": "2026-10-02",
-      "fetched_at": "2026-10-03T02:29:33Z",
+      "source": "stockanalysis.etf_universe.performance",
+      "as_of": null,
+      "fetched_at": "2026-10-05T02:06:18Z",
       "confidence": "observed",
       "unit": "percent_points",
       "policy": [
@@ -371,28 +319,20 @@
       "candidates": [
         {
           "value": 5.359,
-          "source": "stockanalysis.detail.performance",
-          "as_of": "2026-10-02",
-          "fetched_at": "2026-10-03T02:29:33Z",
-          "confidence": "observed",
-          "unit": "percent_points"
-        },
-        {
-          "value": 5.359,
           "source": "stockanalysis.etf_universe.performance",
           "as_of": null,
-          "fetched_at": "2026-10-04T09:28:55Z",
+          "fetched_at": "2026-10-05T02:06:18Z",
           "confidence": "observed",
           "unit": "percent_points"
         }
       ],
-      "candidate_count": 2
+      "candidate_count": 1
     },
     "return_max_avg": {
       "value": -6.19496,
-      "source": "stockanalysis.detail.performance",
-      "as_of": "2026-10-02",
-      "fetched_at": "2026-10-03T02:29:33Z",
+      "source": "stockanalysis.etf_universe.performance",
+      "as_of": null,
+      "fetched_at": "2026-10-05T02:06:18Z",
       "confidence": "observed",
       "unit": "percent_points",
       "policy": [
@@ -403,364 +343,28 @@
       "candidates": [
         {
           "value": -6.19496,
-          "source": "stockanalysis.detail.performance",
-          "as_of": "2026-10-02",
-          "fetched_at": "2026-10-03T02:29:33Z",
-          "confidence": "observed",
-          "unit": "percent_points"
-        },
-        {
-          "value": -6.19496,
           "source": "stockanalysis.etf_universe.performance",
           "as_of": null,
-          "fetched_at": "2026-10-04T09:28:55Z",
+          "fetched_at": "2026-10-05T02:06:18Z",
           "confidence": "observed",
           "unit": "percent_points"
         }
       ],
-      "candidate_count": 2
+      "candidate_count": 1
     }
   },
   "etf": {
-    "holdings_count": 25,
-    "holdings_updated": "Oct 1, 2026",
-    "top_holdings": [
-      {
-        "rank": 1,
-        "name": "Crude Oil Future Nov 26",
-        "weight_pct": 46.18,
-        "shares": 15262,
-        "raw": {
-          "no": 1,
-          "n": "Crude Oil Future Nov 26",
-          "as": "46.18%",
-          "sh": "15,262"
-        }
-      },
-      {
-        "rank": 2,
-        "name": "Cash",
-        "weight_pct": 11.08,
-        "shares": 340185649,
-        "raw": {
-          "no": 2,
-          "n": "Cash",
-          "as": "11.08%",
-          "sh": "340,185,649"
-        }
-      },
-      {
-        "rank": 3,
-        "symbol": "B.0 12.31.26",
-        "name": "United States Treasury Bills 0%",
-        "weight_pct": 4.84,
-        "shares": 150000000,
-        "raw": {
-          "no": 3,
-          "n": "United States Treasury Bills 0%",
-          "s": "B.0 12.31.26",
-          "as": "4.84%",
-          "sh": "150,000,000"
-        }
-      },
-      {
-        "rank": 4,
-        "symbol": "B.0 02.04.27",
-        "name": "United States Treasury Bills 0%",
-        "weight_pct": 4.82,
-        "shares": 150000000,
-        "raw": {
-          "no": 4,
-          "n": "United States Treasury Bills 0%",
-          "s": "B.0 02.04.27",
-          "as": "4.82%",
-          "sh": "150,000,000"
-        }
-      },
-      {
-        "rank": 5,
-        "name": "Trs Macquarie Mqcp361e 07212026",
-        "weight_pct": 4.67,
-        "shares": 2195848,
-        "raw": {
-          "no": 5,
-          "n": "Trs Macquarie Mqcp361e 07212026",
-          "as": "4.67%",
-          "sh": "2,195,848"
-        }
-      },
-      {
-        "rank": 6,
-        "name": "Trs Soc Gen Sgixcwti 06182026",
-        "weight_pct": 4.27,
-        "shares": 977428,
-        "raw": {
-          "no": 6,
-          "n": "Trs Soc Gen Sgixcwti 06182026",
-          "as": "4.27%",
-          "sh": "977,428"
-        }
-      },
-      {
-        "rank": 7,
-        "name": "Bny Cash Reserve",
-        "weight_pct": 3.74,
-        "shares": 114778713,
-        "raw": {
-          "no": 7,
-          "n": "Bny Cash Reserve",
-          "as": "3.74%",
-          "sh": "114,778,713"
-        }
-      },
-      {
-        "rank": 8,
-        "symbol": "B.0 10.20.26",
-        "name": "United States Treasury Bills 0%",
-        "weight_pct": 3.58,
-        "shares": 110000000,
-        "raw": {
-          "no": 8,
-          "n": "United States Treasury Bills 0%",
-          "s": "B.0 10.20.26",
-          "as": "3.58%",
-          "sh": "110,000,000"
-        }
-      },
-      {
-        "rank": 9,
-        "symbol": "B.0 11.17.26",
-        "name": "United States Treasury Bills 0%",
-        "weight_pct": 3.24,
-        "shares": 100000000,
-        "raw": {
-          "no": 9,
-          "n": "United States Treasury Bills 0%",
-          "s": "B.0 11.17.26",
-          "as": "3.24%",
-          "sh": "100,000,000"
-        }
-      },
-      {
-        "rank": 10,
-        "symbol": "B.0 10.22.26",
-        "name": "United States Treasury Bills 0%",
-        "weight_pct": 2.6,
-        "shares": 80000000,
-        "raw": {
-          "no": 10,
-          "n": "United States Treasury Bills 0%",
-          "s": "B.0 10.22.26",
-          "as": "2.60%",
-          "sh": "80,000,000"
-        }
-      },
-      {
-        "rank": 11,
-        "symbol": "B.0 12.01.26",
-        "name": "United States Treasury Bills 0%",
-        "weight_pct": 2.27,
-        "shares": 70000000,
-        "raw": {
-          "no": 11,
-          "n": "United States Treasury Bills 0%",
-          "s": "B.0 12.01.26",
-          "as": "2.27%",
-          "sh": "70,000,000"
-        }
-      },
-      {
-        "rank": 12,
-        "symbol": "XIB.0 11.03.26",
-        "name": "United States Treasury Bills 0%",
-        "weight_pct": 2.11,
-        "shares": 65000000,
-        "raw": {
-          "no": 12,
-          "n": "United States Treasury Bills 0%",
-          "s": "XIB.0 11.03.26",
-          "as": "2.11%",
-          "sh": "65,000,000"
-        }
-      },
-      {
-        "rank": 13,
-        "symbol": "B.0 11.10.26",
-        "name": "United States Treasury Bills 0%",
-        "weight_pct": 2.11,
-        "shares": 65000000,
-        "raw": {
-          "no": 13,
-          "n": "United States Treasury Bills 0%",
-          "s": "B.0 11.10.26",
-          "as": "2.11%",
-          "sh": "65,000,000"
-        }
-      },
-      {
-        "rank": 14,
-        "symbol": "B.0 10.15.26",
-        "name": "United States Treasury Bills 0%",
-        "weight_pct": 1.95,
-        "shares": 60000000,
-        "raw": {
-          "no": 14,
-          "n": "United States Treasury Bills 0%",
-          "s": "B.0 10.15.26",
-          "as": "1.95%",
-          "sh": "60,000,000"
-        }
-      },
-      {
-        "rank": 15,
-        "symbol": "B.0 12.24.26",
-        "name": "United States Treasury Bills 0%",
-        "weight_pct": 1.62,
-        "shares": 50000000,
-        "raw": {
-          "no": 15,
-          "n": "United States Treasury Bills 0%",
-          "s": "B.0 12.24.26",
-          "as": "1.62%",
-          "sh": "50,000,000"
-        }
-      },
-      {
-        "rank": 16,
-        "symbol": "B.0 01.07.27",
-        "name": "United States Treasury Bills 0%",
-        "weight_pct": 1.61,
-        "shares": 50000000,
-        "raw": {
-          "no": 16,
-          "n": "United States Treasury Bills 0%",
-          "s": "B.0 01.07.27",
-          "as": "1.61%",
-          "sh": "50,000,000"
-        }
-      },
-      {
-        "rank": 17,
-        "symbol": "B.0 01.21.27",
-        "name": "United States Treasury Bills 0%",
-        "weight_pct": 1.61,
-        "shares": 50000000,
-        "raw": {
-          "no": 17,
-          "n": "United States Treasury Bills 0%",
-          "s": "B.0 01.21.27",
-          "as": "1.61%",
-          "sh": "50,000,000"
-        }
-      },
-      {
-        "rank": 18,
-        "symbol": "B.0 01.28.27",
-        "name": "United States Treasury Bills 0%",
-        "weight_pct": 1.61,
-        "shares": 50000000,
-        "raw": {
-          "no": 18,
-          "n": "United States Treasury Bills 0%",
-          "s": "B.0 01.28.27",
-          "as": "1.61%",
-          "sh": "50,000,000"
-        }
-      },
-      {
-        "rank": 19,
-        "symbol": "B.0 10.13.26",
-        "name": "United States Treasury Bills 0%",
-        "weight_pct": 1.46,
-        "shares": 45000000,
-        "raw": {
-          "no": 19,
-          "n": "United States Treasury Bills 0%",
-          "s": "B.0 10.13.26",
-          "as": "1.46%",
-          "sh": "45,000,000"
-        }
-      },
-      {
-        "rank": 20,
-        "name": "Drey Inst Pref Gov Mm Inst 6546",
-        "weight_pct": 1.19,
-        "shares": 36400000,
-        "raw": {
-          "no": 20,
-          "n": "Drey Inst Pref Gov Mm Inst 6546",
-          "as": "1.19%",
-          "sh": "36,400,000"
-        }
-      },
-      {
-        "rank": 21,
-        "symbol": "B.0 10.29.26",
-        "name": "United States Treasury Bills 0%",
-        "weight_pct": 1.14,
-        "shares": 35000000,
-        "raw": {
-          "no": 21,
-          "n": "United States Treasury Bills 0%",
-          "s": "B.0 10.29.26",
-          "as": "1.14%",
-          "sh": "35,000,000"
-        }
-      },
-      {
-        "rank": 22,
-        "symbol": "B.0 10.08.26",
-        "name": "United States Treasury Bills 0%",
-        "weight_pct": 0.98,
-        "shares": 30000000,
-        "raw": {
-          "no": 22,
-          "n": "United States Treasury Bills 0%",
-          "s": "B.0 10.08.26",
-          "as": "0.98%",
-          "sh": "30,000,000"
-        }
-      },
-      {
-        "rank": 23,
-        "symbol": "B.0 12.08.26",
-        "name": "United States Treasury Bills 0%",
-        "weight_pct": 0.28,
-        "shares": 8500000,
-        "raw": {
-          "no": 23,
-          "n": "United States Treasury Bills 0%",
-          "s": "B.0 12.08.26",
-          "as": "0.28%",
-          "sh": "8,500,000"
-        }
-      },
-      {
-        "rank": 24,
-        "name": "Trs Soc Gen Sgixcwti 06182026",
-        "weight_pct": -4.42,
-        "shares": 135591785,
-        "raw": {
-          "no": 24,
-          "n": "Trs Soc Gen Sgixcwti 06182026",
-          "as": "-4.42%",
-          "sh": "135,591,785"
-        }
-      },
-      {
-        "rank": 25,
-        "name": "Trs Macquarie Mqcp361e 07212026",
-        "weight_pct": -4.54,
-        "shares": 139477858,
-        "raw": {
-          "no": 25,
-          "n": "Trs Macquarie Mqcp361e 07212026",
-          "as": "-4.54%",
-          "sh": "139,477,858"
-        }
-      }
-    ],
-    "asset_allocation": null,
+    "holdings_count": null,
+    "holdings_updated": "2026-10-02T20:00:00Z",
+    "top_holdings": [],
+    "asset_allocation": {
+      "cashPosition": 0.2897,
+      "stockPosition": 0.0,
+      "bondPosition": 0.2206,
+      "preferredPosition": 0.0,
+      "convertiblePosition": 0.0,
+      "otherPosition": 0.48970002
+    },
     "sectors": null,
     "countries": null,
     "classification": {
@@ -777,21 +381,21 @@
   "financials": null,
   "sources": {
     "yf": false,
-    "stockanalysis": true,
-    "stockanalysis_yf_fallback": false,
+    "stockanalysis": false,
+    "stockanalysis_yf_fallback": true,
     "stockanalysis_etf_catalog": true,
     "slickcharts": false
   },
   "source_files": {
     "yf": null,
-    "stockanalysis": "computed/data-supply/etf-detail/payloads/USO.json",
-    "stockanalysis_yf_fallback": null,
+    "stockanalysis": null,
+    "stockanalysis_yf_fallback": "computed/data-supply/etf-detail/payloads/USO.json",
     "stockanalysis_etf_catalog": "stockanalysis/etf_universe.json",
     "slickcharts": null
   },
   "resolver": {
     "version": "market-facts-resolver/v1",
-    "detail_authority": "data_supply:fresh_primary",
+    "detail_authority": "data_supply:fresh_fallback",
     "field_source_policy": {
       "price": [
         "yf",
