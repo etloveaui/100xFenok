@@ -1,6 +1,6 @@
 {
   "schema_version": "data-entity-graph-stock-index/v1",
-  "generated_at": "2026-10-05T06:34:41.730Z",
+  "generated_at": "2026-10-05T07:01:58.824Z",
   "source_as_of": {
     "stocks_analyzer": "2026-10-02",
     "stock_action_index": "2026-10-02",
@@ -29,7 +29,7 @@
     "stocks": 1066,
     "with_market_facts": 1066,
     "with_filings": 202,
-    "with_sec_13f": 507,
+    "with_sec_13f": 438,
     "with_index_membership": 415,
     "with_single_stock_etfs": 84
   },
@@ -320,18 +320,18 @@
       "flags": {
         "market_facts": true,
         "filings": true,
-        "sec_13f": true,
+        "sec_13f": false,
         "index_membership": false,
         "single_stock_etfs": true
       },
-      "connection_count": 3,
+      "connection_count": 2,
       "service_count": 6,
       "as_of": {
         "profile": "2026-10-02",
         "action_index": "2026-10-02",
         "market_facts": "2026-09-29",
         "filings": null,
-        "sec_13f": "2026-Q2"
+        "sec_13f": null
       },
       "relations": [
         {
@@ -341,10 +341,6 @@
         {
           "type": "has_filing_summary",
           "target": "filing:TSM"
-        },
-        {
-          "type": "held_by_13f_investors",
-          "target": "sec13f:TSM"
         },
         {
           "type": "referenced_by_single_stock_etf",
@@ -481,23 +477,23 @@
       "confidence": {
         "label": "high",
         "rank": 3,
-        "coverage_ratio": 0.75
+        "coverage_ratio": 1
       },
       "flags": {
         "market_facts": true,
         "filings": true,
-        "sec_13f": false,
+        "sec_13f": true,
         "index_membership": true,
         "single_stock_etfs": false
       },
-      "connection_count": 3,
+      "connection_count": 4,
       "service_count": 0,
       "as_of": {
         "profile": "2026-10-02",
         "action_index": "2026-10-02",
         "market_facts": "2026-09-29",
         "filings": null,
-        "sec_13f": null
+        "sec_13f": "2026-Q2"
       },
       "relations": [
         {
@@ -507,6 +503,10 @@
         {
           "type": "has_filing_summary",
           "target": "filing:GOOG"
+        },
+        {
+          "type": "held_by_13f_investors",
+          "target": "sec13f:GOOG"
         }
       ]
     },
@@ -1106,18 +1106,18 @@
       "flags": {
         "market_facts": true,
         "filings": true,
-        "sec_13f": true,
+        "sec_13f": false,
         "index_membership": true,
         "single_stock_etfs": false
       },
-      "connection_count": 4,
+      "connection_count": 3,
       "service_count": 0,
       "as_of": {
         "profile": "2026-10-02",
         "action_index": "2026-10-02",
         "market_facts": "2026-09-29",
         "filings": null,
-        "sec_13f": "2026-Q2"
+        "sec_13f": null
       },
       "relations": [
         {
@@ -1127,10 +1127,6 @@
         {
           "type": "has_filing_summary",
           "target": "filing:BRK.B"
-        },
-        {
-          "type": "held_by_13f_investors",
-          "target": "sec13f:BRK.B"
         }
       ]
     },
@@ -1148,18 +1144,18 @@
       "flags": {
         "market_facts": true,
         "filings": true,
-        "sec_13f": true,
+        "sec_13f": false,
         "index_membership": true,
         "single_stock_etfs": true
       },
-      "connection_count": 4,
+      "connection_count": 3,
       "service_count": 1,
       "as_of": {
         "profile": "2026-10-02",
         "action_index": "2026-10-02",
         "market_facts": "2026-09-29",
         "filings": null,
-        "sec_13f": "2026-Q2"
+        "sec_13f": null
       },
       "relations": [
         {
@@ -1169,10 +1165,6 @@
         {
           "type": "has_filing_summary",
           "target": "filing:ASML"
-        },
-        {
-          "type": "held_by_13f_investors",
-          "target": "sec13f:ASML"
         },
         {
           "type": "referenced_by_single_stock_etf",
@@ -1696,18 +1688,18 @@
       "flags": {
         "market_facts": true,
         "filings": true,
-        "sec_13f": true,
+        "sec_13f": false,
         "index_membership": true,
         "single_stock_etfs": true
       },
-      "connection_count": 4,
+      "connection_count": 3,
       "service_count": 4,
       "as_of": {
         "profile": "2026-10-02",
         "action_index": "2026-10-02",
         "market_facts": "2026-09-29",
         "filings": null,
-        "sec_13f": "2026-Q2"
+        "sec_13f": null
       },
       "relations": [
         {
@@ -1717,10 +1709,6 @@
         {
           "type": "has_filing_summary",
           "target": "filing:ORCL"
-        },
-        {
-          "type": "held_by_13f_investors",
-          "target": "sec13f:ORCL"
         },
         {
           "type": "referenced_by_single_stock_etf",
@@ -2388,18 +2376,18 @@
       "flags": {
         "market_facts": true,
         "filings": true,
-        "sec_13f": true,
+        "sec_13f": false,
         "index_membership": true,
         "single_stock_etfs": true
       },
-      "connection_count": 4,
+      "connection_count": 3,
       "service_count": 3,
       "as_of": {
         "profile": "2026-10-02",
         "action_index": "2026-10-02",
         "market_facts": "2026-09-30",
         "filings": null,
-        "sec_13f": "2026-Q2"
+        "sec_13f": null
       },
       "relations": [
         {
@@ -2409,10 +2397,6 @@
         {
           "type": "has_filing_summary",
           "target": "filing:ARM"
-        },
-        {
-          "type": "held_by_13f_investors",
-          "target": "sec13f:ARM"
         },
         {
           "type": "referenced_by_single_stock_etf",
@@ -2442,18 +2426,18 @@
       "flags": {
         "market_facts": true,
         "filings": true,
-        "sec_13f": true,
+        "sec_13f": false,
         "index_membership": true,
         "single_stock_etfs": false
       },
-      "connection_count": 4,
+      "connection_count": 3,
       "service_count": 0,
       "as_of": {
         "profile": "2026-10-02",
         "action_index": "2026-10-02",
         "market_facts": "2026-09-29",
         "filings": null,
-        "sec_13f": "2026-Q2"
+        "sec_13f": null
       },
       "relations": [
         {
@@ -2463,10 +2447,6 @@
         {
           "type": "has_filing_summary",
           "target": "filing:MS"
-        },
-        {
-          "type": "held_by_13f_investors",
-          "target": "sec13f:MS"
         }
       ]
     },
@@ -2977,34 +2957,30 @@
       "route": "/stock/7203.T",
       "canonical_sector": "Consumer Discretionary",
       "confidence": {
-        "label": "high",
-        "rank": 3,
-        "coverage_ratio": 0.8
+        "label": "medium",
+        "rank": 2,
+        "coverage_ratio": 0.5222
       },
       "flags": {
         "market_facts": true,
         "filings": false,
-        "sec_13f": true,
+        "sec_13f": false,
         "index_membership": false,
         "single_stock_etfs": false
       },
-      "connection_count": 2,
+      "connection_count": 1,
       "service_count": 0,
       "as_of": {
         "profile": "2026-10-02",
         "action_index": "2026-10-02",
         "market_facts": "2026-09-30",
         "filings": null,
-        "sec_13f": "2026-Q2"
+        "sec_13f": null
       },
       "relations": [
         {
           "type": "belongs_to_sector",
           "target": "sector:Consumer Discretionary"
-        },
-        {
-          "type": "held_by_13f_investors",
-          "target": "sec13f:7203.T"
         }
       ]
     },
@@ -3072,18 +3048,18 @@
       "flags": {
         "market_facts": true,
         "filings": true,
-        "sec_13f": true,
+        "sec_13f": false,
         "index_membership": true,
         "single_stock_etfs": false
       },
-      "connection_count": 4,
+      "connection_count": 3,
       "service_count": 0,
       "as_of": {
         "profile": "2026-10-02",
         "action_index": "2026-10-02",
         "market_facts": "2026-10-02",
         "filings": null,
-        "sec_13f": "2026-Q2"
+        "sec_13f": null
       },
       "relations": [
         {
@@ -3093,10 +3069,6 @@
         {
           "type": "has_filing_summary",
           "target": "filing:GS"
-        },
-        {
-          "type": "held_by_13f_investors",
-          "target": "sec13f:GS"
         }
       ]
     },
@@ -3716,18 +3688,18 @@
       "flags": {
         "market_facts": true,
         "filings": true,
-        "sec_13f": true,
+        "sec_13f": false,
         "index_membership": true,
         "single_stock_etfs": false
       },
-      "connection_count": 4,
+      "connection_count": 3,
       "service_count": 0,
       "as_of": {
         "profile": "2026-10-02",
         "action_index": "2026-10-02",
         "market_facts": "2026-09-29",
         "filings": null,
-        "sec_13f": "2026-Q2"
+        "sec_13f": null
       },
       "relations": [
         {
@@ -3737,10 +3709,6 @@
         {
           "type": "has_filing_summary",
           "target": "filing:C"
-        },
-        {
-          "type": "held_by_13f_investors",
-          "target": "sec13f:C"
         }
       ]
     },
@@ -4468,18 +4436,18 @@
       "flags": {
         "market_facts": true,
         "filings": true,
-        "sec_13f": true,
+        "sec_13f": false,
         "index_membership": true,
         "single_stock_etfs": false
       },
-      "connection_count": 4,
+      "connection_count": 3,
       "service_count": 0,
       "as_of": {
         "profile": "2026-10-02",
         "action_index": "2026-10-02",
         "market_facts": "2026-09-30",
         "filings": null,
-        "sec_13f": "2026-Q2"
+        "sec_13f": null
       },
       "relations": [
         {
@@ -4489,10 +4457,6 @@
         {
           "type": "has_filing_summary",
           "target": "filing:TMUS"
-        },
-        {
-          "type": "held_by_13f_investors",
-          "target": "sec13f:TMUS"
         }
       ]
     },
@@ -4503,25 +4467,25 @@
       "route": "/stock/SCCO",
       "canonical_sector": "Materials",
       "confidence": {
-        "label": "medium",
-        "rank": 2,
-        "coverage_ratio": 0.5222
+        "label": "high",
+        "rank": 3,
+        "coverage_ratio": 0.8
       },
       "flags": {
         "market_facts": true,
         "filings": true,
-        "sec_13f": false,
+        "sec_13f": true,
         "index_membership": false,
         "single_stock_etfs": false
       },
-      "connection_count": 2,
+      "connection_count": 3,
       "service_count": 0,
       "as_of": {
         "profile": "2026-10-02",
         "action_index": "2026-10-02",
         "market_facts": "2026-09-29",
         "filings": null,
-        "sec_13f": null
+        "sec_13f": "2026-Q2"
       },
       "relations": [
         {
@@ -4531,6 +4495,10 @@
         {
           "type": "has_filing_summary",
           "target": "filing:SCCO"
+        },
+        {
+          "type": "held_by_13f_investors",
+          "target": "sec13f:SCCO"
         }
       ]
     },
@@ -4754,18 +4722,18 @@
       "flags": {
         "market_facts": true,
         "filings": true,
-        "sec_13f": true,
+        "sec_13f": false,
         "index_membership": true,
         "single_stock_etfs": false
       },
-      "connection_count": 4,
+      "connection_count": 3,
       "service_count": 0,
       "as_of": {
         "profile": "2026-10-02",
         "action_index": "2026-10-02",
         "market_facts": "2026-09-30",
         "filings": null,
-        "sec_13f": "2026-Q2"
+        "sec_13f": null
       },
       "relations": [
         {
@@ -4775,10 +4743,6 @@
         {
           "type": "has_filing_summary",
           "target": "filing:SCHW"
-        },
-        {
-          "type": "held_by_13f_investors",
-          "target": "sec13f:SCHW"
         }
       ]
     },
@@ -4796,18 +4760,18 @@
       "flags": {
         "market_facts": true,
         "filings": true,
-        "sec_13f": true,
+        "sec_13f": false,
         "index_membership": true,
         "single_stock_etfs": false
       },
-      "connection_count": 4,
+      "connection_count": 3,
       "service_count": 0,
       "as_of": {
         "profile": "2026-10-02",
         "action_index": "2026-10-02",
         "market_facts": "2026-10-02",
         "filings": null,
-        "sec_13f": "2026-Q2"
+        "sec_13f": null
       },
       "relations": [
         {
@@ -4817,10 +4781,6 @@
         {
           "type": "has_filing_summary",
           "target": "filing:T"
-        },
-        {
-          "type": "held_by_13f_investors",
-          "target": "sec13f:T"
         }
       ]
     },
@@ -4998,18 +4958,18 @@
       "flags": {
         "market_facts": true,
         "filings": true,
-        "sec_13f": true,
+        "sec_13f": false,
         "index_membership": true,
         "single_stock_etfs": false
       },
-      "connection_count": 4,
+      "connection_count": 3,
       "service_count": 0,
       "as_of": {
         "profile": "2026-10-02",
         "action_index": "2026-10-02",
         "market_facts": "2026-09-29",
         "filings": null,
-        "sec_13f": "2026-Q2"
+        "sec_13f": null
       },
       "relations": [
         {
@@ -5019,10 +4979,6 @@
         {
           "type": "has_filing_summary",
           "target": "filing:NEE"
-        },
-        {
-          "type": "held_by_13f_investors",
-          "target": "sec13f:NEE"
         }
       ]
     },
@@ -5177,25 +5133,25 @@
       "route": "/stock/RIO",
       "canonical_sector": "Materials",
       "confidence": {
-        "label": "high",
-        "rank": 3,
-        "coverage_ratio": 0.8
+        "label": "medium",
+        "rank": 2,
+        "coverage_ratio": 0.5222
       },
       "flags": {
         "market_facts": true,
         "filings": true,
-        "sec_13f": true,
+        "sec_13f": false,
         "index_membership": false,
         "single_stock_etfs": false
       },
-      "connection_count": 3,
+      "connection_count": 2,
       "service_count": 0,
       "as_of": {
         "profile": "2026-10-02",
         "action_index": "2026-10-02",
         "market_facts": "2026-09-29",
         "filings": null,
-        "sec_13f": "2026-Q2"
+        "sec_13f": null
       },
       "relations": [
         {
@@ -5205,10 +5161,6 @@
         {
           "type": "has_filing_summary",
           "target": "filing:RIO"
-        },
-        {
-          "type": "held_by_13f_investors",
-          "target": "sec13f:RIO"
         }
       ]
     },
@@ -5226,18 +5178,18 @@
       "flags": {
         "market_facts": true,
         "filings": true,
-        "sec_13f": true,
+        "sec_13f": false,
         "index_membership": true,
         "single_stock_etfs": true
       },
-      "connection_count": 4,
+      "connection_count": 3,
       "service_count": 1,
       "as_of": {
         "profile": "2026-10-02",
         "action_index": "2026-10-02",
         "market_facts": "2026-09-29",
         "filings": null,
-        "sec_13f": "2026-Q2"
+        "sec_13f": null
       },
       "relations": [
         {
@@ -5247,10 +5199,6 @@
         {
           "type": "has_filing_summary",
           "target": "filing:BA"
-        },
-        {
-          "type": "held_by_13f_investors",
-          "target": "sec13f:BA"
         },
         {
           "type": "referenced_by_single_stock_etf",
@@ -5309,23 +5257,23 @@
       "confidence": {
         "label": "high",
         "rank": 3,
-        "coverage_ratio": 0.75
+        "coverage_ratio": 1
       },
       "flags": {
         "market_facts": true,
         "filings": true,
-        "sec_13f": false,
+        "sec_13f": true,
         "index_membership": true,
         "single_stock_etfs": false
       },
-      "connection_count": 3,
+      "connection_count": 4,
       "service_count": 0,
       "as_of": {
         "profile": "2026-10-02",
         "action_index": "2026-10-02",
         "market_facts": "2026-09-29",
         "filings": null,
-        "sec_13f": null
+        "sec_13f": "2026-Q2"
       },
       "relations": [
         {
@@ -5335,6 +5283,10 @@
         {
           "type": "has_filing_summary",
           "target": "filing:DHR"
+        },
+        {
+          "type": "held_by_13f_investors",
+          "target": "sec13f:DHR"
         }
       ]
     },
@@ -5637,23 +5589,23 @@
       "confidence": {
         "label": "high",
         "rank": 3,
-        "coverage_ratio": 0.75
+        "coverage_ratio": 1
       },
       "flags": {
         "market_facts": true,
         "filings": true,
-        "sec_13f": false,
+        "sec_13f": true,
         "index_membership": true,
         "single_stock_etfs": true
       },
-      "connection_count": 3,
+      "connection_count": 4,
       "service_count": 1,
       "as_of": {
         "profile": "2026-10-02",
         "action_index": "2026-10-02",
         "market_facts": "2026-09-29",
         "filings": null,
-        "sec_13f": null
+        "sec_13f": "2026-Q2"
       },
       "relations": [
         {
@@ -5663,6 +5615,10 @@
         {
           "type": "has_filing_summary",
           "target": "filing:ISRG"
+        },
+        {
+          "type": "held_by_13f_investors",
+          "target": "sec13f:ISRG"
         },
         {
           "type": "referenced_by_single_stock_etf",
@@ -5870,18 +5826,18 @@
       "flags": {
         "market_facts": true,
         "filings": true,
-        "sec_13f": true,
+        "sec_13f": false,
         "index_membership": false,
         "single_stock_etfs": true
       },
-      "connection_count": 3,
+      "connection_count": 2,
       "service_count": 1,
       "as_of": {
         "profile": "2026-10-02",
         "action_index": "2026-10-02",
         "market_facts": "2026-09-29",
         "filings": null,
-        "sec_13f": "2026-Q2"
+        "sec_13f": null
       },
       "relations": [
         {
@@ -5891,10 +5847,6 @@
         {
           "type": "has_filing_summary",
           "target": "filing:NVO"
-        },
-        {
-          "type": "held_by_13f_investors",
-          "target": "sec13f:NVO"
         },
         {
           "type": "referenced_by_single_stock_etf",
@@ -6034,18 +5986,18 @@
       "flags": {
         "market_facts": true,
         "filings": true,
-        "sec_13f": true,
+        "sec_13f": false,
         "index_membership": true,
         "single_stock_etfs": false
       },
-      "connection_count": 4,
+      "connection_count": 3,
       "service_count": 0,
       "as_of": {
         "profile": "2026-10-02",
         "action_index": "2026-10-02",
         "market_facts": "2026-09-29",
         "filings": null,
-        "sec_13f": "2026-Q2"
+        "sec_13f": null
       },
       "relations": [
         {
@@ -6055,10 +6007,6 @@
         {
           "type": "has_filing_summary",
           "target": "filing:BMY"
-        },
-        {
-          "type": "held_by_13f_investors",
-          "target": "sec13f:BMY"
         }
       ]
     },
@@ -6193,23 +6141,23 @@
       "confidence": {
         "label": "high",
         "rank": 3,
-        "coverage_ratio": 1
+        "coverage_ratio": 0.75
       },
       "flags": {
         "market_facts": true,
         "filings": true,
-        "sec_13f": true,
+        "sec_13f": false,
         "index_membership": true,
         "single_stock_etfs": false
       },
-      "connection_count": 4,
+      "connection_count": 3,
       "service_count": 0,
       "as_of": {
         "profile": "2026-10-02",
         "action_index": "2026-10-02",
         "market_facts": "2026-10-02",
         "filings": null,
-        "sec_13f": "2026-Q2"
+        "sec_13f": null
       },
       "relations": [
         {
@@ -6219,10 +6167,6 @@
         {
           "type": "has_filing_summary",
           "target": "filing:PLD"
-        },
-        {
-          "type": "held_by_13f_investors",
-          "target": "sec13f:PLD"
         }
       ]
     },
@@ -6328,18 +6272,18 @@
       "flags": {
         "market_facts": true,
         "filings": true,
-        "sec_13f": true,
+        "sec_13f": false,
         "index_membership": true,
         "single_stock_etfs": false
       },
-      "connection_count": 4,
+      "connection_count": 3,
       "service_count": 0,
       "as_of": {
         "profile": "2026-10-02",
         "action_index": "2026-10-02",
         "market_facts": "2026-09-30",
         "filings": null,
-        "sec_13f": "2026-Q2"
+        "sec_13f": null
       },
       "relations": [
         {
@@ -6349,10 +6293,6 @@
         {
           "type": "has_filing_summary",
           "target": "filing:ACN"
-        },
-        {
-          "type": "held_by_13f_investors",
-          "target": "sec13f:ACN"
         }
       ]
     },
@@ -6458,18 +6398,18 @@
       "flags": {
         "market_facts": true,
         "filings": true,
-        "sec_13f": true,
+        "sec_13f": false,
         "index_membership": true,
         "single_stock_etfs": false
       },
-      "connection_count": 4,
+      "connection_count": 3,
       "service_count": 0,
       "as_of": {
         "profile": "2026-10-02",
         "action_index": "2026-10-02",
         "market_facts": "2026-09-29",
         "filings": null,
-        "sec_13f": "2026-Q2"
+        "sec_13f": null
       },
       "relations": [
         {
@@ -6479,10 +6419,6 @@
         {
           "type": "has_filing_summary",
           "target": "filing:COF"
-        },
-        {
-          "type": "held_by_13f_investors",
-          "target": "sec13f:COF"
         }
       ]
     },
@@ -6824,18 +6760,18 @@
       "flags": {
         "market_facts": true,
         "filings": true,
-        "sec_13f": true,
+        "sec_13f": false,
         "index_membership": false,
         "single_stock_etfs": false
       },
-      "connection_count": 3,
+      "connection_count": 2,
       "service_count": 0,
       "as_of": {
         "profile": "2026-10-02",
         "action_index": "2026-10-02",
         "market_facts": "2026-09-30",
         "filings": null,
-        "sec_13f": "2026-Q2"
+        "sec_13f": null
       },
       "relations": [
         {
@@ -6845,10 +6781,6 @@
         {
           "type": "has_filing_summary",
           "target": "filing:BNS"
-        },
-        {
-          "type": "held_by_13f_investors",
-          "target": "sec13f:BNS"
         }
       ]
     },
@@ -6861,23 +6793,23 @@
       "confidence": {
         "label": "high",
         "rank": 3,
-        "coverage_ratio": 0.75
+        "coverage_ratio": 1
       },
       "flags": {
         "market_facts": true,
         "filings": true,
-        "sec_13f": false,
+        "sec_13f": true,
         "index_membership": true,
         "single_stock_etfs": false
       },
-      "connection_count": 3,
+      "connection_count": 4,
       "service_count": 0,
       "as_of": {
         "profile": "2026-10-02",
         "action_index": "2026-10-02",
         "market_facts": "2026-09-29",
         "filings": null,
-        "sec_13f": null
+        "sec_13f": "2026-Q2"
       },
       "relations": [
         {
@@ -6887,6 +6819,10 @@
         {
           "type": "has_filing_summary",
           "target": "filing:CVS"
+        },
+        {
+          "type": "held_by_13f_investors",
+          "target": "sec13f:CVS"
         }
       ]
     },
@@ -7285,25 +7221,25 @@
       "route": "/stock/ENB",
       "canonical_sector": "Energy",
       "confidence": {
-        "label": "high",
-        "rank": 3,
-        "coverage_ratio": 0.8
+        "label": "medium",
+        "rank": 2,
+        "coverage_ratio": 0.5222
       },
       "flags": {
         "market_facts": true,
         "filings": true,
-        "sec_13f": true,
+        "sec_13f": false,
         "index_membership": false,
         "single_stock_etfs": false
       },
-      "connection_count": 3,
+      "connection_count": 2,
       "service_count": 0,
       "as_of": {
         "profile": "2026-10-02",
         "action_index": "2026-10-02",
         "market_facts": "2026-09-29",
         "filings": null,
-        "sec_13f": "2026-Q2"
+        "sec_13f": null
       },
       "relations": [
         {
@@ -7313,10 +7249,6 @@
         {
           "type": "has_filing_summary",
           "target": "filing:ENB"
-        },
-        {
-          "type": "held_by_13f_investors",
-          "target": "sec13f:ENB"
         }
       ]
     },
@@ -7418,18 +7350,18 @@
       "flags": {
         "market_facts": true,
         "filings": true,
-        "sec_13f": true,
+        "sec_13f": false,
         "index_membership": true,
         "single_stock_etfs": false
       },
-      "connection_count": 4,
+      "connection_count": 3,
       "service_count": 0,
       "as_of": {
         "profile": "2026-10-02",
         "action_index": "2026-10-02",
         "market_facts": "2026-09-29",
         "filings": null,
-        "sec_13f": "2026-Q2"
+        "sec_13f": null
       },
       "relations": [
         {
@@ -7439,10 +7371,6 @@
         {
           "type": "has_filing_summary",
           "target": "filing:LOW"
-        },
-        {
-          "type": "held_by_13f_investors",
-          "target": "sec13f:LOW"
         }
       ]
     },
@@ -7908,18 +7836,18 @@
       "flags": {
         "market_facts": true,
         "filings": true,
-        "sec_13f": true,
+        "sec_13f": false,
         "index_membership": true,
         "single_stock_etfs": true
       },
-      "connection_count": 4,
+      "connection_count": 3,
       "service_count": 1,
       "as_of": {
         "profile": "2026-10-02",
         "action_index": "2026-10-02",
         "market_facts": "2026-09-30",
         "filings": null,
-        "sec_13f": "2026-Q2"
+        "sec_13f": null
       },
       "relations": [
         {
@@ -7929,10 +7857,6 @@
         {
           "type": "has_filing_summary",
           "target": "filing:CDNS"
-        },
-        {
-          "type": "held_by_13f_investors",
-          "target": "sec13f:CDNS"
         },
         {
           "type": "referenced_by_single_stock_etf",
@@ -7954,18 +7878,18 @@
       "flags": {
         "market_facts": true,
         "filings": true,
-        "sec_13f": true,
+        "sec_13f": false,
         "index_membership": true,
         "single_stock_etfs": false
       },
-      "connection_count": 4,
+      "connection_count": 3,
       "service_count": 0,
       "as_of": {
         "profile": "2026-10-02",
         "action_index": "2026-10-02",
         "market_facts": "2026-09-29",
         "filings": null,
-        "sec_13f": "2026-Q2"
+        "sec_13f": null
       },
       "relations": [
         {
@@ -7975,10 +7899,6 @@
         {
           "type": "has_filing_summary",
           "target": "filing:SO"
-        },
-        {
-          "type": "held_by_13f_investors",
-          "target": "sec13f:SO"
         }
       ]
     },
@@ -8655,23 +8575,23 @@
       "confidence": {
         "label": "high",
         "rank": 3,
-        "coverage_ratio": 1
+        "coverage_ratio": 0.75
       },
       "flags": {
         "market_facts": true,
         "filings": true,
-        "sec_13f": true,
+        "sec_13f": false,
         "index_membership": true,
         "single_stock_etfs": false
       },
-      "connection_count": 4,
+      "connection_count": 3,
       "service_count": 0,
       "as_of": {
         "profile": "2026-10-02",
         "action_index": "2026-10-02",
         "market_facts": "2026-09-29",
         "filings": null,
-        "sec_13f": "2026-Q2"
+        "sec_13f": null
       },
       "relations": [
         {
@@ -8681,10 +8601,6 @@
         {
           "type": "has_filing_summary",
           "target": "filing:DUK"
-        },
-        {
-          "type": "held_by_13f_investors",
-          "target": "sec13f:DUK"
         }
       ]
     },
@@ -8883,23 +8799,23 @@
       "confidence": {
         "label": "high",
         "rank": 3,
-        "coverage_ratio": 1
+        "coverage_ratio": 0.75
       },
       "flags": {
         "market_facts": true,
         "filings": true,
-        "sec_13f": true,
+        "sec_13f": false,
         "index_membership": true,
         "single_stock_etfs": false
       },
-      "connection_count": 4,
+      "connection_count": 3,
       "service_count": 0,
       "as_of": {
         "profile": "2026-10-02",
         "action_index": "2026-10-02",
         "market_facts": "2026-10-02",
         "filings": null,
-        "sec_13f": "2026-Q2"
+        "sec_13f": null
       },
       "relations": [
         {
@@ -8909,10 +8825,6 @@
         {
           "type": "has_filing_summary",
           "target": "filing:WMB"
-        },
-        {
-          "type": "held_by_13f_investors",
-          "target": "sec13f:WMB"
         }
       ]
     },
@@ -9402,18 +9314,18 @@
       "flags": {
         "market_facts": true,
         "filings": true,
-        "sec_13f": true,
+        "sec_13f": false,
         "index_membership": true,
         "single_stock_etfs": false
       },
-      "connection_count": 4,
+      "connection_count": 3,
       "service_count": 0,
       "as_of": {
         "profile": "2026-10-02",
         "action_index": "2026-10-02",
         "market_facts": "2026-09-29",
         "filings": null,
-        "sec_13f": "2026-Q2"
+        "sec_13f": null
       },
       "relations": [
         {
@@ -9423,10 +9335,6 @@
         {
           "type": "has_filing_summary",
           "target": "filing:KKR"
-        },
-        {
-          "type": "held_by_13f_investors",
-          "target": "sec13f:KKR"
         }
       ]
     },
@@ -9718,18 +9626,18 @@
       "flags": {
         "market_facts": true,
         "filings": true,
-        "sec_13f": true,
+        "sec_13f": false,
         "index_membership": true,
         "single_stock_etfs": false
       },
-      "connection_count": 4,
+      "connection_count": 3,
       "service_count": 0,
       "as_of": {
         "profile": "2026-10-02",
         "action_index": "2026-10-02",
         "market_facts": "2026-09-29",
         "filings": null,
-        "sec_13f": "2026-Q2"
+        "sec_13f": null
       },
       "relations": [
         {
@@ -9739,10 +9647,6 @@
         {
           "type": "has_filing_summary",
           "target": "filing:MCO"
-        },
-        {
-          "type": "held_by_13f_investors",
-          "target": "sec13f:MCO"
         }
       ]
     },
@@ -9794,27 +9698,23 @@
       "flags": {
         "market_facts": true,
         "filings": false,
-        "sec_13f": true,
+        "sec_13f": false,
         "index_membership": false,
         "single_stock_etfs": false
       },
-      "connection_count": 2,
+      "connection_count": 1,
       "service_count": 0,
       "as_of": {
         "profile": "2026-10-02",
         "action_index": "2026-10-02",
         "market_facts": "2026-09-30",
         "filings": null,
-        "sec_13f": "2026-Q2"
+        "sec_13f": null
       },
       "relations": [
         {
           "type": "belongs_to_sector",
           "target": "sector:Technology"
-        },
-        {
-          "type": "held_by_13f_investors",
-          "target": "sec13f:9999.HK"
         }
       ]
     },
@@ -10232,27 +10132,23 @@
       "flags": {
         "market_facts": true,
         "filings": false,
-        "sec_13f": true,
+        "sec_13f": false,
         "index_membership": true,
         "single_stock_etfs": false
       },
-      "connection_count": 3,
+      "connection_count": 2,
       "service_count": 0,
       "as_of": {
         "profile": "2026-10-02",
         "action_index": "2026-10-02",
         "market_facts": "2026-09-29",
         "filings": null,
-        "sec_13f": "2026-Q2"
+        "sec_13f": null
       },
       "relations": [
         {
           "type": "belongs_to_sector",
           "target": "sector:Energy"
-        },
-        {
-          "type": "held_by_13f_investors",
-          "target": "sec13f:EOG"
         }
       ]
     },
@@ -10742,27 +10638,23 @@
       "flags": {
         "market_facts": true,
         "filings": false,
-        "sec_13f": true,
+        "sec_13f": false,
         "index_membership": true,
         "single_stock_etfs": false
       },
-      "connection_count": 3,
+      "connection_count": 2,
       "service_count": 0,
       "as_of": {
         "profile": "2026-10-02",
         "action_index": "2026-10-02",
         "market_facts": "2026-09-30",
         "filings": null,
-        "sec_13f": "2026-Q2"
+        "sec_13f": null
       },
       "relations": [
         {
           "type": "belongs_to_sector",
           "target": "sector:Consumer Discretionary"
-        },
-        {
-          "type": "held_by_13f_investors",
-          "target": "sec13f:TGT"
         }
       ]
     },
@@ -10780,18 +10672,18 @@
       "flags": {
         "market_facts": true,
         "filings": true,
-        "sec_13f": true,
+        "sec_13f": false,
         "index_membership": true,
         "single_stock_etfs": true
       },
-      "connection_count": 4,
+      "connection_count": 3,
       "service_count": 1,
       "as_of": {
         "profile": "2026-10-02",
         "action_index": "2026-10-02",
         "market_facts": "2026-09-29",
         "filings": null,
-        "sec_13f": "2026-Q2"
+        "sec_13f": null
       },
       "relations": [
         {
@@ -10801,10 +10693,6 @@
         {
           "type": "has_filing_summary",
           "target": "filing:MPWR"
-        },
-        {
-          "type": "held_by_13f_investors",
-          "target": "sec13f:MPWR"
         },
         {
           "type": "referenced_by_single_stock_etf",
@@ -10901,23 +10789,23 @@
       "confidence": {
         "label": "high",
         "rank": 3,
-        "coverage_ratio": 1
+        "coverage_ratio": 0.75
       },
       "flags": {
         "market_facts": true,
         "filings": true,
-        "sec_13f": true,
+        "sec_13f": false,
         "index_membership": true,
         "single_stock_etfs": false
       },
-      "connection_count": 4,
+      "connection_count": 3,
       "service_count": 0,
       "as_of": {
         "profile": "2026-10-02",
         "action_index": "2026-10-02",
         "market_facts": "2026-09-29",
         "filings": null,
-        "sec_13f": "2026-Q2"
+        "sec_13f": null
       },
       "relations": [
         {
@@ -10927,10 +10815,6 @@
         {
           "type": "has_filing_summary",
           "target": "filing:KMI"
-        },
-        {
-          "type": "held_by_13f_investors",
-          "target": "sec13f:KMI"
         }
       ]
     },
@@ -11188,18 +11072,18 @@
       "flags": {
         "market_facts": true,
         "filings": true,
-        "sec_13f": true,
+        "sec_13f": false,
         "index_membership": true,
         "single_stock_etfs": false
       },
-      "connection_count": 4,
+      "connection_count": 3,
       "service_count": 0,
       "as_of": {
         "profile": "2026-10-02",
         "action_index": "2026-10-02",
         "market_facts": "2026-09-29",
         "filings": null,
-        "sec_13f": "2026-Q2"
+        "sec_13f": null
       },
       "relations": [
         {
@@ -11209,10 +11093,6 @@
         {
           "type": "has_filing_summary",
           "target": "filing:HON"
-        },
-        {
-          "type": "held_by_13f_investors",
-          "target": "sec13f:HON"
         }
       ]
     },
@@ -11306,27 +11186,23 @@
       "flags": {
         "market_facts": true,
         "filings": false,
-        "sec_13f": true,
+        "sec_13f": false,
         "index_membership": true,
         "single_stock_etfs": false
       },
-      "connection_count": 3,
+      "connection_count": 2,
       "service_count": 0,
       "as_of": {
         "profile": "2026-10-02",
         "action_index": "2026-10-02",
         "market_facts": "2026-09-29",
         "filings": null,
-        "sec_13f": "2026-Q2"
+        "sec_13f": null
       },
       "relations": [
         {
           "type": "belongs_to_sector",
           "target": "sector:Financials"
-        },
-        {
-          "type": "held_by_13f_investors",
-          "target": "sec13f:DLR"
         }
       ]
     },
@@ -11549,32 +11425,28 @@
       "confidence": {
         "label": "high",
         "rank": 3,
-        "coverage_ratio": 1
+        "coverage_ratio": 0.75
       },
       "flags": {
         "market_facts": true,
         "filings": false,
-        "sec_13f": true,
+        "sec_13f": false,
         "index_membership": true,
         "single_stock_etfs": false
       },
-      "connection_count": 3,
+      "connection_count": 2,
       "service_count": 0,
       "as_of": {
         "profile": "2026-10-02",
         "action_index": "2026-10-02",
         "market_facts": "2026-10-02",
         "filings": null,
-        "sec_13f": "2026-Q2"
+        "sec_13f": null
       },
       "relations": [
         {
           "type": "belongs_to_sector",
           "target": "sector:Industrials"
-        },
-        {
-          "type": "held_by_13f_investors",
-          "target": "sec13f:RSG"
         }
       ]
     },
@@ -11687,25 +11559,25 @@
       "route": "/stock/WPM",
       "canonical_sector": "Materials",
       "confidence": {
-        "label": "medium",
-        "rank": 2,
-        "coverage_ratio": 0.5222
+        "label": "high",
+        "rank": 3,
+        "coverage_ratio": 0.8
       },
       "flags": {
         "market_facts": true,
         "filings": true,
-        "sec_13f": false,
+        "sec_13f": true,
         "index_membership": false,
         "single_stock_etfs": false
       },
-      "connection_count": 2,
+      "connection_count": 3,
       "service_count": 0,
       "as_of": {
         "profile": "2026-10-02",
         "action_index": "2026-10-02",
         "market_facts": "2026-09-30",
         "filings": null,
-        "sec_13f": null
+        "sec_13f": "2026-Q2"
       },
       "relations": [
         {
@@ -11715,6 +11587,10 @@
         {
           "type": "has_filing_summary",
           "target": "filing:WPM"
+        },
+        {
+          "type": "held_by_13f_investors",
+          "target": "sec13f:WPM"
         }
       ]
     },
@@ -11835,25 +11711,25 @@
       "route": "/stock/TRP",
       "canonical_sector": "Energy",
       "confidence": {
-        "label": "high",
-        "rank": 3,
-        "coverage_ratio": 0.8
+        "label": "medium",
+        "rank": 2,
+        "coverage_ratio": 0.5222
       },
       "flags": {
         "market_facts": true,
         "filings": true,
-        "sec_13f": true,
+        "sec_13f": false,
         "index_membership": false,
         "single_stock_etfs": false
       },
-      "connection_count": 3,
+      "connection_count": 2,
       "service_count": 0,
       "as_of": {
         "profile": "2026-10-02",
         "action_index": "2026-10-02",
         "market_facts": "2026-09-29",
         "filings": null,
-        "sec_13f": "2026-Q2"
+        "sec_13f": null
       },
       "relations": [
         {
@@ -11863,10 +11739,6 @@
         {
           "type": "has_filing_summary",
           "target": "filing:TRP"
-        },
-        {
-          "type": "held_by_13f_investors",
-          "target": "sec13f:TRP"
         }
       ]
     },
@@ -12157,32 +12029,28 @@
       "confidence": {
         "label": "high",
         "rank": 3,
-        "coverage_ratio": 1
+        "coverage_ratio": 0.75
       },
       "flags": {
         "market_facts": true,
         "filings": false,
-        "sec_13f": true,
+        "sec_13f": false,
         "index_membership": true,
         "single_stock_etfs": false
       },
-      "connection_count": 3,
+      "connection_count": 2,
       "service_count": 0,
       "as_of": {
         "profile": "2026-10-02",
         "action_index": "2026-10-02",
         "market_facts": "2026-09-29",
         "filings": null,
-        "sec_13f": "2026-Q2"
+        "sec_13f": null
       },
       "relations": [
         {
           "type": "belongs_to_sector",
           "target": "sector:Financials"
-        },
-        {
-          "type": "held_by_13f_investors",
-          "target": "sec13f:MET"
         }
       ]
     },
@@ -12348,27 +12216,23 @@
       "flags": {
         "market_facts": true,
         "filings": false,
-        "sec_13f": true,
+        "sec_13f": false,
         "index_membership": true,
         "single_stock_etfs": false
       },
-      "connection_count": 3,
+      "connection_count": 2,
       "service_count": 0,
       "as_of": {
         "profile": "2026-10-02",
         "action_index": "2026-10-02",
         "market_facts": "2026-09-29",
         "filings": null,
-        "sec_13f": "2026-Q2"
+        "sec_13f": null
       },
       "relations": [
         {
           "type": "belongs_to_sector",
           "target": "sector:Energy"
-        },
-        {
-          "type": "held_by_13f_investors",
-          "target": "sec13f:OXY"
         }
       ]
     },
@@ -12386,27 +12250,23 @@
       "flags": {
         "market_facts": true,
         "filings": false,
-        "sec_13f": true,
+        "sec_13f": false,
         "index_membership": true,
         "single_stock_etfs": false
       },
-      "connection_count": 3,
+      "connection_count": 2,
       "service_count": 0,
       "as_of": {
         "profile": "2026-10-02",
         "action_index": "2026-10-02",
         "market_facts": "2026-09-29",
         "filings": null,
-        "sec_13f": "2026-Q2"
+        "sec_13f": null
       },
       "relations": [
         {
           "type": "belongs_to_sector",
           "target": "sector:Financials"
-        },
-        {
-          "type": "held_by_13f_investors",
-          "target": "sec13f:AJG"
         }
       ]
     },
@@ -12678,27 +12538,23 @@
       "flags": {
         "market_facts": true,
         "filings": false,
-        "sec_13f": true,
+        "sec_13f": false,
         "index_membership": true,
         "single_stock_etfs": false
       },
-      "connection_count": 3,
+      "connection_count": 2,
       "service_count": 0,
       "as_of": {
         "profile": "2026-10-02",
         "action_index": "2026-10-02",
         "market_facts": "2026-09-30",
         "filings": null,
-        "sec_13f": "2026-Q2"
+        "sec_13f": null
       },
       "relations": [
         {
           "type": "belongs_to_sector",
           "target": "sector:Financials"
-        },
-        {
-          "type": "held_by_13f_investors",
-          "target": "sec13f:ALL"
         }
       ]
     },
@@ -13171,32 +13027,28 @@
       "confidence": {
         "label": "high",
         "rank": 3,
-        "coverage_ratio": 1
+        "coverage_ratio": 0.75
       },
       "flags": {
         "market_facts": true,
         "filings": false,
-        "sec_13f": true,
+        "sec_13f": false,
         "index_membership": true,
         "single_stock_etfs": false
       },
-      "connection_count": 3,
+      "connection_count": 2,
       "service_count": 0,
       "as_of": {
         "profile": "2026-10-02",
         "action_index": "2026-10-02",
         "market_facts": "2026-09-29",
         "filings": null,
-        "sec_13f": "2026-Q2"
+        "sec_13f": null
       },
       "relations": [
         {
           "type": "belongs_to_sector",
           "target": "sector:Financials"
-        },
-        {
-          "type": "held_by_13f_investors",
-          "target": "sec13f:PSA"
         }
       ]
     },
@@ -13362,27 +13214,23 @@
       "flags": {
         "market_facts": true,
         "filings": false,
-        "sec_13f": true,
+        "sec_13f": false,
         "index_membership": true,
         "single_stock_etfs": false
       },
-      "connection_count": 3,
+      "connection_count": 2,
       "service_count": 0,
       "as_of": {
         "profile": "2026-10-02",
         "action_index": "2026-10-02",
         "market_facts": "2026-09-30",
         "filings": null,
-        "sec_13f": "2026-Q2"
+        "sec_13f": null
       },
       "relations": [
         {
           "type": "belongs_to_sector",
           "target": "sector:Utilities"
-        },
-        {
-          "type": "held_by_13f_investors",
-          "target": "sec13f:SRE"
         }
       ]
     },
@@ -14434,27 +14282,23 @@
       "flags": {
         "market_facts": true,
         "filings": false,
-        "sec_13f": true,
+        "sec_13f": false,
         "index_membership": true,
         "single_stock_etfs": true
       },
-      "connection_count": 3,
+      "connection_count": 2,
       "service_count": 1,
       "as_of": {
         "profile": "2026-10-02",
         "action_index": "2026-10-02",
         "market_facts": "2026-09-29",
         "filings": null,
-        "sec_13f": "2026-Q2"
+        "sec_13f": null
       },
       "relations": [
         {
           "type": "belongs_to_sector",
           "target": "sector:Industrials"
-        },
-        {
-          "type": "held_by_13f_investors",
-          "target": "sec13f:XYZ"
         },
         {
           "type": "referenced_by_single_stock_etf",
@@ -14471,32 +14315,28 @@
       "confidence": {
         "label": "high",
         "rank": 3,
-        "coverage_ratio": 1
+        "coverage_ratio": 0.75
       },
       "flags": {
         "market_facts": true,
         "filings": false,
-        "sec_13f": true,
+        "sec_13f": false,
         "index_membership": true,
         "single_stock_etfs": false
       },
-      "connection_count": 3,
+      "connection_count": 2,
       "service_count": 0,
       "as_of": {
         "profile": "2026-10-02",
         "action_index": "2026-10-02",
         "market_facts": "2026-09-29",
         "filings": null,
-        "sec_13f": "2026-Q2"
+        "sec_13f": null
       },
       "relations": [
         {
           "type": "belongs_to_sector",
           "target": "sector:Utilities"
-        },
-        {
-          "type": "held_by_13f_investors",
-          "target": "sec13f:XEL"
         }
       ]
     },
@@ -14658,27 +14498,23 @@
       "flags": {
         "market_facts": true,
         "filings": false,
-        "sec_13f": true,
+        "sec_13f": false,
         "index_membership": true,
         "single_stock_etfs": false
       },
-      "connection_count": 3,
+      "connection_count": 2,
       "service_count": 0,
       "as_of": {
         "profile": "2026-10-02",
         "action_index": "2026-10-02",
         "market_facts": "2026-10-02",
         "filings": null,
-        "sec_13f": "2026-Q2"
+        "sec_13f": null
       },
       "relations": [
         {
           "type": "belongs_to_sector",
           "target": "sector:Healthcare"
-        },
-        {
-          "type": "held_by_13f_investors",
-          "target": "sec13f:VEEV"
         }
       ]
     },
@@ -14691,32 +14527,28 @@
       "confidence": {
         "label": "high",
         "rank": 3,
-        "coverage_ratio": 1
+        "coverage_ratio": 0.75
       },
       "flags": {
         "market_facts": true,
         "filings": false,
-        "sec_13f": true,
+        "sec_13f": false,
         "index_membership": true,
         "single_stock_etfs": true
       },
-      "connection_count": 3,
+      "connection_count": 2,
       "service_count": 1,
       "as_of": {
         "profile": "2026-10-02",
         "action_index": "2026-10-02",
         "market_facts": "2026-09-29",
         "filings": null,
-        "sec_13f": "2026-Q2"
+        "sec_13f": null
       },
       "relations": [
         {
           "type": "belongs_to_sector",
           "target": "sector:Technology"
-        },
-        {
-          "type": "held_by_13f_investors",
-          "target": "sec13f:MCHP"
         },
         {
           "type": "referenced_by_single_stock_etf",
@@ -14871,34 +14703,30 @@
       "route": "/stock/SLF",
       "canonical_sector": "Financials",
       "confidence": {
-        "label": "high",
-        "rank": 3,
-        "coverage_ratio": 0.8
+        "label": "medium",
+        "rank": 2,
+        "coverage_ratio": 0.5222
       },
       "flags": {
         "market_facts": true,
         "filings": false,
-        "sec_13f": true,
+        "sec_13f": false,
         "index_membership": false,
         "single_stock_etfs": false
       },
-      "connection_count": 2,
+      "connection_count": 1,
       "service_count": 0,
       "as_of": {
         "profile": "2026-10-02",
         "action_index": "2026-10-02",
         "market_facts": "2026-09-29",
         "filings": null,
-        "sec_13f": "2026-Q2"
+        "sec_13f": null
       },
       "relations": [
         {
           "type": "belongs_to_sector",
           "target": "sector:Financials"
-        },
-        {
-          "type": "held_by_13f_investors",
-          "target": "sec13f:SLF"
         }
       ]
     },
@@ -15432,27 +15260,23 @@
       "flags": {
         "market_facts": true,
         "filings": false,
-        "sec_13f": true,
+        "sec_13f": false,
         "index_membership": false,
         "single_stock_etfs": true
       },
-      "connection_count": 2,
+      "connection_count": 1,
       "service_count": 1,
       "as_of": {
         "profile": "2026-10-02",
         "action_index": "2026-10-02",
         "market_facts": "2026-10-02",
         "filings": null,
-        "sec_13f": "2026-Q2"
+        "sec_13f": null
       },
       "relations": [
         {
           "type": "belongs_to_sector",
           "target": "sector:Technology"
-        },
-        {
-          "type": "held_by_13f_investors",
-          "target": "sec13f:CRDO"
         },
         {
           "type": "referenced_by_single_stock_etf",
@@ -16092,27 +15916,23 @@
       "flags": {
         "market_facts": true,
         "filings": false,
-        "sec_13f": true,
+        "sec_13f": false,
         "index_membership": true,
         "single_stock_etfs": false
       },
-      "connection_count": 3,
+      "connection_count": 2,
       "service_count": 0,
       "as_of": {
         "profile": "2026-10-02",
         "action_index": "2026-10-02",
         "market_facts": "2026-09-30",
         "filings": null,
-        "sec_13f": "2026-Q2"
+        "sec_13f": null
       },
       "relations": [
         {
           "type": "belongs_to_sector",
           "target": "sector:Technology"
-        },
-        {
-          "type": "held_by_13f_investors",
-          "target": "sec13f:TTWO"
         }
       ]
     },
@@ -17903,32 +17723,28 @@
       "confidence": {
         "label": "high",
         "rank": 3,
-        "coverage_ratio": 1
+        "coverage_ratio": 0.75
       },
       "flags": {
         "market_facts": true,
         "filings": false,
-        "sec_13f": true,
+        "sec_13f": false,
         "index_membership": true,
         "single_stock_etfs": false
       },
-      "connection_count": 3,
+      "connection_count": 2,
       "service_count": 0,
       "as_of": {
         "profile": "2026-10-02",
         "action_index": "2026-10-02",
         "market_facts": "2026-09-29",
         "filings": null,
-        "sec_13f": "2026-Q2"
+        "sec_13f": null
       },
       "relations": [
         {
           "type": "belongs_to_sector",
           "target": "sector:Industrials"
-        },
-        {
-          "type": "held_by_13f_investors",
-          "target": "sec13f:VMC"
         }
       ]
     },
@@ -18729,32 +18545,28 @@
       "confidence": {
         "label": "high",
         "rank": 3,
-        "coverage_ratio": 1
+        "coverage_ratio": 0.75
       },
       "flags": {
         "market_facts": true,
         "filings": false,
-        "sec_13f": true,
+        "sec_13f": false,
         "index_membership": true,
         "single_stock_etfs": true
       },
-      "connection_count": 3,
+      "connection_count": 2,
       "service_count": 4,
       "as_of": {
         "profile": "2026-10-02",
         "action_index": "2026-10-02",
         "market_facts": "2026-10-02",
         "filings": null,
-        "sec_13f": "2026-Q2"
+        "sec_13f": null
       },
       "relations": [
         {
           "type": "belongs_to_sector",
           "target": "sector:Technology"
-        },
-        {
-          "type": "held_by_13f_investors",
-          "target": "sec13f:SMCI"
         },
         {
           "type": "referenced_by_single_stock_etf",
@@ -19130,27 +18942,23 @@
       "flags": {
         "market_facts": true,
         "filings": false,
-        "sec_13f": true,
+        "sec_13f": false,
         "index_membership": true,
         "single_stock_etfs": false
       },
-      "connection_count": 3,
+      "connection_count": 2,
       "service_count": 0,
       "as_of": {
         "profile": "2026-10-02",
         "action_index": "2026-10-02",
         "market_facts": "2026-09-29",
         "filings": null,
-        "sec_13f": "2026-Q2"
+        "sec_13f": null
       },
       "relations": [
         {
           "type": "belongs_to_sector",
           "target": "sector:Utilities"
-        },
-        {
-          "type": "held_by_13f_investors",
-          "target": "sec13f:PCG"
         }
       ]
     },
@@ -19490,27 +19298,23 @@
       "flags": {
         "market_facts": true,
         "filings": false,
-        "sec_13f": true,
+        "sec_13f": false,
         "index_membership": true,
         "single_stock_etfs": false
       },
-      "connection_count": 3,
+      "connection_count": 2,
       "service_count": 0,
       "as_of": {
         "profile": "2026-10-02",
         "action_index": "2026-10-02",
         "market_facts": "2026-09-30",
         "filings": null,
-        "sec_13f": "2026-Q2"
+        "sec_13f": null
       },
       "relations": [
         {
           "type": "belongs_to_sector",
           "target": "sector:Consumer Discretionary"
-        },
-        {
-          "type": "held_by_13f_investors",
-          "target": "sec13f:DG"
         }
       ]
     },
@@ -19634,27 +19438,23 @@
       "flags": {
         "market_facts": true,
         "filings": false,
-        "sec_13f": true,
+        "sec_13f": false,
         "index_membership": true,
         "single_stock_etfs": false
       },
-      "connection_count": 3,
+      "connection_count": 2,
       "service_count": 0,
       "as_of": {
         "profile": "2026-10-02",
         "action_index": "2026-10-02",
         "market_facts": "2026-09-29",
         "filings": null,
-        "sec_13f": "2026-Q2"
+        "sec_13f": null
       },
       "relations": [
         {
           "type": "belongs_to_sector",
           "target": "sector:Utilities"
-        },
-        {
-          "type": "held_by_13f_investors",
-          "target": "sec13f:DTE"
         }
       ]
     },
@@ -20365,32 +20165,28 @@
       "confidence": {
         "label": "high",
         "rank": 3,
-        "coverage_ratio": 1
+        "coverage_ratio": 0.75
       },
       "flags": {
         "market_facts": true,
         "filings": false,
-        "sec_13f": true,
+        "sec_13f": false,
         "index_membership": true,
         "single_stock_etfs": false
       },
-      "connection_count": 3,
+      "connection_count": 2,
       "service_count": 0,
       "as_of": {
         "profile": "2026-10-02",
         "action_index": "2026-10-02",
         "market_facts": "2026-10-02",
         "filings": null,
-        "sec_13f": "2026-Q2"
+        "sec_13f": null
       },
       "relations": [
         {
           "type": "belongs_to_sector",
           "target": "sector:Utilities"
-        },
-        {
-          "type": "held_by_13f_investors",
-          "target": "sec13f:PPL"
         }
       ]
     },
@@ -20401,34 +20197,30 @@
       "route": "/stock/MTSI",
       "canonical_sector": "Technology",
       "confidence": {
-        "label": "high",
-        "rank": 3,
-        "coverage_ratio": 0.82
+        "label": "medium",
+        "rank": 2,
+        "coverage_ratio": 0.57
       },
       "flags": {
         "market_facts": true,
         "filings": false,
-        "sec_13f": true,
+        "sec_13f": false,
         "index_membership": false,
         "single_stock_etfs": false
       },
-      "connection_count": 2,
+      "connection_count": 1,
       "service_count": 0,
       "as_of": {
         "profile": "2026-10-02",
         "action_index": "2026-10-02",
         "market_facts": "2026-09-29",
         "filings": null,
-        "sec_13f": "2026-Q2"
+        "sec_13f": null
       },
       "relations": [
         {
           "type": "belongs_to_sector",
           "target": "sector:Technology"
-        },
-        {
-          "type": "held_by_13f_investors",
-          "target": "sec13f:MTSI"
         }
       ]
     },
@@ -20446,27 +20238,23 @@
       "flags": {
         "market_facts": true,
         "filings": false,
-        "sec_13f": true,
+        "sec_13f": false,
         "index_membership": false,
         "single_stock_etfs": false
       },
-      "connection_count": 2,
+      "connection_count": 1,
       "service_count": 0,
       "as_of": {
         "profile": "2026-10-02",
         "action_index": "2026-10-02",
         "market_facts": "2026-09-29",
         "filings": null,
-        "sec_13f": "2026-Q2"
+        "sec_13f": null
       },
       "relations": [
         {
           "type": "belongs_to_sector",
           "target": "sector:Consumer Discretionary"
-        },
-        {
-          "type": "held_by_13f_investors",
-          "target": "sec13f:QSR"
         }
       ]
     },
@@ -21368,27 +21156,23 @@
       "flags": {
         "market_facts": true,
         "filings": false,
-        "sec_13f": true,
+        "sec_13f": false,
         "index_membership": true,
         "single_stock_etfs": false
       },
-      "connection_count": 3,
+      "connection_count": 2,
       "service_count": 0,
       "as_of": {
         "profile": "2026-10-02",
         "action_index": "2026-10-02",
         "market_facts": "2026-10-02",
         "filings": null,
-        "sec_13f": "2026-Q2"
+        "sec_13f": null
       },
       "relations": [
         {
           "type": "belongs_to_sector",
           "target": "sector:Industrials"
-        },
-        {
-          "type": "held_by_13f_investors",
-          "target": "sec13f:JBHT"
         }
       ]
     },
@@ -21804,27 +21588,23 @@
       "flags": {
         "market_facts": true,
         "filings": false,
-        "sec_13f": true,
+        "sec_13f": false,
         "index_membership": true,
         "single_stock_etfs": false
       },
-      "connection_count": 3,
+      "connection_count": 2,
       "service_count": 0,
       "as_of": {
         "profile": "2026-10-02",
         "action_index": "2026-10-02",
         "market_facts": "2026-09-29",
         "filings": null,
-        "sec_13f": "2026-Q2"
+        "sec_13f": null
       },
       "relations": [
         {
           "type": "belongs_to_sector",
           "target": "sector:Industrials"
-        },
-        {
-          "type": "held_by_13f_investors",
-          "target": "sec13f:LUV"
         }
       ]
     },
@@ -22137,32 +21917,28 @@
       "confidence": {
         "label": "high",
         "rank": 3,
-        "coverage_ratio": 1
+        "coverage_ratio": 0.75
       },
       "flags": {
         "market_facts": true,
         "filings": false,
-        "sec_13f": true,
+        "sec_13f": false,
         "index_membership": true,
         "single_stock_etfs": false
       },
-      "connection_count": 3,
+      "connection_count": 2,
       "service_count": 0,
       "as_of": {
         "profile": "2026-10-02",
         "action_index": "2026-10-02",
         "market_facts": "2026-09-29",
         "filings": null,
-        "sec_13f": "2026-Q2"
+        "sec_13f": null
       },
       "relations": [
         {
           "type": "belongs_to_sector",
           "target": "sector:Utilities"
-        },
-        {
-          "type": "held_by_13f_investors",
-          "target": "sec13f:CMS"
         }
       ]
     },
@@ -22832,27 +22608,23 @@
       "flags": {
         "market_facts": true,
         "filings": false,
-        "sec_13f": true,
+        "sec_13f": false,
         "index_membership": true,
         "single_stock_etfs": false
       },
-      "connection_count": 3,
+      "connection_count": 2,
       "service_count": 0,
       "as_of": {
         "profile": "2026-10-02",
         "action_index": "2026-10-02",
         "market_facts": "2026-10-02",
         "filings": null,
-        "sec_13f": "2026-Q2"
+        "sec_13f": null
       },
       "relations": [
         {
           "type": "belongs_to_sector",
           "target": "sector:Industrials"
-        },
-        {
-          "type": "held_by_13f_investors",
-          "target": "sec13f:CHRW"
         }
       ]
     },
@@ -22863,34 +22635,30 @@
       "route": "/stock/SSNC",
       "canonical_sector": "Technology",
       "confidence": {
-        "label": "high",
-        "rank": 3,
-        "coverage_ratio": 0.8
+        "label": "medium",
+        "rank": 2,
+        "coverage_ratio": 0.5222
       },
       "flags": {
         "market_facts": true,
         "filings": false,
-        "sec_13f": true,
+        "sec_13f": false,
         "index_membership": false,
         "single_stock_etfs": false
       },
-      "connection_count": 2,
+      "connection_count": 1,
       "service_count": 0,
       "as_of": {
         "profile": "2026-10-02",
         "action_index": "2026-10-02",
         "market_facts": "2026-09-29",
         "filings": null,
-        "sec_13f": "2026-Q2"
+        "sec_13f": null
       },
       "relations": [
         {
           "type": "belongs_to_sector",
           "target": "sector:Technology"
-        },
-        {
-          "type": "held_by_13f_investors",
-          "target": "sec13f:SSNC"
         }
       ]
     },
@@ -22901,34 +22669,30 @@
       "route": "/stock/BCE",
       "canonical_sector": "Communication Services",
       "confidence": {
-        "label": "high",
-        "rank": 3,
-        "coverage_ratio": 0.8
+        "label": "medium",
+        "rank": 2,
+        "coverage_ratio": 0.5222
       },
       "flags": {
         "market_facts": true,
         "filings": false,
-        "sec_13f": true,
+        "sec_13f": false,
         "index_membership": false,
         "single_stock_etfs": false
       },
-      "connection_count": 2,
+      "connection_count": 1,
       "service_count": 0,
       "as_of": {
         "profile": "2026-10-02",
         "action_index": "2026-10-02",
         "market_facts": "2026-09-29",
         "filings": null,
-        "sec_13f": "2026-Q2"
+        "sec_13f": null
       },
       "relations": [
         {
           "type": "belongs_to_sector",
           "target": "sector:Communication Services"
-        },
-        {
-          "type": "held_by_13f_investors",
-          "target": "sec13f:BCE"
         }
       ]
     },
@@ -23158,27 +22922,23 @@
       "flags": {
         "market_facts": true,
         "filings": false,
-        "sec_13f": true,
+        "sec_13f": false,
         "index_membership": true,
         "single_stock_etfs": false
       },
-      "connection_count": 3,
+      "connection_count": 2,
       "service_count": 0,
       "as_of": {
         "profile": "2026-10-02",
         "action_index": "2026-10-02",
         "market_facts": "2026-10-02",
         "filings": null,
-        "sec_13f": "2026-Q2"
+        "sec_13f": null
       },
       "relations": [
         {
           "type": "belongs_to_sector",
           "target": "sector:Technology"
-        },
-        {
-          "type": "held_by_13f_investors",
-          "target": "sec13f:ZBRA"
         }
       ]
     },
@@ -24080,27 +23840,23 @@
       "flags": {
         "market_facts": true,
         "filings": false,
-        "sec_13f": true,
+        "sec_13f": false,
         "index_membership": true,
         "single_stock_etfs": false
       },
-      "connection_count": 3,
+      "connection_count": 2,
       "service_count": 0,
       "as_of": {
         "profile": "2026-10-02",
         "action_index": "2026-10-02",
         "market_facts": "2026-10-02",
         "filings": null,
-        "sec_13f": "2026-Q2"
+        "sec_13f": null
       },
       "relations": [
         {
           "type": "belongs_to_sector",
           "target": "sector:Industrials"
-        },
-        {
-          "type": "held_by_13f_investors",
-          "target": "sec13f:LEN"
         }
       ]
     },
@@ -25656,27 +25412,23 @@
       "flags": {
         "market_facts": true,
         "filings": false,
-        "sec_13f": true,
+        "sec_13f": false,
         "index_membership": true,
         "single_stock_etfs": false
       },
-      "connection_count": 3,
+      "connection_count": 2,
       "service_count": 0,
       "as_of": {
         "profile": "2026-10-02",
         "action_index": "2026-10-02",
         "market_facts": "2026-10-02",
         "filings": null,
-        "sec_13f": "2026-Q2"
+        "sec_13f": null
       },
       "relations": [
         {
           "type": "belongs_to_sector",
           "target": "sector:Technology"
-        },
-        {
-          "type": "held_by_13f_investors",
-          "target": "sec13f:GEN"
         }
       ]
     },
@@ -25838,27 +25590,23 @@
       "flags": {
         "market_facts": true,
         "filings": false,
-        "sec_13f": true,
+        "sec_13f": false,
         "index_membership": false,
         "single_stock_etfs": false
       },
-      "connection_count": 2,
+      "connection_count": 1,
       "service_count": 0,
       "as_of": {
         "profile": "2026-10-02",
         "action_index": "2026-10-02",
         "market_facts": "2026-09-30",
         "filings": null,
-        "sec_13f": "2026-Q2"
+        "sec_13f": null
       },
       "relations": [
         {
           "type": "belongs_to_sector",
           "target": "sector:Consumer Discretionary"
-        },
-        {
-          "type": "held_by_13f_investors",
-          "target": "sec13f:FLUT"
         }
       ]
     },
@@ -26417,32 +26165,28 @@
       "confidence": {
         "label": "high",
         "rank": 3,
-        "coverage_ratio": 1
+        "coverage_ratio": 0.75
       },
       "flags": {
         "market_facts": true,
         "filings": false,
-        "sec_13f": true,
+        "sec_13f": false,
         "index_membership": true,
         "single_stock_etfs": false
       },
-      "connection_count": 3,
+      "connection_count": 2,
       "service_count": 0,
       "as_of": {
         "profile": "2026-10-02",
         "action_index": "2026-10-02",
         "market_facts": "2026-09-29",
         "filings": null,
-        "sec_13f": "2026-Q2"
+        "sec_13f": null
       },
       "relations": [
         {
           "type": "belongs_to_sector",
           "target": "sector:Consumer Staples"
-        },
-        {
-          "type": "held_by_13f_investors",
-          "target": "sec13f:SJM"
         }
       ]
     },
@@ -26633,32 +26377,28 @@
       "confidence": {
         "label": "high",
         "rank": 3,
-        "coverage_ratio": 1
+        "coverage_ratio": 0.75
       },
       "flags": {
         "market_facts": true,
         "filings": false,
-        "sec_13f": true,
+        "sec_13f": false,
         "index_membership": true,
         "single_stock_etfs": true
       },
-      "connection_count": 3,
+      "connection_count": 2,
       "service_count": 1,
       "as_of": {
         "profile": "2026-10-02",
         "action_index": "2026-10-02",
         "market_facts": "2026-10-02",
         "filings": null,
-        "sec_13f": "2026-Q2"
+        "sec_13f": null
       },
       "relations": [
         {
           "type": "belongs_to_sector",
           "target": "sector:Materials"
-        },
-        {
-          "type": "held_by_13f_investors",
-          "target": "sec13f:ALB"
         },
         {
           "type": "referenced_by_single_stock_etf",
@@ -26751,32 +26491,28 @@
       "confidence": {
         "label": "high",
         "rank": 3,
-        "coverage_ratio": 1
+        "coverage_ratio": 0.75
       },
       "flags": {
         "market_facts": true,
         "filings": false,
-        "sec_13f": true,
+        "sec_13f": false,
         "index_membership": true,
         "single_stock_etfs": false
       },
-      "connection_count": 3,
+      "connection_count": 2,
       "service_count": 0,
       "as_of": {
         "profile": "2026-10-02",
         "action_index": "2026-10-02",
         "market_facts": "2026-09-29",
         "filings": null,
-        "sec_13f": "2026-Q2"
+        "sec_13f": null
       },
       "relations": [
         {
           "type": "belongs_to_sector",
           "target": "sector:Communication Services"
-        },
-        {
-          "type": "held_by_13f_investors",
-          "target": "sec13f:FOX"
         }
       ]
     },
@@ -26900,27 +26636,23 @@
       "flags": {
         "market_facts": true,
         "filings": false,
-        "sec_13f": true,
+        "sec_13f": false,
         "index_membership": false,
         "single_stock_etfs": false
       },
-      "connection_count": 2,
+      "connection_count": 1,
       "service_count": 0,
       "as_of": {
         "profile": "2026-10-02",
         "action_index": "2026-10-02",
         "market_facts": "2026-10-02",
         "filings": null,
-        "sec_13f": "2026-Q2"
+        "sec_13f": null
       },
       "relations": [
         {
           "type": "belongs_to_sector",
           "target": "sector:Consumer Discretionary"
-        },
-        {
-          "type": "held_by_13f_investors",
-          "target": "sec13f:DKS"
         }
       ]
     },
@@ -27188,27 +26920,23 @@
       "flags": {
         "market_facts": true,
         "filings": false,
-        "sec_13f": true,
+        "sec_13f": false,
         "index_membership": true,
         "single_stock_etfs": false
       },
-      "connection_count": 3,
+      "connection_count": 2,
       "service_count": 0,
       "as_of": {
         "profile": "2026-10-02",
         "action_index": "2026-10-02",
         "market_facts": "2026-09-29",
         "filings": null,
-        "sec_13f": "2026-Q2"
+        "sec_13f": null
       },
       "relations": [
         {
           "type": "belongs_to_sector",
           "target": "sector:Consumer Staples"
-        },
-        {
-          "type": "held_by_13f_investors",
-          "target": "sec13f:MKC"
         }
       ]
     },
@@ -27515,34 +27243,30 @@
       "route": "/stock/AMH",
       "canonical_sector": "Financials",
       "confidence": {
-        "label": "high",
-        "rank": 3,
-        "coverage_ratio": 0.8
+        "label": "medium",
+        "rank": 2,
+        "coverage_ratio": 0.5222
       },
       "flags": {
         "market_facts": true,
         "filings": false,
-        "sec_13f": true,
+        "sec_13f": false,
         "index_membership": false,
         "single_stock_etfs": false
       },
-      "connection_count": 2,
+      "connection_count": 1,
       "service_count": 0,
       "as_of": {
         "profile": "2026-10-02",
         "action_index": "2026-10-02",
         "market_facts": "2026-09-29",
         "filings": null,
-        "sec_13f": "2026-Q2"
+        "sec_13f": null
       },
       "relations": [
         {
           "type": "belongs_to_sector",
           "target": "sector:Financials"
-        },
-        {
-          "type": "held_by_13f_investors",
-          "target": "sec13f:AMH"
         }
       ]
     },
@@ -27663,34 +27387,30 @@
       "route": "/stock/WSO",
       "canonical_sector": "Industrials",
       "confidence": {
-        "label": "high",
-        "rank": 3,
-        "coverage_ratio": 0.8
+        "label": "medium",
+        "rank": 2,
+        "coverage_ratio": 0.5222
       },
       "flags": {
         "market_facts": true,
         "filings": false,
-        "sec_13f": true,
+        "sec_13f": false,
         "index_membership": false,
         "single_stock_etfs": false
       },
-      "connection_count": 2,
+      "connection_count": 1,
       "service_count": 0,
       "as_of": {
         "profile": "2026-10-02",
         "action_index": "2026-10-02",
         "market_facts": "2026-09-29",
         "filings": null,
-        "sec_13f": "2026-Q2"
+        "sec_13f": null
       },
       "relations": [
         {
           "type": "belongs_to_sector",
           "target": "sector:Industrials"
-        },
-        {
-          "type": "held_by_13f_investors",
-          "target": "sec13f:WSO"
         }
       ]
     },
@@ -35283,30 +35003,34 @@
       "route": "/stock/TDOC",
       "canonical_sector": "Healthcare",
       "confidence": {
-        "label": "low",
-        "rank": 1,
-        "coverage_ratio": 0.4625
+        "label": "high",
+        "rank": 3,
+        "coverage_ratio": 0.775
       },
       "flags": {
         "market_facts": true,
         "filings": false,
-        "sec_13f": false,
+        "sec_13f": true,
         "index_membership": false,
         "single_stock_etfs": false
       },
-      "connection_count": 1,
+      "connection_count": 2,
       "service_count": 0,
       "as_of": {
         "profile": "2026-10-02",
         "action_index": "2026-10-02",
         "market_facts": "2026-09-29",
         "filings": null,
-        "sec_13f": null
+        "sec_13f": "2026-Q2"
       },
       "relations": [
         {
           "type": "belongs_to_sector",
           "target": "sector:Healthcare"
+        },
+        {
+          "type": "held_by_13f_investors",
+          "target": "sec13f:TDOC"
         }
       ]
     },
