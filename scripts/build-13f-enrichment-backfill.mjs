@@ -297,14 +297,13 @@ function resolveProfile(holding) {
     // leave enrichment empty instead of falling back to an unrelated raw alias.
     return resolved.symbol ? profileForSymbol(resolved.symbol) : null;
   }
-  const raw = String(holding?.ticker ?? "").trim().toUpperCase();
+  // A stored filing ticker is not identity evidence; enrich only symbols whose
+  // own universe name confirms the filing issuer.
   const candidates = [];
-  if (raw) {
-    candidates.push(raw, raw.replace(".", "-"), raw.replace("-", "."));
+  for (const symbol of [resolved.symbol, resolver.nameMap.get(normalizeCompanyName(holding?.name))?.symbol]) {
+    if (!symbol || !resolver.confirmed(symbol, holding?.name)) continue;
+    candidates.push(symbol, symbol.replace(".", "-"), symbol.replace("-", "."));
   }
-  if (resolved.symbol) candidates.push(resolved.symbol);
-  const nameHit = resolver.nameMap.get(normalizeCompanyName(holding?.name));
-  if (nameHit?.symbol) candidates.push(nameHit.symbol);
 
   for (const candidate of candidates) {
     const profile = profileForSymbol(candidate);

@@ -51,10 +51,20 @@ try {
   fs.writeFileSync(path.join(investorDir, "fixture.json"), JSON.stringify({
     investor: {
       filings: [{
-        holdings: [{ ticker: "IVE", cusip: "530909100", name: "LIBERTY LIVE HOLDINGS INC" }],
+        holdings: [{ ticker: "IVE", cusip: "530909100", name: "LIBERTY LIVE HOLDINGS INC" },
+          { ticker: "ATI", cusip: "459200101", name: "INTERNATIONAL BUSINESS MACHS" },
+          { ticker: "IBM", cusip: "459200101", name: "INTERNATIONAL BUSINESS MACHS" }],
       }],
     },
   }));
+  const edgarDir = path.join(resolverRoot, "data/edgar");
+  fs.mkdirSync(edgarDir, { recursive: true });
+  fs.writeFileSync(path.join(edgarDir, "company_tickers.json"), JSON.stringify({ rows: [
+    { ticker: "ZZZ", title: "UNRELATED RETAINED ALIAS CORP" },
+    { ticker: "ATI", title: "ATI INC" },
+    { ticker: "IBM", title: "INTERNATIONAL BUSINESS MACHINES CORP" },
+    { ticker: "T", title: "AT&T INC." },
+  ] }));
   const aliasesDir = path.join(resolverRoot, "data/sec-13f/analytics");
   fs.mkdirSync(aliasesDir, { recursive: true });
   fs.writeFileSync(path.join(aliasesDir, "ticker_aliases.json"), JSON.stringify({
@@ -63,7 +73,9 @@ try {
       { raw_key: "Fixture shared security family INC", normalized_key: "Fixture shared security family",
         symbol: "PNC", source: "issuer-pnc-common-stock-faq", cusips: ["000000000"] },
       { raw_key: "Unrelated retained alias", normalized_key: "Unrelated retained alias",
-        symbol: "ZZZ", source: "alias-history", cusips: ["999999999"] }],
+        symbol: "ZZZ", source: "alias-history", cusips: ["999999999"] },
+      { raw_key: "PHILIP MORRIS INTL INC", normalized_key: "PHILIP MORRIS",
+        symbol: "ATI", source: "13f-history", cusips: ["718172109"] }],
   }));
   const resolver = loadTickerResolver(resolverRoot);
   assert.equal(resolver.resolveHoldingSymbol({ ticker: "IVE", cusip: "530909100", name: "LIBERTY LIVE HOLDINGS INC" }).symbol, "LLYVA");
@@ -136,7 +148,16 @@ try {
   assert.equal(resolver.resolveHoldingSymbol({ name: "Fixture shared security family" }).symbol, null);
   assert.equal(resolver.resolveHoldingSymbol({ cusip: "000000000", name: "Fixture shared security family INC" }).symbol, null);
   assert.equal(resolver.resolveHoldingSymbol({ name: "Unrelated retained alias" }).symbol, "ZZZ");
-  assert.equal(resolver.resolveHoldingSymbol({ ticker: "ZZZ" }).symbol, "ZZZ");
+  assert.equal(resolver.resolveHoldingSymbol({ ticker: "ZZZ", name: "Unrelated retained alias" }).symbol, "ZZZ");
+  // Stored filing tickers and generated aliases need the symbol's own issuer name.
+  assert.equal(resolver.resolveHoldingSymbol({ ticker: "ZZZ" }).symbol, null);
+  assert.equal(resolver.resolveHoldingSymbol({ ticker: "ATI", cusip: "718172109", name: "PHILIP MORRIS INTL INC" }).symbol, null);
+  assert.equal(resolver.resolveHoldingSymbol({ cusip: "718172109", name: "PHILIP MORRIS INTL INC" }).symbol, null);
+  assert.equal(resolver.resolveHoldingSymbol({ ticker: "ATI", cusip: "01741R102", name: "ATI INC" }).symbol, "ATI");
+  assert.equal(resolver.resolveHoldingSymbol({ cusip: "459200101", name: "INTERNATIONAL BUSINESS MACHS" }).symbol, "IBM");
+  assert.equal(resolver.resolveHoldingSymbol({ ticker: "T", name: "AT&T INC" }).symbol, "T");
+  assert.equal(resolver.resolveHoldingSymbol({ ticker: "IVV", cusip: "464287432", name: "ISHARES TR" }).symbol, null);
+  assert.equal(resolver.confirmed("ATI", "SPACE EXPLORATION TECHN CORP"), false);
   const profileSource = read("scripts/build-13f-enrichment-backfill.mjs");
   const profileBody = profileSource.slice(profileSource.indexOf("function resolveProfile("), profileSource.indexOf("function priceSnapshot("));
   const calls = [];
@@ -146,6 +167,9 @@ try {
     (symbol) => { calls.push(symbol); return symbol === "WRONG" || exactAvailable ? { symbol } : null; },
     (name) => name,
   );
+  calls.length = 0;
+  assert.equal(resolveProfile({ ticker: "ATI", cusip: "718172109", name: "PHILIP MORRIS INTL INC" }), null);
+  assert.deepEqual(calls, []);
   for (const [cusip, symbol] of exactPrimaryIdentities) {
     calls.length = 0;
     exactAvailable = true;
